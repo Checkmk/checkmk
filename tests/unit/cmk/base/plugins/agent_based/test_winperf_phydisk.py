@@ -85,7 +85,7 @@ def _check_disk_with_rates(disk, disk_with_rates):
     assert disk_with_rates == disk_reference
 
 
-def test_parse_winperf_phydisk():
+def test_parse_winperf_phydisk() -> None:
     assert winperf_phydisk.parse_winperf_phydisk([STRING_TABLE[0][:2]] + STRING_TABLE[1:]) == {
         "C:": DISK_WO_FREQUENCY,
     }
@@ -94,7 +94,7 @@ def test_parse_winperf_phydisk():
     }
 
 
-def test_compute_rates_single_disk():
+def test_compute_rates_single_disk() -> None:
     # without frequency
     # first call should result in IgnoreResults, second call should yield rates
     with pytest.raises(IgnoreResultsError):
@@ -166,7 +166,7 @@ DISK_HALF = {k: int(v / 2) for k, v in DISK.items()}
     "item",
     ["item", "SUMMARY"],
 )
-def test_check_winperf_phydisk(item):
+def test_check_winperf_phydisk(item) -> None:
     section_1 = {
         item: DISK_HALF,
     }
@@ -185,7 +185,7 @@ def test_check_winperf_phydisk(item):
     "item",
     ["item", "SUMMARY"],
 )
-def test_cluster_check_winperf_phydisk(item):
+def test_cluster_check_winperf_phydisk(item) -> None:
     section_1 = {
         item: DISK_HALF,
     }

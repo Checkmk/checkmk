@@ -12,7 +12,7 @@ from cmk.base.plugins.agent_based.inventory_fortiauthenticator_system import (
 from .utils_inventory import sort_inventory_result
 
 
-def test_inventory_fortiauthenticator_system():
+def test_inventory_fortiauthenticator_system() -> None:
     assert sort_inventory_result(
         inventory_fortiauthenticator_system(
             {

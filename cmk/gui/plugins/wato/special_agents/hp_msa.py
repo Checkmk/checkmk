@@ -6,8 +6,8 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsHardware
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import Dictionary, Password, TextInput
+from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
+from cmk.gui.valuespec import Dictionary, TextInput
 
 
 def _valuespec_special_agents_hp_msa():
@@ -22,7 +22,7 @@ def _valuespec_special_agents_hp_msa():
             ),
             (
                 "password",
-                Password(
+                IndividualOrStoredPassword(
                     title=_("Password"),
                     allow_empty=False,
                 ),

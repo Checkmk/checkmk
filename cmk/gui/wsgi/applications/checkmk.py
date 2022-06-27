@@ -18,8 +18,9 @@ import cmk.utils.profile
 import cmk.utils.store
 
 from cmk.gui import config as config_module
-from cmk.gui import htmllib, http, pages, sites
+from cmk.gui import http, pages, sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.config import active_config
 from cmk.gui.context import AppContext, RequestContext
 from cmk.gui.ctx_stack import app_stack, request_stack
 from cmk.gui.display_options import DisplayOptions
@@ -32,12 +33,15 @@ from cmk.gui.exceptions import (
     MKUnauthenticatedException,
     MKUserError,
 )
-from cmk.gui.globals import active_config, html, PrependURLFilter, request, response
-from cmk.gui.http import Response
+from cmk.gui.htmllib.header import make_header
+from cmk.gui.htmllib.html import html, HTMLGenerator
+from cmk.gui.http import request, response, Response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.utils.json import patch_json
+from cmk.gui.utils.logging import PrependURLFilter
+from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.theme import Theme
 from cmk.gui.utils.timeout_manager import TimeoutManager
@@ -110,7 +114,8 @@ def _page_not_found() -> Response:
         html.write_text(_("Page not found"))
     else:
         title = _("Page not found")
-        html.header(
+        make_header(
+            html,
             title,
             Breadcrumb(
                 [
@@ -141,7 +146,7 @@ def _render_exception(e: Exception, title: str) -> Response:
         )
 
     if not fail_silently():
-        html.header(title, Breadcrumb())
+        make_header(html, title, Breadcrumb())
         html.show_error(str(e))
         html.footer()
 
@@ -191,7 +196,7 @@ def get_mime_type_from_output_format(output_format: str) -> str:
 class CheckmkApp:
     """The Check_MK GUI WSGI entry point"""
 
-    def __init__(self, debug=False):
+    def __init__(self, debug=False) -> None:
         self.debug = debug
 
     def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
@@ -217,7 +222,7 @@ class CheckmkApp:
             funnel=funnel,
             config_obj=config_obj,
             user=LoggedInNobody(),
-            html_obj=htmllib.html(req, resp, funnel, output_format),
+            html_obj=HTMLGenerator(req, funnel, output_format, is_mobile(req, resp)),
             timeout_manager=timeout_manager,
             display_options=DisplayOptions(),
             theme=theme,

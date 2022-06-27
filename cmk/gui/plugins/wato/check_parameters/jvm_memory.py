@@ -121,10 +121,11 @@ def _parameter_valuespec_jvm_memory() -> Transform:
                 + " "
                 + _("Other keywords for this rule: %s") % "Tomcat, Jolokia, JMX"
             ),
-            elements=sum(
-                (_get_memory_level_elements(mem_type) for mem_type in ("heap", "nonheap", "total")),
-                [],
-            ),
+            elements=[
+                element
+                for mem_type in ("heap", "nonheap", "total")
+                for element in _get_memory_level_elements(mem_type)
+            ],
         ),
         forth=_transform_legacy_parameters_jvm_memory,
     )

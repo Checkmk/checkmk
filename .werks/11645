@@ -1,7 +1,7 @@
 Title: Performance issues with PySNMP Backend
 Class: fix
 Compatible: compat
-Component: pysnmp
+Component: core
 Date: 1605014604
 Edition: cee
 Knowledge: doc

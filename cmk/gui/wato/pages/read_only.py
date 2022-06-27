@@ -6,18 +6,19 @@
 """WATO can be set into read only mode manually using this mode"""
 
 import time
+from typing import Collection
 
 import cmk.utils.store as store
 
 import cmk.gui.userdb as userdb
-import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.globals import active_config, html
+from cmk.gui.config import active_config
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.plugins.wato.utils import flash, mode_registry, mode_url, redirect, WatoMode
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.valuespec import (
     AbsoluteDate,
     Alternative,
@@ -27,23 +28,24 @@ from cmk.gui.valuespec import (
     TextAreaUnicode,
     Tuple,
 )
+from cmk.gui.watolib.utils import multisite_dir
 
 
 @mode_registry.register
 class ModeManageReadOnly(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "read_only"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["set_read_only"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._settings = active_config.wato_read_only
 
-    def title(self):
+    def title(self) -> str:
         return _("Manage configuration read only mode")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -62,13 +64,13 @@ class ModeManageReadOnly(WatoMode):
 
     def _save(self):
         store.save_to_mk_file(
-            watolib.multisite_dir() + "read_only.mk",
+            multisite_dir() + "read_only.mk",
             "wato_read_only",
             self._settings,
             pprint_value=active_config.wato_pprint_config,
         )
 
-    def page(self):
+    def page(self) -> None:
         html.p(
             _(
                 "The WATO configuration can be set to read only mode for all users that are not "

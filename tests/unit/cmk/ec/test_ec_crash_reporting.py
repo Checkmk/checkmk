@@ -9,11 +9,11 @@ from cmk.utils.crash_reporting import crash_report_registry
 from cmk.ec.crash_reporting import CrashReportStore, ECCrashReport
 
 
-def test_ec_crash_report_registry():
+def test_ec_crash_report_registry() -> None:
     assert crash_report_registry["ec"] == ECCrashReport
 
 
-def test_ec_crash_report_from_exception():
+def test_ec_crash_report_from_exception() -> None:
     try:
         raise ValueError("DING")
     except Exception:

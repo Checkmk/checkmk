@@ -58,7 +58,8 @@ def parse_lnx_quota(info):
 
 
 def lnx_quota_limit_check(mode, what, user, used, soft, hard, grace):
-    fmt = lambda value, what: what == "files" and "%d" % value or get_bytes_human_readable(value)
+    def fmt(value: float, what: str) -> str:
+        return "%d" % value if what == "files" else get_bytes_human_readable(value)
 
     if mode == "usr":
         txt = "User %s" % user

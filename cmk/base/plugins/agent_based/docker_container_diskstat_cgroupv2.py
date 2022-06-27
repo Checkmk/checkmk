@@ -14,7 +14,7 @@ from .utils import diskstat
 class ParagraphParser:
     headline: str
 
-    def __init__(self, hp: "HeadlineParser"):
+    def __init__(self, hp: "HeadlineParser") -> None:
         hp.register_parser(self)
 
     def parse(self, line: List[str]) -> None:
@@ -22,7 +22,7 @@ class ParagraphParser:
 
 
 class HeadlineParser:
-    def __init__(self):
+    def __init__(self) -> None:
         self._parsers: Dict[str, ParagraphParser] = {}
 
     def register_parser(self, parser: ParagraphParser) -> None:
@@ -41,7 +41,7 @@ class HeadlineParser:
 class TimeParagprahParser(ParagraphParser):
     headline = "[time]"
 
-    def __init__(self, hp: HeadlineParser):
+    def __init__(self, hp: HeadlineParser) -> None:
         super().__init__(hp)
         self.time: int
 
@@ -52,7 +52,7 @@ class TimeParagprahParser(ParagraphParser):
 class NamesParagprahParser(ParagraphParser):
     headline = "[names]"
 
-    def __init__(self, hp: HeadlineParser):
+    def __init__(self, hp: HeadlineParser) -> None:
         super().__init__(hp)
         self.names: Dict[str, str] = {}
 
@@ -63,7 +63,7 @@ class NamesParagprahParser(ParagraphParser):
 class StatParagprahParser(ParagraphParser):
     headline = "[io.stat]"
 
-    def __init__(self, hp: HeadlineParser):
+    def __init__(self, hp: HeadlineParser) -> None:
         super().__init__(hp)
         self.stat: Dict[str, Dict[str, str]] = {}
 
@@ -76,7 +76,7 @@ class StatParagprahParser(ParagraphParser):
 
 
 class DockerDiskstatParser(HeadlineParser):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.time = TimeParagprahParser(self)
         self.names = NamesParagprahParser(self)

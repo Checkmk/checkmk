@@ -17,7 +17,6 @@ import cmk.gui.hooks as hooks
 import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html, request
 from cmk.gui.groups import (
     AllGroupSpecs,
     GroupName,
@@ -27,6 +26,9 @@ from cmk.gui.groups import (
     load_contact_group_information,
     load_group_information,
 )
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.watolib.utils import config_variable_registry, wato_fileheader
@@ -529,7 +531,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
             if name in value["groups"]:
                 display_name = cgroup.get("alias", name)
                 texts.append(
-                    html.render_a(
+                    HTMLWriter.render_a(
                         display_name,
                         href=makeuri_contextless(
                             request,
@@ -540,8 +542,8 @@ class HostAttributeContactGroups(ABCHostAttribute):
                 )
         result: HTML = HTML(", ").join(texts)
         if texts and value["use"]:
-            result += html.render_span(
-                html.render_b("*"),
+            result += HTMLWriter.render_span(
+                HTMLWriter.render_b("*"),
                 title=_("These contact groups are also used in the monitoring configuration."),
             )
         return "", result

@@ -5,15 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fan import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
@@ -58,6 +54,7 @@ def check_bintec_sensors_fan(item, params, info):
     for _sensor_id, sensor_descr, _sensor_type, sensor_value, _sensor_unit in info:
         if sensor_descr == item:
             return check_fan(int(sensor_value), params)
+    return None
 
 
 check_info["bintec_sensors.fan"] = {

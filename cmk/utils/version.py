@@ -207,10 +207,11 @@ class Version:
     _pat_date: str = r"([1-9]\d{3})\.([0-1]\d)\.([0-3]\d)"  # e.g. "2021.12.24"
     _pat_build: str = r"([bip])(\d+)"  # b=beta, i=innov, p=patch; e.g. "b4"
     _pat_stable: str = r"%s(?:%s)?" % (_pat_base, _pat_build)  # e.g. "2.1.0p17"
-    _pat_daily: str = "(?:%s-)?%s" % (
-        _pat_base,
-        _pat_date,
-    )  # e.g. "2.1.0-2021.12.24" also "2021.12.24"
+    # e.g. daily of version branch: "2.1.0-2021.12.24",
+    # daily of master branch: "2021.12.24"
+    # daily of master sandbox branch: "2022.06.02-sandbox-lm-2.2-thing"
+    # daily of version sandbox branch: "2.1.0-2022.06.02-sandbox-lm-2.2-thing"
+    _pat_daily: str = "(?:%s-)?%s(?:-sandbox.+)?" % (_pat_base, _pat_date)
 
     def __init__(self, vstring: str) -> None:
         try:
@@ -357,6 +358,7 @@ class Version:
             return (vtype_map["s"], 0)
         if isinstance(v, (_BetaVersion, _InnovationVersion, _PatchVersion)):
             return (vtype_map[v.vtype], v.patch)
+        return None
 
     def _cmp_date(self, o_v: _Version) -> int:
         v = self.version
@@ -445,6 +447,9 @@ def parse_check_mk_version(v: str) -> int:
     >>> p("1.5.0p13") > p("1.5.0p12")
     True
 
+    >>> p("2022.06.23-sandbox-az-sles-15sp3")
+    2022062300000
+
     """
     parts = v.split(".", 2)
 
@@ -472,11 +477,11 @@ def parse_check_mk_version(v: str) -> int:
     major, minor, rest = parts
     _, sub, rest = _extract_rest(rest)
 
-    if len(major) == 4:
-        rest = v[-3:]
-
     if rest.startswith("-sandbox"):
         return int("%02d%02d%02d%05d" % (int(major), int(minor), sub, 0))
+
+    if len(major) == 4:
+        rest = v[-3:]
 
     # Only add the base once, else we could do it in the loop.
     var_type, num, rest = _extract_rest(rest)
@@ -509,8 +514,16 @@ def is_daily_build_of_master(version: str) -> bool:
     True
     >>> f("2.1.0")
     False
+    >>> f("2.1.0-2022.06.23")
+    False
+
+    Is not directly built from master, but a sandbox branch which is based on the master branch.
+    Treat it same as a master branch.
+
+    >>> f("2022.06.23-sandbox-lm-2.2-omd-apache")
+    True
     """
-    return re.match(r"\d{4}.\d{2}.\d{2}$", version) is not None
+    return re.match(r"\d{4}.\d{2}.\d{2}(?:-sandbox.+)?$", version) is not None
 
 
 def is_same_major_version(this_version: str, other_version: str) -> bool:

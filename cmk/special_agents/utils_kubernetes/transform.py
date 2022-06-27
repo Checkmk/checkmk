@@ -11,13 +11,14 @@ data structures to version independent data structured defined in schemata.api
 
 from __future__ import annotations
 
-import datetime
-from typing import Dict, List, Mapping, Optional, Sequence, Type, Union
+from typing import Dict, Iterable, List, Literal, Mapping, Optional, Sequence, Type, Union
 
-from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
+from kubernetes import client  # type: ignore[import]
 
+from . import transform_json
 from .schemata import api
-from .schemata.api import Label, LabelName, LabelValue
+from .schemata.api import Label, LabelName
+from .transform_any import convert_to_timestamp, parse_annotations, parse_labels
 
 
 def parse_frac_prefix(value: str) -> float:
@@ -37,7 +38,7 @@ def parse_frac_prefix(value: str) -> float:
     return float(value)
 
 
-def parse_memory(value: str) -> float:
+def parse_memory(value: str) -> float:  # pylint: disable=too-many-branches
     if value.endswith("Ki"):
         return 1024**1 * float(value[:-2])
     if value.endswith("Mi"):
@@ -72,30 +73,6 @@ def parse_memory(value: str) -> float:
     return float(value)
 
 
-# TODO: change to Timestamp type
-def convert_to_timestamp(k8s_date_time: Union[str, datetime.datetime]) -> float:
-    if isinstance(k8s_date_time, str):
-        date_time = datetime.datetime.strptime(k8s_date_time, "%Y-%m-%dT%H:%M:%SZ").replace(
-            tzinfo=datetime.timezone.utc
-        )
-    elif isinstance(k8s_date_time, datetime.datetime):
-        date_time = k8s_date_time
-        if date_time.tzinfo is None:
-            raise ValueError(f"Can not convert to timestamp: '{k8s_date_time}' is missing tzinfo")
-    else:
-        raise TypeError(
-            f"Can not convert to timestamp: '{k8s_date_time}' of type {type(k8s_date_time)}"
-        )
-
-    return date_time.timestamp()
-
-
-def parse_labels(labels: Mapping[str, str]) -> Optional[Mapping[LabelName, Label]]:
-    if labels is None:
-        return None
-    return {LabelName(k): Label(name=LabelName(k), value=LabelValue(v)) for k, v in labels.items()}
-
-
 def parse_metadata(
     metadata: client.V1ObjectMeta, model: Type[api.MetaData] = api.MetaData
 ) -> api.MetaData:
@@ -104,6 +81,7 @@ def parse_metadata(
         namespace=metadata.namespace,
         creation_timestamp=convert_to_timestamp(metadata.creation_timestamp),
         labels=parse_labels(metadata.labels),
+        annotations=parse_annotations(metadata.annotations),
     )
 
 
@@ -112,6 +90,7 @@ def parse_namespace_metadata(metadata: client.V1ObjectMeta) -> api.NamespaceMeta
         name=api.NamespaceName(metadata.name),
         creation_timestamp=convert_to_timestamp(metadata.creation_timestamp),
         labels=parse_labels(metadata.labels),
+        annotations=parse_annotations(metadata.annotations),
     )
 
 
@@ -160,6 +139,8 @@ def pod_spec(pod: client.V1Pod) -> api.PodSpec:
         init_containers=containers_spec(
             pod.spec.init_containers if pod.spec.init_containers is not None else []
         ),
+        priority_class_name=pod.spec.priority_class_name,
+        active_deadline_seconds=pod.spec.active_deadline_seconds,
     )
 
 
@@ -171,12 +152,12 @@ def pod_status(pod: client.V1Pod) -> api.PodStatus:
         start_time = None
 
     return api.PodStatus(
-        conditions=pod_conditions(pod.status.conditions),
+        conditions=pod_conditions(pod.status.conditions) if pod.status.conditions else None,
         phase=api.Phase(pod.status.phase.lower()),
         start_time=api.Timestamp(start_time) if start_time else None,
         host_ip=api.IpAddress(pod.status.host_ip) if pod.status.host_ip else None,
         pod_ip=api.IpAddress(pod.status.pod_ip) if pod.status.pod_ip else None,
-        qos_class=pod.status.qos_class.lower(),
+        qos_class=pod.status.qos_class.lower() if pod.status.qos_class else None,
     )
 
 
@@ -192,21 +173,22 @@ def pod_containers(
         ]
         if (details := status.state.terminated) is not None:
             state = api.ContainerTerminatedState(
-                type="terminated",
                 exit_code=details.exit_code,
-                start_time=int(convert_to_timestamp(details.started_at)),
-                end_time=int(convert_to_timestamp(details.finished_at)),
+                start_time=int(convert_to_timestamp(details.started_at))
+                if details.started_at is not None
+                else None,
+                end_time=int(convert_to_timestamp(details.finished_at))
+                if details.finished_at is not None
+                else None,
                 reason=details.reason,
                 detail=details.message,
             )
         elif (details := status.state.running) is not None:
             state = api.ContainerRunningState(
-                type="running",
                 start_time=int(convert_to_timestamp(details.started_at)),
             )
         elif (details := status.state.waiting) is not None:
             state = api.ContainerWaitingState(
-                type="waiting",
                 reason=details.reason,
                 detail=details.message,
             )
@@ -311,7 +293,9 @@ def parse_node_resources(node: client.V1Node) -> Dict[str, api.NodeResources]:
     return node_resources(capacity, allocatable)
 
 
-def node_resources(capacity, allocatable) -> Dict[str, api.NodeResources]:
+def node_resources(  # type:ignore[no-untyped-def]
+    capacity, allocatable
+) -> Dict[str, api.NodeResources]:
     resources = {
         "capacity": api.NodeResources(),
         "allocatable": api.NodeResources(),
@@ -357,15 +341,15 @@ def deployment_replicas(
 def deployment_conditions(
     status: client.V1DeploymentStatus,
 ) -> Mapping[str, api.DeploymentCondition]:
-    conditions = {}
-    for condition in status.conditions:
-        conditions[condition.type.lower()] = api.DeploymentCondition(
+    return {
+        condition.type.lower(): api.DeploymentCondition(
             status=condition.status,
             last_transition_time=convert_to_timestamp(condition.last_transition_time),
             reason=condition.reason,
             message=condition.message,
         )
-    return conditions
+        for condition in status.conditions or []
+    }
 
 
 def pod_from_client(pod: client.V1Pod) -> api.Pod:
@@ -437,7 +421,7 @@ def parse_deployment_spec(deployment_spec: client.V1DeploymentSpec) -> api.Deplo
     raise ValueError(f"Unknown strategy type: {deployment_spec.strategy.type}")
 
 
-def deployment_from_client(
+def deployment_from_client(  # type:ignore[no-untyped-def]
     deployment: client.V1Deployment, pod_uids=Sequence[api.PodUID]
 ) -> api.Deployment:
     return api.Deployment(
@@ -475,6 +459,7 @@ def parse_daemonset_status(status: client.V1DaemonSetStatus) -> api.DaemonSetSta
         updated_number_scheduled=status.updated_number_scheduled or 0,
         number_misscheduled=status.number_misscheduled,
         number_ready=status.number_ready,
+        number_available=status.number_available or 0,
     )
 
 
@@ -495,7 +480,7 @@ def parse_daemonset_spec(daemonset_spec: client.V1DaemonSetSpec) -> api.DaemonSe
     raise ValueError(f"Unknown strategy type: {daemonset_spec.update_strategy.type}")
 
 
-def daemonset_from_client(
+def daemonset_from_client(  # type:ignore[no-untyped-def]
     daemonset: client.V1DaemonSet, pod_uids=Sequence[api.PodUID]
 ) -> api.DaemonSet:
     return api.DaemonSet(
@@ -534,7 +519,7 @@ def parse_statefulset_spec(statefulset_spec: client.V1StatefulSetSpec) -> api.St
     raise ValueError(f"Unknown strategy type: {statefulset_spec.update_strategy.type}")
 
 
-def statefulset_from_client(
+def statefulset_from_client(  # type:ignore[no-untyped-def]
     statefulset: client.V1StatefulSet, pod_uids=Sequence[api.PodUID]
 ) -> api.StatefulSet:
     return api.StatefulSet(
@@ -549,3 +534,122 @@ def namespace_from_client(namespace: client.V1Namespace) -> api.Namespace:
     return api.Namespace(
         metadata=parse_namespace_metadata(namespace.metadata),
     )
+
+
+def parse_resource_quota_spec(
+    spec: client.V1ResourceQuotaSpec,
+) -> api.ResourceQuotaSpec:
+    # TODO: CMK-10288 add validation logic
+    try:
+        scope_selector = parse_scope_selector(spec.scope_selector)
+        scopes = (
+            [api.QuotaScope(scope) for scope in spec.scopes] if spec.scopes is not None else None
+        )
+    except ValueError:
+        raise NotImplementedError("At least one of the given scopes is not supported")
+
+    return api.ResourceQuotaSpec(
+        hard=api.HardRequirement(
+            memory=parse_resource_requirement("memory", spec.hard),
+            cpu=parse_resource_requirement("cpu", spec.hard),
+        )
+        if spec.hard is not None
+        else None,
+        scope_selector=scope_selector,
+        scopes=scopes,
+    )
+
+
+def parse_resource_requirement(  # type:ignore[no-untyped-def]
+    resource: Literal["memory", "cpu"], hard: Mapping[str, str]
+):
+    # request & limit are only defined once for each requirement. It is possible to double
+    # define them in the yaml file but only one value is taken into account.
+    requirements = {}
+    for requirement, value in hard.items():
+        if resource not in requirement:
+            continue
+        requirement_type = "limit" if "limits" in requirement else "request"
+        requirements[requirement_type] = (
+            parse_frac_prefix(value) if resource == "cpu" else parse_memory(value)
+        )
+
+    if not requirements:
+        return None
+    return api.HardResourceRequirement(**requirements)
+
+
+def parse_scope_selector(
+    scope_selector: Optional[client.V1ScopeSelector],
+) -> Optional[api.ScopeSelector]:
+    if scope_selector is None:
+        return None
+    return api.ScopeSelector(
+        match_expressions=[
+            api.ScopedResourceMatchExpression(
+                operator=match_expression.operator,
+                scope_name=match_expression.scope_name,
+                values=match_expression.values,
+            )
+            for match_expression in scope_selector.match_expressions
+        ]
+    )
+
+
+def resource_quota_from_client(
+    resource_quota: client.V1ResourceQuota,
+) -> Optional[api.ResourceQuota]:
+    """Parse Kubernetes resource quota client object
+
+    * Resource quotas which include the CrossNamespacePodAffinity scope
+    are currently not supported and treated as non existent
+    """
+    try:
+        spec = parse_resource_quota_spec(resource_quota.spec)
+    except NotImplementedError:
+        return None
+
+    return api.ResourceQuota(
+        metadata=parse_metadata(resource_quota.metadata),
+        spec=spec,
+    )
+
+
+WorkloadResource = Union[
+    client.V1Deployment,
+    client.V1ReplicaSet,
+    client.V1DaemonSet,
+    client.V1Job,
+    client.V1CronJob,
+    client.V1ReplicationController,
+    client.V1StatefulSet,
+]
+
+
+def dependent_object_owner_refererences_from_client(
+    dependent: WorkloadResource,
+) -> api.OwnerReferences:
+    return [
+        api.OwnerReference(
+            uid=ref.uid,
+            controller=ref.controller,
+        )
+        for ref in dependent.metadata.owner_references or []
+    ]
+
+
+def parse_object_to_owners(
+    workload_resources_client: Iterable[WorkloadResource],
+    workload_resources_json: Iterable[transform_json.JSONStatefulSet],
+) -> Mapping[str, api.OwnerReferences]:
+    return {
+        workload_resource.metadata.uid: dependent_object_owner_refererences_from_client(
+            workload_resource
+        )
+        for workload_resource in workload_resources_client
+    } | {
+        transform_json.dependent_object_uid_from_json(
+            workload_resource
+        ): transform_json.dependent_object_owner_refererences_from_json(workload_resource)
+        for workload_resource in workload_resources_json
+    }

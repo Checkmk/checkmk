@@ -19,7 +19,7 @@ def inventory_netapp_api_vf_status(info):
 def check_netapp_api_vf_status(item, _no_params, info):
     filer_states = dict(info)
     if item not in filer_states:
-        return
+        return None
 
     state = 0 if filer_states[item] in ["running", "DR backup", "migrating"] else 2
     return state, "State is %s" % filer_states[item]

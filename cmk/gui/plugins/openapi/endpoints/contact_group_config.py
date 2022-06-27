@@ -20,12 +20,12 @@ A contact group object can have the following relations present in `links`:
  * `urn:org.restfulobject/rels:delete` - An endpoint to delete this contact group.
 
 """
+from typing import Any, Mapping
+
 from cmk.utils import version
 
-from cmk.gui import watolib
-from cmk.gui.globals import endpoint
 from cmk.gui.http import Response
-from cmk.gui.logged_in import SuperUserContext
+from cmk.gui.logged_in import SuperUserContext, user
 from cmk.gui.plugins.openapi.endpoints.utils import (
     fetch_group,
     fetch_specific_groups,
@@ -39,6 +39,7 @@ from cmk.gui.plugins.openapi.endpoints.utils import (
 )
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
+    endpoint,
     Endpoint,
     permissions,
     request_schemas,
@@ -48,11 +49,19 @@ from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
 from cmk.gui.watolib.groups import (
     add_group,
     check_modify_group_permissions,
+    delete_group,
     edit_group,
     load_contact_group_information,
 )
 
 PERMISSIONS = permissions.Perm("wato.users")
+
+RW_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.edit"),
+        PERMISSIONS,
+    ]
+)
 
 
 @Endpoint(
@@ -62,10 +71,11 @@ PERMISSIONS = permissions.Perm("wato.users")
     etag="output",
     request_schema=request_schemas.InputContactGroup,
     response_schema=response_schemas.DomainObject,
-    permissions_required=PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
-def create(params):
+def create(params: Mapping[str, Any]) -> Response:
     """Create a contact group"""
+    user.need_permission("wato.edit")
     body = params["body"]
     name = body["name"]
     group_details = {"alias": body.get("alias")}
@@ -82,10 +92,11 @@ def create(params):
     method="post",
     request_schema=request_schemas.BulkInputContactGroup,
     response_schema=response_schemas.DomainObjectCollection,
-    permissions_required=PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
-def bulk_create(params):
+def bulk_create(params: Mapping[str, Any]) -> Response:
     """Bulk create host groups"""
+    user.need_permission("wato.edit")
     body = params["body"]
     entries = body["entries"]
     contact_group_details = prepare_groups("contact", entries)
@@ -104,9 +115,11 @@ def bulk_create(params):
     ".../collection",
     method="get",
     response_schema=response_schemas.LinkedValueDomainObjectCollection,
+    permissions_required=PERMISSIONS,
 )
-def list_group(params):
+def list_group(params: Mapping[str, Any]) -> Response:
     """Show all contact groups"""
+    user.need_permission("wato.users")
     collection = [
         {"id": k, "alias": v["alias"]} for k, v in load_contact_group_information().items()
     ]
@@ -124,7 +137,7 @@ def list_group(params):
     path_params=[NAME_FIELD],
     permissions_required=PERMISSIONS,
 )
-def show(params):
+def show(params: Mapping[str, Any]) -> Response:
     """Show a contact group"""
     name = params["name"]
     group = fetch_group(name, "contact")
@@ -137,15 +150,16 @@ def show(params):
     method="delete",
     path_params=[NAME_FIELD],
     output_empty=True,
-    permissions_required=PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
-def delete(params):
+def delete(params: Mapping[str, Any]) -> Response:
     """Delete a contact group"""
+    user.need_permission("wato.edit")
     name = params["name"]
     check_modify_group_permissions("contact")
     with endpoint.do_not_track_permissions(), SuperUserContext():
         # HACK: We need to supress this, due to lots of irrelevant dashboard permissions
-        watolib.delete_group(name, "contact")
+        delete_group(name, "contact")
     return Response(status=204)
 
 
@@ -157,7 +171,7 @@ def delete(params):
     output_empty=True,
     permissions_required=PERMISSIONS,
 )
-def bulk_delete(params):
+def bulk_delete(params: Mapping[str, Any]) -> Response:
     """Bulk delete contact groups"""
     body = params["body"]
     entries = body["entries"]
@@ -172,7 +186,7 @@ def bulk_delete(params):
         for group_name in entries:
             # We need to supress this, because a lot of dashboard permissions are checked for
             # various reasons.
-            watolib.delete_group(group_name, "contact")
+            delete_group(group_name, "contact")
     return Response(status=204)
 
 
@@ -184,10 +198,11 @@ def bulk_delete(params):
     response_schema=response_schemas.ContactGroup,
     etag="both",
     request_schema=request_schemas.UpdateGroup,
-    permissions_required=PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
-def update(params):
+def update(params: Mapping[str, Any]) -> Response:
     """Update a contact group"""
+    user.need_permission("wato.edit")
     name = params["name"]
     group = fetch_group(name, "contact")
     constructors.require_etag(constructors.etag_of_dict(group))
@@ -204,7 +219,7 @@ def update(params):
     response_schema=response_schemas.DomainObjectCollection,
     permissions_required=PERMISSIONS,
 )
-def bulk_update(params):
+def bulk_update(params: Mapping[str, Any]) -> Response:
     """Bulk update contact groups
 
     Please be aware that when doing bulk updates, it is not possible to prevent the

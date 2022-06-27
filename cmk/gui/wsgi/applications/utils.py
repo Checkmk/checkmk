@@ -14,12 +14,13 @@ from cmk.utils.site import url_prefix
 
 from cmk.gui import login, pages
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
+from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUnauthenticatedException
-from cmk.gui.globals import g, request, response, theme
-from cmk.gui.http import Response
+from cmk.gui.http import request, response, Response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.utils.language_cookie import set_language_cookie
+from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
 
 # TODO
@@ -31,7 +32,7 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
     # authentication modes the Checkmk GUI supports and initializes the logged
     # in user objects.
     @functools.wraps(func)
-    def _call_auth():
+    def _call_auth() -> Response:
         with login.authenticate(request) as authenticated:
             if not authenticated:
                 return _handle_not_authenticated()
@@ -52,7 +53,9 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
             # Update the UI theme with the attribute configured by the user.
             # Returns None on first load
             assert user.id is not None
-            theme.set(cmk.gui.userdb.load_custom_attr(user.id, "ui_theme", lambda x: x))
+            theme.set(
+                cmk.gui.userdb.load_custom_attr(user_id=user.id, key="ui_theme", parser=lambda x: x)
+            )
 
             func()
 
@@ -97,9 +100,9 @@ def _ensure_general_access() -> None:
         )
     )
 
-    if login.auth_type == "cookie":  # type: ignore[has-type]
+    if login.auth_type == "cookie":
         reason.append(
-            _("<p>You have been logged out. Please reload the page " "to re-authenticate.</p>")
+            _("<p>You have been logged out. Please reload the page to re-authenticate.</p>")
         )
         login.del_auth_cookie()
 

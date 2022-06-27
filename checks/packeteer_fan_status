@@ -19,6 +19,7 @@ def check_packeteer_fan_status(item, _no_params, info):
         return 2, "Not OK"
     elif fan_status == "3":
         return 2, "Not present"
+    return None
 
 
 check_info["packeteer_fan_status"] = {

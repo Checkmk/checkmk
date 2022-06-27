@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mode for automatic scan of parents (similar to cmk --scan-parents)"""
 
-from typing import Any, List, NamedTuple, Optional, Type
+from typing import Any, Collection, List, NamedTuple, Optional, Type
 
 from livestatus import SiteId
 
@@ -14,18 +14,20 @@ from cmk.utils.type_defs import HostName
 
 import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job
-import cmk.gui.watolib as watolib
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
-from cmk.gui.globals import active_config, html, request
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.utils import get_hosts_from_checkboxes, mode_registry, WatoMode
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.check_mk_automations import scan_parents
-from cmk.gui.watolib.hosts_and_folders import CREFolder
+from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder
+from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 
 class ParentScanTask(NamedTuple):
@@ -54,14 +56,14 @@ class ParentScanSettings(NamedTuple):
 
 # TODO: This job should be executable multiple times at once
 @gui_background_job.job_registry.register
-class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
+class ParentScanBackgroundJob(WatoBackgroundJob):
     job_prefix = "parent_scan"
 
     @classmethod
     def gui_title(cls):
         return _("Parent scan")
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             self.job_prefix,
             title=_("Parent scan"),
@@ -70,7 +72,7 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
         )
 
     def _back_url(self):
-        return watolib.Folder.current().url()
+        return Folder.current().url()
 
     def do_execute(self, settings, tasks, job_interface=None):
         self._initialize_statistics()
@@ -172,8 +174,8 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
         settings: ParentScanSettings,
         gateway: Optional[ParentScanResult],
     ) -> None:
-        watolib.Folder.invalidate_caches()
-        folder = watolib.Folder.folder(task.folder_path)
+        Folder.invalidate_caches()
+        folder = Folder.folder(task.folder_path)
 
         parents = self._configure_gateway(task, settings, gateway, folder)
 
@@ -230,10 +232,10 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
 
     def _determine_gateway_folder(self, where: str, folder: CREFolder) -> CREFolder:
         if where == "here":  # directly in current folder
-            return watolib.Folder.current_disk_folder()
+            return Folder.current_disk_folder()
 
         if where == "subfolder":
-            current = watolib.Folder.current_disk_folder()
+            current = Folder.current_disk_folder()
 
             # Put new gateways in subfolder "Parents" of current
             # folder. Does this folder already exist?
@@ -281,14 +283,14 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
 @mode_registry.register
 class ModeParentScan(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "parentscan"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts", "parentscan"]
 
-    def title(self):
+    def title(self) -> str:
         return _("Parent scan")
 
     @classmethod
@@ -350,7 +352,7 @@ class ModeParentScan(WatoMode):
         """all host in this folder, probably recursively"""
         tasks = []
         for host in self._recurse_hosts(
-            watolib.Folder.current(), self._settings.recurse, self._settings.select
+            Folder.current(), self._settings.recurse, self._settings.select
         ):
             tasks.append(ParentScanTask(host.site_id(), host.folder().path(), host.name()))
         return tasks
@@ -377,7 +379,7 @@ class ModeParentScan(WatoMode):
                 entries += self._recurse_hosts(subfolder, recurse, select)
         return entries
 
-    def page(self):
+    def page(self) -> None:
         job_status_snapshot = self._job.get_status_snapshot()
         if job_status_snapshot.is_active():
             html.show_message(
@@ -519,7 +521,7 @@ class ModeParentScan(WatoMode):
             "where",
             "subfolder",
             self._settings.where == "subfolder",
-            _("in the subfolder <b>%s/Parents</b>") % watolib.Folder.current_disk_folder().title(),
+            _("in the subfolder <b>%s/Parents</b>") % Folder.current_disk_folder().title(),
         )
 
         html.br()
@@ -527,7 +529,7 @@ class ModeParentScan(WatoMode):
             "where",
             "here",
             self._settings.where == "here",
-            _("directly in the folder <b>%s</b>") % watolib.Folder.current_disk_folder().title(),
+            _("directly in the folder <b>%s</b>") % Folder.current_disk_folder().title(),
         )
         html.br()
         html.radiobutton(

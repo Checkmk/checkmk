@@ -8,7 +8,7 @@ from tests.testlib import CMKWebSession
 from tests.testlib.site import Site
 
 
-def test_01_login_and_logout(site: Site):
+def test_01_login_and_logout(site: Site) -> None:
     web = CMKWebSession(site)
 
     r = web.get("wato.py?mode=globalvars", allow_redirect_to_login=True)

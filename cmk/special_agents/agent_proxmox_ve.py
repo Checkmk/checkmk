@@ -25,6 +25,7 @@ information about VMs and nodes:
 import logging
 import re
 from datetime import datetime, timedelta
+from json import JSONDecodeError
 from pathlib import Path
 from typing import Any, Dict, Iterable, Mapping, MutableMapping, Optional, Sequence, Tuple, Union
 
@@ -54,7 +55,7 @@ LogCacheFilePath = Path(tmp_dir) / "special_agents" / "agent_proxmox_ve"
 def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
     """parse command line arguments and return argument object"""
     parser = create_default_argument_parser(description=__doc__)
-    parser.add_argument("--timeout", "-t", type=int, default=20, help="API call timeout")
+    parser.add_argument("--timeout", "-t", type=int, default=50, help="API call timeout")
     parser.add_argument("--port", type=int, default=8006, help="IPv4 port to connect to")
     parser.add_argument("--username", "-u", type=str, help="username for connection")
     parser.add_argument("--password", "-p", type=str, help="password for connection")
@@ -153,7 +154,7 @@ class BackupTask:
         )
 
     @staticmethod
-    def _extract_logs(
+    def _extract_logs(  # pylint: disable=too-many-branches
         logs: Iterable[str],
         strict: bool,
     ) -> Tuple[Mapping[str, BackupInfo], Iterable[Tuple[int, str]]]:
@@ -238,9 +239,15 @@ class BackupTask:
                 return match[0]
             return None
 
-        def duration_from_string(string: str) -> int:
-            duration_dt = datetime.strptime(string, "%H:%M:%S")
-            return duration_dt.hour * 3600 + duration_dt.minute * 60 + duration_dt.second
+        def duration_from_string(string: str) -> float:
+            """Return number of seconds from a string like HH:MM:SS
+            >>> duration_from_string("21:43:44")
+            78224.0
+            >>> duration_from_string("44:00:44")
+            158444.0
+            """
+            h, m, s = (int(x) for x in string.split(":"))
+            return timedelta(hours=h, minutes=m, seconds=s).total_seconds()
 
         for linenr, line in enumerate(logs):
             try:
@@ -677,7 +684,7 @@ class ProxmoxVeSession:
         def create_session() -> requests.Session:
             session = requests.Session()
             session.auth = self.HTTPAuth(self._base_url, credentials, timeout, verify_ssl)
-            session.cookies = requests.cookies.cookiejar_from_dict(  # type: ignore
+            session.cookies = requests.cookies.cookiejar_from_dict(
                 {"PVEAuthCookie": session.auth.pve_auth_cookie}
             )
             session.headers["Connection"] = "keep-alive"
@@ -700,7 +707,7 @@ class ProxmoxVeSession:
     def __enter__(self) -> Any:
         return self
 
-    def __exit__(self, *args: Any, **kwargs: Any) -> None:
+    def __exit__(self, *exc_info: object) -> None:
         self.close()
 
     def close(self) -> None:
@@ -722,7 +729,10 @@ class ProxmoxVeSession:
 
     def get_api_element(self, path: str) -> Any:
         """do an API GET request"""
-        response_json = self.get_raw("api2/json/" + path).json()
+        try:
+            response_json = self.get_raw("api2/json/" + path).json()
+        except JSONDecodeError as e:
+            raise RuntimeError("Couldn't parse API element %r" % path) from e
         if "errors" in response_json:
             raise RuntimeError("Could not fetch %r (%r)" % (path, response_json["errors"]))
         return response_json.get("data")
@@ -751,8 +761,8 @@ class ProxmoxVeAPI:
         self._session.__enter__()
         return self
 
-    def __exit__(self, *args: Any, **kwargs: Any) -> None:
-        self._session.__exit__(*args, **kwargs)
+    def __exit__(self, *exc_info: object) -> None:
+        self._session.__exit__(*exc_info)
         self._session.close()
 
     def get(self, path: Union[str, Iterable[str]]) -> Any:

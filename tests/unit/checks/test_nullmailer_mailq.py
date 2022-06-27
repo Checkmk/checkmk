@@ -30,7 +30,7 @@ def _get_from_context(name, context={}):  # pylint: disable=dangerous-default-va
         ),
     ],
 )
-def test_parse_function(info, expected_parsed):
+def test_parse_function(info, expected_parsed) -> None:
     parse_nullmailer_mailq = _get_from_context("parse_nullmailer_mailq")
     queue = _get_from_context("Queue")
     assert parse_nullmailer_mailq(info) == [queue(*p) for p in expected_parsed]
@@ -44,7 +44,7 @@ def test_parse_function(info, expected_parsed):
             (10, 20),
             [
                 (0, "Deferred: 0 mails", [("length", 0, 10, 20)]),
-                (0, "Size: 25.00 B", [("size", 25)]),
+                (0, "Size: 25 B", [("size", 25)]),
             ],
         ),
         (
@@ -56,7 +56,7 @@ def test_parse_function(info, expected_parsed):
                     "Deferred: 12 mails (warn/crit at 10 mails/20 mails)",
                     [("length", 12, 10, 20)],
                 ),
-                (0, "Size: 25.00 B", [("size", 25)]),
+                (0, "Size: 25 B", [("size", 25)]),
             ],
         ),
         # Other queues have no metrics:
@@ -65,12 +65,12 @@ def test_parse_function(info, expected_parsed):
             (10, 20),
             [
                 (2, "Other queue: 123 mails (warn/crit at 10 mails/20 mails)"),
-                (0, "Size: 1.00 kB"),
+                (0, "Size: 1.00 KiB"),
             ],
         ),
     ],
 )
-def test_check_single_queue(raw_queue, levels_length, expected_result):
+def test_check_single_queue(raw_queue, levels_length, expected_result) -> None:
     check_single_queue = _get_from_context("_check_single_queue")
     queue = _get_from_context("Queue")
     assertCheckResultsEqual(
@@ -86,14 +86,14 @@ def test_check_single_queue(raw_queue, levels_length, expected_result):
             [(25, 0, "deferred"), (25, 0, "failed")],
             [
                 (0, "Deferred: 0 mails", [("length", 0, 10, 20)]),
-                (0, "Size: 25.00 B", [("size", 25)]),
+                (0, "Size: 25 B", [("size", 25)]),
                 (0, "Failed: 0 mails", []),
-                (0, "Size: 25.00 B", []),
+                (0, "Size: 25 B", []),
             ],
         ),
     ],
 )
-def test_check_nullmailer_mailq(raw_queues, expected_result):
+def test_check_nullmailer_mailq(raw_queues, expected_result) -> None:
     dummy_item = ""
     params = _get_from_context("nullmailer_mailq_default_levels")
     check_nullmailer_mailq = _get_from_context("check_nullmailer_mailq")

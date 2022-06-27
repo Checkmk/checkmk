@@ -5,17 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence
 
 import livestatus
 from livestatus import SiteId
 
 import cmk.gui.sites as sites
-from cmk.gui.globals import html, request
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.views.commands import PermissionSectionAction
 from cmk.gui.plugins.views.utils import (
+    Cell,
     cmp_simple_number,
     Command,
     command_registry,
@@ -29,21 +32,23 @@ from cmk.gui.plugins.views.utils import (
     Sorter,
     sorter_registry,
 )
+from cmk.gui.type_defs import ColumnName, Row, SingleInfos
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.view_utils import CellSpec
 
 
 @data_source_registry.register
 class DataSourceCrashReports(DataSourceLivestatus):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "crash_reports"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Crash reports")
 
     @property
-    def infos(self):
+    def infos(self) -> SingleInfos:
         return ["crash"]
 
     @property
@@ -104,7 +109,7 @@ class CrashReportsRowTable(RowTable):
             headers = ["crash_info"]
             columns = ["file:crash_info:%s/crash.info" % livestatus.lqencode(file_path)]
 
-            if crash_info["crash_type"] == "check":
+            if crash_info["crash_type"] in ("check", "section"):
                 headers += ["agent_output", "snmp_info"]
                 columns += [
                     "file:agent_output:%s/agent_output" % livestatus.lqencode(file_path),
@@ -150,7 +155,7 @@ class CrashReportsRowTable(RowTable):
 @painter_registry.register
 class PainterCrashIdent(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "crash_ident"
 
     def title(self, cell):
@@ -160,10 +165,10 @@ class PainterCrashIdent(Painter):
         return _("ID")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["crash_id"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         url = makeuri_contextless(
             request,
             [
@@ -172,13 +177,13 @@ class PainterCrashIdent(Painter):
             ],
             filename="crash.py",
         )
-        return (None, html.render_a(row["crash_id"], href=url))
+        return (None, HTMLWriter.render_a(row["crash_id"], href=url))
 
 
 @painter_registry.register
 class PainterCrashType(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "crash_type"
 
     def title(self, cell):
@@ -188,17 +193,17 @@ class PainterCrashType(Painter):
         return _("Type")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["crash_type"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["crash_type"])
 
 
 @painter_registry.register
 class PainterCrashTime(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "crash_time"
 
     def title(self, cell):
@@ -208,21 +213,21 @@ class PainterCrashTime(Painter):
         return _("Time")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["crash_time"]
 
     @property
     def painter_options(self):
         return ["ts_format", "ts_date"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_age(row["crash_time"], has_been_checked=True, bold_if_younger_than=3600)
 
 
 @painter_registry.register
 class PainterCrashVersion(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "crash_version"
 
     def title(self, cell):
@@ -232,17 +237,17 @@ class PainterCrashVersion(Painter):
         return _("Version")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["crash_version"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["crash_version"])
 
 
 @painter_registry.register
 class PainterCrashException(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "crash_exception"
 
     def title(self, cell):
@@ -252,25 +257,25 @@ class PainterCrashException(Painter):
         return _("Exc.")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["crash_exc_type", "crash_exc_value"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, "%s: %s" % (row["crash_exc_type"], row["crash_exc_value"]))
 
 
 @sorter_registry.register
 class SorterCrashTime(Sorter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "crash_time"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Crash time")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["crash_time"]
 
     def cmp(self, r1, r2):
@@ -291,15 +296,15 @@ PermissionActionDeleteCrashReport = permission_registry.register(
 @command_registry.register
 class CommandDeleteCrashReports(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "delete_crash_reports"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Delete crash reports")
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionDeleteCrashReport
 
     @property
@@ -312,7 +317,7 @@ class CommandDeleteCrashReports(Command):
             ungettext("report", "reports", len_action_rows),
         )
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.button("_delete_crash_reports", _("Delete"))
 
     def _action(

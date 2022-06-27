@@ -25,7 +25,7 @@ INFO_MISSING_TIME_SYSLOG = deepcopy(INFO)
 INFO_MISSING_TIME_SYSLOG[4][3] = ""
 
 
-def test_fileinfo_min_max_age_levels():
+def test_fileinfo_min_max_age_levels() -> None:
     # This test has the following purpose:
     # For each file attr (size or age) the levels 'min*', 'max*' are evaluated.
     # 'min*' is evaluated first and if 'max*' returns state '0' (eg. not set)
@@ -142,7 +142,7 @@ def test_fileinfo_min_max_age_levels():
         ),
     ],
 )
-def test_check_fileinfo_group_no_files(info, parsed, discovery_params, expected_result):
+def test_check_fileinfo_group_no_files(info, parsed, discovery_params, expected_result) -> None:
     """Test that the check returns an OK status when there are no files."""
     assert fileinfo_utils.parse_fileinfo(info) == parsed
     assert not list(fileinfo_plugin.discovery_fileinfo_groups(discovery_params, parsed))
@@ -214,7 +214,7 @@ def test_check_fileinfo_group_no_files(info, parsed, discovery_params, expected_
         ),
     ],
 )
-def test_check_fileinfo_group_no_matching_files(info, parsed, expected_result):
+def test_check_fileinfo_group_no_matching_files(info, parsed, expected_result) -> None:
     """Test that the check returns an OK status if there are no matching files."""
 
     actual_parsed = fileinfo_utils.parse_fileinfo(info)
@@ -348,7 +348,7 @@ def test_check_fileinfo_group_no_matching_files(info, parsed, expected_result):
         ),
     ],
 )
-def test_check_fileinfo_group_patterns(info, group_pattern, expected_result):
+def test_check_fileinfo_group_patterns(info, group_pattern, expected_result) -> None:
     assert expected_result == list(
         fileinfo_plugin.check_fileinfo_groups(
             "banana",
@@ -385,7 +385,7 @@ def test_check_fileinfo_group_patterns(info, group_pattern, expected_result):
         ),
     ],
 )
-def test_check_fileinfo_group_patterns_host_extra_conf(item, params, expected_result):
+def test_check_fileinfo_group_patterns_host_extra_conf(item, params, expected_result) -> None:
     assert (
         list(
             fileinfo_plugin.check_fileinfo_groups(
@@ -507,7 +507,7 @@ def test_check_fileinfo_group_patterns_host_extra_conf(item, params, expected_re
         ),
     ],
 )
-def test_fileinfo_discovery(info, params, expected_result):
+def test_fileinfo_discovery(info, params, expected_result) -> None:
     section = fileinfo_utils.parse_fileinfo(info)
 
     discovery_result = fileinfo_utils.discovery_fileinfo(params, section)
@@ -718,7 +718,7 @@ def test_fileinfo_discovery(info, params, expected_result):
         ([], "fil1234", {}, [Result(state=State.UNKNOWN, summary="Missing reference timestamp")]),
     ],
 )
-def test_fileinfo_check(info, item, params, expected_result):
+def test_fileinfo_check(info, item, params, expected_result) -> None:
     section = fileinfo_utils.parse_fileinfo(info)
 
     check_result = fileinfo_plugin.check_fileinfo(item, params, section)
@@ -770,7 +770,7 @@ def test_fileinfo_check(info, item, params, expected_result):
         ),
     ],
 )
-def test_fileinfo_group_discovery(info, params, expected_result):
+def test_fileinfo_group_discovery(info, params, expected_result) -> None:
     section = fileinfo_utils.parse_fileinfo(info)
 
     discovery_result = fileinfo_utils.discovery_fileinfo_groups(params, section)
@@ -907,7 +907,7 @@ def test_fileinfo_group_discovery(info, params, expected_result):
     ],
 )
 @freeze_time("2021-07-12 12:00")
-def test_fileinfo_groups_check(info, item, params, expected_result):
+def test_fileinfo_groups_check(info, item, params, expected_result) -> None:
     section = fileinfo_utils.parse_fileinfo(info)
 
     check_result = fileinfo_plugin.check_fileinfo_groups(item, params, section)

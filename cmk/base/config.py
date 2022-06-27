@@ -168,8 +168,38 @@ class RRDConfig(TypedDict):
 
 CheckContext = Dict[str, Any]
 GetCheckApiContext = Callable[[], Dict[str, Any]]
+GetInventoryApiContext = Callable[[], Dict[str, Any]]
 CheckIncludes = List[str]
-DiscoveryCheckParameters = Dict
+
+
+class CheckmkCheckParameters(NamedTuple):
+    enabled: bool
+
+
+class DiscoveryCheckParameters(NamedTuple):
+    commandline_only: bool
+    check_interval: int
+    severity_new_services: int
+    severity_vanished_services: int
+    severity_new_host_labels: int
+    rediscovery: dict[str, Any]  # TODO: improve this
+
+    @classmethod
+    def commandline_only_defaults(cls) -> "DiscoveryCheckParameters":
+        return cls.default()._replace(commandline_only=True)
+
+    @classmethod
+    def default(cls) -> "DiscoveryCheckParameters":
+        """Support legacy single value global configurations. Otherwise return the defaults"""
+        return cls(
+            commandline_only=inventory_check_interval is None,
+            check_interval=int(inventory_check_interval or 0),
+            severity_new_services=int(inventory_check_severity),
+            severity_vanished_services=0,
+            severity_new_host_labels=1,
+            # TODO: defaults are currently all over the place :-(
+            rediscovery={},
+        )
 
 
 class SpecialAgentConfiguration(NamedTuple):
@@ -495,12 +525,12 @@ def _transform_mgmt_config_vars_from_140_to_150() -> None:
     # are 'management_protocol' and 'management_snmp_community'.
     # Clean this up one day!
     for hostname, attributes in host_attributes.items():
-        for name, var in [
-            ("management_protocol", management_protocol),
-            ("management_snmp_community", management_snmp_credentials),
-        ]:
-            if attributes.get(name):
-                var.setdefault(hostname, attributes[name])
+        if attributes.get("management_protocol"):
+            management_protocol.setdefault(hostname, attributes["management_protocol"])
+        if attributes.get("management_snmp_community"):
+            management_snmp_credentials.setdefault(
+                hostname, attributes["management_snmp_community"]
+            )
 
 
 def _transform_plugin_names_from_160_to_170(global_dict: Dict[str, Any]) -> None:
@@ -898,7 +928,7 @@ def strip_tags(tagged_hostlist: List[str]) -> List[HostName]:
 def _get_shadow_hosts() -> ShadowHosts:
     try:
         # Only available with CEE
-        return shadow_hosts  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        return shadow_hosts  # type: ignore[name-defined]
     except NameError:
         return {}
 
@@ -1083,6 +1113,9 @@ _old_service_descriptions: Mapping[
     "liebert_bat_temp": lambda item: (False, "Battery Temp"),
     "logwatch": "LOG %s",
     "logwatch_groups": "LOG %s",
+    "megaraid_bbu": "RAID Adapter/BBU %s",
+    "megaraid_pdisks": "RAID PDisk Adapt/Enc/Sl %s",
+    "megaraid_ldisks": "RAID Adapter/LDisk %s",
     "mem_used": "Memory used",
     "mem_win": "Memory and pagefile",
     "mknotifyd": "Notification Spooler %s",
@@ -1525,20 +1558,6 @@ def load_all_agent_based_plugins(
 
     errors.extend(load_checks(get_check_api_context, filelist))
 
-    # LEGACY INVENTORY PLUGINS
-    # unfortunately, inventory_plugins will import cmk.base.config,
-    # so we have to use a local import for now.
-    # We could do further refactoring to resolve this, but the time would probably
-    # be spent better migrating the legacy inventory plugins to the new API...
-    import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
-
-    errors.extend(
-        inventory_plugins.load_legacy_inventory_plugins(
-            get_check_api_context,
-            agent_based_register.inventory_plugins_legacy.get_inventory_context,
-        )
-    )
-
     _all_checks_loaded = True
 
     return errors
@@ -1581,7 +1600,10 @@ def get_plugin_paths(*dirs: str) -> List[str]:
 # NOTE: The given file names should better be absolute, otherwise
 # we depend on the current working directory, which is a bad idea,
 # especially in tests.
-def load_checks(get_check_api_context: GetCheckApiContext, filelist: List[str]) -> List[str]:
+def load_checks(  # pylint: disable=too-many-branches
+    get_check_api_context: GetCheckApiContext,
+    filelist: List[str],
+) -> List[str]:
     cmk_global_vars = set(get_variable_names())
 
     loaded_files: Set[str] = set()
@@ -1984,7 +2006,7 @@ def get_check_context(check_plugin_name: CheckPluginNameStr) -> CheckContext:
 
 # FIXME: Clear / unset all legacy variables to prevent confusions in other code trying to
 # use the legacy variables which are not set by newer checks.
-def convert_check_info() -> None:
+def convert_check_info() -> None:  # pylint: disable=too-many-branches
     check_info_defaults: CheckInfo = {
         "check_function": None,
         "inventory_function": None,
@@ -2944,60 +2966,35 @@ class HostConfig:
         self._explicit_attributes_lookup = cache
         return self._explicit_attributes_lookup
 
-    @property
     def discovery_check_parameters(self) -> DiscoveryCheckParameters:
-        """Compute the parameters for the discovery check for a host
+        """Compute the parameters for the discovery check for a host"""
+        service_discovery_name = self._config_cache.service_discovery_name()
+        if self.is_ping_host or service_ignored(self.hostname, None, service_discovery_name):
+            return DiscoveryCheckParameters.commandline_only_defaults()
 
-        Note:
-        - If a rule is configured to disable the check, this function returns None.
-        - If there is no rule configured, a value is constructed from the legacy global
-          settings and will be returned. In this structure a "check_interval" of None
-          means the check should not be added.
-        """
         entries = self._config_cache.host_extra_conf(self.hostname, periodic_discovery)
         if not entries:
-            return self.default_discovery_check_parameters()
+            return DiscoveryCheckParameters.default()
 
-        return entries[0]
+        if (entry := entries[0]) is None or not (check_interval := entry["check_interval"]):
+            return DiscoveryCheckParameters.commandline_only_defaults()
 
-    def default_discovery_check_parameters(self) -> DiscoveryCheckParameters:
-        """Support legacy single value global configurations. Otherwise return the defaults"""
-        return {
-            "check_interval": inventory_check_interval,
-            "severity_unmonitored": inventory_check_severity,
-            "severity_vanished": 0,
-        }
+        return DiscoveryCheckParameters(
+            commandline_only=False,
+            check_interval=int(check_interval),
+            severity_new_services=int(entry["severity_unmonitored"]),
+            severity_vanished_services=int(entry["severity_vanished"]),
+            severity_new_host_labels=int(entry.get("severity_new_host_label", 1)),
+            rediscovery=entry.get("inventory_rediscovery", {}),
+        )
 
-    def add_service_discovery_check(
-        self, params: Optional[Dict[str, Any]], service_discovery_name: str
-    ) -> bool:
-        if not params:
-            return False
-
-        if not params["check_interval"]:
-            return False
-
-        if service_ignored(self.hostname, None, service_discovery_name):
-            return False
-
-        if self.is_ping_host:
-            return False
-
-        return True
+    def checkmk_check_parameters(self) -> CheckmkCheckParameters:
+        return CheckmkCheckParameters(enabled=not self.is_ping_host)
 
     def inventory_parameters(self, ruleset_name: RuleSetName) -> Dict:
         return self._config_cache.host_extra_conf_merged(
             self.hostname, inv_parameters.get(str(ruleset_name), [])
         )
-
-    @property
-    def inventory_export_hooks(self) -> List[Tuple[str, Dict]]:
-        hooks: List[Tuple[str, Dict]] = []
-        for hookname, ruleset in sorted(inv_exports.items(), key=lambda x: x[0]):
-            entries = self._config_cache.host_extra_conf(self.hostname, ruleset)
-            if entries:
-                hooks.append((hookname, entries[0]))
-        return hooks
 
     def notification_plugin_parameters(self, plugin_name: CheckPluginNameStr) -> Dict:
         return self._config_cache.host_extra_conf_merged(
@@ -3032,15 +3029,12 @@ class HostConfig:
         return self._config_cache.host_extra_conf(self.hostname, custom_checks)
 
     @property
-    def static_checks(
+    def enforced_services_table(
         self,
     ) -> Sequence[Tuple[RulesetName, CheckPluginName, Item, TimespecificParameterSet]]:
-        """Returns a table of all "manual checks" configured for this host"""
         matched = []
-        for checkgroup_name in static_checks:
-            for entry in self._config_cache.host_extra_conf(
-                self.hostname, static_checks.get(checkgroup_name, [])
-            ):
+        for checkgroup_name, ruleset in static_checks.items():
+            for entry in self._config_cache.host_extra_conf(self.hostname, ruleset):
                 if len(entry) == 2:
                     checktype, item = entry
                     params = None
@@ -3115,14 +3109,14 @@ class HostConfig:
     @property
     def management_credentials(self) -> Optional[ManagementCredentials]:
         protocol = self.management_protocol
+        credentials_variable: Mapping[HostName, ManagementCredentials]
         default_value: Optional[ManagementCredentials] = None
         if protocol == "snmp":
-            credentials_variable, default_value = (
-                management_snmp_credentials,
-                snmp_default_community,
-            )
+            credentials_variable = management_snmp_credentials
+            default_value = snmp_default_community
         elif protocol == "ipmi":
-            credentials_variable, default_value = management_ipmi_credentials, None
+            credentials_variable = management_ipmi_credentials
+            default_value = None
         elif protocol is None:
             return None
         else:
@@ -3180,11 +3174,11 @@ class HostConfig:
 
     @property
     def host_key(self) -> HostKey:
-        return HostKey(self.hostname, lookup_ip_address(self), SourceType.HOST)
+        return HostKey(self.hostname, SourceType.HOST)
 
     @property
     def host_key_mgmt(self) -> HostKey:
-        return HostKey(self.hostname, self.management_address, SourceType.MANAGEMENT)
+        return HostKey(self.hostname, SourceType.MANAGEMENT)
 
     @property
     def additional_ipaddresses(self) -> Tuple[List[HostAddress], List[HostAddress]]:
@@ -3324,7 +3318,7 @@ class HostConfig:
 def lookup_mgmt_board_ip_address(host_config: HostConfig) -> Optional[HostAddress]:
     mgmt_address = host_config.management_address
     try:
-        mgmt_ipa: Optional[HostAddress] = HostAddress(ipaddress.ip_address(mgmt_address))
+        mgmt_ipa = None if mgmt_address is None else HostAddress(ipaddress.ip_address(mgmt_address))
     except (ValueError, TypeError):
         mgmt_ipa = None
 
@@ -4070,21 +4064,23 @@ class ConfigCache:
         service_descr: ServiceName,
     ) -> Sequence[HostKey]:
         """Returns the node keys if a service is clustered, otherwise an empty sequence"""
-        node_configs = [
-            self.get_host_config(nodename)
-            for nodename in (host_config.nodes or ())
-            if host_config.hostname == self.host_of_clustered_service(nodename, service_descr)
-        ]
+        used_nodes = (
+            [
+                nn
+                for nn in (host_config.nodes or ())
+                if host_config.hostname == self.host_of_clustered_service(nn, service_descr)
+            ]
+            or host_config.nodes
+            or ()
+        )
+
         return [
             HostKey(
                 nc.hostname,
-                # I am not sure about management interfaces on clusters, but let's be consistent.
-                nc.management_address
-                if source_type is SourceType.MANAGEMENT
-                else lookup_ip_address(nc),
                 source_type,
             )
-            for nc in node_configs
+            for nodename in used_nodes
+            if (nc := self.get_host_config(nodename))
         ]
 
     def get_piggybacked_hosts_time_settings(
@@ -4144,7 +4140,9 @@ class CEEConfigCache(ConfigCache):
     def recurring_downtimes_of_service(
         self, hostname: HostName, description: ServiceName
     ) -> List[RecurringDowntime]:
-        return self.service_extra_conf(hostname, description, service_recurring_downtimes)  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        return self.service_extra_conf(
+            hostname, description, service_recurring_downtimes  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        )
 
     def flap_settings_of_service(
         self, hostname: HostName, description: ServiceName
@@ -4165,7 +4163,9 @@ class CEEConfigCache(ConfigCache):
         )
 
     def state_translation_of_service(self, hostname: HostName, description: ServiceName) -> Dict:
-        entries = self.service_extra_conf(hostname, description, service_state_translation)  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        entries = self.service_extra_conf(
+            hostname, description, service_state_translation  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        )
 
         spec: Dict = {}
         for entry in entries[::-1]:
@@ -4254,11 +4254,16 @@ class CEEHostConfig(HostConfig):
 
     @property
     def recurring_downtimes(self) -> List[RecurringDowntime]:
-        return self._config_cache.host_extra_conf(self.hostname, host_recurring_downtimes)  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        return self._config_cache.host_extra_conf(
+            self.hostname,
+            host_recurring_downtimes,  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        )
 
     @property
     def flap_settings(self) -> Tuple[float, float, float]:
-        values = self._config_cache.host_extra_conf(self.hostname, cmc_host_flap_settings)  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        values = self._config_cache.host_extra_conf(
+            self.hostname, cmc_host_flap_settings  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        )
         if not values:
             return cmc_flap_settings  # type: ignore[name-defined] # pylint: disable=undefined-variable
 
@@ -4267,7 +4272,8 @@ class CEEHostConfig(HostConfig):
     @property
     def log_long_output(self) -> bool:
         entries = self._config_cache.host_extra_conf(
-            self.hostname, cmc_host_long_output_in_monitoring_history  # type: ignore[name-defined] # type: ignore[name-defined] # pylint: disable=undefined-variable
+            self.hostname,
+            cmc_host_long_output_in_monitoring_history,  # type: ignore[name-defined] # pylint: disable=undefined-variable
         )
         if not entries:
             return False
@@ -4275,7 +4281,9 @@ class CEEHostConfig(HostConfig):
 
     @property
     def state_translation(self) -> Dict:
-        entries = self._config_cache.host_extra_conf(self.hostname, host_state_translation)  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        entries = self._config_cache.host_extra_conf(
+            self.hostname, host_state_translation  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        )
 
         spec: Dict = {}
         for entry in entries[::-1]:
@@ -4286,7 +4294,9 @@ class CEEHostConfig(HostConfig):
     def smartping_settings(self) -> Dict:
         settings = {"timeout": 2.5}
         settings.update(
-            self._config_cache.host_extra_conf_merged(self.hostname, cmc_smartping_settings)  # type: ignore[name-defined] # pylint: disable=undefined-variable
+            self._config_cache.host_extra_conf_merged(
+                self.hostname, cmc_smartping_settings  # type: ignore[name-defined] # pylint: disable=undefined-variable
+            )
         )
         return settings
 

@@ -21,9 +21,10 @@ from cmk.gui.config import get_default_config, make_config_object
 from cmk.gui.context import AppContext, RequestContext
 from cmk.gui.ctx_stack import app_stack, request_stack
 from cmk.gui.display_options import DisplayOptions
-from cmk.gui.globals import PrependURLFilter
-from cmk.gui.htmllib import html
+from cmk.gui.htmllib.html import HTMLGenerator
 from cmk.gui.logged_in import LoggedInNobody
+from cmk.gui.utils.logging import PrependURLFilter
+from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.output_funnel import OutputFunnel
 
 
@@ -42,11 +43,11 @@ def mock_livestatus(
     if with_html:
         html_obj = None
     else:
-        html_obj = html(
+        html_obj = HTMLGenerator(
             request=req,
-            response=resp,
             output_funnel=OutputFunnel(resp),
             output_format="html",
+            mobile=is_mobile(req, resp),
         )
     if with_context:
         app_context = AppContext(None, stack=app_stack())

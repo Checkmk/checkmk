@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Sequence, Union
+from typing import Final, Sequence, Union
 
 import pytest
 from pytest_mock.plugin import MockerFixture
@@ -13,7 +13,7 @@ from cmk.utils.type_defs import CheckPluginName
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.windows_updates import parse_windows_updates, Section
 
-SECTION = Section(
+SECTION_OK: Final = Section(
     reboot_required=False,
     important_updates=[
         "Windows XP Service Pack 3 (KB936929)",
@@ -28,25 +28,46 @@ SECTION = Section(
         " Framework 3.5-Produktfamilie (KB951847) x86",
     ],
     forced_reboot=None,
+    failed=None,
 )
 
 
-OUTPUT = """<<<windows_updates>>>
+SECTION_FAILED: Final = Section(
+    reboot_required=False,
+    important_updates=[],
+    optional_updates=[],
+    forced_reboot=None,
+    failed="The text from the windows_update.vbs, second line!",
+)
+
+
+OUTPUT_OK = """<<<windows_updates>>>
 0 2 5
 Windows XP Service Pack 3 (KB936929); Windows-Tool zum Entfernen sch�dlicher Software - M�rz 2011 (KB890830)
 Update f�r WMDRM-f�hige Medienplayer (KB891122); Windows Media Player 11; Windows Search 4.0 f�r Windows XP (KB940157); Microsoft Base Smartcard-Kryptografiedienstanbieter-Paket: x86 (KB909520); Update f�r die Microsoft .NET Framework 3.5 Service Pack 1- und .NET Framework 3.5-Produktfamilie (KB951847) x86
 """
 
+OUTPUT_FAILED: Final = """<<<windows_updates>>>
+x x x
+The text from the windows_update.vbs, second line!
+"""
 
-def test_parse_windows_updates() -> None:
-    assert parse_windows_updates([x.split() for x in OUTPUT.splitlines()[1:]]) == SECTION
+
+def test_parse_windows_updates_ok() -> None:
+    assert parse_windows_updates([x.split() for x in OUTPUT_OK.splitlines()[1:]]) == SECTION_OK
+
+
+def test_parse_windows_updates_failed() -> None:
+    assert (
+        parse_windows_updates([x.split() for x in OUTPUT_FAILED.splitlines()[1:]]) == SECTION_FAILED
+    )
 
 
 def test_discover_windows_updates(fix_register) -> None:
     discover_windows_updates = fix_register.check_plugins[
         CheckPluginName("windows_updates")
     ].discovery_function
-    assert list(discover_windows_updates(section=SECTION)) == [Service()]
+    assert list(discover_windows_updates(section=SECTION_OK)) == [Service()]
 
 
 @pytest.fixture(name="check_windows_updates")
@@ -54,7 +75,7 @@ def check_windows_updates_fixture(fix_register):
     return fix_register.check_plugins[CheckPluginName("windows_updates")].check_function
 
 
-def test_check_windows_updates(check_windows_updates) -> None:
+def test_check_windows_updates_ok(check_windows_updates) -> None:
     assert list(
         check_windows_updates(
             params=dict(
@@ -62,7 +83,7 @@ def test_check_windows_updates(check_windows_updates) -> None:
                 levels_optional=(1, 2),
                 levels_lower_forced_reboot=(604800, 172800),
             ),
-            section=SECTION,
+            section=SECTION_OK,
         )
     ) == [
         Result(state=State.CRIT, summary="Important: 2 (warn/crit at 1/2)"),
@@ -76,12 +97,32 @@ def test_check_windows_updates(check_windows_updates) -> None:
     ]
 
 
+def test_check_windows_updates_failed(check_windows_updates) -> None:
+    assert list(
+        check_windows_updates(
+            params=dict(
+                levels_important=(1, 2),
+                levels_optional=(1, 2),
+                levels_lower_forced_reboot=(604800, 172800),
+            ),
+            section=SECTION_FAILED,
+        )
+    ) == [
+        Result(state=State.CRIT, summary=f"({SECTION_FAILED.failed})"),
+        Result(state=State.OK, summary="Important: 0"),
+        Metric("important", 0.0, levels=(1.0, 2.0)),
+        Result(state=State.OK, summary="Optional: 0"),
+        Metric("optional", 0.0, levels=(1.0, 2.0)),
+    ]
+
+
 def test_reboot_required(check_windows_updates) -> None:
     section = Section(
         reboot_required=True,
         important_updates=[],
         optional_updates=[],
         forced_reboot=None,
+        failed=None,
     )
     assert list(
         check_windows_updates(
@@ -147,6 +188,7 @@ def test_time_until_force_reboot(
         important_updates=[],
         optional_updates=[],
         forced_reboot=reboot_time,
+        failed=None,
     )
     assert (
         list(

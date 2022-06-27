@@ -10,13 +10,18 @@
 #include "common/wtools_runas.h"
 #include "common/wtools_user_control.h"
 #include "test_tools.h"
+using namespace std::chrono_literals;
+using namespace std::string_literals;
 
 namespace wtools::runas {  // to become friendly for cma::cfg classes
 
 static bool WaitForExit(uint32_t pid) {
-    for (int i = 0; i < 300; i++) {
+    for (int i = 0; i < 100; i++) {
         auto [code, error] = GetProcessExitCode(pid);
-        if (code == 0) return true;
+        if (code == 0) {
+            return true;
+        }
+        fmt::print(" Code = {}, error = {}\n", code, error);
         cma::tools::sleep(100);
     }
     return false;
@@ -37,8 +42,6 @@ static std::string ReadFromHandle(HANDLE h) {
 }
 
 TEST(WtoolsRunAs, NoUser_Integration) {
-    using namespace std::chrono_literals;
-    using namespace std::string_literals;
     cma::OnStartTest();
     auto [in, out] = tst::CreateInOut();
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
@@ -47,24 +50,20 @@ TEST(WtoolsRunAs, NoUser_Integration) {
                         "@echo %USERNAME%\n"
                         "@powershell  Start-Sleep -Milliseconds 150\n"
                         "@echo marker %1");
-    //
-    // test();
-    {
-        wtools::AppRunner ar;
-        auto ret = ar.goExecAsJob((in / "runc.cmd 1").wstring());
-        EXPECT_TRUE(ret);
-        ASSERT_TRUE(WaitForExit(ar.processId()));
-        auto data = ReadFromHandle(ar.getStdioRead());
-        ASSERT_TRUE(!data.empty());
-        EXPECT_EQ(cma::tools::win::GetEnv("USERNAME"s) + "\r\nmarker 1\r\n",
-                  data);
-    }
+    wtools::AppRunner ar;
+    auto ret = ar.goExecAsJob((in / "runc.cmd 1").wstring());
+    EXPECT_TRUE(ret);
+    ASSERT_TRUE(WaitForExit(ar.processId()));
+    auto data = ReadFromHandle(ar.getStdioRead());
+    ASSERT_TRUE(!data.empty());
+    EXPECT_EQ(cma::tools::win::GetEnv("USERNAME"s) + "\r\nmarker 1\r\n", data);
 }
 
-TEST(WtoolsRunAs, TestUser_Integration) {
+// TODO(sk,au): Check why the test doesn't work on CI
+TEST(WtoolsRunAs, TestUser_IntegrationExt) {
     wtools::uc::LdapControl lc;
     auto pwd = GenerateRandomString(12);
-    std::wstring user = L"a1";
+    std::wstring user = L"a1" + fmt::format(L"_{}", ::GetCurrentProcessId());
     auto status = lc.userAdd(user, pwd);
     if (status == uc::Status::exists) {
         status = lc.changeUserPassword(user, pwd);
@@ -73,8 +72,6 @@ TEST(WtoolsRunAs, TestUser_Integration) {
         GTEST_SKIP() << "failed to set password, maybe not admin?";
     }
 
-    using namespace std::chrono_literals;
-    using namespace std::string_literals;
     cma::OnStartTest();
     auto [in, out] = tst::CreateInOut();
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
@@ -85,10 +82,12 @@ TEST(WtoolsRunAs, TestUser_Integration) {
                         "@echo marker %1");
 
     // Allow Users to use the file
-    wtools::ChangeAccessRights((in / "runc.cmd").wstring().c_str(),
-                               SE_FILE_OBJECT, L"a1", TRUSTEE_IS_NAME,
-                               STANDARD_RIGHTS_ALL | GENERIC_ALL, GRANT_ACCESS,
-                               OBJECT_INHERIT_ACE);
+    // Must be done for testing. Plugin Engine must use own method to allow
+    // execution
+    EXPECT_TRUE(wtools::ChangeAccessRights(
+        (in / "runc.cmd").wstring().c_str(), SE_FILE_OBJECT, user.c_str(),
+        TRUSTEE_IS_NAME, STANDARD_RIGHTS_ALL | GENERIC_ALL, GRANT_ACCESS,
+        OBJECT_INHERIT_ACE));
 
     wtools::AppRunner ar;
 
@@ -105,6 +104,8 @@ TEST(WtoolsRunAs, TestUser_Integration) {
     ASSERT_TRUE(b);
     auto data = ReadFromHandle(ar.getStdioRead());
     ASSERT_TRUE(!data.empty());
-    EXPECT_EQ("a1\r\nmarker 1\r\n", data);
+    EXPECT_EQ("a1"s + fmt::format("_{}", ::GetCurrentProcessId()) +
+                  "\r\nmarker 1\r\n",
+              data);
 }
 }  // namespace wtools::runas

@@ -18,7 +18,7 @@ from cmk.base.plugins.agent_based.esx_vsphere_snapshot import (
 )
 
 
-def test_parse_esx_vsphere_snapshots():
+def test_parse_esx_vsphere_snapshots() -> None:
     assert parse_esx_vsphere_snapshots([['{"time": 0, "state": "On", "name": "foo"}']]) == [
         Snapshot(time=0, state="On", name="foo")
     ]
@@ -53,14 +53,14 @@ def test_parse_esx_vsphere_snapshots():
     ],
 )
 @freeze_time("2020-11-23")
-def test_check_snapshots_summary(section, expected_result, monkeypatch):
+def test_check_snapshots_summary(section, expected_result, monkeypatch) -> None:
     monkeypatch.setattr(time, "localtime", time.gmtime)
     result = check_snapshots_summary({}, section)
     assert list(result) == expected_result
 
 
 @freeze_time("2020-11-23")
-def test_check_snapshots(monkeypatch):
+def test_check_snapshots(monkeypatch) -> None:
     monkeypatch.setattr(time, "localtime", time.gmtime)
     assert list(
         check_snapshots(

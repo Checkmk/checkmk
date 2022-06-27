@@ -4,42 +4,46 @@
 
 [package]
 name = "cmk-agent-ctl"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 structopt = { version = "0.3", features = [ "paw" ] }
-reqwest = { version = "0.11.4", features = ["blocking", "json", "multipart", "native-tls", "__rustls"] }
+reqwest = { version = "0.11", features = ["blocking", "json", "multipart", "native-tls", "__rustls"] }
 serde = { version = "1.0", features = ["derive"] }
-serde_json = { version = "1.0.68" }
-serde_with = { version = "*" }
-uuid = { version = "0.8.2", features = ["v4"] }
-openssl = { version = "*", features = ["vendored"] }
-rustls = { version = "0.20.0" }
-rustls-pemfile = { version = "*" }
-log = { version = "*" }
-flexi_logger = { version = "*" }
-http = { version = "*" }
+serde_json = { version = "1.0" }
+serde_with = { version = "1.13" }
+uuid = { version = "1.0", features = ["v4"] }
+openssl = { version = "0.10", features = ["vendored"] }
+rustls = { version = "0.20" }
+rustls-pemfile = { version = "1.0" }
+log = { version = "0.4" }
+flexi_logger = { version = "0.22" }
+http = { version = "0.2" }
 anyhow = { version = "1.0", features = ["backtrace"]}
-nix = { version = "*" }
-base64 = { version = "*" }
-string_enum = { version = "*" }
-x509-parser = { version = "*" }
-thiserror = { version = "*" }
-tempfile = { version = "*" }
-flate2 = { version = "*" }
-regex = { version = "*" }
-rand = { version = "*" }
-tokio = { version = "1", features = ["full"] }
-tokio-rustls = { version = "*" }
-async-std = { version = "*" }
-ipnet = { version = "*" }
-toml = { version = "*" }
-rpassword = { version = "*" }
-async-trait = { version = "*" }
-os_info = { version = "*" }
+nix = { version = "0.24" }
+string_enum = { version = "0.3" }
+x509-parser = { version = "0.13" }
+tempfile = { version = "3.3" }
+flate2 = { version = "1.0" }
+rand = { version = "0.8" }
+tokio = { version = "1.18", features = ["full"] }
+tokio-rustls = { version = "0.23" }
+async-std = { version = "1.11" }
+ipnet = { version = "2.5" }
+toml = { version = "0.5" }
+rpassword = { version = "6.0" }
+async-trait = { version = "0.1" }
+os_info = { version = "3.3" }
+faccess = { version = "0.2" }
+bincode = { version = "1.3" } # simple binary serialisation
+socket2 = { version = "0.4" }
+
+[target.'cfg(windows)'.dependencies]
+mail_slot = { version = "0.1" }  # windows mailslot api
+is_elevated = { version = "0.1" }
 
 [patch.crates-io]
 wepoll-ffi = { path = "./patch/wepoll-ffi-0.1.2" }

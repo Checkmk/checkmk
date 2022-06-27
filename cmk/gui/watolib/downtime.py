@@ -26,7 +26,7 @@ def determine_downtime_mode(recurring_number, delayed_duration):
 
 
 class DowntimeSchedule:
-    def __init__(self, start_time, end_time, mode, delayed_duration=None, comment=None):
+    def __init__(self, start_time, end_time, mode, delayed_duration=None, comment=None) -> None:
         self.start_time = start_time
         self.end_time = end_time
         self.mode = mode

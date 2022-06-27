@@ -84,13 +84,13 @@ msgstr "%s"
     subprocess.call(["msgfmt", str(po_file), "-o", str(mo_file)])
 
 
-def test_underscore_without_localization():
+def test_underscore_without_localization() -> None:
     assert i18n.get_current_language() is None
     assert isinstance(i18n._("bla"), str)
     assert i18n._("bla") == "bla"
 
 
-def test_underscore_localization():
+def test_underscore_localization() -> None:
     i18n.localize("de")
     assert i18n.get_current_language() == "de"
     assert i18n._("Age") == "Alter"
@@ -99,7 +99,7 @@ def test_underscore_localization():
     assert i18n.get_current_language() is None
 
 
-def test_lazy_localization():
+def test_lazy_localization() -> None:
     lazy_str = i18n._l("Age")
 
     assert lazy_str == "Age"
@@ -111,11 +111,11 @@ def test_lazy_localization():
     assert lazy_str == "Age"
 
 
-def test_init_language_not_existing():
+def test_init_language_not_existing() -> None:
     assert i18n._init_language("xz") is None
 
 
-def test_init_language_only_builtin():
+def test_init_language_only_builtin() -> None:
     trans = i18n._init_language("de")
     assert isinstance(trans, gettext.GNUTranslations)
     assert trans.info()["language"] == "de"
@@ -126,7 +126,7 @@ def test_init_language_only_builtin():
     assert translated == "bla"
 
 
-def test_init_language_with_local_modification(local_translation):
+def test_init_language_with_local_modification(local_translation) -> None:
     trans = i18n._init_language("de")
     assert isinstance(trans, gettext.GNUTranslations)
     assert trans.info()["language"] == "de"
@@ -137,7 +137,7 @@ def test_init_language_with_local_modification(local_translation):
     assert translated == "blub"
 
 
-def test_init_language_with_local_modification_fallback(local_translation):
+def test_init_language_with_local_modification_fallback(local_translation) -> None:
     trans = i18n._init_language("de")
     assert isinstance(trans, gettext.GNUTranslations)
     assert trans.info()["language"] == "de"
@@ -154,7 +154,7 @@ def test_init_language_with_local_modification_fallback(local_translation):
     assert translated == "Alter"
 
 
-def test_init_language_with_package_localization(local_translation):
+def test_init_language_with_package_localization(local_translation) -> None:
     trans = i18n._init_language("de")
     assert trans is not None
     translated = trans.gettext("pkg1")
@@ -162,7 +162,7 @@ def test_init_language_with_package_localization(local_translation):
     assert translated == "lala"
 
 
-def test_get_language_alias():
+def test_get_language_alias() -> None:
     assert isinstance(i18n.get_language_alias(None), str)
     assert i18n.get_language_alias(None) == "English"
 
@@ -170,12 +170,12 @@ def test_get_language_alias():
     assert i18n.get_language_alias("de") == "German"
 
 
-def test_get_language_local_alias(local_translation):
+def test_get_language_local_alias(local_translation) -> None:
     assert isinstance(i18n.get_language_alias("de"), str)
     assert i18n.get_language_alias("de") == "Äxtended German"
 
 
-def test_get_languages():
+def test_get_languages() -> None:
     assert i18n.get_languages() == [
         ("nl", "Dutch (machine-supported translation)"),
         ("", "English"),
@@ -189,7 +189,7 @@ def test_get_languages():
     ]
 
 
-def test_get_languages_new_local_language(local_translation):
+def test_get_languages_new_local_language(local_translation) -> None:
     assert i18n.get_languages() == [
         ("nl", "Dutch (machine-supported translation)"),
         ("", "English"),

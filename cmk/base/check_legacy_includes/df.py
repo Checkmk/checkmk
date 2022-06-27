@@ -11,9 +11,18 @@ from typing import Any, Dict, List
 from cmk.base.api.agent_based.checking_classes import Metric, Result
 from cmk.base.check_api import get_bytes_human_readable, get_percent_human_readable
 from cmk.base.config import Ruleset
-from cmk.base.plugins.agent_based.utils.df import _check_inodes, FILESYSTEM_DEFAULT_LEVELS
+from cmk.base.plugins.agent_based.utils.df import (
+    check_inodes,
+    check_summary_text,
+    FILESYSTEM_DEFAULT_LEVELS,
+    FILESYSTEM_DEFAULT_PARAMS,
+)
 from cmk.base.plugins.agent_based.utils.df import get_filesystem_levels as _get_filesystem_levels
-from cmk.base.plugins.agent_based.utils.df import mountpoints_in_group
+from cmk.base.plugins.agent_based.utils.df import (
+    INODES_DEFAULT_PARAMS,
+    mountpoints_in_group,
+    TREND_DEFAULT_PARAMS,
+)
 
 from .size_trend import size_trend  # type: ignore[attr-defined]
 
@@ -200,7 +209,7 @@ def df_check_filesystem_single_coroutine(
     this_time=None,
 ):
     if size_mb == 0:
-        yield 1, "Size of filesystem is 0 MB", []
+        yield 1, "Size of filesystem is 0 B", []
         return
 
     # params might still be a tuple
@@ -223,17 +232,13 @@ def df_check_filesystem_single_coroutine(
 
     # Get warning and critical levels already with 'magic factor' applied
     levels = get_filesystem_levels(mountpoint, size_mb / 1024.0, params)
-    warn_mb, crit_mb = levels["levels_mb"]
+    warn_mb, crit_mb = levels.warn_absolute / (1024 * 1024), levels.crit_absolute / (1024 * 1024)
 
     used_hr = get_bytes_human_readable(used_mb * 1024**2)
     used_max_hr = get_bytes_human_readable(used_max * 1024**2)
     used_perc_hr = get_percent_human_readable(100.0 * used_mb / used_max)
 
-    # If both numbers end with the same unit, then drop the first one
-    if used_hr[-2:] == used_max_hr[-2:]:
-        used_hr = used_hr[:-3]
-
-    infotext = ["%s used (%s of %s)" % (used_perc_hr, used_hr, used_max_hr)]
+    infotext = ["Used: %s - %s of %s" % (used_perc_hr, used_hr, used_max_hr)]
 
     if warn_mb < 0.0:
         # Negative levels, so user configured thresholds based on space left. Calculate the
@@ -252,9 +257,9 @@ def df_check_filesystem_single_coroutine(
     if (
         show_levels == "always"
         or (show_levels == "onproblem" and status > 0)  #
-        or (show_levels == "onmagic" and (status > 0 or levels.get("magic", 1.0) != 1.0))  #
+        or (show_levels == "onmagic" and (status > 0 or params.get("magic", 1.0) != 1.0))  #
     ):
-        infotext.append(levels["levels_text"])
+        infotext.append(check_summary_text(levels))
 
     if show_reserved:
         reserved_perc_hr = get_percent_human_readable(100.0 * reserved_mb / size_mb)
@@ -271,14 +276,14 @@ def df_check_filesystem_single_coroutine(
     if subtract_reserved or show_reserved:
         perfdata.append(("reserved", reserved_mb))
 
-    yield status, ", ".join(infotext).replace("), (", ", "), perfdata
+    yield status, ", ".join(infotext).replace(", (", " ("), perfdata
 
-    if levels.get("trend_range"):
+    if params.get("trend_range"):
         trend_state, trend_text, trend_perf = size_trend(
             "df",
             mountpoint,
             "disk",
-            levels,
+            params,
             used_mb,
             size_mb,
             this_time,
@@ -288,10 +293,10 @@ def df_check_filesystem_single_coroutine(
         if trend_state or trend_text or trend_perf:
             yield trend_state, trend_text.strip(" ,"), trend_perf or []
 
-    if not inodes_total or not inodes_avail:
+    if not inodes_total or inodes_avail is None:
         return
 
-    metric, result = _check_inodes(levels, inodes_total, inodes_avail)
+    metric, result = check_inodes(params, inodes_total, inodes_avail)
     assert isinstance(metric, Metric)
     assert isinstance(result, Result)
     yield int(result.state), result.summary, [

@@ -1,7 +1,7 @@
 Title: REST API: host and service filtering now usable without table prefixes
 Class: fix
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1610551950
 Edition: cre
 Knowledge: doc

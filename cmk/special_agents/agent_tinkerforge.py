@@ -339,3 +339,4 @@ def main():
                 display_on_segment(conn, settings, "")
     finally:
         conn.disconnect()
+    return None

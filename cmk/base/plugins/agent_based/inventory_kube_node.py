@@ -22,6 +22,7 @@ def inventory_kube_node(
     yield Attributes(
         path=["software", "applications", "kube", "metadata"],
         inventory_attributes={
+            "object": "Node",
             "name": section_kube_node_info.name,
         },
     )
@@ -40,7 +41,7 @@ def inventory_kube_node(
     )
     for address in section_kube_node_info.addresses:
         yield TableRow(
-            path=["software", "applications", "kube", "network"],
+            path=["networking", "kube"],
             key_columns={"ip": address.address},
             inventory_columns={"address_type": address.type_},
         )

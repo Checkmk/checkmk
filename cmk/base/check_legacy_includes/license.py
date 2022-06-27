@@ -4,8 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-
 
 def license_check_levels(total, in_use, params):
     if params is False:
@@ -35,6 +33,6 @@ def license_check_levels(total, in_use, params):
         status = 0
 
     if status:
-        infotext += " (warn/crit at %d/%d)" % (warn, crit)
+        infotext += " (warn/crit at %d/%d)" % (warn, crit)  # type: ignore[str-format]
 
     return status, infotext, perfdata

@@ -368,6 +368,20 @@ TEST(LogTest, All) {
     // *************************************************************
 }
 
+TEST(LogTest, EmitterLogRotation) {
+    XLOG::Emitter l(XLOG::LogType::log);
+    l.setLogRotation(3, 1024 * 1024);
+    EXPECT_EQ(l.getBackupLogMaxCount(), 3);
+    EXPECT_EQ(l.getBackupLogMaxSize(), 1024 * 1024);
+    l.setLogRotation(0, 0);
+    EXPECT_EQ(l.getBackupLogMaxCount(), 0);
+    EXPECT_EQ(l.getBackupLogMaxSize(), 256 * 1024);
+
+    l.setLogRotation(1000, 1024 * 1024 * 1024);
+    EXPECT_EQ(l.getBackupLogMaxCount(), 64);
+    EXPECT_EQ(l.getBackupLogMaxSize(), 256 * 1024 * 1024);
+}
+
 TEST(LogTest, Setup) {
     using namespace xlog;
     using namespace XLOG;

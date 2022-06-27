@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+
 # <<<omd_apache:sep(124)>>>
 # [heute]
 # /heute/check_mk/view.py?view_name=allhosts&_display_options=htbfcoderuw&_do_actions=&_ajaxid=1433252694|200|5067|13465
@@ -77,9 +79,9 @@ def check_omd_apache(item, _no_params, parsed):
     # the output is showing total values, for the graphing we provide detailed data
     this_time = time.time()
     for ty, title in [
-        ("requests", "Requests/s"),
-        ("secs", "Seconds serving/s"),
-        ("bytes", "Sent/s"),
+        ("requests", "Requests"),
+        ("secs", "Seconds serving"),
+        ("bytes", "Sent"),
     ]:
         total = 0
         for key, value in sorted(stats[ty].items(), key=lambda k_v: k_v[1], reverse=True):
@@ -89,8 +91,8 @@ def check_omd_apache(item, _no_params, parsed):
             total += rate
             yield 0, "", [(ty + "_" + key, rate)]
 
-        total = get_bytes_human_readable(total) if ty == "bytes" else ("%.2f" % total)
-        yield 0, "%s %s" % (total, title)
+        total = render.iobandwidth(total) if ty == "bytes" else ("%.2f/s" % total)
+        yield 0, "%s: %s" % (title, total)
 
 
 # This check uses the section defined in cmk/base/plugins/agent_based/omd_apache.py!

@@ -7,6 +7,7 @@
 import json
 import re
 import uuid
+from typing import Sequence
 
 import pytest
 
@@ -24,16 +25,19 @@ from cmk.gui.fields.utils import BaseSchema
         ("/", True),
         ("/foo", True),
         ("/foo/bar", True),
+        ("/foo/bar/", True),
         ("//", False),
         ("///", False),
         ("\\", True),
         ("\\foo", True),
         ("\\foo\\bar", True),
+        ("\\foo\\bar\\", True),
         ("\\\\", False),
         ("\\\\\\", False),
         ("~", True),
         ("~foo", True),
         ("~foo~bar", True),
+        ("~foo~bar~", True),
         ("~~", False),
         ("~~~", False),
         # This really should be false, but it is tricky to implement. Skipped for now.
@@ -45,13 +49,13 @@ from cmk.gui.fields.utils import BaseSchema
         ("~DCN~DE.KAE.BS", True),
     ],
 )
-def test_folder_regexp(given, expected):
+def test_folder_regexp(given, expected) -> None:
     regexp = re.compile(f"(?:^{FOLDER_PATTERN})$")
     match = regexp.findall(given)
     assert bool(match) == expected, match
 
 
-def test_folder_schema(request_context):
+def test_folder_schema(request_context) -> None:
     class FolderSchema(BaseSchema):
         folder = FolderField(required=True)
 
@@ -61,7 +65,7 @@ def test_folder_schema(request_context):
     assert schema.load({"folder": "~"})["folder"]
 
 
-def test_openapi_folder_validation(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_folder_validation(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     aut_user_auth_wsgi_app.call_method(
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
@@ -81,7 +85,7 @@ def test_openapi_folder_validation(aut_user_auth_wsgi_app: WebTestAppForCMK):
     )
 
 
-def test_openapi_folders_recursively(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_folders_recursively(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all?recursive=1",
@@ -91,7 +95,7 @@ def test_openapi_folders_recursively(aut_user_auth_wsgi_app: WebTestAppForCMK):
     assert len(resp.json["value"]) == 1
 
 
-def test_openapi_folders(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_folders(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
@@ -236,7 +240,7 @@ def test_openapi_folders(aut_user_auth_wsgi_app: WebTestAppForCMK):
         )
 
 
-def test_openapi_folder_config_collections(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_folder_config_collections(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     aut_user_auth_wsgi_app.call_method(
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
@@ -273,7 +277,9 @@ def test_openapi_folder_config_collections(aut_user_auth_wsgi_app: WebTestAppFor
     )
 
 
-def test_openapi_folder_hosts_sub_resource(aut_user_auth_wsgi_app: WebTestAppForCMK, with_host):
+def test_openapi_folder_hosts_sub_resource(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, with_host
+) -> None:
     aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/objects/folder_config/~/collections/hosts",
@@ -282,7 +288,7 @@ def test_openapi_folder_hosts_sub_resource(aut_user_auth_wsgi_app: WebTestAppFor
     )
 
 
-def test_openapi_hosts_in_folder_collection(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_hosts_in_folder_collection(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     aut_user_auth_wsgi_app.call_method(
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
@@ -332,7 +338,7 @@ def test_openapi_hosts_in_folder_collection(aut_user_auth_wsgi_app: WebTestAppFo
     assert "hosts" not in resp.json["value"][0]["members"]
 
 
-def test_openapi_show_hosts_on_folder(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_show_hosts_on_folder(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     aut_user_auth_wsgi_app.call_method(
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
@@ -362,7 +368,7 @@ def test_openapi_show_hosts_on_folder(aut_user_auth_wsgi_app: WebTestAppForCMK):
     assert "hosts" not in resp.json["members"]
 
 
-def test_openapi_missing_folder(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_missing_folder(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     resp = aut_user_auth_wsgi_app.get(
         "/NO_SITE/check_mk/api/1.0/objects/folder_config/asdf" + uuid.uuid4().hex,
         status=404,
@@ -371,7 +377,9 @@ def test_openapi_missing_folder(aut_user_auth_wsgi_app: WebTestAppForCMK):
     assert "title" in resp.json
 
 
-def test_openapi_update_with_invalid_attribute_folder(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_update_with_invalid_attribute_folder(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
     resp = aut_user_auth_wsgi_app.call_method(
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
@@ -392,7 +400,7 @@ def test_openapi_update_with_invalid_attribute_folder(aut_user_auth_wsgi_app: We
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_bulk_actions_folders(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_bulk_actions_folders(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     _resp = aut_user_auth_wsgi_app.call_method(
@@ -468,7 +476,7 @@ def test_openapi_bulk_actions_folders(aut_user_auth_wsgi_app: WebTestAppForCMK):
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_folder_update(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_folder_update(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     resp = aut_user_auth_wsgi_app.call_method(
@@ -516,7 +524,7 @@ def test_openapi_folder_update(aut_user_auth_wsgi_app: WebTestAppForCMK):
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_folder_root(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_folder_root(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     _ = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/objects/folder_config/~",
@@ -526,7 +534,7 @@ def test_openapi_folder_root(aut_user_auth_wsgi_app: WebTestAppForCMK):
     )
 
 
-def test_openapi_folder_remove_attribute(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_folder_remove_attribute(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     resp = aut_user_auth_wsgi_app.call_method(
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
@@ -558,3 +566,38 @@ def test_openapi_folder_remove_attribute(aut_user_auth_wsgi_app: WebTestAppForCM
         headers={"Accept": "application/json"},
     )
     assert "tag_address_family" not in resp.json["extensions"]["attributes"]
+
+
+def test_openapi_folder_config_collections_recursive_list(aut_user_auth_wsgi_app: WebTestAppForCMK):
+    def _create_folder(fname: str, parent: str):
+        params = f'{{"name": "{fname}", "title": "{fname}", "parent": "{parent}"}}'
+        aut_user_auth_wsgi_app.call_method(
+            "post",
+            "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
+            params=params,
+            status=200,
+            headers={"Accept": "application/json"},
+            content_type="application/json",
+        )
+        parent += f"{fname}~"
+
+    def _create_folders_recursive(folders: Sequence[str]):
+        _create_folder(folders[0], "~")
+        parent = f"~{folders[0]}"
+        for fname in folders[1:]:
+            _create_folder(fname, parent)
+            parent += f"~{fname}"
+
+    _create_folders_recursive(["I", "want", "those"])
+    _create_folders_recursive(["na", "na", "batman"])
+
+    response = aut_user_auth_wsgi_app.call_method(
+        "get",
+        "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
+        params={"parent": "~I", "recursive": "True"},
+        status=200,
+        headers={"Accept": "application/json"},
+    )
+
+    for folder in response.json["value"]:
+        assert "batman" not in folder["id"]

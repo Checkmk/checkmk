@@ -1,0 +1,14 @@
+@startuml
+
+file "/etc/apache2/conf-*/zzz_omd.conf" as system_hook
+file "/omd/apache/$SITE.conf" as site_hook
+file "$OMD_ROOT/etc/apache/mode.conf" as mode_link
+file "$OMD_ROOT/etc/apache/apache-own.conf" as site_conf
+file "$OMD_ROOT/etc/apache/proxy-port.conf" as proxy_conf
+
+system_hook -d-> site_hook : includes
+site_hook -d-> mode_link : includes
+mode_link -d-> site_conf : symlinks
+site_conf -d-> proxy_conf : includes
+
+@enduml

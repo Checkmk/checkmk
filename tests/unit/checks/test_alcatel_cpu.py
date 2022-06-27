@@ -22,7 +22,7 @@ CHECK_NAME = "alcatel_cpu"
         ),
     ],
 )
-def test_inventory_function(info, result_expected):
+def test_inventory_function(info, result_expected) -> None:
     check = Check(CHECK_NAME)
     result = list(check.run_discovery(info))
     assert result == result_expected
@@ -48,7 +48,9 @@ def test_inventory_function(info, result_expected):
         ),
     ],
 )
-def test_check_function(parameters, info, state_expected, infotext_expected, perfdata_expected):
+def test_check_function(
+    parameters, info, state_expected, infotext_expected, perfdata_expected
+) -> None:
     """
     Verifies if check function asserts warn and crit CPU levels.
     """

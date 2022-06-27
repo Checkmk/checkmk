@@ -108,10 +108,11 @@ def _check__k8s_stats_network__core(
 ) -> CheckResult:
     now = section["timestamp"]
 
-    interface: Interface = to_interface(
+    empty: collections.Counter[str] = collections.Counter()
+    interface = to_interface(
         sum(
-            (collections.Counter(interface) for interface in section["interfaces"][item]),
-            collections.Counter(),
+            (collections.Counter(intf) for intf in section["interfaces"][item]),
+            empty,
         )
     )
 

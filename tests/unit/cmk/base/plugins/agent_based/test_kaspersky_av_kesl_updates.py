@@ -35,5 +35,5 @@ def set_fixed_timezone():
         ),
     ],
 )
-def test_check_kaskpersky_av_client(section, results):
+def test_check_kaskpersky_av_client(section, results) -> None:
     assert list(check_kaspersky_av_kesl_updates(section)) == results

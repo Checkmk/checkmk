@@ -1,0 +1,13 @@
+Title: Fix summary must be non empty crash when clustering services
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1654783828
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+Some services lead to a crash with the exception "summary must not be empty" on a cluster host.
+This has been fixed. No user interaction required.

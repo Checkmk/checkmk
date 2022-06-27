@@ -5,9 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # Example output from agent:
@@ -33,7 +31,7 @@ def parse_ibm_svc_host(info):
     return parse_ibm_svc_with_header(info, dflt_header)
 
 
-def check_ibm_svc_host(item, params, parsed):
+def check_ibm_svc_host(item, params, parsed):  # pylint: disable=too-many-branches
     if params is None:
         # Old inventory rule until version 1.2.7
         # params were None instead of empty dictionary

@@ -42,11 +42,11 @@ def old_school_discover_function(parsed_extra):
         ("foobar", "foobar"),
     ],
 )
-def test_get_section_name(name_in, name_out):
+def test_get_section_name(name_in, name_out) -> None:
     assert name_out == section_plugins_legacy.get_section_name(name_in)
 
 
-def test_create_agent_parse_function():
+def test_create_agent_parse_function() -> None:
     compliant_parse_function = section_plugins_legacy._create_agent_parse_function(
         old_school_parse_function
     )
@@ -66,7 +66,7 @@ def test_create_agent_parse_function():
     assert old_school_parse_function([]) == compliant_parse_function([])
 
 
-def test_create_snmp_parse_function():
+def test_create_snmp_parse_function() -> None:
     compliant_parse_function = section_plugins_legacy._create_snmp_parse_function(
         original_parse_function=old_school_parse_function,
         recover_layout_function=lambda x: x,
@@ -92,7 +92,7 @@ def test_create_snmp_parse_function():
     ) == old_school_parse_function(arbitrary_non_empty_input)
 
 
-def test_create_snmp_parse_function_handle_empty():
+def test_create_snmp_parse_function_handle_empty() -> None:
     compliant_parse_function = section_plugins_legacy._create_snmp_parse_function(
         original_parse_function=old_school_parse_function,
         recover_layout_function=lambda x: x,
@@ -102,7 +102,7 @@ def test_create_snmp_parse_function_handle_empty():
     assert compliant_parse_function([[]]) == old_school_parse_function([[]])
 
 
-def test_create_snmp_section_plugin_from_legacy():
+def test_create_snmp_section_plugin_from_legacy() -> None:
 
     plugin = section_plugins_legacy.create_snmp_section_plugin_from_legacy(
         "norris",

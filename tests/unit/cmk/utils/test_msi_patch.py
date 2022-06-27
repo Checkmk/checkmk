@@ -25,7 +25,7 @@ def conf_dir(tmp_path):
 aaa_marker = "{AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA}".encode("ascii")
 
 
-def test_parse_command_line():
+def test_parse_command_line() -> None:
     try:
         mode, f, param = msi_patch.parse_command_line(
             ["/path/to/executable", "mode", "msi", "param"]
@@ -53,7 +53,7 @@ def test_parse_command_line():
         assert True
 
 
-def test_low_level_functions(conf_dir):
+def test_low_level_functions(conf_dir) -> None:
     assert msi_patch.MSI_PACKAGE_CODE_OFFSET == 20
     assert msi_patch.MSI_PACKAGE_CODE_MARKER == "Intel;1033"
     assert msi_patch.generate_uuid() != msi_patch.generate_uuid()
@@ -78,7 +78,7 @@ def _get_test_file(fname):
     return src
 
 
-def test_patch_package_code_by_state_file(conf_dir):
+def test_patch_package_code_by_state_file(conf_dir) -> None:
     # prepare file to tests
     fname = "test_bin.tst"
     src = _get_test_file(fname=fname)
@@ -102,7 +102,7 @@ def test_patch_package_code_by_state_file(conf_dir):
     assert new_content.find(uuid.encode("ascii")) == 4
 
 
-def test_patch_package_code_with_state(conf_dir):
+def test_patch_package_code_with_state(conf_dir) -> None:
     # prepare file to tests
     fname = "test_bin.tst"
     src = _get_test_file(fname=fname)
@@ -151,7 +151,7 @@ def test_patch_package_code_with_state(conf_dir):
     assert _id == ""
 
 
-def test_patch_version(tmpdir):
+def test_patch_version(tmpdir) -> None:
     """Tests version patching using the test file from test directory"""
 
     # base data
@@ -185,7 +185,7 @@ def check_content(
     assert new_content[pos + len(uuid) :] == base_content[pos + len(uuid) :]
 
 
-def test_uuid():
+def test_uuid() -> None:
     # relative random set of data, probably better to divide data in few arrays
     assert not msi_patch.valid_uuid("")
     assert not msi_patch.valid_uuid("1")
@@ -197,13 +197,13 @@ def test_uuid():
     assert not msi_patch.valid_uuid("DEFADEFADEFA")
 
 
-def test_uuid_base():
+def test_uuid_base() -> None:
     assert "{21fac8ef-8042-50ca-8c85-fbca566e726e}".upper() == msi_patch.generate_uuid_from_base(
         "012"
     )
 
 
-def test_patch_package_code_by_marker(conf_dir):
+def test_patch_package_code_by_marker(conf_dir) -> None:
     # prepare file to tests
     fname = "test_bin.tst"
     src = _get_test_file(fname=fname)
@@ -240,7 +240,7 @@ def test_patch_package_code_by_marker(conf_dir):
     assert _id == uuid
 
 
-def test_patch_package_code(conf_dir):
+def test_patch_package_code(conf_dir) -> None:
     # prepare file to tests
     fname = "test_bin.tst"
     src = _get_test_file(fname=fname)

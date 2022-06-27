@@ -120,6 +120,7 @@ def check_websphere_mq_instance(item, params, parsed):
             mode.lower(),
             qm_name,
         )
+    return None
 
 
 check_info["websphere_mq_instance"] = {
@@ -146,7 +147,7 @@ def inventory_websphere_mq_manager(parsed):
         yield item, {}
 
 
-def check_websphere_mq_manager(item, params, parsed):
+def check_websphere_mq_manager(item, params, parsed):  # pylint: disable=too-many-branches
     if item in parsed["manager"]:
         data = parsed["manager"][item]
         status = data["STATUS"]

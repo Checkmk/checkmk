@@ -50,6 +50,7 @@ def check_enterasys_powersupply(item, params, info):
                     supply_types.get(typ, "unknown[%s]" % typ),
                 )
             return 1, "Status: %s" % redun_mapped
+    return None
 
 
 check_info["enterasys_powersupply"] = {

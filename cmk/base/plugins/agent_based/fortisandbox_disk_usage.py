@@ -8,7 +8,7 @@ from typing import Any, Mapping, Optional
 
 from .agent_based_api.v1 import get_value_store, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_LEVELS
+from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 from .utils.fortinet import DETECT_FORTISANDBOX
 
 Section = Mapping[str, int]
@@ -68,6 +68,6 @@ register.check_plugin(
     service_name="Disk usage %s",
     discovery_function=discover_fortisandbox_disk,
     check_function=check_fortisandbox_disk,
-    check_default_parameters=FILESYSTEM_DEFAULT_LEVELS,
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
     check_ruleset_name="filesystem",
 )

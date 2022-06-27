@@ -15,7 +15,7 @@ from cmk.automations.results import DiscoveryResult as AutomationDiscoveryResult
 
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import request
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, Integer, Tuple, ValueSpec
 from cmk.gui.watolib.changes import add_service_change
@@ -112,7 +112,7 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
     def gui_title(cls):
         return _("Bulk Discovery")
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             self.job_prefix,
             title=self.gui_title(),
@@ -268,7 +268,6 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         self._num_hosts_succeeded += 1
 
         add_service_change(
-            host,
             "bulk-discovery",
             _(
                 "Did service discovery on host %s: %d added, %d removed, %d kept, "
@@ -283,6 +282,8 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
                 result.self_new_host_labels,
                 result.self_total_host_labels,
             ),
+            host.object_ref(),
+            host.site_id(),
             diff_text=result.diff_text,
         )
 

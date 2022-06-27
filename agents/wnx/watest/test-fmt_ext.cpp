@@ -7,6 +7,7 @@
 
 #include <chrono>
 #include <filesystem>
+#include <optional>
 
 #include "common/fmt_ext.h"
 
@@ -21,4 +22,11 @@ TEST(FmtExt, Chrono) {
     EXPECT_EQ(fmt::format("f={}", std::chrono::microseconds{2}), "f=2us");
     EXPECT_EQ(fmt::format("f={}", std::chrono::nanoseconds{3}), "f=3ns");
     EXPECT_EQ(fmt::format("f={}", std::chrono::seconds{4}), "f=4s");
+}
+
+TEST(FmtExt, Optional) {
+    std::optional<std::string> str;
+    EXPECT_EQ(fmt::format("f={}", str), "f=None");
+    str = "Zzz";
+    EXPECT_EQ(fmt::format("f={}", str), "f=Zzz");
 }

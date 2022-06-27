@@ -2,7 +2,7 @@ import * as cmk_figures from "cmk_figures";
 import * as d3Hexbin from "d3-hexbin";
 
 export class HostStats extends cmk_figures.FigureBase {
-    static ident() {
+    ident() {
         return "hoststats";
     }
 
@@ -98,13 +98,13 @@ export class HostStats extends cmk_figures.FigureBase {
 }
 
 export class ServiceStats extends HostStats {
-    static ident() {
+    ident() {
         return "servicestats";
     }
 }
 
 export class EventStats extends HostStats {
-    static ident() {
+    ident() {
         return "eventstats";
     }
 }

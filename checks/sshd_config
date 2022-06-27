@@ -18,7 +18,8 @@
 
 
 def parse_sshd_config(info):
-    identity = lambda x: x
+    def identity(x: object) -> object:
+        return x
 
     def map_permit_root_login(value):
         if value in ["prohibit-password", "without-password"]:
@@ -70,7 +71,8 @@ def check_sshd_config(_no_item, params, parsed):
         params["PermitRootLogin"] = "key-based"
 
     # type_ is needed because info contains unicode and params str
-    convert = lambda x, type_: (x if isinstance(x, type_) else ", ".join(map(type_, x)))
+    def convert(x, type_):
+        return x if isinstance(x, type_) else ", ".join(map(type_, x))
 
     for option, val in parsed.items():
         state = 0

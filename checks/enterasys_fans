@@ -24,6 +24,7 @@ def check_enterasys_fans(item, _no_params, info):
             if state == "4":
                 return 2, message
             return 0, message
+    return None
 
 
 check_info["enterasys_fans"] = {

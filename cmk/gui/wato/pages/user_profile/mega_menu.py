@@ -10,14 +10,15 @@ from typing import List, Optional
 
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import request, theme
+from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
+from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.plugins.userdb.utils import validate_start_url
 from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
-from cmk.gui.utils.theme import theme_choices
+from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.theme import theme, theme_choices
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 
@@ -29,7 +30,7 @@ def _get_current_theme_titel() -> str:
 def _get_sidebar_position() -> str:
     assert user.id is not None
     sidebar_position = userdb.load_custom_attr(
-        user.id, "ui_sidebar_position", lambda x: None if x == "None" else "left"
+        user_id=user.id, key="ui_sidebar_position", parser=lambda x: None if x == "None" else "left"
     )
 
     return sidebar_position or "right"
@@ -140,7 +141,8 @@ mega_menu_registry.register(
 class ModeAjaxCycleThemes(AjaxPage):
     """AJAX handler for quick access option 'Interface theme" in user menu"""
 
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
+        check_csrf_token()
         themes = [theme for theme, _title in theme_choices()]
         current_theme = theme.get()
         try:
@@ -161,7 +163,8 @@ class ModeAjaxCycleThemes(AjaxPage):
 class ModeAjaxCycleSidebarPosition(AjaxPage):
     """AJAX handler for quick access option 'Sidebar position" in user menu"""
 
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
+        check_csrf_token()
         _set_user_attribute(
             "ui_sidebar_position",
             None if _sidebar_position_id(_get_sidebar_position()) == "left" else "left",
@@ -173,8 +176,9 @@ class ModeAjaxCycleSidebarPosition(AjaxPage):
 class ModeAjaxSetStartURL(AjaxPage):
     """AJAX handler to set the start URL of a user to a dashboard"""
 
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         try:
+            check_csrf_token()
             name = request.get_str_input_mandatory("name")
             url = makeuri_contextless(request, [("name", name)], "dashboard.py")
             validate_start_url(url, "")

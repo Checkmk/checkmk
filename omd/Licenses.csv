@@ -107,7 +107,7 @@ Perl module: XML-Simple,2.20,GPL-3.0,https://opensource.org/licenses/GPL-3.0,omd
 Perl module: XML-Twig,3.48,GPL-3.0,https://opensource.org/licenses/GPL-3.0,omd/packages/perl-modules/src/XML-Twig-3.48.tar.gz,,,,
 Perl module: YAML-Tiny,1.67,GPL-3.0,https://opensource.org/licenses/GPL-3.0,omd/packages/perl-modules/src/YAML-Tiny-1.67.tar.gz,,,,
 pnp4nagios,0.6.26,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/pnp4nagios/pnp4nagios-0.6.26.tar.gz,,,,
-Python,3.9.10,Python-2.0,https://spdx.org/licenses/Python-2.0.html,omd/packages/Python/Python-3.9.10.tar.xz,,,,
+Python,3.10.4,Python-2.0,https://spdx.org/licenses/Python-2.0.html,omd/packages/Python/Python-3.10.4.tar.xz,,,,
 Python for Windows agent (PyWinAg),3.4,Python-2.0,https://spdx.org/licenses/Python-2.0.html,agents/windows/python-3.4.cab
 Python for Windows agent (PyWinAg),3.9,Python-2.0,https://spdx.org/licenses/Python-2.0.html,agents/windows/python-3.cab
 Python for Windows agent (PyWinAg),3.9,Python-2.0,https://spdx.org/licenses/Python-2.0.html,agents/wnx/install/resources/modules/python-3.cab
@@ -158,7 +158,7 @@ Python module: passlib,1.7.2,BSD-3-Clause,https://opensource.org/licenses/BSD-3-
 Python module: pbr,5.4.4,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
 Python module: Pillow,8.3.2,MIT-CMU,https://fedoraproject.org/wiki/Licensing:MIT?rd=Licensing/MIT#CMU_Style,,
 Python module: ply,3.11,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
-Python module: protobuf,3.18.1,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
+Python module: protobuf,3.20.1,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
 Python module: psutil,5.9.0,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
 Python module: psycopg2-binary,2.9.1,LGPL-3.0,https://opensource.org/licenses/LGPL-3.0,,
 Python module: pyasn1,0.4.8,BSD-2-Clause,https://opensource.org/licenses/bsd-license.php,,
@@ -262,6 +262,7 @@ yaml-cpp,0.6.3,MIT,https://opensource.org/licenses/MIT,omd/packages/yaml-cpp/yam
 Icons,,,,,,,,
 Classic Icons,,LGPL-2.1,https://opensource.org/licenses/LGPL-2.1,web/htdocs/images/icon_*,,,,
 Facelift Icons,,Icons8,https://icons8.com/download/Icons8_License.pdf,web/htdocs/images/icon_*,,,,
+Kubernetes Logo,,CC-BY-4.0,https://creativecommons.org/licenses/by/4.0/,web/htdocs/themes/facelift/images/icon_kubernetes.svg,,,,
 ,,,,,,,,
 JavaScript and CSS,,,,,,,,
 ColorPicker,,MIT,https://opensource.org/licenses/MIT,"web/htdocs/js/colorpicker.js

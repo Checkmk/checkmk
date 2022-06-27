@@ -1,0 +1,15 @@
+Title: check_mk_agent.linux check_mk_agent.openwrt: Add multipath section if no multipath.conf
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1649926904
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Until now, Linux and OpenWrt agents wouldn't write a multipath
+section if there was no /etc/multipath.conf file.
+Since the config file isn't mandatory, it would lead to multipath
+devices not being discovered in inventory if default configuration
+is used.

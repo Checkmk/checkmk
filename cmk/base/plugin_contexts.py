@@ -22,7 +22,7 @@ _service_description: Optional[str] = None
 
 
 @contextmanager
-def current_host(host_name_: HostName):
+def current_host(host_name_: HostName):  # type:ignore[no-untyped-def]
     """Make a bit of context information globally available
 
     So that functions called by checks know this context.
@@ -39,7 +39,9 @@ def current_host(host_name_: HostName):
 
 
 @contextmanager
-def current_service(plugin_name: CheckPluginName, description: ServiceName):
+def current_service(  # type:ignore[no-untyped-def]
+    plugin_name: CheckPluginName, description: ServiceName
+):
     """Make a bit of context information globally available
 
     So that functions called by checks know this context.

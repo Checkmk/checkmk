@@ -10,12 +10,14 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
+from cmk.automations.results import DeleteHostsResult
+
 from cmk.gui.plugins.openapi.restful_objects import constructors
 
 CMK_WAIT_FOR_COMPLETION = "cmk/wait-for-completion"
 
 
-def test_openapi_show_activations(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_show_activations(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
     aut_user_auth_wsgi_app.call_method(
         "get",
@@ -25,7 +27,19 @@ def test_openapi_show_activations(aut_user_auth_wsgi_app: WebTestAppForCMK):
     )
 
 
-def test_openapi_list_currently_running_activations(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_show_single_activation(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+    base = "/NO_SITE/check_mk/api/1.0"
+    aut_user_auth_wsgi_app.call_method(
+        "get",
+        base + constructors.object_href("activation_run", "asdf"),
+        status=404,
+        headers={"Accept": "application/json"},
+    )
+
+
+def test_openapi_list_currently_running_activations(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
     aut_user_auth_wsgi_app.call_method(
         "get",
@@ -93,8 +107,8 @@ def test_openapi_activate_changes(
 
     # We delete the host again
     monkeypatch.setattr(
-        "cmk.gui.watolib.hosts_and_folders.delete_hosts",
-        lambda *args, **kwargs: None,
+        "cmk.gui.plugins.openapi.endpoints.host_config.delete_hosts",
+        lambda *args, **kwargs: DeleteHostsResult(),
     )
     aut_user_auth_wsgi_app.follow_link(
         host_created,

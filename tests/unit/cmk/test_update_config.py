@@ -10,7 +10,7 @@ import io
 import os
 import sys
 from pathlib import Path
-from typing import Any, Iterator, Mapping, MutableMapping, Sequence, Tuple
+from typing import Any, Mapping, MutableMapping, Sequence, Tuple
 
 import pytest
 from pytest_mock import MockerFixture
@@ -23,24 +23,17 @@ from tests.unit.cmk.gui.conftest import load_plugins  # noqa: F401 # pylint: dis
 import cmk.utils.log
 import cmk.utils.paths
 from cmk.utils import password_store, store, version
-from cmk.utils.type_defs import ContactgroupName, RulesetName, RuleSpec, RuleValue
-from cmk.utils.type_defs.pluginname import CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, ContactgroupName, RulesetName, RuleSpec, RuleValue
 from cmk.utils.version import is_raw_edition
 
 import cmk.gui.config
-from cmk.gui.utils.script_helpers import application_and_request_context
-from cmk.gui.watolib.changes import AuditLogStore, ObjectRef, ObjectRefType
+from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
 
 import cmk.update_config as update_config
-
-
-@pytest.fixture()
-def request_context() -> Iterator[None]:
-    with application_and_request_context():
-        yield
 
 
 @pytest.fixture(name="uc")
@@ -943,4 +936,66 @@ def test_transform_influxdb_connnections(uc: update_config.UpdateConfig) -> None
     ] == (
         "password",
         "to_be_transformed",
+    )
+
+
+@pytest.fixture()
+def fixture_pre_2_1_mknotifyd_config():
+    sitespecific_file_path: Path = Path(
+        cmk.utils.paths.default_config_dir, "mknotifyd.d", "wato", "sitespecific.mk"
+    )
+    sitespecific_file_path.parent.mkdir(exist_ok=True, parents=True)
+    with sitespecific_file_path.open("w") as f:
+        f.write(
+            "notification_spooler_config.update(%r)"
+            % {
+                "concurrency": [],
+                "deferred_cooldown": 180,
+                "deferred_force_retransmit": 1800,
+                "incoming": {
+                    "authentication": "unauthenticated",
+                    "heartbeat_interval": 10,
+                    "listen_port": 6555,
+                },
+                "log_level": 0,
+                "outgoing": [
+                    {
+                        "address": "localhost",
+                        "cooldown": 20,
+                        "heartbeat_interval": 10,
+                        "heartbeat_timeout": 3,
+                        "port": 6555,
+                    }
+                ],
+            }
+        )
+
+
+@pytest.mark.usefixtures("fixture_pre_2_1_mknotifyd_config")
+def test_rewrite_mknotifyd_migrate(uc: update_config.UpdateConfig) -> None:
+    for key, value in _read_sitespecific_mknotifyd_config().items():
+        if key == "incoming":
+            assert "encryption" not in value
+        if key == "outgoing":
+            for outgoing in value:
+                assert "encryption" not in outgoing
+
+    uc._update_mknotifyd()
+
+    for key, value in _read_sitespecific_mknotifyd_config().items():
+        if key == "incoming":
+            assert value["encryption"] == "unencrypted"
+        if key == "outgoing":
+            for outgoing in value:
+                assert outgoing["encryption"] == "upgradable"
+
+    # Once we have the new format, a second execution must not fail
+    uc._update_mknotifyd()
+
+
+def _read_sitespecific_mknotifyd_config() -> dict[str, Any]:
+    return store.load_from_mk_file(
+        path=Path(cmk.utils.paths.default_config_dir, "mknotifyd.d", "wato", "sitespecific.mk"),
+        key="notification_spooler_config",
+        default={},
     )

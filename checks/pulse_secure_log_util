@@ -12,7 +12,7 @@ METRIC_PULSE_SECURE_LOG = "log_file_utilization"
 def check_pulse_secure_log_util(item, params, parsed):
 
     if not parsed:
-        return None
+        return
 
     yield check_levels(
         parsed[METRIC_PULSE_SECURE_LOG],

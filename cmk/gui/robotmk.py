@@ -18,8 +18,9 @@ from cmk.utils.type_defs import HostName, Tuple
 import cmk.gui.pages
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html, request, response
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.header import make_header
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -31,6 +32,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.plugins.views.utils import make_service_breadcrumb
 from cmk.gui.sites import live, only_sites
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 
 
@@ -59,24 +61,27 @@ class ModeRobotmkPage(cmk.gui.pages.Page):
                 self._report_type(), site_id, host_name, service_description
             )
         except MKLivestatusNotFoundError:
-            html.header(
+            make_header(
+                html,
                 title=title,
                 breadcrumb=breadcrumb,
             )
             html.user_error(MKUserError(None, _("You are not permitted to view this page")))
-            return
+            return None
 
         if not content[0]:
-            html.header(
+            make_header(
+                html,
                 title=title,
                 breadcrumb=breadcrumb,
             )
             html.user_error(MKUserError(None, _("No logs could be found.")))
-            return
+            return None
 
         # Only render page menu with download option if content is not empty
         # and user is permitted
-        html.header(
+        make_header(
+            html,
             title=title,
             breadcrumb=breadcrumb,
             page_menu=self._page_menu(breadcrumb, site_id, host_name, service_description),
@@ -103,6 +108,7 @@ class ModeRobotmkPage(cmk.gui.pages.Page):
         html.javascript(
             "cmk.utils.add_height_to_simple_bar_content_of_iframe(%s);" % json.dumps(iframe)
         )
+        return None
 
     def _is_last_log(self) -> bool:
         return self._report_type() == "robotmk"
@@ -181,7 +187,7 @@ class ModeRobotmkPage(cmk.gui.pages.Page):
 
 
 @cmk.gui.pages.register("robotmk_report")
-def robotmk_report_page() -> cmk.gui.pages.PageResult:
+def robotmk_report_page() -> None:
     """Renders the content of the RobotMK html log file"""
     site_id, host_name, service_description = _get_mandatory_request_vars()
     report_type: str = request.get_str_input_mandatory("report_type")
@@ -193,7 +199,7 @@ def robotmk_report_page() -> cmk.gui.pages.PageResult:
 
 
 @cmk.gui.pages.register("download_robotmk_report")
-def robotmk_download_page() -> cmk.gui.pages.PageResult:
+def robotmk_download_page() -> None:
     user.need_permission("general.see_crash_reports")
 
     site_id, host_name, service_description = _get_mandatory_request_vars()

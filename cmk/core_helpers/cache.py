@@ -16,8 +16,7 @@ Cache hierarchy
         - {abstract} _from_cache_file(bytes) : TRawData
         - {abstract} _to_cache_file(TRawData) : bytes
     }
-    abstract AgentFileCache {}
-    class DefaultAgentFileCache {
+    class AgentFileCache {
         + make_path(Mode) : Path
         - _from_cache_file(bytes) : TRawData
         - _to_cache_file(TRawData) : bytes
@@ -39,12 +38,11 @@ Cache hierarchy
     class PiggybackFetcher {}
 
     FileCache <|.. AgentFileCache : <<bind>>\nTRawData::AgentRawData
+    FileCache <|.. NoCache : <<bind>>\nTRawData::AgentRawData
     FileCache <|.. SNMPFileCache : <<bind>>\nTRawData::SNMPRawData
-    AgentFileCache <|-- DefaultAgentFileCache
-    AgentFileCache <|-- NoCache
-    DefaultAgentFileCache *-- TCPFetcher
-    DefaultAgentFileCache *-- ProgramFetcher
-    DefaultAgentFileCache *-- IPMIFetcher
+    AgentFileCache *-- TCPFetcher
+    AgentFileCache *-- ProgramFetcher
+    AgentFileCache *-- IPMIFetcher
     NoCache *-- PiggybackFetcher
     SNMPFileCache *-- SNMPFetcher
 
@@ -52,6 +50,7 @@ Cache hierarchy
 
 import abc
 import copy
+import enum
 import logging
 from pathlib import Path
 from typing import (
@@ -73,7 +72,7 @@ from typing import (
 
 import cmk.utils
 import cmk.utils.store as _store
-from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.exceptions import MKFetcherError, MKGeneralException
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import HostName, SectionName
 
@@ -284,6 +283,14 @@ class MaxAge(NamedTuple):
         return self._asdict().get(mode.name.lower(), default)
 
 
+@enum.unique
+class FileCacheMode(enum.IntFlag):
+    DISABLED = enum.auto()
+    READ = enum.auto()
+    WRITE = enum.auto()
+    READ_WRITE = READ | WRITE
+
+
 class FileCache(Generic[TRawData], abc.ABC):
     def __init__(
         self,
@@ -291,17 +298,22 @@ class FileCache(Generic[TRawData], abc.ABC):
         *,
         base_path: Union[str, Path],
         max_age: MaxAge,
-        disabled: bool,
         use_outdated: bool,
         simulation: bool,
+        use_only_cache: bool,
+        file_cache_mode: Union[FileCacheMode, int],
     ) -> None:
         super().__init__()
         self.hostname: Final = hostname
         self.base_path: Final = Path(base_path)
         self.max_age = max_age
-        self.disabled = disabled
         self.use_outdated = use_outdated
+        # TODO(ml): Make sure simulation and use_only_cache are identical
+        #           and find a better, more generic name such as "force"
+        #           to produce the intended behavior.
         self.simulation = simulation
+        self.use_only_cache = use_only_cache
+        self.file_cache_mode = FileCacheMode(file_cache_mode)
         self._logger: Final = logging.getLogger("cmk.helper")
 
     def __repr__(self) -> str:
@@ -312,9 +324,10 @@ class FileCache(Generic[TRawData], abc.ABC):
                     f"{self.hostname}",
                     f"base_path={self.base_path}",
                     f"max_age={self.max_age}",
-                    f"disabled={self.disabled}",
                     f"use_outdated={self.use_outdated}",
                     f"simulation={self.simulation}",
+                    f"use_only_cache={self.use_only_cache}",
+                    f"file_cache_mode={self.file_cache_mode.value}",
                 )
             )
             + ")"
@@ -328,9 +341,10 @@ class FileCache(Generic[TRawData], abc.ABC):
                 self.hostname == other.hostname,
                 self.base_path == other.base_path,
                 self.max_age == other.max_age,
-                self.disabled == other.disabled,
                 self.use_outdated == other.use_outdated,
                 self.simulation == other.simulation,
+                self.use_only_cache == other.use_only_cache,
+                self.file_cache_mode == other.file_cache_mode,
             )
         )
 
@@ -339,9 +353,10 @@ class FileCache(Generic[TRawData], abc.ABC):
             "hostname": str(self.hostname),
             "base_path": str(self.base_path),
             "max_age": self.max_age,
-            "disabled": self.disabled,
             "use_outdated": self.use_outdated,
             "simulation": self.simulation,
+            "use_only_cache": self.use_only_cache,
+            "file_cache_mode": self.file_cache_mode,
         }
 
     @classmethod
@@ -365,10 +380,6 @@ class FileCache(Generic[TRawData], abc.ABC):
         raise NotImplementedError()
 
     def _do_cache(self, mode: Mode) -> bool:
-        if self.disabled:
-            self._logger.debug("Not using cache (Cache usage disabled)")
-            return False
-
         if self.simulation:
             self._logger.debug("Using cache (Simulation mode)")
             return True
@@ -384,17 +395,33 @@ class FileCache(Generic[TRawData], abc.ABC):
         return True
 
     def read(self, mode: Mode) -> Optional[TRawData]:
-        if not self._do_cache(mode):
+        self._logger.debug("Read from cache: %r", self)
+        raw_data = self._read(mode)
+        if raw_data is not None:
+            self._logger.debug("Got %r bytes data from cache", len(raw_data))
+            return raw_data
+
+        if self.simulation:
+            raise MKFetcherError("Got no data (Simulation mode enabled and no cached data present)")
+
+        if self.use_only_cache:
+            raise MKFetcherError("Got not data (use_only_cache)")
+
+        return raw_data
+
+    def _read(self, mode: Mode) -> Optional[TRawData]:
+        if FileCacheMode.READ not in self.file_cache_mode or not self._do_cache(mode):
             return None
 
         path = self.make_path(mode)
-        if not path.exists():
-            self._logger.debug("Not using cache (Does not exist)")
+
+        try:
+            cachefile_age = cmk.utils.cachefile_age(path)
+        except FileNotFoundError:
+            self._logger.debug("Not using cache (Does not exists)")
             return None
 
-        may_use_outdated = self.simulation or self.use_outdated
-        cachefile_age = cmk.utils.cachefile_age(path)
-        if not may_use_outdated and cachefile_age > self.max_age.get(mode):
+        if not self.use_outdated and cachefile_age > self.max_age.get(mode):
             self._logger.debug(
                 "Not using cache (Too old. Age is %d sec, allowed is %s sec)",
                 cachefile_age,
@@ -402,12 +429,6 @@ class FileCache(Generic[TRawData], abc.ABC):
             )
             return None
 
-        raw_data = self._read(path)
-        if raw_data is not None:
-            self._logger.debug("Got %r bytes data from cache", len(raw_data))
-        return raw_data
-
-    def _read(self, path: Path) -> Optional[TRawData]:
         # TODO: Use some generic store file read function to generalize error handling,
         # but there is currently no function that simply reads data from the file
         cache_file = path.read_bytes()
@@ -419,7 +440,7 @@ class FileCache(Generic[TRawData], abc.ABC):
         return self._from_cache_file(cache_file)
 
     def write(self, raw_data: TRawData, mode: Mode) -> None:
-        if not self._do_cache(mode):
+        if FileCacheMode.WRITE not in self.file_cache_mode or not self._do_cache(mode):
             return
 
         path = self.make_path(mode)
@@ -440,7 +461,8 @@ class FileCacheFactory(Generic[TRawData], abc.ABC):
 
     # TODO: Clean these options up! We need to change all call sites to use
     #       a single Checkers() object during processing first. Then we
-    #       can change these class attributes to object attributes.
+    #       can change these class attributes to object attributes and finally
+    #       get rid of these otherwise useless "factory" classes.
     #
     # Set by the user via command line to prevent using cached information at all.
     disabled: bool = False
@@ -461,12 +483,14 @@ class FileCacheFactory(Generic[TRawData], abc.ABC):
         *,
         max_age: MaxAge,
         simulation: bool = False,
+        use_only_cache: bool = False,
     ):
         super().__init__()
         self.hostname: Final = hostname
-        self.base_path: Final[Path] = Path(base_path)
+        self.base_path: Final = Path(base_path)
         self.max_age: Final = max_age
-        self.simulation: Final[bool] = simulation
+        self.simulation: Final = simulation
+        self.use_only_cache: Final = use_only_cache
 
     @abc.abstractmethod
     def make(self, *, force_cache_refresh: bool = False) -> FileCache[TRawData]:

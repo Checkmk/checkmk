@@ -19,7 +19,7 @@ from xml.dom import minidom  # type: ignore[import]
 
 import dateutil.parser
 import requests
-import urllib3  # type: ignore[import]
+import urllib3
 
 import cmk.utils.password_store
 import cmk.utils.paths
@@ -864,7 +864,7 @@ class SoapTemplates:
     )
     # yapf: enable
 
-    def __init__(self, system_fields):
+    def __init__(self, system_fields) -> None:
         super().__init__()
         self.login = SoapTemplates.LOGIN % system_fields
         self.systemtime = SoapTemplates.SYSTEMTIME % system_fields
@@ -1042,7 +1042,7 @@ class ESXSession(requests.Session):
         "</SOAP-ENV:Envelope>"
     )
 
-    def __init__(self, address, port, no_cert_check=False):
+    def __init__(self, address, port, no_cert_check=False) -> None:
         super().__init__()
         if no_cert_check:
             # Watch out: we must provide the verify keyword to every individual request call!
@@ -1087,14 +1087,14 @@ class ESXConnection:
         if "NotAuthenticatedFault" in text:
             raise ESXCookieInvalid("No longer authenticated")
 
-    def __init__(self, address, port, opt):
+    def __init__(self, address, port, opt) -> None:
         super().__init__()
 
         AGENT_TMP_PATH.mkdir(parents=True, exist_ok=True)
 
         self._server_cookie_path = AGENT_TMP_PATH / ("%s.cookie" % address)
         self._perf_samples_path = AGENT_TMP_PATH / ("%s.timer" % address)
-        self._perf_samples = None
+        self._perf_samples: None | int = None
 
         self._session = ESXSession(address, port, opt.no_cert_check)
         self.system_info = self._fetch_systeminfo()
@@ -1656,7 +1656,7 @@ def get_section_systemtime(connection: ESXConnection, debug: bool) -> Sequence[s
     return ["<<<systemtime>>>", f"{systime} {time.time()}"]
 
 
-def is_placeholder_vm(devices):
+def is_placeholder_vm(devices) -> bool:
     elements = get_pattern('<VirtualDevice xsi:type="([^"]+)', devices)
     if "VirtualDisk" not in elements:
         return True

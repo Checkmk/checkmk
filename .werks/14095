@@ -1,0 +1,11 @@
+Title: qlogic_fcport: Support SANbox 5600 FC Switch
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1653654827
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+

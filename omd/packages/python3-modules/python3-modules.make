@@ -1,5 +1,4 @@
 include $(REPO_PATH)/defines.make
-include $(REPO_PATH)/buildscripts/infrastructure/pypi_mirror/pypi_mirror.make
 
 PYTHON3_MODULES := python3-modules
 # Use some pseudo version here. Don't use OMD_VERSION (would break the package cache)
@@ -7,11 +6,12 @@ PYTHON3_MODULES_VERS := 1.1
 PYTHON3_MODULES_DIR := $(PYTHON3_MODULES)-$(PYTHON3_MODULES_VERS)
 
 PYTHON3_MODULES_DEPS := $(REPO_PATH)/Pipfile.lock \
+	$(wildcard $(REPO_PATH)/omd/packages/python3-modules/python3-modules.make) \
 	$(wildcard $(REPO_PATH)/agent-receiver/*.py) \
 	$(wildcard $(REPO_PATH)/agent-receiver/agent_receiver/*.py)
 
 # Increase the number before the "-" to enforce a recreation of the build cache
-PYTHON3_MODULES_BUILD_ID := $(call cache_pkg_build_id,15,$(PYTHON3_MODULES_DEPS))
+PYTHON3_MODULES_BUILD_ID := $(call cache_pkg_build_id,16,$(PYTHON3_MODULES_DEPS))
 
 PYTHON3_MODULES_UNPACK:= $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-unpack
 PYTHON3_MODULES_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-patching
@@ -45,11 +45,11 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	set -e ; cd $(PYTHON3_MODULES_BUILD_DIR) ; \
 	    PIPENV_PIPFILE="$(REPO_PATH)/Pipfile" \
-            PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR)/simple \
+            PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR) \
 	    `: rrdtool module is built with rrdtool omd package` \
 	    `: protobuf module is built with protobuf omd package` \
 	    `: fixup git local dependencies` \
-		pipenv lock -r | grep -Ev '(protobuf|rrdtool)' | sed 's|-e \.\/\(.*\)|$(REPO_PATH)\/\1|g' > requirements-dist.txt ; \
+		pipenv requirements --hash | grep -Ev '(protobuf|rrdtool|agent-receiver)' > requirements-dist.txt ; \
 # rpath: Create some dummy rpath which has enough space for later replacement
 # by the final rpath
 	set -e ; cd $(PYTHON3_MODULES_BUILD_DIR) ; \
@@ -70,7 +70,17 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 		--ignore-installed \
 		--no-warn-script-location \
 		--prefix="$(PYTHON3_MODULES_INSTALL_DIR)" \
-		-r requirements-dist.txt
+		-r requirements-dist.txt ; \
+	    $(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
+		`: dont use precompiled things, build with our build env ` \
+		--no-binary=":all:" \
+		--no-deps \
+		--compile \
+		--isolated \
+		--ignore-installed \
+		--no-warn-script-location \
+		--prefix="$(PYTHON3_MODULES_INSTALL_DIR)" \
+		"$(REPO_PATH)/agent-receiver/"
 # For some highly obscure unknown reason some files end up world-writable. Fix that!
 	chmod -R o-w $(PYTHON3_MODULES_INSTALL_DIR)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/site-packages
 # Cleanup some unwanted files (example scripts)
@@ -81,7 +91,7 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 # Cleanup unneeded test files of numpy
 	$(RM) -r $(PYTHON3_MODULES_INSTALL_DIR)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/site-packages/numpy/*/tests
 # Fix python interpreter for kept scripts
-	$(SED) -i '1s|^#!.*/python3$$|#!/usr/bin/env python3|' $(PYTHON3_MODULES_INSTALL_DIR)/bin/[!_]*
+	$(SED) -E -i '1s|^#!.*/python3?$$|#!/usr/bin/env python3|' $(PYTHON3_MODULES_INSTALL_DIR)/bin/[!_]*
 # pip is using pip._vendor.distlib.scripts.ScriptMaker._build_shebang() to
 # build the shebang of the scripts installed to bin. When executed via our CI
 # containers, the shebang exceeds the max_shebang_length of 127 bytes. For this

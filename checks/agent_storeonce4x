@@ -6,15 +6,13 @@
 
 from typing import Any, Mapping, Optional, Sequence, Union
 
-from cmk.utils import password_store
-
 
 def agent_storeonce4x_arguments(
     params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
 ) -> Sequence[Union[str, tuple[str, str, str]]]:
     args = [
         params["user"],
-        password_store.extract(("password", params["password"])),
+        passwordstore_get_cmdline("%s", params["password"]),
         hostname,
     ]
 

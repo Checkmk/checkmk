@@ -17,28 +17,28 @@ from cmk.gui.page_menu import (
 )
 
 
-def test_make_simple_link():
+def test_make_simple_link() -> None:
     item = make_simple_link("views.py")
     assert item.link.url == "views.py"
     assert item.link.target is None
     assert item.link.onclick is None
 
 
-def test_make_external_link():
+def test_make_external_link() -> None:
     item = make_external_link("https://checkmk.com/")
     assert item.link.url == "https://checkmk.com/"
     assert item.link.target == "_blank"
     assert item.link.onclick is None
 
 
-def test_make_javascript_link():
+def test_make_javascript_link() -> None:
     item = make_javascript_link("bla.blub()")
     assert item.link.url is None
     assert item.link.target is None
     assert item.link.onclick == "bla.blub();cmk.page_menu.close_active_dropdown();"
 
 
-def test_make_form_submit_link():
+def test_make_form_submit_link() -> None:
     item = make_form_submit_link("frm", "btn")
     assert item.link.url is None
     assert item.link.target is None
@@ -48,7 +48,7 @@ def test_make_form_submit_link():
     )
 
 
-def test_simple_page_menu(request_context):
+def test_simple_page_menu(request_context) -> None:
     pm = PageMenu(
         [
             PageMenuDropdown(

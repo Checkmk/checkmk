@@ -8,6 +8,7 @@ automation functions on slaves,"""
 
 import traceback
 from contextlib import nullcontext
+from datetime import datetime
 from typing import Iterable
 
 import cmk.utils.paths
@@ -20,14 +21,21 @@ from cmk.automations.results import result_type_registry, SerializedResult
 
 import cmk.gui.userdb as userdb
 import cmk.gui.utils
-import cmk.gui.watolib as watolib
+import cmk.gui.watolib.utils as watolib_utils
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKGeneralException
-from cmk.gui.globals import active_config, request, response
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import SuperUserContext, user
-from cmk.gui.pages import AjaxPage, page_registry
-from cmk.gui.watolib.automations import compatible_with_central_site
+from cmk.gui.pages import AjaxPage, page_registry, PageResult
+from cmk.gui.watolib.automation_commands import automation_command_registry
+from cmk.gui.watolib.automations import (
+    check_mk_local_automation_serialized,
+    compatible_with_central_site,
+    local_automation_failure,
+    remote_automation_call_came_from_pre21,
+)
 
 
 @page_registry.register_page("automation_login")
@@ -41,10 +49,10 @@ class ModeAutomationLogin(AjaxPage):
 
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
-    def handle_page(self):
+    def handle_page(self) -> None:
         self._handle_exc(self.page)
 
-    def page(self):
+    def page(self) -> PageResult:  # pylint: disable=useless-return
         if not user.may("wato.automation"):
             raise MKAuthException(_("This account has no permission for automation."))
 
@@ -97,6 +105,7 @@ class ModeAutomationLogin(AjaxPage):
                 }
             )
         )
+        return None
 
 
 @page_registry.register_page("noauth:automation")
@@ -146,7 +155,7 @@ class ModeAutomation(AjaxPage):
 
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
-    def handle_page(self):
+    def handle_page(self) -> None:
         # The automation page is accessed unauthenticated. After leaving the index.py area
         # into the page handler we always want to have a user context initialized to keep
         # the code free from special cases (if no user logged in, then...). So fake the
@@ -154,7 +163,7 @@ class ModeAutomation(AjaxPage):
         with SuperUserContext():
             self._handle_exc(self.page)
 
-    def page(self):
+    def page(self) -> PageResult:  # pylint: disable=useless-return
         # To prevent mixups in written files we use the same lock here as for
         # the normal WATO page processing. This might not be needed for some
         # special automation requests, like inventory e.g., but to keep it simple,
@@ -165,6 +174,7 @@ class ModeAutomation(AjaxPage):
         )
         with store.lock_checkmk_configuration() if lock_config else nullcontext():
             self._execute_automation()
+        return None
 
     def _execute_automation(self):
         # TODO: Refactor these two calls to also use the automation_command_registry
@@ -175,7 +185,7 @@ class ModeAutomation(AjaxPage):
             self._execute_push_profile()
             return
         try:
-            automation_command = watolib.automation_command_registry[self._command]
+            automation_command = automation_command_registry[self._command]
         except KeyError:
             raise MKGeneralException(_("Invalid automation command: %s.") % self._command)
         self._execute_automation_command(automation_command)
@@ -190,11 +200,11 @@ class ModeAutomation(AjaxPage):
         try:
             return (
                 repr(result_type_registry[cmk_command].deserialize(serialized_result).to_pre_21())
-                if watolib.remote_automation_call_came_from_pre21()
+                if remote_automation_call_came_from_pre21()
                 else serialized_result
             )
         except SyntaxError as e:
-            raise watolib.local_automation_failure(
+            raise local_automation_failure(
                 command=cmk_command,
                 cmdline=cmdline_cmd,
                 out=serialized_result,
@@ -203,11 +213,11 @@ class ModeAutomation(AjaxPage):
 
     def _execute_cmk_automation(self):
         cmk_command = request.get_str_input_mandatory("automation")
-        args = watolib.mk_eval(request.get_str_input_mandatory("arguments"))
-        indata = watolib.mk_eval(request.get_str_input_mandatory("indata"))
-        stdin_data = watolib.mk_eval(request.get_str_input_mandatory("stdin_data"))
-        timeout = watolib.mk_eval(request.get_str_input_mandatory("timeout"))
-        cmdline_cmd, serialized_result = watolib.check_mk_local_automation_serialized(
+        args = watolib_utils.mk_eval(request.get_str_input_mandatory("arguments"))
+        indata = watolib_utils.mk_eval(request.get_str_input_mandatory("indata"))
+        stdin_data = watolib_utils.mk_eval(request.get_str_input_mandatory("stdin_data"))
+        timeout = watolib_utils.mk_eval(request.get_str_input_mandatory("timeout"))
+        cmdline_cmd, serialized_result = check_mk_local_automation_serialized(
             command=cmk_command,
             args=args,
             indata=indata,
@@ -225,7 +235,7 @@ class ModeAutomation(AjaxPage):
 
     def _execute_push_profile(self):
         try:
-            response.set_data(str(watolib.mk_repr(self._automation_push_profile())))
+            response.set_data(str(watolib_utils.mk_repr(self._automation_push_profile())))
         except Exception as e:
             logger.exception("error pushing profile")
             if active_config.debug:
@@ -254,8 +264,8 @@ class ModeAutomation(AjaxPage):
             raise MKGeneralException(_("Invalid call: The profile is missing."))
 
         users = userdb.load_users(lock=True)
-        users[UserId(user_id)] = watolib.mk_eval(profile)
-        userdb.save_users(users)
+        users[UserId(user_id)] = watolib_utils.mk_eval(profile)
+        userdb.save_users(users, datetime.now())
 
         return True
 

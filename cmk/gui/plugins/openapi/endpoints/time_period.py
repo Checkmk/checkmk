@@ -15,7 +15,7 @@ You can find an introduction to time periods in the
 import datetime as dt
 import http.client
 import json
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Mapping, Tuple, Union
 
 from marshmallow.utils import from_iso_time
 
@@ -23,9 +23,11 @@ import cmk.utils.defines as defines
 from cmk.utils.type_defs import TimeperiodSpec
 
 from cmk.gui.http import Response
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
+    permissions,
     request_schemas,
     response_schemas,
 )
@@ -40,6 +42,15 @@ from cmk.gui.watolib.timeperiods import (
 
 TIME_RANGE = Tuple[str, str]
 
+PERMISSIONS = permissions.Perm("wato.timeperiods")
+
+RW_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.edit"),
+        PERMISSIONS,
+    ]
+)
+
 
 @Endpoint(
     constructors.collection_href("time_period"),
@@ -48,9 +59,12 @@ TIME_RANGE = Tuple[str, str]
     etag="output",
     request_schema=request_schemas.InputTimePeriod,
     response_schema=response_schemas.DomainObject,
+    permissions_required=RW_PERMISSIONS,
 )
-def create_timeperiod(params):
+def create_timeperiod(params: Mapping[str, Any]) -> Response:
     """Create a time period"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.timeperiods")
     body = params["body"]
     name = body["name"]
     exceptions = _format_exceptions(body.get("exceptions", []))
@@ -70,10 +84,12 @@ def create_timeperiod(params):
     additional_status_codes=[405],
     request_schema=request_schemas.UpdateTimePeriod,
     output_empty=True,
+    permissions_required=RW_PERMISSIONS,
 )
-def update_timeperiod(params):
+def update_timeperiod(params: Mapping[str, Any]) -> Response:
     """Update a time period"""
-
+    user.need_permission("wato.edit")
+    user.need_permission("wato.timeperiods")
     body = params["body"]
     name = params["name"]
     if name == "24X7":
@@ -107,9 +123,12 @@ def update_timeperiod(params):
     path_params=[NAME_FIELD],
     etag="input",
     output_empty=True,
+    permissions_required=RW_PERMISSIONS,
 )
-def delete(params):
+def delete(params: Mapping[str, Any]) -> Response:
     """Delete a time period"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.timeperiods")
     name = params["name"]
     time_periods = load_timeperiods()
     if name not in time_periods:
@@ -125,9 +144,11 @@ def delete(params):
     method="get",
     path_params=[NAME_FIELD],
     response_schema=response_schemas.ConcreteTimePeriod,
+    permissions_required=PERMISSIONS,
 )
-def show_time_period(params):
+def show_time_period(params: Mapping[str, Any]) -> Response:
     """Show a time period"""
+    user.need_permission("wato.timeperiods")
     name = params["name"]
     time_periods = load_timeperiods()
     if name not in time_periods:
@@ -141,9 +162,11 @@ def show_time_period(params):
     ".../collection",
     method="get",
     response_schema=response_schemas.DomainObjectCollection,
+    permissions_required=PERMISSIONS,
 )
-def list_time_periods(params):
+def list_time_periods(params: Mapping[str, Any]) -> Response:
     """Show all time periods"""
+    user.need_permission("wato.timeperiods")
     time_periods = []
     for time_period_id, time_period_details in load_timeperiods().items():
         alias = time_period_details["alias"]

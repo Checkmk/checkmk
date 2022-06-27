@@ -8,17 +8,20 @@ from __future__ import annotations
 
 import abc
 import time
-from functools import partial
+from dataclasses import dataclass, field
 from typing import (
     Any,
     Callable,
     Dict,
     Iterable,
+    Iterator,
     List,
     Mapping,
+    NamedTuple,
     Optional,
     Sequence,
     Tuple,
+    Type,
     TYPE_CHECKING,
     Union,
 )
@@ -27,13 +30,15 @@ from livestatus import LivestatusResponse, OnlySites, SiteId
 
 import cmk.utils.defines as defines
 import cmk.utils.render
-from cmk.utils.regex import regex
 from cmk.utils.structured_data import (
     Attributes,
     RetentionIntervals,
-    SDKeys,
+    SDKey,
+    SDKeyColumns,
     SDPath,
     SDRawPath,
+    SDRow,
+    SDValue,
     StructuredDataNode,
     Table,
 )
@@ -42,15 +47,19 @@ from cmk.utils.type_defs import HostName
 import cmk.gui.inventory as inventory
 import cmk.gui.pages
 import cmk.gui.sites as sites
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import active_config, html, output_funnel, request, user_errors
 from cmk.gui.hooks import request_memoize
-from cmk.gui.htmllib import foldable_container, HTML
-from cmk.gui.i18n import _
+from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
+from cmk.gui.i18n import _, _l
 from cmk.gui.plugins.views.utils import (
     ABCDataSource,
     Cell,
     cmp_simple_number,
+    CSVExportError,
     data_source_registry,
     declare_1to1_sorter,
     display_options,
@@ -70,21 +79,29 @@ from cmk.gui.plugins.views.utils import (
 from cmk.gui.plugins.visuals.inventory import (
     FilterInvBool,
     FilterInvFloat,
+    FilterInvtableAdminStatus,
+    FilterInvtableAvailable,
     FilterInvtableIDRange,
+    FilterInvtableInterfaceType,
+    FilterInvtableOperStatus,
     FilterInvtableText,
+    FilterInvtableVersion,
     FilterInvText,
 )
 from cmk.gui.plugins.visuals.utils import (
     filter_registry,
     get_livestatus_filter_headers,
-    parse_ranged_tables_literal,
+    get_ranged_table,
     visual_info_registry,
     VisualInfo,
 )
-from cmk.gui.type_defs import ColumnName, FilterName, Icon, Row, Rows
+from cmk.gui.type_defs import ColumnName, FilterName, Icon, Row, Rows, SingleInfos
 from cmk.gui.utils.escaping import escape_text
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.valuespec import Checkbox, Dictionary
+from cmk.gui.utils.user_errors import user_errors
+from cmk.gui.valuespec import Checkbox, Dictionary, ValueSpec
 from cmk.gui.view_utils import CellSpec, render_labels
 from cmk.gui.views.builtin_views import host_view_filters
 
@@ -92,63 +109,51 @@ if TYPE_CHECKING:
     from cmk.gui.plugins.visuals.utils import Filter
     from cmk.gui.views import View
 
+
 PaintResult = Tuple[str, Union[str, HTML]]
 PaintFunction = Callable[[Any], PaintResult]
 
 
-def _paint_host_inventory_tree(
-    row: Row, invpath: SDRawPath = ".", column: str = "host_inventory"
-) -> CellSpec:
+_PAINT_FUNCTION_NAME_PREFIX = "inv_paint_"
+_PAINT_FUNCTIONS: dict[str, PaintFunction] = {}
+
+
+def update_paint_functions(mapping: Mapping[str, Any]) -> None:
+    # Update paint functions from
+    # 1. views (local web plugins are loaded including display hints and paint functions)
+    # 2. here
+    _PAINT_FUNCTIONS.update(
+        {k: v for k, v in mapping.items() if k.startswith(_PAINT_FUNCTION_NAME_PREFIX)}
+    )
+
+
+def _get_paint_function_from_globals(paint_name: str) -> PaintFunction:
+    # Do not overwrite local paint functions
+    update_paint_functions({k: v for k, v in globals().items() if k not in _PAINT_FUNCTIONS})
+    return _PAINT_FUNCTIONS[_PAINT_FUNCTION_NAME_PREFIX + paint_name]
+
+
+class MultipleInventoryTreesError(Exception):
+    pass
+
+
+def _validate_inventory_tree_uniqueness(row: Row) -> None:
     raw_hostname = row.get("host_name")
     assert isinstance(raw_hostname, str)
 
     if (
-        len(sites_with_same_named_hosts := _get_sites_with_same_named_hosts(HostName(raw_hostname)))
+        len(
+            sites_with_same_named_hosts := _get_sites_with_same_named_hosts_cache().get(
+                HostName(raw_hostname), []
+            )
+        )
         > 1
     ):
         html.show_error(
             _("Cannot display inventory tree of host '%s': Found this host on multiple sites: %s")
             % (raw_hostname, ", ".join(sites_with_same_named_hosts))
         )
-        return "", ""
-
-    struct_tree = row.get(column)
-    if struct_tree is None:
-        return "", ""
-
-    assert isinstance(struct_tree, StructuredDataNode)
-
-    tree_renderer = _get_tree_renderer(row, column, invpath)
-
-    parsed_path, attribute_keys = inventory.parse_tree_path(invpath)
-    child: Union[None, StructuredDataNode, Table, Attributes]
-
-    if attribute_keys is None:
-        child = struct_tree.get_node(parsed_path)
-        td_class = "invtree"
-
-    elif attribute_keys == []:
-        child = struct_tree.get_table(parsed_path)
-        td_class = ""
-
-    elif attribute_keys:
-        child = _get_filtered_attributes(struct_tree, parsed_path, attribute_keys)
-        td_class = ""
-
-    else:
-        raise NotImplementedError()
-
-    if child is None:
-        return "", ""
-
-    with output_funnel.plugged():
-        child.show(tree_renderer)
-        code = HTML(output_funnel.drain())
-    return td_class, code
-
-
-def _get_sites_with_same_named_hosts(hostname: HostName) -> Sequence[SiteId]:
-    return _get_sites_with_same_named_hosts_cache().get(hostname, [])
+        raise MultipleInventoryTreesError()
 
 
 @request_memoize()
@@ -161,161 +166,8 @@ def _get_sites_with_same_named_hosts_cache() -> Mapping[HostName, Sequence[SiteI
     return cache
 
 
-def _get_tree_renderer(row: Row, column: str, invpath: SDRawPath) -> ABCNodeRenderer:
-    if column == "host_inventory":
-        painter_options = PainterOptions.get_instance()
-        return NodeRenderer(
-            row["site"],
-            row["host_name"],
-            invpath,
-            show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
-        )
-
-    tree_id = "/" + str(row["invhist_time"])
-    return DeltaNodeRenderer(
-        row["site"],
-        row["host_name"],
-        invpath,
-        tree_id=tree_id,
-    )
-
-
-def _get_filtered_attributes(
-    struct_tree: StructuredDataNode,
-    path: SDPath,
-    keys: SDKeys,
-) -> Optional[Attributes]:
-    if (attributes := struct_tree.get_attributes(path)) is None:
-        return None
-    return attributes.get_filtered_attributes(lambda key: key == keys[-1])
-
-
-def _declare_inv_column(
-    invpath: SDRawPath,
-    datatype: str,
-    title: str,
-    short: Optional[str] = None,
-    is_show_more: bool = True,
-) -> None:
-    """Declares painters, sorters and filters to be used in views based on all host related
-    datasources."""
-    if invpath == ".":
-        name = "inv"
-    else:
-        name = "inv_" + invpath.replace(":", "_").replace(".", "_").strip("_")
-
-    is_attribute = invpath[-1] not in ":."
-
-    # Declare column painter
-    painter_spec = {
-        "title": invpath == "." and _("Inventory Tree") or (_("Inventory") + ": " + title),
-        "columns": ["host_inventory", "host_structured_status"],
-        "options": ["show_internal_tree_paths"],
-        "params": Dictionary(
-            title=_("Report options"),
-            elements=[
-                (
-                    "use_short",
-                    Checkbox(
-                        title=_("Use short title in reports header"),
-                        default_value=False,
-                    ),
-                ),
-            ],
-            required_keys=["use_short"],
-        ),
-        # Only attributes can be shown in reports. There is currently no way to render trees.
-        # The HTML code would simply be stripped by the default rendering mechanism which does
-        # not look good for the HW/SW inventory tree
-        "printable": is_attribute,
-        "load_inv": True,
-        "paint": lambda row: _paint_host_inventory_tree(row, invpath),
-        "sorter": name,
-    }
-    if short:
-        painter_spec["short"] = short
-    register_painter(name, painter_spec)
-
-    # Sorters and Filters only for attributes
-    if is_attribute:
-        # Declare sorter. It will detect numbers automatically
-        register_sorter(
-            name,
-            {
-                "_inv_path": invpath,
-                "title": _("Inventory") + ": " + title,
-                "columns": ["host_inventory", "host_structured_status"],
-                "load_inv": True,
-                "cmp": lambda self, a, b: _cmp_inventory_node(a, b, self._spec["_inv_path"]),
-            },
-        )
-
-        # Declare filter. Sync this with _declare_invtable_column()
-        if datatype == "str":
-            filter_registry.register(
-                FilterInvText(
-                    ident=name,
-                    title=title,
-                    inv_path=invpath,
-                    is_show_more=is_show_more,
-                )
-            )
-        elif datatype == "bool":
-            filter_registry.register(
-                FilterInvBool(
-                    ident=name,
-                    title=title,
-                    inv_path=invpath,
-                    is_show_more=is_show_more,
-                )
-            )
-        else:
-            filter_info = _inv_filter_info().get(datatype, {})
-            filter_registry.register(
-                FilterInvFloat(
-                    ident=name,
-                    title=title,
-                    inv_path=invpath,
-                    unit=filter_info.get("unit"),
-                    scale=filter_info.get("scale", 1.0),
-                    is_show_more=is_show_more,
-                )
-            )
-
-
-def _inv_filter_info():
-    return {
-        "bytes": {"unit": _("MB"), "scale": 1024 * 1024},
-        "bytes_rounded": {"unit": _("MB"), "scale": 1024 * 1024},
-        "hz": {"unit": _("MHz"), "scale": 1000000},
-        "volt": {"unit": _("Volt")},
-        "timestamp": {"unit": _("secs")},
-    }
-
-
-def _cmp_inventory_node(
-    a: Dict[str, StructuredDataNode], b: Dict[str, StructuredDataNode], invpath: str
-) -> int:
-    # TODO merge with _decorate_sort_func
-    # Returns
-    # (1)  1 if val_a > val_b
-    # (2)  0 if val_a == val_b
-    # (3) -1 if val_a < val_b
-    val_a = inventory.get_inventory_attribute(a["host_inventory"], invpath)
-    val_b = inventory.get_inventory_attribute(b["host_inventory"], invpath)
-
-    if val_a is None:
-        # as (2) or (3)
-        return 0 if val_b is None else -1
-
-    if val_b is None:
-        # as (2) or (1)
-        return 0 if val_a is None else 1
-
-    if isinstance(val_a, float) and isinstance(val_b, float):
-        return (val_a > val_b) - (val_a < val_b)
-
-    if isinstance(val_a, int) and isinstance(val_b, int):
+def _cmp_inv_generic(val_a: object, val_b: object) -> int:
+    if isinstance(val_a, (float, int)) and isinstance(val_b, (float, int)):
         return (val_a > val_b) - (val_a < val_b)
 
     if isinstance(val_a, str) and isinstance(val_b, str):
@@ -329,11 +181,11 @@ def _cmp_inventory_node(
 @painter_option_registry.register
 class PainterOptionShowInternalTreePaths(PainterOption):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "show_internal_tree_paths"
 
     @property
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Show internal tree paths"),
             default_value=False,
@@ -343,14 +195,14 @@ class PainterOptionShowInternalTreePaths(PainterOption):
 @painter_registry.register
 class PainterInventoryTree(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "inventory_tree"
 
     def title(self, cell):
         return _("Hardware & Software Tree")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_inventory", "host_structured_status"]
 
     @property
@@ -361,12 +213,44 @@ class PainterInventoryTree(Painter):
     def load_inv(self):
         return True
 
+    def _compute_data(self, row: Row, cell: Cell) -> Optional[StructuredDataNode]:
+        try:
+            _validate_inventory_tree_uniqueness(row)
+        except MultipleInventoryTreesError:
+            return None
+
+        return row.get("host_inventory")
+
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_host_inventory_tree(row)
+        if not isinstance(tree := self._compute_data(row, cell), StructuredDataNode):
+            return "", ""
+
+        painter_options = PainterOptions.get_instance()
+        tree_renderer = NodeRenderer(
+            row["site"],
+            row["host_name"],
+            show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
+        )
+
+        with output_funnel.plugged():
+            tree_renderer.show(tree, DISPLAY_HINTS.get_hints(tree.path))
+            code = HTML(output_funnel.drain())
+
+        return "invtree", code
+
+    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+        raise CSVExportError()
+
+    def export_for_json(self, row: Row, cell: Cell) -> dict:
+        return (
+            tree.serialize()
+            if isinstance(tree := self._compute_data(row, cell), StructuredDataNode)
+            else {}
+        )
 
 
 class ABCRowTable(RowTable):
-    def __init__(self, info_names, add_host_columns):
+    def __init__(self, info_names, add_host_columns) -> None:
         super().__init__()
         self._info_names = info_names
         self._add_host_columns = add_host_columns
@@ -417,13 +301,10 @@ class ABCRowTable(RowTable):
                 rows.append(subrow)
         return rows, len(data)
 
-    def _get_raw_data(self, only_sites: OnlySites, query: str) -> LivestatusResponse:
-        sites.live().set_only_sites(only_sites)
-        sites.live().set_prepend_site(True)
-        data = sites.live().query(query)
-        sites.live().set_prepend_site(False)
-        sites.live().set_only_sites(None)
-        return data
+    @staticmethod
+    def _get_raw_data(only_sites: OnlySites, query: str) -> LivestatusResponse:
+        with sites.only_sites(only_sites), sites.prepend_site():
+            return sites.live().query(query)
 
     def _get_rows(self, hostrow: Row) -> Iterable[Row]:
         inv_data = self._get_inv_data(hostrow)
@@ -654,7 +535,7 @@ def inv_paint_timestamp_as_age_days(timestamp: int) -> PaintResult:
 
 @decorate_inv_paint()
 def inv_paint_csv_labels(csv_list: str) -> PaintResult:
-    return "labels", html.render_br().join(csv_list.split(","))
+    return "labels", HTMLWriter.render_br().join(csv_list.split(","))
 
 
 @decorate_inv_paint()
@@ -702,131 +583,671 @@ def inv_paint_service_status(status: str) -> PaintResult:
 #   '----------------------------------------------------------------------'
 
 
-def _get_display_hint(invpath: SDRawPath) -> InventoryHintSpec:
-    """Generic access function to display hints
-    Don't use other methods to access the hints!"""
-    hint_id = _find_display_hint_id(invpath)
-    if hint_id is None:
-        return {}
-    return _convert_display_hint(inventory_displayhints.get(hint_id, {}))
+def _get_paint_function(raw_hint: InventoryHintSpec) -> tuple[str, PaintFunction]:
+    # FIXME At the moment  we need it to get tdclass: Clean this up one day.
+    if "paint" in raw_hint:
+        data_type = raw_hint["paint"]
+        return data_type, _get_paint_function_from_globals(data_type)
+
+    return "str", inv_paint_generic
 
 
-def _find_display_hint_id(invpath: SDRawPath) -> Optional[str]:
-    """Looks up the display hint for the given inventory path.
+def _make_title_function(raw_hint: InventoryHintSpec) -> Callable[[str], str]:
+    if "title" not in raw_hint:
+        return lambda word: word.replace("_", " ").title()
 
-    It returns either the ID of the display hint matching the given invpath
-    or None in case no entry was found.
+    if callable(title := raw_hint["title"]):
+        # TODO Do we still need this?
+        return title
 
-    In case no exact match is possible try to match display hints that use
-    some kind of *-syntax. There are two types of cases here:
-
-      :* -> Entries in lists (* resolves to list index numbers)
-      .* -> Path entries (* resolves to a path element)
-
-    The current logic has some limitations related to the ways stars can
-    be used.
-    """
-    invpath = invpath.rstrip(".:")
-
-    # Convert index of lists to *-syntax
-    # e.g. ".foo.bar:18.test" to ".foo.bar:*.test"
-    r = regex(r"([^\.]):[0-9]+")
-    invpath = r.sub("\\1:*", invpath)
-
-    candidates = [
-        invpath,
-    ]
-
-    # Produce a list of invpath candidates with a "*" going from back to front.
-    #
-    # This algorithm only allows one ".*" in a invpath. It finds the match with
-    # the longest path prefix before the ".*".
-    #
-    # TODO: Implement a generic mechanism that allows as many stars as possible
-    invpath_parts = invpath.split(".")
-    star_index = len(invpath_parts) - 1
-    while star_index >= 0:
-        parts = invpath_parts[:star_index] + ["*"] + invpath_parts[star_index + 1 :]
-        invpath_with_star = "%s" % ".".join(parts)
-        candidates.append(invpath_with_star)
-        star_index -= 1
-
-    for candidate in candidates:
-        # TODO: Better cleanup trailing ":" and "." from display hints at all. They are useless
-        # for finding the right entry.
-        if candidate in inventory_displayhints:
-            return candidate
-
-        if candidate + "." in inventory_displayhints:
-            return candidate + "."
-
-        if candidate + ":" in inventory_displayhints:
-            return candidate + ":"
-
-    return None
+    return lambda word: title
 
 
-def _convert_display_hint(hint: InventoryHintSpec) -> InventoryHintSpec:
-    """Convert paint type to paint function, for the convenciance of the called"""
-    if "paint" in hint:
-        paint_function_name = "inv_paint_" + hint["paint"]
-        hint["paint_function"] = globals()[paint_function_name]
+def _make_long_title_function(title: str, parent_path: SDPath) -> Callable[[], str]:
+    return lambda: (
+        DISPLAY_HINTS.get_hints(parent_path).node_hint.title + " ➤ " + title
+        if parent_path
+        else title
+    )
 
-    return hint
 
+@dataclass(frozen=True)
+class NodeDisplayHint:
+    icon: Optional[str]
+    title: str
+    short_title: str
+    _long_title_function: Callable[[], str]
 
-def _inv_titleinfo(
-    invpath: SDRawPath,
-    key: Optional[str] = None,
-) -> Tuple[Optional[str], str]:
-    hint = _get_display_hint(invpath)
-    icon = hint.get("icon")
-    if "title" in hint:
-        title = hint["title"]
-        if hasattr(title, "__call__"):
-            title = title(key)
-    else:
-        title = (
-            invpath.rstrip(".").rstrip(":").split(".")[-1].split(":")[-1].replace("_", " ").title()
+    @property
+    def long_title(self) -> str:
+        return self._long_title_function()
+
+    @classmethod
+    def make_from_hint(cls, path: SDPath, raw_hint: InventoryHintSpec) -> NodeDisplayHint:
+        title = _make_title_function(raw_hint)(path[-1] if path else "")
+        return cls(
+            icon=raw_hint.get("icon"),
+            title=title,
+            short_title=raw_hint.get("short", title),
+            _long_title_function=_make_long_title_function(title, path[:-1]),
         )
-    return icon, title
 
 
-def inv_titleinfo_long(invpath: SDRawPath) -> str:
+@dataclass(frozen=True)
+class TableDisplayHint:
+    key_order: Sequence[str]
+    is_show_more: bool
+    view_name: Optional[str]
+
+    @classmethod
+    def make_from_hint(cls, raw_hint: InventoryHintSpec) -> TableDisplayHint:
+        return cls(
+            key_order=raw_hint.get("keyorder", []),
+            is_show_more=raw_hint.get("is_show_more", True),
+            view_name=raw_hint.get("view"),
+        )
+
+
+@dataclass(frozen=True)
+class ColumnDisplayHint:
+    title: str
+    short_title: str
+    paint_function: PaintFunction
+    sort_function: Callable[[Any, Any], int]  # TODO improve type hints for args
+    filter_class: (
+        None
+        | Type[FilterInvtableText]
+        | Type[FilterInvtableVersion]
+        | Type[FilterInvtableOperStatus]
+        | Type[FilterInvtableAdminStatus]
+        | Type[FilterInvtableAvailable]
+        | Type[FilterInvtableInterfaceType]
+    )
+
+    @classmethod
+    def make_from_hint(
+        cls, path: SDPath, key: str, raw_hint: InventoryHintSpec
+    ) -> ColumnDisplayHint:
+        _data_type, paint_function = _get_paint_function(raw_hint)
+        title = _make_title_function(raw_hint)(key)
+        return cls(
+            title=title,
+            short_title=raw_hint.get("short", title),
+            paint_function=paint_function,
+            sort_function=raw_hint.get("sort", _cmp_inv_generic),
+            filter_class=raw_hint.get("filter"),
+        )
+
+    def make_filter(
+        self, inv_info: str, ident: str, topic: str
+    ) -> (
+        FilterInvtableText
+        | FilterInvtableVersion
+        | FilterInvtableOperStatus
+        | FilterInvtableAdminStatus
+        | FilterInvtableAvailable
+        | FilterInvtableInterfaceType
+        | FilterInvtableIDRange
+    ):
+        if self.filter_class:
+            return self.filter_class(
+                inv_info=inv_info,
+                ident=ident,
+                title=topic + ": " + self.title,
+            )
+
+        if (ranged_table := get_ranged_table(inv_info)) is not None:
+            return FilterInvtableIDRange(
+                inv_info=ranged_table,
+                ident=ident,
+                title=topic + ": " + self.title,
+            )
+
+        return FilterInvtableText(
+            inv_info=inv_info,
+            ident=ident,
+            title=topic + ": " + self.title,
+        )
+
+
+@dataclass(frozen=True)
+class AttributesDisplayHint:
+    key_order: Sequence[str]
+
+    @classmethod
+    def make_from_hint(cls, raw_hint: InventoryHintSpec) -> AttributesDisplayHint:
+        return cls(
+            key_order=raw_hint.get("keyorder", []),
+        )
+
+
+@dataclass(frozen=True)
+class AttributeDisplayHint:
+    title: str
+    short_title: str
+    _long_title_function: Callable[[], str]
+    data_type: str
+    paint_function: PaintFunction
+    is_show_more: bool
+
+    @property
+    def long_title(self) -> str:
+        return self._long_title_function()
+
+    @classmethod
+    def make_from_hint(
+        cls, path: SDPath, key: str, raw_hint: InventoryHintSpec
+    ) -> AttributeDisplayHint:
+        data_type, paint_function = _get_paint_function(raw_hint)
+        title = _make_title_function(raw_hint)(key)
+        return cls(
+            title=title,
+            short_title=raw_hint.get("short", title),
+            _long_title_function=_make_long_title_function(title, path),
+            data_type=data_type,
+            paint_function=paint_function,
+            is_show_more=raw_hint.get("is_show_more", True),
+        )
+
+    def make_filter(
+        self, ident: str, inventory_path: inventory.InventoryPath
+    ) -> FilterInvText | FilterInvBool | FilterInvFloat:
+        if self.data_type == "str":
+            return FilterInvText(
+                ident=ident,
+                title=self.long_title,
+                inventory_path=inventory_path,
+                is_show_more=self.is_show_more,
+            )
+
+        if self.data_type == "bool":
+            return FilterInvBool(
+                ident=ident,
+                title=self.long_title,
+                inventory_path=inventory_path,
+                is_show_more=self.is_show_more,
+            )
+
+        filter_info = _inv_filter_info().get(self.data_type, {})
+        return FilterInvFloat(
+            ident=ident,
+            title=self.long_title,
+            inventory_path=inventory_path,
+            unit=filter_info.get("unit"),
+            scale=filter_info.get("scale", 1.0),
+            is_show_more=self.is_show_more,
+        )
+
+
+def _inv_filter_info():
+    return {
+        "bytes": {"unit": _("MB"), "scale": 1024 * 1024},
+        "bytes_rounded": {"unit": _("MB"), "scale": 1024 * 1024},
+        "hz": {"unit": _("MHz"), "scale": 1000000},
+        "volt": {"unit": _("Volt")},
+        "timestamp": {"unit": _("secs")},
+    }
+
+
+def inv_titleinfo_long(raw_path: SDRawPath) -> str:
     """Return the titles of the last two path components of the node, e.g. "BIOS / Vendor"."""
-    _icon, last_title = _inv_titleinfo(invpath)
-    parent = _get_parent_from_invpath(invpath)
-    if parent:
-        _icon, parent_title = _inv_titleinfo(parent)
-        return parent_title + " ➤ " + last_title
-    return last_title
+    inventory_path = inventory.InventoryPath.parse(raw_path)
+    hints = DISPLAY_HINTS.get_hints(inventory_path.path)
+
+    if inventory_path.key:
+        return hints.get_attribute_hint(inventory_path.key).long_title
+
+    return hints.node_hint.long_title
 
 
-def _get_parent_from_invpath(invpath: SDRawPath) -> Optional[SDRawPath]:
-    """Gets the parent path by dropping the last component"""
-    if invpath == ".":
-        return None  # No parent
+@dataclass
+class _RelatedRawHints:
+    for_node: InventoryHintSpec = field(default_factory=dict)
+    for_table: InventoryHintSpec = field(default_factory=dict)
+    by_columns: Dict[str, InventoryHintSpec] = field(default_factory=dict)
+    by_attributes: Dict[str, InventoryHintSpec] = field(default_factory=dict)
 
-    if invpath[-1] in ".:":  # drop trailing type specifyer
-        invpath = invpath[:-1]
 
-    last_sep = max(invpath.rfind(":"), invpath.rfind("."))
-    return invpath[: last_sep + 1]
+class _Column(NamedTuple):
+    hint: ColumnDisplayHint
+    key: str
+    is_key_column: bool
+
+
+class DisplayHints:
+    def __init__(
+        self,
+        *,
+        path: SDPath,
+        node_hint: NodeDisplayHint,
+        table_hint: TableDisplayHint,
+        column_hints: Mapping[str, ColumnDisplayHint],
+        attributes_hint: AttributesDisplayHint,
+        attribute_hints: Mapping[str, AttributeDisplayHint],
+    ) -> None:
+        # This inventory path is an 'abc' path because it's the general, abstract path of a display
+        # hint and may contain "*" (ie. placeholders).
+        # Concrete paths (in trees) contain node names which are inserted into these placeholders
+        # while calculating node titles.
+        self.abc_path = path
+        self.node_hint = node_hint
+        self.table_hint = table_hint
+        self.column_hints = column_hints
+        self.attributes_hint = attributes_hint
+        self.attribute_hints = attribute_hints
+
+        self.nodes: Dict[str, DisplayHints] = {}
+
+    @classmethod
+    def root(cls) -> DisplayHints:
+        path: SDPath = tuple()
+        return DisplayHints(
+            path=path,
+            node_hint=NodeDisplayHint.make_from_hint(path, {"title": _l("Inventory")}),
+            table_hint=TableDisplayHint.make_from_hint({}),
+            column_hints={},
+            attributes_hint=AttributesDisplayHint.make_from_hint({}),
+            attribute_hints={},
+        )
+
+    @classmethod
+    def default(cls, path: SDPath) -> DisplayHints:
+        return DisplayHints(
+            path=path,
+            node_hint=NodeDisplayHint.make_from_hint(path, {}),
+            table_hint=TableDisplayHint.make_from_hint({}),
+            column_hints={},
+            attributes_hint=AttributesDisplayHint.make_from_hint({}),
+            attribute_hints={},
+        )
+
+    def parse(self, raw_hints: Mapping[str, InventoryHintSpec]) -> None:
+        for path, related_raw_hints in sorted(self._get_related_raw_hints(raw_hints).items()):
+            if not path:
+                continue
+
+            self._get_parent(path).nodes.setdefault(
+                path[-1],
+                DisplayHints(
+                    path=path,
+                    # Some fields like 'title' or 'keyorder' of legacy display hints are declared
+                    # either for
+                    # - real nodes, eg. ".hardware.chassis.",
+                    # - nodes with attributes, eg. ".hardware.cpu." or
+                    # - nodes with a table, eg. ".software.packages:"
+                    node_hint=NodeDisplayHint.make_from_hint(
+                        path,
+                        {**related_raw_hints.for_node, **related_raw_hints.for_table},
+                    ),
+                    table_hint=TableDisplayHint.make_from_hint(related_raw_hints.for_table),
+                    column_hints={
+                        key: ColumnDisplayHint.make_from_hint(path, key, raw_hint)
+                        for key, raw_hint in related_raw_hints.by_columns.items()
+                    },
+                    attributes_hint=AttributesDisplayHint.make_from_hint(
+                        related_raw_hints.for_node
+                    ),
+                    attribute_hints={
+                        key: AttributeDisplayHint.make_from_hint(path, key, raw_hint)
+                        for key, raw_hint in related_raw_hints.by_attributes.items()
+                    },
+                ),
+            )
+
+    @staticmethod
+    def _get_related_raw_hints(
+        raw_hints: Mapping[str, InventoryHintSpec]
+    ) -> Mapping[SDPath, _RelatedRawHints]:
+        related_raw_hints_by_path: Dict[SDPath, _RelatedRawHints] = {}
+        for raw_path, raw_hint in raw_hints.items():
+            inventory_path = inventory.InventoryPath.parse(raw_path)
+            related_raw_hints = related_raw_hints_by_path.setdefault(
+                inventory_path.path,
+                _RelatedRawHints(),
+            )
+
+            if inventory_path.source == inventory.TreeSource.node:
+                related_raw_hints.for_node.update(raw_hint)
+                continue
+
+            if inventory_path.source == inventory.TreeSource.table:
+                if inventory_path.key:
+                    related_raw_hints.by_columns.setdefault(inventory_path.key, raw_hint)
+                    continue
+
+                related_raw_hints.for_table.update(raw_hint)
+                continue
+
+            if inventory_path.source == inventory.TreeSource.attributes and inventory_path.key:
+                related_raw_hints.by_attributes.setdefault(inventory_path.key, raw_hint)
+                continue
+
+        return related_raw_hints_by_path
+
+    def _get_parent(self, path: SDPath) -> DisplayHints:
+        node = self
+        for node_name in path[:-1]:
+            if node_name in node.nodes:
+                node = node.nodes[node_name]
+            else:
+                node = node.nodes.setdefault(node_name, DisplayHints.default(path))
+
+        return node
+
+    def __iter__(self) -> Iterator[DisplayHints]:
+        yield from self._make_inventory_paths_or_hints([])
+
+    def _make_inventory_paths_or_hints(self, path: List[str]) -> Iterator[DisplayHints]:
+        yield self
+        for node_name, node in self.nodes.items():
+            yield from node._make_inventory_paths_or_hints(path + [node_name])
+
+    def get_hints(self, path: SDPath) -> DisplayHints:
+        node = self
+        for node_name in path:
+            if node_name in node.nodes:
+                node = node.nodes[node_name]
+
+            elif "*" in node.nodes:
+                node = node.nodes["*"]
+
+            else:
+                return DisplayHints.default(path)
+
+        return node
+
+    def get_column_hint(self, key: str) -> ColumnDisplayHint:
+        if key in self.column_hints:
+            return self.column_hints[key]
+        return ColumnDisplayHint.make_from_hint(self.abc_path, key, {})
+
+    def get_attribute_hint(self, key: str) -> AttributeDisplayHint:
+        if key in self.attribute_hints:
+            return self.attribute_hints[key]
+        return AttributeDisplayHint.make_from_hint(self.abc_path, key, {})
+
+    def make_columns(
+        self, rows: Sequence[SDRow], key_columns: SDKeyColumns, path: SDPath
+    ) -> Sequence[_Column]:
+        sorting_keys = list(self.table_hint.key_order) + sorted(
+            set(k for r in rows for k in r) - set(self.table_hint.key_order)
+        )
+        return [_Column(self.get_column_hint(k), k, k in key_columns) for k in sorting_keys]
+
+    @staticmethod
+    def sort_rows(rows: Sequence[SDRow], columns: Sequence[_Column]) -> Sequence[SDRow]:
+        return sorted(rows, key=lambda r: tuple(r.get(c.key) or "" for c in columns))
+
+    def sort_pairs(self, pairs: Mapping[SDKey, SDValue]) -> Sequence[Tuple[SDKey, SDValue]]:
+        sorting_keys = list(self.attributes_hint.key_order) + sorted(
+            set(pairs) - set(self.attributes_hint.key_order)
+        )
+        return [(k, pairs[k]) for k in sorting_keys if k in pairs]
+
+    def replace_placeholders(self, path: SDPath) -> str:
+        if "%d" not in self.node_hint.title and "%s" not in self.node_hint.title:
+            return self.node_hint.title
+
+        title = self.node_hint.title.replace("%d", "%s")
+        node_names = tuple(
+            path[idx] for idx, node_name in enumerate(self.abc_path) if node_name == "*"
+        )
+        return title % node_names[-title.count("%s") :]
+
+
+DISPLAY_HINTS = DisplayHints.root()
+
+
+def transform_legacy_display_hints():
+    DISPLAY_HINTS.parse(inventory_displayhints)
+
+
+# .
+#   .--inventory columns---------------------------------------------------.
+#   |             _                      _                                 |
+#   |            (_)_ ____   _____ _ __ | |_ ___  _ __ _   _               |
+#   |            | | '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |              |
+#   |            | | | | \ V /  __/ | | | || (_) | |  | |_| |              |
+#   |            |_|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |              |
+#   |                                                  |___/               |
+#   |                          _                                           |
+#   |                 ___ ___ | |_   _ _ __ ___  _ __  ___                 |
+#   |                / __/ _ \| | | | | '_ ` _ \| '_ \/ __|                |
+#   |               | (_| (_) | | |_| | | | | | | | | \__ \                |
+#   |                \___\___/|_|\__,_|_| |_| |_|_| |_|___/                |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 
 def declare_inventory_columns() -> None:
     # create painters for node with a display hint
-    for invpath, hint in inventory_displayhints.items():
-        if "*" not in invpath:
-            datatype = hint.get("paint", "str")
-            long_title = inv_titleinfo_long(invpath)
+    for hints in DISPLAY_HINTS:
+        if "*" in hints.abc_path:
+            continue
+
+        ident = ("inv",) + hints.abc_path
+
+        _register_node_painter(
+            inventory.InventoryPath(path=hints.abc_path, source=inventory.TreeSource.node),
+            "_".join(ident),
+            hints,
+        )
+
+        for key, attr_hint in hints.attribute_hints.items():
             _declare_inv_column(
-                invpath,
-                datatype,
-                long_title,
-                hint.get("short", hint["title"]),
-                is_show_more=hint.get("is_show_more", True),
+                inventory.InventoryPath(
+                    path=hints.abc_path, source=inventory.TreeSource.attributes, key=key
+                ),
+                "_".join(ident + (key,)),
+                attr_hint,
             )
+
+
+def _register_node_painter(
+    inventory_path: inventory.InventoryPath,
+    name: str,
+    hints: DisplayHints,
+) -> None:
+    """Declares painters for (sub) trees on all host related datasources."""
+    hint = hints.node_hint
+
+    register_painter(
+        name,
+        {
+            "title": (
+                (_("Inventory") + ": " + hint.long_title)
+                if inventory_path.path
+                else _("Inventory Tree")
+            ),
+            "short": hint.short_title,
+            "columns": ["host_inventory", "host_structured_status"],
+            "options": ["show_internal_tree_paths"],
+            "params": Dictionary(
+                title=_("Report options"),
+                elements=[
+                    (
+                        "use_short",
+                        Checkbox(
+                            title=_("Use short title in reports header"),
+                            default_value=False,
+                        ),
+                    ),
+                ],
+                required_keys=["use_short"],
+            ),
+            # Only attributes can be shown in reports. There is currently no way to render trees.
+            # The HTML code would simply be stripped by the default rendering mechanism which does
+            # not look good for the HW/SW inventory tree
+            "printable": False,
+            "load_inv": True,
+            "sorter": name,
+            "paint": lambda row: _paint_host_inventory_tree(row, inventory_path, hints),
+            "export_for_csv": lambda row, cell: _export_node_for_csv(),
+            "export_for_json": lambda row, cell: _export_node_as_json(row, inventory_path),
+        },
+    )
+
+
+def _compute_node_painter_data(
+    row: Row, inventory_path: inventory.InventoryPath
+) -> Optional[StructuredDataNode]:
+    try:
+        _validate_inventory_tree_uniqueness(row)
+    except MultipleInventoryTreesError:
+        return None
+
+    if not isinstance(tree := row.get("host_inventory"), StructuredDataNode):
+        return None
+
+    return tree.get_node(inventory_path.path)
+
+
+def _paint_host_inventory_tree(
+    row: Row, inventory_path: inventory.InventoryPath, hints: DisplayHints
+) -> CellSpec:
+    if not (node := _compute_node_painter_data(row, inventory_path)):
+        return "", ""
+
+    painter_options = PainterOptions.get_instance()
+    tree_renderer = NodeRenderer(
+        row["site"],
+        row["host_name"],
+        show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
+    )
+
+    with output_funnel.plugged():
+        tree_renderer.show(node, hints)
+        code = HTML(output_funnel.drain())
+
+    return "invtree", code
+
+
+def _export_node_for_csv() -> str | HTML:
+    raise CSVExportError()
+
+
+def _export_node_as_json(row: Row, inventory_path: inventory.InventoryPath) -> dict:
+    return node.serialize() if (node := _compute_node_painter_data(row, inventory_path)) else {}
+
+
+def _declare_inv_column(
+    inventory_path: inventory.InventoryPath,
+    name: str,
+    hint: AttributeDisplayHint,
+) -> None:
+    """Declares painters, sorters and filters to be used in views based on all host related
+    datasources."""
+
+    # Declare column painter
+    register_painter(
+        name,
+        {
+            "title": (
+                (_("Inventory") + ": " + hint.long_title)
+                if inventory_path.path
+                else _("Inventory Tree")
+            ),
+            "short": hint.short_title,
+            "columns": ["host_inventory", "host_structured_status"],
+            "options": ["show_internal_tree_paths"],
+            "params": Dictionary(
+                title=_("Report options"),
+                elements=[
+                    (
+                        "use_short",
+                        Checkbox(
+                            title=_("Use short title in reports header"),
+                            default_value=False,
+                        ),
+                    ),
+                ],
+                required_keys=["use_short"],
+            ),
+            "printable": True,
+            "load_inv": True,
+            "sorter": name,
+            "paint": lambda row: _paint_host_inventory_attribute(row, inventory_path, hint),
+            "export_for_csv": lambda row, cell: _export_attribute_for_csv(row, inventory_path),
+            "export_for_json": lambda row, cell: _export_attribute_as_json(row, inventory_path),
+        },
+    )
+
+    # Declare sorter. It will detect numbers automatically
+    register_sorter(
+        name,
+        {
+            "_inventory_path": inventory_path,
+            "title": _("Inventory") + ": " + hint.long_title,
+            "columns": ["host_inventory", "host_structured_status"],
+            "load_inv": True,
+            "cmp": lambda self, a, b: _cmp_inventory_node(a, b, self._spec["_inventory_path"]),
+        },
+    )
+
+    # Declare filter. Sync this with _declare_invtable_column()
+    filter_registry.register(hint.make_filter(name, inventory_path))
+
+
+def _compute_attribute_painter_data(
+    row: Row, inventory_path: inventory.InventoryPath
+) -> None | str | int | float:
+    try:
+        _validate_inventory_tree_uniqueness(row)
+    except MultipleInventoryTreesError:
+        return None
+
+    if not isinstance(tree := row.get("host_inventory"), StructuredDataNode):
+        return None
+
+    if (node := tree.get_node(inventory_path.path)) is None:
+        return None
+
+    if inventory_path.key in node.attributes.pairs:
+        return node.attributes.pairs[inventory_path.key]
+
+    return None
+
+
+def _paint_host_inventory_attribute(
+    row: Row, inventory_path: inventory.InventoryPath, hint: AttributeDisplayHint
+) -> CellSpec:
+    if (attribute_data := _compute_attribute_painter_data(row, inventory_path)) is None:
+        return "", ""
+
+    painter_options = PainterOptions.get_instance()
+    tree_renderer = NodeRenderer(
+        row["site"],
+        row["host_name"],
+        show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
+    )
+
+    with output_funnel.plugged():
+        tree_renderer.show_attribute(attribute_data, hint)
+        code = HTML(output_funnel.drain())
+
+    return "", code
+
+
+def _export_attribute_for_csv(row: Row, inventory_path: inventory.InventoryPath) -> str | HTML:
+    return (
+        "" if (data := _compute_attribute_painter_data(row, inventory_path)) is None else str(data)
+    )
+
+
+def _export_attribute_as_json(
+    row: Row, inventory_path: inventory.InventoryPath
+) -> None | str | int | float:
+    return _compute_attribute_painter_data(row, inventory_path)
+
+
+def _cmp_inventory_node(
+    a: Dict[str, StructuredDataNode],
+    b: Dict[str, StructuredDataNode],
+    inventory_path: inventory.InventoryPath,
+) -> int:
+    val_a = inventory.get_attribute(a["host_inventory"], inventory_path)
+    val_b = inventory.get_attribute(b["host_inventory"], inventory_path)
+    return _decorate_sort_func(_cmp_inv_generic)(val_a, val_b)
 
 
 # .
@@ -848,30 +1269,28 @@ def declare_inventory_columns() -> None:
 #   '----------------------------------------------------------------------'
 
 
-def _inv_find_subtable_columns(invpath: SDRawPath) -> List[str]:
+def _inv_find_subtable_columns(
+    inventory_path: inventory.InventoryPath,
+) -> Sequence[Tuple[str, ColumnDisplayHint]]:
     """Find the name of all columns of an embedded table that have a display
     hint. Respects the order of the columns if one is specified in the
     display hint.
 
     Also use the names found in keyorder to get even more of the available columns."""
-    subtable_hint = inventory_displayhints[invpath]
+    hints = DISPLAY_HINTS.get_hints(inventory_path.path)
 
     # Create dict from column name to its order number in the list
-    with_numbers = enumerate(subtable_hint.get("keyorder", []))
+    with_numbers = enumerate(hints.table_hint.key_order)
     swapped = [(t[1], t[0]) for t in with_numbers]
     order = dict(swapped)
 
-    columns = []
-    for path in inventory_displayhints:
-        if path.startswith(invpath + "*."):
-            # ".networking.interfaces:*.port_type" -> "port_type"
-            columns.append(path.split(".")[-1])
+    columns = dict(hints.column_hints)
 
-    for key in subtable_hint.get("keyorder", []):
+    for key in hints.table_hint.key_order:
         if key not in columns:
-            columns.append(key)
+            columns[key] = hints.get_column_hint(key)
 
-    return sorted(columns, key=lambda x: (order.get(x, 999), x))
+    return sorted(columns.items(), key=lambda t: (order.get(t[0], 999), t[0]))
 
 
 def _decorate_sort_func(f):
@@ -888,59 +1307,22 @@ def _decorate_sort_func(f):
 
 
 def _declare_invtable_column(
-    infoname: str, invpath: SDRawPath, topic: str, name: str, column: str
+    infoname: str,
+    topic: str,
+    column: str,
+    hint: ColumnDisplayHint,
 ) -> None:
-    sub_invpath = invpath + "*." + name
-    hint = inventory_displayhints.get(sub_invpath, {})
-
-    def cmp_func(a, b):
-        return (a > b) - (a < b)
-
-    sortfunc = hint.get("sort", cmp_func)
-    if "paint" in hint:
-        paint_name = hint["paint"]
-        paint_function: PaintFunction = globals()["inv_paint_" + paint_name]
-    else:
-        paint_name = "str"
-        paint_function = inv_paint_generic
-
-    title = _inv_titleinfo(sub_invpath)[1]
-
-    # Sync this with _declare_inv_column()
-    filter_class = hint.get("filter")
-    if not filter_class:
-        if paint_name == "str":
-            filter_registry.register(
-                FilterInvtableText(
-                    inv_info=infoname,
-                    ident=infoname + "_" + name,
-                    title=topic + ": " + title,
-                )
-            )
-        else:
-            filter_registry.register(
-                FilterInvtableIDRange(
-                    inv_info=parse_ranged_tables_literal(infoname),
-                    ident=infoname + "_" + name,
-                    title=topic + ": " + title,
-                )
-            )
-    else:
-        filter_registry.register(
-            filter_class(
-                inv_info=infoname,
-                ident=infoname + "_" + name,
-                title=topic + ": " + title,
-            )
-        )
+    # TODO
+    # - Sync this with _declare_inv_column()
+    filter_registry.register(hint.make_filter(infoname, column, topic))
 
     register_painter(
         column,
         {
-            "title": topic + ": " + title,
-            "short": hint.get("short", title),
+            "title": topic + ": " + hint.title,
+            "short": hint.short_title,
             "columns": [column],
-            "paint": lambda row: paint_function(row.get(column)),
+            "paint": lambda row: hint.paint_function(row.get(column)),
             "sorter": column,
         },
     )
@@ -948,19 +1330,32 @@ def _declare_invtable_column(
     register_sorter(
         column,
         {
-            "title": _("Inventory") + ": " + title,
+            "title": _("Inventory") + ": " + hint.title,
             "columns": [column],
-            "cmp": lambda self, a, b: _decorate_sort_func(sortfunc)(a.get(column), b.get(column)),
+            "cmp": lambda self, a, b: _decorate_sort_func(hint.sort_function)(
+                a.get(column), b.get(column)
+            ),
         },
     )
 
 
+def _get_table_rows(
+    tree: StructuredDataNode, inventory_path: inventory.InventoryPath
+) -> Sequence[SDRow]:
+    return (
+        []
+        if inventory_path.source != inventory.TreeSource.table
+        or (table := tree.get_table(inventory_path.path)) is None
+        else table.rows
+    )
+
+
 class RowTableInventory(ABCRowTable):
-    def __init__(self, info_name: str, inventory_path: SDRawPath) -> None:
+    def __init__(self, info_name: str, inventory_path: inventory.InventoryPath) -> None:
         super().__init__([info_name], ["host_structured_status"])
         self._inventory_path = inventory_path
 
-    def _get_inv_data(self, hostrow: Row) -> inventory.InventoryRows:
+    def _get_inv_data(self, hostrow: Row) -> Sequence[SDRow]:
         try:
             merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
         except inventory.LoadStructuredDataError:
@@ -976,12 +1371,9 @@ class RowTableInventory(ABCRowTable):
         if merged_tree is None:
             return []
 
-        table = inventory.get_inventory_table(merged_tree, self._inventory_path)
-        if table is None:
-            return []
-        return table
+        return _get_table_rows(merged_tree, self._inventory_path)
 
-    def _prepare_rows(self, inv_data: inventory.InventoryRows) -> Iterable[Row]:
+    def _prepare_rows(self, inv_data: Sequence[SDRow]) -> Iterable[Row]:
         # TODO check: hopefully there's only a table as input arg
         info_name = self._info_names[0]
         entries = []
@@ -1000,18 +1392,20 @@ class ABCDataSourceInventory(ABCDataSource):
 
     @property
     @abc.abstractmethod
-    def inventory_path(self) -> str:
+    def inventory_path(self) -> inventory.InventoryPath:
         raise NotImplementedError()
 
 
 # One master function that does all
 def declare_invtable_view(
     infoname: str,
-    invpath: SDRawPath,
+    raw_path: SDRawPath,
     title_singular: str,
     title_plural: str,
     icon: Optional[Icon] = None,
 ) -> None:
+    inventory_path = inventory.InventoryPath.parse(raw_path)
+
     _register_info_class(infoname, title_singular, title_plural)
 
     # Create the datasource (like a database view)
@@ -1020,7 +1414,7 @@ def declare_invtable_view(
         (ABCDataSourceInventory,),
         {
             "_ident": infoname,
-            "_inventory_path": invpath,
+            "_inventory_path": inventory_path,
             "_title": "%s: %s" % (_("Inventory"), title_plural),
             "_infos": ["host", infoname],
             "ident": property(lambda s: s._ident),
@@ -1036,25 +1430,27 @@ def declare_invtable_view(
 
     painters: List[Tuple[str, str, str]] = []
     filters = []
-    for name in _inv_find_subtable_columns(invpath):
+    for name, col_hint in _inv_find_subtable_columns(inventory_path):
         column = infoname + "_" + name
 
         # Declare a painter, sorter and filters for each path with display hint
-        _declare_invtable_column(infoname, invpath, title_singular, name, column)
+        _declare_invtable_column(
+            infoname,
+            title_singular,
+            column,
+            col_hint,
+        )
 
         painters.append((column, "", ""))
         filters.append(column)
 
-    _declare_views(infoname, title_plural, painters, filters, [invpath], icon)
-
-
-InventorySourceRows = Tuple[str, inventory.InventoryRows]
+    _declare_views(infoname, title_plural, painters, filters, [inventory_path], icon)
 
 
 class RowMultiTableInventory(ABCRowTable):
     def __init__(
         self,
-        sources: List[Tuple[str, SDRawPath]],
+        sources: List[Tuple[str, inventory.InventoryPath]],
         match_by: List[str],
         errors: List[str],
     ) -> None:
@@ -1063,7 +1459,7 @@ class RowMultiTableInventory(ABCRowTable):
         self._match_by = match_by
         self._errors = errors
 
-    def _get_inv_data(self, hostrow: Row) -> List[InventorySourceRows]:
+    def _get_inv_data(self, hostrow: Row) -> Sequence[Tuple[str, Sequence[SDRow]]]:
         try:
             merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
         except inventory.LoadStructuredDataError:
@@ -1079,14 +1475,12 @@ class RowMultiTableInventory(ABCRowTable):
         if merged_tree is None:
             return []
 
-        multi_table: List[InventorySourceRows] = []
-        for info_name, inventory_path in self._sources:
-            table = inventory.get_inventory_table(merged_tree, inventory_path)
-            if table is not None:
-                multi_table.append((info_name, table))
-        return multi_table
+        return [
+            (info_name, _get_table_rows(merged_tree, inventory_path))
+            for info_name, inventory_path in self._sources
+        ]
 
-    def _prepare_rows(self, inv_data: List[InventorySourceRows]) -> Iterable[Row]:
+    def _prepare_rows(self, inv_data: Sequence[Tuple[str, Sequence[SDRow]]]) -> Iterable[Row]:
         joined_rows: Dict[Tuple[str, ...], Dict] = {}
         for this_info_name, this_inv_data in inv_data:
             for entry in this_inv_data:
@@ -1110,7 +1504,7 @@ def declare_joined_inventory_table_view(
     _register_info_class(tablename, title_singular, title_plural)
 
     info_names: List[str] = []
-    invpaths: List[str] = []
+    inventory_paths: List[inventory.InventoryPath] = []
     titles: List[str] = []
     errors = []
     for this_tablename in tables:
@@ -1125,7 +1519,7 @@ def declare_joined_inventory_table_view(
         assert issubclass(data_source_class, ABCDataSourceInventory)
         ds = data_source_class()
         info_names.append(ds.ident)
-        invpaths.append(ds.inventory_path)
+        inventory_paths.append(ds.inventory_path)
         titles.append(visual_info_class().title)
 
     # Create the datasource (like a database view)
@@ -1134,7 +1528,7 @@ def declare_joined_inventory_table_view(
         (ABCDataSource,),
         {
             "_ident": tablename,
-            "_sources": list(zip(info_names, invpaths)),
+            "_sources": list(zip(info_names, inventory_paths)),
             "_match_by": match_by,
             "_errors": errors,
             "_title": "%s: %s" % (_("Inventory"), title_plural),
@@ -1152,8 +1546,8 @@ def declare_joined_inventory_table_view(
     known_common_columns = set()
     painters: List[Tuple[str, str, str]] = []
     filters = []
-    for this_invpath, this_infoname, this_title in zip(invpaths, info_names, titles):
-        for name in _inv_find_subtable_columns(this_invpath):
+    for this_inventory_path, this_infoname, this_title in zip(inventory_paths, info_names, titles):
+        for name, col_hint in _inv_find_subtable_columns(this_inventory_path):
             if name in match_by:
                 # Filter out duplicate common columns which are used to join tables
                 if name in known_common_columns:
@@ -1163,12 +1557,17 @@ def declare_joined_inventory_table_view(
             column = this_infoname + "_" + name
 
             # Declare a painter, sorter and filters for each path with display hint
-            _declare_invtable_column(this_infoname, this_invpath, this_title, name, column)
+            _declare_invtable_column(
+                this_infoname,
+                this_title,
+                column,
+                col_hint,
+            )
 
             painters.append((column, "", ""))
             filters.append(column)
 
-    _declare_views(tablename, title_plural, painters, filters, invpaths)
+    _declare_views(tablename, title_plural, painters, filters, inventory_paths)
 
 
 def _register_info_class(infoname: str, title_singular: str, title_plural: str) -> None:
@@ -1194,13 +1593,12 @@ def _declare_views(
     title_plural: str,
     painters: List[Tuple[str, str, str]],
     filters: List[FilterName],
-    invpaths: List[SDRawPath],
+    inventory_paths: Sequence[inventory.InventoryPath],
     icon: Optional[Icon] = None,
 ) -> None:
     is_show_more = True
-    if len(invpaths) == 1:
-        hint = _get_display_hint(invpaths[0])
-        is_show_more = hint.get("is_show_more", True)
+    if len(inventory_paths) == 1:
+        is_show_more = DISPLAY_HINTS.get_hints(inventory_paths[0].path).table_hint.is_show_more
 
     # Declare two views: one for searching globally. And one
     # for the items of one host.
@@ -1259,7 +1657,7 @@ def _declare_views(
         "mustsearch": False,
         "link_from": {
             "single_infos": ["host"],
-            "has_inventory_tree": invpaths,
+            "has_inventory_tree": [ip.path for ip in inventory_paths],
         },
         # Columns
         "painters": painters,
@@ -1473,7 +1871,7 @@ multisite_builtin_views["inv_host"] = {
     "hidden": True,
     "link_from": {
         "single_infos": ["host"],
-        "has_inventory_tree": ".",
+        "has_inventory_tree": [inventory.InventoryPath.parse(".").path],
     },
     # Layout options
     "layout": "dataset",
@@ -1489,7 +1887,7 @@ multisite_builtin_views["inv_host"] = {
     "group_painters": [],
     "painters": [
         ("host", "host", ""),
-        ("inv", None, ""),
+        ("inventory_tree", None, ""),
     ],
     # Filters
     "hard_filters": [],
@@ -1647,7 +2045,7 @@ class DataSourceInventoryHistory(ABCDataSource):
         return RowTableInventoryHistory()
 
     @property
-    def infos(self) -> List[str]:
+    def infos(self) -> SingleInfos:
         return ["host", "invhist"]
 
     @property
@@ -1672,7 +2070,7 @@ class PainterInvhistTime(Painter):
         return _("Date/Time")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["invhist_time"]
 
     @property
@@ -1693,11 +2091,42 @@ class PainterInvhistDelta(Painter):
         return _("Inventory changes")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["invhist_delta", "invhist_time"]
 
+    def _compute_data(self, row: Row, cell: Cell) -> Optional[StructuredDataNode]:
+        try:
+            _validate_inventory_tree_uniqueness(row)
+        except MultipleInventoryTreesError:
+            return None
+
+        return row.get("invhist_delta")
+
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_host_inventory_tree(row, column="invhist_delta")
+        if not isinstance(tree := self._compute_data(row, cell), StructuredDataNode):
+            return "", ""
+
+        tree_renderer = DeltaNodeRenderer(
+            row["site"],
+            row["host_name"],
+            tree_id="/" + str(row["invhist_time"]),
+        )
+
+        with output_funnel.plugged():
+            tree_renderer.show(tree, DISPLAY_HINTS.get_hints(tree.path))
+            code = HTML(output_funnel.drain())
+
+        return "invtree", code
+
+    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+        raise CSVExportError()
+
+    def export_for_json(self, row: Row, cell: Cell) -> dict:
+        return (
+            tree.serialize()
+            if isinstance(tree := self._compute_data(row, cell), StructuredDataNode)
+            else {}
+        )
 
 
 def _paint_invhist_count(row: Row, what: str) -> CellSpec:
@@ -1720,7 +2149,7 @@ class PainterInvhistRemoved(Painter):
         return _("Removed")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["invhist_removed"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1740,7 +2169,7 @@ class PainterInvhistNew(Painter):
         return _("New")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["invhist_new"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1760,7 +2189,7 @@ class PainterInvhistChanged(Painter):
         return _("Changed")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["invhist_changed"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1791,7 +2220,7 @@ multisite_builtin_views["inv_host_history"] = {
     "is_show_more": True,
     "link_from": {
         "single_infos": ["host"],
-        "has_inventory_tree_history": ".",
+        "has_inventory_tree_history": [inventory.InventoryPath.parse(".").path],
     },
     # Layout options
     "layout": "table",
@@ -1832,18 +2261,8 @@ multisite_builtin_views["inv_host_history"] = {
 
 
 # Just for compatibility
-def render_inv_dicttable(*args):
+def render_inv_dicttable(*args) -> None:
     pass
-
-
-def _sort_by_index(keyorder, item):
-    try:
-        return keyorder.index(item[0])
-    except ValueError:
-        return len(keyorder) + 1
-
-
-TableTitles = List[Tuple[str, str, bool]]
 
 
 class ABCNodeRenderer(abc.ABC):
@@ -1851,199 +2270,138 @@ class ABCNodeRenderer(abc.ABC):
         self,
         site_id: SiteId,
         hostname: HostName,
-        invpath: SDRawPath,
         tree_id: str = "",
         show_internal_tree_paths: bool = False,
     ) -> None:
         self._site_id = site_id
         self._hostname = hostname
-        self._invpath = invpath
         self._tree_id = tree_id
-        if show_internal_tree_paths:
-            self._show_internal_tree_paths = "on"
-        else:
-            self._show_internal_tree_paths = ""
+        self._show_internal_tree_paths = show_internal_tree_paths
+
+    def show(self, node: StructuredDataNode, hints: DisplayHints) -> None:
+        if not node.attributes.is_empty():
+            self._show_attributes(node.attributes, hints)
+
+        if not node.table.is_empty():
+            self._show_table(node.table, hints)
+
+        for the_node in sorted(node.nodes, key=lambda n: n.name):
+            self._show_node(the_node)
 
     #   ---node-----------------------------------------------------------------
 
-    def show_node(self, node: StructuredDataNode) -> None:
-        invpath = ".%s." % self._get_raw_path(list(node.path))
+    def _show_node(self, node: StructuredDataNode) -> None:
+        raw_path = f".{'.'.join(map(str, node.path))}." if node.path else "."
 
-        edge = node.path[-1] if node.path else ""
-        icon, title = _inv_titleinfo(invpath, key=str(edge))
-
-        # Replace placeholders in title with the real values for this path
-        if "%d" in title or "%s" in title:
-            title = self._replace_placeholders(title, invpath)
-
-        header = self._get_header(title, ".".join(map(str, node.path)), "#666")
-        fetch_url = makeuri_contextless(
-            request,
-            [
-                ("site", self._site_id),
-                ("host", self._hostname),
-                ("path", invpath),
-                ("show_internal_tree_paths", self._show_internal_tree_paths),
-                ("treeid", self._tree_id),
-            ],
-            "ajax_inv_render_tree.py",
-        )
+        hints = DISPLAY_HINTS.get_hints(node.path)
 
         with foldable_container(
             treename="inv_%s%s" % (self._hostname, self._tree_id),
-            id_=invpath,
+            id_=raw_path,
             isopen=False,
-            title=header,
-            icon=icon,
-            fetch_url=fetch_url,
+            title=self._get_header(
+                hints.replace_placeholders(node.path),
+                ".".join(map(str, node.path)),
+                "#666",
+            ),
+            icon=hints.node_hint.icon,
+            fetch_url=makeuri_contextless(
+                request,
+                [
+                    ("site", self._site_id),
+                    ("host", self._hostname),
+                    ("raw_path", raw_path),
+                    ("show_internal_tree_paths", "on" if self._show_internal_tree_paths else ""),
+                    ("tree_id", self._tree_id),
+                ],
+                "ajax_inv_render_tree.py",
+            ),
         ) as is_open:
             if is_open:
-                node.show(self)
-
-    def _replace_placeholders(self, raw_title: str, invpath: SDRawPath) -> str:
-        hint_id = _find_display_hint_id(invpath)
-        if hint_id is None:
-            return raw_title
-
-        invpath_parts = invpath.strip(".").split(".")
-
-        # Use the position of the stars in the path to build a list of texts
-        # that should be used for replacing the tile placeholders
-        replace_vars = []
-        hint_parts = hint_id.strip(".").split(".")
-        for index, hint_part in enumerate(hint_parts):
-            if hint_part == "*":
-                replace_vars.append(invpath_parts[index])
-
-        # Now replace the variables in the title. Handle the case where we have
-        # more stars than macros in the title.
-        num_macros = raw_title.count("%d") + raw_title.count("%s")
-        return raw_title % tuple(replace_vars[:num_macros])
+                self.show(node, hints)
 
     #   ---table----------------------------------------------------------------
 
-    def show_table(self, table: Table) -> None:
-        # FIXME these kind of paths are required for hints.
-        # Clean this up one day.
-        invpath = ".%s:" % self._get_raw_path(list(table.path))
-        hint = _get_display_hint(invpath)
-        keyorder = hint.get("keyorder", [])  # well known keys
-
-        # Add titles for those keys
-        titles: TableTitles = []
-        for key in keyorder:
-            sub_invpath = "%s0.%s" % (invpath, key)
-            _icon, title = _inv_titleinfo(sub_invpath)
-            sub_hint = _get_display_hint(sub_invpath)
-            short_title = sub_hint.get("short", title)
-            titles.append((short_title, key, key in table.key_columns))
-
-        # Determine *all* keys, in order to find unknown ones
-        # Order not well-known keys alphabetically
-        extratitles: TableTitles = []
-        for key in set(key for row in table.rows for key in row):
-            if key not in keyorder:
-                _icon, title = _inv_titleinfo("%s0.%s" % (invpath, key))
-                extratitles.append((title, key, key in table.key_columns))
-        titles += sorted(extratitles)
-
-        # Link to Multisite view with exactly this table
-        if "view" in hint:
-            url = makeuri_contextless(
-                request,
-                [
-                    ("view_name", hint["view"]),
-                    ("host", self._hostname),
-                ],
-                filename="view.py",
-            )
+    def _show_table(self, table: Table, hints: DisplayHints) -> None:
+        if hints.table_hint.view_name:
+            # Link to Multisite view with exactly this table
             html.div(
-                html.render_a(_("Open this table for filtering / sorting"), href=url),
+                HTMLWriter.render_a(
+                    _("Open this table for filtering / sorting"),
+                    href=makeuri_contextless(
+                        request,
+                        [
+                            ("view_name", hints.table_hint.view_name),
+                            ("host", self._hostname),
+                        ],
+                        filename="view.py",
+                    ),
+                ),
                 class_="invtablelink",
             )
 
-        self._show_table_data(hint, table, titles, invpath)
+        columns = hints.make_columns(table.rows, table.key_columns, table.path)
 
-    def _show_table_data(
-        self, hint: InventoryHintSpec, table: Table, titles: TableTitles, invpath: SDRawPath
-    ) -> None:
         # TODO: Use table.open_table() below.
         html.open_table(class_="data")
         html.open_tr()
-        for title, key, is_key_column in titles:
-            html.th(self._get_header(title, key, "#DDD", is_key_column=is_key_column))
-
+        for column in columns:
+            html.th(
+                self._get_header(
+                    column.hint.short_title,
+                    column.key,
+                    "#DDD",
+                    is_key_column=column.is_key_column,
+                )
+            )
         html.close_tr()
 
-        for index, entry in enumerate(self._sort_table_rows(hint, table)):
+        for row in hints.sort_rows(table.rows, columns):
             html.open_tr(class_="even0")
-            for title, key, _is_key_column in titles:
-                value = entry.get(key)
-                sub_invpath = "%s%d.%s" % (invpath, index, key)
-                hint = _get_display_hint(sub_invpath)
-                if "paint_function" in hint:
-                    # FIXME At the moment  we need it to get tdclass
-                    # Clean this up one day.
-                    # The value is not really needed, but we need to deal with the delta mode
-                    unused_value = value[1] if isinstance(value, tuple) else value
-                    tdclass, _ = hint["paint_function"](unused_value)
-                else:
-                    tdclass = None
+            for column in columns:
+                value = row.get(column.key)
+                tdclass, _rendered_value = column.hint.paint_function(
+                    value[1] if isinstance(value, tuple) else value
+                )
 
                 html.open_td(class_=tdclass)
-                self._show_table_value(
+                self._show_row_value(
                     value,
-                    hint,
-                    retention_intervals=table.get_retention_intervals(key, entry),
+                    column.hint,
+                    retention_intervals=table.get_retention_intervals(column.key, row),
                 )
                 html.close_td()
             html.close_tr()
         html.close_table()
 
-    def _sort_table_rows(self, hint: InventoryHintSpec, table: Table) -> inventory.InventoryRows:
-        if (keyorder := hint.get("keyorder")) is None:
-            return table.rows
-
-        sorting_keys = tuple(k for k in keyorder if k in table.key_columns)
-        return sorted(table.rows, key=lambda r: tuple(r.get(k) or "" for k in sorting_keys))
-
     @abc.abstractmethod
-    def _show_table_value(
+    def _show_row_value(
         self,
         value: Any,
-        hint: InventoryHintSpec,
+        col_hint: ColumnDisplayHint,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
         raise NotImplementedError()
 
     #   ---attributes-----------------------------------------------------------
 
-    def show_attributes(self, attributes: Attributes) -> None:
-        invpath = ".%s" % self._get_raw_path(list(attributes.path))
-        hint = _get_display_hint(invpath)
-
-        keyorder = hint.get("keyorder")
-        if keyorder:
-            sort_func: Union[partial[Tuple[str, Any]], Callable[[Tuple[str, Any]], str]] = partial(
-                _sort_by_index, keyorder
-            )
-        else:
-            # Simply sort by keys
-            def sort_func(item):
-                return item[0]
-
+    def _show_attributes(self, attributes: Attributes, hints: DisplayHints) -> None:
         html.open_table()
-        for key, value in sorted(attributes.pairs.items(), key=sort_func):
-            sub_invpath = "%s.%s" % (invpath, key)
-            _icon, title = _inv_titleinfo(sub_invpath)
-            hint = _get_display_hint(sub_invpath)
+        for key, value in hints.sort_pairs(attributes.pairs):
+            attr_hint = hints.get_attribute_hint(key)
 
             html.open_tr()
-            html.th(self._get_header(title, key, "#DDD"), title=sub_invpath)
+            html.th(
+                self._get_header(
+                    attr_hint.title,
+                    key,
+                    "#DDD",
+                )
+            )
             html.open_td()
-            self._show_attribute(
+            self.show_attribute(
                 value,
-                hint,
+                attr_hint,
                 retention_intervals=attributes.get_retention_intervals(key),
             )
             html.close_td()
@@ -2051,19 +2409,15 @@ class ABCNodeRenderer(abc.ABC):
         html.close_table()
 
     @abc.abstractmethod
-    def _show_attribute(
+    def show_attribute(
         self,
         value: Any,
-        hint: InventoryHintSpec,
+        attr_hint: AttributeDisplayHint,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
         raise NotImplementedError()
 
     #   ---helper---------------------------------------------------------------
-
-    def _get_raw_path(self, path: Optional[SDPath]) -> str:
-        raw_path = ".".join(map(str, path)) if path else self._invpath
-        return raw_path.strip(".")
 
     def _get_header(
         self,
@@ -2076,37 +2430,26 @@ class ABCNodeRenderer(abc.ABC):
         header = HTML(title)
         if self._show_internal_tree_paths:
             key_info = "%s*" % key if is_key_column else key
-            header += " " + html.render_span("(%s)" % key_info, style="color: %s" % hex_color)
+            header += " " + HTMLWriter.render_span("(%s)" % key_info, style="color: %s" % hex_color)
         return header
 
     def _show_child_value(
         self,
         value: Any,
-        hint: InventoryHintSpec,
+        hint: Union[ColumnDisplayHint, AttributeDisplayHint],
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
-        if "paint_function" in hint:
-            paint_function: PaintFunction = hint["paint_function"]
-            _tdclass, code = paint_function(value)
-            html.write_text(code)
-        elif isinstance(value, str):
-            html.write_text(value)
-        elif isinstance(value, int):
-            html.write_text(str(value))
-        elif isinstance(value, float):
-            html.write_text("%.2f" % value)
-        elif isinstance(value, HTML):
+        if isinstance(value, HTML):
             html.write_html(value)
-        elif value is not None:
-            html.write_text(str(value))
+        else:
+            _tdclass, code = hint.paint_function(value)
+            html.write_text(code)
 
         if (ret_value_to_write := self._get_retention_value(retention_intervals)) is not None:
             html.write_html(ret_value_to_write)
 
-    def _get_retention_value(
-        self,
-        retention_intervals: Optional[RetentionIntervals],
-    ) -> Optional[HTML]:
+    @staticmethod
+    def _get_retention_value(retention_intervals: Optional[RetentionIntervals]) -> Optional[HTML]:
         if retention_intervals is None:
             return None
 
@@ -2117,47 +2460,51 @@ class ABCNodeRenderer(abc.ABC):
 
         if now <= retention_intervals.keep_until:
             _tdclass, value = inv_paint_age(retention_intervals.keep_until - now)
-            return html.render_span(_(" (%s left)") % value, style="color: #DDD")
+            return HTMLWriter.render_span(_(" (%s left)") % value, style="color: #DDD")
 
-        return html.render_span(_(" (outdated)"), style="color: darkred")
+        return HTMLWriter.render_span(_(" (outdated)"), style="color: darkred")
 
 
 class NodeRenderer(ABCNodeRenderer):
-    def _show_table_value(
+    def _show_row_value(
         self,
         value: Any,
-        hint: InventoryHintSpec,
+        col_hint: ColumnDisplayHint,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
-        self._show_child_value(value, hint, retention_intervals)
+        self._show_child_value(value, col_hint, retention_intervals)
 
-    def _show_attribute(
+    def show_attribute(
         self,
         value: Any,
-        hint: InventoryHintSpec,
+        attr_hint: AttributeDisplayHint,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
-        self._show_child_value(value, hint, retention_intervals)
+        self._show_child_value(value, attr_hint, retention_intervals)
 
 
 class DeltaNodeRenderer(ABCNodeRenderer):
-    def _show_table_value(
+    def _show_row_value(
         self,
         value: Any,
-        hint: InventoryHintSpec,
+        col_hint: ColumnDisplayHint,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
-        self._show_delta_child_value(value, hint)
+        self._show_delta_child_value(value, col_hint)
 
-    def _show_attribute(
+    def show_attribute(
         self,
         value: Any,
-        hint: InventoryHintSpec,
+        attr_hint: AttributeDisplayHint,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
-        self._show_delta_child_value(value, hint)
+        self._show_delta_child_value(value, attr_hint)
 
-    def _show_delta_child_value(self, value: Any, hint: InventoryHintSpec) -> None:
+    def _show_delta_child_value(
+        self,
+        value: Any,
+        hint: Union[ColumnDisplayHint, AttributeDisplayHint],
+    ) -> None:
         if value is None:
             value = (None, None)
 
@@ -2189,12 +2536,12 @@ def ajax_inv_render_tree() -> None:
     hostname = HostName(request.get_ascii_input_mandatory("host"))
     inventory.verify_permission(hostname, site_id)
 
-    invpath = request.get_ascii_input_mandatory("path")
-    tree_id = request.get_ascii_input("treeid", "")
+    raw_path = request.get_ascii_input_mandatory("raw_path")
+    tree_id = request.get_ascii_input("tree_id", "")
     show_internal_tree_paths = bool(request.var("show_internal_tree_paths"))
 
     if tree_id:
-        struct_tree, corrupted_history_files = inventory.load_delta_tree(hostname, int(tree_id[1:]))
+        tree, corrupted_history_files = inventory.load_delta_tree(hostname, int(tree_id[1:]))
         if corrupted_history_files:
             user_errors.add(
                 MKUserError(
@@ -2209,14 +2556,13 @@ def ajax_inv_render_tree() -> None:
         tree_renderer: ABCNodeRenderer = DeltaNodeRenderer(
             site_id,
             hostname,
-            invpath,
             tree_id=tree_id,
         )
 
     else:
         row = inventory.get_status_data_via_livestatus(site_id, hostname)
         try:
-            struct_tree = inventory.load_filtered_and_merged_tree(row)
+            tree = inventory.load_filtered_and_merged_tree(row)
         except inventory.LoadStructuredDataError:
             user_errors.add(
                 MKUserError(
@@ -2229,19 +2575,18 @@ def ajax_inv_render_tree() -> None:
         tree_renderer = NodeRenderer(
             site_id,
             hostname,
-            invpath,
             show_internal_tree_paths=show_internal_tree_paths,
         )
 
-    if struct_tree is None:
+    if tree is None:
         html.show_error(_("No such inventory tree."))
         return
 
-    parsed_path, _attribute_keys = inventory.parse_tree_path(invpath or "")
-    if (node := struct_tree.get_node(parsed_path)) is None:
+    inventory_path = inventory.InventoryPath.parse(raw_path or "")
+    if (node := tree.get_node(inventory_path.path)) is None:
         html.show_error(
-            _("Invalid path in inventory tree: '%s' >> %s") % (invpath, repr(parsed_path))
+            _("Invalid path in inventory tree: '%s' >> %s") % (raw_path, repr(inventory_path.path))
         )
         return
 
-    node.show(tree_renderer)
+    tree_renderer.show(node, DISPLAY_HINTS.get_hints(node.path))

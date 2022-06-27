@@ -22,7 +22,7 @@ def problem(
     title: str = "A problem occurred.",
     detail: Optional[str] = None,
     type_: Optional[str] = None,
-    fields: Optional[dict[str, list[str]]] = None,
+    fields: Optional[dict[str, Any]] = None,
     ext: Optional[dict[str, Any]] = None,
 ) -> Response:
     problem_dict = {
@@ -106,8 +106,8 @@ def param_description(
 
         If a docstring is given, there are a few possibilities.
 
-            >>> from cmk.gui import watolib
-            >>> param_description(watolib.activate_changes_start.__doc__, 'force_foreign_changes')
+            >>> from cmk.gui.watolib.activate_changes import activate_changes_start
+            >>> param_description(activate_changes_start.__doc__, 'force_foreign_changes')
             'Will activate changes even if the user who made those changes is not the currently logged in user.'
 
             >>> param_description(param_description.__doc__, 'string')

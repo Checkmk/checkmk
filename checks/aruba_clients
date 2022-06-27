@@ -8,13 +8,14 @@
 def inventory_aruba_clients(info):
     if info:
         return [(None, {})]
+    return []
 
 
 def check_aruba_clients(_no_item, _params, info):
     try:
         connected_clients = info[0][0]
     except IndexError:
-        return
+        return None
     return 0, "Connected: %s" % connected_clients, [("connections", connected_clients)]
 
 

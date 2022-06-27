@@ -5,7 +5,9 @@ from cmk.utils.site import omd_site
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.globals import html, request, response
+from cmk.gui.htmllib.header import make_header
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -100,6 +102,6 @@ def _show_crash_dump_message(
     if fail_silently:
         return
 
-    html.header(title, Breadcrumb())
+    make_header(html, title, Breadcrumb())
     html.show_error(message)
     html.footer()

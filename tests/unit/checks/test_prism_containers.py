@@ -7,7 +7,7 @@ from .checktestlib import assertCheckResultsEqual, BasicCheckResult, CheckResult
 pytestmark = pytest.mark.checks
 
 
-def test_fileinfo_min_max_age_levels():
+def test_fileinfo_min_max_age_levels() -> None:
     check = Check("prism_containers")
 
     item = "prism-item"
@@ -21,11 +21,11 @@ def test_fileinfo_min_max_age_levels():
     output_expected = [
         BasicCheckResult(
             0,
-            "Total: 10.00 B",
+            "Total: 10 B",
         ),
         BasicCheckResult(
             1,
-            "Used: 5.00 B (warn/crit at 4.00 B/6.00 B)",
+            "Used: 5 B (warn/crit at 4 B/6 B)",
             [
                 PerfValue("fs_used", 5, 4, 6, None, None),
             ],

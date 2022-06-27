@@ -1,0 +1,13 @@
+Title: netapp_api_qtree_quota: some instances of Qtree services not discovered
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1652945345
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+In the event that a quota with the same name exists both with the quota type
+"user" and "tree", the relevant Qtree instance could not be discovered. This
+has been fixed.

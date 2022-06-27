@@ -16,8 +16,16 @@ def agent_jolokia_arguments(
         if param in params:
             arglist += ["--%s" % param, "%s" % params[param]]
 
-    for pair in zip(("--user", "--password", "--mode"), params.get("login", ())):
-        arglist.extend(pair)
+    if login := params.get("login"):
+        user, password, mode = login
+        arglist += [
+            "--user",
+            user,
+            "--password",
+            passwordstore_get_cmdline("%s", password),
+            "--mode",
+            mode,
+        ]
 
     return arglist
 

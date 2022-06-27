@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+
 # pylint: disable=no-else-return
 
 # check_mk plugin to monitor Fujitsu storage systems supporting FJDARY-E60.MIB or FJDARY-E100.MIB
@@ -16,6 +16,12 @@
 # <oid>.1: Index
 # <oid>.3: Status
 # the latter can be one of the following:
+
+from collections import Counter
+from typing import Any, Mapping, MutableMapping, NamedTuple, NewType, Optional
+
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
 fjdarye_item_status = {
     "1": (0, "Normal"),
     "2": (2, "Alarm"),
@@ -26,16 +32,34 @@ fjdarye_item_status = {
 }
 
 
+class FjdaryeItem(NamedTuple):
+    item_index: str
+    status: str
+
+
+SectionFjdaryeItem = Mapping[str, FjdaryeItem]
+
+
+def parse_fjdarye_item(info) -> SectionFjdaryeItem:  # type:ignore[no-untyped-def]
+    fjdarye_items: MutableMapping[str, FjdaryeItem] = {}
+    for item_index, status in info:
+        fjdarye_items.setdefault(item_index, FjdaryeItem(item_index=item_index, status=status))
+    return fjdarye_items
+
+
 # generic inventory item - status other than 'invalid' is ok for inventory
-def inventory_fjdarye_item(info):
-    return [(index, {}) for index, status in info if status != "4"]
+def discover_fjdarye_item(section: SectionFjdaryeItem):  # type:ignore[no-untyped-def]
+    for item in section.values():
+        if item.status != "4":
+            yield item.item_index, {}
 
 
 # generic check_function returning the nagios-code and the status text
-def check_fjdarye_item(item, _no_param, info):
-    for line in info:
-        if line[0] == str(item):  # watch out! older versions discovered `int`s!
-            return fjdarye_item_status[line[1]]
+def check_fjdarye_item(  # type:ignore[no-untyped-def]
+    item: str, _no_param, section: SectionFjdaryeItem
+):
+    if fjdarye_item := section.get(item):
+        yield fjdarye_item_status[fjdarye_item.status]
 
 
 # .
@@ -49,6 +73,16 @@ def check_fjdarye_item(item, _no_param, info):
 #   +----------------------------------------------------------------------+
 #   |                          disks main check                            |
 #   '----------------------------------------------------------------------'
+
+
+class FjdaryeDisk(NamedTuple):
+    disk_index: str
+    state: int
+    state_description: str
+    state_disk: str
+
+
+SectionFjdaryeDisk = Mapping[str, FjdaryeDisk]
 
 fjdarye_disks_status = {
     "1": (0, "available"),
@@ -67,50 +101,55 @@ fjdarye_disks_status = {
 }
 
 
-def parse_fjdarye_disks(info):
-    parsed = {}
-    for idx, disk_state in info:
-        state, state_readable = fjdarye_disks_status.get(
+def parse_fjdarye_disks(info) -> SectionFjdaryeDisk:  # type:ignore[no-untyped-def]
+    fjdarye_disks: MutableMapping[str, FjdaryeDisk] = {}
+
+    for disk_index, disk_state in info:
+        state, state_description = fjdarye_disks_status.get(
             disk_state,
             (3, "unknown[%s]" % disk_state),
         )
-        parsed.setdefault(
-            str(idx),
-            {
-                "state": state,
-                "state_readable": state_readable,
-                "state_disk": disk_state,
-            },
+        fjdarye_disks.setdefault(
+            disk_index,
+            FjdaryeDisk(
+                disk_index=disk_index,
+                state=state,
+                state_description=state_description,
+                state_disk=disk_state,
+            ),
         )
-    return parsed
+    return fjdarye_disks
 
 
-def inventory_fjdarye_disks(parsed):
-    return [
-        (idx, repr(attrs["state_readable"]))
-        for idx, attrs in parsed.items()
-        if attrs["state_disk"] != "3"
-    ]
+def discover_fjdarye_disks(section: SectionFjdaryeDisk):  # type:ignore[no-untyped-def]
+    for disk in section.values():
+        if disk.state_disk != "3":
+            yield disk.disk_index, disk.state_description
 
 
-def check_fjdarye_disks(item, params, parsed):
+def check_fjdarye_disks(  # type:ignore[no-untyped-def]
+    item: str, params: Mapping[str, Any] | str, section: SectionFjdaryeDisk
+):
+
+    if (fjdarye_disk := section.get(item)) is None:
+        return
+
     if isinstance(params, str):
         params = {"expected_state": params}
+        # Determined at the time of discovery
+        # "expected_state" can also be set as a parameter by the user
 
-    if item in parsed:
-        attrs = parsed[item]
-        state_readable = attrs["state_readable"]
-        expected_state = params.get("expected_state")
-        check_state = 0
-        infotext = "Status: %s" % state_readable
-        if params.get("use_device_states"):
-            check_state = attrs["state"]
-            if check_state > 0:
-                infotext += " (use device states)"
-        elif expected_state and state_readable != expected_state:
-            check_state = 2
-            infotext += " (expected: %s)" % expected_state
-        return check_state, infotext
+    if params.get("use_device_states") and fjdarye_disk.state > 0:
+        yield fjdarye_disk.state, f"Status: {fjdarye_disk.state_description} (using device states)"
+        return
+
+    if (expected_state := params.get("expected_state")) and (
+        expected_state != fjdarye_disk.state_description
+    ):
+        yield 2, f"Status: {fjdarye_disk.state_description} (expected: {expected_state})"
+        return
+
+    yield 0, f"Status: {fjdarye_disk.state_description}"
 
 
 # .
@@ -130,67 +169,54 @@ def check_fjdarye_disks(item, params, parsed):
 #   '----------------------------------------------------------------------'
 
 
-def fjdarye_disks_summary(parsed):
-    states = {}
-    for attrs in parsed.values():
-        if attrs["state_disk"] != "3":
-            states.setdefault(attrs["state_readable"], 0)
-            states[attrs["state_readable"]] += 1
-    return states
+def _fjdarye_disks_states_summary(section: SectionFjdaryeDisk) -> Mapping[str, int]:
+
+    return Counter([disk.state_description for disk in section.values() if disk.state_disk != "3"])
 
 
-def inventory_fjdarye_disks_summary(parsed):
-    current_state = fjdarye_disks_summary(parsed)
-    if len(current_state) > 0:
-        return [(None, current_state)]
+def discover_fjdarye_disks_summary(section: SectionFjdaryeDisk):
+    if current_disks_states := _fjdarye_disks_states_summary(section):
+        yield None, current_disks_states
 
 
-def fjdarye_disks_printstates(states):
-    return ", ".join(["%s: %s" % (s.title(), c) for s, c in states.items()])
+def _fjdarye_disks_printstates(states: Mapping[str, int]) -> str:
+    """
+    >>> _fjdarye_disks_printstates({"available": 4, "notavailable": 1})
+    'Available: 4, Notavailable: 1'
+
+    >>> _fjdarye_disks_printstates({})
+    ''
+
+    """
+    return ", ".join([f"{s.title()}: {c}" for s, c in states.items()])
 
 
-def check_fjdarye_disks_summary(index, params, parsed):
-    map_states = {
-        "available": 0,
-        "broken": 2,
-        "notavailable": 1,
-        "notsupported": 1,
-        "present": 0,
-        "readying": 1,
-        "recovering": 1,
-        "partbroken": 1,
-        "spare": 1,
-        "formatting": 0,
-        "unformated": 0,
-        "notexist": 1,
-        "copying": 1,
-    }
+def check_fjdarye_disks_summary(
+    _item: str, params: Mapping[str, int | bool], section: SectionFjdaryeDisk
+):
+    current_disk_states = _fjdarye_disks_states_summary(section)
+    current_disks_states_text = _fjdarye_disks_printstates(current_disk_states)
 
-    use_devices_states = False
-    if "use_device_states" in params:
-        use_devices_states = params["use_device_states"]
-        del params["use_device_states"]
-    expected_state = params
+    if params.get("use_device_states"):
+        yield max(
+            disk.state for disk in section.values()
+        ), f"{current_disks_states_text} (using device states)"
+        return
 
-    current_state = fjdarye_disks_summary(parsed)
-    infotext = fjdarye_disks_printstates(current_state)
-    if use_devices_states:
-        state = 0
-        for state_readable in current_state:
-            state = max(state, map_states.get(state_readable, 3))
-        infotext += " (ignore expected state)"
-        return state, infotext
+    expected_state = {k: v for k, v in params.items() if k != "use_device_states"}
+    if current_disk_states == expected_state:
+        yield 0, current_disks_states_text
+        return
 
-    if current_state == expected_state:
-        return 0, infotext
+    summary = (
+        f"{current_disks_states_text} (expected: {_fjdarye_disks_printstates(expected_state)})"
+    )
+    for expected_state_name, expected_state_count in expected_state.items():
+        if current_disk_states.get(expected_state_name, 0) < expected_state_count:
+            yield 2, summary
+            return
 
-    result = 1
-    for ename, ecount in expected_state.items():
-        if current_state.get(ename, 0) < ecount:
-            result = 2
-            break
-
-    return result, "%s (expected: %s)" % (infotext, fjdarye_disks_printstates(expected_state))
+    yield 1, summary
 
 
 # .
@@ -204,52 +230,84 @@ def check_fjdarye_disks_summary(index, params, parsed):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_fjdarye_rluns(info):
-    for line in info:
-        rawdata = line[1]
-        if rawdata[3] == "\xa0":  # RLUN is present
-            yield line[0], "", None
+class FjdaryeRlun(NamedTuple):
+    rlun_index: str
+    raw_string: str
 
 
-def check_fjdarye_rluns(item, _no_params, info):
-    for line in info:
-        if item == line[0]:
-            rawdata = line[1]
-            if rawdata[3] != "\xa0":
-                return (2, "RLUN is not present")
-            elif rawdata[2] == "\x08":
-                return (1, "RLUN is rebuilding")
-            elif rawdata[2] == "\x07":
-                return (1, "RLUN copyback in progress")
-            elif rawdata[2] == "\x41":
-                return (1, "RLUN spare is in use")
-            elif rawdata[2] == "B":
-                return (0, "RLUN is in RAID0 state")  # assumption state 42
-            elif rawdata[2] == "\x00":
-                return (0, "RLUN is in normal state")  # assumption
-            return (2, "RLUN in unknown state %02x" % ord(rawdata[2]))
+def parse_fjdarye_rluns(info: StringTable) -> Mapping[str, FjdaryeRlun]:
+    readable_rluns: MutableMapping[str, FjdaryeRlun] = {}
+
+    for rlun_index, raw_string in info:
+        readable_rluns[rlun_index] = FjdaryeRlun(rlun_index=rlun_index, raw_string=raw_string)
+
+    return readable_rluns
+
+
+def discover_fjdarye_rluns(section: Mapping[str, FjdaryeRlun]):
+    for rlun in section.values():
+        if rlun.raw_string[3] == "\xa0":  # non-breaking space (decimal 160)
+            # The fourth byte needs to be "\xa0" for a RLUN to be present
+            yield rlun.rlun_index, {}
+
+
+FJDARYE_RLUNS_STATUS_MAPPING = {
+    "\x08": (1, "RLUN is rebuilding"),  # Back Space (decimal 8)
+    "\x07": (1, "RLUN copyback in progress"),  # Bell (decimal 7)
+    "A": (1, "RLUN spare is in use"),  # (decimal 65)
+    "B": (
+        0,
+        "RLUN is in RAID0 state",
+    ),  # (decimal 66) - assumption that B is RAID0 state
+    "\x00": (
+        0,
+        "RLUN is in normal state",
+    ),  # Null char (decimal 0) - assumption that \x00 is normal state
+}
+
+
+def check_fjdarye_rluns(item: str, _no_param: Mapping, section: Mapping[str, FjdaryeRlun]):
+
+    if (rlun := section.get(item)) is None:
+        return
+
+    if rlun.raw_string[3] != "\xa0":
+        yield (2, "RLUN is not present")
+        return
+
+    yield FJDARYE_RLUNS_STATUS_MAPPING.get(
+        rlun.raw_string[2],  # The result state and summary are dependent on the third byte
+        (2, "RLUN in unknown state"),
+    )
 
 
 # .
+FjdaryeDeviceStatus = NewType("FjdaryeDeviceStatus", str)
 
-fjdarye_sum_status = {1: "unknown", 2: "unused", 3: "ok", 4: "warning", 5: "failed"}
+
+def parse_fjdarye_sum(info: StringTable) -> Optional[FjdaryeDeviceStatus]:
+
+    for status in info:
+        if len(status) == 1:
+            return FjdaryeDeviceStatus(status[0])
+    return None
 
 
-def inventory_fjdarye_sum(info):
-    if len(info[0]) == 1:
+def discover_fjdarye_sum(section: Optional[FjdaryeDeviceStatus]):
+    if section:
         yield "0", {}
 
 
-def check_fjdarye_sum(index, _no_param, info):
-    for line in info:
-        if len(info[0]) == 1:
-            status = int(line[0])
-            text = "Status is %s" % fjdarye_sum_status[status]
+FJDARYE_SUM_STATUS = {
+    "1": (2, "unknown"),
+    "2": (2, "unused"),
+    "3": (0, "ok"),
+    "4": (1, "warning"),
+    "5": (2, "failed"),
+}
 
-            if status == 3:
-                return (0, "%s" % text)
-            elif status == 4:
-                return (1, "%s" % text)
-            return (2, "%s" % text)
 
-    return (3, "No status summary present")
+def check_fjdarye_sum(_item: str, _no_param, section: Optional[FjdaryeDeviceStatus]):
+    if section is not None:
+        state, state_desc = FJDARYE_SUM_STATUS.get(section, (3, "unknown"))
+        yield state, f"Status: {state_desc}"

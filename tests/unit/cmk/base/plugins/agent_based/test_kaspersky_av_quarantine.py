@@ -22,5 +22,5 @@ from cmk.base.plugins.agent_based.kaspersky_av_quarantine import check_kaspersky
         )
     ],
 )
-def test_check_kaskpersky_av_client(section, expected_results):
+def test_check_kaskpersky_av_client(section, expected_results) -> None:
     assert list(check_kaspersky_av_quarantine(section)) == expected_results

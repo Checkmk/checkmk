@@ -14,9 +14,10 @@
 #include <filesystem>
 #include <string>
 #include <string_view>
+#include <utility>
 
-#include "Logger.h"
 #include "cma_core.h"
+#include "logger.h"
 #include "providers/internal.h"
 #include "section_header.h"
 
@@ -28,25 +29,25 @@ std::vector<std::string> TokenizeString(const std::string &val, int sub_match);
 
 class MrpeEntry {
 public:
-    MrpeEntry(const std::string &run_as_user,  // only from cfg
-              const std::string &cmd_line,     // parsed
-              const std::string &exe_name,     // parsed
-              const std::string &description)
-        : run_as_user_(run_as_user)
-        , command_line_(cmd_line)
-        , exe_name_(exe_name)
-        , description_(description) {}
+    MrpeEntry(std::string run_as_user,  // only from cfg
+              std::string cmd_line,     // parsed
+              std::string exe_name,     // parsed
+              std::string description)
+        : run_as_user_(std::move(run_as_user))
+        , command_line_(std::move(cmd_line))
+        , exe_name_(std::move(exe_name))
+        , description_(std::move(description)) {}
 
-    MrpeEntry(const std::string &run_as_user,  // only from cfg
+    MrpeEntry(std::string run_as_user,  // only from cfg
               const std::string &value)
-        : run_as_user_(run_as_user) {
+        : run_as_user_(std::move(run_as_user)) {
         loadFromString(value);
     }
 
-    bool add_age() const noexcept { return add_age_; }
-    int cache_age_max() const noexcept { return cache_max_age_; }
+    [[nodiscard]] bool add_age() const noexcept { return add_age_; }
+    [[nodiscard]] int cache_age_max() const noexcept { return cache_max_age_; }
 
-    void loadFromString(const std::string &Value);
+    void loadFromString(const std::string &value);
     std::string run_as_user_;
     std::string command_line_;
     std::string exe_name_;
@@ -98,7 +99,7 @@ public:
 
     void updateSectionStatus() override;
 
-    const auto entries() const noexcept { return entries_; }
+    auto entries() const noexcept { return entries_; }
     const auto &includes() const noexcept { return includes_; }
     const auto &checks() const noexcept { return checks_; }
 
@@ -112,7 +113,7 @@ protected:
     // internal
     void addParsedChecks();    // checks_ -> entries_
     void addParsedIncludes();  // includes_ -> entries_
-    bool parseAndLoadEntry(const std::string &Entry);
+    bool parseAndLoadEntry(const std::string &entry);
 
 private:
     std::vector<MrpeEntry> entries_;

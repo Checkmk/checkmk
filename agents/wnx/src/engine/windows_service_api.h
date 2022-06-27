@@ -20,10 +20,7 @@
 #include "tools/_xlog.h"
 
 // Common Namespace for whole Windows Agent
-namespace cma {
-
-// Related to Service Agent Logic
-namespace srv {
+namespace cma::srv {
 enum class StdioLog { no, yes, extended };
 enum class FwMode { show, configure, clear };
 class ServiceProcessor;
@@ -65,10 +62,9 @@ int ExecExtractCap(std::wstring_view cap_file,
 int ExecSection(const std::wstring &SecName,
                 int RepeatPause,      // if 0 no repeat
                 StdioLog stdio_log);  // on section
-int ServiceAsService(std::wstring_view app_name,
-                     std::chrono::milliseconds delay,
-                     const std::function<bool(const void *some_context)>
-                         &internal_callback);  // service execution
+int ServiceAsService(
+    std::wstring_view app_name, std::chrono::milliseconds delay,
+    const std::function<bool()> &internal_callback);  // service execution
 
 /// returns -1 for all ports
 int GetFirewallPort();
@@ -93,7 +89,7 @@ constexpr const wchar_t *kServiceAccount = L"NT AUTHORITY\\LocalService";
 constexpr const wchar_t *kServicePassword = nullptr;
 
 constexpr std::wstring_view kSrvFirewallRuleName = L"Checkmk Agent";
-constexpr std::wstring_view kIntFirewallRuleName = L"Checkmk Agent Internal";
+constexpr std::wstring_view kIntFirewallRuleName = L"Checkmk Agent Integration";
 constexpr std::wstring_view kAppFirewallRuleName = L"Checkmk Agent application";
 constexpr std::wstring_view kTstFirewallRuleName = L"Checkmk Agent TEST";
 
@@ -108,7 +104,6 @@ bool ConfigureServiceAsRestartable(SC_HANDLE handle);
 
 bool IsGlobalStopSignaled();
 
-}  // namespace srv
-};  // namespace cma
+};  // namespace cma::srv
 
 #endif  // windows_service_api_h__

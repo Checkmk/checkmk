@@ -13,6 +13,7 @@
     "not dead"
   ],
   "scripts": {
+    "build": "webpack",
     "test": "echo \"Error: no test specified\" && exit 1",
     "//": "COMMENT: Process 'resolutions' key below",
     "watch": "webpack --mode development --watch",
@@ -85,6 +86,10 @@
     "simplebar": "^5.3.6",
     "sweetalert2": "^11.2.1",
     "whatwg-fetch": "^3.6.2"
+  },
+  "//": "COMMENT: This is here, so the that the build doesn't fail on a npm version missmatch.",
+  "optionalDependencies": {
+    "fsevents": "2.1.2"
   },
   "resolutions": {
     "//": "COMMENT: Ensure we get the desired version without dependency declaration",

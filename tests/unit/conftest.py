@@ -24,6 +24,7 @@ import cmk.utils.paths
 import cmk.utils.redis as redis
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.site import omd_site
 
@@ -36,6 +37,7 @@ import cmk.gui.default_permissions
 import cmk.gui.permissions
 import cmk.gui.views
 from cmk.gui.livestatus_utils.testing import mock_livestatus
+from cmk.gui.utils.script_helpers import application_and_request_context
 
 if is_enterprise_repo():
     import cmk.cee.dcd.plugins.connectors.connectors_api.v1  # pylint: disable=import-error,no-name-in-module
@@ -76,6 +78,7 @@ def fixture_edition(monkeypatch, request) -> Iterable[cmk_version.Edition]:
 @pytest.fixture(autouse=True)
 def patch_omd_site(monkeypatch):
     monkeypatch.setenv("OMD_SITE", "NO_SITE")
+    monkeypatch.setenv("OMD_ROOT", str(cmk.utils.paths.omd_root))
     omd_site.cache_clear()
 
     _touch(cmk.utils.paths.htpasswd_file)
@@ -96,8 +99,7 @@ def patch_omd_site(monkeypatch):
     omd_config_dir = "%s/etc/omd" % (cmk.utils.paths.omd_root,)
     _dump(
         omd_config_dir + "/site.conf",
-        """
-CONFIG_ADMIN_MAIL=''
+        """CONFIG_ADMIN_MAIL=''
 CONFIG_AGENT_RECEIVER='on'
 CONFIG_AGENT_RECEIVER_PORT='8000'
 CONFIG_APACHE_MODE='own'
@@ -120,8 +122,7 @@ CONFIG_NAGIOS_THEME='classicui'
 CONFIG_NSCA='off'
 CONFIG_NSCA_TCP_PORT='5667'
 CONFIG_PNP4NAGIOS='on'
-CONFIG_TMPFS='on'
-    """,
+CONFIG_TMPFS='on'""",
     )
     _dump(
         cmk.utils.paths.default_config_dir + "/mkeventd.d/wato/rules.mk",
@@ -208,9 +209,16 @@ def clear_caches_per_function():
 def fixup_ip_lookup(monkeypatch):
     # Fix IP lookup when
     def _getaddrinfo(host, port, family=None, socktype=None, proto=None, flags=None):
+        if host not in ("localhost", "::1", "127.0.0.1"):
+            return None
         if family == socket.AF_INET:
-            # TODO: This is broken. It should return (family, type, proto, canonname, sockaddr)
-            return "0.0.0.0"
+            return [
+                (family, socket.SocketKind.SOCK_STREAM, 6, "", ("127.0.0.1", 0)),
+            ]
+        if family == socket.AF_INET6:
+            return [
+                (family, socket.SocketKind.SOCK_STREAM, 6, "", ("::1", 0)),
+            ]
         raise NotImplementedError()
 
     monkeypatch.setattr(socket, "getaddrinfo", _getaddrinfo)
@@ -219,21 +227,27 @@ def fixup_ip_lookup(monkeypatch):
 class FixRegister:
     """Access agent based plugins"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         # Local import to have faster pytest initialization
         import cmk.base.api.agent_based.register as register  # pylint: disable=bad-option-value,import-outside-toplevel
         import cmk.base.check_api as check_api  # pylint: disable=bad-option-value,import-outside-toplevel
         import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
-        import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=bad-option-value,import-outside-toplevel
 
         config._initialize_data_structures()
         assert config.check_info == {}
 
-        config.load_all_agent_based_plugins(check_api.get_check_api_context)
-        inventory_plugins.load_legacy_inventory_plugins(
+        config.load_all_agent_based_plugins(
             check_api.get_check_api_context,
-            register.inventory_plugins_legacy.get_inventory_context,
         )
+
+        # our test environment does not deal with namespace packages properly. load plus plugins:
+        try:
+            load_plugins = list(load_plugins_with_exceptions("plus.cmk.base.plugins.agent_based"))
+        except ModuleNotFoundError:
+            pass
+        else:
+            for _plugin, exception in load_plugins:
+                raise exception
 
         self._snmp_sections = copy.deepcopy(register._config.registered_snmp_sections)
         self._agent_sections = copy.deepcopy(register._config.registered_agent_sections)
@@ -260,15 +274,13 @@ class FixRegister:
 class FixPluginLegacy:
     """Access legacy dicts like `check_info`"""
 
-    def __init__(self, fixed_register: FixRegister):
+    def __init__(self, fixed_register: FixRegister) -> None:
         import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
-        import cmk.base.inventory_plugins as inventory_plugins
 
         assert isinstance(fixed_register, FixRegister)  # make sure plugins are loaded
 
         self._check_info = copy.deepcopy(config.check_info)
         self._snmp_info = copy.deepcopy(config.snmp_info)
-        self._inv_info = copy.deepcopy(inventory_plugins._inv_info)
         self._active_check_info = copy.deepcopy(config.active_check_info)
         self._snmp_scan_functions = copy.deepcopy(config.snmp_scan_functions)
         self._check_variables = copy.deepcopy(config.get_check_variables())
@@ -280,10 +292,6 @@ class FixPluginLegacy:
     @property
     def snmp_info(self):
         return self._snmp_info
-
-    @property
-    def inv_info(self):
-        return self._inv_info
 
     @property
     def active_check_info(self):
@@ -337,11 +345,11 @@ def _mock_livestatus():
 
     Use it like this:
 
-        def test_function():
+        def test_function() -> None:
            from cmk.gui import sites
            sites.live().query("Foo")
 
-        def test_foo(mock_livestatus):
+        def test_foo(mock_livestatus) -> None:
            live = mock_livestatus
            live.expect_query("Foo")
            with live:
@@ -398,6 +406,13 @@ def registry_reset() -> Iterator[None]:
         yield
     finally:
         for registry, defaults in defaults_per_registry:
-            for entry in list(registry):  # type: ignore[call-overload]
+            for entry in list(registry):
                 if entry not in defaults:
                     registry.unregister(entry)  # type: ignore[attr-defined]
+
+
+@pytest.fixture()
+def request_context() -> Iterator[None]:
+    """This fixture registers a global htmllib.html() instance just like the regular GUI"""
+    with application_and_request_context():
+        yield

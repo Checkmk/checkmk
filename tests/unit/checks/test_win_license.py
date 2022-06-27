@@ -104,7 +104,7 @@ def splitter(text):
     ),
     ids=["win7", "win2012", "win2008", "win10"],
 )
-def test_parse_win_license(capture, result):
+def test_parse_win_license(capture, result) -> None:
     check = Check("win_license")
     assert result == check.run_parse(splitter(capture))
 
@@ -133,7 +133,7 @@ class check_ref(NamedTuple):
                     CheckResult(
                         [
                             (0, "Software is Initial grace period"),
-                            (0, "License will expire in 9 d"),
+                            (0, "License will expire in 9 days 0 hours"),
                         ]
                     ),
                 ),
@@ -145,7 +145,10 @@ class check_ref(NamedTuple):
                     CheckResult(
                         [
                             (0, "Software is Licensed"),
-                            (1, "License will expire in 176 d (warn/crit at 180 d/90 d)"),
+                            (
+                                1,
+                                "License will expire in 176 days 2 hours (warn/crit at 180 days 0 hours/90 days 0 hours)",
+                            ),
                         ]
                     ),
                 ),
@@ -157,7 +160,10 @@ class check_ref(NamedTuple):
                     CheckResult(
                         [
                             (0, "Software is Licensed"),
-                            (2, "License will expire in 174 d (warn/crit at 360 d/180 d)"),
+                            (
+                                2,
+                                "License will expire in 174 days 9 hours (warn/crit at 360 days 0 hours/180 days 0 hours)",
+                            ),
                         ]
                     ),
                 ),
@@ -183,20 +189,25 @@ class check_ref(NamedTuple):
                     CheckResult(
                         [
                             (2, "Software is Initial grace period Required: Registered"),
-                            (0, "License will expire in 9 d"),
+                            (0, "License will expire in 9 days 0 hours"),
                         ]
                     ),
                 ),
                 check_ref(
                     None,
-                    CheckResult([(0, "Software is Licensed"), (0, "License will expire in 176 d")]),
+                    CheckResult(
+                        [
+                            (0, "Software is Licensed"),
+                            (0, "License will expire in 176 days 2 hours"),
+                        ]
+                    ),
                 ),
             ],
         )
     ),
     ids=[str(x) for x in range(6)],
 )
-def test_check_win_license(capture, result):
+def test_check_win_license(capture, result) -> None:
     check = Check("win_license")
     output = check.run_check(
         None, result.parameters or check.default_parameters(), check.run_parse(splitter(capture))

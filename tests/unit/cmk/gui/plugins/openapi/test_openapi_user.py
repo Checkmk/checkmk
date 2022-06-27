@@ -22,13 +22,15 @@ from cmk.gui.plugins.openapi.endpoints.user_config import (
     _load_user,
 )
 from cmk.gui.plugins.openapi.endpoints.utils import complement_customer
+from cmk.gui.type_defs import UserRole
+from cmk.gui.watolib.userroles import clone_role, RoleID
 from cmk.gui.watolib.users import edit_users
 
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
 
 @managedtest
-def test_openapi_customer(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch):
+def test_openapi_customer(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch) -> None:
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
@@ -82,7 +84,7 @@ def test_openapi_customer(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch)
 
 
 @managedtest
-def test_openapi_user_minimal_settings(monkeypatch, run_as_superuser):
+def test_openapi_user_minimal_settings(monkeypatch, run_as_superuser) -> None:
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
@@ -194,7 +196,7 @@ def test_openapi_user_minimal_password_settings(
     assert extensions["roles"] == ["user"]
 
 
-def test_openapi_all_users(wsgi_app, with_automation_user):
+def test_openapi_all_users(wsgi_app, with_automation_user) -> None:
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
     base = "/NO_SITE/check_mk/api/1.0"
@@ -291,7 +293,7 @@ def test_openapi_user_config(
 
 
 @managedtest
-def test_openapi_user_internal_with_notifications(monkeypatch, run_as_superuser):
+def test_openapi_user_internal_with_notifications(monkeypatch, run_as_superuser) -> None:
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
@@ -347,7 +349,7 @@ def test_openapi_user_internal_with_notifications(monkeypatch, run_as_superuser)
 
 
 @managedtest
-def test_openapi_user_edit_auth(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch):
+def test_openapi_user_edit_auth(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch) -> None:
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
@@ -408,7 +410,7 @@ def test_openapi_user_edit_auth(aut_user_auth_wsgi_app: WebTestAppForCMK, monkey
 
 
 @managedtest
-def test_openapi_user_internal_auth_handling(monkeypatch, run_as_superuser):
+def test_openapi_user_internal_auth_handling(monkeypatch, run_as_superuser) -> None:
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
@@ -472,14 +474,15 @@ def test_openapi_user_internal_auth_handling(monkeypatch, run_as_superuser):
             _load_user(name),
             {"auth_option": {"secret": "QWXWBFUCSUOXNCPJUMS@", "auth_type": "automation"}},
         )
-        edit_users(
-            {
-                name: {
-                    "attributes": updated_internal_attributes,
-                    "is_new_user": False,
+        with run_as_superuser():
+            edit_users(
+                {
+                    name: {
+                        "attributes": updated_internal_attributes,
+                        "is_new_user": False,
+                    }
                 }
-            }
-        )
+            )
 
     assert _load_internal_attributes(name) == {
         "alias": "Foo Bar",
@@ -504,14 +507,15 @@ def test_openapi_user_internal_auth_handling(monkeypatch, run_as_superuser):
         updated_internal_attributes = _api_to_internal_format(
             _load_user(name), {"auth_option": {"auth_type": "remove"}}
         )
-        edit_users(
-            {
-                name: {
-                    "attributes": updated_internal_attributes,
-                    "is_new_user": False,
+        with run_as_superuser():
+            edit_users(
+                {
+                    name: {
+                        "attributes": updated_internal_attributes,
+                        "is_new_user": False,
+                    }
                 }
-            }
-        )
+            )
     assert _load_internal_attributes(name) == {
         "alias": "Foo Bar",
         "customer": "provider",
@@ -531,7 +535,9 @@ def test_openapi_user_internal_auth_handling(monkeypatch, run_as_superuser):
 
 
 @managedtest
-def test_openapi_managed_global_edition(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch):
+def test_openapi_managed_global_edition(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
+) -> None:
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
@@ -560,7 +566,7 @@ def test_openapi_managed_global_edition(aut_user_auth_wsgi_app: WebTestAppForCMK
 
 
 @managedtest
-def test_managed_global_internal(monkeypatch, run_as_superuser):
+def test_managed_global_internal(monkeypatch, run_as_superuser) -> None:
     # this test uses the internal mechanics of the user endpoint
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
@@ -598,7 +604,7 @@ def test_managed_global_internal(monkeypatch, run_as_superuser):
 
 
 @managedtest
-def test_global_full_configuration(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch):
+def test_global_full_configuration(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch) -> None:
     # this test uses the internal mechanics of the user endpoint
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
@@ -658,7 +664,7 @@ def test_global_full_configuration(aut_user_auth_wsgi_app: WebTestAppForCMK, mon
     }
 
 
-def test_managed_idle_internal(with_automation_user, monkeypatch, run_as_superuser):
+def test_managed_idle_internal(with_automation_user, monkeypatch, run_as_superuser) -> None:
     # this test uses the internal mechanics of the user endpoint
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
@@ -770,7 +776,9 @@ def test_openapi_user_update_contact_options(
 
 
 @managedtest
-def test_openapi_user_disable_notifications(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch):
+def test_openapi_user_disable_notifications(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
+) -> None:
     # this test uses the internal mechanics of the user endpoint
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
@@ -816,7 +824,9 @@ def test_openapi_user_disable_notifications(aut_user_auth_wsgi_app: WebTestAppFo
 
 
 @managedtest
-def test_show_all_users_with_no_email(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch):
+def test_show_all_users_with_no_email(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
+) -> None:
     """Test a user which has no email internally similar to the internal cmkadmin user"""
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
@@ -853,7 +863,9 @@ def test_show_all_users_with_no_email(aut_user_auth_wsgi_app: WebTestAppForCMK, 
 
 
 @managedtest
-def test_user_enforce_password_change_option(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch):
+def test_user_enforce_password_change_option(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
+) -> None:
     """Test enforce password change option for create and update endpoints"""
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
@@ -899,7 +911,7 @@ def test_user_enforce_password_change_option(aut_user_auth_wsgi_app: WebTestAppF
 
 
 @managedtest
-def test_user_interface_settings(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch):
+def test_user_interface_settings(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch) -> None:
     """Test enforce password change option for create and update endpoints"""
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
@@ -967,3 +979,65 @@ def _internal_attributes(user_attributes):
             "force_authuser",
         )
     }
+
+
+@managedtest
+def test_openapi_new_user_with_cloned_role(
+    base: str, aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
+):
+    monkeypatch.setattr(
+        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
+    )
+
+    cloned_role: UserRole = clone_role(RoleID("admin"))
+
+    user_detail = {
+        "username": f"new_user_with_role_{cloned_role.name}",
+        "fullname": f"NewUser_{cloned_role.name}",
+        "customer": "provider",
+        "roles": [cloned_role.name],
+    }
+
+    resp1 = aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/user_config/collections/all",
+        params=json.dumps(user_detail),
+        headers={"Accept": "application/json"},
+        status=200,
+        content_type="application/json",
+    )
+
+    assert resp1.json["extensions"]["roles"] == [cloned_role.name]
+
+    resp2 = aut_user_auth_wsgi_app.call_method(
+        "put",
+        base + f"/objects/user_config/new_user_with_role_{cloned_role.name}",
+        params=json.dumps({"roles": ["user", "guest"]}),
+        status=200,
+        content_type="application/json",
+        headers={"Accept": "application/json", "If-Match": resp1.headers["Etag"]},
+    )
+
+    assert resp2.json["extensions"]["roles"] == ["user", "guest"]
+
+
+@managedtest
+def test_openapi_new_user_with_non_existing_role(
+    base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
+):
+    userrole = "non-existing-userole"
+    user_detail = {
+        "username": f"new_user_with_role_{userrole}",
+        "fullname": f"NewUser_{userrole}",
+        "customer": "provider",
+        "roles": [userrole],
+    }
+
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/user_config/collections/all",
+        params=json.dumps(user_detail),
+        headers={"Accept": "application/json"},
+        status=400,
+        content_type="application/json",
+    )

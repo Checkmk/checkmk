@@ -7,7 +7,9 @@
 from typing import Any, Dict, List, Mapping
 
 from .agent_based_api.v1 import (
+    all_of,
     check_levels,
+    not_equals,
     OIDEnd,
     register,
     render,
@@ -31,7 +33,11 @@ def parse_fortigate_node_memory(string_table: List[StringTable]) -> Section:
 
 register.snmp_section(
     name="fortigate_node_memory",
-    detect=startswith(OID_SysObjectID, ".1.3.6.1.4.1.12356.101.1"),
+    detect=all_of(
+        startswith(OID_SysObjectID, ".1.3.6.1.4.1.12356.101.1"),
+        # exclude FortiGates in standalone mode:
+        not_equals(".1.3.6.1.4.1.12356.101.13.1.1.0", "1"),
+    ),
     parse_function=parse_fortigate_node_memory,
     fetch=[
         SNMPTree(

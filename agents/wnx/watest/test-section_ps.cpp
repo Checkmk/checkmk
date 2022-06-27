@@ -12,17 +12,18 @@
 #include "tools/_misc.h"
 #include "tools/_process.h"
 
+using namespace std::string_literals;
+using namespace std::string_view_literals;
+
 namespace cma::provider {
 namespace {
 long long convert(const std::string &value) {
     try {
         return std::stoull(value);
-    } catch (...) {
+    } catch (const std::invalid_argument &) {
         return -1;
     }
 }
-
-using namespace std::string_view_literals;
 
 const std::vector<std::string_view> g_special_processes{
     {"System Idle Process"sv},
@@ -38,40 +39,44 @@ const std::vector<std::string_view> g_special_processes{
 }  // namespace
 
 TEST(PsTest, Integration) {
-    cma::OnStart(cma::AppType::test);
+    OnStart(AppType::test);
     for (auto use_full_path : {false, true}) {
         SCOPED_TRACE(
             fmt::format("'{}'", use_full_path ? "Full path" : "Short path"));
         auto out = ProducePsWmi(use_full_path);
         EXPECT_EQ(use_full_path,
                   out.find("svchost.exe\t-k") != std::string::npos);
-        auto all = cma::tools::SplitString(out, "\n");
-        EXPECT_TRUE(all.size() > 10);
-        for (auto &in : all) {
-            auto by_tab = cma::tools::SplitString(in, "\t");
+        auto all = tools::SplitString(out, "\n");
+        for (const auto &in : all) {
+            EXPECT_LE(in.length(), 1512U) << in;  // due to pascom crash handler
+            auto by_tab = tools::SplitString(in, "\t");
+            EXPECT_TRUE(all.size() > 10);
             SCOPED_TRACE(fmt::format("'{}'", in));
 
             EXPECT_GE(by_tab.size(), 2U);
             ASSERT_EQ(by_tab[0].back(), ')');
             ASSERT_EQ(by_tab[0][0], '(');
-            EXPECT_TRUE(by_tab[1].size() > 0);
+            EXPECT_FALSE(by_tab[1].empty());
             auto process_name = by_tab[1];
-            auto special = std::find(g_special_processes.begin(),
-                                     g_special_processes.end(),
-                                     process_name) != g_special_processes.end();
+            auto special =
+                std::ranges::find(g_special_processes, process_name) !=
+                g_special_processes.end();
 
             by_tab[0].erase(0, 1);
             by_tab[0].pop_back();
-            auto by_comma = cma::tools::SplitString(by_tab[0], ",");
+            auto by_comma = tools::SplitString(by_tab[0], ",");
             ASSERT_EQ(by_comma.size(), 11);
 
             EXPECT_TRUE(!by_comma[0].empty());
 
-            auto result = convert(by_comma[1]);
             EXPECT_TRUE(convert(by_comma[1]) >= 0);
-            if (!special) EXPECT_TRUE(convert(by_comma[2]) > 0);
+            if (!special) {
+                EXPECT_TRUE(convert(by_comma[2]) > 0);
+            }
             EXPECT_TRUE(convert(by_comma[3]) == 0);
-            if (!special) EXPECT_TRUE(convert(by_comma[4]) > 0) << by_tab[1];
+            if (!special) {
+                EXPECT_TRUE(convert(by_comma[4]) > 0) << by_tab[1];
+            }
             EXPECT_TRUE(convert(by_comma[5]) >= 0);
             EXPECT_TRUE(convert(by_comma[6]) >= 0);
             EXPECT_TRUE(convert(by_comma[7]) >= 0);
@@ -85,65 +90,59 @@ TEST(PsTest, Integration) {
     }
 }
 
-TEST(PsTest, ConvertWmiTime) {
-    {
-        std::string in = "2019052313140";
+namespace {
 
-        auto check_time = ConvertWmiTimeToHumanTime(in);
-        EXPECT_EQ(check_time, 0);
-        EXPECT_EQ(ConvertWmiTimeToHumanTime(""), 0);
-    }
+TEST(PsTest, ConvertWmiTimeInvalid) {
+    std::string in = "2019052313140";
 
-    {
-        std::string in = "20190523131406.074948+120";
+    auto check_time = ConvertWmiTimeToHumanTime(in);
+    EXPECT_EQ(check_time, 0);
+    EXPECT_EQ(ConvertWmiTimeToHumanTime(""), 0);
+}
 
-        auto check_time = ConvertWmiTimeToHumanTime(in);
-        auto check_tm = *std::localtime(&check_time);
-        EXPECT_EQ(check_tm.tm_hour, 13);
-        EXPECT_EQ(check_tm.tm_sec, 06);
-        EXPECT_EQ(check_tm.tm_min, 14);
-        EXPECT_EQ(check_tm.tm_year, 119);
-        EXPECT_EQ(check_tm.tm_mon, 4);
-        EXPECT_EQ(check_tm.tm_mday, 23);
-    }
+auto ToTm(const std::string &in) {
+    auto check_time = ConvertWmiTimeToHumanTime(in);
+    return *std::localtime(&check_time);
+}
 
-    {
-        std::string in = "20190323090106.074948+120";
+}  // namespace
 
-        auto check_time = ConvertWmiTimeToHumanTime(in);
-        auto check_tm = *std::localtime(&check_time);
-        EXPECT_EQ(check_tm.tm_hour, 9);
-        EXPECT_EQ(check_tm.tm_sec, 6);
-        EXPECT_EQ(check_tm.tm_min, 1);
-        EXPECT_EQ(check_tm.tm_year, 119);
-        EXPECT_EQ(check_tm.tm_mon, 2);
-        EXPECT_EQ(check_tm.tm_mday, 23);
-    }
+TEST(PsTest, ConvertWmiTimeValid) {
+    auto check_tm = ToTm("20190523131406.074948+120"s);
+    EXPECT_EQ(check_tm.tm_hour, 13);
+    EXPECT_EQ(check_tm.tm_sec, 06);
+    EXPECT_EQ(check_tm.tm_min, 14);
+    EXPECT_EQ(check_tm.tm_year, 119);
+    EXPECT_EQ(check_tm.tm_mon, 4);
+    EXPECT_EQ(check_tm.tm_mday, 23);
 
-    {
-        std::string in = "20000209090909.074948+120";
+    check_tm = ToTm("20190323090106.074948+120"s);
+    EXPECT_EQ(check_tm.tm_hour, 9);
+    EXPECT_EQ(check_tm.tm_sec, 6);
+    EXPECT_EQ(check_tm.tm_min, 1);
+    EXPECT_EQ(check_tm.tm_year, 119);
+    EXPECT_EQ(check_tm.tm_mon, 2);
+    EXPECT_EQ(check_tm.tm_mday, 23);
 
-        auto check_time = ConvertWmiTimeToHumanTime(in);
-        auto check_tm = *std::localtime(&check_time);
-        EXPECT_EQ(check_tm.tm_hour, 9);
-        EXPECT_EQ(check_tm.tm_sec, 9);
-        EXPECT_EQ(check_tm.tm_min, 9);
-        EXPECT_EQ(check_tm.tm_year, 100);
-        EXPECT_EQ(check_tm.tm_mon, 1);
-        EXPECT_EQ(check_tm.tm_mday, 9);
-    }
+    check_tm = ToTm("20000209090909.074948+120"s);
+    EXPECT_EQ(check_tm.tm_hour, 9);
+    EXPECT_EQ(check_tm.tm_sec, 9);
+    EXPECT_EQ(check_tm.tm_min, 9);
+    EXPECT_EQ(check_tm.tm_year, 100);
+    EXPECT_EQ(check_tm.tm_mon, 1);
+    EXPECT_EQ(check_tm.tm_mday, 9);
 }
 
 namespace {
-constexpr ULONGLONG virtual_size = 1ull * 1024 * 1024 * 1024 * 1024;
-constexpr ULONGLONG working_set_size = 2ull * 1024 * 1024 * 1024 * 1024;
-constexpr long long pagefile_usage = 3ll * 1024 * 1024 * 1024 * 1024;
-constexpr ULONGLONG uptime = 4ull * 1024ull * 1024 * 1024 * 1024;
-constexpr long long usermode_time = 5ll * 1024 * 1024 * 1024 * 1024;
-constexpr long long kernelmode_time = 6ll * 1024 * 1024 * 1024 * 1024;
-constexpr long long process_id = 7ll * 1024 * 1024 * 1024 * 1024;
-constexpr long long process_handle_count = 8ll * 1024 * 1024 * 1024 * 1024;
-constexpr long long thread_count = 9ll * 1024 * 1024 * 1024 * 1024;
+constexpr ULONGLONG virtual_size = 1ULL * 1024 * 1024 * 1024 * 1024;
+constexpr ULONGLONG working_set_size = 2ULL * 1024 * 1024 * 1024 * 1024;
+constexpr long long pagefile_usage = 3LL * 1024 * 1024 * 1024 * 1024;
+constexpr ULONGLONG uptime = 4ULL * 1024ULL * 1024 * 1024 * 1024;
+constexpr long long usermode_time = 5LL * 1024 * 1024 * 1024 * 1024;
+constexpr long long kernelmode_time = 6LL * 1024 * 1024 * 1024 * 1024;
+constexpr long long process_id = 7LL * 1024 * 1024 * 1024 * 1024;
+constexpr long long process_handle_count = 8LL * 1024 * 1024 * 1024 * 1024;
+constexpr long long thread_count = 9LL * 1024 * 1024 * 1024 * 1024;
 
 const std::string user = "user";
 const std::string exe_file = "exe_file";
@@ -158,9 +157,9 @@ const std::string exe_file = "exe_file";
 // Decision: "Test internal API explicit"
 std::string OutputProcessLine(ULONGLONG virtual_size,
                               ULONGLONG working_set_size,
-                              long long pagefile_usage, ULONGLONG uptime,
-                              long long usermode_time,
-                              long long kernelmode_time, long long process_id,
+                              long long pagefile_usage, uint64_t uptime,
+                              uint64_t usermode_time, uint64_t kernelmode_time,
+                              long long process_id,
                               long long process_handle_count,
                               long long thread_count, const std::string &user,
                               const std::string &exe_file);
@@ -170,7 +169,7 @@ TEST(PsTest, OutputProcessLine) {
         OutputProcessLine(virtual_size, working_set_size, pagefile_usage,
                           uptime, usermode_time, kernelmode_time, process_id,
                           process_handle_count, thread_count, user, exe_file);
-    auto by_tab = cma::tools::SplitString(process_string, "\t");
+    auto by_tab = tools::SplitString(process_string, "\t");
     ASSERT_EQ(by_tab.size(), 2);
     ASSERT_EQ(by_tab[0].back(), ')');
     ASSERT_EQ(by_tab[0][0], '(');
@@ -178,7 +177,7 @@ TEST(PsTest, OutputProcessLine) {
 
     by_tab[0].erase(0, 1);
     by_tab[0].pop_back();
-    auto by_comma = cma::tools::SplitString(by_tab[0], ",");
+    auto by_comma = tools::SplitString(by_tab[0], ",");
     ASSERT_EQ(by_comma.size(), 11);
 
     EXPECT_EQ(by_comma[0], user);
@@ -197,9 +196,24 @@ TEST(PsTest, OutputProcessLine) {
 
 TEST(PsTest, GetProcessListFromWmi) {
     auto processes = GetProcessListFromWmi(ps::kSepString);
-    auto table = cma::tools::SplitString(processes, L"\n");
+    auto table = tools::SplitString(processes, L"\n");
     EXPECT_TRUE(!processes.empty());
     EXPECT_GT(table.size(), 10UL);
+}
+
+bool IsAccountExist(const std::string &account) {
+    SID_NAME_USE snu;
+    SID sid{0};
+    auto sz = static_cast<DWORD>(sizeof(sid));
+    DWORD rd_size{0};
+    char *rd{nullptr};
+    auto succ = ::LookupAccountNameA(nullptr, account.c_str(), &sid, &sz, rd,
+                                     &rd_size, &snu);
+    return succ || ::GetLastError() != ERROR_INSUFFICIENT_BUFFER;
+}
+TEST(PsTest, GetProcessOwner) {
+    auto name = GetProcessOwner(GetCurrentProcessId());
+    ASSERT_TRUE(IsAccountExist(name));
 }
 
 }  // namespace cma::provider

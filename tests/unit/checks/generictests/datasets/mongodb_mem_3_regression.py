@@ -25,9 +25,9 @@ discovery = {'': [(None, {})]}
 checks = {'': [(None,
                 {},
                 [(0,
-                  'Resident usage: 856.00 MB',
+                  'Resident usage: 856 MiB',
                   [('process_resident_size', 897581056, None, None, None, None)]),
                  (0,
-                  'Virtual usage: 5.96 GB',
+                  'Virtual usage: 5.96 GiB',
                   [('process_virtual_size', 6396313600, None, None, None, None)])
                  ])]}

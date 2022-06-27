@@ -10,11 +10,12 @@ innovaphone_licenses_default_levels = (90.0, 95.0)
 def inventory_innovaphone_licenses(info):
     if info:
         return [(None, "innovaphone_licenses_default_levels")]
+    return []
 
 
 def check_innovaphone_licenses(_no_item, params, info):
     if not info:
-        return
+        return None
     total, used = map(savefloat, info[0])
     perc_used = (100.0 * used) / total
     warn, crit = params

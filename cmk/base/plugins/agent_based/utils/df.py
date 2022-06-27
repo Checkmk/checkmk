@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import fnmatch
+from enum import Enum
 from typing import (
     Any,
     Callable,
@@ -13,6 +14,7 @@ from typing import (
     Mapping,
     MutableMapping,
     NamedTuple,
+    NewType,
     Optional,
     Sequence,
     Set,
@@ -47,25 +49,269 @@ FSBlock = Tuple[str, Optional[float], Optional[float], float]
 FSBlocks = Sequence[FSBlock]
 BlocksSubsection = Sequence[DfBlock]
 InodesSubsection = Sequence[DfInode]
+Bytes = NewType("Bytes", int)
+Percent = NewType("Percent", float)
 
-FILESYSTEM_DEFAULT_LEVELS = {
+
+class RenderOptions(Enum):
+    bytes_ = "bytes"
+    percent = "percent"
+
+
+class LevelsFreeSpace(NamedTuple):
+    warn_percent: Percent
+    crit_percent: Percent
+    warn_absolute: Bytes
+    crit_absolute: Bytes
+    render_as: RenderOptions
+
+
+class LevelsUsedSpace(NamedTuple):
+    warn_percent: Percent
+    crit_percent: Percent
+    warn_absolute: Bytes
+    crit_absolute: Bytes
+    render_as: RenderOptions
+
+
+FilesystemLevels = LevelsFreeSpace | LevelsUsedSpace
+
+
+DfSection = tuple[BlocksSubsection, InodesSubsection]
+
+
+FILESYSTEM_DEFAULT_LEVELS: Mapping[str, Any] = {
     "levels": (80.0, 90.0),  # warn/crit in percent
-    "magic_normsize": 20,  # Standard size if 20 GB
-    "levels_low": (50.0, 60.0),  # Never move warn level below 50% due to magic factor
+}
+
+TREND_DEFAULT_PARAMS: Mapping[str, Any] = {
     "trend_range": 24,
     "trend_perfdata": True,  # do send performance data for trends
-    "show_levels": "onmagic",
-    "inodes_levels": (10.0, 5.0),
-    "show_inodes": "onlow",
-    "show_reserved": False,
+}
+
+MAGIC_FACTOR_DEFAULT_PARAMS: Mapping[str, Any] = {
+    "magic_normsize": 20,  # Standard size if 20 GB
+    "levels_low": (50.0, 60.0),  # Never move warn level below 50% due to magic factor
 }
 
 
-def savefloat(raw: Any) -> float:
-    try:
-        return float(raw)
-    except (TypeError, ValueError):
-        return 0.0
+SHOW_LEVELS_DEFAULT: Mapping[str, Any] = {
+    "show_levels": "onmagic",
+}
+
+INODES_DEFAULT_PARAMS: Mapping[str, Any] = {
+    "inodes_levels": (10.0, 5.0),
+    "show_inodes": "onlow",
+}
+
+
+FILESYSTEM_DEFAULT_PARAMS: Mapping[str, Any] = {
+    **FILESYSTEM_DEFAULT_LEVELS,
+    **MAGIC_FACTOR_DEFAULT_PARAMS,
+    **SHOW_LEVELS_DEFAULT,
+    **INODES_DEFAULT_PARAMS,
+    "show_reserved": False,
+    **TREND_DEFAULT_PARAMS,
+}
+
+
+def _determine_levels_for_filesystem(levels: list, filesystem_size: Bytes) -> Tuple[Any, Any]:
+    """Determine levels based on the given filesystem size from a list of
+    levels configured by the user.
+
+    The list consists of a tuple of filesystem size (GB) and another tuple of
+    levels (warn/crit). The levels are only selected for the filesystem if it
+    is greater than the filesystem size in the list. If levels cannot be
+    determined, a default of 100% for warn and crit is used.
+
+    Examples:
+
+    >>> _determine_levels_for_filesystem([(20, (1, 2)), (30, (3, 4)), (50, (5, 6))], 20)
+    (100.0, 100.0)
+
+    >>> _determine_levels_for_filesystem([(20, (1, 2)), (30, (3, 4)), (50, (5, 6))], 30)
+    (1, 2)
+
+    >>> _determine_levels_for_filesystem([(20, (1, 2)), (30, (3, 4)), (50, (5, 6))], 40)
+    (3, 4)
+
+    >>> _determine_levels_for_filesystem([(20, (1, 2)), (30, (3, 4)), (50, (5, 6))], 100)
+    (5, 6)
+    """
+
+    for size, actual_levels in sorted(levels, reverse=True):
+        if filesystem_size > size:
+            return actual_levels
+
+    # TODO: if the levels are not found, the defaults should be used
+    return 100.0, 100.0
+
+
+def _adjust_level(level: Percent, factor: float) -> Percent:
+    return Percent(100 - ((100 - level) * factor))
+
+
+def _adjust_levels(
+    levels: FilesystemLevels,
+    factor: float,
+    filesystem_size: Bytes,
+    reference_size: Bytes,
+    minimum_levels: Tuple[float, float],
+) -> FilesystemLevels:
+    """The magic factor adjusts thresholds set for free or used filesystem
+    space based on a factor (aka "magic factor") and relative to a
+    reference size (aka "magic normsize").
+
+    The reasoning is that it does not make sense to apply the same
+    thresholds to all filesystems, regardless of their size. For example,
+    20% of space on a 50TB filesytem could be considered sufficiently free
+    space, while 20% on a 1GB filesystem could indicate that it needs to be
+    expanded/freed.
+
+    The reference size is the size at which we "start adjusting". The
+    thresholds for filesystems larger than the reference size become more
+    lenient (i.e. higher), while the thresholds for filesystems smaller
+    than the reference size become more strict (i.e. lower).
+
+    The magic factor should be a number between 0 and 1, and is the
+    magnitude of adjustment. The closer this number is to 1, the smaller is
+    this magnitude. A factor of 1 does not adjust the thresholds.
+
+    Example:
+
+    reference size: 20GB
+    threshold: 80%
+
+    Filesystem size    MF 1    MF 0.9    MF 0.5
+    10GB               80%     79%       72%
+    20GB               80%     80%       80%
+    50GB               80%     82%       87%
+
+
+    Please run df_magic_factor.py for more examples.
+    """
+
+    relative_size = filesystem_size / reference_size
+    true_factor = (relative_size**factor) / relative_size
+
+    warn_percent = Percent(max(_adjust_level(levels.warn_percent, true_factor), minimum_levels[0]))
+    crit_percent = Percent(max(_adjust_level(levels.crit_percent, true_factor), minimum_levels[1]))
+
+    if isinstance(levels, LevelsFreeSpace):
+        return LevelsFreeSpace(
+            warn_percent=warn_percent,
+            crit_percent=crit_percent,
+            warn_absolute=_to_absolute(warn_percent, filesystem_size),
+            crit_absolute=_to_absolute(crit_percent, filesystem_size),
+            render_as=levels.render_as,
+        )
+
+    return LevelsUsedSpace(
+        warn_percent=warn_percent,
+        crit_percent=crit_percent,
+        warn_absolute=_to_absolute(warn_percent, filesystem_size),
+        crit_absolute=_to_absolute(crit_percent, filesystem_size),
+        render_as=levels.render_as,
+    )
+
+
+def check_summary_text(levels: FilesystemLevels) -> str:
+    # TODO: this is the same as the functionality provided in memory.py!
+
+    if levels.render_as is RenderOptions.percent:
+        applied_levels = (
+            f"{render.percent(abs(levels.warn_percent))}/{render.percent(abs(levels.crit_percent))}"
+        )
+    elif levels.render_as is RenderOptions.bytes_:
+        applied_levels = (
+            f"{render.bytes(abs(levels.warn_absolute))}/{render.bytes(abs(levels.crit_absolute))}"
+        )
+    else:
+        raise TypeError(f"Unsupported render type: {repr(levels.render_as)}")
+
+    if isinstance(levels, LevelsFreeSpace):
+        return f"(warn/crit below {applied_levels} free)"
+
+    return f"(warn/crit at {applied_levels} used)"
+
+
+def _is_free_space_level(warn: int | float, crit: int | float) -> bool:
+    """
+    >>> _is_free_space_level(-1, -1)
+    True
+    >>> _is_free_space_level(0, 0)
+    False
+    >>> _is_free_space_level(1, 1)
+    False
+    """
+    if warn < 0 and crit < 0:
+        return True
+    if warn >= 0 and crit >= 0:
+        return False
+    raise TypeError(
+        f"Unable to determine whether levels are for used or free space, got {repr((warn, crit))}"
+    )
+
+
+def _to_absolute(level: Percent, size: Bytes) -> Bytes:
+    """
+    >>> _to_absolute(80.0, 200)
+    160
+    """
+    return Bytes(int(size * (level / 100)))
+
+
+def _to_percent(level: Bytes, size: Bytes) -> Percent:
+    """
+    >>> _to_percent(160, 200)
+    80.0
+    """
+    return Percent((level / size) * 100.0)
+
+
+def _parse_free_used_levels(levels: tuple, filesystem_size: Bytes) -> FilesystemLevels:
+    warn, crit = levels
+    if isinstance(warn, int) and isinstance(crit, int):
+        warn_absolute = Bytes(warn * 1024 * 1024)
+        crit_absolute = Bytes(crit * 1024 * 1024)
+        warn_percent = _to_percent(warn_absolute, filesystem_size)
+        crit_percent = _to_percent(crit_absolute, filesystem_size)
+        render_as = RenderOptions.bytes_
+    elif isinstance(warn, float) and isinstance(crit, float):
+        warn_percent = Percent(warn)
+        crit_percent = Percent(crit)
+        warn_absolute = _to_absolute(warn_percent, filesystem_size)
+        crit_absolute = _to_absolute(crit_percent, filesystem_size)
+        render_as = RenderOptions.percent
+    else:
+        raise TypeError(
+            "Expected tuple of int or tuple of float for filesystem levels, got {type(warn).__name__}/{type(crit).__name__}"
+        )
+
+    if _is_free_space_level(warn, crit):
+        return LevelsFreeSpace(
+            warn_percent=warn_percent,
+            crit_percent=crit_percent,
+            warn_absolute=warn_absolute,
+            crit_absolute=crit_absolute,
+            render_as=render_as,
+        )
+    return LevelsUsedSpace(
+        warn_percent=warn_percent,
+        crit_percent=crit_percent,
+        warn_absolute=warn_absolute,
+        crit_absolute=crit_absolute,
+        render_as=render_as,
+    )
+
+
+def _parse_filesystem_levels(levels: object, filesystem_size: Bytes) -> FilesystemLevels:
+    if isinstance(levels, tuple):
+        return _parse_free_used_levels(levels, filesystem_size)
+    if isinstance(levels, list):
+        actual_levels = _determine_levels_for_filesystem(levels, filesystem_size)
+        return _parse_free_used_levels(actual_levels, filesystem_size)
+    raise TypeError(f"Expected list or tuple for filesystem levels, got {type(levels).__name__}")
 
 
 def _ungrouped_mountpoints_and_groups(
@@ -82,147 +328,25 @@ def _ungrouped_mountpoints_and_groups(
     return ungrouped_mountpoints, groups
 
 
-def get_filesystem_levels(size_gb: float, params: Mapping[str, Any]) -> Dict[str, Any]:
-    """
-    >>> from pprint import pprint as pp
-    >>> pp(get_filesystem_levels(1234, FILESYSTEM_DEFAULT_LEVELS))
-    {'inodes_levels': (10.0, 5.0),
-     'levels': (80.0, 90.0),
-     'levels_low': (50.0, 60.0),
-     'levels_mb': (1010892.8, 1137254.4),
-     'levels_text': '(warn/crit at 80.00%/90.00%)',
-     'magic_normsize': 20,
-     'show_inodes': 'onlow',
-     'show_levels': 'onmagic',
-     'show_reserved': False,
-     'trend_perfdata': True,
-     'trend_range': 24}
-    >>> pp(get_filesystem_levels(123, {"levels": (10,20)}))
-    {'inodes_levels': (None, None),
-     'levels': (10, 20),
-     'levels_low': (50.0, 60.0),
-     'levels_mb': (9.999999999999998, 19.999999999999996),
-     'levels_text': '(warn/crit at 10.0 MiB/20.0 MiB)',
-     'magic_normsize': 20,
-     'show_inodes': 'onlow',
-     'show_levels': 'onmagic',
-     'show_reserved': False,
-     'trend_perfdata': True,
-     'trend_range': 24}
-    """
-    mega = 1024 * 1024
-    giga = mega * 1024
+def get_filesystem_levels(
+    filesystem_size_gb: float,
+    params: Mapping[str, Any],
+) -> FilesystemLevels:
 
-    # Override default levels with params
-    levels: Dict[str, Any] = {**FILESYSTEM_DEFAULT_LEVELS, **params}
+    filesystem_size = Bytes(int(filesystem_size_gb * 1024 * 1024 * 1024))
 
-    # Determine real warn, crit levels
-    if isinstance(levels["levels"], tuple):
-        warn, crit = levels["levels"]
-    else:
-        # A list of levels. Choose the correct one depending on the
-        # size of the current filesystem. We do not make the first
-        # rule match, but that with the largest size_gb. That way
-        # the order of the entries is not important.
-        found = False
-        found_size = 0
-        # Type-ingore: levels["levels"] was overridden by params and should be list of tuples
-        for to_size, this_levels in levels["levels"]:  # type: ignore[attr-defined]
-            if size_gb * giga > to_size >= found_size:
-                warn, crit = this_levels
-                found_size = to_size
-                found = True
-        if not found:
-            warn, crit = 100.0, 100.0  # entry not found in list
+    filesystem_levels = _parse_filesystem_levels(params["levels"], filesystem_size)
 
-    # Take into account magic scaling factor (third optional argument
-    # in check params). A factor of 1.0 changes nothing. Factor should
-    # be > 0 and <= 1. A smaller factor raises levels for big file systems
-    # bigger than 100 GB and lowers it for file systems smaller than 100 GB.
-    # Please run df_magic_factor.py to understand how it works.
-
-    magic = levels.get("magic")
-    # We need a way to disable the magic factor so check
-    # if magic not 1.0
-    if magic and magic != 1.0:
-        # convert warn/crit to percentage
-        if not isinstance(warn, float):
-            warn = savefloat(warn * mega / float(size_gb * giga)) * 100
-        if not isinstance(crit, float):
-            crit = savefloat(crit * mega / float(size_gb * giga)) * 100
-
-        normsize = levels["magic_normsize"]
-        hgb_size = size_gb / float(normsize)
-        felt_size = hgb_size**magic
-        scale = felt_size / hgb_size
-        warn_scaled = 100 - ((100 - warn) * scale)
-        crit_scaled = 100 - ((100 - crit) * scale)
-
-        # Make sure, levels do never get too low due to magic factor
-        lowest_warning_level, lowest_critical_level = levels["levels_low"]
-        warn_scaled = max(warn_scaled, lowest_warning_level)
-        crit_scaled = max(crit_scaled, lowest_critical_level)
-
-    else:
-        if not isinstance(warn, float):
-            warn_scaled = savefloat(warn * mega / float(size_gb * giga)) * 100
-        else:
-            warn_scaled = warn
-
-        if not isinstance(crit, float):
-            crit_scaled = savefloat(crit * mega / float(size_gb * giga)) * 100
-        else:
-            crit_scaled = crit
-
-    size_mb = size_gb * 1024
-    warn_mb = savefloat(size_mb * warn_scaled / 100)
-    crit_mb = savefloat(size_mb * crit_scaled / 100)
-    levels["levels_mb"] = (warn_mb, crit_mb)
-    if isinstance(warn, float):
-        if warn_scaled < 0 and crit_scaled < 0:
-            label = "warn/crit at free space below"
-            warn_scaled *= -1
-            crit_scaled *= -1
-        else:
-            label = "warn/crit at"
-        levels["levels_text"] = (
-            f"({label} " f"{render.percent(warn_scaled)}/{render.percent(crit_scaled)})"
+    if (magic_factor := params.get("magic")) is not None:
+        filesystem_levels = _adjust_levels(
+            filesystem_levels,
+            factor=magic_factor,
+            filesystem_size=filesystem_size,
+            reference_size=Bytes(params["magic_normsize"] * 1024 * 1024 * 1024),
+            minimum_levels=params["levels_low"],
         )
-    else:
-        if warn * mega < 0 and crit * mega < 0:
-            label = "warn/crit at free space below"
-            warn *= -1
-            crit *= -1
-        else:
-            label = "warn/crit at"
-        warn_hr = render.bytes(warn * mega)
-        crit_hr = render.bytes(crit * mega)
-        levels["levels_text"] = f"({label} {warn_hr}/{crit_hr})"
 
-    inodes_levels = params.get("inodes_levels")
-    if inodes_levels:
-        if isinstance(levels["inodes_levels"], tuple):
-            warn, crit = levels["inodes_levels"]
-        else:
-            # A list of inode levels. Choose the correct one depending on the
-            # size of the current filesystem. We do not make the first
-            # rule match, but that with the largest size_gb. That way
-            # the order of the entries is not important.
-            found = False
-            found_size = 0
-            # Type-ingore: levels["levels"] was overridden by params and should be list of tuples
-            for to_size, this_levels in levels["inodes_levels"]:  # type: ignore[attr-defined]
-                if size_gb * giga > to_size >= found_size:
-                    warn, crit = this_levels
-                    found_size = to_size
-                    found = True
-            if not found:
-                warn, crit = 100.0, 100.0  # entry not found in list
-        levels["inodes_levels"] = warn, crit
-    else:
-        levels["inodes_levels"] = (None, None)
-
-    return levels
+    return filesystem_levels
 
 
 def mountpoints_in_group(
@@ -246,12 +370,12 @@ def mountpoints_in_group(
     return matching_mountpoints
 
 
-def _render_integer(number: float):
+def _render_integer(number: float) -> str:
     return render.filesize(number).strip(" B")
 
 
-def _check_inodes(
-    levels: Dict[str, Any],
+def check_inodes(
+    levels: Mapping[str, Any],
     inodes_total: float,
     inodes_avail: float,
 ) -> Generator[Union[Metric, Result], None, None]:
@@ -260,38 +384,50 @@ def _check_inodes(
     ...     "inodes_levels": (10, 5),
     ...     "show_inodes": "onproblem",
     ... }
-    >>> for r in _check_inodes(levels, 80, 60): print(r)
+    >>> for r in check_inodes(levels, 80, 60): print(r)
     Metric('inodes_used', 20.0, levels=(70.0, 75.0), boundaries=(0.0, 80.0))
     Result(state=<State.OK: 0>, notice='Inodes used: 20, Inodes available: 60 (75.00%)')
 
     >>> levels["show_inodes"] = "always"
-    >>> for r in _check_inodes(levels, 80, 20): print(r)
+    >>> for r in check_inodes(levels, 80, 20): print(r)
     Metric('inodes_used', 60.0, levels=(70.0, 75.0), boundaries=(0.0, 80.0))
     Result(state=<State.OK: 0>, summary='Inodes used: 60, Inodes available: 20 (25.00%)')
 
     >>> levels["show_inodes"]="onlow"
     >>> levels["inodes_levels"]= (40, 35)
-    >>> for r in _check_inodes(levels, 80, 20): print(r)
+    >>> for r in check_inodes(levels, 80, 20): print(r)
     Metric('inodes_used', 60.0, levels=(40.0, 45.0), boundaries=(0.0, 80.0))
     Result(state=<State.CRIT: 2>, summary='Inodes used: 60 (warn/crit at 40/45), Inodes available: 20 (25.00%)')
     """
-    inodes_warn_variant, inodes_crit_variant = levels["inodes_levels"]
+    if (inodes_levels := levels.get("inodes_levels")) is None:
+        # inodes_levels is set as default for every check except network_fs_mounts
+        # this parameter could also be None if it's set to "ignore" by the user
+        inodes_warn_variant, inodes_crit_variant = None, None
+    else:
+        inodes_warn_variant, inodes_crit_variant = inodes_levels
 
     inodes_abs: Optional[Tuple[float, float]] = None
-    human_readable_func: Callable[[Any], str] = _render_integer
-    if isinstance(inodes_warn_variant, int):
+    human_readable_func: Callable[[float], str] = _render_integer
+    if isinstance(inodes_warn_variant, int) and isinstance(inodes_crit_variant, int):
         # Levels in absolute numbers
         inodes_abs = (
             inodes_total - inodes_warn_variant,
             inodes_total - inodes_crit_variant,
         )
-    elif isinstance(inodes_warn_variant, float):
+    elif isinstance(inodes_warn_variant, float) and isinstance(inodes_crit_variant, float):
         # Levels in percent
         inodes_abs = (
             (100 - inodes_warn_variant) / 100.0 * inodes_total,
             (100 - inodes_crit_variant) / 100.0 * inodes_total,
         )
-        human_readable_func = lambda x: render.percent(100.0 * x / inodes_total)
+
+        def human_readable_func(x: float) -> str:
+            return render.percent(100.0 * x / inodes_total)
+
+    else:
+        raise TypeError(
+            "Expected tuple of int or tuple of float for inodes levels, got {type(inodes_warn_variant).__name__}/{type(inodes_crit_variant).__name__}"
+        )
 
     inode_result, inode_metric = check_levels(
         value=inodes_total - inodes_avail,
@@ -354,7 +490,7 @@ def df_check_filesystem_single(
     this_time=None,
 ) -> CheckResult:
     if size_mb == 0:
-        yield Result(state=State.WARN, summary="Size of filesystem is 0 MB")
+        yield Result(state=State.WARN, summary="Size of filesystem is 0 B")
         return
 
     if (size_mb is None) or (avail_mb is None) or (reserved_mb is None):
@@ -375,8 +511,11 @@ def df_check_filesystem_single(
         used_max -= reserved_mb
 
     # Get warning and critical levels already with 'magic factor' applied
-    levels = get_filesystem_levels(size_mb / 1024.0, params)
-    warn_mb, crit_mb = levels["levels_mb"]
+    filesystem_levels = get_filesystem_levels(size_mb / 1024.0, params)
+    warn_mb, crit_mb = (
+        filesystem_levels.warn_absolute / 1024**2,
+        filesystem_levels.crit_absolute / 1024**2,
+    )
 
     used_hr = render.bytes(used_mb * 1024**2)
     used_max_hr = render.bytes(used_max * 1024**2)
@@ -389,8 +528,8 @@ def df_check_filesystem_single(
     if warn_mb < 0.0:
         # Negative levels, so user configured thresholds based on space left. Calculate the
         # upper thresholds based on the size of the filesystem
-        crit_mb = used_max + crit_mb
-        warn_mb = used_max + warn_mb
+        crit_mb = int(used_max + crit_mb)
+        warn_mb = int(used_max + warn_mb)
 
     status = State.CRIT if used_mb >= crit_mb else State.WARN if used_mb >= warn_mb else State.OK
     yield Metric("fs_used", used_mb, levels=(warn_mb, crit_mb), boundaries=(0, size_mb))
@@ -408,10 +547,10 @@ def df_check_filesystem_single(
         show_levels == "always"
         or (show_levels == "onproblem" and status is not State.OK)  #
         or (  #
-            show_levels == "onmagic" and (status is not State.OK or levels.get("magic", 1.0) != 1.0)
+            show_levels == "onmagic" and (status is not State.OK or params.get("magic", 1.0) != 1.0)
         )
     ):
-        infotext.append(levels["levels_text"])
+        infotext.append(check_summary_text(filesystem_levels))
     yield Result(state=status, summary=", ".join(infotext).replace("), (", ", "))
 
     if show_reserved:
@@ -434,14 +573,14 @@ def df_check_filesystem_single(
         value_store=value_store,
         value_store_key=mountpoint,
         resource="disk",
-        levels=levels,
+        levels=params,
         used_mb=used_mb,
         size_mb=size_mb,
         timestamp=this_time,
     )
 
     if inodes_total and inodes_avail is not None:
-        yield from _check_inodes(levels, inodes_total, inodes_avail)
+        yield from check_inodes(params, inodes_total, inodes_avail)
 
 
 def df_check_filesystem_list(

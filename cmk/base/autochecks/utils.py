@@ -12,9 +12,9 @@ from typing import Any, Mapping, NamedTuple, Sequence
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.store import ObjectStore
-from cmk.utils.type_defs import CheckPluginName, HostName, Item
+from cmk.utils.type_defs import CheckPluginName, HostName, Item, ServiceID
 
-from cmk.base.check_utils import LegacyCheckParameters, ServiceID
+from cmk.base.check_utils import LegacyCheckParameters
 
 
 # If we switched to something less stupid than "LegacyCheckParameters", see
@@ -43,7 +43,7 @@ class AutocheckEntry(NamedTuple):
         )
 
     def id(self) -> ServiceID:
-        return self.check_plugin_name, self.item
+        return ServiceID(self.check_plugin_name, self.item)
 
     def dump(self) -> Mapping[str, Any]:
         return {

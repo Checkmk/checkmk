@@ -18,6 +18,7 @@ sudo install -m 755 \
     mkbackup \
     mkbench \
     cmk-update-config \
+    cmk-update-license-usage \
     post-rename-site \
     init-redis \
     "$ROOT"/bin/

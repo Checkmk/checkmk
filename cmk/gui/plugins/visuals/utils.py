@@ -35,7 +35,8 @@ import cmk.utils.plugin_registry
 import cmk.gui.query_filters as query_filters
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import html, request, user_errors
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import PageMenuEntry
 from cmk.gui.site_config import get_site_config
@@ -47,9 +48,11 @@ from cmk.gui.type_defs import (
     FilterName,
     Row,
     Rows,
+    SingleInfos,
     VisualContext,
 )
 from cmk.gui.utils.speaklater import LazyString
+from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import DualListChoice, ValueSpec
 from cmk.gui.view_utils import get_labels
 
@@ -161,7 +164,7 @@ class VisualType(abc.ABC):
 
     @abc.abstractmethod
     def add_visual_handler(
-        self, target_visual_name: str, add_type: str, context: Dict, parameters: Dict
+        self, target_visual_name: str, add_type: str, context: VisualContext, parameters: Dict
     ) -> None:
         """The function to handle adding the given visual to the given visual of this type"""
         raise NotImplementedError()
@@ -412,11 +415,11 @@ RangedTables = Literal[
 ]
 
 
-def parse_ranged_tables_literal(s: str) -> RangedTables:
+def get_ranged_table(s: str) -> Optional[RangedTables]:
     for lit in get_args(RangedTables):
         if s == lit:
             return lit
-    raise ValueError("Expected a RangedTables Literal")
+    return None
 
 
 def recover_pre_2_1_range_filter_request_vars(query: query_filters.NumberRangeQuery):
@@ -718,6 +721,7 @@ class FilterRegistry(cmk.utils.plugin_registry.Registry[Filter]):
             htmlvar: instance.ident for htmlvar in instance.htmlvars
         }
         self.htmlvars_to_filter.update(htmlvars_to_filter)
+        return None
 
     def plugin_name(self, instance):
         return instance.ident
@@ -733,7 +737,7 @@ def filters_allowed_for_info(info: str) -> Iterator[Tuple[str, Filter]]:
             yield fname, filt
 
 
-def filters_allowed_for_infos(info_list: List[str]) -> Dict[str, Filter]:
+def filters_allowed_for_infos(info_list: SingleInfos) -> Dict[str, Filter]:
     """Same as filters_allowed_for_info() but for multiple infos"""
     return dict(chain.from_iterable(map(filters_allowed_for_info, info_list)))
 

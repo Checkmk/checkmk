@@ -11,7 +11,7 @@ import cmk.utils.store as store
 from cmk.utils.type_defs import EventRule, UserId
 
 import cmk.gui.userdb as userdb
-from cmk.gui.globals import active_config
+from cmk.gui.config import active_config
 from cmk.gui.watolib.utils import wato_root_dir
 
 

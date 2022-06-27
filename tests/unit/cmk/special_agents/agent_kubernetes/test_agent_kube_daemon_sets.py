@@ -6,6 +6,7 @@
 
 import json
 
+from kubernetes import client  # type: ignore[import]
 from mocket import Mocketizer  # type: ignore[import]
 from mocket.mockhttp import Entry  # type: ignore[import]
 
@@ -14,7 +15,7 @@ from cmk.special_agents.utils_kubernetes.transform import parse_daemonset_status
 
 
 class TestAPIDaemonSets:
-    def test_parse_metadata(self, apps_client, dummy_host):
+    def test_parse_metadata(self, apps_client: client.AppsV1Api, dummy_host: str) -> None:
         daemon_sets_metadata = {
             "items": [
                 {
@@ -26,7 +27,10 @@ class TestAPIDaemonSets:
                         "generation": 1,
                         "creationTimestamp": "2022-02-16T10:03:21Z",
                         "labels": {"app": "node-collector-container-metrics"},
-                        "annotations": {"deprecated.daemonset.template.generation": "1"},
+                        "annotations": {
+                            "deprecated.daemonset.template.generation": "1",
+                            "seccomp.security.alpha.kubernetes.io/pod": "runtime/default",
+                        },
                     }
                 }
             ]
@@ -45,8 +49,41 @@ class TestAPIDaemonSets:
         assert metadata.name == "node-collector-container-metrics"
         assert isinstance(metadata.creation_timestamp, float)
         assert metadata.labels
+        assert metadata.annotations == {"deprecated.daemonset.template.generation": "1"}
 
-    def test_parse_status_failed_creation(self, apps_client, dummy_host):
+    def test_parse_metadata_missing_annotations_and_labels(
+        self, apps_client: client.AppsV1Api, dummy_host: str
+    ) -> None:
+        daemon_sets_metadata = {
+            "items": [
+                {
+                    "metadata": {
+                        "name": "node-collector-container-metrics",
+                        "namespace": "checkmk-monitoring",
+                        "uid": "6f07cb60-26c7-41ce-afe0-48c97d15a07b",
+                        "resourceVersion": "2967286",
+                        "generation": 1,
+                        "creationTimestamp": "2022-02-16T10:03:21Z",
+                    }
+                }
+            ]
+        }
+
+        Entry.single_register(
+            Entry.GET,
+            f"{dummy_host}/apis/apps/v1/daemonsets",
+            body=json.dumps(daemon_sets_metadata),
+            headers={"content-type": "application/json"},
+        )
+        with Mocketizer():
+            daemon_set = list(apps_client.list_daemon_set_for_all_namespaces().items)[0]
+        metadata = parse_metadata(daemon_set.metadata)
+        assert metadata.labels == {}
+        assert metadata.annotations == {}
+
+    def test_parse_status_failed_creation(
+        self, apps_client: client.AppsV1Api, dummy_host: str
+    ) -> None:
         daemon_sets_data = {
             "items": [
                 {
@@ -77,7 +114,9 @@ class TestAPIDaemonSets:
         assert status.desired_number_scheduled == 2
         assert status.updated_number_scheduled == 1
 
-    def test_parse_status_no_matching_node(self, apps_client, dummy_host):
+    def test_parse_status_no_matching_node(
+        self, apps_client: client.AppsV1Api, dummy_host: str
+    ) -> None:
         """
 
         Some DaemonSets may have no Nodes, on which they want to schedule Pods (because of their

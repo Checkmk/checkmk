@@ -48,7 +48,7 @@ def check_proxmox_ve_disk_usage(params: Mapping[str, Any], section: Section) -> 
     warn_bytes, crit_bytes = (warn / 100 * total_bytes, crit / 100 * total_bytes)
 
     if total_bytes == 0:
-        yield Result(state=State.WARN, summary="Size of filesystem is 0 MB")
+        yield Result(state=State.WARN, summary="Size of filesystem is 0 B")
         return
 
     yield Metric(

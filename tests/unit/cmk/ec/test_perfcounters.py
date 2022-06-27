@@ -13,7 +13,7 @@ from cmk.ec.main import Perfcounters
 logger = logging.getLogger("cmk.mkeventd")
 
 
-def test_perfcounters_count():
+def test_perfcounters_count() -> None:
     c = Perfcounters(logger)
     assert c._counters["messages"] == 0
     c.count("messages")
@@ -22,7 +22,7 @@ def test_perfcounters_count():
     assert not [(k, v) for k, v in c._counters.items() if k != "messages" and v > 0]
 
 
-def test_perfcounters_count_time():
+def test_perfcounters_count_time() -> None:
     c = Perfcounters(logger)
     assert "processing" not in c._times
     c.count_time("processing", 1.0)
@@ -33,7 +33,7 @@ def test_perfcounters_count_time():
     assert c._times["processing"] == 1.04
 
 
-def test_perfcounters_do_statistics(monkeypatch):
+def test_perfcounters_do_statistics(monkeypatch) -> None:
     monkeypatch.setattr("time.time", lambda: 1.0)
 
     c = Perfcounters(logger)
@@ -69,12 +69,12 @@ def test_perfcounters_do_statistics(monkeypatch):
     assert pytest.approx(c._average_rates["messages"]) == 0.5899999999999999
 
 
-def test_perfcounters_columns_match_status_length():
+def test_perfcounters_columns_match_status_length() -> None:
     c = Perfcounters(logger)
     assert len(c.status_columns()) == len(c.get_status())
 
 
-def test_perfcounters_column_default_values():
+def test_perfcounters_column_default_values() -> None:
     c = Perfcounters(logger)
     for column_name, default_value in c.status_columns():
         if column_name.startswith("status_average_") and column_name.endswith("_time"):
@@ -100,7 +100,7 @@ def test_perfcounters_column_default_values():
             )
 
 
-def test_perfcounters_correct_status_values():
+def test_perfcounters_correct_status_values() -> None:
     c = Perfcounters(logger)
 
     for _x in range(5):

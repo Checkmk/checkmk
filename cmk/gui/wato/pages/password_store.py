@@ -4,15 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Optional, Type
+from typing import Collection, List, Optional, Type
 
 from cmk.utils.password_store import Password
 
-from cmk.gui.globals import html
+from cmk.gui.groups import load_contact_group_information
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.utils import (
-    ConfigDomainCore,
     mode_registry,
     SimpleEditMode,
     SimpleListMode,
@@ -31,7 +31,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.valuespec import Password as PasswordValuespec
 from cmk.gui.valuespec import ValueSpec
-from cmk.gui.watolib.groups import load_contact_group_information
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.passwords import sorted_contact_group_choices
 
@@ -60,7 +60,7 @@ class ModePasswords(SimpleListMode):
         return "passwords"
 
     @classmethod
-    def permissions(cls) -> Optional[List[PermissionName]]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["passwords"]
 
     def __init__(self) -> None:
@@ -109,7 +109,7 @@ class ModePasswords(SimpleListMode):
         table.cell(_("Editable by"))
         if entry["owned_by"] is None:
             html.write_text(
-                _("Administrators (having the permission " '"Write access to all passwords")')
+                _('Administrators (having the permission "Write access to all passwords")')
             )
         else:
             html.write_text(self._contact_group_alias(entry["owned_by"]))
@@ -130,7 +130,7 @@ class ModeEditPassword(SimpleEditMode):
         return "edit_password"
 
     @classmethod
-    def permissions(cls) -> Optional[List[PermissionName]]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["passwords"]
 
     @classmethod
@@ -150,7 +150,7 @@ class ModeEditPassword(SimpleEditMode):
                     value=None,
                     title=_("Administrators"),
                     totext=_(
-                        "Administrators (having the permission " '"Write access to all passwords")'
+                        'Administrators (having the permission "Write access to all passwords")'
                     ),
                 )
             ]

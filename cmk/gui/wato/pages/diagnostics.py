@@ -7,7 +7,7 @@
 import tarfile
 import uuid
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Collection, List, Optional, Tuple
 
 from livestatus import SiteId
 
@@ -40,7 +40,8 @@ from cmk.automations.results import CreateDiagnosticsDumpResult
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.background_job import BackgroundProcessInterface
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
-from cmk.gui.globals import html, request, response
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -54,7 +55,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import Page, page_registry
 from cmk.gui.plugins.wato.utils import mode_registry, redirect, WatoMode
 from cmk.gui.site_config import get_site_config, site_is_local
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import get_activation_site_choices
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
@@ -66,7 +67,8 @@ from cmk.gui.valuespec import (
     FixedValue,
     ValueSpec,
 )
-from cmk.gui.watolib import automation_command_registry, AutomationCommand, do_remote_automation
+from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import create_diagnostics_dump
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
@@ -85,7 +87,7 @@ class ModeDiagnostics(WatoMode):
         return "diagnostics"
 
     @classmethod
-    def permissions(cls) -> List[str]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["diagnostics"]
 
     def _from_vars(self) -> None:

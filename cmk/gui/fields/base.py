@@ -10,6 +10,7 @@ from apispec.ext.marshmallow import common  # type: ignore[import]
 from marshmallow import (
     EXCLUDE,
     fields,
+    INCLUDE,
     post_dump,
     post_load,
     RAISE,
@@ -56,15 +57,26 @@ class BaseSchema(Schema):
 
     @pre_dump(pass_many=True)
     def validate_dump_fields(self, data, **kwargs):
-        if self.validate_on_dump and isinstance(data, dict):
-            for key in data:
-                if key not in self.declared_fields:
-                    raise ValidationError({key: "Unknown field."})
+        if not self.validate_on_dump:
+            return data
+
+        if not isinstance(data, dict):
+            return data
+
+        # Some fields may use `data_key` or `attribute` to specify the key in the data dict.
+        field_names = [
+            field.data_key if field.data_key is not None else name
+            for name, field in self.declared_fields.items()
+        ]
+        for key in data:
+            if key not in field_names:
+                raise ValidationError({key: "Unknown field."})
+
         return data
 
 
 class FieldWrapper:
-    def __init__(self, field: fields.Field):
+    def __init__(self, field: fields.Field) -> None:
         self.field = field
 
 
@@ -89,7 +101,7 @@ class ValueTypedDictSchema(BaseSchema):
             result[key] = schema_func(value)
         return result
 
-    def _serialize_field(self, data, field: fields.Field):
+    def _serialize_field(self, data, field: fields.Field):  # type:ignore[no-untyped-def]
         result = {}
         for key, value in data.items():
             field._validate(value)
@@ -99,7 +111,7 @@ class ValueTypedDictSchema(BaseSchema):
                 raise ValidationError(str(exc), field_name=key)
         return result
 
-    def _deserialize_field(self, data, field: fields.Field):
+    def _deserialize_field(self, data, field: fields.Field):  # type:ignore[no-untyped-def]
         result = {}
         for key, value in data.items():
             field._validate(value)
@@ -138,7 +150,7 @@ class ValueTypedDictSchema(BaseSchema):
 
         return result
 
-    def dump(self, obj: typing.Any, *, many=None):
+    def dump(self, obj: typing.Any, *, many=None):  # type:ignore[no-untyped-def]
         if self._has_processors(PRE_DUMP):
             obj = self._invoke_dump_processors(PRE_DUMP, obj, many=many, original_data=obj)
 
@@ -224,7 +236,7 @@ class MultiNested(base.OpenAPIAttributes, fields.Field):
     Merged mode (many=True)
     =======================
 
-    Merged (combining objects) with having many objects as a result is non-sensible and thus
+    Merged (combining objects) with having many objects as a result is nonsensible and thus
     not supported.
 
         >>> MultiNested([Schema1(), Schema2()], merged=True, many=True)
@@ -234,6 +246,10 @@ class MultiNested(base.OpenAPIAttributes, fields.Field):
 
     Merged mode (many=False)
     ========================
+
+    Merged mode only makes sense when all schemas have disjoint keys. When regular schemas with
+    fields are used, this is checked automatically. When blank schemas are used, this is not
+    possible, and you have to ensure that all schemas validate disjoint keys.
 
     When using many=False, we can merge and separate as expected.
 
@@ -267,34 +283,34 @@ class MultiNested(base.OpenAPIAttributes, fields.Field):
         >>> merged_entry.dump({'entry': {'optional1': '1', 'optional2': '2'}})
         Traceback (most recent call last):
         ...
-        marshmallow.exceptions.ValidationError: {'_schema': {'required1': ['Missing data for required field.'], \
-'required2': ['Missing data for required field.']}}
+        marshmallow.exceptions.ValidationError: {'required1': ['Missing data for required field.'], \
+'required2': ['Missing data for required field.']}
 
         >>> merged_entry.dump({'entry': {'required1': '1', 'something': 'else'}})
         Traceback (most recent call last):
         ...
-        marshmallow.exceptions.ValidationError: {'_schema': {'required2': ['Missing data for \
-required field.'], 'something': 'Unknown field.'}}
+        marshmallow.exceptions.ValidationError: {'required2': ['Missing data for \
+required field.'], 'something': ['Unknown field.']}
 
         >>> merged_entry.dump({'entry': {'required1': '1', 'something': 'else'}})
         Traceback (most recent call last):
         ...
-        marshmallow.exceptions.ValidationError: {'_schema': {'required2': ['Missing data for \
-required field.'], 'something': 'Unknown field.'}}
+        marshmallow.exceptions.ValidationError: {'required2': ['Missing data for \
+required field.'], 'something': ['Unknown field.']}
 
         >>> merged_entry.dump({'entry': {'required2': '2', 'something': 'else'}})
         Traceback (most recent call last):
         ...
-        marshmallow.exceptions.ValidationError: {'_schema': {'required1': ['Missing data for \
-required field.'], 'something': 'Unknown field.'}}
+        marshmallow.exceptions.ValidationError: {'required1': ['Missing data for \
+required field.'], 'something': ['Unknown field.']}
 
         And the exception is:
 
             >>> merged_entry.dump({'entry': {'required2': '2', 'something': 'else'}})
             Traceback (most recent call last):
             ...
-            marshmallow.exceptions.ValidationError: {'_schema': {'required1': ['Missing data for \
-required field.'], 'something': 'Unknown field.'}}
+            marshmallow.exceptions.ValidationError: {'required1': ['Missing data for \
+required field.'], 'something': ['Unknown field.']}
 
         Dump only fields are handled correctly as well:
 
@@ -317,7 +333,7 @@ required field.'], 'something': 'Unknown field.'}}
             >>> nested.dump({'field': {'required1': '1', 'dump_only': '1'}})
             Traceback (most recent call last):
             ...
-            marshmallow.exceptions.ValidationError: {'_schema': {'dump_only': ['Unknown field.']}}
+            marshmallow.exceptions.ValidationError: {'dump_only': ['Unknown field.']}
 
         When merging, all keys can only occur once:
 
@@ -327,6 +343,50 @@ required field.'], 'something': 'Unknown field.'}}
             RuntimeError: Schemas [<Schema1(many=False)>, <Schema1(many=False)>] are not disjoint. \
 Keys 'optional1', 'required1' occur more than once.
 
+        Merged mode with blank schemas:
+
+            >>> class Schema(BaseSchema):
+            ...     cast_to_dict = True
+            ...     def __init__(self, required, *args, **kwargs):
+            ...         self.required = required
+            ...         super().__init__(*args, **kwargs)
+            ...
+            ...     @post_load
+            ...     def _validate(self, data, many=False, partial=None):
+            ...         for key in self.required:
+            ...             if key not in data:
+            ...                 raise ValidationError({key: f"Required for load: {key} ({data})/{self.required}"})
+            ...         return data
+
+            >>> schema = Schema(['required42'], unknown=INCLUDE)
+            >>> schema.load({'required42': '42'})
+            {'required42': '42'}
+
+            There is no @pre_dump hook, so this will not work:
+
+            >>> schema.dump({'required84': '84'})
+            {}
+
+            >>> class MergedSchema(BaseSchema):
+            ...     cast_to_dict = True
+            ...     field = MultiNested([Schema(['required17']), Schema(['required18'])],
+            ...                         merged=True)
+
+            >>> merged_blank = MergedSchema()
+            >>> merged_blank.load({'field': {'required17': '17', 'required18': '18'}})
+            {'field': {'required17': '17', 'required18': '18'}}
+
+            >>> merged_blank.dump({'field': {'required17': '17', 'required18': '18'}})
+            {'field': {'required17': '17', 'required18': '18'}}
+
+        And blank schemas are also handled correctly when encountering missing fields:
+
+            >>> merged_blank = MergedSchema()
+            >>> merged_blank.load({'field': {}})  # doctest: +ELLIPSIS
+            Traceback (most recent call last):
+            ...
+            marshmallow.exceptions.ValidationError: ...
+
     """
 
     class ValidateOnDump(BaseSchema):
@@ -335,9 +395,9 @@ Keys 'optional1', 'required1' occur more than once.
 
     Result = dict[str, typing.Any]
 
-    def __init__(
+    def __init__(  # type:ignore[no-untyped-def]
         self,
-        nested: typing.List[typing.Type[fields.SchemaABC]],
+        nested: typing.Sequence[typing.Union[typing.Type[fields.SchemaABC], fields.SchemaABC]],
         mode: typing.Literal["anyOf", "allOf"] = "anyOf",
         *,
         default: typing.Any = fields.missing_,
@@ -355,6 +415,9 @@ Keys 'optional1', 'required1' occur more than once.
         merged: bool = False,
         **kwargs,
     ):
+        if unknown is not None:
+            raise ValueError("unknown is not supported for MultiNested")
+
         if merged and many:
             raise NotImplementedError("merged=True with many=True is not supported.")
 
@@ -370,6 +433,13 @@ Keys 'optional1', 'required1' occur more than once.
         for schema in nested:
             schema_inst = common.resolve_schema_instance(schema)
             schema_inst.context.update(context)
+            if not self._has_fields(schema_inst):
+                # NOTE
+                # We want all values to be included in the result, even if the schema hasn't
+                # defined any fields on it. This is, because these schemas are used to validate
+                # through the hooks @post_load, @pre_dump, etc.
+                schema_inst.unknown = INCLUDE
+
             self._nested.append(schema_inst)
 
         metadata["anyOf"] = self._nested
@@ -401,29 +471,59 @@ Keys 'optional1', 'required1' occur more than once.
     def _nested_schemas(self) -> typing.List[Schema]:
         return self._nested + [MultiNested.ValidateOnDump(unknown=RAISE)]
 
-    def _dump_schemas(self, scalar: Result) -> list[Result]:
+    @staticmethod
+    def _has_fields(_schema: Schema) -> bool:
+        return bool(_schema.declared_fields)
+
+    def _add_error(
+        self,
+        error_store: ErrorStore,
+        errors: typing.Union[str, typing.List, typing.Dict],
+    ) -> None:
+        if isinstance(errors, dict):
+            error_store.errors.update(errors)
+        elif isinstance(errors, list):
+            error_store.errors.setdefault("_schema", []).extend(errors)
+        elif isinstance(errors, str):
+            error_store.errors.setdefault("_schema", []).append(errors)
+        else:
+            raise TypeError(f"Unexpected error message type: {type(errors)}")
+
+    def _dump_schemas(self, scalar: Result) -> typing.Union[Result, list[Result]]:
         rv = []
         error_store = ErrorStore()
         value = dict(scalar)
+        value_initially_empty = not value
+
         for schema in self._nested_schemas():
             schema_inst = common.resolve_schema_instance(schema)
             try:
-                dumped = schema_inst.dump(value, many=False)
+                if not (value_initially_empty or self._has_fields(schema_inst)):
+                    dumped = self._check_key_by_key(value, schema_inst, error_store)
+                else:
+                    dumped = schema_inst.dump(value, many=False)
+
                 if not self.merged:
                     return dumped
-                loaded = schema_inst.load(dumped)
-                # We check what could actually pass through the load() call, because some
-                # schemas validate keys without having them defined in their _declared_fields.
-                for key in loaded.keys():
-                    if key in value:
-                        del value[key]
+
+                # This only works if the schema has fields declared.
+                if self._has_fields(schema_inst):
+                    loaded = schema_inst.load(
+                        dumped,
+                        unknown=self.unknown,
+                    )
+                    # We check what could actually pass through the load() call, because some
+                    # schemas validate keys without having them defined in their _declared_fields.
+                    for key in loaded.keys():
+                        if key in value:
+                            del value[key]
             except ValidationError as exc:
-                # When we encounter an error, we can't do anything besides remove the keys, which
+                # When we encounter an error, we can't do anything besides remove the keys which
                 # we know about.
                 for key in schema_inst.declared_fields:
                     if key in value:
                         del value[key]
-                error_store.store_error({exc.field_name: exc.messages})
+                self._add_error(error_store, exc.messages)
                 continue
 
             if not isinstance(schema_inst, MultiNested.ValidateOnDump):
@@ -434,7 +534,7 @@ Keys 'optional1', 'required1' occur more than once.
 
         return rv
 
-    def _serialize(
+    def _serialize(  # type:ignore[no-untyped-def]
         self,
         value: typing.Any,
         attr: str,
@@ -468,61 +568,95 @@ Keys 'optional1', 'required1' occur more than once.
 
         return result
 
-    def _make_type_error(self, value) -> ValidationError:
+    def _make_type_error(self, value) -> ValidationError:  # type:ignore[no-untyped-def]
         return self.make_error(
             "type",
             input=value,
             type=value.__class__.__name__,
         )
 
-    def _load_schemas(self, scalar: Result, partial=None) -> Result:
+    def _load_schemas(self, scalar: Result, partial=None) -> Result:  # type:ignore[no-untyped-def]
         rv = {}
         error_store = ErrorStore()
         value = dict(scalar)
+        value_initially_empty = not value
+
         for schema in self._nested_schemas():
             schema_inst = common.resolve_schema_instance(schema)
-            try:
-                loaded = schema_inst.load(
-                    value,
-                    unknown=self.unknown,
-                    partial=partial,
-                )
-                if not self.merged:
-                    return loaded
+            if not (value_initially_empty or self._has_fields(schema_inst)):
+                try:
+                    loaded = self._check_key_by_key(value, schema_inst, error_store)
+                except ValidationError as exc:
+                    self._add_error(error_store, exc.messages)
+                    continue
+            else:
+                try:
+                    # We can only load key-by-key when we have at least one key.
+                    loaded = schema_inst.load(
+                        value,
+                        unknown=self.unknown,
+                        partial=partial,
+                    )
+                    for key in schema_inst.declared_fields:
+                        if key in value:
+                            del value[key]
+                except ValidationError as exc:
+                    for key in schema_inst.declared_fields:
+                        if key in value and key not in exc.messages:
+                            del value[key]
+                    self._add_error(error_store, exc.messages)
+                    continue
 
-                for key in schema_inst.declared_fields:
-                    if key in value:
-                        del value[key]
-            except ValidationError as exc:
-                for key in schema_inst.declared_fields:
-                    if key in value:
-                        del value[key]
-                error_store.store_error({exc.field_name: exc.messages})
-                continue
+            if not self.merged:
+                return loaded
 
             if self.merged:
                 rv.update(loaded)
 
-        if error_store.errors:
+        # We only want to report errors when one of these cases is true:
+        # 1. There are values left over in the value dict. This means that there were
+        #    no schemas which could validate these values.
+        # 2. We got no values in the first place and errors were recorded.
+        value_left_over = bool(value)
+        if (value_initially_empty or value_left_over) and error_store.errors:
             raise ValidationError(error_store.errors)
         return rv
 
-    def _deserialize(
+    def _check_key_by_key(
+        self,
+        value: Result,
+        schema_inst: BaseSchema,
+        error_store: ErrorStore,
+    ) -> Result:
+        result = {}
+        success = []
+        for key, _value in value.copy().items():
+            try:
+                result.update(schema_inst.load({key: _value}))
+                del value[key]
+                success.append(key)
+            except ValidationError as exc:
+                self._add_error(error_store, exc.messages)
+        for key in success:
+            if key in error_store.errors:
+                del error_store.errors[key]
+        return result
+
+    def _deserialize(  # type:ignore[no-untyped-def]
         self,
         value: typing.Union[Result, list[Result]],
         attr: typing.Optional[str],
         data: typing.Optional[typing.Mapping[str, typing.Any]],
         **kwargs,
-    ):
-        result: typing.Any
-        if isinstance(value, list):
+    ) -> typing.Union[Result, list[Result]]:
+        if isinstance(value, list):  # pylint: disable=no-else-return
             if self.many:
                 result = []
                 for collection_entry in value:
                     result.append(self._load_schemas(collection_entry))
             else:
                 raise self._make_type_error(value)
-        else:
-            result = self._load_schemas(value)
 
-        return result
+            return result
+        else:
+            return self._load_schemas(value)

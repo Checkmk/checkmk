@@ -15,7 +15,7 @@ from cmk.gui.utils.script_helpers import application_and_request_context
 from .bi_test_data import sample_config  # type: ignore[import] # pylint: disable=import-error
 
 
-def test_bi_legacy_config_conversion(monkeypatch):
+def test_bi_legacy_config_conversion(monkeypatch) -> None:
     monkeypatch.setattr(
         "cmk.utils.bi.bi_legacy_config_converter.BIManagement._get_config_string",
         lambda x: sample_config.LEGACY_BI_PACKS_CONFIG_STRING,
@@ -97,7 +97,7 @@ def test_bi_legacy_config_conversion(monkeypatch):
         ),
     ],
 )
-def test_aggregation_function_conversion(old_config, expected_config):
+def test_aggregation_function_conversion(old_config, expected_config) -> None:
     schema_converter = cmk.utils.bi.bi_legacy_config_converter.BIRuleSchemaConverter
     assert (
         schema_converter.convert_aggr_func_old_to_new(None, old_config) == expected_config  # type: ignore[arg-type]  # irrelevant for test

@@ -119,7 +119,7 @@ PLUGIN_OUTPUT_CGROUPV2_LIMIT = [
 ]
 
 
-def test_docker_parse_container_mem_cgroupv2_no_limit():
+def test_docker_parse_container_mem_cgroupv2_no_limit() -> None:
     string_table = [line.split(" ") for line in AGENT_OUTPUT_NO_LIMIT.split("\n")]
     assert parse_docker_container_mem_cgroupv2(string_table) == {
         "MemTotal": 16202704 * 1024,
@@ -127,7 +127,7 @@ def test_docker_parse_container_mem_cgroupv2_no_limit():
     }
 
 
-def test_docker_parse_container_mem_cgroupv2_limit():
+def test_docker_parse_container_mem_cgroupv2_limit() -> None:
     string_table = [line.split(" ") for line in AGENT_OUTPUT_LIMIT.split("\n")]
     assert parse_docker_container_mem_cgroupv2(string_table) == {
         "MemTotal": 8998912,
@@ -135,7 +135,7 @@ def test_docker_parse_container_mem_cgroupv2_limit():
     }
 
 
-def test_docker_parse_container_mem_docker_plugin_cgroupv2():
+def test_docker_parse_container_mem_docker_plugin_cgroupv2() -> None:
     """
     data fetched with mk_docker.py may look different depending on the cgroup
     version used on the host.
@@ -146,7 +146,7 @@ def test_docker_parse_container_mem_docker_plugin_cgroupv2():
     assert round((result["MemTotal"] - result["MemFree"]) / 1024 / 10.24) / 100 == 26.06
 
 
-def test_docker_parse_container_mem_docker_plugin_cgroupv2_with_limit():
+def test_docker_parse_container_mem_docker_plugin_cgroupv2_with_limit() -> None:
     result = parse_docker_container_mem(PLUGIN_OUTPUT_CGROUPV2_LIMIT)
     assert result == {"MemFree": 55504896, "MemTotal": 57671680}
     # make sure docker stats result is the same:

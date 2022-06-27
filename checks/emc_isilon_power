@@ -42,6 +42,7 @@ def check_emc_isilon_power(item, params, info):
                 state = 0
 
             return state, infotext
+    return None
 
 
 check_info["emc_isilon_power"] = {

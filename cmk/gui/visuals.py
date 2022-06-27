@@ -13,6 +13,7 @@ import pickle
 import re
 import sys
 import traceback
+from collections.abc import Mapping
 from enum import Enum
 from itertools import chain, starmap
 from pathlib import Path
@@ -48,8 +49,13 @@ import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
 from cmk.gui import hooks
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
+from cmk.gui.config import active_config
+from cmk.gui.ctx_stack import g
+from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKGeneralException, MKUserError
-from cmk.gui.globals import active_config, g, html, output_funnel, request
+from cmk.gui.htmllib.header import make_header
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
 from cmk.gui.logged_in import save_user_file, user
@@ -93,9 +99,9 @@ from cmk.gui.type_defs import (
     VisualName,
     VisualTypeName,
 )
-from cmk.gui.utils import unique_default_name_suggestion, validate_id
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import is_user_with_publish_permissions, user_may
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
@@ -106,6 +112,7 @@ from cmk.gui.utils.urls import (
     makeuri_contextless,
     urlencode,
 )
+from cmk.gui.validate import validate_id
 from cmk.gui.valuespec import (
     ABCPageListOfMultipleGetChoice,
     CascadingDropdown,
@@ -302,6 +309,12 @@ def load(
         visual.setdefault("description", "")
         visual.setdefault("hidden", False)
 
+        # Ensure converting _l to str
+        for key, value in visual.items():
+            if not isinstance(value, utils.speaklater.LazyString):
+                continue
+            visual[key] = str(value)
+
         visuals[(UserId(""), name)] = visual
 
     # Add custom "user_*.mk" visuals
@@ -405,7 +418,7 @@ def cleanup_context_filters(context, single_infos: SingleInfos) -> VisualContext
 class _CombinedVisualsCache:
     _visuals_cache_dir: Final[Path] = Path(cmk.utils.paths.tmp_dir) / "visuals_cache"
 
-    def __init__(self, visual_type: VisualType):
+    def __init__(self, visual_type: VisualType) -> None:
         self._visual_type: Final[VisualType] = visual_type
 
     @classmethod
@@ -679,7 +692,7 @@ def get_permissioned_visual(
 # TODO: This code has been copied to a new live into htdocs/pagetypes.py
 # We need to convert all existing page types (views, dashboards, reports)
 # to pagetypes.py and then remove this function!
-def page_list(
+def page_list(  # pylint: disable=too-many-branches
     what,
     title,
     visuals,
@@ -726,7 +739,7 @@ def page_list(
         current_type_dropdown,
         what,
     )
-    html.header(title, breadcrumb, page_menu)
+    make_header(html, title, breadcrumb, page_menu)
 
     for message in get_flashed_messages():
         html.show_message(message)
@@ -758,10 +771,10 @@ def page_list(
         with table_element(css="data", limit=None) as table:
 
             for owner, visual_name, visual in visual_group:
-                table.row(css="data")
+                table.row(css=["data"])
 
                 # Actions
-                table.cell(_("Actions"), css="buttons visuals")
+                table.cell(_("Actions"), css=["buttons visuals"])
 
                 # Clone / Customize
                 buttontext = _("Create a customized copy of this")
@@ -906,7 +919,8 @@ def page_create_visual(what, info_keys, next_url=None):
     vs_infos = SingleInfoSelection(info_keys)
 
     breadcrumb = visual_page_breadcrumb(what, title, "create")
-    html.header(
+    make_header(
+        html,
         title,
         breadcrumb,
         make_simple_form_page_menu(
@@ -1224,7 +1238,7 @@ def _vs_general(
     )
 
 
-def page_edit_visual(
+def page_edit_visual(  # pylint: disable=too-many-branches
     what: Literal["dashboards", "views", "reports"],
     all_visuals: Dict[Tuple[UserId, VisualName], Visual],
     custom_field_handler=None,
@@ -1315,7 +1329,7 @@ def page_edit_visual(
         form_name="visual",
         visualname=visualname,
     )
-    html.header(title, breadcrumb, page_menu)
+    make_header(html, title, breadcrumb, page_menu)
 
     # A few checkboxes concerning the visibility of the visual. These will
     # appear as boolean-keys directly in the visual dict, but encapsulated
@@ -1565,7 +1579,7 @@ def get_filter(name: str) -> Filter:
 # and the "hosts" info.
 def get_link_filter_names(
     single_infos: SingleInfos,
-    info_keys: List[InfoName],
+    info_keys: SingleInfos,
     link_filters: Dict[FilterName, FilterName],
 ) -> Iterator[Tuple[FilterName, FilterName]]:
     for info_key in single_infos:
@@ -1577,7 +1591,7 @@ def get_link_filter_names(
 
 def filters_of_visual(
     visual: Visual,
-    info_keys: List[InfoName],
+    info_keys: SingleInfos,
     link_filters: Optional[Dict[FilterName, FilterName]] = None,
 ) -> List[Filter]:
     """Collects all filters to be used for the given visual"""
@@ -1651,7 +1665,7 @@ def context_to_uri_vars(context: VisualContext) -> HTTPVariables:
 
 # Vice versa: find all filters that belong to the current URI variables
 # and create a context dictionary from that.
-def get_context_from_uri_vars(only_infos: Optional[List[InfoName]] = None) -> VisualContext:
+def get_context_from_uri_vars(only_infos: Optional[SingleInfos] = None) -> VisualContext:
     context = {}
     for filter_name, filter_object in filter_registry.items():
         if only_infos is not None and filter_object.info not in only_infos:
@@ -1709,9 +1723,7 @@ def get_filter_headers(table, infos, context: VisualContext):
 #   '----------------------------------------------------------------------'
 
 
-def FilterChoices(
-    infos: List[InfoName], title: str, help: str
-):  # pylint: disable=redefined-builtin
+def FilterChoices(infos: SingleInfos, title: str, help: str):  # pylint: disable=redefined-builtin
     """Select names of filters for the given infos"""
 
     def _info_filter_choices(infos):
@@ -1744,7 +1756,7 @@ class VisualFilterList(ListOfMultiple):
         for fname, filter_ in filters_allowed_for_info(info):
             yield fname, VisualFilter(name=fname, title=filter_.title)
 
-    def __init__(self, info_list, **kwargs):
+    def __init__(self, info_list: SingleInfos, **kwargs) -> None:
         self._filters = filters_allowed_for_infos(info_list)
 
         kwargs.setdefault("title", _("Filters"))
@@ -1853,7 +1865,7 @@ class VisualFilterListWithAddPopup(VisualFilterList):
         html.javascript("cmk.utils.add_simplebar_scrollbar(%s);" % json.dumps(filter_list_id))
 
 
-def active_context_from_request(infos: List[str], context: VisualContext) -> VisualContext:
+def active_context_from_request(infos: SingleInfos, context: VisualContext) -> VisualContext:
     vs_filterlist = VisualFilterListWithAddPopup(info_list=infos)
     if request.has_var("_active"):
         return vs_filterlist.from_html_vars("")
@@ -1882,7 +1894,7 @@ class PageAjaxVisualFilterListGetChoice(ABCPageListOfMultipleGetChoice):
 
 
 def render_filter_form(
-    info_list: List[InfoName], context: VisualContext, page_name: str, reset_ajax_page: str
+    info_list: SingleInfos, context: VisualContext, page_name: str, reset_ajax_page: str
 ) -> HTML:
     with output_funnel.plugged():
         show_filter_form(info_list, context, page_name, reset_ajax_page)
@@ -1890,7 +1902,7 @@ def render_filter_form(
 
 
 def show_filter_form(
-    info_list: List[InfoName], context: VisualContext, page_name: str, reset_ajax_page: str
+    info_list: SingleInfos, context: VisualContext, page_name: str, reset_ajax_page: str
 ) -> None:
     html.show_user_errors()
     html.begin_form("filter", method="GET", add_transid=False)
@@ -1925,7 +1937,7 @@ def show_filter_form(
 def _show_filter_form_buttons(
     varprefix: str,
     filter_list_id: str,
-    page_request_vars: Optional[Dict[str, Any]],
+    page_request_vars: Optional[Mapping[str, Any]],
     view_name: str,
     reset_ajax_page: str,
 ) -> None:
@@ -1960,7 +1972,7 @@ def _show_filter_form_buttons(
 
 # Realizes a Multisite/visual filter in a valuespec. It can render the filter form, get
 # the filled in values and provide the filled in information for persistance.
-class VisualFilter(ValueSpec):
+class VisualFilter(ValueSpec[FilterHTTPVariables]):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         *,
@@ -1968,14 +1980,14 @@ class VisualFilter(ValueSpec):
         # ValueSpec
         title: Optional[str] = None,
         help: Optional[ValueSpecHelp] = None,
-        default_value: ValueSpecDefault[T] = DEF_VALUE,
-        validate: Optional[ValueSpecValidateFunc[T]] = None,
+        default_value: ValueSpecDefault[FilterHTTPVariables] = DEF_VALUE,
+        validate: Optional[ValueSpecValidateFunc[FilterHTTPVariables]] = None,
     ):
         self._name = name
         self._filter = filter_registry[name]
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
 
-    def title(self):
+    def title(self) -> str:
         return self._filter.title
 
     def canonical_value(self) -> FilterHTTPVariables:
@@ -1989,7 +2001,7 @@ class VisualFilter(ValueSpec):
         # A filter can not be used twice on a page, because the varprefix is not used
         return self._filter.value()
 
-    def validate_datatype(self, value: Any, varprefix: str) -> None:
+    def validate_datatype(self, value: FilterHTTPVariables, varprefix: str) -> None:
         if not isinstance(value, dict):
             raise MKUserError(
                 varprefix, _("The value must be of type dict, but it has type %s") % type(value)
@@ -1997,6 +2009,9 @@ class VisualFilter(ValueSpec):
 
     def validate_value(self, value: FilterHTTPVariables, varprefix: str) -> None:
         self._filter.validate_value(value)
+
+    def mask(self, value: FilterHTTPVariables) -> FilterHTTPVariables:
+        return value
 
     def value_to_html(self, value: FilterHTTPVariables) -> ValueSpecText:
         raise NotImplementedError()  # FIXME! Violates LSP!
@@ -2022,7 +2037,7 @@ def _single_info_selection_back(name_and_restrictions: Tuple[str, Sequence[str]]
     return name_and_restrictions[1]
 
 
-def SingleInfoSelection(info_keys: List[InfoName]) -> Transform:
+def SingleInfoSelection(info_keys: SingleInfos) -> Transform:
     infos = [visual_info_registry[key]() for key in info_keys]
     manual_choices = [
         (i.ident, _("Show information of a single %s") % i.title)
@@ -2082,7 +2097,7 @@ def SingleInfoSelection(info_keys: List[InfoName]) -> Transform:
 # Converts a context from the form { filtername : { ... } } into
 # the for { infoname : { filtername : { } } for editing.
 def pack_context_for_editing(
-    visual: Visual, info_handler: Optional[Callable[[Visual], List[InfoName]]]
+    visual: Visual, info_handler: Optional[Callable[[Visual], SingleInfos]]
 ) -> Dict:
     # We need to pack all variables into dicts with the name of the
     # info. Since we have no mapping from info the the filter variable,
@@ -2135,9 +2150,9 @@ def single_infos_spec(single_infos: SingleInfos) -> Tuple[str, FixedValue]:
         FixedValue(
             value=single_infos,
             title=_("Show information of single"),
-            totext=single_infos
-            and ", ".join(single_infos)
-            or _("Not restricted to showing a specific object."),
+            totext=", ".join(single_infos)
+            if single_infos
+            else _("Not restricted to showing a specific object."),
         ),
     )
 
@@ -2254,7 +2269,7 @@ def get_singlecontext_vars(context: VisualContext, single_infos: SingleInfos) ->
 
 def may_add_site_hint(
     visual_name: str,
-    info_keys: List[InfoName],
+    info_keys: SingleInfos,
     single_info_keys: SingleInfos,
     filter_names: List[FilterName],
 ) -> bool:

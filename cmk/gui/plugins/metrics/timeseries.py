@@ -7,7 +7,7 @@
 import functools
 import operator
 from itertools import chain
-from typing import List, Literal, Optional, Sequence, Tuple
+from typing import Callable, List, Literal, Optional, Sequence, Tuple, Union
 
 import cmk.utils.version as cmk_version
 from cmk.utils.prediction import TimeSeries
@@ -16,8 +16,10 @@ import cmk.gui.utils.escaping as escaping
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import (
+    Curve,
     ExpressionParams,
     fade_color,
+    GraphMetric,
     parse_color,
     render_color,
     RRDData,
@@ -37,7 +39,7 @@ from cmk.gui.plugins.metrics.utils import (
 #   '----------------------------------------------------------------------'
 
 
-def compute_graph_curves(metrics, rrd_data: RRDData):
+def compute_graph_curves(metrics: Sequence[GraphMetric], rrd_data: RRDData) -> list[Curve]:
     curves = []
     for metric_definition in metrics:
         expression = metric_definition["expression"]
@@ -59,14 +61,16 @@ def compute_graph_curves(metrics, rrd_data: RRDData):
                 color = render_color(fade_color(parse_color(color), 0.3))
 
             curves.append(
-                {
-                    "line_type": mirror_prefix + ts.metadata.get("line_type", "")
-                    if multi
-                    else metric_definition["line_type"],
-                    "color": color,
-                    "title": title,
-                    "rrddata": ts,
-                }
+                Curve(
+                    {
+                        "line_type": mirror_prefix + ts.metadata.get("line_type", "")
+                        if multi
+                        else metric_definition["line_type"],
+                        "color": color,
+                        "title": title,
+                        "rrddata": ts,
+                    }
+                )
             )
 
     return curves
@@ -162,47 +166,53 @@ def op_func_wrapper(op_func, tsp):
     return None
 
 
-def clean_time_series_point(tsp):
+def clean_time_series_point(tsp: TimeSeries) -> list[float]:
     """removes "None" entries from input list"""
     return [x for x in tsp if x is not None]
 
 
-def time_series_operator_sum(tsp):
+def time_series_operator_sum(tsp: TimeSeries) -> float:
     return sum(clean_time_series_point(tsp))
 
 
-def time_series_operator_product(tsp):
+def time_series_operator_product(tsp: TimeSeries) -> Optional[float]:
     if None in tsp:
         return None
     return functools.reduce(operator.mul, tsp, 1)
 
 
-def time_series_operator_difference(tsp):
+def time_series_operator_difference(tsp: TimeSeries) -> Optional[float]:
     if None in tsp:
         return None
+    assert tsp[0] is not None
+    assert tsp[1] is not None
     return tsp[0] - tsp[1]
 
 
-def time_series_operator_fraction(tsp):
+def time_series_operator_fraction(tsp: TimeSeries) -> Optional[float]:
     if None in tsp or tsp[1] == 0:
         return None
+    assert tsp[0] is not None
+    assert tsp[1] is not None
     return tsp[0] / tsp[1]
 
 
-def time_series_operator_maximum(tsp):
+def time_series_operator_maximum(tsp: TimeSeries) -> float:
     return max(clean_time_series_point(tsp))
 
 
-def time_series_operator_minimum(tsp):
+def time_series_operator_minimum(tsp: TimeSeries) -> float:
     return min(clean_time_series_point(tsp))
 
 
-def time_series_operator_average(tsp):
-    tsp = clean_time_series_point(tsp)
-    return sum(tsp) / len(tsp)
+def time_series_operator_average(tsp: TimeSeries) -> float:
+    tsp_clean = clean_time_series_point(tsp)
+    return sum(tsp_clean) / len(tsp_clean)
 
 
-def time_series_operators():
+def time_series_operators() -> dict[
+    str, tuple[str, Union[Callable[[TimeSeries], float], Callable[[TimeSeries], Optional[float]]]]
+]:
     return {
         "+": (_("Sum"), time_series_operator_sum),
         "*": (_("Product"), time_series_operator_product),

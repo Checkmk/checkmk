@@ -10,7 +10,17 @@ import socket
 import time
 import traceback
 from multiprocessing import JoinableQueue, Process
-from typing import Collection, Dict, Iterable, Iterator, Mapping, NamedTuple, Optional, overload
+from typing import (
+    Any,
+    Collection,
+    Dict,
+    Iterable,
+    Iterator,
+    Mapping,
+    NamedTuple,
+    Optional,
+    overload,
+)
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
@@ -24,10 +34,14 @@ from cmk.utils.site import omd_site
 import cmk.gui.forms as forms
 import cmk.gui.log as log
 import cmk.gui.sites
-import cmk.gui.watolib as watolib
+import cmk.gui.watolib.audit_log as _audit_log
+import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import FinalizeRequest, MKGeneralException, MKUserError
-from cmk.gui.globals import active_config, html, request, user_errors
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -40,16 +54,21 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
-from cmk.gui.plugins.watolib.utils import config_variable_registry, ConfigVariableGroup
+from cmk.gui.plugins.watolib.utils import (
+    ABCConfigDomain,
+    config_variable_registry,
+    ConfigVariableGroup,
+)
 from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site, site_is_local
 from cmk.gui.sites import SiteStatus
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, UserId
+from cmk.gui.type_defs import ActionResult, PermissionName, UserId
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     DocReference,
@@ -58,6 +77,7 @@ from cmk.gui.utils.urls import (
     makeactionuri_contextless,
     makeuri_contextless,
 )
+from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import (
     Alternative,
     Checkbox,
@@ -76,19 +96,30 @@ from cmk.gui.watolib.activate_changes import (
     clear_site_replication_status,
     get_trial_expired_message,
 )
-from cmk.gui.watolib.automations import do_site_login
-from cmk.gui.watolib.global_settings import load_site_global_settings, save_site_global_settings
-from cmk.gui.watolib.sites import is_livestatus_encrypted, site_globals_editable
+from cmk.gui.watolib.automations import do_remote_automation, do_site_login, MKAutomationException
+from cmk.gui.watolib.config_domains import ConfigDomainGUI, ConfigDomainLiveproxy
+from cmk.gui.watolib.global_settings import (
+    load_configuration_settings,
+    load_site_global_settings,
+    save_global_settings,
+    save_site_global_settings,
+)
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, make_action_link
+from cmk.gui.watolib.sites import (
+    is_livestatus_encrypted,
+    site_globals_editable,
+    SiteManagementFactory,
+)
 
 
 @mode_registry.register
 class ModeEditSite(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_site"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["sites"]
 
     @classmethod
@@ -110,9 +141,9 @@ class ModeEditSite(WatoMode):
     def mode_url(cls, **kwargs: str) -> str:
         return super().mode_url(**kwargs)
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self._site_mgmt = watolib.SiteManagementFactory().factory()
+        self._site_mgmt = SiteManagementFactory().factory()
 
         _site_id_return = request.get_ascii_input("site")
         self._site_id = None if _site_id_return is None else SiteId(_site_id_return)
@@ -155,7 +186,7 @@ class ModeEditSite(WatoMode):
                 }
             )
 
-            if watolib.ConfigDomainLiveproxy.enabled():
+            if ConfigDomainLiveproxy.enabled():
                 self._site.update(
                     {
                         "proxy": {},
@@ -170,7 +201,7 @@ class ModeEditSite(WatoMode):
             except KeyError:
                 raise MKUserError(None, _("The requested site does not exist"))
 
-    def title(self):
+    def title(self) -> str:
         if self._new:
             return _("Add site connection")
         return _("Edit site connection %s") % self._site_id
@@ -222,11 +253,11 @@ class ModeEditSite(WatoMode):
 
         # Don't know exactly what have been changed, so better issue a change
         # affecting all domains
-        watolib.add_change(
+        _changes.add_change(
             "edit-sites",
             msg,
             sites=[self._site_id],
-            domains=watolib.ABCConfigDomain.enabled_domains(),
+            domains=ABCConfigDomain.enabled_domains(),
         )
 
         # In case a site is not being replicated anymore, confirm all changes for this site!
@@ -235,14 +266,12 @@ class ModeEditSite(WatoMode):
 
         if self._site_id != omd_site():
             # On central site issue a change only affecting the GUI
-            watolib.add_change(
-                "edit-sites", msg, sites=[omd_site()], domains=[watolib.ConfigDomainGUI]
-            )
+            _changes.add_change("edit-sites", msg, sites=[omd_site()], domains=[ConfigDomainGUI])
 
         flash(msg)
         return redirect(mode_url("sites"))
 
-    def page(self):
+    def page(self) -> None:
         html.begin_form("site")
 
         self._valuespec().render_input("site", self._site)
@@ -523,18 +552,18 @@ class ModeEditSite(WatoMode):
 @mode_registry.register
 class ModeDistributedMonitoring(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "sites"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["sites"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self._site_mgmt = watolib.SiteManagementFactory().factory()
+        self._site_mgmt = SiteManagementFactory().factory()
 
-    def title(self):
+    def title(self) -> str:
         return _("Distributed monitoring")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -598,7 +627,7 @@ class ModeDistributedMonitoring(WatoMode):
             raise MKUserError(None, _("You can not delete the connection to the local site."))
 
         # Make sure that site is not being used by hosts and folders
-        if delete_id in watolib.Folder.root_folder().all_site_ids():
+        if delete_id in Folder.root_folder().all_site_ids():
             search_url = makeactionuri_contextless(
                 request,
                 transactions,
@@ -630,10 +659,10 @@ class ModeDistributedMonitoring(WatoMode):
         if "secret" in site:
             del site["secret"]
         self._site_mgmt.save_sites(configured_sites)
-        watolib.add_change(
+        _changes.add_change(
             "edit-site",
-            _("Logged out of remote site %s") % html.render_tt(site["alias"]),
-            domains=[watolib.ConfigDomainGUI],
+            _("Logged out of remote site %s") % HTMLWriter.render_tt(site["alias"]),
+            domains=[ConfigDomainGUI],
             sites=[omd_site()],
         )
         flash(_("Logged out."))
@@ -667,14 +696,14 @@ class ModeDistributedMonitoring(WatoMode):
 
                 site["secret"] = secret
                 self._site_mgmt.save_sites(configured_sites)
-                message = _("Successfully logged into remote site %s.") % html.render_tt(
+                message = _("Successfully logged into remote site %s.") % HTMLWriter.render_tt(
                     site["alias"]
                 )
-                watolib.log_audit("edit-site", message)
+                _audit_log.log_audit("edit-site", message)
                 flash(message)
                 return redirect(mode_url("sites"))
 
-            except watolib.MKAutomationException as e:
+            except MKAutomationException as e:
                 error = _("Cannot connect to remote site: %s") % e
 
             except MKUserError as e:
@@ -705,7 +734,7 @@ class ModeDistributedMonitoring(WatoMode):
                 "successful then both side will exchange a login secret "
                 "which is used for the further remote calls."
             )
-            % html.render_tt(site["alias"])
+            % HTMLWriter.render_tt(site["alias"])
         )
 
         html.begin_form("login", method="POST")
@@ -728,7 +757,7 @@ class ModeDistributedMonitoring(WatoMode):
         html.footer()
         return FinalizeRequest(code=200)
 
-    def page(self):
+    def page(self) -> None:
         sites = sort_sites(self._site_mgmt.load_sites())
 
         if cmk_version.is_expired_trial():
@@ -760,10 +789,10 @@ class ModeDistributedMonitoring(WatoMode):
 
     def _show_buttons(self, table, site_id, site):
         table.cell(_("Actions"), css="buttons")
-        edit_url = watolib.folder_preserving_link([("mode", "edit_site"), ("site", site_id)])
+        edit_url = folder_preserving_link([("mode", "edit_site"), ("site", site_id)])
         html.icon_button(edit_url, _("Properties"), "edit")
 
-        clone_url = watolib.folder_preserving_link([("mode", "edit_site"), ("clone", site_id)])
+        clone_url = folder_preserving_link([("mode", "edit_site"), ("clone", site_id)])
         html.icon_button(
             clone_url, _("Clone this connection in order to create a new one"), "clone"
         )
@@ -776,14 +805,12 @@ class ModeDistributedMonitoring(WatoMode):
             delete_url = make_confirm_link(
                 url=makeactionuri(request, transactions, [("_delete", site_id)]),
                 message=_("Do you really want to delete the connection to the site %s?")
-                % html.render_tt(site_id),
+                % HTMLWriter.render_tt(site_id),
             )
             html.icon_button(delete_url, _("Delete"), "delete")
 
         if site_globals_editable(site_id, site):
-            globals_url = watolib.folder_preserving_link(
-                [("mode", "edit_site_globals"), ("site", site_id)]
-            )
+            globals_url = folder_preserving_link([("mode", "edit_site_globals"), ("site", site_id)])
 
             has_site_globals = bool(site.get("globals"))
             title = _("Site specific global configuration")
@@ -807,7 +834,7 @@ class ModeDistributedMonitoring(WatoMode):
     def _show_status_connection_status(self, table, site_id, site):
         table.cell("")
 
-        encrypted_url = watolib.folder_preserving_link(
+        encrypted_url = folder_preserving_link(
             [("mode", "site_livestatus_encryption"), ("site", site_id)]
         )
         html.icon_button(encrypted_url, _("Show details about livestatus encryption"), "encrypted")
@@ -842,13 +869,13 @@ class ModeDistributedMonitoring(WatoMode):
         if site["replication"]:
             if site.get("secret"):
                 logout_url = make_confirm_link(
-                    url=watolib.make_action_link([("mode", "sites"), ("_logout", site_id)]),
+                    url=make_action_link([("mode", "sites"), ("_logout", site_id)]),
                     message=_("Do you really want to log out of '%s'?")
-                    % html.render_tt(site["alias"]),
+                    % HTMLWriter.render_tt(site["alias"]),
                 )
                 html.icon_button(logout_url, _("Logout"), "autherr")
             else:
-                login_url = watolib.make_action_link([("mode", "sites"), ("_login", site_id)])
+                login_url = make_action_link([("mode", "sites"), ("_login", site_id)])
                 html.icon_button(login_url, _("Login"), "authok")
 
         html.open_div(id_="replication_status_%s" % site_id, class_="connection_status")
@@ -866,17 +893,18 @@ class ModeDistributedMonitoring(WatoMode):
 class ModeAjaxFetchSiteStatus(AjaxPage):
     """AJAX handler for asynchronous fetching of the site status"""
 
-    def page(self):
+    def page(self) -> PageResult:
         user.need_permission("wato.sites")
 
         site_states = {}
 
-        sites = list(watolib.SiteManagementFactory().factory().load_sites().items())
+        sites = list(SiteManagementFactory().factory().load_sites().items())
         replication_sites = [e for e in sites if e[1]["replication"]]
         replication_status = ReplicationStatusFetcher().fetch(replication_sites)
 
         for site_id, site in sites:
-            site_states[site_id] = {
+            site_id_str: str = site_id
+            site_states[site_id_str] = {
                 "livestatus": self._render_status_connection_status(site_id, site),
                 "replication": self._render_configuration_connection_status(
                     site_id, site, replication_status
@@ -884,7 +912,9 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
             }
         return site_states
 
-    def _render_configuration_connection_status(self, site_id, site, replication_status):
+    def _render_configuration_connection_status(
+        self, site_id, site, replication_status
+    ) -> str | HTML:
         """Check whether or not the replication connection is possible.
 
         This deals with these situations:
@@ -907,11 +937,11 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
             icon = "failed"
             msg = "%s" % status.response
 
-        return html.render_icon(icon, title=msg) + html.render_span(
+        return html.render_icon(icon, title=msg) + HTMLWriter.render_span(
             msg, style="vertical-align:middle"
         )
 
-    def _render_status_connection_status(self, site_id, site):
+    def _render_status_connection_status(self, site_id, site) -> HTML:
         site_status: SiteStatus = cmk.gui.sites.states().get(site_id, SiteStatus({}))
         if site.get("disabled", False) is True:
             status = status_msg = "disabled"
@@ -924,7 +954,7 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
             message = status_msg.title()
 
         icon = "success" if status == "online" else "failed"
-        return html.render_icon(icon, title=message) + html.render_span(
+        return html.render_icon(icon, title=message) + HTMLWriter.render_span(
             message, style="vertical-align:middle"
         )
 
@@ -943,7 +973,7 @@ class ReplicationStatus(NamedTuple):
 class ReplicationStatusFetcher:
     """Helper class to retrieve the replication status of all relevant sites"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._logger = logger.getChild("replication-status")
 
@@ -1006,7 +1036,7 @@ class ReplicationStatusFetcher:
             result = ReplicationStatus(
                 site_id=site_id,
                 success=True,
-                response=PingResult(**watolib.do_remote_automation(site, "ping", [], timeout=5)),
+                response=PingResult(**do_remote_automation(site, "ping", [], timeout=5)),
             )
             self._logger.debug("[%s] Finished" % site_id)
         except Exception as e:
@@ -1026,11 +1056,11 @@ class ReplicationStatusFetcher:
 @mode_registry.register
 class ModeEditSiteGlobals(ABCGlobalSettingsMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_site_globals"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["sites"]
 
     @classmethod
@@ -1052,10 +1082,10 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
     def mode_url(cls, **kwargs: str) -> str:
         return super().mode_url(**kwargs)
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._site_id = SiteId(request.get_ascii_input_mandatory("site"))
-        self._site_mgmt = watolib.SiteManagementFactory().factory()
+        self._site_mgmt = SiteManagementFactory().factory()
         self._configured_sites = self._site_mgmt.load_sites()
         try:
             self._site = self._configured_sites[self._site_id]
@@ -1063,7 +1093,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
             raise MKUserError("site", _("This site does not exist."))
 
         # 2. Values of global settings
-        self._global_settings = watolib.load_configuration_settings()
+        self._global_settings = load_configuration_settings()
 
         # 3. Site specific global settings
 
@@ -1072,7 +1102,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         else:
             self._current_settings = self._site.get("globals", {})
 
-    def title(self):
+    def title(self) -> str:
         return _("Edit site specific global settings of %s") % self._site_id
 
     def _breadcrumb_url(self) -> str:
@@ -1113,7 +1143,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         self._site.setdefault("globals", {})[varname] = self._current_settings[varname]
         self._site_mgmt.save_sites(self._configured_sites, activate=False)
 
-        watolib.add_change(
+        _changes.add_change(
             "edit-configvar",
             msg,
             sites=[self._site_id],
@@ -1132,7 +1162,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
     def edit_mode_name(self) -> str:
         return "edit_site_configvar"
 
-    def page(self):
+    def page(self) -> None:
         html.help(
             _(
                 "Here you can configure global settings, that should just be applied "
@@ -1166,11 +1196,11 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
 @mode_registry.register
 class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_site_configvar"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["global"]
 
     @classmethod
@@ -1181,23 +1211,23 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
         super()._from_vars()
         self._site_id = SiteId(request.get_ascii_input_mandatory("site"))
         if self._site_id:
-            self._configured_sites = watolib.SiteManagementFactory().factory().load_sites()
+            self._configured_sites = SiteManagementFactory().factory().load_sites()
             try:
                 site = self._configured_sites[self._site_id]
             except KeyError:
                 raise MKUserError("site", _("Invalid site"))
 
         self._current_settings = site.setdefault("globals", {})
-        self._global_settings = watolib.load_configuration_settings()
+        self._global_settings = load_configuration_settings()
 
-    def title(self):
+    def title(self) -> str:
         return _("Site-specific global configuration for %s") % self._site_id
 
     def _affected_sites(self):
         return [self._site_id]
 
     def _save(self):
-        watolib.SiteManagementFactory().factory().save_sites(self._configured_sites, activate=False)
+        SiteManagementFactory().factory().save_sites(self._configured_sites, activate=False)
         if self._site_id == omd_site():
             save_site_global_settings(self._current_settings)
 
@@ -1212,28 +1242,28 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
 @mode_registry.register
 class ModeSiteLivestatusEncryption(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "site_livestatus_encryption"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["sites"]
 
     @classmethod
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeEditSite
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._site_id = SiteId(request.get_ascii_input_mandatory("site"))
-        self._site_mgmt = watolib.SiteManagementFactory().factory()
+        self._site_mgmt = SiteManagementFactory().factory()
         self._configured_sites = self._site_mgmt.load_sites()
         try:
             self._site = self._configured_sites[self._site_id]
         except KeyError:
             raise MKUserError("site", _("This site does not exist."))
 
-    def title(self):
+    def title(self) -> str:
         return _("Livestatus encryption of %s") % self._site_id
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -1271,10 +1301,10 @@ class ModeSiteLivestatusEncryption(WatoMode):
 
         config_variable = config_variable_registry["trusted_certificate_authorities"]()
 
-        global_settings = watolib.load_configuration_settings()
+        global_settings = load_configuration_settings()
         trusted = global_settings.get(
             "trusted_certificate_authorities",
-            watolib.ABCConfigDomain.get_all_default_globals()["trusted_certificate_authorities"],
+            ABCConfigDomain.get_all_default_globals()["trusted_certificate_authorities"],
         )
         trusted_cas = trusted.setdefault("trusted_cas", [])
 
@@ -1288,18 +1318,18 @@ class ModeSiteLivestatusEncryption(WatoMode):
         trusted_cas.append(cert_str)
         global_settings["trusted_certificate_authorities"] = trusted
 
-        watolib.add_change(
+        _changes.add_change(
             "edit-configvar",
             _("Added CA with fingerprint %s to trusted certificate authorities") % digest_sha256,
             domains=[config_variable.domain()],
             need_restart=config_variable.need_restart(),
         )
-        watolib.save_global_settings(global_settings)
+        save_global_settings(global_settings)
 
         flash(_("Added CA with fingerprint %s to trusted certificate authorities") % digest_sha256)
         return None
 
-    def page(self):
+    def page(self) -> None:
         if not is_livestatus_encrypted(self._site):
             html.show_message(
                 _("The livestatus connection to this site configured not to be encrypted.")
@@ -1325,6 +1355,9 @@ class ModeSiteLivestatusEncryption(WatoMode):
         html.open_table(class_=["data", "headerleft"])
 
         server_cert = cert_details[0]
+        title: str
+        css_class: None | str
+        value: Any  # TODO: Should be HTMLContent! Bugs ahead...
         for title, css_class, value in [
             (_("Issued to"), None, server_cert.issued_to),
             (_("Issued by"), None, server_cert.issued_by),
@@ -1348,7 +1381,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         with table_element("certificate_chain", _("Certificate chain")) as table:
             for cert_detail in reversed(cert_details[1:]):
                 table.row()
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
                 if cert_detail.is_ca:
                     url = makeactionuri(
                         request,
@@ -1367,10 +1400,10 @@ class ModeSiteLivestatusEncryption(WatoMode):
                 table.cell(
                     _("Trusted"),
                     self._render_cert_trusted(cert_detail),
-                    css=self._cert_trusted_css_class(cert_detail),
+                    css=[self._cert_trusted_css_class(cert_detail)],
                 )
 
-    def _render_cert_trusted(self, cert):
+    def _render_cert_trusted(self, cert) -> str:
         if cert.verify_result.is_valid:
             return _("Yes")
 
@@ -1380,7 +1413,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
             cert.verify_result.error_depth,
         )
 
-    def _cert_trusted_css_class(self, cert):
+    def _cert_trusted_css_class(self, cert) -> str:
         return "state state0" if cert.verify_result.is_valid else "state state2"
 
     def _fetch_certificate_details(self) -> Iterable[CertificateDetails]:

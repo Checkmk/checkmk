@@ -45,6 +45,7 @@ def check_vbox_guest(_no_item, _no_params, info):
 def inventory_vbox_guest(info):
     if len(info) > 0:
         return [(None, None)]
+    return []
 
 
 check_info["vbox_guest"] = {

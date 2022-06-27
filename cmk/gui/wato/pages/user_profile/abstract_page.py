@@ -7,8 +7,11 @@
 import abc
 
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.globals import active_config, html, request, user_errors
+from cmk.gui.htmllib.header import make_header
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
@@ -17,6 +20,7 @@ from cmk.gui.pages import Page
 from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import requested_file_name
+from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_related
 
 
@@ -61,7 +65,7 @@ class ABCUserProfilePage(Page):
     def page(self) -> None:
         title = self._page_title()
         breadcrumb = self._breadcrumb()
-        html.header(title, breadcrumb, self._page_menu(breadcrumb))
+        make_header(html, title, breadcrumb, self._page_menu(breadcrumb))
 
         if transactions.check_transaction():
             try:

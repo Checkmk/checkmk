@@ -1,0 +1,14 @@
+Title: Fix possible TypeError when using views with group painter
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1653644998
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+Opening of views with group painters (Option "Grouping" on view edit page)
+could result in the error "TypeError: <lambda>() takes 2 positional arguments
+but 3 were given".

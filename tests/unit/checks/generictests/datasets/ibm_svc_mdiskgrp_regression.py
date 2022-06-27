@@ -101,7 +101,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '0% used (0.00 B of 512.00 MB)', [
+                    0, 'Used: 0% - 0 B of 512 MiB', [
                         ('fs_used', 0.0, 409.6, 460.8, 0, 512.0),
                         ('fs_size', 512.0, None, None, None, None),
                         ('fs_used_percent', 0.0, None, None, None, None)
@@ -127,7 +127,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '0% used (0.00 B of 512.00 MB)', [
+                    0, 'Used: 0% - 0 B of 512 MiB', [
                         ('fs_used', 0.0, 409.6, 460.8, 0, 512.0),
                         ('fs_size', 512.0, None, None, None, None),
                         ('fs_used_percent', 0.0, None, None, None, None)
@@ -153,7 +153,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '0% used (0.00 B of 704.00 MB)', [
+                    0, 'Used: 0% - 0 B of 704 MiB', [
                         ('fs_used', 0.0, 563.2, 633.6, 0, 704.0),
                         ('fs_size', 704.0, None, None, None, None),
                         ('fs_used_percent', 0.0, None, None, None, None)
@@ -180,7 +180,7 @@ checks = {
             }, [
                 (
                     2,
-                    '97.18% used (15.88 of 16.34 TB, warn/crit at 80.00%/90.00%)',
+                    'Used: 97.18% - 15.9 TiB of 16.3 TiB (warn/crit at 80.00%/90.00% used)',
                     [
                         (
                             'fs_used', 16651386.88, 13706985.472000001,
@@ -216,7 +216,7 @@ checks = {
             }, [
                 (
                     2,
-                    '98.42% used (19.31 of 19.62 TB, warn/crit at 80.00%/90.00%)',
+                    'Used: 98.42% - 19.3 TiB of 19.6 TiB (warn/crit at 80.00%/90.00% used)',
                     [
                         (
                             'fs_used', 20248002.56, 16458448.896000002,
@@ -252,7 +252,7 @@ checks = {
             }, [
                 (
                     2,
-                    '98.9% used (24.26 of 24.53 TB, warn/crit at 80.00%/90.00%)',
+                    'Used: 98.90% - 24.3 TiB of 24.5 TiB (warn/crit at 80.00%/90.00% used)',
                     [
                         (
                             'fs_used', 25438453.76, 20577255.424000002,
@@ -265,7 +265,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Provisioning: 98.9%', [
+                    0, 'Provisioning: 98.90%', [
                         (
                             'fs_provisioning', 26674152089845.76, None, None,
                             0, 26971020229345.28
@@ -287,7 +287,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '26.33% used (7.75 of 29.43 TB)', [
+                    0, 'Used: 26.33% - 7.75 TiB of 29.4 TiB', [
                         (
                             'fs_used', 8126464.0, 24687673.344, 27773632.512,
                             0, 30859591.68
@@ -322,7 +322,7 @@ checks = {
             }, [
                 (
                     2,
-                    '100% used (6.54 of 6.54 TB, warn/crit at 80.00%/90.00%)',
+                    'Used: 100.00% - 6.54 TiB of 6.54 TiB (warn/crit at 80.00%/90.00% used)',
                     [
                         (
                             'fs_used', 6857687.04, 5486149.632, 6171918.336, 0,
@@ -332,7 +332,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Provisioning: 100%', [
+                    0, 'Provisioning: 100.00%', [
                         (
                             'fs_provisioning', 7190806045655.04, None, None, 0,
                             7190806045655.04
@@ -355,7 +355,7 @@ checks = {
             }, [
                 (
                     2,
-                    '97.18% used (15.88 of 16.34 TB, warn/crit at 80.00%/90.00%)',
+                    'Used: 97.18% - 15.9 TiB of 16.3 TiB (warn/crit at 80.00%/90.00% used)',
                     [
                         (
                             'fs_used', 16651386.88, 13706985.472000001,
@@ -391,7 +391,7 @@ checks = {
             }, [
                 (
                     2,
-                    '98.42% used (19.31 of 19.62 TB, warn/crit at 80.00%/90.00%)',
+                    'Used: 98.42% - 19.3 TiB of 19.6 TiB (warn/crit at 80.00%/90.00% used)',
                     [
                         (
                             'fs_used', 20248002.56, 16458448.896000002,
@@ -427,7 +427,7 @@ checks = {
             }, [
                 (
                     2,
-                    '98.9% used (24.26 of 24.53 TB, warn/crit at 80.00%/90.00%)',
+                    'Used: 98.90% - 24.3 TiB of 24.5 TiB (warn/crit at 80.00%/90.00% used)',
                     [
                         (
                             'fs_used', 25438453.76, 20577255.424000002,
@@ -440,7 +440,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Provisioning: 98.9%', [
+                    0, 'Provisioning: 98.90%', [
                         (
                             'fs_provisioning', 26674152089845.76, None, None,
                             0, 26971020229345.28
@@ -462,7 +462,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '26.33% used (7.75 of 29.43 TB)', [
+                    0, 'Used: 26.33% - 7.75 TiB of 29.4 TiB', [
                         (
                             'fs_used', 8126464.0, 24687673.344, 27773632.512,
                             0, 30859591.68
@@ -497,7 +497,7 @@ checks = {
             }, [
                 (
                     2,
-                    '100% used (6.54 of 6.54 TB, warn/crit at 80.00%/90.00%)',
+                    'Used: 100.00% - 6.54 TiB of 6.54 TiB (warn/crit at 80.00%/90.00% used)',
                     [
                         (
                             'fs_used', 6857687.04, 5486149.632, 6171918.336, 0,
@@ -507,7 +507,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Provisioning: 100%', [
+                    0, 'Provisioning: 100.00%', [
                         (
                             'fs_provisioning', 7190806045655.04, None, None, 0,
                             7190806045655.04

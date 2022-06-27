@@ -7,19 +7,21 @@
 this mode is used."""
 
 import copy
-from typing import cast, List, Optional, Tuple, Type
+from typing import cast, Collection, List, Optional, Tuple, Type
 
 import cmk.gui.forms as forms
 import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
-from cmk.gui.globals import active_config, html, request
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.plugins.wato.utils import get_hostnames_from_checkboxes, mode_registry, WatoMode
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.bulk_discovery import (
@@ -38,11 +40,11 @@ from cmk.gui.watolib.hosts_and_folders import Folder
 @mode_registry.register
 class ModeBulkDiscovery(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "bulkinventory"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts", "services"]
 
     @classmethod
@@ -89,7 +91,7 @@ class ModeBulkDiscovery(WatoMode):
         assert isinstance(bulk_size, int)
         return DoFullScan(do_scan), BulkSize(bulk_size)
 
-    def title(self):
+    def title(self) -> str:
         return _("Bulk discovery")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -125,7 +127,7 @@ class ModeBulkDiscovery(WatoMode):
 
         raise HTTPRedirect(self._job.detail_url())
 
-    def page(self):
+    def page(self) -> None:
         user.need_permission("wato.services")
 
         job_status_snapshot = self._job.get_status_snapshot()
@@ -190,11 +192,9 @@ class ModeBulkDiscovery(WatoMode):
         hosts_to_discover = []
 
         if not self._all:
-            filterfunc = None
-            if self._only_failed:
-                filterfunc = lambda host: host.discovery_failed()
-
-            for host_name in get_hostnames_from_checkboxes(filterfunc):
+            for host_name in get_hostnames_from_checkboxes(
+                (lambda host: host.discovery_failed()) if self._only_failed else None
+            ):
                 if restrict_to_hosts and host_name not in restrict_to_hosts:
                     continue
                 if host_name in skip_hosts:

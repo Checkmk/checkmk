@@ -18,7 +18,9 @@
 .syntastic
 .testmondata
 .venv.lock
-.venv/
+/.venv/
+/.docker_workspace/
+/build_user_home/
 *.cookie
 *.gcno
 *.gcov

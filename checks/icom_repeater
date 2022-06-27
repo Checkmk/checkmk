@@ -5,9 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 #   .--Parse function------------------------------------------------------.
@@ -22,7 +20,7 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 #   '----------------------------------------------------------------------'
 
 
-def parse_icom_repeater(info):
+def parse_icom_repeater(info):  # pylint: disable=too-many-branches
     parsed = {}
     for line in info:
         if line[1] == "Temperature":
@@ -97,6 +95,7 @@ icom_ps_volt_default_levels = (13.5, 13.2, 14.1, 14.4)
 def inventory_icom_repeater_ps_volt(parsed):
     if "ps_voltage" in parsed:
         return [(None, "icom_ps_volt_default_levels")]
+    return []
 
 
 def check_icom_repeater_ps_volt(_no_item, params, parsed):
@@ -217,6 +216,7 @@ factory_settings["icom_repeater_temp_default_levels"] = {
 def inventory_icom_repeater_temp(parsed):
     if "temp" in parsed:
         return [("System", {})]
+    return []
 
 
 def check_icom_repeater_temp(_no_item, params, parsed):

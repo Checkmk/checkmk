@@ -25,11 +25,12 @@ def parse_emcvnx_sp_util(info):
 def inventory_emcvnx_sp_util(parsed):
     if "idle" in parsed and "busy" in parsed:
         return [(None, "emcvnx_sp_util_default_levels")]
+    return []
 
 
 def check_emcvnx_sp_util(item, params, parsed):
     if not ("idle" in parsed and "busy" in parsed):
-        return
+        return None
 
     now = time.time()
     warn, crit = params

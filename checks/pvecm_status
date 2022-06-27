@@ -67,6 +67,7 @@ def parse_pvecm_status(info):
 def inventory_pvecm_status(parsed):
     if parsed:
         return [(None, None)]
+    return []
 
 
 def check_pvecm_status(_no_item, _no_params, parsed):

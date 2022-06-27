@@ -1,0 +1,23 @@
+Title: Deprecate old HW/SW inventory plugin API
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1651481957
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+This werk only affects users and maintainers of custom hardware/software inventory plugins.
+
+The old API for the plugins residing in <tt>{local/,}share/check_mk/inventory</tt> will be removed in Checkmk version 2.2.
+Plugins in that folder will be ignored starting with 2.2.
+However, they keep working with the 2.1 for the transition period.
+
+As of Checkmk version 2.1 plugins in that folder will generate a warning on the commandline and result in an <i>"Analyze Configuration"</i> test going to {{WARN}}.
+
+If you maintian such plugins, please migrate them to the new API before upgrading to Checkmk 2.2.
+New plugins live in <tt>lib/check_mk/base/plugins/agent_based/</tt>.
+You can find an example for a migration on github <a href="https://github.com/tribe29/checkmk/commit/0264b6acdef677ff7ae323a696ddbe17d41116fc">here</a> and <a href="https://github.com/tribe29/checkmk/commit/e926cc58adb8297030fb03d61c7854a96311e7fb">here</a>.
+Also refer to the APIs documentation found in your site (Help -> Check plugin API reference).

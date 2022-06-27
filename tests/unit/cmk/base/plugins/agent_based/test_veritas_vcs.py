@@ -116,7 +116,7 @@ SECTION: veritas_vcs.Section = {
 }
 
 
-def test_parse_veritas_vcs():
+def test_parse_veritas_vcs() -> None:
     assert veritas_vcs.parse_veritas_vcs(STRING_TABLE) == SECTION
 
 
@@ -207,22 +207,22 @@ SECTION_HASHES: veritas_vcs.Section = {
 }
 
 
-def test_parse_veritas_vcs_hashes():
+def test_parse_veritas_vcs_hashes() -> None:
     assert veritas_vcs.parse_veritas_vcs(STRING_TABLE_HASHES) == SECTION_HASHES
 
 
-def test_discover_veritas_vcs():
+def test_discover_veritas_vcs() -> None:
     assert list(veritas_vcs.discover_veritas_vcs(SECTION)) == [Service(item="minions")]
 
 
-def test_discover_veritas_vcs_system():
+def test_discover_veritas_vcs_system() -> None:
     assert list(veritas_vcs.discover_veritas_vcs_system(SECTION)) == [
         Service(item="dave"),
         Service(item="stuart"),
     ]
 
 
-def test_discover_veritas_vcs_group():
+def test_discover_veritas_vcs_group() -> None:
     assert list(veritas_vcs.discover_veritas_vcs_group(SECTION)) == [
         Service(item="bob2"),
         Service(item="bob5"),
@@ -234,7 +234,7 @@ def test_discover_veritas_vcs_group():
     ]
 
 
-def test_discover_veritas_vcs_resource():
+def test_discover_veritas_vcs_resource() -> None:
     assert list(veritas_vcs.discover_veritas_vcs_resource(SECTION)) == [
         Service(item="bob3-nic-proxy"),
         Service(item="bob3-dg"),
@@ -302,7 +302,7 @@ def test_discover_veritas_vcs_resource():
         ),
     ],
 )
-def test_veritas_vcs_boil_down_states_in_cluster(states, expected_state):
+def test_veritas_vcs_boil_down_states_in_cluster(states, expected_state) -> None:
     assert veritas_vcs.veritas_vcs_boil_down_states_in_cluster(states) == expected_state
 
 
@@ -322,7 +322,7 @@ PARAMS = {
 }
 
 
-def test_check_veritas_vcs():
+def test_check_veritas_vcs() -> None:
     assert list(veritas_vcs.check_veritas_vcs("minions", PARAMS, SECTION)) == [
         Result(
             state=state.OK,
@@ -331,7 +331,7 @@ def test_check_veritas_vcs():
     ]
 
 
-def test_check_veritas_vcs_system():
+def test_check_veritas_vcs_system() -> None:
     assert list(veritas_vcs.check_veritas_vcs_system("stuart", PARAMS, SECTION)) == [
         Result(
             state=state.OK,
@@ -344,7 +344,7 @@ def test_check_veritas_vcs_system():
     ]
 
 
-def test_check_veritas_vcs_group():
+def test_check_veritas_vcs_group() -> None:
     assert list(veritas_vcs.check_veritas_vcs_group("nepharius", PARAMS, SECTION_HASHES,)) == [
         Result(
             state=state.WARN,
@@ -361,7 +361,7 @@ def test_check_veritas_vcs_group():
     ]
 
 
-def test_check_veritas_vcs_resource():
+def test_check_veritas_vcs_resource() -> None:
     assert list(veritas_vcs.check_veritas_vcs_resource("bob3-dg", PARAMS, SECTION,)) == [
         Result(
             state=state.WARN,
@@ -374,7 +374,7 @@ def test_check_veritas_vcs_resource():
     ]
 
 
-def test_cluster_check_veritas_vcs():
+def test_cluster_check_veritas_vcs() -> None:
     assert list(
         veritas_vcs.cluster_check_veritas_vcs(
             "minions",
@@ -396,7 +396,7 @@ def test_cluster_check_veritas_vcs():
     ]
 
 
-def test_cluster_check_veritas_vcs_system():
+def test_cluster_check_veritas_vcs_system() -> None:
     assert list(
         veritas_vcs.cluster_check_veritas_vcs_system(
             "dave",
@@ -422,7 +422,7 @@ def test_cluster_check_veritas_vcs_system():
     ]
 
 
-def test_cluster_check_veritas_vcs_group():
+def test_cluster_check_veritas_vcs_group() -> None:
     SECTION["group"]["omd"] = [Vcs(attr="State", value="ONLINE", cluster="minions")]
     assert list(
         veritas_vcs.cluster_check_veritas_vcs_group(
@@ -446,7 +446,7 @@ def test_cluster_check_veritas_vcs_group():
     del SECTION["group"]["omd"]
 
 
-def test_cluster_check_veritas_vcs_resource():
+def test_cluster_check_veritas_vcs_resource() -> None:
     SECTION["resource"]["lan_phantom"] = [Vcs(attr="State", value="OFFLINE", cluster="minions")]
     third_section: veritas_vcs.Section = {
         "resource": {"lan_phantom": [Vcs(attr="State", value="OFFLINE", cluster="minions")]}
@@ -569,7 +569,7 @@ def test_cluster_check_veritas_vcs_resource():
         ),
     ],
 )
-def test_cluster_check_veritas_vcs_states(section, expected_check_result):
+def test_cluster_check_veritas_vcs_states(section, expected_check_result) -> None:
     assert (
         list(
             veritas_vcs.cluster_check_veritas_vcs_subsection(

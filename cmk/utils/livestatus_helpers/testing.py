@@ -15,12 +15,13 @@ import collections
 import datetime as dt
 import io
 import itertools
+import json
 import operator
 import re
 import socket
 import statistics
 import time
-from typing import Any, Callable, Dict, List, Literal, Mapping, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Literal, Mapping, Optional, Tuple, Union
 
 from livestatus import LivestatusTestingError
 
@@ -40,6 +41,46 @@ SiteName = str  # NewType("SiteName", str)
 ColumnName = str  # NewType("ColumnName", str)
 TableName = str  # NewType("TableName", str)
 Tables = Dict[TableName, Dict[SiteName, ResultList]]
+
+
+def repr2(obj):
+    """Create a string representation of an object like in Python2
+
+    Examples:
+
+        >>> repr2({b"Hallo": "Welt"})
+        "{'Hallo': u'Welt'}"
+
+        >>> repr2(b"Hallo Welt")
+        "'Hallo Welt'"
+
+        >>> repr2("Hallo Welt")
+        "u'Hallo Welt'"
+
+        >>> repr2({"1": "a", "2": "b"})
+        "{u'1': u'a', u'2': u'b'}"
+
+        >>> repr2([1, 2, 3])
+        '[1, 2, 3]'
+
+    Args:
+        obj:
+            The object to be serialized.
+
+    Returns:
+        A string representation of the object, like Python2 would do.
+
+    """
+    if isinstance(obj, dict):  # pylint: disable=no-else-return
+        return "{" + ", ".join(f"{repr2(k)}: {repr2(v)}" for k, v in obj.items()) + "}"
+    elif isinstance(obj, (list, tuple)):
+        return "[" + ", ".join(repr2(x) for x in obj) + "]"
+    elif isinstance(obj, str):
+        return f"u'{obj}'"
+    elif isinstance(obj, bytes):
+        return f"'{obj.decode('utf-8')}'"
+    else:
+        return repr(obj)
 
 
 class FakeSocket:
@@ -73,16 +114,24 @@ class FakeSocket:
         return self.mock_live.socket_send(data)
 
 
-def _make_livestatus_response(response) -> str:
-    """Build a (somewhat) convincing LiveStatus response
+def _make_livestatus_response(response: Response, output_format: str) -> str:
+    """Build a (almost) convincing LiveStatus response
 
-    Special response headers are not honored yet.
+    Special response headers (except OutputFormat) are not honored yet.
 
-    >>> _make_livestatus_response([['foo'], [1, {}]])
-    "200          18\\n[['foo'], [1, {}]]"
+    >>> resp = [['foo', b"bar"], [1, {}]]
 
-    >>> _make_livestatus_response([['foo'], [1, {}]])[:16]
-    '200          18\\n'
+    >>> _make_livestatus_response(resp, "json")
+    '200          25\\n[["foo", "bar"], [1, {}]]'
+
+    >>> _make_livestatus_response(resp, "python")
+    "200          26\\n[[u'foo', 'bar'], [1, {}]]"
+
+    >>> _make_livestatus_response(resp, "python3")
+    "200          26\\n[['foo', b'bar'], [1, {}]]"
+
+    >>> _make_livestatus_response(resp, "json")[:16]
+    '200          25\\n'
 
     Args:
         response:
@@ -92,7 +141,21 @@ def _make_livestatus_response(response) -> str:
         The fake LiveStatus response as a string.
 
     """
-    data = repr(response)
+    if output_format == "json":
+        # NOTE:
+        #   need to ensure bytes are also strings, because json.dumps will throw an ValueError
+        #   otherwise. I assume they are encoded as utf-8.
+        response = [
+            [x.decode("utf-8") if isinstance(x, bytes) else x for x in row] for row in response
+        ]
+        data = json.dumps(response)
+    elif output_format == "python":
+        data = repr2(response)
+    elif output_format == "python3":
+        data = repr(response)
+    else:
+        raise ValueError(f"Unknown output format: {output_format}")
+
     code = 200
     length = len(data)
     return f"{code:<3} {length:>11}\n{data}"
@@ -123,13 +186,13 @@ class MockLiveStatusConnection:
             >>> live = MockLiveStatusConnection()
             >>> _ = live.expect_query("GET hosts\\nColumns: name")
             >>> with live(expect_status_query=False):
-            ...     live.result_of_next_query("GET hosts\\nColumns: name")  # returns nothing!
+            ...     live.result_of_next_query("GET hosts\\nColumns: name")[0]
             [['heute'], ['example.com']]
 
             >>> _ = live.expect_query("GET services\\nColumns: description\\nColumnHeaders: on")
             >>> with live(expect_status_query=False):
             ...     live.result_of_next_query(
-            ...         "GET services\\nColumns: description\\nColumnHeaders: on")
+            ...         "GET services\\nColumns: description\\nColumnHeaders: on")[0]
             [['description'], ['Memory'], ['CPU load'], ['CPU load']]
 
         This test will pass as well (useful in real GUI or REST-API calls):
@@ -140,12 +203,13 @@ class MockLiveStatusConnection:
             ...         'GET status\\n'
             ...         'Columns: livestatus_version program_version program_start '
             ...         'num_hosts num_services core_pid'
-            ...     )
+            ...     )[0]
             ...     # Response looks like [['2020-07-03', 'Check_MK 2020-07-03', 1593762478, 1, 36]]
             ...     assert len(response) == 1
             ...     assert len(response[0]) == 6
 
         Some Stats calls are supported as well:
+
             >>> live = MockLiveStatusConnection()
             >>> _ = live.expect_query("GET hosts\\nColumns: filename\\nStats: state > 0")
             >>> with live(expect_status_query=False):
@@ -154,7 +218,7 @@ class MockLiveStatusConnection:
             ...         'Cache: reload\\n'
             ...         'Columns: filename\\n'
             ...         'Stats: state > 0'
-            ...     )
+            ...     )[0]
             [['/wato/hosts.mk', 1]]
 
         This example will fail due to missing queries:
@@ -195,17 +259,17 @@ program_start num_hosts num_services core_pid'
             >>> conn = MockLiveStatusConnection()
             >>> _ = conn.expect_query("GET hosts")
 
-            >>> len(conn.result_of_next_query("GET hosts"))
+            >>> len(conn.result_of_next_query("GET hosts")[0])
             2
 
             >>> _ = conn.expect_query("GET hosts\\nColumns: name\\nColumnHeaders: on")
-            >>> conn.result_of_next_query("GET hosts\\nColumns: name\\nColumnHeaders: on")
+            >>> conn.result_of_next_query("GET hosts\\nColumns: name\\nColumnHeaders: on")[0]
             [['name'], ['heute'], ['example.com']]
 
             >>> conn.add_table('hosts', [{'name': 'morgen'}], site='remote')
 
             >>> _ = conn.expect_query("GET hosts\\nColumns: name\\nColumnHeaders: on")
-            >>> conn.result_of_next_query("GET hosts\\nColumns: name\\nColumnHeaders: on")
+            >>> conn.result_of_next_query("GET hosts\\nColumns: name\\nColumnHeaders: on")[0]
             [['name'], ['heute'], ['example.com'], ['morgen']]
 
     """
@@ -239,17 +303,18 @@ program_start num_hosts num_services core_pid'
                 self._connections[site_name] = MockSingleSiteConnection(site_name, self)
         return self._connections
 
-    def create_socket(self, family, site_name: Optional[SiteName]):
+    def create_socket(self, family, site_name: Optional[SiteName]):  # type:ignore[no-untyped-def]
         if site_name is None:  # plain SingleConnection instantiated by hand
             site_name = self.sites[0]
         return self.connections[site_name].socket
 
-    def result_of_next_query(self, query: str) -> Response:
+    def result_of_next_query(self, query: str) -> tuple[Response, str]:
         result = []
         single_conn: MockSingleSiteConnection
         show_columns = _show_columns(query)
+        output_format = pick_header(query, "OutputFormat", "json")
         for conn_number, single_conn in enumerate(self.connections.values(), start=0):
-            for row_number, row in enumerate(single_conn.result_of_next_query(query), start=0):
+            for row_number, row in enumerate(single_conn.result_of_next_query(query)[0], start=0):
                 # We only want to see the column descriptions once. For all the other sites,
                 # we skip these.
                 if show_columns and conn_number > 0 and row_number == 0:
@@ -261,13 +326,17 @@ program_start num_hosts num_services core_pid'
 
                 result.append(row)
 
-        return result
+        return result, output_format
 
-    def enabled_and_disabled_sites(self, user_id) -> Tuple[dict, dict]:
+    def enabled_and_disabled_sites(  # type:ignore[no-untyped-def]
+        self, user_id
+    ) -> Tuple[dict, dict]:
         """This method is used to inject the currently configured sites into livestatus.py"""
         return {site_name: {"socket": "unix:"} for site_name in self.sites}, {}
 
-    def __call__(self, expect_status_query=True) -> MockLiveStatusConnection:
+    def __call__(  # type:ignore[no-untyped-def]
+        self, expect_status_query=True
+    ) -> MockLiveStatusConnection:
         self._expect_status_query = expect_status_query
         return self
 
@@ -461,6 +530,45 @@ def execute_query(
     return result, columns
 
 
+def pick_header(query: str, header_name: str, default: Optional[str] = None) -> str:
+    """Pick a header from a query.
+
+    Examples:
+
+        >>> pick_header("GET hosts", "OutputFormat", default="json")
+        'json'
+
+        >>> pick_header("GET hosts\\nOutputFormat: python", "OutputFormat")
+        'python'
+
+        >>> pick_header("GET hosts", "OutputFormat")
+        Traceback (most recent call last):
+        ...
+        ValueError: Header OutputFormat not found in query.
+
+    Args:
+        query:
+            A Livestatus query as a string.
+
+        header_name:
+            The name of the header to pick.
+
+        default:
+            The default value to return if the header is not found.
+
+    Returns:
+        The header value.
+    """
+    for line in query.splitlines():
+        if line.startswith(header_name):
+            return line.split(": ", 1)[1]
+
+    if default is not None:
+        return default
+
+    raise ValueError(f"Header {header_name} not found in query.")
+
+
 def remove_headers(query: str, headers: List[str]) -> str:
     """Remove specific Livestatus headers from a query
 
@@ -490,7 +598,7 @@ def remove_headers(query: str, headers: List[str]) -> str:
 
 
 class MockSingleSiteConnection:
-    def __init__(self, site_name, multisite_connection) -> None:
+    def __init__(self, site_name, multisite_connection) -> None:  # type:ignore[no-untyped-def]
         self._site_name = site_name
         self._multisite = multisite_connection
         self._last_response: Optional[io.StringIO] = None
@@ -519,13 +627,14 @@ class MockSingleSiteConnection:
             self._expected_queries.append((query, match_type))
         return self
 
-    def result_of_next_query(self, query: str) -> Response:
+    def result_of_next_query(self, query: str) -> tuple[Response, str]:
         if not self._expected_queries:
             raise LivestatusTestingError(
                 f"Got unexpected query on site {self._site_name!r}:" "\n" f" * {repr(query)}"
             )
 
         expected_query, match_type = self._expected_queries.pop(0)
+        output_format = pick_header(query, "OutputFormat", "json")
 
         if query.startswith("GET "):
             # FIXME: Needs to be a bit more strict. We remove them on both sides to make the
@@ -548,7 +657,7 @@ class MockSingleSiteConnection:
                 f" * {repr(query)}"
             )
 
-        def _generate_output():
+        def _generate_output() -> Iterable[list[ColumnName]]:
             if query.startswith("COMMAND"):
                 return
             _response, _columns = execute_query(self._multisite.tables, query, self._site_name)
@@ -558,7 +667,7 @@ class MockSingleSiteConnection:
 
             yield from _response
 
-        return list(_generate_output())
+        return list(_generate_output()), output_format
 
     def socket_recv(self, length: int) -> bytes:
         if self._last_response is None:
@@ -568,13 +677,13 @@ class MockSingleSiteConnection:
     def socket_send(self, data: bytes) -> None:
         if data[-2:] == b"\n\n":
             data = data[:-2]
-        response = self.result_of_next_query(data.decode("utf-8"))
-        self._last_response = io.StringIO(_make_livestatus_response(response))
+        response, output_format = self.result_of_next_query(data.decode("utf-8"))
+        self._last_response = io.StringIO(_make_livestatus_response(response, output_format))
 
     def __enter__(self):
         pass
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, *exc_info: object) -> None:
         if self._expected_queries:
             remaining_queries = ""
             for query in self._expected_queries:

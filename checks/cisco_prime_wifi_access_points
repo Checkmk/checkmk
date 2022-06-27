@@ -10,9 +10,7 @@ see https://solutionpartner.cisco.com/media/prime-infrastructure/api-reference/
 import collections
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cisco_prime import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 factory_settings["cisco_prime_wifi_access_points"] = {

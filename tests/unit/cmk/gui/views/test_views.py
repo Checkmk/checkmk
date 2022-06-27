@@ -7,7 +7,7 @@
 # yapf: disable
 
 import copy
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 import pytest
 
@@ -16,9 +16,10 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 import cmk.gui.plugins.views
 import cmk.gui.views
-from cmk.gui.globals import active_config, html
+from cmk.gui.config import active_config
+from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.views.utils import transform_painter_spec
+from cmk.gui.plugins.views.utils import Cell, Painter, transform_painter_spec
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import PainterSpec
 from cmk.gui.valuespec import ValueSpec
@@ -31,7 +32,7 @@ def view_fixture(request_context):
     return cmk.gui.views.View(view_name, view_spec, view_spec.get("context", {}))
 
 
-def test_registered_painter_options():
+def test_registered_painter_options() -> None:
     expected = [
         'aggr_expand',
         'aggr_onlyproblems',
@@ -55,7 +56,7 @@ def test_registered_painter_options():
         assert isinstance(vs, ValueSpec)
 
 
-def test_registered_layouts():
+def test_registered_layouts() -> None:
     expected = [
         'boxed',
         'boxed_graph',
@@ -72,7 +73,7 @@ def test_registered_layouts():
     assert sorted(expected) == sorted(names)
 
 
-def test_layout_properties():
+def test_layout_properties() -> None:
     expected = {
         'boxed': {
             'checkboxes': True,
@@ -122,7 +123,7 @@ def test_layout_properties():
         assert spec.get("has_csv_export", False) == plugin.has_individual_csv_export
 
 
-def test_get_layout_choices():
+def test_get_layout_choices() -> None:
     choices = cmk.gui.plugins.views.utils.layout_registry.get_choices()
     assert sorted(choices) == sorted([
         ('matrix', u'Matrix'),
@@ -137,7 +138,7 @@ def test_get_layout_choices():
     ])
 
 
-def test_registered_exporters():
+def test_registered_exporters() -> None:
     expected = [
         'csv',
         'csv_export',
@@ -151,7 +152,7 @@ def test_registered_exporters():
     assert sorted(expected) == sorted(names)
 
 
-def test_registered_command_groups():
+def test_registered_command_groups() -> None:
     expected = [
         'acknowledge',
         'downtimes',
@@ -163,7 +164,7 @@ def test_registered_command_groups():
     assert sorted(expected) == sorted(names)
 
 
-def test_legacy_register_command_group(monkeypatch):
+def test_legacy_register_command_group(monkeypatch) -> None:
     monkeypatch.setattr(cmk.gui.plugins.views.utils, "command_group_registry",
                         cmk.gui.plugins.views.utils.CommandGroupRegistry())
     cmk.gui.plugins.views.utils.register_command_group("abc", "A B C", 123)
@@ -175,7 +176,7 @@ def test_legacy_register_command_group(monkeypatch):
     assert group.sort_index == 123
 
 
-def test_registered_commands():
+def test_registered_commands() -> None:
     expected: Dict[str, Dict[str, Any]] = {
         'acknowledge': {
             'group': 'acknowledge',
@@ -296,11 +297,11 @@ def test_registered_commands():
         assert cmd.permission.name == cmd_spec["permission"]
 
 
-def test_legacy_register_command(monkeypatch):
+def test_legacy_register_command(monkeypatch) -> None:
     monkeypatch.setattr(cmk.gui.plugins.views.utils, "command_registry",
                         cmk.gui.plugins.views.utils.CommandRegistry())
 
-    def render():
+    def render() -> None:
         pass
 
     def action():
@@ -324,7 +325,7 @@ def test_legacy_register_command(monkeypatch):
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-def test_registered_datasources():
+def test_registered_datasources() -> None:
     expected: Dict[str, Dict[str, Any]] = {
         'alert_stats': {
             'add_columns': [
@@ -673,8 +674,26 @@ def test_registered_datasources():
         assert ds.id_keys == spec["idkeys"]
         assert ds.infos == spec["infos"]
 
+def test_painter_export_title(monkeypatch) -> None:
+    painters: list[Painter] = [painter_class() for painter_class in cmk.gui.plugins.views.utils.painter_registry.values()]
+    painters_and_cells: list[Tuple[Painter, Cell]] = [
+                                                      (
+                                                       painter,
+                                                       cmk.gui.plugins.views.utils.Cell(cmk.gui.views.View("", {}, {}),PainterSpec(painter.ident))
+                                                      )
+                                                      for painter in painters
+                                                     ]
 
-def test_legacy_register_painter(monkeypatch):
+    dummy_ident: str = "einszwo"
+    for painter, cell in painters_and_cells:
+        cell._painter_params = {"ident": dummy_ident} # pylint: disable=protected-access
+        expected_title: str = painter.ident
+        if painter.ident in ["host_custom_variable", "service_custom_variable"]:
+            expected_title += "_%s" % dummy_ident
+        assert painter.export_title(cell) == expected_title
+
+
+def test_legacy_register_painter(monkeypatch) -> None:
     monkeypatch.setattr(cmk.gui.plugins.views.utils, "painter_registry",
                         cmk.gui.plugins.views.utils.PainterRegistry())
 
@@ -710,7 +729,7 @@ def test_legacy_register_painter(monkeypatch):
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-def test_registered_sorters():
+def test_registered_sorters() -> None:
     expected: Dict[str, Dict[str, Any]] = {
         'aggr_group': {
             'columns': ['aggr_group'],
@@ -2336,7 +2355,7 @@ def test_registered_sorters():
         assert sorter.load_inv == spec.get("load_inv", False)
 
 
-def test_register_sorter(monkeypatch):
+def test_register_sorter(monkeypatch) -> None:
     monkeypatch.setattr(cmk.gui.plugins.views.utils, "sorter_registry",
                         cmk.gui.plugins.views.utils.SorterRegistry())
 
@@ -2357,7 +2376,7 @@ def test_register_sorter(monkeypatch):
     assert sorter.cmp.__name__ == cmpfunc.__name__
 
 
-def test_get_needed_regular_columns(view):
+def test_get_needed_regular_columns(view) -> None:
     class SomeFilter(Filter):
         def display(self, value):
             return
@@ -2416,7 +2435,7 @@ def test_get_needed_regular_columns(view):
     ])
 
 
-def test_get_needed_join_columns(view, load_config):
+def test_get_needed_join_columns(view, load_config) -> None:
     view_spec = copy.deepcopy(view.spec)
     view_spec["painters"].append(PainterSpec('service_description', None, None, u'CPU load'))
     view = cmk.gui.views.View(view.name, view_spec, view_spec.get("context", {}))
@@ -2437,7 +2456,7 @@ def test_get_needed_join_columns(view, load_config):
     assert sorted(columns) == sorted(expected_columns)
 
 
-def test_create_view_basics():
+def test_create_view_basics() -> None:
     view_name = "allhosts"
     view_spec = cmk.gui.views.multisite_builtin_views[view_name]
     view = cmk.gui.views.View(view_name, view_spec, view_spec.get("context", {}))
@@ -2452,7 +2471,7 @@ def test_create_view_basics():
     assert view.only_sites is None
 
 
-def test_view_row_limit(view):
+def test_view_row_limit(view) -> None:
     assert view.row_limit is None
     view.row_limit = 101
     assert view.row_limit == 101
@@ -2474,7 +2493,7 @@ def test_view_row_limit(view):
     ("hard", {"general.ignore_soft_limit": True, "general.ignore_hard_limit": True}, 5000),
     ("none", {"general.ignore_soft_limit": True, "general.ignore_hard_limit": True}, None),
 ])
-def test_gui_view_row_limit(request_context, monkeypatch, mocker, limit, permissions, result):
+def test_gui_view_row_limit(request_context, monkeypatch, mocker, limit, permissions, result) -> None:
     if limit is not None:
         monkeypatch.setitem(html.request._vars, "limit", limit)
 
@@ -2483,26 +2502,26 @@ def test_gui_view_row_limit(request_context, monkeypatch, mocker, limit, permiss
     assert cmk.gui.views.get_limit() == result
 
 
-def test_view_only_sites(view):
+def test_view_only_sites(view) -> None:
     assert view.only_sites is None
     view.only_sites = ["unit"]
     assert view.only_sites == ["unit"]
 
 
-def test_view_user_sorters(view):
+def test_view_user_sorters(view) -> None:
     assert view.user_sorters is None
     view.user_sorters = [("abc", True)]
     assert view.user_sorters == [("abc", True)]
 
 
-def test_view_want_checkboxes(view):
+def test_view_want_checkboxes(view) -> None:
     assert view.want_checkboxes is False
     view.want_checkboxes = True
     assert view.want_checkboxes is True
 
 
-def test_registered_display_hints():
-    expected = ['.',
+def test_registered_display_hints() -> None:
+    expected = [
     '.hardware.',
     '.hardware.chassis.',
     '.hardware.components.',
@@ -2621,7 +2640,6 @@ def test_registered_display_hints():
     '.hardware.memory.arrays:',
     '.hardware.memory.arrays:*.',
     '.hardware.memory.arrays:*.devices:',
-    '.hardware.memory.arrays:*.devices:*.',
     '.hardware.memory.arrays:*.devices:*.size',
     '.hardware.memory.arrays:*.devices:*.speed',
     '.hardware.memory.arrays:*.maximum_capacity',
@@ -2654,6 +2672,7 @@ def test_registered_display_hints():
     '.hardware.storage.disks:*.size',
     '.hardware.storage.disks:*.type',
     '.hardware.storage.disks:*.vendor',
+    '.hardware.storage.disks.size',
     '.hardware.system.',
     '.hardware.system.expresscode',
     '.hardware.system.manufacturer',
@@ -2670,7 +2689,8 @@ def test_registered_display_hints():
     '.hardware.video:*.graphic_memory',
     '.hardware.video:*.name',
     '.hardware.video:*.subsystem',
-    '.hardware.volumes.physical_volumes.*:',
+    '.hardware.volumes.',
+    '.hardware.volumes.physical_volumes:',
     '.hardware.volumes.physical_volumes:*.volume_group_name',
     '.hardware.volumes.physical_volumes:*.physical_volume_name',
     '.hardware.volumes.physical_volumes:*.physical_volume_status',
@@ -2695,6 +2715,9 @@ def test_registered_display_hints():
     '.networking.interfaces:*.speed',
     '.networking.interfaces:*.vlans',
     '.networking.interfaces:*.vlantype',
+    '.networking.kube:',
+    '.networking.kube:*.address_type',
+    '.networking.kube:*.ip',
     '.networking.routes:',
     '.networking.routes:*.device',
     '.networking.routes:*.gateway',
@@ -2732,6 +2755,7 @@ def test_registered_display_hints():
     '.software.applications.check_mk.host_labels:*.label',
     '.software.applications.check_mk.versions:',
     '.software.applications.check_mk.versions:*.demo',
+    '.software.applications.checkmk-agent.',
     '.software.applications.check_mk.sites:',
     '.software.applications.check_mk.sites:*.autostart',
     '.software.applications.check_mk.sites:*.apache',
@@ -2783,6 +2807,7 @@ def test_registered_display_hints():
     '.software.applications.docker.images:*.labels',
     '.software.applications.docker.images:*.repodigests',
     '.software.applications.docker.images:*.repotags',
+    '.software.applications.docker.networks.',
     '.software.applications.docker.networks.*.',
     '.software.applications.docker.networks.*.containers:',
     '.software.applications.docker.networks.*.containers:*.id',
@@ -2807,15 +2832,17 @@ def test_registered_display_hints():
     '.software.applications.docker.swarm_node_id',
     '.software.applications.docker.swarm_state',
     '.software.applications.docker.version',
+    '.software.applications.fortinet.',
     '.software.applications.fortinet.fortigate_high_availability.',
     '.software.applications.fortinet.fortisandbox:',
     '.software.applications.fortinet.fortisandbox:*.name',
     '.software.applications.fortinet.fortisandbox:*.version',
+    '.software.applications.fritz.',
     '.software.applications.fritz.auto_disconnect_time',
     '.software.applications.fritz.dns_server_1',
     '.software.applications.fritz.dns_server_2',
     '.software.applications.fritz.link_type',
-    '.software.applications.fritz.statefulset.upnp_config_enabled',
+    '.software.applications.fritz.upnp_config_enabled',
     '.software.applications.fritz.voip_dns_server_1',
     '.software.applications.fritz.voip_dns_server_2',
     '.software.applications.fritz.wan_access_type',
@@ -2871,9 +2898,6 @@ def test_registered_display_hints():
     '.software.applications.kube.metadata.name',
     '.software.applications.kube.metadata.namespace',
     '.software.applications.kube.metadata.object',
-    '.software.applications.kube.network:',
-    '.software.applications.kube.network:*.address_type',
-    '.software.applications.kube.network:*.ip',
     '.software.applications.kube.node.',
     '.software.applications.kube.node.architecture',
     '.software.applications.kube.node.container_runtime_version',
@@ -2889,42 +2913,9 @@ def test_registered_display_hints():
     '.software.applications.kube.pod.node',
     '.software.applications.kube.pod.pod_ip',
     '.software.applications.kube.pod.qos_class',
-    '.software.applications.kubernetes.assigned_pods:',
-    '.software.applications.kubernetes.assigned_pods:*.name',
-    '.software.applications.kubernetes.nodes:',
-    '.software.applications.kubernetes.nodes:*.name',
-    '.software.applications.kubernetes.ingresses:',
-    '.software.applications.kubernetes.pod_container:',
-    '.software.applications.kubernetes.pod_container:*.container_id',
-    '.software.applications.kubernetes.pod_container:*.image',
-    '.software.applications.kubernetes.pod_container:*.image_id',
-    '.software.applications.kubernetes.pod_container:*.image_pull_policy',
-    '.software.applications.kubernetes.pod_container:*.name',
-    '.software.applications.kubernetes.pod_container:*.ready',
-    '.software.applications.kubernetes.pod_container:*.restart_count',
-    '.software.applications.kubernetes.job_container:',
-    '.software.applications.kubernetes.job_container:*.name',
-    '.software.applications.kubernetes.job_container:*.image',
-    '.software.applications.kubernetes.job_container:*.image_pull_policy',
-    '.software.applications.kubernetes.daemon_pod_containers:',
-    '.software.applications.kubernetes.daemon_pod_containers:*.name',
-    '.software.applications.kubernetes.daemon_pod_containers:*.image',
-    '.software.applications.kubernetes.daemon_pod_containers:*.image_pull_policy',
-    '.software.applications.kubernetes.pod_info.',
-    '.software.applications.kubernetes.pod_info.dns_policy',
-    '.software.applications.kubernetes.pod_info.host_ip',
-    '.software.applications.kubernetes.pod_info.host_network',
-    '.software.applications.kubernetes.pod_info.node',
-    '.software.applications.kubernetes.pod_info.pod_ip',
-    '.software.applications.kubernetes.pod_info.qos_class',
-    '.software.applications.kubernetes.roles:',
-    '.software.applications.kubernetes.roles:*.namespace',
-    '.software.applications.kubernetes.roles:*.role',
-    '.software.applications.kubernetes.selector.',
-    '.software.applications.kubernetes.service_info.',
-    '.software.applications.kubernetes.service_info.cluster_ip',
-    '.software.applications.kubernetes.service_info.load_balancer_ip',
-    '.software.applications.kubernetes.service_info.type',
+    '.software.applications.mobileiron.',
+    '.software.applications.mobileiron.partition_name',
+    '.software.applications.mobileiron.registration_state',
     '.software.applications.mssql.',
     '.software.applications.mssql.instances:',
     '.software.applications.mssql.instances:*.clustered',
@@ -2994,7 +2985,9 @@ def test_registered_display_hints():
     '.software.applications.oracle.tablespaces:*.type',
     '.software.applications.oracle.tablespaces:*.used_size',
     '.software.applications.oracle.tablespaces:*.version',
+    '.software.applications.vmwareesx.',
     '.software.applications.vmwareesx:*.',
+    '.software.applications.vmwareesx:*.clusters.',
     '.software.applications.vmwareesx:*.clusters:*.',
     '.software.bios.',
     '.software.bios.date',
@@ -3037,12 +3030,12 @@ def test_registered_display_hints():
     assert sorted(expected) == sorted(cmk.gui.plugins.views.utils.inventory_displayhints.keys())
 
 
-def test_get_inventory_display_hint():
+def test_get_inventory_display_hint() -> None:
     hint = cmk.gui.plugins.views.utils.inventory_displayhints.get(".software.packages:*.summary")
     assert isinstance(hint, dict)
 
 
-def test_view_page(logged_in_admin_wsgi_app, mock_livestatus):
+def test_view_page(logged_in_admin_wsgi_app, mock_livestatus) -> None:
     wsgi_app = logged_in_admin_wsgi_app
 
     def _prepend(prefix, dict_):

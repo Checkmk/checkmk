@@ -14,6 +14,7 @@ import requests
 import urllib3
 
 from cmk.utils.exceptions import MKException
+from cmk.utils.password_store import replace_passwords
 
 from cmk.special_agents.utils import vcrtrace
 
@@ -333,7 +334,7 @@ class CommunicationException(MKException):
 
 
 class Server:
-    def __init__(self, hostname, username, password, verify_ssl):
+    def __init__(self, hostname, username, password, verify_ssl) -> None:
         self._url = "https://%s/nuova" % hostname
         self._username = username
         self._password = password
@@ -444,6 +445,7 @@ class Server:
         attribute_data = xml_object.attrib.get(attribute_lower)
         if attribute_data:
             return attribute_data
+        return None
 
     def _get_class_data(self, class_id):
         """
@@ -558,8 +560,7 @@ def setup_logging(opt_debug):
 
 def main(args=None):
     if args is None:
-        # TODO Add functionality in the future
-        # cmk.utils.password_store.replace_passwords()
+        replace_passwords()
         args = sys.argv[1:]
 
     args = parse_arguments(args)

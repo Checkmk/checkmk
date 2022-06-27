@@ -74,7 +74,9 @@ def _section(os_type: _OsType) -> checkmk.PluginSection:
         (cap.parse_checkmk_agent_plugins_win, _OsType.win),
     ],
 )
-def test_parse_ok_lnx(parser: Callable[[StringTable], checkmk.PluginSection], os_type: _OsType):
+def test_parse_ok_lnx(
+    parser: Callable[[StringTable], checkmk.PluginSection], os_type: _OsType
+) -> None:
     assert parser(_agent_output(os_type)) == _section(os_type)
 
 

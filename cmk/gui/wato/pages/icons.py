@@ -6,6 +6,7 @@
 
 import io
 import os
+from typing import Collection
 
 from PIL import Image, PngImagePlugin  # type: ignore[import]
 
@@ -13,34 +14,32 @@ import cmk.utils.paths
 import cmk.utils.store as store
 
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import active_config, html, request, theme
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
-from cmk.gui.plugins.wato.utils import (
-    make_action_link,
-    make_confirm_link,
-    mode_registry,
-    redirect,
-    WatoMode,
-)
+from cmk.gui.plugins.wato.utils import make_confirm_link, mode_registry, redirect, WatoMode
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import Dictionary, DropdownChoice, IconSelector, ImageUpload
+from cmk.gui.watolib.hosts_and_folders import make_action_link
 
 
 @mode_registry.register
 class ModeIcons(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "icons"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["icons"]
 
-    def title(self):
+    def title(self) -> str:
         return _("Custom icons")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -157,13 +156,13 @@ class ModeIcons(WatoMode):
             for icon_name, category_name in icons:
                 table.row()
 
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
                 delete_url = make_confirm_link(
                     url=make_action_link([("mode", "icons"), ("_delete", icon_name)]),
                     message=_("Do you really want to delete the icon <b>%s</b>?") % icon_name,
                 )
                 html.icon_button(delete_url, _("Delete this Icon"), "delete")
 
-                table.cell(_("Icon"), html.render_icon(icon_name), css="buttons")
+                table.cell(_("Icon"), html.render_icon(icon_name), css=["buttons"])
                 table.cell(_("Name"), icon_name)
                 table.cell(_("Category"), IconSelector.category_alias(category_name))

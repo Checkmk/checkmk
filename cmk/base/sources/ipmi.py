@@ -10,7 +10,7 @@ from cmk.utils.exceptions import MKAgentError
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
 from cmk.core_helpers import FetcherType, IPMIFetcher
-from cmk.core_helpers.agent import DefaultAgentFileCache, DefaultAgentFileCacheFactory
+from cmk.core_helpers.agent import AgentFileCache, AgentFileCacheFactory
 from cmk.core_helpers.ipmi import IPMISummarizer
 
 import cmk.base.config as config
@@ -46,8 +46,8 @@ class IPMISource(AgentSource):
         # has type `Union[None, str, Tuple[str, ...], Dict[str, str]]`
         return cast(IPMICredentials, credentials)
 
-    def _make_file_cache(self) -> DefaultAgentFileCache:
-        return DefaultAgentFileCacheFactory(
+    def _make_file_cache(self) -> AgentFileCache:
+        return AgentFileCacheFactory(
             self.hostname,
             base_path=self.file_cache_base_path,
             simulation=config.simulation_mode,

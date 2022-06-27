@@ -299,7 +299,7 @@ int TestMt() {
         XLOG::setup::ColoredOutputOnStdio(true);
         using namespace std::chrono;
         std::string command = "";
-        cma::srv::ServiceProcessor sp(2000ms, [&command](const void *Sp) {
+        cma::srv::ServiceProcessor sp(2000ms, [&command]() {
             CheckForCommand(command);
             if (command[0]) {
                 cma::tools::RunDetachedCommand(command);
@@ -325,10 +325,7 @@ int TestLegacy() {
     try {
         // test for main thread. will be disabled in production
         // to find file, read and start update POC.
-        using namespace std::chrono;
-        std::string command = "";
-        cma::srv::ServiceProcessor sp(
-            2000ms, [&command](const void *Sp) { return true; });
+        cma::srv::ServiceProcessor sp(2000ms, []() { return true; });
         sp.startServiceAsLegacyTest();
         sp.stopService();
     } catch (const std::exception &e) {
@@ -533,8 +530,7 @@ int ExecMainService(StdioLog stdio_log) {
         "press any key to stop execution\n",
         XLOG::Colors::cyan);
     auto delay = 1000ms;
-    auto processor =
-        std::make_unique<ServiceProcessor>(delay, [](const void *some_context) {
+    auto processor = std::make_unique<ServiceProcessor>(delay, []() {
     // default embedded callback for exec
     // At the moment does nothing
     // optional commands should be placed here
@@ -549,8 +545,8 @@ int ExecMainService(StdioLog stdio_log) {
                 UpdateProcess::execute,  // start update when file found
                 GetUserInstallDir());    // dir where file to backup
 #endif
-            return true;
-        });
+        return true;
+    });
 
     processor->startService();
 
@@ -1191,9 +1187,9 @@ bool IsServiceProcess() {
 // called by Windows Service Manager
 // exception free
 // returns -1 on failure
-int ServiceAsService(
-    std::wstring_view app_name, std::chrono::milliseconds delay,
-    const std::function<bool(const void *some_context)> &internal_callback) {
+int ServiceAsService(std::wstring_view app_name,
+                     std::chrono::milliseconds delay,
+                     const std::function<bool()> &internal_callback) {
     if (!IsServiceProcess()) {
         return 0;
     }

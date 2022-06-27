@@ -8,13 +8,13 @@ import json
 
 import pytest
 
-from cmk.utils.tags import BuiltinTagConfig
-
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+
+from cmk.utils.tags import BuiltinTagConfig
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_tag_group_update(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_host_tag_group_update(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     resp = aut_user_auth_wsgi_app.call_method(
@@ -69,7 +69,7 @@ def test_openapi_host_tag_group_update(aut_user_auth_wsgi_app: WebTestAppForCMK)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_tag_group_get_collection(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_host_tag_group_get_collection(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     builtin_groups_count = len(BuiltinTagConfig().tag_groups)
@@ -84,7 +84,7 @@ def test_openapi_host_tag_group_get_collection(aut_user_auth_wsgi_app: WebTestAp
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_tag_group_delete(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_host_tag_group_delete(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     resp = aut_user_auth_wsgi_app.call_method(
@@ -126,7 +126,7 @@ def test_openapi_host_tag_group_delete(aut_user_auth_wsgi_app: WebTestAppForCMK)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_tag_group_invalid_id(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_host_tag_group_invalid_id(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
     _resp = aut_user_auth_wsgi_app.call_method(
         "post",
@@ -147,7 +147,7 @@ def test_openapi_host_tag_group_invalid_id(aut_user_auth_wsgi_app: WebTestAppFor
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_tag_group_built_in(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_host_tag_group_built_in(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     resp = aut_user_auth_wsgi_app.call_method(
@@ -197,7 +197,7 @@ def test_openapi_host_tag_group_built_in(aut_user_auth_wsgi_app: WebTestAppForCM
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_tag_group_update_use_case(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_host_tag_group_update_use_case(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
     resp = aut_user_auth_wsgi_app.call_method(
         "post",
@@ -238,3 +238,96 @@ def test_openapi_host_tag_group_update_use_case(aut_user_auth_wsgi_app: WebTestA
         headers={"Accept": "application/json"},
         status=200,
     )
+
+
+def test_openapi_host_tag_with_only_one_option(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    with_host,
+):
+    base = "/NO_SITE/check_mk/api/1.0"
+    wsgi_app = aut_user_auth_wsgi_app
+    wsgi_app.call_method(
+        "post",
+        base + "/domain-types/host_tag_group/collections/all",
+        params=json.dumps(
+            {
+                "ident": "group_id999",
+                "title": "Kubernetes",
+                "topic": "Data Sources",
+                "help": "Kubernetes Pods",
+                "tags": [{"ident": "pod", "title": "Pod"}],
+            }
+        ),
+        headers={"Accept": "application/json"},
+        status=200,
+        content_type="application/json",
+    )
+
+    host = wsgi_app.get(
+        base + "/objects/host_config/example.com",
+        headers={"Accept": "application/json"},
+        status=200,
+    )
+
+    wsgi_app.put(
+        base + "/objects/host_config/example.com",
+        headers={"Accept": "application/json", "If-Match": host.headers["ETag"]},
+        content_type="application/json",
+        status=200,
+        params=json.dumps(
+            {
+                "attributes": {
+                    "alias": "foobar",
+                    "tag_group_id999": "pod",
+                }
+            }
+        ),
+    )
+
+    host = wsgi_app.get(
+        base + "/objects/host_config/example.com",
+        headers={"Accept": "application/json"},
+        status=200,
+    )
+
+    assert host.json["extensions"]["attributes"]["alias"] == "foobar"
+    assert host.json["extensions"]["attributes"]["tag_group_id999"] == "pod"
+
+    error = wsgi_app.put(
+        base + "/objects/host_config/example.com",
+        headers={"Accept": "application/json", "If-Match": host.headers["ETag"]},
+        content_type="application/json",
+        status=400,
+        params=json.dumps(
+            {
+                "attributes": {
+                    "tag_group_id999": "poddy",  # non-existing choice
+                }
+            }
+        ),
+    )
+
+    assert error.json["detail"].startswith("These fields have problems")
+    assert error.json["fields"] == {"attributes": {"tag_group_id999": ["Unknown field."]}}
+
+    wsgi_app.put(
+        base + "/objects/host_config/example.com",
+        headers={"Accept": "application/json", "If-Match": host.headers["ETag"]},
+        content_type="application/json",
+        status=200,
+        params=json.dumps(
+            {
+                "attributes": {
+                    "tag_group_id999": None,  # deactivate
+                }
+            }
+        ),
+    )
+
+    host = wsgi_app.get(
+        base + "/objects/host_config/example.com",
+        headers={"Accept": "application/json"},
+        status=200,
+    )
+
+    assert host.json["extensions"]["attributes"]["tag_group_id999"] is None

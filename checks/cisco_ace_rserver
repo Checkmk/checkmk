@@ -19,6 +19,7 @@ def parse_framework_mib_inet_address(ip_address_type, ip_address):
         return "".join([chr(x) for x in ip_address])
     elif ip_address_type == 0:  # Unknown address type - represent as hex string
         return "".join(["%x" % byte for byte in ip_address])
+    return None
 
 
 def inventory_cisco_ace_rserver(info):
@@ -74,6 +75,7 @@ def check_cisco_ace_rserver(item, _no_params, info):
             perfdata = [("connections", int(conns))]
 
             return state, infotext, perfdata
+    return None
 
 
 check_info["cisco_ace_rserver"] = {

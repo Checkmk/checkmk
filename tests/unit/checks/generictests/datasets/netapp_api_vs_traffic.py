@@ -116,7 +116,7 @@ checks = {
                 (0, 'FCP avg. Read latency: -', []),
                 (0, 'FCP avg. Write latency: -', []),
                 (
-                    0, 'FCP read data: 0.00 B', [
+                    0, 'FCP read data: 0 B', [
                         (
                             'fcp_read_data', 9.000180003600072e-06, None, None,
                             None, None
@@ -124,7 +124,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'FCP write data: 0.00 B', [
+                    0, 'FCP write data: 0 B', [
                         (
                             'fcp_write_data', 9.000180003600072e-06, None,
                             None, None, None
@@ -138,7 +138,7 @@ checks = {
                 (0, 'FCP avg. Read latency: -', []),
                 (0, 'FCP avg. Write latency: -', []),
                 (
-                    0, 'FCP read data: 0.00 B', [
+                    0, 'FCP read data: 0 B', [
                         (
                             'fcp_read_data', 9.000180003600072e-06, None, None,
                             None, None
@@ -146,7 +146,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'FCP write data: 0.00 B', [
+                    0, 'FCP write data: 0 B', [
                         (
                             'fcp_write_data', 9.000180003600072e-06, None,
                             None, None, None
@@ -160,7 +160,7 @@ checks = {
                 (0, 'iSCSI avg. Read latency: -', []),
                 (0, 'iSCSI avg. Write latency: -', []),
                 (
-                    0, 'iSCSI read data: 0.00 B', [
+                    0, 'iSCSI read data: 0 B', [
                         (
                             'iscsi_read_data', 9.000180003600072e-06, None,
                             None, None, None
@@ -168,7 +168,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'iSCSI write data: 0.00 B', [
+                    0, 'iSCSI write data: 0 B', [
                         (
                             'iscsi_write_data', 9.000180003600072e-06, None,
                             None, None, None
@@ -182,7 +182,7 @@ checks = {
                 (0, 'iSCSI avg. Read latency: -', []),
                 (0, 'iSCSI avg. Write latency: -', []),
                 (
-                    0, 'iSCSI read data: 0.00 B', [
+                    0, 'iSCSI read data: 0 B', [
                         (
                             'iscsi_read_data', 9.000180003600072e-06, None,
                             None, None, None
@@ -190,7 +190,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'iSCSI write data: 0.00 B', [
+                    0, 'iSCSI write data: 0 B', [
                         (
                             'iscsi_write_data', 9.000180003600072e-06, None,
                             None, None, None
@@ -202,7 +202,7 @@ checks = {
         (
             'lvs0', {}, [
                 (
-                    0, 'Ethernet received data: 0.00 B', [
+                    0, 'Ethernet received data: 0 B', [
                         (
                             'if_in_octets', 9.000180003600072e-06, None, None,
                             None, None
@@ -210,7 +210,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Ethernet sent data: 0.00 B', [
+                    0, 'Ethernet sent data: 0 B', [
                         (
                             'if_out_octets', 9.000180003600072e-06, None, None,
                             None, None

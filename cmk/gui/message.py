@@ -6,6 +6,7 @@
 
 import subprocess
 import time
+from datetime import datetime
 from typing import Any, Dict, List, Tuple
 
 from six import ensure_str
@@ -19,10 +20,12 @@ import cmk.gui.pages
 import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
-from cmk.gui.globals import active_config, html
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.header import make_header
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
@@ -36,6 +39,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.utils.escaping import escape_to_html
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     AbsoluteDate,
@@ -133,7 +137,7 @@ def page_message():
     title = _("Send user message")
     breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_setup(), title)
     menu = _page_menu(breadcrumb)
-    html.header(title, breadcrumb, menu)
+    make_header(html, title, breadcrumb, menu)
 
     vs_message = _vs_message()
 
@@ -279,7 +283,7 @@ def _validate_msg(msg, varprefix):
                 raise MKUserError("dest", _('A user with the id "%s" does not exist.') % user_id)
 
 
-def _process_message_message(msg):
+def _process_message_message(msg):  # pylint: disable=too-many-branches
     msg["id"] = utils.gen_id()
     msg["time"] = time.time()
 
@@ -291,7 +295,7 @@ def _process_message_message(msg):
     if dest_what == "all_users":
         recipients = list(active_config.multisite_users.keys())
     elif dest_what == "online":
-        recipients = userdb.get_online_user_ids()
+        recipients = userdb.get_online_user_ids(datetime.now())
     elif dest_what == "list":
         recipients = msg["dest"][1]
     else:
@@ -315,12 +319,12 @@ def _process_message_message(msg):
                 errors.setdefault(method, []).append((user_id, e))
 
     message = escape_to_html(_("The message has successfully been sent..."))
-    message += html.render_br()
+    message += HTMLWriter.render_br()
 
     parts = []
     for method in msg["methods"]:
         parts.append(
-            html.render_li(
+            HTMLWriter.render_li(
                 _messaging_methods()[method]["confirmation_title"]
                 + (
                     _(" for all recipients.")
@@ -330,8 +334,8 @@ def _process_message_message(msg):
             )
         )
 
-    message += html.render_ul(HTML().join(parts))
-    message += html.render_p(_("Recipients: %s") % ", ".join(recipients))
+    message += HTMLWriter.render_ul(HTML().join(parts))
+    message += HTMLWriter.render_p(_("Recipients: %s") % ", ".join(recipients))
     html.show_message(message)
 
     if errors:
@@ -340,10 +344,11 @@ def _process_message_message(msg):
             error_message += _("Failed to send %s messages to the following users:") % method
             table_rows = HTML()
             for user_id, exception in method_errors:
-                table_rows += html.render_tr(
-                    html.render_td(html.render_tt(user_id)) + html.render_td(str(exception))
+                table_rows += HTMLWriter.render_tr(
+                    HTMLWriter.render_td(HTMLWriter.render_tt(user_id))
+                    + HTMLWriter.render_td(str(exception))
                 )
-            error_message += html.render_table(table_rows) + html.render_br()
+            error_message += HTMLWriter.render_table(table_rows) + HTMLWriter.render_br()
         html.show_error(error_message)
 
 
@@ -426,13 +431,13 @@ def message_mail(user_id, msg):
         )
     except OSError as e:
         raise MKInternalError(
-            _("Mail could not be delivered. " 'Failed to execute command "%s": %s')
+            _('Mail could not be delivered. Failed to execute command "%s": %s')
             % (" ".join(command), e)
         )
 
     if completed_process.returncode:
         raise MKInternalError(
-            _("Mail could not be delivered. Exit code of command is %r. " "Output is: %s")
+            _("Mail could not be delivered. Exit code of command is %r. Output is: %s")
             % (completed_process.returncode, completed_process.stdout)
         )
     return True

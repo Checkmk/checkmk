@@ -19,10 +19,12 @@ from typing import Any, Generic, List, Mapping, Optional, Type, TypeVar, Union
 from livestatus import SiteId
 
 import cmk.gui.forms as forms
-import cmk.gui.watolib as watolib
+import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html, request
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
     make_simple_form_page_menu,
@@ -34,9 +36,9 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
+from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult
-from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_link, makeuri_contextless
@@ -52,6 +54,7 @@ from cmk.gui.valuespec import (
     SetupSiteChoice,
     TextInput,
 )
+from cmk.gui.watolib.hosts_and_folders import make_action_link
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 
 _T = TypeVar("_T", bound=Mapping[str, Any])
@@ -87,7 +90,7 @@ class SimpleModeType(Generic[_T], abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def affected_config_domains(self) -> List[Type[watolib.ABCConfigDomain]]:
+    def affected_config_domains(self) -> List[Type[ABCConfigDomain]]:
         """List of config domains that are affected by changes to objects of this type"""
         raise NotImplementedError()
 
@@ -143,7 +146,7 @@ class _SimpleWatoModeBase(Generic[_T], WatoMode, abc.ABC):
         affected_sites: Optional[List[SiteId]],
     ) -> None:
         """Add a WATO change entry for this object type modifications"""
-        watolib.add_change(
+        _changes.add_change(
             "%s-%s" % (action, self._mode_type.type_name()),
             text,
             domains=self._mode_type.affected_config_domains(),
@@ -271,7 +274,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
         self._show_entry_cells(table, ident, entry)
 
     def _show_action_cell(self, table: Table, ident: str) -> None:
-        table.cell(_("Actions"), css="buttons")
+        table.cell(_("Actions"), css=["buttons"])
 
         edit_url = makeuri_contextless(
             request,
@@ -292,7 +295,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
         html.icon_button(clone_url, _("Clone this %s") % self._mode_type.name_singular(), "clone")
 
         delete_url = make_confirm_link(
-            url=watolib.make_action_link(
+            url=make_action_link(
                 [
                     ("mode", self._mode_type.list_mode_name()),
                     ("_action", "delete"),

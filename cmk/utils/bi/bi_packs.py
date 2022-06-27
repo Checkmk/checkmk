@@ -47,7 +47,7 @@ class RuleReferencesResult(NamedTuple):
 
 
 class BIAggregationPack:
-    def __init__(self, pack_config: Dict[str, Any]):
+    def __init__(self, pack_config: Dict[str, Any]) -> None:
         super().__init__()
         self.id = pack_config["id"]
         self.title = pack_config["title"]
@@ -114,7 +114,7 @@ class BIAggregationPack:
 
 
 class BIAggregationPacks:
-    def __init__(self, bi_configuration_file: str):
+    def __init__(self, bi_configuration_file: str) -> None:
         super().__init__()
         self.packs: Dict[str, BIAggregationPack] = {}
         self._bi_configuration_file = bi_configuration_file
@@ -440,7 +440,7 @@ class BIHostRenamer:
 
         for bi_pack in bi_packs.get_packs().values():
             for bi_rule in bi_pack.get_rules().values():
-                renamed += sum([self.rename_node(x, oldname, newname) for x in bi_rule.nodes])
+                renamed += sum(self.rename_node(x, oldname, newname) for x in bi_rule.nodes)
 
             for bi_aggregation in bi_pack.get_aggregations().values():
                 renamed += self.rename_node(bi_aggregation.node, oldname, newname)

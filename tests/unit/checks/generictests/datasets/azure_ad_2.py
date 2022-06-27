@@ -27,10 +27,10 @@ checks = {
     ],
     'sync': [
         (u'Standardverzeichnis', {}, [
-            (0, 'Time since last synchronization: 45 m', []),
+            (0, 'Time since last synchronization: 45 minutes 0 seconds', []),
         ]),
         (u'Standardverzeichnis', {'age': (1800, 3600)}, [
-            (1, 'Time since last synchronization: 45 m (warn/crit at 30 m/60 m)', []),
+            (1, 'Time since last synchronization: 45 minutes 0 seconds (warn/crit at 30 minutes 0 seconds/1 hour 0 minutes)', []),
         ]),
     ],
 }

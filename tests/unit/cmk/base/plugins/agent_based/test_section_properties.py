@@ -7,7 +7,7 @@
 from cmk.base.api.agent_based.register import get_relevant_raw_sections
 
 
-def test_all_sections_are_subscribed_by_some_plugin(fix_register):
+def test_all_sections_are_subscribed_by_some_plugin(fix_register) -> None:
     """Test that all registered sections are subscribed to by some plugin
 
     We have very few sections (one at the time of this writing),
@@ -28,7 +28,7 @@ def test_all_sections_are_subscribed_by_some_plugin(fix_register):
     assert unsubscribed_sections_names == {"labels"}
 
 
-def test_section_detection_uses_sysdescr_or_sysobjid(fix_register):
+def test_section_detection_uses_sysdescr_or_sysobjid(fix_register) -> None:
     """Make sure the first OID is the system description or the system object ID
 
     Checking the system description or the system object ID first increases performance
@@ -96,7 +96,7 @@ def test_section_detection_uses_sysdescr_or_sysobjid(fix_register):
             assert str(section.name) in known_exceptions.get(
                 first_checked_oid, ()
             ), f"""
-            If you've made it here, you have added a case to the known exeptions above.
+            If you've made it here, you have added a case to the known exceptions above.
             Even worse: You may have added an OID to the list of OIDs that are fetched
             from *all SNMP devices* known to the Checkmk site. Please reconsider!
 
@@ -104,11 +104,11 @@ def test_section_detection_uses_sysdescr_or_sysobjid(fix_register):
             """
 
 
-def test_section_parse_function_does_something(fix_register):
+def test_section_parse_function_does_something(fix_register) -> None:
     """We make sure that the parse function is not trivial
 
     To ease the learning curve when developing check plugins
-    we allow to omit the parse_function (defaulting to labda x: x).
+    we allow to omit the parse_function (defaulting to lambda x: x).
 
     However this is allmost always a bad idea, so we make sure it
     does not happen in mainline code.
@@ -118,10 +118,6 @@ def test_section_parse_function_does_something(fix_register):
 
     legacy_exceptions_for_easier_migration = {
         # snmp sections
-        "dell_hw_info",
-        "hp_proliant_systeminfo",
-        "infoblox_osinfo",
-        "infoblox_systeminfo",
         "inv_cisco_vlans",
         "juniper_info",
         # agent sections
@@ -136,7 +132,6 @@ def test_section_parse_function_does_something(fix_register):
         "appdynamics_web_container",
         "arc_raid_status",
         "arcserve_backup",
-        "citrix_controller",
         "citrix_serverload",
         "citrix_sessions",
         "db2_mem",
@@ -148,7 +143,6 @@ def test_section_parse_function_does_something(fix_register):
         "esx_vsphere_sensors",
         "filehandler",
         "fsc_ipmi_mem_status",
-        "heartbeat_crm",
         "heartbeat_nodes",
         "hivemanager_devices",
         "hpux_fchba",
@@ -194,7 +188,6 @@ def test_section_parse_function_does_something(fix_register):
         "oracle_locks",
         "oracle_logswitches",
         "oracle_longactivesessions",
-        "oracle_processes",
         "oracle_recovery_area",
         "oracle_recovery_status",
         "oracle_rman_backups",
@@ -203,7 +196,6 @@ def test_section_parse_function_does_something(fix_register):
         "plesk_domains",
         "qmail_stats",
         "sansymphony_alerts",
-        "sansymphony_pool",
         "sansymphony_ports",
         "sansymphony_serverstatus",
         "sap_hana_filesystem",
@@ -221,7 +213,6 @@ def test_section_parse_function_does_something(fix_register):
         "symantec_av_progstate",
         "symantec_av_quarantine",
         "symantec_av_updates",
-        "timemachine",
         "tsm_drives",
         "tsm_paths",
         "tsm_sessions",
@@ -273,7 +264,7 @@ def test_section_parse_function_does_something(fix_register):
         ), f"💚 The agent section {name} now has a parse function! Remove it from the list above!"
 
 
-def test_snmp_section_parse_function_deals_with_empty_input(fix_register):
+def test_snmp_section_parse_function_deals_with_empty_input(fix_register) -> None:
     """We make sure that all parse functions can handle empty table data"""
     for section in fix_register.snmp_sections.values():
-        _ = section.parse_function(len(section.trees) * [[]])  # type: ignore[arg-type]
+        _ = section.parse_function(len(section.trees) * [[]])

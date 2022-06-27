@@ -204,7 +204,11 @@ class ClassicSNMPBackend(SNMPBackend):
     # And if it is a six-tuple, it has the following additional arguments:
     # (5) privacy protocol (DES|AES) (-x)
     # (6) privacy protocol pass phrase (-X)
-    def _snmp_base_command(self, what: str, context_name: Optional[SNMPContextName]) -> List[str]:
+    def _snmp_base_command(  # pylint: disable=too-many-branches
+        self,
+        what: str,
+        context_name: Optional[SNMPContextName],
+    ) -> List[str]:
         options = []
 
         if what == "get":

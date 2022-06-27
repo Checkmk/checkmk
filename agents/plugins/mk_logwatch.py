@@ -45,6 +45,13 @@ import shutil
 import socket
 import time
 
+try:
+    from typing import Dict
+except ImportError:
+    # We need typing only for testing
+    pass
+
+
 # For Python 3 sys.stdout creates \r\n as newline for Windows.
 # Checkmk can't handle this therefore we rewrite sys.stdout to a new_stdout function.
 # If you want to use the old behaviour just use old_stdout.
@@ -417,7 +424,7 @@ class LogLinesIter(object):  # pylint: disable=useless-object-inheritance
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, *exc_info):
         self.close()
         return False  # Do not swallow exceptions
 
@@ -504,15 +511,15 @@ class LogLinesIter(object):  # pylint: disable=useless-object-inheritance
 
 
 def is_inode_capable(path):
-    system = platform.system()
-    if system == "Windows":
+    system = platform.system().lower()
+    if system == "windows":
         volume_name = "%s:\\\\" % path.split(":", 1)[0]
         import win32api  # type: ignore[import] # pylint: disable=import-error
 
         volume_info = win32api.GetVolumeInformation(volume_name)
         volume_type = volume_info[-1]
         return "ntfs" in volume_type.lower()
-    return system == "Linux"
+    return system in {"linux", "aix", "sunos"}
 
 
 def get_formatted_line(line, level):
@@ -530,7 +537,7 @@ def should_log_line_with_level(level, nocontext):
     return not (nocontext and level == ".")
 
 
-def process_logfile(section, filestate, debug):
+def process_logfile(section, filestate, debug):  # pylint: disable=too-many-branches
     """
     Returns tuple of (
         logfile lines,
@@ -731,7 +738,8 @@ class Options(object):  # pylint: disable=useless-object-inheritance
     }
 
     def __init__(self):
-        self.values = {}
+        # type: () -> None
+        self.values = {}  # type: Dict
 
     @property
     def encoding(self):
@@ -1120,7 +1128,7 @@ def write_output(header, lines, options):
     sys.stdout.writelines(map(ensure_str, lines))
 
 
-def main(argv=None):
+def main(argv=None):  # pylint: disable=too-many-branches
     if argv is None:
         argv = sys.argv
 

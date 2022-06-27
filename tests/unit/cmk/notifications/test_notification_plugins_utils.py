@@ -47,7 +47,7 @@ from cmk.notification_plugins import utils
         ),
     ],
 )
-def test_host_url_from_context(context, result):
+def test_host_url_from_context(context, result) -> None:
     host_url = utils.host_url_from_context(context)
     assert host_url == result
 
@@ -88,7 +88,7 @@ def test_host_url_from_context(context, result):
         ),
     ],
 )
-def test_service_url_from_context(context, result):
+def test_service_url_from_context(context, result) -> None:
     service_url = utils.service_url_from_context(context)
     assert service_url == result
 
@@ -116,7 +116,7 @@ def test_service_url_from_context(context, result):
         ),
     ],
 )
-def test_format_link(template, url, text, expected_link):
+def test_format_link(template, url, text, expected_link) -> None:
     actual_link = utils.format_link(template, url, text)
     assert actual_link == expected_link
 
@@ -152,7 +152,7 @@ def test_format_link(template, url, text, expected_link):
         ),
     ],
 )
-def test_format_address(display_name, address, expected):
+def test_format_address(display_name, address, expected) -> None:
     actual = utils.format_address(display_name, address)
     assert actual == expected
 
@@ -183,11 +183,11 @@ SERVICENOTESURL=localhost
         ),
     ],
 )
-def test_substitute_context(context, template, result):
+def test_substitute_context(context, template, result) -> None:
     assert result == utils.substitute_context(template, context)
 
 
-def test_read_bulk_contents(monkeypatch, capsys):
+def test_read_bulk_contents(monkeypatch, capsys) -> None:
     monkeypatch.setattr("sys.stdin", ("key=val", "\n", "key2=val2", "a comment"))
     assert utils.read_bulk_contexts() == ({"key": "val"}, [{"key2": "val2"}])
     assert capsys.readouterr().err == "Invalid line 'a comment' in bulked notification context\n"
@@ -210,7 +210,7 @@ def test_read_bulk_contents(monkeypatch, capsys):
         ),
     ],
 )
-def test_get_bulk_notification_subject(context, hosts, result):
+def test_get_bulk_notification_subject(context, hosts, result) -> None:
     assert utils.get_bulk_notification_subject(context, hosts) == result
 
 
@@ -222,7 +222,7 @@ def test_get_bulk_notification_subject(context, hosts, result):
         ("store\tpwservice", "http://secret.host"),
     ],
 )
-def test_api_endpoint_url(monkeypatch, value, result):
+def test_api_endpoint_url(monkeypatch, value, result) -> None:
     monkeypatch.setattr("cmk.utils.password_store.extract", lambda x: "http://secret.host")
     assert utils.retrieve_from_passwordstore(value) == result
 
@@ -313,7 +313,7 @@ def test_api_endpoint_url(monkeypatch, value, result):
         ),
     ],
 )
-def test_escape_context(input_context, expected_context):
+def test_escape_context(input_context, expected_context) -> None:
     escaped_context = utils.html_escape_context(input_context)
     assert escaped_context == expected_context
 

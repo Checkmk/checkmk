@@ -35,7 +35,7 @@ def get_rule_options(entry):
     return entry, {}
 
 
-def in_extraconf_hostlist(hostlist, hostname):
+def in_extraconf_hostlist(hostlist, hostname):  # pylint: disable=too-many-branches
     """Whether or not the given host matches the hostlist.
 
     Entries in list are hostnames that must equal the hostname.

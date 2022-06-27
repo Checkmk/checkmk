@@ -59,7 +59,7 @@ OPTIONS:
 #############################################################################
 
 
-def main(sys_argv=None):
+def main(sys_argv=None):  # pylint: disable=too-many-branches
     if sys_argv is None:
         sys_argv = sys.argv[1:]
 
@@ -257,3 +257,4 @@ def main(sys_argv=None):
         show_profile.chmod(0o755)
 
         sys.stderr.write("Profile '%s' written. Please run %s.\n" % (g_profile_path, show_profile))
+    return None

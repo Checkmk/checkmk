@@ -130,24 +130,28 @@ protected:
                             "This is  script");
     }
 
+    tst::TempCfgFs *fs() const { return fs_.get(); };
+    ExecuteUpdate *eu() const { return eu_.get(); };
+
+private:
     std::unique_ptr<tst::TempCfgFs> fs_;
     std::unique_ptr<ExecuteUpdate> eu_;
 };
 
 TEST_F(InstallAutoSimulationFixture, BackupLogIntegration) {
-    fs::path log_bak_file{eu_->getLogFileName()};
+    fs::path log_bak_file{eu()->getLogFileName()};
     log_bak_file.replace_extension(".log.bak");
 
     // perform backup of the log action
-    eu_->backupLog();
+    eu()->backupLog();
 
     // expected copy of log
     EXPECT_TRUE(fs::exists(log_bak_file));
 }
 
 TEST_F(InstallAutoSimulationFixture, CopyScriptToTempIntegration) {
-    eu_->copyScriptToTemp();
-    EXPECT_TRUE(fs::exists(eu_->getTempScriptFile()));
+    EXPECT_TRUE(eu()->copyScriptToTemp());
+    EXPECT_TRUE(fs::exists(eu()->getTempScriptFile()));
 }
 
 extern bool g_use_script_to_install;

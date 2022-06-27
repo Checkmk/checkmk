@@ -8,7 +8,7 @@
 // No C++ file
 #pragma once
 #define NOMINMAX     // must before every windows include
-#include <shlobj.h>  // known path
+#include <ShlObj.h>  // known path
 
 #include <chrono>
 #include <filesystem>
@@ -20,8 +20,16 @@
 
 namespace cma {
 // set only when executable works as a service
-bool IsService();
-bool IsTest();
+enum class Modus {
+    app,
+    service,
+    test,
+    integration,
+};
+Modus GetModus();
+namespace details {
+void SetModus(Modus m);
+} // namespace details
 }  // namespace cma
 
 namespace XLOG {
@@ -55,15 +63,15 @@ enum LogLevel { kLogBase = 0, kLogDebug = 1, kLogAll = 2 };
 /// \brief  If true, than modules will be moved to %temp% for later usage
 constexpr bool g_quick_module_reinstall_allowed{true};
 
-constexpr int kBackupLogMaxCount = 5;
-constexpr size_t kBackupLogMaxSize = 8 * 1024 * 1024;
+constexpr int kLogFileMaxCount = 5;
+constexpr size_t kLogFileMaxSize = 8'000'000;
 
 constexpr uint32_t kMaxOhmErrorsBeforeRestart = 3;
 
 constexpr int kDefaultLogLevel = kLogBase;
 
 // Windows Wmi API timeout, decision from LWA
-constexpr int kDefaultWmiTimeout = 3;  // seconds, this is Windows FAIL
+constexpr int kDefaultWmiTimeout = 5;  // seconds, this is Windows FAIL
 
 // data will be send to peer during this interval
 constexpr int kDefaultRealtimeTimeout = 90;  // In seconds.
@@ -113,7 +121,7 @@ XLOG::EventLevel GetCurrentEventLevel();  // fixed at the moment on Critical
 bool GetCurrentWinDbg();
 bool GetCurrentEventLog();
 
-inline const std::wstring GetDefaultPrefixName() { return L"agent: "; }
+constexpr std::wstring GetDefaultPrefixName() { return L"agent: "; }
 
 // where you can find executables
 std::vector<std::wstring> &ExternalCommandPaths();
@@ -180,10 +188,9 @@ constexpr std::string_view kMkMsiPathName{"MK_MSI_PATH"};
 // internal and stable representation of the [logwatch] event levels
 enum class EventLevels { kIgnore = -2, kOff = -1, kAll = 0, kWarn, kCrit };
 
-// #TODO gtest
 // converts from internal and stable representation
 // to key word in logwatch section of the YAML config file
-constexpr const char *const ConvertLogWatchLevelToString(EventLevels Lvl) {
+constexpr const char *ConvertLogWatchLevelToString(EventLevels Lvl) {
     switch (Lvl) {
         case EventLevels::kAll:
             return vars::kLogWatchEvent_ParamWords[2];

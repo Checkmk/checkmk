@@ -22,19 +22,20 @@ from cmk.gui.valuespec import (
     TextInput,
     Transform,
     Tuple,
+    ValueSpec,
 )
 
 
 @user_attribute_registry.register
 class ForceAuthUserUserAttribute(UserAttribute):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "force_authuser"
 
-    def topic(self):
+    def topic(self) -> str:
         return "personal"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Visibility of hosts/services"),
             label=_("Only show hosts and services the user is a contact for"),
@@ -45,20 +46,20 @@ class ForceAuthUserUserAttribute(UserAttribute):
             ),
         )
 
-    def permission(self):
+    def permission(self) -> None | str:
         return "general.see_all"
 
 
 @user_attribute_registry.register
 class DisableNotificationsUserAttribute(UserAttribute):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "disable_notifications"
 
-    def topic(self):
+    def topic(self) -> str:
         return "personal"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=Dictionary(
                 title=_("Disable notifications"),
@@ -93,23 +94,23 @@ class DisableNotificationsUserAttribute(UserAttribute):
             forth=lambda x: {} if x is None else x,
         )
 
-    def permission(self):
+    def permission(self) -> None | str:
         return "general.disable_notifications"
 
-    def domain(self):
+    def domain(self) -> str:
         return "check_mk"
 
 
 @user_attribute_registry.register
 class StartURLUserAttribute(UserAttribute):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "start_url"
 
-    def topic(self):
+    def topic(self) -> str:
         return "personal"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=Alternative(
                 title=_("Start URL to display in main frame"),
@@ -137,20 +138,20 @@ class StartURLUserAttribute(UserAttribute):
             forth=lambda v: None if v == "" else v,
         )
 
-    def domain(self):
+    def domain(self) -> str:
         return "multisite"
 
 
 @user_attribute_registry.register
 class UIThemeUserAttribute(UserAttribute):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "ui_theme"
 
-    def topic(self):
+    def topic(self) -> str:
         return "interface"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Alternative(
             title=_("User interface theme"),
             orientation="horizontal",
@@ -167,40 +168,40 @@ class UIThemeUserAttribute(UserAttribute):
             ],
         )
 
-    def domain(self):
+    def domain(self) -> str:
         return "multisite"
 
 
 @user_attribute_registry.register
 class UISidebarPosition(UserAttribute):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "ui_sidebar_position"
 
-    def topic(self):
+    def topic(self) -> str:
         return "interface"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Sidebar position"),
             # FIXME: Why isn't this simply a bool instead of an Optional[Literal["left"]]?
             choices=[(None, _("Right")), ("left", _("Left"))],
         )
 
-    def domain(self):
+    def domain(self) -> str:
         return "multisite"
 
 
 @user_attribute_registry.register
 class UIIconTitle(UserAttribute):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "nav_hide_icons_title"
 
-    def topic(self):
+    def topic(self) -> str:
         return "interface"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Navigation bar icons"),
             help=_(
@@ -216,13 +217,13 @@ class UIIconTitle(UserAttribute):
 @user_attribute_registry.register
 class UIIconPlacement(UserAttribute):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "icons_per_item"
 
-    def topic(self):
+    def topic(self) -> str:
         return "interface"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Mega menu icons"),
             help=_(
@@ -235,20 +236,20 @@ class UIIconPlacement(UserAttribute):
             choices=[(None, _("Per topic")), ("entry", _("Per entry"))],
         )
 
-    def domain(self):
+    def domain(self) -> str:
         return "multisite"
 
 
 @user_attribute_registry.register
 class UIBasicAdvancedToggle(UserAttribute):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "show_mode"
 
-    def topic(self):
+    def topic(self) -> str:
         return "interface"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Alternative(
             title=_("Show more / Show less"),
             orientation="horizontal",
@@ -273,5 +274,5 @@ class UIBasicAdvancedToggle(UserAttribute):
             ],
         )
 
-    def domain(self):
+    def domain(self) -> str:
         return "multisite"

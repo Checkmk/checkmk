@@ -63,7 +63,7 @@ class MKUserError(MKHTTPException):
         self.status: int = status
         super().__init__(varname, message)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.message
 
 

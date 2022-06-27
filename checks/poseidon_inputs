@@ -30,6 +30,7 @@ def parse_poseidon_inputs(info):
                 "input_alarm_state": input_alarm_state,
             }
         return parsed
+    return None
 
 
 @get_parsed_item_data

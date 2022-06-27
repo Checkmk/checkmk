@@ -7,7 +7,7 @@
 import cmk.gui.plugins.dashboard
 
 
-def test_pre_21_plugin_api_names():
+def test_pre_21_plugin_api_names() -> None:
     for name in (
         "ABCFigureDashlet",
         "builtin_dashboards",

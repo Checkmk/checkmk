@@ -8,6 +8,7 @@
 def inventory_ra32e_power(info):
     if info[0][0]:
         return [(None, {})]
+    return None
 
 
 def check_ra32e_power(item, params, info):

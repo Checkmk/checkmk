@@ -5,10 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
-from typing import Any, Dict, Literal, NewType, TypedDict, Union
+from typing import Any, Literal, Mapping, NewType, TypedDict, Union
 
 __all__ = [
     "AgentConfig",
+    "MutableAgentConfig",
     "AgentHash",
     "AgentPackagePlatform",
     "BakeryOpSys",
@@ -19,7 +20,8 @@ __all__ = [
 ]
 
 AgentHash = NewType("AgentHash", str)
-AgentConfig = Dict[str, Any]  # TODO Split into more sub configs
+AgentConfig = Mapping[str, Any]  # TODO Split into more sub configs
+MutableAgentConfig = dict[str, Any]  # TODO Split into more sub config
 
 
 class AgentPackagePlatform(enum.Enum):
@@ -50,7 +52,7 @@ class BuiltinBakeryHostName(enum.Enum):
         self.raw_name = raw_name
         self._display_name = name
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self._display_name
 
     VANILLA = ("_VANILLA", "VANILLA")

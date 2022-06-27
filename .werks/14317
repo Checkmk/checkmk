@@ -1,0 +1,21 @@
+Title: filesystem: use default thresholds for inodes when no levels are configured
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1655715192
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The incompatibility of this werk affects users who have services of inode
+capable filesystems.
+
+Due to a bug, default thresholds for inodes were never used by the
+<tt>filesystem</tt> checks. This has been fixed: by default, the check shows a
+WARN state when 10% of inodes are free or fewer, and a CRIT state when 5% of
+inodes are free or fewer.
+
+If you do not wish to apply any levels, it is possible to deactivate thresholds
+by setting the "Levels for inodes" configuration option to "Ignore levels" in
+the corresponding ruleset.

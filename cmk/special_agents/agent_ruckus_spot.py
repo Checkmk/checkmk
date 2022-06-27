@@ -11,6 +11,8 @@ from typing import NoReturn
 
 import requests
 
+from cmk.utils.password_store import replace_passwords
+
 
 def usage() -> NoReturn:
     sys.stderr.write(
@@ -53,6 +55,7 @@ def get_agent_info_tcp(host: str) -> bytes:
 
 def main(sys_argv=None):
     if sys_argv is None:
+        replace_passwords()
         sys_argv = sys.argv[1:]
 
     short_options = "h:"
@@ -106,3 +109,4 @@ def main(sys_argv=None):
     except Exception as e:
         sys.stderr.write("Connection error %s" % e)
         return 1
+    return None

@@ -8,6 +8,6 @@ import pytest
 from cmk.gui.plugins.wato.utils import Levels
 
 
-def test_raises_with_wrong_levels_unit_type():
+def test_raises_with_wrong_levels_unit_type() -> None:
     with pytest.raises(ValueError):
         Levels(unit=1)  # type: ignore

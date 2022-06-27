@@ -1,0 +1,15 @@
+Title: Setup (WATO) now uses Redis for certain lookups to improve GUI performance
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1650375243
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.2.0i1
+
+Large installations with several thousand hosts/folders suffered from a decreased performance
+when navigating through the folder hierarchy or when displaying rulesets.
+Furthermore, the global settings option <tt>Hide folders without read permissions</tt> made the
+entire setup system virtually unusable for non-admin users.
+Some of the data is now cached via Redis, which reduces needless calculations and file parsing.

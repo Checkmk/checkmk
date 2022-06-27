@@ -11,7 +11,10 @@ import livestatus
 import cmk.gui.notifications as notifications
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
-from cmk.gui.globals import active_config, html, request
+from cmk.gui.config import active_config
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.sidebar.utils import CustomizableSidebarSnapin, link, snapin_registry
@@ -66,7 +69,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         return _("Overview")
 
     @classmethod
-    def has_show_more_items(cls):
+    def has_show_more_items(cls) -> bool:
         return True
 
     @classmethod
@@ -204,8 +207,8 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             html.th(row.title)
             html.th(_("Problems"), class_="show_more_mode")
             html.th(
-                html.render_span(_("Unhandled"), class_="more")
-                + html.render_span(_("Unhandled p."), class_="less")
+                HTMLWriter.render_span(_("Unhandled"), class_="more")
+                + HTMLWriter.render_span(_("Unhandled p."), class_="less")
             )
             if show_stales and has_stale_objects:
                 html.th(_("Stale"))
@@ -226,11 +229,9 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                     filename="view.py",
                 )
                 html.open_td(
-                    class_=[
-                        td_class,
-                        "states prob" if value != 0 else None,
-                        "show_more_mode" if ty == "handled" else "basic",
-                    ]
+                    class_=[td_class]
+                    + ([] if value == 0 else ["states prob"])
+                    + ["show_more_mode" if ty == "handled" else "basic"]
                 )
                 link(str(value), url)
                 html.close_td()
@@ -242,11 +243,11 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                         row.views.stale + context_vars,
                         filename="view.py",
                     )
-                    html.open_td(class_=[td_class, "states prob" if stales != 0 else None])
+                    html.open_td(class_=[td_class] + ([] if stales == 0 else ["states prob"]))
                     link(str(stales), url)
                     html.close_td()
                 else:
-                    html.td(html.render_span("0"))
+                    html.td(HTMLWriter.render_span("0"))
 
             html.close_tr()
         html.close_table()

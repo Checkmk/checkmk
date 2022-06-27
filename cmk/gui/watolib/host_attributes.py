@@ -19,15 +19,15 @@ import cmk.utils.plugin_registry
 from cmk.utils.tags import TagGroup
 from cmk.utils.type_defs import HostName, TaggroupIDToTagID, TagID
 
-from cmk.gui import watolib
-from cmk.gui.config import register_post_config_load_hook
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import active_config, html, request
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.site_config import allsites
 from cmk.gui.type_defs import Choices
 from cmk.gui.utils import escaping
+from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Checkbox, DropdownChoice, TextInput, Transform, ValueSpec
 from cmk.gui.watolib.utils import host_attribute_matches
 
@@ -72,120 +72,120 @@ host_attribute_topic_registry = HostAttributeTopicRegistry()
 @host_attribute_topic_registry.register
 class HostAttributeTopicBasicSettings(HostAttributeTopic):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "basic"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Basic settings")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 0
 
 
 @host_attribute_topic_registry.register
 class HostAttributeTopicAddress(HostAttributeTopic):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "address"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Network address")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 10
 
 
 @host_attribute_topic_registry.register
 class HostAttributeTopicDataSources(HostAttributeTopic):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "monitoring_agents"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Monitoring agents")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 20
 
 
 @host_attribute_topic_registry.register
 class HostAttributeTopicHostTags(HostAttributeTopic):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "host_tags"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Host tags")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 30
 
 
 @host_attribute_topic_registry.register
 class HostAttributeTopicNetworkScan(HostAttributeTopic):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "network_scan"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Network Scan")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 40
 
 
 @host_attribute_topic_registry.register
 class HostAttributeTopicManagementBoard(HostAttributeTopic):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "management_board"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Management board")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 50
 
 
 @host_attribute_topic_registry.register
 class HostAttributeTopicCustomAttributes(HostAttributeTopic):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "custom_attributes"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Custom attributes")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 35
 
 
 @host_attribute_topic_registry.register
 class HostAttributeTopicMetaData(HostAttributeTopic):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "meta_data"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Creation / Locking")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 60
 
 
@@ -234,7 +234,7 @@ class ABCHostAttribute(abc.ABC):
         Instead, an exclicit_host_config entry will be generated, e.g.
         explicit_host_config["alias"][hostname] = value
 
-        Used in: cmk.gui.watolib.hosts_and_folders:CREFolder:_save_hosts_file
+        Used in: hosts_and_folders:CREFolder:_save_hosts_file
         """
         return False
 
@@ -575,41 +575,6 @@ def undeclare_host_attribute(attrname: str) -> None:
 def undeclare_host_tag_attribute(tag_id: str) -> None:
     attrname = "tag_" + tag_id
     undeclare_host_attribute(attrname)
-
-
-_update_config_based_host_attributes_config_hash: Optional[str] = None
-
-
-def _update_config_based_host_attributes() -> None:
-    global _update_config_based_host_attributes_config_hash
-
-    def _compute_config_hash() -> str:
-        return str(hash(repr(active_config.tags.get_dict_format()))) + repr(
-            active_config.wato_host_attrs
-        )
-
-    # The topic conversion needs to take place before the _compute_config_hash runs
-    # The actual generated topics may be pre-1.5 converted topics
-    # e.g. "Custom attributes" -> "custom_attributes"
-    # If we do not convert the topics here, the config_hash comparison will always fail
-    transform_pre_16_host_topics(active_config.wato_host_attrs)
-
-    if _update_config_based_host_attributes_config_hash == _compute_config_hash():
-        return  # No re-register needed :-)
-
-    _clear_config_based_host_attributes()
-    _declare_host_tag_attributes()
-    declare_custom_host_attrs()
-
-    from cmk.gui.watolib.hosts_and_folders import Folder  # pylint: disable=import-outside-toplevel
-
-    Folder.invalidate_caches()
-
-    _update_config_based_host_attributes_config_hash = _compute_config_hash()
-
-
-# Make the config module initialize the host attributes after loading the config
-register_post_config_load_hook(_update_config_based_host_attributes)
 
 
 def _clear_config_based_host_attributes() -> None:
@@ -1183,25 +1148,29 @@ def _validate_host_tags(host_tags):
             )
 
 
-def validate_host_attributes(attributes, new=False):
+def validate_host_attributes(attributes, extra_attrs: Sequence[str] = (), new=False):
+    # `extra_attrs` is only necessary for the webapi and should be removed later.
     _validate_general_host_attributes(
-        dict((key, value) for key, value in attributes.items() if not key.startswith("tag_")), new
+        dict((key, value) for key, value in attributes.items() if not key.startswith("tag_")),
+        extra_attrs,
+        new,
     )
     _validate_host_tags(
         dict((key[4:], value) for key, value in attributes.items() if key.startswith("tag_"))
     )
 
 
-def _validate_general_host_attributes(host_attributes, new):
+def _validate_general_host_attributes(host_attributes, extra_attrs: Sequence[str], new: bool):
     """Check if the given attribute name exists, no type check"""
     all_host_attribute_names = _retrieve_host_attributes()
+    all_host_attribute_names.extend(extra_attrs)
     for name, value in host_attributes.items():
         if name not in all_host_attribute_names:
             raise MKUserError(None, _("Unknown attribute: %s") % escaping.escape_attribute(name))
 
         # For real host attributes validate the values
         try:
-            attr = watolib.host_attribute(name)
+            attr: Optional[ABCHostAttribute] = host_attribute(name)
         except KeyError:
             attr = None
 

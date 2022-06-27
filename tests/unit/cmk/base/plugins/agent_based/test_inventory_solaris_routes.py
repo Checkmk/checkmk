@@ -109,7 +109,7 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventory_solaris_routes(string_table, expected_result):
+def test_inventory_solaris_routes(string_table, expected_result) -> None:
     assert sort_inventory_result(
         inventory_solaris_routes(parse_solaris_routes(string_table))
     ) == sort_inventory_result(expected_result)

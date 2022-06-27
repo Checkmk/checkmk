@@ -8,7 +8,7 @@
 from tests.testlib import Check
 
 
-def test_sanitize_line():
+def test_sanitize_line() -> None:
     input_ = [
         "cephfs_data",
         "1",

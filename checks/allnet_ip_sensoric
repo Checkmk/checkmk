@@ -5,15 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # Example output from agent:
@@ -59,39 +55,6 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 # system.devicetype;ALL5000
 # system.sys;114854
 # system.time;16:08:48
-
-
-def parse_allnet_ip_sensoric(info):
-    """parses agent output in a structure like:
-    {'sensor0': {'alarm0': '0',
-              'all4000_typ': '0',
-              'function': '1',
-              'limit_high': '50.00',
-              'limit_low': '10.00',
-              'maximum': '28.56',
-              'minimum': '27.43',
-              'name': 'Temperatur intern',
-              'value_float': '27.50',
-              'value_int': '2750',
-              'value_string': '27.50'},
-    [...]
-    'system': {'alarmcount': '4',
-             'date': '30.06.2014',
-             'devicename': 'all5000',
-             'devicetype': 'ALL5000',
-             'sys': '116240',
-             'time': '16:57:50'}}
-    """
-    parsed = {}
-    for key, value in info:
-        match = re.search(r"(\w+)\.(\w+)", key)
-        if match:
-            sensor = match.group(1)
-            field = match.group(2)
-            parsed.setdefault(sensor, {})
-            parsed[sensor][field] = value
-
-    return parsed
 
 
 def allnet_ip_sensoric_compose_item(sensor_id, sensor):
@@ -140,6 +103,7 @@ def check_allnet_ip_sensoric_tension(item, _no_params, parsed):
 
 
 check_info["allnet_ip_sensoric.tension"] = {
+    # section already migrated!
     "check_function": check_allnet_ip_sensoric_tension,
     "inventory_function": inventory_allnet_ip_sensoric_tension,
     "service_description": "Electric Tension %s",
@@ -180,6 +144,7 @@ def check_allnet_ip_sensoric_temp(item, params, parsed):
 
 
 check_info["allnet_ip_sensoric.temp"] = {
+    # section already migrated!
     "check_function": check_allnet_ip_sensoric_temp,
     "inventory_function": inventory_allnet_ip_sensoric_temp,
     "service_description": "Temperature %s",
@@ -221,6 +186,7 @@ def check_allnet_ip_sensoric_humidity(item, params, parsed):
 
 
 check_info["allnet_ip_sensoric.humidity"] = {
+    # section already migrated!
     "check_function": check_allnet_ip_sensoric_humidity,
     "inventory_function": inventory_allnet_ip_sensoric_humidity,
     "service_description": "Humidity %s",
@@ -262,6 +228,7 @@ def check_allnet_ip_sensoric_pressure(item, _no_params, parsed):
 
 
 check_info["allnet_ip_sensoric.pressure"] = {
+    # section already migrated!
     "check_function": check_allnet_ip_sensoric_pressure,
     "inventory_function": inventory_allnet_ip_sensoric_pressure,
     "service_description": "Pressure %s",
@@ -269,7 +236,3 @@ check_info["allnet_ip_sensoric.pressure"] = {
 }
 
 # .
-
-check_info["allnet_ip_sensoric"] = {
-    "parse_function": parse_allnet_ip_sensoric,
-}

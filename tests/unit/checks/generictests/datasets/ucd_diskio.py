@@ -25,7 +25,7 @@ checks = {
             u'dm-0', {}, [
                 (0, u'[2]', []),
                 (
-                    0, 'Read: 2.27 GB/s', [
+                    0, 'Read: 2.44 GB/s', [
                         (
                             'disk_read_throughput', 2438861824.0, None, None,
                             None, None
@@ -33,7 +33,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Write: 1.25 GB/s', [
+                    0, 'Write: 1.34 GB/s', [
                         (
                             'disk_write_throughput', 1343166464.0, None, None,
                             None, None
@@ -55,7 +55,7 @@ checks = {
             u'dm-1', {}, [
                 (0, u'[3]', []),
                 (
-                    0, 'Read: 81.73 MB/s', [
+                    0, 'Read: 85.7 MB/s', [
                         (
                             'disk_read_throughput', 85700608.0, None, None,
                             None, None
@@ -83,7 +83,7 @@ checks = {
             u'sdk', {'read': (50.0, 100.0), 'write': (1000.0, 5000.0)}, [
                 (0, u'[1]', []),
                 (
-                    2, 'Read: 198.88 MB/s (warn/crit at 50.00 MB/s/100.00 MB/s)', [
+                    2, 'Read: 209 MB/s (warn/crit at 52.4 MB/s/105 MB/s)', [
                         (
                             'disk_read_throughput', 208537089.0, 52428800.0, 104857600.0,
                             None, None
@@ -91,7 +91,7 @@ checks = {
                     ]
                 ),
                 (
-                    1, 'Write: 1.27 GB/s (warn/crit at 1000.00 MB/s/4.88 GB/s)', [
+                    1, 'Write: 1.37 GB/s (warn/crit at 1.05 GB/s/5.24 GB/s)', [
                         (
                             'disk_write_throughput', 1368398849.0, 1048576000.0, 5242880000.0,
                             None, None

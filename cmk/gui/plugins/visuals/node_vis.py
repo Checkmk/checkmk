@@ -6,7 +6,7 @@
 from dataclasses import dataclass
 from typing import Dict
 
-from cmk.gui.globals import html
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _l
 from cmk.gui.plugins.visuals.utils import Filter, filter_registry
 from cmk.gui.type_defs import FilterHTTPVariables, Row
@@ -25,7 +25,7 @@ class _FilterRangeConfig:
 
 
 class FilterRange(Filter):
-    def __init__(self, filter_range_config: _FilterRangeConfig):
+    def __init__(self, filter_range_config: _FilterRangeConfig) -> None:
         super().__init__(
             ident=filter_range_config.column,
             title=filter_range_config.title,
@@ -73,7 +73,7 @@ class FilterRange(Filter):
 
 @filter_registry.register_instance
 class FilterTopologyMeshDepth(FilterRange):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             _FilterRangeConfig(
                 column="topology_mesh_depth",
@@ -88,7 +88,7 @@ class FilterTopologyMeshDepth(FilterRange):
 
 @filter_registry.register_instance
 class FilterTopologyMaxNodes(FilterRange):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             _FilterRangeConfig(
                 column="topology_max_nodes",

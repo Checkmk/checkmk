@@ -19,7 +19,6 @@ import cmk.utils.werks
 from cmk.utils.version import __version__, Edition, Version
 
 import cmk.gui.pages
-import cmk.gui.utils as utils
 from cmk.gui.breadcrumb import (
     Breadcrumb,
     BreadcrumbItem,
@@ -28,11 +27,14 @@ from cmk.gui.breadcrumb import (
     make_simple_page_breadcrumb,
 )
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html, output_funnel, request, theme
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.header import make_header
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.num_split import cmp_version
 from cmk.gui.page_menu import (
     make_display_options_dropdown,
     make_simple_link,
@@ -45,6 +47,9 @@ from cmk.gui.page_menu import (
 from cmk.gui.table import table_element
 from cmk.gui.utils.escaping import escape_to_html, escape_to_html_permissive
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.valuespec import DropdownChoice, Integer, ListChoice, TextInput, Timerange, Tuple
@@ -60,9 +65,10 @@ class ModeAboutCheckmkPage(cmk.gui.pages.Page):
     def _title(self) -> str:
         return _("About Checkmk")
 
-    def page(self) -> cmk.gui.pages.PageResult:
+    def page(self) -> cmk.gui.pages.PageResult:  # pylint: disable=useless-return
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry["help_links"], _("Info"))
-        html.header(
+        make_header(
+            html,
             self._title(),
             breadcrumb=breadcrumb,
         )
@@ -70,7 +76,9 @@ class ModeAboutCheckmkPage(cmk.gui.pages.Page):
         html.open_div(id_="info_title")
         html.h1(_("Your monitoring machine"))
         html.a(
-            html.render_img(theme.url("images/tribe29.svg")), "https://tribe29.com", target="_blank"
+            HTMLWriter.render_img(theme.url("images/tribe29.svg")),
+            "https://tribe29.com",
+            target="_blank",
         )
         html.close_div()
 
@@ -88,8 +96,8 @@ class ModeAboutCheckmkPage(cmk.gui.pages.Page):
         html.span(
             _("Visit our %s to learn more about Checkmk and about the %s.")
             % (
-                html.render_a(_("website"), "https://checkmk.com", target="_blank"),
-                html.render_a(
+                HTMLWriter.render_a(_("website"), "https://checkmk.com", target="_blank"),
+                HTMLWriter.render_a(
                     _("latest version"),
                     "https://checkmk.com/product/latest-version",
                     target="_blank",
@@ -116,6 +124,7 @@ class ModeAboutCheckmkPage(cmk.gui.pages.Page):
         html.span(_("© %s tribe29 GmbH. All Rights Reserved.") % time.strftime("%Y"))
         html.a(_("License agreement"), href="https://checkmk.com/legal.html", target="_blank")
         html.close_div()
+        return None
 
 
 @cmk.gui.pages.page_registry.register_page("change_log")
@@ -123,13 +132,14 @@ class ModeChangeLogPage(cmk.gui.pages.Page):
     def _title(self) -> str:
         return _("Change log (Werks)")
 
-    def page(self) -> cmk.gui.pages.PageResult:
+    def page(self) -> cmk.gui.pages.PageResult:  # pylint: disable=useless-return
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry["help_links"], self._title())
 
         load_werks()
         werk_table_options = _werk_table_options_from_request()
 
-        html.header(
+        make_header(
+            html,
             self._title(),
             breadcrumb,
             self._page_menu(breadcrumb, werk_table_options),
@@ -145,6 +155,7 @@ class ModeChangeLogPage(cmk.gui.pages.Page):
         html.close_div()
 
         html.footer()
+        return None
 
     def _page_menu(self, breadcrumb: Breadcrumb, werk_table_options: Dict[str, Any]) -> PageMenu:
         menu = PageMenu(
@@ -282,7 +293,7 @@ def page_werk():
         )
     )
     breadcrumb.append(make_current_page_breadcrumb_item(title))
-    html.header(title, breadcrumb, _page_menu_werk(breadcrumb, werk))
+    make_header(html, title, breadcrumb, _page_menu_werk(breadcrumb, werk))
 
     html.open_table(class_=["data", "headerleft", "werks"])
 
@@ -294,7 +305,7 @@ def page_werk():
 
     translator = cmk.utils.werks.WerkTranslator()
     werk_table_row(_("ID"), render_werk_id(werk, with_link=False))
-    werk_table_row(_("Title"), html.render_b(render_werk_title(werk)))
+    werk_table_row(_("Title"), HTMLWriter.render_b(render_werk_title(werk)))
     werk_table_row(_("Component"), translator.component_of(werk))
     werk_table_row(_("Date"), render_werk_date(werk))
     werk_table_row(_("Checkmk Version"), werk["version"])
@@ -539,7 +550,7 @@ def _werk_table_option_entries():
     ]
 
 
-def render_unacknowleged_werks():
+def render_unacknowleged_werks() -> None:
     werks = unacknowledged_incompatible_werks()
     if werks and not request.has_var("show_unack"):
         html.open_div(class_=["warning"])
@@ -570,7 +581,7 @@ _SORT_AND_GROUP = {
 }
 
 
-def render_werks_table(werk_table_options: Dict[str, Any]):
+def render_werks_table(werk_table_options: Dict[str, Any]) -> None:
     translator = cmk.utils.werks.WerkTranslator()
     number_of_werks = 0
     sorter, grouper = _SORT_AND_GROUP[werk_table_options["grouping"]]
@@ -589,7 +600,7 @@ def render_werks_table(werk_table_options: Dict[str, Any]):
         html.h3(_("No matching Werks found."))
 
 
-def render_werks_table_row(table, translator, werk):
+def render_werks_table_row(table, translator, werk) -> None:
     table.row()
     table.cell(_("ID"), render_werk_id(werk, with_link=True), css="number narrow")
     table.cell(_("Version"), werk["version"], css="number narrow")
@@ -629,10 +640,10 @@ def werk_matches_options(werk, werk_table_options):
         return False
 
     from_version, to_version = werk_table_options["version"]
-    if from_version and utils.cmp_version(werk["version"], from_version) < 0:
+    if from_version and cmp_version(werk["version"], from_version) < 0:
         return False
 
-    if to_version and utils.cmp_version(werk["version"], to_version) > 0:
+    if to_version and cmp_version(werk["version"], to_version) > 0:
         return False
 
     if werk_table_options["werk_content"]:
@@ -682,11 +693,11 @@ def _werk_table_options_from_request() -> Dict[str, Any]:
 def render_werk_id(werk, with_link) -> Union[HTML, str]:
     if with_link:
         url = makeuri_contextless(request, [("werk", werk["id"])], filename="werk.py")
-        return html.render_a("#%04d" % werk["id"], href=url)
+        return HTMLWriter.render_a("#%04d" % werk["id"], href=url)
     return "#%04d" % werk["id"]
 
 
-def render_werk_date(werk):
+def render_werk_date(werk) -> str:
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(werk["date"]))
 
 
@@ -700,7 +711,7 @@ def render_werk_title(werk) -> HTML:
     return escape_to_html_permissive(title)
 
 
-def render_werk_description(werk) -> HTML:
+def render_werk_description(werk) -> HTML:  # pylint: disable=too-many-branches
     with output_funnel.plugged():
         html.open_p()
         in_list = False
@@ -764,7 +775,7 @@ def insert_manpage_links(text: str) -> HTML:
                 ],
                 filename="wato.py",
             )
-            new_parts.append(html.render_a(content=part, href=url))
+            new_parts.append(HTMLWriter.render_a(content=part, href=url))
         else:
             new_parts.append(escape_to_html(part))
     return HTML(" ").join(new_parts)

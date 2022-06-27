@@ -21,18 +21,36 @@ which you can look up in the Checkmk documentation.
 For a detailed list of columns have a look at the [services table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/services.py)
 definition on GitHub.
 """
+from typing import Any, Mapping, Optional
+
 from cmk.utils.livestatus_helpers.expressions import And
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Services
 
 from cmk.gui import fields as gui_fields
 from cmk.gui import sites
-from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, response_schemas
+from cmk.gui.http import Response
+from cmk.gui.plugins.openapi.restful_objects import (
+    constructors,
+    Endpoint,
+    permissions,
+    response_schemas,
+)
 from cmk.gui.plugins.openapi.restful_objects.constructors import object_action_href
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME, OPTIONAL_HOST_NAME
 from cmk.gui.plugins.openapi.utils import problem
 
 from cmk import fields
+
+PERMISSIONS = permissions.Ignore(
+    permissions.AnyPerm(
+        [
+            permissions.Perm("general.see_all"),
+            permissions.Perm("bi.see_all"),
+            permissions.Perm("mkeventd.seeall"),
+        ]
+    )
+)
 
 PARAMETERS = [
     {
@@ -52,6 +70,7 @@ PARAMETERS = [
                 Services.host_name,
                 Services.description,
             ],
+            example=["host_name", "description"],
         ),
     }
 ]
@@ -72,8 +91,9 @@ PARAMETERS = [
     ],
     tag_group="Monitoring",
     response_schema=response_schemas.DomainObject,
+    permissions_required=PERMISSIONS,
 )
-def show_service(params):
+def show_service(params: Mapping[str, Any]) -> Response:
     """Show the monitored service of a host"""
     service_description = params["service_description"]
     host_name = params["host_name"]
@@ -121,12 +141,13 @@ def show_service(params):
     tag_group="Monitoring",
     blacklist_in=["swagger-ui"],
     response_schema=response_schemas.DomainObjectCollection,
+    permissions_required=PERMISSIONS,
 )
-def _list_host_services(param):
+def _list_host_services(params: Mapping[str, Any]) -> Response:
     """Show the monitored services of a host
 
     This list is filterable by various parameters."""
-    return _list_services(param)
+    return _list_services(params)
 
 
 @Endpoint(
@@ -136,24 +157,25 @@ def _list_host_services(param):
     query_params=[OPTIONAL_HOST_NAME, *PARAMETERS],
     tag_group="Monitoring",
     response_schema=response_schemas.DomainObjectCollection,
+    permissions_required=PERMISSIONS,
 )
-def _list_all_services(param):
+def _list_all_services(params: Mapping[str, Any]) -> Response:
     """Show all monitored services
 
     This list is filterable by various parameters."""
-    return _list_services(param)
+    return _list_services(params)
 
 
-def _list_services(param):
+def _list_services(params: Mapping[str, Any]) -> Response:
     live = sites.live()
 
-    q = Query(param["columns"])
+    q = Query(params["columns"])
 
-    host_name = param.get("host_name")
+    host_name: Optional[str] = params.get("host_name")
     if host_name is not None:
         q = q.filter(Services.host_name == host_name)
 
-    query_expr = param.get("query")
+    query_expr = params.get("query")
     if query_expr:
         q = q.filter(query_expr)
 

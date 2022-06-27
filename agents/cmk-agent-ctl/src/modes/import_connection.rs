@@ -81,7 +81,7 @@ mod tests {
                 pull: std::collections::HashMap::new(),
                 pull_imported: std::collections::HashSet::new(),
             },
-            std::path::PathBuf::from(&tempfile::NamedTempFile::new().unwrap().into_temp_path()),
+            tempfile::NamedTempFile::new().unwrap(),
         )
         .unwrap();
         assert!(reg.is_empty());

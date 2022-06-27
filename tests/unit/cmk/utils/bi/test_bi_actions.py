@@ -82,7 +82,7 @@ def test_state_of_service_execute(
         assert result.service_description == "Uptime"
 
 
-def test_call_a_rule_execute(dummy_bi_rule, bi_searcher_with_sample_config):
+def test_call_a_rule_execute(dummy_bi_rule, bi_searcher_with_sample_config) -> None:
     schema_config = BICallARuleAction.schema()().dump({"rule_id": dummy_bi_rule.id})
     action = BICallARuleAction(schema_config)
     results = list(action.execute_search_results([{}], {}, bi_searcher_with_sample_config))

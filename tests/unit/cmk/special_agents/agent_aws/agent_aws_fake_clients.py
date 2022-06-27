@@ -6,7 +6,7 @@
 
 import abc
 import random
-from typing import Any, Mapping, Optional, Sequence, TypedDict
+from typing import Any, Iterable, Mapping, Optional, Sequence, TypedDict
 
 from cmk.utils.aws_constants import AWSEC2InstTypes
 
@@ -23,7 +23,7 @@ from cmk.utils.aws_constants import AWSEC2InstTypes
 
 
 class Entity(abc.ABC):
-    def __init__(self, key):
+    def __init__(self, key) -> None:  # type:ignore[no-untyped-def]
         self.key = key
 
     @abc.abstractmethod
@@ -35,7 +35,7 @@ class Entity(abc.ABC):
 
 
 class List(Entity):
-    def __init__(self, key, elements, from_choice=None):
+    def __init__(self, key, elements, from_choice=None) -> None:  # type:ignore[no-untyped-def]
         super().__init__(key)
         self._elements = elements
         self._from_choice = from_choice
@@ -52,7 +52,9 @@ class List(Entity):
 
 
 class Dict(Entity):
-    def __init__(self, key, values, enumerate_keys: Optional[Entity] = None):
+    def __init__(  # type:ignore[no-untyped-def]
+        self, key, values, enumerate_keys: Optional[Entity] = None
+    ) -> None:
         super().__init__(key)
         self._values = values
         self._enumerate_keys = enumerate_keys
@@ -71,7 +73,7 @@ class Dict(Entity):
 
 
 class Str(Entity):
-    def __init__(self, key, value=None):
+    def __init__(self, key, value=None) -> None:  # type:ignore[no-untyped-def]
         super().__init__(key)
         self.value = value
 
@@ -103,7 +105,7 @@ class Enum(Entity):
 
 
 class Choice(Entity):
-    def __init__(self, key, choices):
+    def __init__(self, key, choices) -> None:  # type:ignore[no-untyped-def]
         super().__init__(key)
         self.choices = choices
 
@@ -112,7 +114,7 @@ class Choice(Entity):
 
 
 class BoolChoice(Choice):
-    def __init__(self, key):
+    def __init__(self, key) -> None:  # type:ignore[no-untyped-def]
         super().__init__(key, [True, False])
 
 
@@ -135,12 +137,12 @@ class Bytes(Str):
 
 
 class InstanceBuilder(abc.ABC):
-    def __init__(self, idx, amount, skip_entities=None):
+    def __init__(self, idx, amount, skip_entities=None) -> None:  # type:ignore[no-untyped-def]
         self._idx = idx
         self._amount = amount
         self._skip_entities = [] if not skip_entities else skip_entities
 
-    def _fill_instance(self) -> Sequence[Entity]:
+    def _fill_instance(self) -> Iterable[Entity]:
         return []
 
     def _create_instance(self) -> Mapping[str, Any]:
@@ -187,7 +189,7 @@ class DictInstanceBuilder(abc.ABC):
     #   }
     # }
 
-    def __init__(self, idx, amount):
+    def __init__(self, idx, amount) -> None:  # type:ignore[no-untyped-def]
         self._idx = idx
         self._amount = amount
 
@@ -198,10 +200,10 @@ class DictInstanceBuilder(abc.ABC):
         return None
 
     @classmethod
-    def create_instances(cls, amount) -> Mapping[str, Any]:
+    def create_instances(cls, amount) -> Mapping[str, Any]:  # type:ignore[no-untyped-def]
         return {
             # static analysis does not recognize that None can not happen because of if clause -> disable warning
-            key.create(idx, amount): value.create(idx, amount)  # type: ignore
+            key.create(idx, amount): value.create(idx, amount)
             for idx in range(amount)
             if (
                 (key := cls(idx, amount)._key()) is not None
@@ -215,7 +217,7 @@ class DictInstanceBuilder(abc.ABC):
 
 
 class GlacierListVaultsIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("VaultARN"),
             Str("VaultName"),
@@ -227,7 +229,7 @@ class GlacierListVaultsIB(InstanceBuilder):
 
 
 class GlacierVaultTaggingIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("Key"),
             Str("Value"),
@@ -239,7 +241,7 @@ class GlacierVaultTaggingIB(InstanceBuilder):
 
 
 class S3ListBucketsIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("Name"),
             Timestamp("CreationDate"),
@@ -247,7 +249,7 @@ class S3ListBucketsIB(InstanceBuilder):
 
 
 class S3BucketTaggingIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("Key"),
             Str("Value"),
@@ -259,7 +261,7 @@ class S3BucketTaggingIB(InstanceBuilder):
 
 
 class CloudwatchDescribeAlarmsIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("AlarmName"),
             Str("AlarmArn"),
@@ -410,7 +412,7 @@ class CloudwatchDescribeAlarmsIB(InstanceBuilder):
 
 
 class CEGetCostsAndUsageIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Dict(
                 "TimePeriod",
@@ -458,7 +460,7 @@ class CEGetCostsAndUsageIB(InstanceBuilder):
 
 
 class RDSDescribeAccountAttributesIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             List(
                 "AccountQuotas",
@@ -491,7 +493,7 @@ class RDSDescribeAccountAttributesIB(InstanceBuilder):
 
 
 class RDSDescribeDBInstancesIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("DBInstanceIdentifier"),
             Str("DBInstanceClass"),
@@ -674,7 +676,7 @@ class RDSDescribeDBInstancesIB(InstanceBuilder):
 
 
 class RDSListTagsForResourceIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [Str("Key"), Str("Value")]
 
 
@@ -683,7 +685,7 @@ class RDSListTagsForResourceIB(InstanceBuilder):
 
 
 class ELBDescribeLoadBalancersIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("LoadBalancerName"),
             Str("DNSName"),
@@ -772,7 +774,7 @@ class ELBDescribeLoadBalancersIB(InstanceBuilder):
 
 
 class ELBDescribeTagsIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("LoadBalancerName"),
             List(
@@ -786,7 +788,7 @@ class ELBDescribeTagsIB(InstanceBuilder):
 
 
 class ELBDescribeInstanceHealthIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("InstanceId"),
             Choice("State", ["InService", "OutOfService", "Unknown"]),
@@ -796,7 +798,7 @@ class ELBDescribeInstanceHealthIB(InstanceBuilder):
 
 
 class ELBDescribeAccountLimitsIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             List(
                 "Limits",
@@ -820,7 +822,7 @@ class ELBDescribeAccountLimitsIB(InstanceBuilder):
 
 
 class ELBv2DescribeLoadBalancersIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("LoadBalancerArn"),
             Str("DNSName"),
@@ -883,7 +885,7 @@ class ELBv2DescribeLoadBalancersIB(InstanceBuilder):
 
 
 class ELBv2DescribeTargetGroupsIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("TargetGroupArn"),
             Str("TargetGroupName"),
@@ -933,7 +935,7 @@ class ELBv2DescribeTargetGroupsIB(InstanceBuilder):
 
 
 class ELBv2DescribeListenersIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("ListenerArn"),
             Str("LoadBalancerArn"),
@@ -1047,7 +1049,7 @@ class ELBv2DescribeListenersIB(InstanceBuilder):
 
 
 class ELBv2DescribeRulesIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("RuleArn"),
             Str("Priority"),
@@ -1202,7 +1204,7 @@ class ELBv2DescribeRulesIB(InstanceBuilder):
 
 
 class ELBv2DescribeAccountLimitsIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             List(
                 "Limits",
@@ -1228,7 +1230,7 @@ class ELBv2DescribeAccountLimitsIB(InstanceBuilder):
 
 
 class ELBv2DescribeTargetHealthIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Dict(
                 "Target",
@@ -1281,7 +1283,7 @@ class ELBv2DescribeTargetHealthIB(InstanceBuilder):
 
 
 class EC2DescribeReservedInstancesIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("AvailabilityZone"),
             Int("Duration"),
@@ -1362,7 +1364,7 @@ class EC2DescribeReservedInstancesIB(InstanceBuilder):
 
 
 class EC2DescribeAddressesIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("InstanceId"),
             Str("PublicIp"),
@@ -1390,7 +1392,7 @@ class EC2DescribeAddressesIB(InstanceBuilder):
 
 
 class EC2DescribeSecurityGroupsIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("Description"),
             Str("GroupName"),
@@ -1490,7 +1492,7 @@ class EC2DescribeSecurityGroupsIB(InstanceBuilder):
 
 
 class EC2DescribeNetworkInterfacesIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Dict(
                 "Association",
@@ -1593,7 +1595,7 @@ class EC2DescribeNetworkInterfacesIB(InstanceBuilder):
 
 
 class EC2DescribeSpotInstanceRequestsIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("ActualBlockHourlyPrice"),
             Str("AvailabilityZoneGroup"),
@@ -1637,7 +1639,9 @@ class EC2DescribeSpotInstanceRequestsIB(InstanceBuilder):
                                         [
                                             "standard",
                                             "io1",
+                                            "io2",
                                             "gp2",
+                                            "gp3",
                                             "sc1",
                                             "st1",
                                         ],
@@ -1767,7 +1771,7 @@ class EC2DescribeSpotInstanceRequestsIB(InstanceBuilder):
 
 
 class EC2DescribeSpotFleetRequestsIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Choice(
                 "ActivityStatus",
@@ -1835,7 +1839,9 @@ class EC2DescribeSpotFleetRequestsIB(InstanceBuilder):
                                                 [
                                                     "standard",
                                                     "io1",
+                                                    "io2",
                                                     "gp2",
+                                                    "gp3",
                                                     "sc1",
                                                     "st1",
                                                 ],
@@ -2050,7 +2056,7 @@ class EC2DescribeSpotFleetRequestsIB(InstanceBuilder):
 
 
 class EC2DescribeInstancesIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Int("AmiLaunchIndex"),
             Str("ImageId"),
@@ -2364,7 +2370,7 @@ class EC2DescribeInstancesIB(InstanceBuilder):
 
 
 class EC2DescribeVolumesIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             List(
                 "Attachments",
@@ -2417,7 +2423,9 @@ class EC2DescribeVolumesIB(InstanceBuilder):
                 [
                     "standard",
                     "io1",
+                    "io2",
                     "gp2",
+                    "gp3",
                     "sc1",
                     "st1",
                 ],
@@ -2426,7 +2434,7 @@ class EC2DescribeVolumesIB(InstanceBuilder):
 
 
 class EC2DescribeSnapshotsIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("DataEncryptionKeyId"),
             Str("Description"),
@@ -2459,7 +2467,7 @@ class EC2DescribeSnapshotsIB(InstanceBuilder):
 
 
 class EC2DescribeVolumeStatusIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             List(
                 "Actions",
@@ -2512,7 +2520,7 @@ class EC2DescribeVolumeStatusIB(InstanceBuilder):
 
 
 class EC2DescribeTagsIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("Key"),
             Str("ResourceId"),
@@ -2559,7 +2567,7 @@ class EC2DescribeTagsIB(InstanceBuilder):
 
 
 class DynamoDBDescribeLimitsIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Int("AccountMaxReadCapacityUnits"),
             Int("AccountMaxWriteCapacityUnits"),
@@ -2569,7 +2577,7 @@ class DynamoDBDescribeLimitsIB(InstanceBuilder):
 
 
 class DynamoDBDescribeTableIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             List(
                 "AttributeDefinitions",
@@ -2734,7 +2742,7 @@ class DynamoDBDescribeTableIB(InstanceBuilder):
 
 
 class DynamoDBListTagsOfResourceIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("Key"),
             Str("Value"),
@@ -2746,7 +2754,7 @@ class DynamoDBListTagsOfResourceIB(InstanceBuilder):
 
 
 class WAFV2ListOperationIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [Str("Name"), Str("Id"), Str("Description"), Str("LockToken"), Str("ARN")]
 
 
@@ -2818,7 +2826,7 @@ class WAFV2GetWebACLIB(InstanceBuilder):
             ],
         )
 
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("Name"),
             Str("Id"),
@@ -2922,7 +2930,7 @@ class WAFV2GetWebACLIB(InstanceBuilder):
 
 
 class WAFV2ListTagsForResourceIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return [Str("ResourceARN"), List("TagList", [Str("Key"), Str("Value")])]
 
 
@@ -2974,18 +2982,31 @@ class FakeCloudwatchClient:
 
 class QueryResults(TypedDict):
     status: str
-    results: Mapping[str, Sequence[Mapping[str, str]]]
+    results: Sequence[Sequence[Mapping[str, str]]]
+    statistics: Mapping[str, float]
+    ResponseMetadata: Mapping[str, Any]
 
 
 FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE: QueryResults = {
-    "status": "Complete",
-    "results": {
-        "arn:aws:lambda:eu-central-1:710145618630:function:my_python_test_function": [
-            {"field": "max_memory_used_bytes", "value": "52000000"},
-            {"field": "max_init_duration_ms", "value": "1702.11"},
-            {"field": "count_cold_starts", "value": "2"},
-            {"field": "count_invocations", "value": "4"},
+    "results": [
+        [
+            {"field": "max_memory_used_bytes", "value": "35000000"},
+            {"field": "count_cold_starts", "value": "0"},
+            {"field": "count_invocations", "value": "2"},
         ]
+    ],
+    "statistics": {"recordsMatched": 2.0, "recordsScanned": 6.0, "bytesScanned": 710.0},
+    "status": "Complete",
+    "ResponseMetadata": {
+        "RequestId": "0bb17f7e-1230-474a-a9dc-93d583a6a01a",
+        "HTTPStatusCode": 200,
+        "HTTPHeaders": {
+            "x-amzn-requestid": "0bb17f7e-1230-474a-a9dc-93d583a6a01a",
+            "content-type": "application/x-amz-json-1.1",
+            "content-length": "250",
+            "date": "Thu, 16 Jun 2022 11:49:00 GMT",
+        },
+        "RetryAttempts": 0,
     },
 }
 
@@ -2994,7 +3015,17 @@ class QueryId(TypedDict):
     queryId: str
 
 
+class FakeResourceNotFoundException(Exception):
+    pass
+
+
+class FakeCloudwatchClientLogsClientExceptions:
+    ResourceNotFoundException = FakeResourceNotFoundException
+
+
 class FakeCloudwatchClientLogsClient:
+    exceptions = FakeCloudwatchClientLogsClientExceptions()
+
     def start_query(
         self, logGroupName: str, startTime: int, endTime: int, queryString: str
     ) -> QueryId:
@@ -3003,7 +3034,7 @@ class FakeCloudwatchClientLogsClient:
     def get_query_results(self, queryId: str) -> QueryResults:
         return FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE
 
-    def stop_query(self, queryId: str):
+    def stop_query(self, queryId: str):  # type:ignore[no-untyped-def]
         pass
 
 
@@ -3028,7 +3059,7 @@ class FakeServiceQuotasClient:
 
 
 class LambdaListFunctionsIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return {
             Str("FunctionName"),
             Str("FunctionArn", value="arn:aws:lambda:eu-central-1:123456789:function:FunctionName"),
@@ -3124,7 +3155,7 @@ class LambdaListTagsInstancesIB(DictInstanceBuilder):
 
 
 class LambdaListProvisionedConcurrencyConfigsIB(InstanceBuilder):
-    def _fill_instance(self):
+    def _fill_instance(self) -> Iterable[Entity]:
         return {
             Str(
                 "FunctionArn",
@@ -3139,4 +3170,17 @@ class LambdaListProvisionedConcurrencyConfigsIB(InstanceBuilder):
         }
 
 
-# .
+class SNSListSubscriptionsIB(InstanceBuilder):
+    def _fill_instance(self) -> Iterable[Entity]:
+        return [
+            Str("SubscriptionArn"),
+            Str("Owner"),
+            Str("Protocol"),
+            Str("Endpoint"),
+            Str("TopicArn"),
+        ]
+
+
+class SNSListTopicsIB(InstanceBuilder):
+    def _fill_instance(self) -> Iterable[Entity]:
+        return [Str("TopicArn")]

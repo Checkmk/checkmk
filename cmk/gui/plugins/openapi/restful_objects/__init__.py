@@ -40,7 +40,10 @@ The modules:
 
 """
 
+from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.plugins.openapi.restful_objects.decorators import Endpoint
 from cmk.gui.plugins.openapi.restful_objects.specification import SPEC
 
-__all__ = ["Endpoint", "SPEC"]
+__all__ = ["Endpoint", "SPEC", "endpoint"]
+
+endpoint: Endpoint = request_local_attr("endpoint")

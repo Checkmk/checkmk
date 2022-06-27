@@ -8,7 +8,7 @@
 inventory_multipath_rules = []
 
 
-def parse_multipath(info):
+def parse_multipath(info):  # pylint: disable=too-many-branches
     # New reported header lines need to be placed here
     # the matches need to be put in a list of tupples
     # while the structure of the tupple is:
@@ -139,7 +139,7 @@ def inventory_multipath(parsed):
 
 # item is UUID (e.g. '360a9800043346937686f456f59386741') or alias (e.g. 'mpath0')
 # def check_multipath(item, target_numpaths, parsed):
-def check_multipath(item, params, parsed):
+def check_multipath(item, params, parsed):  # pylint: disable=too-many-branches
     # Keys in parsed are the UUIDs. First assume that we are
     # looking for a UUID. Then fall back to aliases
     if item in parsed:

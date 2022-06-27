@@ -102,7 +102,7 @@ INFO2 = [
         ),
     ],
 )
-def test_logwatch_ec_inventory_single(monkeypatch, info, fwd_rule, expected_result):
+def test_logwatch_ec_inventory_single(monkeypatch, info, fwd_rule, expected_result) -> None:
     parsed = parse_logwatch(info)
 
     monkeypatch.setattr(logwatch_ec.logwatch, "get_ec_rule_params", lambda: fwd_rule)
@@ -131,7 +131,7 @@ def test_logwatch_ec_inventory_single(monkeypatch, info, fwd_rule, expected_resu
         ),
     ],
 )
-def test_logwatch_ec_inventory_groups(monkeypatch, info, fwd_rule, expected_result):
+def test_logwatch_ec_inventory_groups(monkeypatch, info, fwd_rule, expected_result) -> None:
     parsed = parse_logwatch(info)
 
     monkeypatch.setattr(logwatch_ec.logwatch, "get_ec_rule_params", lambda: fwd_rule)

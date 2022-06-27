@@ -8,6 +8,7 @@
 def inventory_packeteer_ps_status(info):
     if info:
         return [(None, None)]
+    return []
 
 
 def check_packeteer_ps_status(_no_item, _no_params, info):

@@ -28,7 +28,7 @@ checks = {
                 'epoch': (1, 3, 30)
             }, [
                 (0, 'Health: OK', []),
-                (0, 'Epoch rate (30 m average): 0.00', [])
+                (0, 'Epoch rate (30 minutes 0 seconds average): 0.00', [])
             ]
         )
     ],

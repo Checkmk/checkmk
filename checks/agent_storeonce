@@ -13,7 +13,7 @@ def agent_storeonce_arguments(
     args = [
         "--address=%s" % hostname,
         "--user=%s" % params["user"],
-        "--password=%s" % params["password"],
+        "--password=%s" % str(passwordstore_get_cmdline("%s", params["password"])),
     ]
 
     if "cert" in params and params["cert"] is False:

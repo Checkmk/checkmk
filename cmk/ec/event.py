@@ -52,7 +52,7 @@ class Event(TypedDict, total=False):
     state: int
 
 
-def _make_event(text: str, ipaddress: str, time: float = _time()) -> Event:
+def _make_event(text: str, ipaddress: str) -> Event:
     return Event(
         facility=1,
         priority=0,
@@ -61,7 +61,7 @@ def _make_event(text: str, ipaddress: str, time: float = _time()) -> Event:
         ipaddress=ipaddress,
         application="",
         pid=0,
-        time=time,
+        time=_time(),
         core_host=None,
         host_in_downtime=False,
     )
@@ -90,7 +90,7 @@ def create_event_from_line(
     return event
 
 
-def parse_message(line: str, ipaddress: str) -> Event:
+def parse_message(line: str, ipaddress: str) -> Event:  # pylint: disable=too-many-branches
     # Variant 1: plain syslog message without priority/facility:
     # May 26 13:45:01 Klapprechner CRON[8046]:  message....
 
@@ -333,7 +333,7 @@ def parse_rfc5424_syslog_info(line: str) -> Event:
             structured_data
         )
         # TODO: Fix the typing chaos below. We really need to parse the attributes.
-        event.update(event_update)  # type: ignore[arg-type,typeddict-item]
+        event.update(event_update)  # type: ignore[typeddict-item]
         # TODO: What about the other non-string attributes of an event?
         if (service_level := event.get("sl")) is not None:
             event["sl"] = int(service_level)

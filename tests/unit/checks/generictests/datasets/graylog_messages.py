@@ -22,12 +22,12 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Average number of messages (30 m): 0.00', [
+                    0, 'Average number of messages (30 minutes 0 seconds): 0.00', [
                         ('msgs_avg', 0.0, None, None, None, None)
                     ]
                 ),
                 (
-                    0, 'Total number of messages last 30 m: 0.00', [
+                    0, 'Total number of messages last 30 minutes 0 seconds: 0.00', [
                         ('graylog_diff', 0, None, None, None, None)
                     ]
                 )

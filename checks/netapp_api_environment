@@ -5,15 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # <<<netapp_api_environment:sep(9)>>>
@@ -100,7 +96,7 @@ def check_netapp_api_environment_threshold(item, _no_params, parsed):
 
     sensor_value = maybefloat(parsed.get("threshold-sensor-value"))
     if sensor_value is None:
-        return
+        return None
 
     # NOTE
     # sensor_type may be fru, discrete (see other check), fan, thermal, current or voltage.
@@ -154,7 +150,7 @@ check_info["netapp_api_environment"] = {
 }
 
 
-def _is_fan(_sensor_name):
+def _is_fan(_sensor_name) -> bool:
     return _sensor_name is not None and "fan" in _sensor_name.lower()
 
 

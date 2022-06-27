@@ -56,7 +56,7 @@ from cmk.base.plugins.agent_based.mssql_counters_page_life_expectancy import (
         ),
     ],
 )
-def test_discover_mssql_counters_page_life_expectancy(section, expected_services):
+def test_discover_mssql_counters_page_life_expectancy(section, expected_services) -> None:
     assert list(discover_mssql_counters_page_life_expectancy(section)) == expected_services
 
 
@@ -182,5 +182,5 @@ def test_discover_mssql_counters_page_life_expectancy(section, expected_services
         ),
     ],
 )
-def test_check_mssql_counters_page_life_expectancy(item, params, section, expected_result):
+def test_check_mssql_counters_page_life_expectancy(item, params, section, expected_result) -> None:
     assert list(check_mssql_counters_page_life_expectancy(item, params, section)) == expected_result

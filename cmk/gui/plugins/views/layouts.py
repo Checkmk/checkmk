@@ -9,8 +9,9 @@ import re
 from typing import Any, Dict, List, Optional, Tuple
 
 import cmk.gui.utils as utils
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import active_config, html, theme
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.views.utils import (
@@ -24,22 +25,23 @@ from cmk.gui.plugins.views.utils import (
     row_id,
 )
 from cmk.gui.table import init_rowselect, table_element
+from cmk.gui.utils.theme import theme
 
 
-def render_checkbox(view, row, num_tds):
+def render_checkbox(view, row, num_tds) -> None:
     # value contains the number of columns of this datarow. This is
     # needed for hiliting the correct number of TDs
     html.input(type_="checkbox", name=row_id(view, row), value=(num_tds + 1))
     html.label("", row_id(view, row))
 
 
-def render_checkbox_td(view, row, num_tds):
+def render_checkbox_td(view, row, num_tds) -> None:
     html.open_td(class_="checkbox")
     render_checkbox(view, row, num_tds)
     html.close_td()
 
 
-def render_group_checkbox_th():
+def render_group_checkbox_th() -> None:
     html.open_th()
     html.input(
         type_="button",
@@ -58,18 +60,18 @@ class LayoutSingleDataset(Layout):
     more than on dataset however."""
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "dataset"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Single dataset")
 
     @property
     def can_display_checkboxes(self):
         return False
 
-    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
+    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes) -> None:
         html.open_table(class_="data single")
         rownum = 0
         odd = "odd"
@@ -105,7 +107,7 @@ class GroupedBoxesLayout(Layout):
     def _css_class(self):
         raise NotImplementedError()
 
-    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
+    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes) -> None:
         # N columns. Each should contain approx the same number of entries
         groups = []
         last_group = None
@@ -147,7 +149,7 @@ class GroupedBoxesLayout(Layout):
         html.close_tr()
         html.close_table()
 
-    def _render_group(
+    def _render_group(  # pylint: disable=too-many-branches
         self, rows_with_ids, header, view, group_cells, cells, num_columns, show_checkboxes
     ):
         repeat_heading_every = 20  # in case column_headers is "repeat"
@@ -264,7 +266,7 @@ class GroupedBoxesLayout(Layout):
 
     def _height_of(self, groups):
         # compute total space needed. I count the group header like two rows.
-        return sum([len(rows) for _header, rows in groups]) + 2 * len(groups)
+        return sum(len(rows) for _header, rows in groups) + 2 * len(groups)
 
 
 def grouped_row_title(index, group_spec, num_rows, trclass, num_cells):
@@ -370,11 +372,11 @@ class LayoutBalancedBoxes(GroupedBoxesLayout):
     stacked in columns and can have different sizes."""
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "boxed"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Balanced boxes")
 
     @property
@@ -390,11 +392,11 @@ class LayoutBalancedGraphBoxes(GroupedBoxesLayout):
     """Same as balanced boxes layout but adds a CSS class graph to the box"""
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "boxed_graph"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Balanced graph boxes")
 
     @property
@@ -410,18 +412,26 @@ class LayoutTiled(Layout):
     """The tiled layout puts each dataset into one box with a fixed size"""
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "tiled"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Tiles")
 
     @property
     def can_display_checkboxes(self):
         return True
 
-    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
+    def render(  # pylint: disable=too-many-branches
+        self,
+        rows,
+        view,
+        group_cells,
+        cells,
+        num_columns,
+        show_checkboxes,
+    ):
         html.open_table(class_="data tiled")
 
         last_group = None
@@ -543,18 +553,26 @@ class LayoutTable(Layout):
     width of the columns."""
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "table"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Table")
 
     @property
     def can_display_checkboxes(self):
         return True
 
-    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
+    def render(  # pylint: disable=too-many-branches
+        self,
+        rows,
+        view,
+        group_cells,
+        cells,
+        num_columns,
+        show_checkboxes,
+    ):
         repeat_heading_every = 20  # in case column_headers is "repeat"
 
         html.open_table(class_="data table")
@@ -734,11 +752,11 @@ class LayoutMatrix(Layout):
     The columns are hosts and the rows are services."""
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "matrix"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Matrix")
 
     @property
@@ -746,7 +764,7 @@ class LayoutMatrix(Layout):
         return False
 
     @property
-    def has_individual_csv_export(self):
+    def has_individual_csv_export(self) -> bool:
         return True
 
     def csv_export(self, rows, view, group_cells, cells):
@@ -791,7 +809,15 @@ class LayoutMatrix(Layout):
                                 html.write_text(",")
                             html.write_text(content)
 
-    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
+    def render(  # pylint: disable=too-many-branches
+        self,
+        rows,
+        view,
+        group_cells,
+        cells,
+        num_columns,
+        show_checkboxes,
+    ):
         header_majorities = self._matrix_find_majorities_for_header(rows, group_cells)
         value_counts, row_majorities = self._matrix_find_majorities(rows, cells)
 

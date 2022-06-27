@@ -242,7 +242,7 @@ checks = {
                              [(u'varnish_backend_reuse_rate', 0.0, None, None, None, None)])])],
     'backend_success_ratio': [(None, {
         'levels_lower': (70.0, 60.0)
-    }, [(0, '100%', [('varnish_backend_success_ratio', 100.0, None,
+    }, [(0, '100.00%', [('varnish_backend_success_ratio', 100.0, None,
                                                        None, None, None)])])],
     'cache': [(None, {}, [(0, u'0.0 misses/s',
                            [(u'varnish_cache_miss_rate', 0.0, None, None, None, None)]),
@@ -252,7 +252,7 @@ checks = {
                            [(u'varnish_cache_hitpass_rate', 0.0, None, None, None, None)])])],
     'cache_hit_ratio': [(None, {
         'levels_lower': (70.0, 60.0)
-    }, [(2, '39.28% (warn/crit below 70.0%/60.0%)',
+    }, [(2, '39.28% (warn/crit below 70.00%/60.00%)',
          [('cache_hit_ratio', 39.2761823422654, None, None, None, None)])])],
     'client': [(None, {}, [(0, u'0.0 Connection dropped, no sess wrk/s',
                             [(u'varnish_client_drop_rate', 0.0, None, None, None, None)]),
@@ -314,6 +314,6 @@ checks = {
                             [(u'varnish_worker_max_rate', 0.0, None, None, None, None)])])],
     'worker_thread_ratio': [(None, {
         'levels_lower': (70.0, 60.0)
-    }, [(0, '100%', [('varnish_worker_thread_ratio', 100.0, None,
+    }, [(0, '100.00%', [('varnish_worker_thread_ratio', 100.0, None,
                                                      None, None, None)])])]
 }

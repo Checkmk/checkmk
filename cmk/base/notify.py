@@ -65,6 +65,7 @@ from cmk.utils.timeout import MKTimeout, Timeout
 from cmk.utils.type_defs import (
     Contact,
     ContactName,
+    EventContext,
     EventRule,
     NotifyAnalysisInfo,
     NotifyBulkParameters,
@@ -82,7 +83,6 @@ import cmk.base.core
 import cmk.base.events as events
 import cmk.base.obsolete_output as out
 import cmk.base.utils
-from cmk.base.events import EventContext
 
 try:
     import cmk.base.cee.keepalive as keepalive
@@ -136,7 +136,6 @@ notification_log_template = (
     "$SERVICEDESC$ $SERVICESTATE$ "
 )
 
-notification_mail_command = "mail -s '$SUBJECT$' '$CONTACTEMAIL$'"
 notification_host_subject = "Check_MK: $HOSTNAME$ - $NOTIFICATIONTYPE$"
 notification_service_subject = "Check_MK: $HOSTNAME$/$SERVICEDESC$ $NOTIFICATIONTYPE$"
 
@@ -213,7 +212,10 @@ Available commands:
 # Main function called by cmk --notify. It either starts the
 # keepalive mode (used by CMC), sends out one notifications from
 # several possible sources or sends out all ripe bulk notifications.
-def do_notify(options: Dict[str, bool], args: List[str]) -> Optional[int]:
+def do_notify(  # pylint: disable=too-many-branches
+    options: Dict[str, bool],
+    args: List[str],
+) -> Optional[int]:
     global _log_to_stdout, notify_mode
     _log_to_stdout = options.get("log-to-stdout", _log_to_stdout)
 
@@ -324,7 +326,7 @@ def notify_notify(raw_context: EventContext, analyse: bool = False) -> Optional[
 
     logger.debug(events.render_context_dump(raw_context))
 
-    _complete_raw_context_with_notification_vars(raw_context)
+    raw_context["LOGDIR"] = notification_logdir
     events.complete_raw_context(raw_context, with_dump=config.notification_logging <= 10)
 
     # Spool notification to remote host, if this is enabled
@@ -334,13 +336,6 @@ def notify_notify(raw_context: EventContext, analyse: bool = False) -> Optional[
     if config.notification_spooling != "remote":
         return locally_deliver_raw_context(raw_context, analyse=analyse)
     return None
-
-
-# Add some notification specific variables to the context. These are currently
-# not added to alert handler scripts
-def _complete_raw_context_with_notification_vars(raw_context: EventContext) -> None:
-    raw_context["LOGDIR"] = notification_logdir
-    raw_context["MAIL_COMMAND"] = notification_mail_command
 
 
 # Here we decide which notification implementation we are using.
@@ -583,7 +578,7 @@ def _create_notifications(
     return notifications, rule_info
 
 
-def _process_notifications(
+def _process_notifications(  # pylint: disable=too-many-branches
     raw_context: EventContext, notifications: Notifications, num_rule_matches: int, analyse: bool
 ) -> List[NotifyPluginInfo]:
     plugin_info: List[NotifyPluginInfo] = []
@@ -753,8 +748,9 @@ def user_notification_rules() -> List[EventRule]:
             # WATO-only feature anyway...
             user_rules.append(rule)
 
-            if "authorized_sites" in config.contacts[contactname] and "match_site" not in rule:
-                rule["match_site"] = config.contacts[contactname]["authorized_sites"]
+            authorized_sites = config.contacts[contactname].get("authorized_sites")
+            if authorized_sites is not None and "match_site" not in rule:
+                rule["match_site"] = authorized_sites
 
     logger.debug("Found %d user specific rules", len(user_rules))
     return user_rules
@@ -989,7 +985,10 @@ def rbn_match_event(
     )
 
 
-def rbn_rule_contacts(rule: EventRule, context: EventContext) -> ContactNames:
+def rbn_rule_contacts(  # pylint: disable=too-many-branches
+    rule: EventRule,
+    context: EventContext,
+) -> ContactNames:
     the_contacts = set()
     if rule.get("contact_object"):
         the_contacts.update(rbn_object_contact_names(context))
@@ -1283,7 +1282,10 @@ def notify_flexible(raw_context: EventContext, notification_table: NotificationT
 # 0  : everything fine   -> proceed
 # 1  : currently not OK  -> try to process later on
 # >=2: invalid           -> discard
-def should_notify(context: EventContext, entry: NotificationTableEntry) -> bool:
+def should_notify(  # pylint: disable=too-many-branches
+    context: EventContext,
+    entry: NotificationTableEntry,
+) -> bool:
     # Check disabling
     if entry.get("disabled"):
         logger.info(" - Skipping: it is disabled for this user")
@@ -1486,20 +1488,17 @@ def notify_via_email(plugin_context: PluginContext) -> int:
     subject = substitute_context(subject_t, plugin_context)
     plugin_context["SUBJECT"] = subject
     body = substitute_context(notification_common_body + body_t, plugin_context)
-    command = substitute_context(notification_mail_command, plugin_context)
-    command_utf8 = command.encode("utf-8")
+    command = [str(cmk.utils.paths.bin_dir / "mail"), "-s", subject, plugin_context["CONTACTEMAIL"]]
 
     old_lang = os.getenv("LANG", "")
     ensure_utf8(logger)
     # Important: we must not output anything on stdout or stderr. Data of stdout
     # goes back into the socket to the CMC in keepalive mode and garbles the
     # handshake signal.
-    logger.debug("Executing command: %s", command)
+    logger.debug("Executing command: %s", " ".join(command))
 
-    # TODO: Cleanup this shell=True call!
-    completed_process = subprocess.run(  # nosec
-        command_utf8,
-        shell=True,
+    completed_process = subprocess.run(
+        command,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         close_fds=True,
@@ -1559,6 +1558,10 @@ def create_bulk_parameter_context(params: NotifyPluginParams) -> List[str]:
 
 
 def path_to_notification_script(plugin_name: NotificationPluginNameStr) -> Optional[str]:
+    if "/" in plugin_name:
+        logger.error("Pluginname %r with slash. Raising exception...")
+        raise MKGeneralException("Slashes in plugin_name are forbidden!")
+
     # Call actual script without any arguments
     local_path = cmk.utils.paths.local_notifications_dir / plugin_name
     if local_path.exists():
@@ -1738,6 +1741,13 @@ def handle_spoolfile(spoolfile: str) -> int:
 
         store_notification_backlog(data["context"])
         locally_deliver_raw_context(data["context"])
+        # TODO: It is a bug that we don't transport result information and monitoring history
+        # entries back to the origin site. The intermediate or final results should be sent back to
+        # the origin site. Also _log_to_history calls should not log the entries to the local
+        # monitoring core of the destination site, but forward the log entries as messages to the
+        # remote site just like the mknotifyd is doing with MessageResult. We could create spool
+        # files holding NotificationResult messages which would then be forwarded to the origin site
+        # by the mknotifyd. See CMK-10779.
         return 0  # No error handling for async delivery
 
     except Exception:
@@ -1759,7 +1769,7 @@ def handle_spoolfile(spoolfile: str) -> int:
 #   '----------------------------------------------------------------------'
 
 
-def do_bulk_notify(
+def do_bulk_notify(  # pylint: disable=too-many-branches
     plugin_name: NotificationPluginNameStr,
     params: NotifyPluginParams,
     plugin_context: PluginContext,
@@ -1778,6 +1788,9 @@ def do_bulk_notify(
 
     what = plugin_context["WHAT"]
     contact = plugin_context["CONTACTNAME"]
+    if "/" in contact or "/" in plugin_name:
+        logger.error("Tried to construct bulk dir with unsanitized attributes")
+        raise MKGeneralException("Slashes in CONTACTNAME or plugin_name are forbidden!")
     if bulk.get("timeperiod"):
         bulk_path: List[str] = [
             contact,
@@ -1871,7 +1884,7 @@ def do_bulk_notify(
         )
 
     logger.info("    --> storing for bulk notification %s", "|".join(bulk_path))
-    bulk_dir = create_bulk_dir(bulk_path)
+    bulk_dir = _create_bulk_dir(bulk_path)
     notify_uuid = str(uuid.uuid4())
     filename_new = bulk_dir / f"{notify_uuid}.new"
     filename_final = bulk_dir / notify_uuid
@@ -1880,7 +1893,7 @@ def do_bulk_notify(
     logger.info("        - stored in %s", filename_final)
 
 
-def create_bulk_dir(bulk_path: Sequence[str]) -> Path:
+def _create_bulk_dir(bulk_path: Sequence[str]) -> Path:
     bulk_dir = Path(
         notification_bulkdir,
         bulk_path[0],
@@ -1947,7 +1960,7 @@ def remove_if_orphaned(bulk_dir: str, max_age: float, ref_time: Optional[float] 
             logger.info("    -> Error removing it: %s", e)
 
 
-def find_bulks(only_ripe: bool) -> NotifyBulks:
+def find_bulks(only_ripe: bool) -> NotifyBulks:  # pylint: disable=too-many-branches
     if not os.path.exists(notification_bulkdir):
         return []
 
@@ -2048,7 +2061,7 @@ def send_ripe_bulks() -> None:
                 logger.exception("Error sending bulk %s:", bulk[0])
 
 
-def notify_bulk(dirname: str, uuids: UUIDs) -> None:
+def notify_bulk(dirname: str, uuids: UUIDs) -> None:  # pylint: disable=too-many-branches
     parts = dirname.split("/")
     contact = parts[-3]
     plugin_name = parts[-2]

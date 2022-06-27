@@ -9,6 +9,7 @@ import http.client
 import os
 import traceback
 from contextlib import suppress
+from datetime import datetime
 from hashlib import sha256
 from pathlib import Path
 from typing import Iterator, List, Optional, Tuple, Union
@@ -26,6 +27,7 @@ import cmk.gui.mobile
 import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import (
     FinalizeRequest,
@@ -34,9 +36,10 @@ from cmk.gui.exceptions import (
     MKInternalError,
     MKUserError,
 )
-from cmk.gui.globals import active_config, html, request, response, theme, user_errors
-from cmk.gui.htmllib import HTML
-from cmk.gui.http import Request
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.header import make_header
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request, Request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user, UserContext
@@ -44,10 +47,13 @@ from cmk.gui.main import get_page_heading
 from cmk.gui.pages import Page, page_registry
 from cmk.gui.type_defs import AuthType
 from cmk.gui.utils.escaping import escape_to_html
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.language_cookie import del_language_cookie
 from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, requested_file_name, urlencode
+from cmk.gui.utils.user_errors import user_errors
 
 auth_logger = logger.getChild("auth")
 
@@ -83,7 +89,7 @@ def UserSessionContext(user_id: UserId) -> Iterator[None]:
             yield
         finally:
             transactions.store_new()
-            userdb.on_end_of_request(user_id)
+            userdb.on_end_of_request(user_id, datetime.now())
 
 
 def auth_cookie_name() -> str:
@@ -140,7 +146,8 @@ def _load_serial(username: UserId) -> int:
     Better use the value from the "serials.mk" file, instead of loading the whole user database via
     load_users() for performance reasons.
     """
-    return userdb.load_custom_attr(username, "serial", int, 0)
+    serial = userdb.load_custom_attr(user_id=username, key="serial", parser=int)
+    return 0 if serial is None else serial
 
 
 def _generate_auth_hash(username: UserId, session_id: str) -> str:
@@ -161,7 +168,7 @@ def del_auth_cookie() -> None:
 
     cookie = _fetch_cookie(cookie_name)
     if auth_cookie_is_valid(cookie):
-        response.delete_cookie(cookie_name)
+        response.unset_http_cookie(cookie_name)
 
 
 def _auth_cookie_value(username: UserId, session_id: str) -> str:
@@ -243,8 +250,9 @@ def _check_auth_cookie(cookie_name: str) -> Optional[UserId]:
     username, session_id, cookie_hash = user_from_cookie(_fetch_cookie(cookie_name))
     check_parsed_auth_cookie(username, session_id, cookie_hash)
 
+    now = datetime.now()
     try:
-        userdb.on_access(username, session_id)
+        userdb.on_access(username, session_id, now)
     except MKAuthException:
         del_auth_cookie()
         raise
@@ -252,20 +260,18 @@ def _check_auth_cookie(cookie_name: str) -> Optional[UserId]:
     # Once reached this the cookie is a good one. Renew it!
     _renew_cookie(cookie_name, username, session_id)
 
-    _redirect_for_password_change(username)
+    _redirect_for_password_change(username, now)
     _redirect_for_two_factor_authentication(username)
 
     # Return the authenticated username
     return username
 
 
-def _redirect_for_password_change(user_id: UserId) -> None:
+def _redirect_for_password_change(user_id: UserId, now: datetime) -> None:
     if requested_file_name(request) != "user_change_pw":
-        result = userdb.need_to_change_pw(user_id)
-        if result:
+        if change_reason := userdb.need_to_change_pw(user_id, now):
             raise HTTPRedirect(
-                "user_change_pw.py?_origtarget=%s&reason=%s"
-                % (urlencode(makeuri(request, [])), result)
+                f"user_change_pw.py?_origtarget={urlencode(makeuri(request, []))}&reason={change_reason}"
             )
 
 
@@ -327,7 +333,7 @@ def _check_auth(req: Request) -> Optional[UserId]:
         user_id = _check_auth_http_header(auth_by_http_header)
 
     if user_id is None:
-        if not active_config.user_login:
+        if not active_config.user_login and not _is_site_login():
             return None
         user_id = _check_auth_by_cookie()
 
@@ -427,8 +433,9 @@ def _check_auth_cookie_for_web_server_auth(user_id: UserId):
     The authentication is already done on web server level. We accept the provided
     username as authenticated and create our cookie here.
     """
+    now = datetime.now()
     if auth_cookie_name() not in request.cookies:
-        session_id = userdb.on_succeeded_login(user_id)
+        session_id = userdb.on_succeeded_login(user_id, now)
         _create_auth_session(user_id, session_id)
         return
 
@@ -485,7 +492,7 @@ class LoginPage(Page):
             return
 
         try:
-            if not active_config.user_login:
+            if not active_config.user_login and not _is_site_login():
                 raise MKUserError(None, _("Login is not allowed on this site."))
 
             username_var = request.get_str_input("_username", "")
@@ -507,14 +514,15 @@ class LoginPage(Page):
             if "logout.py" in origtarget or "side.py" in origtarget:
                 origtarget = default_origtarget
 
-            result = userdb.check_credentials(username, password)
+            now = datetime.now()
+            result = userdb.check_credentials(username, password, now)
             if result:
                 # use the username provided by the successful login function, this function
                 # might have transformed the username provided by the user. e.g. switched
                 # from mixed case to lower case.
                 username = result
 
-                session_id = userdb.on_succeeded_login(username)
+                session_id = userdb.on_succeeded_login(username, now)
 
                 # The login succeeded! Now:
                 # a) Set the auth cookie
@@ -527,11 +535,9 @@ class LoginPage(Page):
                 # clear situation.
                 # userdb.need_to_change_pw returns either False or the reason description why the
                 # password needs to be changed
-                change_pw_result = userdb.need_to_change_pw(username)
-                if change_pw_result:
+                if change_reason := userdb.need_to_change_pw(username, now):
                     raise HTTPRedirect(
-                        "user_change_pw.py?_origtarget=%s&reason=%s"
-                        % (urlencode(origtarget), change_pw_result)
+                        f"user_change_pw.py?_origtarget={urlencode(origtarget)}&reason={change_reason}"
                     )
 
                 if userdb.is_two_factor_login_enabled(username):
@@ -541,15 +547,15 @@ class LoginPage(Page):
 
                 raise HTTPRedirect(origtarget)
 
-            userdb.on_failed_login(username)
+            userdb.on_failed_login(username, now)
             raise MKUserError(None, _("Invalid login"))
         except MKUserError as e:
             user_errors.add(e)
 
     def _show_login_page(self) -> None:
-        html.set_render_headfoot(False)
+        html.render_headfoot = False
         html.add_body_css_class("login")
-        html.header(get_page_heading(), Breadcrumb(), javascripts=[])
+        make_header(html, get_page_heading(), Breadcrumb(), javascripts=[])
 
         default_origtarget = (
             "index.py"
@@ -611,7 +617,7 @@ class LoginPage(Page):
 
         footer: List[HTML] = []
         for title, url, target in active_config.login_screen.get("footer_links", []):
-            footer.append(html.render_a(title, href=url, target=target))
+            footer.append(HTMLWriter.render_a(title, href=url, target=target))
 
         if "hide_version" not in active_config.login_screen:
             footer.append(escape_to_html("Version: %s" % cmk_version.__version__))
@@ -619,7 +625,7 @@ class LoginPage(Page):
         footer.append(
             HTML(
                 "&copy; %s"
-                % html.render_a("tribe29 GmbH", href="https://tribe29.com", target="_blank")
+                % HTMLWriter.render_a("tribe29 GmbH", href="https://tribe29.com", target="_blank")
             )
         )
 
@@ -646,6 +652,25 @@ class LoginPage(Page):
         html.footer()
 
 
+def _is_site_login() -> bool:
+    """Determine if login is a site login for connecting central and remote
+    site. This login has to be allowed even if site login on remote site is not
+    permitted by rule "Direct login to Web GUI allowed" """
+    if requested_file_name(request) == "login":
+        if (origtarget_var := request.var("_origtarget")) is None:
+            return False
+        return (
+            origtarget_var.startswith("automation_login.py")
+            and "_version=" in origtarget_var
+            and "_edition_short=" in origtarget_var
+        )
+
+    if requested_file_name(request) == "automation_login":
+        return bool(request.var("_edition_short") and request.var("_version"))
+
+    return False
+
+
 @page_registry.register_page("logout")
 class LogoutPage(Page):
     def page(self) -> None:
@@ -656,7 +681,7 @@ class LogoutPage(Page):
         session_id = _get_session_id_from_cookie(user.id, revalidate_cookie=True)
         userdb.on_logout(user.id, session_id)
 
-        if auth_type == "cookie":  # type: ignore[has-type]
+        if auth_type == "cookie":
             raise HTTPRedirect(url_prefix() + "check_mk/login.py")
 
         # Implement HTTP logout with cookie hack

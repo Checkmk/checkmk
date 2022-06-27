@@ -5,39 +5,40 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mode for searching hosts"""
 
-from typing import Optional, Type
+from typing import Collection, Optional, Type
 
 import cmk.gui.forms as forms
-import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.globals import html, request
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.plugins.wato.utils import configure_attributes, mode_registry
 from cmk.gui.plugins.wato.utils.base_modes import redirect, WatoMode
-from cmk.gui.type_defs import ActionResult, HTTPVariables
+from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import TextInput
 from cmk.gui.wato.pages.folders import ModeFolder
+from cmk.gui.watolib.hosts_and_folders import Folder
 
 
 @mode_registry.register
 class ModeSearch(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "search"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts"]
 
     @classmethod
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeFolder
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self._folder = watolib.Folder.current()
+        self._folder = Folder.current()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
@@ -50,7 +51,7 @@ class ModeSearch(WatoMode):
             save_is_enabled=True,
         )
 
-    def title(self):
+    def title(self) -> str:
         return _("Search for hosts below %s") % self._folder.title()
 
     def action(self) -> ActionResult:
@@ -91,7 +92,7 @@ class ModeSearch(WatoMode):
 
         return list(search_vars.items())
 
-    def page(self):
+    def page(self) -> None:
         # Show search form
         html.begin_form("edit_host", method="POST")
         html.prevent_password_auto_completion()

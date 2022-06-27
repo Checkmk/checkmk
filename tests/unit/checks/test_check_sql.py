@@ -23,6 +23,7 @@ pytestmark = pytest.mark.checks
                 "password": "wurst",
                 "sql": (""),
                 "perfdata": "my_metric_name",
+                "text": "my_additional_text",
             },
             [
                 "--hostname=$HOSTADDRESS$",
@@ -31,12 +32,13 @@ pytestmark = pytest.mark.checks
                 "--user=hans",
                 "--password=wurst",
                 "--metrics=my_metric_name",
+                "--text=my_additional_text",
                 "",
             ],
         ),
     ],
 )
-def test_check_sql_argument_parsing(params, expected_args):
+def test_check_sql_argument_parsing(params, expected_args) -> None:
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_sql")
     assert active_check.run_argument_function(params) == expected_args

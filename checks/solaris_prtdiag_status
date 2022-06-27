@@ -12,11 +12,12 @@
 def inventory_solaris_prtdiag_status(info):
     if info:
         return [(None, None)]
+    return []
 
 
 def check_solaris_prtdiag_status(_no_item, _no_params, info):
     if not info:
-        return
+        return None
 
     # 0 No failures or errors are detected in the system.
     # 1 Failures or errors are detected in the system.

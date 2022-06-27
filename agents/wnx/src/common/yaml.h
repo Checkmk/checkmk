@@ -15,8 +15,8 @@
 
 namespace YAML {
 template <>
-inline const Node Node::operator[](const std::string_view &key) const {
-    //
+inline const Node Node::operator[](
+    const std::string_view &key) const {  // NOLINT
     return operator[](std::string(key));
 }
 

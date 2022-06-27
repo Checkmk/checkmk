@@ -60,16 +60,16 @@ def mock_state_function(key, _default):
 
 expected_result_1 = CheckResult(
     [
-        (0, "User: 40.0%", [("user", 40.0, None, None, None, None)]),
-        (0, "System: 20.0%", [("system", 20.0, None, None, None, None)]),
-        (0, "Wait: 20.0%", [("wait", 20.0, None, None, None, None)]),
-        (0, "Total CPU: 80.0%", [("util", 80.0, None, None, 0, None)]),
+        (0, "User: 40.00%", [("user", 40.0, None, None, None, None)]),
+        (0, "System: 20.00%", [("system", 20.0, None, None, None, None)]),
+        (0, "Wait: 20.00%", [("wait", 20.0, None, None, None, None)]),
+        (0, "Total CPU: 80.00%", [("util", 80.0, None, None, 0, None)]),
     ]
 )
 
 expected_result_2 = CheckResult(
     [
-        (0, "User: 22.3%", [("user", 22.304832713754646, None, None, None, None)]),
+        (0, "User: 22.30%", [("user", 22.304832713754646, None, None, None, None)]),
         (0, "System: 24.78%", [("system", 24.783147459727385, None, None, None, None)]),
         (0, "Wait: 30.98%", [("wait", 30.97893432465923, None, None, None, None)]),
         (0, "Total CPU: 78.07%", [("util", 78.06691449814126, None, None, 0, None)]),
@@ -84,7 +84,7 @@ expected_result_2 = CheckResult(
         (info_statgrab_cpu_hpux, mock_state_dict, expected_result_2),
     ],
 )
-def test_statgrab_cpu_check(info, mockstate, expected_result):
+def test_statgrab_cpu_check(info, mockstate, expected_result) -> None:
 
     check = Check("statgrab_cpu")
 
@@ -100,7 +100,7 @@ def test_statgrab_cpu_check(info, mockstate, expected_result):
         (info_statgrab_cpu_hpux, mock_state_function),
     ],
 )
-def test_statgrab_cpu_check_error(info, mockstate):
+def test_statgrab_cpu_check_error(info, mockstate) -> None:
 
     check = Check("statgrab_cpu")
 

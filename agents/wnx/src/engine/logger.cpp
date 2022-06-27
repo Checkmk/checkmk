@@ -5,6 +5,7 @@
 #include "cfg.h"
 #include "cma_core.h"
 #include "common/cfg_info.h"
+namespace fs = std::filesystem;
 
 namespace XLOG {
 
@@ -236,13 +237,9 @@ constexpr size_t kMaxAllowedBackupSize = 1024 * 1024 * 256;
 void WriteToLogFileWithBackup(std::string_view filename, size_t max_size,
                               unsigned int max_backup_count,
                               std::string_view text) noexcept {
-    // sanity check
-    if (max_backup_count > kMaxAllowedBackupCount)
-        max_backup_count = kMaxAllowedBackupCount;
-
-    if (max_size > kMaxAllowedBackupSize) max_size = kMaxAllowedBackupSize;
-
-    namespace fs = std::filesystem;
+    max_backup_count =
+        std::clamp(max_backup_count, min_file_count, max_file_count);
+    max_size = std::min(max_size, min_file_size);
     std::lock_guard lk(g_backup_lock_mutex);
 
     fs::path log_file(filename);
@@ -252,8 +249,9 @@ void WriteToLogFileWithBackup(std::string_view filename, size_t max_size,
     if (ec.value() != 0) size = 0;
 
     if (size + text.size() + g_file_text_header_size > max_size) {
-        // required backup
-
+        for (auto i = max_file_count; i > max_backup_count; --i) {
+            fs::remove(MakeBackupLogName(filename, i), ec);
+        }
         // making chain of backups
         for (auto i = max_backup_count; i > 0; --i) {
             auto old_file = MakeBackupLogName(filename, i - 1);
@@ -281,8 +279,9 @@ void Emitter::postProcessAndPrint(const std::string &text) {
     // EVENT
     if (setup::IsEventLogEnabled() && ((dirs & xlog::kEventPrint) != 0)) {
         // we do not need to format string for the event
-        auto windows_event_log_id = cma::IsService() ? EventClass::kSrvDefault
-                                                     : EventClass::kAppDefault;
+        auto windows_event_log_id = cma::GetModus() == cma::Modus::service
+                                        ? EventClass::kSrvDefault
+                                        : EventClass::kAppDefault;
         details::LogWindowsEventCritical(windows_event_log_id, text.c_str());
     }
 
@@ -358,6 +357,12 @@ void EnableDebugLog(bool enable) {
 void EnableTraceLog(bool enable) {
     details::TraceLogEnabled = enable;
     t.enableFileLog(enable);
+}
+
+void SetLogRotation(unsigned int max_count, size_t max_size) {
+    l.setLogRotation(max_count, max_size);
+    d.setLogRotation(max_count, max_size);
+    t.setLogRotation(max_count, max_size);
 }
 
 void ChangeDebugLogLevel(int debug_level) {

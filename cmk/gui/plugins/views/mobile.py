@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.globals import html, request, response
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.utils import (
     Layout,
@@ -13,6 +13,7 @@ from cmk.gui.plugins.views.utils import (
     multisite_builtin_views,
     PainterOptions,
 )
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 
 #   .--Views---------------------------------------------------------------.
@@ -721,7 +722,7 @@ multisite_builtin_views.update(
 #   '----------------------------------------------------------------------'
 
 
-def render_mobile_table(rows, view, group_cells, cells, num_columns, show_checkboxes):
+def render_mobile_table(rows, view, group_cells, cells, num_columns, show_checkboxes) -> None:
     if not is_mobile(request, response):
         html.show_error(_("This view can only be used in mobile mode."))
         return
@@ -764,23 +765,23 @@ def render_mobile_table(rows, view, group_cells, cells, num_columns, show_checkb
 @layout_registry.register
 class LayoutMobileTable(Layout):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "mobiletable"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Mobile: Table")
 
     @property
     def can_display_checkboxes(self):
         return False
 
-    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
+    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes) -> None:
         # TODO: Move to class
         render_mobile_table(rows, view, group_cells, cells, num_columns, show_checkboxes)
 
 
-def render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkboxes):
+def render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkboxes) -> None:
     if not is_mobile(request, response):
         html.show_error(_("This view can only be used in mobile mode."))
         return
@@ -823,23 +824,23 @@ def render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkbo
 @layout_registry.register
 class LayoutMobileList(Layout):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "mobilelist"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Mobile: List")
 
     @property
     def can_display_checkboxes(self):
         return False
 
-    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
+    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes) -> None:
         # TODO: Move to class
         render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkboxes)
 
 
-def render_mobile_dataset(rows, view, group_cells, cells, num_columns, show_checkboxes):
+def render_mobile_dataset(rows, view, group_cells, cells, num_columns, show_checkboxes) -> None:
     if not is_mobile(request, response):
         html.show_error(_("This view can only be used in mobile mode."))
         return
@@ -872,17 +873,17 @@ def render_mobile_dataset(rows, view, group_cells, cells, num_columns, show_chec
 @layout_registry.register
 class LayoutMobileDataset(Layout):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "mobiledataset"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Mobile: Dataset")
 
     @property
     def can_display_checkboxes(self):
         return False
 
-    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
+    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes) -> None:
         # TODO: Move to class
         render_mobile_dataset(rows, view, group_cells, cells, num_columns, show_checkboxes)

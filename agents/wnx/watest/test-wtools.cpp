@@ -40,11 +40,6 @@ constexpr CounterParam kDiskCounter = {.description_ = L"Disk",
 
 }  // namespace
 
-namespace cma::details {
-extern bool g_is_service;
-extern bool g_is_test;
-}  // namespace cma::details
-
 namespace wtools {  // to become friendly for cma::cfg classes
 
 class WtoolsKillProcFixture : public ::testing::Test {
@@ -103,7 +98,13 @@ protected:
     void TearDown() override {
         KillTmpProcesses();
         ASSERT_NE(test_dir_.wstring().find(dirToUse()), std::wstring::npos);
-        fs::remove_all(test_dir_);
+        std::error_code ec;
+        fs::remove_all(test_dir_, ec);
+        if (ec) {
+            std::cerr << fmt::format(
+                "Attention: remove_all failed, some of temporary processes are busy. Exception: '{}' [{}]\n",
+                ec.message(), ec.value());
+        }
     }
 
     fs::path test_dir_;
@@ -127,15 +128,17 @@ TEST_F(WtoolsKillProcFixture, KillProcByPid) {
 
 TEST_F(WtoolsKillProcFixture, KillProcsByDir) {
     ASSERT_EQ(RunProcesses(1), 1);  // additional process
+    auto test_dir = test_dir_.wstring();
+    cma::tools::WideUpper(test_dir);
 
-    EXPECT_EQ(KillProcessesByDir(test_dir_), 2);
+    EXPECT_EQ(KillProcessesByDir(test_dir), 2);
     cma::tools::sleep(500ms);
 
     auto [path, pid] = FindExpectedProcess();
     EXPECT_TRUE(path.empty());
     EXPECT_EQ(pid, 0);
 
-    EXPECT_EQ(KillProcessesByDir(test_dir_), 0);
+    EXPECT_EQ(KillProcessesByDir(test_dir), 0);
     EXPECT_EQ(KillProcessesByDir(""), -1);
     EXPECT_EQ(KillProcessesByDir("k:"), -1);
 }
@@ -171,8 +174,6 @@ protected:
                     names.end());
     }
 
-    void TearDown() override {}
-
     uint32_t startProcessTree() {
         auto exe_a = temp_dir() / "a.cmd";
         auto exe_b = temp_dir() / "b.cmd";
@@ -185,7 +186,7 @@ protected:
         return cma::tools::RunStdCommand(exe_a.wstring(), false);
     }
 
-    bool findProcessByPid(uint32_t pid) {
+    bool findProcessByPid(uint32_t pid) const {
         bool found = false;
         wtools::ScanProcessList(
             [&found, pid ](const PROCESSENTRY32 &entry) -> auto {
@@ -199,7 +200,7 @@ protected:
         return found;
     }
 
-    bool findProcessByParentPid(uint32_t pid) {
+    bool findProcessByParentPid(uint32_t pid) const {
         bool found = false;
         wtools::ScanProcessList(
             [&found, pid ](const PROCESSENTRY32 &entry) -> auto {
@@ -228,7 +229,7 @@ protected:
     }
 
     tst::TempCfgFs::ptr temp_fs;
-    std::filesystem::path temp_dir() { return temp_fs->data(); };
+    std::filesystem::path temp_dir() const { return temp_fs->data(); };
 };
 
 TEST_F(WtoolsKillProcessTreeFixture, Integration) {
@@ -508,9 +509,14 @@ TEST(Wtools, GetArgv) {
     EXPECT_TRUE(GetArgv(10).empty());
 }
 
-TEST(Wtools, MemSize) {
-    auto sz = GetOwnVirtualSize();
-    EXPECT_TRUE(sz > static_cast<size_t>(400'000));
+TEST(Wtools, GetOwnVirtualSize) {
+    constexpr size_t min_size{400'000U};
+    EXPECT_GT(GetOwnVirtualSize(), min_size);
+}
+
+TEST(Wtools, GetCommitCharge) {
+    constexpr size_t min_size{400'000U};
+    EXPECT_GT(GetCommitCharge(GetCurrentProcessId()), min_size);
 }
 
 TEST(Wtools, KillTree) {
@@ -551,16 +557,18 @@ TEST(Wtools, PatchFileLineEnding) {
 }
 
 TEST(Wtools, UserGroupName) {
+    const auto m = cma::GetModus();
+    ON_OUT_OF_SCOPE(cma::details::SetModus(m));
     EXPECT_TRUE(GenerateCmaUserNameInGroup(L"").empty());
     EXPECT_EQ(GenerateCmaUserNameInGroup(L"XX"), L"cmk_TST_XX");
 
-    cma::details::g_is_service = true;
-    ON_OUT_OF_SCOPE(cma::details::g_is_service = false;
-                    cma::details::g_is_test = true);
-
+    cma::details::SetModus(cma::Modus::service);
     EXPECT_EQ(GenerateCmaUserNameInGroup(L"XX"), L"cmk_in_XX");
-    cma::details::g_is_service = false;
-    cma::details::g_is_test = false;
+
+    cma::details::SetModus(cma::Modus::integration);
+    EXPECT_EQ(GenerateCmaUserNameInGroup(L"XX"), L"cmk_IT_XX");
+
+    cma::details::SetModus(cma::Modus::app);
     EXPECT_TRUE(GenerateCmaUserNameInGroup(L"XX").empty());
 }
 

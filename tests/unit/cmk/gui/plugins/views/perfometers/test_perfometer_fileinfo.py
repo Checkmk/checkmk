@@ -6,8 +6,8 @@
 
 import pytest
 
-from cmk.gui.htmllib import HTML
 from cmk.gui.plugins.views.perfometers.check_mk import perfometer_fileinfo_groups
+from cmk.gui.utils.html import HTML
 
 
 @pytest.mark.parametrize(
@@ -44,5 +44,5 @@ from cmk.gui.plugins.views.perfometers.check_mk import perfometer_fileinfo_group
         ),
     ],
 )
-def test_perfometer_fileinfo_groups(perf_data, expected_result, request_context):
+def test_perfometer_fileinfo_groups(perf_data, expected_result, request_context) -> None:
     assert perfometer_fileinfo_groups({}, "", perf_data) == expected_result

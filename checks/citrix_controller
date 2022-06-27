@@ -34,12 +34,14 @@ def inventory_citrix_controller_services(info):
     for line in info:
         if line[0] == "ActiveSiteServices":
             return [(None, None)]
+    return []
 
 
 def check_citrix_controller_services(_no_item, _no_params, info):
     for line in info:
         if line[0] == "ActiveSiteServices":
             return 0, " ".join(line[1:])
+    return None
 
 
 check_info["citrix_controller.services"] = {
@@ -69,6 +71,7 @@ def inventory_citrix_controller_registered(info):
     for line in info:
         if line[0] == "DesktopsRegistered":
             return [(None, None)]
+    return []
 
 
 def check_citrix_controller_registered(_no_item, params, info):
@@ -85,6 +88,7 @@ def check_citrix_controller_registered(_no_item, params, info):
             return check_levels(
                 count_desktops, "registered_desktops", levels, human_readable_func=int
             )
+    return None
 
 
 check_info["citrix_controller.registered"] = {
@@ -172,6 +176,7 @@ check_info["citrix_controller.sessions"] = {
 def inventory_citrix_controller_licensing(info):
     if info:
         return [(None, None)]
+    return []
 
 
 def check_citrix_controller_licensing(_no_item, _no_params, info):
@@ -243,6 +248,7 @@ def inventory_citrix_controller(info):
     for line in info:
         if line[0] == "ControllerState":
             return [(None, None)]
+    return []
 
 
 def check_citrix_controller(_no_item, _no_params, info):
@@ -256,6 +262,7 @@ def check_citrix_controller(_no_item, _no_params, info):
             if raw_state != "Active":
                 state = 2
             return state, raw_state
+    return None
 
 
 check_info["citrix_controller"] = {

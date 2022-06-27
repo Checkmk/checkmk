@@ -40,7 +40,6 @@ class AutomationCommandRegistry(cmk.utils.plugin_registry.Registry[Type[Automati
 automation_command_registry = AutomationCommandRegistry()
 
 
-@automation_command_registry.register
 class AutomationPing(AutomationCommand):
     def command_name(self) -> str:
         return "ping"

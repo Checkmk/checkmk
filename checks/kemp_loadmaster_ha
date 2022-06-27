@@ -11,6 +11,7 @@
 def inventory_kemp_loadmaster_ha(info):
     if info and info[0][0] != "0":
         return [(None, None)]
+    return []
 
 
 def check_kemp_loadmaster_ha(_no_item, _no_params, info):

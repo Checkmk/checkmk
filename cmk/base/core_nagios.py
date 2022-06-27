@@ -12,7 +12,7 @@ import socket
 import sys
 from io import StringIO
 from pathlib import Path
-from typing import Any, cast, Dict, IO, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any, cast, Dict, IO, Iterable, List, Optional, Set, Tuple
 
 import cmk.utils.config_path
 import cmk.utils.paths
@@ -32,7 +32,6 @@ from cmk.utils.type_defs import (
     HostName,
     HostsToUpdate,
     InventoryPluginName,
-    Item,
     ServicegroupName,
     ServiceName,
     TimeperiodName,
@@ -46,15 +45,10 @@ import cmk.base.obsolete_output as out
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.sources as sources
 import cmk.base.utils
-from cmk.base.check_utils import ServiceID
 from cmk.base.config import ConfigCache, HostConfig, ObjectAttributes
-from cmk.base.core_config import CoreCommand, CoreCommandName
+from cmk.base.core_config import AbstractServiceID, CoreCommand, CoreCommandName
 
 ObjectSpec = Dict[str, Any]
-
-ActiveServiceID = Tuple[str, Item]  # TODO: I hope the str someday (tm) becomes "CheckPluginName",
-CustomServiceID = Tuple[str, Item]  # #     at which point these will be the same as "ServiceID"
-AbstractServiceID = Union[ActiveServiceID, CustomServiceID, ServiceID]
 
 CHECK_INFO_BY_MIGRATED_NAME = {
     k: config.check_info[v] for k, v in config.legacy_check_plugin_names.items()
@@ -193,7 +187,7 @@ def _create_nagios_config_host(
     _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs)
 
 
-def _create_nagios_host_spec(
+def _create_nagios_host_spec(  # pylint: disable=too-many-branches
     cfg: NagiosConfig, config_cache: ConfigCache, hostname: HostName, attrs: ObjectAttributes
 ) -> ObjectSpec:
     host_config = config_cache.get_host_config(hostname)
@@ -298,7 +292,7 @@ def _create_nagios_host_spec(
     return host_spec
 
 
-def _create_nagios_servicedefs(
+def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
     cfg: NagiosConfig, config_cache: ConfigCache, hostname: HostName, host_attrs: ObjectAttributes
 ) -> None:
     from cmk.base.check_table import get_check_table  # pylint: disable=import-outside-toplevel
@@ -396,7 +390,7 @@ def _create_nagios_servicedefs(
         have_at_least_one_service = True
 
     # Active check for Check_MK
-    if have_at_least_one_service:
+    if host_config.checkmk_check_parameters().enabled:
         service_spec = {
             "use": config.active_service_template,
             "host_name": hostname,
@@ -422,76 +416,71 @@ def _create_nagios_servicedefs(
 
             # Make hostname available as global variable in argument functions
             with plugin_contexts.current_host(hostname):
+                for description, args in core_config.iter_active_check_services(
+                    acttype, act_info, hostname, host_attrs, params
+                ):
 
-                description = config.active_check_service_description(
-                    hostname, host_attrs["alias"], acttype, params
-                )
+                    if not description:
+                        core_config.warning(
+                            f"Skipping invalid service with empty description (active check: {acttype}) on host {hostname}"
+                        )
+                        continue
 
-                if not description:
-                    core_config.warning(
-                        f"Skipping invalid service with empty description (active check: {acttype}) on host {hostname}"
+                    if do_omit_service(hostname, description):
+                        continue
+
+                    # quote ! and \ for Nagios
+                    escaped_args = args.replace("\\", "\\\\").replace("!", "\\!")
+
+                    if description in used_descriptions:
+                        cn, _ = used_descriptions[description]
+                        # If we have the same active check again with the same description,
+                        # then we do not regard this as an error, but simply ignore the
+                        # second one. That way one can override a check with other settings.
+                        if cn == "active(%s)" % acttype:
+                            continue
+
+                        core_config.duplicate_service_warning(
+                            checktype="active",
+                            description=description,
+                            host_name=hostname,
+                            first_occurrence=used_descriptions[description],
+                            second_occurrence=("active(%s)" % acttype, None),
+                        )
+                        continue
+
+                    # TODO: is this right? description on the right, not item?
+                    used_descriptions[description] = ("active(" + acttype + ")", description)
+
+                    template = "check_mk_perf," if has_perfdata else ""
+
+                    if host_attrs["address"] in ["0.0.0.0", "::"]:
+                        command_name = "check-mk-custom"
+                        command = (
+                            command_name
+                            + '!echo "CRIT - Failed to lookup IP address and no explicit IP address configured" && exit 2'
+                        )
+                        cfg.custom_commands_to_define.add(command_name)
+                    else:
+                        command = "check_mk_active-%s!%s" % (acttype, escaped_args)
+
+                    service_spec = {
+                        "use": "%scheck_mk_default" % template,
+                        "host_name": hostname,
+                        "service_description": description,
+                        "check_command": _simulate_command(cfg, command),
+                        "active_checks_enabled": str(1),
+                    }
+                    service_spec.update(
+                        core_config.get_service_attributes(hostname, description, config_cache)
                     )
-                    continue
-
-                if do_omit_service(hostname, description):
-                    continue
-
-                # compute argument, and quote ! and \ for Nagios
-                args = (
-                    core_config.active_check_arguments(
-                        hostname, description, act_info["argument_function"](params)
+                    service_spec.update(
+                        _extra_service_conf_of(cfg, config_cache, hostname, description)
                     )
-                    .replace("\\", "\\\\")
-                    .replace("!", "\\!")
-                )
+                    cfg.write(_format_nagios_object("service", service_spec))
 
-            if description in used_descriptions:
-                cn, it = used_descriptions[description]
-                # If we have the same active check again with the same description,
-                # then we do not regard this as an error, but simply ignore the
-                # second one. That way one can override a check with other settings.
-                if cn == "active(%s)" % acttype:
-                    continue
-
-                core_config.duplicate_service_warning(
-                    checktype="active",
-                    description=description,
-                    host_name=hostname,
-                    first_occurrence=(cn, it),
-                    second_occurrence=("active(%s)" % acttype, None),
-                )
-                continue
-
-            # TODO: is this right? description on the right, not item?
-            used_descriptions[description] = ("active(" + acttype + ")", description)
-
-            template = "check_mk_perf," if has_perfdata else ""
-
-            if host_attrs["address"] in ["0.0.0.0", "::"]:
-                command_name = "check-mk-custom"
-                command = (
-                    command_name
-                    + '!echo "CRIT - Failed to lookup IP address and no explicit IP address configured" && exit 2'
-                )
-                cfg.custom_commands_to_define.add(command_name)
-            else:
-                command = "check_mk_active-%s!%s" % (acttype, args)
-
-            service_spec = {
-                "use": "%scheck_mk_default" % template,
-                "host_name": hostname,
-                "service_description": description,
-                "check_command": _simulate_command(cfg, command),
-                "active_checks_enabled": str(1),
-            }
-            service_spec.update(
-                core_config.get_service_attributes(hostname, description, config_cache)
-            )
-            service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, description))
-            cfg.write(_format_nagios_object("service", service_spec))
-
-            # write service dependencies for active checks
-            cfg.write(get_dependencies(hostname, description))
+                    # write service dependencies for active checks
+                    cfg.write(get_dependencies(hostname, description))
 
     # Legacy checks via custom_checks
     custchecks = host_config.custom_checks
@@ -540,7 +529,7 @@ def _create_nagios_servicedefs(
             cfg.custom_commands_to_define.add(command_name)
 
             if description in used_descriptions:
-                cn, it = used_descriptions[description]
+                cn, _ = used_descriptions[description]
                 # If we have the same active check again with the same description,
                 # then we do not regard this as an error, but simply ignore the
                 # second one.
@@ -551,7 +540,7 @@ def _create_nagios_servicedefs(
                     checktype="custom",
                     description=description,
                     host_name=hostname,
-                    first_occurrence=(cn, it),
+                    first_occurrence=used_descriptions[description],
                     second_occurrence=("custom(%s)" % command_name, description),
                 )
                 continue
@@ -581,8 +570,7 @@ def _create_nagios_servicedefs(
     service_discovery_name = config_cache.service_discovery_name()
 
     # Inventory checks - if user has configured them.
-    params = host_config.discovery_check_parameters
-    if host_config.add_service_discovery_check(params, service_discovery_name):
+    if not (disco_params := host_config.discovery_check_parameters()).commandline_only:
         service_spec = {
             "use": config.inventory_check_template,
             "host_name": hostname,
@@ -598,8 +586,8 @@ def _create_nagios_servicedefs(
 
         service_spec.update(
             {
-                "check_interval": params["check_interval"],
-                "retry_interval": params["check_interval"],
+                "check_interval": str(disco_params.check_interval),
+                "retry_interval": str(disco_params.check_interval),
             }
         )
 
@@ -864,13 +852,11 @@ def _create_nagios_config_timeperiods(cfg: NagiosConfig) -> None:
 
 
 def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: List[HostName]) -> None:
-    if len(config.contacts) > 0:
+    if config.contacts:
         cfg.write("\n# ------------------------------------------------------------\n")
         cfg.write("# Contact definitions (controlled by variable 'contacts')\n")
         cfg.write("# ------------------------------------------------------------\n\n")
-        cnames = sorted(config.contacts)
-        for cname in cnames:
-            contact = config.contacts[cname]
+        for cname, contact in sorted(config.contacts.items()):
             # Create contact groups in nagios, even when they are empty. This is needed
             # for RBN to work correctly when using contactgroups as recipients which are
             # not assigned to any host
@@ -888,7 +874,7 @@ def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: List[HostName])
             if not cgrs:
                 continue
 
-            contact_spec = {
+            contact_spec: ObjectSpec = {
                 "contact_name": cname,
             }
 
@@ -901,13 +887,19 @@ def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: List[HostName])
             if "pager" in contact:
                 contact_spec["pager"] = contact["pager"]
 
-            if config.enable_rulebased_notifications:
-                not_enabled = False
-            else:
-                not_enabled = contact.get("notifications_enabled", True)
+            not_enabled = (
+                False
+                if config.enable_rulebased_notifications
+                else contact.get("notifications_enabled", True)
+            )
 
             for what in ["host", "service"]:
-                no = contact.get(what + "_notification_options", "")
+                if what == "host":
+                    no: str = contact.get("host_notification_options", "")
+                elif what == "service":
+                    no = contact.get("service_notification_options", "")
+                else:
+                    raise ValueError()
 
                 if not no or not not_enabled:
                     contact_spec["%s_notifications_enabled" % what] = 0
@@ -923,8 +915,7 @@ def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: List[HostName])
                 )
 
             # Add custom macros
-            for macro in [m for m in contact if m.startswith("_")]:
-                contact_spec[macro] = contact[macro]
+            contact_spec.update({key: val for key, val in contact.items() if key.startswith("_")})
 
             contact_spec["contactgroups"] = ", ".join(cgrs)
             cfg.write(_format_nagios_object("contact", contact_spec))
@@ -1095,7 +1086,7 @@ def _precompile_hostchecks(config_path: VersionedConfigPath) -> None:
             sys.exit(5)
 
 
-def _dump_precompiled_hostcheck(
+def _dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
     config_cache: ConfigCache,
     config_path: VersionedConfigPath,
     hostname: HostName,

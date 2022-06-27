@@ -372,7 +372,9 @@ def check_fileinfo_data(
         yield Result(state=State.OK, summary="File not found - %s" % outof_range_txt)
 
     else:
-        yield Result(state=params.get("state_missing", State.UNKNOWN), summary="File not found")
+        yield Result(
+            state=State(value=params.get("state_missing", State.UNKNOWN)), summary="File not found"
+        )
 
 
 def _filename_matches(

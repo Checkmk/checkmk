@@ -17,15 +17,14 @@ from livestatus import SiteId
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
-# It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.sites as sites
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _, _l
-from cmk.gui.permissions import permission_section_registry, PermissionSection
+from cmk.gui.permissions import PermissionSection
 from cmk.gui.valuespec import DropdownChoiceEntries
 
 
@@ -116,14 +115,13 @@ action_whats = {
 }
 
 
-@permission_section_registry.register
 class PermissionSectionEventConsole(PermissionSection):
     @property
-    def name(self):
+    def name(self) -> str:
         return "mkeventd"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Event Console")
 
 
@@ -209,7 +207,7 @@ def query_ec_directly(query):
         return ast.literal_eval(response_text.decode())
     except SyntaxError:
         raise MKGeneralException(
-            _("Invalid response from event daemon: " "<pre>%s</pre>") % response_text
+            _("Invalid response from event daemon: <pre>%s</pre>") % response_text
         )
 
     except Exception as e:
@@ -315,7 +313,7 @@ def event_rule_matches(rule_pack, rule, event):
     return result
 
 
-def event_rule_matches_non_inverted(rule_pack, rule, event):
+def event_rule_matches_non_inverted(rule_pack, rule, event):  # pylint: disable=too-many-branches
     if not match_ipv4_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
         return _("The source IP address does not match.")
 
@@ -402,6 +400,7 @@ def check_timeperiod(tpname):
             return _("The timeperiod %s is not known to the local monitoring core") % tpname
         if int(answer) == 0:
             return _("The timeperiod %s is currently not active") % tpname
+        return None
     except Exception as e:
         if active_config.debug:
             raise

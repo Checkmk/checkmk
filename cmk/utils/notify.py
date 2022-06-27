@@ -7,7 +7,7 @@
 import os
 import subprocess
 from logging import Logger
-from typing import List, NewType, Optional
+from typing import List, NewType, Optional, TypedDict
 
 import cmk.utils.defines
 from cmk.utils.exceptions import MKGeneralException
@@ -23,6 +23,14 @@ MAX_PLUGIN_OUTPUT_LENGTH = 1000
 NotificationResultCode = NewType("NotificationResultCode", int)
 NotificationPluginName = NewType("NotificationPluginName", str)
 NotificationContext = NewType("NotificationContext", dict[str, str])
+
+
+class NotificationResult(TypedDict, total=False):
+    plugin: NotificationPluginName
+    status: NotificationResultCode
+    output: List[str]
+    forward: bool
+    context: NotificationContext
 
 
 def _state_for(exit_code: NotificationResultCode) -> str:
@@ -135,7 +143,7 @@ def ensure_utf8(logger: Optional[Logger] = None) -> None:
     exit_code: int = proc.returncode
     error_msg: str = _("Command 'locale -a' could not be executed. Exit code of command was")
     not_found_msg: str = _(
-        "No UTF-8 encoding found in your locale -a! " "Please install appropriate locales."
+        "No UTF-8 encoding found in your locale -a! Please install appropriate locales."
     )
     if exit_code != 0:
         if not logger:

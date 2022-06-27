@@ -25,13 +25,13 @@ EXPECTED_TEST_FILES = ["check_mk_agent.msi", msi_engine.AGENT_MSI_FILE, "check_m
 
 
 @pytest.mark.parametrize("executable", EXPECTED_EXECUTABLES)
-def test_executables(site: Site, executable):
+def test_executables(site: Site, executable) -> None:
     bin_path = Path(site.path("bin"))
     assert Path(bin_path / executable).exists(), "path: '{}' exe: '{}'".format(bin_path, executable)
 
 
 @pytest.mark.parametrize("test_file", EXPECTED_TEST_FILES)
-def test_files(site: Site, test_file):
+def test_files(site: Site, test_file) -> None:
     msi_path = Path(site.path(MSI_LOCATION))
     assert Path(msi_path / test_file).exists(), "path: '{}' file: '{}'".format(msi_path, test_file)
 
@@ -42,7 +42,7 @@ def _get_msi_file_path_not_signed(site: Site):
 
 
 # check the export with site/bin tools
-def test_export_msi_file(site: Site, tmp_path):
+def test_export_msi_file(site: Site, tmp_path) -> None:
     msi_file = _get_msi_file_path_not_signed(site=site)
 
     out_dir = tmp_path / "idts"
@@ -126,7 +126,7 @@ def test_copy_or_create(tmp_path: Path) -> None:
     assert content == "+++"
 
 
-def test_generate_product_versions():
+def test_generate_product_versions() -> None:
     test = [
         ["1.7.0i1", "1.7.0.xxx"],
         ["1.2.5i4p1", "1.2.5.xxx"],

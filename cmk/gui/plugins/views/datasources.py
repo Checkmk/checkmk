@@ -3,6 +3,9 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Sequence
+
+from livestatus import LivestatusColumn, Query, QuerySpecification
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.utils import (
@@ -13,20 +16,21 @@ from cmk.gui.plugins.views.utils import (
     RowTable,
     RowTableLivestatus,
 )
+from cmk.gui.type_defs import SingleInfos
 
 
 @data_source_registry.register
 class DataSourceHosts(DataSourceLivestatus):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "hosts"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("All hosts")
 
     @property
-    def infos(self):
+    def infos(self) -> SingleInfos:
         return ["host"]
 
     @property
@@ -54,15 +58,15 @@ class DataSourceHosts(DataSourceLivestatus):
 @data_source_registry.register
 class DataSourceHostsByGroup(DataSourceLivestatus):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "hostsbygroup"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Hosts grouped by host groups")
 
     @property
-    def infos(self):
+    def infos(self) -> SingleInfos:
         return ["host", "hostgroup"]
 
     @property
@@ -81,15 +85,15 @@ class DataSourceHostsByGroup(DataSourceLivestatus):
 @data_source_registry.register
 class DataSourceServices(DataSourceLivestatus):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "services"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("All services")
 
     @property
-    def infos(self):
+    def infos(self) -> SingleInfos:
         return ["service", "host"]
 
     @property
@@ -118,15 +122,15 @@ class DataSourceServices(DataSourceLivestatus):
 @data_source_registry.register
 class DataSourceServicesByGroup(DataSourceLivestatus):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "servicesbygroup"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Services grouped by service groups")
 
     @property
-    def infos(self):
+    def infos(self) -> SingleInfos:
         return ["service", "host", "servicegroup"]
 
     @property
@@ -141,15 +145,15 @@ class DataSourceServicesByGroup(DataSourceLivestatus):
 @data_source_registry.register
 class DataSourceServicesByHostGroup(DataSourceLivestatus):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "servicesbyhostgroup"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Services grouped by host groups")
 
     @property
-    def infos(self):
+    def infos(self) -> SingleInfos:
         return ["service", "host", "hostgroup"]
 
     @property
@@ -164,15 +168,15 @@ class DataSourceServicesByHostGroup(DataSourceLivestatus):
 @data_source_registry.register
 class DataSourceHostGroups(DataSourceLivestatus):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "hostgroups"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Host groups")
 
     @property
-    def infos(self):
+    def infos(self) -> SingleInfos:
         return ["hostgroup"]
 
     @property
@@ -189,11 +193,11 @@ class DataSourceMergedHostGroups(DataSourceLivestatus):
     """Merged groups across sites"""
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "merged_hostgroups"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Host groups, merged")
 
     @property
@@ -201,7 +205,7 @@ class DataSourceMergedHostGroups(DataSourceLivestatus):
         return RowTableLivestatus("hostgroups")
 
     @property
-    def infos(self):
+    def infos(self) -> SingleInfos:
         return ["hostgroup"]
 
     @property
@@ -220,15 +224,15 @@ class DataSourceMergedHostGroups(DataSourceLivestatus):
 @data_source_registry.register
 class DataSourceServiceGroups(DataSourceLivestatus):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "servicegroups"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Service groups")
 
     @property
-    def infos(self):
+    def infos(self) -> SingleInfos:
         return ["servicegroup"]
 
     @property
@@ -245,11 +249,11 @@ class DataSourceMergedServiceGroups(ABCDataSource):
     """Merged groups across sites"""
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "merged_servicegroups"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Service groups, merged")
 
     @property
@@ -257,7 +261,7 @@ class DataSourceMergedServiceGroups(ABCDataSource):
         return RowTableLivestatus("servicegroups")
 
     @property
-    def infos(self):
+    def infos(self) -> SingleInfos:
         return ["servicegroup"]
 
     @property
@@ -276,15 +280,15 @@ class DataSourceMergedServiceGroups(ABCDataSource):
 @data_source_registry.register
 class DataSourceComments(DataSourceLivestatus):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "comments"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Host- and Servicecomments")
 
     @property
-    def infos(self):
+    def infos(self) -> SingleInfos:
         return ["comment", "host", "service"]
 
     @property
@@ -299,15 +303,15 @@ class DataSourceComments(DataSourceLivestatus):
 @data_source_registry.register
 class DataSourceDowntimes(DataSourceLivestatus):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "downtimes"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Scheduled Downtimes")
 
     @property
-    def infos(self):
+    def infos(self) -> SingleInfos:
         return ["downtime", "host", "service"]
 
     @property
@@ -321,7 +325,7 @@ class DataSourceDowntimes(DataSourceLivestatus):
 
 class LogDataSource(DataSourceLivestatus):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "log"
 
     @property
@@ -329,7 +333,7 @@ class LogDataSource(DataSourceLivestatus):
         return RowTableLivestatus("log")
 
     @property
-    def infos(self):
+    def infos(self) -> SingleInfos:
         return ["log", "host", "service", "contact", "command"]
 
     @property
@@ -348,22 +352,22 @@ class LogDataSource(DataSourceLivestatus):
 @data_source_registry.register
 class DataSourceLog(LogDataSource):
     @property
-    def title(self):
+    def title(self) -> str:
         return _("The Logfile")
 
 
 @data_source_registry.register
 class DataSourceLogHostAndServiceEvents(LogDataSource):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "log_events"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Host and Service Events")
 
     @property
-    def infos(self):
+    def infos(self) -> SingleInfos:
         return ["log", "host", "service"]
 
     @property
@@ -374,15 +378,15 @@ class DataSourceLogHostAndServiceEvents(LogDataSource):
 @data_source_registry.register
 class DataSourceLogHostEvents(LogDataSource):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "log_host_events"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Host Events")
 
     @property
-    def infos(self):
+    def infos(self) -> SingleInfos:
         return ["log", "host"]
 
     @property
@@ -393,15 +397,15 @@ class DataSourceLogHostEvents(LogDataSource):
 @data_source_registry.register
 class DataSourceLogAlertStatistics(LogDataSource):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "alert_stats"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Alert Statistics")
 
     @property
-    def infos(self):
+    def infos(self) -> SingleInfos:
         return ["log", "host", "service", "contact", "command"]
 
     @property
@@ -430,11 +434,11 @@ class DataSourceLogAlertStatistics(LogDataSource):
 @data_source_registry.register
 class DataSourceServiceDiscovery(ABCDataSource):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "service_discovery"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Service discovery")
 
     @property
@@ -442,7 +446,7 @@ class DataSourceServiceDiscovery(ABCDataSource):
         return ServiceDiscoveryRowTable()
 
     @property
-    def infos(self):
+    def infos(self) -> SingleInfos:
         return ["host", "discovery"]
 
     @property
@@ -469,13 +473,14 @@ class ServiceDiscoveryRowTable(RowTable):
     # filters to the host livestatus query and apply the others during the discovery
     # service query.
 
-    def prepare_lql(self, columns, headers):
-        query = "GET services\n"
-        query += "Columns: %s\n" % " ".join(columns)
-        query += headers
-        # Hard code the discovery service filter
-        query += "Filter: check_command = check-mk-inventory\n"
-        return query
+    def create_livestatus_query(self, columns: Sequence[LivestatusColumn], headers: str) -> Query:
+        return Query(
+            QuerySpecification(
+                table="services",
+                columns=columns,
+                headers=headers + "Filter: check_command = check-mk-inventory\n",
+            )
+        )
 
     def query(self, view, columns, headers, only_sites, limit, all_active_filters):
 
@@ -483,8 +488,9 @@ class ServiceDiscoveryRowTable(RowTable):
             columns.append("long_plugin_output")
 
         columns = [c for c in columns if c not in view.datasource.add_columns]
-        query = self.prepare_lql(columns, headers)
-        data = query_livestatus(query, only_sites, limit, "read")
+        data = query_livestatus(
+            self.create_livestatus_query(columns, headers), only_sites, limit, "read"
+        )
 
         columns = ["site"] + columns
         service_rows = [dict(zip(columns, row)) for row in data]

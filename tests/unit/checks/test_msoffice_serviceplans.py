@@ -22,7 +22,7 @@ pytestmark = pytest.mark.checks
         ({"levels": (0, 1)}, 2, " (warn/crit at 0/1)"),
     ],
 )
-def test_check_win_license(params, expected_status, expected_levels_info):
+def test_check_win_license(params, expected_status, expected_levels_info) -> None:
     check = Check("msoffice_serviceplans")
 
     item = "bundle"

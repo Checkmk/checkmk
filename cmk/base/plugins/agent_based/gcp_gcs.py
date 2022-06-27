@@ -17,16 +17,19 @@ def parse_gcp_gcs(string_table: StringTable) -> gcp.Section:
 register.agent_section(name="gcp_service_gcs", parse_function=parse_gcp_gcs)
 
 
+service_namer = gcp.service_name_factory("GCS")
+SECTIONS = ["gcp_service_gcs", "gcp_assets"]
+ASSET_TYPE = "storage.googleapis.com/Bucket"
+
+
 def discover(
-    section_gcp_service_gcs: Optional[gcp.Section], section_gcp_assets: Optional[gcp.AssetSection]
+    section_gcp_service_gcs: Optional[gcp.Section],
+    section_gcp_assets: Optional[gcp.AssetSection],
 ) -> DiscoveryResult:
-    if section_gcp_assets is None:
+    if section_gcp_assets is None or not section_gcp_assets.config.is_enabled("gcs"):
         return
-    bucket_type = "storage.googleapis.com/Bucket"
-    buckets = [a for a in section_gcp_assets if a.asset.asset_type == bucket_type]
-    for bucket in buckets:
+    for item, bucket in section_gcp_assets[ASSET_TYPE].items():
         data = bucket.asset.resource.data
-        item = data["id"]
         labels = [ServiceLabel(f"gcp/labels/{k}", v) for k, v in data["labels"].items()]
         labels.append(ServiceLabel("gcp/location", data["location"]))
         labels.append(ServiceLabel("gcp/bucket/storageClass", data["storageClass"]))
@@ -41,23 +44,22 @@ def check_gcp_gcs_requests(
     section_gcp_service_gcs: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_gcs is None:
-        return
     metrics = {
-        "requests": gcp.MetricSpec("storage.googleapis.com/api/request_count", "requests", str)
+        "requests": gcp.MetricSpec("storage.googleapis.com/api/request_count", "Requests", str)
     }
-    timeseries = section_gcp_service_gcs.get(item, gcp.SectionItem(rows=[])).rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_gcs, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(
     name="gcp_gcs_requests",
-    sections=["gcp_service_gcs", "gcp_assets"],
-    service_name="GCP GCS requests %s",
+    sections=SECTIONS,
+    service_name=service_namer("requests"),
     check_ruleset_name="gcp_gcs_requests",
     discovery_function=discover,
     check_function=check_gcp_gcs_requests,
-    check_default_parameters={},
+    check_default_parameters={"requests": None},
 )
 
 
@@ -67,8 +69,6 @@ def check_gcp_gcs_network(
     section_gcp_service_gcs: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_gcs is None:
-        return
     metrics = {
         "net_data_sent": gcp.MetricSpec(
             "storage.googleapis.com/network/sent_bytes_count", "Out", render.networkbandwidth
@@ -77,14 +77,15 @@ def check_gcp_gcs_network(
             "storage.googleapis.com/network/received_bytes_count", "In", render.networkbandwidth
         ),
     }
-    timeseries = section_gcp_service_gcs.get(item, gcp.SectionItem(rows=[])).rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_gcs, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(
     name="gcp_gcs_network",
-    sections=["gcp_service_gcs", "gcp_assets"],
-    service_name="GCP GCS networks %s",
+    sections=SECTIONS,
+    service_name=service_namer("networks"),
     check_ruleset_name="gcp_gcs_network",
     discovery_function=discover,
     check_function=check_gcp_gcs_network,
@@ -98,8 +99,6 @@ def check_gcp_gcs_object(
     section_gcp_service_gcs: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_gcs is None:
-        return
     metrics = {
         "aws_bucket_size": gcp.MetricSpec(
             "storage.googleapis.com/storage/total_bytes", "Bucket size", render.bytes
@@ -108,14 +107,15 @@ def check_gcp_gcs_object(
             "storage.googleapis.com/storage/object_count", "Objects", str
         ),
     }
-    timeseries = section_gcp_service_gcs.get(item, gcp.SectionItem(rows=[])).rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_gcs, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(
     name="gcp_gcs_objects",
-    sections=["gcp_service_gcs", "gcp_assets"],
-    service_name="GCP GCS objects %s",
+    sections=SECTIONS,
+    service_name=service_namer("objects"),
     check_ruleset_name="gcp_gcs_objects",
     discovery_function=discover,
     check_function=check_gcp_gcs_object,

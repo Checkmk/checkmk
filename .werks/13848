@@ -1,0 +1,12 @@
+Title: check_sql: make --text option WATO configurable
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1649953680
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+The `--text` option is now WATO configurable.
+It lets users prefix the output with an additional text.

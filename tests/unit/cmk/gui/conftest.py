@@ -23,17 +23,21 @@ from mock import MagicMock
 from tests.testlib.users import create_and_destroy_user
 
 import cmk.utils.log
+from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.utils.type_defs import UserId
+
+from cmk.automations.results import DeleteHostsResult
 
 import cmk.gui.config as config_module
 import cmk.gui.login as login
 import cmk.gui.watolib.activate_changes as activate_changes
-from cmk.gui import main_modules, watolib
-from cmk.gui.globals import active_config
+import cmk.gui.watolib.groups as groups
+from cmk.gui import main_modules
+from cmk.gui.config import active_config
 from cmk.gui.logged_in import SuperUserContext, UserContext
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
-from cmk.gui.utils.script_helpers import application_and_request_context, session_wsgi_app
+from cmk.gui.utils.script_helpers import session_wsgi_app
 from cmk.gui.watolib import hosts_and_folders, search
 
 SPEC_LOCK = threading.Lock()
@@ -54,13 +58,6 @@ HTTPMethod = Literal[
     "POST",
     "DELETE",
 ]  # yapf: disable
-
-
-@pytest.fixture()
-def request_context() -> Iterator[None]:
-    """This fixture registers a global htmllib.html() instance just like the regular GUI"""
-    with application_and_request_context():
-        yield
 
 
 @pytest.fixture()
@@ -95,6 +92,16 @@ def load_plugins() -> None:
     main_modules.load_plugins()
     if errors := get_failed_plugins():
         raise Exception(f"The following errors occured during plugin loading: {errors}")
+
+    # our test environment does not deal with namespace packages properly.
+    # Load plus plugins explicitly:
+    try:
+        load_plugins = list(load_plugins_with_exceptions("plus.cmk.gui.plugins"))
+    except ModuleNotFoundError:
+        pass
+    else:
+        for _plugin, exception in load_plugins:
+            raise exception
 
 
 @pytest.fixture(name="patch_json", autouse=True)
@@ -135,7 +142,7 @@ def suppress_remote_automation_calls(mocker: MagicMock) -> Iterator[RemoteAutoma
     This is needed because in order for remote automation calls to work, the site needs to be set up
     properly, which can't be done in an unit-test context."""
     remote_automation = mocker.patch("cmk.gui.watolib.automations.do_remote_automation")
-    mocker.patch("cmk.gui.watolib.do_remote_automation", new=remote_automation)
+    mocker.patch("cmk.gui.watolib.automations.do_remote_automation", new=remote_automation)
     yield RemoteAutomation(
         automation=remote_automation,
         responses=None,
@@ -145,7 +152,7 @@ def suppress_remote_automation_calls(mocker: MagicMock) -> Iterator[RemoteAutoma
 @pytest.fixture()
 def make_html_object_explode(mocker: MagicMock) -> None:
     class HtmlExploder:
-        def __init__(self, *args, **kw):
+        def __init__(self, *args, **kw) -> None:
             raise NotImplementedError("Tried to instantiate html")
 
     mocker.patch("cmk.gui.htmllib.html", new=HtmlExploder)
@@ -162,8 +169,8 @@ def inline_background_jobs(mocker: MagicMock) -> None:
     # We stub out everything preventing smooth execution.
     mocker.patch("multiprocessing.Process.join")
     mocker.patch("sys.exit")
-    mocker.patch("cmk.gui.watolib.ActivateChangesSite._detach_from_parent")
-    mocker.patch("cmk.gui.watolib.ActivateChangesSite._close_apache_fds")
+    mocker.patch("cmk.gui.watolib.activate_changes.ActivateChangesSite._detach_from_parent")
+    mocker.patch("cmk.gui.watolib.activate_changes.ActivateChangesSite._close_apache_fds")
     mocker.patch("cmk.gui.background_job.BackgroundProcess._detach_from_parent")
     mocker.patch("cmk.gui.background_job.BackgroundProcess._open_stdout_and_stderr")
     mocker.patch("cmk.gui.background_job.BackgroundProcess._register_signal_handlers")
@@ -311,18 +318,17 @@ def logged_in_admin_wsgi_app(wsgi_app, with_admin):
 
 @pytest.fixture()
 def with_groups(request_context, with_admin_login, suppress_remote_automation_calls):
-    watolib.add_group("windows", "host", {"alias": "windows"})
-    watolib.add_group("routers", "service", {"alias": "routers"})
-    watolib.add_group("admins", "contact", {"alias": "admins"})
+    groups.add_group("windows", "host", {"alias": "windows"})
+    groups.add_group("routers", "service", {"alias": "routers"})
+    groups.add_group("admins", "contact", {"alias": "admins"})
     yield
-    watolib.delete_group("windows", "host")
-    watolib.delete_group("routers", "service")
-    watolib.delete_group("admins", "contact")
+    groups.delete_group("windows", "host")
+    groups.delete_group("routers", "service")
+    groups.delete_group("admins", "contact")
 
 
 @pytest.fixture()
 def with_host(
-    monkeypatch: pytest.MonkeyPatch,
     request_context,
     with_admin_login,
 ):
@@ -331,11 +337,9 @@ def with_host(
         [(hostname, {}, None) for hostname in hostnames]
     )
     yield hostnames
-    monkeypatch.setattr(
-        "cmk.gui.watolib.hosts_and_folders.delete_hosts",
-        lambda *args, **kwargs: None,
+    hosts_and_folders.CREFolder.root_folder().delete_hosts(
+        hostnames, automation=lambda *args, **kwargs: DeleteHostsResult()
     )
-    hosts_and_folders.CREFolder.root_folder().delete_hosts(hostnames)
 
 
 @pytest.fixture(autouse=True)
@@ -349,7 +353,7 @@ def run_as_user() -> Callable[[UserId], ContextManager[None]]:
 
     Examples:
 
-        def test_function(run_as_user):
+        def test_function(run_as_user) -> None:
             print("Run as Nobody")
             with run_as_user(UserID("egon")):
                  print("Run as 'egon'")
@@ -372,7 +376,7 @@ def run_as_superuser() -> Callable[[], ContextManager[None]]:
 
     Examples:
 
-        def test_function(run_as_superuser):
+        def test_function(run_as_superuser) -> None:
             print("Run as Nobody")
             with run_as_superuser():
                  print("Run as Superuser")

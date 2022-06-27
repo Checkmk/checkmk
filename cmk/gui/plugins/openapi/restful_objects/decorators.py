@@ -16,6 +16,7 @@ import functools
 import hashlib
 import http.client
 import json
+import logging
 import typing
 from types import FunctionType
 from typing import (
@@ -33,6 +34,7 @@ from typing import (
     TypeVar,
     Union,
 )
+from urllib import parse
 
 import apispec  # type: ignore[import]
 import apispec.utils  # type: ignore[import]
@@ -46,7 +48,8 @@ from cmk.utils import store
 
 from cmk.gui import fields
 from cmk.gui import http as cmk_http
-from cmk.gui.globals import active_config, request
+from cmk.gui.config import active_config
+from cmk.gui.http import request
 from cmk.gui.permissions import permission_registry
 from cmk.gui.plugins.openapi.restful_objects import permissions
 from cmk.gui.plugins.openapi.restful_objects.code_examples import code_samples
@@ -92,6 +95,9 @@ K = TypeVar("K")
 V = TypeVar("V")
 
 WrappedFunc = Callable[[typing.Mapping[str, Any]], cmk_http.Response]
+
+
+_logger = logging.getLogger(__name__)
 
 
 class WrappedEndpoint:
@@ -339,14 +345,14 @@ class Endpoint:
 
     """
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-branches
         self,
         path: str,
         link_relation: LinkRelation,
         method: HTTPMethod = "get",
         content_type: str = "application/json",
         output_empty: bool = False,
-        error_schemas: Optional[Mapping[ErrorStatusCodeInt, Type[Schema]]] = None,
+        error_schemas: Optional[Mapping[ErrorStatusCodeInt, Type[ApiError]]] = None,
         response_schema: Optional[RawParameter] = None,
         request_schema: Optional[RawParameter] = None,
         convert_response: bool = True,
@@ -449,6 +455,10 @@ class Endpoint:
                     f"Status code {status_code} not expected for endpoint: {method.upper()} {path}"
                 )
 
+    def error_schema(self, status_code: ErrorStatusCodeInt) -> ApiError:
+        schema: Type[ApiError] = self.error_schemas.get(status_code, ApiError)
+        return schema()
+
     @contextlib.contextmanager
     def do_not_track_permissions(self) -> typing.Iterator[None]:
         self.track_permissions = False
@@ -462,7 +472,7 @@ class Endpoint:
         the request has been done, everything is forgotten again."""
         self._used_permissions.add(permission)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Endpoint {self.func.__module__}:{self.func.__name__}>"
 
     def _list(self, sequence: Optional[Sequence[T]]) -> List[T]:
@@ -599,7 +609,9 @@ class Endpoint:
             raise RuntimeError("Decorating failure. function not set.")
 
         @functools.wraps(self.func)
-        def _validating_wrapper(param: typing.Mapping[str, Any]) -> cmk_http.Response:
+        def _validating_wrapper(  # pylint: disable=too-many-branches
+            param: typing.Mapping[str, Any]
+        ) -> cmk_http.Response:
             # TODO: Better error messages, pointing to the location where variables are missing
 
             _params = dict(param)
@@ -636,7 +648,9 @@ class Endpoint:
 
             try:
                 if path_schema:
-                    _params.update(path_schema().load(_params))
+                    _params.update(
+                        path_schema().load({k: parse.unquote(v) for k, v in _params.items()})
+                    )
             except ValidationError as exc:
                 return _problem(exc, status_code=404)
 
@@ -690,7 +704,7 @@ class Endpoint:
             try:
                 response = self.func(_params)
             except ValidationError as exc:
-                return _problem(exc, status_code=400)
+                response = _problem(exc, status_code=400)
 
             # We don't expect a permission to be triggered when an endpoint ran into an error.
             if response.status_code < 400:
@@ -698,15 +712,35 @@ class Endpoint:
                     self.permissions_required is not None
                     and not self.permissions_required.validate(list(self._used_permissions))
                 ):
-                    # Intentionally generate a crash report.
-                    raise PermissionError(
-                        "There can be some causes for this error:\n"
-                        "* a permission which was required (successfully) was not declared\n"
-                        "* a permission which was declared (not optional) was not required\n"
-                        "* No permission was required at all, although permission were declared\n"
-                        f"Endpoint: {self}\n"
-                        f"Required: {list(self._used_permissions)}\n"
-                        f"Declared: {self.permissions_required}\n"
+
+                    required_permissions = list(self._used_permissions)
+                    declared_permissions = self.permissions_required
+
+                    _logger.error(
+                        "Permission mismatch: %r Params: %s Required: %s Declared: %s",
+                        self,
+                        _params,
+                        required_permissions,
+                        declared_permissions,
+                    )
+
+                    if request.environ.get("paste.testing"):
+                        raise PermissionError(
+                            "Permission mismatch\n"
+                            "There can be some causes for this error:\n"
+                            "* a permission which was required (successfully) was not declared\n"
+                            "* a permission which was declared (not optional) was not required\n"
+                            "* No permission was required at all, although permission were declared\n"
+                            f"Endpoint: {self}\n"
+                            f"Params: {_params!r}\n"
+                            f"Required: {required_permissions}\n"
+                            f"Declared: {declared_permissions}\n"
+                        )
+
+                    return problem(
+                        status=500,
+                        title="Internal Server Error",
+                        detail="Permission mismatch. See the server logs for more information.",
                     )
 
             if self.output_empty and response.status_code < 400 and response.data:
@@ -775,6 +809,20 @@ class Endpoint:
 
                 if self.convert_response:
                     response.set_data(json.dumps(outbound))
+            elif response.headers["Content-Type"] == "application/problem+json" and response.data:
+                data = response.data.decode("utf-8")
+                try:
+                    json.loads(data)
+                except ValidationError as exc:
+                    return problem(
+                        status=500,
+                        title="Server was about to send an invalid response.",
+                        detail="This is an error of the implementation.",
+                        ext={
+                            "errors": exc.messages,
+                            "orig": data,
+                        },
+                    )
 
             response.freeze()
             return response
@@ -803,7 +851,7 @@ class Endpoint:
         return any(code in self._expected_status_codes for code in [201, 301, 302])
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         """Provide an identity for the Endpoint
 
         This can be used for keys in a dictionary, e.g. the ENDPOINT_REGISTRY."""
@@ -846,7 +894,7 @@ class Endpoint:
             headers=headers,
         )
 
-    def to_operation_dict(self) -> OperationSpecType:
+    def to_operation_dict(self) -> OperationSpecType:  # pylint: disable=too-many-branches
         """Generate the openapi spec part of this endpoint.
 
         The result needs to be added to the `apispec` instance manually.
@@ -1289,6 +1337,19 @@ def _permission_descriptions(
         'This endpoint requires the following permissions: \n * `wato.edit_folders`: Allowed to cook the books.\n'
 
         >>> _permission_descriptions(
+        ...     permissions.AllPerm([permissions.Perm("wato.edit_folders")]),
+        ...     {'wato.edit_folders': 'Allowed to cook the books.'},
+        ... )
+        'This endpoint requires the following permissions: \n * `wato.edit_folders`: Allowed to cook the books.\n'
+
+        >>> _permission_descriptions(
+        ...     permissions.AllPerm([permissions.Perm("wato.edit_folders"),
+        ...                          permissions.Ignore(permissions.Perm("wato.edit"))]),
+        ...     {'wato.edit_folders': 'Allowed to cook the books.'},
+        ... )
+        'This endpoint requires the following permissions: \n * `wato.edit_folders`: Allowed to cook the books.\n'
+
+        >>> _permission_descriptions(
         ...     permissions.AnyPerm([permissions.Perm("wato.edit_folders"), permissions.Perm("wato.edit_folders")]),
         ...     {'wato.edit_folders': 'Allowed to cook the books.'},
         ... )
@@ -1321,6 +1382,9 @@ def _permission_descriptions(
     description_map: Dict[str, str] = descriptions if descriptions is not None else {}
     _description: List[str] = ["This endpoint requires the following permissions: "]
 
+    def _count_perms(_perms):
+        return len([p for p in _perms if not isinstance(p, permissions.Ignore)])
+
     def _add_desc(permission: permissions.BasePerm, indent: int, desc_list: List[str]) -> None:
         # We indent by two spaces, as is required by markdown.
         prefix = "  " * indent
@@ -1329,16 +1393,27 @@ def _permission_descriptions(
             desc = description_map.get(perm_name) or permission_registry[perm_name].description
             _description.append(f"{prefix} * `{perm_name}`: {desc}")
         elif isinstance(permission, permissions.AllPerm):
-            desc_list.append(f"{prefix} * All of:")
-            for perm in permission.perms:
-                _add_desc(perm, indent + 1, desc_list)
+            # If AllOf only contains one permission, we don't need to show the AllOf
+            if _count_perms(permission.perms) == 1:
+                _add_desc(permission.perms[0], indent, desc_list)
+            else:
+                desc_list.append(f"{prefix} * All of:")
+                for perm in permission.perms:
+                    _add_desc(perm, indent + 1, desc_list)
         elif isinstance(permission, permissions.AnyPerm):
-            desc_list.append(f"{prefix} * Any of:")
-            for perm in permission.perms:
-                _add_desc(perm, indent + 1, desc_list)
+            # If AnyOf only contains one permission, we don't need to show the AnyOf
+            if _count_perms(permission.perms) == 1:
+                _add_desc(permission.perms[0], indent, desc_list)
+            else:
+                desc_list.append(f"{prefix} * Any of:")
+                for perm in permission.perms:
+                    _add_desc(perm, indent + 1, desc_list)
         elif isinstance(permission, permissions.Optional):
             desc_list.append(f"{prefix} * Optionally:")
             _add_desc(permission.perm, indent + 1, desc_list)
+        elif isinstance(permission, permissions.Ignore):
+            # Don't render
+            pass
         else:
             raise NotImplementedError(f"Printing of {permission!r} not yet implemented.")
 

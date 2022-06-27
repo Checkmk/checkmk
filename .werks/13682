@@ -1,0 +1,17 @@
+Title: super_server: Fix deactivation of Solaris network service
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1654002168
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+This Werk fixes a regression that got introduced with Werk #13678.
+
+When trying to deactivate the Solaris agent's network service via the ruleset
+"Checkmk agent network service (Solaris)", the agent bakery did crash on baking
+agents.
+

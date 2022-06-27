@@ -35,11 +35,11 @@ class TestDashlet(Dashlet):
         return "test"
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 0
 
     @classmethod
-    def is_selectable(cls):
+    def is_selectable(cls) -> bool:
         return False
 
     def show(self):
@@ -97,11 +97,11 @@ class TestDashlet(Dashlet):
         return "test"
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 0
 
     @classmethod
-    def is_selectable(cls):
+    def is_selectable(cls) -> bool:
         return False
 
     def show(self):

@@ -15,7 +15,19 @@ import sys
 import time
 import traceback
 from collections import defaultdict, OrderedDict
-from typing import Any, Callable, DefaultDict, Dict, Iterator, List, Mapping, Optional, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    DefaultDict,
+    Dict,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 from urllib.parse import quote
 
 import requests
@@ -72,7 +84,7 @@ def parse_pod_name(labels: Dict[str, str], prepend_namespace: bool = False):
 
 
 class FilesystemInfo:
-    def __init__(self, name, fstype, mountpoint, size=None, available=None, used=None):
+    def __init__(self, name, fstype, mountpoint, size=None, available=None, used=None) -> None:
         self.name = name
         self.fstype = fstype
         self.mountpoint = mountpoint
@@ -91,7 +103,7 @@ class FilesystemInfo:
 
 
 class NodeExporter:
-    def __init__(self, api_client):
+    def __init__(self, api_client) -> None:
         self.api_client = api_client
 
     def df_summary(self) -> Dict[str, List[str]]:
@@ -339,11 +351,11 @@ class NodeExporter:
 
 
 class CAdvisorExporter:
-    def __init__(self, api_client, options):
+    def __init__(self, api_client, options) -> None:
         self.api_client = api_client
         self.container_name_option = options.get("container_id", "short")
-        self.pod_containers = {}
-        self.container_ids = {}
+        self.pod_containers: dict = {}
+        self.container_ids: dict = {}
         self.prepend_namespaces = options.get("prepend_namespaces", True)
         self.namespace_include_patterns = options.get("namespace_include_patterns", [])
 
@@ -625,7 +637,7 @@ class CAdvisorExporter:
 
 
 class KubeStateExporter:
-    def __init__(self, api_client, options: Dict[str, Any]):
+    def __init__(self, api_client, options: Dict[str, Any]) -> None:
         self.api_client = api_client
         self.cluster_name = options["cluster_name"]
         self.prepend_namespaces = options.get("prepend_namespaces", True)
@@ -1119,7 +1131,7 @@ class PromQLResponse:
 class PromQLResult:
     """The PromQL result object representation for internal usage"""
 
-    def __init__(self, raw_response: Dict[str, Any]):
+    def __init__(self, raw_response: Dict[str, Any]) -> None:
         """
 
         Args:
@@ -1367,10 +1379,8 @@ class PromQLMultiResponse(PromQLResponse):
                 if metric_label != "total_count"
             ]
             information_gains[promql_label] = sum(
-                [
-                    PromQLMultiResponse._determine_single_entropy(metric_label_probability)
-                    for metric_label_probability in metric_label_probabilities
-                ]
+                PromQLMultiResponse._determine_single_entropy(metric_label_probability)
+                for metric_label_probability in metric_label_probabilities
             )
         return information_gains
 
@@ -1467,25 +1477,19 @@ class PrometheusServer:
         response = self.api_client.query_static_endpoint("/-/healthy")
         return {"status_code": response.status_code, "status_text": response.reason}
 
-    def _prometheus_version(self) -> str:
-        promql_result = self.api_client.perform_multi_result_promql("prometheus_build_info")
+    def _prometheus_version(self) -> Sequence[str]:
+        try:
+            endpoint_result = self.api_client.query_static_endpoint("/api/v1/status/buildinfo")
+            return [json.loads(endpoint_result.content)["data"]["version"]]
+        except requests.exceptions.HTTPError as e:  # This endpoint is only available from v2.14
+            if e.response.status_code not in (404, 405):
+                raise e
 
+        promql_result = self.api_client.perform_multi_result_promql("prometheus_build_info")
         if promql_result is None:
             raise ApiError("Missing Prometheus version")
 
-        try:
-            version = promql_result.promql_metrics[0]["labels"]["version"]
-        except IndexError:
-            return ""
-
-        if len(promql_result.promql_metrics) > 1:
-            for prometheus_instance in promql_result.promql_metrics:
-                if prometheus_instance["labels"]["version"] != version:
-                    raise ApiError(
-                        "Multiple Prometheus instances with different versions connected"
-                    )
-
-        return version
+        return [instance["labels"]["version"] for instance in promql_result.promql_metrics]
 
     def _scrape_targets(self) -> Dict[str, Any]:
         down_targets = []
@@ -1751,7 +1755,7 @@ class ApiData:
     Server & the Prometheus Exporters
     """
 
-    def __init__(self, api_client, exporter_options):
+    def __init__(self, api_client, exporter_options) -> None:
         self.api_client = api_client
         self.prometheus_server = PrometheusServer(api_client)
         if "cadvisor" in exporter_options:
@@ -1960,7 +1964,7 @@ class ApiData:
                 group.join(kube_state_service_info["service_name"], element)
         yield "\n".join(group.output(piggyback_prefix=piggyback_prefix))
 
-    def node_exporter_section(
+    def node_exporter_section(  # pylint: disable=too-many-branches
         self, node_options: Dict[str, Union[List[str], str]]
     ) -> Iterator[str]:
         node_entities = node_options["entities"]

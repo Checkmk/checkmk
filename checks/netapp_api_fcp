@@ -5,12 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from typing import Dict, Optional
 
 from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 from cmk.base.plugins.agent_based.utils.interfaces import (
     get_specific_traffic_levels,
     get_traffic_levels,
@@ -117,7 +116,7 @@ def _io_bytes_results(item, params, fcp_if):
             value,
             what,
             level_params,
-            human_readable_func=lambda x: get_bytes_human_readable(x, unit="B/s"),
+            human_readable_func=render.iobandwidth,
             infoname=descr,
         )
 

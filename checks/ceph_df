@@ -5,15 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.plugins.agent_based.utils.df import df_discovery, FSBlocks
 
@@ -30,7 +26,7 @@ def _sanitize_line(line):
     return sanitized_line
 
 
-def parse_ceph_df(info) -> FSBlocks:
+def parse_ceph_df(info) -> FSBlocks:  # pylint: disable=too-many-branches
     parsed = {}
     section = None
     global_headers = None
@@ -335,7 +331,7 @@ def inventory_ceph_df(mps):
     return df_discovery(host_extra_conf(host_name(), filesystem_groups), [x[0] for x in mps])
 
 
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 check_info["ceph_df"] = {

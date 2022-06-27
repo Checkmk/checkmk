@@ -40,15 +40,16 @@ import cmk.gui.sites as sites
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
-from cmk.gui.config import builtin_role_ids
+from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.exceptions import MKGeneralException, MKMissingDataError, MKTimeout, MKUserError
 from cmk.gui.figures import create_figures_response
-from cmk.gui.globals import active_config, html, request
 from cmk.gui.hooks import request_memoize
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.metrics import translate_perf_data
-from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.metrics.rrd_fetch import merge_multicol
 from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options
@@ -177,7 +178,7 @@ class Dashlet(abc.ABC):
         return False
 
     @classmethod
-    def single_infos(cls) -> List[str]:
+    def single_infos(cls) -> SingleInfos:
         """Return a list of the single infos (for the visual context) of this dashlet"""
         return []
 
@@ -276,7 +277,7 @@ class Dashlet(abc.ABC):
         self._dashlet_spec = dashlet
         self._context: Optional[VisualContext] = self._get_context()
 
-    def infos(self) -> List[str]:
+    def infos(self) -> SingleInfos:
         """Return a list of the supported infos (for the visual context) of this dashlet"""
         return []
 
@@ -520,7 +521,7 @@ class VsResultGeneralSettings(TypedDict):
     single_infos: List[str]
 
 
-def dashlet_vs_general_settings(dashlet_type: Type[Dashlet], single_infos: List[str]):
+def dashlet_vs_general_settings(dashlet_type: Type[Dashlet], single_infos: SingleInfos):
     return Dictionary(
         title=_("General Settings"),
         render="form",
@@ -653,7 +654,7 @@ dashlet_registry = DashletRegistry()
 
 @page_registry.register_page("ajax_figure_dashlet_data")
 class FigureDashletPage(AjaxPage):
-    def page(self):
+    def page(self) -> PageResult:
         settings = json.loads(request.get_str_input_mandatory("settings"))
 
         try:
@@ -669,7 +670,11 @@ class FigureDashletPage(AjaxPage):
         properties = dashlet_type.vs_parameters().value_from_json(json.loads(raw_properties))
         context = json.loads(request.get_str_input_mandatory("context", "{}"))
         # Inject the infos because the datagenerator is a separate instance to dashlet
-        settings["infos"] = dashlet_type.infos()
+        # TODO: Can we do better than using fake arguments below? We *really* need an instance,
+        # because in general, infos() is an *instance* method, not a class method.
+        settings["infos"] = dashlet_type(
+            dashboard_name="", dashboard={"context": {}}, dashlet_id=0, dashlet={"context": {}}
+        ).infos()
         response_data = dashlet_type.generate_response_data(properties, context, settings)
         return create_figures_response(response_data)
 
@@ -685,7 +690,7 @@ class ABCFigureDashlet(Dashlet, abc.ABC):
         return "figure_dashlet"
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 95
 
     @classmethod
@@ -696,16 +701,15 @@ class ABCFigureDashlet(Dashlet, abc.ABC):
     def initial_size(cls):
         return (56, 40)
 
-    @classmethod
-    def infos(cls):
+    def infos(self) -> SingleInfos:
         return ["host", "service"]
 
     @classmethod
-    def single_infos(cls):
+    def single_infos(cls) -> SingleInfos:
         return []
 
     @classmethod
-    def has_context(cls):
+    def has_context(cls) -> bool:
         return True
 
     @property
@@ -807,7 +811,7 @@ class DashboardStore:
         """Load dashboards only once for each request"""
         return cls()
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.all = self._load_all()
         self.permitted = self._load_permitted(self.all)
 
@@ -870,7 +874,8 @@ def _transform_dashlets_mut(dashlet_spec: DashletConfig) -> DashletConfig:
 
         # The service context has to be set, otherwise the pnpgraph dashlet would
         # complain about missing context information when displaying host graphs.
-        dashlet_spec["context"].setdefault("service", "_HOST_")
+        # -> 2.1.0i1 dashlets now use dict as context: change "_HOST_" to {"service": "_HOST_"}
+        dashlet_spec["context"].setdefault("service", {"service": "_HOST_"})
 
     if dashlet_spec["type"] in ["pnpgraph", "custom_graph"]:
         # -> 1.5.0i2
@@ -947,7 +952,7 @@ def transform_timerange_dashlet(dashlet_spec: DashletConfig) -> DashletConfig:
 # be compatible to old definitions, where even internal dashlets were
 # referenced by url, e.g. dashboard['url'] = 'hoststats.py'
 # FIXME: can be removed one day. Mark as incompatible change or similar.
-def _transform_builtin_dashboards() -> None:
+def _transform_builtin_dashboards() -> None:  # pylint: disable=too-many-branches
     for name, dashboard in builtin_dashboards.items():
         # Do not transform dashboards which are already in the new format
         if "context" in dashboard:
@@ -1234,7 +1239,7 @@ def dashboard_breadcrumb(name: str, board: DashboardConfig, title: str) -> Bread
         mega_menu_registry.menu_monitoring(),
         PagetypeTopics.get_topic(board["topic"]).title(),
     )
-    breadcrumb.append(BreadcrumbItem(title, makeuri_contextless(request, [("name", name)])))
+    breadcrumb.append(BreadcrumbItem(title, makeuri(request, [("name", name)])))
     return breadcrumb
 
 
@@ -1256,9 +1261,7 @@ class StateFormatter:
     message_template: str
 
     def state_names(self, row: Row) -> Tuple[str, str]:
-        # TODO: remove underscore from _state_names and remove this method
-        # when https://github.com/python/mypy/pull/10548 is released
-        return self._state_names(row)  # type: ignore
+        return self._state_names(row)
 
 
 class ServiceStateFormatter(StateFormatter):
@@ -1269,8 +1272,7 @@ class ServiceStateFormatter(StateFormatter):
             message_template=message_template,
         )
         self.css = "svcstate state{}"
-        # TODO: see comment in StateFormatter.state_names
-        self._state_names = service_state_short  # type: ignore
+        self._state_names = service_state_short
         self.message_template = message_template
 
 

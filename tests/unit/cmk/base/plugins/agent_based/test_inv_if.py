@@ -371,7 +371,7 @@ SECTION_INV_IF = SectionInvIf(
 )
 
 
-def test_parse_inv_if():
+def test_parse_inv_if() -> None:
     assert (
         parse_inv_if(
             [
@@ -756,7 +756,7 @@ def test_parse_inv_if():
     )
 
 
-def test_inventory_if():
+def test_inventory_if() -> None:
     with on_time(1601310544, "UTC"):
         assert sort_inventory_result(
             inventory_if(

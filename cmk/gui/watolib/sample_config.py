@@ -6,6 +6,7 @@
 """Create an initial Checkmk configuration for new sites"""
 
 import os
+from datetime import datetime
 from typing import Any, Dict
 
 from cmk.utils import store
@@ -157,9 +158,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                     "id": "59d84cde-ee3a-4f8d-8bec-fce35a2b0d15",
                     "condition": {},
                     "value": True,
-                    "options": {
-                        "description": "All management boards use SNMP v2 (incl. bulk walks) by default"
-                    },
+                    "options": {"description": "All management boards use SNMPv2 and bulk walk"},
                 },
             ],
             # Put all hosts and the contact group 'all'
@@ -247,6 +246,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                     "value": {
                         "severity_unmonitored": 1,
                         "severity_vanished": 0,
+                        "severity_new_host_label": 1,
                         "check_interval": 120.0,
                     },
                     "options": {"description": "Perform every two hours a service discovery"},
@@ -337,6 +337,9 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 "logwatch_groups",
                 "mem_used",
                 "mem_win",
+                "megaraid_bbu",
+                "megaraid_pdisks",
+                "megraid_vdisks",
                 "mknotifyd",
                 "mknotifyd_connection",
                 "mssql_backup",
@@ -426,4 +429,4 @@ class ConfigGeneratorAutomationUser(SampleConfigGenerator):
         return 60
 
     def generate(self) -> None:
-        create_cmk_automation_user()
+        create_cmk_automation_user(datetime.now())

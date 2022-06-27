@@ -21,6 +21,7 @@ from typing import (
     NewType,
     NoReturn,
     Optional,
+    Protocol,
     Sequence,
     Set,
     Tuple,
@@ -261,6 +262,7 @@ class DiscoveryResult:
     clustered_new: int = 0
     clustered_old: int = 0
     clustered_vanished: int = 0
+    clustered_ignored: int = 0
 
     # None  -> No error occured
     # ""    -> Not monitored (disabled host)
@@ -292,7 +294,6 @@ class SourceType(enum.Enum):
 
 class HostKey(NamedTuple):
     hostname: HostName
-    ipaddress: Optional[HostAddress]
     source_type: SourceType
 
 
@@ -309,7 +310,7 @@ class EvalableFloat(float):
     """Extends the float representation for Infinities in such way that
     they can be parsed by eval"""
 
-    def __str__(self):
+    def __str__(self) -> str:
         return super().__repr__()
 
     def __repr__(self) -> str:
@@ -350,3 +351,23 @@ class HostLabelValueDict(TypedDict):
 
 
 DiscoveredHostLabelsDict = Dict[str, HostLabelValueDict]
+
+
+class KeepaliveAPI(Protocol):
+    # NOTE: This is not the full API. It's what I need now.
+
+    def enabled(self) -> bool:
+        ...
+
+    def add_check_result(
+        self,
+        host: HostName,
+        service: ServiceName,
+        state: ServiceState,
+        output: ServiceDetails,
+        cache_info: Optional[tuple[int, int]],
+    ) -> None:
+        ...
+
+
+InfluxDBConnectionSpec = dict[str, Any]

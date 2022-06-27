@@ -22,19 +22,19 @@ class TestGlobalConfig:
             snmp_plugin_store=SNMPPluginStore(),
         )
 
-    def test_deserialization(self, global_config):
+    def test_deserialization(self, global_config) -> None:
         assert GlobalConfig.deserialize(global_config.serialize()) == global_config
 
 
 class TestControllerApi:
-    def test_controller_log(self):
+    def test_controller_log(self) -> None:
         assert (
             CMCMessage.log_answer(
                 "payload",
                 logging.WARNING,
             )
-            == b"fetch:LOG    :warning :7       :payload"
+            == b"fetch:LOG    :warning :7               :payload"
         )
 
-    def test_controller_end_of_reply(self):
-        assert CMCMessage.end_of_reply() == b"fetch:ENDREPL:        :0       :"
+    def test_controller_end_of_reply(self) -> None:
+        assert CMCMessage.end_of_reply() == b"fetch:ENDREPL:        :0               :"

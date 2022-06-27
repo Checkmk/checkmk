@@ -6,14 +6,12 @@
 
 import json
 
-import pytest
-
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
-from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
-def test_openapi_get_bi_packs(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_get_bi_packs(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     response = aut_user_auth_wsgi_app.get(
@@ -26,7 +24,27 @@ def test_openapi_get_bi_packs(aut_user_auth_wsgi_app: WebTestAppForCMK):
     assert packs["value"][0]["title"] == "Default Pack"
 
 
-def test_openapi_get_bi_pack(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_get_bi_rule_non_existing_id(
+    base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
+) -> None:
+    aut_user_auth_wsgi_app.get(
+        base + "/domain-types/objects/bi_rule/abc",
+        headers={"Accept": "application/json"},
+        status=404,
+    )
+
+
+def test_openapi_get_bi_aggregation_non_existing_id(
+    base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
+):
+    aut_user_auth_wsgi_app.get(
+        base + "/domain-types/objects/bi_aggregation/abc",
+        headers={"Accept": "application/json"},
+        status=404,
+    )
+
+
+def test_openapi_get_bi_pack(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     pack_id = "default"
@@ -39,7 +57,7 @@ def test_openapi_get_bi_pack(aut_user_auth_wsgi_app: WebTestAppForCMK):
     assert len(pack["members"]["aggregations"]["value"]) == 1
 
 
-def test_openapi_get_bi_aggregation(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_get_bi_aggregation(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     aggr_id = "default_aggregation"
@@ -62,7 +80,7 @@ def test_openapi_get_bi_aggregation(aut_user_auth_wsgi_app: WebTestAppForCMK):
     assert aggregation["id"] == aggr_id
 
 
-def test_openapi_get_bi_rule(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_get_bi_rule(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     rule_id = "applications"
@@ -83,7 +101,7 @@ def test_openapi_get_bi_rule(aut_user_auth_wsgi_app: WebTestAppForCMK):
     assert rule["id"] == rule_id
 
 
-def test_openapi_modify_bi_aggregation(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_modify_bi_aggregation(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     aggr_id = "default_aggregation"
@@ -118,7 +136,7 @@ def test_openapi_modify_bi_aggregation(aut_user_auth_wsgi_app: WebTestAppForCMK)
     assert aggregation["computation_options"]["escalate_downtimes_as_warn"]
 
 
-def test_openapi_modify_bi_rule(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_modify_bi_rule(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     rule_id = "applications"
@@ -145,7 +163,7 @@ def test_openapi_modify_bi_rule(aut_user_auth_wsgi_app: WebTestAppForCMK):
     assert "OTHERARGUMENT" in rule["params"]["arguments"]
 
 
-def test_openapi_clone_bi_aggregation(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_clone_bi_aggregation(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     aggr_id = "default_aggregation"
@@ -202,7 +220,7 @@ def test_openapi_clone_bi_aggregation(aut_user_auth_wsgi_app: WebTestAppForCMK):
     assert len(pack["members"]["aggregations"]["value"]) == 2
 
 
-def test_openapi_clone_bi_rule(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_clone_bi_rule(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     rule_id = "applications"
@@ -255,7 +273,7 @@ def test_openapi_clone_bi_rule(aut_user_auth_wsgi_app: WebTestAppForCMK):
     assert len(pack["members"]["rules"]["value"]) == 13
 
 
-def test_openapi_clone_bi_pack(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_clone_bi_pack(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     pack_id = "default"
@@ -326,7 +344,7 @@ def test_openapi_clone_bi_pack(aut_user_auth_wsgi_app: WebTestAppForCMK):
     assert cloned_pack["title"] == "Test title"
 
 
-def test_openapi_delete_pack(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_delete_pack(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     pack_data = {
@@ -362,7 +380,7 @@ def test_openapi_delete_pack(aut_user_auth_wsgi_app: WebTestAppForCMK):
     )
 
 
-def test_openapi_delete_pack_forbidden(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_delete_pack_forbidden(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
     # Check invalid POST request on existing id
     aut_user_auth_wsgi_app.delete(
@@ -373,13 +391,45 @@ def test_openapi_delete_pack_forbidden(aut_user_auth_wsgi_app: WebTestAppForCMK)
     )
 
 
-def test_get_non_existing_aggregation(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
+def test_get_aggregation_state_empty(aut_user_auth_wsgi_app, mock_livestatus) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
-    postfix = "/objects/bi_aggregation/"
-    url = f"{base}{postfix}NO_I_DONT_EXIST"
+    postfix = "/domain-types/bi_aggregation/actions/aggregation_state/invoke"
+    url = f"{base}{postfix}"
 
-    with pytest.raises(MKGeneralException):
-        _response = wsgi_app.get(url=url, headers={"Accept": "application/json"})
+    live: MockLiveStatusConnection = mock_livestatus
+    live.set_sites(["NO_SITE"])
+    live.expect_query("GET status\nColumns: program_start")
+    live.expect_query("GET status\nColumns: program_start")
+    live.expect_query(
+        "GET hosts\nColumns: host_name host_tags host_labels host_childs host_parents host_alias host_filename"
+    )
+
+    with live():
+        _response = aut_user_auth_wsgi_app.post(
+            url,
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
+            status=200,
+            params=json.dumps({}),
+        )
+
+
+def test_get_aggregation_state_filter_names(aut_user_auth_wsgi_app, mock_livestatus) -> None:
+    base = "/NO_SITE/check_mk/api/1.0"
+    postfix = "/domain-types/bi_aggregation/actions/aggregation_state/invoke"
+    url = f"{base}{postfix}"
+
+    live: MockLiveStatusConnection = mock_livestatus
+    live.set_sites(["NO_SITE"])
+    live.expect_query("GET status\nColumns: program_start")
+    live.expect_query("GET status\nColumns: program_start")
+    live.expect_query(
+        "GET hosts\nColumns: host_name host_tags host_labels host_childs host_parents host_alias host_filename"
+    )
+
+    with live():
+        _response = aut_user_auth_wsgi_app.post(
+            url,
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
+            status=200,
+            params=json.dumps({"filter_names": ["Host heute"]}),
+        )

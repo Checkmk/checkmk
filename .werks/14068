@@ -1,0 +1,14 @@
+Title: KUBE agent_kube: adding case when pod conditions are not available
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1651230603
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Under some circumstances, the Kubernetes API server returns Pods which have no
+entry for status.conditions. The agent previously failed when this field was
+not available. This werk fixes this behaviour and the pod conditions service is not
+discovered if those are not present.

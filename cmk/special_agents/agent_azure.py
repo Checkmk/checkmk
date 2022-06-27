@@ -22,7 +22,7 @@ from typing import Any, List, Mapping, Sequence, Tuple
 import adal  # type: ignore[import] # pylint: disable=import-error
 import requests
 
-import cmk.utils.password_store
+from cmk.utils import password_store
 from cmk.utils.paths import tmp_dir
 
 from cmk.special_agents.utils import DataCache, get_seconds_since_midnight, vcrtrace
@@ -30,7 +30,6 @@ from cmk.special_agents.utils import DataCache, get_seconds_since_midnight, vcrt
 Args = argparse.Namespace
 GroupLabels = Mapping[str, Mapping[str, str]]
 
-cmk.utils.password_store.replace_passwords()
 
 LOGGER = logging.getLogger()  # root logger for now
 
@@ -118,7 +117,7 @@ def parse_arguments(argv):
     # REQUIRED
     parser.add_argument("--client", required=True, help="Azure client ID")
     parser.add_argument("--tenant", required=True, help="Azure tenant ID")
-    parser.add_argument("--secret", help="Azure authentication secret")
+    parser.add_argument("--secret", required=True, help="Azure authentication secret")
     # CONSTRAIN DATA TO REQUEST
     parser.add_argument(
         "--require-tag",
@@ -191,9 +190,9 @@ class ApiErrorMissingData(ApiError):
 class BaseApiClient(abc.ABC):
     AUTHORITY = "https://login.microsoftonline.com"
 
-    def __init__(self, base_url):
+    def __init__(self, base_url) -> None:
         self._ratelimit = float("Inf")
-        self._headers = {}
+        self._headers: dict = {}
         self._base_url = base_url
 
     @property
@@ -260,7 +259,7 @@ class BaseApiClient(abc.ABC):
 
 
 class GraphApiClient(BaseApiClient):
-    def __init__(self):
+    def __init__(self) -> None:
         base_url = "%s/v1.0/" % self.resource
         super().__init__(base_url)
 
@@ -293,7 +292,7 @@ class GraphApiClient(BaseApiClient):
 
 
 class MgmtApiClient(BaseApiClient):
-    def __init__(self, subscription):
+    def __init__(self, subscription) -> None:
         base_url = "%s/subscriptions/%s/" % (self.resource, subscription)
         super().__init__(base_url)
 
@@ -349,12 +348,12 @@ class MgmtApiClient(BaseApiClient):
 
 
 class GroupConfig:
-    def __init__(self, name):
+    def __init__(self, name) -> None:
         super().__init__()
         if not name:
             raise ValueError("falsey group name: %r" % name)
         self.name = name
-        self.resources = []
+        self.resources: list = []
 
     @property
     def fetchall(self):
@@ -366,16 +365,16 @@ class GroupConfig:
             return
         raise ValueError("unknown config key: %s" % key)
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.fetchall:
             return "[%s]\n  <fetchall>" % self.name
         return "[%s]\n" % self.name + "\n".join("resource: %s" % r for r in self.resources)
 
 
 class ExplicitConfig:
-    def __init__(self, raw_list=()):
+    def __init__(self, raw_list=()) -> None:
         super().__init__()
-        self.groups = {}
+        self.groups: dict = {}
         self.current_group = None
         for item in raw_list:
             if "=" not in item:
@@ -395,7 +394,7 @@ class ExplicitConfig:
             raise RuntimeError("missing arg: group=<name>")
         self.current_group.add_key(key, value)
 
-    def is_configured(self, resource):
+    def is_configured(self, resource) -> bool:
         if self.fetchall:
             return True
         group_config = self.groups.get(resource.info["group"])
@@ -405,19 +404,19 @@ class ExplicitConfig:
             return True
         return resource.info["name"] in group_config.resources
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.fetchall:
             return "[<fetchall>]"
         return "\n".join(str(group) for group in self.groups.values())
 
 
 class TagBasedConfig:
-    def __init__(self, required, key_values):
+    def __init__(self, required, key_values) -> None:
         super().__init__()
         self._required = required
         self._values = key_values
 
-    def is_configured(self, resource):
+    def is_configured(self, resource) -> bool:
         if not all(k in resource.tags for k in self._required):
             return False
         for key, val in self._values:
@@ -425,7 +424,7 @@ class TagBasedConfig:
                 return False
         return True
 
-    def __str__(self):
+    def __str__(self) -> str:
         lines = []
         if self._required:
             lines.append("required tags: %s" % ", ".join(self._required))
@@ -435,7 +434,7 @@ class TagBasedConfig:
 
 
 class Selector:
-    def __init__(self, args):
+    def __init__(self, args) -> None:
         super().__init__()
         self._explicit_config = ExplicitConfig(raw_list=args.explicit_config)
         self._tag_based_config = TagBasedConfig(args.require_tag, args.require_tag_value)
@@ -447,7 +446,7 @@ class Selector:
             return False
         return True
 
-    def __str__(self):
+    def __str__(self) -> str:
         lines = [
             "Explicit configuration:\n  %s" % str(self._explicit_config).replace("\n", "\n  "),
             "Tag based configuration:\n  %s" % str(self._tag_based_config).replace("\n", "\n  "),
@@ -458,11 +457,11 @@ class Selector:
 class Section:
     LOCK = Lock()
 
-    def __init__(self, name, piggytargets, separator, options):
+    def __init__(self, name, piggytargets, separator, options) -> None:
         super().__init__()
         self._sep = chr(separator)
         self._piggytargets = list(piggytargets)
-        self._cont = []
+        self._cont: list = []
         section_options = ":".join(["sep(%d)" % separator] + options)
         self._title = f"<<<{name.replace('-', '_')}:{section_options}>>>\n"
 
@@ -491,17 +490,17 @@ class Section:
 
 
 class AzureSection(Section):
-    def __init__(self, name, piggytargets=("",)):
+    def __init__(self, name, piggytargets=("",)) -> None:
         super().__init__("azure_%s" % name, piggytargets, separator=124, options=[])
 
 
 class LabelsSection(Section):
-    def __init__(self, piggytarget):
+    def __init__(self, piggytarget) -> None:
         super().__init__("labels", [piggytarget], separator=0, options=[])
 
 
 class UsageSection(Section):
-    def __init__(self, usage_details, piggytargets, cacheinfo):
+    def __init__(self, usage_details, piggytargets, cacheinfo) -> None:
         options = ["cached(%d,%d)" % cacheinfo]
         super().__init__(
             "azure_%s" % usage_details.section, piggytargets, separator=124, options=options
@@ -510,18 +509,18 @@ class UsageSection(Section):
 
 
 class IssueCollecter:
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self._list = []
+        self._list: list[tuple[str, str]] = []
 
-    def add(self, issue_type, issued_by, issue_msg):
+    def add(self, issue_type, issued_by, issue_msg) -> None:
         issue = {"type": issue_type, "issued_by": issued_by, "msg": issue_msg}
         self._list.append(("issue", json.dumps(issue)))
 
-    def dumpinfo(self):
+    def dumpinfo(self) -> list[tuple[str, str]]:
         return self._list
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._list)
 
 
@@ -580,7 +579,7 @@ def get_attrs_from_uri(uri):
 
 
 class AzureResource:
-    def __init__(self, info):
+    def __init__(self, info) -> None:
         super().__init__()
         self.info = info
         self.info.update(get_attrs_from_uri(info["id"]))
@@ -591,7 +590,7 @@ class AzureResource:
         group = self.info.get("group")
         if group:
             self.piggytargets.append(group)
-        self.metrics = []
+        self.metrics: list = []
 
     def dumpinfo(self):
         # TODO: Hmmm, should the variable-length tuples actually be lists?
@@ -616,7 +615,7 @@ def process_vm(mgmt_client, vmach, args):
 
 
 class MetricCache(DataCache):
-    def __init__(self, resource, metric_definition, ref_time, debug=False):
+    def __init__(self, resource, metric_definition, ref_time, debug=False) -> None:
         self.metric_definition = metric_definition
         metricnames = metric_definition[0]
         super().__init__(self.get_cache_path(resource), metricnames, debug=debug)
@@ -682,7 +681,7 @@ class UsageClient(DataCache):
         "offer MS-AZR-0144P",
     )
 
-    def __init__(self, client, subscription, debug=False):
+    def __init__(self, client, subscription, debug=False) -> None:
         super().__init__(AZURE_CACHE_FILE_PATH, "%s-usage" % subscription, debug=debug)
         self._client = client
 
@@ -854,7 +853,7 @@ def write_group_info(
 
 
 def write_exception_to_agent_info_section(exception, component):
-    # those exeptions are quite noisy. try to make them more concise:
+    # those exceptions are quite noisy. try to make them more concise:
     msg = str(exception).split("Trace ID", 1)[0]
     msg = msg.split(":", 2)[-1].strip(" ,")
 
@@ -931,10 +930,10 @@ def get_mapper(debug, sequential, timeout):
     return async_mapper
 
 
-def main_graph_client(args, secret):
+def main_graph_client(args):
     graph_client = GraphApiClient()
     try:
-        graph_client.login(args.tenant, args.client, secret)
+        graph_client.login(args.tenant, args.client, args.secret)
         write_section_ad(graph_client)
     except Exception as exc:
         if args.debug:
@@ -942,11 +941,11 @@ def main_graph_client(args, secret):
         write_exception_to_agent_info_section(exc, "Graph client")
 
 
-def main_subscription(args, secret, selector, subscription):
+def main_subscription(args, selector, subscription):
     mgmt_client = MgmtApiClient(subscription)
 
     try:
-        mgmt_client.login(args.tenant, args.client, secret)
+        mgmt_client.login(args.tenant, args.client, args.secret)
 
         all_resources = (AzureResource(r) for r in mgmt_client.resources())
 
@@ -973,27 +972,21 @@ def main_subscription(args, secret, selector, subscription):
 
 
 def main(argv=None):
+    if argv is None:
+        password_store.replace_passwords()
+        argv = sys.argv[1:]
 
-    args = parse_arguments(argv or sys.argv[1:])
+    args = parse_arguments(argv)
     selector = Selector(args)
     if args.dump_config:
         sys.stdout.write("Configuration:\n%s\n" % selector)
         return
     LOGGER.debug("%s", selector)
 
-    # secrets can be passed in as a command line argument for testing,
-    # BUT the standard method is to pass them via stdin so that they
-    # are not accessible from outside, e.g. visible on the ps output
-    if not (secret := args.secret):
-        secret = json.loads(sys.stdin.read()).get("secret")
-
-    if not secret:
-        raise RuntimeError("secret is not set")
-
-    main_graph_client(args, secret)
+    main_graph_client(args)
 
     for subscription in args.subscriptions:
-        main_subscription(args, secret, selector, subscription)
+        main_subscription(args, selector, subscription)
 
 
 if __name__ == "__main__":

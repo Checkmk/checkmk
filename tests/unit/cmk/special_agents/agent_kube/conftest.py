@@ -15,7 +15,7 @@
 
 import itertools
 import uuid
-from typing import Callable, Dict, Iterator, Sequence, Type
+from typing import Callable, Dict, Iterator, Mapping, Sequence, Type
 
 import pytest
 from pydantic_factories import ModelFactory, Use
@@ -75,13 +75,26 @@ containers_count = 1
 class APIPodFactory(ModelFactory):
     __model__ = api.Pod
 
-    uid = lambda: api.PodUID(str(uuid.uuid4()))
+    @staticmethod
+    def _uid() -> api.PodUID:
+        return api.PodUID(str(uuid.uuid4()))
+
+    @staticmethod
+    def _spec() -> api.PodSpec:
+        return PodSpecFactory.build(containers=ContainerSpecFactory.batch(containers_count))
+
+    @staticmethod
+    def _containers() -> Mapping[str, api.ContainerStatus]:
+        return {
+            container.name: container
+            for container in ContainerStatusFactory.batch(containers_count)
+        }
+
+    uid = _uid
     metadata = PodMetaDataFactory.build
     status = PodStatusFactory.build
-    spec = lambda: PodSpecFactory.build(containers=ContainerSpecFactory.batch(containers_count))
-    containers = lambda: {
-        container.name: container for container in ContainerStatusFactory.batch(containers_count)
-    }
+    spec = _spec
+    containers = _containers
 
 
 # Node Factories
@@ -141,13 +154,17 @@ def node_status(node_condition_status: api.NodeConditionStatus) -> api.NodeStatu
 class APINodeFactory(ModelFactory):
     __model__ = api.Node
 
+    @staticmethod
+    def _resources() -> dict[str, api.NodeResources]:
+        return {
+            "capacity": NodeResourcesFactory.build(),
+            "allocatable": NodeResourcesFactory.build(),
+        }
+
     metadata = NodeMetaDataFactory.build
     status = NodeStatusFactory.build
     control_plane = False
-    resources = lambda: {
-        "capacity": NodeResourcesFactory.build(),
-        "allocatable": NodeResourcesFactory.build(),
-    }
+    resources = _resources
     kubelet_info = KubeletInfoFactory.build
 
 
@@ -191,17 +208,17 @@ class StatefulSetStatusFactory(ModelFactory):
 
 # Container Status Fixtures
 @pytest.fixture
-def container_status_state() -> str:
-    return "running"
+def container_status_state() -> api.ContainerStateType:
+    return api.ContainerStateType.running
 
 
 @pytest.fixture
 def container_state(container_status_state) -> api.ContainerState:
-    if container_status_state == "running":
+    if container_status_state == api.ContainerStateType.running:
         return ContainerRunningStateFactory.build()
-    if container_status_state == "waiting":
+    if container_status_state == api.ContainerStateType.waiting:
         return ContainerWaitingStateFactory.build()
-    if container_status_state == "terminated":  # terminated
+    if container_status_state == api.ContainerStateType.terminated:
         return ContainerTerminatedStateFactory.build()
     raise ValueError(f"Unknown container state: {container_status_state}")
 
@@ -394,17 +411,6 @@ def new_pod(
         )
 
     return _new_pod
-
-
-def api_to_agent_pod(pod: api.Pod) -> agent_kube.Pod:
-    return agent_kube.Pod(
-        uid=pod.uid,
-        metadata=pod.metadata,
-        status=pod.status,
-        spec=pod.spec,
-        containers=pod.containers,
-        init_containers=pod.init_containers,
-    )
 
 
 @pytest.fixture
@@ -627,6 +633,7 @@ def cluster_api_sections() -> Sequence[str]:
         "kube_allocatable_memory_resource_v1",
         "kube_allocatable_cpu_resource_v1",
         "kube_cluster_info_v1",
+        "kube_collector_daemons_v1",
     ]
 
 

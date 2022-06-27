@@ -41,6 +41,17 @@ def pod_phase_generator() -> Iterator[api.Phase]:
     yield from itertools.cycle(api.Phase)
 
 
+def api_to_agent_pod(pod: api.Pod) -> agent.Pod:
+    return agent.Pod(
+        uid=pod.uid,
+        metadata=pod.metadata,
+        status=pod.status,
+        spec=pod.spec,
+        containers=pod.containers,
+        init_containers=pod.init_containers,
+    )
+
+
 # Deployment related Factories
 
 
@@ -54,3 +65,21 @@ def api_to_agent_deployment(api_deployment: api.Deployment) -> agent.Deployment:
         spec=api_deployment.spec,
         status=api_deployment.status,
     )
+
+
+# Namespace & Resource Quota related Factories
+
+
+class NamespaceMetaDataFactory(ModelFactory):
+    __model__ = api.NamespaceMetaData
+
+
+class APIResourceQuotaFactory(ModelFactory):
+    __model__ = api.ResourceQuota
+
+
+# Performance related Factories
+
+
+class PerformancePodFactory(ModelFactory):
+    __model__ = agent.PerformancePod

@@ -23,6 +23,11 @@ SETLOCAL EnableDelayedExpansion
 
 @echo logonserver: "%LOGONSERVER%" user: "%USERNAME%"
 
+::Get start time:
+for /F "tokens=1-4 delims=:.," %%a in ("%time%") do (
+   set /A "start=(((%%a*60)+1%%b %% 100)*60+1%%c %% 100)*100+1%%d %% 100"
+)
+
 :: CHECK FOR CHOCO
 :: if choco is absent then build is not possible(we can't dynamically control environment)
 powershell Write-Host "Looking for choco..." -Foreground White
@@ -104,17 +109,18 @@ cscript.exe //nologo scripts\WiRunSQL.vbs %build_dir%\install\Release\check_mk_s
 if not %errorlevel% == 0 powershell Write-Host "Failed version set" -Foreground Red && exit /b 34
 
 :: Unit Tests Phase: post processing/build special modules using make
+net stop WinRing0_1_2_0
 copy %build_dir%\watest\Win32\Release\watest32.exe %arte% /y	
 copy %build_dir%\watest\x64\Release\watest64.exe %arte% /Y	
 powershell Write-Host "starting unit tests" -Foreground Cyan 
-call call_unit_tests.cmd -*_Long:*Integration
+call call_unit_tests.cmd -*_Long:*Integration:*IntegrationExt
 if not %errorlevel% == 0 goto error
 powershell Write-Host "Unit test SUCCESS" -Foreground Green
 goto end
 :error
-powershell Write-Host "Unit test failed" -Foreground Red 
-powershell Write-Host "Killing msi in artefacts" -Foreground Red 
-call %cur_dir%\clean_artefacts.cmd 
+powershell Write-Host "Unit test failed" -Foreground Red
+powershell Write-Host "Killing msi in artefacts" -Foreground Red
+call %cur_dir%\scripts\clean_artifacts.cmd
 exit 100
 :end
 
@@ -126,6 +132,20 @@ copy install\resources\check_mk.user.yml %arte%
 copy install\resources\check_mk.yml %arte%
 powershell Write-Host "File Deployment succeeded" -Foreground Green
 
+::Get end time:
+for /F "tokens=1-4 delims=:.," %%a in ("%time%") do (
+   set /A "end=(((%%a*60)+1%%b %% 100)*60+1%%c %% 100)*100+1%%d %% 100"
+)
+
+:: Get elapsed time:
+set /A elapsed=end-start
+
+:: Show elapsed time:
+set /A hh=elapsed/(60*60*100), rest=elapsed%%(60*60*100), mm=rest/(60*100), rest%%=60*100, ss=rest/100, cc=rest%%100
+if %mm% lss 10 set mm=0%mm%
+if %ss% lss 10 set ss=0%ss%
+if %cc% lss 10 set cc=0%cc%
+powershell Write-Host "Elapsed time: %hh%:%mm%:%ss%,%cc%" -Foreground Yellow
 
 :: Additional Phase: post processing/build special modules using make
 !make_exe! msi_patch || powershell Write-Host "Failed to patch MSI exec" -Foreground Red && echo set && exit /b 36

@@ -14,22 +14,113 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.structured_data import StructuredDataNode
 
 import cmk.gui.inventory
+from cmk.gui.inventory import InventoryPath, TreeSource
 
 
 @pytest.mark.parametrize(
-    "raw_path, expected_path",
+    "raw_path, expected_path, expected_node_name",
     [
-        ("", ([], None)),
-        (".", ([], None)),
-        (".hardware.", (["hardware"], None)),
-        (".hardware.cpu.", (["hardware", "cpu"], None)),
-        (".hardware.cpu.model", (["hardware", "cpu"], ["model"])),
-        (".software.packages:", (["software", "packages"], [])),
-        (".software.packages:17.name", (["software", "packages", "17"], ["name"])),
+        (
+            "",
+            InventoryPath(
+                path=tuple(),
+                source=TreeSource.node,
+            ),
+            "",
+        ),
+        (
+            ".",
+            InventoryPath(
+                path=tuple(),
+                source=TreeSource.node,
+            ),
+            "",
+        ),
+        (
+            ".hardware.",
+            InventoryPath(
+                path=("hardware",),
+                source=TreeSource.node,
+            ),
+            "hardware",
+        ),
+        (
+            ".hardware.cpu.",
+            InventoryPath(
+                path=("hardware", "cpu"),
+                source=TreeSource.node,
+            ),
+            "cpu",
+        ),
+        (
+            ".hardware.cpu.model",
+            InventoryPath(
+                path=("hardware", "cpu"),
+                source=TreeSource.attributes,
+                key="model",
+            ),
+            "cpu",
+        ),
+        (
+            ".software.packages:",
+            InventoryPath(
+                path=("software", "packages"),
+                source=TreeSource.table,
+            ),
+            "packages",
+        ),
+        (
+            ".hardware.memory.arrays:*.",
+            InventoryPath(
+                ("hardware", "memory", "arrays", "*"),
+                source=TreeSource.node,
+            ),
+            "*",
+        ),
+        (
+            ".software.packages:17.name",
+            InventoryPath(
+                path=("software", "packages"),
+                source=TreeSource.table,
+                key="name",
+            ),
+            "packages",
+        ),
+        (
+            ".software.packages:*.name",
+            InventoryPath(
+                path=("software", "packages"),
+                source=TreeSource.table,
+                key="name",
+            ),
+            "packages",
+        ),
+        (
+            ".hardware.memory.arrays:*.devices:*.speed",
+            InventoryPath(
+                path=("hardware", "memory", "arrays", "*", "devices"),
+                source=TreeSource.table,
+                key="speed",
+            ),
+            "devices",
+        ),
+        (
+            ".path:*.to.node.key",
+            InventoryPath(
+                path=("path", "*", "to", "node"),
+                source=TreeSource.attributes,
+                key="key",
+            ),
+            "node",
+        ),
     ],
 )
-def test_parse_tree_path(raw_path, expected_path):
-    assert cmk.gui.inventory.parse_tree_path(raw_path) == expected_path
+def test_parse_tree_path(
+    raw_path: str, expected_path: InventoryPath, expected_node_name: str
+) -> None:
+    inventory_path = InventoryPath.parse(raw_path)
+    assert inventory_path == expected_path
+    assert inventory_path.node_name == expected_node_name
 
 
 @pytest.mark.parametrize(
@@ -49,7 +140,7 @@ def test_parse_tree_path(raw_path, expected_path):
         ),
     ],
 )
-def test__load_status_data_tree(monkeypatch, hostname, row, expected_tree):
+def test__load_status_data_tree(monkeypatch, hostname, row, expected_tree) -> None:
     monkeypatch.setattr(
         cmk.gui.inventory,
         "_load_structured_data_tree",
@@ -73,7 +164,9 @@ _MergedTree = StructuredDataNode.deserialize({"inv": "node", "status": "node"})
         (_InvTree, _StatusDataTree, _MergedTree),
     ],
 )
-def test__merge_inventory_and_status_data_tree(inventory_tree, status_data_tree, expected_tree):
+def test__merge_inventory_and_status_data_tree(
+    inventory_tree, status_data_tree, expected_tree
+) -> None:
     merged_tree = cmk.gui.inventory._merge_inventory_and_status_data_tree(
         inventory_tree,
         status_data_tree,
@@ -82,12 +175,12 @@ def test__merge_inventory_and_status_data_tree(inventory_tree, status_data_tree,
     assert merged_tree.is_equal(expected_tree)
 
 
-def test__merge_inventory_and_status_data_tree_both_None():
+def test__merge_inventory_and_status_data_tree_both_None() -> None:
     merged_tree = cmk.gui.inventory._merge_inventory_and_status_data_tree(None, None)
     assert merged_tree is None
 
 
-def test_get_history_empty():
+def test_get_history_empty() -> None:
     for hostname in [
         "inv-host",
         "/inv-host",
@@ -98,7 +191,7 @@ def test_get_history_empty():
         assert len(corrupted_history_files) == 0
 
 
-def test_get_history_archive_but_no_inv_tree():
+def test_get_history_archive_but_no_inv_tree() -> None:
     hostname = "inv-host"
 
     # history
@@ -217,7 +310,7 @@ def test_load_delta_tree(
 
 
 @pytest.mark.usefixtures("create_inventory_history")
-def test_load_delta_tree_no_such_timestamp():
+def test_load_delta_tree_no_such_timestamp() -> None:
     hostname = "inv-host"
     with pytest.raises(MKGeneralException) as e:
         cmk.gui.inventory.load_delta_tree(hostname, -1)

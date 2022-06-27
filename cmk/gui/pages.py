@@ -8,19 +8,21 @@ import abc
 import http.client as http_client
 import inspect
 import json
-from typing import Any, Callable, Dict, Mapping, Optional, Type
+from typing import Any, Callable, Dict, Optional, Type
 
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKException
 
+from cmk.gui.config import active_config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
+from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKMissingDataError
-from cmk.gui.globals import active_config, g, html, request, response
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request, response
 from cmk.gui.log import logger
 
 PageHandlerFunc = Callable[[], None]
-PageResult = Any
-AjaxPageResult = Dict[str, Any]
+PageResult = object
 
 
 # At the moment pages are simply callables that somehow render content for the HTTP response
@@ -40,6 +42,7 @@ class Page(abc.ABC):
     # in self._ident by PageRegistry.register_page().
     # In practice this is no problem at the moment, because each page is accessible only through a
     # single endpoint.
+
     @classmethod
     def ident(cls) -> str:
         raise NotImplementedError()
@@ -57,7 +60,7 @@ class Page(abc.ABC):
 class AjaxPage(Page, abc.ABC):
     """Generic page handler that wraps page() calls into AJAX respones"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._from_vars()
 
@@ -69,7 +72,7 @@ class AjaxPage(Page, abc.ABC):
         return request.get_request()
 
     @abc.abstractmethod
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         """Override this to implement the page functionality"""
         raise NotImplementedError()
 
@@ -125,8 +128,8 @@ class PageRegistry(cmk.utils.plugin_registry.Registry[Type[Page]]):
                 raise NotImplementedError()
 
             # mypy is not happy with this. Find a cleaner way
-            plugin_class._ident = path  # type: ignore[attr-defined]
-            plugin_class.ident = classmethod(lambda cls: cls._ident)  # type: ignore[assignment]
+            plugin_class._ident = path
+            plugin_class.ident = classmethod(lambda cls: cls._ident)
 
             self.register(plugin_class)
             return plugin_class
@@ -180,10 +183,8 @@ def get_page_handler(
 
     In case dflt is given it returns dflt instead of None when there is no
     page handler for the requested name."""
-    # NOTE: Workaround for our non-generic registries... :-/
-    pr: Mapping[str, Type[Page]] = page_registry
-    handle_class = pr.get(name)
-    if handle_class is None:
-        return dflt
-    # NOTE: We can'use functools.partial because of https://bugs.python.org/issue3445
-    return (lambda hc: lambda: hc().handle_page())(handle_class)
+
+    def page_handler(hc: Type[Page]) -> PageHandlerFunc:
+        return lambda: hc().handle_page()
+
+    return dflt if (handle_class := page_registry.get(name)) is None else page_handler(handle_class)

@@ -18,6 +18,7 @@ factory_settings["netscaler_tcp_conns_default_levels"] = {
 def inventory_netscaler_tcp_conns(info):
     if info:
         return [(None, {})]
+    return []
 
 
 def check_netscaler_tcp_conns(_no_item, params, info):

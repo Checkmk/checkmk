@@ -121,7 +121,7 @@ def test_parse(
     assert oracle_rman.parse_oracle_rman(string_table) == parsed
 
 
-def test_discovery():
+def test_discovery() -> None:
     yielded_services = list(oracle_rman.discovery_oracle_rman(get_parsed_section()))
     assert yielded_services == [
         Service(item="AFIS11.ARCHIVELOG", parameters={}, labels=[]),
@@ -180,18 +180,18 @@ def test_discovery():
         ),
     ],
 )
-def test_check(item, params, section, results):
+def test_check(item, params, section, results) -> None:
     yielded_results = list(oracle_rman.check_oracle_rman(item, params, section))
     assert yielded_results == results
 
 
-def test_check_raises():
+def test_check_raises() -> None:
     with pytest.raises(IgnoreResultsError) as exc:
         list(oracle_rman.check_oracle_rman("NON-EXISTANT-ITEM", {}, get_parsed_section()))
     assert "Login into database failed. Working on NON-EXISTANT-ITEM" in str(exc.value)
 
 
-def test_cluster_check():
+def test_cluster_check() -> None:
     item = "TUX2.DB_INCR"
     parsed_section_2 = get_parsed_section()
     parsed_section_2[item]["backupage"] = 1
@@ -254,5 +254,5 @@ def test_cluster_check():
         ),
     ],
 )
-def test_parse_oracle_rman(string_table, section):
+def test_parse_oracle_rman(string_table, section) -> None:
     assert oracle_rman.parse_oracle_rman(string_table) == section

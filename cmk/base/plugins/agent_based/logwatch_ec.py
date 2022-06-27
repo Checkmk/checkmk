@@ -227,7 +227,7 @@ def _filter_accumulated_lines(cluster_section: ClusterSection, item: str) -> Ite
     )
 
 
-def check_logwatch_ec_common(
+def check_logwatch_ec_common(  # pylint: disable=too-many-branches
     item: Optional[str],
     params: Mapping[str, Any],
     parsed: ClusterSection,
@@ -392,7 +392,7 @@ def check_logwatch_ec_common(
 
 
 class LogwatchFordwardResult:
-    def __init__(self, num_forwarded=0, num_spooled=0, num_dropped=0, exception=None):
+    def __init__(self, num_forwarded=0, num_spooled=0, num_dropped=0, exception=None) -> None:
         self.num_forwarded = num_forwarded
         self.num_spooled = num_spooled
         self.num_dropped = num_dropped
@@ -503,7 +503,7 @@ def logwatch_forward_tcp(
     if logwatch_shall_spool_messages(method):
         logwatch_spool_messages(message_chunks, result, spool_path)
     else:
-        result.num_dropped = sum([len(c[2]) for c in message_chunks])
+        result.num_dropped = sum(len(c[2]) for c in message_chunks)
 
     return result
 

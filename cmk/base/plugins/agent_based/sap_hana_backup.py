@@ -3,31 +3,60 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import time
-from typing import Dict, NamedTuple, Optional
 
-from .agent_based_api.v1 import check_levels, IgnoreResultsError, register, render, Result, Service
-from .agent_based_api.v1 import State as state
+from datetime import datetime, timezone, tzinfo
+from typing import Any, Dict, Mapping, NamedTuple, Optional
+
+from .agent_based_api.v1 import (
+    check_levels,
+    IgnoreResultsError,
+    register,
+    render,
+    Result,
+    Service,
+    State,
+)
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import sap_hana
+
+# Black magic alert: could return None in some cases, but the offset seems to be
+# magically calculated based on local systemtime...
+LOCAL_TIMEZONE = datetime.utcnow().astimezone().tzinfo
 
 
 class Backup(NamedTuple):
-    sys_end_time: Optional[int] = None
-    backup_time_readable: Optional[str] = None
+    end_time: Optional[datetime] = None
     state_name: Optional[str] = None
     comment: Optional[str] = None
     message: Optional[str] = None
 
 
-def _get_sap_hana_backup_timestamp(backup_time_readable):
+Section = Mapping[str, Backup]
+
+
+def _backup_timestamp(backup_time_readable: str, tz: Optional[tzinfo]) -> Optional[datetime]:
+    """
+    >>> from datetime import datetime, timedelta, timezone
+
+    >>> _backup_timestamp("", timezone.utc) is None
+    True
+    >>> _backup_timestamp("???", timezone.utc) is None
+    True
+
+    >>> _backup_timestamp("2022-05-20 08:00:00", timezone.utc)
+    datetime.datetime(2022, 5, 20, 8, 0, tzinfo=datetime.timezone.utc)
+
+    >>> _backup_timestamp("2022-05-20 08:00:00", timezone(timedelta(seconds=7200), 'CEST'))
+    datetime.datetime(2022, 5, 20, 8, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=7200), 'CEST'))
+    """
+
     try:
-        t_struct = time.strptime(backup_time_readable, "%Y-%m-%d %H:%M:%S")
+        return datetime.strptime(backup_time_readable, "%Y-%m-%d %H:%M:%S").replace(tzinfo=tz)
     except ValueError:
         return None
-    return time.mktime(t_struct)
 
 
-def parse_sap_hana_backup(string_table):
+def _parse_sap_hana_backup(string_table: StringTable, timezone_info: Optional[tzinfo]) -> Section:
     parsed: Dict[str, Backup] = {}
     for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
         if len(lines) == 0:
@@ -36,13 +65,10 @@ def parse_sap_hana_backup(string_table):
             if len(line) < 5:
                 continue
 
-            backup_time_readable = line[1].rsplit(".", 1)[0]
-            backup_time_stamp = _get_sap_hana_backup_timestamp(backup_time_readable)
             parsed.setdefault(
                 "%s - %s" % (sid_instance, line[0]),
                 Backup(
-                    sys_end_time=backup_time_stamp,
-                    backup_time_readable=backup_time_readable,
+                    end_time=_backup_timestamp(line[1].rsplit(".", 1)[0], timezone_info),
                     state_name=line[2],
                     comment=line[3],
                     message=line[4],
@@ -51,68 +77,83 @@ def parse_sap_hana_backup(string_table):
     return parsed
 
 
+def parse_sap_hana_backup(string_table: StringTable) -> Section:
+    # This is maintained for pre-fix compatibility reasons, to avoid
+    # forcing users to roll out the agent plugin. The implementation
+    # works in cases when the monitoring server and SAP Hana server are
+    # in the same timezone.
+    return _parse_sap_hana_backup(string_table, LOCAL_TIMEZONE)
+
+
+def parse_sap_hana_backup_v2(string_table: StringTable) -> Section:
+    return _parse_sap_hana_backup(string_table, timezone.utc)
+
+
 register.agent_section(
     name="sap_hana_backup",
     parse_function=parse_sap_hana_backup,
 )
 
+register.agent_section(
+    name="sap_hana_backup_v2",
+    parsed_section_name="sap_hana_backup",
+    parse_function=parse_sap_hana_backup_v2,
+)
 
-def discovery_sap_hana_backup(section):
+
+def discovery_sap_hana_backup(section: Section) -> DiscoveryResult:
     for sid in section:
         yield Service(item=sid)
 
 
-def check_sap_hana_backup(item, params, section):
-    now = time.time()
+def check_sap_hana_backup(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
 
     data = section.get(item)
     if not data:
         raise IgnoreResultsError("Login into database failed.")
 
     if not data.state_name:
-        yield Result(state=state.WARN, summary="No backup found")
+        yield Result(state=State.WARN, summary="No backup found")
         return
 
-    state_name = data.state_name
-    if state_name == "failed":
-        cur_state = state.CRIT
-    elif state_name in ["cancel pending", "canceled"]:
-        cur_state = state.WARN
-    elif state_name in ["ok", "successful", "running"]:
-        cur_state = state.OK
+    if data.state_name == "failed":
+        cur_state = State.CRIT
+    elif data.state_name in ["cancel pending", "canceled"]:
+        cur_state = State.WARN
+    elif data.state_name in ["ok", "successful", "running"]:
+        cur_state = State.OK
     else:
-        cur_state = state.UNKNOWN
-    yield Result(state=cur_state, summary="Status: %s" % state_name)
+        cur_state = State.UNKNOWN
+    yield Result(state=cur_state, summary="Status: %s" % data.state_name)
 
-    sys_end_time = data.sys_end_time
-    if sys_end_time is not None:
-        yield Result(state=state.OK, summary="Last: %s" % data.backup_time_readable)
+    if data.end_time is not None:
+        yield Result(
+            state=State.OK, summary="Last: %s" % render.datetime(data.end_time.timestamp())
+        )
         yield from check_levels(
-            now - sys_end_time,
+            (datetime.utcnow().replace(tzinfo=timezone.utc) - data.end_time).total_seconds(),
             metric_name="backup_age",
             levels_upper=params["backup_age"],
             render_func=render.timespan,
             label="Age",
         )
 
-    comment = data.comment
-    if comment:
-        yield Result(state=state.OK, summary="Comment: %s" % comment)
+    if data.comment:
+        yield Result(state=State.OK, summary="Comment: %s" % data.comment)
 
-    message = data.message
-    if message:
-        yield Result(state=state.OK, summary="Message: %s" % message)
+    if data.message:
+        yield Result(state=State.OK, summary="Message: %s" % data.message)
 
 
 def cluster_check_sap_hana_backup(
-    item,
-    params,
-    section,
+    item: str,
+    params: Mapping[str, Any],
+    section: Mapping[str, Optional[Section]],
 ):
     # TODO: This is *not* a real cluster check. We do not evaluate the different node results with
     # each other, but this was the behaviour before the migration to the new Check API.
-    yield Result(state=state.OK, summary="Nodes: %s" % ", ".join(section.keys()))
-    for node_section in section.values():
+    yield Result(state=State.OK, summary="Nodes: %s" % ", ".join(section.keys()))
+    for node_section in [s for s in section.values() if s is not None]:
         if item in node_section:
             yield from check_sap_hana_backup(item, params, node_section)
             return

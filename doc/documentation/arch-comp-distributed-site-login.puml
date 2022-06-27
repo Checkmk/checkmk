@@ -1,0 +1,47 @@
+@startuml
+scale 0.6
+
+participant "Admin" as admin
+
+box "Central site"
+    participant "Setup" as setup_central_site
+    participant "Site config" as site_config_central_site
+    participant "Trusted CAs" as trusted_cas_central_site
+end box
+box "Remote site"
+    participant "Livestatus" as livestatus_remote_site
+    participant "Setup" as setup_remote_site
+end box
+
+== Configure remote site ==
+
+admin -> setup_central_site: Configure remote site\n(with config replication)
+setup_central_site -> site_config_central_site: Store site config
+admin <- setup_central_site: Show list of sites with\ntodos to establish connections
+
+== Establish TLS trust for livestatus ==
+
+admin -> setup_remote_site: Open page to establish trust
+setup_central_site -> livestatus_remote_site: Connect to remote Livestatus\nto get certificate information
+setup_central_site <- livestatus_remote_site: Send back certificate information
+admin <- setup_central_site: Show details and ask for confirmation
+admin -> setup_central_site: Establish TLS trust for\nLivestatus with remote site
+setup_central_site -> trusted_cas_central_site: Store remote site CA as trusted
+admin <- setup_central_site: Show list of sites with\ntodos to establish connections
+
+== Gather shared secret for remote automation calls ==
+
+admin -> setup_central_site: Provide remote site admin credentials
+setup_central_site -> setup_remote_site: Login to remote site to gather the remote site secret
+setup_central_site <- setup_remote_site: Send back site secret
+setup_central_site -> site_config_central_site: Store the remote site secret
+admin <- setup_central_site: Show result
+
+== Test connections ==
+
+admin -> setup_central_site: View list of sites
+setup_central_site <- site_config_central_site: Read remote site secret
+setup_central_site <- trusted_cas_central_site: Read trusted CAs
+setup_central_site -> setup_remote_site: Test livestatus and automation connection
+admin <- setup_central_site: Show state of connections
+@enduml

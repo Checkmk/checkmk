@@ -124,13 +124,17 @@ def replace_passwords() -> None:
         sys.argv[num_arg] = arg[:pos_in_arg] + password + arg[pos_in_arg + len(password) :]
 
 
-def save(stored_passwords: Mapping[str, str]) -> None:
+def save(stored_passwords: Mapping[str, str], custom_path: Optional[Path] = None) -> None:
     """Save the passwords to the pre-activation path"""
     content = ""
     for ident, pw in stored_passwords.items():
-        content += "%s:%s\n" % (ident, pw)
+        # This is normally needed to not break the file format for things like gcp tokens.
+        # The GUI does this automatically by having only one line of input field,
+        # but other sources (like the REST API) use this function as well.
+        password_on_one_line = pw.replace("\n", "")
+        content += "%s:%s\n" % (ident, password_on_one_line)
 
-    store.save_bytes_to_file(password_store_path(), _obfuscate(content))
+    store.save_bytes_to_file(custom_path or password_store_path(), _obfuscate(content))
 
 
 def load() -> dict[str, str]:

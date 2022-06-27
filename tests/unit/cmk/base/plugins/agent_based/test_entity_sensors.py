@@ -66,7 +66,7 @@ _SECTION_CISCO_ENTITY_SENSORS = {
         ),
     ],
 )
-def test_discover_entity_sensors_temp(string_table, expected_discovery):
+def test_discover_entity_sensors_temp(string_table, expected_discovery) -> None:
     assert (
         list(discover_entity_sensors_temp(parse_entity_sensors(string_table))) == expected_discovery
     )
@@ -98,7 +98,7 @@ def test_discover_entity_sensors_temp(string_table, expected_discovery):
         ),
     ],
 )
-def test_discover_entity_sensors_fan(string_table, expected_discovery):
+def test_discover_entity_sensors_fan(string_table, expected_discovery) -> None:
     assert (
         list(discover_entity_sensors_fan(parse_entity_sensors(string_table))) == expected_discovery
     )
@@ -122,7 +122,7 @@ def test_discover_entity_sensors_fan(string_table, expected_discovery):
         ),
     ],
 )
-def test_discover_entity_sensors_power_presence(string_table, expected_discovery):
+def test_discover_entity_sensors_power_presence(string_table, expected_discovery) -> None:
     assert (
         list(discover_entity_sensors_power_presence(parse_entity_sensors(string_table)))
         == expected_discovery
@@ -205,7 +205,7 @@ def test_discover_entity_sensors_power_presence(string_table, expected_discovery
         ),
     ],
 )
-def test_check_entity_sensors_temp(item, params, section, expected_result):
+def test_check_entity_sensors_temp(item, params, section, expected_result) -> None:
     assert list(check_entity_sensors_temp(item, params, section)) == expected_result
 
 
@@ -272,7 +272,7 @@ def test_check_entity_sensors_temp(item, params, section, expected_result):
         ),
     ],
 )
-def test_check_entity_sensors_fan(item, params, section, expected_result):
+def test_check_entity_sensors_fan(item, params, section, expected_result) -> None:
     assert list(check_entity_sensors_fan(item, params, section)) == expected_result
 
 
@@ -332,5 +332,5 @@ def test_check_entity_sensors_fan(item, params, section, expected_result):
         ),
     ],
 )
-def test_check_entity_sensors_power_presence(item, params, section, expected_result):
+def test_check_entity_sensors_power_presence(item, params, section, expected_result) -> None:
     assert list(check_entity_sensors_power_presence(item, params, section)) == expected_result

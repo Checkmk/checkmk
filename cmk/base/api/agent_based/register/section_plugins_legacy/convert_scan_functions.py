@@ -3,14 +3,13 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-# type: ignore[attr-defined]
 """Helper to register a new-sytyle section based on config.check_info
 """
 import ast
 import inspect
 import os.path
 from types import CodeType
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 from cmk.base.api.agent_based.register.section_plugins import _validate_detect_spec
 from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification
@@ -34,22 +33,20 @@ from cmk.base.plugins.agent_based.utils import (  # pylint: disable=cmk-module-l
 
 from .detect_specs import PRECONVERTED_DETECT_SPECS
 
+ScanFunction = Union[ast.FunctionDef, ast.Lambda]
 DetectSpecKey = Tuple[bytes, Tuple, Tuple]
 
 MIGRATED_SCAN_FUNCTIONS: Dict[str, SNMPDetectSpecification] = {
-    # I am not sure why the following suppressions are needed.
-    # 'reveal_type(DETECT)' in checkpoint shows that mypy does know the type in principle
-    # If I add an explicit typehint to 'DETECT' in checkpoint, these suppressions are not needed.
-    "scan_checkpoint": checkpoint.DETECT,  # type: ignore[has-type]
-    "scan_ricoh_printer": printer.DETECT_RICOH,  # type: ignore[has-type]
-    "scan_pulse_secure": pulse_secure.DETECT_PULSE_SECURE,  # type: ignore[has-type]
-    "_is_ucd": ucd_hr_detection.UCD,  # type: ignore[has-type]
-    "is_ucd": ucd_hr_detection.UCD,  # type: ignore[has-type]
-    "is_hr": ucd_hr_detection.HR,  # type: ignore[has-type]
-    "prefer_hr_else_ucd": ucd_hr_detection.PREFER_HR_ELSE_UCD,  # type: ignore[has-type]
-    "is_ucd_mem": ucd_hr_detection.USE_UCD_MEM,  # type: ignore[has-type]
-    "is_hr_mem": ucd_hr_detection.USE_HR_MEM,  # type: ignore[has-type]
-    "_is_ucd_mem": ucd_hr_detection._UCD_MEM,  # type: ignore[has-type]
+    "scan_checkpoint": checkpoint.DETECT,
+    "scan_ricoh_printer": printer.DETECT_RICOH,
+    "scan_pulse_secure": pulse_secure.DETECT_PULSE_SECURE,
+    "_is_ucd": ucd_hr_detection.UCD,
+    "is_ucd": ucd_hr_detection.UCD,
+    "is_hr": ucd_hr_detection.HR,
+    "prefer_hr_else_ucd": ucd_hr_detection.PREFER_HR_ELSE_UCD,
+    "is_ucd_mem": ucd_hr_detection.USE_UCD_MEM,
+    "is_hr_mem": ucd_hr_detection.USE_HR_MEM,
+    "_is_ucd_mem": ucd_hr_detection._UCD_MEM,
 }
 
 
@@ -98,7 +95,7 @@ def _explicit_conversions(function_name: str) -> SNMPDetectSpecification:
 
 def _get_scan_function_ast(
     name: str, snmp_scan_function: Callable, fallback_files: List[str]
-) -> ast.AST:
+) -> ScanFunction:
     src_file_name = inspect.getsourcefile(snmp_scan_function)
     read_files = fallback_files if src_file_name is None else [src_file_name]
 
@@ -117,7 +114,9 @@ def _get_scan_function_ast(
     )
 
 
-def _extract_scan_function_ast(tree: ast.AST, scan_function_name: str, plugin_name: str) -> ast.AST:
+def _extract_scan_function_ast(
+    tree: ast.Module, scan_function_name: str, plugin_name: str
+) -> ScanFunction:
 
     if explicit_scan_function_definitions := [
         s for s in tree.body if isinstance(s, ast.FunctionDef) and s.name == scan_function_name
@@ -125,24 +124,27 @@ def _extract_scan_function_ast(tree: ast.AST, scan_function_name: str, plugin_na
         return explicit_scan_function_definitions[0]  # should only be one
 
     global_dict_entries = [  # like check_info["this_plugin"] = ...
-        (s.targets[0], s.value)
+        (s.targets[0].value, s.value)
         for s in tree.body
         if (
             isinstance(s, ast.Assign)
             and isinstance(s.targets[0], ast.Subscript)
+            and isinstance(s.targets[0].value, ast.Name)
             and isinstance(s.targets[0].slice, ast.Constant)
             and s.targets[0].slice.value.split(".")[0] == plugin_name
         )
     ]
 
     for target, value in global_dict_entries:
-        if target.value.id == "snmp_scan_functions":
+        if target.id == "snmp_scan_functions" and isinstance(value, ast.Lambda):
             return value
 
-        if target.value.id in ("check_info", "inv_info") and isinstance(value, ast.Dict):
+        if target.id in ("check_info", "inv_info") and isinstance(value, ast.Dict):
             try:
                 return {
-                    k.s: v for k, v in zip(value.keys, value.values) if isinstance(k, ast.Constant)
+                    k.value: v
+                    for k, v in zip(value.keys, value.values)
+                    if isinstance(k, ast.Constant) and isinstance(v, ast.Lambda)
                 }["snmp_scan_function"]
             except KeyError:
                 pass
@@ -150,11 +152,11 @@ def _extract_scan_function_ast(tree: ast.AST, scan_function_name: str, plugin_na
     raise ValueError(ast.dump(tree))
 
 
-def _get_expression_from_function(name: str, scan_func_ast: ast.AST) -> ast.AST:
-    body = scan_func_ast.body  # type: ignore
+def _get_expression_from_function(name: str, scan_func_ast: ScanFunction) -> ast.expr:
     if isinstance(scan_func_ast, ast.Lambda):
-        return body
+        return scan_func_ast.body
 
+    body = scan_func_ast.body
     if len(body) >= 2 and isinstance(body[0], ast.Expr) and isinstance(body[0].value, ast.Constant):
         # remove doc string!
         body = body[1:]

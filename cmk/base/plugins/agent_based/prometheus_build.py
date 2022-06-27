@@ -40,9 +40,19 @@ def discovery_prometheus_build(section: Section) -> DiscoveryResult:
 
 def check_prometheus_build(section: Section) -> CheckResult:
     if "version" in section:
+        # Only from Prometheus 2.14 the buildinfo endpoint is available which will show the version
+        # number of the main Prometheus instance. For < 2.14 the version information can only be
+        # retrieved via PromQl. However, the query returns the version of all connected instances
+        # with no label to identify the main instance
+        if len(section["version"]) == 1:
+            version_summary = version_details = f"Version: {section['version'][0]}"
+        else:
+            version_summary = "Version: multiple instances"
+            version_details = f"Versions: {', '.join(section['version'])}"
         yield Result(
             state=state.OK,
-            summary=f"Version: {section['version']}",
+            summary=version_summary,
+            details=version_details,
         )
 
     if "reload_config_status" in section:

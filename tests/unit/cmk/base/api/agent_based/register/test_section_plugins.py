@@ -41,7 +41,7 @@ def _parse_dummy(string_table):  # pylint: disable=unused-argument
         42,
     ],
 )
-def test_validate_parse_function_type(parse_function):
+def test_validate_parse_function_type(parse_function) -> None:
     with pytest.raises(TypeError):
         section_plugins._validate_parse_function(
             parse_function,
@@ -58,7 +58,7 @@ def test_validate_parse_function_type(parse_function):
         lambda foo, string_table: None,
     ],
 )
-def test_validate_parse_function_value(parse_function):
+def test_validate_parse_function_value(parse_function) -> None:
     with pytest.raises(ValueError):
         section_plugins._validate_parse_function(
             parse_function,
@@ -66,7 +66,7 @@ def test_validate_parse_function_value(parse_function):
         )
 
 
-def test_validate_parse_function_annotation_string_table():
+def test_validate_parse_function_annotation_string_table() -> None:
     def _parse_function(string_table: List[StringTable]):
         return string_table
 
@@ -82,7 +82,7 @@ def test_validate_parse_function_annotation_string_table():
     )
 
 
-def test_validate_supersedings_raise_duplicate():
+def test_validate_supersedings_raise_duplicate() -> None:
     supersedes = [
         SectionName("foo"),
         SectionName("bar"),
@@ -93,12 +93,12 @@ def test_validate_supersedings_raise_duplicate():
         section_plugins._validate_supersedings(SectionName("jim"), supersedes)
 
 
-def test_validate_supersedings_raise_self_superseding():
+def test_validate_supersedings_raise_self_superseding() -> None:
     with pytest.raises(ValueError, match="cannot supersede myself"):
         section_plugins._validate_supersedings(SectionName("foo"), [SectionName("foo")])
 
 
-def test_create_agent_section_plugin():
+def test_create_agent_section_plugin() -> None:
     plugin = section_plugins.create_agent_section_plugin(
         name="norris",
         parsed_section_name="chuck",
@@ -118,7 +118,7 @@ def test_create_agent_section_plugin():
     assert plugin.supersedes == {SectionName("bar"), SectionName("foo")}
 
 
-def test_create_snmp_section_plugin():
+def test_create_snmp_section_plugin() -> None:
 
     trees: List[SNMPTree] = [
         SNMPTree(
@@ -156,7 +156,7 @@ def test_create_snmp_section_plugin():
     assert plugin.supersedes == {SectionName("bar"), SectionName("foo")}
 
 
-def test_create_snmp_section_plugin_single_tree():
+def test_create_snmp_section_plugin_single_tree() -> None:
 
     single_tree = SNMPTree(base=".1.2.3", oids=[OIDEnd(), "2.3"])
 
@@ -174,7 +174,7 @@ def test_create_snmp_section_plugin_single_tree():
     assert plugin.parse_function([[["A", "B"]]]) == [["A", "B"]]
 
 
-def test_validate_supersedings_raise_implicit():
+def test_validate_supersedings_raise_implicit() -> None:
     all_supersedes_invalid = {
         SectionName("foo"): {SectionName("bar")},
         SectionName("bar"): {SectionName("gee")},
@@ -193,7 +193,7 @@ def test_validate_supersedings_raise_implicit():
     section_plugins.validate_section_supersedes(all_supersedes_valid)
 
 
-def test_validate_supersedings_raise_cyclic():
+def test_validate_supersedings_raise_cyclic() -> None:
     all_supersedes_cyclic = {
         SectionName("foo"): {SectionName("bar")},
         SectionName("bar"): {SectionName("foo")},

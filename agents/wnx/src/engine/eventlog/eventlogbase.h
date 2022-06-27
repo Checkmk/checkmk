@@ -7,8 +7,8 @@
 #define EventLogBase_h
 
 #include <fmt/format.h>
-#include <time.h>
 
+#include <ctime>
 #include <functional>
 #include <memory>
 #include <ranges>
@@ -38,24 +38,24 @@ public:
     EventLogRecordBase(const EventLogRecordBase &) = delete;
     EventLogRecordBase &operator=(const EventLogRecordBase &) = delete;
 
-    virtual uint64_t recordId() const = 0;
-    virtual uint16_t eventId() const = 0;
-    virtual uint16_t eventQualifiers() const = 0;
-    virtual time_t timeGenerated() const = 0;
-    virtual std::wstring source() const = 0;
-    virtual Level eventLevel() const = 0;
-    virtual std::wstring makeMessage() const = 0;
+    [[nodiscard]] virtual uint64_t recordId() const = 0;
+    [[nodiscard]] virtual uint16_t eventId() const = 0;
+    [[nodiscard]] virtual uint16_t eventQualifiers() const = 0;
+    [[nodiscard]] virtual time_t timeGenerated() const = 0;
+    [[nodiscard]] virtual std::wstring source() const = 0;
+    [[nodiscard]] virtual Level eventLevel() const = 0;
+    [[nodiscard]] virtual std::wstring makeMessage() const = 0;
 
-    std::string stringize(cma::cfg::EventLevels required,
-                          bool hide_trash) const {
+    [[nodiscard]] std::string stringize(cfg::EventLevels required,
+                                        bool hide_trash) const {
         // convert UNIX timestamp to local time
         auto ch = getEventSymbol(required);
         if (hide_trash && ch == '.') {
             return {};
         }
 
-        time_t time_generated = static_cast<time_t>(timeGenerated());
-        auto *t = ::localtime(&time_generated);
+        auto time_generated = timeGenerated();
+        const auto *t = ::localtime(&time_generated);
         char timestamp[64];
         ::strftime(timestamp, sizeof(timestamp), "%b %d %H:%M:%S", t);
 
@@ -73,7 +73,7 @@ public:
     }
 
     // for output in port
-    char getEventSymbol(cma::cfg::EventLevels required) const {
+    [[nodiscard]] char getEventSymbol(cfg::EventLevels required) const {
         switch (eventLevel()) {
             case Level::error:
                 return 'C';
@@ -82,10 +82,9 @@ public:
             case Level::information:
             case Level::audit_success:
             case Level::success:
-                if (required == cma::cfg::EventLevels::kAll)
-                    return 'O';
-                else
-                    return '.';  // potential drop of context
+                return (required == cfg::EventLevels::kAll)
+                           ? 'O'
+                           : '.';  // potential drop of context
             case Level::audit_failure:
                 return 'C';
             default:
@@ -94,20 +93,20 @@ public:
     }
 
     // decode windows level to universal
-    cma::cfg::EventLevels calcEventLevel(cma::cfg::EventLevels required) const {
+    [[nodiscard]] cfg::EventLevels calcEventLevel() const {
         switch (eventLevel()) {
             case Level::error:
-                return cma::cfg::EventLevels::kCrit;
+                return cfg::EventLevels::kCrit;
             case Level::warning:
-                return cma::cfg::EventLevels::kWarn;
+                return cfg::EventLevels::kWarn;
             case Level::information:
             case Level::audit_success:
             case Level::success:
-                return cma::cfg::EventLevels::kAll;
+                return cfg::EventLevels::kAll;
             case Level::audit_failure:
-                return cma::cfg::EventLevels::kCrit;
+                return cfg::EventLevels::kCrit;
             default:
-                return cma::cfg::EventLevels::kWarn;
+                return cfg::EventLevels::kWarn;
         }
     }
 };
@@ -122,7 +121,7 @@ public:
     /**
      * return the name/path of the eventlog monitored
      **/
-    virtual std::wstring getName() const = 0;
+    [[nodiscard]] virtual std::wstring getName() const = 0;
 
     /**
      * seek to the specified record on the next read or, if the record_number is
@@ -152,7 +151,7 @@ public:
     virtual uint64_t getLastRecordId() = 0;
 
     // checks that log really exists
-    virtual bool isLogValid() const = 0;
+    [[nodiscard]] virtual bool isLogValid() const = 0;
 };
 
 // Official CheckMK Event Log API
@@ -160,19 +159,20 @@ public:
 std::unique_ptr<EventLogBase> OpenEvl(const std::wstring &name, bool vista_api);
 
 /// \brief - scan existing event log
-std::pair<uint64_t, cma::cfg::EventLevels> ScanEventLog(
-    EventLogBase &log, uint64_t pos, cma::cfg::EventLevels level);
+std::pair<uint64_t, cfg::EventLevels> ScanEventLog(EventLogBase &log,
+                                                   uint64_t pos,
+                                                   cfg::EventLevels level);
 
 using EvlProcessor = std::function<bool(const std::string &)>;
 
 // third call
 uint64_t PrintEventLog(EventLogBase &log, uint64_t from_pos,
-                       cma::cfg::EventLevels level, bool hide_context,
+                       cfg::EventLevels level, bool hide_context,
                        SkipDuplicatedRecords skip,
                        const EvlProcessor &processor);
 // internal
 inline uint64_t choosePos(uint64_t last_read_pos) {
-    return cma::cfg::kFromBegin == last_read_pos ? 0 : last_read_pos + 1;
+    return cfg::kFromBegin == last_read_pos ? 0 : last_read_pos + 1;
 }
 
 }  // namespace cma::evl

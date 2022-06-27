@@ -69,7 +69,7 @@ _AGENT_OUTPUT_2 = [
         (_AGENT_OUTPUT_2, [Service(item="SGP")]),
     ],
 )
-def test_discover_oracle_performance(fix_register, string_table, expected_result):
+def test_discover_oracle_performance(fix_register, string_table, expected_result) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("oracle_performance")]
     section = parse_oracle_performance(string_table)
     assert sorted(check_plugin.discovery_function(section)) == expected_result
@@ -113,13 +113,13 @@ def test_discover_oracle_performance(fix_register, string_table, expected_result
                 Metric("oracle_db_cpu", 0.0),
                 Result(state=State.OK, summary="DB Non-Idle Wait: 0.00 1/s"),
                 Metric("oracle_db_wait_time", 0.0),
-                Result(state=State.OK, summary="Maximum SGA Size: 12.22 GB"),
-                Result(state=State.OK, summary="Buffer Cache Size: 3.61 GB"),
-                Result(state=State.OK, summary="Shared Pool Size: 5.02 GB"),
-                Result(state=State.OK, summary="Redo Buffers: 13.98 MB"),
-                Result(state=State.OK, summary="Java Pool Size: 64.00 MB"),
-                Result(state=State.OK, summary="Large Pool Size: 32.00 MB"),
-                Result(state=State.OK, summary="Streams Pool Size: 0.00 B"),
+                Result(state=State.OK, summary="Maximum SGA Size: 12.2 GiB"),
+                Result(state=State.OK, summary="Buffer Cache Size: 3.61 GiB"),
+                Result(state=State.OK, summary="Shared Pool Size: 5.02 GiB"),
+                Result(state=State.OK, summary="Redo Buffers: 14.0 MiB"),
+                Result(state=State.OK, summary="Java Pool Size: 64.0 MiB"),
+                Result(state=State.OK, summary="Large Pool Size: 32.0 MiB"),
+                Result(state=State.OK, summary="Streams Pool Size: 0 B"),
                 Result(state=State.OK, summary="Library cache hit ratio: 97.8%"),
                 Metric("oracle_library_cache_hit_ratio", 97.78761061946902),
                 Metric("oracle_pin_hits_sum", 0.0),
@@ -135,7 +135,9 @@ def test_discover_oracle_performance(fix_register, string_table, expected_result
         ),
     ],
 )
-def test_check_oracle_performance(monkeypatch, fix_register, string_table, item, expected_result):
+def test_check_oracle_performance(
+    monkeypatch, fix_register, string_table, item, expected_result
+) -> None:
     # TODO hack: clean this up as soon as the check is migrated
     monkeypatch.setattr(cmk.base.plugin_contexts, "_hostname", "foo")
     monkeypatch.setattr(cmk.base.config.ConfigCache, "host_extra_conf_merged", lambda s, h, r: {})
@@ -186,7 +188,7 @@ def test_check_oracle_performance(monkeypatch, fix_register, string_table, item,
         ),
     ],
 )
-def test_inventory_oracle_performance(string_table, expected_result):
+def test_inventory_oracle_performance(string_table, expected_result) -> None:
     assert (
         list(inventory_oracle_performance(parse_oracle_performance(string_table)))
         == expected_result

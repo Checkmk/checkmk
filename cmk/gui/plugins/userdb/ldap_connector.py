@@ -37,8 +37,9 @@ import os
 import shutil
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, IO, Iterator, List, Literal, Optional, Sequence, Set
+from typing import Callable, Dict, IO, Iterator, List, Literal, Optional, Sequence, Set
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
@@ -59,8 +60,9 @@ from cmk.utils.type_defs import UserId
 import cmk.gui.hooks as hooks
 import cmk.gui.log as log
 import cmk.gui.utils.escaping as escaping
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import active_config
+from cmk.gui.groups import load_contact_group_information
 from cmk.gui.i18n import _
 from cmk.gui.plugins.userdb.utils import (
     add_internal_attributes,
@@ -77,6 +79,7 @@ from cmk.gui.plugins.userdb.utils import (
     UserConnector,
 )
 from cmk.gui.site_config import has_wato_slave_sites
+from cmk.gui.type_defs import Users
 from cmk.gui.valuespec import (
     CascadingDropdown,
     CascadingDropdownChoice,
@@ -211,7 +214,7 @@ class LDAPUserConnector(UserConnector):
 
         return cfg
 
-    def __init__(self, cfg):
+    def __init__(self, cfg) -> None:
         super().__init__(self.transform_config(cfg))
 
         self._ldap_obj: Optional[ldap.ldapobject.ReconnectLDAPObject] = None
@@ -219,9 +222,9 @@ class LDAPUserConnector(UserConnector):
         self._logger = log.logger.getChild("ldap.Connection(%s)" % self.id())
 
         self._num_queries = 0
-        self._user_cache = {}
-        self._group_cache = {}
-        self._group_search_cache = {}
+        self._user_cache: dict = {}
+        self._group_cache: dict = {}
+        self._group_search_cache: dict = {}
 
         # File for storing the time of the last success event
         self._sync_time_file = Path(cmk.utils.paths.var_dir).joinpath(
@@ -502,10 +505,10 @@ class LDAPUserConnector(UserConnector):
     def _directory_type(self):
         return self._config["directory_type"][0]
 
-    def is_active_directory(self):
+    def is_active_directory(self) -> bool:
         return self._directory_type() == "ad"
 
-    def has_user_base_dn_configured(self):
+    def has_user_base_dn_configured(self) -> bool:
         return self._config["user_dn"] != ""
 
     def _create_users_only_on_login(self):
@@ -517,10 +520,10 @@ class LDAPUserConnector(UserConnector):
     def _member_attr(self):
         return self._config.get("group_member", self.ldap_attr("member")).lower()
 
-    def has_bind_credentials_configured(self):
+    def has_bind_credentials_configured(self) -> bool:
         return self._config.get("bind", ("", ""))[0] != ""
 
-    def has_group_base_dn_configured(self):
+    def has_group_base_dn_configured(self) -> bool:
         return self._config["group_dn"] != ""
 
     def get_group_dn(self) -> DistinguishedName:
@@ -532,7 +535,7 @@ class LDAPUserConnector(UserConnector):
     def _get_suffix(self):
         return self._config.get("suffix")
 
-    def _has_suffix(self):
+    def _has_suffix(self) -> bool:
         return self._config.get("suffix") is not None
 
     def _save_suffix(self):
@@ -608,7 +611,7 @@ class LDAPUserConnector(UserConnector):
                 break
         return results
 
-    def _ldap_search(
+    def _ldap_search(  # pylint: disable=too-many-branches
         self, base, filt="(objectclass=*)", columns=None, scope="sub", implicit_connect=True
     ):
         if columns is None:
@@ -860,7 +863,7 @@ class LDAPUserConnector(UserConnector):
         ):
             if user_id_attr not in ldap_user:
                 raise MKLDAPException(
-                    _('The configured User-ID attribute "%s" does not ' 'exist for the user "%s"')
+                    _('The configured User-ID attribute "%s" does not exist for the user "%s"')
                     % (user_id_attr, dn)
                 )
             user_id = self._sanitize_user_id(ldap_user[user_id_attr][0])
@@ -987,7 +990,11 @@ class LDAPUserConnector(UserConnector):
     # Nested querying is more complicated. We have no option to simply do a query for group objects
     # to make them resolve the memberships here. So we need to query all users with the nested
     # memberof filter to get all group memberships of that group. We need one query for each group.
-    def _get_nested_group_memberships(self, filters: List[str], filt_attr: str) -> GroupMemberships:
+    def _get_nested_group_memberships(  # pylint: disable=too-many-branches
+        self,
+        filters: List[str],
+        filt_attr: str,
+    ) -> GroupMemberships:
         groups: GroupMemberships = {}
 
         # Search group members in common ancestor of group and user base DN to be able to use a single
@@ -1198,7 +1205,14 @@ class LDAPUserConnector(UserConnector):
         suffix = self._get_suffix()
         return "%s@%s" % (username, suffix)
 
-    def do_sync(self, add_to_changelog, only_username, load_users_func, save_users_func):
+    def do_sync(  # pylint: disable=too-many-branches
+        self,
+        *,
+        add_to_changelog: bool,
+        only_username: Optional[UserId],
+        load_users_func: Callable[[bool], Users],
+        save_users_func: Callable[[Users, datetime], None],
+    ):
         if not self.has_user_base_dn_configured():
             self._logger.info('Not trying sync (no "user base DN" configured)')
             return  # silently skip sync without configuration
@@ -1215,7 +1229,7 @@ class LDAPUserConnector(UserConnector):
 
         ldap_users = self.get_users()
 
-        users = load_users_func(lock=True)
+        users = load_users_func(True)  # too lazy to add a protocol for the "lock" kwarg...
 
         changes = []
 
@@ -1343,7 +1357,7 @@ class LDAPUserConnector(UserConnector):
         )
 
         if changes or has_changed_passwords:
-            save_users_func(users)
+            save_users_func(users, datetime.now())
         else:
             release_users_lock()
 
@@ -1546,7 +1560,7 @@ class LDAPBuiltinAttributePlugin(LDAPAttributePlugin):
     """Base class for all builtin based sync plugins"""
 
     @property
-    def is_builtin(self):
+    def is_builtin(self) -> bool:
         return True
 
 
@@ -1554,7 +1568,7 @@ class LDAPUserAttributePlugin(LDAPAttributePlugin):
     """Base class for all custom user attribute based sync plugins"""
 
     @property
-    def is_builtin(self):
+    def is_builtin(self) -> bool:
         return False
 
 
@@ -1737,11 +1751,11 @@ def _group_membership_parameters():
 @ldap_attribute_plugin_registry.register
 class LDAPAttributePluginMail(LDAPBuiltinAttributePlugin):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "email"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Email address")
 
     @property
@@ -1803,11 +1817,11 @@ class LDAPAttributePluginMail(LDAPBuiltinAttributePlugin):
 @ldap_attribute_plugin_registry.register
 class LDAPAttributePluginAlias(LDAPBuiltinAttributePlugin):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "alias"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Alias")
 
     @property
@@ -1877,11 +1891,11 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
     and then maybe increase the serial."""
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "auth_expire"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Authentication Expiration")
 
     @property
@@ -2000,11 +2014,11 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
 @ldap_attribute_plugin_registry.register
 class LDAPAttributePluginPager(LDAPBuiltinAttributePlugin):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "pager"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Pager")
 
     @property
@@ -2069,11 +2083,11 @@ class LDAPAttributePluginPager(LDAPBuiltinAttributePlugin):
 @ldap_attribute_plugin_registry.register
 class LDAPAttributePluginGroupsToContactgroups(LDAPBuiltinAttributePlugin):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "groups_to_contactgroups"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Contactgroup Membership")
 
     @property
@@ -2099,9 +2113,6 @@ class LDAPAttributePluginGroupsToContactgroups(LDAPBuiltinAttributePlugin):
         ldap_user: dict,
         user: dict,
     ) -> dict:
-        # Gather all group names to search for in LDAP
-        from cmk.gui.groups import load_contact_group_information
-
         cg_names = load_contact_group_information().keys()
 
         return {
@@ -2139,11 +2150,11 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
     """Populate user attributes based on group memberships within LDAP"""
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "groups_to_attributes"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Groups to custom user attributes")
 
     @property
@@ -2255,8 +2266,9 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
 
     def _get_user_attribute_choices(self) -> Sequence[CascadingDropdownChoice]:
         return [
-            (name, attr.valuespec().title(), attr.valuespec())
+            (name, title, attr.valuespec())
             for name, attr in get_user_attributes()
+            if (title := attr.valuespec().title()) is not None  # TODO: Hmmm...
         ]
 
 
@@ -2274,11 +2286,11 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
 @ldap_attribute_plugin_registry.register
 class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "groups_to_roles"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Roles")
 
     @property

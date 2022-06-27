@@ -7,9 +7,11 @@
 # yapf: disable
 # type: ignore
 
+from cmk.base.plugins.agent_based.lparstat_aix import parse_lparstat_aix
+
 checkname = 'lparstat_aix'
 
-info = [
+parsed = parse_lparstat_aix([
     ['System', 'Config', 'type=Dedicated', 'ent=7.0', 'what=ever'],
     [
         u'%user', u'%sys', u'%wait', u'%idle', u'physc', u'%entc', u'lbusy', u'vcsw', u'phint',
@@ -20,7 +22,7 @@ info = [
         u'-----', u'-----', u'------'
     ],
     [u'0.2', u'0.4', u'0.0', u'99.3', u'0.02', u'1.7', u'0.0', u'215', u'3', u'101', u'0.64'],
-]
+])
 
 discovery = {'': [(None, {})], 'cpu_util': [(None, {})]}
 
@@ -35,10 +37,10 @@ checks = {
         (0, u'Utcyc: 0.64%', [(u'utcyc', 0.64, None, None, None, None)]),
     ]),],
     'cpu_util': [(None, None, [
-        (0, 'User: 0.2%', [('user', 0.2)]),
-        (0, 'System: 0.4%', [('system', 0.4)]),
+        (0, 'User: 0.20%', [('user', 0.2)]),
+        (0, 'System: 0.40%', [('system', 0.4)]),
         (0, 'Wait: 0%', [('wait', 0.0)]),
-        (0, 'Total CPU: 0.6%', [('util', 0.6000000000000001, None, None, 0, None)]),
+        (0, 'Total CPU: 0.60%', [('util', 0.6000000000000001, None, None, 0, None)]),
         (0, "Physical CPU consumption: 0.02 CPUs", [('cpu_entitlement_util', 0.02)]),
         (0, 'Entitlement: 7.00 CPUs', [('cpu_entitlement', 7.0)]),
     ]),],

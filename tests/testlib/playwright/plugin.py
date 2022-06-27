@@ -55,7 +55,7 @@ def _playwright() -> t.Generator[Playwright, None, None]:
 
 @pytest.fixture(scope="session", name="browser_type")
 def _browser_type(playwright: Playwright, browser_name: str) -> BrowserType:
-    return getattr(playwright, browser_name)
+    return t.cast(BrowserType, getattr(playwright, browser_name))
 
 
 @pytest.fixture(scope="session", name="browser")
@@ -87,7 +87,7 @@ def _may_create_screenshot(
     request: pytest.FixtureRequest,
     pytestconfig: t.Any,
     pages: t.List[Page],
-):
+) -> None:
     failed = request.node.rep_call.failed if hasattr(request.node, "rep_call") else True
     screenshot_option = pytestconfig.getoption("--screenshot")
     capture_screenshot = screenshot_option == "on" or (
@@ -131,8 +131,8 @@ def is_chromium(browser_name: str) -> bool:
 
 
 @pytest.fixture(name="browser_name", scope="session")
-def _browser_name(pytestconfig: t.Any) -> t.Optional[str]:
-    browser_names = pytestconfig.getoption("--browser")
+def _browser_name(pytestconfig: t.Any) -> str:
+    browser_names = t.cast(list[str], pytestconfig.getoption("--browser"))
     if len(browser_names) == 0:
         return "chromium"
     if len(browser_names) == 1:

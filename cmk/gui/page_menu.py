@@ -20,11 +20,14 @@ from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.globals import html, output_funnel, request
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Icon
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodInline
 from cmk.gui.utils.urls import (
     doc_reference_url,
@@ -33,34 +36,6 @@ from cmk.gui.utils.urls import (
     makeuri_contextless,
     requested_file_with_query,
 )
-
-
-def enable_page_menu_entry(name: str):
-    _toggle_page_menu_entry(name, state=True)
-
-
-def disable_page_menu_entry(name: str):
-    _toggle_page_menu_entry(name, state=False)
-
-
-def _toggle_page_menu_entry(name: str, state: bool) -> None:
-    html.javascript(
-        "cmk.page_menu.enable_menu_entry(%s, %s)" % (json.dumps(name), json.dumps(state))
-    )
-
-
-def enable_page_menu_entries(css_class: str):
-    toggle_page_menu_entries(css_class, state=True)
-
-
-def disable_page_menu_entries(css_class: str):
-    toggle_page_menu_entries(css_class, state=False)
-
-
-def toggle_page_menu_entries(css_class: str, state: bool) -> None:
-    html.javascript(
-        "cmk.page_menu.enable_menu_entries(%s, %s)" % (json.dumps(css_class), json.dumps(state))
-    )
 
 
 @dataclass
@@ -205,7 +180,7 @@ class PageMenu:
     has_pending_changes: bool = False
     pending_changes_tooltip: Optional[str] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Add the display options dropdown
         self.dropdowns.append(make_display_options_dropdown())
 
@@ -216,7 +191,7 @@ class PageMenu:
         if self.breadcrumb and len(self.breadcrumb) > 1 and self.breadcrumb[-2].url:
             self.dropdowns.append(make_up_link(self.breadcrumb))
 
-    def __getitem__(self, name):
+    def __getitem__(self, name: str) -> PageMenuDropdown:
         for dropdown in self.dropdowns:
             if dropdown.name == name:
                 return dropdown
@@ -525,7 +500,7 @@ class PageMenuRenderer:
 
             html.open_div(
                 id_="page_menu_dropdown_%s" % dropdown.name,
-                class_=["menucontainer", "disabled" if not dropdown.is_enabled else None],
+                class_=["menucontainer"] + (["disabled"] if not dropdown.is_enabled else []),
             )
 
             self._show_dropdown_trigger(dropdown)
@@ -536,7 +511,7 @@ class PageMenuRenderer:
 
     def _show_dropdown_trigger(self, dropdown: PageMenuDropdown) -> None:
         html.popup_trigger(
-            html.render_h2(dropdown.title),
+            HTMLWriter.render_h2(dropdown.title),
             ident="menu_" + dropdown.name,
             method=MethodInline(self._render_dropdown_area(dropdown)),
             data=dropdown.popup_data,
@@ -570,10 +545,8 @@ class PageMenuRenderer:
         html.open_div(class_="topic")
         html.div(
             topic.title,
-            class_=[
-                "topic_title",
-                "show_more_mode" if all(entry.is_show_more for entry in topic.entries) else None,
-            ],
+            class_=["topic_title"]
+            + (["show_more_mode"] if all(entry.is_show_more for entry in topic.entries) else []),
         )
 
         for entry in topic.entries:
@@ -585,7 +558,7 @@ class PageMenuRenderer:
         html.close_div()
 
     def _show_entry(self, entry: PageMenuEntry) -> None:
-        classes: List[Optional[str]] = ["entry"]
+        classes = ["entry"]
         classes += self._get_entry_css_classes(entry)
 
         html.open_div(
@@ -612,7 +585,7 @@ class PageMenuRenderer:
         html.open_tr(id_="suggestions")
         html.open_td(colspan=3)
         for entry in entries:
-            classes: List[Optional[str]] = ["suggestion"]
+            classes = ["suggestion"]
             classes += self._get_entry_css_classes(entry)
             html.open_div(class_=classes)
             SuggestedEntryRenderer().show(entry)
@@ -620,12 +593,12 @@ class PageMenuRenderer:
         html.close_td()
         html.close_tr()
 
-    def _get_entry_css_classes(self, entry: PageMenuEntry) -> List[Optional[str]]:
-        classes: List[Optional[str]] = [
+    def _get_entry_css_classes(self, entry: PageMenuEntry) -> list[str]:
+        classes = [
             ("enabled" if entry.is_enabled else "disabled"),
             ("show_more_mode" if entry.is_show_more else "basic"),
         ]
-        classes += entry.css_classes
+        classes += [c for c in entry.css_classes if c is not None]
         return classes
 
     def _show_inpage_search_field(self, item: PageMenuSearch) -> None:
@@ -722,7 +695,7 @@ class ShortcutRenderer:
             title=entry.shortcut_title or entry.title,
             icon=entry.icon_name,
             target=target,
-            class_=" ".join(classes),
+            class_=[" ".join(classes)],
             id_=("menu_shortcut_%s" % entry.name if entry.name else None),
         )
 
@@ -826,8 +799,8 @@ class PageMenuPopupsRenderer:
         if entry.name is None:
             raise ValueError('Missing "name" attribute on entry "%s"' % entry.title)
 
-        classes: List[Optional[str]] = ["page_menu_popup"]
-        classes += entry.item.css_classes
+        classes = ["page_menu_popup"]
+        classes += [c for c in entry.item.css_classes if c is not None]
         if isinstance(entry.item, PageMenuSidePopup):
             classes.append("side_popup")
 

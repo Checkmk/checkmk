@@ -8,12 +8,12 @@ cleanup is implemented here: the bulk removal of explicit attribute
 values."""
 
 from hashlib import sha256
-from typing import Optional, Type
+from typing import Collection, Optional, Type
 
 import cmk.gui.forms as forms
-import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.globals import html, request
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
@@ -24,28 +24,29 @@ from cmk.gui.plugins.wato.utils import (
     mode_registry,
 )
 from cmk.gui.plugins.wato.utils.base_modes import redirect, WatoMode
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
-from cmk.gui.watolib.host_attributes import host_attribute_registry
+from cmk.gui.watolib.host_attributes import collect_attributes, host_attribute_registry
+from cmk.gui.watolib.hosts_and_folders import Folder
 
 
 @mode_registry.register
 class ModeBulkEdit(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "bulkedit"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts", "edit_hosts"]
 
     @classmethod
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeFolder
 
-    def title(self):
+    def title(self) -> str:
         return _("Bulk edit hosts")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -59,21 +60,21 @@ class ModeBulkEdit(WatoMode):
 
         user.need_permission("wato.edit_hosts")
 
-        changed_attributes = watolib.collect_attributes("bulk", new=False)
+        changed_attributes = collect_attributes("bulk", new=False)
         host_names = get_hostnames_from_checkboxes()
         for host_name in host_names:
-            host = watolib.Folder.current().load_host(host_name)
+            host = Folder.current().load_host(host_name)
             host.update_attributes(changed_attributes)
             # call_hook_hosts_changed() is called too often.
             # Either offer API in class Host for bulk change or
             # delay saving until end somehow
 
         flash(_("Edited %d hosts") % len(host_names))
-        return redirect(watolib.Folder.current().url())
+        return redirect(Folder.current().url())
 
     def page(self) -> None:
         host_names = get_hostnames_from_checkboxes()
-        hosts = {host_name: watolib.Folder.current().host(host_name) for host_name in host_names}
+        hosts = {host_name: Folder.current().host(host_name) for host_name in host_names}
         current_host_hash = sha256(repr(hosts).encode()).hexdigest()
 
         # When bulk edit has been made with some hosts, then other hosts have been selected
@@ -108,7 +109,7 @@ class ModeBulkEdit(WatoMode):
         html.begin_form("edit_host", method="POST")
         html.prevent_password_auto_completion()
         html.hidden_field("host_hash", current_host_hash)
-        configure_attributes(False, hosts, "bulk", parent=watolib.Folder.current())
+        configure_attributes(False, hosts, "bulk", parent=Folder.current())
         forms.end()
         html.hidden_fields()
         html.end_form()
@@ -117,11 +118,11 @@ class ModeBulkEdit(WatoMode):
 @mode_registry.register
 class ModeBulkCleanup(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "bulkcleanup"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts", "edit_hosts"]
 
     @classmethod
@@ -129,9 +130,9 @@ class ModeBulkCleanup(WatoMode):
         return ModeFolder
 
     def _from_vars(self):
-        self._folder = watolib.Folder.current()
+        self._folder = Folder.current()
 
-    def title(self):
+    def title(self) -> str:
         return _("Bulk removal of explicit attributes")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -173,7 +174,7 @@ class ModeBulkCleanup(WatoMode):
                 to_clean.append(attrname)
         return to_clean
 
-    def page(self):
+    def page(self) -> None:
         hosts = get_hosts_from_checkboxes()
 
         html.p(

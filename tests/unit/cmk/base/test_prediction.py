@@ -24,7 +24,7 @@ from cmk.base import prediction
         (prediction._group_by_everyhour, 1543402820, ("everyhour", 20)),
     ],
 )
-def test_group_by(group_by, timestamp, result):
+def test_group_by(group_by, timestamp, result) -> None:
     with on_time(timestamp, "CET"):
         assert group_by(timestamp) == result
 
@@ -116,7 +116,7 @@ def test_group_by(group_by, timestamp, result):
         ),
     ],
 )
-def test_time_slices(utcdate, timezone, horizon, period_info, timegroup, result):
+def test_time_slices(utcdate, timezone, horizon, period_info, timegroup, result) -> None:
     """Find period slices for predictive levels
 
     More than a test is an exemplification of our convention
@@ -182,5 +182,5 @@ def test_time_slices(utcdate, timezone, horizon, period_info, timegroup, result)
         ),
     ],
 )
-def test_data_stats(slices, result):
+def test_data_stats(slices, result) -> None:
     assert prediction._data_stats(slices) == result

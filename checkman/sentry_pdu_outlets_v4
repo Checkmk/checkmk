@@ -1,0 +1,16 @@
+title: Sentry PDU Devices v4: Outlets
+agents: snmp
+catalog: hw/power/servertech
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the status of the outlets of a Sentry PDU Device v4.
+ If the outlet status is normal, then the check displays OK.
+ If the outlet status is reading/settle/lowWarning/highWarning,
+ then check displays WARN. Otherwise the check displays CRIT.
+
+item:
+ The name of the outlet.
+
+discovery:
+ One service is created for each outlet.

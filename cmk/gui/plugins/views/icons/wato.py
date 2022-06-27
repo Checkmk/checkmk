@@ -4,7 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.globals import active_config, display_options, request, response
+from cmk.gui.config import active_config
+from cmk.gui.display_options import display_options
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
@@ -25,7 +27,7 @@ class WatoIcon(Icon):
     def host_columns(self):
         return ["filename"]
 
-    def render(self, what, row, tags, custom_vars):
+    def render(self, what, row, tags, custom_vars) -> None:
         def may_see_hosts():
             return user.may("wato.use") and (user.may("wato.seeall") or user.may("wato.hosts"))
 
@@ -79,7 +81,7 @@ class DownloadAgentOutputIcon(Icon):
     def host_columns(self):
         return ["filename", "check_type"]
 
-    def render(self, what, row, tags, custom_vars):
+    def render(self, what, row, tags, custom_vars) -> None:
         return _paint_download_host_info(
             what, row, tags, custom_vars, ty="agent"
         )  # pylint: disable=no-value-for-parameter
@@ -103,7 +105,7 @@ class DownloadSnmpWalkIcon(Icon):
     def default_sort_index(self):
         return 50
 
-    def render(self, what, row, tags, custom_vars):
+    def render(self, what, row, tags, custom_vars) -> None:
         return _paint_download_host_info(
             what, row, tags, custom_vars, ty="walk"
         )  # pylint: disable=no-value-for-parameter
@@ -121,10 +123,10 @@ def _paint_download_host_info(what, row, tags, host_custom_vars, ty):
         # Render "download agent output" for non agent hosts, because there might
         # be piggyback data available which should be downloadable.
         if ty == "walk" and "snmp" not in tags:
-            return
+            return None
 
         if ty == "agent" and "snmp" in tags and "tcp" not in tags:
-            return
+            return None
 
         params = [
             ("host", row["host_name"]),
@@ -147,8 +149,10 @@ def _paint_download_host_info(what, row, tags, host_custom_vars, ty):
 
         url = makeuri_contextless(request, params, filename="fetch_agent_output.py")
         return "agents", title, url
+    return None
 
 
 def _wato_folder_from_filename(filename):
     if filename.startswith("/wato/") and filename.endswith("hosts.mk"):
         return filename[6:-8].rstrip("/")
+    return None

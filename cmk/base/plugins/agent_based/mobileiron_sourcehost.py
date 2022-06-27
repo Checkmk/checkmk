@@ -13,7 +13,7 @@ def check_mobileiron_sourcehost(section: SourceHostSection) -> CheckResult:
 
     yield Result(
         state=State.OK,
-        summary=f"Query Time: {section.queryTime}",
+        summary=f"Query Time: {section.query_time}",
     )
 
     yield Result(

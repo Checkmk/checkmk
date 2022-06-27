@@ -13,9 +13,9 @@ from typing import (
     Iterable,
     List,
     Mapping,
+    NamedTuple,
     Optional,
     Sequence,
-    Set,
     Tuple,
     Union,
 )
@@ -51,7 +51,6 @@ import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
 import cmk.base.item_state as item_state
-import cmk.base.license_usage as license_usage
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.utils
 from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
@@ -65,10 +64,19 @@ from cmk.base.api.agent_based import checking_classes, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
+from cmk.base.keepalive import get_keepalive
 from cmk.base.sources import fetch_all, make_sources, Source
 
 from . import _cluster_modes, _submit_to_core
-from .utils import AggregatedResult
+
+
+class _AggregatedResult(NamedTuple):
+    service: ConfiguredService
+    submit: bool
+    data_received: bool
+    result: ServiceCheckResult
+    cache_info: Optional[Tuple[int, int]]
+
 
 # .
 #   .--Checking------------------------------------------------------------.
@@ -86,7 +94,6 @@ from .utils import AggregatedResult
 @cmk.base.agent_based.decorator.handle_check_mk_check_result("mk", "Check_MK")
 def active_check_checking(
     hostname: HostName,
-    ipaddress: Optional[HostAddress],
     *,
     fetched: Sequence[Tuple[Source, FetcherMessage]],
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
@@ -102,7 +109,6 @@ def active_check_checking(
     """
     return _execute_checkmk_checks(
         hostname=hostname,
-        ipaddress=ipaddress,
         fetched=fetched,
         run_plugin_names=run_plugin_names,
         selected_sections=selected_sections,
@@ -145,7 +151,6 @@ def commandline_checking(
     )
     return _execute_checkmk_checks(
         hostname=host_name,
-        ipaddress=ipaddress,
         fetched=fetched,
         run_plugin_names=run_plugin_names,
         selected_sections=selected_sections,
@@ -157,7 +162,6 @@ def commandline_checking(
 def _execute_checkmk_checks(
     *,
     hostname: HostName,
-    ipaddress: Optional[HostAddress],
     fetched: Sequence[Tuple[Source, FetcherMessage]],
     run_plugin_names: Container[CheckPluginName],
     selected_sections: SectionNameCollection,
@@ -167,58 +171,52 @@ def _execute_checkmk_checks(
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
     exit_spec = host_config.exit_code_spec()
-    try:
-        license_usage.try_history_update()
-        services = config.resolve_service_dependencies(
-            host_name=hostname,
-            services=sorted(
-                check_table.get_check_table(hostname).values(),
-                key=lambda service: service.description,
-            ),
-        )
-        broker, source_results = make_broker(
-            fetched=fetched,
-            selected_sections=selected_sections,
-            file_cache_max_age=host_config.max_cachefile_age,
-        )
-        with CPUTracker() as tracker:
-            num_success, plugins_missing_data = check_host_services(
-                config_cache=config_cache,
-                host_config=host_config,
-                ipaddress=ipaddress,
-                parsed_sections_broker=broker,
-                services=services,
-                run_plugin_names=run_plugin_names,
-                dry_run=dry_run,
-                show_perfdata=show_perfdata,
-            )
-            if run_plugin_names is EVERYTHING:
-                inventory.do_inventory_actions_during_checking_for(
-                    config_cache,
-                    host_config,
-                    parsed_sections_broker=broker,
-                )
-            timed_results = [
-                *check_sources(
-                    source_results=source_results,
-                    include_ok_results=True,
-                ),
-                *check_parsing_errors(
-                    errors=broker.parsing_errors(),
-                ),
-                *_check_plugins_missing_data(
-                    plugins_missing_data,
-                    exit_spec,
-                    bool(num_success),
-                ),
-            ]
-        return ActiveCheckResult.from_subresults(
-            *timed_results,
-            _timing_results(tracker.duration, [fetched_entry[1] for fetched_entry in fetched]),
-        )
 
-    finally:
-        _submit_to_core.finalize()
+    services = config.resolve_service_dependencies(
+        host_name=hostname,
+        services=sorted(
+            check_table.get_check_table(hostname).values(),
+            key=lambda service: service.description,
+        ),
+    )
+    broker, source_results = make_broker(
+        fetched=fetched,
+        selected_sections=selected_sections,
+        file_cache_max_age=host_config.max_cachefile_age,
+    )
+    with CPUTracker() as tracker:
+        service_results = check_host_services(
+            config_cache=config_cache,
+            host_config=host_config,
+            parsed_sections_broker=broker,
+            services=services,
+            run_plugin_names=run_plugin_names,
+            dry_run=dry_run,
+            show_perfdata=show_perfdata,
+        )
+        if run_plugin_names is EVERYTHING:
+            inventory.do_inventory_actions_during_checking_for(
+                config_cache,
+                host_config,
+                parsed_sections_broker=broker,
+            )
+        timed_results = [
+            *check_sources(
+                source_results=source_results,
+                include_ok_results=True,
+            ),
+            *check_parsing_errors(
+                errors=broker.parsing_errors(),
+            ),
+            *_check_plugins_missing_data(
+                service_results,
+                exit_spec,
+            ),
+        ]
+    return ActiveCheckResult.from_subresults(
+        *timed_results,
+        _timing_results(tracker.duration, [fetched_entry[1] for fetched_entry in fetched]),
+    )
 
 
 def _timing_results(
@@ -259,16 +257,20 @@ def _timing_results(
 
 
 def _check_plugins_missing_data(
-    plugins_missing_data: List[CheckPluginName],
+    service_results: Sequence[_AggregatedResult],
     exit_spec: ExitSpec,
-    some_success: bool,
 ) -> Iterable[ActiveCheckResult]:
-    if not plugins_missing_data:
+
+    if all(r.data_received for r in service_results):
         return
 
-    if not some_success:
+    if not any(r.data_received for r in service_results):
         yield ActiveCheckResult(exit_spec.get("empty_output", 2), "Got no information from host")
         return
+
+    plugins_missing_data = {
+        r.service.check_plugin_name for r in service_results if not r.data_received
+    }
 
     # key is a legacy name, kept for compatibility.
     specific_plugins_missing_data_spec = exit_spec.get("specific_missing_sections", [])
@@ -298,46 +300,41 @@ def check_host_services(
     *,
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
-    ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
     services: Sequence[ConfiguredService],
     run_plugin_names: Container[CheckPluginName],
     dry_run: bool,
     show_perfdata: bool,
-) -> Tuple[int, List[CheckPluginName]]:
+) -> Sequence[_AggregatedResult]:
     """Compute service state results for all given services on node or cluster
 
     * Loops over all services,
     * calls the check
     * examines the result and sends it to the core (unless `dry_run` is True).
     """
-    num_success = 0
-    plugins_missing_data: Set[CheckPluginName] = set()
     with plugin_contexts.current_host(host_config.hostname):
         with value_store.load_host_value_store(
             host_config.hostname, store_changes=not dry_run
         ) as value_store_manager:
-            for service in _filter_services_to_check(
-                services=services,
-                run_plugin_names=run_plugin_names,
-                config_cache=config_cache,
-                host_name=host_config.hostname,
-            ):
-                success = _execute_check(
+            submittables = [
+                get_aggregated_result(
                     parsed_sections_broker,
                     host_config,
-                    ipaddress,
                     service,
-                    dry_run=dry_run,
-                    show_perfdata=show_perfdata,
+                    agent_based_register.get_check_plugin(service.check_plugin_name),
                     value_store_manager=value_store_manager,
                 )
-                if success:
-                    num_success += 1
-                else:
-                    plugins_missing_data.add(service.check_plugin_name)
+                for service in _filter_services_to_check(
+                    services=services,
+                    run_plugin_names=run_plugin_names,
+                    config_cache=config_cache,
+                    host_name=host_config.hostname,
+                )
+            ]
 
-    return num_success, sorted(plugins_missing_data)
+    _submit_aggregated_results(submittables, host_config.hostname, dry_run, show_perfdata)
+
+    return submittables
 
 
 def _filter_services_to_check(
@@ -346,7 +343,7 @@ def _filter_services_to_check(
     run_plugin_names: Container[CheckPluginName],
     config_cache: config.ConfigCache,
     host_name: HostName,
-) -> List[ConfiguredService]:
+) -> Sequence[ConfiguredService]:
     """Filter list of services to check
 
     If check types are specified in `run_plugin_names` (e.g. via command line), drop all others
@@ -372,56 +369,55 @@ def service_outside_check_period(
     return True
 
 
-def _execute_check(
-    parsed_sections_broker: ParsedSectionsBroker,
-    host_config: config.HostConfig,
-    ipaddress: Optional[HostAddress],
-    service: ConfiguredService,
-    *,
+def _submit_aggregated_results(
+    submittables: Iterable[_AggregatedResult],
+    host_name: HostName,
     dry_run: bool,
     show_perfdata: bool,
-    value_store_manager: value_store.ValueStoreManager,
-) -> bool:
-    plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
-    submittable = get_aggregated_result(
-        parsed_sections_broker,
-        host_config,
-        ipaddress,
-        service,
-        plugin,
-        value_store_manager=value_store_manager,
-        persist_value_store_changes=not dry_run,
+) -> None:
+    submitter = _submit_to_core.get_submitter(
+        check_submission=config.check_submission,
+        monitoring_core=config.monitoring_core,
+        dry_run=dry_run,
+        keepalive=get_keepalive(cmk_version.edition()),
     )
-    if submittable.submit:
-        _submit_to_core.check_result(
-            host_name=host_config.hostname,
-            service_name=service.description,
-            result=submittable.result,
-            cache_info=submittable.cache_info,
-            dry_run=dry_run,
-            show_perfdata=show_perfdata,
-        )
-    else:
-        console.verbose(f"{service.description:20} PEND - {submittable.result.output}\n")
-    return submittable.data_received
+
+    try:
+        for submittable in submittables:
+            if not submittable.submit:
+                console.verbose(
+                    f"{submittable.service.description:20} PEND - {submittable.result.output}\n"
+                )
+                continue
+
+            _submit_to_core.check_result(
+                host_name=host_name,
+                service_name=submittable.service.description,
+                result=submittable.result,
+                submitter=submitter,
+                cache_info=submittable.cache_info,
+                show_perfdata=show_perfdata,
+                perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
+            )
+    finally:
+        _submit_to_core.finalize()
 
 
 def get_aggregated_result(
     parsed_sections_broker: ParsedSectionsBroker,
     host_config: config.HostConfig,
-    ipaddress: Optional[HostAddress],
     service: ConfiguredService,
     plugin: Optional[checking_classes.CheckPlugin],
     *,
     value_store_manager: value_store.ValueStoreManager,
-    persist_value_store_changes: bool,
-) -> AggregatedResult:
+) -> _AggregatedResult:
     """Run the check function and aggregate the subresults
 
     This function is also called during discovery.
     """
     if plugin is None:
-        return AggregatedResult(
+        return _AggregatedResult(
+            service=service,
             submit=True,
             data_received=True,
             result=ServiceCheckResult.check_not_implemented(),
@@ -437,7 +433,7 @@ def get_aggregated_result(
             ),
             plugin=plugin,
             service_id=service.id(),
-            persist_value_store_changes=persist_value_store_changes,
+            value_store_manager=value_store_manager,
         )
         if host_config.is_cluster
         else plugin.check_function
@@ -447,12 +443,12 @@ def get_aggregated_result(
         parsed_sections_broker,
         host_config,
         config_cache,
-        ipaddress,
         service,
         plugin.sections,
     )
     if not section_kws:  # no data found
-        return AggregatedResult(
+        return _AggregatedResult(
+            service=service,
             submit=False,
             data_received=False,
             result=error_result,
@@ -480,7 +476,8 @@ def get_aggregated_result(
 
     except (item_state.MKCounterWrapped, checking_classes.IgnoreResultsError) as e:
         msg = str(e) or "No service summary available"
-        return AggregatedResult(
+        return _AggregatedResult(
+            service=service,
             submit=False,
             data_received=True,
             result=ServiceCheckResult(output=msg),
@@ -499,11 +496,12 @@ def get_aggregated_result(
                 service_name=service.description,
                 plugin_name=service.check_plugin_name,
                 plugin_kwargs={**item_kw, **params_kw, **section_kws},
-                is_manual=service.id() in table,
+                is_enforced=service.id() in table,
             ),
         )
 
-    return AggregatedResult(
+    return _AggregatedResult(
+        service=service,
         submit=True,
         data_received=True,
         result=result,
@@ -515,7 +513,6 @@ def _get_monitoring_data_kwargs(
     parsed_sections_broker: ParsedSectionsBroker,
     host_config: config.HostConfig,
     config_cache: config.ConfigCache,
-    ipaddress: Optional[HostAddress],
     service: ConfiguredService,
     sections: Sequence[ParsedSectionName],
     source_type: Optional[SourceType] = None,

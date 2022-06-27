@@ -5,12 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Iterable, NamedTuple, Optional, Type, Union
+from typing import Iterable, NamedTuple, Type
 
 import cmk.utils.plugin_registry
 
 from cmk.gui.breadcrumb import BreadcrumbItem
-from cmk.gui.globals import request
+from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Icon
 from cmk.gui.utils.speaklater import LazyString
@@ -18,7 +18,7 @@ from cmk.gui.utils.urls import makeuri_contextless
 
 
 class MenuItem:
-    def __init__(self, mode_or_url, title, icon, permission, description, sort_index=20):
+    def __init__(self, mode_or_url, title, icon, permission, description, sort_index=20) -> None:
         self._mode_or_url = mode_or_url
         self._title = title
         self._icon = icon
@@ -27,27 +27,27 @@ class MenuItem:
         self._sort_index = sort_index
 
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return self._mode_or_url
 
     @property
-    def title(self):
+    def title(self) -> str:
         return self._title
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return self._icon
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return self._permission
 
     @property
-    def description(self):
+    def description(self) -> str:
         return self._description
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return self._sort_index
 
     @property
@@ -75,7 +75,7 @@ class MenuItem:
             return mode_or_url
         return makeuri_contextless(request, [("mode", mode_or_url)], filename="wato.py")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             "%s(mode_or_url=%r, title=%r, icon=%r, permission=%r, description=%r, sort_index=%r)"
             % (
@@ -92,7 +92,7 @@ class MenuItem:
 
 class MainModuleTopic(NamedTuple):
     name: str
-    title: Union[str, LazyString]
+    title: str | LazyString
     icon_name: str
     sort_index: int
 
@@ -106,7 +106,7 @@ main_module_topic_registry = MainModuleTopicRegistry()
 
 
 class ABCMainModule(MenuItem, abc.ABC):
-    def __init__(self):
+    def __init__(self) -> None:
         # TODO: Cleanup hierarchy
         super().__init__(
             mode_or_url=None,
@@ -139,7 +139,7 @@ class ABCMainModule(MenuItem, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def permission(self) -> Optional[str]:
+    def permission(self) -> None | str:
         raise NotImplementedError()
 
     @property

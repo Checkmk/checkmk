@@ -152,7 +152,7 @@ pytestmark = pytest.mark.checks
         )
     ],
 )
-def test_parse_cmciii_lcp_water(string_table: StringTable, section: StringTable):
+def test_parse_cmciii_lcp_water(string_table: StringTable, section: StringTable) -> None:
     check = Check("cmciii_lcp_water")
     assert list(check.run_parse(string_table)) == section
 
@@ -167,7 +167,7 @@ def test_parse_cmciii_lcp_water(string_table: StringTable, section: StringTable)
         )
     ],
 )
-def test_discover_cmciii_lcp_water(string_table: StringTable, discovered_item):
+def test_discover_cmciii_lcp_water(string_table: StringTable, discovered_item) -> None:
     check = Check("cmciii_lcp_water")
     assert list(check.run_discovery(string_table)) == discovered_item
 
@@ -182,6 +182,6 @@ def test_discover_cmciii_lcp_water(string_table: StringTable, discovered_item):
         )
     ],
 )
-def test_check_cmciii_lcp_water(string_table: StringTable, discovered_items: Sequence[str]):
+def test_check_cmciii_lcp_water(string_table: StringTable, discovered_items: Sequence[str]) -> None:
     check = Check("cmciii_lcp_water")
     assert list(check.run_check("bla", {}, string_table)) == discovered_items

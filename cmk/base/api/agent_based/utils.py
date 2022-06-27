@@ -327,8 +327,12 @@ def check_levels(
         Metric('temperature', 23.0, levels=(12.0, 42.0))
 
     """
+
+    def default_render_function(f: float) -> str:
+        return "%.2f" % f
+
     if render_func is None:
-        render_func = lambda f: "%.2f" % f
+        render_func = default_render_function
 
     info_text = str(render_func(value))  # forgive wrong output type
     if label:

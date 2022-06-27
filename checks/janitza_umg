@@ -5,15 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
@@ -145,7 +141,7 @@ def inventory_janitza_umg_freq(parsed):
 
 def check_janitza_umg_freq(item, params, parsed):
     if "Frequency" not in parsed:
-        return
+        return None
 
     return check_levels(
         float(parsed["Frequency"]) / 100.0,
@@ -183,6 +179,7 @@ def check_janitza_umg_temp(item, params, parsed):
         return check_temperature(
             float(parsed["Temperature"][idx]) / 10.0, params, "janitza_umg_%s" % item
         )
+    return None
 
 
 check_info["janitza_umg.temp"] = {

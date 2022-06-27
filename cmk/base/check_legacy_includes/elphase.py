@@ -33,7 +33,7 @@ _RENDER_FUNCTION_AND_UNIT = {
 # IT. INSTEAD, MODIFY THE MIGRATED VERSION.
 # ==================================================================================================
 # ==================================================================================================
-def check_elphase(item, params, parsed):
+def check_elphase(item, params, parsed):  # pylint: disable=too-many-branches
     if item not in parsed:
         return  # Item not found in SNMP data
 

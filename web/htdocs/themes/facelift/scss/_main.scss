@@ -1253,16 +1253,20 @@ tr.hidden {
 }
 
 .simplebar-track {
-  &.simplebar-vertical div.simplebar-scrollbar::before {
-    left: 3px;
-    width: $simplebar-scrollbar-width;
+  &.simplebar-vertical {
+    width: $simplebar-track-width;
+
+    div.simplebar-scrollbar::before {
+      left: 3px;
+      width: $simplebar-scrollbar-width;
+    }
   }
 
   &.simplebar-horizontal {
     height: $spacing-double;
 
     div.simplebar-scrollbar {
-      top: 3px;
+      top: $spacing-half;
       height: $simplebar-scrollbar-width;
     }
   }

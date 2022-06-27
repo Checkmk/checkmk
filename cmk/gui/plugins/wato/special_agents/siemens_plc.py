@@ -6,7 +6,6 @@
 
 from typing import Any, Dict
 
-import cmk.gui.watolib as watolib
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsHardware
@@ -23,6 +22,7 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+from cmk.gui.watolib.rulespecs import Rulespec
 
 
 def _special_agents_siemens_plc_validate_siemens_plc_values(value, varprefix):
@@ -132,7 +132,7 @@ def _special_agents_siemens_plc_siemens_plc_value():
 
 def _factory_default_special_agents_siemens_plc():
     # No default, do not use setting if no rule matches
-    return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+    return Rulespec.FACTORY_DEFAULT_UNUSED
 
 
 def _valuespec_special_agents_siemens_plc():

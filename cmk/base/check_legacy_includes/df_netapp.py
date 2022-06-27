@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 from cmk.base.check_api import host_extra_conf, host_name, saveint
 from cmk.base.plugins.agent_based.utils.df import df_discovery
 
@@ -30,7 +29,7 @@ def check_df_netapp(item, params, info):
     return df_check_filesystem_list(item, params, fslist)
 
 
-def is_netapp_filer(oid):
+def is_netapp_filer(oid) -> bool:
     return "ontap" in oid(".1.3.6.1.2.1.1.1.0").lower() or oid(".1.3.6.1.2.1.1.2.0").startswith(
         ".1.3.6.1.4.1.789"
     )

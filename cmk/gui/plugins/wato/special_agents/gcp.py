@@ -26,6 +26,7 @@ def _valuespec_special_agents_gcp():
                     title=_("GCP services to monitor"),
                     choices=[
                         ("gcs", _("Google Cloud Storage (GCS)")),
+                        ("gce", _("Google Compute Engine (GCE)")),
                         ("cloud_run", _("Cloud Run")),
                         ("cloud_functions", _("Cloud Functions")),
                         ("cloud_sql", _("Cloud SQL")),
@@ -34,6 +35,7 @@ def _valuespec_special_agents_gcp():
                     ],
                     default_value=[
                         "gcs",
+                        "gce",
                         "cloud_run",
                         "cloud_functions",
                         "cloud_sql",

@@ -27,7 +27,7 @@ _AGENT_OUTPUT = [
         (_AGENT_OUTPUT, [Service()]),
     ],
 )
-def test_discover_k8s_roles(fix_register, string_table, expected_result):
+def test_discover_k8s_roles(fix_register, string_table, expected_result) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("k8s_roles")]
     section = parse_json(string_table)
     assert sorted(check_plugin.discovery_function(section)) == expected_result
@@ -49,7 +49,7 @@ def test_discover_k8s_roles(fix_register, string_table, expected_result):
         ),
     ],
 )
-def test_check_k8s_roles(fix_register, string_table, expected_result):
+def test_check_k8s_roles(fix_register, string_table, expected_result) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("k8s_roles")]
     section = parse_json(string_table)
     assert list(check_plugin.check_function(params={}, section=section)) == expected_result
@@ -121,7 +121,7 @@ def test_check_k8s_roles(fix_register, string_table, expected_result):
         ),
     ],
 )
-def test_inventory_k8s_roles(section, expected_result):
+def test_inventory_k8s_roles(section, expected_result) -> None:
     assert sort_inventory_result(inventory_k8s_roles(section)) == sort_inventory_result(
         expected_result
     )

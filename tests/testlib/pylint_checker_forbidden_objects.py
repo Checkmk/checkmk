@@ -12,7 +12,7 @@ from pylint.checkers import BaseChecker  # type: ignore[import]
 from pylint.interfaces import IAstroidChecker  # type: ignore[import]
 
 
-def register(linter) -> None:
+def register(linter) -> None:  # type:ignore[no-untyped-def]
     linter.register_checker(CollectionsNamedTupleChecker(linter))
     linter.register_checker(TypingNamedTupleChecker(linter))
     linter.register_checker(SixEnsureStrBinChecker(linter))
@@ -25,7 +25,7 @@ class ForbiddenObjectChecker(BaseChecker):
     target_objects: FrozenSet[str] = frozenset([])
     target_lib = ""
 
-    def __init__(self, linter) -> None:
+    def __init__(self, linter) -> None:  # type:ignore[no-untyped-def]
         super().__init__(linter)
         self.was_imported = False
         self.object_names: List[str] = []

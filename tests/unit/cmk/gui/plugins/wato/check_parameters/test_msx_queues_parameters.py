@@ -19,5 +19,5 @@ CUSTOMIZED_QUEUES = [("Custom queue", 56)]
         (CUSTOMIZED_QUEUES, {"queue_names": CUSTOMIZED_QUEUES}),
     ],
 )
-def test_transform_msx_queues_inventory(parameters, expected_result):
+def test_transform_msx_queues_inventory(parameters, expected_result) -> None:
     assert transform_msx_queues_inventory(parameters) == expected_result

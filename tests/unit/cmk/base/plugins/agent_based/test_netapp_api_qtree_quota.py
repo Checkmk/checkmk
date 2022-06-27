@@ -16,6 +16,7 @@ import cmk.base.plugins.agent_based.netapp_api_qtree_quota as qtree_quota
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.netapp_api_qtree_quota import get_item_names, Qtree
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 
 @pytest.fixture(name="value_store_patch")
@@ -250,7 +251,7 @@ def test_inventory_netapp_api_qtree_quota(
         )
     ],
 )
-def test_get_item_names(qtree: Qtree, expected_result):
+def test_get_item_names(qtree: Qtree, expected_result) -> None:
     result = get_item_names(qtree)
     assert result == expected_result
 
@@ -330,8 +331,11 @@ def test_get_item_names(qtree: Qtree, expected_result):
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
                 Metric("trend", 0.0, boundaries=(0.0, 0.000244140625)),
-                Metric("inodes_used", 99.0, boundaries=(0.0, 100.0)),
-                Result(state=State.OK, summary="Inodes used: 99, Inodes available: 1 (1.00%)"),
+                Metric("inodes_used", 99.0, levels=(90.0, 95.0), boundaries=(0.0, 100.0)),
+                Result(
+                    state=State.CRIT,
+                    summary="Inodes used: 99.00% (warn/crit at 90.00%/95.00%), Inodes available: 1 (1.00%)",
+                ),
             ],
             id="qtree_with_inodes",
         ),
@@ -362,5 +366,49 @@ def test_check_netapp_api_qtree_quota(
     expected_result: Sequence[CheckResult],
 ) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("netapp_api_qtree_quota")]
-    result = list(check_plugin.check_function(item=item, params={}, section=parsed))
-    assert result == expected_result
+    result = list(
+        check_plugin.check_function(item=item, params=FILESYSTEM_DEFAULT_PARAMS, section=parsed)
+    )
+
+    assert [r for r in result if isinstance(r, Result)] == [
+        r for r in expected_result if isinstance(r, Result)
+    ]
+
+    expected_metrics: Sequence[Metric] = [m for m in expected_result if isinstance(m, Metric)]
+    for actual_metric, expected_metric in zip(
+        [m for m in result if isinstance(m, Metric)], expected_metrics
+    ):
+        assert actual_metric.name == expected_metric.name
+        assert actual_metric.value == expected_metric.value
+        if hasattr(actual_metric, "levels"):
+            assert actual_metric.levels[0] == pytest.approx(expected_metric.levels[0], 0.01)
+            assert actual_metric.levels[1] == pytest.approx(expected_metric.levels[1], 0.01)
+
+
+def test_discover_netapp_api_qtree_quota_duplicate_item_names(fix_register: FixRegister) -> None:
+    check_plugin = fix_register.check_plugins[CheckPluginName("netapp_api_qtree_quota")]
+    section_plugin = fix_register.agent_sections[SectionName("netapp_api_qtree_quota")]
+
+    string_table = [
+        [
+            "quota somequota",
+            "disk-limit 83886080",
+            "disk-used 60654012",
+            "quota-type tree",
+            "volume vol0",
+        ],
+        [
+            "quota somequota",
+            "disk-limit 83886080",
+            "disk-used 4388",
+            "quota-type user",
+            "volume vol0",
+        ],
+    ]
+
+    discovered_items = list(
+        check_plugin.discovery_function(
+            params={}, section=section_plugin.parse_function(string_table)
+        )
+    )
+    assert discovered_items == [Service(item="vol0/somequota")]

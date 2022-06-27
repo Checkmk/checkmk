@@ -1,0 +1,14 @@
+Title: Crash check scaleio: KeyError(ERR_STATE)
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1651042123
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+If a scaleio device had missing information like error state (ERR_STATE),
+state (STATE) or storage pool id (STORAGE_POOL_ID) the check would crash.
+Now the respective value is displayed as "n/a".

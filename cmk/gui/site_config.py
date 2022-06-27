@@ -14,7 +14,7 @@ from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 import cmk.utils.paths
 from cmk.utils.site import omd_site
 
-from cmk.gui.globals import active_config
+from cmk.gui.config import active_config
 
 
 def sitenames() -> List[SiteId]:

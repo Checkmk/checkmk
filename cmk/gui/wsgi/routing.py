@@ -66,7 +66,7 @@ def make_router(debug: bool = False) -> WSGIApplication:
     # Fix wsgi.url_scheme with werkzeug.middleware.proxy_fix.ProxyFix
     # would be always http instead
     cmk_app = ProxyFix(app=CheckmkApp(debug=debug).__call__)  # type: ignore[arg-type]
-    api_app = ProxyFix(app=CheckmkRESTAPI(debug=debug).wsgi_app)  # type: ignore[arg-type]
+    api_app = ProxyFix(app=CheckmkRESTAPI(debug=debug).wsgi_app)
 
     endpoints: Dict[str, WSGIApplication] = {
         "cmk": cmk_app,

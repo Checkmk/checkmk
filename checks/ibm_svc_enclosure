@@ -5,9 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # Example output from agent:
@@ -116,7 +114,7 @@ def _get_ibm_svc_enclosure_dflt_header(info):
     try:
         first_line = info[0]
     except IndexError:
-        return
+        return None
 
     if len(first_line) == 9:
         return [
@@ -184,4 +182,4 @@ def _get_ibm_svc_enclosure_dflt_header(info):
             "total_sems",
             "online_sems",
         ]
-    return
+    return None

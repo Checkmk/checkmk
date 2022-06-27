@@ -17,7 +17,7 @@ checks = {
         (
             None, {}, [
                 (
-                    0, 'Percentage of log file used: 19.0%', [
+                    0, 'Percentage of log file used: 19.00%', [
                         ('log_file_utilization', 19, None, None, None, None)
                     ]
                 )

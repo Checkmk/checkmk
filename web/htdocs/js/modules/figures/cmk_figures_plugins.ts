@@ -1,3 +1,3 @@
 // Used to introduce cmk_figures into webpack
-import "cmk_table.js";
-import "cmk_stats.js";
+import "cmk_table";
+import "cmk_stats";

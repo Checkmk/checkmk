@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 tribe29 GMiBH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -271,7 +271,7 @@ info_empty_inodes = [
         (
             info_df_lnx_tmpfs,
             [],
-            {"ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"]},
+            {"ignore_fs_types": ["tmpfs", "nfs", "sMiBfs", "cifs", "iso9660"]},
         ),
         # Ignoring tmpfs explicitly, but including one mountpoint explicitly:
         (
@@ -286,7 +286,7 @@ info_empty_inodes = [
                 ),
             ],
             {
-                "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
+                "ignore_fs_types": ["tmpfs", "nfs", "sMiBfs", "cifs", "iso9660"],
                 "never_ignore_mountpoints": ["/opt/omd/sites/heute/tmp"],
             },
         ),
@@ -309,7 +309,7 @@ info_empty_inodes = [
                     },
                 ),
             ],
-            {"ignore_fs_types": ["nfs", "smbfs", "cifs", "iso9660"]},
+            {"ignore_fs_types": ["nfs", "sMiBfs", "cifs", "iso9660"]},
         ),
         # Including tmpfs and volume name:
         (
@@ -331,7 +331,7 @@ info_empty_inodes = [
                 ),
             ],
             {
-                "ignore_fs_types": ["nfs", "smbfs", "cifs", "iso9660"],
+                "ignore_fs_types": ["nfs", "sMiBfs", "cifs", "iso9660"],
                 "item_appearance": "volume_name_and_mountpoint",
             },
         ),
@@ -348,7 +348,7 @@ info_empty_inodes = [
                 ),
             ],
             {
-                "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
+                "ignore_fs_types": ["tmpfs", "nfs", "sMiBfs", "cifs", "iso9660"],
                 "item_appearance": "volume_name_and_mountpoint",
                 "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
             },
@@ -424,7 +424,7 @@ info_empty_inodes = [
         ),
     ],
 )
-def test_df_discovery_with_parse(info, expected_result, inventory_df_rules):
+def test_df_discovery_with_parse(info, expected_result, inventory_df_rules) -> None:
     check = Check("df")
 
     def mocked_host_extra_conf_merged(_hostname, ruleset):
@@ -462,7 +462,7 @@ def make_test_df_params():
             [
                 (
                     0,
-                    "75.79% used (103.92 of 137.13 GB)",
+                    "Used: 75.79% - 104 GiB of 137 GiB",
                     [
                         (
                             "fs_used",
@@ -492,7 +492,7 @@ def make_test_df_params():
             [
                 (
                     0,
-                    "75.79% used (103.92 of 137.13 GB)",
+                    "Used: 75.79% - 104 GiB of 137 GiB",
                     [
                         (
                             "fs_used",
@@ -522,7 +522,7 @@ def make_test_df_params():
             [
                 (
                     0,
-                    "1.82% used (181.89 MB of 9.77 GB)",
+                    "Used: 1.82% - 182 MiB of 9.77 GiB",
                     [
                         ("fs_used", 181.890625, 8000.621875, 9000.699609375, 0, 10000.77734375),
                         ("fs_size", 10000.77734375),
@@ -538,7 +538,7 @@ def make_test_df_params():
             [
                 (
                     0,
-                    "1.82% used (181.89 MB of 9.77 GB)",
+                    "Used: 1.82% - 182 MiB of 9.77 GiB",
                     [
                         ("fs_used", 181.890625, 8000.621875, 9000.699609375, 0, 10000.77734375),
                         ("fs_size", 10000.77734375, None, None, None, None),
@@ -554,7 +554,7 @@ def make_test_df_params():
             [
                 (
                     0,
-                    "21.13% used (4.23 of 20.00 GB)",
+                    "Used: 21.13% - 4.23 GiB of 20.0 GiB",
                     [
                         ("fs_used", 4327.29296875, 16383.2, 18431.1, 0, 20479.0),
                         ("fs_size", 20479.0, None, None, None, None),
@@ -571,13 +571,13 @@ def make_test_df_params():
         ),
         (
             "btrfs /dev/sda1",
-            {"show_volume_name": True},
+            {**make_test_df_params(), "show_volume_name": True},
             info_df_btrfs,
             [
                 (0, "[/dev/sda1]"),
                 (
                     0,
-                    "21.13% used (4.23 of 20.00 GB)",
+                    "Used: 21.13% - 4.23 GiB of 20.0 GiB",
                     [
                         ("fs_used", 4327.29296875, 16383.2, 18431.1, 0, 20479.0),
                         ("fs_size", 20479.0, None, None, None, None),
@@ -588,12 +588,12 @@ def make_test_df_params():
         ),
         (
             "btrfs /dev/sda1",
-            {},
+            make_test_df_params(),
             info_df_btrfs,
             [
                 (
                     0,
-                    "21.13% used (4.23 of 20.00 GB)",
+                    "Used: 21.13% - 4.23 GiB of 20.0 GiB",
                     [
                         ("fs_used", 4327.29296875, 16383.2, 18431.1, 0, 20479.0),
                         ("fs_size", 20479.0, None, None, None, None),
@@ -606,13 +606,14 @@ def make_test_df_params():
         (
             "btrfs 12345678-9012-3456-7890-123456789012",
             {
+                **make_test_df_params(),
                 "mountpoint_for_block_devices": "uuid",
             },
             info_df_btrfs,
             [
                 (
                     0,
-                    "21.13% used (4.23 of 20.00 GB)",
+                    "Used: 21.13% - 4.23 GiB of 20.0 GiB",
                     [
                         ("fs_used", 4327.29296875, 16383.2, 18431.1, 0, 20479.0),
                         ("fs_size", 20479.0, None, None, None, None),
@@ -623,7 +624,7 @@ def make_test_df_params():
         ),
     ],
 )
-def test_df_check_with_parse(item, params, info, expected_result):
+def test_df_check_with_parse(item, params, info, expected_result) -> None:
     check = Check("df")
     actual = CheckResult(check.run_check(item, params, parse_df(info)))
     assertCheckResultsEqual(actual, CheckResult(expected_result))
@@ -649,12 +650,11 @@ info_df_groups = [
 
 
 @pytest.mark.parametrize(
-    "inventory_df_rules, filesystem_groups, expected_result",
+    "inventory_df_rules, expected_result",
     [
         # no groups
         (
             {},
-            [],
             [
                 (
                     "/",
@@ -690,7 +690,6 @@ info_df_groups = [
             {
                 "item_appearance": "mountpoint",
             },
-            [],
             [
                 (
                     "/",
@@ -726,7 +725,6 @@ info_df_groups = [
             {
                 "item_appearance": "volume_name_and_mountpoint",
             },
-            [],
             [
                 (
                     "/dev/sda1 /",
@@ -762,7 +760,6 @@ info_df_groups = [
             {
                 "item_appearance": "volume_name_and_mountpoint",
             },
-            [],
             [
                 (
                     "/dev/sda1 /",
@@ -796,18 +793,15 @@ info_df_groups = [
         ),
         # groups
         (
-            {},
-            [
-                {
-                    "groups": [
-                        {
-                            "group_name": "my-group",
-                            "patterns_include": ["/", "/foo"],
-                            "patterns_exclude": ["/bar"],
-                        }
-                    ]
-                }
-            ],
+            {
+                "groups": [
+                    {
+                        "group_name": "my-group",
+                        "patterns_include": ["/", "/foo"],
+                        "patterns_exclude": ["/bar"],
+                    }
+                ]
+            },
             [
                 (
                     "my-group",
@@ -837,18 +831,14 @@ info_df_groups = [
         (
             {
                 "item_appearance": "volume_name_and_mountpoint",
+                "groups": [
+                    {
+                        "group_name": "my-group",
+                        "patterns_include": ["/", "/foo"],
+                        "patterns_exclude": ["/bar"],
+                    }
+                ],
             },
-            [
-                {
-                    "groups": [
-                        {
-                            "group_name": "my-group",
-                            "patterns_include": ["/", "/foo"],
-                            "patterns_exclude": ["/bar"],
-                        }
-                    ]
-                }
-            ],
             [
                 (
                     "my-group",
@@ -878,19 +868,15 @@ info_df_groups = [
         (
             {
                 "item_appearance": "volume_name_and_mountpoint",
+                # groups do not apply
+                "groups": [
+                    {
+                        "group_name": "my-group",
+                        "patterns_include": ["/dev/sda1 /", "/dev/sda2 /foo"],
+                        "patterns_exclude": ["/dev/sda3 /bar"],
+                    }
+                ],
             },
-            # groups do not apply
-            [
-                {
-                    "groups": [
-                        {
-                            "group_name": "my-group",
-                            "patterns_include": ["/dev/sda1 /", "/dev/sda2 /foo"],
-                            "patterns_exclude": ["/dev/sda3 /bar"],
-                        }
-                    ]
-                }
-            ],
             [
                 (
                     "/dev/sda1 /",
@@ -926,18 +912,14 @@ info_df_groups = [
             {
                 "item_appearance": "volume_name_and_mountpoint",
                 "grouping_behaviour": "volume_name_and_mountpoint",
+                "groups": [
+                    {
+                        "group_name": "my-group",
+                        "patterns_include": ["/dev/sda1 /", "/dev/sda2 /foo"],
+                        "patterns_exclude": ["/dev/sda3 /bar"],
+                    }
+                ],
             },
-            [
-                {
-                    "groups": [
-                        {
-                            "group_name": "my-group",
-                            "patterns_include": ["/dev/sda1 /", "/dev/sda2 /foo"],
-                            "patterns_exclude": ["/dev/sda3 /bar"],
-                        }
-                    ]
-                }
-            ],
             [
                 (
                     "my-group",
@@ -968,19 +950,15 @@ info_df_groups = [
             {
                 "item_appearance": "volume_name_and_mountpoint",
                 "grouping_behaviour": "volume_name_and_mountpoint",
+                # groups do not apply
+                "groups": [
+                    {
+                        "group_name": "my-group",
+                        "patterns_include": ["/", "/foo"],
+                        "patterns_exclude": ["/bar"],
+                    }
+                ],
             },
-            # groups do not apply
-            [
-                {
-                    "groups": [
-                        {
-                            "group_name": "my-group",
-                            "patterns_include": ["/", "/foo"],
-                            "patterns_exclude": ["/bar"],
-                        }
-                    ]
-                }
-            ],
             [
                 (
                     "/dev/sda1 /",
@@ -1014,7 +992,7 @@ info_df_groups = [
         ),
     ],
 )
-def test_df_discovery_groups_with_parse(inventory_df_rules, filesystem_groups, expected_result):
+def test_df_discovery_groups_with_parse(inventory_df_rules, expected_result) -> None:
     check = Check("df")
 
     def mocked_host_extra_conf_merged(_hostname, ruleset):
@@ -1024,17 +1002,9 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, filesystem_groups, e
             "Unknown/unhandled ruleset 'inventory_df_rules' used in mock of host_extra_conf_merged"
         )
 
-    def mocked_host_extra_conf(_hostname, ruleset):
-        if ruleset is check.context.get("filesystem_groups"):
-            return filesystem_groups
-        raise AssertionError(
-            "Unknown/unhandled ruleset 'filesystem_groups' used in mock of host_extra_conf"
-        )
-
     with MockHostExtraConf(check, mocked_host_extra_conf_merged, "host_extra_conf_merged"):
-        with MockHostExtraConf(check, mocked_host_extra_conf, "host_extra_conf"):
-            raw_discovery_result = check.run_discovery(parse_df(info_df_groups))
-            discovery_result = DiscoveryResult(raw_discovery_result)
+        raw_discovery_result = check.run_discovery(parse_df(info_df_groups))
+        discovery_result = DiscoveryResult(raw_discovery_result)
 
     expected_result = DiscoveryResult(expected_result)
     assertDiscoveryResultsEqual(check, discovery_result, expected_result)
@@ -1051,7 +1021,7 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, filesystem_groups, e
             [
                 (
                     2,
-                    "90.0% used (189.00 of 210.00 kB, warn/crit at 80.00%/90.00%)",
+                    "Used: 90.00% - 189 KiB of 210 KiB (warn/crit at 80.00%/90.00% used)",
                     [
                         ("fs_used", 0.1845703125, 0.1640625, 0.1845703125, 0, 0.205078125),
                         ("fs_size", 0.205078125, None, None, None, None),
@@ -1070,7 +1040,7 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, filesystem_groups, e
             [
                 (
                     2,
-                    "90.0% used (189.00 of 210.00 kB, warn/crit at 80.00%/90.00%)",
+                    "Used: 90.00% - 189 KiB of 210 KiB (warn/crit at 80.00%/90.00% used)",
                     [
                         ("fs_used", 0.1845703125, 0.1640625, 0.1845703125, 0, 0.205078125),
                         ("fs_size", 0.205078125, None, None, None, None),
@@ -1089,7 +1059,7 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, filesystem_groups, e
             [
                 (
                     2,
-                    "90.0% used (189.00 of 210.00 kB, warn/crit at 80.00%/90.00%)",
+                    "Used: 90.00% - 189 KiB of 210 KiB (warn/crit at 80.00%/90.00% used)",
                     [
                         ("fs_used", 0.1845703125, 0.1640625, 0.1845703125, 0, 0.205078125),
                         ("fs_size", 0.205078125, None, None, None, None),
@@ -1130,7 +1100,7 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, filesystem_groups, e
             [
                 (
                     2,
-                    "90.0% used (207.00 of 230.00 kB, warn/crit at 80.00%/90.00%)",
+                    "Used: 90.00% - 207 KiB of 230 KiB (warn/crit at 80.00%/90.00% used)",
                     [
                         ("fs_used", 0.2021484375, 0.1796875, 0.2021484375, 0, 0.224609375),
                         ("fs_size", 0.224609375, None, None, None, None),
@@ -1152,7 +1122,7 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, filesystem_groups, e
             [
                 (
                     2,
-                    "90.0% used (207.00 of 230.00 kB, warn/crit at 80.00%/90.00%)",
+                    "Used: 90.00% - 207 KiB of 230 KiB (warn/crit at 80.00%/90.00% used)",
                     [
                         ("fs_used", 0.2021484375, 0.1796875, 0.2021484375, 0, 0.224609375),
                         ("fs_size", 0.224609375, None, None, None, None),
@@ -1188,7 +1158,7 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, filesystem_groups, e
         ),
     ],
 )
-def test_df_check_groups_with_parse(add_params, expected_result):
+def test_df_check_groups_with_parse(add_params, expected_result) -> None:
     check = Check("df")
     params = make_test_df_params()
     params.update(add_params)

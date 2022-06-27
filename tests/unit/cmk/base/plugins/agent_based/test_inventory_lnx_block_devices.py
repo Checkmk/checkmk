@@ -48,7 +48,7 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_lnx_block_devices(string_table, expected_result):
+def test_lnx_block_devices(string_table, expected_result) -> None:
     assert sort_inventory_result(
         inventory_lnx_block_devices(parse_lnx_block_devices(string_table))
     ) == sort_inventory_result(expected_result)

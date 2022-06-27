@@ -1,7 +1,7 @@
 Title: RESTAPI: discovery: Service Item may be Null
 Class: fix
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1635321087
 Edition: cre
 Knowledge: doc

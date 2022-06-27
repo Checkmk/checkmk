@@ -7,6 +7,19 @@ SCRIPTS := ../scripts
 FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
 PIPENV := $(SCRIPTS)/run-pipenv
 PYTEST := $(PIPENV) run py.test $(PYTEST_ARGS)
+CYCLES := $(PIPENV) run py_import_cycles
+CYCLES_THRESHOLD := 68
+PYTEST_UNIT_TEST_OPTS = \
+    -T unit \
+    --doctest-modules \
+    ../cmk/base \
+    ../cmk/fields \
+    ../cmk/gui \
+    ../cmk/special_agents \
+    ../cmk/utils \
+    ../agent-receiver \
+    unit
+PYTEST_ADDITIONAL_UNIT_TEST_OPTS = -m "not slow"
 YAPF := $(PIPENV) run yapf
 BLACK  := $(SCRIPTS)/run-black
 THREE_TO_TWO := $(PIPENV) run 3to2
@@ -42,14 +55,14 @@ PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8 3.9
 
 .PHONY: clean format-shell help prepare-protobuf-files prepare-playwright  bandit.ini \
 	$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
-	test-bandit test-composition test-composition-docker test-composition-docker-debug \
-	test-docker test-docker-docker test-format-python test-format-python-docker test-format-shell \
-	test-format-js test-format-js-docker test-format-css test-format-css-docker \
+	test-bandit test-code-quality test-code-quality-docker test-composition test-composition-docker \
+	test-composition-docker-debug test-docker test-docker-docker test-format-python test-format-python-docker \
+	test-format-shell test-format-js test-format-js-docker test-format-css test-format-css-docker \
 	test-gui-crawl test-gui-crawl-docker test-xss-crawl test-xss-crawl-docker test-gui-e2e test-gui-e2e-docker \
 	test-integration test-integration-docker test-integration-docker-debug \
 	test-mypy test-mypy-raw itest-mypy-docker test-packaging test-pipenv-deps test-pylint test-pylint-docker \
 	test-unit test-unit-docker test-unit-resilience test-unit-resilience-docker test-unit-coverage-html \
-	test-unit-shell test-unit-shell-docker test-shellcheck \
+	test-unit-shell test-unit-shell-docker test-shellcheck test-cycles test-cycles-docker \
 	test-tidy-livestatus test-tidy-core test-tidy-docker test-iwyu-livestatus test-iwyu-core test-iwyu-docker \
 	test-unit-livestatus test-unit-core %-livestatus-docker %-core-docker \
 	test-cargo-check test-cargo-check-docker test-cargo-test test-cargo-test-docker \
@@ -64,6 +77,8 @@ help:
 	    echo "test-agent-plugin-unit-py$${i}-docker - Run Agent plugin tests in container with Python $${i}"; \
 	done
 	@echo "test-bandit                         - Run bandit (security) tests"
+	@echo "test-code-quality                   - Run code quality tests locally"
+	@echo "test-code-quality-docker            - Run code quality tests in container"
 	@echo "test-composition                    - Run composition tests locally"
 	@echo "test-composition-docker             - Run composition tests in container"
 	@echo "test-composition-docker-debug       - Run test container for manual debugging"
@@ -149,11 +164,11 @@ $(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker):
 	    --rm \
 	    $(DOCKER_ADDOPTS) \
 	    -e "PYTEST_ADDOPTS" \
+	    -e "CI" \
 	    -u $$(id -u):$$(id -g) \
 	    -v "$$TEST_PATH:/tests" \
-	    -v "$(realpath agent-plugin-unit)/utils.py:/tests/utils.py" \
 	    -v "$(realpath agent-plugin-unit)/datasets:/tests/datasets" \
-	    -v "$(realpath ../agents/plugins):/plugins" \
+	    -v "$(realpath ../agents):/agents" \
 	    $$IMAGE_HASH \
 	    python$$PYTHON_VERSION -m pytest --ignore=tests/py2/ "/tests"
 
@@ -171,6 +186,9 @@ prepare-playwright:
 
 test-integration-docker-debug test-composition-docker-debug:
 	$(PIPENV) run scripts/run-dockerized.py debug
+
+test-build-js:
+	../scripts/check-webpack-build
 
 test-composition-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-composition"
@@ -257,11 +275,25 @@ test-gui-e2e-docker:
 test-integration-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-integration"
 
+test-code-quality:
+	if test -z "$$PYTHON_FILES" && test -z "$$CI"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
+	xargs -n 1500 --no-run-if-empty $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_license_headers.py) \
+	--python-files;
+	if test -n "$$IS_PIPFILE_CHANGED" || test -z "$$CI"; then $(PYTEST) -T code_quality \
+	--log-cli-level=INFO $(realpath code_quality/test_pipfile.py); fi;
+	if test -n "$$CHANGED_FILES"; then echo "--changed-files $$CHANGED_FILES"; elif test -z "$$CI"; then echo "--test-all-files"; \
+	else echo ""; fi | xargs -n 1500 --no-run-if-empty $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content);
+	if test -n "$$IS_WERK_CHANGED" || test -z "$$CI"; then $(PYTEST) -T code_quality \
+	--log-cli-level=INFO $(realpath code_quality/test_werks.py); fi;
+	exit $${PIPESTATUS[1]}
+
+test-code-quality-docker:
+	../scripts/run-in-docker.sh make --quiet test-code-quality
+
 test-mypy: prepare-protobuf-files
 	PYTHON_FILES=$$($(FIND_PYTHON_FILES) | \
 	`: filter out plugins, they are not real modules` \
 	grep -v $$(realpath '../checks') | \
-	grep -v $$(realpath '../inventory') | \
 	`: files are only needed for pylint to understand the module hierarchy` \
 	grep -v $$(realpath -m '../enterprise/cmk/__init__.py') | \
 	grep -v $$(realpath -m '../enterprise/cmk/base/__init__.py') | \
@@ -291,17 +323,24 @@ test-pylint-docker:
 test-shellcheck:
 	cd .. && shellcheck $(SHELLCHECK_OUTPUT_ARGS) $(SHELL_FILES_REL)
 
+test-cycles:
+	$(CYCLES) \
+		--folders cmk enterprise managed plus \
+		--graph no \
+		--map enterprise:cee managed:cme plus:cpe \
+		--project-path $$(realpath -L ..) \
+		--strategy dfs \
+		--verbose 2>&1 | tee .py-import-cycles.txt || true
+	(cat .py-import-cycles.txt && rm .py-import-cycles.txt) \
+	| perl -ne '/Found (\d+)/ && exit ($$1 > $(CYCLES_THRESHOLD))'
+
+test-cycles-docker:
+	../scripts/run-in-docker.sh make --quiet test-cycles
+
 test-unit: prepare-protobuf-files
 	$(PYTEST) \
-		-T unit \
-		--doctest-modules \
-		../cmk/base \
-		../cmk/fields \
-		../cmk/gui \
-		../cmk/special_agents \
-		../cmk/utils \
-		../agent-receiver \
-		unit
+		$(PYTEST_ADDITIONAL_UNIT_TEST_OPTS) \
+		$(PYTEST_UNIT_TEST_OPTS)
 
 test-unit-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit
@@ -310,16 +349,9 @@ test-unit-resilience: prepare-protobuf-files
 	$(PYTEST) \
 		--count=2 \
 		--random-order-bucket=global \
-		-T unit \
-		--doctest-modules \
-		../cmk/base \
-		../cmk/fields \
-		../cmk/gui \
-		../cmk/special_agents \
-		../cmk/utils \
-		../agent-receiver \
 	        -m "not non_resilient" \
-		unit
+		$(PYTEST_ADDITIONAL_UNIT_TEST_OPTS) \
+		$(PYTEST_UNIT_TEST_OPTS)
 
 test-unit-resilience-docker:
 	../scripts/run-in-docker.sh make test-unit-resilience
@@ -329,19 +361,12 @@ test-agent-plugin-docker:
 
 test-unit-coverage-html: prepare-protobuf-files
 	$(PYTEST) \
-		-T unit \
 		--cov=cmk \
 		--cov-report=html \
 		--cov-config=.coveragerc_unit \
 		--no-cov-on-fail \
-		--doctest-modules \
-		../cmk/base \
-		../cmk/fields \
-		../cmk/gui \
-		../cmk/special_agents \
-		../cmk/utils \
-		../agent-receiver \
-		unit
+		$(PYTEST_ADDITIONAL_UNIT_TEST_OPTS) \
+		$(PYTEST_UNIT_TEST_OPTS)
 
 test-unit-shell:
 	./unit-shell/runner.sh

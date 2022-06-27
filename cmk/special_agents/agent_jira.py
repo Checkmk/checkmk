@@ -10,16 +10,19 @@ import logging
 import sys
 from typing import Any, Dict, Union
 
-import urllib3  # type: ignore[import]
+import urllib3
 from jira import JIRA  # type: ignore[import]
 from jira.exceptions import JIRAError  # type: ignore[import]
 from requests.exceptions import ConnectionError as RequestsConnectionError
+
+from cmk.utils.password_store import replace_passwords
 
 urllib3.disable_warnings(urllib3.exceptions.SubjectAltNameWarning)
 
 
 def main(argv=None):
     if argv is None:
+        replace_passwords()
         argv = sys.argv[1:]
 
     args = parse_arguments(argv)
@@ -115,7 +118,7 @@ def _handle_project(jira, args):
     if issues_dict:
         return json.dumps(issues_dict)
 
-    return
+    return None
 
 
 def _handle_custom_query(jira, args):
@@ -199,7 +202,7 @@ def _handle_custom_query(jira, args):
     if result_dict:
         return json.dumps(result_dict)
 
-    return
+    return None
 
 
 def _handle_search_issues(jira, jql, field, max_results, args, project, svc_desc):
@@ -218,6 +221,7 @@ def _handle_search_issues(jira, jql, field, max_results, args, project, svc_desc
         sys.stdout.write("%s\n" % json.dumps(msg_dict))
         if args.debug:
             raise
+        return None
     else:
         return issues
 

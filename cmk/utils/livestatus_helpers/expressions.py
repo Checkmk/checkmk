@@ -15,7 +15,7 @@ It's implementation is still a bit rudimentary but supports most necessary conce
 """
 
 import abc
-from typing import Any, cast, List, Tuple
+from typing import Any, List, Tuple
 
 # TODO: column functions
 # TODO: more tests
@@ -78,7 +78,7 @@ class NothingExpression(QueryExpression):
 class UnaryExpression(abc.ABC):
     """Base class of all concrete single parts of BinaryExpression."""
 
-    def __init__(self, value):
+    def __init__(self, value) -> None:  # type:ignore[no-untyped-def]
         self.value = value
 
     def op(self, operator: str, other: Any) -> "BinaryExpression":
@@ -89,7 +89,7 @@ class UnaryExpression(abc.ABC):
             other = LiteralExpression(other)
         return BinaryExpression(self, other, operator)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<%s %s 0x%x>" % (self.__class__.__name__, self.value, id(self))
 
     @abc.abstractmethod
@@ -289,7 +289,7 @@ class BinaryExpression(QueryExpression):
         self.operator = operator
         self._header = header
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "%s(%s %s %s)" % (
             self._header,
             self.left.value,
@@ -297,7 +297,7 @@ class BinaryExpression(QueryExpression):
             self.right.value,
         )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "%s %s %s" % (self.left.value, self.operator, self.right.value)
 
     def render(self) -> RenderIntermediary:
@@ -310,14 +310,14 @@ class BoolExpression(QueryExpression):
     def expr(self):
         raise NotImplementedError()
 
-    def __init__(self, *args: QueryExpression):
+    def __init__(self, *args: QueryExpression) -> None:
         self.args = args
         if not args:
             # For now this seems reasonable, but there are cases where it could be advantageous
             # to have empty arguments, though we'd have to decide on an actual use-case to be sure.
             raise ValueError("Need at least one parameter.")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.expr}{self.args!r}"
 
     def render(self) -> RenderIntermediary:
@@ -371,136 +371,11 @@ class Not(QueryExpression):
 
     """
 
-    def __init__(self, other: QueryExpression):
+    def __init__(self, other: QueryExpression) -> None:
         self.other = other
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Not({self.other!r})"
 
     def render(self) -> RenderIntermediary:
         return self.other.render() + [("Negate", "1")]
-
-
-def lookup_column(table_name, column_name) -> UnaryExpression:
-    from cmk.utils.livestatus_helpers import tables
-
-    if isinstance(table_name, str):
-        table_class = getattr(tables, table_name.title())
-    else:
-        table_class = table_name
-        table_name = table_class.__tablename__
-
-    try:
-        column = getattr(table_class, column_name)
-    except AttributeError as e:
-        raise ValueError(f"Table {table_name!r} has no column {column_name!r}.") from e
-    return column.expr
-
-
-def tree_to_expr(filter_dict, table: Any = None) -> QueryExpression:
-    """Turn a filter-dict into a QueryExpression.
-
-    Examples:
-
-        >>> tree_to_expr({'op': '=', 'left': 'hosts.name', 'right': 'example.com'})
-        Filter(name = example.com)
-
-        >>> tree_to_expr({'op': '!=', 'left': 'hosts.name', 'right': 'example.com'})
-        Filter(name != example.com)
-
-        >>> tree_to_expr({'op': '!=', 'left': 'name', 'right': 'example.com'}, 'hosts')
-        Filter(name != example.com)
-
-        >>> tree_to_expr({'op': 'and', \
-                          'expr': [{'op': '=', 'left': 'hosts.name', 'right': 'example.com'}, \
-                          {'op': '=', 'left': 'hosts.state', 'right': 0}]})
-        And(Filter(name = example.com), Filter(state = 0))
-
-        >>> tree_to_expr({'op': 'or', \
-                          'expr': [{'op': '=', 'left': 'hosts.name', 'right': 'example.com'}, \
-                          {'op': '=', 'left': 'hosts.name', 'right': 'heute'}]})
-        Or(Filter(name = example.com), Filter(name = heute))
-
-        >>> tree_to_expr({'op': 'not', \
-                          'expr': {'op': '=', 'left': 'hosts.name', 'right': 'example.com'}})
-        Not(Filter(name = example.com))
-
-        >>> tree_to_expr({'op': 'not', \
-                          'expr': {'op': 'not', \
-                                   'expr': {'op': '=', \
-                                            'left': 'hosts.name', \
-                                            'right': 'example.com'}}})
-        Not(Not(Filter(name = example.com)))
-
-        >>> from cmk.utils.livestatus_helpers.tables import Hosts
-        >>> tree_to_expr({'op': 'not', 'expr': Hosts.name == 'example.com'})
-        Not(Filter(name = example.com))
-
-        >>> tree_to_expr({'op': 'no_way', \
-                          'expr': {'op': '=', 'left': 'hosts.name', 'right': 'example.com'}})
-        Traceback (most recent call last):
-        ...
-        ValueError: Unknown operator: no_way
-
-    Args:
-        filter_dict:
-            A filter-dict, which can either be persisted or passed over the wire.
-
-        table:
-            Optionally a table name. Only used when the columns are used in plain form
-            (without table name prefixes).
-
-    Returns:
-        A valid LiveStatus query expression.
-
-    Raises:
-        ValueError: when unknown columns are queried
-
-    """
-    if not isinstance(filter_dict, dict):
-        # FIXME
-        #   Because of not having correct Python packages at the root-level, sometimes a
-        #   locally defined class ends up having a relative dotted path, like for example
-        #       <class 'expressions.BinaryExpression'>
-        #   instead of
-        #       <class 'cmk.utils.livestatus_helpers.expressions.BinaryExpression'>
-        #   While these classes are actually the same, Python treats them distinct, so we can't
-        #   just say `isinstance(filter_dict, BinaryExpression)` (or their super-type) here.
-        return cast(QueryExpression, filter_dict)
-    op = filter_dict["op"]
-    if op in LIVESTATUS_OPERATORS:
-        left = filter_dict["left"]
-        if "." in left:
-            _table, column = left.split(".")
-            if table is not None and _table_name(table) != _table:
-                raise ValueError(
-                    f"This field can only query table {_table_name(table)!r}. ({left})"
-                )
-        else:
-            if table is None:
-                raise ValueError("Missing table parameter.")
-            _table = _table_name(table)
-            column = left
-        return BinaryExpression(
-            lookup_column(_table, column),
-            LiteralExpression(filter_dict["right"]),
-            op,
-        )
-
-    if op == "and":
-        return And(*[tree_to_expr(expr, table) for expr in filter_dict["expr"]])
-
-    if op == "or":
-        return Or(*[tree_to_expr(expr, table) for expr in filter_dict["expr"]])
-
-    if op == "not":
-        return Not(tree_to_expr(filter_dict["expr"], table))
-
-    raise ValueError(f"Unknown operator: {op}")
-
-
-def _table_name(table) -> str:
-    if isinstance(table, str):
-        return table
-
-    return table.__tablename__

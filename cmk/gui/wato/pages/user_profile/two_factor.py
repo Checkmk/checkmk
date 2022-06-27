@@ -23,9 +23,12 @@ from fido2.webauthn import PublicKeyCredentialRpEntity  # type: ignore[import]
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_simple_page_breadcrumb
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
+from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKUserError
-from cmk.gui.globals import g, html, request, response, theme, user_errors
 from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.header import make_header
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -53,8 +56,10 @@ from cmk.gui.userdb import (
     set_two_factor_completed,
 )
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, make_confirm_link, makeactionuri, makeuri_contextless
+from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
 
 from .abstract_page import ABCUserProfilePage
@@ -90,14 +95,15 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             flash(_("Credential has been deleted"))
 
         if request.has_var("_backup_codes"):
-            display_codes, credentials["backup_codes"] = make_two_factor_backup_codes()
+            codes = make_two_factor_backup_codes()
+            credentials["backup_codes"] = [pwhashed for _password, pwhashed in codes]
             save_two_factor_credentials(user.id, credentials)
             flash(
                 _(
                     "The following backup codes have been generated: <ul>%s</ul> These codes are "
                     "displayed only now. Save them securely."
                 )
-                % "".join(f"<li><tt>{c}</tt></li>" for c in display_codes)
+                % "".join(f"<li><tt>{password}</tt></li>" for password, _pwhashed in codes)
             )
 
     def _page_menu(self, breadcrumb) -> PageMenu:
@@ -194,7 +200,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
         with table_element(title=None, searchable=False, sortable=False) as table:
             for credential in webauthn_credentials.values():
                 table.row()
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
                 delete_url = make_confirm_link(
                     url=makeactionuri(
                         request, transactions, [("_delete", credential["credential_id"])]
@@ -345,6 +351,9 @@ class CBORPage(Page, abc.ABC):
         try:
             response.set_content_type("application/cbor")
             response.set_data(cbor.encode(self.page()))
+        except MKGeneralException as e:
+            response.status_code = http_client.BAD_REQUEST
+            response.set_data(str(e))
         except Exception as e:
             response.status_code = http_client.INTERNAL_SERVER_ERROR
             handle_exception_as_gui_crash_report(
@@ -399,15 +408,24 @@ class UserWebAuthnRegisterComplete(CBORPage):
         logger.debug("Client data: %r", client_data)
         logger.debug("Attestation object: %r", att_obj)
 
-        auth_data = make_fido2_server().register_complete(
-            session.session_info.webauthn_action_state, client_data, att_obj
-        )
+        try:
+            auth_data = make_fido2_server().register_complete(
+                session.session_info.webauthn_action_state, client_data, att_obj
+            )
+        except ValueError as e:
+            if "Invalid origin in ClientData" in str(e):
+                raise MKGeneralException(
+                    "The origin %r is not valid. You need to access the UI via HTTPS "
+                    "and you need to use a valid host or domain name. See werk #13325 for "
+                    "further information" % client_data.get("origin")
+                ) from e
+            raise
 
         ident = auth_data.credential_data.credential_id.hex()
         credentials = load_two_factor_credentials(user.id, lock=True)
 
         if ident in credentials["webauthn_credentials"]:
-            raise MKGeneralException(_("Your WebAuthn credetial is already in use"))
+            raise MKGeneralException(_("Your WebAuthn credential is already in use"))
 
         credentials["webauthn_credentials"][ident] = WebAuthnCredential(
             {
@@ -428,10 +446,10 @@ class UserLoginTwoFactor(Page):
     def page(self) -> None:
         assert user.id is not None
 
-        html.set_render_headfoot(False)
+        html.render_headfoot = False
         html.add_body_css_class("login")
         html.add_body_css_class("two_factor")
-        html.header(_("Two-factor authentication"), Breadcrumb(), javascripts=[])
+        make_header(html, _("Two-factor authentication"), Breadcrumb(), javascripts=[])
 
         html.open_div(id_="login")
 

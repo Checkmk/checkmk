@@ -45,56 +45,62 @@ def _get_import_names_from_pipfile() -> List[str]:
     return import_names
 
 
-def test_01_python_interpreter_exists(site: Site):
+def test_01_python_interpreter_exists(site: Site) -> None:
     assert os.path.exists(site.root + "/bin/python3")
 
 
-def test_02_python_interpreter_path(site: Site):
+def test_02_python_interpreter_path(site: Site) -> None:
     p = site.execute(["which", "python3"], stdout=subprocess.PIPE)
     path = p.stdout.read().strip() if p.stdout else "<NO STDOUT>"
     assert path == "/omd/sites/%s/bin/python3" % site.id
 
 
-def test_03_python_interpreter_version(site: Site):
+def test_03_python_interpreter_version(site: Site) -> None:
     p = site.execute(["python3", "-V"], stdout=subprocess.PIPE)
     version = p.stdout.read() if p.stdout else "<NO STDOUT>"
-    assert version.startswith("Python 3.9.10")
+    assert version.startswith("Python 3.10.4")
 
 
-def test_03_python_path(site: Site):
+def test_03_python_path(site: Site) -> None:
     p = site.execute(
         ["python3", "-c", "import sys,json; json.dump(sys.path, sys.stdout)"],
         stdout=subprocess.PIPE,
     )
     sys_path = json.loads(p.stdout.read()) if p.stdout else "<NO STDOUT>"
+
     assert sys_path[0] == ""
-    assert site.root + "/local/lib/python3" in sys_path
-    assert site.root + "/lib/python3" in sys_path
-    assert site.root + "/lib/python3.9" in sys_path
 
-    for path in sys_path:
-        if path != "" and not path.startswith(site.root):
-            raise Exception("Found non site path %s in sys.path" % path)
+    ordered_path_elements = [
+        # there may be more, but these have to occur in this order:
+        site.root + "/local/lib/python3",
+        site.root + "/lib/python3/plus",
+        site.root + "/lib/python3.10",
+        site.root + "/lib/python3",
+    ]
+    assert [s for s in sys_path if s in ordered_path_elements] == ordered_path_elements
+
+    for path in sys_path[1:]:
+        assert path.startswith(site.root), f"Found non site path {path!r} in sys.path"
 
 
-def test_01_pip_exists(site: Site):
+def test_01_pip_exists(site: Site) -> None:
     assert os.path.exists(site.root + "/bin/pip3")
 
 
-def test_02_pip_path(site: Site):
+def test_02_pip_path(site: Site) -> None:
     p = site.execute(["which", "pip3"], stdout=subprocess.PIPE)
     path = p.stdout.read().strip() if p.stdout else "<NO STDOUT>"
     assert path == "/omd/sites/%s/bin/pip3" % site.id
 
 
-def test_03_pip_interpreter_version(site: Site):
+def test_03_pip_interpreter_version(site: Site) -> None:
     p = site.execute(["pip3", "-V"], stdout=subprocess.PIPE)
     version = p.stdout.read() if p.stdout else "<NO STDOUT>"
-    assert version.startswith("pip 21.2.4")
+    assert version.startswith("pip 22.0.4")
 
 
 @pytest.mark.parametrize("module_name", _get_import_names_from_pipfile())
-def test_python_modules(site: Site, module_name):
+def test_python_modules(site: Site, module_name) -> None:
     # TODO: Clarify and remove skipping of obscure modules
     # Skip those modules for now, they throw:
     # >       found = self._search_paths(context.pattern, context.path)
@@ -110,7 +116,7 @@ def test_python_modules(site: Site, module_name):
         assert module.__file__.startswith(site.root)
 
 
-def test_python_preferred_encoding():
+def test_python_preferred_encoding() -> None:
     import locale  # pylint: disable=import-outside-toplevel
 
     assert locale.getpreferredencoding() == "UTF-8"

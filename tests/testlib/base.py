@@ -19,7 +19,7 @@ from cmk.base import autochecks
 
 
 class _AutochecksMocker(autochecks.AutochecksManager):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.raw_autochecks: dict[HostName, Sequence[autochecks.AutocheckEntry]] = {}
 

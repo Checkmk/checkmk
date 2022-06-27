@@ -1,0 +1,13 @@
+Title: Fix wrong plugin and local check count
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1652439545
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The <i>Check_MK Agent</i> was not counting plugins and local checks that
+didn't specify a version.
+Now they are properly handled as unversioned.

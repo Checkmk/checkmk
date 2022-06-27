@@ -12,8 +12,11 @@ import multiprocessing
 import os
 import subprocess
 import time
+from io import TextIOWrapper
 from pathlib import Path
+from typing import Sequence
 
+from pylint.message.message import Message  # type: ignore[import]
 from pylint.reporters.text import (  # type: ignore[import]
     ColorizedTextReporter,
     ParseableTextReporter,
@@ -22,18 +25,11 @@ from pylint.reporters.text import (  # type: ignore[import]
 from tests.testlib import cmk_path, is_enterprise_repo, repo_path
 
 
-def check_files(base_dir):
-    filelist = sorted([base_dir + "/" + f for f in os.listdir(base_dir) if not f.startswith(".")])
-
-    # Sort: first includes, then other
-    filelist = [f for f in filelist if f.endswith(".include")] + [
-        f for f in filelist if not f.endswith(".include")
-    ]
-
-    return filelist
+def check_files(base_dir: str) -> Sequence[str]:
+    return sorted([base_dir + "/" + f for f in os.listdir(base_dir) if not f.startswith(".")])
 
 
-def add_file(f, path):
+def add_file(f: TextIOWrapper, path: str) -> None:
     relpath = os.path.relpath(os.path.realpath(path), cmk_path())
     f.write("# -*- encoding: utf-8 -*-")
     f.write("#\n")
@@ -43,7 +39,7 @@ def add_file(f, path):
     f.write(Path(path).read_text())
 
 
-def run_pylint(base_path, check_files):
+def run_pylint(base_path: str, check_files: Sequence[str]) -> int:
     args = os.environ.get("PYLINT_ARGS", "")
     if args:
         pylint_args = args.split(" ")
@@ -60,7 +56,7 @@ def run_pylint(base_path, check_files):
         pylint_cfg,
         "--jobs=%d" % num_jobs_to_use(),
     ]
-    files = pylint_args + check_files
+    files = [*pylint_args, *check_files]
 
     print(
         f"Running pylint in '{base_path}' with: {subprocess.list2cmdline(cmd)}"
@@ -72,7 +68,7 @@ def run_pylint(base_path, check_files):
     return exit_code
 
 
-def num_jobs_to_use():
+def num_jobs_to_use() -> int:
     # Naive heuristic, but looks OK for our use cases:\ Normal quad core CPUs
     # with HT report 8 CPUs (=> 6 jobs), our server 24-core CPU reports 48 CPUs
     # (=> 11 jobs). Just using 0 (meaning: use all reported CPUs) might just
@@ -88,7 +84,7 @@ def num_jobs_to_use():
     return int(multiprocessing.cpu_count() / 8.0) + 5
 
 
-def get_pylint_files(base_path, file_pattern):
+def get_pylint_files(base_path: str, file_pattern: str) -> Sequence[str]:
     files = []
     for path in glob.glob("%s/%s" % (base_path, file_pattern)):
         f = path[len(base_path) + 1 :]
@@ -102,7 +98,7 @@ def get_pylint_files(base_path, file_pattern):
     return files
 
 
-def is_python_file(path, shebang_name=None):
+def is_python_file(path: str, shebang_name: str | None = None) -> bool:
     if shebang_name is None:
         shebang_name = "python3"
 
@@ -123,10 +119,10 @@ def is_python_file(path, shebang_name=None):
 # python modules. This custom reporter rewrites the found
 # messages to tell the users the original location in the
 # python sources
-# TODO: This can be dropped once we have refactored checks/inventory/bakery plugins
+# TODO: This can be dropped once we have refactored checks/bakery plugins
 # to real modules
 class CMKFixFileMixin:
-    def handle_message(self, msg):
+    def handle_message(self, msg: Message) -> None:
         if msg.abspath is None:
             # NOTE: I'm too lazy to define a Protocol for this mixin which is
             # already on death row, so let's use a reflection hack...
@@ -139,30 +135,32 @@ class CMKFixFileMixin:
             new_path = self._change_path_to_repo_path(msg)
 
         if new_path is not None:
-            msg = msg._replace(path=new_path)
+            msg.path = new_path
         if new_line is not None:
-            msg = msg._replace(line=new_line)
+            msg.line = new_line
 
         # NOTE: I'm too lazy to define a Protocol for this mixin which is
         # already on death row, so let's use a reflection hack...
         getattr(super(), "handle_message")(msg)
 
-    def _change_path_to_repo_path(self, msg):
+    def _change_path_to_repo_path(self, msg: Message) -> str:
         return os.path.relpath(msg.abspath, cmk_path())
 
-    def _orig_location_from_compiled_file(self, msg):
+    def _orig_location_from_compiled_file(
+        self, msg: Message
+    ) -> tuple[str, int] | tuple[None, None]:
         with open(msg.abspath) as fmsg:
             lines = fmsg.readlines()
         line_nr = msg.line
-        orig_file, went_back = None, -3
+        went_back = -3
         while line_nr > 0:
             line_nr -= 1
             went_back += 1
             line = lines[line_nr]
             if line.startswith("# ORIG-FILE: "):
-                orig_file = line.split(": ", 1)[1].strip()
-                break
-        return orig_file, (None if orig_file is None else went_back)
+                return line.split(": ", 1)[1].strip(), went_back
+
+        return None, None
 
 
 class CMKOutputScanTimesMixin:

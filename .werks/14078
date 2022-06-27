@@ -1,0 +1,13 @@
+Title: Fix deletion of users with none-ASCII characters in distributed setups with configuration replication
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1653052222
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+In distributed setups with configuration replication, deleting a user with none-ASCII
+characters in its username led to a crash upon attempting to activate the change:
+<tt>cmk.gui.exceptions.MKUserError: The given text must only contain ASCII characters.</tt>

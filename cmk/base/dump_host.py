@@ -21,7 +21,7 @@ import cmk.base.sources as sources
 from cmk.base.check_utils import LegacyCheckParameters
 
 
-def dump_host(hostname: HostName) -> None:
+def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 
@@ -141,6 +141,8 @@ def _evaluate_params(params: Union[LegacyCheckParameters, TimespecificParameters
     if not isinstance(params, TimespecificParameters):
         return repr(params)
 
+    if params.is_constant():
+        return repr(params.evaluate(cmk.base.core.timeperiod_active))
     return "Timespecific parameters at %s: %r" % (
         cmk.utils.render.date_and_time(time.time()),
         params.evaluate(cmk.base.core.timeperiod_active),

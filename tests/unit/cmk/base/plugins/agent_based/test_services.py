@@ -39,7 +39,7 @@ PARSED_AUTO = [
 ]
 
 
-def test_parse():
+def test_parse() -> None:
     assert PARSED == services.parse_windows_services(STRING_TABLE)
 
 
@@ -87,7 +87,7 @@ def test_parse():
         ),
     ],
 )
-def test_discovery_windows_services(params, discovered_services):
+def test_discovery_windows_services(params, discovered_services) -> None:
     assert discovered_services == list(services.discovery_windows_services(params, PARSED))
 
 
@@ -163,7 +163,7 @@ def test_discovery_windows_services(params, discovered_services):
         ),
     ],
 )
-def test_check_windows_services(item, params, yielded_results):
+def test_check_windows_services(item, params, yielded_results) -> None:
     assert yielded_results == list(services.check_windows_services(item, params, PARSED))
 
 
@@ -198,7 +198,7 @@ def test_check_windows_services(item, params, yielded_results):
         ),
     ],
 )
-def test_cluster_windows_services(item, params, yielded_results):
+def test_cluster_windows_services(item, params, yielded_results) -> None:
     assert yielded_results == list(
         services.cluster_check_windows_services(
             item, params, {"node1": PARSED, "node2": PARSED_NODE}
@@ -206,7 +206,7 @@ def test_cluster_windows_services(item, params, yielded_results):
     )
 
 
-def test_discovery_services_summary():
+def test_discovery_services_summary() -> None:
     assert [Service()] == list(services.discovery_services_summary(PARSED))
 
 
@@ -264,5 +264,5 @@ def test_discovery_services_summary():
         ),
     ],
 )
-def test_check_services_summary(params, yielded_results):
+def test_check_services_summary(params, yielded_results) -> None:
     assert yielded_results == list(services.check_services_summary(params, PARSED_AUTO))

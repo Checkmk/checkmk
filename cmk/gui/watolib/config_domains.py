@@ -24,23 +24,16 @@ from cmk.utils.type_defs import ConfigurationWarnings, HostName
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.hooks as hooks
 import cmk.gui.mkeventd as mkeventd
-from cmk.gui.config import get_default_config
+from cmk.gui.config import active_config, get_default_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.watolib.utils import (
-    ABCConfigDomain,
-    config_domain_registry,
-    DomainRequest,
-    SerializedSettings,
-)
+from cmk.gui.plugins.watolib.utils import ABCConfigDomain, DomainRequest, SerializedSettings
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import ConfigDomainName
-from cmk.gui.watolib.changes import log_audit
+from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.utils import liveproxyd_config_dir, multisite_dir, wato_root_dir
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
@@ -58,7 +51,6 @@ class ConfigDomainCoreSettings:
         self.validate()
 
 
-@config_domain_registry.register
 class ConfigDomainCore(ABCConfigDomain):
     @classmethod
     def ident(cls) -> ConfigDomainName:
@@ -109,7 +101,6 @@ class ConfigDomainCore(ABCConfigDomain):
         return DomainRequest(cls.ident(), cls.generate_hosts_to_update_settings(hosts_to_update))
 
 
-@config_domain_registry.register
 class ConfigDomainGUI(ABCConfigDomain):
     needs_sync = True
     needs_activation = False
@@ -132,7 +123,6 @@ class ConfigDomainGUI(ABCConfigDomain):
 # to extract SiteManagement() to a separate module (depends on Folder, add_change, ...).
 # As soon as we have untied this we should re-establish a watolib plugin hierarchy and
 # move this to a CEE/CME specific watolib plugin
-@config_domain_registry.register
 class ConfigDomainLiveproxy(ABCConfigDomain):
     needs_sync = False
     needs_activation = False
@@ -208,7 +198,6 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
         }
 
 
-@config_domain_registry.register
 class ConfigDomainEventConsole(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
@@ -237,7 +226,6 @@ class ConfigDomainEventConsole(ABCConfigDomain):
         return ec.default_config()
 
 
-@config_domain_registry.register
 class ConfigDomainCACertificates(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
@@ -368,13 +356,12 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         }
 
 
-@config_domain_registry.register
 class ConfigDomainOMD(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
     omd_config_dir = "%s/etc/omd" % (cmk.utils.paths.omd_root,)
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._logger: logging.Logger = logger.getChild("config.omd")
 
@@ -470,7 +457,7 @@ class ConfigDomainOMD(ABCConfigDomain):
     #
     # Sadly we can not use the Transform() valuespecs, because each configvar
     # only get's the value associated with it's config key.
-    def _from_omd_config(self, omd_config):
+    def _from_omd_config(self, omd_config):  # pylint: disable=too-many-branches
         settings: Dict[str, Any] = {}
 
         for key, value in omd_config.items():
@@ -525,7 +512,7 @@ class ConfigDomainOMD(ABCConfigDomain):
 
     # Bring the WATO internal representation int OMD configuration settings.
     # Counterpart of the _from_omd_config() method.
-    def _to_omd_config(self, settings):
+    def _to_omd_config(self, settings):  # pylint: disable=too-many-branches
         # Convert to OMD key
         settings = {key.upper()[5:]: val for key, val in settings.items()}
 
@@ -572,7 +559,6 @@ class ConfigDomainOMD(ABCConfigDomain):
         return omd_config
 
 
-@gui_background_job.job_registry.register
 class OMDConfigChangeBackgroundJob(WatoBackgroundJob):
     job_prefix = "omd-config-change"
 
@@ -580,7 +566,7 @@ class OMDConfigChangeBackgroundJob(WatoBackgroundJob):
     def gui_title(cls):
         return _("Apply OMD config changes")
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             self.job_prefix,
             title=self.gui_title(),

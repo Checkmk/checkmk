@@ -4,6 +4,8 @@
 #include "pch.h"
 
 #include <filesystem>
+#include <numeric>
+#include <ranges>
 
 #include "agent_controller.h"
 #include "cfg.h"
@@ -11,18 +13,12 @@
 
 using namespace std::chrono_literals;
 namespace fs = std::filesystem;
-namespace cma::details {
-extern bool g_is_service;
-}
+namespace rs = std::ranges;
 
 namespace cma::ac {
-TEST(AgentController, StartAgent) {
-    EXPECT_FALSE(ac::StartAgentController("cmd.exe"));
-}
+TEST(AgentController, StartAgent) { EXPECT_FALSE(ac::StartAgentController()); }
 
-TEST(AgentController, KillAgent) {
-    EXPECT_FALSE(ac::KillAgentController("anything"));
-}
+TEST(AgentController, KillAgent) { EXPECT_FALSE(ac::KillAgentController()); }
 
 constexpr std::string_view port{"1111"};
 constexpr std::string_view allowed{"::1 111.11.11/11 8.8.8.8"};
@@ -35,19 +31,95 @@ TEST(AgentController, BuildCommandLine) {
                                          "  port: {}\n",
                                          port)));
     EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
-              fmt::format("x daemon -P {} --agent-channel {} -vv", port,
+              fmt::format("x daemon --agent-channel {} -vv",
                           cfg::defaults::kControllerAgentChannelDefault));
 }
 
+class AgentControllerCreateToml : public ::testing::Test {
+public:
+    void SetUp() override { temp_fs_ = tst::TempCfgFs::Create(); }
+
+    void TearDown() override { killArtifacts(); }
+
+    std::vector<std::string> loadConfigAndGetResult(
+        const std::string &cfg) const {
+        if (!temp_fs_->loadContent(cfg)) {
+            return {};
+        }
+        ac::CreateTomlConfig(tomlFile());
+        return tst::ReadFileAsTable(tomlFile());
+    }
+
+    void killArtifacts() const {
+        std::error_code ec;
+        fs::remove(tomlFile(), ec);
+    }
+    fs::path tomlFile() const { return tst::GetTempDir() / "the_file.toml"; }
+
+    // "allowed_ip = [x,b,z]" -> ["x","b","z"]
+    static std::vector<std::string> convertTomlToIps(
+        std::string_view toml_statement) {
+        std::string all{toml_statement};
+        rs::replace_if(
+            all, [](const char c) { return c == '='; }, ':');
+        auto yaml = YAML::Load(all);
+        auto actual_ips = yaml["allowed_ip"];
+        std::vector<std::string> actual;
+        rs::transform(actual_ips, std::back_inserter(actual),
+                      [](const YAML::Node &n) { return n.as<std::string>(); });
+        return actual;
+    }
+
+private:
+    tst::TempCfgFs::ptr temp_fs_;
+};
+
+TEST_F(AgentControllerCreateToml, Port) {
+    auto table =
+        loadConfigAndGetResult(fmt::format("global:\n"
+                                           "  enabled: yes\n"
+                                           "  only_from: \n"
+                                           "  port: {}\n",
+                                           port));
+    for (auto index : {0, 1, 2}) {
+        EXPECT_EQ(table[index][0], '#');
+    }
+    EXPECT_TRUE(table[3].empty());
+    EXPECT_EQ(table[4], fmt::format("pull_port = {}", port));
+}
+
+TEST_F(AgentControllerCreateToml, PortAndAllowed) {
+    auto table =
+        loadConfigAndGetResult(fmt::format("global:\n"
+                                           "  enabled: yes\n"
+                                           "  only_from: {}\n"
+                                           "  port: {}\n",
+                                           allowed, port));
+    for (auto index : {0, 1, 2}) {
+        EXPECT_EQ(table[index][0], '#');
+    }
+    EXPECT_TRUE(table[3].empty());
+    EXPECT_EQ(table[4], fmt::format("pull_port = {}", port));
+
+    auto all = std::accumulate(
+        table.begin() + 5, table.end(), std::string{},
+        [](const std::string &a, const std::string &b) { return a + b; });
+    auto actual_ips = convertTomlToIps(all);
+    auto expected_ips = tools::SplitString(std::string{allowed}, " ");
+    EXPECT_TRUE(rs::is_permutation(actual_ips, expected_ips));
+    EXPECT_EQ(actual_ips.size(), expected_ips.size());
+}
+
 TEST(AgentController, BuildCommandLineAgentChannelOk) {
-    std::tuple<std::string, uint16_t, std::string_view> mapping[] = {
-        {"ll:12345", 12345, "ll:12345"},
-        {"ll:999", kWindowsInternalPort,
-         cfg::defaults::kControllerAgentChannelDefault},
-        {"ll:-1", kWindowsInternalPort,
-         cfg::defaults::kControllerAgentChannelDefault},
-    };
-    for (const auto &e : mapping) {
+    for (std::vector<std::tuple<std::string, uint16_t, std::string_view>>
+             mapping{
+                 {"ll:12345", 12345, "ll:12345"},
+                 {"ll:999", kWindowsInternalServicePort,
+                  cfg::defaults::kControllerAgentChannelDefault},
+                 {"ll:-1", kWindowsInternalServicePort,
+                  cfg::defaults::kControllerAgentChannelDefault},
+             };
+         const auto &[ch_in, p, ch_out] : mapping) {
         auto temp_fs = tst::TempCfgFs::CreateNoIo();
         ASSERT_TRUE(
             temp_fs->loadContent(fmt::format("global:\n"
@@ -56,12 +128,15 @@ TEST(AgentController, BuildCommandLineAgentChannelOk) {
                                              "  controller:\n"
                                              "    run: yes\n"
                                              "    agent_channel: {}\n",
-                                             std::get<0>(e))));
-        EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
-                  fmt::format("x daemon -P {} --agent-channel {} -vv",
-                              cfg::kMainPort, std::get<2>(e)));
-        EXPECT_EQ(GetConfiguredAgentChannelPort(), std::get<1>(e));
+                                             ch_in)));
+        EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path{"x"})),
+                  fmt::format("x daemon --agent-channel {} -vv", ch_out));
+        EXPECT_EQ(GetConfiguredAgentChannelPort(GetModus()), p);
     }
+    EXPECT_EQ(GetConfiguredAgentChannelPort(Modus::integration),
+              kWindowsInternalExePort);
+    EXPECT_EQ(GetConfiguredAgentChannelPort(Modus::app),
+              kWindowsInternalExePort);
 }
 
 TEST(AgentController, BuildCommandLineAgentChannelMalformed) {
@@ -73,11 +148,15 @@ TEST(AgentController, BuildCommandLineAgentChannelMalformed) {
                                          "  controller:\n"
                                          "    run: yes\n"
                                          "    agent_channel: ll\n")));
-    EXPECT_EQ(
-        wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
-        fmt::format("x daemon -P {} --agent-channel {} -vv", cfg::kMainPort,
-                    cfg::defaults::kControllerAgentChannelDefault));
-    EXPECT_EQ(GetConfiguredAgentChannelPort(), kWindowsInternalPort);
+    EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
+              fmt::format("x daemon --agent-channel {} -vv",
+                          cfg::defaults::kControllerAgentChannelDefault));
+    EXPECT_EQ(GetConfiguredAgentChannelPort(GetModus()),
+              kWindowsInternalServicePort);
+    EXPECT_EQ(GetConfiguredAgentChannelPort(Modus::integration),
+              kWindowsInternalExePort);
+    EXPECT_EQ(GetConfiguredAgentChannelPort(Modus::app),
+              kWindowsInternalExePort);
 }
 
 TEST(AgentController, BuildCommandLineAllowed) {
@@ -88,10 +167,9 @@ TEST(AgentController, BuildCommandLineAllowed) {
                                          "  only_from: {}\n"
                                          "  port: {}\n",
                                          allowed, port)));
-    EXPECT_EQ(
-        wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
-        fmt::format("x daemon -P {} --agent-channel {} -A {} -vv", port,
-                    cfg::defaults::kControllerAgentChannelDefault, allowed));
+    EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
+              fmt::format("x daemon --agent-channel {} -vv",
+                          cfg::defaults::kControllerAgentChannelDefault));
 }
 
 TEST(AgentController, LegacyMode) {
@@ -121,9 +199,9 @@ void CleanArtifacts() {
     std::error_code ec;
     fs::remove(ac::LegacyPullFile(), ec);
     fs::remove(ac::ControllerFlagFile(), ec);
+    fs::remove(ac::ControllerFlagFile(), ec);
 }
-constexpr auto marker_new =
-    "Check MK monitoring and management Service - 2.1, 64-bit";
+constexpr auto marker_new = "Checkmk monitoring agent service - 2.1, 64-bit";
 constexpr auto marker_old =
     "Check MK monitoring and management Service, 64-bit";
 
@@ -147,7 +225,7 @@ TEST(AgentController, CreateLegacyPullFile) {
         bool exists;
     };
     // NOTE(sk): better to have std::array, but init is a mess
-    Param params[] = {
+    std::vector<Param> params{
         {.run = "no",
          .force_legacy = "no",
          .marker = marker_old,
@@ -206,11 +284,11 @@ public:
 
     void TearDown() override { killArtifacts(); }
 
-    bool markerExists() { return fs::exists(markerFile()); }
-    bool legacyExists() { return fs::exists(legacyFile()); }
-    bool flagExists() { return fs::exists(flagFile()); }
+    bool markerExists() const { return fs::exists(markerFile()); }
+    bool legacyExists() const { return fs::exists(legacyFile()); }
+    bool flagExists() const { return fs::exists(flagFile()); }
 
-    void killArtifacts() {
+    void killArtifacts() const {
         std::error_code ec;
         fs::remove(markerFile(), ec);
         fs::remove(legacyFile(), ec);
@@ -318,8 +396,9 @@ TEST_F(AgentControllerCreateArtifacts, From1620OldWithController) {
 }
 
 TEST(AgentController, SimulationIntegration) {
-    details::g_is_service = true;
-    ON_OUT_OF_SCOPE(details::g_is_service = false;);
+    const auto m = GetModus();
+    ON_OUT_OF_SCOPE(details::SetModus(m));
+    details::SetModus(Modus::service);
     auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
     fs::copy(fs::path{"c:\\windows\\system32\\whoami.exe"},
@@ -327,9 +406,11 @@ TEST(AgentController, SimulationIntegration) {
     const auto service = fs::path{cfg::GetRootDir()} / "cmd.exe";
     const auto expected =
         fs::path{cfg::GetUserBinDir()} / cfg::files::kAgentCtl;
-    EXPECT_TRUE(ac::StartAgentController(service));
+    EXPECT_TRUE(ac::StartAgentController());
     EXPECT_TRUE(fs::exists(expected));
-    EXPECT_TRUE(ac::KillAgentController(service));
+    EXPECT_TRUE(fs::exists(ac::TomlConfigFile()));
+    EXPECT_TRUE(ac::KillAgentController());
     EXPECT_FALSE(fs::exists(expected));
+    EXPECT_FALSE(fs::exists(ac::TomlConfigFile()));
 }
 }  // namespace cma::ac

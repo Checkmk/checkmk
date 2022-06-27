@@ -95,7 +95,7 @@ from cmk.special_agents.agent_siemens_plc import (
         ),
     ],
 )
-def test_parse_spec(hostspec, expected_parsed_device):
+def test_parse_spec(hostspec, expected_parsed_device) -> None:
     assert parse_spec(hostspec) == expected_parsed_device
 
 
@@ -105,7 +105,7 @@ def test_parse_spec(hostspec, expected_parsed_device):
         ("merker", 131),
     ],
 )
-def test__area_name_to_area_id(area_name, expected_id):
+def test__area_name_to_area_id(area_name, expected_id) -> None:
     assert _area_name_to_area_id(area_name) == expected_id
 
 
@@ -142,7 +142,7 @@ def test__area_name_to_area_id(area_name, expected_id):
         ),
     ],
 )
-def test__addresses_from_area_values(values, expected_addresses):
+def test__addresses_from_area_values(values, expected_addresses) -> None:
     assert _addresses_from_area_values(values) == expected_addresses
 
 
@@ -187,7 +187,7 @@ def test__addresses_from_area_values(values, expected_addresses):
         ),
     ],
 )
-def test__cast_values(values, start_address, area_value, expected_value):
+def test__cast_values(values, start_address, area_value, expected_value) -> None:
     assert _cast_values(values, start_address, area_value) == expected_value
 
 
@@ -273,6 +273,6 @@ def test__cast_values(values, start_address, area_value, expected_value):
         ),
     ],
 )
-def test__group_device_values(device, expected_grouped_values):
+def test__group_device_values(device, expected_grouped_values) -> None:
     actual_values = [(i, list(j)) for i, j in _group_device_values(device)]
     assert actual_values == expected_grouped_values

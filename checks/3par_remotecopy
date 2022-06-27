@@ -5,9 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.threepar import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # example output
@@ -27,6 +25,7 @@ factory_settings["threepar_remotecopy_default_levels"] = {
 def inventory_3par_remotecopy(parsed):
     if parsed.get("mode", 0) > 1:
         return [(None, {})]
+    return []
 
 
 def check_3par_remotecopy(_no_item, params, parsed):

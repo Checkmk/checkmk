@@ -7,7 +7,11 @@ def build(Map args) {
     def ARTIFACTS_DIR = 'artefacts'
     def ARTIFACTS = ''
     if (args.TARGET == "test_integration" || args.TARGET == "test_unit") {
-        download_artifacts("${FOLDER_ID}/windows-agent-build", ARTIFACTS_DIR)
+        download_artifacts("windows-agent-build", ARTIFACTS_DIR)
+    }
+
+    if (args.TARGET == "test_integration") {
+        download_artifacts("Windows-Python-Build", ARTIFACTS_DIR)
     }
 
     stage("Windows ${args.TARGET} build") {
@@ -20,16 +24,18 @@ def build(Map args) {
                     ARTIFACTS = 'python-3.cab,python-3.4.cab'
                 } else if (args.TARGET == "agent_with_sign") {
                     bat 'cd agents\\wnx && call build_release.cmd tribe29.pfx ' + args.PASSWORD
-                    ARTIFACTS = "check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk_agent_unsigned.msi,check_mk.user.yml,check_mk.yml,watest32.exe,watest64.exe"
+                    ARTIFACTS = "cmk-agent-ctl.exe,check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk_agent_unsigned.msi,check_mk.user.yml,check_mk.yml,watest32.exe,watest64.exe,unit_tests_results.zip"
                 } else if (args.TARGET == "agent_no_sign") {
                     bat 'cd agents\\wnx && call build_release.cmd'
-                    ARTIFACTS = "check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,check_mk.yml,watest32.exe,watest64.exe"
+                    ARTIFACTS = "cmk-agent-ctl.exe,check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,check_mk.yml,watest32.exe,watest64.exe"
                 } else if (args.TARGET == "cmk_agent_ctl_no_sign") {
                     bat 'cd agents\\cmk-agent-ctl && call cargo_build.cmd'
                 } else if (args.TARGET == "test_unit") {
-                    bat 'cd agents\\wnx && call call_unit_tests.cmd -*_Long:*Integration:*Flaky'
+                    bat 'cd agents\\wnx && call call_unit_tests.cmd -*_Long:*Integration:*IntegrationExt:*Flaky'
+                    ARTIFACTS = "unit_tests_results.zip"
                 } else if (args.TARGET == "test_integration") {
-                    bat 'cd agents\\wnx && call call_integration_tests.cmd'
+                    bat 'cd agents\\wnx && call run_integration_tests.cmd all'
+                    ARTIFACTS = "integration_tests_results.zip"
                 } else if (args.TARGET == "test_build") {
                     bat 'cd agents\\wnx && call call_test_build.cmd'
                 } else {
@@ -65,11 +71,11 @@ def build(Map args) {
 }
 
 def download_artifacts(PROJECT_NAME, DIR) {
-    stage('download artifacts') {
+    stage("Download ${PROJECT_NAME} artifacts") {
         dir(DIR) {
             script {
                 step ([$class: 'CopyArtifact',
-                projectName: "${FOLDER_ID}/windows-agent-build",
+                projectName: "${FOLDER_ID}/${PROJECT_NAME}",
             ]);
             }
         }

@@ -1,6 +1,6 @@
 Title: logwatch: Invalid check parameter: Undefined key 'pre_comp_group_patterns'
 Class: fix
-Compatible: comp
+Compatible: compat
 Component: checks
 Date: 1578485313
 Edition: cre

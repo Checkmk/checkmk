@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from datetime import datetime
+
 import pytest
 
 from cmk.utils.type_defs import UserId
@@ -20,10 +22,11 @@ def fixture_user_id(with_user):
     return UserId(with_user[0])
 
 
-def test_flash(user_id):
+def test_flash(user_id) -> None:
     # Execute the first request flash some message
+    now = datetime.now()
     with application_and_request_context(), login.UserSessionContext(user_id):
-        session_id = on_succeeded_login(user_id)  # Create and activate session
+        session_id = on_succeeded_login(user_id, now)  # Create and activate session
         assert session is not None
 
         flash("abc")
@@ -31,7 +34,7 @@ def test_flash(user_id):
 
     # Now create the second request to get the previously flashed message
     with application_and_request_context(), login.UserSessionContext(user_id):
-        on_access(user_id, session_id)
+        on_access(user_id, session_id, now)
         assert session is not None
         assert session.session_info.flashes == ["abc"]
 
@@ -45,23 +48,25 @@ def test_flash(user_id):
     # Now create the third request that should not have access to the flashed messages since the
     # second one consumed them.
     with application_and_request_context(), login.UserSessionContext(user_id):
-        on_access(user_id, session_id)
+        on_access(user_id, session_id, now)
         assert session is not None
         assert session.session_info.flashes == []
         assert get_flashed_messages() == []
 
 
-def test_flash_escape_html_in_str(user_id, request_context):
+def test_flash_escape_html_in_str(user_id, request_context) -> None:
+    now = datetime.now()
     with login.UserSessionContext(user_id):
-        on_succeeded_login(user_id)  # Create and activate session
+        on_succeeded_login(user_id, now)  # Create and activate session
 
         flash("<script>aaa</script>")
         assert get_flashed_messages() == [HTML("&lt;script&gt;aaa&lt;/script&gt;")]
 
 
-def test_flash_dont_escape_html(user_id, request_context):
+def test_flash_dont_escape_html(user_id, request_context) -> None:
+    now = datetime.now()
     with login.UserSessionContext(user_id):
-        on_succeeded_login(user_id)  # Create and activate session
+        on_succeeded_login(user_id, now)  # Create and activate session
 
         flash(HTML("<script>aaa</script>"))
         assert get_flashed_messages() == [HTML("<script>aaa</script>")]

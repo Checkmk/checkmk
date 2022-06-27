@@ -17,10 +17,10 @@ just to signal that real build script was not called -->
 <?define PackageCode = "BAEBF560-7308-4D53-B426-903EA74B1D7E"?>
 <?define CompanyFolderName = "checkmk"?>
 <?define ServiceFolderName = "service"?>
-<?define ServiceName = "CheckMkService"?>
-<?define ServiceDisplayName = "Check MK Service"?>
-<!-- IMPORTANT NOTE 3: String below must start from 'Check MK monitoring and management Service - ', grep client to find why-->
-<?define ServiceDescription = "Check MK monitoring and management Service - 2.1"?>
+<?define ServiceName = "CheckmkService"?>
+<?define ServiceDisplayName = "Checkmk Service"?>
+<!-- IMPORTANT NOTE 3: String below must start from 'Checkmk monitoring agent service - ', grep client to find why-->
+<?define ServiceDescription = "Checkmk monitoring agent service - 2.1"?>
 <?define ServiceStart = "demand"?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"

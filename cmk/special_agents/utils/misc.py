@@ -31,7 +31,7 @@ LOG = logging.getLogger(__name__)
 
 
 class AgentJSON:
-    def __init__(self, key, title):
+    def __init__(self, key, title) -> None:
         self._key = key
         self._title = title
 
@@ -93,12 +93,13 @@ USAGE: agent_%s --section_url [{section_name},{url}]
                     print(line)
         else:
             return content
+        return None
 
 
 def datetime_serializer(obj):
     """Custom serializer to pass to json dump functions"""
     if isinstance(obj, datetime.datetime):
-        return obj.__str__()
+        return str(obj)
     # fall back to json default behaviour:
     raise TypeError("%r is not JSON serializable" % obj)
 
@@ -210,10 +211,10 @@ class _NullContext:
     def __enter__(self):
         return self
 
-    def __exit__(self, *_args):
+    def __exit__(self, *exc_info: object) -> None:
         pass
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return False
 
 
@@ -242,7 +243,7 @@ def vcrtrace(**vcr_init_kwargs):
     """
 
     class VcrTraceAction(argparse.Action):
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args, **kwargs) -> None:
             kwargs.setdefault("metavar", "TRACEFILE")
             help_part = "" if vcrtrace.__doc__ is None else vcrtrace.__doc__.split("\n\n")[3]
             kwargs["help"] = "%s %s" % (help_part, kwargs.get("help", ""))

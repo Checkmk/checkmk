@@ -182,7 +182,7 @@ Other options:
     )
 
 
-def main(args=None):
+def main(args=None):  # pylint: disable=too-many-branches
     if args is None:
         args = sys.argv[1:]
 

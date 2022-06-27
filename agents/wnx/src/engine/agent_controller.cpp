@@ -3,22 +3,42 @@
 
 #include "agent_controller.h"
 
-#include <versionhelpers.h>
+#include <VersionHelpers.h>
 
 #include <filesystem>
 #include <iosfwd>
 #include <iostream>
+#include <ranges>
 
 #include "cfg.h"
+#include "common/cfg_info.h"
 #include "common/cfg_yaml.h"
 #include "common/cma_yml.h"
 #include "common/wtools.h"
 
 namespace fs = std::filesystem;
+namespace rs = std::ranges;
 using namespace std::chrono_literals;
 using namespace std::string_literals;
 
 namespace cma::ac {
+
+namespace {
+const std::vector<Modus> start_controller_moduses{Modus::service,
+                                                  Modus::integration};
+
+bool AllowUseController(Modus modus) {
+    return rs::find(start_controller_moduses, modus) !=
+           start_controller_moduses.end();
+}
+const std::vector<Modus> use_special_port_moduses{Modus::app,
+                                                  Modus::integration};
+
+bool UseSpecialPort(Modus modus) {
+    return rs::find(use_special_port_moduses, modus) !=
+           use_special_port_moduses.end();
+}
+}  // namespace
 
 fs::path LegacyPullFile() {
     return fs::path{cfg::GetUserDir()} / ac::kLegacyPullFile;
@@ -28,13 +48,18 @@ fs::path ControllerFlagFile() {
     return fs::path{cfg::GetUserDir()} / ac::kControllerFlagFile;
 }
 
-namespace {
-std::pair<fs::path, fs::path> ServiceName2TargetName(const fs::path &service) {
-    return {GetController(service), GetWorkController()};
+fs::path TomlConfigFile() {
+    return fs::path{cfg::GetUserDir()} / cfg::files::kAgentToml;
 }
 
-fs::path CopyControllerToBin(const fs::path &service) {
-    const auto [src, tgt] = ServiceName2TargetName(service);
+namespace {
+std::pair<fs::path, fs::path> ServiceName2TargetName() {
+    return {fs::path{cfg::GetRootDir()} / cfg::files::kAgentCtl,
+            GetWorkController()};
+}
+
+fs::path CopyControllerToBin() {
+    const auto [src, tgt] = ServiceName2TargetName();
     std::error_code ec;
     fs::copy(src, tgt, fs::copy_options::overwrite_existing, ec);
     if (ec.value() == 0) {
@@ -43,7 +68,7 @@ fs::path CopyControllerToBin(const fs::path &service) {
     XLOG::l("error copying controller from '{}' to '{}' [{}]", src, tgt,
             ec.value());
 
-    auto tgt_sav = tgt;
+    fs::path tgt_sav{tgt};
     try {
         tgt_sav.replace_extension(".sav");
     } catch (const std::exception &e) {
@@ -82,16 +107,18 @@ uint16_t GetPortFromString(const std::string &str) {
     }
 
     auto port = ToInt(table[1]);
-    return port < 1000 ? 0 : port;
+    return port > 1'000 && port < 60'000 ? static_cast<uint16_t>(port) : 0U;
 }
 
-std::string GetConfiguredAgentChannel() {
+std::string GetConfiguredAgentChannel(Modus modus) {
+    if (UseSpecialPort(modus)) {
+        return fmt::format("localhost:{}", kWindowsInternalExePort);
+    }
     auto controller_config = GetControllerNode();
     auto result =
         cfg::GetVal(controller_config, cfg::vars::kControllerAgentChannel,
                     std::string{cfg::defaults::kControllerAgentChannelDefault});
-    auto port = GetPortFromString(result);
-    if (port == 0) {
+    if (GetPortFromString(result) == 0) {
         XLOG::l("Invalid configured agent channel '{}' use default", result);
         return std::string{cfg::defaults::kControllerAgentChannelDefault};
     }
@@ -106,8 +133,8 @@ bool GetConfiguredForceLegacy() {
 
 }  // namespace
 
-uint16_t GetConfiguredAgentChannelPort() {
-    return GetPortFromString(GetConfiguredAgentChannel());
+uint16_t GetConfiguredAgentChannelPort(Modus modus) {
+    return GetPortFromString(GetConfiguredAgentChannel(modus));
 }
 
 bool GetConfiguredLocalOnly() {
@@ -130,8 +157,8 @@ bool GetConfiguredCheck() {
 }
 
 /// returns true if controller files DOES NOT exist
-bool DeleteControllerInBin(const fs::path &service) {
-    const auto [_, tgt] = ServiceName2TargetName(service);
+bool DeleteControllerInBin() {
+    const auto [_, tgt] = ServiceName2TargetName();
     std::error_code ec;
     if (!fs::exists(tgt, ec)) {
         return true;
@@ -153,7 +180,7 @@ bool IsInLegacyMode() {
 }
 
 fs::path GetController(const fs::path &service) {
-    auto controller = service;
+    fs::path controller{service};
     controller.replace_filename(cfg::files::kAgentCtl);
     return controller;
 }
@@ -162,12 +189,41 @@ fs::path GetWorkController() {
     return fs::path{cfg::GetUserBinDir()} / cfg::files::kAgentCtl;
 }
 
-std::wstring BuildCommandLine(const fs::path &controller) {
+bool CreateTomlConfig(const fs::path &toml_file) {
+    constexpr std::string_view text{
+        "# Controlled by Check_MK Agent Bakery.\n"
+        "# This file is managed via WATO, do not edit manually or you\n"
+        "# lose your changes next time when you update the agent.\n\n"};
     auto port =
         cfg::GetVal(cfg::groups::kGlobal, cfg::vars::kPort, cfg::kMainPort);
+    auto pull_port = fmt::format("pull_port = {}\n", port);
     auto only_from =
         cfg::GetInternalArray(cfg::groups::kGlobal, cfg::vars::kOnlyFrom);
-    auto agent_channel = GetConfiguredAgentChannel();
+    std::string allowed_ip;
+    if (!only_from.empty()) {
+        allowed_ip = "allowed_ip = ["s;
+        for (const auto &a : only_from) {
+            allowed_ip += "\"" + a + "\"" + ",\n ";
+        }
+        allowed_ip.pop_back();
+        allowed_ip.pop_back();
+        allowed_ip.pop_back();
+        allowed_ip += "]\n";
+    }
+    try {
+        std::ofstream ofs(toml_file);
+        ofs << text << pull_port << allowed_ip;
+    } catch (const std::exception &e) {
+        XLOG::l("Failed to create TOML config with exception {}", e.what());
+        return false;
+    }
+    return true;
+}
+
+std::wstring BuildCommandLine(const fs::path &controller) {
+    auto only_from =
+        cfg::GetInternalArray(cfg::groups::kGlobal, cfg::vars::kOnlyFrom);
+    auto agent_channel = GetConfiguredAgentChannel(GetModus());
     std::string allowed_ip;
     if (!only_from.empty()) {
         allowed_ip = " "s + std::string{kCmdLineAllowedIp};
@@ -177,17 +233,15 @@ std::wstring BuildCommandLine(const fs::path &controller) {
     }
 
     return controller.wstring() +
-           wtools::ConvertToUTF16(fmt::format(" {} {} {} {} {}{} -vv",  //
-                                              kCmdLineAsDaemon,    // daemon
-                                              kCmdLinePort, port,  // -P 6556
+           wtools::ConvertToUTF16(fmt::format(" {} {} {} -vv",   //
+                                              kCmdLineAsDaemon,  // daemon
                                               kCmdLineChannel,
-                                              agent_channel,  // --channel 50001
-                                              allowed_ip));   // -A ip ip ip ip
+                                              agent_channel  // --channel 50001
+                                              ));
 }
-
-std::optional<uint32_t> StartAgentController(const fs::path &service) {
+std::optional<uint32_t> StartAgentController() {
     XLOG::l.i("starting controller");
-    if (!cma::IsService()) {
+    if (!AllowUseController(GetModus())) {
         return {};
     }
 
@@ -198,16 +252,31 @@ std::optional<uint32_t> StartAgentController(const fs::path &service) {
             "Checkmk rule set \"Windows agent controller\" for this host.");
         return false;
     }
-    auto controller_name = CopyControllerToBin(service);
+    auto killed_count = wtools::KillProcessesByDir(cfg::GetUserBinDir());
+    XLOG::d.i("killed {} processes in '{}'", killed_count,
+              wtools::ToUtf8(cfg::GetUserBinDir()));
+    auto controller_name = CopyControllerToBin();
     if (controller_name.empty()) {
         XLOG::l("can't copy controller");
         return {};
     }
 
+    ac::CreateTomlConfig(ac::TomlConfigFile());
+
     wtools::AppRunner ar;
+    if (GetModus() == Modus::integration) {
+        auto env_value = tools::win::GetEnv(L"DEBUG_HOME_DIR"s);
+        if (env_value.empty()) {
+            XLOG::d.i("Set DEBUG_HOME_DIR to '{}'",
+                      wtools::ToUtf8(cfg::GetUserDir()));
+            tools::win::SetEnv(L"DEBUG_HOME_DIR"s, cfg::GetUserDir());
+        } else {
+            XLOG::d.i("Use DEBUG_HOME_DIR as '{}'", wtools::ToUtf8(env_value));
+        }
+    }
     const auto cmdline = BuildCommandLine(controller_name);
-    auto proc_id = ar.goExecAsDetached(cmdline);
-    if (proc_id != 0) {
+
+    if (auto proc_id = ar.goExecAsDetached(cmdline); proc_id != 0) {
         XLOG::l.i("Agent controller '{}' started pid [{}]",
                   wtools::ToUtf8(cmdline), proc_id);
         return proc_id;
@@ -227,8 +296,7 @@ void TrimRight(std::string &s, std::string_view chars) {
 namespace {
 std::string RunAgentControllerWithParam(std::string_view param) {
     auto work_controller = GetWorkController();
-    std::error_code ec;
-    if (!fs::exists(work_controller, ec)) {
+    if (std::error_code ec; !fs::exists(work_controller, ec)) {
         XLOG::l("There is no controller '{}' ec=[{}]", work_controller,
                 ec.value());
         return {};
@@ -248,22 +316,31 @@ std::string DetermineAgentCtlStatus() {
     return RunAgentControllerWithParam(kCmdLineStatus);
 }
 
-bool KillAgentController(const fs::path &service) {
-    if (cma::IsService()) {
-        auto ret = wtools::KillProcess(cfg::files::kAgentCtl, 1);
-        // Idiotic loop below mirrors idiotic Windows architecture.
-        // MS: Even if process killed, the executable may be for some time busy.
-        // And can't be deleted.
-        for (int i = 0; i < 20; ++i) {
-            if (DeleteControllerInBin(service)) {
-                break;
-            }
-            XLOG::d("error deleting controller");
-            std::this_thread::sleep_for(200ms);
-        }
-        return ret;
+bool KillAgentController() {
+    if (!AllowUseController(GetModus())) {
+        return false;
     }
-    return false;
+
+    if (auto killed = wtools::KillProcessesByDir(cfg::GetUserBinDir())) {
+        XLOG::t.i("killed [{}] controllers", killed);
+    }
+
+    // Idiotic loop below mirrors idiotic Windows architecture.
+    // MS: Even if process killed, the executable may be for some time busy.
+    // And can't be deleted.
+    bool success = false;
+    for (int i = 0; i < 20; ++i) {
+        if (DeleteControllerInBin()) {
+            XLOG::l.i("Controller is deleted");
+            success = true;
+            break;
+        }
+        XLOG::d("error deleting controller");
+        std::this_thread::sleep_for(200ms);
+    }
+    std::error_code ec;
+    fs::remove(ac::TomlConfigFile(), ec);
+    return success;
 }
 
 namespace {
@@ -304,10 +381,10 @@ bool CreateLegacyModeFile(const fs::path &marker) {
                                              "is strange, assuming bad file");
     }
 
-    const auto age = std::chrono::duration_cast<std::chrono::seconds>(
-        fs::_File_time_clock::now().time_since_epoch() -
-        timestamp.time_since_epoch());
-    if (age > uninstall_allowed_delay) {
+    if (const auto age = std::chrono::duration_cast<std::chrono::seconds>(
+            fs::_File_time_clock::now().time_since_epoch() -
+            timestamp.time_since_epoch());
+        age > uninstall_allowed_delay) {
         return ConditionallyCreateLegacyFile(
             marker, "is too old, assuming fresh install");
     }
@@ -318,8 +395,10 @@ bool CreateLegacyModeFile(const fs::path &marker) {
                                              "is bad, assuming fresh install");
     }
 
-    bool reinstall_new = (*data).starts_with(kCmkAgentMarkerNew);
-    if (reinstall_new) {
+    if (bool reinstall_new =
+            (*data).starts_with(kCmkAgentMarkerNewDeprecated) ||
+            (*data).starts_with(kCmkAgentMarkerLatest);
+        reinstall_new) {
         XLOG::l.i("File '{}' is from 2.1+ legacy pull mode  N/A", marker);
         return false;
     }

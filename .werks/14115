@@ -1,0 +1,12 @@
+Title: Fix moving of rules between rule packs
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1652792265
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+The option "Move rules" on th edit page of BI packs had no effect.

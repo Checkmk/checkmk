@@ -283,17 +283,21 @@ bool readConfigFile(std::istream &is, const std::string &hostname,
     }
 
     CSimpleIniA ini(false, true);  // No UTF-8, multikey support
-    auto res = ini.LoadData(is);
 
-    if (res < 0) {
+    if (auto res = ini.LoadData(is); res < 0) {
         switch (res) {
             case SI_Error::SI_FAIL:
                 XLOG::l("Generic error");
+                break;
             case SI_Error::SI_NOMEM:
                 XLOG::l("Out of memory");
+                break;
             case SI_Error::SI_FILE:
-                XLOG::l("generic_error().what()");
-            default:;
+                XLOG::l("file error");
+                break;
+            default:
+                XLOG::l("unknown error {}", res);
+                break;
         }
         return false;
     }
@@ -527,17 +531,17 @@ bool supportIPv6() {
     DWORD bufferSize = 0;
     std::vector<BYTE> protocolInfo;
     INT iErrno = NO_ERROR;
-    LPWSAPROTOCOL_INFOW lpProtocolInfo = nullptr;
+    LPWSAPROTOCOL_INFOW wsa_protocol_info = nullptr;
 
     // WSCEnumProtocols is broken (nice!). You *must* call it 1st time with
     // null buffer & bufferSize 0. Otherwise it will corrupt your heap in
     // case the necessary buffer size exceeds your allocated buffer. Do
     // never ever trust Microsoft WinAPI documentation!
-    while ((iNuminfo = WSCEnumProtocols(nullptr, lpProtocolInfo, &bufferSize,
+    while ((iNuminfo = WSCEnumProtocols(nullptr, wsa_protocol_info, &bufferSize,
                                         &iErrno)) == SOCKET_ERROR) {
         if (iErrno == WSAENOBUFS) {
             protocolInfo.resize(bufferSize, 0);
-            lpProtocolInfo =
+            wsa_protocol_info =
                 reinterpret_cast<LPWSAPROTOCOL_INFOW>(protocolInfo.data());
         } else {
             std::cerr << "WSCEnumProtocols failed with error: " << iErrno
@@ -547,8 +551,14 @@ bool supportIPv6() {
         }
     }
 
+    if (wsa_protocol_info == nullptr) {
+        return false;
+    }
+
     for (INT i = 0; i < iNuminfo; ++i) {
-        if (lpProtocolInfo[i].iAddressFamily == AF_INET6) return true;
+        if (wsa_protocol_info[i].iAddressFamily == AF_INET6) {
+            return true;
+        }
     }
 
     return false;

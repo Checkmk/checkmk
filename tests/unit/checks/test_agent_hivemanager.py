@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping, Sequence
+
 import pytest
 
 from tests.testlib import SpecialAgent
@@ -12,12 +14,23 @@ pytestmark = pytest.mark.checks
 
 
 @pytest.mark.parametrize(
-    "params,expected_args",
+    ["params", "expected_args"],
     [
-        (("user", "password"), ["address", "user", "password"]),
+        pytest.param(
+            ("user", ("password", "password")),
+            ["address", "user", "password"],
+            id="explicit_passwords",
+        ),
+        pytest.param(
+            ("user", ("store", "hivemanager")),
+            ["address", "user", ("store", "hivemanager", "%s")],
+            id="passwords_from_store",
+        ),
     ],
 )
-def test_hivemanager_argument_parsing(params, expected_args):
+def test_hivemanager_argument_parsing(
+    params: Mapping[str, Any], expected_args: Sequence[Any]
+) -> None:
     """Tests if all required arguments are present."""
     agent = SpecialAgent("agent_hivemanager")
     arguments = agent.argument_func(params, "host", "address")

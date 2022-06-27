@@ -9,7 +9,7 @@ import cmk.utils.version as cmk_version
 from cmk.gui.watolib.main_menu import main_module_registry
 
 
-def test_registered_modules():
+def test_registered_modules() -> None:
     expected_modules = [
         "folder",
         "tags",

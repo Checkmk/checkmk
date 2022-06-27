@@ -37,6 +37,7 @@ def check_netscaler_cpu(item, params, info):
                 infotext += " (warn/crit at %d/%d)" % (warn, crit)
 
             return state, infotext, perfdata
+    return None
 
 
 check_info["netscaler_cpu"] = {

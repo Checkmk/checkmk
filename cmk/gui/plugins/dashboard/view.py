@@ -6,19 +6,21 @@
 
 import cmk.gui.views as views
 import cmk.gui.visuals as visuals
+from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import display_options, html, request
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.dashboard.utils import dashlet_registry, IFrameDashlet
-from cmk.gui.plugins.views.utils import PainterOptions
-from cmk.gui.type_defs import ViewSpec
+from cmk.gui.plugins.views.utils import data_source_registry, PainterOptions
+from cmk.gui.type_defs import SingleInfos, ViewSpec
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
 from cmk.gui.valuespec import DropdownChoice
 
 
 class ABCViewDashlet(IFrameDashlet):
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 10
 
     @classmethod
@@ -26,7 +28,7 @@ class ABCViewDashlet(IFrameDashlet):
         return (40, 20)
 
     @classmethod
-    def has_context(cls):
+    def has_context(cls) -> bool:
         return True
 
     def _show_view_as_dashlet(self, view_spec: ViewSpec):
@@ -83,7 +85,7 @@ class ABCViewDashlet(IFrameDashlet):
 
     def _get_infos_from_view_spec(self, view_spec: ViewSpec):
         ds_name = view_spec["datasource"]
-        return views.data_source_registry[ds_name]().infos
+        return data_source_registry[ds_name]().infos
 
 
 @dashlet_registry.register
@@ -104,7 +106,7 @@ class ViewDashlet(ABCViewDashlet):
 
     @classmethod
     def vs_parameters(cls):
-        def _render_input(dashlet):
+        def _render_input(dashlet) -> None:
             # TODO: Don't modify the self._dashlet data structure here!
             views.transform_view_to_valuespec_value(dashlet)
             return views.render_view_config(dashlet)
@@ -127,12 +129,12 @@ class ViewDashlet(ABCViewDashlet):
         self._show_view_as_dashlet(self._dashlet_spec)
         html.javascript('cmk.utils.add_simplebar_scrollbar("dashlet_content_wrapper");')
 
-    def infos(self):
+    def infos(self) -> SingleInfos:
         # Hack for create mode of dashlet editor. The user first selects a datasource and then the
         # single contexts, the dashlet editor needs to use these information.
         if requested_file_name(request) == "edit_dashlet" and request.has_var("datasource"):
             ds_name = request.get_str_input_mandatory("datasource")
-            return views.data_source_registry[ds_name]().infos
+            return list(data_source_registry[ds_name]().infos)  # TODO: Hmmm...
 
         return self._get_infos_from_view_spec(self._dashlet_spec)
 
@@ -208,5 +210,5 @@ class LinkedViewDashlet(ABCViewDashlet):
         self._show_view_as_dashlet(self._get_view_spec())
         html.javascript('cmk.utils.add_simplebar_scrollbar("dashlet_content_wrapper");')
 
-    def infos(self):
+    def infos(self) -> SingleInfos:
         return self._get_infos_from_view_spec(self._get_view_spec())

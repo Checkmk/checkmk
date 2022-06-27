@@ -10,7 +10,7 @@ import omdlib.main
 import omdlib.skel_permissions
 
 
-def test_read_skel_permissions(monkeypatch, tmp_path):
+def test_read_skel_permissions(monkeypatch, tmp_path) -> None:
     pfile = tmp_path / "skel.permissions"
     pfile.open("w", encoding="utf-8").write("bla 755\nblub 644\n")
 

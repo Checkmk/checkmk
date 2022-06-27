@@ -11,6 +11,8 @@ from typing import NamedTuple, Optional
 
 import requests
 
+from cmk.utils.password_store import replace_passwords
+
 from cmk.special_agents.utils import vcrtrace
 
 
@@ -22,6 +24,7 @@ class Section(NamedTuple):
 
 def main(argv=None):
     if argv is None:
+        replace_passwords()
         argv = sys.argv[1:]
 
     args = parse_arguments(argv)

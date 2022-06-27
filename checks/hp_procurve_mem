@@ -5,9 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # FIXME
@@ -29,11 +27,12 @@ factory_settings["hp_procurve_mem_default_levels"] = {"levels": ("perc_used", (8
 def inventory_hp_procurve_mem(info):
     if len(info) == 1 and int(info[0][0]) >= 0:
         return [("", "hp_procurve_mem_default_levels")]
+    return []
 
 
 def check_hp_procurve_mem(item, params, info):
     if len(info) != 1:
-        return
+        return None
 
     if isinstance(params, tuple):
         params = {"levels": ("perc_used", params)}

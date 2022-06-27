@@ -50,6 +50,8 @@ def to_timestamp(values: Sequence[str]) -> float:
     1504196023.0
     >>> to_timestamp(('31/08/2017', '4:13:43', 'p.m.'))  # allow "a.m."/"p.m." instead of "AM/PM"
     1504196023.0
+    >>> to_timestamp(('31.8.2017',))                     # allow time stamp that has only a date
+    1504137600.0
     """
 
     def to_datetime(values: Sequence[str]) -> datetime:
@@ -72,6 +74,8 @@ def to_timestamp(values: Sequence[str]) -> float:
                 " ".join(values).replace("a.m.", "AM").replace("p.m.", "PM"),
                 "%d/%m/%Y %I:%M:%S %p",
             )
+        with suppress(ValueError):
+            return datetime.strptime(" ".join(values), "%d.%m.%Y")
         raise ValueError(f'Time string {" ".join(values)} does not match any known pattern')
 
     return to_datetime(values).replace(tzinfo=timezone.utc).timestamp()

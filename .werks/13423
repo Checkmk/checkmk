@@ -1,0 +1,15 @@
+Title: Fix parse error for ups_out_load
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1654686873
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+This fixes the error message:
+
+<code>
+Parsing of section ups_out_load failed
+</code>

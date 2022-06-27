@@ -29,7 +29,7 @@ class OraErrors:
     [False, True, 'Found error in agent output "Message: Hello"', <State.UNKNOWN: 3>]
     """
 
-    def __init__(self, line: List[str]):
+    def __init__(self, line: List[str]) -> None:
         # Default values
         self.ignore = False
         self.has_error = False

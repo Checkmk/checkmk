@@ -162,6 +162,7 @@ def check_rstcli_pdisks(item, _no_params, parsed):
                 disk["Serial Number"],
             )
             return rstcli_states.get(disk["State"], 2), infotext
+    return None
 
 
 check_info["rstcli.pdisks"] = {

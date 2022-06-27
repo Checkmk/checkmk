@@ -55,7 +55,7 @@ def _test_atomic_relation(relation_name, value, testcases):
         ),
     ],
 )
-def test_contains(value, testcases):
+def test_contains(value, testcases) -> None:
     _test_atomic_relation("contains", value, testcases)
 
 
@@ -85,7 +85,7 @@ def test_contains(value, testcases):
         ),
     ],
 )
-def test_startswith(value, testcases):
+def test_startswith(value, testcases) -> None:
     _test_atomic_relation("startswith", value, testcases)
 
 
@@ -115,7 +115,7 @@ def test_startswith(value, testcases):
         ),
     ],
 )
-def test_endswith(value, testcases):
+def test_endswith(value, testcases) -> None:
     _test_atomic_relation("endswith", value, testcases)
 
 
@@ -131,7 +131,7 @@ def test_endswith(value, testcases):
         ("fürwahr", True),
     ],
 )
-def test_exists(testcases):
+def test_exists(testcases) -> None:
     spec = utils.exists(".1.2.3")
     _validate_detect_spec(spec)
     assert len(spec) == 1
@@ -141,7 +141,7 @@ def test_exists(testcases):
     assert result is bool(re.match(expr, test))
 
 
-def test_all_of():
+def test_all_of() -> None:
 
     spec1 = SNMPDetectSpecification([[(".1", "1?", True)]])
     spec2 = SNMPDetectSpecification([[(".2", "2?", True)]])
@@ -161,7 +161,7 @@ def test_all_of():
     assert utils.all_of(spec1, spec2, spec3) == utils.all_of(spec12, spec3)
 
 
-def test_any_of():
+def test_any_of() -> None:
 
     spec1 = SNMPDetectSpecification([[(".1", "1?", True)]])
     spec2 = SNMPDetectSpecification([[(".2", "2?", True)]])
@@ -181,7 +181,7 @@ def test_any_of():
     assert spec123 == utils.any_of(spec12, spec3)
 
 
-def test_any_of_all_of():
+def test_any_of_all_of() -> None:
 
     spec1 = SNMPDetectSpecification([[(".1", "1?", True)]])
     spec2 = SNMPDetectSpecification([[(".2", "2?", True)]])
@@ -205,7 +205,7 @@ def test_any_of_all_of():
     )
 
 
-def test_all_of_any_of():
+def test_all_of_any_of() -> None:
 
     spec1 = SNMPDetectSpecification([[(".1", "1?", True)]])
     spec2 = SNMPDetectSpecification([[(".2", "2?", True)]])

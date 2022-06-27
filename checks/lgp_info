@@ -22,6 +22,7 @@ lgp_info_devices = {
 def inventory_lgp_info(info):
     if info and info[0] and info[0][0]:
         return [(None, None)]
+    return []
 
 
 def check_lgp_info(item, params, info):
@@ -39,6 +40,7 @@ def check_lgp_info(item, params, info):
             device_output = "\n".join(devices)
 
         return (0, "Model: %s, Firmware: %s, S/N: %s\n%s" % tuple(agent_info + [device_output]))
+    return None
 
 
 check_info["lgp_info"] = {

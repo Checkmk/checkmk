@@ -1,6 +1,6 @@
 Title: esx multipath: Skip devices without LUN ID
 Class: fix
-Compatible: incompat
+Compatible: incomp
 Component: checks
 Date: 1627562198
 Edition: cre

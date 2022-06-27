@@ -5,12 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=protected-access
-from typing import List, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import pytest
 
 import cmk.utils.debug
-from cmk.utils.structured_data import RetentionIntervals, StructuredDataNode
+from cmk.utils.structured_data import RetentionIntervals, SDFilterFunc, SDPath, StructuredDataNode
 
 from cmk.base.agent_based import inventory
 from cmk.base.agent_based.inventory._retentions import (
@@ -22,7 +22,7 @@ from cmk.base.agent_based.inventory._retentions import (
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 
 
-def test_aggregator_raises_collision():
+def test_aggregator_raises_collision() -> None:
     inventory_items: List[Union[Attributes, TableRow]] = [
         Attributes(path=["a", "b", "c"], status_attributes={"foo": "bar"}),
         TableRow(path=["a", "b", "c"], key_columns={"foo": "bar"}),
@@ -46,9 +46,9 @@ def test_aggregator_raises_collision():
 
 
 _TREE_WITH_OTHER = StructuredDataNode()
-_TREE_WITH_OTHER.setdefault_node(["other"])
+_TREE_WITH_OTHER.setdefault_node(("other",))
 _TREE_WITH_EDGE = StructuredDataNode()
-_TREE_WITH_EDGE.setdefault_node(["edge"])
+_TREE_WITH_EDGE.setdefault_node(("edge",))
 
 
 @pytest.mark.parametrize(
@@ -60,7 +60,9 @@ _TREE_WITH_EDGE.setdefault_node(["edge"])
         (_TREE_WITH_OTHER, _TREE_WITH_EDGE),
     ],
 )
-def test__tree_nodes_are_not_equal(old_tree, inv_tree):
+def test__tree_nodes_are_not_equal(
+    old_tree: StructuredDataNode, inv_tree: Optional[StructuredDataNode]
+) -> None:
     assert inventory._tree_nodes_are_equal(old_tree, inv_tree, "edge") is False
 
 
@@ -71,11 +73,11 @@ def test__tree_nodes_are_not_equal(old_tree, inv_tree):
         (_TREE_WITH_EDGE, _TREE_WITH_EDGE),
     ],
 )
-def test__tree_nodes_are_equal(old_tree, inv_tree):
+def test__tree_nodes_are_equal(old_tree: StructuredDataNode, inv_tree: StructuredDataNode) -> None:
     assert inventory._tree_nodes_are_equal(old_tree, inv_tree, "edge") is True
 
 
-def test_integrate_attributes():
+def test_integrate_attributes() -> None:
     inventory_items: List[Attributes] = [
         Attributes(
             path=["a", "b", "c"],
@@ -121,7 +123,7 @@ def test_integrate_attributes():
     }
 
 
-def test_integrate_table_row():
+def test_integrate_table_row() -> None:
     inventory_items: List[TableRow] = [
         TableRow(
             path=["a", "b", "c"],
@@ -204,10 +206,10 @@ def test_integrate_table_row():
     [
         # === Attributes ===
         # empty config
-        ([], "", [], None),
-        ([], "Attributes", [], None),
-        ([], "Attributes", ["path-to", "node"], None),
-        ([], "Attributes", ["path-to", "node"], (1, 2)),
+        ([], "", tuple(), None),
+        ([], "Attributes", tuple(), None),
+        ([], "Attributes", ("path-to", "node"), None),
+        ([], "Attributes", ("path-to", "node"), (1, 2)),
         # config, wrong path
         (
             [
@@ -217,7 +219,7 @@ def test_integrate_table_row():
                 }
             ],
             "",
-            [],
+            tuple(),
             None,
         ),
         (
@@ -228,7 +230,7 @@ def test_integrate_table_row():
                 }
             ],
             "Attributes",
-            [],
+            tuple(),
             None,
         ),
         (
@@ -239,7 +241,7 @@ def test_integrate_table_row():
                 }
             ],
             "Attributes",
-            ["path-to", "node"],
+            ("path-to", "node"),
             None,
         ),
         (
@@ -250,7 +252,7 @@ def test_integrate_table_row():
                 }
             ],
             "Attributes",
-            ["path-to", "node"],
+            ("path-to", "node"),
             (1, 2),
         ),
         # config, right path, no choices
@@ -262,7 +264,7 @@ def test_integrate_table_row():
                 }
             ],
             "",
-            [],
+            tuple(),
             None,
         ),
         (
@@ -273,7 +275,7 @@ def test_integrate_table_row():
                 }
             ],
             "Attributes",
-            [],
+            tuple(),
             None,
         ),
         (
@@ -284,7 +286,7 @@ def test_integrate_table_row():
                 }
             ],
             "Attributes",
-            ["path-to", "node"],
+            ("path-to", "node"),
             None,
         ),
         (
@@ -295,7 +297,7 @@ def test_integrate_table_row():
                 }
             ],
             "Attributes",
-            ["path-to", "node"],
+            ("path-to", "node"),
             (1, 2),
         ),
         # config, right path, all attributes
@@ -308,7 +310,7 @@ def test_integrate_table_row():
                 }
             ],
             "",
-            [],
+            tuple(),
             None,
         ),
         (
@@ -320,7 +322,7 @@ def test_integrate_table_row():
                 }
             ],
             "Attributes",
-            [],
+            tuple(),
             None,
         ),
         # config, right path, attributes choices
@@ -333,7 +335,7 @@ def test_integrate_table_row():
                 }
             ],
             "",
-            [],
+            tuple(),
             None,
         ),
         (
@@ -345,15 +347,15 @@ def test_integrate_table_row():
                 }
             ],
             "Attributes",
-            [],
+            tuple(),
             None,
         ),
         # === Table ===
         # empty config
-        ([], "", [], None),
-        ([], "Table", [], None),
-        ([], "Table", ["path-to", "node"], None),
-        ([], "Table", ["path-to", "node"], (1, 2)),
+        ([], "", tuple(), None),
+        ([], "Table", tuple(), None),
+        ([], "Table", ("path-to", "node"), None),
+        ([], "Table", ("path-to", "node"), (1, 2)),
         # config, wrong path
         (
             [
@@ -363,7 +365,7 @@ def test_integrate_table_row():
                 }
             ],
             "",
-            [],
+            tuple(),
             None,
         ),
         (
@@ -374,7 +376,7 @@ def test_integrate_table_row():
                 }
             ],
             "Table",
-            [],
+            tuple(),
             None,
         ),
         (
@@ -385,7 +387,7 @@ def test_integrate_table_row():
                 }
             ],
             "Table",
-            ["path-to", "node"],
+            ("path-to", "node"),
             None,
         ),
         (
@@ -396,7 +398,7 @@ def test_integrate_table_row():
                 }
             ],
             "Table",
-            ["path-to", "node"],
+            ("path-to", "node"),
             (1, 2),
         ),
         # config, right path, no choices
@@ -408,7 +410,7 @@ def test_integrate_table_row():
                 }
             ],
             "",
-            [],
+            tuple(),
             None,
         ),
         (
@@ -419,7 +421,7 @@ def test_integrate_table_row():
                 }
             ],
             "Table",
-            [],
+            tuple(),
             None,
         ),
         (
@@ -430,7 +432,7 @@ def test_integrate_table_row():
                 }
             ],
             "Table",
-            ["path-to", "node"],
+            ("path-to", "node"),
             None,
         ),
         (
@@ -441,7 +443,7 @@ def test_integrate_table_row():
                 }
             ],
             "Table",
-            ["path-to", "node"],
+            ("path-to", "node"),
             (1, 2),
         ),
         # config, right path, all columns
@@ -454,7 +456,7 @@ def test_integrate_table_row():
                 }
             ],
             "",
-            [],
+            tuple(),
             None,
         ),
         (
@@ -466,7 +468,7 @@ def test_integrate_table_row():
                 }
             ],
             "Table",
-            [],
+            tuple(),
             None,
         ),
         # config, right path, columns choices
@@ -479,7 +481,7 @@ def test_integrate_table_row():
                 }
             ],
             "",
-            [],
+            tuple(),
             None,
         ),
         (
@@ -491,17 +493,17 @@ def test_integrate_table_row():
                 }
             ],
             "Table",
-            [],
+            tuple(),
             None,
         ),
     ],
 )
 def test_retentions_add_cache_info_no_match(
-    raw_intervals,
-    node_name,
-    path,
-    raw_cache_info,
-):
+    raw_intervals: list[Dict],
+    node_name: str,
+    path: SDPath,
+    raw_cache_info: Optional[Tuple[int, int]],
+) -> None:
     now = 100
     retentions_tracker = RetentionsTracker(raw_intervals)
     retentions_tracker.may_add_cache_info(
@@ -514,7 +516,7 @@ def test_retentions_add_cache_info_no_match(
 
 
 @pytest.mark.parametrize(
-    "raw_intervals, node_name, path, raw_cache_info, expected_intervals, match_some_keys, match_other_keys",
+    "raw_intervals, node_name, raw_cache_info, expected_intervals, match_some_keys, match_other_keys",
     [
         # === Attributes ===
         # config, right path, all attributes
@@ -527,7 +529,6 @@ def test_retentions_add_cache_info_no_match(
                 }
             ],
             "Attributes",
-            ["path-to", "node"],
             None,
             RetentionIntervals(
                 cached_at=100,
@@ -546,7 +547,6 @@ def test_retentions_add_cache_info_no_match(
                 }
             ],
             "Attributes",
-            ["path-to", "node"],
             (1, 2),
             RetentionIntervals(
                 cached_at=1,
@@ -566,7 +566,6 @@ def test_retentions_add_cache_info_no_match(
                 }
             ],
             "Attributes",
-            ["path-to", "node"],
             None,
             RetentionIntervals(
                 cached_at=100,
@@ -585,7 +584,6 @@ def test_retentions_add_cache_info_no_match(
                 }
             ],
             "Attributes",
-            ["path-to", "node"],
             (1, 2),
             RetentionIntervals(
                 cached_at=1,
@@ -606,7 +604,6 @@ def test_retentions_add_cache_info_no_match(
                 }
             ],
             "Table",
-            ["path-to", "node"],
             None,
             RetentionIntervals(
                 cached_at=100,
@@ -625,7 +622,6 @@ def test_retentions_add_cache_info_no_match(
                 }
             ],
             "Table",
-            ["path-to", "node"],
             (1, 2),
             RetentionIntervals(
                 cached_at=1,
@@ -645,7 +641,6 @@ def test_retentions_add_cache_info_no_match(
                 }
             ],
             "Table",
-            ["path-to", "node"],
             None,
             RetentionIntervals(
                 cached_at=100,
@@ -664,7 +659,6 @@ def test_retentions_add_cache_info_no_match(
                 }
             ],
             "Table",
-            ["path-to", "node"],
             (1, 2),
             RetentionIntervals(
                 cached_at=1,
@@ -677,20 +671,19 @@ def test_retentions_add_cache_info_no_match(
     ],
 )
 def test_retentions_add_cache_info(
-    raw_intervals,
-    node_name,
-    path,
-    raw_cache_info,
-    expected_intervals,
-    match_some_keys,
-    match_other_keys,
-):
+    raw_intervals: list[Dict],
+    node_name: str,
+    raw_cache_info: Optional[Tuple[int, int]],
+    expected_intervals: RetentionIntervals,
+    match_some_keys: bool,
+    match_other_keys: bool,
+) -> None:
     now = 100
     retentions_tracker = RetentionsTracker(raw_intervals)
     retentions_tracker.may_add_cache_info(
         now=now,
         node_name=node_name,
-        path=path,
+        path=("path-to", "node"),
         raw_cache_info=raw_cache_info,
     )
 
@@ -706,7 +699,9 @@ def test_retentions_add_cache_info(
         assert retention_info.filter_func(key) is match_other_keys
 
 
-def _make_trees(previous_attributes_retentions, previous_table_retentions):
+def _make_trees(
+    previous_attributes_retentions: Dict, previous_table_retentions: Dict
+) -> Tuple[StructuredDataNode, StructuredDataNode]:
     previous_tree = StructuredDataNode.deserialize(
         {
             "Attributes": {},
@@ -769,7 +764,7 @@ def _make_trees(previous_attributes_retentions, previous_table_retentions):
 #   ---no previous node, no inv node----------------------------------------
 
 
-def test_updater_null_obj_attributes():
+def test_updater_null_obj_attributes() -> None:
     inv_tree = StructuredDataNode()
     updater = AttributesUpdater(
         RetentionInfo(
@@ -783,10 +778,10 @@ def test_updater_null_obj_attributes():
     assert not result.save_tree
     assert not result.reason
 
-    assert inv_tree.get_node(["path-to", "node"]) is None
+    assert inv_tree.get_node(("path-to", "node")) is None
 
 
-def test_updater_null_obj_attributes_outdated():
+def test_updater_null_obj_attributes_outdated() -> None:
     inv_tree = StructuredDataNode()
     updater = AttributesUpdater(
         RetentionInfo(
@@ -800,10 +795,10 @@ def test_updater_null_obj_attributes_outdated():
     assert not result.save_tree
     assert not result.reason
 
-    assert inv_tree.get_node(["path-to", "node"]) is None
+    assert inv_tree.get_node(("path-to", "node")) is None
 
 
-def test_updater_null_obj_tables():
+def test_updater_null_obj_tables() -> None:
     inv_tree = StructuredDataNode()
     updater = TableUpdater(
         RetentionInfo(
@@ -817,10 +812,10 @@ def test_updater_null_obj_tables():
     assert not result.save_tree
     assert not result.reason
 
-    assert inv_tree.get_node(["path-to", "node"]) is None
+    assert inv_tree.get_node(("path-to", "node")) is None
 
 
-def test_updater_null_obj_tables_outdated():
+def test_updater_null_obj_tables_outdated() -> None:
     inv_tree = StructuredDataNode()
     updater = TableUpdater(
         RetentionInfo(
@@ -834,36 +829,40 @@ def test_updater_null_obj_tables_outdated():
     assert not result.save_tree
     assert not result.reason
 
-    assert inv_tree.get_node(["path-to", "node"]) is None
+    assert inv_tree.get_node(("path-to", "node")) is None
 
 
 #   ---no previous node, inv node-------------------------------------------
 
 
 @pytest.mark.parametrize(
-    "filter_func, path, expected_retentions",
+    "filter_func, expected_retentions",
     [
-        (lambda key: key in ["unknown", "keyz"], ["path-to", "node"], {}),
+        (
+            lambda key: key in ["unknown", "keyz"],
+            {},
+        ),
         (
             lambda key: key in ["new", "keyz"],
-            ["path-to", "node"],
             {"new": RetentionIntervals(1, 2, 3)},
         ),
     ],
 )
 def test_updater_handle_inv_attributes(
-    filter_func,
-    path,
-    expected_retentions,
-):
+    filter_func: SDFilterFunc,
+    expected_retentions: Dict,
+) -> None:
     _previous_tree, inv_tree = _make_trees({}, {})
+
+    fst_inv_node = inv_tree.get_node(("path-to", "node"))
+    assert isinstance(fst_inv_node, StructuredDataNode)
 
     updater = AttributesUpdater(
         RetentionInfo(
             filter_func,
             RetentionIntervals(1, 2, 3),
         ),
-        inv_tree.get_node(path),
+        fst_inv_node,
         StructuredDataNode(),
     )
     result = updater.filter_and_merge(-1)
@@ -874,35 +873,39 @@ def test_updater_handle_inv_attributes(
         assert not result.save_tree
         assert not result.reason
 
-    inv_node = inv_tree.get_node(["path-to", "node"])
+    inv_node = inv_tree.get_node(("path-to", "node"))
     assert inv_node is not None
     assert inv_node.attributes.retentions == expected_retentions
 
 
 @pytest.mark.parametrize(
-    "filter_func, path, expected_retentions",
+    "filter_func, expected_retentions",
     [
-        (lambda key: key in ["unknown", "keyz"], ["path-to", "node"], {}),
+        (
+            lambda key: key in ["unknown", "keyz"],
+            {},
+        ),
         (
             lambda key: key in ["new", "keyz"],
-            ["path-to", "node"],
             {"new": RetentionIntervals(1, 2, 3)},
         ),
     ],
 )
 def test_updater_handle_inv_attributes_outdated(
-    filter_func,
-    path,
-    expected_retentions,
-):
+    filter_func: SDFilterFunc,
+    expected_retentions: Dict,
+) -> None:
     _previous_tree, inv_tree = _make_trees({}, {})
+
+    fst_inv_node = inv_tree.get_node(("path-to", "node"))
+    assert isinstance(fst_inv_node, StructuredDataNode)
 
     updater = AttributesUpdater(
         RetentionInfo(
             filter_func,
             RetentionIntervals(1, 2, 3),
         ),
-        inv_tree.get_node(path),
+        fst_inv_node,
         StructuredDataNode(),
     )
     result = updater.filter_and_merge(1000)
@@ -913,18 +916,20 @@ def test_updater_handle_inv_attributes_outdated(
         assert not result.save_tree
         assert not result.reason
 
-    inv_node = inv_tree.get_node(["path-to", "node"])
+    inv_node = inv_tree.get_node(("path-to", "node"))
     assert inv_node is not None
     assert inv_node.attributes.retentions == expected_retentions
 
 
 @pytest.mark.parametrize(
-    "filter_func, path, expected_retentions",
+    "filter_func, expected_retentions",
     [
-        (lambda key: key in ["unknown", "keyz"], ["path-to", "node"], {}),
+        (
+            lambda key: key in ["unknown", "keyz"],
+            {},
+        ),
         (
             lambda key: key in ["new", "keyz"],
-            ["path-to", "node"],
             {
                 ("Ident 1",): {"new": RetentionIntervals(1, 2, 3)},
                 ("Ident 2",): {"new": RetentionIntervals(1, 2, 3)},
@@ -933,18 +938,20 @@ def test_updater_handle_inv_attributes_outdated(
     ],
 )
 def test_updater_handle_inv_tables(
-    filter_func,
-    path,
-    expected_retentions,
-):
+    filter_func: SDFilterFunc,
+    expected_retentions: Dict,
+) -> None:
     _previous_tree, inv_tree = _make_trees({}, {})
+
+    fst_inv_node = inv_tree.get_node(("path-to", "node"))
+    assert isinstance(fst_inv_node, StructuredDataNode)
 
     updater = TableUpdater(
         RetentionInfo(
             filter_func,
             RetentionIntervals(1, 2, 3),
         ),
-        inv_tree.get_node(path),
+        fst_inv_node,
         StructuredDataNode(),
     )
     result = updater.filter_and_merge(-1)
@@ -955,18 +962,20 @@ def test_updater_handle_inv_tables(
         assert not result.save_tree
         assert not result.reason
 
-    inv_node = inv_tree.get_node(["path-to", "node"])
+    inv_node = inv_tree.get_node(("path-to", "node"))
     assert inv_node is not None
     assert inv_node.table.retentions == expected_retentions
 
 
 @pytest.mark.parametrize(
-    "filter_func, path, expected_retentions",
+    "filter_func, expected_retentions",
     [
-        (lambda key: key in ["unknown", "keyz"], ["path-to", "node"], {}),
+        (
+            lambda key: key in ["unknown", "keyz"],
+            {},
+        ),
         (
             lambda key: key in ["new", "keyz"],
-            ["path-to", "node"],
             {
                 ("Ident 1",): {"new": RetentionIntervals(1, 2, 3)},
                 ("Ident 2",): {"new": RetentionIntervals(1, 2, 3)},
@@ -975,18 +984,20 @@ def test_updater_handle_inv_tables(
     ],
 )
 def test_updater_handle_inv_tables_outdated(
-    filter_func,
-    path,
-    expected_retentions,
-):
+    filter_func: SDFilterFunc,
+    expected_retentions: Dict,
+) -> None:
     _previous_tree, inv_tree = _make_trees({}, {})
+
+    fst_inv_node = inv_tree.get_node(("path-to", "node"))
+    assert isinstance(fst_inv_node, StructuredDataNode)
 
     updater = TableUpdater(
         RetentionInfo(
             filter_func,
             RetentionIntervals(1, 2, 3),
         ),
-        inv_tree.get_node(path),
+        fst_inv_node,
         StructuredDataNode(),
     )
     result = updater.filter_and_merge(1000)
@@ -997,7 +1008,7 @@ def test_updater_handle_inv_tables_outdated(
         assert not result.save_tree
         assert not result.reason
 
-    inv_node = inv_tree.get_node(["path-to", "node"])
+    inv_node = inv_tree.get_node(("path-to", "node"))
     assert inv_node is not None
     assert inv_node.table.retentions == expected_retentions
 
@@ -1013,19 +1024,22 @@ def test_updater_handle_inv_tables_outdated(
     ],
 )
 def test_updater_merge_previous_attributes(
-    filter_func,
-    expected_retentions,
+    filter_func: SDFilterFunc,
+    expected_retentions: Dict,
 ):
     previous_tree, _inv_tree = _make_trees({"old": (1, 2, 3)}, {})
     inv_tree = StructuredDataNode()
+
+    previous_node = previous_tree.get_node(("path-to", "node"))
+    assert isinstance(previous_node, StructuredDataNode)
 
     updater = AttributesUpdater(
         RetentionInfo(
             filter_func,
             RetentionIntervals(-1, -2, -3),
         ),
-        inv_tree.setdefault_node(["path-to", "node"]),
-        previous_tree.get_node(["path-to", "node"]),
+        inv_tree.setdefault_node(("path-to", "node")),
+        previous_node,
     )
     result = updater.filter_and_merge(-1)
     if expected_retentions:
@@ -1035,7 +1049,7 @@ def test_updater_merge_previous_attributes(
         assert not result.save_tree
         assert not result.reason
 
-    inv_node = inv_tree.get_node(["path-to", "node"])
+    inv_node = inv_tree.get_node(("path-to", "node"))
     assert inv_node is not None
     assert inv_node.attributes.retentions == expected_retentions
 
@@ -1050,23 +1064,26 @@ def test_updater_merge_previous_attributes(
         lambda key: key in ["old", "keyz"],
     ],
 )
-def test_updater_merge_previous_attributes_outdated(filter_func):
+def test_updater_merge_previous_attributes_outdated(filter_func: SDFilterFunc) -> None:
     previous_tree, _inv_tree = _make_trees({"old": (1, 2, 3)}, {})
     inv_tree = StructuredDataNode()
+
+    previous_node = previous_tree.get_node(("path-to", "node"))
+    assert isinstance(previous_node, StructuredDataNode)
 
     updater = AttributesUpdater(
         RetentionInfo(
             filter_func,
             RetentionIntervals(-1, -2, -3),
         ),
-        inv_tree.setdefault_node(["path-to", "node"]),
-        previous_tree.get_node(["path-to", "node"]),
+        inv_tree.setdefault_node(("path-to", "node")),
+        previous_node,
     )
     result = updater.filter_and_merge(1000)
     assert not result.save_tree
     assert not result.reason
 
-    inv_node = inv_tree.get_node(["path-to", "node"])
+    inv_node = inv_tree.get_node(("path-to", "node"))
     assert inv_node is not None
     assert inv_node.attributes.retentions == {}
 
@@ -1085,9 +1102,9 @@ def test_updater_merge_previous_attributes_outdated(filter_func):
     ],
 )
 def test_updater_merge_previous_tables(
-    filter_func,
-    expected_retentions,
-):
+    filter_func: SDFilterFunc,
+    expected_retentions: Dict,
+) -> None:
     previous_tree, _inv_tree = _make_trees(
         {},
         {
@@ -1097,13 +1114,16 @@ def test_updater_merge_previous_tables(
     )
     inv_tree = StructuredDataNode()
 
+    previous_node = previous_tree.get_node(("path-to", "node"))
+    assert isinstance(previous_node, StructuredDataNode)
+
     updater = TableUpdater(
         RetentionInfo(
             filter_func,
             RetentionIntervals(-1, -2, -3),
         ),
-        inv_tree.setdefault_node(["path-to", "node"]),
-        previous_tree.get_node(["path-to", "node"]),
+        inv_tree.setdefault_node(("path-to", "node")),
+        previous_node,
     )
     result = updater.filter_and_merge(-1)
     if expected_retentions:
@@ -1113,7 +1133,7 @@ def test_updater_merge_previous_tables(
         assert not result.save_tree
         assert not result.reason
 
-    inv_node = inv_tree.get_node(["path-to", "node"])
+    inv_node = inv_tree.get_node(("path-to", "node"))
     assert inv_node is not None
     assert inv_node.table.retentions == expected_retentions
 
@@ -1129,7 +1149,7 @@ def test_updater_merge_previous_tables(
         lambda key: key in ["old", "keyz"],
     ],
 )
-def test_updater_merge_previous_tables_outdated(filter_func):
+def test_updater_merge_previous_tables_outdated(filter_func: SDFilterFunc) -> None:
     previous_tree, _inv_tree = _make_trees(
         {},
         {
@@ -1139,19 +1159,22 @@ def test_updater_merge_previous_tables_outdated(filter_func):
     )
     inv_tree = StructuredDataNode()
 
+    previous_node = previous_tree.get_node(("path-to", "node"))
+    assert isinstance(previous_node, StructuredDataNode)
+
     updater = TableUpdater(
         RetentionInfo(
             filter_func,
             RetentionIntervals(-1, -2, -3),
         ),
-        inv_tree.setdefault_node(["path-to", "node"]),
-        previous_tree.get_node(["path-to", "node"]),
+        inv_tree.setdefault_node(("path-to", "node")),
+        previous_node,
     )
     result = updater.filter_and_merge(1000)
     assert not result.save_tree
     assert not result.reason
 
-    inv_node = inv_tree.get_node(["path-to", "node"])
+    inv_node = inv_tree.get_node(("path-to", "node"))
     assert inv_node is not None
     assert inv_node.table.retentions == {}
 
@@ -1180,9 +1203,9 @@ def test_updater_merge_previous_tables_outdated(filter_func):
     ],
 )
 def test_updater_merge_attributes(
-    filter_func,
-    expected_retentions,
-):
+    filter_func: SDFilterFunc,
+    expected_retentions: Dict,
+) -> None:
     previous_tree, inv_tree = _make_trees(
         {
             "old": (1, 2, 3),
@@ -1191,10 +1214,10 @@ def test_updater_merge_attributes(
         {},
     )
 
-    previous_node = previous_tree.get_node(["path-to", "node"])
+    previous_node = previous_tree.get_node(("path-to", "node"))
     assert previous_node is not None
 
-    inv_node = inv_tree.get_node(["path-to", "node"])
+    inv_node = inv_tree.get_node(("path-to", "node"))
     assert inv_node is not None
 
     updater = AttributesUpdater(
@@ -1240,9 +1263,9 @@ def test_updater_merge_attributes(
     ],
 )
 def test_updater_merge_attributes_outdated(
-    filter_func,
-    expected_retentions,
-):
+    filter_func: SDFilterFunc,
+    expected_retentions: Dict,
+) -> None:
     previous_tree, inv_tree = _make_trees(
         {
             "old": (1, 2, 3),
@@ -1251,10 +1274,10 @@ def test_updater_merge_attributes_outdated(
         {},
     )
 
-    previous_node = previous_tree.get_node(["path-to", "node"])
+    previous_node = previous_tree.get_node(("path-to", "node"))
     assert previous_node is not None
 
-    inv_node = inv_tree.get_node(["path-to", "node"])
+    inv_node = inv_tree.get_node(("path-to", "node"))
     assert inv_node is not None
 
     updater = AttributesUpdater(
@@ -1279,7 +1302,10 @@ def test_updater_merge_attributes_outdated(
 @pytest.mark.parametrize(
     "filter_func, expected_retentions",
     [
-        (lambda key: key in ["unknown", "keyz"], {}),
+        (
+            lambda key: key in ["unknown", "keyz"],
+            {},
+        ),
         (
             lambda key: key
             in [
@@ -1303,7 +1329,10 @@ def test_updater_merge_attributes_outdated(
         ),
     ],
 )
-def test_updater_merge_tables(filter_func, expected_retentions):
+def test_updater_merge_tables(
+    filter_func: SDFilterFunc,
+    expected_retentions: Dict,
+) -> None:
     previous_tree, inv_tree = _make_trees(
         {},
         {
@@ -1318,10 +1347,10 @@ def test_updater_merge_tables(filter_func, expected_retentions):
         },
     )
 
-    previous_node = previous_tree.get_node(["path-to", "node"])
+    previous_node = previous_tree.get_node(("path-to", "node"))
     assert previous_node is not None
 
-    inv_node = inv_tree.get_node(["path-to", "node"])
+    inv_node = inv_tree.get_node(("path-to", "node"))
     assert inv_node is not None
 
     updater = TableUpdater(
@@ -1345,13 +1374,16 @@ def test_updater_merge_tables(filter_func, expected_retentions):
     if expected_retentions:
         for row in inv_node.table.rows:
             assert "old" in row
-            assert row.get("keys").startswith("New Keys")
+            assert row["keys"].startswith("New Keys")
 
 
 @pytest.mark.parametrize(
     "filter_func, expected_retentions",
     [
-        (lambda key: key in ["unknown", "keyz"], {}),
+        (
+            lambda key: key in ["unknown", "keyz"],
+            {},
+        ),
         (
             lambda key: key
             in [
@@ -1374,9 +1406,9 @@ def test_updater_merge_tables(filter_func, expected_retentions):
     ],
 )
 def test_updater_merge_tables_outdated(
-    filter_func,
-    expected_retentions,
-):
+    filter_func: SDFilterFunc,
+    expected_retentions: Dict,
+) -> None:
     previous_tree, inv_tree = _make_trees(
         {},
         {
@@ -1385,10 +1417,10 @@ def test_updater_merge_tables_outdated(
         },
     )
 
-    previous_node = previous_tree.get_node(["path-to", "node"])
+    previous_node = previous_tree.get_node(("path-to", "node"))
     assert previous_node is not None
 
-    inv_node = inv_tree.get_node(["path-to", "node"])
+    inv_node = inv_tree.get_node(("path-to", "node"))
     assert inv_node is not None
 
     updater = TableUpdater(

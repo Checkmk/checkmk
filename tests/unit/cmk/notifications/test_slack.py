@@ -78,6 +78,6 @@ from cmk.notification_plugins.slack import slack_msg
         ),
     ],
 )
-def test_slack_message(context, result):
+def test_slack_message(context, result) -> None:
     msg = slack_msg(context)
     assert msg == result

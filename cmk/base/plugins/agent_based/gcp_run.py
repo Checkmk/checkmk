@@ -17,18 +17,17 @@ def parse_gcp_run(string_table: StringTable) -> gcp.Section:
 
 register.agent_section(name="gcp_service_cloud_run", parse_function=parse_gcp_run)
 
+service_namer = gcp.service_name_factory("Cloud Run")
+ASSET_TYPE = "run.googleapis.com/Service"
+
 
 def discover(
     section_gcp_service_cloud_run: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> DiscoveryResult:
-    if section_gcp_assets is None:
+    if section_gcp_assets is None or not section_gcp_assets.config.is_enabled("cloud_run"):
         return
-    asset_type = "run.googleapis.com/Service"
-    services = [a for a in section_gcp_assets if a.asset.asset_type == asset_type]
-    for service in services:
-        data = service.asset.resource.data
-        item = data["metadata"]["name"]
+    for item, service in section_gcp_assets[ASSET_TYPE].items():
         labels = [
             ServiceLabel("gcp/location", service.asset.resource.location),
             ServiceLabel("gcp/run/name", item),
@@ -43,8 +42,6 @@ def check_gcp_run_network(
     section_gcp_service_cloud_run: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_cloud_run is None:
-        return
     metrics = {
         "net_data_recv": gcp.MetricSpec(
             "run.googleapis.com/container/network/received_bytes_count",
@@ -55,14 +52,15 @@ def check_gcp_run_network(
             "run.googleapis.com/container/network/sent_bytes_count", "In", render.networkbandwidth
         ),
     }
-    timeseries = section_gcp_service_cloud_run.get(item, gcp.SectionItem(rows=[])).rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_cloud_run, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(
     name="gcp_run_network",
     sections=["gcp_service_cloud_run", "gcp_assets"],
-    service_name="GCP Cloud Run network %s",
+    service_name=service_namer("network"),
     check_ruleset_name="gcp_run_network",
     discovery_function=discover,
     check_function=check_gcp_run_network,
@@ -76,22 +74,21 @@ def check_gcp_run_memory(
     section_gcp_service_cloud_run: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_cloud_run is None:
-        return
     metrics = {
         # percent render expects numbers range 0 to 100 and not fractions.
         "memory_util": gcp.MetricSpec(
             "run.googleapis.com/container/memory/utilizations", "Memory", render.percent, scale=1e2
         ),
     }
-    timeseries = section_gcp_service_cloud_run.get(item, gcp.SectionItem(rows=[])).rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_cloud_run, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(
     name="gcp_run_memory",
     sections=["gcp_service_cloud_run", "gcp_assets"],
-    service_name="GCP Cloud Run memory %s",
+    service_name=service_namer("memory"),
     check_ruleset_name="gcp_run_memory",
     discovery_function=discover,
     check_function=check_gcp_run_memory,
@@ -105,25 +102,24 @@ def check_gcp_run_cpu(
     section_gcp_service_cloud_run: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_cloud_run is None:
-        return
     metrics = {
         "util": gcp.MetricSpec(
             "run.googleapis.com/container/cpu/utilizations", "CPU", render.percent, scale=1e2
         ),
     }
-    timeseries = section_gcp_service_cloud_run.get(item, gcp.SectionItem(rows=[])).rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_cloud_run, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(
     name="gcp_run_cpu",
     sections=["gcp_service_cloud_run", "gcp_assets"],
-    service_name="GCP Cloud Run cpu %s",
+    service_name=service_namer("cpu"),
     check_ruleset_name="gcp_run_cpu",
     discovery_function=discover,
     check_function=check_gcp_run_cpu,
-    check_default_parameters={"util": None},
+    check_default_parameters={"util": (80.0, 90.0)},
 )
 
 
@@ -133,42 +129,73 @@ def check_gcp_run_requests(
     section_gcp_service_cloud_run: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_cloud_run is None:
-        return
     metrics = {
         "faas_total_instance_count": gcp.MetricSpec(
-            "run.googleapis.com/container/instance_count", "Instances", str, dtype="int"
+            "run.googleapis.com/container/instance_count",
+            "Instances",
+            str,
         ),
         "faas_execution_count": gcp.MetricSpec(
-            "run.googleapis.com/container/request_count", "Requests", str, dtype="int"
+            "run.googleapis.com/request_count",
+            "Requests",
+            str,
+        ),
+        "faas_execution_count_2xx": gcp.MetricSpec(
+            "run.googleapis.com/request_count",
+            "Requests 2xx (sucess)",
+            str,
+            filter_by=gcp.Filter("response_code_class", "2xx"),
+        ),
+        "faas_execution_count_3xx": gcp.MetricSpec(
+            "run.googleapis.com/request_count",
+            "Requests 3xx (redirection)",
+            str,
+            filter_by=gcp.Filter("response_code_class", "3xx"),
+        ),
+        "faas_execution_count_4xx": gcp.MetricSpec(
+            "run.googleapis.com/request_count",
+            "Requests 4xx (client error)",
+            str,
+            filter_by=gcp.Filter("response_code_class", "4xx"),
+        ),
+        "faas_execution_count_5xx": gcp.MetricSpec(
+            "run.googleapis.com/request_count",
+            "Requests 5xx (server error)",
+            str,
+            filter_by=gcp.Filter("response_code_class", "5xx"),
         ),
         "gcp_billable_time": gcp.MetricSpec(
             "run.googleapis.com/container/billable_instance_time",
-            "Billable Time",
+            "Billable time",
             lambda x: f"{x:.2f} s/s",
         ),
         # timespan renderer expects seconds not milliseconds
         "faas_execution_times": gcp.MetricSpec(
-            "run.googleapis.com/container/request_latencies",
+            "run.googleapis.com/request_latencies",
             "Latencies",
             render.timespan,
-            scale=1e3,
+            scale=1e-3,
         ),
     }
-    timeseries = section_gcp_service_cloud_run.get(item, gcp.SectionItem(rows=[])).rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_cloud_run, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(
     name="gcp_run_requests",
     sections=["gcp_service_cloud_run", "gcp_assets"],
-    service_name="GCP Cloud Run requests %s",
+    service_name=service_namer("requests"),
     check_ruleset_name="gcp_run_requests",
     discovery_function=discover,
     check_function=check_gcp_run_requests,
     check_default_parameters={
         "faas_total_instance_count": None,
         "faas_execution_count": None,
+        "faas_execution_count_2xx": None,
+        "faas_execution_count_3xx": None,
+        "faas_execution_count_4xx": None,
+        "faas_execution_count_5xx": None,
         "gcp_billable_time": None,
         "faas_execution_times": None,
     },

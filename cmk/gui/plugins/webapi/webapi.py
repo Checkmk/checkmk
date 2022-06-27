@@ -23,12 +23,16 @@ from cmk.utils.type_defs import DiscoveryResult, TagConfigSpec, TagID
 
 import cmk.gui.bi as bi
 import cmk.gui.userdb as userdb
-import cmk.gui.watolib as watolib
+import cmk.gui.watolib.changes as _changes
+import cmk.gui.watolib.groups as groups
 import cmk.gui.watolib.users
-from cmk.gui.config import prepare_raw_site_config
+from cmk.gui.config import active_config, prepare_raw_site_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import active_config
-from cmk.gui.groups import load_host_group_information, load_service_group_information
+from cmk.gui.groups import (
+    load_contact_group_information,
+    load_host_group_information,
+    load_service_group_information,
+)
 from cmk.gui.i18n import _
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.plugins.webapi.utils import (
@@ -38,12 +42,22 @@ from cmk.gui.plugins.webapi.utils import (
     check_hostname,
     compute_config_hash,
     validate_config_hash,
-    validate_host_attributes,
 )
-from cmk.gui.watolib.check_mk_automations import discovery, try_discovery
-from cmk.gui.watolib.groups import load_contact_group_information
+from cmk.gui.watolib.activate_changes import activate_changes_start, activate_changes_wait
+from cmk.gui.watolib.automations import do_site_login
+from cmk.gui.watolib.bakery import try_bake_agents_for_hosts
+from cmk.gui.watolib.check_mk_automations import delete_hosts, discovery, try_discovery
+from cmk.gui.watolib.host_attributes import validate_host_attributes as _validate_host_attributes
+from cmk.gui.watolib.hosts_and_folders import check_wato_foldername, CREFolder, Folder, Host
+from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Ruleset, SingleRulesetRecursively
+from cmk.gui.watolib.sites import SiteManagementFactory
 from cmk.gui.watolib.tags import TagConfigFile
-from cmk.gui.watolib.utils import try_bake_agents_for_hosts
+
+
+def validate_host_attributes(attributes, *, new=False) -> None:
+    # inventory_failed and site are not "real" host_attributes attributes (TODO: Clean this up!)
+    _validate_host_attributes(attributes, extra_attrs=("inventory_failed", "site"), new=new)
+
 
 # .
 #   .--Folders-------------------------------------------------------------.
@@ -95,10 +109,10 @@ class APICallFolders(APICallCollection):
 
     def _get(self, request):
         folder_path = request["folder"]
-        if not watolib.Folder.folder_exists(folder_path):
+        if not Folder.folder_exists(folder_path):
             raise MKUserError(None, _("Folder %s does not exist") % folder_path)
 
-        folder = watolib.Folder.folder(folder_path)
+        folder = Folder.folder(folder_path)
         if bool(int(request.get("effective_attributes", "0"))):
             attributes = folder.effective_attributes()
         else:
@@ -110,7 +124,7 @@ class APICallFolders(APICallCollection):
 
     def _add(self, request):
         folder_path = request["folder"]
-        watolib.check_wato_foldername(None, os.path.basename(folder_path), just_name=True)
+        check_wato_foldername(None, os.path.basename(folder_path), just_name=True)
 
         folder_attributes = request.get("attributes", {})
         if "alias" in folder_attributes:
@@ -123,18 +137,18 @@ class APICallFolders(APICallCollection):
 
         # Check existance of parent folder, create it when configured
         create_parent_folders = bool(int(request.get("create_parent_folders", "1")))
-        if create_parent_folders or watolib.Folder.folder_exists(os.path.dirname(folder_path)):
-            watolib.Folder.root_folder().create_missing_folders(folder_path)
-            watolib.Folder.folder(folder_path).edit(folder_alias, folder_attributes)
+        if create_parent_folders or Folder.folder_exists(os.path.dirname(folder_path)):
+            Folder.root_folder().create_missing_folders(folder_path)
+            Folder.folder(folder_path).edit(folder_alias, folder_attributes)
         else:
             raise MKUserError(None, _("Unable to create parent folder(s)."))
 
     def _edit(self, request):
         folder_path = request["folder"]
-        if not watolib.Folder.folder_exists(folder_path):
+        if not Folder.folder_exists(folder_path):
             raise MKUserError(None, _("Folder %s does not exist") % folder_path)
 
-        folder = watolib.Folder.folder(folder_path)
+        folder = Folder.folder(folder_path)
         if "configuration_hash" in request:
             validate_config_hash(request["configuration_hash"], folder.attributes())
 
@@ -151,10 +165,10 @@ class APICallFolders(APICallCollection):
 
     def _delete(self, request):
         folder_path = request["folder"]
-        if not watolib.Folder.folder_exists(folder_path):
+        if not Folder.folder_exists(folder_path):
             raise MKUserError(None, _("Folder %s does not exist") % folder_path)
 
-        folder = watolib.Folder.folder(folder_path)
+        folder = Folder.folder(folder_path)
         if "configuration_hash" in request:
             validate_config_hash(request["configuration_hash"], folder.attributes())
 
@@ -167,7 +181,7 @@ class APICallFolders(APICallCollection):
         folders = {}
         effective_attributes = bool(int(request.get("effective_attributes", "0")))
 
-        for folder_path, folder in watolib.Folder.all_folders().items():
+        for folder_path, folder in Folder.all_folders().items():
             if effective_attributes:
                 folders[folder_path] = folder.effective_attributes()
             else:
@@ -255,7 +269,7 @@ class APICallHosts(APICallCollection):
         if folder_path not in ("", "/"):
             folders = folder_path.split("/")
             for foldername in folders:
-                watolib.check_wato_foldername(None, foldername, just_name=True)
+                check_wato_foldername(None, foldername, just_name=True)
         else:
             folder_path = ""
             folders = [""]
@@ -268,15 +282,15 @@ class APICallHosts(APICallCollection):
         validate_host_attributes(attributes, new=True)
 
         # Create folder(s)
-        if not watolib.Folder.folder_exists(folder_path):
+        if not Folder.folder_exists(folder_path):
             if not create_parent_folders:
                 raise MKUserError(None, _("Unable to create parent folder(s)."))
-            watolib.Folder.create_missing_folders(folder_path)
+            Folder.create_missing_folders(folder_path)
 
         # Add host
         if cluster_nodes:
             cluster_nodes = list(map(str, cluster_nodes))
-        watolib.Folder.folder(folder_path).create_hosts(
+        Folder.folder(folder_path).create_hosts(
             [(hostname, attributes, cluster_nodes)], bake_hosts=bake_hosts
         )
 
@@ -312,7 +326,7 @@ class APICallHosts(APICallCollection):
         cluster_nodes = request.get("nodes")
 
         check_hostname(hostname, should_exist=True)
-        host = watolib.Host.load_host(hostname)
+        host = Host.load_host(hostname)
 
         # Deprecated, but still supported
         # Nodes are now specified in an extra key
@@ -344,7 +358,7 @@ class APICallHosts(APICallCollection):
 
         check_hostname(hostname, should_exist=True)
 
-        host = watolib.Host.load_host(hostname)
+        host = Host.load_host(hostname)
         host.need_permission("read")
         if bool(int(request.get("effective_attributes", "0"))):
             attributes = host.effective_attributes()
@@ -360,7 +374,7 @@ class APICallHosts(APICallCollection):
         effective_attributes = bool(int(request.get("effective_attributes", "0")))
 
         response = {}
-        all_hosts = watolib.Folder.root_folder().all_hosts_recursively()
+        all_hosts = Folder.root_folder().all_hosts_recursively()
 
         for hostname, host in all_hosts.items():
             host.need_permission("read")
@@ -382,11 +396,11 @@ class APICallHosts(APICallCollection):
         hostname = request["hostname"]
         check_hostname(hostname, should_exist=True)
 
-        host = watolib.Host.load_host(hostname)
-        host.folder().delete_hosts([host.name()])
+        host = Host.load_host(hostname)
+        host.folder().delete_hosts([host.name()], automation=delete_hosts)
 
     def _delete_hosts(self, request):
-        all_hosts = watolib.Host.all()
+        all_hosts = Host.all()
         delete_hostnames = set(request["hostnames"])
         all_hostnames = set(all_hosts.keys())
 
@@ -394,12 +408,12 @@ class APICallHosts(APICallCollection):
         if unknown_hosts:
             raise MKUserError(None, _("No such host(s): %s") % ", ".join(unknown_hosts))
 
-        grouped_by_folders: Dict[watolib.CREFolder, List[Any]] = {}
+        grouped_by_folders: Dict[CREFolder, List[Any]] = {}
         for hostname in delete_hostnames:
             grouped_by_folders.setdefault(all_hosts[hostname].folder(), []).append(hostname)
 
         for folder, hostnames in grouped_by_folders.items():
-            folder.delete_hosts(hostnames)
+            folder.delete_hosts(hostnames, automation=delete_hosts)
 
 
 # .
@@ -497,11 +511,11 @@ class APICallGroups(APICallCollection):
 
     def _delete_group(self, group_type, request):
         groupname = request.get("groupname")
-        watolib.delete_group(groupname, group_type)
+        groups.delete_group(groupname, group_type)
 
     def _add_group(self, group_type, request):
         self._check_customer(request)
-        watolib.add_group(
+        groups.add_group(
             request.get("groupname"),
             group_type,
             self._get_group_extra_info(group_type, request),
@@ -509,7 +523,7 @@ class APICallGroups(APICallCollection):
 
     def _edit_group(self, group_type, request):
         self._check_customer(request)
-        watolib.edit_group(
+        groups.edit_group(
             request.get("groupname"),
             group_type,
             self._get_group_extra_info(group_type, request),
@@ -636,10 +650,8 @@ class APICallUsers(APICallCollection):
             user_attrs = copy.deepcopy(user)
             user_attrs.update(set_attributes)
             for entry in unset_attributes:
-                if entry not in user_attrs:
-                    continue
-                # TODO: Dynamically fiddling around with a TypedDict is a bit questionable
-                del user_attrs[entry]  # type: ignore[misc]
+                if entry in user_attrs:
+                    del user_attrs[entry]
 
             new_password = set_attributes.get("password")
             if new_password:
@@ -688,7 +700,7 @@ class APICallRules(APICallCollection):
         }
 
     def _get_ruleset_configuration(self, ruleset_name):
-        collection = watolib.SingleRulesetRecursively(ruleset_name)
+        collection = SingleRulesetRecursively(ruleset_name)
         collection.load()
         ruleset = collection.get(ruleset_name)
 
@@ -730,15 +742,15 @@ class APICallRules(APICallCollection):
 
         for check_folders in [folders_set_ruleset, folders_obsolete_ruleset]:
             for folder_path in check_folders:
-                if not watolib.Folder.folder_exists(folder_path):
+                if not Folder.folder_exists(folder_path):
                     raise MKUserError(None, _("Folder %s does not exist") % folder_path)
-                rule_folder = watolib.Folder.folder(folder_path)
+                rule_folder = Folder.folder(folder_path)
                 rule_folder.need_permission("write")
 
         tag_to_group_map = ruleset_matcher.get_tag_to_group_map(active_config.tags)
 
         # Verify all rules
-        rule_vs = watolib.Ruleset(ruleset_name, tag_to_group_map).rulespec.valuespec
+        rule_vs = Ruleset(ruleset_name, tag_to_group_map).rulespec.valuespec
 
         for folder_path, rules in new_ruleset.items():
             for rule in rules:
@@ -752,15 +764,15 @@ class APICallRules(APICallCollection):
 
         # Add new rulesets
         for folder_path, rules in new_ruleset.items():
-            folder = watolib.Folder.folder(folder_path)
+            folder = Folder.folder(folder_path)
 
-            new_ruleset = watolib.Ruleset(ruleset_name, tag_to_group_map)
+            new_ruleset = Ruleset(ruleset_name, tag_to_group_map)
             new_ruleset.from_config(folder, rules)
 
-            folder_rulesets = watolib.FolderRulesets(folder)
+            folder_rulesets = FolderRulesets(folder)
             folder_rulesets.load()
             # TODO: This add_change() call should be made by the data classes
-            watolib.add_change(
+            _changes.add_change(
                 "edit-ruleset",
                 _("Set ruleset '%s' for '%s' with %d rules")
                 % (
@@ -776,16 +788,16 @@ class APICallRules(APICallCollection):
 
         # Remove obsolete rulesets
         for folder_path in folders_obsolete_ruleset:
-            folder = watolib.Folder.folder(folder_path)
+            folder = Folder.folder(folder_path)
 
-            folder_rulesets = watolib.FolderRulesets(folder)
+            folder_rulesets = FolderRulesets(folder)
             folder_rulesets.load()
 
-            new_ruleset = watolib.Ruleset(ruleset_name, tag_to_group_map)
+            new_ruleset = Ruleset(ruleset_name, tag_to_group_map)
             new_ruleset.from_config(folder, [])
 
             # TODO: This add_change() call should be made by the data classes
-            watolib.add_change(
+            _changes.add_change(
                 "edit-ruleset",
                 _("Deleted ruleset '%s' for '%s'")
                 % (
@@ -801,7 +813,7 @@ class APICallRules(APICallCollection):
 
     def _get_rulesets_info(self, request):
         rulesets_info = {}
-        all_rulesets = watolib.AllRulesets()
+        all_rulesets = AllRulesets()
         all_rulesets.load()
 
         for varname, ruleset in all_rulesets.get_rulesets().items():
@@ -880,7 +892,7 @@ class APICallHosttags(APICallCollection):
         self._verify_no_used_tags_missing(changed_hosttags_config)
 
         tag_config_file.save(changed_hosttags_config.get_dict_format())
-        watolib.add_change("edit-hosttags", _("Updated host tags through Web-API"))
+        _changes.add_change("edit-hosttags", _("Updated host tags through Web-API"))
 
     def _verify_no_used_tags_missing(self, changed_hosttags_config):
         # Check for conflicts with existing configuration
@@ -908,12 +920,12 @@ class APICallHosttags(APICallCollection):
         used_tags = set()
 
         # This requires a lot of computation power..
-        for folder in watolib.Folder.all_folders().values():
+        for folder in Folder.all_folders().values():
             for attr_name, value in folder.attributes().items():
                 if attr_name.startswith("tag_"):
                     used_tags.add((attr_name[4:], value))
 
-        for host in watolib.Host.all().values():
+        for host in Host.all().values():
             for attr_name, value in host.attributes().items():
                 if attr_name.startswith("tag_"):
                     used_tags.add((attr_name[4:], value))
@@ -924,7 +936,7 @@ class APICallHosttags(APICallCollection):
     ) -> Set[Tuple[TagID, Optional[TagID]]]:
         used_tags: Set[Tuple[TagID, Optional[TagID]]] = set()
 
-        all_rulesets = watolib.AllRulesets()
+        all_rulesets = AllRulesets()
         all_rulesets.load()
         for ruleset in all_rulesets.get_rulesets().values():
             for _folder, _rulenr, rule in ruleset.get_rules():
@@ -938,12 +950,12 @@ class APICallHosttags(APICallCollection):
                             continue
 
                         if "$or" in tag_spec:
-                            for tag_id in tag_spec["$or"]:  # type: ignore[typeddict-item,misc]
+                            for tag_id in tag_spec["$or"]:  # type: ignore[typeddict-item]
                                 used_tags.add((tag_group_id, tag_id))
                             continue
 
                         if "$nor" in tag_spec:
-                            for tag_id in tag_spec["$nor"]:  # type: ignore[typeddict-item,misc]
+                            for tag_id in tag_spec["$nor"]:  # type: ignore[typeddict-item]
                                 used_tags.add((tag_group_id, tag_id))
                             continue
 
@@ -1019,7 +1031,7 @@ class APICallSites(APICallCollection):
         }
 
     def _get(self, request: Mapping[str, Any]) -> dict[str, Any]:
-        site_mgmt = watolib.SiteManagementFactory().factory()
+        site_mgmt = SiteManagementFactory().factory()
 
         all_sites = site_mgmt.load_sites()
         existing_site = all_sites.get(request["site_id"])
@@ -1032,14 +1044,14 @@ class APICallSites(APICallCollection):
         return sites_dict
 
     def _get_all(self, request: Mapping[str, Any]) -> dict[str, Any]:
-        site_mgmt = watolib.SiteManagementFactory().factory()
+        site_mgmt = SiteManagementFactory().factory()
         all_sites = site_mgmt.load_sites()
         sites_dict: dict[str, Any] = {"sites": all_sites}
         sites_dict["configuration_hash"] = compute_config_hash(all_sites)
         return sites_dict
 
     def _set(self, request: Mapping[str, Any]) -> None:
-        site_mgmt = watolib.SiteManagementFactory().factory()
+        site_mgmt = SiteManagementFactory().factory()
 
         all_sites = site_mgmt.load_sites()
         existing_site = all_sites.get(request["site_id"])
@@ -1056,7 +1068,7 @@ class APICallSites(APICallCollection):
         site_mgmt.save_sites(all_sites)
 
     def _set_all(self, request: Mapping[str, Any]) -> None:
-        site_mgmt = watolib.SiteManagementFactory().factory()
+        site_mgmt = SiteManagementFactory().factory()
 
         all_sites = site_mgmt.load_sites()
         if "configuration_hash" in request:
@@ -1068,7 +1080,7 @@ class APICallSites(APICallCollection):
         site_mgmt.save_sites(prepare_raw_site_config(request["sites"]))
 
     def _delete(self, request: Mapping[str, Any]) -> None:
-        site_mgmt = watolib.SiteManagementFactory().factory()
+        site_mgmt = SiteManagementFactory().factory()
 
         all_sites = site_mgmt.load_sites()
         existing_site = all_sites.get(request["site_id"])
@@ -1078,13 +1090,13 @@ class APICallSites(APICallCollection):
         site_mgmt.delete_site(request["site_id"])
 
     def _login(self, request: Mapping[str, Any]) -> None:
-        site_mgmt = watolib.SiteManagementFactory().factory()
+        site_mgmt = SiteManagementFactory().factory()
         all_sites = site_mgmt.load_sites()
         site = all_sites.get(request["site_id"])
         if not site:
             raise MKUserError(None, _("Site id not found: %s") % request["site_id"])
 
-        response = watolib.do_site_login(site, request["username"], request["password"])
+        response = do_site_login(site, request["username"], request["password"])
 
         if isinstance(response, dict):
             if cmk_version.is_managed_edition() and response["edition_short"] != "cme":
@@ -1103,7 +1115,7 @@ class APICallSites(APICallCollection):
         site_mgmt.save_sites(all_sites)
 
     def _logout(self, request: Mapping[str, Any]) -> None:
-        site_mgmt = watolib.SiteManagementFactory().factory()
+        site_mgmt = SiteManagementFactory().factory()
         all_sites = site_mgmt.load_sites()
         site = all_sites.get(request["site_id"])
         if not site:
@@ -1123,6 +1135,7 @@ class APICallBIAggregationState(APICallCollection):
                 "handler": self._get,
                 "optional_keys": ["filter"],
                 "required_permissions": required_permissions,
+                "locking": False,
             },
         }
 
@@ -1167,7 +1180,7 @@ class APICallOther(APICallCollection):
 
         check_hostname(hostname, should_exist=True)
 
-        host = watolib.Host.load_host(hostname)
+        host = Host.load_host(hostname)
 
         host_attributes = host.effective_attributes()
 
@@ -1218,13 +1231,17 @@ class APICallOther(APICallCollection):
                 hostname,
                 result.self_total,
             )
-            watolib.add_service_change(host, "refresh-autochecks", message)
+            _changes.add_service_change(
+                "refresh-autochecks", message, host.object_ref(), host.site_id()
+            )
         else:
             message = _("Saved check configuration of host [%s] with %d services") % (
                 hostname,
                 result.self_total,
             )
-            watolib.add_service_change(host, "set-autochecks", message)
+            _changes.add_service_change(
+                "set-autochecks", message, host.object_ref(), host.site_id()
+            )
 
         msg = _(
             "Service discovery successful. Added %d, removed %d, kept %d, total %d services "
@@ -1253,9 +1270,9 @@ class APICallOther(APICallCollection):
         else:
             sites = []
 
-        activation_id = watolib.activate_changes_start(
+        activation_id = activate_changes_start(
             sites,
             comment,
             force_foreign_changes=allow_foreign_changes,
         )
-        return watolib.activate_changes_wait(activation_id)
+        return activate_changes_wait(activation_id)

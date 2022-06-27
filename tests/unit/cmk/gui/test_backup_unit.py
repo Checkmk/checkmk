@@ -12,6 +12,7 @@ import cmk.utils.paths
 
 import cmk.gui.backup as backup
 import cmk.gui.wato as wato
+from cmk.gui.logged_in import user
 
 
 @pytest.mark.parametrize(
@@ -30,32 +31,29 @@ import cmk.gui.wato as wato
         ("/a/b/../../etc/shadow", False),
     ],
 )
-def test_is_canonical(monkeypatch, path, expected):
+def test_is_canonical(monkeypatch, path, expected) -> None:
     monkeypatch.setattr("os.getcwd", lambda: "/test")
     monkeypatch.setattr("os.path.islink", lambda x: False)
 
     assert backup.is_canonical(path) == expected
 
 
-def test_backup_key_create_web(request_context, site, monkeypatch):
+@pytest.mark.usefixtures("request_context")
+def test_backup_key_create_web(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(user, "id", "dingdöng")
     store_path = Path(cmk.utils.paths.default_config_dir, "backup_keys.mk")
 
     assert not store_path.exists()
     mode = wato.ModeBackupEditKey()
 
     # First create a backup key
-    mode._create_key(
-        {
-            "alias": "älias",
-            "passphrase": "passphra$e",
-        }
-    )
+    mode._create_key(alias="älias", passphrase="passphra$e")
 
     assert store_path.exists()
 
     # Then test key existence
     test_mode = wato.ModeBackupEditKey()
-    keys = test_mode.load()
+    keys = test_mode.key_store.load()
     assert len(keys) == 1
 
     assert store_path.exists()

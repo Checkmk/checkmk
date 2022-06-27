@@ -5,9 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
@@ -334,6 +332,7 @@ def _create_hierarchy(path, instance):
 def inventory_varnish(parsed, needed_keys):
     if all(key in parsed for key in needed_keys):
         return [(None, {})]
+    return []
 
 
 def check_varnish_stats(_no_item, params, parsed, expected_keys):
@@ -378,6 +377,7 @@ def check_varnish_ratio(_no_item, params, parsed, ratio_keys):
 def inventory_varnish_uptime(parsed):
     if "uptime" in parsed:
         return [(None, None)]
+    return []
 
 
 def check_varnish_uptime(_no_item, _no_params, parsed):
@@ -390,6 +390,7 @@ def check_varnish_uptime(_no_item, _no_params, parsed):
                 f'Could not handle uptime value {parsed["uptime"]["value"]!r}. '
                 "Output of `varnishstats` seems to be faulty.",
             )
+    return None
 
 
 check_info["varnish"] = {

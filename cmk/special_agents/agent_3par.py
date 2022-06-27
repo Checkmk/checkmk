@@ -12,7 +12,7 @@ import json
 import sys
 
 import requests
-import urllib3  # type: ignore[import]
+import urllib3
 
 import cmk.utils.password_store
 
@@ -120,3 +120,4 @@ def main(argv=None):
             "Wrong status code: %s. Expected: %s \n" % (req.status_code, requests.codes.OK)
         )
         return 1
+    return None

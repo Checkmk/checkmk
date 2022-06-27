@@ -19,7 +19,7 @@ import pytest
 
 # the urllib3 ignore import annotation can be removed when urllib3 v2.0 is released
 #   see https://github.com/urllib3/urllib3/issues/1897
-import urllib3  # type: ignore[import]
+import urllib3
 
 from tests.testlib.compare_html import compare_html
 from tests.testlib.event_console import CMKEventConsole, CMKEventConsoleStatus
@@ -70,7 +70,7 @@ def fake_version_and_paths():
     if is_running_as_site_user():
         return
 
-    import _pytest.monkeypatch  # type: ignore # pylint: disable=import-outside-toplevel
+    import _pytest.monkeypatch  # pylint: disable=import-outside-toplevel
 
     monkeypatch = _pytest.monkeypatch.MonkeyPatch()
     tmp_dir = tempfile.mkdtemp(prefix="pytest_cmk_")
@@ -216,15 +216,6 @@ def fake_version_and_paths():
         Path(tmp_dir, "var/check_mk/discovered_host_labels"),
     )
     monkeypatch.setattr("cmk.utils.paths.profile_dir", Path(cmk.utils.paths.var_dir, "web"))
-    monkeypatch.setattr("agent_receiver.constants.LOG_FILE", Path(tmp_dir, "agent-receiver.log"))
-    monkeypatch.setattr(
-        "agent_receiver.constants.AGENT_OUTPUT_DIR",
-        Path(tmp_dir, "agent_output_dir"),
-    )
-    monkeypatch.setattr(
-        "agent_receiver.constants.REGISTRATION_REQUESTS",
-        Path(tmp_dir, "registration_request"),
-    )
 
     # Agent registration paths
     monkeypatch.setattr(
@@ -264,6 +255,10 @@ def fake_version_and_paths():
         Path(cmk.utils.paths._r4r_base_dir, "DISCOVERABLE"),
     )
 
+    monkeypatch.setattr(
+        "cmk.utils.paths.license_usage_dir", Path(cmk.utils.paths.var_dir, "license_usage")
+    )
+
 
 def import_module(pathname):
     """Return the module loaded from `pathname`.
@@ -286,7 +281,9 @@ def import_module(pathname):
     # TODO: load_module() is deprecated, we should avoid using it.
     # Furthermore, due to some reflection Kung-Fu and typeshed oddities,
     # mypy is confused about its arguments.
-    return importlib.machinery.SourceFileLoader(modname, modpath).load_module()  # type: ignore[call-arg] # pylint: disable=no-value-for-parameter,deprecated-method
+    return importlib.machinery.SourceFileLoader(  # pylint: disable=no-value-for-parameter,deprecated-method
+        modname, modpath
+    ).load_module()
 
 
 def wait_until(condition, timeout=1, interval=0.1):
@@ -324,7 +321,7 @@ def wait_until_liveproxyd_ready(site: Site, site_ids):
 class WatchLog:
     """Small helper for integration tests: Watch a sites log file"""
 
-    def __init__(self, site: Site, default_timeout: Optional[int] = None):
+    def __init__(self, site: Site, default_timeout: Optional[int] = None) -> None:
         self._site = site
         self._log_path = site.core_history_log()
         self._log: Optional[TextIO] = None
@@ -440,9 +437,9 @@ class MissingCheckInfoError(KeyError):
 class BaseCheck(abc.ABC):
     """Abstract base class for Check and ActiveCheck"""
 
-    def __init__(self, name):
+    def __init__(self, name) -> None:
         self.name = name
-        self.info = {}
+        self.info: dict = {}
         # we cant use the current_host context, b/c some tests rely on a persistent
         # item state across several calls to run_check
         import cmk.base.plugin_contexts  # pylint: disable=import-outside-toplevel
@@ -451,7 +448,7 @@ class BaseCheck(abc.ABC):
 
 
 class Check(BaseCheck):
-    def __init__(self, name):
+    def __init__(self, name) -> None:
         import cmk.base.config as config  # pylint: disable=import-outside-toplevel
         from cmk.base.api.agent_based import register  # pylint: disable=import-outside-toplevel
 
@@ -491,7 +488,7 @@ class Check(BaseCheck):
 
 
 class ActiveCheck(BaseCheck):
-    def __init__(self, name):
+    def __init__(self, name) -> None:
         import cmk.base.config as config  # pylint: disable=import-outside-toplevel
 
         super().__init__(name)
@@ -506,9 +503,12 @@ class ActiveCheck(BaseCheck):
     def run_service_description(self, params):
         return self.info["service_description"](params)
 
+    def run_generate_icmp_services(self, host_config, params):
+        yield from self.info["service_generator"](host_config, params)
+
 
 class SpecialAgent:
-    def __init__(self, name):
+    def __init__(self, name) -> None:
         import cmk.base.config as config  # pylint: disable=import-outside-toplevel
 
         super().__init__()

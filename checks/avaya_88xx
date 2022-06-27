@@ -5,9 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
@@ -28,7 +26,7 @@ def inventory_avaya_88xx_fan(parsed):
 def check_avaya_88xx_fan(item, _no_params, parsed):
     fans = parsed["fanstate"]
     if len(fans) < int(item):
-        return
+        return None
 
     map_fan_state = {
         "1": ("Reported Unknown", 3),
@@ -37,7 +35,7 @@ def check_avaya_88xx_fan(item, _no_params, parsed):
     }
     text, state = map_fan_state.get(fans[int(item)], (None, None))
     if not text:
-        return
+        return None
 
     return state, text
 
@@ -57,11 +55,12 @@ def inventory_avaya_88xx(parsed):
 def check_avaya_88xx(item, params, parsed):
     sensors = parsed["temp"]
     if len(sensors) < int(item):
-        return
+        return None
 
     reading = sensors[int(item)]
     if reading:
         return check_temperature(int(reading), params, "avaya_88xx_%s" % item)
+    return None
 
 
 check_info["avaya_88xx"] = {

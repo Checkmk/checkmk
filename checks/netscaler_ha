@@ -57,6 +57,7 @@ netscaler_ha_peer_mode = {
 def inventory_netscaler_ha(info):
     if info:
         return [(None, None)]
+    return []
 
 
 def check_netscaler_ha(_no_item, _no_params, info):
@@ -75,6 +76,7 @@ def check_netscaler_ha(_no_item, _no_params, info):
             )
 
         return state, infotext
+    return None
 
 
 check_info["netscaler_ha"] = {

@@ -5,9 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html, theme
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.plugins.dashboard.utils import dashlet_registry, IFrameDashlet
+from cmk.gui.utils.theme import theme
 from cmk.gui.valuespec import DropdownChoice
 
 
@@ -28,7 +29,7 @@ class SnapinDashlet(IFrameDashlet):
         return _("Allows you to use a sidebar element in the dashboard.")
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 55
 
     @classmethod
@@ -74,7 +75,7 @@ class SnapinDashlet(IFrameDashlet):
             raise MKUserError(None, _("The configured element does not exist."))
         snapin_instance = snapin()
 
-        html.set_browser_reload(self.refresh_interval())
+        html.browser_reload = self.refresh_interval()
         html.html_head(_("Sidebar element"))
         html.open_body(class_="side", data_theme=theme.get())
         html.open_div(id_="check_mk_sidebar")

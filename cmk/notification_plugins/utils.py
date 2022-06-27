@@ -22,6 +22,7 @@ import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
+from cmk.utils.misc import typeshed_issue_7724
 from cmk.utils.notify import find_wato_folder, NotificationContext
 from cmk.utils.store import load_text_from_file
 
@@ -338,7 +339,9 @@ def post_request(
         response = requests.post(
             url=url,
             json=message_constructor(context),
-            proxies=deserialize_http_proxy_config(serialized_proxy_config).to_requests_proxies(),
+            proxies=typeshed_issue_7724(
+                deserialize_http_proxy_config(serialized_proxy_config).to_requests_proxies()
+            ),
             headers=headers,
             verify=verify,
         )
@@ -385,6 +388,7 @@ def process_by_result_map(
                 result = get_details_from_json(value, what)
                 if result:
                     return result
+        return None
 
     status_code = response.status_code
     summary = f"{status_code}: {http_responses[status_code]}"

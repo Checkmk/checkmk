@@ -17,9 +17,7 @@
 
 #include "tools/_tgt.h"
 
-namespace cma {
-
-namespace install {
+namespace cma::install {
 bool UseScriptToInstall();
 
 std::optional<std::filesystem::path> FindProductMsi(
@@ -37,13 +35,15 @@ public:
                  const std::filesystem::path &recover_msi,
                  bool validate_script_exists);
 
-    bool copyScriptToTemp() const;
+    [[nodiscard]] bool copyScriptToTemp() const;
     void backupLog() const;
 
-    std::wstring getCommand() const noexcept { return command_; }
-    std::wstring getLogFileName() const noexcept { return log_file_name_; }
+    [[nodiscard]] std::wstring getCommand() const noexcept { return command_; }
+    [[nodiscard]] std::wstring getLogFileName() const noexcept {
+        return log_file_name_;
+    }
 
-    std::filesystem::path getTempScriptFile() const noexcept {
+    [[nodiscard]] std::filesystem::path getTempScriptFile() const noexcept {
         return temp_script_file_;
     }
 
@@ -69,7 +69,7 @@ const std::wstring kMsiInstallFolder = L"Install_Folder";
 const std::wstring kMsiInstallService = L"Install_Service";
 
 const std::wstring kMsiRemoveLegacy = L"Remove_Legacy";
-const std::wstring kMsiRemoveLegacyDefault = L"";
+const std::wstring kMsiRemoveLegacyDefault;
 const std::wstring kMsiRemoveLegacyRequest = L"1";
 const std::wstring kMsiRemoveLegacyAlready = L"0";
 
@@ -80,21 +80,27 @@ constexpr std::wstring_view kMsiPostInstallDefault = L"no";
 constexpr std::wstring_view kMsiPostInstallRequest = L"yes";
 
 constexpr std::wstring_view kMsiMigrationRequired = L"Migration_Required";
-constexpr std::wstring_view kMsiMigrationDefault = L"";
+constexpr std::wstring_view kMsiMigrationDefault;
 constexpr std::wstring_view kMsiMigrationRequest = L"1";
 
-inline const std::wstring GetMsiRegistryPath() {
+inline std::wstring GetMsiRegistryPath() {
     return tgt::Is64bit() ? registry::kMsiInfoPath64 : registry::kMsiInfoPath32;
 }
 };  // namespace registry
 
 /// Returns command and success status
-// set StartUpdateProcess to 'skip' to test functionality
-// BackupPath may be empty, normally points out on the install folder
-// DirWithMsi is update dir in ProgramData
+/// set StartUpdateProcess to 'skip' for dry run
+/// BackupPath may be empty, normally points out on the install folder
+/// DirWithMsi is update dir in ProgramData
 std::pair<std::wstring, bool> CheckForUpdateFile(
     std::wstring_view msi_name, std::wstring_view msi_dir,
-    UpdateProcess start_update_process, std::wstring_view backup_dir = L"");
+    UpdateProcess start_update_process, std::wstring_view backup_dir);
+
+inline std::pair<std::wstring, bool> CheckForUpdateFile(
+    std::wstring_view msi_name, std::wstring_view msi_dir,
+    UpdateProcess start_update_process) {
+    return CheckForUpdateFile(msi_name, msi_dir, start_update_process, L"");
+}
 
 std::filesystem::path MakeTempFileNameInTempPath(std::wstring_view Name);
 std::filesystem::path GenerateTempFileNameInTempPath(std::wstring_view Name);
@@ -128,7 +134,6 @@ std::optional<std::wstring> GetLastInstallFailReason();
 
 bool IsMigrationRequired();
 
-}  // namespace install
-}  // namespace cma
+}  // namespace cma::install
 
 #endif  // install_api_h__

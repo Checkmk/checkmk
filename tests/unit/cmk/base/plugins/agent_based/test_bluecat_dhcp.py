@@ -99,7 +99,7 @@ def check_bluecat_dhcp_one_lease():
     ]
 
 
-def test_cluster_check_bluecat_all_ok():
+def test_cluster_check_bluecat_all_ok() -> None:
     assert list(
         bluecat_dhcp.cluster_check_bluecat_dhcp(
             {
@@ -151,7 +151,7 @@ def test_cluster_check_bluecat_all_ok():
     ]
 
 
-def test_cluster_check_bluecat_one_ok():
+def test_cluster_check_bluecat_one_ok() -> None:
     assert list(
         bluecat_dhcp.cluster_check_bluecat_dhcp(
             {
@@ -203,7 +203,7 @@ def test_cluster_check_bluecat_one_ok():
     ]
 
 
-def test_cluster_check_bluecat_none_ok():
+def test_cluster_check_bluecat_none_ok() -> None:
     assert list(
         bluecat_dhcp.cluster_check_bluecat_dhcp(
             {

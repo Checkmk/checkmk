@@ -19,6 +19,7 @@ import sys
 import textwrap
 import time
 import tracemalloc
+from pathlib import Path
 
 import cmk.utils.log as log
 from cmk.utils.config_path import LATEST_CONFIG
@@ -96,8 +97,6 @@ def _vm_size() -> int:
     with open("/proc/self/statm") as f:  # see: man proc(5).
         return int(f.read().split()[0]) * 4096
 
-
-from pathlib import Path
 
 a_path = Path(os.path.realpath(Path(LATEST_CONFIG)))
 

@@ -47,7 +47,7 @@ config_filename = mk_confdir + "/mk_inotify.cfg"
 configured_paths = mk_vardir + "/mk_inotify.configured"
 pid_filename = mk_vardir + "/mk_inotify.pid"
 
-config = configparser.SafeConfigParser({})
+config = configparser.SafeConfigParser({})  # pylint: disable=deprecated-class
 if not os.path.exists(config_filename):
     sys.exit(0)
 config_mtime = os.stat(config_filename).st_mtime
@@ -282,7 +282,7 @@ def update_watched_folders():
                     attributes["watch_descriptor"] = new_wd
 
 
-def main():
+def main():  # pylint: disable=too-many-branches
     # Read config
 
     for section in config.sections():

@@ -7,7 +7,7 @@
 import re
 import shutil
 from pathlib import Path
-from typing import Any, Dict, Generator, List, Optional, Tuple, Union
+from typing import Any, Dict, Generator, List, Optional, Sequence, Tuple, Union
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -36,7 +36,7 @@ from cmk.core_helpers.type_defs import Mode
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.type_defs import ParsedSectionName, SNMPSectionPlugin
+from cmk.base.api.agent_based.type_defs import HostLabel, ParsedSectionName, SNMPSectionPlugin
 from cmk.base.autochecks import AutocheckEntry
 from cmk.base.check_utils import ConfiguredService
 
@@ -1031,22 +1031,23 @@ def test_host_config_inventory_parameters(
     [
         (
             "testhost1",
-            {
-                "check_interval": None,
-                "severity_unmonitored": 1,
-                "severity_vanished": 0,
-            },
+            config.DiscoveryCheckParameters.commandline_only_defaults(),
         ),
         (
             "testhost2",
-            {
-                "check_interval": 1,
-            },
+            config.DiscoveryCheckParameters(
+                commandline_only=False,
+                check_interval=1,
+                severity_new_services=1,
+                severity_vanished_services=0,
+                severity_new_host_labels=1,
+                rediscovery={},
+            ),
         ),
     ],
 )
 def test_host_config_discovery_check_parameters(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: Dict[str, Optional[int]]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: config.DiscoveryCheckParameters
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -1057,6 +1058,9 @@ def test_host_config_discovery_check_parameters(
             (
                 {
                     "check_interval": 1,
+                    "severity_unmonitored": 1,
+                    "severity_vanished": 0,
+                    "severity_new_host_label": 1,
                 },
                 [],
                 ["testhost2"],
@@ -1065,6 +1069,9 @@ def test_host_config_discovery_check_parameters(
             (
                 {
                     "check_interval": 2,
+                    "severity_unmonitored": 1,
+                    "severity_vanished": 0,
+                    "severity_new_host_label": 1,
                 },
                 [],
                 ["testhost2"],
@@ -1073,41 +1080,7 @@ def test_host_config_discovery_check_parameters(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).discovery_check_parameters == result
-
-
-@pytest.mark.parametrize(
-    "hostname_str,result",
-    [
-        ("testhost1", []),
-        (
-            "testhost2",
-            [
-                ("abc", {"param1": 1}),
-                ("xyz", {"param2": 1}),
-            ],
-        ),
-    ],
-)
-def test_host_config_inventory_export_hooks(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: List[Tuple]
-) -> None:
-    hostname = HostName(hostname_str)
-    ts = Scenario()
-    ts.add_host(hostname)
-    ts.set_option(
-        "inv_exports",
-        {
-            "abc": [
-                ({"param1": 1}, [], ["testhost2"], {}),
-            ],
-            "xyz": [
-                ({"param2": 1}, [], ["testhost2"], {}),
-            ],
-        },
-    )
-    config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).inventory_export_hooks == result
+    assert config_cache.get_host_config(hostname).discovery_check_parameters() == result
 
 
 @pytest.mark.parametrize(
@@ -1263,7 +1236,7 @@ def test_host_config_static_checks(
         },
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).static_checks == result
+    assert config_cache.get_host_config(hostname).enforced_services_table == result
 
 
 @pytest.mark.parametrize(
@@ -2295,7 +2268,10 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
     )
 
     # empty for cluster (we have not clustered the service)
-    assert [] == config_cache.get_clustered_service_node_keys(
+    assert [
+        HostKey(hostname="node1.test", source_type=SourceType.HOST),
+        HostKey(hostname="node2.test", source_type=SourceType.HOST),
+    ] == config_cache.get_clustered_service_node_keys(
         config_cache.get_host_config(cluster_test),
         SourceType.HOST,
         "Test Service",
@@ -2333,15 +2309,18 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
         SourceType.HOST,
         "Test Service",
     ) == [
-        HostKey(node1, "dummy.test.ip.1", SourceType.HOST),
-        HostKey(node2, "dummy.test.ip.2", SourceType.HOST),
+        HostKey(node1, SourceType.HOST),
+        HostKey(node2, SourceType.HOST),
     ]
     monkeypatch.setattr(
         config,
         "lookup_ip_address",
         lambda host_config, *, family=None: "dummy.test.ip.0",
     )
-    assert [] == config_cache.get_clustered_service_node_keys(
+    assert [
+        HostKey(hostname="node1.test", source_type=SourceType.HOST),
+        HostKey(hostname="node2.test", source_type=SourceType.HOST),
+    ] == config_cache.get_clustered_service_node_keys(
         config_cache.get_host_config(cluster),
         SourceType.HOST,
         "Test Unclustered",
@@ -2444,19 +2423,30 @@ def test_host_config_service_level(
     assert config_cache.get_host_config(hostname).service_level == result
 
 
+def _rule_val(check_interval: Optional[int]) -> dict[str, Any]:
+    return {
+        "check_interval": check_interval,
+        "severity_unmonitored": 0,
+        "severity_vanished": 0,
+        "severity_new_host_label": 0,
+    }
+
+
 @pytest.mark.parametrize(
-    "params,ignored,ping,result",
+    "rule_entries,ignored,ping,result",
     [
-        (None, False, False, False),
-        ({"check_interval": 0}, False, False, False),
-        ({"check_interval": 3600}, False, False, True),
-        ({"check_interval": 3600}, True, False, False),
-        ({"check_interval": 3600}, False, True, False),
+        ([None], False, False, True),
+        ([], False, False, False),
+        ([_rule_val(None)], False, False, True),
+        ([_rule_val(0)], False, False, True),
+        ([_rule_val(3600)], False, False, False),
+        ([_rule_val(3600)], True, False, True),
+        ([_rule_val(3600)], False, True, True),
     ],
 )
 def test_host_config_add_discovery_check(
     monkeypatch: MonkeyPatch,
-    params: Optional[Dict[str, int]],
+    rule_entries: Sequence[Optional[dict]],
     ignored: bool,
     ping: bool,
     result: bool,
@@ -2474,13 +2464,25 @@ def test_host_config_add_discovery_check(
     ts = Scenario()
     ts.add_host(xyz_host, tags=tags)
 
+    ts.set_ruleset(
+        "periodic_discovery",
+        [
+            {
+                "condition": {
+                    "host_name": ["xyz"],
+                },
+                "value": value,
+            }
+            for value in rule_entries
+        ],
+    )
     if ignored:
         ts.set_ruleset(
             "ignored_services",
             [
                 {
                     "condition": {
-                        "service_description": [{"$regex": "Check_MK Discovery"}],
+                        "service_description": [{"$regex": "Check_MK inventory"}],
                         "host_name": ["xyz"],
                     },
                     "value": True,
@@ -2489,8 +2491,10 @@ def test_host_config_add_discovery_check(
         )
     config_cache = ts.apply(monkeypatch)
 
+    monkeypatch.setattr(config, "inventory_check_interval", 42)
+
     host_config = config_cache.get_host_config(xyz_host)
-    assert host_config.add_service_discovery_check(params, "Check_MK Discovery") == result
+    assert host_config.discovery_check_parameters().commandline_only == result
 
 
 def test_get_config_file_paths_with_confd(folder_path_test_config: None) -> None:
@@ -2693,7 +2697,7 @@ explicit_host_conf['{setting_name}'].update({values})
         )
 
 
-def test_explicit_setting_loading():
+def test_explicit_setting_loading() -> None:
     main_mk_file = Path(cmk.utils.paths.main_config_file)
     settings = [
         ("sub1", "parents", {"hostA": "setting1"}),
@@ -2776,15 +2780,15 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
         CheckPluginName("duplicate_plugin"),
         [],
         "Duplicate Plugin",
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
+        lambda: [],
+        None,
+        None,
+        "merged",
+        lambda: [],
+        None,
+        None,
+        None,
+        None,
     )
 
     monkeypatch.setattr(
@@ -2809,21 +2813,21 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
 
 
 def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
-    duplicate_plugin = {  # type: ignore
+    duplicate_plugin: dict[str, dict[str, Any]] = {
         "duplicate_plugin": {},
     }
     registered_section = SNMPSectionPlugin(
         SectionName("duplicate_plugin"),
         ParsedSectionName("duplicate_plugin"),
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
+        lambda x: None,
+        lambda: (HostLabel(x, "bar") for x in ["foo"]),
+        None,
+        None,
+        "merged",
+        [],
+        [],
+        set(),
+        None,
     )
 
     monkeypatch.setattr(

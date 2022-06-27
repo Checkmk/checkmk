@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Sequence, Tup
 
 from .agent_based_api.v1 import get_value_store, regex, register, Result, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_LEVELS
+from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 
 _MEGA = 1024.0**2
 
@@ -154,5 +154,5 @@ register.check_plugin(
     discovery_ruleset_type=register.RuleSetType.ALL,
     check_function=check_vnx_quotas,
     check_ruleset_name="filesystem",
-    check_default_parameters=FILESYSTEM_DEFAULT_LEVELS,
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

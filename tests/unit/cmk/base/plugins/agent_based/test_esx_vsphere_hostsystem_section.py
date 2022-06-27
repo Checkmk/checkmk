@@ -34,5 +34,5 @@ from cmk.base.plugins.agent_based.esx_vsphere_hostsystem_section import parse_es
         ),
     ],
 )
-def test_parse_esx_vsphere_hostsystem(string_table, section):
+def test_parse_esx_vsphere_hostsystem(string_table, section) -> None:
     assert parse_esx_vsphere_hostsystem(string_table) == section

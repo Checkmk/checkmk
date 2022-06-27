@@ -21,8 +21,12 @@ from cmk.gui.breadcrumb import (
     make_current_page_breadcrumb_item,
     make_simple_page_breadcrumb,
 )
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
-from cmk.gui.globals import active_config, html, request
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.header import make_header
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
@@ -81,7 +85,7 @@ def page_show():
 def show_log_list():
     title = _("All problematic logfiles")
     breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
-    html.header(title, breadcrumb, _log_list_page_menu(breadcrumb))
+    make_header(html, title, breadcrumb, _log_list_page_menu(breadcrumb))
 
     if request.has_var("_ack") and not request.var("_do_actions") == _("No"):
         do_log_ack(site=None, host_name=None, file_name=None)
@@ -97,7 +101,7 @@ def show_log_list():
             continue  # Logfile vanished
 
         html.h3(
-            html.render_a(
+            HTMLWriter.render_a(
                 host_name,
                 href=makeuri(
                     request,
@@ -176,7 +180,7 @@ def analyse_url(site, host_name, file_name="", match=""):
 def show_host_log_list(site, host_name):
     title = _("Logfiles of host %s") % host_name
     breadcrumb = _host_log_list_breadcrumb(host_name, title)
-    html.header(title, breadcrumb, _host_log_list_page_menu(breadcrumb, site, host_name))
+    make_header(html, title, breadcrumb, _host_log_list_page_menu(breadcrumb, site, host_name))
 
     if request.has_var("_ack") and not request.var("_do_actions") == _("No"):
         do_log_ack(site, host_name, file_name=None)
@@ -264,7 +268,7 @@ def list_logs(site, host_name, logfile_names):
             table.row()
             file_display = form_file_to_ext(file_name)
             uri = makeuri(request, [("site", site), ("host", host_name), ("file", file_display)])
-            logfile_link = html.render_a(file_display, href=uri)
+            logfile_link = HTMLWriter.render_a(file_display, href=uri)
 
             try:
                 log_chunks = parse_file(site, host_name, file_name)
@@ -276,10 +280,10 @@ def list_logs(site, host_name, logfile_names):
                 state = worst_log["level"]
                 state_name = form_level(state)
 
-                table.cell(_("Level"), state_name, css="state%d" % state)
+                table.cell(_("Level"), state_name, css=["state%d" % state])
                 table.cell(_("Logfile"), logfile_link)
                 table.cell(_("Last Entry"), form_datetime(last_log["datetime"]))
-                table.cell(_("Entries"), len(log_chunks), css="number")
+                table.cell(_("Entries"), len(log_chunks), css=["number"])
 
             except Exception:
                 if active_config.debug:
@@ -295,7 +299,9 @@ def show_file(site, host_name, file_name):
 
     title = _("Logfiles of Host %s: %s") % (host_name, int_filename)
     breadcrumb = _show_file_breadcrumb(host_name, title)
-    html.header(title, breadcrumb, _show_file_page_menu(breadcrumb, site, host_name, int_filename))
+    make_header(
+        html, title, breadcrumb, _show_file_page_menu(breadcrumb, site, host_name, int_filename)
+    )
 
     if request.has_var("_ack") and not request.var("_do_actions") == _("No"):
         do_log_ack(site, host_name, file_name)
@@ -508,7 +514,7 @@ def _page_menu_entry_acknowledge(
     )
 
 
-def do_log_ack(site, host_name, file_name):
+def do_log_ack(site, host_name, file_name):  # pylint: disable=too-many-branches
     sites.live().set_auth_domain("action")
 
     logs_to_ack = []
@@ -598,7 +604,7 @@ def acknowledge_logfile(site, host_name, int_filename, display_name):
 #   '----------------------------------------------------------------------'
 
 
-def parse_file(site, host_name, file_name, hidecontext=False):
+def parse_file(site, host_name, file_name, hidecontext=False):  # pylint: disable=too-many-branches
     log_chunks: List[Dict[str, Any]] = []
     try:
         chunk: Optional[Dict[str, Any]] = None
@@ -826,7 +832,7 @@ def get_logfile_lines(site, host_name, file_name):
 
 def all_logs():
     sites.live().set_prepend_site(True)
-    rows = sites.live().query("GET hosts\n" "Columns: name mk_logwatch_files\n")
+    rows = sites.live().query("GET hosts\nColumns: name mk_logwatch_files\n")
     sites.live().set_prepend_site(False)
     return rows
 

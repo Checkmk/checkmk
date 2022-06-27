@@ -9,7 +9,7 @@ import os
 from tests.testlib.site import Site
 
 
-def test_init_scripts(site: Site):
+def test_init_scripts(site: Site) -> None:
     scripts = [
         "apache",
         "core",
@@ -20,7 +20,6 @@ def test_init_scripts(site: Site):
         "pnp_gearman_worker",
         "rrdcached",
         "xinetd",
-        "systemd",
         "stunnel",
         "redis",
         "agent-receiver",

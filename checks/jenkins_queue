@@ -121,7 +121,7 @@ def check_jenkins_queue(no_item, params, parsed):
 
         long_output.append((state, long_output_str))
 
-    max_state = max([state for state, _infotext in long_output])
+    max_state = max(state for state, _infotext in long_output)
 
     for key, value, infotext in [
         (stuck_tasks, "stuck_tasks", "Stuck"),

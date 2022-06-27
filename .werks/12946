@@ -1,7 +1,7 @@
 Title: REST API: allow dots in pathnames through folder regexp
 Class: fix
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1624373455
 Edition: cre
 Knowledge: doc

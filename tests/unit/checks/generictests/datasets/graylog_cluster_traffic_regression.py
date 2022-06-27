@@ -17,11 +17,11 @@ info = [[
 discovery = {'': [(None, {})]}
 
 checks = {
-    '': [(None, {}, [(0, 'Input: 425.14 kB', [('graylog_input', 435345, None,
+    '': [(None, {}, [(0, 'Input: 425 KiB', [('graylog_input', 435345, None,
                                                None, None, None)]),
-                     (0, 'Output: 871.47 kB', [('graylog_output', 892382, None,
+                     (0, 'Output: 871 KiB', [('graylog_output', 892382, None,
                                                 None, None, None)]),
-                     (0, 'Decoded: 900.80 kB', [('graylog_decoded', 922424,
+                     (0, 'Decoded: 901 KiB', [('graylog_decoded', 922424,
                                                  None, None, None, None)]),
                      (0, 'Last updated: 2019-10-01 14:00:00', [])])]
 }

@@ -1,0 +1,12 @@
+Title: netapp_disks: Fix WATO inline help
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1650627531
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Inline help for "Failed to spare ratio" and "Offline to spare ratio"
+parameters had an incorrect expression.

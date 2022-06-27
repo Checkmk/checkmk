@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping, Sequence
+
 import pytest
 
 from tests.testlib import SpecialAgent
@@ -69,7 +71,7 @@ pytestmark = pytest.mark.checks
                 "protocol": "https",
                 "basicauth": (
                     "user",
-                    "password",
+                    ("password", "password"),
                 ),
             },
             [
@@ -83,11 +85,35 @@ pytestmark = pytest.mark.checks
                 "--password",
                 "password",
             ],
-            id="with username and password",
+            id="with username and explicit password",
+        ),
+        pytest.param(
+            {
+                "use_piggyback": True,
+                "servername": "testserver",
+                "port": 8161,
+                "protocol": "https",
+                "basicauth": (
+                    "user",
+                    ("store", "activemq"),
+                ),
+            },
+            [
+                "testserver",
+                "8161",
+                "--protocol",
+                "https",
+                "--piggyback",
+                "--username",
+                "user",
+                "--password",
+                ("store", "activemq", "%s"),
+            ],
+            id="with username and password from store",
         ),
     ],
 )
-def test_activemq_argument_parsing(params, expected_args):
+def test_activemq_argument_parsing(params: Mapping[str, Any], expected_args: Sequence[Any]) -> None:
     """Tests if all required arguments are present."""
     agent = SpecialAgent("agent_activemq")
     arguments = agent.argument_func(params, "host", "address")

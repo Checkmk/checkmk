@@ -99,7 +99,7 @@ def root_cert(param: Mapping[str, Any]) -> Response:
     status_descriptions={
         403: _403_STATUS_DESCRIPTION,
     },
-    request_schema=request_schemas.X509ReqPEM,
+    request_schema=request_schemas.X509ReqPEMUUID,
     response_schema=response_schemas.X509PEM,
     permissions_required=permissions.Perm("general.agent_pairing"),
 )

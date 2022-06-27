@@ -228,13 +228,13 @@ class Mailbox:
     """
 
     def __init__(self, args: Args) -> None:
-        self._connection = None
+        self._connection: Any = None  # TODO: Typing is quite broken below...
         self._args = args
 
     def __enter__(self) -> "Mailbox":
         return self
 
-    def __exit__(self, *args: Any, **kwargs: Any) -> None:
+    def __exit__(self, *exc_info: object) -> None:
         self._close_mailbox()
 
     def connect(self) -> None:
@@ -262,7 +262,8 @@ class Mailbox:
 
             connection = EWS(
                 Account(
-                    self._args.fetch_username,
+                    primary_smtp_address=self._args.fetch_email_address
+                    or self._args.fetch_username,
                     autodiscover=False,
                     access_type=DELEGATE,
                     config=Configuration(
@@ -274,7 +275,7 @@ class Mailbox:
                     ),
                 )
             )
-            self._connection = connection  # type: ignore[assignment]
+            self._connection = connection
 
         assert self._connection is None
         try:
@@ -404,9 +405,8 @@ class Mailbox:
             # return int(time.time()) if parsed is None else email.utils.mktime_tz(parsed)
             raw_number = verified_result(self._connection.fetch(mail_id, "INTERNALDATE"))[0]
             assert isinstance(raw_number, bytes)
-            return int(
-                time.mktime(imaplib.Internaldate2tuple(raw_number))  # type: ignore[arg-type]
-            )
+            # typeshed bug: https://github.com/python/typeshed/issues/7781
+            return int(time.mktime(imaplib.Internaldate2tuple(raw_number)))  # type: ignore[arg-type]
 
         if self.inbox_protocol() == "EWS":
             assert isinstance(self._connection, EWS)
@@ -439,7 +439,8 @@ class Mailbox:
             [
                 date
                 for mail_id in ids[0].split()
-                for date in (fetch_timestamp(mail_id),)  # type: ignore[arg-type]
+                if isinstance(mail_id, str)  # caused by verified_result() typing horror
+                for date in (fetch_timestamp(mail_id),)
                 if before is None or date <= before
             ]
             if ids and ids[0]
@@ -522,6 +523,13 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Arg
         required=True,
         metavar="USER",
         help="Username to use for IMAP/POP3/EWS",
+    )
+    parser.add_argument(
+        "--fetch-email-address",
+        type=str,
+        required=False,
+        metavar="EMAIL-ADDRESS",
+        help="Email address (default: same as username, only effects EWS protocol)",
     )
     parser.add_argument(
         "--fetch-password",
@@ -654,7 +662,7 @@ def active_check_main(
     the correct return code it's hard to test in unit tests.
     Therefore _active_check_main_core and _output_check_result should be used for unit tests since
     they are not meant to modify the system environment or terminate the process."""
-    cmk.utils.password_store.replace_passwords()  # type: ignore[no-untyped-call]
+    cmk.utils.password_store.replace_passwords()
     exitcode, status, perfdata = _active_check_main_core(argument_parser, check_fn, sys.argv[1:])
     _output_check_result(status, perfdata)
     raise SystemExit(exitcode)

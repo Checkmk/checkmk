@@ -514,21 +514,39 @@ metric_info["aws_ebs_block_store_space_standard"] = {
 }
 
 metric_info["aws_ebs_block_store_space_io1"] = {
-    "title": _l("Provisioned IOPS SSD space"),
+    "title": _l("Provisioned IOPS SSD (io1) space"),
     "unit": "bytes",
     "color": "13/a",
 }
 
 metric_info["aws_ebs_block_store_iops_io1"] = {
-    "title": _l("Provisioned IOPS SSD IO operations per second"),
+    "title": _l("Provisioned IOPS SSD (io1) IO operations per second"),
     "unit": "1/s",
     "color": "14/a",
 }
 
+metric_info["aws_ebs_block_store_space_io2"] = {
+    "title": _l("Provisioned IOPS SSD (io2) space"),
+    "unit": "bytes",
+    "color": "23/a",
+}
+
+metric_info["aws_ebs_block_store_iops_io2"] = {
+    "title": _l("Provisioned IOPS SSD (io2) IO operations per second"),
+    "unit": "1/s",
+    "color": "24/a",
+}
+
 metric_info["aws_ebs_block_store_space_gp2"] = {
-    "title": _l("General Purpose SSD space"),
+    "title": _l("General Purpose SSD (gp2) space"),
     "unit": "bytes",
     "color": "15/a",
+}
+
+metric_info["aws_ebs_block_store_space_gp3"] = {
+    "title": _l("General Purpose SSD (gp3) space"),
+    "unit": "bytes",
+    "color": "22/a",
 }
 
 metric_info["aws_ebs_block_store_space_sc1"] = {
@@ -915,6 +933,41 @@ metric_info["aws_route53_time_to_first_byte"] = {
     "color": "46/a",
 }
 
+metric_info["aws_sns_topics_standard"] = {
+    "title": _l("Standard Topics"),
+    "unit": "count",
+    "color": "46/a",
+}
+
+metric_info["aws_sns_topics_fifo"] = {
+    "title": _l("FIFO Topics"),
+    "unit": "count",
+    "color": "46/a",
+}
+metric_info["aws_cloudfront_requests"] = {
+    "title": _l("Requests"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["aws_cloudfront_total_error_rate"] = {
+    "title": _l("Total error rate"),
+    "unit": "%",
+    "color": "21/a",
+}
+
+metric_info["aws_cloudfront_4xx_error_rate"] = {
+    "title": _l("4xx error rate"),
+    "unit": "%",
+    "color": "32/a",
+}
+
+metric_info["aws_cloudfront_5xx_error_rate"] = {
+    "title": _l("5xx error rate"),
+    "unit": "%",
+    "color": "42/a",
+}
+
 
 # .
 #   .--Graphs--------------------------------------------------------------.
@@ -1025,5 +1078,14 @@ graph_info["aws_wafv2_web_acl_requests"] = {
         ("aws_wafv2_allowed_requests_rate", "stack"),
         ("aws_wafv2_blocked_requests_rate", "stack"),
         ("aws_wafv2_requests_rate", "line"),
+    ],
+}
+
+graph_info["aws_cloudfront_errors_rate"] = {
+    "title": _l("Error rates"),
+    "metrics": [
+        ("aws_cloudfront_total_error_rate", "stack"),
+        ("aws_cloudfront_4xx_error_rate", "stack"),
+        ("aws_cloudfront_5xx_error_rate", "stack"),
     ],
 }

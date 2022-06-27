@@ -77,23 +77,21 @@ fs::path GetOsPathWithCase(const fs::path &file_path) {
 //                                            Simple if * or ?
 //                                            Recursive if **
 GlobType DetermineGlobType(const std::wstring &input) {
-    const std::wstring patterns[] = {
-        {L"^\\*\\*$"},  // "**"
-        {L".*\\*.*"},   // "anything*anything"
-        {L".*\\?.*"}    // "anything?anything"
+    const std::pair<std::wstring, GlobType> matches[] = {
+        {L"^\\*\\*$", GlobType::kRecursive},  // "**"
+        {L".*\\*.*", GlobType::kSimple},      // "anything*anything"
+        {L".*\\?.*", GlobType::kSimple}       // "anything?anything"
     };
 
     std::wsmatch match;
     try {
-        if (std::regex_match(input, match, std::wregex(patterns[0])))
-            return GlobType::kRecursive;
-        if (std::regex_match(input, match, std::wregex(patterns[1])) ||
-            std::regex_match(input, match, std::wregex(patterns[2])))
-            return GlobType::kSimple;
+        for (const auto &[regex_str, glob_type] : matches) {
+            if (std::regex_match(input, match, std::wregex(regex_str))) {
+                return glob_type;
+            }
+        }
     } catch (const std::exception &e) {
         XLOG::l("Bad pattern {} '{}'", wtools::ToUtf8(input), e.what());
-    } catch (...) {
-        XLOG::l.crit("Bad pattern {} '{}'", wtools::ToUtf8(input));
     }
 
     return GlobType::kNone;
@@ -123,7 +121,6 @@ void GatherMatchingFilesRecursive(const fs::path &search_path,
                 continue;
             }
 
-            // normal file
             if (tools::GlobMatch(file_pattern.wstring(),
                                  entry_name.wstring())) {
                 files.push_back(entry);
@@ -143,28 +140,30 @@ void GatherMatchingFilesAndDirs(
     const fs::path &file_pattern,  // c:\windows\L*\*.log
     PathVector &files_found,       // output
     PathVector &dirs_found) {      // output
-    namespace fs = std::filesystem;
     for (const auto &p : fs::directory_iterator(search_dir)) {
-        // Found files must match the entire path pattern.
         std::error_code ec;
-        auto status = p.status();  // CMK-1417, to be confirmed in ticket
-        if (ec) {                  // ! error
-            XLOG::d("Cant obtain status for dir {} path {}status is {}",
-                    search_dir.u8string(), p.path().u8string(), ec.value());
+        auto status = p.status(ec);  // CMK-1417
+        if (ec) {
+            XLOG::d("Cant obtain status for dir '{}' path '{}' error [{}]",
+                    search_dir, p.path(), ec.value());
             continue;
         }
 
         const auto &path = p.path();
-        if (fs::is_regular_file(status) &&
-            tools::GlobMatch(file_pattern.wstring(), path.wstring())) {
-            files_found.push_back(path);
-            continue;
-        }
+        try {
+            if (fs::is_regular_file(status) &&
+                tools::GlobMatch(file_pattern.wstring(), path.wstring())) {
+                files_found.push_back(path);
+                continue;
+            }
 
-        if (fs::is_directory(status) &&
-            tools::GlobMatch(dir_pattern.wstring(), path.wstring())) {
-            dirs_found.push_back(path);
-            continue;
+            if (fs::is_directory(status) &&
+                tools::GlobMatch(dir_pattern.wstring(), path.wstring())) {
+                dirs_found.push_back(path);
+                continue;
+            }
+        } catch (std::exception &e) {
+            XLOG::l("Exception GatherMatchingFilesAndDirs '{}'", e.what());
         }
     }
 }
@@ -229,7 +228,6 @@ void ProcessDirsAndFilesTables(PathVector &dirs, PathVector &files,
             continue;
         }
 
-        // no error
         if (good_file) {
             // good boy found, push it the files
             files.push_back(entry);
@@ -334,9 +332,10 @@ bool ValidFileInfoPathEntry(std::string_view entry) {
 
 std::string MakeFileInfoEntryModern(const fs::path &file_name, bool stat_failed,
                                     uint64_t file_size, int64_t seconds) {
-    if (stat_failed)
+    if (stat_failed) {
         return file_name.u8string() + FileInfo::kSep +
                std::string(FileInfo::kStatFailed) + "\n";
+    }
 
     return fmt::format("{0}{1}{2}{1}{3}{1}{4}\n", file_name, FileInfo::kSep,
                        FileInfo::kOk, file_size, seconds);
@@ -344,9 +343,10 @@ std::string MakeFileInfoEntryModern(const fs::path &file_name, bool stat_failed,
 
 std::string MakeFileInfoEntryLegacy(const fs::path &file_name, bool stat_failed,
                                     uint64_t file_size, int64_t seconds) {
-    if (stat_failed)
+    if (stat_failed) {
         return fmt::format("{0}{1}{2}{1}{3}\n", file_name, FileInfo::kSep,
                            FileInfo::kMissing, seconds);
+    }
 
     return fmt::format("{0}{1}{2}{1}{3}\n", file_name, FileInfo::kSep,
                        file_size, seconds);
@@ -365,7 +365,9 @@ void CorrectSeconds(int64_t &seconds) {
     // To remove hack we need *to_time_t* functionality
 
     constexpr int64_t epoch_distance = 11'644'473'600LL;
-    if (seconds > epoch_distance) seconds -= epoch_distance;
+    if (seconds > epoch_distance) {
+        seconds -= epoch_distance;
+    }
 }
 
 std::tuple<uint64_t, int64_t, bool> GetFileStats(const fs::path &file_path) {

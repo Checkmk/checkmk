@@ -7,7 +7,7 @@
 import cmk.gui.bi as bi
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
+from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -16,7 +16,6 @@ from cmk.gui.valuespec import (
     HTTPUrl,
     ListOf,
     MonitoringState,
-    Password,
     RegExp,
     TextInput,
     Transform,
@@ -63,8 +62,14 @@ class MultisiteBiDatasource:
                             _("Use the following credentials"),
                             Tuple(
                                 elements=[
-                                    TextInput(title=_("Automation Username"), allow_empty=True),
-                                    Password(title=_("Automation Secret"), allow_empty=True),
+                                    TextInput(
+                                        title=_("Automation Username"),
+                                        allow_empty=True,
+                                    ),
+                                    IndividualOrStoredPassword(
+                                        title=_("Automation Secret"),
+                                        allow_empty=True,
+                                    ),
                                 ],
                             ),
                         ),

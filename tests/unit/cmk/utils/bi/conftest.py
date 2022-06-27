@@ -22,7 +22,7 @@ from .bi_test_data import sample_config
 
 
 class MockBIAggregationPack(BIAggregationPacks):
-    def __init__(self, config: Dict[Any, Any]):
+    def __init__(self, config: Dict[Any, Any]) -> None:
         super().__init__("")
         self._load_config(config)
 
@@ -37,6 +37,7 @@ def mock_query_callback(
     query: str,
     only_sites: Optional[List[SiteId]] = None,
     output_format: LivestatusOutputFormat = LivestatusOutputFormat.PYTHON,
+    fetch_full_data: bool = False,
 ) -> LivestatusResponse:
     return LivestatusResponse([])
 

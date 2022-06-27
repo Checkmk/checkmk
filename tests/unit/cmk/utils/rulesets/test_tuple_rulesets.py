@@ -36,7 +36,7 @@ def ts(monkeypatch):
     return ts
 
 
-def test_service_extra_conf(ts):
+def test_service_extra_conf(ts) -> None:
     ruleset: List[Tuple[str, List[str], List[str], List[str], Dict]] = [
         ("1", [], tuple_rulesets.ALL_HOSTS, tuple_rulesets.ALL_SERVICES, {}),
         (
@@ -98,7 +98,7 @@ def host_ruleset():
     ]
 
 
-def test_host_extra_conf(ts, host_ruleset):
+def test_host_extra_conf(ts, host_ruleset) -> None:
     assert ts.config_cache.host_extra_conf("host1", host_ruleset) == [
         {"1": True},
         {"2": True},
@@ -116,7 +116,7 @@ def test_host_extra_conf(ts, host_ruleset):
     ]
 
 
-def test_host_extra_conf_merged(ts, host_ruleset):
+def test_host_extra_conf_merged(ts, host_ruleset) -> None:
     assert ts.config_cache.host_extra_conf_merged("host1", host_ruleset) == {
         "1": True,
         "2": True,
@@ -214,7 +214,7 @@ def test_host_extra_conf_merged(ts, host_ruleset):
         ],
     ],
 )
-def test_in_boolean_serviceconf_list(ts, parameters):
+def test_in_boolean_serviceconf_list(ts, parameters) -> None:
     ruleset, outcome_host1, outcome_host2 = parameters
 
     assert (
@@ -225,7 +225,7 @@ def test_in_boolean_serviceconf_list(ts, parameters):
     )
 
 
-def test_all_matching_hosts(ts):
+def test_all_matching_hosts(ts) -> None:
     config_cache = ts.config_cache
     assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {"agent": "no-agent"}}, with_foreign_hosts=False
@@ -277,7 +277,7 @@ def test_all_matching_hosts(ts):
     ) == set([])
 
 
-def test_in_extraconf_hostlist():
+def test_in_extraconf_hostlist() -> None:
     assert tuple_rulesets.in_extraconf_hostlist(tuple_rulesets.ALL_HOSTS, "host1") is True
     assert tuple_rulesets.in_extraconf_hostlist([], "host1") is False
 
@@ -301,36 +301,36 @@ def test_in_extraconf_hostlist():
 # TODO: in_binary_hostlist
 
 
-def test_get_rule_options_regular_rule():
+def test_get_rule_options_regular_rule() -> None:
     options = {"description": 'Put all hosts into the contact group "all"'}
     entry: Tuple[str, List[str], List[str], Dict] = ("all", [], tuple_rulesets.ALL_HOSTS, options)
     assert tuple_rulesets.get_rule_options(entry) == (entry[:-1], options)
 
 
-def test_get_rule_options_empty_options():
+def test_get_rule_options_empty_options() -> None:
     options: Dict = {}
     entry: Tuple[str, List[str], List[str], Dict] = ("all", [], tuple_rulesets.ALL_HOSTS, options)
     assert tuple_rulesets.get_rule_options(entry) == (entry[:-1], options)
 
 
-def test_get_rule_options_missing_options():
+def test_get_rule_options_missing_options() -> None:
     entry: Tuple[str, List[str], List[str]] = ("all", [], tuple_rulesets.ALL_HOSTS)
     assert tuple_rulesets.get_rule_options(entry) == (entry, {})
 
 
-def test_hosttags_match_taglist():
+def test_hosttags_match_taglist() -> None:
     assert tuple_rulesets.hosttags_match_taglist(["no-agent"], ["no-agent"])
     assert tuple_rulesets.hosttags_match_taglist(["no-agent", "test"], ["no-agent"])
     assert tuple_rulesets.hosttags_match_taglist(["no-agent", "test"], ["no-agent", "test"])
 
 
-def test_hosttags_match_taglist_not_matching():
+def test_hosttags_match_taglist_not_matching() -> None:
     assert not tuple_rulesets.hosttags_match_taglist(["no-agent"], ["test"])
     assert not tuple_rulesets.hosttags_match_taglist(["tag", "no-agent", "test2"], ["test"])
     assert not tuple_rulesets.hosttags_match_taglist(["no-agent", "test"], ["test", "tag3"])
 
 
-def test_hosttags_match_taglist_negate():
+def test_hosttags_match_taglist_negate() -> None:
     assert not tuple_rulesets.hosttags_match_taglist(["no-agent", "test"], ["no-agent", "!test"])
     assert tuple_rulesets.hosttags_match_taglist(["no-agent"], ["no-agent", "!test"])
 
@@ -374,5 +374,5 @@ def test_hosttags_match_taglist_negate():
         ([r"OMD ([a-z]+) \1"], "OMD stable stable", True),
     ],
 )
-def test_in_extraconf_servicelist(service_patterns, service, expected):
+def test_in_extraconf_servicelist(service_patterns, service, expected) -> None:
     assert config.in_extraconf_servicelist(service_patterns, service) == expected

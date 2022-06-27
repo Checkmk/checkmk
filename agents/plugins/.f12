@@ -14,4 +14,7 @@ ROOT=/omd/sites/$SITE
 
 # sudo mkdir -p /usr/lib/check_mk_agent/plugins
 # sudo install -m 755 * /usr/lib/check_mk_agent/plugins || true
-sudo rsync -va --exclude=.f12 ./ "$ROOT/share/check_mk/agents/plugins/"
+sudo rsync -va \
+    --exclude=.f12 \
+    --exclude=__init__.py* \
+    ./ "$ROOT/share/check_mk/agents/plugins/"

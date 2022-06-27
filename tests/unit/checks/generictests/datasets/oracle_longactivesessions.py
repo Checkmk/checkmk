@@ -47,10 +47,10 @@ discovery = {'': [('orcl', {}), ('orcl', {}), ('orcl1', {})]}
 checks = {'': [('orcl',
                 {'levels': (500, 1000)},
                 [(0,
-                  '2 Session (sid,serial,proc) TUX12C Another Serial Number 0 active for 8 m from machine osuser another osuser program 4800 sql_id 0 ',
+                  '2 Session (sid,serial,proc) TUX12C Another Serial Number 0 active for 8 minutes 20 seconds from machine osuser another osuser program 4800 sql_id 0 ',
                   [('count', 2, 500, 1000, None, None)])]),
                ('orcl1',
                 {'levels': (500, 1000)},
                 [(0,
-                  '1 Session (sid,serial,proc) TUX12C1 Yet Another Serial Number 0 active for 8 m from another machine osuser yet another osuser program 5800 sql_id 0 ',
+                  '1 Session (sid,serial,proc) TUX12C1 Yet Another Serial Number 0 active for 8 minutes 20 seconds from another machine osuser yet another osuser program 5800 sql_id 0 ',
                   [('count', 1, 500, 1000, None, None)])])]}

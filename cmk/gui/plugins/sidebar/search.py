@@ -19,13 +19,16 @@ from cmk.utils.exceptions import MKException, MKGeneralException
 
 import cmk.gui.sites as sites
 import cmk.gui.utils
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
-from cmk.gui.globals import active_config, html, output_funnel, request
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.plugins.sidebar.utils import PageHandlers, SidebarSnapin, snapin_registry
 from cmk.gui.plugins.wato.utils import main_module_registry
 from cmk.gui.type_defs import (
@@ -46,9 +49,16 @@ from cmk.gui.utils.labels import (
     label_help_text,
     Labels,
 )
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.urls import makeuri
-from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher
+from cmk.gui.wato.pages.hosts import ModeEditHost
+from cmk.gui.watolib.search import (
+    IndexNotFoundException,
+    IndexSearcher,
+    PermissionsHandler,
+    URLChecker,
+)
 
 #   .--Quicksearch---------------------------------------------------------.
 #   |         ___        _      _                            _             |
@@ -501,7 +511,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
 class QuicksearchManager:
     """Producing the results for the given search query"""
 
-    def __init__(self, raise_too_many_rows_error: bool = True):
+    def __init__(self, raise_too_many_rows_error: bool = True) -> None:
         self.raise_too_many_rows_error = raise_too_many_rows_error
 
     def generate_results(self, query: SearchQuery) -> SearchResultsByTopic:
@@ -690,7 +700,7 @@ def _maybe_strip(param: Optional[str]) -> Optional[str]:
 
 @snapin_registry.register
 class QuicksearchSnapin(SidebarSnapin):
-    def __init__(self):
+    def __init__(self) -> None:
         self._quicksearch_manager = QuicksearchManager()
         super().__init__()
 
@@ -785,7 +795,8 @@ class QuicksearchResultRenderer:
             for result in sorted(results, key=lambda x: x.title):
                 html.open_a(id_="result_%s" % query, href=result.url, target="main")
                 html.write_text(
-                    result.title + (" %s" % html.render_b(result.context) if result.context else "")
+                    result.title
+                    + (" %s" % HTMLWriter.render_b(result.context) if result.context else "")
                 )
                 html.close_a()
 
@@ -811,7 +822,7 @@ class QuicksearchResultRenderer:
 class ABCMatchPlugin(abc.ABC):
     """Base class for all match plugins"""
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         super().__init__()
         self._name = name
 
@@ -848,7 +859,9 @@ class ABCLivestatusMatchPlugin(ABCMatchPlugin):
     def get_preferred_livestatus_table(self) -> LivestatusTable:
         return self._preferred_livestatus_table
 
-    def is_used_for_table(self, livestatus_table: LivestatusTable, used_filters: UsedFilters):
+    def is_used_for_table(
+        self, livestatus_table: LivestatusTable, used_filters: UsedFilters
+    ) -> bool:
         # Check if this filters handles the table at all
         if livestatus_table not in self._supported_livestatus_tables:
             return False
@@ -901,7 +914,7 @@ match_plugin_registry = MatchPluginRegistry()
 
 
 class GroupMatchPlugin(ABCLivestatusMatchPlugin):
-    def __init__(self, group_type: str, name: str):
+    def __init__(self, group_type: str, name: str) -> None:
         super().__init__(
             ["%sgroups" % group_type, "%ss" % group_type, "services"],
             "%sgroups" % group_type,
@@ -995,7 +1008,7 @@ match_plugin_registry.register(
 
 
 class ServiceMatchPlugin(ABCLivestatusMatchPlugin):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(["services"], "services", "s")
 
     def get_match_topic(self) -> str:
@@ -1042,7 +1055,7 @@ match_plugin_registry.register(ServiceMatchPlugin())
 
 
 class HostMatchPlugin(ABCLivestatusMatchPlugin):
-    def __init__(self, livestatus_field, name):
+    def __init__(self, livestatus_field, name) -> None:
         super().__init__(["hosts", "services"], "hosts", name)
         self._livestatus_field = livestatus_field  # address, name or alias
 
@@ -1135,7 +1148,7 @@ match_plugin_registry.register(
 
 
 class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(["hosts", "services"], "hosts", "tg")
 
     def _get_hosttag_dict(self):
@@ -1357,7 +1370,7 @@ match_plugin_registry.register(MonitorMenuMatchPlugin())
 class MenuSearchResultsRenderer:
     _max_num_displayed_results = 10
 
-    def __init__(self, search_type: str):
+    def __init__(self, search_type: str) -> None:
 
         # TODO: In the future, we should separate the rendering and the generation of the results
         if search_type == "monitoring":
@@ -1365,7 +1378,9 @@ class MenuSearchResultsRenderer:
                 raise_too_many_rows_error=False
             ).generate_results
         elif search_type == "setup":
-            self._generate_results = IndexSearcher().search
+            self._generate_results = IndexSearcher(
+                PermissionsHandler(URLChecker[ModeEditHost](ModeEditHost))
+            ).search
         else:
             raise NotImplementedError(f"Renderer not implemented for type '{search_type}'")
         self.search_type = search_type
@@ -1467,7 +1482,7 @@ class MenuSearchResultsRenderer:
             html_text = output_funnel.drain()
         return html_text
 
-    def _render_topic(self, topic: str, icons: Tuple[Icon, Icon]):
+    def _render_topic(self, topic: str, icons: Tuple[Icon, Icon]) -> None:
         html.open_h2()
         html.div(class_="spacer", content="")
 
@@ -1486,7 +1501,7 @@ class MenuSearchResultsRenderer:
         html.span(topic)
         html.close_h2()
 
-    def _render_result(self, result, hidden=False):
+    def _render_result(self, result, hidden=False) -> None:
         html.open_li(
             class_="hidden" if hidden else "",
             **{"data-extended": "false" if hidden else ""},
@@ -1498,7 +1513,7 @@ class MenuSearchResultsRenderer:
             title=result.title + (" %s" % result.context if result.context else ""),
         )
         html.write_text(
-            result.title + (" %s" % html.render_b(result.context) if result.context else "")
+            result.title + (" %s" % HTMLWriter.render_b(result.context) if result.context else "")
         )
         html.close_a()
         html.close_li()
@@ -1549,7 +1564,7 @@ class MonitoringSearch(ABCMegaMenuSearch):
 
 @page_registry.register_page("ajax_search_monitoring")
 class PageSearchMonitoring(AjaxPage):
-    def page(self):
+    def page(self) -> PageResult:
         query = request.get_str_input_mandatory("q")
         return MenuSearchResultsRenderer("monitoring").render(query)
 
@@ -1585,7 +1600,7 @@ class SetupSearch(ABCMegaMenuSearch):
 
 @page_registry.register_page("ajax_search_setup")
 class PageSearchSetup(AjaxPage):
-    def page(self):
+    def page(self) -> PageResult:
         query = request.get_str_input_mandatory("q")
         try:
             return MenuSearchResultsRenderer("setup").render(query)

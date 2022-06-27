@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.check_parameters.utils import match_dual_level_type
+from cmk.gui.plugins.wato.check_parameters.filesystem_utils import match_dual_level_type
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
@@ -86,9 +86,8 @@ def _parameter_valuespec_memory():
                                     ],
                                 ),
                                 title=_("Levels for free memory"),
-                                help=
-                                # xgettext: no-python-format
-                                _(
+                                help=_(
+                                    # xgettext: no-python-format
                                     "Keep in mind that if you have 1GB RAM and 1GB Swap you need to "
                                     "specify 120% or 1200MB to get an alert if there is only 20% free RAM available. "
                                     "The free memory levels do not work with the fortigate check, because it does "

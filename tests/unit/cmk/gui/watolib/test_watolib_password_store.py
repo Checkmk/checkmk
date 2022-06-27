@@ -89,7 +89,7 @@ def fixture_store() -> PasswordStore:
     return PasswordStore()
 
 
-def test_password_store_save(store: PasswordStore):
+def test_password_store_save(store: PasswordStore) -> None:
     entries = {
         "ding": Password(
             {

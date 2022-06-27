@@ -8,8 +8,10 @@ from __future__ import annotations
 
 from typing import Optional, TYPE_CHECKING
 
+from cmk.gui.ctx_stack import request_local_attr
+
 if TYPE_CHECKING:
-    import cmk.gui.htmllib as htmllib
+    from cmk.gui.htmllib.html import HTMLGenerator
     from cmk.gui.http import Request
 
 # .
@@ -66,7 +68,7 @@ class DisplayOptions:
         self.options: str = self.all_off()
         self.title_options: Optional[str] = None
 
-    def load_from_html(self, request: Request, html: htmllib.html) -> None:
+    def load_from_html(self, request: Request, html: HTMLGenerator) -> None:
         # Parse display options and
         if html.output_format == "html":
             options = request.get_ascii_input_mandatory("display_options", "")
@@ -97,7 +99,7 @@ class DisplayOptions:
         # frame. Also the display options are removed since the view in the main
         # frame should be displayed in standard mode.
         if self.disabled(self.M):
-            html.set_link_target("main")
+            html.link_target = "main"
             request.del_var("display_options")
 
     # If all display_options are upper case assume all not given values default
@@ -115,3 +117,6 @@ class DisplayOptions:
 
     def disabled(self, opt: str) -> bool:
         return opt not in self.options
+
+
+display_options: DisplayOptions = request_local_attr("display_options")

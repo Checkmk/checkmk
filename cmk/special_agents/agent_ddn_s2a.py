@@ -8,6 +8,8 @@ import argparse
 import socket
 import sys
 
+from cmk.utils.password_store import replace_passwords
+
 # This special agent uses the S2A RCM API. Please refer to the
 # official documentation.
 
@@ -29,6 +31,7 @@ def query(s, command_txt):
 
 def main(sys_argv=None):
     if sys_argv is None:
+        replace_passwords()
         sys_argv = sys.argv[1:]
 
     parser = argparse.ArgumentParser(

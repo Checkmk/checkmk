@@ -30,7 +30,7 @@ public:
         : Synchronous(name, separator) {}
 
 private:
-    virtual std::string makeBody() override;
+    std::string makeBody() override;
     static std::string makeOnlyFrom();
 };
 

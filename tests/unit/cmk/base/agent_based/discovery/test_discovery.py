@@ -6,7 +6,7 @@
 
 # pylint: disable=redefined-outer-name
 
-from typing import Dict, List, Literal, Mapping, NamedTuple, Optional, Sequence, Set, Tuple, Union
+from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Sequence, Set, Tuple
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -20,10 +20,10 @@ from cmk.utils.type_defs import (
     CheckPluginName,
     DiscoveryResult,
     EVERYTHING,
-    HostAddress,
     HostKey,
     HostName,
     SectionName,
+    ServiceID,
     SourceType,
 )
 
@@ -34,7 +34,6 @@ import cmk.base.agent_based.discovery as discovery
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
 import cmk.base.config as config
-import cmk.base.ip_lookup as ip_lookup
 from cmk.base.agent_based.data_provider import (
     ParsedSectionsBroker,
     ParsedSectionsResolver,
@@ -49,7 +48,7 @@ from cmk.base.sources.snmp import SNMPRawDataSection
 @pytest.fixture
 def service_table() -> discovery.ServicesTable:
     return {
-        (CheckPluginName("check_plugin_name"), "New Item 1"): (
+        ServiceID(CheckPluginName("check_plugin_name"), "New Item 1"): (
             "new",
             autochecks.AutocheckEntry(
                 CheckPluginName("check_plugin_name"),
@@ -59,7 +58,7 @@ def service_table() -> discovery.ServicesTable:
             ),
             [],
         ),
-        (CheckPluginName("check_plugin_name"), "New Item 2"): (
+        ServiceID(CheckPluginName("check_plugin_name"), "New Item 2"): (
             "new",
             autochecks.AutocheckEntry(
                 CheckPluginName("check_plugin_name"),
@@ -69,7 +68,7 @@ def service_table() -> discovery.ServicesTable:
             ),
             [],
         ),
-        (CheckPluginName("check_plugin_name"), "Vanished Item 1"): (
+        ServiceID(CheckPluginName("check_plugin_name"), "Vanished Item 1"): (
             "vanished",
             autochecks.AutocheckEntry(
                 CheckPluginName("check_plugin_name"),
@@ -79,7 +78,7 @@ def service_table() -> discovery.ServicesTable:
             ),
             [],
         ),
-        (CheckPluginName("check_plugin_name"), "Vanished Item 2"): (
+        ServiceID(CheckPluginName("check_plugin_name"), "Vanished Item 2"): (
             "vanished",
             autochecks.AutocheckEntry(
                 CheckPluginName("check_plugin_name"),
@@ -376,240 +375,251 @@ def test__get_post_discovery_services(
     assert result.self_removed == count_removed
 
 
+def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
+    return config.DiscoveryCheckParameters(
+        commandline_only=False,
+        check_interval=60,
+        severity_new_services=1,
+        severity_vanished_services=0,
+        severity_new_host_labels=0,
+        rediscovery=rediscovery,
+    )
+
+
 @pytest.mark.parametrize(
     "parameters, result_need_rediscovery",
     [
-        ({}, False),
+        (_get_params({}), False),
         # New services
         # Whitelist
         (
-            {
-                "inventory_rediscovery": {
+            _get_params(
+                {
                     "mode": discovery.DiscoveryMode.NEW,
                     "service_whitelist": ["^Test Description New Item 1"],
-                },
-            },
+                }
+            ),
             True,
         ),
         (
-            {
-                "inventory_rediscovery": {
+            _get_params(
+                {
                     "mode": discovery.DiscoveryMode.REMOVE,
                     "service_whitelist": ["^Test Description New Item 1"],
-                },
-            },
+                }
+            ),
             False,
         ),
         (
-            {
-                "inventory_rediscovery": {
+            _get_params(
+                {
                     "mode": discovery.DiscoveryMode.FIXALL,
                     "service_whitelist": ["^Test Description New Item 1"],
-                },
-            },
+                }
+            ),
             True,
         ),
         (
-            {
-                "inventory_rediscovery": {
+            _get_params(
+                {
                     "mode": discovery.DiscoveryMode.REFRESH,
                     "service_whitelist": ["^Test Description New Item 1"],
-                },
-            },
+                }
+            ),
             True,
         ),
         # Blacklist
         (
-            {
-                "inventory_rediscovery": {
+            _get_params(
+                {
                     "mode": discovery.DiscoveryMode.NEW,
                     "service_blacklist": ["^Test Description New Item 1"],
-                },
-            },
+                }
+            ),
             True,
         ),
         (
-            {
-                "inventory_rediscovery": {
+            _get_params(
+                {
                     "mode": discovery.DiscoveryMode.REMOVE,
                     "service_blacklist": ["^Test Description New Item 1"],
-                },
-            },
+                }
+            ),
             True,
         ),
         (
-            {
-                "inventory_rediscovery": {
+            _get_params(
+                {
                     "mode": discovery.DiscoveryMode.FIXALL,
                     "service_blacklist": ["^Test Description New Item 1"],
-                },
-            },
+                }
+            ),
             True,
         ),
         (
-            {
-                "inventory_rediscovery": {
+            _get_params(
+                {
                     "mode": discovery.DiscoveryMode.REFRESH,
                     "service_blacklist": ["^Test Description New Item 1"],
-                },
-            },
+                }
+            ),
             True,
         ),
         # White-/blacklist
         (
-            {
-                "inventory_rediscovery": {
+            _get_params(
+                {
                     "mode": discovery.DiscoveryMode.NEW,
                     "service_whitelist": ["^Test Description New Item 1"],
                     "service_blacklist": ["^Test Description New Item 2"],
-                },
-            },
+                }
+            ),
             True,
         ),
         (
-            {
-                "inventory_rediscovery": {
+            _get_params(
+                {
                     "mode": discovery.DiscoveryMode.REMOVE,
                     "service_whitelist": ["^Test Description New Item 1"],
                     "service_blacklist": ["^Test Description New Item 2"],
-                },
-            },
+                }
+            ),
             False,
         ),
         (
-            {
-                "inventory_rediscovery": {
+            _get_params(
+                {
                     "mode": discovery.DiscoveryMode.FIXALL,
                     "service_whitelist": ["^Test Description New Item 1"],
                     "service_blacklist": ["^Test Description New Item 2"],
-                },
-            },
+                }
+            ),
             True,
         ),
         (
-            {
-                "inventory_rediscovery": {
+            _get_params(
+                {
                     "mode": discovery.DiscoveryMode.REFRESH,
                     "service_whitelist": ["^Test Description New Item 1"],
                     "service_blacklist": ["^Test Description New Item 2"],
-                },
-            },
+                }
+            ),
             True,
         ),
         # Vanished services
         # Whitelist
         (
-            {
-                "inventory_rediscovery": {
+            _get_params(
+                {
                     "mode": discovery.DiscoveryMode.NEW,
                     "service_whitelist": ["^Test Description Vanished Item 1"],
-                },
-            },
+                }
+            ),
             False,
         ),
         (
-            {
-                "inventory_rediscovery": {
+            _get_params(
+                {
                     "mode": discovery.DiscoveryMode.REMOVE,
                     "service_whitelist": ["^Test Description Vanished Item 1"],
-                },
-            },
+                }
+            ),
             True,
         ),
         (
-            {
-                "inventory_rediscovery": {
+            _get_params(
+                {
                     "mode": discovery.DiscoveryMode.FIXALL,
                     "service_whitelist": ["^Test Description Vanished Item 1"],
-                },
-            },
+                }
+            ),
             True,
         ),
         (
-            {
-                "inventory_rediscovery": {
+            _get_params(
+                {
                     "mode": discovery.DiscoveryMode.REFRESH,
                     "service_whitelist": ["^Test Description Vanished Item 1"],
-                },
-            },
+                }
+            ),
             True,
         ),
         # Blacklist
         (
-            {
-                "inventory_rediscovery": {
+            _get_params(
+                {
                     "mode": discovery.DiscoveryMode.NEW,
                     "service_blacklist": ["^Test Description Vanished Item 1"],
-                },
-            },
+                }
+            ),
             True,
         ),
         (
-            {
-                "inventory_rediscovery": {
+            _get_params(
+                {
                     "mode": discovery.DiscoveryMode.REMOVE,
                     "service_blacklist": ["^Test Description Vanished Item 1"],
-                },
-            },
+                }
+            ),
             True,
         ),
         (
-            {
-                "inventory_rediscovery": {
+            _get_params(
+                {
                     "mode": discovery.DiscoveryMode.FIXALL,
                     "service_blacklist": ["^Test Description Vanished Item 1"],
-                },
-            },
+                }
+            ),
             True,
         ),
         (
-            {
-                "inventory_rediscovery": {
+            _get_params(
+                {
                     "mode": discovery.DiscoveryMode.REFRESH,
                     "service_blacklist": ["^Test Description Vanished Item 1"],
-                },
-            },
+                }
+            ),
             True,
         ),
         # White-/blacklist
         (
-            {
-                "inventory_rediscovery": {
+            _get_params(
+                {
                     "mode": discovery.DiscoveryMode.NEW,
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                     "service_blacklist": ["^Test Description Vanished Item 2"],
-                },
-            },
+                }
+            ),
             False,
         ),
         (
-            {
-                "inventory_rediscovery": {
+            _get_params(
+                {
                     "mode": discovery.DiscoveryMode.REMOVE,
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                     "service_blacklist": ["^Test Description Vanished Item 2"],
-                },
-            },
+                }
+            ),
             True,
         ),
         (
-            {
-                "inventory_rediscovery": {
+            _get_params(
+                {
                     "mode": discovery.DiscoveryMode.FIXALL,
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                     "service_blacklist": ["^Test Description Vanished Item 2"],
-                },
-            },
+                }
+            ),
             True,
         ),
         (
-            {
-                "inventory_rediscovery": {
+            _get_params(
+                {
                     "mode": discovery.DiscoveryMode.REFRESH,
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                     "service_blacklist": ["^Test Description Vanished Item 2"],
-                },
-            },
+                }
+            ),
             True,
         ),
     ],
@@ -617,9 +627,7 @@ def test__get_post_discovery_services(
 def test__check_service_table(
     monkeypatch: MonkeyPatch,
     grouped_services: discovery.ServicesByTransition,
-    parameters: Dict[
-        Literal["inventory_rediscovery"], Dict[str, Union[discovery.DiscoveryMode, List[str]]]
-    ],
+    parameters: config.DiscoveryCheckParameters,
     result_need_rediscovery: bool,
 ) -> None:
     def _get_service_description(_hostname, _check_plugin_name, item):
@@ -627,7 +635,7 @@ def test__check_service_table(
 
     monkeypatch.setattr(config, "service_description", _get_service_description)
 
-    rediscovery_parameters = parameters.get("inventory_rediscovery", {}).copy()
+    rediscovery_parameters = parameters.rediscovery.copy()
     discovery_mode = rediscovery_parameters.pop("mode", discovery.DiscoveryMode.FALLBACK)
     assert isinstance(discovery_mode, discovery.DiscoveryMode)  # for mypy
     results, need_rediscovery = discovery._check_service_lists(
@@ -679,7 +687,7 @@ def test__find_candidates() -> None:
         {
             # we just care about the keys here, content set to arbitrary values that can be parsed.
             # section names are chosen arbitrarily.
-            HostKey(HostName("test_node"), HostAddress("1.2.3.4"), SourceType.HOST): (
+            HostKey(HostName("test_node"), SourceType.HOST): (
                 ParsedSectionsResolver(
                     section_plugins=[
                         agent_based_register.get_section_plugin(SectionName("kernel")),
@@ -693,9 +701,10 @@ def test__find_candidates() -> None:
                             SectionName("uptime"): [["123"]],  # host & mgmt
                         }
                     ),
+                    host_name=HostName("test_node"),
                 ),
             ),
-            HostKey(HostName("test_node"), HostAddress("1.2.3.4"), SourceType.MANAGEMENT): (
+            HostKey(HostName("test_node"), SourceType.MANAGEMENT): (
                 ParsedSectionsResolver(
                     section_plugins=[
                         agent_based_register.get_section_plugin(SectionName("uptime")),
@@ -707,17 +716,14 @@ def test__find_candidates() -> None:
                     host_sections=HostSections[SNMPRawDataSection](
                         {
                             # host & mgmt:
-                            SectionName("uptime"): [["123"]],  # type: ignore[dict-item]
+                            SectionName("uptime"): [["123"]],
                             # mgmt only:
-                            SectionName("liebert_fans"): [  # type: ignore[dict-item]
-                                [["Fan", "67", "umin"]]
-                            ],
+                            SectionName("liebert_fans"): [[["Fan", "67", "umin"]]],
                             # is already mgmt_ prefixed:
-                            SectionName("mgmt_snmp_info"): [  # type: ignore[dict-item]
-                                [["a", "b", "c", "d"]]
-                            ],
+                            SectionName("mgmt_snmp_info"): [[["a", "b", "c", "d"]]],
                         }
                     ),
+                    host_name=HostName("test_node"),
                 ),
             ),
         }
@@ -866,24 +872,22 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
 
 class RealHostScenario(NamedTuple):
     hostname: HostName
-    ipaddress: str
     parsed_sections_broker: ParsedSectionsBroker
 
     @property
     def host_key(self) -> HostKey:
-        return HostKey(self.hostname, self.ipaddress, SourceType.HOST)
+        return HostKey(self.hostname, SourceType.HOST)
 
     @property
     def host_key_mgmt(self) -> HostKey:
-        return HostKey(self.hostname, None, SourceType.MANAGEMENT)
+        return HostKey(self.hostname, SourceType.MANAGEMENT)
 
 
 @pytest.fixture(name="realhost_scenario")
 def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
     hostname = HostName("test-realhost")
-    ipaddress = HostAddress("1.2.3.4")
     ts = Scenario()
-    ts.add_host(hostname, ipaddress=ipaddress)
+    ts.add_host(hostname, ipaddress="127.0.0.1")
     ts.set_ruleset(
         "inventory_df_rules",
         [
@@ -897,11 +901,6 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
         ],
     )
     ts.apply(monkeypatch)
-
-    def fake_lookup_ip_address(*_a, **_kw) -> HostAddress:
-        return ipaddress
-
-    monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
 
     DiscoveredHostLabelsStore(hostname).save(
         {
@@ -918,7 +917,7 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
 
     broker = ParsedSectionsBroker(
         {
-            HostKey(hostname=hostname, ipaddress=ipaddress, source_type=SourceType.HOST,): (
+            HostKey(hostname=hostname, source_type=SourceType.HOST,): (
                 ParsedSectionsResolver(
                     section_plugins=[
                         agent_based_register.get_section_plugin(SectionName("labels")),
@@ -954,18 +953,18 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
                                 ],
                             ],
                         }
-                    )
+                    ),
+                    host_name=hostname,
                 ),
             ),
         }
     )
 
-    return RealHostScenario(hostname, ipaddress, broker)
+    return RealHostScenario(hostname, broker)
 
 
 class ClusterScenario(NamedTuple):
     host_config: config.HostConfig
-    ipaddress: HostAddress
     parsed_sections_broker: ParsedSectionsBroker
     node1_hostname: HostName
     node2_hostname: HostName
@@ -974,14 +973,8 @@ class ClusterScenario(NamedTuple):
 @pytest.fixture(name="cluster_scenario")
 def _cluster_scenario(monkeypatch) -> ClusterScenario:
     hostname = HostName("test-clusterhost")
-    ipaddress = HostAddress("1.2.3.4")
     node1_hostname = HostName("test-node1")
     node2_hostname = HostName("test-node2")
-
-    def fake_lookup_ip_address(*_a, **_kw) -> HostAddress:
-        return ipaddress
-
-    monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
 
     ts = Scenario()
     ts.add_host(node1_hostname)
@@ -1026,7 +1019,7 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:
 
     broker = ParsedSectionsBroker(
         {
-            HostKey(hostname=node1_hostname, ipaddress=ipaddress, source_type=SourceType.HOST,): (
+            HostKey(hostname=node1_hostname, source_type=SourceType.HOST): (
                 ParsedSectionsResolver(
                     section_plugins=[
                         agent_based_register.get_section_plugin(SectionName("labels")),
@@ -1062,10 +1055,11 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:
                                 ],
                             ],
                         }
-                    )
+                    ),
+                    host_name=node1_hostname,
                 ),
             ),
-            HostKey(hostname=node2_hostname, ipaddress=ipaddress, source_type=SourceType.HOST,): (
+            HostKey(hostname=node2_hostname, source_type=SourceType.HOST): (
                 ParsedSectionsResolver(
                     section_plugins=[
                         agent_based_register.get_section_plugin(SectionName("labels")),
@@ -1101,7 +1095,8 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:
                                 ],
                             ],
                         }
-                    )
+                    ),
+                    host_name=node2_hostname,
                 ),
             ),
         }
@@ -1109,7 +1104,6 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:
 
     return ClusterScenario(
         host_config,
-        ipaddress,
         broker,
         node1_hostname,
         node2_hostname,
@@ -1530,7 +1524,6 @@ def test__discover_services_on_cluster(
 
     discovered_services = discovery._get_cluster_services(
         scenario.host_config,
-        scenario.ipaddress,
         scenario.parsed_sections_broker,
         OnError.RAISE,
     )
@@ -1612,8 +1605,8 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
     )
 
     assert discovery._get_node_services(
-        HostKey(HostName("horst"), None, SourceType.HOST),
-        HostKey(HostName("horst"), None, SourceType.MANAGEMENT),
+        HostKey(HostName("horst"), SourceType.HOST),
+        HostKey(HostName("horst"), SourceType.MANAGEMENT),
         ParsedSectionsBroker({}),
         OnError.RAISE,
         lambda hn, _svcdescr: hn,
@@ -1627,7 +1620,7 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
     }
 
 
-def test_make_discovery_diff_empty():
+def test_make_discovery_diff_empty() -> None:
     assert discovery._make_diff((), (), (), ()) == "Nothing was changed."
 
 
@@ -1636,7 +1629,7 @@ class _MockService(NamedTuple):
     item: Optional[str]
 
 
-def test_make_discovery_diff():
+def test_make_discovery_diff() -> None:
     assert discovery._make_diff(
         (HostLabel("foo", "bar"),),
         (HostLabel("gee", "boo"),),

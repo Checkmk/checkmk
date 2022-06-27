@@ -126,7 +126,7 @@ class TestMakeHostSectionsHosts:
         ts.add_host(hostname)
         return ts.apply(monkeypatch)
 
-    def test_no_sources(self, hostname, ipaddress, config_cache, host_config):
+    def test_no_sources(self, hostname, ipaddress, config_cache, host_config) -> None:
         host_sections = _collect_host_sections(
             fetched=(),
             file_cache_max_age=file_cache.MaxAge.none(),
@@ -134,7 +134,7 @@ class TestMakeHostSectionsHosts:
         )[0]
         assert not host_sections
 
-    def test_one_snmp_source(self, hostname, ipaddress, config_cache, host_config):
+    def test_one_snmp_source(self, hostname, ipaddress, config_cache, host_config) -> None:
         raw_data: SNMPRawData = {}
         host_sections = _collect_host_sections(
             fetched=[
@@ -158,7 +158,7 @@ class TestMakeHostSectionsHosts:
         )[0]
         assert len(host_sections) == 1
 
-        key = HostKey(hostname, ipaddress, SourceType.HOST)
+        key = HostKey(hostname, SourceType.HOST)
         assert key in host_sections
 
         section = host_sections[key]
@@ -178,7 +178,9 @@ class TestMakeHostSectionsHosts:
             TCPSource,
         ],
     )
-    def test_one_nonsnmp_source(self, hostname, ipaddress, config_cache, host_config, source):
+    def test_one_nonsnmp_source(
+        self, hostname, ipaddress, config_cache, host_config, source
+    ) -> None:
         source = source(hostname, ipaddress)
         assert source.source_type is SourceType.HOST
 
@@ -198,7 +200,7 @@ class TestMakeHostSectionsHosts:
         )[0]
         assert len(host_sections) == 1
 
-        key = HostKey(hostname, ipaddress, source.source_type)
+        key = HostKey(hostname, source.source_type)
         assert key in host_sections
 
         section = host_sections[key]
@@ -235,7 +237,7 @@ class TestMakeHostSectionsHosts:
         )[0]
         assert len(host_sections) == 1
 
-        key = HostKey(hostname, ipaddress, SourceType.HOST)
+        key = HostKey(hostname, SourceType.HOST)
         assert key in host_sections
 
         section = host_sections[key]
@@ -271,15 +273,15 @@ class TestMakeHostSectionsHosts:
         )[0]
 
         assert set(host_sections) == {
-            HostKey(HostName(f"{hostname}0"), ipaddress, SourceType.HOST),
-            HostKey(HostName(f"{hostname}1"), ipaddress, SourceType.HOST),
-            HostKey(HostName(f"{hostname}2"), ipaddress, SourceType.HOST),
+            HostKey(HostName(f"{hostname}0"), SourceType.HOST),
+            HostKey(HostName(f"{hostname}1"), SourceType.HOST),
+            HostKey(HostName(f"{hostname}2"), SourceType.HOST),
         }
 
         for source in sources:
-            assert host_sections[
-                HostKey(source.hostname, source.ipaddress, SourceType.HOST)
-            ].sections[SectionName(f"section_name_{source.hostname}")] == [["section_content"]]
+            assert host_sections[HostKey(source.hostname, SourceType.HOST)].sections[
+                SectionName(f"section_name_{source.hostname}")
+            ] == [["section_content"]]
 
 
 class TestMakeHostSectionsClusters:
@@ -349,11 +351,11 @@ class TestMakeHostSectionsClusters:
         return ts.apply(monkeypatch)
 
     @pytest.mark.usefixtures("config_cache")
-    def test_host_config_for_cluster(self, host_config):
+    def test_host_config_for_cluster(self, host_config) -> None:
         assert host_config.is_cluster is True
         assert host_config.nodes
 
-    def test_no_sources(self, cluster, nodes, config_cache, host_config):
+    def test_no_sources(self, cluster, nodes, config_cache, host_config) -> None:
         sources = make_cluster_sources(config_cache, host_config)
 
         host_sections = _collect_host_sections(
@@ -373,11 +375,11 @@ class TestMakeHostSectionsClusters:
         )[0]
         assert len(host_sections) == len(nodes)
 
-        key_clu = HostKey(cluster, None, SourceType.HOST)
+        key_clu = HostKey(cluster, SourceType.HOST)
         assert key_clu not in host_sections
 
-        for hostname, addr in nodes.items():
-            key = HostKey(hostname, addr, SourceType.HOST)
+        for hostname in nodes:
+            key = HostKey(hostname, SourceType.HOST)
             assert key in host_sections
 
             section = host_sections[key]
@@ -388,7 +390,7 @@ class TestMakeHostSectionsClusters:
             assert not section.piggybacked_raw_data
 
 
-def test_get_host_sections_cluster(monkeypatch, mocker):
+def test_get_host_sections_cluster(monkeypatch, mocker) -> None:
     hostname = HostName("testhost")
     hosts = {
         HostName("host0"): "10.0.0.0",
@@ -453,10 +455,10 @@ def test_get_host_sections_cluster(monkeypatch, mocker):
     cmk.utils.piggyback._store_status_file_of.assert_not_called()  # type: ignore[attr-defined]
     assert cmk.utils.piggyback.remove_source_status_file.call_count == 3  # type: ignore[attr-defined]
 
-    for host, addr in hosts.items():
+    for host in hosts:
         remove_source_status_file = cmk.utils.piggyback.remove_source_status_file
         remove_source_status_file.assert_any_call(host)  # type: ignore[attr-defined]
-        key = HostKey(host, addr, SourceType.HOST)
+        key = HostKey(host, SourceType.HOST)
         assert key in host_sections
         section = host_sections[key]
         assert len(section.sections) == 1

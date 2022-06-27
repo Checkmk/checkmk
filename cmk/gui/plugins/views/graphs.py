@@ -6,13 +6,18 @@
 
 import copy
 import time
+from typing import Literal, Sequence
 
-from cmk.gui.globals import active_config, request, response
+from cmk.gui.config import active_config
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics import html_render
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.plugins.views.utils import (
+    Cell,
+    CSVExportError,
     get_graph_timerange_from_painter_options,
+    JSONExportError,
     multisite_builtin_views,
     Painter,
     painter_option_registry,
@@ -20,9 +25,12 @@ from cmk.gui.plugins.views.utils import (
     PainterOption,
     PainterOptions,
 )
+from cmk.gui.type_defs import ColumnName, Row, TemplateGraphSpec
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.valuespec import Dictionary, DropdownChoice, Transform
+from cmk.gui.valuespec import Dictionary, DropdownChoice, Transform, ValueSpec
+from cmk.gui.view_utils import CellSpec
 
 multisite_builtin_views.update(
     {
@@ -31,7 +39,7 @@ multisite_builtin_views.update(
             "column_headers": "off",
             "datasource": "services",
             "description": _(
-                "Shows all graphs including timerange selections " "of a collection of services."
+                "Shows all graphs including timerange selections of a collection of services."
             ),
             "group_painters": [
                 ("sitealias", "sitehosts"),
@@ -62,7 +70,7 @@ multisite_builtin_views.update(
             "column_headers": "off",
             "datasource": "hosts",
             "description": _(
-                "Shows host graphs including timerange selections " "of a collection of hosts."
+                "Shows host graphs including timerange selections of a collection of hosts."
             ),
             "group_painters": [
                 ("sitealias", "sitehosts"),
@@ -92,13 +100,15 @@ multisite_builtin_views.update(
 
 
 def paint_time_graph_cmk(row, cell, override_graph_render_options=None):
-    graph_identification = (
+    graph_identification: tuple[Literal["template"], TemplateGraphSpec] = (
         "template",
-        {
-            "site": row["site"],
-            "host_name": row["host_name"],
-            "service_description": row.get("service_description", "_HOST_"),
-        },
+        TemplateGraphSpec(
+            {
+                "site": row["site"],
+                "host_name": row["host_name"],
+                "service_description": row.get("service_description", "_HOST_"),
+            }
+        ),
     )
 
     # Load the graph render options from
@@ -118,19 +128,19 @@ def paint_time_graph_cmk(row, cell, override_graph_render_options=None):
     if options is not None:
         graph_render_options.update(options)
 
-    graph_data_range = {}
-
-    now = time.time()
+    now = int(time.time())
     if "set_default_time_range" in painter_params:
         duration = painter_params["set_default_time_range"]
-        graph_data_range["time_range"] = now - duration, now
+        time_range = now - duration, now
     else:
-        graph_data_range["time_range"] = now - 3600 * 4, now
+        time_range = now - 3600 * 4, now
 
     # Load timerange from painter option (overrides the defaults, if set by the user)
     painter_option_pnp_timerange = painter_options.get_without_default("pnp_timerange")
     if painter_option_pnp_timerange is not None:
-        graph_data_range["time_range"] = get_graph_timerange_from_painter_options()
+        time_range = get_graph_timerange_from_painter_options()
+
+    graph_data_range = html_render.make_graph_data_range(time_range, graph_render_options)
 
     if is_mobile(request, response):
         graph_render_options.update(
@@ -211,14 +221,14 @@ def _transform_old_graph_render_options(value):
 @painter_registry.register
 class PainterServiceGraphs(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "service_graphs"
 
     def title(self, cell):
         return _("Service Graphs with Timerange Previews")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return [
             "host_name",
             "service_description",
@@ -239,21 +249,27 @@ class PainterServiceGraphs(Painter):
     def parameters(self):
         return cmk_time_graph_params()
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_cmk_graphs_with_timeranges(row, cell)
+
+    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+        raise CSVExportError()
+
+    def export_for_json(self, row: Row, cell: Cell) -> object:
+        raise JSONExportError()
 
 
 @painter_registry.register
 class PainterHostGraphs(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "host_graphs"
 
     def title(self, cell):
         return _("Host Graphs with Timerange Previews")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_name", "host_perf_data", "host_metrics", "host_check_command"]
 
     @property
@@ -268,18 +284,24 @@ class PainterHostGraphs(Painter):
     def parameters(self):
         return cmk_time_graph_params()
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_cmk_graphs_with_timeranges(row, cell)
+
+    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+        raise CSVExportError()
+
+    def export_for_json(self, row: Row, cell: Cell) -> object:
+        raise JSONExportError()
 
 
 @painter_option_registry.register
 class PainterOptionGraphRenderOptions(PainterOption):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "graph_render_options"
 
     @property
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return vs_graph_render_options()
 
 

@@ -31,7 +31,7 @@ KILO = 1024
 MEGA = KILO**2
 
 
-def test_check_discovery_total_zero():
+def test_check_discovery_total_zero() -> None:
     """
     Some containers do not provide memory info.
     Make sure they are discovered, and a proper error message is displayed
@@ -200,7 +200,7 @@ def test_check_discovery_total_zero():
         ),
     ],
 )
-def test_check_memory_element(label, used, total, levels, kwargs, expected):
+def test_check_memory_element(label, used, total, levels, kwargs, expected) -> None:
     result = list(memory.check_element(label, used, total, levels, **kwargs))
     assert result == expected
 
@@ -268,7 +268,7 @@ MEMINFO_PAGE_MAPPED = {
         ({}, {"MemTotal": 42 * KILO, "MemFree": 28 * KILO, "SwapFree": 23}, KeyError),
     ],
 )
-def test_check_memory_fails(params, meminfo, fail_with_exception):
+def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
     with pytest.raises(fail_with_exception):
         list(check_mem_used(params, meminfo))
 
@@ -736,7 +736,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception):
         ),
     ],
 )
-def test_check_memory(params, meminfo, expected):
+def test_check_memory(params, meminfo, expected) -> None:
     copy_info = meminfo.copy()
 
     result = list(check_mem_used(params, meminfo))

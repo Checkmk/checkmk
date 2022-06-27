@@ -20,7 +20,7 @@ def _names(space):
     return sorted(n for n in dir(space) if not n.startswith("_"))
 
 
-def test_v1():
+def test_v1() -> None:
     if _names(v1) != [
         "Attributes",
         "GetRateError",
@@ -66,7 +66,7 @@ def test_v1():
         raise AssertionError(__doc__)
 
 
-def test_v1_render():
+def test_v1_render() -> None:
     if _names(v1.render) != [
         "bytes",
         "date",
@@ -83,7 +83,7 @@ def test_v1_render():
         raise AssertionError(__doc__)
 
 
-def test_v1_type_defs():
+def test_v1_type_defs() -> None:
     if _names(v1.type_defs) != [
         "CheckResult",
         "DiscoveryResult",
@@ -95,7 +95,7 @@ def test_v1_type_defs():
         raise AssertionError(__doc__)
 
 
-def test_v1_register():
+def test_v1_register() -> None:
     if _names(v1.register) != [
         "RuleSetType",
         "agent_section",
@@ -106,6 +106,6 @@ def test_v1_register():
         raise AssertionError(__doc__)
 
 
-def test_v1_clusterize():
+def test_v1_clusterize() -> None:
     if _names(v1.clusterize) != ["make_node_notice_results"]:
         raise AssertionError(__doc__)

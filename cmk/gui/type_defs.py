@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import uuid
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field
 from typing import (
@@ -16,14 +17,25 @@ from typing import (
     Mapping,
     NamedTuple,
     Optional,
+    Sequence,
     Text,
     Tuple,
     TypedDict,
     Union,
 )
 
+from pydantic import BaseModel
+
 from cmk.utils.cpu_tracking import Snapshot
-from cmk.utils.type_defs import ContactgroupName, DisabledNotificationsOptions, EventRule, UserId
+from cmk.utils.type_defs import (
+    ContactgroupName,
+    DisabledNotificationsOptions,
+    EventRule,
+    HostName,
+    MetricName,
+    ServiceName,
+    UserId,
+)
 
 from cmk.gui.exceptions import FinalizeRequest
 from cmk.gui.utils.speaklater import LazyString
@@ -32,11 +44,32 @@ HTTPVariables = List[Tuple[str, Optional[Union[int, str]]]]
 LivestatusQuery = str
 PermissionName = str
 RoleName = str
-CSSSpec = Union[None, str, List[str], List[Optional[str]], str]
+CSSSpec = list[str]
 ChoiceText = str
 ChoiceId = Optional[str]
 Choice = Tuple[ChoiceId, ChoiceText]
 Choices = List[Choice]  # TODO: Change to Sequence, perhaps DropdownChoiceEntries[str]
+
+
+@dataclass
+class UserRole:
+    name: str
+    alias: str
+    builtin: bool = False
+    permissions: Dict[str, bool] = field(default_factory=dict)
+    basedon: str | None = None
+
+    def to_dict(self) -> dict:
+        userrole_dict = {
+            "alias": self.alias,
+            "permissions": self.permissions,
+            "builtin": self.builtin,
+        }
+
+        if not self.builtin:
+            userrole_dict["basedon"] = self.basedon
+
+        return userrole_dict
 
 
 class ChoiceGroup(NamedTuple):
@@ -68,6 +101,7 @@ class SessionInfo:
     session_id: SessionId
     started_at: int
     last_activity: int
+    csrf_token: str = field(default_factory=lambda: str(uuid.uuid4()))
     flashes: List[str] = field(default_factory=list)
     # In case it is enabled: Was it already authenticated?
     two_factor_completed: bool = False
@@ -125,6 +159,8 @@ class UserSpec(TypedDict, total=False):
     user_scheme_serial: int
 
 
+Users = Dict[UserId, UserSpec]  # TODO: Improve this type
+
 # Visual specific
 FilterName = str
 FilterHTTPVariables = Mapping[str, str]
@@ -133,7 +169,7 @@ VisualName = str
 VisualTypeName = str
 VisualContext = Mapping[FilterName, FilterHTTPVariables]
 InfoName = str
-SingleInfos = List[InfoName]
+SingleInfos = Sequence[InfoName]
 
 
 class VisualLinkSpec(NamedTuple):
@@ -179,7 +215,7 @@ class PainterSpec(
 
         return super().__new__(cls, *value)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(
             (self.painter_name, tuple(self.link_spec) if self.link_spec else None) + tuple(self)[2:]
         )
@@ -294,19 +330,24 @@ SearchResultsByTopic = Iterable[Tuple[str, Iterable[SearchResult]]]
 
 # Metric & graph specific
 
+UnitRenderFunc = Callable[[Any], str]
+
 
 class _UnitInfoRequired(TypedDict):
     title: str
     symbol: str
-    render: Callable[[Any], str]
+    render: UnitRenderFunc
     js_render: str
+
+
+GraphUnitRenderFunc = Callable[[List[Union[int, float]]], Tuple[str, List[str]]]
 
 
 class UnitInfo(_UnitInfoRequired, TypedDict, total=False):
     id: str
     stepping: str
     color: str
-    graph_unit: Callable[[List[Union[int, float]]], Tuple[str, List[str]]]
+    graph_unit: GraphUnitRenderFunc
     description: str
     valuespec: Any  # TODO: better typing
 
@@ -328,7 +369,9 @@ class TranslatedMetric(_TranslatedMetricRequired, total=False):
     color: str
 
 
-GraphIdentifier = Tuple[str, Any]
+GraphPresentation = str  # TODO: Improve Literal["lines", "stacked", "sum", "average", "min", "max"]
+GraphConsoldiationFunction = Literal["max", "min", "average"]
+
 RenderingExpression = Tuple[Any, ...]
 TranslatedMetrics = Dict[str, TranslatedMetric]
 MetricExpression = str
@@ -341,6 +384,72 @@ PerfdataTuple = Tuple[
     str, float, str, Optional[float], Optional[float], Optional[float], Optional[float]
 ]
 Perfdata = List[PerfdataTuple]
+
+
+class GraphSpec(TypedDict):
+    pass
+
+
+class _TemplateGraphSpecMandatory(GraphSpec):
+    site: Optional[str]
+    host_name: HostName
+    service_description: ServiceName
+
+
+class TemplateGraphSpec(_TemplateGraphSpecMandatory, total=False):
+    graph_index: Optional[int]
+    graph_id: Optional[str]
+
+
+class ExplicitGraphSpec(GraphSpec, total=False):
+    # This is added during run time by GraphIdentificationExplicit.create_graph_recipes. Where is it
+    # used?
+    specification: tuple[Literal["explicit"], GraphSpec]  # TODO: Correct would be ExplicitGraphSpec
+    # I'd bet they are not mandatory. Needs to be figured out
+    title: str
+    unit: str
+    consolidation_function: Optional[GraphConsoldiationFunction]
+    explicit_vertical_range: tuple[Optional[float], Optional[float]]
+    omit_zero_metrics: bool
+    horizontal_rules: list  # TODO: Be more specific
+    context: VisualContext
+    add_context_to_title: bool
+    metrics: list  # TODO: Be more specific
+
+
+class _CombinedGraphSpecMandatory(GraphSpec):
+    datasource: str
+    single_infos: SingleInfos
+    presentation: GraphPresentation
+    context: VisualContext
+
+
+class CombinedGraphSpec(_CombinedGraphSpecMandatory, total=False):
+    selected_metric: MetricDefinition
+    consolidation_function: GraphConsoldiationFunction
+    graph_template: str
+
+
+class _SingleTimeseriesGraphSpecMandatory(GraphSpec):
+    site: str
+    metric: MetricName
+
+
+class SingleTimeseriesGraphSpec(_SingleTimeseriesGraphSpecMandatory, total=False):
+    host: HostName
+    service: ServiceName
+    service_description: ServiceName
+    color: Optional[str]
+
+
+GraphIdentifier = Union[
+    Tuple[Literal["custom"], str],
+    Tuple[Literal["forecast"], str],
+    Tuple[Literal["template"], TemplateGraphSpec],
+    Tuple[Literal["combined"], CombinedGraphSpec],
+    Tuple[Literal["explicit"], ExplicitGraphSpec],
+    Tuple[Literal["single_timeseries"], SingleTimeseriesGraphSpec],
+]
 
 
 class RenderableRecipe(NamedTuple):
@@ -377,3 +486,16 @@ CustomAttr = TypedDict(
     },
     total=True,
 )
+
+
+class Key(BaseModel):
+    certificate: str
+    private_key: str
+    alias: str
+    owner: UserId
+    date: float
+    # Before 2.2 this field was only used for WATO backup keys. Now we add it to all key, because it
+    # won't hurt for other types of keys (e.g. the bakery signing keys). We set a default of False
+    # to initialize it for all existing keys assuming it was already downloaded. It is still only
+    # used in the context of the backup keys.
+    not_downloaded: bool = False

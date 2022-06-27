@@ -1,0 +1,11 @@
+Title: brocade_sfp: Do not crash upon vanished item
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1655847254
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+

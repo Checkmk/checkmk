@@ -24,7 +24,7 @@ checks = {
     }, [(0, 'Battery status: normal', []), (1, 'Battery needs replacing', []),
         (0, 'Output status: on line (calibration invalid)', []),
         (0, 'Capacity: 100%', [('capacity', 100, 95, 80, 0, 100)]),
-        (0, 'Time remaining: 61 m', [('runtime', 61.0, None, None, None, None)])]),
+        (0, 'Time remaining: 1 hour 1 minute', [('runtime', 61.0, None, None, None, None)])]),
          (None, {
              'capacity': (95, 80),
              'calibration_state': 0,
@@ -32,7 +32,7 @@ checks = {
          }, [(0, 'Battery status: normal', []), (2, 'Battery needs replacing', []),
              (0, 'Output status: on line (calibration invalid)', []),
              (0, 'Capacity: 100%', [('capacity', 100, 95, 80, 0, 100)]),
-             (0, 'Time remaining: 61 m', [('runtime', 61.0, None, None, None, None)])])],
+             (0, 'Time remaining: 1 hour 1 minute', [('runtime', 61.0, None, None, None, None)])])],
     'elphase': [('Battery', {
         'current': (1, 1)
     }, [(0, 'Current: 0.0 A', [('current', 0.0, 1, 1, None, None)])])],

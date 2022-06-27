@@ -54,6 +54,7 @@ def create_section_crash_dump(
     operation: str,
     section_name: SectionName,
     section_content: object,
+    host_name: HostName,
 ) -> str:
     """Create a crash dump from an exception raised in a parse or host label function"""
 
@@ -62,6 +63,7 @@ def create_section_crash_dump(
         crash = SectionCrashReport.from_exception_and_context(
             section_name=section_name,
             section_content=section_content,
+            host_name=host_name,
         )
         CrashReportStore().save(crash)
         return f"{text} - please submit a crash report! (Crash-ID: {crash.ident_to_text()})"
@@ -77,7 +79,7 @@ def create_check_crash_dump(
     service_name: ServiceName,
     plugin_name: Union[CheckPluginNameStr, CheckPluginName],
     plugin_kwargs: Mapping[str, Any],
-    is_manual: bool,
+    is_enforced: bool,
 ) -> str:
     """Create a crash dump from an exception occured during check execution
 
@@ -91,7 +93,7 @@ def create_check_crash_dump(
             hostname=host_name,
             check_plugin_name=str(plugin_name),
             check_plugin_kwargs=plugin_kwargs,
-            is_manual_check=is_manual,
+            is_enforced_service=is_enforced,
             description=service_name,
             text=text,
         )
@@ -104,67 +106,7 @@ def create_check_crash_dump(
         return "check failed - failed to create a crash report: %s" % traceback.format_exc()
 
 
-@crash_reporting.crash_report_registry.register
-class SectionCrashReport(crash_reporting.ABCCrashReport):
-    @classmethod
-    def type(cls) -> str:
-        return "section"
-
-    @classmethod
-    def from_exception_and_context(
-        cls,
-        *,
-        section_name: SectionName,
-        section_content: object,
-    ) -> crash_reporting.ABCCrashReport:
-        return cls.from_exception(
-            details={
-                "section_name": str(section_name),
-                "section_content": section_content,
-            },
-        )
-
-
-@crash_reporting.crash_report_registry.register
-class CheckCrashReport(crash_reporting.ABCCrashReport):
-    @classmethod
-    def type(cls) -> str:
-        return "check"
-
-    @classmethod
-    def from_exception_and_context(
-        cls,
-        hostname: HostName,
-        check_plugin_name: str,
-        check_plugin_kwargs: Mapping[str, Any],
-        is_manual_check: bool,
-        description: ServiceName,
-        text: str,
-    ) -> crash_reporting.ABCCrashReport:
-        config_cache = config.get_config_cache()
-        host_config = config_cache.get_host_config(hostname)
-
-        snmp_info = _read_snmp_info(hostname)
-        agent_output = _read_agent_output(hostname)
-
-        return cls.from_exception(
-            details={
-                "check_output": text,
-                "host": hostname,
-                "is_cluster": host_config.is_cluster,
-                "description": description,
-                "check_type": check_plugin_name,
-                "inline_snmp": host_config.snmp_config(hostname).snmp_backend
-                == SNMPBackendEnum.INLINE,
-                "manual_check": is_manual_check,
-                **check_plugin_kwargs,
-            },
-            type_specific_attributes={
-                "snmp_info": snmp_info,
-                "agent_output": agent_output,
-            },
-        )
-
+class CrashReportWithAgentOutput(crash_reporting.ABCCrashReport):
     def __init__(
         self,
         crash_info: Dict,
@@ -187,6 +129,77 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
                 attributes[key] = val
 
         return attributes
+
+
+@crash_reporting.crash_report_registry.register
+class SectionCrashReport(CrashReportWithAgentOutput):
+    @classmethod
+    def type(cls) -> str:
+        return "section"
+
+    @classmethod
+    def from_exception_and_context(
+        cls,
+        *,
+        section_name: SectionName,
+        section_content: object,
+        host_name: HostName,
+    ) -> crash_reporting.ABCCrashReport:
+        snmp_info = _read_snmp_info(host_name)
+        agent_output = _read_agent_output(host_name)
+
+        return cls.from_exception(
+            details={
+                "section_name": str(section_name),
+                "section_content": section_content,
+                "host_name": host_name,
+            },
+            type_specific_attributes={
+                "snmp_info": snmp_info,
+                "agent_output": agent_output,
+            },
+        )
+
+
+@crash_reporting.crash_report_registry.register
+class CheckCrashReport(CrashReportWithAgentOutput):
+    @classmethod
+    def type(cls) -> str:
+        return "check"
+
+    @classmethod
+    def from_exception_and_context(
+        cls,
+        hostname: HostName,
+        check_plugin_name: str,
+        check_plugin_kwargs: Mapping[str, Any],
+        is_enforced_service: bool,
+        description: ServiceName,
+        text: str,
+    ) -> crash_reporting.ABCCrashReport:
+        config_cache = config.get_config_cache()
+        host_config = config_cache.get_host_config(hostname)
+
+        snmp_info = _read_snmp_info(hostname)
+        agent_output = _read_agent_output(hostname)
+
+        return cls.from_exception(
+            details={
+                "check_output": text,
+                "host": hostname,
+                "is_cluster": host_config.is_cluster,
+                "description": description,
+                "check_type": check_plugin_name,
+                "inline_snmp": host_config.snmp_config(hostname).snmp_backend
+                == SNMPBackendEnum.INLINE,
+                "enforced_service": is_enforced_service,
+                **check_plugin_kwargs,
+            },
+            type_specific_attributes={
+                "snmp_info": snmp_info,
+                "agent_output": agent_output,
+            },
+        )
 
 
 def _read_snmp_info(hostname: str) -> Optional[bytes]:

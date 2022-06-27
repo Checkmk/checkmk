@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Type
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -32,11 +32,11 @@ from cmk.gui.valuespec import (
 @rulespec_group_registry.register
 class RulespecGroupVMCloudContainer(RulespecGroup):
     @property
-    def name(self):
+    def name(self) -> str:
         return "vm_cloud_container"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("VM, Cloud, Container")
 
     @property
@@ -47,11 +47,11 @@ class RulespecGroupVMCloudContainer(RulespecGroup):
 @rulespec_group_registry.register
 class RulespecGroupDatasourcePrograms(RulespecGroup):
     @property
-    def name(self):
+    def name(self) -> str:
         return "datasource_programs"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Other integrations")
 
     @property
@@ -62,104 +62,104 @@ class RulespecGroupDatasourcePrograms(RulespecGroup):
 @rulespec_group_registry.register
 class RulespecGroupDatasourceProgramsOS(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupDatasourcePrograms
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "os"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Operating systems")
 
 
 @rulespec_group_registry.register
 class RulespecGroupDatasourceProgramsApps(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupDatasourcePrograms
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "apps"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Applications")
 
 
 @rulespec_group_registry.register
 class RulespecGroupDatasourceProgramsCloud(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupDatasourcePrograms
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "cloud"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Cloud based environments")
 
 
 class RulespecGroupDatasourceProgramsContainer(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupDatasourcePrograms
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "container"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Containerization")
 
 
 @rulespec_group_registry.register
 class RulespecGroupDatasourceProgramsCustom(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupDatasourcePrograms
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "custom"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Custom integrations")
 
 
 @rulespec_group_registry.register
 class RulespecGroupDatasourceProgramsHardware(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupDatasourcePrograms
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "hw"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Hardware")
 
 
 @rulespec_group_registry.register
 class RulespecGroupDatasourceProgramsTesting(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupDatasourcePrograms
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "testing"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Testing")
 
 

@@ -9,15 +9,14 @@ from __future__ import annotations
 import abc
 import traceback
 from dataclasses import dataclass
-from typing import Any, Dict, Iterator, List, Literal, Optional, Tuple, Type, Union
+from typing import Any, Dict, Iterator, List, Literal, Optional, Sequence, Tuple, Type, Union
 
 import cmk.utils.plugin_registry
 import cmk.utils.regex
 from cmk.utils.type_defs import TagID
 
-from cmk.gui.config import builtin_role_ids, register_post_config_load_hook
-from cmk.gui.globals import active_config, html
-from cmk.gui.htmllib import HTML
+from cmk.gui.config import active_config, builtin_role_ids, register_post_config_load_hook
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import declare_permission, permission_section_registry, PermissionSection
@@ -25,16 +24,17 @@ from cmk.gui.permissions import declare_permission, permission_section_registry,
 # Imported for plugins
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.escaping import escape_to_html
+from cmk.gui.utils.html import HTML
 
 
 @permission_section_registry.register
 class PermissionSectionIconsAndActions(PermissionSection):
     @property
-    def name(self):
+    def name(self) -> str:
         return "icons_and_actions"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Icons")
 
     @property
@@ -78,7 +78,7 @@ class Icon(abc.ABC):
     ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
         raise NotImplementedError()
 
-    def columns(self) -> List[str]:
+    def columns(self) -> Sequence[ColumnName]:
         """List of livestatus columns needed by this icon idependent of
         the queried table. The table prefix will be added to each column
         (e.g. name -> host_name)"""
@@ -131,7 +131,7 @@ class IconRegistry(cmk.utils.plugin_registry.Registry[Type[Icon]]):
 icon_and_action_registry = IconRegistry()
 
 
-def update_icons_from_configuration():
+def update_icons_from_configuration() -> None:
     _update_builtin_icons(active_config.builtin_icon_visibility)
     _register_custom_user_icons_and_actions(active_config.user_icons_and_actions)
 
@@ -285,7 +285,7 @@ def _process_icons(
     return icons
 
 
-def _process_icon(
+def _process_icon(  # pylint: disable=too-many-branches
     what: IconObjectType,
     row: Row,
     tags: List[TagID],

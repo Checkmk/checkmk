@@ -25,7 +25,14 @@ from typing import (
 import cmk.utils.piggyback
 import cmk.utils.tty as tty
 from cmk.utils.log import console
-from cmk.utils.type_defs import HostKey, ParsedSectionName, result, SectionName, SourceType
+from cmk.utils.type_defs import (
+    HostKey,
+    HostName,
+    ParsedSectionName,
+    result,
+    SectionName,
+    SourceType,
+)
 
 import cmk.core_helpers.cache as cache
 from cmk.core_helpers.host_sections import HostSections
@@ -39,7 +46,6 @@ if TYPE_CHECKING:
     from cmk.core_helpers.protocol import FetcherMessage
     from cmk.core_helpers.type_defs import SectionNameCollection
 
-    from cmk.base.config import ConfigCache, HostConfig
     from cmk.base.sources import Source
 
 CacheInfo = Optional[Tuple[int, int]]
@@ -65,14 +71,20 @@ class SectionsParser:
     def __init__(
         self,
         host_sections: HostSections,
+        host_name: HostName,
     ) -> None:
         super().__init__()
         self._host_sections = host_sections
         self._parsing_errors: List[str] = []
         self._memoized_results: Dict[SectionName, Optional[ParsingResult]] = {}
+        self._host_name = host_name
 
     def __repr__(self) -> str:
-        return "%s(host_sections=%r)" % (type(self).__name__, self._host_sections)
+        return "%s(host_sections=%r, host_name=%r)" % (
+            type(self).__name__,
+            self._host_sections,
+            self._host_name,
+        )
 
     @property
     def parsing_errors(self) -> Sequence[str]:
@@ -112,6 +124,7 @@ class SectionsParser:
                     operation="parsing",
                     section_name=section.name,
                     section_content=raw_data,
+                    host_name=self._host_name,
                 )
             )
             return None
@@ -309,7 +322,7 @@ def _collect_host_sections(
 
         source.file_cache_max_age = file_cache_max_age
 
-        host_key = HostKey(source.hostname, source.ipaddress, source.source_type)
+        host_key = HostKey(source.hostname, source.source_type)
         collected_host_sections.setdefault(
             host_key,
             source.default_host_sections,
@@ -329,10 +342,13 @@ def _collect_host_sections(
     for source, _ in fetched:
         # Store piggyback information received from all sources of this host. This
         # also implies a removal of piggyback files received during previous calls.
+        if source.source_type is SourceType.MANAGEMENT:
+            # management board (SNMP or IPMI) does not support piggybacking
+            continue
         cmk.utils.piggyback.store_piggyback_raw_data(
             source.hostname,
             collected_host_sections.setdefault(
-                HostKey(source.hostname, source.ipaddress, SourceType.HOST),
+                HostKey(source.hostname, source.source_type),
                 HostSections[AgentRawDataSection](),
             ).piggybacked_raw_data,
         )
@@ -361,7 +377,7 @@ def make_broker(
                             for section_name in host_sections.sections
                         ],
                     ),
-                    SectionsParser(host_sections=host_sections),
+                    SectionsParser(host_sections=host_sections, host_name=host_key.hostname),
                 )
                 for host_key, host_sections in collected_host_sections.items()
             }

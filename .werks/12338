@@ -1,7 +1,7 @@
 Title: REST API list of currently running activations
 Class: fix
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1615310135
 Edition: cre
 Knowledge: doc

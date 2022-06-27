@@ -111,6 +111,27 @@ register.snmp_section(
 )
 
 
+register.snmp_section(
+    name="pdu_gude_8801",
+    parsed_section_name="pdu_gude",
+    parse_function=parse_pdu_gude,
+    detect=equals(
+        ".1.3.6.1.2.1.1.2.0",
+        ".1.3.6.1.4.1.28507.41",
+    ),
+    fetch=SNMPTree(
+        ".1.3.6.1.4.1.28507.41.1.5.1.2.1",
+        [
+            "3",  # Consumption
+            "4",  # Power
+            "5",  # Current
+            "6",  # Voltage
+            "10",  # Track power
+        ],
+    ),
+)
+
+
 def discover_pdu_gude(section: Section) -> DiscoveryResult:
     yield from (Service(item=pdu_num) for pdu_num in section)
 

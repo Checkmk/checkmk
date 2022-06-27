@@ -15,11 +15,9 @@ timeout(time: 12, unit: 'HOURS') {
             stage("Execute NEB Test") {
                 sh("( cd livestatus/src/test && ./.f12 )")
             }
-    
-            stage("Execute NEB Test") {
+            stage("Execute CMC Test") {
                 sh("( cd enterprise/core/src/test && ./.f12 )")
             }
-    
             stage("Analyse Issues") {
                 xunit([GoogleTest(
                     deleteOutputFiles: true,

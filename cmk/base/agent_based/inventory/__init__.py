@@ -18,7 +18,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
 from cmk.utils.check_utils import ActiveCheckResult
-from cmk.utils.exceptions import MKGeneralException, OnError
+from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
 from cmk.utils.structured_data import StructuredDataNode, StructuredDataStore
 from cmk.utils.type_defs import EVERYTHING, HostName, InventoryPluginName, result, ServiceState
@@ -109,16 +109,6 @@ def _commandline_inventory_on_host(
     section.section_success(f"Found {count_i} inventory entries")
     section.section_success(f"Found {count_s} status entries")
 
-    if not host_config.inventory_export_hooks:
-        return
-
-    section.section_step("Execute inventory export hooks")
-
-    _run_inventory_export_hooks(host_config, inv_result.trees.inventory)
-
-    count = len(host_config.inventory_export_hooks)
-    section.section_success(f"Sucessfully ran {count} export hooks")
-
 
 # .
 #   .--Inventory Check-----------------------------------------------------.
@@ -170,8 +160,6 @@ def active_check_inventory(hostname: HostName, options: Dict[str, int]) -> Activ
         old_tree = _save_inventory_tree(hostname, trees.inventory, retentions)
         update_result = ActiveCheckResult()
 
-    _run_inventory_export_hooks(host_config, trees.inventory)
-
     return ActiveCheckResult.from_subresults(
         update_result,
         *_check_inventory_tree(trees, old_tree, sw_missing, sw_changes, hw_changes),
@@ -202,7 +190,7 @@ def _check_inventory_tree(
         ActiveCheckResult(0, f"Found {trees.inventory.count_entries()} inventory entries")
     ]
 
-    swp_table = trees.inventory.get_table(["software", "packages"])
+    swp_table = trees.inventory.get_table(("software", "packages"))
     if swp_table is not None and swp_table.is_empty() and sw_missing:
         subresults.append(ActiveCheckResult(sw_missing, "software packages information is missing"))
 
@@ -229,8 +217,8 @@ def _tree_nodes_are_equal(
     if inv_tree is None:
         return False
 
-    old_node = old_tree.get_node([edge])
-    inv_node = inv_tree.get_node([edge])
+    old_node = old_tree.get_node((edge,))
+    inv_node = inv_tree.get_node((edge,))
     if old_node is None:
         return inv_node is None
 
@@ -335,7 +323,7 @@ def _do_inv_for_cluster(host_config: config.HostConfig) -> InventoryTrees:
         return InventoryTrees(inventory_tree, StructuredDataNode())
 
     node = inventory_tree.setdefault_node(
-        ["software", "applications", "check_mk", "cluster", "nodes"]
+        ("software", "applications", "check_mk", "cluster", "nodes")
     )
     node.table.add_key_columns(["name"])
     node.table.add_rows([{"name": node_name} for node_name in host_config.nodes])
@@ -413,7 +401,7 @@ def _set_cluster_property(
     inventory_tree: StructuredDataNode,
     host_config: config.HostConfig,
 ) -> None:
-    node = inventory_tree.setdefault_node(["software", "applications", "check_mk", "cluster"])
+    node = inventory_tree.setdefault_node(("software", "applications", "check_mk", "cluster"))
     node.attributes.add_pairs({"is_cluster": host_config.is_cluster})
 
 
@@ -457,21 +445,3 @@ def _save_inventory_tree(
 
     inventory_store.save(host_name=hostname, tree=inventory_tree)
     return old_tree
-
-
-def _run_inventory_export_hooks(
-    host_config: config.HostConfig, inventory_tree: StructuredDataNode
-) -> None:
-    import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
-
-    for hookname, params in host_config.inventory_export_hooks:
-        console.verbose(
-            "Execute export hook: %s%s%s%s" % (tty.blue, tty.bold, hookname, tty.normal)
-        )
-        try:
-            func = inventory_plugins.inv_export[hookname]["export_function"]
-            func(host_config.hostname, params, inventory_tree.serialize())
-        except Exception as e:
-            if cmk.utils.debug.enabled():
-                raise
-            raise MKGeneralException("Failed to execute export hook %s: %s" % (hookname, e))

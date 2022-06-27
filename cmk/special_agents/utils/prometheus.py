@@ -7,6 +7,8 @@
 Common functions used in Prometheus related Special agents
 """
 
+from cmk.utils import password_store
+
 from cmk.special_agents.utils.request_helper import (
     create_api_connect_session,
     parse_api_custom_url,
@@ -21,12 +23,18 @@ def extract_connection_args(config):
     }
 
     if "auth_basic" in config:
+        auth_info = config["auth_basic"][1]
         if config["auth_basic"][0] == "auth_login":
-            auth_info = config["auth_basic"][1]
-            connection_args.update({"auth": (auth_info["username"], auth_info["password"][1])})
+            connection_args.update(
+                {
+                    "auth": (
+                        auth_info["username"],
+                        password_store.extract(auth_info["password"]),
+                    )
+                }
+            )
         else:
-            auth_info = config["auth_basic"][1]
-            connection_args.update({"token": auth_info["token"][1]})
+            connection_args.update({"token": password_store.extract(auth_info["token"])})
 
     connect_type, connect_settings = config["connection"]
 

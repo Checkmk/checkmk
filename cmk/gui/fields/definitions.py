@@ -7,34 +7,42 @@
 import ast
 import json
 import typing
+import uuid
+import warnings
 from datetime import datetime
 from typing import Any, Optional
 
 import pytz
-from cryptography.x509 import load_pem_x509_csr
+from cryptography.x509 import CertificateSigningRequest, load_pem_x509_csr
+from cryptography.x509.oid import NameOID
 from marshmallow import fields as _fields
-from marshmallow import post_load, utils, ValidationError
+from marshmallow import post_load, pre_dump, utils, ValidationError
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 import cmk.utils.version as version
 from cmk.utils.exceptions import MKException
-from cmk.utils.livestatus_helpers.expressions import (
-    NothingExpression,
-    QueryExpression,
-    tree_to_expr,
-)
+from cmk.utils.livestatus_helpers.expressions import NothingExpression, QueryExpression
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hostgroups, Hosts, Servicegroups
 from cmk.utils.livestatus_helpers.types import Column, Table
 
-from cmk.gui import sites, watolib
+from cmk.gui import sites
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.base import BaseSchema, MultiNested, ValueTypedDictSchema
-from cmk.gui.fields.utils import attr_openapi_schema, collect_attributes, ObjectContext, ObjectType
+from cmk.gui.fields.utils import (
+    attr_openapi_schema,
+    collect_attributes,
+    ObjectContext,
+    ObjectType,
+    tree_to_expr,
+)
 from cmk.gui.groups import GroupName, GroupType, load_group_information
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import allsites
+from cmk.gui.watolib.host_attributes import host_attribute, HostAttributeTopicCustomAttributes
+from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, Host
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
+from cmk.gui.watolib.tags import load_tag_group
 
 from cmk.fields import base, DateTime
 
@@ -101,7 +109,7 @@ class PythonString(base.String):
 
 # NOTE
 # All these non-capturing match groups are there to properly distinguish the alternatives.
-FOLDER_PATTERN = r"(?:(?:[~\\\/]|(?:[~\\\/][-_ a-zA-Z0-9.]+)+)|[0-9a-fA-F]{32})"
+FOLDER_PATTERN = r"(?:(?:[~\\\/]|(?:[~\\\/][-_ a-zA-Z0-9.]+)+[~\\\/]?)|[0-9a-fA-F]{32})"
 
 
 class FolderField(base.String):
@@ -152,6 +160,9 @@ class FolderField(base.String):
             >>> FolderField._normalize_folder("~foo~bar")
             '/foo/bar'
 
+            >>> FolderField._normalize_folder("/foo/bar/")
+            '/foo/bar'
+
         Returns:
             The normalized representation.
 
@@ -164,10 +175,12 @@ class FolderField(base.String):
             if prev == folder_id:
                 break
             prev = folder_id
+        if len(folder_id) > 1 and folder_id.endswith("/"):
+            folder_id = folder_id[:-1]
         return folder_id
 
     @classmethod
-    def load_folder(cls, folder_id: str) -> watolib.CREFolder:
+    def load_folder(cls, folder_id: str) -> CREFolder:
         def _ishexdigit(hex_string: str) -> bool:
             try:
                 int(hex_string, 16)
@@ -176,12 +189,12 @@ class FolderField(base.String):
                 return False
 
         if folder_id == "/":
-            folder = watolib.Folder.root_folder()
+            folder = Folder.root_folder()
         elif _ishexdigit(folder_id):
-            folder = watolib.Folder.by_id(folder_id)
+            folder = Folder.by_id(folder_id)
         else:
             folder_id = cls._normalize_folder(folder_id)
-            folder = watolib.Folder.folder(folder_id[1:])
+            folder = Folder.folder(folder_id[1:])
 
         return folder
 
@@ -192,12 +205,15 @@ class FolderField(base.String):
         except MKException:
             if value:
                 raise self.make_error("not_found", folder_id=value)
+        return None
 
     def _serialize(self, value, attr, obj, **kwargs) -> typing.Optional[str]:
         if isinstance(value, str):
+            if not value.startswith("/"):
+                value = f"/{value}"
             return value
 
-        if isinstance(value, watolib.CREFolder):
+        if isinstance(value, CREFolder):
             return "/" + value.path()
 
         raise ValueError(f"Unknown type: {value!r}")
@@ -387,6 +403,7 @@ ColumnTypes = typing.Union[Column, str]
 
 def column_field(
     table: typing.Type[Table],
+    example: typing.List[str],
     required: bool = False,
     mandatory: Optional[typing.List[ColumnTypes]] = None,
 ) -> "_ListOfColumns":
@@ -406,6 +423,7 @@ def column_field(
         load_default=[getattr(table, col) for col in column_names],
         description=f"The desired columns of the `{table.__tablename__}` table. If left empty, a "
         "default set of columns is used.",
+        example=example,
     )
 
 
@@ -553,14 +571,14 @@ class HostField(base.String):
         # Regex gets checked through the `pattern` of the String instance
 
         if self._should_exist is not None:
-            host = watolib.Host.host(value)
+            host = Host.host(value)
             if self._should_exist and not host:
                 raise self.make_error("should_exist", host_name=value)
 
             if not self._should_exist and host:
                 raise self.make_error("should_not_exist", host_name=value)
 
-        if self._should_be_cluster is not None and (host := watolib.Host.host(value)) is not None:
+        if self._should_be_cluster is not None and (host := Host.host(value)) is not None:
             if self._should_be_cluster and not host.is_cluster():
                 raise self.make_error("should_be_cluster", host_name=value)
 
@@ -597,12 +615,12 @@ def host_is_monitored(host_name: str) -> bool:
 def validate_custom_host_attributes(data: dict[str, str]) -> dict[str, str]:
     for name, value in data.items():
         try:
-            attribute = watolib.host_attribute(name)
+            attribute = host_attribute(name)
         except KeyError:
-            raise ValidationError(f"No such attribute, {name!r}", field_name=name)
+            raise ValidationError({name: f"No such attribute, {name!r}"}, field_name=name)
 
-        if attribute.topic() != watolib.host_attributes.HostAttributeTopicCustomAttributes:
-            raise ValidationError(f"{name} is not a custom host attribute.")
+        if attribute.topic() != HostAttributeTopicCustomAttributes:
+            raise ValidationError({name: f"{name} is not a custom host attribute."})
 
         try:
             attribute.validate_input(value, "")
@@ -630,6 +648,101 @@ class CustomFolderAttributes(ValueTypedDictSchema):
     @post_load
     def _valid(self, data, **kwargs):
         return validate_custom_host_attributes(data)
+
+
+class TagGroupAttributes(ValueTypedDictSchema):
+    """Schema to validate tag groups
+
+    Examples:
+
+        >>> schema = TagGroupAttributes()
+        >>> schema.load({"foo": "bar"})
+        Traceback (most recent call last):
+        ...
+        marshmallow.exceptions.ValidationError: {'foo': "Tag group name must start with 'tag_'"}
+
+        >>> schema.load({"tag_foo": "bar"})
+        Traceback (most recent call last):
+        ...
+        marshmallow.exceptions.ValidationError: {'tag_foo': 'No such tag-group.'}
+
+        >>> schema.load({"tag_agent": "flint"})
+        Traceback (most recent call last):
+        ...
+        marshmallow.exceptions.ValidationError: {'tag_agent': "Invalid value for tag-group: 'flint'"}
+
+        >>> schema.load({"tag_agent": "cmk-agent"})
+        {'tag_agent': 'cmk-agent'}
+
+        >>> schema.dump({"tag_agent": "cmk-agent"})
+        {'tag_agent': 'cmk-agent'}
+
+        >>> schema.load({"tag_agent": None})
+        Traceback (most recent call last):
+        ...
+        marshmallow.exceptions.ValidationError: {'tag_agent': 'Invalid value for tag-group: None'}
+
+        >>> schema.dump({"tag_agent": None})
+        {'tag_agent': None}
+
+    """
+
+    value_type = ValueTypedDictSchema.field(
+        base.String(
+            description=(
+                "The value of the tag-group attribute. Each tag is a mapping of string to string, "
+                "where the tag name must start with `tag_`."
+            ),
+            allow_none=True,
+        )
+    )
+
+    def _validate_tag_group(self, name: str) -> set[typing.Optional[str]]:
+        if not name.startswith("tag_"):
+            raise ValidationError({name: "Tag group name must start with 'tag_'"})
+
+        try:
+            tag_group = load_tag_group(name[4:])
+        except MKUserError as exc:
+            raise ValidationError({name: str(exc)}) from exc
+
+        if tag_group is None:
+            raise ValidationError({name: "No such tag-group."})
+
+        # FIXME: This should eventually be moved into TagGroup
+
+        # Checkbox tags are allowed to have no value at all. This means they are deactivated.
+        allowed_ids = tag_group.get_tag_ids()
+        if tag_group.is_checkbox_tag_group:
+            allowed_ids.add(None)
+
+        return allowed_ids
+
+    @pre_dump
+    def _pre_dump(self, data: dict[str, str], **kwargs) -> dict[str, str]:
+        rv: dict[str, str] = {}
+        for key, value in data.items():
+            allowed_ids = self._validate_tag_group(key)
+
+            if value not in allowed_ids:
+                warnings.warn(f"Invalid value for tag-group {key}: {value!r}")
+
+            rv[key] = value
+
+        return rv
+
+    @post_load
+    def _post_load(self, data: dict[str, str], **kwargs) -> dict[str, str]:
+        rv: dict[str, str] = {}
+        for key, value in data.items():
+            allowed_ids = self._validate_tag_group(key)
+
+            if value not in allowed_ids:
+                raise ValidationError({key: f"Invalid value for tag-group: {value!r}"})
+
+            rv[key] = value
+
+        return rv
 
 
 def attributes_field(
@@ -684,6 +797,7 @@ def attributes_field(
             [
                 attr_openapi_schema(object_type, object_context),
                 custom_schema[object_type],
+                TagGroupAttributes,
             ],
             metadata={"context": {"object_context": object_context}},
             merged=True,  # to unify both models
@@ -857,8 +971,11 @@ class PasswordIdent(base.String):
             **kwargs,
         )
 
-    def _validate(self, value):
+    def _validate(self, value: str):
         super()._validate(value)
+
+        if ":" in value:
+            raise self.make_error("contains_colon", name=value)
 
         exists = password_exists(value)
         if self._should_exist and not exists:
@@ -991,17 +1108,30 @@ class Timestamp(DateTime):
         return datetime.timestamp(val)
 
 
-class X509ReqPEMField(base.String):
+class X509ReqPEMFieldUUID(base.String):
     default_error_messages = {
         "malformed": "Malformed CSR",
         "invalid": "Invalid CSR (signature and public key do not match)",
+        "no_cn": "CN is missing",
+        "cn_no_uuid": "CN {cn} is no valid version-4 UUID",
     }
 
-    def _validate(self, value):
+    def _validate(self, value: CertificateSigningRequest) -> None:
         if not value.is_signature_valid:
             raise self.make_error("invalid")
+        try:
+            cn = value.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
+        except IndexError:
+            raise self.make_error("no_cn")
+        try:
+            uuid.UUID(
+                cn,
+                version=4,
+            )
+        except ValueError:
+            raise self.make_error("cn_no_uuid", cn=cn)
 
-    def _deserialize(self, value, attr, data, **kwargs):
+    def _deserialize(self, value, attr, data, **kwargs) -> CertificateSigningRequest:
         try:
             return load_pem_x509_csr(
                 super()
@@ -1035,5 +1165,5 @@ __all__ = [
     "query_field",
     "SiteField",
     "Timestamp",
-    "X509ReqPEMField",
+    "X509ReqPEMFieldUUID",
 ]

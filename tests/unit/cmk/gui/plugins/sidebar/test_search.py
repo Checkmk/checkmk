@@ -16,7 +16,7 @@ from cmk.gui.plugins.sidebar.search import (
 
 
 class TestLabelMatchPlugin:
-    def test_input_to_key_value_invalid_ok(self):
+    def test_input_to_key_value_invalid_ok(self) -> None:
         assert ABCLabelMatchPlugin._input_to_key_value("key:value") == Label("key", "value", False)
 
     @pytest.mark.parametrize(
@@ -28,20 +28,20 @@ class TestLabelMatchPlugin:
             "abc:",
         ],
     )
-    def test_input_to_key_value_invalid(self, invalid_input: str):
+    def test_input_to_key_value_invalid(self, invalid_input: str) -> None:
         with pytest.raises(MKUserError):
             ABCLabelMatchPlugin._input_to_key_value(invalid_input)
 
-    def test_get_livestatus_filters_no_input(self):
+    def test_get_livestatus_filters_no_input(self) -> None:
         assert HostLabelMatchPlugin().get_livestatus_filters("", {}) == ""
 
-    def test_get_livestatus_filters_one_filter(self):
+    def test_get_livestatus_filters_one_filter(self) -> None:
         assert (
             HostLabelMatchPlugin().get_livestatus_filters("hosts", {"hl": ["x:y"]})
             == "Filter: labels = 'x' 'y'\n"
         )
 
-    def test_get_livestatus_filters_two_filters(self):
+    def test_get_livestatus_filters_two_filters(self) -> None:
         assert (
             ServiceLabelMatchPlugin().get_livestatus_filters("services", {"sl": ["x:y", "a:b"]})
             == "Filter: labels = 'x' 'y'\nFilter: labels = 'a' 'b'\n"

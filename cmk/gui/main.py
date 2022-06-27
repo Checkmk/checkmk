@@ -8,8 +8,10 @@ from cmk.utils.site import omd_site
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect
-from cmk.gui.globals import active_config, html, request, response
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.sidebar import SidebarRenderer
@@ -25,7 +27,7 @@ def page_index() -> None:
         raise HTTPRedirect(makeuri(request, [], filename="mobile.py"))
 
     title = get_page_heading()
-    content = html.render_iframe("", src=_get_start_url(), name="main")
+    content = HTMLWriter.render_iframe("", src=_get_start_url(), name="main")
     SidebarRenderer().show(title, content)
 
 

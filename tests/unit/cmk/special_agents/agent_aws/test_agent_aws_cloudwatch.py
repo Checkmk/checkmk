@@ -77,7 +77,9 @@ def test_agent_aws_cloudwatch_alarms_limits(
 
 
 @pytest.mark.parametrize("alarm_names,amount_alarms", cloudwatch_params)
-def test_agent_aws_cloudwatch_alarms(get_cloudwatch_alarms_sections, alarm_names, amount_alarms):
+def test_agent_aws_cloudwatch_alarms(
+    get_cloudwatch_alarms_sections, alarm_names, amount_alarms
+) -> None:
     cloudwatch_alarms_limits, cloudwatch_alarms = get_cloudwatch_alarms_sections(alarm_names)
     _cloudwatch_alarms_limits_results = cloudwatch_alarms_limits.run().results  # noqa: F841
     cloudwatch_alarms_results = cloudwatch_alarms.run().results

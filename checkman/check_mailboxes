@@ -4,8 +4,8 @@ catalog: agentless
 license: GPLv2
 distribution: check_mk
 description:
- This active check logs into an imap account and can monitor the age of the oldest or
- newest mail as well as the total count of mails in one or multiple mailboxes.
+ This active check logs into an IMAP or EWS account and optionally monitors the age of the oldest
+ or newest mail as well as the total count of mails in one or multiple mailboxes.
 
  There is a caveat though: Many mailservers don't support retrieving mails sorted by
  age and it would be very costy (in terms of traffic and check time) to retrive all
@@ -13,3 +13,8 @@ description:
  recently and most recently modified mails from the server and checks the age of those.
  Unless mails get moved between mailboxes, the least recenly modified mail should also
  be the oldest one and the most recently modified mail should be the newest.
+ 
+ As for EWS the mailbox to be contacted can be specified by an email address which in contrast to
+ IMAP might be different from the credentials username (but doesn't have to be).
+ For that case this email address (a.k.a. 'PrimarySmtpAddress') can be specified in the setup
+ for this check (available for EWS only).

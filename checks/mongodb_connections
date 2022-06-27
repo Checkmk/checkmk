@@ -49,7 +49,7 @@ def check_mongodb_connections(item, params, info):
     yield 0, "Rate: %s/sec" % rate, [("connections_rate", rate)]
 
 
-def _is_int(key_list, info_dict):
+def _is_int(key_list, info_dict) -> bool:
     """
     check if key is in dict and value is an integer
     :param key_list: list of keys

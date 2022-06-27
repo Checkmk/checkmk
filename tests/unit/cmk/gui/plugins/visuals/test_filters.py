@@ -19,9 +19,10 @@ import cmk.gui.plugins.visuals
 # Triggers plugin loading
 import cmk.gui.views
 import cmk.gui.visuals
-from cmk.gui.globals import active_config, output_funnel
+from cmk.gui.config import active_config
 from cmk.gui.plugins.visuals.wato import FilterWatoFolder
 from cmk.gui.type_defs import VisualContext
+from cmk.gui.utils.output_funnel import output_funnel
 
 
 # mock_livestatus does not support Stats queries at the moment. We need to mock the function away
@@ -111,7 +112,7 @@ def fixture_livestatus_test_config(mock_livestatus, mock_wato_folders):
 
 # In general filters should not affect livestatus query in case there is no variable set for them
 @pytest.mark.parametrize("filter_ident", cmk.gui.plugins.visuals.utils.filter_registry.keys())
-def test_filters_filter_with_empty_request(request_context, filter_ident, live):
+def test_filters_filter_with_empty_request(request_context, filter_ident, live) -> None:
     if filter_ident == "hostgroupvisibility":
         expected_filter = "Filter: hostgroup_num_hosts > 0\n"
     else:
@@ -454,12 +455,7 @@ filter_tests = [
             ("hst_service_level_lower", "10"),
             ("hst_service_level_upper", "20"),
         ],
-        expected_filters=(
-            "Filter: host_custom_variable_names >= EC_SL\n"
-            "Filter: host_custom_variable_values >= 10\n"
-            "Filter: host_custom_variable_values >= 20\n"
-            "Or: 2\n"
-        ),
+        expected_filters=("Filter: host_custom_variable_names >= EC_SL\n"),
     ),
     FilterTest(
         ident="log_class",
@@ -592,7 +588,7 @@ def filter_test_id(t):
 
 
 @pytest.mark.parametrize("test", filter_tests, ids=filter_test_id)
-def test_filters_filter(request_context, test, monkeypatch):
+def test_filters_filter(request_context, test, monkeypatch) -> None:
     # Needed for ABCFilterCustomAttribute
     monkeypatch.setattr(active_config, "wato_host_attrs", [{"name": "bla", "title": "Bla"}])
 
@@ -611,10 +607,6 @@ class FilterTableTest(NamedTuple):
     request_vars: Sequence[Tuple[str, str]]
     rows: Sequence[Mapping[str, Any]]
     expected_rows: Sequence[Mapping[str, Any]]
-
-
-def get_inventory_table_patch(inventory, path):
-    return inventory[path]
 
 
 filter_table_tests = [
@@ -927,7 +919,52 @@ filter_table_tests = [
     # Testing base class FilterInvtableOperStatus
     FilterTableTest(
         ident="invinterface_oper_status",
+        request_vars=[],
+        rows=[
+            {"invinterface_oper_status": 1},
+            {"invinterface_oper_status": 3},
+            {"invinterface_oper_status": 5},
+        ],
+        expected_rows=[
+            {"invinterface_oper_status": 1},
+            {"invinterface_oper_status": 3},
+            {"invinterface_oper_status": 5},
+        ],
+    ),
+    FilterTableTest(
+        ident="invinterface_oper_status",
         request_vars=[
+            ("invinterface_oper_status_1", ""),
+            ("invinterface_oper_status_3", "on"),
+            ("invinterface_oper_status_5", ""),
+        ],
+        rows=[
+            {"invinterface_oper_status": 1},
+            {"invinterface_oper_status": 3},
+            {"invinterface_oper_status": 5},
+        ],
+        expected_rows=[
+            {"invinterface_oper_status": 3},
+        ],
+    ),
+    FilterTableTest(
+        ident="invinterface_oper_status",
+        request_vars=[
+            ("invinterface_oper_status_1", ""),
+            ("invinterface_oper_status_3", ""),
+            ("invinterface_oper_status_5", ""),
+        ],
+        rows=[
+            {"invinterface_oper_status": 1},
+            {"invinterface_oper_status": 3},
+            {"invinterface_oper_status": 5},
+        ],
+        expected_rows=[],
+    ),
+    FilterTableTest(
+        ident="invinterface_oper_status",
+        request_vars=[
+            ("invinterface_oper_status_1", ""),
             ("invinterface_oper_status_3", "on"),
         ],
         rows=[
@@ -937,6 +974,7 @@ filter_table_tests = [
         ],
         expected_rows=[
             {"invinterface_oper_status": 3},
+            {"invinterface_oper_status": 5},
         ],
     ),
     # Testing base class FilterInvtableAdminStatus
@@ -1047,6 +1085,143 @@ filter_table_tests = [
             {"invinterface_last_change": 1523811000 - (60 * 60 * 24 * 4)},
         ],
     ),
+    # FilterECServiceLevelRange
+    FilterTableTest(
+        ident="svc_service_level",
+        request_vars=[("svc_service_level_lower", "1"), ("svc_service_level_upper", "3")],
+        rows=[
+            {"service_custom_variable_values": ["custom_2", "custom_1", "0"]},
+            {"service_custom_variable_values": ["custom_2", "custom_1", "1"]},
+            {"service_custom_variable_values": ["custom_2", "custom_1", "2"]},
+            {"service_custom_variable_values": ["custom_2", "custom_1", "3"]},
+            {"service_custom_variable_values": ["custom_2", "custom_1", "4"]},
+        ],
+        expected_rows=[
+            {"service_custom_variable_values": ["custom_2", "custom_1", "1"]},
+            {"service_custom_variable_values": ["custom_2", "custom_1", "2"]},
+            {"service_custom_variable_values": ["custom_2", "custom_1", "3"]},
+        ],
+    ),
+    FilterTableTest(
+        ident="hst_service_level",
+        request_vars=[("hst_service_level_lower", "1")],
+        rows=[
+            {
+                "host_custom_variable_values": [
+                    "",
+                    "",
+                    "127.0.0.1",
+                    "/wato/hosts.mk",
+                    "0",
+                    "",
+                    "",
+                    "/wato/ auto-piggyback cmk-agent",
+                    "/wato/hosts.mk",
+                ]
+            },
+            {
+                "host_custom_variable_values": [
+                    "",
+                    "",
+                    "127.0.0.1",
+                    "/wato/hosts.mk",
+                    "1",
+                    "",
+                    "",
+                    "/wato/ auto-piggyback cmk-agent",
+                    "/wato/hosts.mk",
+                ]
+            },
+            {
+                "host_custom_variable_values": [
+                    "",
+                    "",
+                    "127.0.0.1",
+                    "/wato/hosts.mk",
+                    "2",
+                    "",
+                    "",
+                    "/wato/ auto-piggyback cmk-agent",
+                    "/wato/hosts.mk",
+                ]
+            },
+        ],
+        expected_rows=[
+            {
+                "host_custom_variable_values": [
+                    "",
+                    "",
+                    "127.0.0.1",
+                    "/wato/hosts.mk",
+                    "1",
+                    "",
+                    "",
+                    "/wato/ auto-piggyback cmk-agent",
+                    "/wato/hosts.mk",
+                ]
+            },
+        ],
+    ),
+    FilterTableTest(
+        ident="hst_service_level",
+        request_vars=[("hst_service_level_upper", "2")],
+        rows=[
+            {
+                "host_custom_variable_values": [
+                    "",
+                    "",
+                    "127.0.0.1",
+                    "/wato/hosts.mk",
+                    "0",
+                    "",
+                    "",
+                    "/wato/ auto-piggyback cmk-agent",
+                    "/wato/hosts.mk",
+                ]
+            },
+            {
+                "host_custom_variable_values": [
+                    "",
+                    "",
+                    "127.0.0.1",
+                    "/wato/hosts.mk",
+                    "1",
+                    "",
+                    "",
+                    "/wato/ auto-piggyback cmk-agent",
+                    "/wato/hosts.mk",
+                ]
+            },
+            {
+                "host_custom_variable_values": [
+                    "",
+                    "",
+                    "127.0.0.1",
+                    "/wato/hosts.mk",
+                    "2",
+                    "",
+                    "",
+                    "/wato/ auto-piggyback cmk-agent",
+                    "/wato/hosts.mk",
+                ]
+            },
+        ],
+        expected_rows=[
+            {
+                "host_custom_variable_values": [
+                    "",
+                    "",
+                    "127.0.0.1",
+                    "/wato/hosts.mk",
+                    "2",
+                    "",
+                    "",
+                    "/wato/ auto-piggyback cmk-agent",
+                    "/wato/hosts.mk",
+                ]
+            },
+        ],
+    ),
     # TODO: Testing base class FilterHistoric
     # FilterTableTest(
     #    ident="host_metrics_hist",
@@ -1062,7 +1237,7 @@ filter_table_tests = [
 
 
 @pytest.mark.parametrize("test", filter_table_tests)
-def test_filters_filter_table(request_context, test, monkeypatch):
+def test_filters_filter_table(request_context, test, monkeypatch) -> None:
     # Needed for DeploymentTristateFilter test
     def deployment_states(host_name):
         return {
@@ -1078,11 +1253,19 @@ def test_filters_filter_table(request_context, test, monkeypatch):
         monkeypatch.setattr(agent_bakery, "get_cached_deployment_status", deployment_states)
 
     # Needed for FilterInvFloat test
-    monkeypatch.setattr(cmk.gui.inventory, "get_inventory_table", get_inventory_table_patch)
-    monkeypatch.setattr(cmk.gui.inventory, "get_inventory_attribute", get_inventory_table_patch)
+    monkeypatch.setattr(
+        cmk.gui.views.inventory,
+        "_get_table_rows",
+        lambda t, p: {cmk.gui.inventory.InventoryPath.parse(k): v for k, v in t.items()}[p],
+    )
+    monkeypatch.setattr(
+        cmk.gui.inventory,
+        "get_attribute",
+        lambda t, p: {cmk.gui.inventory.InventoryPath.parse(k): v for k, v in t.items()}[p],
+    )
 
     # Needed for FilterAggrServiceUsed test
-    def is_part_of_aggregation_patch(host, service):
+    def is_part_of_aggregation_patch(host, service) -> bool:
         return {("h", "srv1"): True}.get((host, service), False)
 
     monkeypatch.setattr(cmk.gui.bi, "is_part_of_aggregation", is_part_of_aggregation_patch)
@@ -1097,7 +1280,7 @@ def test_filters_filter_table(request_context, test, monkeypatch):
 
 
 # Filter form is not really checked. Only checking that no exception occurs
-def test_filters_display_with_empty_request(request_context, live):
+def test_filters_display_with_empty_request(request_context, live) -> None:
     with live:
         for filt in cmk.gui.plugins.visuals.utils.filter_registry.values():
             with output_funnel.plugged():

@@ -1,0 +1,18 @@
+Title: Pipe symbol in name of the NIC doesn't lead to crash
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1650386830
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+In Windows names of a network card may contain a wide variety of the 
+symbols including the pipe symbol. If the pipe symbol is presented in 
+the name, then WATO crashes.
+
+With this release, the windows_if.ps1 plugin replaces pipe symbol, i.e. 
+'|' with slash symbol, i.e. '/', thus eliminating the problem.
+
+Ticket CMK-10291

@@ -47,7 +47,6 @@ constexpr std::string_view kFile = "file";        // string
 constexpr std::string_view kTimeout = "timeout";  // int
 
 // group "global"
-// root
 const char *const kInstall = "install";                               // bool
 const char *const kName = "name";                                     // string
 const char *const kPort = "port";                                     // int
@@ -61,6 +60,7 @@ const char *const kSectionFlush = "section_flush";                    // bool
 const char *const kGlobalEncrypt = "encrypted";                       // bool
 const char *const kGlobalPassword = "passphrase";                     // string
 const char *const kGlobalWmiTimeout = "wmi_timeout";                  // int
+const std::string_view kCpuLoadMethod{"cpuload_method"};              // string
 
 const char *const kGlobalRemoveLegacy = "remove_legacy";  // bool
 
@@ -80,6 +80,8 @@ const char *const kLogDebug = "debug";        // string no, yes, all
 const char *const kLogWinDbg = "windbg";      // bool
 const char *const kLogEvent = "eventlog";     // bool
 const char *const kLogFile = "file";          // string
+const char *const kLogFileMaxFileCount = "max_file_count";  // string
+const char *const kLogFileMaxFileSize = "max_file_size";    // string
 
 // group plugins
 const char *const kPluginsFolders = "folders";            // seq
@@ -217,6 +219,11 @@ constexpr const char *const kWaitNetwork = "wait_network";  // int, seconds
 }  // namespace vars
 
 namespace values {
+
+// global.cpuload_method
+const std::string_view kCpuLoadWmi{"use_wmi"};
+const std::string_view kCpuLoadPerf{"use_perf"};
+
 // modules.table
 constexpr std::string_view kModulesNamePython = "python-3";  //
 constexpr std::string_view kModulesCmdPython =
@@ -261,6 +268,7 @@ constexpr std::string_view kControllerOnCrashEmergency{"emergency_mode"};
 }  // namespace values
 
 namespace defaults {
+const std::string_view kCpuLoad{values::kCpuLoadPerf};
 constexpr const char *const kStartMode = values::kStartModeAuto;
 constexpr const char *const kErrorMode = values::kErrorModeLog;
 constexpr bool kRestartOnCrash = true;
@@ -273,7 +281,7 @@ constexpr std::string_view kModulesDir = "modules\\{}";
 constexpr std::string_view kModuleUsageDefaultMode = values::kModuleUsageAuto;
 
 constexpr uint32_t kServiceWaitNetwork = 30;
-constexpr std::string_view kControllerAgentChannelDefault{"localhost:50001"};
+constexpr std::string_view kControllerAgentChannelDefault{"localhost:28250"};
 constexpr std::string_view kControllerOnCrashDefault{
     values::kControllerOnCrashIgnore};
 constexpr bool kControllerLocalOnly{true};

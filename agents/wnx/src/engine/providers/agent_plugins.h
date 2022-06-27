@@ -14,9 +14,7 @@
 #include "providers/internal.h"
 #include "section_header.h"
 
-namespace cma {
-
-namespace provider {
+namespace cma::provider {
 
 class AgentPlugins : public Asynchronous {
 public:
@@ -30,10 +28,6 @@ private:
     std::string makeBody() override;
 };
 
-namespace agent_plugins {}  // namespace agent_plugins
-
-}  // namespace provider
-
-};  // namespace cma
+};  // namespace cma::provider
 
 #endif  // agent_plugins_h__

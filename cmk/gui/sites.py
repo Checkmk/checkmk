@@ -23,7 +23,9 @@ from cmk.utils.paths import livestatus_unix_socket
 from cmk.utils.type_defs import UserId
 from cmk.utils.version import is_managed_edition
 
-from cmk.gui.globals import active_config, g, request
+from cmk.gui.config import active_config
+from cmk.gui.ctx_stack import g
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser
@@ -168,7 +170,9 @@ def _ensure_connected(user: Optional[LoggedInUser], force_authuser: Optional[Use
     _connect_multiple_sites(user)
     _set_livestatus_auth(user, force_authuser)
 
-    logger.debug("Site states: %r", g.site_status)
+    site_states_to_log = g.site_status.copy()
+    site_states_to_log.update({"secret": "REDACTED"})
+    logger.debug("Site states: %r", site_states_to_log)
 
 
 def _connect_multiple_sites(user: LoggedInUser) -> None:

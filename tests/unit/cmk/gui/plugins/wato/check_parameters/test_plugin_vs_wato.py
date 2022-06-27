@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -42,7 +41,7 @@ class DefaultLoadingFailed(BaseException):
 class Base(t.Generic[T], abc.ABC):
     type: str
 
-    def __init__(self, element: T):
+    def __init__(self, element: T) -> None:
         self._element: T = element
 
     @abc.abstractmethod
@@ -63,7 +62,7 @@ class Base(t.Generic[T], abc.ABC):
     @abc.abstractmethod
     def get_description(self) -> str:
         """
-        return human readable uniqe identifier for this element
+        return human readable unique identifier for this element
         """
 
     def __lt__(self, other: object) -> bool:
@@ -273,16 +272,15 @@ class ErrorReporter:
         ("discovery", "ewon_discovery_rules"),
         ("discovery", "inventory_df_rules"),
         ("discovery", "inventory_fujitsu_ca_ports"),
-        ("discovery", "inventory_heartbeat_crm_rules"),
         ("discovery", "inventory_sap_values"),
         ("discovery", "inventory_solaris_services_rules"),
         ("discovery", "oracle_performance_discovery"),
         ("discovery", "sap_value_groups"),
         ("inventory", "active_checks:cmk_inv"),
-        ("inventory", "inv_exports:software_csv"),
         ("inventory", "inv_parameters:inv_if"),
         ("inventory", "inv_parameters:lnx_sysctl"),
         ("inventory", "inv_retention_intervals"),
+        ("inventory", "inv_exports:software_csv"),  # deprecated since 2.2
     }
     KNOWN_ITEM_REQUIREMENTS = {
         # type # plugin # wato
@@ -302,6 +300,11 @@ class ErrorReporter:
         ("check", "mongodb_replica_set", "checkgroup_parameters:mongodb_replica_set"),
         ("check", "mongodb_replica_set_election", "checkgroup_parameters:mongodb_replica_set"),
         ("check", "netapp_fcpio", "checkgroup_parameters:netapp_fcportio"),
+        (
+            "check",
+            "systemd_units_services_summary",
+            "checkgroup_parameters:systemd_services_summary",
+        ),
         ("check", "ucd_mem", "checkgroup_parameters:memory_simple"),
     }
     KNOWN_WATO_MISSING = {
@@ -353,7 +356,6 @@ class ErrorReporter:
         ("discovery", "logwatch", "logwatch_groups"),
         ("inventory", "inv_if", "inv_if"),
         ("inventory", "lnx_sysctl", "lnx_sysctl"),
-        ("inventory", "suseconnect", "suseconnect"),
     }
     KNOWN_ERROR_LOADING_DEFAULTS = {
         # type # plugin # wato
@@ -366,7 +368,6 @@ class ErrorReporter:
         ("check", "apc_symmetra_temp", "checkgroup_parameters:temperature"),
         ("check", "appdynamics_sessions", "checkgroup_parameters:jvm_sessions"),
         ("check", "appdynamics_web_container", "checkgroup_parameters:jvm_threads"),
-        ("check", "apt", "checkgroup_parameters:apt"),
         ("check", "avaya_88xx_cpu", "checkgroup_parameters:cpu_utilization"),
         (
             "check",
@@ -444,7 +445,6 @@ class ErrorReporter:
         ("check", "fortimail_cpu_load", "checkgroup_parameters:fortimail_cpu_load"),
         ("check", "fortimail_disk_usage", "checkgroup_parameters:fortimail_disk_usage"),
         ("check", "genua_pfstate", "checkgroup_parameters:pf_used_states"),
-        ("check", "heartbeat_crm_resources", "checkgroup_parameters:heartbeat_crm_resources"),
         ("check", "hitachi_hnas_bossock", "checkgroup_parameters:bossock_fibers"),
         ("check", "hivemanager_devices", "checkgroup_parameters:hivemanager_devices"),
         ("check", "hp_proliant_power", "checkgroup_parameters:epower_single"),
@@ -491,7 +491,6 @@ class ErrorReporter:
         ("check", "mssql_connections", "checkgroup_parameters:mssql_connections"),
         ("check", "mssql_jobs", "checkgroup_parameters:mssql_jobs"),
         ("check", "multipath", "checkgroup_parameters:multipath"),
-        ("check", "mysql_capacity", "checkgroup_parameters:mysql_db_size"),
         ("check", "mysql_slave", "checkgroup_parameters:mysql_slave"),
         ("check", "netapp_api_connection", "checkgroup_parameters:netapp_instance"),
         ("check", "netapp_api_cpu_utilization", "checkgroup_parameters:cpu_utilization"),
@@ -519,7 +518,6 @@ class ErrorReporter:
         ("check", "safenet_ntls_clients", "checkgroup_parameters:safenet_ntls_clients"),
         ("check", "safenet_ntls_links", "checkgroup_parameters:safenet_ntls_links"),
         ("check", "sansymphony_alerts", "checkgroup_parameters:sansymphony_alerts"),
-        ("check", "sansymphony_pool", "checkgroup_parameters:sansymphony_pool"),
         ("check", "siemens_plc_flag", "checkgroup_parameters:siemens_plc_flag"),
         ("check", "skype_conferencing", "checkgroup_parameters:skype_conferencing"),
         ("check", "skype_sip_stack", "checkgroup_parameters:skype_sip"),
@@ -556,7 +554,7 @@ class ErrorReporter:
         ("discovery", "hitachi_hnas_volume_virtual", "filesystem_groups"),
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._last_exception: t.Optional[DefaultLoadingFailed] = None
         self._failed = False
         self._known_wato_unused = self.KNOWN_WATO_UNUSED.copy()
@@ -660,7 +658,7 @@ class ErrorReporter:
 
     def raise_last_default_loading_exception(self) -> None:
         if self._last_exception is not None:
-            raise self._last_exception  # pylint: disable-msg=E0702  # https://stackoverflow.com/a/2228811
+            raise self._last_exception
 
 
 ################################################################################
@@ -751,7 +749,7 @@ def test_merge() -> None:
 
 def test_compare() -> None:
     class CompareBase(Base[MergeKey]):
-        def __init__(self, element: MergeKey):
+        def __init__(self, element: MergeKey) -> None:
             self._element: MergeKey
             super().__init__(element)
 

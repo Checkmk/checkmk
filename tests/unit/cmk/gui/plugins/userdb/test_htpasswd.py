@@ -23,14 +23,14 @@ def fixture_test_config(tmp_path):
     return htpwd
 
 
-def test_load(test_config):
+def test_load(test_config) -> None:
     assert test_config.load() == {
         "non-unicode": "non-unicode",
         "abcä": "bbbä",
     }
 
 
-def test_exists(test_config):
+def test_exists(test_config) -> None:
     assert test_config.exists("non-unicode")
     assert test_config.exists("non-unicode")
     assert not test_config.exists("not-existant")
@@ -38,7 +38,7 @@ def test_exists(test_config):
     assert not test_config.exists("")
 
 
-def test_save(tmp_path):
+def test_save(tmp_path) -> None:
     file_path = tmp_path / "htpasswd"
     htpwd = htpasswd.Htpasswd(file_path)
 

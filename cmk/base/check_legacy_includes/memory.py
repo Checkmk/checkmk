@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 from cmk.base.check_api import get_bytes_human_readable, get_percent_human_readable
 
 
@@ -61,7 +60,7 @@ def check_memory_simple(used, total, params):
 
 
 # DEPRECATED: Please use check_memory_element from mem.inlude!
-def check_memory_multiitem(params, data, base=1024):
+def check_memory_multiitem(params, data, base=1024):  # pylint: disable=too-many-branches
     if "mem_total" not in data:
         return 3, "Invalid data: missing mem_total"
     mem_total = data["mem_total"]

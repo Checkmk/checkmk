@@ -1,0 +1,13 @@
+Title: Fix refresh of master sidebar snapin "Master control"
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1652851345
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+The snapin was static and not refreshed regularly. This could lead to
+misleading informations if other users switched toggle buttons.

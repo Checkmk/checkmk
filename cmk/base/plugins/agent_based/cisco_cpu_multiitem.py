@@ -52,14 +52,17 @@ def parse_cisco_cpu_multiitem(string_table: List[StringTable]) -> Section:
     for idx, desc, class_idx in string_table[1]:
         if desc.lower().startswith("cpu "):
             desc = desc[4:]
-        ph_idx_to_entity[idx] = Entity(desc, PhysicalClasses(class_idx))
+        ph_idx_to_entity[idx] = Entity(desc, PhysicalClasses.parse_cisco(class_idx))
 
     parsed = {}
-    for idx, util in string_table[0]:
-        entity = ph_idx_to_entity.get(idx, Entity(idx, PhysicalClasses.unknown))
-        # if cpmCPUTotalPhysicalIndex is 0, the element is not supported
-        # (see CISCO-PROCESS-MIB.txt)
-        if idx == "0" or entity.physical_class != PhysicalClasses.cpu:
+    for cpu_id, idx, util in string_table[0]:
+        # if cpmCPUTotalEntry can be referenced to an entPhysicalEntry, use information from there.
+        # if cpmCPUTotalEntry has no reference (e.g. is a virtual cpu) use the id of cpmCPUTotalEntry.
+        entity = ph_idx_to_entity.get(idx, Entity(cpu_id, PhysicalClasses.unknown))
+
+        if entity.physical_class in {PhysicalClasses.fan, PhysicalClasses.sensor}:
+            # in case we have a entPhysicalEntry and see it can not be a cpu, ignore it.
+            # we've already seen chassis with cpu (e.g. optional extension slots with cpu)
             continue
         with suppress(ValueError):
             parsed[entity.description] = CPUInfo(util=float(util))
@@ -90,6 +93,7 @@ def check_cisco_cpu_multiitem(item: str, params: Params, section: Section) -> Ch
         boundaries=(0, 100),
         label="Utilization in the last 5 minutes",
     )
+    return None
 
 
 register.snmp_section(
@@ -104,6 +108,7 @@ register.snmp_section(
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.109.1.1.1.1",
             oids=[
+                OIDEnd(),  # OID index
                 "2",  # cpmCPUTotalPhysicalIndex
                 "8",  # cpmCPUTotal5minRev
             ],

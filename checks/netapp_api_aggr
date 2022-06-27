@@ -5,21 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # <<<netapp_api_aggr:sep(9)>>>
@@ -29,7 +23,7 @@ from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildc
 # aggregation aggr1_n2    size-available 2936561664       size-total 9437184000
 
 
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 def inventory_netapp_api_aggr(parsed):
@@ -41,7 +35,7 @@ def inventory_netapp_api_aggr(parsed):
 @get_parsed_item_data
 def check_netapp_api_aggr(item, params, aggr):
     if not ("size-total" in aggr and "size-available" in aggr):
-        return
+        return None
     mega = 1024.0 * 1024.0
     size_total = int(aggr.get("size-total")) / mega  # fixed: true-division
     size_avail = int(aggr.get("size-available")) / mega  # fixed: true-division

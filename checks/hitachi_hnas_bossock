@@ -5,9 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.hitachi_hnas import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 hitachi_hnas_bossock_default_levels = (250, 350)
@@ -34,6 +32,7 @@ def check_hitachi_hnas_bossock(item, params, info):
             perfdata = [("fibers", fibers, warn, crit)]
 
             return state, infotext, perfdata
+    return None
 
 
 check_info["hitachi_hnas_bossock"] = {

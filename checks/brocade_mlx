@@ -5,9 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # TODO refactoring: use parse-function
@@ -141,7 +139,7 @@ def check_brocade_mlx_module_mem(item, params, info):
     parsed = parse_brocade_mlx_module_mem(info)
     data = parsed.get(item)
     if data is None:
-        return
+        return None
 
     state_readable = data["state_readable"]
     if state_readable.lower() != "running":

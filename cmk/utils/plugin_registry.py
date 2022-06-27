@@ -31,7 +31,7 @@ class Registry(Mapping[str, _VT]):
 
         >>> from cmk.utils.plugin_registry import Registry
         >>> class A:
-        ...     def __init__(self, name: str):
+        ...     def __init__(self, name: str) -> None:
         ...         self.name = name
         >>> class MyRegistry(Registry[A]):
         ...     def plugin_name(self, instance: A) -> str:

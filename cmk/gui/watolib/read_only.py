@@ -8,7 +8,8 @@ import time
 
 import cmk.utils.render as render
 
-from cmk.gui.globals import active_config, request
+from cmk.gui.config import active_config
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 
@@ -31,7 +32,7 @@ def message():
     return text
 
 
-def is_enabled():
+def is_enabled() -> bool:
     if not active_config.wato_read_only:
         return False
     if active_config.wato_read_only["enabled"] is True:

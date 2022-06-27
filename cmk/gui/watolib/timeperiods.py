@@ -7,7 +7,7 @@
 import cmk.utils.store as store
 from cmk.utils.type_defs import TimeperiodSpec, TimeperiodSpecs
 
-from cmk.gui.globals import active_config
+from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import DropdownChoice
@@ -69,7 +69,7 @@ def _filter_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> TimeperiodSpecs
 
 
 class TimeperiodSelection(DropdownChoice):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         kwargs.setdefault("no_preselect_title", _("Select a timeperiod"))
         DropdownChoice.__init__(self, choices=self._get_choices, **kwargs)
 

@@ -197,7 +197,7 @@ import cmk.gui.availability as availability
         )
     ],
 )
-def test_reclassify_by_annotations(monkeypatch, av_rawdata, annotations, result):
+def test_reclassify_by_annotations(monkeypatch, av_rawdata, annotations, result) -> None:
     monkeypatch.setattr(availability, "load_annotations", lambda: annotations)
     assert availability.reclassify_by_annotations("service", av_rawdata) == result
 
@@ -215,7 +215,7 @@ def test_reclassify_by_annotations(monkeypatch, av_rawdata, annotations, result)
         (61, 70, False),
     ],
 )
-def test_relevant_annotation_times(annotation_from, annotation_until, result):
+def test_relevant_annotation_times(annotation_from, annotation_until, result) -> None:
     with on_time(1572253746, "CET"):
         assert (
             availability._annotation_affects_time_range(annotation_from, annotation_until, 30, 60)
@@ -244,7 +244,7 @@ def test_relevant_annotation_times(annotation_from, annotation_until, result):
         ([(1543446000 + 82800, 1543446000 + 172800)], cmk.utils.render.date_and_time),
     ],
 )
-def test_get_annotation_date_render_function(annotation_times, result):
+def test_get_annotation_date_render_function(annotation_times, result) -> None:
     annotations = [((None, None, None), {"from": s, "until": e}) for s, e in annotation_times]
     with on_time(1572253746, "CET"):
         assert (
@@ -426,7 +426,7 @@ def test_get_annotation_date_render_function(annotation_times, result):
         )
     ],
 )
-def test_get_relevant_annotations(annotations, by_host, avoptions, result):
+def test_get_relevant_annotations(annotations, by_host, avoptions, result) -> None:
     assert (
         availability.get_relevant_annotations(annotations, by_host, "service", avoptions) == result
     )

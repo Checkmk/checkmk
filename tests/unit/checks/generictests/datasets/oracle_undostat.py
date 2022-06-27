@@ -29,10 +29,10 @@ discovery = {
 checks = {
     '': [
         ('TUX2', {'levels': (600, 300), 'nospaceerrcnt_state': 2}, [
-            (0, 'Undo retention: 18 m', []),
+            (0, 'Undo retention: 18 minutes 1 second', []),
             (0, 'Active undo blocks: 160', []),
             (0, 'Max concurrent transactions: 3', []),
-            (0, 'Max querylen: 5 m', []),
+            (0, 'Max querylen: 5 minutes 0 seconds', []),
             (0, 'Space errors: 0', []),
             (0, '', [
                 ('activeblk', 160, None, None, None, None),
@@ -43,10 +43,10 @@ checks = {
             ]),
         ]),
         ('TUX3', {'levels': (600, 180), 'nospaceerrcnt_state': 2}, [
-            (1, 'Undo retention: 7 m (warn/crit below 10 m/180 s)', []),
+            (1, 'Undo retention: 7 minutes 0 seconds (warn/crit below 10 minutes 0 seconds/3 minutes 0 seconds)', []),
             (0, 'Active undo blocks: 150', []),
             (0, 'Max concurrent transactions: 2', []),
-            (0, 'Max querylen: 200 s', []),
+            (0, 'Max querylen: 3 minutes 20 seconds', []),
             (2, 'Space errors: 1', []),
             (0, '', [
                 ('activeblk', 150, None, None, None, None),

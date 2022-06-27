@@ -4,16 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
 from cmk.gui.plugins.wato.utils import HostRulespec, PasswordFromStore, rulespec_registry
 from cmk.gui.valuespec import Dictionary, DropdownChoice, Integer, ListChoice, TextInput
+from cmk.gui.watolib.rulespecs import Rulespec
 
 
 def _factory_default_special_agents_rabbitmq():
     # No default, do not use setting if no rule matches
-    return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+    return Rulespec.FACTORY_DEFAULT_UNUSED
 
 
 def _valuespec_special_agents_rabbitmq():
@@ -39,7 +39,7 @@ def _valuespec_special_agents_rabbitmq():
                 "user",
                 TextInput(
                     title=_("Username"),
-                    help=_("The username that should be used for accessing the " "RabbitMQ API."),
+                    help=_("The username that should be used for accessing the RabbitMQ API."),
                     size=32,
                     allow_empty=False,
                 ),

@@ -16,7 +16,7 @@ from cmk.base.plugins.agent_based.utils import cpu_util
 pytestmark = pytest.mark.checks
 
 
-def test_check_cpu_util():
+def test_check_cpu_util() -> None:
     """
     Test a quite straight forward case. Nothing in particular, just to have at least any test.
     """
@@ -57,7 +57,7 @@ def test_check_cpu_util():
     ]
 
 
-def test_check_cpu_util_unix():
+def test_check_cpu_util_unix() -> None:
 
     assert list(
         cpu_util.check_cpu_util_unix(
@@ -84,7 +84,7 @@ def test_check_cpu_util_unix():
     ]
 
 
-def test_cpu_util_time():
+def test_cpu_util_time() -> None:
 
     value_store: Dict[str, Any] = {}
 
@@ -129,7 +129,7 @@ def test_cpu_util_time():
     )
 
 
-def test__util_counter():
+def test__util_counter() -> None:
 
     cpu = cpu_util.CPUInfo("cpu-name", 100, 40, 60, 80, 50, 80, 30, 60, 20, 40)
 

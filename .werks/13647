@@ -1,0 +1,15 @@
+Title: Two-factor auth: Improve error handling of wrong protocol or address
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1651343486
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+In case a user tries to register two-factor credentials without HTTPS, the
+error message was not very helpful. And also the handling access via IP address
+instead of a valid host- or DNS name is improved. The new message is now more
+helpful and also does not raise a crash report anymore.

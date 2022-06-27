@@ -151,7 +151,7 @@ import cmk.base.plugins.agent_based.hr_mem as hr_mem
         ),
     ],
 )
-def test_hr_mem(string_table, expected_parsed_data):
+def test_hr_mem(string_table, expected_parsed_data) -> None:
     assert hr_mem.pre_parse_hr_mem(string_table) == expected_parsed_data
 
 

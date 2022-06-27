@@ -4,10 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
-
 import pytest
+from pylint.lint import PyLinter  # type: ignore[import]
 
 from tests.testlib.pylint_checker_cmk_module_layers import (
     _COMPONENTS,
@@ -19,7 +17,7 @@ from tests.testlib.pylint_checker_cmk_module_layers import (
     ModulePath,
 )
 
-CHECKER = CMKModuleLayerChecker()
+CHECKER = CMKModuleLayerChecker(PyLinter())
 
 COMPONENT_LIST = [c for c, _ in _COMPONENTS]
 
@@ -47,7 +45,7 @@ def test__get_absolute_importee(
 
 
 @pytest.mark.parametrize("component", COMPONENT_LIST)
-def test_allowed_import_ok(component):
+def test_allowed_import_ok(component) -> None:
     for importee in (
         "cmk",
         "cmk.utils",
@@ -94,7 +92,7 @@ def test_allowed_import_ok(component):
         ("cmk/gui", "cmk.gui.y", "cmk.automations.b", True),
     ],
 )
-def test__is_import_allowed(module_path, importer, importee, allowed):
+def test__is_import_allowed(module_path, importer, importee, allowed) -> None:
     assert allowed is CHECKER._is_import_allowed(
         ModulePath(module_path),
         ModuleName(importer),

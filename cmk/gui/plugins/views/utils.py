@@ -24,6 +24,7 @@ from typing import (
     Callable,
     cast,
     Dict,
+    Final,
     Hashable,
     List,
     Mapping,
@@ -38,7 +39,7 @@ from typing import (
 )
 
 import livestatus
-from livestatus import LivestatusColumn, LivestatusRow, OnlySites, SiteId
+from livestatus import LivestatusColumn, LivestatusRow, OnlySites, Query, QuerySpecification, SiteId
 
 import cmk.utils.plugin_registry
 import cmk.utils.regex
@@ -62,14 +63,18 @@ import cmk.gui.valuespec as valuespec
 import cmk.gui.view_utils
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
+from cmk.gui.config import active_config
+from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import active_config, display_options, html, request, response, theme
 from cmk.gui.hooks import request_memoize
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _u, ungettext
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.num_split import cmp_num_split as _cmp_num_split
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
@@ -93,7 +98,9 @@ from cmk.gui.type_defs import (
     VisualLinkSpec,
     VisualName,
 )
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.gui.valuespec import DropdownChoice, ValueSpec
 from cmk.gui.view_utils import CellContent, CellSpec, CSSClass
@@ -101,6 +108,7 @@ from cmk.gui.view_utils import CellContent, CellSpec, CSSClass
 if TYPE_CHECKING:
     from cmk.gui.plugins.visuals.utils import Filter
     from cmk.gui.views import View
+
 
 ExportCellContent = Union[str, Dict[str, Any]]
 PDFCellContent = Union[str, HTML, Tuple[str, str]]
@@ -359,11 +367,11 @@ painter_option_registry = ViewPainterOptionRegistry()
 @painter_option_registry.register
 class PainterOptionRefresh(PainterOption):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "refresh"
 
     @property
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         choices = [
             (x, {0: _("off")}.get(x, str(x) + "s")) for x in active_config.view_option_refreshes
         ]
@@ -376,11 +384,11 @@ class PainterOptionRefresh(PainterOption):
 @painter_option_registry.register
 class PainterOptionNumColumns(PainterOption):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "num_columns"
 
     @property
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Number of columns"),
             choices=[(x, str(x)) for x in active_config.view_option_columns],
@@ -660,7 +668,7 @@ class ABCDataSource(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def infos(self) -> List[str]:
+    def infos(self) -> SingleInfos:
         """Infos that are available with this data sources
 
         A info is used to create groups out of single painters and filters.
@@ -683,6 +691,11 @@ class ABCDataSource(abc.ABC):
     def add_columns(self) -> List[ColumnName]:
         """These columns are requested automatically in addition to the
         other needed columns."""
+        return []
+
+    @property
+    def unsupported_columns(self) -> List[ColumnName]:
+        """These columns are ignored, e.g. 'site' for DataSourceBIAggregations"""
         return []
 
     @property
@@ -841,11 +854,8 @@ class RowTableLivestatus(RowTable):
         # columns to allow for repeatable tests.
         return [c for c in sorted(columns) if c not in datasource.add_columns], dynamic_columns
 
-    def prepare_lql(self, columns: List[ColumnName], headers: str) -> LivestatusQuery:
-        query = "GET %s\n" % self.table_name
-        query += "Columns: %s\n" % " ".join(columns)
-        query += headers
-        return query
+    def create_livestatus_query(self, columns: Sequence[LivestatusColumn], headers) -> Query:
+        return Query(QuerySpecification(table=self.table_name, columns=columns, headers=headers))
 
     def query(
         self,
@@ -869,8 +879,12 @@ class RowTableLivestatus(RowTable):
         datasource = view.datasource
 
         columns, dynamic_columns = self._prepare_columns(columns, view)
-        query = self.prepare_lql(columns, headers + datasource.add_headers)
-        data = query_livestatus(query, only_sites, limit, datasource.auth_domain)
+        data = query_livestatus(
+            self.create_livestatus_query(columns, headers + datasource.add_headers),
+            only_sites,
+            limit,
+            datasource.auth_domain,
+        )
 
         if datasource.merge_by:
             data = _merge_data(data, columns)
@@ -888,7 +902,7 @@ class RowTableLivestatus(RowTable):
 
 
 def query_livestatus(
-    query: LivestatusQuery, only_sites: OnlySites, limit: Optional[int], auth_domain: str
+    query: Query, only_sites: OnlySites, limit: Optional[int], auth_domain: str
 ) -> List[LivestatusRow]:
 
     if all(
@@ -899,7 +913,7 @@ def query_livestatus(
         )
     ):
         html.open_div(class_=["livestatus", "message"])
-        html.tt(query.replace("\n", "<br>\n"))
+        html.tt(str(query).replace("\n", "<br>\n"))
         html.close_div()
 
     sites.live().set_auth_domain(auth_domain)
@@ -909,6 +923,14 @@ def query_livestatus(
     sites.live().set_auth_domain("read")
 
     return data
+
+
+class CSVExportError(Exception):
+    pass
+
+
+class JSONExportError(Exception):
+    pass
 
 
 # TODO: Return value of render() could be cleaned up e.g. to a named tuple with an
@@ -945,7 +967,7 @@ class Painter(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         """Livestatus columns needed for this painter"""
         raise NotImplementedError()
 
@@ -976,27 +998,14 @@ class Painter(abc.ABC):
             query. As they might be required to find them again within the
             data."""
 
-    @abc.abstractmethod
-    def render(self, row: Row, cell: "Cell") -> CellSpec:
-        """Renders the painter for the given row
-        The paint function gets one argument: A data row, which is a python
-        dictionary representing one data object (host, service, ...). Its
-        keys are the column names, its values the actual values from livestatus
-        (typed: numbers are float or int, not string)
-
-        The paint function must return a pair of two strings:
-            - A CSS class for the TD of the column and
-            - a Text string or HTML code for painting the column
-
-        That class is optional and set to "" in most cases. Currently CSS
-        styles are not modular and all defined in check_mk.css. This will
-        change in future."""
-        raise NotImplementedError()
-
     def short_title(self, cell: "Cell") -> str:
         """Used as display string for the painter e.g. as table header
         Falls back to the full title if no short title is given"""
         return self.title(cell)
+
+    def export_title(self, cell: "Cell") -> str:
+        """Used for exporting views in JSON/CSV/python format"""
+        return self.ident
 
     def list_title(self, cell: "Cell") -> str:
         """Override this to define a custom title for the painter in the view editor
@@ -1046,6 +1055,55 @@ class Painter(abc.ABC):
         """Whether or not to load the HW/SW inventory for this column"""
         return False
 
+    # TODO At the moment we use render as fallback but in the future every
+    # painter should implement explicit
+    #   - _compute_data
+    #   - render
+    #   - export methods
+    # As soon as this is done all four methods will be abstract.
+
+    # See first implementations: PainterInventoryTree, PainterHostLabels, ...
+
+    # TODO For PDF or Python output format we implement additional methods.
+
+    def _compute_data(self, row: Row, cell: "Cell") -> object:
+        return self.render(row, cell)[1]
+
+    @abc.abstractmethod
+    def render(self, row: Row, cell: "Cell") -> CellSpec:
+        """Renders the painter for the given row
+        The paint function gets one argument: A data row, which is a python
+        dictionary representing one data object (host, service, ...). Its
+        keys are the column names, its values the actual values from livestatus
+        (typed: numbers are float or int, not string)
+
+        The paint function must return a pair of two strings:
+            - A CSS class for the TD of the column and
+            - a Text string or HTML code for painting the column
+
+        That class is optional and set to "" in most cases. Currently CSS
+        styles are not modular and all defined in check_mk.css. This will
+        change in future."""
+        raise NotImplementedError()
+
+    def export_for_csv(self, row: Row, cell: "Cell") -> str | HTML:
+        """Render the content of the painter for CSV export based on the given row.
+
+        If the data of a painter can not be exported as CSV (like trees), then this method
+        raises a 'CSVExportError'.
+        """
+        if isinstance(data := self._compute_data(row, cell), (str, HTML)):
+            return data
+        raise ValueError("Data must be of type 'str' or 'HTML' but is %r" % type(data))
+
+    def export_for_json(self, row: Row, cell: "Cell") -> object:
+        """Render the content of the painter for JSON export based on the given row.
+
+        If the data of a painter can not be exported as JSON, then this method
+        raises a 'JSONExportError'.
+        """
+        return self._compute_data(row, cell)
+
 
 class PainterRegistry(cmk.utils.plugin_registry.Registry[Type[Painter]]):
     def plugin_name(self, instance: Type[Painter]) -> str:
@@ -1058,6 +1116,7 @@ painter_registry = PainterRegistry()
 # Kept for pre 1.6 compatibility. But also the inventory.py uses this to
 # register some painters dynamically
 def register_painter(ident: str, spec: Dict[str, Any]) -> None:
+    paint_function = spec["paint"]
     cls = type(
         "LegacyPainter%s" % ident.title(),
         (Painter,),
@@ -1068,7 +1127,17 @@ def register_painter(ident: str, spec: Dict[str, Any]) -> None:
             "title": lambda s, cell: s._spec["title"],
             "short_title": lambda s, cell: s._spec.get("short", s.title),
             "columns": property(lambda s: s._spec["columns"]),
-            "render": lambda self, row, cell: spec["paint"](row),
+            "render": lambda self, row, cell: paint_function(row),
+            "export_for_csv": (
+                lambda self, row, cell: spec["export_for_csv"](row, cell)
+                if "export_for_csv" in spec
+                else paint_function(row)[1]
+            ),
+            "export_for_json": (
+                lambda self, row, cell: spec["export_for_json"](row, cell)
+                if "export_for_json" in spec
+                else paint_function(row)[1]
+            ),
             "group_by": lambda self, row, cell: self._spec.get("groupby"),
             "parameters": property(lambda s: s._spec.get("params")),
             "painter_options": property(lambda s: s._spec.get("options", [])),
@@ -1098,7 +1167,7 @@ class Sorter(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def columns(self) -> List[str]:
+    def columns(self) -> Sequence[ColumnName]:
         """Livestatus columns needed for this sorter"""
         raise NotImplementedError()
 
@@ -1231,10 +1300,12 @@ def paint_stalified(row: Row, text: CellContent) -> CellSpec:
 
 
 def paint_host_list(site: SiteId, hosts: List[HostName]) -> CellSpec:
-    return "", ", ".join(
-        cmk.gui.view_utils.get_host_list_links(
-            site,
-            [str(host) for host in hosts],
+    return "", HTML(
+        ", ".join(
+            cmk.gui.view_utils.get_host_list_links(
+                site,
+                [str(host) for host in hosts],
+            )
         )
     )
 
@@ -1252,7 +1323,7 @@ def render_link_to_view(content: CellContent, row: Row, link_spec: VisualLinkSpe
 
     url = url_to_visual(row, link_spec)
     if url:
-        return html.render_a(content, href=url)
+        return HTMLWriter.render_a(content, href=url)
     return content
 
 
@@ -1303,7 +1374,7 @@ def _get_visual_by_link_spec(link_spec: Optional[VisualLinkSpec]) -> Optional[Vi
 def _get_singlecontext_html_vars_from_row(
     visual_name: VisualName,
     row: Row,
-    infos: List[str],
+    infos: SingleInfos,
     single_infos: SingleInfos,
     link_filters: Dict[str, str],
 ) -> Dict[str, str]:
@@ -1508,7 +1579,7 @@ def paint_nagiosflag(row: Row, field: ColumnName, bold_if_nonzero: bool) -> Cell
     nonzero = row[field] != 0
     return (
         "badflag" if nonzero == bold_if_nonzero else "goodflag",
-        html.render_span(_("yes") if nonzero else _("no")),
+        HTMLWriter.render_span(_("yes") if nonzero else _("no")),
     )
 
 
@@ -1524,17 +1595,14 @@ def declare_1to1_sorter(
 ) -> PainterName:
     painter = painter_registry[painter_name]()
 
-    if not reverse:
-        cmp_func = lambda self, r1, r2: func(painter.columns[col_num], r1, r2)
-    else:
-        cmp_func = lambda self, r1, r2: func(painter.columns[col_num], r2, r1)
-
     register_sorter(
         painter_name,
         {
             "title": painter.title,
             "columns": painter.columns,
-            "cmp": cmp_func,
+            "cmp": (lambda self, r1, r2: func(painter.columns[col_num], r2, r1))
+            if reverse
+            else lambda self, r1, r2: func(painter.columns[col_num], r1, r2),
         },
     )
     return painter_name
@@ -1547,7 +1615,7 @@ def cmp_simple_number(column: ColumnName, r1: Row, r2: Row) -> int:
 
 
 def cmp_num_split(column: ColumnName, r1: Row, r2: Row) -> int:
-    return cmk.gui.utils.cmp_num_split(r1[column].lower(), r2[column].lower())
+    return _cmp_num_split(r1[column].lower(), r2[column].lower())
 
 
 def cmp_simple_string(column: ColumnName, r1: Row, r2: Row) -> int:
@@ -1636,11 +1704,9 @@ def _merge_data(data: List[LivestatusRow], columns: List[ColumnName]) -> List[Li
     is required to be the *second* column (right after the site column)"""
     merged: Dict[ColumnName, LivestatusRow] = {}
 
-    # site column is not merged
-    site_column_merge_func = lambda a, b: ""
-
     mergefuncs: List[Callable[[LivestatusColumn, LivestatusColumn], LivestatusColumn]] = [
-        site_column_merge_func
+        # site column is not merged
+        lambda a, b: ""
     ]
 
     def worst_host_state(a, b):
@@ -1651,13 +1717,13 @@ def _merge_data(data: List[LivestatusRow], columns: List[ColumnName]) -> List[Li
     for c in columns:
         _tablename, col = c.split("_", 1)
         if col.startswith("num_") or col.startswith("members"):
-            mergefunc = lambda a, b: a + b
+            mergefunc = lambda a, b: a + b  # pylint: disable=unnecessary-lambda-assignment
         elif col.startswith("worst_service"):
             mergefunc = functools.partial(worst_service_state, default=3)
         elif col.startswith("worst_host"):
             mergefunc = worst_host_state
         else:
-            mergefunc = lambda a, b: a
+            mergefunc = lambda a, b: a  # pylint: disable=unnecessary-lambda-assignment
 
         mergefuncs.append(mergefunc)
 
@@ -1681,7 +1747,7 @@ def join_row(row: Row, cell: "Cell") -> Row:
     return row
 
 
-def get_view_infos(view: ViewSpec) -> List[str]:
+def get_view_infos(view: ViewSpec) -> SingleInfos:
     """Return list of available datasources (used to render filters)"""
     ds_name = view.get("datasource", request.var("datasource"))
     return data_source_registry[ds_name]().infos
@@ -1737,10 +1803,11 @@ class ViewStore:
         return cls()
 
     def __init__(self) -> None:
-        self.all = self._load_all_views()
-        self.permitted = self._load_permitted_views(self.all)
+        self.all: Final = ViewStore._load_all_views()
+        self.permitted: Final = ViewStore._load_permitted_views(self.all)
 
-    def _load_all_views(self) -> AllViewSpecs:
+    @staticmethod
+    def _load_all_views() -> AllViewSpecs:
         """Loads all view definitions from disk and returns them"""
         # Skip views which do not belong to known datasources
         views = visuals.load(
@@ -1751,7 +1818,8 @@ class ViewStore:
         views = _transform_old_views(views)
         return {viewname: transform_painter_spec(view) for viewname, view in views.items()}
 
-    def _load_permitted_views(self, all_views: AllViewSpecs) -> PermittedViewSpecs:
+    @staticmethod
+    def _load_permitted_views(all_views: AllViewSpecs) -> PermittedViewSpecs:
         """Returns all view defitions that a user is allowed to use"""
         return visuals.available("views", all_views)
 
@@ -1774,7 +1842,9 @@ def transform_painter_spec(view: ViewSpec) -> ViewSpec:
 
 # Convert views that are saved in the pre 1.2.6-style
 # FIXME: Can be removed one day. Mark as incompatible change or similar.
-def _transform_old_views(all_views: AllViewSpecs) -> AllViewSpecs:
+def _transform_old_views(  # pylint: disable=too-many-branches
+    all_views: AllViewSpecs,
+) -> AllViewSpecs:
     for view in all_views.values():
         ds_name = view["datasource"]
         datasource = data_source_registry[ds_name]()
@@ -1956,6 +2026,7 @@ def extract_painter_name(painter_spec: Union[PainterName, PainterSpec]) -> Paint
         return painter_spec[0]
     if isinstance(painter_spec, str):
         return painter_spec
+    return None
 
 
 def painter_exists(painter_spec: PainterSpec) -> bool:
@@ -2037,7 +2108,7 @@ class Cell:
     def export_title(self) -> str:
         if self._custom_title:
             return re.sub(r"[^\w]", "_", self._custom_title.lower())
-        return self.painter_name()
+        return self.painter().export_title(self)
 
     def painter_options(self) -> List[str]:
         return self.painter().painter_options
@@ -2200,9 +2271,9 @@ class Cell:
             tooltip_cell = Cell(self._view, PainterSpec(self.tooltip_painter_name()))
             _tooltip_tdclass, tooltip_content = tooltip_cell.render_content(row)
             assert not isinstance(tooltip_content, Mapping)
-            tooltip_text = escaping.strip_tags(tooltip_content)
+            tooltip_text = escaping.strip_tags_for_tooltip(tooltip_content)
             if tooltip_text:
-                content = html.render_span(content, title=tooltip_text)
+                content = HTMLWriter.render_span(content, title=tooltip_text)
 
         return tdclass, content
 
@@ -2222,6 +2293,7 @@ class Cell:
                 for path_in_theme in (str(file_path).replace(t, "facelift") for t in themes):
                     if os.path.exists(path_in_theme):
                         return path_in_theme
+            return None
 
         try:
             row = join_row(row, self)
@@ -2259,27 +2331,51 @@ class Cell:
                 'Failed to paint "%s": %s' % (self.painter_name(), traceback.format_exc())
             )
 
-    # TODO: We really should have some intermediate "data" layer that would make it possible to
-    # extract the data for the export in a cleaner way.
-    def render_for_export(self, row: Row) -> ExportCellContent:
-        rendered_txt = self.render_content(row)[1]
-        if rendered_txt is None:
+    # TODO render_for_python_export/as PDF
+
+    def render_for_csv_export(self, row: Row) -> str | HTML:
+        if request.var("output_format") not in ["csv", "csv_export"]:
+            return "NOT_CSV_EXPORTABLE"
+
+        if not row:
             return ""
 
-        # The aggr_treestate painters are returning a dictionary data structure
-        # (see paint_aggregated_tree_state()) in case the output_format is not
-        # HTML. Hand over the whole data structure to the caller. It will be
-        # converted to str during rendering.
-        if isinstance(rendered_txt, dict):
-            return rendered_txt
+        try:
+            content = self.painter().export_for_csv(row, self)
+        except CSVExportError:
+            return "NOT_CSV_EXPORTABLE"
 
-        txt: str = str(rendered_txt).strip()
+        return self._render_html_content(content)
+
+    def render_for_json_export(self, row: Row) -> object:
+        if request.var("output_format") not in ["json", "json_export"]:
+            return "NOT_JSON_EXPORTABLE"
+
+        if not row:
+            return ""
+
+        try:
+            content = self.painter().export_for_json(row, self)
+        except JSONExportError:
+            return "NOT_JSON_EXPORTABLE"
+
+        if isinstance(content, (str, HTML)):
+            # TODO At the moment we have to keep this str/HTML handling because export_for_json
+            # falls back to render. As soon as all painters have explicit export_for_* methods,
+            # we can remove this...
+            return self._render_html_content(content)
+
+        return content
+
+    def _render_html_content(self, content: str | HTML) -> str:
+        txt: str = str(content).strip()
 
         # Similar to the PDF rendering hack above, but this time we extract the title from our icons
         # and add them to the CSV export instead of stripping the whole HTML tag.
         # Current limitation: *one* image
         if txt.lower().startswith("<img"):
             txt = re.sub(".*title=[\"']([^'\"]*)[\"'].*", "\\1", str(txt))
+
         return txt
 
     def render_content(self, row: Row) -> CellSpec:
@@ -2287,14 +2383,7 @@ class Cell:
             return "", ""  # nothing to paint
 
         painter = self.painter()
-        result = painter.render(row, self)
-        if (
-            not isinstance(result, tuple)
-            or len(result) != 2
-            or not isinstance(result[1], (str, HTML))
-        ):
-            raise Exception(_("Painter %r returned invalid result: %r") % (painter.ident, result))
-        return result
+        return painter.render(row, self)
 
     def paint(self, row: Row, colspan: Optional[int] = None) -> bool:
         tdclass, content = self.render(row)

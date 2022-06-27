@@ -18,7 +18,6 @@ from typing import (
     Iterable,
     Iterator,
     List,
-    Literal,
     Mapping,
     Optional,
     OrderedDict,
@@ -33,25 +32,32 @@ from typing import (
 
 from six import ensure_str
 
+from livestatus import SiteId
+
 import cmk.utils.regex
 import cmk.utils.version as cmk_version
 from cmk.utils.memoize import MemoizeCache
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.prediction import livestatus_lql, TimeSeries
+from cmk.utils.prediction import livestatus_lql, TimeSeries, TimeSeriesValue
 from cmk.utils.type_defs import HostName
 from cmk.utils.type_defs import MetricName as _MetricName
-from cmk.utils.type_defs import ServiceName
+from cmk.utils.type_defs import Seconds, ServiceName, TimeRange
 from cmk.utils.version import parse_check_mk_version
 
 import cmk.gui.sites as sites
+from cmk.gui.config import active_config
+from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import active_config, g, html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.visuals.utils import livestatus_query_bare
 from cmk.gui.type_defs import (
     Choice,
     Choices,
+    GraphConsoldiationFunction,
+    GraphPresentation,
+    LineType,
     MetricDefinition,
     MetricExpression,
     Perfdata,
@@ -73,13 +79,43 @@ Atom = TypeVar("Atom")
 TransformedAtom = TypeVar("TransformedAtom")
 StackElement = Union[Atom, TransformedAtom]
 
-GraphPresentation = str  # TODO: Improve Literal["lines", "stacked", "sum", "average", "min", "max"]
 ScalarDefinition = Union[str, Tuple[str, Union[str, LazyString]]]
-GraphConsoldiationFunction = Literal["max", "min", "average"]
+HorizontalRule = tuple[float, str, str, Union[str, LazyString]]
+RGBColor = tuple[float, float, float]  # (1.5, 0.0, 0.5)
+
+
+class _CurveMandatory(TypedDict):
+    line_type: LineType
+    color: str
+    title: str
+    rrddata: TimeSeries
+
+
+class Curve(_CurveMandatory, total=False):
+    dont_paint: bool
+    # Added during runtime by _compute_scalars
+    scalars: dict[str, tuple[TimeSeriesValue, str]]
+
+
+Scalar = tuple[str, str, bool]
+GraphRenderOptions = dict[str, Any]
+
+
+class _GraphDataRangeMandatory(TypedDict):
+    time_range: TimeRange
+    # Forecast graphs represent step as str (see forecasts.py and fetch_rrd_data)
+    # colon separated [step length]:[rrd point count]
+    step: Union[Seconds, str]
+
+
+class GraphDataRange(_GraphDataRangeMandatory, total=False):
+    vertical_range: tuple[float, float]
 
 
 GraphRangeSpec = Tuple[Union[int, str], Union[int, str]]
 GraphRange = Tuple[Optional[float], Optional[float]]
+
+SizeEx = int
 
 
 class _GraphTemplateMandatory(TypedDict):
@@ -104,8 +140,21 @@ class GraphTemplate(_GraphTemplateMandatory, total=False):
 
 
 GraphRecipe = Dict[str, Any]
-GraphMetrics = Dict[str, Any]
-RRDData = Dict[Tuple[str, str, str, str, str, str], TimeSeries]
+
+
+class _GraphMetricMandatory(TypedDict):
+    title: str
+    line_type: LineType
+    expression: StackElement
+
+
+class GraphMetric(_GraphMetricMandatory, total=False):
+    unit: str
+    color: str
+
+
+RRDDataKey = Tuple[SiteId, HostName, ServiceName, str, Optional[GraphConsoldiationFunction], float]
+RRDData = Dict[RRDDataKey, TimeSeries]
 
 
 class MetricUnitColor(TypedDict):
@@ -1001,7 +1050,7 @@ def metric_recipe_and_unit(
 def horizontal_rules_from_thresholds(
     thresholds: Iterable[ScalarDefinition],
     translated_metrics: TranslatedMetrics,
-):
+) -> list[HorizontalRule]:
     horizontal_rules = []
     for entry in thresholds:
         if isinstance(entry, tuple):
@@ -1135,7 +1184,7 @@ def get_palette_color_by_index(i: int, shading="a") -> str:
     return "%s/%s" % (color_key, shading)
 
 
-def get_next_random_palette_color():
+def get_next_random_palette_color() -> str:
     keys = list(_cmk_color_palette.keys())
     if "random_color_index" in g:
         last_index = g.random_color_index
@@ -1149,7 +1198,7 @@ def get_next_random_palette_color():
 def get_n_different_colors(n: int) -> List[str]:
     """Return a list of colors that are as different as possible (visually)
     by distributing them on the HSV color wheel."""
-    total_weight = sum([x[1] for x in _hsv_color_distribution])
+    total_weight = sum(x[1] for x in _hsv_color_distribution)
 
     colors: List[str] = []
     while len(colors) < n:
@@ -1205,7 +1254,7 @@ def hsv_to_hexrgb(hsv: Tuple[float, float, float]) -> str:
     return render_color(colorsys.hsv_to_rgb(*hsv))
 
 
-def render_color(color_rgb: Tuple[float, float, float]) -> str:
+def render_color(color_rgb: RGBColor) -> str:
     return rgb_color_to_hex_color(
         int(color_rgb[0] * 255),
         int(color_rgb[1] * 255),
@@ -1213,7 +1262,7 @@ def render_color(color_rgb: Tuple[float, float, float]) -> str:
     )
 
 
-def parse_color(color: str) -> Tuple[float, float, float]:
+def parse_color(color: str) -> RGBColor:
     """Convert '#ff0080' to (1.5, 0.0, 0.5)"""
     rgb = hex_color_to_rgb_color(color)
     return rgb[0] / 255.0, rgb[1] / 255.0, rgb[2] / 255.0
@@ -1254,7 +1303,7 @@ def _mix_colors(a, b):
 
 
 def render_color_icon(color: str) -> HTML:
-    return html.render_div(
+    return HTMLWriter.render_div(
         "",
         class_="color",
         # NOTE: When we drop support for IE11 we can use #%s4c instead of rgba(...)
@@ -1333,7 +1382,7 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
 
     ident = "monitored_metrics"
 
-    def __init__(self, **kwargs: Any):
+    def __init__(self, **kwargs: Any) -> None:
         # Customer's metrics from local checks or other custom plugins will now appear as metric
         # options extending the registered metric names on the system. Thus assuming the user
         # only selects from available options we skip the input validation(invalid_choice=None)

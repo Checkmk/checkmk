@@ -4,13 +4,31 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Mapping, Optional, Union
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Optional, TextInput
+from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, TextInput, Transform
+
+
+def _transform_opt_string(
+    parameters: Union[Mapping[str, Optional[str]], str, None]
+) -> Mapping[str, Optional[str]]:
+    """
+    >>> _transform_opt_string(None)
+    {'expected_node': None}
+    >>> _transform_opt_string("foobar")
+    {'expected_node': 'foobar'}
+    >>> _transform_opt_string({'expected_node': 'mooo'})
+    {'expected_node': 'mooo'}
+    """
+    if parameters is None or isinstance(parameters, str):
+        return {"expected_node": parameters}
+    return parameters
 
 
 def _item_spec_heartbeat_crm_resources():
@@ -22,11 +40,23 @@ def _item_spec_heartbeat_crm_resources():
 
 
 def _parameter_valuespec_heartbeat_crm_resources():
-    return Optional(
-        valuespec=TextInput(allow_empty=False),
-        title=_("Expected node"),
-        help=_("The hostname of the expected node to hold this resource."),
-        none_label=_("Do not enforce the resource to be hold by a specific node."),
+    return Transform(
+        Dictionary(
+            elements=[
+                (
+                    "expected_node",
+                    Alternative(
+                        title=_("Expected node"),
+                        help=_("The hostname of the expected node to hold this resource."),
+                        elements=[
+                            FixedValue(value=None, totext="", title=_("Do not check the node")),
+                            TextInput(allow_empty=False, title=_("Expected node")),
+                        ],
+                    ),
+                ),
+            ],
+        ),
+        forth=_transform_opt_string,
     )
 
 

@@ -10,6 +10,7 @@ import tarfile
 from pathlib import Path
 
 import pytest
+from werkzeug import datastructures as werkzeug_datastructures
 
 import tests.testlib as testlib
 
@@ -20,6 +21,7 @@ import cmk.utils.version as cmk_version
 
 import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.utils
+from cmk.gui.http import Request
 from cmk.gui.watolib.activate_changes import ConfigSyncFileInfo
 from cmk.gui.watolib.config_sync import ReplicationPath
 
@@ -41,6 +43,7 @@ def _expected_replication_paths():
         ReplicationPath("file", "auth.secret", "etc/auth.secret", []),
         ReplicationPath("file", "password_store.secret", "etc/password_store.secret", []),
         ReplicationPath("file", "auth.serials", "etc/auth.serials", []),
+        ReplicationPath("file", "stored_passwords", "var/check_mk/stored_passwords", []),
         ReplicationPath(
             "dir", "usersettings", "var/check_mk/web", ["report-thumbnails", "session_info.mk"]
         ),
@@ -108,7 +111,7 @@ def _expected_replication_paths():
     return expected
 
 
-def test_get_replication_paths_defaults(edition, monkeypatch):
+def test_get_replication_paths_defaults(edition, monkeypatch) -> None:
     expected = _expected_replication_paths()
     assert sorted(activate_changes.get_replication_paths()) == sorted(expected)
 
@@ -181,7 +184,7 @@ def test_get_replication_components(
     ) == sorted(expected)
 
 
-def test_add_replication_paths_pre_17(monkeypatch):
+def test_add_replication_paths_pre_17(monkeypatch) -> None:
     monkeypatch.setattr(cmk.utils.paths, "omd_root", Path("/path"))
     # dir/file, ident, path, optional list of excludes
     activate_changes.add_replication_paths(
@@ -200,7 +203,7 @@ def test_add_replication_paths_pre_17(monkeypatch):
     )
 
 
-def test_add_replication_paths():
+def test_add_replication_paths() -> None:
     activate_changes.add_replication_paths(
         [
             ReplicationPath("dir", "abc", "path/to/abc", ["e1", "e2"]),
@@ -226,11 +229,11 @@ def test_add_replication_paths():
         (True, {"livestatus_version": "1.5.0p23"}),
     ],
 )
-def test_is_pre_17_remote_site(site_status, expected):
+def test_is_pre_17_remote_site(site_status, expected) -> None:
     assert cmk.gui.watolib.utils.is_pre_17_remote_site(site_status) == expected
 
 
-def test_automation_get_config_sync_state():
+def test_automation_get_config_sync_state() -> None:
     get_state = activate_changes.AutomationGetConfigSyncState()
     response = get_state.execute([ReplicationPath("dir", "abc", "etc", [])])
     assert response == (
@@ -261,16 +264,16 @@ def test_automation_get_config_sync_state():
             ),
             "etc/omd/site.conf": (
                 33200,
-                683,
+                677,
                 None,
-                "f549a7f82c6841c886b56d4290c325faa939aa74f37a4b577e46d5789d10d0f5",
+                "d20618bd8e3d002617b76f55eeba48bb4b73b530c6bc198edf280d136efcb9bc",
             ),
         },
         0,
     )
 
 
-def test_get_config_sync_file_infos():
+def test_get_config_sync_file_infos() -> None:
     base_dir = cmk.utils.paths.omd_root / "replication"
     _create_get_config_sync_file_infos_test_config(base_dir)
 
@@ -385,7 +388,7 @@ def _create_get_config_sync_file_infos_test_config(base_dir):
     base_dir.joinpath("links/working-symlink-to-file").symlink_to("../etc/d3/xyz")
 
 
-def test_get_file_names_to_sync():
+def test_get_file_names_to_sync() -> None:
     remote, central = _get_test_file_infos()
     to_sync_new, to_sync_changed, to_delete = activate_changes.get_file_names_to_sync(
         logger, central, remote, None
@@ -541,7 +544,7 @@ def _get_test_file_infos():
     return remote, central
 
 
-def test_get_sync_archive(tmp_path):
+def test_get_sync_archive(tmp_path) -> None:
     sync_archive = _get_test_sync_archive(tmp_path)
     with tarfile.TarFile(mode="r", fileobj=io.BytesIO(sync_archive)) as f:
         assert sorted(f.getnames()) == sorted(
@@ -587,68 +590,107 @@ def _get_test_sync_archive(tmp_path):
     )
 
 
-def test_automation_receive_config_sync(monkeypatch, tmp_path):
-    remote_path = tmp_path / "remote"
-    monkeypatch.setattr(cmk.utils.paths, "omd_root", remote_path)
+class TestAutomationReceiveConfigSync:
+    def test_automation_receive_config_sync(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+    ) -> None:
+        remote_path = tmp_path / "remote"
+        monkeypatch.setattr(cmk.utils.paths, "omd_root", remote_path)
 
-    # Disable for the moment, because the unit test fake environment is not ready for this yet
-    monkeypatch.setattr(
-        cmk.gui.watolib.activate_changes, "_execute_post_config_sync_actions", lambda site_id: None
-    )
-
-    remote_path.mkdir(parents=True, exist_ok=True)
-
-    dir_to_symlink_file = remote_path.joinpath("working-symlink/file")
-    dir_to_symlink_file.parent.mkdir(parents=True, exist_ok=True)
-    with dir_to_symlink_file.open("w", encoding="utf-8") as f:
-        f.write("ig")
-
-    dir_to_file = remote_path.joinpath("dir-to-file/file")
-    dir_to_file.parent.mkdir(parents=True, exist_ok=True)
-    with dir_to_file.open("w", encoding="utf-8") as f:
-        f.write("fi")
-
-    file_to_dir = remote_path.joinpath("file-to-dir")
-    with file_to_dir.open("w", encoding="utf-8") as f:
-        f.write("za")
-
-    to_delete_path = remote_path.joinpath("to_delete")
-    with to_delete_path.open("w", encoding="utf-8") as f:
-        f.write("äää")
-
-    assert to_delete_path.exists()
-    assert not remote_path.joinpath("etc/abc").exists()
-    assert not remote_path.joinpath("ding").exists()
-
-    automation = activate_changes.AutomationReceiveConfigSync()
-    automation.execute(
-        activate_changes.ReceiveConfigSyncRequest(
-            site_id=SiteId("remote"),
-            sync_archive=_get_test_sync_archive(tmp_path.joinpath("central")),
-            to_delete=[
-                "to_delete",
-                "working-symlink/file",
-                "file-to-dir",
-            ],
-            config_generation=0,
+        # Disable for the moment, because the unit test fake environment is not ready for this yet
+        monkeypatch.setattr(
+            cmk.gui.watolib.activate_changes,
+            "_execute_post_config_sync_actions",
+            lambda site_id: None,
         )
-    )
 
-    assert not to_delete_path.exists()
-    assert remote_path.joinpath("etc/abc").exists()
-    assert remote_path.joinpath("ding").exists()
+        remote_path.mkdir(parents=True, exist_ok=True)
 
-    assert not dir_to_symlink_file.exists()
-    assert dir_to_symlink_file.parent.is_symlink()
+        dir_to_symlink_file = remote_path.joinpath("working-symlink/file")
+        dir_to_symlink_file.parent.mkdir(parents=True, exist_ok=True)
+        with dir_to_symlink_file.open("w", encoding="utf-8") as f:
+            f.write("ig")
 
-    assert not dir_to_file.parent.is_dir()
-    assert dir_to_file.parent.exists()
+        dir_to_file = remote_path.joinpath("dir-to-file/file")
+        dir_to_file.parent.mkdir(parents=True, exist_ok=True)
+        with dir_to_file.open("w", encoding="utf-8") as f:
+            f.write("fi")
 
-    assert file_to_dir.is_dir()
-    assert file_to_dir.joinpath("aaa").exists()
+        file_to_dir = remote_path.joinpath("file-to-dir")
+        with file_to_dir.open("w", encoding="utf-8") as f:
+            f.write("za")
+
+        to_delete_path = remote_path.joinpath("to_delete")
+        with to_delete_path.open("w", encoding="utf-8") as f:
+            f.write("äää")
+
+        assert to_delete_path.exists()
+        assert not remote_path.joinpath("etc/abc").exists()
+        assert not remote_path.joinpath("ding").exists()
+
+        automation = activate_changes.AutomationReceiveConfigSync()
+        automation.execute(
+            activate_changes.ReceiveConfigSyncRequest(
+                site_id=SiteId("remote"),
+                sync_archive=_get_test_sync_archive(tmp_path.joinpath("central")),
+                to_delete=[
+                    "to_delete",
+                    "working-symlink/file",
+                    "file-to-dir",
+                ],
+                config_generation=0,
+            )
+        )
+
+        assert not to_delete_path.exists()
+        assert remote_path.joinpath("etc/abc").exists()
+        assert remote_path.joinpath("ding").exists()
+
+        assert not dir_to_symlink_file.exists()
+        assert dir_to_symlink_file.parent.is_symlink()
+
+        assert not dir_to_file.parent.is_dir()
+        assert dir_to_file.parent.exists()
+
+        assert file_to_dir.is_dir()
+        assert file_to_dir.joinpath("aaa").exists()
+
+    def test_get_request(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        request = Request({})
+        request.set_var("site_id", "NO_SITE")
+        request.set_var("to_delete", "['x/y/z.txt', 'abc.ending', '/ä/☃/☕']")
+        request.set_var("config_generation", "123")
+        request.files = werkzeug_datastructures.ImmutableMultiDict(
+            {
+                "sync_archive": werkzeug_datastructures.FileStorage(
+                    stream=io.BytesIO(b"some data"),
+                    filename="sync_archive",
+                    name="sync_archive",
+                )
+            }
+        )
+        monkeypatch.setattr(
+            activate_changes,
+            "_request",
+            request,
+        )
+        assert (
+            activate_changes.AutomationReceiveConfigSync().get_request()
+            == activate_changes.ReceiveConfigSyncRequest(
+                site_id=SiteId("NO_SITE"),
+                sync_archive=b"some data",
+                to_delete=["x/y/z.txt", "abc.ending", "/ä/☃/☕"],
+                config_generation=123,
+            )
+        )
 
 
-def test_get_current_config_generation():
+def test_get_current_config_generation() -> None:
     assert activate_changes._get_current_config_generation() == 0
     activate_changes.update_config_generation()
     assert activate_changes._get_current_config_generation() == 1

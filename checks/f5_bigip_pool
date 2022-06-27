@@ -5,9 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.f5_bigip import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # Agent / MIB output
@@ -71,7 +69,7 @@ def check_f5_bigip_pool(item, params, parsed):
 
     pool_info = parsed.get(item)
     if not pool_info:
-        return
+        return None
 
     pool_act_members = pool_info["act_members"]
     pool_def_members = pool_info["def_members"]

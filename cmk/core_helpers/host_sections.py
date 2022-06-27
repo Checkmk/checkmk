@@ -31,7 +31,7 @@ class HostSections(Generic[TRawDataSection], abc.ABC):
         self.cache_info: Final = cache_info if cache_info else {}
         self.piggybacked_raw_data: Final = piggybacked_raw_data if piggybacked_raw_data else {}
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "%s(sections=%r, cache_info=%r, piggybacked_raw_data=%r)" % (
             type(self).__name__,
             self.sections,

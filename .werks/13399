@@ -1,7 +1,7 @@
 Title: RESTAPI: Endpoint for downloading agent by host name
 Class: feature
 Compatible: incomp
-Component: core
+Component: rest-api
 Date: 1635428545
 Edition: cre
 Knowledge: undoc

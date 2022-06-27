@@ -139,7 +139,7 @@ REQUIRED_ARGUMENTS: dict[str, list[str]] = {
 }
 
 
-def test_all_agents_tested():
+def test_all_agents_tested() -> None:
     agents = {
         os.path.basename(os.path.splitext(agent_file)[0])
         for agent_file in glob("%s/cmk/special_agents/agent_*.py" % cmk_path())
@@ -149,7 +149,7 @@ def test_all_agents_tested():
 
 
 @pytest.mark.parametrize("agent_name, required_args", list(REQUIRED_ARGUMENTS.items()))
-def test_parse_arguments(agent_name, required_args):
+def test_parse_arguments(agent_name, required_args) -> None:
     agent = import_module("cmk.special_agents.%s" % agent_name)
     if agent_name in AGENTS_WITHOUT_PARSE_ARGUMENTS:
         return

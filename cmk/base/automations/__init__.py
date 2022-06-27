@@ -5,11 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import os
 import signal
+from contextlib import redirect_stdout
 from types import FrameType
 from typing import Any, Dict, List, NoReturn, Optional
 
 import cmk.utils.debug
+import cmk.utils.log as log
 from cmk.utils.exceptions import MKException, MKTimeout
 from cmk.utils.log import console
 from cmk.utils.plugin_loader import load_plugins
@@ -47,7 +50,11 @@ class Automations:
                 raise MKAutomationError("Automation command '%s' is not implemented." % cmd)
 
             if automation.needs_checks:
-                config.load_all_agent_based_plugins(check_api.get_check_api_context)
+                with redirect_stdout(open(os.devnull, "w")):
+                    log.setup_console_logging()
+                    config.load_all_agent_based_plugins(
+                        check_api.get_check_api_context,
+                    )
 
             if automation.needs_config:
                 config.load(validate_hosts=False)

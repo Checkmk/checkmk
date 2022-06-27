@@ -5,9 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 factory_settings["nvidia_temp_default_levels"] = {"levels": (60, 65)}
@@ -38,6 +36,7 @@ def check_nvidia_temp(item, params, info):
             ":"
         ):  # compatibility code for "old discovered" services
             return check_temperature(int(line[1]), params, "nvidia_%s" % item)
+    return None
 
 
 check_info["nvidia.temp"] = {
@@ -63,6 +62,7 @@ def inventory_nvidia_errors(info):
     for line in info:
         if line[0] == "GPUErrors:":
             return [(None, None)]
+    return []
 
 
 def check_nvidia_errors(_no_item, _no_params, info):

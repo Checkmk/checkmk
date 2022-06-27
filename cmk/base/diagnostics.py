@@ -55,7 +55,7 @@ from cmk.utils.type_defs import HostName
 import cmk.base.section as section
 
 if cmk_version.is_enterprise_edition():
-    # type: ignore[import] # noqa: F401 # pylint: disable=no-name-in-module,import-error
+    # type: ignore[import]  # pylint: disable=no-name-in-module,import-error
     from cmk.base.cee.diagnostics import cmc_specific_attrs
 else:
 
@@ -142,6 +142,7 @@ class DiagnosticsDump:
             PerfDataDiagnosticsElement(),
             HWDiagnosticsElement(),
             EnvironmentDiagnosticsElement(),
+            FilesSizeCSVDiagnosticsElement(),
         ]
 
     def _get_optional_elements(
@@ -254,7 +255,7 @@ class DiagnosticsDump:
 
 
 class Collectors:
-    def __init__(self):
+    def __init__(self) -> None:
         self._omd_config_collector = OMDConfigCollector()
         self._checkmk_server_name_collector = CheckmkServerNameCollector()
 
@@ -268,7 +269,7 @@ class Collectors:
 class ABCCollector(abc.ABC):
     """Collects information which are used by several elements"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._has_collected = False
         self._infos = None
 
@@ -290,7 +291,12 @@ class OMDConfigCollector(ABCCollector):
 
 class CheckmkServerNameCollector(ABCCollector):
     def _collect_infos(self) -> Optional[HostName]:
-        query = "GET hosts\nColumns: host_name\nFilter: host_labels = 'cmk/check_mk_server' 'yes'\n"
+        query = (
+            "GET services\nColumns: host_name\nFilter: service_description ~ OMD %s performance\n"
+            % omd_site()
+        )
+        result = livestatus.LocalConnection().query(query)
+
         result = livestatus.LocalConnection().query(query)
         try:
             return HostName(result[0][0])
@@ -398,6 +404,30 @@ class LocalFilesCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
         return get_local_files_csv(package_infos)
 
 
+class FilesSizeCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
+    @property
+    def ident(self) -> str:
+        return "file_size"
+
+    @property
+    def title(self) -> str:
+        return _("File Size")
+
+    @property
+    def description(self) -> str:
+        return _("List of all files in the site including their size")
+
+    def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementCSVResult:
+        csv_data = []
+        csv_data.append("size;path")
+        for path, _dirs, files in os.walk(cmk.utils.paths.omd_root):
+            for f in files:
+                fp = os.path.join(path, f)
+                if not os.path.islink(fp):
+                    csv_data.append("%d;%s" % (os.path.getsize(fp), str(fp)))
+        return "\n".join(csv_data)
+
+
 #   ---json dumps-----------------------------------------------------------
 
 
@@ -413,7 +443,7 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @property
     def description(self) -> str:
         return _(
-            "OS, Checkmk version and edition, Time, Core, " "Python version and paths, Architecture"
+            "OS, Checkmk version and edition, Time, Core, Python version and paths, Architecture"
         )
 
     def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementJSONResult:
@@ -646,11 +676,11 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             )
 
         infos = {}
-        attrs = tree.get_attributes(["software", "applications", "check_mk"])
+        attrs = tree.get_attributes(("software", "applications", "check_mk"))
         if attrs:
             infos.update(attrs.serialize())
 
-        node = tree.get_node(["software", "applications", "check_mk"])
+        node = tree.get_node(("software", "applications", "check_mk"))
         if node:
             infos.update(node.serialize())
 
@@ -809,7 +839,7 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
             ]
         )
 
-        return requests.post(url, verify=False)  # nosec
+        return requests.post(url)
 
     def _get_automation_secret(self) -> str:
         automation_secret_filepath = Path(cmk.utils.paths.var_dir).joinpath(

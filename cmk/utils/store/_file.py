@@ -9,7 +9,7 @@ import tempfile
 from ast import literal_eval
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Final, Generic, Iterator, Protocol, TypeVar, Union
+from typing import Any, Final, Generic, Iterator, Protocol, TypeVar
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
@@ -17,7 +17,6 @@ from cmk.utils.i18n import _
 from cmk.utils.store._locks import aquire_lock, have_lock, release_lock
 
 TObject = TypeVar("TObject")
-TDefault = TypeVar("TDefault")
 
 
 class Serializer(Protocol[TObject]):
@@ -84,7 +83,7 @@ class ObjectStore(Generic[TObject]):
     def write_obj(self, obj: TObject, *, mode: int = 0o660) -> None:
         return self._save_bytes_to_file(data=self._serializer.serialize(obj), mode=mode)
 
-    def read_obj(self, *, default: TDefault) -> Union[TObject, TDefault]:
+    def read_obj(self, *, default: TObject) -> TObject:
         raw = self._load_bytes_from_file()
         return self._serializer.deserialize(raw) if raw else default
 

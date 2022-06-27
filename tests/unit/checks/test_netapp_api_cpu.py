@@ -55,7 +55,7 @@ result_parsed_over_time = [
             {"levels": (10.0, 90.0)},
             (
                 1,
-                "Total CPU: 13.33% (warn/crit at 10.0%/90.0%), 2 CPUs",
+                "Total CPU: 13.33% (warn/crit at 10.00%/90.00%), 2 CPUs",
                 [("util", 13.333333333333334, 10.0, 90.0, 0, 2)],
             ),
             (0, "Total CPU: 0.83%, 2 CPUs", [("util", 0.8333333333333334, 10.0, 90.0, 0, 2)]),

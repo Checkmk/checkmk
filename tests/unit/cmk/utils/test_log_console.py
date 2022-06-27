@@ -22,21 +22,21 @@ def read(stream):
     return stream.read()
 
 
-def test_verbose_on(stream, caplog):
+def test_verbose_on(stream, caplog) -> None:
     caplog.set_level(console.VERBOSE, logger="cmk.base")
 
     console.verbose("hello", stream=stream)
     assert read(stream) == "hello"
 
 
-def test_verbose_off(stream, caplog):
+def test_verbose_off(stream, caplog) -> None:
     caplog.set_level(console.VERBOSE + 1, logger="cmk.base")
 
     console.verbose("hello", stream=stream)
     assert not read(stream)
 
 
-def test_verbose_default_stream_on(caplog, capsys):
+def test_verbose_default_stream_on(caplog, capsys) -> None:
     caplog.set_level(console.VERBOSE, logger="cmk.base")
 
     console.verbose("hello")
@@ -46,7 +46,7 @@ def test_verbose_default_stream_on(caplog, capsys):
     assert not captured.err
 
 
-def test_verbose_default_stream_off(caplog, capsys):
+def test_verbose_default_stream_off(caplog, capsys) -> None:
     caplog.set_level(console.VERBOSE + 1, logger="cmk.base")
 
     console.verbose("hello")
@@ -56,40 +56,40 @@ def test_verbose_default_stream_off(caplog, capsys):
     assert not captured.err
 
 
-def test_vverbose_on(stream, caplog):
+def test_vverbose_on(stream, caplog) -> None:
     caplog.set_level(logging.DEBUG, logger="cmk.base")
 
     console.vverbose("hello", stream=stream)
     assert read(stream) == "hello"
 
 
-def test_vverbose_off(stream, caplog):
+def test_vverbose_off(stream, caplog) -> None:
     caplog.set_level(logging.DEBUG + 1, logger="cmk.base")
 
     console.vverbose("hello", stream=stream)
     assert not read(stream)
 
 
-def test_info_on(stream, caplog):
+def test_info_on(stream, caplog) -> None:
     caplog.set_level(logging.INFO, logger="cmk.base")
 
     console.info("hello", stream=stream)
     assert read(stream) == "hello"
 
 
-def test_info_off(stream, caplog):
+def test_info_off(stream, caplog) -> None:
     caplog.set_level(logging.INFO + 1, logger="cmk.base")
 
     console.info("hello", stream=stream)
     assert not read(stream)
 
 
-def test_warning(stream):
+def test_warning(stream) -> None:
     console.warning("  hello  ", stream=stream)
     assert read(stream) == console._format_warning("  hello  ")
 
 
-def test_error(caplog, capsys):
+def test_error(caplog, capsys) -> None:
     caplog.set_level(console.VERBOSE, logger="cmk.base")
 
     console.error("hello")

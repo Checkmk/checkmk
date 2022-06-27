@@ -57,7 +57,7 @@ SECTION = {
 }
 
 
-def test_discovery():
+def test_discovery() -> None:
     assert list(postgres_stats.discover_postgres_stats(SECTION)) == [
         Service(item="VACUUM adwebconnect"),
         Service(item="ANALYZE adwebconnect"),
@@ -66,7 +66,7 @@ def test_discovery():
     ]
 
 
-def test_check_postgres_stats_no_data():
+def test_check_postgres_stats_no_data() -> None:
     assert list(
         postgres_stats._check_postgres_stats(
             item="ANALYZE this",
@@ -78,7 +78,7 @@ def test_check_postgres_stats_no_data():
     ) == [IgnoreResults("Login into database failed")]
 
 
-def test_check_postgres_stats_empty_data():
+def test_check_postgres_stats_empty_data() -> None:
     item = "ANALYZE this"
     assert list(
         postgres_stats._check_postgres_stats(
@@ -91,7 +91,7 @@ def test_check_postgres_stats_empty_data():
     ) == list(postgres_stats._check_never_checked("", [], {}, {}, NOW))
 
 
-def test_check_postgres_stats_oldest_table():
+def test_check_postgres_stats_oldest_table() -> None:
     item = "ANALYZE adwebconnect"
     assert list(
         postgres_stats._check_postgres_stats(

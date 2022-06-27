@@ -15,7 +15,20 @@ import sys
 import time
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterator, List, Optional, Sequence, Set, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterator,
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostAddress
@@ -66,11 +79,10 @@ def total_size(o: Any, handlers: Optional[Dict] = None) -> int:
     if handlers is None:
         handlers = {}
 
-    dict_handler = lambda d: itertools.chain.from_iterable(d.items())
     all_handlers = {
         tuple: iter,
         list: iter,
-        dict: dict_handler,
+        dict: lambda d: itertools.chain.from_iterable(d.items()),
         set: iter,
         frozenset: iter,
     }
@@ -106,13 +118,16 @@ def branch_of_daily_build(v: str) -> str:
 
 
 def cachefile_age(path: Union[Path, str]) -> float:
+    """Return the time difference between the last modification and now.
+
+    Raises:
+        FileNotFoundError if `path` does not exist.
+
+    """
     if not isinstance(path, Path):
         path = Path(path)
 
-    try:
-        return time.time() - path.stat().st_mtime
-    except Exception as e:
-        raise MKGeneralException("Cannot determine age of cache file %s: %s" % (path, e))
+    return time.time() - path.stat().st_mtime
 
 
 def getfuncargs(func: Callable) -> List[str]:
@@ -166,3 +181,9 @@ def normalize_ip_addresses(ip_addresses: Union[str, Sequence[str]]) -> List[Host
         expanded.extend(HostAddress(f"{prefix}{i}{suffix}") for i in curly.split(","))
 
     return expanded
+
+
+def typeshed_issue_7724(x: Optional[Mapping[str, str]]) -> Optional[MutableMapping[str, str]]:
+    """Temporary workaround for https://github.com/python/typeshed/issues/7724
+    TODO: Remove this when the issue a above is fixed!"""
+    return None if x is None else dict(x)

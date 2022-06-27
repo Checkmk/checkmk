@@ -121,7 +121,7 @@ def inventory_mkbackup_system(parsed):
 def check_mkbackup_system(item, _no_params, parsed):
     job_state = parsed.get("system", {}).get(item)
     if not job_state:
-        return
+        return None
 
     return check_mkbackup(job_state)
 
@@ -145,7 +145,7 @@ def check_mkbackup_site(item, _no_params, parsed):
     site_id, job_id = item.split(" backup ")
     job_state = parsed.get("site", {}).get(site_id, {}).get(job_id)
     if not job_state:
-        return
+        return None
 
     return check_mkbackup(job_state)
 

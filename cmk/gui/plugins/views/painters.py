@@ -8,21 +8,23 @@ import abc
 import time
 from fnmatch import fnmatch
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 import cmk.utils.man_pages as man_pages
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.defines import short_host_state_name, short_service_state_name
 from cmk.utils.render import approx_age
-from cmk.utils.type_defs import Timestamp
+from cmk.utils.type_defs import Labels, Timestamp
 
 import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.globals import active_config, html, output_funnel, request, response
+from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import render_color_icon, TranslatedMetrics
 from cmk.gui.plugins.views.graphs import cmk_time_graph_params, paint_time_graph_cmk
@@ -35,11 +37,13 @@ from cmk.gui.plugins.views.icons.utils import (
 )
 from cmk.gui.plugins.views.utils import (
     Cell,
+    CSVExportError,
     format_plugin_output,
     get_label_sources,
     get_perfdata_nth_value,
     get_tag_groups,
     is_stale,
+    JSONExportError,
     paint_age,
     paint_host_list,
     paint_nagiosflag,
@@ -56,7 +60,9 @@ from cmk.gui.plugins.views.utils import (
 )
 from cmk.gui.site_config import get_site_config
 from cmk.gui.type_defs import ColumnName, Row, SorterName
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.urls import makeuri_contextless, urlencode
 from cmk.gui.valuespec import (
@@ -265,7 +271,7 @@ class PainterServiceIcons(Painter):
         return _("Icons")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return iconpainter_columns("service", toplevel=None)
 
     @property
@@ -292,7 +298,7 @@ class PainterHostIcons(Painter):
         return _("Icons")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return iconpainter_columns("host", toplevel=None)
 
     @property
@@ -332,7 +338,7 @@ class PainterSiteIcon(Painter):
         return ""
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["site"]
 
     @property
@@ -341,7 +347,9 @@ class PainterSiteIcon(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         if row.get("site") and active_config.use_siteicons:
-            return None, html.render_img("icons/site-%s-24.png" % row["site"], class_="siteicon")
+            return None, HTMLWriter.render_img(
+                "icons/site-%s-24.png" % row["site"], class_="siteicon"
+            )
         return None, ""
 
 
@@ -358,7 +366,7 @@ class PainterSitenamePlain(Painter):
         return _("Site")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["site"]
 
     @property
@@ -379,7 +387,7 @@ class PainterSitealias(Painter):
         return _("Site alias")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["site"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -409,7 +417,9 @@ def _paint_service_state_short(row: Row) -> CellSpec:
     state, name = service_state_short(row)
     if is_stale(row):
         state = state + " stale"
-    return "state svcstate state%s" % state, html.render_span(name, class_=["state_rounded_fill"])
+    return "state svcstate state%s" % state, HTMLWriter.render_span(
+        name, class_=["state_rounded_fill"]
+    )
 
 
 def host_state_short(row: Row) -> Tuple[str, str]:
@@ -432,7 +442,9 @@ def _paint_host_state_short(row: Row, short: bool = False) -> CellSpec:
     if short:
         name = name[0]
 
-    return "state hstate hstate%s" % state, html.render_span(name, class_=["state_rounded_fill"])
+    return "state hstate hstate%s" % state, HTMLWriter.render_span(
+        name, class_=["state_rounded_fill"]
+    )
 
 
 @painter_registry.register
@@ -451,7 +463,7 @@ class PainterServiceState(Painter):
         return ["center"]
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_has_been_checked", "service_state"]
 
     @property
@@ -475,7 +487,7 @@ class PainterSvcPluginOutput(Painter):
         return _("Summary (Previously named: Status details or plugin output)")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_plugin_output", "service_custom_variables", "service_check_command"]
 
     @property
@@ -499,7 +511,7 @@ class PainterSvcLongPluginOutput(Painter):
         return _("Details (Previously named: long output)")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_long_plugin_output", "service_custom_variables"]
 
     @property
@@ -550,7 +562,7 @@ class PainterSvcPerfData(Painter):
         return _("Perfdata")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_perf_data"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -570,7 +582,7 @@ class PainterSvcMetrics(Painter):
         return _("Metrics")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_check_command", "service_perf_data"]
 
     @property
@@ -638,7 +650,7 @@ class PainterSvcPerfVal(Painter):
         return _("Val. %d") % self._num
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_perf_data"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -708,7 +720,7 @@ class PainterSvcCheckCommand(Painter):
         return _("Check command")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_check_command"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -728,7 +740,7 @@ class PainterSvcCheckCommandExpanded(Painter):
         return _("Check command expanded")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_check_command_expanded"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -748,7 +760,7 @@ class PainterSvcContacts(Painter):
         return _("Contacts")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_contacts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -768,7 +780,7 @@ class PainterSvcContactGroups(Painter):
         return _("Contact groups")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_contact_groups"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -788,7 +800,7 @@ class PainterServiceDescription(Painter):
         return _("Service")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_description"]
 
     @property
@@ -812,7 +824,7 @@ class PainterServiceDisplayName(Painter):
         return _("Display name")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_display_name"]
 
     @property
@@ -836,7 +848,7 @@ class PainterSvcStateAge(Painter):
         return _("Age")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_has_been_checked", "service_last_state_change"]
 
     @property
@@ -880,7 +892,7 @@ class PainterSvcCheckAge(Painter):
         return _("Checked")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_has_been_checked", "service_last_check", "service_cached_at"]
 
     @property
@@ -904,7 +916,7 @@ class PainterSvcCheckCacheInfo(Painter):
         return _("Cached")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_last_check", "service_cached_at", "service_cache_interval"]
 
     @property
@@ -930,7 +942,7 @@ class PainterSvcNextCheck(Painter):
         return _("Next check")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_next_check"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -950,7 +962,7 @@ class PainterSvcLastTimeOk(Painter):
         return _("Last OK")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_last_time_ok", "service_has_been_checked"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -970,7 +982,7 @@ class PainterSvcNextNotification(Painter):
         return _("Next notification")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_next_notification"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1023,7 +1035,7 @@ class PainterSvcNotificationPostponementReason(Painter):
         return _("Notif. postponed")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_notification_postponement_reason"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1043,7 +1055,7 @@ class PainterSvcLastNotification(Painter):
         return _("last notification")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_last_notification"]
 
     @property
@@ -1067,7 +1079,7 @@ class PainterSvcNotificationNumber(Painter):
         return _("N#")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_current_notification_number"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1089,7 +1101,7 @@ class PainterSvcCheckLatency(Painter):
         return _("Latency")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_latency"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1109,7 +1121,7 @@ class PainterSvcCheckDuration(Painter):
         return _("Duration")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_execution_time"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1129,7 +1141,7 @@ class PainterSvcAttempt(Painter):
         return _("Att.")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_current_attempt", "service_max_check_attempts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1149,7 +1161,7 @@ class PainterSvcNormalInterval(Painter):
         return _("Check int.")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_check_interval"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1169,7 +1181,7 @@ class PainterSvcRetryInterval(Painter):
         return _("Retry")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_retry_interval"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1189,7 +1201,7 @@ class PainterSvcCheckInterval(Painter):
         return _("Interval")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_check_interval", "service_retry_interval"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1216,7 +1228,7 @@ class PainterSvcCheckType(Painter):
         return _("Type")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_check_type"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1236,7 +1248,7 @@ class PainterSvcInDowntime(Painter):
         return _("Dt.")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_scheduled_downtime_depth"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1256,7 +1268,7 @@ class PainterSvcInNotifper(Painter):
         return _("in notif. p.")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_in_notification_period"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1276,7 +1288,7 @@ class PainterSvcNotifper(Painter):
         return _("notif.")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_notification_period"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1296,7 +1308,7 @@ class PainterSvcCheckPeriod(Painter):
         return _("check.")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_check_period"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1316,7 +1328,7 @@ class PainterSvcFlapping(Painter):
         return _("Flap")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_is_flapping"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1336,7 +1348,7 @@ class PainterSvcNotificationsEnabled(Painter):
         return _("Notif.")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_notifications_enabled"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1356,7 +1368,7 @@ class PainterSvcIsActive(Painter):
         return _("Active")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_active_checks_enabled"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1376,14 +1388,14 @@ class PainterSvcGroupMemberlist(Painter):
         return _("Groups")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_groups"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         links = []
         for group in row["service_groups"]:
             link = "view.py?view_name=servicegroup&servicegroup=" + group
-            links.append(html.render_a(group, link))
+            links.append(HTMLWriter.render_a(group, link))
         return "", HTML(", ").join(links)
 
 
@@ -1397,7 +1409,7 @@ class PainterSvcPnpgraph(Painter):
         return _("Service Graphs")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return [
             "host_name",
             "service_description",
@@ -1421,6 +1433,12 @@ class PainterSvcPnpgraph(Painter):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_time_graph_cmk(row, cell)
 
+    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+        raise CSVExportError()
+
+    def export_for_json(self, row: Row, cell: Cell) -> object:
+        raise JSONExportError()
+
 
 @painter_registry.register
 class PainterCheckManpage(Painter):
@@ -1435,7 +1453,7 @@ class PainterCheckManpage(Painter):
         return _("Manual")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_check_command"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1461,10 +1479,11 @@ class PainterCheckManpage(Painter):
             return "", _("Man page %s not found.") % checktype
 
         description = (
-            escaping.escape_attribute(page["header"]["description"])
+            escaping.escape_attribute(page.description)
             .replace("{", "<b>")
             .replace("}", "</b>")
             .replace("&lt;br&gt;", "<br>")
+            .replace("\n\n", "\n<br>\n")
         )
         return "", HTML(description)
 
@@ -1473,7 +1492,8 @@ def _paint_comments(prefix: str, row: Row) -> CellSpec:
     comments = row[prefix + "comments_with_info"]
     text = HTML(", ").join(
         [
-            html.render_i(a) + escaping.escape_to_html_permissive(": %s" % c, escape_links=False)
+            HTMLWriter.render_i(a)
+            + escaping.escape_to_html_permissive(": %s" % c, escape_links=False)
             for _id, a, c in comments
         ]
     )
@@ -1493,7 +1513,7 @@ class PainterSvcComments(Painter):
         return _("Comments")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_comments_with_info"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1513,7 +1533,7 @@ class PainterSvcAcknowledged(Painter):
         return _("Ack")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_acknowledged"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1534,23 +1554,10 @@ def _paint_custom_notes(what: str, row: Row) -> CellSpec:
     host = row["host_name"]
     svc = row.get("service_description")
     if what == "service":
-        dirs = notes_matching_pattern_entries(
-            [
-                Path(
-                    cmk.utils.paths.default_config_dir,
-                    "/notes/services",
-                )
-            ],
-            host,
-        )
+        dirs = [Path(cmk.utils.paths.default_config_dir) / "notes/services" / host]
         item = svc
     else:
-        dirs = [
-            Path(
-                cmk.utils.paths.default_config_dir,
-                "/notes/hosts",
-            )
-        ]
+        dirs = [Path(cmk.utils.paths.default_config_dir) / "notes/hosts"]
         item = host
 
     assert isinstance(item, str)
@@ -1591,7 +1598,7 @@ class PainterSvcCustomNotes(Painter):
         return _("Notes")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_name", "host_address", "service_description", "service_plugin_output"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1611,7 +1618,7 @@ class PainterSvcStaleness(Painter):
         return _("Staleness")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_staleness"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1620,7 +1627,7 @@ class PainterSvcStaleness(Painter):
 
 def _paint_is_stale(row: Row) -> CellSpec:
     if is_stale(row):
-        return "badflag", html.render_span(_("yes"))
+        return "badflag", HTMLWriter.render_span(_("yes"))
     return "goodflag", _("no")
 
 
@@ -1637,7 +1644,7 @@ class PainterSvcIsStale(Painter):
         return _("Stale")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_staleness"]
 
     @property
@@ -1661,7 +1668,7 @@ class PainterSvcServicelevel(Painter):
         return _("Service Level")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_custom_variable_names", "service_custom_variable_values"]
 
     @property
@@ -1680,8 +1687,10 @@ def _paint_custom_vars(what: str, row: Row, blacklist: Optional[List] = None) ->
     rows = []
     for varname, value in items:
         if varname not in blacklist:
-            rows.append(html.render_tr(html.render_td(varname) + html.render_td(value)))
-    return "", html.render_table(HTML().join(rows))
+            rows.append(
+                HTMLWriter.render_tr(HTMLWriter.render_td(varname) + HTMLWriter.render_td(value))
+            )
+    return "", HTMLWriter.render_table(HTML().join(rows))
 
 
 @painter_registry.register
@@ -1694,7 +1703,7 @@ class PainterServiceCustomVariables(Painter):
         return _("Service custom attributes")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_custom_variables"]
 
     def group_by(self, row: Row, cell: Cell) -> Tuple[Tuple[str, str], ...]:
@@ -1710,6 +1719,9 @@ class ABCPainterCustomVariable(Painter, abc.ABC):
 
     def short_title(self, cell: Cell) -> str:
         return self._dynamic_title(cell.painter_parameters())
+
+    def export_title(self, cell: Cell) -> str:
+        return "%s_%s" % (self.ident, cell.painter_parameters()["ident"])
 
     def _dynamic_title(self, params: Optional[Dict[str, Any]] = None) -> str:
         if params is None:
@@ -1767,7 +1779,7 @@ class PainterServiceCustomVariable(ABCPainterCustomVariable):
         return "service_custom_variable"
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_custom_variable_names", "service_custom_variable_values"]
 
     @property
@@ -1792,7 +1804,7 @@ class PainterHostCustomVariable(ABCPainterCustomVariable):
         return "host_custom_variable"
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
     def group_by(self, row: Row, cell: Cell) -> Union[str, Tuple[str, ...]]:
@@ -1852,7 +1864,7 @@ class PainterHostState(Painter):
         return ["center"]
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_has_been_checked", "host_state"]
 
     @property
@@ -1876,7 +1888,7 @@ class PainterHostStateOnechar(Painter):
         return _("S.")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_has_been_checked", "host_state"]
 
     @property
@@ -1900,7 +1912,7 @@ class PainterHostPluginOutput(Painter):
         return _("Summary (Previously named: Status details or plugin output)")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_plugin_output", "host_custom_variables"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1920,7 +1932,7 @@ class PainterHostPerfData(Painter):
         return _("Performance data")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_perf_data"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1940,7 +1952,7 @@ class PainterHostCheckCommand(Painter):
         return _("Check command")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_check_command"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1960,7 +1972,7 @@ class PainterHostCheckCommandExpanded(Painter):
         return _("Check command expanded")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_check_command_expanded"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1980,7 +1992,7 @@ class PainterHostStateAge(Painter):
         return _("Age")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_has_been_checked", "host_last_state_change"]
 
     @property
@@ -2004,7 +2016,7 @@ class PainterHostCheckAge(Painter):
         return _("Checked")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_has_been_checked", "host_last_check"]
 
     @property
@@ -2028,7 +2040,7 @@ class PainterHostNextCheck(Painter):
         return _("Next check")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_next_check"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2048,7 +2060,7 @@ class PainterHostNextNotification(Painter):
         return _("Next notification")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_next_notification"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2068,7 +2080,7 @@ class PainterHostNotificationPostponementReason(Painter):
         return _("Notif. postponed")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_notification_postponement_reason"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2088,7 +2100,7 @@ class PainterHostLastNotification(Painter):
         return _("last notification")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_last_notification"]
 
     @property
@@ -2112,7 +2124,7 @@ class PainterHostCheckLatency(Painter):
         return _("Latency")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_latency"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2132,7 +2144,7 @@ class PainterHostCheckDuration(Painter):
         return _("Duration")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_execution_time"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2152,7 +2164,7 @@ class PainterHostAttempt(Painter):
         return _("Att.")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_current_attempt", "host_max_check_attempts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2172,7 +2184,7 @@ class PainterHostNormalInterval(Painter):
         return _("Check int.")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_check_interval"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2192,7 +2204,7 @@ class PainterHostRetryInterval(Painter):
         return _("Retry")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_retry_interval"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2212,7 +2224,7 @@ class PainterHostCheckInterval(Painter):
         return _("Interval")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_check_interval", "host_retry_interval"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2239,7 +2251,7 @@ class PainterHostCheckType(Painter):
         return _("Type")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_check_type"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2259,7 +2271,7 @@ class PainterHostInNotifper(Painter):
         return _("in notif. p.")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_in_notification_period"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2279,7 +2291,7 @@ class PainterHostNotifper(Painter):
         return _("notif.")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_notification_period"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2299,7 +2311,7 @@ class PainterHostNotificationNumber(Painter):
         return _("N#")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_current_notification_number"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2319,7 +2331,7 @@ class PainterHostFlapping(Painter):
         return _("Flap")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_is_flapping"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2339,7 +2351,7 @@ class PainterHostIsActive(Painter):
         return _("Active")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_active_checks_enabled"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2359,7 +2371,7 @@ class PainterHostNotificationsEnabled(Painter):
         return _("Notif.")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_notifications_enabled"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2379,7 +2391,7 @@ class PainterHostPnpgraph(Painter):
         return _("Graph")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_name", "host_perf_data", "host_metrics", "host_check_command"]
 
     @property
@@ -2397,6 +2409,12 @@ class PainterHostPnpgraph(Painter):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_time_graph_cmk(row, cell)
 
+    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+        raise CSVExportError()
+
+    def export_for_json(self, row: Row, cell: Cell) -> object:
+        raise JSONExportError()
+
 
 @painter_registry.register
 class PainterHostBlack(Painter):
@@ -2411,7 +2429,7 @@ class PainterHostBlack(Painter):
         return _("Host")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["site", "host_name", "host_state"]
 
     @property
@@ -2421,7 +2439,7 @@ class PainterHostBlack(Painter):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         state = row["host_state"]
         if state != 0:
-            return "nobr", html.render_div(row["host_name"], class_="hostdown")
+            return "nobr", HTMLWriter.render_div(row["host_name"], class_="hostdown")
         return "nobr", row["host_name"]
 
 
@@ -2438,7 +2456,7 @@ class PainterHostWithState(Painter):
         return _("Host")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["site", "host_name", "host_state", "host_has_been_checked"]
 
     @property
@@ -2451,7 +2469,7 @@ class PainterHostWithState(Painter):
         else:
             state = "p"
         if state != 0:
-            return "state hstate hstate%s" % state, html.render_span(row["host_name"])
+            return "state hstate hstate%s" % state, HTMLWriter.render_span(row["host_name"])
         return "nobr", row["host_name"]
 
 
@@ -2468,7 +2486,7 @@ class PainterHost(Painter):
         return _("Host")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_name", "host_state", "host_has_been_checked", "host_scheduled_downtime_depth"]
 
     @property
@@ -2525,7 +2543,7 @@ class PainterHost(Painter):
                 css.append("hstate%s" % option_state)
                 break
 
-        return " ".join(css), html.render_span(
+        return " ".join(css), HTMLWriter.render_span(
             row["host_name"], class_=["state_rounded_fill", "host"]
         )
 
@@ -2543,7 +2561,7 @@ class PainterAlias(Painter):
         return _("Alias")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_alias"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2563,7 +2581,7 @@ class PainterHostAddress(Painter):
         return _("IP address")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_address"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2583,7 +2601,7 @@ class PainterHostIpv4Address(Painter):
         return _("IPv4 address")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2603,7 +2621,7 @@ class PainterHostIpv6Address(Painter):
         return _("IPv6 address")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2623,7 +2641,7 @@ class PainterHostAddresses(Painter):
         return _("IP addresses")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_address", "host_custom_variable_names", "host_custom_variable_values"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2656,7 +2674,7 @@ class PainterHostAddressesAdditional(Painter):
         return _("Add. addresses")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2689,7 +2707,7 @@ class PainterHostAddressFamily(Painter):
         return _("Address family")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2709,7 +2727,7 @@ class PainterHostAddressFamilies(Painter):
         return _("Address families")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2759,7 +2777,7 @@ class PainterNumServices(Painter):
         return ["right"]
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_num_services"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2782,7 +2800,7 @@ class PainterNumServicesOk(Painter):
         return ["right"]
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_num_services_ok"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2805,7 +2823,7 @@ class PainterNumProblems(Painter):
         return ["right"]
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_num_services", "host_num_services_ok", "host_num_services_pending"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2833,7 +2851,7 @@ class PainterNumServicesWarn(Painter):
         return ["right"]
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_num_services_warn"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2856,7 +2874,7 @@ class PainterNumServicesCrit(Painter):
         return ["right"]
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_num_services_crit"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2879,7 +2897,7 @@ class PainterNumServicesUnknown(Painter):
         return ["right"]
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_num_services_unknown"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2902,7 +2920,7 @@ class PainterNumServicesPending(Painter):
         return ["right"]
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_num_services_pending"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2934,9 +2952,11 @@ def _paint_service_list(row: Row, columnname: str) -> CellSpec:
         else:
             css = "statep"
 
-        h += html.render_div(html.render_span(html.render_a(text, link)), class_=css)
+        h += HTMLWriter.render_div(
+            HTMLWriter.render_span(HTMLWriter.render_a(text, link)), class_=css
+        )
 
-    return "", html.render_div(h, class_="objectlist")
+    return "", HTMLWriter.render_div(h, class_="objectlist")
 
 
 @painter_registry.register
@@ -2952,7 +2972,7 @@ class PainterHostServices(Painter):
         return _("Services")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_name", "host_services_with_state"]
 
     @property
@@ -3012,7 +3032,7 @@ class PainterHostParents(Painter):
         return _("Parents")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_parents"]
 
     @property
@@ -3036,7 +3056,7 @@ class PainterHostChilds(Painter):
         return _("children")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_childs"]
 
     @property
@@ -3060,7 +3080,7 @@ class PainterHostGroupMemberlist(Painter):
         return _("Groups")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_groups"]
 
     def group_by(self, row: Row, cell: Cell) -> Tuple[str, ...]:
@@ -3078,7 +3098,7 @@ class PainterHostGroupMemberlist(Painter):
                 link += "&display_options=%s" % escaping.escape_attribute(
                     request.var("display_options")
                 )
-            links.append(html.render_a(group, link))
+            links.append(HTMLWriter.render_a(group, link))
         return "", HTML(", ").join(links)
 
 
@@ -3095,7 +3115,7 @@ class PainterHostContacts(Painter):
         return _("Contacts")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_contacts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3115,7 +3135,7 @@ class PainterHostContactGroups(Painter):
         return _("Contact groups")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_contact_groups"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3135,7 +3155,7 @@ class PainterHostCustomNotes(Painter):
         return _("Notes")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_name", "host_address", "host_plugin_output"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3155,7 +3175,7 @@ class PainterHostComments(Painter):
         return _("Comments")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_comments_with_info"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3175,7 +3195,7 @@ class PainterHostInDowntime(Painter):
         return _("Downtime")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_scheduled_downtime_depth"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3195,7 +3215,7 @@ class PainterHostAcknowledged(Painter):
         return _("Ack")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_acknowledged"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3215,7 +3235,7 @@ class PainterHostStaleness(Painter):
         return _("Staleness")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_staleness"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3235,7 +3255,7 @@ class PainterHostIsStale(Painter):
         return _("Stale")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_staleness"]
 
     @property
@@ -3259,7 +3279,7 @@ class PainterHostServicelevel(Painter):
         return _("Service Level")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
     @property
@@ -3280,7 +3300,7 @@ class PainterHostCustomVariables(Painter):
         return _("Host custom attributes")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_custom_variables"]
 
     def group_by(self, row: Row, cell: Cell) -> Tuple[Tuple[str, str], ...]:
@@ -3332,7 +3352,7 @@ def _paint_discovery_output(field: str, row: Row) -> CellSpec:
             urlencode(row["host_name"]),
             urlencode(value),
         )
-        return None, html.render_div(html.render_a(value, link))
+        return None, HTMLWriter.render_div(HTMLWriter.render_a(value, link))
     return None, value
 
 
@@ -3349,7 +3369,7 @@ class PainterServiceDiscoveryState(Painter):
         return _("State")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["discovery_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3369,7 +3389,7 @@ class PainterServiceDiscoveryCheck(Painter):
         return _("Check type")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["discovery_state", "discovery_check", "discovery_service"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3389,7 +3409,7 @@ class PainterServiceDiscoveryService(Painter):
         return _("Service description")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["discovery_state", "discovery_check", "discovery_service"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3416,7 +3436,7 @@ class PainterHostgroupHosts(Painter):
         return _("Hosts")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["hostgroup_members_with_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3430,8 +3450,8 @@ class PainterHostgroupHosts(Painter):
                 css = "hstate%d" % state
             else:
                 css = "hstatep"
-            h += html.render_div(html.render_a(host, link), class_=css)
-        return "", html.render_div(h, class_="objectlist")
+            h += HTMLWriter.render_div(HTMLWriter.render_a(host, link), class_=css)
+        return "", HTMLWriter.render_div(h, class_="objectlist")
 
 
 @painter_registry.register
@@ -3447,7 +3467,7 @@ class PainterHgNumServices(Painter):
         return ""
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["hostgroup_num_services"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3470,7 +3490,7 @@ class PainterHgNumServicesOk(Painter):
         return ["right"]
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["hostgroup_num_services_ok"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3493,7 +3513,7 @@ class PainterHgNumServicesWarn(Painter):
         return ["right"]
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["hostgroup_num_services_warn"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3516,7 +3536,7 @@ class PainterHgNumServicesCrit(Painter):
         return ["right"]
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["hostgroup_num_services_crit"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3539,7 +3559,7 @@ class PainterHgNumServicesUnknown(Painter):
         return ["right"]
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["hostgroup_num_services_unknown"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3562,7 +3582,7 @@ class PainterHgNumServicesPending(Painter):
         return ["right"]
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["hostgroup_num_services_pending"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3585,7 +3605,7 @@ class PainterHgNumHostsUp(Painter):
         return ["right"]
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["hostgroup_num_hosts_up"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3608,7 +3628,7 @@ class PainterHgNumHostsDown(Painter):
         return ["right"]
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["hostgroup_num_hosts_down"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3631,7 +3651,7 @@ class PainterHgNumHostsUnreach(Painter):
         return ["right"]
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["hostgroup_num_hosts_unreach"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3654,7 +3674,7 @@ class PainterHgNumHostsPending(Painter):
         return ["right"]
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["hostgroup_num_hosts_pending"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3674,7 +3694,7 @@ class PainterHgName(Painter):
         return _("Name")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["hostgroup_name"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3694,7 +3714,7 @@ class PainterHgAlias(Painter):
         return _("Alias")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["hostgroup_alias"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3722,7 +3742,7 @@ class PainterSgServices(Painter):
         return _("Services")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["servicegroup_members_with_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3742,7 +3762,7 @@ class PainterSgNumServices(Painter):
         return ""
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["servicegroup_num_services"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3762,7 +3782,7 @@ class PainterSgNumServicesOk(Painter):
         return _("O")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["servicegroup_num_services_ok"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3782,7 +3802,7 @@ class PainterSgNumServicesWarn(Painter):
         return _("W")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["servicegroup_num_services_warn"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3802,7 +3822,7 @@ class PainterSgNumServicesCrit(Painter):
         return _("C")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["servicegroup_num_services_crit"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3822,7 +3842,7 @@ class PainterSgNumServicesUnknown(Painter):
         return _("U")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["servicegroup_num_services_unknown"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3842,7 +3862,7 @@ class PainterSgNumServicesPending(Painter):
         return _("P")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["servicegroup_num_services_pending"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3862,7 +3882,7 @@ class PainterSgName(Painter):
         return _("Name")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["servicegroup_name"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3882,7 +3902,7 @@ class PainterSgAlias(Painter):
         return _("Alias")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["servicegroup_alias"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3910,7 +3930,7 @@ class PainterCommentId(Painter):
         return _("ID")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["comment_id"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3930,7 +3950,7 @@ class PainterCommentAuthor(Painter):
         return _("Author")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["comment_author"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3947,7 +3967,7 @@ class PainterCommentComment(Painter):
         return _("Comment text")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["comment_comment"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3967,7 +3987,7 @@ class PainterCommentWhat(Painter):
         return _("Type")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["comment_type"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3987,7 +4007,7 @@ class PainterCommentTime(Painter):
         return _("Time")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["comment_entry_time"]
 
     @property
@@ -4011,7 +4031,7 @@ class PainterCommentExpires(Painter):
         return _("Expires")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["comment_expire_time"]
 
     @property
@@ -4037,7 +4057,7 @@ class PainterCommentEntryType(Painter):
         return _("E.Type")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["comment_entry_type", "host_name", "service_description"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4089,7 +4109,7 @@ class PainterDowntimeId(Painter):
         return _("ID")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["downtime_id"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4109,7 +4129,7 @@ class PainterDowntimeAuthor(Painter):
         return _("Author")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["downtime_author"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4129,7 +4149,7 @@ class PainterDowntimeComment(Painter):
         return _("Comment")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["downtime_comment"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4149,7 +4169,7 @@ class PainterDowntimeFixed(Painter):
         return _("Mode")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["downtime_fixed"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4169,7 +4189,7 @@ class PainterDowntimeOrigin(Painter):
         return _("Origin")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["downtime_origin"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4189,12 +4209,13 @@ class PainterDowntimeRecurring(Painter):
         return _("Recurring")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["downtime_recurring"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         try:
             from cmk.gui.cee.plugins.wato.cmc import recurring_downtimes_types
+
         except ImportError:
             return "", _("(not supported)")
 
@@ -4217,7 +4238,7 @@ class PainterDowntimeWhat(Painter):
         return _("for")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["downtime_is_service"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4237,7 +4258,7 @@ class PainterDowntimeType(Painter):
         return _("act/pend")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["downtime_type"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4257,7 +4278,7 @@ class PainterDowntimeEntryTime(Painter):
         return _("Entry")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["downtime_entry_time"]
 
     @property
@@ -4281,7 +4302,7 @@ class PainterDowntimeStartTime(Painter):
         return _("Start")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["downtime_start_time"]
 
     @property
@@ -4305,7 +4326,7 @@ class PainterDowntimeEndTime(Painter):
         return _("End")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["downtime_end_time"]
 
     @property
@@ -4329,7 +4350,7 @@ class PainterDowntimeDuration(Painter):
         return _("Flex. Duration")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["downtime_duration", "downtime_fixed"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4359,7 +4380,7 @@ class PainterLogMessage(Painter):
         return _("Message")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["log_message"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4379,7 +4400,7 @@ class PainterLogPluginOutput(Painter):
         return _("Summary")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["log_plugin_output", "log_type", "log_state_type", "log_comment"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4414,7 +4435,7 @@ class PainterLogWhat(Painter):
         return _("Host/Service")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["log_type"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4439,7 +4460,7 @@ class PainterLogAttempt(Painter):
         return _("Att.")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["log_attempt"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4459,7 +4480,7 @@ class PainterLogStateType(Painter):
         return _("Type")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["log_state_type"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4479,7 +4500,7 @@ class PainterLogStateInfo(Painter):
         return _("State info")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["log_state_info", "log_state_type"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4505,7 +4526,7 @@ class PainterLogType(Painter):
         return _("Event")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["log_type"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4525,7 +4546,7 @@ class PainterLogContactName(Painter):
         return _("Contact")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["log_contact_name"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4537,7 +4558,7 @@ class PainterLogContactName(Painter):
         return (
             "nowrap",
             HTML(", ").join(
-                html.render_a(
+                HTMLWriter.render_a(
                     contact,
                     makeuri_contextless(
                         request,
@@ -4566,7 +4587,7 @@ class PainterLogCommand(Painter):
         return _("Command")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["log_command_name"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4586,10 +4607,10 @@ class PainterLogIcon(Painter):
         return ""
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["log_type", "log_state", "log_state_type", "log_command_name"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell) -> CellSpec:  # pylint: disable=too-many-branches
         img = None
         log_type = row["log_type"]
         log_state = row["log_state"]
@@ -4688,7 +4709,7 @@ class PainterLogOptions(Painter):
         return _("Info")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["log_options"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4708,7 +4729,7 @@ class PainterLogComment(Painter):
         return _("Comment")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["log_options"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4733,7 +4754,7 @@ class PainterLogTime(Painter):
         return _("Time")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["log_time"]
 
     @property
@@ -4757,7 +4778,7 @@ class PainterLogLineno(Painter):
         return _("Line")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["log_lineno"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4777,7 +4798,7 @@ class PainterLogDate(Painter):
         return _("Date")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["log_time"]
 
     def group_by(self, row: Row, cell: Cell) -> str:
@@ -4803,7 +4824,7 @@ class PainterLogState(Painter):
         return ["center"]
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["log_state", "log_state_type", "log_service_description", "log_type"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4841,7 +4862,7 @@ class PainterAlertStatsOk(Painter):
         return ["right"]
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["log_alerts_ok"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4864,7 +4885,7 @@ class PainterAlertStatsWarn(Painter):
         return ["right"]
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["log_alerts_warn"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4887,7 +4908,7 @@ class PainterAlertStatsCrit(Painter):
         return ["right"]
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["log_alerts_crit"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4910,7 +4931,7 @@ class PainterAlertStatsUnknown(Painter):
         return ["right"]
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["log_alerts_unknown"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4933,7 +4954,7 @@ class PainterAlertStatsProblem(Painter):
         return ["right"]
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["log_alerts_problem"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4958,7 +4979,7 @@ class PainterHostTags(Painter):
         return self.title(cell)
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_tags"]
 
     @property
@@ -4977,7 +4998,7 @@ class ABCPainterTagsWithTitles(Painter, abc.ABC):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         entries = self._get_entries(row)
-        return "", html.render_br().join(
+        return "", HTMLWriter.render_br().join(
             [
                 escaping.escape_to_html_permissive("%s: %s" % e, escape_links=False)
                 for e in sorted(entries)
@@ -5020,7 +5041,7 @@ class PainterHostTagsWithTitles(ABCPainterTagsWithTitles):
         return self.title(cell)
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_tags"]
 
     @property
@@ -5041,7 +5062,7 @@ class PainterServiceTags(Painter):
         return self.title(cell)
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_tags"]
 
     @property
@@ -5069,7 +5090,7 @@ class PainterServiceTagsWithTitles(ABCPainterTagsWithTitles):
         return self.title(cell)
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_tags"]
 
     @property
@@ -5090,23 +5111,29 @@ class PainterHostLabels(Painter):
         return self.title(cell)
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_labels", "host_label_sources"]
 
     @property
     def sorter(self) -> SorterName:
         return "host_labels"
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
-        if html.is_api_call():
-            return "", get_labels(row, "host")
+    def _compute_data(self, row: Row, cell: Cell) -> Labels:
+        return get_labels(row, "host")
 
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return "", render_labels(
-            get_labels(row, "host"),
+            self._compute_data(row, cell),
             "host",
             with_links=True,
             label_sources=get_label_sources(row, "host"),
         )
+
+    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+        raise CSVExportError()
+
+    def export_for_json(self, row: Row, cell: Cell) -> Labels:
+        return self._compute_data(row, cell)
 
 
 @painter_registry.register
@@ -5122,23 +5149,29 @@ class PainterServiceLabels(Painter):
         return self.title(cell)
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_labels", "service_label_sources"]
 
     @property
     def sorter(self) -> SorterName:
         return "service_labels"
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
-        if html.is_api_call():
-            return "", get_labels(row, "service")
+    def _compute_data(self, row: Row, cell: Cell) -> Labels:
+        return get_labels(row, "service")
 
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return "", render_labels(
-            get_labels(row, "service"),
+            self._compute_data(row, cell),
             "service",
             with_links=True,
             label_sources=get_label_sources(row, "service"),
         )
+
+    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+        raise CSVExportError()
+
+    def export_for_json(self, row: Row, cell: Cell) -> Labels:
+        return self._compute_data(row, cell)
 
 
 @painter_registry.register
@@ -5154,7 +5187,7 @@ class PainterHostDockerNode(Painter):
         return _("Node")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_labels", "host_label_sources"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -5180,7 +5213,7 @@ class PainterHostDockerNode(Painter):
             ],
             filename="view.py",
         )
-        content: HTML = html.render_a(node, href=url)
+        content: HTML = HTMLWriter.render_a(node, href=url)
         return "", content
 
 
@@ -5223,7 +5256,7 @@ class AbstractPainterSpecificMetric(Painter):
             return _("Metric not found")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         raise NotImplementedError()
 
     @property
@@ -5251,7 +5284,7 @@ class AbstractPainterSpecificMetric(Painter):
             key=lambda x: x[1],
         )
 
-    def _render(self, row, cell, perf_data_entries, check_command):
+    def _render(self, row, cell, perf_data_entries, check_command) -> tuple[str, str]:
         show_metric = cell.painter_parameters()["metric"]
         translated_metrics = metrics.translate_perf_data(
             perf_data_entries, check_command=check_command
@@ -5272,7 +5305,7 @@ class PainterHostSpecificMetric(AbstractPainterSpecificMetric):
         return "host_specific_metric"
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["host_perf_data", "host_check_command"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -5288,7 +5321,7 @@ class PainterServiceSpecificMetric(AbstractPainterSpecificMetric):
         return "service_specific_metric"
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> Sequence[ColumnName]:
         return ["service_perf_data", "service_check_command"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -5330,8 +5363,8 @@ class _PainterHostKubernetes(Painter):
         return f"host_kubernetes_{self._kubernetes_object_type}"
 
     @property
-    def columns(self) -> List[ColumnName]:
-        return ["host_labels", "host_name"]
+    def columns(self) -> Sequence[ColumnName]:
+        return ["host_labels", "host_name", "site"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         labels = row.get("host_labels", {})
@@ -5353,13 +5386,14 @@ class _PainterHostKubernetes(Painter):
                 # name of the dashboard we are linking to
                 ("name", f"kubernetes_{self._kubernetes_object_type}"),
                 ("host", row["host_name"]),
+                ("site", row["site"]),
             ],
             filename="dashboard.py",
         )
         if (
             object_name := labels.get(f"cmk/kubernetes/{self._kubernetes_object_type}")
         ) is not None:
-            content: HTML = html.render_a(object_name, href=url)
+            content: HTML = HTMLWriter.render_a(object_name, href=url)
             return "", content
         return "", ""
 
@@ -5370,7 +5404,7 @@ class PainterHostKubernetesCluster(_PainterHostKubernetes):
     _constraints = ["cluster"]
 
     def title(self, cell: Cell) -> str:
-        return _("Kubernetes cluster")
+        return _("Kubernetes Cluster")
 
     def short_title(self, cell: Cell) -> str:
         return _("Cluster")
@@ -5382,7 +5416,7 @@ class PainterHostKubernetesNamespace(_PainterHostKubernetes):
     _constraints = ["namespace", "cluster"]
 
     def title(self, cell: Cell) -> str:
-        return _("Kubernetes namespace")
+        return _("Kubernetes Namespace")
 
     def short_title(self, cell: Cell) -> str:
         return _("Namespace")
@@ -5394,7 +5428,7 @@ class PainterHostKubernetesDeployment(_PainterHostKubernetes):
     _constraints = ["deployment", "namespace", "cluster"]
 
     def title(self, cell: Cell) -> str:
-        return _("Kubernetes deployment")
+        return _("Kubernetes Deployment")
 
     def short_title(self, cell: Cell) -> str:
         return _("Deployment")
@@ -5406,10 +5440,10 @@ class PainterHostKubernetesDaemonset(_PainterHostKubernetes):
     _constraints = ["daemonset", "namespace", "cluster"]
 
     def title(self, cell: Cell) -> str:
-        return _("Kubernetes daemonset")
+        return _("Kubernetes DaemonSet")
 
     def short_title(self, cell: Cell) -> str:
-        return _("Daemonset")
+        return _("DaemonSet")
 
 
 @painter_registry.register
@@ -5418,10 +5452,10 @@ class PainterHostKubernetesStatefulset(_PainterHostKubernetes):
     _constraints = ["statefulset", "namespace", "cluster"]
 
     def title(self, cell: Cell) -> str:
-        return _("Kubernetes statefulset")
+        return _("Kubernetes StatefulSet")
 
     def short_title(self, cell: Cell) -> str:
-        return _("Statefulset")
+        return _("StatefulSet")
 
 
 @painter_registry.register
@@ -5430,7 +5464,7 @@ class PainterHostKubernetesNode(_PainterHostKubernetes):
     _constraints = ["node", "cluster"]
 
     def title(self, cell: Cell) -> str:
-        return _("Kubernetes node")
+        return _("Kubernetes Node")
 
     def short_title(self, cell: Cell) -> str:
         return _("Node")

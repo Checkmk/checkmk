@@ -7,11 +7,13 @@
 from typing import Any, Dict, Tuple
 
 import cmk.gui.bi as bi
-from cmk.gui.globals import html, request
-from cmk.gui.htmllib import HTML
 from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.sidebar.utils import bulletlink, SidebarSnapin, snapin_registry
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless, urlencode
 
 
@@ -65,7 +67,7 @@ class SidebarSnapinAggregationGroupTree(SidebarSnapin):
             child = child.setdefault("__children__", {})
             self._build_tree(children, child, path)
 
-    def _render_tree(self, tree):
+    def _render_tree(self, tree) -> None:
         for group, attrs in tree.items():
             aggr_group_tree = "/".join(attrs["__path__"])
             fetch_url = makeuri_contextless(
@@ -83,7 +85,7 @@ class SidebarSnapinAggregationGroupTree(SidebarSnapin):
                     id_=aggr_group_tree,
                     isopen=False,
                     title=HTML(
-                        html.render_a(
+                        HTMLWriter.render_a(
                             group,
                             href=fetch_url,
                             target="main",

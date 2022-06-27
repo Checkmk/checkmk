@@ -27,6 +27,7 @@ from cmk.automations import results
 
 from cmk.gui.i18n import _
 from cmk.gui.site_config import site_is_local
+from cmk.gui.watolib.activate_changes import sync_changes_before_remote_automation
 from cmk.gui.watolib.automations import (
     check_mk_local_automation_serialized,
     check_mk_remote_automation_serialized,
@@ -80,7 +81,7 @@ def _automation_serialized(
             indata=indata,
             stdin_data=stdin_data,
             timeout=timeout,
-            sync=sync,
+            sync=sync_changes_before_remote_automation if sync else lambda site_id: None,
             non_blocking_http=non_blocking_http,
         ),
         local=False,

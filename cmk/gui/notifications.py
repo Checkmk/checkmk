@@ -15,8 +15,12 @@ import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
+from cmk.gui.config import active_config
+from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import active_config, g, html, request
+from cmk.gui.htmllib.header import make_header
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
@@ -205,7 +209,7 @@ class ClearFailedNotificationPage(Page):
                 breadcrumb = make_simple_page_breadcrumb(
                     mega_menu_registry.menu_monitoring(), title
                 )
-                html.header(title, breadcrumb)
+                make_header(html, title, breadcrumb)
 
                 for message in get_flashed_messages():
                     html.show_message(message)
@@ -224,7 +228,7 @@ class ClearFailedNotificationPage(Page):
 
         page_menu = self._page_menu(acktime, failed_notifications, breadcrumb)
 
-        html.header(title, breadcrumb, page_menu)
+        make_header(html, title, breadcrumb, page_menu)
 
         self._show_notification_table(failed_notifications)
 

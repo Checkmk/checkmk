@@ -197,7 +197,7 @@ def _bind_to_rule_pack_proxies(
             )
 
 
-def load_config(settings: Settings) -> ConfigFromWATO:
+def load_config(settings: Settings) -> ConfigFromWATO:  # pylint: disable=too-many-branches
     """Load event console configuration."""
     # TODO: Do not use exec and the funny MkpRulePackProxy Kung Fu, removing the need for the two casts below.
     global_context = cast(dict[str, Any], default_config())

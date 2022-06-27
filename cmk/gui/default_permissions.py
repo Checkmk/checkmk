@@ -28,15 +28,15 @@ from cmk.gui.permissions import (
 @permission_section_registry.register
 class PermissionSectionGeneral(PermissionSection):
     @property
-    def name(self):
+    def name(self) -> str:
         return "general"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("General Permissions")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 10
 
 

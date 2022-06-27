@@ -40,7 +40,7 @@ from urllib.parse import quote_plus
 PY2 = sys.version_info[0] == 2
 
 try:
-    from typing import Any, Callable, Dict, Iterable, Union
+    from typing import Any, Dict, Iterable, List, Union
 except ImportError:
     pass
 
@@ -85,7 +85,7 @@ def get_database_info(client):
 
 def get_collection_names(database):  # type:(pymongo.database.Database) -> Iterable[str]
     if PYMONGO_VERSION <= (3, 6, 0):
-        collection_names = database.collection_names()
+        collection_names = database.collection_names()  # type: List[str]
     else:
         collection_names = database.list_collection_names()
 
@@ -461,14 +461,17 @@ def _get_chunk_size_information(client):
     return {"chunkSize": chunk_size}
 
 
+def _recursive_defaultdict():
+    return defaultdict(_recursive_defaultdict)
+
+
 def _get_collections_information(client):
     """
     get all documents from config collections
     :param client: mongodb client
     :return: dictionary with collections information
     """
-    collections_def_dict = lambda: defaultdict(collections_def_dict)  # type: Callable
-    collections_dict = collections_def_dict()
+    collections_dict = _recursive_defaultdict()
     for collection in client.config.collections.find(
         {}, set(["_id", "unique", "dropped", "noBalance"])
     ):
@@ -498,8 +501,7 @@ def _count_chunks_per_shard(client, databases):
     :param client: mongodb client
     :return: dictionary with shards and sum of chunks and jumbo chunks
     """
-    chunks_def_dict = lambda: defaultdict(chunks_def_dict)  # type: Callable
-    chunks_dict = chunks_def_dict()
+    chunks_dict = _recursive_defaultdict()
 
     # initialize dictionary
     # set default defaults for numberOfChunks and numberOfJumbos
@@ -660,8 +662,7 @@ def _get_indexes_information(client, databases):
     :param client: mongodb client
     :return: dictionary with shards information
     """
-    indexes_def_dict = lambda: defaultdict(indexes_def_dict)  # type: Callable
-    indexes_dict = indexes_def_dict()
+    indexes_dict = _recursive_defaultdict()
     for database_name in databases:
         database = databases.get(database_name)
         for collection_name in database.get("collections", []):
@@ -678,7 +679,7 @@ def _get_indexes_information(client, databases):
                 )
             except pymongo.errors.OperationFailure:
                 LOGGER.debug("Could not access $indexStat", exc_info=True)
-                return
+                return None
 
     return indexes_dict
 
@@ -691,6 +692,7 @@ def get_timestamp(text):
             return time.mktime(time.strptime(text, pattern))
         except ValueError:
             pass
+    return None
 
 
 def read_statefile(state_file):
@@ -826,6 +828,7 @@ class MongoDBConfigParser(configparser.ConfigParser):
 
 class Config:
     def __init__(self, config):
+        # type: (MongoDBConfigParser) -> None
         self.tls_enable = config.get_mongodb_bool("tls_enable")
         self.tls_verify = config.get_mongodb_bool("tls_verify")
         self.tls_ca_file = config.get_mongodb_str("tls_ca_file")
@@ -955,10 +958,12 @@ def main(argv=None):
             message = message.replace(quote_plus(config.password), "****")
         LOGGER.info(message)
 
-    client = pymongo.MongoClient(read_preference=pymongo.ReadPreference.SECONDARY, **pymongo_config)
+    client = pymongo.MongoClient(
+        read_preference=pymongo.ReadPreference.SECONDARY, **pymongo_config
+    )  # type: pymongo.MongoClient
     try:
         # connecting is lazy, it might fail only now
-        server_status = client.admin.command("serverStatus")
+        server_status = client.admin.command("serverStatus")  # type: Dict
     except (pymongo.errors.OperationFailure, pymongo.errors.ConnectionFailure) as e:
         sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
         sys.stdout.write("error\tFailed to connect\n")

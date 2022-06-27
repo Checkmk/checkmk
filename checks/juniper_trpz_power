@@ -26,6 +26,7 @@ def check_juniper_trpz_power(item, _no_params, info):
             if state == 1:
                 return 1, message
             return 0, message
+    return None
 
 
 check_info["juniper_trpz_power"] = {

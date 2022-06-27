@@ -170,7 +170,9 @@ WLAN_CONTROLLERS_SECTION = {
         )
     ],
 )
-def test_get_controllers(controller_data: Dict[str, Any], expected_result: List[Dict[str, Any]]):
+def test_get_controllers(
+    controller_data: Dict[str, Any], expected_result: List[Dict[str, Any]]
+) -> None:
     controllers = get_controllers(controller_data)
     assert list(controllers) == expected_result
 
@@ -182,7 +184,7 @@ def test_get_controllers(controller_data: Dict[str, Any], expected_result: List[
         ("2020-07-27T17:27:39.000Z", datetime(2020, 7, 27, 17, 27, 39, tzinfo=timezone.utc)),
     ],
 )
-def test_get_last_backup(last_backup: Optional[str], expected_result: Optional[datetime]):
+def test_get_last_backup(last_backup: Optional[str], expected_result: Optional[datetime]) -> None:
     assert get_last_backup(last_backup) == expected_result
 
 

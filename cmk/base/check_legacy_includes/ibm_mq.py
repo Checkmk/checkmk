@@ -75,7 +75,7 @@ def parse_runmqsc_display_output(info, group_by_object):
     return parsed
 
 
-def is_ibm_mq_service_vanished(item, parsed):
+def is_ibm_mq_service_vanished(item, parsed) -> bool:
     """
     Returns true if queue or channel is not contained anymore in the agent
     output but queue manager is known as RUNNING. Throws MKCounterWrapped to

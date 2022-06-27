@@ -6,13 +6,20 @@
 
 import pytest
 
+import cmk.gui.plugins.views.utils as utils
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.views.utils import (
     _encode_sorter_url,
     _parse_url_sorters,
+    Cell,
+    group_value,
+    Painter,
+    PainterRegistry,
     replace_action_url_macros,
     SorterSpec,
 )
+from cmk.gui.type_defs import PainterSpec
+from cmk.gui.views import View
 
 
 @pytest.mark.parametrize(
@@ -28,7 +35,7 @@ from cmk.gui.plugins.views.utils import (
         ),
     ],
 )
-def test_url_sorters_parse_encode(url, sorters):
+def test_url_sorters_parse_encode(url, sorters) -> None:
     sorters = [SorterSpec(*s) for s in sorters]
     assert _parse_url_sorters(url) == sorters
     assert _encode_sorter_url(sorters) == url
@@ -72,3 +79,29 @@ def test_replace_action_url_macros(
         "user",
     )
     assert replace_action_url_macros(url, what, row) == result
+
+
+def test_group_value(monkeypatch) -> None:
+    monkeypatch.setattr(utils, "painter_registry", PainterRegistry())
+
+    def rendr(row) -> tuple[str, str]:
+        return ("abc", "xyz")
+
+    utils.register_painter(
+        "tag_painter",
+        {
+            "title": "Tag painter",
+            "short": "tagpaint",
+            "columns": ["x"],
+            "sorter": "aaaa",
+            "options": ["opt1"],
+            "printable": False,
+            "paint": rendr,
+            "groupby": "dmz",
+        },
+    )
+
+    painter: Painter = utils.painter_registry["tag_painter"]()
+    dummy_cell: Cell = Cell(View("", {}, {}), PainterSpec(painter.ident))
+
+    assert group_value({"host_tags": {"networking": "dmz"}}, [dummy_cell]) == ("dmz",)

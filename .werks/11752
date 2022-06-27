@@ -1,6 +1,6 @@
 Title: Management board: SNMP bulk walk can now be configured
 Class: fix
-Compatible: comp
+Compatible: compat
 Component: core
 Date: 1607334353
 Edition: cre

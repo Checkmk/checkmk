@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 #   ---non Nexus devices----------------------------------------------------
 #   ---specific Cisco devices-----------------------------------------------
 
@@ -50,13 +49,13 @@ def snmp_scan_cisco_oldcpu(oid):
 #   ---helper---------------------------------------------------------------
 
 
-def _is_cisco(oid):
+def _is_cisco(oid) -> bool:  # type:ignore[no-untyped-def]
     return "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower()
 
 
-def _is_cisco_nexus(oid):
+def _is_cisco_nexus(oid) -> bool:  # type:ignore[no-untyped-def]
     return "nx-os" in oid(".1.3.6.1.2.1.1.1.0").lower()
 
 
-def _has_table_2(oid):
+def _has_table_2(oid) -> bool:  # type:ignore[no-untyped-def]
     return bool(oid(".1.3.6.1.4.1.9.9.109.1.1.1.1.2.*"))

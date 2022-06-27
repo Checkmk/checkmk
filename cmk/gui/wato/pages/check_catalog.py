@@ -11,7 +11,7 @@ the global settings.
 """
 
 import re
-from typing import Any, Dict, List, Optional, overload, Set, Tuple, Type
+from typing import Any, Collection, Dict, List, Mapping, Optional, overload, Set, Tuple, Type
 
 from six import ensure_str
 
@@ -21,8 +21,9 @@ from cmk.utils.type_defs import CheckPluginNameStr
 
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html, request
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
     make_simple_link,
@@ -36,6 +37,7 @@ from cmk.gui.plugins.wato.utils import get_search_expression, mode_registry, sea
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import PermissionName
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import ID
 from cmk.gui.watolib.check_mk_automations import get_check_information
@@ -45,18 +47,18 @@ from cmk.gui.watolib.rulespecs import rulespec_registry
 @mode_registry.register
 class ModeCheckPlugins(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "check_plugins"
 
     @classmethod
-    def permissions(cls) -> Optional[List[PermissionName]]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["check_plugins"]
 
     def _from_vars(self):
         self._manpages = _get_check_catalog(only_path=())
-        self._titles = man_pages.man_page_catalog_titles()
+        self._titles = man_pages.CATALOG_TITLES
 
-    def title(self):
+    def title(self) -> str:
         return _("Catalog of check plugins")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -64,7 +66,7 @@ class ModeCheckPlugins(WatoMode):
         menu.inpage_search = PageMenuSearch(target_mode="check_plugin_search")
         return menu
 
-    def page(self):
+    def page(self) -> None:
         html.help(
             _(
                 "This catalog of check plugins gives you a complete listing of all plugins "
@@ -95,11 +97,11 @@ class ModeCheckPlugins(WatoMode):
 @mode_registry.register
 class ModeCheckPluginSearch(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "check_plugin_search"
 
     @classmethod
-    def permissions(cls) -> Optional[List[PermissionName]]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["check_plugins"]
 
     @classmethod
@@ -109,12 +111,12 @@ class ModeCheckPluginSearch(WatoMode):
     def _from_vars(self):
         self._search = get_search_expression()
         self._manpages = _get_check_catalog(only_path=())
-        self._titles = man_pages.man_page_catalog_titles()
+        self._titles = man_pages.CATALOG_TITLES
 
-    def title(self):
+    def title(self) -> str:
         return "%s: %s" % (_("Check plugins matching"), self._search)
 
-    def page(self):
+    def page(self) -> None:
         search_form(title="%s: " % _("Search for check plugins"), mode="check_plugin_search")
 
         for path, manpages in self._get_manpages_after_search():
@@ -132,7 +134,9 @@ class ModeCheckPluginSearch(WatoMode):
                 title = ensure_str(  # pylint: disable= six-ensure-str-bin-call
                     entry.get("title", "")
                 )
-                if self._search in name.lower() or self._search in title.lower():
+                if self._search is not None and (
+                    self._search in name.lower() or self._search in title.lower()
+                ):
                     return entry
 
             return None
@@ -170,11 +174,11 @@ class ModeCheckPluginSearch(WatoMode):
 @mode_registry.register
 class ModeCheckPluginTopic(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "check_plugin_topic"
 
     @classmethod
-    def permissions(cls) -> Optional[List[PermissionName]]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["check_plugins"]
 
     @classmethod
@@ -221,7 +225,7 @@ class ModeCheckPluginTopic(WatoMode):
             ID().validate_value(comp, None)  # Beware against code injection!
 
         self._manpages = _get_check_catalog(self._path)
-        self._titles = man_pages.man_page_catalog_titles()
+        self._titles = man_pages.CATALOG_TITLES
 
         self._has_second_level = None
         for t, has_second_level, title, _helptext in _man_page_catalog_topics():
@@ -233,12 +237,12 @@ class ModeCheckPluginTopic(WatoMode):
         if len(self._path) == 2:
             self._topic_title = self._titles.get(self._path[1], self._path[1])
 
-    def title(self):
+    def title(self) -> str:
         if self._topic == "unsorted":
             return "unsorted"
         return self._topic_title
 
-    def page(self):
+    def page(self) -> None:
         if isinstance(self._manpages, list):
             _render_manpage_list(self._titles, self._manpages, self._path[-1], self._topic_title)
             return
@@ -304,7 +308,7 @@ def _add_breadcrumb_topic_items(breadcrumb, titles, path):
     return breadcrumb
 
 
-def _render_manpage_list(titles, manpage_list, path_comp, heading):
+def _render_manpage_list(titles, manpage_list, path_comp, heading) -> None:
     def translate(t):
         return titles.get(t, t)
 
@@ -322,10 +326,12 @@ def _render_manpage_list(titles, manpage_list, path_comp, heading):
                     ("back", makeuri(request, [])),
                 ],
             )
-            table.cell(_("Type of Check"), html.render_a(entry["title"], href=url), css="title")
-            table.cell(_("Plugin Name"), html.render_tt(entry["name"]), css="name")
             table.cell(
-                _("Agents"), ", ".join(map(translate, sorted(entry["agents"]))), css="agents"
+                _("Type of Check"), HTMLWriter.render_a(entry["title"], href=url), css=["title"]
+            )
+            table.cell(_("Plugin Name"), HTMLWriter.render_tt(entry["name"]), css=["name"])
+            table.cell(
+                _("Agents"), ", ".join(map(translate, sorted(entry["agents"]))), css=["agents"]
             )
 
 
@@ -336,19 +342,19 @@ def _man_page_catalog_topics():
             "hw",
             True,
             _("Appliances, other dedicated hardware"),
-            _("Switches, load balancers, storage, UPSes, " "environmental sensors, etc. "),
+            _("Switches, load balancers, storage, UPSes, environmental sensors, etc. "),
         ),
         (
             "os",
             True,
             _("Operating systems"),
-            _("Plugins for operating systems, things " "like memory, CPU, filesystems, etc."),
+            _("Plugins for operating systems, things like memory, CPU, filesystems, etc."),
         ),
         (
             "app",
             False,
             _("Applications"),
-            _("Monitoring of applications such as " "processes, services or databases"),
+            _("Monitoring of applications such as processes, services or databases"),
         ),
         (
             "cloud",
@@ -366,43 +372,47 @@ def _man_page_catalog_topics():
             "agentless",
             False,
             _("Networking checks without agent"),
-            _("Plugins that directly check networking " "protocols like HTTP or IMAP"),
+            _("Plugins that directly check networking protocols like HTTP or IMAP"),
         ),
         (
             "generic",
             False,
             _("Generic check plugins"),
-            _("Plugins for local agent extensions or " "communication with the agent in general"),
+            _("Plugins for local agent extensions or communication with the agent in general"),
         ),
     ]
 
 
-def _get_check_catalog(only_path):
-    def path_prefix_matches(p, op):
-        if op and not p:
-            return False
-        if not op:
-            return True
-        return p[0] == op[0] and path_prefix_matches(p[1:], op[1:])
+def _get_check_catalog(only_path: tuple[str, ...]) -> Mapping[str, Any]:
+    # Note: this is impossible to type, since the type is recursive.
+    # The return type `Monster` would be something like
+    # Monster = Mapping[str, Union[Sequence[_ManPageSummary], Monster]]
 
-    def strip_manpage_entry(entry):
-        return {k: v for k, v in entry.items() if k in ["name", "agents", "title"]}
+    def path_prefix_matches(p: tuple[str, ...]) -> bool:
+        return p[: len(only_path)] == only_path
 
-    tree: Dict[str, Any] = {}
+    tree: dict[str, Any] = {}
 
     for path, entries in man_pages.load_man_page_catalog().items():
-        if not path_prefix_matches(path, only_path):
+        if not path_prefix_matches(path):
             continue
         subtree = tree
         for component in path[:-1]:
             subtree = subtree.setdefault(component, {})
-        subtree[path[-1]] = list(map(strip_manpage_entry, entries))
+        subtree[path[-1]] = [
+            {
+                "name": e.name,
+                "agents": e.agents,
+                "title": e.title,
+            }
+            for e in entries
+        ]
 
     for p in only_path:
         try:
             tree = tree[p]
         except KeyError:
-            pass
+            break
 
     return tree
 
@@ -410,11 +420,11 @@ def _get_check_catalog(only_path):
 @mode_registry.register
 class ModeCheckManPage(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "check_manpage"
 
     @classmethod
-    def permissions(cls) -> Optional[List[PermissionName]]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["check_plugins"]
 
     @classmethod
@@ -425,52 +435,52 @@ class ModeCheckManPage(WatoMode):
         # To be able to calculate the breadcrumb with ModeCheckPluginTopic as parent, we need to
         # ensure that the topic is available.
         with request.stashed_vars():
-            request.set_var("topic", self._manpage["header"]["catalog"])
+            request.set_var("topic", "/".join(self._manpage.catalog))
             return super().breadcrumb()
 
-    def _from_vars(self):
-        self._check_type = request.get_ascii_input_mandatory("check_type", "")
+    def _from_vars(self) -> None:
+        self._check_plugin_name = request.get_ascii_input_mandatory("check_type", "")
 
-        builtin_check_types = ["check-mk", "check-mk-inventory"]
+        check_builtins = ["check-mk", "check-mk-inventory"]
         if (
-            not re.match("^[a-zA-Z0-9_.]+$", self._check_type)
-            and self._check_type not in builtin_check_types
+            not re.match("^[a-zA-Z0-9_.]+$", self._check_plugin_name)
+            and self._check_plugin_name not in check_builtins
         ):
             raise MKUserError("check_type", _("Invalid check type"))
 
-        manpage = man_pages.load_man_page(self._check_type)
+        manpage = man_pages.load_man_page(self._check_plugin_name)
         if manpage is None:
             raise MKUserError(None, _("There is no manpage for this check."))
         self._manpage = manpage
 
         checks = get_check_information().plugin_infos
-        if self._check_type in checks:
-            self._manpage = {
-                "type": "check_mk",
-                **checks[self._check_type],
-                **self._manpage,
-            }
-        elif self._check_type.startswith("check_"):  # Assume active check
-            self._manpage = {
-                "type": "active",
-                **self._manpage,
-            }
-        elif self._check_type in builtin_check_types:
-            self._manpage = {
-                "type": "check_mk",
-                "service_description": "Check_MK%s"
-                % ("" if self._check_type == "check-mk" else " Discovery"),
-                **self._manpage,
-            }
+        if (check_info := checks.get(self._check_plugin_name)) is not None:
+            self._check_type = "check_mk"
+            self._service_description = check_info["service_description"]
+            ruleset_name = check_info.get("check_ruleset_name")
+            self._ruleset: Optional[str] = (
+                f"checkgroup_parameters:{ruleset_name}" if ruleset_name else None
+            )
+
+        elif self._check_type in check_builtins:
+            self._check_type = "check_mk"
+            self._service_description = (
+                "Check_MK" if self._check_plugin_name == "check-mk" else "Check_MK Discovery"
+            )
+            self._ruleset = None
+        elif self._check_plugin_name.startswith("check_"):  # Assume active check
+            self._check_type = "active"
+            self._service_description = "Active check"  # unused
+            self._ruleset = f"active_checks:{self._check_plugin_name[6:]}"
         else:
             raise MKUserError(
                 None,
                 _("Could not detect type of manpage: %s. Maybe the check is missing ")
-                % self._check_type,
+                % self._check_plugin_name,
             )
 
-    def title(self):
-        return self._manpage["header"]["title"]
+    def title(self) -> str:
+        return self._manpage.title
 
     # TODO
     # We could simply detect on how many hosts and services this plugin
@@ -478,10 +488,10 @@ class ModeCheckManPage(WatoMode):
     # together with a link for searching. Then we can remove the dumb context
     # button, that will always be shown - even if the plugin is not in use.
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        if self._check_type.startswith("check_"):
-            command = "check_mk_active-" + self._check_type[6:]
+        if self._check_plugin_name.startswith("check_"):
+            command = "check_mk_active-" + self._check_plugin_name[6:]
         else:
-            command = "check_mk-" + self._check_type
+            command = "check_mk-" + self._check_plugin_name
         url = makeuri_contextless(
             request,
             [("view_name", "searchsvc"), ("check_command", command), ("filled_in", "filter")],
@@ -510,62 +520,54 @@ class ModeCheckManPage(WatoMode):
             breadcrumb=breadcrumb,
         )
 
-    def page(self):
-
-        header = self._manpage["header"]
+    def page(self) -> None:
 
         html.open_table(class_=["data", "headerleft"])
 
         html.open_tr()
         html.th(_("Title"))
         html.open_td()
-        html.b(header["title"])
+        html.b(self._manpage.title)
         html.close_td()
         html.close_tr()
 
         html.open_tr()
         html.th(_("Name of plugin"))
         html.open_td()
-        html.tt(self._check_type)
+        html.tt(self._check_plugin_name)
         html.close_td()
         html.close_tr()
 
         html.open_tr()
         html.th(_("Description"))
-        html.td(self._manpage_text(header["description"]))
+        html.td(self._manpage_text(self._manpage.description))
         html.close_tr()
 
-        if self._manpage["type"] == "check_mk":
+        if self._check_type == "check_mk":
             html.open_tr()
             html.th(_("Service name"))
-            html.td(HTML(self._manpage["service_description"].replace("%s", "&#9744;")))
+            html.td(HTML(self._service_description.replace("%s", "&#9744;")))
             html.close_tr()
 
-            discovery = header.get("discovery") or header.get("inventory")
-            if discovery:
+            if discovery := self._manpage.discovery:
                 html.open_tr()
                 html.th(_("Discovery"))
                 html.td(self._manpage_text(discovery))
                 html.close_tr()
 
-            check_ruleset_name = self._manpage.get("check_ruleset_name")
-            if check_ruleset_name is not None:
-                self._show_ruleset("checkgroup_parameters:%s" % check_ruleset_name)
-
-            cluster = header.get("cluster")
-            if cluster:
+            if self._manpage.cluster:
                 html.open_tr()
                 html.th(_("Cluster behaviour"))
-                html.td(self._manpage_text(cluster))
+                html.td(self._manpage_text(self._manpage.cluster))
                 html.close_tr()
-        else:
-            self._show_ruleset("active_checks:%s" % self._check_type[6:])
+
+        if self._ruleset:
+            self._show_ruleset(self._ruleset)
 
         html.close_table()
 
-    def _manpage_text(self, text):
-        html_code = text.replace("<br>", "\n")
-        html_code = re.sub("{(.*?)}", "<tt>\\1</tt>", html_code)
+    def _manpage_text(self, text: str) -> str:
+        html_code = re.sub("{(.*?)}", "<tt>\\1</tt>", text)
         html_code = re.sub("\n\n+", "<p>", html_code)
         return html_code
 

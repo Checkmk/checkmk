@@ -29,7 +29,7 @@ class _Label:
     def label(self) -> str:
         return f"{self.name}:{self.value}"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name!r}, {self.value!r})"
 
     def __eq__(self, other):

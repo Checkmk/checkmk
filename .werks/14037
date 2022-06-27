@@ -1,0 +1,14 @@
+Title: oracle_performance: Wrong monitoring state when using thresholds
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1650439640
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+After setting up Oracle Performance Discovery rule and a threshold
+in Oracle Performance rule the service would go to UNKNOWN and no
+useful data was shown.
+Now, the thresholds are applied and service values shown.

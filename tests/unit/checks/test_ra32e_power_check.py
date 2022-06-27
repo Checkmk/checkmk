@@ -16,12 +16,12 @@ RA32E_POWER = "ra32e_power"
 
 
 @pytest.mark.parametrize("info,result", [([[""]], None), ([["0"]], [(None, {})])])
-def test_ra32e_power_discovery(info, result):
+def test_ra32e_power_discovery(info, result) -> None:
     check = Check(RA32E_POWER)
     assert check.run_discovery(info) == result
 
 
-def test_ra32e_power_check_battery():
+def test_ra32e_power_check_battery() -> None:
     check = Check(RA32E_POWER)
     result = check.run_check(None, {}, [["0"]])
 
@@ -31,7 +31,7 @@ def test_ra32e_power_check_battery():
     assert "battery" in infotext
 
 
-def test_ra32e_power_check_acpower():
+def test_ra32e_power_check_acpower() -> None:
     check = Check(RA32E_POWER)
     result = BasicCheckResult(*check.run_check(None, {}, [["1"]]))
 
@@ -39,7 +39,7 @@ def test_ra32e_power_check_acpower():
     assert "AC/Utility" in result.infotext
 
 
-def test_ra32e_power_check_nodata():
+def test_ra32e_power_check_nodata() -> None:
     check = Check(RA32E_POWER)
     result = BasicCheckResult(*check.run_check(None, {}, [[""]]))
 

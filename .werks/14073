@@ -1,0 +1,12 @@
+Title: Agent controller: Also listen for IPv6 pull connections
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1651851398
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The agent controller (<tt>cmk-agent-ctl</tt>) now also listens for incoming
+IPv6 pull connections. Previously, only IPv4 connections were handled.

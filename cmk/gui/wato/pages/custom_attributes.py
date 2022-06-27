@@ -7,13 +7,15 @@
 
 import abc
 import re
-from typing import Any, Dict, Iterable, Optional, Type
+from datetime import datetime
+from typing import Any, Collection, Dict, Iterable, Optional, Type
 
 import cmk.gui.forms as forms
-import cmk.gui.watolib as watolib
+import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html, request
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
     make_simple_form_page_menu,
@@ -25,7 +27,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.wato.utils import (
-    add_change,
     make_confirm_link,
     mode_registry,
     mode_url,
@@ -33,7 +34,7 @@ from cmk.gui.plugins.wato.utils import (
     WatoMode,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, Choices
+from cmk.gui.type_defs import ActionResult, Choices, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.watolib.custom_attributes import (
@@ -43,6 +44,7 @@ from cmk.gui.watolib.custom_attributes import (
     update_user_custom_attrs,
 )
 from cmk.gui.watolib.host_attributes import host_attribute_topic_registry
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 
 
 def custom_attr_types() -> Choices:
@@ -108,7 +110,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
         """Option to show the custom attribute in overview tables of the setup menu."""
         raise NotImplementedError()
 
-    def _render_table_option(self, section_title, label, help_text):
+    def _render_table_option(self, section_title, label, help_text) -> None:
         """Helper method to implement _show_in_table_option."""
         forms.section(section_title)
         html.help(help_text)
@@ -176,12 +178,12 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
             }
             self._attrs.append(self._attr)
 
-            add_change(
+            _changes.add_change(
                 "edit-%sattr" % self._type,
                 _("Create new %s attribute %s") % (self._type, self._name),
             )
         else:
-            add_change(
+            _changes.add_change(
                 "edit-%sattr" % self._type, _("Modified %s attribute %s") % (self._type, self._name)
             )
         self._attr.update(
@@ -201,7 +203,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
 
         return redirect(mode_url(self._type + "_attrs"))
 
-    def page(self):
+    def page(self) -> None:
         # TODO: remove subclass specific things specifict things (everything with _type == 'user')
         html.begin_form("attr")
         forms.header(_("Properties"))
@@ -256,11 +258,11 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
 @mode_registry.register
 class ModeEditCustomUserAttr(ModeEditCustomAttr):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_user_attr"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["users", "custom_attributes"]
 
     @classmethod
@@ -295,7 +297,7 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
         return _("Make this variable available in notifications")
 
     def _update_config(self):
-        update_user_custom_attrs()
+        update_user_custom_attrs(datetime.now())
 
     def _show_in_table_option(self):
         self._render_table_option(
@@ -320,7 +322,7 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
             label=_("Users can change this attribute in their personal settings"),
         )
 
-    def title(self):
+    def title(self) -> str:
         if self._new:
             return _("Add user attribute")
         return _("Edit user attribute")
@@ -329,11 +331,11 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
 @mode_registry.register
 class ModeEditCustomHostAttr(ModeEditCustomAttr):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_host_attr"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts", "manage_hosts", "custom_attributes"]
 
     @classmethod
@@ -381,14 +383,14 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
             ),
         )
 
-    def title(self):
+    def title(self) -> str:
         if self._new:
             return _("Add host attribute")
         return _("Edit host attribute")
 
 
 class ModeCustomAttrs(WatoMode, abc.ABC):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         # TODO: Inappropriate Intimacy: custom host attributes should not now about
         #       custom user attributes and vice versa. The only reason they now about
@@ -405,7 +407,7 @@ class ModeCustomAttrs(WatoMode, abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def title(self):
+    def title(self) -> str:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -426,7 +428,7 @@ class ModeCustomAttrs(WatoMode, abc.ABC):
                                     title=_("Add attribute"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        watolib.folder_preserving_link(
+                                        folder_preserving_link(
                                             [("mode", "edit_%s_attr" % self._type)]
                                         )
                                     ),
@@ -469,10 +471,10 @@ class ModeCustomAttrs(WatoMode, abc.ABC):
                 self._attrs.pop(index)
         save_custom_attrs_to_mk_file(self._all_attrs)
         self._update_config()
-        add_change("edit-%sattrs" % self._type, _("Deleted attribute %s") % (delname))
+        _changes.add_change("edit-%sattrs" % self._type, _("Deleted attribute %s") % (delname))
         return redirect(self.mode_url())
 
-    def page(self):
+    def page(self) -> None:
         if not self._attrs:
             html.div(_("No custom attributes are defined yet."), class_="info")
             return
@@ -481,8 +483,8 @@ class ModeCustomAttrs(WatoMode, abc.ABC):
             for custom_attr in sorted(self._attrs, key=lambda x: x["title"]):
                 table.row()
 
-                table.cell(_("Actions"), css="buttons")
-                edit_url = watolib.folder_preserving_link(
+                table.cell(_("Actions"), css=["buttons"])
+                edit_url = folder_preserving_link(
                     [("mode", "edit_%s_attr" % self._type), ("edit", custom_attr["name"])]
                 )
                 delete_url = make_confirm_link(
@@ -501,11 +503,11 @@ class ModeCustomAttrs(WatoMode, abc.ABC):
 @mode_registry.register
 class ModeCustomUserAttrs(ModeCustomAttrs):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "user_attrs"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["users", "custom_attributes"]
 
     @property
@@ -513,9 +515,9 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
         return "user"
 
     def _update_config(self):
-        update_user_custom_attrs()
+        update_user_custom_attrs(datetime.now())
 
-    def title(self):
+    def title(self) -> str:
         return _("Custom user attributes")
 
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
@@ -535,11 +537,11 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
 @mode_registry.register
 class ModeCustomHostAttrs(ModeCustomAttrs):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "host_attrs"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts", "manage_hosts", "custom_attributes"]
 
     @property
@@ -549,7 +551,7 @@ class ModeCustomHostAttrs(ModeCustomAttrs):
     def _update_config(self):
         update_host_custom_attrs()
 
-    def title(self):
+    def title(self) -> str:
         return _("Custom host attributes")
 
     def get_attributes(self):

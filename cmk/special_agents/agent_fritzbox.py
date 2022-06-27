@@ -37,6 +37,8 @@ from typing import Final, Iterator, Mapping, Tuple
 
 import requests
 
+from cmk.utils.misc import typeshed_issue_7724
+
 from cmk.special_agents.utils import vcrtrace
 
 UPNPInfo = Tuple[Mapping[str, str], str, str]
@@ -127,7 +129,10 @@ class FritzConnection:
 
     def post(self, url: str, data: str, headers: Mapping[str, str]) -> requests.Response:
         return self._session.post(
-            f"{self._urls[self._urlidx]}{url}", data=data, headers=headers, timeout=self._timeout
+            f"{self._urls[self._urlidx]}{url}",
+            data=data,
+            headers=typeshed_issue_7724(headers),
+            timeout=self._timeout,
         )
 
     def toggle_base_url(self) -> None:

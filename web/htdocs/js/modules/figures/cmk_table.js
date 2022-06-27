@@ -5,7 +5,7 @@ import * as dc from "dc";
 import * as cmk_figures from "cmk_figures";
 
 export class TableFigure extends cmk_figures.FigureBase {
-    static ident() {
+    ident() {
         return "table";
     }
 

@@ -68,8 +68,8 @@ def _parse_plugin_lnx(line: str, prefix: str) -> Optional[Plugin]:
 def _parse_plugin_win(line: str, prefix: str) -> Optional[Plugin]:
     """
     >>> _parse_plugin_win(
-    ...    'c:\\ProgramData\\checkmk\\agent\\plugins\\windows_if.py:CMK_VERSION = "2.1.0i1"',
-    ...    'c:\\ProgramData\\checkmk\\agent\\plugins',
+    ...    'c:\\\\ProgramData\\\\checkmk\\\\agent\\\\plugins\\\\windows_if.py:CMK_VERSION = "2.1.0i1"',
+    ...    'c:\\\\ProgramData\\\\checkmk\\\\agent\\\\plugins',
     ... )
     Plugin(name='windows_if.py', version='2.1.0i1', version_int=2010010100, cache_interval=None)
     """

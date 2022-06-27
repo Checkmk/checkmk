@@ -36,6 +36,7 @@ def inventory_netapp_cluster(info):
             # Include the cluster partner name in inventory (value added data)
             inventory.append((cfPartnerName, None))
         return inventory
+    return []
 
 
 def check_netapp_cluster(item, _no_params, info):

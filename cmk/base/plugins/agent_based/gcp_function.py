@@ -17,18 +17,18 @@ def parse_gcp_function(string_table: StringTable) -> gcp.Section:
 
 register.agent_section(name="gcp_service_cloud_functions", parse_function=parse_gcp_function)
 
+service_namer = gcp.service_name_factory("Function")
+ASSET_TYPE = "cloudfunctions.googleapis.com/CloudFunction"
+
 
 def discover(
     section_gcp_service_cloud_functions: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> DiscoveryResult:
-    if section_gcp_assets is None:
+    if section_gcp_assets is None or not section_gcp_assets.config.is_enabled("cloud_functions"):
         return
-    asset_type = "cloudfunctions.googleapis.com/CloudFunction"
-    functions = [a for a in section_gcp_assets if a.asset.asset_type == asset_type]
-    for function in functions:
-        data = function.asset.resource.data
-        item = data["name"].split("/")[-1]
+    functions = section_gcp_assets[ASSET_TYPE]
+    for item, function in functions.items():
         labels = [
             ServiceLabel("gcp/location", function.asset.resource.location),
             ServiceLabel("gcp/function/name", item),
@@ -43,9 +43,6 @@ def check_gcp_function_instances(
     section_gcp_service_cloud_functions: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_cloud_functions is None:
-        return
-    section = section_gcp_service_cloud_functions
     metrics = {
         "faas_total_instance_count": gcp.MetricSpec(
             "cloudfunctions.googleapis.com/function/instance_count", "Instances", str
@@ -54,14 +51,15 @@ def check_gcp_function_instances(
             "cloudfunctions.googleapis.com/function/active_instances", "Active instances", str
         ),
     }
-    timeseries = section.get(item, gcp.SectionItem(rows=[])).rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_cloud_functions, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(
     name="gcp_function_instances",
     sections=["gcp_service_cloud_functions", "gcp_assets"],
-    service_name="GCP Cloud Function instances %s",
+    service_name=service_namer("instances"),
     check_ruleset_name="gcp_function_instances",
     discovery_function=discover,
     check_function=check_gcp_function_instances,
@@ -78,9 +76,6 @@ def check_gcp_function_execution(
     section_gcp_service_cloud_functions: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_cloud_functions is None:
-        return
-    section = section_gcp_service_cloud_functions
     metrics = {
         # TODO: this is the total. Separate by state
         "faas_execution_count": gcp.MetricSpec(
@@ -97,14 +92,15 @@ def check_gcp_function_execution(
             scale=1e-9,
         ),
     }
-    timeseries = section.get(item, gcp.SectionItem(rows=[])).rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_cloud_functions, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(
     name="gcp_function_execution",
     sections=["gcp_service_cloud_functions", "gcp_assets"],
-    service_name="GCP Cloud Function execution %s",
+    service_name=service_namer("execution"),
     check_ruleset_name="gcp_function_execution",
     discovery_function=discover,
     check_function=check_gcp_function_execution,
@@ -122,22 +118,20 @@ def check_gcp_function_network(
     section_gcp_service_cloud_functions: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_cloud_functions is None:
-        return
-    section = section_gcp_service_cloud_functions
     metrics = {
         "net_data_sent": gcp.MetricSpec(
             "cloudfunctions.googleapis.com/function/network_egress", "Out", render.networkbandwidth
         ),
     }
-    timeseries = section.get(item, gcp.SectionItem(rows=[])).rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_cloud_functions, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(
     name="gcp_function_network",
     sections=["gcp_service_cloud_functions", "gcp_assets"],
-    service_name="GCP Cloud Function network %s",
+    service_name=service_namer("network"),
     check_ruleset_name="gcp_function_network",
     discovery_function=discover,
     check_function=check_gcp_function_network,

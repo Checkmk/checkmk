@@ -8,6 +8,7 @@
 def inventory_bintec_info(info):
     if len(info[0]) >= 1:
         return [(None, None)]
+    return []
 
 
 def check_bintec_info(checktype, params, info):

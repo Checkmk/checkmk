@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+#
+# BEGIN COMMON INVENTORY CODE
+#
+
 # Reason for this no-op: shellcheck disable=... before the first command disables the error for the
 # entire script.
 :
@@ -10,6 +14,62 @@
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
 CMK_VERSION="2.2.0i1"
+
+_load_config() {
+    # defaults:
+    INVENTORY_INTERVAL=$((3600 * 4))
+
+    [ -r "${1}" ] || return
+    # shellcheck source=../cfg_examples/mk_inventory.cfg
+    . "${1}"
+}
+
+inpath() {
+    # replace "if type [somecmd]" idiom
+    # 'command -v' tends to be more robust vs 'which' and 'type' based tests
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
+
+_get_epoch() {
+    # This is taken from the check_mk_agent. Try to keep it in sync with set_up_get_epoch...
+
+    # On some systems date +%s returns a literal %s
+    if date +%s | grep "^[0-9].*$" >/dev/null 2>&1; then
+        date +%s
+    else
+        # do not check whether perl is even present.
+        # in weird cases we may be fine without get_epoch.
+        perl -e 'print($^T."\n");'
+    fi
+}
+
+_insert_persist_option() {
+    # insert the persist(...) option, if it is not already present.
+    sed -e '/^<<<.*\(:persist(\).*>>>/{p;d;}; s/^<<<\([^>]*\)>>>$/<<<\1:persist('"${1}"')>>>/'
+}
+
+run_persisted() {
+    INTERVAL="${1}"
+    shift
+
+    FLAGFILE="${MK_VARDIR}/persisted/${1}.${REMOTE}"
+    NOW="$(_get_epoch)"
+    UNTIL=$((NOW + INTERVAL + 600))
+    LAST_RUN="$(cat "${FLAGFILE}" 2>/dev/null)" || LAST_RUN=0
+
+    if [ $((NOW - LAST_RUN)) -lt "${INTERVAL}" ]; then
+        return
+    fi
+
+    mkdir "${FLAGFILE%/*}"
+    echo "${NOW}" >"${FLAGFILE}"
+
+    "$@" | _insert_persist_option "${UNTIL}"
+}
+
+#
+# END COMMON INVENTORY CODE
+#
 
 _data_items() {
     #  size                 must be multiplied with block size (512byte)
@@ -52,95 +112,108 @@ _distro_files() {
 HERE
 }
 
-_load_config() {
-    [ -r "{$1}" ] || return
-    # shellcheck source=../cfg_examples/mk_inventory.cfg
-    . "{$1}"
+sections_mk_inventory() {
+
+    section_lnx_packages
+
+    section_lnx_distro
+
+    section_lnx_cpuinfo
+
+    section_dmidecode
+
+    section_lnx_uname
+
+    section_lnx_video
+
+    section_lnx_ip_r
+
+    section_lnx_sysctl
+
+    section_lnx_block_devices
 }
 
-_load_config "${MK_CONFDIR}/mk_inventory.cfg"
-
-# Default to four hours
-INTERVAL="${INVENTORY_INTERVAL:-14400}"
-
-FLAGFILE="$MK_VARDIR/mk_inventory.last.$REMOTE"
-LAST_RUN="$(stat -c %Y "${FLAGFILE}")"
-NOW="$(date +%s)"
-UNTIL=$((NOW + INTERVAL + 600))
-
-if [ $((NOW - LAST_RUN)) -ge "${INTERVAL}" ]; then
-    touch "${FLAGFILE}"
-
+section_lnx_packages() {
     # List of DEB packages
-    if type dpkg-query >/dev/null; then
-        echo "<<<lnx_packages:sep(124):persist($UNTIL)>>>"
+    if inpath dpkg-query; then
+        echo "<<<lnx_packages:sep(124)>>>"
         dpkg-query --show --showformat='${Package}|${Version}|${Architecture}|deb|-|${Summary}|${Status}\n'
     fi
 
     # List of RPM packages in same format
-    if type rpm >/dev/null; then
-        echo "<<<lnx_packages:sep(9):persist($UNTIL)>>>"
+    if inpath rpm; then
+        echo "<<<lnx_packages:sep(9)>>>"
         rpm -qa --qf '%{NAME}\t%{VERSION}\t%{ARCH}\trpm\t%{RELEASE}\t%{SUMMARY}\t-\n'
     fi
 
     # List Gentoo packages
-    if type equery >/dev/null; then
-        echo "<<<lnx_packages:sep(124):persist($UNTIL)>>>"
+    if inpath equery; then
+        echo "<<<lnx_packages:sep(124)>>>"
         equery -C list --format "\$category/\$name|\$fullversion|\$mask2|ebuild|Repository \$repo|installed" \* | head -n -1
     fi
+}
 
+section_lnx_distro() {
     # Information about distribution
-    echo "<<<lnx_distro:sep(124):persist($UNTIL)>>>"
+    echo "<<<lnx_distro:sep(124)>>>"
     _distro_files | while read -r f; do
         [ -e "$f" ] || continue
         echo "[[[$f]]]"
         tr \\n \| <"$f" | sed 's/|$//'
         echo
     done
+}
 
+section_lnx_cpuinfo() {
     # CPU Information. We need just the first one
-    if [ -e /proc/cpuinfo ]; then
-        echo "<<<lnx_cpuinfo:sep(58):persist($UNTIL)>>>"
-        sed 's/[[:space:]]*:[[:space:]]*/:/' </proc/cpuinfo
-    fi
+    [ -e /proc/cpuinfo ] || return
+    echo "<<<lnx_cpuinfo:sep(58)>>>"
+    sed 's/[[:space:]]*:[[:space:]]*/:/' </proc/cpuinfo
+}
 
+section_dmidecode() {
     # Information about main board, memory, etc.
-    if type dmidecode >/dev/null; then
-        echo "<<<dmidecode:sep(58):persist($UNTIL)>>>"
-        dmidecode -q | sed 's/\t/:/g'
-    fi
+    inpath dmidecode || return
+    echo "<<<dmidecode:sep(58)>>>"
+    dmidecode -q | sed 's/\t/:/g'
+}
 
+section_lnx_uname() {
     # Information about kernel architecture
-    if type uname >/dev/null; then
-        echo "<<<lnx_uname:persist($UNTIL)>>>"
-        uname -m
-        uname -r
-    fi
+    inpath uname || return
+    echo "<<<lnx_uname>>>"
+    uname -m
+    uname -r
+}
 
+section_lnx_video() {
     # Collect VGAs if they are present
     vgas="$(lspci | grep VGA | cut -d" " -f 1)"
-    if [ -n "$vgas" ]; then
-        echo "<<<lnx_video:sep(58):persist($UNTIL)>>>"
-        lspci -v -s "$vgas"
-    fi
+    [ -n "$vgas" ] || return
+    echo "<<<lnx_video:sep(58)>>>"
+    lspci -v -s "$vgas"
+}
 
+section_lnx_ip_r() {
     # Some networking information
-    if type ip >/dev/null; then
-        echo "<<<lnx_ip_r:persist($UNTIL)>>>"
-        ip r
-        ip -6 r
-    fi
+    inpath ip || return
+    echo "<<<lnx_ip_r>>>"
+    ip r
+    ip -6 r
+}
 
+section_lnx_sysctl() {
     # Kernel configuration
-    if type sysctl >/dev/null; then
-        echo "<<<lnx_sysctl:persist($UNTIL)>>>"
-        sysctl -ae
-    fi
+    inpath sysctl || return
+    echo "<<<lnx_sysctl>>>"
+    sysctl -ae
+}
 
+section_lnx_block_devices() {
     # Block devices
     (# This subshell is for scoping UEVENT_FILE and DEVICE_DIR
         # use sep=0 rather than 124 in order to be more flexible in the parse function
-        echo "<<<lnx_block_devices:sep(0):persist($UNTIL)>>>"
+        echo "<<<lnx_block_devices:sep(0)>>>"
         find "/sys/block/" -maxdepth 1 -type f -o -type l | while read -r DEVICE; do
             UEVENT_FILE="$(realpath "${DEVICE}")/uevent"
             DEVICE_DIR="$(dirname "${UEVENT_FILE}")"
@@ -156,4 +229,16 @@ if [ $((NOW - LAST_RUN)) -ge "${INTERVAL}" ]; then
             done
         done 2>/dev/null
     )
-fi
+}
+
+#
+# BEGIN COMMON INVENTORY CODE
+#
+
+main() {
+    _load_config "${MK_CONFDIR}/mk_inventory.cfg"
+
+    run_persisted "${INVENTORY_INTERVAL:?}" sections_mk_inventory
+}
+
+[ -z "${MK_SOURCE_AGENT}" ] && main

@@ -1,0 +1,14 @@
+Title: Dynamic host management: Fix MKAPIError
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1652680704
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+If the global option "Connection to the Web API" was changed, the error
+"MKAPIError: {"title": "You need to be authenticated to use the REST API.",
+"status": 401}" occurred.

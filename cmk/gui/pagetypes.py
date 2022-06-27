@@ -34,9 +34,13 @@ import cmk.gui.sites as sites
 import cmk.gui.userdb as userdb
 import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
+from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
-from cmk.gui.globals import html, request, user_errors
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.header import make_header
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, _u
 from cmk.gui.logged_in import save_user_file, user
 from cmk.gui.main_menu import mega_menu_registry
@@ -59,8 +63,8 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import HTTPVariables, Icon, MegaMenu, TopicMenuItem, TopicMenuTopic
-from cmk.gui.utils import unique_default_name_suggestion, validate_id
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.roles import is_user_with_publish_permissions, user_may
 from cmk.gui.utils.transaction_manager import transactions
@@ -71,6 +75,8 @@ from cmk.gui.utils.urls import (
     makeuri_contextless,
     urlencode,
 )
+from cmk.gui.utils.user_errors import user_errors
+from cmk.gui.validate import validate_id
 from cmk.gui.valuespec import (
     CascadingDropdown,
     CascadingDropdownChoice,
@@ -234,7 +240,7 @@ class Base:
     def _can_be_linked(self) -> bool:
         return True
 
-    def render_title(self) -> str:
+    def render_title(self) -> str | HTML:
         return _u(self.title())
 
     def is_empty(self) -> bool:
@@ -289,7 +295,7 @@ class Base:
         return cls.__instances[key]
 
     @classmethod
-    def has_instance(cls, key):
+    def has_instance(cls, key) -> bool:
         return key in cls.__instances
 
     # Return a dict of all instances of this type
@@ -500,9 +506,9 @@ class PageRenderer(Base):
             filename="%s.py" % self.type_name(),
         )
 
-    def render_title(self):
+    def render_title(self) -> str | HTML:
         if self._can_be_linked():
-            return html.render_a(self.title(), href=self.page_url())
+            return HTMLWriter.render_a(self.title(), href=self.page_url())
         return self.title()
 
 
@@ -522,7 +528,7 @@ class PageRenderer(Base):
 
 
 class Overridable(Base):
-    def __init__(self, d):
+    def __init__(self, d) -> None:
         super().__init__(d)
         self._.setdefault("public", False)
 
@@ -575,7 +581,7 @@ class Overridable(Base):
             header += " (%s)" % self.owner()
         return header
 
-    def is_public(self):
+    def is_public(self) -> bool:
         """Checks whether a page is visible to other users than the owner.
 
         This does not only need a flag in the page itself, but also the
@@ -590,10 +596,10 @@ class Overridable(Base):
         return not self.owner() or user_may(self.owner(), "general.publish_" + self.type_name())
 
     # Same, but checks if the owner has the permission to override builtin views
-    def is_public_forced(self):
+    def is_public_forced(self) -> bool:
         return self.is_public() and user_may(self.owner(), "general.force_" + self.type_name())
 
-    def is_published_to_me(self):
+    def is_published_to_me(self) -> bool:
         """Whether or not the page is published to the currently active user"""
         if self._["public"] is True:
             return self.publish_is_allowed()
@@ -604,17 +610,17 @@ class Overridable(Base):
 
         return False
 
-    def is_hidden(self):
+    def is_hidden(self) -> bool:
         return self._.get("hidden", False)
 
     # Derived method for conveniance
-    def is_builtin(self):
+    def is_builtin(self) -> bool:
         return not self.owner()
 
-    def is_mine(self):
+    def is_mine(self) -> bool:
         return self.owner() == user.id
 
-    def is_mine_and_may_have_own(self):
+    def is_mine_and_may_have_own(self) -> bool:
         return self.is_mine() and user.may("general.edit_" + self.type_name())
 
     def _can_be_linked(self):
@@ -850,7 +856,7 @@ class Overridable(Base):
         )
 
     @classmethod
-    def has_overriding_permission(cls, how):
+    def has_overriding_permission(cls, how) -> bool:
         return user.may("general.%s_%s" % (how, cls.type_name()))
 
     @classmethod
@@ -932,6 +938,7 @@ class Overridable(Base):
         for page in cls.instances():
             if page.is_mine() and page.name() == name:
                 return page
+        return None
 
     @classmethod
     def find_foreign_page(cls, owner, name):
@@ -1055,7 +1062,7 @@ class Overridable(Base):
         return breadcrumb
 
     @classmethod
-    def page_list(cls):
+    def page_list(cls):  # pylint: disable=too-many-branches
         cls.load()
 
         # custom_columns = []
@@ -1104,7 +1111,7 @@ class Overridable(Base):
             current_type_dropdown,
             cls.type_name(),
         )
-        html.header(title_plural, breadcrumb, page_menu)
+        make_header(html, title_plural, breadcrumb, page_menu)
 
         for message in get_flashed_messages():
             html.show_message(message)
@@ -1120,7 +1127,7 @@ class Overridable(Base):
             except KeyError:
                 raise MKUserError(
                     "_delete",
-                    _("The %s you are trying to delete " "does not exist.") % pagetype_title,
+                    _("The %s you are trying to delete does not exist.") % pagetype_title,
                 )
 
             if not instance.may_delete():
@@ -1167,12 +1174,12 @@ class Overridable(Base):
                                 value="X",
                             ),
                             sortable=False,
-                            css="checkbox",
+                            css=["checkbox"],
                         )
                         html.checkbox("_c_%s+%s" % (instance.owner(), instance.name()))
 
                     # Actions
-                    table.cell(_("Actions"), css="buttons visuals")
+                    table.cell(_("Actions"), css=["buttons visuals"])
 
                     # View
                     if isinstance(instance, PageRenderer):
@@ -1194,7 +1201,7 @@ class Overridable(Base):
                     cls.custom_list_buttons(instance)
 
                     # Internal ID of instance (we call that 'name')
-                    table.cell(_("ID"), instance.name(), css="narrow")
+                    table.cell(_("ID"), instance.name(), css=["narrow"])
 
                     # Title
                     table.cell(_("Title"))
@@ -1206,7 +1213,7 @@ class Overridable(Base):
 
                     # Owner
                     if instance.is_builtin():
-                        ownertxt = html.render_i(_("builtin"))
+                        ownertxt = HTMLWriter.render_i(_("builtin"))
                     else:
                         ownertxt = instance.owner()
                     table.cell(_("Owner"), ownertxt)
@@ -1258,12 +1265,12 @@ class Overridable(Base):
 
     # Override this in order to display additional columns of an instance
     # in the table of all instances.
-    def render_extra_columns(self, table):
+    def render_extra_columns(self, table) -> None:
         pass
 
     # Page for editing an existing page, or creating a new one
     @classmethod
-    def page_edit(cls):
+    def page_edit(cls):  # pylint: disable=too-many-branches
         back_url = request.get_url_input("back", cls.list_url())
 
         cls.load()
@@ -1314,7 +1321,7 @@ class Overridable(Base):
             visualname=page_name,
         )
 
-        html.header(title, breadcrumb, page_menu)
+        make_header(html, title, breadcrumb, page_menu)
 
         parameters, keys_by_topic = cls._collect_parameters(mode)
 
@@ -1325,7 +1332,9 @@ class Overridable(Base):
             elements=parameters,
             headers=keys_by_topic,
             validate=validate_id(
-                mode, {p.name(): p for p in cls.permitted_instances_sorted() if p.is_mine()}
+                mode,
+                {p.name(): p for p in cls.permitted_instances_sorted() if p.is_mine()},
+                cls.reserved_unique_ids(),
             ),
         )
 
@@ -1382,6 +1391,12 @@ class Overridable(Base):
         html.end_form()
         html.footer()
 
+    @classmethod
+    def reserved_unique_ids(cls) -> List:
+        """Used to exclude names from choosing as unique ID, e.g. builtin names
+        in sidebar snapins"""
+        return []
+
 
 def customize_page_menu(
     breadcrumb: Breadcrumb,
@@ -1422,9 +1437,9 @@ def _page_menu_entries_related(current_type_name: str) -> Iterator[PageMenuEntry
             item=make_simple_link("edit_dashboards.py"),
         )
 
-    def has_reporting():
+    def has_reporting() -> bool:
         try:
-            # The suppression below is OK, we just want to check if the module is there.
+            # TODO(ml): Import cycle
             import cmk.gui.cee.reporting as _dummy  # noqa: F401 # pylint: disable=import-outside-toplevel
 
             return True
@@ -1451,9 +1466,7 @@ def vs_no_permission_to_publish(type_title: str, title: str) -> FixedValue:
     return FixedValue(
         value=False,
         title=title,
-        totext=_(
-            "The %s is only visible to you because you don't have the " "permission to share it."
-        )
+        totext=_("The %s is only visible to you because you don't have the permission to share it.")
         % type_title.lower(),
     )
 
@@ -1630,7 +1643,7 @@ def _page_menu_entries_sub_pages(
 class ContactGroupChoice(DualListChoice):
     """A multiple selection of contact groups that are part of the current active config"""
 
-    def __init__(self, with_foreign_groups=True, **kwargs):
+    def __init__(self, with_foreign_groups=True, **kwargs) -> None:
         super().__init__(choices=self._load_groups, **kwargs)
         self._with_foreign_groups = with_foreign_groups
 
@@ -1659,7 +1672,7 @@ class ContactGroupChoice(DualListChoice):
 
 
 class Container(Base):
-    def __init__(self, d):
+    def __init__(self, d) -> None:
         super().__init__(d)
         self._.setdefault("elements", [])
 
@@ -1680,7 +1693,7 @@ class Container(Base):
         del self._["elements"][nr]
         self._["elements"][whither:whither] = [el]
 
-    def is_empty(self):
+    def is_empty(self) -> bool:
         return not self.elements()
 
 
@@ -1795,7 +1808,7 @@ def page_type(page_type_name):
     return page_types[page_type_name]
 
 
-def has_page_type(page_type_name):
+def has_page_type(page_type_name) -> bool:
     return page_type_name in page_types
 
 
@@ -1897,7 +1910,7 @@ class PagetypeTopics(Overridable):
 
         return parameters
 
-    def render_extra_columns(self, table):
+    def render_extra_columns(self, table) -> None:
         """Show some specific useful columns in the list view"""
         table.cell(_("Icon"), html.render_icon(self._["icon_name"]))
         table.cell(_("Nr. of items"), str(self.max_entries()))

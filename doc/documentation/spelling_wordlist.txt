@@ -5,7 +5,9 @@ Backend
 backends
 Checkmk
 cmk
+Crontab
 crontab
+cron
 keepalive
 Liveproxyd
 Livestatus
@@ -13,6 +15,7 @@ Makefile
 Makefiles
 microcore
 Nagios
+PNP4Nagios
 omd
 parsers
 preforking
@@ -25,3 +28,13 @@ Systemd
 tmpfs
 todo
 Vlissides
+rrdcached
+localhost
+Kerberos
+Grafana
+init
+mknotifyd
+stunnel
+Spooler
+Livedump
+gapped

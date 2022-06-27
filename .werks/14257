@@ -1,0 +1,11 @@
+Title: REST API: Docs not showing examples of host or service columns
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1653928080
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+

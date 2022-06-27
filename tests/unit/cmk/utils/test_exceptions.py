@@ -29,7 +29,7 @@ from cmk.utils.exceptions import MKException
         ),
     ],
 )
-def test_mkexception(sources, expected):
+def test_mkexception(sources, expected) -> None:
     exc = MKException(*sources)
     assert str(exc) == expected
     assert str(MKException(exc)) == expected

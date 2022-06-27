@@ -5,22 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.couchbase import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
 
 check_info["couchbase_nodes_stats"] = {
     "parse_function": parse_couchbase_lines,
@@ -32,7 +23,7 @@ def check_couchbase_nodes_cpu_util(_item, params, data):
     try:
         return check_cpu_util(float(data["cpu_utilization_rate"]), params)
     except (ValueError, KeyError):
-        pass
+        return None
 
 
 check_info["couchbase_nodes_stats.cpu_util"] = {
@@ -75,6 +66,7 @@ def check_couchbase_nodes_mem(_item, params, data):
         None,
         metric_name="swap_used",
     )
+    return None
 
 
 check_info["couchbase_nodes_stats.mem"] = {

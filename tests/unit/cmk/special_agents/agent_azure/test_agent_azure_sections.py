@@ -11,7 +11,7 @@ from cmk.special_agents.agent_azure import Section
 
 class TestSection:
     @pytest.fixture
-    def name(self):
+    def name(self) -> str:
         return "testsection"
 
     @pytest.fixture

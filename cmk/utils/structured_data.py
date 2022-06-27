@@ -47,7 +47,7 @@ SDRawPath = str
 SDRawTree = Dict
 
 SDNodeName = str
-SDPath = List[SDNodeName]
+SDPath = Tuple[SDNodeName, ...]
 
 SDKey = str
 SDKeys = List[SDKey]
@@ -67,7 +67,6 @@ SDRow = Dict[SDKey, SDValue]
 SDRows = Dict[SDRowIdent, SDRow]
 LegacyRows = List[SDRow]
 
-SDNodePath = Tuple[SDNodeName, ...]
 SDNodes = Dict[SDNodeName, "StructuredDataNode"]
 
 SDEncodeAs = Callable
@@ -221,8 +220,13 @@ class StructuredDataStore:
 
 # TODO filter table rows?
 
-_use_all = lambda key: True
-_use_nothing = lambda key: False
+
+def _use_all(_key: str) -> Literal[True]:
+    return True
+
+
+def _use_nothing(_key: str) -> Literal[False]:
+    return False
 
 
 def _make_choices_filter(choices: Sequence[Union[str, int]]) -> SDFilterFunc:
@@ -286,7 +290,7 @@ def make_filter_from_choice(choice: Union[Tuple[str, List[str]], str, None]) -> 
 
 
 class StructuredDataNode:
-    def __init__(self, *, name: SDNodeName = "", path: Optional[SDNodePath] = None) -> None:
+    def __init__(self, *, name: SDNodeName = "", path: Optional[SDPath] = None) -> None:
         # Only root node has no name or path
         self.name = name
 
@@ -299,10 +303,14 @@ class StructuredDataNode:
         self.table = Table(path=path)
         self._nodes: SDNodes = {}
 
-    def set_path(self, path: SDNodePath) -> None:
+    def set_path(self, path: SDPath) -> None:
         self.path = path
         self.attributes.set_path(path)
         self.table.set_path(path)
+
+    @property
+    def nodes(self) -> Iterable[StructuredDataNode]:
+        return self._nodes.values()
 
     #   ---common methods-------------------------------------------------------
 
@@ -458,7 +466,7 @@ class StructuredDataNode:
         cls,
         *,
         name: SDNodeName,
-        path: SDNodePath,
+        path: SDPath,
         raw_tree: SDRawTree,
     ) -> StructuredDataNode:
         node = cls(name=name, path=path)
@@ -482,7 +490,7 @@ class StructuredDataNode:
         cls,
         *,
         name: SDNodeName,
-        path: SDNodePath,
+        path: SDPath,
         raw_tree: SDRawTree,
     ) -> StructuredDataNode:
         node = cls(name=name, path=path)
@@ -499,7 +507,7 @@ class StructuredDataNode:
                 if not value:
                     continue
 
-                inst = node.setdefault_node([key])
+                inst = node.setdefault_node((key,))
                 if node._is_table(value):
                     inst.add_table(Table._deserialize_legacy(path=the_path, legacy_rows=value))
                     continue
@@ -629,19 +637,6 @@ class StructuredDataNode:
 
         return filtered
 
-    #   ---web------------------------------------------------------------------
-
-    def show(self, renderer):
-        # TODO: type hints
-        if not self.attributes.is_empty():
-            renderer.show_attributes(self.attributes)
-
-        if not self.table.is_empty():
-            renderer.show_table(self.table)
-
-        for name in sorted(self._nodes):
-            renderer.show_node(self._nodes[name])
-
 
 # .
 #   .--Table---------------------------------------------------------------.
@@ -662,7 +657,7 @@ class Table:
     def __init__(
         self,
         *,
-        path: Optional[SDNodePath] = None,
+        path: Optional[SDPath] = None,
         key_columns: Optional[SDKeyColumns] = None,
         retentions: Optional[TableRetentions] = None,
     ) -> None:
@@ -683,7 +678,7 @@ class Table:
 
         self._rows: SDRows = {}
 
-    def set_path(self, path: SDNodePath) -> None:
+    def set_path(self, path: SDPath) -> None:
         self.path = path
 
     def add_key_columns(self, key_columns: SDKeyColumns) -> None:
@@ -768,7 +763,7 @@ class Table:
         for row in rows:
             self.add_row(self._make_row_ident(row), row)
 
-    def _make_row_ident(self, row) -> SDRowIdent:
+    def _make_row_ident(self, row) -> SDRowIdent:  # type:ignore[no-untyped-def]
         return tuple(self._get_row_value(row[k]) for k in self.key_columns if k in row)
 
     @staticmethod
@@ -797,7 +792,7 @@ class Table:
 
     #   ---retentions-----------------------------------------------------------
 
-    def update_from_previous(
+    def update_from_previous(  # pylint: disable=too-many-branches
         self,
         now: int,
         other: object,
@@ -932,7 +927,7 @@ class Table:
         return raw_table
 
     @classmethod
-    def deserialize(cls, *, path: SDNodePath, raw_rows: SDRawTree) -> Table:
+    def deserialize(cls, *, path: SDPath, raw_rows: SDRawTree) -> Table:
         rows = raw_rows.get(_ROWS_KEY, [])
         if _KEY_COLUMNS_KEY in raw_rows:
             key_columns = raw_rows[_KEY_COLUMNS_KEY]
@@ -951,7 +946,7 @@ class Table:
         return table
 
     @classmethod
-    def _deserialize_legacy(cls, *, path: SDNodePath, legacy_rows: LegacyRows) -> Table:
+    def _deserialize_legacy(cls, *, path: SDPath, legacy_rows: LegacyRows) -> Table:
         table = cls(
             path=path,
             key_columns=cls._get_default_key_columns(legacy_rows),
@@ -1009,12 +1004,6 @@ class Table:
             table.add_row(ident, _get_filtered_dict(row, filter_func))
         return table
 
-    #   ---web------------------------------------------------------------------
-
-    def show(self, renderer):
-        # TODO: type hints
-        renderer.show_table(self)
-
 
 # .
 #   .--Attributes----------------------------------------------------------.
@@ -1031,7 +1020,7 @@ class Attributes:
     def __init__(
         self,
         *,
-        path: Optional[SDNodePath] = None,
+        path: Optional[SDPath] = None,
         retentions: Optional[RetentionIntervalsByKeys] = None,
     ) -> None:
         if path:
@@ -1046,7 +1035,7 @@ class Attributes:
 
         self.pairs: SDPairs = {}
 
-    def set_path(self, path: SDNodePath) -> None:
+    def set_path(self, path: SDPath) -> None:
         self.path = path
 
     #   ---common methods-------------------------------------------------------
@@ -1160,7 +1149,7 @@ class Attributes:
         return raw_attributes
 
     @classmethod
-    def deserialize(cls, *, path: SDNodePath, raw_pairs: SDRawTree) -> Attributes:
+    def deserialize(cls, *, path: SDPath, raw_pairs: SDRawTree) -> Attributes:
         attributes = cls(
             path=path,
             retentions=_deserialize_retentions(raw_pairs.get(_RETENTIONS_KEY)),
@@ -1169,7 +1158,7 @@ class Attributes:
         return attributes
 
     @classmethod
-    def _deserialize_legacy(cls, *, path: SDNodePath, legacy_pairs: LegacyPairs) -> Attributes:
+    def _deserialize_legacy(cls, *, path: SDPath, legacy_pairs: LegacyPairs) -> Attributes:
         attributes = cls(path=path)
         attributes.add_pairs(legacy_pairs)
         return attributes
@@ -1205,12 +1194,6 @@ class Attributes:
         attributes = Attributes(path=self.path, retentions=self.retentions)
         attributes.add_pairs(_get_filtered_dict(self.pairs, filter_func))
         return attributes
-
-    #   ---web------------------------------------------------------------------
-
-    def show(self, renderer):
-        # TODO: type hints
-        renderer.show_attributes(self)
 
 
 # .
@@ -1254,10 +1237,13 @@ def _compare_dicts(*, old_dict: Dict, new_dict: Dict, keep_identical: bool) -> D
     if keep_identical:
         delta_dict.update(identical)
 
-    return DDeltaResult(
-        counter=Counter(new=len(new), changed=len(changed), removed=len(removed)),
-        delta=delta_dict,
-    )
+    # We have to help mypy a little bit to figure out the Literal.
+    cnt: Mapping[Literal["new", "changed", "removed"], int] = {
+        "new": len(new),
+        "changed": len(changed),
+        "removed": len(removed),
+    }
+    return DDeltaResult(counter=Counter(cnt), delta=delta_dict)
 
 
 class ComparedDictKeys(NamedTuple):
@@ -1302,7 +1288,7 @@ def _identical_delta_tree_node(value: SDValue) -> Tuple[SDValue, SDValue]:
 
 
 def parse_visible_raw_path(raw_path: SDRawPath) -> SDPath:
-    return [part for part in raw_path.split(".") if part]
+    return tuple(part for part in raw_path.split(".") if part)
 
 
 def _serialize_retentions(

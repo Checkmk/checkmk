@@ -182,6 +182,6 @@ info_3 = [
         info_3,
     ],
 )
-def test_mkbackup_parse(info):
+def test_mkbackup_parse(info) -> None:
     check = Check("mkbackup")
     check.run_parse(info)

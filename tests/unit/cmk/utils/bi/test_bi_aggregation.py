@@ -14,7 +14,7 @@ from cmk.utils.bi.bi_aggregation import BIAggregation
 from .bi_test_data import sample_config
 
 
-def test_load_aggregation_integrity(bi_packs_sample_config):
+def test_load_aggregation_integrity(bi_packs_sample_config) -> None:
     default_aggregation = bi_packs_sample_config.get_aggregation("default_aggregation")
     assert default_aggregation.id == "default_aggregation"
     assert default_aggregation.groups.names == ["Hosts"]

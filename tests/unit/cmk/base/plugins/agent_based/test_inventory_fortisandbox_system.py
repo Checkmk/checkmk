@@ -10,7 +10,7 @@ from cmk.base.plugins.agent_based.inventory_fortisandbox_system import inventory
 from .utils_inventory import sort_inventory_result
 
 
-def test_inventory_fortisandbox_system():
+def test_inventory_fortisandbox_system() -> None:
     assert sort_inventory_result(
         inventory_fortisandbox_system(["v2.52-build0340 (GA)"])
     ) == sort_inventory_result(

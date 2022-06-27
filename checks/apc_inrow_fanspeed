@@ -8,6 +8,7 @@
 def inventory_apc_inrow_fanspeed(info):
     if info:
         return [(None, None)]
+    return []
 
 
 def check_apc_inrow_fanspeed(_no_item, _no_params, info):

@@ -8,7 +8,7 @@ import logging
 import re
 from typing import Any, Dict, Iterable, List, Sequence
 from typing import Tuple as _Tuple
-from typing import Union
+from typing import Type, Union
 
 import cmk.utils.paths
 from cmk.utils.tags import TagGroup
@@ -17,23 +17,17 @@ from cmk.utils.version import is_raw_edition
 from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.plugins.userdb.utils as userdb_utils
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError, MKUserError
-from cmk.gui.globals import active_config, request
+from cmk.gui.groups import load_contact_group_information
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.views.icons.utils import icon_and_action_registry
 from cmk.gui.plugins.wato.utils import (
     BinaryHostRulespec,
     BinaryServiceRulespec,
-    config_variable_group_registry,
-    config_variable_registry,
-    ConfigDomainCACertificates,
-    ConfigDomainCore,
-    ConfigDomainGUI,
-    ConfigDomainOMD,
     ConfigHostname,
-    ConfigVariable,
-    ConfigVariableGroup,
     ConfigVariableGroupSiteManagement,
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
@@ -61,11 +55,16 @@ from cmk.gui.plugins.wato.utils import (
     ServiceDescriptionTranslation,
     ServiceGroupSelection,
     ServiceRulespec,
-    site_neutral_path,
     SNMPCredentials,
-    TimeperiodSelection,
     UserIconOrAction,
     valuespec_check_plugin_selection,
+)
+from cmk.gui.plugins.watolib.utils import (
+    ABCConfigDomain,
+    config_variable_group_registry,
+    config_variable_registry,
+    ConfigVariable,
+    ConfigVariableGroup,
 )
 from cmk.gui.utils.theme import theme_choices
 from cmk.gui.utils.urls import makeuri_contextless
@@ -101,7 +100,14 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.watolib.bulk_discovery import vs_bulk_discovery
-from cmk.gui.watolib.groups import load_contact_group_information
+from cmk.gui.watolib.config_domains import (
+    ConfigDomainCACertificates,
+    ConfigDomainCore,
+    ConfigDomainGUI,
+    ConfigDomainOMD,
+)
+from cmk.gui.watolib.timeperiods import TimeperiodSelection
+from cmk.gui.watolib.utils import site_neutral_path
 
 #   .--Global Settings-----------------------------------------------------.
 #   |  ____ _       _           _   ____       _   _   _                   |
@@ -117,16 +123,16 @@ from cmk.gui.watolib.groups import load_contact_group_information
 
 @config_variable_registry.register
 class ConfigVariableUITheme(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "ui_theme"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("User interface theme"),
             help=_("Change the default user interface theme of your Checkmk installation"),
@@ -136,16 +142,16 @@ class ConfigVariableUITheme(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableShowMoreMode(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "show_mode"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Show more / Show less"),
             help=_(
@@ -162,16 +168,16 @@ class ConfigVariableShowMoreMode(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableBulkDiscoveryDefaultSettings(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "bulk_discovery_default_settings"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return vs_bulk_discovery()
 
 
@@ -193,16 +199,16 @@ def _slow_view_logging_help():
 
 @config_variable_registry.register
 class ConfigVariableLogLevels(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "log_levels"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             title=_("Logging"),
             help=_(
@@ -289,16 +295,16 @@ class ConfigVariableLogLevels(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableSlowViewsDurationThreshold(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "slow_views_duration_threshold"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Integer(
             title=_("Threshold for slow views"),
             # title=_("Create a log entry for all view calls taking longer than"),
@@ -311,16 +317,16 @@ class ConfigVariableSlowViewsDurationThreshold(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableDebug(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "debug"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Debug mode"),
             label=_("enable debug mode"),
@@ -334,16 +340,16 @@ class ConfigVariableDebug(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableGUIProfile(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "profile"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Profile requests"),
             help=_(
@@ -366,16 +372,16 @@ class ConfigVariableGUIProfile(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableDebugLivestatusQueries(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "debug_livestatus_queries"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Debug Livestatus queries"),
             label=_("enable debug of Livestatus queries"),
@@ -388,16 +394,16 @@ class ConfigVariableDebugLivestatusQueries(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableSelectionLivetime(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "selection_livetime"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Integer(
             title=_("Checkbox Selection Livetime"),
             help=_(
@@ -412,16 +418,16 @@ class ConfigVariableSelectionLivetime(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableShowLivestatusErrors(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "show_livestatus_errors"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Show MK Livestatus error messages"),
             label=_("show errors"),
@@ -435,16 +441,16 @@ class ConfigVariableShowLivestatusErrors(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEnableSounds(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "enable_sounds"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Enable sounds in views"),
             label=_("enable sounds"),
@@ -459,16 +465,16 @@ class ConfigVariableEnableSounds(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableSoftQueryLimit(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "soft_query_limit"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Integer(
             title=_("Soft query limit"),
             help=_(
@@ -482,16 +488,16 @@ class ConfigVariableSoftQueryLimit(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableHardQueryLimit(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "hard_query_limit"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Integer(
             title=_("Hard query limit"),
             help=_(
@@ -506,16 +512,16 @@ class ConfigVariableHardQueryLimit(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableQuicksearchDropdownLimit(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "quicksearch_dropdown_limit"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Integer(
             title=_("Number of elements to show in Quicksearch"),
             help=_(
@@ -530,16 +536,16 @@ class ConfigVariableQuicksearchDropdownLimit(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableQuicksearchSearchOrder(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "quicksearch_search_order"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return ListOf(
             valuespec=Tuple(
                 elements=[
@@ -579,16 +585,16 @@ class ConfigVariableQuicksearchSearchOrder(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableTableRowLimit(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "table_row_limit"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Integer(
             title=_("Limit the number of rows shown in tables"),
             help=_(
@@ -603,16 +609,16 @@ class ConfigVariableTableRowLimit(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableStartURL(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "start_url"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return TextInput(
             title=_("Start URL to display in main frame"),
             help=_(
@@ -628,16 +634,16 @@ class ConfigVariableStartURL(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariablePageHeading(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "page_heading"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return TextInput(
             title=_("Page title"),
             help=_(
@@ -650,16 +656,16 @@ class ConfigVariablePageHeading(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableBIDefaultLayout(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "default_bi_layout"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             title=_("Default BI Visualization Settings"),
             elements=[
@@ -701,16 +707,16 @@ class ConfigVariableBIDefaultLayout(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariablePagetitleDateFormat(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "pagetitle_date_format"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Date format for page titles"),
             help=_(
@@ -727,18 +733,18 @@ class ConfigVariablePagetitleDateFormat(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEscapePluginOutput(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "escape_plugin_output"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
-            title=_("Escape HTML in service output " "(Dangerous to deactivate - read help)"),
+            title=_("Escape HTML in service output (Dangerous to deactivate - read help)"),
             help=_(
                 "By default, for security reasons, the GUI does not interpret any HTML "
                 "code received from external sources, like service output or log messages. "
@@ -759,16 +765,16 @@ class ConfigVariableEscapePluginOutput(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableDrawRuleIcon(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "multisite_draw_ruleicon"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Show icon linking to WATO parameter editor for services"),
             label=_("Show WATO icon"),
@@ -801,16 +807,16 @@ def transform_virtual_host_trees(trees):
 
 @config_variable_registry.register
 class ConfigVariableVirtualHostTrees(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "virtual_host_trees"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=ListOf(
                 valuespec=Dictionary(
@@ -923,16 +929,16 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableRescheduleTimeout(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "reschedule_timeout"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Float(
             title=_("Timeout for rescheduling checks in Multisite"),
             help=_(
@@ -949,16 +955,16 @@ class ConfigVariableRescheduleTimeout(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableSidebarUpdateInterval(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "sidebar_update_interval"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Float(
             title=_("Interval of sidebar status updates"),
             help=_(
@@ -975,16 +981,16 @@ class ConfigVariableSidebarUpdateInterval(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableSidebarNotifyInterval(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "sidebar_notify_interval"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Optional(
             valuespec=Float(
                 minvalue=10.0,
@@ -1002,16 +1008,16 @@ class ConfigVariableSidebarNotifyInterval(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableiAdHocDowntime(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "adhoc_downtime"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Optional(
             valuespec=Dictionary(
                 optional_keys=False,
@@ -1051,16 +1057,16 @@ class ConfigVariableiAdHocDowntime(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableAuthByHTTPHeader(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "auth_by_http_header"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             Optional(
                 valuespec=TextInput(
@@ -1100,16 +1106,16 @@ class ConfigVariableAuthByHTTPHeader(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableStalenessThreshold(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "staleness_threshold"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Float(
             title=_("Staleness value to mark hosts / services stale"),
             help=_(
@@ -1124,16 +1130,16 @@ class ConfigVariableStalenessThreshold(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableLoginScreen(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "login_screen"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             title=_("Customize login screen"),
             elements=[
@@ -1188,16 +1194,16 @@ class ConfigVariableLoginScreen(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableUserLocalizations(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "user_localizations"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=ListOf(
                 valuespec=Tuple(
@@ -1224,16 +1230,16 @@ class ConfigVariableUserLocalizations(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableUserIconsAndActions(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "user_icons_and_actions"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=ListOf(
                 valuespec=Tuple(
@@ -1350,16 +1356,16 @@ class ConfigVariableUserIconsAndActions(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableCustomServiceAttributes(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "custom_service_attributes"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=ListOf(
                 valuespec=Dictionary(
@@ -1492,16 +1498,16 @@ def _service_tag_rules_tag_group_choices():
 
 @config_variable_registry.register
 class ConfigVariableUserDowntimeTimeranges(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "user_downtime_timeranges"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return ListOf(
             valuespec=Dictionary(
                 elements=[
@@ -1545,16 +1551,16 @@ class ConfigVariableUserDowntimeTimeranges(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableBuiltinIconVisibility(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "builtin_icon_visibility"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=ListOf(
                 valuespec=Tuple(
@@ -1618,16 +1624,16 @@ class ConfigVariableBuiltinIconVisibility(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableServiceViewGrouping(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "service_view_grouping"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return ListOf(
             valuespec=Dictionary(
                 elements=[
@@ -1676,16 +1682,16 @@ class ConfigVariableServiceViewGrouping(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableViewActionDefaults(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "view_action_defaults"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             title=_("View action defaults"),
             elements=[
@@ -1735,16 +1741,16 @@ def _transform_trusted_certs(certs: Iterable[Union[str, bytes]]) -> Sequence[str
 
 @config_variable_registry.register
 class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCACertificates
 
-    def ident(self):
+    def ident(self) -> str:
         return "trusted_certificate_authorities"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             title=_("Trusted certificate authorities for SSL"),
             help=_(
@@ -1790,10 +1796,10 @@ class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
 
 @config_variable_registry.register
 class RestAPIETagLocking(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
     def ident(self) -> str:
@@ -1829,16 +1835,16 @@ class RestAPIETagLocking(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableWATOMaxSnapshots(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "wato_max_snapshots"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Integer(
             title=_("Number of configuration snapshots to keep"),
             help=_(
@@ -1852,16 +1858,16 @@ class ConfigVariableWATOMaxSnapshots(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableActivateChangesConcurrency(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "wato_activate_changes_concurrency"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return CascadingDropdown(
             title=_("Maximum parallel site activations"),
             choices=[
@@ -1888,16 +1894,16 @@ class ConfigVariableActivateChangesConcurrency(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableWATOActivateChangesCommentMode(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "wato_activate_changes_comment_mode"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Comment for activation of changes"),
             help=_(
@@ -1914,16 +1920,16 @@ class ConfigVariableWATOActivateChangesCommentMode(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableWATOActivationMethod(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "wato_activation_method"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Restart mode for Nagios"),
             help=_("Restart or reload Nagios when changes are activated"),
@@ -1936,16 +1942,16 @@ class ConfigVariableWATOActivationMethod(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableWATOHideFilenames(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "wato_hide_filenames"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Hide internal folder names in WATO"),
             label=_("hide folder names"),
@@ -1960,16 +1966,16 @@ class ConfigVariableWATOHideFilenames(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableWATOUploadInsecureSnapshots(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "wato_upload_insecure_snapshots"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Allow upload of insecure WATO snapshots"),
             label=_("upload insecure snapshots"),
@@ -1984,16 +1990,16 @@ class ConfigVariableWATOUploadInsecureSnapshots(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableWATOHideHosttags(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "wato_hide_hosttags"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Hide hosttags in WATO folder view"),
             label=_("hide hosttags"),
@@ -2003,16 +2009,16 @@ class ConfigVariableWATOHideHosttags(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableWATOHideVarnames(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "wato_hide_varnames"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Hide names of configuration variables"),
             label=_("hide variable names"),
@@ -2025,16 +2031,16 @@ class ConfigVariableWATOHideVarnames(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableHideHelpInLists(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "wato_hide_help_in_lists"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Hide help text of rules in list views"),
             label=_("hide help text"),
@@ -2044,16 +2050,16 @@ class ConfigVariableHideHelpInLists(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableWATOUseGit(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "wato_use_git"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Use GIT version control for WATO"),
             label=_("enable GIT version control"),
@@ -2070,16 +2076,16 @@ class ConfigVariableWATOUseGit(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableWATOPrettyPrintConfig(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "wato_pprint_config"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Pretty-Print configuration files"),
             label=_("pretty-print configuration files"),
@@ -2093,16 +2099,16 @@ class ConfigVariableWATOPrettyPrintConfig(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableWATOHideFoldersWithoutReadPermissions(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "wato_hide_folders_without_read_permissions"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Hide folders without read permissions"),
             label=_("hide folders without read permissions"),
@@ -2116,16 +2122,16 @@ class ConfigVariableWATOHideFoldersWithoutReadPermissions(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableWATOIconCategories(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "wato_icon_categories"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return ListOf(
             valuespec=Tuple(
                 elements=[
@@ -2162,25 +2168,25 @@ class ConfigVariableWATOIconCategories(ConfigVariable):
 
 @config_variable_group_registry.register
 class ConfigVariableGroupUserManagement(ConfigVariableGroup):
-    def title(self):
+    def title(self) -> str:
         return _("User management")
 
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 40
 
 
 @config_variable_registry.register
 class ConfigVariableLogLogonFailures(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserManagement
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "log_logon_failures"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Logging of logon failures"),
             label=_("Enable logging of logon failures"),
@@ -2194,16 +2200,16 @@ class ConfigVariableLogLogonFailures(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableLockOnLogonFailures(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserManagement
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "lock_on_logon_failures"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             Optional(
                 valuespec=Integer(
@@ -2229,16 +2235,16 @@ class ConfigVariableLockOnLogonFailures(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariablePasswordPolicy(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserManagement
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "password_policy"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             title=_("Password policy for local accounts"),
             help=_(
@@ -2288,16 +2294,16 @@ class ConfigVariablePasswordPolicy(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableUserIdleTimeout(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserManagement
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "user_idle_timeout"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Optional(
             valuespec=Age(
                 title=None,
@@ -2321,16 +2327,16 @@ class ConfigVariableUserIdleTimeout(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableSingleUserSession(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserManagement
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "single_user_session"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Optional(
             valuespec=Age(
                 title=None,
@@ -2354,16 +2360,16 @@ class ConfigVariableSingleUserSession(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableDefaultUserProfile(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserManagement
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "default_user_profile"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             title=_("Default user profile"),
             help=_(
@@ -2430,25 +2436,25 @@ class ConfigVariableDefaultUserProfile(ConfigVariable):
 
 @config_variable_group_registry.register
 class ConfigVariableGroupCheckExecution(ConfigVariableGroup):
-    def title(self):
+    def title(self) -> str:
         return _("Execution of checks")
 
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 10
 
 
 @config_variable_registry.register
 class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupCheckExecution
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "use_new_descriptions_for"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=ListChoice(
                 title=_("Use new service descriptions"),
@@ -2535,6 +2541,9 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                     ("liebert_bat_temp", _("Liebert UPS Device: Temperature sensor")),
                     ("logwatch", _("Check logfiles for relevant new messages")),
                     ("logwatch_groups", _("Check logfile groups")),
+                    ("megaraid_pdisks", _("LSI MegaRAID: Physical Disks")),
+                    ("megaraid_ldisks", _("LSI MegaRAID: Logical Disks")),
+                    ("megaraid_bbu", _("LSI MegaRAID: Battery Backup Unit")),
                     ("mem_used", _("Main memory usage (UNIX / Other Devices)")),
                     ("mem_win", _("Memory usage for %s hosts") % "Windows"),
                     ("mknotifyd", _("Notification Spooler")),
@@ -2579,16 +2588,16 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableTCPConnectTimeout(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupCheckExecution
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "tcp_connect_timeout"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Float(
             title=_("Agent TCP connect timeout"),
             help=_(
@@ -2604,16 +2613,16 @@ class ConfigVariableTCPConnectTimeout(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableSimulationMode(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupCheckExecution
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "simulation_mode"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Simulation mode"),
             label=_("Run in simulation mode"),
@@ -2628,16 +2637,16 @@ class ConfigVariableSimulationMode(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableRestartLocking(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupCheckExecution
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "restart_locking"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Simultanous activation of changes"),
             help=_(
@@ -2656,16 +2665,16 @@ class ConfigVariableRestartLocking(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableAgentSimulator(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupCheckExecution
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "agent_simulator"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("SNMP Agent Simulator"),
             label=_("Process stored SNMP walks with agent simulator"),
@@ -2679,16 +2688,16 @@ class ConfigVariableAgentSimulator(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableDelayPrecompile(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupCheckExecution
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "delay_precompile"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Delay precompiling of host checks"),
             label=_("delay precompiling"),
@@ -2705,16 +2714,16 @@ class ConfigVariableDelayPrecompile(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableClusterMaxCachefileAge(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupCheckExecution
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "cluster_max_cachefile_age"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Integer(
             title=_("Maximum cache file age for clusters"),
             label=_("seconds"),
@@ -2730,16 +2739,16 @@ class ConfigVariableClusterMaxCachefileAge(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariablePiggybackMaxCachefileAge(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupCheckExecution
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "piggyback_max_cachefile_age"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Age(
             title=_("Maximum age for piggyback files"),
             help=_(
@@ -2752,16 +2761,16 @@ class ConfigVariablePiggybackMaxCachefileAge(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableCheckMKPerfdataWithTimes(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupCheckExecution
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "check_mk_perfdata_with_times"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Checkmk with times performance data"),
             label=_("Return process times within performance data"),
@@ -2776,16 +2785,16 @@ class ConfigVariableCheckMKPerfdataWithTimes(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableUseDNSCache(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupCheckExecution
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "use_dns_cache"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Use DNS lookup cache"),
             label=_("Prevent DNS lookups by use of a cache file"),
@@ -2824,16 +2833,16 @@ def transform_snmp_backend_back(backend):
 
 @config_variable_registry.register
 class ConfigVariableChooseSNMPBackend(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupCheckExecution
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "snmp_backend_default"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=DropdownChoice(
                 title=_("Choose SNMP Backend (Enterprise Edition only)"),
@@ -2858,16 +2867,16 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableUseInlineSNMP(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupCheckExecution
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "use_inline_snmp"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Use Inline SNMP (deprecated)"),
             label=_("Enable inline SNMP (directly use net-snmp libraries) (deprecated)"),
@@ -2889,16 +2898,16 @@ class ConfigVariableUseInlineSNMP(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableHTTPProxies(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupCheckExecution
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "http_proxies"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=ListOf(
                 valuespec=Dictionary(
@@ -2962,25 +2971,25 @@ class ConfigVariableHTTPProxies(ConfigVariable):
 
 @config_variable_group_registry.register
 class ConfigVariableGroupServiceDiscovery(ConfigVariableGroup):
-    def title(self):
+    def title(self) -> str:
         return _("Service discovery")
 
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 4
 
 
 @config_variable_registry.register
 class ConfigVariableInventoryCheckInterval(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupServiceDiscovery
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "inventory_check_interval"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Optional(
             valuespec=Integer(
                 title=_("Perform service discovery check every"),
@@ -3004,16 +3013,16 @@ class ConfigVariableInventoryCheckInterval(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableInventoryCheckSeverity(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupServiceDiscovery
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "inventory_check_severity"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Severity of failed service discovery check"),
             help=_(
@@ -3031,16 +3040,16 @@ class ConfigVariableInventoryCheckSeverity(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableInventoryCheckAutotrigger(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupServiceDiscovery
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "inventory_check_autotrigger"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Service discovery triggers service discovery check"),
             label=_(
@@ -3307,7 +3316,7 @@ rulespec_registry.register(
 def _valuespec_extra_service_conf_active_checks_enabled():
     return DropdownChoice(
         title=_("Enable/disable active checks for services"),
-        help=_("This setting allows you to disable or enable " "active checks for a service."),
+        help=_("This setting allows you to disable or enable active checks for a service."),
         choices=[("1", _("Enable active checks")), ("0", _("Disable active checks"))],
     )
 
@@ -3782,9 +3791,7 @@ rulespec_registry.register(
 def _valuespec_extra_host_conf_flap_detection_enabled():
     return DropdownChoice(
         title=_("Enable/disable flapping detection for hosts"),
-        help=_(
-            "This setting allows you to disable the flapping detection for a " "host completely."
-        ),
+        help=_("This setting allows you to disable the flapping detection for a host completely."),
         choices=[
             ("1", _("Enable flap detection")),
             ("0", _("Disable flap detection")),
@@ -3805,7 +3812,7 @@ def _valuespec_extra_service_conf_flap_detection_enabled():
     return DropdownChoice(
         title=_("Enable/disable flapping detection for services"),
         help=_(
-            "This setting allows you to disable the flapping detection for a " "service completely."
+            "This setting allows you to disable the flapping detection for a service completely."
         ),
         choices=[
             ("1", _("Enable flap detection")),
@@ -3827,15 +3834,15 @@ rulespec_registry.register(
 @rulespec_group_registry.register
 class RulespecGroupMonitoringConfigurationInventoryAndCMK(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupDiscoveryCheckParameters
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "inventory_and_check_mk_settings"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Discovery and Checkmk settings")
 
 
@@ -4509,7 +4516,7 @@ def _valuespec_extra_host_conf_notes_url():
     return TextInput(
         label=_("URL:"),
         title=_("Notes URL for Hosts"),
-        help=_("With this setting you can set links to documentations " "for Hosts"),
+        help=_("With this setting you can set links to documentations for Hosts"),
         size=80,
     )
 
@@ -4564,7 +4571,7 @@ def _valuespec_extra_service_conf_notes_url():
     return TextInput(
         label=_("URL:"),
         title=_("Notes URL for Services"),
-        help=_("With this setting you can set links to documentations " "for each service"),
+        help=_("With this setting you can set links to documentations for each service"),
         size=80,
     )
 
@@ -4677,7 +4684,7 @@ rulespec_registry.register(
 
 def _valuespec_extra_host_conf__ESCAPE_PLUGIN_OUTPUT():
     return DropdownChoice(
-        title=_("Escape HTML in host output" "(Dangerous to deactivate - read help)"),
+        title=_("Escape HTML in host output (Dangerous to deactivate - read help)"),
         help=_(
             "By default, for security reasons, the GUI does not interpret any HTML "
             "code received from external sources, like plugin output or log messages. "
@@ -4708,7 +4715,7 @@ rulespec_registry.register(
 
 def _valuespec_extra_service_conf__ESCAPE_PLUGIN_OUTPUT():
     return DropdownChoice(
-        title=_("Escape HTML in service output " "(Dangerous to deactivate - read help)"),
+        title=_("Escape HTML in service output (Dangerous to deactivate - read help)"),
         help=_(
             "By default, for security reasons, the GUI does not interpret any HTML "
             "code received from external sources, like service output or log messages. "
@@ -4741,11 +4748,11 @@ rulespec_registry.register(
 @rulespec_group_registry.register
 class RulespecGroupAgent(RulespecGroup):
     @property
-    def name(self):
+    def name(self) -> str:
         return "agent"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Access to agents")
 
     @property
@@ -4756,15 +4763,15 @@ class RulespecGroupAgent(RulespecGroup):
 @rulespec_group_registry.register
 class RulespecGroupAgentGeneralSettings(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupAgent
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "general_settings"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("General Settings")
 
 
@@ -4875,45 +4882,35 @@ rulespec_registry.register(
 )
 
 
-def _help_bulkwalk_hosts():
+def _help_enable_snmpv2c():
     return _(
-        "Most SNMP hosts support SNMP version 2c. However, Check_MK defaults to version "
-        "1, in order to support as many devices as possible. Please use this ruleset in "
-        "order to configure SNMP v2c for as many hosts as possible. That version has two "
-        "advantages: it supports 64 bit counters, which avoids problems with wrapping "
-        "counters at too much traffic. And it supports bulk walk, which saves much CPU "
-        "and network resources. Please be aware, however, that there are some broken "
-        "devices out there, that support bulk walk but behave very bad when it is used. "
-        "When you want to enable v2c while not using bulk walk, please use the rule set "
-        "snmpv2c_hosts instead."
+        "Checkmk defaults to SNMPv1 in order to support as many devices as "
+        "possible. In practice, most SNMP devices also support SNMPv2c, which "
+        "has two advantages: it supports 64 bit counters and bulk walk, which "
+        "saves CPU and network resources and is more performant. Use this rule "
+        "to configure SNMPv2c for as many devices as possible. However, please be "
+        "aware that some devices that support SNMPv2c may be buggy. In such cases, "
+        'you may want to try disabling bulk walk using the ruleset "Disable '
+        'bulk walks on SNMPv2c/v3".'
     )
 
 
 rulespec_registry.register(
     BinaryHostRulespec(
         group=RulespecGroupAgentSNMP,
-        help_func=_help_bulkwalk_hosts,
+        help_func=_help_enable_snmpv2c,
         name="bulkwalk_hosts",
-        title=lambda: _("Bulk walk: Hosts using bulk walk (enforces SNMP v2c)"),
+        title=lambda: _("Enable SNMPv2c and bulk walk for hosts"),
     )
 )
 
 
-def _help_management_bulkwalk_hosts():
-    return _(
-        "SNMP monitoring of management boards defaults to SNMPv2 for all hosts by default. "
-        "In case some of your management boards don't support SNMPv2 or bulk walks, you "
-        "can use this ruleset to enforce Checkmk to contact these management boards "
-        "using SNMPv1."
-    )
-
-
 rulespec_registry.register(
     BinaryHostRulespec(
         group=RulespecGroupAgentSNMP,
-        help_func=_help_management_bulkwalk_hosts,
+        help_func=_help_enable_snmpv2c,
         name="management_bulkwalk_hosts",
-        title=lambda: _("Management board SNMP using bulk walk (enforces SNMP v2c)"),
+        title=lambda: _("Enable SNMPv2c and bulk walk for management boards"),
     )
 )
 
@@ -4963,23 +4960,22 @@ rulespec_registry.register(
 )
 
 
-def _help_snmpv2c_hosts():
+def _help_snmpv2c_without_bulkwalk():
     return _(
-        "There exist a few devices out there that behave very badly when using SNMP v2c "
-        "and bulk walk. If you want to use SNMP v2c on those devices, nevertheless, you "
-        "need to configure this device as legacy snmp device and upgrade it to SNMP v2c "
-        "(without bulk walk) with this rule set. One reason is enabling 64 bit counters. "
-        "Note: This rule won't apply if the device is already configured as SNMP v2c "
-        "device."
+        "Some SNMPv2c/v3 capable devices are buggy when being queried using "
+        "bulk walks. In such cases, you can disable bulk walks with this "
+        "ruleset. Please be aware that you should only do this if no other "
+        "approach is feasible (e.g. limiting the bulk size), as bulk walks are "
+        "much more performant."
     )
 
 
 rulespec_registry.register(
     BinaryHostRulespec(
         group=RulespecGroupAgentSNMP,
-        help_func=_help_snmpv2c_hosts,
+        help_func=_help_snmpv2c_without_bulkwalk,
         name="snmpv2c_hosts",
-        title=lambda: _("Legacy SNMP devices using SNMP v2c"),
+        title=lambda: _("Disable bulk walks on SNMPv2c/v3"),
     )
 )
 
@@ -5151,15 +5147,15 @@ rulespec_registry.register(
 @rulespec_group_registry.register
 class RulespecGroupAgentCMKAgent(RulespecSubGroup):
     @property
-    def main_group(self):
+    def main_group(self) -> Type[RulespecGroup]:
         return RulespecGroupAgent
 
     @property
-    def sub_group_name(self):
+    def sub_group_name(self) -> str:
         return "check_mk_agent"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Checkmk agent")
 
 

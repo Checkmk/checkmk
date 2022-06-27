@@ -304,7 +304,7 @@ def parse_ps_time(text: str) -> int:
         days = 0
 
     day_secs = sum(
-        [factor * int(v or 0) for factor, v in zip([1, 60, 3600], reversed(text.split(":")))]
+        factor * int(v or 0) for factor, v in zip([1, 60, 3600], reversed(text.split(":")))
     )
 
     return 86400 * days + day_secs
@@ -320,7 +320,7 @@ def cpu_rate(value_store, counter, now, lifetime):
 class ProcessAggregator:
     """Collects information about all instances of monitored processes"""
 
-    def __init__(self, cpu_cores, params):
+    def __init__(self, cpu_cores, params) -> None:
         self.cpu_cores = cpu_cores
         self.params = params
         self.virtual_size = 0
@@ -330,7 +330,7 @@ class ProcessAggregator:
         self.max_elapsed: Optional[float] = None
         self.min_elapsed: Optional[float] = None
         self.processes: List[_Process] = []
-        self.running_on_nodes = set()
+        self.running_on_nodes: set = set()
 
     def __getitem__(self, item: int) -> _Process:
         return self.processes[item]
@@ -482,7 +482,7 @@ def process_capture(
             and process_info.physical is not None
         ):
 
-            process.append(("user", (process_info.user, "")))  # type: ignore[args-type]
+            process.append(("user", (process_info.user, "")))
             process.append(("virtual size", (process_info.virtual, "kB")))
             process.append(("resident size", (process_info.physical, "kB")))
 

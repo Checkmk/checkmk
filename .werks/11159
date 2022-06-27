@@ -1,6 +1,6 @@
 Title: Grouping of NetApp Volumes
 Class: feature
-Compatible: incompat
+Compatible: incomp
 Component: checks
 Date: 1591689562
 Edition: cre

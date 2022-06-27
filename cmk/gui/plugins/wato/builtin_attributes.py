@@ -4,27 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from typing import Any
+from typing import Any, Callable, Literal, Optional, Type
 
 import cmk.utils.tags
-from cmk.utils.type_defs import HostName, List
-from cmk.utils.version import Edition, is_plus_edition
+from cmk.utils.type_defs import HostName, List, Union
 
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
-import cmk.gui.watolib as watolib
 from cmk.gui import fields as gui_fields
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.utils import (
     ABCHostAttributeNagiosText,
-    ABCHostAttributeNagiosValueSpec,
     ABCHostAttributeValueSpec,
     ConfigHostname,
-    host_attribute_registry,
     HostAttributeTopicAddress,
     HostAttributeTopicBasicSettings,
     HostAttributeTopicCustomAttributes,
@@ -37,13 +32,16 @@ from cmk.gui.plugins.wato.utils import (
     SNMPCredentials,
 )
 from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.valuespec import (
     AbsoluteDate,
     Age,
     Alternative,
+    AlternativeModel,
     CascadingDropdown,
     Checkbox,
+    DEF_VALUE,
     Dictionary,
     DropdownChoice,
     FixedValue,
@@ -60,8 +58,15 @@ from cmk.gui.valuespec import (
     TimeofdayRange,
     Transform,
     Tuple,
+    ValueSpec,
+    ValueSpecDefault,
+    ValueSpecHelp,
     ValueSpecText,
+    ValueSpecValidateFunc,
 )
+from cmk.gui.watolib.host_attributes import host_attribute_registry, HostAttributeTopic
+from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.gui.watolib.tags import TagConfigFile
 
 from cmk import fields
 
@@ -72,17 +77,17 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
     def _size(self):
         return 64
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicBasicSettings
 
     def is_show_more(self) -> bool:
         return True
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 10
 
-    def name(self):
+    def name(self) -> str:
         return "alias"
 
     def nagios_name(self):
@@ -91,7 +96,7 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
     def is_explicit(self) -> bool:
         return True
 
-    def title(self):
+    def title(self) -> str:
         return _("Alias")
 
     def help(self):
@@ -106,14 +111,14 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
 
 @host_attribute_registry.register
 class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicAddress
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 30
 
-    def name(self):
+    def name(self) -> str:
         return "ipaddress"
 
     def show_in_folder(self):
@@ -122,7 +127,7 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
     def depends_on_tags(self):
         return ["ip-v4"]
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return HostAddress(
             title=_("IPv4 address"),
             help=_(
@@ -157,14 +162,14 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
 
 @host_attribute_registry.register
 class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicAddress
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 40
 
-    def name(self):
+    def name(self) -> str:
         return "ipv6address"
 
     def show_in_folder(self):
@@ -173,7 +178,7 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
     def depends_on_tags(self):
         return ["ip-v6"]
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return HostAddress(
             title=_("IPv6 Address"),
             help=_(
@@ -203,17 +208,17 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
 
 @host_attribute_registry.register
 class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicAddress
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 50
 
     def is_show_more(self) -> bool:
         return True
 
-    def name(self):
+    def name(self) -> str:
         return "additional_ipv4addresses"
 
     def show_in_table(self):
@@ -222,7 +227,7 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
     def show_in_folder(self):
         return False
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return ListOf(
             valuespec=HostAddress(
                 allow_empty=False,
@@ -251,17 +256,17 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
 
 @host_attribute_registry.register
 class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicAddress
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 60
 
     def is_show_more(self) -> bool:
         return True
 
-    def name(self):
+    def name(self) -> str:
         return "additional_ipv6addresses"
 
     def show_in_table(self):
@@ -270,7 +275,7 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
     def show_in_folder(self):
         return False
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return ListOf(
             valuespec=HostAddress(
                 allow_empty=False,
@@ -291,78 +296,15 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
 
 
 @host_attribute_registry.register
-class HostAttributeAgentConnection(ABCHostAttributeNagiosValueSpec):
-    def topic(self):
-        return HostAttributeTopicDataSources
-
-    @classmethod
-    def sort_index(cls):
-        return 64  # after agent, before snmp
-
-    def is_show_more(self) -> bool:
-        # non plus edition currently only has one option
-        return not is_plus_edition()
-
-    def name(self):
-        return "cmk_agent_connection"
-
-    def show_in_table(self):
-        return False
-
-    def show_in_folder(self):
-        return True
-
-    def depends_on_tags(self):
-        return ["checkmk-agent"]
-
-    def nagios_name(self) -> str:
-        return self.name()
-
-    def to_nagios(self, value: str) -> str:
-        return value
-
-    def valuespec(self):
-        return DropdownChoice(
-            title=_("Checkmk agent connection mode"),
-            choices=[
-                ("pull-agent", _("Pull: Checkmk server contacts the agent")),
-                (
-                    "push-agent",
-                    _("Push: Checkmk agent contacts the server (%s only)")
-                    % Edition.CPE.short.upper(),
-                ),
-            ],
-            help=_(
-                "By default the server will try to contact the monitored host and pull the"
-                " data by initializing a TCP connection. "
-                "On the %s you can configure a push configuration, where the monitored host is"
-                " expected to send the data to the monitoring server without being actively"
-                " triggered."
-            )
-            % Edition.CPE.title,
-        )
-
-    def openapi_field(self) -> gui_fields.Field:
-        return fields.String(
-            enum=["pull-agent", "push-agent"],
-            description=(
-                "This configures the communication direction of this host.\n"
-                " * `pull-agent` (default) - The server will try to contact the monitored host and pull the data by initializing a TCP connection\n"
-                " * `push-agent` - the host is expected to send the data to the monitoring server without being triggered\n"
-            ),
-        )
-
-
-@host_attribute_registry.register
 class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicDataSources
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 70
 
-    def name(self):
+    def name(self) -> str:
         return "snmp_community"
 
     def show_in_table(self):
@@ -374,7 +316,7 @@ class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
     def depends_on_tags(self):
         return ["snmp"]
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return SNMPCredentials(
             help=_(
                 "Using this option you can configure the community which should be used when "
@@ -400,14 +342,14 @@ class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
 
 @host_attribute_registry.register
 class HostAttributeParents(ABCHostAttributeValueSpec):
-    def name(self):
+    def name(self) -> str:
         return "parents"
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicBasicSettings
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 80
 
     def is_show_more(self) -> bool:
@@ -419,7 +361,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
     def show_in_folder(self):
         return True
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return ListOfStrings(
             valuespec=ConfigHostname(),
             title=_("Parents"),
@@ -441,12 +383,13 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
             description="A list of parents of this host.",
         )
 
-    def is_visible(self, for_what, new):
+    def is_visible(self, for_what, new) -> bool:
         return for_what != "cluster"
 
     def to_nagios(self, value):
         if value:
             return ",".join(value)
+        return None
 
     def nagios_name(self):
         return "parents"
@@ -456,7 +399,9 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
 
     def paint(self, value, hostname):
         parts = [
-            html.render_a(hn, "wato.py?" + urlencode_vars([("mode", "edit_host"), ("host", hn)]))
+            HTMLWriter.render_a(
+                hn, "wato.py?" + urlencode_vars([("mode", "edit_host"), ("host", hn)])
+            )
             for hn in value
         ]
         return "", HTML(", ").join(parts)
@@ -472,7 +417,7 @@ def validate_host_parents(host):
                 None, _("You configured the host to be it's own parent, which is not allowed.")
             )
 
-        parent = watolib.Host.host(parent_name)
+        parent = Host.host(parent_name)
         if not parent:
             raise MKUserError(
                 None, _("You defined the non-existing host '%s' as a parent.") % parent_name
@@ -496,7 +441,7 @@ hooks.register_builtin("validate-host", validate_host_parents)
 @hooks.request_memoize()
 def _get_criticality_choices():
     """Returns the current configuration of the tag_group criticality"""
-    tags = cmk.utils.tags.TagConfig.from_config(watolib.TagConfigFile().load_for_reading())
+    tags = cmk.utils.tags.TagConfig.from_config(TagConfigFile().load_for_reading())
     criticality_group = tags.get_tag_group("criticality")
     if not criticality_group:
         return []
@@ -506,17 +451,17 @@ def _get_criticality_choices():
 
 @host_attribute_registry.register
 class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
-    def name(self):
+    def name(self) -> str:
         return "network_scan"
 
     def may_edit(self):
         return user.may("wato.manage_hosts")
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicNetworkScan
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 90
 
     def show_in_table(self):
@@ -534,7 +479,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
     def show_inherited_value(self):
         return False
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             elements=self._network_scan_elements,
             title=_("Network Scan"),
@@ -629,7 +574,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
                 Integer(
                     title=_("Parallel pings to send"),
                     help=_(
-                        "Set the maximum number of concurrent pings sent to target IP " "addresses."
+                        "Set the maximum number of concurrent pings sent to target IP addresses."
                     ),
                     minvalue=1,
                     maxvalue=200,
@@ -758,14 +703,14 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
 
 @host_attribute_registry.register
 class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
-    def name(self):
+    def name(self) -> str:
         return "network_scan_result"
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicNetworkScan
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 100
 
     def show_in_table(self):
@@ -794,7 +739,7 @@ class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
             gui_fields.NetworkScanResult, description="Read only access to the network scan result"
         )
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             elements=[
                 (
@@ -868,14 +813,14 @@ class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
 
 @host_attribute_registry.register
 class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
-    def name(self):
+    def name(self) -> str:
         return "management_address"
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicManagementBoard
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 120
 
     def show_in_table(self):
@@ -884,7 +829,7 @@ class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
     def show_in_folder(self):
         return False
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return HostAddress(
             title=_("Address"),
             help=_(
@@ -909,14 +854,14 @@ class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
 
 @host_attribute_registry.register
 class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
-    def name(self):
+    def name(self) -> str:
         return "management_protocol"
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicManagementBoard
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 110
 
     def show_in_table(self):
@@ -925,7 +870,7 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
     def show_in_folder(self):
         return True
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Protocol"),
             help=_("Specify the protocol used to connect to the management board."),
@@ -943,14 +888,14 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
 
 @host_attribute_registry.register
 class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
-    def name(self):
+    def name(self) -> str:
         return "management_snmp_community"
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicManagementBoard
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 130
 
     def show_in_table(self):
@@ -959,7 +904,7 @@ class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
     def show_in_folder(self):
         return True
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return SNMPCredentials(
             default_value=None,
             allow_none=True,
@@ -974,28 +919,48 @@ class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
 
 
 class IPMICredentials(Alternative):
-    def __init__(self, **kwargs):
-        kwargs["elements"] = [
-            FixedValue(
-                value=None,
-                title=_("No explicit credentials"),
-                totext="",
-            ),
-            IPMIParameters(),
-        ]
-        super().__init__(**kwargs)
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        match: Optional[Callable[[AlternativeModel], int]] = None,
+        show_alternative_title: bool = False,
+        on_change: Optional[str] = None,
+        orientation: Literal["horizontal", "vertical"] = "vertical",
+        # ValueSpec
+        title: Optional[str] = None,
+        help: Optional[ValueSpecHelp] = None,
+        default_value: ValueSpecDefault[AlternativeModel] = DEF_VALUE,
+        validate: Optional[ValueSpecValidateFunc[AlternativeModel]] = None,
+    ):
+        super().__init__(
+            elements=[
+                FixedValue(
+                    value=None,
+                    title=_("No explicit credentials"),
+                    totext="",
+                ),
+                IPMIParameters(),
+            ],
+            match=match,
+            show_alternative_title=show_alternative_title,
+            on_change=on_change,
+            orientation=orientation,
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
 
 
 @host_attribute_registry.register
 class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
-    def name(self):
+    def name(self) -> str:
         return "management_ipmi_credentials"
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicManagementBoard
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 140
 
     def show_in_table(self):
@@ -1004,7 +969,7 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
     def show_in_folder(self):
         return True
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return IPMICredentials(
             title=_("IPMI credentials"),
             default_value=None,
@@ -1020,17 +985,17 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
 
 @host_attribute_registry.register
 class HostAttributeSite(ABCHostAttributeValueSpec):
-    def name(self):
+    def name(self) -> str:
         return "site"
 
     def is_show_more(self) -> bool:
         return not (has_wato_slave_sites() or is_wato_slave_site())
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicBasicSettings
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 20
 
     def show_in_table(self):
@@ -1039,7 +1004,7 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
     def show_in_folder(self):
         return True
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return SetupSiteChoice(
             title=_("Monitored on site"),
             help=_("Specify the site that should monitor this host."),
@@ -1070,14 +1035,14 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
 
 @host_attribute_registry.register
 class HostAttributeLockedBy(ABCHostAttributeValueSpec):
-    def name(self):
+    def name(self) -> str:
         return "locked_by"
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicMetaData
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 160
 
     def show_in_table(self):
@@ -1101,7 +1066,7 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
     def editable(self):
         return False
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=LockedByValuespec(),
             forth=tuple,
@@ -1116,6 +1081,11 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
                 "The identity is built out of the Site ID, the program name and the connection ID."
             ),
         )
+
+    def filter_matches(
+        self, crit: list[str], value: Union[list[str], tuple[str, str, str]], hostname
+    ) -> bool:
+        return crit == list(value)
 
 
 class LockedByValuespec(Tuple):
@@ -1147,14 +1117,14 @@ class LockedByValuespec(Tuple):
 
 @host_attribute_registry.register
 class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
-    def name(self):
+    def name(self) -> str:
         return "locked_attributes"
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicMetaData
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 170
 
     def show_in_table(self):
@@ -1178,7 +1148,7 @@ class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
     def editable(self):
         return False
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return ListOf(
             valuespec=DropdownChoice(choices=host_attribute_registry.get_choices),
             title=_("Locked attributes"),
@@ -1194,14 +1164,14 @@ class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
 
 @host_attribute_registry.register
 class HostAttributeMetaData(ABCHostAttributeValueSpec):
-    def name(self):
+    def name(self) -> str:
         return "meta_data"
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicMetaData
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 155
 
     def show_in_table(self):
@@ -1228,7 +1198,7 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
     def openapi_editable(self) -> bool:
         return False
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             elements=[
                 (
@@ -1278,14 +1248,14 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
 
 @host_attribute_registry.register
 class HostAttributeDiscoveryFailed(ABCHostAttributeValueSpec):
-    def name(self):
+    def name(self) -> str:
         return "inventory_failed"
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicMetaData
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 200
 
     def show_in_table(self):
@@ -1312,7 +1282,7 @@ class HostAttributeDiscoveryFailed(ABCHostAttributeValueSpec):
     def openapi_editable(self) -> bool:
         return True
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Discovery failed"),
             help=self._help_text(),
@@ -1338,17 +1308,17 @@ class HostAttributeDiscoveryFailed(ABCHostAttributeValueSpec):
 
 @host_attribute_registry.register
 class HostAttributeLabels(ABCHostAttributeValueSpec):
-    def name(self):
+    def name(self) -> str:
         return "labels"
 
-    def title(self):
+    def title(self) -> str:
         return _("Labels")
 
-    def topic(self):
+    def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicCustomAttributes
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 190
 
     def help(self):
@@ -1366,12 +1336,14 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
     def show_in_folder(self):
         return True
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Labels(world=Labels.World.CONFIG, label_source=Labels.Source.EXPLICIT)
 
     def openapi_field(self) -> gui_fields.Field:
         return fields.Dict(
             description=self.help(),
+            keys=fields.String(description="The host label key"),
+            values=fields.String(description="The host label value"),
         )
 
     def filter_matches(self, crit, value, hostname):

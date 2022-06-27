@@ -1,0 +1,14 @@
+Title: Fix using macros in sub directory option of scheduler entries
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1652451348
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+If you used macros in option "Store in sub directory" of report scheduler
+entries, the error "General Options: Please specify a relative path only using
+a-z, 0-9, -, _, and ." occurred.

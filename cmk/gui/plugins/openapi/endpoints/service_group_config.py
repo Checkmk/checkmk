@@ -18,12 +18,14 @@ A service group object can have the following relations present in `links`:
  * `urn:org.restfulobject/rels:update` - An endpoint to change this service group.
  * `urn:org.restfulobject/rels:delete` - An endpoint to delete this service group.
 """
+from typing import Any, Mapping
 
 from cmk.utils import version
 
-from cmk.gui import watolib
+import cmk.gui.watolib.groups as groups
 from cmk.gui.groups import load_service_group_information
 from cmk.gui.http import Response
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.endpoints.utils import (
     fetch_group,
     fetch_specific_groups,
@@ -43,9 +45,15 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
-from cmk.gui.watolib.groups import add_group, edit_group
 
 PERMISSIONS = permissions.Perm("wato.groups")
+
+RW_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.edit"),
+        PERMISSIONS,
+    ]
+)
 
 
 @Endpoint(
@@ -55,16 +63,17 @@ PERMISSIONS = permissions.Perm("wato.groups")
     etag="output",
     request_schema=request_schemas.InputServiceGroup,
     response_schema=response_schemas.DomainObject,
-    permissions_required=PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
-def create(params):
+def create(params: Mapping[str, Any]) -> Response:
     """Create a service group"""
+    user.need_permission("wato.edit")
     body = params["body"]
     name = body["name"]
     group_details = {"alias": body.get("alias")}
     if version.is_managed_edition():
         group_details = update_customer_info(group_details, body["customer"])
-    add_group(name, "service", group_details)
+    groups.add_group(name, "service", group_details)
     group = fetch_group(name, "service")
     return serve_group(group, serialize_group("service_group_config"))
 
@@ -75,17 +84,18 @@ def create(params):
     method="post",
     request_schema=request_schemas.BulkInputServiceGroup,
     response_schema=response_schemas.DomainObjectCollection,
-    permissions_required=PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
-def bulk_create(params):
+def bulk_create(params: Mapping[str, Any]) -> Response:
     """Bulk create service groups"""
+    user.need_permission("wato.edit")
     body = params["body"]
     entries = body["entries"]
     service_group_details = prepare_groups("service", entries)
 
     service_group_names = []
     for group_name, group_details in service_group_details.items():
-        add_group(group_name, "service", group_details)
+        groups.add_group(group_name, "service", group_details)
         service_group_names.append(group_name)
 
     service_groups = fetch_specific_groups(service_group_names, "service")
@@ -97,9 +107,11 @@ def bulk_create(params):
     ".../collection",
     method="get",
     response_schema=response_schemas.LinkedValueDomainObjectCollection,
+    permissions_required=PERMISSIONS,
 )
-def list_groups(params):
+def list_groups(params: Mapping[str, Any]) -> Response:
     """Show all service groups"""
+    user.need_permission("wato.groups")
     collection = [
         {"id": k, "alias": v["alias"]} for k, v in load_service_group_information().items()
     ]
@@ -115,8 +127,9 @@ def list_groups(params):
     path_params=[NAME_FIELD],
     permissions_required=PERMISSIONS,
 )
-def show_group(params):
+def show_group(params: Mapping[str, Any]) -> Response:
     """Show a service group"""
+    user.need_permission("wato.groups")
     name = params["name"]
     group = fetch_group(name, "service")
     return serve_group(group, serialize_group("service_group_config"))
@@ -128,12 +141,13 @@ def show_group(params):
     method="delete",
     path_params=[NAME_FIELD],
     output_empty=True,
-    permissions_required=PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
-def delete(params):
+def delete(params: Mapping[str, Any]) -> Response:
     """Delete a service group"""
+    user.need_permission("wato.edit")
     name = params["name"]
-    watolib.delete_group(name, group_type="service")
+    groups.delete_group(name, group_type="service")
     return Response(status=204)
 
 
@@ -143,10 +157,11 @@ def delete(params):
     method="post",
     request_schema=request_schemas.BulkDeleteServiceGroup,
     output_empty=True,
-    permissions_required=PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
-def bulk_delete(params):
+def bulk_delete(params: Mapping[str, Any]) -> Response:
     """Bulk delete service groups"""
+    user.need_permission("wato.edit")
     body = params["body"]
     entries = body["entries"]
     for group_name in entries:
@@ -154,7 +169,7 @@ def bulk_delete(params):
             group_name, "service", status=400, message="service group %s was not found" % group_name
         )
     for group_name in entries:
-        watolib.delete_group(group_name, group_type="service")
+        groups.delete_group(group_name, group_type="service")
     return Response(status=204)
 
 
@@ -166,14 +181,15 @@ def bulk_delete(params):
     etag="both",
     response_schema=response_schemas.ServiceGroup,
     request_schema=request_schemas.UpdateGroup,
-    permissions_required=PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
-def update(params):
+def update(params: Mapping[str, Any]) -> Response:
     """Update a service group"""
+    user.need_permission("wato.edit")
     name = params["name"]
     group = fetch_group(name, "service")
     constructors.require_etag(constructors.etag_of_dict(group))
-    edit_group(name, "service", updated_group_details(name, "service", params["body"]))
+    groups.edit_group(name, "service", updated_group_details(name, "service", params["body"]))
     group = fetch_group(name, "service")
     return serve_group(group, serialize_group("service_group_config"))
 
@@ -184,15 +200,16 @@ def update(params):
     method="put",
     request_schema=request_schemas.BulkUpdateServiceGroup,
     response_schema=response_schemas.DomainObjectCollection,
-    permissions_required=PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
-def bulk_update(params):
+def bulk_update(params: Mapping[str, Any]) -> Response:
     """Bulk update service groups
 
     Please be aware that when doing bulk updates, it is not possible to prevent the
     [Updating Values]("lost update problem"), which is normally prevented by the ETag locking
     mechanism. Use at your own risk.
     """
+    user.need_permission("wato.edit")
     body = params["body"]
     entries = body["entries"]
     updated_service_groups = update_groups("service", entries)

@@ -15,18 +15,18 @@ def parse(string_table: StringTable) -> gcp.Section:
 
 register.agent_section(name="gcp_service_redis", parse_function=parse)
 
+service_namer = gcp.service_name_factory("Redis")
+ASSET_TYPE = "redis.googleapis.com/Instance"
+
 
 def discover(
     section_gcp_service_redis: Optional[gcp.Section], section_gcp_assets: Optional[gcp.AssetSection]
 ) -> DiscoveryResult:
-    if section_gcp_assets is None:
+    if section_gcp_assets is None or not section_gcp_assets.config.is_enabled("redis"):
         return
-    asset_type = "redis.googleapis.com/Instance"
-    instances = [a for a in section_gcp_assets if a.asset.asset_type == asset_type]
-    for instance in instances:
+    instances = section_gcp_assets[ASSET_TYPE]
+    for item, instance in instances.items():
         data = instance.asset.resource.data
-        # so this is long string because display name and UID are not the same.
-        item = data["name"]
         labels = []
         labels.append(ServiceLabel("gcp/location", data["locationId"]))
         labels.append(ServiceLabel("gcp/projectId", section_gcp_assets.project))
@@ -47,25 +47,24 @@ def check_cpu_util(
     section_gcp_service_redis: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_redis is None:
-        return
     metrics = {
         "util": gcp.MetricSpec(
             "redis.googleapis.com/stats/cpu_utilization", "Utilization", render.percent, scale=1e2
         )
     }
-    timeseries = section_gcp_service_redis.get(item, gcp.SectionItem(rows=[])).rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_redis, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(
     name="gcp_redis_cpu",
     sections=["gcp_service_redis", "gcp_assets"],
-    service_name="GCP Redis CPU: %s",
+    service_name=service_namer("CPU"),
     check_ruleset_name="gcp_redis_cpu",
     discovery_function=discover,
     check_function=check_cpu_util,
-    check_default_parameters={"util": None},
+    check_default_parameters={"util": (80.0, 90.0)},
 )
 
 
@@ -75,8 +74,6 @@ def check_memory_util(
     section_gcp_service_redis: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_redis is None:
-        return
     metrics = {
         "memory_util": gcp.MetricSpec(
             "redis.googleapis.com/stats/memory/usage_ratio",
@@ -91,18 +88,19 @@ def check_memory_util(
             scale=1e2,
         ),
     }
-    timeseries = section_gcp_service_redis.get(item, gcp.SectionItem(rows=[])).rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_redis, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(
     name="gcp_redis_memory",
     sections=["gcp_service_redis", "gcp_assets"],
-    service_name="GCP Redis Memory: %s",
+    service_name=service_namer("memory"),
     check_ruleset_name="gcp_redis_memory",
     discovery_function=discover,
     check_function=check_memory_util,
-    check_default_parameters={"memory_util": None, "system_memory_util": None},
+    check_default_parameters={"memory_util": (80.0, 90.0), "system_memory_util": (80.0, 90.0)},
 )
 
 
@@ -113,6 +111,8 @@ def check_hitratio(
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
     if section_gcp_service_redis is None:
+        return
+    if section_gcp_assets is None or item not in section_gcp_assets[ASSET_TYPE]:
         return
     metric = gcp.MetricSpec(
         "redis.googleapis.com/stats/cache_hit_ratio",
@@ -127,7 +127,7 @@ def check_hitratio(
 register.check_plugin(
     name="gcp_redis_hitratio",
     sections=["gcp_service_redis", "gcp_assets"],
-    service_name="GCP Redis Hitratio: %s",
+    service_name=service_namer("hitratio"),
     check_ruleset_name="redis_hitratio",
     discovery_function=discover,
     check_function=check_hitratio,

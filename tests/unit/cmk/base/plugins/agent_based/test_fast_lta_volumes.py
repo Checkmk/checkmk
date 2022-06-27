@@ -7,6 +7,7 @@ import pytest
 from cmk.utils.type_defs import CheckPluginName, SectionName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 parsed = {"Archiv_Test": [("Archiv_Test", 953674.31640625, 944137.5732421875, 0)]}
 info = [[["Archiv_Test", "1000000000000", "10000000000"], ["Archiv_Test_1", "", ""]]]
@@ -46,8 +47,8 @@ def test_discovery_fast_lta_volumes(discover_fast_lta_volumes) -> None:
 
 
 def test_check_fast_lta_volumes(check_fast_lta_volumes) -> None:
-    assert list(check_fast_lta_volumes("Archiv_Test", {}, parsed)) == [
-        Result(state=State.OK, summary="1.0% used (9.31 of 931.32 GB)"),
+    assert list(check_fast_lta_volumes("Archiv_Test", FILESYSTEM_DEFAULT_PARAMS, parsed)) == [
+        Result(state=State.OK, summary="Used: 1.00% - 9.31 GiB of 931 GiB"),
         Metric(
             "fs_used",
             9536.7431640625,

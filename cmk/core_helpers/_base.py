@@ -6,7 +6,6 @@
 
 import abc
 import logging
-from types import TracebackType
 from typing import Any, final, Final, Generic, Literal, Mapping, Optional, Sequence, Type, TypeVar
 
 from cmk.utils.check_utils import ActiveCheckResult
@@ -37,11 +36,11 @@ class Fetcher(Generic[TRawData], abc.ABC):
 
     def __init__(
         self,
-        file_cache: FileCache,
+        file_cache: FileCache[TRawData],
         logger: logging.Logger,
     ) -> None:
         super().__init__()
-        self.file_cache: Final[FileCache[TRawData]] = file_cache
+        self.file_cache: Final = file_cache
         self._logger = logger
 
     @final
@@ -65,12 +64,7 @@ class Fetcher(Generic[TRawData], abc.ABC):
         return self
 
     @final
-    def __exit__(
-        self,
-        exc_type: Optional[Type[BaseException]],
-        exc_value: Optional[BaseException],
-        traceback: Optional[TracebackType],
-    ) -> Literal[False]:
+    def __exit__(self, *exc_info: object) -> Literal[False]:
         """Destroy the data source. Only needed if simulation mode is
         disabled"""
         if self.file_cache.simulation:
@@ -95,18 +89,9 @@ class Fetcher(Generic[TRawData], abc.ABC):
             return result.Error(exc)
 
     def _fetch(self, mode: Mode) -> TRawData:
-        self._logger.debug(
-            "[%s] Fetch with cache settings: %r",
-            self.__class__.__name__,
-            self.file_cache,
-        )
         raw_data = self.file_cache.read(mode)
         if raw_data is not None:
-            self._logger.log(VERBOSE, "[%s] Use cached data", self.__class__.__name__)
             return raw_data
-
-        if self.file_cache.simulation:
-            raise MKFetcherError("Got no data (Simulation mode enabled and no cached data present)")
 
         self._logger.log(VERBOSE, "[%s] Execute data source", self.__class__.__name__)
 

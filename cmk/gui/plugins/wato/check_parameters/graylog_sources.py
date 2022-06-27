@@ -74,7 +74,7 @@ def _parameter_valuespec_graylog_sources():
             (
                 "msgs_diff",
                 Age(
-                    title=_("Timespan for difference calculation of total number of " "messages"),
+                    title=_("Timespan for difference calculation of total number of messages"),
                     display=["days", "hours", "minutes"],
                     default_value=1800,
                 ),

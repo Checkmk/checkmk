@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import json
 import re
 from contextlib import contextmanager, nullcontext
@@ -23,19 +25,24 @@ from typing import (
     Union,
 )
 
-import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.weblib as weblib
-from cmk.gui.globals import active_config, html, output_funnel, request, response
-from cmk.gui.htmllib import foldable_container, HTML
+from cmk.gui.config import active_config
+from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.tag_rendering import HTMLContent
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.num_split import key_num_split
 from cmk.gui.utils.escaping import escape_to_html_permissive
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri, requested_file_name
 
 if TYPE_CHECKING:
-    from cmk.gui.htmllib import HTMLContent
     from cmk.gui.type_defs import CSSSpec
 
 
@@ -82,7 +89,7 @@ class Foldable(Enum):
 @contextmanager
 def table_element(
     table_id: Optional[str] = None,
-    title: Optional["HTMLContent"] = None,
+    title: Optional[HTMLContent] = None,
     searchable: bool = True,
     sortable: bool = True,
     foldable: Foldable = Foldable.NOT_FOLDABLE,
@@ -145,7 +152,7 @@ class Table:
     def __init__(
         self,
         table_id: Optional[str] = None,
-        title: Optional["HTMLContent"] = None,
+        title: Optional[HTMLContent] = None,
         searchable: bool = True,
         sortable: bool = True,
         foldable: Foldable = Foldable.NOT_FOLDABLE,
@@ -195,13 +202,13 @@ class Table:
 
         self.empty_text = empty_text if empty_text is not None else _("No entries.")
         self.help = help
-        self.css = css
+        self.css = [] if css is None else [css]
         self.mode = "row"
         self.isopen: Final = isopen
 
     def row(
         self,
-        css: Optional["CSSSpec"] = None,
+        css: "Optional[CSSSpec]" = None,
         state: int = 0,
         collect_headers: bool = True,
         fixed: bool = False,
@@ -211,14 +218,14 @@ class Table:
     ) -> None:
         self._finish_previous()
         self.next_func = lambda: self._add_row(
-            css, state, collect_headers, fixed, id_, onmouseover, onmouseout
+            [] if css is None else css, state, collect_headers, fixed, id_, onmouseover, onmouseout
         )
 
     def cell(
         self,
-        title: "HTMLContent" = "",
-        text: "HTMLContent" = "",
-        css: Optional["CSSSpec"] = None,
+        title: HTMLContent = "",
+        text: HTMLContent = "",
+        css: "Optional[CSSSpec]" = None,
         help_txt: Optional[str] = None,
         colspan: Optional[int] = None,
         sortable: bool = True,
@@ -227,7 +234,7 @@ class Table:
         self.next_func = lambda: self._add_cell(
             title=title,
             text=text,
-            css=css,
+            css=[] if css is None else css,
             help_txt=help_txt,
             colspan=colspan,
             sortable=sortable,
@@ -239,13 +246,13 @@ class Table:
 
     def _add_row(
         self,
-        css: Optional["CSSSpec"] = None,
-        state: int = 0,
-        collect_headers: bool = True,
-        fixed: bool = False,
-        id_: Optional[str] = None,
-        onmouseover: Optional[str] = None,
-        onmouseout: Optional[str] = None,
+        css: "CSSSpec",
+        state: int,
+        collect_headers: bool,
+        fixed: bool,
+        id_: Optional[str],
+        onmouseover: Optional[str],
+        onmouseout: Optional[str],
     ) -> None:
         if self.next_header:
             self.rows.append(
@@ -271,12 +278,12 @@ class Table:
 
     def _add_cell(
         self,
-        title: "HTMLContent" = "",
-        text: "HTMLContent" = "",
-        css: Optional["CSSSpec"] = None,
-        help_txt: Optional[str] = None,
-        colspan: Optional[int] = None,
-        sortable: bool = True,
+        title: HTMLContent,
+        text: HTMLContent,
+        css: "CSSSpec",
+        help_txt: Optional[str],
+        colspan: Optional[int],
+        sortable: bool,
     ):
         if isinstance(text, HTML):
             content = text
@@ -315,7 +322,7 @@ class Table:
         """
         self.next_header = title
 
-    def _end(self) -> None:
+    def _end(self) -> None:  # pylint: disable=too-many-branches
         if not self.rows and self.options["omit_if_empty"]:
             return
 
@@ -335,7 +342,7 @@ class Table:
                     id_=self.id,
                     isopen=self.isopen,
                     indent=False,
-                    title=html.render_h3(self.title, class_=["treeangle", "title"]),
+                    title=HTMLWriter.render_h3(self.title, class_=["treeangle", "title"]),
                     save_state=self.options["foldable"] == Foldable.FOLDABLE_SAVE_STATE,
                 )
             else:
@@ -449,7 +456,7 @@ class Table:
     def _get_sort_column(self, table_opts: Dict[str, Any]) -> Optional[str]:
         return request.get_ascii_input("_%s_sort" % self.id, table_opts.get("sort"))
 
-    def _write_table(
+    def _write_table(  # pylint: disable=too-many-branches
         self,
         rows: TableRows,
         num_rows_unlimited: int,
@@ -469,7 +476,7 @@ class Table:
         if self.options["omit_empty_columns"]:
             num_cols -= len([v for v in empty_columns if v])
 
-        html.open_table(class_=["data", "oddeven", self.css])
+        html.open_table(class_=["data", "oddeven"] + self.css)
 
         # If we have no group headers then paint the headers now
         if self.rows and not isinstance(self.rows[0], GroupHeader):
@@ -587,7 +594,7 @@ class Table:
 
         response.set_data("".join(resp))
 
-    def _render_headers(
+    def _render_headers(  # pylint: disable=too-many-branches
         self, actions_enabled: bool, actions_visible: bool, empty_columns: List[bool]
     ) -> None:
         if self.options["omit_headers"]:
@@ -602,7 +609,7 @@ class Table:
                 continue
 
             if header.help_txt:
-                header_title: HTML = html.render_span(header.title, title=header.help_txt)
+                header_title: HTML = HTMLWriter.render_span(header.title, title=header.help_txt)
             else:
                 header_title = header.title
 
@@ -703,7 +710,7 @@ def _sort_rows(rows: TableRows, sort_col: int, sort_reverse: int) -> TableRows:
     # see the table in the first place.
     try:
         rows.sort(
-            key=lambda x: utils.key_num_split(escaping.strip_tags(x[0][sort_col][0])),
+            key=lambda x: key_num_split(escaping.strip_tags(x[0][sort_col][0])),
             reverse=sort_reverse == 1,
         )
     except IndexError:

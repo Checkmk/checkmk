@@ -7,15 +7,8 @@
 import json
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
@@ -32,14 +25,14 @@ def parse_cadvisor_df(info):
     return parsed
 
 
-def check_cadvisor_df(item, params, parsed):
+def check_cadvisor_df(item, _params, parsed):
     size_mb = parsed["df_size"] / 1024**2
     avail_mb = size_mb - (parsed["df_used"] / 1024**2)
     reserved_mb = 0
     inodes_total = parsed["inodes_total"]
     inodes_free = parsed["inodes_free"]
     return df_check_filesystem_single(
-        item, size_mb, avail_mb, reserved_mb, inodes_total, inodes_free, params
+        item, size_mb, avail_mb, reserved_mb, inodes_total, inodes_free, FILESYSTEM_DEFAULT_PARAMS
     )
 
 

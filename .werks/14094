@@ -1,0 +1,12 @@
+Title: Permission error during agent controller installation
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1653042616
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+A regression in Checkmk 2.1.0b9 could lead to a permission error during the installation of the Checkmk agent.

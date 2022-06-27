@@ -6,13 +6,13 @@
 """Verify or find out a hosts agent related configuration"""
 
 import json
-from typing import List, Optional, Type
+from typing import Collection, List, Optional, Type
 
 import cmk.gui.forms as forms
-import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
-from cmk.gui.globals import html, request, user_errors
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -22,7 +22,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.plugins.wato.utils import (
     flash,
     mode_registry,
@@ -31,8 +31,10 @@ from cmk.gui.plugins.wato.utils import (
     SNMPCredentials,
     WatoMode,
 )
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
+from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
@@ -44,16 +46,17 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.check_mk_automations import diag_host
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, Host
 
 
 @mode_registry.register
 class ModeDiagHost(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "diag_host"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts", "diag_host"]
 
     @classmethod
@@ -74,13 +77,13 @@ class ModeDiagHost(WatoMode):
 
     def _from_vars(self):
         self._hostname = request.get_ascii_input_mandatory("host")
-        self._host = watolib.Folder.current().load_host(self._hostname)
+        self._host = Folder.current().load_host(self._hostname)
         self._host.need_permission("read")
 
         if self._host.is_cluster():
             raise MKGeneralException(_("This page does not support cluster hosts."))
 
-    def title(self):
+    def title(self) -> str:
         return _("Test connection to host") + " " + self._hostname
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -160,13 +163,18 @@ class ModeDiagHost(WatoMode):
             elif "snmp_community" in new:
                 return_message.append(_("SNMP credentials"))
 
+            # The hostname field used by this dialog is not a host_attribute. Remove it here to
+            # prevent data corruption.
+            new = new.copy()
+            del new["hostname"]
+
             self._host.update_attributes(new)
             flash(_("Updated attributes: ") + ", ".join(return_message))
             return redirect(
                 mode_url(
                     "edit_host",
                     host=self._hostname,
-                    folder=watolib.Folder.current().path(),
+                    folder=Folder.current().path(),
                 )
             )
         return None
@@ -180,7 +188,7 @@ class ModeDiagHost(WatoMode):
         rule_vars = vs_rules.from_html_vars("vs_rules")
         vs_rules.validate_value(rule_vars, "vs_rules")
 
-    def page(self):
+    def page(self) -> None:
         html.open_div(class_="diag_host")
         html.open_table()
         html.open_tr()
@@ -332,7 +340,7 @@ class ModeDiagHost(WatoMode):
                         maxvalue=65535,
                         default_value=6556,
                         title=_('Checkmk Agent Port (<a href="%s">Rules</a>)')
-                        % watolib.folder_preserving_link(
+                        % folder_preserving_link(
                             [("mode", "edit_ruleset"), ("varname", "agent_ports")]
                         ),
                         help=_(
@@ -350,7 +358,7 @@ class ModeDiagHost(WatoMode):
                         display_format="%.0f",  # show values consistent to
                         size=2,  # SNMP-Timeout
                         title=_('TCP Connection Timeout (<a href="%s">Rules</a>)')
-                        % watolib.folder_preserving_link(
+                        % folder_preserving_link(
                             [("mode", "edit_ruleset"), ("varname", "tcp_connect_timeouts")]
                         ),
                         help=_(
@@ -364,7 +372,7 @@ class ModeDiagHost(WatoMode):
                     "snmp_timeout",
                     Integer(
                         title=_('SNMP-Timeout (<a href="%s">Rules</a>)')
-                        % watolib.folder_preserving_link(
+                        % folder_preserving_link(
                             [("mode", "edit_ruleset"), ("varname", "snmp_timing")]
                         ),
                         help=_(
@@ -381,7 +389,7 @@ class ModeDiagHost(WatoMode):
                     "snmp_retries",
                     Integer(
                         title=_('SNMP-Retries (<a href="%s">Rules</a>)')
-                        % watolib.folder_preserving_link(
+                        % folder_preserving_link(
                             [("mode", "edit_ruleset"), ("varname", "snmp_timing")]
                         ),
                         default_value=5,
@@ -395,7 +403,8 @@ class ModeDiagHost(WatoMode):
 
 @page_registry.register_page("wato_ajax_diag_host")
 class ModeAjaxDiagHost(AjaxPage):
-    def page(self):
+    def page(self) -> PageResult:
+        check_csrf_token()
         if not user.may("wato.diag_host"):
             raise MKAuthException(_("You are not permitted to perform this action."))
 
@@ -408,7 +417,7 @@ class ModeAjaxDiagHost(AjaxPage):
         if not hostname:
             raise MKGeneralException(_("The hostname is missing."))
 
-        host = watolib.Host.host(hostname)
+        host = Host.host(hostname)
 
         if not host:
             raise MKGeneralException(_("The given host does not exist."))

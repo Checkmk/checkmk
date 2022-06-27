@@ -9,8 +9,14 @@ import pytest
 from tests.testlib import on_time
 
 import cmk.base.plugins.agent_based.docker_container_status as docker
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResults, Metric, Result, Service
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    IgnoreResults,
+    Metric,
+    Result,
+    Service,
+    State,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.utils import uptime
 from cmk.base.plugins.agent_based.utils.docker import AgentOutputMalformatted
 
@@ -79,37 +85,50 @@ PARSED = {
     "Status": "running",
 }
 PARSED_NOT_RUNNING = {"Status": "stopped"}
+SECTION_MULTIPLE_NODES = docker._MultipleNodesMarker()
 
 
-@pytest.mark.parametrize(
-    "string_table, parse_type",
-    [
-        (STRING_TABLE_WITH_VERSION, dict),
-    ],
-)
-def test_parse_docker_container_status(string_table, parse_type):
-    actual_parsed = docker.parse_docker_container_status(string_table)
-    assert actual_parsed == PARSED
-    assert isinstance(actual_parsed, parse_type)
+def test_parse_docker_container_status() -> None:
+    assert docker.parse_docker_container_status(STRING_TABLE_WITH_VERSION) == PARSED
 
 
-@pytest.mark.parametrize(
-    "string_table, exception_type",
-    [
-        (STRING_TABLE_WITHOUT_VERSION, AgentOutputMalformatted),
-    ],
-)
-def test_parse_docker_container_status_legacy_raises(string_table, exception_type):
-    with pytest.raises(exception_type):
-        docker.parse_docker_container_status(string_table)
+def test_parse_docker_container_status_legacy_raises() -> None:
+    with pytest.raises(AgentOutputMalformatted):
+        docker.parse_docker_container_status(STRING_TABLE_WITHOUT_VERSION)
 
 
-def _test_discovery(discovery_function, section, expected_discovery):
+def test_parse_docker_container_status_with_oci_error() -> None:
+    assert (
+        docker.parse_docker_container_status(
+            [
+                *STRING_TABLE_WITH_VERSION,
+                ["OCI runtime exec failed: exec failed:"],
+            ]
+        )
+        == PARSED
+    )
+
+
+def test_parse_docker_container_status_multiple_nodes() -> None:
+    assert isinstance(
+        docker.parse_docker_container_status(
+            [
+                *STRING_TABLE_WITH_VERSION,
+                *STRING_TABLE_WITH_VERSION,
+            ]
+        ),
+        docker._MultipleNodesMarker,
+    )
+
+
+def _test_discovery(
+    discovery_function, section: docker.SectionStandard, expected_discovery
+) -> None:
     for status in ["running", "exited"]:
         assert list(discovery_function({**section, "Status": status})) == expected_discovery
 
 
-def test_discovery_docker_container_status():
+def test_discovery_docker_container_status() -> None:
     _test_discovery(
         docker.discover_docker_container_status,
         PARSED,
@@ -117,9 +136,30 @@ def test_discovery_docker_container_status():
     )
 
 
-def test_check_docker_container_status():
-    expected_results = [Result(state=state.OK, summary="Container running")]
+def test_discover_docker_container_status_multiple_nodes() -> None:
+    assert list(docker.discover_docker_container_status(SECTION_MULTIPLE_NODES)) == [
+        Service(
+            item=None,
+            parameters={},
+            labels=[],
+        )
+    ]
+
+
+def test_check_docker_container_status() -> None:
+    expected_results = [Result(state=State.OK, summary="Container running")]
     assert list(docker.check_docker_container_status(PARSED)) == expected_results
+
+
+def test_check_docker_container_status_multiple_nodes() -> None:
+    results = list(docker.check_docker_container_status(SECTION_MULTIPLE_NODES))
+    assert len(results) == 1
+    assert isinstance((only_res := results[0]), Result)
+    assert only_res.state is State.CRIT
+    assert (
+        only_res.summary
+        == "Found data from multiple Docker nodes - see service details for more information"
+    )
 
 
 @pytest.mark.parametrize(
@@ -137,7 +177,7 @@ def test_check_docker_container_status():
         ),
     ],
 )
-def test_discovery_docker_container_status_uptime(section_uptime, expected_services):
+def test_discovery_docker_container_status_uptime(section_uptime, expected_services) -> None:
     _test_discovery(
         lambda parsed: docker.discover_docker_container_status_uptime(parsed, section_uptime),
         PARSED,
@@ -145,49 +185,77 @@ def test_discovery_docker_container_status_uptime(section_uptime, expected_servi
     )
 
 
+def test_discover_docker_container_status_uptime_multiple_nodes() -> None:
+    assert not list(
+        docker.discover_docker_container_status_uptime(
+            SECTION_MULTIPLE_NODES,
+            None,
+        ),
+    )
+
+
 @pytest.mark.parametrize(
-    "params, expected_results",
+    ["params", "section", "expected_results"],
     [
         (
             {},
+            PARSED,
             [
-                Result(state=state.OK, summary="Up since Jun 05 2019 08:58:07"),
-                Result(state=state.OK, summary="Uptime: 1 hour 1 minute"),
+                Result(state=State.OK, summary="Up since Jun 05 2019 08:58:07"),
+                Result(state=State.OK, summary="Uptime: 1 hour 1 minute"),
                 Metric("uptime", 3713.0),
             ],
         ),
         (
             {"min": (1000, 2000)},
+            PARSED,
             [
-                Result(state=state.OK, summary="Up since Jun 05 2019 08:58:07"),
-                Result(state=state.OK, summary="Uptime: 1 hour 1 minute"),
+                Result(state=State.OK, summary="Up since Jun 05 2019 08:58:07"),
+                Result(state=State.OK, summary="Uptime: 1 hour 1 minute"),
                 Metric("uptime", 3713.0),
             ],
         ),
         (
             {"max": (1000, 2000)},
+            PARSED,
             [
-                Result(state=state.OK, summary="Up since Jun 05 2019 08:58:07"),
+                Result(state=State.OK, summary="Up since Jun 05 2019 08:58:07"),
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary="Uptime: 1 hour 1 minute (warn/crit at 16 minutes 40 seconds/33 minutes 20 seconds)",
                 ),
                 Metric("uptime", 3713.0, levels=(1000.0, 2000.0)),
             ],
         ),
+        pytest.param(
+            {},
+            SECTION_MULTIPLE_NODES,
+            [],
+            id="multiple nodes",
+        ),
     ],
 )
-def test_check_docker_container_status_uptime(params, expected_results):
+def test_check_docker_container_status_uptime(
+    params,
+    section: docker.Section,
+    expected_results: CheckResult,
+) -> None:
     with on_time(*NOW_SIMULATED):
-        yielded_results = list(docker.check_docker_container_status_uptime(params, PARSED, None))
+        yielded_results = list(docker.check_docker_container_status_uptime(params, section, None))
         assert expected_results == yielded_results
 
 
-def test_discover_docker_container_status_health():
+def test_discover_docker_container_status_health() -> None:
     _test_discovery(
         docker.discover_docker_container_status_health,
         PARSED,
         [Service()],
+    )
+
+
+def test_discover_docker_container_status_health_multiple_nodes() -> None:
+    assert not list(
+        docker.discover_docker_container_status_health(SECTION_MULTIPLE_NODES),
     )
 
 
@@ -198,16 +266,16 @@ def test_discover_docker_container_status_health():
             PARSED,
             [
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary="Health status: Unhealthy",
                 ),
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="Last health report: mysqld is alive",
                 ),
-                Result(state=state.CRIT, summary="Failing streak: 0"),
+                Result(state=State.CRIT, summary="Failing streak: 0"),
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="Health test: CMD-SHELL /healthcheck.sh",
                 ),
             ],
@@ -226,17 +294,22 @@ def test_discover_docker_container_status_health():
                 "Status": "running",
             },
             [
-                Result(state=state.OK, summary="Health status: Healthy"),
-                Result(state=state.WARN, summary="Last health report: no output"),
+                Result(state=State.OK, summary="Health status: Healthy"),
+                Result(state=State.WARN, summary="Last health report: no output"),
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="Health test: CMD-SHELL",
                     details="Health test: CMD-SHELL #!/bin/bash\n\nexit $(my_healthcheck)\n",
                 ),
             ],
         ),
+        pytest.param(
+            SECTION_MULTIPLE_NODES,
+            [],
+            id="multiple nodes",
+        ),
     ],
 )
-def test_check_docker_container_status_health(section, expected):
+def test_check_docker_container_status_health(section, expected) -> None:
     yielded_results = list(docker.check_docker_container_status_health(section))
     assert yielded_results == expected

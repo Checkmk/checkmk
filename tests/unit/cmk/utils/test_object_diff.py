@@ -7,38 +7,38 @@
 from cmk.utils.object_diff import make_object_diff
 
 
-def test_make_object_diff_nothing_changed():
+def test_make_object_diff_nothing_changed() -> None:
     assert make_object_diff(None, None) == "Nothing was changed."
     assert make_object_diff({}, {}) == "Nothing was changed."
     assert make_object_diff([], []) == "Nothing was changed."
 
 
-def test_make_object_diff_str():
+def test_make_object_diff_str() -> None:
     assert make_object_diff("a", "b") == 'Value of object changed from "a" to "b".'
 
 
-def test_make_object_diff_new_dict_key():
+def test_make_object_diff_new_dict_key() -> None:
     assert make_object_diff({}, {"a": "1"}) == 'Attribute "a" with value "1" added.'
 
 
-def test_make_object_diff_removed_dict_key():
+def test_make_object_diff_removed_dict_key() -> None:
     assert make_object_diff({"a": "1"}, {}) == 'Attribute "a" with value "1" removed.'
 
 
-def test_make_object_diff_changed_dict_value():
+def test_make_object_diff_changed_dict_value() -> None:
     assert make_object_diff({"a": "0"}, {"a": "1"}) == 'Value of "a" changed from "0" to "1".'
 
 
-def test_make_object_diff_multiple_changes():
+def test_make_object_diff_multiple_changes() -> None:
     assert (
         make_object_diff({"a": "0", "b": "1"}, {"a": "1"})
         == 'Attribute "b" with value "1" removed.\nValue of "a" changed from "0" to "1".'
     )
 
 
-def test_make_object_diff_list_remove_item():
+def test_make_object_diff_list_remove_item() -> None:
     assert make_object_diff([1, 2], [1]) == "Item 1 with value 2 removed."
 
 
-def test_make_object_diff_list_remove_dict():
+def test_make_object_diff_list_remove_dict() -> None:
     assert make_object_diff([1, {"1": "a"}], [1]) == "Item 1 with value {'1': 'a'} removed."

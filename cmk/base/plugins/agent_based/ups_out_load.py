@@ -28,8 +28,14 @@ class UpsPowerVoltage(NamedTuple):
 Section = Dict[str, UpsPowerVoltage]
 
 
+def int_or_zero(value: str) -> int:
+    if value == "":
+        return 0
+    return int(value)
+
+
 def parse_ups_load(string_table: List[StringTable]) -> Section:
-    return {i: UpsPowerVoltage(int(p), int(v)) for v, p, i in string_table[0]}
+    return {i: UpsPowerVoltage(int_or_zero(p), int_or_zero(v)) for v, p, i in string_table[0]}
 
 
 register.snmp_section(

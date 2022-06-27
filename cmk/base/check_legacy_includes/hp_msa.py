@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+
 import time
 
 import cmk.base.plugins.agent_based.utils.hp_msa as hp_msa
@@ -68,6 +68,7 @@ def check_hp_msa_health(item, _no_params, parsed):
                 infotexts.append("speed: %s RPM" % (parsed[item]["rpm"]))
 
         return health_state, ", ".join(infotexts)
+    return None
 
 
 def inventory_hp_msa_io(parsed):
@@ -75,7 +76,7 @@ def inventory_hp_msa_io(parsed):
 
 
 def check_hp_msa_io(item, params, parsed):
-    disks = {}
+    disks: dict = {}
     now = time.time()
     for key, values in parsed.items():
         disk = disks.setdefault(key, {})

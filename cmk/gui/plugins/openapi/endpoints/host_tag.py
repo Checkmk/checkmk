@@ -15,12 +15,12 @@ You can find an introduction to hosts including host tags and host tag groups in
 """
 
 import json
-from typing import Any, Dict
+from typing import Any, Dict, Mapping
 
 from cmk.utils.tags import BuiltinTagConfig, TagGroup, TaggroupSpec
 
-import cmk.gui.watolib as watolib
 from cmk.gui.http import Response
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
@@ -29,6 +29,8 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
+from cmk.gui.watolib.host_attributes import undeclare_host_tag_attribute
+from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.tags import (
     change_host_tags_in_folders,
     edit_tag_group,
@@ -47,6 +49,14 @@ from cmk import fields
 
 PERMISSIONS = permissions.AllPerm(
     [
+        permissions.Perm("wato.hosttags"),
+        permissions.Optional(permissions.Perm("wato.all_folders")),
+    ]
+)
+
+RW_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.edit"),
         permissions.Perm("wato.hosttags"),
         permissions.Optional(permissions.Perm("wato.all_folders")),
     ]
@@ -84,10 +94,11 @@ HOST_TAG_GROUP_NAME = {
     etag="output",
     request_schema=request_schemas.InputHostTagGroup,
     response_schema=response_schemas.DomainObject,
-    permissions_required=PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
-def create_host_tag_group(params):
+def create_host_tag_group(params: Mapping[str, Any]) -> Response:
     """Create a host tag group"""
+    user.need_permission("wato.edit")
     host_tag_group_details = params["body"]
     save_tag_group(TagGroup.from_config(host_tag_group_details))
     return _serve_host_tag_group(_retrieve_group(host_tag_group_details["id"]).get_dict_format())
@@ -100,11 +111,12 @@ def create_host_tag_group(params):
     etag="output",
     path_params=[HOST_TAG_GROUP_NAME],
     response_schema=response_schemas.ConcreteHostTagGroup,
-    permissions_required=permissions.Perm("wato.hosttags"),
+    permissions_required=PERMISSIONS,
 )
-def show_host_tag_group(params):
+def show_host_tag_group(params: Mapping[str, Any]) -> Response:
     """Show a host tag group"""
     ident = params["name"]
+    user.need_permission("wato.hosttags")
     tag_group = _retrieve_group(ident=ident)
     return _serve_host_tag_group(tag_group.get_dict_format())
 
@@ -114,10 +126,11 @@ def show_host_tag_group(params):
     ".../collection",
     method="get",
     response_schema=response_schemas.DomainObjectCollection,
-    permissions_required=permissions.Perm("wato.hosttags"),
+    permissions_required=PERMISSIONS,
 )
-def list_host_tag_groups(params):
+def list_host_tag_groups(params: Mapping[str, Any]) -> Response:
     """Show all host tag groups"""
+    user.need_permission("wato.hosttags")
     tag_config = load_tag_config()
     tag_config += BuiltinTagConfig()
     tag_groups_collection = {
@@ -144,12 +157,14 @@ def list_host_tag_groups(params):
     path_params=[HOST_TAG_GROUP_NAME],
     additional_status_codes=[401, 405],
     request_schema=request_schemas.UpdateHostTagGroup,
-    permissions_required=PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
     response_schema=response_schemas.ConcreteHostTagGroup,
 )
-def update_host_tag_group(params):
+def update_host_tag_group(params: Mapping[str, Any]) -> Response:
     """Update a host tag group"""
     # TODO: ident verification mechanism with ParamDict replacement
+    user.need_permission("wato.edit")
+    user.need_permission("wato.hosttags")  # see cmk.gui.wato.pages.tags
     body = params["body"]
     ident = params["name"]
     if is_builtin(ident):
@@ -186,11 +201,12 @@ def update_host_tag_group(params):
     path_params=[HOST_TAG_GROUP_NAME],
     additional_status_codes=[405],
     query_params=[request_schemas.DeleteHostTagGroup],
-    permissions_required=PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
     output_empty=True,
 )
-def delete_host_tag_group(params):
+def delete_host_tag_group(params: Mapping[str, Any]) -> Response:
     """Delete a host tag group"""
+    user.need_permission("wato.edit")
     ident = params["name"]
     if is_builtin(ident):
         return problem(
@@ -200,7 +216,7 @@ def delete_host_tag_group(params):
         )
 
     affected = change_host_tags_in_folders(
-        OperationRemoveTagGroup(ident), TagCleanupMode.CHECK, watolib.Folder.root_folder()
+        OperationRemoveTagGroup(ident), TagCleanupMode.CHECK, Folder.root_folder()
     )
     if any(affected):
         if not params["repair"]:
@@ -212,9 +228,9 @@ def delete_host_tag_group(params):
                     "authorize Checkmk to update the relevant instances using the repair parameter"
                 ),
             )
-        watolib.host_attributes.undeclare_host_tag_attribute(ident)
+        undeclare_host_tag_attribute(ident)
         _ = change_host_tags_in_folders(
-            OperationRemoveTagGroup(ident), TagCleanupMode("delete"), watolib.Folder.root_folder()
+            OperationRemoveTagGroup(ident), TagCleanupMode("delete"), Folder.root_folder()
         )
 
     tag_config = load_tag_config()

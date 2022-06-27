@@ -22,6 +22,7 @@ def check_juniper_cpu(item, params, info):
                 "This check is obsolete and has been replaced, "
                 "please re-discover service on this host",
             )
+    return None
 
 
 check_info["juniper_cpu"] = {

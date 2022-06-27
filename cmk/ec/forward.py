@@ -55,7 +55,7 @@ def _validate_sd_name(name: str) -> bool:
 class StructuredDataName:
     """Represents SD-NAME from https://tools.ietf.org/html/rfc5424"""
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         if not _validate_sd_name(name):
             raise ValueError(f"{name} is not an RFC 5425-conform SD-NAME.")
         self.__name = name
@@ -79,7 +79,7 @@ class StructuredDataName:
 class StructuredDataID:
     """Represents SD-ID from https://tools.ietf.org/html/rfc5424"""
 
-    def __init__(self, id_: str):
+    def __init__(self, id_: str) -> None:
         if not self._validate(id_):
             raise ValueError(f"{id_} is not an RFC 5425-conform SD-ID.")
         self.__id = id_
@@ -120,7 +120,7 @@ class StructuredDataID:
 class StructuredDataValue:
     """Represents SD-VALUE from https://tools.ietf.org/html/rfc5424"""
 
-    def __init__(self, value: str):
+    def __init__(self, value: str) -> None:
         if "\n" in value:
             raise ValueError("Structured data values must not contain linebreaks.")
         self.__value = value
@@ -172,11 +172,12 @@ class SyslogMessage:
         application: str = _NILVALUE,
         proc_id: str = _NILVALUE,
         msg_id: str = _NILVALUE,
-        structured_data: StructuredData = StructuredData({}),
+        structured_data: Optional[StructuredData] = None,
         text: Optional[str] = None,
         ip_address: Optional[str] = None,
         service_level: Optional[int] = None,
     ):
+        structured_data = structured_data or StructuredData({})
         if not 0 <= facility <= 23:
             raise ValueError("Facility must be in the range 0..23 (inclusive).")
         if not 0 <= severity <= 7:

@@ -29,6 +29,7 @@ def check_emc_datadomain_nvbat(item, _no_params, info):
             infotext = "Status %s Charge Level %s%%" % (dev_state_str, dev_charge)
             perfdata = [("charge", dev_charge + "%")]
             return dev_state_rc, infotext, perfdata
+    return None
 
 
 check_info["emc_datadomain_nvbat"] = {

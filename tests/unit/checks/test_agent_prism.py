@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping, Sequence
+
 import pytest
 
 from tests.testlib import SpecialAgent
@@ -12,28 +14,44 @@ pytestmark = pytest.mark.checks
 
 
 @pytest.mark.parametrize(
-    "params,expected_args",
+    ["params", "expected_args"],
     [
-        (
-            {"username": "", "password": ""},
+        pytest.param(
+            {"username": "", "password": ("password", "")},
             ["--server", "address", "--username", "", "--password", ""],
+            id="explicit password and no port",
         ),
-        (
-            {"username": "userid", "password": "password", "port": 9440},
+        pytest.param(
+            {"username": "userid", "password": ("password", "password"), "port": 9440},
             [
                 "--server",
                 "address",
-                "--port",
-                "9440",
                 "--username",
                 "userid",
                 "--password",
                 "password",
+                "--port",
+                "9440",
             ],
+            id="explicit password and port",
+        ),
+        pytest.param(
+            {"username": "userid", "password": ("store", "prism"), "port": 9440},
+            [
+                "--server",
+                "address",
+                "--username",
+                "userid",
+                "--password",
+                ("store", "prism", "%s"),
+                "--port",
+                "9440",
+            ],
+            id="password from store and port",
         ),
     ],
 )
-def test_prism_argument_parsing(params, expected_args):
+def test_prism_argument_parsing(params: Mapping[str, Any], expected_args: Sequence[Any]) -> None:
     """Tests if all required arguments are present."""
     agent = SpecialAgent("agent_prism")
     arguments = agent.argument_func(params, "host", "address")

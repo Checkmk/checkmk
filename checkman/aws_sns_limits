@@ -1,0 +1,23 @@
+title: AWS SNS: Limits
+agents: aws
+catalog: cloud/aws
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the number of standard and FIFO topics for
+ AWS/SNS.
+
+ To make this check work, you have to configure the related special
+ agent {Amazon Web Services (AWS)}.
+
+ Default levels are set to 80, 90 percent and the default max. value is
+ set to the default value provided by AWS, ie.:
+
+ - Standard Topics: 100,000
+
+ - FIFO Topics: 1,000
+
+ These limits are user-configurable.
+
+discovery:
+ One service is created per monitored AWS region.

@@ -21,12 +21,12 @@ import cmk.utils
 import cmk.utils.paths
 import cmk.utils.store as store
 
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.watolib.changes import log_audit
+from cmk.gui.watolib.audit_log import log_audit
 
 DomainSpec = Dict
 
@@ -183,7 +183,11 @@ def _do_snapshot_maintenance():
 
 # Returns status information for snapshots or snapshots in progress
 # TODO: Remove once new changes mechanism has been implemented
-def get_snapshot_status(snapshot, validate_checksums=False, check_correct_core=True):
+def get_snapshot_status(  # pylint: disable=too-many-branches
+    snapshot,
+    validate_checksums=False,
+    check_correct_core=True,
+):
     if isinstance(snapshot, tuple):
         name, file_stream = snapshot
     else:
@@ -438,7 +442,10 @@ def _snapshot_secret() -> bytes:
         return s
 
 
-def extract_snapshot(tar: tarfile.TarFile, domains: Dict[str, DomainSpec]) -> None:
+def extract_snapshot(  # pylint: disable=too-many-branches
+    tar: tarfile.TarFile,
+    domains: Dict[str, DomainSpec],
+) -> None:
     """Used to restore a configuration snapshot for "discard changes"""
     tar_domains = {}
     for member in tar.getmembers():

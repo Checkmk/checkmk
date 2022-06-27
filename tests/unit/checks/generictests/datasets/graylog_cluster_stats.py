@@ -68,7 +68,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Allocated storage: 1.45 MB', [
+                    0, 'Allocated storage: 1.45 MiB', [
                         (
                             'mongodb_collection_storage_size', 1519616, None,
                             None, None, None
@@ -76,12 +76,12 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Total size: 2.77 MB', [
+                    0, 'Total size: 2.77 MiB', [
                         ('indexes_size', 2899968, None, None, None, None)
                     ]
                 ),
                 (
-                    0, 'Total size of uncompressed data: 2.26 MB', [
+                    0, 'Total size of uncompressed data: 2.26 MiB', [
                         (
                             'mongodb_collection_size', 2366513, None, None,
                             None, None
@@ -89,7 +89,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Average document size: 323.21 B', [
+                    0, 'Average document size: 323 B', [
                         (
                             'avg_doc_size', 323.20581808249113, None, None,
                             None, None
@@ -169,17 +169,17 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Store size: 1.07 GB', [
+                    0, 'Store size: 1.07 GiB', [
                         ('store_size', 1148947754, None, None, None, None)
                     ]
                 ),
                 (
-                    0, 'ID cache size: 0.00 B', [
+                    0, 'ID cache size: 0 B', [
                         ('id_cache_size', 0, None, None, None, None)
                     ]
                 ),
                 (
-                    0, 'Field data size: 622.02 kB', [
+                    0, 'Field data size: 622 KiB', [
                         ('field_data_size', 636952, None, None, None, None)
                     ]
                 )

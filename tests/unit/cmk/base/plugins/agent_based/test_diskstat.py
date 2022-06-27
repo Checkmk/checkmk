@@ -21,7 +21,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 
 
-def test_parse_diskstat_minimum():
+def test_parse_diskstat_minimum() -> None:
     assert (
         diskstat.parse_diskstat(
             [
@@ -32,7 +32,7 @@ def test_parse_diskstat_minimum():
     )
 
 
-def test_parse_diskstat_predictive(mocker: MockerFixture):
+def test_parse_diskstat_predictive(mocker: MockerFixture) -> None:
     # SUP-5924
     DATA = [
         ["1617784511"],
@@ -196,7 +196,7 @@ def test_parse_diskstat_predictive(mocker: MockerFixture):
         ]
 
 
-def test_parse_diskstat_simple():
+def test_parse_diskstat_simple() -> None:
     assert diskstat.parse_diskstat(
         [
             ["1439297971"],
@@ -246,7 +246,7 @@ def test_parse_diskstat_simple():
     }
 
 
-def test_parse_diskstat_dmsetup():
+def test_parse_diskstat_dmsetup() -> None:
     assert diskstat.parse_diskstat(
         [
             ["1596025224"],
@@ -383,7 +383,7 @@ def test_parse_diskstat_dmsetup():
     }
 
 
-def test_parse_diskstat_vx_dsk():
+def test_parse_diskstat_vx_dsk() -> None:
     assert diskstat.parse_diskstat(
         [
             ["1439883623"],
@@ -700,7 +700,7 @@ def test_parse_diskstat_vx_dsk():
     }
 
 
-def test_diskstat_convert_info():
+def test_diskstat_convert_info() -> None:
     section_diskstat = {
         "cciss/c0d0": {
             "timestamp": 1409133356,
@@ -1273,7 +1273,7 @@ EXP_METRICS = {
 }
 
 
-def test_compute_rates_single_disk_same_time_same_values():
+def test_compute_rates_single_disk_same_time_same_values() -> None:
     # same timestamp twice --> IgnoreResultsError twice
     with pytest.raises(IgnoreResultsError):
         diskstat._compute_rates_single_disk(
@@ -1287,7 +1287,7 @@ def test_compute_rates_single_disk_same_time_same_values():
         )
 
 
-def test_compute_rates_single_disk_diff_time_same_values():
+def test_compute_rates_single_disk_diff_time_same_values() -> None:
     # different timestamps --> IgnoreResults once
     with pytest.raises(IgnoreResultsError):
         diskstat._compute_rates_single_disk(
@@ -1307,7 +1307,7 @@ def test_compute_rates_single_disk_diff_time_same_values():
     }
 
 
-def test_compute_rates_single_disk_diff_time_diff_values():
+def test_compute_rates_single_disk_diff_time_diff_values() -> None:
     # different timestamps --> IgnoreResults once
     with pytest.raises(IgnoreResultsError):
         diskstat._compute_rates_single_disk(
@@ -1326,7 +1326,7 @@ def test_compute_rates_single_disk_diff_time_diff_values():
             assert v > 0
 
 
-def test_check_diskstat_single_item():
+def test_check_diskstat_single_item() -> None:
     with pytest.raises(IgnoreResultsError):
         list(
             diskstat.check_diskstat(
@@ -1363,7 +1363,7 @@ def test_check_diskstat_single_item():
     ]
 
 
-def test_check_diskstat_summary():
+def test_check_diskstat_summary() -> None:
     with pytest.raises(IgnoreResultsError):
         list(
             diskstat.check_diskstat(
@@ -1445,7 +1445,7 @@ def test_check_diskstat_summary():
             assert res_sum.value >= res_single.value
 
 
-def test_cluster_check_diskstat_single_item():
+def test_cluster_check_diskstat_single_item() -> None:
     with pytest.raises(IgnoreResultsError):
         list(
             diskstat.cluster_check_diskstat(
@@ -1503,7 +1503,7 @@ def test_cluster_check_diskstat_single_item():
     assert results_cluster == results_non_cluster
 
 
-def test_cluster_check_diskstat_summary():
+def test_cluster_check_diskstat_summary() -> None:
     with pytest.raises(IgnoreResultsError):
         list(
             diskstat.cluster_check_diskstat(
@@ -1567,7 +1567,7 @@ def test_cluster_check_diskstat_summary():
     assert results_cluster == results_non_cluster
 
 
-def test_check_latency_calculation():
+def test_check_latency_calculation() -> None:
     with pytest.raises(IgnoreResultsError):
         list(
             diskstat.check_diskstat(

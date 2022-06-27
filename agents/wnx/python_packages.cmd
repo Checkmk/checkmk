@@ -4,7 +4,7 @@ SETLOCAL EnableDelayedExpansion
 @rem Installs all required packages GLOBALLY
 
 if "%1"=="" (
-set ppath=C:\Python27.32\Scripts
+set ppath=C:\Python310\Scripts
 powershell Write-Host "Using default directory !ppath!" -Foreground Green
 ) else (
 set ppath=%1\Scripts
@@ -58,3 +58,5 @@ call python_package_install !ppath! pytest
 call python_package_install !ppath! freezegun
 call python_package_install !ppath! bs4
 call python_package_install !ppath! pycryptodomex
+call python_package_install !ppath! black
+call python_package_install !ppath! isort

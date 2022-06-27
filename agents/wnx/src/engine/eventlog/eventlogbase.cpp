@@ -36,7 +36,7 @@ std::pair<uint64_t, cma::cfg::EventLevels> ScanEventLog(
         }
 
         last_pos = record->recordId();
-        auto calculated = record->calcEventLevel(level);
+        auto calculated = record->calcEventLevel();
         worst_state = std::max(worst_state, calculated);
     }
 

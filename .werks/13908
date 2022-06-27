@@ -1,0 +1,13 @@
+Title: First field sent to carbon must be the host name
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1653904657
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+This corrects a regression in 2.1 where the first field
+sent over the Carbon correction was erroneouly set to
+the name of the service instead of the name of the host.

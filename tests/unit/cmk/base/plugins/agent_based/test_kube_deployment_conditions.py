@@ -147,30 +147,30 @@ def check_result(params: Mapping[str, VSResultAge], section: DeploymentCondition
     return kube_deployment_conditions.check(params, section)
 
 
-def test_ok_state_mappings_match_conditions():
+def test_ok_state_mappings_match_conditions() -> None:
     assert all(
         condition in kube_deployment_conditions.CONDITIONS_OK_MAPPINGS
         for condition in DeploymentConditions.schema()["properties"]
     )
 
 
-def test_parse(string_table: StringTable):
+def test_parse(string_table: StringTable) -> None:
     section = kube_deployment_conditions.parse(string_table)
     assert section is not None
     assert len(section.dict()) == 3
 
 
-def test_discovery(section: DeploymentConditions):
+def test_discovery(section: DeploymentConditions) -> None:
     discovered_services = list(kube_deployment_conditions.discovery(section))
     assert len(discovered_services) == 1
 
 
-def test_all_ok_check_result(check_result: CheckResult):
+def test_all_ok_check_result(check_result: CheckResult) -> None:
     assert len(list(check_result)) == 1
 
 
 @pytest.mark.parametrize("status_replicafailure", [None])
-def test_no_replicafailure_and_others_ok_check_result(check_result: CheckResult):
+def test_no_replicafailure_and_others_ok_check_result(check_result: CheckResult) -> None:
     results = list(check_result)
     assert len(results) == 1
     assert isinstance(results[0], Result)
@@ -180,7 +180,7 @@ def test_no_replicafailure_and_others_ok_check_result(check_result: CheckResult)
 @pytest.mark.parametrize("status_replicafailure", [None])
 @pytest.mark.parametrize("state", [WARN])
 @pytest.mark.parametrize("status_progressing, status_available", [(True, False), (False, True)])
-def test_no_replicafailure_and_one_false_condition_check_result(check_result: CheckResult):
+def test_no_replicafailure_and_one_false_condition_check_result(check_result: CheckResult) -> None:
     results = list(check_result)
     assert len(results) == 2
     assert (
@@ -208,7 +208,7 @@ def test_no_replicafailure_and_one_false_condition_check_result(check_result: Ch
 @pytest.mark.parametrize(
     "status_replicafailure, status_progressing, state_available", [(True, False, False)]
 )
-def test_all_failing_status_but_within_valid_time_range(check_result: CheckResult):
+def test_all_failing_status_but_within_valid_time_range(check_result: CheckResult) -> None:
     results = list(check_result)
     assert len(results) == 3
     assert all(result.state == State.OK for result in results if isinstance(result, Result))
@@ -219,7 +219,7 @@ def test_all_failing_status_but_within_valid_time_range(check_result: CheckResul
 )
 @pytest.mark.parametrize("params", [{}])
 @pytest.mark.parametrize("state", [OK, WARN, CRIT])
-def test_check_result_all_failing_but_with_no_params(check_result: CheckResult):
+def test_check_result_all_failing_but_with_no_params(check_result: CheckResult) -> None:
     results = list(check_result)
     assert all(isinstance(result, Result) for result in results)
     assert all(result.state == State.OK for result in results if isinstance(result, Result))
@@ -227,7 +227,7 @@ def test_check_result_all_failing_but_with_no_params(check_result: CheckResult):
 
 @pytest.mark.parametrize("status_replicafailure, status_available", [(None, None)])
 @pytest.mark.parametrize("status_progressing, state_progressing", [(False, WARN)])
-def test_failing_condition_with_warn_time_difference(check_result: CheckResult):
+def test_failing_condition_with_warn_time_difference(check_result: CheckResult) -> None:
     results = list(check_result)
     assert len(results) == 1
     assert isinstance(results[0], Result)

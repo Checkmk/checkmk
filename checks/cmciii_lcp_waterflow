@@ -57,7 +57,7 @@ def inventory_cmciii_lcp_waterflow(section: Section):
 
 def check_cmciii_lcp_waterflow(item, params, section: Section):
     if not section:
-        return
+        return None
 
     sym = ""
     state = 0

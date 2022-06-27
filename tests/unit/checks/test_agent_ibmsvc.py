@@ -67,7 +67,7 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_ibmsvc_argument_parsing(params, expected_args):
+def test_ibmsvc_argument_parsing(params, expected_args) -> None:
     """Tests if all required arguments are present."""
     agent = SpecialAgent("agent_ibmsvc")
     arguments = agent.argument_func(params, "host", "address")

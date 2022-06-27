@@ -31,7 +31,7 @@ class SectionManager:
     def __enter__(self) -> "SectionManager":
         return self
 
-    def __exit__(self, *args: Any, **kwargs: Any) -> None:
+    def __exit__(self, *exc_info: object) -> None:
         self.flush()
 
     def append(self, data: Any) -> None:
@@ -80,10 +80,10 @@ class ConditionalPiggybackSection(SectionManager):
         if self.set_piggyback:
             self.append(f"<<<<{hostname}>>>>")
 
-    def __exit__(self, *args: Any, **kwargs: Any) -> None:
+    def __exit__(self, *exc_info: object) -> None:
         if self.set_piggyback:
             self.append("<<<<>>>>")
-        super().__exit__(*args, **kwargs)
+        super().__exit__(*exc_info)
 
 
 class SectionWriter(SectionManager):
@@ -119,7 +119,7 @@ def _special_agent_main_core(
         datefmt="%Y-%m-%d %H:%M:%S",
         level={0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(args.verbose, logging.DEBUG),
     )
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # type: ignore
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     logging.getLogger("urllib3.connectionpool").setLevel(logging.INFO)
     logging.getLogger("vcr").setLevel(logging.WARN)
     logging.info("running file %s", __file__)
@@ -157,5 +157,5 @@ def special_agent_main(
     Therefore _active_check_main_core and _output_check_result should be used for unit tests since
     they are not meant to modify the system environment or terminate the process.
     """
-    cmk.utils.password_store.replace_passwords()  # type: ignore[no-untyped-call]
+    cmk.utils.password_store.replace_passwords()
     _special_agent_main_core(parse_arguments, main_fn, argv or sys.argv[1:])

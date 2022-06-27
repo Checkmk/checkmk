@@ -3,10 +3,16 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from .agent_based_api.v1 import HostLabel, register
+
+from typing import Mapping
+
+from .agent_based_api.v1 import Attributes, HostLabel, register
+from .agent_based_api.v1.type_defs import HostLabelGenerator, InventoryResult, StringTable
+
+Section = Mapping[str, str]
 
 
-def parse_esx_vsphere_systeminfo(string_table):
+def parse_esx_vsphere_systeminfo(string_table: StringTable) -> Section:
     """Load key/value pairs into dict
 
     Example:
@@ -31,7 +37,7 @@ def parse_esx_vsphere_systeminfo(string_table):
     return parsed
 
 
-def host_label_esx_vshpere_systeminfo(section):
+def host_label_esx_vshpere_systeminfo(section: Section) -> HostLabelGenerator:
     """Host label function
 
     Labels:
@@ -52,4 +58,29 @@ register.agent_section(
     name="esx_systeminfo",
     parse_function=parse_esx_vsphere_systeminfo,
     host_label_function=host_label_esx_vshpere_systeminfo,
+)
+
+
+def inventory_esx_systeminfo(section: Section) -> InventoryResult:
+    yield Attributes(
+        path=["software", "os"],
+        inventory_attributes={
+            "arch": "x86_64",
+            **{
+                key: section[raw_key]
+                for key, raw_key in (
+                    ("vendor", "vendor"),
+                    ("name", "name"),
+                    ("version", "version"),
+                    ("type", "osType"),
+                )
+                if raw_key in section
+            },
+        },
+    )
+
+
+register.inventory_plugin(
+    name="esx_systeminfo",
+    inventory_function=inventory_esx_systeminfo,
 )

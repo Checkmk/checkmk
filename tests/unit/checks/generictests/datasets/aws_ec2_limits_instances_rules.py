@@ -89,9 +89,9 @@ checks = {
                 (
                     0,
                     '\nActive Spot Fleet Requests: 0 (of max. 1000)\nElastic IP Addresses: 0 (of '
-                    'max. 5)\nRunning On-Demand t2.medium Instances: 3 (of max. 3), Usage: 100% '
-                    '(warn/crit at 80.0%/90.0%)(!!)\nRunning On-Demand t2.nano Instances: 5 (of '
-                    'max. 6), Usage: 83.33% (warn/crit at 80.0%/90.0%)(!)\nSpot Fleet Requests '
+                    'max. 5)\nRunning On-Demand t2.medium Instances: 3 (of max. 3), Usage: 100.00% '
+                    '(warn/crit at 80.00%/90.00%)(!!)\nRunning On-Demand t2.nano Instances: 5 (of '
+                    'max. 6), Usage: 83.33% (warn/crit at 80.00%/90.00%)(!)\nSpot Fleet Requests '
                     'Total Target Capacity: 0 (of max. 5000)\nSpot Instance Requests: 0 (of max. '
                     '20)\nTotal Running On-Demand Instances: 4 (of max. 20)\nVPC Elastic IP '
                     'Addresses: 0 (of max. 5)',
@@ -327,8 +327,8 @@ checks = {
                 (
                     0,
                     '\nActive Spot Fleet Requests: 0 (of max. 1000)\nElastic IP Addresses: 0 (of '
-                    'max. 5)\nRunning On-Demand t2.medium Instances: 3 (of max. 3), Usage: 100% '
-                    '(warn/crit at 80.0%/90.0%)(!!)\nRunning On-Demand t2.nano Instances: 5 (of '
+                    'max. 5)\nRunning On-Demand t2.medium Instances: 3 (of max. 3), Usage: 100.00% '
+                    '(warn/crit at 80.00%/90.00%)(!!)\nRunning On-Demand t2.nano Instances: 5 (of '
                     'max. 20)\nSpot Fleet Requests Total Target Capacity: 0 (of max. 5000)\nSpot '
                     'Instance Requests: 0 (of max. 20)\nTotal Running On-Demand Instances: 4 (of '
                     'max. 20)\nVPC Elastic IP Addresses: 0 (of max. 5)',

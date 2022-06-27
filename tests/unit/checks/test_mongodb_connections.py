@@ -23,7 +23,7 @@ pytestmark = pytest.mark.checks
             "connections",
             1,
             0,
-            "Used percentage: 50.0%",
+            "Used percentage: 50.00%",
         ),
         (
             [("current", "10"), ("available", "200"), ("totalCreated", "25007")],
@@ -41,7 +41,7 @@ pytestmark = pytest.mark.checks
             "connections",
             1,
             0,
-            "Used percentage: 50.0%",
+            "Used percentage: 50.00%",
         ),
         (
             [("current", "10"), ("available", 200.1), ("totalCreated", "25007")],

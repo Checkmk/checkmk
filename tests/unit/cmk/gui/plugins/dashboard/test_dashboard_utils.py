@@ -19,7 +19,7 @@ from cmk.gui.plugins.dashboard import utils
                 "show_service": True,
                 "single_infos": [],
                 "context": {
-                    "host": "abc",
+                    "host": {"host": "abc"},
                 },
             },
             {
@@ -27,8 +27,8 @@ from cmk.gui.plugins.dashboard import utils
                 "single_infos": ["service", "host"],
                 "type": "pnpgraph",
                 "context": {
-                    "host": "abc",
-                    "service": "_HOST_",
+                    "host": {"host": "abc"},
+                    "service": {"service": "_HOST_"},
                 },
             },
             id="->1.5.0i2->2.0.0b6 pnpgraph",
@@ -43,7 +43,7 @@ from cmk.gui.plugins.dashboard import utils
                 },
                 "single_infos": ["host", "service"],
                 "context": {
-                    "host": "abc",
+                    "host": {"host": "abc"},
                 },
             },
             {
@@ -53,8 +53,8 @@ from cmk.gui.plugins.dashboard import utils
                 "single_infos": ["host", "service"],
                 "type": "pnpgraph",
                 "context": {
-                    "host": "abc",
-                    "service": "_HOST_",
+                    "host": {"host": "abc"},
+                    "service": {"service": "_HOST_"},
                 },
             },
             id="1.6.0->2.0.0b6 pnpgraph",
@@ -97,7 +97,7 @@ from cmk.gui.plugins.dashboard import utils
         ),
     ],
 )
-def test_transform_dashlets_mut(entry, result):
+def test_transform_dashlets_mut(entry, result) -> None:
     assert utils._transform_dashlets_mut(entry) == result
 
 
@@ -111,7 +111,7 @@ def test_transform_dashlets_mut(entry, result):
         ),
     ],
 )
-def test_transform_dashlet_status_display(entry, result):
+def test_transform_dashlet_status_display(entry, result) -> None:
     assert utils.ABCFigureDashlet._transform_vs_forth(entry) == result
 
 
@@ -138,7 +138,7 @@ def test_transform_dashlet_status_display(entry, result):
         ),
     ],
 )
-def test_transform_timerange(config, expected_config):
+def test_transform_timerange(config, expected_config) -> None:
     assert expected_config == utils.transform_timerange_dashlet(config)
 
 
@@ -277,7 +277,7 @@ def test_macro_mapping_from_context(
         ),
     ],
 )
-def test_get_title_macros_from_single_infos(single_infos, result):
+def test_get_title_macros_from_single_infos(single_infos, result) -> None:
     assert list(utils._get_title_macros_from_single_infos(single_infos)) == result
 
 
@@ -330,7 +330,7 @@ def test_get_title_macros_from_single_infos(single_infos, result):
         ),
     ],
 )
-def test_title_help_text_for_macros(monkeypatch, single_infos, additional_macros, result):
+def test_title_help_text_for_macros(monkeypatch, single_infos, additional_macros, result) -> None:
     monkeypatch.setattr(
         utils.ABCFigureDashlet,
         "single_infos",

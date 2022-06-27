@@ -14,22 +14,18 @@
 #include "providers/internal.h"
 #include "section_header.h"
 
-namespace cma {
-
-namespace provider {
+namespace cma::provider {
 
 class Mem : public Synchronous {
 public:
     Mem() : Synchronous(cma::section::kMemName) {}
-    Mem(const std::string &Name, char Separator)
-        : Synchronous(Name, Separator) {}
+    Mem(const std::string &name, char separator)
+        : Synchronous(name, separator) {}
 
 private:
     std::string makeBody() override;
 };
 
-}  // namespace provider
-
-};  // namespace cma
+};  // namespace cma::provider
 
 #endif  // mem_h__

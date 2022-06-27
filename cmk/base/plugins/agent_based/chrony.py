@@ -65,7 +65,7 @@ def parse_chrony(string_table):
     return parsed or None
 
 
-def is_error_message(info):
+def is_error_message(info) -> bool:
     return len(info) == 1 and isinstance(info[0], list) and ":" not in info[0][0]
 
 
@@ -127,13 +127,22 @@ def check_chrony(params, section_chrony, section_ntp):
         )
 
     if (last_sync := section_chrony.get("last_sync")) is not None:
-        yield from check_levels(
-            last_sync,
-            levels_upper=params["alert_delay"],
-            render_func=render.timespan,
-            label="Time since last sync",
-            boundaries=(0, None),
-        )
+        if last_sync >= 0:
+            yield from check_levels(
+                last_sync,
+                levels_upper=params["alert_delay"],
+                render_func=render.timespan,
+                label="Time since last sync",
+                boundaries=(0, None),
+            )
+        else:
+            yield Result(
+                state=state.OK,
+                summary=(
+                    f"Last synchronization appears to be {render.timespan(-last_sync)}"
+                    " in the future (check your system time)"
+                ),
+            )
 
 
 register.check_plugin(

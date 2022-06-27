@@ -71,6 +71,7 @@ def postfix_mailq_to_bytes(value, uom):
         return value * 1024 * 1024
     elif uom == "gbytes":
         return value * 1024 * 1024 * 1024
+    return None
 
 
 def parse_postfix_mailq(info):

@@ -23,7 +23,7 @@ SECTION = [
 ]
 
 
-def test_parse_fortisandbox_software_inv():
+def test_parse_fortisandbox_software_inv() -> None:
     parsed = parse_fortisandbox_software(
         [
             ["5.2.50534", "2.4.20034", "3.2.279", "4.478", "14.613", "", ""],
@@ -33,7 +33,7 @@ def test_parse_fortisandbox_software_inv():
     assert list(parsed) == SECTION
 
 
-def test_inventory_fortisandbox_software():
+def test_inventory_fortisandbox_software() -> None:
     assert sort_inventory_result(inventory_fortisandbox_software(SECTION)) == sort_inventory_result(
         [
             TableRow(

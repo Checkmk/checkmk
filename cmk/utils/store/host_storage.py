@@ -48,7 +48,7 @@ def host_storage_fileheader() -> str:
     return "# Created by HostStorage\n\n"
 
 
-def get_hosts_file_variables():
+def get_hosts_file_variables() -> HostsData:
     """These parameters imitate a cmk.base environment"""
     return {
         "FOLDER_PATH": "",
@@ -154,16 +154,16 @@ class HostsStorageFieldsGenerator:
 
 
 class ABCHostsStorage(Generic[THostsReadData]):
-    def __init__(self, storage_format: StorageFormat):
+    def __init__(self, storage_format: StorageFormat) -> None:
         self._storage_format = storage_format
 
-    def exists(self, file_path_without_extension: Path):
+    def exists(self, file_path_without_extension: Path):  # type:ignore[no-untyped-def]
         return self.add_file_extension(file_path_without_extension).exists()
 
-    def remove(self, file_path_without_extension: Path):
+    def remove(self, file_path_without_extension: Path):  # type:ignore[no-untyped-def]
         Path(self.add_file_extension(file_path_without_extension)).unlink(missing_ok=True)
 
-    def add_file_extension(self, file_path: Path):
+    def add_file_extension(self, file_path: Path):  # type:ignore[no-untyped-def]
         return file_path.with_suffix(self._storage_format.extension())
 
     def write(
@@ -186,10 +186,10 @@ class ABCHostsStorage(Generic[THostsReadData]):
 
 
 class StandardHostsStorage(ABCHostsStorage[str]):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(StorageFormat.STANDARD)
 
-    def _write(
+    def _write(  # pylint: disable=too-many-branches
         self, file_path: Path, data: HostsStorageData, value_formatter: Callable[[Any], str]
     ) -> None:
         out = io.StringIO()
@@ -249,7 +249,7 @@ class StandardHostsStorage(ABCHostsStorage[str]):
 
 
 class PickleHostsStorage(ABCHostsStorage[HostsData]):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(StorageFormat.PICKLE)
 
     def _write(
@@ -264,7 +264,7 @@ class PickleHostsStorage(ABCHostsStorage[HostsData]):
 
 
 class RawHostsStorage(ABCHostsStorage[HostsData]):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(StorageFormat.RAW)
 
     def _write(
@@ -285,7 +285,7 @@ def make_experimental_hosts_storage(storage_format: StorageFormat) -> Optional[A
     return None
 
 
-def get_standard_hosts_storage():
+def get_standard_hosts_storage() -> ABCHostsStorage[str]:
     return StandardHostsStorage()
 
 
@@ -437,8 +437,7 @@ class StorageFormat(enum.Enum):
         return cls[value.upper()]
 
     def extension(self) -> str:
-        # This typing error is a false positive.  There are tests to demonstrate that.
-        return {  # type: ignore[return-value]
+        return {
             StorageFormat.STANDARD: ".mk",
             StorageFormat.PICKLE: ".pkl",
             StorageFormat.RAW: ".cfg",

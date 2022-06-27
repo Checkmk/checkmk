@@ -17,6 +17,7 @@ def parse_fortigate_memory(info):
 def inventory_fortigate_memory(parsed):
     if parsed is not None:
         return [(None, "fortigate_memory_default_levels")]
+    return []
 
 
 def check_fortigate_memory(item, params, current_reading):

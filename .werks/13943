@@ -1,0 +1,12 @@
+Title: Site Overview Tooltips now can cross dashlet boundaries
+Class: fix
+Compatible: compat
+Component: core
+Date: 1651136883
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Before, the tooltips of the site overview were bound to the parents dashlets bondaries.
+They now can extend beyond them.

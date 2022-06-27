@@ -20,7 +20,7 @@ import cmk.utils.version as cmk_version
 
 import cmk.gui.config
 import cmk.gui.permissions as permissions
-from cmk.gui.globals import active_config
+from cmk.gui.config import active_config
 from cmk.gui.permissions import (
     load_dynamic_permissions,
     Permission,
@@ -30,7 +30,7 @@ from cmk.gui.permissions import (
 from cmk.gui.utils.speaklater import LazyString
 
 
-def test_default_config_from_plugins():
+def test_default_config_from_plugins() -> None:
     expected = [
         "roles",
         "debug",
@@ -200,7 +200,7 @@ def test_default_config_from_plugins():
     assert sorted(default_config2.keys()) == sorted(expected)
 
 
-def test_load_config():
+def test_load_config() -> None:
     config_path = Path(cmk.utils.paths.default_config_dir, "multisite.mk")
     config_path.unlink(missing_ok=True)
 
@@ -222,20 +222,20 @@ def local_config_plugin():
 
 
 @pytest.mark.usefixtures("local_config_plugin")
-def test_load_config_respects_local_plugin():
+def test_load_config_respects_local_plugin() -> None:
     cmk.gui.config.load_config()
     assert active_config.ding == "dong"  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("local_config_plugin")
-def test_load_config_allows_local_plugin_setting():
+def test_load_config_allows_local_plugin_setting() -> None:
     with Path(cmk.utils.paths.default_config_dir, "multisite.mk").open("w") as f:
         f.write("ding = 'ding'\n")
     cmk.gui.config.load_config()
     assert active_config.ding == "ding"  # type: ignore[attr-defined]
 
 
-def test_registered_permission_sections():
+def test_registered_permission_sections() -> None:
     expected_sections = [
         ("bookmark_list", (50, "Bookmark lists", True)),
         ("custom_snapin", (50, "Custom sidebar elements", True)),
@@ -275,7 +275,7 @@ def test_registered_permission_sections():
         assert section.do_sort == do_sort
 
 
-def test_registered_permissions():
+def test_registered_permissions() -> None:
     load_dynamic_permissions()
 
     expected_permissions = [
@@ -712,6 +712,12 @@ def test_registered_permissions():
     if not cmk_version.is_raw_edition():
         expected_permissions += [
             "agent_registration.edit",
+            "dashboard.kubernetes_cluster",
+            "dashboard.kubernetes_daemonset",
+            "dashboard.kubernetes_deployment",
+            "dashboard.kubernetes_namespace",
+            "dashboard.kubernetes_overview",
+            "dashboard.kubernetes_statefulset",
             "dashboard.linux_hosts_overview",
             "dashboard.linux_single_overview",
             "dashboard.windows_hosts_overview",
@@ -829,7 +835,7 @@ def test_registered_permissions():
         assert isinstance(perm.defaults, list)
 
 
-def test_declare_permission_section(monkeypatch):
+def test_declare_permission_section(monkeypatch) -> None:
     monkeypatch.setattr(
         permissions, "permission_section_registry", permissions.PermissionSectionRegistry()
     )
@@ -843,7 +849,7 @@ def test_declare_permission_section(monkeypatch):
     assert section.do_sort is False
 
 
-def test_declare_permission(monkeypatch):
+def test_declare_permission(monkeypatch) -> None:
     monkeypatch.setattr(
         permissions, "permission_section_registry", permissions.PermissionSectionRegistry()
     )
@@ -871,18 +877,18 @@ def test_declare_permission(monkeypatch):
         (False, ["sec1.Z", "sec1.z", "sec1.A", "sec1.b", "sec1.a", "sec1.1", "sec1.g"]),
     ],
 )
-def test_permission_sorting(do_sort, result):
+def test_permission_sorting(do_sort, result) -> None:
     sections = permissions.PermissionSectionRegistry()
     perms = permissions.PermissionRegistry()
 
     @sections.register
     class Sec1(permissions.PermissionSection):
         @property
-        def name(self):
+        def name(self) -> str:
             return "sec1"
 
         @property
-        def title(self):
+        def title(self) -> str:
             return "SEC1"
 
         @property
@@ -1091,14 +1097,14 @@ def test_permission_sorting(do_sort, result):
         ),
     ],
 )
-def test_migrate_old_site_config(site, result):
+def test_migrate_old_site_config(site, result) -> None:
     assert cmk.gui.config.prepare_raw_site_config(SiteConfigurations({SiteId("mysite"): site})) == {
         "mysite": result
     }
 
 
 @pytest.mark.usefixtures("load_config")
-def test_default_tags():
+def test_default_tags() -> None:
     groups = {
         "snmp_ds": [
             "no-snmp",
@@ -1133,7 +1139,7 @@ def test_default_tags():
 
 
 @pytest.mark.usefixtures("load_config")
-def test_default_aux_tags():
+def test_default_aux_tags() -> None:
     assert sorted(active_config.tags.aux_tag_list.get_tag_ids()) == sorted(
         [
             "checkmk-agent",

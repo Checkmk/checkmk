@@ -8,7 +8,7 @@ from cmk.base.plugins.agent_based.emc_vplex_if import parse_emc_vplex_if
 from cmk.base.plugins.agent_based.utils.interfaces import Interface
 
 
-def test_parse_emc_vplex_if():
+def test_parse_emc_vplex_if() -> None:
     assert parse_emc_vplex_if(
         [
             [["director-1-1-A", "128.221.252.35"], ["director-1-1-B", "128.221.252.36"]],

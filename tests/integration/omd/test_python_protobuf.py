@@ -12,7 +12,7 @@ from tests.testlib import import_module
 from tests.testlib.site import Site
 
 
-def test_protobuf_api_implementation_is_cpp():
+def test_protobuf_api_implementation_is_cpp() -> None:
     from google.protobuf.internal import api_implementation  # type: ignore[attr-defined]
 
     assert api_implementation.Type() == "cpp"
@@ -72,7 +72,7 @@ def fixture_protobuf_py(site: Site, test_dir, proto_source_file):
     return py_file
 
 
-def test_python_protobuf(site: Site, protobuf_py):
+def test_python_protobuf(site: Site, protobuf_py) -> None:
     test_pb2 = import_module(str(protobuf_py))
 
     address_book = test_pb2.AddressBook()

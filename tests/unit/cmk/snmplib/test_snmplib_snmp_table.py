@@ -68,7 +68,7 @@ class SNMPTestBackend(SNMPBackend):
         ),
     ],
 )
-def test_get_snmp_table(monkeypatch, snmp_info, expected_values):
+def test_get_snmp_table(monkeypatch, snmp_info, expected_values) -> None:
     def get_all_snmp_tables(info):
         backend = SNMPTestBackend(SNMPConfig, logger)
         if not isinstance(info, list):
@@ -103,7 +103,7 @@ def test_get_snmp_table(monkeypatch, snmp_info, expected_values):
         ("cp437", [([b"\x81"], "string")], [["ü"]]),
     ],
 )
-def test_sanitize_snmp_encoding(monkeypatch, encoding, columns, expected):
+def test_sanitize_snmp_encoding(monkeypatch, encoding, columns, expected) -> None:
     ts = Scenario()
     ts.add_host("localhost")
     ts.set_ruleset(
@@ -118,7 +118,7 @@ def test_sanitize_snmp_encoding(monkeypatch, encoding, columns, expected):
     assert snmp_table._sanitize_snmp_encoding(columns, snmp_config) == expected
 
 
-def test_is_bulkwalk_host(monkeypatch):
+def test_is_bulkwalk_host(monkeypatch) -> None:
     ts = Scenario()
     ts.set_ruleset(
         "bulkwalk_hosts",
@@ -133,7 +133,7 @@ def test_is_bulkwalk_host(monkeypatch):
     assert config_cache.get_host_config("localhost").snmp_config("").is_bulkwalk_host is True
 
 
-def test_is_classic_at_snmp_v1_host(monkeypatch):
+def test_is_classic_at_snmp_v1_host(monkeypatch) -> None:
     ts = Scenario()
     ts.set_ruleset(
         "bulkwalk_hosts",

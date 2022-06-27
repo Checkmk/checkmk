@@ -5,15 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cisco_sensor_item import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # NOTE: Devices of type 3850 with firmware versions 3.2.0SE, 3.2.1, 3.2.2
@@ -35,7 +28,7 @@ cisco_temperature_admin_state_map = {
 }
 
 
-def parse_cisco_temperature(info):
+def parse_cisco_temperature(info):  # pylint: disable=too-many-branches
     # CISCO-ENTITY-SENSOR-MIB entSensorType
     cisco_sensor_types = {
         "1": "other",
@@ -283,6 +276,7 @@ def check_cisco_temperature(item, params, parsed):
             dev_status=state,
             dev_status_name=state_readable,
         )
+    return None
 
 
 check_info["cisco_temperature"] = {

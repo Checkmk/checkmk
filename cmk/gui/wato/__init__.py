@@ -57,40 +57,10 @@
 # for them, we can remove this here and the imports
 # flake8: noqa
 # pylint: disable=unused-import,cmk-module-layer-violation
-
-import abc
-import ast
-import copy
-import csv
-import datetime
-import fcntl
-import glob
-import inspect
-import json
-import math
-import multiprocessing
-import pprint
-import random
-import re
-import shutil
-import socket
-import subprocess
-import sys
-import tarfile
-import time
-import traceback
-from hashlib import sha256
 from typing import Any, Dict
-from typing import Optional as _Optional
-from typing import Tuple as _Tuple
-from typing import Type, Union
 
 import cmk.utils.paths
-import cmk.utils.render as render
-import cmk.utils.store as store
 import cmk.utils.version as cmk_version
-from cmk.utils.defines import short_service_state_name
-from cmk.utils.regex import regex
 
 import cmk.gui.background_job as background_job
 import cmk.gui.backup as backup
@@ -100,34 +70,36 @@ import cmk.gui.i18n
 import cmk.gui.mkeventd
 import cmk.gui.plugins.wato.utils
 import cmk.gui.plugins.wato.utils.base_modes
+import cmk.gui.plugins.watolib.utils
 import cmk.gui.sites as sites
 import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
+import cmk.gui.valuespec
 import cmk.gui.view_utils
 import cmk.gui.wato.mkeventd
 import cmk.gui.wato.pages.fetch_agent_output
 import cmk.gui.wato.pages.user_profile
 import cmk.gui.wato.permissions
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.changes
+import cmk.gui.watolib.host_attributes
 import cmk.gui.watolib.hosts_and_folders
+import cmk.gui.watolib.rulespecs
+import cmk.gui.watolib.sites
+import cmk.gui.watolib.timeperiods
+import cmk.gui.watolib.user_scripts
+import cmk.gui.watolib.utils
 import cmk.gui.weblib as weblib
-from cmk.gui.exceptions import (
-    HTTPRedirect,
-    MKAuthException,
-    MKException,
-    MKGeneralException,
-    MKInternalError,
-    MKUserError,
-)
-from cmk.gui.globals import active_config, html
-from cmk.gui.htmllib import HTML
-from cmk.gui.i18n import _, _l, _u
+from cmk.gui.exceptions import MKGeneralException as _MKGeneralException
+from cmk.gui.htmllib.html import html
+from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.pages import Page, page_registry
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import PermissionName
+from cmk.gui.utils.html import HTML
 from cmk.gui.wato.pages.activate_changes import (
     ModeActivateChanges,
     ModeAjaxActivationState,
@@ -221,16 +193,7 @@ if cmk_version.is_managed_edition():
 else:
     managed = None  # type: ignore[assignment]
 
-wato_root_dir = watolib.wato_root_dir
-multisite_dir = watolib.multisite_dir
-
-# TODO: Kept for old plugin compatibility. Remove this one day
-from cmk.gui.valuespec import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
 syslog_facilities = cmk.gui.mkeventd.syslog_facilities
-ALL_HOSTS = watolib.ALL_HOSTS
-ALL_SERVICES = watolib.ALL_SERVICES
-NEGATE = watolib.NEGATE
 from cmk.gui.plugins.wato.utils import (
     get_hostnames_from_checkboxes,
     get_hosts_from_checkboxes,
@@ -269,34 +232,14 @@ subgroup_virt = RulespecGroupCheckParametersVirtualization().sub_group_name
 subgroup_hardware = RulespecGroupCheckParametersHardware().sub_group_name
 subgroup_inventory = RulespecGroupCheckParametersDiscovery().sub_group_name
 
+import cmk.gui.watolib.config_domains
+
 # Make some functions of watolib available to WATO plugins without using the
 # watolib module name. This is mainly done for compatibility reasons to keep
 # the current plugin API functions working
 import cmk.gui.watolib.network_scan
 import cmk.gui.watolib.read_only
-from cmk.gui.plugins.watolib.utils import configvar_order, register_configvar
-from cmk.gui.watolib import (
-    ACResultCRIT,
-    ACResultOK,
-    ACResultWARN,
-    ACTest,
-    ACTestCategories,
-    add_change,
-    add_replication_paths,
-    add_service_change,
-    ConfigDomainCore,
-    ConfigDomainEventConsole,
-    ConfigDomainGUI,
-    ConfigDomainOMD,
-    declare_host_attribute,
-    LivestatusViaTCP,
-    make_action_link,
-    NagiosTextAttribute,
-    register_rule,
-    register_rulegroup,
-    site_neutral_path,
-    ValueSpecAttribute,
-)
+from cmk.gui.watolib.sites import LivestatusViaTCP
 
 modes: Dict[Any, Any] = {}
 
@@ -340,8 +283,8 @@ def load_plugins() -> None:
     utils.load_web_plugins("wato", globals())
 
     if modes:
-        raise MKGeneralException(
-            _("Deprecated WATO modes found: %r. " "They need to be refactored to new API.")
+        raise _MKGeneralException(
+            _("Deprecated WATO modes found: %r. They need to be refactored to new API.")
             % list(modes.keys())
         )
 
@@ -361,54 +304,23 @@ def _register_pre_21_plugin_api() -> None:
     import cmk.gui.plugins.wato as api_module
 
     for name in (
-        "ABCConfigDomain",
         "ABCEventsMode",
         "ABCHostAttributeNagiosText",
         "ABCHostAttributeValueSpec",
         "ABCMainModule",
-        "ac_test_registry",
-        "ACResult",
-        "ACResultCRIT",
-        "ACResultOK",
-        "ACResultWARN",
-        "ACTest",
-        "ACTestCategories",
-        "add_change",
-        "add_replication_paths",
         "BinaryHostRulespec",
         "BinaryServiceRulespec",
         "CheckParameterRulespecWithItem",
         "CheckParameterRulespecWithoutItem",
-        "config_domain_registry",
-        "config_variable_group_registry",
-        "config_variable_registry",
-        "ConfigDomainCACertificates",
-        "ConfigDomainCore",
-        "ConfigDomainEventConsole",
-        "ConfigDomainGUI",
-        "ConfigDomainOMD",
         "ConfigHostname",
-        "ConfigVariable",
-        "ConfigVariableGroup",
         "ContactGroupSelection",
         "DictHostTagCondition",
         "flash",
-        "folder_preserving_link",
         "FullPathFolderChoice",
         "get_check_information",
         "get_hostnames_from_checkboxes",
         "get_hosts_from_checkboxes",
         "get_search_expression",
-        "host_attribute_registry",
-        "host_attribute_topic_registry",
-        "HostAttributeTopicAddress",
-        "HostAttributeTopicBasicSettings",
-        "HostAttributeTopicCustomAttributes",
-        "HostAttributeTopicDataSources",
-        "HostAttributeTopicHostTags",
-        "HostAttributeTopicManagementBoard",
-        "HostAttributeTopicMetaData",
-        "HostAttributeTopicNetworkScan",
         "HostGroupSelection",
         "HostnameTranslation",
         "HostRulespec",
@@ -419,7 +331,6 @@ def _register_pre_21_plugin_api() -> None:
         "IPMIParameters",
         "is_wato_slave_site",
         "Levels",
-        "LivestatusViaTCP",
         "main_module_registry",
         "MainMenu",
         "MainModuleTopic",
@@ -432,16 +343,13 @@ def _register_pre_21_plugin_api() -> None:
         "MainModuleTopicMaintenance",
         "MainModuleTopicServices",
         "MainModuleTopicUsers",
-        "make_action_link",
         "make_confirm_link",
-        "make_diff_text",
         "ManualCheckParameterRulespec",
         "MenuItem",
         "mode_registry",
         "mode_url",
         "monitoring_macro_help",
         "multifolder_host_rule_match_conditions",
-        "multisite_dir",
         "notification_parameter_registry",
         "NotificationParameter",
         "PasswordFromStore",
@@ -450,15 +358,10 @@ def _register_pre_21_plugin_api() -> None:
         "PredictiveLevels",
         "redirect",
         "register_check_parameters",
-        "register_configvar",
         "register_hook",
         "register_modules",
         "register_notification_parameters",
         "ReplicationPath",
-        "rule_option_elements",
-        "Rulespec",
-        "rulespec_group_registry",
-        "rulespec_registry",
         "RulespecGroup",
         "RulespecGroupCheckParametersApplications",
         "RulespecGroupCheckParametersDiscovery",
@@ -477,8 +380,6 @@ def _register_pre_21_plugin_api() -> None:
         "RulespecGroupEnforcedServicesStorage",
         "RulespecGroupEnforcedServicesVirtualization",
         "RulespecSubGroup",
-        "sample_config_generator_registry",
-        "SampleConfigGenerator",
         "search_form",
         "ServiceDescriptionTranslation",
         "ServiceGroupSelection",
@@ -486,19 +387,77 @@ def _register_pre_21_plugin_api() -> None:
         "SimpleEditMode",
         "SimpleListMode",
         "SimpleModeType",
-        "site_neutral_path",
         "SiteBackupJobs",
         "SNMPCredentials",
         "sort_sites",
-        "TimeperiodSelection",
         "transform_simple_to_multi_host_rule_match_conditions",
-        "user_script_choices",
-        "user_script_title",
         "UserIconOrAction",
         "valuespec_check_plugin_selection",
-        "wato_fileheader",
-        "wato_root_dir",
         "WatoMode",
         "WatoModule",
     ):
         api_module.__dict__[name] = cmk.gui.plugins.wato.utils.__dict__[name]
+    for name in ("add_change",):
+        api_module.__dict__[name] = cmk.gui.watolib.changes.__dict__[name]
+    for name in (
+        "ConfigDomainCACertificates",
+        "ConfigDomainCore",
+        "ConfigDomainEventConsole",
+        "ConfigDomainGUI",
+        "ConfigDomainOMD",
+    ):
+        api_module.__dict__[name] = cmk.gui.watolib.config_domains.__dict__[name]
+    for name in (
+        "host_attribute_registry",
+        "host_attribute_topic_registry",
+        "HostAttributeTopicAddress",
+        "HostAttributeTopicBasicSettings",
+        "HostAttributeTopicCustomAttributes",
+        "HostAttributeTopicDataSources",
+        "HostAttributeTopicHostTags",
+        "HostAttributeTopicManagementBoard",
+        "HostAttributeTopicMetaData",
+        "HostAttributeTopicNetworkScan",
+    ):
+        api_module.__dict__[name] = cmk.gui.watolib.host_attributes.__dict__[name]
+    for name in (
+        "folder_preserving_link",
+        "make_action_link",
+    ):
+        api_module.__dict__[name] = cmk.gui.watolib.hosts_and_folders.__dict__[name]
+    for name in (
+        "Rulespec",
+        "rulespec_group_registry",
+        "rulespec_registry",
+    ):
+        api_module.__dict__[name] = cmk.gui.watolib.rulespecs.__dict__[name]
+    for name in ("LivestatusViaTCP",):
+        api_module.__dict__[name] = cmk.gui.watolib.sites.__dict__[name]
+    for name in ("TimeperiodSelection",):
+        api_module.__dict__[name] = cmk.gui.watolib.timeperiods.__dict__[name]
+    for name in (
+        "user_script_choices",
+        "user_script_title",
+    ):
+        api_module.__dict__[name] = cmk.gui.watolib.user_scripts.__dict__[name]
+    for name in (
+        "ABCConfigDomain",
+        "config_domain_registry",
+        "config_variable_group_registry",
+        "config_variable_registry",
+        "ConfigVariable",
+        "ConfigVariableGroup",
+        "register_configvar",
+        "sample_config_generator_registry",
+        "SampleConfigGenerator",
+        "wato_fileheader",
+    ):
+        api_module.__dict__[name] = cmk.gui.plugins.watolib.utils.__dict__[name]
+    for name in ("rule_option_elements",):
+        api_module.__dict__[name] = cmk.gui.valuespec.__dict__[name]
+    for name in (
+        "multisite_dir",
+        "site_neutral_path",
+        "wato_root_dir",
+    ):
+        api_module.__dict__[name] = cmk.gui.watolib.utils.__dict__[name]

@@ -1,0 +1,42 @@
+{
+    "errors": null,
+    "result": {
+        "totalCount": 2,
+        "searchResults": [
+            {
+                "id": 0,
+                "platformVersion": "10",
+                "clientVersion": "79.0.0.29",
+                "osBuildVersion": "210705.QD01.178",
+                "complianceState": false,
+                "policyViolationCount": 1,
+                "lastRegistrationTime": 1636034522518,
+                "availableCapacity": 49.125763,
+                "totalCapacity": 128,
+                "uptime": 56710248,
+                "entityName": "overflowdevice1",
+                "androidSecurityPatchLevel": "2021-07-05",
+                "ipAddress": "1.1.1.1"
+            },
+            {
+                "id": 1,
+                "platformVersion": "14.7.1",
+                "osBuildVersion": "18G82",
+                "clientVersion": "79.0.0.29",
+                "complianceState": false,
+                "policyViolationCount": 2,
+                "lastRegistrationTime": 1629721745112,
+                "availableCapacity": 119.887474,
+                "totalCapacity": 128,
+                "uptime": null,
+                "ipAddress": "1.1.1.1",
+                "entityName": "overflowdevice2",
+                "androidSecurityPatchLevel": null
+            }
+        ],
+        "offset": 0,
+        "limit": 10,
+        "queryTime": 64,
+        "totalUnfilteredResultCount": 0
+    }
+}

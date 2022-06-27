@@ -28,7 +28,7 @@ from cmk.base.plugins.agent_based.check_mk import host_label_function_labels, pa
         ),
     ],
 )
-def test_checkmk_labels(string_table, expected_parsed_data):
+def test_checkmk_labels(string_table, expected_parsed_data) -> None:
     result = list(host_label_function_labels(parse_checkmk_labels(string_table)))
     assert isinstance(result[0], HostLabel)
     assert expected_parsed_data == result

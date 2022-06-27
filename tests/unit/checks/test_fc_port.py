@@ -134,7 +134,7 @@ pytestmark = pytest.mark.checks
         ),  # "00 00 00 00 00 DA 85 00"
     ],
 )
-def test_services_split(oid_value, expected):
+def test_services_split(oid_value, expected) -> None:
     check = Check("fc_port")
     fc_parse_counter = check.context["fc_parse_counter"]
     actual = fc_parse_counter(oid_value)

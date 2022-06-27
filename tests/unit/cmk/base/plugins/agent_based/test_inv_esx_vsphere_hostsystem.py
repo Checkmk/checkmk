@@ -43,7 +43,7 @@ section = OrderedDict(
 )
 
 
-def test_inventory():
+def test_inventory() -> None:
     # Setting the timezone is needed, otherwise test results will differ between jenkins and local
     # runs
     with set_timezone("UTC"):

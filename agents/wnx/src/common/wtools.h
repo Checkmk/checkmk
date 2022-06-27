@@ -12,16 +12,16 @@
 #ifndef wtools_h__
 #define wtools_h__
 #if defined(_WIN32)
-#include <aclapi.h>
+#include <AclAPI.h>
 #include <comdef.h>
 
-#include "windows.h"
+#include "Windows.h"
 #include "winperf.h"
 
 #define _WIN32_DCOM
 
-#include <Wbemidl.h>
-#include <tlhelp32.h>
+#include <TlHelp32.h>
+#include <WbemIdl.h>
 #endif
 
 #include <atomic>
@@ -37,6 +37,7 @@
 #include "tools/_process.h"
 #include "tools/_tgt.h"
 #include "tools/_win.h"
+#include "tools/_xlog.h"
 
 namespace wtools {
 constexpr const wchar_t *kWToolsLogName = L"check_mk_wtools.log";
@@ -56,10 +57,10 @@ enum class SecurityLevel { standard, admin };
 // RAII class to keep MS Windows Security Descriptor temporary
 class SecurityAttributeKeeper {
 public:
-    SecurityAttributeKeeper(SecurityLevel sl);
+    explicit SecurityAttributeKeeper(SecurityLevel sl);
     ~SecurityAttributeKeeper();
 
-    const SECURITY_ATTRIBUTES *get() const { return sa_; }
+    [[nodiscard]] const SECURITY_ATTRIBUTES *get() const { return sa_; }
     SECURITY_ATTRIBUTES *get() { return sa_; }
 
 private:
@@ -75,8 +76,10 @@ private:
 // usually this pointer comes from Windows API
 template <typename T>
 struct LocalAllocDeleter {
-    void operator()(T *r) noexcept {
-        if (r != nullptr) ::LocalFree(reinterpret_cast<HLOCAL>(r));
+    void operator()(T *r) const noexcept {
+        if (r != nullptr) {
+            ::LocalFree(reinterpret_cast<HLOCAL>(r));
+        }
     }
 };
 
@@ -91,7 +94,11 @@ using LocalResource = std::unique_ptr<T, LocalAllocDeleter<T>>;
 
 struct HandleDeleter {
     using pointer = HANDLE;  // trick to use HANDLE as STL pointer
-    void operator()(HANDLE h) { ::CloseHandle(h); }
+    void operator()(HANDLE h) const noexcept {
+        if (h != nullptr) {
+            ::CloseHandle(h);
+        }
+    }
 };
 
 /// Unique ptr for Windows HANDLE
@@ -143,10 +150,12 @@ bool InstallService(const wchar_t *service_name, const wchar_t *display_name,
 //   error in the standard output stream for users to diagnose the problem.
 //
 enum class UninstallServiceMode { normal, test };
-bool UninstallService(
-    const wchar_t *service_name,
-    UninstallServiceMode uninstall_mode = UninstallServiceMode::normal);
+bool UninstallService(const wchar_t *service_name,
+                      UninstallServiceMode uninstall_mode);
 
+inline bool UninstallService(const wchar_t *service_name) {
+    return UninstallService(service_name, UninstallServiceMode::normal);
+}
 // Abstract Interface template for SERVICE PROCESSOR:
 // WE ARE NOT GOING TO USE AT ALL.
 // One binary - one object of one class
@@ -160,18 +169,18 @@ public:
     virtual void pauseService() = 0;
     virtual void continueService() = 0;
     virtual void shutdownService() = 0;
-    virtual const wchar_t *getMainLogName() const = 0;
-    virtual void preContextCall() = 0;
-    virtual void cleanupOnStop() {}
+    [[nodiscard]] virtual const wchar_t *getMainLogName() const = 0;
+    virtual void cleanupOnStop() {
+        // may  be but not should overridden
+    }
 };
 
 // keeps two handles
 class SimplePipe {
 public:
-    SimplePipe() : read_(nullptr), write_(nullptr), sa_initialized_(false) {
+    SimplePipe() {
         sa_.lpSecurityDescriptor = &sd_;
         sa_.nLength = sizeof(SECURITY_ATTRIBUTES);
-
         sa_.bInheritHandle = TRUE;  // allow handle inherit for child process
     }
 
@@ -185,14 +194,15 @@ public:
     bool create() {
         // protected by lock
         std::lock_guard lk(lock_);
-        if (read_ || write_) return true;
-
-        if (!sa_initialized_) {
-            auto ret = initDescriptorsWithFullAccess();
-            if (!ret) return false;  // really, something weird
+        if (read_ != nullptr || write_ != nullptr) {
+            return true;
         }
 
-        if (!::CreatePipe(&read_, &write_, &sa_, 0)) {
+        if (!sa_initialized_ && !initDescriptorsWithFullAccess()) {
+            return false;  // really, something weird
+        }
+
+        if (::CreatePipe(&read_, &write_, &sa_, 0) == 0) {
             read_ = nullptr;
             write_ = nullptr;
             xlog::l("Failed to create pipe, %d", GetLastError()).print();
@@ -200,7 +210,7 @@ public:
         }
 
         // disable inheriting from the child
-        if (!SetHandleInformation(read_, HANDLE_FLAG_INHERIT, 0)) {
+        if (SetHandleInformation(read_, HANDLE_FLAG_INHERIT, 0) == 0) {
             xlog::l("Failed to change handle information, %d", GetLastError())
                 .print();
             ::CloseHandle(read_);
@@ -213,32 +223,30 @@ public:
         return true;
     }
 
-    void shutdown() {
+    void shutdown() noexcept {
         std::lock_guard lk(lock_);
-        if (read_) {
-            CloseHandle(read_);
-            xlog::v("Closed read %p", read_);
+        if (read_ != nullptr) {
+            ::CloseHandle(read_);
             read_ = nullptr;
         }
-        if (write_) {
-            CloseHandle(write_);
-            xlog::v("Closed write %p", write_);
+        if (write_ != nullptr) {
+            ::CloseHandle(write_);
             write_ = nullptr;
         }
     }
 
-    const HANDLE getRead() const noexcept {
+    HANDLE getRead() const noexcept {
         std::lock_guard lk(lock_);
         return read_;
     }
-    const HANDLE getWrite() const noexcept {
+    HANDLE getWrite() const noexcept {
         std::lock_guard lk(lock_);
         return write_;
     }
 
-    const HANDLE moveWrite() noexcept {
+    HANDLE moveWrite() noexcept {
         std::lock_guard lk(lock_);
-        auto write = write_;
+        auto *write = write_;
         write_ = nullptr;
         return write;
     }
@@ -247,7 +255,7 @@ private:
     bool initDescriptorsWithFullAccess() {
         auto ret =
             ::InitializeSecurityDescriptor(&sd_, SECURITY_DESCRIPTOR_REVISION);
-        if (!ret) {
+        if (ret == 0) {
             xlog::l(XLOG_FLINE + "Stupid fail").print();
             return false;
         }
@@ -259,8 +267,8 @@ private:
         // NOW THIS IS BY DESIGN of Check MK
         // https://docs.microsoft.com/de-at/windows/desktop/SecAuthZ/creating-a-security-descriptor-for-a-new-object-in-c--
         // ******************************************************
-        ret = ::SetSecurityDescriptorDacl(&sd_, true, nullptr, false);
-        if (!ret) {
+        ret = ::SetSecurityDescriptorDacl(&sd_, 1, nullptr, 0);  // NOLINT
+        if (ret == 0) {
             xlog::l(XLOG_FLINE + "Not so stupid fail %d", GetLastError())
                 .print();
             return false;
@@ -269,9 +277,9 @@ private:
         return true;
     }
     mutable std::mutex lock_;
-    HANDLE read_;
-    HANDLE write_;
-    bool sa_initialized_;
+    HANDLE read_{nullptr};
+    HANDLE write_{nullptr};
+    bool sa_initialized_{false};
     SECURITY_DESCRIPTOR sd_ = {0};
     SECURITY_ATTRIBUTES sa_;
 };
@@ -288,12 +296,11 @@ bool KillProcess(uint32_t pid, int exit_code) noexcept;
 
 // process terminator
 // used to kill OpenHardwareMonitor
-bool KillProcess(std::wstring_view process_name, int exit_code = 9) noexcept;
+bool KillProcess(std::wstring_view process_name, int exit_code) noexcept;
 
 // special function to kill suspicious processes with all here children
 // useful mostly to stop legacy agent which may have plugins running
-bool KillProcessFully(const std::wstring &process_name,
-                      int exit_code = 9) noexcept;
+bool KillProcessFully(const std::wstring &process_name, int exit_code) noexcept;
 
 // calculates count of processes in the system
 int FindProcess(std::wstring_view process_name) noexcept;
@@ -305,12 +312,7 @@ void KillProcessTree(uint32_t ProcessId);
 
 class AppRunner {
 public:
-    AppRunner()
-        : process_id_(0)
-        , exit_code_(STILL_ACTIVE)
-        , job_handle_(nullptr)
-        , process_handle_(nullptr) {}
-
+    AppRunner() = default;
     // no copy, no move
     AppRunner(const AppRunner &) = delete;
     AppRunner(AppRunner &&) = delete;
@@ -342,7 +344,7 @@ public:
         }
 
         if (kill_tree_too) {
-            if (job_handle_) {
+            if (job_handle_ != nullptr) {
                 // this is normal case but with job
                 TerminateJobObject(job_handle_, 0);
 
@@ -354,7 +356,9 @@ public:
                 CloseHandle(process_handle_);  // must
                 process_handle_ = nullptr;
             } else {
-                if (kProcessTreeKillAllowed) KillProcessTree(proc_id);
+                if (kProcessTreeKillAllowed) {
+                    KillProcessTree(proc_id);
+                }
             }
 
             return;
@@ -362,23 +366,24 @@ public:
 
         if (exit_code_ == STILL_ACTIVE) {
             auto success = KillProcess(proc_id, -1);
-            if (!success)
+            if (!success) {
                 xlog::v("Failed kill {} status {}", proc_id, GetLastError());
+            }
         }
     }
 
-    const auto getCmdLine() const { return cmd_line_; }
-    const auto processId() const { return process_id_.load(); }
-    const auto exitCode() const { return exit_code_; }
-    const auto getStdioRead() const { return stdio_.getRead(); }
-    const auto getStderrRead() const { return stderr_.getRead(); }
+    auto getCmdLine() const { return cmd_line_; }
+    auto processId() const { return process_id_.load(); }
+    auto exitCode() const { return exit_code_; }
+    auto getStdioRead() const { return stdio_.getRead(); }
+    auto getStderrRead() const { return stderr_.getRead(); }
 
     const auto &getData() const { return data_; }
-
     auto &getData() { return data_; }
-    bool trySetExitCode(uint32_t Pid, uint32_t Code) {
-        if (Pid && Pid == process_id_) {
-            exit_code_ = Code;
+
+    bool trySetExitCode(uint32_t pid, uint32_t code) {
+        if ((pid != 0U) && pid == process_id_) {
+            exit_code_ = code;
             return true;
         }
         return false;
@@ -388,17 +393,17 @@ private:
     void prepareResources(std::wstring_view command_line,
                           bool create_pipe) noexcept;
     void cleanResources() noexcept;
-    void setExitCode(uint32_t Code) { exit_code_ = Code; }
+    void setExitCode(uint32_t code) { exit_code_ = code; }
     std::wstring cmd_line_;
-    std::atomic<uint32_t> process_id_;
-    HANDLE job_handle_;
-    HANDLE process_handle_;
+    std::atomic<uint32_t> process_id_{0};
+    HANDLE job_handle_{nullptr};
+    HANDLE process_handle_{nullptr};
     SimplePipe stdio_;
     SimplePipe stderr_;
 
     // output
     std::vector<char> data_;
-    uint32_t exit_code_;
+    uint32_t exit_code_{STILL_ACTIVE};
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class Wtools;
     FRIEND_TEST(Wtools, AppRunner);
@@ -411,25 +416,28 @@ private:
     static ServiceController *s_controller_;  // probably we need her shared
                                               // ptr, but this is clear overkill
 public:
-    ServiceController(std::unique_ptr<wtools::BaseServiceProcessor> processor);
+    explicit ServiceController(
+        std::unique_ptr<wtools::BaseServiceProcessor> processor);
 
     ServiceController(const ServiceController &) = delete;
     ServiceController &operator=(const ServiceController &) = delete;
     ServiceController(ServiceController &&) = delete;
     ServiceController &operator=(ServiceController &&) = delete;
 
-    ~ServiceController() {
+    virtual ~ServiceController() {
         std::lock_guard lk(s_lock_);
-        if (s_controller_ && s_controller_ == this) {
+        if ((s_controller_ != nullptr) && s_controller_ == this) {
             s_controller_ = nullptr;
         }
     }
 
     // no return from here till service ends
     enum class StopType { normal, no_connect, fail };
-    StopType registerAndRun(const wchar_t *service_name, bool can_stop = true,
-                            bool can_shutdown = true,
-                            bool can_pause_continue = true);
+    StopType registerAndRun(const wchar_t *service_name, bool can_stop,
+                            bool can_shutdown, bool can_pause_continue);
+    StopType registerAndRun(const wchar_t *service_name) {
+        return registerAndRun(service_name, true, true, true);
+    }
 
 protected:
     //
@@ -443,8 +451,8 @@ protected:
     //   * Win32ExitCode - error code to report
     //   * WaitHint - estimated time for pending operation, in milliseconds
     //
-    void setServiceStatus(DWORD current_state, DWORD win32_exit_code = NO_ERROR,
-                          DWORD wait_hint = 0) {
+    void setServiceStatus(DWORD current_state, DWORD win32_exit_code,
+                          DWORD wait_hint) {
         static DWORD check_point = 1;
 
         // Fill in the SERVICE_STATUS structure of the service.
@@ -460,8 +468,11 @@ protected:
         // Report the status of the service to the SCM.
         auto ret = ::SetServiceStatus(status_handle_, &status_);
         xlog::l("Setting state %d result %d", current_state,
-                ret ? 0 : GetLastError())
+                ret != 0 ? 0 : GetLastError())
             .print();
+    }
+    void setServiceStatus(DWORD current_state) {
+        return setServiceStatus(current_state, NO_ERROR, 0);
     }
 
 private:
@@ -510,15 +521,15 @@ private:
 
     // The singleton service instance.
     std::unique_ptr<BaseServiceProcessor> processor_;
-    const wchar_t *log_name_ = wtools::kWToolsLogName;
+    const wchar_t *log_name_{wtools::kWToolsLogName};
 
     std::unique_ptr<wchar_t[]> name_;
-    bool can_stop_;
-    bool can_shutdown_;
-    bool can_pause_continue_;
+    bool can_stop_{false};
+    bool can_shutdown_{false};
+    bool can_pause_continue_{false};
 
-    SERVICE_STATUS status_;
-    SERVICE_STATUS_HANDLE status_handle_;
+    SERVICE_STATUS status_{0};
+    SERVICE_STATUS_HANDLE status_handle_{nullptr};
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class ServiceControllerTest;
     FRIEND_TEST(ServiceControllerTest, CreateDelete);
@@ -533,9 +544,11 @@ inline std::string ToUtf8(const std::wstring_view src) noexcept {
 #if defined(WINDOWS_OS)
     // Windows only
     auto in_len = static_cast<int>(src.length());
-    auto out_len =
-        ::WideCharToMultiByte(CP_UTF8, 0, src.data(), in_len, NULL, 0, 0, 0);
-    if (out_len == 0) return {};
+    auto out_len = ::WideCharToMultiByte(CP_UTF8, 0, src.data(), in_len,
+                                         nullptr, 0, nullptr, nullptr);
+    if (out_len == 0) {
+        return {};
+    }
 
     std::string str;
     try {
@@ -546,8 +559,8 @@ inline std::string ToUtf8(const std::wstring_view src) noexcept {
     }
 
     // convert
-    ::WideCharToMultiByte(CP_UTF8, 0, src.data(), -1, str.data(), out_len, 0,
-                          0);
+    ::WideCharToMultiByte(CP_UTF8, 0, src.data(), -1, str.data(), out_len,
+                          nullptr, nullptr);
     return str;
 #else
     // standard but deprecated
@@ -570,8 +583,9 @@ std::wstring ToCanonical(std::wstring_view raw_app_name);
 inline std::wstring ConvertToUTF16(std::string_view src) noexcept {
 #if defined(WINDOWS_OS)
     auto in_len = static_cast<int>(src.length());
-    auto utf8_str = src.data();
-    auto out_len = MultiByteToWideChar(CP_UTF8, 0, utf8_str, in_len, NULL, 0);
+    const auto *utf8_str = src.data();
+    auto out_len =
+        MultiByteToWideChar(CP_UTF8, 0, utf8_str, in_len, nullptr, 0);
     std::wstring wstr;
     try {
         wstr.resize(out_len);
@@ -601,10 +615,6 @@ std::vector<wchar_t> ReadPerfCounterKeyFromRegistry(PerfCounterReg type);
 std::optional<uint32_t> FindPerfIndexInRegistry(std::wstring_view key);
 NameMap GenerateNameMap();
 
-// ************************
-// #TODO probably we need a class wrapper here
-// ************************
-// to simplify reading
 using DataSequence = cma::tools::DataBlock<BYTE>;
 
 // API:
@@ -636,9 +646,9 @@ std::vector<const PERF_COUNTER_DEFINITION *> GenerateCounters(
 std::vector<std::wstring> GenerateCounterNames(const PERF_OBJECT_TYPE *object,
                                                const NameMap &map);
 // 5. And Values!
-std::vector<ULONGLONG> GenerateValues(
+std::vector<uint64_t> GenerateValues(
     const PERF_COUNTER_DEFINITION &counter,
-    std::vector<const PERF_INSTANCE_DEFINITION *> &instances) noexcept;
+    const std::vector<const PERF_INSTANCE_DEFINITION *> &instances) noexcept;
 
 uint64_t GetValueFromBlock(const PERF_COUNTER_DEFINITION &counter,
                            const PERF_COUNTER_BLOCK *block) noexcept;
@@ -666,12 +676,9 @@ std::filesystem::path GetCurrentExePath();
 // return 0 when no data or error
 inline int DataCountOnHandle(HANDLE handle) {
     DWORD read_count = 0;
-
     // MSDN says to do so
-    auto peek_result =
-        ::PeekNamedPipe(handle, nullptr, 0, nullptr, &read_count, nullptr);
-
-    if (0 == peek_result) {
+    if (::PeekNamedPipe(handle, nullptr, 0, nullptr, &read_count, nullptr) ==
+        0) {
         return 0;
     }
 
@@ -681,8 +688,8 @@ inline int DataCountOnHandle(HANDLE handle) {
 template <typename T>
 bool IsVectorMarkedAsUTF16(const std::vector<T> &data) {
     static_assert(sizeof(T) == 1, "Invalid Data Type in template");
-    constexpr T char_0 = static_cast<T>('\xFF');
-    constexpr T char_1 = static_cast<T>('\xFE');
+    constexpr auto char_0 = static_cast<T>('\xFF');
+    constexpr auto char_1 = static_cast<T>('\xFE');
 
     return data.size() > 1 && data[0] == char_0 && data[1] == char_1;
 }
@@ -690,14 +697,15 @@ bool IsVectorMarkedAsUTF16(const std::vector<T> &data) {
 template <typename T>
 std::string SmartConvertUtf16toUtf8(const std::vector<T> &original_data) {
     static_assert(sizeof(T) == 1, "Invalid Data Type in template");
-    bool convert_required = IsVectorMarkedAsUTF16(original_data);
 
-    if (convert_required) {
-        auto raw_data =
+    if (IsVectorMarkedAsUTF16(original_data)) {
+        const auto *raw_data =
             reinterpret_cast<const wchar_t *>(original_data.data() + 2);
 
         std::wstring wdata(raw_data, raw_data + (original_data.size() - 2) / 2);
-        if (wdata.empty()) return {};
+        if (wdata.empty()) {
+            return {};
+        }
 
         return wtools::ToUtf8(wdata);
     }
@@ -712,7 +720,9 @@ inline void AddSafetyEndingNull(std::string &data) {
     // end without changing length
     // this is required for some stupid engines like iostream+YAML
     auto length = data.size();
-    if (data.capacity() <= length) data.reserve(length + 1);
+    if (data.capacity() <= length) {
+        data.reserve(length + 1);
+    }
     data[length] = 0;
 }
 
@@ -732,7 +742,7 @@ std::string ConditionallyConvertFromUTF16(const std::vector<T> &original_data) {
 
 // local implementation of shitty registry access functions
 inline uint32_t LocalReadUint32(const char *root_name, const char *name,
-                                uint32_t default_value = 0) noexcept {
+                                uint32_t default_value) noexcept {
     HKEY hkey = nullptr;
     auto result = ::RegOpenKeyExA(HKEY_LOCAL_MACHINE, root_name, 0,
                                   KEY_QUERY_VALUE, &hkey);
@@ -743,8 +753,8 @@ inline uint32_t LocalReadUint32(const char *root_name, const char *name,
     DWORD value = 0;
     DWORD type = REG_DWORD;
     DWORD size = sizeof(DWORD);
-    result =
-        ::RegQueryValueExA(hkey, name, nullptr, &type, (PBYTE)&value, &size);
+    result = ::RegQueryValueExA(hkey, name, nullptr, &type,
+                                reinterpret_cast<PBYTE>(&value), &size);
     ::RegCloseKey(hkey);
 
     if (result == ERROR_SUCCESS) {
@@ -798,7 +808,7 @@ inline uint32_t WmiGetUint32(const VARIANT &var) noexcept {
         case VT_UI4:
             return var.uintVal;  // no conversion here, we expect good type here
         case VT_I4:
-            return static_cast<uint32_t>(var.uintVal);
+            return var.uintVal;
         default:
             return 0;
     }
@@ -924,8 +934,7 @@ std::string WmiPostProcess(const std::string &in, StatusColumn exception_column,
 // the class is thread safe
 class WmiWrapper {
 public:
-    WmiWrapper() : locator_(nullptr), services_(nullptr) {}
-
+    WmiWrapper() = default;
     WmiWrapper(const WmiWrapper &) = delete;
     WmiWrapper &operator=(const WmiWrapper &) = delete;
     WmiWrapper(WmiWrapper &&) = delete;
@@ -961,8 +970,8 @@ private:
                                   const std::wstring &Target) noexcept;
 
     mutable std::mutex lock_;
-    IWbemLocator *locator_;
-    IWbemServices *services_;
+    IWbemLocator *locator_{nullptr};
+    IWbemServices *services_{nullptr};
 };
 
 HMODULE LoadWindowsLibrary(const std::wstring &DllPath);
@@ -989,6 +998,7 @@ std::wstring GetRegistryValue(std::wstring_view path,
                               std::wstring_view value_name,
                               std::wstring_view dflt) noexcept;
 std::wstring GetArgv(uint32_t index) noexcept;
+size_t GetCommitCharge(uint32_t pid) noexcept;
 size_t GetOwnVirtualSize() noexcept;
 
 namespace monitor {
@@ -1004,7 +1014,7 @@ public:
         AceList *next;
     };
     /// \b bstrPath - path for which ACL info should be queried
-    ACLInfo(const _bstr_t &path) noexcept;
+    explicit ACLInfo(const _bstr_t &path) noexcept;
     virtual ~ACLInfo();
     /// \b Queries NTFS for ACL Info of the file/directory
     HRESULT query() noexcept;
@@ -1014,8 +1024,6 @@ public:
 private:
     void clearAceList() noexcept;
     HRESULT addAceToList(ACE_HEADER *pAce) noexcept;
-
-private:
     _bstr_t path_;
     AceList *ace_list_;  // list of Access Control Entries
 };
@@ -1024,7 +1032,7 @@ std::string ReadWholeFile(const std::filesystem::path &fname) noexcept;
 
 bool PatchFileLineEnding(const std::filesystem::path &fname) noexcept;
 
-using InternalUser = std::pair<std::wstring, std::wstring>;  // name,pwd
+using InternalUser = std::pair<std::wstring, std::wstring>;  // name, password
 
 InternalUser CreateCmaUserInGroup(const std::wstring &group_name) noexcept;
 bool RemoveCmaUser(const std::wstring &user_name) noexcept;
@@ -1038,11 +1046,10 @@ public:
     Bstr &operator=(const Bstr &) = delete;
     Bstr &operator=(Bstr &&) = delete;
 
-    Bstr(std::wstring_view str) { data_ = ::SysAllocString(str.data()); }
+    explicit Bstr(std::wstring_view str)
+        : data_{::SysAllocString(str.data())} {}
     ~Bstr() { ::SysFreeString(data_); }
-    operator BSTR() { return data_; }
-
-public:
+    [[nodiscard]] BSTR bstr() const { return data_; }
     BSTR data_;
 };
 
@@ -1073,10 +1080,12 @@ std::filesystem::path ExecuteCommandsSync(
 /// \brief Changes Access Rights in Windows crazy manner
 ///
 /// Example of usage is
-/// ChangeAccessRights( L"c:\\txt", SE_FILE_OBJECT,        // what
-///                     L"a1", TRUSTEE_IS_NAME,            // who
-///                     STANDARD_RIGHTS_ALL | GENERIC_ALL, // how
-///                     GRANT_ACCESS, OBJECT_INHERIT_ACE);
+#if 0
+ChangeAccessRights( L"c:\\txt", SE_FILE_OBJECT,        // what
+                    L"a1", TRUSTEE_IS_NAME,            // who
+                    STANDARD_RIGHTS_ALL | GENERIC_ALL, // how
+                    GRANT_ACCESS, OBJECT_INHERIT_ACE);
+#endif
 bool ChangeAccessRights(
     const wchar_t *object_name,   // name of object
     SE_OBJECT_TYPE object_type,   // type of object
@@ -1091,8 +1100,7 @@ std::wstring ExpandStringWithEnvironment(std::wstring_view str);
 
 const wchar_t *GetMultiSzEntry(wchar_t *&pos, const wchar_t *end);
 
-std::wstring SidToName(const std::wstring_view sid,
-                       const SID_NAME_USE &sid_type);
+std::wstring SidToName(std::wstring_view sid, const SID_NAME_USE &sid_type);
 
 std::vector<char> ReadFromHandle(HANDLE handle);
 

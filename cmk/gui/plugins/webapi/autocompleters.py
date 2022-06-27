@@ -14,11 +14,10 @@ from cmk.utils.type_defs import MetricName
 
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.sites as sites
-import cmk.gui.watolib as watolib
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
-from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.plugins.metrics.utils import (
     get_graph_templates,
     graph_info,
@@ -36,6 +35,7 @@ from cmk.gui.query_filters import sites_options
 from cmk.gui.type_defs import Choices
 from cmk.gui.utils.labels import encode_label_for_livestatus, Label
 from cmk.gui.valuespec import autocompleter_registry
+from cmk.gui.watolib.hosts_and_folders import CREHost, Folder, Host
 
 
 def __live_query_to_choices(
@@ -88,7 +88,7 @@ def monitored_hostname_autocompleter(value: str, params: Dict) -> Choices:
 def config_hostname_autocompleter(value: str, params: Dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices"""
-    all_hosts: Dict[str, watolib.CREHost] = watolib.Host.all()
+    all_hosts: Dict[str, CREHost] = Host.all()
     match_pattern = re.compile(value, re.IGNORECASE)
     match_list: Choices = []
     for host_name, host_object in all_hosts.items():
@@ -183,7 +183,11 @@ def monitored_service_description_autocompleter(value: str, params: Dict) -> Cho
 
 @autocompleter_registry.register_expression("wato_folder_choices")
 def wato_folder_choices_autocompleter(value: str, params: Dict) -> Choices:
-    return watolib.Folder.folder_choices_fulltitle()
+    # select2 omits empty strings ("") as option therefore the path of the Main folder is replaced by a placeholder
+    return [
+        (path, name) if path != "" else ("@main", name)
+        for path, name in Folder.folder_choices_fulltitle()
+    ]
 
 
 @autocompleter_registry.register_expression("kubernetes_labels")
@@ -251,7 +255,7 @@ def tag_group_opt_autocompleter(value: str, params: Dict) -> Choices:
             grouped.append(("", ""))
             for grouped_tag in tag_group.tags:
                 tag_id = "" if grouped_tag.id is None else grouped_tag.id
-                if value.lower() in grouped_tag.title:
+                if value.lower() in grouped_tag.title.lower() or value == grouped_tag.id:
                     grouped.append((tag_id, grouped_tag.title))
     return grouped
 
@@ -325,7 +329,7 @@ def validate_autocompleter_data(api_request):
 
 @page_registry.register_page("ajax_vs_autocomplete")
 class PageVsAutocomplete(AjaxPage):
-    def page(self):
+    def page(self) -> PageResult:
         api_request = self.webapi_request()
         validate_autocompleter_data(api_request)
         ident = api_request["ident"]

@@ -24,6 +24,7 @@ def inventory_dell_powerconnect_cpu(info):
         enabled, onesecondperc, _oneminuteperc, _fiveminutesperc = info[0]
         if enabled == "1" and onesecondperc != "" and int(onesecondperc) >= 0:
             return [(None, "dell_powerconnect_cpu_default_levels")]
+    return []
 
 
 # Check of dell power connect CPU details.

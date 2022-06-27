@@ -88,6 +88,7 @@ def check_eltek_fans(item, params, info):
                     infotext += " (warn/crit %s %.1f%%/%.1f%%)" % (levelstext, warn, crit)
 
                 return state, infotext
+    return None
 
 
 check_info["eltek_fans"] = {

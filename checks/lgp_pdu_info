@@ -21,6 +21,7 @@ def inventory_lgp_pdu_info(info):
             # Use the SysAssignLabel as item
             inv.append((pdu[2], None))
         return inv
+    return []
 
 
 def check_lgp_pdu_info(item, params, info):

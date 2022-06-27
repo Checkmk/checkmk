@@ -27,7 +27,6 @@ import cmk.utils
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.translations
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import VERBOSE
 from cmk.utils.regex import regex
 from cmk.utils.render import Age
@@ -264,9 +263,9 @@ def _get_piggyback_processed_file_info(
 
     try:
         file_age = cmk.utils.cachefile_age(piggyback_file_path)
-    except MKGeneralException:
+    except FileNotFoundError:
         return PiggybackFileInfo(
-            source_hostname, piggyback_file_path, False, "Piggyback file might have been deleted", 0
+            source_hostname, piggyback_file_path, False, "Piggyback file is missing", 0
         )
 
     if (outdated := file_age - settings.max_cache_age(source_hostname, piggybacked_hostname)) > 0:
@@ -539,8 +538,8 @@ def _cleanup_old_source_status_files(
     for source_state_file in _get_source_state_files():
         try:
             file_age = cmk.utils.cachefile_age(source_state_file)
-        except MKGeneralException:
-            continue  # File might've been deleted. That's ok.
+        except FileNotFoundError:
+            continue  # File has been removed, that's OK.
 
         # No entry -> no file
         max_cache_age_of_source = max_cache_age_by_sources.get(source_state_file.name)

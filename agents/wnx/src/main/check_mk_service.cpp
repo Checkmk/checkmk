@@ -12,13 +12,14 @@
 
 #include "cfg.h"
 #include "cma_core.h"
+#include "common/cfg_info.h"
 #include "common/cmdline_info.h"
 #include "common/yaml.h"
+#include "cstdint"  // for int64_t, uint32_t, uint64_t
 #include "install_api.h"
 #include "logger.h"
 #include "on_start.h"  // for AppType, OnStartApp, AppType::exe, AppType::srv
 #include "providers/perf_counters_cl.h"
-#include "stdint.h"  // for int64_t, uint32_t, uint64_t
 #include "windows_service_api.h"
 
 using namespace std::chrono_literals;
@@ -263,13 +264,9 @@ void ServiceUsage(std::wstring_view comment) {
 
 }  // namespace cma::cmdline
 
-namespace cma::details {
-extern bool g_is_service;
-}  // namespace cma::details
-
 namespace cma {
 AppType AppDefaultType() {
-    return details::g_is_service ? AppType::srv : AppType::exe;
+    return GetModus() == Modus::service ? AppType::srv : AppType::exe;
 }
 
 namespace {
@@ -358,18 +355,18 @@ int CheckMainService(const std::wstring &param, int interval) {
 
 namespace srv {
 int RunService(std::wstring_view app_name) {
-    cma::details::g_is_service = true;  // we know that we are service
+    cma::details::SetModus(Modus::service);  // we know that we are service
 
-    auto ret = ServiceAsService(app_name, 1000ms, [](const void * /*nothing*/) {
+    auto ret = ServiceAsService(app_name, 1000ms, []() {
         // Auto Update when  MSI file is located by specified address
         // this part of code have to be tested manually
-        auto [command, ret] = cma::install::CheckForUpdateFile(
+        auto [command, started] = cma::install::CheckForUpdateFile(
             cma::install::kDefaultMsiFileName,     // file we are looking for
             cma::cfg::GetUpdateDir(),              // dir with file
             cma::install::UpdateProcess::execute,  // operation if file found
             cma::cfg::GetUserInstallDir());        // dir where file to backup
 
-        if (ret) {
+        if (started) {
             XLOG::l.i(
                 "Install process with command '{}' was initiated - waiting for restart",
                 wtools::ToUtf8(command));
@@ -378,7 +375,9 @@ int RunService(std::wstring_view app_name) {
         return true;
     });
 
-    if (ret == 0) cma::cmdline::ServiceUsage(L"");
+    if (ret == 0) {
+        cma::cmdline::ServiceUsage(L"");
+    }
 
     return ret == 0 ? 0 : 1;
 }
@@ -386,7 +385,9 @@ int RunService(std::wstring_view app_name) {
 
 namespace {
 void WaitForPostInstall() {
-    if (!cma::install::IsPostInstallRequired()) return;
+    if (!cma::install::IsPostInstallRequired()) {
+        return;
+    }
 
     std::cout << "Finalizing installation, please wait";
     int count = 0;
@@ -402,38 +403,35 @@ void WaitForPostInstall() {
     } while (cma::install::IsPostInstallRequired());
 }
 
-}  // namespace
-
-namespace {
 int ProcessWinperf(const std::vector<std::wstring> &args) {
+    // Two possibilities:
     // @file winperf file:a.txt id:12345 timeout:20 238:processor
     //       winperf file:a.txt id:12345 timeout:20 238:processor
     int offset = 0;
     if (args[0][0] == '@') {
         try {
             std::filesystem::path p{args[0].c_str() + 1};
-            XLOG::setup::ChangeLogFileName(p.u8string());
+            XLOG::setup::ChangeLogFileName(wtools::ToUtf8(p.wstring()));
             XLOG::setup::EnableDebugLog(true);
             XLOG::setup::EnableTraceLog(true);
             XLOG::d.i("winperf started");
             offset++;
         } catch (const std::exception & /*e*/) {
+            // nothing can be done here:
+            // command line is bad, log file probably too
             return 1;
         }
-    };
+    }
 
-    auto [error_val, name, id_val, timeout_val] =
+    auto parsed =
         exe::cmdline::ParseExeCommandLine({args.begin() + offset, args.end()});
 
-    if (error_val != 0) {
-        XLOG::l("Invalid parameters in command line [{}]", error_val);
+    if (parsed.error_code != 0) {
+        XLOG::l("Invalid parameters in command line [{}]", parsed.error_code);
         return 1;
     }
 
-    std::wstring prefix = name;
-    std::wstring port = args[offset + 1];
-    std::wstring id = id_val;
-    std::wstring timeout = timeout_val;
+    const auto &port = args[offset + 1];
     std::vector<std::wstring_view> counters;
     for (size_t i = 4 + offset; i < args.size(); i++) {
         if (std::wstring(L"#") == args[i]) {
@@ -442,7 +440,8 @@ int ProcessWinperf(const std::vector<std::wstring> &args) {
         counters.emplace_back(args[i]);
     }
 
-    return provider::RunPerf(prefix, port, id, ToInt(timeout, 20), counters);
+    return provider::RunPerf(parsed.name, port, parsed.id_val,
+                             ToInt(parsed.timeout_val, 20), counters);
 }
 }  // namespace
 
@@ -463,8 +462,8 @@ int MainFunction(int argc, wchar_t const *argv[]) {
 
     WaitForPostInstall();
 
-    std::wstring param(argv[1]);
-    if (param == exe::cmdline::kRunOnceParam) {
+    std::string param(wtools::ToUtf8(argv[1]));
+    if (param == wtools::ToUtf8(exe::cmdline::kRunOnceParam)) {
         // NO READING FROM CONFIG. This is intentional
         //
         // -runonce @file winperf file:a.txt id:12345 timeout:20 238:processor
@@ -480,65 +479,73 @@ int MainFunction(int argc, wchar_t const *argv[]) {
 
     OnStartApp();  // path from EXE
 
-    if (param == wtools::ConvertToUTF16(kInstallParam)) {
+    if (param == kInstallParam) {
         return srv::InstallMainService();
     }
-    if (param == wtools::ConvertToUTF16(kRemoveParam)) {
+    if (param == kRemoveParam) {
         return srv::RemoveMainService();
     }
 
-    if (param == wtools::ConvertToUTF16(kCheckParam)) {
-        std::wstring param = argc > 2 ? argv[2] : L"";
+    if (param == kCheckParam) {
+        std::wstring param_next = argc > 2 ? argv[2] : L"";
         auto interval = argc > 3 ? ToInt(argv[3]) : 0;
-        return CheckMainService(param, interval);
+        return CheckMainService(param_next, interval);
     }
 
-    if (param == wtools::ConvertToUTF16(kLegacyTestParam)) {
+    if (param == kLegacyTestParam) {
         return srv::TestLegacy();
     }
 
-    if (param == wtools::ConvertToUTF16(kRestoreParam)) {
+    if (param == kRestoreParam) {
         return srv::RestoreWATOConfig();
     }
 
-    if (param == wtools::ConvertToUTF16(kExecParam) ||
-        param == wtools::ConvertToUTF16(kAdhocParam)) {
-        std::wstring second_param = argc > 2 ? argv[2] : L"";
+    if (param == kExecParam || param == kAdhocParam) {
+        std::string second_param{argc > 2 ? wtools::ToUtf8(argv[2]) : ""};
 
         auto log_on_screen = srv::StdioLog::no;
-        if (second_param == wtools::ConvertToUTF16(kExecParamShowAll))
+        if (second_param == kExecParamShowAll) {
             log_on_screen = srv::StdioLog::extended;
-        else if (second_param == wtools::ConvertToUTF16(kExecParamShowWarn))
+        } else if (second_param == kExecParamShowWarn) {
             log_on_screen = srv::StdioLog::yes;
+        } else if (second_param == kExecParamIntegration) {
+            if (cma::tools::win::GetEnv(env::integration_base_dir).empty()) {
+                fmt::print(
+                    L"Integration is requested, but env var '{}' is absent\n",
+                    env::integration_base_dir);
+                ::exit(12);
+            } else {
+                cma::details::SetModus(cma::Modus::integration);
+            }
+        }
 
         return srv::ExecMainService(log_on_screen);
     }
-    if (param == wtools::ConvertToUTF16(kRealtimeParam)) {
+    if (param == kRealtimeParam) {
         return srv::ExecRealtimeTest(true);
     }
     if (param == kSkypeParam) {
         return srv::ExecSkypeTest();
     }
-    if (param == wtools::ConvertToUTF16(kResetOhm)) {
+    if (param == kResetOhm) {
         return srv::ExecResetOhm();
     }
 
-    if (param == wtools::ConvertToUTF16(kStopLegacyParam)) {
+    if (param == kStopLegacyParam) {
         return srv::ExecStopLegacy();
     }
-    if (param == wtools::ConvertToUTF16(kStartLegacyParam)) {
+    if (param == kStartLegacyParam) {
         return srv::ExecStartLegacy();
     }
-    if (param == wtools::ConvertToUTF16(kCapParam)) {
+    if (param == kCapParam) {
         return srv::ExecCap();
     }
 
-    if (param == wtools::ConvertToUTF16(kVersionParam)) {
+    if (param == kVersionParam) {
         return srv::ExecVersion();
     }
 
-    if (param == wtools::ConvertToUTF16(kUpdaterParam) ||
-        param == wtools::ConvertToUTF16(kCmkUpdaterParam)) {
+    if (param == kUpdaterParam || param == kCmkUpdaterParam) {
         std::vector<std::wstring> params;
         for (int k = 2; k < argc; k++) {
             params.emplace_back(argv[k]);
@@ -547,22 +554,22 @@ int MainFunction(int argc, wchar_t const *argv[]) {
         return srv::ExecCmkUpdateAgent(params);
     }
 
-    if (param == wtools::ConvertToUTF16(kPatchHashParam)) {
+    if (param == kPatchHashParam) {
         return srv::ExecPatchHash();
     }
 
-    if (param == wtools::ConvertToUTF16(kShowConfigParam)) {
+    if (param == kShowConfigParam) {
         std::wstring second_param = argc > 2 ? argv[2] : L"";
         return srv::ExecShowConfig(wtools::ToUtf8(second_param));
     }
 
-    if (param == wtools::ConvertToUTF16(kUpgradeParam)) {
+    if (param == kUpgradeParam) {
         std::wstring second_param = argc > 2 ? argv[2] : L"";
         return srv::ExecUpgradeParam(
             second_param == wtools::ConvertToUTF16(kUpgradeParamForce));
     }
     // #TODO make a function
-    if (param == wtools::ConvertToUTF16(kCvtParam)) {
+    if (param == kCvtParam) {
         if (argc > 2) {
             auto diag = tools::CheckArgvForValue(argc, argv, 2, kCvtParamShow)
                             ? srv::StdioLog::yes
@@ -586,7 +593,7 @@ int MainFunction(int argc, wchar_t const *argv[]) {
         return 2;
     }
 
-    if (param == wtools::ConvertToUTF16(kFwParam)) {
+    if (param == kFwParam) {
         if (argc <= 2) {
             return srv::ExecFirewall(srv::FwMode::show, argv[0], {});
         }
@@ -606,7 +613,7 @@ int MainFunction(int argc, wchar_t const *argv[]) {
         return 2;
     }
 
-    if (param == wtools::ConvertToUTF16(kSectionParam) && argc > 2) {
+    if (param == kSectionParam && argc > 2) {
         std::wstring section = argv[2];
         int delay = argc > 3 ? ToInt(argv[3]) : 0;
         auto diag = tools::CheckArgvForValue(argc, argv, 4, kSectionParamShow)
@@ -615,35 +622,35 @@ int MainFunction(int argc, wchar_t const *argv[]) {
         return srv::ExecSection(section, delay, diag);
     }
 
-    if (param == wtools::ConvertToUTF16(kCapExtractParam) && argc > 3) {
+    if (param == kCapExtractParam && argc > 3) {
         std::wstring file = argv[2];
         std::wstring to = argv[3];
         return srv::ExecExtractCap(file, to);
     }
 
-    if (param == wtools::ConvertToUTF16(kReloadConfigParam)) {
+    if (param == kReloadConfigParam) {
         srv::ExecReloadConfig();
         return 0;
     }
 
-    if (param == wtools::ConvertToUTF16(kUninstallAlert)) {
+    if (param == kUninstallAlert) {
         XLOG::l.i("UNINSTALL ALERT");
         srv::ExecUninstallAlert();
         return 0;
     }
 
-    if (param == wtools::ConvertToUTF16(kRemoveLegacyParam)) {
+    if (param == kRemoveLegacyParam) {
         srv::ExecRemoveLegacyAgent();
         return 0;
     }
 
-    if (param == wtools::ConvertToUTF16(kHelpParam)) {
+    if (param == kHelpParam) {
         ServiceUsage(L"");
         return 0;
     }
 
-    auto text =
-        std::wstring(L"Provided Parameter \"") + param + L"\" is not allowed\n";
+    auto text = std::wstring(L"Provided Parameter \"") +
+                wtools::ConvertToUTF16(param) + L"\" is not allowed\n";
 
     ServiceUsage(text);
     return 13;
@@ -651,7 +658,6 @@ int MainFunction(int argc, wchar_t const *argv[]) {
 }  // namespace cma
 
 #if !defined(CMK_TEST)
-// This is our main: do not add code here
 int wmain(int argc, wchar_t const *argv[]) {
     return cma::MainFunction(argc, argv);
 }

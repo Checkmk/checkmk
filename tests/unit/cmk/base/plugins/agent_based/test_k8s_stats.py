@@ -18,6 +18,7 @@ from cmk.base.plugins.agent_based.k8s_stats_network import (
     discover_k8s_stats_network,
 )
 from cmk.base.plugins.agent_based.k8s_stats_section import parse_k8s
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 discovery = {
     "": [],
@@ -257,7 +258,7 @@ parsed_data = {
         ),
     ],
 )
-def test_parse_k8s(string_table, expected_parsed_data):
+def test_parse_k8s(string_table, expected_parsed_data) -> None:
     assert parse_k8s([[string_table]]) == expected_parsed_data
 
 
@@ -267,7 +268,7 @@ def test_parse_k8s(string_table, expected_parsed_data):
         (parsed_data, [Service(item="/dev/sda1")]),
     ],
 )
-def test_discover_k8s_stats_fs(section, expected_items):
+def test_discover_k8s_stats_fs(section, expected_items) -> None:
     assert list(discover_k8s_stats_fs(section)) == expected_items
 
 
@@ -277,7 +278,7 @@ def test_discover_k8s_stats_fs(section, expected_items):
         (parsed_data, [Service(item="eth1"), Service(item="eth0"), Service(item="sit0")]),
     ],
 )
-def test_discover_k8s_stats_network(section, expected_items):
+def test_discover_k8s_stats_network(section, expected_items) -> None:
     assert list(discover_k8s_stats_network(section, None)) == expected_items
 
 
@@ -305,20 +306,31 @@ def test_discover_k8s_stats_network(section, expected_items):
         )
     ],
 )
-def test__check_k8s_stats_fs(section, expected_results):
+def test__check_k8s_stats_fs(section, expected_results) -> None:
     vs: Dict[str, Any] = {}
     for _ in range(2):
         results = list(
             _check__k8s_stats_fs__core(
                 vs,
                 "/dev/sda1",
-                {},
+                FILESYSTEM_DEFAULT_PARAMS,
                 section,
             )
         )
 
     print("\n", "\n".join(str(r) for r in results))
-    assert results == expected_results
+    assert [r for r in results if isinstance(r, Result)] == [
+        r for r in expected_results if isinstance(r, Result)
+    ]
+    for actual_metric, expected_metric in zip(
+        [m for m in results if isinstance(m, Metric)],
+        [m for m in expected_results if isinstance(m, Metric)],
+    ):
+        assert actual_metric.name == expected_metric.name
+        assert actual_metric.value == expected_metric.value
+        if hasattr(actual_metric, "levels"):
+            assert actual_metric.levels[0] == pytest.approx(expected_metric.levels[0])
+            assert actual_metric.levels[1] == pytest.approx(expected_metric.levels[1])
 
 
 @pytest.mark.parametrize(
@@ -345,7 +357,7 @@ def test__check_k8s_stats_fs(section, expected_results):
         )
     ],
 )
-def test__check_k8s_stats_network(section, expected_results):
+def test__check_k8s_stats_network(section, expected_results) -> None:
     vs: Dict[str, Any] = {}
     for _ in range(2):
         section = {

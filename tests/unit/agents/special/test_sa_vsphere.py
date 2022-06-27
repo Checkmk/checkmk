@@ -62,7 +62,7 @@ DEFAULT_AGRS = {
         (["-s", "I like listening to Folk music"], {"secret": "I like listening to Folk music"}),
     ],
 )
-def test_parse_arguments(argv, expected_non_default_args):
+def test_parse_arguments(argv, expected_non_default_args) -> None:
     args = agent_vsphere.parse_arguments(argv + ["test_host"])
     for attr in DEFAULT_AGRS:
         expected = expected_non_default_args.get(attr, DEFAULT_AGRS[attr])
@@ -81,7 +81,7 @@ def test_parse_arguments(argv, expected_non_default_args):
         ["--vm_piggyname", "MissPiggy"],
     ],
 )
-def test_parse_arguments_invalid(invalid_argv, monkeypatch):
+def test_parse_arguments_invalid(invalid_argv, monkeypatch) -> None:
     monkeypatch.setattr("cmk.special_agents.utils.vcrtrace", lambda **vcr_init_kwargs: None)
     with pytest.raises(SystemExit):
         agent_vsphere.parse_arguments(invalid_argv)

@@ -475,7 +475,7 @@ def user_match_options(extra_elements=None):
                     mode=RegExp.prefix,
                 ),
                 title=_("Regular expression matching username"),
-                help=_("This regex must match the <i>beginning</i> of the complete " "username"),
+                help=_("This regex must match the <i>beginning</i> of the complete username"),
                 forth=lambda x: x[1:],  # remove ~
                 back=lambda x: "~" + x,  # prefix ~
             ),

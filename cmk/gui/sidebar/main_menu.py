@@ -10,14 +10,18 @@ Cares about the main navigation of our GUI. This is a) the small sidebar and b) 
 from typing import List, NamedTuple, Optional, Union
 
 import cmk.gui.message as message
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import active_config, html, output_funnel, request, response
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import any_show_more_items, mega_menu_registry
-from cmk.gui.pages import AjaxPage, page_registry, register
+from cmk.gui.pages import AjaxPage, page_registry, PageResult, register
 from cmk.gui.type_defs import Icon, MegaMenu, TopicMenuItem, TopicMenuTopic
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodInline
 from cmk.gui.werks import may_acknowledge, num_unacknowledged_incompatible_werks
 
@@ -52,7 +56,7 @@ class MainMenuRenderer:
                 (self._get_popup_trigger_content(active_icon, menu_item)),
                 ident="mega_menu_" + menu_item.name,
                 method=MethodInline(self._get_mega_menu_content(menu_item)),
-                cssclass=menu_item.name,
+                cssclass=[menu_item.name],
                 popup_group="main_menu_popup",
                 hover_switch_delay=150,  # ms
                 onopen=menu_item.onopen,
@@ -66,10 +70,12 @@ class MainMenuRenderer:
             html.close_li()
 
     def _get_popup_trigger_content(self, active_icon: Icon, menu_item: MainMenuItem) -> HTML:
-        content = html.render_icon(menu_item.icon) + html.render_icon(active_icon, class_="active")
+        content = html.render_icon(menu_item.icon) + html.render_icon(
+            active_icon, class_=["active"]
+        )
 
         if not user.get_attribute("nav_hide_icons_title"):
-            content += html.render_div(menu_item.title)
+            content += HTMLWriter.render_div(menu_item.title)
 
         return content
 
@@ -94,11 +100,10 @@ class MainMenuRenderer:
             menu = mega_menu_registry[menu_item.name]
             html.open_div(
                 id_="popup_menu_%s" % menu_item.name,
-                class_=[
-                    "popup_menu",
-                    "main_menu_popup",
-                    "min" if user.get_attribute("nav_hide_icons_title") else None,
-                ],
+                class_=(
+                    ["popup_menu", "main_menu_popup"]
+                    + (["min"] if user.get_attribute("nav_hide_icons_title") else [])
+                ),
             )
             MegaMenuRenderer().show(menu)
             html.close_div()
@@ -119,7 +124,7 @@ def ajax_message_read():
 
 @page_registry.register_page("ajax_sidebar_get_messages")
 class ModeAjaxSidebarGetMessages(AjaxPage):
-    def page(self):
+    def page(self) -> PageResult:
         popup_msg: List = []
         hint_msg: int = 0
 
@@ -140,7 +145,7 @@ class ModeAjaxSidebarGetMessages(AjaxPage):
 
 @page_registry.register_page("ajax_sidebar_get_unack_incomp_werks")
 class ModeAjaxSidebarGetUnackIncompWerks(AjaxPage):
-    def page(self):
+    def page(self) -> PageResult:
         if not may_acknowledge():
             raise MKAuthException(_("You are not allowed to acknowlegde werks"))
 

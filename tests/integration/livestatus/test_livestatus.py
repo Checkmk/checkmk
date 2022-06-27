@@ -111,7 +111,7 @@ def test_host_table_host_equal_filter(site: Site) -> None:
 @pytest.mark.usefixtures("default_cfg")
 def test_service_table(site: Site) -> None:
     rows = site.live.query(
-        "GET services\nFilter: host_name = livestatus-test-host\n" "Columns: description\n"
+        "GET services\nFilter: host_name = livestatus-test-host\nColumns: description\n"
     )
     assert isinstance(rows, list)
     assert len(rows) >= 20  # header + min 1 service
@@ -200,13 +200,13 @@ class TestCrashReport:
         yield
         site.delete_dir("var/check_mk/crashes/%s" % component)
 
-    def test_list_crash_report(self, site, component, uuid):
+    def test_list_crash_report(self, site, component, uuid) -> None:
         rows = site.live.query("GET crashreports")
         assert rows
         assert ["component", "id"] in rows
         assert [component, uuid] in rows
 
-    def test_read_crash_report(self, site, component, uuid, crash_info):
+    def test_read_crash_report(self, site, component, uuid, crash_info) -> None:
         rows = site.live.query(
             "\n".join(
                 (
@@ -219,7 +219,7 @@ class TestCrashReport:
         assert rows
         assert _json.loads(rows[0][0]) == crash_info
 
-    def test_del_crash_report(self, site, component, uuid):
+    def test_del_crash_report(self, site, component, uuid) -> None:
         before = site.live.query("GET crashreports")
         assert [component, uuid] in before
 
@@ -230,7 +230,7 @@ class TestCrashReport:
         assert after != before
         assert [component, uuid] not in after
 
-    def test_other_crash_report(self, site, component, uuid):
+    def test_other_crash_report(self, site, component, uuid) -> None:
         before = site.live.query("GET crashreports")
         assert [component, uuid] in before
 

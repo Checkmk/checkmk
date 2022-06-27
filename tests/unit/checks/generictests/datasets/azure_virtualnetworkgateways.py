@@ -26,7 +26,7 @@ checks = {
     '': [(u'MeinGateway', {}, [
         (0, 'Point-to-site connections: 1', [('connections', 1, None, None, 0, None)]),
         (0, 'Point-to-site bandwidth: 0.00 B/s', [('p2s_bandwidth', 0.0, None, None, 0, None)]),
-        (0, 'Site-to-site bandwidth: 13.41 kB/s', [('s2s_bandwidth', 13729.0, None, None, 0,
+        (0, 'Site-to-site bandwidth: 13.7 kB/s', [('s2s_bandwidth', 13729.0, None, None, 0,
                                                     None)]),
         (0, u'Location: westeurope', []),
     ]),],

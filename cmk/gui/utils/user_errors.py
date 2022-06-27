@@ -12,6 +12,7 @@ page.
 
 from typing import Dict, Iterator, Mapping, Optional
 
+from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKUserError
 
 
@@ -33,3 +34,6 @@ class UserErrors(Mapping[Optional[str], str]):
 
     def __len__(self) -> int:
         return len(self._errors)
+
+
+user_errors: UserErrors = request_local_attr("user_errors")

@@ -5,15 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # <<<tinkerforge:sep(44)>>>
@@ -98,6 +94,7 @@ def check_tinkerforge_temperature(item, params, parsed):
     if "temperature" in parsed and item in parsed["temperature"]:
         reading = float(parsed["temperature"][item][0]) / 100.0
         return check_temperature(reading, params, "tinkerforge_%s" % item)
+    return None
 
 
 def check_tinkerforge_ambient(item, params, parsed):
@@ -106,15 +103,17 @@ def check_tinkerforge_ambient(item, params, parsed):
         if not params:
             params = None
         return check_levels(reading, "brightness", params, unit="lx", infoname="Brightness")
+    return None
 
 
 def check_tinkerforge_humidity(item, params, parsed):
     if "humidity" in parsed and item in parsed["humidity"]:
         return check_humidity(float(parsed["humidity"][item][0]) / 10.0, params)
+    return None
 
 
 def check_tinkerforge_motion(item, params, parsed):
-    def test_in_period(time, periods):
+    def test_in_period(time, periods) -> bool:
         time_mins = time[0] * 60 + time[1]
         for per in periods:
             per_mins_low = per[0][0] * 60 + per[0][1]

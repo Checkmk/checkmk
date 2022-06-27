@@ -10,7 +10,10 @@ from pathlib import Path
 from typing import (
     Container,
     Dict,
+    Final,
     List,
+    Literal,
+    Mapping,
     Optional,
     overload,
     Set,
@@ -92,7 +95,7 @@ from cmk.base.modes import keepalive_option, Mode, modes, Option
 #   |      \____|\___|_| |_|\___|_|  \__,_|_|  \___/| .__/ \__|___(_)      |
 #   |                                               |_|                    |
 #   +----------------------------------------------------------------------+
-#   | The general options that are available for all Checkmk modes. Only  |
+#   | The general options that are available for all Checkmk modes. Only   |
 #   | add new general options in case they are really affecting basic      |
 #   | things and used by the most of the modes.                            |
 #   '----------------------------------------------------------------------'
@@ -112,66 +115,6 @@ modes.register_general_option(
         short_option="v",
         short_help="Enable verbose output (Use twice for more)",
         handler_function=option_verbosity,
-    )
-)
-
-_verbosity = 0
-
-
-def option_cache() -> None:
-    cmk.core_helpers.cache.FileCacheFactory.maybe = True
-    cmk.core_helpers.cache.FileCacheFactory.use_outdated = True
-
-
-modes.register_general_option(
-    Option(
-        long_option="cache",
-        short_help="Read info from data source cache files when existant, even when it "
-        "is outdated. Only contact the data sources when the cache file "
-        "is absent",
-        handler_function=option_cache,
-    )
-)
-
-
-def option_no_cache() -> None:
-    cmk.core_helpers.cache.FileCacheFactory.disabled = True
-
-
-modes.register_general_option(
-    Option(
-        long_option="no-cache",
-        short_help="Never use cached information",
-        handler_function=option_no_cache,
-    )
-)
-
-
-def option_no_tcp() -> None:
-    sources.tcp.TCPSource.use_only_cache = True
-
-
-# TODO: Check whether or not this is used only for -I as written in the help.
-# Does it affect inventory/checking too?
-modes.register_general_option(
-    Option(
-        long_option="no-tcp",
-        short_help="For -I: Only use cache files. Skip hosts without cache files.",
-        handler_function=option_no_tcp,
-    )
-)
-
-
-def option_usewalk() -> None:
-    snmp_factory.force_stored_walks()
-    ip_lookup.enforce_localhost()
-
-
-modes.register_general_option(
-    Option(
-        long_option="usewalk",
-        short_help="Use snmpwalk stored with --snmpwalk",
-        handler_function=option_usewalk,
     )
 )
 
@@ -216,7 +159,68 @@ modes.register_general_option(
     )
 )
 
+
 # .
+#   .--Fetcher options-----------------------------------------------------.
+#   |                  _____    _       _                                  |
+#   |                 |  ___|__| |_ ___| |__   ___ _ __                    |
+#   |                 | |_ / _ \ __/ __| '_ \ / _ \ '__|                   |
+#   |                 |  _|  __/ || (__| | | |  __/ |                      |
+#   |                 |_|  \___|\__\___|_| |_|\___|_|                      |
+#   |                                                                      |
+#   |                              _   _                                   |
+#   |                   ___  _ __ | |_(_) ___  _ __  ___                   |
+#   |                  / _ \| '_ \| __| |/ _ \| '_ \/ __|                  |
+#   |                 | (_) | |_) | |_| | (_) | | | \__ \                  |
+#   |                  \___/| .__/ \__|_|\___/|_| |_|___/                  |
+#   |                       |_|                                            |
+#   +----------------------------------------------------------------------+
+#   | These options are shared by all modes that use fetchers.             |
+#   | These used to be general options, that's why we currently have these |
+#   | handler *like*  functions, that only have side-effects.              |
+#   | It's not meant to stay this way.                                     |
+#   '----------------------------------------------------------------------'
+# .
+
+
+def _handle_fetcher_options(options: Mapping[str, object]) -> None:
+
+    if options.get("cache", False):
+        cmk.core_helpers.cache.FileCacheFactory.maybe = True
+        cmk.core_helpers.cache.FileCacheFactory.use_outdated = True
+
+    if options.get("no-cache", False):
+        cmk.core_helpers.cache.FileCacheFactory.disabled = True
+
+    if options.get("no-tcp", False):
+        sources.tcp.TCPSource.use_only_cache = True
+
+    if options.get("usewalk", False):
+        snmp_factory.force_stored_walks()
+        ip_lookup.enforce_localhost()
+
+
+_FETCHER_OPTIONS: Final = [
+    Option(
+        long_option="cache",
+        short_help="Read info from data source cache files when existant, even when it "
+        "is outdated. Only contact the data sources when the cache file "
+        "is absent",
+    ),
+    Option(
+        long_option="no-cache",
+        short_help="Never use cached information",
+    ),
+    Option(
+        long_option="no-tcp",
+        short_help="Only use cache files. Skip hosts without cache files.",
+    ),
+    Option(
+        long_option="usewalk",
+        short_help="Use snmpwalk stored with --snmpwalk",
+    ),
+]
+
 # .
 #   .--list-hosts----------------------------------------------------------.
 #   |              _ _     _        _               _                      |
@@ -422,7 +426,8 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_dump_agent(hostname: HostName) -> None:
+def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) -> None:
+    _handle_fetcher_options(options)
     try:
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
@@ -476,6 +481,7 @@ modes.register(
             "hosts it shows the agent output plus possible piggyback information. "
             "Does not work on clusters but only on real hosts. "
         ],
+        sub_options=_FETCHER_OPTIONS[:3],
     )
 )
 
@@ -1083,7 +1089,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_flush(hosts: List[HostName]) -> None:
+def mode_flush(hosts: List[HostName]) -> None:  # pylint: disable=too-many-branches
     config_cache = config.get_config_cache()
 
     if not hosts:
@@ -1488,8 +1494,15 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_discover_marked_hosts() -> None:
-    discovery.discover_marked_hosts(create_core(config.monitoring_core))
+def mode_discover_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
+    _handle_fetcher_options(options)
+
+    if not (queue := discovery.AutodiscoveryQueue()):
+        console.verbose("Autodiscovery: No hosts marked by discovery check\n")
+        return
+
+    config.load()
+    discovery.discover_marked_hosts(create_core(config.monitoring_core), queue)
 
 
 modes.register(
@@ -1503,6 +1516,8 @@ modes.register(
             "check-discovery. The results of this discovery may be activated "
             "automatically if configured.",
         ],
+        sub_options=_FETCHER_OPTIONS,
+        needs_config=False,
     )
 )
 
@@ -1517,7 +1532,8 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_check_discovery(hostname: HostName) -> int:
+def mode_check_discovery(options: Mapping[str, Literal[True]], hostname: HostName) -> int:
+    _handle_fetcher_options(options)
     return discovery.commandline_check_discovery(hostname, ipaddress=None)
 
 
@@ -1534,6 +1550,7 @@ modes.register(
             "If configured to do so, this will queue those hosts for automatic "
             "discover-marked-hosts"
         ],
+        sub_options=_FETCHER_OPTIONS,
     )
 )
 
@@ -1676,6 +1693,10 @@ def _extract_plugin_selection(
 _DiscoveryOptions = TypedDict(
     "_DiscoveryOptions",
     {
+        "cache": Literal[True],
+        "no-cache": Literal[True],
+        "no-tcp": Literal[True],
+        "usewalk": Literal[True],
         "detect-sections": Set[SectionName],
         "plugins": Set[CheckPluginName],
         "detect-plugins": Set[str],
@@ -1687,6 +1708,7 @@ _DiscoveryOptions = TypedDict(
 
 
 def mode_discover(options: _DiscoveryOptions, args: List[str]) -> None:
+    _handle_fetcher_options(options)
     hostnames = modes.parse_hostname_list(args)
     cmk.core_helpers.cache.FileCacheFactory.maybe = True
     if not hostnames:
@@ -1727,6 +1749,7 @@ modes.register(
             "specified types and hosts.",
         ],
         sub_options=[
+            *_FETCHER_OPTIONS,
             Option(
                 long_option="discover",
                 short_option="I",
@@ -1758,6 +1781,10 @@ modes.register(
 _CheckingOptions = TypedDict(
     "_CheckingOptions",
     {
+        "cache": Literal[True],
+        "no-cache": Literal[True],
+        "no-tcp": Literal[True],
+        "usewalk": Literal[True],
         "no-submit": bool,
         "perfdata": bool,
         "detect-sections": Set[SectionName],
@@ -1771,6 +1798,8 @@ _CheckingOptions = TypedDict(
 def mode_check(options: _CheckingOptions, args: List[str]) -> None:
     import cmk.base.agent_based.checking as checking  # pylint: disable=import-outside-toplevel
     import cmk.base.item_state as item_state  # pylint: disable=import-outside-toplevel
+
+    _handle_fetcher_options(options)
 
     if "no-submit" in options:
         # this has no effect for the new Check API. For the old one (cmk/base/check_api.py)
@@ -1817,6 +1846,7 @@ modes.register(
             "'snmp' for all SNMP based checks.",
         ],
         sub_options=[
+            *_FETCHER_OPTIONS,
             Option(
                 long_option="no-submit",
                 short_option="n",
@@ -1847,6 +1877,10 @@ modes.register(
 _InventoryOptions = TypedDict(
     "_InventoryOptions",
     {
+        "cache": Literal[True],
+        "no-cache": Literal[True],
+        "no-tcp": Literal[True],
+        "usewalk": Literal[True],
         "force": bool,
         "detect-sections": Set[SectionName],
         "plugins": Set[InventoryPluginName],
@@ -1857,6 +1891,8 @@ _InventoryOptions = TypedDict(
 
 
 def mode_inventory(options: _InventoryOptions, args: List[str]) -> None:
+    _handle_fetcher_options(options)
+
     config_cache = config.get_config_cache()
 
     if args:
@@ -1896,6 +1932,7 @@ modes.register(
             "will be used even if they are outdated."
         ],
         sub_options=[
+            *_FETCHER_OPTIONS,
             Option(
                 long_option="force",
                 short_option="f",
@@ -1920,6 +1957,7 @@ modes.register(
 
 
 def mode_inventory_as_check(options: Dict, hostname: HostName) -> int:
+    _handle_fetcher_options(options)
     return inventory.active_check_inventory(hostname, options)
 
 
@@ -1931,6 +1969,7 @@ modes.register(
         argument_descr="HOST",
         short_help="Do HW/SW-Inventory, behave like check plugin",
         sub_options=[
+            *_FETCHER_OPTIONS,
             Option(
                 long_option="hw-changes",
                 argument=True,

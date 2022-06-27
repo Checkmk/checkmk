@@ -18,7 +18,7 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
 import cmk.gui.background_job as background_job
-import cmk.gui.globals as gui_globals
+import cmk.gui.config as config
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.log
 
@@ -29,10 +29,10 @@ def debug_logging():
         {"cmk.web": logging.DEBUG, "cmk.web.background-job": cmk.utils.log.VERBOSE}
     )
     yield
-    cmk.gui.log.set_log_levels(gui_globals.active_config.log_levels)
+    cmk.gui.log.set_log_levels(config.active_config.log_levels)
 
 
-def test_registered_background_jobs():
+def test_registered_background_jobs() -> None:
     expected_jobs = [
         "ActivateChangesSchedulerBackgroundJob",
         "ParentScanBackgroundJob",
@@ -64,7 +64,7 @@ def test_registered_background_jobs():
     assert sorted(gui_background_job.job_registry.keys()) == sorted(expected_jobs)
 
 
-def test_registered_background_jobs_attributes():
+def test_registered_background_jobs_attributes() -> None:
     for job_class in gui_background_job.job_registry.values():
         assert isinstance(job_class.job_prefix, str)
         assert isinstance(job_class.gui_title(), str)
@@ -95,7 +95,7 @@ class DummyBackgroundJob(gui_background_job.GUIBackgroundJob):
     def gui_title(cls):
         return "Dummy Job"
 
-    def __init__(self):
+    def __init__(self) -> None:
         kwargs = {}
         kwargs["title"] = self.gui_title()
         kwargs["deletable"] = False
@@ -115,7 +115,7 @@ class DummyBackgroundJob(gui_background_job.GUIBackgroundJob):
         time.sleep(100)
 
 
-def test_start_job(request_context):
+def test_start_job(request_context) -> None:
     job = DummyBackgroundJob()
     job.set_function(job.execute_hello)
 
@@ -146,7 +146,7 @@ def test_start_job(request_context):
     assert "Hallo :-)" in output
 
 
-def test_stop_job(request_context):
+def test_stop_job(request_context) -> None:
     job = DummyBackgroundJob()
     job.set_function(job.execute_endless)
     job.start()

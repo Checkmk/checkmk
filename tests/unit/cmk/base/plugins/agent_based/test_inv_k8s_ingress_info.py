@@ -126,7 +126,7 @@ RESULT0 = [
         (DATA0, RESULT0),
     ],
 )
-def test_inv_k8s_ingress_info(data: StringTable, result: InventoryResult):
+def test_inv_k8s_ingress_info(data: StringTable, result: InventoryResult) -> None:
     assert sort_inventory_result(
         inventory_k8s_ingress_info(json.loads(data[0][0]))
     ) == sort_inventory_result(result)

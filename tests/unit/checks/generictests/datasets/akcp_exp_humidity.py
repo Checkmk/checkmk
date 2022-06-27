@@ -22,5 +22,5 @@ checks = {'': [(u'Dual Humidity Port 1',
                 (30, 35, 60, 65),
                 [(2, 'State: sensor error', []),
                  (1,
-                  '30.0% (warn/crit below 35.0%/30.0%)',
+                  '30.00% (warn/crit below 35.00%/30.00%)',
                   [('humidity', 30, 60, 65, 0, 100)])])]}

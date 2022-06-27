@@ -52,6 +52,7 @@
 def inventory_supermicro_health(info):
     if info[1]:
         return [(None, None)]
+    return []
 
 
 def check_supermicro_health(_no_item, _no_params, info):
@@ -120,7 +121,7 @@ def check_supermicro_sensors(item, _no_params, info):
 
     def expect_order(*args):
         return max(
-            [abs(x[0] - x[1][0]) for x in enumerate(sorted(enumerate(args), key=lambda x: x[1]))]
+            abs(x[0] - x[1][0]) for x in enumerate(sorted(enumerate(args), key=lambda x: x[1]))
         )
 
     for name, sensor_type, reading, high, low, unit, dev_status in info[0]:
@@ -207,6 +208,7 @@ def check_supermicro_smart(item, _no_params, info):
     for serial, name, status in info[2]:
         if format_item_supermicro_smart(name) == item:
             return int(status), "(S/N %s) %s" % (serial, status_map[status])
+    return None
 
 
 check_info["supermicro.smart"] = {

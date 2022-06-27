@@ -9,6 +9,6 @@ from ast import literal_eval
 from cmk.utils.type_defs import EvalableFloat
 
 
-def test_evalable_float():
+def test_evalable_float() -> None:
     inf = EvalableFloat("inf")
     assert literal_eval("%r" % inf) == float("inf")

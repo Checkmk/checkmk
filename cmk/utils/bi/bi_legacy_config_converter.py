@@ -25,8 +25,8 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.rulesets.ruleset_matcher import get_tag_to_group_map, RulesetToDictTransformer
 
-import cmk.gui.watolib as watolib  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.globals import active_config  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.config import active_config  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.watolib.utils import multisite_dir  # pylint: disable=cmk-module-layer-violation
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=cmk-module-layer-violation,no-name-in-module
@@ -40,7 +40,7 @@ BIAggrNode = Tuple
 
 
 class ErrorCounter:
-    def __init__(self):
+    def __init__(self) -> None:
         self._count = 0
 
     def increase_error_count(self):
@@ -52,7 +52,7 @@ class ErrorCounter:
 
 
 class BIRuleSchemaConverter:
-    def __init__(self, logger: logging.Logger, error_counter: ErrorCounter):
+    def __init__(self, logger: logging.Logger, error_counter: ErrorCounter) -> None:
         self._logger = logger
         self._error_counter = error_counter
 
@@ -233,10 +233,11 @@ class BIRuleSchemaConverter:
                     "action"
                 ],
             }
+        return None
 
 
 class BIAggregationSchemaConverter:
-    def __init__(self, logger: logging.Logger, error_counter: ErrorCounter):
+    def __init__(self, logger: logging.Logger, error_counter: ErrorCounter) -> None:
         self._logger = logger
         self._error_counter = error_counter
 
@@ -278,7 +279,7 @@ class BIAggregationSchemaConverter:
 
 
 class BIPackSchemaConverter:
-    def __init__(self, logger: logging.Logger, error_counter: ErrorCounter):
+    def __init__(self, logger: logging.Logger, error_counter: ErrorCounter) -> None:
         self._logger = logger
         self._error_counter = error_counter
 
@@ -303,7 +304,7 @@ class BIPackSchemaConverter:
 
 
 class BIManagement:
-    def __init__(self, logger: logging.Logger):
+    def __init__(self, logger: logging.Logger) -> None:
         self._logger = logger
         self._load_config()
 
@@ -510,6 +511,7 @@ class BIManagement:
                 spec,
                 service,
             ) + self._convert_node_to_bi(node[1][3])
+        return None
 
     def _convert_aggregation_from_bi(self, aggr, single_host):
         if isinstance(aggr[0], dict):
@@ -586,7 +588,7 @@ class BIManagement:
         return brule
 
     # Convert node-Tuple into format used by CascadingDropdown
-    def _convert_node_from_bi(self, node):
+    def _convert_node_from_bi(self, node):  # pylint: disable=too-many-branches
         if len(node) == 2:
             if isinstance(node[1], list):
                 return ("call", node)
@@ -640,7 +642,7 @@ class BIManagement:
 
 
 class BILegacyConfigConverter(BIManagement):
-    def __init__(self, logger: logging.Logger):
+    def __init__(self, logger: logging.Logger) -> None:
         super().__init__(logger)
         self._logger = logger
         self._error_counter = ErrorCounter()
@@ -655,12 +657,12 @@ class BILegacyConfigConverter(BIManagement):
 
 
 class BILegacyPacksConverter(BIAggregationPacks):
-    def __init__(self, logger: logging.Logger, bi_configuration_file: str):
+    def __init__(self, logger: logging.Logger, bi_configuration_file: str) -> None:
         super().__init__(bi_configuration_file)
         self._logger = logger
 
     def convert_config(self):
-        old_bi_config = Path(watolib.multisite_dir(), "bi.mk")
+        old_bi_config = Path(multisite_dir(), "bi.mk")
         if not old_bi_config.exists():
             self._logger.info("Skipping conversion of bi.mk (already done)")
             return

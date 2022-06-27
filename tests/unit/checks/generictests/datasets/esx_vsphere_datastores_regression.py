@@ -6,6 +6,8 @@
 
 # yapf: disable
 # type: ignore
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
 checkname = 'esx_vsphere_datastores'
 
 info = [
@@ -44,7 +46,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '24.73% used (1012.89 GB of 4.00 TB)', [
+                    0, 'Used: 24.73% - 1013 GiB of 4.00 TiB', [
                         (
                             'fs_used', 1037195.0, 3355238.4, 3774643.2, 0,
                             4194048.0
@@ -56,7 +58,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Uncommitted: 0.00 B', [
+                    0, 'Uncommitted: 0 B', [
                         ('uncommitted', 0.0, None, None, None, None)
                     ]
                 ), (0, 'Provisioning: 24.73%', []),
@@ -69,10 +71,11 @@ checks = {
         ),
         (
             'WIN-0108-MCC35-U-L008-SSD-EXC2', {
+                **FILESYSTEM_DEFAULT_PARAMS,
                 'provisioning_levels': (70.0, 80.0)
             }, [
                 (
-                    0, '78.18% used (9.38 of 12.00 TB)', [
+                    0, 'Used: 78.18% - 9.38 TiB of 12.0 TiB', [
                         (
                             'fs_used', 9836700.0, 10066124.8, 11324390.4, 0,
                             12582656.0
@@ -84,10 +87,10 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Uncommitted: 0.00 B', [
+                    0, 'Uncommitted: 0 B', [
                         ('uncommitted', 0.0, None, None, None, None)
                     ]
-                ), (1, 'Provisioning: 78.18% (warn/crit at 70.0%/80.0%)', []),
+                ), (1, 'Provisioning: 78.18% (warn/crit at 70.00%/80.00%)', []),
                 (
                     0, '', [
                         (
@@ -111,7 +114,7 @@ checks = {
                 'show_reserved': False
             }, [
                 (
-                    0, '78.18% used (9.38 of 12.00 TB)', [
+                    0, 'Used: 78.18% - 9.38 TiB of 12.0 TiB', [
                         (
                             'fs_used', 9836700.0, 10066124.8, 11324390.4, 0,
                             12582656.0
@@ -123,7 +126,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Uncommitted: 0.00 B', [
+                    0, 'Uncommitted: 0 B', [
                         ('uncommitted', 0.0, None, None, None, None)
                     ]
                 ), (0, 'Provisioning: 78.18%', []),

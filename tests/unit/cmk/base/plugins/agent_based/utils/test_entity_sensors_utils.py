@@ -353,7 +353,7 @@ _SECTION_fp1140 = {
         ),
     ],
 )
-def test_parse_entity_sensors(string_table, sensor_types_ignore, expected_section):
+def test_parse_entity_sensors(string_table, sensor_types_ignore, expected_section) -> None:
     assert (
         parse_entity_sensors(
             string_table,

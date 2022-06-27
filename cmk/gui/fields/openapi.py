@@ -13,7 +13,7 @@ from marshmallow import base, fields
 from cmk.gui.fields.base import FieldWrapper, MultiNested, ValueTypedDictSchema
 
 
-def is_value_typed_dict(schema):
+def is_value_typed_dict(schema) -> bool:  # type:ignore[no-untyped-def]
     is_class = isinstance(schema, type) and issubclass(schema, ValueTypedDictSchema)
     is_instance = isinstance(schema, ValueTypedDictSchema)
     return is_class or is_instance
@@ -128,7 +128,7 @@ class CheckmkOpenAPIConverter(marshmallow.OpenAPIConverter):
             "additionalProperties": properties,
         }
 
-    def nested2properties(self, field: fields.Field, ret):
+    def nested2properties(self, field: fields.Field, ret):  # type:ignore[no-untyped-def]
         """Return a dictionary of properties from :class:`Nested <marshmallow.fields.Nested` fields.
 
         Typically provides a reference object and will add the schema to the spec

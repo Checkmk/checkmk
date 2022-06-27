@@ -29,6 +29,7 @@ from .utils_inventory import sort_inventory_result
                 name="minikube",
                 creation_timestamp=1640000000.0,
                 labels={},
+                annotations={},
                 addresses=[
                     NodeAddress(type_="Hostname", address="k8-21"),
                     NodeAddress(type_="ExternalIP", address="10.200.3.21"),
@@ -44,6 +45,7 @@ from .utils_inventory import sort_inventory_result
                 Attributes(
                     path=["software", "applications", "kube", "metadata"],
                     inventory_attributes={
+                        "object": "Node",
                         "name": "minikube",
                     },
                 ),
@@ -61,13 +63,13 @@ from .utils_inventory import sort_inventory_result
                     status_attributes={},
                 ),
                 TableRow(
-                    path=["software", "applications", "kube", "network"],
+                    path=["networking", "kube"],
                     key_columns={"ip": "k8-21"},
                     inventory_columns={"address_type": "Hostname"},
                     status_columns={},
                 ),
                 TableRow(
-                    path=["software", "applications", "kube", "network"],
+                    path=["networking", "kube"],
                     key_columns={"ip": "10.200.3.21"},
                     inventory_columns={"address_type": "ExternalIP"},
                     status_columns={},
@@ -87,7 +89,7 @@ def test_inventory_kube_node(
     ) == sort_inventory_result(expected_check_result)
 
 
-def test_inventory_kube_node_calls_labels_to_table(mocker):
+def test_inventory_kube_node_calls_labels_to_table(mocker) -> None:
     """Test coverage and uniform look across inventories relies on the inventories calling
     labels_to_table."""
 

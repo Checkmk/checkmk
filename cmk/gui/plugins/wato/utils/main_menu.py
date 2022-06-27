@@ -7,7 +7,7 @@
 import re
 from typing import List
 
-from cmk.gui.globals import html
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _l
 from cmk.gui.watolib.main_menu import (
     ABCMainModule,
@@ -19,7 +19,7 @@ from cmk.gui.watolib.main_menu import (
 
 
 class MainMenu:
-    def __init__(self, items=None, columns=2):
+    def __init__(self, items=None, columns=2) -> None:
         self._items = items or []
         self._columns = columns
 

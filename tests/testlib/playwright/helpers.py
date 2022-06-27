@@ -7,7 +7,6 @@
 from abc import ABC, abstractmethod
 
 from playwright.sync_api import expect, Locator, Page
-from playwright.sync_api._generated import FrameLocator
 
 from tests.testlib.playwright.e2e_typing import ActivationStates
 from tests.testlib.playwright.timeouts import TemporaryTimeout, TIMEOUT_ACTIVATE_CHANGES_MS
@@ -39,6 +38,10 @@ class LocatorHelper(ABC):
 
     def get_text(self, text: str) -> Locator:
         return self.locator(f"text={text}")
+
+    def get_element_including_texts(self, element_id: str, texts: list[str]) -> Locator:
+        has_text_str = "".join([f":has-text('{t}')" for t in texts])
+        return self.locator(f"#{element_id}{has_text_str}")
 
     def get_link_from_title(self, title: str) -> Locator:
         return self.locator(f"a[title='{title}']")
@@ -117,7 +120,11 @@ class PPage(LocatorHelper):
     def goto_monitoring_all_hosts(self) -> None:
         """main menu -> monitoring -> All hosts"""
         self.megamenu_monitoring.click()
-        return self.main_menu.locator("#monitoring_topic_overview >> text=All hosts").click()
+        self.main_menu.locator("#monitoring_topic_overview >> text=All hosts").click()
 
     def select_host(self, host_name: str) -> None:
         self.main_frame.locator(f"td:has-text('{host_name}')").click()
+
+    def goto_add_sidebar_element(self) -> None:
+        self.locator("div#check_mk_sidebar >> div#add_snapin > a").click()
+        self.main_frame.check_page_title("Add sidebar element")

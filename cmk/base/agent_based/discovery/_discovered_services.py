@@ -13,7 +13,7 @@ import cmk.utils.paths
 from cmk.utils.check_utils import unwrap_parameters
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console
-from cmk.utils.type_defs import CheckPluginName, HostKey, ParsedSectionName, SourceType
+from cmk.utils.type_defs import CheckPluginName, HostKey, ParsedSectionName, ServiceID, SourceType
 
 import cmk.core_helpers.cache
 
@@ -25,7 +25,6 @@ from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 from cmk.base.agent_based.utils import get_section_kwargs
 from cmk.base.api.agent_based import checking_classes
 from cmk.base.autochecks import AutocheckEntry, AutochecksStore
-from cmk.base.check_utils import ServiceID
 
 from .utils import QualifiedDiscovery
 

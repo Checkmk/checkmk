@@ -40,7 +40,9 @@ class PerformanceContainerFactory(ModelFactory):
     __model__ = agent.PerformanceContainer
 
 
-def test_cluster_namespaces(cluster_details: api.ClusterDetails, pod_metadata: api.PodMetaData):
+def test_cluster_namespaces(
+    cluster_details: api.ClusterDetails, pod_metadata: api.PodMetaData
+) -> None:
     cluster = agent.Cluster(cluster_details=cluster_details, excluded_node_roles=[])
     api_pod = APIPodFactory.build(metadata=pod_metadata)
     cluster.add_pod(
@@ -117,7 +119,7 @@ def test_node_count_returns_number_of_nodes_ready_not_ready(
 
 
 @pytest.mark.parametrize("node_is_control_plane", [True])
-def test_node_control_plane_count(cluster_details: api.ClusterDetails, node: agent.Node):
+def test_node_control_plane_count(cluster_details: api.ClusterDetails, node: agent.Node) -> None:
     cluster = agent.Cluster(cluster_details=cluster_details, excluded_node_roles=[])
     cluster.add_node(node)
     node_count = cluster.node_count()
@@ -128,7 +130,9 @@ def test_node_control_plane_count(cluster_details: api.ClusterDetails, node: age
 
 @pytest.mark.parametrize("node_is_control_plane", [True])
 @pytest.mark.parametrize("node_condition_status", [api.ConditionStatus.FALSE])
-def test_node_control_plane_not_ready_count(cluster_details: api.ClusterDetails, node: agent.Node):
+def test_node_control_plane_not_ready_count(
+    cluster_details: api.ClusterDetails, node: agent.Node
+) -> None:
     cluster = agent.Cluster(cluster_details=cluster_details, excluded_node_roles=[])
     cluster.add_node(node)
     node_count = cluster.node_count()
@@ -144,7 +148,7 @@ def test_daemon_sets_returns_daemon_sets_of_cluster(
 
 
 @pytest.mark.parametrize("cluster_statefulsets", [0, 10, 20])
-def test_statefulsets_returns_statefulsets_of_cluster(cluster_statefulsets, cluster):
+def test_statefulsets_returns_statefulsets_of_cluster(cluster_statefulsets, cluster) -> None:
     statefulsets = cluster.statefulsets()
     assert len(statefulsets) == cluster_statefulsets
 

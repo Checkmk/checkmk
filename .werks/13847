@@ -1,6 +1,6 @@
 Title: local: Do not crash upon invalid metric names
 Class: fix
-Compatible: compat
+Compatible: incomp
 Component: checks
 Date: 1649834677
 Edition: cre

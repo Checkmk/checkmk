@@ -10,43 +10,15 @@ Please try to find a better place for the things you want to put here."""
 
 import itertools
 import marshal
-import re
 import urllib.parse
 import uuid
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import cmk.utils.paths
 import cmk.utils.regex
 
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger
-
-
-def num_split(s: str) -> Tuple[Union[int, str], ...]:
-    """Splits a word into sequences of numbers and non-numbers.
-
-    Creates a tuple from these where the number are converted into int datatype.
-    That way a naturual sort can be implemented.
-    """
-    parts: List[Union[int, str]] = []
-    for part in re.split(r"(\d+)", s):
-        try:
-            parts.append(int(part))
-        except ValueError:
-            parts.append(part)
-
-    return tuple(parts)
-
-
-def cmp_num_split(a: str, b: str) -> int:
-    """Compare two strings, separate numbers and non-numbers from before."""
-    return (num_split(a) > num_split(b)) - (num_split(a) < num_split(b))
-
-
-def key_num_split(a: str) -> Tuple[Union[int, str], ...]:
-    """Return a key from a string, separate numbers and non-numbers from before."""
-    return num_split(a)
 
 
 def is_allowed_url(
@@ -95,21 +67,6 @@ def is_allowed_url(
             return False
 
     return True
-
-
-def cmp_version(a: Optional[str], b: Optional[str]) -> int:
-    """Compare two version numbers with each other
-    Allow numeric version numbers, but also characters.
-    """
-    if a is None or b is None:
-        if a is None:
-            a = ""
-        if b is None:
-            b = ""
-        return (a > b) - (a < b)
-    aa = list(map(num_split, a.split(".")))
-    bb = list(map(num_split, b.split(".")))
-    return (aa > bb) - (aa < bb)
 
 
 # TODO: Remove this helper function. Replace with explicit checks and covnersion
@@ -199,31 +156,3 @@ def add_failed_plugin(main_module_name: str, plugin_name: str, e: BaseException)
 
 def get_failed_plugins() -> List[Tuple[str, BaseException]]:
     return list(itertools.chain(*list(_failed_plugins.values())))
-
-
-def unique_default_name_suggestion(template: str, used_names: Iterable[str]) -> str:
-    used_names_set = set(used_names)
-    nr = 1
-    while True:
-        suggestion = "%s_%d" % (template.replace(" ", "_"), nr)
-        if suggestion not in used_names_set:
-            return suggestion
-        nr += 1
-
-
-def validate_id(
-    mode: str,
-    existing_entries: Dict[str, Any],
-) -> Callable[[Dict[str, Any], str], None,]:
-    """Validate ID of newly created or cloned pagetype or visual"""
-    from cmk.gui.i18n import _
-
-    def _validate(properties: Dict[str, Any], varprefix: str) -> None:
-        name = properties["name"]
-        if existing_entries.get(name) and mode in ["create", "clone"]:
-            raise MKUserError(
-                varprefix + "_p_name",
-                _("You already have an element with the ID <b>%s</b>") % name,
-            )
-
-    return _validate

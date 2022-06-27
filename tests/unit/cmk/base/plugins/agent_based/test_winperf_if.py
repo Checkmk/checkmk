@@ -1988,7 +1988,7 @@ def test_parse_winperf_if_win32_networkadapter(
     assert parse_winperf_if_win32_networkadapter(string_table) == section
 
 
-def test_parse_winperf_if_get_netadapter():
+def test_parse_winperf_if_get_netadapter() -> None:
     assert parse_winperf_if_get_netadapter(
         [
             [

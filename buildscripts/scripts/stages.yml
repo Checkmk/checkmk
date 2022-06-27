@@ -35,9 +35,8 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/tests/Makefile' - || true"
 
     - NAME: CHANGED_PYTHON_FILES
-      # filter list of all python files to contain only changed files. Make sure an empty list
-      # of grep expressions won't just grep for '-'
-      SH: "${WORKSPACE}/scripts/find-python-files | grep -h -e '^^' ${GREP_PATTERNS} - | sort"
+      # filter list of changed files to contain only python files
+      SH: "git diff-tree --no-commit-id --name-only -r ${BASE_COMMIT_ID}..HEAD | xargs realpath | ${WORKSPACE}/scripts/find-python-files --filter"
 
     - NAME: CHANGED_RUST_FILES
       # filter list of all rust files to contain only changed files. Make sure an empty list
@@ -65,6 +64,9 @@ VARIABLES:
     - NAME: CHANGED_RUN_PIPENV_SCRIPT
       SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/scripts/run-pipenv' - || true"
 
+    - NAME: CHANGED_RUN_PRETTIER_SCRIPT
+      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/scripts/run-prettier' - || true"
+
       # Gather the list of changed agent plugins
     - NAME: CHANGED_AGENT_PLUGINS
       SH: "echo '${CHANGED_FILES_REL}' | grep '^agents/plugins/' || true"
@@ -88,12 +90,20 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep 'web/htdocs/js/' || true"
       REPLACE_NEWLINES: true
 
+    - NAME: CHANGED_PACKAGE_JSON
+      SH: "echo '${CHANGED_FILES_REL}' | grep 'package\\(-lock\\)\\?.json' || true"
+      REPLACE_NEWLINES: true
+
     - NAME: CHANGED_CSS_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep 'web/htdocs/themes/' | sed '/\\.scss$/!d' || true"
       REPLACE_NEWLINES: true
 
     - NAME: CHANGED_SW_DOC_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep 'doc/documentation/' || true"
+      REPLACE_NEWLINES: true
+
+    - NAME: CHANGED_WERK_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '.werks/' || true"
       REPLACE_NEWLINES: true
 
 STAGES:
@@ -118,6 +128,13 @@ STAGES:
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/python-format.txt"
 
+    - NAME: 'Python Cyclic Dependencies'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_TESTS_MAKEFILE,CHANGED_PIPFILE,CHANGED_PYTHON_FILES
+      DIR: 'tests'
+      COMMAND: 'make test-cycles-docker > ${RESULTS}/py-import-cycles.txt'
+      TEXT_ON_SKIP: 'No Python files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/py-import-cycles.txt"
+
     - NAME: 'Python Unit Test'
       ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_FILES,CHANGED_PIPFILE,CHANGED_PYTEST_INI_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT
       DIR: 'tests'
@@ -126,6 +143,19 @@ STAGES:
       COMMAND: "make test-unit-docker"
       TEXT_ON_SKIP: 'No Python files changed'
       RESULT_CHECK_FILE_PATTERN: "results/python3-unit-junit.xml"
+
+    - NAME: 'Python Code Quality Test'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_FILES,CHANGED_PIPFILE,CHANGED_FILES_ABS,CHANGED_WERK_FILES
+      DIR: 'tests'
+      ENV_VARS:
+        PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-code-quality-junit.xml --color=no"
+        PYTHON_FILES: "${CHANGED_PYTHON_FILES}"
+        IS_PIPFILE_CHANGED: "${CHANGED_PIPFILE}"
+        CHANGED_FILES: "${CHANGED_FILES_ABS}"
+        IS_WERK_CHANGED: "${CHANGED_WERK_FILES}"
+      COMMAND: "make test-code-quality-docker"
+      TEXT_ON_SKIP: 'No Python files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/python3-code-quality-junit.xml"
 
     - NAME: 'Python Linting'
       ONLY_WHEN_NOT_EMPTY: CHANGED_PYLINT_RC_FILE,CHANGED_PYTHON_FILES,CHANGED_PIPFILE,CHANGED_PYTEST_INI_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT
@@ -157,14 +187,21 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/shell-unit.txt"
 
     - NAME: 'JavaScript Format'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_JS_FILES,CHANGED_TESTS_MAKEFILE
+      ONLY_WHEN_NOT_EMPTY: CHANGED_JS_FILES,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PRETTIER_SCRIPT,CHANGED_PACKAGE_JSON
       DIR: 'tests'
       COMMAND: "make --quiet test-format-js-docker &> ${RESULTS}/js-prettier.txt"
       TEXT_ON_SKIP: 'No JavaScript files changed'
       RESULT_CHECK_FILE_PATTERN: "results/js-prettier.txt"
 
+    -  NAME: 'JS Build'
+       ONLY_WHEN_NOT_EMPTY: CHANGED_JS_FILES
+       DIR: 'tests'
+       COMMAND: 'make test-build-js &> ${RESULTS}/js-build.txt'
+       TEXT_ON_SKIP: 'No relevant JS/TS files changed'
+       RESULT_CHECK_FILE_PATTERN: "results/js-build.txt"
+
     - NAME: 'CSS Format'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CSS_FILES,CHANGED_TESTS_MAKEFILE
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CSS_FILES,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PRETTIER_SCRIPT,CHANGED_PACKAGE_JSON
       DIR: 'tests'
       COMMAND: "make --quiet test-format-css-docker &> ${RESULTS}/css-prettier.txt"
       TEXT_ON_SKIP: 'No CSS files changed'

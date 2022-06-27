@@ -41,11 +41,10 @@ from pathlib import Path
 import cmk.utils.paths
 import cmk.utils.store as store
 
-import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
-from cmk.gui.globals import active_config
+from cmk.gui.config import active_config
+from cmk.gui.groups import load_contact_group_information
 from cmk.gui.utils.roles import get_role_permissions
-from cmk.gui.watolib.groups import load_contact_group_information
 
 
 def _auth_php():
@@ -225,11 +224,3 @@ def _on_userdb_job():
     # This is a good place to replace old api based files in the future.
     if not _auth_php().exists() or _auth_php().stat().st_size == 0:
         _create_auth_file("page_hook")
-
-
-# TODO: Should we not execute this hook also when folders are modified?
-hooks.register_builtin("userdb-job", _on_userdb_job)
-hooks.register_builtin("users-saved", lambda users: _create_auth_file("users-saved", users))
-hooks.register_builtin("roles-saved", lambda x: _create_auth_file("roles-saved"))
-hooks.register_builtin("contactgroups-saved", lambda x: _create_auth_file("contactgroups-saved"))
-hooks.register_builtin("activate-changes", lambda x: _create_auth_file("activate-changes"))

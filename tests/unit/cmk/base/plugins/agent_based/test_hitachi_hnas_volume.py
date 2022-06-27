@@ -16,6 +16,7 @@ from cmk.base.plugins.agent_based.hitachi_hnas_volume import (
     parse_hitachi_hnas_volume,
     Section,
 )
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 LAST_TIME_EPOCH = (
     datetime.strptime("1988-06-08 16:00:00.000000", "%Y-%m-%d %H:%M:%S.%f") - datetime(1970, 1, 1)
@@ -66,7 +67,7 @@ def value_store_fixture(monkeypatch):
     [
         (
             "1024 mount_id1",
-            {},
+            FILESYSTEM_DEFAULT_PARAMS,
             common_section,
             (
                 Result(state=State.OK, summary="no filesystem size information"),
@@ -76,7 +77,7 @@ def value_store_fixture(monkeypatch):
         ),
         (
             "1071 mount_id2",
-            {},
+            FILESYSTEM_DEFAULT_PARAMS,
             common_section,
             (
                 Result(state=State.OK, summary="no filesystem size information"),
@@ -87,6 +88,7 @@ def value_store_fixture(monkeypatch):
         (
             "1071 mount_id2",
             {
+                **FILESYSTEM_DEFAULT_PARAMS,  # type: ignore
                 "patterns": (["1024 mount_id1", "1071 mount_id2"], []),
             },
             common_section,
@@ -101,7 +103,7 @@ def value_store_fixture(monkeypatch):
         ),
         (
             "1072 mount_id3",
-            {},
+            FILESYSTEM_DEFAULT_PARAMS,
             common_section,
             (
                 Metric(
@@ -133,8 +135,20 @@ def test_check_hitachi_hnas_volume(value_store_patch, item, params, section, exp
     """Hitachi volume check function returns expected results for different volume params"""
 
     with on_time("2021-07-22 12:00", "CET"):
-        results = tuple(check_hitachi_hnas_volume(item, params, section))
-        assert results == expected
+        results = list(check_hitachi_hnas_volume(item, params, section))
+
+    assert [r for r in results if isinstance(r, Result)] == [
+        r for r in expected if isinstance(r, Result)
+    ]
+    for actual_metric, expected_metric in zip(
+        [m for m in results if isinstance(m, Metric)],
+        [m for m in expected if isinstance(m, Metric)],
+    ):
+        assert actual_metric.name == expected_metric.name
+        assert actual_metric.value == expected_metric.value
+        if hasattr(actual_metric, "levels"):
+            assert actual_metric.levels[0] == pytest.approx(expected_metric.levels[0])
+            assert actual_metric.levels[1] == pytest.approx(expected_metric.levels[1])
 
 
 @pytest.mark.parametrize(
@@ -142,13 +156,13 @@ def test_check_hitachi_hnas_volume(value_store_patch, item, params, section, exp
     [
         (
             "1024 mount_id1",
-            {},
+            FILESYSTEM_DEFAULT_PARAMS,
             common_section,
             (Result(state=State.OK, summary="no quota defined"),),
         ),
         (
             "mount_id3 on mount_id2",
-            {},
+            FILESYSTEM_DEFAULT_PARAMS,
             common_section,
             (
                 Result(state=State.OK, summary="no filesystem size information"),

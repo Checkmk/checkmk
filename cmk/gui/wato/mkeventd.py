@@ -11,8 +11,9 @@ import os
 import re
 import time
 import zipfile
+from html import escape as html_escape
 from pathlib import Path
-from typing import Callable, Dict, Iterable, Iterator, List
+from typing import Callable, Collection, Dict, Iterable, Iterator, List
 from typing import Optional as _Optional
 from typing import overload, Type, TypeVar, Union
 
@@ -38,11 +39,15 @@ from cmk.utils.site import omd_site
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
+from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopic
+from cmk.gui.plugins.watolib.utils import ABCConfigDomain
+from cmk.gui.type_defs import Icon, PermissionName
 from cmk.gui.wato.mkeventdstore import (
     export_mkp_rule_pack,
     load_mkeventd_rules,
     save_mkeventd_rules,
 )
+from cmk.gui.watolib.audit_log import log_audit
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -53,10 +58,13 @@ import cmk.gui.forms as forms
 import cmk.gui.hooks as hooks
 import cmk.gui.mkeventd
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import active_config, html, request
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -72,13 +80,6 @@ from cmk.gui.page_menu import (
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.wato.utils import (
     ABCMainModule,
-    add_change,
-    config_variable_group_registry,
-    config_variable_registry,
-    ConfigDomainEventConsole,
-    ConfigDomainGUI,
-    ConfigVariable,
-    ConfigVariableGroup,
     ConfigVariableGroupNotifications,
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
@@ -89,7 +90,6 @@ from cmk.gui.plugins.wato.utils import (
     HostRulespec,
     main_module_registry,
     MainModuleTopicEvents,
-    make_action_link,
     mode_registry,
     mode_url,
     redirect,
@@ -98,18 +98,24 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroup,
     RulespecGroupHostsMonitoringRulesVarious,
     RulespecGroupMonitoringConfigurationVarious,
-    sample_config_generator_registry,
-    SampleConfigGenerator,
     ServiceRulespec,
-    site_neutral_path,
     SNMPCredentials,
     WatoMode,
+)
+from cmk.gui.plugins.watolib.utils import (
+    config_variable_group_registry,
+    config_variable_registry,
+    ConfigVariable,
+    ConfigVariableGroup,
+    sample_config_generator_registry,
+    SampleConfigGenerator,
 )
 from cmk.gui.site_config import allsites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.user_sites import get_event_console_site_choices
 from cmk.gui.utils.escaping import escape_to_html
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     make_confirm_link,
@@ -143,18 +149,23 @@ from cmk.gui.valuespec import (
     TextInput,
     Transform,
     Tuple,
+    ValueSpec,
 )
 from cmk.gui.wato.pages.global_settings import (
     ABCEditGlobalSettingMode,
     ABCGlobalSettingsMode,
     MatchItemGeneratorSettings,
 )
+from cmk.gui.watolib.config_domains import ConfigDomainEventConsole, ConfigDomainGUI
+from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
+from cmk.gui.watolib.hosts_and_folders import make_action_link
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     match_item_generator_registry,
     MatchItem,
     MatchItems,
 )
+from cmk.gui.watolib.utils import site_neutral_path
 
 
 def _compiled_mibs_dir() -> Path:
@@ -173,48 +184,63 @@ def _compiled_mibs_dir() -> Path:
 #   | Declarations of the structure of rules and actions                   |
 #   '----------------------------------------------------------------------'
 
+MACROS_AND_VARS = [
+    ("ID", _l("Event ID")),
+    ("COUNT", _l("Number of occurrances")),
+    ("TEXT", _l("Message text")),
+    ("FIRST", _l("Time of the first occurrence (time stamp)")),
+    ("LAST", _l("Time of the most recent occurrance")),
+    ("COMMENT", _l("Event comment")),
+    ("SL", _l("Service Level")),
+    ("HOST", _l("Host name (as sent by syslog)")),
+    ("ORIG_HOST", _l("Original host name when host name has been rewritten, empty otherwise")),
+    ("CONTACT", _l("Contact information")),
+    ("APPLICATION", _l("Syslog tag / Application")),
+    ("PID", _l("Process ID of the origin process")),
+    ("PRIORITY", _l("Syslog Priority")),
+    ("FACILITY", _l("Syslog Facility")),
+    ("RULE_ID", _l("ID of the rule")),
+    ("STATE", _l("State of the event (0/1/2/3)")),
+    ("PHASE", _l("Phase of the event (open in normal situations, closed when cancelling)")),
+    ("OWNER", _l("Owner of the event")),
+    ("MATCH_GROUPS", _l("Text groups from regular expression match, separated by spaces")),
+    ("MATCH_GROUP_1", _l("Text of the first match group from expression match")),
+    ("MATCH_GROUP_2", _l("Text of the second match group from expression match")),
+    (
+        "MATCH_GROUP_3",
+        _l("Text of the third match group from expression match (and so on...)"),
+    ),
+]
 
-def substitute_help():
-    _help_list = [
-        ("$ID$", _("Event ID")),
-        ("$COUNT$", _("Number of occurrances")),
-        ("$TEXT$", _("Message text")),
-        ("$FIRST$", _("Time of the first occurrence (time stamp)")),
-        ("$LAST$", _("Time of the most recent occurrance")),
-        ("$COMMENT$", _("Event comment")),
-        ("$SL$", _("Service Level")),
-        ("$HOST$", _("Host name (as sent by syslog)")),
-        ("$ORIG_HOST$", _("Original host name when host name has been rewritten, empty otherwise")),
-        ("$CONTACT$", _("Contact information")),
-        ("$APPLICATION$", _("Syslog tag / Application")),
-        ("$PID$", _("Process ID of the origin process")),
-        ("$PRIORITY$", _("Syslog Priority")),
-        ("$FACILITY$", _("Syslog Facility")),
-        ("$RULE_ID$", _("ID of the rule")),
-        ("$STATE$", _("State of the event (0/1/2/3)")),
-        ("$PHASE$", _("Phase of the event (open in normal situations, closed when cancelling)")),
-        ("$OWNER$", _("Owner of the event")),
-        ("$MATCH_GROUPS$", _("Text groups from regular expression match, separated by spaces")),
-        ("$MATCH_GROUP_1$", _("Text of the first match group from expression match")),
-        ("$MATCH_GROUP_2$", _("Text of the second match group from expression match")),
-        (
-            "$MATCH_GROUP_3$",
-            _("Text of the third match group from expression match (and so on...)"),
-        ),
-    ]
 
-    # TODO: While loading this module there is no "html" object available for generating the HTML
-    # code below. The HTML generating code could be independent of a HTML request.
+def _macros_help() -> HTML:
+    _help_list = [(f"${macro_name}$", description) for macro_name, description in MACROS_AND_VARS]
+
     _help_rows = [
-        html.render_tr(html.render_td(key) + html.render_td(value)) for key, value in _help_list
+        HTMLWriter.render_tr(HTMLWriter.render_td(key) + HTMLWriter.render_td(str(value)))
+        for key, value in _help_list
     ]
 
     return (
-        escape_to_html(
-            _("The following macros will be substituted by value from the actual event:")
-        )
-        + html.render_br()
-        + html.render_br()
+        _("Text-body of the email to send. ")
+        + _("The following macros will be substituted by value from the actual event:")
+        + HTMLWriter.render_br()
+        + HTMLWriter.render_br()
+        + HTMLWriter.render_table(HTML().join(_help_rows), class_="help")
+    )
+
+
+def _vars_help() -> HTML:
+    _help_list = [(f"CMK_{macro_name}", description) for macro_name, description in MACROS_AND_VARS]
+
+    _help_rows = [
+        html.render_tr(html.render_td(key) + html.render_td(str(value)))
+        for key, value in _help_list
+    ]
+
+    return (
+        _("This script will be executed using the BASH shell. ")
+        + _("This information is available as environment variables")
         + html.render_table(HTML().join(_help_rows), class_="help")
     )
 
@@ -240,7 +266,7 @@ def ActionList(vs, **kwargs):
 
 
 class RuleState(CascadingDropdown):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         choices: List[CascadingDropdownChoice] = [
             (0, _("OK")),
             (1, _("WARN")),
@@ -1301,7 +1327,7 @@ class SampleConfigGeneratorECSampleRulepack(SampleConfigGenerator):
         return "ec_sample_rule_pack"
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 50
 
     def generate(self):
@@ -1323,7 +1349,7 @@ class SampleConfigGeneratorECSampleRulepack(SampleConfigGenerator):
 
 
 class ABCEventConsoleMode(WatoMode, abc.ABC):
-    def __init__(self):
+    def __init__(self) -> None:
         self._rule_packs = load_mkeventd_rules()
         super().__init__()
 
@@ -1375,13 +1401,13 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
         rfc = cmk.gui.mkeventd.send_event(event)
         flash(
             escape_to_html(_("Test event generated and sent to Event Console."))
-            + html.render_br()
-            + html.render_pre(rfc)
+            + HTMLWriter.render_br()
+            + HTMLWriter.render_pre(rfc)
         )
         return True
 
     def _add_change(self, what, message):
-        add_change(
+        _changes.add_change(
             what, message, domains=[ConfigDomainEventConsole], sites=_get_event_console_sync_sites()
         )
 
@@ -1475,14 +1501,14 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
 @mode_registry.register
 class ModeEventConsoleRulePacks(ABCEventConsoleMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "mkeventd_rule_packs"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["mkeventd.edit"]
 
-    def title(self):
+    def title(self) -> str:
         return _("Event Console rule packs")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -1564,7 +1590,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             ],
         )
 
-    def action(self) -> ActionResult:
+    def action(self) -> ActionResult:  # pylint: disable=too-many-branches
         if not transactions.check_transaction():
             return redirect(self.mode_url())
 
@@ -1590,7 +1616,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             self._copy_rules_from_master()
             self._add_change(
                 "copy-rules-from-master",
-                _("Copied the event rules from the master " "into the local configuration"),
+                _("Copied the event rules from the master into the local configuration"),
             )
             flash(_("Copied rules from master"))
             return redirect(self.mode_url())
@@ -1676,7 +1702,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         rule_packs = answer["rules"]
         save_mkeventd_rules(rule_packs)
 
-    def page(self):
+    def page(self) -> None:  # pylint: disable=too-many-branches
         self._verify_ec_enabled()
         rep_mode = cmk.gui.mkeventd.replication_mode()
         if rep_mode in ["sync", "takeover"]:
@@ -1731,14 +1757,8 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             for nr, rule_pack in enumerate(self._rule_packs):
                 id_ = rule_pack["id"]
                 type_ = ec.RulePackType.type_of(rule_pack, id_to_mkp)
-
-                if id_ in found_packs:
-                    css_matches_search: _Optional[str] = "matches_search"
-                else:
-                    css_matches_search = None
-
-                table.row(css=css_matches_search)
-                table.cell(_("Actions"), css="buttons")
+                table.row(css=["matches_search"] if id_ in found_packs else [])
+                table.cell(_("Actions"), css=["buttons"])
 
                 edit_url = makeuri_contextless(
                     request,
@@ -1818,7 +1838,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                             },
                         )
 
-                    table.cell("", css="buttons")
+                    table.cell("", css=["buttons"])
                     if type_ == ec.RulePackType.unmodified_mkp:
                         html.icon(
                             "mkps", _("This rule pack is provided via the MKP %s.") % id_to_mkp[id_]
@@ -1906,12 +1926,12 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
                 table.cell(
                     _("Rules"),
-                    html.render_a("%d" % len(rule_pack["rules"]), href=rules_url),
-                    css="number",
+                    HTMLWriter.render_a("%d" % len(rule_pack["rules"]), href=rules_url),
+                    css=["number"],
                 )
 
                 hits = rule_pack.get("hits")
-                table.cell(_("Hits"), str(hits) if hits else "", css="number")
+                table.cell(_("Hits"), str(hits) if hits else "", css=["number"])
 
     def _filter_mkeventd_rule_packs(self, search_expression, rule_packs):
         found_packs: Dict[str, List[ec.ECRuleSpec]] = {}
@@ -1945,11 +1965,11 @@ def _deref(x: Union[T, Callable[[], T]]) -> T:
 @mode_registry.register
 class ModeEventConsoleRules(ABCEventConsoleMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "mkeventd_rules"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["mkeventd.edit"]
 
     @classmethod
@@ -1979,7 +1999,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         self._rule_pack_nr, self._rule_pack = self._rule_pack_with_id(self._rule_pack_id)
         self._rules = self._rule_pack["rules"]
 
-    def title(self):
+    def title(self) -> str:
         return _("Rule pack %s") % self._rule_pack["title"]
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -2045,7 +2065,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             ],
         )
 
-    def action(self) -> ActionResult:
+    def action(self) -> ActionResult:  # pylint: disable=too-many-branches
         if not transactions.check_transaction():
             return redirect(self.mode_url(rule_pack=self._rule_pack_id))
 
@@ -2120,7 +2140,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             self._add_change("move-rule", _("Changed position of rule %s") % rule["id"])
         return redirect(self.mode_url(rule_pack=self._rule_pack_id))
 
-    def page(self):
+    def page(self) -> None:  # pylint: disable=too-many-branches
         self._verify_ec_enabled()
         search_expression = self._search_expression()
         if search_expression:
@@ -2148,12 +2168,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         with table_element(title=_("Rules"), css="ruleset", limit=None, sortable=False) as table:
             have_match = False
             for nr, rule in enumerate(self._rules):
-                if rule in found_rules:
-                    css_matches_search: _Optional[str] = "matches_search"
-                else:
-                    css_matches_search = None
-
-                table.row(css=css_matches_search)
+                table.row(css=["matches_search"] if rule in found_rules else [])
                 delete_url = make_confirm_link(
                     url=make_action_link(
                         [
@@ -2178,13 +2193,13 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     ],
                 )
 
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
                 html.icon_button(edit_url, _("Edit this rule"), "edit")
                 html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
                 html.element_dragger_url("tr", base_url=drag_url)
                 html.icon_button(delete_url, _("Delete this rule"), "delete")
 
-                table.cell("", css="buttons")
+                table.cell("", css=["buttons"])
                 if rule.get("disabled"):
                     html.icon(
                         "disabled", _("This rule is currently disabled and will not be applied")
@@ -2221,7 +2236,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         % (", ".join(rule["contact_groups"]["groups"]) or _("(none)")),
                     )
 
-                table.cell(_("ID"), html.render_a(rule["id"], edit_url))
+                table.cell(_("ID"), HTMLWriter.render_a(rule["id"], edit_url))
 
                 if cmk_version.is_managed_edition():
                     table.cell(_("Customer"))
@@ -2234,7 +2249,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         html.write_text(managed.get_customer_name(rule))
 
                 if rule.get("drop"):
-                    table.cell(_("State"), css="state statep nowrap")
+                    table.cell(_("State"), css=["state statep nowrap"])
                     if rule["drop"] == "skip_pack":
                         html.write_text(_("SKIP PACK"))
                     else:
@@ -2252,7 +2267,11 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         -1: _("(syslog)"),
                         "text_pattern": _("(set by message text)"),
                     }[stateval]
-                    table.cell(_("State"), html.render_span(txt), css="state state%s" % stateval)
+                    table.cell(
+                        _("State"),
+                        HTMLWriter.render_span(txt, class_="state_rounded_fill"),
+                        css=["state state%s" % stateval],
+                    )
 
                 # Syslog priority
                 if "match_priority" in rule:
@@ -2278,7 +2297,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     ),
                 )
                 hits = rule.get("hits")
-                table.cell(_("Hits"), str(hits) if hits else "", css="number")
+                table.cell(_("Hits"), str(hits) if hits else "", css=["number"])
 
                 # Text to match
                 table.cell(_("Text to match"), rule.get("match"))
@@ -2324,11 +2343,11 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
 @mode_registry.register
 class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "mkeventd_edit_rule_pack"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["mkeventd.edit"]
 
     @classmethod
@@ -2345,14 +2364,12 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
             try:
                 self._rule_pack = self._rule_packs[self._edit_nr]
             except IndexError:
-                raise MKUserError(
-                    "edit", _("The rule pack you are trying to " "edit does not exist.")
-                )
+                raise MKUserError("edit", _("The rule pack you are trying to edit does not exist."))
 
         id_to_mkp = self._get_rule_pack_to_mkp_map()
         self._type = ec.RulePackType.type_of(self._rule_pack, id_to_mkp)
 
-    def title(self):
+    def title(self) -> str:
         if self._new:
             return _("Add rule pack")
         return _("Edit rule pack %s") % self._rule_packs[self._edit_nr]["id"]
@@ -2419,7 +2436,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
             self._add_change("edit-rule-pack", _("Modified rule pack %s") % self._rule_pack["id"])
         return redirect(mode_url("mkeventd_rule_packs"))
 
-    def page(self):
+    def page(self) -> None:
         self._verify_ec_enabled()
         html.begin_form("rule_pack")
         vs = self._valuespec()
@@ -2439,11 +2456,11 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
 @mode_registry.register
 class ModeEventConsoleEditRule(ABCEventConsoleMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "mkeventd_edit_rule"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["mkeventd.edit"]
 
     @classmethod
@@ -2489,7 +2506,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
             except IndexError:
                 raise MKUserError("edit", _("The rule you are trying to edit does not exist."))
 
-    def title(self):
+    def title(self) -> str:
         if self._new:
             return _("Add rule")
         return _("Edit rule %s") % self._rules[self._edit_nr]["id"]
@@ -2513,7 +2530,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         )
         return menu
 
-    def action(self) -> ActionResult:
+    def action(self) -> ActionResult:  # pylint: disable=too-many-branches
         if not transactions.check_transaction():
             return redirect(mode_url("mkeventd_rules", rule_pack=self._rule_pack["id"]))
 
@@ -2552,7 +2569,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         if "count" in self._rule and "expect" in self._rule:
             raise MKUserError(
                 "rule_p_expect_USE",
-                _("You cannot use counting and expecting " "at the same time in the same rule."),
+                _("You cannot use counting and expecting at the same time in the same rule."),
             )
 
         if "expect" in self._rule and "delay" in self._rule:
@@ -2617,7 +2634,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
             cmk.gui.mkeventd.execute_command("RESETCOUNTERS", [self._rule["id"]], omd_site())
         return redirect(mode_url("mkeventd_rules", rule_pack=self._rule_pack["id"]))
 
-    def page(self):
+    def page(self) -> None:
         self._verify_ec_enabled()
         html.begin_form("rule")
         vs = self._valuespec()
@@ -2633,18 +2650,18 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
 @mode_registry.register
 class ModeEventConsoleStatus(ABCEventConsoleMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "mkeventd_status"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return []
 
     @classmethod
     def parent_mode(cls) -> _Optional[Type[WatoMode]]:
         return ModeEventConsoleRulePacks
 
-    def title(self):
+    def title(self) -> str:
         return _("Local server status")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -2673,13 +2690,11 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
         else:
             new_mode = "takeover"
         cmk.gui.mkeventd.execute_command("SWITCHMODE", [new_mode], omd_site())
-        watolib.log_audit(
-            "mkeventd-switchmode", _("Switched replication slave mode to %s") % new_mode
-        )
+        log_audit("mkeventd-switchmode", _("Switched replication slave mode to %s") % new_mode)
         flash(_("Switched to %s mode") % new_mode)
         return None
 
-    def page(self):
+    def page(self) -> None:
         self._verify_ec_enabled()
 
         warning = _("The Event Console Daemon is currently not running. ")
@@ -2743,22 +2758,22 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
 @mode_registry.register
 class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "mkeventd_config"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["mkeventd.config"]
 
     @classmethod
     def parent_mode(cls) -> _Optional[Type[WatoMode]]:
         return ModeEventConsoleRulePacks
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         self._default_values = ConfigDomainEventConsole().default_globals()
-        self._current_settings = watolib.load_configuration_settings()
+        self._current_settings = load_configuration_settings()
 
     @staticmethod
     def _get_groups(show_all: bool) -> Iterable[ConfigVariableGroup]:
@@ -2771,9 +2786,9 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
             if isinstance(g, ConfigVariableGroupEventConsole)
         ]
 
-    def title(self):
+    def title(self) -> str:
         if self._search:
-            return escape_to_html(_("Event Console configuration matching '%s'") % self._search)
+            return html_escape(_("Event Console configuration matching '%s'") % self._search)
         return _("Event Console configuration")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -2822,7 +2837,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
             self._current_settings[varname] and _("on") or _("off"),
         )
 
-        watolib.save_global_settings(self._current_settings)
+        save_global_settings(self._current_settings)
 
         self._add_change("edit-configvar", msg)
 
@@ -2834,7 +2849,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
     def edit_mode_name(self) -> str:
         return "mkeventd_edit_configvar"
 
-    def page(self):
+    def page(self) -> None:
         self._verify_ec_enabled()
         self._show_configuration_variables()
 
@@ -2845,50 +2860,50 @@ class ConfigVariableGroupEventConsole(ConfigVariableGroup):
 
 @config_variable_group_registry.register
 class ConfigVariableGroupEventConsoleGeneric(ConfigVariableGroupEventConsole):
-    def title(self):
+    def title(self) -> str:
         return _("Event Console: Generic")
 
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 18
 
 
 @config_variable_group_registry.register
 class ConfigVariableGroupEventConsoleLogging(ConfigVariableGroupEventConsole):
-    def title(self):
+    def title(self) -> str:
         return _("Event Console: Logging & diagnose")
 
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 19
 
 
 @config_variable_group_registry.register
 class ConfigVariableGroupEventConsoleSNMP(ConfigVariableGroupEventConsole):
-    def title(self):
+    def title(self) -> str:
         return _("Event Console: SNMP traps")
 
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 20
 
 
 @mode_registry.register
 class ModeEventConsoleEditGlobalSetting(ABCEditGlobalSettingMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "mkeventd_edit_configvar"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["mkeventd.config"]
 
     @classmethod
     def parent_mode(cls) -> _Optional[Type[WatoMode]]:
         return ModeEventConsoleSettings
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._need_restart = None
 
-    def title(self):
+    def title(self) -> str:
         return _("Event Console configuration")
 
     def _affected_sites(self):
@@ -2906,18 +2921,18 @@ def _get_event_console_sync_sites():
 @mode_registry.register
 class ModeEventConsoleMIBs(ABCEventConsoleMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "mkeventd_mibs"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["mkeventd.config"]
 
     @classmethod
     def parent_mode(cls) -> _Optional[Type[WatoMode]]:
         return ModeEventConsoleRulePacks
 
-    def title(self):
+    def title(self) -> str:
         return _("SNMP MIBs for trap translation")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -3021,7 +3036,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         ]:
             f.unlink(missing_ok=True)
 
-    def page(self):
+    def page(self) -> None:
         self._verify_ec_enabled()
         for path, title in cmk.gui.mkeventd.mib_dirs():
             self._show_mib_table(path, title)
@@ -3048,7 +3063,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                     )
                     html.checkbox("_c_mib_%s" % filename, deflt=False)
 
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
                 if is_custom_dir:
                     delete_url = make_confirm_link(
                         url=make_action_link([("mode", "mkeventd_mibs"), ("_delete", filename)]),
@@ -3060,7 +3075,9 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                 table.cell(_("Filename"), filename)
                 table.cell(_("MIB"), mib.get("name", ""))
                 table.cell(_("Organization"), mib.get("organization", ""))
-                table.cell(_("Size"), cmk.utils.render.fmt_bytes(mib.get("size", 0)), css="number")
+                table.cell(
+                    _("Size"), cmk.utils.render.fmt_bytes(mib.get("size", 0)), css=["number"]
+                )
 
         if is_custom_dir:
             html.hidden_fields()
@@ -3110,18 +3127,18 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
 @mode_registry.register
 class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "mkeventd_upload_mibs"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["mkeventd.config"]
 
     @classmethod
     def parent_mode(cls) -> _Optional[Type[WatoMode]]:
         return ModeEventConsoleMIBs
 
-    def title(self):
+    def title(self) -> str:
         return _("Upload SNMP MIBs")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -3183,7 +3200,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
     # Used zipfile.is_zipfile(io.BytesIO(content)) before, but this only
     # possible with python 2.7. zipfile is only supporting checking of files by
     # their path.
-    def _is_zipfile(self, fo):
+    def _is_zipfile(self, fo) -> bool:
         try:
             with zipfile.ZipFile(fo) as _opened_file:
                 pass
@@ -3296,7 +3313,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
                 raise e
             raise Exception(_("Failed to process your MIB file (%s): %s") % (mibname, e))
 
-    def page(self):
+    def page(self) -> None:
         self._verify_ec_enabled()
         html.h3(_("Upload MIB file"))
         html.write_text(
@@ -3412,7 +3429,7 @@ permission_registry.register(
         name="config",
         title=_l("Configuration of Event Console"),
         description=_l(
-            "This permission allows to configure the global settings " "of the event console."
+            "This permission allows to configure the global settings of the event console."
         ),
         defaults=["admin"],
     )
@@ -3463,31 +3480,31 @@ permission_registry.register(
 @main_module_registry.register
 class MainModuleEventConsole(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "mkeventd_rule_packs"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicEvents
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Event Console")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "event_console"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "mkeventd.edit"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Manage event classification and correlation rules for the Event Console")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 20
 
     @property
@@ -3495,7 +3512,7 @@ class MainModuleEventConsole(ABCMainModule):
         return active_config.mkeventd_enabled
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return True
 
 
@@ -3515,16 +3532,16 @@ class MainModuleEventConsole(ABCMainModule):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleRemoteStatus(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "remote_status"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Optional(
             valuespec=Tuple(
                 elements=[
@@ -3579,16 +3596,16 @@ class ConfigVariableEventConsoleRemoteStatus(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleReplication(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "replication"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Optional(
             valuespec=Dictionary(
                 optional_keys=["takeover", "fallback", "disabled", "logging"],
@@ -3703,16 +3720,16 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleRetentionInterval(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "retention_interval"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Age(
             title=_("State Retention Interval"),
             help=_(
@@ -3725,16 +3742,16 @@ class ConfigVariableEventConsoleRetentionInterval(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleHousekeepingInterval(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "housekeeping_interval"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Age(
             title=_("Housekeeping Interval"),
             help=_(
@@ -3748,16 +3765,16 @@ class ConfigVariableEventConsoleHousekeepingInterval(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleStatisticsInterval(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "statistics_interval"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Age(
             title=_("Statistics Interval"),
             help=_(
@@ -3771,16 +3788,16 @@ class ConfigVariableEventConsoleStatisticsInterval(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleLogMessages(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "log_messages"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Syslog-like message logging"),
             label=_("Log all messages into syslog-like logfiles"),
@@ -3796,16 +3813,16 @@ class ConfigVariableEventConsoleLogMessages(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleRuleOptimizer(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "rule_optimizer"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Optimize rule execution"),
             label=_("enable optimized rule execution"),
@@ -3815,16 +3832,16 @@ class ConfigVariableEventConsoleRuleOptimizer(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleActions(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "actions"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return ActionList(
             Foldable(
                 valuespec=Dictionary(
@@ -3903,8 +3920,7 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
                                                     "body",
                                                     TextAreaUnicode(
                                                         title=_("Body"),
-                                                        help=_("Text-body of the email to send. ")
-                                                        + substitute_help(),
+                                                        help=_macros_help,
                                                         cols=64,
                                                         rows=10,
                                                     ),
@@ -3922,16 +3938,7 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
                                                     "script",
                                                     TextAreaUnicode(
                                                         title=_("Script body"),
-                                                        help=_(
-                                                            "This script will be executed using the BASH shell. "
-                                                        )
-                                                        + substitute_help()
-                                                        + "<br>"
-                                                        + _(
-                                                            "These information are also available as environment variables with the prefix "
-                                                            "<tt>CMK_</tt>. For example the text of the event is available as "
-                                                            "<tt>CMK_TEXT</tt> as environment variable."
-                                                        ),
+                                                        help=_vars_help,
                                                         cols=64,
                                                         rows=10,
                                                     ),
@@ -3964,16 +3971,16 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleArchiveOrphans(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "archive_orphans"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Force message archiving"),
             label=_("Archive messages that do not match any rule"),
@@ -3988,16 +3995,16 @@ class ConfigVariableEventConsoleArchiveOrphans(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableHostnameTranslation(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "hostname_translation"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return HostnameTranslation(
             title=_("Hostname translation for incoming messages"),
             help=_(
@@ -4013,7 +4020,7 @@ class ConfigVariableHostnameTranslation(ConfigVariable):
 def vs_ec_event_limit_actions(notify_txt):
     return DropdownChoice(
         title=_("Action"),
-        help=_("Choose the action the Event Console should trigger once " "the limit is reached."),
+        help=_("Choose the action the Event Console should trigger once the limit is reached."),
         choices=[
             ("stop", _("Stop creating new events")),
             ("stop_overflow", _("Stop creating new events, create overflow event")),
@@ -4089,16 +4096,16 @@ def vs_ec_host_limit(title):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleEventLimit(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "event_limit"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             title=_("Limit amount of current events"),
             help=_(
@@ -4144,16 +4151,16 @@ class ConfigVariableEventConsoleEventLimit(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleHistoryRotation(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "history_rotation"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Event history logfile rotation"),
             help=_(
@@ -4165,19 +4172,19 @@ class ConfigVariableEventConsoleHistoryRotation(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleHistoryLifetime(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "history_lifetime"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Integer(
             title=_("Event history lifetime"),
-            help=_("After this number of days old logfile of event history " "will be deleted."),
+            help=_("After this number of days old logfile of event history will be deleted."),
             unit=_("days"),
             minvalue=1,
         )
@@ -4185,16 +4192,16 @@ class ConfigVariableEventConsoleHistoryLifetime(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleSocketQueueLength(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "socket_queue_len"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Integer(
             title=_("Max. number of pending connections to the status socket"),
             help=_(
@@ -4212,16 +4219,16 @@ class ConfigVariableEventConsoleSocketQueueLength(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleEventSocketQueueLength(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "eventsocket_queue_len"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Integer(
             title=_("Max. number of pending connections to the event socket"),
             help=_(
@@ -4239,16 +4246,16 @@ class ConfigVariableEventConsoleEventSocketQueueLength(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleTranslateSNMPTraps(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleSNMP
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "translate_snmptraps"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=CascadingDropdown(
                 choices=[
@@ -4284,16 +4291,16 @@ class ConfigVariableEventConsoleTranslateSNMPTraps(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleSNMPCredentials(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleSNMP
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "snmp_credentials"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return ListOf(
             valuespec=Dictionary(
                 elements=[
@@ -4345,16 +4352,16 @@ class ConfigVariableEventConsoleSNMPCredentials(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleDebugRules(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleLogging
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "debug_rules"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Debug rule execution"),
             label=_("enable extensive rule logging"),
@@ -4369,16 +4376,16 @@ class ConfigVariableEventConsoleDebugRules(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleLogLevel(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleLogging
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "log_level"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=Dictionary(
                 title=_("Log level"),
@@ -4453,16 +4460,16 @@ class ConfigVariableEventConsoleLogLevel(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventLogRuleHits(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleLogging
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
-    def ident(self):
+    def ident(self) -> str:
         return "log_rulehits"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Log rule hits"),
             label=_("Log hits for rules in log of Event Console"),
@@ -4478,16 +4485,16 @@ class ConfigVariableEventLogRuleHits(ConfigVariable):
 # TODO: Isn't this variable deprecated since 1.5? Investigate and drop/mark as deprecated
 @config_variable_registry.register
 class ConfigVariableEventConsoleConnectTimeout(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "mkeventd_connect_timeout"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Integer(
             title=_("Connect timeout to status socket of Event Console"),
             help=_(
@@ -4503,16 +4510,16 @@ class ConfigVariableEventConsoleConnectTimeout(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsolePrettyPrintRules(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "mkeventd_pprint_rules"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Pretty-Print rules in config file of Event Console"),
             label=_("enable pretty-printing of rules"),
@@ -4529,16 +4536,16 @@ class ConfigVariableEventConsolePrettyPrintRules(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleNotifyContactgroup(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "mkeventd_notify_contactgroup"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return ContactGroupSelection(
             title=_("Send notifications to Event Console"),
             no_selection=_("(don't send notifications to Event Console)"),
@@ -4559,16 +4566,16 @@ class ConfigVariableEventConsoleNotifyContactgroup(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleNotifyRemoteHost(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "mkeventd_notify_remotehost"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Optional(
             valuespec=TextInput(
                 title=_("Host running Event Console"),
@@ -4592,16 +4599,16 @@ class ConfigVariableEventConsoleNotifyRemoteHost(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleNotifyFacility(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "mkeventd_notify_facility"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Syslog facility for Event Console notifications"),
             help=_(
@@ -4623,35 +4630,35 @@ class MainModuleEventConsoleRules(ABCMainModule):
         return False
 
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return makeuri_contextless_rulespec_group(request, "eventconsole")
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicEvents
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Event Console rules")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return {"icon": "event_console", "emblem": "settings"}
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "rulesets"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Host and service rules related to the Event Console")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 40
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return True
 
     @classmethod
@@ -4669,11 +4676,11 @@ class MainModuleEventConsoleRules(ABCMainModule):
 @rulespec_group_registry.register
 class RulespecGroupEventConsole(RulespecGroup):
     @property
-    def name(self):
+    def name(self) -> str:
         return "eventconsole"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Event Console rules")
 
     @property

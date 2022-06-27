@@ -36,7 +36,7 @@ metric_info["kube_pod_pending"] = {
 metric_info["kube_pod_running"] = {
     "title": _("Running"),
     "unit": "count",
-    "color": "31/a",
+    "color": "15/b",
 }
 
 metric_info["kube_pod_free"] = {
@@ -95,18 +95,25 @@ requirement_to_absolute_titles = {
 
 requirement_colors = {
     "request": "42/a",
-    "limit": "42/b",
+    "limit": "13/a",
     "allocatable": "46/a",
     "cluster_allocatable": "46/a",
     "node_allocatable": "46/a",
 }
 
+metric_info["kube_memory_usage"] = {
+    "title": _("Usage"),
+    "unit": "bytes",
+    "color": "26/b",
+}
+
+metric_info["kube_cpu_usage"] = {
+    "title": _("Usage"),
+    "unit": "",
+    "color": "31/a",
+}
+
 for resource, usage_unit in zip(["memory", "cpu"], ["bytes", ""]):
-    metric_info[f"kube_{resource}_usage"] = {
-        "title": _("Usage"),
-        "unit": usage_unit,
-        "color": "31/a",
-    }
     for req, title in requirement_to_absolute_titles.items():
         metric_info[f"kube_{resource}_{req}"] = {
             "title": title,

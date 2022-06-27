@@ -1,0 +1,22 @@
+Title: KUBE: kube_collector_info shows number of Nodes with collector
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1650116487
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+ With this werk, the service uses the Kubernetes API to report on the status of
+ DaemonSets belonging to node collectors. For each node collector the following
+ are reported
+
+ - the number of Nodes with a Pod, which is available and desired
+
+ - the number of Nodes, on which a Pod is desired
+
+ The DaemonSets are identified by the labels "node-collector=machine-sections"
+ and "node-collector=container-metrics". The service reports an OK state regardless of
+ the data process outcome and the API data.
+

@@ -1,0 +1,17 @@
+Title: Fix error on report scheduler creation
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1654008586
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+If the button "Create regular time-schedule for this report" was used, the
+error "Cannot edit schedule entry for non-existing report MY_REPORT" could
+occur.
+
+Also, the chosen report is now selected for the created scheduler entry. It is
+no longer necessary to select it from a dropdown list on the next page.

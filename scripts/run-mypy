@@ -42,6 +42,5 @@ $REPO_PATH/agent-receiver" \
     --check-untyped-defs \
     --strict-equality \
     --no-implicit-optional \
-    --cache-dir=/dev/null \
     ${JUNIT_XML} \
     "$@"

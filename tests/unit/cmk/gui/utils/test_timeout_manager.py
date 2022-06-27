@@ -13,8 +13,8 @@ import pytest
 from werkzeug.test import create_environ
 
 from cmk.gui.exceptions import RequestTimeout
-from cmk.gui.globals import request, timeout_manager
-from cmk.gui.utils.timeout_manager import TimeoutManager
+from cmk.gui.http import request
+from cmk.gui.utils.timeout_manager import timeout_manager, TimeoutManager
 from cmk.gui.wsgi.applications.checkmk import CheckmkApp
 
 if t.TYPE_CHECKING:
@@ -45,13 +45,13 @@ def make_start_response() -> StartResponse:
     return start_response
 
 
-def test_checkmk_app_enables_timeout_handling():
+def test_checkmk_app_enables_timeout_handling() -> None:
     assert signal.alarm(0) == 0
     CheckmkTestApp()(create_environ(), make_start_response())
     assert signal.alarm(0) == 0
 
 
-def test_timeout_manager_raises_timeout():
+def test_timeout_manager_raises_timeout() -> None:
     tm = TimeoutManager()
 
     with pytest.raises(RequestTimeout):
@@ -59,7 +59,7 @@ def test_timeout_manager_raises_timeout():
         time.sleep(2)
 
 
-def test_timeout_manager_disable():
+def test_timeout_manager_disable() -> None:
     tm = TimeoutManager()
 
     tm.enable_timeout(1)

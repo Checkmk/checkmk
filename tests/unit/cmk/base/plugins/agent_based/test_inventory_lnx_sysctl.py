@@ -167,7 +167,7 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inv_oracle_systemparameter(info, params, inventory_data):
+def test_inv_oracle_systemparameter(info, params, inventory_data) -> None:
     assert sort_inventory_result(
         inventory_lnx_sysctl(params, parse_lnx_sysctl(info))
     ) == sort_inventory_result(inventory_data)

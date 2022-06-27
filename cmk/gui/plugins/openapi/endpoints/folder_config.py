@@ -33,14 +33,14 @@ A folder_config object can have the following relations present in `links`:
 
 
 """
-from typing import List
+from typing import Any, List, Mapping
 
 from werkzeug.datastructures import ETags
 
 from cmk.gui import fields as gui_fields
-from cmk.gui import watolib
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.endpoints.host_config import serve_host_collection
 from cmk.gui.plugins.openapi.endpoints.utils import folder_slug
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -51,7 +51,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
-from cmk.gui.watolib import CREFolder
+from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder
 
 from cmk import fields
 
@@ -67,18 +67,22 @@ PATH_FOLDER_FIELD = {
     )
 }
 
-CREATE_DELETE_PERMISSIONS = permissions.AllPerm(
+RW_PERMISSIONS = permissions.AllPerm(
     [
+        permissions.Perm("wato.edit"),
         permissions.Perm("wato.manage_folders"),
+        # If a folder to be deleted still contains hosts, the mange_hosts permission is required.
+        permissions.Optional(permissions.Perm("wato.manage_hosts")),
         permissions.Optional(permissions.Perm("wato.all_folders")),
     ]
 )
 
 UPDATE_PERMISSIONS = permissions.AllPerm(
     [
+        permissions.Perm("wato.edit"),
         permissions.Perm("wato.edit_folders"),
         permissions.Optional(permissions.Perm("wato.all_folders")),
-    ],
+    ]
 )
 
 
@@ -89,10 +93,11 @@ UPDATE_PERMISSIONS = permissions.AllPerm(
     etag="output",
     response_schema=response_schemas.FolderSchema,
     request_schema=request_schemas.CreateFolder,
-    permissions_required=CREATE_DELETE_PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
-def create(params):
+def create(params: Mapping[str, Any]) -> Response:
     """Create a folder"""
+    user.need_permission("wato.edit")
     put_body = params["body"]
     name = put_body["name"]
     title = put_body["title"]
@@ -119,9 +124,9 @@ def create(params):
     response_schema=response_schemas.HostConfigCollection,
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
 )
-def hosts_of_folder(params):
+def hosts_of_folder(params: Mapping[str, Any]) -> Response:
     """Show all hosts in a folder"""
-    folder: watolib.CREFolder = params["folder"]
+    folder: CREFolder = params["folder"]
     folder.need_permission("read")
     return serve_host_collection(folder.hosts().values())
 
@@ -136,8 +141,10 @@ def hosts_of_folder(params):
     request_schema=request_schemas.UpdateFolder,
     permissions_required=UPDATE_PERMISSIONS,
 )
-def update(params):
+def update(params: Mapping[str, Any]) -> Response:
     """Update a folder"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.edit_folders")
     folder = params["folder"]
     constructors.require_etag(etag_of_folder(folder))
 
@@ -186,13 +193,15 @@ def update(params):
     request_schema=request_schemas.BulkUpdateFolder,
     permissions_required=UPDATE_PERMISSIONS,
 )
-def bulk_update(params):
+def bulk_update(params: Mapping[str, Any]) -> Response:
     """Bulk update folders
 
     Please be aware that when doing bulk updates, it is not possible to prevent the
     [Updating Values]("lost update problem"), which is normally prevented by the ETag locking
     mechanism. Use at your own risk
     """
+    user.need_permission("wato.edit")
+    user.need_permission("wato.edit_folders")
     body = params["body"]
     entries = body["entries"]
     folders = []
@@ -245,10 +254,11 @@ def bulk_update(params):
     method="delete",
     path_params=[PATH_FOLDER_FIELD],
     output_empty=True,
-    permissions_required=CREATE_DELETE_PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
-def delete(params):
+def delete(params: Mapping[str, Any]) -> Response:
     """Delete a folder"""
+    user.need_permission("wato.edit")
     folder = params["folder"]
     parent = folder.parent()
     parent.delete_subfolder(folder.name())
@@ -263,16 +273,17 @@ def delete(params):
     response_schema=response_schemas.FolderSchema,
     request_schema=request_schemas.MoveFolder,
     etag="both",
-    permissions_required=CREATE_DELETE_PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
-def move(params):
+def move(params: Mapping[str, Any]) -> Response:
     """Move a folder"""
-    folder: watolib.CREFolder = params["folder"]
+    user.need_permission("wato.edit")
+    folder: CREFolder = params["folder"]
     folder_id = folder.id()
 
     constructors.require_etag(etag_of_folder(folder))
 
-    dest_folder: watolib.CREFolder = params["body"]["destination"]
+    dest_folder: CREFolder = params["body"]["destination"]
 
     try:
         folder.parent().move_subfolder_to(folder, dest_folder)
@@ -295,7 +306,7 @@ def move(params):
             "parent": gui_fields.FolderField(
                 description="Show all sub-folders of this folder. The default is the root-folder.",
                 example="/servers",
-                load_default=watolib.Folder.root_folder,  # because we can't load it too early.
+                load_default=Folder.root_folder,  # because we can't load it too early.
             ),
             "recursive": fields.Boolean(
                 description="List the folder (default: root) and all its sub-folders recursively.",
@@ -316,12 +327,12 @@ def move(params):
     response_schema=response_schemas.FolderCollection,
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
 )
-def list_folders(params):
+def list_folders(params: Mapping[str, Any]) -> Response:
     """Show all folders"""
     parent: CREFolder = params["parent"]
     if params["recursive"]:
         parent.need_recursive_permission("read")
-        folders = parent.all_folders_recursively()
+        folders = parent.subfolders_recursively()
     else:
         parent.need_permission("read")
         folders = parent.subfolders()
@@ -389,7 +400,7 @@ def _folders_collection(
     path_params=[PATH_FOLDER_FIELD],
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
 )
-def show_folder(params):
+def show_folder(params: Mapping[str, Any]) -> Response:
     """Show a folder"""
     folder: CREFolder = params["folder"]
     folder.need_permission("read")

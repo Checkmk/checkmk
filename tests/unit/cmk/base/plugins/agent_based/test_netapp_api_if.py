@@ -302,7 +302,6 @@ from cmk.base.plugins.agent_based.utils import interfaces
     ],
 )
 def test_netapp_api_if_regression(
-    monkeypatch,
     string_table,
     discovery_results,
     items_params_results,
@@ -319,15 +318,33 @@ def test_netapp_api_if_regression(
         == discovery_results
     )
 
-    monkeypatch.setattr(interfaces, "get_value_store", lambda: {})
     for item, par, res in items_params_results:
         assert (
             list(
-                netapp_api_if.check_netapp_api_if(
+                netapp_api_if._check_netapp_api_if(
                     item,
                     (par),
                     section,
+                    value_store={},
                 )
             )
             == res
         )
+
+
+if __name__ == "__main__":
+    # Please keep these lines - they make TDD easy and have no effect on normal test runs.
+    # Just run this file from your IDE and dive into the code.
+    from pathlib import Path
+
+    from tests.testlib.utils import cmk_path
+
+    assert not pytest.main(
+        [
+            "-T=unit",
+            "-vvsx",
+            "--doctest-modules",
+            str(Path(cmk_path()) / "cmk/base/plugins/agent_based/netapp_api_if.py"),
+            __file__,
+        ]
+    )

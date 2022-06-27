@@ -12,7 +12,7 @@ from tests.testlib.site import Site
 
 
 class CMKEventConsole:
-    def __init__(self, site: Site):
+    def __init__(self, site: Site) -> None:
         super().__init__()
         self.site = site
         self.status = CMKEventConsoleStatus("%s/tmp/run/mkeventd/status" % site.root)
@@ -85,7 +85,7 @@ class CMKEventConsole:
 
 
 class CMKEventConsoleStatus:
-    def __init__(self, address):
+    def __init__(self, address) -> None:
         self._address = address
 
     # Copied from web/htdocs/mkeventd.py. Better move to some common lib.

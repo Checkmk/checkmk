@@ -13,6 +13,7 @@
 def inventory_k8s_roles(parsed):
     if parsed:
         return [(None, {})]
+    return []
 
 
 def check_k8s_roles(item, params, parsed):

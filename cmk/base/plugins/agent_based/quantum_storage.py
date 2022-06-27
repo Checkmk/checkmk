@@ -6,8 +6,8 @@
 
 from typing import Mapping, NamedTuple, Optional
 
-from .agent_based_api.v1 import exists, register, Result, Service, SNMPTree, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .agent_based_api.v1 import Attributes, exists, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
 
 
 class Section(NamedTuple):
@@ -77,4 +77,22 @@ register.check_plugin(
             "state not available": 3,
         },
     },
+)
+
+
+def inv_snmp_quantum_storage_info(section: Section) -> InventoryResult:
+    yield Attributes(
+        path=["hardware", "system"],
+        inventory_attributes={
+            "manufacturer": section.manufacturer,
+            "product": section.product,
+            "revision": section.revision,
+            "serial": section.serial,
+        },
+    )
+
+
+register.inventory_plugin(
+    name="snmp_quantum_storage_info",
+    inventory_function=inv_snmp_quantum_storage_info,
 )

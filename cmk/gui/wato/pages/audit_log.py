@@ -6,15 +6,16 @@
 
 import re
 import time
-from typing import Iterator, List
+from typing import Collection, Iterator
 
 import cmk.utils.render as render
 
-import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
-from cmk.gui.globals import display_options, html, output_funnel, request, response, user_errors
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -28,11 +29,14 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.plugins.wato.utils import flash, make_confirm_link, mode_registry, redirect, WatoMode
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, Choices
+from cmk.gui.type_defs import ActionResult, Choices, PermissionName
 from cmk.gui.userdb import UserSelection
 from cmk.gui.utils import escaping
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri
+from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import (
     AbsoluteDate,
     CascadingDropdown,
@@ -42,26 +46,28 @@ from cmk.gui.valuespec import (
     TextInput,
 )
 from cmk.gui.wato.pages.activate_changes import render_object_ref
-from cmk.gui.watolib.changes import AuditLogStore, ObjectRefType
+from cmk.gui.watolib.audit_log import AuditLogStore
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
+from cmk.gui.watolib.objref import ObjectRefType
 
 
 @mode_registry.register
 class ModeAuditLog(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "auditlog"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["auditlog"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._options = {key: vs.default_value() for key, vs in self._audit_log_options()}
         super().__init__()
         self._store = AuditLogStore(AuditLogStore.make_path())
         self._show_details = request.get_integer_input_mandatory("show_details", 1) == 1
 
-    def title(self):
+    def title(self) -> str:
         return _("Audit log")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -109,7 +115,7 @@ class ModeAuditLog(WatoMode):
             yield PageMenuEntry(
                 title=_("View changes"),
                 icon_name="activate",
-                item=make_simple_link(watolib.folder_preserving_link([("mode", "changelog")])),
+                item=make_simple_link(folder_preserving_link([("mode", "changelog")])),
             )
 
     def _page_menu_entries_actions(self) -> Iterator[PageMenuEntry]:
@@ -217,7 +223,7 @@ class ModeAuditLog(WatoMode):
 
         return None
 
-    def page(self):
+    def page(self) -> None:
         self._options.update(self._get_audit_log_options_from_request())
 
         audit = self._parse_audit_log()
@@ -276,18 +282,18 @@ class ModeAuditLog(WatoMode):
                 table.row()
                 table.cell(
                     _("Time"),
-                    html.render_nobr(render.date_and_time(float(entry.time))),
-                    css="narrow",
+                    HTMLWriter.render_nobr(render.date_and_time(float(entry.time))),
+                    css=["narrow"],
                 )
                 user_txt = ("<i>%s</i>" % _("internal")) if entry.user_id == "-" else entry.user_id
-                table.cell(_("User"), user_txt, css="nobreak narrow")
+                table.cell(_("User"), user_txt, css=["nobreak narrow"])
 
                 table.cell(
                     _("Object type"),
                     entry.object_ref.object_type.name if entry.object_ref else "",
-                    css="narrow",
+                    css=["narrow"],
                 )
-                table.cell(_("Object"), render_object_ref(entry.object_ref) or "", css="narrow")
+                table.cell(_("Object"), render_object_ref(entry.object_ref) or "", css=["narrow"])
 
                 text = HTML(escaping.escape_text(entry.text).replace("\n", "<br>\n"))
                 table.cell(_("Summary"), text)
@@ -352,7 +358,7 @@ class ModeAuditLog(WatoMode):
             elif entry.time < start_time and last_log_index is None:
                 last_log_index = index
                 # This is the next log after this day
-                previous_log_time = int(log[index][0])
+                previous_log_time = int(entry[0])
                 # Finished!
                 break
 
@@ -528,7 +534,7 @@ class ModeAuditLog(WatoMode):
     def _clear_audit_log(self):
         self._store.clear()
 
-    def _export_audit_log(self, audit: List[AuditLogStore.Entry]) -> ActionResult:
+    def _export_audit_log(self, audit: list[AuditLogStore.Entry]) -> ActionResult:
         response.set_content_type("text/csv")
 
         if self._options["display"] == "daily":
@@ -580,7 +586,7 @@ class ModeAuditLog(WatoMode):
 
         return FinalizeRequest(code=200)
 
-    def _parse_audit_log(self) -> List[AuditLogStore.Entry]:
+    def _parse_audit_log(self) -> list[AuditLogStore.Entry]:
         return list(reversed([e for e in self._store.read() if self._filter_entry(e)]))
 
     def _filter_entry(self, entry: AuditLogStore.Entry) -> bool:

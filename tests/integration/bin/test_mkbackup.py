@@ -14,6 +14,7 @@ import re
 import subprocess
 import tarfile
 from contextlib import contextmanager
+from typing import Generator
 
 import pytest
 
@@ -67,7 +68,7 @@ def backup_lock_dir_fixture(request):
 
 
 @pytest.fixture(name="test_cfg", scope="function")
-def test_cfg_fixture(web, site: Site, backup_path):
+def test_cfg_fixture(web, site: Site, backup_path) -> Generator:
     site.ensure_running()
 
     cfg = {
@@ -211,7 +212,7 @@ def _execute_restore(site: Site, backup_id, env=None, restore_site=True):
 #   '----------------------------------------------------------------------'
 
 
-def test_mkbackup_help(site: Site):
+def test_mkbackup_help(site: Site) -> None:
     p = site.execute(["mkbackup"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8")
     stdout, stderr = p.communicate()
     assert stderr == "ERROR: Missing operation mode\n"
@@ -219,7 +220,7 @@ def test_mkbackup_help(site: Site):
     assert p.wait() == 3
 
 
-def test_mkbackup_list_unconfigured(site: Site):
+def test_mkbackup_list_unconfigured(site: Site) -> None:
     p = site.execute(
         ["mkbackup", "list"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8"
     )
@@ -228,7 +229,7 @@ def test_mkbackup_list_unconfigured(site: Site):
     assert p.wait() == 3
 
 
-def test_mkbackup_list_targets(site: Site, test_cfg):
+def test_mkbackup_list_targets(site: Site, test_cfg) -> None:
     p = site.execute(
         ["mkbackup", "targets"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8"
     )
@@ -239,7 +240,7 @@ def test_mkbackup_list_targets(site: Site, test_cfg):
     assert "tärget" in stdout
 
 
-def test_mkbackup_list_backups(site: Site, test_cfg):
+def test_mkbackup_list_backups(site: Site, test_cfg) -> None:
     p = site.execute(
         ["mkbackup", "list", "test-target"],
         stdout=subprocess.PIPE,
@@ -253,7 +254,7 @@ def test_mkbackup_list_backups(site: Site, test_cfg):
     assert "Details" in stdout
 
 
-def test_mkbackup_list_backups_invalid_target(site: Site, test_cfg):
+def test_mkbackup_list_backups_invalid_target(site: Site, test_cfg) -> None:
     p = site.execute(
         ["mkbackup", "list", "xxx"],
         stdout=subprocess.PIPE,
@@ -266,7 +267,7 @@ def test_mkbackup_list_backups_invalid_target(site: Site, test_cfg):
     assert stdout == ""
 
 
-def test_mkbackup_list_jobs(site: Site, test_cfg):
+def test_mkbackup_list_jobs(site: Site, test_cfg) -> None:
     p = site.execute(
         ["mkbackup", "jobs"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8"
     )
@@ -277,20 +278,20 @@ def test_mkbackup_list_jobs(site: Site, test_cfg):
     assert "Tästjob" in stdout
 
 
-def test_mkbackup_simple_backup(site: Site, test_cfg, backup_lock_dir):
+def test_mkbackup_simple_backup(site: Site, test_cfg, backup_lock_dir) -> None:
     _execute_backup(site)
 
 
-def test_mkbackup_simple_restore(site: Site, test_cfg):
+def test_mkbackup_simple_restore(site: Site, test_cfg) -> None:
     backup_id = _execute_backup(site)
     _execute_restore(site, backup_id)
 
 
-def test_mkbackup_encrypted_backup(site: Site, test_cfg):
+def test_mkbackup_encrypted_backup(site: Site, test_cfg) -> None:
     _execute_backup(site, job_id="testjob-encrypted")
 
 
-def test_mkbackup_encrypted_backup_and_restore(site, test_cfg):
+def test_mkbackup_encrypted_backup_and_restore(site, test_cfg) -> None:
     backup_id = _execute_backup(site, job_id="testjob-encrypted")
 
     env = os.environ.copy()
@@ -299,12 +300,12 @@ def test_mkbackup_encrypted_backup_and_restore(site, test_cfg):
     _execute_restore(site, backup_id, env)
 
 
-def test_mkbackup_compressed_backup_and_restore(site, test_cfg):
+def test_mkbackup_compressed_backup_and_restore(site, test_cfg) -> None:
     backup_id = _execute_backup(site, job_id="testjob-compressed")
     _execute_restore(site, backup_id)
 
 
-def test_mkbackup_no_history_backup_and_restore(site, test_cfg, backup_path):
+def test_mkbackup_no_history_backup_and_restore(site, test_cfg, backup_path) -> None:
     backup_id = _execute_backup(site, job_id="testjob-no-history")
 
     tar_path = os.path.join(backup_path, backup_id, "site-%s.tar" % site.id)
@@ -322,7 +323,7 @@ def test_mkbackup_no_history_backup_and_restore(site, test_cfg, backup_path):
     _execute_restore(site, backup_id)
 
 
-def test_mkbackup_locking(site, test_cfg):
+def test_mkbackup_locking(site, test_cfg) -> None:
     backup_id = _execute_backup(site, job_id="testjob-no-history")
     with simulate_backup_lock(site.id):
         for what in (

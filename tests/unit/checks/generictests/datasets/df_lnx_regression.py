@@ -7,6 +7,7 @@
 # yapf: disable
 # type: ignore
 from cmk.base.plugins.agent_based.df_section import parse_df
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 checkname = 'df'
 
@@ -56,7 +57,7 @@ checks = {
             [
                 (
                     0,
-                    '75.79% used (103.92 of 137.13 GB)',
+                    'Used: 75.79% - 104 GiB of 137 GiB',
                     [
                         ('fs_used', 106418.50390625, 112333.35625, 126375.02578125, 0,
                          140416.6953125),
@@ -89,7 +90,7 @@ checks = {
             [
                 (
                     0,
-                    '75.79% used (103.92 of 137.13 GB)',
+                    'Used: 75.79% - 104 GiB of 137 GiB',
                     [
                         ('fs_used', 106418.50390625, 112333.35625, 126375.02578125, 0,
                          140416.6953125),
@@ -123,7 +124,7 @@ checks = {
             [
                 (
                     0,
-                    '74.49% used (96.94 of 130.14 GB), additionally reserved for root: 6.99 GB',
+                    'Used: 74.49% - 96.9 GiB of 130 GiB, additionally reserved for root: 6.99 GiB',
                     [
                         ('fs_used', 99263.20703125, 112333.35625, 126375.02578125, 0,
                          140416.6953125),
@@ -158,7 +159,7 @@ checks = {
             [
                 (
                     0,
-                    '75.79% used (103.92 of 137.13 GB), therein reserved for root: 5.1% (6.99 GB)',
+                    'Used: 75.79% - 104 GiB of 137 GiB, therein reserved for root: 5.10% (6.99 GiB)',
                     [
                         ('fs_used', 106418.50390625, 112333.35625, 126375.02578125, 0,
                          140416.6953125),
@@ -192,7 +193,7 @@ checks = {
             [
                 (
                     0,
-                    '75.79% used (103.92 of 137.13 GB), therein reserved for root: 5.1% (6.99 GB)',
+                    'Used: 75.79% - 104 GiB of 137 GiB, therein reserved for root: 5.10% (6.99 GiB)',
                     [
                         ('fs_used', 106418.50390625, 112333.35625, 126375.02578125, 0,
                          140416.6953125),
@@ -228,13 +229,14 @@ checks = {
         (
             '/',
             {
+                **FILESYSTEM_DEFAULT_PARAMS,
                 'show_inodes': 'onlow',
                 'inodes_levels': (90.0, 5.0)
             },
             [
                 (
                     0,
-                    '75.79% used (103.92 of 137.13 GB)',
+                    'Used: 75.79% - 104 GiB of 137 GiB',
                     [
                         ('fs_used', 106418.50390625, 112333.35625, 126375.02578125, 0,
                          140416.6953125),
@@ -255,13 +257,14 @@ checks = {
         (
             '/',
             {
+                **FILESYSTEM_DEFAULT_PARAMS,
                 'show_inodes': 'onlow',
                 'inodes_levels': (8542272, 8142272)
             },
             [
                 (
                     0,
-                    '75.79% used (103.92 of 137.13 GB)',
+                    'Used: 75.79% - 104 GiB of 137 GiB',
                     [
                         ('fs_used', 106418.50390625, 112333.35625, 126375.02578125, 0,
                          140416.6953125),
@@ -281,12 +284,13 @@ checks = {
         (
             'all',
             {
+                **FILESYSTEM_DEFAULT_PARAMS,
                 'patterns': (['*'], []),
             },
             [
                 (
                     0,
-                    '75.55% used (104.12 of 137.81 GB)',
+                    'Used: 75.55% - 104 GiB of 138 GiB',
                     [
                         ('fs_used', 106617.31640625, 112896.94375, 127009.06171875, 0,
                          141121.1796875),
@@ -298,7 +302,7 @@ checks = {
                     0,
                     '',
                     [
-                        ('inodes_used', 1654576, None, None, 0.0, 9189120.0),
+                        ('inodes_used', 1654576, 8270208.0, 8729664.0, 0.0, 9189120.0),
                     ],
                 ),
                 (
@@ -311,12 +315,13 @@ checks = {
         (
             'parts',
             {
+                **FILESYSTEM_DEFAULT_PARAMS,
                 'patterns': (['*oot', '/'], []),
             },
             [
                 (
                     0,
-                    '75.55% used (104.12 of 137.81 GB)',
+                    'Used: 75.55% - 104 GiB of 138 GiB',
                     [
                         ('fs_used', 106617.31640625, 112896.94375, 127009.06171875, 0,
                          141121.1796875),
@@ -328,7 +333,7 @@ checks = {
                     0,
                     '',
                     [
-                        ('inodes_used', 1654576, None, None, 0.0, 9189120.0),
+                        ('inodes_used', 1654576, 8270208.0, 8729664.0, 0.0, 9189120.0),
                     ],
                 ),
                 (
@@ -354,7 +359,7 @@ checks = {
             [
                 (
                     0,
-                    '28.22% used (198.81 of 704.48 MB)',
+                    'Used: 28.22% - 199 MiB of 704 MiB',
                     [
                         ('fs_used', 198.8125, 563.5875, 634.0359375, 0, 704.484375),
                         ('fs_size', 704.484375, None, None, None, None),
@@ -386,7 +391,7 @@ checks = {
             [
                 (
                     0,
-                    '75.79% used (103.92 of 137.13 GB)',
+                    'Used: 75.79% - 104 GiB of 137 GiB',
                     [
                         ('fs_used', 106418.50390625, 112333.35625, 126375.02578125, 0,
                          140416.6953125),
@@ -419,7 +424,7 @@ checks = {
             [
                 (
                     0,
-                    '28.22% used (198.81 of 704.48 MB)',
+                    'Used: 28.22% - 199 MiB of 704 MiB',
                     [
                         ('fs_used', 198.8125, 563.5875, 634.0359375, 0, 704.484375),
                         ('fs_size', 704.484375, None, None, None, None),

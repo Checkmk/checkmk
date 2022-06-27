@@ -186,17 +186,17 @@ def make_section_2() -> Dict[str, Dict[str, float]]:
         (make_agent_output_2(), make_section_2()),
     ],
 )
-def test_parse_function(string_table, section):
+def test_parse_function(string_table, section) -> None:
     assert apache_status.apache_status_parse(string_table) == section
 
 
-def test_discovery():
+def test_discovery() -> None:
     assert list(apache_status.discover_apache_status(make_section_2())) == [
         Service(item="MY CHECK MK"),
     ]
 
 
-def test_check_function(monkeypatch):
+def test_check_function(monkeypatch) -> None:
     monkeypatch.setattr(
         apache_status,
         "get_value_store",

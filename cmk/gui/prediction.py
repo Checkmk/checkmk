@@ -17,7 +17,9 @@ from cmk.utils.type_defs import HostName
 import cmk.gui.pages
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import html, request
+from cmk.gui.htmllib.header import make_header
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.utils import make_service_breadcrumb
 
@@ -58,7 +60,11 @@ def page_graph():
     dsname = request.get_str_input_mandatory("dsname")
 
     breadcrumb = make_service_breadcrumb(host_name, service)
-    html.header(_("Prediction for %s - %s - %s") % (host_name, service, dsname), breadcrumb)
+    make_header(
+        html,
+        _("Prediction for %s - %s - %s") % (host_name, service, dsname),
+        breadcrumb,
+    )
 
     # Get current value from perf_data via Livestatus
     current_value = get_current_perfdata(host_name, service, dsname)
@@ -151,7 +157,7 @@ vranges = [
 ]
 
 
-def compute_vertical_scala(low, high):
+def compute_vertical_scala(low, high):  # pylint: disable=too-many-branches
     m = max(abs(low), abs(high))
     for letter, factor in vranges:
         if m <= 99 * factor:
@@ -276,40 +282,40 @@ def create_graph(name, size, bounds, v_range, legend):
     )
 
 
-def render_coordinates(v_scala, t_scala):
+def render_coordinates(v_scala, t_scala) -> None:
     html.javascript(
         "cmk.prediction.render_coordinates(%s, %s);" % (json.dumps(v_scala), json.dumps(t_scala))
     )
 
 
-def render_curve(points, color, width=1, square=False):
+def render_curve(points, color, width=1, square=False) -> None:
     html.javascript(
         "cmk.prediction.render_curve(%s, %s, %d, %d);"
         % (json.dumps(points), json.dumps(color), width, square and 1 or 0)
     )
 
 
-def render_point(t, v, color):
+def render_point(t, v, color) -> None:
     html.javascript(
         "cmk.prediction.render_point(%s, %s, %s);"
         % (json.dumps(t), json.dumps(v), json.dumps(color))
     )
 
 
-def render_area(points, color, alpha=1.0):
+def render_area(points, color, alpha=1.0) -> None:
     html.javascript(
         "cmk.prediction.render_area(%s, %s, %f);" % (json.dumps(points), json.dumps(color), alpha)
     )
 
 
-def render_area_reverse(points, color, alpha=1.0):
+def render_area_reverse(points, color, alpha=1.0) -> None:
     html.javascript(
         "cmk.prediction.render_area_reverse(%s, %s, %f);"
         % (json.dumps(points), json.dumps(color), alpha)
     )
 
 
-def render_dual_area(lower_points, upper_points, color, alpha=1.0):
+def render_dual_area(lower_points, upper_points, color, alpha=1.0) -> None:
     html.javascript(
         "cmk.prediction.render_dual_area(%s, %s, %s, %f);"
         % (json.dumps(lower_points), json.dumps(upper_points), json.dumps(color), alpha)

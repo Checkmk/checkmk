@@ -13,7 +13,7 @@ def agent_netapp_arguments(
     return [
         ipaddress or hostname,
         params["username"],
-        params["password"],
+        passwordstore_get_cmdline("%s", params["password"]),
         "--no_counters",
     ] + [element[4:] for element in params["skip_elements"] if element.startswith("ctr_")]
 

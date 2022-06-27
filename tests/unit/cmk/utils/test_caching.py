@@ -7,11 +7,11 @@
 import cmk.utils.caching
 
 
-def test_cache_manager():
+def test_cache_manager() -> None:
     cmk.utils.caching.CacheManager()
 
 
-def test_create_dict_cache():
+def test_create_dict_cache() -> None:
     mgr = cmk.utils.caching.CacheManager()
     key = "test"
 
@@ -23,7 +23,7 @@ def test_create_dict_cache():
     assert isinstance(cache, cmk.utils.caching.DictCache)
 
 
-def test_clear_all():
+def test_clear_all() -> None:
     mgr = cmk.utils.caching.CacheManager()
 
     cache = mgr.get("test_dict")
@@ -37,7 +37,7 @@ def test_clear_all():
     assert cache.is_empty()
 
 
-def test_populated():
+def test_populated() -> None:
     mgr = cmk.utils.caching.CacheManager()
 
     cache = mgr.get("test1")

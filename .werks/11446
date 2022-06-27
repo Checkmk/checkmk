@@ -1,7 +1,7 @@
 Title: BI REST API: Introduced PUT/POST requests for rules and aggregations
 Class: feature
 Compatible: compat
-Component: wato
+Component: rest-api
 Date: 1612863345
 Edition: cre
 Knowledge: undoc

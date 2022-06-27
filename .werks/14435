@@ -1,0 +1,31 @@
+Title: Make password store usable for all special agents
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1655504654
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+The password store is now usable in the configuration of all special agents which require a password. Specifically, the following special agents did not support the password store before:
+
+LI: Aerohive HiveManager NG
+LI: Aerohive HiveManager
+LI: Apache ActiveMQ queues
+LI: AppDynamics via REST API
+LI: BI Aggregations
+LI: DDN S2A
+LI: EMC VNX storage systems
+LI: HPE StoreOnce via REST API 4.x
+LI: HPE StoreOnce
+LI: HP MSA via Web Interface
+LI: IPMI Sensors via Freeipmi or IPMItool
+LI: Jolokia
+LI: Microsoft Azure
+LI: NetApp via WebAPI
+LI: Nutanix Prism
+LI: Ruckus Spot
+LI: UCS Bladecenter
+LI: VNX quotas and filesystems
+LI: Zerto

@@ -28,7 +28,7 @@ import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKGeneralException, MKInternalError, MKUserError
-from cmk.gui.globals import request
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.metrics.html_render import (
@@ -267,7 +267,7 @@ def _perfometer_expressions(perfometer: PerfometerSpec) -> List[PerfometerExpres
     elif perfometer["type"] in ("stacked", "dual"):
         if "perfometers" not in perfometer:
             raise MKGeneralException(
-                _("Perfometers of type 'stacked' and 'dual' need " "the element 'perfometers' (%r)")
+                _("Perfometers of type 'stacked' and 'dual' need the element 'perfometers' (%r)")
                 % perfometer
             )
 
@@ -657,12 +657,12 @@ class MetricometerRendererDual(MetricometerRenderer):
     def type_name(cls) -> str:
         return "dual"
 
-    def __init__(self, perfometer, translated_metrics):
+    def __init__(self, perfometer, translated_metrics) -> None:
         super().__init__(perfometer, translated_metrics)
 
         if len(perfometer["perfometers"]) != 2:
             raise MKInternalError(
-                _("Perf-O-Meter of type 'dual' must contain exactly " "two definitions, not %d")
+                _("Perf-O-Meter of type 'dual' must contain exactly two definitions, not %d")
                 % len(perfometer["perfometers"])
             )
 

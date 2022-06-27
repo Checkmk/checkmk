@@ -56,7 +56,7 @@ _AGENT_OUTPUT = [
         ),
     ],
 )
-def test_discover_oracle_dataguard_stats(fix_register, string_table, expected_result):
+def test_discover_oracle_dataguard_stats(fix_register, string_table, expected_result) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("oracle_dataguard_stats")]
     section = parse_oracle_dataguard_stats(string_table)
     assert sorted(check_plugin.discovery_function(section)) == expected_result
@@ -79,11 +79,11 @@ def test_discover_oracle_dataguard_stats(fix_register, string_table, expected_re
             "TUX12C.TUXSTDB",
             [
                 Result(state=State.OK, summary="Database Role physical standby"),
-                Result(state=State.OK, summary="Apply finish time: 17.0 s"),
+                Result(state=State.OK, summary="Apply finish time: 17 seconds"),
                 Metric("apply_finish_time", 17.0),
-                Result(state=State.OK, summary="Apply lag: 28 m"),
+                Result(state=State.OK, summary="Apply lag: 28 minutes 57 seconds"),
                 Metric("apply_lag", 1737.0),
-                Result(state=State.OK, summary="Transport lag: 0.00 s"),
+                Result(state=State.OK, summary="Transport lag: 0 seconds"),
                 Metric("transport_lag", 0.0),
             ],
         ),
@@ -92,17 +92,17 @@ def test_discover_oracle_dataguard_stats(fix_register, string_table, expected_re
             "KNULF.TUXSTDB",
             [
                 Result(state=State.OK, summary="Database Role physical standby"),
-                Result(state=State.OK, summary="Apply finish time: 17.0 s"),
+                Result(state=State.OK, summary="Apply finish time: 17 seconds"),
                 Metric("apply_finish_time", 17.0),
                 Result(state=State.CRIT, summary="Apply lag: no value"),
-                Result(state=State.OK, summary="Transport lag: 0.00 s"),
+                Result(state=State.OK, summary="Transport lag: 0 seconds"),
                 Metric("transport_lag", 0.0),
                 Result(state=State.OK, summary="old plugin data found, recovery active?"),
             ],
         ),
     ],
 )
-def test_check_oracle_dataguard_stats(fix_register, string_table, item, expected_result):
+def test_check_oracle_dataguard_stats(fix_register, string_table, item, expected_result) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("oracle_dataguard_stats")]
     section = parse_oracle_dataguard_stats(string_table)
     assert (
@@ -162,7 +162,7 @@ def test_check_oracle_dataguard_stats(fix_register, string_table, item, expected
         ),
     ],
 )
-def test_inventory_oracle_dataguard_stats(string_table, expected_result):
+def test_inventory_oracle_dataguard_stats(string_table, expected_result) -> None:
     assert sort_inventory_result(
         inventory_oracle_dataguard_stats(parse_oracle_dataguard_stats(string_table))
     ) == sort_inventory_result(expected_result)

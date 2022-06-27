@@ -12,6 +12,7 @@ factory_settings["fortigate_ipsecvpn_default_levels"] = {
 def inventory_fortigate_ipsecvpn(info):
     if len(info) > 0:
         return [(None, {})]
+    return []
 
 
 def check_fortigate_ipsecvpn(item, params, info):

@@ -11,12 +11,12 @@ from tests.testlib import on_time
 import cmk.utils.log as log
 
 
-def test_get_logger():
+def test_get_logger() -> None:
     l = logging.getLogger("cmk.asd")
     assert l.parent == log.logger
 
 
-def test_setup_console_logging(capsys):
+def test_setup_console_logging(capsys) -> None:
     out, err = capsys.readouterr()
     log.clear_console_logging()
 
@@ -41,7 +41,7 @@ def test_setup_console_logging(capsys):
     assert err == ""
 
 
-def test_open_log(tmp_path):
+def test_open_log(tmp_path) -> None:
     log_file = tmp_path / "test.log"
     log.open_log(log_file)
 
@@ -56,7 +56,7 @@ def test_open_log(tmp_path):
         )
 
 
-def test_set_verbosity():
+def test_set_verbosity() -> None:
     root = logging.getLogger("cmk")
     root.setLevel(logging.INFO)
 

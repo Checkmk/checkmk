@@ -31,6 +31,7 @@ sylo_default_levels = (70, 5, 25)
 def inventory_sylo(info):
     if len(info) > 0 and len(info[0]) == 4:
         return [(None, "", "sylo_default_levels")]
+    return []
 
 
 def check_sylo(item, params, info):

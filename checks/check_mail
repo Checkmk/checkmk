@@ -6,7 +6,7 @@
 from cmk.base.check_api import passwordstore_get_cmdline
 
 
-def check_mail_arguments(params):
+def check_mail_arguments(params):  # pylint: disable=too-many-branches
     """
     >>> for a in check_mail_arguments({
     ...     'service_description': 'Email',

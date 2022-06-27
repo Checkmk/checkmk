@@ -40,6 +40,7 @@ def parse_citrix_hostsystem(info):
 def inventory_citrix_hostsystem_vms(parsed):
     if parsed["vms"]:
         return [(None, None)]
+    return []
 
 
 def check_citrix_hostsystem_vms(_no_item, _no_params, parsed):
@@ -67,6 +68,7 @@ check_info["citrix_hostsystem.vms"] = {
 def inventory_citrix_hostsystem(parsed):
     if parsed["pool"]:
         return [(None, None)]
+    return []
 
 
 def check_citrix_hostsystem(_no_item, no_params, parsed):

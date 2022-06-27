@@ -32,7 +32,7 @@ from cmk.base.plugins.agent_based.f5_bigip_cluster import (
         ([[["0 - Synchronized"]]], ("0", "Synchronized")),
     ],
 )
-def test_parse_f5_bigip_config_sync_pre_v11(string_table, expected_parsed_data):
+def test_parse_f5_bigip_config_sync_pre_v11(string_table, expected_parsed_data) -> None:
     assert parse_f5_bigip_config_sync_pre_v11(string_table) == expected_parsed_data
 
 
@@ -44,7 +44,7 @@ def test_parse_f5_bigip_config_sync_pre_v11(string_table, expected_parsed_data):
         ([[["6", "Standalone"]]], ("6", "Standalone")),
     ],
 )
-def test_parse_f5_bigip_config_sync_v11_plus(string_table, expected_parsed_data):
+def test_parse_f5_bigip_config_sync_v11_plus(string_table, expected_parsed_data) -> None:
     assert parse_f5_bigip_config_sync_v11_plus(string_table) == expected_parsed_data
 
 
@@ -70,7 +70,7 @@ def test_parse_f5_bigip_config_sync_v11_plus(string_table, expected_parsed_data)
         ),
     ],
 )
-def test_check_f5_bigip_config_sync_pre_v11(section, result):
+def test_check_f5_bigip_config_sync_pre_v11(section, result) -> None:
     assert list(check_f5_bigip_config_sync_pre_v11(State(*section))) == result
 
 
@@ -91,7 +91,7 @@ def test_check_f5_bigip_config_sync_pre_v11(section, result):
         ),
     ],
 )
-def test_check_f5_bigip_config_sync_v11_plus(section, result):
+def test_check_f5_bigip_config_sync_v11_plus(section, result) -> None:
     assert (
         list(
             check_f5_bigip_config_sync_v11_plus(

@@ -12,13 +12,14 @@ from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Tuple
 import livestatus
 
 import cmk.utils.version as cmk_version
-from cmk.utils.prediction import lq_logic
 
 import cmk.gui.bi as bi
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.sites as sites
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
-from cmk.gui.globals import active_config, html, request, user_errors
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import (
     Choices,
@@ -32,6 +33,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.autocompleter_config import AutocompleterConfig, GroupAutocompleterConfig
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.speaklater import LazyString
+from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import DualListChoice, Labels
 
 if cmk_version.is_managed_edition():
@@ -664,7 +666,7 @@ filter_registry.register(
 # TODO: I would be great to split this in two filters for host & service kind of problems
 @filter_registry.register_instance
 class FilterHostgroupProblems(CheckboxRowFilter):
-    def __init__(self):
+    def __init__(self) -> None:
         self.host_problems = query_filters.host_problems_options("hostgroups_having_hosts_")
         self.host_problems.append(("hostgroups_show_unhandled_host", _("Unhandled host problems")))
 
@@ -1317,7 +1319,7 @@ filter_registry.register(
 # TODO: I would be great to split this in two filters for host & service states
 @filter_registry.register_instance
 class FilterLogState(CheckboxRowFilter):
-    def __init__(self):
+    def __init__(self) -> None:
         self.host_states = [
             ("logst_h0", _("Up")),
             ("logst_h1", _("Down")),
@@ -1444,9 +1446,10 @@ class TagFilter(Filter):
             html.dropdown(
                 prefix + "_op",
                 operators,
+                deflt=value.get(prefix + "_op", ""),
                 style="width:36px",
                 ordered=True,
-                class_="op",
+                class_=["op"],
             )
             html.close_td()
             html.open_td()
@@ -1494,7 +1497,7 @@ filter_registry.register(
 
 @filter_registry.register_instance
 class FilterHostAuxTags(Filter):
-    def __init__(self):
+    def __init__(self) -> None:
         self.query_filter = query_filters.AuxTagsQuery(object_type="host")
         super().__init__(
             ident=self.query_filter.ident,
@@ -1510,7 +1513,7 @@ class FilterHostAuxTags(Filter):
         for num in range(self.query_filter.count):
             varname = "%s_%d" % (self.query_filter.var_prefix, num)
             html.dropdown(
-                varname, self._options(), deflt=value.get(varname, ""), ordered=True, class_="neg"
+                varname, self._options(), deflt=value.get(varname, ""), ordered=True, class_=["neg"]
             )
             html.open_nobr()
             html.checkbox(varname + "_neg", bool(value.get(varname)), label=_("negate"))
@@ -1583,7 +1586,7 @@ def filter_kubernetes_register(
     filter_registry.register(
         AjaxDropdownFilter(
             title=title,
-            sort_index=-1,  # TODO!
+            sort_index=550,
             info="host",
             autocompleter=GroupAutocompleterConfig(
                 ident="kubernetes_labels",
@@ -1601,8 +1604,8 @@ filter_kubernetes_register(_("Kubernetes Cluster"), "cluster")
 filter_kubernetes_register(_("Kubernetes Namespace"), "namespace")
 filter_kubernetes_register(_("Kubernetes Node"), "node")
 filter_kubernetes_register(_("Kubernetes Deployment"), "deployment")
-filter_kubernetes_register(_("Kubernetes Daemonset"), "daemonset")
-filter_kubernetes_register(_("Kubernetes Statefulset"), "statefulset")
+filter_kubernetes_register(_("Kubernetes DaemonSet"), "daemonset")
+filter_kubernetes_register(_("Kubernetes StatefulSet"), "statefulset")
 
 
 class FilterCustomAttribute(Filter):
@@ -1740,35 +1743,48 @@ class FilterECServiceLevelRange(Filter):
         )
         html.close_div()
 
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        lower_bound = value.get(self.lower_bound_varname)
-        upper_bound = value.get(self.upper_bound_varname)
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         # NOTE: We need this special case only because our construction of the
         # disjunction is broken. We should really have a Livestatus Query DSL...
-        if not lower_bound and not upper_bound:
+        bounds: FilterHTTPVariables = context.get(self.ident, {})
+        if not any(bounds):
+            return rows
+
+        lower_bound: Optional[str] = bounds.get(self.lower_bound_varname)
+        upper_bound: Optional[str] = bounds.get(self.upper_bound_varname)
+        # If user only chooses "From" or "To", use same value from the choosen
+        # field for the empty field and update filter form with that value
+        if not lower_bound:
+            lower_bound = upper_bound
+            assert upper_bound is not None
+            html.request.set_var(self.lower_bound_varname, upper_bound)
+        if not upper_bound:
+            upper_bound = lower_bound
+            assert lower_bound is not None
+            html.request.set_var(self.upper_bound_varname, lower_bound)
+
+        filtered_rows: Rows = []
+        assert lower_bound is not None
+        assert upper_bound is not None
+        for row in rows:
+            # Example lq output (99 = service level):
+            # host: [,4,127.0.0.1,/wato/hosts.mk,99,,,/wato/ auto-piggyback checkmk-agent ...]
+            # service: [custom_2, custom_1, 99]
+            service_level = (
+                int(row["%s_custom_variable_values" % self.info][4])
+                if self.info == "host"
+                else int(row["%s_custom_variable_values" % self.info][-1])
+            )
+            if int(lower_bound) <= service_level <= int(upper_bound):
+                filtered_rows.append(row)
+
+        return filtered_rows
+
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        if not value.get(self.lower_bound_varname) and not value.get(self.upper_bound_varname):
             return ""
 
-        if lower_bound:
-            match_lower = lambda val, lo=int(lower_bound): lo <= val
-        else:
-            match_lower = lambda val, lo=0: True
-
-        if upper_bound:
-            match_upper = lambda val, hi=int(upper_bound): val <= hi
-        else:
-            match_upper = lambda val, hi=0: True
-
-        filterline = "Filter: %s_custom_variable_names >= EC_SL\n" % self.info
-
-        filterline_values = [
-            str(val)
-            for val, _readable in active_config.mkeventd_service_levels
-            if match_lower(val) and match_upper(val)
-        ]
-
-        return filterline + lq_logic(
-            "Filter: %s_custom_variable_values >=" % self.info, filterline_values, "Or"
-        )
+        return "Filter: %s_custom_variable_names >= EC_SL\n" % self.info
 
 
 filter_registry.register(
@@ -1833,7 +1849,7 @@ filter_registry.register(
 
 @filter_registry.register_instance
 class FilterAggrGroup(Filter):
-    def __init__(self):
+    def __init__(self) -> None:
         self.column = "aggr_group"
         super().__init__(
             ident="aggr_group",
@@ -1868,7 +1884,7 @@ class FilterAggrGroup(Filter):
 
 @filter_registry.register_instance
 class FilterAggrGroupTree(Filter):
-    def __init__(self):
+    def __init__(self) -> None:
         self.column = "aggr_group_tree"
         super().__init__(
             ident="aggr_group_tree",
@@ -2012,7 +2028,7 @@ filter_registry.register(
 
 @filter_registry.register_instance
 class FilterAggrHosts(Filter):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             ident="aggr_hosts",
             title=_l("Affected hosts contain"),
@@ -2053,7 +2069,7 @@ class FilterAggrService(Filter):
     """Not performing filter(), nor filter_table(). The filtering is done directly in BI by
     bi.table(), which calls service_spec()."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             ident="aggr_service",
             title=_l("Affected by service"),
@@ -2429,7 +2445,7 @@ filter_registry.register(
 # TODO: Cleanup as a dropdown visual Filter later on
 @filter_registry.register_instance
 class FilterOptEventEffectiveContactgroup(FilterGroupCombo):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             title=_l("Contact group (effective)"),
             sort_index=212,

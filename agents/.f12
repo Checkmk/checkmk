@@ -13,4 +13,16 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
 # don't delete *.deb and *.rpm files as those are part of the distribution and can not be found in the source directory
-sudo rsync -varx --delete --exclude=.f12* --exclude cmk-agent-ctl --exclude windows --exclude linux --exclude=.gitignore --exclude=baked* --exclude=bakery --exclude=plugins --exclude='*.deb' --exclude='*.rpm' ./ "$ROOT/share/check_mk/agents/"
+sudo rsync -varx --delete \
+    --exclude=.f12* \
+    --exclude=__init__.py* \
+    --exclude cmk-agent-ctl \
+    --exclude windows \
+    --exclude linux \
+    --exclude=.gitignore \
+    --exclude=baked* \
+    --exclude=bakery \
+    --exclude=plugins \
+    --exclude='*.deb' \
+    --exclude='*.rpm' \
+    ./ "$ROOT/share/check_mk/agents/"

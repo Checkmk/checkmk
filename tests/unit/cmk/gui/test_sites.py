@@ -36,7 +36,7 @@ from cmk.gui.logged_in import user
         ),
     ],
 )
-def test_encode_socket_for_livestatus(site_spec, result):
+def test_encode_socket_for_livestatus(site_spec, result) -> None:
     assert sites.encode_socket_for_livestatus(SiteId("mysite"), site_spec) == result
 
 
@@ -59,11 +59,11 @@ def test_encode_socket_for_livestatus(site_spec, result):
         ),
     ],
 )
-def test_site_config_for_livestatus_tcp_tls(site_spec, result):
+def test_site_config_for_livestatus_tcp_tls(site_spec, result) -> None:
     assert sites._site_config_for_livestatus(SiteId("mysite"), site_spec) == result
 
 
-def test_sorted_sites(with_user_login, mocker):
+def test_sorted_sites(with_user_login, mocker) -> None:
     mocker.patch.object(
         user,
         "authorized_sites",

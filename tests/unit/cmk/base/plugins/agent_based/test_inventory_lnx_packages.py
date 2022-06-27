@@ -39,7 +39,6 @@ from .utils_inventory import sort_inventory_result
                         "arch": "x86_64",
                         "package_type": "deb",
                         "summary": "summary",
-                        "package_version": "v5",
                     },
                     status_columns={},
                 ),
@@ -89,7 +88,7 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventory_lnx_packages(string_table, expected_result):
+def test_inventory_lnx_packages(string_table, expected_result) -> None:
     assert sort_inventory_result(
         inventory_lnx_packages(parse_lnx_packages(string_table))
     ) == sort_inventory_result(expected_result)

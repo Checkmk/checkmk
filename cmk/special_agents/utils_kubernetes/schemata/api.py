@@ -14,7 +14,7 @@ except the python standard library or pydantic.
 """
 
 import enum
-from typing import Dict, List, Literal, Mapping, NewType, Optional, Protocol, Sequence, Union
+from typing import Dict, List, Literal, Mapping, NewType, Optional, Sequence, Union
 
 from pydantic import BaseModel
 from pydantic.class_validators import validator
@@ -23,9 +23,77 @@ from pydantic.fields import Field
 CronJobUID = NewType("CronJobUID", str)
 JobUID = NewType("JobUID", str)
 PodUID = NewType("PodUID", str)
-LabelName = NewType("LabelName", str)
-LabelValue = NewType("LabelValue", str)
 GitVersion = NewType("GitVersion", str)
+
+
+LabelValue = NewType("LabelValue", str)
+"""
+
+A string consisting of alphanumeric characters, '-', '_' or '.', and must
+start and end with an alphanumeric character.
+
+    Examples:
+        >>> import re
+        >>> validation_value = re.compile(r'(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?')
+        >>> is_value = lambda x: bool(validation_value.fullmatch(x))
+        >>> is_value('MyName')
+        True
+        >>> is_value('my.name')
+        True
+        >>> is_value('123-abc')
+        True
+        >>> is_value('a..a') # repeating '.', '_' or '-' characters in the middle is ok
+        True
+        >>> is_value('')  # empty values are allowed
+        True
+        >>> is_value('a-')  # does not end with alphanumeric character
+        False
+        >>> is_value('a&a')  # & not allowed
+        False
+"""
+
+LabelName = NewType("LabelName", str)
+"""
+
+A string consisting of a name part and an optional prefix part. The validation
+for the name part is the same as that of a `LabelValue`. The prefix part is a
+lowercase RFC 1123 DNS subdomain, which consists of lowercase alphanumeric
+characters, '-', '_' or '.' Note, that these subdomains are more restrictive
+than general DNS domains, which are allowed to have empty DNS labels and DNS
+labels with other special characters.
+
+    Examples:
+        >>> import re
+        >>> validation_name_part = re.compile(r'([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]')
+        >>> is_name_part = lambda x: bool(validation_name_part.fullmatch(x))
+        >>> validation_prefix_part = re.compile(r'[a-z0-9]([-a-z0-9]*[a-z0-9])?([.][a-z0-9]([-a-z0-9]*[a-z0-9])?)*')
+        >>> is_prefix_part = lambda x: bool(validation_prefix_part.fullmatch(x))
+        >>> is_prefix_part('a-a')  #  DNS label
+        True
+        >>> is_prefix_part('a.a')  # Two DNS labels seperated by a dot
+        True
+        >>> is_prefix_part('A')  # not a DNS label, upper case not allowed
+        False
+        >>> is_prefix_part('.a')  # not a prefix, each prefix must start and with a non-empty DNS label
+        False
+        >>> is_prefix_part('a..a')  # Empty DNS label in the middle is not allowed
+        False
+        >>> def is_name(x: str) -> bool:
+        ...     *prefix_part, name_part = x.split('/', maxsplit=1)
+        ...     if len(prefix_part) > 0:
+        ...         return is_prefix_part(prefix_part[0]) and is_name_part(name_part)
+        ...     return is_name_part(name_part)
+        >>> is_name('a')  #  A valid name_part without prefix
+        True
+        >>> is_name('a/A')  #  A valid name part and a valid prefix part
+        True
+        >>> is_name('/A')  #  Empty prefix is not allowed
+        False
+        >>> is_name('./a')  # '.' is not a valid prefix part
+        False
+        >>> is_name('a/a/a')  #  Multiple slashes are not allowed
+        False
+"""
 
 
 class Label(BaseModel):
@@ -34,6 +102,7 @@ class Label(BaseModel):
 
 
 Labels = Mapping[LabelName, Label]
+Annotations = Mapping[LabelName, LabelValue]
 Timestamp = NewType("Timestamp", float)
 
 # This information is from the one-page API overview v1.22
@@ -54,7 +123,8 @@ class MetaData(BaseModel):
     name: str
     namespace: Optional[NamespaceName] = None
     creation_timestamp: Optional[CreationTimestamp] = None
-    labels: Optional[Labels] = None
+    labels: Labels
+    annotations: Annotations
 
 
 class NodeMetaData(MetaData):
@@ -68,12 +138,125 @@ class PodMetaData(MetaData):
 
 class NamespaceMetaData(BaseModel):
     name: NamespaceName
-    labels: Optional[Labels] = None
+    labels: Labels
+    annotations: Annotations
     creation_timestamp: CreationTimestamp
 
 
 class Namespace(BaseModel):
     metadata: NamespaceMetaData
+
+
+# TODO: PodCrossNamespaceAffinity is currently not supported
+# service is not generated
+class QuotaScope(enum.Enum):
+    """
+    General:
+        * QuotaScope comprises multiple pod related concepts (QoS class, priority class,
+        terminating spec) and can therefore be considered ResourceQuota specific
+
+    Scopes:
+        * BestEffort: pods with BestEffort QoS class
+        * NotBestEffort: pods with either Burstable and Guaranteed QoS class
+        * Terminating: pods that have the active-DeadlineSeconds set (name itself is misleading)
+        * NotTerminating: pods that do not have the active-DeadlineSeconds set
+        * PriorityClass: pods with an assigned PriorityClass
+    """
+
+    BestEffort = "BestEffort"
+    NotBestEffort = "NotBestEffort"
+    Terminating = "Terminating"
+    NotTerminating = "NotTerminating"
+    PriorityClass = "PriorityClass"
+
+
+class ScopeOperator(enum.Enum):
+    In = "In"
+    NotIn = "NotIn"
+    Exists = "Exists"
+    DoesNotExist = "DoesNotExist"
+
+
+class ScopedResourceMatchExpression(BaseModel):
+    """
+    Definitions 1. - 3. are taken from
+    https://kubernetes.io/docs/concepts/policy/resource-quotas/#quota-scopes
+
+    1.  if scopeName is one of these [Terminating, NotTerminating, BestEffort, NotBestEffort], the
+    operator MUST be "Exists" (see also 3.)
+
+    2.  if operator is one of ["In", "NotIn"] , the values field must have AT LEAST ONE value
+
+    3.  if operator is one of ["Exists", "DoesNotExist"] , the values field MUST NOT be specified
+
+    4.  Based on 1. and 3.: operator DoesNotExist can only be used for scopeName = PriorityClass
+        with an empty values field -> pod.priority_class_name must be None to be valid
+    """
+
+    operator: ScopeOperator
+    # TODO: CrossNamespacePodAffinity
+    scope_name: QuotaScope
+    values: Sequence[str]
+
+
+class HardResourceRequirement(BaseModel):
+    """sections: [kube_resource_quota_memory_v1, kube_resource_quota_cpu_v1]"""
+
+    limit: Optional[float] = None
+    request: Optional[float] = None
+
+
+class HardRequirement(BaseModel):
+    # the format is different to ResourcesRequirement as resources are not nested within
+    # request & limit for RQ
+    memory: Optional[HardResourceRequirement] = None
+    cpu: Optional[HardResourceRequirement] = None
+
+
+class ScopeSelector(BaseModel):
+    match_expressions: Sequence[ScopedResourceMatchExpression]
+
+
+class ResourceQuotaSpec(BaseModel):
+    """
+    General:
+        * it is possible to set constraints for almost all Kubernetes object types
+        (e.g. deployments) but quota scopes usually pod relevant
+        (see https://kubernetes.io/docs/concepts/policy/resource-quotas/#quota-scopes for tracking
+        scopes)
+        * it is possible to specify both scope_selector and scopes fields at the same time
+
+    scopes:
+        * only objects which fulfill the intersection of the specified scopes are considered
+        part of the RQ.
+        * PriorityClass scope verifies if the object has any PriorityClass associated with it
+    """
+
+    hard: Optional[HardRequirement]
+    scope_selector: Optional[ScopeSelector]
+    scopes: Optional[Sequence[QuotaScope]]
+
+
+class ResourceQuota(BaseModel):
+    """
+    A resource quota provides constraints (objects count, workload resources) that limit
+    aggregate resource consumption per namespace:
+        * it can limit the quantity of objects that can be created
+        * total amount of compute resources (memory, cpu)
+
+    ResourceQuota controller behaviour:
+        * Kubernetes enforces RQ at pod creation time. This means that pods created prior to the RQ
+        definition are unaffected
+
+    General:
+        * RQ is enabled by default for many distributions (ResourceQuota must be included in
+            --enable-admission-plugins=)
+        * convention is to create one RQ for each namespace (but Kubernetes does not reject
+        multiple RQs targeting the same namespace)
+    """
+
+    metadata: MetaData
+    spec: ResourceQuotaSpec
 
 
 class NodeConditionStatus(str, enum.Enum):
@@ -248,6 +431,7 @@ class DaemonSetStatus(BaseModel):
     updated_number_scheduled: int
     number_misscheduled: int
     number_ready: int
+    number_available: int
 
 
 class DaemonSet(BaseModel):
@@ -309,24 +493,33 @@ class PodSpec(BaseModel):
     restart_policy: RestartPolicy
     containers: Sequence[ContainerSpec]
     init_containers: Sequence[ContainerSpec]
+    priority_class_name: Optional[str] = None
+    active_deadline_seconds: Optional[int] = None
+
+
+@enum.unique
+class ContainerStateType(str, enum.Enum):
+    running = "running"
+    waiting = "waiting"
+    terminated = "terminated"
 
 
 class ContainerRunningState(BaseModel):
-    type: str = Field("running", const=True)
+    type: Literal[ContainerStateType.running] = Field(ContainerStateType.running, const=True)
     start_time: int
 
 
 class ContainerWaitingState(BaseModel):
-    type: str = Field("waiting", const=True)
+    type: Literal[ContainerStateType.waiting] = Field(ContainerStateType.waiting, const=True)
     reason: str
     detail: Optional[str]
 
 
 class ContainerTerminatedState(BaseModel):
-    type: str = Field("terminated", const=True)
+    type: Literal[ContainerStateType.terminated] = Field(ContainerStateType.terminated, const=True)
     exit_code: int
-    start_time: int
-    end_time: int
+    start_time: Optional[int]
+    end_time: Optional[int]
     reason: Optional[str]
     detail: Optional[str]
 
@@ -375,12 +568,12 @@ class PodCondition(BaseModel):
 
 
 class PodStatus(BaseModel):
-    conditions: List[PodCondition]
+    conditions: Optional[List[PodCondition]]
     phase: Phase
     start_time: Optional[Timestamp]  # None if pod is faulty
     host_ip: Optional[IpAddress] = None
     pod_ip: Optional[IpAddress] = None
-    qos_class: QosClass
+    qos_class: Optional[QosClass]
 
 
 class Pod(BaseModel):
@@ -417,24 +610,36 @@ class ClusterDetails(BaseModel):
     version: GitVersion
 
 
-class API(Protocol):
-    def cron_jobs(self) -> Sequence[CronJob]:
-        ...
+class UnknownKubernetesVersion(BaseModel):
+    git_version: GitVersion
 
-    def nodes(self) -> Sequence[Node]:
-        ...
 
-    def pods(self) -> Sequence[Pod]:
-        ...
+class KubernetesVersion(BaseModel):
+    git_version: GitVersion
+    major: int
+    minor: int
 
-    def deployments(self):
-        ...
 
-    def daemon_sets(self):
-        ...
+class OwnerReference(BaseModel):
+    uid: str
+    controller: Optional[bool]  # Optional, since some owner references
+    # are user-defined and the controller field can be omitted from the yaml.
+    # This model is only intended for parsing. The absence of the controller
+    # field can be interpreted as controller=False, but this interpretation is
+    # done in _match_controllers, where all the interpretation for owner
+    # references happens.
 
-    def statefulsets(self):
-        ...
 
-    def cluster_details(self) -> ClusterDetails:
-        ...
+OwnerReferences = Sequence[OwnerReference]
+"""
+
+Example 1: A Pod is owned and controlled by a ReplicaSet with uid 123, then we obtain
+`[OwnerReference(uid="123", controller=True)]`
+
+Example 2: The Pod is additionaly owned by a ReplicaSet with uid abc, then we obtain
+`[OwnerReference(uid="abc", controller=False), OwnerReference(uid="123", controller=True)]` or
+`[OwnerReference(uid="abc", controller=None), OwnerReference(uid="123", controller=True)]`
+
+Example 3: A Node is owned by no object, then we obtain
+`[]`, but empty fields are omitted and we obtain `None`
+"""

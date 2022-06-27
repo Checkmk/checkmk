@@ -11,20 +11,19 @@ import ast
 import logging
 import re
 import subprocess
-import time
 import uuid
 from pathlib import Path
-from typing import Any, Dict, Iterable, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, NamedTuple, Optional, Sequence, Tuple, Union
 
 import requests
-import urllib3  # type: ignore[import]
+import urllib3
 
 from livestatus import SiteConfiguration, SiteId
 
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import UserId
+from cmk.utils.type_defs import PhaseOneResult, UserId
 from cmk.utils.version import base_version_parts, is_daily_build_of_master, parse_check_mk_version
 
 from cmk.automations.results import result_type_registry, SerializedResult
@@ -33,8 +32,9 @@ import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.hooks as hooks
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.background_job import BackgroundProcessInterface
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import active_config, request
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.site_config import get_site_config
@@ -178,7 +178,7 @@ def check_mk_remote_automation_serialized(
     indata: Any,
     stdin_data: Optional[str] = None,
     timeout: Optional[int] = None,
-    sync: bool = True,
+    sync: Callable[[SiteId], None],
     non_blocking_http: bool = False,
 ) -> SerializedResult:
     site = get_site_config(site_id)
@@ -193,8 +193,7 @@ def check_mk_remote_automation_serialized(
             % site.get("alias", site_id)
         )
 
-    if sync:
-        sync_changes_before_remote_automation(site_id)
+    sync(site_id)
 
     if non_blocking_http:
         # This will start a background job process on the remote site to execute the automation
@@ -217,35 +216,6 @@ def check_mk_remote_automation_serialized(
             ],
         )
     )
-
-
-# If the site is not up-to-date, synchronize it first.
-def sync_changes_before_remote_automation(site_id):
-    # TODO: Cleanup this local import
-    import cmk.gui.watolib.activate_changes  # pylint: disable=redefined-outer-name
-
-    manager = cmk.gui.watolib.activate_changes.ActivateChangesManager()
-    manager.load()
-
-    if not manager.is_sync_needed(site_id):
-        return
-
-    logger.info("Syncing %s", site_id)
-
-    manager.start([site_id], activate_foreign=True, prevent_activate=True)
-
-    # Wait maximum 30 seconds for sync to finish
-    timeout = 30.0
-    while manager.is_running() and timeout > 0.0:
-        time.sleep(0.5)
-        timeout -= 0.5
-
-    state = manager.get_site_state(site_id)
-    if state and state["_state"] != "success":
-        logger.error(
-            _("Remote automation tried to sync pending changes but failed: %s"),
-            state.get("_status_details"),
-        )
 
 
 # This hook is executed when one applies the pending configuration changes
@@ -317,6 +287,20 @@ def _do_remote_automation_serialized(
         raise MKAutomationException(_("Empty output from remote site."))
 
     return response
+
+
+def execute_phase1_result(site_id: SiteId, connection_id: str) -> PhaseOneResult:
+    command_args = {
+        "request_format": "python",
+        "request": repr(
+            {"action": "get_phase1_result", "kwargs": {"connection_id": connection_id}}
+        ),
+    }
+    return ast.literal_eval(
+        do_remote_automation(
+            site=get_site_config(site_id), command="execute-dcd-command", vars_=command_args
+        )
+    )
 
 
 def do_remote_automation(site, command, vars_, files=None, timeout=None) -> Any:

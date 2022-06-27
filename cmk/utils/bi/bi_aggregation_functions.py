@@ -33,7 +33,7 @@ _reversed_bi_criticality_level = {v: k for k, v in _bi_criticality_level.items()
 
 
 def mapped_states(func):
-    def wrap(self, states: List[int]) -> int:
+    def wrap(self, states: List[int]) -> int:  # type:ignore[no-untyped-def]
         new_states = sorted(map(lambda x: _bi_criticality_level[x], states))
         return _reversed_bi_criticality_level.get(func(self, new_states), BIStates.UNKNOWN)
 
@@ -67,7 +67,7 @@ class BIAggregationFunctionBest(ABCBIAggregationFunction):
             "restrict_state": self.restrict_state,
         }
 
-    def __init__(self, aggr_function_config: Dict[str, Any]):
+    def __init__(self, aggr_function_config: Dict[str, Any]) -> None:
         super().__init__(aggr_function_config)
         self.count = aggr_function_config["count"]
         self.restrict_state = aggr_function_config["restrict_state"]
@@ -120,7 +120,7 @@ class BIAggregationFunctionWorst(ABCBIAggregationFunction):
             "restrict_state": self.restrict_state,
         }
 
-    def __init__(self, aggr_function_config: Dict[str, Any]):
+    def __init__(self, aggr_function_config: Dict[str, Any]) -> None:
         super().__init__(aggr_function_config)
         self.count = aggr_function_config["count"]
         self.restrict_state = aggr_function_config["restrict_state"]
@@ -173,7 +173,7 @@ class BIAggregationFunctionCountOK(ABCBIAggregationFunction):
             "levels_warn": self.levels_warn,
         }
 
-    def __init__(self, aggr_function_config: Dict[str, Any]):
+    def __init__(self, aggr_function_config: Dict[str, Any]) -> None:
         super().__init__(aggr_function_config)
         self.levels_ok = aggr_function_config["levels_ok"]
         self.levels_warn = aggr_function_config["levels_warn"]

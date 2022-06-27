@@ -39,16 +39,18 @@
 
 import json
 import re
-from typing import Dict, List, Set, Tuple, Union
+from typing import Dict, List, Sequence, Set, Tuple, Union
 
 import cmk.utils
 import cmk.utils.render
 from cmk.utils.type_defs import TagID
 
 import cmk.gui.bi as bi
-from cmk.gui.globals import active_config, html, request, response
+from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.views.graphs import cmk_graph_url
@@ -60,7 +62,8 @@ from cmk.gui.plugins.views.utils import (
     render_cache_info,
     url_to_visual,
 )
-from cmk.gui.type_defs import Row, VisualLinkSpec
+from cmk.gui.type_defs import ColumnName, Row, VisualLinkSpec
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
@@ -93,7 +96,9 @@ class ActionMenuIcon(Icon):
     def default_sort_index(self):
         return 10
 
-    def render(self, what, row, tags, custom_vars):
+    def render(
+        self, what, row, tags, custom_vars
+    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
         url_vars = [
             ("host", row["host_name"]),
         ]
@@ -140,7 +145,7 @@ class IconImageIcon(Icon):
     def title(cls) -> str:
         return _("Icon image")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["icon_image"]
 
     def default_toplevel(self):
@@ -149,10 +154,10 @@ class IconImageIcon(Icon):
     def default_sort_index(self):
         return 25
 
-    def render(self, what, row, tags, custom_vars):
+    def render(self, what, row, tags, custom_vars) -> None | HTML:
         img = row[what + "_icon_image"]
         if not img:
-            return
+            return None
 
         if img.endswith(".png"):
             img = img[:-4]
@@ -181,7 +186,7 @@ class RescheduleIcon(Icon):
     def title(cls) -> str:
         return _("Reschedule")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["check_type", "active_checks_enabled", "check_command"]
 
     def service_columns(self):
@@ -196,7 +201,7 @@ class RescheduleIcon(Icon):
 
         # Reschedule button
         if row[what + "_check_type"] == 2:
-            return  # shadow hosts/services cannot be rescheduled
+            return None  # shadow hosts/services cannot be rescheduled
 
         if (
             row[what + "_active_checks_enabled"] == 1
@@ -226,6 +231,7 @@ class RescheduleIcon(Icon):
             )
             # _self is needed to prevent wrong linking when views are parts of dashlets
             return icon, txt, (url, "_self")
+        return None
 
 
 # .
@@ -251,7 +257,7 @@ class RuleEditorIcon(Icon):
     def title(cls) -> str:
         return _("Rule editor")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["check_type"]
 
     def host_columns(self):
@@ -260,9 +266,11 @@ class RuleEditorIcon(Icon):
     def service_columns(self):
         return ["description"]
 
-    def render(self, what, row, tags, custom_vars):
+    def render(
+        self, what, row, tags, custom_vars
+    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
         if row[what + "_check_type"] == 2:
-            return  # shadow services have no parameters
+            return None  # shadow services have no parameters
 
         if (
             active_config.wato_enabled
@@ -281,6 +289,7 @@ class RuleEditorIcon(Icon):
                 title = _("Parameters for this host")
 
             return "rulesets", title, makeuri_contextless(request, urlvars, "wato.py")
+        return None
 
 
 # .
@@ -309,7 +318,9 @@ class ManpageIcon(Icon):
     def service_columns(self):
         return ["check_command"]
 
-    def render(self, what, row, tags, custom_vars):
+    def render(
+        self, what, row, tags, custom_vars
+    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
         if what == "service" and active_config.wato_enabled and user.may("wato.use"):
             command = row["service_check_command"]
             if command.startswith("check_mk-mgmt_"):
@@ -325,15 +336,16 @@ class ManpageIcon(Icon):
                 elif command == "check-mk-inventory":
                     check_type = "check-mk-inventory"
                 else:
-                    return
+                    return None
             else:
-                return
+                return None
             urlvars = [("mode", "check_manpage"), ("check_type", check_type)]
             return (
                 "check_plugins",
                 _("Manual page for this check type"),
                 makeuri_contextless(request, urlvars, "wato.py"),
             )
+        return None
 
 
 # .
@@ -359,15 +371,18 @@ class AcknowledgeIcon(Icon):
     def title(cls) -> str:
         return _("Status acknowledged")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["acknowledged"]
 
     def default_toplevel(self):
         return True
 
-    def render(self, what, row, tags, custom_vars):
+    def render(
+        self, what, row, tags, custom_vars
+    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
         if row[what + "_acknowledged"]:
             return "ack", _("This problem has been acknowledged")
+        return None
 
 
 # .
@@ -393,7 +408,7 @@ class PerfgraphIcon(Icon):
     def title(cls) -> str:
         return _("Performance graph")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["pnpgraph_present"]
 
     def default_toplevel(self):
@@ -402,10 +417,13 @@ class PerfgraphIcon(Icon):
     def default_sort_index(self):
         return 20
 
-    def render(self, what, row, tags, custom_vars):
+    def render(
+        self, what, row, tags, custom_vars
+    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
         pnpgraph_present = row[what + "_pnpgraph_present"]
         if pnpgraph_present == 1:
             return self._pnp_icon(row, what)
+        return None
 
     def _pnp_icon(self, row, what):
         url = self._graph_icon_link(row, what)
@@ -414,9 +432,9 @@ class PerfgraphIcon(Icon):
         # mobile view for graphs, so the graphs on the bottom of the host/service view are enough
         # for the moment.
         if is_mobile(request, response):
-            return
+            return None
 
-        return html.render_a(
+        return HTMLWriter.render_a(
             content=html.render_icon("graph", ""),
             href=url,
             onmouseout="cmk.hover.hide()",
@@ -457,13 +475,15 @@ class PredictionIcon(Icon):
     def title(cls) -> str:
         return _("Prediction")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["perf_data"]
 
     def default_toplevel(self):
         return True
 
-    def render(self, what, row, tags, custom_vars):
+    def render(
+        self, what, row, tags, custom_vars
+    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
         # TODO: At least for interfaces we have 2 predictive values. But this icon
         # only creates a link to the first one. Add multiple icons or add a navigation
         # element to the prediction page.
@@ -484,6 +504,7 @@ class PredictionIcon(Icon):
                         _("Analyse predictive monitoring for this service"),
                         makeuri_contextless(request, urlvars, "prediction_graph.py"),
                     )
+        return None
 
 
 # .
@@ -509,16 +530,19 @@ class CustomActionIcon(Icon):
     def title(cls) -> str:
         return _("Custom action")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["action_url_expanded", "pnpgraph_present"]
 
-    def render(self, what, row, tags, custom_vars):
+    def render(
+        self, what, row, tags, custom_vars
+    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
         if display_options.enabled(display_options.X):
             # action_url (only, if not a PNP-URL and pnp_graph is working!)
             action_url = row[what + "_action_url_expanded"]
             pnpgraph_present = row[what + "_pnpgraph_present"]
             if action_url and not ("/pnp4nagios/" in action_url and pnpgraph_present >= 0):
                 return "action", _("Custom Action"), action_url
+        return None
 
 
 # .
@@ -547,12 +571,14 @@ class LogwatchIcon(Icon):
     def service_columns(self):
         return ["host_name", "service_description", "check_command"]
 
-    def render(self, what, row, tags, custom_vars):
+    def render(
+        self, what, row, tags, custom_vars
+    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
         if what != "service" or row[what + "_check_command"] not in [
             "check_mk-logwatch",
             "check_mk-logwatch_groups",
         ]:
-            return
+            return None
 
         sitename, hostname, item = row["site"], row["host_name"], row["service_description"][4:]
         url = makeuri_contextless(
@@ -586,7 +612,7 @@ class NotesIcon(Icon):
     def title(cls) -> str:
         return _("Notes")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["notes_url_expanded", "check_command"]
 
     def render(self, what, row, tags, custom_vars):
@@ -597,6 +623,7 @@ class NotesIcon(Icon):
             notes_url = row[what + "_notes_url_expanded"]
             if notes_url:
                 return "notes", _("Custom Notes"), (notes_url, "_blank")
+        return None
 
 
 # .
@@ -625,7 +652,7 @@ class DowntimesIcon(Icon):
     def default_toplevel(self):
         return True
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["scheduled_downtime_depth", "downtimes_with_extra_info"]
 
     def host_columns(self):
@@ -689,6 +716,7 @@ class DowntimesIcon(Icon):
                 title,
                 url_to_visual(row, VisualLinkSpec("views", "downtimes_of_host")),
             )
+        return None
 
 
 # .
@@ -714,7 +742,7 @@ class CommentsIcon(Icon):
     def title(cls) -> str:
         return _("Status comments")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["comments_with_extra_info"]
 
     def default_toplevel(self):
@@ -737,6 +765,7 @@ class CommentsIcon(Icon):
                 text,
                 url_to_visual(row, VisualLinkSpec("views", "comments_of_" + what)),
             )
+        return None
 
 
 # .
@@ -762,13 +791,15 @@ class NotificationsIcon(Icon):
     def title(cls) -> str:
         return _("Status notifications enabled")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["modified_attributes_list", "notifications_enabled"]
 
     def default_toplevel(self):
         return True
 
-    def render(self, what, row, tags, custom_vars):
+    def render(
+        self, what, row, tags, custom_vars
+    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
         # Notifications disabled
         enabled = row[what + "_notifications_enabled"]
         modified = "notifications_enabled" in row[what + "_modified_attributes_list"]
@@ -778,6 +809,7 @@ class NotificationsIcon(Icon):
             return "notif_man_disabled", _("Notifications are manually disabled for this %s") % what
         if not enabled:
             return "notif_disabled", _("Notifications are disabled for this %s") % what
+        return None
 
 
 # .
@@ -801,19 +833,20 @@ class FlappingIcon(Icon):
     def title(cls) -> str:
         return _("Status flapping")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["is_flapping"]
 
     def default_toplevel(self):
         return True
 
-    def render(self, what, row, tags, custom_vars):
+    def render(self, what, row, tags, custom_vars) -> None | tuple[str, str]:
         if row[what + "_is_flapping"]:
             if what == "host":
                 title = _("This host is flapping")
             else:
                 title = _("This service is flapping")
             return "flapping", title
+        return None
 
 
 # .
@@ -837,13 +870,15 @@ class StalenessIcon(Icon):
     def title(cls) -> str:
         return _("Status stale")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["staleness"]
 
     def default_toplevel(self):
         return True
 
-    def render(self, what, row, tags, custom_vars):
+    def render(
+        self, what, row, tags, custom_vars
+    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
         if is_stale(row):
             if what == "host":
                 title = _("This host is stale")
@@ -854,6 +889,7 @@ class StalenessIcon(Icon):
                     % active_config.staleness_threshold
                 )
             return "stale", title
+        return None
 
 
 # .
@@ -879,13 +915,15 @@ class ActiveChecksIcon(Icon):
     def title(cls) -> str:
         return _("Status active checks")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["modified_attributes_list", "active_checks_enabled"]
 
     def default_toplevel(self):
         return True
 
-    def render(self, what, row, tags, custom_vars):
+    def render(
+        self, what, row, tags, custom_vars
+    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
         # Setting of active checks modified by user
         if "active_checks_enabled" in row[what + "_modified_attributes_list"]:
             if row[what + "_active_checks_enabled"] == 0:
@@ -894,6 +932,7 @@ class ActiveChecksIcon(Icon):
                     _("Active checks have been manually disabled for this %s!") % what,
                 )
             return "enabled", _("Active checks have been manually enabled for this %s!") % what
+        return None
 
 
 # .
@@ -919,13 +958,15 @@ class PassiveChecksIcon(Icon):
     def title(cls) -> str:
         return _("Status passive checks")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["modified_attributes_list", "accept_passive_checks"]
 
     def default_toplevel(self):
         return True
 
-    def render(self, what, row, tags, custom_vars):
+    def render(
+        self, what, row, tags, custom_vars
+    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
         # Passive checks disabled manually?
         if "passive_checks_enabled" in row[what + "_modified_attributes_list"]:
             if row[what + "_accept_passive_checks"] == 0:
@@ -933,6 +974,7 @@ class PassiveChecksIcon(Icon):
                     "npassive",
                     _("Passive checks have been manually disabled for this %s!") % what,
                 )
+        return None
 
 
 # .
@@ -956,15 +998,18 @@ class NotificationPeriodIcon(Icon):
     def title(cls) -> str:
         return _("Status notification period")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["in_notification_period"]
 
     def default_toplevel(self):
         return True
 
-    def render(self, what, row, tags, custom_vars):
+    def render(
+        self, what, row, tags, custom_vars
+    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
         if not row[what + "_in_notification_period"]:
             return "outofnot", _("Out of notification period")
+        return None
 
 
 # .
@@ -988,15 +1033,18 @@ class ServicePeriodIcon(Icon):
     def title(cls) -> str:
         return _("Status service period")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["in_service_period"]
 
     def default_toplevel(self):
         return True
 
-    def render(self, what, row, tags, custom_vars):
+    def render(
+        self, what, row, tags, custom_vars
+    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
         if not row[what + "_in_service_period"]:
             return "outof_serviceperiod", _("Out of service period")
+        return None
 
 
 # .
@@ -1022,7 +1070,9 @@ class AggregationsIcon(Icon):
     def title(cls) -> str:
         return _("Aggregations")
 
-    def render(self, what, row, tags, custom_vars):
+    def render(
+        self, what, row, tags, custom_vars
+    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
         # Link to aggregations of the host/service
         # When precompile on demand is enabled, this icon is displayed for all hosts/services
         # otherwise only for the hosts/services which are part of aggregations.
@@ -1030,7 +1080,7 @@ class AggregationsIcon(Icon):
             view_name = "aggr_%s" % what
 
             if not user.may("view.%s" % view_name):
-                return
+                return None
 
             urivars = [
                 ("view_name", view_name),
@@ -1046,6 +1096,7 @@ class AggregationsIcon(Icon):
                 % (what == "host" and _("Host") or _("Service")),
                 url,
             )
+        return None
 
 
 # .
@@ -1069,7 +1120,9 @@ class StarsIcon(Icon):
     def title(cls) -> str:
         return _("Stars")
 
-    def render(self, what, row, tags, custom_vars):
+    def render(
+        self, what, row, tags, custom_vars
+    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
         stars = self._get_stars()
 
         if what == "host":
@@ -1081,6 +1134,7 @@ class StarsIcon(Icon):
 
         if starred:
             return "starred", _("This %s is one of your favorites") % title
+        return None
 
     @request_memoize()
     def _get_stars(self) -> Set[str]:
@@ -1113,7 +1167,7 @@ class AggregationIcon(Icon):
     def host_columns(self):
         return ["check_command", "name", "address"]
 
-    def render(self, what, row, tags, custom_vars):
+    def render(self, what, row, tags, custom_vars) -> None | tuple[str, str, str]:
         # service_check_command looks like:
         # u"check_mk_active-bi_aggr!... '-b' 'http://localhost/$HOSTNAME$' ... '-a' 'Host foobar' ..."
         if what == "service" and row.get("service_check_command", "").startswith(
@@ -1136,6 +1190,7 @@ class AggregationIcon(Icon):
             )
 
             return "aggr", _("Open this Aggregation"), url
+        return None
 
 
 # .
@@ -1167,7 +1222,7 @@ class CrashdumpsIcon(Icon):
     def service_columns(self):
         return ["plugin_output", "state", "host_name"]
 
-    def render(self, what, row, tags, custom_vars):
+    def render(self, what, row, tags, custom_vars) -> None | tuple[str, str] | tuple[str, str, str]:
         if (
             what == "service"
             and row["service_state"] == 3
@@ -1205,6 +1260,7 @@ class CrashdumpsIcon(Icon):
                 ),
                 crashurl,
             )
+        return None
 
 
 # .
@@ -1230,7 +1286,7 @@ class CheckPeriodIcon(Icon):
     def title(cls) -> str:
         return _("Check period")
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["in_check_period"]
 
     def default_toplevel(self):
@@ -1239,7 +1295,7 @@ class CheckPeriodIcon(Icon):
     def service_columns(self):
         return ["in_passive_check_period"]
 
-    def render(self, what, row, tags, custom_vars):
+    def render(self, what, row, tags, custom_vars) -> None | tuple[str, str]:
         if what == "service":
             if (
                 row["%s_in_passive_check_period" % what] == 0
@@ -1249,6 +1305,7 @@ class CheckPeriodIcon(Icon):
         elif what == "host":
             if row["%s_in_check_period" % what] == 0:
                 return "pause", _("This host is currently not being checked")
+        return None
 
 
 # .

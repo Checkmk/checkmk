@@ -5,7 +5,7 @@ properties([
     pipelineTriggers([triggers: [upstream(upstreamProjects: "${FOLDER_ID}/windows-agent-build", threshold: hudson.model.Result.SUCCESS)]]),
 ])
 
-node('windows') {
+node('win_master_agent_unit') {
     stage('git checkout') {
         checkout(scm)
         windows = load 'buildscripts/scripts/lib/windows.groovy'

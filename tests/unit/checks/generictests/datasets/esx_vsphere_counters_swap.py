@@ -31,8 +31,8 @@ checks = {
     'swap': [
         (
             None, {}, [
-                (0, 'Swap in: 0.00 KB', []), (0, 'Swap out: not available', []),
-                (0, 'Swap used: 0.00 KB', [])
+                (0, 'Swap in: 0 B', []), (0, 'Swap out: not available', []),
+                (0, 'Swap used: 0 B', [])
             ]
         )
     ]

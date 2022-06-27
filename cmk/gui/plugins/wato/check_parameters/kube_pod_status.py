@@ -33,7 +33,6 @@ def __element():
                 add_label=_("Add new status"),
                 allow_empty=False,
                 movable=False,
-                help=RegExp(mode=RegExp.infix).help(),
             ),
         ],
     )

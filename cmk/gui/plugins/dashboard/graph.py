@@ -14,7 +14,7 @@ from cmk.utils.type_defs import MetricName
 
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException, MKMissingDataError, MKUserError
-from cmk.gui.globals import html
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.metrics import graph_info, metric_info
 from cmk.gui.plugins.dashboard.utils import (
@@ -33,7 +33,13 @@ from cmk.gui.plugins.metrics.html_render import (
 )
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.plugins.visuals.utils import get_only_sites_from_context
-from cmk.gui.type_defs import Choices, GraphIdentifier, VisualContext
+from cmk.gui.type_defs import (
+    Choices,
+    GraphIdentifier,
+    SingleInfos,
+    TemplateGraphSpec,
+    VisualContext,
+)
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.valuespec import (
     Dictionary,
@@ -58,7 +64,7 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
     ident = "available_graphs"
     _MARKER_DEPRECATED_CHOICE = "_deprecated_int_value"
 
-    def __init__(self, **kwargs: Any):
+    def __init__(self, **kwargs: Any) -> None:
         kwargs_with_defaults: Mapping[str, Any] = {
             "css_spec": ["ajax-vals"],
             "hint_label": _("graph"),
@@ -137,7 +143,7 @@ class GraphDashlet(Dashlet):
         return _("Displays a performance graph of a host or service.")
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 20
 
     @classmethod
@@ -148,16 +154,15 @@ class GraphDashlet(Dashlet):
     def initial_size(cls):
         return (60, 21)
 
-    @classmethod
-    def infos(cls):
+    def infos(self) -> SingleInfos:
         return ["host", "service"]
 
     @classmethod
-    def single_infos(cls):
+    def single_infos(cls) -> SingleInfos:
         return ["host", "service"]
 
     @classmethod
-    def has_context(cls):
+    def has_context(cls) -> bool:
         return True
 
     def default_display_title(self) -> str:
@@ -202,7 +207,8 @@ class GraphDashlet(Dashlet):
         except Exception:
             raise MKGeneralException(_("Failed to calculate a graph recipe."))
 
-        self._dashlet_spec["_graph_title"] = graph_recipes[0]["title"]
+        if graph_recipes:
+            self._dashlet_spec["_graph_title"] = graph_recipes[0]["title"]
 
     @staticmethod
     def _resolve_site(host: str):
@@ -231,19 +237,25 @@ class GraphDashlet(Dashlet):
         # handle this here
         raw_source = self._dashlet_spec["source"]
         if isinstance(raw_source, int):
-            graph_def = {"graph_index": raw_source - 1}
+            graph_spec = TemplateGraphSpec(
+                {
+                    "site": site,
+                    "host_name": host,
+                    "service_description": service,
+                    "graph_index": raw_source - 1,
+                }
+            )
         else:
-            graph_def = {"graph_id": raw_source}
+            graph_spec = TemplateGraphSpec(
+                {
+                    "site": site,
+                    "host_name": host,
+                    "service_description": service,
+                    "graph_id": raw_source,
+                }
+            )
 
-        return (
-            "template",
-            {
-                "site": site,
-                "host_name": host,
-                "service_description": service,
-                **graph_def,
-            },
-        )
+        return ("template", graph_spec)
 
     @classmethod
     def vs_parameters(cls) -> ValueSpec:

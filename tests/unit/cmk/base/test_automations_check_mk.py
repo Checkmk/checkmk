@@ -49,7 +49,7 @@ class TestAutomationDiagHost:
 
     @pytest.mark.usefixtures("scenario")
     @pytest.mark.usefixtures("patch_fetch")
-    def test_execute(self, hostname, ipaddress, raw_data):
+    def test_execute(self, hostname, ipaddress, raw_data) -> None:
         args = [hostname, "agent", ipaddress, "", "6557", "10", "5", "5", ""]
         assert check_mk.AutomationDiagHost().execute(args) == DiagHostResult(
             0,

@@ -244,7 +244,7 @@ class Ec2Inventory(object):
     def _empty_inventory(self):
         return {"_meta": {"hostvars": {}}}
 
-    def __init__(self):
+    def __init__(self) -> None:
         ''' Main execution path '''
 
         # Inventory grouped by instance IDs, tags, security groups, regions,
@@ -291,7 +291,7 @@ class Ec2Inventory(object):
 
         print(data_to_print)
 
-    def is_cache_valid(self):
+    def is_cache_valid(self) -> bool:
         ''' Determines if the cache files have expired, or if it is still valid '''
 
         if os.path.isfile(self.cache_path_cache):

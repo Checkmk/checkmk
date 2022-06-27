@@ -92,7 +92,8 @@ $toggle-switch-width: 30px;
 $tag-padding: 0.1em 0.3em;
 $page-header-height: 58px;
 $popup-filters-border-radius: 2px;
-$simplebar-scrollbar-width: 5px;
+$simplebar-scrollbar-width: 8px;
+$simplebar-track-width: $simplebar-scrollbar-width + 6px;
 $megamenu-navbar-height: 60px;
 $megamenu-spacing-bottom: 20px;
 $dashlet-anchor-size: 26px;
@@ -105,3 +106,6 @@ $dashlet-resize-handle-width-slim: 12px;
 $dashlet-resize-handle-height-slim: 6px;
 $input-field-height: 21px; // also for tactical overview
 $input-field-margin: 0 $spacing-half $spacing-half 0;
+$mobile-form-element-bg-color: rgb(246, 246, 246);
+$mobile-form-element-border: 1px solid rgb(221, 221, 221);
+$mobile-form-element-focus-box-shadow: 0 0 12px rgb(51, 136, 204);

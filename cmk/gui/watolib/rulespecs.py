@@ -14,12 +14,15 @@ from typing import Type, Union
 import cmk.utils.plugin_registry
 
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import html, request
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, makeuri_contextless_rulespec_group
 from cmk.gui.valuespec import (
+    DEF_VALUE,
     Dictionary,
     DropdownChoice,
     DropdownChoiceEntries,
@@ -31,7 +34,10 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
     ValueSpec,
+    ValueSpecDefault,
+    ValueSpecHelp,
     ValueSpecText,
+    ValueSpecValidateFunc,
 )
 from cmk.gui.watolib.check_mk_automations import get_check_information
 from cmk.gui.watolib.main_menu import ABCMainModule, ModuleRegistry
@@ -122,7 +128,7 @@ class RulespecSubGroup(RulespecBaseGroup, abc.ABC):
 
 
 class RulespecGroupRegistry(cmk.utils.plugin_registry.Registry[Type[RulespecBaseGroup]]):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._main_groups: List[Type[RulespecGroup]] = []
         self._sub_groups_by_main_group: Dict[Type[RulespecGroup], List[Type[RulespecSubGroup]]] = {}
@@ -933,7 +939,7 @@ def _rulespec_class_for(varname: str, has_valuespec: bool, has_itemtype: bool) -
 
 
 class RulespecRegistry(cmk.utils.plugin_registry.Registry[Rulespec]):
-    def __init__(self, group_registry):
+    def __init__(self, group_registry) -> None:
         super().__init__()
         self._group_registry = group_registry
 
@@ -989,8 +995,26 @@ class RulespecRegistry(cmk.utils.plugin_registry.Registry[Rulespec]):
 
 
 class CheckTypeGroupSelection(ElementSelection):
-    def __init__(self, checkgroup, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        checkgroup: str,
+        # ElementSelection
+        label: Optional[str] = None,
+        empty_text: Optional[str] = None,
+        # ValueSpec
+        title: Optional[str] = None,
+        help: Optional[ValueSpecHelp] = None,
+        default_value: ValueSpecDefault[str] = DEF_VALUE,
+        validate: Optional[ValueSpecValidateFunc[Optional[str]]] = None,
+    ):
+        super().__init__(
+            label=label,
+            empty_text=empty_text,
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
         self._checkgroup = checkgroup
 
     def get_elements(self):
@@ -1002,11 +1026,11 @@ class CheckTypeGroupSelection(ElementSelection):
         }
         return elements
 
-    def value_to_html(self, value: str) -> ValueSpecText:
-        return html.render_tt(value)
+    def value_to_html(self, value: Optional[str]) -> ValueSpecText:
+        return HTMLWriter.render_tt(value)
 
 
-class TimeperiodValuespec(ValueSpec):
+class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
     # Used by GUI switch
     # The actual set mode
     # "0" - no timespecific settings
@@ -1017,18 +1041,18 @@ class TimeperiodValuespec(ValueSpec):
     tp_default_value_key = "tp_default_value"  # Used in valuespec
     tp_values_key = "tp_values"  # Used in valuespec
 
-    def __init__(self, valuespec):
+    def __init__(self, valuespec: ValueSpec[dict[str, Any]]) -> None:
         super().__init__(
             title=valuespec.title(),
             help=valuespec.help(),
         )
         self._enclosed_valuespec = valuespec
 
-    def default_value(self) -> Any:
+    def default_value(self) -> dict[str, Any]:
         # If nothing is configured, simply return the default value of the enclosed valuespec
         return self._enclosed_valuespec.default_value()
 
-    def render_input(self, varprefix: str, value: Any) -> None:
+    def render_input(self, varprefix: str, value: dict[str, Any]) -> None:
         # The display mode differs when the valuespec is activated
         vars_copy = dict(request.itervars())
 
@@ -1058,15 +1082,14 @@ class TimeperiodValuespec(ValueSpec):
             )
         else:
             value = self._get_timeless_value(value)
-            r = self._enclosed_valuespec.render_input(varprefix, value)
+            self._enclosed_valuespec.render_input(varprefix, value)
             html.buttonlink(
                 toggle_url,
                 _("Enable timespecific parameters"),
                 class_=["toggle_timespecific_parameter"],
             )
-            return r
 
-    def value_to_html(self, value: Any) -> ValueSpecText:
+    def value_to_html(self, value: dict[str, Any]) -> ValueSpecText:
         return self._get_used_valuespec(value).value_to_html(value)
 
     def from_html_vars(self, varprefix: str) -> dict[str, Any]:
@@ -1089,11 +1112,11 @@ class TimeperiodValuespec(ValueSpec):
         super()._validate_value(value, varprefix)
         self._get_used_valuespec(value).validate_value(value, varprefix)
 
-    def validate_datatype(self, value: Any, varprefix: str) -> None:
+    def validate_datatype(self, value: dict[str, Any], varprefix: str) -> None:
         super().validate_datatype(value, varprefix)
         self._get_used_valuespec(value).validate_datatype(value, varprefix)
 
-    def _get_timeperiod_valuespec(self):
+    def _get_timeperiod_valuespec(self) -> ValueSpec[dict[str, Any]]:
         return Dictionary(
             elements=[
                 (
@@ -1127,32 +1150,35 @@ class TimeperiodValuespec(ValueSpec):
         )
 
     # Checks whether the tp-mode is switched on through the gui
-    def _is_switched_on(self):
+    def _is_switched_on(self) -> bool:
         return request.var(self.tp_toggle_var) == "1"
 
     # Checks whether the value itself already uses the tp-mode
-    def is_active(self, value):
+    def is_active(self, value: dict[str, Any]) -> bool:
         return isinstance(value, dict) and self.tp_default_value_key in value
 
     # Returns simply the value or converts a plain value to a tp-value
-    def _get_timeperiod_value(self, value):
+    def _get_timeperiod_value(self, value: dict[str, Any]) -> dict[str, Any]:
         if isinstance(value, dict) and self.tp_default_value_key in value:
             return value
         return {self.tp_values_key: [], self.tp_default_value_key: value}
 
     # Returns simply the value or converts tp-value back to a plain value
-    def _get_timeless_value(self, value):
+    def _get_timeless_value(self, value: dict[str, Any]) -> Any:
         if isinstance(value, dict) and self.tp_default_value_key in value:
             return value.get(self.tp_default_value_key)
         return value
 
     # Returns the currently used ValueSpec based on the current value
-    def _get_used_valuespec(self, value: Any) -> ValueSpec:
+    def _get_used_valuespec(self, value: dict[str, Any]) -> ValueSpec[dict[str, Any]]:
         return (
             self._get_timeperiod_valuespec() if self.is_active(value) else self._enclosed_valuespec
         )
 
-    def transform_value(self, value: Any) -> Any:
+    def mask(self, value: dict[str, Any]) -> dict[str, Any]:
+        return self._get_used_valuespec(value).mask(value)
+
+    def transform_value(self, value: dict[str, Any]) -> dict[str, Any]:
         return self._get_used_valuespec(value).transform_value(value)
 
     def value_to_json(self, value: dict[str, Any]) -> JSONValue:

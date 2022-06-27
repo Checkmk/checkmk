@@ -45,7 +45,6 @@ from cmk.utils.structured_data import (
     RawIntervalsFromConfig,
     RetentionIntervals,
     SDFilterFunc,
-    SDNodePath,
     SDPath,
     StructuredDataNode,
     TABLE_KEY,
@@ -66,7 +65,7 @@ class RetentionInfo(NamedTuple):
     intervals: RetentionIntervals
 
 
-RetentionKey = Tuple[SDNodePath, str]
+RetentionKey = Tuple[SDPath, str]
 RetentionInfos = Dict[RetentionKey, RetentionInfo]
 IntervalsFromConfig = Dict[RetentionKey, IntervalFromConfig]
 
@@ -186,16 +185,15 @@ class Retentions:
         previous_tree: StructuredDataNode,
     ) -> NodeUpdater:
         node_path, node_name = retention_key
-        path = list(node_path)
 
-        inv_node = self._inv_tree.get_node(path)
-        previous_node = previous_tree.get_node(path)
+        inv_node = self._inv_tree.get_node(node_path)
+        previous_node = previous_tree.get_node(node_path)
 
         if previous_node is None:
             previous_node = StructuredDataNode()
 
         if inv_node is None:
-            inv_node = self._inv_tree.setdefault_node(path)
+            inv_node = self._inv_tree.setdefault_node(node_path)
 
         if node_name == ATTRIBUTES_KEY:
             return AttributesUpdater(

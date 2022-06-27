@@ -29,7 +29,7 @@ from cmk.base.plugins.agent_based.f5_bigip_cluster_status import (
         ([[["4"]]], 4),
     ],
 )
-def test_parse_f5_bigip_cluster_status(string_table, expected_parsed_data):
+def test_parse_f5_bigip_cluster_status(string_table, expected_parsed_data) -> None:
     assert parse_f5_bigip_cluster_status(string_table) == expected_parsed_data
 
 
@@ -42,7 +42,7 @@ def test_parse_f5_bigip_cluster_status(string_table, expected_parsed_data):
         ((def_params, 0), [Result(state=state.OK, summary="Node is standby")]),
     ],
 )
-def test_check_f5_bigip_cluster_status(arg, result):
+def test_check_f5_bigip_cluster_status(arg, result) -> None:
     assert list(check_f5_bigip_cluster_status(arg[0], arg[1])) == result
 
 
@@ -66,7 +66,7 @@ def test_check_f5_bigip_cluster_status(arg, result):
         ((def_params, 0), [Result(state=state.UNKNOWN, summary="Node is unknown")]),
     ],
 )
-def test_check_f5_bigip_cluster_status_v11_2(arg, result):
+def test_check_f5_bigip_cluster_status_v11_2(arg, result) -> None:
     assert list(check_f5_bigip_cluster_status_v11_2(arg[0], arg[1])) == result
 
 
@@ -96,7 +96,7 @@ def test_check_f5_bigip_cluster_status_v11_2(arg, result):
         ),
     ],
 )
-def test_cluster_check_f5_bigip_cluster_status(arg, result):
+def test_cluster_check_f5_bigip_cluster_status(arg, result) -> None:
     assert list(cluster_check_f5_bigip_cluster_status(arg[0], arg[1])) == result
 
 
@@ -134,7 +134,7 @@ def test_cluster_check_f5_bigip_cluster_status(arg, result):
         ),
     ],
 )
-def test_cluster_check_f5_bigip_cluster_status_v11_2(arg, result):
+def test_cluster_check_f5_bigip_cluster_status_v11_2(arg, result) -> None:
     assert list(cluster_check_f5_bigip_cluster_status_v11_2(arg[0], arg[1])) == result
 
 
@@ -145,5 +145,5 @@ def test_cluster_check_f5_bigip_cluster_status_v11_2(arg, result):
         ([[["3", "4"]]], None),
     ],
 )
-def test_parse_f5_bigip_vcmpfailover(string_table, expected_parsed_data):
+def test_parse_f5_bigip_vcmpfailover(string_table, expected_parsed_data) -> None:
     assert parse_f5_bigip_vcmpfailover(string_table) == expected_parsed_data

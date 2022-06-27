@@ -1,0 +1,11 @@
+Title: allow custom notification events for pagerduty testing
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1654861635
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+To test pagerduty notification you can now use CUSTOM commands as documented.

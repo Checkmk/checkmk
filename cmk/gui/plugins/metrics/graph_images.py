@@ -10,19 +10,23 @@ import base64
 import json
 import time
 import traceback
+from typing import Any, Literal, Optional
 
 import livestatus
 
 import cmk.utils
 import cmk.utils.render
+from cmk.utils.type_defs import Timestamp
 
 import cmk.gui.pdf as pdf
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUnauthenticatedException, MKUserError
-from cmk.gui.globals import active_config, request, response
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import SuperUserContext
 from cmk.gui.plugins.metrics import artwork, html_render
+from cmk.gui.plugins.metrics.artwork import GraphArtwork, GraphDataRange, GraphRenderOptions
 from cmk.gui.plugins.metrics.graph_pdf import (
     compute_pdf_graph_data_range,
     get_mm_per_ex,
@@ -30,14 +34,15 @@ from cmk.gui.plugins.metrics.graph_pdf import (
     render_graph_pdf,
 )
 from cmk.gui.plugins.metrics.identification import graph_identification_types
-from cmk.gui.plugins.metrics.utils import get_graph_data_from_livestatus
+from cmk.gui.plugins.metrics.utils import get_graph_data_from_livestatus, GraphRecipe
+from cmk.gui.type_defs import TemplateGraphSpec
 
 
 # Provides a json list containing base64 encoded PNG images of the current 24h graphs
 # of a host or service.
 #    # Needed by mail notification plugin (-> no authentication from localhost)
 @cmk.gui.pages.register("noauth:ajax_graph_images")
-def ajax_graph_images_for_notifications():
+def ajax_graph_images_for_notifications() -> None:
     if request.remote_ip not in ["127.0.0.1", "::1"]:
         raise MKUnauthenticatedException(
             _("You are not allowed to access this page (%s).") % request.remote_ip
@@ -49,11 +54,11 @@ def ajax_graph_images_for_notifications():
 
 def _answer_graph_image_request() -> None:
     try:
-        host_name = request.var("host")
+        host_name = request.get_ascii_input_mandatory("host")
         if not host_name:
             raise MKGeneralException(_('Missing mandatory "host" parameter'))
 
-        service_description = request.var("service", "_HOST_")
+        service_description = request.get_str_input_mandatory("service", "_HOST_")
 
         site = request.var("site")
         # FIXME: We should really enforce site here. But it seems that the notification context
@@ -73,19 +78,21 @@ def _answer_graph_image_request() -> None:
         site = row["site"]
 
         # Always use 25h graph in notifications
-        end_time = time.time()
+        end_time = int(time.time())
         start_time = end_time - (25 * 3600)
 
         graph_render_options = graph_image_render_options()
 
-        graph_identification = (
+        graph_identification: tuple[Literal["template"], TemplateGraphSpec] = (
             "template",
-            {
-                "site": site,
-                "host_name": host_name,
-                "service_description": service_description,
-                "graph_index": None,  # all graphs
-            },
+            TemplateGraphSpec(
+                {
+                    "site": site,
+                    "host_name": host_name,
+                    "service_description": service_description,
+                    "graph_index": None,  # all graphs
+                }
+            ),
         )
 
         graph_data_range = graph_image_data_range(graph_render_options, start_time, end_time)
@@ -111,13 +118,15 @@ def _answer_graph_image_request() -> None:
             raise
 
 
-def graph_image_data_range(graph_render_options, start_time, end_time):
+def graph_image_data_range(
+    graph_render_options: GraphRenderOptions, start_time: Timestamp, end_time: Timestamp
+) -> GraphDataRange:
     mm_per_ex = get_mm_per_ex(graph_render_options["font_size"])
     width_mm = graph_render_options["size"][0] * mm_per_ex
     return compute_pdf_graph_data_range(width_mm, start_time, end_time)
 
 
-def graph_image_render_options(api_request=None):
+def graph_image_render_options(api_request: Optional[dict[str, Any]] = None) -> GraphRenderOptions:
     # Set image rendering defaults
     graph_render_options = {
         "font_size": 8.0,  # pt
@@ -144,7 +153,11 @@ def graph_image_render_options(api_request=None):
     return graph_render_options
 
 
-def render_graph_image(graph_artwork, graph_data_range, graph_render_options):
+def render_graph_image(
+    graph_artwork: GraphArtwork,
+    graph_data_range: GraphDataRange,
+    graph_render_options: GraphRenderOptions,
+) -> bytes:
     width_ex, height_ex = graph_render_options["size"]
     mm_per_ex = get_mm_per_ex(graph_render_options["font_size"])
 
@@ -181,11 +194,14 @@ def render_graph_image(graph_artwork, graph_data_range, graph_render_options):
     )
 
     pdf_graph = doc.end(do_send=False)
+    assert pdf_graph is not None
     # open("/tmp/x.pdf", "w").write(pdf_graph)
     return pdf.pdf2png(pdf_graph)
 
 
-def graph_recipes_for_api_request(api_request):
+def graph_recipes_for_api_request(
+    api_request: dict[str, Any]
+) -> tuple[GraphDataRange, list[GraphRecipe]]:
     # Get and validate the specification
     graph_identification = api_request.get("specification", [])
     if not graph_identification:
@@ -197,10 +213,10 @@ def graph_recipes_for_api_request(api_request):
     graph_identification_types.verify(graph_identification[0])
 
     # Default to 25h view
-    default_time_range = (time.time() - (25 * 3600), time.time())
+    default_time_range = ((now := int(time.time())) - (25 * 3600), now)
 
     # Get and validate the data range
-    graph_data_range = api_request.get("data_range", {})
+    graph_data_range: GraphDataRange = api_request.get("data_range", {})
     graph_data_range.setdefault("time_range", default_time_range)
 
     time_range = graph_data_range["time_range"]
@@ -231,7 +247,7 @@ def graph_recipes_for_api_request(api_request):
     return graph_data_range, graph_recipes
 
 
-def graph_spec_from_request(api_request):
+def graph_spec_from_request(api_request: dict[str, Any]) -> dict[str, Any]:
     graph_data_range, graph_recipes = graph_recipes_for_api_request(api_request)
 
     try:
@@ -246,7 +262,7 @@ def graph_spec_from_request(api_request):
 
     for c in curves:
         start_time, end_time, step = c["rrddata"].twindow
-        api_curve = c.copy()
+        api_curve: dict[str, Any] = dict(c)
         api_curve["rrddata"] = c["rrddata"].values
         api_curves.append(api_curve)
 

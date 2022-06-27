@@ -9,6 +9,7 @@ import subprocess
 import traceback
 from typing import Any, Dict
 from typing import Optional as _Optional
+from typing import Type
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -17,19 +18,16 @@ from cmk.utils.type_defs import ConfigurationWarnings
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.wato.utils import (
+from cmk.gui.plugins.wato.utils import ConfigVariableGroupSiteManagement, ReplicationPath
+from cmk.gui.plugins.watolib.utils import (
     ABCConfigDomain,
-    add_replication_paths,
     config_domain_registry,
     config_variable_registry,
-    ConfigDomainOMD,
     ConfigVariable,
-    ConfigVariableGroupSiteManagement,
-    LivestatusViaTCP,
-    ReplicationPath,
+    ConfigVariableGroup,
+    SerializedSettings,
     wato_fileheader,
 )
-from cmk.gui.plugins.watolib.utils import SerializedSettings
 from cmk.gui.type_defs import ConfigDomainName
 from cmk.gui.valuespec import (
     Age,
@@ -41,7 +39,11 @@ from cmk.gui.valuespec import (
     ListChoice,
     Optional,
     Tuple,
+    ValueSpec,
 )
+from cmk.gui.watolib.activate_changes import add_replication_paths
+from cmk.gui.watolib.config_domains import ConfigDomainOMD
+from cmk.gui.watolib.sites import LivestatusViaTCP
 
 # .
 #   .--omd config----------------------------------------------------------.
@@ -58,16 +60,16 @@ from cmk.gui.valuespec import (
 
 @config_variable_registry.register
 class ConfigVariableSiteAutostart(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainOMD
 
-    def ident(self):
+    def ident(self) -> str:
         return "site_autostart"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Start during system boot"),
             help=_(
@@ -79,16 +81,16 @@ class ConfigVariableSiteAutostart(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableSiteCore(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainOMD
 
-    def ident(self):
+    def ident(self) -> str:
         return "site_core"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Monitoring core"),
             help=_(
@@ -115,16 +117,16 @@ class ConfigVariableSiteCore(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableSiteLivestatusTCP(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainOMD
 
-    def ident(self):
+    def ident(self) -> str:
         return "site_livestatus_tcp"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Optional(
             valuespec=LivestatusViaTCP(),
             title=_("Access to Livestatus via TCP"),
@@ -140,16 +142,16 @@ class ConfigVariableSiteLivestatusTCP(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableSiteEventConsole(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainOMD
 
-    def ident(self):
+    def ident(self) -> str:
         return "site_mkeventd"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Optional(
             valuespec=ListChoice(
                 choices=[
@@ -203,6 +205,9 @@ class ConfigDomainDiskspace(ABCConfigDomain):
 
     def config_dir(self):
         return ""  # unused, we override load and save below
+
+    def load_full_config(self, site_specific=False, custom_site_path=None):
+        return self.load()
 
     def load(self, site_specific=False, custom_site_path=None):
         cleanup_settings = store.load_mk_file(self.diskspace_config, default={})
@@ -262,16 +267,16 @@ class ConfigDomainDiskspace(ABCConfigDomain):
 
 @config_variable_registry.register
 class ConfigVariableSiteDiskspaceCleanup(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainDiskspace
 
-    def ident(self):
+    def ident(self) -> str:
         return "diskspace_cleanup"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             title=_("Automatic disk space cleanup"),
             help=_(
@@ -460,16 +465,16 @@ class ConfigDomainApache(ABCConfigDomain):
 
 @config_variable_registry.register
 class ConfigVariableSiteApacheProcessTuning(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainApache
 
-    def ident(self):
+    def ident(self) -> str:
         return "apache_process_tuning"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             title=_("Apache process tuning"),
             elements=[
@@ -585,16 +590,16 @@ class ConfigDomainRRDCached(ABCConfigDomain):
 
 @config_variable_registry.register
 class ConfigVariableSiteRRDCachedTuning(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainRRDCached
 
-    def ident(self):
+    def ident(self) -> str:
         return "rrdcached_tuning"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Dictionary(
             title=_("RRDCached tuning"),
             elements=[

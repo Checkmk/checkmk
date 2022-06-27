@@ -13,6 +13,7 @@ import shutil
 import time
 import xml.dom.minidom  # type: ignore[import]
 from dataclasses import dataclass, field
+from enum import auto, Enum
 from pathlib import Path
 from typing import Callable, Dict, List, Literal, NamedTuple, Optional, Sequence, Set, Tuple, Union
 
@@ -26,10 +27,9 @@ import cmk.utils.store as store
 from cmk.utils.exceptions import MKException, MKGeneralException
 from cmk.utils.structured_data import (
     make_filter,
-    SDKeys,
+    SDKey,
     SDPath,
     SDRawPath,
-    SDRow,
     StructuredDataNode,
     StructuredDataStore,
 )
@@ -38,69 +38,89 @@ from cmk.utils.type_defs import HostName
 import cmk.gui.pages
 import cmk.gui.sites as sites
 import cmk.gui.userdb as userdb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.globals import active_config, html, request, response
 from cmk.gui.hooks import request_memoize
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Row
 from cmk.gui.valuespec import TextInput, ValueSpec
 
 # TODO Cleanup variation:
-#   - parse_tree_path parses NOT visible, internal tree paths used in displayhints/views
+#   - InventoryPath.parse parses NOT visible, internal tree paths used in displayhints/views
 #   - cmk.utils.structured_data.py::parse_visible_raw_path
 #     parses visible, internal tree paths for contact groups etc.
 # => Should be unified one day.
 
-InventoryValue = Union[None, str, int, float]
-InventoryRows = List[SDRow]
 
-
-def get_inventory_table(tree: StructuredDataNode, raw_path: SDRawPath) -> Optional[InventoryRows]:
-    parsed_path, attribute_keys = parse_tree_path(raw_path)
-    if attribute_keys != []:
+def get_attribute(
+    tree: StructuredDataNode, inventory_path: InventoryPath
+) -> Union[None, str, int, float]:
+    if inventory_path.source != TreeSource.attributes or not inventory_path.key:
         return None
-    table = tree.get_table(parsed_path)
-    return None if table is None else table.rows
+    attributes = tree.get_attributes(inventory_path.path)
+    return None if attributes is None else attributes.pairs.get(inventory_path.key)
 
 
-def get_inventory_attribute(tree: StructuredDataNode, raw_path: SDRawPath) -> InventoryValue:
-    parsed_path, attribute_keys = parse_tree_path(raw_path)
-    if not attribute_keys:
-        return None
-    attributes = tree.get_attributes(parsed_path)
-    return None if attributes is None else attributes.pairs.get(attribute_keys[-1])
+class TreeSource(Enum):
+    node = auto()
+    table = auto()
+    attributes = auto()
 
 
-def parse_tree_path(raw_path: SDRawPath) -> Tuple[SDPath, Optional[SDKeys]]:
-    # raw_path may look like:
-    # .                          (ROOT) => path = []                            key = None
-    # .hardware.                 (dict) => path = ["hardware"],                 key = None
-    # .hardware.cpu.model        (leaf) => path = ["hardware", "cpu"],          key = "model"
-    # .hardware.cpu.             (dict) => path = ["hardware", "cpu"],          key = None
-    # .software.packages:17.name (leaf) => path = ["software", "packages", "17"], key = "name"
-    # .software.packages:        (list) => path = ["software", "packages"],     key = []
-    if not raw_path:
-        return [], None
+@dataclass(frozen=True)
+class InventoryPath:
+    path: SDPath
+    source: TreeSource
+    key: Optional[SDKey] = None
 
-    path: List[str]
-    attribute_keys: Optional[SDKeys]
+    @classmethod
+    def parse(cls, raw_path: SDRawPath) -> InventoryPath:
+        if not raw_path:
+            return InventoryPath(
+                path=tuple(),
+                source=TreeSource.node,
+            )
 
-    if raw_path.endswith(":"):
-        path = raw_path[:-1].strip(".").split(".")
-        attribute_keys = []
-    elif raw_path.endswith("."):
-        path = raw_path[:-1].strip(".").split(".")
-        attribute_keys = None
-    else:
+        if raw_path.endswith("."):
+            path = raw_path[:-1].strip(".").split(".")
+            return InventoryPath(
+                path=cls._sanitize_path(raw_path[:-1].strip(".").split(".")),
+                source=TreeSource.node,
+            )
+
+        if raw_path.endswith(":"):
+            return InventoryPath(
+                path=cls._sanitize_path(raw_path[:-1].strip(".").split(".")),
+                source=TreeSource.table,
+            )
+
         path = raw_path.strip(".").split(".")
-        attribute_keys = [path.pop(-1)]
+        sanitized_path = cls._sanitize_path(path[:-1])
+        if ":" in path[-2]:
+            source = TreeSource.table
+            # Forget the last '*' or an index like '17'
+            # because it's related to columns (not nodes)
+            sanitized_path = sanitized_path[:-1]
+        else:
+            source = TreeSource.attributes
 
-    # ":": Nested tables, see also lib/structured_data.py
-    return (
-        [p for part in path for p in (part.split(":") if ":" in part else [part]) if p],
-        attribute_keys,
-    )
+        return InventoryPath(
+            path=sanitized_path,
+            source=source,
+            key=path[-1],
+        )
+
+    @staticmethod
+    def _sanitize_path(path: Sequence[str]) -> SDPath:
+        # ":": Nested tables, see also lib/structured_data.py
+        return tuple(p for part in path for p in (part.split(":") if ":" in part else [part]) if p)
+
+    @property
+    def node_name(self) -> str:
+        return self.path[-1] if self.path else ""
 
 
 def load_filtered_and_merged_tree(row: Row) -> Optional[StructuredDataNode]:
@@ -178,13 +198,13 @@ def vs_inventory_path_or_keys_help():
 _DEFAULT_PATH_TO_TREE = Path()
 
 
-class TreePath(NamedTuple):
+class InventoryHistoryPath(NamedTuple):
     path: Path
     timestamp: Optional[int]
 
     @classmethod
-    def default(cls) -> TreePath:
-        return TreePath(
+    def default(cls) -> InventoryHistoryPath:
+        return InventoryHistoryPath(
             path=_DEFAULT_PATH_TO_TREE,
             timestamp=None,
         )
@@ -202,21 +222,25 @@ class HistoryEntry(NamedTuple):
     delta_tree: StructuredDataNode
 
 
-class FilteredTreePaths(NamedTuple):
-    start_tree_path: TreePath
-    tree_paths: Sequence[TreePath]
+class FilteredInventoryHistoryPaths(NamedTuple):
+    start_tree_path: InventoryHistoryPath
+    tree_paths: Sequence[InventoryHistoryPath]
 
 
-class FilterTreePathsError(Exception):
+class FilterInventoryHistoryPathsError(Exception):
     pass
 
 
 def load_latest_delta_tree(hostname: HostName) -> Optional[StructuredDataNode]:
-    def _get_latest_timestamps(tree_paths: Sequence[TreePath]) -> FilteredTreePaths:
+    def _get_latest_timestamps(
+        tree_paths: Sequence[InventoryHistoryPath],
+    ) -> FilteredInventoryHistoryPaths:
         if len(tree_paths) == 0:
-            raise FilterTreePathsError()
-        return FilteredTreePaths(
-            start_tree_path=TreePath.default() if len(tree_paths) == 1 else tree_paths[-2],
+            raise FilterInventoryHistoryPathsError()
+        return FilteredInventoryHistoryPaths(
+            start_tree_path=InventoryHistoryPath.default()
+            if len(tree_paths) == 1
+            else tree_paths[-2],
             tree_paths=[tree_paths[-1]],
         )
 
@@ -238,15 +262,17 @@ def load_delta_tree(
     # tree we will just return the complete tree - without any delta
     # computation.
 
-    def _search_timestamps(tree_paths: Sequence[TreePath], timestamp: int) -> FilteredTreePaths:
+    def _search_timestamps(
+        tree_paths: Sequence[InventoryHistoryPath], timestamp: int
+    ) -> FilteredInventoryHistoryPaths:
         for idx, tree_path in enumerate(tree_paths):
             if tree_path.timestamp == timestamp:
                 if idx == 0:
-                    return FilteredTreePaths(
-                        start_tree_path=TreePath.default(),
+                    return FilteredInventoryHistoryPaths(
+                        start_tree_path=InventoryHistoryPath.default(),
                         tree_paths=[tree_path],
                     )
-                return FilteredTreePaths(
+                return FilteredInventoryHistoryPaths(
                     start_tree_path=tree_paths[idx - 1],
                     tree_paths=[tree_path],
                 )
@@ -269,8 +295,8 @@ def load_delta_tree(
 def get_history(hostname: HostName) -> Tuple[Sequence[HistoryEntry], Sequence[str]]:
     return _get_history(
         hostname,
-        filter_tree_paths=lambda tree_paths: FilteredTreePaths(
-            start_tree_path=TreePath.default(),
+        filter_tree_paths=lambda tree_paths: FilteredInventoryHistoryPaths(
+            start_tree_path=InventoryHistoryPath.default(),
             tree_paths=tree_paths,
         ),
     )
@@ -279,17 +305,17 @@ def get_history(hostname: HostName) -> Tuple[Sequence[HistoryEntry], Sequence[st
 def _get_history(
     hostname: HostName,
     *,
-    filter_tree_paths: Callable[[Sequence[TreePath]], FilteredTreePaths],
+    filter_tree_paths: Callable[[Sequence[InventoryHistoryPath]], FilteredInventoryHistoryPaths],
 ) -> Tuple[Sequence[HistoryEntry], Sequence[str]]:
     if "/" in hostname:
         return [], []  # just for security reasons
 
-    if not (tree_paths := _get_tree_paths(hostname)):
+    if not (tree_paths := _get_inventory_history_paths(hostname)):
         return [], []
 
     try:
         filtered_tree_paths = filter_tree_paths(tree_paths)
-    except FilterTreePathsError:
+    except FilterInventoryHistoryPathsError:
         return [], []
 
     cached_tree_loader = _CachedTreeLoader()
@@ -327,13 +353,13 @@ def _get_history(
     return history, sorted([str(path) for path in corrupted_history_files])
 
 
-def _get_tree_paths(hostname: HostName) -> Sequence[TreePath]:
+def _get_inventory_history_paths(hostname: HostName) -> Sequence[InventoryHistoryPath]:
     inventory_path = Path(cmk.utils.paths.inventory_output_dir, hostname)
     inventory_archive_dir = Path(cmk.utils.paths.inventory_archive_dir, hostname)
 
     try:
         archived_tree_paths = [
-            TreePath(
+            InventoryHistoryPath(
                 path=filepath,
                 timestamp=int(filepath.name),
             )
@@ -344,7 +370,7 @@ def _get_tree_paths(hostname: HostName) -> Sequence[TreePath]:
 
     try:
         archived_tree_paths.append(
-            TreePath(
+            InventoryHistoryPath(
                 path=inventory_path,
                 timestamp=int(inventory_path.stat().st_mtime),
             )
@@ -355,10 +381,12 @@ def _get_tree_paths(hostname: HostName) -> Sequence[TreePath]:
     return archived_tree_paths
 
 
-def _get_pairs(filtered_tree_paths: FilteredTreePaths) -> Sequence[Tuple[TreePath, TreePath]]:
+def _get_pairs(
+    filtered_tree_paths: FilteredInventoryHistoryPaths,
+) -> Sequence[Tuple[InventoryHistoryPath, InventoryHistoryPath]]:
     start_tree_path = filtered_tree_paths.start_tree_path
 
-    pairs: List[Tuple[TreePath, TreePath]] = []
+    pairs: List[Tuple[InventoryHistoryPath, InventoryHistoryPath]] = []
     for tree_path in filtered_tree_paths.tree_paths:
         pairs.append((start_tree_path, tree_path))
         start_tree_path = tree_path
@@ -628,11 +656,10 @@ def page_host_inv_api() -> None:
         _write_python(resp)
 
 
-def has_inventory(hostname):
-    if not hostname:
-        return False
-    inventory_path = "%s/%s" % (cmk.utils.paths.inventory_output_dir, hostname)
-    return os.path.exists(inventory_path)
+def has_inventory(hostname: HostName) -> bool:
+    return (
+        os.path.exists(f"{cmk.utils.paths.inventory_output_dir}/{hostname}") if hostname else False
+    )
 
 
 def inventory_of_host(host_name: HostName, api_request):
@@ -647,7 +674,13 @@ def inventory_of_host(host_name: HostName, api_request):
 
     if "paths" in api_request:
         merged_tree = merged_tree.get_filtered_node(
-            [make_filter(parse_tree_path(path)) for path in api_request["paths"]]
+            [
+                make_filter(
+                    (inventory_path.path, [inventory_path.key] if inventory_path.key else None)
+                )
+                for raw_path in api_request["paths"]
+                for inventory_path in (InventoryPath.parse(raw_path),)
+            ]
         )
 
     assert merged_tree is not None
@@ -670,7 +703,7 @@ def verify_permission(host_name: HostName, site: Optional[livestatus.SiteId]) ->
         result = sites.live().query_summed_stats(query, "ColumnHeaders: off\n")
     except livestatus.MKLivestatusNotFoundError:
         raise MKAuthException(
-            _("No such inventory tree of host %s." " You may also have no access to this host.")
+            _("No such inventory tree of host %s. You may also have no access to this host.")
             % host_name
         )
     finally:
@@ -696,7 +729,7 @@ def _write_python(resp):
 
 
 class InventoryHousekeeping:
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._inventory_path = Path(cmk.utils.paths.inventory_output_dir)
         self._inventory_archive_path = Path(cmk.utils.paths.inventory_archive_dir)

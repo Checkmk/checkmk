@@ -30,6 +30,7 @@ def check_avaya_45xx_fan(item, params, info):
         if str(idx) == item:
             text, state = state_map.get(fan_status[0], ("Unknown", 3))
             return state, text
+    return None
 
 
 check_info["avaya_45xx_fan"] = {

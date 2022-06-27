@@ -11,13 +11,12 @@ Special agent for monitoring Zerto application with Check_MK.
 """
 
 import argparse
-import json
 import logging
 import sys
 
 import requests
 
-from cmk.utils.exceptions import MKException
+from cmk.utils.password_store import replace_passwords
 
 LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +53,7 @@ def parse_arguments(argv):
 
 
 class ZertoRequest:
-    def __init__(self, connection_url, session_id):
+    def __init__(self, connection_url, session_id) -> None:  # type:ignore[no-untyped-def]
         self._endpoint = "%s/vms" % connection_url
         self._headers = {"x-zerto-session": session_id, "content-type": "application/json"}
 
@@ -63,16 +62,19 @@ class ZertoRequest:
 
         if response.status_code != 200:
             LOGGER.debug("response status code: %s", response.status_code)
+            LOGGER.debug("response : %s", response.text)
             raise RuntimeError("Call to ZVM failed")
         try:
-            data = json.loads(response.text)
+            data = response.json()
         except ValueError:
+            LOGGER.debug("failed to parse json")
+            LOGGER.debug("response : %s", response.text)
             raise ValueError("Got invalid data from host")
         return data
 
 
 class ZertoConnection:
-    def __init__(self, hostaddress, username, password):
+    def __init__(self, hostaddress, username, password) -> None:  # type:ignore[no-untyped-def]
         self._credentials = username, password
         self._host = hostaddress
         self.base_url = "https://%s:9669/v1" % self._host
@@ -82,32 +84,41 @@ class ZertoConnection:
         if authentication == "windows":
             response = requests.post(url, auth=self._credentials, verify=False)  # nosec
         else:
-            dataval = {"AuthenticationMethod": 1}
-            LOGGER.debug("VCenter dataval: %r", dataval)
             headers = {"content-type": "application/json"}
             response = requests.post(  # nosec
-                url, data=dataval, auth=self._credentials, headers=headers, verify=False
+                url, auth=self._credentials, headers=headers, verify=False
             )
 
-        LOGGER.debug("Response status code: %s", response.status_code)
-
         if response.status_code != 200:
+            LOGGER.info("response status code: %s", response.status_code)
+            LOGGER.debug("response text: %s", response.text)
             raise AuthError("Failed authenticating to the Zerto Virtual Manager")
 
+        if "x-zerto-session" not in response.headers:
+            LOGGER.info("session id not found in response header")
+            LOGGER.debug("response header: %s", response.headers)
+            LOGGER.debug("response text: %s", response.text)
         return response.headers.get("x-zerto-session")
 
 
-class AuthError(MKException):
+class AuthError(Exception):
     pass
 
 
 def main(argv=None):
+    replace_passwords()
     args = parse_arguments(argv or sys.argv[1:])
-    connection = ZertoConnection(args.hostaddress, args.username, args.password)
-    session_id = connection.get_session_id(args.authentication)
+    sys.stdout.write("<<<zerto_agent:sep(0)>>>")
+    try:
+        connection = ZertoConnection(args.hostaddress, args.username, args.password)
+        session_id = connection.get_session_id(args.authentication)
+    except Exception as e:
+        sys.stdout.write(f"Error: {e}")
+        sys.exit(1)
+    sys.stdout.write("Initialized OK")
+
     request = ZertoRequest(connection.base_url, session_id)
     vm_data = request.get_vms_data()
-
     for vm in vm_data:
         try:
             sys.stdout.write("<<<<{}>>>>\n".format(vm["VmName"]))

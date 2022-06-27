@@ -1,0 +1,13 @@
+Title: Fix KeyError on mknotifyd start after upgrade to 2.1.0
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1653399002
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+If the notification spooler was used on a remote site, after upgrade to 2.1.0
+the start of the mknotifyd could fail with the error "KeyError: 'encryption'".

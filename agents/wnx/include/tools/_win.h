@@ -11,13 +11,13 @@
 namespace wtools {
 
 /// \brief Replacement for INVALID_HANDLE_VALUE
-inline HANDLE InvalidHandle() {
+inline HANDLE InvalidHandle() noexcept {
     // conversion to satisfy Win32 API and C++:
     return reinterpret_cast<HANDLE>(
         static_cast<size_t>(static_cast<LONG_PTR>(-1)));
 }
 
-inline bool IsInvalidHandle(HANDLE h) {
+inline bool IsInvalidHandle(HANDLE h) noexcept {
     //
     return InvalidHandle() == h;
 }

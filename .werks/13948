@@ -1,0 +1,14 @@
+Title: Switch BI check and agent to the REST API
+Class: feature
+Compatible: incomp
+Component: bi
+Date: 1652359634
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+The BI active check and agent will now use the REST API to retrive data.
+This also means that cookie authentication mode in the active check is no longer supported.
+You can use the header mode (the new default) instead.

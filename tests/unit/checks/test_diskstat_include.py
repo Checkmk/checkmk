@@ -31,7 +31,7 @@ def get_average(_counter, _time, value, _time_span):
             CheckResult(
                 (
                     0,
-                    "read: 50.50 kB/s, write: 100.50 kB/s",
+                    "read: 51.7 kB/s, write: 103 kB/s",
                     [
                         ("read", 51712),
                         ("write", 102912),
@@ -44,7 +44,7 @@ def get_average(_counter, _time, value, _time_span):
             CheckResult(
                 (
                     0,
-                    "read: 50.50 kB/s, write: 100.50 kB/s",
+                    "read: 51.7 kB/s, write: 103 kB/s",
                     [
                         ("read", 51712),
                         ("write", 102912),
@@ -56,10 +56,10 @@ def get_average(_counter, _time, value, _time_span):
         ),
     ],
 )
-def test_check_diskstat_line(monkeypatch, args, expected_result):
+def test_check_diskstat_line(monkeypatch, args, expected_result) -> None:
     monkeypatch.setattr(cmk.base.check_legacy_includes.diskstat, "get_rate", get_rate)
     monkeypatch.setattr(cmk.base.check_legacy_includes.diskstat, "get_average", get_average)
-    actual_result = CheckResult(check_diskstat_line(*args))  # type: ignore[name-defined] # pylint: disable=undefined-variable
+    actual_result = CheckResult(check_diskstat_line(*args))
     assertCheckResultsEqual(actual_result, expected_result)
 
 
@@ -71,7 +71,7 @@ def test_check_diskstat_line(monkeypatch, args, expected_result):
             CheckResult(
                 (
                     0,
-                    "read: 1.00 kB/s, write: 2.00 kB/s",
+                    "read: 1.02 kB/s, write: 2.05 kB/s",
                     [
                         ("read", 1024),
                         ("write", 2048),
@@ -85,8 +85,8 @@ def test_check_diskstat_line(monkeypatch, args, expected_result):
         ),
     ],
 )
-def test_check_diskstat_generic_summary_clutster(monkeypatch, info, expected_result):
+def test_check_diskstat_generic_summary_clutster(monkeypatch, info, expected_result) -> None:
     monkeypatch.setattr(cmk.base.check_legacy_includes.diskstat, "get_rate", get_rate)
     monkeypatch.setattr(cmk.base.check_legacy_includes.diskstat, "get_average", get_average)
-    actual_result = CheckResult(check_diskstat_generic("SUMMARY", {}, 0, info))  # type: ignore[name-defined] # pylint: disable=undefined-variable
+    actual_result = CheckResult(check_diskstat_generic("SUMMARY", {}, 0, info))
     assertCheckResultsEqual(actual_result, expected_result)

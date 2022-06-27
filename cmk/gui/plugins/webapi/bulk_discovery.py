@@ -7,8 +7,8 @@
 import copy
 from typing import Any, Dict, List, Tuple
 
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.webapi.utils import api_call_collection_registry, APICallCollection

@@ -546,12 +546,11 @@ TEST(AgentConfig, LogFile) {
 }
 
 TEST(AgentConfig, YamlRead) {
-    auto file = tst::MakePathToConfigTestFiles() / files::kDefaultDevMinimum;
+    auto file = tst::MakePathToConfigTestFiles() / tst::kDefaultDevMinimum;
     auto ret = fs::exists(file);
     ASSERT_TRUE(ret);
 
-    int err = 0;
-    auto result = LoadAndCheckYamlFile(file.wstring(), &err);
+    auto result = LoadAndCheckYamlFile(file.wstring());
     auto sz = result.size();
     auto val_global = result["global"];
     auto v = result["globalvas"];
@@ -693,6 +692,13 @@ TEST(AgentConfig, FactoryConfig) {
         auto rt_port = GetVal(realtime, vars::kRtPort, 111);
         EXPECT_EQ(rt_port, kDefaultRealtimePort);
 
+        EXPECT_EQ(GetVal(groups::kGlobal, vars::kGlobalWmiTimeout, 1),
+                  kDefaultWmiTimeout);
+
+        EXPECT_EQ(GetVal(groups::kGlobal, vars::kCpuLoadMethod,
+                         std::string{values::kCpuLoadWmi}),
+                  values::kCpuLoadPerf);
+
         auto passphrase =
             GetVal(realtime, vars::kGlobalPassword, std::string());
         EXPECT_TRUE(passphrase == "this is my password");
@@ -702,7 +708,7 @@ TEST(AgentConfig, FactoryConfig) {
     }
     {
         auto logging = GetNode(groups::kGlobal, vars::kLogging);
-        EXPECT_EQ(logging.size(), 5);
+        EXPECT_EQ(logging.size(), 7);
 
         auto log_location =
             GetVal(logging, vars::kLogLocation, std::string(""));
@@ -720,6 +726,10 @@ TEST(AgentConfig, FactoryConfig) {
 
         auto file_log = GetVal(logging, vars::kLogFile, std::string("a.log"));
         EXPECT_TRUE(file_log.empty());
+        EXPECT_EQ(GetVal(logging, vars::kLogFileMaxFileCount, 0),
+                  cfg::kLogFileMaxCount);
+        EXPECT_EQ(GetVal(logging, vars::kLogFileMaxFileSize, 0),
+                  cfg::kLogFileMaxSize);
     }
 
     // winperf
@@ -842,7 +852,7 @@ TEST(AgentConfig, UTF16LE) {
     details::KillDefaultConfig();
 
     auto file_utf16 =
-        tst::MakePathToConfigTestFiles() / files::kDefaultDevConfigUTF16;
+        tst::MakePathToConfigTestFiles() / tst::kDefaultDevConfigUTF16;
     bool success = loader(file_utf16.wstring());
     EXPECT_TRUE(success);
 
@@ -882,7 +892,7 @@ TEST(AgentConfig, FailScenario_Long) {
     auto test_config_path = tst::MakePathToConfigTestFiles();
 
     auto file_1 = (test_config_path / files::kDefaultMainConfig).wstring();
-    auto file_2 = (test_config_path / files::kDefaultDevMinimum).wstring();
+    auto file_2 = (test_config_path / tst::kDefaultDevMinimum).wstring();
 
     EXPECT_TRUE(loader(file_1, file_2));
     EXPECT_FALSE(loader(L"StrangeName<GTEST>.yml"));

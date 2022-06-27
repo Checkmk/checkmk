@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 from cmk.base.check_api import get_bytes_human_readable
 
 # disks = [
@@ -20,8 +19,8 @@ FILER_DISKS_CHECK_DEFAULT_PARAMETERS = {
 }
 
 
-def check_filer_disks(disks, params):
-    state = {}
+def check_filer_disks(disks, params):  # pylint: disable=too-many-branches
+    state: dict = {}
     state["prefailed"] = []
     state["failed"] = []
     state["offline"] = []
@@ -69,7 +68,7 @@ def check_filer_disks(disks, params):
         if len(total_disks) > 0:
             info_text = "%s disks" % len(total_disks)
             if len(prefailed_disks) > 0:
-                info_text += " (%d prefailed)" % (prefailed_disks)
+                info_text += " (%d prefailed)" % (prefailed_disks)  # type: ignore[str-format]
             yield 0, info_text
             info_texts = []
             for disk in prefailed_disks:
@@ -87,7 +86,7 @@ def check_filer_disks(disks, params):
             ratio = (
                 float(len(state[disk_state])) / (len(state[disk_state]) + len(state["spare"])) * 100
             )
-            return_state = False
+            return_state: bool | int = False
             if ratio >= crit:
                 return_state = 2
             elif ratio >= warn:

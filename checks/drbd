@@ -261,7 +261,7 @@ def drbd_get_block(item, info, checktype):
     return None
 
 
-def check_drbd_general(item, params, info):
+def check_drbd_general(item, params, info):  # pylint: disable=too-many-branches
     parsed = drbd_get_block(item, info, "drbd")
 
     if isinstance(params, tuple):

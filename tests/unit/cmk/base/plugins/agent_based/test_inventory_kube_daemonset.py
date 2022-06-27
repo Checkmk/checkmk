@@ -31,6 +31,7 @@ from .utils_inventory import sort_inventory_result
                 name="oh-lord",
                 namespace="have-mercy",
                 labels={},
+                annotations={},
                 selector=Selector(match_labels={}, match_expressions=[]),
                 creation_timestamp=1600000000.0,
                 containers=ThinContainers(images={"i/name:0.5"}, names=["name"]),
@@ -75,7 +76,7 @@ def test_inventory_kube_daemonset(
     ) == sort_inventory_result(expected_inventory_result)
 
 
-def test_inventory_kube_daemonset_calls_labels_to_table(mocker):
+def test_inventory_kube_daemonset_calls_labels_to_table(mocker) -> None:
     """Test coverage and uniform look across inventories relies on the inventories calling
     labels_to_table."""
 

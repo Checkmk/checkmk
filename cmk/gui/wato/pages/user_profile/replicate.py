@@ -5,8 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.globals import active_config, html, request
+from cmk.gui.htmllib.header import make_header
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
@@ -42,7 +45,7 @@ class UserProfileReplicate(Page):
     def page(self) -> None:
         title = _("Replicate user profile")
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), title)
-        html.header(title, breadcrumb, self._page_menu(breadcrumb))
+        make_header(html, title, breadcrumb, self._page_menu(breadcrumb))
 
         for message in get_flashed_messages():
             html.show_message(message)

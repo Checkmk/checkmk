@@ -77,6 +77,6 @@ rulespec_registry.register(
         item_spec=_item_spec_storcli_pdisks,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_storcli_pdisks,
-        title=lambda: _("LSI RAID physical disks (StorCLI)"),
+        title=lambda: _("LSI RAID physical disks"),
     )
 )

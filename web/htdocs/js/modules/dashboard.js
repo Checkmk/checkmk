@@ -23,6 +23,7 @@ export function set_start_url(dashboard_name) {
                 );
             }
         },
+        method: "POST",
     });
 }
 
@@ -907,7 +908,6 @@ function drag_dashlet_stop(event) {
     g_drag_start = null;
 
     persist_dashlet_pos(nr);
-
     return false;
 }
 

@@ -20,7 +20,7 @@ checks = {
         (
             None, {'levels': (30, 60)}, [
                 (
-                    0, 'Offset: 778 ms', [
+                    0, 'Offset: 778 milliseconds', [
                         ('offset', 0.7776598930358887, 30.0, 60.0, None, None)
                     ]
                 )

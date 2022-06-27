@@ -14,6 +14,6 @@ import cmk.gui.plugins.wato.check_parameters.windows_tasks as wato_windows_tasks
 pytestmark = pytest.mark.checks
 
 
-def test_default_exit_codes():
+def test_default_exit_codes() -> None:
     check = Check("windows_tasks")
     assert wato_windows_tasks._MAP_EXIT_CODES == check.context["_MAP_EXIT_CODES"]

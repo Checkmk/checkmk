@@ -10,8 +10,7 @@ import pytest
 
 import cmk.utils.paths
 
-from cmk.gui.globals import theme
-from cmk.gui.utils.theme import Theme, theme_choices
+from cmk.gui.utils.theme import theme, Theme, theme_choices
 
 
 @pytest.fixture(name="theme_dirs")
@@ -43,7 +42,7 @@ def fixture_my_theme(theme_dirs, monkeypatch):
     return my_dir
 
 
-def test_theme_request_context_integration(my_theme, request_context):
+def test_theme_request_context_integration(my_theme, request_context) -> None:
     theme.from_config("facelift")
 
     theme.set("")
@@ -114,15 +113,15 @@ def test_has_custom_logo(
     assert th.has_custom_logo() is (edition is cmk.utils.version.Edition.CME and with_logo)
 
 
-def test_theme_choices_empty(theme_dirs):
+def test_theme_choices_empty(theme_dirs) -> None:
     assert theme_choices() == []
 
 
-def test_theme_choices_normal(my_theme):
+def test_theme_choices_normal(my_theme) -> None:
     assert theme_choices() == [("my_theme", "Määh Theme :-)")]
 
 
-def test_theme_choices_local_theme(theme_dirs, my_theme):
+def test_theme_choices_local_theme(theme_dirs, my_theme) -> None:
     local_theme_path = theme_dirs[1]
 
     my_dir = local_theme_path / "my_improved_theme"
@@ -139,7 +138,7 @@ def test_theme_choices_local_theme(theme_dirs, my_theme):
     )
 
 
-def test_theme_choices_override(theme_dirs, my_theme):
+def test_theme_choices_override(theme_dirs, my_theme) -> None:
     local_theme_path = theme_dirs[1]
 
     my_dir = local_theme_path / "my_theme"
@@ -155,7 +154,7 @@ def test_theme_choices_override(theme_dirs, my_theme):
     )
 
 
-def test_theme_broken_meta(my_theme):
+def test_theme_broken_meta(my_theme) -> None:
     (my_theme / "theme.json").open(mode="w", encoding="utf-8").write(
         str('{"titlewrong": xyz"bla"}')
     )

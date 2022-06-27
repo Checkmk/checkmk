@@ -10,7 +10,7 @@ Cares about rendering the breadcrumb which is shown at the top of all pages
 
 from typing import Iterable, List, MutableSequence, NamedTuple, Optional, Union
 
-from cmk.gui.globals import html
+from cmk.gui.htmllib.html import html
 from cmk.gui.type_defs import MegaMenu
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.speaklater import LazyString
@@ -22,11 +22,11 @@ class BreadcrumbItem(NamedTuple):
 
 
 class Breadcrumb(MutableSequence[BreadcrumbItem]):  # pylint: disable=too-many-ancestors
-    def __init__(self, items: Optional[Iterable[BreadcrumbItem]] = None):
+    def __init__(self, items: Optional[Iterable[BreadcrumbItem]] = None) -> None:
         super().__init__()
         self._items: List[BreadcrumbItem] = list(items) if items else []
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._items)
 
     def __getitem__(self, index):

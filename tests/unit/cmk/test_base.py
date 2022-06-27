@@ -9,7 +9,7 @@ import pytest
 import cmk.utils.version as cmk_version
 
 
-def test_version():
+def test_version() -> None:
     assert isinstance(cmk_version.__version__, str)
 
 

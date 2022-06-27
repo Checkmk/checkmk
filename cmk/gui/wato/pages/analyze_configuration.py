@@ -13,7 +13,7 @@ import multiprocessing
 import queue
 import time
 import traceback
-from typing import Any, Dict, Tuple
+from typing import Any, Collection, Dict, Tuple
 
 from livestatus import SiteId
 
@@ -22,10 +22,10 @@ import cmk.utils.store as store
 
 import cmk.gui.log as log
 import cmk.gui.utils.escaping as escaping
-import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import html, request
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -39,7 +39,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri
@@ -52,6 +52,7 @@ from cmk.gui.watolib.analyze_configuration import (
     ACTestCategories,
     AutomationCheckAnalyzeConfig,
 )
+from cmk.gui.watolib.automations import do_remote_automation
 
 
 @ac_test_registry.register
@@ -75,14 +76,14 @@ class ModeAnalyzeConfig(WatoMode):
     _ack_path = cmk.utils.paths.var_dir + "/acknowledged_bp_tests.mk"
 
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "analyze_config"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return []
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._logger = logger.getChild("analyze-config")
         self._acks = self._load_acknowledgements()
@@ -92,7 +93,7 @@ class ModeAnalyzeConfig(WatoMode):
         self._show_failed = not request.has_var("hide_failed")
         self._show_ack = request.has_var("show_ack")
 
-    def title(self):
+    def title(self) -> str:
         return _("Analyze configuration")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -153,7 +154,7 @@ class ModeAnalyzeConfig(WatoMode):
 
         return None
 
-    def page(self):
+    def page(self) -> None:
         if not self._analyze_sites():
             html.show_message(
                 _(
@@ -182,7 +183,13 @@ class ModeAnalyzeConfig(WatoMode):
                 ):
                     self._show_test_row(table, test_id, test_results_by_site, site_ids)
 
-    def _show_test_row(self, table, test_id, test_results_by_site, site_ids):
+    def _show_test_row(  # pylint: disable=too-many-branches
+        self,
+        table,
+        test_id,
+        test_results_by_site,
+        site_ids,
+    ):
         table.row()
 
         table.cell(_("Actions"), css="buttons", sortable=False)
@@ -420,7 +427,7 @@ class ModeAnalyzeConfig(WatoMode):
                 results_data = automation.execute(automation.get_request())
 
             else:
-                results_data = watolib.do_remote_automation(
+                results_data = do_remote_automation(
                     get_site_config(site_id),
                     "check-analyze-config",
                     [],
@@ -446,10 +453,10 @@ class ModeAnalyzeConfig(WatoMode):
             result_queue.join_thread()
             result_queue.join()
 
-    def _is_acknowledged(self, result):
+    def _is_acknowledged(self, result) -> bool:
         return (result.test_id, result.site_id, result.status) in self._acks
 
-    def _is_test_disabled(self, test_id):
+    def _is_test_disabled(self, test_id) -> bool:
         return not self._acks.get(test_id, True)
 
     def _unacknowledge_test(self, test_id, site_id, status_id):

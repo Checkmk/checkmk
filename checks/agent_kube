@@ -18,7 +18,7 @@ def _timeouts(timeouts: Mapping[str, int], arg_prefix: str) -> Sequence[str]:
     return args
 
 
-def agent_kube_arguments(
+def agent_kube_arguments(  # pylint: disable=too-many-branches
     params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
 ) -> Sequence[Union[str, tuple[str, str, str]]]:
     args = ["--cluster", params["cluster-name"]]
@@ -41,6 +41,13 @@ def agent_kube_arguments(
             args.extend(params["cluster-resource-aggregation"][1])
     else:
         args.extend(["--cluster-aggregation-exclude-node-roles", "control-plane", "infra"])
+
+    if (host_labels_param := params.get("import-annotations")) is not None:
+        if host_labels_param == "include-annotations-as-host-labels":
+            args.append("--include-annotations-as-host-labels")
+        else:
+            args.append("--include-matching-annotations-as-host-labels")
+            args.append(host_labels_param[1])
 
     api_params = params["kubernetes-api-server"]
     args.extend(["--api-server-endpoint", api_params["endpoint"]])

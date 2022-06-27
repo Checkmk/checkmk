@@ -8,6 +8,7 @@
 def inventory_tplink_mem(info):
     if len(info) >= 1:
         return [(None, {})]
+    return []
 
 
 def check_tplink_mem(_no_item, params, info):
@@ -19,7 +20,7 @@ def check_tplink_mem(_no_item, params, info):
         num_units += 1
 
     if num_units == 0:
-        return
+        return None
 
     mem_used = float(mem_used) / num_units
 

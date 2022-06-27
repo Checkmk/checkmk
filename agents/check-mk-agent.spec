@@ -25,6 +25,8 @@ Provides:  check_mk-agent check_mk_agent
 
 %global _python_bytecompile_errors_terminate_build 0
 %define _binaries_in_noarch_packages_terminate_build 0
+%define _source_payload w0.gzdio
+%define _binary_payload w0.gzdio
 
 # Override CentOS 6+ specific behaviour that the build root is erased before
 # building. This does not work very well with our way of preparing the files

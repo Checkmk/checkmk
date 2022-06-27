@@ -14,7 +14,7 @@ def _service(plugin_name: str, item: str) -> AutocheckEntry:
     return AutocheckEntry(CheckPluginName(plugin_name), item, {}, {})
 
 
-def test_discover_keep_vanished_and_remember():
+def test_discover_keep_vanished_and_remember() -> None:
 
     result = _analyse_discovered_services(
         existing_services=[_service("A", "1")],
@@ -29,7 +29,7 @@ def test_discover_keep_vanished_and_remember():
     assert result.new == [_service("B", "1")]
 
 
-def test_discover_drop_vanished_but_remember():
+def test_discover_drop_vanished_but_remember() -> None:
 
     result = _analyse_discovered_services(
         existing_services=[_service("A", "1")],
@@ -44,7 +44,7 @@ def test_discover_drop_vanished_but_remember():
     assert result.new == [_service("B", "1")]
 
 
-def test_discover_forget_everything_but_keep_it():
+def test_discover_forget_everything_but_keep_it() -> None:
 
     result = _analyse_discovered_services(
         existing_services=[_service("A", "1")],
@@ -59,7 +59,7 @@ def test_discover_forget_everything_but_keep_it():
     assert result.new == [_service("B", "1"), _service("A", "1")]
 
 
-def test_discover_forget_everything_and_clear():  # a.k.a. "tabula rasa"
+def test_discover_forget_everything_and_clear() -> None:  # a.k.a. "tabula rasa"
 
     result = _analyse_discovered_services(
         existing_services=[_service("A", "1")],
@@ -75,7 +75,7 @@ def test_discover_forget_everything_and_clear():  # a.k.a. "tabula rasa"
     assert result.new == [_service("B", "1")]
 
 
-def test_discover_run_plugin_names():
+def test_discover_run_plugin_names() -> None:
 
     result = _analyse_discovered_services(
         existing_services=[_service("A", "1"), _service("B", "1")],
@@ -90,7 +90,7 @@ def test_discover_run_plugin_names():
     assert result.new == [_service("B", "2")]
 
 
-def test_discover_run_plugin_names_forget():
+def test_discover_run_plugin_names_forget() -> None:
     # this combination does not really make sense, but this is what we'd expect to happen.
     result = _analyse_discovered_services(
         existing_services=[_service("A", "1"), _service("B", "1")],

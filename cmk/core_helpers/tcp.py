@@ -18,23 +18,22 @@ from cmk.utils.encryption import decrypt_by_agent_protocol, TransportProtocol
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 
-from ._base import verify_ipaddress
-from .agent import AgentFetcher, DefaultAgentFileCache
+from ._base import Fetcher, verify_ipaddress
+from .agent import AgentFileCache
 from .tcp_agent_ctl import AgentCtlMessage
 from .type_defs import Mode
 
 
-class TCPFetcher(AgentFetcher):
+class TCPFetcher(Fetcher[AgentRawData]):
     def __init__(
         self,
-        file_cache: DefaultAgentFileCache,
+        file_cache: AgentFileCache,
         *,
         family: socket.AddressFamily,
         address: Tuple[Optional[HostAddress], int],
         timeout: float,
         host_name: HostName,
         encryption_settings: Mapping[str, str],
-        use_only_cache: bool,
     ) -> None:
         super().__init__(file_cache, logging.getLogger("cmk.helper.tcp"))
         self.family: Final = socket.AddressFamily(family)
@@ -43,7 +42,6 @@ class TCPFetcher(AgentFetcher):
         self.timeout: Final = timeout
         self.host_name: Final = host_name
         self.encryption_settings: Final = encryption_settings
-        self.use_only_cache: Final = use_only_cache
         self._opt_socket: Optional[socket.socket] = None
 
     @property
@@ -62,7 +60,6 @@ class TCPFetcher(AgentFetcher):
                     f"timeout={self.timeout!r}",
                     f"host_name={self.host_name!r}",
                     f"encryption_settings={self.encryption_settings!r}",
-                    f"use_only_cache={self.use_only_cache!r}",
                 )
             )
             + ")"
@@ -74,7 +71,7 @@ class TCPFetcher(AgentFetcher):
         address: Tuple[Optional[HostAddress], int] = serialized_.pop("address")
         host_name = HostName(serialized_.pop("host_name"))
         return cls(
-            DefaultAgentFileCache.from_json(serialized_.pop("file_cache")),
+            AgentFileCache.from_json(serialized_.pop("file_cache")),
             address=address,
             host_name=host_name,
             **serialized_,
@@ -88,7 +85,6 @@ class TCPFetcher(AgentFetcher):
             "timeout": self.timeout,
             "host_name": str(self.host_name),
             "encryption_settings": self.encryption_settings,
-            "use_only_cache": self.use_only_cache,
         }
 
     def open(self) -> None:
@@ -122,10 +118,8 @@ class TCPFetcher(AgentFetcher):
         self._opt_socket = None
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
-        if self.use_only_cache:
-            raise MKFetcherError(
-                "Got no data: No usable cache file present at %s" % self.file_cache.base_path
-            )
+        if mode is not Mode.CHECKING:
+            raise MKFetcherError(f"Refusing to fetch live data during {mode.name.lower()}")
 
         agent_data, protocol = self._get_agent_data()
         return self._validate_decrypted_data(self._decrypt(protocol, agent_data))

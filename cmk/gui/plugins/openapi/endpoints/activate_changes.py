@@ -16,19 +16,22 @@ You can find an introduction to the configuration of Checkmk including activatio
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato.html).
 """
 
-from cmk.gui import watolib
+from typing import Any, Mapping
+
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.globals import request
-from cmk.gui.http import Response
+from cmk.gui.http import request, Response
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.endpoints.utils import may_fail
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
+    permissions,
     request_schemas,
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.type_defs import LinkType
 from cmk.gui.plugins.openapi.utils import ProblemException
+from cmk.gui.watolib.activate_changes import activate_changes_start, ActivateChangesManager
 
 from cmk import fields
 
@@ -39,6 +42,24 @@ ACTIVATION_ID = {
         required=True,
     ),
 }
+
+# NOTE: These are not needed for the activation of changes, but are asked for different queries
+RO_PERMISSIONS = permissions.Ignore(
+    permissions.AnyPerm(
+        [
+            permissions.Perm("general.see_all"),
+            permissions.Perm("bi.see_all"),
+            permissions.Perm("mkeventd.seeall"),
+        ]
+    ),
+)
+
+PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.activate"),
+        RO_PERMISSIONS,  # to make perm system happy
+    ]
+)
 
 
 @Endpoint(
@@ -62,13 +83,24 @@ ACTIVATION_ID = {
     additional_status_codes=[302, 401, 409, 422, 423],
     request_schema=request_schemas.ActivateChanges,
     response_schema=response_schemas.DomainObject,
+    permissions_required=permissions.AllPerm(
+        [
+            permissions.Perm("wato.activate"),
+            permissions.Optional(permissions.Perm("wato.activateforeign")),
+            RO_PERMISSIONS,  # to make perm system happy
+        ]
+    ),
 )
-def activate_changes(params):
-    """Activate pending changes"""
+def activate_changes(params: Mapping[str, Any]) -> Response:
+    """Activate pending changes
+
+    If redirect is set to True a link to the wait-for-completion resource for the activation job is included.
+    """
+    user.need_permission("wato.activate")
     body = params["body"]
     sites = body["sites"]
     with may_fail(MKUserError), may_fail(MKAuthException, status=401):
-        activation_id = watolib.activate_changes_start(
+        activation_id = activate_changes_start(
             sites, force_foreign_changes=body["force_foreign_changes"]
         )
 
@@ -121,15 +153,17 @@ def _serve_activation_run(activation_id: str, is_running: bool = False) -> Respo
     },
     path_params=[ACTIVATION_ID],
     additional_status_codes=[302],
+    permissions_required=PERMISSIONS,
     output_empty=True,
 )
-def activate_changes_wait_for_completion(params):
+def activate_changes_wait_for_completion(params: Mapping[str, Any]) -> Response:
     """Wait for activation completion
 
     This endpoint will periodically redirect on itself to prevent timeouts.
     """
+    user.need_permission("wato.activate")
     activation_id = params["activation_id"]
-    manager = watolib.ActivateChangesManager()
+    manager = ActivateChangesManager()
     manager.load()
     try:
         manager.load_activation(activation_id)
@@ -152,12 +186,17 @@ def activate_changes_wait_for_completion(params):
     status_descriptions={
         404: "There is no running activation with this activation_id.",
     },
+    permissions_required=PERMISSIONS,
     response_schema=response_schemas.DomainObject,
 )
-def show_activation(params):
-    """Show the activation status"""
+def show_activation(params: Mapping[str, Any]) -> Response:
+    """Show the activation status
+
+    If the activation is still running a link to the wait-for-completion resource for the activation job is included.
+    """
+    user.need_permission("wato.activate")
     activation_id = params["activation_id"]
-    manager = watolib.ActivateChangesManager()
+    manager = ActivateChangesManager()
     manager.load()
     try:
         manager.load_activation(activation_id)
@@ -173,11 +212,12 @@ def show_activation(params):
     constructors.collection_href("activation_run", "running"),
     "cmk/run",
     method="get",
+    permissions_required=RO_PERMISSIONS,
     response_schema=response_schemas.DomainObjectCollection,
 )
-def list_activations(params):
+def list_activations(params: Mapping[str, Any]) -> Response:
     """Show all currently running activations"""
-    manager = watolib.ActivateChangesManager()
+    manager = ActivateChangesManager()
     activations = []
     for activation_id, change in manager.activations():
         activations.append(

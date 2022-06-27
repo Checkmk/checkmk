@@ -14,11 +14,11 @@ import cmk.gui.crash_handler as crash_handler
 import cmk.gui.crash_reporting as crash_reporting
 
 
-def test_gui_crash_report_registry():
+def test_gui_crash_report_registry() -> None:
     assert cmk.utils.crash_reporting.crash_report_registry["gui"] == crash_handler.GUICrashReport
 
 
-def test_gui_crash_report_get_packed(request_context):
+def test_gui_crash_report_get_packed(request_context) -> None:
     store = crash_handler.CrashReportStore()
     try:
         crash_dir = Path()

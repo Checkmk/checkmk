@@ -44,6 +44,7 @@ def parse_fortigate_signatures(info):
 def inventory_fortigate_signatures(parsed):
     if parsed:
         return [(None, {})]
+    return []
 
 
 def check_fortigate_signatures(_no_item, params, parsed):

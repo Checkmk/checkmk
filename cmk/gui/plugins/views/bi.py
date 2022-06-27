@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import List, Optional, Tuple, Type, TYPE_CHECKING, Union
+from typing import List, Optional, Sequence, Tuple, Type, TYPE_CHECKING, Union
 
 from livestatus import OnlySites
 
@@ -14,13 +14,15 @@ from cmk.utils.defines import short_service_state_name
 
 import cmk.gui.bi as bi
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.globals import html, output_funnel, request
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.utils import (
     ABCDataSource,
     Cell,
     CellSpec,
+    CSVExportError,
     data_source_registry,
     Painter,
     painter_option_registry,
@@ -30,13 +32,16 @@ from cmk.gui.plugins.views.utils import (
     Row,
     RowTable,
 )
-from cmk.gui.type_defs import ColumnName, Rows
+from cmk.gui.type_defs import ColumnName, Rows, SingleInfos
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri, urlencode_vars
-from cmk.gui.valuespec import DropdownChoice
+from cmk.gui.valuespec import DropdownChoice, ValueSpec
 
 if TYPE_CHECKING:
     from cmk.gui.plugins.visuals.utils import Filter
     from cmk.gui.views import View
+
 
 #     ____        _
 #    |  _ \  __ _| |_ __ _ ___  ___  _   _ _ __ ___ ___  ___
@@ -49,27 +54,31 @@ if TYPE_CHECKING:
 @data_source_registry.register
 class DataSourceBIAggregations(ABCDataSource):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "bi_aggregations"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("BI Aggregations")
 
     @property
-    def table(self):
+    def table(self) -> "RowTable":
         return RowTableBIAggregations()
 
     @property
-    def infos(self):
+    def infos(self) -> SingleInfos:
         return ["aggr", "aggr_group"]
 
     @property
-    def keys(self):
+    def unsupported_columns(self) -> List[ColumnName]:
+        return ["site"]
+
+    @property
+    def keys(self) -> List[ColumnName]:
         return []
 
     @property
-    def id_keys(self):
+    def id_keys(self) -> List[ColumnName]:
         return ["aggr_name"]
 
 
@@ -89,27 +98,27 @@ class RowTableBIAggregations(RowTable):
 @data_source_registry.register
 class DataSourceBIHostAggregations(ABCDataSource):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "bi_host_aggregations"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("BI Aggregations affected by one host")
 
     @property
-    def table(self):
+    def table(self) -> "RowTable":
         return RowTableBIHostAggregations()
 
     @property
-    def infos(self):
+    def infos(self) -> SingleInfos:
         return ["aggr", "host", "aggr_group"]
 
     @property
-    def keys(self):
+    def keys(self) -> List[ColumnName]:
         return []
 
     @property
-    def id_keys(self):
+    def id_keys(self) -> List[ColumnName]:
         return ["aggr_name"]
 
 
@@ -124,27 +133,27 @@ class DataSourceBIHostnameAggregations(ABCDataSource):
     is used to join the host table rather then the affected host"""
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "bi_hostname_aggregations"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("BI Hostname Aggregations")
 
     @property
-    def table(self):
+    def table(self) -> "RowTable":
         return RowTableBIHostnameAggregations()
 
     @property
-    def infos(self):
+    def infos(self) -> SingleInfos:
         return ["aggr", "host", "aggr_group"]
 
     @property
-    def keys(self):
+    def keys(self) -> List[ColumnName]:
         return []
 
     @property
-    def id_keys(self):
+    def id_keys(self) -> List[ColumnName]:
         return ["aggr_name"]
 
 
@@ -158,27 +167,27 @@ class DataSourceBIHostnameByGroupAggregations(ABCDataSource):
     """The same but with group information"""
 
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "bi_hostnamebygroup_aggregations"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("BI aggregations for hosts by host groups")
 
     @property
-    def table(self):
+    def table(self) -> "RowTable":
         return RowTableBIHostnameByGroupAggregations()
 
     @property
-    def infos(self):
+    def infos(self) -> SingleInfos:
         return ["aggr", "host", "hostgroup", "aggr_group"]
 
     @property
-    def keys(self):
+    def keys(self) -> List[ColumnName]:
         return []
 
     @property
-    def id_keys(self):
+    def id_keys(self) -> List[ColumnName]:
         return ["aggr_name"]
 
 
@@ -200,14 +209,14 @@ class RowTableBIHostnameByGroupAggregations(RowTable):
 @painter_registry.register
 class PainterAggrIcons(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_icons"
 
     def title(self, cell):
         return _("Links")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_group", "aggr_name", "aggr_effective_state"]
 
     @property
@@ -255,14 +264,14 @@ class PainterAggrIcons(Painter):
 @painter_registry.register
 class PainterAggrInDowntime(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_in_downtime"
 
     def title(self, cell):
         return _("In Downtime")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_effective_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -272,14 +281,14 @@ class PainterAggrInDowntime(Painter):
 @painter_registry.register
 class PainterAggrAcknowledged(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_acknowledged"
 
     def title(self, cell):
         return _("Acknowledged")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_effective_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -293,13 +302,13 @@ def _paint_aggr_state_short(state, assumed=False):
     classes = "state svcstate state%s" % state["state"]
     if assumed:
         classes += " assumed"
-    return classes, html.render_span(name, class_=["state_rounded_fill"])
+    return classes, HTMLWriter.render_span(name, class_=["state_rounded_fill"])
 
 
 @painter_registry.register
 class PainterAggrState(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_state"
 
     def title(self, cell):
@@ -309,7 +318,7 @@ class PainterAggrState(Painter):
         return _("State")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_effective_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -321,7 +330,7 @@ class PainterAggrState(Painter):
 @painter_registry.register
 class PainterAggrStateNum(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_state_num"
 
     def title(self, cell):
@@ -331,7 +340,7 @@ class PainterAggrStateNum(Painter):
         return _("State")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_effective_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -341,7 +350,7 @@ class PainterAggrStateNum(Painter):
 @painter_registry.register
 class PainterAggrRealState(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_real_state"
 
     def title(self, cell):
@@ -351,7 +360,7 @@ class PainterAggrRealState(Painter):
         return _("R.State")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -361,7 +370,7 @@ class PainterAggrRealState(Painter):
 @painter_registry.register
 class PainterAggrAssumedState(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_assumed_state"
 
     def title(self, cell):
@@ -371,7 +380,7 @@ class PainterAggrAssumedState(Painter):
         return _("Assumed")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_assumed_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -381,7 +390,7 @@ class PainterAggrAssumedState(Painter):
 @painter_registry.register
 class PainterAggrGroup(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_group"
 
     def title(self, cell):
@@ -391,7 +400,7 @@ class PainterAggrGroup(Painter):
         return _("Group")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_group"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -401,7 +410,7 @@ class PainterAggrGroup(Painter):
 @painter_registry.register
 class PainterAggrName(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_name"
 
     def title(self, cell):
@@ -411,7 +420,7 @@ class PainterAggrName(Painter):
         return _("Aggregation")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_name"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -421,7 +430,7 @@ class PainterAggrName(Painter):
 @painter_registry.register
 class PainterAggrOutput(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_output"
 
     def title(self, cell):
@@ -431,7 +440,7 @@ class PainterAggrOutput(Painter):
         return _("Output")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_output"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -442,14 +451,14 @@ def paint_aggr_hosts(row, link_to_view):
     h = []
     for site, host in row["aggr_hosts"]:
         url = makeuri(request, [("view_name", link_to_view), ("site", site), ("host", host)])
-        h.append(html.render_a(host, url))
+        h.append(HTMLWriter.render_a(host, url))
     return "", HTML(" ").join(h)
 
 
 @painter_registry.register
 class PainterAggrHosts(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_hosts"
 
     def title(self, cell):
@@ -459,7 +468,7 @@ class PainterAggrHosts(Painter):
         return _("Hosts")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_hosts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -469,7 +478,7 @@ class PainterAggrHosts(Painter):
 @painter_registry.register
 class PainterAggrHostsServices(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_hosts_services"
 
     def title(self, cell):
@@ -479,7 +488,7 @@ class PainterAggrHostsServices(Painter):
         return _("Hosts")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_hosts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -489,11 +498,11 @@ class PainterAggrHostsServices(Painter):
 @painter_option_registry.register
 class PainterOptionAggrExpand(PainterOption):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_expand"
 
     @property
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Initial expansion of aggregations"),
             default_value="0",
@@ -510,11 +519,11 @@ class PainterOptionAggrExpand(PainterOption):
 @painter_option_registry.register
 class PainterOptionAggrOnlyProblems(PainterOption):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_onlyproblems"
 
     @property
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Show only problems"),
             default_value="0",
@@ -528,11 +537,11 @@ class PainterOptionAggrOnlyProblems(PainterOption):
 @painter_option_registry.register
 class PainterOptionAggrTreeType(PainterOption):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_treetype"
 
     @property
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Type of tree layout"),
             default_value="foldable",
@@ -549,11 +558,11 @@ class PainterOptionAggrTreeType(PainterOption):
 @painter_option_registry.register
 class PainterOptionAggrWrap(PainterOption):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_wrap"
 
     @property
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Handling of too long texts (affects only table)"),
             default_value="wrap",
@@ -567,9 +576,6 @@ class PainterOptionAggrWrap(PainterOption):
 def paint_aggregated_tree_state(
     row: Row, force_renderer_cls: Optional[Type[bi.ABCFoldableTreeRenderer]] = None
 ) -> CellSpec:
-    if html.is_api_call():
-        return bi.render_tree_json(row)
-
     painter_options = PainterOptions.get_instance()
     treetype = painter_options.get("aggr_treetype")
     expansion_level = int(painter_options.get("aggr_expand"))
@@ -603,7 +609,7 @@ def paint_aggregated_tree_state(
 @painter_registry.register
 class PainterAggrTreestate(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_treestate"
 
     def title(self, cell):
@@ -613,7 +619,7 @@ class PainterAggrTreestate(Painter):
         return _("Tree")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_treestate", "aggr_hosts"]
 
     @property
@@ -623,11 +629,17 @@ class PainterAggrTreestate(Painter):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_aggregated_tree_state(row)
 
+    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+        raise CSVExportError()
+
+    def export_for_json(self, row: Row, cell: Cell) -> dict:
+        return bi.render_tree_json(row)
+
 
 @painter_registry.register
 class PainterAggrTreestateBoxed(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_treestate_boxed"
 
     def title(self, cell):
@@ -637,8 +649,14 @@ class PainterAggrTreestateBoxed(Painter):
         return _("Tree")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["aggr_treestate", "aggr_hosts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_aggregated_tree_state(row, force_renderer_cls=bi.FoldableTreeRendererBoxes)
+
+    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+        raise CSVExportError()
+
+    def export_for_json(self, row: Row, cell: Cell) -> dict:
+        return bi.render_tree_json(row)

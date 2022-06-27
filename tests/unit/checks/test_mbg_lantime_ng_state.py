@@ -45,7 +45,7 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_mbg_lantime_ng_state_ref_clock(params, result):
+def test_mbg_lantime_ng_state_ref_clock(params, result) -> None:
     check = Check("mbg_lantime_ng_state")
     ref_clock_result = list(check.run_check(None, params, [["2", "1", "GPS", "0.0009"]]))[-1]
     assert ref_clock_result == result

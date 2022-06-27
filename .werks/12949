@@ -1,7 +1,7 @@
 Title: add folder to REST API host endpoints
 Class: feature
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1625491819
 Edition: cre
 Knowledge: undoc

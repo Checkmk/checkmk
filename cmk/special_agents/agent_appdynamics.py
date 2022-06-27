@@ -13,6 +13,8 @@ from http.client import HTTPConnection
 from pathlib import Path
 from typing import Any, Dict
 
+from cmk.utils.password_store import replace_passwords
+
 
 def usage():
     sys.stderr.write(
@@ -39,6 +41,7 @@ OPTIONS:
 
 def main(sys_argv=None):  # pylint: disable=too-many-branches
     if sys_argv is None:
+        replace_passwords()
         sys_argv = sys.argv[1:]
 
     short_options = "u:p:P:t:f:hv"
@@ -193,3 +196,4 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
                                     output_items.append("%s:%s" % (name, value))
                             sys.stdout.write("|".join(output_items) + "\n")
     sys.stdout.write("<<<<>>>>\n")
+    return None

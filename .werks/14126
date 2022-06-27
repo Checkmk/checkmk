@@ -1,0 +1,17 @@
+Title: KUBE agent_kube: clarify error messages caused by unsupported Kubernetes version
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1652441073
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+With this werk, the agent verifies whether the Kubernetes version is supported by Checkmk. If it is
+known that an API server with a certain version is incompatible, the agent will now provide a
+helpful error message.  Different flavors of Kubernetes are not verified. In the event, that the
+version of the API server deviates from the versioning scheme used by Kubernetes, processing the API
+data is still attempted on a best effort basis. Errors related to unknown versioning schemes can be
+inspected by increasing the verbosity of the agent via the command line (you can find the command
+line tool by using cmk -D).

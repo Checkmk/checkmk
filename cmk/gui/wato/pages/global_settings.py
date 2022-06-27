@@ -7,17 +7,19 @@
 settings"""
 
 import abc
-from typing import Final, Iterable, Iterator, Optional, Tuple, Type
+from typing import Any, Collection, Final, Iterable, Iterator, Optional, Type
 
 import cmk.utils.version as cmk_version
 
 import cmk.gui.forms as forms
 import cmk.gui.utils.escaping as escaping
-import cmk.gui.watolib as watolib
+import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
-from cmk.gui.globals import active_config, html, request
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -41,12 +43,16 @@ from cmk.gui.plugins.watolib.utils import (
     ConfigVariable,
     ConfigVariableGroup,
 )
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Transform
+from cmk.gui.watolib.config_domains import ConfigDomainCore
+from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     match_item_generator_registry,
@@ -56,15 +62,15 @@ from cmk.gui.watolib.search import (
 
 
 class ABCGlobalSettingsMode(WatoMode):
-    def __init__(self):
-        self._search = None
+    def __init__(self) -> None:
+        self._search: None | str = None
         self._show_only_modified = False
 
         super().__init__()
 
         self._default_values = ABCConfigDomain.get_all_default_globals()
-        self._global_settings = {}
-        self._current_settings = {}
+        self._global_settings: dict[str, Any] = {}
+        self._current_settings: dict[str, Any] = {}
 
     def _from_vars(self):
         self._search = get_search_expression()
@@ -108,10 +114,7 @@ class ABCGlobalSettingsMode(WatoMode):
         if not config_variable.domain().enabled():
             return False
 
-        if (
-            config_variable.domain() == watolib.ConfigDomainCore
-            and varname not in self._default_values
-        ):
+        if config_variable.domain() == ConfigDomainCore and varname not in self._default_values:
             if active_config.debug:
                 raise MKGeneralException(
                     "The configuration variable <tt>%s</tt> is unknown to "
@@ -126,7 +129,7 @@ class ABCGlobalSettingsMode(WatoMode):
 
     def iter_all_configuration_variables(
         self,
-    ) -> Iterable[Tuple[ConfigVariableGroup, Iterable[ConfigVariable]]]:
+    ) -> Iterable[tuple[ConfigVariableGroup, Iterable[ConfigVariable]]]:
         yield from (
             (
                 group,
@@ -140,7 +143,7 @@ class ABCGlobalSettingsMode(WatoMode):
             for group in sorted(self._groups(), key=lambda g: g.sort_index())
         )
 
-    def _show_configuration_variables(self) -> None:
+    def _show_configuration_variables(self) -> None:  # pylint: disable=too-many-branches
         search = self._search
 
         at_least_one_painted = False
@@ -171,19 +174,19 @@ class ABCGlobalSettingsMode(WatoMode):
 
                 if not header_is_painted:
                     # always open headers when searching
-                    forms.header(group.title(), isopen=search or self._show_only_modified)
+                    forms.header(group.title(), isopen=bool(search) or self._show_only_modified)
                     header_is_painted = True
 
                 default_value = self._default_values[varname]
 
-                edit_url = watolib.folder_preserving_link(
+                edit_url = folder_preserving_link(
                     [
                         ("mode", self.edit_mode_name),
                         ("varname", varname),
                         ("site", request.var("site", "")),
                     ]
                 )
-                title = html.render_a(
+                title = HTMLWriter.render_a(
                     title_text,
                     href=edit_url,
                     class_="modified" if varname in self._current_settings else None,
@@ -210,18 +213,20 @@ class ABCGlobalSettingsMode(WatoMode):
                 forms.section(title, simple=simple)
 
                 if varname in self._current_settings:
-                    modified_cls: Optional[str] = "modified"
+                    modified_cls = ["modified"]
                     value_title: Optional[str] = _("This option has been modified.")
                 elif varname in self._global_settings:
-                    modified_cls = "modified globally"
+                    modified_cls = ["modified globally"]
                     value_title = _("This option has been modified in global settings.")
                 else:
-                    modified_cls = None
+                    modified_cls = []
                     value_title = None
 
                 if is_a_checkbox(valuespec):
                     html.open_div(
-                        class_=["toggle_switch_container", modified_cls, "on" if value else None]
+                        class_=["toggle_switch_container"]
+                        + modified_cls
+                        + (["on"] if value else [])
                     )
                     html.toggle_switch(
                         enabled=value,
@@ -258,7 +263,7 @@ class ABCEditGlobalSettingMode(WatoMode):
         if not self._may_edit_configvar(self._varname):
             raise MKAuthException(_("You are not permitted to edit this global setting."))
 
-        self._current_settings = watolib.load_configuration_settings()
+        self._current_settings = load_configuration_settings()
         self._global_settings = {}
 
     def _may_edit_configvar(self, varname):
@@ -272,7 +277,7 @@ class ABCEditGlobalSettingMode(WatoMode):
         )
 
         reset_possible = self._config_variable.allow_reset() and self._is_configured()
-        default_values = watolib.ABCConfigDomain.get_all_default_globals()
+        default_values = ABCConfigDomain.get_all_default_globals()
         defvalue = default_values[self._varname]
         value = self._current_settings.get(
             self._varname, self._global_settings.get(self._varname, defvalue)
@@ -323,7 +328,7 @@ class ABCEditGlobalSettingMode(WatoMode):
             )
 
         self._save()
-        watolib.add_change(
+        _changes.add_change(
             "edit-configvar",
             msg,
             sites=self._affected_sites(),
@@ -338,7 +343,7 @@ class ABCEditGlobalSettingMode(WatoMode):
         raise NotImplementedError()
 
     def _save(self):
-        watolib.save_global_settings(self._current_settings)
+        save_global_settings(self._current_settings)
 
     @abc.abstractmethod
     def _affected_sites(self):
@@ -351,7 +356,7 @@ class ABCEditGlobalSettingMode(WatoMode):
         is_configured = self._is_configured()
         is_configured_globally = self._varname in self._global_settings
 
-        default_values = watolib.ABCConfigDomain.get_all_default_globals()
+        default_values = ABCConfigDomain.get_all_default_globals()
 
         defvalue = default_values[self._varname]
         value = self._current_settings.get(
@@ -409,18 +414,18 @@ class ABCEditGlobalSettingMode(WatoMode):
 @mode_registry.register
 class ModeEditGlobals(ABCGlobalSettingsMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "globalvars"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["global"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self._current_settings = watolib.load_configuration_settings()
+        self._current_settings = load_configuration_settings()
 
-    def title(self):
+    def title(self) -> str:
         if self._search:
             return _("Global settings matching '%s'") % escape_to_html(self._search)
         return _("Global settings")
@@ -508,9 +513,9 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
             varname,
             "on" if self._current_settings[varname] else "off",
         )
-        watolib.save_global_settings(self._current_settings)
+        save_global_settings(self._current_settings)
 
-        watolib.add_change(
+        _changes.add_change(
             "edit-configvar",
             msg,
             domains=[config_variable.domain()],
@@ -521,25 +526,25 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
             flash(msg)
         return redirect(mode_url("globalvars"))
 
-    def page(self):
+    def page(self) -> None:
         self._show_configuration_variables()
 
 
 @mode_registry.register
 class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_configvar"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["global"]
 
     @classmethod
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeEditGlobals
 
-    def title(self):
+    def title(self) -> str:
         return _("Edit global setting")
 
     def _affected_sites(self):
@@ -549,7 +554,7 @@ class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
         return ModeEditGlobals.mode_url()
 
 
-def is_a_checkbox(vs):
+def is_a_checkbox(vs) -> bool:
     """Checks if a valuespec is a Checkbox"""
     if isinstance(vs, Checkbox):
         return True

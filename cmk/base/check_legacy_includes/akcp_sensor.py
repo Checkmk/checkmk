@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 from .humidity import check_humidity
 from .temperature import check_temperature
 
@@ -105,7 +104,7 @@ def inventory_akcp_sensor_temp(info):
             yield line[0], {}
 
 
-def check_akcp_sensor_temp(item, params, info):
+def check_akcp_sensor_temp(item, params, info):  # pylint: disable=too-many-branches
     for (
         description,
         degree,
@@ -164,6 +163,7 @@ def check_akcp_sensor_temp(item, params, info):
                 (high_warn, high_crit),
                 (low_warn, low_crit),
             )
+    return None
 
 
 # .
@@ -197,6 +197,7 @@ def check_akcp_sensor_relay(item, _no_params, info):
 
             state, state_name = relay_states[status]
             return state, "State: %s" % state_name
+    return None
 
 
 # .
@@ -241,3 +242,4 @@ def check_akcp_sensor_drycontact(item, _no_params, info):
                 state, infotext = states[status]
 
             return state, infotext
+    return None

@@ -46,7 +46,7 @@ class FakeUser:
     ) -> None:
         self.perms = perms
 
-    def has_permission(self, perm: str):
+    def has_permission(self, perm: str) -> bool:
         return perm in self.perms
 
 
@@ -74,10 +74,10 @@ class Optional(BasePerm):
     Both of these cases are valid, so it always returns True.
     """
 
-    def __init__(self, perm: BasePerm):
+    def __init__(self, perm: BasePerm) -> None:
         self.perm = perm
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.perm}?"
 
     def has_permission(self, user: UserLike) -> bool:
@@ -90,11 +90,17 @@ class Optional(BasePerm):
         return self.perm.iter_perms()
 
 
+class Ignore(Optional):
+    """A permission which shall not be documented, but may occur.
+
+    Structurally similar to `Optional` but with a different name."""
+
+
 class MultiPerm(BasePerm, abc.ABC):
-    def __init__(self, perms: List[BasePerm]):
+    def __init__(self, perms: List[BasePerm]) -> None:
         self.perms = perms
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}([{', '.join([repr(o) for o in self.perms])})"
 
     def iter_perms(self) -> Iterable[str]:
@@ -121,10 +127,10 @@ class NoPerm(BasePerm):
 class Perm(BasePerm):
     """A permission identified by a string."""
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         self.name = name
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{{{self.name}}}"
 
     def has_permission(self, user: UserLike) -> bool:
@@ -147,9 +153,9 @@ class AllPerm(MultiPerm):
         >>> p = AnyPerm([AllPerm([Perm("wato.edit"), Perm("wato.users")]), Perm("wato.seeall")])
 
         >>> class User:
-        ...     def __init__(self, perms):
+        ...     def __init__(self, perms) -> None:
         ...         self.perms = perms
-        ...     def has_permission(self, perm_name):
+        ...     def has_permission(self, perm_name) -> bool:
         ...         return perm_name in self.perms
 
         >>> p.has_permission(User(["wato.edit"]))
@@ -189,9 +195,9 @@ class AnyPerm(MultiPerm):
         >>> p = AnyPerm([Perm("foo"), AnyPerm([Perm("bar"), Perm("baz")])])
 
         >>> class User:
-        ...     def __init__(self, perms):
+        ...     def __init__(self, perms) -> None:
         ...         self.perms = perms
-        ...     def has_permission(self, perm_name):
+        ...     def has_permission(self, perm_name) -> bool:
         ...         return perm_name in self.perms
 
         >>> p.has_permission(User(["foo"]))

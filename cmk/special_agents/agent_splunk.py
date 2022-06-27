@@ -9,7 +9,7 @@ import sys
 from typing import Any, Callable, NamedTuple
 
 import requests
-import urllib3  # type: ignore[import]
+import urllib3
 
 import cmk.utils.password_store
 
@@ -69,6 +69,7 @@ def main(argv=None):
         sys.stderr.write("Unhandled exception: %s\n" % e)
         if args.debug:
             return 1
+    return None
 
 
 def handle_request(args, sections):
@@ -99,6 +100,7 @@ def handle_request(args, sections):
 
             sys.stdout.write("<<<splunk_%s>>>\n" % section.name)
             section.handler(value)
+    return None
 
 
 def parse_arguments(argv):

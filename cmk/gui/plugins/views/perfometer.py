@@ -4,12 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Tuple
+from typing import Optional, Sequence, Tuple
 
 import cmk.gui.metrics as metrics
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.globals import active_config, html
-from cmk.gui.htmllib import HTML
+from cmk.gui.config import active_config
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.views.graphs import cmk_graph_url
@@ -25,7 +25,8 @@ from cmk.gui.plugins.views.utils import (
     Sorter,
     sorter_registry,
 )
-from cmk.gui.type_defs import Perfdata, PerfometerSpec, TranslatedMetrics
+from cmk.gui.type_defs import ColumnName, Perfdata, PerfometerSpec, TranslatedMetrics
+from cmk.gui.utils.html import HTML
 
 
 class Perfometer:
@@ -206,7 +207,7 @@ class Perfometer:
 @painter_registry.register
 class PainterPerfometer(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "perfometer"
 
     def title(self, cell):
@@ -216,7 +217,7 @@ class PainterPerfometer(Painter):
         return _("Perf-O-Meter")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return [
             "service_staleness",
             "service_perf_data",
@@ -247,9 +248,9 @@ class PainterPerfometer(Painter):
 
         assert h is not None
         content = (
-            html.render_div(HTML(h), class_=["content"])
-            + html.render_div(title, class_=["title"])
-            + html.render_div("", class_=["glass"])
+            HTMLWriter.render_div(HTML(h), class_=["content"])
+            + HTMLWriter.render_div(title, class_=["title"])
+            + HTMLWriter.render_div("", class_=["glass"])
         )
 
         # pnpgraph_present: -1 means unknown (path not configured), 0: no, 1: yes
@@ -260,26 +261,26 @@ class PainterPerfometer(Painter):
             url = "javascript:void(0)"
             disabled = True
 
-        return " ".join(classes), html.render_a(
+        return " ".join(classes), HTMLWriter.render_a(
             content=content,
             href=url,
             title=escaping.strip_tags(title),
-            class_=["disabled" if disabled else None],
+            class_=["disabled"] if disabled else [],
         )
 
 
 @sorter_registry.register
 class SorterPerfometer(Sorter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "perfometer"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Perf-O-Meter")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return [
             "service_perf_data",
             "service_state",

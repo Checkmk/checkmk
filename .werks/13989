@@ -1,0 +1,16 @@
+Title: Timesyncd check plugin can now handle large time offsets
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1654674514
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The timesyncd check plugin was unable to handle offsets that were displayed
+with units other than seconds, milliseconds, or microseconds.
+For example, an offset such as 5h 10min 12s would produce an error.
+This incompleteness in the check plugin is now fixed and all the units systemd.time is
+able to produce at the time of writing this werk can be handled effectively.
+See also https://man7.org/linux/man-pages/man7/systemd.time.7.html

@@ -62,7 +62,7 @@ checks = {
                     0, 'Used connections: 104470', [
                         ('connections', 104470, None, None, None, None)
                     ]
-                ), (0, 'Used percentage: 20.9%', [])
+                ), (0, 'Used percentage: 20.90%', [])
             ]
         ),
         (
@@ -73,7 +73,7 @@ checks = {
                     0, 'Used connections: 104470', [
                         ('connections', 104470, None, None, None, None)
                     ]
-                ), (0, 'Used percentage: 20.9%', [])
+                ), (0, 'Used percentage: 20.90%', [])
             ]
         )
     ],
@@ -141,17 +141,17 @@ checks = {
         (
             'my_vsid1 0', {}, [
                 (
-                    0, 'Total number of bytes accepted: 0.00 B 1/s', [
+                    0, 'Total number of bytes accepted: 0.00 B/s', [
                         ('bytes_accepted', 0.0, None, None, None, None)
                     ]
                 ),
                 (
-                    0, 'Total number of bytes dropped: 0.00 B 1/s', [
+                    0, 'Total number of bytes dropped: 0.00 B/s', [
                         ('bytes_dropped', 0.0, None, None, None, None)
                     ]
                 ),
                 (
-                    0, 'Total number of bytes rejected: 0.00 B 1/s', [
+                    0, 'Total number of bytes rejected: 0.00 B/s', [
                         ('bytes_rejected', 0.0, None, None, None, None)
                     ]
                 )
@@ -160,17 +160,17 @@ checks = {
         (
             'my_vsid2 1', {}, [
                 (
-                    0, 'Total number of bytes accepted: 0.00 B 1/s', [
+                    0, 'Total number of bytes accepted: 0.00 B/s', [
                         ('bytes_accepted', 0.0, None, None, None, None)
                     ]
                 ),
                 (
-                    0, 'Total number of bytes dropped: 0.00 B 1/s', [
+                    0, 'Total number of bytes dropped: 0.00 B/s', [
                         ('bytes_dropped', 0.0, None, None, None, None)
                     ]
                 ),
                 (
-                    0, 'Total number of bytes rejected: 0.00 B 1/s', [
+                    0, 'Total number of bytes rejected: 0.00 B/s', [
                         ('bytes_rejected', 0.0, None, None, None, None)
                     ]
                 )

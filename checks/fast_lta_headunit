@@ -35,7 +35,7 @@ def check_fast_lta_headunit_status(item, _no_params, info):
     try:
         head_unit_status, app_read_only_status = info[0][0][:2]
     except IndexError:
-        return
+        return None
 
     head_unit_status_map = {
         "-1": "workerDefect",
@@ -100,7 +100,7 @@ def check_fast_lta_headunit_replication(item, _no_params, info):
     try:
         node_replication_mode, replication_status = info[0][0][1:3]
     except IndexError:
-        return
+        return None
 
     head_unit_replication_map = {
         "0": "Slave",

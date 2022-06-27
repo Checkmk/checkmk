@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-def check_sql_arguments(params):
+def check_sql_arguments(params):  # pylint: disable=too-many-branches
     args = []
 
     if "host" in params:
@@ -46,6 +46,9 @@ def check_sql_arguments(params):
         warn_high, crit_high = upper
         args.append("-w%s:%s" % (warn_low, warn_high))
         args.append("-c%s:%s" % (crit_low, crit_high))
+
+    if "text" in params:
+        args.append("--text=%s" % params["text"])
 
     if isinstance(params["sql"], tuple):
         sql_tmp = params["sql"][-1]

@@ -77,7 +77,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, u'Difference last 7 d: 0.00', [
+                    0, u'Difference last 7 days 0 hours: 0.00', [
                         ('jira_diff', 0, None, None, None, None)
                     ]
                 )
@@ -91,7 +91,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, u'Difference last 7 d: 0.00', [
+                    0, u'Difference last 7 days 0 hours: 0.00', [
                         ('jira_diff', 0, None, None, None, None)
                     ]
                 )

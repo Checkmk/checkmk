@@ -6,10 +6,10 @@
 
 import cmk.utils.paths
 
-import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
+from cmk.gui.watolib.snapshots import backup_domains
 
-watolib.backup_domains.update(
+backup_domains.update(
     {
         "check_mk": {
             "group": _("Configuration"),

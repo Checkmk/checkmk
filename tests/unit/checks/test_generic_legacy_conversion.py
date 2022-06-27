@@ -29,7 +29,7 @@ from cmk.base.check_legacy_includes.ucd_hr import _is_ucd
 pytestmark = pytest.mark.checks
 
 
-def test_create_section_plugin_from_legacy(fix_plugin_legacy, fix_register):
+def test_create_section_plugin_from_legacy(fix_plugin_legacy, fix_register) -> None:
     for name, check_info_dict in fix_plugin_legacy.check_info.items():
         # only test main checks
         if name != section_name_of(name):
@@ -54,11 +54,11 @@ def test_create_section_plugin_from_legacy(fix_plugin_legacy, fix_register):
             assert original_parse_function.__name__ == section.parse_function.__name__
 
 
-def test_snmp_info_snmp_scan_functions_equal(fix_plugin_legacy):
+def test_snmp_info_snmp_scan_functions_equal(fix_plugin_legacy) -> None:
     assert set(fix_plugin_legacy.snmp_scan_functions) == set(fix_plugin_legacy.snmp_info)
 
 
-def test_snmp_tree_translation(fix_plugin_legacy):
+def test_snmp_tree_translation(fix_plugin_legacy) -> None:
     for info_spec in fix_plugin_legacy.snmp_info.values():
         new_trees, recover_function = _create_snmp_trees(info_spec)
         assert callable(recover_function)  # is tested separately
@@ -66,7 +66,7 @@ def test_snmp_tree_translation(fix_plugin_legacy):
         assert all(isinstance(tree, SNMPTree) for tree in new_trees)
 
 
-def test_scan_function_translation(fix_plugin_legacy):
+def test_scan_function_translation(fix_plugin_legacy) -> None:
     for name, scan_func in fix_plugin_legacy.snmp_scan_functions.items():
         if name in (
             # these are already migrated manually:
@@ -95,18 +95,18 @@ def test_scan_function_translation(fix_plugin_legacy):
         _is_cisco_nexus,
     ],
 )
-def test_explicit_conversion(func):
+def test_explicit_conversion(func) -> None:
     created = create_detect_spec("unit-test", func, [])
     explicit = _explicit_conversions(func.__name__)
     assert created == explicit
 
 
-def test_no_subcheck_with_snmp_keywords(fix_plugin_legacy):
+def test_no_subcheck_with_snmp_keywords(fix_plugin_legacy) -> None:
     for name in fix_plugin_legacy.snmp_info:
         assert name == section_name_of(name)
 
 
-def test_all_checks_migrated(fix_plugin_legacy, fix_register):
+def test_all_checks_migrated(fix_plugin_legacy, fix_register) -> None:
     migrated = set(str(name) for name in fix_register.check_plugins)
     # we don't expect pure section declarations anymore
     true_checks = set(
@@ -118,7 +118,7 @@ def test_all_checks_migrated(fix_plugin_legacy, fix_register):
     assert not failures, "failed to migrate: %r" % (failures,)
 
 
-def test_all_check_variables_present(fix_plugin_legacy):
+def test_all_check_variables_present(fix_plugin_legacy) -> None:
     expected_check_variables = {
         "AKCP_TEMP_CHECK_DEFAULT_PARAMETERS",
         "ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS",
@@ -143,18 +143,14 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "K8S_OK_CONDITIONS",
         "KEY_PULSE_SECURE_CPU",
         "MAILQUEUES_LABEL",
-        "MAP_BUILD_STATES",
         "MAP_ENABLED",
         "MAP_INSTANCE_STATE",
-        "MAP_JOB_STATES",
         "MAP_PARAM_TO_TEXT",
         "MAP_QUEUE_STATES",
         "MAP_RPO_STATES",
         "MAP_SERVER_STATUS",
         "MB",
         "MBG_LANTIME_STATE_CHECK_DEFAULT_PARAMETERS",
-        "MB_PER_DAY_TO_B_PER_S",
-        "MEGA",
         "METRICS_INFO_NAMES_PULSE_SECURE_MEM",
         "METRIC_PULSE_SECURE_DISK",
         "METRIC_PULSE_SECURE_LOG",
@@ -212,7 +208,6 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "apc_symmetra_output_default_levels",
         "apc_symmetra_temp_default_levels",
         "apt_default_levels",
-        "arbor_cpuload_default_levels",
         "arbor_memory_default_levels",
         "arris_cmts_cpu_default_levels",
         "arris_cmts_mem",
@@ -229,7 +224,6 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "aws_cpu_credits",
         "aws_dynamodb_capacity_defaults",
         "aws_dynamodb_limits_default_levels",
-        "aws_ebs_limits_default_levels",
         "aws_ec2_cpu_util_default_levels",
         "aws_ec2_limits_default_levels",
         "aws_elb_limits_default_levels",
@@ -248,7 +242,6 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "bintec_sensors_fan_default_levels",
         "bintec_sensors_info",
         "bintec_sensors_temp_default_levels",
-        "blade_bx_cpuload_default_levels",
         "blade_bx_fan_default_error_levels",
         "blade_bx_powerfan_default_levels",
         "blade_bx_status",
@@ -284,14 +277,12 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "ceph_osds_default_levels",
         "ceph_status_default_levels",
         "check_mk_only_from_default",
-        "checkpoint_connections_default_levels",
         "checkpoint_memory_default_levels",
         "checkpoint_packets_default_levels",
         "checkpoint_sensorstatus_to_nagios",
         "checkpoint_temp_default_levels",
         "checkpoint_tunnels_default_levels",
         "checkpoint_vsx_default_levels",
-        "cisco_asa_svc_default_levels",
         "cisco_cpu_default_levels",
         "cisco_fan_state_mapping",
         "cisco_ip_sla_default_levels",
@@ -322,8 +313,6 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "cmctc_pcm_m_sensor_types",
         "condition_map",
         "cpsecure_sessions_default_levels",
-        "cpu_threads_default_levels",
-        "cpuload_default_levels",
         "cups_queues_default_levels",
         "datapower_cpu_default_levels",
         "datapower_mem_default_levels",
@@ -391,10 +380,8 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "eltek_outdoor_temp_default_variables",
         "emc_datadomain_mtree_default_levels",
         "emc_isilon_fan_default_levels",
-        "emc_isilon_ifs",
         "emc_isilon_info",
         "emc_isilon_power_default_levels",
-        "emc_isilon_quota",
         "emc_isilon_temp_cpu_default_levels",
         "emc_isilon_temp_default_levels",
         "emc_vplex_cpu_default_levels",
@@ -409,7 +396,6 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "enterasys_temp_default_levels",
         "enviromux_default_levels",
         "epson_beamer_lamp_default_levels",
-        "esx_host_mem_default_levels",
         "esx_vsphere_counters_ramdisk_sizes",
         "esx_vsphere_objects_default_levels",
         "etherbox2_temp_default_levels",
@@ -435,7 +421,6 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "fc_port_phystates",
         "filehandler_default_levels",
         "filer_disks_default_levels",
-        "filesystem_Default_levels",
         "filesystem_default_levels",
         "filesystem_groups",
         "filesystem_levels",
@@ -445,7 +430,7 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "fjdarye60_sum_status",
         "fjdarye_disks_status",
         "fjdarye_item_status",
-        "fjdarye_sum_status",
+        "FJDARYE_SUM_STATUS",
         "forced_mapping",
         "fortigate_cpu_base_default_levels",
         "fortigate_cpu_default_levels",
@@ -466,15 +451,10 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "graylog_nodes_default_levels",
         "graylog_sidecars_default_levels",
         "graylog_sources_default_levels",
-        "graylog_streams_default_levels",
         "gude_humidity_default_levels",
         "gude_powerbank_default_levels",
         "gude_relayport_default_levels",
         "gude_temp_default_levels",
-        "heartbeat_crm_default_levels",
-        "heartbeat_crm_default_max_age",
-        "heartbeat_crm_naildown",
-        "heartbeat_crm_resources_naildown",
         "hitachi_hnas_bossock_default_levels",
         "hitachi_hnas_cpu_default_levels",
         "hitachi_hnas_fpga_default_levels",
@@ -552,9 +532,6 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "ibm_svc_cpu_default_levels",
         "ibm_svc_enclosurestats_temperature_default_levels",
         "ibm_svc_mdisk_default_levels",
-        "if_default_average",
-        "if_default_error_levels",
-        "if_default_traffic_levels",
         "if_groups",
         "ifoperstatus_inventory_porttypes",
         "ifoperstatus_monitor_unused",
@@ -573,7 +550,6 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "inventory_df_exclude_mountpoints",
         "inventory_df_rules",
         "inventory_fujitsu_ca_ports",
-        "inventory_heartbeat_crm_rules",
         "inventory_multipath_rules",
         "inventory_sap_values",
         "inventory_solaris_services_rules",
@@ -650,11 +626,7 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "mbg_lantime_refclock_gpsstate_map",
         "mbg_lantime_refclock_refmode_map",
         "mbg_lantime_state_default_levels",
-        "mcafee_emailgateway_cpuload_default_levels",
         "megaraid_bbu_refvalues",
-        "megaraid_pdisks_adapterstr",
-        "megaraid_pdisks_legacy_mode",
-        "megaraid_pdisks_states",
         "mem_extended_perfdata",
         "mem_linux_default_levels",
         "mem_vmalloc_default_levels",
@@ -682,10 +654,8 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "netapp_api_cpu_default_levels",
         "netapp_api_luns_default_levels",
         "netapp_api_snapshots_default_levels",
-        "netapp_api_vf_stats_cpu_util_default_levels",
         "netapp_cpu_default_levels",
         "netapp_fcpio_default_levels",
-        "netapp_volumes_owner",
         "netctr_counter_indices",
         "netctr_counters",
         "netctr_default_params",
@@ -725,18 +695,13 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "oracle_logswitches_default_levels",
         "oracle_longactivesessions_defaults",
         "oracle_performance_discovery",
-        "oracle_processes_defaults",
         "oracle_recovery_area_defaults",
         "oracle_sessions_default_levels",
-        "oracle_tablespaces_check_autoext",
-        "oracle_tablespaces_default_levels",
         "oracle_undostat_defaults",
         "oxyreduct_tag_map",
         "palo_alto_sessions",
         "pandacom_temp_default_levels",
         "papouch_th2e_sensors_humidity_default_levels",
-        "param_name",
-        "pdu_gude_default_levels",
         "pfsense_counter_default_levels",
         "pfsense_if_default_levels",
         "poe_default_levels",
@@ -748,7 +713,6 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "postgres_connections_default_levels",
         "printer_supply_ricoh_default_levels",
         "prism_container_default_levels",
-        "ps_default_levels",
         "pse_poe_default_levels",
         "pulse_secure_cpu_util_def_levels",
         "pulse_secure_disk_util_def_levels",
@@ -781,7 +745,6 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "safenet_hsm_default_levels",
         "safenet_hsm_events_default_levels",
         "sansymphony_alerts_default_values",
-        "sansymphony_pool_default_values",
         "sap_hana_connect_state_map",
         "sap_hana_ess_migration_state_map",
         "sap_hana_mem_database_default_levels",
@@ -796,8 +759,6 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "sensor_type_names",
         "sensor_type_names_external",
         "sensor_type_names_sems_external",
-        "services_default_levels",
-        "services_summary_default_levels",
         "severity_to_states",
         "shards_info",
         "siemens_plc_temp_default_levels",
@@ -839,7 +800,6 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "threads_default_levels",
         "threepar_ports_default_levels",
         "threepar_remotecopy_default_levels",
-        "timemachine_default_levels",
         "tinkerforge_humidity_default_levels",
         "tsm_scratch_default_levels",
         "tsm_session_default_levels",
@@ -885,7 +845,6 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "win_netstat_states",
         "win_printer_default_levels",
         "windows_license_default_levels",
-        "winperf_cpu_default_levels",
         "wut_webtherm_defaultlevels",
         "wut_webtherm_humidity_defaultlevels",
         "zorp_connections",
@@ -894,15 +853,15 @@ def test_all_check_variables_present(fix_plugin_legacy):
     missing_variables = expected_check_variables - set(fix_plugin_legacy.check_variables)
 
     assert not missing_variables, (
-        "'%s' were variables present in config.get_check_variables(). "
-        "They may be needed to resolve the default parameters in users autochecks file. "
-        "If you are sure this is not the case, you may remove the variables from the "
-        "list above. If they may still be needed, you may add them to the module "
-        "cmk.utils.migrated_check_variables."
-    ) % sorted(missing_variables)
+        "It appears you have removed the following variables from the global scope of a check: "
+        f"{sorted(missing_variables)!r}\n"
+        "Note that such variables were configurable via .mk files. By removing them, you may "
+        "inadvertedly break that functionality.\n"
+        "But: Most of the time that is not the case, and you can simply remove them."
+    )
 
 
-def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
+def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
     expected_legacy_checks = {
         "3par_capacity",
         "3par_cpgs",
@@ -960,7 +919,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "allnet_ip_sensoric.temp",
         "allnet_ip_sensoric.humidity",
         "allnet_ip_sensoric.pressure",
-        "allnet_ip_sensoric",
         "apc_ats_output",
         "apc_ats_status",
         "apc_humidity",
@@ -1038,7 +996,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "aws_dynamodb_table.latency",
         "aws_ebs",
         "aws_ebs.burst_balance",
-        "aws_ebs_limits",
         "aws_ebs_summary",
         "aws_ebs_summary.health",
         "aws_ec2",
@@ -1216,7 +1173,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "checkpoint_vsx.packets",
         "checkpoint_vsx.traffic",
         "checkpoint_vsx.status",
-        "cifsmounts",
         "cisco_ace_rserver",
         "cisco_asa_conn",
         "cisco_asa_connections",
@@ -1591,9 +1547,7 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "fireeye_raid.disks",
         "fireeye_smtp_conn",
         "fireeye_sys_image",
-        "fireeye_sys_status",
         "fireeye_temp",
-        "fjdarye100_cadaps",
         "fjdarye100_cmods",
         "fjdarye100_cmods_mem",
         "fjdarye100_conencs",
@@ -1604,7 +1558,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "fjdarye100_rluns",
         "fjdarye100_sum",
         "fjdarye100_syscaps",
-        "fjdarye101_cadaps",
         "fjdarye101_cmods",
         "fjdarye101_cmods_mem",
         "fjdarye101_conencs",
@@ -1615,7 +1568,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "fjdarye101_syscaps",
         "fjdarye200_pools",
         "fjdarye500_ca_ports",
-        "fjdarye500_cadaps",
         "fjdarye500_cmods",
         "fjdarye500_cmods_flash",
         "fjdarye500_cmods_mem",
@@ -1630,7 +1582,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "fjdarye500_sum",
         "fjdarye500_syscaps",
         "fjdarye500_thmls",
-        "fjdarye60_cadaps",
         "fjdarye60_cmods",
         "fjdarye60_cmods_flash",
         "fjdarye60_cmods_mem",
@@ -1691,15 +1642,12 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "graylog_nodes",
         "graylog_sidecars",
         "graylog_sources",
-        "graylog_streams",
         "gude_humidity",
         "gude_powerbanks",
         "gude_relayport",
         "gude_temp",
         "h3c_lanswitch_cpu",
         "h3c_lanswitch_sensors",
-        "heartbeat_crm",
-        "heartbeat_crm.resources",
         "heartbeat_nodes",
         "heartbeat_rscstatus",
         "hepta",
@@ -2028,8 +1976,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "mcafee_webgateway_misc",
         "md",
         "megaraid_bbu",
-        "megaraid_ldisks",
-        "megaraid_pdisks",
         "mem.linux",
         "mem.win",
         "mem.vmalloc",
@@ -2087,7 +2033,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "mysql.galerastartup",
         "mysql.galerasize",
         "mysql.galerastatus",
-        "mysql_capacity",
         "mysql_ping",
         "mysql_slave",
         "netapp_api_aggr",
@@ -2124,7 +2069,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "netapp_cpu",
         "netapp_fcpio",
         "netapp_vfiler",
-        "netapp_volumes",
         "netctr.combined",
         "netextreme_cpu_util",
         "netextreme_fan",
@@ -2147,8 +2091,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "netscaler_tcp_conns",
         "netstat",
         "nfsexports",
-        "nfsiostat",
-        "nfsmounts",
         "nginx_status",
         "nimble_latency",
         "nimble_latency.write",
@@ -2191,7 +2133,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "oracle_performance.iostat_bytes",
         "oracle_performance.iostat_ios",
         "oracle_performance.waitclasses",
-        "oracle_processes",
         "oracle_recovery_area",
         "oracle_recovery_status",
         "oracle_rman_backups",
@@ -2325,7 +2266,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "safenet_ntls",
         "salesforce_instances",
         "sansymphony_alerts",
-        "sansymphony_pool",
         "sansymphony_ports",
         "sansymphony_serverstatus",
         "sansymphony_virtualdiskstatus",
@@ -2358,8 +2298,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "security_master.temp",
         "seh_ports",
         "sensatronics_temp",
-        "sentry_pdu",
-        "sentry_pdu_outlets",
         "sentry_pdu_systempower",
         "siemens_plc.temp",
         "siemens_plc.flag",
@@ -2446,7 +2384,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "systemtime",
         "teracom_tcw241_analog",
         "teracom_tcw241_digital",
-        "timemachine",
         "tinkerforge",
         "tinkerforge.temperature",
         "tinkerforge.ambient",
@@ -2540,7 +2477,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "vnx_version",
         "vutlan_ems_humidity",
         "vutlan_ems_leakage",
-        "vutlan_ems_smoke",
         "vutlan_ems_temp",
         "vxvm_enclosures",
         "vxvm_multipath",

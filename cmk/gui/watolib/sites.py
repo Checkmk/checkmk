@@ -21,9 +21,14 @@ import cmk.gui.sites
 import cmk.gui.watolib.activate_changes
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.sidebar_reload
-from cmk.gui.config import default_single_site_configuration, load_config, prepare_raw_site_config
-from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import active_config, request
+from cmk.gui.config import (
+    active_config,
+    default_single_site_configuration,
+    load_config,
+    prepare_raw_site_config,
+)
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site, site_is_local
@@ -45,7 +50,6 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
-from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.config_domains import (
     ConfigDomainCACertificates,
     ConfigDomainGUI,
@@ -222,7 +226,12 @@ class SiteManagement:
         )
 
     @classmethod
-    def validate_configuration(cls, site_id, site_configuration, all_sites):
+    def validate_configuration(  # pylint: disable=too-many-branches
+        cls,
+        site_id,
+        site_configuration,
+        all_sites,
+    ):
         if not re.match("^[-a-z0-9A-Z_]+$", site_id):
             raise MKUserError(
                 "id", _("The site id must consist only of letters, digit and the underscore.")
@@ -625,7 +634,7 @@ class CEESiteManagement(SiteManagement):
 
 # TODO: Change to factory
 class LivestatusViaTCP(Dictionary):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         kwargs["elements"] = [
             (
                 "port",
@@ -764,37 +773,6 @@ def _delete_distributed_wato_file():
 class PushSnapshotRequest(NamedTuple):
     site_id: SiteId
     tar_content: bytes
-
-
-@automation_command_registry.register
-class AutomationPushSnapshot(AutomationCommand):
-    """Apply a config sync snapshot create by a pre 1.7 site
-
-    This is kept for compatibility of pre 1.7 central sites with 1.7 remote sites.
-    TODO: This call can be dropped with 1.8.
-    """
-
-    def command_name(self):
-        return "push-snapshot"
-
-    def get_request(self) -> PushSnapshotRequest:
-        site_id = SiteId(request.get_ascii_input_mandatory("siteid"))
-        cmk.gui.watolib.activate_changes.verify_remote_site_config(site_id)
-
-        snapshot = request.uploaded_file("snapshot")
-        if not snapshot:
-            raise MKGeneralException(_("Invalid call: The snapshot is missing."))
-
-        return PushSnapshotRequest(site_id=site_id, tar_content=snapshot[2])
-
-    def execute(self, api_request: PushSnapshotRequest) -> bool:
-        with store.lock_checkmk_configuration():
-            return cmk.gui.watolib.activate_changes.apply_pre_17_sync_snapshot(
-                api_request.site_id,
-                api_request.tar_content,
-                cmk.utils.paths.omd_root,
-                cmk.gui.watolib.activate_changes.get_replication_paths(),
-            )
 
 
 def get_effective_global_setting(site_id: SiteId, is_remote_site: bool, varname: str) -> Any:

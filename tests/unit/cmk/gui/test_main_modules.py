@@ -92,7 +92,7 @@ def fixture_plugin_module_dir(request):
     return request.param
 
 
-def test_plugins_loaded(plugin_module_dir):
+def test_plugins_loaded(plugin_module_dir) -> None:
     if plugin_module_dir == "bi":
         raise pytest.skip("No plugin at the moment")
 

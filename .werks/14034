@@ -1,0 +1,12 @@
+Title: Fix high disk IO in linux agent
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1653890526
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The systemd check caused high IO load, when querying service status.
+This has been fixed. No action requried.

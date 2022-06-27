@@ -30,7 +30,7 @@ def check_uniserv():
         ["host", "port", "service", "ADDRESS", "street", "street_nr", "city", "regex"],
     ],
 )
-def test_ac_check_uniserv_broken_arguments(capsys, check_uniserv, args):
+def test_ac_check_uniserv_broken_arguments(capsys, check_uniserv, args) -> None:
     with pytest.raises(SystemExit):
         check_uniserv.parse_arguments(args)
     out, _err = capsys.readouterr()
@@ -53,7 +53,7 @@ def test_ac_check_uniserv_broken_arguments(capsys, check_uniserv, args):
         ),
     ],
 )
-def test_ac_check_uniserv_parse_arguments(check_uniserv, args, expected_args):
+def test_ac_check_uniserv_parse_arguments(check_uniserv, args, expected_args) -> None:
     assert check_uniserv.parse_arguments(args) == expected_args
 
 
@@ -71,7 +71,7 @@ def test_ac_check_uniserv_parse_arguments(check_uniserv, args, expected_args):
         "foo=bar;type=TIPTOP",
     ],
 )
-def test_ac_check_uniserv_broken_data(capsys, check_uniserv, data):
+def test_ac_check_uniserv_broken_data(capsys, check_uniserv, data) -> None:
     with pytest.raises(SystemExit):
         check_uniserv.parse_response(data)
     out, _err = capsys.readouterr()
@@ -85,7 +85,7 @@ def test_ac_check_uniserv_broken_data(capsys, check_uniserv, data):
         "type=1;foo=bar",
     ],
 )
-def test_ac_check_uniserv_broken_response(capsys, check_uniserv, data):
+def test_ac_check_uniserv_broken_response(capsys, check_uniserv, data) -> None:
     with pytest.raises(SystemExit):
         check_uniserv.parse_response(data)
     out, _err = capsys.readouterr()
@@ -99,7 +99,7 @@ def test_ac_check_uniserv_broken_response(capsys, check_uniserv, data):
         ("type=TIPTOP;key=value;foo=bar", {"type": "TIPTOP", "key": "value"}),
     ],
 )
-def test_ac_check_uniserv_parse_response(check_uniserv, data, expected_result):
+def test_ac_check_uniserv_parse_response(check_uniserv, data, expected_result) -> None:
     assert sorted(check_uniserv.parse_response(data).items()) == sorted(expected_result.items())
 
 
@@ -140,7 +140,9 @@ def test_ac_check_uniserv_parse_response(check_uniserv, data, expected_result):
         ),
     ],
 )
-def test_ac_check_uniserv_check_job(monkeypatch, check_uniserv, args, parsed, expected_result):
+def test_ac_check_uniserv_check_job(
+    monkeypatch, check_uniserv, args, parsed, expected_result
+) -> None:
     job, s, sid, street, street_nr, city, regex = args
     monkeypatch.setattr("check_uniserv.send_and_receive", lambda x, y: parsed)
     assert check_uniserv.check_job(job, s, sid, street, street_nr, city, regex) == expected_result

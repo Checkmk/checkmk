@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use super::{certs, config, types};
-use anyhow::{anyhow, Context, Error as AnyhowError, Result as AnyhowResult};
+use anyhow::{anyhow, bail, Context, Result as AnyhowResult};
 use http::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_with::DisplayFromStr;
@@ -59,31 +59,9 @@ pub struct StatusResponse {
     pub message: Option<String>,
 }
 
-#[derive(thiserror::Error, Debug)]
-pub enum StatusError {
-    #[error(transparent)]
-    // Note: we deliberately do not use '#[from] reqwest::Error' here because we do not want to
-    // create this variant from any reqwest::Error (otherwise, we could for example write
-    // 'response.text()?', which would then result in this variant)
-    ConnectionRefused(reqwest::Error),
-
-    #[error("Client certificate invalid")]
-    CertificateInvalid,
-
-    #[error(transparent)]
-    Other(#[from] AnyhowError),
-}
-
 #[derive(Deserialize)]
 struct ErrorResponse {
     pub detail: String,
-}
-
-fn encode_pem_cert_base64(cert: &str) -> AnyhowResult<String> {
-    Ok(base64::encode_config(
-        certs::parse_pem(cert)?.contents,
-        base64::URL_SAFE,
-    ))
 }
 
 pub trait Pairing {
@@ -120,9 +98,7 @@ pub trait AgentData {
     fn agent_data(
         &self,
         base_url: &reqwest::Url,
-        root_cert: &str,
-        uuid: &uuid::Uuid,
-        certificate: &str,
+        connection: &config::Connection,
         compression_algorithm: &str,
         monitoring_data: &[u8],
     ) -> AnyhowResult<()>;
@@ -132,13 +108,13 @@ pub trait Status {
     fn status(
         &self,
         base_url: &reqwest::Url,
-        root_cert: &str,
-        uuid: &uuid::Uuid,
-        certificate: &str,
-    ) -> Result<StatusResponse, StatusError>;
+        connection: &config::Connection,
+    ) -> AnyhowResult<StatusResponse>;
 }
 
-pub struct Api {}
+pub struct Api {
+    pub use_proxy: bool,
+}
 
 impl Api {
     fn endpoint_url(
@@ -195,7 +171,7 @@ impl Pairing for Api {
         csr: String,
         credentials: &types::Credentials,
     ) -> AnyhowResult<PairingResponse> {
-        let response = certs::client(root_cert)?
+        let response = certs::client(root_cert, None, self.use_proxy)?
             .post(Self::endpoint_url(base_url, &["pairing"])?)
             .basic_auth(&credentials.username, Some(&credentials.password))
             .json(&PairingBody { csr })
@@ -225,7 +201,7 @@ impl Registration for Api {
         host_name: &str,
     ) -> AnyhowResult<()> {
         Api::check_response_204(
-            certs::client(Some(root_cert))?
+            certs::client(Some(root_cert), None, self.use_proxy)?
                 .post(Self::endpoint_url(base_url, &["register_with_hostname"])?)
                 .basic_auth(&credentials.username, Some(&credentials.password))
                 .json(&RegistrationWithHNBody {
@@ -245,7 +221,7 @@ impl Registration for Api {
         agent_labels: &types::AgentLabels,
     ) -> AnyhowResult<()> {
         Api::check_response_204(
-            certs::client(Some(root_cert))?
+            certs::client(Some(root_cert), None, self.use_proxy)?
                 .post(Self::endpoint_url(base_url, &["register_with_labels"])?)
                 .basic_auth(&credentials.username, Some(&credentials.password))
                 .json(&RegistrationWithALBody {
@@ -261,30 +237,31 @@ impl AgentData for Api {
     fn agent_data(
         &self,
         base_url: &reqwest::Url,
-        root_cert: &str,
-        uuid: &uuid::Uuid,
-        certificate: &str,
+        connection: &config::Connection,
         compression_algorithm: &str,
         monitoring_data: &[u8],
     ) -> AnyhowResult<()> {
         Api::check_response_204(
-            certs::client(Some(root_cert))?
-                .post(Self::endpoint_url(
-                    base_url,
-                    &["agent_data", &uuid.to_string()],
-                )?)
-                .header("certificate", encode_pem_cert_base64(certificate)?)
-                .header("compression", compression_algorithm)
-                .multipart(
-                    reqwest::blocking::multipart::Form::new().part(
-                        "monitoring_data",
-                        reqwest::blocking::multipart::Part::bytes(monitoring_data.to_owned())
-                            // Note: We need to set the file name, otherwise the request won't have the
-                            // right format. However, the value itself does not matter.
-                            .file_name("agent_data"),
-                    ),
-                )
-                .send()?,
+            certs::client(
+                Some(&connection.root_cert),
+                Some(connection.identity()?),
+                self.use_proxy,
+            )?
+            .post(Self::endpoint_url(
+                base_url,
+                &["agent_data", &connection.uuid.to_string()],
+            )?)
+            .header("compression", compression_algorithm)
+            .multipart(
+                reqwest::blocking::multipart::Form::new().part(
+                    "monitoring_data",
+                    reqwest::blocking::multipart::Part::bytes(monitoring_data.to_owned())
+                        // Note: We need to set the file name, otherwise the request won't have the
+                        // right format. However, the value itself does not matter.
+                        .file_name("agent_data"),
+                ),
+            )
+            .send()?,
         )
     }
 }
@@ -293,31 +270,29 @@ impl Status for Api {
     fn status(
         &self,
         base_url: &reqwest::Url,
-        root_cert: &str,
-        uuid: &uuid::Uuid,
-        certificate: &str,
-    ) -> Result<StatusResponse, StatusError> {
-        let response = certs::client(Some(root_cert))?
+        connection: &config::Connection,
+    ) -> AnyhowResult<StatusResponse> {
+        let identity = match connection.identity() {
+            Ok(ident) => ident,
+            _ => bail!("Error loading client certificate"),
+        };
+        let response = certs::client(Some(&connection.root_cert), Some(identity), self.use_proxy)?
             .get(Self::endpoint_url(
                 base_url,
-                &["registration_status", &uuid.to_string()],
+                &["registration_status", &connection.uuid.to_string()],
             )?)
-            .header("certificate", encode_pem_cert_base64(certificate)?)
-            .send()
-            .map_err(StatusError::ConnectionRefused)?;
+            .send()?;
 
         match response.status() {
             StatusCode::OK => {
-                let body = response
-                    .text()
-                    .map_err(|_| StatusError::Other(anyhow!("Failed to obtain response body")))?;
+                let body = response.text()?;
                 Ok(serde_json::from_str::<StatusResponse>(&body)
                     .context(format!("Failed to deserialize response body: {}", body))?)
             }
-            StatusCode::UNAUTHORIZED => Err(StatusError::CertificateInvalid),
-            _ => Err(StatusError::Other(anyhow!(
-                Api::error_response_description(response.status(), response.text().ok())
-            ))),
+            _ => bail!(Api::error_response_description(
+                response.status(),
+                response.text().ok()
+            )),
         }
     }
 }

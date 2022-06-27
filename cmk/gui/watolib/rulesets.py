@@ -10,10 +10,12 @@ import dataclasses
 import os
 import pprint
 import re
-from typing import Any, Callable, cast, Container, Dict, List, Mapping, Optional, Tuple, Union
+from enum import auto, Enum
+from typing import Any, cast, Container, Dict, List, Mapping, Optional, Tuple, Union
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.store as store
+from cmk.utils.object_diff import make_diff_text
 from cmk.utils.regex import escape_regex_chars
 from cmk.utils.type_defs import (
     HostOrServiceConditionRegex,
@@ -34,15 +36,16 @@ from cmk.utils.type_defs import (
 # e.g. by trying to move the common code to a common place
 import cmk.base.export  # pylint: disable=cmk-module-layer-violation
 
+import cmk.gui.watolib.bakery as bakery
 from cmk.gui import utils
-from cmk.gui.config import register_post_config_load_hook
+from cmk.gui.config import active_config, register_post_config_load_hook
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import active_config, html
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import DropdownChoiceEntries, ValueSpec
-from cmk.gui.watolib.changes import add_change, make_diff_text, ObjectRef, ObjectRefType
+from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.hosts_and_folders import (
     CREFolder,
     CREHost,
@@ -51,8 +54,9 @@ from cmk.gui.watolib.hosts_and_folders import (
     Host,
     may_use_redis,
 )
+from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
-from cmk.gui.watolib.utils import ALL_HOSTS, ALL_SERVICES, has_agent_bakery, NEGATE, wato_root_dir
+from cmk.gui.watolib.utils import ALL_HOSTS, ALL_SERVICES, NEGATE, wato_root_dir
 
 # Make the GUI config module reset the base config to always get the latest state of the config
 register_post_config_load_hook(cmk.base.export.reset_config)
@@ -61,10 +65,15 @@ FolderPath = str
 SearchOptions = Dict[str, Any]
 
 
-# This macro is needed to make the to_config() methods be able to use native
-# pprint/repr for the ruleset data structures. Have a look at
-# to_config_with_folder_macro() for further information.
+# This macro is needed to make the to_config() methods be able to use native pprint/repr for the
+# ruleset data structures. Have a look at to_config() for further information.
 _FOLDER_PATH_MACRO = "%#%FOLDER_PATH%#%"
+
+
+class UseHostFolder(Enum):
+    NONE = auto()
+    MACRO = auto()
+    HOST = auto()
 
 
 class RuleConditions:
@@ -93,7 +102,7 @@ class RuleConditions:
         self.service_labels = conditions.get("service_labels", {})
         return self
 
-    def to_config_with_folder_macro(self) -> RuleConditionsSpec:
+    def to_config(self, use_host_folder: UseHostFolder) -> RuleConditionsSpec:
         """Create serializable data structure for the conditions
 
         In the WATO folder hierarchy each folder may have a rules.mk which
@@ -111,19 +120,6 @@ class RuleConditions:
         Checkmk can then resolve the FOLDER_PATH while loading the configuration file.
         Have a look at _load_folder_rulesets() for an example.
         """
-        cfg = self._to_config()
-        cfg["host_folder"] = _FOLDER_PATH_MACRO
-        return cfg
-
-    def to_config_with_folder(self) -> RuleConditionsSpec:
-        cfg = self._to_config()
-        cfg["host_folder"] = self.host_folder
-        return cfg
-
-    def to_config_without_folder(self) -> RuleConditionsSpec:
-        return self._to_config()
-
-    def _to_config(self) -> RuleConditionsSpec:
         cfg: RuleConditionsSpec = {}
 
         if self.host_tags:
@@ -140,6 +136,14 @@ class RuleConditions:
 
         if self.service_labels:
             cfg["service_labels"] = self.service_labels
+
+        match use_host_folder:
+            case UseHostFolder.NONE:
+                pass
+            case UseHostFolder.MACRO:
+                cfg["host_folder"] = _FOLDER_PATH_MACRO
+            case UseHostFolder.HOST:
+                cfg["host_folder"] = self.host_folder
 
         return cfg
 
@@ -494,6 +498,11 @@ class SearchedRulesets(FilteredRulesetCollection):
 
 
 class Ruleset:
+    # These constants are used to give a name to positions within the ruleset.
+    # mylist[-1] is the last element, mylist[0] is the first. See `move_to_folder`.
+    TOP = 0
+    BOTTOM = -1
+
     def __init__(self, name: RulesetName, tag_to_group_map: TagIDToTaggroupID) -> None:
         super().__init__()
         self.name = name
@@ -573,6 +582,25 @@ class Ruleset:
             object_ref=rule.object_ref(),
         )
 
+    def move_to_folder(
+        self,
+        rule: Rule,
+        folder: CREFolder,
+        index: int = BOTTOM,
+    ) -> None:
+        source_rules = self._rules[rule.folder.path()]
+        dest_rules = self._rules.setdefault(folder.path(), [])
+
+        # The actual move
+        source_rules.remove(rule)
+        if index == Ruleset.BOTTOM:
+            dest_rules.append(rule)
+        else:
+            dest_rules.insert(index, rule)
+        rule.folder = folder
+
+        self._on_change()
+
     def append_rule(self, folder: CREFolder, rule: Rule) -> int:
         rules = self._rules.setdefault(folder.path(), [])
         index = len(rules)
@@ -582,8 +610,9 @@ class Ruleset:
         return index
 
     def insert_rule_after(self, rule: Rule, after: Rule) -> None:
-        index = self._rules[rule.folder.path()].index(after) + 1
-        self._rules[rule.folder.path()].insert(index, rule)
+        rules = self._rules[rule.folder.path()]
+        index = rules.index(after) + 1
+        rules.insert(index, rule)
         self._rules_by_id[rule.id] = rule
         self._on_change()
 
@@ -801,10 +830,7 @@ class Ruleset:
         return self.rulespec.is_optional
 
     def _on_change(self) -> None:
-        if has_agent_bakery():
-            import cmk.gui.cee.agent_bakery as agent_bakery  # pylint: disable=no-name-in-module
-
-            agent_bakery.ruleset_changed(self.name)
+        bakery.ruleset_changed(self.name)
 
     # Returns the outcoming value or None and a list of matching rules. These are pairs
     # of rule_folder and rule_number
@@ -975,30 +1001,28 @@ class Rule:
     def to_config(self) -> RuleSpec:
         # Special case: The main folder must not have a host_folder condition, because
         # these rules should also affect non WATO hosts.
-        for_config = (
-            self.conditions.to_config_with_folder_macro()
-            if not self.folder.is_root()
-            else self.conditions.to_config_without_folder()
+        return self._to_config(
+            use_host_folder=UseHostFolder.NONE if self.folder.is_root() else UseHostFolder.MACRO,
+            hide_secrets=False,
         )
-        return self._to_config(for_config)
 
     def to_web_api(self) -> RuleSpec:
-        return self._to_config(self.conditions.to_config_without_folder())
+        return self._to_config(use_host_folder=UseHostFolder.NONE, hide_secrets=False)
 
     def to_log(self) -> RuleSpec:
         """Returns a JSON compatible format suitable for logging, where passwords are replaced"""
-        return self._to_config(
-            self.conditions.to_config_without_folder(), self.ruleset.valuespec().value_to_json_safe
-        )
+        return self._to_config(use_host_folder=UseHostFolder.NONE, hide_secrets=True)
 
-    def _to_config(
-        self, conditions: RuleConditionsSpec, value_func: Callable[[Any], Any] = lambda x: x
-    ) -> RuleSpec:
-        rule_spec: RuleSpec = {
-            "id": self.id,
-            "value": value_func(self.value),
-            "condition": conditions,
-        }
+    def _to_config(self, *, use_host_folder: UseHostFolder, hide_secrets: bool) -> RuleSpec:
+        rule_spec = RuleSpec(
+            id=self.id,
+            value=(
+                self.ruleset.valuespec().value_to_json_safe(self.value)
+                if hide_secrets
+                else self.value
+            ),
+            condition=self.conditions.to_config(use_host_folder),
+        )
         if options := self.rule_options.to_config():
             rule_spec["options"] = options
         return rule_spec
@@ -1123,7 +1147,10 @@ class Rule:
 
         yield _("The rule does not match")
 
-    def matches_search(self, search_options: SearchOptions) -> bool:
+    def matches_search(  # pylint: disable=too-many-branches
+        self,
+        search_options: SearchOptions,
+    ) -> bool:
         if "rule_folder" in search_options and self.folder.name() not in self._get_search_folders(
             search_options
         ):

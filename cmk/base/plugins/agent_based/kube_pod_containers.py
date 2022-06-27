@@ -27,10 +27,10 @@ def parse(string_table: StringTable) -> Optional[PodContainers]:
     """Parses `string_table` into a PodContainers isinstance
     >>> section_kube_pod_containers_v1 = '{"containers": {"busybox": {"container_id": null, "image_id": "", "name": "busybox", "image": "busybox", "ready": false, "state": {"type": "waiting", "reason": "PodInitializing", "detail": null}, "restart_count": 0}}}'
     >>> parse([[section_kube_pod_containers_v1]])
-    PodContainers(containers={'busybox': ContainerStatus(container_id=None, image_id='', name='busybox', image='busybox', ready=False, state=ContainerWaitingState(type='waiting', reason='PodInitializing', detail=None), restart_count=0)})
+    PodContainers(containers={'busybox': ContainerStatus(container_id=None, image_id='', name='busybox', image='busybox', ready=False, state=ContainerWaitingState(type=<ContainerStateType.waiting: 'waiting'>, reason='PodInitializing', detail=None), restart_count=0)})
     >>> section_kube_pod_init_containers_v1 = '{"containers": {"busybox-init": {"container_id": "docker://some-id", "image_id": "docker-pullable://busybox@sha256:some-id", "name": "busybox-init", "image": "busybox:latest", "ready": false, "state": {"type": "waiting", "reason": "CrashLoopBackOff", "detail": "back-off 5m0s restarting failed container=busybox-init pod=failing-initcontainer-64ff5bdcd-vhl59_pod-status(8c812676-6e30-45ae-8271-16a279c95168)"}, "restart_count": 144}}}'
     >>> parse([[section_kube_pod_init_containers_v1]])
-    PodContainers(containers={'busybox-init': ContainerStatus(container_id='docker://some-id', image_id='docker-pullable://busybox@sha256:some-id', name='busybox-init', image='busybox:latest', ready=False, state=ContainerWaitingState(type='waiting', reason='CrashLoopBackOff', detail='back-off 5m0s restarting failed container=busybox-init pod=failing-initcontainer-64ff5bdcd-vhl59_pod-status(8c812676-6e30-45ae-8271-16a279c95168)'), restart_count=144)})
+    PodContainers(containers={'busybox-init': ContainerStatus(container_id='docker://some-id', image_id='docker-pullable://busybox@sha256:some-id', name='busybox-init', image='busybox:latest', ready=False, state=ContainerWaitingState(type=<ContainerStateType.waiting: 'waiting'>, reason='CrashLoopBackOff', detail='back-off 5m0s restarting failed container=busybox-init pod=failing-initcontainer-64ff5bdcd-vhl59_pod-status(8c812676-6e30-45ae-8271-16a279c95168)'), restart_count=144)})
     """
     if not string_table:
         return None
@@ -88,10 +88,22 @@ def check_terminated(params: Mapping[str, int], state: ContainerTerminatedState)
         status = "Failed"
     summary = f"Status: {status} ({state.reason}: {state.detail})"
     yield Result(state=result_state, summary=summary)
-    end_time = render.datetime(state.end_time)
-    duration = render.timespan(state.end_time - state.start_time)
-    summary = f"End time: {end_time} Run duration: {duration}"
-    yield Result(state=State.OK, summary=summary)
+
+    if state.start_time is not None and state.end_time is not None:
+        duration = render.timespan(state.end_time - state.start_time)
+        summary = f"End time: {render.datetime(state.end_time)} Run duration: {duration}"
+        yield Result(state=State.OK, summary=summary)
+        return
+
+    # the scenario where both times are not set can be related to following code block
+    # https://pkg.go.dev/k8s.io/api@v0.23.5/core/v1#ContainerStateTerminated
+    # reproducing the error is not trivial and most likely involves enforcing a status processing
+    # error from Kubernetes' side
+    if state.start_time is not None:
+        yield Result(state=State.OK, summary=f"Start time: {render.datetime(state.start_time)}")
+
+    if state.end_time is not None:
+        yield Result(state=State.OK, summary=f"End time: {render.datetime(state.end_time)}")
 
 
 register.check_plugin(

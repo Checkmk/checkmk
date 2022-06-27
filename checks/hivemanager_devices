@@ -24,7 +24,7 @@ def inventory_hivemanager_devices(info):
         yield infos["hostName"], {}
 
 
-def check_hivemanager_devices(item, params, info):
+def check_hivemanager_devices(item, params, info):  # pylint: disable=too-many-branches
     for line in info:
         infos = dict([x.split("::") for x in line])
         if infos["hostName"] == item:

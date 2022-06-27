@@ -1,0 +1,16 @@
+Title: sentry_pdu_v4: PDU support for Servertech v4 devices
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1654595532
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+It is now possible to monitor PDU on Servertech v4 devices.
+
+The change is incompatible for users who have sentry_pdu services:
+discovery parameter is removed and the output of the parse function
+has changed. To get the correct service output, rerun the discovery.
+The behavior of sentry_pdu check hasn't changed.

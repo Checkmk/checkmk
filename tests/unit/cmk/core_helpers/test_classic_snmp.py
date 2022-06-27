@@ -25,7 +25,7 @@ from cmk.core_helpers.snmp_backend import ClassicSNMPBackend
         (1234, ":1234"),
     ],
 )
-def test_snmp_port_spec(port, expected):
+def test_snmp_port_spec(port, expected) -> None:
     snmp_config = SNMPHostConfig(
         is_ipv6_primary=False,
         hostname=HostName("localhost"),
@@ -52,7 +52,7 @@ def test_snmp_port_spec(port, expected):
         (False, ""),
     ],
 )
-def test_snmp_proto_spec(monkeypatch, is_ipv6, expected):
+def test_snmp_proto_spec(monkeypatch, is_ipv6, expected) -> None:
     snmp_config = SNMPHostConfig(
         is_ipv6_primary=is_ipv6,
         hostname=HostName("localhost"),
@@ -285,7 +285,7 @@ class SNMPSettings(NamedTuple):
         ),
     ],
 )
-def test_snmp_walk_command(monkeypatch, settings, expected):
+def test_snmp_walk_command(monkeypatch, settings, expected) -> None:
     backend = ClassicSNMPBackend(settings.snmp_config, logger)
     assert backend._snmp_walk_command(settings.context_name) == expected
 
@@ -301,11 +301,11 @@ def test_snmp_walk_command(monkeypatch, settings, expected):
         ("SHA-512", "SHA-512"),
     ],
 )
-def test_auth_proto(proto, result):
+def test_auth_proto(proto, result) -> None:
     assert classic_snmp._auth_proto_for(proto) == result
 
 
-def test_auth_proto_unknown():
+def test_auth_proto_unknown() -> None:
     with pytest.raises(MKGeneralException):
         classic_snmp._auth_proto_for("unknown")
 
@@ -317,7 +317,7 @@ def test_auth_proto_unknown():
         ("AES", "AES"),
     ],
 )
-def test_priv_proto(proto, result):
+def test_priv_proto(proto, result) -> None:
     assert classic_snmp._priv_proto_for(proto) == result
 
 
@@ -333,6 +333,6 @@ def test_priv_proto(proto, result):
         "AES-256-Blumenthal",
     ],
 )
-def test_priv_proto_unknown(proto):
+def test_priv_proto_unknown(proto) -> None:
     with pytest.raises(MKGeneralException):
         classic_snmp._priv_proto_for(proto)

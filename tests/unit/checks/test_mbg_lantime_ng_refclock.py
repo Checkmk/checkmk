@@ -31,7 +31,7 @@ meinberg_lantime_6 = [["1", "30", "3", "1", "155", "0", "8", "0", "0", "0", "201
         (meinberg_lantime_2, DiscoveryResult([("1", None)])),
     ],
 )
-def test_discovery_mbg_lantime_ng_refclock(info, expected):
+def test_discovery_mbg_lantime_ng_refclock(info, expected) -> None:
     check = Check("mbg_lantime_ng_refclock")
     discovery = DiscoveryResult(check.run_discovery(info))
     assertDiscoveryResultsEqual(check, discovery, expected)
@@ -56,7 +56,7 @@ def test_discovery_mbg_lantime_ng_refclock(info, expected):
         ),
     ],
 )
-def test_check_mbg_lantime_ng_refclock(info, item, params, expected):
+def test_check_mbg_lantime_ng_refclock(info, item, params, expected) -> None:
     check = Check("mbg_lantime_ng_refclock")
     result = CheckResult(check.run_check(item, params, info))
     assertCheckResultsEqual(result, expected)
@@ -71,7 +71,7 @@ def test_check_mbg_lantime_ng_refclock(info, item, params, expected):
         (meinberg_lantime_6, DiscoveryResult([("1", "mbg_lantime_refclock_default_levels")])),
     ],
 )
-def test_discovery_mbg_lantime_ng_refclock_gps(info, expected):
+def test_discovery_mbg_lantime_ng_refclock_gps(info, expected) -> None:
     check = Check("mbg_lantime_ng_refclock.gps")
     discovery = DiscoveryResult(check.run_discovery(info))
     assertDiscoveryResultsEqual(check, discovery, expected)
@@ -126,7 +126,7 @@ def test_discovery_mbg_lantime_ng_refclock_gps(info, expected):
         ),
     ],
 )
-def test_check_mbg_lantime_ng_refclock_gps(info, item, params, expected):
+def test_check_mbg_lantime_ng_refclock_gps(info, item, params, expected) -> None:
     check = Check("mbg_lantime_ng_refclock.gps")
     result = CheckResult(check.run_check(item, params, info))
     assertCheckResultsEqual(result, expected)

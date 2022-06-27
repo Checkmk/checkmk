@@ -5,9 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
@@ -41,11 +39,13 @@ def parse_ups_cps_battery(info):
 def inventory_ups_cps_battery_temp(parsed):
     if "temperature" in parsed:
         return [("Battery", {})]
+    return []
 
 
 def check_ups_cps_battery_temp(item, params, parsed):
     if "temperature" in parsed:
         return check_temperature(parsed["temperature"], params, "ups_cps_battery_temp")
+    return None
 
 
 check_info["ups_cps_battery.temp"] = {
@@ -73,6 +73,7 @@ factory_settings["ups_cps_battery"] = {
 def inventory_ups_cps_battery(parsed):
     if "capacity" in parsed:
         return [(None, {})]
+    return []
 
 
 def check_ups_cps_battery(item, params, parsed):

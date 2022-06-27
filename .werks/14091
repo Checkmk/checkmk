@@ -1,0 +1,12 @@
+Title: Do not contact site during monitoring of the agent controller
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1652514174
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Contacting the site may fail and increase the execution time by the TCP timeout.
+We don't need the information anyway, so don't query it.

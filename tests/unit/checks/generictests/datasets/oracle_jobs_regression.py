@@ -38,7 +38,7 @@ checks = {
             }, [
                 (
                     1,
-                    'Job-State: SCHEDULED, Enabled: Yes, Last Duration: 0.00 s, Next Run: 02-DEC-19 09.15.07.529970 AM -07:00,  no log information found(!)',
+                    'Job-State: SCHEDULED, Enabled: Yes, Last Duration: 0 seconds, Next Run: 02-DEC-19 09.15.07.529970 AM -07:00,  no log information found(!)',
                     [('duration', 0, None, None, None, None)]
                 )
             ]
@@ -51,7 +51,7 @@ checks = {
             }, [
                 (
                     0,
-                    'Job-State: SCHEDULED, Enabled: Yes, Last Duration: 6.00 s, Next Run: 03-DEC-19 03.00.00.421040 AM PST8PDT, Last Run Status: SUCCEEDED (ignored disabled Job)',
+                    'Job-State: SCHEDULED, Enabled: Yes, Last Duration: 6 seconds, Next Run: 03-DEC-19 03.00.00.421040 AM PST8PDT, Last Run Status: SUCCEEDED (ignored disabled Job)',
                     [('duration', 6, None, None, None, None)]
                 )
             ]

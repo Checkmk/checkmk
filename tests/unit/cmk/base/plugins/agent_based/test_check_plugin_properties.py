@@ -39,7 +39,7 @@ def _get_empty_parsed_result(section: SectionPlugin) -> object:
     )
 
 
-def test_check_plugins_do_not_discover_upon_empty_snmp_input(monkeypatch, fix_register):
+def test_check_plugins_do_not_discover_upon_empty_snmp_input(monkeypatch, fix_register) -> None:
     """
     In Checkmk < 1.6 the parse function has not been called for empty table data,
     unless "handle_empty_info" has been set.
@@ -53,7 +53,7 @@ def test_check_plugins_do_not_discover_upon_empty_snmp_input(monkeypatch, fix_re
     with a list of known exceptions, to ensure the old behaviour is not changed.
 
     However: There is nothing wrong with not returning None, in principle.
-    If you whish to do that (see one of the listed exeptions for examples),
+    If you whish to do that (see one of the listed exceptions for examples),
     just add an exception below. If maintaining this test becvomes too tedious,
     we can probably just remove it.
     """
@@ -91,7 +91,7 @@ def test_check_plugins_do_not_discover_upon_empty_snmp_input(monkeypatch, fix_re
     assert plugins_discovering_upon_empty == plugins_expected_to_discover_upon_empty
 
 
-def test_no_plugins_with_trivial_sections(fix_register):
+def test_no_plugins_with_trivial_sections(fix_register) -> None:
     """
     This is a sanity test for registered inventory and check plugins. It ensures that plugins
     have a non trivial section. Trivial sections may be created accidentally e.g. if a typo
@@ -108,14 +108,10 @@ def test_no_plugins_with_trivial_sections(fix_register):
             "aix_service_packs",
             "couchbase_nodes_ports",
             "docker_container_network",
-            "docker_container_node_name",
             "docker_node_images",
             "k8s_assigned_pods",
             "k8s_daemon_pod_containers",
             "k8s_job_container",
-            "k8s_pod_info",
-            "k8s_selector",
-            "k8s_service_info",
             "lnx_block_devices",
             "lnx_cpuinfo",
             "lnx_distro",
@@ -142,7 +138,6 @@ def test_no_plugins_with_trivial_sections(fix_register):
             "win_networkadapter",
             "win_os",
             "win_reg_uninstall",
-            "win_system",
             "win_video",
             "win_wmi_software",
             "win_wmi_updates",
@@ -155,10 +150,17 @@ def test_no_plugins_with_trivial_sections(fix_register):
         for s in chain(fix_register.agent_sections.values(), fix_register.snmp_sections.values())
     }
 
-    plugins_with_trivial_sections: Dict[str, Set[str]] = defaultdict(set)
-    for plugin in chain(
-        fix_register.check_plugins.values(), fix_register.inventory_plugins.values()
+    registered_check_and_inventory_plugins = list(
+        chain(fix_register.check_plugins.values(), fix_register.inventory_plugins.values())
+    )
+
+    if unknown_plugins := {str(p) for p in known_exceptions}.difference(
+        {str(p.name) for p in registered_check_and_inventory_plugins}
     ):
+        raise AssertionError(f"Unknown plugins in exception list: {', '.join(unknown_plugins)}")
+
+    plugins_with_trivial_sections: Dict[str, Set[str]] = defaultdict(set)
+    for plugin in registered_check_and_inventory_plugins:
         for section in plugin.sections:
             if section not in registered_sections and section not in known_exceptions:
                 plugins_with_trivial_sections[plugin.name].add(str(section))

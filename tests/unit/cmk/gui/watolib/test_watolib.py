@@ -8,18 +8,19 @@ import pytest
 
 import cmk.utils.version as cmk_version
 
-import cmk.gui.watolib as watolib
 from cmk.gui.plugins.watolib.utils import (
     ABCConfigDomain,
+    config_domain_registry,
     config_variable_group_registry,
     config_variable_registry,
     configvar_order,
     ConfigVariableGroup,
 )
 from cmk.gui.valuespec import ValueSpec
+from cmk.gui.watolib.automation_commands import automation_command_registry
 
 
-def test_registered_config_domains():
+def test_registered_config_domains() -> None:
     expected_config_domains = [
         "apache",
         "ca-certificates",
@@ -38,11 +39,11 @@ def test_registered_config_domains():
             "mknotifyd",
         ]
 
-    registered = sorted(watolib.config_domain_registry.keys())
+    registered = sorted(config_domain_registry.keys())
     assert registered == sorted(expected_config_domains)
 
 
-def test_registered_automation_commands():
+def test_registered_automation_commands() -> None:
 
     expected_automation_commands = [
         "activate-changes",
@@ -54,13 +55,13 @@ def test_registered_automation_commands():
         "fetch-agent-output-start",
         "network-scan",
         "ping",
-        "push-snapshot",
         "get-config-sync-state",
         "receive-config-sync",
         "service-discovery-job",
         "checkmk-remote-automation-start",
         "checkmk-remote-automation-get-status",
         "discovered-host-label-sync",
+        "remove-tls-registration",
     ]
 
     if not cmk_version.is_raw_edition():
@@ -70,11 +71,11 @@ def test_registered_automation_commands():
             "update-agent-requests",
         ]
 
-    registered = sorted(watolib.automation_command_registry.keys())
+    registered = sorted(automation_command_registry.keys())
     assert registered == sorted(expected_automation_commands)
 
 
-def test_registered_configvars():
+def test_registered_configvars() -> None:
     expected_vars = [
         "actions",
         "adhoc_downtime",
@@ -265,7 +266,7 @@ def test_registered_configvars():
 
 
 # Can be removed once we use mypy there
-def test_registered_configvars_types():
+def test_registered_configvars_types() -> None:
     for var_class in config_variable_registry.values():
         var = var_class()
         assert issubclass(var.group(), ConfigVariableGroup)
@@ -274,7 +275,7 @@ def test_registered_configvars_types():
         assert isinstance(var.valuespec(), ValueSpec)
 
 
-def test_registered_configvar_groups():
+def test_registered_configvar_groups() -> None:
     expected_groups = [
         "Setup",
         "Event Console: Generic",
@@ -304,7 +305,7 @@ def test_registered_configvar_groups():
     assert registered == sorted(expected_groups)
 
 
-def test_legacy_configvar_order_access():
+def test_legacy_configvar_order_access() -> None:
     with pytest.raises(NotImplementedError) as e:
         configvar_order()["x"] = 10
     assert "werk #6911" in "%s" % e

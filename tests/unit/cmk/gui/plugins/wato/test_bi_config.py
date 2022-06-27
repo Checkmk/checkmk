@@ -95,7 +95,7 @@ from cmk.gui.plugins.wato.bi_valuespecs import _convert_bi_rule_from_vs, _conver
         ),
     ],
 )
-def test_bi_rule_outermost_transform_to_vs(rest_config):
+def test_bi_rule_outermost_transform_to_vs(rest_config) -> None:
     if rest_config is None:
         # Error page special handling
         # This handles html.var voodoo, never results in a rest config

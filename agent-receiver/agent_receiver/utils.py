@@ -10,13 +10,15 @@ from pathlib import Path
 from typing import Optional
 from uuid import UUID
 
-from agent_receiver.constants import AGENT_OUTPUT_DIR, REGISTRATION_REQUESTS
 from agent_receiver.models import HostTypeEnum, RegistrationData, RegistrationStatusEnum
+from agent_receiver.site_context import agent_output_dir, r4r_dir
+from cryptography.x509 import load_pem_x509_csr
+from cryptography.x509.oid import NameOID
 
 
 class Host:
-    def __init__(self, uuid: UUID):
-        self._source_path = AGENT_OUTPUT_DIR / str(uuid)
+    def __init__(self, uuid: UUID) -> None:
+        self._source_path = agent_output_dir() / str(uuid)
 
         self._registered = self.source_path.is_symlink()
         target_path = self._get_target_path() if self.registered else None
@@ -72,7 +74,7 @@ def update_file_access_time(path: Path) -> None:
 
 def get_registration_status_from_file(uuid: UUID) -> Optional[RegistrationData]:
     for status in RegistrationStatusEnum:
-        path = REGISTRATION_REQUESTS / status.name / f"{uuid}.json"
+        path = r4r_dir() / status.name / f"{uuid}.json"
         if path.exists():
             message = (
                 read_message_from_file(path) if status is RegistrationStatusEnum.DECLINED else None
@@ -84,6 +86,12 @@ def get_registration_status_from_file(uuid: UUID) -> Optional[RegistrationData]:
     return None
 
 
-def site_name_prefix(app_name: str) -> str:
-    site_prefix = f"/{site}" if (site := os.getenv("OMD_SITE")) else ""
-    return f"{site_prefix}/{app_name}"
+def uuid_from_pem_csr(pem_csr: str) -> str:
+    try:
+        return (
+            load_pem_x509_csr(pem_csr.encode())
+            .subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0]
+            .value
+        )
+    except ValueError:
+        return "[CSR parsing failed]"

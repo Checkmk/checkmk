@@ -35,8 +35,9 @@ import time
 from pathlib import Path
 from typing import Optional
 
+from omdlib.console import ok
 from omdlib.contexts import SiteContext
-from omdlib.utils import delete_directory_contents, is_dockerized, ok
+from omdlib.utils import delete_directory_contents, is_dockerized
 from omdlib.version_info import VersionInfo
 
 import cmk.utils.tty as tty
@@ -121,7 +122,11 @@ def mark_tmpfs_initialized(site: SiteContext) -> None:
         f.write("")
 
 
-def unmount_tmpfs(site: SiteContext, output: bool = True, kill: bool = False) -> bool:
+def unmount_tmpfs(  # pylint: disable=too-many-branches
+    site: SiteContext,
+    output: bool = True,
+    kill: bool = False,
+) -> bool:
     # During omd update TMPFS hook might not be set so assume
     # that the hook is enabled by default.
     # If kill is True, then we do an fuser -k on the tmp

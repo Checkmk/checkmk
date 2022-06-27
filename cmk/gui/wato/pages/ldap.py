@@ -6,16 +6,17 @@
 """LDAP configuration and diagnose page"""
 
 import re
-from typing import Iterable, List, Optional, Type
+from typing import Collection, Iterable, List, Optional, Type
 
 import cmk.utils.version as cmk_version
 
 import cmk.gui.userdb as userdb
-import cmk.gui.watolib as watolib
+import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import active_config, html, request
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.page_menu import (
@@ -41,9 +42,7 @@ from cmk.gui.plugins.userdb.utils import (
     save_connection_config,
 )
 from cmk.gui.plugins.wato.utils import (
-    add_change,
     IndividualOrStoredPassword,
-    make_action_link,
     make_confirm_link,
     mode_registry,
     mode_url,
@@ -52,7 +51,8 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, makeuri_contextless
 from cmk.gui.valuespec import (
@@ -72,6 +72,8 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+from cmk.gui.watolib.config_domains import ConfigDomainGUI
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -90,7 +92,7 @@ else:
 
 
 class LDAPConnectionValuespec(Transform):
-    def __init__(self, new, connection_id):
+    def __init__(self, new, connection_id) -> None:
         self._new = new
         self._connection_id = connection_id
         self._connection = get_connection(self._connection_id)
@@ -223,7 +225,7 @@ class LDAPConnectionValuespec(Transform):
                         IndividualOrStoredPassword(
                             title=_("Bind password"),
                             help=_(
-                                "Specify the password to be used to bind to " "the LDAP directory."
+                                "Specify the password to be used to bind to the LDAP directory."
                             ),
                         ),
                     ],
@@ -684,27 +686,27 @@ class LDAPConnectionValuespec(Transform):
             if connection_id != self._connection_id and value == suffix:
                 raise MKUserError(
                     varprefix,
-                    _("This suffix is already used by connection %s." "Please choose another one.")
+                    _("This suffix is already used by connection %s. Please choose another one.")
                     % connection_id,
                 )
 
 
 class LDAPMode(WatoMode):
     def _add_change(self, action_name, text):
-        add_change(action_name, text, domains=[watolib.ConfigDomainGUI], sites=get_login_sites())
+        _changes.add_change(action_name, text, domains=[ConfigDomainGUI], sites=get_login_sites())
 
 
 @mode_registry.register
 class ModeLDAPConfig(LDAPMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "ldap_config"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["global"]
 
-    def title(self):
+    def title(self) -> str:
         return _("LDAP connections")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -721,9 +723,7 @@ class ModeLDAPConfig(LDAPMode):
                                     title=_("Add connection"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        watolib.folder_preserving_link(
-                                            [("mode", "edit_ldap_connection")]
-                                        )
+                                        folder_preserving_link([("mode", "edit_ldap_connection")])
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -790,13 +790,13 @@ class ModeLDAPConfig(LDAPMode):
 
         return redirect(self.mode_url())
 
-    def page(self):
+    def page(self) -> None:
         with table_element() as table:
             for index, connection in enumerate(load_connection_config()):
                 table.row()
 
-                table.cell(_("Actions"), css="buttons")
-                edit_url = watolib.folder_preserving_link(
+                table.cell(_("Actions"), css=["buttons"])
+                edit_url = folder_preserving_link(
                     [("mode", "edit_ldap_connection"), ("id", connection["id"])]
                 )
                 delete_url = make_confirm_link(
@@ -805,7 +805,7 @@ class ModeLDAPConfig(LDAPMode):
                     % connection["id"],
                 )
                 drag_url = make_action_link([("mode", "ldap_config"), ("_move", index)])
-                clone_url = watolib.folder_preserving_link(
+                clone_url = folder_preserving_link(
                     [("mode", "edit_ldap_connection"), ("clone", connection["id"])]
                 )
 
@@ -814,7 +814,7 @@ class ModeLDAPConfig(LDAPMode):
                 html.element_dragger_url("tr", base_url=drag_url)
                 html.icon_button(delete_url, _("Delete this LDAP connection"), "delete")
 
-                table.cell("", css="narrow")
+                table.cell("", css=["narrow"])
                 if connection.get("disabled"):
                     html.icon(
                         "disabled",
@@ -841,11 +841,11 @@ class ModeLDAPConfig(LDAPMode):
 @mode_registry.register
 class ModeEditLDAPConnection(LDAPMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_ldap_connection"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["global"]
 
     @classmethod
@@ -877,8 +877,9 @@ class ModeEditLDAPConnection(LDAPMode):
 
         if not self._connection_cfg:
             raise MKUserError(None, _("The requested connection does not exist."))
+        return None
 
-    def title(self):
+    def title(self) -> str:
         if self._new:
             return _("Add LDAP connection")
         assert self._connection_id is not None
@@ -941,7 +942,7 @@ class ModeEditLDAPConnection(LDAPMode):
         # Handle the case where a user hit "Save & Test" during creation
         return redirect(self.mode_url(_test="1", id=self._connection_id))
 
-    def page(self):
+    def page(self) -> None:
         html.open_div(id_="ldap")
         html.open_table()
         html.open_tr()

@@ -19,7 +19,9 @@ def instance_method_lru_cache(*cache_args, **cache_kwargs):
         @wraps(func)
         def cache_factory(self, *args, **kwargs):
             instance_cache = lru_cache(*cache_args, **cache_kwargs)(func)
-            instance_cache = instance_cache.__get__(self, self.__class__)
+            instance_cache = instance_cache.__get__(  # pylint: disable=unnecessary-dunder-call
+                self, self.__class__
+            )
             setattr(self, func.__name__, instance_cache)
             return instance_cache(*args, **kwargs)
 

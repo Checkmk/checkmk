@@ -15,10 +15,11 @@ from cmk.utils.site import omd_site
 
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
-import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKUserError
-from cmk.gui.globals import html, request, response
+from cmk.gui.htmllib.header import make_header
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import Page, page_registry
@@ -27,8 +28,11 @@ from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
-from cmk.gui.watolib import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import get_agent_output
+from cmk.gui.watolib.hosts_and_folders import CREHost, Folder, Host
+from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 # .
 #   .--Agent-Output--------------------------------------------------------.
@@ -47,14 +51,14 @@ from cmk.gui.watolib.check_mk_automations import get_agent_output
 
 
 class FetchAgentOutputRequest:
-    def __init__(self, host: watolib.CREHost, agent_type: str) -> None:
+    def __init__(self, host: CREHost, agent_type: str) -> None:
         self.host = host
         self.agent_type = agent_type
 
     @classmethod
     def deserialize(cls, serialized: Dict[str, str]) -> "FetchAgentOutputRequest":
         host_name = serialized["host_name"]
-        host = watolib.Host.host(host_name)
+        host = Host.host(host_name)
         if host is None:
             raise MKGeneralException(
                 _(
@@ -96,10 +100,10 @@ class AgentOutputPage(Page, abc.ABC):
 
         self._back_url = request.get_url_input("back_url", deflt="") or None
 
-        host = watolib.Folder.current().host(host_name)
+        host = Folder.current().host(host_name)
         if not host:
             raise MKGeneralException(
-                _("Host is not managed by WATO. " 'Click <a href="%s">here</a> to go back.')
+                _('Host is not managed by WATO. Click <a href="%s">here</a> to go back.')
                 % escape_attribute(self._back_url)
             )
         host.need_permission("read")
@@ -119,7 +123,7 @@ class AgentOutputPage(Page, abc.ABC):
 class PageFetchAgentOutput(AgentOutputPage):
     def page(self) -> None:
         title = self._title()
-        html.header(title, self._breadcrumb(title))
+        make_header(html, title, self._breadcrumb(title))
 
         self._action()
 
@@ -176,7 +180,7 @@ class PageFetchAgentOutput(AgentOutputPage):
             start_fetch_agent_job(self._request)
             return
 
-        watolib.do_remote_automation(
+        do_remote_automation(
             get_site_config(self._request.host.site_id()),
             "fetch-agent-output-start",
             [
@@ -188,7 +192,7 @@ class PageFetchAgentOutput(AgentOutputPage):
         if site_is_local(self._request.host.site_id()):
             return get_fetch_agent_job_status(self._request)
 
-        return watolib.do_remote_automation(
+        return do_remote_automation(
             get_site_config(self._request.host.site_id()),
             "fetch-agent-output-get-status",
             [
@@ -243,7 +247,7 @@ def get_fetch_agent_job_status(api_request: FetchAgentOutputRequest) -> Dict:
 
 
 @gui_background_job.job_registry.register
-class FetchAgentOutputBackgroundJob(watolib.WatoBackgroundJob):
+class FetchAgentOutputBackgroundJob(WatoBackgroundJob):
     """The background job is always executed on the site where the host is located on"""
 
     job_prefix = "agent-output-"
@@ -288,9 +292,10 @@ class FetchAgentOutputBackgroundJob(watolib.WatoBackgroundJob):
         preview_filepath = os.path.join(
             job_interface.get_work_dir(), AgentOutputPage.file_name(self._request)
         )
-        store.save_text_to_file(
+
+        store.save_bytes_to_file(
             preview_filepath,
-            agent_output_result.raw_agent_data.decode("utf-8"),
+            agent_output_result.raw_agent_data,
         )
 
         download_url = makeuri_contextless(
@@ -320,7 +325,7 @@ class PageDownloadAgentOutput(AgentOutputPage):
         if site_is_local(self._request.host.site_id()):
             return get_fetch_agent_output_file(self._request)
 
-        return watolib.do_remote_automation(
+        return do_remote_automation(
             get_site_config(self._request.host.site_id()),
             "fetch-agent-output-get-file",
             [

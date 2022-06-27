@@ -11,12 +11,13 @@ from cmk.utils.prediction import lq_logic
 
 import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
-import cmk.gui.watolib as watolib
-from cmk.gui.globals import active_config, html
+from cmk.gui.config import active_config
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _l
 from cmk.gui.plugins.visuals.utils import Filter, filter_registry
 from cmk.gui.type_defs import Choices, FilterHeader, FilterHTTPVariables
-from cmk.gui.valuespec import DualListChoice
+from cmk.gui.valuespec import DualListChoice, ValueSpec
+from cmk.gui.watolib.hosts_and_folders import Folder
 
 
 def _wato_folders_to_lq_regex(path: str) -> str:
@@ -35,9 +36,9 @@ def _wato_folders_to_lq_regex(path: str) -> str:
 
 
 class FilterWatoFolder(Filter):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.last_wato_data_update = None
+        self.last_wato_data_update: None | float = None
 
     def available(self):
         # This filter is also available on slave sites with disabled WATO
@@ -46,7 +47,7 @@ class FilterWatoFolder(Filter):
         return active_config.wato_enabled or site_config.is_wato_slave_site()
 
     def load_wato_data(self):
-        self.tree = watolib.Folder.root_folder()
+        self.tree = Folder.root_folder()
         self.path_to_tree: Dict[str, str] = {}  # will be filled by self.folder_selection
         self.selection = list(self.folder_selection(self.tree))
         self.last_wato_data_update = time.time()
@@ -136,7 +137,7 @@ class FilterMultipleWatoFolder(FilterWatoFolder):
     # Once filters are managed by a valuespec and we get more complex
     # datastuctures beyond FilterHTTPVariable there must be a back&forth
     # for data
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         # Drop Main directory represented by empty string, because it means
         # don't filter after any folder due to recursive folder filtering.
         choices = [(name, folder) for name, folder in self.choices() if name]

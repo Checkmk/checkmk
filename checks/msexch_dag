@@ -139,6 +139,7 @@ def check_msexch_dag_dbcopy(item, params, info):
                     state = 1
                     infotxt = "%s changed from %s to %s" % (inv_key, inv_val, val)
                 return state, infotxt
+    return None
 
 
 check_info["msexch_dag.dbcopy"] = {
@@ -177,6 +178,7 @@ def check_msexch_dag_contentindex(item, _no_params, info):
                 else:
                     state = 1
                 return state, "Status: %s" % val
+    return None
 
 
 check_info["msexch_dag.contentindex"] = {
@@ -224,6 +226,7 @@ def check_msexch_dag_copyqueue(item, params, info):
                     infotxt += " (warn/crit at %d/%d)" % (warn, crit)
                 perfdata = [("length", int(val), warn, crit, 0)]
                 return state, infotxt, perfdata
+    return None
 
 
 check_info["msexch_dag.copyqueue"] = {

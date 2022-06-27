@@ -8,7 +8,7 @@ from cmk.gui.utils.script_helpers import application_and_request_context
 from cmk.gui.watolib import git
 
 
-def test_add_message_commit_separation():
+def test_add_message_commit_separation() -> None:
     with application_and_request_context():
         assert git._git_messages() == []
         git.add_message("dingdong")

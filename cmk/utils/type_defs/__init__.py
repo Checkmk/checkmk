@@ -7,6 +7,7 @@
 
 from . import result
 from ._misc import *  # TODO(ML): We should clean this up some day.
+from .automations import *
 from .bakery import *
 from .core_config import *
 from .ip_lookup import *

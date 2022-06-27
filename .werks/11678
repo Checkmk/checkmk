@@ -1,6 +1,6 @@
 Title: 'local' plugin crashed upon missing data on cluster
 Class: fix
-Compatible: compat
+Compatible: incomp
 Component: checks
 Date: 1606201555
 Edition: cre
@@ -8,5 +8,9 @@ Knowledge: doc
 Level: 1
 Version: 2.0.0b1
 
-The 'local' plugin crashed when configured on a cluster and no nodes sent data for a service.
-This has been fixed, and the service now shows the generic "Item not found in monitoring data" message in that case.
+This change affects users who write local checks. The 'local' plugin crashed
+when configured on a cluster and no nodes sent data for a service. This has
+been fixed, and the service now shows the generic "Item not found in monitoring
+data" message in that case. If your check does not use the 'P' option, but you
+want the graphs to show WARN and CRIT information, then you need to change the
+'P' option on.

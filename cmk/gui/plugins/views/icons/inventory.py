@@ -25,17 +25,20 @@ class InventoryIcon(Icon):
     def host_columns(self):
         return ["name"]
 
-    def render(self, what, row, tags, custom_vars):
+    def render(self, what, row, tags, custom_vars) -> None | tuple[str, str, str]:
         if (
             what == "host"
             or row.get("service_check_command", "").startswith("check_mk_active-cmk_inv!")
         ) and inventory.has_inventory(row["host_name"]):
 
             if not user.may("view.inv_host"):
-                return
+                return None
 
+            v = url_to_visual(row, VisualLinkSpec("views", "inv_host"))
+            assert v is not None
             return (
                 "inventory",
                 _("Show Hardware/Software Inventory of this host"),
-                url_to_visual(row, VisualLinkSpec("views", "inv_host")),
+                v,
             )
+        return None

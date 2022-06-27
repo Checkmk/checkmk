@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+#
+# BEGIN COMMON INVENTORY CODE
+#
+
 # Reason for this no-op: shellcheck disable=... before the first command disables the error for the
 # entire script.
 :
@@ -11,50 +15,114 @@
 # shellcheck disable=SC2034
 CMK_VERSION="2.2.0i1"
 
-# Run and *send* only once every 4 hours
-INTERVAL=14400
+_load_config() {
+    # defaults:
+    INVENTORY_INTERVAL=$((3600 * 4))
 
-FLAGFILE=$MK_VARDIR/mk_inventory.last.$REMOTE
-NOW=$(date +%s)
-UNTIL=$((NOW + INTERVAL + 600))
+    [ -r "${1}" ] || return
+    # shellcheck source=../cfg_examples/mk_inventory.cfg
+    . "${1}"
+}
 
-#check if flagfile exits
-if [ -e "$FLAGFILE" ]; then
-    LAST_RUN=$(cat "$FLAGFILE")
-else
-    #First run of the script
-    LAST_RUN=0
-fi
+inpath() {
+    # replace "if type [somecmd]" idiom
+    # 'command -v' tends to be more robust vs 'which' and 'type' based tests
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
 
-if [ $((NOW - LAST_RUN)) -ge $INTERVAL ]; then
-    echo "$NOW" >"$FLAGFILE"
+_get_epoch() {
+    # This is taken from the check_mk_agent. Try to keep it in sync with set_up_get_epoch...
 
+    # On some systems date +%s returns a literal %s
+    if date +%s | grep "^[0-9].*$" >/dev/null 2>&1; then
+        date +%s
+    else
+        # do not check whether perl is even present.
+        # in weird cases we may be fine without get_epoch.
+        perl -e 'print($^T."\n");'
+    fi
+}
+
+_insert_persist_option() {
+    # insert the persist(...) option, if it is not already present.
+    sed -e '/^<<<.*\(:persist(\).*>>>/{p;d;}; s/^<<<\([^>]*\)>>>$/<<<\1:persist('"${1}"')>>>/'
+}
+
+run_persisted() {
+    INTERVAL="${1}"
+    shift
+
+    FLAGFILE="${MK_VARDIR}/persisted/${1}.${REMOTE}"
+    NOW="$(_get_epoch)"
+    UNTIL=$((NOW + INTERVAL + 600))
+    LAST_RUN="$(cat "${FLAGFILE}" 2>/dev/null)" || LAST_RUN=0
+
+    if [ $((NOW - LAST_RUN)) -lt "${INTERVAL}" ]; then
+        return
+    fi
+
+    mkdir "${FLAGFILE%/*}"
+    echo "${NOW}" >"${FLAGFILE}"
+
+    "$@" | _insert_persist_option "${UNTIL}"
+}
+
+#
+# END COMMON INVENTORY CODE
+#
+
+sections_mk_inventory() {
+    section_lslpp
+
+    section_oslevel
+
+    section_lparstat
+
+    section_prtconf
+}
+
+section_lslpp() {
+    inpath lslpp || return
     # List of installed AIX packages
-    if type lslpp >/dev/null; then
-        echo "<<<aix_packages:sep(58):persist($UNTIL)>>>"
-        lslpp -c -L
-    fi
+    echo "<<<aix_packages:sep(58)>>>"
+    lslpp -c -L
+}
 
-    if type oslevel >/dev/null; then
-        # base level of the system
-        echo "<<<aix_baselevel:persist($UNTIL)>>>"
-        oslevel
+section_oslevel() {
+    inpath oslevel || return
 
-        # list the known service packs on a system
-        echo "<<<aix_service_packs:persist($UNTIL)>>>"
-        oslevel -sq
-    fi
+    # base level of the system
+    echo "<<<aix_baselevel>>>"
+    oslevel
 
-    if type lparstat >/dev/null; then
-        echo "<<<aix_lparstat_inventory:sep(0):persist($UNTIL)>>>"
-        lparstat -i
-    fi
+    # list the known service packs on a system
+    echo "<<<aix_service_packs>>>"
+    oslevel -sq
+}
 
+section_lparstat() {
+    inpath lparstat || return
+    echo "<<<aix_lparstat_inventory:sep(0)>>>"
+    lparstat -i
+}
+
+section_prtconf() {
+    inpath prtconf || return
     # If you run the prtconf command without any flags, it displays the system model, machine serial,
     # processor type, number of processors, processor clock speed, cpu type, total memory size, network information, filesystem
     # information, paging space information, and devices information.
-    if type prtconf >/dev/null; then
-        echo "<<<prtconf:sep(58):persist($UNTIL)>>>"
-        prtconf
-    fi
-fi
+    echo "<<<prtconf:sep(58)>>>"
+    prtconf
+}
+
+#
+# BEGIN COMMON INVENTORY CODE
+#
+
+main() {
+    _load_config "${MK_CONFDIR}/mk_inventory.cfg"
+
+    run_persisted "${INVENTORY_INTERVAL:?}" sections_mk_inventory
+}
+
+[ -z "${MK_SOURCE_AGENT}" ] && main

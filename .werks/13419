@@ -1,0 +1,19 @@
+Title: cisco_cpu_multiitem: fix Werk #13413
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1649332166
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+Werk #13413 in version 2.0.0p22 caused that many valid
+<tt>cisco_cpu_multiitem</tt> services vanished. This werk brings them back, but
+in some cases with a different name: If your <tt>cisco_cpu_multiitem</tt> is
+named <tt>CPU utilization 0</tt> those might vanish and be rediscovered as
+<tt>CPU utilization 1</tt>.
+
+Werk #13413 assumed that a 0 in cpmCPUTotalPhysicalIndex means that this CPU is
+not supported at all. This assumption was wrong.

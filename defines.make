@@ -72,7 +72,7 @@ GCC_VERSION	       := "${GCC_VERSION_MAJOR}.${GCC_VERSION_MINOR}.${GCC_VERSION_P
 # When you update the Python version, you have to update the test expectations
 # in test_03_python_interpreter_version and test_03_pip_interpreter_version.
 # Update omd/Licenses.csv, too.
-PYTHON_VERSION	   := 3.9.10
+PYTHON_VERSION	   := 3.10.4
 
 # convenience stuff derived from PYTHON_VERSION
 PY_ARRAY	       := $(subst ., ,$(PYTHON_VERSION))
@@ -83,13 +83,22 @@ PYTHON_MAJOR_MINOR     := $(PYTHON_VERSION_MAJOR)$(PYTHON_VERSION_MINOR)
 PYTHON_MAJOR_DOT_MINOR := $(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)
 
 # Needed for bootstrapping CI and development environments
-PIPENV_VERSION := 2022.1.8
-VIRTUALENV_VERSION := 20.13.0
+PIPENV_VERSION := 2022.5.2
+VIRTUALENV_VERSION := 20.14.1
 NODEJS_VERSION := 16
 NPM_VERSION := 8
 
-# Internal PyPi Mirror
-DEVPI_SERVER := devpi.lan.tribe29.com
+# PyPi Mirror Configuration
+# By default our internal Python mirror is used.
+# To use the official Python mirror, please export `USE_EXTERNAL_PIPENV_MIRROR=true`.
+EXTERNAL_PYPI_MIRROR := https://pypi.python.org/simple
+INTERNAL_PYPI_MIRROR :=  https://devpi.lan.tribe29.com/root/pypi
+
+ifeq (true,${USE_EXTERNAL_PIPENV_MIRROR})
+PIPENV_PYPI_MIRROR  := $(EXTERNAL_PYPI_MIRROR)
+else
+PIPENV_PYPI_MIRROR  := $(INTERNAL_PYPI_MIRROR)
+endif
 
 print-%:
 	@echo '$($*)'

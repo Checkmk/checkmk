@@ -14,20 +14,29 @@ from hashlib import sha256
 from typing import Any, Iterable, List, NamedTuple, Sequence, Set, Tuple
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+from cmk.utils.object_diff import make_diff_text
 from cmk.utils.type_defs import HostOrServiceConditions, SetAutochecksTable
 
 from cmk.automations.results import CheckPreviewEntry, TryDiscoveryResult
 
 import cmk.gui.gui_background_job as gui_background_job
-import cmk.gui.watolib as watolib
+import cmk.gui.watolib.changes as _changes
 from cmk.gui.background_job import BackgroundProcessInterface, JobStatusStates
-from cmk.gui.globals import active_config
+from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import get_site_config, site_is_local
-from cmk.gui.watolib.automations import sync_changes_before_remote_automation
+from cmk.gui.watolib.activate_changes import sync_changes_before_remote_automation
+from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import discovery, set_autochecks, try_discovery
-from cmk.gui.watolib.rulesets import RuleConditions, service_description_to_condition
+from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost
+from cmk.gui.watolib.rulesets import (
+    AllRulesets,
+    Rule,
+    RuleConditions,
+    Ruleset,
+    service_description_to_condition,
+)
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 
@@ -59,7 +68,7 @@ class DiscoveryState:
     LEGACY_IGNORED = "legacy_ignored"
 
     @classmethod
-    def is_discovered(cls, table_source):
+    def is_discovered(cls, table_source) -> bool:
         return table_source in [
             cls.UNDECIDED,
             cls.VANISHED,
@@ -130,13 +139,13 @@ class DiscoveryOptions(NamedTuple):
 
 
 class StartDiscoveryRequest(NamedTuple):
-    host: watolib.CREHost
-    folder: watolib.CREFolder
+    host: CREHost
+    folder: CREFolder
     options: DiscoveryOptions
 
 
 class Discovery:
-    def __init__(self, host, discovery_options, api_request):
+    def __init__(self, host, discovery_options, api_request) -> None:
         self._host = host
         self._options = discovery_options
         self._discovery_info = {
@@ -225,12 +234,13 @@ class Discovery:
             self._host.name(),
             len(checks),
         )
-        watolib.add_service_change(
-            host=self._host,
+        _changes.add_service_change(
             action_name="set-autochecks",
             text=message,
+            object_ref=self._host.object_ref(),
+            site_id=self._host.site_id(),
             need_sync=need_sync,
-            diff_text=watolib.make_diff_text(
+            diff_text=make_diff_text(
                 _make_host_audit_log_object(old_autochecks), _make_host_audit_log_object(checks)
             ),
         )
@@ -257,13 +267,13 @@ class Discovery:
         if not services:
             return
 
-        rulesets = watolib.AllRulesets()
+        rulesets = AllRulesets()
         rulesets.load()
 
         try:
             ruleset = rulesets.get("ignored_services")
         except KeyError:
-            ruleset = watolib.Ruleset(
+            ruleset = Ruleset(
                 "ignored_services", ruleset_matcher.get_tag_to_group_map(active_config.tags)
             )
 
@@ -309,8 +319,8 @@ class Discovery:
         return []
 
     def _update_rule_of_host(
-        self, ruleset: watolib.Ruleset, service_patterns: HostOrServiceConditions, value: Any
-    ) -> List[watolib.CREFolder]:
+        self, ruleset: Ruleset, service_patterns: HostOrServiceConditions, value: Any
+    ) -> List[CREFolder]:
         folder = self._host.folder()
         rule = self._get_rule_of_host(ruleset, value)
 
@@ -320,13 +330,13 @@ class Discovery:
                     rule.conditions.service_description.append(service_condition)
 
         elif service_patterns:
-            rule = watolib.Rule.from_ruleset_defaults(folder, ruleset)
+            rule = Rule.from_ruleset_defaults(folder, ruleset)
 
             conditions = RuleConditions(folder.path())
             conditions.host_name = [self._host.name()]
             # mypy is wrong here vor some reason:
             # Invalid index type "str" for "Union[Dict[str, str], str]"; expected type "Union[int, slice]"  [index]
-            conditions.service_description = sorted(service_patterns, key=lambda x: x["$regex"])  # type: ignore[index]
+            conditions.service_description = sorted(service_patterns, key=lambda x: x["$regex"])
             rule.update_conditions(conditions)
 
             rule.value = value
@@ -388,7 +398,7 @@ class Discovery:
         )
 
 
-def _apply_state_change(
+def _apply_state_change(  # pylint: disable=too-many-branches
     table_source: str,
     table_target: str,
     key: Tuple[Any, Any],
@@ -512,10 +522,11 @@ def get_check_table(discovery_request: StartDiscoveryRequest) -> DiscoveryResult
     _get_check_table()
     """
     if discovery_request.options.action == DiscoveryAction.TABULA_RASA:
-        watolib.add_service_change(
-            discovery_request.host,
+        _changes.add_service_change(
             "refresh-autochecks",
             _("Refreshed check configuration of host '%s'") % discovery_request.host.name(),
+            discovery_request.host.object_ref(),
+            discovery_request.host.site_id(),
         )
 
     if site_is_local(discovery_request.host.site_id()):
@@ -524,7 +535,7 @@ def get_check_table(discovery_request: StartDiscoveryRequest) -> DiscoveryResult
     sync_changes_before_remote_automation(discovery_request.host.site_id())
 
     return DiscoveryResult.deserialize(
-        watolib.do_remote_automation(
+        do_remote_automation(
             get_site_config(discovery_request.host.site_id()),
             "service-discovery-job",
             [
@@ -631,7 +642,7 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         # count_added, _count_removed, _count_kept, _count_new = counts[api_request.host.name()]
         # message = _("Refreshed check configuration of host '%s' with %d services") % \
         #            (api_request.host.name(), count_added)
-        # watolib.add_service_change(api_request.host, "refresh-autochecks", message)
+        # _changes.add_service_change(api_request.host, "refresh-autochecks", message)
 
     def _get_automation_flags(self, api_request: StartDiscoveryRequest) -> Iterable[str]:
         if api_request.options.action == DiscoveryAction.REFRESH:

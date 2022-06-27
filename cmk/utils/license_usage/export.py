@@ -28,6 +28,8 @@ from typing import (
 
 from dateutil.relativedelta import relativedelta
 
+LicenseUsageHistoryDumpVersion = "1.3"
+
 
 class LicenseUsageReportVersionError(Exception):
     pass
@@ -251,11 +253,16 @@ class SubscriptionDetails(NamedTuple):
                 limit=SubscriptionDetailsLimit.parse(details["subscription_limit"]),
             )
 
-        if isinstance(raw_subscription_details, dict) and "source" in raw_subscription_details:
+        if isinstance(raw_subscription_details, dict):
+            if "source" in raw_subscription_details:
+                source = SubscriptionDetailsSource.parse(raw_subscription_details["source"])
+            else:
+                source = SubscriptionDetailsSource.empty
+
             cls._validate_detail_values(raw_subscription_details)
 
             return SubscriptionDetails(
-                source=SubscriptionDetailsSource.parse(raw_subscription_details["source"]),
+                source=source,
                 start=int(raw_subscription_details["subscription_start"]),
                 end=int(raw_subscription_details["subscription_end"]),
                 limit=SubscriptionDetailsLimit.parse(
@@ -313,7 +320,7 @@ class LicenseUsageExtensions:
         parsed_extensions = {
             ext_key: raw_sample.get(ext_key, raw_sample.get("extensions", {}).get(key, False))
             for key in ["ntop"]
-            for ext_key in ("extension_%s" % key,)
+            for ext_key in (f"extension_{key}",)
         }
         return cls(ntop=parsed_extensions["extension_ntop"])
 

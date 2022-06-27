@@ -24,7 +24,7 @@ checks = {
                 'levels': (80.0, 90.0)
             }, [
                 (
-                    0, 'Used: 28.0%', [
+                    0, 'Used: 28.00%', [
                         ('mem_used_percent', 28.0, 80.0, 90.0, None, None)
                     ]
                 )
@@ -37,7 +37,7 @@ checks = {
                 'levels': (80.0, 90.0)
             }, [
                 (
-                    0, 'Usage: 4.0%', [
+                    0, 'Usage: 4.00%', [
                         ('cpu_percent', 4.0, 80.0, 90.0, None, None)
                     ]
                 )

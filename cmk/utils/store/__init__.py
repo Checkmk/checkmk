@@ -217,7 +217,7 @@ def save_bytes_to_file(path: Union[Path, str], content: bytes, mode: int = 0o660
 
 
 class PickleSerializer:
-    def serialize(self, data) -> bytes:
+    def serialize(self, data) -> bytes:  # type:ignore[no-untyped-def]
         return pickle.dumps(data)
 
     def deserialize(self, raw: bytes) -> Any:

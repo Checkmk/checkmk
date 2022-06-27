@@ -28,7 +28,7 @@ def fixture_zlib_compressed_data(uncompressed_data: bytes) -> bytes:
 
 
 class TestVersion:
-    def test_members(self):
+    def test_members(self) -> None:
         for member in Version:
             assert Version.from_bytes(bytes(member)) is member
 

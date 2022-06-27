@@ -41,15 +41,15 @@ A host_config object can have the following relations present in `links`:
 import itertools
 import json
 import operator
-from typing import Any, Dict, Iterable, List, Sequence
+from typing import Any, Dict, Iterable, List, Mapping, Sequence
 from urllib.parse import urlencode
 
 import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import HostName
 
 import cmk.gui.watolib.activate_changes as activate_changes
+import cmk.gui.watolib.bakery as bakery
 from cmk.gui import fields as gui_fields
-from cmk.gui import watolib
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import Response
@@ -65,9 +65,9 @@ from cmk.gui.plugins.openapi.restful_objects import (
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.plugins.webapi.utils import check_hostname
-from cmk.gui.watolib import hosts_and_folders
+from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.host_rename import perform_rename_hosts
-from cmk.gui.watolib.hosts_and_folders import CREFolder
+from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, Folder, Host
 
 from cmk import fields
 
@@ -89,7 +89,16 @@ BAKE_AGENT_PARAM = {
 
 PERMISSIONS = permissions.AllPerm(
     [
+        permissions.Perm("wato.edit"),
         permissions.Perm("wato.manage_hosts"),
+        permissions.Optional(permissions.Perm("wato.all_folders")),
+    ]
+)
+
+UPDATE_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.edit"),
+        permissions.Perm("wato.edit_hosts"),
         permissions.Optional(permissions.Perm("wato.all_folders")),
     ]
 )
@@ -105,8 +114,9 @@ PERMISSIONS = permissions.AllPerm(
     query_params=[BAKE_AGENT_PARAM],
     permissions_required=PERMISSIONS,
 )
-def create_host(params):
+def create_host(params: Mapping[str, Any]) -> Response:
     """Create a host"""
+    user.need_permission("wato.edit")
     body = params["body"]
     host_name = body["host_name"]
     folder: CREFolder = body["folder"]
@@ -116,7 +126,7 @@ def create_host(params):
         [(host_name, body["attributes"], None)], bake_hosts=params[BAKE_AGENT_PARAM_NAME]
     )
 
-    host = watolib.Host.load_host(host_name)
+    host = Host.load_host(host_name)
     return _serve_host(host, False)
 
 
@@ -130,11 +140,12 @@ def create_host(params):
     permissions_required=PERMISSIONS,
     query_params=[BAKE_AGENT_PARAM],
 )
-def create_cluster_host(params):
+def create_cluster_host(params: Mapping[str, Any]) -> Response:
     """Create a cluster host
 
     A cluster host groups many hosts (called nodes in this context) into a conceptual cluster.
     All the services of the individual nodes will be collated on the cluster host."""
+    user.need_permission("wato.edit")
     body = params["body"]
     host_name = body["host_name"]
     folder: CREFolder = body["folder"]
@@ -143,7 +154,7 @@ def create_cluster_host(params):
         [(host_name, body["attributes"], body["nodes"])], bake_hosts=params[BAKE_AGENT_PARAM_NAME]
     )
 
-    host = watolib.Host.load_host(host_name)
+    host = Host.load_host(host_name)
     return _serve_host(host, effective_attributes=False)
 
 
@@ -178,8 +189,9 @@ class BulkHostActionWithFailedHosts(response_schemas.ApiError):
     permissions_required=PERMISSIONS,
     query_params=[BAKE_AGENT_PARAM],
 )
-def bulk_create_hosts(params):
+def bulk_create_hosts(params: Mapping[str, Any]) -> Response:
     """Bulk create hosts"""
+    user.need_permission("wato.edit")
     body = params["body"]
     entries = body["entries"]
 
@@ -202,15 +214,15 @@ def bulk_create_hosts(params):
         succeeded_hosts.extend(entry[0] for entry in validated_entries)
 
     if params[BAKE_AGENT_PARAM_NAME]:
-        hosts_and_folders.try_bake_agents_for_hosts(succeeded_hosts)
+        bakery.try_bake_agents_for_hosts(succeeded_hosts)
 
     return _bulk_host_action_response(
-        failed_hosts, [watolib.Host.load_host(host_name) for host_name in succeeded_hosts]
+        failed_hosts, [Host.load_host(host_name) for host_name in succeeded_hosts]
     )
 
 
 def _bulk_host_action_response(
-    failed_hosts: Dict[HostName, str], succeeded_hosts: Sequence[watolib.CREHost]
+    failed_hosts: Dict[HostName, str], succeeded_hosts: Sequence[CREHost]
 ) -> Response:
     if failed_hosts:
         return problem(
@@ -236,16 +248,16 @@ def _bulk_host_action_response(
 )
 def list_hosts(param) -> Response:
     """Show all hosts"""
-    root_folder = watolib.Folder.root_folder()
+    root_folder = Folder.root_folder()
     root_folder.need_recursive_permission("read")
     return serve_host_collection(root_folder.all_hosts_recursively().values())
 
 
-def serve_host_collection(hosts: Iterable[watolib.CREHost]) -> Response:
+def serve_host_collection(hosts: Iterable[CREHost]) -> Response:
     return constructors.serve_json(_host_collection(hosts))
 
 
-def _host_collection(hosts: Iterable[watolib.CREHost]) -> dict[str, Any]:
+def _host_collection(hosts: Iterable[CREHost]) -> dict[str, Any]:
     return {
         "id": "host",
         "domainType": "host_config",
@@ -269,14 +281,16 @@ def _host_collection(hosts: Iterable[watolib.CREHost]) -> dict[str, Any]:
     etag="both",
     request_schema=request_schemas.UpdateNodes,
     response_schema=response_schemas.ObjectProperty,
-    permissions_required=permissions.Perm("wato.all_folders"),
+    permissions_required=UPDATE_PERMISSIONS,
 )
-def update_nodes(params):
+def update_nodes(params: Mapping[str, Any]) -> Response:
     """Update the nodes of a cluster host"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.edit_hosts")
     host_name = params["host_name"]
     body = params["body"]
     nodes = body["nodes"]
-    host: watolib.CREHost = watolib.Host.load_host(host_name)
+    host: CREHost = Host.load_host(host_name)
     _require_host_etag(host)
     host.edit(host.attributes(), nodes)
 
@@ -298,20 +312,23 @@ def update_nodes(params):
     etag="both",
     request_schema=request_schemas.UpdateHost,
     response_schema=response_schemas.HostConfigSchema,
-    permissions_required=permissions.Perm("wato.all_folders"),
+    permissions_required=UPDATE_PERMISSIONS,
 )
-def update_host(params):
+def update_host(params: Mapping[str, Any]) -> Response:
     """Update a host"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.edit_hosts")
     host_name = params["host_name"]
     body = params["body"]
     new_attributes = body["attributes"]
     update_attributes = body["update_attributes"]
     remove_attributes = body["remove_attributes"]
     check_hostname(host_name, should_exist=True)
-    host: watolib.CREHost = watolib.Host.load_host(host_name)
+    host: CREHost = Host.load_host(host_name)
     _require_host_etag(host)
 
     if new_attributes:
+        new_attributes["meta_data"] = host.attributes().get("meta_data", {})
         host.edit(new_attributes, None)
 
     if update_attributes:
@@ -344,19 +361,21 @@ def update_host(params):
     error_schemas={
         400: BulkHostActionWithFailedHosts,
     },
-    permissions_required=permissions.Perm("wato.all_folders"),
+    permissions_required=UPDATE_PERMISSIONS,
 )
-def bulk_update_hosts(params):
+def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
     """Bulk update hosts
 
     Please be aware that when doing bulk updates, it is not possible to prevent the
     [Updating Values]("lost update problem"), which is normally prevented by the ETag locking
     mechanism. Use at your own risk.
     """
+    user.need_permission("wato.edit")
+    user.need_permission("wato.edit_hosts")
     body = params["body"]
     entries = body["entries"]
 
-    succeeded_hosts: List[watolib.CREHost] = []
+    succeeded_hosts: List[CREHost] = []
     failed_hosts: Dict[HostName, str] = {}
     for update_detail in entries:
         host_name = update_detail["host_name"]
@@ -364,7 +383,7 @@ def bulk_update_hosts(params):
         update_attributes = update_detail["update_attributes"]
         remove_attributes = update_detail["remove_attributes"]
         check_hostname(host_name)
-        host: watolib.CREHost = watolib.Host.load_host(host_name)
+        host: CREHost = Host.load_host(host_name)
         if new_attributes:
             host.edit(new_attributes, None)
 
@@ -377,7 +396,7 @@ def bulk_update_hosts(params):
                 faulty_attributes.append(attribute)
 
         if faulty_attributes:
-            failed_hosts[host_name] = "Failed to remove {', '.join(faulty_attributes)}"
+            failed_hosts[host_name] = f"Failed to remove {', '.join(faulty_attributes)}"
             continue
 
         if remove_attributes:
@@ -409,8 +428,9 @@ def bulk_update_hosts(params):
         ]
     ),
 )
-def rename_host(params):
+def rename_host(params: Mapping[str, Any]) -> Response:
     """Rename a host"""
+    user.need_permission("wato.edit")
     user.need_permission("wato.rename_hosts")
     if activate_changes.get_pending_changes_info():
         return problem(
@@ -419,7 +439,7 @@ def rename_host(params):
             detail="Please activate all pending changes before executing a host rename process",
         )
     host_name = params["host_name"]
-    host: watolib.CREHost = watolib.Host.load_host(host_name)
+    host: CREHost = Host.load_host(host_name)
     new_name = params["body"]["new_name"]
     _, auth_problems = perform_rename_hosts([(host.folder(), host_name, new_name)])
     if auth_problems:
@@ -441,17 +461,19 @@ def rename_host(params):
     response_schema=response_schemas.HostConfigSchema,
     permissions_required=permissions.AllPerm(
         [
-            *PERMISSIONS.perms,
+            permissions.Perm("wato.edit"),
             permissions.Perm("wato.edit_hosts"),
             permissions.Perm("wato.move_hosts"),
+            *PERMISSIONS.perms,
         ]
     ),
 )
-def move(params):
+def move(params: Mapping[str, Any]) -> Response:
     """Move a host to another folder"""
+    user.need_permission("wato.edit")
     user.need_permission("wato.move_hosts")
     host_name = params["host_name"]
-    host: watolib.CREHost = watolib.Host.load_host(host_name)
+    host: CREHost = Host.load_host(host_name)
     _require_host_etag(host)
     current_folder = host.folder()
     target_folder: CREFolder = params["body"]["target_folder"]
@@ -481,13 +503,14 @@ def move(params):
     output_empty=True,
     permissions_required=PERMISSIONS,
 )
-def delete(params):
+def delete(params: Mapping[str, Any]) -> Response:
     """Delete a host"""
+    user.need_permission("wato.edit")
     host_name = params["host_name"]
     # Parameters can't be validated through marshmallow yet.
     check_hostname(host_name, should_exist=True)
-    host: watolib.CREHost = watolib.Host.load_host(host_name)
-    host.folder().delete_hosts([host.name()])
+    host: CREHost = Host.load_host(host_name)
+    host.folder().delete_hosts([host.name()], automation=delete_hosts)
     return Response(status=204)
 
 
@@ -499,12 +522,13 @@ def delete(params):
     permissions_required=PERMISSIONS,
     output_empty=True,
 )
-def bulk_delete(params):
+def bulk_delete(params: Mapping[str, Any]) -> Response:
     """Bulk delete hosts"""
+    user.need_permission("wato.edit")
     body = params["body"]
     for host_name in body["entries"]:
-        host = watolib.Host.load_host(host_name)
-        host.folder().delete_hosts([host.name()])
+        host = Host.load_host(host_name)
+        host.folder().delete_hosts([host.name()], automation=delete_hosts)
     return Response(status=204)
 
 
@@ -531,10 +555,10 @@ def bulk_delete(params):
     response_schema=response_schemas.HostConfigSchema,
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
 )
-def show_host(params):
+def show_host(params: Mapping[str, Any]) -> Response:
     """Show a host"""
     host_name = params["host_name"]
-    host: watolib.CREHost = watolib.Host.load_host(host_name)
+    host: CREHost = Host.load_host(host_name)
     return _serve_host(host, effective_attributes=params["effective_attributes"])
 
 
@@ -547,9 +571,9 @@ def _serve_host(host, effective_attributes=False):
     return response
 
 
-def serialize_host(host: watolib.CREHost, effective_attributes: bool):
+def serialize_host(host: CREHost, effective_attributes: bool):
     extensions = {
-        "folder": host.folder().path(),
+        "folder": "/" + host.folder().path(),
         "attributes": host.attributes(),
         "effective_attributes": host.effective_attributes() if effective_attributes else None,
         "is_cluster": host.is_cluster(),

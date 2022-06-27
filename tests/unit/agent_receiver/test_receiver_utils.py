@@ -8,10 +8,9 @@ import time
 from pathlib import Path
 from uuid import UUID
 
-from agent_receiver import constants
+from agent_receiver import site_context
 from agent_receiver.models import HostTypeEnum
-from agent_receiver.utils import Host, site_name_prefix, update_file_access_time
-from pytest_mock import MockerFixture
+from agent_receiver.utils import Host, update_file_access_time
 
 
 def test_host_not_registered(uuid: UUID) -> None:
@@ -23,7 +22,7 @@ def test_host_not_registered(uuid: UUID) -> None:
 
 
 def test_pull_host_registered(tmp_path: Path, uuid: UUID) -> None:
-    source = constants.AGENT_OUTPUT_DIR / str(uuid)
+    source = site_context.agent_output_dir() / str(uuid)
     target_dir = tmp_path / "hostname"
     source.symlink_to(target_dir)
 
@@ -36,7 +35,7 @@ def test_pull_host_registered(tmp_path: Path, uuid: UUID) -> None:
 
 
 def test_push_host_registered(tmp_path: Path, uuid: UUID) -> None:
-    source = constants.AGENT_OUTPUT_DIR / str(uuid)
+    source = site_context.agent_output_dir() / str(uuid)
     target_dir = tmp_path / "hostname"
     target_dir.touch()
     source.symlink_to(target_dir)
@@ -63,9 +62,3 @@ def test_update_file_access_time_success(tmp_path: Path) -> None:
 
 def test_update_file_access_time_no_file(tmp_path: Path) -> None:
     update_file_access_time(tmp_path / "my_file")
-
-
-def test_site_name_prefix(mocker: MockerFixture) -> None:
-    assert site_name_prefix("my_app") == "/NO_SITE/my_app"
-    mocker.patch("os.getenv", return_value=None)
-    assert site_name_prefix("my_app") == "/my_app"

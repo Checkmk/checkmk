@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import urllib.parse
-from typing import Callable, Optional, TypeVar, Union
+from typing import Callable, Optional, Sequence, TypeVar, Union
 
 from livestatus import SiteId
 
@@ -14,14 +14,17 @@ from cmk.utils.defines import short_service_state_name
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.sites as sites
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.config import builtin_role_ids
-from cmk.gui.globals import active_config, html, request
-from cmk.gui.htmllib import HTML
+from cmk.gui.config import active_config, builtin_role_ids
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import Permission, permission_registry
+from cmk.gui.plugins.dashboard.utils import DashletConfig
 from cmk.gui.plugins.views.utils import (
     ABCDataSource,
+    Cell,
     cmp_num_split,
     cmp_simple_number,
     cmp_simple_string,
@@ -40,10 +43,12 @@ from cmk.gui.plugins.views.utils import (
     row_id,
     RowTableLivestatus,
 )
-from cmk.gui.type_defs import HTTPVariables, Row
+from cmk.gui.type_defs import ColumnName, HTTPVariables, Row, SingleInfos, ViewSpec
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeactionuri, urlencode_vars
+from cmk.gui.utils.urls import makeactionuri, makeuri_contextless, urlencode_vars
 from cmk.gui.valuespec import MonitoringState
+from cmk.gui.view_utils import CellSpec
 
 #   .--Datasources---------------------------------------------------------.
 #   |       ____        _                                                  |
@@ -104,7 +109,7 @@ def _ec_filter_host_information_of_not_permitted_hosts(rows):
 
     user_groups = set(user.contact_groups)
 
-    def is_contact(row):
+    def is_contact(row) -> bool:
         return bool(user_groups.intersection(row["host_contact_groups"]))
 
     if rows:
@@ -178,11 +183,11 @@ permission_registry.register(
 @data_source_registry.register
 class DataSourceECEvents(ABCDataSource):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "mkeventd_events"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Event Console: Current events")
 
     @property
@@ -190,7 +195,7 @@ class DataSourceECEvents(ABCDataSource):
         return RowTableEC("eventconsoleevents")
 
     @property
-    def infos(self):
+    def infos(self) -> SingleInfos:
         return ["event", "host"]
 
     @property
@@ -213,11 +218,11 @@ class DataSourceECEvents(ABCDataSource):
 @data_source_registry.register
 class DataSourceECEventHistory(ABCDataSource):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "mkeventd_history"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Event Console: Event history")
 
     @property
@@ -225,7 +230,7 @@ class DataSourceECEventHistory(ABCDataSource):
         return RowTableEC("eventconsolehistory")
 
     @property
-    def infos(self):
+    def infos(self) -> SingleInfos:
         return ["history", "event", "host"]
 
     @property
@@ -259,7 +264,7 @@ class DataSourceECEventHistory(ABCDataSource):
 @painter_registry.register
 class PainterEventId(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_id"
 
     def title(self, cell):
@@ -269,17 +274,17 @@ class PainterEventId(Painter):
         return _("ID")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_id"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("number", str(row["event_id"]))
 
 
 @painter_registry.register
 class PainterEventCount(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_count"
 
     def title(self, cell):
@@ -289,17 +294,17 @@ class PainterEventCount(Painter):
         return _("Cnt.")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_count"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("number", str(row["event_count"]))
 
 
 @painter_registry.register
 class PainterEventText(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_text"
 
     def title(self, cell):
@@ -309,17 +314,17 @@ class PainterEventText(Painter):
         return _("Message")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_text"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return "", HTML(escaping.escape_attribute(row["event_text"]).replace("\x01", "<br>"))
 
 
 @painter_registry.register
 class PainterEventMatchGroups(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_match_groups"
 
     def title(self, cell):
@@ -329,15 +334,15 @@ class PainterEventMatchGroups(Painter):
         return _("Match")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_match_groups"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         groups = row["event_match_groups"]
         if groups:
             code = HTML("")
             for text in groups:
-                code += html.render_span(text)
+                code += HTMLWriter.render_span(text)
             return "matchgroups", code
         return "", HTML("")
 
@@ -345,7 +350,7 @@ class PainterEventMatchGroups(Painter):
 @painter_registry.register
 class PainterEventFirst(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_first"
 
     def title(self, cell):
@@ -355,21 +360,21 @@ class PainterEventFirst(Painter):
         return _("First")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_first"]
 
     @property
     def painter_options(self):
         return ["ts_format", "ts_date"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_age(row["event_first"], True, True)
 
 
 @painter_registry.register
 class PainterEventLast(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_last"
 
     def title(self, cell):
@@ -379,21 +384,21 @@ class PainterEventLast(Painter):
         return _("Last")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_last"]
 
     @property
     def painter_options(self):
         return ["ts_format", "ts_date"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_age(row["event_last"], True, True)
 
 
 @painter_registry.register
 class PainterEventComment(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_comment"
 
     def title(self, cell):
@@ -403,17 +408,17 @@ class PainterEventComment(Painter):
         return _("Comment")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_comment"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", row["event_comment"])
 
 
 @painter_registry.register
 class PainterEventSl(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_sl"
 
     def title(self, cell):
@@ -423,10 +428,10 @@ class PainterEventSl(Painter):
         return _("Level")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_sl"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         sl_txt = dict(active_config.mkeventd_service_levels).get(
             row["event_sl"], str(row["event_sl"])
         )
@@ -436,7 +441,7 @@ class PainterEventSl(Painter):
 @painter_registry.register
 class PainterEventHost(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_host"
 
     def title(self, cell):
@@ -446,19 +451,33 @@ class PainterEventHost(Painter):
         return _("Host")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_host", "host_name"]
 
+    @property
+    def use_painter_link(self) -> bool:
+        return False
+
     def render(self, row, cell):
-        if row["host_name"]:
-            return "", row["host_name"]
-        return "", row["event_host"]
+        host_name = row.get("host_name", row["event_host"])
+        # See SUP-10272 for a detailed explanation, hacks of view.py do not
+        # work for SNMP traps
+        link = makeuri_contextless(
+            html.request,
+            [
+                ("view_name", "ec_events_of_host"),
+                ("host", host_name),
+                ("event_host", row["event_host"]),
+            ],
+        )
+
+        return "", HTML(html.render_a(host_name, link))
 
 
 @painter_registry.register
 class PainterEventIpaddress(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_ipaddress"
 
     def title(self, cell):
@@ -468,17 +487,17 @@ class PainterEventIpaddress(Painter):
         return _("Orig. IP")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_ipaddress"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", row["event_ipaddress"])
 
 
 @painter_registry.register
 class PainterEventHostInDowntime(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_host_in_downtime"
 
     def title(self, cell):
@@ -488,17 +507,17 @@ class PainterEventHostInDowntime(Painter):
         return _("Dt.")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_host_in_downtime"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_nagiosflag(row, "event_host_in_downtime", True)
 
 
 @painter_registry.register
 class PainterEventOwner(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_owner"
 
     def title(self, cell):
@@ -508,17 +527,17 @@ class PainterEventOwner(Painter):
         return _("Owner")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_owner"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", row["event_owner"])
 
 
 @painter_registry.register
 class PainterEventContact(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_contact"
 
     def title(self, cell):
@@ -528,17 +547,17 @@ class PainterEventContact(Painter):
         return _("Contact")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_contact"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", row["event_contact"])
 
 
 @painter_registry.register
 class PainterEventApplication(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_application"
 
     def title(self, cell):
@@ -548,17 +567,17 @@ class PainterEventApplication(Painter):
         return _("Application")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_application"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", row["event_application"])
 
 
 @painter_registry.register
 class PainterEventPid(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_pid"
 
     def title(self, cell):
@@ -568,10 +587,10 @@ class PainterEventPid(Painter):
         return _("PID")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_pid"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", "%s" % row["event_pid"])
 
 
@@ -586,7 +605,7 @@ def _deref(x: Union[T, Callable[[], T]]) -> T:
 @painter_registry.register
 class PainterEventPriority(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_priority"
 
     def title(self, cell):
@@ -596,17 +615,17 @@ class PainterEventPriority(Painter):
         return _("Prio")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_priority"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", dict(_deref(mkeventd.syslog_priorities))[row["event_priority"]])
 
 
 @painter_registry.register
 class PainterEventFacility(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_facility"
 
     def title(self, cell):
@@ -616,17 +635,17 @@ class PainterEventFacility(Painter):
         return _("Facility")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_facility"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", dict(_deref(mkeventd.syslog_facilities))[row["event_facility"]])
 
 
 @painter_registry.register
 class PainterEventRuleId(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_rule_id"
 
     def title(self, cell):
@@ -636,21 +655,21 @@ class PainterEventRuleId(Painter):
         return _("Rule")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_rule_id"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         rule_id = row["event_rule_id"]
         if user.may("mkeventd.edit"):
             urlvars = urlencode_vars([("mode", "mkeventd_edit_rule"), ("rule_id", rule_id)])
-            return "", html.render_a(rule_id, "wato.py?%s" % urlvars)
+            return "", HTMLWriter.render_a(rule_id, "wato.py?%s" % urlvars)
         return "", rule_id
 
 
 @painter_registry.register
 class PainterEventState(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_state"
 
     def title(self, cell):
@@ -660,13 +679,13 @@ class PainterEventState(Painter):
         return _("State")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_state"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         state = row["event_state"]
         name = short_service_state_name(state, "")
-        return "state svcstate state%s" % state, html.render_span(
+        return "state svcstate state%s" % state, HTMLWriter.render_span(
             name, class_=["state_rounded_fill"]
         )
 
@@ -674,7 +693,7 @@ class PainterEventState(Painter):
 @painter_registry.register
 class PainterEventPhase(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_phase"
 
     def title(self, cell):
@@ -684,10 +703,10 @@ class PainterEventPhase(Painter):
         return _("Phase")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_phase"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", mkeventd.phase_names.get(row["event_phase"], ""))
 
 
@@ -705,7 +724,7 @@ def paint_event_icons(row, history=False):
     return "", ""
 
 
-def render_event_phase_icons(row):
+def render_event_phase_icons(row) -> str | HTML:
     phase = row["event_phase"]
 
     if phase == "ack":
@@ -720,31 +739,37 @@ def render_event_phase_icons(row):
     return html.render_icon(phase, title=title)
 
 
-def render_delete_event_icons(row):
+def render_delete_event_icons(row) -> str | HTML:
     if not user.may("mkeventd.delete"):
         return ""
     urlvars: HTTPVariables = []
 
     # Found no cleaner way to get the view. Sorry.
     # TODO: This needs to be cleaned up with the new view implementation.
-    if request.has_var("name") and request.has_var("id"):
+    filename: Optional[str] = None
+    if _is_rendered_from_view_dashlet():
         ident = request.get_integer_input_mandatory("id")
 
         import cmk.gui.dashboard as dashboard
 
-        view = dashboard.get_dashlet(request.get_str_input_mandatory("name"), ident)
+        dashlet_config: DashletConfig = dashboard.get_dashlet(
+            request.get_str_input_mandatory("name"), ident
+        )
+        if dashlet_config.get("type") == "linked_view":
+            view: Union[DashletConfig, ViewSpec] = get_permitted_views()[dashlet_config["name"]]
+        else:
+            view = dashlet_config
 
         # These actions are not performed within the dashlet. Assume the title url still
         # links to the source view where the action can be performed.
-        title_url = view.get("title_url")
+        title_url = dashlet_config.get("title_url")
         if title_url:
             parsed_url = urllib.parse.urlparse(title_url)
-            filename: Optional[str] = parsed_url.path
+            filename = parsed_url.path
             urlvars += urllib.parse.parse_qsl(parsed_url.query)
     else:
         # Regular view
-        view = get_permitted_views()[(request.get_str_input_mandatory("view_name"))]
-        filename = None
+        view = get_permitted_views()[request.get_str_input_mandatory("view_name")]
 
     urlvars += [
         ("filled_in", "actions"),
@@ -760,10 +785,14 @@ def render_delete_event_icons(row):
     return html.render_icon_button(url, _("Archive this event"), "archive_event")
 
 
+def _is_rendered_from_view_dashlet() -> bool:
+    return html.request.has_var("name") and html.request.has_var("id")
+
+
 @painter_registry.register
 class PainterEventIcons(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_icons"
 
     def title(self, cell):
@@ -773,21 +802,21 @@ class PainterEventIcons(Painter):
         return _("Icons")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_phase", "event_host_in_downtime"]
 
     @property
     def printable(self):
         return False
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_event_icons(row)
 
 
 @painter_registry.register
 class PainterEventHistoryIcons(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_history_icons"
 
     def title(self, cell):
@@ -797,21 +826,21 @@ class PainterEventHistoryIcons(Painter):
         return _("Icons")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_phase", "event_host_in_downtime"]
 
     @property
     def printable(self):
         return False
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_event_icons(row, history=True)
 
 
 @painter_registry.register
 class PainterEventContactGroups(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_contact_groups"
 
     def title(self, cell):
@@ -821,10 +850,10 @@ class PainterEventContactGroups(Painter):
         return _("Rule contact groups")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["event_contact_groups"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         cgs = row.get("event_contact_groups")
         if cgs is None:
             return "", ""
@@ -836,7 +865,7 @@ class PainterEventContactGroups(Painter):
 @painter_registry.register
 class PainterEventEffectiveContactGroups(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_effective_contact_groups"
 
     def title(self, cell):
@@ -846,14 +875,14 @@ class PainterEventEffectiveContactGroups(Painter):
         return _("Contact groups")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return [
             "event_contact_groups",
             "event_contact_groups_precedence",
             "host_contact_groups",
         ]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         if row["event_contact_groups_precedence"] == "host":
             cgs = row["host_contact_groups"]
         else:
@@ -863,7 +892,7 @@ class PainterEventEffectiveContactGroups(Painter):
             return "", ""
         if cgs:
             return "", ", ".join(sorted(cgs))
-        return "", html.render_i(_("none"))
+        return "", HTMLWriter.render_i(_("none"))
 
 
 # Event History
@@ -872,7 +901,7 @@ class PainterEventEffectiveContactGroups(Painter):
 @painter_registry.register
 class PainterHistoryLine(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "history_line"
 
     def title(self, cell):
@@ -882,17 +911,17 @@ class PainterHistoryLine(Painter):
         return _("Line")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["history_line"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("number", "%s" % row["history_line"])
 
 
 @painter_registry.register
 class PainterHistoryTime(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "history_time"
 
     def title(self, cell):
@@ -902,21 +931,21 @@ class PainterHistoryTime(Painter):
         return _("Time")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["history_time"]
 
     @property
     def painter_options(self):
         return ["ts_format", "ts_date"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_age(row["history_time"], True, True)
 
 
 @painter_registry.register
 class PainterHistoryWhat(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "history_what"
 
     def title(self, cell):
@@ -926,35 +955,35 @@ class PainterHistoryWhat(Painter):
         return _("Action")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["history_what"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         what = row["history_what"]
-        return "", html.render_span(what, title=str(mkeventd.action_whats[what]))
+        return "", HTMLWriter.render_span(what, title=str(mkeventd.action_whats[what]))
 
 
 @painter_registry.register
 class PainterHistoryWhatExplained(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "history_what_explained"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Explanation for event action")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["history_what"]
 
-    def render(self, row, cell):
-        return ("", mkeventd.action_whats[row["history_what"]])
+    def render(self, row: Row, cell: Cell) -> CellSpec:
+        return ("", str(mkeventd.action_whats[row["history_what"]]))
 
 
 @painter_registry.register
 class PainterHistoryWho(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "history_who"
 
     def title(self, cell):
@@ -964,17 +993,17 @@ class PainterHistoryWho(Painter):
         return _("Who")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["history_who"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", row["history_who"])
 
 
 @painter_registry.register
 class PainterHistoryAddinfo(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "history_addinfo"
 
     def title(self, cell):
@@ -984,10 +1013,10 @@ class PainterHistoryAddinfo(Painter):
         return _("Info")
 
     @property
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["history_addinfo"]
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", row["history_addinfo"])
 
 
@@ -1049,15 +1078,15 @@ class ECCommand(Command):
 @command_registry.register
 class CommandECUpdateEvent(ECCommand):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "ec_update_event"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Update & acknowledge")
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionECUpdateEvent
 
     def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
@@ -1066,7 +1095,7 @@ class CommandECUpdateEvent(ECCommand):
             ungettext("event", "events", len_action_rows),
         )
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.open_table(border="0", cellpadding="0", cellspacing="3")
         if user.may("mkeventd.update_comment"):
             html.open_tr()
@@ -1139,15 +1168,15 @@ PermissionECChangeEventState = permission_registry.register(
 @command_registry.register
 class CommandECChangeState(ECCommand):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "ec_change_state"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Change state")
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionECChangeEventState
 
     def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
@@ -1156,7 +1185,7 @@ class CommandECChangeState(ECCommand):
             ungettext("event", "events", len_action_rows),
         )
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.button("_mkeventd_changestate", _("Change Event state to:"))
         html.nbsp()
         MonitoringState().render_input("_mkeventd_state", 2)
@@ -1187,15 +1216,15 @@ PermissionECCustomActions = permission_registry.register(
 @command_registry.register
 class CommandECCustomAction(ECCommand):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "ec_custom_actions"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Custom action")
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionECCustomActions
 
     def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
@@ -1204,7 +1233,7 @@ class CommandECCustomAction(ECCommand):
             ungettext("event", "events", len_action_rows),
         )
 
-    def render(self, what):
+    def render(self, what) -> None:
         for action_id, title in mkeventd.action_choices(omit_hidden=True):
             html.button("_action_" + action_id, title)
             html.br()
@@ -1233,15 +1262,15 @@ PermissionECArchiveEvent = permission_registry.register(
 @command_registry.register
 class CommandECArchiveEvent(ECCommand):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "ec_archive_event"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Archive event")
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionECArchiveEvent
 
     def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
@@ -1250,7 +1279,7 @@ class CommandECArchiveEvent(ECCommand):
             ungettext("event", "events", len_action_rows),
         )
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.button("_delete_event", _("Archive Event"))
 
     def _action(
@@ -1277,22 +1306,22 @@ PermissionECArchiveEventsOfHost = permission_registry.register(
 @command_registry.register
 class CommandECArchiveEventsOfHost(ECCommand):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "ec_archive_events_of_host"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Archive events of hosts")
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionECArchiveEventsOfHost
 
     @property
     def tables(self):
         return ["service"]
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.help(
             _(
                 "Note: With this command you can archive all events of one host. "
@@ -1320,7 +1349,8 @@ class CommandECArchiveEventsOfHost(ECCommand):
                     + "Columns: event_id\n"
                     + "Filter: host_name = %s" % row["host_name"]
                 )
-                commands = ["DELETE;%s;%s" % (entry[0], user.id) for entry in data]
+                events = ",".join([entry[0] for entry in data])
+                commands = ["DELETE;%s;%s" % (events, user.id)]
 
             return commands, "<b>archive all events</b> of"
         return None

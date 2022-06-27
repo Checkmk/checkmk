@@ -13,6 +13,7 @@ You can find an introduction to the acknowledgement of problems in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/basics_ackn.html).
 """
 # TODO: List acknowledgments
+from typing import Any, Mapping
 from urllib.parse import unquote
 
 from cmk.utils.livestatus_helpers.expressions import And
@@ -20,6 +21,7 @@ from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hosts, Services
 
 from cmk.gui import http, sites
+from cmk.gui.http import Response
 from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_host_problem,
     acknowledge_hostgroup_problem,
@@ -27,7 +29,12 @@ from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_servicegroup_problem,
 )
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, request_schemas
+from cmk.gui.plugins.openapi.restful_objects import (
+    constructors,
+    Endpoint,
+    permissions,
+    request_schemas,
+)
 from cmk.gui.plugins.openapi.utils import ProblemException
 
 from cmk import fields
@@ -38,6 +45,21 @@ SERVICE_DESCRIPTION = {
         example="Memory",
     )
 }
+
+RW_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("action.acknowledge"),
+        permissions.Ignore(
+            permissions.AnyPerm(
+                [
+                    permissions.Perm("general.see_all"),
+                    permissions.Perm("bi.see_all"),
+                    permissions.Perm("mkeventd.seeall"),
+                ]
+            )
+        ),
+    ]
+)
 
 
 @Endpoint(
@@ -52,9 +74,10 @@ SERVICE_DESCRIPTION = {
     },
     request_schema=request_schemas.AcknowledgeHostRelatedProblem,
     output_empty=True,
+    permissions_required=RW_PERMISSIONS,
     update_config_generation=False,
 )
-def set_acknowledgement_on_hosts(params):
+def set_acknowledgement_on_hosts(params: Mapping[str, Any]) -> Response:
     """Set acknowledgement on related hosts"""
     body = params["body"]
     live = sites.live()
@@ -141,9 +164,10 @@ def set_acknowledgement_on_hosts(params):
     },
     request_schema=request_schemas.AcknowledgeServiceRelatedProblem,
     output_empty=True,
+    permissions_required=RW_PERMISSIONS,
     update_config_generation=False,
 )
-def set_acknowledgement_on_services(params):
+def set_acknowledgement_on_services(params: Mapping[str, Any]) -> Response:
     """Set acknowledgement on related services"""
     body = params["body"]
     live = sites.live()
@@ -155,8 +179,8 @@ def set_acknowledgement_on_services(params):
     acknowledge_type = body["acknowledge_type"]
 
     if acknowledge_type == "service":
-        description = unquote(body["service_description"])
-        host_name = body["host_name"]
+        description: str = unquote(body["service_description"])
+        host_name: str = body["host_name"]
         service = Query(
             [Services.host_name, Services.description, Services.state],
             And(Services.host_name == host_name, Services.description == description),
@@ -211,6 +235,8 @@ def set_acknowledgement_on_services(params):
                 detail="All queried services are OK.",
             )
 
+        # We need to check for this permission, even if we don't have a single service
+        user.need_permission("action.acknowledge")
         for service in services:
             if not service.state:
                 continue

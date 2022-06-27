@@ -24,12 +24,14 @@ import cmk.gui.pages
 import cmk.gui.utils
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.view_utils
-import cmk.gui.watolib as watolib
+import cmk.gui.watolib.utils as watolib_utils
 from cmk.gui import sites
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError
-from cmk.gui.globals import active_config, html, output_funnel, request, theme
 from cmk.gui.hooks import request_memoize
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import (
@@ -40,6 +42,9 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
 from cmk.gui.type_defs import ColumnName, VisualContext
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless, urlencode_vars
 from cmk.gui.valuespec import DropdownChoiceEntries
 
@@ -47,11 +52,11 @@ from cmk.gui.valuespec import DropdownChoiceEntries
 @permission_section_registry.register
 class PermissionSectionBI(PermissionSection):
     @property
-    def name(self):
+    def name(self) -> str:
         return "bi"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("BI - Checkmk Business Intelligence")
 
 
@@ -71,7 +76,7 @@ permission_registry.register(
 )
 
 
-def is_part_of_aggregation(host, service):
+def is_part_of_aggregation(host, service) -> bool:
     if BIAggregationPacks.get_num_enabled_aggregations() == 0:
         return False
     return get_cached_bi_compiler().is_part_of_aggregation(host, service)
@@ -292,7 +297,7 @@ def ajax_render_tree():
     html.write_html(renderer.render())
 
 
-def render_tree_json(row):
+def render_tree_json(row) -> dict[str, Any]:
     expansion_level = request.get_integer_input_mandatory("expansion_level", 999)
 
     treestate = user.get_tree_states("bi")
@@ -301,7 +306,7 @@ def render_tree_json(row):
         user.set_tree_states("bi", treestate)
         user.save_tree_states()
 
-    def render_node_json(tree, show_host):
+    def render_node_json(tree, show_host) -> dict[str, Any]:
         is_leaf = len(tree) == 3
         if is_leaf:
             service = tree[2].get("service")
@@ -338,7 +343,7 @@ def render_tree_json(row):
         json_node["output"] = compute_output_message(effective_state, tree[2])
         return json_node
 
-    def render_subtree_json(node, path, show_host):
+    def render_subtree_json(node, path, show_host) -> dict[str, Any]:
         json_node = render_node_json(node, show_host)
 
         is_leaf = len(node) == 3
@@ -356,7 +361,7 @@ def render_tree_json(row):
     root_node = row["aggr_treestate"]
     affected_hosts = row["aggr_hosts"]
 
-    return "", render_subtree_json(root_node, [root_node[2]["title"]], len(affected_hosts) > 1)
+    return render_subtree_json(root_node, [root_node[2]["title"]], len(affected_hosts) > 1)
 
 
 def compute_output_message(effective_state, rule):
@@ -381,7 +386,9 @@ UNAVAIL = 4
 
 
 class ABCFoldableTreeRenderer(abc.ABC):
-    def __init__(self, row, omit_root, expansion_level, only_problems, lazy, wrap_texts=True):
+    def __init__(
+        self, row, omit_root, expansion_level, only_problems, lazy, wrap_texts=True
+    ) -> None:
         self._row = row
         self._omit_root = omit_root
         self._expansion_level = expansion_level
@@ -453,13 +460,13 @@ class ABCFoldableTreeRenderer(abc.ABC):
 
         return state, assumed_state, node, new_subtrees
 
-    def _is_leaf(self, tree):
+    def _is_leaf(self, tree) -> bool:
         return len(tree) == 3
 
     def _path_id(self, path):
         return "/".join(path)
 
-    def _is_open(self, path):
+    def _is_open(self, path) -> bool:
         is_open = self._treestate.get(self._path_id(path))
         if is_open is None:
             is_open = len(path) <= self._expansion_level
@@ -533,7 +540,7 @@ class ABCFoldableTreeRenderer(abc.ABC):
             cssclass="assumption",
         )
 
-    def _render_bi_state(self, state):
+    def _render_bi_state(self, state: int) -> str:
         return {
             PENDING: _("PD"),
             OK: _("OK"),
@@ -602,21 +609,26 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
         html.close_span()
 
     @contextmanager
-    def _show_node(self, tree, show_host, mousecode=None, img_class=None):
+    def _show_node(  # pylint: disable=too-many-branches
+        self,
+        tree,
+        show_host,
+        mousecode=None,
+        img_class=None,
+    ):
         # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
         if tree[1] and tree[0] != tree[1]:
-            addclass: Optional[str] = "assumed"
+            addclass = ["assumed"]
             effective_state = tree[1]
         else:
-            addclass = None
+            addclass = []
             effective_state = tree[0]
 
-        class_: List[Optional[str]] = [
-            "content",  #
+        class_ = [
+            "content",
             "state",
             "state%d" % (effective_state["state"] if effective_state["state"] is not None else -1),
-            addclass,
-        ]
+        ] + addclass
         html.open_span(class_=class_)
         html.write_text(self._render_bi_state(effective_state["state"]))
         html.close_span()
@@ -665,7 +677,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
             effective_state["output"], shall_escape=active_config.escape_plugin_output
         )
         if output:
-            output = html.render_b(HTML("&diams;"), class_="bullet") + output
+            output = HTMLWriter.render_b(HTML("&diams;"), class_="bullet") + output
         else:
             output = HTML()
 
@@ -682,10 +694,10 @@ class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
     def _show_subtree(self, tree, path, show_host):
         # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
         if tree[1] and tree[0] != tree[1]:
-            addclass: Optional[str] = "assumed"
+            addclass = ["assumed"]
             effective_state = tree[1]
         else:
-            addclass = None
+            addclass = []
             effective_state = tree[0]
 
         is_leaf = self._is_leaf(tree)
@@ -702,8 +714,7 @@ class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
             "open" if self._is_open(path) else "closed",
             "state",
             "state%d" % effective_state["state"],
-            addclass,
-        ]
+        ] + addclass
 
         omit = self._omit_root and len(path) == 1
         if not omit:
@@ -759,12 +770,16 @@ class ABCFoldableTreeRendererTable(FoldableTreeRendererTree):
         for code, colspan, parents in leaves:
             html.open_tr()
 
-            leaf_td = html.render_td(code, class_=["leaf", odd], style=td_style, colspan=colspan)
+            leaf_td = HTMLWriter.render_td(
+                code, class_=["leaf", odd], style=td_style, colspan=colspan
+            )
             odd = "even" if odd == "odd" else "odd"
 
             tds = [leaf_td]
             for rowspan, c in parents:
-                tds.append(html.render_td(c, class_=["node"], style=td_style, rowspan=rowspan))
+                tds.append(
+                    HTMLWriter.render_td(c, class_=["node"], style=td_style, rowspan=rowspan)
+                )
 
             if self._mirror:
                 tds.reverse()
@@ -956,7 +971,7 @@ def singlehost_table(
 
 
 class BIManager:
-    def __init__(self):
+    def __init__(self) -> None:
         sites_callback = SitesCallback(cmk.gui.sites.states, bi_livestatus_query)
         self.compiler = BICompiler(self.bi_configuration_file(), sites_callback)
         self.compiler.load_compiled_aggregations()
@@ -965,7 +980,7 @@ class BIManager:
 
     @classmethod
     def bi_configuration_file(cls) -> str:
-        return str(Path(watolib.multisite_dir()) / "bi_config.bi")
+        return str(Path(watolib_utils.multisite_dir()) / "bi_config.bi")
 
 
 @request_memoize()
@@ -991,11 +1006,13 @@ def bi_livestatus_query(
     query: str,
     only_sites: Optional[List[SiteId]] = None,
     output_format: LivestatusOutputFormat = LivestatusOutputFormat.PYTHON,
+    fetch_full_data: bool = False,
 ) -> LivestatusResponse:
 
     with sites.output_format(output_format), sites.only_sites(only_sites), sites.prepend_site():
         try:
-            sites.live().set_auth_domain("bi")
+            auth_domain = "bi_fetch_full_data" if fetch_full_data else "bi"
+            sites.live().set_auth_domain(auth_domain)
             return sites.live().query(query)
         finally:
             sites.live().set_auth_domain("read")

@@ -5,16 +5,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+import json
 import sys
 from multiprocessing.pool import ThreadPool
-from pathlib import Path
-from typing import Dict, Set
+from typing import Any, Dict, Mapping, Set
 
 import requests
-import urllib3  # type: ignore[import]
+import urllib3
 
 import cmk.utils.site
 from cmk.utils.exceptions import MKException
+from cmk.utils.password_store import extract
+from cmk.utils.paths import profile_dir
 from cmk.utils.regex import regex
 from cmk.utils.site import omd_site
 
@@ -22,17 +24,17 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class AggregationData:
-    def __init__(self, bi_rawdata, config, error):
+    def __init__(self, bi_rawdata, config, error) -> None:
         super().__init__()
         self._bi_rawdata = bi_rawdata
         self._error = error
 
-        self._output = []
+        self._output: list = []
         self._options = config.get("options", {})
         self._assignments = config.get("assignments", {})
-        self._missing_sites = []
-        self._missing_aggr = []
-        self._aggregation_targets = {}
+        self._missing_sites: list = []
+        self._missing_aggr: list = []
+        self._aggregation_targets: dict = {}
 
     @property
     def bi_rawdata(self):
@@ -116,7 +118,7 @@ class AggregationData:
             self._aggregation_targets.setdefault(None, {})[aggr_name] = aggr_data
 
         if "affected_hosts" in self._assignments:
-            for _site, hostname in aggr_data["hosts"]:
+            for hostname in aggr_data["hosts"]:
                 self._aggregation_targets.setdefault(hostname, {})[aggr_name] = aggr_data
 
         for pattern, target_host in self._assignments.get("regex", []):
@@ -129,22 +131,18 @@ class RawdataException(MKException):
 
 
 class AggregationRawdataGenerator:
-    def __init__(self, config):
-        super().__init__()
+    def __init__(self, config: Mapping[str, Any]) -> None:
         self._config = config
 
         self._credentials = config["credentials"]
         if self._credentials == "automation":
             self._username = self._credentials
-
-            secret_file_path = (
-                Path(cmk.utils.paths.var_dir) / "web" / self._username / "automation.secret"
+            self._secret = (profile_dir / self._username / "automation.secret").read_text(
+                encoding="utf-8"
             )
-
-            with secret_file_path.open(encoding="utf-8") as f:
-                self._secret = f.read()
         else:
-            self._username, self._secret = self._credentials[1]
+            self._username, automation_secret = self._credentials[1]
+            self._secret = extract(automation_secret)
 
         site_config = config["site"]
 
@@ -156,9 +154,7 @@ class AggregationRawdataGenerator:
         else:
             self._site_url = site_config[1]
 
-        self._errors = []
-
-    def generate_data(self):
+    def generate_data(self) -> AggregationData:
         try:
             response_text = self._fetch_aggregation_data()
             rawdata = self._parse_response_text(response_text)
@@ -169,14 +165,16 @@ class AggregationRawdataGenerator:
             return AggregationData(None, self._config, "Request Error %s" % e)
 
     def _fetch_aggregation_data(self):
+        filter_query = self._config.get("filter") or {}
+
         response = requests.post(
-            "%s/check_mk/webapi.py?action=get_bi_aggregations" % self._site_url,
-            data={
-                "_username": self._username,
-                "_secret": self._secret,
-                "request": repr({"filter": self._config.get("filter", {})}),
-                "request_format": "python",
-                "output_format": "python",
+            f"{self._site_url}"
+            + "/check_mk/api/1.0"
+            + "/domain-types/bi_aggregation/actions/aggregation_state/invoke",
+            headers={"Authorization": f"Bearer {self._username} {self._secret.strip()}"},
+            json={
+                "filter_names": filter_query.get("names") or [],
+                "filter_groups": filter_query.get("groups") or [],
             },
         )
         response.raise_for_status()
@@ -184,29 +182,22 @@ class AggregationRawdataGenerator:
 
     def _parse_response_text(self, response_text):
         try:
-            rawdata = ast.literal_eval(response_text)
-        except (ValueError, SyntaxError):  # ast.literal_eval
+            data = json.loads(response_text)
+        except ValueError:
             if "automation secret" in response_text:
                 raise RawdataException(
                     "Error: Unable to parse data from monitoring instance. Please check the login credentials"
                 )
             raise RawdataException("Error: Unable to parse data from monitoring instance")
 
-        if not isinstance(rawdata, dict):
+        if not isinstance(data, dict):
             raise RawdataException("Error: Unable to process parsed data from monitoring instance")
 
-        result_code = rawdata.get("result_code")
-        if result_code is None:
-            raise RawdataException("API Error: No error description available")
-
-        if result_code != 0:
-            raise RawdataException("API Error: %r" % (rawdata,))
-
-        return rawdata["result"]
+        return data
 
 
 class AggregationOutputRenderer:
-    def render(self, aggregation_data_results):
+    def render(self, aggregation_data_results) -> None:
         connection_info_fields = ["missing_sites", "missing_aggr", "generic_errors"]
         connection_info: Dict[str, Set[str]] = {field: set() for field in connection_info_fields}  #
 
@@ -236,7 +227,7 @@ class AggregationOutputRenderer:
         sys.stdout.write("\n".join(output))
 
 
-def query_data(config):
+def query_data(config: Mapping[str, Any]) -> AggregationData:
     output_generator = AggregationRawdataGenerator(config)
     return output_generator.generate_data()
 

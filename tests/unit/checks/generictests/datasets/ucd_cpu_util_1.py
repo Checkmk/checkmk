@@ -33,7 +33,7 @@ checks = {
                     0, 'System: 25.05%', [
                         ('system', 25.051775056191136, None, None, None, None)
                     ]
-                ), (0, 'Wait: 0.001%', [('wait', 0.001464434107289391, None, None, None, None)]),
+                ), (0, 'Wait: <0.01%', [('wait', 0.001464434107289391, None, None, None, None)]),
                 (
                     0, 'Total CPU: 46.26%', [
                         ('util', 46.264113845457665, None, None, 0, None)

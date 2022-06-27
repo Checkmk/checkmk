@@ -6,6 +6,8 @@
 
 # yapf: disable
 # type: ignore
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
+
 checkname = 'storeonce_servicesets'
 
 freeze_time = '2020-01-02 13:38:00'
@@ -48,9 +50,9 @@ checks = {
     ],
     'capacity': [
         (
-            '1', {}, [
+            '1', FILESYSTEM_DEFAULT_LEVELS, [
                 (
-                    0, '71.5% used (49.39 of 69.08 TB)', [
+                    0, 'Used: 71.50% - 49.4 TiB of 69.1 TiB', [
                         (
                             'fs_used', 51789957.953125, 57947394.26700058,
                             65190818.550375655, 0, 72434242.83375072
@@ -61,8 +63,8 @@ checks = {
                             None, None
                         )
                     ]
-                ), (0, 'Total local: 69.08 TB', []),
-                (0, 'Free local: 19.69 TB', []),
+                ), (0, 'Total local: 69.1 TiB', []),
+                (0, 'Free local: 19.7 TiB', []),
                 (
                     0, 'Dedup ratio: 16.63',
                     [('dedup_rate', 16.626312639082, None, None, None, None)]

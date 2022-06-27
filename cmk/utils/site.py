@@ -24,7 +24,7 @@ def omd_site() -> SiteId:
         return SiteId(os.environ["OMD_SITE"])
     except KeyError:
         raise MKGeneralException(
-            _("OMD_SITE environment variable not set. You can " "only execute this in an OMD site.")
+            _("OMD_SITE environment variable not set. You can only execute this in an OMD site.")
         )
 
 

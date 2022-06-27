@@ -22,7 +22,7 @@ def _write_site_config(config: dict) -> None:
         f.write(f"sites.update({config!r})")
 
 
-def test_update_basic_site_config():
+def test_update_basic_site_config() -> None:
     _write_site_config(
         {
             "heute": {
@@ -56,7 +56,7 @@ def test_update_basic_site_config():
     assert all_sites[SiteId("haha")]["url_prefix"] == "/haha/"
 
 
-def test_update_remote_site_status_host_config():
+def test_update_remote_site_status_host_config() -> None:
     _write_site_config(
         {
             "stable": {

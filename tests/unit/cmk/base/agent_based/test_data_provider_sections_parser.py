@@ -9,7 +9,7 @@ from typing import Callable
 import pytest
 
 import cmk.utils.debug
-from cmk.utils.type_defs import SectionName
+from cmk.utils.type_defs import HostName, SectionName
 
 from cmk.core_helpers.host_sections import HostSections
 
@@ -37,7 +37,8 @@ class TestSectionsParser:
                     SectionName("one"): [],
                     SectionName("two"): [],
                 }
-            )
+            ),
+            host_name=HostName("only-neede-for-crash-reporting"),
         )
 
     @staticmethod

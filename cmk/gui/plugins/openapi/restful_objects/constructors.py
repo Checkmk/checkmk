@@ -15,8 +15,8 @@ from werkzeug.datastructures import ETags
 
 from cmk.utils.site import omd_site
 
-from cmk.gui.globals import active_config, request
-from cmk.gui.http import Response
+from cmk.gui.config import active_config
+from cmk.gui.http import request, Response
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     CollectionItem,
@@ -60,8 +60,7 @@ def absolute_url(href):
 
     Examples:
 
-
-        This function has to be used within an request context.
+        This function has to be used within a request context.
 
         >>> with _request_context(secure=False):
         ...     absolute_url("objects/host_config/example.com")
@@ -75,6 +74,7 @@ def absolute_url(href):
         href:
 
     Returns:
+        An absolute URL.
 
     """
     if href.startswith("/"):
@@ -345,9 +345,9 @@ def action_result(
 
 
 class DomainObjectMembers:
-    def __init__(self, base):
+    def __init__(self, base) -> None:
         self.base = base
-        self.members = {}
+        self.members: dict[str, dict[str, Any]] = {}
 
     def object_property(
         self,

@@ -45,7 +45,7 @@ def _get_python_plugins():
 
 @pytest.mark.parametrize("plugin_path", _get_python_plugins())
 @pytest.mark.parametrize("python_version", ["2.5", "2.6", "2.7", "3.7"])
-def test_agent_plugin_syntax_compatibility(python_container, plugin_path, python_version):
+def test_agent_plugin_syntax_compatibility(python_container, plugin_path, python_version) -> None:
     if plugin_path.endswith(".py2") and not python_version.startswith("2"):
         pytest.skip(
             "Do not test .py2 with Python 3 "

@@ -19,7 +19,7 @@ checks = {
             None, {}, [
                 (
                     0,
-                    'Usage: 91.41% - 15.41 MB of 16.86 MB (Parent pod memory usage)',
+                    'Usage: 91.41% - 15.4 MiB of 16.9 MiB (Parent pod memory usage)',
                     [('mem_used', 16162816.0, None, None, 0, 17682432.0)]
                 ), (0, 'Resident size: 8812.0 kB', []),
                 (

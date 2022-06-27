@@ -18,13 +18,14 @@ import cmk.utils.version as cmk_version
 import cmk.gui.inventory as inventory
 import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
-import cmk.gui.utils as utils
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import active_config, user_errors
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.num_split import cmp_version
 from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
 from cmk.gui.utils.labels import encode_labels_for_livestatus, Label, Labels, parse_labels_value
+from cmk.gui.utils.user_errors import user_errors
 
 Options = List[Tuple[str, str]]
 
@@ -250,9 +251,9 @@ def starred(what: Literal["host", "service"]) -> Callable[[bool], FilterHeader]:
 
 
 ## Filter tables
-def inside_inventory(invpath: str) -> Callable[[bool, Row], bool]:
+def inside_inventory(inventory_path: inventory.InventoryPath) -> Callable[[bool, Row], bool]:
     def keep_row(on: bool, row: Row) -> bool:
-        return inventory.get_inventory_attribute(row["host_inventory"], invpath) is on
+        return inventory.get_attribute(row["host_inventory"], inventory_path) is on
 
     return keep_row
 
@@ -265,7 +266,11 @@ def has_inventory(on: bool, row: Row) -> bool:
 def time_filter_options() -> Options:
     ranges = [(86400, _("days")), (3600, _("hours")), (60, _("min")), (1, _("sec"))]
     choices = [(str(sec), title + " " + _("ago")) for sec, title in ranges]
-    choices += [("abs", _("Date (YYYY-MM-DD)")), ("unix", _("UNIX timestamp"))]
+    choices += [
+        ("abs", _("Date (YYYY-MM-DD)")),
+        ("ts", _("Timestamp (YYYY-MM-DD HH:mm:ss)")),
+        ("unix", _("UNIX timestamp")),
+    ]
     return choices
 
 
@@ -366,9 +371,9 @@ def version_in_range(
     new_rows = []
     for row in rows:
         version = row.get(ident, "")
-        if from_version and utils.cmp_version(version, from_version) == -1:
+        if from_version and cmp_version(version, from_version) == -1:
             continue
-        if to_version and utils.cmp_version(version, to_version) == 1:
+        if to_version and cmp_version(version, to_version) == 1:
             continue
         new_rows.append(row)
 
@@ -376,18 +381,25 @@ def version_in_range(
 
 
 class TimeQuery(NumberRangeQuery):
-    def __init__(self, *, ident: str, column: Optional[str] = None):
+    def __init__(self, *, ident: str, column: Optional[str] = None) -> None:
 
         super().__init__(ident=ident, column=column)
         self.request_vars.extend([var + "_range" for var in self.request_vars])
 
-    @staticmethod
-    def get_bound(var: str, value: FilterHTTPVariables) -> Optional[int]:
+    def get_bound(self, var: str, value: FilterHTTPVariables) -> Optional[int]:
         rangename = value.get(var + "_range")
+        if rangename == "ts":
+            try:
+                return int(time.mktime(time.strptime(value[var], "%Y-%m-%d %H:%M:%S")))
+            except ValueError:
+                user_errors.add(
+                    MKUserError(var, _("Please enter the date in the format YYYY-MM-DD HH:mm:ss."))
+                )
+                return None
         if rangename == "abs":
             try:
                 return int(time.mktime(time.strptime(value[var], "%Y-%m-%d")))
-            except Exception:
+            except ValueError:
                 user_errors.add(
                     MKUserError(var, _("Please enter the date in the format YYYY-MM-DD."))
                 )
@@ -402,7 +414,7 @@ class TimeQuery(NumberRangeQuery):
             count = int(value[var])
             secs = count * int(rangename)
             return int(time.time()) - secs
-        except Exception:
+        except ValueError:
             return None
 
 
@@ -473,7 +485,9 @@ class TextQuery(Query):
 
 
 class TableTextQuery(TextQuery):
-    def __init__(self, *, ident: str, row_filter: Callable[[str, str], Callable[[Row], bool]]):
+    def __init__(
+        self, *, ident: str, row_filter: Callable[[str, str], Callable[[Row], bool]]
+    ) -> None:
         super().__init__(ident=ident, op="=")
         self.link_columns = []
         self.row_filter = row_filter
@@ -512,12 +526,14 @@ def filter_by_column_textregex(filtertext: str, column: str) -> Callable[[Row], 
     return lambda row: bool(regex.search(row.get(column, "")))
 
 
-def filter_by_host_inventory(invpath: str) -> Callable[[str, str], Callable[[Row], bool]]:
+def filter_by_host_inventory(
+    inventory_path: inventory.InventoryPath,
+) -> Callable[[str, str], Callable[[Row], bool]]:
     def row_filter(filtertext: str, column: str) -> Callable[[Row], bool]:
         regex = re_ignorecase(filtertext, column)
 
         def filt(row: Row):
-            invdata = inventory.get_inventory_attribute(row["host_inventory"], invpath)
+            invdata = inventory.get_attribute(row["host_inventory"], inventory_path)
             if not isinstance(invdata, str):
                 invdata = ""
             return bool(regex.search(invdata))
@@ -528,10 +544,10 @@ def filter_by_host_inventory(invpath: str) -> Callable[[str, str], Callable[[Row
 
 
 def filter_in_host_inventory_range(
-    invpath: str,
+    inventory_path: inventory.InventoryPath,
 ) -> Callable[[Row, str, MaybeBounds], bool]:
     def row_filter(row: Row, column: str, bounds: MaybeBounds) -> bool:
-        invdata = inventory.get_inventory_attribute(row["host_inventory"], invpath)
+        invdata = inventory.get_attribute(row["host_inventory"], inventory_path)
         if not isinstance(invdata, (int, float)):
             return False
         return value_in_range(invdata, bounds)
@@ -549,7 +565,7 @@ class CheckCommandQuery(TextQuery):
 
 
 class HostnameOrAliasQuery(TextQuery):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(ident="hostnameoralias", column="host_name", op="~~", negateable=False)
         self.link_columns = ["host_alias", "host_name"]
 
@@ -560,7 +576,7 @@ class HostnameOrAliasQuery(TextQuery):
 
 
 class OptEventEffectiveContactgroupQuery(TextQuery):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             ident="optevent_effective_contactgroup",
             request_var="optevent_effective_contact_group",
@@ -591,7 +607,7 @@ class OptEventEffectiveContactgroupQuery(TextQuery):
 
 
 class IPAddressQuery(Query):
-    def __init__(self, *, ident: str, what: str):
+    def __init__(self, *, ident: str, what: str) -> None:
         request_vars = [ident, ident + "_prefix"]
         super().__init__(ident=ident, request_vars=request_vars)
         self._what = what
@@ -681,7 +697,7 @@ class LabelsQuery(Query):
 
 
 class AllLabelsQuery(LabelsQuery):
-    def __init__(self, *, object_type: Literal["host", "service"]):
+    def __init__(self, *, object_type: Literal["host", "service"]) -> None:
         self.object_type = object_type
         self.column = f"{object_type}_labels"
         super().__init__(ident=f"{object_type}_labels", request_vars=[f"{object_type}_label"])
@@ -725,7 +741,7 @@ class TagsQuery(LabelsQuery):
 
 
 class AuxTagsQuery(LabelsQuery):
-    def __init__(self, *, object_type: Literal["host"]):
+    def __init__(self, *, object_type: Literal["host"]) -> None:
         self.object_type = object_type
         self.column = f"{object_type}_tags"
         self.count = 3
@@ -942,17 +958,15 @@ def log_class_filter(value: FilterHTTPVariables) -> FilterHeader:
 
 
 def if_oper_status_filter_table(ident: str, context: VisualContext, rows: Rows) -> Rows:
-
     values = context.get(ident, {})
-    assert not isinstance(values, str)
-    # We consider the filter active if not all checkboxes
-    # are either on (default) or off (unset)
-    settings = set(values.values())
 
-    if len(settings) == 1 and len(values) > 1:
-        return rows
+    def _add_row(row) -> bool:
+        # Apply filter if and only if a filter value is set
+        if (filter_key := "%s_%d" % (ident, row["invinterface_oper_status"])) in values:
+            return values[filter_key] == "on"
+        return True
 
-    return [row for row in rows if values.get("%s_%d" % (ident, row["invinterface_oper_status"]))]
+    return [row for row in rows if _add_row(row)]
 
 
 def cre_sites_options() -> Options:

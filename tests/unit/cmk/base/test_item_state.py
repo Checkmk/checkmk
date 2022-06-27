@@ -15,7 +15,7 @@ from cmk.base.api.agent_based import value_store
 _TEST_KEY = ("check", "item", "user-key")
 
 
-def test_item_state_prefix_required(monkeypatch):
+def test_item_state_prefix_required(monkeypatch) -> None:
     monkeypatch.setattr(
         value_store._global_state,
         "_active_host_value_store",

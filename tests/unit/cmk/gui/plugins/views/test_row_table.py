@@ -8,7 +8,7 @@ from cmk.gui.type_defs import VisualContext
 from cmk.gui.views import View
 
 
-def test_row_table_object(mock_livestatus, request_context):
+def test_row_table_object(mock_livestatus, request_context) -> None:
     live = mock_livestatus
     live.add_table(
         "hosts",
@@ -22,7 +22,7 @@ def test_row_table_object(mock_livestatus, request_context):
         ],
     )
     live.expect_query(
-        "GET hosts\n" "Columns: host_has_been_checked host_state name\n" "Filter: name = heute"
+        "GET hosts\nColumns: host_has_been_checked host_state name\nFilter: name = heute"
     )
 
     view_name = "hosts"

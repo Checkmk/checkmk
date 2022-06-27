@@ -33,7 +33,7 @@ def _parse_mandatory(string_table) -> Section:
     return section
 
 
-def test_discovery():
+def test_discovery() -> None:
     assert list(discover_wut_webio(_parse_mandatory(STRING_TABLE))) == [
         Service(item=ITEM, parameters={"states_during_discovery": "On"}),
         Service(item="WEBIO-094849 Input 1", parameters={"states_during_discovery": "Off"}),
@@ -53,5 +53,5 @@ def test_discovery():
         ),
     ],
 )
-def test_check(params, expected):
+def test_check(params, expected) -> None:
     assert list(check_wut_webio(ITEM, params, _parse_mandatory(STRING_TABLE))) == expected

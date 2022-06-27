@@ -27,12 +27,6 @@ from cmk.base.plugins.agent_based.utils.checkmk import ControllerSection, Plugin
 # TODO: make this more blackboxy once API vialoations are reduced!
 
 
-@pytest.fixture(name="fix_time")
-def _get_fix_time():
-    with on_time(1645800081.5039608, "UTC"):
-        yield
-
-
 def test_discovery_something() -> None:
     assert [*discover_checkmk_agent({}, None, None)] == [Service()]
 
@@ -88,7 +82,7 @@ def test_check_version_site_mismatch(fail_state: State) -> None:
     ]
 
 
-def test_check_version_at_least_success():
+def test_check_version_at_least_success() -> None:
     assert [
         *_check_version(
             "1.2.3",
@@ -99,7 +93,7 @@ def test_check_version_at_least_success():
     ] == [Result(state=State.OK, summary="Version: 1.2.3")]
 
 
-def test_check_version_at_least_dict_empty():
+def test_check_version_at_least_dict_empty() -> None:
     spec: dict[str, str] = {}
     assert [
         *_check_version(
@@ -111,7 +105,7 @@ def test_check_version_at_least_dict_empty():
     ] == [Result(state=State.OK, summary="Version: 1.2.3")]
 
 
-def test_check_version_at_least_daily_build():
+def test_check_version_at_least_daily_build() -> None:
     assert [
         *_check_version(
             "1.2.3-2021.02.03",
@@ -127,7 +121,7 @@ def test_check_version_at_least_daily_build():
     ]
 
 
-def test_check_version_at_least_daily_build_vs_release():
+def test_check_version_at_least_daily_build_vs_release() -> None:
     assert [
         *_check_version(
             "1.2.3-2022.02.03",
@@ -193,7 +187,18 @@ def test_check_tranport_ls_ok(fail_state: State) -> None:
     assert not [
         *_check_transport(
             False,
-            ControllerSection(allow_legacy_pull=False, ip_allowlist=()),
+            ControllerSection(allow_legacy_pull=False, ip_allowlist=(), socket_ready=True),
+            fail_state,
+        )
+    ]
+
+
+@pytest.mark.parametrize("fail_state", list(State))
+def test_check_tranport_no_tls_controller_not_in_use(fail_state: State) -> None:
+    assert not [
+        *_check_transport(
+            False,
+            ControllerSection(allow_legacy_pull=True, ip_allowlist=(), socket_ready=False),
             fail_state,
         )
     ]
@@ -201,26 +206,14 @@ def test_check_tranport_ls_ok(fail_state: State) -> None:
 
 @pytest.mark.parametrize("fail_state", list(State))
 def test_check_tranport_no_tls(fail_state: State) -> None:
-    assert [
-        *_check_transport(
-            False,
-            ControllerSection(allow_legacy_pull=True, ip_allowlist=()),
-            fail_state,
-        )
-    ] == [
-        Result(
-            state=fail_state,
-            summary="TLS is not activated on monitored host (see details)",
-            details=(
-                "The hosts agent supports TLS, but it is not being used. "
-                "We strongly recommend to enable TLS by registering the host to the site"
-                " (using the `cmk-agent-ctl register` command on the monitored host). "
-                "However you can configure missing TLS to be OK in the setting"
-                ' "State in case of available but not enabled TLS" of the ruleset'
-                ' "Status of the Checkmk services".'
-            ),
-        )
-    ]
+    (result,) = _check_transport(
+        False,
+        ControllerSection(allow_legacy_pull=True, ip_allowlist=(), socket_ready=True),
+        fail_state,
+    )
+    assert isinstance(result, Result)
+    assert result.state == fail_state
+    assert result.summary == "TLS is not activated on monitored host (see details)"
 
 
 @pytest.mark.parametrize("fail_state", list(State))
@@ -242,25 +235,28 @@ def test_check_no_check_yet() -> None:
 
 
 @pytest.mark.parametrize("duplicate", [False, True])
-def test_check_warn_upon_old_update_check(fix_time, duplicate: bool) -> None:
-    assert [
-        *_check_cmk_agent_update(
-            {},
-            {
-                "agentupdate": " ".join(
-                    (1 + duplicate)
-                    * (
-                        "last_check 1645000081.5039608",
-                        "last_update 1645000181.5039608",
-                        "aghash 38bf6e44175732bc",
-                        "pending_hash 1234abcd5678efgh",
-                        "update_url https://server/site/check_mk",
-                        "error 503 Server Error: Service Unavailable",
+def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
+    with on_time(1645800081.5039608, "UTC"):
+        actual = list(
+            _check_cmk_agent_update(
+                {},
+                {
+                    "agentupdate": " ".join(
+                        (1 + duplicate)
+                        * (
+                            "last_check 1645000081.5039608",
+                            "last_update 1645000181.5039608",
+                            "aghash 38bf6e44175732bc",
+                            "pending_hash 1234abcd5678efgh",
+                            "update_url https://server/site/check_mk",
+                            "error 503 Server Error: Service Unavailable",
+                        )
                     )
-                )
-            },
+                },
+            )
         )
-    ] == [
+
+    assert actual == [
         Result(state=State.WARN, summary="Update error: 503 Server Error: Service Unavailable"),
         Result(
             state=State.WARN,
@@ -303,13 +299,19 @@ def test_check_warn_upon_old_update_check(fix_time, duplicate: bool) -> None:
                         version_int=2000050020,
                         cache_interval=None,
                     ),
+                    Plugin(
+                        name="plugin3",
+                        version="unversioned",
+                        version_int=None,
+                        cache_interval=None,
+                    ),
                 ],
                 local_checks=[],
             ),
             [
                 Result(
                     state=State.OK,
-                    summary="Agent plugins: 2",
+                    summary="Agent plugins: 3",
                 ),
                 Result(
                     state=State.OK,
@@ -335,6 +337,12 @@ def test_check_warn_upon_old_update_check(fix_time, duplicate: bool) -> None:
                         version_int=1000000000,
                         cache_interval=None,
                     ),
+                    Plugin(
+                        name="check3.py",
+                        version="unversioned",
+                        version_int=None,
+                        cache_interval=None,
+                    ),
                 ],
             ),
             [
@@ -344,7 +352,7 @@ def test_check_warn_upon_old_update_check(fix_time, duplicate: bool) -> None:
                 ),
                 Result(
                     state=State.OK,
-                    summary="Local checks: 2",
+                    summary="Local checks: 3",
                 ),
             ],
             id="local checks only",
@@ -386,6 +394,12 @@ def test_check_warn_upon_old_update_check(fix_time, duplicate: bool) -> None:
                         version_int=None,
                         cache_interval=None,
                     ),
+                    Plugin(
+                        name="custom_plugin4",
+                        version="unversioned",
+                        version_int=None,
+                        cache_interval=None,
+                    ),
                 ],
                 local_checks=[
                     Plugin(
@@ -406,16 +420,22 @@ def test_check_warn_upon_old_update_check(fix_time, duplicate: bool) -> None:
                         version_int=None,
                         cache_interval=None,
                     ),
+                    Plugin(
+                        name="check4.py",
+                        version="unversioned",
+                        version_int=None,
+                        cache_interval=None,
+                    ),
                 ],
             ),
             [
                 Result(
                     state=State.OK,
-                    summary="Agent plugins: 3",
+                    summary="Agent plugins: 4",
                 ),
                 Result(
                     state=State.OK,
-                    summary="Local checks: 3",
+                    summary="Local checks: 4",
                 ),
                 Result(
                     state=State.OK,
@@ -431,6 +451,10 @@ def test_check_warn_upon_old_update_check(fix_time, duplicate: bool) -> None:
                 ),
                 Result(
                     state=State.OK,
+                    notice="Agent plugin 'custom_plugin4': no version specified",
+                ),
+                Result(
+                    state=State.OK,
                     notice="Local check 'check1.sh': 1.3.45",
                 ),
                 Result(
@@ -440,6 +464,10 @@ def test_check_warn_upon_old_update_check(fix_time, duplicate: bool) -> None:
                 Result(
                     state=State.WARN,
                     summary="Local check 'check3.py': unable to parse version '[fill in later]'",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Local check 'check4.py': no version specified",
                 ),
             ],
             id="version checks",
@@ -483,6 +511,12 @@ def test_check_warn_upon_old_update_check(fix_time, duplicate: bool) -> None:
                         version_int=None,
                         cache_interval=None,
                     ),
+                    Plugin(
+                        name="custom_plugin4",
+                        version="unversioned",
+                        version_int=None,
+                        cache_interval=None,
+                    ),
                 ],
                 local_checks=[
                     Plugin(
@@ -503,16 +537,22 @@ def test_check_warn_upon_old_update_check(fix_time, duplicate: bool) -> None:
                         version_int=None,
                         cache_interval=None,
                     ),
+                    Plugin(
+                        name="check4.py",
+                        version="unversioned",
+                        version_int=None,
+                        cache_interval=None,
+                    ),
                 ],
             ),
             [
                 Result(
                     state=State.OK,
-                    summary="Agent plugins: 3",
+                    summary="Agent plugins: 4",
                 ),
                 Result(
                     state=State.OK,
-                    summary="Local checks: 3",
+                    summary="Local checks: 4",
                 ),
                 Result(
                     state=State.OK,
@@ -529,6 +569,10 @@ def test_check_warn_upon_old_update_check(fix_time, duplicate: bool) -> None:
                 Result(
                     state=State.CRIT,
                     summary="Local check 'check2.py': 1.0 (warn/crit below 1.2/1.1)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Local check 'check4.py': no version specified",
                 ),
             ],
             id="version checks with excludes",

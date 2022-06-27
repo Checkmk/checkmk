@@ -52,7 +52,7 @@ logger = logging.getLogger(__name__)
         (".1.3.6.1.4.1.318.1.1.10.4.2.3.1.3"),
     ],
 )
-def test_get_ipv4(oid: OID):
+def test_get_ipv4(oid: OID) -> None:
     configs = _create_configs_ipv4()
     result_inline, result_classic = _create_results_snmpbackend_get(oid, configs)
 
@@ -66,7 +66,7 @@ def test_get_ipv4(oid: OID):
         (".1.3.6.1.2.1.2.2.1.6.1"),
     ],
 )
-def test_get_ipv6(oid: OID):
+def test_get_ipv6(oid: OID) -> None:
     configs = _create_configs_ipv6()
     result_inline, result_classic = _create_results_snmpbackend_get(oid, configs)
 
@@ -80,7 +80,7 @@ def test_get_ipv6(oid: OID):
         (".1.3.6.1.2.1.2.2.1.6.1"),
     ],
 )
-def test_get_auth(oid: OID):
+def test_get_auth(oid: OID) -> None:
     configs = _create_configs_special_auth()
     result_inline, result_classic = _create_results_snmpbackend_get(oid, configs)
 
@@ -98,7 +98,7 @@ def test_get_auth(oid: OID):
         (".1.3.6.1.4.1"),
     ],
 )
-def test_walk_ipv4(oid):
+def test_walk_ipv4(oid) -> None:
     configs = _create_configs_ipv4()
     result_inline, result_classic = _create_results_snmpbackend_walk(oid, configs)
 
@@ -114,7 +114,7 @@ def test_walk_ipv4(oid):
         (".1.3.6.1.4.1"),
     ],
 )
-def test_walk_ipv6(oid):
+def test_walk_ipv6(oid) -> None:
     configs = _create_configs_ipv6()
     result_inline, result_classic = _create_results_snmpbackend_walk(oid, configs)
 
@@ -129,7 +129,7 @@ def test_walk_ipv6(oid):
         (".1.3.6"),
     ],
 )
-def test_walk_auth(oid):
+def test_walk_auth(oid) -> None:
     configs = _create_configs_special_auth()
     result_inline, result_classic = _create_results_snmpbackend_walk(oid, configs)
 

@@ -14,6 +14,7 @@ factory_settings["ups_eaton_enviroment_default"] = {
 def inventory_ups_eaton_enviroment(info):
     if len(info) > 0:
         return [(None, {})]
+    return []
 
 
 def check_ups_eaton_enviroment(item, params, info):

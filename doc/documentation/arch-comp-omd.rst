@@ -36,7 +36,8 @@ OMD hooks into different parts of the Operating system.
 * Each site has it's own operating system user (The *site user*)
 * Each site is located in it's dedicated *site directory*
 * Each site creates a ramdisk for temporary file processing
-* Each site hooks into the system wide apache configuration for HTTP access
+* Each site hooks into the system wide
+  :doc:`Apache configuration <arch-comp-apache>` for HTTP access
 * Each site has a dedicated crontab
 
 The integration with the OS configuration should be as lean as possible so that
@@ -91,39 +92,41 @@ on the configuration.
 
 .. uml::
 
-   [OMD]
-   node "Site processes" as omd_p {
-      [mknotifyd]
-      [mkeventd]
-      [rrdcached]
-      [liveproxyd]
-      [crontab]
-      [dcd]
-      [apache]
-      [agent-receiver]
-      [redis]
-      [stunnel]
-      [systemd]
-      [cmc]
-   }
-   node "Microcore helper processes" as cmc_p {
-      [checkhelper] as checker
-      [icmpsender]
-      [icmpreceiver]
-      [fetcher]
-      [cmk --notify]
-      [cmk --handle-alerts]
-      [cmk --create-rrd]
-      [cmk --checker]
-      [cmk --real-time-checks]
-   }
-   node "liveproxyd processes" as liveproxyd_p {
-      [Site process]
-   }
-   node "Apache processes" as apache_p {
-      [Worker process]
-   }
-   OMD -> omd_p
-   cmc -> cmc_p
-   liveproxyd -> liveproxyd_p
-   apache -> apache_p
+    component "System cron" as cron
+    [OMD]
+    node "Site processes" as omd_p {
+        component "[[../arch-comp-crontab.html cron jobs]]" as cronjobs
+        component "[[../arch-comp-mknotifyd.html mknotifyd]]" as mknotifyd
+        [mkeventd]
+        component "[[../arch-comp-rrdcached.html rrdcached]]" as rrdcached
+        [liveproxyd]
+        component "[[../arch-comp-liveproxyd.html liveproxyd]]" as liveproxyd
+        component "[[../arch-comp-dcd.html dcd]]" as dcd
+        component "[[../arch-comp-apache.html Apache]]" as apache
+        [agent-receiver]
+        [redis]
+        [stunnel]
+        component "[[../arch-comp-core.html Monitoring core]]" as cmc
+        node "Microcore helper processes" as cmc_p {
+           [checkhelper] as checker
+           [icmpsender]
+           [icmpreceiver]
+           [fetcher]
+           [cmk --notify]
+           [cmk --handle-alerts]
+           [cmk --create-rrd]
+           [cmk --checker]
+           [cmk --real-time-checks]
+        }
+        node "liveproxyd processes" as liveproxyd_p {
+           [Remote site process]
+        }
+        node "Apache processes" as apache_p {
+           [Worker process]
+        }
+    }
+    OMD -d-> omd_p
+    cmc -d-> cmc_p
+    liveproxyd -d-> liveproxyd_p
+    apache -d-> apache_p
+    cron -d-> cronjobs

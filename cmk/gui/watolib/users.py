@@ -4,11 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from datetime import datetime
+
+from cmk.utils.object_diff import make_diff_text
+
 import cmk.gui.mkeventd
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib.global_settings as global_settings
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.userdb.utils import add_internal_attributes
@@ -32,7 +36,9 @@ from cmk.gui.valuespec import (
     Tuple,
     UserID,
 )
-from cmk.gui.watolib.changes import add_change, log_audit, make_diff_text, ObjectRef, ObjectRefType
+from cmk.gui.watolib.audit_log import log_audit
+from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.user_scripts import (
     declare_notification_plugin_permissions,
     user_script_choices,
@@ -41,6 +47,8 @@ from cmk.gui.watolib.user_scripts import (
 
 
 def delete_users(users_to_delete):
+    user.need_permission("wato.users")
+    user.need_permission("wato.edit")
     if user.id in users_to_delete:
         raise MKUserError(None, _("You cannot delete your own account!"))
 
@@ -62,10 +70,13 @@ def delete_users(users_to_delete):
                 object_ref=make_user_object_ref(user_id),
             )
         add_change("edit-users", _("Deleted user: %s") % ", ".join(deleted_users))
-        userdb.save_users(all_users)
+        userdb.save_users(all_users, datetime.now())
 
 
 def edit_users(changed_users):
+    if user:
+        user.need_permission("wato.users")
+        user.need_permission("wato.edit")
     all_users = userdb.load_users(lock=True)
     new_users_info = []
     modified_users_info = []
@@ -100,7 +111,7 @@ def edit_users(changed_users):
     if modified_users_info:
         add_change("edit-users", _("Modified users: %s") % ", ".join(modified_users_info))
 
-    userdb.save_users(all_users)
+    userdb.save_users(all_users, datetime.now())
 
 
 def make_user_audit_log_object(attributes):
@@ -128,7 +139,12 @@ def make_user_object_ref(user_id: UserId) -> ObjectRef:
     return ObjectRef(ObjectRefType.User, str(user_id))
 
 
-def _validate_user_attributes(all_users, user_id, user_attrs, is_new_user=True) -> None:
+def _validate_user_attributes(  # pylint: disable=too-many-branches
+    all_users,
+    user_id,
+    user_attrs,
+    is_new_user=True,
+) -> None:
     # Check user_id
     if is_new_user:
         if user_id in all_users:

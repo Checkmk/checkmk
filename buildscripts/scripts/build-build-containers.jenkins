@@ -59,7 +59,7 @@ timeout(time: 12, unit: 'HOURS') {
                         def IMAGE
                         stage('build ' + DISTRO) {
                             dir('buildscripts/infrastructure/build-nodes') {
-                                sh('cp ../../../defines.make scripts')  // we need it *within* the context :-P
+                                sh('cp ../../../{defines.make,omd/strip_binaries} scripts')  // we need it *within* the context :-P
                                 def DOCKER_REGISTRY_NOHTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
                                 withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                                     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {

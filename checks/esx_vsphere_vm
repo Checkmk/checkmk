@@ -17,6 +17,7 @@
 def inventory_esx_vsphere_vm_mem(section):
     if "summary.quickStats.guestMemoryUsage" in section:
         return [(None, {})]
+    return []
 
 
 def check_esx_vsphere_vm_mem(_no_item, params, section):
@@ -85,12 +86,14 @@ check_info["esx_vsphere_vm.mem_usage"] = {
 def inventory_esx_vsphere_vm_name(section):
     if "name" in section:
         return [(None, None)]
+    return []
 
 
 def check_esx_vsphere_vm_name(_no_item, _no_params, section):
     name = section.get("name")
     if name:
         return 0, " ".join(name)
+    return None
 
 
 check_info["esx_vsphere_vm.name"] = {
@@ -148,6 +151,7 @@ def inventory_esx_vsphere_vm_datastores(section):
     # Right now we only handle one datastore per vm
     if "config.datastoreUrl" in section:
         return [(None, None)]
+    return []
 
 
 def check_esx_vsphere_vm_datastores(no_item, no_params, section):
@@ -209,13 +213,14 @@ check_info["esx_vsphere_vm.datastores"] = {
 def inventory_esx_vsphere_vm_guest_tools(section):
     if "guest.toolsVersionStatus" in section:
         return [(None, {})]
+    return []
 
 
 def check_esx_vsphere_vm_guest_tools(_no_item, params, section):
     try:
         vm_status = section["guest.toolsVersionStatus"][0]
     except KeyError:
-        return
+        return None
 
     guest_tools_map = {
         "guestToolsCurrent": (0, "VMware Tools are installed and the version is current"),
@@ -258,11 +263,12 @@ check_info["esx_vsphere_vm.guest_tools"] = {
 def inventory_esx_vsphere_vm_hb_status(section):
     if "guestHeartbeatStatus" in section:
         return [(None, {})]
+    return []
 
 
 def check_esx_vsphere_vm_hb_status(_no_item, params, section):
     if section.get("guestHeartbeatStatus") is None:
-        return
+        return None
 
     vm_status = section["guestHeartbeatStatus"][0]
     state = 3
@@ -313,6 +319,7 @@ check_info["esx_vsphere_vm.heartbeat"] = {
 def inventory_esx_vsphere_vm_cpu(section):
     if "summary.quickStats.overallCpuUsage" in section:
         return [(None, None)]
+    return []
 
 
 def check_esx_vsphere_vm_cpu(_no_item, _no_params, section):
@@ -366,6 +373,7 @@ def parse_esx_vsphere_vm_mounted_devices(section):
 def inventory_esx_vsphere_vm_mounted_devices(section):
     if parse_esx_vsphere_vm_mounted_devices(section):
         return [(None, None)]
+    return []
 
 
 def check_esx_vsphere_vm_mounted_devices(item, params, section):

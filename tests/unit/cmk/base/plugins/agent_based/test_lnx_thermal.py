@@ -35,7 +35,7 @@ thermal_zone8|-|sunxi-therm|61|127|critical|127|hot|99|passive|99|active|94|acti
     ),
 ]
 
-RESULT_DISCOVERY = [  # type: ignore
+RESULT_DISCOVERY = [
     [Service(item="Zone %s" % i) for i in [0, 1, 3, 5]],
     [Service(item="Zone %s" % i) for i in [0, 3, 4, 5, 6, 8]],
 ]
@@ -187,7 +187,7 @@ def test_check_functions_perfdata(
         ),
     ],
 )
-def test_parse_and_discovery_function_2(line: List[str], item: str):
+def test_parse_and_discovery_function_2(line: List[str], item: str) -> None:
     section = lnx_thermal.parse_lnx_thermal([line])
     assert list(lnx_thermal.discover_lnx_thermal(section)) == [Service(item=item)]
 

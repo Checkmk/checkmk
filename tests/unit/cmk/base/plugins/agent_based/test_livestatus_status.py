@@ -642,12 +642,12 @@ PARSED_SSL = {
 }
 
 
-def test_parse():
+def test_parse() -> None:
     assert livestatus_status.parse_livestatus_status(STRING_TABLE_STATUS) == PARSED_STATUS
     assert livestatus_status.parse_livestatus_ssl_certs(STRING_TABLE_SSL) == PARSED_SSL
 
 
-def test_discovery():
+def test_discovery() -> None:
     discovered_services = list(
         livestatus_status.discovery_livestatus_status(PARSED_STATUS, PARSED_SSL)
     )
@@ -669,7 +669,7 @@ def fixture_fetcher_checker_counters_list():
 
 
 @pytest.mark.usefixtures("fetcher_checker_counters")
-def test_check_new_counters_in_oldstabe(fetcher_checker_counters):
+def test_check_new_counters_in_oldstabe(fetcher_checker_counters) -> None:
     yielded_results = list(
         livestatus_status._generate_livestatus_results(
             "oldstable",
@@ -743,7 +743,7 @@ _RESULTS = [
 ]
 
 
-def test_check():
+def test_check() -> None:
 
     yielded_results = list(
         livestatus_status._generate_livestatus_results(

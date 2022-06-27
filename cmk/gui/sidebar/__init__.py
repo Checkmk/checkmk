@@ -23,14 +23,20 @@ import cmk.gui.sites as sites
 import cmk.gui.user_sites as user_sites
 import cmk.gui.utils as utils
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
-from cmk.gui.config import register_post_config_load_hook
+from cmk.gui.config import active_config, register_post_config_load_hook
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import active_config, html, output_funnel, request, response, theme
+from cmk.gui.htmllib.header import make_header
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
+from cmk.gui.pages import AjaxPage, PageResult
+from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import CascadingDropdown, Dictionary
 from cmk.gui.werks import may_acknowledge
@@ -343,7 +349,7 @@ class SidebarRenderer:
         html.body_end()
 
     def _show_body_start(self) -> None:
-        body_classes = ["side", "screenshotmode" if active_config.screenshotmode else None]
+        body_classes = ["side"] + (["screenshotmode"] if active_config.screenshotmode else [])
 
         if not user.may("general.see_sidebar"):
             html.open_body(class_=body_classes, data_theme=theme.get())
@@ -377,9 +383,13 @@ class SidebarRenderer:
 
         assert user.id is not None
         sidebar_position = cmk.gui.userdb.load_custom_attr(
-            user.id, "ui_sidebar_position", lambda x: None if x == "None" else "left"
+            user_id=user.id,
+            key="ui_sidebar_position",
+            parser=lambda x: None if x == "None" else "left",
         )
-        html.open_div(id_="check_mk_sidebar", class_=[sidebar_position])
+        html.open_div(
+            id_="check_mk_sidebar", class_=[] if sidebar_position is None else [sidebar_position]
+        )
 
         self._show_snapin_bar(user_config)
 
@@ -574,7 +584,7 @@ class SidebarRenderer:
         html.open_div(
             id_="side_fold", title=_("Toggle the sidebar"), onclick="cmk.sidebar.toggle_sidebar()"
         )
-        html.icon("sidebar_folded", class_="folded")
+        html.icon("sidebar_folded", class_=["folded"])
         html.icon("sidebar")
         if not user.get_attribute("nav_hide_icons_title"):
             html.div(_("Sidebar"))
@@ -651,41 +661,47 @@ def ajax_snapin():
     response.set_data(json.dumps(snapin_code))
 
 
-@cmk.gui.pages.register("sidebar_fold")
-def ajax_fold():
-    response.set_content_type("application/json")
-    user_config = UserSidebarConfig(user, active_config.sidebar)
-    user_config.folded = request.var("fold") == "yes"
-    user_config.save()
-
-
-@cmk.gui.pages.register("sidebar_openclose")
-def ajax_openclose() -> None:
-    response.set_content_type("application/json")
-    if not user.may("general.configure_sidebar"):
+@cmk.gui.pages.page_registry.register_page("sidebar_fold")
+class AjaxFoldSnapin(AjaxPage):
+    def page(self) -> PageResult:  # pylint: disable=useless-return
+        check_csrf_token()
+        response.set_content_type("application/json")
+        user_config = UserSidebarConfig(user, active_config.sidebar)
+        user_config.folded = request.var("fold") == "yes"
+        user_config.save()
         return None
 
-    snapin_id = request.var("name")
-    if snapin_id is None:
+
+@cmk.gui.pages.page_registry.register_page("sidebar_openclose")
+class AjaxOpenCloseSnapin(AjaxPage):
+    def page(self) -> PageResult:
+        check_csrf_token()
+        response.set_content_type("application/json")
+        if not user.may("general.configure_sidebar"):
+            return None
+
+        snapin_id = request.var("name")
+        if snapin_id is None:
+            return None
+
+        state = request.var("state")
+        if state not in [SnapinVisibility.OPEN.value, SnapinVisibility.CLOSED.value, "off"]:
+            raise MKUserError("state", "Invalid state: %s" % state)
+
+        user_config = UserSidebarConfig(user, active_config.sidebar)
+
+        try:
+            snapin = user_config.get_snapin(snapin_id)
+        except KeyError:
+            return None
+
+        if state == "off":
+            user_config.remove_snapin(snapin)
+        else:
+            snapin.visible = SnapinVisibility(state)
+
+        user_config.save()
         return None
-
-    state = request.var("state")
-    if state not in [SnapinVisibility.OPEN.value, SnapinVisibility.CLOSED.value, "off"]:
-        raise MKUserError("state", "Invalid state: %s" % state)
-
-    user_config = UserSidebarConfig(user, active_config.sidebar)
-
-    try:
-        snapin = user_config.get_snapin(snapin_id)
-    except KeyError:
-        return None
-
-    if state == "off":
-        user_config.remove_snapin(snapin)
-    else:
-        snapin.visible = SnapinVisibility(state)
-
-    user_config.save()
 
 
 @cmk.gui.pages.register("sidebar_move_snapin")
@@ -715,6 +731,7 @@ def move_snapin() -> None:
 
     user_config.move_snapin_before(snapin, before_snapin)
     user_config.save()
+    return None
 
 
 # .
@@ -793,6 +810,10 @@ class CustomSnapins(pagetypes.Overridable):
             )
         return choices
 
+    @classmethod
+    def reserved_unique_ids(cls) -> List[str]:
+        return [k for k, v in snapin_registry.items() if not v.is_custom_snapin()]
+
 
 pagetypes.declare(CustomSnapins)
 
@@ -824,7 +845,7 @@ def page_add_snapin() -> None:
 
     title = _("Add sidebar element")
     breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_customize(), title)
-    html.header(title, breadcrumb, _add_snapins_page_menu(breadcrumb))
+    make_header(html, title, breadcrumb, _add_snapins_page_menu(breadcrumb))
 
     used_snapins = _used_snapins()
 
@@ -876,8 +897,9 @@ def _used_snapins() -> List[Any]:
 
 
 @cmk.gui.pages.page_registry.register_page("sidebar_ajax_add_snapin")
-class AjaxAddSnapin(cmk.gui.pages.AjaxPage):
-    def page(self):
+class AjaxAddSnapin(AjaxPage):
+    def page(self) -> PageResult:
+        check_csrf_token()
         if not user.may("general.configure_sidebar"):
             raise MKGeneralException(_("You are not allowed to change the sidebar."))
 

@@ -85,14 +85,14 @@ def patch_package_code(
     if mask is None or len(mask) == 0:
         mask = TRADITIONAL_UUID
 
-    data = p.read_bytes()  # type:ignore
+    data = p.read_bytes()
     pos = data.find(mask.encode("ascii"))
     if pos == -1:
         write_state_file(state_file, -1, "")
         return False
 
     ret = data.replace(mask.encode("ascii"), package_code.encode("ascii"), 1)
-    p.write_bytes(ret)  # type:ignore
+    p.write_bytes(ret)
 
     write_state_file(state_file, pos, package_code)
 
@@ -132,14 +132,14 @@ def patch_windows_version(
 
     expected_blob = _matrix.format(_expected_version).encode("ascii")
     required_blob = _matrix.format(new_version).encode("ascii")
-    data = p.read_bytes()  # type:ignore
+    data = p.read_bytes()
     pos = data.find(expected_blob)
     if pos == -1:
         print("VersionNT matrix isn't found, impossible to patch")
         return False
 
     ret = data.replace(expected_blob, required_blob, 1)
-    p.write_bytes(ret)  # type:ignore
+    p.write_bytes(ret)
 
     return True
 
@@ -181,7 +181,7 @@ def patch_package_code_by_marker(
     elif not valid_uuid(package_code):
         package_code = generate_uuid_from_base(package_code)
 
-    data = p.read_bytes()  # type:ignore
+    data = p.read_bytes()
     location = data.find(MSI_PACKAGE_CODE_MARKER.encode("ascii"))
     if location == -1:
         return False
@@ -194,7 +194,7 @@ def patch_package_code_by_marker(
     start = location
     end = start + len(package_code)
     out = data[:start] + package_code.encode("ascii") + data[end:]
-    p.write_bytes(out)  # type:ignore
+    p.write_bytes(out)
 
     write_state_file(state_file, start, package_code)
 

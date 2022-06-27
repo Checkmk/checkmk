@@ -7,7 +7,7 @@
 import cmk.utils.memoize as memoize
 
 
-def test_memoize_pow():
+def test_memoize_pow() -> None:
     @memoize.MemoizeCache
     def memoized_pow(a, b):
         return a**b
@@ -19,7 +19,7 @@ def test_memoize_pow():
     assert len(memoized_pow._cache) == 2
 
 
-def test_memoize_clear():
+def test_memoize_clear() -> None:
     @memoize.MemoizeCache
     def memoized_pow(a, b):
         return a**b

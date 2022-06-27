@@ -40,6 +40,7 @@ def check_informix_locks(item, params, parsed):
         if state:
             infotext += " (warn/crit at %s/%s)" % (warn, crit)
         return state, infotext, [("locks", locks)]
+    return None
 
 
 check_info["informix_locks"] = {

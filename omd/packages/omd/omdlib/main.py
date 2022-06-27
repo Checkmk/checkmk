@@ -47,6 +47,7 @@ from typing import (
     Callable,
     cast,
     Dict,
+    Final,
     IO,
     Iterable,
     List,
@@ -75,6 +76,7 @@ from omdlib.config_hooks import (
     save_site_conf,
     sort_hooks,
 )
+from omdlib.console import ok, show_success
 from omdlib.contexts import AbstractSiteContext, RootContext, SiteContext
 from omdlib.dialog import (
     ask_user_choices,
@@ -86,6 +88,11 @@ from omdlib.dialog import (
 )
 from omdlib.init_scripts import call_init_scripts, check_status
 from omdlib.skel_permissions import Permissions, read_skel_permissions, skel_permissions_file_path
+from omdlib.system_apache import (
+    delete_apache_hook,
+    register_with_system_apache,
+    unregister_from_system_apache,
+)
 from omdlib.tmpfs import (
     add_to_fstab,
     mark_tmpfs_initialized,
@@ -110,7 +117,7 @@ from omdlib.users_and_groups import (
     useradd,
     userdel,
 )
-from omdlib.utils import chdir, delete_user_file, ok
+from omdlib.utils import chdir, delete_user_file
 from omdlib.version_info import VersionInfo
 
 import cmk.utils.log
@@ -190,14 +197,6 @@ def stop_logging() -> None:
     global g_stdout_log, g_stderr_log
     g_stdout_log = None
     g_stderr_log = None
-
-
-def show_success(exit_code: int) -> int:
-    if exit_code is True or exit_code == 0:
-        ok()
-    else:
-        sys.stdout.write(tty.error + "\n")
-    return exit_code
 
 
 # .
@@ -470,7 +469,7 @@ def _is_unpatchable_file(path: str) -> bool:
     return path.endswith(".png") or path.endswith(".pdf")
 
 
-def patch_template_file(
+def patch_template_file(  # pylint: disable=too-many-branches
     conflict_mode: str, src: str, dst: str, old_site: SiteContext, new_site: SiteContext
 ) -> None:
     # Create patch from old instantiated skeleton file to new one
@@ -602,7 +601,7 @@ def patch_template_file(
 
 # Try to merge changes from old->new version and
 # old->user version
-def merge_update_file(
+def merge_update_file(  # pylint: disable=too-many-branches
     site: SiteContext, conflict_mode: str, relpath: str, old_version: str, new_version: str
 ) -> None:
     fn = tty.bold + relpath + tty.normal
@@ -857,7 +856,7 @@ def _execute_update_file(
                     todo = True  # Try again
 
 
-def update_file(
+def update_file(  # pylint: disable=too-many-branches
     relpath: str,
     site: SiteContext,
     conflict_mode: str,
@@ -1294,7 +1293,7 @@ def initialize_site_ca(site: SiteContext) -> None:
     if not ca.site_certificate_exists(site.name):
         ca.create_site_certificate(site.name)
     if not ca.agent_receiver_certificate_exists:
-        ca.create_agent_receiver_certificate()
+        ca.create_agent_receiver_certificate(site.name)
 
 
 def config_change(version_info: VersionInfo, site: SiteContext, config_hooks: ConfigHooks) -> None:
@@ -1708,53 +1707,6 @@ def hostname() -> str:
     return completed_process.stdout.strip()
 
 
-def create_apache_hook(site: SiteContext) -> None:
-    with open("/omd/apache/%s.conf" % site.name, "w") as f:
-        f.write("Include %s/etc/apache/mode.conf\n" % site.dir)
-
-
-def delete_apache_hook(sitename: str) -> None:
-    hook_path = "/omd/apache/%s.conf" % sitename
-    if not os.path.exists(hook_path):
-        return
-
-    try:
-        os.remove(hook_path)
-    except Exception as e:
-        sys.stderr.write("Cannot remove apache hook %s: %s\n" % (hook_path, e))
-
-
-def init_cmd(version_info: VersionInfo, name: str, action: str) -> str:
-    return version_info.INIT_CMD % {
-        "name": name,
-        "action": action,
-    }
-
-
-def reload_apache(version_info: VersionInfo) -> None:
-    sys.stdout.write("Reloading Apache...")
-    sys.stdout.flush()
-    show_success(subprocess.call([version_info.APACHE_CTL, "graceful"]) >> 8)
-
-
-def restart_apache(version_info: VersionInfo) -> None:
-    if (
-        os.system(  # nosec
-            init_cmd(version_info, version_info.APACHE_INIT_NAME, "status") + " >/dev/null 2>&1"
-        )
-        >> 8
-        == 0
-    ):
-        sys.stdout.write("Restarting Apache...")
-        sys.stdout.flush()
-        show_success(
-            os.system(  # nosec
-                init_cmd(version_info, version_info.APACHE_INIT_NAME, "restart") + " >/dev/null"
-            )
-            >> 8
-        )
-
-
 def replace_tags(content: bytes, replacements: Replacements) -> bytes:
     for var, value in replacements.items():
         content = content.replace(var.encode("utf-8"), value.encode("utf-8"))
@@ -1877,7 +1829,7 @@ def main_help(
         _command_options,
         descr,
         _confirm_text,
-    ) in commands:
+    ) in COMMANDS:
         if only_root and not is_root():
             continue
 
@@ -2245,13 +2197,7 @@ def finalize_site(
         if status:
             bail_out("Error in non-priviledged sub-process.")
 
-    # Finally reload global apache - with root permissions - and
-    # create include-hook for Apache and reload apache
-    create_apache_hook(site)
-    if apache_reload:
-        reload_apache(version_info)
-    else:
-        restart_apache(version_info)
+    register_with_system_apache(version_info, site, apache_reload)
 
 
 def finalize_site_as_user(
@@ -2306,7 +2252,7 @@ def main_rm(
     # Needs to be cleaned up before removing the site directory. Otherwise a
     # parallel restart / reload of the apache may fail, because the apache hook
     # refers to a not existing site apache config.
-    delete_apache_hook(site.name)
+    unregister_from_system_apache(version_info, site, apache_reload="apache-reload" in options)
 
     if not reuse:
         remove_from_fstab(site)
@@ -2324,11 +2270,6 @@ def main_rm(
         create_site_dir(site)
         os.mkdir(site.tmp_dir)
         os.chown(site.tmp_dir, user_id(site.name), group_id(site.name))
-
-    if "apache-reload" in options:
-        reload_apache(version_info)
-    else:
-        restart_apache(version_info)
 
 
 def create_site_dir(site: SiteContext) -> None:
@@ -2355,9 +2296,7 @@ def main_disable(
     stop_if_not_stopped(site)
     unmount_tmpfs(site, kill="kill" in options)
     sys.stdout.write("Disabling Apache configuration for this site...")
-    delete_apache_hook(site.name)
-    ok()
-    restart_apache(version_info)
+    unregister_from_system_apache(version_info, site, apache_reload=False)
 
 
 def main_enable(
@@ -2372,9 +2311,7 @@ def main_enable(
         sys.stderr.write("This site is already enabled.\n")
         sys.exit(0)
     sys.stdout.write("Re-enabling Apache configuration for this site...")
-    create_apache_hook(site)
-    ok()
-    restart_apache(version_info)
+    register_with_system_apache(version_info, site, apache_reload=False)
 
 
 def _get_conflict_mode(options: CommandOptions) -> str:
@@ -2386,7 +2323,7 @@ def _get_conflict_mode(options: CommandOptions) -> str:
     return conflict_mode
 
 
-def main_mv_or_cp(
+def main_mv_or_cp(  # pylint: disable=too-many-branches
     version_info: VersionInfo,
     old_site: SiteContext,
     global_opts: "GlobalOptions",
@@ -2663,7 +2600,7 @@ def print_diff(
         print_status(StateMarkers.warn, fn, "p", "Changed permissions")
 
 
-def main_update(
+def main_update(  # pylint: disable=too-many-branches
     version_info: VersionInfo,
     site: SiteContext,
     global_opts: "GlobalOptions",
@@ -2866,6 +2803,8 @@ def _is_version_update_allowed(from_version: str, to_version: str) -> bool:
     True
     >>> c("2022.01.01", "2021.12.13")
     True
+    >>> c("2.1.0-2022.06.23", "2022.06.23-sandbox-lm-2.2-omd-apache")
+    True
 
     Nightly branch builds e.g. 2.0.0-2022.01.01 are treated as 2.0.0.
 
@@ -3033,7 +2972,7 @@ def main_umount(
     sys.exit(exit_status)
 
 
-def main_init_action(
+def main_init_action(  # pylint: disable=too-many-branches
     version_info: VersionInfo,
     site: SiteContext,
     global_opts: "GlobalOptions",
@@ -3185,7 +3124,7 @@ def main_init_action(
     sys.exit(exit_status)
 
 
-def main_config(
+def main_config(  # pylint: disable=too-many-branches
     version_info: VersionInfo,
     site: SiteContext,
     global_opts: "GlobalOptions",
@@ -3271,7 +3210,7 @@ def main_backup(
             _try_backup_site_to_tarfile(fh, "w:", options, site, global_opts)
 
 
-def _restore_backup_from_tar(
+def _restore_backup_from_tar(  # pylint: disable=too-many-branches
     *,
     tar: tarfile.TarFile,
     site: SiteContext,
@@ -3375,7 +3314,7 @@ def main_restore(
 ) -> None:
     if len(args) == 0:
         bail_out(
-            "You need to provide either a path to the source " 'file or "-" for restore from stdin.'
+            'You need to provide either a path to the source file or "-" for restore from stdin.'
         )
 
     source = args[-1]
@@ -3806,9 +3745,7 @@ class Command(NamedTuple):
     confirm_text: str
 
 
-commands: List[Command] = []
-
-commands.append(
+COMMANDS: Final = [
     Command(
         command="help",
         only_root=False,
@@ -3821,10 +3758,7 @@ commands.append(
         options=[],
         description="Show general help",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="setversion",
         only_root=True,
@@ -3837,10 +3771,7 @@ commands.append(
         options=[],
         description="Sets the default version of OMD which will be used by new sites",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="version",
         only_root=False,
@@ -3855,10 +3786,7 @@ commands.append(
         ],
         description="Show version of OMD",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="versions",
         only_root=False,
@@ -3873,10 +3801,7 @@ commands.append(
         ],
         description="List installed OMD versions",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="sites",
         only_root=False,
@@ -3891,10 +3816,7 @@ commands.append(
         ],
         description="Show list of sites",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="create",
         only_root=True,
@@ -3934,10 +3856,7 @@ commands.append(
         "- Create and populate the site home directory\n"
         "- Restart the system wide apache daemon\n"
         "- Add tmpfs for the site to fstab and mount it",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="init",
         only_root=True,
@@ -3957,10 +3876,7 @@ commands.append(
         ],
         description="Populate site directory with default files and enable the site",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="rm",
         only_root=True,
@@ -3992,10 +3908,7 @@ commands.append(
         "- Remove the system group <SITENAME>\n"
         "- Remove the site home directory\n"
         "- Restart the system wide apache daemon\n",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="disable",
         only_root=True,
@@ -4010,10 +3923,7 @@ commands.append(
         ],
         description="Disable a site (stop it, unmount tmpfs, remove Apache hook)",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="enable",
         only_root=True,
@@ -4026,10 +3936,7 @@ commands.append(
         options=[],
         description="Enable a site (reenable a formerly disabled site)",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="mv",
         only_root=True,
@@ -4066,10 +3973,7 @@ commands.append(
         ],
         description="Rename a site",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="cp",
         only_root=True,
@@ -4109,10 +4013,7 @@ commands.append(
         ],
         description="Make a copy of a site",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="update",
         only_root=False,
@@ -4132,10 +4033,7 @@ commands.append(
         ],
         description="Update site to other version of OMD",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="start",
         only_root=False,
@@ -4153,10 +4051,7 @@ commands.append(
         ],
         description="Start services of one or all sites",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="stop",
         only_root=False,
@@ -4174,10 +4069,7 @@ commands.append(
         ],
         description="Stop services of site(s)",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="restart",
         only_root=False,
@@ -4194,10 +4086,7 @@ commands.append(
         ],
         description="Restart services of site(s)",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="reload",
         only_root=False,
@@ -4214,10 +4103,7 @@ commands.append(
         ],
         description="Reload services of site(s)",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="status",
         only_root=False,
@@ -4236,10 +4122,7 @@ commands.append(
         ],
         description="Show status of services of site(s)",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="config",
         only_root=False,
@@ -4256,10 +4139,7 @@ Usage:\n\
  omd config [site] show\t\t\tshow configuration settings\n\
  omd config [site] set VAR VAL\t\tset specific setting VAR to VAL",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="diff",
         only_root=False,
@@ -4274,10 +4154,7 @@ commands.append(
         ],
         description="Shows differences compared to the original version files",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="su",
         only_root=True,
@@ -4290,10 +4167,7 @@ commands.append(
         options=[],
         description="Run a shell as a site-user",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="umount",
         only_root=False,
@@ -4309,10 +4183,7 @@ commands.append(
         ],
         description="Umount ramdisk volumes of site(s)",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="backup",
         only_root=False,
@@ -4328,10 +4199,7 @@ commands.append(
         ],
         description="Create a backup tarball of a site, writing it to a file or stdout",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="restore",
         only_root=False,
@@ -4372,10 +4240,7 @@ commands.append(
         ],
         description="Restores the backup of a site to an existing site or creates a new site",
         confirm_text="",
-    )
-)
-
-commands.append(
+    ),
     Command(
         command="cleanup",
         only_root=True,
@@ -4388,8 +4253,8 @@ commands.append(
         options=[],
         description="Uninstall all Check_MK versions that are not used by any site.",
         confirm_text="",
-    )
-)
+    ),
+]
 
 
 class GlobalOptions(NamedTuple):
@@ -4444,7 +4309,7 @@ def _opt_arg(main_args: Arguments, opt: str) -> Tuple[str, Arguments]:
     return arg, main_args
 
 
-def _parse_command_options(
+def _parse_command_options(  # pylint: disable=too-many-branches
     args: Arguments, options: List[Option]
 ) -> Tuple[Arguments, CommandOptions]:
 
@@ -4577,7 +4442,7 @@ def ensure_mkbackup_lock_dir_rights() -> None:
 # the options before the command here only
 # TODO: Refactor these global variables
 # TODO: Refactor to argparse. Be aware of the pitfalls of the OMD command line scheme
-def main() -> None:
+def main() -> None:  # pylint: disable=too-many-branches
     ensure_mkbackup_lock_dir_rights()
 
     main_args = sys.argv[1:]
@@ -4705,7 +4570,7 @@ def _get_command(
     global_opts: GlobalOptions,
     command_arg: str,
 ) -> Command:
-    for command in commands:
+    for command in COMMANDS:
         if command.command == command_arg:
             return command
 

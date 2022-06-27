@@ -12,7 +12,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.structured_data import StructuredDataNode
 
 from cmk.gui import sites
-from cmk.gui.globals import request
+from cmk.gui.http import request
 from cmk.gui.plugins.views.utils import painter_registry
 from cmk.gui.type_defs import PainterSpec
 from cmk.gui.utils.html import HTML
@@ -27,6 +27,7 @@ def fixture_livestatus_test_config(mock_livestatus):
         "hosts",
         [
             {
+                "host_name": "abc",
                 "name": "abc",
                 "alias": "abc",
                 "address": "server.example.com",
@@ -52,7 +53,7 @@ def fixture_livestatus_test_config(mock_livestatus):
 
 
 @pytest.mark.usefixtures("load_config")
-def test_registered_painters():
+def test_registered_painters() -> None:
     painters = painter_registry.keys()
     expected_painters = [
         "aggr_acknowledged",
@@ -254,6 +255,7 @@ def test_registered_painters():
         "inv_hardware_storage_controller",
         "inv_hardware_storage_controller_version",
         "inv_hardware_storage_disks",
+        "inv_hardware_storage_disks_size",
         "inv_hardware_system",
         "inv_hardware_system_expresscode",
         "inv_hardware_system_manufacturer",
@@ -263,11 +265,14 @@ def test_registered_painters():
         "inv_hardware_system_serial",
         "inv_hardware_system_serial_number",
         "inv_hardware_video",
+        "inv_hardware_volumes",
+        "inv_hardware_volumes_physical_volumes",
         "inv_networking",
         "inv_networking_addresses",
         "inv_networking_available_ethernet_ports",
         "inv_networking_interfaces",
         "inv_networking_hostname",
+        "inv_networking_kube",
         "inv_networking_routes",
         "inv_networking_total_ethernet_ports",
         "inv_networking_total_interfaces",
@@ -286,6 +291,7 @@ def test_registered_painters():
         "inv_software_applications_check_mk_num_services",
         "inv_software_applications_check_mk_sites",
         "inv_software_applications_check_mk_versions",
+        "inv_software_applications_checkmk-agent",
         "inv_software_applications_checkmk-agent_local_checks",
         "inv_software_applications_checkmk-agent_plugins",
         "inv_software_applications_citrix",
@@ -302,6 +308,7 @@ def test_registered_painters():
         "inv_software_applications_docker_container_ports",
         "inv_software_applications_docker_containers",
         "inv_software_applications_docker_images",
+        "inv_software_applications_docker_networks",
         "inv_software_applications_docker_node_labels",
         "inv_software_applications_docker_num_containers_paused",
         "inv_software_applications_docker_num_containers_running",
@@ -313,13 +320,15 @@ def test_registered_painters():
         "inv_software_applications_docker_swarm_node_id",
         "inv_software_applications_docker_swarm_state",
         "inv_software_applications_docker_version",
+        "inv_software_applications_fortinet",
         "inv_software_applications_fortinet_fortigate_high_availability",
         "inv_software_applications_fortinet_fortisandbox",
+        "inv_software_applications_fritz",
         "inv_software_applications_fritz_auto_disconnect_time",
         "inv_software_applications_fritz_dns_server_1",
         "inv_software_applications_fritz_dns_server_2",
         "inv_software_applications_fritz_link_type",
-        "inv_software_applications_fritz_statefulset_upnp_config_enabled",
+        "inv_software_applications_fritz_upnp_config_enabled",
         "inv_software_applications_fritz_voip_dns_server_1",
         "inv_software_applications_fritz_voip_dns_server_2",
         "inv_software_applications_fritz_wan_access_type",
@@ -327,6 +336,9 @@ def test_registered_painters():
         "inv_software_applications_ibm_mq_channels",
         "inv_software_applications_ibm_mq_managers",
         "inv_software_applications_ibm_mq_queues",
+        "inv_software_applications_mobileiron",
+        "inv_software_applications_mobileiron_partition_name",
+        "inv_software_applications_mobileiron_registration_state",
         "inv_software_applications_kube",
         "inv_software_applications_kube_metadata",
         "inv_software_applications_kube_metadata_name",
@@ -348,7 +360,6 @@ def test_registered_painters():
         "inv_software_applications_kube_deployment_match_labels",
         "inv_software_applications_kube_deployment_match_expressions",
         "inv_software_applications_kube_labels",
-        "inv_software_applications_kube_network",
         "inv_software_applications_kube_node",
         "inv_software_applications_kube_node_architecture",
         "inv_software_applications_kube_node_container_runtime_version",
@@ -364,25 +375,6 @@ def test_registered_painters():
         "inv_software_applications_kube_pod_node",
         "inv_software_applications_kube_pod_pod_ip",
         "inv_software_applications_kube_pod_qos_class",
-        "inv_software_applications_kubernetes_assigned_pods",
-        "inv_software_applications_kubernetes_daemon_pod_containers",
-        "inv_software_applications_kubernetes_ingresses",
-        "inv_software_applications_kubernetes_job_container",
-        "inv_software_applications_kubernetes_nodes",
-        "inv_software_applications_kubernetes_pod_container",
-        "inv_software_applications_kubernetes_pod_info",
-        "inv_software_applications_kubernetes_pod_info_dns_policy",
-        "inv_software_applications_kubernetes_pod_info_host_ip",
-        "inv_software_applications_kubernetes_pod_info_host_network",
-        "inv_software_applications_kubernetes_pod_info_node",
-        "inv_software_applications_kubernetes_pod_info_pod_ip",
-        "inv_software_applications_kubernetes_pod_info_qos_class",
-        "inv_software_applications_kubernetes_roles",
-        "inv_software_applications_kubernetes_selector",
-        "inv_software_applications_kubernetes_service_info",
-        "inv_software_applications_kubernetes_service_info_cluster_ip",
-        "inv_software_applications_kubernetes_service_info_load_balancer_ip",
-        "inv_software_applications_kubernetes_service_info_type",
         "inv_software_applications_mssql",
         "inv_software_applications_mssql_instances",
         "inv_software_applications_oracle",
@@ -393,6 +385,7 @@ def test_registered_painters():
         "inv_software_applications_oracle_sga",
         "inv_software_applications_oracle_systemparameter",
         "inv_software_applications_oracle_tablespaces",
+        "inv_software_applications_vmwareesx",
         "inv_software_bios",
         "inv_software_bios_date",
         "inv_software_bios_vendor",
@@ -805,7 +798,7 @@ def fixture_service_painter_names():
     return sorted(list(painters_of_datasource("services").keys()))
 
 
-def test_service_painters(request_context, service_painter_idents, live):
+def test_service_painters(request_context, service_painter_idents, live) -> None:
     with live(expect_status_query=False), request.stashed_vars(), on_time(
         "2018-04-15 16:50", "CET"
     ):
@@ -1691,9 +1684,6 @@ def _set_expected_queries(painter_ident, live):
     if painter_ident == "inv":
         # TODO: Why is it querying twice?
         live.expect_query(
-            "GET hosts\nColumns: host_name\nLocaltime: 1523811000\nOutputFormat: python3\nKeepAlive: on\nResponseHeader: fixed16"
-        )
-        live.expect_query(
-            "GET hosts\nColumns: host_name\nLocaltime: 1523811000\nOutputFormat: python3\nKeepAlive: on\nResponseHeader: fixed16"
+            "GET hosts\nColumns: host_name\nLocaltime: 1523811000\nOutputFormat: json\nKeepAlive: on\nResponseHeader: fixed16"
         )
         return

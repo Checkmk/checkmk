@@ -5,10 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
-from typing import Any, Dict, Mapping, Optional
+from typing import Any, Mapping, Optional
 
-from .agent_based_api.v1 import HostLabel, IgnoreResults, register, Result, Service
-from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import HostLabel, IgnoreResults, register, Result, Service, State
 from .agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -20,13 +19,23 @@ from .utils import docker, uptime
 RESTART_POLICIES_TO_DISCOVER = ("always",)
 
 HEALTH_STATUS_MAP = {
-    "healthy": state.OK,
-    "starting": state.WARN,
-    "unhealthy": state.CRIT,
+    "healthy": State.OK,
+    "starting": State.WARN,
+    "unhealthy": State.CRIT,
 }
 
 
-def _is_active_container(section: Dict[str, Any]) -> bool:
+SectionStandard = Mapping[str, Any]
+
+
+class _MultipleNodesMarker:
+    ...
+
+
+Section = SectionStandard | _MultipleNodesMarker
+
+
+def _is_active_container(section: SectionStandard) -> bool:
     """return wether container is or should be running"""
     if section.get("Status") in ("running", "exited"):
         return True
@@ -34,18 +43,23 @@ def _is_active_container(section: Dict[str, Any]) -> bool:
     return restart_policy_name in RESTART_POLICIES_TO_DISCOVER
 
 
-def parse_docker_container_status(string_table: StringTable) -> Dict[str, Any]:
-    """process the first line to a JSON object
-
-    In case there are multiple lines of output sent by the agent only process the first
-    line. We assume that this a full JSON object. The rest of the section is skipped.
-    When a container got piggyback data from multiple hosts (e.g. a cluster) this results
-    in multiple JSON objects handed over to this check.
+def parse_docker_container_status(string_table: StringTable) -> Section:
+    """Normally, we expect two lines of agent output here: the version information and the section-
+    specific JSON data. However, since docker containers are often piggyback hosts, it can happen
+    that we get the concatenated agent output from multiple parent hosts in Checkmk (SUP-10582).
+    This happens if a container with the same name runs on multiple docker hosts and if the docker
+    agent plugin is configured to use the container name as piggyback host name. Even though this is
+    of course unwanted, we 'parse' this data here, s.t. in the check functions, we can inform the user
+    about this issue.
     """
-    return docker.parse(string_table, strict=False).data
+    return (
+        _MultipleNodesMarker()
+        if len(docker.cleanup_oci_error_message(string_table)) > 2
+        else docker.parse(string_table, strict=False).data
+    )
 
 
-def host_labels_docker_container_status(section) -> HostLabelGenerator:
+def host_labels_docker_container_status(section: Section) -> HostLabelGenerator:
     """Host label function
 
     Labels:
@@ -94,6 +108,9 @@ def host_labels_docker_container_status(section) -> HostLabelGenerator:
     """
     yield HostLabel("cmk/docker_object", "container")
 
+    if isinstance(section, _MultipleNodesMarker):
+        return
+
     image_tags = section.get("ImageTags")
     if not image_tags:
         return
@@ -130,8 +147,8 @@ register.agent_section(
 #   '----------------------------------------------------------------------'
 
 
-def discover_docker_container_status_health(section: Dict[str, Any]) -> DiscoveryResult:
-    if not _is_active_container(section):
+def discover_docker_container_status_health(section: Section) -> DiscoveryResult:
+    if isinstance(section, _MultipleNodesMarker) or not _is_active_container(section):
         return
     # Only discover if a healthcheck and health is configured.
     # Stopped containers may have the 'Health' key anyway, so that's no criteria.
@@ -140,7 +157,10 @@ def discover_docker_container_status_health(section: Dict[str, Any]) -> Discover
         yield Service()
 
 
-def check_docker_container_status_health(section: Dict[str, Any]) -> CheckResult:
+def check_docker_container_status_health(section: Section) -> CheckResult:
+    if isinstance(section, _MultipleNodesMarker):
+        return
+
     if section.get("Status") != "running":
         yield IgnoreResults("Container is not running")
         return
@@ -148,7 +168,7 @@ def check_docker_container_status_health(section: Dict[str, Any]) -> CheckResult
     health = section.get("Health", {})
 
     health_status = health.get("Status", "unknown")
-    cur_state = HEALTH_STATUS_MAP.get(health_status, state.UNKNOWN)
+    cur_state = HEALTH_STATUS_MAP.get(health_status, State.UNKNOWN)
     yield Result(state=cur_state, summary="Health status: %s" % health_status.title())
 
     last_log = health.get("Log", [{}])[-1]
@@ -157,13 +177,13 @@ def check_docker_container_status_health(section: Dict[str, Any]) -> CheckResult
     health_report = last_log.get("Output", "no output").strip().replace("\n", ", ")
     if health_report:
         yield Result(
-            state=state(int(last_log.get("ExitCode") != 0)),
+            state=State(int(last_log.get("ExitCode") != 0)),
             summary="Last health report: %s" % health_report,
         )
 
-    if cur_state == state.CRIT:
+    if cur_state == State.CRIT:
         failing_streak = section.get("Health", {}).get("FailingStreak", "not found")
-        yield Result(state=state.CRIT, summary="Failing streak: %s" % failing_streak)
+        yield Result(state=State.CRIT, summary="Failing streak: %s" % failing_streak)
 
     health_test = section.get("Healthcheck", {}).get("Test")
     if health_test:
@@ -182,7 +202,7 @@ def _health_test_result(health_test: str) -> Result:
     'Health test: CMD-SHELL #!/bin/bash\\n\\nexit 0\\n'
     """
     return Result(
-        state=state.OK,
+        state=State.OK,
         summary=health_test.split("\n", 1)[0].split("#!", 1)[0].strip(),
         details=health_test,
     )
@@ -208,14 +228,27 @@ register.check_plugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_docker_container_status(section: Dict[str, Any]):
-    if _is_active_container(section):
+def discover_docker_container_status(section: Section):
+    if isinstance(section, _MultipleNodesMarker) or _is_active_container(section):
         yield Service()
 
 
-def check_docker_container_status(section: Dict[str, Any]) -> CheckResult:
+def check_docker_container_status(section: Section) -> CheckResult:
+    if isinstance(section, _MultipleNodesMarker):
+        yield Result(
+            state=State.CRIT,
+            summary="Found data from multiple Docker nodes - see service details for more information",
+            details="This docker container apparently exists on multiple parent hosts. This should be "
+            "reflected in the fact that this host has multiple piggyback sources, see the output of the "
+            "Check_MK service. Hence, no definitive information on the container can be displayed. To "
+            "resolve this situation, you have two options: 1. configure the docker agent plugin to use "
+            "the container IDs as host names, 2. use the ruleset 'Hostname translation for piggybacked "
+            "hosts' to create unique host names for the affected containers.",
+        )
+        return
+
     status = section.get("Status", "unknown")
-    cur_state = {"running": state.OK, "unknown": state.UNKNOWN}.get(status, state.CRIT)
+    cur_state = {"running": State.OK, "unknown": State.UNKNOWN}.get(status, State.CRIT)
 
     # Please adjust PainterHostDockerNode if info is changed here
     # 5019 node = output.split()[-1]
@@ -227,7 +260,7 @@ def check_docker_container_status(section: Dict[str, Any]) -> CheckResult:
     yield Result(state=cur_state, summary=info)
 
     if section.get("Error"):
-        yield Result(state=state.CRIT, summary="Error: %s" % section["Error"])
+        yield Result(state=State.CRIT, summary="Error: %s" % section["Error"])
 
 
 register.check_plugin(
@@ -251,7 +284,7 @@ register.check_plugin(
 
 
 def discover_docker_container_status_uptime(
-    section_docker_container_status: Optional[Dict[str, Any]],
+    section_docker_container_status: Section | None,
     section_uptime: Optional[uptime.Section],
 ) -> DiscoveryResult:
     if section_uptime:
@@ -259,7 +292,10 @@ def discover_docker_container_status_uptime(
             # if the uptime service of the checkmk agent is
             # present, we don't need this service.
             return
-    if not section_docker_container_status:
+    if not section_docker_container_status or isinstance(
+        section_docker_container_status,
+        _MultipleNodesMarker,
+    ):
         return
     if (
         _is_active_container(section_docker_container_status)
@@ -270,11 +306,17 @@ def discover_docker_container_status_uptime(
 
 def check_docker_container_status_uptime(
     params: Mapping[str, Any],
-    section_docker_container_status: Optional[Dict[str, Any]],
+    section_docker_container_status: Section | None,
     section_uptime: Optional[uptime.Section],
 ) -> CheckResult:
     if not section_docker_container_status:
         return
+    if isinstance(
+        section_docker_container_status,
+        _MultipleNodesMarker,
+    ):
+        return
+
     started_str = section_docker_container_status.get("StartedAt")
     if not started_str:
         return
@@ -288,7 +330,7 @@ def check_docker_container_status_uptime(
         yield from uptime.check(params, uptime.Section(int(uptime_sec), None))
     else:
         yield from uptime.check(params, uptime.Section(0, None))
-        yield Result(state=state.OK, summary="Operation State: %s" % op_status)
+        yield Result(state=State.OK, summary="Operation State: %s" % op_status)
 
 
 register.check_plugin(

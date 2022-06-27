@@ -32,7 +32,7 @@ class TestHostSections:
             },
         )
 
-    def test_add_self_extends_sections(self, host_sections):
+    def test_add_self_extends_sections(self, host_sections) -> None:
         result = host_sections + host_sections
 
         assert result.sections.keys() == host_sections.sections.keys()
@@ -48,7 +48,7 @@ class TestHostSections:
                 == 2 * host_sections.piggybacked_raw_data[host_name]
             )
 
-    def test_add_other_adds_sections(self, host_sections):
+    def test_add_other_adds_sections(self, host_sections) -> None:
         other = HostSections[Sequence[AgentRawDataSection]](
             {
                 SectionName("section2"): [["first", "line"], ["second", "line"]],

@@ -22,7 +22,7 @@ from cmk.gui.plugins.wato.check_parameters import domino_tasks
         ),
     ],
 )
-def test_transform_discovery_params(params, transformed_params):
+def test_transform_discovery_params(params, transformed_params) -> None:
     assert domino_tasks._transform_inv_domino_tasks_rules(params) == transformed_params
 
 
@@ -54,5 +54,5 @@ def test_transform_discovery_params(params, transformed_params):
         ),
     ],
 )
-def test_transform_valuespec_domino_tasks(par, result):
+def test_transform_valuespec_domino_tasks(par, result) -> None:
     assert domino_tasks._transform_valuespec_domino_tasks(par) == result

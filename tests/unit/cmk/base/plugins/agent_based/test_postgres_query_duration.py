@@ -23,19 +23,19 @@ def Query(seconds="", pid="", current_query="", usename="", client_addr="", stat
     }
 
 
-def test_check_postgres_query_duration_no_data():
+def test_check_postgres_query_duration_no_data() -> None:
     assert list(check_postgres_query_duration("item", {})) == [
         IgnoreResults("Login into database failed"),
     ]
 
 
-def test_check_postgres_query_duration_no_queries():
+def test_check_postgres_query_duration_no_queries() -> None:
     assert list(check_postgres_query_duration("item", {"item": []})) == [
         Result(state=State.OK, summary="No queries running"),
     ]
 
 
-def test_check_postgres_query_duration_basic():
+def test_check_postgres_query_duration_basic() -> None:
     section = {
         "item": [
             Query(seconds="2"),  # not used
@@ -50,7 +50,7 @@ def test_check_postgres_query_duration_basic():
     ]
 
 
-def test_cluster_check_postgres_query_duration_basic():
+def test_cluster_check_postgres_query_duration_basic() -> None:
     node1_section = {
         "item": [
             Query(seconds="23", pid="4242", current_query="Where is Hugo", state="amused"),

@@ -12,23 +12,23 @@ from cmk.special_agents.utils_kubernetes.transform import convert_to_timestamp
 
 
 @pytest.mark.parametrize(
-    "k8s_date_time",
+    "kube_date_time",
     [
         "1970-01-01T00:00:00",
         datetime.datetime(1970, 1, 1, 0, 0, 0),
     ],
 )
-def test_convert_to_timestamp_raises_error(k8s_date_time) -> None:
+def test_convert_to_timestamp_raises_error(kube_date_time) -> None:
     with pytest.raises(Exception):
-        convert_to_timestamp(k8s_date_time)
+        convert_to_timestamp(kube_date_time)
 
 
 @pytest.mark.parametrize(
-    "k8s_date_time",
+    "kube_date_time",
     [
         "1970-01-01T00:00:00Z",
         datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc),
     ],
 )
-def test_convert_to_timestamp_correct_conversion(k8s_date_time) -> None:
-    assert 0 == convert_to_timestamp(k8s_date_time)
+def test_convert_to_timestamp_correct_conversion(kube_date_time) -> None:
+    assert 0 == convert_to_timestamp(kube_date_time)

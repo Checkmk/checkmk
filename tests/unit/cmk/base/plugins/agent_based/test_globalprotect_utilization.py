@@ -33,7 +33,9 @@ def test_parse_globalprotect_utilization(
     "section, expected_result",
     [(Section(utilization=3, max_tunnels=250, active_tunnels=8), [Service()])],
 )
-def test_discover_globalprotect_utilization(section: Section, expected_result: List[Service]):
+def test_discover_globalprotect_utilization(
+    section: Section, expected_result: List[Service]
+) -> None:
     services = list(discover_globalprotect_utilization(section))
     assert services == expected_result
 

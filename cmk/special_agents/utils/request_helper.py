@@ -75,7 +75,7 @@ class HTTPSConfigurableConnection(HTTPSConnection):
 
 
 class HTTPSAuthHandler(HTTPSHandler):
-    def __init__(self, ca_file: str):
+    def __init__(self, ca_file: str) -> None:
         super().__init__()
         self.__ca_file = ca_file
 
@@ -171,7 +171,7 @@ class ApiSession(Session):
         return super().request(method, url, verify=self.ssl_verify, **kwargs)
 
 
-def parse_api_url(
+def parse_api_url(  # type:ignore[no-untyped-def]
     server_address,
     api_path,
     protocol="http",

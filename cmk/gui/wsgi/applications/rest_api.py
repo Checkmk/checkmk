@@ -16,6 +16,7 @@ import os
 import re
 import traceback
 import urllib.parse
+from datetime import datetime
 from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Type, TYPE_CHECKING
 
 from apispec.yaml_utils import dict_to_yaml  # type: ignore[import]
@@ -33,13 +34,13 @@ from cmk.gui.context import AppContext, RequestContext
 from cmk.gui.ctx_stack import app_stack, request_stack
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.globals import PrependURLFilter
 from cmk.gui.http import Request, Response
 from cmk.gui.logged_in import LoggedInNobody, user
 from cmk.gui.login import check_parsed_auth_cookie, user_from_cookie
 from cmk.gui.openapi import add_once, ENDPOINT_REGISTRY, generate_data
 from cmk.gui.permissions import load_dynamic_permissions
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
+from cmk.gui.utils.logging import PrependURLFilter
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.wsgi.auth import automation_auth, gui_user_auth, rfc7662_subject, set_user_context
 from cmk.gui.wsgi.middleware import OverrideRequestMethod
@@ -56,9 +57,6 @@ if TYPE_CHECKING:
         WSGIResponse,
     )
 
-if TYPE_CHECKING:
-    from cmk.gui.plugins.openapi.restful_objects import Endpoint
-
 ARGS_KEY = "CHECK_MK_REST_API_ARGS"
 
 logger = logging.getLogger("cmk.gui.wsgi.rest_api")
@@ -69,7 +67,10 @@ EXCEPTION_STATUS: Dict[Type[Exception], int] = {
 }
 
 
-def _verify_user(environ) -> RFC7662:
+def _verify_user(  # pylint: disable=too-many-branches
+    environ: WSGIEnvironment,
+    now: datetime,
+) -> RFC7662:
     verified: List[RFC7662] = []
 
     auth_header = environ.get("HTTP_AUTHORIZATION", "")
@@ -84,7 +85,7 @@ def _verify_user(environ) -> RFC7662:
             else:
                 # GUI user and Automation users are mutually exclusive. Checking only once is less
                 # work for the system.
-                gui_user = gui_user_auth(user_id, secret)
+                gui_user = gui_user_auth(user_id, secret, now)
                 if gui_user:
                     verified.append(gui_user)
         elif auth_type == "Basic":
@@ -119,7 +120,7 @@ def _verify_user(environ) -> RFC7662:
     if userdb.user_locked(user_id):
         raise MKAuthException(f"{user_id} not authorized.")
 
-    if change_reason := userdb.need_to_change_pw(user_id):
+    if change_reason := userdb.need_to_change_pw(user_id, now):
         raise MKAuthException(f"{user_id} needs to change the password ({change_reason}).")
 
     if userdb.is_two_factor_login_enabled(user_id):
@@ -221,7 +222,7 @@ class Authenticate:
     the memory foot-print of this is feasible and should be done if a good way has been found.
     """
 
-    def __init__(self, endpoint: Endpoint):
+    def __init__(self, endpoint: Endpoint) -> None:
         self.endpoint = endpoint
 
     def __repr__(self) -> str:
@@ -231,7 +232,7 @@ class Authenticate:
         path_args = environ[ARGS_KEY]
 
         try:
-            rfc7662 = _verify_user(environ)
+            rfc7662 = _verify_user(environ, datetime.now())
         except MKException as exc:
             return problem(
                 status=401,
@@ -355,7 +356,7 @@ def _url(environ: WSGIEnvironment) -> str:
 
 
 class ServeSwaggerUI:
-    def __init__(self, prefix=""):
+    def __init__(self, prefix="") -> None:
         self.prefix = prefix
         self.data: Optional[Dict[str, Any]] = None
 

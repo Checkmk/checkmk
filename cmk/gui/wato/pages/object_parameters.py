@@ -7,27 +7,36 @@
 parameters. This is a host/service overview page over all things that can be
 modified via rules."""
 
-from typing import Iterator, List, Optional
+from typing import Collection, Iterator, List, Optional
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
 import cmk.gui.forms as forms
 import cmk.gui.view_utils
-import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import active_config, html, request
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuEntry, PageMenuTopic
 from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_service_status_link
+from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Tuple
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.check_mk_automations import analyse_host, analyse_service
-from cmk.gui.watolib.hosts_and_folders import CREFolder
-from cmk.gui.watolib.rulesets import Rule, Ruleset
-from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
+from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, Folder, folder_preserving_link
+from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset
+from cmk.gui.watolib.rulespecs import (
+    get_rulegroup,
+    Rulespec,
+    rulespec_group_registry,
+    rulespec_registry,
+)
+from cmk.gui.watolib.utils import mk_repr
 
 
 @mode_registry.register
@@ -36,11 +45,11 @@ class ModeObjectParameters(WatoMode):
     _PARAMETERS_OMIT: List = []
 
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "object_parameters"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts", "rulesets"]
 
     @classmethod
@@ -49,16 +58,16 @@ class ModeObjectParameters(WatoMode):
 
     def _from_vars(self):
         self._hostname = request.get_ascii_input_mandatory("host")
-        host = watolib.Folder.current().host(self._hostname)
+        host = Folder.current().host(self._hostname)
         if host is None:
             raise MKUserError("host", _("The given host does not exist."))
-        self._host: watolib.CREHost = host
+        self._host: CREHost = host
         self._host.need_permission("read")
 
         # TODO: Validate?
         self._service = request.get_str_input("service")
 
-    def title(self):
+    def title(self) -> str:
         title = _("Effective parameters of") + " " + self._hostname
         if self._service:
             title += " / " + self._service
@@ -95,8 +104,8 @@ class ModeObjectParameters(WatoMode):
         if self._service:
             yield make_service_status_link(self._host.name(), self._service)
 
-    def page(self):
-        all_rulesets = watolib.AllRulesets()
+    def page(self) -> None:
+        all_rulesets = AllRulesets()
         all_rulesets.load()
         for_host: bool = not self._service
 
@@ -118,7 +127,7 @@ class ModeObjectParameters(WatoMode):
                 # Open form for that group here, if we know that we have at least one rule
                 if last_maingroup != maingroup:
                     last_maingroup = maingroup
-                    rulegroup = watolib.get_rulegroup(maingroup)
+                    rulegroup = get_rulegroup(maingroup)
                     forms.header(
                         rulegroup.title,
                         isopen=maingroup == "monconf",
@@ -144,7 +153,7 @@ class ModeObjectParameters(WatoMode):
         forms.header(_("Host information"), isopen=True, narrow=True, css="rulesettings")
         self._show_labels(host_info.labels, "host", host_info.label_sources)
 
-    def _show_service_info(self, all_rulesets):
+    def _show_service_info(self, all_rulesets):  # pylint: disable=too-many-branches
         assert self._service is not None
 
         serviceinfo = analyse_service(
@@ -214,7 +223,7 @@ class ModeObjectParameters(WatoMode):
                         )
                         return
 
-                    url = watolib.folder_preserving_link(
+                    url = folder_preserving_link(
                         [
                             ("mode", "edit_ruleset"),
                             ("varname", "static_checks:" + checkgroup),
@@ -296,11 +305,11 @@ class ModeObjectParameters(WatoMode):
                 )
             rule_folder, rule_index, rule = origin_rule_result
 
-            url = watolib.folder_preserving_link(
+            url = folder_preserving_link(
                 [("mode", "edit_ruleset"), ("varname", "custom_checks"), ("host", self._hostname)]
             )
-            forms.section(html.render_a(_("Command Line"), href=url))
-            url = watolib.folder_preserving_link(
+            forms.section(HTMLWriter.render_a(_("Command Line"), href=url))
+            url = folder_preserving_link(
                 [
                     ("mode", "edit_rule"),
                     ("varname", "custom_checks"),
@@ -374,16 +383,16 @@ class ModeObjectParameters(WatoMode):
         self, title, title_url, reason, reason_url, is_default, setting: Union[str, HTML]
     ) -> None:
         if title_url:
-            title = html.render_a(title, href=title_url)
+            title = HTMLWriter.render_a(title, href=title_url)
         forms.section(title)
 
         if reason:
-            reason = html.render_a(reason, href=reason_url)
+            reason = HTMLWriter.render_a(reason, href=reason_url)
 
         html.open_table(class_="setting")
         html.open_tr()
         if is_default:
-            html.td(html.render_i(reason), class_="reason")
+            html.td(HTMLWriter.render_i(reason), class_="reason")
             html.td(setting, class_=["settingvalue", "unused"])
         else:
             html.td(reason, class_="reason")
@@ -391,14 +400,14 @@ class ModeObjectParameters(WatoMode):
         html.close_tr()
         html.close_table()
 
-    def _output_analysed_ruleset(
+    def _output_analysed_ruleset(  # pylint: disable=too-many-branches
         self, all_rulesets, rulespec, svc_desc_or_item, svc_desc, known_settings=None
     ):
         if known_settings is None:
             known_settings = self._PARAMETERS_UNKNOWN
 
         def rule_url(rule: Rule) -> str:
-            return watolib.folder_preserving_link(
+            return folder_preserving_link(
                 [
                     ("mode", "edit_rule"),
                     ("varname", varname),
@@ -407,26 +416,26 @@ class ModeObjectParameters(WatoMode):
                     ("host", self._hostname),
                     (
                         "item",
-                        watolib.mk_repr(svc_desc_or_item).decode() if svc_desc_or_item else "",
+                        mk_repr(svc_desc_or_item).decode() if svc_desc_or_item else "",
                     ),
-                    ("service", watolib.mk_repr(svc_desc).decode() if svc_desc else ""),
+                    ("service", mk_repr(svc_desc).decode() if svc_desc else ""),
                 ]
             )
 
         varname = rulespec.name
         valuespec = rulespec.valuespec
 
-        url = watolib.folder_preserving_link(
+        url = folder_preserving_link(
             [
                 ("mode", "edit_ruleset"),
                 ("varname", varname),
                 ("host", self._hostname),
-                ("item", watolib.mk_repr(svc_desc_or_item).decode()),
-                ("service", watolib.mk_repr(svc_desc).decode()),
+                ("item", mk_repr(svc_desc_or_item).decode()),
+                ("service", mk_repr(svc_desc).decode()),
             ]
         )
 
-        forms.section(html.render_a(rulespec.title, url))
+        forms.section(HTMLWriter.render_a(rulespec.title, url))
 
         ruleset = all_rulesets.get(varname)
         setting, rules = ruleset.analyse_ruleset(self._hostname, svc_desc_or_item, svc_desc)
@@ -485,19 +494,19 @@ class ModeObjectParameters(WatoMode):
             # complete outcoming value here.
             if rules and ruleset.match_type() == "dict":
                 if (
-                    rulespec.factory_default is not watolib.Rulespec.NO_FACTORY_DEFAULT
-                    and rulespec.factory_default is not watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+                    rulespec.factory_default is not Rulespec.NO_FACTORY_DEFAULT
+                    and rulespec.factory_default is not Rulespec.FACTORY_DEFAULT_UNUSED
                 ):
                     fd = rulespec.factory_default.copy()
                     fd.update(setting)
                     setting = fd
 
             if valuespec and not rules:  # show the default value
-                if rulespec.factory_default is watolib.Rulespec.FACTORY_DEFAULT_UNUSED:
+                if rulespec.factory_default is Rulespec.FACTORY_DEFAULT_UNUSED:
                     # Some rulesets are ineffective if they are empty
                     html.write_text(_("(unused)"))
 
-                elif rulespec.factory_default is not watolib.Rulespec.NO_FACTORY_DEFAULT:
+                elif rulespec.factory_default is not Rulespec.NO_FACTORY_DEFAULT:
                     # If there is a factory default then show that one
                     setting = rulespec.factory_default
                     html.write_text(valuespec.value_to_html(setting))

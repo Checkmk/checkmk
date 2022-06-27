@@ -14,7 +14,7 @@ import cmk.base.automations
 import cmk.base.automations.check_mk as automations
 
 
-def test_registered_automations():
+def test_registered_automations() -> None:
     needed_automations = [
         "active-check",
         "analyse-host",
@@ -51,7 +51,7 @@ def test_registered_automations():
     )
 
 
-def test_analyse_host(monkeypatch):
+def test_analyse_host(monkeypatch) -> None:
     automation = automations.AutomationAnalyseHost()
 
     ts = Scenario()

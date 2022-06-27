@@ -14,8 +14,10 @@ from typing import Dict
 from urllib.parse import urljoin
 
 import requests
-import urllib3  # type: ignore[import]
+import urllib3
 from requests.structures import CaseInsensitiveDict
+
+from cmk.utils.password_store import replace_passwords
 
 LOGGER = logging.getLogger(__name__)
 
@@ -129,7 +131,7 @@ class AuthError(RuntimeError):
 
 
 class HPMSAConnection:
-    def __init__(self, hostaddress, opt_timeout, debug):
+    def __init__(self, hostaddress, opt_timeout, debug) -> None:
         self._host = hostaddress
         self._base_url = "https://%s/api/" % self._host
         self._timeout = opt_timeout
@@ -184,6 +186,7 @@ class HPMSAConnection:
 
 
 def main(argv=None):
+    replace_passwords()
     args = parse_arguments(argv or sys.argv[1:])
     opt_timeout = 10
 

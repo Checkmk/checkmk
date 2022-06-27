@@ -6,7 +6,6 @@
 
 import abc
 import logging
-import os
 import time
 from pathlib import Path
 from typing import (
@@ -16,10 +15,10 @@ from typing import (
     List,
     Mapping,
     MutableMapping,
+    NamedTuple,
     Optional,
     Sequence,
     Tuple,
-    Union,
 )
 
 import cmk.utils.agent_simulator as agent_simulator
@@ -29,101 +28,63 @@ from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import AgentRawData, HostName, SectionName
 
-from ._base import Fetcher, Parser, Summarizer
+from ._base import Parser, Summarizer
 from ._markers import PiggybackMarker, SectionMarker
-from .cache import FileCache, FileCacheFactory, MaxAge, SectionStore
+from .cache import FileCache, FileCacheFactory, FileCacheMode, MaxAge, SectionStore
 from .host_sections import HostSections
 from .type_defs import AgentRawDataSection, Mode, NO_SELECTION, SectionNameCollection
 
 
 class AgentFileCache(FileCache[AgentRawData]):
-    pass
-
-
-class DefaultAgentFileCache(AgentFileCache):
     @staticmethod
     def _from_cache_file(raw_data: bytes) -> AgentRawData:
         return AgentRawData(raw_data)
 
     @staticmethod
     def _to_cache_file(raw_data: AgentRawData) -> bytes:
-        # TODO: This does not seem to be needed
         return raw_data
 
     def make_path(self, mode: Mode) -> Path:
         return self.base_path / self.hostname
 
 
-class NoCache(AgentFileCache):
-    """Noop cache for fetchers that do not cache."""
-
-    def __init__(
-        self,
-        hostname: HostName,
-        *,
-        base_path: Union[str, Path],
-        max_age: MaxAge,
-        disabled: bool,
-        use_outdated: bool,
-        simulation: bool,
-    ) -> None:
-        # Force disable
-        disabled = True
-        super().__init__(
-            hostname,
-            base_path=base_path,
-            max_age=max_age,
-            disabled=disabled,
-            use_outdated=use_outdated,
-            simulation=simulation,
-        )
-
-    @staticmethod
-    def _from_cache_file(raw_data: bytes) -> AgentRawData:
-        return AgentRawData(raw_data)
-
-    @staticmethod
-    def _to_cache_file(raw_data: AgentRawData) -> bytes:
-        return raw_data
-
-    def make_path(self, mode: Mode):
-        return Path(os.devnull)
-
-
-class DefaultAgentFileCacheFactory(FileCacheFactory[AgentRawData]):
+class AgentFileCacheFactory(FileCacheFactory[AgentRawData]):
     # force_cache_refresh is currently only used by SNMP. It's probably less irritating
     # to implement it here anyway:
-    def make(self, *, force_cache_refresh: bool = False) -> DefaultAgentFileCache:
-        return DefaultAgentFileCache(
+    def make(self, *, force_cache_refresh: bool = False) -> AgentFileCache:
+        return AgentFileCache(
             self.hostname,
             base_path=self.base_path,
             max_age=MaxAge.none() if force_cache_refresh else self.max_age,
-            disabled=self.disabled,
-            use_outdated=False if force_cache_refresh else self.use_outdated,
+            use_outdated=self.simulation or (False if force_cache_refresh else self.use_outdated),
             simulation=self.simulation,
+            use_only_cache=self.use_only_cache,
+            file_cache_mode=FileCacheMode.DISABLED if self.disabled else FileCacheMode.READ_WRITE,
         )
 
 
 class NoCacheFactory(FileCacheFactory[AgentRawData]):
     # force_cache_refresh is currently only used by SNMP. It's probably less irritating
     # to implement it here anyway. At the time of this writing NoCache does nothing either way.
-    def make(self, *, force_cache_refresh: bool = False) -> NoCache:
-        return NoCache(
+    def make(self, *, force_cache_refresh: bool = False) -> AgentFileCache:
+        return AgentFileCache(
             self.hostname,
             base_path=self.base_path,
             max_age=MaxAge.none() if force_cache_refresh else self.max_age,
-            disabled=self.disabled,
-            use_outdated=False if force_cache_refresh else self.use_outdated,
+            use_outdated=self.simulation or (False if force_cache_refresh else self.use_outdated),
             simulation=self.simulation,
+            use_only_cache=self.use_only_cache,
+            file_cache_mode=FileCacheMode.DISABLED,
         )
 
 
-class AgentFetcher(Fetcher[AgentRawData]):
-    pass
+class SectionWithHeader(NamedTuple):
+    header: SectionMarker
+    section: List[AgentRawData]
 
 
-MutableSection = MutableMapping[SectionMarker, List[AgentRawData]]
-ImmutableSection = Mapping[SectionMarker, Sequence[AgentRawData]]
+MutableSection = List[SectionWithHeader]
+ImmutableSection = Sequence[SectionWithHeader]
 
 
 class ParserState(abc.ABC):
@@ -222,7 +183,8 @@ class ParserState(abc.ABC):
             type(self).__name__,
             HostSectionParser.__name__,
         )
-        self.sections.setdefault(section_header, [])
+        if not self.sections or self.sections[-1].header != section_header:
+            self.sections.append(SectionWithHeader(section_header, []))
         return HostSectionParser(
             self.hostname,
             self.sections,
@@ -243,7 +205,7 @@ class ParserState(abc.ABC):
             type(self).__name__,
             PiggybackParser.__name__,
         )
-        self.piggyback_sections.setdefault(header, {})
+        self.piggyback_sections.setdefault(header, [])
         return PiggybackParser(
             self.hostname,
             self.sections,
@@ -266,7 +228,11 @@ class ParserState(abc.ABC):
             type(self).__name__,
             PiggybackSectionParser.__name__,
         )
-        self.piggyback_sections[current_host].setdefault(section_header, [])
+        if (
+            not self.piggyback_sections[current_host]
+            or self.piggyback_sections[current_host][-1].header != section_header
+        ):
+            self.piggyback_sections[current_host].append(SectionWithHeader(section_header, []))
         return PiggybackSectionParser(
             self.hostname,
             self.sections,
@@ -426,7 +392,8 @@ class PiggybackSectionParser(ParserState):
         self.current_section: Final = current_section
 
     def do_action(self, line: bytes) -> "ParserState":
-        self.piggyback_sections[self.current_host][self.current_section].append(AgentRawData(line))
+        assert self.piggyback_sections[self.current_host][-1].header == self.current_section
+        self.piggyback_sections[self.current_host][-1].section.append(AgentRawData(line))
         return self
 
     def on_piggyback_header(self, line: bytes) -> "ParserState":
@@ -527,7 +494,8 @@ class HostSectionParser(ParserState):
         if not self.current_section.nostrip:
             line = line.strip()
 
-        self.sections[self.current_section].append(AgentRawData(line))
+        assert self.sections[-1].header == self.current_section
+        self.sections[-1].section.append(AgentRawData(line))
         return self
 
     def on_piggyback_header(self, line: bytes) -> "ParserState":
@@ -592,7 +560,7 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
         raw_sections, piggyback_sections = self._parse_host_section(raw_data)
         section_info = {
             header.name: header
-            for header in raw_sections
+            for header, _ in raw_sections
             if selection is NO_SELECTION or header.name in selection
         }
 
@@ -600,7 +568,7 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
             sections: ImmutableSection,
         ) -> MutableMapping[SectionName, List[AgentRawDataSection]]:
             out: MutableMapping[SectionName, List[AgentRawDataSection]] = {}
-            for header, content in sections.items():
+            for header, content in sections:
                 out.setdefault(header.name, []).extend(header.parse_line(line) for line in content)
             return out
 
@@ -611,7 +579,7 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
             cache_for: int,
             selection: SectionNameCollection,
         ) -> Iterator[bytes]:
-            for header, content in sections.items():
+            for header, content in sections:
                 if not (selection is NO_SELECTION or header.name in selection):
                     continue
 
@@ -679,7 +647,7 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
         """Split agent output in chunks, splits lines by whitespaces."""
         parser: ParserState = NOOPParser(
             self.hostname,
-            {},
+            [],
             {},
             translation=self.translation,
             encoding_fallback=self.encoding_fallback,

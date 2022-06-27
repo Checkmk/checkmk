@@ -10,24 +10,22 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Optional, TYPE_CHECKING
+from typing import List, Optional
 
 from werkzeug.local import LocalStack
 
+from cmk.gui import http, userdb
+from cmk.gui.config import Config
+from cmk.gui.display_options import DisplayOptions
+from cmk.gui.htmllib.html import HTMLGenerator
+from cmk.gui.i18n import Translation
+from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.plugins.openapi.restful_objects import Endpoint
+from cmk.gui.utils.output_funnel import OutputFunnel
+from cmk.gui.utils.theme import Theme
+from cmk.gui.utils.timeout_manager import TimeoutManager
+from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.gui.utils.user_errors import UserErrors
-
-if TYPE_CHECKING:
-    # Cyclical import
-    from cmk.gui import htmllib, http, userdb
-    from cmk.gui.config import Config
-    from cmk.gui.display_options import DisplayOptions
-    from cmk.gui.i18n import Translation
-    from cmk.gui.logged_in import LoggedInUser
-    from cmk.gui.plugins.openapi.restful_objects import Endpoint
-    from cmk.gui.utils.output_funnel import OutputFunnel
-    from cmk.gui.utils.theme import Theme
-    from cmk.gui.utils.timeout_manager import TimeoutManager
-    from cmk.gui.utils.transaction_manager import TransactionManager
 
 _sentinel = object()
 
@@ -69,16 +67,16 @@ class AppContext:
         https://flask.palletsprojects.com/en/1.1.x/reqcontext/
     """
 
-    def __init__(self, app, *, stack: LocalStack):
+    def __init__(self, app, *, stack: LocalStack) -> None:
         self.app = app
         self.g = _AppCtxGlobals()
         self._stack = stack
 
-    def __enter__(self):
+    def __enter__(self) -> AppContext:
         self._stack.push(self)
         return self
 
-    def __exit__(self, exc_type, exc_value, tb):
+    def __exit__(self, *exc_info: object) -> None:
         self._stack.pop()
 
 
@@ -113,7 +111,7 @@ class RequestContext:
         funnel: OutputFunnel,
         config_obj: Config,
         user: LoggedInUser,  # pylint: disable=redefined-outer-name
-        html_obj: Optional[htmllib.html] = None,
+        html_obj: Optional[HTMLGenerator] = None,
         timeout_manager: Optional[TimeoutManager] = None,  # pylint: disable=redefined-outer-name
         theme: Optional[Theme] = None,  # pylint: disable=redefined-outer-name
         display_options: Optional[DisplayOptions] = None,  # pylint: disable=redefined-outer-name

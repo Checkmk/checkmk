@@ -12,12 +12,11 @@ You can find an introduction to services including service discovery in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_services.html).
 """
 import json
-from typing import List, Optional, Sequence
+from typing import Any, List, Mapping, Optional, Sequence
 
 from cmk.automations.results import CheckPreviewEntry
 
 from cmk.gui import fields as gui_fields
-from cmk.gui import watolib
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -41,6 +40,7 @@ from cmk.gui.watolib.bulk_discovery import (
     prepare_hosts_for_discovery,
     start_bulk_discovery,
 )
+from cmk.gui.watolib.hosts_and_folders import CREHost, Host
 from cmk.gui.watolib.services import (
     checkbox_id,
     Discovery,
@@ -103,9 +103,9 @@ DISCOVERY_ACTION = {
         }
     ],
 )
-def show_services(params) -> Response:
+def show_services(params: Mapping[str, Any]) -> Response:
     """Show all services of specific phase"""
-    host = watolib.Host.load_host(params["host_name"])
+    host = Host.load_host(params["host_name"])
     discovery_request = StartDiscoveryRequest(
         host=host,
         folder=host.folder(),
@@ -179,10 +179,10 @@ class UpdateDiscoveryPhase(BaseSchema):
         ]
     ),
 )
-def update_service_phase(params) -> Response:
+def update_service_phase(params: Mapping[str, Any]) -> Response:
     """Update the phase of a service"""
     body = params["body"]
-    host = watolib.Host.load_host(params["host_name"])
+    host = Host.load_host(params["host_name"])
     target_phase = body["target_phase"]
     check_type = body["check_type"]
     service_item = body["service_item"]
@@ -197,7 +197,7 @@ def update_service_phase(params) -> Response:
 
 def _update_single_service_phase(
     target_phase: str,
-    host: watolib.CREHost,
+    host: CREHost,
     check_type: str,
     service_item: Optional[str],
 ) -> None:
@@ -252,9 +252,9 @@ class DiscoverServices(BaseSchema):
     request_schema=DiscoverServices,
     response_schema=response_schemas.DomainObject,
 )
-def execute(params) -> Response:
+def execute(params: Mapping[str, Any]) -> Response:
     """Execute a service discovery on a host"""
-    host = watolib.Host.load_host(params["host_name"])
+    host = Host.load_host(params["host_name"])
     body = params["body"]
     discovery_request = StartDiscoveryRequest(
         host=host,
@@ -277,7 +277,7 @@ def execute(params) -> Response:
 
 
 def _serve_services(
-    host: watolib.CREHost,
+    host: CREHost,
     discovered_services: Sequence[CheckPreviewEntry],
     discovery_phases: List[str],
 ) -> Response:
@@ -305,7 +305,7 @@ def _lookup_phase_name(internal_phase_name: str) -> str:
 
 
 def serialize_service_discovery(
-    host: watolib.CREHost,
+    host: CREHost,
     discovered_services: Sequence[CheckPreviewEntry],
     discovery_phases: List[str],
 ):
@@ -412,19 +412,19 @@ class BulkDiscovery(BaseSchema):
     do_full_scan = fields.Boolean(
         required=False,
         description="The option whether to perform a full scan or not.",
-        example=False,
+        example=True,
         load_default=True,
     )
     bulk_size = fields.Integer(
         required=False,
         description="The number of hosts to be handled at once.",
-        example=False,
+        example=10,
         load_default=10,
     )
     ignore_errors = fields.Boolean(
         required=False,
         description="The option whether to ignore errors in single check plugins.",
-        example=False,
+        example=True,
         load_default=True,
     )
 
@@ -440,7 +440,7 @@ class BulkDiscovery(BaseSchema):
     request_schema=BulkDiscovery,
     response_schema=response_schemas.DiscoveryBackgroundJobStatusObject,
 )
-def execute_bulk_discovery(params) -> Response:
+def execute_bulk_discovery(params: Mapping[str, Any]) -> Response:
     """Start a bulk discovery job"""
     body = params["body"]
     job = BulkDiscoveryBackgroundJob()
@@ -470,7 +470,7 @@ def execute_bulk_discovery(params) -> Response:
     },
     response_schema=response_schemas.DiscoveryBackgroundJobStatusObject,
 )
-def show_bulk_discovery_status(params) -> Response:
+def show_bulk_discovery_status(params: Mapping[str, Any]) -> Response:
     """Show the status of a bulk discovery job"""
 
     job_id = params["job_id"]

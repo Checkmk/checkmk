@@ -49,7 +49,7 @@ def _collectors():
 #   '----------------------------------------------------------------------'
 
 
-def test_diagnostics_dump_elements():
+def test_diagnostics_dump_elements() -> None:
     fixed_element_classes = set(
         [
             diagnostics.GeneralDiagnosticsElement,
@@ -59,7 +59,8 @@ def test_diagnostics_dump_elements():
     assert fixed_element_classes.issubset(element_classes)
 
 
-def test_diagnostics_dump_create():
+@pytest.mark.usefixtures("mock_livestatus")
+def test_diagnostics_dump_create() -> None:
     diagnostics_dump = diagnostics.DiagnosticsDump()
     diagnostics_dump._create_dump_folder()
 
@@ -75,7 +76,7 @@ def test_diagnostics_dump_create():
     assert all(tarfile.suffix == ".tar.gz" for tarfile in tarfiles)
 
 
-def test_diagnostics_cleanup_dump_folder():
+def test_diagnostics_cleanup_dump_folder() -> None:
     diagnostics_dump = diagnostics.DiagnosticsDump()
     diagnostics_dump._create_dump_folder()
 
@@ -101,7 +102,7 @@ def test_diagnostics_cleanup_dump_folder():
 #   '----------------------------------------------------------------------'
 
 
-def test_diagnostics_element_general():
+def test_diagnostics_element_general() -> None:
     diagnostics_element = diagnostics.GeneralDiagnosticsElement()
     assert diagnostics_element.ident == "general"
     assert diagnostics_element.title == "General"
@@ -110,7 +111,7 @@ def test_diagnostics_element_general():
     )
 
 
-def test_diagnostics_element_general_content(tmp_path, _collectors):
+def test_diagnostics_element_general_content(tmp_path, _collectors) -> None:
     diagnostics_element = diagnostics.GeneralDiagnosticsElement()
     tmppath = Path(tmp_path).joinpath("tmp")
     filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
@@ -134,7 +135,7 @@ def test_diagnostics_element_general_content(tmp_path, _collectors):
     assert sorted(content.keys()) == sorted(info_keys)
 
 
-def test_diagnostics_element_perfdata():
+def test_diagnostics_element_perfdata() -> None:
     diagnostics_element = diagnostics.PerfDataDiagnosticsElement()
     assert diagnostics_element.ident == "perfdata"
     assert diagnostics_element.title == "Performance Data"
@@ -143,7 +144,7 @@ def test_diagnostics_element_perfdata():
     )
 
 
-def test_diagnostics_element_perfdata_content(tmp_path, _collectors, mock_livestatus):
+def test_diagnostics_element_perfdata_content(tmp_path, _collectors, mock_livestatus) -> None:
 
     test_columns = {
         "connections": 1253,
@@ -181,14 +182,14 @@ def test_diagnostics_element_perfdata_content(tmp_path, _collectors, mock_livest
         assert "license_usage_history" not in content
 
 
-def test_diagnostics_element_hw_info():
+def test_diagnostics_element_hw_info() -> None:
     diagnostics_element = diagnostics.HWDiagnosticsElement()
     assert diagnostics_element.ident == "hwinfo"
     assert diagnostics_element.title == "HW Information"
     assert diagnostics_element.description == ("Hardware information of the Checkmk Server")
 
 
-def test_diagnostics_element_hw_info_content(tmp_path, _collectors):
+def test_diagnostics_element_hw_info_content(tmp_path, _collectors) -> None:
     diagnostics_element = diagnostics.HWDiagnosticsElement()
     tmppath = Path(tmp_path).joinpath("tmp")
     filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
@@ -206,7 +207,7 @@ def test_diagnostics_element_hw_info_content(tmp_path, _collectors):
     assert sorted(content.keys()) == sorted(info_keys)
 
 
-def test_diagnostics_element_local_files_json():
+def test_diagnostics_element_local_files_json() -> None:
     diagnostics_element = diagnostics.LocalFilesJSONDiagnosticsElement()
     assert diagnostics_element.ident == "local_files"
     assert diagnostics_element.title == "Local Files"
@@ -216,7 +217,7 @@ def test_diagnostics_element_local_files_json():
     )
 
 
-def test_diagnostics_element_local_files_json_content(tmp_path, _collectors):
+def test_diagnostics_element_local_files_json_content(tmp_path, _collectors) -> None:
     diagnostics_element = diagnostics.LocalFilesJSONDiagnosticsElement()
 
     def create_test_package(name):
@@ -319,7 +320,7 @@ def test_diagnostics_element_local_files_json_content(tmp_path, _collectors):
     shutil.rmtree(str(packaging.package_dir()))
 
 
-def test_diagnostics_element_local_files_csv():
+def test_diagnostics_element_local_files_csv() -> None:
     diagnostics_element = diagnostics.LocalFilesJSONDiagnosticsElement()
     assert diagnostics_element.ident == "local_files"
     assert diagnostics_element.title == "Local Files"
@@ -329,7 +330,7 @@ def test_diagnostics_element_local_files_csv():
     )
 
 
-def test_diagnostics_element_local_files_csv_content(tmp_path, _collectors):
+def test_diagnostics_element_local_files_csv_content(tmp_path, _collectors) -> None:
     diagnostics_element = diagnostics.LocalFilesCSVDiagnosticsElement()
     check_dir = cmk.utils.paths.local_checks_dir
 
@@ -395,14 +396,14 @@ def test_diagnostics_element_local_files_csv_content(tmp_path, _collectors):
     shutil.rmtree(str(packaging.package_dir()))
 
 
-def test_diagnostics_element_environment():
+def test_diagnostics_element_environment() -> None:
     diagnostics_element = diagnostics.EnvironmentDiagnosticsElement()
     assert diagnostics_element.ident == "environment"
     assert diagnostics_element.title == "Environment Variables"
     assert diagnostics_element.description == ("Variables set in the site user's environment")
 
 
-def test_diagnostics_element_environment_content(monkeypatch, tmp_path, _collectors):
+def test_diagnostics_element_environment_content(monkeypatch, tmp_path, _collectors) -> None:
 
     environment_vars = {"France": "Paris", "Italy": "Rome", "Germany": "Berlin"}
 
@@ -426,7 +427,48 @@ def test_diagnostics_element_environment_content(monkeypatch, tmp_path, _collect
         assert content["OMD_SITE"] == cmk.utils.site.omd_site()
 
 
-def test_diagnostics_element_omd_config():
+def test_diagnostics_element_filesize() -> None:
+    diagnostics_element = diagnostics.FilesSizeCSVDiagnosticsElement()
+    assert diagnostics_element.ident == "file_size"
+    assert diagnostics_element.title == "File Size"
+    assert diagnostics_element.description == ("List of all files in the site including their size")
+
+
+def test_diagnostics_element_filesize_content(monkeypatch, tmp_path, _collectors) -> None:
+
+    diagnostics_element = diagnostics.FilesSizeCSVDiagnosticsElement()
+
+    test_dir = cmk.utils.paths.local_checks_dir
+    test_dir.mkdir(parents=True, exist_ok=True)
+    test_file = test_dir.joinpath("testfile")
+    test_content = "test\n"
+    with test_file.open("w", encoding="utf-8") as f:
+        f.write(test_content)
+
+    tmppath = Path(tmp_path).joinpath("tmp")
+    filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
+
+    assert isinstance(filepath, Path)
+    assert filepath == tmppath.joinpath("file_size.csv")
+
+    column_headers = [
+        "path",
+        "size",
+    ]
+
+    csvdata = {}
+    with open(filepath, newline="") as csvfile:
+        csvreader = csv.DictReader(csvfile, delimiter=";", quotechar="'")
+        for row in csvreader:
+            csvdata[row["path"]] = row["size"]
+            last_row = row
+
+    assert sorted(last_row.keys()) == sorted(column_headers)
+    assert str(test_file) in csvdata
+    assert csvdata[str(test_file)] == str(len(test_content))
+
+
+def test_diagnostics_element_omd_config() -> None:
     diagnostics_element = diagnostics.OMDConfigDiagnosticsElement()
     assert diagnostics_element.ident == "omd_config"
     assert diagnostics_element.title == "OMD Config"
@@ -438,7 +480,7 @@ def test_diagnostics_element_omd_config():
     )
 
 
-def test_diagnostics_element_omd_config_content(tmp_path, _collectors):
+def test_diagnostics_element_omd_config_content(tmp_path, _collectors) -> None:
     diagnostics_element = diagnostics.OMDConfigDiagnosticsElement()
 
     # Fake raw output of site.conf
@@ -535,7 +577,7 @@ CONFIG_TMPFS='on'"""
     shutil.rmtree(str(etc_omd_dir))
 
 
-def test_diagnostics_element_checkmk_overview():
+def test_diagnostics_element_checkmk_overview() -> None:
     diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement()
     assert diagnostics_element.ident == "checkmk_overview"
     assert diagnostics_element.title == "Checkmk Overview of Checkmk Server"
@@ -707,7 +749,7 @@ def test_diagnostics_element_checkmk_overview_content(
         ),
     ],
 )
-def test_diagnostics_element_checkmk_files(diag_elem, ident, title, description):
+def test_diagnostics_element_checkmk_files(diag_elem, ident, title, description) -> None:
     files = ["/path/to/raw-conf-file1", "/path/to/raw-conf-file2"]
     diagnostics_element = diag_elem(files)
     assert diagnostics_element.ident == ident
@@ -722,7 +764,7 @@ def test_diagnostics_element_checkmk_files(diag_elem, ident, title, description)
         diagnostics.CheckmkLogFilesDiagnosticsElement,
     ],
 )
-def test_diagnostics_element_checkmk_files_error(tmp_path, _collectors, diag_elem):
+def test_diagnostics_element_checkmk_files_error(tmp_path, _collectors, diag_elem) -> None:
     short_test_conf_filepath = "/no/such/file"
     diagnostics_element = diag_elem([short_test_conf_filepath])
     tmppath = Path(tmp_path).joinpath("tmp")
@@ -767,7 +809,7 @@ def test_diagnostics_element_checkmk_files_content(
     assert content == "testvar = testvalue"
 
 
-def test_diagnostics_element_performance_graphs():
+def test_diagnostics_element_performance_graphs() -> None:
     diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement()
     assert diagnostics_element.ident == "performance_graphs"
     assert diagnostics_element.title == "Performance Graphs of Checkmk Server"

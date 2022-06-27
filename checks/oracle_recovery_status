@@ -26,7 +26,7 @@ def inventory_oracle_recovery_status(info):
     return [(line[0], {}) for line in info]
 
 
-def check_oracle_recovery_status(item, params, info):
+def check_oracle_recovery_status(item, params, info):  # pylint: disable=too-many-branches
     state = 0
     offlinecount = 0
     filemissingcount = 0

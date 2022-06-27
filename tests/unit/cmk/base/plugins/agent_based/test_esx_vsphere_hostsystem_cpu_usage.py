@@ -52,7 +52,7 @@ from cmk.base.plugins.agent_based.esx_vsphere_hostsystem_cpu_usage import (
         ),
     ],
 )
-def test_extract_esx_vsphere_hostsystem_cpu(section, cpu_section):
+def test_extract_esx_vsphere_hostsystem_cpu(section, cpu_section) -> None:
     assert extract_esx_vsphere_hostsystem_cpu_usage(section) == cpu_section
 
 
@@ -84,7 +84,7 @@ def test_extract_esx_vsphere_hostsystem_cpu(section, cpu_section):
         ),
     ],
 )
-def test_discover_esx_vsphere_hostsystem_cpu_usage(section, discovered_service):
+def test_discover_esx_vsphere_hostsystem_cpu_usage(section, discovered_service) -> None:
     assert list(discover_esx_vsphere_hostsystem_cpu_usage(section, None)) == discovered_service
 
 
@@ -140,7 +140,7 @@ def test_discover_esx_vsphere_hostsystem_cpu_usage(section, discovered_service):
         ),
     ],
 )
-def test_check_esx_vsphere_hostsystem_cpu(section, params, check_results):
+def test_check_esx_vsphere_hostsystem_cpu(section, params, check_results) -> None:
     assert list(check_esx_vsphere_hostsystem_cpu_usage(params, section, None)) == check_results
 
 
@@ -288,7 +288,7 @@ def test_check_esx_vsphere_hostsystem_cpu(section, params, check_results):
         ),
     ],
 )
-def test_cluster_check_esx_vsphere_hostsystem_cpu(section, params, check_results):
+def test_cluster_check_esx_vsphere_hostsystem_cpu(section, params, check_results) -> None:
     assert (
         list(
             cluster_check_esx_vsphere_hostsystem_cpu_usage(

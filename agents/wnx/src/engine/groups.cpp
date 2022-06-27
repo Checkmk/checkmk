@@ -5,6 +5,7 @@
 #include <shlobj.h>  // known path
 
 #include <filesystem>
+#include <ranges>
 #include <string>
 
 #include "cfg.h"
@@ -13,6 +14,8 @@
 #include "common/yaml.h"
 #include "tools/_raii.h"  // on out
 #include "tools/_tgt.h"   // we need IsDebug
+
+namespace fs = std::filesystem;
 
 namespace cma::cfg {
 
@@ -72,6 +75,8 @@ void Global::loadFromMainConfig() {
 
         wmi_timeout_ = GetVal(groups::kGlobal, vars::kGlobalWmiTimeout,
                               kDefaultWmiTimeout);
+        cpuload_method_ = GetVal(groups::kGlobal, vars::kCpuLoadMethod,
+                                 std::string{defaults::kCpuLoad});
 
         realtime_sections_ = GetInternalArray(realtime, vars::kRtRun);
         auto logging = GetNode(groups::kGlobal, vars::kLogging);
@@ -99,6 +104,10 @@ void Global::loadFromMainConfig() {
         event_log_ = GetVal(logging, vars::kLogEvent, true);
 
         log_file_name_ = GetVal(logging, vars::kLogFile, std::string());
+        log_file_max_count_ =
+            GetVal(logging, vars::kLogFile, cfg::kLogFileMaxCount);
+        log_file_max_size_ =
+            GetVal(logging, vars::kLogFile, cfg::kLogFileMaxCount);
         updateLogNames();
     }
     // UNLOCK HERE
@@ -134,35 +143,34 @@ void Global::setDefaults() {
     log_file_name_ = kDefaultLogFileName;
 }
 
-static std::filesystem::path CheckAndCreateLogPath(
-    const std::filesystem::path &forced_path) {
-    namespace fs = std::filesystem;
+static fs::path CheckAndCreateLogPath(const fs::path &forced_path) {
     try {
         std::error_code ec;
-        if (fs::exists(forced_path, ec)) return forced_path;
+        if (fs::exists(forced_path, ec)) {
+            return forced_path;
+        }
 
         fs::create_directories(forced_path, ec);
-        if (fs::exists(forced_path, ec)) return forced_path;
+        if (fs::exists(forced_path, ec)) {
+            return forced_path;
+        }
 
-        XLOG::l.bp("Failed to create [{}' folder as log",
-                   forced_path.u8string());
+        XLOG::l.bp("Failed to create [{}' folder as log", forced_path);
 
     } catch (const std::exception &e) {
         XLOG::l.bp("Failed to use [{}' folder as log, exception is '{}'",
-                   forced_path.u8string(), e.what());
+                   forced_path, e.what());
     }
     return details::GetDefaultLogPath();
 }
 
 // should be called to keep invariant
 void Global::updateLogNames() {
-    auto yaml_path = yaml_log_path_.u8string();
-
+    auto yaml_path = wtools::ToUtf8(yaml_log_path_.wstring());
     auto log_path = details::ConvertLocationToLogPath(yaml_path);
-
-    auto yaml_file = log_file_name_;
-    if (yaml_file.empty()) log_file_name_ = kDefaultLogFileName;
-
+    if (log_file_name_.empty()) {
+        log_file_name_ = kDefaultLogFileName;
+    }
     logfile_dir_ = log_path;
 
     logfile_ = logfile_dir_ / log_file_name_;
@@ -172,14 +180,16 @@ void Global::updateLogNames() {
 
 // empty string does nothing
 // used to set values during start
-void Global::setLogFolder(const std::filesystem::path &forced_path) {
+void Global::setLogFolder(const fs::path &forced_path) {
     std::unique_lock lk(lock_);
-    if (cma::IsService()) {
+    if (GetModus() == Modus::service) {
         XLOG::details::LogWindowsEventAlways(
             XLOG::EventLevel::information, 35,
             "checkmk service uses log path '{}'", forced_path);
     }
-    if (forced_path.empty()) return;
+    if (forced_path.empty()) {
+        return;
+    }
 
     yaml_log_path_ = CheckAndCreateLogPath(forced_path);
 
@@ -196,7 +206,7 @@ void Global::setupLogEnvironment() {
 // loader
 // gtest[+] partially
 void WinPerf::loadFromMainConfig() {
-    auto config = cma::cfg::GetLoadedConfig();
+    auto config = cfg::GetLoadedConfig();
 
     std::lock_guard lk(lock_);
     // reset all
@@ -221,13 +231,13 @@ void WinPerf::loadFromMainConfig() {
                          std::string("winperf"));
 
         timeout_ = GetVal(groups::kWinPerf, vars::kWinPerfTimeout,
-                          cma::cfg::kDefaultWinPerfTimeout);
+                          cfg::kDefaultWinPerfTimeout);
 
         fork_ = GetVal(groups::kWinPerf, vars::kWinPerfFork,
-                       cma::cfg::kDefaultWinPerfFork);
+                       cfg::kDefaultWinPerfFork);
 
         trace_ = GetVal(groups::kWinPerf, vars::kWinPerfTrace,
-                        cma::cfg::kDefaultWinPerfTrace);
+                        cfg::kDefaultWinPerfTrace);
 
         enabled_in_cfg_ =
             GetVal(groups::kWinPerf, vars::kEnabled, exist_in_cfg_);
@@ -306,7 +316,9 @@ void Plugins::ExeUnit::assignUser(std::string_view user) {
 void Plugins::ExeUnit::apply(std::string_view filename,
                              const YAML::Node &entry) {
     try {
-        if (!entry.IsMap()) return;
+        if (!entry.IsMap()) {
+            return;
+        }
 
         ApplyValueIfScalar(entry, async_, vars::kPluginAsync);
         ApplyValueIfScalar(entry, run_, vars::kPluginRun);
@@ -426,9 +438,9 @@ Plugins::CmdLineInfo Plugins::buildCmdLine() const {
               << count_of_files << " files";
 
     // remove duplicates
-    std::sort(files.begin(), files.end());
-    auto undefined = std::unique(files.begin(), files.end());
-    files.erase(undefined, files.end());
+    std::ranges::sort(files);
+    auto [a, b] = std::ranges::unique(files);
+    files.erase(a, b);
 
     // build command line
     for (const auto &file_name : files) {
@@ -439,8 +451,9 @@ Plugins::CmdLineInfo Plugins::buildCmdLine() const {
         return cli;
     }
 
-    if (!cli.cmd_line_.empty() && cli.cmd_line_.back() == L' ')
+    if (!cli.cmd_line_.empty() && cli.cmd_line_.back() == L' ') {
         cli.cmd_line_.pop_back();
+    }
 
     XLOG::t.i("Expected to execute [{}] plugins '{}'", files.size(),
               wtools::ToUtf8(cli.cmd_line_));

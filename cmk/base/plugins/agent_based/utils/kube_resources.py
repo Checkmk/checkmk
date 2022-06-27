@@ -5,7 +5,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Callable, Iterable, Literal, Mapping, Optional, Tuple, TypedDict, Union
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Iterable,
+    Literal,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Tuple,
+    TypedDict,
+    Union,
+)
 
 from pydantic import BaseModel
 
@@ -37,6 +49,13 @@ class AllocatableResource(BaseModel):
 
     context: AllocatableKubernetesObject
     value: float
+
+
+class HardResourceRequirement(BaseModel):
+    """sections: [kube_resource_quota_memory_v1, kube_resource_quota_cpu_v1]"""
+
+    limit: Optional[float] = None
+    request: Optional[float] = None
 
 
 def parse_performance_usage(string_table: StringTable) -> PerformanceUsage:
@@ -74,6 +93,10 @@ def parse_resources(string_table: StringTable) -> Resources:
     return Resources(**json.loads(string_table[0][0]))
 
 
+def parse_hard_requirements(string_table: StringTable) -> HardResourceRequirement:
+    return HardResourceRequirement(**json.loads(string_table[0][0]))
+
+
 def parse_allocatable_resource(string_table: StringTable) -> AllocatableResource:
     """Parses allocatable value into AllocatableResource
     >>> parse_allocatable_resource([['{"context": "node", "value": 23120704.0}']])
@@ -87,7 +110,7 @@ def parse_allocatable_resource(string_table: StringTable) -> AllocatableResource
 Param = Union[Literal["no_levels"], Tuple[Literal["levels"], Tuple[float, float]]]
 
 
-class Params(TypedDict):
+class Params(TypedDict, total=False):
     usage: Param
     request: Param
     limit: Param
@@ -104,6 +127,13 @@ DEFAULT_PARAMS = Params(
 )
 
 
+RESOURCE_QUOTA_DEFAULT_PARAMS = Params(
+    usage="no_levels",
+    request="no_levels",
+    limit="no_levels",
+)
+
+
 utilization_title: Mapping[Union[RequirementType, AllocatableKubernetesObject], str] = {
     "request": "Requests utilization",
     "limit": "Limits utilization",
@@ -116,6 +146,10 @@ absolute_title: Mapping[Union[RequirementType, AllocatableKubernetesObject], str
     "limit": "Limits",
     "allocatable": "Allocatable",
 }
+
+
+def cpu_render_func(x: float) -> str:
+    return f"{x:0.3f}"
 
 
 def check_with_utilization(
@@ -211,3 +245,87 @@ def check_resource(
             summary = f"{result.summary} ({count_overview(resources, requirement_type)})"
         yield Result(state=result.state, summary=summary)
         yield metric
+
+
+def check_resource_quota_resource(
+    params: Params,
+    resource_usage: Optional[PerformanceUsage],
+    hard_requirement: Optional[HardResourceRequirement],
+    resource_type: ResourceType,
+    render_func: Callable[[float], str],
+) -> CheckResult:
+    """Check result for resource quota usage & requirement
+
+    While the general picture is similar to check_resource, there is one key difference:
+
+    * for resources in check_resource, the resource section contains an aggregation of the request
+    and limit values of the underlying containers. In resource quota, the configured hard spec
+    value is taken instead (aggregated configured values vs single configured value)
+
+    -> while the API data is mandatory for check_resource, it is optional for resource quota and the
+    service is allowed to only display the performance usage value
+    """
+    usage = resource_usage.resource.usage if resource_usage is not None else None
+    if usage is not None:
+        yield from check_levels(
+            usage,
+            label="Usage",
+            levels_upper=params["usage"][1] if params["usage"] != "no_levels" else None,
+            metric_name=f"kube_{resource_type}_usage",
+            render_func=render_func,
+            boundaries=(0.0, None),
+        )
+
+    if hard_requirement is None:
+        return
+
+    for requirement_type, requirement_value in [
+        ("request", hard_requirement.request),
+        ("limit", hard_requirement.limit),
+    ]:
+        if requirement_value is None:
+            # user has not configured a value for this requirement
+            continue
+
+        requirement_type = cast(RequirementType, requirement_type)
+        if requirement_value != 0.0 and usage is not None:
+            yield from check_with_utilization(
+                usage,
+                resource_type=resource_type,
+                requirement_type=requirement_type,
+                kubernetes_object=None,
+                requirement_value=requirement_value,
+                params=params,
+                render_func=render_func,
+            )
+        else:  # requirements with no usage
+            yield from check_levels(
+                requirement_value,
+                label=absolute_title[requirement_type],
+                metric_name=f"kube_{resource_type}_{requirement_type}",
+                render_func=render_func,
+                boundaries=(0.0, None),
+            )
+
+
+def performance_cpu(
+    section_kube_performance_cpu: Optional[PerformanceUsage],
+    current_timestamp: float,
+    host_value_store: MutableMapping[str, Any],
+    value_store_key: Literal["cpu_usage", "resource_quota_cpu_usage"],
+) -> Optional[PerformanceUsage]:
+    """Persists the performance usage and uses the stored value for a certain period of time if
+    no new data is available.
+    """
+    if section_kube_performance_cpu is not None:
+        host_value_store[value_store_key] = (current_timestamp, section_kube_performance_cpu.json())
+        return section_kube_performance_cpu
+
+    if (timestamped_usage := host_value_store.get(value_store_key)) is not None:
+        timestamp, usage = timestamped_usage
+        if current_timestamp - timestamp <= 60:
+            return PerformanceUsage(**json.loads(usage))
+        # remove the stored value if older than 60 seconds
+        host_value_store.pop(value_store_key)
+
+    return None

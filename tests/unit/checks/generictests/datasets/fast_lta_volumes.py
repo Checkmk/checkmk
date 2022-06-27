@@ -6,6 +6,8 @@
 
 # yapf: disable
 # type: ignore
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
+
 checkname = 'fast_lta_volumes'
 
 info = [
@@ -17,9 +19,9 @@ discovery = {'': [('Archiv_Test', {})]}
 checks = {
     '': [
         (
-            'Archiv_Test', {}, [
+            'Archiv_Test', FILESYSTEM_DEFAULT_LEVELS, [
                 (
-                    0, '1.0% used (9.31 of 931.32 GB)', [
+                    0, 'Used: 1.00% - 9.31 GiB of 931 GiB', [
                         (
                             'fs_used', 9536.7431640625, 762939.453125,
                             858306.884765625, 0, 953674.31640625

@@ -42,8 +42,8 @@ def test_size_trend_growing(monkeypatch: MonkeyPatch) -> None:
     assert state == 2
     assert (
         infotext
-        == ", trend: +100.00 MB / 1 hours - growing too fast (warn/crit at 50.00 MB/100.00 MB per 1.0 h)(!!)"
-        ", growing too fast (warn/crit at 10.0%/20.0% per 1.0 h)(!)"
+        == ", trend: +100 MiB / 1 hours - growing too fast (warn/crit at 50.0 MiB/100 MiB per 1.0 h)(!!)"
+        ", growing too fast (warn/crit at 10.00%/20.00% per 1.0 h)(!)"
         ", only 9 hours until some resource full(!!)"
     )
     assert perfdata == [
@@ -76,8 +76,8 @@ def test_size_trend_shrinking(monkeypatch: MonkeyPatch) -> None:
     assert state == 2
     assert (
         infotext
-        == ", trend: -100.00 MB / 1 hours - shrinking too fast (warn/crit at 50.00 MB/100.00 MB per 1.0 h)(!!)"
-        ", shrinking too fast (warn/crit at 10.0%/20.0% per 1.0 h)(!)"
+        == ", trend: -100 MiB / 1 hours - shrinking too fast (warn/crit at 50.0 MiB/100 MiB per 1.0 h)(!!)"
+        ", shrinking too fast (warn/crit at 10.00%/20.00% per 1.0 h)(!)"
     )
     assert perfdata == [
         ("growth", -2400.0),

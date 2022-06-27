@@ -1,0 +1,33 @@
+Title: NagVis Geomaps: Deprecate <tt>wato_geo_fields.py</tt> in favor of regular custom host attributes
+Class: fix
+Compatible: incomp
+Component: wato
+Date: 1653035141
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+This werk only affects users of NagVis Geomaps.
+
+One of the available map types in NagVis are Geomaps, which show geographical locations.
+For this map type, NagVis offers the option to use geographical coordinates stored in
+Checkmk host attributes, see http://docs.nagvis.org/1.9/en_US/geomap.html.
+
+The necessary host attributes (latitude and longitude) are by default not available in
+Checkmk. Therefore, up to now, Checkmk came with the script
+<tt>share/doc/check_mk/treasures/wato_geo_fields.py</tt>,
+which added these host attributes.
+
+As of this werk, <tt>wato_geo_fields.py</tt> is deprecated, since it is incompatible
+with Checkmk 2.1. Attempting to use this script in version 2.1 will fail, meaning that
+latitude and longitude will no longer available in the user interface. Furthermore, the
+REST API will respond with HTTP 500 when attempting to query the status of affected
+hosts.
+
+To retain the functionality previously offered by this script, users can instead create
+two regular custom host attributes. This is fully compatible and will not result in any
+loss of data. The exact procedure is described here:
+https://kb.checkmk.com/display/KB/Geo+coordinates+from+Checkmk+in+NagVis+maps.
+After creating the custom attributes, users must remove their local copy of
+<tt>wato_geo_fields.py</tt> from <tt>local/share/check_mk/web/plugins/wato/<tt>.

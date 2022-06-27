@@ -43,7 +43,7 @@ def check_scaleio_devices(item, params, devices):
     error_devices = []
     long_output = []
     for device in devices:
-        err_state = device["ERR_STATE"]
+        err_state = device.get("ERR_STATE", "n/a")
         if err_state == "NO_ERROR":
             continue
         err_state_readable = _make_state_readable(err_state)
@@ -53,10 +53,10 @@ def check_scaleio_devices(item, params, devices):
             "Device %s: Error: %s, State: %s (ID: %s, Storage pool ID: %s)"
             % (
                 dev_id,
-                _make_state_readable(device["STATE"]),
+                _make_state_readable(device.get("STATE", "n/a")),
                 err_state_readable,
                 dev_id,
-                device["STORAGE_POOL_ID"],
+                device.get("STORAGE_POOL_ID", "n/a"),
             )
         )
 

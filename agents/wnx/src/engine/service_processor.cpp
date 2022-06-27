@@ -15,6 +15,7 @@
 #include "agent_controller.h"
 #include "cap.h"
 #include "commander.h"
+#include "common/cma_yml.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
 #include "common/wtools_service.h"
@@ -70,10 +71,10 @@ void ServiceProcessor::startServiceAsLegacyTest() {
 
 namespace {
 void KillProcessesInUserFolder() {
-    std::filesystem::path user_dir{cfg::GetUserDir()};
+    fs::path user_dir{cfg::GetUserDir()};
     std::error_code ec;
     if (user_dir.empty() ||
-        std::filesystem::exists(user_dir / cfg::dirs::kUserPlugins, ec)) {
+        fs::exists(user_dir / cfg::dirs::kUserPlugins, ec)) {
         auto killed_processes_count = wtools::KillProcessesByDir(user_dir);
         XLOG::d.i("Killed [{}] processes from the user folder",
                   killed_processes_count);
@@ -82,7 +83,7 @@ void KillProcessesInUserFolder() {
     }
 }
 
-void TryCleanOnExit(cfg::modules::ModuleCommander &mc) {
+void TryCleanOnExit() {
     namespace details = cfg::details;
 
     KillProcessesInUserFolder();
@@ -95,7 +96,7 @@ void TryCleanOnExit(cfg::modules::ModuleCommander &mc) {
 
     fw::RemoveRule(srv::kSrvFirewallRuleName);
 
-    auto mode = details::GetCleanDataFolderMode();  // read config
+    const auto mode = details::GetCleanDataFolderMode();  // read config
     XLOG::l.i(
         "Clean on exit was requested, trying to remove what we have, mode is [{}]",
         static_cast<int>(mode));
@@ -116,20 +117,26 @@ void ServiceProcessor::stopService() {
     }
 
     // #TODO (sk): use std::array<std::reference_wrapper<std::thread>, 3> t{};
-    if (thread_.joinable()) thread_.join();
-    if (process_thread_.joinable()) thread_.join();
-    if (rm_lwa_thread_.joinable()) rm_lwa_thread_.join();
+    if (thread_.joinable()) {
+        thread_.join();
+    }
+    if (process_thread_.joinable()) {
+        thread_.join();
+    }
+    if (rm_lwa_thread_.joinable()) {
+        rm_lwa_thread_.join();
+    }
 }
 
 void ServiceProcessor::cleanupOnStop() {
     XLOG::l.i("Cleanup called by service");
 
-    if (!IsService()) {
+    if (GetModus() != Modus::service) {
         XLOG::l("Invalid call!");
     }
     KillAllInternalUsers();
 
-    TryCleanOnExit(mc_);
+    TryCleanOnExit();
 }
 
 // #TODO - implement
@@ -164,7 +171,6 @@ std::string FindWinPerfExe() {
 
     if (tools::IsEqual(exe_name, "agent")) {
         XLOG::t.i("Looking for default agent");
-        namespace fs = std::filesystem;
         const fs::path f{cfg::GetRootDir()};
         std::vector<fs::path> names{
             f / cfg::kDefaultAppFileName  // on install
@@ -180,8 +186,7 @@ std::string FindWinPerfExe() {
         for (const auto &name : names) {
             std::error_code ec;
             if (fs::exists(name, ec)) {
-                exe_name = name.u8string();
-                XLOG::d.i("Using file '{}' for winperf", exe_name);
+                XLOG::d.i("Using file '{}' for winperf", name);
                 break;
             }
         }
@@ -197,8 +202,7 @@ std::string FindWinPerfExe() {
 
 std::wstring GetWinPerfLogFile() {
     return cfg::groups::winperf.isTrace()
-               ? (std::filesystem::path{cfg::GetLogDir()} / "winperf.log")
-                     .wstring()
+               ? (fs::path{cfg::GetLogDir()} / "winperf.log").wstring()
                : L"";
 }
 }  // namespace
@@ -214,7 +218,7 @@ void ServiceProcessor::kickWinPerf(AnswerId answer_id,
     }
 
     auto exe_name = wtools::ConvertToUTF16(FindWinPerfExe());
-    auto timeout = winperf.timeout();
+    const auto timeout = winperf.timeout();
     auto prefix = wtools::ConvertToUTF16(winperf.prefix());
 
     if (winperf.isFork() && !exe_name.empty()) {
@@ -259,13 +263,15 @@ void ServiceProcessor::informDevice(rt::Device &rt_device,
     }
 
     auto sections = cfg::groups::global.realtimeSections();
-    if (sections.empty()) return;
+    if (sections.empty()) {
+        return;
+    }
 
     auto s_view = tools::ToView(sections);
 
-    auto rt_port = cfg::groups::global.realtimePort();
+    const auto rt_port = cfg::groups::global.realtimePort();
     auto password = cfg::groups::global.realtimePassword();
-    auto rt_timeout = cfg::groups::global.realtimeTimeout();
+    const auto rt_timeout = cfg::groups::global.realtimeTimeout();
 
     rt_device.connectFrom(ip_addr, rt_port, s_view, password, rt_timeout);
 }
@@ -374,7 +380,7 @@ bool ServiceProcessor::conditionallyStartOhm() noexcept {
         XLOG::l(
             "Too many errors [{}] on the OHM, stopping, cleaning and starting",
             error_count);
-        auto stopped = stopRunningOhmProcess();
+        const auto stopped = stopRunningOhmProcess();
         resetOhm();
         ohm_engine.resetError();
         if (!stopped) {
@@ -393,16 +399,28 @@ bool ServiceProcessor::conditionallyStartOhm() noexcept {
     return true;
 }
 
+namespace {
+bool UsePerfCpuLoad(const YAML::Node &config) {
+    const auto g = yml::GetNode(config, std::string{cfg::groups::kGlobal});
+    return yml::GetVal(g, std::string{cfg::vars::kCpuLoadMethod},
+                       std::string{cfg::defaults::kCpuLoad}) ==
+           cfg::values::kCpuLoadPerf;
+}
+}  // namespace
+
 // This is relative simple function which kicks to call
 // different providers
 int ServiceProcessor::startProviders(AnswerId answer_id,
                                      const std::string &ip_addr) {
+    bool use_perf_cpuload = UsePerfCpuLoad(cfg::GetLoadedConfig());
     vf_.clear();
     max_wait_time_ = 0;
 
     // call of sensible to CPU-load sections
-    auto started_sync =
-        tryToDirectCall(wmi_cpuload_provider_, answer_id, ip_addr);
+    const auto started_sync =
+        use_perf_cpuload
+            ? tryToDirectCall(perf_cpuload_provider_, answer_id, ip_addr)
+            : tryToDirectCall(wmi_cpuload_provider_, answer_id, ip_addr);
 
     // sections to be kicked out
     tryToKick(uptime_provider_, answer_id, ip_addr);
@@ -486,13 +504,12 @@ ByteVector ServiceProcessor::generateAnswer(const std::string &ip_from) {
 namespace {
 bool FindProcessByPid(uint32_t pid) {
     bool found = false;
-    wtools::ScanProcessList(
-        [&found, pid ](const PROCESSENTRY32 &entry) -> auto {
-            if (entry.th32ProcessID == pid) {
-                found = true;
-            }
-            return true;
-        });
+    wtools::ScanProcessList([&found, pid](const PROCESSENTRY32 &entry) {
+        if (entry.th32ProcessID == pid) {
+            found = true;
+        }
+        return true;
+    });
     return found;
 }
 
@@ -517,16 +534,18 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop(
     std::optional<ControllerParam> &controller_param) {
     XLOG::l.i("main Wait Loop");
     // memorize vars to check for changes in loop below
-    auto ipv6 = cfg::groups::global.ipv6();
-    auto port = cfg::groups::global.port();
+    const auto ipv6 = cfg::groups::global.ipv6();
+    const auto port = cfg::groups::global.port();
     auto uniq_cfg_id = cfg::GetCfg().uniqId();
-    ProcessServiceConfiguration(kServiceName);
+    if (GetModus() == Modus::service) {
+        ProcessServiceConfiguration(kServiceName);
+    }
 
     auto last_check = std::chrono::steady_clock::now();
 
     // Perform main service function here...
     while (true) {
-        if (!callback_(static_cast<const void *>(this))) {
+        if (!callback_()) {
             break;
         }
 
@@ -606,16 +625,16 @@ std::optional<ServiceProcessor::ControllerParam> OptionallyStartAgentController(
         return {};
     }
 
-    if (auto pid = ac::StartAgentController(wtools::GetArgv(0))) {
+    if (auto pid = ac::StartAgentController()) {
         std::this_thread::sleep_for(validate_process_delay);
         if (wtools::GetProcessPath(*pid).empty()) {
             XLOG::l("Controller process pid={} died in {}ms", *pid,
                     validate_process_delay.count());
-            ac::DeleteControllerInBin(wtools::GetArgv(0));
+            ac::DeleteControllerInBin();
             return {};
         }
         return ServiceProcessor::ControllerParam{
-            .port = ac::GetConfiguredAgentChannelPort(),
+            .port = ac::GetConfiguredAgentChannelPort(GetModus()),
             .pid = *pid,
         };
     }
@@ -623,9 +642,17 @@ std::optional<ServiceProcessor::ControllerParam> OptionallyStartAgentController(
     return {};
 }
 
+std::wstring_view RuleName() {
+    switch (GetModus()) {
+        case Modus::service:
+            return srv::kSrvFirewallRuleName;
+        default:
+            return srv::kAppFirewallRuleName;
+    }
+}
+
 void OpenFirewall(bool controller) {
-    auto rule_name =
-        IsService() ? srv::kSrvFirewallRuleName : srv::kAppFirewallRuleName;
+    auto rule_name = RuleName();
     if (controller) {
         XLOG::l.i("Controller has started: firewall to controller");
         ProcessFirewallConfiguration(ac::GetWorkController().wstring(),
@@ -646,7 +673,8 @@ void OpenFirewall(bool controller) {
 /// Periodically checks if the service is stopping.
 void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
                                   bool cap_installed) noexcept {
-    if (IsService()) {
+    const auto is_service = GetModus() == Modus::service;
+    if (is_service) {
         auto wait_period =
             cfg::GetVal(cfg::groups::kSystem, cfg::vars::kWaitNetwork,
                         cfg::defaults::kServiceWaitNetwork);
@@ -654,7 +682,7 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
     }
 
     auto controller_params = OptionallyStartAgentController(1000ms);
-    ON_OUT_OF_SCOPE(ac::KillAgentController(wtools::GetArgv(0)));
+    ON_OUT_OF_SCOPE(ac::KillAgentController());
     OpenFirewall(controller_params.has_value());
     if (cap_installed) {
         ac::CreateArtifacts(
@@ -662,17 +690,17 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
                 ac::kCmkAgentUnistall,
             controller_params.has_value());
     }
-    MailSlot mailbox(
-        IsService() ? cfg::kServiceMailSlot : cfg::kTestingMailSlot, 0);
+    MailSlot mailbox(is_service ? cfg::kServiceMailSlot : cfg::kTestingMailSlot,
+                     0);
     internal_port_ = carrier::BuildPortName(carrier::kCarrierMailslotName,
                                             mailbox.GetName());
     try {
         mailbox.ConstructThread(SystemMailboxCallback, 20, this,
-                                IsService() ? wtools::SecurityLevel::admin
-                                            : wtools::SecurityLevel::standard);
+                                is_service ? wtools::SecurityLevel::admin
+                                           : wtools::SecurityLevel::standard);
         ON_OUT_OF_SCOPE(mailbox.DismantleThread());
 
-        if (IsService()) {
+        if (is_service) {
             mc_.InstallDefault(cfg::modules::InstallMode::normal);
             install::ClearPostInstallFlag();
         } else {
@@ -691,7 +719,7 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
 
         // Main Processing Loop
         while (true) {
-            uint16_t use_port =
+            const uint16_t use_port =
                 controller_params
                     ? controller_params->port
                     : cfg::GetVal(cfg::groups::kGlobal, cfg::vars::kPort,
@@ -766,24 +794,23 @@ bool SystemMailboxCallback(const MailSlot * /*nothing*/, const void *data,
     }
 
     const auto *dt = static_cast<const carrier::CarrierDataHeader *>(data);
-    XLOG::d.i("Received [{}] bytes from '{}'\n", len, dt->providerId());
     switch (dt->type()) {
         case carrier::DataType::kLog:
-            // IMPORTANT ENTRY POINT
             // Receive data for Logging to file
             if (dt->data() != nullptr) {
                 std::string to_log;
                 const auto *data = static_cast<const char *>(dt->data());
                 to_log.assign(data, data + dt->length());
-                XLOG::l(XLOG::kNoPrefix)("{} : {}", dt->providerId(), to_log);
+                XLOG::l(XLOG::kNoPrefix)("[{}] {}", dt->providerId(), to_log);
             } else
-                XLOG::l(XLOG::kNoPrefix)("{} : null", dt->providerId());
+                XLOG::l(XLOG::kNoPrefix)("[{}] null", dt->providerId());
             break;
 
         case carrier::DataType::kSegment:
-            // IMPORTANT ENTRY POINT
             // Receive data for Section
             {
+                XLOG::d.i("Received [{}] bytes from '{}'\n", len,
+                          dt->providerId());
                 std::chrono::nanoseconds duration_since_epoch{dt->answerId()};
                 std::chrono::time_point<std::chrono::steady_clock> tp(
                     duration_since_epoch);
@@ -886,12 +913,13 @@ bool TheMiniProcess::stop() {
 
     process_id_ = 0;
     process_name_.clear();
-    ::CloseHandle(handle);
+    ON_OUT_OF_SCOPE(::CloseHandle(handle));
     process_handle_ = wtools::InvalidHandle();
 
     // check status and kill process if required
-    DWORD exit_code = STILL_ACTIVE;
-    if (::GetExitCodeProcess(handle, &exit_code) == FALSE ||  // no access
+
+    if (auto exit_code = STILL_ACTIVE;
+        ::GetExitCodeProcess(handle, &exit_code) == FALSE ||  // no access
         exit_code == STILL_ACTIVE) {                          // running
         lk.unlock();
 

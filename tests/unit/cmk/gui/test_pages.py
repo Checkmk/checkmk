@@ -11,7 +11,7 @@ import cmk.utils.version as cmk_version
 import cmk.gui.pages
 
 
-def test_registered_pages():
+def test_registered_pages() -> None:
     expected_pages = [
         "add_bookmark",
         "ajax_figure_dashlet_data",
@@ -235,7 +235,7 @@ def test_registered_pages():
     assert len(differences) == 0
 
 
-def test_pages_register(monkeypatch, capsys):
+def test_pages_register(monkeypatch, capsys) -> None:
     monkeypatch.setattr(cmk.gui.pages, "page_registry", cmk.gui.pages.PageRegistry())
 
     @cmk.gui.pages.register("123handler")
@@ -249,11 +249,11 @@ def test_pages_register(monkeypatch, capsys):
     assert capsys.readouterr()[0] == "123"
 
 
-def test_pages_register_handler(monkeypatch, capsys):
+def test_pages_register_handler(monkeypatch, capsys) -> None:
     monkeypatch.setattr(cmk.gui.pages, "page_registry", cmk.gui.pages.PageRegistry())
 
     class PageClass:
-        def handle_page(self):
+        def handle_page(self) -> None:
             sys.stdout.write("234")
 
     cmk.gui.pages.register_page_handler("234handler", lambda: PageClass().handle_page())
@@ -265,12 +265,12 @@ def test_pages_register_handler(monkeypatch, capsys):
     assert capsys.readouterr()[0] == "234"
 
 
-def test_page_registry_register_page(monkeypatch, capsys):
+def test_page_registry_register_page(monkeypatch, capsys) -> None:
     page_registry = cmk.gui.pages.PageRegistry()
 
     @page_registry.register_page("234handler")
     class PageClass(cmk.gui.pages.Page):
-        def page(self):
+        def page(self) -> None:
             sys.stdout.write("234")
 
     handler = page_registry.get("234handler")
@@ -280,7 +280,7 @@ def test_page_registry_register_page(monkeypatch, capsys):
     assert capsys.readouterr()[0] == "234"
 
 
-def test_get_page_handler_default():
+def test_get_page_handler_default() -> None:
     def dummy():
         pass
 

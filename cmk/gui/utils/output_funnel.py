@@ -7,6 +7,7 @@
 from contextlib import contextmanager
 from typing import Iterator, List
 
+from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.http import Response
 
 
@@ -55,3 +56,6 @@ class OutputFunnel:
         text = self._response_stack.pop().get_data(as_text=True)
         self._response_stack.append(Response())
         return text
+
+
+output_funnel: OutputFunnel = request_local_attr("output_funnel")

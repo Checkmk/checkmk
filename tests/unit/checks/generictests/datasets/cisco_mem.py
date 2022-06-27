@@ -25,7 +25,7 @@ checks = {
             }, [
                 (
                     1,
-                    'Usage: 84.53% - 11.83 MB of 14.00 MB (warn/crit at 80.00%/90.00% used)',
+                    'Usage: 84.53% - 11.8 MiB of 14.0 MiB (warn/crit at 80.00%/90.00% used)',
                     [('mem_used_percent', 84.52995845249721, 80.00000000000001, 90.0, 0.0, None)]
                 )
             ]
@@ -35,7 +35,7 @@ checks = {
                 'levels': (80.0, 90.0)
             }, [
                 (
-                    0, 'Usage: 36.64% - 25.83 MB of 70.50 MB', [
+                    0, 'Usage: 36.64% - 25.8 MiB of 70.5 MiB', [
                         ('mem_used_percent', 36.64215435612978, 80.0, 90.0, 0, None)
                     ]
                 )

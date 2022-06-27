@@ -46,7 +46,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
         ),
     ],
 )
-def test_parse_sap_hana_ess(fix_register, info, expected_result):
+def test_parse_sap_hana_ess(fix_register, info, expected_result) -> None:
     section_plugin = fix_register.agent_sections[SectionName("sap_hana_ess")]
     result = section_plugin.parse_function(info)
     assert result == expected_result
@@ -65,7 +65,7 @@ def test_parse_sap_hana_ess(fix_register, info, expected_result):
         ),
     ],
 )
-def test_inventory_sap_hana_ess(fix_register, info, expected_result):
+def test_inventory_sap_hana_ess(fix_register, info, expected_result) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_ess")].parse_function(info)
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_ess")]
     assert list(plugin.discovery_function(section)) == expected_result
@@ -115,7 +115,7 @@ def test_inventory_sap_hana_ess(fix_register, info, expected_result):
         ),
     ],
 )
-def test_check_sap_hana_ess(fix_register, item, info, expected_result):
+def test_check_sap_hana_ess(fix_register, item, info, expected_result) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_ess")].parse_function(info)
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_ess")]
     assert list(plugin.check_function(item, section)) == expected_result
@@ -132,7 +132,7 @@ def test_check_sap_hana_ess(fix_register, item, info, expected_result):
         ),
     ],
 )
-def test_check_sap_hana_ess_stale(fix_register, item, info):
+def test_check_sap_hana_ess_stale(fix_register, item, info) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_ess")].parse_function(info)
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_ess")]
     with pytest.raises(IgnoreResultsError):

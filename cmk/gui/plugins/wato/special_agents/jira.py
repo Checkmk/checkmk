@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import (
     RulespecGroupDatasourceProgramsApps,
@@ -21,11 +20,12 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
+from cmk.gui.watolib.rulespecs import Rulespec
 
 
 def _factory_default_special_agents_jira():
     # No default, do not use setting if no rule matches
-    return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+    return Rulespec.FACTORY_DEFAULT_UNUSED
 
 
 def _vs_jira_projects(title):
@@ -70,7 +70,7 @@ def _vs_jira_projects(title):
 def _valuespec_special_agents_jira():
     return Dictionary(
         title=_("Jira statistics"),
-        help=_("Use Jira Query Language (JQL) to get statistics out of your " "Jira instance."),
+        help=_("Use Jira Query Language (JQL) to get statistics out of your Jira instance."),
         elements=[
             (
                 "instance",
@@ -90,7 +90,7 @@ def _valuespec_special_agents_jira():
                 "user",
                 TextInput(
                     title=_("Username"),
-                    help=_("The username that should be used for accessing the " "Jira API."),
+                    help=_("The username that should be used for accessing the Jira API."),
                     size=32,
                     allow_empty=False,
                 ),
@@ -162,7 +162,7 @@ def _valuespec_special_agents_jira():
                                         "of a given numeric field."
                                     ),
                                     choices=[
-                                        ("count", _("Number of " "search results")),
+                                        ("count", _("Number of search results")),
                                         (
                                             "sum",
                                             _(
@@ -192,7 +192,7 @@ def _valuespec_special_agents_jira():
                                         ),
                                         (
                                             "average",
-                                            _("Average value " "of the following numeric field: "),
+                                            _("Average value of the following numeric field: "),
                                             Tuple(
                                                 elements=[
                                                     TextInput(

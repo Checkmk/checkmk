@@ -11,14 +11,7 @@ from typing import Callable, Iterable, Mapping, Sequence
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
-from cmk.utils.type_defs import (
-    HostAddress,
-    HostKey,
-    HostName,
-    ParsedSectionName,
-    SectionName,
-    SourceType,
-)
+from cmk.utils.type_defs import HostKey, HostName, ParsedSectionName, SectionName, SourceType
 
 from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.type_defs import AgentRawDataSection
@@ -116,17 +109,17 @@ def test_get_parsed_section(
 
     parsed_sections_broker = ParsedSectionsBroker(
         {
-            HostKey(HostName("node1"), HostAddress("127.0.0.1"), SourceType.HOST): (
+            HostKey(HostName("node1"), SourceType.HOST): (
                 ParsedSectionsResolver(
                     section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR],
                 ),
-                SectionsParser(host_sections=node_sections),
+                SectionsParser(host_sections=node_sections, host_name=HostName("node1")),
             ),
         }
     )
 
     content = parsed_sections_broker.get_parsed_section(
-        HostKey(HostName("node1"), HostAddress("127.0.0.1"), SourceType.HOST),
+        HostKey(HostName("node1"), SourceType.HOST),
         ParsedSectionName("parsed"),
     )
 
@@ -141,6 +134,7 @@ def _get_parser() -> SectionsParser:
                 SectionName("four"): NODE_1,
             }
         ),
+        host_name=HostName("some-host"),
     )
 
 

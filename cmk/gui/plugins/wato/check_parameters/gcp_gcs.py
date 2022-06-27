@@ -6,12 +6,13 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
+    CheckParameterRulespecWithoutItem,
     Levels,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Dictionary, Filesize, MonitoringState, Percentage, ValueSpec
+from cmk.gui.valuespec import Dictionary, Filesize, Integer, MonitoringState, Percentage, ValueSpec
 
 # A notes about the names of the Dictionary elements. They correspond to the names of the metrics in
 # the check plugin. Please do not change them.
@@ -170,7 +171,10 @@ def _vs_run_memory() -> ValueSpec:
     return Dictionary(
         title=_("Levels memory"),
         elements=[
-            ("memory_util", SimpleLevels(Percentage, title=_("Memory utilitzation"))),
+            (
+                "memory_util",
+                SimpleLevels(Percentage, title=_("Memory utilitzation"), default_value=(80, 90)),
+            ),
         ],
     )
 
@@ -190,7 +194,7 @@ def _vs_run_cpu() -> ValueSpec:
     return Dictionary(
         title=_("Levels CPU"),
         elements=[
-            ("util", SimpleLevels(Percentage, title=_("CPU utilitzation"))),
+            ("util", SimpleLevels(Percentage, title=_("CPU utilitzation"), default_value=(80, 90))),
         ],
     )
 
@@ -212,6 +216,22 @@ def _vs_run_requests() -> ValueSpec:
         elements=[
             ("faas_total_instance_count", Levels(title=_("Number of running containers"))),
             ("faas_execution_count", Levels(title=_("Number of requests"))),
+            (
+                "faas_execution_count_2xx",
+                Levels(title=_("Number of requests with return code class 2xx (sucess)")),
+            ),
+            (
+                "faas_execution_count_3xx",
+                Levels(title=_("Number of requests with return code class 3xx (redirection)")),
+            ),
+            (
+                "faas_execution_count_4xx",
+                Levels(title=_("Number of requests with return code class 4xx (client error)")),
+            ),
+            (
+                "faas_execution_count_5xx",
+                Levels(title=_("Number of requests with return code class 5xx (server error)")),
+            ),
             ("gcp_billable_time", Levels(title=_("billable time"), unit="s/s")),
             ("faas_execution_times", Levels(title=_("99th percentile request latency"), unit="s")),
         ],
@@ -288,7 +308,7 @@ def _vs_sql_disk() -> ValueSpec:
     return Dictionary(
         title=_("Levels disk"),
         elements=[
-            ("fs_used_percent", Levels(title=_("Disk usage"), unit="%")),
+            ("fs_used_percent", Levels(title=_("Disk usage"), unit="%", default_value=(80, 90))),
             ("disk_read_ios", Levels(title=_("Number of read IOPS"))),
             ("disk_write_ios", Levels(title=_("Number of write IOPS"))),
         ],
@@ -330,8 +350,16 @@ def _vs_redis_memory() -> ValueSpec:
     return Dictionary(
         title=_("Levels memory"),
         elements=[
-            ("memory_util", SimpleLevels(Percentage, title=_("Memory utilitzation"))),
-            ("system_memory_util", SimpleLevels(Percentage, title=_("System Memory utilitzation"))),
+            (
+                "memory_util",
+                SimpleLevels(Percentage, title=_("Memory utilitzation"), default_value=(80, 90)),
+            ),
+            (
+                "system_memory_util",
+                SimpleLevels(
+                    Percentage, title=_("System Memory utilitzation"), default_value=(80, 90)
+                ),
+            ),
         ],
     )
 
@@ -343,5 +371,55 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_vs_redis_memory,
         title=lambda: _("GCP/Memorystore redis memory"),
+    )
+)
+
+
+def _vs_gce_cpu() -> Dictionary:
+    return Dictionary(
+        title=_("Levels CPU"),
+        elements=[
+            ("util", SimpleLevels(Percentage, title=_("CPU utilization"))),
+            ("vcores", SimpleLevels(Integer, title=_("Number of vCPUs reserved for the VM"))),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="gcp_gce_cpu",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_gce_cpu,
+        title=lambda: _("GCP/GCE CPU"),
+    )
+)
+
+
+def _vs_gce_disk() -> Dictionary:
+    return Dictionary(
+        title=_("Levels disk IO"),
+        elements=[
+            (
+                "disk_read_throughput",
+                SimpleLevels(Filesize, title=_("Disk read throughput per second")),
+            ),
+            (
+                "disk_write_throughput",
+                SimpleLevels(Filesize, title=_("Disk read throughput per second")),
+            ),
+            ("disk_read_ios", SimpleLevels(Integer, title=_("Disk read opertions"), unit="ops")),
+            ("disk_write_ios", SimpleLevels(Integer, title=_("Disk read opertions"), unit="ops")),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="gcp_gce_disk",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_gce_disk,
+        title=lambda: _("GCP/GCE disk IO"),
     )
 )

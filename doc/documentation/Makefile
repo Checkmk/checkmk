@@ -5,7 +5,7 @@
 # You can set these variables from the command line, and also
 # from the environment for the first two.
 SPHINXOPTS    ?= -W
-SPHINXBUILD   ?= sphinx-build
+SPHINXBUILD   ?= ../../scripts/run-pipenv run sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
 PLANTUML_VERSION = 1.2020.6

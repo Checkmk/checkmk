@@ -10,11 +10,7 @@ from typing import Optional
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
 from cmk.core_helpers import FetcherType, TCPFetcher
-from cmk.core_helpers.agent import (
-    AgentSummarizerDefault,
-    DefaultAgentFileCache,
-    DefaultAgentFileCacheFactory,
-)
+from cmk.core_helpers.agent import AgentFileCache, AgentFileCacheFactory, AgentSummarizerDefault
 
 import cmk.base.config as config
 from cmk.base.config import HostConfig
@@ -23,6 +19,10 @@ from .agent import AgentSource
 
 
 class TCPSource(AgentSource):
+    # TODO(ml): Global caching options usually go to the FileCacheFactory,
+    #           actually, the "factory" has no other purpose than to hold
+    #           all of this at one place.  Would it be possible to move this
+    #           option there as well?
     use_only_cache = False
 
     def __init__(
@@ -45,11 +45,12 @@ class TCPSource(AgentSource):
         self.timeout: Optional[float] = None
         self.host_name = hostname
 
-    def _make_file_cache(self) -> DefaultAgentFileCache:
-        return DefaultAgentFileCacheFactory(
+    def _make_file_cache(self) -> AgentFileCache:
+        return AgentFileCacheFactory(
             self.hostname,
             base_path=self.file_cache_base_path,
             simulation=config.simulation_mode,
+            use_only_cache=self.use_only_cache,
             max_age=self.file_cache_max_age,
         ).make()
 
@@ -61,7 +62,6 @@ class TCPSource(AgentSource):
             host_name=self.host_name,
             timeout=self.timeout or self.host_config.tcp_connect_timeout,
             encryption_settings=self.host_config.agent_encryption,
-            use_only_cache=self.use_only_cache,
         )
 
     def _make_summarizer(self) -> AgentSummarizerDefault:

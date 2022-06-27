@@ -53,10 +53,10 @@ bi_computer_postprocessing_registry = BIComputerPostprocessingRegistry()
 
 
 class BIComputer:
-    def __init__(self, compiled_aggregations, bi_status_fetcher):
+    def __init__(self, compiled_aggregations, bi_status_fetcher) -> None:
         self._compiled_aggregations: Dict[str, BICompiledAggregation] = compiled_aggregations
         self._bi_status_fetcher = bi_status_fetcher
-        self._legacy_branch_cache = {}
+        self._legacy_branch_cache: dict = {}
 
     def compute_aggregation_result(
         self,

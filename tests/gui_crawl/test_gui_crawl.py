@@ -141,7 +141,7 @@ class CrawlResult:
 
 
 class Crawler:
-    def __init__(self, site: Site, report_file: Optional[str]):
+    def __init__(self, site: Site, report_file: Optional[str]) -> None:
         self.duration = 0.0
         self.results: MutableMapping[str, CrawlResult] = {}
         self.site = site
@@ -323,6 +323,7 @@ class Crawler:
             "application/json",
             "application/pdf",
             "image/png",
+            "image/svg+xml",
             "image/gif",
             "text/x-chdr",
             "text/x-c++src",
@@ -429,7 +430,7 @@ class Crawler:
             if not any(accepted_log in log for accepted_log in accepted_logs):
                 self.handle_error(url, error_type="JavascriptError", message=log)
 
-    def verify_is_valid_url(self, url: str) -> None:
+    def verify_is_valid_url(self, url: str) -> None:  # pylint: disable=too-many-branches
         parsed = urlsplit(url)
         if parsed.scheme != "http":
             raise InvalidUrl(url, f"invalid scheme: {parsed.scheme}")
@@ -670,12 +671,12 @@ def test_crawl(site: Site) -> None:
         ),
     ],
 )
-def test_mutate_url_with_xss_payload(url: str, payload: str, expected_urls: Iterable[str]):
+def test_mutate_url_with_xss_payload(url: str, payload: str, expected_urls: Iterable[str]) -> None:
     assert [u.url for u in mutate_url_with_xss_payload(Url(url), payload)] == expected_urls
 
 
 @pytest.mark.type("unit")
-def test_mutate_url_with_xss_payload_url_metadata():
+def test_mutate_url_with_xss_payload_url_metadata() -> None:
     url = Url(
         url="http://host/page.py?key=value",
         referer_url="http://host/referer.py",

@@ -1,0 +1,20 @@
+Title: Fix synchronisation of password store entries to customer sites
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1651227473
+Edition: cme
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+This werk fixes two problems:
+
+The ValueError that was fixed for other editions in werk #14102.
+
+The password store entries were always completly synchronised to the remote
+sites. The customer option that should be used for calculating the passwords to
+synchronize was ignored.
+
+

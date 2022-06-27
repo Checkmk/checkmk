@@ -11,11 +11,12 @@
 def inventory_sansymphony_serverstatus(info):
     if info:
         return [(None, None)]
+    return []
 
 
 def check_sansymphony_serverstatus(_no_item, _no_params, info):
     if not info:
-        return
+        return None
     status, cachestate = info[0]
     if status == "Online" and cachestate == "WritebackGlobal":
         return 0, "SANsymphony is %s and its cache is in %s mode" % (status, cachestate)

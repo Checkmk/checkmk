@@ -61,7 +61,7 @@ class SkipReport(RuntimeError):
 
 
 class CrashDataset(WritableDataset):
-    def __init__(self, crash_report_fn):
+    def __init__(self, crash_report_fn) -> None:
         """
         Try to create a dataset like object from a crash report
 
@@ -122,9 +122,9 @@ class CrashDataset(WritableDataset):
         for line in traceback[::-1]:
             if "share/check_mk/checks/" in line[0]:
                 return line[0].split("share/check_mk/checks/")[-1]
-        return
+        return None
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "CrashDataset(checkname=%r, id=%r)" % (self.checkname, self.crash_id)
 
 
@@ -133,7 +133,7 @@ class CrashReportList(list):
     Use update_crashes.py in order to read new crash reports and list them in the state file.
     Crash reports are read from state_file in order to speed up generic crash report tests"""
 
-    def __init__(self, state_file):
+    def __init__(self, state_file) -> None:
         self.state_file = state_file
         with open(self.state_file) as file_:
             # A line contains: ID STATE AMOUNT I N F O
@@ -166,7 +166,7 @@ class CrashReportList(list):
                 cr_info[3] = "Exception: %s" % exc
 
 
-def test_crashreport(fix_plugin_legacy, crashdata):
+def test_crashreport(fix_plugin_legacy, crashdata) -> None:
     try:
         run(fix_plugin_legacy.check_info, crashdata)
         check = Check(crashdata.full_checkname)

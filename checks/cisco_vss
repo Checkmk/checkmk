@@ -64,6 +64,7 @@ def inventory_cisco_vss(info):
     for _switch_id, chassis_role in info[0]:
         if chassis_role in ["2", "3"]:  # active, standby
             return [(None, None)]
+    return []
 
 
 def check_cisco_vss(item, params, info):

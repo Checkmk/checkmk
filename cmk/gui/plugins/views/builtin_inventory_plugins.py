@@ -10,8 +10,8 @@
 # at your choice adding temporarily in the style file the option:
 # each_dict_entry_on_separate_line=False
 
-import cmk.gui.utils
 from cmk.gui.i18n import _l
+from cmk.gui.num_split import cmp_version
 from cmk.gui.plugins.views.utils import inventory_displayhints
 from cmk.gui.plugins.visuals.inventory import (
     FilterInvtableAdminStatus,
@@ -26,7 +26,6 @@ from cmk.gui.plugins.visuals.inventory import (
 # yapf: disable
 
 inventory_displayhints.update({
-    ".": {"title": _l("Inventory")},
     ".hardware.": {"title": _l("Hardware"), "icon": "hardware"},
     ".hardware.chassis.": {"title": _l("Chassis")},
     ".hardware.cpu.": {
@@ -94,7 +93,6 @@ inventory_displayhints.update({
     ".hardware.memory.arrays:*.maximum_capacity": {
         "title": _l("Maximum Capacity"), "paint": "bytes"
     },
-    ".hardware.memory.arrays:*.devices:*.": {"title": lambda v: v["locator"]},
     ".hardware.memory.arrays:*.devices:*.size": {"title": _l("Size"), "paint": "bytes"},
     ".hardware.memory.arrays:*.devices:*.speed": {"title": _l("Speed"), "paint": "hz"},
     ".hardware.system.": {
@@ -114,81 +112,6 @@ inventory_displayhints.update({
     ".hardware.system.manufacturer": {"title": _l("Manufacturer")},
 
     # Legacy ones. Kept to not break existing views - DON'T use these values for new plugins
-    ".software.applications.kubernetes.roles:": {
-        "title": _l("Roles"),
-        "keyorder": ["role", "namespace"],
-    },
-    ".software.applications.kubernetes.nodes:": {
-        "title": _l("Nodes"),
-        "keyorder": ["name"],
-    },
-    ".software.applications.kubernetes.pod_container:": {
-        "title": _l("Containers"),
-        "keyorder": [
-            "name",
-            "ready",
-            "restart_count",
-            "image",
-            "image_pull_policy",
-            "image_id",
-            "container_id",
-        ],
-    },
-    ".software.applications.kubernetes.job_container:": {
-        "title": _l("Containers"),
-        "keyorder": [
-            "name",
-            "image",
-            "image_pull_policy",
-        ],
-    },
-    ".software.applications.kubernetes.roles:*.role" : {"title": _l("Name")},
-    ".software.applications.kubernetes.roles:*.namespace" : {"title": _l("Namespace")},
-    ".software.applications.kubernetes.nodes:*.name" : {"title": _l("Name")},
-    ".software.applications.kubernetes.ingresses:": {
-        "title": _l("Ingress"),
-        "keyorder": ["path", "service_name", "service_port"],
-    },
-    ".software.applications.kubernetes.pod_container:*.name": {"title": _l("Name")},
-    ".software.applications.kubernetes.pod_container:*.image": {"title": _l("Image")},
-    ".software.applications.kubernetes.pod_container:*.image_pull_policy": {"title": _l("Image pull policy")},
-    ".software.applications.kubernetes.pod_container:*.image_id": {"title": _l("Image ID")},
-    ".software.applications.kubernetes.pod_container:*.ready": {"title": _l("Ready"), "paint": "container_ready"},
-    ".software.applications.kubernetes.pod_container:*.restart_count": {"title": _l("Restart count")},
-    ".software.applications.kubernetes.pod_container:*.container_id": {"title": _l("Container ID")},
-    ".software.applications.kubernetes.job_container:*.name": {"title": _l("Name")},
-    ".software.applications.kubernetes.job_container:*.image": {"title": _l("Image")},
-    ".software.applications.kubernetes.job_container:*.image_pull_policy": {"title": _l("Image pull policy")},
-    ".software.applications.kubernetes.daemon_pod_containers:": {
-        "title": _l("Daemon pod containers"),
-        "keyorder": ["name", "image", "image_pull_policy"],
-    },
-    ".software.applications.kubernetes.daemon_pod_containers:*.name": {"title": _l("Name")},
-    ".software.applications.kubernetes.daemon_pod_containers:*.image": {"title": _l("Image")},
-    ".software.applications.kubernetes.daemon_pod_containers:*.image_pull_policy": {"title": _l("Image pull policy")},
-    ".software.applications.kubernetes.pod_info.": {
-        "title": _l("Pod"),
-    },
-    ".software.applications.kubernetes.pod_info.node": {"title": _l("Node")},
-    ".software.applications.kubernetes.pod_info.host_network": {"title": _l("Host network")},
-    ".software.applications.kubernetes.pod_info.dns_policy": {"title": _l("DNS policy")},
-    ".software.applications.kubernetes.pod_info.host_ip": {"title": _l("Host IP")},
-    ".software.applications.kubernetes.pod_info.pod_ip": {"title": _l("Pod IP")},
-    ".software.applications.kubernetes.pod_info.qos_class": {"title": _l("QOS class")},
-    ".software.applications.kubernetes.service_info.": {
-        "title": _l("Service"),
-    },
-    ".software.applications.kubernetes.service_info.type": {"title": _l("Type")},
-    ".software.applications.kubernetes.service_info.cluster_ip": {"title": _l("Cluster IP")},
-    ".software.applications.kubernetes.service_info.load_balancer_ip": {"title": _l("Load Balancer IP")},
-    ".software.applications.kubernetes.selector.": {
-        "title": _l("Selectors"),
-    },
-    ".software.applications.kubernetes.assigned_pods:": {
-        "title": _l("Pods"),
-        "keyorder": ["id", "name"],
-    },
-    ".software.applications.kubernetes.assigned_pods:*.name": {"title": _l("Name")},
     ".hardware.system.serial_number": {"title": _l("Serial Number - LEGACY, don't use")},
     ".hardware.system.model_name": {"title": _l("Model Name - LEGACY, don't use")},
     ".hardware.components.": {"title": _l("Physical Components")},
@@ -429,7 +352,10 @@ inventory_displayhints.update({
     ".hardware.storage.disks:*.serial": {"title": _l("Serial Number")},
     ".hardware.storage.disks:*.size": {"title": _l("Size"), "paint": "size"},
     ".hardware.storage.disks:*.type": {"title": _l("Type")},
-    ".hardware.volumes.physical_volumes.*:": {
+    # this displayhint is for Attributes and NOT for above Table
+    ".hardware.storage.disks.size": {"title": _l("Size"), "paint": "size"},
+    ".hardware.volumes.": {"title": _l("Volumes")},
+    ".hardware.volumes.physical_volumes:": {
         "title": ("Physical Volumes"),
         "keyorder": [
             "volume_group_name",
@@ -473,14 +399,14 @@ inventory_displayhints.update({
     ".software.": {"title": _l("Software"), "icon": "software"},
     ".software.applications.": {"title": _l("Applications")},
     ".software.applications.check_mk.": {"title": _l("Checkmk")},
-    ".software.applications.check_mk.num_hosts": {"title": _l("# Hosts"), "short": _l("Hosts"),},
-    ".software.applications.check_mk.num_services": {"title": _l("# Services"), "short": _l("Services"),},
+    ".software.applications.check_mk.num_hosts": {"title": _l("#Hosts"), "short": _l("Hosts"),},
+    ".software.applications.check_mk.num_services": {"title": _l("#Services"), "short": _l("Services"),},
     ".software.applications.check_mk.versions:": {
         "title": _l("Versions"),
         "keyorder": ["version", "number", "edition", "demo", "num_sites"],
         "view": "invcmkversions_of_host",
     },
-    ".software.applications.check_mk.versions:*.demo": {"paint": "bool"},
+    ".software.applications.check_mk.versions:*.demo": {"title": _l("Demo"), "paint": "bool"},
     ".software.applications.check_mk.sites:": {
         "title": _l("Sites"),
         "keyorder": [
@@ -497,27 +423,27 @@ inventory_displayhints.update({
         ],
         "view": "invcmksites_of_host",
     },
-    ".software.applications.check_mk.sites:*.used_version": {"short": _l("Version")},
-    ".software.applications.check_mk.sites:*.num_hosts": {"short": _l("Hosts")},
-    ".software.applications.check_mk.sites:*.num_services": {"short": _l("Services")},
-    ".software.applications.check_mk.sites:*.check_mk_helper_usage": {"short": _l("CMK helper")},
-    ".software.applications.check_mk.sites:*.fetcher_helper_usage": {"short": _l("Fetcher helper")},
-    ".software.applications.check_mk.sites:*.checker_helper_usage": {"short": _l("Checker helper")},
-    ".software.applications.check_mk.sites:*.livestatus_usage": {"short": _l("Live helper")},
-    ".software.applications.check_mk.sites:*.check_helper_usage": {"short": _l("Act. helper")},
-    ".software.applications.check_mk.sites:*.autostart": {"paint": "bool"},
-    ".software.applications.check_mk.sites:*.apache": {"paint": "service_status"},
-    ".software.applications.check_mk.sites:*.cmc": {"paint": "service_status"},
-    ".software.applications.check_mk.sites:*.crontab": {"paint": "service_status"},
-    ".software.applications.check_mk.sites:*.dcd": {"paint": "service_status"},
-    ".software.applications.check_mk.sites:*.liveproxyd": {"paint": "service_status"},
-    ".software.applications.check_mk.sites:*.mkeventd": {"paint": "service_status"},
-    ".software.applications.check_mk.sites:*.mknotifyd": {"paint": "service_status"},
-    ".software.applications.check_mk.sites:*.rrdcached": {"paint": "service_status"},
-    ".software.applications.check_mk.sites:*.stunnel": {"paint": "service_status"},
-    ".software.applications.check_mk.sites:*.xinetd": {"paint": "service_status"},
-    ".software.applications.check_mk.sites:*.nagios": {"paint": "service_status"},
-    ".software.applications.check_mk.sites:*.npcd": {"paint": "service_status"},
+    ".software.applications.check_mk.sites:*.used_version": {"title": _l("Version"), "short": _l("Version")},
+    ".software.applications.check_mk.sites:*.num_hosts": {"title": _l("#Hosts"), "short": _l("Hosts")},
+    ".software.applications.check_mk.sites:*.num_services": {"title": _l("#Services"), "short": _l("Services")},
+    ".software.applications.check_mk.sites:*.check_mk_helper_usage": {"title": _l("CMK helper usage"), "short": _l("CMK helper")},
+    ".software.applications.check_mk.sites:*.fetcher_helper_usage": {"title": _l("Fetcher helper usage"), "short": _l("Fetcher helper")},
+    ".software.applications.check_mk.sites:*.checker_helper_usage": {"title": _l("Checker helper usage"), "short": _l("Checker helper")},
+    ".software.applications.check_mk.sites:*.livestatus_usage": {"title": _l("Lice helper usage"), "short": _l("Live helper")},
+    ".software.applications.check_mk.sites:*.check_helper_usage": {"title": _l("Actual helper usage"), "short": _l("Act. helper")},
+    ".software.applications.check_mk.sites:*.autostart": {"title": _l("Autostart"), "paint": "bool"},
+    ".software.applications.check_mk.sites:*.apache": {"title": _l("Apache status"), "paint": "service_status"},
+    ".software.applications.check_mk.sites:*.cmc": {"title": _l("CMC status"), "paint": "service_status"},
+    ".software.applications.check_mk.sites:*.crontab": {"title": _l("Crontab status"), "paint": "service_status"},
+    ".software.applications.check_mk.sites:*.dcd": {"title": _l("DCD status"), "paint": "service_status"},
+    ".software.applications.check_mk.sites:*.liveproxyd": {"title": _l("Liveproxyd status"), "paint": "service_status"},
+    ".software.applications.check_mk.sites:*.mkeventd": {"title": _l("MKEventd status"), "paint": "service_status"},
+    ".software.applications.check_mk.sites:*.mknotifyd": {"title": _l("MKNotifyd status"), "paint": "service_status"},
+    ".software.applications.check_mk.sites:*.rrdcached": {"title": _l("RRDCached status"), "paint": "service_status"},
+    ".software.applications.check_mk.sites:*.stunnel": {"title": _l("STunnel status"), "paint": "service_status"},
+    ".software.applications.check_mk.sites:*.xinetd": {"title": _l("XInetd status"), "paint": "service_status"},
+    ".software.applications.check_mk.sites:*.nagios": {"title": _l("Nagios status"), "paint": "service_status"},
+    ".software.applications.check_mk.sites:*.npcd": {"title": _l("NPCD status"), "paint": "service_status"},
     ".software.applications.check_mk.cluster.": {"title": _l("Cluster")},
     ".software.applications.check_mk.cluster.is_cluster": {
         "title": _l("Cluster host"), "short": _l("Cluster"), "paint": "bool"
@@ -540,6 +466,7 @@ inventory_displayhints.update({
     ".software.applications.check_mk.host_labels:*.plugin_name": {
         "title": _l("Discovered by plugin"),
     },
+    ".software.applications.checkmk-agent.": {"title": _l("Checkmk Agent")},
     ".software.applications.checkmk-agent.plugins:": {
         "title": _l("Agent plugins"),
         "keyorder": ["name", "version", "cache_interval"],
@@ -563,11 +490,11 @@ inventory_displayhints.update({
     ".software.applications.docker.registry": {"title": _l("Registry")},
     ".software.applications.docker.swarm_state": {"title": _l("Swarm State")},
     ".software.applications.docker.swarm_node_id": {"title": _l("Swarm Node ID")},
-    ".software.applications.docker.num_containers_total": {"title": _l("# Containers"), "short": _l("Containers"),},
-    ".software.applications.docker.num_containers_running": {"title": _l("# Containers running"), "short": _l("Running"),},
-    ".software.applications.docker.num_containers_stopped": {"title": _l("# Containers stopped"), "short": _l("Stopped"),},
-    ".software.applications.docker.num_containers_paused": {"title": _l("# Containers paused"), "short": _l("Paused"),},
-    ".software.applications.docker.num_images": {"title": _l("# Images")},
+    ".software.applications.docker.num_containers_total": {"title": _l("#Containers"), "short": _l("Containers"),},
+    ".software.applications.docker.num_containers_running": {"title": _l("#Containers running"), "short": _l("Running"),},
+    ".software.applications.docker.num_containers_stopped": {"title": _l("#Containers stopped"), "short": _l("Stopped"),},
+    ".software.applications.docker.num_containers_paused": {"title": _l("#Containers paused"), "short": _l("Paused"),},
+    ".software.applications.docker.num_images": {"title": _l("#Images")},
     ".software.applications.docker.node_labels:": {
         "title": _l("Node Labels"),
         "keyorder": ["label"],
@@ -587,8 +514,8 @@ inventory_displayhints.update({
     },
     ".software.applications.docker.images:*.id": {"title": _l("ID")},
     ".software.applications.docker.images:*.creation": {"title": _l("Creation")},
-    ".software.applications.docker.images:*.size": {"paint": "size"},
-    ".software.applications.docker.images:*.labels": {"paint": "csv_labels"},
+    ".software.applications.docker.images:*.size": {"title": _l("Size"), "paint": "size"},
+    ".software.applications.docker.images:*.labels": {"title": _l("Labels"), "paint": "csv_labels"},
     ".software.applications.docker.images:*.amount_containers": {"title": _l("# Containers")},
     ".software.applications.docker.images:*.repotags": {"title": _l("Repository/Tag"), "paint": "csv_labels"},
     ".software.applications.docker.images:*.repodigests": {"title": _l("Digests"), "paint": "csv_labels"},
@@ -601,7 +528,8 @@ inventory_displayhints.update({
         "is_show_more": False,
     },
     ".software.applications.docker.containers:*.id": {"title": _l("ID")},
-    ".software.applications.docker.containers:*.labels": {"paint": "csv_labels"},
+    ".software.applications.docker.containers:*.labels": {"title": _l("Labels"), "paint": "csv_labels"},
+    ".software.applications.docker.networks.": {"title": "Networks"},
     ".software.applications.docker.networks.*.": {"title": "Network %s"},
     ".software.applications.docker.networks.*.network_id": {"title": "Network ID"},
     ".software.applications.docker.networks.*.name": {"title": "Name"},
@@ -622,6 +550,7 @@ inventory_displayhints.update({
     ".software.applications.docker.container.networks:*.mac_address": {"title": _l("MAC address")},
     ".software.applications.docker.container.networks:*.network_id": {"title": _l("Network ID")},
     ".software.applications.docker.networks.*.containers:": {
+        "title": _l("Containers"),
         "keyorder": ["name", "id", "ipv4_address", "ipv6_address", "mac_address"],
     },
     ".software.applications.docker.networks.*.containers:*.id": {"title": _l("ID")},
@@ -634,6 +563,7 @@ inventory_displayhints.update({
     ".software.applications.docker.networks.*.containers:*.mac_address": {
         "title": _l("MAC address"),
     },
+    ".software.applications.fortinet.": {"title": _l("Fortinet")},
     ".software.applications.fortinet.fortisandbox:": {
         "title": _l("FortiSandbox Software"),
         "keyorder": ["name", "version"],
@@ -644,6 +574,7 @@ inventory_displayhints.update({
         "title": _l("FortiGate HighAvailability"),
     },
 
+    ".software.applications.fritz.": {"title": _l("Fritz")},
     ".software.applications.fritz.link_type": {"title": _l("Link type")},
     ".software.applications.fritz.wan_access_type": {"title": _l("WAN access type")},
     ".software.applications.fritz.auto_disconnect_time": {"title": _l("Auto-disconnect time")},
@@ -651,7 +582,7 @@ inventory_displayhints.update({
     ".software.applications.fritz.dns_server_2": {"title": _l("DNS server 2")},
     ".software.applications.fritz.voip_dns_server_1": {"title": _l("VoIP DNS server 1")},
     ".software.applications.fritz.voip_dns_server_2": {"title": _l("VoIP DNS server 2")},
-    ".software.applications.fritz.statefulset.upnp_config_enabled": {"title": _l("uPnP configuration enabled")},
+    ".software.applications.fritz.upnp_config_enabled": {"title": _l("uPnP configuration enabled")},
 
     ".software.applications.kube.": {"title": _l("Kubernetes")},
 
@@ -666,14 +597,14 @@ inventory_displayhints.update({
         "title": _l("Value"),
     },
 
-    ".software.applications.kube.network:": {
-        "title": _l("Network"),
+    ".networking.kube:": {
+        "title": _l("Kubernetes"),
         "keyorder": ["ip", "address_type"],
     },
-    ".software.applications.kube.network:*.ip": {
+    ".networking.kube:*.ip": {
         "title": _l("IP address"),
     },
-    ".software.applications.kube.network:*.address_type": {
+    ".networking.kube:*.address_type": {
         "title": _l("Type"),
     },
     ".software.applications.kube.containers:": {
@@ -690,7 +621,7 @@ inventory_displayhints.update({
     },
 
     ".software.applications.kube.metadata.": {
-        "title": _l("General"),
+        "title": _l("Metadata"),
         "keyorder": [
             "object",
             "name",
@@ -743,6 +674,11 @@ inventory_displayhints.update({
     ".software.applications.kube.pod.node": {"title": _l("Node")},
     ".software.applications.kube.pod.pod_ip": {"title": _l("Pod IP")},
     ".software.applications.kube.pod.qos_class": {"title": _l("QoS class")},
+
+
+    ".software.applications.mobileiron.": {"title": _l("Mobileiron")},
+    ".software.applications.mobileiron.partition_name": {"title": _l("Partition Name")},
+    ".software.applications.mobileiron.registration_state": {"title": _l("Registration State")},
 
     ".software.applications.citrix.": {"title": _l("Citrix")},
     ".software.applications.citrix.controller.": {"title": _l("Controller")},
@@ -942,7 +878,9 @@ inventory_displayhints.update({
     ".software.applications.oracle.tablespaces:*.free_space": {
         "title": _l("Free space"), "paint": "size"
     },
+    ".software.applications.vmwareesx.": {"title": _l("VMWare ESX")},
     ".software.applications.vmwareesx:*.": {"title": _l("Datacenter %d")},
+    ".software.applications.vmwareesx:*.clusters.": {"title": _l("Clusters")},
     ".software.applications.vmwareesx:*.clusters:*.": {"title": _l("Cluster %d")},
     ".software.applications.mssql.": {"title": _l("MSSQL")},
     ".software.applications.mssql.instances:": {
@@ -1046,17 +984,17 @@ inventory_displayhints.update({
     ".software.packages:*.package_type": {"title": _l("Type")},
     ".software.packages:*.summary": {"title": _l("Description")},
     ".software.packages:*.version": {
-        "title": _l("Version"), "sort": cmk.gui.utils.cmp_version, "filter": FilterInvtableVersion
+        "title": _l("Version"), "sort": cmp_version, "filter": FilterInvtableVersion
     },
     ".software.packages:*.vendor": {"title": _l("Publisher")},
     ".software.packages:*.package_version": {
-        "title": _l("Package Version"), "sort": cmk.gui.utils.cmp_version, "filter": FilterInvtableVersion
+        "title": _l("Package Version"), "sort": cmp_version, "filter": FilterInvtableVersion
     },
     ".software.packages:*.install_date": {"title": _l("Install Date"), "paint": "date"},
     ".software.packages:*.size": {"title": _l("Size"), "paint": "count"},
     ".software.packages:*.path": {"title": _l("Path")},
     ".networking.": {"title": _l("Networking"), "icon": "networking"},
-    ".networking.total_interfaces": {"title": _l("Interfaces"), "paint": "count"},
+    ".networking.total_interfaces": {"title": _l("Total interfaces"), "paint": "count"},
     ".networking.total_ethernet_ports": {"title": _l("Ports"), "paint": "count"},
     ".networking.hostname": {"title": _l("Hostname")},
     ".networking.available_ethernet_ports": {"title": _l("Ports available"), "paint": "count"},

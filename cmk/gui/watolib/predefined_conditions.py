@@ -17,7 +17,7 @@ PredefinedConditionSpec = dict[str, Any]
 
 
 class PredefinedConditionStore(WatoSimpleConfigFile[PredefinedConditionSpec]):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             config_file_path=Path(wato_root_dir()) / "predefined_conditions.mk",
             config_variable="predefined_conditions",

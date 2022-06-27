@@ -29,7 +29,7 @@ checks = {
             }, [
                 (
                     0,
-                    'Job-State: SCHEDULED, Enabled: Yes, Last Duration: 1.00 s, Next Run: 09.12.19 00:00:00,000000 +02:00, Last Run Status: SUCCEEDED (ignored disabled Job)',
+                    'Job-State: SCHEDULED, Enabled: Yes, Last Duration: 1 second, Next Run: 09.12.19 00:00:00,000000 +02:00, Last Run Status: SUCCEEDED (ignored disabled Job)',
                     [('duration', 1, None, None, None, None)]
                 )
             ]

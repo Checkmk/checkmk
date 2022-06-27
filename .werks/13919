@@ -1,0 +1,11 @@
+Title: Mobile UI: Fix forms
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 2.2.0i1
+Date: 1653467644
+Class: fix
+
+The forms of the mobile UI did not work correctly anymore.
+Now, the "Results" button functions as a submit button again. The dropdowns are rendered correctly and all form information is applied to the results view.

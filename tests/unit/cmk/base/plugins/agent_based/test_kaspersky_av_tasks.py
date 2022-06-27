@@ -14,7 +14,7 @@ from cmk.base.plugins.agent_based.kaspersky_av_tasks import (
 
 
 @pytest.mark.parametrize("string_table,expected_result", [([["UnnamedValue:", "Value"]], {})])
-def test_parse_kaspersky_av_tasks(string_table, expected_result):
+def test_parse_kaspersky_av_tasks(string_table, expected_result) -> None:
     assert parse_kaspersky_av_tasks(string_table) == expected_result
 
 
@@ -41,5 +41,5 @@ def test_parse_kaspersky_av_tasks(string_table, expected_result):
         ),
     ],
 )
-def test_check_kaspersky_av_client(item, section, results):
+def test_check_kaspersky_av_client(item, section, results) -> None:
     assert list(check_kaspersky_av_tasks(item, section)) == results

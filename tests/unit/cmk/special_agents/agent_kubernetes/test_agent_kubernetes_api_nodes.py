@@ -7,7 +7,7 @@
 import datetime
 import json
 
-from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
+from kubernetes import client  # type: ignore[import]
 from mocket import Mocketizer  # type: ignore[import]
 from mocket.mockhttp import Entry  # type: ignore[import]
 
@@ -16,7 +16,7 @@ from cmk.special_agents.utils_kubernetes.transform import node_conditions, node_
 
 
 class TestAPINode:
-    def test_parse_metadata(self):
+    def test_parse_metadata(self) -> None:
         labels = {
             "beta.kubernetes.io/arch": "amd64",
             "beta.kubernetes.io/os": "linux",
@@ -24,6 +24,11 @@ class TestAPINode:
             "kubernetes.io/hostname": "k8",
             "kubernetes.io/os": "linux",
             "node-role.kubernetes.io/master": "",
+        }
+        annotations = {
+            "kubectl.kubernetes.io/last-applied-configuration": '{"apiVersion":"v1","kind":"Node","metadata":{"annotations":{},"name":"minikube"}}\n',
+            "node.alpha.kubernetes.io/ttl": "0",
+            "volumes.kubernetes.io/controller-managed-attach-detach": "true",
         }
 
         node_raw_metadata = {
@@ -33,13 +38,33 @@ class TestAPINode:
             ).replace(tzinfo=datetime.timezone.utc),
             "uid": "42c82288-5524-49cb-af75-065e73fedc88",
             "labels": labels,
+            "annotations": annotations,
         }
         metadata_obj = client.V1ObjectMeta(**node_raw_metadata)
-        metadata = parse_metadata(metadata_obj)
+        metadata = parse_metadata(metadata_obj, model=api.NodeMetaData)
+        assert isinstance(metadata, api.NodeMetaData)
         assert metadata.name == "k8"
         assert metadata.namespace is None
+        assert metadata.labels
+        assert metadata.annotations == {
+            "node.alpha.kubernetes.io/ttl": "0",
+            "volumes.kubernetes.io/controller-managed-attach-detach": "true",
+        }
 
-    def test_parse_metadata_datetime(self):
+    def test_parse_metadata_missing_annotations_and_labels(self) -> None:
+        node_raw_metadata = {
+            "name": "k8",
+            "creation_timestamp": datetime.datetime.strptime(
+                "2021-05-04T09:01:13Z", "%Y-%m-%dT%H:%M:%SZ"
+            ).replace(tzinfo=datetime.timezone.utc),
+            "uid": "42c82288-5524-49cb-af75-065e73fedc88",
+        }
+        metadata_obj = client.V1ObjectMeta(**node_raw_metadata)
+        metadata = parse_metadata(metadata_obj, model=api.NodeMetaData)
+        assert metadata.labels == {}
+        assert metadata.annotations == {}
+
+    def test_parse_metadata_datetime(self) -> None:
         now = datetime.datetime(2021, 10, 11, 13, 53, 10, tzinfo=datetime.timezone.utc)
         node_raw_metadata = {
             "name": "unittest",
@@ -50,7 +75,7 @@ class TestAPINode:
         metadata = parse_metadata(metadata_obj)
         assert metadata.creation_timestamp == now.timestamp()
 
-    def test_parse_node_info(self, dummy_host, core_client):
+    def test_parse_node_info(self, dummy_host, core_client) -> None:  # type:ignore[no-untyped-def]
         node_list_with_info = {
             "items": [
                 {
@@ -84,7 +109,7 @@ class TestAPINode:
         assert parsed_node_info.kernel_version == "5.4.0-88-generic"
         assert parsed_node_info.os_image == "Ubuntu 20.04.3 LTS"
 
-    def test_parse_conditions(self, core_client, dummy_host):
+    def test_parse_conditions(self, core_client, dummy_host) -> None:  # type:ignore[no-untyped-def]
         node_with_conditions = {
             "items": [
                 {
@@ -151,7 +176,9 @@ class TestAPINode:
             api.NodeConditionStatus.TRUE
         ]
 
-    def test_parse_conditions_no_status(self, core_client, dummy_host):
+    def test_parse_conditions_no_status(  # type:ignore[no-untyped-def]
+        self, core_client, dummy_host
+    ) -> None:
         node_with_conditions = {"items": [{"status": {}}]}  # type: ignore
         Entry.single_register(
             Entry.GET,
@@ -163,7 +190,9 @@ class TestAPINode:
             node = list(core_client.list_node().items)[0]
         assert node_conditions(node.status) is None
 
-    def test_parse_conditions_no_conditions(self, core_client, dummy_host):
+    def test_parse_conditions_no_conditions(  # type:ignore[no-untyped-def]
+        self, core_client, dummy_host
+    ) -> None:
         node_with_conditions = {"items": [{"status": {"conditions": []}}]}  # type: ignore
         Entry.single_register(
             Entry.GET,

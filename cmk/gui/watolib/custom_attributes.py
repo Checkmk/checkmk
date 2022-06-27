@@ -5,18 +5,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import os
 import pprint
+from datetime import datetime
 
 from cmk.utils import store
 
-from cmk.gui import userdb, watolib
+from cmk.gui import userdb
 from cmk.gui.config import load_config
-from cmk.gui.watolib import Folder
+from cmk.gui.plugins.watolib.utils import wato_fileheader
 from cmk.gui.watolib.host_attributes import transform_pre_16_host_topics
+from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.utils import multisite_dir
 
 
-def update_user_custom_attrs():
+def update_user_custom_attrs(now: datetime):
     userdb.update_config_based_user_attributes()
-    userdb.rewrite_users()
+    userdb.rewrite_users(now)
 
 
 def update_host_custom_attrs():
@@ -26,7 +29,7 @@ def update_host_custom_attrs():
 
 
 def load_custom_attrs_from_mk_file(lock):
-    filename = os.path.join(watolib.multisite_dir(), "custom_attrs.mk")
+    filename = os.path.join(multisite_dir(), "custom_attrs.mk")
     vars_ = store.load_mk_file(
         filename,
         {
@@ -46,11 +49,11 @@ def load_custom_attrs_from_mk_file(lock):
 
 
 def save_custom_attrs_to_mk_file(attrs):
-    output = watolib.wato_fileheader()
+    output = wato_fileheader()
     for what in ["user", "host"]:
         if what in attrs and len(attrs[what]) > 0:
             output += "if type(wato_%s_attrs) != list:\n    wato_%s_attrs = []\n" % (what, what)
             output += "wato_%s_attrs += %s\n\n" % (what, pprint.pformat(attrs[what]))
 
-    store.mkdir(watolib.multisite_dir())
-    store.save_text_to_file(watolib.multisite_dir() + "custom_attrs.mk", output)
+    store.mkdir(multisite_dir())
+    store.save_text_to_file(multisite_dir() + "custom_attrs.mk", output)

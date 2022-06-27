@@ -17,8 +17,8 @@ import cmk.gui.utils
 import cmk.gui.wato
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
 import cmk.gui.watolib.rulesets as rulesets
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import active_config
 from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_local
 from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
 
@@ -62,7 +62,9 @@ def fixture_gen_id(monkeypatch):
         ("clustered_services", True, True),
     ],
 )
-def test_rule_from_ruleset_defaults(request_context, ruleset_name, default_value, is_binary):
+def test_rule_from_ruleset_defaults(
+    request_context, ruleset_name, default_value, is_binary
+) -> None:
     ruleset = _ruleset(ruleset_name)
     rule = rulesets.Rule.from_ruleset_defaults(hosts_and_folders.Folder.root_folder(), ruleset)
     assert isinstance(rule.conditions, rulesets.RuleConditions)
@@ -211,7 +213,7 @@ def test_rule_from_config_tuple(
 
     for key, val in expected_attributes.items():
         if key == "conditions":
-            assert rule.conditions._to_config() == val
+            assert rule.conditions.to_config(rulesets.UseHostFolder.NONE) == val
         else:
             assert getattr(rule, key) == val
 
@@ -470,7 +472,7 @@ def test_rule_from_config_dict(
 
     for key, val in expected_attributes.items():
         if key == "conditions":
-            assert rule.conditions._to_config() == val
+            assert rule.conditions.to_config(rulesets.UseHostFolder.NONE) == val
         else:
             assert getattr(rule, key) == val
 
@@ -525,7 +527,7 @@ checkgroup_parameters['local'] = [
         # """),
     ],
 )
-def test_ruleset_to_config(request_context, monkeypatch, wato_use_git, expected_result):
+def test_ruleset_to_config(request_context, monkeypatch, wato_use_git, expected_result) -> None:
     monkeypatch.setattr(active_config, "wato_use_git", wato_use_git)
 
     ruleset = rulesets.Ruleset(
@@ -580,7 +582,9 @@ checkgroup_parameters['local'] = [
         ),
     ],
 )
-def test_ruleset_to_config_sub_folder(with_admin_login, monkeypatch, wato_use_git, expected_result):
+def test_ruleset_to_config_sub_folder(
+    with_admin_login, monkeypatch, wato_use_git, expected_result
+) -> None:
     monkeypatch.setattr(active_config, "wato_use_git", wato_use_git)
 
     ruleset = rulesets.Ruleset(
@@ -614,7 +618,7 @@ def test_ruleset_to_config_sub_folder(with_admin_login, monkeypatch, wato_use_gi
     assert ruleset.to_config(folder) == expected_result
 
 
-def test_rule_clone(request_context):
+def test_rule_clone(request_context) -> None:
     rule = rulesets.Rule.from_config(
         hosts_and_folders.Folder.root_folder(),
         _ruleset("clustered_services"),

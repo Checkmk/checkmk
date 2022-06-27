@@ -8,15 +8,19 @@ from contextlib import nullcontext
 from typing import Any, ContextManager, Dict, List
 
 import cmk.gui.sites as sites
-import cmk.gui.watolib as watolib
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import active_config, html, request, response
-from cmk.gui.htmllib import foldable_container, HTML
+from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.sidebar.utils import SidebarSnapin, snapin_registry
 from cmk.gui.plugins.wato.check_mk_configuration import transform_virtual_host_trees
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.watolib.hosts_and_folders import Folder, get_folder_title_path
 
 
 @snapin_registry.register
@@ -152,7 +156,7 @@ class VirtualHostTree(SidebarSnapin):
                 if "_num_hosts" in subtree:
                     node_title += " (%d)" % subtree["_num_hosts"]
 
-                node_title = html.render_a(node_title, href=url, target="main")
+                node_title = HTMLWriter.render_a(node_title, href=url, target="main")
 
                 if "_children" not in subtree:
                     if self._is_tag_subdir(path, cwd):
@@ -172,7 +176,7 @@ class VirtualHostTree(SidebarSnapin):
                 else:
                     self._render_tag_tree_level(tree_spec, subpath, cwd, node_title, subtree)
 
-    def _is_tag_subdir(self, path, cwd):
+    def _is_tag_subdir(self, path, cwd) -> bool:
         if not cwd:
             return True
         if not path:
@@ -182,12 +186,12 @@ class VirtualHostTree(SidebarSnapin):
         return self._is_tag_subdir(path[1:], cwd[1:])
 
     def _tag_tree_bullet(self, state, path, leaf) -> HTML:
-        code = html.render_div(
+        code = HTMLWriter.render_div(
             "&nbsp;",
-            class_=["tagtree", "leaf" if leaf else None, "statebullet", "state%d" % state],
+            class_=["tagtree"] + (["leaf"] if leaf else []) + ["statebullet", "state%d" % state],
         )
         if not leaf:
-            code = html.render_a(
+            code = HTMLWriter.render_a(
                 code,
                 href="javascript:virtual_host_tree_enter('%s');" % "|".join(path),
                 title=_("Display the tree only below this node"),
@@ -308,7 +312,14 @@ function virtual_host_tree_enter(path)
             self._add_host_to_tree(tree_spec, tree, host_row, tag_groups, topics)
         return tree
 
-    def _add_host_to_tree(self, tree_spec, tree, host_row, tag_groups, topics):
+    def _add_host_to_tree(  # pylint: disable=too-many-branches
+        self,
+        tree_spec,
+        tree,
+        host_row,
+        tag_groups,
+        topics,
+    ):
         (
             _site,
             _host_name,
@@ -324,8 +335,8 @@ function virtual_host_tree_enter(path)
         if wato_folder.startswith("/wato/"):
             folder_path = wato_folder[6:-9]
             folder_path_components = folder_path.split("/")
-            if watolib.Folder.folder_exists(folder_path):
-                folder_titles = watolib.get_folder_title_path(folder_path)[1:]  # omit main folder
+            if Folder.folder_exists(folder_path):
+                folder_titles = get_folder_title_path(folder_path)[1:]  # omit main folder
         else:
             folder_titles = []
 

@@ -61,7 +61,7 @@ checks = {
             [
                 (
                     0,
-                    '27.01% used (16.12 of 59.66 GB)',
+                    'Used: 27.01% - 16.1 GiB of 59.7 GiB',
                     [
                         ('fs_used', 16502.328125, 48869.596875, 54978.296484375, 0, 61086.99609375),
                         ('fs_size', 61086.99609375, None, None, None, None),
@@ -87,7 +87,7 @@ checks = {
             [
                 (
                     0,
-                    '28.06% used (2.80 of 9.97 GB)',
+                    'Used: 28.06% - 2.80 GiB of 9.97 GiB',
                     [
                         ('fs_used', 2863.62109375, 8164.796875, 9185.396484375, 0, 10205.99609375),
                         ('fs_size', 10205.99609375, None, None, None, None),
@@ -113,7 +113,7 @@ checks = {
             [
                 (
                     0,
-                    '15.2% used (773.30 MB of 4.97 GB)',
+                    'Used: 15.20% - 773 MiB of 4.97 GiB',
                     [
                         ('fs_used', 773.3046875, 4068.796875, 4577.396484375, 0, 5085.99609375),
                         ('fs_size', 5085.99609375, None, None, None, None),
@@ -125,14 +125,13 @@ checks = {
     ],
 }
 
-mock_host_conf = {
-    '': [{
+mock_host_conf_merged = {
+    '': {
+        "item_appearance": "volume_name_and_mountpoint",
         "groups": [{
             'group_name': 'myGroup',
             'patterns_include': ['GROUPME'],
             'patterns_exclude': []
         }]
-    }]
-}  # new-style rule spec, old ones are always transformed now
-
-mock_host_conf_merged = {'': {"item_appearance": "volume_name_and_mountpoint",}}
+    },
+}

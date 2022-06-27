@@ -89,6 +89,6 @@ register.check_plugin(
     discovery_function=discovery_sap_hana_data_volume,
     check_ruleset_name="filesystem",
     check_function=check_sap_hana_data_volume,
-    check_default_parameters=df.FILESYSTEM_DEFAULT_LEVELS,
+    check_default_parameters=df.FILESYSTEM_DEFAULT_PARAMS,
     cluster_check_function=cluster_check_sap_hana_data_volume,
 )

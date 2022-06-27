@@ -74,7 +74,7 @@ public:
         local_ = true;
         cfg_name_ = cfg::groups::kLocal;
     }
-    virtual void updateSectionStatus();
+    void updateSectionStatus() override;
 };
 
 enum class PluginMode { all, sync, async };

@@ -24,12 +24,12 @@ def _check_function_node(test_results):
         yield res
 
 
-def test_node_returns_nothing():
+def test_node_returns_nothing() -> None:
     assert list(make_node_notice_results("test_node", _check_function_node(()))) == []
     assert list(make_node_notice_results("test_node", ())) == []
 
 
-def test_node_raises():
+def test_node_raises() -> None:
     def _check_node_raises():
         raise IgnoreResultsError()
         yield  # pylint: disable=unreachable
@@ -37,26 +37,26 @@ def test_node_raises():
     assert list(make_node_notice_results("test_node", _check_node_raises())) == []
 
 
-def test_node_ignore_results():
+def test_node_ignore_results() -> None:
     node_results = _check_function_node((_OK_RESULT, IgnoreResults()))
     assert list(make_node_notice_results("test_node", node_results)) == []
 
 
-def test_node_returns_metric():
+def test_node_returns_metric() -> None:
     node_results = _check_function_node((_OK_RESULT, Metric("panic", 42)))
     assert list(make_node_notice_results("test_node", node_results)) == [
         Result(state=State.OK, notice="[test_node]: I am fine"),
     ]
 
 
-def test_node_returns_details_only():
+def test_node_returns_details_only() -> None:
     node_results = _check_function_node((Result(state=State.OK, notice="This is detailed"),))
     assert list(make_node_notice_results("test_node", node_results)) == [
         Result(state=State.OK, notice="[test_node]: This is detailed"),
     ]
 
 
-def test_node_returns_ok_and_warn():
+def test_node_returns_ok_and_warn() -> None:
     node_results = _check_function_node((_OK_RESULT, _WARN_RESULT))
     assert list(make_node_notice_results("test_node", node_results)) == [
         Result(state=State.OK, notice="[test_node]: I am fine"),
@@ -64,7 +64,7 @@ def test_node_returns_ok_and_warn():
     ]
 
 
-def test_node_mutliline():
+def test_node_mutliline() -> None:
     node_results = (Result(state=State.WARN, notice="These\nare\nfour\nlines"),)
     assert list(make_node_notice_results("test_node", _check_function_node(node_results))) == [
         Result(

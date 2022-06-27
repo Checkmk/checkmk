@@ -8,6 +8,7 @@ import signal
 from types import FrameType
 from typing import Optional
 
+from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import RequestTimeout
 from cmk.gui.i18n import _
 
@@ -49,3 +50,6 @@ class TimeoutManager:
 
     def disable_timeout(self) -> None:
         signal.alarm(0)
+
+
+timeout_manager: TimeoutManager = request_local_attr("timeout_manager")

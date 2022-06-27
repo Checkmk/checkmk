@@ -5,6 +5,8 @@
 
 """ definitions of timeouts during e2e testing
 """
+from types import TracebackType
+from typing import Type
 
 from playwright.sync_api import Page
 
@@ -18,12 +20,14 @@ class TemporaryTimeout:
 
     default_timeout_ms = 30000
 
-    def __init__(self, page: Page, temporary_timeout_ms: int):
+    def __init__(self, page: Page, temporary_timeout_ms: int) -> None:
         self.page = page
         self.timeout = temporary_timeout_ms
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         self.page.set_default_timeout(self.timeout)
 
-    def __exit__(self, exc_type, exc_value, exc_tb):
+    def __exit__(
+        self, exc_type: Type[BaseException], exc_value: BaseException, exc_tb: TracebackType
+    ) -> None:
         self.page.set_default_timeout(self.default_timeout_ms)

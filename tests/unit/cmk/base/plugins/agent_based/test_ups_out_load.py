@@ -20,7 +20,7 @@ from cmk.base.plugins.agent_based.ups_out_load import (
         ([[["1", "2", "1"], ["0", "2", "2"]]], [Service(item="1")]),
     ],
 )
-def test_ups_out_load_discovery(info, expected_result):
+def test_ups_out_load_discovery(info, expected_result) -> None:
     section = parse_ups_load(info)
     result = discovery_ups(section)
     assert list(result) == expected_result
@@ -59,9 +59,18 @@ def test_ups_out_load_discovery(info, expected_result):
             [[["1", "99", "1"]]],
             [Result(state=State.UNKNOWN, summary="Phase 3 not found in SNMP output")],
         ),
+        (
+            "5",
+            {"levels": (85, 90)},
+            [[["400", "", "5"]]],
+            [
+                Result(state=State.OK, summary="load: 0%"),
+                Metric("out_load", 0.0, levels=(85.0, 90.0)),
+            ],
+        ),
     ],
 )
-def test_ups_out_load_check(item, params, info, expected_result):
+def test_ups_out_load_check(item, params, info, expected_result) -> None:
     section = parse_ups_load(info)
     result = check_ups_out_load(item, params, section)
     assert list(result) == expected_result

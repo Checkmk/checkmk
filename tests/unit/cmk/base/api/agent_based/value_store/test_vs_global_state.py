@@ -7,7 +7,7 @@
 # pylint: disable=protected-access
 
 import cmk.utils.store as store
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, ServiceID
 
 from cmk.base.api.agent_based.value_store._global_state import (
     get_value_store,
@@ -17,14 +17,15 @@ from cmk.base.api.agent_based.value_store._global_state import (
 _TEST_KEY = ("check", "item", "user-key")
 
 
-def test_load_host_value_store_loads_file(monkeypatch):
+def test_load_host_value_store_loads_file(monkeypatch) -> None:
 
-    service_id = (CheckPluginName("test_service"), None)
+    service_id = ServiceID(CheckPluginName("test_service"), None)
 
     monkeypatch.setattr(
         store,
         "load_text_from_file",
-        lambda *_a, **_kw: "{('%s', %r, 'loaded_file'): True}" % service_id,
+        lambda *_a, **_kw: "{('test_load_host_value_store_loads_file', '%s', %r, 'loaded_file'): True}"
+        % service_id,
     )
 
     with load_host_value_store(

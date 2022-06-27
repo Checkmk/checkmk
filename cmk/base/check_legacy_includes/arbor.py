@@ -4,8 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-
 #   .--Common--------------------------------------------------------------.
 #   |              ____                                                    |
 #   |             / ___|___  _ __ ___  _ __ ___   ___  _ __                |
@@ -44,6 +42,7 @@ ARBOR_MEMORY_CHECK_DEFAULT_PARAMETERS = {
 def inventory_arbor_memory(parsed):
     if len(parsed) > 0:
         return [(None, {})]
+    return []
 
 
 def check_arbor_memory(no_item, params, parsed):
@@ -86,6 +85,7 @@ def check_arbor_memory(no_item, params, parsed):
 def inventory_arbor_disk_usage(parsed):
     if "disk" in parsed:
         return [("/", {})]
+    return []
 
 
 def check_arbor_disk_usage(no_item, params, parsed):
@@ -108,6 +108,7 @@ def check_arbor_disk_usage(no_item, params, parsed):
 def inventory_arbor_host_fault(parsed):
     if "host_fault" in parsed:
         return [(None, None)]
+    return []
 
 
 def check_arbor_host_fault(no_item, no_params, parsed):
@@ -131,6 +132,7 @@ def check_arbor_host_fault(no_item, no_params, parsed):
 def inventory_arbor_drop_rate(parsed):
     if "drop_rate" in parsed:
         return [("Overrun", {})]
+    return []
 
 
 def check_arbor_drop_rate(no_item, params, parsed):
@@ -163,7 +165,7 @@ def check_arbor_drop_rate(no_item, params, parsed):
         if upper_status:
             infotext += " (warn/crit above %.1f/%.1f)%s" % (warn, crit, label)
 
-        perfdata = [("if_in_pkts", drop_rate, warn, crit)]
+        perfdata: list[tuple] = [("if_in_pkts", drop_rate, warn, crit)]
     else:
         perfdata = [("if_in_pkts", drop_rate)]
 

@@ -6,7 +6,8 @@
 
 import abc
 import os
-from typing import Any, Dict, List, Literal, Optional, Tuple, Type, Union
+from datetime import datetime
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Type, Union
 
 from livestatus import SiteId
 
@@ -15,15 +16,15 @@ import cmk.utils.store as store
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
-from cmk.gui.config import builtin_role_ids
+from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, save_user_file, user
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
-from cmk.gui.type_defs import UserSpec
+from cmk.gui.type_defs import Users, UserSpec
 from cmk.gui.utils import is_allowed_url
+from cmk.gui.valuespec import ValueSpec
 
 # count this up, if new user attributes are used or old are marked as
 # incompatible
@@ -343,7 +344,7 @@ class UserConnector(abc.ABC):
     #
 
     @abc.abstractmethod
-    def is_enabled(self):
+    def is_enabled(self) -> bool:
         raise NotImplementedError()
 
     # Optional: Hook function can be registered here to be executed
@@ -359,7 +360,14 @@ class UserConnector(abc.ABC):
 
     # Optional: Hook function can be registered here to be executed
     # to synchronize all users.
-    def do_sync(self, add_to_changelog, only_username, load_users_func, save_users_func):
+    def do_sync(
+        self,
+        *,
+        add_to_changelog: bool,
+        only_username: Optional[UserId],
+        load_users_func: Callable[[bool], Users],
+        save_users_func: Callable[[Users, datetime], None],
+    ):
         pass
 
     # Optional: Tells whether or not the synchronization (using do_sync()
@@ -408,7 +416,7 @@ class UserAttribute(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         raise NotImplementedError()
 
     def from_config(self) -> bool:
@@ -417,7 +425,7 @@ class UserAttribute(abc.ABC):
     def user_editable(self) -> bool:
         return True
 
-    def permission(self) -> Optional[str]:
+    def permission(self) -> None | str:
         return None
 
     def show_in_table(self) -> bool:

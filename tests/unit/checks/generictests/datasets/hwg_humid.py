@@ -20,7 +20,7 @@ checks = {
         (
             '2', (0, 0, 60, 70), [
                 (
-                    0, '34.6% (Description: Sensor 216, Status: normal)', [
+                    0, '34.60% (Description: Sensor 216, Status: normal)', [
                         ('humidity', 34.6, 60.0, 70.0, 0.0, 100.0)
                     ]
                 )

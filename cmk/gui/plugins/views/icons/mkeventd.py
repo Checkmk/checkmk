@@ -6,12 +6,14 @@
 
 import re
 import shlex
+from typing import Sequence
 
-from cmk.gui.globals import active_config
+from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
 from cmk.gui.site_config import get_site_config
 from cmk.gui.sites import get_alias_of_host
+from cmk.gui.type_defs import ColumnName
 from cmk.gui.utils.urls import urlencode_vars
 
 
@@ -31,28 +33,28 @@ class MkeventdIcon(Icon):
     def default_sort_index(self):
         return 30
 
-    def columns(self):
+    def columns(self) -> Sequence[ColumnName]:
         return ["check_command"]
 
     def host_columns(self):
         return ["address", "name"]
 
-    def render(self, what, row, tags, custom_vars):
+    def render(self, what, row, tags, custom_vars) -> None | tuple[str, str, str]:
         if not active_config.mkeventd_enabled:
-            return
+            return None
 
         # show for services based on the mkevents active check
         command = row[what + "_check_command"]
 
         if what != "service" or not command.startswith("check_mk_active-mkevents"):
-            return
+            return None
 
         # Split command by the parts (COMMAND!ARG0!...) Beware: Do not split by escaped exclamation mark.
         splitted_command = re.split(r"(?<!\\)!", command)
 
         # All arguments are space separated in in ARG0
         if len(splitted_command) != 2:
-            return
+            return None
 
         host = None
         app = None
@@ -60,7 +62,7 @@ class MkeventdIcon(Icon):
         # Extract parameters from check_command
         args = shlex.split(splitted_command[1])
         if not args:
-            return
+            return None
 
         # Handle -a and -H options. Sorry for the hack. We currently
         # have no better idea
@@ -75,7 +77,7 @@ class MkeventdIcon(Icon):
         # If we have no host then the command line from the check_command seems
         # to be garbled. Better show nothing in this case.
         if not host:
-            return
+            return None
 
         # It is possible to have a central event console, this is the default case.
         # Another possible architecture is to have an event console in each site in

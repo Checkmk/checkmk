@@ -52,7 +52,7 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventory_aruba_wlc_aps(raw_section, expected_result):
+def test_inventory_aruba_wlc_aps(raw_section, expected_result) -> None:
     assert sort_inventory_result(
         inventory_aruba_wlc_aps(parse_aruba_wlc_aps(raw_section))
     ) == sort_inventory_result(expected_result)

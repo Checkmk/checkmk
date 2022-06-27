@@ -27,22 +27,31 @@ import sys
 import time
 from collections import defaultdict, OrderedDict
 from collections.abc import MutableSequence
-from typing import Any, Callable, Dict, Generic, Iterator, List, Mapping, Optional, TypeVar, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    TypeVar,
+    Union,
+)
 
 import dateutil.parser
-import urllib3  # type: ignore[import]
+import urllib3
 
 # We currently have no typeshed for kubernetes
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
+from kubernetes.client.rest import ApiException  # type: ignore[import]
 
 import cmk.utils.password_store
 import cmk.utils.profile
 
 from cmk.special_agents.utils.request_helper import get_requests_ca
-
-from kubernetes.client.rest import (  # type: ignore[import] # pylint: disable=import-error,ungrouped-imports # isort: skip
-    ApiException,
-)
 
 
 @contextlib.contextmanager
@@ -60,6 +69,7 @@ class PathPrefixAction(argparse.Action):
             return ""
         path_prefix = "/" + values.strip("/")
         setattr(namespace, self.dest, path_prefix)
+        return None
 
 
 def parse_arguments(args: List[str]) -> argparse.Namespace:
@@ -129,7 +139,7 @@ def parse_frac_prefix(value: str) -> float:
     return float(value)
 
 
-def parse_memory(value: str) -> float:
+def parse_memory(value: str) -> float:  # pylint: disable=too-many-branches
     if value.endswith("Ki"):
         return 1024**1 * float(value[:-2])
     if value.endswith("Mi"):
@@ -206,7 +216,7 @@ class Metadata:
         self.use_namespace = use_namespace
 
     @property
-    def name(self):
+    def name(self) -> str:
         if self.use_namespace:
             return "_".join([self.namespace, self.prefix, self._name]).lstrip("_")
         return "_".join([self.prefix, self._name]).lstrip("_")
@@ -302,7 +312,7 @@ class ComponentStatus(Metadata):
 
 
 class Service(Metadata):
-    def __init__(self, service, use_namespace):
+    def __init__(self, service, use_namespace) -> None:
         super().__init__(service.metadata, "service", use_namespace)
 
         spec = service.spec
@@ -326,7 +336,7 @@ class Service(Metadata):
             self._ports = []
 
     @property
-    def info(self):
+    def info(self) -> dict[str, Any]:
         return {
             "type": self._type,
             "cluster_ip": self._cluster_ip,
@@ -403,7 +413,7 @@ class Deployment(Metadata):
 
 
 class Ingress(Metadata):
-    def __init__(self, ingress, use_namespace):
+    def __init__(self, ingress, use_namespace) -> None:
         super().__init__(ingress.metadata, "ingress", use_namespace)
         self._backends = []  # list of (path, service_name, service_port)
         self._hosts = defaultdict(list)  # secret -> list of hosts
@@ -454,7 +464,7 @@ class Ingress(Metadata):
         return "/"
 
     @property
-    def info(self):
+    def info(self) -> dict[str, Any]:
         return {
             self.name: {
                 "backends": self._backends,
@@ -580,7 +590,7 @@ class Pod(Metadata):
         return {c.type: c.status for c in self._conditions}
 
     @property
-    def info(self):
+    def info(self) -> dict[str, Any]:
         return {
             "node": self.node,
             "host_network": self.host_network,
@@ -591,23 +601,24 @@ class Pod(Metadata):
         }
 
 
+class Hurz:
+    pass
+
+
 class Endpoint(Metadata):
     # See Also:
     #   https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1Endpoints.md
 
-    def __init__(self, endpoint, use_namespace):
+    def __init__(self, endpoint, use_namespace) -> None:
         super().__init__(endpoint.metadata, "endpoint", use_namespace)
         # There is no spec here.
         self._subsets = [
             self._parse_subset(subset) for subset in (endpoint.subsets if endpoint.subsets else ())
         ]
 
+    # NOTE: The argument is actually a Subset.
     @staticmethod
-    def _parse_subset(subset):
-        # Silent false positive from pylint.
-        #  - https://github.com/PyCQA/pylint/issues/574
-        #  - https://github.com/PyCQA/pylint/issues/2818
-        # pylint: disable=superfluous-parens
+    def _parse_subset(subset: Any) -> Mapping[str, Sequence[Mapping[str, Any]]]:
         addresses = [
             {
                 "hostname": _.hostname if _.hostname else "",
@@ -632,16 +643,15 @@ class Endpoint(Metadata):
             }
             for _ in (subset.ports if subset.ports else ())
         ]
-        # pylint: enable=superfluous-parens
         return {"addresses": addresses, "not_ready_addresses": not_ready_addresses, "ports": ports}
 
     @property
-    def infos(self):
+    def infos(self) -> Mapping[str, Sequence[Mapping[str, Sequence[Mapping[str, Any]]]]]:
         return {"subsets": self._subsets}
 
 
 class Job(Metadata):
-    def __init__(self, job, use_namespace):
+    def __init__(self, job, use_namespace) -> None:
         super().__init__(job.metadata, "job", use_namespace)
         spec = job.spec
         if spec:
@@ -678,7 +688,7 @@ class Job(Metadata):
             self._succeeded = 0
 
     @property
-    def infos(self):
+    def infos(self) -> Mapping[str, dict[str, Any]]:
         return {
             "active": self._active,
             "failed": self._failed,
@@ -716,7 +726,7 @@ class Job(Metadata):
 
 
 class DaemonSet(Metadata):
-    def __init__(self, daemon_set, use_namespace):
+    def __init__(self, daemon_set, use_namespace) -> None:
         super().__init__(daemon_set.metadata, "daemon_set", use_namespace)
         status = daemon_set.status
         if status:
@@ -748,7 +758,7 @@ class DaemonSet(Metadata):
             self._containers = []
 
     @property
-    def info(self):
+    def info(self) -> dict[str, Any]:
         return {
             "collision_count": self.collision_count,
             "conditions": self.conditions,
@@ -774,7 +784,7 @@ class DaemonSet(Metadata):
 
 
 class StatefulSet(Metadata):
-    def __init__(self, stateful_set, use_namespace):
+    def __init__(self, stateful_set, use_namespace) -> None:
         super().__init__(stateful_set.metadata, "stateful_set", use_namespace)
         spec = stateful_set.spec
         strategy = spec.update_strategy
@@ -948,7 +958,7 @@ class ComponentStatusList(K8sList[ComponentStatus]):  # pylint: disable=too-many
 
 
 class ServiceList(K8sList[Service]):  # pylint: disable=too-many-ancestors
-    def infos(self):
+    def infos(self) -> Mapping[str, dict[str, Any]]:
         return {service.name: service.info for service in self}
 
     def selector(self):
@@ -964,12 +974,12 @@ class DeploymentList(K8sList[Deployment]):  # pylint: disable=too-many-ancestors
 
 
 class IngressList(K8sList[Ingress]):  # pylint: disable=too-many-ancestors
-    def infos(self):
+    def infos(self) -> Mapping[str, dict[str, Any]]:
         return {ingress.name: ingress.info for ingress in self}
 
 
 class DaemonSetList(K8sList[DaemonSet]):  # pylint: disable=too-many-ancestors
-    def info(self):
+    def info(self) -> dict[str, Any]:
         return {daemon_set.name: daemon_set.info for daemon_set in self}
 
     def containers(self):
@@ -1002,7 +1012,7 @@ class PodList(K8sList[Pod]):  # pylint: disable=too-many-ancestors
             }
         }
 
-    def info(self):
+    def info(self) -> dict[str, Any]:
         return {pod.name: pod.info for pod in self}
 
     def resources(self):
@@ -1036,12 +1046,12 @@ class PodList(K8sList[Pod]):  # pylint: disable=too-many-ancestors
 
 
 class EndpointList(K8sList[Endpoint]):  # pylint: disable=too-many-ancestors
-    def info(self):
+    def info(self) -> dict[str, Any]:
         return {endpoint.name: endpoint.infos for endpoint in self}
 
 
 class JobList(K8sList[Job]):  # pylint: disable=too-many-ancestors
-    def info(self):
+    def info(self) -> dict[str, Any]:
         return {job.name: job.infos for job in self}
 
     def pod_infos(self):
@@ -1460,7 +1470,7 @@ def get_api_client(arguments: argparse.Namespace) -> client.ApiClient:
     return client.ApiClient(config)
 
 
-def main(args: Optional[List[str]] = None) -> int:
+def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-branches
     if args is None:
         cmk.utils.password_store.replace_passwords()
         args = sys.argv[1:]

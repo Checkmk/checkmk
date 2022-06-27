@@ -25,6 +25,7 @@ cd %save_dir%\.venv\Scripts
 .\python -m pip install idna==2.9
 .\python -m pip install requests[socks]==2.21.0
 .\python -m pip install urllib3==1.24.3
+.\python -m pip install cffi==1.13
 .\python -m pip install pyopenssl==18.0.0
 .\python -m pip install pypiwin32==219
 .\python -m pip install typing

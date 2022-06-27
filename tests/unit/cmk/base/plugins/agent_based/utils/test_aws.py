@@ -6,13 +6,17 @@
 
 import pytest
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.utils.aws import (
+    check_aws_limits,
+    CheckResult,
     CloudwatchInsightsSection,
     extract_aws_metrics_by_labels,
     LambdaFunctionConfiguration,
     LambdaInsightMetrics,
     LambdaSummarySection,
     parse_aws,
+    parse_aws_limits_generic,
 )
 
 
@@ -466,12 +470,168 @@ from cmk.base.plugins.agent_based.utils.aws import (
         ),
     ],
 )
-def test_parse_aws(string_table, expected_result):
+def test_parse_aws(string_table, expected_result) -> None:
     assert parse_aws(string_table) == expected_result
 
 
+def test_parse_aws_limits_generic() -> None:
+    parsed = parse_aws_limits_generic(
+        string_table=[
+            [
+                '[["topics_standard",',
+                '"Standard',
+                "Topics",
+                'Limit",',
+                "100000,",
+                "2,",
+                '"eu-central-1"],',
+                '["topics_fifo",',
+                '"FIFO',
+                "Topics",
+                'Limit",',
+                "1000,",
+                "1,",
+                '"eu-central-1"],',
+                '["subscriptions_of_topic_AutoTag",',
+                '"Subscriptions',
+                "Limit",
+                "for",
+                "Topic",
+                'AutoTag",',
+                "12500000,",
+                "3,",
+                '"eu-central-1"],',
+                '["subscriptions_of_topic_TestTopicTim.fifo",',
+                '"Subscriptions',
+                "Limit",
+                "for",
+                "Topic",
+                'TestTopicTim.fifo",',
+                "100,",
+                "0,",
+                '"eu-central-1"],',
+                '["subscriptions_of_topic_dynamodb",',
+                '"Subscriptions',
+                "Limit",
+                "for",
+                "Topic",
+                'dynamodb",',
+                "12500000,",
+                "0,",
+                '"eu-central-1"]]',
+            ]
+        ]
+    )
+    assert len(parsed) == 1
+    limits = parsed["eu-central-1"]
+    limits = [v[:-1] for v in limits]
+    assert limits == [
+        ["topics_standard", "Standard Topics Limit", 100000, 2],
+        ["topics_fifo", "FIFO Topics Limit", 1000, 1],
+        [
+            "subscriptions_of_topic_AutoTag",
+            "Subscriptions Limit for Topic AutoTag",
+            12500000,
+            3,
+        ],
+        [
+            "subscriptions_of_topic_TestTopicTim.fifo",
+            "Subscriptions Limit for Topic TestTopicTim.fifo",
+            100,
+            0,
+        ],
+        [
+            "subscriptions_of_topic_dynamodb",
+            "Subscriptions Limit for Topic dynamodb",
+            12500000,
+            0,
+        ],
+    ]
+
+
 @pytest.mark.parametrize(
-    "expected_metric_names, section, expected_result",
+    "test_input, output",
+    [
+        (
+            [
+                ["topics_standard", "Standard Topics Limit", 100000, 2, str],
+                ["topics_fifo", "FIFO Topics Limit", 1000, 1, str],
+            ],
+            [
+                Metric("aws_sns_topics_standard", 2),
+                Result(state=State.OK, notice="Standard Topics Limit: 2 (of max. 100000), <0.01%"),
+                Metric("aws_sns_topics_fifo", 1),
+                Result(state=State.OK, notice="FIFO Topics Limit: 1 (of max. 1000), 0.10%"),
+            ],
+        ),
+        (
+            [
+                ["topics_standard", "Standard Topics Limit", 100000, 100001, str],
+                ["topics_fifo", "FIFO Topics Limit", 1000, 1, str],
+            ],
+            [
+                Metric("aws_sns_topics_standard", 100001),
+                Result(
+                    state=State.CRIT,
+                    summary="Standard Topics Limit: 100001 (of max. 100000), 100.00% (warn/crit at 80.00%/90.00%)",
+                ),
+                Metric("aws_sns_topics_fifo", 1),
+                Result(state=State.OK, notice="FIFO Topics Limit: 1 (of max. 1000), 0.10%"),
+            ],
+        ),
+        (
+            [
+                ["topics_standard", "Standard Topics Limit", 100000, 2, str],
+                ["topics_fifo", "FIFO Topics Limit", 1000, 1001, str],
+            ],
+            [
+                Metric("aws_sns_topics_standard", 2),
+                Result(state=State.OK, notice="Standard Topics Limit: 2 (of max. 100000), <0.01%"),
+                Metric("aws_sns_topics_fifo", 1001),
+                Result(
+                    state=State.CRIT,
+                    summary="FIFO Topics Limit: 1001 (of max. 1000), 100.10% (warn/crit at 80.00%/90.00%)",
+                ),
+            ],
+        ),
+        (
+            [
+                ["topics_standard", "Standard Topics Limit", 100000, 100001, str],
+                ["topics_fifo", "FIFO Topics Limit", 1000, 1001, str],
+            ],
+            [
+                Metric("aws_sns_topics_standard", 100001),
+                Result(
+                    state=State.CRIT,
+                    summary="Standard Topics Limit: 100001 (of max. 100000), 100.00% (warn/crit at 80.00%/90.00%)",
+                ),
+                Metric("aws_sns_topics_fifo", 1001),
+                Result(
+                    state=State.CRIT,
+                    summary="FIFO Topics Limit: 1001 (of max. 1000), 100.10% (warn/crit at 80.00%/90.00%)",
+                ),
+            ],
+        ),
+    ],
+)
+def test_check_aws_limits(test_input: list[list], output: CheckResult) -> None:
+    assert (
+        list(
+            check_aws_limits(
+                "sns",
+                {
+                    "topics_fifo": (None, 80.0, 90.0),
+                    "topics_standard": (None, 80.0, 90.0),
+                },
+                test_input,
+            )
+        )
+        == output
+    )
+
+
+@pytest.mark.parametrize(
+    "expected_metric_names, section, extra_kwargs, expected_result",
     [
         (
             [
@@ -566,6 +726,7 @@ def test_parse_aws(string_table, expected_result):
                     "StatusCode": "Complete",
                 },
             ],
+            {},
             {
                 "172.31.41.207-eu-central-1-i-08363bfeff774e12c": {
                     "CPUCreditUsage": 0.0021155,
@@ -581,11 +742,123 @@ def test_parse_aws(string_table, expected_result):
                     "StatusCheckFailed_System": 0.0,
                 }
             },
-        )
+        ),
+        (
+            [
+                "Requests",
+                "BytesDownloaded",
+                "BytesUploaded",
+                "TotalErrorRate",
+                "4xxErrorRate",
+                "5xxErrorRate",
+            ],
+            [
+                {
+                    "Id": "id_0_Requests",
+                    "Label": "E2RAYOVSSL6ZM3",
+                    "Timestamps": [],
+                    "Values": [],
+                    "StatusCode": "Complete",
+                },
+                {
+                    "Id": "id_0_BytesDownloaded",
+                    "Label": "E2RAYOVSSL6ZM3",
+                    "Timestamps": [],
+                    "Values": [],
+                    "StatusCode": "Complete",
+                },
+                {
+                    "Id": "id_0_BytesUploaded",
+                    "Label": "E2RAYOVSSL6ZM3",
+                    "Timestamps": [],
+                    "Values": [],
+                    "StatusCode": "Complete",
+                },
+                {
+                    "Id": "id_0_TotalErrorRate",
+                    "Label": "E2RAYOVSSL6ZM3",
+                    "Timestamps": [],
+                    "Values": [],
+                    "StatusCode": "Complete",
+                },
+                {
+                    "Id": "id_0_4xxErrorRate",
+                    "Label": "E2RAYOVSSL6ZM3",
+                    "Timestamps": [],
+                    "Values": [],
+                    "StatusCode": "Complete",
+                },
+                {
+                    "Id": "id_0_5xxErrorRate",
+                    "Label": "E2RAYOVSSL6ZM3",
+                    "Timestamps": [],
+                    "Values": [],
+                    "StatusCode": "Complete",
+                },
+                {
+                    "Id": "id_1_Requests",
+                    "Label": "EWN6C0UT7HBX0",
+                    "Timestamps": ["2022-04-29 13:35:00+00:00"],
+                    "Values": [[88.0, 600]],
+                    "StatusCode": "Complete",
+                },
+                {
+                    "Id": "id_1_BytesDownloaded",
+                    "Label": "EWN6C0UT7HBX0",
+                    "Timestamps": ["2022-04-29 13:35:00+00:00"],
+                    "Values": [[582911.0, 600]],
+                    "StatusCode": "Complete",
+                },
+                {
+                    "Id": "id_1_BytesUploaded",
+                    "Label": "EWN6C0UT7HBX0",
+                    "Timestamps": ["2022-04-29 13:35:00+00:00"],
+                    "Values": [[0.0, 600]],
+                    "StatusCode": "Complete",
+                },
+                {
+                    "Id": "id_1_TotalErrorRate",
+                    "Label": "EWN6C0UT7HBX0",
+                    "Timestamps": ["2022-04-29 13:35:00+00:00"],
+                    "Values": [[0.0, None]],
+                    "StatusCode": "Complete",
+                },
+                {
+                    "Id": "id_1_4xxErrorRate",
+                    "Label": "EWN6C0UT7HBX0",
+                    "Timestamps": ["2022-04-29 13:35:00+00:00"],
+                    "Values": [[0.0, None]],
+                    "StatusCode": "Complete",
+                },
+                {
+                    "Id": "id_1_5xxErrorRate",
+                    "Label": "EWN6C0UT7HBX0",
+                    "Timestamps": ["2022-04-29 13:35:00+00:00"],
+                    "Values": [[0.0, None]],
+                    "StatusCode": "Complete",
+                },
+            ],
+            {"convert_sum_stats_to_rate": False},
+            {
+                "EWN6C0UT7HBX0": {
+                    "Requests": 88.0,
+                    "BytesDownloaded": 582911.0,
+                    "BytesUploaded": 0.0,
+                    "TotalErrorRate": 0.0,
+                    "4xxErrorRate": 0.0,
+                    "5xxErrorRate": 0.0,
+                }
+            },
+        ),
     ],
 )
-def test_extract_aws_metrics_by_labels(expected_metric_names, section, expected_result):
-    assert extract_aws_metrics_by_labels(expected_metric_names, section) == expected_result
+def test_extract_aws_metrics_by_labels(
+    expected_metric_names, section, extra_kwargs, expected_result
+):
+    assert (
+        extract_aws_metrics_by_labels(expected_metric_names, section, **extra_kwargs)
+        == expected_result
+    )
 
 
 SECTION_AWS_LAMBDA_SUMMARY: LambdaSummarySection = {

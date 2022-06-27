@@ -10,8 +10,7 @@ minimal changes."""
 import cProfile
 import time
 from pathlib import Path
-from types import TracebackType
-from typing import Any, Callable, Optional, Type, Union
+from typing import Any, Callable, Optional, Union
 
 import cmk.utils.log
 
@@ -37,12 +36,7 @@ class Profile:
             self._profile.enable()
         return self
 
-    def __exit__(
-        self,
-        exc_type: Optional[Type[BaseException]],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
-    ) -> None:
+    def __exit__(self, *exc_info: object) -> None:
         if not self._enabled:
             return
 

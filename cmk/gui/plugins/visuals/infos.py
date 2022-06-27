@@ -21,11 +21,11 @@ from cmk.gui.valuespec import (
 @visual_info_registry.register
 class VisualInfoHost(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "host"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Host")
 
     @property
@@ -41,18 +41,18 @@ class VisualInfoHost(VisualInfo):
         return ["hostgroup"]
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 10
 
 
 @visual_info_registry.register
 class VisualInfoService(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "service"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Service")
 
     @property
@@ -81,18 +81,18 @@ class VisualInfoService(VisualInfo):
         return ["servicegroup"]
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 10
 
 
 @visual_info_registry.register
 class VisualInfoHostgroup(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "hostgroup"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Host group")
 
     @property
@@ -115,18 +115,18 @@ class VisualInfoHostgroup(VisualInfo):
         return False
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 10
 
 
 @visual_info_registry.register
 class VisualInfoServicegroup(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "servicegroup"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Service group")
 
     @property
@@ -149,18 +149,18 @@ class VisualInfoServicegroup(VisualInfo):
         return False
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 10
 
 
 @visual_info_registry.register
 class VisualInfoLog(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "log"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Log Entry")
 
     @property
@@ -175,11 +175,11 @@ class VisualInfoLog(VisualInfo):
 @visual_info_registry.register
 class VisualInfoComment(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "comment"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Comment")
 
     @property
@@ -201,11 +201,11 @@ class VisualInfoComment(VisualInfo):
 @visual_info_registry.register
 class VisualInfoDowntime(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "downtime"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Downtime")
 
     @property
@@ -227,11 +227,11 @@ class VisualInfoDowntime(VisualInfo):
 @visual_info_registry.register
 class VisualInfoContact(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "contact"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Contact")
 
     @property
@@ -253,11 +253,11 @@ class VisualInfoContact(VisualInfo):
 @visual_info_registry.register
 class VisualInfoCommand(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "command"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Command")
 
     @property
@@ -279,11 +279,11 @@ class VisualInfoCommand(VisualInfo):
 @visual_info_registry.register
 class VisualInfoBIAggregation(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("BI Aggregation")
 
     @property
@@ -302,18 +302,18 @@ class VisualInfoBIAggregation(VisualInfo):
         ]
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 20
 
 
 @visual_info_registry.register
 class VisualInfoBIAggregationGroup(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "aggr_group"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("BI Aggregation Group")
 
     @property
@@ -332,18 +332,18 @@ class VisualInfoBIAggregationGroup(VisualInfo):
         ]
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 20
 
 
 @visual_info_registry.register
 class VisualInfoDiscovery(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "discovery"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Discovery Output")
 
     @property
@@ -358,11 +358,11 @@ class VisualInfoDiscovery(VisualInfo):
 @visual_info_registry.register
 class VisualInfoEvent(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Event Console Event")
 
     @property
@@ -384,11 +384,11 @@ class VisualInfoEvent(VisualInfo):
 @visual_info_registry.register
 class VisualInfoEventHistory(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "history"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Historic Event Console Event")
 
     @property
@@ -416,11 +416,11 @@ class VisualInfoEventHistory(VisualInfo):
 @visual_info_registry.register
 class VisualInfoCrash(VisualInfo):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "crash"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Crash report")
 
     @property

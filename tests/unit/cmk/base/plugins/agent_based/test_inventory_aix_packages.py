@@ -136,7 +136,7 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inv_aix_packages(raw_section, expected_result):
+def test_inv_aix_packages(raw_section, expected_result) -> None:
     assert sort_inventory_result(
         inventory_aix_packages(parse_aix_packages(raw_section))
     ) == sort_inventory_result(expected_result)

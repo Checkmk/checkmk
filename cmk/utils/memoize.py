@@ -55,13 +55,14 @@ class _HashedSeq(list):
 
     __slots__ = ["hashvalue"]
 
-    def __init__(self, tup, hash=hash):
+    def __init__(self, tup, hash=hash) -> None:  # type:ignore[no-untyped-def]
         super().__init__()
         self[:] = tup
         self.hashvalue = hash(tup)
 
+    # FIXME: This is severely broken: list.__hash__ returns None, i.e. lists are *not* hashable!
+    # Perhaps we should derive from tuple instead?
     def __hash__(self):
-        # FIXME Removed type declaration 'type: () -> int'
         return self.hashvalue
 
 

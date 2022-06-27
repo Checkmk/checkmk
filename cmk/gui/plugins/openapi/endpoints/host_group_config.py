@@ -18,11 +18,14 @@ A host group object can have the following relations present in `links`:
  * `urn:org.restfulobject/rels:delete` - An endpoint to delete this host group.
 
 """
+from typing import Any, Mapping
+
 from cmk.utils import version
 
-from cmk.gui import watolib
+import cmk.gui.watolib.groups as groups
 from cmk.gui.groups import load_host_group_information
 from cmk.gui.http import Response
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.endpoints.utils import (
     fetch_group,
     fetch_specific_groups,
@@ -42,7 +45,15 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
-from cmk.gui.watolib.groups import add_group, edit_group
+
+PERMISSIONS = permissions.Perm("wato.groups")
+
+RW_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.edit"),
+        PERMISSIONS,
+    ]
+)
 
 
 @Endpoint(
@@ -52,16 +63,17 @@ from cmk.gui.watolib.groups import add_group, edit_group
     etag="output",
     request_schema=request_schemas.InputHostGroup,
     response_schema=response_schemas.HostGroup,
-    permissions_required=permissions.Perm("wato.groups"),
+    permissions_required=RW_PERMISSIONS,
 )
-def create(params):
+def create(params: Mapping[str, Any]) -> Response:
     """Create a host group"""
+    user.need_permission("wato.edit")
     body = params["body"]
     name = body["name"]
     group_details = {"alias": body.get("alias")}
     if version.is_managed_edition():
         group_details = update_customer_info(group_details, body["customer"])
-    add_group(name, "host", group_details)
+    groups.add_group(name, "host", group_details)
     group = fetch_group(name, "host")
     return serve_group(group, serialize_group("host_group_config"))
 
@@ -72,17 +84,18 @@ def create(params):
     method="post",
     request_schema=request_schemas.BulkInputHostGroup,
     response_schema=response_schemas.DomainObjectCollection,
-    permissions_required=permissions.Perm("wato.groups"),
+    permissions_required=RW_PERMISSIONS,
 )
-def bulk_create(params):
+def bulk_create(params: Mapping[str, Any]) -> Response:
     """Bulk create host groups"""
+    user.need_permission("wato.edit")
     body = params["body"]
     entries = body["entries"]
     host_group_details = prepare_groups("host", entries)
 
     host_group_names = []
     for group_name, group_details in host_group_details.items():
-        add_group(group_name, "host", group_details)
+        groups.add_group(group_name, "host", group_details)
         host_group_names.append(group_name)
 
     host_groups = fetch_specific_groups(host_group_names, "host")
@@ -94,9 +107,11 @@ def bulk_create(params):
     ".../collection",
     method="get",
     response_schema=response_schemas.LinkedValueDomainObjectCollection,
+    permissions_required=PERMISSIONS,
 )
-def list_groups(params):
+def list_groups(params: Mapping[str, Any]) -> Response:
     """Show all host groups"""
+    user.need_permission("wato.groups")
     collection = [{"id": k, "alias": v["alias"]} for k, v in load_host_group_information().items()]
     return constructors.serve_json(serialize_group_list("host_group_config", collection))
 
@@ -107,12 +122,13 @@ def list_groups(params):
     method="delete",
     path_params=[NAME_FIELD],
     output_empty=True,
-    permissions_required=permissions.Perm("wato.groups"),
+    permissions_required=RW_PERMISSIONS,
 )
-def delete(params):
+def delete(params: Mapping[str, Any]) -> Response:
     """Delete a host group"""
+    user.need_permission("wato.edit")
     name = params["name"]
-    watolib.delete_group(name, "host")
+    groups.delete_group(name, "host")
     return Response(status=204)
 
 
@@ -122,10 +138,11 @@ def delete(params):
     method="post",
     request_schema=request_schemas.BulkDeleteHostGroup,
     output_empty=True,
-    permissions_required=permissions.Perm("wato.groups"),
+    permissions_required=RW_PERMISSIONS,
 )
-def bulk_delete(params):
+def bulk_delete(params: Mapping[str, Any]) -> Response:
     """Bulk delete host groups"""
+    user.need_permission("wato.edit")
     body = params["body"]
     entries = body["entries"]
     for group_name in entries:
@@ -138,7 +155,7 @@ def bulk_delete(params):
         )
 
     for group_name in entries:
-        watolib.delete_group(group_name, "host")
+        groups.delete_group(group_name, "host")
     return Response(status=204)
 
 
@@ -150,14 +167,15 @@ def bulk_delete(params):
     etag="both",
     response_schema=response_schemas.HostGroup,
     request_schema=request_schemas.UpdateGroup,
-    permissions_required=permissions.Perm("wato.groups"),
+    permissions_required=RW_PERMISSIONS,
 )
-def update(params):
+def update(params: Mapping[str, Any]) -> Response:
     """Update a host group"""
+    user.need_permission("wato.edit")
     name = params["name"]
     group = fetch_group(name, "host")
     constructors.require_etag(constructors.etag_of_dict(group))
-    edit_group(name, "host", updated_group_details(name, "host", params["body"]))
+    groups.edit_group(name, "host", updated_group_details(name, "host", params["body"]))
     group = fetch_group(name, "host")
     return serve_group(group, serialize_group("host_group_config"))
 
@@ -168,15 +186,16 @@ def update(params):
     method="put",
     request_schema=request_schemas.BulkUpdateHostGroup,
     response_schema=response_schemas.DomainObjectCollection,
-    permissions_required=permissions.Perm("wato.groups"),
+    permissions_required=RW_PERMISSIONS,
 )
-def bulk_update(params):
+def bulk_update(params: Mapping[str, Any]) -> Response:
     """Bulk update host groups
 
     Please be aware that when doing bulk updates, it is not possible to prevent the
     [Updating Values]("lost update problem"), which is normally prevented by the ETag locking
     mechanism. Use at your own risk
     """
+    user.need_permission("wato.edit")
     body = params["body"]
     entries = body["entries"]
     updated_host_groups = update_groups("host", entries)
@@ -190,9 +209,11 @@ def bulk_update(params):
     response_schema=response_schemas.HostGroup,
     etag="output",
     path_params=[NAME_FIELD],
+    permissions_required=PERMISSIONS,
 )
-def get(params):
+def get(params: Mapping[str, Any]) -> Response:
     """Show a host group"""
+    user.need_permission("wato.groups")
     name = params["name"]
     group = fetch_group(name, "host")
     return serve_group(group, serialize_group("host_group_config"))

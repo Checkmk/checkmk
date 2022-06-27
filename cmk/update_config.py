@@ -22,6 +22,7 @@ import shutil
 import subprocess
 import time
 from contextlib import contextmanager, suppress
+from datetime import datetime
 from pathlib import Path, PureWindowsPath
 from typing import (
     Any,
@@ -70,7 +71,6 @@ import cmk.base.autochecks
 import cmk.base.check_api
 import cmk.base.config
 from cmk.base.api.agent_based import register
-from cmk.base.autochecks.migration import load_unmigrated_autocheck_entries
 
 import cmk.gui.config
 import cmk.gui.groups
@@ -99,20 +99,22 @@ from cmk.gui.plugins.userdb.utils import (
     USER_SCHEME_SERIAL,
 )
 from cmk.gui.plugins.views.utils import get_all_views
-from cmk.gui.plugins.wato.utils import config_variable_registry
-from cmk.gui.plugins.watolib.utils import filter_unknown_settings
-from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site
+from cmk.gui.plugins.watolib.utils import config_variable_registry, filter_unknown_settings
+from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.userdb import load_users, save_users, Users
 from cmk.gui.utils.script_helpers import gui_context
-from cmk.gui.watolib.changes import (
-    ActivateChangesWriter,
-    add_change,
-    AuditLogStore,
-    ObjectRef,
-    ObjectRefType,
+from cmk.gui.wato.mkeventd import MACROS_AND_VARS
+from cmk.gui.watolib.audit_log import AuditLogStore
+from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
+from cmk.gui.watolib.global_settings import (
+    GlobalSettings,
+    load_configuration_settings,
+    load_site_global_settings,
+    save_global_settings,
+    save_site_global_settings,
 )
-from cmk.gui.watolib.global_settings import GlobalSettings
 from cmk.gui.watolib.notifications import load_notification_rules, save_notification_rules
+from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.rulesets import RulesetCollection
 from cmk.gui.watolib.sites import site_globals_editable, SiteManagementFactory
@@ -161,6 +163,10 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("ovs_bonding"): CheckPluginName("bonding"),
     CheckPluginName("lnx_bonding"): CheckPluginName("bonding"),
     CheckPluginName("windows_os_bonding"): CheckPluginName("bonding"),
+    CheckPluginName("fjdarye100_cadaps"): CheckPluginName("fjdarye_channel_adapters"),
+    CheckPluginName("fjdarye101_cadaps"): CheckPluginName("fjdarye_channel_adapters"),
+    CheckPluginName("fjdarye500_cadaps"): CheckPluginName("fjdarye_channel_adapters"),
+    CheckPluginName("fjdarye60_cadaps"): CheckPluginName("fjdarye_channel_adapters"),
 }
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]
@@ -177,6 +183,7 @@ REMOVED_GLOBALS_MAP: List[Tuple[str, str, Dict]] = [
 
 REMOVED_WATO_RULESETS_MAP = {
     "non_inline_snmp_hosts": "snmp_backend_hosts",
+    "agent_config:package_compression": "agent_config:bakery_packages",
 }
 
 _MATCH_SINGLE_BACKSLASH = re.compile(r"[^\\]\\[^\\]")
@@ -255,7 +262,6 @@ class UpdateConfig:
         return [
             (self._rewrite_password_store, "Rewriting password store"),
             (self._rewrite_visuals, "Migrate Visuals context"),
-            (self._migrate_dashlets, "Migrate dashlets"),
             (self._update_global_settings, "Update global settings"),
             (self._rewrite_wato_tag_config, "Rewriting tags"),
             (self._rewrite_wato_host_and_folder_config, "Rewriting hosts and folders"),
@@ -264,6 +270,8 @@ class UpdateConfig:
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
             # CAUTION: update_fs_used_name must be called *after* rewrite_autochecks!
             (self._migrate_pagetype_topics_to_ids, "Migrate pagetype topics"),
+            # NEXT CAUTION: self._migrate_dashlets, must be called *after* migrate_pagetype_topics_to_ids!
+            (self._migrate_dashlets, "Migrate dashlets"),
             (self._migrate_ldap_connections, "Migrate LDAP connections"),
             (self._rewrite_bi_configuration, "Rewrite BI Configuration"),
             (self._adjust_user_attributes, "Set version specific user attributes"),
@@ -280,14 +288,16 @@ class UpdateConfig:
             (self._add_site_ca_to_trusted_cas, "Adding site CA to trusted CAs"),
             (self._update_mknotifyd, "Rewrite mknotifyd config for central site"),
             (self._transform_influxdb_connnections, "Rewriting InfluxDB connections"),
+            (self._check_ec_rules, "Disabling unsafe EC rules"),
         ]
 
     def _initialize_base_environment(self) -> None:
-        # Failing to load the config here will result in the loss of *all*
-        # services due to an exception thrown by cmk.base.config.service_description
-        # in _parse_autocheck_entry of cmk.base.autochecks.
+        # Failing to load the config here will result in the loss of *all* services due to (...)
+        # EDIT: This is no longer the case; but we probably need the config for other reasons?
         cmk.base.config.load()
-        cmk.base.config.load_all_agent_based_plugins(cmk.base.check_api.get_check_api_context)
+        cmk.base.config.load_all_agent_based_plugins(
+            cmk.base.check_api.get_check_api_context,
+        )
 
     def _rewrite_wato_tag_config(self) -> None:
         tag_config_file = cmk.gui.watolib.tags.TagConfigFile()
@@ -309,21 +319,19 @@ class UpdateConfig:
     def _update_installation_wide_global_settings(self) -> None:
         """Update the globals.mk of the local site"""
         # Load full config (with undefined settings)
-        global_config = cmk.gui.watolib.global_settings.load_configuration_settings(
-            full_config=True
-        )
+        global_config = load_configuration_settings(full_config=True)
         self._update_global_config(global_config)
-        cmk.gui.watolib.global_settings.save_global_settings(global_config)
+        save_global_settings(global_config)
 
     def _update_site_specific_global_settings(self) -> None:
         """Update the sitespecific.mk of the local site (which is a remote site)"""
         if not is_wato_slave_site():
             return
 
-        global_config = cmk.gui.watolib.global_settings.load_site_global_settings()
+        global_config = load_site_global_settings()
         self._update_global_config(global_config)
 
-        cmk.gui.watolib.global_settings.save_site_global_settings(global_config)
+        save_site_global_settings(global_config)
 
     def _update_remote_site_specific_global_settings(self) -> None:
         """Update the site specific global settings in the central site configuration"""
@@ -384,7 +392,6 @@ class UpdateConfig:
         return global_config
 
     def _rewrite_autochecks(self) -> None:
-        check_variables = cmk.base.config.get_check_variables()
         failed_hosts = []
 
         all_rulesets = cmk.gui.watolib.rulesets.AllRulesets()
@@ -392,25 +399,18 @@ class UpdateConfig:
 
         for autocheck_file in Path(cmk.utils.paths.autochecks_dir).glob("*.mk"):
             hostname = HostName(autocheck_file.stem)
+            store = cmk.base.autochecks.AutochecksStore(hostname)
+
             try:
-                autochecks = load_unmigrated_autocheck_entries(
-                    autocheck_file,
-                    check_variables,
-                )
+                autochecks = store.read()
             except MKGeneralException as exc:
-                msg = (
-                    "%s\nIf you encounter this error during the update process "
-                    "you need to replace the the variable by its actual value, e.g. "
-                    "replace `my_custom_levels` by `{'levels': (23, 42)}`." % exc
-                )
                 if self._arguments.debug:
-                    raise MKGeneralException(msg)
-                self._logger.error(msg)
+                    raise
+                self._logger.error(str(exc))
                 failed_hosts.append(hostname)
                 continue
 
-            autochecks = [self._fix_entry(s, all_rulesets, hostname) for s in autochecks]
-            cmk.base.autochecks.AutochecksStore(hostname).write(autochecks)
+            store.write([self._fix_entry(s, all_rulesets, hostname) for s in autochecks])
 
         if failed_hosts:
             msg = "Failed to rewrite autochecks file for hosts: %s" % ", ".join(failed_hosts)
@@ -614,7 +614,7 @@ class UpdateConfig:
                 rule.to_config(),
             )
             new_rule.id = cmk.gui.watolib.rulesets.utils.gen_id()
-            new_rule.value = {  # type: ignore[assignment]
+            new_rule.value = {
                 "sections_disabled": sorted(str(s) for s in sections_to_disable),
                 "sections_enabled": [],
             }
@@ -1169,10 +1169,11 @@ class UpdateConfig:
         for connection in connections:
             connection.setdefault("type", "ldap")
 
-            dn, password = connection["bind"]
-            if isinstance(password, tuple):
-                continue
-            connection["bind"] = (dn, ("password", password))
+            if "bind" in connection:
+                dn, password = connection["bind"]
+                if isinstance(password, tuple):
+                    continue
+                connection["bind"] = (dn, ("password", password))
 
         save_connection_config(connections)
 
@@ -1181,9 +1182,7 @@ class UpdateConfig:
         BILegacyPacksConverter(self._logger, BIManager.bi_configuration_file()).convert_config()
 
     def _migrate_dashlets(self) -> None:
-        global_config = cmk.gui.watolib.global_settings.load_configuration_settings(
-            full_config=True
-        )
+        global_config = load_configuration_settings(full_config=True)
         filter_group = global_config.get("topology_default_filter_group", "")
 
         dashboards = visuals.load("dashboards", builtin_dashboards)
@@ -1220,7 +1219,7 @@ class UpdateConfig:
             _add_user_scheme_serial(users, user_id)
             _cleanup_ldap_connector(users, user_id, has_deprecated_ldap_connection)
 
-        save_users(users)
+        save_users(users, datetime.now())
 
     def _rewrite_py2_inventory_data(self) -> None:
         done_path = Path(cmk.utils.paths.var_dir, "update_config")
@@ -1562,9 +1561,7 @@ class UpdateConfig:
         if not site_ca:
             return
 
-        global_config = cmk.gui.watolib.global_settings.load_configuration_settings(
-            full_config=True
-        )
+        global_config = load_configuration_settings(full_config=True)
         cert_settings = global_config.setdefault(
             "trusted_certificate_authorities", {"use_system_wide_cas": True, "trusted_cas": []}
         )
@@ -1574,17 +1571,13 @@ class UpdateConfig:
             return
 
         cert_settings["trusted_cas"].append(site_ca)
-        cmk.gui.watolib.global_settings.save_global_settings(global_config)
+        save_global_settings(global_config)
 
     def _update_mknotifyd(self) -> None:
         """
-        Update the sitespecific mknotifyd config file on central site because
-        this is not handled by the global or sitespecific updates.
+        Update the sitespecific mknotifyd config file.
         The encryption key is missing on update from 2.0 to 2.1.
         """
-        if is_wato_slave_site() or not has_wato_slave_sites():
-            return
-
         sitespecific_file_path: Path = Path(
             cmk.utils.paths.default_config_dir, "mknotifyd.d", "wato", "sitespecific.mk"
         )
@@ -1616,7 +1609,7 @@ class UpdateConfig:
             return
 
         # fmt: off
-        from cmk.gui.cee.plugins.wato import influxdb  # type: ignore[import] # isort:skip # pylint: disable=no-name-in-module
+        from cmk.gui.cee.plugins.wato import influxdb  # isort:skip # pylint: disable=no-name-in-module
         # fmt: on
 
         influx_db_connection_config = influxdb.InfluxDBConnectionConfig()
@@ -1627,6 +1620,41 @@ class UpdateConfig:
                 for connection_id, connection_config in influx_db_connection_config.load_for_modification().items()
             }
         )
+
+    def _check_ec_rules(self) -> None:
+        """check for macros in EC scripts and disable them if found
+
+        The macros in shell scripts cannot be gated by quotes or something, so
+        an attacker could craft malicious logs and insert code.
+
+        This routine goes through all rules, checks for macros in the scripts
+        and then disables them"""
+        global_config = load_configuration_settings(full_config=True)
+        for action in global_config.get("actions", []):
+            if action["action"][0] == "script":
+                if not self._has_script_macros(action["action"][1]["script"]):
+                    self._logger.debug("Script %r doesn't use macros, that's good", action["id"])
+                    continue
+                if action["disabled"]:
+                    self._logger.info(
+                        "Script %r uses macros but was already disabled. Be careful if you enable this!",
+                        action["id"],
+                    )
+                else:
+                    self._logger.warning(
+                        "Script %r uses macros. We disable it. Please replace the macros with proper variables before enabling it again!",
+                        action["id"],
+                    )
+                    action["disabled"] = True
+        save_global_settings(global_config)
+
+    @staticmethod
+    def _has_script_macros(script_text: str) -> bool:
+        """check if a script uses macros"""
+        for macro_name, _description in MACROS_AND_VARS:
+            if f"${macro_name}$" in script_text:
+                return True
+        return False
 
 
 class PasswordSanitizer:

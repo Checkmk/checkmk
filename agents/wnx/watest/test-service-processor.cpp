@@ -138,12 +138,11 @@ TEST(ServiceProcessorTest, StartStopExe) {
     auto temp_fs{tst::TempCfgFs::CreateNoIo()};
     ASSERT_TRUE(temp_fs->loadContent(tst::GetFabricYmlContent()));
 
-    auto processor =
-        new ServiceProcessor(100ms, [&counter](const void *Processor) {
-            xlog::l("pip").print();
-            counter++;
-            return true;
-        });
+    auto processor = new ServiceProcessor(100ms, [&counter]() {
+        xlog::l("pip").print();
+        counter++;
+        return true;
+    });
     ON_OUT_OF_SCOPE(delete processor;);
 
     cma::MailSlot mailbox(kTestingMailSlot, 0);

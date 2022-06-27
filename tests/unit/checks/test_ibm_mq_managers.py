@@ -20,7 +20,7 @@ pytestmark = pytest.mark.checks
 CHECK_NAME = "ibm_mq_managers"
 
 
-def test_parse():
+def test_parse() -> None:
     lines = """\
 QMNAME(THE.LOCAL.ONE)                                     STATUS(RUNNING) DEFAULT(NO) STANDBY(NOT PERMITTED) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(8.0.0.6) HA() DRROLE()
    INSTANCE(sb112233) MODE(ACTIVE)
@@ -50,7 +50,7 @@ QMNAME(THE.CRASHED.ONE)                                   STATUS(ENDED UNEXPECTE
     assert "INSTANCES" not in attrs
 
 
-def test_check_single_instance_running():
+def test_check_single_instance_running() -> None:
     lines = """\
 QMNAME(THE.LOCAL.ONE)                                     STATUS(RUNNING) DEFAULT(NO) STANDBY(NOT PERMITTED) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(8.0.0.6)
    INSTANCE(sb112233) MODE(ACTIVE)
@@ -74,7 +74,7 @@ QMNAME(THE.LOCAL.ONE)                                     STATUS(RUNNING) DEFAUL
     assert expected == actual
 
 
-def test_rdqm():
+def test_rdqm() -> None:
     lines = """\
 QMNAME(THE.RDQM.ONE)                                      STATUS(RUNNING) DEFAULT(NO) STANDBY(NOT PERMITTED) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(9.1.0.4) HA(REPLICATED) DRROLE()
     INSTANCE(sb008877) MODE(ACTIVE)
@@ -99,7 +99,7 @@ QMNAME(THE.STANDBY.RDQM)                                  STATUS(RUNNING ELSEWHE
     assert expected == actual
 
 
-def test_ended_preemtively():
+def test_ended_preemtively() -> None:
     lines = """\
 QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PREEMPTIVELY) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(7.5.0.2)
 """
@@ -132,7 +132,7 @@ QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PRE-EMPTI
     assert expected == actual
 
 
-def test_status_wato_override():
+def test_status_wato_override() -> None:
     lines = """\
 QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PRE-EMPTIVELY) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(7.5.0.2)
 """
@@ -174,7 +174,7 @@ QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PRE-EMPTI
     assert expected == actual
 
 
-def test_version_mismatch():
+def test_version_mismatch() -> None:
     lines = """\
 QMNAME(THE.RUNNING.ONE)                                   STATUS(RUNNING) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(7.5.0.2)
 """

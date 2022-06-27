@@ -1,0 +1,33 @@
+@startuml
+component "HTTP clients" as http_clients {
+    actor "UI user"
+    component "REST client"
+}
+
+component "System Apache" as system_apache {
+    component "Reverse proxy: foo" as site_foo_proxy
+    component "Reverse proxy: bar" as site_bar_proxy
+}
+
+interface "Listen HTTP 80/443" as system_http_port
+
+package "OMD site foo" as site_foo {
+    component "Apache" as site_foo_apache
+}
+
+interface "site foo 127.0.0.1:APACHE_TCP_PORT" as site_foo_port
+
+package "OMD Site foo" as site_bar {
+    component "Apache" as site_bar_apache
+}
+
+interface "Site bar 127.0.0.1:APACHE_TCP_PORT" as site_bar_port
+
+http_clients -d-> system_http_port
+system_http_port -d-> system_apache
+site_foo_proxy -d-> site_foo_port
+site_foo_port -d-> site_foo_apache
+site_bar_proxy -d-> site_bar_port
+site_bar_port -d-> site_bar_apache
+
+@enduml

@@ -4,7 +4,6 @@
 
 #
 include defines.make
-include buildscripts/infrastructure/pypi_mirror/pypi_mirror.make
 
 NAME               := check_mk
 PREFIX             := /usr
@@ -24,7 +23,7 @@ export DOXYGEN     := doxygen
 export IWYU_TOOL   := python3 $(realpath scripts/iwyu_tool.py)
 ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
 # TODO: Prefixing the command with the environment variable breaks xargs usage below!
-PIPENV             := PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR)/simple scripts/run-pipenv
+PIPENV             := PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR) scripts/run-pipenv
 BLACK              := scripts/run-black
 
 M4_DEPS            := $(wildcard m4/*) configure.ac
@@ -52,7 +51,7 @@ WERKS              := $(wildcard .werks/[0-9]*)
 JAVASCRIPT_SOURCES := $(filter-out %_min.js, \
                           $(wildcard \
                               $(foreach edir,. enterprise managed, \
-                                  $(foreach subdir,* */* */*/*,$(edir)/web/htdocs/js/$(subdir).js))))
+                                  $(foreach subdir,* */* */*/*,$(edir)/web/htdocs/js/$(subdir).[jt]s))))
 
 SCSS_SOURCES := $(wildcard \
 					$(foreach edir,. enterprise managed, \
@@ -76,6 +75,10 @@ OPENAPI_SPEC       := web/htdocs/openapi/checkmk.yaml
 
 LOCK_FD := 200
 LOCK_PATH := .venv.lock
+PY_PATH := .venv/bin/python
+ifneq ("$(wildcard $(PY_PATH))","")
+  PY_VIRT_MAJ_MIN := $(shell "${PY_PATH}" -c "from sys import version_info as v; print(f'{v.major}.{v.minor}')")
+endif
 
 .PHONY: all analyze build check check-binaries check-permissions check-version \
         clean compile-neb-cmc compile-neb-cmc-docker dist documentation \
@@ -182,7 +185,6 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	tar czf $(DISTNAME)/checks.tar.gz $(TAROPTS) -C checks $$(cd checks ; ls)
 	tar czf $(DISTNAME)/active_checks.tar.gz $(TAROPTS) -C active_checks $$(cd active_checks ; ls)
 	tar czf $(DISTNAME)/notifications.tar.gz $(TAROPTS) -C notifications $$(cd notifications ; ls)
-	tar czf $(DISTNAME)/inventory.tar.gz $(TAROPTS) -C inventory $$(cd inventory ; ls)
 	tar czf $(DISTNAME)/checkman.tar.gz $(TAROPTS) -C checkman $$(cd checkman ; ls)
 	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web \
       app \
@@ -210,10 +212,12 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 
 	make -C agents/plugins
 	cd agents ; tar czf ../$(DISTNAME)/agents.tar.gz $(TAROPTS) \
+		--exclude __init__.py \
 		--exclude check_mk_agent.spec \
 		--exclude special/lib \
 		--exclude plugins/Makefile \
 		--exclude plugins/*.checksum \
+		--exclude plugins/__init__.py \
 		cfg_examples \
 		plugins \
 		sap \
@@ -365,7 +369,7 @@ node_modules/.bin/prettier: .ran-npm
 	    REGISTRY= ; \
 	    echo "Installing from public registry" ; \
         fi ; \
-	npm install --yes --audit=false --unsafe-perm $$REGISTRY
+	npm ci --yes --audit=false --unsafe-perm $$REGISTRY
 	sed -i 's#"resolved": "https://artifacts.lan.tribe29.com/repository/npm-proxy/#"resolved": "https://registry.npmjs.org/#g' package-lock.json
 	touch node_modules/.bin/webpack node_modules/.bin/redoc-cli node_modules/.bin/prettier
 
@@ -656,9 +660,7 @@ Pipfile.lock: Pipfile
 	@( \
 	    echo "Locking Python requirements..." ; \
 	    flock $(LOCK_FD); \
-	    SKIP_MAKEFILE_CALL=1 $(PIPENV) lock; RC=$$? ; \
-	    rm -rf .venv ; \
-	    exit $$RC \
+	    ( SKIP_MAKEFILE_CALL=1 $(PIPENV) lock ) || ( $(RM) -r .venv ; exit 1 ) \
 	) $(LOCK_FD)>$(LOCK_PATH)
 
 # Remake .venv everytime Pipfile or Pipfile.lock are updated. Using the 'sync'
@@ -670,7 +672,11 @@ Pipfile.lock: Pipfile
 	@( \
 	    echo "Creating .venv..." ; \
 	    flock $(LOCK_FD); \
-	    $(RM) -r .venv; \
+	    if [ "$(CI)" == "true" ] || [ "$(PY_VIRT_MAJ_MIN)" != "$(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)" ]; then \
+	      echo "CI is $(CI), Python version of .venv is $(PY_VIRT_MAJ_MIN), Target python version is $(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)"; \
+	      echo "Cleaning up .venv before sync..."; \
+	      $(RM) -r .venv; \
+    	    fi; \
 	    ( PIPENV_COLORBLIND=1 SKIP_MAKEFILE_CALL=1 VIRTUAL_ENV="" $(PIPENV) sync --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
 	) $(LOCK_FD)>$(LOCK_PATH)
 

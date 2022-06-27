@@ -33,7 +33,10 @@ def do_compress_history(args: List[str]) -> None:
             raise MKBailOut("%s" % e)
 
 
-def compress_history_file(input_path: str, output_path: str) -> None:
+def compress_history_file(  # pylint: disable=too-many-branches
+    input_path: str,
+    output_path: str,
+) -> None:
     known_services: Dict[str, Set[Optional[str]]] = {}
     machine_state = "START"
 

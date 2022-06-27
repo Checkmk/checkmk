@@ -70,7 +70,7 @@ checks = {
         {},
         [
             (0, 'Alive', []),
-            (0, 'Uptime: 19 h', []),
+            (0, 'Uptime: 19 hours 6 minutes', []),
             (0, '47 Notifications sent', []),
             (0, '47 Notifications received', []),
         ],

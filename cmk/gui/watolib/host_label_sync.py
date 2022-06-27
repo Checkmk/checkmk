@@ -32,7 +32,7 @@ import cmk.gui.pages
 from cmk.gui.config import load_config
 from cmk.gui.context import RequestContext
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import request
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.site_config import get_site_config, has_wato_slave_sites, wato_slave_sites

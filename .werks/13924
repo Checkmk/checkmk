@@ -1,0 +1,10 @@
+Title: Dashboard element 'Alert statistics': Apply context filters and rename
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 2.2.0i1
+Date: 1655280944
+Class: fix
+
+The 'Alert statistics' dashboard element is renamed to 'Alert overview' for a higher naming consistency among comparable dashboard elements. Also the context filters for this element are fixed and now applicable.

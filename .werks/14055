@@ -1,0 +1,12 @@
+Title: crash_reporting: Fix Section content in section crash report
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1655471522
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Section content always showed None in the crash report for section
+crashes.

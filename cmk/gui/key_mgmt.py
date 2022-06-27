@@ -7,17 +7,21 @@
 import pprint
 import time
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Literal, Mapping, Optional, Union
 
-from OpenSSL import crypto  # type: ignore[import]
+from OpenSSL import crypto
+
+from livestatus import SiteId
 
 import cmk.utils.render
 import cmk.utils.store as store
 from cmk.utils.site import omd_site
+from cmk.utils.type_defs import UserId
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKUserError
-from cmk.gui.globals import html, request, response
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -29,7 +33,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, Key
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import (
@@ -48,31 +52,41 @@ class KeypairStore:
         self._attr = attr
         super().__init__()
 
-    def load(self):
+    def load(self) -> dict[int, Key]:
         if not self._path.exists():
             return {}
 
-        variables: Dict[str, Any] = {self._attr: {}}
+        variables: dict[str, dict[int, dict[str, Any]]] = {self._attr: {}}
         with self._path.open("rb") as f:
             exec(f.read(), variables, variables)
-        return variables[self._attr]
+        return self._parse(variables[self._attr])
 
-    def save(self, keys):
+    def save(self, keys: Mapping[int, Key]) -> None:
         store.makedirs(self._path.parent)
-        store.save_mk_file(self._path, "%s.update(%s)" % (self._attr, pprint.pformat(keys)))
+        store.save_mk_file(
+            self._path, "%s.update(%s)" % (self._attr, pprint.pformat(self._unparse(keys)))
+        )
 
-    def choices(self):
+    def _parse(self, raw_keys: Mapping[int, dict[str, Any]]) -> dict[int, Key]:
+        return {key_id: Key.parse_obj(raw_key) for key_id, raw_key in raw_keys.items()}
+
+    def _unparse(self, keys: Mapping[int, Key]) -> dict[int, dict[str, Any]]:
+        return {key_id: key.dict() for key_id, key in keys.items()}
+
+    def choices(self) -> list[tuple[str, str]]:
         choices = []
         for key in self.load().values():
-            cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
+            cert = crypto.load_certificate(crypto.FILETYPE_PEM, key.certificate.encode("ascii"))
             digest = cert.digest("md5").decode("ascii")
-            choices.append((digest, key["alias"]))
+            choices.append((digest, key.alias))
 
         return sorted(choices, key=lambda x: x[1])
 
-    def get_key_by_digest(self, digest):
+    def get_key_by_digest(self, digest: str) -> tuple[int, Key]:
         for key_id, key in self.load().items():
-            other_cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
+            other_cert = crypto.load_certificate(
+                crypto.FILETYPE_PEM, key.certificate.encode("ascii")
+            )
             other_digest = other_cert.digest("md5").decode("ascii")
             if other_digest == digest:
                 return key_id, key
@@ -84,17 +98,11 @@ class PageKeyManagement:
     upload_mode = "upload_key"
     download_mode = "download_key"
 
-    def __init__(self):
-        self.keys = self.load()
+    def __init__(self, key_store: KeypairStore) -> None:
         super().__init__()
+        self.key_store = key_store
 
-    def title(self):
-        raise NotImplementedError()
-
-    def load(self):
-        raise NotImplementedError()
-
-    def save(self, keys):
+    def title(self) -> str:
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -136,7 +144,7 @@ class PageKeyManagement:
             breadcrumb=breadcrumb,
         )
 
-    def _may_edit_config(self):
+    def _may_edit_config(self) -> bool:
         return True
 
     def action(self) -> ActionResult:
@@ -145,44 +153,45 @@ class PageKeyManagement:
             if key_id_as_str is None:
                 raise Exception("cannot happen")
             key_id = int(key_id_as_str)
-            if key_id not in self.keys:
+            keys = self.key_store.load()
+            if key_id not in keys:
                 return None
 
-            key = self.keys[key_id]
+            key = keys[key_id]
 
             if self._key_in_use(key_id, key):
                 raise MKUserError("", _("This key is still used."))
 
-            self.delete(key_id)
-            self.save(self.keys)
+            del keys[key_id]
+            self._log_delete_action(key_id, key)
+            self.key_store.save(keys)
         return None
 
-    def delete(self, key_id):
-        del self.keys[key_id]
+    def _log_delete_action(self, key_id: int, key: Key) -> None:
+        pass
 
-    def _delete_confirm_msg(self):
+    def _delete_confirm_msg(self) -> str:
         raise NotImplementedError()
 
-    def _key_in_use(self, key_id, key):
+    def _key_in_use(self, key_id: int, key: Key) -> bool:
         raise NotImplementedError()
 
-    def _table_title(self):
+    def _table_title(self) -> str:
         raise NotImplementedError()
 
-    def page(self):
+    def page(self) -> None:
         with table_element(title=self._table_title(), searchable=False, sortable=False) as table:
 
-            for key_id, key in sorted(self.keys.items()):
-                cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
+            for key_id, key in sorted(self.key_store.load().items()):
+                cert = crypto.load_certificate(crypto.FILETYPE_PEM, key.certificate.encode("ascii"))
 
                 table.row()
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
                 if self._may_edit_config():
                     message = self._delete_confirm_msg()
-                    if key["owner"] != user.id:
+                    if key.owner != user.id:
                         message += (
-                            _("<br><b>Note</b>: this key has created by user <b>%s</b>")
-                            % key["owner"]
+                            _("<br><b>Note</b>: this key has created by user <b>%s</b>") % key.owner
                         )
 
                     delete_url = make_confirm_link(
@@ -195,23 +204,18 @@ class PageKeyManagement:
                     [("mode", self.download_mode), ("key", key_id)],
                 )
                 html.icon_button(download_url, _("Download this key"), "download")
-                table.cell(_("Description"), key["alias"])
-                table.cell(_("Created"), cmk.utils.render.date(key["date"]))
-                table.cell(_("By"), key["owner"])
+                table.cell(_("Description"), key.alias)
+                table.cell(_("Created"), cmk.utils.render.date(key.date))
+                table.cell(_("By"), key.owner)
                 table.cell(_("Digest (MD5)"), cert.digest("md5").decode("ascii"))
 
 
 class PageEditKey:
     back_mode: str
 
-    def __init__(self):
-        self._minlen = None
-
-    def load(self):
-        raise NotImplementedError()
-
-    def save(self, keys):
-        raise NotImplementedError()
+    def __init__(self, key_store: KeypairStore, passphrase_min_len: Optional[int] = None) -> None:
+        self._minlen = passphrase_min_len
+        self.key_store = key_store
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
@@ -226,7 +230,7 @@ class PageEditKey:
             # leak the secret information
             request.del_var("key_p_passphrase")
             self._vs_key().validate_value(value, "key")
-            self._create_key(value)
+            self._create_key(value["alias"], value["passphrase"])
             # FIXME: This leads to a circular import otherwise. This module (cmk.gui.key_mgmt) is
             #  clearly outside of either cmk.gui.plugins.wato and cmk.gui.cee.plugins.wato so this
             #  is obviously a very simple module-layer violation. This whole module should either
@@ -238,33 +242,18 @@ class PageEditKey:
             return HTTPRedirect(mode_url(self.back_mode))
         return None
 
-    def _create_key(self, value):
-        keys = self.load()
+    def _create_key(self, alias: str, passphrase: str) -> None:
+        keys = self.key_store.load()
 
         new_id = 1
         for key_id in keys:
             new_id = max(new_id, key_id + 1)
 
-        keys[new_id] = self._generate_key(value["alias"], value["passphrase"])
-        self.save(keys)
+        assert user.id is not None
+        keys[new_id] = generate_key(alias, passphrase, user.id, omd_site())
+        self.key_store.save(keys)
 
-    @staticmethod
-    def _generate_key(alias, passphrase):
-        pkey = crypto.PKey()
-        pkey.generate_key(crypto.TYPE_RSA, 2048)
-
-        cert = create_self_signed_cert(pkey)
-        return {
-            "certificate": crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("ascii"),
-            "private_key": crypto.dump_privatekey(
-                crypto.FILETYPE_PEM, pkey, "AES256", passphrase.encode("utf-8")
-            ).decode("ascii"),
-            "alias": alias,
-            "owner": user.id,
-            "date": time.time(),
-        }
-
-    def page(self):
+    def page(self) -> None:
         # Currently only "new" is supported
         html.begin_form("key", method="POST")
         html.prevent_password_auto_completion()
@@ -273,7 +262,7 @@ class PageEditKey:
         html.hidden_fields()
         html.end_form()
 
-    def _vs_key(self):
+    def _vs_key(self) -> Dictionary:
         return Dictionary(
             title=_("Properties"),
             elements=[
@@ -307,11 +296,9 @@ class PageEditKey:
 class PageUploadKey:
     back_mode: str
 
-    def load(self):
-        raise NotImplementedError()
-
-    def save(self, keys):
-        raise NotImplementedError()
+    def __init__(self, key_store: KeypairStore) -> None:
+        super().__init__()
+        self.key_store = key_store
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
@@ -324,7 +311,7 @@ class PageUploadKey:
             request.del_var("key_p_passphrase")
             self._vs_key().validate_value(value, "key")
 
-            key_file = self._get_uploaded(value, "key_file")
+            key_file = self._get_uploaded(value["key_file"])
             if not key_file:
                 raise MKUserError(None, _("You need to provide a key file."))
 
@@ -336,7 +323,7 @@ class PageUploadKey:
             ):
                 raise MKUserError(None, _("The file does not look like a valid key file."))
 
-            self._upload_key(key_file, value)
+            self._upload_key(key_file, value["alias"], value["passphrase"])
             # FIXME: This leads to a circular import otherwise. This module (cmk.gui.key_mgmt) is
             #  clearly outside of either cmk.gui.plugins.wato and cmk.gui.cee.plugins.wato so this
             #  is obviously a very simple module-layer violation. This whole module should either
@@ -348,60 +335,67 @@ class PageUploadKey:
             return HTTPRedirect(mode_url(self.back_mode), code=302)
         return None
 
-    def _get_uploaded(self, cert_spec, key):
-        if key in cert_spec:
-            if cert_spec[key][0] == "upload":
-                return cert_spec[key][1][2].decode("ascii")
-            return cert_spec[key][1]
+    def _get_uploaded(
+        self,
+        cert_spec: Union[
+            tuple[Literal["upload"], tuple[str, str, bytes]], tuple[Literal["text"], str]
+        ],
+    ) -> str:
+        if cert_spec[0] == "upload":
+            return cert_spec[1][2].decode("ascii")
+        return cert_spec[1]
 
-    def _upload_key(self, key_file, value):
-        keys = self.load()
+    def _upload_key(self, key_file: str, alias: str, passphrase: str) -> None:
+        keys = self.key_store.load()
 
         new_id = 1
         for key_id in keys:
             new_id = max(new_id, key_id + 1)
 
-        certificate = crypto.load_certificate(crypto.FILETYPE_PEM, key_file)
+        certificate = crypto.load_certificate(crypto.FILETYPE_PEM, key_file.encode("ascii"))
 
         this_digest = certificate.digest("md5").decode("ascii")
         for key_id, key in keys.items():
-            other_cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
+            other_cert = crypto.load_certificate(
+                crypto.FILETYPE_PEM, key.certificate.encode("ascii")
+            )
             other_digest = other_cert.digest("md5").decode("ascii")
             if other_digest == this_digest:
                 raise MKUserError(
                     None,
-                    _("The key / certificate already exists (Key: %d, " "Description: %s)")
-                    % (key_id, key["alias"]),
+                    _("The key / certificate already exists (Key: %d, Description: %s)")
+                    % (key_id, key.alias),
                 )
 
         # Use time from certificate
-        def parse_asn1_generalized_time(timestr):
+        def parse_asn1_generalized_time(timestr: str) -> time.struct_time:
             return time.strptime(timestr, "%Y%m%d%H%M%SZ")
 
-        created = time.mktime(
-            parse_asn1_generalized_time(certificate.get_notBefore().decode("ascii"))
-        )
+        not_before = certificate.get_notBefore()
+        assert not_before is not None  # TODO: Why is this true?
+        created = time.mktime(parse_asn1_generalized_time(not_before.decode("ascii")))
 
         # Check for valid passphrase
-        decrypt_private_key(key_file, value["passphrase"])
+        decrypt_private_key(key_file, passphrase)
 
         # Split PEM for storing separated
         parts = key_file.split("-----END ENCRYPTED PRIVATE KEY-----\n", 1)
         key_pem = parts[0] + "-----END ENCRYPTED PRIVATE KEY-----\n"
         cert_pem = parts[1]
 
-        key = {
-            "certificate": cert_pem,
-            "private_key": key_pem,
-            "alias": value["alias"],
-            "owner": user.id,
-            "date": created,
-        }
+        key = Key(
+            certificate=cert_pem,
+            private_key=key_pem,
+            alias=alias,
+            owner=user.id,
+            date=created,
+            not_downloaded=False,
+        )
 
         keys[new_id] = key
-        self.save(keys)
+        self.key_store.save(keys)
 
-    def page(self):
+    def page(self) -> None:
         html.begin_form("key", method="POST")
         html.prevent_password_auto_completion()
         self._vs_key().render_input("key", {})
@@ -409,7 +403,7 @@ class PageUploadKey:
         html.hidden_fields()
         html.end_form()
 
-    def _vs_key(self):
+    def _vs_key(self) -> Dictionary:
         return Dictionary(
             title=_("Properties"),
             elements=[
@@ -445,18 +439,16 @@ class PageUploadKey:
             render="form",
         )
 
-    def _passphrase_help(self):
+    def _passphrase_help(self) -> str:
         raise NotImplementedError()
 
 
 class PageDownloadKey:
     back_mode: str
 
-    def load(self):
-        raise NotImplementedError()
-
-    def save(self, keys):
-        raise NotImplementedError()
+    def __init__(self, key_store: KeypairStore) -> None:
+        super().__init__()
+        self.key_store = key_store
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
@@ -465,7 +457,7 @@ class PageDownloadKey:
 
     def action(self) -> ActionResult:
         if transactions.check_transaction():
-            keys = self.load()
+            keys = self.key_store.load()
 
             try:
                 key_id_str = request.var("key")
@@ -478,7 +470,7 @@ class PageDownloadKey:
             if key_id not in keys:
                 raise MKUserError(None, _("You need to provide a valid key id."))
 
-            private_key = keys[key_id]["private_key"]
+            private_key = keys[key_id].private_key
 
             value = self._vs_key().from_html_vars("key")
             self._vs_key().validate_value(value, "key")
@@ -488,18 +480,18 @@ class PageDownloadKey:
             return FinalizeRequest(code=200)
         return None
 
-    def _send_download(self, keys, key_id):
+    def _send_download(self, keys: dict[int, Key], key_id: int) -> None:
         key = keys[key_id]
         response.headers["Content-Disposition"] = "Attachment; filename=%s" % self._file_name(
             key_id, key
         )
         response.headers["Content-type"] = "application/x-pem-file"
-        response.set_data(key["private_key"] + key["certificate"])
+        response.set_data(key.private_key + key.certificate)
 
-    def _file_name(self, key_id, key):
+    def _file_name(self, key_id: int, key: Key) -> str:
         raise NotImplementedError()
 
-    def page(self):
+    def page(self) -> None:
         html.p(
             _(
                 "To be able to download the key, you need to unlock the key by entering the "
@@ -514,7 +506,7 @@ class PageDownloadKey:
         html.hidden_fields()
         html.end_form()
 
-    def _vs_key(self):
+    def _vs_key(self) -> Dictionary:
         return Dictionary(
             title=_("Properties"),
             elements=[
@@ -532,10 +524,27 @@ class PageDownloadKey:
         )
 
 
-def create_self_signed_cert(pkey):
+def generate_key(alias: str, passphrase: str, user_id: UserId, site_id: SiteId) -> Key:
+    pkey = crypto.PKey()
+    pkey.generate_key(crypto.TYPE_RSA, 2048)
+
+    cert = create_self_signed_cert(pkey, user_id, site_id)
+    return Key(
+        certificate=crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("ascii"),
+        private_key=crypto.dump_privatekey(
+            crypto.FILETYPE_PEM, pkey, "AES256", passphrase.encode("utf-8")
+        ).decode("ascii"),
+        alias=alias,
+        owner=user_id,
+        date=time.time(),
+        not_downloaded=True,
+    )
+
+
+def create_self_signed_cert(pkey: crypto.PKey, user_id: UserId, site_id: SiteId) -> crypto.X509:
     cert = crypto.X509()
-    cert.get_subject().O = "Check_MK Site %s" % omd_site()
-    cert.get_subject().CN = user.id or "### Check_MK ###"
+    cert.get_subject().O = f"Check_MK Site {site_id}"
+    cert.get_subject().CN = user_id
     cert.set_serial_number(1)
     cert.gmtime_adj_notBefore(0)
     cert.gmtime_adj_notAfter(30 * 365 * 24 * 60 * 60)  # valid for 30 years.
@@ -546,7 +555,7 @@ def create_self_signed_cert(pkey):
     return cert
 
 
-def decrypt_private_key(encrypted_private_key, passphrase):
+def decrypt_private_key(encrypted_private_key: str, passphrase: str) -> crypto.PKey:
     try:
         return crypto.load_privatekey(
             crypto.FILETYPE_PEM, encrypted_private_key, passphrase.encode("utf-8")

@@ -89,6 +89,7 @@ def check_cisco_fantray(item, _no_params, parsed):
     if item in parsed:
         state, state_readable = parsed[item]
         return state, "Status: %s" % state_readable
+    return None
 
 
 check_info["cisco_fantray"] = {

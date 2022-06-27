@@ -69,3 +69,4 @@ def check_poe_data(params, poe_data):
             # optionally concat fault detail string
             fault_detail = " (%s)" % poe_data.poe_status_detail
         return 2, "Operational status of the PSE is FAULTY" + fault_detail
+    return None

@@ -3,25 +3,51 @@
 # Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import collections
 import functools
 import typing
-from typing import Any, Callable, List, Literal, NamedTuple, Optional, Type, TypedDict, TypeVar
+from typing import (
+    Any,
+    Callable,
+    cast,
+    List,
+    Literal,
+    NamedTuple,
+    Optional,
+    Type,
+    TypedDict,
+    TypeVar,
+)
 
 from marshmallow import ValidationError
 
 from livestatus import SiteId
 
+from cmk.utils.livestatus_helpers import tables
+from cmk.utils.livestatus_helpers.expressions import (
+    And,
+    BinaryExpression,
+    LiteralExpression,
+    LIVESTATUS_OPERATORS,
+    Not,
+    Or,
+    QueryExpression,
+    UnaryExpression,
+)
 from cmk.utils.tags import BuiltinTagConfig, TagGroup
 
 # There is an implicit dependency introduced by the collect_attributes call which is evaluated
 # at import time. To make it work as expected we need to import
-# TODO: Clean this dependency on the plugins up by moving the plugins to cmk.gui.watolib
 import cmk.gui.plugins.wato.builtin_attributes  # pylint: disable=unused-import
 import cmk.gui.watolib.groups  # pylint: disable=unused-import
-from cmk.gui import site_config, watolib
+from cmk.gui import site_config
 from cmk.gui.fields.base import BaseSchema
 from cmk.gui.utils.escaping import strip_tags
+from cmk.gui.watolib.host_attributes import (
+    get_sorted_host_attribute_topics,
+    get_sorted_host_attributes_by_topic,
+)
 from cmk.gui.watolib.tags import load_tag_config
 
 from cmk import fields
@@ -102,8 +128,8 @@ def collect_attributes(
     #   We want to get all the topics, so we don't miss any attributes. We filter them later.
     #   new=True may also be new=False, it doesn't matter in this context.
     result = []
-    for topic_id, topic_title in watolib.get_sorted_host_attribute_topics("always", new=True):
-        for attr in watolib.get_sorted_host_attributes_by_topic(topic_id):
+    for topic_id, topic_title in get_sorted_host_attribute_topics("always", new=True):
+        for attr in get_sorted_host_attributes_by_topic(topic_id):
             if object_type == "folder" and not attr.show_in_folder():
                 continue
 
@@ -140,13 +166,17 @@ def collect_attributes(
             for tag in tag_group.tags:
                 description.append(f" * {_format(tag.id)}: {tag.title}")
 
+        allowed_ids = [tag.id for tag in tag_group.tags]
+        if tag_group.is_checkbox_tag_group:
+            allowed_ids.insert(0, None)
+
         result.append(
             Attr(
                 name=_ensure(f"tag_{tag_group.id}"),
                 section=tag_group.topic or "No topic",
                 mandatory=False,
                 description="\n\n".join(description),
-                enum=[tag.id for tag in tag_group.tags],
+                enum=allowed_ids,
                 field=None,
             )
         )
@@ -289,3 +319,126 @@ def attr_openapi_schema(
 
     class_name = f"{object_type.title()}{context.title()}Attribute"
     return _schema_from_dict(class_name, schema)
+
+
+def tree_to_expr(filter_dict, table: Any = None) -> QueryExpression:
+    """Turn a filter-dict into a QueryExpression.
+
+    Examples:
+
+        >>> tree_to_expr({'op': '=', 'left': 'hosts.name', 'right': 'example.com'})
+        Filter(name = example.com)
+
+        >>> tree_to_expr({'op': '!=', 'left': 'hosts.name', 'right': 'example.com'})
+        Filter(name != example.com)
+
+        >>> tree_to_expr({'op': '!=', 'left': 'name', 'right': 'example.com'}, 'hosts')
+        Filter(name != example.com)
+
+        >>> tree_to_expr({'op': 'and', \
+                          'expr': [{'op': '=', 'left': 'hosts.name', 'right': 'example.com'}, \
+                          {'op': '=', 'left': 'hosts.state', 'right': 0}]})
+        And(Filter(name = example.com), Filter(state = 0))
+
+        >>> tree_to_expr({'op': 'or', \
+                          'expr': [{'op': '=', 'left': 'hosts.name', 'right': 'example.com'}, \
+                          {'op': '=', 'left': 'hosts.name', 'right': 'heute'}]})
+        Or(Filter(name = example.com), Filter(name = heute))
+
+        >>> tree_to_expr({'op': 'not', \
+                          'expr': {'op': '=', 'left': 'hosts.name', 'right': 'example.com'}})
+        Not(Filter(name = example.com))
+
+        >>> tree_to_expr({'op': 'not', \
+                          'expr': {'op': 'not', \
+                                   'expr': {'op': '=', \
+                                            'left': 'hosts.name', \
+                                            'right': 'example.com'}}})
+        Not(Not(Filter(name = example.com)))
+
+        >>> from cmk.utils.livestatus_helpers.tables import Hosts
+        >>> tree_to_expr({'op': 'not', 'expr': Hosts.name == 'example.com'})
+        Not(Filter(name = example.com))
+
+        >>> tree_to_expr({'op': 'no_way', \
+                          'expr': {'op': '=', 'left': 'hosts.name', 'right': 'example.com'}})
+        Traceback (most recent call last):
+        ...
+        ValueError: Unknown operator: no_way
+
+    Args:
+        filter_dict:
+            A filter-dict, which can either be persisted or passed over the wire.
+
+        table:
+            Optionally a table name. Only used when the columns are used in plain form
+            (without table name prefixes).
+
+    Returns:
+        A valid LiveStatus query expression.
+
+    Raises:
+        ValueError: when unknown columns are queried
+
+    """
+    if not isinstance(filter_dict, dict):
+        # FIXME
+        #   Because of not having correct Python packages at the root-level, sometimes a
+        #   locally defined class ends up having a relative dotted path, like for example
+        #       <class 'expressions.BinaryExpression'>
+        #   instead of
+        #       <class 'cmk.utils.livestatus_helpers.expressions.BinaryExpression'>
+        #   While these classes are actually the same, Python treats them distinct, so we can't
+        #   just say `isinstance(filter_dict, BinaryExpression)` (or their super-type) here.
+        return cast(QueryExpression, filter_dict)
+    op = filter_dict["op"]
+    if op in LIVESTATUS_OPERATORS:
+        left = filter_dict["left"]
+        if "." in left:
+            _table, column = left.split(".")
+            if table is not None and _table_name(table) != _table:
+                raise ValueError(
+                    f"This field can only query table {_table_name(table)!r}. ({left})"
+                )
+        else:
+            if table is None:
+                raise ValueError("Missing table parameter.")
+            _table = _table_name(table)
+            column = left
+        return BinaryExpression(
+            _lookup_column(_table, column),
+            LiteralExpression(filter_dict["right"]),
+            op,
+        )
+
+    if op == "and":
+        return And(*[tree_to_expr(expr, table) for expr in filter_dict["expr"]])
+
+    if op == "or":
+        return Or(*[tree_to_expr(expr, table) for expr in filter_dict["expr"]])
+
+    if op == "not":
+        return Not(tree_to_expr(filter_dict["expr"], table))
+
+    raise ValueError(f"Unknown operator: {op}")
+
+
+def _lookup_column(table_name, column_name) -> UnaryExpression:
+    if isinstance(table_name, str):
+        table_class = getattr(tables, table_name.title())
+    else:
+        table_class = table_name
+        table_name = table_class.__tablename__
+
+    try:
+        column = getattr(table_class, column_name)
+    except AttributeError as e:
+        raise ValueError(f"Table {table_name!r} has no column {column_name!r}.") from e
+    return column.expr
+
+
+def _table_name(table) -> str:
+    if isinstance(table, str):
+        return table
+
+    return table.__tablename__

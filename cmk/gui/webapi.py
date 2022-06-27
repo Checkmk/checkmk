@@ -20,9 +20,9 @@ import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.watolib
 import cmk.gui.watolib.read_only
-from cmk.gui.config import builtin_role_ids
+from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.exceptions import MKAuthException, MKException, MKUserError
-from cmk.gui.globals import active_config, request, response
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -147,7 +147,9 @@ def _check_permissions(api_call: APICallDefinitionDict) -> None:
     if not active_config.wato_enabled:
         raise MKUserError(None, _("Setup is disabled on this site."))
 
-    for permission in ["wato.use", "wato.api_allowed"] + api_call.get("required_permissions", []):
+    for permission in ["wato.use", "wato.api_allowed"] + list(
+        api_call.get("required_permissions", [])
+    ):
         user.need_permission(permission)
 
 

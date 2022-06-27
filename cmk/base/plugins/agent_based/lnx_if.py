@@ -135,7 +135,9 @@ def _parse_lnx_if_sections(string_table: type_defs.StringTable):
     return ip_stats, ethtool_stats
 
 
-def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
+def parse_lnx_if(  # pylint: disable=too-many-branches
+    string_table: type_defs.StringTable,
+) -> Section:
     ip_stats, ethtool_stats = _parse_lnx_if_sections(string_table)
 
     nic_info = []

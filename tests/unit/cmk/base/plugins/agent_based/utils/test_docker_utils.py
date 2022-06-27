@@ -9,14 +9,14 @@ import typing
 import pytest
 
 from cmk.base.plugins.agent_based.utils.docker import (
-    _cleanup_oci_error_message,
+    cleanup_oci_error_message,
     MemorySection,
     parse,
     parse_multiline,
 )
 
 
-def test_parse_strict():
+def test_parse_strict() -> None:
     result = parse(
         [
             [
@@ -42,19 +42,19 @@ def test_parse_strict():
         ([["@docker_version_info", "{}"], ["1"], ["2"]], 1),  # 2 should not be there
     ],
 )
-def test_parse_strict_violation(data, expected):
+def test_parse_strict_violation(data, expected) -> None:
     with pytest.raises(ValueError):
         parse(data)
     assert parse(data, strict=False).data == expected
 
 
-def test_parse_strict_empty_version():
+def test_parse_strict_empty_version() -> None:
     result = parse([["@docker_version_info", "{}"], ['{"payload": 1}']])
     assert result.version == {}
     assert result.data == {"payload": 1}
 
 
-def test_parse_multiline():
+def test_parse_multiline() -> None:
     result = parse_multiline(
         [["@docker_version_info", "{}"], ['{"value": 1}'], ['{"value": 2}'], ['{"value": 3}']]
     )
@@ -100,8 +100,8 @@ def test_parse_multiline():
         ),
     ],
 )
-def test_parse_remove_error_message(data_in, data_out):
-    cleaned_up = _cleanup_oci_error_message(data_in)
+def test_parse_remove_error_message(data_in, data_out) -> None:
+    cleaned_up = cleanup_oci_error_message(data_in)
     assert cleaned_up == data_out
 
 

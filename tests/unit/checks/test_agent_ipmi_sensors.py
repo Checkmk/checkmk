@@ -4,23 +4,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping, Sequence
+
 import pytest
 
 from tests.testlib import SpecialAgent
 
 pytestmark = pytest.mark.checks
-from typing import Any, Mapping, Sequence
 
 
 @pytest.mark.parametrize(
-    "params,expected_args",
+    ["params", "expected_args"],
     [
         pytest.param(
             (
                 "freeipmi",
                 {
                     "username": "user",
-                    "password": "password",
+                    "password": ("password", "password"),
                     "privilege_lvl": "user",
                 },
             ),
@@ -31,7 +32,25 @@ from typing import Any, Mapping, Sequence
                 "freeipmi",
                 "user",
             ],
-            id="freeipmi with mandatory args only",
+            id="freeipmi with mandatory args only and explicit password",
+        ),
+        pytest.param(
+            (
+                "freeipmi",
+                {
+                    "username": "user",
+                    "password": ("store", "ipmi_sensors"),
+                    "privilege_lvl": "user",
+                },
+            ),
+            [
+                "address",
+                "user",
+                ("store", "ipmi_sensors", "%s"),
+                "freeipmi",
+                "user",
+            ],
+            id="freeipmi with mandatory args only and password from the store",
         ),
         pytest.param(
             (
@@ -39,7 +58,7 @@ from typing import Any, Mapping, Sequence
                 {
                     "username": "user",
                     "ipmi_driver": "driver",
-                    "password": "password",
+                    "password": ("password", "password"),
                     "privilege_lvl": "user",
                     "sdr_cache_recreate": True,
                     "interpret_oem_data": True,
@@ -64,7 +83,7 @@ from typing import Any, Mapping, Sequence
                 "ipmitool",
                 {
                     "username": "user",
-                    "password": "password",
+                    "password": ("password", "password"),
                     "privilege_lvl": "administrator",
                     "intf": "lanplus",
                 },

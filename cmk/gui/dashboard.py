@@ -47,7 +47,10 @@ from cmk.gui.exceptions import (
     MKMissingDataError,
     MKUserError,
 )
-from cmk.gui.globals import html, output_funnel, request, response
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.header import make_header
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -106,9 +109,10 @@ from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=un
 from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
 from cmk.gui.plugins.views.utils import data_source_registry
 from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
-from cmk.gui.type_defs import InfoName, VisualContext
+from cmk.gui.type_defs import InfoName, SingleInfos, VisualContext
 from cmk.gui.utils.html import HTML, HTMLInput
 from cmk.gui.utils.ntop import is_ntop_configured
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.gui.valuespec import (
@@ -120,7 +124,8 @@ from cmk.gui.valuespec import (
     ValueSpec,
     ValueSpecValidateFunc,
 )
-from cmk.gui.views import ABCAjaxInitialFilters
+from cmk.gui.views import ABCAjaxInitialFilters, view_choices
+from cmk.gui.views.datasource_selection import show_create_view_dialog
 from cmk.gui.watolib.activate_changes import get_pending_changes_info, get_pending_changes_tooltip
 
 loaded_with_language: Union[None, bool, str] = False
@@ -141,11 +146,11 @@ raster = 10  # Raster the dashlet coords are measured in (px)
 @visual_type_registry.register
 class VisualTypeDashboards(VisualType):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "dashboards"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("dashboard")
 
     @property
@@ -198,11 +203,11 @@ class VisualTypeDashboards(VisualType):
             specification = parameters["definition"]["specification"]
             if specification[0] == "template":
                 context = {
-                    "host": specification[1]["host_name"],
+                    "host": {"host": specification[1]["host_name"]},
                     # The service context has to be set, even for host graphs. Otherwise the
                     # pnpgraph dashlet would complain about missing context information when
                     # displaying host graphs.
-                    "service": specification[1]["service_description"],
+                    "service": {"service": specification[1]["service_description"]},
                 }
                 parameters = {"source": specification[1]["graph_id"]}
 
@@ -260,7 +265,7 @@ class VisualTypeDashboards(VisualType):
         elif add_type in ["pnpgraph", "custom_graph"]:
             # The "add to visual" popup does not provide a timerange information,
             # but this is not an optional value. Set it to 25h initially.
-            dashlet_spec.setdefault("timerange", "1")
+            dashlet_spec.setdefault("timerange", "25h")
 
         add_dashlet(dashlet_spec, dashboard)
 
@@ -279,11 +284,11 @@ class VisualTypeDashboards(VisualType):
 @permission_section_registry.register
 class PermissionSectionDashboard(PermissionSection):
     @property
-    def name(self):
+    def name(self) -> str:
         return "dashboard"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Dashboards")
 
     @property
@@ -381,7 +386,7 @@ class LegacyDashlet(IFrameDashlet):
         return cls._spec["sort_index"]
 
     @classmethod
-    def single_infos(cls) -> List[str]:
+    def single_infos(cls) -> SingleInfos:
         return cls._spec.get("single_infos", [])
 
     @classmethod
@@ -440,7 +445,7 @@ class LegacyDashlet(IFrameDashlet):
             return cls._spec["add_urlfunc"]()
         return super().add_url()
 
-    def infos(self) -> List[str]:
+    def infos(self) -> SingleInfos:
         return self._spec.get("infos", [])
 
     def default_display_title(self) -> str:
@@ -587,7 +592,7 @@ def draw_dashboard(name: DashboardName) -> None:
 
     if not board.get("show_title"):
         # Remove the whole header line
-        html.set_render_headfoot(False)
+        html.render_headfoot = False
 
     # In case we have a dashboard / dashlet that requires context information that is not available
     # yet, display a message to the user to insert the missing information.
@@ -605,7 +610,8 @@ def draw_dashboard(name: DashboardName) -> None:
 
     html.add_body_css_class("dashboard")
     breadcrumb = dashboard_breadcrumb(name, board, title)
-    html.header(
+    make_header(
+        html,
         title,
         breadcrumb=breadcrumb,
         page_menu=_page_menu(
@@ -1337,9 +1343,9 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[Page
     )
 
     yield PageMenuEntryCEEOnly(
-        title="Alert statistics",
+        title="Alert overview",
         icon_name={"icon": "alerts", "emblem": "statistic"},
-        item=_dashboard_add_non_view_dashlet_link(name, "alert_statistics"),
+        item=_dashboard_add_non_view_dashlet_link(name, "alert_overview"),
     )
     yield PageMenuEntry(
         title="Host statistics",
@@ -1541,7 +1547,7 @@ def draw_dashlet(dashlet: Dashlet, content: HTMLInput, title: Union[str, HTML]) 
     ):
         title_background = ["highlighted"] if dashlet.show_title() is True else []
         html.div(
-            html.render_span(title),
+            HTMLWriter.render_span(title),
             id_="dashlet_title_%d" % dashlet.dashlet_id,
             class_=["title"] + title_background,
         )
@@ -1642,18 +1648,25 @@ def page_edit_dashboards() -> None:
 
 def _render_dashboard_buttons(dashboard_name: DashboardName, dashboard: DashboardConfig) -> None:
     if dashboard["owner"] == user.id:
-        html.icon_button(
-            makeuri_contextless(
-                request,
-                [
-                    ("name", dashboard_name),
-                    ("edit", "1"),
-                ],
-                "dashboard.py",
-            ),
-            title=_("Edit dashboard"),
-            icon="dashboard",
-        )
+        if dashboard.get("show_title"):
+            html.icon_button(
+                makeuri_contextless(
+                    request,
+                    [
+                        ("name", dashboard_name),
+                        ("edit", "1"),
+                    ],
+                    "dashboard.py",
+                ),
+                title=_("Edit layout"),
+                icon="dashboard",
+            )
+        else:
+            html.icon(
+                icon="dashboard",
+                title=_("Edit layout only available if header is enabled"),
+                cssclass="colorless",
+            )
 
 
 # .
@@ -1800,14 +1813,12 @@ def page_create_view_dashlet() -> None:
     name = request.get_str_input_mandatory("name")
 
     if create:
-        import cmk.gui.views as views  # pylint: disable=import-outside-toplevel
-
         url = makeuri(
             request,
             [("back", makeuri(request, []))],
             filename="create_view_dashlet_infos.py",
         )
-        views.show_create_view_dialog(next_url=url)
+        show_create_view_dialog(next_url=url)
 
     else:
         # Choose an existing view from the list of available views
@@ -1854,11 +1865,9 @@ def page_create_view_dashlet_infos() -> None:
 
 
 def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Callable) -> None:
-    import cmk.gui.views as views  # pylint: disable=import-outside-toplevel
-
     vs_view = DropdownChoice(
         title=_("View name"),
-        choices=lambda: views.view_choices(allow_empty=False),
+        choices=lambda: view_choices(allow_empty=False),
         sorted=True,
         no_preselect_title="",
     )
@@ -1869,7 +1878,12 @@ def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Calla
         raise MKUserError("name", _("The requested dashboard does not exist."))
 
     breadcrumb = _dashlet_editor_breadcrumb(name, dashboard, title)
-    html.header(title, breadcrumb=breadcrumb, page_menu=_choose_view_page_menu(breadcrumb))
+    make_header(
+        html,
+        title,
+        breadcrumb=breadcrumb,
+        page_menu=_choose_view_page_menu(breadcrumb),
+    )
 
     if request.var("_save") and transactions.check_transaction():
         try:
@@ -1930,7 +1944,7 @@ class EditDashletPage(Page):
         except KeyError:
             raise MKUserError("name", _("The requested dashboard does not exist."))
 
-    def page(self) -> PageResult:
+    def page(self) -> PageResult:  # pylint: disable=useless-return,too-many-branches
         if self._ident is None:
             type_name = request.get_str_input_mandatory("type")
             mode = "add"
@@ -1957,7 +1971,7 @@ class EditDashletPage(Page):
             self._ident = len(self._dashboard["dashlets"])
 
             single_infos_raw = request.var("single_infos")
-            single_infos: List[InfoName] = []
+            single_infos: SingleInfos = []
             if single_infos_raw:
                 single_infos = single_infos_raw.split(",")
                 for key in single_infos:
@@ -1983,11 +1997,16 @@ class EditDashletPage(Page):
             title = _("Edit element: %s") % dashlet_type.title()
 
         breadcrumb = _dashlet_editor_breadcrumb(self._board, self._dashboard, title)
-        html.header(title, breadcrumb=breadcrumb, page_menu=_dashlet_editor_page_menu(breadcrumb))
+        make_header(
+            html,
+            title,
+            breadcrumb=breadcrumb,
+            page_menu=_dashlet_editor_page_menu(breadcrumb),
+        )
 
         vs_general = dashlet_vs_general_settings(dashlet_type, single_infos)
 
-        def dashlet_info_handler(dashlet_spec: DashletConfig) -> List[str]:
+        def dashlet_info_handler(dashlet_spec: DashletConfig) -> SingleInfos:
             assert isinstance(self._ident, int)
             dashlet_type = dashlet_registry[dashlet_spec["type"]]
             dashlet = dashlet_type(self._board, self._dashboard, self._ident, dashlet_spec)
@@ -2038,6 +2057,9 @@ class EditDashletPage(Page):
                     if option not in general_properties and option in dashlet_spec:
                         del dashlet_spec[option]
 
+                if context_specs:
+                    dashlet_spec["context"] = visuals.process_context_specs(context_specs)
+
                 if vs_type:
                     type_properties = vs_type.from_html_vars("type")
                     vs_type.validate_value(type_properties, "type")
@@ -2047,9 +2069,6 @@ class EditDashletPage(Page):
                     # The returned dashlet must be equal to the parameter! It is not replaced/re-added
                     # to the dashboard object. FIXME TODO: Clean this up!
                     dashlet_spec = handle_input_func(self._ident, dashlet_spec)
-
-                if context_specs:
-                    dashlet_spec["context"] = visuals.process_context_specs(context_specs)
 
                 if mode == "add":
                     self._dashboard["dashlets"].append(dashlet_spec)
@@ -2076,6 +2095,7 @@ class EditDashletPage(Page):
         html.end_form()
 
         html.footer()
+        return None
 
 
 def _dashlet_editor_page_menu(breadcrumb: Breadcrumb) -> PageMenu:

@@ -1,0 +1,163 @@
+[MASTER]
+# Windows version of main .pylintrc
+# Disabled cmk plugins based on linux specific modules
+#
+init-hook=
+    import inspect
+    import os
+    import sys
+    config_file = inspect.stack()[2][0].f_locals["linter"].config_file
+    sys.path.insert(0, os.path.dirname(config_file))
+jobs=0
+# pickle collected data for later comparisons. Not used in our CI and makes runs faster
+persistent=no
+extension-pkg-whitelist=rrdtool,_ldap,netifaces,pymssql,pydantic
+bad-functions=unichr,basestring,unicode,file,cmp,apply,execfile,reduce,reload
+
+signature-mutators=cmk.utils.store.with_lock_dict
+
+[MESSAGES CONTROL]
+disable=
+    # Use local suppressions or (even better) refactor the code.
+    import-outside-toplevel,
+    #---------------------------------------------------------------------------
+    # We should really enable this, there could be some real exceptions waiting
+    # to be thrown. But some work is needed first to sprinkle abc annotations
+    # through our code and fix a few obscure places.
+    abstract-method,
+    #---------------------------------------------------------------------------
+    # Enabling this would be very desirable, it vastly improves readability and
+    # it might even be necessary for tools like mypy. Fixing this involves some
+    # amount of relatively easy work, especially if we want to avoid code
+    # duplication (introduce new classes, combine methods, etc.)
+    attribute-defined-outside-init,
+    #---------------------------------------------------------------------------
+    # Enabling these warnings would be nice, they are mostly a sign of sloppy
+    # programming practice. In some cases, they can even hide bugs.
+    broad-except,
+    #---------------------------------------------------------------------------
+    # Enabling this would be nice, but not crucial. Nevertheless, this would
+    # improve readability and involve some cleanups in our class hierarchy, so
+    # we should do this some day.
+    protected-access,
+    #---------------------------------------------------------------------------
+    # Enabling this would be nice, but not crucial. At the moment, we have quite
+    # a few violations, so we postpone fixing this.
+    no-self-use,
+    #---------------------------------------------------------------------------
+    # Enabling this would be nice, but not crucial. At the moment, we have quite
+    # a few violations (about 220 in roughly 40 modules), so we postpone fixing
+    # this. Note that due to our arcane use of types, we need to be very careful
+    # when fixing these warnings!
+    len-as-condition,
+    #---------------------------------------------------------------------------
+    # Enabling this would be nice, but not crucial. At the moment, we have quite
+    # a few violations, so we postpone fixing this. When we do it eventually, we
+    # probably want to use "include-naming-hint=yes" in the BASIC section.
+    invalid-name,
+    #---------------------------------------------------------------------------
+    # We can probably re-enable this if we move __version__ definitions and
+    # conditional imports after the normal imports.
+    wrong-import-position,
+    #---------------------------------------------------------------------------
+    # Enabling this would be nice, but not crucial. At the moment, we have quite
+    # a few violations, so we postpone fixing this.
+    unused-argument,
+    #---------------------------------------------------------------------------
+    # Alas, these maintenance/security nightmares are still part of our base
+    # "technology"... :-/ Nevertheless, reducing their usage is a very worthy
+    # goal.
+    exec-used,
+    global-statement,
+    #---------------------------------------------------------------------------
+    # Enabling these would be nice, but given the current state of affairs
+    # (gigantic modules with deeply nested humungous functions/methods), this
+    # will be a non-trivial amount of work.
+    too-few-public-methods,
+    too-many-arguments,
+    too-many-boolean-expressions,
+    too-many-instance-attributes,
+    too-many-lines,
+    too-many-locals,
+    too-many-nested-blocks,
+    too-many-public-methods,
+    too-many-return-statements,
+    too-many-statements,
+    #---------------------------------------------------------------------------
+    # Enabling these would be nice, but at the moment pylint is a bit too dumb,
+    # so it stumbles over e.g. initialization with None. It ignores control
+    # flow, so even adding e.g. isinstance() guards wouldn't help, see:
+    # https://github.com/PyCQA/pylint/issues/1498.
+    unsubscriptable-object,
+    unsupported-membership-test,
+    #---------------------------------------------------------------------------
+    # Our code is still full of FIXMEs/XXXs/TODOs, perhaps fixing or removing
+    # them might be a good idea some day...
+    fixme,
+    #---------------------------------------------------------------------------
+    # Black doesn't split long strings, we'll have to this by ourselves, see
+    # https://github.com/psf/black/issues/1331
+    line-too-long,
+    #---------------------------------------------------------------------------
+    # We are light years away from enabling this...
+    missing-docstring,
+    #---------------------------------------------------------------------------
+    # Enabling the two spelling-related checks increases pylints runtime from
+    # 11 min to 40 min, so we better keep those disabled for normal runs.
+    # NOTE: If we want to enable one of these checks, we need to add pyenchant
+    # to our dev dependencies.
+    wrong-spelling-in-comment,
+    wrong-spelling-in-docstring,
+    #---------------------------------------------------------------------------
+    # Pylint is full of bugs regarding this, leading to tons of false positives
+    # when pathlib.path is used. Furthermore, the handling of NewTypes is totally
+    # broken, see e.g. https://github.com/PyCQA/pylint/issues/2296 and
+    # https://github.com/PyCQA/pylint/issues/3162.
+    no-member,
+    #---------------------------------------------------------------------------
+    # Lots of warning due to this, but we should really go through them one by
+    # one, this might drastically improve the usefulness of our backtraces.
+    raise-missing-from,
+    #---------------------------------------------------------------------------
+    # pylint 2.7.[012] has totally screwed this up... :-/ Takes ages, too.
+    duplicate-code,
+    R0801,
+    #---------------------------------------------------------------------------
+    # werkzeug's LocalProxy uses slots, so this check doesn't really blend well
+    # with out cmk.gui.globals.
+    assigning-non-slot,
+    #---------------------------------------------------------------------------
+    # Useful, but quite a few findings.
+    use-implicit-booleaness-not-comparison,
+    #---------------------------------------------------------------------------
+    # A stylistic thing only, many findings, but all fixes are mechanical.
+    consider-using-from-import,
+    #---------------------------------------------------------------------------
+    # A good idea in general, but each of the many findings has to be looked at:
+    # We often mutate a dictionary while iterating over it, which is :-P
+    consider-using-dict-items,
+    #---------------------------------------------------------------------------
+    # Purely mechanical & aesthetical, lots of findings.
+    redundant-u-string-prefix,
+    #---------------------------------------------------------------------------
+    # Fixing this is URGENT: There are potentially lots of encoding problems
+    # sleeping in our code when we are not explicit in open().
+    unspecified-encoding,
+    #---------------------------------------------------------------------------
+    # Tons of findings, we fix this incrementally, f-strings are much more
+    # performant than old-skool string splicing/formatting.
+    consider-using-f-string,
+
+[IMPORTS]
+# This complies with PEP 8 and avoids code duplication in some cases.
+allow-wildcard-with-all=yes
+
+[REPORTS]
+msg-template={path}:{line}: [{msg_id}({symbol}), {obj}] {msg}
+
+[FORMAT]
+max-line-length=100
+
+[VARIABLES]
+# Be a little bit more mypy-friendly.
+additional-builtins=reveal_type

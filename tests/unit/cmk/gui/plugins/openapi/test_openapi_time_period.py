@@ -14,7 +14,7 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_time_period(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_time_period(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     _resp = aut_user_auth_wsgi_app.call_method(
@@ -70,7 +70,7 @@ def test_openapi_time_period(aut_user_auth_wsgi_app: WebTestAppForCMK):
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_time_period_collection(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_time_period_collection(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     resp = aut_user_auth_wsgi_app.call_method(
@@ -119,7 +119,7 @@ def test_openapi_time_period_collection(aut_user_auth_wsgi_app: WebTestAppForCMK
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_timeperiod_builtin(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_timeperiod_builtin(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     _resp = aut_user_auth_wsgi_app.call_method(
@@ -138,7 +138,7 @@ def test_openapi_timeperiod_builtin(aut_user_auth_wsgi_app: WebTestAppForCMK):
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_timeperiod_unmodified_update(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_timeperiod_unmodified_update(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     _resp = aut_user_auth_wsgi_app.call_method(
@@ -304,7 +304,7 @@ def test_openapi_timeperiod_unmodified_update(aut_user_auth_wsgi_app: WebTestApp
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_timeperiod_complex_update(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_timeperiod_complex_update(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     _resp = aut_user_auth_wsgi_app.call_method(
@@ -374,7 +374,7 @@ def test_openapi_timeperiod_complex_update(aut_user_auth_wsgi_app: WebTestAppFor
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_timeperiod_excluding_exclude(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_timeperiod_excluding_exclude(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     _resp = aut_user_auth_wsgi_app.call_method(

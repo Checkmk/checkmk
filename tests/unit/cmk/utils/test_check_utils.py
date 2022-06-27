@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.utils.check_utils import ServiceCheckResult
-from cmk.utils.type_defs import HostAddress, HostKey, HostName, SourceType
+from cmk.utils.type_defs import HostKey, HostName, SourceType
 
 
 def test_cluster_received_no_data_no_nodes() -> None:
@@ -18,8 +18,8 @@ def test_cluster_received_no_data_no_nodes() -> None:
 def test_cluster_received_no_data() -> None:
     assert ServiceCheckResult.cluster_received_no_data(
         [
-            HostKey(HostName("node1"), HostAddress("1.2.3.4"), SourceType.HOST),
-            HostKey(HostName("node2"), HostAddress("1.2.3.4"), SourceType.HOST),
+            HostKey(HostName("node1"), SourceType.HOST),
+            HostKey(HostName("node2"), SourceType.HOST),
         ]
     ) == ServiceCheckResult(
         3,

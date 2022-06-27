@@ -5,13 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-
-from agent_receiver.constants import LOG_FILE
-
-handler = logging.FileHandler(LOG_FILE, encoding="UTF-8")
-formatter = logging.Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s")
-handler.setFormatter(formatter)
+import pathlib
 
 logger = logging.getLogger("agent-receiver")
-logger.addHandler(handler)
-logger.setLevel(logging.INFO)
+
+
+def configure_logger(path: pathlib.Path) -> None:
+    handler = logging.FileHandler(path, encoding="UTF-8")
+    formatter = logging.Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)

@@ -7,7 +7,8 @@
 import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
 import cmk.gui.user_sites as user_sites
-from cmk.gui.globals import html
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.plugins.sidebar.utils import SidebarSnapin, snapin_registry, snapin_site_choice
 
@@ -23,7 +24,7 @@ class Performance(SidebarSnapin):
         return _("Server performance")
 
     @classmethod
-    def has_show_more_items(cls):
+    def has_show_more_items(cls) -> bool:
         return True
 
     @classmethod
@@ -40,7 +41,7 @@ class Performance(SidebarSnapin):
         def write_line(left, right, show_more):
             html.open_tr(class_="show_more_mode" if show_more else "basic")
             html.td(left, class_="left")
-            html.td(html.render_strong(right), class_="right")
+            html.td(HTMLWriter.render_strong(right), class_="right")
             html.close_tr()
 
         html.open_table(class_=["performance"])
@@ -74,8 +75,8 @@ class Performance(SidebarSnapin):
                 )
             finally:
                 sites.live().set_only_sites(None)
-            size = sum([row[0] for row in data])
-            maxx = sum([row[1] for row in data])
+            size = sum(row[0] for row in data)
+            maxx = sum(row[1] for row in data)
             write_line(_("Com. buf. max/total"), "%d / %d" % (maxx, size), show_more=True)
 
         html.close_table()

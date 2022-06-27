@@ -24,7 +24,7 @@ def agent_hivemanager_ng_arguments(
         params["vhm_id"],
         params["api_token"],
         params["client_id"],
-        params["client_secret"],
+        passwordstore_get_cmdline("%s", params["client_secret"]),
         params["redirect_url"],
     ]
 

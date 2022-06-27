@@ -4,17 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import dataclass
-from typing import Callable, Sequence
+from typing import Optional
 
 import pytest
 from pytest_mock import MockerFixture
 
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs.pluginname import CheckPluginName
 
-from cmk.base.api.agent_based.checking_classes import Service, ServiceLabel
+from cmk.base.api.agent_based.checking_classes import ServiceLabel
 from cmk.base.plugin_contexts import current_host, current_service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
+from cmk.base.plugins.agent_based.gcp_assets import parse_assets
 from cmk.base.plugins.agent_based.gcp_function import (
     check_gcp_function_execution,
     check_gcp_function_instances,
@@ -24,26 +29,12 @@ from cmk.base.plugins.agent_based.gcp_function import (
 )
 from cmk.base.plugins.agent_based.utils import gcp
 
-SECTION_TABLE = [
-    [
-        '{"metric":{"type":"cloudfunctions.googleapis.com/function/execution_count","labels":{}},"resource":{"type":"cloud_function","labels":{"project_id":"backup-255820","function_name":"function-2"}},"metricKind":1,"valueType":3,"points":[{"interval":{"startTime":"2022-02-23T12:27:27.205842Z","endTime":"2022-02-23T12:27:27.205842Z"},"value":{"doubleValue":0.016666666666666666}},{"interval":{"startTime":"2022-02-23T12:26:27.205842Z","endTime":"2022-02-23T12:26:27.205842Z"},"value":{"doubleValue":0.06666666666666667}}],"unit":""}'
-    ],
-    [
-        '{"metric":{"type":"cloudfunctions.googleapis.com/function/user_memory_bytes","labels":{}},"resource":{"type":"cloud_function","labels":{"project_id":"backup-255820","function_name":"function-2"}},"metricKind":1,"valueType":3,"points":[{"interval":{"startTime":"2022-02-23T12:27:27.205842Z","endTime":"2022-02-23T12:27:27.205842Z"},"value":{"doubleValue":63722624.968750365}}],"unit":""}'
-    ],
-    [
-        '{"metric":{"type":"cloudfunctions.googleapis.com/function/execution_times","labels":{}},"resource":{"type":"cloud_function","labels":{"project_id":"backup-255820","function_name":"function-2"}},"metricKind":1,"valueType":3,"points":[{"interval":{"startTime":"2022-02-23T12:26:27.205842Z","endTime":"2022-02-23T12:26:27.205842Z"},"value":{"doubleValue":77468035.78821974}}],"unit":""}'
-    ],
-    [
-        '{"metric":{"type":"cloudfunctions.googleapis.com/function/active_instances","labels":{}},"resource":{"type":"cloud_function","labels":{"project_id":"backup-255820","function_name":"function-2"}},"metricKind":1,"valueType":2,"points":[{"interval":{"startTime":"2022-02-23T12:27:27.205842Z","endTime":"2022-02-23T12:27:27.205842Z"},"value":{"int64Value":"3"}}],"unit":""}'
-    ],
-    [
-        '{"metric":{"type":"cloudfunctions.googleapis.com/function/active_instances","labels":{}},"resource":{"type":"cloud_function","labels":{"project_id":"backup-255820","function_name":"function-3"}},"metricKind":1,"valueType":2,"points":[{"interval":{"startTime":"2022-02-23T12:27:27.205842Z","endTime":"2022-02-23T12:27:27.205842Z"},"value":{"int64Value":"3"}}],"unit":""}'
-    ],
-]
+from cmk.special_agents.agent_gcp import FUNCTIONS
+
+from .gcp_test_util import DiscoverTester, generate_timeseries, Plugin
 
 ASSET_TABLE = [
-    ['{"project":"backup-255820"}'],
+    [f'{{"project":"backup-255820", "config": ["{FUNCTIONS.name}"]}}'],
     [
         '{"name": "//cloudfunctions.googleapis.com/projects/backup-255820/locations/us-central1/functions/function-1", "asset_type": "cloudfunctions.googleapis.com/CloudFunction", "resource": {"version": "v1", "discovery_document_uri": "https://cloudfunctions.googleapis.com/$discovery/rest", "discovery_name": "CloudFunction", "parent": "//cloudresourcemanager.googleapis.com/projects/360989076580", "data": {"dockerRegistry": "CONTAINER_REGISTRY", "timeout": "60s", "updateTime": "2022-02-07T20:37:20.735Z", "serviceAccountEmail": "backup-255820@appspot.gserviceaccount.com", "name": "projects/backup-255820/locations/us-central1/functions/function-1", "buildId": "bbbb3f80-54e4-4460-b10d-d7b912cd6b57", "status": "ACTIVE", "availableMemoryMb": 256.0, "entryPoint": "hello_world", "httpsTrigger": {"url": "https://us-central1-backup-255820.cloudfunctions.net/function-1", "securityLevel": "SECURE_ALWAYS"}, "versionId": "1", "ingressSettings": "ALLOW_ALL", "runtime": "python37", "buildName": "projects/360989076580/locations/us-central1/builds/bbbb3f80-54e4-4460-b10d-d7b912cd6b57", "maxInstances": 3000.0, "labels": {"deployment-tool": "console-cloud"}, "sourceUploadUrl": "https://storage.googleapis.com/gcf-upload-us-central1-bab35793-a665-4418-b5e0-d1e9495d23d7/a9c82954-5087-4655-9656-04c7cdb2410e.zip?GoogleAccessId=service-360989076580@gcf-admin-robot.iam.gserviceaccount.com&Expires=1644267947&Signature=z4UoLtkcqj3Y3Vo3cMgL0IZIJowhg5NrSsyS2O2wuLT%2BkjXRFxj%2BFWyeovp3YWG%2Fw3TbB1nS1Aq3uyIRjtlB4aVI%2FgfLxDeHwuoH7gx2EiULukSxT8YztuqNQmdlw67mWG%2FUbcxVpHSFrv%2FPqX6QJLd9IpqnAvs9wu5IiBriWJnImBqAQNJF9Lw%2FEz4QutK7fDUWNwiRSjnvEEByRTPLu14d%2FZxSG3wbikDdCmGibHFEMCd6KKjl%2FxLPkLH68SQczKwePwtx9nrRaaXEBwKNt4S0Omk8tjfaJSljbVrRmsfENpDUpvMUoGXa3SCXYujQOXPccWZLCLTPumf6vcSszw%3D%3D"}, "location": "us-central1", "resource_url": ""}, "ancestors": ["projects/360989076580"], "update_time": "2022-02-08T00:40:50.926703Z", "org_policy": []}'
     ],
@@ -56,121 +47,63 @@ ASSET_TABLE = [
 ]
 
 
-def test_parse_gcp():
-    section = parse_gcp_function(SECTION_TABLE)
-    n_rows = sum(len(i.rows) for i in section.values())
-    # first row contains general section information and no metrics
-    assert n_rows == len(SECTION_TABLE)
+class TestDiscover(DiscoverTester):
+    @property
+    def _assets(self) -> StringTable:
+        return ASSET_TABLE
+
+    @property
+    def expected_services(self) -> set[str]:
+        return {"function-1", "function-2", "function-3"}
+
+    @property
+    def expected_labels(self) -> set[ServiceLabel]:
+        return {
+            ServiceLabel("gcp/location", "us-central1"),
+            ServiceLabel("gcp/function/name", "function-1"),
+            ServiceLabel("gcp/projectId", "backup-255820"),
+        }
+
+    def discover(self, assets: Optional[gcp.AssetSection]) -> DiscoveryResult:
+        yield from discover(section_gcp_service_cloud_functions=None, section_gcp_assets=assets)
 
 
-@pytest.fixture(name="asset_section")
-def fixture_asset_section():
-    return gcp.parse_assets(ASSET_TABLE)
-
-
-@pytest.fixture(name="functions")
-def fixture_functions(asset_section):
-    return list(
-        discover(section_gcp_service_cloud_functions=None, section_gcp_assets=asset_section)
-    )
-
-
-def test_no_asset_section_yields_no_service():
-    assert (
-        len(list(discover(section_gcp_service_cloud_functions=None, section_gcp_assets=None))) == 0
-    )
-
-
-def test_discover_all_functions(functions: Sequence[Service]):
-    assert {b.item for b in functions} == {"function-1", "function-2", "function-3"}
-
-
-def test_discover_project_labels(functions: Sequence[Service]):
-    for fun in functions:
-        assert ServiceLabel("gcp/projectId", "backup-255820") in fun.labels
-
-
-def test_discover_function_labels(functions: Sequence[Service]):
-    labels = functions[0].labels
-    assert set(labels) == {
-        ServiceLabel("gcp/location", "us-central1"),
-        ServiceLabel("gcp/function/name", "function-1"),
-        ServiceLabel("gcp/projectId", "backup-255820"),
-    }
-
-
-@dataclass(frozen=True)
-class Plugin:
-    metrics: Sequence[str]
-    function: Callable
-
-
-PLUGINS = [
-    Plugin(
-        function=check_gcp_function_network,
-        metrics=[
-            "net_data_sent",
-        ],
-    ),
-    Plugin(
-        function=check_gcp_function_execution,
-        metrics=["faas_execution_count", "aws_lambda_memory_size_absolute", "faas_execution_times"],
-    ),
-    Plugin(
-        function=check_gcp_function_instances,
-        metrics=[
-            "faas_total_instance_count",
-            "faas_active_instance_count",
-        ],
-    ),
-]
-ITEM = "function-3"
-
-
-@pytest.fixture(name="section")
-def fixture_section():
-    return parse_gcp_function(SECTION_TABLE)
-
-
-@pytest.fixture(params=PLUGINS, name="checkplugin")
-def fixture_checkplugin(request):
-    return request.param
-
-
-@pytest.fixture(
-    params=[None, {"levels_upper": (0, 1), "horizon": 1, "period": "day"}], name="params"
-)
-def fixture_params(request):
-    return request.param
-
-
-@pytest.fixture(name="results")
-def fixture_results(checkplugin, section, params, mocker: MockerFixture):
-    params = {k: params for k in checkplugin.metrics}
-    mocker.patch(
-        "cmk.base.check_api._prediction.get_levels", return_value=(None, (2.2, 4.2, None, None))
-    )
-
-    with current_host("unittest"), current_service(
-        CheckPluginName("test_check"), "unittest-service-description"
-    ):
-        results = list(
-            checkplugin.function(
-                item=ITEM,
-                params=params,
-                section_gcp_service_cloud_functions=section,
-                section_gcp_assets=None,
-            )
+def test_zero_default_if_metric_does_not_exist() -> None:
+    item = "some_function"
+    metrics = (
+        el
+        for el in check_gcp_function_network(
+            item=item,
+            params={"net_data_sent": None},
+            section_gcp_service_cloud_functions={item: gcp.SectionItem(rows=[])},
+            section_gcp_assets=None,
         )
-    return results, checkplugin
+        if isinstance(el, Metric)
+    )
+    for metric in metrics:
+        assert metric.value == 0.0
 
 
-def test_no_function_section_yields_no_metric_data(checkplugin):
-    params = {k: None for k in checkplugin.metrics}
+def test_zero_default_if_item_does_not_exist() -> None:
+    metrics = (
+        el
+        for el in check_gcp_function_network(
+            item="does_not_exist",
+            params={"net_data_sent": None},
+            section_gcp_service_cloud_functions={},
+            section_gcp_assets=None,
+        )
+        if isinstance(el, Metric)
+    )
+    for metric in metrics:
+        assert metric.value == 0.0
+
+
+def test_no_function_section_yields_no_metric_data() -> None:
     results = list(
-        checkplugin.function(
-            item=ITEM,
-            params=params,
+        check_gcp_function_network(
+            item="no_data_anyway",
+            params={"net_data_sent": None},
             section_gcp_service_cloud_functions=None,
             section_gcp_assets=None,
         )
@@ -178,81 +111,144 @@ def test_no_function_section_yields_no_metric_data(checkplugin):
     assert len(results) == 0
 
 
-def test_yield_metrics_as_specified(results):
-    results, checkplugin = results
-    res = {r.name: r for r in results if isinstance(r, Metric)}
-    assert len(res) == len(checkplugin.metrics)
-    assert set(res.keys()) == set(checkplugin.metrics)
+def test_warn_settings_in_check() -> None:
+    item = "item"
+    section = parse_gcp_function(generate_timeseries(item, 42.0, FUNCTIONS))
+    results = [
+        r
+        for r in check_gcp_function_network(
+            item=item,
+            params={"net_data_sent": (20, 50)},
+            section_gcp_service_cloud_functions=section,
+            section_gcp_assets=None,
+        )
+        if isinstance(r, Result)
+    ]
+    for r in results:
+        assert r.state == State.WARN
 
 
-def test_yield_results_as_specified(results):
-    results, checkplugin = results
+def test_crit_settings_in_check() -> None:
+    item = "item"
+    section = parse_gcp_function(generate_timeseries(item, 42.0, FUNCTIONS))
+    results = [
+        r
+        for r in check_gcp_function_network(
+            item=item,
+            params={"net_data_sent": (20, 40)},
+            section_gcp_service_cloud_functions=section,
+            section_gcp_assets=None,
+        )
+        if isinstance(r, Result)
+    ]
+    for r in results:
+        assert r.state == State.CRIT
+
+
+def test_missing_item() -> None:
+    item = "item"
+    section = parse_gcp_function(generate_timeseries(item, 42.0, FUNCTIONS))
+    results = list(
+        check_gcp_function_network(
+            item=item,
+            params={"net_data_sent": (20, 40)},
+            section_gcp_service_cloud_functions=section,
+            section_gcp_assets=parse_assets(
+                [
+                    [f'{{"project":"backup-255820", "config": ["{FUNCTIONS.name}"]}}'],
+                    [
+                        '{"name": "//cloudfunctions.googleapis.com/projects/backup-255820/locations/us-central1/functions/function-1", "asset_type": "cloudfunctions.googleapis.com/CloudFunction", "resource": {"version": "v1", "discovery_document_uri": "https://cloudfunctions.googleapis.com/$discovery/rest", "discovery_name": "CloudFunction", "parent": "//cloudresourcemanager.googleapis.com/projects/360989076580", "data": {"dockerRegistry": "CONTAINER_REGISTRY", "timeout": "60s", "updateTime": "2022-02-07T20:37:20.735Z", "serviceAccountEmail": "backup-255820@appspot.gserviceaccount.com", "name": "projects/backup-255820/locations/us-central1/functions/function-1", "buildId": "bbbb3f80-54e4-4460-b10d-d7b912cd6b57", "status": "ACTIVE", "availableMemoryMb": 256.0, "entryPoint": "hello_world", "httpsTrigger": {"url": "https://us-central1-backup-255820.cloudfunctions.net/function-1", "securityLevel": "SECURE_ALWAYS"}, "versionId": "1", "ingressSettings": "ALLOW_ALL", "runtime": "python37", "buildName": "projects/360989076580/locations/us-central1/builds/bbbb3f80-54e4-4460-b10d-d7b912cd6b57", "maxInstances": 3000.0, "labels": {"deployment-tool": "console-cloud"}, "sourceUploadUrl": "https://storage.googleapis.com/gcf-upload-us-central1-bab35793-a665-4418-b5e0-d1e9495d23d7/a9c82954-5087-4655-9656-04c7cdb2410e.zip?GoogleAccessId=service-360989076580@gcf-admin-robot.iam.gserviceaccount.com&Expires=1644267947&Signature=z4UoLtkcqj3Y3Vo3cMgL0IZIJowhg5NrSsyS2O2wuLT%2BkjXRFxj%2BFWyeovp3YWG%2Fw3TbB1nS1Aq3uyIRjtlB4aVI%2FgfLxDeHwuoH7gx2EiULukSxT8YztuqNQmdlw67mWG%2FUbcxVpHSFrv%2FPqX6QJLd9IpqnAvs9wu5IiBriWJnImBqAQNJF9Lw%2FEz4QutK7fDUWNwiRSjnvEEByRTPLu14d%2FZxSG3wbikDdCmGibHFEMCd6KKjl%2FxLPkLH68SQczKwePwtx9nrRaaXEBwKNt4S0Omk8tjfaJSljbVrRmsfENpDUpvMUoGXa3SCXYujQOXPccWZLCLTPumf6vcSszw%3D%3D"}, "location": "us-central1", "resource_url": ""}, "ancestors": ["projects/360989076580"], "update_time": "2022-02-08T00:40:50.926703Z", "org_policy": []}'
+                    ],
+                ]
+            ),
+        )
+    )
+    assert len(results) == 0
+
+
+def test_predictive_checks(mocker: MockerFixture) -> None:
+    item = "item"
+    section = parse_gcp_function(generate_timeseries(item, 42.0, FUNCTIONS))
+    mocker.patch(
+        "cmk.base.check_api._prediction.get_levels", return_value=(None, (20, 50, None, None))
+    )
+    with current_host("unittest"), current_service(CheckPluginName("test"), item):
+        results = list(
+            check_gcp_function_network(
+                item=item,
+                params={"net_data_sent": {"levels_upper": (0, 1), "horizon": 1, "period": "day"}},
+                section_gcp_service_cloud_functions=section,
+                section_gcp_assets=None,
+            )
+        )
     res = [r for r in results if isinstance(r, Result)]
-    assert len(res) == len(checkplugin.metrics)
     for r in res:
-        assert r.state == State.OK
+        assert r.state == State.WARN
 
 
-class TestDefaultMetricValues:
-    # requests does not contain example data
-    def test_zero_default_if_metric_does_not_exist(self, section):
-        params = {k: None for k in ["faas_total_instance_count", "faas_active_instance_count"]}
-        results = (
-            el
-            for el in check_gcp_function_instances(
-                item=ITEM,
-                params=params,
-                section_gcp_service_cloud_functions=section,
-                section_gcp_assets=None,
-            )
-            if isinstance(el, Metric)
-        )
-        for result in results:
-            assert result.value == 0.0
+PLUGINS = [
+    pytest.param(
+        Plugin(
+            function=check_gcp_function_network,
+            metrics=["net_data_sent"],
+            results=[Result(state=State.OK, summary="Out: 336 Bit/s")],
+        ),
+        id="network",
+    ),
+    pytest.param(
+        Plugin(
+            function=check_gcp_function_execution,
+            metrics=[
+                "faas_execution_count",
+                "aws_lambda_memory_size_absolute",
+                "faas_execution_times",
+            ],
+            results=[
+                Result(state=State.OK, summary="Executions count: 42.0"),
+                Result(state=State.OK, summary="Memory: 42 B"),
+                Result(state=State.OK, summary="Execution times: 42 nanoseconds"),
+            ],
+        ),
+        id="execution",
+    ),
+    pytest.param(
+        Plugin(
+            function=check_gcp_function_instances,
+            metrics=["faas_total_instance_count", "faas_active_instance_count"],
+            results=[
+                Result(state=State.OK, summary="Instances: 42.0"),
+                Result(state=State.OK, summary="Active instances: 42.0"),
+            ],
+        ),
+        id="instances",
+    ),
+]
 
-    def test_zero_default_if_item_does_not_exist(self, section, checkplugin: Plugin):
-        params = {k: None for k in checkplugin.metrics}
-        results = (
-            el
-            for el in checkplugin.function(
-                item="no I do not exist",
-                params=params,
-                section_gcp_service_cloud_functions=section,
-                section_gcp_assets=None,
-            )
-            if isinstance(el, Metric)
-        )
-        for result in results:
-            assert result.value == 0.0
+
+def generate_results(plugin: Plugin) -> CheckResult:
+    item = "item"
+    asset_table = [
+        [f'{{"project":"backup-255820", "config": ["{FUNCTIONS.name}"]}}'],
+        [
+            f'{{"name": "//cloudfunctions.googleapis.com/projects/backup-255820/locations/us-central1/functions/function-1", "asset_type": "cloudfunctions.googleapis.com/CloudFunction", "resource": {{"version": "v1", "discovery_document_uri": "https://cloudfunctions.googleapis.com/$discovery/rest", "discovery_name": "CloudFunction", "parent": "//cloudresourcemanager.googleapis.com/projects/360989076580", "data": {{"dockerRegistry": "CONTAINER_REGISTRY", "timeout": "60s", "updateTime": "2022-02-07T20:37:20.735Z", "serviceAccountEmail": "backup-255820@appspot.gserviceaccount.com", "name": "projects/backup-255820/locations/us-central1/functions/{item}", "buildId": "bbbb3f80-54e4-4460-b10d-d7b912cd6b57", "status": "ACTIVE", "availableMemoryMb": 256.0, "entryPoint": "hello_world", "httpsTrigger": {{"url": "https://us-central1-backup-255820.cloudfunctions.net/function-1", "securityLevel": "SECURE_ALWAYS"}}, "versionId": "1", "ingressSettings": "ALLOW_ALL", "runtime": "python37", "buildName": "projects/360989076580/locations/us-central1/builds/bbbb3f80-54e4-4460-b10d-d7b912cd6b57", "maxInstances": 3000.0, "labels": {{"deployment-tool": "console-cloud"}}, "sourceUploadUrl": "https://storage.googleapis.com/gcf-upload-us-central1-bab35793-a665-4418-b5e0-d1e9495d23d7/a9c82954-5087-4655-9656-04c7cdb2410e.zip?GoogleAccessId=service-360989076580@gcf-admin-robot.iam.gserviceaccount.com&Expires=1644267947&Signature=z4UoLtkcqj3Y3Vo3cMgL0IZIJowhg5NrSsyS2O2wuLT%2BkjXRFxj%2BFWyeovp3YWG%2Fw3TbB1nS1Aq3uyIRjtlB4aVI%2FgfLxDeHwuoH7gx2EiULukSxT8YztuqNQmdlw67mWG%2FUbcxVpHSFrv%2FPqX6QJLd9IpqnAvs9wu5IiBriWJnImBqAQNJF9Lw%2FEz4QutK7fDUWNwiRSjnvEEByRTPLu14d%2FZxSG3wbikDdCmGibHFEMCd6KKjl%2FxLPkLH68SQczKwePwtx9nrRaaXEBwKNt4S0Omk8tjfaJSljbVrRmsfENpDUpvMUoGXa3SCXYujQOXPccWZLCLTPumf6vcSszw%3D%3D"}}, "location": "us-central1", "resource_url": ""}}, "ancestors": ["projects/360989076580"], "update_time": "2022-02-08T00:40:50.926703Z", "org_policy": []}}'
+        ],
+    ]
+    section = parse_gcp_function(generate_timeseries(item, 42.0, FUNCTIONS))
+    yield from plugin.function(
+        item=item,
+        params={k: None for k in plugin.metrics},
+        section_gcp_service_cloud_functions=section,
+        section_gcp_assets=parse_assets(asset_table),
+    )
 
 
-class TestConfiguredNotificationLevels:
-    # In the example sections we do not have data for all metrics. To be able to test all check plugins
-    # use 0, the default value, to check notification levels.
-    def test_warn_levels(self, checkplugin, section):
-        params = {k: (0, None) for k in checkplugin.metrics}
-        results = list(
-            checkplugin.function(
-                item=ITEM,
-                params=params,
-                section_gcp_service_cloud_functions=section,
-                section_gcp_assets=None,
-            )
-        )
-        results = [r for r in results if isinstance(r, Result)]
-        for r in results:
-            assert r.state == State.WARN
+@pytest.mark.parametrize("plugin", PLUGINS)
+def test_yield_results_as_specified(plugin) -> None:
+    results = {r for r in generate_results(plugin) if isinstance(r, Result)}
+    assert results == set(plugin.results)
 
-    def test_crit_levels(self, checkplugin, section):
-        params = {k: (None, 0) for k in checkplugin.metrics}
-        results = list(
-            checkplugin.function(
-                item=ITEM,
-                params=params,
-                section_gcp_service_cloud_functions=section,
-                section_gcp_assets=None,
-            )
-        )
-        results = [r for r in results if isinstance(r, Result)]
-        for r in results:
-            assert r.state == State.CRIT
+
+@pytest.mark.parametrize("plugin", PLUGINS)
+def test_yield_metrics_as_specified(plugin) -> None:
+    results = {r.name for r in generate_results(plugin) if isinstance(r, Metric)}
+    assert results == set(plugin.metrics)

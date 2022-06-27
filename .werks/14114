@@ -1,0 +1,13 @@
+Title: Fix missing documentation URL in aggregation views
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1652791819
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+If configured, the documentation URL was not shown in front of the aggregation
+title.

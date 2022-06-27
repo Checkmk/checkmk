@@ -2,7 +2,7 @@ RRDTOOL := rrdtool
 RRDTOOL_VERS := 1.7.2
 RRDTOOL_DIR := $(RRDTOOL)-$(RRDTOOL_VERS)
 # Increase this to enforce a recreation of the build cache
-RRDTOOL_BUILD_ID := 2
+RRDTOOL_BUILD_ID := 3
 
 RRDTOOL_PATCHING := $(BUILD_HELPER_DIR)/$(RRDTOOL_DIR)-patching
 RRDTOOL_CONFIGURE := $(BUILD_HELPER_DIR)/$(RRDTOOL_DIR)-configure

@@ -32,6 +32,7 @@ from cmk.base.plugins.agent_based.utils.kube import (
                 name="name",
                 creation_timestamp=1600000000.0,
                 labels={},
+                annotations={},
                 node="minikube",
                 host_network=None,
                 dns_policy="ClusterFirst",
@@ -92,6 +93,7 @@ from cmk.base.plugins.agent_based.utils.kube import (
                 Attributes(
                     path=["software", "applications", "kube", "metadata"],
                     inventory_attributes={
+                        "object": "Pod",
                         "name": "name",
                         "namespace": "default",
                     },
@@ -269,7 +271,7 @@ def test_container_to_table(
     )
 
 
-def test_inventory_kube_pod_calls_labels_to_table(mocker):
+def test_inventory_kube_pod_calls_labels_to_table(mocker) -> None:
     """Test coverage and uniform look across inventories relies on the inventories calling
     labels_to_table."""
 

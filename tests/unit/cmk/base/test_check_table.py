@@ -15,14 +15,20 @@ from _pytest.monkeypatch import MonkeyPatch
 from tests.testlib.base import Scenario
 
 from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
-from cmk.utils.type_defs import CheckPluginName, HostName, LegacyCheckParameters
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    HostName,
+    LegacyCheckParameters,
+    RuleSetName,
+    ServiceID,
+)
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import check_table, config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.autochecks import AutocheckEntry
 from cmk.base.check_table import HostCheckTable
-from cmk.base.check_utils import ConfiguredService, ServiceID
+from cmk.base.check_utils import ConfiguredService
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -35,7 +41,7 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
     node = HostName("node")
     cluster = HostName("cluster")
 
-    service_id = CheckPluginName("smart_temp"), "auto-clustered"
+    service_id = ServiceID(CheckPluginName("smart_temp"), "auto-clustered")
 
     ts = Scenario()
     ts.add_host("node")
@@ -387,7 +393,7 @@ def test_get_check_table__static_checks_win(monkeypatch: MonkeyPatch) -> None:
     # assert check table is populated as expected
     assert len(chk_table) == 1
     # assert static checks won
-    effective_params = chk_table[(plugin_name, item)].parameters.evaluate(lambda _: True)
+    effective_params = chk_table[ServiceID(plugin_name, item)].parameters.evaluate(lambda _: True)
     assert effective_params["source"] == "static"  # type: ignore[index,call-overload]
 
 
@@ -430,22 +436,22 @@ def test_check_table__get_static_check_entries(
             CheckPluginName("ps"),
             [],
             "Process item",
-            None,  # type: ignore
-            None,  # type: ignore
-            None,  # type: ignore
-            None,  # type: ignore
-            None,  # type: ignore
+            lambda: [],
+            None,
+            None,
+            "merged",
+            lambda: [],
             {},
-            "ps",  # type: ignore
-            None,  # type: ignore
-            None,  # type: ignore
+            RuleSetName("ps"),
+            None,
+            None,
         ),
     )
 
     host_config = config_cache.get_host_config(hostname)
     static_check_parameters = [
         service.parameters
-        for service in check_table._get_static_check_entries(config_cache, host_config)
+        for service in check_table._get_enforced_services(config_cache, host_config)
     ]
 
     entries = config._get_checkgroup_parameters(

@@ -79,11 +79,11 @@ Remaining reserve space : 0
 
 
 def test_discovery(discover_megaraid_bbu, section) -> None:
-    assert list(discover_megaraid_bbu(section)) == [Service(item="0")]
+    assert list(discover_megaraid_bbu(section)) == [Service(item="/c0")]
 
 
 def test_check_ok(check_megaraid_bbu, section) -> None:
-    assert list(check_megaraid_bbu("0", section)) == [
+    assert list(check_megaraid_bbu("/c0", section)) == [
         Result(
             state=State.OK,
             summary="Charge: not reported for this controller",
@@ -97,7 +97,7 @@ def test_check_ok(check_megaraid_bbu, section) -> None:
 
 def test_check_low_cap(check_megaraid_bbu, section) -> None:
     section["0"]["Remaining Capacity Low"] = "Yes"
-    assert list(check_megaraid_bbu("0", section)) == [
+    assert list(check_megaraid_bbu("/c0", section)) == [
         Result(
             state=State.OK,
             summary="Charge: not reported for this controller",

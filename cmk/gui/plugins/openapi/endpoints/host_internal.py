@@ -8,6 +8,7 @@
 WARNING: Use at your own risk, not supported.
 """
 
+from typing import Any, Literal, Mapping
 from uuid import UUID
 
 from cmk.utils.agent_registration import get_uuid_link_manager
@@ -15,20 +16,31 @@ from cmk.utils.type_defs import HostName
 
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import Response
-from cmk.gui.plugins.openapi.endpoints.utils import may_fail
+from cmk.gui.plugins.openapi.endpoints.utils import ProblemException
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
     permissions,
     request_schemas,
+    response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.watolib.hosts_and_folders import CREHost, Host
 
 
-def _check_host_editing_permissions(host_name: HostName) -> CREHost:
+def _check_host_access_permissions(
+    host_name: HostName,
+    *,
+    access_type: Literal["read", "write"],
+) -> CREHost:
     host = Host.load_host(host_name)
-    host.need_permission("write")
+    try:
+        host.need_permission(access_type)
+    except MKAuthException:
+        raise ProblemException(
+            status=401,
+            title=f"You do not have {access_type} access to the host {host_name}",
+        )
     return host
 
 
@@ -47,7 +59,7 @@ def _link_with_uuid(
 
 @Endpoint(
     constructors.object_action_href(
-        "host_config",
+        "host_config_internal",
         "{host_name}",
         action_name="link_uuid",
     ),
@@ -60,16 +72,52 @@ def _link_with_uuid(
     },
     path_params=[HOST_NAME],
     request_schema=request_schemas.LinkHostUUID,
-    permissions_required=permissions.Perm("wato.all_folders"),
+    permissions_required=permissions.AnyPerm(
+        [
+            permissions.Perm("wato.all_folders"),
+            permissions.Perm("wato.edit_hosts"),
+        ]
+    ),
     output_empty=True,
 )
-def link_with_uuid(params) -> Response:
+def link_with_uuid(params: Mapping[str, Any]) -> Response:
     """Link a host to a UUID"""
-    with may_fail(MKAuthException):
-        host = _check_host_editing_permissions(host_name := params["host_name"])
     _link_with_uuid(
-        host_name,
-        host,
+        host_name := params["host_name"],
+        _check_host_access_permissions(
+            host_name,
+            access_type="write",
+        ),
         params["body"]["uuid"],
     )
     return Response(status=204)
+
+
+@Endpoint(
+    constructors.object_href(
+        "host_config_internal",
+        "{host_name}",
+    ),
+    "cmk/show",
+    method="get",
+    tag_group="Checkmk Internal",
+    additional_status_codes=[401],
+    status_descriptions={
+        401: "You do not have read access to this host.",
+    },
+    path_params=[HOST_NAME],
+    response_schema=response_schemas.HostConfigSchemaInternal,
+    permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
+)
+def show_host(params: Mapping[str, Any]) -> Response:
+    """Show a host"""
+    host = _check_host_access_permissions(
+        params["host_name"],
+        access_type="read",
+    )
+    return constructors.serve_json(
+        {
+            "site": host.site_id(),
+            "is_cluster": host.is_cluster(),
+        }
+    )

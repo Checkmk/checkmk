@@ -12,9 +12,9 @@ from _pytest.monkeypatch import MonkeyPatch
 from cmk.utils.tags import TagConfig
 from cmk.utils.type_defs import TagConditionNE, TaggroupID, TagID
 
-import cmk.gui.watolib as watolib
-from cmk.gui.htmllib import HTML
+from cmk.gui.utils.html import HTML
 from cmk.gui.wato.pages.rulesets import active_config, RuleConditionRenderer
+from cmk.gui.watolib.hosts_and_folders import Folder, Host
 
 
 @pytest.fixture(name="tag_config")
@@ -97,13 +97,13 @@ def patch_tag_config(
 @pytest.fixture(name="folder_lookup")
 def fixture_folder_lookup(mocker):
     folder_cache = {"cached_host": "cached_host_value"}
-    mocker.patch.object(watolib.Folder, "get_folder_lookup_cache", return_value=folder_cache)
+    mocker.patch.object(Folder, "get_folder_lookup_cache", return_value=folder_cache)
 
     class MockHost:
         def edit_url(self):
             return "cached_host_url"
 
-    mocker.patch.object(watolib.Host, "host", return_value=MockHost())
+    mocker.patch.object(Host, "host", return_value=MockHost())
 
 
 class TestRuleConditionRenderer:
@@ -297,7 +297,7 @@ class TestRuleConditionRenderer:
             ),
         ],
     )
-    def test_render_host_condition_text_raises(self, folder_lookup, conditions, exception):
+    def test_render_host_condition_text_raises(self, folder_lookup, conditions, exception) -> None:
         with pytest.raises(exception):
             assert RuleConditionRenderer()._render_host_condition_text(conditions)
 
@@ -408,7 +408,7 @@ class TestRuleConditionRenderer:
             ),
         ],
     )
-    def test_service_conditions(self, item_type, item_name, conditions, expected):
+    def test_service_conditions(self, item_type, item_name, conditions, expected) -> None:
         assert (
             list(RuleConditionRenderer()._service_conditions(item_type, item_name, conditions))
             == expected

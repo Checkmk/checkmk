@@ -163,6 +163,9 @@
     <ClCompile Include="test-section_agent_plugins.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test-section_perf_cpuload.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">

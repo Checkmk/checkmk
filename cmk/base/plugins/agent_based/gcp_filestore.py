@@ -17,18 +17,19 @@ def parse(string_table: StringTable) -> gcp.Section:
 
 register.agent_section(name="gcp_service_filestore", parse_function=parse)
 
+service_namer = gcp.service_name_factory("Filestore")
+ASSET_TYPE = "file.googleapis.com/Instance"
+
 
 def discover(
     section_gcp_service_filestore: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> DiscoveryResult:
-    if section_gcp_assets is None:
+    if section_gcp_assets is None or not section_gcp_assets.config.is_enabled("filestore"):
         return
-    asset_type = "file.googleapis.com/Instance"
-    shares = [a for a in section_gcp_assets if a.asset.asset_type == asset_type]
-    for share in shares:
+    shares = section_gcp_assets[ASSET_TYPE]
+    for item, share in shares.items():
         data = share.asset.resource.data
-        item = data["name"].split("/")[-1]
         labels = [
             ServiceLabel("gcp/location", share.asset.resource.location),
             ServiceLabel("gcp/filestore/name", item),
@@ -44,9 +45,6 @@ def check(
     section_gcp_service_filestore: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_filestore is None:
-        return
-    section = section_gcp_service_filestore
     metrics = {
         "fs_used_percent": gcp.MetricSpec(
             "file.googleapis.com/nfs/server/used_bytes_percent", "Usage", render.percent, scale=1e2
@@ -58,19 +56,20 @@ def check(
             "file.googleapis.com/nfs/server/write_ops_count", "Write operations", str
         ),
     }
-    timeseries = section[item].rows
-    yield from gcp.generic_check(metrics, timeseries, params)
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_filestore, ASSET_TYPE, section_gcp_assets
+    )
 
 
 register.check_plugin(
     name="gcp_filestore_disk",
     sections=["gcp_service_filestore", "gcp_assets"],
-    service_name="GCP Filestore %s",
+    service_name=service_namer("disk"),
     check_ruleset_name="gcp_filestore_disk",
     discovery_function=discover,
     check_function=check,
     check_default_parameters={
-        "fs_used_percent": None,
+        "fs_used_percent": (80.0, 90.0),
         "disk_read_ios": None,
         "disk_write_ios": None,
     },

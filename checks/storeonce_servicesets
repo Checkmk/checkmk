@@ -5,21 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.storeonce import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # example output
@@ -67,6 +61,8 @@ from cmk.base.check_legacy_includes.storeonce import *  # pylint: disable=wildca
 # combinedDiskBytes   47759419043899
 # combinedFreeBytes   85220347674624
 # combinedUserBytes   265622218292968
+
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 def _get_item(data):
@@ -116,6 +112,7 @@ def check_storeonce_servicesets_capacity(item, params, parsed):
     for values in parsed.values():
         if _get_item(values) == item:
             return check_storeonce_space(item, params, values)
+    return None
 
 
 check_info["storeonce_servicesets.capacity"] = {
@@ -124,4 +121,5 @@ check_info["storeonce_servicesets.capacity"] = {
     "service_description": "ServiceSet %s Capacity",
     "has_perfdata": True,
     "group": "filesystem",
+    "default_levels_variable": "filesystem_default_levels",
 }

@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
+from typing import Optional
 
 # TODO: Import errors from passlib are suppressed right now since now
 # stub files for mypy are not available.
@@ -86,12 +87,17 @@ class Htpasswd:
 # - https://httpd.apache.org/docs/2.4/misc/password_encryptions.html
 # - https://passlib.readthedocs.io/en/stable/lib/passlib.apache.html
 #
-def hash_password(password: str) -> str:
-    # The rounds aka workfactor should be more than 10
-    # it defaults to 12 anyways, but I prefer explicity
-    return bcrypt.using(rounds=12).hash(password)
+# NOTE: The time for hashing is *exponential* in the number of rounds, so this
+# can get *very* slow! On a laptop with a i9-9880H CPU, the runtime is roughly
+# 43 microseconds * 2**rounds, so for 12 rounds this takes about 0.176s.
+# Nevertheless, the rounds a.k.a. workfactor should be more than 10 for security
+# reasons. It defaults to 12, but let's be explicit.
+def hash_password(password: str, *, rounds: Optional[int] = None) -> str:
+    return bcrypt.using(rounds=12 if rounds is None else rounds).hash(password)
 
 
+# NOTE: The same warning regarding runtime is applicable here, the runtime for
+# verification is roughly the same as for the hashing above.
 def check_password(password: str, pwhash: str) -> bool:
     try:
         return crypt_context.verify(password, pwhash)

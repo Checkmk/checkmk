@@ -8,19 +8,15 @@ from unittest.mock import Mock
 
 import pytest
 
-from tests.unit.cmk.special_agents.agent_kube.conftest import (
-    api_to_agent_node,
-    api_to_agent_pod,
-    APINodeFactory,
-    APIPodFactory,
-)
+from tests.unit.cmk.special_agents.agent_kube.conftest import api_to_agent_node, APINodeFactory
+from tests.unit.cmk.special_agents.agent_kube.factory import api_to_agent_pod, APIPodFactory
 
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 
 @pytest.mark.parametrize("node_pods", [0, 10, 20])
-def test_node_pod_resources_returns_all_node_pods(node_pods: int):
+def test_node_pod_resources_returns_all_node_pods(node_pods: int) -> None:
     node = api_to_agent_node(APINodeFactory.build())
     for _ in range(node_pods):
         node.add_pod(api_to_agent_pod(APIPodFactory.build()))
@@ -29,7 +25,7 @@ def test_node_pod_resources_returns_all_node_pods(node_pods: int):
     assert sum(len(pods) for _, pods in pod_resources) == node_pods
 
 
-def test_node_pod_resources_one_pod_per_phase(node: agent.Node):
+def test_node_pod_resources_one_pod_per_phase(node: agent.Node) -> None:
     resources = dict(node.pod_resources())
     pod_resources = section.PodResources(**resources)
     for _phase, pods in pod_resources:
@@ -39,7 +35,7 @@ def test_node_pod_resources_one_pod_per_phase(node: agent.Node):
 @pytest.mark.parametrize(
     "phases", [["running"], ["pending"], ["succeeded"], ["failed"], ["unknown"]]
 )
-def test_node_pod_resources_pods_in_phase(node: agent.Node, phases, node_pods: int):
+def test_node_pod_resources_pods_in_phase(node: agent.Node, phases, node_pods: int) -> None:
     pods = node.pods(phases[0])
     assert len(pods) == node_pods
 
@@ -47,18 +43,18 @@ def test_node_pod_resources_pods_in_phase(node: agent.Node, phases, node_pods: i
 @pytest.mark.parametrize(
     "phases", [["running"], ["pending"], ["succeeded"], ["failed"], ["unknown"]]
 )
-def test_node_pod_resources_pods_in_phase_no_phase_param(node: agent.Node, node_pods: int):
+def test_node_pod_resources_pods_in_phase_no_phase_param(node: agent.Node, node_pods: int) -> None:
     pods = node.pods()
     assert len(pods) == node_pods
 
 
-def test_node_allocatable_memory_resource(node_allocatable_memory: float, node: agent.Node):
+def test_node_allocatable_memory_resource(node_allocatable_memory: float, node: agent.Node) -> None:
     expected = section.AllocatableResource(context="node", value=node_allocatable_memory)
     actual = node.allocatable_memory_resource()
     assert actual == expected
 
 
-def test_node_allocatable_cpu_resource(node_allocatable_cpu: float, node: agent.Node):
+def test_node_allocatable_cpu_resource(node_allocatable_cpu: float, node: agent.Node) -> None:
     expected = section.AllocatableResource(context="node", value=node_allocatable_cpu)
     actual = node.allocatable_cpu_resource()
     assert actual == expected
@@ -77,14 +73,18 @@ def test_node_alloctable_pods(
 def test_write_nodes_api_sections_registers_sections_to_be_written(
     node: agent.Node, nodes_api_sections: Sequence[str], write_sections_mock
 ):
-    agent.write_nodes_api_sections("cluster", [node], Mock())
+    agent.write_nodes_api_sections(
+        "cluster", agent.AnnotationNonPatternOption.ignore_all, [node], Mock()
+    )
     assert list(write_sections_mock.call_args[0][0]) == nodes_api_sections
 
 
 def test_write_nodes_api_sections_maps_section_names_to_callables(
     node: agent.Node, nodes_api_sections: Sequence[str], write_sections_mock
 ):
-    agent.write_nodes_api_sections("cluster", [node], Mock())
+    agent.write_nodes_api_sections(
+        "cluster", agent.AnnotationNonPatternOption.ignore_all, [node], Mock()
+    )
     assert all(
         callable(write_sections_mock.call_args[0][0][section_name])
         for section_name in nodes_api_sections
@@ -94,11 +94,16 @@ def test_write_nodes_api_sections_maps_section_names_to_callables(
 def test_write_nodes_api_sections_calls_write_sections_for_each_node(
     new_node: Callable[[], agent.Node], cluster_nodes: int, write_sections_mock
 ):
-    agent.write_nodes_api_sections("cluster", [new_node() for _ in range(cluster_nodes)], Mock())
+    agent.write_nodes_api_sections(
+        "cluster",
+        agent.AnnotationNonPatternOption.ignore_all,
+        [new_node() for _ in range(cluster_nodes)],
+        Mock(),
+    )
     assert write_sections_mock.call_count == cluster_nodes
 
 
-def test_conditions_returns_all_native_conditions(node: agent.Node):
+def test_conditions_returns_all_native_conditions(node: agent.Node) -> None:
     conditions = node.conditions()
     assert conditions is not None
     conditions_dict = conditions.dict()
@@ -109,7 +114,7 @@ def test_conditions_returns_all_native_conditions(node: agent.Node):
     )
 
 
-def test_conditions_respects_status_conditions(node: agent.Node):
+def test_conditions_respects_status_conditions(node: agent.Node) -> None:
     api_conditions = node.status.conditions
     assert api_conditions is not None
 
@@ -127,7 +132,7 @@ def test_conditions_respects_status_conditions(node: agent.Node):
     )
 
 
-def test_custom_conditions_respects_status_conditions(node: agent.Node):
+def test_custom_conditions_respects_status_conditions(node: agent.Node) -> None:
     status_conditions = node.status.conditions
     assert status_conditions is not None
 
@@ -146,7 +151,7 @@ def test_custom_conditions_respects_status_conditions(node: agent.Node):
     assert npd_conditions_status == custom_conditions_status
 
 
-def test_conditions_truthy_vs_status(node: agent.Node):
+def test_conditions_truthy_vs_status(node: agent.Node) -> None:
     conditions = node.conditions()
     assert conditions is not None
 
@@ -155,7 +160,7 @@ def test_conditions_truthy_vs_status(node: agent.Node):
     assert all(c.is_ok() is (c.status == api.NodeConditionStatus.TRUE) for c in truthy_conditions)
 
 
-def test_conditions_falsy_vs_status(node: agent.Node):
+def test_conditions_falsy_vs_status(node: agent.Node) -> None:
     conditions = node.conditions()
     assert conditions is not None
 
@@ -164,14 +169,14 @@ def test_conditions_falsy_vs_status(node: agent.Node):
     assert all(c.is_ok() is (c.status == api.NodeConditionStatus.FALSE) for c in falsy_conditions)
 
 
-def test_conditions_with_status_conditions_none(node: agent.Node):
+def test_conditions_with_status_conditions_none(node: agent.Node) -> None:
     node.status.conditions = None
     conditions = node.conditions()
     assert conditions is None
 
 
-def test_node_info_section(node: agent.Node):
-    info = node.info("cluster")
+def test_node_info_section(node: agent.Node) -> None:
+    info = node.info("cluster", agent.AnnotationNonPatternOption.ignore_all)
     assert info.name == node.metadata.name
     assert info.labels == node.metadata.labels
     assert isinstance(info.creation_timestamp, float)
@@ -208,9 +213,9 @@ def test_node_cpu_resources(
 
 
 @pytest.mark.parametrize("pod_containers_count", [0, 5, 10])
-@pytest.mark.parametrize("container_status_state", ["running", "terminated", "waiting"])
+@pytest.mark.parametrize("container_status_state", list(api.ContainerStateType))
 def test_node_container_count(
-    container_status_state: str,
+    container_status_state: api.ContainerStateType,
     new_node: Callable[[], agent.Node],
     new_pod: Callable[[], agent.Pod],
     pod_containers_count: int,
@@ -219,9 +224,9 @@ def test_node_container_count(
     node.add_pod(new_pod())
     container_count = node.container_count()
     assert isinstance(container_count, section.ContainerCount)
-    assert container_count.dict()[container_status_state] == pod_containers_count
+    assert container_count.dict()[container_status_state.value] == pod_containers_count
     assert all(
         count == 0
         for state, count in container_count.dict().items()
-        if state != container_status_state
+        if state != container_status_state.value
     )

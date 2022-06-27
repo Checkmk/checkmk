@@ -11,7 +11,7 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12sp5 sles12sp5 \
     && zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12spx-web-scripting web-scripting \
     && zypper -n --no-gpg-checks in --replacefiles \
     gawk \
-    && zypper -n --no-gpg-checks in --replacefiles \
+    && zypper -n --no-gpg-checks in --replacefiles --force-resolution \
     curl \
     cyrus-sasl-devel \
     enchant-devel \

@@ -9,7 +9,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
 from cmk.base.plugins.agent_based.utils.interfaces import Interface
 
 
-def test_parse_esx_vsphere_counters():
+def test_parse_esx_vsphere_counters() -> None:
     assert esx_vsphere_counters.parse_esx_vsphere_counters(
         [
             ["disk.numberReadAveraged", "naa.5000cca05688e814", "0#0", "number"],
@@ -64,7 +64,7 @@ def test_parse_esx_vsphere_counters():
     }
 
 
-def test_convert_esx_counters_if():
+def test_convert_esx_counters_if() -> None:
     assert esx_vsphere_counters.convert_esx_counters_if(
         {
             "net.bandwidth": {
@@ -399,7 +399,7 @@ def test_convert_esx_counters_if():
     ]
 
 
-def test_discovery_counters_diskio():
+def test_discovery_counters_diskio() -> None:
     assert list(
         esx_vsphere_counters.discover_esx_vsphere_counters_diskio(
             {
@@ -413,7 +413,7 @@ def test_discovery_counters_diskio():
     ) == [Service(item="SUMMARY")]
 
 
-def test_check_counters_diskio():
+def test_check_counters_diskio() -> None:
     assert list(
         esx_vsphere_counters.check_esx_vsphere_counters_diskio(
             "SUMMARY",

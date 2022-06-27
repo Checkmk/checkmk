@@ -7,14 +7,16 @@
 import abc
 import multiprocessing
 import subprocess
+from contextlib import suppress
 from pathlib import Path
 from typing import Iterator, Type
 
 import requests
-import urllib3  # type: ignore[import]
+import urllib3
 
 from livestatus import LocalConnection
 
+from cmk.utils.paths import local_inventory_dir
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
@@ -22,21 +24,11 @@ import cmk.gui.plugins.userdb.htpasswd
 import cmk.gui.plugins.userdb.ldap_connector as ldap
 import cmk.gui.userdb as userdb
 import cmk.gui.utils
-import cmk.gui.watolib as watolib
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import request
+from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    ac_test_registry,
-    ACResult,
-    ACResultCRIT,
-    ACResultOK,
-    ACResultWARN,
-    ACTest,
-    ACTestCategories,
-    ConfigDomainOMD,
-    SiteBackupJobs,
-)
+from cmk.gui.plugins.wato.utils import SiteBackupJobs
+from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.site_config import (
     get_site_config,
     has_wato_slave_sites,
@@ -44,7 +36,18 @@ from cmk.gui.site_config import (
     sitenames,
     wato_slave_sites,
 )
+from cmk.gui.watolib.analyze_configuration import (
+    ac_test_registry,
+    ACResult,
+    ACResultCRIT,
+    ACResultOK,
+    ACResultWARN,
+    ACTest,
+    ACTestCategories,
+)
+from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
+from cmk.gui.watolib.rulesets import SingleRulesetRecursively
 from cmk.gui.watolib.sites import SiteManagementFactory
 
 # Disable python warnings in background job output or logs like "Unverified
@@ -289,7 +292,7 @@ class ACTestLDAPSecured(ACTest):
 
             else:
                 yield ACResultWARN(
-                    _("%s: Not using SSL. Consider enabling it in the " "connection settings.")
+                    _("%s: Not using SSL. Consider enabling it in the connection settings.")
                     % connection_id
                 )
 
@@ -871,7 +874,7 @@ class ACTestCheckMKFetcherUsage(ACTest):
         )
 
         # Only report this as warning in case the user increased the default helper configuration
-        default_values = watolib.ABCConfigDomain.get_all_default_globals()
+        default_values = ABCConfigDomain.get_all_default_globals()
         if (
             self._get_effective_global_setting("cmc_fetcher_helpers")
             > default_values["cmc_fetcher_helpers"]
@@ -945,7 +948,7 @@ class ACTestCheckMKCheckerUsage(ACTest):
         )
 
         # Only report this as warning in case the user increased the default helper configuration
-        default_values = watolib.ABCConfigDomain.get_all_default_globals()
+        default_values = ABCConfigDomain.get_all_default_globals()
         if (
             self._get_effective_global_setting("cmc_checker_helpers")
             > default_values["cmc_checker_helpers"]
@@ -1130,7 +1133,7 @@ class ACTestESXDatasources(ACTest):
         )
 
     def _get_rules(self):
-        collection = watolib.SingleRulesetRecursively("special_agents:vsphere")
+        collection = SingleRulesetRecursively("special_agents:vsphere")
         collection.load()
 
         ruleset = collection.get("special_agents:vsphere")
@@ -1178,6 +1181,36 @@ class ACTestRulebasedNotifications(ACTest):
             yield ACResultOK(_("Rulebased notifications are activated"))
 
 
+@ac_test_registry.register
+class ACTestDeprecatedInventoryPlugins(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.deprecations
+
+    def title(self) -> str:
+        return _("Deprecated HW/SW inventory plugins")
+
+    def help(self) -> str:
+        return _(
+            "The old inventory plugin API has been removed in Checkmk version 2.2."
+            " Plugin files in <tt>'%s'</tt> are ignored."
+            " Please migrate the plugins to the new API."
+        ) % str(local_inventory_dir)
+
+    def is_relevant(self) -> bool:
+        return True
+
+    def execute(self) -> Iterator[ACResult]:
+        with suppress(FileNotFoundError):
+            if plugin_files := list(local_inventory_dir.iterdir()):
+                yield ACResultCRIT(
+                    _("%d ignored HW/SW inventory plugins found: %s")
+                    % (len(plugin_files), ", ".join(f.name for f in plugin_files))
+                )
+                return
+
+        yield ACResultOK(_("No ignored HW/SW inventory plugins found"))
+
+
 def _site_is_using_livestatus_proxy(site_id):
     site_configs = SiteManagementFactory().factory().load_sites()
     return site_configs[site_id].get("proxy") is not None
@@ -1222,7 +1255,7 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
             yield ACResultCRIT("Rule in <b>%s</b> has value <b>%s</b>" % (folder_title, rule_state))
 
     def _get_rules(self):
-        collection = watolib.SingleRulesetRecursively("check_mk_exit_status")
+        collection = SingleRulesetRecursively("check_mk_exit_status")
         collection.load()
         ruleset = collection.get("check_mk_exit_status")
         state_map = {0: "OK", 1: "WARN", 2: "CRIT", 3: "UNKNOWN"}

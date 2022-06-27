@@ -14,7 +14,7 @@ import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import response
+from cmk.gui.http import response
 from cmk.gui.log import logger
 from cmk.gui.logged_in import SuperUserContext
 

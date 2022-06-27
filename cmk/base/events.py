@@ -13,7 +13,7 @@ import select
 import socket
 import sys
 import time
-from typing import Any, Callable, Iterable, List, Literal, Mapping, Optional, TypedDict, Union
+from typing import Any, Callable, Iterable, List, Mapping, Optional, Union
 from urllib.parse import quote, urlencode
 
 import livestatus
@@ -22,100 +22,12 @@ import cmk.utils.daemon
 import cmk.utils.debug
 from cmk.utils.regex import regex
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import EventRule, HostName, ServiceName
+from cmk.utils.type_defs import EventContext, EventRule, HostName, ServiceName
 
 import cmk.base.config as config
 import cmk.base.core
 
 ContactList = List  # TODO Improve this
-
-
-class EventContext(TypedDict, total=False):
-    """Used to be Dict[str, Any]"""
-
-    NOTIFICATIONTYPE: Literal[
-        "RECOVERY",
-        "FLAPPINGSTART",
-        "FLAPPINGSTOP",
-        "FLAPPINGDISABLED",
-        "DOWNTIMESTART",
-        "DOWNTIMEEND",
-        "DOWNTIMECANCELLED",
-        "ACKNOWLEDGEMENT",
-    ]
-
-    CONTACTNAME: str
-    CONTACTS: str
-    DATE: str
-    EC_COMMENT: str
-    EC_FACILITY: str
-    EC_PRIORITY: str
-    EC_RULE_ID: str
-    HOSTATTEMPT: str
-    HOSTCONTACTGROUPNAMES: str
-    HOSTFORURL: str
-    HOSTGROUPNAMES: str
-    HOSTNAME: str
-    HOSTNOTIFICATIONNUMBER: str
-    HOSTOUTPUT: str
-    HOSTSTATE: Literal["UP", "DOWN", "UNREACHABLE"]
-    HOSTTAGS: str
-    HOSTURL: str
-    HOST_SL: str
-    LASTHOSTSTATE: str
-    LASTHOSTSTATECHANGE: str
-    LASTHOSTSTATECHANGE_REL: str
-    LASTHOSTUP: str
-    LASTHOSTUP_REL: str
-    LASTSERVICEOK: str
-    LASTSERVICEOK_REL: str
-    LASTSERVICESTATE: str
-    LASTSERVICESTATECHANGE: str
-    LASTSERVICESTATECHANGE_REL: str
-    LONGDATETIME: str
-    LONGSERVICEOUTPUT: str
-    MICROTIME: str
-    MONITORING_HOST: str
-    NOTIFICATIONCOMMENT: str
-    OMD_ROOT: str
-    OMD_SITE: str
-    PREVIOUSHOSTHARDSTATE: str
-    PREVIOUSSERVICEHARDSTATE: str
-    SERVICEATTEMPT: str
-    SERVICECHECKCOMMAND: str
-    SERVICECONTACTGROUPNAMES: str
-    SERVICEDESC: str
-    SERVICEFORURL: str
-    SERVICEGROUPNAMES: str
-    SERVICENOTIFICATIONNUMBER: str
-    SERVICEOUTPUT: str
-    SERVICESTATE: Literal["OK", "WARNING", "CRITICAL", "UNKNOWN"]
-    SERVICEURL: str
-    SHORTDATETIME: str
-    SVC_SL: str
-    WHAT: Literal["SERVICE", "HOST"]
-
-    # Dynamically added:
-    # HOSTLABEL_*: str
-    # SERVICELABEL_*: str
-
-    # Dynamically added:
-    # # Add short variants for state names (at most 4 characters)
-    # for key, value in list(raw_context.items()):
-    #     if key.endswith("STATE"):
-    #         raw_context[key[:-5] + "SHORTSTATE"] = value[:4]
-    # We know of:
-    HOSTSHORTSTATE: str
-    LASTHOSTSHORTSTATE: str
-    LASTSERVICESHORTSTATE: str
-    PREVIOUSHOSTHARDSHORTSTATE: str
-    PREVIOUSSERVICEHARDSHORTSTATE: str
-    SERVICESHORTSTATE: str
-
-    # Todo(Delete them with a Werk)
-    LOGDIR: str
-    MAIL_COMMAND: str
-
 
 # We actually want to use Matcher for all our matchers, but mypy is too dumb to
 # use that for function types, see https://github.com/python/mypy/issues/1641.
@@ -124,12 +36,12 @@ Matcher = Callable[[EventRule, EventContext], Optional[str]]
 logger = logging.getLogger("cmk.base.events")
 
 
-def _send_reply_ready():
+def _send_reply_ready() -> None:
     sys.stdout.write("*\n")
     sys.stdout.flush()
 
 
-def event_keepalive(
+def event_keepalive(  # pylint: disable=too-many-branches
     event_function: Callable,
     call_every_loop: Optional[Callable] = None,
     loop_interval: Optional[int] = None,
@@ -357,7 +269,10 @@ def add_rulebased_macros(raw_context: EventContext) -> None:
     raw_context["CONTACTNAME"] = "check-mk-notify"
 
 
-def complete_raw_context(raw_context: EventContext, with_dump: bool) -> None:
+def complete_raw_context(  # pylint: disable=too-many-branches
+    raw_context: EventContext,
+    with_dump: bool,
+) -> None:
     """Extend the raw notification context
 
     This ensures that all raw contexts processed in the notification code has specific variables
@@ -633,7 +548,7 @@ def event_match_servicegroups_regex(rule: EventRule, context: EventContext) -> O
     return _event_match_servicegroups(rule, context, is_regex=True)
 
 
-def _event_match_servicegroups(
+def _event_match_servicegroups(  # pylint: disable=too-many-branches
     rule: EventRule, context: EventContext, is_regex: bool
 ) -> Optional[str]:
     if is_regex:

@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from datetime import datetime
 from typing import Dict, List, Sequence
 from typing import Tuple as _Tuple
 
@@ -13,17 +14,19 @@ import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.agent_registration import get_uuid_link_manager, UUIDLinkManager
 from cmk.utils.bi.bi_packs import BIHostRenamer
+from cmk.utils.object_diff import make_diff_text
 from cmk.utils.type_defs import HostName
 
-import cmk.gui.watolib as watolib
 from cmk.gui import userdb
 from cmk.gui.bi import get_cached_bi_packs
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
-from cmk.gui.watolib.changes import add_change, log_audit, make_diff_text
+from cmk.gui.watolib.audit_log import log_audit
+from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.check_mk_automations import rename_hosts
 from cmk.gui.watolib.hosts_and_folders import call_hook_hosts_changed, CREFolder, Folder, Host
 from cmk.gui.watolib.notifications import load_notification_rules, save_notification_rules
+from cmk.gui.watolib.rulesets import FolderRulesets
 from cmk.gui.watolib.utils import rename_host_in_list
 
 try:
@@ -128,7 +131,7 @@ def _rename_host_in_rulesets(folder, oldname, newname):
     changed_rulesets = []
 
     def rename_host_in_folder_rules(folder):
-        rulesets = watolib.FolderRulesets(folder)
+        rulesets = FolderRulesets(folder)
         rulesets.load()
 
         changed_folder_rulesets = []
@@ -160,7 +163,7 @@ def _rename_host_in_rulesets(folder, oldname, newname):
         for subfolder in folder.subfolders():
             rename_host_in_folder_rules(subfolder)
 
-    rename_host_in_folder_rules(watolib.Folder.root_folder())
+    rename_host_in_folder_rules(Folder.root_folder())
     if changed_rulesets:
         actions = []
         unique = set(changed_rulesets)
@@ -196,7 +199,7 @@ def _rename_hosts_in_check_mk(
     return action_counts
 
 
-def _rename_host_in_event_rules(oldname, newname):
+def _rename_host_in_event_rules(oldname, newname):  # pylint: disable=too-many-branches
     actions = []
 
     def rename_in_event_rules(rules):
@@ -242,7 +245,7 @@ def _rename_host_in_event_rules(oldname, newname):
                 actions += ["notify_flexible"] * channels_changed
 
     if some_user_changed:
-        userdb.save_users(users)
+        userdb.save_users(users, datetime.now())
 
     return actions
 

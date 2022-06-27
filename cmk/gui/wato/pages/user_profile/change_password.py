@@ -5,10 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from datetime import datetime
 
 from cmk.gui import forms, login, userdb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html, request
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import page_registry
@@ -49,7 +51,8 @@ class UserChangePasswordPage(ABCUserProfilePage):
         if cur_password == password:
             raise MKUserError("password", _("The new password must differ from your current one."))
 
-        if userdb.check_credentials(user.id, cur_password) is False:
+        now = datetime.now()
+        if userdb.check_credentials(user.id, cur_password, now) is False:
             raise MKUserError("cur_password", _("Your old password is wrong."))
 
         if password2 and password != password2:
@@ -71,7 +74,7 @@ class UserChangePasswordPage(ABCUserProfilePage):
         else:
             user_spec["serial"] += 1
 
-        userdb.save_users(users)
+        userdb.save_users(users, now)
 
         flash(_("Successfully changed password."))
 
@@ -112,7 +115,7 @@ class UserChangePasswordPage(ABCUserProfilePage):
         if "password" in locked_attributes:
             raise MKUserError(
                 "cur_password",
-                _("You can not change your password, because it is " "managed by another system."),
+                _("You can not change your password, because it is managed by another system."),
             )
 
         html.begin_form("profile", method="POST")

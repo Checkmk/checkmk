@@ -5,7 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.notifications as notifications
-from cmk.gui.globals import html, request
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.dashboard.utils import Dashlet, dashlet_registry
 from cmk.gui.utils.urls import makeuri_contextless
@@ -28,7 +29,7 @@ class FailedNotificationsDashlet(Dashlet):
         return _("Display GUI notifications in case notification mechanism fails")
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 0
 
     @classmethod
@@ -36,7 +37,7 @@ class FailedNotificationsDashlet(Dashlet):
         return 60
 
     @classmethod
-    def is_selectable(cls):
+    def is_selectable(cls) -> bool:
         return False
 
     @classmethod

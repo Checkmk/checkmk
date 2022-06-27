@@ -9,8 +9,8 @@ from typing import Any, Mapping, MutableMapping
 
 from .agent_based_api.v1 import get_value_store, GetRateError, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_LEVELS
-from .utils.k8s import Filesystem, Section, to_filesystem
+from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
+from .utils.k8s import Section, to_filesystem
 
 ###########################################################################
 # NOTE: This check (and associated special agent) is deprecated and will be
@@ -45,27 +45,12 @@ def _check__k8s_stats_fs__core(
     params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
-    """
-    >>> value_store = {'/dev/sda1.delta': (1553765630.0, 4158.4921875)}
-    >>> for result in _check__k8s_stats_fs__core(value_store, "/dev/sda1", {}, {
-    ...       'filesystem': {"/dev/sda1": [{'capacity': 17293533184, 'available': 12933038080}]},
-    ...       'timestamp': 1553765631.0,
-    ... }):
-    ...     print(result)
-    Metric('fs_used', 4158.4921875, levels=(13193.91875, 14843.15859375), boundaries=(0.0, 16492.3984375))
-    Metric('fs_size', 16492.3984375, boundaries=(0.0, None))
-    Metric('fs_used_percent', 25.21459933956316, levels=(80.0, 90.0), boundaries=(0.0, 100.0))
-    Result(state=<State.OK: 0>, summary='25.21% used (4.06 of 16.1 GiB)')
-    Metric('growth', 0.0)
-    Result(state=<State.OK: 0>, summary='trend per 1 day 0 hours: +0 B')
-    Result(state=<State.OK: 0>, summary='trend per 1 day 0 hours: +0%')
-    Metric('trend', 0.0, boundaries=(0.0, 687.1832682291666))
-    """
     now = section["timestamp"]
-    disk: Filesystem = to_filesystem(
+    empty: collections.Counter[str] = collections.Counter()
+    disk = to_filesystem(
         sum(
             (collections.Counter(interface) for interface in section["filesystem"][item]),
-            collections.Counter(),
+            empty,
         )
     )
 
@@ -102,7 +87,7 @@ register.check_plugin(
     sections=["k8s_stats"],
     service_name="Filesystem %s",
     discovery_function=discover_k8s_stats_fs,
-    check_default_parameters=FILESYSTEM_DEFAULT_LEVELS,
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
     check_ruleset_name="filesystem",
     check_function=check_k8s_stats_fs,
 )

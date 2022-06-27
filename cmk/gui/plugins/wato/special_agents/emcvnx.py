@@ -4,16 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsHardware
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import Dictionary, ListChoice, Password, TextInput, Transform
+from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
+from cmk.gui.valuespec import Dictionary, ListChoice, TextInput, Transform
+from cmk.gui.watolib.rulespecs import Rulespec
 
 
 def _factory_default_special_agents_emcvnx():
     # No default, do not use setting if no rule matches
-    return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+    return Rulespec.FACTORY_DEFAULT_UNUSED
 
 
 def _valuespec_special_agents_emcvnx():
@@ -46,7 +46,7 @@ def _valuespec_special_agents_emcvnx():
             ),
             (
                 "password",
-                Password(
+                IndividualOrStoredPassword(
                     title=_("EMC VNX admin user password"),
                     allow_empty=True,
                 ),

@@ -14,7 +14,7 @@ from cmk.special_agents.utils_kubernetes.transform import parse_metadata, parse_
 
 
 class TestAPIStatefulSets:
-    def test_parse_metadata(self, apps_client, dummy_host):
+    def test_parse_metadata(self, apps_client, dummy_host) -> None:  # type:ignore[no-untyped-def]
         statefulsets_metadata = {
             "items": [
                 {
@@ -26,7 +26,7 @@ class TestAPIStatefulSets:
                         "generation": 1,
                         "creationTimestamp": "2022-03-09T07:44:17Z",
                         "labels": {"app": "nginx"},
-                        "annotations": {},
+                        "annotations": {"foo": "bar"},
                     },
                 }
             ]
@@ -45,8 +45,41 @@ class TestAPIStatefulSets:
         assert metadata.name == "web"
         assert isinstance(metadata.creation_timestamp, float)
         assert metadata.labels
+        assert metadata.annotations == {"foo": "bar"}
 
-    def test_parse_status_successful_creation(self, apps_client, dummy_host):
+    def test_parse_metadata_missing_annotations_and_labels(  # type:ignore[no-untyped-def]
+        self, apps_client, dummy_host
+    ) -> None:
+        statefulsets_metadata = {
+            "items": [
+                {
+                    "metadata": {
+                        "name": "web",
+                        "namespace": "default",
+                        "uid": "29be93ae-eba8-4b2b-8eb9-2e76378b4e87",
+                        "resourceVersion": "54122",
+                        "generation": 1,
+                        "creationTimestamp": "2022-03-09T07:44:17Z",
+                    },
+                }
+            ]
+        }
+
+        Entry.single_register(
+            Entry.GET,
+            f"{dummy_host}/apis/apps/v1/statefulsets",
+            body=json.dumps(statefulsets_metadata),
+            headers={"content-type": "application/json"},
+        )
+        with Mocketizer():
+            statefulset = list(apps_client.list_stateful_set_for_all_namespaces().items)[0]
+        metadata = parse_metadata(statefulset.metadata)
+        assert metadata.labels == {}
+        assert metadata.annotations == {}
+
+    def test_parse_status_successful_creation(  # type:ignore[no-untyped-def]
+        self, apps_client, dummy_host
+    ) -> None:
         statefulsets_data = {
             "items": [
                 {
@@ -77,7 +110,9 @@ class TestAPIStatefulSets:
         assert status.ready_replicas == 3
         assert status.updated_replicas == 3
 
-    def test_parse_status_failed_creation(self, apps_client, dummy_host):
+    def test_parse_status_failed_creation(  # type:ignore[no-untyped-def]
+        self, apps_client, dummy_host
+    ) -> None:
         statefulsets_data = {
             "items": [
                 {

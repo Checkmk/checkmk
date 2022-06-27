@@ -19,7 +19,7 @@ from cmk.utils.type_defs import HostAddress, HostName
 
 from cmk.gui import userdb
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import request
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import UserContext
@@ -54,7 +54,7 @@ def execute_network_scan_job() -> None:
     run_as = folder.attribute("network_scan")["run_as"]
     if not userdb.user_exists(run_as):
         raise MKGeneralException(
-            _("The user %s used by the network " "scan of the folder %s does not exist.")
+            _("The user %s used by the network scan of the folder %s does not exist.")
             % (run_as, folder.title())
         )
 

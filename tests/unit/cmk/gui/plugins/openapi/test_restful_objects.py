@@ -13,7 +13,7 @@ from cmk.gui.plugins.openapi.restful_objects import response_schemas
 from cmk.gui.plugins.openapi.restful_objects.type_defs import StatusCode, StatusCodeInt
 
 
-def test_domain_object():
+def test_domain_object() -> None:
     errors = response_schemas.DomainObject().validate(
         {
             "domainType": "folder",
@@ -87,7 +87,7 @@ def test_domain_object():
         raise Exception(errors)
 
 
-def test_status_codes_match():
+def test_status_codes_match() -> None:
     assert StatusCodeInt.__args__ == tuple(int(sc) for sc in StatusCode.__args__)  # type: ignore
 
 

@@ -25,6 +25,7 @@ def check_sansymphony_ports(item, _no_params, info):
             if portstatus == "True":
                 return 0, "%s Port %s is up" % (porttype, portname)
             return 2, "%s Port %s is down" % (porttype, portname)
+    return None
 
 
 check_info["sansymphony_ports"] = {

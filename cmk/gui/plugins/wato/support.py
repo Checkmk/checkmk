@@ -4,38 +4,41 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Type
+
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
+from cmk.gui.plugins.watolib.utils import (
+    ABCConfigDomain,
     config_variable_group_registry,
     config_variable_registry,
-    ConfigDomainGUI,
     ConfigVariable,
     ConfigVariableGroup,
 )
-from cmk.gui.valuespec import HTTPUrl, TextInput
+from cmk.gui.valuespec import HTTPUrl, TextInput, ValueSpec
+from cmk.gui.watolib.config_domains import ConfigDomainGUI
 
 
 @config_variable_group_registry.register
 class ConfigVariableGroupSupport(ConfigVariableGroup):
-    def title(self):
+    def title(self) -> str:
         return _("Support")
 
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 80
 
 
 @config_variable_registry.register
 class ConfigVariableCrashReportURL(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupSupport
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "crash_report_url"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return HTTPUrl(
             title=_("Crash report HTTP URL"),
             help=_("By default crash reports will be sent to our crash reporting server."),
@@ -45,16 +48,16 @@ class ConfigVariableCrashReportURL(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableCrashReportTarget(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupSupport
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "crash_report_target"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return TextInput(
             title=_("Crash report fallback mail address"),
             help=_(

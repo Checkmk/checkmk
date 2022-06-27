@@ -11,7 +11,6 @@ from cmk.utils.defines import weekday_ids
 from cmk.utils.livestatus_helpers import tables
 
 from cmk.gui import fields as gui_fields
-from cmk.gui import watolib
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_host_problem,
@@ -26,6 +25,8 @@ from cmk.gui.livestatus_utils.commands.downtimes import (
 )
 from cmk.gui.plugins.openapi.utils import param_description
 from cmk.gui.userdb import load_users
+from cmk.gui.watolib import userroles
+from cmk.gui.watolib.activate_changes import activate_changes_start
 from cmk.gui.watolib.groups import is_alias_used
 from cmk.gui.watolib.tags import load_aux_tags, tag_group_exists
 from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
@@ -1062,6 +1063,17 @@ class Username(fields.String):
             raise self.make_error("should_not_exist", username=value)
 
 
+class ExistingUserRole(fields.String):
+    default_error_messages = {
+        "invalid_role": "The specified role does not exist: {role!r}",
+    }
+
+    def _validate(self, value):
+        super()._validate(value)
+        if not userroles.role_exists(value):
+            raise self.make_error("invalid_role", role=value)
+
+
 class CustomTimeRange(BaseSchema):
     # TODO: gui_fields.Dict validation also for Timperiods
     start_time = fields.DateTime(
@@ -1361,12 +1373,7 @@ class CreateUser(BaseSchema):
         example={"option": "global"},
     )
     roles = fields.List(
-        fields.String(
-            required=True,
-            description="A role of the user",
-            enum=["user", "admin", "guest"],
-            example="user",
-        ),
+        ExistingUserRole(description="A user role", required=True, example="user"),
         required=False,
         load_default=list,
         description="The list of assigned roles to the user",
@@ -1465,12 +1472,7 @@ class UpdateUser(BaseSchema):
         example={},
     )
     roles = fields.List(
-        fields.String(
-            required=False,
-            description="A role of the user",
-            enum=["user", "admin", "guest"],
-            example="user",
-        ),
+        ExistingUserRole(description="A user role", required=True, example="user"),
         required=False,
         description="The list of assigned roles to the user",
         example=["user"],
@@ -1986,18 +1988,61 @@ class ActivateChanges(BaseSchema):
         example=["production"],
     )
     force_foreign_changes = fields.Boolean(
-        description=param_description(
-            watolib.activate_changes_start.__doc__, "force_foreign_changes"
-        ),
+        description=param_description(activate_changes_start.__doc__, "force_foreign_changes"),
         required=False,
         load_default=False,
         example=False,
     )
 
 
-class X509ReqPEM(BaseSchema):
-    csr = gui_fields.X509ReqPEMField(
+class X509ReqPEMUUID(BaseSchema):
+    csr = gui_fields.X509ReqPEMFieldUUID(
         required=True,
         example="-----BEGIN CERTIFICATE REQUEST-----\n...\n-----END CERTIFICATE REQUEST-----\n",
-        description="PEM-encoded X.509 CSR.",
+        description="PEM-encoded X.509 CSR. The CN must a valid version-4 UUID.",
+    )
+
+
+class CreateHostComment(BaseSchema):
+    host_name = gui_fields.HostField(
+        description="The host name",
+        should_exist=True,
+        example="example.com",
+        required=True,
+    )
+    comment = fields.String(
+        description="The comment which will be stored for the host.",
+        example="Windows",
+        required=True,
+    )
+    persistent = fields.Boolean(
+        description="If set, the comment will persist a restart. Defaults to False.",
+        example=False,
+        load_default=False,
+        required=False,
+    )
+
+
+class CreateServiceComment(BaseSchema):
+    host_name = gui_fields.HostField(
+        description="The host name",
+        should_exist=True,
+        example="example.com",
+        required=True,
+    )
+    service_description = fields.String(
+        description="The service description for which the comment is for. No exception is raised when the specified service description does not exist",
+        example="Memory",
+        required=True,
+    )
+    comment = fields.String(
+        description="The comment which will be stored for the service.",
+        example="Windows",
+        required=True,
+    )
+    persistent = fields.Boolean(
+        description="If set, the comment will persist a restart. Defaults to False.",
+        example=False,
+        load_default=False,
+        required=False,
     )

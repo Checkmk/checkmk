@@ -151,7 +151,7 @@ def _get_or_load_image(client: docker.DockerClient, image_name_with_tag: str) ->
 
     except docker.errors.ImageNotFound:
         logger.info(
-            "  Not available locally, try to pull " "(May take some time. Grab a coffee or two...)"
+            "  Not available locally, try to pull (May take some time. Grab a coffee or two...)"
         )
 
     try:
@@ -422,6 +422,7 @@ def _container_env(version: CMKVersion) -> Dict[str, str]:
         "EDITION": version.edition_short,
         "BRANCH": version.branch(),
         "RESULT_PATH": "/results",
+        "CI": os.environ.get("CI", ""),
         # Write to this result path by default (may be overridden e.g. by integration tests)
         "PYTEST_ADDOPTS": os.environ.get("PYTEST_ADDOPTS", "") + " --junitxml=/results/junit.xml",
     }
@@ -521,7 +522,7 @@ def container_exec(
 
 
 class ContainerExec:
-    def __init__(self, client, container_id, output):
+    def __init__(self, client, container_id, output) -> None:
         self.client = client
         self.id = container_id
         self.output = output

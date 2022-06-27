@@ -4,12 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any
 
 import pytest
 from freezegun import freeze_time
 
 from cmk.base.check_api import get_age_human_readable, get_filesize_human_readable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.utils.fileinfo import (
     _cast_value,
     _fileinfo_check_conjunctions,
@@ -37,18 +39,18 @@ pytestmark = pytest.mark.checks
         ("some string", int),
     ],
 )
-def test__cast_value(value, cast_type):
+def test__cast_value(value, cast_type) -> None:
     cast_value = _cast_value(value, cast_type)
     assert cast_value is None
 
 
-def test__get_field():
+def test__get_field() -> None:
     my_list = [1, 2, 3]
     field_value = _get_field(my_list, 3)
     assert field_value is None
 
 
-def test__parse_single_legacy_row():
+def test__parse_single_legacy_row() -> None:
     row = ["No such file or directory"]
     parsed_row = _parse_single_legacy_row(row)
     assert not parsed_row
@@ -130,7 +132,7 @@ def test__parse_single_legacy_row():
         ),
     ],
 )
-def test_parse_fileinfo(info, expected_result):
+def test_parse_fileinfo(info, expected_result) -> None:
     assert parse_fileinfo(info) == expected_result
 
 
@@ -157,7 +159,7 @@ def test_parse_fileinfo(info, expected_result):
         ),
     ],
 )
-def test_fileinfo_groups_get_group_name(group_patterns, filename, reftime, expected_result):
+def test_fileinfo_groups_get_group_name(group_patterns, filename, reftime, expected_result) -> None:
     result = fileinfo_groups_get_group_name(group_patterns, filename, reftime)
     assert result == expected_result
 
@@ -173,7 +175,9 @@ def test_fileinfo_groups_get_group_name(group_patterns, filename, reftime, expec
         ),
     ],
 )
-def test_fileinfo_groups_get_group_name_error(group_patterns, filename, reftime, expected_result):
+def test_fileinfo_groups_get_group_name_error(
+    group_patterns, filename, reftime, expected_result
+) -> None:
     with pytest.raises(RuntimeError) as e:
         fileinfo_groups_get_group_name(group_patterns, filename, reftime)
 
@@ -196,7 +200,7 @@ def test_fileinfo_groups_get_group_name_error(group_patterns, filename, reftime,
     ],
 )
 @freeze_time("2021-07-12 12:00")
-def test_fileinfo_check_timeranges(params, expected_result):
+def test_fileinfo_check_timeranges(params, expected_result) -> None:
     result = fileinfo_check_timeranges(params)
 
     assert result == expected_result
@@ -247,10 +251,28 @@ def test_fileinfo_check_timeranges(params, expected_result):
                 Result(state=State.OK, summary="Out of relevant time of day"),
             ],
         ),
+        (
+            FileinfoItem(
+                name="/home/tim/test.txt", missing=True, failed=False, size=None, time=None
+            ),
+            1653985037,
+            {"state_missing": 2},
+            [Result(state=State.CRIT, summary="File not found")],
+        ),
+        (
+            FileinfoItem(
+                name="/home/tim/test.txt", missing=True, failed=False, size=None, time=None
+            ),
+            1653985037,
+            {},
+            [Result(state=State.UNKNOWN, summary="File not found")],
+        ),
     ],
 )
 @freeze_time("2021-07-12 12:00")
-def test_check_fileinfo_data(file_stat, reftime, params, expected_result):
+def test_check_fileinfo_data(
+    file_stat: FileinfoItem, reftime: int, params: dict[str, Any], expected_result: CheckResult
+):
     result = list(check_fileinfo_data(file_stat, reftime, params))
 
     assert result == expected_result
@@ -275,7 +297,7 @@ def test_check_fileinfo_data(file_stat, reftime, params, expected_result):
         ),
     ],
 )
-def test__filename_matches(filename, reftime, inclusion, exclusion, expected_result):
+def test__filename_matches(filename, reftime, inclusion, exclusion, expected_result) -> None:
     result = _filename_matches(filename, reftime, inclusion, exclusion)
     assert result == expected_result
 
@@ -370,7 +392,7 @@ def test__filename_matches(filename, reftime, inclusion, exclusion, expected_res
         ),
     ],
 )
-def test_check_fileinfo_groups_data(item, params, parsed, expected_result):
+def test_check_fileinfo_groups_data(item, params, parsed, expected_result) -> None:
     result = list(check_fileinfo_groups_data(item, params, parsed, parsed.reftime))
     assert result == expected_result
 
@@ -387,13 +409,13 @@ def test_check_fileinfo_groups_data(item, params, parsed, expected_result):
             [
                 Result(state=State.OK, summary="Size: 7 B"),
                 Metric("size", 7),
-                Result(state=State.OK, summary="Age: 3.00 s"),
+                Result(state=State.OK, summary="Age: 3 seconds"),
                 Metric("age", 3),
             ],
         )
     ],
 )
-def test__fileinfo_check_function(check_definition, params, expected_result):
+def test__fileinfo_check_function(check_definition, params, expected_result) -> None:
     result = list(_fileinfo_check_function(check_definition, params))
     assert result == expected_result
 
@@ -409,12 +431,13 @@ def test__fileinfo_check_function(check_definition, params, expected_result):
             {"conjunctions": [(2, [("size", 12), ("newest_age_lower", 86400)])]},
             [
                 Result(
-                    state=State.CRIT, summary="Conjunction: size at 12 B AND newest age below 24 h"
+                    state=State.CRIT,
+                    summary="Conjunction: size at 12 B AND newest age below 1 day 0 hours",
                 )
             ],
         )
     ],
 )
-def test__fileinfo_check_conjunctions(check_definition, params, expected_result):
+def test__fileinfo_check_conjunctions(check_definition, params, expected_result) -> None:
     result = list(_fileinfo_check_conjunctions(check_definition, params))
     assert result == expected_result

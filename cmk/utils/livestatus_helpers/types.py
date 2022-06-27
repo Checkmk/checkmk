@@ -116,10 +116,10 @@ class Column:
         # This needs to be a @property, due to the descriptor magic mentioned elsewhere.
         return f"{self.table.__tablename__}.{self.name}"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         class_name = self.__class__.__name__
         return f"{class_name}({self.full_name}: {self.type})"
 
@@ -152,7 +152,7 @@ class Column:
         copy.label_name = label_name
         return copy
 
-    def __get__(self, obj, obj_type) -> "Column":
+    def __get__(self, obj, obj_type) -> "Column":  # type:ignore[no-untyped-def]
         # As we don't know on which Table this Column is located, we use
         # the descriptor protocol during attribute access to find out.
         if self.table is NoTable:
@@ -187,7 +187,7 @@ class Column:
     def disparity(self, other, ignore_case=False):
         return self.expr.disparity(other, ignore_case=ignore_case)
 
-    def op(self, op_str, other) -> BinaryExpression:
+    def op(self, op_str, other) -> BinaryExpression:  # type:ignore[no-untyped-def]
         return self.expr.op(op_str, other)
 
     def empty(self):

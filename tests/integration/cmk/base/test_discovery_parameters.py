@@ -12,7 +12,7 @@ from cmk.utils.type_defs import HostName
 import cmk.base.autochecks as autochecks
 
 
-def test_test_check_1_merged_rule(request, site: Site, web):
+def test_test_check_1_merged_rule(request, site: Site, web) -> None:
 
     host_name = "disco-params-test-host"
 
@@ -89,7 +89,7 @@ register.check_plugin(
         raise AssertionError('"test_check_1" not discovered')
 
 
-def test_test_check_1_all_rule(request, site: Site, web):
+def test_test_check_1_all_rule(request, site: Site, web) -> None:
 
     host_name = "disco-params-test-host"
 

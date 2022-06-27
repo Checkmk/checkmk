@@ -2,47 +2,26 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import json
 from typing import NamedTuple, Optional
-
-from ..agent_based_api.v1.type_defs import StringTable
 
 
 class Section(NamedTuple):
-    policyViolationCount: Optional[int]
-    complianceState: Optional[bool]
-    osBuildVersion: Optional[str]
-    androidSecurityPatchLevel: Optional[str]
-    platformVersion: Optional[str]
-    clientVersion: Optional[str]
-    availableCapacity: Optional[float]
+    policy_violation_count: Optional[int]
+    compliance_state: Optional[bool]
+    os_build_version: Optional[str]
+    android_security_patch_level: Optional[str]
+    platform_version: Optional[str]
+    client_version: Optional[str]
     uptime: Optional[int]
-    ipAddress: Optional[str]
+    ip_address: Optional[str]
+    device_model: Optional[str]
+    platform_type: Optional[str]
+    registration_state: Optional[str]
+    manufacturer: Optional[str]
+    serial_number: Optional[str]
+    dm_partition_name: Optional[str]
 
 
 class SourceHostSection(NamedTuple):
-    queryTime: Optional[int]
+    query_time: Optional[int]
     total_count: Optional[int]
-
-
-def parse_mobileiron(string_table: StringTable) -> Section:
-    json_raw = json.loads(string_table[0][0])
-    return Section(
-        policyViolationCount=json_raw.get("policyViolationCount"),
-        complianceState=json_raw.get("complianceState"),
-        osBuildVersion=json_raw.get("osBuildVersion"),
-        androidSecurityPatchLevel=json_raw.get("androidSecurityPatchLevel"),
-        platformVersion=json_raw.get("platformVersion"),
-        clientVersion=json_raw.get("clientVersion"),
-        availableCapacity=json_raw.get("availableCapacity"),
-        uptime=json_raw.get("uptime"),
-        ipAddress=json_raw.get("ipAddress"),
-    )
-
-
-def parse_mobileiron_source_host(string_table: StringTable) -> SourceHostSection:
-    json_raw = json.loads(string_table[0][0])
-    return SourceHostSection(
-        queryTime=json_raw.get("queryTime"),
-        total_count=json_raw.get("total_count"),
-    )

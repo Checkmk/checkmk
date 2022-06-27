@@ -29,6 +29,7 @@ def check_hp_webmgmt_status(item, _no_params, info):
             if device_model and serial_number:
                 infotext += " [Model: %s, Serial Number: %s]" % (device_model, serial_number)
             return status, infotext
+    return None
 
 
 check_info["hp_webmgmt_status"] = {

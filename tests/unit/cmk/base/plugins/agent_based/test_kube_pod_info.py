@@ -32,6 +32,7 @@ def fixture_time(mocker):
                 name="mypod",
                 creation_timestamp=1600000000.0,
                 labels={},
+                annotations={},
                 node=None,
                 host_network=None,
                 dns_policy="Default",

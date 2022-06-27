@@ -5,9 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ddn_s2a import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 factory_settings["ddn_s2a_statsdelay_default_levels"] = {
@@ -49,18 +47,20 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
     def subtract_histograms(histogram1, histogram2):
         return [v1 - v2 for v1, v2 in zip(histogram1, histogram2)]
 
-    def is_zero(histogram):
+    def is_zero(histogram) -> bool:
         return not any(histogram)
 
     def histogram_min(time_intervals, values):
         for interval, value in zip(time_intervals, values):
             if value != 0:
                 return interval
+        return None
 
     def histogram_max(time_intervals, values):
         for interval, value in list(zip(time_intervals, values))[::-1]:
             if value != 0:
                 return interval
+        return None
 
     def histogram_avg(time_intervals, values):
         number_of_values = 0

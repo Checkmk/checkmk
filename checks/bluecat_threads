@@ -10,6 +10,7 @@ threads_default_levels = {"levels": ("levels", (2000, 4000))}
 def inventory_bluecat_threads(info):
     if info:
         return [(None, "threads_default_levels")]
+    return []
 
 
 def check_bluecat_threads(item, params, info):

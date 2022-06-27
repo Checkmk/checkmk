@@ -31,7 +31,7 @@ _FAN_STATE_TO_MON_STATE = {
 
 def check_datapower_fan(item, _no_params, section):
     if not (fan := section.get(item)):
-        return
+        return None
     return (
         _FAN_STATE_TO_MON_STATE[fan.state],
         f"{fan.state_txt}, {fan.speed} rpm",

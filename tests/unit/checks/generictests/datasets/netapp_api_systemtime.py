@@ -25,7 +25,7 @@ checks: Dict[str, List[Tuple[str, Dict[Any, Any], List[Tuple[int, str, List[Tupl
                 ),
                 (
                     0,
-                    'Time difference: 0.00 s',
+                    'Time difference: 0 seconds',
                     [('time_difference', 0, None, None, None, None)]
                 ),
             ]

@@ -8,6 +8,7 @@
 def inventory_steelhead_status(info):
     if len(info) == 1:
         return [(None, None)]
+    return []
 
 
 def check_steelhead_status(item, params, info):

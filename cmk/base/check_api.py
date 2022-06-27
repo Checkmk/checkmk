@@ -31,7 +31,6 @@ Modules available by default (pre imported by Check_MK):
 
 Global variables:
     from cmk.utils.regex import regex
-    import cmk.utils.render as render
     core_state_names     Names of states. Usually used to convert numeric states
                          to their name for adding it to the plugin output.
                          The mapping is like this:
@@ -88,7 +87,7 @@ import enum  # noqa: F401 # pylint: disable=unused-import
 import fnmatch  # noqa: F401 # pylint: disable=unused-import
 import functools
 import math  # noqa: F401 # pylint: disable=unused-import
-import os
+import os  # pylint: disable=unused-import
 
 # NOTE: We do not use pprint in this module, but it is part of the check API.
 import pprint  # noqa: F401 # pylint: disable=unused-import
@@ -96,14 +95,14 @@ import re  # noqa: F401 # pylint: disable=unused-import
 import socket  # noqa: F401 # pylint: disable=unused-import
 import sys  # noqa: F401 # pylint: disable=unused-import
 import time
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
+from contextlib import suppress
+from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Set, Tuple, Union
 
 import cmk.utils as _cmk_utils
 import cmk.utils.debug as _debug
 import cmk.utils.defines as _defines
 import cmk.utils.log.console as _console  # noqa: F401 # pylint: disable=unused-import
 import cmk.utils.paths as _paths
-import cmk.utils.render as render
 
 # These imports are not meant for use in the API. So we prefix the names
 # with an underscore. These names will be skipped when loading into the
@@ -132,6 +131,7 @@ import cmk.base.api.agent_based.register as _agent_based_register
 import cmk.base.config as _config
 import cmk.base.item_state as _item_state
 import cmk.base.prediction as _prediction
+from cmk.base.api.agent_based import render as _render
 from cmk.base.api.agent_based.section_classes import OIDBytes as _OIDBytes
 from cmk.base.api.agent_based.section_classes import OIDCached as _OIDCached
 from cmk.base.plugin_contexts import check_type
@@ -212,8 +212,13 @@ def get_check_api_context() -> _config.CheckContext:
 core_state_names = _defines.short_service_state_names()
 
 # backwards compatibility: allow to pass integer.
-BINARY = lambda x: _OIDBytes(str(x))
-CACHED_OID = lambda x: _OIDCached(str(x))
+def BINARY(x: str | int) -> _OIDBytes:
+    return _OIDBytes(str(x))
+
+
+def CACHED_OID(x: str | int) -> _OIDCached:
+    return _OIDCached(str(x))
+
 
 OID_BIN = _SpecialColumn.BIN
 OID_STRING = _SpecialColumn.STRING
@@ -291,11 +296,55 @@ def is_ipv6_primary(hostname: HostName) -> bool:
 nagios_illegal_chars = _config.nagios_illegal_chars
 is_cmc = _config.is_cmc
 
-get_age_human_readable: Callable[[float], str] = lambda secs: "%s" % render.Age(secs)
-get_bytes_human_readable = render.fmt_bytes
-get_nic_speed_human_readable = render.fmt_nic_speed
-get_percent_human_readable = render.percent
-get_number_with_precision = render.fmt_number_with_precision
+
+def get_age_human_readable(seconds: float) -> str:
+    return _render.timespan(seconds) if seconds >= 0 else f"-{_render.timespan(-seconds)}"
+
+
+def get_bytes_human_readable(
+    bytes_: int,
+    base: Literal[1000, 1024] = 1024,
+    precision: object = None,  # for legacy compatibility
+    unit: str = "B",
+) -> str:
+    if not (
+        renderer := {
+            1000: _render.disksize,
+            1024: _render.bytes,
+        }.get(int(base))
+    ):
+        raise ValueError(f"Unsupported value for 'base' in get_bytes_human_readable: {base=}")
+    return renderer(bytes_)[:-1] + unit
+
+
+def get_nic_speed_human_readable(bits_per_sec: float | str) -> str:
+    return _render.nicspeed(float(bits_per_sec) / 8)
+
+
+def get_percent_human_readable(
+    percentage: float,
+    scientific_notation: object = None,  # for legacy compatibility
+) -> str:
+    return _render.percent(percentage)
+
+
+def get_number_with_precision(
+    v: float,
+    base: object = None,  # for legacy compatibility
+    precision: int = 2,
+    drop_zeroes: object = None,  # for legacy compatibility
+    unit: str = "",
+    zero_non_decimal: object = None,  # for legacy compatibility
+) -> str:
+    """
+    >>> get_number_with_precision(123.4324)
+    '123.43'
+    >>> get_number_with_precision(2.3e5, precision=3, unit='V')
+    '230000.000 V'
+    """
+    return "%.*f" % (precision, v) + f"{' ' if unit else ''}{unit}"
+
+
 quote_shell_string = _cmk_utils.quote_shell_string
 
 
@@ -416,7 +465,7 @@ def _build_perfdata(
     return perfdata
 
 
-def check_levels(
+def check_levels(  # pylint: disable=too-many-branches
     value: Union[int, float],
     dsname: Union[None, MetricName],
     params: Any,
@@ -479,8 +528,11 @@ def check_levels(
     else:
         unit_info = ""
 
+    def default_human_readable_func(x: float) -> str:
+        return "%.2f" % (x / scale)
+
     if human_readable_func is None:
-        human_readable_func = lambda x: "%.2f" % (x / scale)
+        human_readable_func = default_human_readable_func
 
     def scale_value(v: Union[None, int, float]) -> Union[None, int, float]:
         if v is None:
@@ -618,7 +670,7 @@ def _agent_cache_file_age(
     else:
         cachefile = "%s/%s" % (_paths.tcp_cache_dir, hostname)
 
-    if os.path.exists(cachefile):
+    with suppress(FileNotFoundError):
         return _cmk_utils.cachefile_age(cachefile)
 
     return None
@@ -658,7 +710,7 @@ def get_parsed_item_data(check_function: Callable) -> Callable:
                 "Wrong usage of decorator function 'get_parsed_item_data': parsed is not a dict",
             )
         if item not in parsed or not parsed[item]:
-            return
+            return None
         return check_function(item, params, parsed[item])
 
     return wrapped_check_function

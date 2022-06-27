@@ -16,6 +16,7 @@ factory_settings["bluecat_ntp"] = {
 def inventory_bluecat_ntp(info):
     if len(info) > 0 and info[0][0] != "NULL":
         return [(None, None)]
+    return []
 
 
 def check_bluecat_ntp(item, params, info):

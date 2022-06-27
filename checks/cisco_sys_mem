@@ -27,6 +27,7 @@ def check_cisco_sys_mem(_no_item, params, info):
             infoname="Supervisor Memory used",
             boundaries=(0, 100),
         )
+    return None
 
 
 check_info["cisco_sys_mem"] = {

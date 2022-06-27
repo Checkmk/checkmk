@@ -4,24 +4,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.globals import html
+from typing import Collection
+
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import mode_registry
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.type_defs import PermissionName
 
 
 @mode_registry.register
 class ModeNotImplemented(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return ""
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return []
 
-    def title(self):
+    def title(self) -> str:
         return _("Error")
 
-    def page(self):
+    def page(self) -> None:
         html.show_error(_("This module has not yet been implemented."))

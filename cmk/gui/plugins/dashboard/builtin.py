@@ -19,7 +19,7 @@ builtin_dashboards["problems"] = {
     "sort_index": 5,
     "icon": "dashboard_problems",
     "description": _(
-        "This dashboard gives you a general overview on the state of your " "monitored devices."
+        "This dashboard gives you a general overview on the state of your monitored devices."
     ),
     "dashlets": [
         {
@@ -568,6 +568,7 @@ else:
             "show_title": True,
             "single_infos": ["host", "service"],
             "size": (26, 14),
+            "title": "$METRIC_NAME$, $SERVICE_DESCRIPTION$",
         },
         {
             "context": {"service": "CPU load"},

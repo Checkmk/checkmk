@@ -4,13 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Type
+
 import pytest
 
 import cmk.utils.version as cmk_version
 
 # Triggers plugin loading of plugins.wato which registers all the plugins
 import cmk.gui.wato
-import cmk.gui.watolib as watolib
 import cmk.gui.watolib.rulespecs
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.plugins.wato.utils import register_check_parameters, TimeperiodValuespec
@@ -19,10 +20,14 @@ from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.gui.watolib.rulespec_groups import RulespecGroupEnforcedServices
 from cmk.gui.watolib.rulespecs import (
     CheckTypeGroupSelection,
+    get_rulegroup,
     HostRulespec,
     main_module_from_rulespec_group_name,
     ManualCheckParameterRulespec,
     MatchItemGeneratorRules,
+    register_rule,
+    register_rulegroup,
+    Rulespec,
     rulespec_group_registry,
     rulespec_registry,
     RulespecGroup,
@@ -33,14 +38,14 @@ from cmk.gui.watolib.rulespecs import (
 from cmk.gui.watolib.search import MatchItem
 
 
-def test_rulespec_sub_group():
+def test_rulespec_sub_group() -> None:
     class TestGroup(RulespecGroup):
         @property
-        def name(self):
+        def name(self) -> str:
             return "main_group"
 
         @property
-        def title(self):
+        def title(self) -> str:
             return "Title"
 
         @property
@@ -49,15 +54,15 @@ def test_rulespec_sub_group():
 
     class TestSubGroup(RulespecSubGroup):
         @property
-        def main_group(self):
+        def main_group(self) -> Type[RulespecGroup]:
             return TestGroup
 
         @property
-        def sub_group_name(self):
+        def sub_group_name(self) -> str:
             return "sub_group"
 
         @property
-        def title(self):
+        def title(self) -> str:
             return "Sub"
 
     test_sub_group = TestSubGroup()
@@ -65,37 +70,37 @@ def test_rulespec_sub_group():
     assert test_sub_group.title == "Sub"
 
 
-def test_legacy_register_rulegroup(monkeypatch):
+def test_legacy_register_rulegroup(monkeypatch) -> None:
     monkeypatch.setattr(
         cmk.gui.watolib.rulespecs, "rulespec_group_registry", RulespecGroupRegistry()
     )
-    watolib.register_rulegroup("abc", "A B C", "abc 123")
+    register_rulegroup("abc", "A B C", "abc 123")
 
-    group = watolib.get_rulegroup("abc")
+    group = get_rulegroup("abc")
     assert isinstance(group, RulespecGroup)
     assert group.name == "abc"
     assert group.title == "A B C"
     assert group.help == "abc 123"
 
 
-def test_legacy_get_not_existing_rulegroup(monkeypatch):
+def test_legacy_get_not_existing_rulegroup(monkeypatch) -> None:
     monkeypatch.setattr(
         cmk.gui.watolib.rulespecs, "rulespec_group_registry", RulespecGroupRegistry()
     )
 
-    group = watolib.get_rulegroup("xyz")
+    group = get_rulegroup("xyz")
     assert isinstance(group, cmk.gui.watolib.rulespecs.RulespecGroup)
     assert group.name == "xyz"
     assert group.title == "xyz"
     assert group.help is None
 
 
-def test_legacy_get_not_existing_rule_sub_group(monkeypatch):
+def test_legacy_get_not_existing_rule_sub_group(monkeypatch) -> None:
     monkeypatch.setattr(
         cmk.gui.watolib.rulespecs, "rulespec_group_registry", RulespecGroupRegistry()
     )
 
-    group = watolib.get_rulegroup("xyz/Abc, xxx ding./aaa")
+    group = get_rulegroup("xyz/Abc, xxx ding./aaa")
     assert isinstance(group, RulespecSubGroup)
     assert group.name == "xyz/abcxxxdingaaa"
     assert group.title == "Abc, xxx ding./aaa"
@@ -105,7 +110,7 @@ def test_legacy_get_not_existing_rule_sub_group(monkeypatch):
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-def test_grouped_rulespecs():
+def test_grouped_rulespecs() -> None:
     by_group = {
         "static/networking": [
             "static_checks:mtr",
@@ -532,7 +537,6 @@ def test_grouped_rulespecs():
         ],
         "inventory": [
             "active_checks:cmk_inv",
-            "inv_exports:software_csv",
             "inv_parameters:inv_if",
         ],
         "static/virtualization": [
@@ -1335,7 +1339,7 @@ def _expected_rulespec_group_choices():
         ("rulesets", _expected_rulespec_group_choices()),
     ],
 )
-def test_rulespec_group_choices(mode, result):
+def test_rulespec_group_choices(mode, result) -> None:
     assert sorted(rulespec_group_registry.get_group_choices()) == sorted(result)
 
 
@@ -1379,14 +1383,12 @@ def test_rulespec_group_choices(mode, result):
         ),
     ],
 )
-def test_rulespec_get_matching_group_names(term, result):
-    assert sorted(watolib.rulespec_group_registry.get_matching_group_names(term)) == sorted(result)
+def test_rulespec_get_matching_group_names(term, result) -> None:
+    assert sorted(rulespec_group_registry.get_matching_group_names(term)) == sorted(result)
 
 
-def test_rulespec_get_main_groups():
-    main_group_names = [
-        g_class().name for g_class in watolib.rulespec_group_registry.get_main_groups()
-    ]
+def test_rulespec_get_main_groups() -> None:
+    main_group_names = [g_class().name for g_class in rulespec_group_registry.get_main_groups()]
     assert sorted(main_group_names) == sorted(
         [
             "activechecks",
@@ -1406,7 +1408,7 @@ def test_rulespec_get_main_groups():
     )
 
 
-def test_rulespec_get_all_groups():
+def test_rulespec_get_all_groups() -> None:
     expected_rulespec_groups = [
         "activechecks",
         "host_monconf/host_checks",
@@ -1459,7 +1461,7 @@ def test_rulespec_get_all_groups():
     assert sorted(rulespec_registry.get_all_groups()) == sorted(expected_rulespec_groups)
 
 
-def test_rulespec_get_host_groups():
+def test_rulespec_get_host_groups() -> None:
 
     expected_rulespec_host_groups = [
         "checkparams",
@@ -1494,18 +1496,18 @@ def test_rulespec_get_host_groups():
             "agents/windows_modules",
         ]
 
-    group_names = watolib.rulespec_group_registry.get_host_rulespec_group_names(True)
+    group_names = rulespec_group_registry.get_host_rulespec_group_names(True)
     assert sorted(group_names) == sorted(expected_rulespec_host_groups)
 
 
-def test_legacy_register_rule(monkeypatch):
-    group_registry = watolib.RulespecGroupRegistry()
+def test_legacy_register_rule(monkeypatch) -> None:
+    group_registry = RulespecGroupRegistry()
     monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry", group_registry)
     monkeypatch.setattr(
         cmk.gui.watolib.rulespecs, "rulespec_registry", RulespecRegistry(group_registry)
     )
 
-    watolib.register_rule(
+    register_rule(
         "grouping",
         "dingdong_group",
         Dictionary(
@@ -1515,7 +1517,7 @@ def test_legacy_register_rule(monkeypatch):
         ),
     )
 
-    group = cmk.gui.watolib.rulespecs.get_rulegroup("grouping")
+    group = get_rulegroup("grouping")
     assert group.name == "grouping"
     assert group.title == "grouping"
 
@@ -1541,17 +1543,17 @@ def test_legacy_register_rule(monkeypatch):
     assert spec.item_enum is None
     assert spec.is_optional is False
     assert spec.is_deprecated is False
-    assert spec.factory_default == watolib.Rulespec.NO_FACTORY_DEFAULT
+    assert spec.factory_default == Rulespec.NO_FACTORY_DEFAULT
 
 
-def test_legacy_register_rule_attributes(monkeypatch):
-    group_registry = watolib.RulespecGroupRegistry()
+def test_legacy_register_rule_attributes(monkeypatch) -> None:
+    group_registry = RulespecGroupRegistry()
     monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry", group_registry)
     monkeypatch.setattr(
         cmk.gui.watolib.rulespecs, "rulespec_registry", RulespecRegistry(group_registry)
     )
 
-    watolib.register_rule(
+    register_rule(
         "dingdong_group",
         "rule_name",
         Dictionary(
@@ -1588,7 +1590,7 @@ def test_legacy_register_rule_attributes(monkeypatch):
 
 @pytest.fixture(name="patch_rulespec_registries")
 def fixture_patch_rulespec_registries(monkeypatch):
-    group_registry = watolib.RulespecGroupRegistry()
+    group_registry = RulespecGroupRegistry()
     group_registry.register(RulespecGroupEnforcedServices)
     test_rulespec_registry = RulespecRegistry(group_registry)
     monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry", group_registry)
@@ -1596,7 +1598,7 @@ def fixture_patch_rulespec_registries(monkeypatch):
     monkeypatch.setattr(cmk.gui.plugins.wato.utils, "rulespec_registry", test_rulespec_registry)
 
 
-def test_register_check_parameters(patch_rulespec_registries):
+def test_register_check_parameters(patch_rulespec_registries) -> None:
     register_check_parameters(
         "netblabla",
         "bla_params",
@@ -1609,7 +1611,7 @@ def test_register_check_parameters(patch_rulespec_registries):
     )
 
     # Check either registration as discovery check ruleset
-    group = cmk.gui.watolib.rulespecs.get_rulegroup("checkparams/netblabla")
+    group = get_rulegroup("checkparams/netblabla")
     assert group.name == "checkparams/netblabla"
     assert group.title == "netblabla"
 
@@ -1633,7 +1635,7 @@ def test_register_check_parameters(patch_rulespec_registries):
     assert rulespec.is_optional is False
 
     # and also as static ruleset
-    group = cmk.gui.watolib.rulespecs.get_rulegroup("static/netblabla")
+    group = get_rulegroup("static/netblabla")
     assert group.name == "static/netblabla"
     assert group.title == "netblabla"
 
@@ -1672,7 +1674,7 @@ def test_register_check_parameters(patch_rulespec_registries):
     assert isinstance(rulespec.valuespec._elements[2], TimeperiodValuespec)
 
 
-def test_register_host_check_parameters(patch_rulespec_registries):
+def test_register_host_check_parameters(patch_rulespec_registries) -> None:
     register_check_parameters(
         "netblabla",
         "bla_params",
@@ -1697,7 +1699,7 @@ def test_register_host_check_parameters(patch_rulespec_registries):
     assert isinstance(rulespec.valuespec._elements[2], TimeperiodValuespec)
 
 
-def test_register_without_discovery(patch_rulespec_registries):
+def test_register_without_discovery(patch_rulespec_registries) -> None:
     with pytest.raises(MKGeneralException, match="registering manual check"):
         register_check_parameters(
             "netblabla",
@@ -1712,7 +1714,7 @@ def test_register_without_discovery(patch_rulespec_registries):
         )
 
 
-def test_register_without_static(patch_rulespec_registries):
+def test_register_without_static(patch_rulespec_registries) -> None:
     register_check_parameters(
         "netblabla",
         "bla_params",
@@ -1735,11 +1737,11 @@ def test_register_without_static(patch_rulespec_registries):
 
 class DummyGroup(RulespecGroup):
     @property
-    def name(self):
+    def name(self) -> str:
         return "group"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return "Group title"
 
     @property
@@ -1747,7 +1749,7 @@ class DummyGroup(RulespecGroup):
         return "help text"
 
 
-def test_rulespecs_get_by_group():
+def test_rulespecs_get_by_group() -> None:
     group_registry = RulespecGroupRegistry()
     registry = RulespecRegistry(group_registry)
 
@@ -1766,14 +1768,14 @@ def test_rulespecs_get_by_group():
     assert isinstance(result[0], HostRulespec)
 
 
-def test_match_item_generator_rules():
+def test_match_item_generator_rules() -> None:
     class SomeRulespecGroup(RulespecGroup):
         @property
-        def name(self):
+        def name(self) -> str:
             return "rulespec_group"
 
         @property
-        def title(self):
+        def title(self) -> str:
             return "Rulespec Group"
 
         @property
@@ -1823,7 +1825,7 @@ def test_match_item_generator_rules():
     ]
 
 
-def test_all_rulespec_groups_have_main_group():
+def test_all_rulespec_groups_have_main_group() -> None:
     for rulespec_group_name, rulespec_group_cls in rulespec_group_registry.items():
         if issubclass(rulespec_group_cls, RulespecGroup):
             main_module_from_rulespec_group_name(
@@ -1832,15 +1834,15 @@ def test_all_rulespec_groups_have_main_group():
             )
 
 
-def test_rulespec_groups_have_unique_names():
+def test_rulespec_groups_have_unique_names() -> None:
     # The title is e.g. shown in the mega menu search. With duplicate entries a user could not
     # distinguish where a rule is located in the menu hierarchy.
     main_group_titles = [e().title for e in rulespec_group_registry.get_main_groups()]
     assert len(main_group_titles) == len(set(main_group_titles)), "Main group titles are not unique"
 
 
-def test_validate_datatype_timeperiod_valuespec_inner():
+def test_validate_datatype_timeperiod_valuespec_inner() -> None:
     # make sure TimeperiodValuespec does propagate validate_datatype to its child
-    value_spec = TimeperiodValuespec(TextInput(title="testing"))
+    value_spec = TimeperiodValuespec(Dictionary(elements=[]))
     with pytest.raises(MKUserError):
-        value_spec.validate_datatype(["not", "a", "string"], "")
+        value_spec.validate_datatype(["not", "a", "string"], "")  # type: ignore[arg-type]

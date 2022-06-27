@@ -1,0 +1,15 @@
+Title: Speed up loading time of user visuals
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1650376045
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+System with many users (1000+) had performance problems in calculating
+the actual visible views, dashboards and reports for the corresponding user.
+This introduced an additional rendering delay of 200-300ms for those visuals.
+
+Most of the computed visual world is now cached and only updated on demand.

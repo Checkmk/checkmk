@@ -70,6 +70,6 @@ rulespec_registry.register(
         item_spec=_item_spec_storcli_vdrives,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_storcli_vdrives,
-        title=lambda: _("LSI RAID VDrives (StorCLI)"),
+        title=lambda: _("LSI RAID logical disks"),
     )
 )

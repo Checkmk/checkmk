@@ -30,7 +30,7 @@ from cmk.utils.macros import MacroMapping
 
 
 class ABCBINodeGenerator(ABCWithSchema):
-    def __init__(self, node_config: NodeDict):
+    def __init__(self, node_config: NodeDict) -> None:
         super().__init__()
         self.search: ABCBISearch = bi_search_registry.instantiate(node_config["search"])
         self.action: ABCBIAction = bi_action_registry.instantiate(node_config["action"])

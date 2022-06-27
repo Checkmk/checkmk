@@ -8,6 +8,7 @@
 def inventory_zebra_model(info):
     if info[0] != [] or info[1] != [] or info[2] != []:
         return [(None, {})]
+    return []
 
 
 def check_zebra_model(_no_item, _no_params, info):

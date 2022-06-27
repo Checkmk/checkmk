@@ -30,6 +30,6 @@ from cmk.base.plugins.agent_based.k8s_nodes import check_k8s_nodes
         ),
     ],
 )
-def test_check_k8s_nodes(section, params, expected_result):
+def test_check_k8s_nodes(section, params, expected_result) -> None:
     result = list(check_k8s_nodes(params, section))
     assert result == expected_result

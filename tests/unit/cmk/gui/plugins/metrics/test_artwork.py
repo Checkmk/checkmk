@@ -8,6 +8,8 @@ import pytest
 
 from tests.testlib import on_time
 
+from cmk.utils.prediction import TimeSeries
+
 from cmk.gui.plugins.metrics import artwork
 
 
@@ -21,7 +23,7 @@ from cmk.gui.plugins.metrics import artwork
         (None, 5, True, (-5, 5)),
     ],
 )
-def test_min(_min, _max, mirrored, result):
+def test_min(_min, _max, mirrored, result) -> None:
     assert artwork._purge_min_max(_min, _max, mirrored) == result
 
 
@@ -40,7 +42,7 @@ def test_min(_min, _max, mirrored, result):
         ),
     ],
 )
-def test_dist_equal(args, result):
+def test_dist_equal(args, result) -> None:
     with on_time("2019-09-09", "Europe/Berlin"):
         assert list(artwork.dist_equal(*args)) == result
 
@@ -70,13 +72,21 @@ def test_dist_equal(args, result):
         ),
     ],
 )
-def test_dist_week(args, result):
+def test_dist_week(args, result) -> None:
     with on_time("2019-09-09", "Europe/Berlin"):
         assert list(artwork.dist_week(*args)) == result
 
 
-def test_halfstep_interpolation():
-    assert artwork.halfstep_interpolation([5, 7, None]) == [5, 5, 5, 6, 7, 7, None]
+def test_halfstep_interpolation() -> None:
+    assert artwork.halfstep_interpolation(TimeSeries([5.0, 7.0, None], (123, 234, 10))) == [
+        5.0,
+        5.0,
+        5.0,
+        6.0,
+        7.0,
+        7.0,
+        None,
+    ]
 
 
 @pytest.mark.parametrize(
@@ -94,5 +104,5 @@ def test_halfstep_interpolation():
         ),
     ],
 )
-def test_fringe(args, result):
+def test_fringe(args, result) -> None:
     assert artwork.areastack(args[1], args[0]) == result

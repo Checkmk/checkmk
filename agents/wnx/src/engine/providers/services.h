@@ -12,9 +12,7 @@
 #include "providers/internal.h"
 #include "section_header.h"
 
-namespace cma {
-
-namespace provider {
+namespace cma::provider {
 
 class Services : public Asynchronous {
 public:
@@ -26,8 +24,6 @@ private:
     std::string makeBody() override;
 };
 
-}  // namespace provider
-
-};  // namespace cma
+};  // namespace cma::provider
 
 #endif  // services_h__

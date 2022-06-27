@@ -14,7 +14,7 @@ def inventory_appdynamics_web_container(info):
         yield " ".join(line[0:2]), {}
 
 
-def check_appdynamics_web_container(item, params, info):
+def check_appdynamics_web_container(item, params, info):  # pylint: disable=too-many-branches
     for line in info:
         if item == " ".join(line[0:2]):
             values = {}

@@ -7,7 +7,9 @@
 from typing import Optional
 
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.globals import html
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.header import make_header
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 
 # TODO: Change all call sites to directly import from cmk.gui.page_menu
@@ -19,7 +21,7 @@ from cmk.gui.watolib.activate_changes import get_pending_changes_info, get_pendi
 _html_head_open = False
 
 
-def initialize_wato_html_head():
+def initialize_wato_html_head() -> None:
     global _html_head_open
     _html_head_open = False
 
@@ -38,7 +40,8 @@ def wato_html_head(
         return
 
     _html_head_open = True
-    html.header(
+    make_header(
+        html,
         title=title,
         breadcrumb=breadcrumb,
         page_menu=page_menu,
@@ -61,16 +64,27 @@ def _make_wato_page_state() -> PageState:
     changes_info = get_pending_changes_info()
     tooltip = get_pending_changes_tooltip()
     changelog_url = "wato.py?mode=changelog"
-    span_id = "pending_changes"
+    span_id = "changes_info"
     if changes_info:
+        changes_number, changes_str = changes_info.split()
         return PageState(
-            text=html.render_span(changes_info, id_=span_id, class_="has_changes"),
+            text=HTMLWriter.render_span(
+                HTMLWriter.render_span(changes_number, class_="changes_number")
+                + HTMLWriter.render_span(changes_str, class_="changes_str"),
+                id_=span_id,
+            ),
             icon_name="pending_changes",
             url=changelog_url,
             tooltip_text=tooltip,
+            css_classes=["pending_changes"],
         )
     return PageState(
-        text=html.render_span(_("No pending changes"), id_=span_id),
+        text=HTMLWriter.render_span(
+            HTMLWriter.render_span("", class_="changes_number")
+            + HTMLWriter.render_span(_("No pending changes"), class_="changes_str"),
+            id_=span_id,
+        ),
         url=changelog_url,
         tooltip_text=tooltip,
+        css_classes=["no_changes"],
     )

@@ -33,7 +33,7 @@ def _write_hosts_mk(content: str) -> Path:
     return path
 
 
-def test_rewrite_folder_explicit_site():
+def test_rewrite_folder_explicit_site() -> None:
     _write_folder_attributes(
         {
             "title": "Main",
@@ -60,7 +60,7 @@ def test_rewrite_folder_explicit_site():
     assert folder.attribute("site") == "dingdong"
 
 
-def test_rewrite_host_explicit_site():
+def test_rewrite_host_explicit_site() -> None:
     _write_hosts_mk(
         """# Created by WATO
 # encoding: utf-8
@@ -90,7 +90,7 @@ host_attributes.update(
     assert hosts_config["host_tags"]["ag"]["site"] == "dingdong"
 
 
-def test_rewrite_tags_no_explicit_site_set(monkeypatch):
+def test_rewrite_tags_no_explicit_site_set(monkeypatch) -> None:
     _write_folder_attributes(
         {
             "title": "Main",

@@ -15,7 +15,10 @@ import werkzeug
 from six import ensure_str
 from werkzeug.utils import get_content_type
 
+from cmk.utils.site import url_prefix
+
 import cmk.gui.utils as utils
+from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.i18n import _
 
@@ -36,10 +39,7 @@ class LegacyVarsMixin:
     DELETED = object()
 
     def __init__(self, *args: Any, **kw: Any) -> None:
-        # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
-        # up with 1.7, once we have moved to python 3.
-        # [mypy:] Too many arguments for "__init__" of "object"  [call-arg]
-        super().__init__(*args, **kw)  # type: ignore[call-arg]
+        super().__init__(*args, **kw)
         self.legacy_vars = self._vars = {}  # type: Dict[str, Union[str, object]]
 
     def set_var(self, varname: str, value: str) -> None:
@@ -83,8 +83,8 @@ class LegacyVarsMixin:
         # up with 1.7, once we have moved to python 3.
         return super().has_var(varname)  # type: ignore[misc]
 
-    def var(self, varname: str, default: Optional[str] = None) -> Optional[str]:
-        legacy_var = self.legacy_vars.get(varname, None)
+    def var(self, name: str, default: Optional[str] = None) -> Optional[str]:
+        legacy_var = self.legacy_vars.get(name, None)
         if legacy_var is not None:
             if legacy_var is not self.DELETED:
                 assert isinstance(legacy_var, str)
@@ -93,15 +93,12 @@ class LegacyVarsMixin:
         # We only fall through to the real HTTP request if our var isn't set and isn't deleted.
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
-        return super().var(varname, default)  # type: ignore[misc]
+        return super().var(name, default)  # type: ignore[misc]
 
 
 class LegacyUploadMixin:
     def __init__(self, *args: Any, **kw: Any) -> None:
-        # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
-        # up with 1.7, once we have moved to python 3.
-        # [mypy:] Too many arguments for "__init__" of "object"  [call-arg]
-        super().__init__(*args, **kw)  # type: ignore[call-arg]
+        super().__init__(*args, **kw)
         self.upload_cache: Dict[str, UploadedFile] = {}
 
     def uploaded_file(self, name: str) -> UploadedFile:
@@ -242,7 +239,7 @@ class Request(
 
     # pylint: disable=too-many-ancestors
 
-    def __init__(self, environ, populate_request=True, shallow=False):
+    def __init__(self, environ, populate_request=True, shallow=False) -> None:
         super().__init__(environ, populate_request=populate_request, shallow=shallow)
         self._verify_not_using_threaded_mpm()
 
@@ -431,7 +428,7 @@ class Request(
             python_request = self.var("request", "{}")
             assert python_request is not None
             try:
-                request = ast.literal_eval(python_request)
+                request_ = ast.literal_eval(python_request)
             except (SyntaxError, ValueError) as e:
                 raise MKUserError(
                     "request", _("Failed to parse Python request: '%s': %s") % (python_request, e)
@@ -440,8 +437,8 @@ class Request(
             json_request = self.var("request", "{}")
             assert json_request is not None
             try:
-                request = json.loads(json_request)
-                request["request_format"] = "json"
+                request_ = json.loads(json_request)
+                request_["request_format"] = "json"
             except ValueError as e:  # Python3: json.JSONDecodeError
                 raise MKUserError(
                     "request", _("Failed to parse JSON request: '%s': %s") % (json_request, e)
@@ -449,9 +446,9 @@ class Request(
 
         for key, val in self.itervars():
             if key not in ["request", "output_format"] + exclude_vars:
-                request[key] = val
+                request_[key] = val
 
-        return request
+        return request_
 
 
 class Response(werkzeug.Response):
@@ -461,7 +458,17 @@ class Response(werkzeug.Response):
     default_mimetype = "text/html"
 
     def set_http_cookie(self, key: str, value: str, *, secure: bool) -> None:
-        super().set_cookie(key, value, secure=secure, httponly=True, samesite="Lax")
+        super().set_cookie(
+            key, value, path=url_prefix(), secure=secure, httponly=True, samesite="Lax"
+        )
+
+    def unset_http_cookie(self, key: str) -> None:
+        super().delete_cookie(key, path=url_prefix())
 
     def set_content_type(self, mime_type: str) -> None:
         self.headers["Content-type"] = get_content_type(mime_type, self.charset)
+
+
+# From request context
+request: Request = request_local_attr("request")
+response: Response = request_local_attr("response")

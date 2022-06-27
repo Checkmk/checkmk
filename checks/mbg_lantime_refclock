@@ -27,6 +27,7 @@ mbg_lantime_refclock_default_levels = (3, 3)
 def inventory_mbg_lantime_refclock(info):
     if len(info) > 0 and len(info[0]) == 6:
         return [(None, None, "mbg_lantime_refclock_default_levels")]
+    return []
 
 
 def check_mbg_lantime_refclock(item, params, info):

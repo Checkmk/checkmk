@@ -45,7 +45,7 @@ inline void hardcodedBP() { DbgBreakPoint(); }
 #elif defined(NTVIDEO)
 inline void hardcodedBP() { EngDebugBreak(); }
 #elif defined(WIN32)
-inline void hardcodedBP() { DebugBreak(); }
+inline void hardcodedBP() noexcept { DebugBreak(); }
 #elif defined(LINUX)
 #if defined(__arm__)
 inline void hardcodedBP() { ; }

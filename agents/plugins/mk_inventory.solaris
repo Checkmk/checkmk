@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+#
+# BEGIN COMMON INVENTORY CODE
+#
+
 # Reason for this no-op: shellcheck disable=... before the first command disables the error for the
 # entire script.
 :
@@ -11,79 +15,143 @@
 # shellcheck disable=SC2034
 CMK_VERSION="2.2.0i1"
 
-# Run and *send* only once every __ seconds
-# shellcheck source=../cfg_examples/mk_inventory.cfg
-. "${MK_CONFDIR}/mk_inventory.cfg" 2>/dev/null || true
+_load_config() {
+    # defaults:
+    INVENTORY_INTERVAL=$((3600 * 4))
 
-# Default to four hours
-INTERVAL=${INVENTORY_INTERVAL:-14400}
+    [ -r "${1}" ] || return
+    # shellcheck source=../cfg_examples/mk_inventory.cfg
+    . "${1}"
+}
 
-FLAGFILE=$MK_VARDIR/mk_inventory.last.$REMOTE
-if [ "$(uname -r)" = "5.10" ]; then
-    NOW=$(truss /usr/bin/date 2>&1 | grep ^time | awk -F"= " '{print $2}')
-else
-    NOW="$(date +%s)"
-fi
-UNTIL=$((NOW + INTERVAL + 600))
+inpath() {
+    # replace "if type [somecmd]" idiom
+    # 'command -v' tends to be more robust vs 'which' and 'type' based tests
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
 
-#check if flagfile exits
-if [ -e "$FLAGFILE" ]; then
-    LAST_RUN="$(cat "${FLAGFILE}")"
-else
-    #First run of the script
-    LAST_RUN=0
-fi
+_get_epoch() {
+    # This is taken from the check_mk_agent. Try to keep it in sync with set_up_get_epoch...
 
-if [ $((NOW - LAST_RUN)) -ge "${INTERVAL}" ]; then
+    # On some systems date +%s returns a literal %s
+    if date +%s | grep "^[0-9].*$" >/dev/null 2>&1; then
+        date +%s
+    else
+        # do not check whether perl is even present.
+        # in weird cases we may be fine without get_epoch.
+        perl -e 'print($^T."\n");'
+    fi
+}
+
+_insert_persist_option() {
+    # insert the persist(...) option, if it is not already present.
+    sed -e '/^<<<.*\(:persist(\).*>>>/{p;d;}; s/^<<<\([^>]*\)>>>$/<<<\1:persist('"${1}"')>>>/'
+}
+
+run_persisted() {
+    INTERVAL="${1}"
+    shift
+
+    FLAGFILE="${MK_VARDIR}/persisted/${1}.${REMOTE}"
+    NOW="$(_get_epoch)"
+    UNTIL=$((NOW + INTERVAL + 600))
+    LAST_RUN="$(cat "${FLAGFILE}" 2>/dev/null)" || LAST_RUN=0
+
+    if [ $((NOW - LAST_RUN)) -lt "${INTERVAL}" ]; then
+        return
+    fi
+
+    mkdir "${FLAGFILE%/*}"
     echo "${NOW}" >"${FLAGFILE}"
 
-    echo "<<<solaris_uname:sep(61):persist($UNTIL)>>>"
+    "$@" | _insert_persist_option "${UNTIL}"
+}
+
+#
+# END COMMON INVENTORY CODE
+#
+
+sections_mk_inventory() {
+    section_solaris_uname
+
+    section_solaris_prtdiag
+
+    section_solaris_psrinfo
+
+    section_solaris_pkginfo
+
+    section_solaris_addresses
+
+    section_solaris_routes
+}
+
+section_solaris_uname() {
+    echo "<<<solaris_uname:sep(61)>>>"
     uname -X
+}
 
-    if zoneadm list | grep global >/dev/null 2>&1; then
-        if type prtdiag >/dev/null; then
-            echo "<<<solaris_prtdiag:sep(10):persist($UNTIL)>>>"
-            if type sneep >/dev/null 2>&1; then
-                SN=$(sneep -t serial)
-            else
-                SN=$(smbios -t SMB_TYPE_SYSTEM | grep 'Serial Number:' | awk '{print substr($0, index($0,$3))}')
-            fi
-            echo "SerialNumber: $SN"
-            prtdiag -v
-        fi
+section_solaris_prtdiag() {
+    inpath prtdiag && zoneadm list | grep -q global || return
+
+    echo "<<<solaris_prtdiag:sep(10)>>>"
+    if inpath sneep; then
+        SN=$(sneep -t serial)
+    else
+        SN=$(smbios -t SMB_TYPE_SYSTEM | grep 'Serial Number:' | awk '{print substr($0, index($0,$3))}')
+    fi
+    echo "SerialNumber: $SN"
+    prtdiag -v
+}
+
+section_solaris_psrinfo() {
+    inpath psrinfo || return
+
+    # Previously, we only had this single psrinfo section
+    # Keep the name to avoid incompatibilities.
+    echo "<<<solaris_psrinfo>>>"
+    psrinfo -p -v
+
+    # Name the section containing the plain "psrinfo" output
+    # _virtual instead, as this is what it basically contains
+    echo "<<<solaris_psrinfo_virtual>>>"
+    psrinfo
+
+    echo "<<<solaris_psrinfo_physical>>>"
+    psrinfo -p
+
+    # -t option is not available on older systems
+    PSRINFO_T=$(psrinfo -t 2>/dev/null)
+    if [ -n "$PSRINFO_T" ]; then
+        echo "<<<solaris_psrinfo_table>>>"
+        psrinfo -t
     fi
 
-    if type psrinfo >/dev/null; then
-        # Previously, we only had this single psrinfo section
-        # Keep the name to avoid incompatibilities.
-        echo "<<<solaris_psrinfo:persist($UNTIL)>>>"
-        psrinfo -p -v
+}
 
-        # Name the section containing the plain "psrinfo" output
-        # _virtual instead, as this is what it basically contains
-        echo "<<<solaris_psrinfo_virtual:persist($UNTIL)>>>"
-        psrinfo
+section_solaris_pkginfo() {
+    inpath pkginfo || return
+    echo "<<<solaris_pkginfo:sep(58)>>>"
+    pkginfo -l
+}
 
-        echo "<<<solaris_psrinfo_physical:persist($UNTIL)>>>"
-        psrinfo -p
-
-        # -t option is not available on older systems
-        PSRINFO_T=$(psrinfo -t 2>/dev/null)
-        if [ -n "$PSRINFO_T" ]; then
-            echo "<<<solaris_psrinfo_table:persist($UNTIL)>>>"
-            psrinfo -t
-        fi
-    fi
-
-    if type pkginfo >/dev/null; then
-        echo "<<<solaris_pkginfo:sep(58):persist($UNTIL)>>>"
-        pkginfo -l
-    fi
-
-    echo "<<<solaris_addresses:persist($UNTIL)>>>"
+section_solaris_addresses() {
+    echo "<<<solaris_addresses>>>"
     ifconfig -a
+}
 
-    echo "<<<solaris_routes:persist($UNTIL)>>>"
+section_solaris_routes() {
+    echo "<<<solaris_routes>>>"
     netstat -nr
+}
 
-fi
+#
+# BEGIN COMMON INVENTORY CODE
+#
+
+main() {
+    _load_config "${MK_CONFDIR}/mk_inventory.cfg"
+
+    run_persisted "${INVENTORY_INTERVAL:?}" sections_mk_inventory
+}
+
+[ -z "${MK_SOURCE_AGENT}" ] && main

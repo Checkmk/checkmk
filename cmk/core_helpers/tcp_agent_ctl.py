@@ -50,7 +50,6 @@ class AgentCtlMessage(Deserializer):
         version: Version,
         payload: bytes,
     ) -> None:
-        super().__init__()
         self.version: Final = version
         self.payload: Final = payload
 
@@ -91,7 +90,6 @@ class HeaderV1(Serializer, Deserializer):
         self,
         compression_type: CompressionType,
     ) -> None:
-        super().__init__()
         self.compression_type: Final = compression_type
 
     def __iter__(self) -> Iterator[bytes]:
@@ -111,7 +109,6 @@ class MessageV1(Deserializer):
         header: HeaderV1,
         payload: bytes,
     ) -> None:
-        super().__init__()
         self.header: Final = header
         self.payload: Final = payload
 

@@ -12,6 +12,8 @@ from typing import List, Optional, Tuple
 import cmk.utils.paths
 from cmk.utils.version import is_managed_edition
 
+from cmk.gui.ctx_stack import request_local_attr
+
 
 class Theme:
     def __init__(self) -> None:
@@ -23,7 +25,7 @@ class Theme:
         self._default_theme = default_theme
         self._theme = default_theme
 
-    def set(self, theme_id: str) -> None:
+    def set(self, theme_id: Optional[str]) -> None:
         if not theme_id:
             theme_id = self._default_theme
 
@@ -119,3 +121,6 @@ def theme_choices() -> List[Tuple[str, str]]:
             themes[theme_dir.name] = theme_meta["title"]
 
     return sorted(themes.items())
+
+
+theme: Theme = request_local_attr("theme")

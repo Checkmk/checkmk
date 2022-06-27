@@ -46,7 +46,16 @@ def _process_sub_table(sub_table: Sequence[Union[str, Sequence[int]]]) -> Iterab
     >>> from pprint import pprint
     >>> pprint(list(_process_sub_table(['49160', 'gigabitEthernet 1/0/8', 'pve-muc1-ipmi', '6',
     ... '1000000000', '1000', '1', '1', [116, 218, 136, 88, 22, 17], '761116702'])))
-    [Interface(index='49160', descr='gigabitEthernet 1/0/8', alias='pve-muc1-ipmi', type='6', speed=1000000000, oper_status=1, phys_address='74:DA:88:58:16:11', admin_status=1, last_change=7611167.02, bond=None)]
+    [Interface(index='49160',
+               descr='gigabitEthernet 1/0/8',
+               alias='pve-muc1-ipmi',
+               type='6',
+               speed=1000000000,
+               oper_status=1,
+               phys_address='74:DA:88:58:16:11',
+               admin_status=1,
+               last_change=7611167.02,
+               bond=None)]
     >>> pprint(list(_process_sub_table(['49160', 'gigabitEthernet 1/0/8', 'pve-muc1-ipmi', '231',
     ... '1000000000', '1000', '1', '1', [116, 218, 136, 88, 22, 17], '761116702'])))
     []

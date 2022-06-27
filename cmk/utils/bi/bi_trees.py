@@ -98,7 +98,7 @@ class BICompiledLeaf(ABCBICompiledNode):
     def required_elements(self) -> Set[RequiredBIElement]:
         return {RequiredBIElement(self.site_id, self.host_name, self.service_description)}
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "BICompiledLeaf[Site %s, Host: %s, Service %s]" % (
             self.site_id,
             self.host_name,
@@ -256,7 +256,7 @@ class BICompiledRule(ABCBICompiledNode):
         self.aggregation_function = aggregation_function
         self.node_visualization = node_visualization
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "BICompiledRule[%s, %d rules, %d leaves %d remaining]" % (
             self.properties.title,
             len([x for x in self.nodes if x.type() == "rule"]),
@@ -417,7 +417,7 @@ class BIRemainingResult(ABCBICompiledNode):
     def type(cls) -> str:
         return "remaining"
 
-    def __init__(self, host_names: List[HostName]):
+    def __init__(self, host_names: List[HostName]) -> None:
         super().__init__()
         self.host_names = host_names
 
@@ -540,6 +540,7 @@ class BICompiledAggregation:
                 if node_result_bundle.assumed_result
                 else node_result_bundle.actual_result
             ),
+            "aggr_id": bi_compiled_branch.properties.title,
             "aggr_name": bi_compiled_branch.properties.title,
             "aggr_output": node_result_bundle.actual_result.output,
             "aggr_hosts": bi_compiled_branch.required_hosts,
@@ -583,6 +584,7 @@ class BICompiledAggregation:
         if isinstance(node, BICompiledRule):
             result["type"] = 2
             result["title"] = node.properties.title
+            result["docu_url"] = node.properties.docu_url
             result["rule_id"] = node.id
             result["reqhosts"] = list(node.required_hosts)
             result["nodes"] = list(map(self.eval_result_node, node.nodes))

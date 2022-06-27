@@ -1,0 +1,13 @@
+Title: Windows plugins agent: handle python plugins and local checks
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1652439956
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The Windows <i>Check_MK Agent</i> was not counting python plugins and
+local checks.
+Now they are correctly counted.

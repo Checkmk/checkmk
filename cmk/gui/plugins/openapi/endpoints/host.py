@@ -39,6 +39,7 @@ To search for hosts with specific tags set on them:
     {'op': '~', 'left': 'tag_names', 'right': 'windows'}
 
 """
+from typing import Any, Mapping
 
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hosts
@@ -46,7 +47,13 @@ from cmk.utils.livestatus_helpers.tables import Hosts
 from cmk.gui import fields as gui_fields
 from cmk.gui import sites
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, response_schemas
+from cmk.gui.http import Response
+from cmk.gui.plugins.openapi.restful_objects import (
+    constructors,
+    Endpoint,
+    permissions,
+    response_schemas,
+)
 
 from cmk import fields
 
@@ -71,7 +78,18 @@ class HostParameters(BaseSchema):
         load_default=[],
     )
     query = gui_fields.query_field(Hosts, required=False)
-    columns = gui_fields.column_field(Hosts, mandatory=[Hosts.name])
+    columns = gui_fields.column_field(Hosts, mandatory=[Hosts.name], example=["name"])
+
+
+PERMISSIONS = permissions.Ignore(
+    permissions.AnyPerm(
+        [
+            permissions.Perm("general.see_all"),
+            permissions.Perm("bi.see_all"),
+            permissions.Perm("mkeventd.seeall"),
+        ]
+    )
+)
 
 
 @Endpoint(
@@ -82,17 +100,18 @@ class HostParameters(BaseSchema):
     blacklist_in=["swagger-ui"],
     query_params=[HostParameters],
     response_schema=response_schemas.DomainObjectCollection,
+    permissions_required=PERMISSIONS,
 )
-def list_hosts(param):
+def list_hosts(params: Mapping[str, Any]) -> Response:
     """Show hosts of specific condition"""
     live = sites.live()
-    sites_to_query = param["sites"]
+    sites_to_query = params["sites"]
     if sites_to_query:
         live.only_sites = sites_to_query
 
-    q = Query(param["columns"])
+    q = Query(params["columns"])
 
-    query_expr = param.get("query")
+    query_expr = params.get("query")
     if query_expr:
         q = q.filter(query_expr)
 

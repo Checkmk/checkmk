@@ -25,7 +25,6 @@ from cmk.utils.bi.bi_search import (
 from cmk.utils.defines import short_service_state_name
 
 import cmk.gui.userdb as userdb
-import cmk.gui.watolib as watolib
 from cmk.gui.bi import get_cached_bi_packs
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -46,6 +45,7 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+from cmk.gui.watolib.hosts_and_folders import Folder
 
 #   .--Generic converter---------------------------------------------------.
 #   |                   ____                      _                        |
@@ -373,7 +373,7 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
                 DropdownChoice(
                     title=_("Folder"),
                     help=_("The rule is only applied to hosts directly in or below this folder."),
-                    choices=watolib.Folder.folder_choices(),
+                    choices=Folder.folder_choices(),
                     encode_value=False,
                 ),
             ),
@@ -596,7 +596,7 @@ def may_use_rules_in_pack(bi_pack):
     return bi_pack.public or is_contact_for_pack(bi_pack)
 
 
-def is_contact_for_pack(bi_pack):
+def is_contact_for_pack(bi_pack) -> bool:
     if user.may("wato.bi_admin"):
         return True  # meaning I am admin
 
@@ -749,7 +749,7 @@ bi_config_aggregation_function_registry = BIConfigAggregationFunctionRegistry()
 
 @bi_config_aggregation_function_registry.register
 class BIConfigAggregationFunctionBest(BIAggregationFunctionBest, ABCBIConfigAggregationFunction):
-    def __str__(self):
+    def __str__(self) -> str:
         return _("Best state, %d nodes, restrict to %s") % (
             self.count,
             short_service_state_name(self.restrict_state),
@@ -803,7 +803,7 @@ class BIConfigAggregationFunctionBest(BIAggregationFunctionBest, ABCBIConfigAggr
 
 @bi_config_aggregation_function_registry.register
 class BIConfigAggregationFunctionWorst(BIAggregationFunctionWorst, ABCBIConfigAggregationFunction):
-    def __str__(self):
+    def __str__(self) -> str:
         return _("Worst state, %d nodes, restrict to %s") % (
             self.count,
             short_service_state_name(self.restrict_state),
@@ -860,7 +860,7 @@ class BIConfigAggregationFunctionWorst(BIAggregationFunctionWorst, ABCBIConfigAg
 class BIConfigAggregationFunctionCountOK(
     BIAggregationFunctionCountOK, ABCBIConfigAggregationFunction
 ):
-    def __str__(self):
+    def __str__(self) -> str:
         info = []
         for state, settings in [(_("OK"), self.levels_ok), (_("WARN"), self.levels_warn)]:
             if settings["type"] == "count":

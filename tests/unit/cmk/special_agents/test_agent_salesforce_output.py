@@ -13,14 +13,14 @@ from cmk.special_agents.agent_salesforce import main
 URL = "https://api.status.salesforce.com/v1/instances/5/status"
 
 
-def test_wrong_arguments(capsys):
+def test_wrong_arguments(capsys) -> None:
     with pytest.raises(SystemExit):
         main()
     assert capsys.readouterr().out == ""
 
 
 @responses.activate
-def test_agent_output(capsys, monkeypatch):
+def test_agent_output(capsys, monkeypatch) -> None:
     responses.add(
         responses.GET,
         URL,

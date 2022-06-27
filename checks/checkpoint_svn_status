@@ -5,15 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.checkpoint import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
 def inventory_checkpoint_svn_status(info):
     if info:
         return [(None, None)]
+    return []
 
 
 def check_checkpoint_svn_status(item, params, info):
@@ -23,6 +22,7 @@ def check_checkpoint_svn_status(item, params, info):
         if int(code) != 0:
             return 2, description
         return 0, "OK (%s)" % ver
+    return None
 
 
 check_info["checkpoint_svn_status"] = {

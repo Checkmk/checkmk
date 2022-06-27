@@ -14,15 +14,15 @@ from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings
 from cmk.utils.type_defs import AgentRawData, ExitSpec, HostAddress, HostName
 
-from ._base import Summarizer
-from .agent import AgentFetcher, NoCache
+from ._base import Fetcher, Summarizer
+from .agent import AgentFileCache
 from .type_defs import Mode
 
 
-class PiggybackFetcher(AgentFetcher):
+class PiggybackFetcher(Fetcher[AgentRawData]):
     def __init__(
         self,
-        file_cache: NoCache,
+        file_cache: AgentFileCache,
         *,
         hostname: HostName,
         address: Optional[HostAddress],
@@ -55,7 +55,7 @@ class PiggybackFetcher(AgentFetcher):
     def _from_json(cls, serialized: Mapping[str, Any]) -> "PiggybackFetcher":
         serialized_ = copy.deepcopy(dict(serialized))
         return cls(
-            NoCache.from_json(serialized_.pop("file_cache")),
+            AgentFileCache.from_json(serialized_.pop("file_cache")),
             **serialized_,
         )
 

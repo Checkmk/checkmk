@@ -93,6 +93,7 @@ def check_aix_sap_processlist(item, _no_params, parsed):
         else:
             state = 2
         return state, ", ".join(infotexts), perfdata
+    return None
 
 
 check_info["aix_sap_processlist"] = {

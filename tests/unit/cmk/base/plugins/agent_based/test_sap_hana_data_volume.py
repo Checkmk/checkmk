@@ -110,11 +110,11 @@ LEVELS_CRIT = {
         )
     ],
 )
-def test_sap_hana_data_volume_parse(string_table_row, expected_parsed_data):
+def test_sap_hana_data_volume_parse(string_table_row, expected_parsed_data) -> None:
     assert sap_hana_data_volume.parse_sap_hana_data_volume(string_table_row) == expected_parsed_data
 
 
-def test_sap_hana_data_volume_discovery():
+def test_sap_hana_data_volume_discovery() -> None:
     assert list(sap_hana_data_volume.discovery_sap_hana_data_volume(PARSED_SECTION)) == [
         Service(item="H62 10 - DATA 20", parameters={}, labels=[]),
         Service(item="H62 10 - DATA 20 Disk", parameters={}, labels=[]),
@@ -143,7 +143,7 @@ def value_store_fixture(monkeypatch):
     [
         (
             "H62 10 - DATA 20",
-            df.FILESYSTEM_DEFAULT_LEVELS,
+            df.FILESYSTEM_DEFAULT_PARAMS,
             [
                 Metric(
                     "fs_used",
@@ -198,7 +198,7 @@ def value_store_fixture(monkeypatch):
                 ),
                 Result(
                     state=state.CRIT,
-                    summary="26.47% used (84.7 of 320 MiB, warn/crit at 10.00%/15.00%)",
+                    summary="26.47% used (84.7 of 320 MiB, warn/crit at 10.00%/15.00% used)",
                 ),
                 Metric("growth", -4470.553049074118),
                 Result(
@@ -223,7 +223,7 @@ def value_store_fixture(monkeypatch):
     ],
 )
 @freeze_time(NOW_SIMULATED)
-def test_sap_hana_data_volume_check(value_store_patch, item, params, expected_results):
+def test_sap_hana_data_volume_check(value_store_patch, item, params, expected_results) -> None:
 
     yielded_results = list(
         sap_hana_data_volume.check_sap_hana_data_volume(item, params, PARSED_SECTION)
@@ -237,6 +237,6 @@ def test_sap_hana_data_volume_check(value_store_patch, item, params, expected_re
         ("H62 10 - DATA 20", {}),
     ],
 )
-def test_sap_hana_data_volume_check_stale(item, section):
+def test_sap_hana_data_volume_check_stale(item, section) -> None:
     with pytest.raises(IgnoreResultsError):
         list(sap_hana_data_volume.check_sap_hana_data_volume(item, {}, section))

@@ -22,14 +22,14 @@ from cmk.utils.livestatus_helpers import tables
 
 
 class Node:
-    def __init__(self, value):
+    def __init__(self, value) -> None:  # type:ignore[no-untyped-def]
         self.value = value
         self.parsed = self.parse(value)
 
     def parse(self, value):
         return value
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.parsed})"
 
 
@@ -149,7 +149,7 @@ def make_grammar():
     return base_expr
 
 
-def parse_filter(fstr: str):
+def parse_filter(fstr: str):  # type:ignore[no-untyped-def]
     """
     >>> parse_filter(r'''
     ... and(
@@ -187,7 +187,9 @@ def parse_filter(fstr: str):
     return pprint.pprint(root_expr)
 
 
-def nested_loop_join(t1, t2, key1: Tuple[str, ...], key2: Tuple[str, ...]):
+def nested_loop_join(  # type:ignore[no-untyped-def]
+    t1, t2, key1: Tuple[str, ...], key2: Tuple[str, ...]
+):
     """Joins two datasets with the nested-loop join algorithm.
 
     >>> l1 = [{'a': 1}, {'a': 2}]
@@ -221,7 +223,7 @@ def nested_loop_join(t1, t2, key1: Tuple[str, ...], key2: Tuple[str, ...]):
 # Hosts.name <- Downtimes.host_name
 
 
-def hash_join(
+def hash_join(  # type:ignore[no-untyped-def]
     t1,
     t2,
     key1: Tuple[str, ...],

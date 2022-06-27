@@ -11,10 +11,12 @@ from bs4 import BeautifulSoup as bs  # type: ignore[import]
 
 from tests.testlib import compare_html
 
-from cmk.gui.globals import html, output_funnel, response
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import response
 from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.table import table_element
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.output_funnel import output_funnel
 
 
 def read_out_simple_table(text):
@@ -43,7 +45,7 @@ def read_out_csv(text, separator):
     return data
 
 
-def test_basic(request_context):
+def test_basic(request_context) -> None:
     table_id = 0
     title = " TEST "
 
@@ -60,7 +62,7 @@ def test_basic(request_context):
     assert read_out_simple_table(written_text) == [["A", "B"], ["1", "2"], ["1", "4"]]
 
 
-def test_cell_content_escaping(request_context):
+def test_cell_content_escaping(request_context) -> None:
     with output_funnel.plugged():
         with table_element("ding", "TITLE", searchable=False, sortable=False) as table:
             table.row()
@@ -75,7 +77,7 @@ def test_cell_content_escaping(request_context):
     assert "<b>C</b>" in written_text
 
 
-def test_cell_title_escaping(request_context):
+def test_cell_title_escaping(request_context) -> None:
     with output_funnel.plugged():
         with table_element("ding", "TITLE", searchable=False, sortable=False) as table:
             table.row()
@@ -90,7 +92,7 @@ def test_cell_title_escaping(request_context):
     assert "<b>C</b>" in written_text
 
 
-def test_plug(request_context):
+def test_plug(request_context) -> None:
     table_id = 0
     title = " TEST "
 
@@ -111,7 +113,7 @@ def test_plug(request_context):
     assert read_out_simple_table(written_text) == [["A", "B"], ["1a", "2b"], ["1a", "4c"]]
 
 
-def test_context(request_context):
+def test_context(request_context) -> None:
     table_id = 0
     rows = [(i, i**3) for i in range(10)]
     header = ["Number", "Cubical"]
@@ -129,7 +131,7 @@ def test_context(request_context):
     assert data == rows
 
 
-def test_nesting(request_context):
+def test_nesting(request_context) -> None:
     table_id = 0
     title = " TEST "
 
@@ -164,7 +166,7 @@ def test_nesting(request_context):
     ), written_text
 
 
-def test_nesting_context(request_context):
+def test_nesting_context(request_context) -> None:
     table_id = 0
     title = " TEST "
 
@@ -205,7 +207,9 @@ def test_nesting_context(request_context):
 @pytest.mark.parametrize("searchable", [True, False])
 @pytest.mark.parametrize("limit", [None, 2])
 @pytest.mark.parametrize("output_format", ["html", "csv"])
-def test_table_cubical(request_context, monkeypatch, sortable, searchable, limit, output_format):
+def test_table_cubical(
+    request_context, monkeypatch, sortable, searchable, limit, output_format
+) -> None:
     monkeypatch.setattr(LoggedInNobody, "save_tableoptions", lambda s: None)
 
     # Test data
@@ -219,7 +223,7 @@ def test_table_cubical(request_context, monkeypatch, sortable, searchable, limit
     html.request.set_var("_%s_sort" % table_id, "1,0")
     html.request.set_var("_%s_actions" % table_id, "1")
 
-    def _render_table():
+    def _render_table() -> None:
         with table_element(
             table_id="%d" % table_id,
             title=title,

@@ -29,14 +29,14 @@ checks = {
         (
             u'1/1',
             {},
-            [(0, '50.0%', [('fan_perc', 50.0, None, None, None, None)])],
+            [(0, '50.00%', [('fan_perc', 50.0, None, None, None, None)])],
         ),
         (
             u'1/2',
             {
                 'levels': (70.0, 85.0)
             },
-            [(1, '80.0% (warn/crit at 70.0%/85.0%)', [('fan_perc', 80.0, 70.0, 85.0, None, None)])],
+            [(1, '80.00% (warn/crit at 70.00%/85.00%)', [('fan_perc', 80.0, 70.0, 85.0, None, None)])],
         ),
     ]
 }

@@ -21,7 +21,11 @@ Section = Mapping[str, Sensor]
 #        "current" : 12.0,                                # without device state
 #     }
 # }
-def check_elphase(item: str, params: CheckParams, section: Section) -> type_defs.CheckResult:
+def check_elphase(  # pylint: disable=too-many-branches
+    item: str,
+    params: CheckParams,
+    section: Section,
+) -> type_defs.CheckResult:
     if item not in section:
         return  # Item not found in SNMP data
 

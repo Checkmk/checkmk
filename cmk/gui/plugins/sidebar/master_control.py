@@ -13,8 +13,9 @@ from livestatus import SiteId
 import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
 import cmk.gui.user_sites as user_sites
-from cmk.gui.globals import html, request, response
-from cmk.gui.htmllib import foldable_container
+from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -40,9 +41,7 @@ class MasterControlSnapin(SidebarSnapin):
 
     @classmethod
     def description(cls) -> str:
-        return _(
-            "Buttons for switching globally states such as enabling " "checks and notifications"
-        )
+        return _("Buttons for switching globally states such as enabling checks and notifications")
 
     def show(self) -> None:
         items = self._core_toggles()
@@ -78,6 +77,10 @@ class MasterControlSnapin(SidebarSnapin):
                     logger.exception("error rendering master control for site %s", site_id)
                     write_snapin_exception(e)
 
+    @classmethod
+    def refresh_regularly(cls) -> bool:
+        return True
+
     def _core_toggles(self) -> List[Tuple[str, str]]:
         return [
             ("enable_notifications", _("Notifications")),
@@ -102,7 +105,7 @@ class MasterControlSnapin(SidebarSnapin):
             return
 
         if site_state["state"] == "dead":
-            html.show_error(site_state["exception"])
+            html.show_error(str(site_state["exception"]))
             return
 
         if site_state["state"] == "disabled":
@@ -111,7 +114,7 @@ class MasterControlSnapin(SidebarSnapin):
 
         if site_state["state"] == "unknown":
             if site_state.get("exception"):
-                html.show_error(site_state["exception"])
+                html.show_error(str(site_state["exception"]))
             else:
                 html.show_error(_("Site state is unknown"))
             return

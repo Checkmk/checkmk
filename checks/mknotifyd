@@ -52,7 +52,7 @@
 # OutputBuffer:             0 Bytes
 
 
-def parse_mknotifyd(info):
+def parse_mknotifyd(info):  # pylint: disable=too-many-branches
     try:
         timestamp, data = int(info[0][0]), info[1:]
     except (IndexError, ValueError):

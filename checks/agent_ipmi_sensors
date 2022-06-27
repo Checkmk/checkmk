@@ -15,7 +15,7 @@ def agent_ipmi_sensors_arguments(
     return [
         ipaddress or hostname,
         options["username"],
-        options["password"],
+        passwordstore_get_cmdline("%s", options["password"]),
         ipmi_command,
         options["privilege_lvl"],
         *chain.from_iterable(

@@ -160,7 +160,10 @@ function update(handler_data, response) {
     utils.execute_javascript_by_object(container);
 
     if (response.pending_changes_info) {
-        utils.update_pending_changes(response.pending_changes_info);
+        utils.update_pending_changes(
+            response.pending_changes_info,
+            response.pending_changes_tooltip
+        );
     }
 
     // Also execute delayed active checks once to trigger delayed checks that are initially visible.
@@ -221,7 +224,7 @@ export function register_delayed_active_check(
     if (g_delayed_active_checks.length == 0) {
         utils
             .content_scrollbar()
-            .getScrollElement()
+            ?.getScrollElement()
             .addEventListener("scroll", trigger_delayed_active_checks);
         utils.add_event_handler("resize", trigger_delayed_active_checks);
     }
@@ -255,19 +258,22 @@ function trigger_delayed_active_checks() {
 
 export function execute_active_check(entry) {
     var div = document.getElementById(entry.divid);
-    var url =
-        "wato_ajax_execute_check.py?" +
-        "site=" +
-        encodeURIComponent(entry.site) +
-        "&folder=" +
-        encodeURIComponent(entry.folder_path) +
-        "&host=" +
-        encodeURIComponent(entry.hostname) +
-        "&checktype=" +
-        encodeURIComponent(entry.checktype) +
-        "&item=" +
-        encodeURIComponent(entry.item);
-    ajax.get_url(url, handle_execute_active_check, div);
+    ajax.call_ajax("wato_ajax_execute_check.py", {
+        post_data:
+            "site=" +
+            encodeURIComponent(entry.site) +
+            "&folder=" +
+            encodeURIComponent(entry.folder_path) +
+            "&host=" +
+            encodeURIComponent(entry.hostname) +
+            "&checktype=" +
+            encodeURIComponent(entry.checktype) +
+            "&item=" +
+            encodeURIComponent(entry.item),
+        method: "POST",
+        response_handler: handle_execute_active_check,
+        handler_data: div,
+    });
 }
 
 function handle_execute_active_check(oDiv, response_json) {

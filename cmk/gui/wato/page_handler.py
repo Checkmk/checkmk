@@ -4,16 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import inspect
-from typing import List, Optional, Tuple, Type
+from typing import Type
 
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 
 import cmk.gui.pages
+import cmk.gui.watolib.read_only as read_only
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb
+from cmk.gui.config import active_config
+from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKGeneralException, MKUserError
-from cmk.gui.globals import active_config, display_options, html, request, user_errors
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.utils import mode_registry
@@ -23,9 +26,9 @@ from cmk.gui.plugins.wato.utils.html_elements import (
     wato_html_footer,
     wato_html_head,
 )
-from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.transaction_manager import transactions
+from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.wato.pages.not_implemented import ModeNotImplemented
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib.git import do_git_commit
@@ -77,12 +80,11 @@ def page_handler() -> None:
     if cmk_version.is_managed_edition() and not managed.is_provider(
         active_config.current_customer
     ):  # type: ignore[attr-defined]
-        raise MKGeneralException(
-            _("Check_MK can only be configured on " "the managers central site.")
-        )
+        raise MKGeneralException(_("Check_MK can only be configured on the managers central site."))
 
     current_mode = request.var("mode") or "main"
-    mode_permissions, mode_class = _get_mode_permission_and_class(current_mode)
+    mode_class = mode_registry.get(current_mode, ModeNotImplemented)
+    _ensure_mode_permissions(mode_class)
 
     display_options.load_from_html(request, html)
 
@@ -92,36 +94,17 @@ def page_handler() -> None:
     # If we do an action, we aquire an exclusive lock on the complete WATO.
     if transactions.is_transaction():
         with store.lock_checkmk_configuration():
-            _wato_page_handler(current_mode, mode_permissions, mode_class)
+            _wato_page_handler(current_mode, mode_class())
     else:
-        _wato_page_handler(current_mode, mode_permissions, mode_class)
+        _wato_page_handler(current_mode, mode_class())
 
 
-def _wato_page_handler(
-    current_mode: str, mode_permissions: Optional[List[PermissionName]], mode_class: Type[WatoMode]
-) -> None:
-    # Check general permission for this mode
-    if mode_permissions is not None and not user.may("wato.seeall"):
-        _ensure_mode_permissions(mode_permissions)
-
-    mode = mode_class()
-
+def _wato_page_handler(current_mode: str, mode: WatoMode) -> None:
     # Do actions (might switch mode)
     if transactions.is_transaction():
         try:
-            user.need_permission("wato.edit")
-
-            # Even if the user has seen this mode because auf "seeall",
-            # he needs an explicit access permission for doing changes:
-            if user.may("wato.seeall"):
-                if mode_permissions:
-                    _ensure_mode_permissions(mode_permissions)
-
-            if (
-                cmk.gui.watolib.read_only.is_enabled()
-                and not cmk.gui.watolib.read_only.may_override()
-            ):
-                raise MKUserError(None, cmk.gui.watolib.read_only.message())
+            if read_only.is_enabled() and not read_only.may_override():
+                raise MKUserError(None, read_only.message())
 
             result = mode.action()
             if isinstance(result, (tuple, str, bool)):
@@ -158,10 +141,8 @@ def _wato_page_handler(
         show_top_heading=display_options.enabled(display_options.T),
     )
 
-    if not transactions.is_transaction() or (
-        cmk.gui.watolib.read_only.is_enabled() and cmk.gui.watolib.read_only.may_override()
-    ):
-        _show_read_only_warning()
+    if read_only.is_enabled() and (not transactions.is_transaction() or read_only.may_override()):
+        html.show_warning(read_only.message())
 
     # Show outcome of failed action on this page
     html.show_user_errors()
@@ -179,36 +160,15 @@ def _wato_page_handler(
     wato_html_footer(show_body_end=display_options.enabled(display_options.H))
 
 
-def _get_mode_permission_and_class(
-    mode_name: str,
-) -> Tuple[Optional[List[PermissionName]], Type[WatoMode]]:
-    mode_class = mode_registry.get(mode_name, ModeNotImplemented)
-    mode_permissions = mode_class.permissions()
-
-    if mode_class is None:
-        raise MKGeneralException(_("No such WATO module '<tt>%s</tt>'") % mode_name)
-
-    if inspect.isfunction(mode_class):
-        raise MKGeneralException(
-            _(
-                "Deprecated WATO module: Implemented as function. "
-                "This needs to be refactored as WatoMode child class."
-            )
-        )
-
-    if mode_permissions is not None and not user.may("wato.use"):
-        raise MKAuthException(_("You are not allowed to use WATO."))
-
-    return mode_permissions, mode_class
-
-
-def _ensure_mode_permissions(mode_permissions: List[PermissionName]) -> None:
-    for pname in mode_permissions:
-        if "." not in pname:
-            pname = "wato." + pname
-        user.need_permission(pname)
-
-
-def _show_read_only_warning() -> None:
-    if cmk.gui.watolib.read_only.is_enabled():
-        html.show_warning(cmk.gui.watolib.read_only.message())
+def _ensure_mode_permissions(mode_class: Type[WatoMode]) -> None:
+    permissions = mode_class.permissions()
+    if permissions is None:
+        permissions = []
+    else:
+        user.need_permission("wato.use")
+    if transactions.is_transaction():
+        user.need_permission("wato.edit")
+    elif user.may("wato.seeall"):
+        permissions = []
+    for pname in permissions:
+        user.need_permission(pname if "." in pname else ("wato." + pname))

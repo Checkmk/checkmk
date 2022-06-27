@@ -53,18 +53,41 @@ div#top_heading {
       }
     }
 
-    div.text_container span.has_changes {
-      font-size: $font-size-large;
+    &.pending_changes {
+      top: 3px;
+
+      div.text_container span {
+        display: block;
+        text-align: center;
+
+        &.changes_number {
+          font-size: $font-size-page-title;
+          font-weight: $font-weight-bold;
+        }
+      }
+    }
+
+    &.no_changes div.text_container {
+      span.changes_number {
+        display: none;
+      }
+
+      span.changes_str {
+        color: $font-color-dimmed;
+
+        &:hover {
+          color: $font-color;
+        }
+      }
     }
 
     div.icon_container {
-      margin-top: -2px; // align icon with text
       margin-left: 8px;
 
       img.icon {
         display: block;
-        width: 2 * $spacing;
-        height: 2 * $spacing;
+        width: 2.8 * $spacing;
+        height: 2.8 * $spacing;
 
         &:hover {
           /* disable hover effect */
@@ -369,7 +392,7 @@ div#top_heading {
       }
 
       input[type="text"] {
-        width: 110px !important;
+        width: 180px !important;
         height: 18px;
       }
 
@@ -550,8 +573,8 @@ div#page_menu_popups {
 
       a.close_popup img {
         position: absolute;
-        top: 6px;
-        right: $spacing;
+        top: 8px;
+        right: $simplebar-track-width;
         width: 12px;
         height: auto;
       }
@@ -785,8 +808,8 @@ div#page_menu_popups div.side_popup {
 
     a.more {
       position: absolute;
-      top: 6px;
-      right: 4px;
+      top: 8px;
+      right: 6px;
     }
 
     ul {

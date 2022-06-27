@@ -55,5 +55,5 @@ from cmk.gui.plugins.wato.check_parameters.windows_updates import _transform
         ),
     ],
 )
-def test_transform(entry, result):
+def test_transform(entry, result) -> None:
     assert _transform(entry) == result

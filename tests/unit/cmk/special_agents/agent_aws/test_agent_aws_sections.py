@@ -26,7 +26,7 @@ class TestAWSSections:
     def generic_section(self, services, region, config):
         return AWSSectionsGeneric(services, region, config)
 
-    def test_section_header(self, generic_section, capsys):
+    def test_section_header(self, generic_section, capsys) -> None:
         cached_data = {
             ("costs_and_usage", 1606382471.693873, 38582.763184): [
                 AWSSectionResult(

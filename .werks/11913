@@ -1,6 +1,6 @@
 Title: Fix usage of host custom attribute in service notification bulking
 Class: fix
-Compatible: incompat
+Compatible: incomp
 Component: notifications
 Date: 1610450374
 Edition: cre

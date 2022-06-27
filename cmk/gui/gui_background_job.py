@@ -16,7 +16,9 @@ import cmk.gui.i18n
 import cmk.gui.log as log
 import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.globals import html, request, timeout_manager
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import (
@@ -26,6 +28,7 @@ from cmk.gui.permissions import (
     PermissionSection,
 )
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.timeout_manager import timeout_manager
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri_contextless
 
@@ -35,11 +38,11 @@ import cmk
 @permission_section_registry.register
 class PermissionSectionBackgroundJobs(PermissionSection):
     @property
-    def name(self):
+    def name(self) -> str:
         return "background_jobs"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Background jobs")
 
 
@@ -132,19 +135,19 @@ class GUIBackgroundProcess(background_job.BackgroundProcess):
 # These functions here are included in a frozen snapshot of a background job
 # Restrictions for newly added functions: no function arguments, only getters
 class GUIBackgroundJobSnapshottedFunctions(background_job.BackgroundJob):
-    def has_exception(self):
+    def has_exception(self) -> bool:
         return self.get_status().get("state") == background_job.JobStatusStates.EXCEPTION
 
     def acknowledged_by(self):
         return self.get_status().get("acknowledged_by")
 
-    def is_available(self):
+    def is_available(self) -> bool:
         return self.exists() and self.is_visible()
 
-    def is_deletable(self):
+    def is_deletable(self) -> bool:
         return self.get_status().get("deletable", True)
 
-    def is_visible(self):
+    def is_visible(self) -> bool:
         if user.may("background_jobs.see_foreign_jobs"):
             return True
         return user.id == self.get_status().get("user")
@@ -179,13 +182,13 @@ class GUIBackgroundJobSnapshottedFunctions(background_job.BackgroundJob):
 
         return True
 
-    def is_foreign(self):
+    def is_foreign(self) -> bool:
         return self.get_status().get("user") != user.id
 
     # FIXME: There is some arcane metaprogramming Kung Fu going on in
     # GUIBackgroundStatusSnapshot which needs the methods *in this class*,
     # although they are actually totally useless here.
-    def is_active(self):  # pylint: disable=useless-super-delegation
+    def is_active(self) -> bool:  # pylint: disable=useless-super-delegation
         return super().is_active()
 
     def exists(self):  # pylint: disable=useless-super-delegation
@@ -201,7 +204,7 @@ class GUIBackgroundJobSnapshottedFunctions(background_job.BackgroundJob):
 class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions):
     _background_process_class = GUIBackgroundProcess
 
-    def __init__(self, job_id, **kwargs):
+    def __init__(self, job_id, **kwargs) -> None:
         logger = log.logger.getChild("background-job")
         kwargs["user"] = user.id
         kwargs["logfile_path"] = "~/var/log/web.log"
@@ -255,7 +258,7 @@ job_registry = GUIBackgroundJobRegistry()
 # TODO: BackgroundJob should provide an explicit status object, which we can use
 # here without any metaprogramming Kung Fu and arcane inheritance hierarchies.
 class GUIBackgroundStatusSnapshot:
-    def __init__(self, job):
+    def __init__(self, job) -> None:
         super().__init__()
         self._job_status = job.get_status()
         self._logger = job._logger.getChild("snapshot")
@@ -276,7 +279,7 @@ class GUIBackgroundStatusSnapshot:
 
 
 class GUIBackgroundJobManager(background_job.BackgroundJobManager):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(logger=log.logger.getChild("background-job.manager"))
 
     def get_running_job_ids(self, job_class):
@@ -527,7 +530,7 @@ class JobRenderer:
         ]
 
     @classmethod
-    def render_job_row(cls, job_id, job_status, odd, job_details_back_url=None):
+    def render_job_row(cls, job_id, job_status, odd, job_details_back_url=None) -> None:
         html.open_tr(css="data %s0" % odd)
 
         # Actions
@@ -565,7 +568,8 @@ class JobRenderer:
 
         # State
         html.td(
-            html.render_span(job_status["state"]), css=cls.get_css_for_jobstate(job_status["state"])
+            HTMLWriter.render_span(job_status["state"]),
+            css=cls.get_css_for_jobstate(job_status["state"]),
         )
 
         # Started
@@ -624,7 +628,7 @@ class ActionHandler:
     delete_job_var = "_delete_job"
     acknowledge_job_var = "_acknowledge_job"
 
-    def __init__(self, breadcrumb: Breadcrumb):
+    def __init__(self, breadcrumb: Breadcrumb) -> None:
         super().__init__()
         self._breadcrumb = breadcrumb
         self._did_acknowledge_job = False

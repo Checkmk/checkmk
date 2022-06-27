@@ -22,23 +22,23 @@ def repo_path() -> str:
     return os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 
-def cmk_path():
+def cmk_path() -> str:
     return repo_path()
 
 
-def cmc_path():
+def cmc_path() -> str:
     return repo_path() + "/enterprise"
 
 
-def cme_path():
+def cme_path() -> str:
     return repo_path() + "/managed"
 
 
-def cpe_path():
+def cpe_path() -> str:
     return repo_path() + "/plus"
 
 
-def is_enterprise_repo():
+def is_enterprise_repo() -> bool:
     return os.path.exists(cmc_path())
 
 
@@ -89,7 +89,7 @@ def current_branch_name() -> str:
     return branch_name.split("\n", 1)[0]
 
 
-def current_base_branch_name():
+def current_base_branch_name() -> str:
     branch_name = current_branch_name()
 
     # Detect which other branch this one was created from. We do this by going back the
@@ -134,26 +134,28 @@ def current_base_branch_name():
     return branch_name
 
 
-def get_cmk_download_credentials_file():
+def get_cmk_download_credentials_file() -> str:
     return "%s/.cmk-credentials" % os.environ["HOME"]
 
 
-def get_cmk_download_credentials():
-    credentials_file = get_cmk_download_credentials_file()
+def get_cmk_download_credentials() -> tuple[str, str]:
+    credentials_file_path = get_cmk_download_credentials_file()
     try:
-        return tuple(open(credentials_file).read().strip().split(":"))
+        with open(credentials_file_path) as credentials_file:
+            username, password = credentials_file.read().strip().split(":", maxsplit=1)
+            return username, password
     except IOError:
         raise Exception("Missing %s file (Create with content: USER:PASSWORD)" % credentials_file)
 
 
-def get_standard_linux_agent_output():
+def get_standard_linux_agent_output() -> str:
     with Path(repo_path(), "tests/integration/cmk/base/test-files/linux-agent-output").open(
         encoding="utf-8"
     ) as f:
         return f.read()
 
 
-def site_id():
+def site_id() -> str:
     site_id = os.environ.get("OMD_SITE")
     if site_id is not None:
         return site_id
@@ -170,7 +172,7 @@ def site_id():
     return site_id
 
 
-def is_running_as_site_user():
+def is_running_as_site_user() -> bool:
     try:
         return pwd.getpwuid(os.getuid()).pw_name == site_id()
     except KeyError:
@@ -179,7 +181,7 @@ def is_running_as_site_user():
         return False
 
 
-def add_python_paths():
+def add_python_paths() -> None:
     # make the repo directory available (cmk lib)
     sys.path.insert(0, cmk_path())
 

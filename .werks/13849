@@ -1,0 +1,22 @@
+Title: Add Check_MK service for hosts without passive services
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1650439666
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+Previously we only added the <i>Check_MK</i> service if the host had no passive services.
+We now add it always, unless the host is a ping-only host.
+
+Originally the main job of the <i>Check_MK</i> service was to trigger the passive services, so it was not needed for hosts without them.
+
+However, for a while now the service also reports the success of the data sources, which may be relevant for hosts without passive services as well.
+In particular, a failing data source may be the reason why we don't see passive services in the first place.
+
+For example there are special agents that only create services on piggybacked hosts.
+If you configure such an agent on a dedicated host, you would not have seen the status of the agent at all.
+

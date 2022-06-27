@@ -49,7 +49,7 @@ error = ""
 states: Dict[int, str] = {}
 
 
-def reinit():
+def reinit() -> None:
     global black, red, green, yellow, blue, magenta, cyan, white
     global bgblue, bgmagenta, bgwhite, bgyellow, bgred, bgcyan
     global bold, underline, normal, ok, warn, error, states
@@ -118,7 +118,7 @@ def get_size() -> Tuple[int, int]:
         ws = struct.pack("HHHH", 0, 0, 0, 0)
         # TODO: Use the following instead?
         # array.array(b'h' if six.PY2 else u'h', [0, 0, 0, 0])
-        ws = fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ, ws)  # type: ignore
+        ws = fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ, ws)
         lines, columns = struct.unpack("HHHH", ws)[:2]
         if lines > 0 and columns > 0:
             return lines, columns

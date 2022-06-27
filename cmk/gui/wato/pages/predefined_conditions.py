@@ -5,21 +5,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Predefine conditions that can be used in the WATO rule editor"""
 
-from typing import List, Optional, Type
+from typing import Collection, List, Optional, Type
 
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html, request
+from cmk.gui.groups import load_contact_group_information
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.utils import (
-    ConfigDomainCore,
     mode_registry,
     SimpleEditMode,
     SimpleListMode,
     SimpleModeType,
     WatoMode,
 )
+from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
     Alternative,
@@ -30,20 +32,20 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.wato.pages.rulesets import RuleConditions, VSExplicitConditions
-from cmk.gui.watolib.groups import load_contact_group_information
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
-from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, SearchedRulesets
+from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, SearchedRulesets, UseHostFolder
 from cmk.gui.watolib.rulespecs import RulespecGroup, ServiceRulespec
 
 
 class DummyRulespecGroup(RulespecGroup):
     @property
-    def name(self):
+    def name(self) -> str:
         return "dummy"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return "Dummy"
 
     @property
@@ -59,11 +61,11 @@ def dummy_rulespec() -> ServiceRulespec:
     )
 
 
-def vs_conditions():
+def vs_conditions() -> Transform:
     return Transform(
         valuespec=VSExplicitConditions(rulespec=dummy_rulespec(), render="form_part"),
         forth=lambda c: RuleConditions("").from_config(c),
-        back=lambda c: c.to_config_with_folder(),
+        back=lambda c: c.to_config(UseHostFolder.HOST),
     )
 
 
@@ -74,7 +76,7 @@ class PredefinedConditionModeType(SimpleModeType):
     def name_singular(self):
         return _("predefined condition")
 
-    def is_site_specific(self):
+    def is_site_specific(self) -> bool:
         return False
 
     def can_be_disabled(self):
@@ -87,21 +89,21 @@ class PredefinedConditionModeType(SimpleModeType):
 @mode_registry.register
 class ModePredefinedConditions(SimpleListMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "predefined_conditions"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["rulesets"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             mode_type=PredefinedConditionModeType(),
             store=PredefinedConditionStore(),
         )
         self._contact_groups = load_contact_group_information()
 
-    def title(self):
+    def title(self) -> str:
         return _("Predefined conditions")
 
     def _table_title(self):
@@ -121,7 +123,7 @@ class ModePredefinedConditions(SimpleListMode):
                 % (self._mode_type.name_singular(), self._search_url(ident)),
             )
 
-    def page(self):
+    def page(self) -> None:
         html.p(
             _(
                 "This module can be used to define conditions for Check_MK rules in a central place. "
@@ -189,18 +191,18 @@ class ModePredefinedConditions(SimpleListMode):
 @mode_registry.register
 class ModeEditPredefinedCondition(SimpleEditMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_predefined_condition"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["rulesets"]
 
     @classmethod
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModePredefinedConditions
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             mode_type=PredefinedConditionModeType(),
             store=PredefinedConditionStore(),

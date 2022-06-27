@@ -15,7 +15,7 @@ import cmk.utils.tags
 from cmk.utils.exceptions import MKGeneralException
 
 
-def test_transform_tuple_ruleset():
+def test_transform_tuple_ruleset() -> None:
     ruleset: Union[List[Tuple[str, List[str]]], List[Dict[str, List[str]]]] = [
         ("VAL1", ["HOSTLIST1"]),
         ("VAL2", ["HOSTLIST2"]),
@@ -41,7 +41,7 @@ def test_transform_tuple_ruleset():
     ]
 
 
-def test_transform_mixed_ruleset():
+def test_transform_mixed_ruleset() -> None:
     ruleset = [
         ("VAL1", ["HOSTLIST1"]),
         {
@@ -72,7 +72,7 @@ def test_transform_mixed_ruleset():
     ]
 
 
-def test_transform_physical_hosts():
+def test_transform_physical_hosts() -> None:
     with pytest.raises(MKGeneralException, match="PHYSICAL_HOSTS"):
         ruleset_matcher.RulesetToDictTransformer(tag_to_group_map={}).transform_in_place(
             [
@@ -83,7 +83,7 @@ def test_transform_physical_hosts():
         )
 
 
-def test_transform_cluster_hosts():
+def test_transform_cluster_hosts() -> None:
     with pytest.raises(MKGeneralException, match="CLUSTER_HOSTS"):
         ruleset_matcher.RulesetToDictTransformer(tag_to_group_map={}).transform_in_place(
             [
@@ -624,7 +624,7 @@ def _generate_id(val):
     + BINARY_SERVICE_RULESET,
     ids=_generate_id,
 )
-def test_transform(case, rule_options):
+def test_transform(case, rule_options) -> None:
     rule_spec = case.old
     if rule_options is not None:
         rule_spec = rule_spec + (rule_options,)
@@ -641,7 +641,7 @@ def test_transform(case, rule_options):
     assert ruleset[0] == expected
 
 
-def test_get_tag_to_group_map(monkeypatch):
+def test_get_tag_to_group_map(monkeypatch) -> None:
     tag_config = cmk.utils.tags.TagConfig.from_config(
         {
             "aux_tags": [{"id": "bla", "title": "bl\xfcb"}],

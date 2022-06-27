@@ -56,7 +56,7 @@ checks: Dict[str, List[Tuple[str, Dict[Any, Any], List[Tuple[int, str, List[Tupl
                     ]
                 ),
                 (
-                    0, 'Memory used: 16.39 kB', [
+                    0, 'Memory used: 16.4 KiB', [
                         ('mem_lnx_total_used', 16780, None, None, None, None)
                     ]
                 )
@@ -82,7 +82,7 @@ checks: Dict[str, List[Tuple[str, Dict[Any, Any], List[Tuple[int, str, List[Tupl
                     ]
                 ),
                 (
-                    0, 'Memory used: 9.59 kB', [
+                    0, 'Memory used: 9.59 KiB', [
                         ('mem_lnx_total_used', 9816, None, None, None, None)
                     ]
                 )
@@ -108,7 +108,7 @@ checks: Dict[str, List[Tuple[str, Dict[Any, Any], List[Tuple[int, str, List[Tupl
                     ]
                 ),
                 (
-                    0, 'Memory used: 66.44 kB', [
+                    0, 'Memory used: 66.4 KiB', [
                         ('mem_lnx_total_used', 68036, None, None, None, None)
                     ]
                 )

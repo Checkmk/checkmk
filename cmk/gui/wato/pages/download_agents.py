@@ -8,15 +8,15 @@
 import abc
 import fnmatch
 import os
-from typing import Iterator, List, Optional
+from typing import Collection, Iterator, List
 
 import cmk.utils.paths
 import cmk.utils.render
 
 import cmk.gui.forms as forms
-import cmk.gui.watolib as watolib
+import cmk.gui.watolib.bakery as bakery
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.globals import html
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
     make_simple_link,
@@ -25,14 +25,15 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import folder_preserving_link, mode_registry, WatoMode
+from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils import agent
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 
 
 class ABCModeDownloadAgents(WatoMode):
     @classmethod
-    def permissions(cls) -> Optional[List[PermissionName]]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["download_agents"]
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -53,11 +54,11 @@ class ABCModeDownloadAgents(WatoMode):
         )
 
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
-        if watolib.has_agent_bakery():
+        if bakery.has_agent_bakery():
             yield PageMenuEntry(
                 title=_("Windows, Linux, Solaris, AIX"),
                 icon_name="agents",
-                item=make_simple_link(watolib.folder_preserving_link([("mode", "agents")])),
+                item=make_simple_link(folder_preserving_link([("mode", "agents")])),
             )
 
         if self.name() != "download_agents_windows":

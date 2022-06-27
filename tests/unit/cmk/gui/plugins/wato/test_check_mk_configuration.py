@@ -7,16 +7,14 @@
 import pytest
 
 from cmk.gui.plugins.wato.check_mk_configuration import _transform_automatic_rediscover_parameters
-from cmk.gui.plugins.wato.utils import (
-    config_variable_registry,
-    ConfigDomainGUI,
-    ConfigVariableGroupUserInterface,
-)
+from cmk.gui.plugins.wato.utils import ConfigVariableGroupUserInterface
+from cmk.gui.plugins.watolib.utils import config_variable_registry
 from cmk.gui.utils.theme import theme_choices
 from cmk.gui.valuespec import DropdownChoice
+from cmk.gui.watolib.config_domains import ConfigDomainGUI
 
 
-def test_ui_theme_registration():
+def test_ui_theme_registration() -> None:
     var = config_variable_registry["ui_theme"]()
     assert var.domain() == ConfigDomainGUI
     assert var.group() == ConfigVariableGroupUserInterface
@@ -26,7 +24,7 @@ def test_ui_theme_registration():
     assert valuespec.choices() == theme_choices()
 
 
-def test_ui_theme_default_value(request_context):
+def test_ui_theme_default_value(request_context) -> None:
     var = config_variable_registry["ui_theme"]()
 
     default_setting = var.domain()().default_globals()[var.ident()]
@@ -100,5 +98,5 @@ def test_ui_theme_default_value(request_context):
         ),
     ],
 )
-def test__transform_automatic_rediscover_parameters(parameters, result):
+def test__transform_automatic_rediscover_parameters(parameters, result) -> None:
     assert _transform_automatic_rediscover_parameters(parameters) == result

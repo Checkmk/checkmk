@@ -30,7 +30,7 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_tinkerforge_argument_parsing(params, expected_args):
+def test_tinkerforge_argument_parsing(params, expected_args) -> None:
     """Tests if all required arguments are present."""
     agent = SpecialAgent("agent_tinkerforge")
     arguments = agent.argument_func(params, "host", "address")

@@ -1552,6 +1552,18 @@ metric_info["clients_count"] = {
     "color": "22/a",
 }
 
+metric_info["bytes_downloaded"] = {
+    "title": _("Bytes downloaded"),
+    "unit": "bytes",
+    "color": "42/a",
+}
+
+metric_info["bytes_uploaded"] = {
+    "title": _("Bytes uploaded"),
+    "unit": "bytes",
+    "color": "41/b",
+}
+
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -2081,5 +2093,13 @@ graph_info["active_sessions_with_peak_value"] = {
     "scalars": [
         "active_sessions:warn",
         "active_sessions:crit",
+    ],
+}
+
+graph_info["data_transfer"] = {
+    "title": _("Data transfer"),
+    "metrics": [
+        ("bytes_downloaded", "stack"),
+        ("bytes_uploaded", "stack"),
     ],
 }

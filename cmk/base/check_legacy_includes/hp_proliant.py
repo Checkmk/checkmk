@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 # pylint: disable=consider-using-in
 
 from .temperature import check_temperature
@@ -82,6 +81,7 @@ hp_proliant_da_cntlr_state_map = {
 def inventory_hp_proliant_da_cntlr(info):
     if info:
         return [(line[0], None) for line in info]
+    return []
 
 
 def check_hp_proliant_da_cntlr(item, params, info):
@@ -137,6 +137,7 @@ hp_proliant_cpu_status2nagios_map = {
 def inventory_hp_proliant_cpu(info):
     if len(info) > 0:
         return [(line[0], None) for line in info]
+    return []
 
 
 def check_hp_proliant_cpu(item, params, info):
@@ -191,6 +192,7 @@ def inventory_hp_proliant_fans(info):
                 label = hp_proliant_fans_locale[int(line[1])]
             items.append(("%s (%s)" % (line[0], label), None))
         return items
+    return []
 
 
 def check_hp_proliant_fans(item, params, info):

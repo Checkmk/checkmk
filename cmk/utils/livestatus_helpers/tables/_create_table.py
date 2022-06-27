@@ -90,7 +90,7 @@ def transform_csv(table_name: str) -> None:
         break
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("table_name", metavar="TABLE")
 

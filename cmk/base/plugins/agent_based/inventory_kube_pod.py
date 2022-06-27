@@ -51,6 +51,7 @@ def inventory_kube_pod(
     yield Attributes(
         path=["software", "applications", "kube", "metadata"],
         inventory_attributes={
+            "object": "Pod",
             "name": section_kube_pod_info.name,
             "namespace": section_kube_pod_info.namespace,
         },

@@ -6,8 +6,6 @@
 
 from typing import Any, Mapping, Optional, Sequence
 
-from cmk.utils import password_store
-
 
 def agent_smb_share_arguments(
     params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
@@ -20,7 +18,7 @@ def agent_smb_share_arguments(
         args.append("--username")
         args.append(authentication[0])
         args.append("--password")
-        args.append(password_store.extract(authentication[1]))
+        args.append(passwordstore_get_cmdline("%s", authentication[1]))
 
     if patterns := params.get("patterns"):
         args.append("--patterns")

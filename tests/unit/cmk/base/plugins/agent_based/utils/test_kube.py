@@ -13,13 +13,13 @@ from cmk.base.plugins.agent_based.utils.kube import (
 )
 
 
-def test_kube_labels_to_cmk_labels():
+def test_kube_labels_to_cmk_labels() -> None:
     labels: Labels = {
         LabelName("asd"): Label(name="asd", value="bsd"),
         LabelName("empty"): Label(name="empty", value=""),
     }
     result = list(kube_labels_to_cmk_labels(labels))
     assert result == [
-        HostLabel("asd", "bsd"),
-        HostLabel("empty", "true"),
+        HostLabel("cmk/kubernetes/label/asd", "bsd"),
+        HostLabel("cmk/kubernetes/label/empty", "true"),
     ]

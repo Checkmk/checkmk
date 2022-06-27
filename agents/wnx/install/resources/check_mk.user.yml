@@ -147,7 +147,10 @@ global:
             - winperf_processor
 
     # In seconds. Windows may be slow during WMI, increase the value when you have problems
-    # wmi_timeout: 3 
+    # wmi_timeout: 5
+
+    # cpuload_method: 'use_perf' # set use_wmi if you have serious problems with the section
+
 
     # -------------------------------------------------------------- 
     # Internal log of agent
@@ -165,6 +168,9 @@ global:
 
         # you may disable your eventlog ability
         eventlog: yes
+
+        max_file_count: 5  # log rotation files quantity,  allowed 1..1024 
+        max_file_size: 8000000 # allowed 200K..200MB
 
 ps:
     # enabled: yes
@@ -358,7 +364,7 @@ system:
     #    check: yes                          # if yes that only the controller process connections could access agent monitoring data
                                              # set no if monitoring is lost and in log you find 'Connection forbidden: address'
     #    force_legacy: no                    # if yes always created for version with controller
-    #    agent_channel: "localhost:50001"    # for controller
+    #    agent_channel: "localhost:28250"    # for controller
     #    local_only: no                      # bind to 127.0.0.1 or 0.0.0.0
     #    on_crash: "ignore"                  # possible values "ignore" or "emergency_mode". This is safety switch.
                                              # Use "emergency_mode" if controller crashes/disappear

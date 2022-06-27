@@ -6,6 +6,7 @@
 
 import ast
 import time
+from datetime import datetime
 from multiprocessing import TimeoutError as mp_TimeoutError
 from multiprocessing.pool import ThreadPool
 from typing import NamedTuple
@@ -13,8 +14,9 @@ from typing import NamedTuple
 import cmk.gui.hooks as hooks
 import cmk.gui.sites as sites
 import cmk.gui.userdb as userdb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, RequestTimeout
-from cmk.gui.globals import active_config, request
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.site_config import get_login_slave_sites, get_site_config, is_wato_slave_site
 from cmk.gui.utils.urls import urlencode_vars
@@ -39,7 +41,9 @@ from cmk.gui.watolib.utils import mk_eval, mk_repr
 
 
 class SynchronizationResult:
-    def __init__(self, site_id, error_text=None, disabled=False, succeeded=False, failed=False):
+    def __init__(
+        self, site_id, error_text=None, disabled=False, succeeded=False, failed=False
+    ) -> None:
         self.site_id = site_id
         self.error_text = error_text
         self.failed = failed
@@ -105,9 +109,9 @@ def _synchronize_profiles_to_sites(logger, profiles_to_synchronize):
     pool.terminate()
     pool.join()
 
-    num_failed = sum([1 for result in results if result.failed])
-    num_disabled = sum([1 for result in results if result.disabled])
-    num_succeeded = sum([1 for result in results if result.succeeded])
+    num_failed = sum(1 for result in results if result.failed)
+    num_disabled = sum(1 for result in results if result.disabled)
+    num_succeeded = sum(1 for result in results if result.succeeded)
     logger.info(
         "  Disabled: %d, Succeeded: %d, Failed: %d" % (num_disabled, num_succeeded, num_failed)
     )
@@ -238,5 +242,5 @@ class PushUserProfilesToSite(AutomationCommand):
         users = userdb.load_users(lock=True)
         for user_id, profile in user_profiles.items():
             users[user_id] = profile
-        userdb.save_users(users)
+        userdb.save_users(users, datetime.now())
         return True

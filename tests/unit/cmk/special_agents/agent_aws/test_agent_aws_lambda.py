@@ -12,6 +12,7 @@ import pytest
 from _pytest.monkeypatch import (
     MonkeyPatch,  # type: ignore[import] # pylint: disable=import-outside-toplevel
 )
+from pytest_mock import MockerFixture
 
 from cmk.special_agents.agent_aws import (
     _create_lamdba_sections,
@@ -27,6 +28,7 @@ from .agent_aws_fake_clients import (
     FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE,
     FakeCloudwatchClient,
     FakeCloudwatchClientLogsClient,
+    FakeResourceNotFoundException,
     LambdaListFunctionsIB,
     LambdaListProvisionedConcurrencyConfigsIB,
     LambdaListTagsInstancesIB,
@@ -49,7 +51,7 @@ class PaginatorProvisionedConcurrencyConfigs:
 
 
 class FakeLambdaClient:
-    def __init__(self, skip_entities=None):
+    def __init__(self, skip_entities=None) -> None:
         self._skip_entities = {} if not skip_entities else skip_entities
 
     def get_paginator(self, operation_name: str) -> Any:
@@ -57,6 +59,7 @@ class FakeLambdaClient:
             return PaginatorListFunctions()
         if operation_name == "list_provisioned_concurrency_configs":
             return PaginatorProvisionedConcurrencyConfigs()
+        return None
 
     def list_tags(self, Resource: str) -> Mapping[str, Any]:
         tags: Mapping[str, Any] = {}
@@ -178,21 +181,26 @@ def test_agent_aws_lambda_summary(
 def test_agent_aws_lambda_cloudwatch(names: Sequence[str], tags: Sequence[Tuple[str, str]]) -> None:
     (
         _lambda_limits,
-        _lambda_summary,
-        _lambda_provisioned_concurrency_configuration,
+        lambda_summary,
+        lambda_provisioned_concurrency_configuration,
         lambda_cloudwatch,
         _lambda_cloudwatch_insights,
     ) = get_lambda_sections(
         names,
         tags,
     )
+    lambda_summary.run()
+    lambda_provisioned_concurrency_configuration.run()
+    # We are asserting that the colleague contents is present because otherwise the test is not
+    # checking anything
+    assert lambda_cloudwatch._get_colleague_contents().content
     _lambda_cloudwatch_results = lambda_cloudwatch.run().results
 
     assert lambda_cloudwatch.cache_interval == 300
     assert lambda_cloudwatch.period == 600
     assert lambda_cloudwatch.name == "lambda"
     for result in _lambda_cloudwatch_results:
-        assert len(result.content) == 28  # all metrics
+        assert len(result.content) == 84  # all metrics
 
 
 @pytest.mark.parametrize("names,tags", no_tags_or_names_params)
@@ -210,6 +218,9 @@ def test_agent_aws_lambda_provisioned_concurrency_configuration(
         tags,
     )
     lambda_summary.run()
+    # We are asserting that the colleague contents is present because otherwise the test is not
+    # checking anything
+    assert lambda_provisioned_concurrency_configuration._get_colleague_contents().content
     lambda_provisioned_concurrency_configuration_results = (
         lambda_provisioned_concurrency_configuration.run().results
     )
@@ -226,21 +237,27 @@ def test_agent_aws_lambda_cloudwatch_insights(
 ) -> None:
     (
         _lambda_limits,
-        _lambda_summary,
-        _lambda_provisioned_concurrency_configuration,
+        lambda_summary,
+        lambda_provisioned_concurrency_configuration,
         _lambda_cloudwatch,
         lambda_cloudwatch_insights,
     ) = get_lambda_sections(
         names,
         tags,
     )
+    lambda_summary.run()
+    lambda_provisioned_concurrency_configuration.run()
+    # We are asserting that the colleague contents is present because otherwise the test is not
+    # checking anything
+    assert lambda_cloudwatch_insights._get_colleague_contents().content
     lambda_cloudwatch_logs_results = lambda_cloudwatch_insights.run().results
 
     assert lambda_cloudwatch_insights.cache_interval == 300
     assert lambda_cloudwatch_insights.period == 600
     assert lambda_cloudwatch_insights.name == "lambda_cloudwatch_insights"
     for result in lambda_cloudwatch_logs_results:
-        assert len(result.content) == 3  # all metrics
+        for metrics in result.content.values():
+            assert len(metrics) == 3  # all metrics
 
 
 def test_lambda_cloudwatch_insights_query_results_timeout(monkeypatch: MonkeyPatch) -> None:
@@ -260,3 +277,33 @@ def test_lambda_cloudwatch_insights_query_results_timeout(monkeypatch: MonkeyPat
         )
         is None
     )
+
+
+@pytest.mark.parametrize("names,tags", no_tags_or_names_params)
+def test_lambda_cloudwatch_insights_log_not_existing(
+    mocker: MockerFixture, names: Sequence[str], tags: Sequence[Tuple[str, str]]
+) -> None:
+    (
+        _lambda_limits,
+        lambda_summary,
+        lambda_provisioned_concurrency_configuration,
+        _lambda_cloudwatch,
+        lambda_cloudwatch_insights,
+    ) = get_lambda_sections(names, tags)
+    mocker.patch.object(
+        FakeCloudwatchClientLogsClient,
+        "get_query_results",
+        side_effect=FakeResourceNotFoundException,
+    )
+
+    lambda_summary.run()
+    # LambdaProvisionedConcurrency needs LambdaSummary content in order to have content
+    # (as it is specified in the _get_colleague_contents method)
+    lambda_provisioned_concurrency_configuration.run()
+    # LambdaCloudwatchInsights needs LambdaProvisionedConcurrency content in order to have
+    # content (as it is specified in the _get_colleague_contents method).
+    # We are asserting that the colleague contents is present because otherwise the test is not
+    # checking anything
+    assert lambda_cloudwatch_insights._get_colleague_contents().content
+    lambda_cloudwatch_logs_results = lambda_cloudwatch_insights.run().results
+    assert len(lambda_cloudwatch_logs_results) == 0

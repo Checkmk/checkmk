@@ -1,0 +1,13 @@
+Title: Special AWS/Lambda agent: crash if there are no CloudWatch logs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1655383546
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The AWS special agent was crashing if there was no log group for a
+lambda function.
+This werk solves the issue.

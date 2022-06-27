@@ -339,7 +339,7 @@ from cmk.ec.event import (
         ),
     ],
 )
-def test_create_event_from_line(line, expected):
+def test_create_event_from_line(line, expected) -> None:
     address = ("127.0.0.1", 1234)
     logger = logging.getLogger("cmk.mkeventd")
     with on_time(1550000000.0, "CET"):

@@ -1,0 +1,12 @@
+Title: Fix linux agent using 100% CPU
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1650868783
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Fixes 100% CPU load of async linux agent. The async agent would consume 100% CPU load after about 1 to 2 weeks runtime.
+

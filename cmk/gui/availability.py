@@ -35,13 +35,13 @@ from cmk.utils.prediction import lq_logic
 from cmk.utils.type_defs import HostName, ServiceName
 
 import cmk.gui.sites as sites
-import cmk.gui.utils as utils
 from cmk.gui.bi import BIManager
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import request, user_errors
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
+from cmk.gui.num_split import key_num_split
 from cmk.gui.plugins.views.utils import cmp_service_name_equiv
 from cmk.gui.type_defs import (
     FilterHeader,
@@ -53,6 +53,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode_vars
+from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import (
     Age,
     Checkbox,
@@ -733,7 +734,7 @@ def get_av_computation_options() -> AVOptionValueSpecs:
             Age(
                 title=_("Query Time Limit"),
                 help=_(
-                    "Limit the execution time of the query, in order to " "avoid a hanging system."
+                    "Limit the execution time of the query, in order to avoid a hanging system."
                 ),
                 default_value=30,
             ),
@@ -1052,7 +1053,9 @@ def filter_groups_of_entries(
     # They need to be able to filter the list of all groups.
     # TODO: Negated filters are not handled here. :(
     if group_by == "service_groups":
-        if "servicegroups" not in context and "optservicegroup" not in context:
+        servicegroups = context.get("servicegroups", {})
+        optservicegroup = context.get("optservicegroup", {})
+        if not any(iter(servicegroups.values())) and not any(iter(optservicegroup.values())):
             return
 
         # Extract from context:
@@ -1121,7 +1124,11 @@ def spans_by_object(spans: List[AVSpan]) -> AVRawData:
 
 
 # Compute an availability table. what is one of "bi", "host", "service".
-def compute_availability(what: AVObjectType, av_rawdata: AVRawData, avoptions: AVOptions) -> AVData:
+def compute_availability(  # pylint: disable=too-many-branches
+    what: AVObjectType,
+    av_rawdata: AVRawData,
+    avoptions: AVOptions,
+) -> AVData:
     reclassified_rawdata = reclassify_by_annotations(what, av_rawdata)
 
     # Now compute availability table. We have the following possible states:
@@ -1397,11 +1404,11 @@ def reclassify_config_by_annotation(
         # that would override the unset service downtime.
         if history_entry.get("in_host_downtime") and annotation["downtime"] is False:
             new_entry["in_host_downtime"] = 0
-    if new_config.host_state:
+    if new_config.host_state is not None:
         new_host_state = annotation.get("host_state", history_entry.get("host_state"))
         new_entry["state"] = new_host_state
         new_entry["host_down"] = 1 if new_host_state else 0
-    if new_config.service_state:
+    if new_config.service_state is not None:
         new_entry["state"] = annotation.get("service_state", history_entry.get("state"))
 
     return new_entry
@@ -1703,7 +1710,7 @@ def _annotation_affects_time_range(annotation_from, annotation_until, from_time,
 #    "urls" : { "timeline": "view.py..." },
 #    "object" : ( "Host123", "Foobar" ),
 # }
-def layout_availability_table(
+def layout_availability_table(  # pylint: disable=too-many-branches
     what: AVObjectType,
     group_title: _Optional[str],
     availability_table: AVData,
@@ -1819,11 +1826,9 @@ def layout_availability_table(
         # verification since the percentage value takes the considered duration as reference duration
         if show_summary and av_levels:
             summary["ok_level"] = sum(
-                [
-                    float(entry["states"].get("ok", 0)) / entry["considered_duration"]
-                    for entry in availability_table
-                    if entry["considered_duration"] > 0
-                ]
+                float(entry["states"].get("ok", 0)) / entry["considered_duration"]
+                for entry in availability_table
+                if entry["considered_duration"] > 0
             )
 
     # Summary line. It has the same format as each entry in cells
@@ -2021,7 +2026,7 @@ def get_object_cells(what: AVObjectType, av_entry: AVEntry, labelling: List[str]
 #    "spans" : [ spans... ],
 #    "legend" : [ legendentries... ],
 # }
-def layout_timeline(
+def layout_timeline(  # pylint: disable=too-many-branches
     what: AVObjectType,
     timeline_rows: AVTimelineRows,
     considered_duration: int,
@@ -2362,7 +2367,7 @@ def get_timeline_containers(
 
 # Not a real class, more a struct
 class TimelineContainer:
-    def __init__(self, aggr_row):
+    def __init__(self, aggr_row) -> None:
         self._aggr_row = aggr_row
 
         # PUBLIC accessible data
@@ -2787,10 +2792,10 @@ def key_av_entry(
     _Tuple[Union[int, str], ...], int, _Tuple[Union[int, str], ...], _Tuple[Union[int, str], ...]
 ]:
     return (
-        utils.key_num_split(a["service"]),
+        key_num_split(a["service"]),
         cmp_service_name_equiv(a["service"]),
-        utils.key_num_split(a["host"]),
-        utils.key_num_split(a["site"]),
+        key_num_split(a["host"]),
+        key_num_split(a["site"]),
     )
 
 

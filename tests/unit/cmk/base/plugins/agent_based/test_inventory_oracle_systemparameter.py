@@ -82,7 +82,7 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventory_oracle_systemparameter(string_table, expected_result):
+def test_inventory_oracle_systemparameter(string_table, expected_result) -> None:
     assert sort_inventory_result(
         inventory_oracle_systemparameter(parse_oracle_systemparameter(string_table))
     ) == sort_inventory_result(expected_result)

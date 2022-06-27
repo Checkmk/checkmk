@@ -1,0 +1,11 @@
+Title: remove trailing single quote in clickable url
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1651841808
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Clickable links in the service summary now have the trailing single quote stripped if the check plugin quoted the url in single quotes.

@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Dictionary, Float, Tuple
 
 def _parameter_valuespec_netscaler_dnsrates():
     return Dictionary(
-        help=_("Counter rates of DNS parameters for Citrix Netscaler Loadbalancer " "Appliances"),
+        help=_("Counter rates of DNS parameters for Citrix Netscaler Loadbalancer Appliances"),
         elements=[
             (
                 "query",

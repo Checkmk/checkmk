@@ -8,17 +8,20 @@
 # TODO: Remove all configuration for legacy-Email to deprecated, or completely
 # remove from WATO.
 
+from typing import Type
+
 import cmk.utils.paths
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
-    config_variable_registry,
-    ConfigDomainCore,
-    ConfigDomainGUI,
-    ConfigVariable,
     ConfigVariableGroupNotifications,
     notification_parameter_registry,
-    site_neutral_path,
+)
+from cmk.gui.plugins.watolib.utils import (
+    ABCConfigDomain,
+    config_variable_registry,
+    ConfigVariable,
+    ConfigVariableGroup,
 )
 from cmk.gui.valuespec import (
     Age,
@@ -31,21 +34,24 @@ from cmk.gui.valuespec import (
     TextInput,
     Transform,
     Tuple,
+    ValueSpec,
 )
+from cmk.gui.watolib.config_domains import ConfigDomainCore, ConfigDomainGUI
+from cmk.gui.watolib.utils import site_neutral_path
 
 
 @config_variable_registry.register
 class ConfigVariableEnableRBN(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "enable_rulebased_notifications"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Checkbox(
             title=_("Rule based notifications"),
             label=_("Enable new rule based notifications"),
@@ -63,16 +69,16 @@ class ConfigVariableEnableRBN(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableNotificationFallbackEmail(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "notification_fallback_email"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return EmailAddress(
             title=_("Fallback email address for notifications"),
             help=_(
@@ -91,16 +97,16 @@ class ConfigVariableNotificationFallbackEmail(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableNotificationFallbackFormat(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "notification_fallback_format"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return CascadingDropdown(
             title=_("Fallback notification email format"),
             choices=[
@@ -120,16 +126,16 @@ class ConfigVariableNotificationFallbackFormat(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableNotificationBacklog(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "notification_backlog"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Integer(
             title=_("Store notifications for rule analysis"),
             help=_(
@@ -146,16 +152,16 @@ class ConfigVariableNotificationBacklog(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableNotificationBulkInterval(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "notification_bulk_interval"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Age(
             title=_("Interval for checking for ripe bulk notifications"),
             help=_(
@@ -173,16 +179,16 @@ class ConfigVariableNotificationBulkInterval(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableNotificationPluginTimeout(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "notification_plugin_timeout"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Age(
             title=_("Notification plugin timeout"),
             help=_("After the configured time notification plugins are being interrupted."),
@@ -192,16 +198,16 @@ class ConfigVariableNotificationPluginTimeout(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableNotificationLogging(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainCore
 
-    def ident(self):
+    def ident(self) -> str:
         return "notification_logging"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=DropdownChoice(
                 choices=[
@@ -234,16 +240,16 @@ class ConfigVariableNotificationLogging(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableServiceLevels(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "mkeventd_service_levels"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return ListOf(
             valuespec=Tuple(
                 elements=[
@@ -280,16 +286,16 @@ class ConfigVariableServiceLevels(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableFailedNotificationHorizon(ConfigVariable):
-    def group(self):
+    def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self):
+    def domain(self) -> Type[ABCConfigDomain]:
         return ConfigDomainGUI
 
-    def ident(self):
+    def ident(self) -> str:
         return "failed_notification_horizon"
 
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return Age(
             title=_("Failed notification horizon"),
             help=_(

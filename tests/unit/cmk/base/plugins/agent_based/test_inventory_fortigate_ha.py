@@ -21,7 +21,7 @@ SECTION = {
 }
 
 
-def test_parse_fortigate_ha():
+def test_parse_fortigate_ha() -> None:
     assert (
         parse_fortigate_ha(
             [
@@ -38,7 +38,7 @@ def test_parse_fortigate_ha():
     )
 
 
-def test_inventory_fortigate_ha():
+def test_inventory_fortigate_ha() -> None:
     assert sort_inventory_result(inventory_fortigate_ha(SECTION)) == sort_inventory_result(
         [
             Attributes(

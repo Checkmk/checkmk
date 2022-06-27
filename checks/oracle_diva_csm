@@ -67,6 +67,7 @@ def check_oracle_diva_csm_status(name, idx, item, params, info):
 
         if item_name_oracle_diva_csm(name, element_id) == item:
             return status_result_oracle_diva_csm(reading)
+    return None
 
 
 check_info["oracle_diva_csm"] = {
@@ -161,6 +162,7 @@ def check_oracle_diva_csm_objects(item, params, info):
                 ),
             ],
         )
+    return None
 
 
 check_info["oracle_diva_csm.objects"] = {
@@ -199,6 +201,7 @@ def check_oracle_diva_csm_tapes(item, params, info):
             infotext += " (warn/crit at %d/%d)" % (warn, crit)
 
         return state, infotext, [("tapes_free", blank_tapes)]
+    return None
 
 
 check_info["oracle_diva_csm.tapes"] = {

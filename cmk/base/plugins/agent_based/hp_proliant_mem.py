@@ -167,7 +167,7 @@ def inventory_hp_proliant_mem(section: Section) -> InventoryResult:
 
     for module in section.values():
         yield TableRow(
-            path=["hardware", "memory", f"array_{module.cpu_num}", "devices"],
+            path=["hardware", "memory", "arrays", str(module.cpu_num), "devices"],
             key_columns={
                 "set": module.number,
             },

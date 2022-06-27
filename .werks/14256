@@ -1,0 +1,12 @@
+Title: REST-API objects/ruleset: Change status code to 404 when ruleset doesn't exist
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1653053151
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The objects ruleset endpoint previously returned a 500 internal server error when 
+the ruleset didn't exist. This werk changes the status code to a 404 'Unknown ruleset' 

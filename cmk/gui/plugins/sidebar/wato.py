@@ -10,9 +10,10 @@ import cmk.gui.dashboard as dashboard
 import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
 import cmk.gui.views as views
-import cmk.gui.watolib as watolib
-from cmk.gui.globals import active_config, html
-from cmk.gui.htmllib import foldable_container, HTML
+from cmk.gui.config import active_config
+from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
@@ -26,6 +27,9 @@ from cmk.gui.plugins.sidebar.utils import (
 )
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry, MainModuleTopic
 from cmk.gui.type_defs import Choices, MegaMenu, TopicMenuItem, TopicMenuTopic, ViewSpec
+from cmk.gui.utils.html import HTML
+from cmk.gui.watolib.activate_changes import get_pending_changes_info
+from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     match_item_generator_registry,
@@ -34,7 +38,7 @@ from cmk.gui.watolib.search import (
 )
 
 
-def render_wato(mini):
+def render_wato(mini) -> None | bool:
     if not active_config.wato_enabled:
         html.write_text(_("Setup is disabled."))
         return False
@@ -49,7 +53,7 @@ def render_wato(mini):
             for item in topic.items:
                 html.icon_button(
                     url=item.url,
-                    class_="show_more_mode" if item.is_show_more else None,
+                    class_=["show_more_mode"] if item.is_show_more else [],
                     title=item.title,
                     icon=item.icon or "wato",
                     target="main",
@@ -57,10 +61,11 @@ def render_wato(mini):
     else:
         show_topic_menu(treename="wato", menu=menu, show_item_icons=True)
 
-    pending_info = watolib.get_pending_changes_info()
+    pending_info = get_pending_changes_info()
     if pending_info:
         footnotelinks([(pending_info, "wato.py?mode=changelog")])
         html.div("", class_="clear")
+    return None
 
 
 def get_wato_menu_items() -> List[TopicMenuTopic]:
@@ -160,7 +165,7 @@ class SidebarSnapinWATOMini(SidebarSnapin):
         return _("Quick setup")
 
     @classmethod
-    def has_show_more_items(cls):
+    def has_show_more_items(cls) -> bool:
         return True
 
     @classmethod
@@ -187,7 +192,7 @@ def compute_foldertree():
     sites.live().set_prepend_site(False)
 
     def get_folder(path, num=0):
-        folder = watolib.Folder.folder(path)
+        folder = Folder.folder(path)
         return {
             "title": folder.title() or path.split("/")[-1],
             ".path": path,
@@ -211,7 +216,7 @@ def compute_foldertree():
         for num_parts in range(0, len(path_parts)):
             this_folder_path = "/".join(path_parts[:num_parts])
 
-            if watolib.Folder.folder_exists(this_folder_path):
+            if Folder.folder_exists(this_folder_path):
                 if this_folder_path not in user_folders:
                     user_folders[this_folder_path] = get_folder(this_folder_path, num)
                 else:
@@ -253,7 +258,7 @@ def compute_foldertree():
 # Note: the dictionary that represents the folder here is *not*
 # the datastructure from WATO but a result of compute_foldertree(). The reason:
 # We fetch the information via livestatus - not from WATO.
-def render_tree_folder(tree_id, folder, js_func):
+def render_tree_folder(tree_id, folder, js_func) -> None:
     subfolders = folder.get(".folders", {}).values()
     is_leaf = len(subfolders) == 0
 
@@ -263,7 +268,7 @@ def render_tree_folder(tree_id, folder, js_func):
     elif folder and folder[".path"] != "":
         html.open_ul(style="padding-left:0px;")
 
-    title = html.render_a(
+    title = HTMLWriter.render_a(
         "%s (%d)" % (folder["title"], folder[".num_hosts"]),
         href="#",
         class_="link",
@@ -387,3 +392,4 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
             render_tree_folder(
                 "wato-hosts", list(user_folders.values())[0], "cmk.sidebar.wato_tree_click"
             )
+        return None

@@ -5,15 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.raritan import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
@@ -100,6 +96,7 @@ def check_raritan_emx_temp(item, params, parsed):
             dev_status=state,
             dev_status_name=state_readable,
         )
+    return None
 
 
 check_info["raritan_emx"] = {
@@ -140,6 +137,7 @@ def check_raritan_emx_fan(item, _no_params, parsed):
         fan_unit = parsed[item]["rack_unit"]
         state, state_readable = parsed[item]["state"]
         return state, "Speed: %d%s, status: %s" % (fan_speed, fan_unit, state_readable)
+    return None
 
 
 check_info["raritan_emx.fan"] = {

@@ -26,10 +26,7 @@
 import contextlib
 import os
 import shutil
-import sys
 from typing import Iterator
-
-import cmk.utils.tty as tty
 
 
 def is_dockerized() -> bool:
@@ -45,10 +42,6 @@ def chdir(path: str) -> Iterator[None]:
         yield
     finally:
         os.chdir(prev_cwd)
-
-
-def ok() -> None:
-    sys.stdout.write(tty.ok + "\n")
 
 
 def delete_user_file(user_path: str) -> None:

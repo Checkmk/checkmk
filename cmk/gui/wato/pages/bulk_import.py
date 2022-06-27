@@ -12,16 +12,18 @@ import time
 import uuid
 from difflib import SequenceMatcher
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Collection, Dict, Optional, Type
 
 import cmk.utils.store as store
 
 import cmk.gui.pages
-import cmk.gui.watolib as watolib
+import cmk.gui.watolib.bakery as bakery
 import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import active_config, html, request
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -48,6 +50,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato.pages.custom_attributes import ModeCustomHostAttrs
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.host_attributes import host_attribute_registry
+from cmk.gui.watolib.hosts_and_folders import Folder
 
 # Was not able to get determine the type of csv._reader / _csv.reader
 CSVReader = Any
@@ -60,7 +63,7 @@ class ModeBulkImport(WatoMode):
         return "bulk_import"
 
     @classmethod
-    def permissions(cls) -> List[PermissionName]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["hosts", "manage_hosts"]
 
     @classmethod
@@ -228,7 +231,7 @@ class ModeBulkImport(WatoMode):
 
             host_name, attributes = self._get_host_info_from_row(row, row_num)
             try:
-                watolib.Folder.current().create_hosts(
+                Folder.current().create_hosts(
                     [(host_name, attributes, None)],
                     bake_hosts=False,
                 )
@@ -241,7 +244,7 @@ class ModeBulkImport(WatoMode):
                 )
                 num_failed += 1
 
-        watolib.hosts_and_folders.try_bake_agents_for_hosts(imported_hosts)
+        bakery.try_bake_agents_for_hosts(imported_hosts)
 
         self._delete_csv_file()
 
@@ -253,7 +256,7 @@ class ModeBulkImport(WatoMode):
                 msg += "<li>%s</li>" % fail_msg
             msg += "</ul>"
 
-        folder_path = watolib.Folder.current().path()
+        folder_path = Folder.current().path()
         if num_succeeded > 0 and request.var("do_service_detection") == "1":
             # Create a new selection for performing the bulk discovery
             user.set_rowselection(
@@ -315,7 +318,7 @@ class ModeBulkImport(WatoMode):
                     if not value.isascii():
                         raise MKUserError(
                             None,
-                            _("Non-ASCII characters are not allowed in the " 'attribute "%s".')
+                            _('Non-ASCII characters are not allowed in the attribute "%s".')
                             % attribute,
                         )
 
@@ -430,7 +433,7 @@ class ModeBulkImport(WatoMode):
         rows = list(csv_reader)
 
         # Determine how many columns should be rendered by using the longest column
-        num_columns = max([len(r) for r in [headers] + rows])
+        num_columns = max(len(r) for r in [headers] + rows)
 
         with table_element(
             sortable=False, searchable=False, omit_headers=not self._has_title_line

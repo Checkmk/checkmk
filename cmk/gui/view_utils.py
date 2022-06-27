@@ -14,11 +14,14 @@ from livestatus import SiteId
 from cmk.utils.type_defs import Labels, LabelSources, TaggroupID, TaggroupIDToTagID, TagID
 
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.globals import html, request, theme
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 CSSClass = Optional[str]
@@ -30,6 +33,18 @@ CellSpec = Tuple[CSSClass, CellContent]
 
 if TYPE_CHECKING:
     from cmk.gui.type_defs import Row
+
+
+def _prepare_button_url(p: re.Match) -> str:
+    """The regex to find out if a link button should be placed does not deal correctly with escaped trailing quotes
+
+    Because single quotes are valid characters in a URL only remove this is the match was enclosed in single quotes.
+    This can happen with the check_http plugin
+    """
+    m = p.group(1).replace("&quot;", "")
+    if p.start(1) >= 6 and p.string[p.start(1) - 6 : p.start(1)] == "&#x27;":
+        m = m[:-6]
+    return unescape(m)
 
 
 # There is common code with cmk/notification_plugins/utils.py:format_plugin_output(). Please check
@@ -84,8 +99,8 @@ def format_plugin_output(
             "(?:&lt;A HREF=&quot;)?" + http_url + "(?: target=&quot;_blank&quot;&gt;)?",
             lambda p: str(
                 html.render_icon_button(
-                    unescape(p.group(1).replace("&quot;", "")),
-                    unescape(p.group(1).replace("&quot;", "")),
+                    _prepare_button_url(p),
+                    _prepare_button_url(p),
                     "link",
                 )
             ),
@@ -111,7 +126,7 @@ def get_host_list_links(site: SiteId, hosts: List[Union[str]]) -> List[str]:
             args.append(("display_options", request.var("display_options")))
 
         url = makeuri_contextless(request, args, filename="view.py")
-        link = str(html.render_a(host, href=url))
+        link = str(HTMLWriter.render_a(host, href=url))
         entries.append(link)
     return entries
 
@@ -127,7 +142,7 @@ def query_limit_exceeded_warn(limit: Optional[int], user_config: LoggedInUser) -
     if request.get_ascii_input("limit", "soft") == "soft" and user_config.may(
         "general.ignore_soft_limit"
     ):
-        text += html.render_a(
+        text += HTMLWriter.render_a(
             _("Repeat query and allow more results."),
             target="_self",
             href=makeuri(request, [("limit", "hard")]),
@@ -135,7 +150,7 @@ def query_limit_exceeded_warn(limit: Optional[int], user_config: LoggedInUser) -
     elif request.get_ascii_input("limit") == "hard" and user_config.may(
         "general.ignore_hard_limit"
     ):
-        text += html.render_a(
+        text += HTMLWriter.render_a(
             _("Repeat query without limit."),
             target="_self",
             href=makeuri(request, [("limit", "none")]),
@@ -187,7 +202,7 @@ def _render_tag_groups_or_labels(
         )
         for tag_group_id_or_label_key, tag_id_or_label_value in sorted(entries.items())
     ]
-    return html.render_tags(
+    return HTMLWriter.render_tags(
         HTML(" ").join(elements), class_=["tagify", label_type, "display"], readonly="true"
     )
 
@@ -200,9 +215,9 @@ def _render_tag_group(
     label_type: str,
     label_source: str,
 ) -> HTML:
-    span = html.render_tag(
-        html.render_div(
-            html.render_span(
+    span = HTMLWriter.render_tag(
+        HTMLWriter.render_div(
+            HTMLWriter.render_span(
                 "%s:%s"
                 % (
                     tag_group_id_or_label_key,
@@ -242,7 +257,7 @@ def _render_tag_group(
     ]
 
     url = makeuri_contextless(request, url_vars + type_filter_vars, filename="view.py")
-    return html.render_a(span, href=url)
+    return HTMLWriter.render_a(span, href=url)
 
 
 def get_themed_perfometer_bg_color() -> str:

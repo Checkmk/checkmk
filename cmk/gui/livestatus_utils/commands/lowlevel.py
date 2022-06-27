@@ -14,7 +14,7 @@ from cmk.utils.site import omd_site
 from cmk.gui.livestatus_utils.commands.type_defs import LivestatusCommand
 
 
-def send_command(
+def send_command(  # type:ignore[no-untyped-def]
     connection,
     command: LivestatusCommand,
     params: List[Any],

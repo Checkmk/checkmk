@@ -67,11 +67,11 @@ def _run_parse_and_check(
 
 
 @pytest.mark.parametrize("item, result", ITEM_RESULT)
-def test_aruba_wlc_clients(item, result):
+def test_aruba_wlc_clients(item, result) -> None:
     assert _run_parse_and_check(item, INFO) == result
 
 
-def test_parse_aruba_wlc_clients():
+def test_parse_aruba_wlc_clients() -> None:
     result = parse_aruba_wlc_clients(INFO)
 
     assert result == WlcClientsSection(

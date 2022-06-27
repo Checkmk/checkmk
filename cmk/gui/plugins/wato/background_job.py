@@ -6,12 +6,13 @@
 
 import json
 import traceback
-from typing import Iterator, Optional, Type
+from typing import Collection, Iterator, Optional, Type
 
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.globals import html, output_funnel, request
 from cmk.gui.gui_background_job import GUIBackgroundStatusSnapshot
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.page_menu import (
@@ -21,7 +22,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
+from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.plugins.wato.utils import (
     ABCMainModule,
     main_module_registry,
@@ -31,59 +32,61 @@ from cmk.gui.plugins.wato.utils import (
     redirect,
     WatoMode,
 )
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopic
+from cmk.gui.type_defs import ActionResult, Icon, PermissionName
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri_contextless
 
 
 @main_module_registry.register
 class MainModuleBackgroundJobs(ABCMainModule):
     @property
-    def mode_or_url(self):
+    def mode_or_url(self) -> str:
         return "background_jobs_overview"
 
     @property
-    def topic(self):
+    def topic(self) -> MainModuleTopic:
         return MainModuleTopicMaintenance
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Background jobs")
 
     @property
-    def icon(self):
+    def icon(self) -> Icon:
         return "background_jobs"
 
     @property
-    def permission(self):
+    def permission(self) -> None | str:
         return "background_jobs.manage_jobs"
 
     @property
-    def description(self):
+    def description(self) -> str:
         return _("Manage longer running tasks in the Checkmk GUI")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 60
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return True
 
 
 @mode_registry.register
 class ModeBackgroundJobsOverview(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "background_jobs_overview"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return ["background_jobs.manage_jobs"]
 
-    def title(self):
+    def title(self) -> str:
         return _("Background jobs overview")
 
-    def page(self):
+    def page(self) -> None:
         job_manager = gui_background_job.GUIBackgroundJobManager()
 
         back_url = makeuri_contextless(request, [("mode", "background_jobs_overview")])
@@ -106,18 +109,18 @@ class ModeBackgroundJobsOverview(WatoMode):
 @mode_registry.register
 class ModeBackgroundJobDetails(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "background_job_details"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Collection[PermissionName]:
         return []
 
     @classmethod
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeBackgroundJobsOverview
 
-    def title(self):
+    def title(self) -> str:
         return _("Background job details")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -152,7 +155,7 @@ class ModeBackgroundJobDetails(WatoMode):
     def back_url(self):
         return request.get_url_input("back_url", deflt="")
 
-    def page(self):
+    def page(self) -> None:
         html.div(html.render_message(_("Loading...")), id_="async_progress_msg")
         html.div("", id_="status_container")
         html.javascript(
@@ -169,7 +172,7 @@ class ModeAjaxCycleThemes(AjaxPage):
         self.action()
         super().handle_page()
 
-    def page(self) -> AjaxPageResult:
+    def page(self) -> PageResult:
         with output_funnel.plugged():
             api_request = request.get_request()
             job_snapshot = self._show_details_page(api_request["job_id"])

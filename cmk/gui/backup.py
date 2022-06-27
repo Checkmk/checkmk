@@ -28,13 +28,18 @@ import cmk.utils.render as render
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.schedule import next_scheduled_time
+from cmk.utils.site import omd_site
 
 import cmk.gui.forms as forms
 import cmk.gui.key_mgmt as key_mgmt
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKGeneralException, MKUserError
-from cmk.gui.globals import html, request, user_errors
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.header import make_header
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
     make_simple_form_page_menu,
@@ -54,6 +59,7 @@ from cmk.gui.utils.urls import (
     makeactionuri_contextless,
     makeuri_contextless,
 )
+from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import (
     AbsoluteDirname,
     Alternative,
@@ -86,7 +92,7 @@ from cmk.gui.valuespec import (
 #   '----------------------------------------------------------------------'
 
 
-def is_site():
+def is_site() -> bool:
     return "OMD_ROOT" in os.environ
 
 
@@ -113,7 +119,7 @@ def hostname():
     return socket.gethostname()
 
 
-def is_canonical(directory):
+def is_canonical(directory) -> bool:
     if not directory.endswith("/"):
         directory += "/"
     return (
@@ -124,7 +130,7 @@ def is_canonical(directory):
 
 # TODO: Locking!
 class Config:
-    def __init__(self, file_path):
+    def __init__(self, file_path) -> None:
         self._file_path = file_path
 
     def load(self):
@@ -152,19 +158,19 @@ class Config:
 
 
 class BackupEntity:
-    def __init__(self, ident, config):
+    def __init__(self, ident, config) -> None:
         self._ident = ident
-        self._config = {}
+        self._config: dict = {}
 
         self.from_config(config)
 
-    def ident(self):
+    def ident(self) -> str:
         return self._ident
 
     def config(self):
         return self._config
 
-    def title(self):
+    def title(self) -> str:
         return self._config["title"]
 
     def to_config(self):
@@ -175,7 +181,7 @@ class BackupEntity:
 
 
 class BackupEntityCollection:
-    def __init__(self, config_file_path, cls, config_attr):
+    def __init__(self, config_file_path, cls, config_attr) -> None:
         self._config_path = config_file_path
         self._config = Config(config_file_path).load()
         self._cls = cls
@@ -341,7 +347,7 @@ class Job(MKBackupJob, BackupEntity):
     def key_ident(self):
         return self._config["encrypt"]
 
-    def is_encrypted(self):
+    def is_encrypted(self) -> bool:
         return self._config["encrypt"] is not None
 
     # TODO: Duplicated code with mkbackup (globalize_job_id())
@@ -427,19 +433,19 @@ class Job(MKBackupJob, BackupEntity):
 
 
 class Jobs(BackupEntityCollection):
-    def __init__(self, config_file_path):
+    def __init__(self, config_file_path) -> None:
         super().__init__(config_file_path, cls=Job, config_attr="jobs")
 
         etc_path = os.path.dirname(os.path.dirname(config_file_path))
         self._cronjob_path = "%s/cron.d/mkbackup" % etc_path
 
-    def show_list(self, editable=True):
+    def show_list(self, editable=True):  # pylint: disable=too-many-branches
         html.h3(_("Jobs"))
         with table_element(sortable=False, searchable=False) as table:
 
             for job_ident, job in sorted(self.objects.items()):
                 table.row()
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
                 delete_url = make_confirm_link(
                     url=makeactionuri_contextless(
                         request,
@@ -506,8 +512,8 @@ class Jobs(BackupEntityCollection):
                 elif state["state"] is None:
                     css = ""
 
-                table.cell(_("State"), css=css)
-                html.write_html(html.render_span(state_txt))
+                table.cell(_("State"), css=[css])
+                html.write_html(HTMLWriter.render_span(state_txt))
 
                 table.cell(_("Runtime"))
                 if state["started"]:
@@ -578,17 +584,18 @@ class Jobs(BackupEntityCollection):
 
 
 class PageBackup:
-    def title(self):
+    def title(self) -> str:
         raise NotImplementedError()
 
     def jobs(self):
         raise NotImplementedError()
 
-    def keys(self):
+    def home_button(self) -> None:
         raise NotImplementedError()
 
-    def home_button(self):
-        raise NotImplementedError()
+    def __init__(self, key_store: key_mgmt.KeypairStore) -> None:
+        super().__init__()
+        self.key_store = key_store
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         if not self._may_edit_config():
@@ -697,14 +704,15 @@ class PageBackup:
         job.stop()
         flash(_("The backup has been stopped."))
 
-    def page(self):
-        show_key_download_warning(self.keys().load())
+    def page(self) -> None:
+        show_key_download_warning(self.key_store.load())
         self.jobs().show_list(editable=self._may_edit_config())
 
 
 class PageEditBackupJob:
-    def __init__(self):
+    def __init__(self, key_store: key_mgmt.KeypairStore) -> None:
         super().__init__()
+        self.key_store = key_store
         job_ident = request.var("job")
 
         if job_ident is not None:
@@ -732,10 +740,7 @@ class PageEditBackupJob:
     def targets(self):
         raise NotImplementedError()
 
-    def keys(self):
-        raise NotImplementedError()
-
-    def title(self):
+    def title(self) -> str:
         return self._title
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -888,7 +893,7 @@ class PageEditBackupJob:
             raise MKUserError(varprefix, _("This ID is already used by another backup job."))
 
     def backup_key_choices(self):
-        return self.keys().choices()
+        return self.key_store.choices()
 
     def backup_target_choices(self):
         return sorted(self.targets().choices(), key=lambda x_y1: x_y1[1].title())
@@ -917,7 +922,7 @@ class PageEditBackupJob:
         jobs.save()
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
-    def page(self):
+    def page(self) -> None:
         html.begin_form("edit_job", method="POST")
         html.prevent_password_auto_completion()
 
@@ -932,7 +937,7 @@ class PageEditBackupJob:
 
 
 class PageAbstractBackupJobState:
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._job: Optional[MKBackupJob] = None
         self._ident: Optional[str] = None
@@ -940,7 +945,7 @@ class PageAbstractBackupJobState:
     def jobs(self):
         raise NotImplementedError()
 
-    def title(self):
+    def title(self) -> str:
         # Our class hierarchy is totally screwed up here...
         if not isinstance(self._job, BackupEntity):
             raise Exception("incorrect job state: no backup entity")
@@ -949,7 +954,7 @@ class PageAbstractBackupJobState:
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(dropdowns=[], breadcrumb=breadcrumb)
 
-    def page(self):
+    def page(self) -> None:
         html.open_div(id_="job_details")
         self.show_job_details()
         html.close_div()
@@ -969,20 +974,22 @@ class PageAbstractBackupJobState:
 
         html.open_table(class_=["data", "backup_job"])
 
-        css: Optional[str] = "state0"
-        state_txt = job.state_name(state["state"])
-        if state["state"] == "finished":
-            if not state["success"]:
-                css = "state2"
-                state_txt = _("Failed")
-            else:
-                state_txt = _("Finished")
-        elif state["state"] is None:
-            css = None
+        if state["state"] is None:
+            css = []
+            state_txt = job.state_name(state["state"])
+        elif state["state"] != "finished":
+            css = ["state0"]
+            state_txt = job.state_name(state["state"])
+        elif state["success"]:
+            css = ["state0"]
+            state_txt = _("Finished")
+        else:
+            css = ["state2"]
+            state_txt = _("Failed")
 
         html.open_tr(class_=["data", "even0"])
         html.td(_("State"), class_=["left", "legend"])
-        html.td(state_txt, class_=["state", css])
+        html.td(state_txt, class_=["state"] + css)
         html.close_tr()
 
         html.open_tr(class_=["data", "odd0"])
@@ -1012,7 +1019,7 @@ class PageAbstractBackupJobState:
 
 
 class PageBackupJobState(PageAbstractBackupJobState):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._from_vars()
 
@@ -1067,7 +1074,7 @@ class Target(BackupEntity):
                     continue
 
                 table.row()
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
 
                 delete_url = make_confirm_link(
                     url=makeactionuri(
@@ -1135,7 +1142,7 @@ class Target(BackupEntity):
 
 
 class Targets(BackupEntityCollection):
-    def __init__(self, config_file_path):
+    def __init__(self, config_file_path) -> None:
         super().__init__(config_file_path, cls=Target, config_attr="targets")
 
     def show_list(self, title=None, editable=True):
@@ -1153,7 +1160,7 @@ class Targets(BackupEntityCollection):
 
             for target_ident, target in sorted(self.objects.items()):
                 table.row()
-                table.cell(_("Actions"), css="buttons")
+                table.cell(_("Actions"), css=["buttons"])
                 restore_url = makeuri_contextless(
                     request,
                     [("mode", "backup_restore"), ("target", target_ident)],
@@ -1197,7 +1204,7 @@ class Targets(BackupEntityCollection):
 
 
 class PageBackupTargets:
-    def title(self):
+    def title(self) -> str:
         raise NotImplementedError()
 
     def targets(self):
@@ -1261,11 +1268,11 @@ class PageBackupTargets:
         if job_titles:
             raise MKUserError(
                 "target",
-                _("You can not delete this target because it is used " "by these backup jobs: %s")
+                _("You can not delete this target because it is used by these backup jobs: %s")
                 % ", ".join(job_titles),
             )
 
-    def page(self):
+    def page(self) -> None:
         self.targets().show_list()
         SystemBackupTargetsReadOnly().show_list(editable=False, title=_("System global targets"))
 
@@ -1274,7 +1281,7 @@ class PageBackupTargets:
 
 
 class PageEditBackupTarget:
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         target_ident = request.var("target")
 
@@ -1297,7 +1304,7 @@ class PageEditBackupTarget:
     def targets(self):
         raise NotImplementedError()
 
-    def title(self):
+    def title(self) -> str:
         return self._title
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -1349,8 +1356,7 @@ class PageEditBackupTarget:
                     "remote",
                     CascadingDropdown(
                         title=_("Destination"),
-                        # Like everyone reading this, mypy is totally confused by our ValueSpecs... :-P
-                        choices=ABCBackupTargetType.choices,  # type: ignore[arg-type]
+                        choices=ABCBackupTargetType.choices,
                     ),
                 ),
             ],
@@ -1386,7 +1392,7 @@ class PageEditBackupTarget:
         targets.save()
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
-    def page(self):
+    def page(self) -> None:
         html.begin_form("edit_target", method="POST")
         html.prevent_password_auto_completion()
 
@@ -1401,7 +1407,7 @@ class PageEditBackupTarget:
 
 
 class SystemBackupTargetsReadOnly(Targets):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(system_config_path())
 
     # Only show the list on CMA devices
@@ -1427,7 +1433,7 @@ class SystemBackupTargetsReadOnly(Targets):
 class ABCBackupTargetType(abc.ABC):
     @property
     @abc.abstractmethod
-    def ident(self):
+    def ident(self) -> str:
         raise NotImplementedError()
 
     @classmethod
@@ -1445,16 +1451,18 @@ class ABCBackupTargetType(abc.ABC):
         for type_class in cls.__subclasses__():
             if type_class.ident == type_ident:
                 return type_class
+        return None
 
     @classmethod
     def title(cls):
         raise NotImplementedError()
 
-    def __init__(self, params):
+    def __init__(self, params) -> None:
         self._params = params
 
+    @classmethod
     @abc.abstractmethod
-    def valuespec(self):
+    def valuespec(cls):
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -1626,24 +1634,24 @@ class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
     def jobs(self):
         raise NotImplementedError()
 
-    def title(self):
+    def title(self) -> str:
         return _("Keys for backups")
 
-    def page(self):
-        show_key_download_warning(self.keys)
+    def page(self) -> None:
+        show_key_download_warning(self.key_store.load())
         super().page()
 
-    def _key_in_use(self, key_id, key):
+    def _key_in_use(self, key_id: int, key: key_mgmt.Key) -> bool:
         for job in self.jobs().objects.values():
             job_key_id = job.key_ident()
             if job_key_id is not None and key_id == job_key_id:
                 return True
         return False
 
-    def _table_title(self):
+    def _table_title(self) -> str:
         return self.title()
 
-    def _delete_confirm_msg(self):
+    def _delete_confirm_msg(self) -> str:
         return _(
             "Are you sure you want to delete this key?<br><br>"
             "<b>Beware:</b> Deleting this key "
@@ -1657,10 +1665,10 @@ class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
 class PageBackupEditKey(key_mgmt.PageEditKey):
     back_mode = "backup_keys"
 
-    def title(self):
+    def title(self) -> str:
         return _("Create backup key")
 
-    def _passphrase_help(self):
+    def _passphrase_help(self) -> str:
         return _(
             "The backup key will be stored encrypted using this passphrase on your "
             "disk. The passphrase will not be stored anywhere. The backup will use "
@@ -1669,21 +1677,22 @@ class PageBackupEditKey(key_mgmt.PageEditKey):
             "passphrase to decrypt the backup."
         )
 
-    def _generate_key(self, alias, passphrase):
-        key = super()._generate_key(alias, passphrase)
+    def _generate_key(self, alias: str, passphrase: str) -> key_mgmt.Key:
+        assert user.id is not None
+        key = key_mgmt.generate_key(alias, passphrase, user.id, omd_site())
         # Mark key as not downloaded yet to issue a warning to the user that the key
         # should be backed up. The warning is removed on first download.
-        key["not_downloaded"] = True
+        key.not_downloaded = True
         return key
 
 
 class PageBackupUploadKey(key_mgmt.PageUploadKey):
     back_mode = "backup_keys"
 
-    def title(self):
+    def title(self) -> str:
         return _("Upload backup key")
 
-    def _passphrase_help(self):
+    def _passphrase_help(self) -> str:
         return _(
             "The backup key will be stored encrypted using this passphrase on your "
             "disk. The passphrase will not be stored anywhere. The backup will use "
@@ -1696,21 +1705,20 @@ class PageBackupUploadKey(key_mgmt.PageUploadKey):
 class PageBackupDownloadKey(key_mgmt.PageDownloadKey):
     back_mode = "backup_keys"
 
-    def title(self):
+    def title(self) -> str:
         return _("Download backup key")
 
-    def _send_download(self, keys, key_id):
+    def _send_download(self, keys: dict[int, key_mgmt.Key], key_id: int) -> None:
         super()._send_download(keys, key_id)
-        if "not_downloaded" in keys[key_id]:
-            del keys[key_id]["not_downloaded"]
-        self.save(keys)
+        keys[key_id].not_downloaded = True
+        self.key_store.save(keys)
 
-    def _file_name(self, key_id, key):
+    def _file_name(self, key_id: int, key: key_mgmt.Key) -> str:
         raise NotImplementedError()
 
 
-def show_key_download_warning(keys):
-    to_load = [k["alias"] for k in keys.values() if "not_downloaded" in k]
+def show_key_download_warning(keys: dict[int, key_mgmt.Key]) -> None:
+    to_load = [k.alias for k in keys.values() if k.not_downloaded]
     if to_load:
         html.show_warning(
             _(
@@ -1738,13 +1746,13 @@ def show_key_download_warning(keys):
 
 
 class RestoreJob(MKBackupJob):
-    def __init__(self, target_ident, backup_ident, passphrase=None):
+    def __init__(self, target_ident, backup_ident, passphrase=None) -> None:
         super().__init__()
         self._target_ident = target_ident
         self._backup_ident = backup_ident
         self._passphrase = passphrase
 
-    def title(self):
+    def title(self) -> str:
         return _("Restore")
 
     def state_file_path(self) -> Path:
@@ -1768,12 +1776,10 @@ class RestoreJob(MKBackupJob):
 
 
 class PageBackupRestore:
-    def __init__(self):
-        self._load_target()
+    def __init__(self, key_store: key_mgmt.KeypairStore) -> None:
         super().__init__()
-
-    def keys(self):
-        raise NotImplementedError()
+        self.key_store = key_store
+        self._load_target()
 
     def _load_target(self):
         ident = request.var("target")
@@ -1792,7 +1798,7 @@ class PageBackupRestore:
     def _get_target(self, target_ident):
         return self.targets().get(target_ident)
 
-    def title(self):
+    def title(self) -> str:
         raise NotImplementedError()
 
     def targets(self):
@@ -1910,7 +1916,7 @@ class PageBackupRestore:
         key_digest = backup_info["config"]["encrypt"]
 
         try:
-            _key_id, key = self.keys().get_key_by_digest(key_digest)
+            _key_id, key = self.key_store.get_key_by_digest(key_digest)
         except KeyError:
             raise MKUserError(
                 None,
@@ -1929,7 +1935,7 @@ class PageBackupRestore:
                     passphrase = value["passphrase"]
 
                     # Validate the passphrase
-                    key_mgmt.decrypt_private_key(key["private_key"], passphrase)
+                    key_mgmt.decrypt_private_key(key.private_key, passphrase)
 
                     transactions.check_transaction()  # invalidate transid
                     RestoreJob(self._target_ident, backup_ident, passphrase).start()
@@ -1942,7 +1948,7 @@ class PageBackupRestore:
         if is_site():
             title = _("Insert passphrase")
             breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_setup(), title)
-            html.header(title, breadcrumb, PageMenu(dropdowns=[], breadcrumb=breadcrumb))
+            make_header(html, title, breadcrumb, PageMenu(dropdowns=[], breadcrumb=breadcrumb))
 
         html.show_user_errors()
         html.p(
@@ -1989,7 +1995,7 @@ class PageBackupRestore:
         RestoreJob(self._target_ident, backup_ident).stop()
         flash(_("The restore has been stopped."))
 
-    def page(self):
+    def page(self) -> None:
         if self._restore_was_started():
             self._show_restore_progress()
 
@@ -2011,7 +2017,7 @@ class PageBackupRestore:
 
 
 class PageBackupRestoreState(PageAbstractBackupJobState):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._job = RestoreJob(None, None)  # TODO: target_ident and backup_ident needed?
         self._ident = "restore"

@@ -91,9 +91,9 @@ class History:
 try:
     import datetime
 
-    from pymongo import DESCENDING  # type: ignore[import]
+    from pymongo import DESCENDING
     from pymongo.connection import Connection  # type: ignore[import]
-    from pymongo.errors import OperationFailure  # type: ignore[import]
+    from pymongo.errors import OperationFailure
 except ImportError:
     Connection = None
 
@@ -119,7 +119,7 @@ def _connect_mongodb(settings: Settings, mongodb: MongoDB) -> None:
     if Connection is None:
         raise Exception("Could not initialize MongoDB (Python-Modules are missing)")
     mongodb.connection = Connection(*_mongodb_local_connection_opts(settings))
-    mongodb.db = mongodb.connection.__getitem__(os.environ["OMD_SITE"])
+    mongodb.db = mongodb.connection[os.environ["OMD_SITE"]]
 
 
 def _mongodb_local_connection_opts(settings: Settings) -> tuple[Optional[str], Optional[int]]:
@@ -212,7 +212,10 @@ def _log_event(
         logger.info("Event %d: %s/%s/%s - %s" % (event["id"], what, who, addinfo, event["text"]))
 
 
-def _get_mongodb(history: History, query: QueryGET) -> Iterable[Any]:
+def _get_mongodb(  # pylint: disable=too-many-branches
+    history: History,
+    query: QueryGET,
+) -> Iterable[Any]:
     filters, limit = query.filters, query.limit
 
     history_entries = []

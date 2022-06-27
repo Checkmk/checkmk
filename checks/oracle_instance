@@ -35,7 +35,7 @@ def _transform_oracle_instance_params(p):
     return p
 
 
-def check_oracle_instance(item, params, section):
+def check_oracle_instance(item, params, section):  # pylint: disable=too-many-branches
     if not (item_data := section.get(item)):
         return 2, "Database or necessary processes not running or login failed"
 

@@ -45,7 +45,7 @@ def fixture_section(string_table: StringTable) -> Section:
     return parse(string_table)
 
 
-def test_parse(section: Section):
+def test_parse(section: Section) -> None:
     expected_section = Section(
         crs_nodename="crsnode",
         resources={
@@ -68,7 +68,7 @@ def test_parse(section: Section):
     assert section == expected_section
 
 
-def test_discover(section: Section):
+def test_discover(section: Section) -> None:
     services = list(discover(section))
     assert services == [
         Service(item="ora.cluster_interconnect.haip"),
@@ -83,12 +83,12 @@ def test_discover(section: Section):
         ("ora.crsd", "Cluster resource service daemon not running"),
     ],
 )
-def test_check_item_not_in_section(section: Section, item: str, summary: str):
+def test_check_item_not_in_section(section: Section, item: str, summary: str) -> None:
     results = list(check(item=item, section=section))
     assert results == [Result(state=State.CRIT, summary=summary)]
 
 
-def test_check_item_not_in_section_and_cluster_down(section: Section):
+def test_check_item_not_in_section_and_cluster_down(section: Section) -> None:
     with pytest.raises(IgnoreResultsError):
         list(check(item="foo", section=section))
 
@@ -107,5 +107,5 @@ def test_check_item_not_in_section_and_cluster_down(section: Section):
         ("ora.cluster_interconnect.haip", [Result(state=State.OK, summary="local: online")]),
     ],
 )
-def test_check_item_in_section(section: Section, item: str, results: Sequence[Result]):
+def test_check_item_in_section(section: Section, item: str, results: Sequence[Result]) -> None:
     assert results == list(check(item=item, section=section))

@@ -9,11 +9,12 @@ import json
 from contextlib import contextmanager
 from typing import Iterator, Optional, Union
 
-from cmk.gui.globals import html, theme
+from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.theme import theme
 
-from ._tag_rendering import HTMLContent
+from .tag_rendering import HTMLContent
 
 __all__ = [
     "foldable_container",
@@ -31,7 +32,6 @@ def foldable_container(
     isopen: bool,
     title: HTMLContent,
     indent: Union[str, None, bool] = True,
-    first: bool = False,
     icon: Optional[str] = None,
     fetch_url: Optional[str] = None,
     title_url: Optional[str] = None,
@@ -62,14 +62,12 @@ def foldable_container(
     if icon:
         html.img(
             id_=img_id,
-            class_=[
-                "treeangle",
-                "title",
-                # Although foldable_sidebar is given via the argument icon it should not be
-                # displayed as big as an icon.
-                "icon" if icon != "foldable_sidebar" else None,
-                "open" if isopen else "closed",
-            ],
+            # Although foldable_sidebar is given via the argument icon it should not be displayed as big as an icon.
+            class_=(
+                ["treeangle", "title"]
+                + (["icon"] if icon != "foldable_sidebar" else [])
+                + ["open" if isopen else "closed"]
+            ),
             src=theme.detect_icon_path(icon, "icon_"),
             onclick=onclick if title_url else None,
         )

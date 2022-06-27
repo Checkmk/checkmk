@@ -26,11 +26,11 @@ class TestSNMPDetectSpec:
             ]
         )
 
-    def test_serialization(self, specs):
+    def test_serialization(self, specs) -> None:
         assert SNMPDetectSpec.from_json(specs.to_json()) == specs
 
 
-def test_snmptree_from_frontend():
+def test_snmptree_from_frontend() -> None:
     base = "1.2"
     tree = BackendSNMPTree.from_frontend(
         base=base,
@@ -71,5 +71,5 @@ def test_snmptree_from_frontend():
         ),
     ],
 )
-def test_serialize_snmptree(tree):
+def test_serialize_snmptree(tree) -> None:
     assert tree.from_json(json.loads(json.dumps(tree.to_json()))) == tree

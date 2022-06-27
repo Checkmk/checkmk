@@ -18,6 +18,7 @@ def inventory_rmon_stats(info):
         for line in info:
             inventory.append((line[0], None))
         return inventory
+    return []
 
 
 def check_rmon_stats(item, _no_params, info):

@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 import time
+from datetime import timedelta
 
 from cmk.base.check_api import check_levels
 
@@ -38,8 +38,6 @@ def parse_snmp_uptime(ticks):
 #    "min" : ( 7200, 3600 ),            # Minimum required uptime (warn, crit)
 #    "max" : ( 86400 * 7, 86400 * 14),  # Maximum required uptime (warn, crit)
 # }
-
-from datetime import timedelta
 
 
 ################################################################################################

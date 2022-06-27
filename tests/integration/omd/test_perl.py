@@ -7,7 +7,7 @@
 from tests.testlib.site import Site
 
 
-def test_perl_modules(site: Site):
+def test_perl_modules(site: Site) -> None:
     # TODO: Complete this list
     test_modules = [
         "Getopt::Long",

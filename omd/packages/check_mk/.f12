@@ -15,6 +15,8 @@ done
 
 # TODO: More stuff is probably missing here... :-/
 sudo install -m 644 skel/etc/nagios/conf.d/check_mk_templates.cfg "$ROOT/etc/nagios/conf.d"
+sudo cp skel/etc/cron.d/* "$ROOT/etc/cron.d"
+sudo omd restart "$SITE" crontab
 
 sed -e "s|###ROOT###|$ROOT|g" -e "s|###SITE###|$SITE|g" skel/etc/check_mk/apache.conf | sudo tee "$ROOT/etc/check_mk/apache.conf" >/dev/null
 if [ -z $ONLY_COPY ]; then

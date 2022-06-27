@@ -811,7 +811,7 @@ checks = {
         (
             'mysql', {}, [
                 (
-                    0, 'Max. parallel connections since server start: 12.0%',
+                    0, 'Max. parallel connections since server start: 12.00%',
                     [('connections_perc_used', 12.0, None, None, None, None)]
                 ),
                 (
@@ -821,7 +821,7 @@ checks = {
                 ),
                 (0, '', [('connections_max', 100.0, None, None, None, None)]),
                 (
-                    0, 'Currently open connections: 3.0%', [
+                    0, 'Currently open connections: 3.00%', [
                         (
                             'connections_perc_conn_threads', 3.0, None, None,
                             None, None

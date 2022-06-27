@@ -14,7 +14,7 @@ import cmk.utils.version as cmk_version
 from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry
 
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import request, response
+from cmk.gui.http import request, response
 from cmk.gui.wato.pages import automation
 from cmk.gui.watolib.utils import mk_repr
 
@@ -56,7 +56,7 @@ class TestModeAutomation:
     @pytest.fixture(name="check_mk_local_automation_serialized")
     def check_mk_local_automation_serialized_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
-            automation.watolib,
+            automation,
             "check_mk_local_automation_serialized",
             self._check_mk_local_automation_serialized,
         )
@@ -83,7 +83,7 @@ class TestModeAutomation:
         "setup_request",
         "patch_version",
     )
-    def test_execute_cmk_automation_post_21(self, monkeypatch: pytest.MonkeyPatch):
+    def test_execute_cmk_automation_post_21(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
             request,
             "headers",
@@ -98,7 +98,7 @@ class TestModeAutomation:
         "setup_request",
         "patch_version",
     )
-    def test_execute_cmk_automation_pre_21(self, monkeypatch: pytest.MonkeyPatch):
+    def test_execute_cmk_automation_pre_21(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
             request,
             "headers",

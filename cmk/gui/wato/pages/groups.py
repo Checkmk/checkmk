@@ -5,18 +5,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Dict, Iterator, List, Optional, Sequence, Tuple, Type
+from typing import Collection, Dict, Iterator, List, Optional, Sequence, Tuple, Type
 
 import cmk.utils.paths
 
 import cmk.gui.forms as forms
 import cmk.gui.userdb as userdb
-import cmk.gui.watolib as watolib
+import cmk.gui.watolib.groups as groups
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html, request
-from cmk.gui.groups import load_host_group_information, load_service_group_information
-from cmk.gui.htmllib import HTML
+from cmk.gui.groups import (
+    GroupName,
+    GroupSpec,
+    GroupType,
+    load_contact_group_information,
+    load_host_group_information,
+    load_service_group_information,
+)
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.inventory import vs_element_inventory_visible_raw_path, vs_inventory_path_or_keys_help
 from cmk.gui.page_menu import (
@@ -37,6 +45,7 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName, UserId
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.valuespec import (
@@ -47,7 +56,7 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
 )
-from cmk.gui.watolib.groups import GroupName, GroupSpec, GroupType, load_contact_group_information
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 
 
 class ModeGroups(WatoMode, abc.ABC):
@@ -86,7 +95,7 @@ class ModeGroups(WatoMode, abc.ABC):
                                     title=_("Add group"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        watolib.folder_preserving_link(
+                                        folder_preserving_link(
                                             [("mode", "edit_%s_group" % self.type_name)]
                                         )
                                     ),
@@ -130,7 +139,7 @@ class ModeGroups(WatoMode, abc.ABC):
 
         if request.var("_delete"):
             delname = request.get_ascii_input_mandatory("_delete")
-            usages = watolib.find_usages_of_group(delname, self.type_name)
+            usages = groups.find_usages_of_group(delname, self.type_name)
 
             if usages:
                 message = "<b>%s</b><br>%s:<ul>" % (
@@ -142,7 +151,7 @@ class ModeGroups(WatoMode, abc.ABC):
                 message += "</ul>"
                 raise MKUserError(None, message)
 
-            watolib.delete_group(delname, self.type_name)
+            groups.delete_group(delname, self.type_name)
             self._groups = self._load_groups()
 
         return redirect(mode_url("%s_groups" % self.type_name))
@@ -154,15 +163,15 @@ class ModeGroups(WatoMode, abc.ABC):
         pass
 
     def _show_row_cells(self, table: Table, name: GroupName, group: GroupSpec) -> None:
-        table.cell(_("Actions"), css="buttons")
-        edit_url = watolib.folder_preserving_link(
+        table.cell(_("Actions"), css=["buttons"])
+        edit_url = folder_preserving_link(
             [("mode", "edit_%s_group" % self.type_name), ("edit", name)]
         )
         delete_url = make_confirm_link(
             url=makeactionuri(request, transactions, [("_delete", name)]),
             message=_('Do you really want to delete the %s group "%s"?') % (self.type_name, name),
         )
-        clone_url = watolib.folder_preserving_link(
+        clone_url = folder_preserving_link(
             [("mode", "edit_%s_group" % self.type_name), ("clone", name)]
         )
         html.icon_button(edit_url, _("Properties"), "edit")
@@ -241,10 +250,10 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
 
         if self._new:
             self._name = request.get_ascii_input_mandatory("name").strip()
-            watolib.add_group(self._name, self.type_name, self.group)
+            groups.add_group(self._name, self.type_name, self.group)
         else:
             assert self._name is not None
-            watolib.edit_group(self._name, self.type_name, self.group)
+            groups.edit_group(self._name, self.type_name, self.group)
 
         return redirect(mode_url("%s_groups" % self.type_name))
 
@@ -295,7 +304,7 @@ class ModeHostgroups(ModeGroups):
         return "host_groups"
 
     @classmethod
-    def permissions(cls) -> Optional[List[PermissionName]]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["groups"]
 
     def _load_groups(self) -> Dict[GroupName, GroupSpec]:
@@ -308,13 +317,11 @@ class ModeHostgroups(ModeGroups):
         yield PageMenuEntry(
             title=_("Service groups"),
             icon_name="servicegroups",
-            item=make_simple_link(watolib.folder_preserving_link([("mode", "service_groups")])),
+            item=make_simple_link(folder_preserving_link([("mode", "service_groups")])),
         )
 
     def _rules_url(self) -> str:
-        return watolib.folder_preserving_link(
-            [("mode", "edit_ruleset"), ("varname", "host_groups")]
-        )
+        return folder_preserving_link([("mode", "edit_ruleset"), ("varname", "host_groups")])
 
 
 @mode_registry.register
@@ -328,7 +335,7 @@ class ModeServicegroups(ModeGroups):
         return "service_groups"
 
     @classmethod
-    def permissions(cls) -> Optional[List[PermissionName]]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["groups"]
 
     def _load_groups(self) -> Dict[GroupName, GroupSpec]:
@@ -341,13 +348,11 @@ class ModeServicegroups(ModeGroups):
         yield PageMenuEntry(
             title=_("Host groups"),
             icon_name="hostgroups",
-            item=make_simple_link(watolib.folder_preserving_link([("mode", "host_groups")])),
+            item=make_simple_link(folder_preserving_link([("mode", "host_groups")])),
         )
 
     def _rules_url(self) -> str:
-        return watolib.folder_preserving_link(
-            [("mode", "edit_ruleset"), ("varname", "service_groups")]
-        )
+        return folder_preserving_link([("mode", "edit_ruleset"), ("varname", "service_groups")])
 
 
 @mode_registry.register
@@ -361,7 +366,7 @@ class ModeContactgroups(ModeGroups):
         return "contact_groups"
 
     @classmethod
-    def permissions(cls) -> Optional[List[PermissionName]]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["users"]
 
     def _load_groups(self) -> Dict[GroupName, GroupSpec]:
@@ -376,11 +381,11 @@ class ModeContactgroups(ModeGroups):
         yield PageMenuEntry(
             title=_("Users"),
             icon_name="users",
-            item=make_simple_link(watolib.folder_preserving_link([("mode", "users")])),
+            item=make_simple_link(folder_preserving_link([("mode", "users")])),
         )
 
     def _rules_url(self) -> str:
-        return watolib.folder_preserving_link(
+        return folder_preserving_link(
             [("mode", "rule_search"), ("filled_in", "search"), ("search", "contactgroups")]
         )
 
@@ -398,11 +403,9 @@ class ModeContactgroups(ModeGroups):
         html.write_html(
             HTML(", ").join(
                 [
-                    html.render_a(
+                    HTMLWriter.render_a(
                         alias,
-                        href=watolib.folder_preserving_link(
-                            [("mode", "edit_user"), ("edit", userid)]
-                        ),
+                        href=folder_preserving_link([("mode", "edit_user"), ("edit", userid)]),
                     )
                     for userid, alias in self._members.get(name, [])
                 ]
@@ -425,7 +428,7 @@ class ModeEditServicegroup(ABCModeEditGroup):
         return ModeServicegroups
 
     @classmethod
-    def permissions(cls) -> Optional[List[PermissionName]]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["groups"]
 
     def _load_groups(self) -> Dict[GroupName, GroupSpec]:
@@ -452,7 +455,7 @@ class ModeEditHostgroup(ABCModeEditGroup):
         return ModeHostgroups
 
     @classmethod
-    def permissions(cls) -> Optional[List[PermissionName]]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["groups"]
 
     def _load_groups(self) -> Dict[GroupName, GroupSpec]:
@@ -479,7 +482,7 @@ class ModeEditContactgroup(ABCModeEditGroup):
         return ModeContactgroups
 
     @classmethod
-    def permissions(cls) -> Optional[List[PermissionName]]:
+    def permissions(cls) -> Collection[PermissionName]:
         return ["users"]
 
     def _load_groups(self) -> Dict[GroupName, GroupSpec]:

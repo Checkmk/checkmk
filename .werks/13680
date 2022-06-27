@@ -1,0 +1,22 @@
+Title: Agent Bakery: Make package compression optional
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1652686099
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+Compression of baked agent packages is now turned off by default.
+
+Recently, all agent packages got packaged with default compression options
+of the respective packaging system. This resulted in a gzip-level-9-compression
+of <tt>.rpm</tt>, <tt>.deb</tt>, and <tt>.tar.gz</tt> packages.
+However, as all large files (larger than a few kb) that are shipped with Checkmk
+are already precompressed, the influence to the package size was minimal, while
+there was a noticeable impact to the baking performance.
+
+Hence, the gzip compression is now deactivated by default (level set to 0),
+while you can activate it with the agent ruleset "Agent bakery package compression"
+

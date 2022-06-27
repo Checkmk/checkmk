@@ -101,7 +101,7 @@ def _certificate_args(host, proxy, settings):
     return args
 
 
-def _url_args(host, _proxy, settings):
+def _url_args(host, _proxy, settings):  # pylint: disable=too-many-branches
     args = []
 
     if "uri" in settings:

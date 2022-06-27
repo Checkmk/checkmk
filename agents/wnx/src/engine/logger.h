@@ -9,6 +9,7 @@
 #pragma once
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <mutex>
 #include <string>
 #include <string_view>
@@ -73,7 +74,9 @@ template <typename... Args>
 void LogWindowsEvent(EventLevel Level, int Code, const char *Format,
                      Args &&...args) {
     auto allowed_level = cma::cfg::GetCurrentEventLevel();
-    if (Level > allowed_level) return;
+    if (Level > allowed_level) {
+        return;
+    }
 
     LogWindowsEventAlways(Level, Code, Format, std::forward<Args>(args)...);
 }
@@ -115,11 +118,15 @@ void LogWindowsEventInfo(int Code, const char *Format, Args &&...args) {
 namespace xlog {
 
 inline void AddCr(std::string &s) noexcept {
-    if (s.empty() || s.back() != '\n') s.push_back('\n');
+    if (s.empty() || s.back() != '\n') {
+        s.push_back('\n');
+    }
 }
 
 inline void RmCr(std::string &s) noexcept {
-    if (!s.empty() && s.back() == '\n') s.pop_back();
+    if (!s.empty() && s.back() == '\n') {
+        s.pop_back();
+    }
 }
 
 inline bool IsNoCrFlag(int Flag) noexcept { return (Flag & kNoCr) != 0; }
@@ -130,14 +137,18 @@ inline std::string formatString(int Fl, const char *Prefix,
                                 const char *String) {
     std::string s;
     auto length = String != nullptr ? strlen(String) : 0;
-    auto prefix = Fl & Flags::kNoPrefix ? nullptr : Prefix;
+    const auto *prefix = (Fl & Flags::kNoPrefix) != 0 ? nullptr : Prefix;
     length += prefix != nullptr ? strlen(prefix) : 0;
     length++;
 
     try {
         s.reserve(length);
-        if (prefix != nullptr) s = prefix;
-        if (String != nullptr) s += String;
+        if (prefix != nullptr) {
+            s = prefix;
+        }
+        if (String != nullptr) {
+            s += String;
+        }
     } catch (const std::exception &) {
         return {};
     }
@@ -177,7 +188,9 @@ constexpr uint16_t GetColorAttribute(Colors color) {
 }
 
 constexpr int GetBitOffset(uint16_t color_mask) {
-    if (color_mask == 0) return 0;
+    if (color_mask == 0) {
+        return 0;
+    }
 
     int bit_offset = 0;
     while ((color_mask & 1) == 0) {
@@ -212,10 +225,9 @@ inline void sendStringToDebugger(const char *String) {
     internal_PrintStringDebugger(String);
 }
 
-inline void sendStringToStdio(const char *String,
-                              internal::Colors Color = internal::Colors::dflt) {
+inline void sendStringToStdio(const char *str, internal::Colors color) {
     if (!XLOG::details::IsColoredOnStdio()) {
-        internal_PrintStringStdio(String);
+        internal_PrintStringStdio(str);
         return;
     }
 
@@ -225,7 +237,7 @@ inline void sendStringToStdio(const char *String,
     CONSOLE_SCREEN_BUFFER_INFO buffer_info;
     GetConsoleScreenBufferInfo(stdout_handle, &buffer_info);
     const uint16_t old_color_attrs = buffer_info.wAttributes;
-    const uint16_t new_color = internal::CalculateColor(Color, old_color_attrs);
+    const uint16_t new_color = internal::CalculateColor(color, old_color_attrs);
 
     // We need to flush the stream buffers into the console before each
     // SetConsoleTextAttribute call lest it affect the text that is
@@ -233,17 +245,25 @@ inline void sendStringToStdio(const char *String,
     fflush(stdout);
     SetConsoleTextAttribute(stdout_handle, new_color);
 
-    internal_PrintStringStdio(String);
+    internal_PrintStringStdio(str);
 
     fflush(stdout);
     // Restores the text color.
     SetConsoleTextAttribute(stdout_handle, old_color_attrs);
 }
 
+inline void sendStringToStdio(const char *str) {
+    return sendStringToStdio(str, internal::Colors::dflt);
+}
+
 }  // namespace xlog
 #endif
 
 namespace XLOG {
+constexpr unsigned int min_file_count = 0;
+constexpr unsigned int max_file_count = 64;
+constexpr size_t min_file_size = 256 * 1024;
+constexpr size_t max_file_size = 256 * 1024 * 1024;
 
 namespace setup {
 void DuplicateOnStdio(bool on);
@@ -254,9 +274,12 @@ void SetContext(std::string_view context);
 
 using Colors = xlog::internal::Colors;
 
-inline void SendStringToStdio(std::string_view string,
-                              Colors Color = Colors::dflt) {
-    return xlog::sendStringToStdio(string.data(), Color);
+inline void SendStringToStdio(std::string_view string, Colors color) {
+    return xlog::sendStringToStdio(string.data(), color);
+}
+
+inline void SendStringToStdio(std::string_view string) {
+    return xlog::sendStringToStdio(string.data());
 }
 
 enum Mods : int {
@@ -382,7 +405,7 @@ public:
     }
     // **********************************
 
-    inline std::string SafePrintToDebuggerAndEventLog(
+    static inline std::string SafePrintToDebuggerAndEventLog(
         const std::string &text) noexcept {
         try {
             return fmt::format(
@@ -435,7 +458,7 @@ public:
     }
     // **********************************
 
-    void bp() {
+    static void bp() {
         if (bp_allowed_) {
             xdbg::bp();
         }
@@ -526,11 +549,15 @@ public:
     }
 
     // this if for stream operations
-    [[maybe_unused]] XLOG::Emitter operator()(int Flags = kCopy) noexcept {
+    [[maybe_unused]] XLOG::Emitter operator()(int Flags) const noexcept {
         auto e = *this;
         e.mods_ = Flags;
 
         return e;
+    }
+
+    [[maybe_unused]] XLOG::Emitter operator()() const noexcept {
+        return operator()(kCopy);
     }
 
     [[maybe_unused]] Emitter t() noexcept {
@@ -580,28 +607,37 @@ public:
         }
     }
 
+    void setLogRotation(unsigned int count, size_t size) {
+        backup_log_max_count_ =
+            std::clamp(count, min_file_count, max_file_count);
+        backup_log_max_size_ = std::clamp(size, min_file_size, max_file_size);
+    }
+
     void enableFileLog(bool enable) {
-        if (enable)
+        if (enable) {
             log_param_.directions_ |= xlog::Directions::kFilePrint;
-        else
+        } else {
             log_param_.directions_ &= ~xlog::Directions::kFilePrint;
+        }
     }
 
     void enableEventLog(bool enable) {
         if (type_ == LogType::log) {
             // only kLog has right to create event log entries
-            if (enable)
+            if (enable) {
                 log_param_.directions_ |= xlog::Directions::kEventPrint;
-            else
+            } else {
                 log_param_.directions_ &= ~xlog::Directions::kEventPrint;
+            }
         }
     }
 
     void enableWinDbg(bool enable) {
-        if (enable)
+        if (enable) {
             log_param_.directions_ |= xlog::Directions::kDebuggerPrint;
-        else
+        } else {
             log_param_.directions_ &= ~xlog::Directions::kDebuggerPrint;
+        }
     }
 
     bool isWinDbg() const {
@@ -650,8 +686,8 @@ private:
 
     mutable std::mutex lock_;
     xlog::LogParam log_param_;  // this is fixed base
-    std::atomic<int> backup_log_max_count_{cma::cfg::kBackupLogMaxCount};
-    std::atomic<size_t> backup_log_max_size_{cma::cfg::kBackupLogMaxSize};
+    std::atomic<unsigned int> backup_log_max_count_{cma::cfg::kLogFileMaxCount};
+    std::atomic<size_t> backup_log_max_size_{cma::cfg::kLogFileMaxSize};
     std::ostringstream os_;  // stream storage
     XLOG::LogType type_;
 

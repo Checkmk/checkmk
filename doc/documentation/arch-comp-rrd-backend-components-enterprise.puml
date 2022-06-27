@@ -1,0 +1,30 @@
+@startuml
+component "[[../arch-comp-core.html Monitoring Core]]" as cmc {
+    component "RRDCacheDThread" as rrdcached_thread
+    component "RRDHelper" as rrd_helper
+    component "[[../arch-comp-livestatus.html Livestatus]]" as cmc_livestatus_server {
+        component "RRDColumn" as rrd_column
+    }
+}
+package "RRD backend" as rrd_backend {
+   component "[[../arch-comp-rrdcached.html rrdcached]]" as rrdcached
+   component "RRD create helper" as rrd_create_helper
+   database "RRD storage" as rrd_storage
+   interface librrd
+
+   rrdcached --> librrd : write
+   rrd_create_helper -d-> librrd : create
+   librrd <--> rrd_storage
+}
+
+interface "IO" as cmc_rrd_create_helper_io
+interface "rrdcached.socket" as rrd_socket
+
+rrd_helper -> rrdcached_thread
+librrd -d-> rrd_column : read
+rrd_helper -d-> cmc_rrd_create_helper_io
+cmc_rrd_create_helper_io -d-> rrd_create_helper
+rrdcached_thread -d-> rrd_socket : write
+rrd_socket -d-> rrdcached
+rrd_column -> rrd_socket : flush
+@enduml

@@ -34,11 +34,11 @@ from cmk.gui.valuespec import (
 @rulespec_group_registry.register
 class RulespecGroupInventory(RulespecGroup):
     @property
-    def name(self):
+    def name(self) -> str:
         return "inventory"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Hardware / Software Inventory")
 
     @property
@@ -194,6 +194,7 @@ rulespec_registry.register(
         group=RulespecGroupInventory,
         name="inv_exports:software_csv",
         valuespec=_valuespec_inv_exports_software_csv,
+        is_deprecated=True,
     )
 )
 

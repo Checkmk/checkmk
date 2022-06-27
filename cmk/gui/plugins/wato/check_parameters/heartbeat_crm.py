@@ -58,6 +58,10 @@ rulespec_registry.register(
 
 
 def _heartbeat_crm_transform_heartbeat_crm(params):
+    """
+    >>> _heartbeat_crm_transform_heartbeat_crm([60, 1, 0, 0])
+    {'max_age': 60, 'show_failed_actions': False, 'dc': 1, 'num_nodes': 0, 'num_resources': 0}
+    """
     if isinstance(params, dict):
         _params = params.copy()
         _params.setdefault("show_failed_actions", False)

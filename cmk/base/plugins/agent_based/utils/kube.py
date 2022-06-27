@@ -20,7 +20,7 @@ start and end with an alphanumeric character.
 
     Examples:
         >>> import re
-        >>> validation_value = re.compile(r'([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]')
+        >>> validation_value = re.compile(r'(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?')
         >>> is_value = lambda x: bool(validation_value.fullmatch(x))
         >>> is_value('MyName')
         True
@@ -30,8 +30,8 @@ start and end with an alphanumeric character.
         True
         >>> is_value('a..a') # repeating '.', '_' or '-' characters in the middle is ok
         True
-        >>> is_value('')  # does not start with alphanumeric character
-        False
+        >>> is_value('')  # empty values are allowed
+        True
         >>> is_value('a-')  # does not end with alphanumeric character
         False
         >>> is_value('a&a')  # & not allowed
@@ -89,6 +89,7 @@ class Label(BaseModel):
 
 ContainerName = NewType("ContainerName", str)
 Labels = Mapping[LabelName, Label]
+FilteredAnnotations = Mapping[LabelName, LabelValue]
 CreationTimestamp = NewType("CreationTimestamp", float)
 HostName = NewType("HostName", str)
 IpAddress = NewType("IpAddress", str)
@@ -160,11 +161,57 @@ def condition_detailed_description(
     return f"{condition_short_description(name, status)} ({reason}: {message})"
 
 
+# TODO: CMK-10380 (the change will incompatible)
 def kube_labels_to_cmk_labels(labels: Labels) -> HostLabelGenerator:
+    """Convert Kubernetes Labels to HostLabels.
+
+    Key-value pairs of Kubernetes labels are valid checkmk labels (see
+    `LabelName` and `LabelValue`).
+
+    However, directly yielding `HostLabel(label.name, label.value)` is
+    problematic. This is because a user can add labels to their Kubernetes
+    objects, which overwrite existing Checkmk labels. For instance, the label
+    `cmk/os_name=` would overwrite the cmk label `cmk/os_name:linux`. To
+    circumvent this problem, we prepend every label key with
+    'cmk/kubernetes/label/'.
+
+    >>> list(kube_labels_to_cmk_labels({
+    ... 'k8s.io/app': Label(name='k8s.io/app', value='nginx'),
+    ... 'infra': Label(name='infra', value='yes'),
+    ... }))
+    [HostLabel('cmk/kubernetes/label/k8s.io/app', 'nginx'), HostLabel('cmk/kubernetes/label/infra', 'yes')]
+    """
     for label in labels.values():
         if (value := label.value) == "":
             value = LabelValue("true")
-        yield HostLabel(label.name, value)
+        yield HostLabel(f"cmk/kubernetes/label/{label.name}", value)
+
+
+# TODO: CMK-10380 (the change will incompatible)
+def kube_annotations_to_cmk_labels(annotations: FilteredAnnotations) -> HostLabelGenerator:
+    """Convert Kubernetes Annotations to HostLabels.
+
+    Kubernetes annotations are not valid Checkmk labels, but agent_kube makes
+    sure that annotations only arrive here, if we want to yield it as a
+    HostLabel, e.g. a restricted set of characters.
+
+    Directly yielding `HostLabel(annotation.name, annotation.value)` is
+    problematic. This is because a user can add annotations to their Kubernetes
+    objects, which overwrite existing Checkmk labels. For instance, the
+    annotation `cmk/os_name=` would overwrite the cmk label
+    `cmk/os_name:linux`. To circumvent this problem, we prepend every
+    annotation key with 'cmk/kubernetes/annotation/'.
+
+    >>> annotations = {
+    ... 'k8s.io/app': 'nginx',
+    ... 'infra': 'yes',
+    ... 'empty': '',
+    ... }
+    >>> list(kube_annotations_to_cmk_labels(annotations))
+    [HostLabel('cmk/kubernetes/annotation/k8s.io/app', 'nginx'), HostLabel('cmk/kubernetes/annotation/infra', 'yes'), HostLabel('cmk/kubernetes/annotation/empty', 'true')]
+    """
+    for name, value in annotations.items():
+        yield HostLabel(f"cmk/kubernetes/annotation/{name}", value or "true")
 
 
 class KubernetesError(Exception):
@@ -308,7 +355,7 @@ class FalsyNodeCustomCondition(FalsyNodeCondition):
 
 
 class NodeConditions(BaseModel):
-    """section: k8s_node_conditions_v1"""
+    """section: kube_node_conditions_v1"""
 
     ready: TruthyNodeCondition
     memorypressure: FalsyNodeCondition
@@ -318,7 +365,7 @@ class NodeConditions(BaseModel):
 
 
 class NodeCustomConditions(BaseModel):
-    """section: k8s_node_custom_conditions_v1"""
+    """section: kube_node_custom_conditions_v1"""
 
     custom_conditions: Sequence[FalsyNodeCustomCondition]
 
@@ -375,6 +422,7 @@ class NodeInfo(BaseModel):
     name: NodeName
     creation_timestamp: CreationTimestamp
     labels: Labels
+    annotations: FilteredAnnotations
     addresses: NodeAddresses
     cluster: str
 
@@ -406,13 +454,14 @@ class PodInfo(BaseModel):
     name: str
     creation_timestamp: Optional[CreationTimestamp]
     labels: Labels  # used for host labels
+    annotations: FilteredAnnotations  # used for host labels
     node: Optional[NodeName]  # this is optional, because there may be pods, which are not
     # scheduled on any node (e.g., no node with enough capacity is available).
     host_network: Optional[str]
     dns_policy: Optional[str]
     host_ip: Optional[IpAddress]
     pod_ip: Optional[IpAddress]
-    qos_class: QosClass
+    qos_class: Optional[QosClass]  # can be None, if the Pod was evicted.
     restart_policy: RestartPolicy
     uid: PodUID
     # TODO: see CMK-9901
@@ -489,22 +538,29 @@ class PodConditions(BaseModel):
     ready: Optional[PodCondition]
 
 
+@enum.unique
+class ContainerStateType(str, enum.Enum):
+    running = "running"
+    waiting = "waiting"
+    terminated = "terminated"
+
+
 class ContainerRunningState(BaseModel):
-    type: str = Field("running", const=True)
+    type: Literal[ContainerStateType.running] = Field(ContainerStateType.running, const=True)
     start_time: int
 
 
 class ContainerWaitingState(BaseModel):
-    type: str = Field("waiting", const=True)
+    type: Literal[ContainerStateType.waiting] = Field(ContainerStateType.waiting, const=True)
     reason: str
     detail: Optional[str]
 
 
 class ContainerTerminatedState(BaseModel):
-    type: str = Field("terminated", const=True)
+    type: Literal[ContainerStateType.terminated] = Field(ContainerStateType.terminated, const=True)
     exit_code: int
-    start_time: int
-    end_time: int
+    start_time: Optional[int]
+    end_time: Optional[int]
     reason: Optional[str]
     detail: Optional[str]
 
@@ -566,6 +622,7 @@ class DeploymentInfo(BaseModel):
     name: str
     namespace: NamespaceName
     labels: Labels
+    annotations: FilteredAnnotations
     selector: Selector
     creation_timestamp: CreationTimestamp
     containers: ThinContainers
@@ -578,6 +635,7 @@ class DaemonSetInfo(BaseModel):
     name: str
     namespace: NamespaceName
     labels: Labels
+    annotations: FilteredAnnotations
     selector: Selector
     creation_timestamp: CreationTimestamp
     containers: ThinContainers
@@ -590,6 +648,7 @@ class StatefulSetInfo(BaseModel):
     name: str
     namespace: NamespaceName
     labels: Labels
+    annotations: FilteredAnnotations
     selector: Selector
     creation_timestamp: CreationTimestamp
     containers: ThinContainers
@@ -740,4 +799,36 @@ class NamespaceInfo(BaseModel):
     name: NamespaceName
     creation_timestamp: Optional[CreationTimestamp]
     labels: Labels
+    annotations: FilteredAnnotations
     cluster: str
+
+
+class IdentificationError(BaseModel):
+    """Errors due to incorrect labels set by the user."""
+
+    duplicate_machine_collector: bool
+    duplicate_container_collector: bool
+    unknown_collector: bool
+
+
+class NodeCollectorReplica(BaseModel):
+    # This model reports api data of a node collector DaemonSet.
+    # We identify this DaemonSet via certain labels and provide the counts to the
+    # Cluster object via the CollectorDaemons section. The data is also available in
+    # a more generic way as part of the Replicas service on a DaemonSet, but we want
+    # to show this information on the cluster object.
+    available: int
+    desired: int
+
+
+class CollectorDaemons(BaseModel):
+    """section: kube_collector_daemons_v1
+
+    Model containing information about the DaemonSets of the node-collectors.
+    The section is intended for the cluster host. `None` indicates, that the
+    corresponding DaemonSet is not among the API data.
+    """
+
+    machine: Optional[NodeCollectorReplica]
+    container: Optional[NodeCollectorReplica]
+    errors: IdentificationError

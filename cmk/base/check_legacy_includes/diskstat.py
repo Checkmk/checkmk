@@ -29,12 +29,12 @@ from cmk.base.check_api import (
     check_levels,
     get_age_human_readable,
     get_average,
-    get_bytes_human_readable,
     get_percent_human_readable,
     get_rate,
     host_extra_conf,
     host_name,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 from cmk.base.plugins.agent_based.utils.diskstat import _METRICS_TO_BE_AVERAGED
 
 diskstat_inventory_mode = "rule"  # "summary", "single", "legacy"
@@ -65,7 +65,7 @@ diskstat_diskless_pattern = re.compile("x?[shv]d[a-z]*[0-9]+")
 # IT. INSTEAD, MODIFY THE MIGRATED VERSION.
 # ==================================================================================================
 # ==================================================================================================
-def inventory_diskstat_generic(
+def inventory_diskstat_generic(  # pylint: disable=too-many-branches
     parsed: Sequence[Sequence[Any]],
 ) -> Optional[Sequence[Tuple[str, Optional[str]]]]:
     # Skip over on empty data
@@ -113,7 +113,7 @@ def inventory_diskstat_generic(
     return inventory
 
 
-def check_diskstat_line(
+def check_diskstat_line(  # pylint: disable=too-many-branches
     this_time: float,
     item: str,
     params: Mapping[str, Any],
@@ -144,7 +144,7 @@ def check_diskstat_line(
         else:
             warn, crit = None, None
 
-        per_sec = get_rate(countername, this_time, int(ctr))  # type:ignore
+        per_sec = get_rate(countername, this_time, int(ctr))
         if mode == "sectors":
             # compute IO rate in bytes/sec
             bytes_per_sec = per_sec * 512
@@ -168,8 +168,7 @@ def check_diskstat_line(
             levels,
             scale=1048576,
             statemarkers=True,
-            unit="/s",
-            human_readable_func=get_bytes_human_readable,
+            human_readable_func=render.iobandwidth,
             infoname=what,
         )
         if text:
@@ -183,8 +182,8 @@ def check_diskstat_line(
 
     # Process IOs when available
     ios_per_sec = None
-    if len(line) >= 6 and line[4] >= 0 and line[5] > 0:  # type:ignore
-        reads, writes = map(int, line[4:6])  # type:ignore
+    if len(line) >= 6 and line[4] >= 0 and line[5] > 0:
+        reads, writes = map(int, line[4:6])
         if "read_ios" in params:
             warn, crit = params["read_ios"]
             if reads >= crit:
@@ -213,8 +212,8 @@ def check_diskstat_line(
             perfdata.append(("ios", ios_per_sec))
 
     # Do Latency computation if this information is available:
-    if len(line) >= 7 and line[6] >= 0:  # type:ignore
-        timems = int(line[6])  # type:ignore
+    if len(line) >= 7 and line[6] >= 0:
+        timems = int(line[6])
         timems_per_sec = get_rate(countername + ".time", this_time, timems)
         if not ios_per_sec:
             latency = 0.0
@@ -246,7 +245,7 @@ def check_diskstat_line(
             else:
                 warn, crit = None, None
 
-            qlx = get_rate(countername, this_time, int(ctr))  # type:ignore
+            qlx = get_rate(countername, this_time, int(ctr))
             ql = qlx / 10000000.0
             infos.append(what.title() + " Queue: %.2f" % ql)
 
@@ -358,7 +357,7 @@ def _check_diskstat_old(
 # IT. INSTEAD, MODIFY THE MIGRATED VERSION.
 # ==================================================================================================
 # ==================================================================================================
-def diskstat_select_disk(
+def diskstat_select_disk(  # pylint: disable=too-many-branches
     disks: Mapping[str, MutableMapping[str, Any]], item: str
 ) -> Optional[MutableMapping[str, Any]]:
 
@@ -451,7 +450,7 @@ def diskstat_select_disk(
 # IT. INSTEAD, MODIFY THE MIGRATED VERSION.
 # ==================================================================================================
 # ==================================================================================================
-def check_diskstat_dict(
+def check_diskstat_dict(  # pylint: disable=too-many-branches
     item: str, params: Mapping[str, Any], disks: Mapping[str, MutableMapping[str, Any]]
 ) -> Iterable[Any]:
     # Take care of previously discovered services
@@ -505,10 +504,9 @@ def check_diskstat_dict(
                 throughput,
                 "disk_" + what + "_throughput",
                 params.get(what),
-                unit="/s",
                 scale=1048576,
                 statemarkers=False,
-                human_readable_func=get_bytes_human_readable,
+                human_readable_func=render.iobandwidth,
                 infoname=what.title(),
             )
 

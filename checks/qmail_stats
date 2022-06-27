@@ -12,6 +12,7 @@ factory_settings["qmail_stats_default_levels"] = {
 def inventory_qmail_stats(info):
     if len(info) > 0:
         return [("", {})]
+    return []
 
 
 def check_qmail_stats(_no_item, params, info):

@@ -27,7 +27,7 @@ def create_test_email(subject):
     return email.message_from_string(email_string)
 
 
-def test_ac_check_mail_main_failed_connect(check_mail):
+def test_ac_check_mail_main_failed_connect(check_mail) -> None:
     state, info, perf = _active_check_main_core(
         check_mail.create_argument_parser(),
         check_mail.check_mail,

@@ -100,7 +100,7 @@ def test_match_message(
         (2, (2, 2), (2, 2), MatchPriority(has_match=True, has_canceling_match=True)),
     ],
 )
-def test_match_priority(m, priority, match_priority, cancel_priority, expected):
+def test_match_priority(m, priority, match_priority, cancel_priority, expected) -> None:
     rule = {}
     if match_priority is not None:
         rule["match_priority"] = match_priority
@@ -155,7 +155,7 @@ def test_match_priority(m, priority, match_priority, cancel_priority, expected):
         ),
     ],
 )
-def test_match_outcome(m, rule, match_groups, match_priority, expected):
+def test_match_outcome(m, rule, match_groups, match_priority, expected) -> None:
     assert m._check_match_outcome(rule, match_groups, match_priority) == expected
 
 
@@ -168,7 +168,7 @@ def test_match_outcome(m, rule, match_groups, match_priority, expected):
         (False, {"match_site": ["dong"]}),
     ],
 )
-def test_match_site(m, rule, result):
+def test_match_site(m, rule, result) -> None:
     assert m.event_rule_matches_site(rule, {}) == result
 
 
@@ -187,7 +187,7 @@ def test_match_site(m, rule, result):
         (False, {"match_host": "^abc$"}, {"host": "abx"}),
     ],
 )
-def test_match_host(m, result, rule, event):
+def test_match_host(m, result, rule, event) -> None:
     if "match_host" in rule:
         rule = {
             **rule,
@@ -208,7 +208,7 @@ def test_match_host(m, result, rule, event):
         (False, {"match_ipaddress": "10.3.3.0"}, {"ipaddress": "10.3.3.4"}),
     ],
 )
-def test_match_ipaddress(m, result, rule, event):
+def test_match_ipaddress(m, result, rule, event) -> None:
     assert m.event_rule_matches_ip(rule, event) == result
 
 
@@ -221,5 +221,5 @@ def test_match_ipaddress(m, result, rule, event):
         (False, {"match_facility": 0}, {"facility": 1}),
     ],
 )
-def test_match_facility(m, result, rule, event):
+def test_match_facility(m, result, rule, event) -> None:
     assert m.event_rule_matches_facility(rule, event) == result

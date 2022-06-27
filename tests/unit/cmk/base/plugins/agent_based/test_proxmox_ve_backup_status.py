@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 from datetime import datetime
 
 import pytest
@@ -19,52 +20,68 @@ NO_BACKUP_DATA = [['{"last_backup": null}']]
 
 BACKUP_DATA1 = [
     [
-        '{"last_backup": {'
-        '    "started_time": "2020-04-16 22:20:43+0000",'
-        '    "total_duration": 120,'
-        '    "archive_name": "/some/file.name.vma.lzo",'
-        '    "archive_size": 1099511627776,'
-        '    "transfer_size": 2199023255552,'
-        '    "transfer_time": 1000}'
-        "}"
+        json.dumps(
+            {
+                "last_backup": {
+                    "started_time": "2020-04-16 22:20:43+0000",
+                    "total_duration": 120,
+                    "archive_name": "/some/file.name.vma.lzo",
+                    "archive_size": 1099511627776,
+                    "transfer_size": 2199023255552,
+                    "transfer_time": 1000,
+                }
+            }
+        )
     ]
 ]
 
 BACKUP_DATA2 = [
     [
-        '{"last_backup": {'
-        '    "started_time": "2020-04-16 22:20:43+0000",'
-        '    "total_duration": 140,'
-        '    "archive_name": "/some/file.name.vma.lzo",'
-        '    "upload_amount": 10995116277,'
-        '    "upload_total": 1099511627776,'
-        '    "upload_time": 120'
-        "}}"
+        json.dumps(
+            {
+                "last_backup": {
+                    "started_time": "2020-04-16 22:20:43+0000",
+                    "total_duration": 140,
+                    "archive_name": "/some/file.name.vma.lzo",
+                    "upload_amount": 10995116277,
+                    "upload_total": 1099511627776,
+                    "upload_time": 120,
+                }
+            }
+        )
     ]
 ]
 
 BACKUP_DATA3 = [
     [
-        '{"last_backup": {'
-        '    "started_time": "2020-04-16 22:20:43+0000",'
-        '    "total_duration": 140,'
-        '    "archive_name": "/some/file.name.vma.lzo",'
-        '    "bytes_written_size": 10995116277,'
-        '    "bytes_written_bandwidth": 10000}'
-        "}"
+        json.dumps(
+            {
+                "last_backup": {
+                    "started_time": "2020-04-16 22:20:43+0000",
+                    "total_duration": 140,
+                    "archive_name": "/some/file.name.vma.lzo",
+                    "bytes_written_size": 10995116277,
+                    "bytes_written_bandwidth": 10000,
+                }
+            }
+        )
     ]
 ]
 
 BACKUP_DATA4 = [
     [
-        '{"last_backup": {'
-        '    "started_time": "2020-04-16 22:20:43+0000",'
-        '    "total_duration": 140,'
-        '    "archive_name": "/some/file.name.vma.lzo",'
-        '    "backup_amount": 10995116277,'
-        '    "backup_total": 1099511627776,'
-        '    "backup_time": 120}'
-        "}"
+        json.dumps(
+            {
+                "last_backup": {
+                    "started_time": "2020-04-16 22:20:43+0000",
+                    "total_duration": 140,
+                    "archive_name": "/some/file.name.vma.lzo",
+                    "backup_amount": 10995116277,
+                    "backup_total": 1099511627776,
+                    "backup_time": 120,
+                }
+            }
+        )
     ]
 ]
 

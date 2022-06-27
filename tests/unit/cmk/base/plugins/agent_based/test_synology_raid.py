@@ -10,12 +10,12 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 SECTION_TABLE = [[f"Volume {i}", f"{i}"] for i in range(1, 22)]
 
 
-def test_parsing():
+def test_parsing() -> None:
     section = synology_raid.parse(SECTION_TABLE)
     assert len(section) == len(SECTION_TABLE)
 
 
-def test_discovery():
+def test_discovery() -> None:
     section = synology_raid.parse(SECTION_TABLE)
     services = list(synology_raid.discovery(section))
     assert {s.item for s in services} == {i for i, _ in SECTION_TABLE}
@@ -47,7 +47,7 @@ def test_discovery():
         (21, State.UNKNOWN),
     ],
 )
-def test_result_state(state, expected):
+def test_result_state(state, expected) -> None:
     section = {"Volume 1": synology_raid.Raid("Volume 1", state)}
     result = list(synology_raid.check(item="Volume 1", section=section))[0]
     assert isinstance(result, Result)

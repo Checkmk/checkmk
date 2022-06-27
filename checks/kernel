@@ -7,15 +7,11 @@
 import cmk.base.plugins.agent_based.kernel
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.transforms import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 #   .--kernel--Counters----------------------------------------------------.
@@ -47,12 +43,12 @@ def check_kernel(item, params, parsed):
     timestamp, items = parsed
 
     if timestamp is None:
-        return
+        return None
 
     item_values = items.get(item)
 
     if item_values is None:
-        return
+        return None
 
     if len(item_values) > 1:
         return 3, "item '%s' not unique (found %d times)" % (item, len(item_values))
@@ -90,6 +86,7 @@ def inventory_kernel_performance(parsed):
         data = items.get(name)
         if data is not None and len(data) > 0:
             return [(None, {})]
+    return []
 
 
 def check_kernel_performance(_no_item, params, parsed):

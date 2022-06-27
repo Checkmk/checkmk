@@ -17,11 +17,11 @@ from cmk.gui.permissions import (
 @permission_section_registry.register
 class PermissionSectionNagVis(PermissionSection):
     @property
-    def name(self):
+    def name(self) -> str:
         return "nagvis"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("NagVis")
 
 

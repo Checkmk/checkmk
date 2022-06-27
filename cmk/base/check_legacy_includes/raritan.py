@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+
 from .temperature import check_temperature
 
 # For raritan devices which support the PDU2-, EMD-, or LHX-MIB
@@ -194,7 +194,7 @@ def inventory_raritan_sensors(parsed, sensor_type):
 
 
 def inventory_raritan_sensors_temp(parsed, sensor_type):
-    inventory = []
+    inventory: list = []
     for key, values in parsed.items():
         if values["availability"] == "1" and values["sensor_type"] == sensor_type:
             inventory.append((key, {}))
@@ -220,12 +220,14 @@ def check_raritan_sensors(item, _no_params, parsed):
             )
 
         return state, infotext, [(parsed[item]["sensor_type"], reading, warn, crit)]
+    return None
 
 
 def check_raritan_sensors_binary(item, _no_params, parsed):
     if item in parsed:
         state, state_readable = parsed[item]["state"]
         return state, "Status: %s" % state_readable
+    return None
 
 
 def check_raritan_sensors_temp(item, params, parsed):
@@ -242,3 +244,4 @@ def check_raritan_sensors_temp(item, params, parsed):
             dev_status=state,
             dev_status_name=state_readable,
         )
+    return None

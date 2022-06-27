@@ -16,12 +16,13 @@ from cmk.base.check_api import (
     get_rate,
     MKCounterWrapped,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 _AZURE_METRIC_FMT = {
     "count": lambda n: "%d" % n,
     "percent": get_percent_human_readable,
     "bytes": get_bytes_human_readable,
-    "bytes_per_second": lambda b: "%s/s" % get_bytes_human_readable(b),
+    "bytes_per_second": render.iobandwidth,
     "seconds": lambda s: "%.2f s" % s,
     "milli_seconds": lambda ms: "%d ms" % (ms * 1000),
 }

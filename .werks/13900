@@ -1,0 +1,17 @@
+Title: Update Pillow and Paramiko
+Class: security
+Compatible: compat
+Component: core
+Date: 1650872232
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+This updates paramiko to 2.3.10 and Pillow to 9.1.0. These new versions include fixes for these CVEs:
+
+LI: CVE-2022-24302
+LI: CVE-2022-22817
+LI: CVE-2022-22816
+LI: CVE-2022-22815
+LI: CVE-2022-24303

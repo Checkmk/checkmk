@@ -65,7 +65,7 @@ checks = {
                     ]
                 ), (0, 'Radio state [2,4GHz]: up', []),
                 (
-                    0, 'Channel usage [2,4GHz]: 10.0%', [
+                    0, 'Channel usage [2,4GHz]: 10.00%', [
                         (
                             'channel_utilization_24ghz', 10.0, 80.0, 90.0,
                             None, None
@@ -78,7 +78,7 @@ checks = {
                     ]
                 ), (0, 'Radio state [5GHz]: up', []),
                 (
-                    0, 'Channel usage [5GHz]: 7.0%', [
+                    0, 'Channel usage [5GHz]: 7.00%', [
                         (
                             'channel_utilization_5ghz', 7.0, 80.0, 90.0, None,
                             None
@@ -98,7 +98,7 @@ checks = {
                     ]
                 ), (0, 'Radio state [2,4GHz]: up', []),
                 (
-                    0, 'Channel usage [2,4GHz]: 12.0%', [
+                    0, 'Channel usage [2,4GHz]: 12.00%', [
                         (
                             'channel_utilization_24ghz', 12.0, 80.0, 90.0,
                             None, None
@@ -111,7 +111,7 @@ checks = {
                     ]
                 ), (0, 'Radio state [5GHz]: up', []),
                 (
-                    0, 'Channel usage [5GHz]: 1.0%', [
+                    0, 'Channel usage [5GHz]: 1.00%', [
                         (
                             'channel_utilization_5ghz', 1.0, 80.0, 90.0, None,
                             None
@@ -131,7 +131,7 @@ checks = {
                     ]
                 ), (0, 'Radio state [2,4GHz]: up', []),
                 (
-                    0, 'Channel usage [2,4GHz]: 13.0%', [
+                    0, 'Channel usage [2,4GHz]: 13.00%', [
                         (
                             'channel_utilization_24ghz', 13.0, 80.0, 90.0,
                             None, None
@@ -144,7 +144,7 @@ checks = {
                     ]
                 ), (0, 'Radio state [5GHz]: up', []),
                 (
-                    0, 'Channel usage [5GHz]: 1.0%', [
+                    0, 'Channel usage [5GHz]: 1.00%', [
                         (
                             'channel_utilization_5ghz', 1.0, 80.0, 90.0, None,
                             None
@@ -164,7 +164,7 @@ checks = {
                     ]
                 ), (0, 'Radio state [2,4GHz]: up', []),
                 (
-                    0, 'Channel usage [2,4GHz]: 13.0%', [
+                    0, 'Channel usage [2,4GHz]: 13.00%', [
                         (
                             'channel_utilization_24ghz', 13.0, 80.0, 90.0,
                             None, None
@@ -177,7 +177,7 @@ checks = {
                     ]
                 ), (0, 'Radio state [5GHz]: up', []),
                 (
-                    0, 'Channel usage [5GHz]: 1.0%', [
+                    0, 'Channel usage [5GHz]: 1.00%', [
                         (
                             'channel_utilization_5ghz', 1.0, 80.0, 90.0, None,
                             None
@@ -197,7 +197,7 @@ checks = {
                     ]
                 ), (0, 'Radio state [2,4GHz]: up', []),
                 (
-                    0, 'Channel usage [2,4GHz]: 12.0%', [
+                    0, 'Channel usage [2,4GHz]: 12.00%', [
                         (
                             'channel_utilization_24ghz', 12.0, 80.0, 90.0,
                             None, None
@@ -210,7 +210,7 @@ checks = {
                     ]
                 ), (0, 'Radio state [5GHz]: up', []),
                 (
-                    0, 'Channel usage [5GHz]: 1.0%', [
+                    0, 'Channel usage [5GHz]: 1.00%', [
                         (
                             'channel_utilization_5ghz', 1.0, 80.0, 90.0, None,
                             None
@@ -230,7 +230,7 @@ checks = {
                     ]
                 ), (0, 'Radio state [2,4GHz]: up', []),
                 (
-                    0, 'Channel usage [2,4GHz]: 13.0%', [
+                    0, 'Channel usage [2,4GHz]: 13.00%', [
                         (
                             'channel_utilization_24ghz', 13.0, 80.0, 90.0,
                             None, None
@@ -243,7 +243,7 @@ checks = {
                     ]
                 ), (0, 'Radio state [5GHz]: up', []),
                 (
-                    0, 'Channel usage [5GHz]: 1.0%', [
+                    0, 'Channel usage [5GHz]: 1.00%', [
                         (
                             'channel_utilization_5ghz', 1.0, 80.0, 90.0, None,
                             None
@@ -264,7 +264,7 @@ checks = {
                 ), (0, 'Radio state [2,4GHz]: up', []),
                 (
                     1,
-                    'Channel usage [2,4GHz]: 89.0% (warn/crit at 80.0%/90.0%)',
+                    'Channel usage [2,4GHz]: 89.00% (warn/crit at 80.00%/90.00%)',
                     [
                         (
                             'channel_utilization_24ghz', 89.0, 80.0, 90.0,
@@ -278,7 +278,7 @@ checks = {
                     ]
                 ), (0, 'Radio state [5GHz]: up', []),
                 (
-                    0, 'Channel usage [5GHz]: 1.0%', [
+                    0, 'Channel usage [5GHz]: 1.00%', [
                         (
                             'channel_utilization_5ghz', 1.0, 80.0, 90.0, None,
                             None
@@ -299,7 +299,7 @@ checks = {
                 ), (3, 'Radio state [2,4GHz]: not available', []),
                 (
                     1,
-                    'Channel usage [2,4GHz]: 87.0% (warn/crit at 80.0%/90.0%)',
+                    'Channel usage [2,4GHz]: 87.00% (warn/crit at 80.00%/90.00%)',
                     [
                         (
                             'channel_utilization_24ghz', 87.0, 80.0, 90.0,
@@ -314,7 +314,7 @@ checks = {
                 ), (3, 'Radio state [5GHz]: not available', []),
                 (
                     2,
-                    'Channel usage [5GHz]: 93.0% (warn/crit at 80.0%/90.0%)', [
+                    'Channel usage [5GHz]: 93.00% (warn/crit at 80.00%/90.00%)', [
                         (
                             'channel_utilization_5ghz', 93.0, 80.0, 90.0, None,
                             None
@@ -330,7 +330,7 @@ checks = {
                 'levels': (80.0, 90.0)
             }, [
                 (
-                    0, 'Usage: 1.0%', [
+                    0, 'Usage: 1.00%', [
                         ('cpu_percent', 1.0, 80.0, 90.0, None, None)
                     ]
                 )
@@ -341,7 +341,7 @@ checks = {
                 'levels': (80.0, 90.0)
             }, [
                 (
-                    0, 'Usage: 1.0%', [
+                    0, 'Usage: 1.00%', [
                         ('cpu_percent', 1.0, 80.0, 90.0, None, None)
                     ]
                 )
@@ -352,7 +352,7 @@ checks = {
                 'levels': (80.0, 90.0)
             }, [
                 (
-                    0, 'Usage: 1.0%', [
+                    0, 'Usage: 1.00%', [
                         ('cpu_percent', 1.0, 80.0, 90.0, None, None)
                     ]
                 )
@@ -363,7 +363,7 @@ checks = {
                 'levels': (80.0, 90.0)
             }, [
                 (
-                    0, 'Usage: 1.0%', [
+                    0, 'Usage: 1.00%', [
                         ('cpu_percent', 1.0, 80.0, 90.0, None, None)
                     ]
                 )
@@ -374,7 +374,7 @@ checks = {
                 'levels': (80.0, 90.0)
             }, [
                 (
-                    0, 'Usage: 66.0%', [
+                    0, 'Usage: 66.00%', [
                         ('cpu_percent', 66.0, 80.0, 90.0, None, None)
                     ]
                 )
@@ -385,7 +385,7 @@ checks = {
                 'levels': (80.0, 90.0)
             }, [
                 (
-                    0, 'Usage: 1.0%', [
+                    0, 'Usage: 1.00%', [
                         ('cpu_percent', 1.0, 80.0, 90.0, None, None)
                     ]
                 )
@@ -396,7 +396,7 @@ checks = {
                 'levels': (80.0, 90.0)
             }, [
                 (
-                    0, 'Usage: 1.0%', [
+                    0, 'Usage: 1.00%', [
                         ('cpu_percent', 1.0, 80.0, 90.0, None, None)
                     ]
                 )
@@ -415,7 +415,7 @@ checks = {
                 'levels': (80.0, 90.0)
             }, [
                 (
-                    0, 'Used: 23.0%', [
+                    0, 'Used: 23.00%', [
                         ('mem_used_percent', 23.0, 80.0, 90.0, None, None)
                     ]
                 )
@@ -426,7 +426,7 @@ checks = {
                 'levels': (80.0, 90.0)
             }, [
                 (
-                    0, 'Used: 23.0%', [
+                    0, 'Used: 23.00%', [
                         ('mem_used_percent', 23.0, 80.0, 90.0, None, None)
                     ]
                 )
@@ -437,7 +437,7 @@ checks = {
                 'levels': (80.0, 90.0)
             }, [
                 (
-                    0, 'Used: 23.0%', [
+                    0, 'Used: 23.00%', [
                         ('mem_used_percent', 23.0, 80.0, 90.0, None, None)
                     ]
                 )
@@ -448,7 +448,7 @@ checks = {
                 'levels': (80.0, 90.0)
             }, [
                 (
-                    0, 'Used: 23.0%', [
+                    0, 'Used: 23.00%', [
                         ('mem_used_percent', 23.0, 80.0, 90.0, None, None)
                     ]
                 )
@@ -459,7 +459,7 @@ checks = {
                 'levels': (80.0, 90.0)
             }, [
                 (
-                    0, 'Used: 23.0%', [
+                    0, 'Used: 23.00%', [
                         ('mem_used_percent', 23.0, 80.0, 90.0, None, None)
                     ]
                 )
@@ -470,7 +470,7 @@ checks = {
                 'levels': (80.0, 90.0)
             }, [
                 (
-                    0, 'Used: 23.0%', [
+                    0, 'Used: 23.00%', [
                         ('mem_used_percent', 23.0, 80.0, 90.0, None, None)
                     ]
                 )
@@ -481,7 +481,7 @@ checks = {
                 'levels': (80.0, 90.0)
             }, [
                 (
-                    0, 'Used: 23.0%', [
+                    0, 'Used: 23.00%', [
                         ('mem_used_percent', 23.0, 80.0, 90.0, None, None)
                     ]
                 )

@@ -13,7 +13,9 @@ import cmk.utils.werks
 import cmk.gui.message as message
 import cmk.gui.pages
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
-from cmk.gui.globals import html, request
+from cmk.gui.htmllib.header import make_header
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
@@ -52,7 +54,7 @@ class ModeUserMessagePage(cmk.gui.pages.Page):
 
     def page(self) -> None:
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), _("Messages"))
-        html.header(self.title(), breadcrumb, self.page_menu(breadcrumb))
+        make_header(html, self.title(), breadcrumb, self.page_menu(breadcrumb))
         render_user_message_table("gui_hint")
 
 
@@ -93,7 +95,7 @@ def render_user_message_table(what: str) -> None:
             datetime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(entry["time"]))
             msg = entry["text"].replace("\n", " ")
 
-            table.cell(_("Actions"), css="buttons", sortable=False)
+            table.cell(_("Actions"), css=["buttons"], sortable=False)
             onclick = (
                 "cmk.utils.delete_user_message('%s', this);cmk.utils.reload_whole_page();" % msg_id
                 if what == "gui_hint"

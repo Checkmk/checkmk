@@ -4,7 +4,7 @@
 
 ### Source
 
-PYTHON 3.9.10, provided as source tarball by standard Checkmk development process
+PYTHON 3.10.4, provided as source tarball by standard Checkmk development process
 PYTHON 3.4.4, downloaded as msi installer from the python.org
 
 ### Changing or Updating the Python
@@ -36,6 +36,14 @@ We must set registry value MsiDisable = 0 as in Windows 10
 installation is not possible. The error is "cannot install" or similar
 
 4. You must increase value in file BUILD_NUM to get a rebuild binary
+
+5. You may need to unpack libffi-7.zip into correspoding python source directory.
+
+6. Python 3.8 can't be built with Windows 11 SDK
+Check this path:
+HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Microsoft SDKs\Windows\v10.0
+and set to crrect value 10586
+
 
 ### Changes of the files and names
 

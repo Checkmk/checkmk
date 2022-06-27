@@ -9,7 +9,7 @@ from typing import Dict
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.sites as sites
-from cmk.gui.globals import active_config
+from cmk.gui.config import active_config
 
 
 def load_mkeventd_rules():

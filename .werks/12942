@@ -1,7 +1,7 @@
 Title: REST API: parse HTTP content-type header options
 Class: fix
 Compatible: compat
-Component: core
+Component: rest-api
 Date: 1623062918
 Edition: cre
 Knowledge: doc

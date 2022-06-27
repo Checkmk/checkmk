@@ -19,7 +19,7 @@ class AgentOutputMalformatted(Exception):
         "Agents <= 1.5.0 are no longer supported."
     )
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(AgentOutputMalformatted.DEFAULT_MESSAGE)
 
 
@@ -33,7 +33,7 @@ class DockerParseMultilineResult(NamedTuple):
     version: Dict[str, Any]
 
 
-def _cleanup_oci_error_message(string_table: StringTable) -> StringTable:
+def cleanup_oci_error_message(string_table: StringTable) -> StringTable:
     """
     If mk_docker.py can not execute the agent inside the docker container, a error
     message is appended to the agent output. The expected output would be the
@@ -65,9 +65,9 @@ def parse_multiline(string_table: StringTable) -> DockerParseMultilineResult:
     returns generator of parsed json data and version info
     """
     version = ensure_valid_docker_header(string_table)
-    string_table = _cleanup_oci_error_message(string_table)
+    string_table = cleanup_oci_error_message(string_table)
 
-    def generator():
+    def generator() -> Iterable[Dict[str, Any]]:
         for line in string_table[1:]:
             if len(line) != 1:
                 raise ValueError(
@@ -93,7 +93,7 @@ def parse(string_table: StringTable, *, strict=True) -> DockerParseResult:
         an Value Error will be thrown
     """
     version = ensure_valid_docker_header(string_table)
-    string_table = _cleanup_oci_error_message(string_table)
+    string_table = cleanup_oci_error_message(string_table)
     if strict:
         if len(string_table) != 2 or len(string_table[0]) != 2 or len(string_table[1]) != 1:
             raise ValueError(

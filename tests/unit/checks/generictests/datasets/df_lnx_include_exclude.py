@@ -7,6 +7,7 @@
 # yapf: disable
 # type: ignore
 from cmk.base.plugins.agent_based.df_section import parse_df
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 checkname = 'df'
 
@@ -47,8 +48,10 @@ parsed = parse_df([
     ['[df_inodes_end]'],
 ])
 
-mock_host_conf = {
-    '': [{
+mock_host_conf_merged = {
+    '': {
+        'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'],
+        'never_ignore_mountpoints': ['~.*/omd/sites/[^/]+/tmp$'],
         "groups": [
             {
                 'group_name': 'group1',
@@ -116,13 +119,6 @@ mock_host_conf = {
                 'patterns_exclude': []
             },
         ]
-    },],
-}
-
-mock_host_conf_merged = {
-    '': {
-        'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'],
-        'never_ignore_mountpoints': ['~.*/omd/sites/[^/]+/tmp$']
     }
 }
 
@@ -181,60 +177,65 @@ checks = {
         (
             'group1',
             {
+                **FILESYSTEM_DEFAULT_PARAMS,
                 'patterns': (['/opt/omd/sites/*'], []),
                 'grouping_behaviour': 'mountpoint',
                 "item_appearance": "mountpoint",
             },
             [
-                (0, '0.08% used (52.38 MB of 61.81 GB)', [('fs_used', 52.3828125, 50635.025,
+                (0, 'Used: 0.08% - 52.4 MiB of 61.8 GiB', [('fs_used', 52.3828125, 50635.025,
                                                            56964.403125, 0, 63293.78125),
                                                           ('fs_size', 63293.78125),
                                                           ('fs_used_percent', 0.0827613889792688)]),
-                (0, '', [('inodes_used', 12319, None, None, 0.0, 16203208.0)]),
+                (0, '', [('inodes_used', 12319, 14582887.200000001, 15393047.6, 0.0, 16203208.0)]),
                 (0, '8 filesystems', []),
             ],
         ),
         ('group2', {
+            **FILESYSTEM_DEFAULT_PARAMS,
             'patterns': (['/opt/omd/sites/site[12]/*', '/opt/omd/sites/site[3]/*'], []),
             'grouping_behaviour': 'mountpoint',
             "item_appearance": "mountpoint",
         }, [
-            (0, '0.08% used (18.95 MB of 23.18 GB)', [('fs_used', 18.9453125, 18988.134375,
+            (0, 'Used: 0.08% - 18.9 MiB of 23.2 GiB', [('fs_used', 18.9453125, 18988.134375,
                                                        21361.651171875, 0, 23735.16796875),
                                                       ('fs_size', 23735.16796875),
                                                       ('fs_used_percent', 0.07981958469787793)]),
-            (0, '', [('inodes_used', 4623, None, None, 0.0, 6076203.0)]),
+            (0, '', [('inodes_used', 4623, 5468582.7, 5772392.85, 0.0, 6076203.0)]),
             (0, '3 filesystems', []),
         ]),
         ('group3', {
+            **FILESYSTEM_DEFAULT_PARAMS,
             'patterns': (['*'], []),
             'grouping_behaviour': 'mountpoint',
             "item_appearance": "mountpoint",
-        }, [(0, '22.24% used (69.64 of 313.09 GB)', [('fs_used', 71308.953125, 256483.0375,
+        }, [(0, 'Used: 22.24% - 69.6 GiB of 313 GiB', [('fs_used', 71308.953125, 256483.0375,
                                                       288543.4171875, 0, 320603.796875),
                                                      ('fs_size', 320603.796875),
                                                      ('fs_used_percent', 22.242080043987315)]),
-            (0, '', [('inodes_used', 1280583, None, None, 0.0, 41868133.0)]),
+            (0, '', [('inodes_used', 1280583, 37681319.7, 39774726.35, 0.0, 41868133.0)]),
             (0, '16 filesystems', [])]),
         ('group4', {
+            **FILESYSTEM_DEFAULT_PARAMS,
             'patterns': (['/opt/omd/sites/*'], ['/opt/omd/sites/site[2,4]/*']),
             'grouping_behaviour': 'mountpoint',
             "item_appearance": "mountpoint",
-        }, [(0, '0.08% used (39.75 MB of 46.36 GB)', [('fs_used', 39.75390625, 37976.26875,
+        }, [(0, 'Used: 0.08% - 39.8 MiB of 46.4 GiB', [('fs_used', 39.75390625, 37976.26875,
                                                        42723.30234375, 0, 47470.3359375),
                                                       ('fs_size', 47470.3359375),
                                                       ('fs_used_percent', 0.083744733347454)]),
-            (0, '', [('inodes_used', 9237, None, None, 0.0, 12152406.0)]),
+            (0, '', [('inodes_used', 9237, 10937165.4, 11544785.7, 0.0, 12152406.0)]),
             (0, '6 filesystems', [])]),
         ('group5', {
+            **FILESYSTEM_DEFAULT_PARAMS,
             'patterns': (['/opt/omd/sites/site1*', ''], ['/opt/omd/sites/site10/*', '']),
             'grouping_behaviour': 'mountpoint',
             "item_appearance": "mountpoint",
-        }, [(0, '0.08% used (6.31 MB of 7.73 GB)', [('fs_used', 6.30859375,
+        }, [(0, 'Used: 0.08% - 6.31 MiB of 7.73 GiB', [('fs_used', 6.30859375,
                                                      6329.378125, 7120.550390625, 0, 7911.72265625),
                                                     ('fs_size', 7911.72265625),
                                                     ('fs_used_percent', 0.07973729646623064)]),
-            (0, '', [('inodes_used', 1541, None, None, 0.0, 2025401.0)]),
+            (0, '', [('inodes_used', 1541, 1822860.9000000001, 1924130.95, 0.0, 2025401.0)]),
             (0, '1 filesystems', [])]),
     ],
 }

@@ -10,7 +10,9 @@ import sys
 import xml.etree.ElementTree as ET
 
 import requests
-import urllib3  # type: ignore[import]
+import urllib3
+
+from cmk.utils.password_store import replace_passwords
 
 
 def usage():
@@ -4625,6 +4627,7 @@ def query_stores_info(serviceset_id, args_dict, opt_demo, opt_cert):
 
 def main(sys_argv=None):
     if sys_argv is None:
+        replace_passwords()
         sys_argv = sys.argv[1:]
 
     short_options = "h"
@@ -4669,3 +4672,4 @@ def main(sys_argv=None):
     except Exception as e:
         sys.stderr.write("Connection error: %s" % e)
         return 1
+    return None

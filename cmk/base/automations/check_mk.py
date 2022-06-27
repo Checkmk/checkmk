@@ -102,9 +102,7 @@ class DiscoveryAutomation(Automation):
         if not config.inventory_check_autotrigger:
             return
 
-        service_discovery_name = config_cache.service_discovery_name()
-        disc_check_params = host_config.discovery_check_parameters
-        if not host_config.add_service_discovery_check(disc_check_params, service_discovery_name):
+        if host_config.discovery_check_parameters().commandline_only:
             return
 
         if host_config.is_cluster:
@@ -273,7 +271,9 @@ class AutomationSetAutochecks(DiscoveryAutomation):
         # service_descriptions of existing services to decided whether or not they are clustered
         # (See autochecks.set_autochecks_of_cluster())
         if host_config.is_cluster:
-            config.load_all_agent_based_plugins(check_api.get_check_api_context)
+            config.load_all_agent_based_plugins(
+                check_api.get_check_api_context,
+            )
 
         # Fix data from version <2.0
         new_services: List[AutocheckServiceWithNodes] = []
@@ -418,7 +418,11 @@ class AutomationRenameHosts(Automation):
         code = os.system(command)  # nosec
         return not code
 
-    def _rename_host_files(self, oldname: HistoryFile, newname: HistoryFile) -> List[str]:
+    def _rename_host_files(  # pylint: disable=too-many-branches
+        self,
+        oldname: HistoryFile,
+        newname: HistoryFile,
+    ) -> List[str]:
         actions = []
 
         if self._rename_host_file(autochecks_dir, oldname + ".mk", newname + ".mk"):
@@ -496,7 +500,11 @@ class AutomationRenameHosts(Automation):
         return 0
 
     # This functions could be moved out of Checkmk.
-    def _omd_rename_host(self, oldname: str, newname: str) -> List[str]:
+    def _omd_rename_host(  # pylint: disable=too-many-branches
+        self,
+        oldname: str,
+        newname: str,
+    ) -> List[str]:
         oldregex = self._escape_name_for_regex_matching(oldname)
         actions = []
 
@@ -678,8 +686,9 @@ class AutomationAnalyseServices(Automation):
 
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
+        host_attrs = core_config.get_host_attributes(hostname, config_cache)
 
-        service_info = self._get_service_info(config_cache, host_config, servicedesc)
+        service_info = self._get_service_info(config_cache, host_config, host_attrs, servicedesc)
         if not service_info:
             return automation_results.AnalyseServiceResult({})
 
@@ -695,25 +704,29 @@ class AutomationAnalyseServices(Automation):
     # constructed
     # TODO: Refactor this huge function
     def _get_service_info(
-        self, config_cache: config.ConfigCache, host_config: config.HostConfig, servicedesc: str
+        self,
+        config_cache: config.ConfigCache,
+        host_config: config.HostConfig,
+        host_attrs: core_config.ObjectAttributes,
+        servicedesc: str,
     ) -> Mapping[str, Union[None, str, LegacyCheckParameters]]:
         hostname = host_config.hostname
 
         # We just consider types of checks that are managed via WATO.
         # We have the following possible types of services:
-        # 1. manual checks (static_checks) (currently overriding inventorized checks)
-        # 2. inventorized check
+        # 1. enforced services (currently overriding discovered services)
+        # 2. disocvered services
         # 3. classical checks
         # 4. active checks
 
-        # 1. Manual checks
+        # 1. Enforced services
         # If we used the check table here, we would end up with the
         # *effective* parameters, these are the *configured* ones.
-        for checkgroup_name, check_plugin_name, item, params in host_config.static_checks:
+        for checkgroup_name, check_plugin_name, item, params in host_config.enforced_services_table:
             descr = config.service_description(hostname, check_plugin_name, item)
             if descr == servicedesc:
                 return {
-                    "origin": "static",
+                    "origin": "static",  # TODO: (how) can we change this to "enforced"?
                     "checkgroup": checkgroup_name,
                     "checktype": str(check_plugin_name),
                     "item": item,
@@ -746,15 +759,19 @@ class AutomationAnalyseServices(Automation):
         with plugin_contexts.current_host(hostname):
             for plugin_name, entries in host_config.active_checks:
                 for active_check_params in entries:
-                    description = config.active_check_service_description(
-                        hostname, host_config.alias, plugin_name, active_check_params
-                    )
-                    if description == servicedesc:
-                        return {
-                            "origin": "active",
-                            "checktype": plugin_name,
-                            "parameters": active_check_params,
-                        }
+                    for description in core_config.get_active_check_descriptions(
+                        hostname,
+                        host_config.alias,
+                        host_attrs,
+                        plugin_name,
+                        active_check_params,
+                    ):
+                        if description == servicedesc:
+                            return {
+                                "origin": "active",
+                                "checktype": plugin_name,
+                                "parameters": active_check_params,
+                            }
 
         return {}  # not found
 
@@ -1074,7 +1091,9 @@ class AutomationGetConfiguration(Automation):
         missing_variables = [v for v in variable_names if not hasattr(config, v)]
 
         if missing_variables:
-            config.load_all_agent_based_plugins(check_api.get_check_api_context)
+            config.load_all_agent_based_plugins(
+                check_api.get_check_api_context,
+            )
             config.load(with_conf_d=False)
 
         result = {}
@@ -1196,7 +1215,10 @@ class AutomationDiagHost(Automation):
     needs_config = True
     needs_checks = True
 
-    def execute(self, args: List[str]) -> automation_results.DiagHostResult:
+    def execute(  # pylint: disable=too-many-branches
+        self,
+        args: List[str],
+    ) -> automation_results.DiagHostResult:
         hostname = HostName(args[0])
         test, ipaddress, snmp_community = args[1:4]
         agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
@@ -1375,7 +1397,7 @@ class AutomationDiagHost(Automation):
             raise
         return completed_process.returncode, completed_process.stdout
 
-    def _execute_snmp(
+    def _execute_snmp(  # pylint: disable=too-many-branches
         self,
         test,
         host_config,
@@ -1504,7 +1526,10 @@ class AutomationActiveCheck(Automation):
         plugin, raw_item = args[1:]
         item = raw_item
 
-        host_config = config.get_config_cache().get_host_config(hostname)
+        config_cache = config.get_config_cache()
+        host_config = config_cache.get_host_config(hostname)
+        with redirect_stdout(open(os.devnull, "w")):
+            host_attrs = core_config.get_host_attributes(hostname, config_cache)
 
         if plugin == "custom":
             for entry in host_config.custom_checks:
@@ -1533,20 +1558,18 @@ class AutomationActiveCheck(Automation):
         # (used e.g. by check_http)
         with plugin_contexts.current_host(hostname):
             for params in dict(host_config.active_checks).get(plugin, []):
-                description = config.active_check_service_description(
-                    hostname, host_config.alias, plugin, params
-                )
-                if description != item:
-                    continue
 
-                command_args = core_config.active_check_arguments(
-                    hostname, description, act_info["argument_function"](params)
-                )
-                command_line = self._replace_core_macros(
-                    hostname, act_info["command_line"].replace("$ARG1$", command_args)
-                )
-                cmd = core_config.autodetect_plugin(command_line)
-                return automation_results.ActiveCheckResult(*self._execute_check_plugin(cmd))
+                for description, command_args in core_config.iter_active_check_services(
+                    plugin, act_info, hostname, host_attrs, params
+                ):
+                    if description != item:
+                        continue
+
+                    command_line = self._replace_core_macros(
+                        hostname, act_info["command_line"].replace("$ARG1$", command_args)
+                    )
+                    cmd = core_config.autodetect_plugin(command_line)
+                    return automation_results.ActiveCheckResult(*self._execute_check_plugin(cmd))
 
         return automation_results.ActiveCheckResult(
             None,

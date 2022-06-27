@@ -20,6 +20,7 @@ from cmk.notification_plugins.utils import (
 def pagerduty_event_type(event: str) -> str:
     return {
         "PROBLEM": "trigger",
+        "CUSTOM": "trigger",
         "ACKNOWLEDGEMENT": "acknowledge",
         "RECOVERY": "resolve",
         "FLAPPINGSTART": "trigger",

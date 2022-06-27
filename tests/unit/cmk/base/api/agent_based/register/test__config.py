@@ -12,20 +12,20 @@ import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 
 
-def test_get_registered_check_plugins(monkeypatch):
+def test_get_registered_check_plugins(monkeypatch) -> None:
     test_plugin = CheckPlugin(
         CheckPluginName("check_unit_test"),
         [],
         "Unit Test",
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
-        None,  # type: ignore  # irrelevant for test
+        lambda: [],
+        None,
+        None,
+        "merged",
+        lambda: [],
+        None,
+        None,
+        None,
+        None,
     )
 
     monkeypatch.setattr(

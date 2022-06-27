@@ -134,7 +134,6 @@ class ResultMessage(Serializer, Deserializer, Generic[TRawData]):
 
 class ResultStats(Serializer, Deserializer):
     def __init__(self, duration: Snapshot) -> None:
-        super().__init__()
         self.duration: Final = duration
 
     def __repr__(self) -> str:
@@ -313,7 +312,6 @@ class FetcherHeader(Serializer, Deserializer):
         payload_length: int,
         stats_length: int,
     ) -> None:
-        super().__init__()
         self.fetcher_type: Final = fetcher_type
         self.payload_type: Final = payload_type
         self.status: Final = status
@@ -371,7 +369,6 @@ class FetcherMessage(Serializer, Deserializer):
         payload: Union[ResultMessage[AgentRawData], ResultMessage[SNMPRawData]],
         stats: ResultStats,
     ) -> None:
-        super().__init__()
         self.header: Final = header
         self.payload: Final = payload
         self.stats: Final = stats
@@ -512,10 +509,10 @@ class CMCHeader(Serializer, Deserializer):
       LOGLEVEL - 8 bytes log level, '        ' for 'RESULT' and 'ENDREPL',
                  for 'LOG' one of 'emergenc', 'alert   ', 'critical',
                  'error   ', 'warning ', 'notice  ', 'info    ', 'debug   '
-      SIZE     - 8 bytes text 0..9
+      SIZE     - 16 bytes text 0..9  (54 bits, unsigned)
 
     Example:
-        b"base0:RESULT :        :12345678:"
+        b"base0:RESULT :        :1234567812345678:"
 
     This is first(transport) layer protocol.
     Used to
@@ -529,8 +526,8 @@ class CMCHeader(Serializer, Deserializer):
         LOG = "LOG    "
         END_OF_REPLY = "ENDREPL"
 
-    fmt = "{:<5}:{:<7}:{:<8}:{:<8}:"
-    length = 32
+    fmt = "{:<5}:{:<7}:{:<8}:{:<16}:"
+    length = 40
 
     def __init__(
         self,
@@ -539,7 +536,6 @@ class CMCHeader(Serializer, Deserializer):
         log_level: str,
         payload_length: int,
     ) -> None:
-        super().__init__()
         self.name = name
         self.state = CMCHeader.State(state) if isinstance(state, str) else state
         self.log_level = log_level  # contains either log_level or empty field
@@ -597,7 +593,6 @@ class FetcherResultsId(Serializer, Deserializer):
     _length = struct.calcsize(fmt)
 
     def __init__(self, serial: int, host_name: str) -> None:
-        super().__init__()
         self.serial: Final = serial
         self.host_name: Final = host_name
 
@@ -621,7 +616,6 @@ class FetcherResultsStats(Serializer, Deserializer):
     length = struct.calcsize(fmt)
 
     def __init__(self, timeout: int, duration: Snapshot) -> None:
-        super().__init__()
         self.timeout: Final = timeout
         self.duration: Final = duration
 
@@ -728,7 +722,6 @@ class CMCMessage(Serializer, Deserializer):
         header: CMCHeader,
         payload: CMCPayload,
     ) -> None:
-        super().__init__()
         self.header: Final = header
         self.payload: Final = payload
 

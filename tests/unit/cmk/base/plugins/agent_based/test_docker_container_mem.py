@@ -51,7 +51,7 @@ PLUGIN_OUTPUT_MEM_LIMIT = [
 ]
 
 
-def test_parse_container_mem_docker_plugin():
+def test_parse_container_mem_docker_plugin() -> None:
     """
     see if the output returned from mk_docker.py on a host with cgroup v1 can
     be parsed corretly
@@ -63,7 +63,7 @@ def test_parse_container_mem_docker_plugin():
     assert round((result["MemTotal"] - result["MemFree"]) / 1024 / 1024) == 1007
 
 
-def test_parse_container_mem_docker_plugin_with_limit():
+def test_parse_container_mem_docker_plugin_with_limit() -> None:
     """
     same as above, but with a 500MiB memory limit set via `-m` on `docker run`
     """

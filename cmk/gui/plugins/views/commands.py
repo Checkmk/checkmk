@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Literal, Optional, Sequence
+from typing import Any, Literal, Optional, Sequence, Type
 
 import livestatus
 from livestatus import SiteId
@@ -16,8 +16,10 @@ import cmk.gui.bi as bi
 import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import active_config, html, request
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, _u, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import (
@@ -42,26 +44,26 @@ from cmk.gui.watolib.downtime import determine_downtime_mode, DowntimeSchedule
 @command_group_registry.register
 class CommandGroupVarious(CommandGroup):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "various"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Various Commands")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 20
 
 
 @permission_section_registry.register
 class PermissionSectionAction(PermissionSection):
     @property
-    def name(self):
+    def name(self) -> str:
         return "action"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Commands on host and services")
 
     @property
@@ -92,11 +94,11 @@ PermissionActionReschedule = permission_registry.register(
 @command_registry.register
 class CommandReschedule(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "reschedule"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Reschedule active checks")
 
     @property
@@ -104,14 +106,14 @@ class CommandReschedule(Command):
         return "service_duration"
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionReschedule
 
     @property
     def tables(self):
         return ["host", "service"]
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.open_div(class_="group")
         html.write_text(_("Spread over") + " ")
         html.text_input("_resched_spread", default_value="0", size=3, cssclass="number")
@@ -172,22 +174,22 @@ PermissionActionNotifications = permission_registry.register(
 @command_registry.register
 class CommandNotifications(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "notifications"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Notifications")
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionNotifications
 
     @property
     def tables(self):
         return ["host", "service"]
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.button("_enable_notifications", _("Enable"))
         html.button("_disable_notifications", _("Disable"))
 
@@ -237,22 +239,22 @@ PermissionActionEnableChecks = permission_registry.register(
 @command_registry.register
 class CommandToggleActiveChecks(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "toggle_active_checks"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Active checks")
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionEnableChecks
 
     @property
     def tables(self):
         return ["host", "service"]
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.button("_enable_checks", _("Enable"))
         html.button("_disable_checks", _("Disable"))
 
@@ -286,22 +288,22 @@ class CommandToggleActiveChecks(Command):
 @command_registry.register
 class CommandTogglePassiveChecks(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "toggle_passive_checks"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Passive checks")
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionEnableChecks
 
     @property
     def tables(self):
         return ["host", "service"]
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.button("_enable_passive_checks", _("Enable"))
         html.button("_disable_passive_checks", _("Disable"))
 
@@ -354,22 +356,22 @@ PermissionActionClearModifiedAttributes = permission_registry.register(
 @command_registry.register
 class CommandClearModifiedAttributes(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "clear_modified_attributes"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Modified attributes")
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionClearModifiedAttributes
 
     @property
     def tables(self):
         return ["host", "service"]
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.button("_clear_modattr", _("Clear modified attributes"))
 
     def _action(
@@ -406,26 +408,26 @@ PermissionActionFakeChecks = permission_registry.register(
 @command_group_registry.register
 class CommandGroupFakeCheck(CommandGroup):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "fake_check"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Fake check results")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 15
 
 
 @command_registry.register
 class CommandFakeCheckResult(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "fake_check_result"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Fake check results")
 
     @property
@@ -433,7 +435,7 @@ class CommandFakeCheckResult(Command):
         return "fake_check_result"
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionFakeChecks
 
     @property
@@ -441,14 +443,14 @@ class CommandFakeCheckResult(Command):
         return ["host", "service"]
 
     @property
-    def group(self):
+    def group(self) -> Type[CommandGroup]:
         return CommandGroupFakeCheck
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return True
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.open_table()
 
         html.open_tr()
@@ -550,11 +552,11 @@ PermissionActionCustomNotification = permission_registry.register(
 @command_registry.register
 class CommandCustomNotification(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "send_custom_notification"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Custom notification")
 
     @property
@@ -562,7 +564,7 @@ class CommandCustomNotification(Command):
         return "notifications"
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionCustomNotification
 
     @property
@@ -570,10 +572,10 @@ class CommandCustomNotification(Command):
         return ["host", "service"]
 
     @property
-    def is_show_more(self):
+    def is_show_more(self) -> bool:
         return True
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.open_div(class_="group")
         html.text_input(
             "_cusnot_comment",
@@ -637,26 +639,26 @@ PermissionActionAcknowledge = permission_registry.register(
 @command_group_registry.register
 class CommandGroupAcknowledge(CommandGroup):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "acknowledge"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Acknowledge")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 5
 
 
 @command_registry.register
 class CommandAcknowledge(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "acknowledge"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Acknowledge problems")
 
     @property
@@ -664,26 +666,26 @@ class CommandAcknowledge(Command):
         return "host_svc_problems"
 
     @property
-    def is_shortcut(self):
+    def is_shortcut(self) -> bool:
         return True
 
     @property
-    def is_suggested(self):
+    def is_suggested(self) -> bool:
         return True
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionAcknowledge
 
     @property
-    def group(self):
+    def group(self) -> Type[CommandGroup]:
         return CommandGroupAcknowledge
 
     @property
     def tables(self):
         return ["host", "service", "aggr"]
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.open_div(class_="group")
         html.text_input(
             "_ack_comment",
@@ -725,7 +727,7 @@ class CommandAcknowledge(Command):
         html.button("_remove_ack", _("Remove acknowledgement"), formnovalidate=True)
         html.close_div()
 
-    def _action(
+    def _action(  # pylint: disable=too-many-branches
         self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
     ) -> CommandActionResult:
         if "aggr_tree" in row:  # BI mode
@@ -826,11 +828,11 @@ PermissionActionAddComment = permission_registry.register(
 @command_registry.register
 class CommandAddComment(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "add_comment"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Add comment")
 
     @property
@@ -838,14 +840,14 @@ class CommandAddComment(Command):
         return "comment"
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionAddComment
 
     @property
     def tables(self):
         return ["host", "service"]
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.open_div(class_="group")
         html.text_input(
             "_comment",
@@ -913,26 +915,26 @@ permission_registry.register(
 @command_group_registry.register
 class CommandGroupDowntimes(CommandGroup):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "downtimes"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Schedule downtimes")
 
     @property
-    def sort_index(self):
+    def sort_index(self) -> int:
         return 10
 
 
 @command_registry.register
 class CommandScheduleDowntimes(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "schedule_downtimes"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Schedule downtimes")
 
     @property
@@ -940,19 +942,19 @@ class CommandScheduleDowntimes(Command):
         return "downtime"
 
     @property
-    def is_shortcut(self):
+    def is_shortcut(self) -> bool:
         return True
 
     @property
-    def is_suggested(self):
+    def is_suggested(self) -> bool:
         return True
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionDowntimes
 
     @property
-    def group(self):
+    def group(self) -> Type[CommandGroup]:
         return CommandGroupDowntimes
 
     @property
@@ -980,7 +982,7 @@ class CommandScheduleDowntimes(Command):
             ]
         return super().user_confirm_options(len_rows, cmdtag)
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.open_div(class_="group")
         html.text_input(
             "_down_comment",
@@ -1115,7 +1117,7 @@ class CommandScheduleDowntimes(Command):
 
     def _remove_downtime_details(self, cmdtag, row):
         if not user.may("action.remove_all_downtimes"):
-            return
+            return None
         if request.var("_on_hosts"):
             raise MKUserError(
                 "_on_hosts",
@@ -1307,9 +1309,9 @@ class CommandScheduleDowntimes(Command):
             new_children.update(rec_childs)
         return list(new_children)
 
-    def _has_recurring_downtimes(self):
+    def _has_recurring_downtimes(self) -> bool:
         try:
-            # The suppression below is OK, we just want to check if the module is there.
+            # TODO(ml): Import cycle
             import cmk.gui.cee.plugins.wato.cmc  # noqa: F401 # pylint: disable=unused-variable,unused-import,import-outside-toplevel
 
             return True
@@ -1360,6 +1362,7 @@ def time_interval_end(
         return time.mktime((new_year, new_month, 1, 0, 0, 0, 0, 0, now.tm_isdst))
     if time_value == "next_year":
         return time.mktime((now.tm_year, 12, 31, 23, 59, 59, 0, 0, now.tm_isdst)) + 1
+    return None
 
 
 def time_interval_to_human_readable(next_time_interval, prefix):
@@ -1398,15 +1401,15 @@ def time_interval_to_human_readable(next_time_interval, prefix):
 @command_registry.register
 class CommandRemoveDowntime(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "remove_downtimes"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Remove downtimes")
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionDowntimes
 
     @property
@@ -1414,14 +1417,14 @@ class CommandRemoveDowntime(Command):
         return ["downtime"]
 
     @property
-    def is_shortcut(self):
+    def is_shortcut(self) -> bool:
         return True
 
     @property
-    def is_suggested(self):
+    def is_suggested(self) -> bool:
         return True
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.button("_remove_downtimes", _("Remove"))
 
     def _action(
@@ -1435,11 +1438,11 @@ class CommandRemoveDowntime(Command):
 @command_registry.register
 class CommandRemoveComments(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "remove_comments"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Remove comments")
 
     @property
@@ -1451,7 +1454,7 @@ class CommandRemoveComments(Command):
         return True
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionAddComment
 
     @property
@@ -1464,7 +1467,7 @@ class CommandRemoveComments(Command):
             ungettext("comment", "comments", len_action_rows),
         )
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.button("_remove_comments", _("Remove"))
 
     def _action(
@@ -1510,11 +1513,11 @@ PermissionActionStar = permission_registry.register(
 @command_registry.register
 class CommandFavorites(Command):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "favorites"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Favorites")
 
     @property
@@ -1522,14 +1525,14 @@ class CommandFavorites(Command):
         return "favorite"
 
     @property
-    def permission(self):
+    def permission(self) -> Permission:
         return PermissionActionStar
 
     @property
     def tables(self):
         return ["host", "service"]
 
-    def render(self, what):
+    def render(self, what) -> None:
         html.button("_star", _("Add to Favorites"), cssclass="hot")
         html.button("_unstar", _("Remove from Favorites"))
 

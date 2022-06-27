@@ -5,15 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
+# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.brocade import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
@@ -82,6 +75,8 @@ def check_brocade_sfp_temp(item, params, parsed):
     #       item to brocade.include and do the same
     #       for brocade.fcport.
     port_index = int(item.split()[0]) + 1
+    if port_index not in parsed:
+        return None
     port_info = parsed[port_index]
 
     return check_temperature(port_info["temp"], params, item)
@@ -114,6 +109,8 @@ def check_brocade_sfp(item, params, parsed):
     #       item to brocade.include and do the same
     #       for brocade.fcport.
     port_index = int(item.split()[0]) + 1
+    if port_index not in parsed:
+        return
     port_info = parsed[port_index]
 
     def sort_params(key):

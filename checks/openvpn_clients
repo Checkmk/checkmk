@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+
 # Example output from agent:
 # <<<openvpn_clients:sep(44)>>>
 # wilhelmshilfe-hups1,84.161.206.33:58371,11267978,8134524,Sun Mar 10 14:02:27 2013
@@ -35,7 +37,7 @@ def check_openvpn_clients(item, _no_params, info):
             for what, val in [("in", int(inbytes)), ("out", int(outbytes))]:
                 countername = "openvpn_clients.%s.%s" % (item, what)
                 bytes_per_sec = get_rate(countername, this_time, val)
-                infos.append("%s: %s/sec" % (what, get_bytes_human_readable(bytes_per_sec)))
+                infos.append("%s: %s" % (what, render.iobandwidth(bytes_per_sec)))
                 perfdata.append((what, bytes_per_sec))
             return 0, ", ".join(infos), perfdata
 

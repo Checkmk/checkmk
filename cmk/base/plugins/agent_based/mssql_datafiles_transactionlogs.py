@@ -9,8 +9,15 @@ from typing import Any, Dict, List, Literal, Mapping, Optional, Tuple, TypedDict
 
 from cmk.base.plugins.agent_based.utils.df import BlocksSubsection, InodesSubsection
 
-from .agent_based_api.v1 import check_levels, IgnoreResultsError, register, render, Result, Service
-from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import (
+    check_levels,
+    IgnoreResultsError,
+    register,
+    render,
+    Result,
+    Service,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
@@ -144,7 +151,7 @@ def _mssql_datafiles_process_sizes(
         )
 
     yield Result(
-        state=state.OK,
+        state=State.OK,
         summary="Maximum size: %s" % ("unlimited" if max_size is None else render.bytes(max_size)),
     )
 

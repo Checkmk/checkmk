@@ -204,7 +204,7 @@ def test_discovery_mssql_transactionlogs(section_mssql, section_df):
                     state=State.OK,
                     summary="Used: 16.0 MiB",
                 ),
-                Metric("data_size", 16777216.0, boundaries=(0, 1024.0)),
+                Metric("data_size", 16777216.0, boundaries=(0, 16778240.0)),
                 Result(
                     state=State.OK,
                     summary="Allocated used: 16.0 MiB",
@@ -213,10 +213,10 @@ def test_discovery_mssql_transactionlogs(section_mssql, section_df):
                     state=State.OK,
                     summary="Allocated: 256 MiB",
                 ),
-                Metric("allocated_size", 268435456.0, boundaries=(0, 1024.0)),
+                Metric("allocated_size", 268435456.0, boundaries=(0, 16778240.0)),
                 Result(
                     state=State.OK,
-                    summary="Maximum size: 1.00 KiB",  # filesystem smaller than log size limit
+                    summary="Maximum size: 16.0 MiB",  # filesystem smaller than log size limit
                 ),
             ],
         ),
@@ -266,16 +266,15 @@ def test_check_mssql_common_unlimited() -> None:
             ),
         )
     ) == [
-        # wrong, will be fixed in the following commits
-        Result(state=State.CRIT, summary="Used: 38.0 GiB (warn/crit at 18.0 GiB/20.2 GiB)"),
+        Result(state=State.OK, summary="Used: 38.0 GiB"),
         Metric(
             "data_size",
             40787509248.0,
-            levels=(19326091264.0, 21741852672.0),
-            boundaries=(0.0, 24157614080.0),
+            levels=(51956098662.4, 58450610995.2),
+            boundaries=(0.0, 64945123328.0),
         ),
         Result(state=State.OK, summary="Allocated used: 38.0 GiB"),
         Result(state=State.OK, summary="Allocated: 41.8 GiB"),
-        Metric("allocated_size", 44844449792.0, boundaries=(0.0, 24157614080.0)),
-        Result(state=State.OK, summary="Maximum size: 22.5 GiB"),
+        Metric("allocated_size", 44844449792.0, boundaries=(0.0, 64945123328.0)),
+        Result(state=State.OK, summary="Maximum size: 60.5 GiB"),
     ]

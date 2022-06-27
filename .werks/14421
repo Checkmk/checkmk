@@ -1,0 +1,15 @@
+Title: <tt>mssql_datafiles/transactionlogs</tt>: Correct maximum size in unlimited cases
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1656324994
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p4
+
+The check plugins <tt>mssql_datafiles/transactionlogs</tt> did not handle unlimited instances
+correctly. Specifically, the maximum size only took the space still available on the filesystem
+into account, but not the current size of the file. This resulted in too low thresholds in case
+of percentage levels.

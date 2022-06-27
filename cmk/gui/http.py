@@ -5,15 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Wrapper layer between WSGI and GUI application code"""
 
-from typing import Optional, Any, Iterator, Union, Dict, Tuple, TypeVar
+from typing import Any, Dict, Iterator, Optional, Tuple, TypeVar, Union
 
-from six import ensure_binary, ensure_str
 import werkzeug
+from six import ensure_binary, ensure_str
 from werkzeug.utils import get_content_type
 
+from cmk.gui.config import url_prefix
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import request
 from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKUserError
 
 UploadedFile = Tuple[str, str, bytes]
 T = TypeVar('T')
@@ -328,7 +329,15 @@ class Response(werkzeug.Response):
     def set_http_cookie(self, key: str, value: str, secure: Optional[bool] = None) -> None:
         if secure is None:
             secure = request.is_secure
-        super(Response, self).set_cookie(key, value, secure=secure, httponly=True, samesite="Lax")
+        super().set_cookie(key,
+                           value,
+                           path=url_prefix(),
+                           secure=secure,
+                           httponly=True,
+                           samesite="Lax")
+
+    def unset_http_cookie(self, key: str) -> None:
+        super().delete_cookie(key, path=url_prefix())
 
     def set_content_type(self, mime_type: str) -> None:
         self.headers["Content-type"] = get_content_type(mime_type, self.charset)

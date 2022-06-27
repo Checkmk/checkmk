@@ -149,7 +149,7 @@ def del_auth_cookie() -> None:
 
     cookie = _fetch_cookie(cookie_name)
     if auth_cookie_is_valid(cookie):
-        html.response.delete_cookie(cookie_name)
+        html.response.unset_http_cookie(cookie_name)
 
 
 def _auth_cookie_value(username: UserId, session_id: str) -> str:

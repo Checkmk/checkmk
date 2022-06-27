@@ -179,6 +179,10 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("fjdarye101_conencs"): CheckPluginName("fjdarye_controller_enclosures"),
     CheckPluginName("fjdarye500_conencs"): CheckPluginName("fjdarye_controller_enclosures"),
     CheckPluginName("fjdarye60_conencs"): CheckPluginName("fjdarye_controller_enclosures"),
+    CheckPluginName("fjdarye100_devencs"): CheckPluginName("fjdarye_device_enclosures"),
+    CheckPluginName("fjdarye101_devencs"): CheckPluginName("fjdarye_device_enclosures"),
+    CheckPluginName("fjdarye500_devencs"): CheckPluginName("fjdarye_device_enclosures"),
+    CheckPluginName("fjdarye60_devencs"): CheckPluginName("fjdarye_device_enclosures"),
 }
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]

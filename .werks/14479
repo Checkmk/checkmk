@@ -1,0 +1,12 @@
+Title: Update openssl to 1.1.1p
+Class: security
+Compatible: compat
+Component: core
+Date: 1656334786
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p6
+
+

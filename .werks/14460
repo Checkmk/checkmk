@@ -1,0 +1,13 @@
+Title: Fix error on rule search
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1656354828
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p5
+
+Searching for e.g. "Group" or "Ineffective" could lead to an error message like
+"The selected element 'None' is not longer available.".

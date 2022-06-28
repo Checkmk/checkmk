@@ -183,7 +183,7 @@ def _item_spec_aws_limits_generic():
     return TextInput(title=_("Region name"), help=_("An AWS region name such as 'eu-central-1'"))
 
 
-def _vs_limits(
+def vs_aws_limits(
     resource: str,
     default_limit: int,
     vs_limit_cls: Optional[Type[Filesize]] = None,
@@ -290,7 +290,7 @@ def _parameter_valuespec_aws_glacier_limits() -> Dictionary:
         elements=[
             (
                 "number_of_vaults",
-                _vs_limits(_("Vaults"), 1000),
+                vs_aws_limits(_("Vaults"), 1000),
             )
         ]
     )
@@ -557,7 +557,7 @@ def _parameter_valuespec_aws_s3_limits() -> Dictionary:
         elements=[
             (
                 "buckets",
-                _vs_limits(_("Buckets"), 100, title_default=_("Default limit set by AWS")),
+                vs_aws_limits(_("Buckets"), 100, title_default=_("Default limit set by AWS")),
             ),
         ]
     )
@@ -626,7 +626,7 @@ def _vs_limits_inst_types():
                 (
                     inst_type,
                     inst_type,
-                    _vs_limits(
+                    vs_aws_limits(
                         _("%s instances") % inst_type,
                         AWSEC2LimitsSpecial.get(inst_type, AWSEC2LimitsDefault)[0],
                     ),
@@ -646,7 +646,7 @@ def _vs_limits_vcpu_families():
                 (
                     "%s_vcpu" % inst_fam,
                     fam_name,
-                    _vs_limits(
+                    vs_aws_limits(
                         fam_name,
                         AWSEC2LimitsSpecial.get("%s_vcpu" % inst_fam, AWSEC2LimitsDefault)[0],
                     ),
@@ -661,23 +661,23 @@ def _vs_limits_vcpu_families():
 def _parameter_valuespec_aws_ec2_limits() -> Dictionary:
     return Dictionary(
         elements=[
-            ("vpc_elastic_ip_addresses", _vs_limits(_("VPC Elastic IP Addresses"), 5)),
-            ("elastic_ip_addresses", _vs_limits(_("Elastic IP Addresses"), 5)),
-            ("vpc_sec_group_rules", _vs_limits(_("Rules of VPC security group"), 120)),
-            ("vpc_sec_groups", _vs_limits(_("VPC security groups"), 2500)),
+            ("vpc_elastic_ip_addresses", vs_aws_limits(_("VPC Elastic IP Addresses"), 5)),
+            ("elastic_ip_addresses", vs_aws_limits(_("Elastic IP Addresses"), 5)),
+            ("vpc_sec_group_rules", vs_aws_limits(_("Rules of VPC security group"), 120)),
+            ("vpc_sec_groups", vs_aws_limits(_("VPC security groups"), 2500)),
             (
                 "if_vpc_sec_group",
-                _vs_limits(_("VPC security groups of elastic network interface"), 5),
+                vs_aws_limits(_("VPC security groups of elastic network interface"), 5),
             ),
-            ("spot_inst_requests", _vs_limits(_("Spot Instance Requests"), 20)),
-            ("active_spot_fleet_requests", _vs_limits(_("Active Spot Fleet Requests"), 1000)),
+            ("spot_inst_requests", vs_aws_limits(_("Spot Instance Requests"), 20)),
+            ("active_spot_fleet_requests", vs_aws_limits(_("Active Spot Fleet Requests"), 1000)),
             (
                 "spot_fleet_total_target_capacity",
-                _vs_limits(_("Spot Fleet Requests Total Target Capacity"), 5000),
+                vs_aws_limits(_("Spot Fleet Requests Total Target Capacity"), 5000),
             ),
             (
                 "running_ondemand_instances_total",
-                _vs_limits(_("Total Running On-Demand Instances(Deprecated by AWS)"), 20),
+                vs_aws_limits(_("Total Running On-Demand Instances(Deprecated by AWS)"), 20),
             ),
             ("running_ondemand_instances_vcpus", _vs_limits_vcpu_families()),
             ("running_ondemand_instances", _vs_limits_inst_types()),
@@ -934,11 +934,11 @@ rulespec_registry.register(
 def _parameter_valuespec_aws_elb_limits() -> Dictionary:
     return Dictionary(
         elements=[
-            ("load_balancers", _vs_limits(_("Load balancers"), 20)),
-            ("load_balancer_listeners", _vs_limits(_("Listeners per load balancer"), 100)),
+            ("load_balancers", vs_aws_limits(_("Load balancers"), 20)),
+            ("load_balancer_listeners", vs_aws_limits(_("Listeners per load balancer"), 100)),
             (
                 "load_balancer_registered_instances",
-                _vs_limits(_("Registered instances per load balancer"), 1000),
+                vs_aws_limits(_("Registered instances per load balancer"), 1000),
             ),
         ]
     )
@@ -969,33 +969,33 @@ rulespec_registry.register(
 def _parameter_valuespec_aws_elbv2_limits() -> Dictionary:
     return Dictionary(
         elements=[
-            ("application_load_balancers", _vs_limits(_("Application Load balancers"), 20)),
+            ("application_load_balancers", vs_aws_limits(_("Application Load balancers"), 20)),
             (
                 "application_load_balancer_rules",
-                _vs_limits(_("Application Load Balancer Rules"), 100),
+                vs_aws_limits(_("Application Load Balancer Rules"), 100),
             ),
             (
                 "application_load_balancer_listeners",
-                _vs_limits(_("Application Load Balancer Listeners"), 50),
+                vs_aws_limits(_("Application Load Balancer Listeners"), 50),
             ),
             (
                 "application_load_balancer_target_groups",
-                _vs_limits(_("Application Load Balancer Target Groups"), 3000),
+                vs_aws_limits(_("Application Load Balancer Target Groups"), 3000),
             ),
             (
                 "application_load_balancer_certificates",
-                _vs_limits(_("Application Load balancer Certificates"), 25),
+                vs_aws_limits(_("Application Load balancer Certificates"), 25),
             ),
-            ("network_load_balancers", _vs_limits(_("Network Load balancers"), 20)),
+            ("network_load_balancers", vs_aws_limits(_("Network Load balancers"), 20)),
             (
                 "network_load_balancer_listeners",
-                _vs_limits(_("Network Load Balancer Listeners"), 50),
+                vs_aws_limits(_("Network Load Balancer Listeners"), 50),
             ),
             (
                 "network_load_balancer_target_groups",
-                _vs_limits(_("Network Load Balancer Target Groups"), 3000),
+                vs_aws_limits(_("Network Load Balancer Target Groups"), 3000),
             ),
-            ("load_balancer_target_groups", _vs_limits(_("Load balancers Target Groups"), 3000)),
+            ("load_balancer_target_groups", vs_aws_limits(_("Load balancers Target Groups"), 3000)),
         ]
     )
 
@@ -1114,16 +1114,16 @@ rulespec_registry.register(
 def _parameter_valuespec_aws_ebs_limits() -> Dictionary:
     return Dictionary(
         elements=[
-            ("block_store_snapshots", _vs_limits(_("Total Block store snapshots"), 100000)),
+            ("block_store_snapshots", vs_aws_limits(_("Total Block store snapshots"), 100000)),
             (
                 "block_store_space_standard",
-                _vs_limits(
+                vs_aws_limits(
                     _("Total Magnetic volumes space"), 300 * 1024**4, vs_limit_cls=Filesize
                 ),
             ),
             (
                 "block_store_space_io1",
-                _vs_limits(
+                vs_aws_limits(
                     _("Total Provisioned IOPS SSD (io1) space"),
                     300 * 1024**4,
                     vs_limit_cls=Filesize,
@@ -1131,11 +1131,13 @@ def _parameter_valuespec_aws_ebs_limits() -> Dictionary:
             ),
             (
                 "block_store_iops_io1",
-                _vs_limits(_("Total Provisioned IOPS SSD (io1) IO operations per seconds"), 300000),
+                vs_aws_limits(
+                    _("Total Provisioned IOPS SSD (io1) IO operations per seconds"), 300000
+                ),
             ),
             (
                 "block_store_space_io2",
-                _vs_limits(
+                vs_aws_limits(
                     _("Total Provisioned IOPS SSD (io2) space"),
                     20 * 1024**4,
                     vs_limit_cls=Filesize,
@@ -1143,11 +1145,13 @@ def _parameter_valuespec_aws_ebs_limits() -> Dictionary:
             ),
             (
                 "block_store_iops_io2",
-                _vs_limits(_("Total Provisioned IOPS SSD (io2) IO operations per seconds"), 100000),
+                vs_aws_limits(
+                    _("Total Provisioned IOPS SSD (io2) IO operations per seconds"), 100000
+                ),
             ),
             (
                 "block_store_space_gp2",
-                _vs_limits(
+                vs_aws_limits(
                     _("Total General Purpose SSD (gp2) space"),
                     300 * 1024**4,
                     vs_limit_cls=Filesize,
@@ -1155,7 +1159,7 @@ def _parameter_valuespec_aws_ebs_limits() -> Dictionary:
             ),
             (
                 "block_store_space_gp3",
-                _vs_limits(
+                vs_aws_limits(
                     _("Total General Purpose SSD (gp3) space"),
                     300 * 1024**4,
                     vs_limit_cls=Filesize,
@@ -1163,11 +1167,11 @@ def _parameter_valuespec_aws_ebs_limits() -> Dictionary:
             ),
             (
                 "block_store_space_sc1",
-                _vs_limits(_("Total Cold HDD space"), 300 * 1024**4, vs_limit_cls=Filesize),
+                vs_aws_limits(_("Total Cold HDD space"), 300 * 1024**4, vs_limit_cls=Filesize),
             ),
             (
                 "block_store_space_st1",
-                _vs_limits(
+                vs_aws_limits(
                     _("Total Throughput Optimized HDD space"),
                     300 * 1024**4,
                     vs_limit_cls=Filesize,
@@ -1345,27 +1349,27 @@ rulespec_registry.register(
 def _parameter_valuespec_aws_rds_limits() -> Dictionary:
     return Dictionary(
         elements=[
-            ("db_instances", _vs_limits(_("DB instances"), 40)),
-            ("reserved_db_instances", _vs_limits(_("Reserved DB instances"), 40)),
+            ("db_instances", vs_aws_limits(_("DB instances"), 40)),
+            ("reserved_db_instances", vs_aws_limits(_("Reserved DB instances"), 40)),
             (
                 "allocated_storage",
-                _vs_limits(_("Allocated storage"), 100 * 1024**4, vs_limit_cls=Filesize),
+                vs_aws_limits(_("Allocated storage"), 100 * 1024**4, vs_limit_cls=Filesize),
             ),
-            ("db_security_groups", _vs_limits(_("DB security groups"), 25)),
+            ("db_security_groups", vs_aws_limits(_("DB security groups"), 25)),
             (
                 "auths_per_db_security_groups",
-                _vs_limits(_("Authorizations per DB security group"), 20),
+                vs_aws_limits(_("Authorizations per DB security group"), 20),
             ),
-            ("db_parameter_groups", _vs_limits(_("DB parameter groups"), 50)),
-            ("manual_snapshots", _vs_limits(_("Manual snapshots"), 100)),
-            ("event_subscriptions", _vs_limits(_("Event subscriptions"), 20)),
-            ("db_subnet_groups", _vs_limits(_("DB subnet groups"), 50)),
-            ("option_groups", _vs_limits(_("Option groups"), 20)),
-            ("subnet_per_db_subnet_groups", _vs_limits(_("Subnet per DB subnet groups"), 20)),
-            ("read_replica_per_master", _vs_limits(_("Read replica per master"), 5)),
-            ("db_clusters", _vs_limits(_("DB clusters"), 40)),
-            ("db_cluster_parameter_groups", _vs_limits(_("DB cluster parameter groups"), 50)),
-            ("db_cluster_roles", _vs_limits(_("DB cluster roles"), 5)),
+            ("db_parameter_groups", vs_aws_limits(_("DB parameter groups"), 50)),
+            ("manual_snapshots", vs_aws_limits(_("Manual snapshots"), 100)),
+            ("event_subscriptions", vs_aws_limits(_("Event subscriptions"), 20)),
+            ("db_subnet_groups", vs_aws_limits(_("DB subnet groups"), 50)),
+            ("option_groups", vs_aws_limits(_("Option groups"), 20)),
+            ("subnet_per_db_subnet_groups", vs_aws_limits(_("Subnet per DB subnet groups"), 20)),
+            ("read_replica_per_master", vs_aws_limits(_("Read replica per master"), 5)),
+            ("db_clusters", vs_aws_limits(_("DB clusters"), 40)),
+            ("db_cluster_parameter_groups", vs_aws_limits(_("DB cluster parameter groups"), 50)),
+            ("db_cluster_roles", vs_aws_limits(_("DB cluster roles"), 5)),
         ]
     )
 
@@ -1395,7 +1399,7 @@ rulespec_registry.register(
 def _parameter_valuespec_aws_cloudwatch_alarms_limits() -> Dictionary:
     return Dictionary(
         elements=[
-            ("cloudwatch_alarms", _vs_limits(_("CloudWatch Alarms"), 5000)),
+            ("cloudwatch_alarms", vs_aws_limits(_("CloudWatch Alarms"), 5000)),
         ]
     )
 
@@ -1427,7 +1431,7 @@ def _parameter_valuespec_aws_dynamodb_limits() -> Dictionary:
         elements=[
             (
                 "number_of_tables",
-                _vs_limits(
+                vs_aws_limits(
                     _("Number of tables"),
                     256,
                     unit="tables",
@@ -1436,11 +1440,11 @@ def _parameter_valuespec_aws_dynamodb_limits() -> Dictionary:
             ),
             (
                 "read_capacity",
-                _vs_limits(_("Read capacity"), 80000, unit="RCU"),
+                vs_aws_limits(_("Read capacity"), 80000, unit="RCU"),
             ),
             (
                 "write_capacity",
-                _vs_limits(_("Write capacity"), 80000, unit="WCU"),
+                vs_aws_limits(_("Write capacity"), 80000, unit="WCU"),
             ),
         ]
     )
@@ -1615,23 +1619,23 @@ def _parameter_valuespec_aws_wafv2_limits() -> Dictionary:
         elements=[
             (
                 "web_acls",
-                _vs_limits(_("Web ACLs"), 100, title_default="Default limit set by AWS"),
+                vs_aws_limits(_("Web ACLs"), 100, title_default="Default limit set by AWS"),
             ),
             (
                 "rule_groups",
-                _vs_limits(_("Rule groups"), 100, title_default="Default limit set by AWS"),
+                vs_aws_limits(_("Rule groups"), 100, title_default="Default limit set by AWS"),
             ),
             (
                 "ip_sets",
-                _vs_limits(_("IP sets"), 100, title_default="Default limit set by AWS"),
+                vs_aws_limits(_("IP sets"), 100, title_default="Default limit set by AWS"),
             ),
             (
                 "regex_pattern_sets",
-                _vs_limits(_("Regex sets"), 10, title_default="Default limit set by AWS"),
+                vs_aws_limits(_("Regex sets"), 10, title_default="Default limit set by AWS"),
             ),
             (
                 "web_acl_capacity_units",
-                _vs_limits(
+                vs_aws_limits(
                     _("Web ACL capacity units (WCUs)"),
                     1500,
                     title_default="Default limit set by AWS",

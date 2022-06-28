@@ -39,10 +39,13 @@ jobs:
         echo "PIPENV_CACHE_DIR=$HOME/.cache/pipenv" >> $GITHUB_ENV
     - name: Checkout Repository
       uses: actions/checkout@v2
+    - name: Parse Python version from defines.make
+      run: |
+        echo "PYTHON_VERSION=$(make --no-print-directory --file=defines.make print-PYTHON_MAJOR_DOT_MINOR)" >> $GITHUB_ENV
     - name: Setup Python
       uses: actions/setup-python@v2
       with:
-        python-version: "3.10"
+        python-version: ${{ env.PYTHON_VERSION }}
     - name: Cache pip
       uses: actions/cache@v2
       with:

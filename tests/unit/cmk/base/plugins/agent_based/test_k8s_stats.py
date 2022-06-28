@@ -297,7 +297,7 @@ def test_discover_k8s_stats_network(section, expected_items) -> None:
                 Metric("fs_size", 16492.3984375, boundaries=(0.0, None)),
                 Metric(
                     "fs_used_percent",
-                    25.21459933956316,
+                    25.214599339563158,
                     levels=(80.0, 90.0),
                     boundaries=(0.0, 100.0),
                 ),

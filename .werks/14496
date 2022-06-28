@@ -1,0 +1,15 @@
+Title: df: 'fs_used_percent' metric does not respect reserved space configuration
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1656424140
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+It is possible to configure the <tt>df</tt> check to exlude the space reserved
+for the root user from the used space. The metric 'fs_used_percent' which is
+shown in the perfometer of any <tt>filesystem</tt> service did not respect this
+configuration, showing the percentage of used space of the total filesystem,
+including the reserved space. This has been fixed.

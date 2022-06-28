@@ -494,10 +494,6 @@ def check_filesystem_levels(
         filesystem_levels.crit_absolute / 1024**2,
     )
 
-    used_hr = render.bytes(used_space * 1024**2)
-    used_max_hr = render.bytes(allocatable_filesystem_size * 1024**2)
-    used_perc_hr = render.percent(100.0 * used_space / allocatable_filesystem_size)
-
     if warn_mb < 0.0:
         # Negative levels, so user configured thresholds based on space left. Calculate the
         # upper thresholds based on the size of the filesystem
@@ -509,15 +505,23 @@ def check_filesystem_levels(
     )
     yield Metric("fs_used", used_space, levels=(warn_mb, crit_mb), boundaries=(0, filesystem_size))
     yield Metric("fs_size", filesystem_size, boundaries=(0, None))
+
+    used_space_percent = (used_space / allocatable_filesystem_size) * 100.0
     yield Metric(
         "fs_used_percent",
-        100.0 * used_space / filesystem_size,
-        levels=(_mb_to_perc(warn_mb, filesystem_size), _mb_to_perc(crit_mb, filesystem_size)),
+        used_space_percent,
+        levels=(
+            _mb_to_perc(warn_mb, allocatable_filesystem_size),
+            _mb_to_perc(crit_mb, allocatable_filesystem_size),
+        ),
         boundaries=(0.0, 100.0),
     )
 
     # Expand infotext according to current params
-    summary = f"Used: {used_perc_hr} - {used_hr} of {used_max_hr}"
+    summary = (
+        f"Used: {render.percent(used_space_percent)} "
+        f"- {render.bytes(used_space * 1024**2)} of {render.bytes(allocatable_filesystem_size * 1024**2)}"
+    )
     if (
         show_levels == "always"
         or (show_levels == "onproblem" and status is not State.OK)  #
@@ -555,11 +559,12 @@ def df_check_filesystem_single(
         params.get("show_reserved") and reserved_space > 0,
     )
 
-    used_space = filesystem_size - free_space
-    allocatable_filesystem_size = filesystem_size
     if subtract_reserved:
-        used_space -= reserved_space
-        allocatable_filesystem_size -= reserved_space
+        allocatable_filesystem_size = filesystem_size - reserved_space
+    else:
+        allocatable_filesystem_size = filesystem_size
+
+    used_space = allocatable_filesystem_size - free_space
 
     yield from check_filesystem_levels(
         filesystem_size, allocatable_filesystem_size, free_space, used_space, params, show_levels

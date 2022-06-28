@@ -118,7 +118,7 @@ def value_store_fixture(monkeypatch):
                 Metric("fs_size", 65843.2, boundaries=(0.0, None)),
                 Metric(
                     "fs_used_percent",
-                    15.707620528771386,
+                    15.707620528771388,
                     levels=(80.0, 90.0),
                     boundaries=(0.0, 100.0),
                 ),
@@ -147,7 +147,7 @@ def value_store_fixture(monkeypatch):
                 Metric("fs_size", 65843.2, boundaries=(0.0, None)),
                 Metric(
                     "fs_used_percent",
-                    15.707620528771386,
+                    15.707620528771388,
                     levels=(80.0, 90.0),
                     boundaries=(0.0, 100.0),
                 ),
@@ -176,7 +176,7 @@ def value_store_fixture(monkeypatch):
                 Metric("fs_size", 65843.2, boundaries=(0.0, None)),
                 Metric(
                     "fs_used_percent",
-                    15.707620528771386,
+                    15.707620528771388,
                     levels=(80.0, 90.0),
                     boundaries=(0.0, 100.0),
                 ),

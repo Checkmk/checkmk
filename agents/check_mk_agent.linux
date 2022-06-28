@@ -1607,11 +1607,6 @@ run_cached() {
     NAME="${1}"
     MAXAGE="${2}"
     shift 2
-
-    #
-    # END COMMON AGENT CODE
-    #
-
     # ideally, these should be independent parameters:
     TIMEOUT=$((MAXAGE * 2))
     REFRESH_INTERVAL="${MAXAGE}"
@@ -1620,7 +1615,7 @@ run_cached() {
     CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"
 
     NOW="$(get_epoch)"
-    MTIME=$(get_file_mtime "${CACHEFILE}" 2>/dev/null) || MTIME=0
+    MTIME="$(get_file_mtime "${CACHEFILE}" 2>/dev/null)" || MTIME=0
 
     if ${MK_RUN_SYNC_PARTS} && [ -s "${CACHEFILE}" ]; then
 
@@ -1668,8 +1663,12 @@ HERE
 
     fi
 
-    unset NAME MAXAGE TIMEOUT REFRESH_INTERVAL CACHEFILE MTIME CACHE_INFO
+    unset NAME MAXAGE TIMEOUT REFRESH_INTERVAL CACHEFILE NOW MTIME CACHE_INFO
 }
+
+#
+# END COMMON AGENT CODE
+#
 
 # Make run_cached available for subshells (plugins, local checks, etc.)
 export -f run_cached

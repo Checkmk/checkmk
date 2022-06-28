@@ -653,6 +653,8 @@ run_cached() {
     # END COMMON AGENT CODE
     #
 
+    # ideally, these should be independent parameters:
+    TIMEOUT=$((MAXAGE * 2))
     REFRESH_INTERVAL="${MAXAGE}"
 
     [ -d "${MK_VARDIR}/cache" ] || mkdir -p "${MK_VARDIR}/cache"
@@ -677,13 +679,31 @@ run_cached() {
 
     if ${MK_RUN_ASYNC_PARTS}; then
 
+        # Check if the creation of the cache takes suspiciously long.
+        # Kill the process if the cache file has not been accessed for more than TIMEOUT seconds.
+        for cfile in "${CACHEFILE}.new."*; do
+            [ -e "${cfile}" ] || break # no match
+            if [ $((NOW - $(get_file_atime "${cfile}"))) -ge "${TIMEOUT}" ]; then
+                kill -9 "${cfile##*.new.}" # TODO: what about child processes?
+                rm -f "${cfile}"
+            fi
+        done
+
+        # This does the right thing, regardless whether the pattern matches!
+        _cfile_in_use() {
+            for cfile in "${CACHEFILE}.new."*; do
+                printf "%s\n" "${cfile}"
+                break
+            done
+        }
+
         # Time to refresh cache file and new job not yet running?
-        if [ $((NOW - MTIME)) -gt "${REFRESH_INTERVAL}" ] && [ ! -e "${CACHEFILE}.new" ]; then
+        if [ $((NOW - MTIME)) -gt "${REFRESH_INTERVAL}" ] && [ ! -e "$(_cfile_in_use)" ]; then
             # Start it. If the command fails the output is thrown away
             cat <<HERE | nohup "$(_this_shell)" >/dev/null 2>&1 &
 eval '${MK_DEFINE_LOG_SECTION_TIME}'
-exec > "${CACHEFILE}.new" || exit 1
-$* && mv -f "${CACHEFILE}.new" "${CACHEFILE}" || rm -f "${CACHEFILE}" "${CACHEFILE}.new"
+exec > "${CACHEFILE}.new.\$\$" || exit 1
+$* && mv -f "${CACHEFILE}.new.\$\$" "${CACHEFILE}" || rm -f "${CACHEFILE}" "${CACHEFILE}.new.\$\$"
 HERE
         fi
     fi

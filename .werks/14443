@@ -1,0 +1,14 @@
+Title: Checkmk agent for AIX: kill long running async processes
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1656423677
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+The Checkmk agents for Linux and Solaris kill plugin processes that are
+started asynchronously and don't terminate after a certain period of inactivity.
+
+This werk brings this behaviour to the AIX agent.

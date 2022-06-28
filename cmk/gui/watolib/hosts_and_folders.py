@@ -2891,7 +2891,7 @@ class WATOFoldersOnDemand(Mapping[PathWithoutSlash, Optional[CREFolder]]):
         self._raw_dict: Dict[PathWithoutSlash, Optional[CREFolder]] = values
 
     def __getitem__(self, path_without_slash: PathWithoutSlash) -> CREFolder:
-        item: Optional[CREFolder] = self._raw_dict.get(path_without_slash)
+        item: Optional[CREFolder] = self._raw_dict[path_without_slash]
         if item is None:
             item = self._create_folder(path_without_slash)
             self._raw_dict.__setitem__(path_without_slash, item)

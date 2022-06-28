@@ -216,6 +216,9 @@ def _create_new_results_with_details(
                 metrics.extend(list(result[2]))
             details.extend([el for el in result[1].split("\n") if el])
 
+        if len(details) == 0:
+            continue
+
         # we might have an actual summary to use
         if idx == 0 and (s := first_detail.split("\n", 1)[0]):
             summary = s

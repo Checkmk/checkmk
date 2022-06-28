@@ -180,6 +180,34 @@ def test_create_check_function_without_details() -> None:
     ]
 
 
+def test_create_check_function_with_zero_details_after_newline() -> None:
+    def insane_check(item, _no_params, info):
+        assert item == "Test Item"
+        assert _no_params == {}
+        assert info == ["info"]
+        yield 0, "Main info"
+        yield 0, "\n"
+
+    new_function = check_plugins_legacy._create_check_function(
+        "test_plugin",
+        {
+            "check_function": insane_check,
+            "service_description": "Foo %s",
+        },
+    )
+
+    fixed_params = inspect.signature(new_function).parameters
+    assert list(fixed_params) == ["item", "params", "section"]
+    assert inspect.isgeneratorfunction(new_function)
+
+    results = new_function(item="Test Item", section=["info"], params={})
+    # we cannot compare the actual Result objects because of
+    # the nasty bypassing of validation in the legacy conversion
+    assert list(results) == [
+        Result(state=checking_classes.State.OK, summary="Main info", details="Main info"),  # Result
+    ]
+
+
 def test_create_check_plugin_from_legacy_wo_params() -> None:
 
     plugin = check_plugins_legacy.create_check_plugin_from_legacy(

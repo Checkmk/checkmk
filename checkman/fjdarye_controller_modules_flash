@@ -1,12 +1,15 @@
-title: Fujitsu ETERNUS DX Storage Systems: Flash of Controller Modules
+title: Fujitsu Storage Systems: Flash of Controller Modules
 agents: snmp
 catalog: hw/storagehw/fujitsu
 license: GPLv2
 distribution: check_mk
 description:
  This check monitors the reported status of the flash of all installed channel
- modules in storage systems from Fujitsu which support the
- FJDARY-E60.MIB like the ETERNUS DX60 and DX80.
+ modules in storage systems from Fujitsu.
+ Supported devices:
+ ETERNUS DX60
+ ETERNUS DX80
+ ETERNUS DX500 S3
 
 item:
  The index of the controller module flash in the SNMP table. It is of type

@@ -189,6 +189,8 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("fjdarye60_syscaps"): CheckPluginName("fjdarye_system_capacitors"),
     CheckPluginName("fjdarye500_inletthmls"): CheckPluginName("fjdarye_inlet_thermal_sensors"),
     CheckPluginName("fjdarye60_inletthmls"): CheckPluginName("fjdarye_inlet_thermal_sensors"),
+    CheckPluginName("fjdarye500_cmods_flash"): CheckPluginName("fjdarye_controller_modules_flash"),
+    CheckPluginName("fjdarye60_cmods_flash"): CheckPluginName("fjdarye_controller_modules_flash"),
 }
 
 

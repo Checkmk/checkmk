@@ -60,6 +60,7 @@ def _valuespec_active_checks_sql() -> Dictionary:
                         ("mssql", _("MSSQL")),
                         ("oracle", _("Oracle")),
                         ("db2", _("DB2")),
+                        ("sqlanywhere", _("SQLAnywhere"))
                     ],
                     default_value="postgres",
                 ),

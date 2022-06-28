@@ -31,7 +31,8 @@ def test_discover_hp_proliant_raid_no_snmp_data() -> None:
 def test_discover_hp_proliant_raid(string_table,) -> None:
     check_plugin = Check("hp_proliant_raid")
     discovery_results = list(check_plugin.run_discovery(check_plugin.run_parse(string_table)))
-    assert discovery_results[1:] == [
+    assert discovery_results == [
+        ("1", None),
         ("2", None),
         ("3", None),
         ("4", None),
@@ -54,7 +55,7 @@ def test_check_hp_proliant_raid_item_not_found(string_table,) -> None:
 def test_check_hp_proliant_raid(string_table,) -> None:
     check_plugin = Check("hp_proliant_raid")
     assert list(check_plugin.run_check(
-        "",
+        "1",
         {},
         check_plugin.run_parse(string_table),
     )) == [
@@ -68,7 +69,7 @@ def test_check_hp_proliant_raid_progress_cannot_be_determined() -> None:
     check_plugin = Check("hp_proliant_raid")
     assert list(
         check_plugin.run_check(
-            "banana",
+            "banana 1",
             {},
             check_plugin.run_parse([
                 ["1", "banana", "7", "286070", "4294967295"],

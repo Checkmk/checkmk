@@ -1,0 +1,11 @@
+Title: 'Host groups' view: Add coloring for host states
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 2.1.0p5
+Date: 1656407475
+
+In the view "Host groups" host state cells were not colored according to their state. This is fixed, so now whenever there's at least one occurence of the given host state for the given host group, the table cell is colored. This behavior now matches that of the service state cells again.

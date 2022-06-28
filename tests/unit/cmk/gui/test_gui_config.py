@@ -155,6 +155,7 @@ def test_default_config_from_plugins() -> None:
         "sites",
         "config_storage_format",
         "tags",
+        "enable_login_via_get",
     ]
 
     if is_enterprise_repo():

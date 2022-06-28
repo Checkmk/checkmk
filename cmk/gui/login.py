@@ -471,6 +471,13 @@ class LoginPage(Page):
             if not active_config.user_login and not _is_site_login():
                 raise MKUserError(None, _("Login is not allowed on this site."))
 
+            # Login via the GET method is allowed only after manually
+            # enabling the property "Enable login via GET" in the
+            # Global Settings. Please refer to the Werk 14261 for
+            # more details.
+            if request.request_method != "POST" and not active_config.enable_login_via_get:
+                raise MKUserError(None, _("Method not allowed"))
+
             username_var = request.get_str_input("_username", "")
             assert username_var is not None
             username = UserId(username_var.rstrip())

@@ -1,0 +1,17 @@
+Title: Manual enablement of login using HTTP GET to avoid unintentional leakage of user credentials in Apache's access logs
+Class: security
+Compatible: compat
+Component: wato
+Date: 1656422525
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Using <tt>GET</tt> requests to <tt>login.py</tt> means that the credentials supplied in the query parameters will appear in the site's Apache logs. To avoid unintentional leakage of such credentials, we <b>by default</b> block login attempts via the <tt>GET</tt> method.
+
+If you used the <tt>GET</tt> method to, for example, export the data of views and dashboards in formats such as <tt>JSON</tt>, you can make use of the <tt>automation</tt> user as described in <a href="https://docs.checkmk.com/latest/en/wato_user.html#automation">documentation</a> article. For example, to display the view <i>allhosts</i> in <tt>JSON</tt> format, you can issue requests like this one <tt>curl -X GET 'http://localhost/heute/check_mk/view.py?_username=automation&_secret=[automation_secret]&view_name=allhosts&output_format=json'</tt>.
+
+However, if you <b>still need to use the <tt>GET</tt> method to login to WATO</b>, you can manually enable this method as follows:
+
+In the WATO interface, go to Setup > Global Settings > User interface, and switch on the <i>Enable login via GET requests</i> property.

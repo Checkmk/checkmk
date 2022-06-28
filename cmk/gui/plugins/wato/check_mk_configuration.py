@@ -1104,6 +1104,29 @@ class ConfigVariableAuthByHTTPHeader(ConfigVariable):
 
 
 @config_variable_registry.register
+class EnableLoginViaGet(ConfigVariable):
+    def group(self) -> Type[ConfigVariableGroup]:
+        return ConfigVariableGroupUserInterface
+
+    def domain(self) -> Type[ABCConfigDomain]:
+        return ConfigDomainGUI
+
+    def ident(self) -> str:
+        return "enable_login_via_get"
+
+    def valuespec(self) -> ValueSpec:
+        return Checkbox(
+            title=_("Enable login via GET requests"),
+            help=_(
+                "Using the GET method to authenticate against login.py leaks user credentials "
+                "in the Apache logs (see more details in our Werk 14261). We disable logging  "
+                "in via this method by default. Use this property to enable logging in via the "
+                "GET method for all users."
+            ),
+        )
+
+
+@config_variable_registry.register
 class ConfigVariableStalenessThreshold(ConfigVariable):
     def group(self) -> Type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface

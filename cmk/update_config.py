@@ -291,6 +291,7 @@ class UpdateConfig:
             (self._rewrite_wato_tag_config, "Rewriting tags"),
             (self._rewrite_wato_host_and_folder_config, "Rewriting hosts and folders"),
             (self._rewrite_wato_rulesets, "Rewriting rulesets"),
+            (self._rewrite_discovered_host_labels, "Rewriting discovered host labels"),
             (self._rewrite_autochecks, "Rewriting autochecks"),
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
             # CAUTION: update_fs_used_name must be called *after* rewrite_autochecks!
@@ -416,6 +417,53 @@ class UpdateConfig:
         )
         return global_config
 
+    def _rewrite_discovered_host_labels(self) -> None:
+        """Host labels used to be attributed to the check plugins that created them.
+        Now they are are attributed to the section names, so we have to map that.
+
+        Failing to map can lead to crashes, as dots where allowed in check plugin names
+        previously, but are not allowed in section plugin names as of 2.0.
+
+        This rewrite rule was added in 2.1 (and backported to 2.0), so we should keep it
+        around in the 2.2.
+        """
+        failed_hosts = []
+
+        for host_labels_file in Path(cmk.utils.paths.discovered_host_labels_dir).glob("*.mk"):
+            hostname = HostName(host_labels_file.stem)
+            store = cmk.utils.labels.DiscoveredHostLabelsStore(hostname)
+
+            try:
+                host_labels = store.load()
+            except MKGeneralException as exc:
+                if self._arguments.debug:
+                    raise
+                self._logger.error(str(exc))
+                failed_hosts.append(hostname)
+                continue
+
+            store.save(
+                {
+                    name: {
+                        "value": raw_label["value"],
+                        "plugin_name": (
+                            None
+                            if (plugin := raw_label.get("plugin_name")) is None
+                            else cmk.utils.check_utils.section_name_of(plugin)
+                        ),
+                    }
+                    for name, raw_label in host_labels.items()
+                },
+            )
+
+        if failed_hosts:
+            msg = (
+                "Failed to rewrite discovered host labels file for hosts: "
+                f"{', '.join(failed_hosts)}"
+            )
+            self._logger.error(msg)
+            raise MKGeneralException(msg)
+
     def _rewrite_autochecks(self) -> None:
         failed_hosts = []
 
@@ -438,7 +486,7 @@ class UpdateConfig:
             store.write([self._fix_entry(s, all_rulesets, hostname) for s in autochecks])
 
         if failed_hosts:
-            msg = "Failed to rewrite autochecks file for hosts: %s" % ", ".join(failed_hosts)
+            msg = f"Failed to rewrite autochecks file for hosts: {', '.join(failed_hosts)}"
             self._logger.error(msg)
             raise MKGeneralException(msg)
 

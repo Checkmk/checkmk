@@ -616,20 +616,40 @@ section_job() {
     fi
 }
 
-run_cached() {
-    NAME=${1}
-    # Be aware: Maxage was expected to be given in minutes but this was
-    # confusing because all other agents use seconds here. So this has
-    # been changed to be compatible.
-    MAXAGE=${2}
-    shift 2
-    CMDLINE=$*
+#
+# BEGIN COMMON AGENT CODE
+#
 
+# Run a command asynchronous by use of a cache file.
+# Usage: run_cached NAME MAXAGE [COMMAND ...]
+#   NAME     name of the section (also used as cache file name)
+#   MAXAGE   maximum cache livetime in seconds
+#   COMMAND  command to run
+#
+# Note that while multiple COMMAND arguments are considered, they are evaluated in a string.
+# This means that extra escaping is required.
+# For example: to run `cat "My File"` every two minutes, you'll have to call
+#
+#     run_cached "my_file_output" 120 "cat \"My File\""
+#
+run_cached() {
     if ${DISABLE_CACHING:-false}; then
-        # shellcheck disable=SC2090
-        ${CMDLINE}
+        shift 2
+        # We need the re-splitting to be compatible with the caching case, so:
+        # shellcheck disable=SC2068
+        $@
         return
     fi
+
+    NAME="${1}"
+    MAXAGE="${2}"
+    shift 2
+
+    #
+    # END COMMON AGENT CODE
+    #
+
+    CMDLINE=$*
 
     NOW=$(get_epoch)
 

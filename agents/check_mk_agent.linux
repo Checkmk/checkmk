@@ -1579,6 +1579,10 @@ _this_shell() {
     ps -o args= -p $$ | sed -e 's/^-//' -e 's/\ .*//'
 }
 
+#
+# BEGIN COMMON AGENT CODE
+#
+
 # Run a command asynchronous by use of a cache file.
 # Usage: run_cached NAME MAXAGE [COMMAND ...]
 #   NAME     name of the section (also used as cache file name)
@@ -1592,19 +1596,25 @@ _this_shell() {
 #     run_cached "my_file_output" 120 "cat \"My File\""
 #
 run_cached() {
-    NAME="${1}"
-    MAXAGE="${2}"
-    shift 2
-    # ideally, these should be independent parameters:
-    TIMEOUT=$((MAXAGE * 2))
-    REFRESH_INTERVAL="${MAXAGE}"
-
     if ${DISABLE_CACHING:-false}; then
+        shift 2
         # We need the re-splitting to be compatible with the caching case, so:
         # shellcheck disable=SC2068
         $@
         return
     fi
+
+    NAME="${1}"
+    MAXAGE="${2}"
+    shift 2
+
+    #
+    # END COMMON AGENT CODE
+    #
+
+    # ideally, these should be independent parameters:
+    TIMEOUT=$((MAXAGE * 2))
+    REFRESH_INTERVAL="${MAXAGE}"
 
     [ -d "${MK_VARDIR}/cache" ] || mkdir -p "${MK_VARDIR}/cache"
     CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"

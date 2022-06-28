@@ -554,19 +554,40 @@ run_purely_synchronous_sections() {
     fi
 }
 
-# Runs a command asynchronous by use of a cache file
-run_cached() {
-    local NAME MAXAGE NOW MTIME
-    NAME=${1}
-    MAXAGE=${2}
-    shift 2
+#
+# BEGIN COMMON AGENT CODE
+#
 
+# Run a command asynchronous by use of a cache file.
+# Usage: run_cached NAME MAXAGE [COMMAND ...]
+#   NAME     name of the section (also used as cache file name)
+#   MAXAGE   maximum cache livetime in seconds
+#   COMMAND  command to run
+#
+# Note that while multiple COMMAND arguments are considered, they are evaluated in a string.
+# This means that extra escaping is required.
+# For example: to run `cat "My File"` every two minutes, you'll have to call
+#
+#     run_cached "my_file_output" 120 "cat \"My File\""
+#
+run_cached() {
     if ${DISABLE_CACHING:-false}; then
+        shift 2
         # We need the re-splitting to be compatible with the caching case, so:
         # shellcheck disable=SC2068
         $@
         return
     fi
+
+    NAME="${1}"
+    MAXAGE="${2}"
+    shift 2
+
+    #
+    # END COMMON AGENT CODE
+    #
+
+    local NOW MTIME
 
     if [ ! -d "${MK_VARDIR}/cache" ]; then mkdir -p "${MK_VARDIR}/cache"; fi
     CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"
@@ -576,6 +597,7 @@ run_cached() {
     NOW=$(get_epoch)
     if [ -e "${CACHEFILE}.new" ]; then
         if [ $((NOW - $(get_file_atime "${CACHEFILE}.new"))) -ge $((MAXAGE * 2)) ]; then
+            unset NAME MAXAGE
             return
         fi
     fi
@@ -598,17 +620,20 @@ run_cached() {
         fi
     fi
 
-    ${MK_RUN_ASYNC_PARTS} || return
+    if ${MK_RUN_ASYNC_PARTS}; then
 
-    # Cache file outdated and new job not yet running? Start it
-    if [ -z "${USE_CACHEFILE}" ] && [ ! -e "${CACHEFILE}.new" ]; then
-        cat <<HERE | nohup /usr/local/bin/bash >/dev/null 2>&1
+        # Cache file outdated and new job not yet running? Start it
+        if [ -z "${USE_CACHEFILE}" ] && [ ! -e "${CACHEFILE}.new" ]; then
+            cat <<HERE | nohup /usr/local/bin/bash >/dev/null 2>&1
 set -o noclobber
 eval '${MK_DEFINE_LOG_SECTION_TIME}'
 exec > "${CACHEFILE}.new" || exit 1
 $* && mv "${CACHEFILE}.new" "${CACHEFILE}" || rm -f "${CACHEFILE}" "${CACHEFILE}.new"
 HERE
+        fi
+
     fi
+    unset NAME MAXAGE
 }
 
 #

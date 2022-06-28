@@ -675,19 +675,40 @@ run_mrpe() {
 
 export -f run_mrpe
 
-# Runs a command asynchronous by use of a cache file
-run_cached() {
-    local NAME=${1}
-    local MAXAGE=${2}
-    shift 2
-    local AGE
+#
+# BEGIN COMMON AGENT CODE
+#
 
+# Run a command asynchronous by use of a cache file.
+# Usage: run_cached NAME MAXAGE [COMMAND ...]
+#   NAME     name of the section (also used as cache file name)
+#   MAXAGE   maximum cache livetime in seconds
+#   COMMAND  command to run
+#
+# Note that while multiple COMMAND arguments are considered, they are evaluated in a string.
+# This means that extra escaping is required.
+# For example: to run `cat "My File"` every two minutes, you'll have to call
+#
+#     run_cached "my_file_output" 120 "cat \"My File\""
+#
+run_cached() {
     if ${DISABLE_CACHING:-false}; then
+        shift 2
         # We need the re-splitting to be compatible with the caching case, so:
         # shellcheck disable=SC2068
         $@
         return
     fi
+
+    NAME="${1}"
+    MAXAGE="${2}"
+    shift 2
+
+    #
+    # END COMMON AGENT CODE
+    #
+
+    local AGE
 
     local NOW
     NOW=$(get_epoch)

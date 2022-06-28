@@ -2353,6 +2353,9 @@ msgstr "AIX"
 msgid "AIX HACMP Resource Groups"
 msgstr "AIX HACMP Hulpbron Groepen"
 
+msgid "AIX: TGZ (.tar.gz)"
+msgstr ""
+
 msgid "ALL"
 msgstr "ALLE"
 
@@ -4164,8 +4167,9 @@ msgstr "Agent-toegangsregels"
 msgid "Agent bakery"
 msgstr "Agent bakkerij"
 
-msgid "Agent bakery package compression"
-msgstr ""
+#, fuzzy
+msgid "Agent bakery packages"
+msgstr "Agent bakkerij"
 
 msgid "Agent baking"
 msgstr "Agent bakken"
@@ -18012,6 +18016,11 @@ msgstr "Expliciet, regelset, ontdekt"
 msgid "Explicitly map Node Exporter host"
 msgstr "Expliciet in kaart brengen Node Exporter host"
 
+msgid ""
+"Explicitly select packages to be baked. If this rule entry is not activated, "
+"all packages are baked."
+msgstr ""
+
 msgid "Explicitly set on folders"
 msgstr "Expliciet ingesteld op mappen"
 
@@ -25904,10 +25913,6 @@ msgstr "Ongeldige gebruikersinvoer"
 msgid "Invalid value for ack parameter."
 msgstr "Ongeldige waarde voor ack parameter."
 
-#, fuzzy
-msgid "Invalid value for based on. Must be id of builtin rule."
-msgstr "Ongeldig geldig voor gebaseerd op. Moet id van ingebouwde regel zijn."
-
 #, python-format
 msgid "Invalid value in column %d (%s) of row %d: %s"
 msgstr "Ongeldige waarde in kolom %d (%s) van rij %d: %s"
@@ -27815,6 +27820,15 @@ msgstr "Linux, Solaris, AIX bestanden"
 
 msgid "Linux-User:"
 msgstr "Linux-gebruiker:"
+
+msgid "Linux: DPKG (.deb)"
+msgstr ""
+
+msgid "Linux: RPM (.rpm)"
+msgstr ""
+
+msgid "Linux: TGZ (.tar.gz)"
+msgstr ""
 
 msgid "List Grouping Patterns"
 msgstr "Lijst groeperingspatronen"
@@ -40473,6 +40487,10 @@ msgstr "Selecteer type interfacepoort"
 msgid "Select metrics to send to InfluxDB"
 msgstr "Metriek verzenden naar Graphite / InfluxDB"
 
+#, fuzzy
+msgid "Select packages"
+msgstr "Regel pakket %s"
+
 msgid "Select sound"
 msgstr "Selecteer geluid"
 
@@ -42721,6 +42739,12 @@ msgstr "Samenvatting van Solaris-diensten"
 
 msgid "Solaris service discovery"
 msgstr "Solaris service ontdekking"
+
+msgid "Solaris: PKG (.pkg)"
+msgstr ""
+
+msgid "Solaris: TGZ (.tar.gz)"
+msgstr ""
 
 msgid ""
 "Some GUI extensions could not be loaded. This may be caused by some "
@@ -46179,6 +46203,10 @@ msgstr ""
 
 msgid "The ID needs to be unique."
 msgstr "De ID moet uniek zijn."
+
+#, fuzzy
+msgid "The ID of a builtin user role cannot be changed"
+msgstr "De databron van een view kan niet worden gewijzigd."
 
 msgid "The ID of an exported rule pack cannot be modified."
 msgstr "Het ID van een geëxporteerd rule pack kan niet worden gewijzigd."
@@ -60200,6 +60228,10 @@ msgstr "Windows, Linux, Solaris, AIX"
 msgid "Windows, Linux, Solaris, AIX agents matching: %s"
 msgstr "Windows, Linux, Solaris, AIX agenten overeenkomend met: %s"
 
+#, fuzzy
+msgid "Windows: MSI (.msi)"
+msgstr "Windows Modules"
+
 msgid ""
 "With ServiceNow you can create different types of management issues, "
 "currently supported are indicents and cases."
@@ -61686,6 +61718,12 @@ msgstr ""
 "standaardiconen hebben een sorteerindex van <tt>30</tt> geconfigureerd."
 
 msgid ""
+"You can use these options to tune the way packages are baked for your hosts "
+"which may have a positive impact on the performance of the baking procedure. "
+"Defaults to bake for all platforms with no compression."
+msgstr ""
+
+msgid ""
 "You can use this option to change the default visibility options of the "
 "builtin icons. You can change whether or not the icons are shown in the "
 "popup menu or on top level and change the sorting of the icons."
@@ -62077,6 +62115,10 @@ msgid "You have signed some or all agent packages"
 msgstr "U hebt enkele of alle agentpakketten ondertekend"
 
 msgid "You have to provide a canonical path."
+msgstr "Je moet een canoniek pad opgeven."
+
+#, fuzzy
+msgid "You have to provide a role ID."
 msgstr "Je moet een canoniek pad opgeven."
 
 msgid "You have to select at least one element."
@@ -64549,6 +64591,12 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~| msgid "Invalid valid for based on. Must be id of builtin rule."
+#~ msgid "Invalid value for based on. Must be id of builtin rule."
+#~ msgstr ""
+#~ "Ongeldig geldig voor gebaseerd op. Moet id van ingebouwde regel zijn."
 
 #, fuzzy
 #~| msgid "Define a tolerating time period for activating services"
@@ -67823,9 +67871,6 @@ msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Rule efficiency"
 #~ msgstr "Regel efficiëntie"
-
-#~ msgid "Rule package %s"
-#~ msgstr "Regel pakket %s"
 
 #~ msgid "Running collectors"
 #~ msgstr "Lopende verzamelaars"

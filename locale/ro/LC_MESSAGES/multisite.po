@@ -2005,6 +2005,9 @@ msgstr ""
 msgid "AIX HACMP Resource Groups"
 msgstr ""
 
+msgid "AIX: TGZ (.tar.gz)"
+msgstr ""
+
 msgid "ALL"
 msgstr "TOATE"
 
@@ -3927,8 +3930,9 @@ msgstr "Ascude regulile de utilizator"
 msgid "Agent bakery"
 msgstr ""
 
-msgid "Agent bakery package compression"
-msgstr ""
+#, fuzzy
+msgid "Agent bakery packages"
+msgstr "Conexiune Noua"
 
 msgid "Agent baking"
 msgstr ""
@@ -17450,6 +17454,11 @@ msgstr ""
 msgid "Explicitly map Node Exporter host"
 msgstr ""
 
+msgid ""
+"Explicitly select packages to be baked. If this rule entry is not activated, "
+"all packages are baked."
+msgstr ""
+
 msgid "Explicitly set on folders"
 msgstr ""
 
@@ -24332,9 +24341,6 @@ msgstr ""
 msgid "Invalid value for ack parameter."
 msgstr ""
 
-msgid "Invalid value for based on. Must be id of builtin rule."
-msgstr ""
-
 #, python-format
 msgid "Invalid value in column %d (%s) of row %d: %s"
 msgstr ""
@@ -26289,6 +26295,15 @@ msgstr ""
 #, fuzzy
 msgid "Linux-User:"
 msgstr "Utilizator nou"
+
+msgid "Linux: DPKG (.deb)"
+msgstr ""
+
+msgid "Linux: RPM (.rpm)"
+msgstr ""
+
+msgid "Linux: TGZ (.tar.gz)"
+msgstr ""
 
 #, fuzzy
 msgid "List Grouping Patterns"
@@ -39080,6 +39095,10 @@ msgid "Select metrics to send to InfluxDB"
 msgstr ""
 
 #, fuzzy
+msgid "Select packages"
+msgstr "Conexiune Noua"
+
+#, fuzzy
 msgid "Select sound"
 msgstr "(selectează directorul)"
 
@@ -41314,6 +41333,12 @@ msgstr ""
 #, fuzzy
 msgid "Solaris service discovery"
 msgstr "(fără Nivel de serviciu)"
+
+msgid "Solaris: PKG (.pkg)"
+msgstr ""
+
+msgid "Solaris: TGZ (.tar.gz)"
+msgstr ""
 
 msgid ""
 "Some GUI extensions could not be loaded. This may be caused by some "
@@ -44476,6 +44501,9 @@ msgid ""
 msgstr ""
 
 msgid "The ID needs to be unique."
+msgstr ""
+
+msgid "The ID of a builtin user role cannot be changed"
 msgstr ""
 
 msgid "The ID of an exported rule pack cannot be modified."
@@ -55896,6 +55924,10 @@ msgstr ""
 msgid "Windows, Linux, Solaris, AIX agents matching: %s"
 msgstr ""
 
+#, fuzzy
+msgid "Windows: MSI (.msi)"
+msgstr "(fără Nivel de serviciu)"
+
 msgid ""
 "With ServiceNow you can create different types of management issues, "
 "currently supported are indicents and cases."
@@ -56994,6 +57026,12 @@ msgid ""
 msgstr ""
 
 msgid ""
+"You can use these options to tune the way packages are baked for your hosts "
+"which may have a positive impact on the performance of the baking procedure. "
+"Defaults to bake for all platforms with no compression."
+msgstr ""
+
+msgid ""
 "You can use this option to change the default visibility options of the "
 "builtin icons. You can change whether or not the icons are shown in the "
 "popup menu or on top level and change the sorting of the icons."
@@ -57306,6 +57344,9 @@ msgid "You have signed some or all agent packages"
 msgstr ""
 
 msgid "You have to provide a canonical path."
+msgstr ""
+
+msgid "You have to provide a role ID."
 msgstr ""
 
 msgid "You have to select at least one element."

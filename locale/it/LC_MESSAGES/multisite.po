@@ -2353,6 +2353,9 @@ msgstr "AIX"
 msgid "AIX HACMP Resource Groups"
 msgstr "Gruppi di risorse AIX HACMP"
 
+msgid "AIX: TGZ (.tar.gz)"
+msgstr ""
+
 msgid "ALL"
 msgstr "TUTTI"
 
@@ -4166,8 +4169,9 @@ msgstr "Regole di accesso dell'agente"
 msgid "Agent bakery"
 msgstr "Panificio agente"
 
-msgid "Agent bakery package compression"
-msgstr ""
+#, fuzzy
+msgid "Agent bakery packages"
+msgstr "Panificio agente"
 
 msgid "Agent baking"
 msgstr "Cottura dell'agente"
@@ -18066,6 +18070,11 @@ msgstr "Esplicito, insieme di regole, scoperto"
 msgid "Explicitly map Node Exporter host"
 msgstr "Mappare esplicitamente l'host Node Exporter"
 
+msgid ""
+"Explicitly select packages to be baked. If this rule entry is not activated, "
+"all packages are baked."
+msgstr ""
+
 msgid "Explicitly set on folders"
 msgstr "Impostato esplicitamente sulle cartelle"
 
@@ -25963,11 +25972,6 @@ msgstr "Inserimento utente non valido"
 msgid "Invalid value for ack parameter."
 msgstr "Valore non valido per il parametro ack."
 
-#, fuzzy
-msgid "Invalid value for based on. Must be id of builtin rule."
-msgstr ""
-"Valido non valido per based on. Deve essere l'id della regola incorporata."
-
 #, python-format
 msgid "Invalid value in column %d (%s) of row %d: %s"
 msgstr "Valore non valido nella colonna %d (%s) della riga %d: %s"
@@ -27869,6 +27873,15 @@ msgstr "File Linux, Solaris, AIX"
 
 msgid "Linux-User:"
 msgstr "Utente Linux:"
+
+msgid "Linux: DPKG (.deb)"
+msgstr ""
+
+msgid "Linux: RPM (.rpm)"
+msgstr ""
+
+msgid "Linux: TGZ (.tar.gz)"
+msgstr ""
 
 msgid "List Grouping Patterns"
 msgstr "Modelli di raggruppamento di liste"
@@ -40587,6 +40600,10 @@ msgstr "Seleziona il tipo di porta dell'interfaccia"
 msgid "Select metrics to send to InfluxDB"
 msgstr "Invia le metriche a Graphite / InfluxDB"
 
+#, fuzzy
+msgid "Select packages"
+msgstr "Regola pacchetto %s"
+
 msgid "Select sound"
 msgstr "Seleziona il suono"
 
@@ -42837,6 +42854,12 @@ msgstr "Riassunto dei servizi Solaris"
 
 msgid "Solaris service discovery"
 msgstr "Scoperta dei servizi Solaris"
+
+msgid "Solaris: PKG (.pkg)"
+msgstr ""
+
+msgid "Solaris: TGZ (.tar.gz)"
+msgstr ""
 
 msgid ""
 "Some GUI extensions could not be loaded. This may be caused by some "
@@ -46294,6 +46317,10 @@ msgstr ""
 
 msgid "The ID needs to be unique."
 msgstr "L'ID deve essere unico."
+
+#, fuzzy
+msgid "The ID of a builtin user role cannot be changed"
+msgstr "Il datasource di una vista non può essere cambiato."
 
 msgid "The ID of an exported rule pack cannot be modified."
 msgstr "L'ID di un pacchetto di regole esportato non può essere modificato."
@@ -60318,6 +60345,10 @@ msgstr "Windows, Linux, Solaris, AIX"
 msgid "Windows, Linux, Solaris, AIX agents matching: %s"
 msgstr "Windows, Linux, Solaris, AIX agenti corrispondenti: %s"
 
+#, fuzzy
+msgid "Windows: MSI (.msi)"
+msgstr "Moduli Windows"
+
 msgid ""
 "With ServiceNow you can create different types of management issues, "
 "currently supported are indicents and cases."
@@ -61801,6 +61832,12 @@ msgstr ""
 "tt> configurato."
 
 msgid ""
+"You can use these options to tune the way packages are baked for your hosts "
+"which may have a positive impact on the performance of the baking procedure. "
+"Defaults to bake for all platforms with no compression."
+msgstr ""
+
+msgid ""
 "You can use this option to change the default visibility options of the "
 "builtin icons. You can change whether or not the icons are shown in the "
 "popup menu or on top level and change the sorting of the icons."
@@ -62192,6 +62229,10 @@ msgid "You have signed some or all agent packages"
 msgstr "Avete firmato alcuni o tutti i pacchetti di agenti"
 
 msgid "You have to provide a canonical path."
+msgstr "Devi fornire un percorso canonico."
+
+#, fuzzy
+msgid "You have to provide a role ID."
 msgstr "Devi fornire un percorso canonico."
 
 msgid "You have to select at least one element."
@@ -64673,6 +64714,12 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#, fuzzy
+#~| msgid "Invalid valid for based on. Must be id of builtin rule."
+#~ msgid "Invalid value for based on. Must be id of builtin rule."
+#~ msgstr ""
+#~ "Valido non valido per based on. Deve essere l'id della regola incorporata."
 
 #, fuzzy
 #~| msgid "Define a tolerating time period for activating services"
@@ -67976,9 +68023,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
 #~ msgid "Rule efficiency"
 #~ msgstr "Efficienza delle regole"
-
-#~ msgid "Rule package %s"
-#~ msgstr "Regola pacchetto %s"
 
 #~ msgid "Running collectors"
 #~ msgstr "Raccoglitori in esecuzione"

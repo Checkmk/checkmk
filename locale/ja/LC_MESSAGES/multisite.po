@@ -2236,6 +2236,9 @@ msgstr "AIX"
 msgid "AIX HACMP Resource Groups"
 msgstr "AIX HACMP リソースグループ"
 
+msgid "AIX: TGZ (.tar.gz)"
+msgstr ""
+
 msgid "ALL"
 msgstr "すべて"
 
@@ -3982,8 +3985,9 @@ msgstr "エージェントアクセスルール"
 msgid "Agent bakery"
 msgstr "エージェントベーカリー"
 
-msgid "Agent bakery package compression"
-msgstr ""
+#, fuzzy
+msgid "Agent bakery packages"
+msgstr "エージェントベーカリー"
 
 msgid "Agent baking"
 msgstr "エージェントベーキング"
@@ -17203,6 +17207,11 @@ msgstr "明示的、ルールセット、発見"
 msgid "Explicitly map Node Exporter host"
 msgstr "Node Exporterホストを明示的にマップします"
 
+msgid ""
+"Explicitly select packages to be baked. If this rule entry is not activated, "
+"all packages are baked."
+msgstr ""
+
 msgid "Explicitly set on folders"
 msgstr "フォルダに明示的に設定"
 
@@ -24584,10 +24593,6 @@ msgstr "無効なユーザー入力"
 msgid "Invalid value for ack parameter."
 msgstr "ackパラメーターの値が無効です。"
 
-#, fuzzy
-msgid "Invalid value for based on. Must be id of builtin rule."
-msgstr "に基づいて無効です。組み込みルールのIDである必要があります。"
-
 #, python-format
 msgid "Invalid value in column %d (%s) of row %d: %s"
 msgstr "列 %d (%s) 行 %dの値が無効です: %s"
@@ -26392,6 +26397,15 @@ msgstr "Linux、Solaris、AIXファイル"
 
 msgid "Linux-User:"
 msgstr "Linux-ユーザー:"
+
+msgid "Linux: DPKG (.deb)"
+msgstr ""
+
+msgid "Linux: RPM (.rpm)"
+msgstr ""
+
+msgid "Linux: TGZ (.tar.gz)"
+msgstr ""
 
 msgid "List Grouping Patterns"
 msgstr "グループ化パターンのリスト"
@@ -38530,6 +38544,10 @@ msgstr "インターフェイスポートタイプを選択します"
 msgid "Select metrics to send to InfluxDB"
 msgstr ""
 
+#, fuzzy
+msgid "Select packages"
+msgstr "ルールパッケージ%s"
+
 msgid "Select sound"
 msgstr "サウンドを選択"
 
@@ -40651,6 +40669,12 @@ msgstr "Solarisサービスの概要"
 
 msgid "Solaris service discovery"
 msgstr "Solarisサービスディスカバリ"
+
+msgid "Solaris: PKG (.pkg)"
+msgstr ""
+
+msgid "Solaris: TGZ (.tar.gz)"
+msgstr ""
 
 msgid ""
 "Some GUI extensions could not be loaded. This may be caused by some "
@@ -43904,6 +43928,10 @@ msgstr ""
 
 msgid "The ID needs to be unique."
 msgstr "IDは一意である必要があります。"
+
+#, fuzzy
+msgid "The ID of a builtin user role cannot be changed"
+msgstr "ビューのデータソースは変更できません。"
 
 msgid "The ID of an exported rule pack cannot be modified."
 msgstr "エクスポートされたルールパックのIDは変更できません。"
@@ -56679,6 +56707,10 @@ msgstr "Windows、Linux、Solaris、AIX"
 msgid "Windows, Linux, Solaris, AIX agents matching: %s"
 msgstr "一致するWindows、Linux、Solaris、AIXエージェント: %s"
 
+#, fuzzy
+msgid "Windows: MSI (.msi)"
+msgstr "Windows WMIタイムアウト"
+
 msgid ""
 "With ServiceNow you can create different types of management issues, "
 "currently supported are indicents and cases."
@@ -58015,6 +58047,12 @@ msgstr ""
 "トインデックスが設定されています。"
 
 msgid ""
+"You can use these options to tune the way packages are baked for your hosts "
+"which may have a positive impact on the performance of the baking procedure. "
+"Defaults to bake for all platforms with no compression."
+msgstr ""
+
+msgid ""
 "You can use this option to change the default visibility options of the "
 "builtin icons. You can change whether or not the icons are shown in the "
 "popup menu or on top level and change the sorting of the icons."
@@ -58364,6 +58402,10 @@ msgid "You have signed some or all agent packages"
 msgstr "一部またはすべてのエージェントパッケージに署名しました"
 
 msgid "You have to provide a canonical path."
+msgstr "正規のパスを指定する必要があります。"
+
+#, fuzzy
+msgid "You have to provide a role ID."
 msgstr "正規のパスを指定する必要があります。"
 
 msgid "You have to select at least one element."
@@ -60753,6 +60795,11 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "Invalid valid for based on. Must be id of builtin rule."
+#~ msgid "Invalid value for based on. Must be id of builtin rule."
+#~ msgstr "に基づいて無効です。組み込みルールのIDである必要があります。"
 
 #~ msgid "Time until alert, if deployment in replica failure"
 #~ msgstr "レプリカに障害が発生した場合、アラートが出るまでの時間"
@@ -63812,9 +63859,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Rule efficiency"
 #~ msgstr "ルールの効率"
-
-#~ msgid "Rule package %s"
-#~ msgstr "ルールパッケージ%s"
 
 #~ msgid "Running collectors"
 #~ msgstr "実行中のコレクター"

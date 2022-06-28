@@ -82,7 +82,8 @@ td.fillbackground.state0,
 .statebullet.state0,
 .infobox_entry.state0,
 .state0 span,
-.hstate0 span {
+.hstate0 span,
+td.count.hstate0 {
   &,
   a {
     color: $black !important;
@@ -121,7 +122,8 @@ td.fillbackground.state2,
 .statebullet.state2,
 .infobox_entry.state2,
 .state2 span,
-.hstate1 span {
+.hstate1 span,
+td.count.hstate1 {
   &,
   a {
     color: $white !important;
@@ -139,7 +141,8 @@ td.fillbackground.state3,
 .statebullet.state3,
 .infobox_entry.state3,
 .state3 span,
-.hstate2 span {
+.hstate2 span,
+td.count.hstate2 {
   &,
   a {
     color: $white !important;
@@ -152,6 +155,7 @@ td.fillbackground.state3,
 .hstatep,
 .stated,
 .hstated {
+  &.count,
   span {
     &,
     a {

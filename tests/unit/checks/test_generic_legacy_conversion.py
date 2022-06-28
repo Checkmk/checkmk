@@ -1561,7 +1561,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "fjdarye500_sum",
         "fjdarye60_disks",
         "fjdarye60_disks.summary",
-        "fjdarye60_psus",
         "fjdarye60_rluns",
         "fjdarye60_sum",
         "fortigate_cpu",

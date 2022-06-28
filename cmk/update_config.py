@@ -195,6 +195,7 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("fjdarye60_expanders"): CheckPluginName("fjdarye_expanders"),
     CheckPluginName("fjdarye500_thmls"): CheckPluginName("fjdarye_thermal_sensors"),
     CheckPluginName("fjdarye60_thmls"): CheckPluginName("fjdarye_thermal_sensors"),
+    CheckPluginName("fjdarye60_psus"): CheckPluginName("fjdarye_power_supply_units"),
 }
 
 

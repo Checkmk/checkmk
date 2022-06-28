@@ -301,7 +301,7 @@ def test_discover_k8s_stats_network(section, expected_items) -> None:
                     levels=(80.0, 90.0),
                     boundaries=(0.0, 100.0),
                 ),
-                Result(state=state.OK, summary="25.21% used (4.06 of 16.1 GiB)"),
+                Result(state=state.OK, summary="Used: 25.21% - 4.06 GiB of 16.1 GiB"),
             ],
         )
     ],

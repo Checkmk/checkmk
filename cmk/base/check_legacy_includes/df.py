@@ -8,17 +8,14 @@
 
 from typing import Any, Dict, List
 
-from cmk.base.api.agent_based.checking_classes import Metric, Result
+from cmk.base.api.agent_based.checking_classes import Metric, Result, State
 from cmk.base.check_api import get_bytes_human_readable, get_percent_human_readable
 from cmk.base.config import Ruleset
 from cmk.base.plugins.agent_based.utils.df import (
+    check_filesystem_levels,
     check_inodes,
-    check_summary_text,
     FILESYSTEM_DEFAULT_LEVELS,
     FILESYSTEM_DEFAULT_PARAMS,
-)
-from cmk.base.plugins.agent_based.utils.df import get_filesystem_levels as _get_filesystem_levels
-from cmk.base.plugins.agent_based.utils.df import (
     INODES_DEFAULT_PARAMS,
     mountpoints_in_group,
     TREND_DEFAULT_PARAMS,
@@ -83,25 +80,6 @@ def _get_update_from_params(params):
     if len(params) >= 3:
         update_params["magic"] = params[2]
     return update_params
-
-
-def get_filesystem_levels(mountpoint, size_gb, params):
-    """Just a wrapper for the migrated version"""
-
-    def convert_legacy_levels(value):
-        if isinstance(params, tuple) or not params.get("flex_levels"):
-            return tuple(map(float, value))
-        return value
-
-    update_params = {
-        **_get_update_from_user_config_default_levels(
-            filesystem_default_levels,
-            convert_legacy_levels,
-        ),
-        **_get_update_from_params(params),
-    }
-
-    return _get_filesystem_levels(size_gb, update_params)
 
 
 # ==================================================================================================
@@ -198,7 +176,7 @@ def df_check_filesystem_list_coroutine(
 # IF YOU CANNOT FIND THE MIGRATED COUNTERPART OF A FUNCTION, PLEASE TALK TO TIMI BEFORE DOING
 # ANYTHING ELSE.
 # ==================================================================================================
-def df_check_filesystem_single_coroutine(
+def df_check_filesystem_single_coroutine(  # pylint: disable=too-many-branches
     mountpoint,
     size_mb,
     avail_mb,
@@ -215,7 +193,7 @@ def df_check_filesystem_single_coroutine(
     # params might still be a tuple
     show_levels, subtract_reserved, show_reserved = (
         (
-            params.get("show_levels", False),
+            params.get("show_levels", "onproblem"),
             params.get("subtract_reserved", False) and reserved_mb > 0,
             params.get("show_reserved") and reserved_mb > 0,
         )
@@ -230,36 +208,27 @@ def df_check_filesystem_single_coroutine(
         used_mb -= reserved_mb
         used_max -= reserved_mb
 
-    # Get warning and critical levels already with 'magic factor' applied
-    levels = get_filesystem_levels(mountpoint, size_mb / 1024.0, params)
-    warn_mb, crit_mb = levels.warn_absolute / (1024 * 1024), levels.crit_absolute / (1024 * 1024)
-
-    used_hr = get_bytes_human_readable(used_mb * 1024**2)
-    used_max_hr = get_bytes_human_readable(used_max * 1024**2)
-    used_perc_hr = get_percent_human_readable(100.0 * used_mb / used_max)
-
-    infotext = ["Used: %s - %s of %s" % (used_perc_hr, used_hr, used_max_hr)]
-
-    if warn_mb < 0.0:
-        # Negative levels, so user configured thresholds based on space left. Calculate the
-        # upper thresholds based on the size of the filesystem
-        crit_mb = used_max + crit_mb
-        warn_mb = used_max + warn_mb
-
-    status = 2 if used_mb >= crit_mb else 1 if used_mb >= warn_mb else 0
-
-    perfdata = [
-        ("fs_used", used_mb, warn_mb, crit_mb, 0, size_mb),
-        ("fs_size", size_mb),
-        ("fs_used_percent", 100.0 * used_mb / size_mb),
-    ]
-
-    if (
-        show_levels == "always"
-        or (show_levels == "onproblem" and status > 0)  #
-        or (show_levels == "onmagic" and (status > 0 or params.get("magic", 1.0) != 1.0))  #
+    state = State.OK
+    infotext = []
+    perfdata = []
+    for result in check_filesystem_levels(
+        size_mb, used_max, avail_mb, used_mb, params, show_levels
     ):
-        infotext.append(check_summary_text(levels))
+        if isinstance(result, Result):
+            state = state.worst(state, result.state)
+            infotext.append(result.summary)
+        elif isinstance(result, Metric):
+            name = result.name
+            value = result.value
+            if hasattr(result, "levels"):
+                perflevels = result.levels
+            else:
+                perflevels = None, None
+            if hasattr(result, "boundaries"):
+                perfboundaries = result.boundaries
+            else:
+                perfboundaries = None, None
+            perfdata.append((name, value, *perflevels, *perfboundaries))
 
     if show_reserved:
         reserved_perc_hr = get_percent_human_readable(100.0 * reserved_mb / size_mb)
@@ -271,12 +240,12 @@ def df_check_filesystem_single_coroutine(
         )
 
     if subtract_reserved:
-        perfdata.append(("fs_free", avail_mb, None, None, 0, size_mb))
+        perfdata.append(("fs_free", avail_mb, None, None, 0, size_mb))  # type: ignore
 
     if subtract_reserved or show_reserved:
-        perfdata.append(("reserved", reserved_mb))
+        perfdata.append(("reserved", reserved_mb))  # type: ignore
 
-    yield status, ", ".join(infotext).replace(", (", " ("), perfdata
+    yield int(state), ", ".join(infotext), perfdata
 
     if params.get("trend_range"):
         trend_state, trend_text, trend_perf = size_trend(

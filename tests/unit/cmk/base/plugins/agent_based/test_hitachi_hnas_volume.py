@@ -119,7 +119,7 @@ def value_store_fixture(monkeypatch):
                     levels=(80.0, 90.00000000000001),
                     boundaries=(0.0, 100.0),
                 ),
-                Result(state=State.OK, summary="70.32% used (1.78 of 2.53 TiB)"),
+                Result(state=State.OK, summary="Used: 70.32% - 1.78 TiB of 2.53 TiB"),
                 Metric("growth", -1495.9370633802703),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -1.46 GiB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -0.06%"),

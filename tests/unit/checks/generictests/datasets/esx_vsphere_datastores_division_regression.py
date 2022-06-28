@@ -55,10 +55,9 @@ checks = {
                             'fs_used', 4481822.59375, 15200550.09375,
                             17100618.85546875, 0, 19000687.6171875
                         ),
-                        ('fs_size', 19000687.6171875, None, None, None, None),
+                        ('fs_size', 19000687.6171875, None, None, 0, None),
                         (
-                            'fs_used_percent', 23.587686319814377, None, None,
-                            None, None
+                            'fs_used_percent', 23.587686319814377, 80.0, 90.0, 0.0, 100.0
                         )
                     ]
                 ),
@@ -94,10 +93,9 @@ checks = {
                         (
                             'fs_used', 2685473.0, 3433676.8, 3862886.4, 0,
                             4292096.0
-                        ), ('fs_size', 4292096.0, None, None, None, None),
+                        ), ('fs_size', 4292096.0, None, None, 0, None),
                         (
-                            'fs_used_percent', 62.56786893862579, None, None,
-                            None, None
+                            'fs_used_percent', 62.56786893862579, 80.0, 90.0, 0.0, 100.0
                         )
                     ]
                 ),
@@ -131,10 +129,9 @@ checks = {
                             'fs_used', 5754936.7265625, 6004113.728125,
                             6754627.944140625, 0, 7505142.16015625
                         ),
-                        ('fs_size', 7505142.16015625, None, None, None, None),
+                        ('fs_size', 7505142.16015625, None, None, 0, None),
                         (
-                            'fs_used_percent', 76.67991629944939, None, None,
-                            None, None
+                            'fs_used_percent', 76.67991629944939, 80.0, 90.0, 0.0, 100.0
                         )
                     ]
                 ),
@@ -168,10 +165,9 @@ checks = {
                 (
                     0, 'Used: 0.21% - 974 MiB of 458 GiB', [
                         ('fs_used', 974.0, 375398.4, 422323.2, 0, 469248.0),
-                        ('fs_size', 469248.0, None, None, None, None),
+                        ('fs_size', 469248.0, None, None, 0, None),
                         (
-                            'fs_used_percent', 0.2075661483906165, None, None,
-                            None, None
+                            'fs_used_percent', 0.2075661483906165, 80.0, 90.0, 0.0, 100.0
                         )
                     ]
                 ),
@@ -201,10 +197,9 @@ checks = {
                             'fs_used', 5754936.7265625, 6004113.728125,
                             6754627.944140625, 0, 7505142.16015625
                         ),
-                        ('fs_size', 7505142.16015625, None, None, None, None),
+                        ('fs_size', 7505142.16015625, None, None, 0, None),
                         (
-                            'fs_used_percent', 76.67991629944939, None, None,
-                            None, None
+                            'fs_used_percent', 76.67991629944939, 80.0, 90.0, 0.0, 100.0
                         )
                     ]
                 ),

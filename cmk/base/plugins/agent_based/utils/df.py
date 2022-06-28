@@ -11,6 +11,7 @@ from typing import (
     Dict,
     Generator,
     List,
+    Literal,
     Mapping,
     MutableMapping,
     NamedTuple,
@@ -215,7 +216,7 @@ def _adjust_levels(
     )
 
 
-def check_summary_text(levels: FilesystemLevels) -> str:
+def _check_summary_text(levels: FilesystemLevels) -> str:
     # TODO: this is the same as the functionality provided in memory.py!
 
     if levels.render_as is RenderOptions.percent:
@@ -478,6 +479,56 @@ def df_discovery(params, mplist):
     return ungrouped + grouped
 
 
+def check_filesystem_levels(
+    filesystem_size: float,
+    allocatable_filesystem_size: float,
+    free_space: float,
+    used_space: float,
+    params: Mapping[str, Any],
+    show_levels: Literal["onmagic", "always", "onproblem"] = "onproblem",
+):
+    # Get warning and critical levels already with 'magic factor' applied
+    filesystem_levels = get_filesystem_levels(filesystem_size / 1024.0, params)
+    warn_mb, crit_mb = (
+        filesystem_levels.warn_absolute / 1024**2,
+        filesystem_levels.crit_absolute / 1024**2,
+    )
+
+    used_hr = render.bytes(used_space * 1024**2)
+    used_max_hr = render.bytes(allocatable_filesystem_size * 1024**2)
+    used_perc_hr = render.percent(100.0 * used_space / allocatable_filesystem_size)
+
+    if warn_mb < 0.0:
+        # Negative levels, so user configured thresholds based on space left. Calculate the
+        # upper thresholds based on the size of the filesystem
+        crit_mb = int(allocatable_filesystem_size + crit_mb)
+        warn_mb = int(allocatable_filesystem_size + warn_mb)
+
+    status = (
+        State.CRIT if used_space >= crit_mb else State.WARN if used_space >= warn_mb else State.OK
+    )
+    yield Metric("fs_used", used_space, levels=(warn_mb, crit_mb), boundaries=(0, filesystem_size))
+    yield Metric("fs_size", filesystem_size, boundaries=(0, None))
+    yield Metric(
+        "fs_used_percent",
+        100.0 * used_space / filesystem_size,
+        levels=(_mb_to_perc(warn_mb, filesystem_size), _mb_to_perc(crit_mb, filesystem_size)),
+        boundaries=(0.0, 100.0),
+    )
+
+    # Expand infotext according to current params
+    summary = f"Used: {used_perc_hr} - {used_hr} of {used_max_hr}"
+    if (
+        show_levels == "always"
+        or (show_levels == "onproblem" and status is not State.OK)  #
+        or (  #
+            show_levels == "onmagic" and (status is not State.OK or params.get("magic", 1.0) != 1.0)
+        )
+    ):
+        summary = f"{summary} {_check_summary_text(filesystem_levels)}"
+    yield Result(state=status, summary=summary)
+
+
 def df_check_filesystem_single(
     value_store: MutableMapping[str, Any],
     mountpoint: str,
@@ -499,7 +550,7 @@ def df_check_filesystem_single(
 
     # params might still be a tuple
     show_levels, subtract_reserved, show_reserved = (
-        params.get("show_levels", False),
+        params.get("show_levels", "onproblem"),
         params.get("subtract_reserved", False) and reserved_space > 0,
         params.get("show_reserved") and reserved_space > 0,
     )
@@ -510,56 +561,15 @@ def df_check_filesystem_single(
         used_space -= reserved_space
         allocatable_filesystem_size -= reserved_space
 
-    # Get warning and critical levels already with 'magic factor' applied
-    filesystem_levels = get_filesystem_levels(filesystem_size / 1024.0, params)
-    warn_mb, crit_mb = (
-        filesystem_levels.warn_absolute / 1024**2,
-        filesystem_levels.crit_absolute / 1024**2,
+    yield from check_filesystem_levels(
+        filesystem_size, allocatable_filesystem_size, free_space, used_space, params, show_levels
     )
-
-    used_hr = render.bytes(used_space * 1024**2)
-    used_max_hr = render.bytes(allocatable_filesystem_size * 1024**2)
-    used_perc_hr = render.percent(100.0 * used_space / allocatable_filesystem_size)
-
-    # If both strings end with the same unit, then drop the first one
-    if used_hr.split()[1] == used_max_hr.split()[1]:
-        used_hr = used_hr.split()[0]
-
-    if warn_mb < 0.0:
-        # Negative levels, so user configured thresholds based on space left. Calculate the
-        # upper thresholds based on the size of the filesystem
-        crit_mb = int(allocatable_filesystem_size + crit_mb)
-        warn_mb = int(allocatable_filesystem_size + warn_mb)
-
-    status = (
-        State.CRIT if used_space >= crit_mb else State.WARN if used_space >= warn_mb else State.OK
-    )
-    yield Metric("fs_used", used_space, levels=(warn_mb, crit_mb), boundaries=(0, filesystem_size))
-    yield Metric("fs_size", filesystem_size, boundaries=(0, None))
-    yield Metric(
-        "fs_used_percent",
-        100.0 * used_space / filesystem_size,
-        levels=(_mb_to_perc(warn_mb, filesystem_size), _mb_to_perc(crit_mb, filesystem_size)),
-        boundaries=(0.0, 100.0),
-    )
-
-    # Expand infotext according to current params
-    infotext = [f"{used_perc_hr} used ({used_hr} of {used_max_hr})"]
-    if (
-        show_levels == "always"
-        or (show_levels == "onproblem" and status is not State.OK)  #
-        or (  #
-            show_levels == "onmagic" and (status is not State.OK or params.get("magic", 1.0) != 1.0)
-        )
-    ):
-        infotext.append(check_summary_text(filesystem_levels))
-    yield Result(state=status, summary=", ".join(infotext).replace("), (", ", "))
 
     if show_reserved:
         reserved_perc_hr = render.percent(100.0 * reserved_space / filesystem_size)
         reserved_hr = render.bytes(reserved_space * 1024**2)
         yield Result(
-            state=status,
+            state=State.OK,
             summary="additionally reserved for root: %s" % reserved_hr  #
             if subtract_reserved
             else f"therein reserved for root: {reserved_perc_hr} ({reserved_hr})",  #

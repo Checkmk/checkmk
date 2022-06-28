@@ -25,10 +25,9 @@ checks = {
                         (
                             'fs_used', 3666504.428902626, 167772160.0,
                             188743680.0, 0, 209715200.0
-                        ), ('fs_size', 209715200.0, None, None, None, None),
+                        ), ('fs_size', 209715200.0, None, None, 0, None),
                         (
-                            'fs_used_percent', 1.7483255524171, None, None,
-                            None, None
+                            'fs_used_percent', 1.7483255524171, 80.0, 90.0, 0.0, 100.0
                         )
                     ]
                 )

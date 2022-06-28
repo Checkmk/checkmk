@@ -158,7 +158,7 @@ def value_store_fixture(monkeypatch):
                     levels=(80.0, 90.0),
                     boundaries=(0.0, 100.0),
                 ),
-                Result(state=state.OK, summary="26.47% used (84.7 of 320 MiB)"),
+                Result(state=state.OK, summary="Used: 26.47% - 84.7 MiB of 320 MiB"),
                 Metric("growth", -4470.553049074118),
                 Result(state=state.OK, summary="trend per 1 day 0 hours: +621 TiB"),
                 Result(state=state.OK, summary="trend per 1 day 0 hours: +203357489.65%"),
@@ -198,7 +198,7 @@ def value_store_fixture(monkeypatch):
                 ),
                 Result(
                     state=state.CRIT,
-                    summary="26.47% used (84.7 of 320 MiB, warn/crit at 10.00%/15.00% used)",
+                    summary="Used: 26.47% - 84.7 MiB of 320 MiB (warn/crit at 10.00%/15.00% used)",
                 ),
                 Metric("growth", -4470.553049074118),
                 Result(

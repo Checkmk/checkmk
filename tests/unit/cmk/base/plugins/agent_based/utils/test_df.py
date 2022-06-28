@@ -107,7 +107,7 @@ def test_df_discovery(params, expected) -> None:
                 ),
                 Result(
                     state=State.OK,
-                    summary="42.71% used (42.8 of 100 GiB)",
+                    summary="Used: 42.71% - 42.8 GiB of 100 GiB",
                 ),
                 Metric(
                     "growth",
@@ -161,7 +161,7 @@ def test_df_discovery(params, expected) -> None:
                 ),
                 Result(
                     state=State.OK,
-                    summary="42.71% used (42.8 of 100 GiB)",
+                    summary="Used: 42.71% - 42.8 GiB of 100 GiB",
                 ),
                 Metric(
                     "growth",
@@ -225,7 +225,7 @@ def test_df_discovery(params, expected) -> None:
                 ),
                 Result(
                     state=State.OK,
-                    summary="42.71% used (42.8 of 100 GiB)",
+                    summary="Used: 42.71% - 42.8 GiB of 100 GiB",
                 ),
                 Metric(
                     "growth",
@@ -690,5 +690,5 @@ def test_get_filesystem_levels_magic_factor(
         ),
     ],
 )
-def test_check_summary_text(filesystem_levels: df.FilesystemLevels, summary: str) -> None:
-    assert df.check_summary_text(filesystem_levels) == summary
+def test__check_summary_text(filesystem_levels: df.FilesystemLevels, summary: str) -> None:
+    assert df._check_summary_text(filesystem_levels) == summary

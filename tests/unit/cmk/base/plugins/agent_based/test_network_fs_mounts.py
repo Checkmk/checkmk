@@ -49,12 +49,12 @@ size1 = SizeWithUsage(
     ["491520", "460182", "460182", "65536"],
     491520 * 65536,
     491520 * 65536 - 460182 * 65536,
-    "6.38% used (1.91 of 30.0 GiB)",
+    "Used: 6.38% - 1.91 GiB of 30.0 GiB",
 )
 
 size2 = SizeBasic(
     ["201326592", "170803720", "170803720", "32768"],
-    "15.16% used (931 GiB of 6.00 TiB)",
+    "Used: 15.16% - 931 GiB of 6.00 TiB",
 )
 
 
@@ -233,7 +233,7 @@ def test_network_fs_mounts_check(
             "/mnt/test_client",
             [
                 Result(state=State.OK, summary="Source: 127.0.0.1:/mnt/test"),
-                Result(state=State.OK, summary="37.06% used (85.8 of 232 GiB)"),
+                Result(state=State.OK, summary="Used: 37.06% - 85.8 GiB of 232 GiB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -4.35 GiB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -1.88%"),
             ],

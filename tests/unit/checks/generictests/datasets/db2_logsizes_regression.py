@@ -22,11 +22,10 @@ checks = {
             'db2mpss:ASMPROD', {"levels": (-20.0, -10.0)}, [
                 (
                     0, 'Used: 1.03% - 2.00 MiB of 195 MiB', [
-                        ('fs_used', 2, 156.0, 175.5, 0, 195),
-                        ('fs_size', 195, None, None, None, None),
+                        ('fs_used', 2, 156.0, 175.0, 0, 195),
+                        ('fs_size', 195, None, None, 0, None),
                         (
-                            'fs_used_percent', 1.0256410256410255, None, None,
-                            None, None
+                            'fs_used_percent', 1.0256410256410255, 80.0, 90.0, 0.0, 100.0
                         )
                     ]
                 )

@@ -45,7 +45,7 @@ def test_check_fast_lta_silent_cube_capacity(check_fast_lta_silent_cubes_capacit
             "fs_used", 3695972.90234375, levels=(6104729.6, 6867820.8), boundaries=(0.0, 7630912.0)
         ),
         Metric("fs_size", 7630912.0),
-        Metric("fs_used_percent", 48.4342225718728),
+        Metric("fs_used_percent", 48.4342225718728, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
     ]
 
     assert [r for r in actual_check_results if isinstance(r, Result)] == [

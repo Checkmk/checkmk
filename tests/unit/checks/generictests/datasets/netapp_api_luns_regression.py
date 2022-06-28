@@ -48,15 +48,14 @@ checks = {
                 'read_only': False
             }, [
                 (
-                    1, 'Used: 83.65% - 502 GiB of 600 GiB', [
+                    1, 'Used: 83.65% - 502 GiB of 600 GiB (warn/crit at 80.00%/90.00% used)', [
                         (
                             'fs_used', 513958.37890625, 491551.34765625,
                             552995.2661132812, 0, 614439.1845703125
                         ),
-                        ('fs_size', 614439.1845703125, None, None, None, None),
+                        ('fs_size', 614439.1845703125, None, None, 0, None),
                         (
-                            'fs_used_percent', 83.64674516415641, None, None,
-                            None, None
+                            'fs_used_percent', 83.64674516415641, 80.0, 90.0, 0.0, 100.0
                         )
                     ]
                 )
@@ -70,18 +69,17 @@ checks = {
                 'read_only': False
             }, [
                 (
-                    1, 'Used: 89.53% - 2.15 TiB of 2.40 TiB', [
+                    1, 'Used: 89.53% - 2.15 TiB of 2.40 TiB (warn/crit at 80.00%/90.00% used)', [
                         (
                             'fs_used', 2253024.93359375, 2013308.47265625,
                             2264972.0317382812, 0, 2516635.5908203125
                         ),
                         (
-                            'fs_size', 2516635.5908203125, None, None, None,
+                            'fs_size', 2516635.5908203125, None, None, 0,
                             None
                         ),
                         (
-                            'fs_used_percent', 89.52527500651625, None, None,
-                            None, None
+                            'fs_used_percent', 89.52527500651625, 80.0, 90.0, 0.0, 100.0
                         )
                     ]
                 )
@@ -95,15 +93,14 @@ checks = {
                 'read_only': False
             }, [
                 (
-                    1, 'Used: 83.38% - 542 GiB of 650 GiB', [
+                    1, 'Used: 83.38% - 542 GiB of 650 GiB (warn/crit at 80.00%/90.00% used)', [
                         (
                             'fs_used', 555052.578125, 532529.6484375,
                             599095.8544921875, 0, 665662.060546875
                         ),
-                        ('fs_size', 665662.060546875, None, None, None, None),
+                        ('fs_size', 665662.060546875, None, None, 0, None),
                         (
-                            'fs_used_percent', 83.38353813780468, None, None,
-                            None, None
+                            'fs_used_percent', 83.38353813780468, 80.0, 90.0, 0.0, 100.0
                         )
                     ]
                 )
@@ -122,10 +119,9 @@ checks = {
                             'fs_used', 415366.30859375, 491551.34765625,
                             552995.2661132812, 0, 614439.1845703125
                         ),
-                        ('fs_size', 614439.1845703125, None, None, None, None),
+                        ('fs_size', 614439.1845703125, None, None, 0, None),
                         (
-                            'fs_used_percent', 67.60088207659193, None, None,
-                            None, None
+                            'fs_used_percent', 67.60088207659193, 80.0, 90.0, 0.0, 100.0
                         )
                     ]
                 )

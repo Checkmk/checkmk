@@ -46,9 +46,9 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
                     0,
                     "Used: 42.71% - 42.8 GiB of 100 GiB",
                     [
-                        ("fs_used", 43841, 82124.0, 92389.5, 0, 102655),
-                        ("fs_size", 102655),
-                        ("fs_used_percent", 42.707125809751105),
+                        ("fs_used", 43841.0, 82124.0, 92389.5, 0.0, 102655.0),
+                        ("fs_size", 102655, None, None, 0, None),
+                        ("fs_used_percent", 42.707125809751105, 80.0, 90.0, 0.0, 100.0),
                     ],
                 ),
                 (
@@ -75,9 +75,9 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
                     0,
                     "Used: 42.71% - 42.8 GiB of 100 GiB",
                     [
-                        ("fs_used", 43841, 82124.0, 92389.5, 0, 102655),
-                        ("fs_size", 102655),
-                        ("fs_used_percent", 42.707125809751105),
+                        ("fs_used", 43841.0, 82124.0, 92389.5, 0.0, 102655.0),
+                        ("fs_size", 102655, None, None, 0, None),
+                        ("fs_used_percent", 42.707125809751105, 80.0, 90.0, 0.0, 100.0),
                     ],
                 ),
                 (
@@ -110,9 +110,9 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
                     0,
                     "Used: 42.71% - 42.8 GiB of 100 GiB",
                     [
-                        ("fs_used", 43841, 82124.0, 92389.5, 0, 102655),
-                        ("fs_size", 102655),
-                        ("fs_used_percent", 42.707125809751105),
+                        ("fs_used", 43841.0, 82124.0, 92389.5, 0.0, 102655.0),
+                        ("fs_size", 102655, None, None, 0, None),
+                        ("fs_used_percent", 42.707125809751105, 80.0, 90.0, 0.0, 100.0),
                     ],
                 ),
                 (

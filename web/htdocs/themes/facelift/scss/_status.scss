@@ -87,6 +87,7 @@ td.fillbackground.state0,
 .infobox_entry.state0,
 .state0 span,
 .hstate0 span,
+td.count.hstate0,
 .timeline .state0,
 .hostmatrix .state0,
 div.statea,
@@ -135,7 +136,8 @@ td.fillbackground.state2,
 .state2 span,
 .timeline .state2,
 .hostmatrix .state2,
-.hstate1 span {
+.hstate1 span,
+td.count.hstate1 {
   &,
   a {
     color: $font-color-white !important;
@@ -155,7 +157,8 @@ td.fillbackground.state3,
 .state3 span,
 .timeline .state3,
 .hostmatrix .state3,
-.hstate2 span {
+.hstate2 span,
+td.count.hstate2 {
   &,
   a {
     color: $font-color-white !important;
@@ -168,6 +171,7 @@ td.fillbackground.state3,
 .hstatep,
 .stated,
 .hstated {
+  &.count,
   span {
     &,
     a {

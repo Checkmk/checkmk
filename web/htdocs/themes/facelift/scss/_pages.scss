@@ -369,7 +369,8 @@ table.data {
         color: $font-color;
       }
 
-      &:not(.state):not(.hstate) {
+      &:not(.state):not(.hstate),
+      &.count {
         height: 26px;
         padding: 2px 8px; /* spacing in every row */
         text-overflow: $td-text-overflow;

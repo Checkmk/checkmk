@@ -587,23 +587,16 @@ run_cached() {
     # END COMMON AGENT CODE
     #
 
+    # ideally, these should be independent parameters:
+    TIMEOUT=$((MAXAGE * 2))
     REFRESH_INTERVAL="${MAXAGE}"
 
-    if [ ! -d "${MK_VARDIR}/cache" ]; then mkdir -p "${MK_VARDIR}/cache"; fi
+    [ -d "${MK_VARDIR}/cache" ] || mkdir -p "${MK_VARDIR}/cache"
     CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"
 
     local NOW MTIME
     NOW="$(get_epoch)"
     MTIME="$(get_file_mtime "${CACHEFILE}" 2>/dev/null)" || MTIME=0
-
-    # Check if the creation of the cache takes suspiciously long and return
-    # nothing if the age (access time) of ${CACHEFILE}.new is twice the MAXAGE
-    if [ -e "${CACHEFILE}.new" ]; then
-        if [ $((NOW - $(get_file_atime "${CACHEFILE}.new"))) -ge $((MAXAGE * 2)) ]; then
-            unset NAME MAXAGE
-            return
-        fi
-    fi
 
     if ${MK_RUN_SYNC_PARTS} && [ -s "${CACHEFILE}" ]; then
 
@@ -613,7 +606,7 @@ run_cached() {
             # prefix CACHE_INFO, but skip any headers and lines with existing CACHE_INFO
             sed -e "/^<<<.*>>>/{p;d;}; /^cached([0-9]*,[0-9]*) /{p;d;}; s/^/${CACHE_INFO} /" "${CACHEFILE}"
         else
-            # insert CACHE_INFO in the header, but skip headers with existing CACHE_INFO
+            # insert CACHE_INFO in header, but skip headers with existing CACHE_INFO
             sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}; s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
         fi
 
@@ -621,13 +614,22 @@ run_cached() {
 
     if ${MK_RUN_ASYNC_PARTS}; then
 
+        # Check if the creation of the cache takes suspiciously long and return
+        # nothing if the age (access time) of ${CACHEFILE}.new is twice the MAXAGE
+        if [ -e "${CACHEFILE}.new" ]; then
+            if [ $((NOW - $(get_file_atime "${CACHEFILE}.new"))) -ge "${TIMEOUT}" ]; then
+                unset NAME MAXAGE
+                return
+            fi
+        fi
+
         # Cache file outdated and new job not yet running? Start it
         if [ $((NOW - MTIME)) -gt "${REFRESH_INTERVAL}" ] && [ ! -e "${CACHEFILE}.new" ]; then
             cat <<HERE | nohup /usr/local/bin/bash >/dev/null 2>&1
 set -o noclobber
 eval '${MK_DEFINE_LOG_SECTION_TIME}'
 exec > "${CACHEFILE}.new" || exit 1
-$* && mv "${CACHEFILE}.new" "${CACHEFILE}" || rm -f "${CACHEFILE}" "${CACHEFILE}.new"
+$* && mv -f "${CACHEFILE}.new" "${CACHEFILE}" || rm -f "${CACHEFILE}" "${CACHEFILE}.new"
 HERE
         fi
 

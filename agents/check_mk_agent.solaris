@@ -708,24 +708,15 @@ run_cached() {
     # END COMMON AGENT CODE
     #
 
+    # ideally, these should be independent parameters:
+    TIMEOUT=$((MAXAGE * 2))
     REFRESH_INTERVAL="${MAXAGE}"
 
-    if [ ! -d "${MK_VARDIR}"/cache ]; then mkdir -p "${MK_VARDIR}"/cache; fi
+    [ -d "${MK_VARDIR}/cache" ] || mkdir -p "${MK_VARDIR}/cache"
     CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"
 
-    local AGE NOW MTIME
-    NOW=$(get_epoch)
+    NOW="$(get_epoch)"
     MTIME="$(get_file_mtime "${CACHEFILE}" 2>/dev/null)" || MTIME=0
-
-    # Check if the creation of the cache takes suspiciously long and return
-    # nothing if the age (access time) of ${CACHEFILE}.new is twice the MAXAGE
-    if [ -e "${CACHEFILE}.new" ]; then
-        AGE=$((NOW - $(get_file_atime "${CACHEFILE}.new")))
-        if [ "${AGE}" -ge $((MAXAGE * 2)) ]; then
-            fuser -k "${CACHEFILE}.new" >/dev/null 2>&1
-            rm -f "${CACHEFILE}.new"
-        fi
-    fi
 
     if ${MK_RUN_SYNC_PARTS} && [ -s "${CACHEFILE}" ]; then
 
@@ -743,6 +734,16 @@ run_cached() {
 
     if ${MK_RUN_ASYNC_PARTS}; then
 
+        # Check if the creation of the cache takes suspiciously long and return
+        # nothing if the age (access time) of ${CACHEFILE}.new is twice the MAXAGE
+        if [ -e "${CACHEFILE}.new" ]; then
+            AGE=$((NOW - $(get_file_atime "${CACHEFILE}.new")))
+            if [ "${AGE}" -ge "${TIMEOUT}" ]; then
+                fuser -k "${CACHEFILE}.new" >/dev/null 2>&1
+                rm -f "${CACHEFILE}.new"
+            fi
+        fi
+
         # Cache file outdated and new job not yet running?
         if [ $((NOW - MTIME)) -gt "${REFRESH_INTERVAL}" ] && [ ! -e "${CACHEFILE}.new" ]; then
             # Start it. If the command fails the output is thrown away
@@ -750,11 +751,13 @@ run_cached() {
 set -o noclobber
 eval '${MK_DEFINE_LOG_SECTION_TIME}'
 exec > "${CACHEFILE}.new" || exit 1
-$* && mv "${CACHEFILE}.new" "${CACHEFILE}" || rm -f "${CACHEFILE}" "${CACHEFILE}.new"
+$* && mv -f "${CACHEFILE}.new" "${CACHEFILE}" || rm -f "${CACHEFILE}" "${CACHEFILE}.new"
 HERE
         fi
 
     fi
+
+    unset NAME MAXAGE REFRESH_INTERVAL TIMEOUT CACHEFILE NOW MTIME CACHE_INFO
 }
 
 #

@@ -11,7 +11,7 @@ edition = "2021"
 
 [dependencies]
 structopt = { version = "0.3", features = [ "paw" ] }
-reqwest = { version = "0.11", features = ["blocking", "json", "multipart", "native-tls", "__rustls"] }
+reqwest = { version = "0.11", default-features = false, features = ["blocking", "json", "multipart", "rustls-tls"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0" }
 serde_with = { version = "1.13" }

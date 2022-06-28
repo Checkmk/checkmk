@@ -649,24 +649,20 @@ run_cached() {
     # END COMMON AGENT CODE
     #
 
-    CMDLINE=$*
+    REFRESH_INTERVAL="${MAXAGE}"
 
-    NOW=$(get_epoch)
+    CMDLINE=$*
 
     if [ ! -e "${MK_VARDIR}/cache" ]; then mkdir -p "${MK_VARDIR}/cache"; fi
     CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"
 
-    USE_CACHEFILE=""
+    NOW="$(get_epoch)"
+    MTIME="$(get_file_mtime "${CACHEFILE}" 2>/dev/null)" || MTIME=0
+
     # Check if file exists and is recent enough
     if [ -s "${CACHEFILE}" ]; then
-        AGE=$((NOW - $(get_file_mtime "${CACHEFILE}")))
-        if ((AGE < MAXAGE)); then
-            USE_CACHEFILE=1
-        fi
-
         if ${MK_RUN_SYNC_PARTS}; then
             # get file time for cache
-            MTIME=$(get_file_mtime "${CACHEFILE}")
             CACHE_INFO="cached(${MTIME},${MAXAGE})"
             if [[ ${NAME} == local_* ]]; then
                 # prefix CACHE_INFO, but skip any headers and lines with existing CACHE_INFO
@@ -680,7 +676,7 @@ run_cached() {
 
     ${MK_RUN_ASYNC_PARTS} || return
 
-    if [ -z "${USE_CACHEFILE}" ] && [ ! -e "${CACHEFILE}.new" ]; then
+    if [ $((NOW - MTIME)) -gt "${REFRESH_INTERVAL}" ] && [ ! -e "${CACHEFILE}.new" ]; then
         {
             nohup sh -c "eval '${MK_DEFINE_LOG_SECTION_TIME}'; ${CMDLINE}" >"${CACHEFILE}.new" 2>/dev/null &&
                 mv -f "${CACHEFILE}.new" "${CACHEFILE}"

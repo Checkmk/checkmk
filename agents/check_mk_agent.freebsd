@@ -587,14 +587,17 @@ run_cached() {
     # END COMMON AGENT CODE
     #
 
-    local NOW MTIME
+    REFRESH_INTERVAL="${MAXAGE}"
 
     if [ ! -d "${MK_VARDIR}/cache" ]; then mkdir -p "${MK_VARDIR}/cache"; fi
     CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"
 
+    local NOW MTIME
+    NOW="$(get_epoch)"
+    MTIME="$(get_file_mtime "${CACHEFILE}" 2>/dev/null)" || MTIME=0
+
     # Check if the creation of the cache takes suspiciously long and return
     # nothing if the age (access time) of ${CACHEFILE}.new is twice the MAXAGE
-    NOW=$(get_epoch)
     if [ -e "${CACHEFILE}.new" ]; then
         if [ $((NOW - $(get_file_atime "${CACHEFILE}.new"))) -ge $((MAXAGE * 2)) ]; then
             unset NAME MAXAGE
@@ -604,8 +607,6 @@ run_cached() {
 
     # Check if cache file exists and is recent enough
     if [ -s "${CACHEFILE}" ]; then
-        MTIME=$(get_file_mtime "${CACHEFILE}")
-        if [ $((NOW - MTIME)) -le "${MAXAGE}" ]; then local USE_CACHEFILE=1; fi
 
         if ${MK_RUN_SYNC_PARTS}; then
             # Output the file even if it is outdated.
@@ -623,7 +624,7 @@ run_cached() {
     if ${MK_RUN_ASYNC_PARTS}; then
 
         # Cache file outdated and new job not yet running? Start it
-        if [ -z "${USE_CACHEFILE}" ] && [ ! -e "${CACHEFILE}.new" ]; then
+        if [ $((NOW - MTIME)) -gt "${REFRESH_INTERVAL}" ] && [ ! -e "${CACHEFILE}.new" ]; then
             cat <<HERE | nohup /usr/local/bin/bash >/dev/null 2>&1
 set -o noclobber
 eval '${MK_DEFINE_LOG_SECTION_TIME}'

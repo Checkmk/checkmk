@@ -616,6 +616,10 @@ section_job() {
     fi
 }
 
+_this_shell() {
+    ps -o args= -p $$ | sed -e 's/^-//' -e 's/\ .*//'
+}
+
 #
 # BEGIN COMMON AGENT CODE
 #
@@ -651,8 +655,6 @@ run_cached() {
 
     REFRESH_INTERVAL="${MAXAGE}"
 
-    CMDLINE=$*
-
     if [ ! -e "${MK_VARDIR}/cache" ]; then mkdir -p "${MK_VARDIR}/cache"; fi
     CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"
 
@@ -677,10 +679,12 @@ run_cached() {
     ${MK_RUN_ASYNC_PARTS} || return
 
     if [ $((NOW - MTIME)) -gt "${REFRESH_INTERVAL}" ] && [ ! -e "${CACHEFILE}.new" ]; then
-        {
-            nohup sh -c "eval '${MK_DEFINE_LOG_SECTION_TIME}'; ${CMDLINE}" >"${CACHEFILE}.new" 2>/dev/null &&
-                mv -f "${CACHEFILE}.new" "${CACHEFILE}"
-        } || rm -f "${CACHEFILE}.new" "${CACHEFILE}" &
+        # Start it. If the command fails the output is thrown away
+        cat <<HERE | nohup "$(_this_shell)" >/dev/null 2>&1 &
+eval '${MK_DEFINE_LOG_SECTION_TIME}'
+exec > "${CACHEFILE}.new" || exit 1
+$* && mv -f "${CACHEFILE}.new" "${CACHEFILE}" || rm -f "${CACHEFILE}" "${CACHEFILE}.new"
+HERE
     fi
 }
 

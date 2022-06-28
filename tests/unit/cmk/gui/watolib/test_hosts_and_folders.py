@@ -25,7 +25,7 @@ import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
 from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.watolib.bakery import has_agent_bakery
 from cmk.gui.watolib.search import MatchItem
 
@@ -1015,3 +1015,12 @@ def test_folder_exists(mocker: MagicMock, tmp_path: Path) -> None:
     assert not hosts_and_folders.Folder.folder_exists("foo/foobar")
     with pytest.raises(MKUserError):
         hosts_and_folders.Folder.folder_exists("../wato")
+
+
+def test_folder_access(mocker: MagicMock, tmp_path: Path) -> None:
+    mocker.patch.object(cmk.utils.paths, "check_mk_config_dir", str(tmp_path))
+    (tmp_path / "wato" / "foo" / "bar").mkdir(parents=True)
+    assert isinstance(hosts_and_folders.Folder.folder("foo/bar"), hosts_and_folders.CREFolder)
+    assert isinstance(hosts_and_folders.Folder.folder(""), hosts_and_folders.CREFolder)
+    with pytest.raises(MKGeneralException):
+        hosts_and_folders.Folder.folder("unknown_folder")

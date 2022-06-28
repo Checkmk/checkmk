@@ -8,6 +8,11 @@
 #  http://www-01.ibm.com/support/docview.wss?uid=swg27016878
 # as well as the ibm_db2 Python DBI driver for DB2:
 #  https://pypi.python.org/pypi/ibm_db
+
+# SQLAnywhere support requires installation of the SAP SQL Anywhere binaries:
+# https://help.sap.com/docs/SAP_SQL_Anywhere/a3e900ad39b94d689987e838835f39fe/8157f2236ce21014a9f387041b1c1047.html?locale=en-US&version=17.0
+# as well as the sqlanydb Python DB driver for SqlAnywhere:
+# https://pypi.org/project/sqlanydb/
 """Check_MK SQL Test"""
 import argparse
 import logging
@@ -94,7 +99,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         "-d",
         "--dbms",
         default="postgres",
-        choices=["postgres", "mysql", "mssql", "oracle", "db2"],
+        choices=["postgres", "mysql", "mssql", "oracle", "db2", "sqlanywhere"],
         help='''Name of the database management system.
                              Default is "postgres"''',
     )
@@ -326,6 +331,18 @@ def db2_execute(cursor, cmd, inpt, procedure):
     return _default_execute(cursor, cmd, inpt, procedure)
 
 
+def sqlanywhere_connect(host, port, db_name, user, pwd):
+    try:
+        import sqlanydb  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
+    except ImportError as exc:
+        bail_out(3, "%s. Please install it via 'pip install sqlanydb'." % exc)
+    return sqlanydb.connect(uid=user, pwd=pwd, dbn=db_name, host="%s:%s" % (host, port))
+
+
+def sqlanywhere_execute(cursor, cmd, inpt, procedure):
+    return _default_execute(cursor, cmd, inpt, procedure)
+
+
 # .
 
 
@@ -344,6 +361,7 @@ def connect(dbms, host, port, db_name, user, pwd):
         "mssql": mssql_connect,
         "oracle": oracle_connect,
         "db2": db2_connect,
+        "sqlanywhere": sqlanywhere_connect,
     }[dbms](host, port, db_name, user, pwd)
 
 
@@ -362,6 +380,7 @@ def execute(dbms, connection, cmd, inpt, procedure=False):
             "mssql": mssql_execute,
             "oracle": oracle_execute,
             "db2": db2_execute,
+            "sqlanywhere": sqlanywhere_execute,
         }[dbms](cursor, cmd, inpt, procedure)
     finally:
         cursor.close()

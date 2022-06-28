@@ -1,0 +1,21 @@
+Title: Update config: Invalid characters in 'esx_vsphere_vm.running_on' for S
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1656412529
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p5
+
+Some discovered host labels from vSphere plugins lead to the above crash
+when discovering new host labels.
+
+This werk migrates the discovered hosts labels appropriately.
+Alternatively users can just rediscover their host labels using
+the command
+
+C+:
+cmk --only-host-labels -II MyHost
+C-:

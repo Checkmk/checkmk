@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import copy
 from typing import Any, Dict, List, Optional
 
 from cmk.utils import aws_constants
@@ -1661,10 +1662,22 @@ def _valuespec_generic_metrics_prometheus():
 
 
 def _transform_agent_prometheus(params):
+    params = copy.deepcopy(params)
+
+    if isinstance(params.get("connection"), str):
+        params["connection"] = (params["connection"], {})
+
     if "port" in params:
         if params["connection"][0] in ("ip_address", "host_name"):
             params["connection"][1]["port"] = params["port"]
         params.pop("port", None)
+
+    if isinstance(params.get("auth_basic"), dict):
+        params["auth_basic"] = ("auth_login", params["auth_basic"])
+
+    if "verify-cert" not in params:
+        params["verify-cert"] = False
+
     return params
 
 

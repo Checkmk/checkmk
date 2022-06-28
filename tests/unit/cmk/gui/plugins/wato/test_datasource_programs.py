@@ -9,6 +9,7 @@ import pytest
 from cmk.gui.plugins.wato.datasource_programs import (
     _special_agents_innovaphone_transform,
     _special_agents_kubernetes_transform,
+    _transform_agent_prometheus,
     MultisiteBiDatasource,
 )
 
@@ -132,3 +133,71 @@ def test_bi_datasource_parameters(value, _bi_datasource_parameters):
     assert (
         MultisiteBiDatasource().get_valuespec().transform_value(value) == _bi_datasource_parameters
     )
+
+
+@pytest.mark.parametrize(
+    "parameters, expected_result",
+    [
+        (
+            {},
+            {
+                "verify-cert": False,
+            },
+        ),
+        (
+            {
+                "connection": "host_name",
+                "port": 9090,
+            },
+            {
+                "connection": ("host_name", {"port": 9090}),
+                "verify-cert": False,
+            },
+        ),
+        (
+            {
+                "connection": ("url_custom", {"url_address": "custom_url"}),
+                "port": 9090,
+            },
+            {
+                "connection": ("url_custom", {"url_address": "custom_url"}),
+                "verify-cert": False,
+            },
+        ),
+        (
+            {
+                "connection": "ip_address",
+                "port": 9090,
+                "auth_basic": {"username": "asdasd", "password": ("password", "asd")},
+            },
+            {
+                "connection": ("ip_address", {"port": 9090}),
+                "verify-cert": False,
+                "auth_basic": (
+                    "auth_login",
+                    {"username": "asdasd", "password": ("password", "asd")},
+                ),
+            },
+        ),
+        (
+            {
+                "connection": ("ip_address", {"port": 9090}),
+                "verify-cert": True,
+                "auth_basic": (
+                    "auth_login",
+                    {"username": "asdasd", "password": ("password", "asd")},
+                ),
+            },
+            {
+                "connection": ("ip_address", {"port": 9090}),
+                "verify-cert": True,
+                "auth_basic": (
+                    "auth_login",
+                    {"username": "asdasd", "password": ("password", "asd")},
+                ),
+            },
+        ),
+    ],
+)
+def test__transform_agent_prometheus(parameters, expected_result) -> None:
+    assert _transform_agent_prometheus(parameters) == expected_result

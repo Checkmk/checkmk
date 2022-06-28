@@ -7,6 +7,7 @@
 import collections.abc
 import json
 import re
+import logging
 import typing
 from datetime import datetime
 from typing import Any, Callable, Dict, Optional, Tuple
@@ -35,6 +36,8 @@ from cmk.utils.livestatus_helpers.types import Column, Table
 
 if version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+
+_logger = logging.getLogger(__name__)
 
 
 class String(_fields.String):
@@ -935,42 +938,73 @@ def host_is_monitored(host_name: str) -> bool:
     return bool(Query([Hosts.name], Hosts.name == host_name).first_value(sites.live()))
 
 
-def validate_custom_host_attributes(data: Dict[str, str]) -> Dict[str, str]:
-    for name, value in data.items():
+def validate_custom_host_attributes(
+    host_attributes: Dict[str, str],
+    errors: typing.Literal["warn", "raise"],
+) -> Dict[str, str]:
+    """Validate only custom host attributes
+
+    Args:
+        host_attributes:
+            The host attributes a dictionary with the attributes as keys (without any prefixes)
+            and the values as values.
+
+        errors:
+            Either `warn` or `raise`. When set to `warn`, errors will just be logged, when set to
+            `raise`, errors will lead to a ValidationError being raised.
+
+    Returns:
+        The data unchanged.
+
+    Raises:
+        ValidationError: when `errors` is set to `raise`
+
+    """
+    for name, value in host_attributes.items():
         try:
             attribute = watolib.host_attribute(name)
-        except KeyError:
-            raise ValidationError(f"No such attribute, {name!r}", field_name=name)
+        except KeyError as exc:
+            if errors == "raise":
+                raise ValidationError(f"No such attribute, {name!r}", field_name=name) from exc
+
+            _logger.error("No such attribute: %s", name)
+            return host_attributes
 
         if attribute.topic() != watolib.host_attributes.HostAttributeTopicCustomAttributes:
-            raise ValidationError(f"{name} is not a custom host attribute.")
+            if errors == "raise":
+                raise ValidationError(f"{name} is not a custom host attribute.")
+
+            _logger.error("Not a custom attribute: %s", name)
 
         try:
             attribute.validate_input(value, "")
         except MKUserError as exc:
-            raise ValidationError(str(exc))
+            if errors == "raise":
+                raise ValidationError(str(exc)) from exc
 
-    return data
+            _logger.error("Error validating %s: %s", name, str(exc))
+
+    return host_attributes
 
 
-class CustomHostAttributes(ValueTypedDictSchema):
+class CustomAttributes(ValueTypedDictSchema):
     value_type = (_fields.String(description="Each tag is a mapping of string to string"),)
 
     @post_load
-    def _valid(self, data, **kwargs):
-        return validate_custom_host_attributes(data)
-
-
-class CustomFolderAttributes(ValueTypedDictSchema):
-    value_type = (_fields.String(description="Each tag is a mapping of string to string"),)
-
-    @post_load
-    def _valid(self, data, **kwargs):
-        return validate_custom_host_attributes(data)
+    def _valid(self, data: Dict[str, Any], **kwargs) -> Dict[str, Any]:
+        # NOTE
+        # If an attribute gets deleted AFTER it has already been set to a host or a folder,
+        # then this would break here. We therefore can't validate outbound data as thoroughly
+        # because our own data can be inherently inconsistent.
+        if self.context["direction"] == "outbound":  # pylint: disable=no-else-return
+            return validate_custom_host_attributes(data, "warn")
+        else:
+            return validate_custom_host_attributes(data, "raise")
 
 
 def attributes_field(object_type: ObjectType,
                      object_context: ObjectContext,
+                     direction: typing.Literal["inbound", "outbound"],
                      description: Optional[str] = None,
                      example: Optional[Any] = None,
                      required: bool = False,
@@ -985,6 +1019,9 @@ def attributes_field(object_type: ObjectType,
 
         object_context:
             May be 'create' or 'update'. Deletion is considered as 'update'.
+
+        direction:
+            If the data is *coming from* the user (inbound) or *going to* the user (outbound).
 
         description:
             A descriptive text of this field. Required.
@@ -1009,19 +1046,15 @@ def attributes_field(object_type: ObjectType,
         # clarify this here by force.
         raise ValueError("description is necessary.")
 
-    custom_schema = {
-        'host': CustomHostAttributes,
-        'cluster': CustomHostAttributes,
-        'folder': CustomFolderAttributes,
-    }
     if not names_only:
         return MultiNested(
             [
                 attr_openapi_schema(object_type, object_context),
-                custom_schema[object_type],
+                CustomAttributes,
             ],
             metadata={"context": {
-                "object_context": object_context
+                "object_context": object_context,
+                "direction": direction
             }},
             merged=True,  # to unify both models
             description=description,
@@ -1329,8 +1362,7 @@ class Timestamp(_fields.DateTime):
 __all__ = [
     'attributes_field',
     'customer_field',
-    'CustomHostAttributes',
-    'CustomFolderAttributes',
+    'CustomAttributes',
     'column_field',
     'ExprSchema',
     'FolderField',

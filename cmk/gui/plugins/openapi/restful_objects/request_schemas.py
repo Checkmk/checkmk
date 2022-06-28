@@ -68,6 +68,7 @@ class CreateClusterHost(BaseSchema):
     attributes = fields.attributes_field(
         'cluster',
         'create',
+        "inbound",
         description="Attributes to set on the newly created host.",
         example={'ipaddress': '192.168.0.123'},
     )
@@ -98,6 +99,7 @@ class CreateHost(BaseSchema):
     attributes = fields.attributes_field(
         'host',
         'create',
+        "inbound",
         description="Attributes to set on the newly created host.",
         example={'ipaddress': '192.168.0.123'},
     )
@@ -134,6 +136,7 @@ class UpdateHost(BaseSchema):
     attributes = fields.attributes_field(
         'host',
         'update',
+        "inbound",
         description=("Replace all currently set attributes on the host, with these attributes. "
                      "Any previously set attributes which are not given here will be removed."),
         example={'ipaddress': '192.168.0.123'},
@@ -142,6 +145,7 @@ class UpdateHost(BaseSchema):
     update_attributes = fields.attributes_field(
         'host',
         'update',
+        "inbound",
         description=("Just update the hosts attributes with these attributes. The previously set "
                      "attributes will not be touched."),
         example={'ipaddress': '192.168.0.123'},
@@ -150,6 +154,7 @@ class UpdateHost(BaseSchema):
     remove_attributes = fields.attributes_field(
         "host",
         "update",
+        "inbound",
         names_only=True,
         description="A list of attributes which should be removed.",
         example=["tag_foobar"],
@@ -415,6 +420,7 @@ class CreateFolder(BaseSchema):
     attributes = fields.attributes_field(
         'folder',
         'create',
+        "inbound",
         required=False,
         description=("Specific attributes to apply for all hosts in this folder "
                      "(among other things)."),
@@ -444,6 +450,7 @@ class UpdateFolder(BaseSchema):
     attributes = fields.attributes_field(
         'folder',
         'update',
+        "inbound",
         description=("Replace all attributes with the ones given in this field. Already set "
                      "attributes, not given here, will be removed."),
         example={'networking': 'wan'},
@@ -452,6 +459,7 @@ class UpdateFolder(BaseSchema):
     update_attributes = fields.attributes_field(
         'folder',
         'update',
+        "inbound",
         description=("Only set the attributes which are given in this field. Already set "
                      "attributes will not be touched."),
         example={'tag_criticality': 'prod'},
@@ -460,6 +468,7 @@ class UpdateFolder(BaseSchema):
     remove_attributes = fields.attributes_field(
         'folder',
         'update',
+        "inbound",
         description="A list of attributes which should be removed.",
         example=["tag_foobar"],
         missing=list,

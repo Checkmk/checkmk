@@ -14,9 +14,14 @@ from typing import List
 import pkg_resources as pkg  # type: ignore[import]
 import pytest  # type: ignore[import]
 from pipfile import Pipfile  # type: ignore[import]
+from semver import VersionInfo  # type: ignore[import]
 
 from tests.testlib import repo_path
 from tests.testlib.site import Site
+
+
+def _load_pipfile_data() -> dict:
+    return Pipfile.load(filename=repo_path() + "/Pipfile").data
 
 
 def _get_import_names_from_dist_name(dist_name: str) -> List[str]:
@@ -37,33 +42,39 @@ def _get_import_names_from_dist_name(dist_name: str) -> List[str]:
 
 def _get_import_names_from_pipfile() -> List[str]:
 
-    parsed_pipfile = Pipfile.load(filename=repo_path() + "/Pipfile")
     import_names = []
-    for dist_name in parsed_pipfile.data["default"].keys():
+    for dist_name in _load_pipfile_data()["default"].keys():
         import_names.extend(_get_import_names_from_dist_name(dist_name))
     assert import_names
     return import_names
 
 
+def _get_python_version_from_pipfile() -> VersionInfo:
+    return VersionInfo.parse(_load_pipfile_data()["_meta"]["requires"]["python_version"])
+
+
 def test_01_python_interpreter_exists(site: Site) -> None:
-    assert os.path.exists(site.root + "/bin/python3")
+    assert os.path.exists(site.root + f"/bin/python{_get_python_version_from_pipfile().major}")
 
 
 def test_02_python_interpreter_path(site: Site) -> None:
-    p = site.execute(["which", "python3"], stdout=subprocess.PIPE)
+    major = _get_python_version_from_pipfile().major
+    p = site.execute(["which", f"python{major}"], stdout=subprocess.PIPE)
     path = p.stdout.read().strip() if p.stdout else "<NO STDOUT>"
-    assert path == "/omd/sites/%s/bin/python3" % site.id
+    assert path == f"/omd/sites/{site.id}/bin/python{major}"
 
 
 def test_03_python_interpreter_version(site: Site) -> None:
-    p = site.execute(["python3", "-V"], stdout=subprocess.PIPE)
+    python_version = _get_python_version_from_pipfile()
+    p = site.execute([f"python{python_version.major}", "-V"], stdout=subprocess.PIPE)
     version = p.stdout.read() if p.stdout else "<NO STDOUT>"
-    assert version.startswith("Python 3.10.4")
+    assert version.startswith(f"Python {str(python_version)}")
 
 
 def test_03_python_path(site: Site) -> None:
+    python_version = _get_python_version_from_pipfile()
     p = site.execute(
-        ["python3", "-c", "import sys,json; json.dump(sys.path, sys.stdout)"],
+        [f"python{python_version.major}", "-c", "import sys,json; json.dump(sys.path, sys.stdout)"],
         stdout=subprocess.PIPE,
     )
     sys_path = json.loads(p.stdout.read()) if p.stdout else "<NO STDOUT>"
@@ -72,10 +83,10 @@ def test_03_python_path(site: Site) -> None:
 
     ordered_path_elements = [
         # there may be more, but these have to occur in this order:
-        site.root + "/local/lib/python3",
-        site.root + "/lib/python3/plus",
-        site.root + "/lib/python3.10",
-        site.root + "/lib/python3",
+        site.root + f"/local/lib/python{python_version.major}",
+        site.root + f"/lib/python{python_version.major}/plus",
+        site.root + f"/lib/python{python_version.major}.{python_version.minor}",
+        site.root + f"/lib/python{python_version.major}",
     ]
     assert [s for s in sys_path if s in ordered_path_elements] == ordered_path_elements
 

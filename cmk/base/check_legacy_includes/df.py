@@ -100,8 +100,6 @@ def get_filesystem_levels(mountpoint, size_gb, params):
 # THE NEW CHECK API. PLEASE DO NOT MODIFY THIS FUNCTION ANYMORE. INSTEAD, MODIFY THE MIGRATED CODE
 # RESIDING IN
 # cmk/base/plugins/agent_based/utils/df.py
-# IF YOU CANNOT FIND THE MIGRATED COUNTERPART OF A FUNCTION, PLEASE TALK TO TIMI BEFORE DOING
-# ANYTHING ELSE.
 # ==================================================================================================
 def df_check_filesystem_list_coroutine(
     item,
@@ -186,8 +184,6 @@ def df_check_filesystem_list_coroutine(
 # THE NEW CHECK API. PLEASE DO NOT MODIFY THIS FUNCTION ANYMORE. INSTEAD, MODIFY THE MIGRATED CODE
 # RESIDING IN
 # cmk/base/plugins/agent_based/utils/df.py
-# IF YOU CANNOT FIND THE MIGRATED COUNTERPART OF A FUNCTION, PLEASE TALK TO TIMI BEFORE DOING
-# ANYTHING ELSE.
 # ==================================================================================================
 def df_check_filesystem_single_coroutine(
     mountpoint,

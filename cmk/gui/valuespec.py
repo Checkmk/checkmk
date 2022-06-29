@@ -1224,9 +1224,11 @@ def Hostname(  # pylint: disable=redefined-builtin
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
     default_value: ValueSpecDefault[str] = DEF_VALUE,
+    size: int = 38,
 ):
     """A host name with or without domain part. Also allow IP addresses"""
     return TextInput(
+        size=size,
         regex=cmk.utils.regex.regex(cmk.utils.regex.REGEX_HOST_NAME),
         regex_error=_(
             "Please enter a valid hostname or IPv4 address. "

@@ -1,0 +1,13 @@
+Title: WebAPI: Add output to get_bi_aggregations
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1656519252
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p27
+
+After rework of WebAPI get_bi_aggregations endpoint in v2.0,
+output of the aggregation was no longer returned. Now, it's
+added again.

@@ -9,13 +9,15 @@ SPHINXBUILD   ?= ../../scripts/run-pipenv run sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
 PLANTUML_VERSION = 1.2020.6
+PLANTUML_JAR = plantuml.${PLANTUML_VERSION}.jar
 
 .PHONY: help
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-plantuml.jar:
-	wget "http://downloads.sourceforge.net/project/plantuml/${PLANTUML_VERSION}/plantuml.${PLANTUML_VERSION}.jar" -O $@
+${PLANTUML_JAR}:
+	wget "http://downloads.sourceforge.net/project/plantuml/${PLANTUML_VERSION}/$@"
+	ln -sf $@ plantuml.jar
 
 .PHONY: spell
 spell:
@@ -24,5 +26,5 @@ spell:
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 .PHONY: Makefile
-%: Makefile plantuml.jar spell
+%: Makefile ${PLANTUML_JAR} spell
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)

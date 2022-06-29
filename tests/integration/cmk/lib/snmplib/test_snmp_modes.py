@@ -31,7 +31,7 @@ def monkeymodule(request):
     mpatch.undo()
 
 
-def test_get_single_oid_ipv6(backend) -> None:
+def test_get_single_oid_ipv6(backend) -> None:  # type:ignore[no-untyped-def]
     if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")
 
@@ -44,7 +44,7 @@ def test_get_single_oid_ipv6(backend) -> None:
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
 
-def test_get_single_oid_snmpv3(backend) -> None:
+def test_get_single_oid_snmpv3(backend) -> None:  # type:ignore[no-untyped-def]
     if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")
 
@@ -61,7 +61,7 @@ def test_get_single_oid_snmpv3(backend) -> None:
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
 
-def test_get_single_oid_snmpv3_higher_encryption(backend) -> None:
+def test_get_single_oid_snmpv3_higher_encryption(backend) -> None:  # type:ignore[no-untyped-def]
     if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")
 
@@ -85,7 +85,7 @@ def test_get_single_oid_snmpv3_higher_encryption(backend) -> None:
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
 
-def test_get_single_oid_wrong_credentials(backend) -> None:
+def test_get_single_oid_wrong_credentials(backend) -> None:  # type:ignore[no-untyped-def]
     if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")
 
@@ -95,13 +95,13 @@ def test_get_single_oid_wrong_credentials(backend) -> None:
     assert result is None
 
 
-def test_get_single_oid(backend) -> None:
+def test_get_single_oid(backend) -> None:  # type:ignore[no-untyped-def]
     result = snmp_modes.get_single_oid(".1.3.6.1.2.1.1.1.0", backend=backend)
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
     assert isinstance(result, str)
 
 
-def test_get_single_oid_cache(backend) -> None:
+def test_get_single_oid_cache(backend) -> None:  # type:ignore[no-untyped-def]
     oid = ".1.3.6.1.2.1.1.1.0"
     expected_value = "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
@@ -112,12 +112,12 @@ def test_get_single_oid_cache(backend) -> None:
     assert isinstance(cached_oid, str)
 
 
-def test_get_single_non_prefixed_oid(backend) -> None:
+def test_get_single_non_prefixed_oid(backend) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises(MKGeneralException, match="does not begin with"):
         snmp_modes.get_single_oid("1.3.6.1.2.1.1.1.0", backend=backend)
 
 
-def test_get_single_oid_next(backend) -> None:
+def test_get_single_oid_next(backend) -> None:  # type:ignore[no-untyped-def]
     assert (
         snmp_modes.get_single_oid(".1.3.6.1.2.1.1.9.1.*", backend=backend)
         == ".1.3.6.1.6.3.10.3.1.1"
@@ -129,18 +129,18 @@ def test_get_single_oid_next(backend) -> None:
 #    assert snmp_modes.get_single_oid(snmp_config, ".1.3.6.1.2.1.2.2.1.6.2") == b"\x00\x12yb\xf9@"
 
 
-def test_get_single_oid_value(backend) -> None:
+def test_get_single_oid_value(backend) -> None:  # type:ignore[no-untyped-def]
     assert (
         snmp_modes.get_single_oid(".1.3.6.1.2.1.1.9.1.2.1", backend=backend)
         == ".1.3.6.1.6.3.10.3.1.1"
     )
 
 
-def test_get_single_oid_not_existing(backend) -> None:
+def test_get_single_oid_not_existing(backend) -> None:  # type:ignore[no-untyped-def]
     assert snmp_modes.get_single_oid(".1.3.100.200.300.400", backend=backend) is None
 
 
-def test_get_single_oid_not_resolvable(backend) -> None:
+def test_get_single_oid_not_resolvable(backend) -> None:  # type:ignore[no-untyped-def]
     if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")
 
@@ -205,7 +205,7 @@ def test_get_single_oid_not_resolvable(backend) -> None:
         ),
     ],
 )
-def test_walk_for_export(backend, oid, expected_table) -> None:
+def test_walk_for_export(backend, oid, expected_table) -> None:  # type:ignore[no-untyped-def]
     if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")
 

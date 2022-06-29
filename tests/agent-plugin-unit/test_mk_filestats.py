@@ -58,7 +58,7 @@ def test_lazy_file() -> None:
 @pytest.mark.parametrize(
     "config", [({}), ({"input_unknown": None}), ({"input_one": None, "input_two": None})]
 )
-def test_get_file_iterator_invalid(config) -> None:
+def test_get_file_iterator_invalid(config) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises(ValueError):
         mk_filestats.get_file_iterator(config)
 
@@ -70,7 +70,7 @@ def test_get_file_iterator_invalid(config) -> None:
         ({"input_patterns": '"foo bar" gee*'}, ["foo bar", "gee*"]),
     ],
 )
-def test_get_file_iterator_pattern(config, pat_list) -> None:
+def test_get_file_iterator_pattern(config, pat_list) -> None:  # type:ignore[no-untyped-def]
     iter_obj = mk_filestats.get_file_iterator(config)
     assert isinstance(iter_obj, mk_filestats.PatternIterator)
     assert iter_obj._patterns == [os.path.abspath(p) for p in pat_list]
@@ -86,14 +86,14 @@ def test_get_file_iterator_pattern(config, pat_list) -> None:
         ("==", (2000.0, 1024, "1000"), (False, True, False)),
     ],
 )
-def test_numeric_filter(operator, values, results) -> None:
+def test_numeric_filter(operator, values, results) -> None:  # type:ignore[no-untyped-def]
     num_filter = mk_filestats.AbstractNumericFilter("%s1024" % operator)
     for value, result in zip(values, results):
         assert result == num_filter._matches_value(value)
 
 
 @pytest.mark.parametrize("invalid_arg", ["<>1024", "<NaN"])
-def test_numeric_filter_raises(invalid_arg) -> None:
+def test_numeric_filter_raises(invalid_arg) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises(ValueError):
         mk_filestats.AbstractNumericFilter(invalid_arg)
 
@@ -109,7 +109,7 @@ def test_numeric_filter_raises(invalid_arg) -> None:
         ("[^ð]*ð{2}[^ð]*", ("foðbar", "fððbar"), (False, True)),
     ],
 )
-def test_path_filter(reg_pat, paths, results) -> None:
+def test_path_filter(reg_pat, paths, results) -> None:  # type:ignore[no-untyped-def]
     path_filter = mk_filestats.RegexFilter(reg_pat)
     for path, result in zip(paths, results):
         lazy_file = mk_filestats.FileStat(path)
@@ -123,7 +123,7 @@ def test_path_filter(reg_pat, paths, results) -> None:
         {"filter_size": "!=käse"},
     ],
 )
-def test_get_file_filters_invalid(config) -> None:
+def test_get_file_filters_invalid(config) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises(ValueError):
         mk_filestats.get_file_filters(config)
 
@@ -138,13 +138,13 @@ def test_get_file_filters() -> None:
 
 
 @pytest.mark.parametrize("config", [{}, {"output": "/dev/null"}])
-def test_get_ouput_aggregator_invalid(config) -> None:
+def test_get_ouput_aggregator_invalid(config) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises(ValueError):
         mk_filestats.get_output_aggregator(config)
 
 
 @pytest.mark.parametrize("output_value", ["count_only", "file_stats", "single_file"])
-def test_get_ouput_aggregator(output_value) -> None:
+def test_get_ouput_aggregator(output_value) -> None:  # type:ignore[no-untyped-def]
     aggr = mk_filestats.get_output_aggregator({"output": output_value})
     assert aggr is getattr(mk_filestats, "output_aggregator_%s" % output_value)
 
@@ -163,7 +163,9 @@ def test_get_ouput_aggregator(output_value) -> None:
         ("%s myService %s", "[[[single_file test_mk_filestats.py myService %s]]]"),
     ],
 )
-def test_output_aggregator_single_file_servicename(lazyfile, group_name, expected) -> None:
+def test_output_aggregator_single_file_servicename(  # type:ignore[no-untyped-def]
+    lazyfile, group_name, expected
+) -> None:
 
     actual = mk_filestats.output_aggregator_single_file(group_name, [lazyfile])
     assert expected == list(actual)[0]
@@ -238,7 +240,7 @@ class TestConfigParsing:
 
 
 class MockedFileStatFile:
-    def __init__(self, path) -> None:
+    def __init__(self, path) -> None:  # type:ignore[no-untyped-def]
         self.path = path
 
     def __eq__(self, other):

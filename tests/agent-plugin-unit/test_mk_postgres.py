@@ -49,7 +49,7 @@ PG_PASSFILE = ["myhost:myport:mydb:myusr:mypw"]
 
 class TestNotImplementedOS:
     @pytest.fixture(autouse=True)
-    def is_not_implemented_os(self, monkeypatch) -> None:
+    def is_not_implemented_os(self, monkeypatch) -> None:  # type:ignore[no-untyped-def]
         monkeypatch.setattr(mk_postgres, "IS_WINDOWS", False)
         monkeypatch.setattr(mk_postgres, "IS_LINUX", False)
 
@@ -64,7 +64,7 @@ class TestNotImplementedOS:
 
 class TestLinux:
     @pytest.fixture(autouse=True)
-    def is_linux(self, monkeypatch) -> None:
+    def is_linux(self, monkeypatch) -> None:  # type:ignore[no-untyped-def]
         monkeypatch.setattr(mk_postgres, "IS_WINDOWS", False)
         monkeypatch.setattr(mk_postgres, "IS_LINUX", True)
         monkeypatch.setattr(mk_postgres, "open_env_file", lambda *_args: ["export PGPORT=5432"])
@@ -172,7 +172,7 @@ class TestLinux:
 
 class TestWindows:
     @pytest.fixture(autouse=True)
-    def is_windows(self, monkeypatch) -> None:
+    def is_windows(self, monkeypatch) -> None:  # type:ignore[no-untyped-def]
         monkeypatch.setattr(mk_postgres, "IS_WINDOWS", True)
         monkeypatch.setattr(mk_postgres, "IS_LINUX", False)
         monkeypatch.setattr(mk_postgres, "open_env_file", lambda *_args: ["export PGPORT=5432"])
@@ -209,7 +209,9 @@ class TestWindows:
 
     @patch("os.path.isfile", return_value=True)
     @patch("subprocess.Popen")
-    def test_factory_without_instance(self, mock_Popen, mock_isfile) -> None:
+    def test_factory_without_instance(  # type:ignore[no-untyped-def]
+        self, mock_Popen, mock_isfile
+    ) -> None:
         process_mock = Mock()
         attrs = {"communicate.side_effect": [(b"postgres\ndb1", b"ok"), (b"12.1", b"ok")]}
         process_mock.configure_mock(**attrs)

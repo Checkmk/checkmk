@@ -24,5 +24,5 @@ import agents.plugins.mtr as mtr
         ),
     ],
 )
-def test_host_to_filename(host, expected_result) -> None:
+def test_host_to_filename(host, expected_result) -> None:  # type:ignore[no-untyped-def]
     assert mtr.host_to_filename(host) == expected_result

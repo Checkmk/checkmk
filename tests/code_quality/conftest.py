@@ -25,14 +25,14 @@ def pytest_addoption(parser):
 
 
 @pytest.fixture
-def python_files(request) -> Sequence[str]:
+def python_files(request) -> Sequence[str]:  # type:ignore[no-untyped-def]
     if not (files := request.config.getoption("--python-files")):
         pytest.skip()
     return files
 
 
 @pytest.fixture
-def changed_files(request) -> ChangedFiles:
+def changed_files(request) -> ChangedFiles:  # type:ignore[no-untyped-def]
     test_all_files = request.config.getoption("--test-all-files")
     files = request.config.getoption("--changed-files")
     if not test_all_files and not files:

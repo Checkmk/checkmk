@@ -7,7 +7,7 @@
 import pytest
 
 
-def test_import_module(capfd) -> None:
+def test_import_module(capfd) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises(SystemExit) as pytest_wrapped_e:
         import agents.plugins.plesk_backups  # pylint: disable=unused-import
     out, _ = capfd.readouterr()

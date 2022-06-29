@@ -98,7 +98,9 @@ def _format_expected(lines):
         ),
     ],
 )
-def test_mk_errpt_aix(tmpdir, state_file_name, errpt_output, last_reported, expectations) -> None:
+def test_mk_errpt_aix(  # type:ignore[no-untyped-def]
+    tmpdir, state_file_name, errpt_output, last_reported, expectations
+) -> None:
     tmp_dir = str(tmpdir)
     _prepare_mock_errpt(tmp_dir, errpt_output)
     env = _get_env(tmp_dir)

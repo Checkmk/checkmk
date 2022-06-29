@@ -98,7 +98,7 @@ def test_get_auth(oid: OID) -> None:
         (".1.3.6.1.4.1"),
     ],
 )
-def test_walk_ipv4(oid) -> None:
+def test_walk_ipv4(oid) -> None:  # type:ignore[no-untyped-def]
     configs = _create_configs_ipv4()
     result_inline, result_classic = _create_results_snmpbackend_walk(oid, configs)
 
@@ -114,7 +114,7 @@ def test_walk_ipv4(oid) -> None:
         (".1.3.6.1.4.1"),
     ],
 )
-def test_walk_ipv6(oid) -> None:
+def test_walk_ipv6(oid) -> None:  # type:ignore[no-untyped-def]
     configs = _create_configs_ipv6()
     result_inline, result_classic = _create_results_snmpbackend_walk(oid, configs)
 
@@ -129,7 +129,7 @@ def test_walk_ipv6(oid) -> None:
         (".1.3.6"),
     ],
 )
-def test_walk_auth(oid) -> None:
+def test_walk_auth(oid) -> None:  # type:ignore[no-untyped-def]
     configs = _create_configs_special_auth()
     result_inline, result_classic = _create_results_snmpbackend_walk(oid, configs)
 
@@ -188,7 +188,7 @@ def _create_results_snmpbackend_walk(oid, configs, check_plugin_name=None, table
     )
 
 
-def _create_result_for_backend_walk(
+def _create_result_for_backend_walk(  # type:ignore[no-untyped-def]
     backend: Type[SNMPBackend], oid: OID, config: SNMPHostConfig, check_plugin_name, table_base_oid
 ) -> SNMPRowInfo:
     return backend(config, logger).walk(

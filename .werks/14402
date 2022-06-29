@@ -1,0 +1,13 @@
+Title: nfsiostat check metrics when mount name ends on numbers
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1656492450
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p5
+
+When a mount is named "server:/foo/042" the ops/s values used to be parsed as 42.
+This has been fixed now. No user interaction required

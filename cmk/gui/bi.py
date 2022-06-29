@@ -147,6 +147,7 @@ def api_get_aggregation_state(
             is_single_host_aggregation = len(required_hosts) == 1
             aggregations[aggr_title] = {
                 "state": node_result_bundle.actual_result.state,
+                "output": node_result_bundle.actual_result.output,
                 "hosts": required_hosts,
                 "acknowledged": node_result_bundle.actual_result.acknowledged,
                 "in_downtime": node_result_bundle.actual_result.downtime_state != 0,

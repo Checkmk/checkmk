@@ -60,7 +60,7 @@ def parse_arguments(args: Optional[Sequence[str]]) -> Args:
 def agent_activemq_main(args: Args) -> None:
     api_url = parse_api_url(
         server_address=args.servername,
-        api_path="/admin/xml/",
+        api_path="admin/xml/",
         port=args.port,
         protocol=args.protocol,
     )

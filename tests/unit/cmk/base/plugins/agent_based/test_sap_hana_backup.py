@@ -10,7 +10,13 @@ import pytest
 from freezegun import freeze_time
 
 import cmk.base.plugins.agent_based.sap_hana_backup as sap_hana_backup
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    IgnoreResultsError,
+    Metric,
+    Result,
+    Service,
+    State,
+)
 
 NOW_SIMULATED = "2019-01-01 22:00:00.000000"
 ITEM = "inst"
@@ -158,3 +164,9 @@ def test_cluster_check_sap_hana_backup_missing_node_data() -> None:
     section = {"node0": None, "node1": SECTION}
 
     assert list(sap_hana_backup.cluster_check_sap_hana_backup(ITEM, params, section))
+
+
+def test_check_sap_hana_backup_empty() -> None:
+    section_with_empty_backup = {ITEM: sap_hana_backup.Backup()}
+    with pytest.raises(IgnoreResultsError):
+        list(sap_hana_backup.check_sap_hana_backup(ITEM, {}, section_with_empty_backup))

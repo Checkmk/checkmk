@@ -1,14 +1,16 @@
-title: Fujitsu ETERNUS DX500 S3 Storage Systems: Summarized Status of all Disks
+title: Fujitsu Storage Systems: Summarized Status of all Disks
 agents: snmp
 catalog: hw/storagehw/fujitsu
 license: GPLv2
 distribution: none
 description:
  This check monitors the reported summary status of all installed
- physical disks
- in storage systems from Fujitsu which support the
- FJDARY-E150.MIB like the ETERNUS DX500 S3.
- This is an adaption of the corresponding fjdarye60 check.
+ physical disks in storage systems from Fujitsu.
+ Supported devices:
+ ETERNUS DX60
+ ETERNUS DX80
+ ETERNUS DX80 S2
+ ETERNUS DX500 S3
 
  The check goes CRIT if the current state is not equal the state
  during discovery; otherwise OK.
@@ -19,4 +21,4 @@ description:
  OK otherise.
 
 discovery:
- One service is created if at least one disk is found.
+ One summary service is created if at least one disk is found.

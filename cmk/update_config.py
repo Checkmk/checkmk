@@ -198,6 +198,14 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("fjdarye60_psus"): CheckPluginName("fjdarye_power_supply_units"),
     CheckPluginName("fjdarye500_cpsus"): CheckPluginName("fjdarye_ce_power_supply_units"),
     CheckPluginName("fjdarye100_cpsus"): CheckPluginName("fjdarye_ce_power_supply_units"),
+    CheckPluginName("fjdarye100_disks"): CheckPluginName("fjdarye_disks"),
+    CheckPluginName("fjdarye101_disks"): CheckPluginName("fjdarye_disks"),
+    CheckPluginName("fjdarye500_disks"): CheckPluginName("fjdarye_disks"),
+    CheckPluginName("fjdarye60_disks"): CheckPluginName("fjdarye_disks"),
+    CheckPluginName("fjdarye100_disks_summary"): CheckPluginName("fjdarye_disks_summary"),
+    CheckPluginName("fjdarye101_disks_summary"): CheckPluginName("fjdarye_disks_summary"),
+    CheckPluginName("fjdarye500_disks_summary"): CheckPluginName("fjdarye_disks_summary"),
+    CheckPluginName("fjdarye60_disks_summary"): CheckPluginName("fjdarye_disks_summary"),
 }
 
 

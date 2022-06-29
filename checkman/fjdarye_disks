@@ -1,12 +1,16 @@
-title: Fujitsu ETERNUS DX Storage Systems: Disks
+title: Fujitsu Storage Systems: Disks
 agents: snmp
 catalog: hw/storagehw/fujitsu
 license: GPLv2
-distribution: check_mk
+distribution: none
 description:
  This check monitors the reported status of one of a physical disk
- in storage systems from Fujitsu which support the
- FJDARY-E60.MIB like the ETERNUS DX60 and DX80.
+ in storage systems from Fujitsu.
+ Supported devices:
+ ETERNUS DX60
+ ETERNUS DX80
+ ETERNUS DX80 S2
+ ETERNUS DX500 S3
 
  The check goes CRIT if the current state is not equal the state
  during discovery; otherwise OK.

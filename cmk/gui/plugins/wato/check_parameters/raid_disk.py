@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -52,8 +53,15 @@ def _parameter_valuespec_raid_disk():
                 ),
             ],
         ),
-        forth=lambda x: isinstance(x, str) and {"expected_state": x} or x,
+        forth=_transform_expected_state,
     )
+
+
+def _transform_expected_state(params):
+    # This was introduced in the Checkmk version 2.2.0.
+    if isinstance(params, str):
+        return {"expected_state": params}
+    return params
 
 
 rulespec_registry.register(

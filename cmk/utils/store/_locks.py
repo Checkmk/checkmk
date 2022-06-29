@@ -236,6 +236,7 @@ def leave_locked_unless_exception(path: Union[str, Path]) -> Iterator[None]:
         yield
     except Exception:
         release_lock(path)
+        raise
 
 
 @contextmanager

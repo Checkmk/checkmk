@@ -27,7 +27,6 @@ from typing import (
 
 from cmk.utils import store
 from cmk.utils.rulesets.tuple_rulesets import ALL_HOSTS, ALL_SERVICES
-from cmk.utils.store import PickleSerializer
 from cmk.utils.type_defs import ContactgroupName, HostName, Labels, TaggroupIDToTagID
 
 HostAttributeMapping = Tuple[
@@ -255,12 +254,14 @@ class PickleHostsStorage(ABCHostsStorage[HostsData]):
     def _write(
         self, file_path: Path, data: HostsStorageData, value_formatter: Callable[[Any], str]
     ) -> None:
-        pickle_store = store.ObjectStore(file_path, serializer=PickleSerializer())
+        pickle_store = store.ObjectStore(file_path, serializer=store.PickleSerializer())
         with pickle_store.locked():
             pickle_store.write_obj(asdict(data))
 
     def _read(self, file_path: Path) -> HostsData:
-        return store.ObjectStore(file_path, serializer=PickleSerializer()).read_obj(default={})
+        return store.ObjectStore(file_path, serializer=store.PickleSerializer()).read_obj(
+            default={}
+        )
 
 
 class RawHostsStorage(ABCHostsStorage[HostsData]):

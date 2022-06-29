@@ -4,11 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pickle
 import pprint
 import tempfile
 from ast import literal_eval
 from contextlib import contextmanager
+from os import getgid, getuid
 from pathlib import Path
+from stat import S_IMODE, S_IWOTH
 from typing import Any, Final, Generic, Iterator, Protocol, TypeVar
 
 import cmk.utils.debug
@@ -62,6 +65,30 @@ class DimSerializer:
         return literal_eval(raw.decode("utf-8"))
 
 
+class PickleSerializer:
+    """A dangerous serializer that uses pickle"""
+
+    def serialize(self, data) -> bytes:  # type:ignore[no-untyped-def]
+        return pickle.dumps(data)
+
+    def deserialize(self, raw: bytes) -> Any:
+        return pickle.loads(raw)  # nosec B301 # BNS:9a7128
+
+
+def _check_permissions(path: Path) -> None:
+    """Check if the file owned by the site user and not world writable.
+    Raise an exception otherwise."""
+    stat = path.stat()
+    # we trust root and ourselves
+    owned_by_site_user_or_root = stat.st_uid in [0, getuid()] and stat.st_gid in [0, getgid()]
+    world_writable = S_IMODE(stat.st_mode) & S_IWOTH != 0
+
+    if not owned_by_site_user_or_root:
+        raise MKGeneralException(_('Refusing to read file not owned by site user: "%s"') % path)
+    if world_writable:
+        raise MKGeneralException(_('Refusing to read world writable file: "%s"') % path)
+
+
 class ObjectStore(Generic[TObject]):
     def __init__(self, path: Path, *, serializer: Serializer[TObject]) -> None:
         self.path: Final = path
@@ -80,14 +107,14 @@ class ObjectStore(Generic[TObject]):
             if not already_locked:
                 release_lock(self.path)
 
-    def write_obj(self, obj: TObject, *, mode: int = 0o660) -> None:
-        return self._save_bytes_to_file(data=self._serializer.serialize(obj), mode=mode)
+    def write_obj(self, obj: TObject) -> None:
+        return self._save_bytes_to_file(data=self._serializer.serialize(obj))
 
     def read_obj(self, *, default: TObject) -> TObject:
         raw = self._load_bytes_from_file()
         return self._serializer.deserialize(raw) if raw else default
 
-    def _save_bytes_to_file(self, *, data: bytes, mode: int) -> None:
+    def _save_bytes_to_file(self, *, data: bytes) -> None:
         tmp_path = None
         try:
             with tempfile.NamedTemporaryFile(
@@ -98,7 +125,8 @@ class ObjectStore(Generic[TObject]):
             ) as tmp:
 
                 tmp_path = Path(tmp.name)
-                tmp_path.chmod(mode)
+                # note that ObjectStore will refuse to read world-writable files
+                tmp_path.chmod(0o660)
                 tmp.write(data)
 
                 # The goal of the fsync would be to ensure that there is a consistent file after a
@@ -141,15 +169,14 @@ class ObjectStore(Generic[TObject]):
             release_lock(self.path)
 
     def _load_bytes_from_file(self) -> bytes:
-
         try:
-            try:
-                return self.path.read_bytes()
-            except FileNotFoundError:
-                # Since locking (currently) creates an empty file,
-                # there is no semantic difference between an empty and a
-                # non-existing file, so we ensure consistency here.
-                return b""
+            _check_permissions(self.path)
+            return self.path.read_bytes()
+        except FileNotFoundError:
+            # Since locking (currently) creates an empty file,
+            # there is no semantic difference between an empty and a
+            # non-existing file, so we ensure consistency here.
+            return b""
 
         except (MKTerminate, MKTimeout):
             raise

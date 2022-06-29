@@ -50,7 +50,6 @@ from cmk.utils.object_diff import make_diff_text
 from cmk.utils.redis import get_redis_client, Pipeline
 from cmk.utils.regex import regex, WATO_FOLDER_PATH_NAME_CHARS, WATO_FOLDER_PATH_NAME_REGEX
 from cmk.utils.site import omd_site
-from cmk.utils.store import PickleSerializer
 from cmk.utils.store.host_storage import (
     ABCHostsStorage,
     apply_hosts_file_to_object,
@@ -692,7 +691,9 @@ class _PickleWATOInfoStorage(_ABCWATOInfoStorage):
         pickle_path = self._add_suffix(file_path)
         if not pickle_path.exists() or not self._file_valid(pickle_path, file_path):
             return None
-        return store.ObjectStore(pickle_path, serializer=PickleSerializer()).read_obj(default={})
+        return store.ObjectStore(pickle_path, serializer=store.PickleSerializer()).read_obj(
+            default={}
+        )
 
     def _file_valid(self, pickle_path: Path, file_path: Path) -> bool:
         # The experimental file must not be older than the corresponding .wato
@@ -703,7 +704,9 @@ class _PickleWATOInfoStorage(_ABCWATOInfoStorage):
         return file_path.stat().st_mtime <= pickle_path.stat().st_mtime
 
     def write(self, file_path: Path, data: Dict[str, Any]) -> None:
-        pickle_store = store.ObjectStore(self._add_suffix(file_path), serializer=PickleSerializer())
+        pickle_store = store.ObjectStore(
+            self._add_suffix(file_path), serializer=store.PickleSerializer()
+        )
         with pickle_store.locked():
             pickle_store.write_obj(data)
 

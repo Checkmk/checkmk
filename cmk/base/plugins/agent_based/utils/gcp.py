@@ -8,8 +8,6 @@ from dataclasses import dataclass
 from enum import IntEnum, unique
 from typing import Any, Callable, Mapping, Optional, Sequence
 
-from google.cloud.asset_v1 import Asset
-
 from ..agent_based_api.v1 import check_levels, check_levels_predictive
 from ..agent_based_api.v1.type_defs import CheckResult, StringTable
 
@@ -45,23 +43,23 @@ class GCPResult:
 
 @dataclass(frozen=True)
 class GCPAsset:
-    _asset: Asset
+    _asset: Mapping[str, Any]
 
     @classmethod
     def deserialize(cls, data: str) -> "GCPAsset":
-        return cls(_asset=Asset.from_json(data))
+        return cls(_asset=json.loads(data))
 
     @property
     def resource_data(self) -> Mapping[str, Any]:
-        return self._asset.resource.data
+        return self._asset["resource"]["data"]
 
     @property
     def location(self) -> str:
-        return self._asset.resource.location
+        return self._asset["resource"]["location"]
 
     @property
     def asset_type(self) -> str:
-        return self._asset.asset_type
+        return self._asset["asset_type"]
 
 
 @dataclass(frozen=True)

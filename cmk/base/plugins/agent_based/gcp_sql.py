@@ -82,7 +82,7 @@ def check_gcp_sql_status(
     if (metric := next((r for r in timeseries if r.metric_type == metric_type), None)) is None:
         yield Result(state=State.UNKNOWN, summary="No data available")
         return
-    gcp_state = metric.points[0].value.string_value
+    gcp_state = metric.points[0]["value"]["string_value"]
     state = State(params[gcp_state])
     summary = f"State: {gcp_state}"
     yield Result(state=state, summary=summary)

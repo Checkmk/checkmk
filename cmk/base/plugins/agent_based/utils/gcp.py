@@ -3,12 +3,12 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import json
 from dataclasses import dataclass
 from enum import IntEnum, unique
 from typing import Any, Callable, Mapping, Optional, Sequence
 
 from google.cloud.asset_v1 import Asset
-from google.cloud.monitoring_v3.types import TimeSeries
 
 from ..agent_based_api.v1 import check_levels, check_levels_predictive
 from ..agent_based_api.v1.type_defs import CheckResult, StringTable
@@ -16,32 +16,31 @@ from ..agent_based_api.v1.type_defs import CheckResult, StringTable
 
 @dataclass(frozen=True)
 class GCPResult:
-    _ts: TimeSeries
+    _ts: Mapping[str, Any]
 
     @classmethod
     def deserialize(cls, data: str) -> "GCPResult":
-        ts = TimeSeries.from_json(data)
-        return cls(_ts=ts)
+        return cls(_ts=json.loads(data))
 
     @property
     def resource_labels(self) -> Mapping[str, str]:
-        return self._ts.resource.labels
+        return self._ts["resource"]["labels"]
 
     @property
     def metric_type(self) -> str:
-        return self._ts.metric.type
+        return self._ts["metric"]["type"]
 
     @property
     def value_type(self) -> int:
-        return self._ts.value_type
+        return self._ts["value_type"]
 
     @property
     def metric_labels(self) -> Mapping[str, str]:
-        return self._ts.metric.labels
+        return self._ts["metric"]["labels"]
 
     @property
-    def points(self) -> Sequence:
-        return self._ts.points
+    def points(self) -> Sequence[Mapping[str, Any]]:
+        return self._ts["points"]
 
 
 @dataclass(frozen=True)
@@ -151,15 +150,15 @@ def _get_value(results: Sequence[GCPResult], spec: MetricSpec) -> float:
             return r.metric_type == spec.metric_type
 
     results = list(r for r in results if filter_func(r))
-    ret_val = 0
+    ret_val = 0.0
     for result in results:
-        proto_value = result.points[0].value
+        proto_value = result.points[0]["value"]
         if result.value_type == MetricSpec.DType.FLOAT:
-            value = proto_value.double_value
+            value = float(proto_value["double_value"])
         elif result.value_type == MetricSpec.DType.INT:
-            value = proto_value.int64_value
+            value = float(proto_value["int64_value"])
         else:
-            raise NotImplementedError("unkown dtype")
+            raise NotImplementedError("unknown dtype")
         ret_val += value * spec.scale
     return ret_val
 

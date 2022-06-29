@@ -1,0 +1,15 @@
+Title: SAP HANA check: backup service is stale if database login fails
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1656513418
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p5
+
+Before this werk, if the login to a database failed, the SAP HANA Backup
+service issued a warning.
+
+This is now changed and the service goes stale.

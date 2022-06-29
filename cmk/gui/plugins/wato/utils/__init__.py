@@ -1536,7 +1536,7 @@ class ABCEventsMode(WatoMode, abc.ABC):
                                 " For host events this condition never matches as soon as at least one group is selected."
                             ),
                             valuespec=RegExp(
-                                size=32,
+                                size=40,
                                 mode=RegExp.infix,
                             ),
                             orientation="horizontal",
@@ -1562,7 +1562,7 @@ class ABCEventsMode(WatoMode, abc.ABC):
                                 "For host events this condition is simply ignored."
                             ),
                             valuespec=RegExp(
-                                size=32,
+                                size=40,
                                 mode=RegExp.infix,
                             ),
                             orientation="horizontal",
@@ -1580,7 +1580,7 @@ class ABCEventsMode(WatoMode, abc.ABC):
                         "rule if this option is being used."
                     ),
                     valuespec=RegExp(
-                        size=32,
+                        size=40,
                         mode=RegExp.prefix,
                     ),
                     orientation="horizontal",
@@ -1595,7 +1595,7 @@ class ABCEventsMode(WatoMode, abc.ABC):
                 ListOfStrings(
                     title=_("Exclude services"),
                     valuespec=RegExp(
-                        size=32,
+                        size=40,
                         mode=RegExp.prefix,
                     ),
                     orientation="horizontal",
@@ -1619,6 +1619,7 @@ class ABCEventsMode(WatoMode, abc.ABC):
                         "This text is a regular expression that is being searched in the output "
                         "of the check plugins that produced the alert. It is not a prefix but an infix match."
                     ),
+                    size=40,
                     mode=RegExp.prefix,
                 ),
             ),

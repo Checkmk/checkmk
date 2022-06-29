@@ -45,6 +45,7 @@ from cmk.gui.fields.definitions import (
     X509ReqPEMFieldUUID,
 )
 from cmk.gui.fields.validators import (
+    validate_hostname,
     ValidateAnyOfValidators,
     ValidateIPv4,
     ValidateIPv4Network,
@@ -78,6 +79,7 @@ __all__ = [
     "SiteField",
     "SNMPCredentials",
     "Timestamp",
+    "validate_hostname",
     "ValidateAnyOfValidators",
     "ValidateIPv4",
     "ValidateIPv4Network",

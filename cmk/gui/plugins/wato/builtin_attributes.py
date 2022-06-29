@@ -829,11 +829,12 @@ class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
 
     def openapi_field(self) -> gui_fields.Field:
         return fields.String(
-            description="Address (IPv4 or IPv6) under which the management board can be reached.",
+            description="Address (IPv4, IPv6 or hostname) under which the management board can be reached.",
             validate=gui_fields.ValidateAnyOfValidators(
                 [
                     gui_fields.ValidateIPv4(),
                     gui_fields.ValidateIPv6(),
+                    gui_fields.validate_hostname,
                 ]
             ),
         )

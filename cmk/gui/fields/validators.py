@@ -157,3 +157,59 @@ class ValidateHostName(Validator):
         raise ValidationError(
             f"Hostname {value!r} doesn't match pattern '^{HOST_NAME_RE.pattern}$'"
         )
+
+
+def validate_hostname(hostname: str) -> None:
+    # NOTE:
+    #   this was duplicated from cmk.gui.valuespec:HostAddress._is_valid_host_name to prevent
+    #   import cycles.
+    """Validate a hostname according to RFC1123
+
+    Args:
+        hostname:
+
+    Raises:
+        ValidationError - when it doesn't validate.
+
+    Returns:
+        Nothing
+
+    Examples:
+
+        >>> validate_hostname("aol.com")
+        >>> validate_hostname("aol.com.")
+        >>> validate_hostname("aol.com..")
+        Traceback (most recent call last):
+        ...
+        marshmallow.exceptions.ValidationError: Domain part #2: '' is not a valid hostname. [RFC1123]
+
+        >>> validate_hostname("-hyphenfront")
+        Traceback (most recent call last):
+        ...
+        marshmallow.exceptions.ValidationError: Domain part #0: '-hyphenfront' is not a valid hostname. [RFC1123]
+
+        >>> validate_hostname("127.0.0.1")
+        Traceback (most recent call last):
+        ...
+        marshmallow.exceptions.ValidationError: Host names can't be just numeric.
+
+    """
+    # http://stackoverflow.com/questions/2532053/validate-a-hostname-string/2532344#2532344
+    if len(hostname) > 255:
+        raise ValidationError("Hostname too long")
+
+    if hostname[-1] == ".":
+        hostname = hostname[:-1]  # strip exactly one dot from the right, if present
+
+    # must be not all-numeric, so that it can't be confused with an IPv4 address.
+    # Host names may start with numbers (RFC 1123 section 2.1) but never the final part,
+    # since TLDs are alphabetic.
+    if re.match(r"[\d.]+$", hostname):
+        raise ValidationError("Host names can't be just numeric.")
+
+    allowed = re.compile(r"(?!-)[A-Z_\d-]{1,63}(?<!-)$", re.IGNORECASE)
+    for index, part in enumerate(hostname.split(".")):
+        if not allowed.match(part):
+            raise ValidationError(
+                f"Domain part #{index}: {part!r} is not a valid hostname. [RFC1123]"
+            )

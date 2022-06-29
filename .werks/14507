@@ -1,0 +1,27 @@
+Title: REST API management board address validator
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1656514425
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p5
+
+The management board address can hold IPv4 addresses, IPv6 addresses and
+hostnames. The REST API only validated the IP addresses but rejected
+the hostnames. This host attribute is used at the host creation, update
+and display endpoints.
+
+The affected endpoints are:
+
+ - POST /domain-types/host_config/actions/bulk-create/invoke
+ - POST /domain-types/host_config/actions/bulk-update/invoke
+ - GET /domain-types/host_config/collections/all
+ - POST /domain-types/host_config/collections/all
+ - GET /objects/host_config/{host_name}
+ - PUT /objects/host_config/{host_name}
+
+This werk adds a validator that allows hostnames set through the REST API
+as well. No futher action is needed.

@@ -40,7 +40,7 @@ from cmk.gui.fields.utils import (
 from cmk.gui.groups import GroupName, GroupType, load_group_information
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import allsites
-from cmk.gui.watolib.host_attributes import host_attribute, HostAttributeTopicCustomAttributes
+from cmk.gui.watolib.host_attributes import host_attribute
 from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, Host
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 from cmk.gui.watolib.tags import load_tag_group
@@ -649,12 +649,6 @@ def validate_custom_host_attributes(
 
             _logger.error("No such attribute: %s", name)
             return host_attributes
-
-        if attribute.topic() != HostAttributeTopicCustomAttributes:
-            if errors == "raise":
-                raise ValidationError({name: f"{name} is not a custom host attribute."})
-
-            _logger.error("Not a custom attribute: %s", name)
 
         try:
             attribute.validate_input(value, "")

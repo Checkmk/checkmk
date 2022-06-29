@@ -14,10 +14,9 @@ from cmk.utils.version import is_managed_edition
 from cmk.gui.exceptions import MKHTTPException
 from cmk.gui.groups import GroupSpec, GroupSpecs, load_group_information
 from cmk.gui.http import Response
-from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.restful_objects import constructors
 from cmk.gui.plugins.openapi.utils import ProblemException
-from cmk.gui.watolib.groups import check_modify_group_permissions, edit_group, GroupType
+from cmk.gui.watolib.groups import edit_group, GroupType
 from cmk.gui.watolib.hosts_and_folders import CREFolder
 
 if is_managed_edition():
@@ -130,8 +129,6 @@ def fetch_group(
     status: int = 404,
     message: Optional[str] = None,
 ) -> GroupSpec:
-    if user:
-        check_modify_group_permissions(group_type)
     groups = load_group_information()[group_type]
     group = _retrieve_group(ident, groups, status, message)
     group["id"] = ident

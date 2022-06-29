@@ -68,6 +68,7 @@ RW_PERMISSIONS = permissions.AllPerm(
 def create(params: Mapping[str, Any]) -> Response:
     """Create a service group"""
     user.need_permission("wato.edit")
+    user.need_permission("wato.groups")
     body = params["body"]
     name = body["name"]
     group_details = {"alias": body.get("alias")}
@@ -89,6 +90,7 @@ def create(params: Mapping[str, Any]) -> Response:
 def bulk_create(params: Mapping[str, Any]) -> Response:
     """Bulk create service groups"""
     user.need_permission("wato.edit")
+    user.need_permission("wato.groups")
     body = params["body"]
     entries = body["entries"]
     service_group_details = prepare_groups("service", entries)
@@ -146,6 +148,7 @@ def show_group(params: Mapping[str, Any]) -> Response:
 def delete(params: Mapping[str, Any]) -> Response:
     """Delete a service group"""
     user.need_permission("wato.edit")
+    user.need_permission("wato.groups")
     name = params["name"]
     groups.delete_group(name, group_type="service")
     return Response(status=204)
@@ -162,6 +165,7 @@ def delete(params: Mapping[str, Any]) -> Response:
 def bulk_delete(params: Mapping[str, Any]) -> Response:
     """Bulk delete service groups"""
     user.need_permission("wato.edit")
+    user.need_permission("wato.groups")
     body = params["body"]
     entries = body["entries"]
     for group_name in entries:
@@ -186,6 +190,7 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
 def update(params: Mapping[str, Any]) -> Response:
     """Update a service group"""
     user.need_permission("wato.edit")
+    user.need_permission("wato.groups")
     name = params["name"]
     group = fetch_group(name, "service")
     constructors.require_etag(constructors.etag_of_dict(group))
@@ -210,6 +215,7 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
     mechanism. Use at your own risk.
     """
     user.need_permission("wato.edit")
+    user.need_permission("wato.groups")
     body = params["body"]
     entries = body["entries"]
     updated_service_groups = update_groups("service", entries)

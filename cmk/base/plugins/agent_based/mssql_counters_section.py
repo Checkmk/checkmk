@@ -41,6 +41,8 @@ def to_timestamp(values: Sequence[str]) -> float:
     1504196023.0
     >>> to_timestamp(('31/08/2017', '16:13:43'))
     1504196023.0
+    >>> to_timestamp(('31/08/17', '16:13:43'))
+    1504196023.0
     >>> to_timestamp(('31-08-2017', '16:13:43'))
     1504196023.0
     >>> to_timestamp(('2017-08-31', '16:13:43.123'))     # allow micro/nanoseconds
@@ -61,6 +63,8 @@ def to_timestamp(values: Sequence[str]) -> float:
             return datetime.strptime(' '.join(values), '%Y/%m/%d %I:%M:%S %p')
         with suppress(ValueError):
             return datetime.strptime(' '.join(values), '%d/%m/%Y %H:%M:%S')
+        with suppress(ValueError):
+            return datetime.strptime(' '.join(values), '%d/%m/%y %H:%M:%S')
         with suppress(ValueError):
             return datetime.strptime(' '.join(values), '%d-%m-%Y %H:%M:%S')
         with suppress(ValueError):

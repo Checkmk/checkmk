@@ -605,20 +605,18 @@ run_cached() {
         fi
     fi
 
-    # Check if cache file exists and is recent enough
-    if [ -s "${CACHEFILE}" ]; then
+    if ${MK_RUN_SYNC_PARTS} && [ -s "${CACHEFILE}" ]; then
 
-        if ${MK_RUN_SYNC_PARTS}; then
-            # Output the file even if it is outdated.
-            CACHE_INFO="cached(${MTIME},${MAXAGE})"
-            if [[ ${NAME} == local_* ]]; then
-                # prefix CACHE_INFO, but skip any headers and lines with existing CACHE_INFO
-                sed -e "/^<<<.*>>>/{p;d;}; /^cached([0-9]*,[0-9]*) /{p;d;}; s/^/${CACHE_INFO} /" "${CACHEFILE}"
-            else
-                # insert CACHE_INFO in the header, but skip headers with existing CACHE_INFO
-                sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}; s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
-            fi
+        # Output the file (even if it is outdated)
+        CACHE_INFO="cached(${MTIME},${MAXAGE})"
+        if [[ ${NAME} == local_* ]]; then
+            # prefix CACHE_INFO, but skip any headers and lines with existing CACHE_INFO
+            sed -e "/^<<<.*>>>/{p;d;}; /^cached([0-9]*,[0-9]*) /{p;d;}; s/^/${CACHE_INFO} /" "${CACHEFILE}"
+        else
+            # insert CACHE_INFO in the header, but skip headers with existing CACHE_INFO
+            sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}; s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
         fi
+
     fi
 
     if ${MK_RUN_ASYNC_PARTS}; then

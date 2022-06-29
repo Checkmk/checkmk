@@ -271,3 +271,63 @@ def test_mount_name_ends_with_number(discovery, check):
     item = services[0][0]
     results = list(check(item=item, params={}, section=section))
     assert results[0] == Result(state=State.OK, summary="Operations: 730.89/s")
+
+
+def test_mount_name_with_no_beginning_slash(discovery, check):
+    section = nfsiostat.parse_nfsiostat(
+        [
+            [
+                "10.61.241.85:ucs",
+                "mounted",
+                "on",
+                "/home/thor/bkp:",
+                "op/s",
+                "rpc",
+                "bklog",
+                "0.54",
+                "0.00",
+                "read:",
+                "ops/s",
+                "kB/s",
+                "kB/op",
+                "retrans",
+                "avg",
+                "RTT",
+                "(ms)",
+                "avg",
+                "exe",
+                "(ms)",
+                "0.000",
+                "0.000",
+                "0.000",
+                "0",
+                "(0.0%)",
+                "0.000",
+                "0.000",
+                "write:",
+                "ops/s",
+                "kB/s",
+                "kB/op",
+                "retrans",
+                "avg",
+                "RTT",
+                "(ms)",
+                "avg",
+                "exe",
+                "(ms)",
+                "0.389",
+                "25.007",
+                "64.278",
+                "0",
+                "(0.0%)",
+                "13.013",
+                "372.231",
+            ]
+        ]
+    )
+
+    services = list(discovery(section))
+    item = services[0][0]
+    assert item == "'10.61.241.85:ucs',"
+    results = list(check(item=item, params={}, section=section))
+    assert results[0] == Result(state=State.OK, summary="Operations: 0.54/s")

@@ -1,0 +1,11 @@
+Title: work with nfs mounts not starting with a slash
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1656495110
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+We now parse nfs mounts not starting with a slash in the nfsiostat plugin.

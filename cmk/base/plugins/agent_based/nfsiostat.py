@@ -77,7 +77,7 @@ def parse_nfsiostat(string_table: StringTable) -> Section:
     return {
         f"'{m[0]}',": m[1:]
         for m in re.findall(
-            r"(\S+:/\S+) mounted on \S+:%s" % (r".*?(\d+\.\d+|\d+)" * 16),
+            r"(\S+:\S+) mounted on \S+:%s" % (r".*?(\d+\.\d+|\d+)" * 16),
             " ".join(new_info),
             flags=re.DOTALL,
         )

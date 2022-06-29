@@ -646,12 +646,6 @@ def validate_custom_host_attributes(
             _logger.error("No such attribute: %s", name)
             return host_attributes
 
-        if attribute.topic() != watolib.host_attributes.HostAttributeTopicCustomAttributes:
-            if errors == "raise":
-                raise ValidationError({name: f"{name} is not a custom host attribute."})
-
-            _logger.error("Not a custom attribute: %s", name)
-
         try:
             attribute.validate_input(value, "")
         except MKUserError as exc:

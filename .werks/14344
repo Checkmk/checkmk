@@ -1,0 +1,14 @@
+Title: host_config: remove restriction that custom attributes must have topic "Custom attributes"
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1656495445
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p5
+
+Previously, the REST API returned a validation error if the specified custom attributes
+had a topic other than "Custom Attributes". This werk removes that restriction and allows
+custom attributes of all topics to be included.

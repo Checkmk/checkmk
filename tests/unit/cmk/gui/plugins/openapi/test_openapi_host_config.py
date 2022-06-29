@@ -717,6 +717,21 @@ def _custom_host_attribute():
         yield
 
 
+@pytest.fixture(name="custom_host_attribute_basic_topic")
+def _custom_host_attribute_with_basic_topic():
+    attr: CustomAttr = {
+        "name": "foo",
+        "title": "bar",
+        "help": "foo",
+        "topic": "basic",
+        "type": "TextAscii",
+        "add_custom_macro": False,
+        "show_in_table": False,
+    }
+    with custom_host_attribute_ctx({"host": [attr]}):
+        yield
+
+
 @contextlib.contextmanager
 def custom_host_attribute_ctx(attrs: dict[str, list[CustomAttr]]):
     try:
@@ -1266,7 +1281,7 @@ def test_openapi_create_host_with_contact_group(aut_user_auth_wsgi_app: WebTestA
 @managedtest
 def test_openapi_create_host_with_custom_attributes(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    custom_host_attribute,
+    custom_host_attribute_basic_topic,
 ):
     base = "/NO_SITE/check_mk/api/1.0"
 

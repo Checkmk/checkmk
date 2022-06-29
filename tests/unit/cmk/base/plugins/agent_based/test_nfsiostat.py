@@ -212,3 +212,62 @@ def test_nfsiostat_check2(section2, discovery, check) -> None:
         Result(state=State.OK, summary="Write Average EXE: 0.000/ms"),
         Metric("write_avg_exe_ms", 0.0),
     ]
+
+
+def test_mount_name_ends_with_number(discovery, check):
+    section = nfsiostat.parse_nfsiostat(
+        [
+            [
+                "fsapp.zdv.uni-mainz.de:/seafile/024",
+                "mounted",
+                "on",
+                "/fsapp/seafile_storage/024:",
+                "ops/s",
+                "rpc",
+                "bklog",
+                "730.890",
+                "0.000",
+                "read:",
+                "ops/s",
+                "kB/s",
+                "kB/op",
+                "retrans",
+                "avg",
+                "RTT",
+                "(ms)",
+                "avg",
+                "exe",
+                "(ms)",
+                "2.622",
+                "1.062",
+                "0.405",
+                "0",
+                "(0.0%)",
+                "1.137",
+                "1.271",
+                "write:",
+                "ops/s",
+                "kB/s",
+                "kB/op",
+                "retrans",
+                "avg",
+                "RTT",
+                "(ms)",
+                "avg",
+                "exe",
+                "(ms)",
+                "0.000",
+                "0.000",
+                "0.000",
+                "0",
+                "(0.0%)",
+                "0.000",
+                "0.000",
+            ]
+        ]
+    )
+
+    services = list(discovery(section))
+    item = services[0][0]
+    results = list(check(item=item, params={}, section=section))
+    assert results[0] == Result(state=State.OK, summary="Operations: 730.89/s")

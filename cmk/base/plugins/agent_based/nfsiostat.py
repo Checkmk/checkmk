@@ -75,10 +75,10 @@ def parse_nfsiostat(string_table: StringTable) -> Section:
     # at most a re-ordering of these values (in check_nfsiostat_parames) and
     # changing the check to include new metrics (via swtiches/flags)
     return {
-        m[0]: m[1:]
+        f"'{m[0]}',": m[1:]
         for m in re.findall(
-            r"(\S+:/\S+)%s" % (r".*?(\d+\.\d+|\d+)" * 16),
-            str(new_info).strip("[]"),
+            r"(\S+:/\S+) mounted on \S+:%s" % (r".*?(\d+\.\d+|\d+)" * 16),
+            " ".join(new_info),
             flags=re.DOTALL,
         )
     }

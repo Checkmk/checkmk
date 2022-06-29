@@ -1,13 +1,14 @@
-title: Fujitsu ETERNUS DX80 S2 Storage Systems: Power Supply Units Mounted on CE
+title: Fujitsu Storage Systems: Power Supply Units Mounted on CE
 agents: snmp
 catalog: hw/storagehw/fujitsu
 license: GPLv2
 distribution: none
 description:
  This check monitors the reported status of all installed power supply units
- mounted on CE (CPSUs) in storage systems from Fujitsu which support the
- FJDARY-E100.MIB like the ETERNUS DX80 S2.
- This is an adaption of the corresponding fjdarye60 check.
+ mounted on CE (CPSUs) in storage systems from Fujitsu.
+ Supported devices:
+ ETERNUS DX80 S2
+ ETERNUS DX500 S3
 
 item:
  The index of the power supply unit mounted on CE (CPSU) in the SNMP table.

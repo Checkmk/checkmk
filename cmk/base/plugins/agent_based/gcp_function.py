@@ -30,7 +30,7 @@ def discover(
     functions = section_gcp_assets[ASSET_TYPE]
     for item, function in functions.items():
         labels = [
-            ServiceLabel("gcp/location", function.asset.resource.location),
+            ServiceLabel("gcp/location", function.location),
             ServiceLabel("gcp/function/name", item),
             ServiceLabel("gcp/projectId", section_gcp_assets.project),
         ]

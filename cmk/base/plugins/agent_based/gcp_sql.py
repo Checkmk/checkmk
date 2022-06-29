@@ -34,7 +34,7 @@ def discover(
     if section_gcp_assets is None or not section_gcp_assets.config.is_enabled("cloud_sql"):
         return
     for item, service in section_gcp_assets[ASSET_TYPE].items():
-        data = service.asset.resource.data
+        data = service.resource_data
         labels = (
             [ServiceLabel(f"gcp/labels/{k}", v) for k, v in data["settings"]["userLabels"].items()]
             if "userLabels" in data["settings"]
@@ -42,7 +42,7 @@ def discover(
         )
         labels.extend(
             [
-                ServiceLabel("gcp/location", service.asset.resource.location),
+                ServiceLabel("gcp/location", service.location),
                 ServiceLabel("gcp/cloud_sql/name", item),
                 ServiceLabel("gcp/cloud_sql/databaseVersion", data["databaseVersion"]),
                 ServiceLabel("gcp/cloud_sql/availability", data["settings"]["availabilityType"]),
@@ -79,10 +79,10 @@ def check_gcp_sql_status(
     yield from gcp.generic_check(metrics, timeseries, {"up": None})
 
     metric_type = "cloudsql.googleapis.com/database/state"
-    if (metric := next((r for r in timeseries if r.ts.metric.type == metric_type), None)) is None:
+    if (metric := next((r for r in timeseries if r.metric_type == metric_type), None)) is None:
         yield Result(state=State.UNKNOWN, summary="No data available")
         return
-    gcp_state = metric.ts.points[0].value.string_value
+    gcp_state = metric.points[0].value.string_value
     state = State(params[gcp_state])
     summary = f"State: {gcp_state}"
     yield Result(state=state, summary=summary)

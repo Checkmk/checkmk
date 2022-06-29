@@ -20,16 +20,16 @@ def parse_assets(string_table: StringTable) -> AssetSection:
     assets = [GCPAsset.deserialize(row[0]) for row in string_table[1:]]
     sorted_assets: dict[AssetType, list[GCPAsset]] = defaultdict(list)
     for a in assets:
-        sorted_assets[a.asset.asset_type].append(a)
+        sorted_assets[a.asset_type].append(a)
 
     # fmt: off
     extractors: Mapping[AssetType, Callable[[GCPAsset], Item]] = {
-        "file.googleapis.com/Instance": lambda a: a.asset.resource.data["name"].split("/")[-1],
-        "cloudfunctions.googleapis.com/CloudFunction": lambda a: a.asset.resource.data["name"].split("/")[-1],
-        "storage.googleapis.com/Bucket": lambda a: a.asset.resource.data["id"],
-        "redis.googleapis.com/Instance": lambda a: a.asset.resource.data["name"],
-        "run.googleapis.com/Service": lambda a: a.asset.resource.data["metadata"]["name"],
-        "sqladmin.googleapis.com/Instance": lambda a: a.asset.resource.data["name"],
+        "file.googleapis.com/Instance": lambda a: a.resource_data["name"].split("/")[-1],
+        "cloudfunctions.googleapis.com/CloudFunction": lambda a: a.resource_data["name"].split("/")[-1],
+        "storage.googleapis.com/Bucket": lambda a: a.resource_data["id"],
+        "redis.googleapis.com/Instance": lambda a: a.resource_data["name"],
+        "run.googleapis.com/Service": lambda a: a.resource_data["metadata"]["name"],
+        "sqladmin.googleapis.com/Instance": lambda a: a.resource_data["name"],
     }
     # fmt: on
     typed_assets: dict[AssetType, AssetTypeSection] = {}

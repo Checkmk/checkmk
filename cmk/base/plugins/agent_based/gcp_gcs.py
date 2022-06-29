@@ -29,7 +29,7 @@ def discover(
     if section_gcp_assets is None or not section_gcp_assets.config.is_enabled("gcs"):
         return
     for item, bucket in section_gcp_assets[ASSET_TYPE].items():
-        data = bucket.asset.resource.data
+        data = bucket.resource_data
         labels = [ServiceLabel(f"gcp/labels/{k}", v) for k, v in data["labels"].items()]
         labels.append(ServiceLabel("gcp/location", data["location"]))
         labels.append(ServiceLabel("gcp/bucket/storageClass", data["storageClass"]))

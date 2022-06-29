@@ -26,7 +26,7 @@ def discover(
         return
     instances = section_gcp_assets[ASSET_TYPE]
     for item, instance in instances.items():
-        data = instance.asset.resource.data
+        data = instance.resource_data
         labels = []
         labels.append(ServiceLabel("gcp/location", data["locationId"]))
         labels.append(ServiceLabel("gcp/projectId", section_gcp_assets.project))

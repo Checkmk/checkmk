@@ -29,7 +29,7 @@ def discover(
         return
     for item, service in section_gcp_assets[ASSET_TYPE].items():
         labels = [
-            ServiceLabel("gcp/location", service.asset.resource.location),
+            ServiceLabel("gcp/location", service.location),
             ServiceLabel("gcp/run/name", item),
             ServiceLabel("gcp/projectId", section_gcp_assets.project),
         ]

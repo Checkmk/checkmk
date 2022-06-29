@@ -16,21 +16,53 @@ from ..agent_based_api.v1.type_defs import CheckResult, StringTable
 
 @dataclass(frozen=True)
 class GCPResult:
-    ts: TimeSeries
+    _ts: TimeSeries
 
     @classmethod
     def deserialize(cls, data: str) -> "GCPResult":
         ts = TimeSeries.from_json(data)
-        return cls(ts=ts)
+        return cls(_ts=ts)
+
+    @property
+    def resource_labels(self) -> Mapping[str, str]:
+        return self._ts.resource.labels
+
+    @property
+    def metric_type(self) -> str:
+        return self._ts.metric.type
+
+    @property
+    def value_type(self) -> int:
+        return self._ts.value_type
+
+    @property
+    def metric_labels(self) -> Mapping[str, str]:
+        return self._ts.metric.labels
+
+    @property
+    def points(self) -> Sequence:
+        return self._ts.points
 
 
 @dataclass(frozen=True)
 class GCPAsset:
-    asset: Asset
+    _asset: Asset
 
     @classmethod
     def deserialize(cls, data: str) -> "GCPAsset":
-        return cls(asset=Asset.from_json(data))
+        return cls(_asset=Asset.from_json(data))
+
+    @property
+    def resource_data(self) -> Mapping[str, Any]:
+        return self._asset.resource.data
+
+    @property
+    def location(self) -> str:
+        return self._asset.resource.location
+
+    @property
+    def asset_type(self) -> str:
+        return self._asset.asset_type
 
 
 @dataclass(frozen=True)
@@ -68,9 +100,9 @@ def parse_gcp(
     string_table: StringTable, label_key: str, extract: Callable[[str], str] = lambda x: x
 ) -> Section:
     rows = [GCPResult.deserialize(row[0]) for row in string_table]
-    items = {row.ts.resource.labels[label_key] for row in rows}
+    items = {row.resource_labels[label_key] for row in rows}
     return {
-        extract(item): SectionItem([r for r in rows if r.ts.resource.labels[label_key] == item])
+        extract(item): SectionItem([r for r in rows if r.resource_labels[label_key] == item])
         for item in items
     }
 
@@ -109,22 +141,22 @@ def _get_value(results: Sequence[GCPResult], spec: MetricSpec) -> float:
 
         def filter_func(r: GCPResult) -> bool:
             return (
-                r.ts.metric.type == spec.metric_type
-                and r.ts.metric.labels[filter_by.label] == filter_by.value
+                r.metric_type == spec.metric_type
+                and r.metric_labels[filter_by.label] == filter_by.value
             )
 
     else:
 
         def filter_func(r: GCPResult) -> bool:
-            return r.ts.metric.type == spec.metric_type
+            return r.metric_type == spec.metric_type
 
     results = list(r for r in results if filter_func(r))
     ret_val = 0
     for result in results:
-        proto_value = result.ts.points[0].value
-        if result.ts.value_type == MetricSpec.DType.FLOAT:
+        proto_value = result.points[0].value
+        if result.value_type == MetricSpec.DType.FLOAT:
             value = proto_value.double_value
-        elif result.ts.value_type == MetricSpec.DType.INT:
+        elif result.value_type == MetricSpec.DType.INT:
             value = proto_value.int64_value
         else:
             raise NotImplementedError("unkown dtype")

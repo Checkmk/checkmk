@@ -29,9 +29,9 @@ def discover(
         return
     shares = section_gcp_assets[ASSET_TYPE]
     for item, share in shares.items():
-        data = share.asset.resource.data
+        data = share.resource_data
         labels = [
-            ServiceLabel("gcp/location", share.asset.resource.location),
+            ServiceLabel("gcp/location", share.location),
             ServiceLabel("gcp/filestore/name", item),
             ServiceLabel("gcp/projectId", section_gcp_assets.project),
         ]

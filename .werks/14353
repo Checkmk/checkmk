@@ -1,0 +1,13 @@
+Title: Fix Rittal CMC-III LCP water temperature check
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1654860854
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p14
+
+The check expects two services, one for IN and one for OUT, to be created. We now again
+created two services, instead of only one.

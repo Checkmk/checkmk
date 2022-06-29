@@ -59,7 +59,8 @@ def parse_cmciii_lcp_water(info):
 
 def inventory_cmciii_lcp_water(parsed):
     if parsed:
-        yield (None, {})
+        yield ("IN", {})
+        yield ("OUT", {})
 
 
 def check_cmciii_lcp_water(item, params, parsed):

@@ -77,27 +77,26 @@ def get_submitter(
     check_submission: str,
     monitoring_core: str,
     dry_run: bool,
-    host_name: HostName,
     keepalive: KeepaliveAPI,
 ) -> Submitter:
     if dry_run:
         return NoOpSubmitter()
 
     if keepalive.enabled():
-        return KeepaliveSubmitter(host_name, keepalive)
+        return KeepaliveSubmitter(keepalive)
 
     if check_submission == "pipe" or monitoring_core == "cmc":
-        return PipeSubmitter(host_name)
+        return PipeSubmitter()
 
     if check_submission == "file":
-        return FileSubmitter(host_name)
+        return FileSubmitter()
 
     raise MKGeneralException(f"Invalid setting {check_submission=} (expected 'pipe' or 'file')")
 
 
-_Submittee = tuple[ServiceName, ServiceCheckResult, _CacheInfo]
+_Submittee = tuple[HostName, ServiceName, ServiceCheckResult, _CacheInfo]
 
-_FormattedSubmittee = tuple[ServiceName, ServiceState, ServiceDetails, _CacheInfo]
+_FormattedSubmittee = tuple[HostName, ServiceName, ServiceState, ServiceDetails, _CacheInfo]
 
 
 class Submitter(abc.ABC):
@@ -109,6 +108,7 @@ class Submitter(abc.ABC):
     ) -> None:
         formatted_submittees = [
             (
+                host_name,
                 service_name,
                 result.state,
                 "%s|%s"
@@ -120,10 +120,10 @@ class Submitter(abc.ABC):
                 ),
                 cache_info,
             )
-            for service_name, result, cache_info in submittees
+            for host_name, service_name, result, cache_info in submittees
         ]
 
-        for description, state, output, _ci in formatted_submittees:
+        for _hn, description, state, output, _ci in formatted_submittees:
             _output_check_result(description, state, output, show_perfdata=show_perfdata)
 
         self._submit(formatted_submittees)
@@ -139,23 +139,19 @@ class NoOpSubmitter(Submitter):
 
 
 class KeepaliveSubmitter(Submitter):
-    def __init__(self, host_name: HostName, keepalive: KeepaliveAPI) -> None:
+    def __init__(self, keepalive: KeepaliveAPI) -> None:
         self._keepalive = keepalive
-        self._host_name = host_name
 
     def _submit(self, formatted_submittees: Iterable[_FormattedSubmittee]) -> None:
         """Regular case for the CMC - check helpers are running in keepalive mode"""
         for s in formatted_submittees:
-            self._keepalive.add_check_result(self._host_name, *s)
+            self._keepalive.add_check_result(*s)
 
 
 class PipeSubmitter(Submitter):
 
     # Filedescriptor to open nagios command pipe.
     _nagios_command_pipe: Literal[False] | IO[bytes] | None = None
-
-    def __init__(self, host_name: HostName) -> None:
-        self._host_name = host_name
 
     @classmethod
     def _open_command_pipe(cls) -> Literal[False] | IO[bytes]:
@@ -183,11 +179,11 @@ class PipeSubmitter(Submitter):
         if not (pipe := PipeSubmitter._open_command_pipe()):
             return
 
-        for service, state, output, _cache_info in formatted_submittees:
+        for host, service, state, output, _cache_info in formatted_submittees:
 
             msg = "[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" % (
                 time.time(),
-                self._host_name,
+                host,
                 service,
                 state,
                 output.replace("\n", "\\n"),
@@ -230,20 +226,17 @@ class FileSubmitter(Submitter):
 
     _names = _RandomNameSequence()
 
-    def __init__(self, host_name: HostName) -> None:
-        self._host_name = host_name
-
     def _submit(self, formatted_submittees: Iterable[_FormattedSubmittee]) -> None:
 
         now = time.time()
 
         with self._open_checkresult_file() as fd:
-            for service, state, output, _cache_info in formatted_submittees:
+            for host, service, state, output, _cache_info in formatted_submittees:
                 output = output.replace("\n", "\\n")
                 os.write(
                     fd,
                     (
-                        f"host_name={self._host_name}\n"
+                        f"host_name={host}\n"
                         f"service_description={service}\n"
                         "check_type=1\n"
                         "check_options=0\n"

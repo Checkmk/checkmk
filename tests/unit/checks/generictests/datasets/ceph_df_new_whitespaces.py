@@ -45,11 +45,11 @@ checks = {
             }, [
                 (
                     0, 'Used: 3.16% - 8.00 GiB of 253 GiB', [
-                        ('fs_used', 8192.0, 207257.6, 233164.8, 0, 259072.0),
-                        ('fs_size', 259072.0, None, None, 0, None),
+                        ('fs_used', 8192.0, 207257.6, 233164.8, 0, None),
+                        ('fs_free', 250880.0, None, None, 0, None),
                         (
                             'fs_used_percent', 3.1620553359683794, 80.0, 90.0, 0.0, 100.0
-                        )
+                        ), ('fs_size', 259072.0, None, None, 0, None)
                     ]
                 )
             ]
@@ -70,11 +70,11 @@ checks = {
                     0, 'Used: 2.04% - 1.60 GiB of 78.6 GiB', [
                         (
                             'fs_used', 1638.3999999999942, 64389.12, 72437.76,
-                            0, 80486.4
-                        ), ('fs_size', 80486.4, None, None, 0, None),
+                            0, None
+                        ), ('fs_free', 78848.0, None, None, 0, None),
                         (
                             'fs_used_percent', 2.035623409669204, 80.0, 90.0, 0.0, 100.0
-                        )
+                        ), ('fs_size', 80486.4, None, None, 0, None)
                     ]
                 )
             ]
@@ -93,11 +93,11 @@ checks = {
             }, [
                 (
                     0, 'Used: 0.04% - 32.0 MiB of 77.0 GiB', [
-                        ('fs_used', 32.0, 63104.0, 70992.0, 0, 78880.0),
-                        ('fs_size', 78880.0, None, None, 0, None),
+                        ('fs_used', 32.0, 63104.0, 70992.0, 0, None),
+                        ('fs_free', 78848.0, None, None, 0, None),
                         (
                             'fs_used_percent', 0.04056795131845842, 80.0, 90.0, 0.0, 100.0
-                        )
+                        ), ('fs_size', 78880.0, None, None, 0, None)
                     ]
                 )
             ]

@@ -1,0 +1,27 @@
+Title: df: changed creation conditions for filesystem free and reserved space metrics
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1656591084
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+The incompatibility of this change only affects users who use the metric for
+filesystem space reserved for the root user ("reserved") in a custom graph and
+rely on this metric to be created when the "Show space reserved for the root
+user" option is enabled.
+
+The metric for filesystem free space ("fs_free") is now always created,
+regardless of the configuration options chosen for the check. Previously, it
+was only created when the "Exclude space reserved for the root user from
+calculation of used space" option was enabled.
+
+The metric for filesystem space resereved for root ("reserved") was generated
+when either the "Exclude space reserved for the root user from calculation of
+used space" or the "Show space reserved for the root user". It is now only
+created when the former of these options is enabled.
+
+These changes do not affect the built-in graph, "Filesystem size and used
+space".

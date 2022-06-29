@@ -149,9 +149,13 @@ def value_store_fixture(monkeypatch):
                     "fs_used",
                     84.703125,
                     levels=(256.0, 288.0),
-                    boundaries=(0.0, 320.0),
+                    boundaries=(0.0, None),
                 ),
-                Metric("fs_size", 320.0, boundaries=(0.0, None)),
+                Metric(
+                    "fs_free",
+                    235.296875,
+                    boundaries=(0.0, None),
+                ),
                 Metric(
                     "fs_used_percent",
                     26.4697265625,
@@ -159,6 +163,7 @@ def value_store_fixture(monkeypatch):
                     boundaries=(0.0, 100.0),
                 ),
                 Result(state=state.OK, summary="Used: 26.47% - 84.7 MiB of 320 MiB"),
+                Metric("fs_size", 320.0, boundaries=(0.0, None)),
                 Metric("growth", -4470.553049074118),
                 Result(state=state.OK, summary="trend per 1 day 0 hours: +621 TiB"),
                 Result(state=state.OK, summary="trend per 1 day 0 hours: +203357489.65%"),
@@ -183,11 +188,11 @@ def value_store_fixture(monkeypatch):
                     "fs_used",
                     84.703125,
                     levels=(32.0, 48.0),
-                    boundaries=(0.0, 320.0),
+                    boundaries=(0.0, None),
                 ),
                 Metric(
-                    "fs_size",
-                    320.0,
+                    "fs_free",
+                    235.296875,
                     boundaries=(0.0, None),
                 ),
                 Metric(
@@ -200,6 +205,7 @@ def value_store_fixture(monkeypatch):
                     state=state.CRIT,
                     summary="Used: 26.47% - 84.7 MiB of 320 MiB (warn/crit at 10.00%/15.00% used)",
                 ),
+                Metric("fs_size", 320.0, boundaries=(0.0, None)),
                 Metric("growth", -4470.553049074118),
                 Result(
                     state=state.CRIT,

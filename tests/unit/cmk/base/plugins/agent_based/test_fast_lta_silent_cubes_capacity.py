@@ -41,10 +41,8 @@ def test_check_fast_lta_silent_cube_capacity(check_fast_lta_silent_cubes_capacit
     )
     expected_check_results = [
         Result(state=State.OK, summary="Used: 48.43% - 3.52 TiB of 7.28 TiB"),
-        Metric(
-            "fs_used", 3695972.90234375, levels=(6104729.6, 6867820.8), boundaries=(0.0, 7630912.0)
-        ),
-        Metric("fs_size", 7630912.0),
+        Metric("fs_used", 3695972.90234375, levels=(6104729.6, 6867820.8), boundaries=(0.0, None)),
+        Metric("fs_free", 3934939.09765625, boundaries=(0.0, None)),
         Metric("fs_used_percent", 48.434222571872795, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
     ]
 

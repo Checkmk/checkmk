@@ -210,8 +210,10 @@ def check_network_fs_mount(
         yield from results
         return
 
+    # TODO: metric translation could be used instead...
     for old_name, new_name, factor in (
         ("fs_used", "fs_used", MEGA),
+        ("fs_free", "fs_free", MEGA),
         ("fs_size", "fs_size", MEGA),
         ("growth", "fs_growth", MB_PER_DAY_TO_B_PER_S),
         ("trend", "fs_trend", MB_PER_DAY_TO_B_PER_S),

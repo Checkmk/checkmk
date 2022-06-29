@@ -46,11 +46,12 @@ checks = {
                     0, 'Used: 28.03% - 91.7 TiB of 327 TiB', [
                         (
                             'fs_used', 96122807.59765625, 274296840.0,
-                            308583945.0, 0, 342871050.0
-                        ), ('fs_size', 342871050.0, None, None, 0, None),
+                            308583945.0, 0, None
+                        ),
+                        ('fs_free', 246748242.40234375, None, None, 0, None),
                         (
                             'fs_used_percent', 28.034681725872233, 80.0, 90.0, 0.0, 100.0
-                        )
+                        ), ('fs_size', 342871050.0, None, None, 0, None)
                     ]
                 ), (0, 'Total local: 327 TiB', []),
                 (0, 'Free local: 235 TiB', []),

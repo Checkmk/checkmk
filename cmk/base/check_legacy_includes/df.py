@@ -226,6 +226,8 @@ def df_check_filesystem_single_coroutine(  # pylint: disable=too-many-branches
                 perfboundaries = None, None
             perfdata.append((name, value, *perflevels, *perfboundaries))
 
+    perfdata.append(("fs_size", size_mb, None, None, 0, None))  # type: ignore
+
     if show_reserved:
         reserved_perc_hr = get_percent_human_readable(100.0 * reserved_mb / size_mb)
         reserved_hr = get_bytes_human_readable(reserved_mb * 1024**2)
@@ -234,9 +236,6 @@ def df_check_filesystem_single_coroutine(  # pylint: disable=too-many-branches
             if subtract_reserved
             else "therein reserved for root: %s (%s)" % (reserved_perc_hr, reserved_hr)  #
         )
-
-    if subtract_reserved:
-        perfdata.append(("fs_free", avail_mb, None, None, 0, size_mb))  # type: ignore
 
     if subtract_reserved or show_reserved:
         perfdata.append(("reserved", reserved_mb))  # type: ignore

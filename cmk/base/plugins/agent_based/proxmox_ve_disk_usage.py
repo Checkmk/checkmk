@@ -32,6 +32,7 @@ def discover_single(section: Section) -> DiscoveryResult:
     yield Service()
 
 
+# TODO: this is exactly the same as df, except in bytes
 def check_proxmox_ve_disk_usage(params: Mapping[str, Any], section: Section) -> CheckResult:
     """
     >>> for result in check_proxmox_ve_disk_usage(
@@ -39,8 +40,9 @@ def check_proxmox_ve_disk_usage(params: Mapping[str, Any], section: Section) -> 
     ...     parse_proxmox_ve_disk_usage([['{"disk": 1073741824, "max_disk": 2147483648}']])):
     ...   print(result)
     Metric('fs_used', 1073741824.0, levels=(1717986918.4, 1932735283.2), boundaries=(0.0, 2147483648.0))
-    Metric('fs_size', 2147483648.0, boundaries=(0.0, None))
+    Metric('fs_free', 1073741824.0, boundaries=(0.0, None))
     Metric('fs_used_percent', 50.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0))
+    Metric('fs_size', 2147483648.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='50.00% used (1.07 GB of 2.15 GB)')
     """
     used_bytes, total_bytes = section.get("disk", 0), section.get("max_disk", 0)
@@ -58,8 +60,8 @@ def check_proxmox_ve_disk_usage(params: Mapping[str, Any], section: Section) -> 
         boundaries=(0, total_bytes),
     )
     yield Metric(
-        "fs_size",
-        total_bytes,
+        "fs_free",
+        total_bytes - used_bytes,
         boundaries=(0, None),
     )
     yield Metric(
@@ -67,6 +69,11 @@ def check_proxmox_ve_disk_usage(params: Mapping[str, Any], section: Section) -> 
         100.0 * used_bytes / total_bytes,
         levels=(warn, crit),
         boundaries=(0.0, 100.0),
+    )
+    yield Metric(
+        "fs_size",
+        total_bytes,
+        boundaries=(0, None),
     )
 
     yield Result(

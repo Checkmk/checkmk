@@ -26,8 +26,8 @@ DISK_DATA = {"disk": 1024**4, "max_disk": 2 * 1024**4}
                     boundaries=(0.0, 2199023255552.0),
                 ),
                 Metric(
-                    "fs_size",
-                    2199023255552.0,
+                    "fs_free",
+                    1099511627776.0,
                     boundaries=(0.0, None),
                 ),
                 Metric(
@@ -35,6 +35,11 @@ DISK_DATA = {"disk": 1024**4, "max_disk": 2 * 1024**4}
                     50.0,
                     levels=(0.0, 0.0),
                     boundaries=(0.0, 100.0),
+                ),
+                Metric(
+                    "fs_size",
+                    2199023255552.0,
+                    boundaries=(0.0, None),
                 ),
                 Result(
                     state=State.CRIT,
@@ -53,8 +58,8 @@ DISK_DATA = {"disk": 1024**4, "max_disk": 2 * 1024**4}
                     boundaries=(0.0, 2199023255552.0),
                 ),
                 Metric(
-                    "fs_size",
-                    2199023255552.0,
+                    "fs_free",
+                    1099511627776.0,
                     boundaries=(0.0, None),
                 ),
                 Metric(
@@ -62,6 +67,11 @@ DISK_DATA = {"disk": 1024**4, "max_disk": 2 * 1024**4}
                     50.0,
                     levels=(40.0, 90.0),
                     boundaries=(0.0, 100.0),
+                ),
+                Metric(
+                    "fs_size",
+                    2199023255552.0,
+                    boundaries=(0.0, None),
                 ),
                 Result(state=State.WARN, summary="50.00% used (1.10 TB of 2.20 TB)"),
             ),

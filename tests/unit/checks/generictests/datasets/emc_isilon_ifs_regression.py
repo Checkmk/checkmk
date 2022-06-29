@@ -22,11 +22,11 @@ checks = {
                     0, 'Used: 2.57% - 14.4 TiB of 560 TiB', [
                         (
                             'fs_used', 15077125, 469629670.4, 528333379.2, 0,
-                            587037088
-                        ), ('fs_size', 587037088, None, None, 0, None),
+                            None
+                        ), ('fs_free', 571959963, None, None, 0, None),
                         (
                             'fs_used_percent', 2.5683428369691015, 80.0, 90.0, 0.0, 100.0
-                        )
+                        ), ('fs_size', 587037088, None, None, 0, None)
                     ]
                 )
             ]

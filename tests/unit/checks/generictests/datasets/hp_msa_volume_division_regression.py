@@ -250,9 +250,10 @@ checks = {
                     2,
                     'Used: 100.00% - 1.09 TiB of 1.09 TiB (warn/crit at 80.00%/90.00% used)',
                     [
-                        ('fs_used', 1143452, 914761.6, 1029106.8, 0, 1143452),
-                        ('fs_size', 1143452, None, None, 0, None),
-                        ('fs_used_percent', 100.0, 80.0, 90.0, 0.0, 100.0)
+                        ('fs_used', 1143452, 914761.6, 1029106.8, 0, None),
+                        ('fs_free', 0, None, None, 0, None),
+                        ('fs_used_percent', 100.0, 80.0, 90.0, 0.0, 100.0),
+                        ('fs_size', 1143452, None, None, 0, None)
                     ]
                 )
             ]
@@ -274,9 +275,10 @@ checks = {
                     2,
                     'Used: 100.00% - 1.09 TiB of 1.09 TiB (warn/crit at 80.00%/90.00% used)',
                     [
-                        ('fs_used', 1143452, 914761.6, 1029106.8, 0, 1143452),
-                        ('fs_size', 1143452, None, None, 0, None),
-                        ('fs_used_percent', 100.0, 80.0, 90.0, 0.0, 100.0)
+                        ('fs_used', 1143452, 914761.6, 1029106.8, 0, None),
+                        ('fs_free', 0, None, None, 0, None),
+                        ('fs_used_percent', 100.0, 80.0, 90.0, 0.0, 100.0),
+                        ('fs_size', 1143452, None, None, 0, None)
                     ]
                 )
             ]

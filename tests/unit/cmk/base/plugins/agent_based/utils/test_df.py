@@ -92,13 +92,9 @@ def test_df_discovery(params, expected) -> None:
                     "fs_used",
                     43841.0,
                     levels=(82124.0, 92389.5),
-                    boundaries=(0.0, 102655.0),
-                ),
-                Metric(
-                    "fs_size",
-                    102655.0,
                     boundaries=(0.0, None),
                 ),
+                Metric("fs_free", 58814.0, boundaries=(0, None)),
                 Metric(
                     "fs_used_percent",
                     42.707125809751105,
@@ -109,6 +105,7 @@ def test_df_discovery(params, expected) -> None:
                     state=State.OK,
                     summary="Used: 42.71% - 42.8 GiB of 100 GiB",
                 ),
+                Metric("fs_size", 102655.0, boundaries=(0.0, None)),
                 Metric(
                     "growth",
                     161105947.82608697,
@@ -146,11 +143,11 @@ def test_df_discovery(params, expected) -> None:
                     "fs_used",
                     43841.0,
                     levels=(82124.0, 92389.5),
-                    boundaries=(0.0, 102655.0),
+                    boundaries=(0.0, None),
                 ),
                 Metric(
-                    "fs_size",
-                    102655.0,
+                    "fs_free",
+                    58814.0,
                     boundaries=(0.0, None),
                 ),
                 Metric(
@@ -163,6 +160,7 @@ def test_df_discovery(params, expected) -> None:
                     state=State.OK,
                     summary="Used: 42.71% - 42.8 GiB of 100 GiB",
                 ),
+                Metric("fs_size", 102655.0, boundaries=(0.0, None)),
                 Metric(
                     "growth",
                     161105947.82608697,
@@ -210,11 +208,11 @@ def test_df_discovery(params, expected) -> None:
                     "fs_used",
                     43841.0,
                     levels=(82124.0, 92389.5),
-                    boundaries=(0.0, 102655.0),
+                    boundaries=(0.0, None),
                 ),
                 Metric(
-                    "fs_size",
-                    102655.0,
+                    "fs_free",
+                    58814.0,
                     boundaries=(0.0, None),
                 ),
                 Metric(
@@ -227,6 +225,7 @@ def test_df_discovery(params, expected) -> None:
                     state=State.OK,
                     summary="Used: 42.71% - 42.8 GiB of 100 GiB",
                 ),
+                Metric("fs_size", 102655.0, boundaries=(0.0, None)),
                 Metric(
                     "growth",
                     161105947.82608697,

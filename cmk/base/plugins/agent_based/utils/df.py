@@ -503,8 +503,8 @@ def check_filesystem_levels(
     status = (
         State.CRIT if used_space >= crit_mb else State.WARN if used_space >= warn_mb else State.OK
     )
-    yield Metric("fs_used", used_space, levels=(warn_mb, crit_mb), boundaries=(0, filesystem_size))
-    yield Metric("fs_size", filesystem_size, boundaries=(0, None))
+    yield Metric("fs_used", used_space, levels=(warn_mb, crit_mb), boundaries=(0, None))
+    yield Metric("fs_free", free_space, boundaries=(0, None))
 
     used_space_percent = (used_space / allocatable_filesystem_size) * 100.0
     yield Metric(
@@ -570,6 +570,9 @@ def df_check_filesystem_single(
         filesystem_size, allocatable_filesystem_size, free_space, used_space, params, show_levels
     )
 
+    # This is used to draw some pretty perfometers
+    yield Metric("fs_size", filesystem_size, boundaries=(0, None))
+
     if show_reserved:
         reserved_perc_hr = render.percent(100.0 * reserved_space / filesystem_size)
         reserved_hr = render.bytes(reserved_space * 1024**2)
@@ -581,9 +584,6 @@ def df_check_filesystem_single(
         )
 
     if subtract_reserved:
-        yield Metric("fs_free", free_space, boundaries=(0, filesystem_size))
-
-    if subtract_reserved or show_reserved:
         yield Metric("reserved", reserved_space)
 
     yield from size_trend(

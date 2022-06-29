@@ -84,11 +84,12 @@ checks = {
                 (0, 'A (RAID0)', []),
                 (
                     0, 'Used: 24.76% - 23.1 GiB of 93.1 GiB', [
-                        ('fs_used', 23616, 76291.2, 85827.6, 0, 95364),
-                        ('fs_size', 95364, None, None, 0, None),
+                        ('fs_used', 23616, 76291.2, 85827.6, 0, None),
+                        ('fs_free', 71748, None, None, 0, None),
                         (
                             'fs_used_percent', 24.764061910154776, 80.0, 90.0, 0.0, 100.0
-                        )
+                        ),
+                        ('fs_size', 95364, None, None, 0, None),
                     ]
                 )
             ]
@@ -108,11 +109,12 @@ checks = {
                 (0, 'A (RAID0)', []),
                 (
                     0, 'Used: 57.81% - 1.16 TiB of 2.00 TiB', [
-                        ('fs_used', 1212896, 1678313.6, 1888102.8, 0, 2097892),
-                        ('fs_size', 2097892, None, None, 0, None),
+                        ('fs_used', 1212896, 1678313.6, 1888102.8, 0, None),
+                        ('fs_free', 884996, None, None, 0, None),
                         (
                             'fs_used_percent', 57.81498761614039, 80.0, 90.0, 0.0, 100.0
-                        )
+                        ),
+                        ('fs_size', 2097892, None, None, 0, None),
                     ]
                 )
             ]
@@ -134,11 +136,12 @@ checks = {
                     2,
                     'Used: 91.37% - 1.83 TiB of 2.00 TiB (warn/crit at 80.00%/90.00% used)',
                     [
-                        ('fs_used', 1916852, 1678236.8, 1888016.4, 0, 2097796),
-                        ('fs_size', 2097796, None, None, 0, None),
+                        ('fs_used', 1916852, 1678236.8, 1888016.4, 0, None),
+                        ('fs_free', 180944, None, None, 0, None),
                         (
                             'fs_used_percent', 91.37456644974058, 80.0, 90.0, 0.0, 100.0
-                        )
+                        ),
+                        ('fs_size', 2097796, None, None, 0, None),
                     ]
                 )
             ]
@@ -158,11 +161,12 @@ checks = {
                 (0, 'A (RAID0)', []),
                 (
                     0, 'Used: 78.78% - 323 GiB of 410 GiB', [
-                        ('fs_used', 330528, 335644.8, 377600.4, 0, 419556),
-                        ('fs_size', 419556, None, None, 0, None),
+                        ('fs_used', 330528, 335644.8, 377600.4, 0, None),
+                        ('fs_free', 89028, None, None, 0, None),
                         (
                             'fs_used_percent', 78.7804250207362, 80.0, 90.0, 0.0, 100.0
-                        )
+                        ),
+                        ('fs_size', 419556, None, None, 0, None),
                     ]
                 )
             ]

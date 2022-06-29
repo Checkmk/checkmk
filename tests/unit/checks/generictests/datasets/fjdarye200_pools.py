@@ -32,11 +32,11 @@ checks = {
                     [
                         (
                             'fs_used', 105269493, 93752467.2, 105471525.6, 0,
-                            117190584
-                        ), ('fs_size', 117190584, None, None, 0, None),
+                            None
+                        ), ('fs_free', 11921091, None, None, 0, None),
                         (
                             'fs_used_percent', 89.82760338492724, 80.0, 90.0, 0.0, 100.0
-                        )
+                        ), ('fs_size', 117190584, None, None, 0, None)
                     ]
                 )
             ]

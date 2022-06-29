@@ -113,9 +113,8 @@ def value_store_fixture(monkeypatch):
                     "fs_used",
                     10342.400000000001,
                     levels=(52674.56, 59258.88),
-                    boundaries=(0.0, 65843.2),
                 ),
-                Metric("fs_size", 65843.2, boundaries=(0.0, None)),
+                Metric("fs_free", 55500.79),
                 Metric(
                     "fs_used_percent",
                     15.707620528771388,
@@ -123,6 +122,7 @@ def value_store_fixture(monkeypatch):
                     boundaries=(0.0, 100.0),
                 ),
                 Result(state=State.OK, summary="Used: 15.71% - 10.1 GiB of 64.3 GiB"),
+                Metric("fs_size", 65843.2, boundaries=(0.0, None)),
                 Metric("growth", -4469.024458823538),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +621 TiB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +988323.73%"),
@@ -142,9 +142,8 @@ def value_store_fixture(monkeypatch):
                     "fs_used",
                     10342.400000000001,
                     levels=(52674.56, 59258.88),
-                    boundaries=(0.0, 65843.2),
                 ),
-                Metric("fs_size", 65843.2, boundaries=(0.0, None)),
+                Metric("fs_free", 55500.79),
                 Metric(
                     "fs_used_percent",
                     15.707620528771388,
@@ -152,6 +151,7 @@ def value_store_fixture(monkeypatch):
                     boundaries=(0.0, 100.0),
                 ),
                 Result(state=State.OK, summary="Used: 15.71% - 10.1 GiB of 64.3 GiB"),
+                Metric("fs_size", 65843.2, boundaries=(0.0, None)),
                 Metric("growth", -4469.024458823538),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +621 TiB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +988323.73%"),
@@ -171,9 +171,8 @@ def value_store_fixture(monkeypatch):
                     "fs_used",
                     10342.400000000001,
                     levels=(52674.56, 59258.88),
-                    boundaries=(0.0, 65843.2),
                 ),
-                Metric("fs_size", 65843.2, boundaries=(0.0, None)),
+                Metric("fs_free", 55500.79),
                 Metric(
                     "fs_used_percent",
                     15.707620528771388,
@@ -181,6 +180,7 @@ def value_store_fixture(monkeypatch):
                     boundaries=(0.0, 100.0),
                 ),
                 Result(state=State.OK, summary="Used: 15.71% - 10.1 GiB of 64.3 GiB"),
+                Metric("fs_size", 65843.2, boundaries=(0.0, None)),
                 Metric("growth", -4469.024458823538),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +621 TiB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +988323.73%"),
@@ -206,7 +206,7 @@ def test_check_sap_hana_diskusage(
         [m for m in expected_result if isinstance(m, Metric)],
     ):
         assert actual_metric.name == expected_metric.name
-        assert actual_metric.value == expected_metric.value
+        assert actual_metric.value == pytest.approx(expected_metric.value)
         if hasattr(actual_metric, "levels"):
             assert actual_metric.levels[0] == pytest.approx(expected_metric.levels[0])
             assert actual_metric.levels[1] == pytest.approx(expected_metric.levels[1])

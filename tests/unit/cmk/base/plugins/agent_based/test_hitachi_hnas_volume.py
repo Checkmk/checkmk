@@ -112,7 +112,7 @@ def value_store_fixture(monkeypatch):
                     levels=(2122214.4, 2387491.2),
                     boundaries=(0.0, 2652768.0),
                 ),
-                Metric("fs_size", 2652768.0, boundaries=(0.0, None)),
+                Metric("fs_free", 787382.69921875, boundaries=(0.0, None)),
                 Metric(
                     "fs_used_percent",
                     70.31844853305114,
@@ -120,6 +120,7 @@ def value_store_fixture(monkeypatch):
                     boundaries=(0.0, 100.0),
                 ),
                 Result(state=State.OK, summary="Used: 70.32% - 1.78 TiB of 2.53 TiB"),
+                Metric("fs_size", 2652768.0, boundaries=(0.0, None)),
                 Metric("growth", -1495.9370633802703),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -1.46 GiB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -0.06%"),

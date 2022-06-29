@@ -274,12 +274,11 @@ def test_get_item_names(qtree: Qtree, expected_result) -> None:
             },
             "QUOTA-10.user",
             [
-                Metric(
-                    "fs_used", 0.0, levels=(0.0046875, 0.0052734375), boundaries=(0.0, 0.005859375)
-                ),
-                Metric("fs_size", 0.005859375, boundaries=(0.0, None)),
+                Metric("fs_used", 0.0, levels=(0.0046875, 0.0052734375)),
+                Metric("fs_free", 0.005859375, boundaries=(0.0, None)),
                 Metric("fs_used_percent", 0.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Result(state=State.OK, summary="Used: 0% - 0 B of 6.00 KiB"),
+                Metric("fs_size", 0.005859375, boundaries=(0.0, None)),
                 Metric("growth", 0.0),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
@@ -321,12 +320,11 @@ def test_get_item_names(qtree: Qtree, expected_result) -> None:
             },
             "QUOTA-10.user",
             [
-                Metric(
-                    "fs_used", 0.0, levels=(0.0046875, 0.0052734375), boundaries=(0.0, 0.005859375)
-                ),
-                Metric("fs_size", 0.005859375, boundaries=(0.0, None)),
+                Metric("fs_used", 0.0, levels=(0.0046875, 0.0052734375)),
+                Metric("fs_free", 0.005859375, boundaries=(0.0, None)),
                 Metric("fs_used_percent", 0.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Result(state=State.OK, summary="Used: 0% - 0 B of 6.00 KiB"),
+                Metric("fs_size", 0.005859375, boundaries=(0.0, None)),
                 Metric("growth", 0.0),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),

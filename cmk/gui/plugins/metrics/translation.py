@@ -415,7 +415,10 @@ df_translation: Dict[str, CheckMetricEntry] = {
     "fs_used_percent": {
         "auto_graph": False,
     },
-    "fs_size": {"scale": MB},
+    "fs_size": {
+        "scale": MB,
+        "auto_graph": False,
+    },
     "reserved": {"scale": MB},
     "fs_free": {"scale": MB},
     "growth": {"name": "fs_growth", "scale": MB / 86400.0},
@@ -483,12 +486,26 @@ check_metrics["check_mk-sansymphony_pool"] = {
     "percent_allocated": {"name": "fs_used_percent"},
 }
 
+
+do_not_display_fs_size_translation: Dict[str, CheckMetricEntry] = {
+    "fs_size": {
+        "auto_graph": False,
+    },
+}
+check_metrics["check_mk-nfsmounts"] = do_not_display_fs_size_translation
+check_metrics["check_mk-cifsmounts"] = do_not_display_fs_size_translation
+check_metrics["check_mk-proxmox_ve_disk_usage"] = do_not_display_fs_size_translation
+
 check_metrics["check_mk-netapp_api_volumes"] = {
     "fs_used": {"scale": MB},
+    "fs_free": {"scale": MB},
     "fs_used_percent": {
         "auto_graph": False,
     },
-    "fs_size": {"scale": MB},
+    "fs_size": {
+        "scale": MB,
+        "auto_graph": False,
+    },
     "growth": {"name": "fs_growth", "scale": MB / 86400.0},
     "trend": {"name": "fs_trend", "scale": MB / 86400.0},
     "read_latency": {"scale": m},

@@ -85,16 +85,17 @@ metric_info["fs_provisioning"] = {
 graph_info["fs_used"] = {
     "title": _("Size and used space"),
     "metrics": [
+        # NOTE: in this scenario, fs_used includes reserved space
         ("fs_used", "area"),
-        ("fs_size,fs_used,-#e3fff9", "stack", _("Free space")),
-        ("fs_size", "line"),
+        ("fs_free", "stack"),
+        ("fs_used,fs_free,+#006040", "line", "Filesystem_size"),
     ],
     "scalars": [
         "fs_used:warn",
         "fs_used:crit",
     ],
     "range": (0, "fs_used:max"),
-    "conflicting_metrics": ["fs_free"],
+    "conflicting_metrics": ["reserved"],
 }
 
 # draw a different graph if space reserved for root was excluded
@@ -104,7 +105,7 @@ graph_info["fs_used_2"] = {
         ("fs_used", "area"),
         ("fs_free", "stack"),
         ("reserved", "stack"),
-        ("fs_size", "line"),
+        ("fs_used,fs_free,reserved,+,+#006040", "line", "Filesystem_size"),
     ],
     "scalars": [
         "fs_used:warn",

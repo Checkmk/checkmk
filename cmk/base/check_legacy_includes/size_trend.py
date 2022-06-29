@@ -27,8 +27,6 @@ from cmk.base.check_api import get_rate
 # THE NEW CHECK API. PLEASE DO NOT MODIFY THIS FUNCTION ANYMORE. INSTEAD, MODIFY THE MIGRATED CODE
 # RESIDING IN
 # cmk/base/plugins/agent_based/utils/size_trend.py
-# IF YOU CANNOT FIND THE MIGRATED COUNTERPART OF A FUNCTION, PLEASE TALK TO TIMI BEFORE DOING
-# ANYTHING ELSE.
 # ==================================================================================================
 def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):  # pylint: disable=function-redefined
     """Trend computation for size related checks of disks, ram, etc.

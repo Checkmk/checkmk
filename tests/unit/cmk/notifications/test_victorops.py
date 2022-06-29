@@ -62,6 +62,6 @@ from cmk.notification_plugins.victorops import victorops_msg
         ),
     ],
 )
-def test_victorops_message(context, result) -> None:
+def test_victorops_message(context, result) -> None:  # type:ignore[no-untyped-def]
     msg = victorops_msg(context)
     assert msg == result

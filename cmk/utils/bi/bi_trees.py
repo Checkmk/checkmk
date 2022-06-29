@@ -60,7 +60,7 @@ class BICompiledLeaf(ABCBICompiledNode):
     def type(cls) -> str:
         return "leaf"
 
-    def __init__(
+    def __init__(  # type:ignore[no-untyped-def]
         self,
         host_name: HostName,
         service_description: Optional[ServiceName] = None,
@@ -105,7 +105,7 @@ class BICompiledLeaf(ABCBICompiledNode):
             self.service_description,
         )
 
-    def compute(
+    def compute(  # type:ignore[no-untyped-def]
         self,
         computation_options: BIAggregationComputationOptions,
         bi_status_fetcher: ABCBIStatusFetcher,
@@ -164,7 +164,7 @@ class BICompiledLeaf(ABCBICompiledNode):
             self,
         )
 
-    def _map_hoststate_to_bistate(self, host_state: HostState):
+    def _map_hoststate_to_bistate(self, host_state: HostState):  # type:ignore[no-untyped-def]
         if host_state == BIStates.HOST_UP:
             return BIStates.OK
         if host_state == BIStates.HOST_DOWN:
@@ -178,7 +178,7 @@ class BICompiledLeaf(ABCBICompiledNode):
             return cmk.utils.defines.service_state_name(state)
         return cmk.utils.defines.host_state_name(state)
 
-    def _get_entity(
+    def _get_entity(  # type:ignore[no-untyped-def]
         self, bi_status_fetcher
     ) -> Optional[Union[BIHostStatusInfoRow, BIServiceWithFullState]]:
         entity = bi_status_fetcher.states.get((self.site_id, self.host_name))
@@ -209,7 +209,7 @@ class BISiteHostPairSchema(Schema):
     host_name = ReqString()
 
     @pre_dump
-    def pre_dumper(self, obj: Tuple, many=False) -> Dict:
+    def pre_dumper(self, obj: Tuple, many=False) -> Dict:  # type:ignore[no-untyped-def]
         # Convert aggregations and rules to list
         return {"site_id": obj[0], "host_name": obj[1]}
 
@@ -294,7 +294,7 @@ class BICompiledRule(ABCBICompiledNode):
             BIHostSpec(element.site_id, element.host_name) for element in self.required_elements()
         }
 
-    def compute(
+    def compute(  # type:ignore[no-untyped-def]
         self,
         computation_options: BIAggregationComputationOptions,
         bi_status_fetcher: ABCBIStatusFetcher,
@@ -452,7 +452,7 @@ class BIRemainingResult(ABCBICompiledNode):
     def services_of_host(self, host_name: HostName) -> Set[ServiceName]:
         return set()
 
-    def compute(
+    def compute(  # type:ignore[no-untyped-def]
         self,
         computation_options: BIAggregationComputationOptions,
         bi_status_fetcher: ABCBIStatusFetcher,
@@ -516,7 +516,9 @@ class BICompiledAggregation:
                 "output": item.output,
             }
 
-        def create_tree_state(bundle: NodeResultBundle, is_toplevel=False):
+        def create_tree_state(  # type:ignore[no-untyped-def]
+            bundle: NodeResultBundle, is_toplevel=False
+        ):
             response = []
             response.append(generate_state(bundle.actual_result))
             response.append(generate_state(bundle.assumed_result))

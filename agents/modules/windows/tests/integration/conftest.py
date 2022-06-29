@@ -64,7 +64,7 @@ def fixture_python_subdir():
     shutil.rmtree(tmpdir)
 
 
-def run_proc(command: List[str], *, cwd: Optional[Path] = None):
+def run_proc(command: List[str], *, cwd: Optional[Path] = None):  # type:ignore[no-untyped-def]
     with Popen(command, stdout=PIPE, stderr=PIPE, cwd=cwd) as process:
         pipe, err = process.communicate()
         ret = process.wait()
@@ -76,7 +76,7 @@ def run_proc(command: List[str], *, cwd: Optional[Path] = None):
 
 
 @pytest.fixture(scope="session", autouse=True)
-def python_to_test(python_subdir, regression_data) -> Path:
+def python_to_test(python_subdir, regression_data) -> Path:  # type:ignore[no-untyped-def]
     """This is quite complicated simulator to verify python module and prepare the module for
     testing. During deployment every step will be validated, not because it is required(this method
     also contradicts a bit to the TDD philosophy), but to prevent extremely strange errors during

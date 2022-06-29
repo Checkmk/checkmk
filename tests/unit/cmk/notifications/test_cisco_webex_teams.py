@@ -66,6 +66,6 @@ from cmk.notification_plugins.cisco_webex_teams import cisco_webex_teams_msg
         ),
     ],
 )
-def test_cisco_webex_teams_message(context, result) -> None:
+def test_cisco_webex_teams_message(context, result) -> None:  # type:ignore[no-untyped-def]
     msg = cisco_webex_teams_msg(context)
     assert msg == result

@@ -95,7 +95,7 @@ from cmk.special_agents.agent_siemens_plc import (
         ),
     ],
 )
-def test_parse_spec(hostspec, expected_parsed_device) -> None:
+def test_parse_spec(hostspec, expected_parsed_device) -> None:  # type:ignore[no-untyped-def]
     assert parse_spec(hostspec) == expected_parsed_device
 
 
@@ -105,7 +105,7 @@ def test_parse_spec(hostspec, expected_parsed_device) -> None:
         ("merker", 131),
     ],
 )
-def test__area_name_to_area_id(area_name, expected_id) -> None:
+def test__area_name_to_area_id(area_name, expected_id) -> None:  # type:ignore[no-untyped-def]
     assert _area_name_to_area_id(area_name) == expected_id
 
 
@@ -142,7 +142,9 @@ def test__area_name_to_area_id(area_name, expected_id) -> None:
         ),
     ],
 )
-def test__addresses_from_area_values(values, expected_addresses) -> None:
+def test__addresses_from_area_values(  # type:ignore[no-untyped-def]
+    values, expected_addresses
+) -> None:
     assert _addresses_from_area_values(values) == expected_addresses
 
 
@@ -187,7 +189,9 @@ def test__addresses_from_area_values(values, expected_addresses) -> None:
         ),
     ],
 )
-def test__cast_values(values, start_address, area_value, expected_value) -> None:
+def test__cast_values(  # type:ignore[no-untyped-def]
+    values, start_address, area_value, expected_value
+) -> None:
     assert _cast_values(values, start_address, area_value) == expected_value
 
 
@@ -273,6 +277,8 @@ def test__cast_values(values, start_address, area_value, expected_value) -> None
         ),
     ],
 )
-def test__group_device_values(device, expected_grouped_values) -> None:
+def test__group_device_values(  # type:ignore[no-untyped-def]
+    device, expected_grouped_values
+) -> None:
     actual_values = [(i, list(j)) for i, j in _group_device_values(device)]
     assert actual_values == expected_grouped_values

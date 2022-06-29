@@ -31,7 +31,7 @@ LOG = logging.getLogger(__name__)
 
 
 class AgentJSON:
-    def __init__(self, key, title) -> None:
+    def __init__(self, key, title) -> None:  # type:ignore[no-untyped-def]
         self._key = key
         self._title = title
 
@@ -243,7 +243,7 @@ def vcrtrace(**vcr_init_kwargs):
     """
 
     class VcrTraceAction(argparse.Action):
-        def __init__(self, *args, **kwargs) -> None:
+        def __init__(self, *args, **kwargs) -> None:  # type:ignore[no-untyped-def]
             kwargs.setdefault("metavar", "TRACEFILE")
             help_part = "" if vcrtrace.__doc__ is None else vcrtrace.__doc__.split("\n\n")[3]
             kwargs["help"] = "%s %s" % (help_part, kwargs.get("help", ""))
@@ -267,7 +267,7 @@ def vcrtrace(**vcr_init_kwargs):
     return VcrTraceAction
 
 
-def get_seconds_since_midnight(current_time) -> float:
+def get_seconds_since_midnight(current_time) -> float:  # type:ignore[no-untyped-def]
     midnight = datetime.datetime.combine(current_time.date(), datetime.datetime.min.time())
     return (current_time - midnight).total_seconds()
 

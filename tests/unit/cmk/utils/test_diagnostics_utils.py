@@ -104,7 +104,7 @@ def test_diagnostics_serialize_wato_parameters_boolean() -> None:
         ),
     ],
 )
-def test_diagnostics_serialize_wato_parameters_files(
+def test_diagnostics_serialize_wato_parameters_files(  # type:ignore[no-untyped-def]
     mocker, wato_parameters, expected_parameters
 ) -> None:
     mocker.patch("cmk.utils.diagnostics._get_max_args", return_value=5)
@@ -155,7 +155,9 @@ def test_diagnostics_serialize_wato_parameters_files(
         ),
     ],
 )
-def test_diagnostics_deserialize(cl_parameters, modes_parameters, expected_parameters) -> None:
+def test_diagnostics_deserialize(  # type:ignore[no-untyped-def]
+    cl_parameters, modes_parameters, expected_parameters
+) -> None:
     assert diagnostics.deserialize_cl_parameters(cl_parameters) == expected_parameters
     assert diagnostics.deserialize_modes_parameters(modes_parameters) == expected_parameters
 
@@ -170,7 +172,9 @@ def test_diagnostics_deserialize(cl_parameters, modes_parameters, expected_param
         (diagnostics.OPT_COMP_BUSINESS_INTELLIGENCE, [3, 3, 3, 3, 3, 3, 1]),
     ],
 )
-def test_diagnostics_get_checkmk_file_info_by_name(component, sensitivity_values) -> None:
+def test_diagnostics_get_checkmk_file_info_by_name(  # type:ignore[no-untyped-def]
+    component, sensitivity_values
+) -> None:
     rel_filepaths = [
         "path/to/sites.mk",
         "path/to/global.mk",
@@ -239,7 +243,9 @@ def test_diagnostics_get_checkmk_file_info_by_name(component, sensitivity_values
         ("web.log", 1),
     ],
 )
-def test_diagnostics_file_info_of_comp_notifications(rel_filepath, sensitivity_value) -> None:
+def test_diagnostics_file_info_of_comp_notifications(  # type:ignore[no-untyped-def]
+    rel_filepath, sensitivity_value
+) -> None:
     assert (
         diagnostics.get_checkmk_file_info(
             rel_filepath, diagnostics.OPT_COMP_NOTIFICATIONS

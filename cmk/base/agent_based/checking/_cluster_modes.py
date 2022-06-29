@@ -48,7 +48,7 @@ class Selector(Protocol):
         ...
 
 
-def _unfit_for_clustering(**_kw) -> CheckResult:
+def _unfit_for_clustering(**_kw) -> CheckResult:  # type:ignore[no-untyped-def]
     """A cluster_check_function that displays a generic warning"""
     yield Result(
         state=State.UNKNOWN,

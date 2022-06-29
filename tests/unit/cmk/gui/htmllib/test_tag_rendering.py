@@ -43,7 +43,7 @@ def test_render_start_tag_keep_empty_values() -> None:
 
 @pytest.mark.parametrize("value", [["1", "2"], "1 2", ["1", None, "2"]])
 @pytest.mark.parametrize("key", ["class_", "css", "cssclass", "class"])
-def test_render_start_tag_class_variants(key, value) -> None:
+def test_render_start_tag_class_variants(key, value) -> None:  # type:ignore[no-untyped-def]
     tag = render_start_tag("div", **{key: value})
     assert str(tag) == '<div class="1 2">'
 
@@ -114,5 +114,5 @@ def test_render_element_do_not_escape_html() -> None:
 
 
 @pytest.mark.parametrize("value", [["1"], "1", ["1", None]])
-def test_normalize_css_spec_skip_nones(value) -> None:
+def test_normalize_css_spec_skip_nones(value) -> None:  # type:ignore[no-untyped-def]
     assert normalize_css_spec(value) == ["1"]

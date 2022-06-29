@@ -67,6 +67,7 @@ RW_PERMISSIONS = permissions.AllPerm(
 def create(params):
     """Create a service group"""
     user.need_permission("wato.edit")
+    user.need_permission("wato.groups")
     body = params["body"]
     name = body["name"]
     group_details = {"alias": body.get("alias")}
@@ -88,6 +89,7 @@ def create(params):
 def bulk_create(params):
     """Bulk create service groups"""
     user.need_permission("wato.edit")
+    user.need_permission("wato.groups")
     body = params["body"]
     entries = body["entries"]
     service_group_details = prepare_groups("service", entries)
@@ -145,6 +147,7 @@ def show_group(params):
 def delete(params):
     """Delete a service group"""
     user.need_permission("wato.edit")
+    user.need_permission("wato.groups")
     name = params["name"]
     watolib.delete_group(name, group_type="service")
     return Response(status=204)
@@ -161,6 +164,7 @@ def delete(params):
 def bulk_delete(params):
     """Bulk delete service groups"""
     user.need_permission("wato.edit")
+    user.need_permission("wato.groups")
     body = params["body"]
     entries = body["entries"]
     for group_name in entries:
@@ -185,6 +189,7 @@ def bulk_delete(params):
 def update(params):
     """Update a service group"""
     user.need_permission("wato.edit")
+    user.need_permission("wato.groups")
     name = params["name"]
     group = fetch_group(name, "service")
     constructors.require_etag(constructors.etag_of_dict(group))
@@ -209,6 +214,7 @@ def bulk_update(params):
     mechanism. Use at your own risk.
     """
     user.need_permission("wato.edit")
+    user.need_permission("wato.groups")
     body = params["body"]
     entries = body["entries"]
     updated_service_groups = update_groups("service", entries)

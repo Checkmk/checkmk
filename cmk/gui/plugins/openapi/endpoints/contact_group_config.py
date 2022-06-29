@@ -74,6 +74,7 @@ RW_PERMISSIONS = permissions.AllPerm(
 def create(params):
     """Create a contact group"""
     user.need_permission("wato.edit")
+    user.need_permission("wato.users")
     body = params["body"]
     name = body["name"]
     group_details = {"alias": body.get("alias")}
@@ -95,6 +96,7 @@ def create(params):
 def bulk_create(params):
     """Bulk create host groups"""
     user.need_permission("wato.edit")
+    user.need_permission("wato.users")
     body = params["body"]
     entries = body["entries"]
     contact_group_details = prepare_groups("contact", entries)
@@ -137,6 +139,7 @@ def list_group(params):
 )
 def show(params):
     """Show a contact group"""
+    user.need_permission("wato.users")
     name = params["name"]
     group = fetch_group(name, "contact")
     return serve_group(group, serialize_group("contact_group_config"))
@@ -153,6 +156,7 @@ def show(params):
 def delete(params):
     """Delete a contact group"""
     user.need_permission("wato.edit")
+    user.need_permission("wato.users")
     name = params["name"]
     check_modify_group_permissions("contact")
     with endpoint.do_not_track_permissions(), SuperUserContext():
@@ -167,10 +171,12 @@ def delete(params):
     method="post",
     request_schema=request_schemas.BulkDeleteContactGroup,
     output_empty=True,
-    permissions_required=PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
 def bulk_delete(params):
     """Bulk delete contact groups"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.users")
     body = params["body"]
     entries = body["entries"]
     for group_name in entries:
@@ -201,6 +207,7 @@ def bulk_delete(params):
 def update(params):
     """Update a contact group"""
     user.need_permission("wato.edit")
+    user.need_permission("wato.users")
     name = params["name"]
     group = fetch_group(name, "contact")
     constructors.require_etag(constructors.etag_of_dict(group))
@@ -215,7 +222,7 @@ def update(params):
     method="put",
     request_schema=request_schemas.BulkUpdateContactGroup,
     response_schema=response_schemas.DomainObjectCollection,
-    permissions_required=PERMISSIONS,
+    permissions_required=RW_PERMISSIONS,
 )
 def bulk_update(params):
     """Bulk update contact groups
@@ -224,6 +231,8 @@ def bulk_update(params):
     [Updating Values]("lost update problem"), which is normally prevented by the ETag locking
     mechanism. Use at your own risk.
     """
+    user.need_permission("wato.edit")
+    user.need_permission("wato.users")
     body = params["body"]
     entries = body["entries"]
     updated_contact_groups = update_groups("contact", entries)

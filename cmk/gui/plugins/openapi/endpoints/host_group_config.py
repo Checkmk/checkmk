@@ -76,6 +76,7 @@ RW_PERMISSIONS = permissions.AllPerm(
 def create(params):
     """Create a host group"""
     user.need_permission("wato.edit")
+    user.need_permission("wato.groups")
     body = params["body"]
     name = body["name"]
     group_details = {"alias": body.get("alias")}
@@ -97,6 +98,7 @@ def create(params):
 def bulk_create(params):
     """Bulk create host groups"""
     user.need_permission("wato.edit")
+    user.need_permission("wato.groups")
     body = params["body"]
     entries = body["entries"]
     host_group_details = prepare_groups("host", entries)
@@ -135,6 +137,7 @@ def list_groups(params):
 def delete(params):
     """Delete a host group"""
     user.need_permission("wato.edit")
+    user.need_permission("wato.groups")
     name = params["name"]
     watolib.delete_group(name, "host")
     return Response(status=204)
@@ -151,6 +154,7 @@ def delete(params):
 def bulk_delete(params):
     """Bulk delete host groups"""
     user.need_permission("wato.edit")
+    user.need_permission("wato.groups")
     body = params["body"]
     entries = body["entries"]
     for group_name in entries:
@@ -180,6 +184,7 @@ def bulk_delete(params):
 def update(params):
     """Update a host group"""
     user.need_permission("wato.edit")
+    user.need_permission("wato.groups")
     name = params["name"]
     group = fetch_group(name, "host")
     constructors.require_etag(constructors.etag_of_dict(group))
@@ -204,6 +209,7 @@ def bulk_update(params):
     mechanism. Use at your own risk
     """
     user.need_permission("wato.edit")
+    user.need_permission("wato.groups")
     body = params["body"]
     entries = body["entries"]
     updated_host_groups = update_groups("host", entries)

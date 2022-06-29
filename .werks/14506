@@ -1,0 +1,17 @@
+Title: group endpoint permissions in the REST API
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1656514263
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p5
+
+In the contact group endpoints in the REST API, there could
+be situations where a required permission was not checked.
+This led to a 500 internal server error to prevent unauthorized
+access.
+
+This werk fixes this problem. No further action is needed.

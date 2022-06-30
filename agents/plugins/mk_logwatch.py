@@ -1114,7 +1114,7 @@ def _filter_consecutive_duplicates(lines, nocontext):
         current_line = next_line
 
 
-def write_output(header, lines, options):
+def filter_output(lines, options):
 
     if options.maxcontextlines:
         lines = _filter_maxcontextlines(lines, *options.maxcontextlines)
@@ -1124,8 +1124,12 @@ def write_output(header, lines, options):
     if options.skipconsecutiveduplicated:
         lines = _filter_consecutive_duplicates(lines, options.nocontext)
 
-    sys.stdout.write(header)
-    sys.stdout.writelines(map(ensure_str, lines))
+    return [ensure_str(l) for l in lines]
+
+
+def write_output(lines):
+    sys.stdout.write("<<<logwatch>>>\n")
+    sys.stdout.writelines(lines)
 
 
 def main(argv=None):  # pylint: disable=too-many-branches
@@ -1135,15 +1139,13 @@ def main(argv=None):  # pylint: disable=too-many-branches
     args = ArgsParser(argv)
     init_logging(args.verbosity)
 
-    sys.stdout.write("<<<logwatch>>>\n")
-
     try:
         files = get_config_files(MK_CONFDIR, config_file_arg=args.config)
         logfiles_config, cluster_config = read_config(files, args.debug)
     except Exception as exc:
         if args.debug:
             raise
-        sys.stdout.write(CONFIG_ERROR_PREFIX + "%s\n" % exc)
+        sys.stdout.write("<<<logwatch>>>\n%s%s\n" % (CONFIG_ERROR_PREFIX, exc))
         sys.exit(1)
 
     status_filename = get_status_filename(cluster_config)
@@ -1151,14 +1153,16 @@ def main(argv=None):  # pylint: disable=too-many-branches
     if not os.path.exists(status_filename) and os.path.exists("%s/logwatch.state" % MK_VARDIR):
         shutil.copy("%s/logwatch.state" % MK_VARDIR, status_filename)
 
+    output = []
+
     found_sections, non_matching_patterns = parse_sections(logfiles_config)
 
     for pattern in non_matching_patterns:
         # Python 2.5/2.6 compatible solution
         if sys.version_info[0] == 3:
-            sys.stdout.write("[[[%s:missing]]]\n" % pattern)
+            output.append("[[[%s:missing]]]\n" % pattern)
         else:
-            sys.stdout.write(("[[[%s:missing]]]\n" % pattern).encode("utf-8"))
+            output.append(("[[[%s:missing]]]\n" % pattern).encode("utf-8"))
 
     state = State(status_filename)
     try:
@@ -1175,11 +1179,15 @@ def main(argv=None):  # pylint: disable=too-many-branches
         filestate = state.get(section.name_fs)
         try:
             header, output = process_logfile(section, filestate, args.debug)
-            write_output(header, output, section.options)
+            item_data = [header] + filter_output(output, section.options)
         except Exception as exc:
             if args.debug:
                 raise
             LOGGER.debug("Exception when processing %r: %s", section.name_fs, exc)
+
+        output.extend(item_data)
+
+    write_output(output)
 
     if args.debug:
         LOGGER.debug("State file not written (debug mode)")

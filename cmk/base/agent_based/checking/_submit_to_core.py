@@ -257,8 +257,8 @@ class FileSubmitter(Submitter):
                     ).encode(),
                 )
 
-    @contextmanager
     @classmethod
+    @contextmanager
     def _open_checkresult_file(cls) -> Iterator[int]:
         """Create some temporary file for storing the checkresults.
         Nagios expects a seven character long file starting with "c". Since Python3 we can not

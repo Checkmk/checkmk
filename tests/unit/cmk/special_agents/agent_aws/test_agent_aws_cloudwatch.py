@@ -77,7 +77,7 @@ def test_agent_aws_cloudwatch_alarms_limits(
 
 
 @pytest.mark.parametrize("alarm_names,amount_alarms", cloudwatch_params)
-def test_agent_aws_cloudwatch_alarms(
+def test_agent_aws_cloudwatch_alarms(  # type:ignore[no-untyped-def]
     get_cloudwatch_alarms_sections, alarm_names, amount_alarms
 ) -> None:
     cloudwatch_alarms_limits, cloudwatch_alarms = get_cloudwatch_alarms_sections(alarm_names)

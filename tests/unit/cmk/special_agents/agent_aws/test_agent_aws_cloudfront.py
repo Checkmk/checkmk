@@ -213,7 +213,9 @@ class FakeTaggingClient:
 
 @pytest.fixture()
 def get_cloudfront_sections():
-    def _create_cloudfront_sections(names, tags, assign_to_domain_host: bool):
+    def _create_cloudfront_sections(  # type:ignore[no-untyped-def]
+        names, tags, assign_to_domain_host: bool
+    ):
         region = "us-east-1"
         config = AWSConfig("hostname", [], (None, None))
         config.add_single_service_config("cloudfront_names", names)

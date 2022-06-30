@@ -84,7 +84,7 @@ def clone_file_cache(file_cache: FileCache) -> FileCache:
 
 class TestFileCache:
     @pytest.fixture(params=[AgentFileCache, SNMPFileCache])
-    def file_cache(self, request) -> FileCache:
+    def file_cache(self, request) -> FileCache:  # type:ignore[no-untyped-def]
         return request.param(
             HostName("hostname"),
             base_path=Path(os.devnull),
@@ -108,7 +108,7 @@ class TestFileCache:
 # anyways...
 class TestAgentFileCache_and_SNMPFileCache:
     @pytest.fixture(params=[AgentFileCache, SNMPFileCache])
-    def file_cache(self, tmp_path: Path, request):
+    def file_cache(self, tmp_path: Path, request):  # type:ignore[no-untyped-def]
         return request.param(
             HostName("hostname"),
             base_path=tmp_path / "database",
@@ -127,7 +127,7 @@ class TestAgentFileCache_and_SNMPFileCache:
         table: Sequence[SNMPTable] = []
         return {SectionName("X"): table}
 
-    def test_read_write(self, file_cache, raw_data) -> None:
+    def test_read_write(self, file_cache, raw_data) -> None:  # type:ignore[no-untyped-def]
         mode = Mode.DISCOVERY
         file_cache.file_cache_mode = FileCacheMode.READ_WRITE
 
@@ -146,7 +146,7 @@ class TestAgentFileCache_and_SNMPFileCache:
         assert clone.make_path(mode).exists()
         assert clone.read(mode) == raw_data
 
-    def test_read_only(self, file_cache, raw_data) -> None:
+    def test_read_only(self, file_cache, raw_data) -> None:  # type:ignore[no-untyped-def]
         mode = Mode.DISCOVERY
         file_cache.file_cache_mode = FileCacheMode.READ
 
@@ -157,7 +157,7 @@ class TestAgentFileCache_and_SNMPFileCache:
         assert not file_cache.make_path(mode).exists()
         assert file_cache.read(mode) is None
 
-    def test_write_only(self, file_cache, raw_data) -> None:
+    def test_write_only(self, file_cache, raw_data) -> None:  # type:ignore[no-untyped-def]
         mode = Mode.DISCOVERY
         file_cache.file_cache_mode = FileCacheMode.WRITE
 
@@ -171,7 +171,7 @@ class TestAgentFileCache_and_SNMPFileCache:
 class StubFileCache(AgentFileCache):
     """Holds the data to be cached in-memory for testing"""
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args, **kwargs) -> None:  # type:ignore[no-untyped-def]
         super().__init__(*args, **kwargs)
         self.cache: Optional[AgentRawData] = None
 
@@ -750,10 +750,10 @@ class _MockSock:
         self._used += len(use)
         return use
 
-    def __enter__(self, *_args) -> "_MockSock":
+    def __enter__(self, *_args) -> "_MockSock":  # type:ignore[no-untyped-def]
         return self
 
-    def __exit__(self, *_args) -> None:
+    def __exit__(self, *_args) -> None:  # type:ignore[no-untyped-def]
         pass
 
 

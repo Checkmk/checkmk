@@ -132,7 +132,9 @@ _AGENT_OUTPUT_2 = [
         ),
     ],
 )
-def test_discover_mssql_instance(fix_register, string_table, expected_result) -> None:
+def test_discover_mssql_instance(  # type:ignore[no-untyped-def]
+    fix_register, string_table, expected_result
+) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("mssql_instance")]
     section = parse_mssql_instance(string_table)
     assert sorted(check_plugin.discovery_function(section)) == expected_result
@@ -254,7 +256,9 @@ def test_discover_mssql_instance(fix_register, string_table, expected_result) ->
         ),
     ],
 )
-def test_check_mssql_instance(fix_register, string_table, item, expected_result) -> None:
+def test_check_mssql_instance(  # type:ignore[no-untyped-def]
+    fix_register, string_table, item, expected_result
+) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("mssql_instance")]
     section = parse_mssql_instance(string_table)
     assert (
@@ -332,7 +336,9 @@ def test_check_mssql_instance(fix_register, string_table, item, expected_result)
         ),
     ],
 )
-def test_inventory_mssql_instance(string_table, expected_result) -> None:
+def test_inventory_mssql_instance(  # type:ignore[no-untyped-def]
+    string_table, expected_result
+) -> None:
     assert sort_inventory_result(
         inventory_mssql_instance(parse_mssql_instance(string_table))
     ) == sort_inventory_result(expected_result)

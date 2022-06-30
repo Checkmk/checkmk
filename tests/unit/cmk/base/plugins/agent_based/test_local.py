@@ -45,7 +45,7 @@ def test_invalid_metric_name_does_not_crash() -> None:
         ("0 name - has a backslash\\", ("0", "name", "-", "has a backslash\\")),
     ],
 )
-def test_regex_parser(check_line, expected_components) -> None:
+def test_regex_parser(check_line, expected_components) -> None:  # type:ignore[no-untyped-def]
     assert local._split_check_result(check_line) == expected_components
 
 
@@ -71,7 +71,7 @@ def test_regex_parser(check_line, expected_components) -> None:
         ),
     ],
 )
-def test_local_format_error(string_table, exception_reason) -> None:
+def test_local_format_error(string_table, exception_reason) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises(ValueError) as e:
         list(local.discover_local(local.parse_local(string_table)))
     assert str(e.value) == exception_reason
@@ -264,7 +264,7 @@ def test_local_format_error(string_table, exception_reason) -> None:
         ),
     ],
 )
-def test_parse(string_table_row, expected_parsed_data) -> None:
+def test_parse(string_table_row, expected_parsed_data) -> None:  # type:ignore[no-untyped-def]
     assert local.parse_local([string_table_row]) == expected_parsed_data
 
 
@@ -311,7 +311,7 @@ def test_fix_state() -> None:
         ),
     ],
 )
-def test_cached(age, expected) -> None:
+def test_cached(age, expected) -> None:  # type:ignore[no-untyped-def]
     local_result = local.LocalResult(
         cache_info=CacheInfo(
             age=age,

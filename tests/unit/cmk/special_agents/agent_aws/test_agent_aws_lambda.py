@@ -51,7 +51,7 @@ class PaginatorProvisionedConcurrencyConfigs:
 
 
 class FakeLambdaClient:
-    def __init__(self, skip_entities=None) -> None:
+    def __init__(self, skip_entities=None) -> None:  # type:ignore[no-untyped-def]
         self._skip_entities = {} if not skip_entities else skip_entities
 
     def get_paginator(self, operation_name: str) -> Any:

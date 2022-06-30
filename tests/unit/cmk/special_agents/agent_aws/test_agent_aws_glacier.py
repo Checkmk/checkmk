@@ -81,7 +81,9 @@ glacier_params = [
 
 
 @pytest.mark.parametrize("names,tags,amount_vaults", glacier_params)
-def test_agent_aws_glacier_limits(get_glacier_sections, names, tags, amount_vaults) -> None:
+def test_agent_aws_glacier_limits(  # type:ignore[no-untyped-def]
+    get_glacier_sections, names, tags, amount_vaults
+) -> None:
     glacier_limits, _glacier_summary, _glacier = get_glacier_sections(names, tags)
     glacier_limits_results = glacier_limits.run().results
     assert glacier_limits.name == "glacier_limits"
@@ -98,7 +100,9 @@ def test_agent_aws_glacier_limits(get_glacier_sections, names, tags, amount_vaul
 
 
 @pytest.mark.parametrize("names,tags,amount_vaults", glacier_params)
-def test_agent_aws_glacier_summary(get_glacier_sections, names, tags, amount_vaults) -> None:
+def test_agent_aws_glacier_summary(  # type:ignore[no-untyped-def]
+    get_glacier_sections, names, tags, amount_vaults
+) -> None:
     glacier_limits, glacier_summary, _glacier = get_glacier_sections(names, tags)
     _glacier_summary_results = glacier_limits.run().results
     glacier_summary_results = glacier_summary.run().results
@@ -108,7 +112,9 @@ def test_agent_aws_glacier_summary(get_glacier_sections, names, tags, amount_vau
 
 
 @pytest.mark.parametrize("names,tags,amount_vaults", glacier_params)
-def test_agent_aws_glacier(get_glacier_sections, names, tags, amount_vaults) -> None:
+def test_agent_aws_glacier(  # type:ignore[no-untyped-def]
+    get_glacier_sections, names, tags, amount_vaults
+) -> None:
     glacier_limits, glacier_summary, glacier = get_glacier_sections(names, tags)
     _glacier_summary_results = glacier_limits.run().results
     _glacier_summary_results = glacier_summary.run().results
@@ -123,7 +129,7 @@ def test_agent_aws_glacier(get_glacier_sections, names, tags, amount_vaults) -> 
 
 
 @pytest.mark.parametrize("names,tags,amount_vaults", glacier_params)
-def test_agent_aws_glacier_summary_without_limits(
+def test_agent_aws_glacier_summary_without_limits(  # type:ignore[no-untyped-def]
     get_glacier_sections, names, tags, amount_vaults
 ) -> None:
     _glacier_limits, glacier_summary, _glacier = get_glacier_sections(names, tags)

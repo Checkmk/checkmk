@@ -165,7 +165,9 @@ def _get_provisioned_table_names(tables):
 
 
 @pytest.mark.parametrize("names,tags,found_instances", dynamodb_params)
-def test_agent_aws_dynamodb_limits(get_dynamodb_sections, names, tags, found_instances) -> None:
+def test_agent_aws_dynamodb_limits(  # type:ignore[no-untyped-def]
+    get_dynamodb_sections, names, tags, found_instances
+) -> None:
 
     dynamodb_sections = get_dynamodb_sections(names, tags)
     dynamodb_limits = dynamodb_sections["dynamodb_limits"]
@@ -206,7 +208,7 @@ def _test_summary(dynamodb_summary, found_instances):
 
 
 @pytest.mark.parametrize("names,tags,found_instances", dynamodb_params)
-def test_agent_aws_dynamodb_summary_w_limits(
+def test_agent_aws_dynamodb_summary_w_limits(  # type:ignore[no-untyped-def]
     get_dynamodb_sections, names, tags, found_instances
 ) -> None:
     dynamodb_sections = get_dynamodb_sections(names, tags)
@@ -215,7 +217,7 @@ def test_agent_aws_dynamodb_summary_w_limits(
 
 
 @pytest.mark.parametrize("names,tags,found_instances", dynamodb_params)
-def test_agent_aws_dynamodb_summary_wo_limits(
+def test_agent_aws_dynamodb_summary_wo_limits(  # type:ignore[no-untyped-def]
     get_dynamodb_sections, names, tags, found_instances
 ) -> None:
     dynamodb_sections = get_dynamodb_sections(names, tags)
@@ -236,7 +238,7 @@ def _test_table(dynamodb_table, found_instances):
 
 
 @pytest.mark.parametrize("names,tags,found_instances", dynamodb_params)
-def test_agent_aws_dynamodb_tables_w_limits(
+def test_agent_aws_dynamodb_tables_w_limits(  # type:ignore[no-untyped-def]
     get_dynamodb_sections, names, tags, found_instances
 ) -> None:
     dynamodb_sections = get_dynamodb_sections(names, tags)
@@ -246,7 +248,7 @@ def test_agent_aws_dynamodb_tables_w_limits(
 
 
 @pytest.mark.parametrize("names,tags,found_instances", dynamodb_params)
-def test_agent_aws_dynamodb_tables_wo_limits(
+def test_agent_aws_dynamodb_tables_wo_limits(  # type:ignore[no-untyped-def]
     get_dynamodb_sections, names, tags, found_instances
 ) -> None:
     dynamodb_sections = get_dynamodb_sections(names, tags)

@@ -119,7 +119,7 @@ from cmk.base.plugins.agent_based.mssql_mirroring import (
         ),
     ],
 )
-def test_parse_mssql_mirroring(string_table, parsed_config) -> None:
+def test_parse_mssql_mirroring(string_table, parsed_config) -> None:  # type:ignore[no-untyped-def]
     assert parse_mssql_mirroring(string_table) == parsed_config
 
 
@@ -198,7 +198,9 @@ def test_parse_mssql_mirroring(string_table, parsed_config) -> None:
         ),
     ],
 )
-def test_discover_mssql_mirroring(string_table, discovered_services) -> None:
+def test_discover_mssql_mirroring(  # type:ignore[no-untyped-def]
+    string_table, discovered_services
+) -> None:
     assert (
         list(discover_mssql_mirroring(parse_mssql_mirroring(string_table))) == discovered_services
     )
@@ -283,7 +285,9 @@ def test_discover_mssql_mirroring(string_table, discovered_services) -> None:
         ),
     ],
 )
-def test_check_mssql_mirroring(item, params, section, check_result) -> None:
+def test_check_mssql_mirroring(  # type:ignore[no-untyped-def]
+    item, params, section, check_result
+) -> None:
     assert list(check_mssql_mirroring(item, params, section)) == check_result
 
 
@@ -409,5 +413,7 @@ def test_check_mssql_mirroring(item, params, section, check_result) -> None:
         ),
     ],
 )
-def test_cluster_check_mssql_mirroring(item, params, section, check_result) -> None:
+def test_cluster_check_mssql_mirroring(  # type:ignore[no-untyped-def]
+    item, params, section, check_result
+) -> None:
     assert list(cluster_check_mssql_mirroring(item, params, section)) == check_result

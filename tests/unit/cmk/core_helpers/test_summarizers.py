@@ -47,19 +47,23 @@ class TestAgentSummarizer:
     def summarizer(self):
         return Summarizer(ExitSpec())
 
-    def test_summarize_success(self, summarizer) -> None:
+    def test_summarize_success(self, summarizer) -> None:  # type:ignore[no-untyped-def]
         assert summarizer.summarize_success() == [ActiveCheckResult(0)]
 
-    def test_summarize_base_exception(self, summarizer) -> None:
+    def test_summarize_base_exception(self, summarizer) -> None:  # type:ignore[no-untyped-def]
         assert summarizer.summarize_failure(Exception()) == [ActiveCheckResult(3)]
 
-    def test_summarize_MKEmptyAgentData_exception(self, summarizer) -> None:
+    def test_summarize_MKEmptyAgentData_exception(  # type:ignore[no-untyped-def]
+        self, summarizer
+    ) -> None:
         assert summarizer.summarize_failure(MKEmptyAgentData()) == [ActiveCheckResult(2)]
 
-    def test_summarize_MKAgentError_exception(self, summarizer) -> None:
+    def test_summarize_MKAgentError_exception(  # type:ignore[no-untyped-def]
+        self, summarizer
+    ) -> None:
         assert summarizer.summarize_failure(MKAgentError()) == [ActiveCheckResult(2)]
 
-    def test_summarize_MKTimeout_exception(self, summarizer) -> None:
+    def test_summarize_MKTimeout_exception(self, summarizer) -> None:  # type:ignore[no-untyped-def]
         assert summarizer.summarize_failure(MKTimeout()) == [ActiveCheckResult(2)]
 
 
@@ -68,10 +72,10 @@ class TestAgentSummarizerDefault_AllModes:
     def summarizer(self):
         return AgentSummarizerDefault(ExitSpec())
 
-    def test_missing_section(self, summarizer) -> None:
+    def test_missing_section(self, summarizer) -> None:  # type:ignore[no-untyped-def]
         assert summarizer.summarize_success() == [ActiveCheckResult(0, "Success")]
 
-    def test_random_section(self, summarizer) -> None:
+    def test_random_section(self, summarizer) -> None:  # type:ignore[no-untyped-def]
         assert summarizer.summarize_success() == [ActiveCheckResult(0, "Success")]
 
 
@@ -102,11 +106,11 @@ class TestPiggybackSummarizer:
             lambda *args, **kwargs: (),
         )
 
-    def test_repr_smoke_test(self, summarizer) -> None:
+    def test_repr_smoke_test(self, summarizer) -> None:  # type:ignore[no-untyped-def]
         assert isinstance(repr(summarizer), str)
 
     @pytest.mark.usefixtures("patch_get_piggyback_raw_data")
-    def test_summarize_missing_data(self, summarizer) -> None:
+    def test_summarize_missing_data(self, summarizer) -> None:  # type:ignore[no-untyped-def]
         assert not summarizer.summarize_success()
 
     @pytest.mark.usefixtures("patch_get_piggyback_raw_data")

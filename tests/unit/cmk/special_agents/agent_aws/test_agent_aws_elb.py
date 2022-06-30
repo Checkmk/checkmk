@@ -215,7 +215,7 @@ def test_agent_aws_elb_health(
 
 
 @pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elb_params)
-def test_agent_aws_elb(
+def test_agent_aws_elb(  # type:ignore[no-untyped-def]
     get_elb_sections, names, tags, found_instances, found_instances_with_labels
 ) -> None:
     elb_limits, elb_summary, _elb_labels, _elb_health, elb = get_elb_sections(names, tags)

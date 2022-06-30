@@ -6169,10 +6169,15 @@ class Transform(ValueSpec):
     """Transforms the value from one representation to another while being
     completely transparent to the user
 
-    forth: function that converts a value into the representation
-           needed by the encapsulated vs
-    back:  function that converts a value created by the encapsulated
-           vs back to the outer representation"""
+    The transformation is implemented by two functions: forth and back:
+
+    forth: Converts a value from any "outer world" representation (e.g. as
+           it was read from a .mk file) to the form that is processable by
+           the encapsulated ValueSpec (e.g. for rendering).
+
+    back:  Converts a value created by the encapsulated ValueSpec back to
+           the outer representation.
+    """
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
@@ -6231,7 +6236,7 @@ class Transform(ValueSpec):
         return self.back(self._valuespec.default_value())
 
     def mask(self, value: Any) -> Any:
-        return self._valuespec.mask(self.forth(value))
+        return self.back(self._valuespec.mask(self.forth(value)))
 
     def value_to_html(self, value: Any) -> ValueSpecText:
         return self._valuespec.value_to_html(self.forth(value))

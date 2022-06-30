@@ -1,0 +1,11 @@
+Title: Mask passwords in REST API responses
+Class: security
+Compatible: compat
+Component: rest-api
+Date: 1656604171
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Mask sensitive information when querying rules via the REST API.

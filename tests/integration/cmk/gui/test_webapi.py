@@ -11,9 +11,10 @@ import os
 import subprocess
 import sys
 import time
+from collections.abc import Iterator
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, TypeAlias
 
 import pytest
 from PIL import Image  # type: ignore[import]
@@ -21,12 +22,15 @@ from PIL import Image  # type: ignore[import]
 from tests.testlib import APIError, wait_until
 from tests.testlib.site import Site
 from tests.testlib.utils import get_standard_linux_agent_output
+from tests.testlib.web_session import CMKWebSession
 
 import cmk.utils.version as cmk_version
 
+LocalTestHostFixture: TypeAlias = None
+
 
 @pytest.fixture(name="local_test_hosts")
-def fixture_local_test_hosts(web, site: Site):  # pylint: disable=redefined-outer-name
+def fixture_local_test_hosts(web: CMKWebSession, site: Site) -> Iterator[LocalTestHostFixture]:
     site.makedirs("var/check_mk/agent_output/")
 
     web.add_hosts(
@@ -66,12 +70,12 @@ def fixture_local_test_hosts(web, site: Site):  # pylint: disable=redefined-oute
     site.delete_file("etc/check_mk/conf.d/local-test-hosts.mk")
 
 
-def test_global_settings(site, web) -> None:  # pylint: disable=redefined-outer-name
+def test_global_settings(site: Site, web: CMKWebSession) -> None:
     r = web.get("wato.py?mode=globalvars")
     assert "Global settings" in r.text
 
 
-def test_add_host(web) -> None:  # pylint: disable=redefined-outer-name
+def test_add_host(web: CMKWebSession) -> None:
     try:
         # Also tests get_host
         web.add_host(
@@ -84,7 +88,7 @@ def test_add_host(web) -> None:  # pylint: disable=redefined-outer-name
         web.delete_host("test-host")
 
 
-def test_add_host_folder_create(web) -> None:  # pylint: disable=redefined-outer-name
+def test_add_host_folder_create(web: CMKWebSession) -> None:
     try:
         web.add_host(
             "test-host",
@@ -98,7 +102,9 @@ def test_add_host_folder_create(web) -> None:  # pylint: disable=redefined-outer
         web.delete_host("test-host")
 
 
-def test_add_host_no_folder_create(web) -> None:  # pylint: disable=redefined-outer-name
+def test_add_host_no_folder_create(
+    web: CMKWebSession,
+) -> None:
     with pytest.raises(APIError) as e:
         web.add_host(
             "test-host",
@@ -114,7 +120,7 @@ def test_add_host_no_folder_create(web) -> None:  # pylint: disable=redefined-ou
     assert "Unable to create parent folder" in exc_msg
 
 
-def test_add_hosts(web) -> None:  # pylint: disable=redefined-outer-name
+def test_add_hosts(web: CMKWebSession) -> None:
     hosts = ["test-hosts1", "test-hosts2"]
     try:
         web.add_hosts(
@@ -133,7 +139,7 @@ def test_add_hosts(web) -> None:  # pylint: disable=redefined-outer-name
         web.delete_hosts(hosts)
 
 
-def test_edit_host(web) -> None:  # pylint: disable=redefined-outer-name
+def test_edit_host(web: CMKWebSession) -> None:
     try:
         web.add_host(
             "test-edit-host",
@@ -147,7 +153,7 @@ def test_edit_host(web) -> None:  # pylint: disable=redefined-outer-name
         web.delete_host("test-edit-host")
 
 
-def test_edit_hosts(web) -> None:  # pylint: disable=redefined-outer-name
+def test_edit_hosts(web: CMKWebSession) -> None:
     try:
         web.add_host(
             "test-edit-hosts1",
@@ -172,7 +178,7 @@ def test_edit_hosts(web) -> None:  # pylint: disable=redefined-outer-name
         web.delete_hosts(["test-edit-hosts1", "test-edit-hosts2"])
 
 
-def test_get_all_hosts_basic(web) -> None:  # pylint: disable=redefined-outer-name
+def test_get_all_hosts_basic(web: CMKWebSession) -> None:
     try:
         web.add_host(
             "test-host-list",
@@ -187,7 +193,7 @@ def test_get_all_hosts_basic(web) -> None:  # pylint: disable=redefined-outer-na
         web.delete_host("test-host-list")
 
 
-def test_delete_host(web) -> None:  # pylint: disable=redefined-outer-name
+def test_delete_host(web: CMKWebSession) -> None:
     try:
         web.add_host(
             "test-host-delete",
@@ -199,7 +205,7 @@ def test_delete_host(web) -> None:  # pylint: disable=redefined-outer-name
         web.delete_host("test-host-delete")
 
 
-def test_delete_hosts(web) -> None:  # pylint: disable=redefined-outer-name
+def test_delete_hosts(web: CMKWebSession) -> None:
     try:
         web.add_host(
             "test-hosts-delete1",
@@ -217,7 +223,9 @@ def test_delete_hosts(web) -> None:  # pylint: disable=redefined-outer-name
         web.delete_hosts(["test-hosts-delete1", "test-hosts-delete2"])
 
 
-def test_get_host_effective_attributes(web) -> None:  # pylint: disable=redefined-outer-name
+def test_get_host_effective_attributes(
+    web: CMKWebSession,
+) -> None:
     try:
         web.add_host(
             "test-host",
@@ -237,8 +245,8 @@ def test_get_host_effective_attributes(web) -> None:  # pylint: disable=redefine
 
 
 def test_get_all_hosts_effective_attributes(
-    web,
-):  # pylint: disable=redefined-outer-name
+    web: CMKWebSession,
+) -> None:
     try:
         web.add_host(
             "test-host",
@@ -259,7 +267,7 @@ def test_get_all_hosts_effective_attributes(
         web.delete_host("test-host")
 
 
-def test_get_ruleset(web) -> None:  # pylint: disable=redefined-outer-name
+def test_get_ruleset(web: CMKWebSession) -> None:
     response = web.get_ruleset("extra_host_conf:notification_options")
     assert response == {
         "ruleset": {
@@ -293,7 +301,7 @@ def test_get_ruleset(web) -> None:  # pylint: disable=redefined-outer-name
     }
 
 
-def test_set_ruleset(web) -> None:  # pylint: disable=redefined-outer-name
+def test_set_ruleset(web: CMKWebSession) -> None:
     orig_ruleset = web.get_ruleset("bulkwalk_hosts")
     assert orig_ruleset == {
         "ruleset": {
@@ -327,12 +335,12 @@ def test_set_ruleset(web) -> None:  # pylint: disable=redefined-outer-name
         assert response is None
 
 
-def test_get_site(web, site: Site) -> None:  # pylint: disable=redefined-outer-name
+def test_get_site(web: CMKWebSession, site: Site) -> None:
     response = web.get_site(site.id)
     assert "site_config" in response
 
 
-def test_get_all_sites(web, site: Site) -> None:  # pylint: disable=redefined-outer-name
+def test_get_all_sites(web: CMKWebSession, site: Site) -> None:
     response = web.get_all_sites()
     assert "sites" in response
     assert site.id in response["sites"]
@@ -341,7 +349,6 @@ def test_get_all_sites(web, site: Site) -> None:  # pylint: disable=redefined-ou
 @pytest.mark.parametrize(
     "sock_spec",
     [
-        "tcp:1.2.3.4:6557",
         (
             "tcp",
             {
@@ -351,7 +358,7 @@ def test_get_all_sites(web, site: Site) -> None:  # pylint: disable=redefined-ou
         ),
     ],
 )
-def test_set_site(web, site, sock_spec) -> None:  # pylint: disable=redefined-outer-name
+def test_set_site(web: CMKWebSession, site: Site, sock_spec: tuple[str, dict]) -> None:
     original_site = web.get_site(site.id)
     assert site.id == original_site["site_id"]
 
@@ -385,7 +392,6 @@ def test_set_site(web, site, sock_spec) -> None:  # pylint: disable=redefined-ou
 @pytest.mark.parametrize(
     "sock_spec",
     [
-        "tcp:1.2.3.4:6557",
         (
             "tcp",
             {
@@ -395,7 +401,7 @@ def test_set_site(web, site, sock_spec) -> None:  # pylint: disable=redefined-ou
         ),
     ],
 )
-def test_set_all_sites(web, site, sock_spec) -> None:  # pylint: disable=redefined-outer-name
+def test_set_all_sites(web: CMKWebSession, site: Site, sock_spec: tuple[str, dict]) -> None:
     response = web.get_all_sites()
     del response["configuration_hash"]
 
@@ -425,7 +431,7 @@ def test_set_all_sites(web, site, sock_spec) -> None:  # pylint: disable=redefin
         web.delete_site(new_site_id)
 
 
-def test_write_host_tags(web, site: Site) -> None:  # pylint: disable=redefined-outer-name
+def test_write_host_tags(web: CMKWebSession, site: Site) -> None:
     try:
         web.add_host(
             "test-host-dmz",
@@ -482,7 +488,7 @@ def test_write_host_tags(web, site: Site) -> None:  # pylint: disable=redefined-
         web.delete_hosts(["test-host-lan2", "test-host-lan", "test-host-dmz"])
 
 
-def test_write_host_labels(web, site: Site) -> None:  # pylint: disable=redefined-outer-name
+def test_write_host_labels(web: CMKWebSession, site: Site) -> None:
     try:
         web.add_host(
             "test-host-lan",
@@ -521,7 +527,7 @@ def test_write_host_labels(web, site: Site) -> None:  # pylint: disable=redefine
 
 # TODO: Parameterize test for cme / non cme
 @pytest.mark.parametrize(("group_type"), ["contact", "host", "service"])
-def test_add_group(web, group_type) -> None:  # pylint: disable=redefined-outer-name
+def test_add_group(web: CMKWebSession, group_type: str) -> None:
     group_id = "%s_testgroup_id" % group_type
     group_alias = "%s_testgroup_alias" % group_type
     try:
@@ -546,7 +552,7 @@ def test_add_group(web, group_type) -> None:  # pylint: disable=redefined-outer-
 
 # TODO: Parameterize test for cme / non cme
 @pytest.mark.parametrize(("group_type"), ["contact", "host", "service"])
-def test_edit_group(web, group_type) -> None:  # pylint: disable=redefined-outer-name
+def test_edit_group(web: CMKWebSession, group_type: str) -> None:
     group_id = "%s_testgroup_id" % group_type
     group_alias = "%s_testgroup_alias" % group_type
     group_alias2 = "%s_testgroup_otheralias" % group_type
@@ -573,7 +579,7 @@ def test_edit_group(web, group_type) -> None:  # pylint: disable=redefined-outer
 
 # TODO: Parameterize test for cme / non cme
 @pytest.mark.parametrize(("group_type"), ["contact", "host", "service"])
-def test_edit_group_missing(web, group_type) -> None:  # pylint: disable=redefined-outer-name
+def test_edit_group_missing(web: CMKWebSession, group_type: str) -> None:
     group_id = "%s_testgroup_id" % group_type
     group_alias = "%s_testgroup_alias" % group_type
     group_alias2 = "%s_testgroup_otheralias" % group_type
@@ -599,7 +605,7 @@ def test_edit_group_missing(web, group_type) -> None:  # pylint: disable=redefin
 
 
 # TODO: Parameterize test for cme / non cme
-def test_edit_cg_group_with_nagvis_maps(web, site) -> None:  # pylint: disable=redefined-outer-name
+def test_edit_cg_group_with_nagvis_maps(web: CMKWebSession, site: Site) -> None:
     dummy_map_filepath1 = Path(site.root, "etc", "nagvis", "maps", "blabla.cfg")
     dummy_map_filepath2 = Path(site.root, "etc", "nagvis", "maps", "bloblo.cfg")
     try:
@@ -628,7 +634,7 @@ def test_edit_cg_group_with_nagvis_maps(web, site) -> None:  # pylint: disable=r
 
 # TODO: Parameterize test for cme / non cme
 @pytest.mark.parametrize(("group_type"), ["contact", "host", "service"])
-def test_delete_group(web, group_type) -> None:  # pylint: disable=redefined-outer-name
+def test_delete_group(web: CMKWebSession, group_type: str) -> None:
     group_id = "%s_testgroup_id" % group_type
     group_alias = "%s_testgroup_alias" % group_type
     try:
@@ -642,7 +648,7 @@ def test_delete_group(web, group_type) -> None:  # pylint: disable=redefined-out
         web.delete_group(group_type, group_id)
 
 
-def test_get_all_users(web) -> None:  # pylint: disable=redefined-outer-name
+def test_get_all_users(web: CMKWebSession) -> None:
     users = {
         "klaus": {"alias": "mr. klaus", "pager": "99221199", "password": "1234"},
         "monroe": {"alias": "mr. monroe"},
@@ -656,7 +662,7 @@ def test_get_all_users(web) -> None:  # pylint: disable=redefined-outer-name
         web.delete_htpasswd_users(list(users.keys()))
 
 
-def test_add_htpasswd_users(web) -> None:  # pylint: disable=redefined-outer-name
+def test_add_htpasswd_users(web: CMKWebSession) -> None:
     users = {
         "klaus": {"alias": "mr. klaus", "pager": "99221199", "password": "1234"},
         "monroe": {"alias": "mr. monroe"},
@@ -667,7 +673,7 @@ def test_add_htpasswd_users(web) -> None:  # pylint: disable=redefined-outer-nam
         web.delete_htpasswd_users(list(users.keys()))
 
 
-def test_edit_htpasswd_users(web) -> None:  # pylint: disable=redefined-outer-name
+def test_edit_htpasswd_users(web: CMKWebSession) -> None:
     users = {
         "klaus": {"alias": "mr. klaus", "pager": "99221199", "password": "1234"},
         "monroe": {"alias": "mr. monroe"},
@@ -687,13 +693,13 @@ def test_edit_htpasswd_users(web) -> None:  # pylint: disable=redefined-outer-na
         web.delete_htpasswd_users(list(users.keys()))
 
 
-def test_discover_services(web, local_test_hosts) -> None:  # pylint: disable=redefined-outer-name
+def test_discover_services(web: CMKWebSession, local_test_hosts: LocalTestHostFixture) -> None:
     web.discover_services("test-host")
 
 
 def test_bulk_discovery_start_with_empty_hosts(
-    web,
-):  # pylint: disable=redefined-outer-name
+    web: CMKWebSession,
+) -> None:
     with pytest.raises(APIError, match="specify some host"):
         web.bulk_discovery_start(
             {
@@ -703,7 +709,9 @@ def test_bulk_discovery_start_with_empty_hosts(
         )
 
 
-def test_bulk_discovery_unknown_host(web) -> None:  # pylint: disable=redefined-outer-name
+def test_bulk_discovery_unknown_host(
+    web: CMKWebSession,
+) -> None:
     with pytest.raises(APIError, match="does not exist"):
         web.bulk_discovery_start(
             {
@@ -713,8 +721,10 @@ def test_bulk_discovery_unknown_host(web) -> None:  # pylint: disable=redefined-
         )
 
 
-def _wait_for_bulk_discovery_job(web):  # pylint: disable=redefined-outer-name
-    def job_completed():
+def _wait_for_bulk_discovery_job(
+    web: CMKWebSession,
+) -> None:
+    def job_completed() -> bool:
         status = web.bulk_discovery_status()
         return status["job"]["state"] != "initialized" and status["is_active"] is False
 
@@ -722,8 +732,8 @@ def _wait_for_bulk_discovery_job(web):  # pylint: disable=redefined-outer-name
 
 
 def test_bulk_discovery_start_with_defaults(
-    web, local_test_hosts
-):  # pylint: disable=redefined-outer-name
+    web: CMKWebSession, local_test_hosts: LocalTestHostFixture
+) -> None:
     result = web.bulk_discovery_start(
         {
             "hostnames": ["test-host"],
@@ -742,8 +752,8 @@ def test_bulk_discovery_start_with_defaults(
 
 
 def test_bulk_discovery_start_with_parameters(
-    web, local_test_hosts
-):  # pylint: disable=redefined-outer-name
+    web: CMKWebSession, local_test_hosts: LocalTestHostFixture
+) -> None:
     result = web.bulk_discovery_start(
         {
             "hostnames": ["test-host"],
@@ -764,8 +774,8 @@ def test_bulk_discovery_start_with_parameters(
 
 
 def test_bulk_discovery_start_multiple_with_subdir(
-    web, local_test_hosts
-):  # pylint: disable=redefined-outer-name
+    web: CMKWebSession, local_test_hosts: LocalTestHostFixture
+) -> None:
     result = web.bulk_discovery_start(
         {
             "hostnames": ["test-host", "test-host2"],
@@ -785,7 +795,7 @@ def test_bulk_discovery_start_multiple_with_subdir(
     assert status["job"]["state"] == "finished"
 
 
-def test_activate_changes(web, site: Site) -> None:  # pylint: disable=redefined-outer-name
+def test_activate_changes(web: CMKWebSession, site: Site) -> None:
     try:
         web.add_host(
             "test-host-activate",
@@ -803,8 +813,11 @@ def test_activate_changes(web, site: Site) -> None:  # pylint: disable=redefined
         site.activate_changes_and_wait_for_core_reload()
 
 
-@pytest.fixture(scope="module")
-def graph_test_config(web, site: Site):  # pylint: disable=redefined-outer-name
+GraphTestConfigFixture: TypeAlias = None
+
+
+@pytest.fixture(name="graph_test_config", scope="module")
+def graph_test_config_fixture(web: CMKWebSession, site: Site) -> Iterator[GraphTestConfigFixture]:
     # No graph yet...
     with pytest.raises(APIError) as exc_info:
         web.get_regular_graph("test-host-get-graph", "Check_MK", 0, expect_error=True)
@@ -872,7 +885,7 @@ def graph_test_config(web, site: Site):  # pylint: disable=redefined-outer-name
 
 
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="not supported in raw edition")
-def test_get_graph_api(web, graph_test_config) -> None:  # pylint: disable=redefined-outer-name
+def test_get_graph_api(web: CMKWebSession, graph_test_config: GraphTestConfigFixture) -> None:
     # Now we get a graph
     data = web.get_regular_graph("test-host-get-graph", "Check_MK", 0)
 
@@ -897,7 +910,7 @@ def test_get_graph_api(web, graph_test_config) -> None:  # pylint: disable=redef
 
 
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="not supported in raw edition")
-def test_get_graph_image(web, graph_test_config) -> None:  # pylint: disable=redefined-outer-name
+def test_get_graph_image(web: CMKWebSession, graph_test_config: GraphTestConfigFixture) -> None:
     result = web.post(
         "graph_image.py",
         data={
@@ -929,8 +942,8 @@ def test_get_graph_image(web, graph_test_config) -> None:  # pylint: disable=red
 
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="not supported in raw edition")
 def test_get_graph_notification_image(
-    web, graph_test_config
-):  # pylint: disable=redefined-outer-name
+    web: CMKWebSession, graph_test_config: GraphTestConfigFixture
+) -> None:
     result = web.get("ajax_graph_images.py?host=test-host-get-graph&service=Check_MK")
 
     # Provides a json list containing base64 encoded PNG images of the current 24h graphs
@@ -950,7 +963,7 @@ def test_get_graph_notification_image(
 
 
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="not supported in raw edition")
-def test_get_graph_hover(web, graph_test_config) -> None:  # pylint: disable=redefined-outer-name
+def test_get_graph_hover(web: CMKWebSession, graph_test_config: GraphTestConfigFixture) -> None:
     metrics: List[Dict[str, Any]] = [
         {
             "color": "#87f058",
@@ -1115,7 +1128,7 @@ def test_get_graph_hover(web, graph_test_config) -> None:  # pylint: disable=red
         # assert curve_value["rendered_value"][1] != ""
 
 
-def test_get_inventory(web) -> None:  # pylint: disable=redefined-outer-name
+def test_get_inventory(web: CMKWebSession) -> None:
     host_name = "test-host"
     inventory_dir = "var/check_mk/inventory"
     try:
@@ -1172,19 +1185,17 @@ def test_get_inventory(web) -> None:  # pylint: disable=redefined-outer-name
 
 
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="not supported in raw edition")
-def test_get_user_sites(web, graph_test_config) -> None:  # pylint: disable=redefined-outer-name
+def test_get_user_sites(web: CMKWebSession, graph_test_config: GraphTestConfigFixture) -> None:
     assert web.get_user_sites()[0][0] == web.site.id
 
 
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="not supported in raw edition")
-def test_get_host_names(web, graph_test_config) -> None:  # pylint: disable=redefined-outer-name
+def test_get_host_names(web: CMKWebSession, graph_test_config: GraphTestConfigFixture) -> None:
     assert "test-host-get-graph" in web.get_host_names(request={})
 
 
 @pytest.mark.skip("the test is too strict, the indices are a random permutation of 0..2")
-def test_get_metrics_of_host(  # pylint: disable=redefined-outer-name
-    web, graph_test_config
-) -> None:
+def test_get_metrics_of_host(web: CMKWebSession, graph_test_config: GraphTestConfigFixture) -> None:
     # Do not validate the whole response, just a sample entry
     response = web.get_metrics_of_host(request={"hostname": "test-host-get-graph"})
     assert response["CPU load"] == {
@@ -1202,7 +1213,7 @@ def test_get_metrics_of_host(  # pylint: disable=redefined-outer-name
 
 
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="not supported in raw edition")
-def test_get_graph_recipes(web, graph_test_config) -> None:  # pylint: disable=redefined-outer-name
+def test_get_graph_recipes(web: CMKWebSession, graph_test_config: GraphTestConfigFixture) -> None:
     if cmk_version.is_raw_edition():
         expected_recipe = [
             {
@@ -1496,8 +1507,8 @@ def test_get_graph_recipes(web, graph_test_config) -> None:  # pylint: disable=r
 
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="not supported with raw edition")
 def test_get_combined_graph_identifications(
-    web, graph_test_config
-):  # pylint: disable=redefined-outer-name
+    web: CMKWebSession, graph_test_config: GraphTestConfigFixture
+) -> None:
     result = web.get_combined_graph_identifications(
         request={
             "single_infos": ["host"],
@@ -1534,8 +1545,8 @@ def test_get_combined_graph_identifications(
 
 
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="not supported in raw edition")
-def test_get_graph_annotations(  # pylint: disable=redefined-outer-name
-    web, graph_test_config
+def test_get_graph_annotations(
+    web: CMKWebSession, graph_test_config: GraphTestConfigFixture
 ) -> None:
     now = time.time()
     start_time, end_time = now - 3601, now
@@ -1560,7 +1571,7 @@ def test_get_graph_annotations(  # pylint: disable=redefined-outer-name
     assert result["availability_timelines"][0]["display_name"] == "CPU load"
 
 
-def test_get_hosttags(web) -> None:  # pylint: disable=redefined-outer-name
+def test_get_hosttags(web: CMKWebSession) -> None:
     host_tags = web.get_hosttags()
     assert isinstance(host_tags["configuration_hash"], str)
     assert host_tags["aux_tags"] == []
@@ -1569,7 +1580,7 @@ def test_get_hosttags(web) -> None:  # pylint: disable=redefined-outer-name
     assert host_tags["tag_groups"][0]["id"] == "criticality"
 
 
-def test_set_hosttags(web) -> None:  # pylint: disable=redefined-outer-name
+def test_set_hosttags(web: CMKWebSession) -> None:
     original_host_tags = web.get_hosttags()
 
     location_tag_group = {

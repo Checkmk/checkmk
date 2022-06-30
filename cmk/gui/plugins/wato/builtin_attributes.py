@@ -68,6 +68,7 @@ from cmk.gui.watolib.host_attributes import host_attribute_registry, HostAttribu
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.tags import TagConfigFile
 
+import cmk.fields.validators
 from cmk import fields
 
 
@@ -154,7 +155,7 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
             validate=fields.ValidateAnyOfValidators(
                 [
                     fields.ValidateIPv4(),
-                    gui_fields.ValidateHostName(),
+                    fields.ValidateHostName(),
                 ]
             ),
         )
@@ -246,7 +247,7 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
                 validate=fields.ValidateAnyOfValidators(
                     [
                         fields.ValidateIPv4(),
-                        gui_fields.ValidateHostName(),
+                        fields.ValidateHostName(),
                     ]
                 )
             ),

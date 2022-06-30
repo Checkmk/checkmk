@@ -27,6 +27,7 @@ from cmk.fields.validators import (
     IsValidRegexp,
     validate_hostname,
     ValidateAnyOfValidators,
+    ValidateHostName,
     ValidateIPv4,
     ValidateIPv4Network,
     ValidateIPv6,
@@ -61,4 +62,5 @@ __all__ = [
     "ValidateIPv6",
     "IsValidRegexp",
     "validate_hostname",
+    "ValidateHostName",
 ]

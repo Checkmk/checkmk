@@ -142,10 +142,10 @@ auto ConstructVector(Args &...str) {
     return std::vector{str...};
 };
 
-inline bool IsValidRegularFile(const std::filesystem::path &filepath) {
+inline bool IsValidRegularFile(const std::filesystem::path &filepath) noexcept {
     std::error_code ec;
     return std::filesystem::exists(filepath, ec) &&
-           std::filesystem::is_regular_file(filepath);
+           std::filesystem::is_regular_file(filepath, ec);
 }
 
 template <typename T>

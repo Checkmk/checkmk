@@ -27,34 +27,34 @@ bool g_use_script_to_install{true};
 namespace {
 std::wstring GetMsiProductId(int i) {
     constexpr size_t buf_size{500};
-    wchar_t buf[buf_size];
+    wchar_t buf[buf_size] = {0};
     return ::MsiEnumProductsW(i, buf) == 0 ? std::wstring{buf} : std::wstring();
 }
 
 std::wstring GetMsiProductName(std::wstring_view product_id) {
     constexpr size_t buf_size{500};
-    wchar_t product_name[500];
+    wchar_t product_name[500] = {0};
     DWORD len{buf_size};
-    auto ret = ::MsiGetProductInfoW(product_id.data(),
-                                    INSTALLPROPERTY_INSTALLEDPRODUCTNAME,
-                                    product_name, &len);
-    return ret == 0 ? std::wstring{product_name} : std::wstring();
+    return ::MsiGetProductInfoW(product_id.data(),
+                                INSTALLPROPERTY_INSTALLEDPRODUCTNAME,
+                                product_name, &len) == 0
+               ? std::wstring{product_name}
+               : std::wstring();
 }
 
 std::wstring GetMsiProductLocalPackage(std::wstring_view product_id) {
     constexpr size_t buf_size{500};
-    wchar_t local_package[500];
+    wchar_t local_package[500] = {0};
     DWORD len{buf_size};
-    auto ret = ::MsiGetProductInfoW(
-        product_id.data(), INSTALLPROPERTY_LOCALPACKAGE, local_package, &len);
-
-    return ret == 0 ? std::wstring{local_package} : std::wstring();
+    return ::MsiGetProductInfoW(product_id.data(), INSTALLPROPERTY_LOCALPACKAGE,
+                                local_package, &len) == 0
+               ? std::wstring{local_package}
+               : std::wstring();
 }
 
 }  // namespace
 
-std::optional<std::filesystem::path> FindProductMsi(
-    std::wstring_view product_name) {
+std::optional<fs::path> FindProductMsi(std::wstring_view product_name) {
     if (product_name.empty()) {
         XLOG::l("Empty package name");
         return {};
@@ -66,8 +66,7 @@ std::optional<std::filesystem::path> FindProductMsi(
             break;
         }
 
-        auto current_product_name = GetMsiProductName(product_id);
-        if (current_product_name != product_name) {
+        if (GetMsiProductName(product_id) != product_name) {
             continue;
         }
 
@@ -84,14 +83,14 @@ std::optional<std::filesystem::path> FindProductMsi(
     return {};
 }
 
-bool UseScriptToInstall() { return g_use_script_to_install; }
+bool UseScriptToInstall() noexcept { return g_use_script_to_install; }
 
 InstallMode G_InstallMode = InstallMode::normal;
 InstallMode GetInstallMode() { return G_InstallMode; }
 
-std::filesystem::path MakeTempFileNameInTempPath(std::wstring_view file_name) {
+fs::path MakeTempFileNameInTempPath(std::wstring_view file_name) {
     // Find Temporary Folder
-    fs::path temp_folder{cma::tools::win::GetTempFolder()};
+    fs::path temp_folder{tools::win::GetTempFolder()};
     std::error_code ec;
     if (!fs::exists(temp_folder, ec)) {
         XLOG::l("Updating is NOT possible, temporary folder not found [{}]",
@@ -105,10 +104,9 @@ std::filesystem::path MakeTempFileNameInTempPath(std::wstring_view file_name) {
 // makes in temp own folder with name check_mk_agent_<pid>_<number>
 // returns path to this folder with msi_name
 // on fail returns empty
-std::filesystem::path GenerateTempFileNameInTempPath(
-    std::wstring_view msi_name) {
+fs::path GenerateTempFileNameInTempPath(std::wstring_view msi_name) {
     // Find Temporary Folder
-    fs::path temp_folder{cma::tools::win::GetTempFolder()};
+    fs::path temp_folder{tools::win::GetTempFolder()};
     std::error_code ec;
     if (!fs::exists(temp_folder, ec)) {
         XLOG::l("Updating is NOT possible, temporary folder not found [{}]",
@@ -126,14 +124,14 @@ std::filesystem::path GenerateTempFileNameInTempPath(
     while (true) {
         auto folder_name = fmt::format("check_mk_agent_{}_{}", pid, counter);
         ret_path = temp_folder / folder_name;
-        if (!fs::exists(ret_path, ec) && fs::create_directory(ret_path, ec))
+        if (!fs::exists(ret_path, ec) && fs::create_directory(ret_path, ec)) {
             break;
+        }
 
         XLOG::l("Proposed folder exists '{}'", ret_path);
         attempt++;
         if (attempt >= max_attempts) {
             XLOG::l("Can't find free name for folder");
-
             return {};
         }
     }
@@ -141,27 +139,29 @@ std::filesystem::path GenerateTempFileNameInTempPath(
     return ret_path / msi_name;
 }
 
-static void LogPermissions(const std::string &file_name) noexcept {
+static void LogPermissions(const fs::path &file_name) noexcept {
     try {
-        wtools::ACLInfo acl(file_name.c_str());
+        auto fname = wtools::ToUtf8(file_name.wstring());
+        wtools::ACLInfo acl(fname.c_str());
         auto ret = acl.query();
-        if (ret == S_OK)
+        if (ret == S_OK) {
             XLOG::l("Permissions:\n{}", acl.output());
-        else
+        } else {
             XLOG::l("Permission access failed with error {:#X}", ret);
+        }
     } catch (const std::exception &e) {
-        XLOG::l("Exception hit in bad place {}", e.what());
+        XLOG::l("Exception hit in bad place {}", e);
     }
 }
 
-static bool RmFileWithRename(const std::filesystem::path &file_name,
+static bool RmFileWithRename(const fs::path &file_name,
                              std::error_code ec) noexcept {
     XLOG::l(
         "Updating is NOT possible, can't delete file '{}', error [{}]. Trying rename.",
-        file_name.u8string(), ec.value());
+        file_name, ec.value());
 
-    LogPermissions(file_name.u8string());
-    LogPermissions(file_name.parent_path().u8string());
+    LogPermissions(file_name);
+    LogPermissions(file_name.parent_path());
 
     auto file = file_name;
     fs::rename(file_name, file.replace_extension(".old"), ec);
@@ -185,15 +185,14 @@ std::wstring MsiFileToRecoverMsi(const std::wstring &name) {
 
 // remove file with diagnostic
 // for internal use by cma::install
-bool RmFile(const std::filesystem::path &file_name) noexcept {
+bool RmFile(const fs::path &file_name) noexcept {
     std::error_code ec;
     if (!fs::exists(file_name, ec)) {
         XLOG::l.t("File '{}' is absent, no need to delete", file_name);
         return true;
     }
 
-    auto ret = fs::remove(file_name, ec);
-    if (ret || ec.value() == 0) {  // either deleted or disappeared
+    if (fs::remove(file_name, ec) || !ec) {  // either deleted or disappeared
         XLOG::l.i("File '{}'was removed", file_name);
         return true;
     }
@@ -203,11 +202,11 @@ bool RmFile(const std::filesystem::path &file_name) noexcept {
 
 // MOVE(rename) file with diagnostic
 // for internal use by cma::install
-bool MvFile(const std::filesystem::path &source_file,
-            const std::filesystem::path &destination_file) noexcept {
+bool MvFile(const fs::path &source_file,
+            const fs::path &destination_file) noexcept {
     std::error_code ec;
     fs::rename(source_file, destination_file, ec);
-    if (ec.value() != 0) {
+    if (ec) {
         XLOG::l("Can't move file '{}' to '{}', error [{}]", source_file,
                 destination_file, ec.value());
         return false;
@@ -221,8 +220,8 @@ bool MvFile(const std::filesystem::path &source_file,
 // store file in the folder
 // used to save last installed MSI
 // no return because we will install new MSI always
-void BackupFile(const std::filesystem::path &file_name,
-                const std::filesystem::path &backup_dir) noexcept {
+void BackupFile(const fs::path &file_name,
+                const fs::path &backup_dir) noexcept {
     std::error_code ec;
 
     if (backup_dir.empty() || !fs::exists(backup_dir, ec) ||
@@ -231,7 +230,7 @@ void BackupFile(const std::filesystem::path &file_name,
         return;
     }
 
-    if (file_name.empty() || !cma::tools::IsValidRegularFile(file_name)) {
+    if (file_name.empty() || !tools::IsValidRegularFile(file_name)) {
         XLOG::l("Backup of the '{}' impossible", file_name);
         return;
     }
@@ -251,8 +250,8 @@ void BackupFile(const std::filesystem::path &file_name,
 // return true when BackupDir is absent, BackupDir/IncomingFile.filename absent
 // or when IncomingFile is newer than BackupDir/IncomingFile.filename
 // Diagnostic for the "install" case
-bool NeedInstall(const std::filesystem::path &incoming_file,
-                 const std::filesystem::path &backup_dir) noexcept {
+bool NeedInstall(const fs::path &incoming_file,
+                 const fs::path &backup_dir) noexcept {
     std::error_code ec;
 
     if (!fs::exists(incoming_file, ec)) {
@@ -277,8 +276,8 @@ bool NeedInstall(const std::filesystem::path &incoming_file,
         return true;
     }
 
-    auto target_time = fs::last_write_time(saved_file, ec);
-    auto src_time = fs::last_write_time(incoming_file, ec);
+    const auto target_time = fs::last_write_time(saved_file, ec);
+    const auto src_time = fs::last_write_time(incoming_file, ec);
     return src_time > target_time;
 }
 
@@ -286,7 +285,7 @@ bool NeedInstall(const std::filesystem::path &incoming_file,
 ///
 /// In the case of any problems returns true
 /// No unit tests
-bool NeedInstall(const std::filesystem::path &incoming_file) noexcept {
+bool NeedInstall(const fs::path &incoming_file) noexcept {
     std::error_code ec;
 
     if (!fs::exists(incoming_file, ec)) {
@@ -303,14 +302,14 @@ bool NeedInstall(const std::filesystem::path &incoming_file) noexcept {
         return true;
     }
 
-    auto target_time = fs::last_write_time(*installed_msi, ec);
-    if (ec.value() != 0) {
+    const auto target_time = fs::last_write_time(*installed_msi, ec);
+    if (ec) {
         XLOG::d.w("Can't check data from '{}' assume installation required",
                   *installed_msi);
         return true;
     }
-    auto src_time = fs::last_write_time(incoming_file, ec);
-    if (ec.value() != 0) {
+    const auto src_time = fs::last_write_time(incoming_file, ec);
+    if (ec) {
         XLOG::d.w("Can't check data from '{}' assume installation required",
                   incoming_file);
         return true;
@@ -323,7 +322,7 @@ std::pair<std::wstring, std::wstring> MakeCommandLine() {
     // msiexecs' parameters below are not fixed unfortunately
     // documentation is scarce and method of installation in MK
     // is not a special standard
-    std::filesystem::path log_file_name = cfg::GetLogDir();
+    fs::path log_file_name = cfg::GetLogDir();
     std::error_code ec;
     if (!fs::exists(log_file_name, ec)) {
         XLOG::d("Log file path doesn't '{}' exist. Fallback to install.",
@@ -351,16 +350,16 @@ void ExecuteUpdate::backupLog() const {
     std::error_code ec;
     fs::path log_file_name{log_file_name_};
 
-    if (!fs::exists(log_file_name, ec)) return;
+    if (!fs::exists(log_file_name, ec)) {
+        return;
+    }
 
     XLOG::l.i("Log file '{0}' exists, backing up to '{0}.bak'", log_file_name);
 
     auto log_bak_file_name = log_file_name;
     log_bak_file_name.replace_extension(".log.bak");
 
-    auto success = MvFile(log_file_name, log_bak_file_name);
-
-    if (!success) {
+    if (!MvFile(log_file_name, log_bak_file_name)) {
         XLOG::d("Backing up of msi log failed");
     }
 }
@@ -389,11 +388,10 @@ bool ExecuteUpdate::copyScriptToTemp() const {
     return false;
 }
 
-void ExecuteUpdate::prepare(const std::filesystem::path &exe,
-                            const std::filesystem::path &msi,
-                            const std::filesystem::path &recover_msi,
+void ExecuteUpdate::prepare(const fs::path &exe, const fs::path &msi,
+                            const fs::path &recover_msi,
                             bool validate_script_exists) {
-    auto [command_tail, log_file_name] = MakeCommandLine();
+    const auto [command_tail, log_file_name] = MakeCommandLine();
     log_file_name_ = log_file_name;
 
     std::error_code ec;
@@ -401,7 +399,7 @@ void ExecuteUpdate::prepare(const std::filesystem::path &exe,
     // no validate -> new
     // validate and script is present -> new
     // validate and script is absent -> old
-    auto required_script_absent =
+    const auto required_script_absent =
         validate_script_exists && !fs::exists(base_script_file_, ec);
 
     if (UseScriptToInstall() && !required_script_absent) {
@@ -497,7 +495,7 @@ std::optional<fs::path> CreateInstallFile(const fs::path &msi_base,
 // returns true when update found and ready to exec
 std::pair<std::wstring, bool> CheckForUpdateFile(
     std::wstring_view msi_name, std::wstring_view msi_dir,
-    UpdateProcess start_update_process, std::wstring_view backup_dir) {
+    UpdateProcess start_update_process) {
     // find path to msiexec, in Windows it is in System32 folder
     const auto exe = cfg::GetMsiExecPath();
     if (exe.empty()) {
@@ -547,7 +545,7 @@ std::pair<std::wstring, bool> CheckForUpdateFile(
         XLOG::l("Unexpected exception '{}' during attempt to exec update ",
                 e.what());
     }
-    { return {{}, false}; }
+    return {{}, false};
 }
 
 /// \brief - checks that post install flag is set by MSI
@@ -592,16 +590,18 @@ std::optional<fs::path> FindMsiLog() {
 
 /// \brief reads the file which must be encoded as LE BOM<summary>
 std::wstring ReadLeBom(const fs::path &file) {
-    constexpr size_t max_log_size{8192 * 1024};
+    constexpr size_t max_log_size{8192U * 1024};
+    constexpr auto ff = static_cast<unsigned char>('\xFF');
+    constexpr auto fe = static_cast<unsigned char>('\xFE');
+    constexpr std::array<unsigned char, 2> le_bom_marker{ff, fe};
     try {
         std::ifstream f1(file, std::ifstream::binary | std::ifstream::ate);
 
-        auto size = static_cast<size_t>(f1.tellg());
+        const auto size = static_cast<size_t>(f1.tellg());
         if (size > max_log_size) {
             return {};
         }
         f1.seekg(0, std::ifstream::beg);
-        constexpr std::array<unsigned char, 2> le_bom_marker{'\xFF', '\xFE'};
         std::array<unsigned char, 2> buf;
         f1.read(reinterpret_cast<char *>(buf.data()), buf.size());
         if (buf != le_bom_marker) {
@@ -627,11 +627,11 @@ std::vector<std::wstring> FindStringsByMarker(const std::wstring &content,
     std::vector<std::wstring> strings;
     size_t cur_offset = 0;
     while (true) {
-        auto offset = content.find(marker, cur_offset);
+        const auto offset = content.find(marker, cur_offset);
         if (offset == std::wstring::npos) {
             break;
         }
-        auto end = content.find(L"\r\n", offset);
+        const auto end = content.find(L"\r\n", offset);
         if (end == std::wstring::npos) {
             strings.emplace_back(content.substr(offset));
         } else if (offset != end) {
@@ -652,18 +652,17 @@ std::wstring ExpectedMarker() {
 }  // namespace
 
 std::optional<std::wstring> GetLastInstallFailReason() {
-    auto msi_log = FindMsiLog();
+    const auto msi_log = FindMsiLog();
     if (!msi_log) {
         return {};
     }
-    auto content = ReadLeBom(*msi_log);
-    auto product_strings = FindStringsByMarker(content, ExpectedMarker());
-    if (rs::any_of(product_strings, [](const std::wstring &value) -> bool {
+    const auto content = ReadLeBom(*msi_log);
+    const auto product_strings = FindStringsByMarker(content, ExpectedMarker());
+    if (rs::any_of(product_strings, [](const std::wstring &value) {
             return value.find(L"Installation failed") != std::wstring::npos;
         })) {
         return {product_strings[0]};
     }
     return {};
 }
-
 };  // namespace cma::install

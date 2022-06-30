@@ -18,7 +18,7 @@
 #include "tools/_tgt.h"
 
 namespace cma::install {
-bool UseScriptToInstall();
+bool UseScriptToInstall() noexcept;
 
 std::optional<std::filesystem::path> FindProductMsi(
     std::wstring_view product_name);
@@ -90,17 +90,10 @@ inline std::wstring GetMsiRegistryPath() {
 
 /// Returns command and success status
 /// set StartUpdateProcess to 'skip' for dry run
-/// BackupPath may be empty, normally points out on the install folder
 /// DirWithMsi is update dir in ProgramData
 std::pair<std::wstring, bool> CheckForUpdateFile(
     std::wstring_view msi_name, std::wstring_view msi_dir,
-    UpdateProcess start_update_process, std::wstring_view backup_dir);
-
-inline std::pair<std::wstring, bool> CheckForUpdateFile(
-    std::wstring_view msi_name, std::wstring_view msi_dir,
-    UpdateProcess start_update_process) {
-    return CheckForUpdateFile(msi_name, msi_dir, start_update_process, L"");
-}
+    UpdateProcess start_update_process);
 
 std::filesystem::path MakeTempFileNameInTempPath(std::wstring_view Name);
 std::filesystem::path GenerateTempFileNameInTempPath(std::wstring_view Name);

@@ -361,10 +361,10 @@ int RunService(std::wstring_view app_name) {
         // Auto Update when  MSI file is located by specified address
         // this part of code have to be tested manually
         auto [command, started] = cma::install::CheckForUpdateFile(
-            cma::install::kDefaultMsiFileName,     // file we are looking for
-            cma::cfg::GetUpdateDir(),              // dir with file
-            cma::install::UpdateProcess::execute,  // operation if file found
-            cma::cfg::GetUserInstallDir());        // dir where file to backup
+            cma::install::kDefaultMsiFileName,    // file we are looking for
+            cma::cfg::GetUpdateDir(),             // dir with file
+            cma::install::UpdateProcess::execute  // operation if file found
+        );
 
         if (started) {
             XLOG::l.i(

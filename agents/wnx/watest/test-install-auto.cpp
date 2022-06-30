@@ -218,8 +218,8 @@ TEST(InstallAuto, CheckForUpdateFileIntegration) {
     {
         auto path = in / name;
         tst::CreateTextFile(path, "-----\n");
-        auto [command, result] = CheckForUpdateFile(
-            name, in.wstring(), UpdateProcess::skip, out.wstring());
+        auto [command, result] =
+            CheckForUpdateFile(name, in.wstring(), UpdateProcess::skip);
         EXPECT_TRUE(result);
 
         EXPECT_TRUE(!fs::exists(path, ec));
@@ -234,8 +234,8 @@ TEST(InstallAuto, CheckForUpdateFileIntegration) {
         ASSERT_TRUE(temp_fs->createRootFile(
             fs::path(cfg::dirs::kAgentUtils) / cfg::files::kExecuteUpdateFile,
             "rem echo nothing\n"));
-        auto [command, result] = CheckForUpdateFile(
-            name, in.wstring(), UpdateProcess::skip, out.wstring());
+        auto [command, result] =
+            CheckForUpdateFile(name, in.wstring(), UpdateProcess::skip);
         EXPECT_TRUE(result);
 
         EXPECT_TRUE(!fs::exists(path, ec));

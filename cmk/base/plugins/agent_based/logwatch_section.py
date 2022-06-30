@@ -14,7 +14,7 @@
 #                                                                                       #
 #########################################################################################
 
-from typing import Dict, Optional, Tuple
+from typing import Dict, Literal, Optional
 
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
@@ -30,19 +30,31 @@ def _extract_error_message(line: str) -> Optional[str]:
     return "Error in agent configuration: %s" % line[25:]
 
 
-def _extract_item_attribute(line: str) -> Optional[Tuple[str, str]]:
+def _extract_item_attribute(
+    line: str,
+) -> tuple[str | None, Literal["cannotopen", "missing", "ok"]]:
     """Check line for next item subsection
-    Return None if no item subsection is found,
-    (item, attribute) otherwise
+    Return None if no item subsection is found, (item, attribute) otherwise
+
+    >>> _extract_item_attribute("W no item here")
+    (None, 'ok')
+    >>> _extract_item_attribute("[[[vanished_file:missing]]]")
+    ('vanished_file', 'missing')
+    >>> _extract_item_attribute("[[[this is nice]]]")
+    ('this is nice', 'ok')
+    >>> _extract_item_attribute("[[[filename:with:colons]]]")
+    ('filename:with:colons', 'ok')
     """
     if line[:3] != "[[[" or line[-3:] != "]]]":
-        return None
-    logfile_name = line[3:-3]
-    if logfile_name.endswith(":missing") or logfile_name.endswith(":cannotopen"):
-        logfile_name, attribute = logfile_name.rsplit(":", 1)
-    else:
-        attribute = "ok"
-    return logfile_name, attribute
+        return None, "ok"
+
+    header = line[3:-3]
+    logfile_name, *attribute = header.rsplit(":", 1)
+    match attribute:
+        case ("missing" | "cannotopen" as value,):
+            return logfile_name, value
+        case _:
+            return header, "ok"
 
 
 def parse_logwatch(string_table: StringTable) -> Section:
@@ -80,9 +92,8 @@ def parse_logwatch(string_table: StringTable) -> Section:
             errors.append(error_msg)
             continue
 
-        item_attribute = _extract_item_attribute(line)
-        if item_attribute is not None:
-            item, attribute = item_attribute
+        item, attribute = _extract_item_attribute(line)
+        if item is not None:
             item_data = logfiles.setdefault(item, {"attr": attribute, "lines": []})
             continue
 

@@ -38,14 +38,10 @@ from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation
 from ..agent_based_api.v1 import regex, Result
 from ..agent_based_api.v1 import State as state
 
-ItemData = TypedDict(
-    "ItemData",
-    {
-        "attr": str,
-        "lines": List[str],
-    },
-    total=True,
-)
+
+class ItemData(TypedDict):
+    attr: str
+    lines: List[str]
 
 
 class Section(NamedTuple):

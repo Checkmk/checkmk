@@ -8,6 +8,8 @@
 import re
 from typing import Collection, Iterable, List, Optional, Type
 
+from livestatus import SiteId
+
 import cmk.utils.version as cmk_version
 
 import cmk.gui.userdb as userdb
@@ -40,6 +42,7 @@ from cmk.gui.plugins.userdb.utils import (
     get_connection,
     load_connection_config,
     save_connection_config,
+    UserConnectionSpec,
 )
 from cmk.gui.plugins.wato.utils import (
     IndividualOrStoredPassword,
@@ -72,6 +75,7 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 
@@ -692,8 +696,13 @@ class LDAPConnectionValuespec(Transform):
 
 
 class LDAPMode(WatoMode):
-    def _add_change(self, action_name, text):
-        _changes.add_change(action_name, text, domains=[ConfigDomainGUI], sites=get_login_sites())
+    def _add_change(self, action_name: str, text: LogMessage, sites: List[SiteId]) -> None:
+        _changes.add_change(action_name, text, domains=[ConfigDomainGUI], sites=sites)
+
+    def _get_affected_sites(self, connection: UserConnectionSpec) -> List[SiteId]:
+        if cmk_version.is_managed_edition():
+            return list(managed.get_sites_of_customer(connection["customer"]).keys())
+        return get_login_sites()
 
 
 @mode_registry.register
@@ -771,7 +780,9 @@ class ModeLDAPConfig(LDAPMode):
             index = request.get_integer_input_mandatory("_delete")
             connection = connections[index]
             self._add_change(
-                "delete-ldap-connection", _("Deleted LDAP connection %s") % (connection["id"])
+                "delete-ldap-connection",
+                _("Deleted LDAP connection %s") % (connection["id"]),
+                self._get_affected_sites(connection),
             )
             del connections[index]
             save_connection_config(connections)
@@ -783,6 +794,7 @@ class ModeLDAPConfig(LDAPMode):
             self._add_change(
                 "move-ldap-connection",
                 _("Changed position of LDAP connection %s to %d") % (connection["id"], to_pos),
+                self._get_affected_sites(connection),
             )
             del connections[from_pos]  # make to_pos now match!
             connections[to_pos:to_pos] = [connection]
@@ -931,7 +943,7 @@ class ModeEditLDAPConnection(LDAPMode):
         else:
             log_what = "edit-ldap-connection"
             log_text = _("Changed LDAP connection %s") % self._connection_id
-        self._add_change(log_what, log_text)
+        self._add_change(log_what, log_text, self._get_affected_sites(self._connection_cfg))
 
         save_connection_config(self._connections)
         active_config.user_connections = (

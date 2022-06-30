@@ -452,10 +452,9 @@ async fn with_timeout<T, E: 'static + Error + Send + Sync>(
     fut: impl Future<Output = Result<T, E>>,
     seconds: u64,
 ) -> AnyhowResult<T> {
-    match timeout(Duration::from_secs(seconds), fut).await {
-        Ok(inner) => Ok(inner?),
-        Err(err) => Err(anyhow!(err)),
-    }
+    Ok(timeout(Duration::from_secs(seconds), fut)
+        .await
+        .map_err(|e| anyhow!(e))??)
 }
 
 #[cfg(test)]

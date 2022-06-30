@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -58,7 +57,7 @@ _STRING_TABLES = [
         ["2081", "Power_Supply_PS2_Status", "[Presence_detected]"],
     ],
     [
-        ["32", "Temperature_Ambient", "20.00_C_(1.00/42.00)", "[OK]"],
+        ["32", "Temperature_Ambient", "20.00_C_(1.00/42.00)", "nc"],
         ["416", "Temperature_DIMM-2A", "NA(NA/115.00)", "[Unknown]"],
         ["4288", "Power_Unit_PSU", "[Redundancy_Lost]"],
         ["138", "OEM_Reserved_CPU_Temp", "NA_NA_(NA/NA)", "[OEM_Event_=_0000h]"],
@@ -317,7 +316,7 @@ _SECTIONS = [
             crit_high=None,
         ),
         "Temperature_Ambient": ipmi_utils.Sensor(
-            status_txt="OK",
+            status_txt="nc",
             unit="C",
             value=20.0,
             crit_low=1.0,
@@ -491,6 +490,16 @@ def test_discover_ipmi_sensors(
                 Result(state=State.OK, summary="3.37 V"),
                 Result(state=State.CRIT,
                        summary="Voltage_AVCC: 3.37 V (warn/crit at 1.00 V/2.00 V)"),
+            ],
+        ),
+        pytest.param(
+            "Temperature_Ambient",
+            {},
+            _SECTIONS[2],
+            [
+                Result(state=State.WARN, summary="Status: nc"),
+                Result(state=State.OK, summary="20.00 C"),
+                Metric("value", 20.0, levels=(None, 42.0)),
             ],
         ),
     ],

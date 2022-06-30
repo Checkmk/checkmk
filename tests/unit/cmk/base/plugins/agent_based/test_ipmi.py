@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -52,7 +51,7 @@ SECTION_IPMI = ipmi.parse_ipmi(
      [u'FAN2_SYS', u'2400.000', u'RPM', u'ok', u'na', u'600.000', u'na', u'na', u'na', u'na'],
      [u'FAN3_SYS', u'2400.000', u'RPM', u'ok', u'na', u'600.000', u'na', u'na', u'na', u'na'],
      [u'FAN4_SYS', u'1980.000', u'RPM', u'ok', u'na', u'600.000', u'na', u'na', u'na', u'na'],
-     [u'FAN5_SYS', u'2280.000', u'RPM', u'ok', u'na', u'600.000', u'na', u'na', u'na', u'na'],
+     [u'FAN5_SYS', u'2280.000', u'RPM', u'nc', u'na', u'600.000', u'na', u'na', u'na', u'na'],
      [u'FAN_PSU1', u'2320.000', u'RPM', u'ok', u'na', u'400.000', u'na', u'na', u'na', u'na'],
      [u'FAN_PSU2', u'2400.000', u'RPM', u'ok', u'na', u'400.000', u'na', u'na', u'na', u'na'],
      [u'PSU1_Power', u'18.000', u'Watts', u'ok', u'na', u'na', u'na', u'na', u'na', u'na'],
@@ -350,7 +349,7 @@ SECTION_IPMI_DISCRETE = ipmi.parse_ipmi(
             "discovery_mode": (
                 "single",
                 {
-                    "ignored_sensorstates": ["ok", "ns"]
+                    "ignored_sensorstates": ["ok", "ns", "nc"]
                 },
             )
         },
@@ -374,7 +373,7 @@ def test_regression_discovery(
         Result(
             state=State.CRIT,
             summary=
-            '147 sensors - 105 OK - 2 CRIT: PS1_Status (ok (Presence detected, Failure detected     <= NOT OK !!)), Drive_4 (ok (Drive Present, Drive Fault)) - 40 skipped',
+            '147 sensors - 104 OK - 1 WARN: FAN5_SYS (nc) - 2 CRIT: PS1_Status (ok (Presence detected, Failure detected     <= NOT OK !!)), Drive_4 (ok (Drive Present, Drive Fault)) - 40 skipped',
         )
     ]),
     ('CMOS_Battery', [Result(state=State.OK, summary='Status: ok')]),
@@ -756,7 +755,7 @@ def test_regression_discovery(
         Metric('FAN4_SYS', 1980.0)
     ]),
     ('FAN5_SYS', [
-        Result(state=State.OK, summary='Status: ok'),
+        Result(state=State.WARN, summary='Status: nc'),
         Result(state=State.OK, summary='2280.00 RPM'),
         Metric('FAN5_SYS', 2280.0)
     ]),

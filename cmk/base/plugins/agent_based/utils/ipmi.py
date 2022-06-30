@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -184,10 +183,6 @@ def check_ipmi_detailed(
         if sensor.status_txt.startswith(wato_status_txt):
             yield Result(state=State(wato_status), summary="User-defined state")
             break
-
-    # Sensor reports 'nc' ('non critical'), so we set the state to WARNING
-    if sensor.status_txt.startswith('nc'):
-        yield Result(state=State.WARN, summary="Sensor is non-critical")
 
 
 def check_ipmi_summarized(

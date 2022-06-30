@@ -269,7 +269,6 @@ CEE_UNUSED_PACKAGES = [
     "requests-kerberos",
     "requests-toolbelt",
     "s3transfer",
-    "semver",
     "setuptools_scm",
     "snmpsim",
     "tenacity",

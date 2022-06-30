@@ -163,45 +163,47 @@ def check_ipmi_detailed(
         ),
     )
 
-    if sensor.value is not None:
-        metric = None
-        if not temperature_metrics_only:
-            metric = Metric(
-                item.replace("/", "_"),
-                sensor.value,
-                levels=(sensor.warn_high, sensor.crit_high),
-            )
+    if sensor.value is None:
+        return
 
-        # Do not save performance data for FANs. This produces a lot of data and is - in my
-        # opinion - useless.
-        elif "temperature" in item.lower() or "temp" in item.lower() or sensor.unit == "C":
-            metric = Metric(
-                "value",
-                sensor.value,
-                levels=(None, sensor.crit_high),
-            )
-
-        sensor_result, *_ = check_levels(
+    metric = None
+    if not temperature_metrics_only:
+        metric = Metric(
+            item.replace("/", "_"),
             sensor.value,
-            levels_upper=_sensor_levels_to_check_levels(sensor.warn_high, sensor.crit_high),
-            levels_lower=_sensor_levels_to_check_levels(sensor.warn_low, sensor.crit_low),
-            render_func=_unit_to_render_func(sensor.unit),
+            levels=(sensor.warn_high, sensor.crit_high),
         )
-        yield Result(
-            state=sensor_result.state,
-            summary=sensor_result.summary,
-        )
-        if metric:
-            yield metric
 
-        num_result = _check_numerical_levels(
-            item,
+    # Do not save performance data for FANs. This produces a lot of data and is - in my
+    # opinion - useless.
+    elif "temperature" in item.lower() or "temp" in item.lower() or sensor.unit == "C":
+        metric = Metric(
+            "value",
             sensor.value,
-            params,
-            sensor.unit,
+            levels=(None, sensor.crit_high),
         )
-        if num_result is not None:
-            yield num_result
+
+    sensor_result, *_ = check_levels(
+        sensor.value,
+        levels_upper=_sensor_levels_to_check_levels(sensor.warn_high, sensor.crit_high),
+        levels_lower=_sensor_levels_to_check_levels(sensor.warn_low, sensor.crit_low),
+        render_func=_unit_to_render_func(sensor.unit),
+    )
+    yield Result(
+        state=sensor_result.state,
+        summary=sensor_result.summary,
+    )
+    if metric:
+        yield metric
+
+    num_result = _check_numerical_levels(
+        item,
+        sensor.value,
+        params,
+        sensor.unit,
+    )
+    if num_result is not None:
+        yield num_result
 
 
 def check_ipmi_summarized(  # pylint: disable=too-many-branches

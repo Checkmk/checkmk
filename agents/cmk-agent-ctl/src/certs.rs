@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use anyhow::{anyhow, bail, Context, Result as AnyhowResult};
+use anyhow::{anyhow, Context, Result as AnyhowResult};
 use openssl::hash::MessageDigest;
 use openssl::nid::Nid;
 use openssl::pkey::PKey;
@@ -71,25 +71,16 @@ impl std::convert::TryFrom<&Certificate> for CNCheckerUUID {
     type Error = RusttlsError;
 
     fn try_from(certificate: &Certificate) -> Result<Self, RusttlsError> {
-        let cert = match x509_parser::certificate::X509Certificate::from_der(certificate.as_ref()) {
-            Ok((_rem, cert)) => cert,
-            Err(err) => {
-                return Err(RusttlsError::InvalidCertificateData(format!(
-                    "Certificate parsing failed: {}",
-                    err
-                )))
-            }
-        };
+        let (_rem, cert) = x509_parser::certificate::X509Certificate::from_der(
+            certificate.as_ref(),
+        )
+        .map_err(|e| {
+            RusttlsError::InvalidCertificateData(format!("Certificate parsing failed: {}", e))
+        })?;
 
-        let common_names = match common_names(cert.subject()) {
-            Ok(cns) => cns,
-            Err(err) => {
-                return Err(RusttlsError::InvalidCertificateData(format!(
-                    "Certificate parsing failed: {}",
-                    err
-                )))
-            }
-        };
+        let common_names = common_names(cert.subject()).map_err(|e| {
+            RusttlsError::InvalidCertificateData(format!("Certificate parsing failed: {}", e))
+        })?;
 
         if common_names.len() != 1 {
             return Err(RusttlsError::General(format!(
@@ -137,15 +128,12 @@ impl ServerCertVerifier for CnIsNoUuidAcceptAnyHostname {
             end_entity,
             intermediates,
             // emulate reqwest::ClientBuilder::danger_accept_invalid_hostnames
-            &match ServerName::try_from(cn_checker.cn()) {
-                Ok(server_name) => server_name,
-                Err(err) => {
-                    return Err(RusttlsError::General(format!(
-                        "CN in server certificate cannot be used as server name: {}",
-                        err
-                    )));
-                }
-            },
+            &ServerName::try_from(cn_checker.cn()).map_err(|e| {
+                RusttlsError::General(format!(
+                    "CN in server certificate cannot be used as server name: {}",
+                    e
+                ))
+            })?,
             scts,
             ocsp_response,
             now,
@@ -222,16 +210,13 @@ pub fn parse_pem(cert: &str) -> AnyhowResult<x509_parser::pem::Pem> {
 }
 
 pub fn common_names<'a>(x509_name: &'a x509_parser::x509::X509Name) -> AnyhowResult<Vec<&'a str>> {
-    let mut cns = Vec::new();
-
-    for name in x509_name.iter_common_name() {
-        match name.as_str() {
-            Ok(cn) => cns.push(cn),
-            Err(err) => bail!("Failed to parse CN to string: {}", err),
-        }
-    }
-
-    Ok(cns)
+    x509_name
+        .iter_common_name()
+        .map(|n| {
+            n.as_str()
+                .map_err(|e| anyhow!(format!("Failed to parse CN to string: {}", e)))
+        })
+        .collect::<AnyhowResult<Vec<_>>>()
 }
 
 pub fn rustls_private_key(key_pem: &str) -> AnyhowResult<RustlsPrivateKey> {

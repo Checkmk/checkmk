@@ -59,8 +59,8 @@ PYTHON_MODULE_344  := $(PYTHON_TMP_DIR_344)\$(PYTHON_MODULE_NAME_344)
 
 usage:
 	@powershell Write-Host "Define build parameters, for example:"
-	@powershell Write-Host "make build PY_VER=3.9 PY_SUVBER=7" -foreground Green 
-	@powershell Write-Host "make python_344 PY_VER=3.4 PY_SUVBER=4" -foreground Green 
+	@powershell Write-Host "make build PY_VER=3.9 PY_SUBVER=7" -foreground Green 
+	@powershell Write-Host "make python_344 PY_VER=3.4 PY_SUBVER=4" -foreground Green 
 
 python_version:
 	@echo $(PY_VER) $(PY_SUBVER)

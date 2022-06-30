@@ -439,6 +439,21 @@ def _custom_host_attribute():
         yield
 
 
+@pytest.fixture(name="custom_host_attribute_basic_topic")
+def _custom_host_attribute_with_basic_topic():
+    attr: CustomAttr = {
+        "name": "foo",
+        "title": "bar",
+        "help": "foo",
+        "topic": "basic",
+        "type": "TextAscii",
+        "add_custom_macro": False,
+        "show_in_table": False,
+    }
+    with custom_host_attribute_ctx({"host": [attr]}):
+        yield
+
+
 @contextlib.contextmanager
 def custom_host_attribute_ctx(attrs: typing.Dict[str, typing.List[CustomAttr]]):
     try:
@@ -953,7 +968,7 @@ def test_openapi_create_host_with_contact_group(
 def test_openapi_create_host_with_custom_attributes(
     wsgi_app,
     with_automation_user,
-    custom_host_attribute,
+    custom_host_attribute_basic_topic,
 ):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))

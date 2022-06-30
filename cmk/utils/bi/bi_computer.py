@@ -53,7 +53,9 @@ bi_computer_postprocessing_registry = BIComputerPostprocessingRegistry()
 
 
 class BIComputer:
-    def __init__(self, compiled_aggregations, bi_status_fetcher) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, compiled_aggregations, bi_status_fetcher
+    ) -> None:
         self._compiled_aggregations: Dict[str, BICompiledAggregation] = compiled_aggregations
         self._bi_status_fetcher = bi_status_fetcher
         self._legacy_branch_cache: dict = {}
@@ -246,7 +248,7 @@ class BIComputer:
 
         return legacy_results
 
-    def _get_matched_aggr_groups(
+    def _get_matched_aggr_groups(  # type:ignore[no-untyped-def]
         self,
         bi_aggregation_filter: BIAggregationFilter,
         compiled_aggregation: BICompiledAggregation,

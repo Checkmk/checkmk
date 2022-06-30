@@ -25,24 +25,24 @@ EXPECTED_TEST_FILES = ["check_mk_agent.msi", msi_engine.AGENT_MSI_FILE, "check_m
 
 
 @pytest.mark.parametrize("executable", EXPECTED_EXECUTABLES)
-def test_executables(site: Site, executable) -> None:
+def test_executables(site: Site, executable) -> None:  # type:ignore[no-untyped-def]
     bin_path = Path(site.path("bin"))
     assert Path(bin_path / executable).exists(), "path: '{}' exe: '{}'".format(bin_path, executable)
 
 
 @pytest.mark.parametrize("test_file", EXPECTED_TEST_FILES)
-def test_files(site: Site, test_file) -> None:
+def test_files(site: Site, test_file) -> None:  # type:ignore[no-untyped-def]
     msi_path = Path(site.path(MSI_LOCATION))
     assert Path(msi_path / test_file).exists(), "path: '{}' file: '{}'".format(msi_path, test_file)
 
 
-def _get_msi_file_path_not_signed(site: Site):
+def _get_msi_file_path_not_signed(site: Site):  # type:ignore[no-untyped-def]
     msi_path = Path(site.path(MSI_LOCATION))
     return msi_path / msi_engine.AGENT_MSI_FILE
 
 
 # check the export with site/bin tools
-def test_export_msi_file(site: Site, tmp_path) -> None:
+def test_export_msi_file(site: Site, tmp_path) -> None:  # type:ignore[no-untyped-def]
     msi_file = _get_msi_file_path_not_signed(site=site)
 
     out_dir = tmp_path / "idts"

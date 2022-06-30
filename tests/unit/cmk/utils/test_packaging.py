@@ -163,7 +163,7 @@ def test_get_permissions_unknown_path() -> None:
         (str(cmk.utils.paths.local_bin_dir), 0o755),
     ],
 )
-def test_get_permissions(path, expected) -> None:
+def test_get_permissions(path, expected) -> None:  # type:ignore[no-untyped-def]
     assert packaging._get_permissions(path) == expected
 
 
@@ -279,7 +279,7 @@ def test_edit_rename_conflict() -> None:
         packaging.edit("aaa", new_package_info)
 
 
-def test_install(mkp_bytes, build_setup_search_index) -> None:
+def test_install(mkp_bytes, build_setup_search_index) -> None:  # type:ignore[no-untyped-def]
     packaging.install(mkp_bytes)
     build_setup_search_index.assert_called_once()
 
@@ -290,7 +290,7 @@ def test_install(mkp_bytes, build_setup_search_index) -> None:
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
 
-def test_install_by_path(mkp_file, build_setup_search_index) -> None:
+def test_install_by_path(mkp_file, build_setup_search_index) -> None:  # type:ignore[no-untyped-def]
     packaging.install_by_path(mkp_file)
     build_setup_search_index.assert_called_once()
 
@@ -339,7 +339,7 @@ def test_write_file() -> None:
     assert info2["name"] == "aaa"
 
 
-def test_remove(build_setup_search_index) -> None:
+def test_remove(build_setup_search_index) -> None:  # type:ignore[no-untyped-def]
     package_info = _create_simple_test_package("aaa")
     packaging.remove(package_info)
     build_setup_search_index.assert_called_once()
@@ -406,7 +406,7 @@ def test_get_optional_package_infos_none() -> None:
     assert packaging.get_optional_package_infos() == {}
 
 
-def test_get_optional_package_infos(monkeypatch, tmp_path) -> None:
+def test_get_optional_package_infos(monkeypatch, tmp_path) -> None:  # type:ignore[no-untyped-def]
     mkp_dir = tmp_path.joinpath("optional_packages")
     mkp_dir.mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr(cmk.utils.paths, "optional_packages_dir", mkp_dir)
@@ -432,11 +432,11 @@ def test_parse_package_info() -> None:
     assert packaging.parse_package_info(info_str)["name"] == "pkgname"
 
 
-def test_disable_package(mkp_file, build_setup_search_index) -> None:
+def test_disable_package(mkp_file, build_setup_search_index) -> None:  # type:ignore[no-untyped-def]
     _install_and_disable_package(mkp_file, build_setup_search_index)
 
 
-def test_is_disabled(mkp_file, build_setup_search_index) -> None:
+def test_is_disabled(mkp_file, build_setup_search_index) -> None:  # type:ignore[no-untyped-def]
     package_file_name = _install_and_disable_package(mkp_file, build_setup_search_index)
     assert packaging.is_disabled(package_file_name)
 
@@ -464,7 +464,9 @@ def _install_and_disable_package(mkp_file, build_setup_search_index):
     return package_file_name
 
 
-def test_enable_disabled_package(mkp_file, build_setup_search_index) -> None:
+def test_enable_disabled_package(  # type:ignore[no-untyped-def]
+    mkp_file, build_setup_search_index
+) -> None:
     package_file_name = _install_and_disable_package(mkp_file, build_setup_search_index)
 
     packaging.enable(package_file_name)
@@ -474,7 +476,9 @@ def test_enable_disabled_package(mkp_file, build_setup_search_index) -> None:
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
 
-def test_remove_disabled_package(mkp_file, build_setup_search_index) -> None:
+def test_remove_disabled_package(  # type:ignore[no-untyped-def]
+    mkp_file, build_setup_search_index
+) -> None:
     package_file_name = _install_and_disable_package(mkp_file, build_setup_search_index)
 
     packaging.remove_disabled(package_file_name)
@@ -483,14 +487,18 @@ def test_remove_disabled_package(mkp_file, build_setup_search_index) -> None:
     assert not cmk.utils.paths.disabled_packages_dir.joinpath(package_file_name).exists()
 
 
-def test_reload_gui_without_gui_files(reload_apache, build_setup_search_index) -> None:
+def test_reload_gui_without_gui_files(  # type:ignore[no-untyped-def]
+    reload_apache, build_setup_search_index
+) -> None:
     package = packaging.get_initial_package_info("ding")
     packaging._execute_post_package_change_actions(package)
     build_setup_search_index.assert_called_once()
     reload_apache.assert_not_called()
 
 
-def test_reload_gui_with_gui_part(reload_apache, build_setup_search_index) -> None:
+def test_reload_gui_with_gui_part(  # type:ignore[no-untyped-def]
+    reload_apache, build_setup_search_index
+) -> None:
     package = packaging.get_initial_package_info("ding")
     package["files"] = {"gui": ["a"]}
 
@@ -499,7 +507,9 @@ def test_reload_gui_with_gui_part(reload_apache, build_setup_search_index) -> No
     reload_apache.assert_called_once()
 
 
-def test_reload_gui_with_web_part(reload_apache, build_setup_search_index) -> None:
+def test_reload_gui_with_web_part(  # type:ignore[no-untyped-def]
+    reload_apache, build_setup_search_index
+) -> None:
     package = packaging.get_initial_package_info("ding")
     package["files"] = {"web": ["a"]}
 

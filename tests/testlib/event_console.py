@@ -85,7 +85,7 @@ class CMKEventConsole:
 
 
 class CMKEventConsoleStatus:
-    def __init__(self, address) -> None:
+    def __init__(self, address) -> None:  # type:ignore[no-untyped-def]
         self._address = address
 
     # Copied from web/htdocs/mkeventd.py. Better move to some common lib.

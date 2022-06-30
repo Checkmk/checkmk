@@ -77,7 +77,7 @@ def main(args):
         sf.save_results()
 
 
-def _execute_as_site_user(site: Site, args):
+def _execute_as_site_user(site: Site, args):  # type:ignore[no-untyped-def]
     env_vars = {
         "VERSION": site.version.version_spec,
         "EDITION": site.version.edition(),

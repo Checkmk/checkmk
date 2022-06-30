@@ -19,7 +19,7 @@ from cmk.base import item_state
     ],
 )
 @pytest.mark.usefixtures("initialised_item_state")
-def test_get_rate_raises(pre_state, time, value, errmsg) -> None:
+def test_get_rate_raises(pre_state, time, value, errmsg) -> None:  # type:ignore[no-untyped-def]
     item_state.set_item_state("foo", pre_state)
     with pytest.raises(item_state.MKCounterWrapped, match=errmsg):
         item_state.get_rate("foo", time, value, onwrap=item_state.RAISE)
@@ -36,7 +36,7 @@ def test_get_rate_raises(pre_state, time, value, errmsg) -> None:
     ],
 )
 @pytest.mark.usefixtures("initialised_item_state")
-def test_get_rate(pre_state, time, value, onwrap, expected) -> None:
+def test_get_rate(pre_state, time, value, onwrap, expected) -> None:  # type:ignore[no-untyped-def]
     item_state.set_item_state("foo", pre_state)
     result = item_state.get_rate("foo", time, value, onwrap=onwrap, allow_negative=True)
     assert result == expected
@@ -81,7 +81,7 @@ def test_get_rate(pre_state, time, value, onwrap, expected) -> None:
     ],
 )
 @pytest.mark.usefixtures("initialised_item_state")
-def test_get_average(ini_zero, backlog_min, timeseries) -> None:
+def test_get_average(ini_zero, backlog_min, timeseries) -> None:  # type:ignore[no-untyped-def]
     for _idx, (this_time, this_value, expected_average) in enumerate(timeseries):
         avg = item_state.get_average(
             "foo",

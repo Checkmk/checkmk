@@ -71,7 +71,7 @@ class ProblemException(HTTPException):
         self.ext = ext
         self.fields = fields
 
-    def __call__(self, environ, start_response) -> Iterable[bytes]:
+    def __call__(self, environ, start_response) -> Iterable[bytes]:  # type:ignore[no-untyped-def]
         return self.to_problem()(environ, start_response)
 
     def to_problem(self) -> Response:

@@ -47,13 +47,15 @@ def test_hostname() -> None:
     assert omdlib.main.hostname() == os.popen("hostname").read().strip()
 
 
-def test_main_help(site_context, capsys, version_info) -> None:
+def test_main_help(site_context, capsys, version_info) -> None:  # type:ignore[no-untyped-def]
     omdlib.main.main_help(version_info, site_context)
     stdout = capsys.readouterr()[0]
     assert "omd COMMAND -h" in stdout
 
 
-def test_main_version_of_current_site(site_context, capsys, monkeypatch, version_info) -> None:
+def test_main_version_of_current_site(  # type:ignore[no-untyped-def]
+    site_context, capsys, monkeypatch, version_info
+) -> None:
     monkeypatch.setattr(omdlib, "__version__", "1.2.3p4")
     global_opts = omdlib.main.default_global_options()
     args: omdlib.main.Arguments = []
@@ -64,7 +66,9 @@ def test_main_version_of_current_site(site_context, capsys, monkeypatch, version
     assert stdout == "OMD - Open Monitoring Distribution Version 1.2.3p4\n"
 
 
-def test_main_version_root(capsys, monkeypatch, version_info) -> None:
+def test_main_version_root(  # type:ignore[no-untyped-def]
+    capsys, monkeypatch, version_info
+) -> None:
     monkeypatch.setattr(omdlib, "__version__", "1.2.3p4")
     global_opts = omdlib.main.default_global_options()
     args: omdlib.main.Arguments = []
@@ -75,7 +79,7 @@ def test_main_version_root(capsys, monkeypatch, version_info) -> None:
     assert stdout == "OMD - Open Monitoring Distribution Version 1.2.3p4\n"
 
 
-def test_main_version_root_not_existing_site(version_info) -> None:
+def test_main_version_root_not_existing_site(version_info) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises(SystemExit, match="No such site: testsite"):
         omdlib.main.main_version(
             version_info,
@@ -86,7 +90,9 @@ def test_main_version_root_not_existing_site(version_info) -> None:
         )
 
 
-def test_main_version_root_specific_site_broken_version(tmp_path, version_info) -> None:
+def test_main_version_root_specific_site_broken_version(  # type:ignore[no-untyped-def]
+    tmp_path, version_info
+) -> None:
     tmp_path.joinpath("omd/sites/testsite").mkdir(parents=True)
     with pytest.raises(SystemExit, match="Failed to determine site version"):
         omdlib.main.main_version(
@@ -98,7 +104,9 @@ def test_main_version_root_specific_site_broken_version(tmp_path, version_info) 
         )
 
 
-def test_main_version_root_specific_site(tmp_path, capsys, monkeypatch, version_info) -> None:
+def test_main_version_root_specific_site(  # type:ignore[no-untyped-def]
+    tmp_path, capsys, monkeypatch, version_info
+) -> None:
     tmp_path.joinpath("omd/sites/testsite").mkdir(parents=True)
     tmp_path.joinpath("omd/sites/testsite/version").symlink_to("../../versions/1.2.3p4")
     tmp_path.joinpath("omd/versions/1.2.3p4").mkdir(parents=True)
@@ -114,7 +122,9 @@ def test_main_version_root_specific_site(tmp_path, capsys, monkeypatch, version_
     assert stdout == "OMD - Open Monitoring Distribution Version 1.2.3p4\n"
 
 
-def test_main_version_root_specific_site_bare(tmp_path, capsys, monkeypatch, version_info) -> None:
+def test_main_version_root_specific_site_bare(  # type:ignore[no-untyped-def]
+    tmp_path, capsys, monkeypatch, version_info
+) -> None:
     tmp_path.joinpath("omd/sites/testsite").mkdir(parents=True)
     tmp_path.joinpath("omd/sites/testsite/version").symlink_to("../../versions/1.2.3p4")
     tmp_path.joinpath("omd/versions/1.2.3p4").mkdir(parents=True)
@@ -130,7 +140,9 @@ def test_main_version_root_specific_site_bare(tmp_path, capsys, monkeypatch, ver
     assert stdout == "1.2.3p4\n"
 
 
-def test_main_versions(tmp_path, capsys, monkeypatch, version_info) -> None:
+def test_main_versions(  # type:ignore[no-untyped-def]
+    tmp_path, capsys, monkeypatch, version_info
+) -> None:
     tmp_path.joinpath("omd/versions/1.2.3p4").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/1.6.0p4").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/1.6.0p14").mkdir(parents=True)
@@ -143,7 +155,9 @@ def test_main_versions(tmp_path, capsys, monkeypatch, version_info) -> None:
     assert stdout == "1.2.3p4\n1.6.0p14\n1.6.0p4 (default)\n"
 
 
-def test_main_versions_bare(tmp_path, capsys, monkeypatch, version_info) -> None:
+def test_main_versions_bare(  # type:ignore[no-untyped-def]
+    tmp_path, capsys, monkeypatch, version_info
+) -> None:
     tmp_path.joinpath("omd/versions/1.2.3p4").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/1.6.0p4").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/1.6.0p14").mkdir(parents=True)
@@ -160,14 +174,14 @@ def test_main_versions_bare(tmp_path, capsys, monkeypatch, version_info) -> None
     assert stdout == "1.2.3p4\n1.6.0p14\n1.6.0p4\n"
 
 
-def test_default_version(tmp_path) -> None:
+def test_default_version(tmp_path) -> None:  # type:ignore[no-untyped-def]
     tmp_path.joinpath("omd/versions").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/default").symlink_to("2019.12.11.cee")
     assert omdlib.main.default_version() == "2019.12.11.cee"
     assert isinstance(omdlib.main.default_version(), str)
 
 
-def test_omd_versions(tmp_path) -> None:
+def test_omd_versions(tmp_path) -> None:  # type:ignore[no-untyped-def]
     tmp_path.joinpath("omd/versions").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/2019.12.11.cee").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/1.6.0p7").mkdir(parents=True)
@@ -185,13 +199,15 @@ def test_omd_versions(tmp_path) -> None:
     ]
 
 
-def test_version_exists(tmp_path) -> None:
+def test_version_exists(tmp_path) -> None:  # type:ignore[no-untyped-def]
     tmp_path.joinpath("omd/versions/1.6.0p7").mkdir(parents=True)
     assert omdlib.main.version_exists("1.6.0p7") is True
     assert omdlib.main.version_exists("1.6.0p6") is False
 
 
-def test_main_sites(tmp_path, capsys, monkeypatch, version_info) -> None:
+def test_main_sites(  # type:ignore[no-untyped-def]
+    tmp_path, capsys, monkeypatch, version_info
+) -> None:
     tmp_path.joinpath("omd/versions/1.2.3p4").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/1.6.0p4").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/1.6.0p14").mkdir(parents=True)
@@ -235,7 +251,7 @@ def test_main_sites(tmp_path, capsys, monkeypatch, version_info) -> None:
     )
 
 
-def test_sitename_must_be_valid_ok(tmp_path) -> None:
+def test_sitename_must_be_valid_ok(tmp_path) -> None:  # type:ignore[no-untyped-def]
     tmp_path.joinpath("omd/sites/lala").mkdir(parents=True)
     assert omdlib.main.sitename_must_be_valid(omdlib.main.SiteContext("lulu")) is None
 
@@ -250,7 +266,9 @@ def test_sitename_must_be_valid_ok(tmp_path) -> None:
         ("aaaaaaaaaaaaaaaaa", False),
     ],
 )
-def test_sitename_must_be_valid_regex(tmp_path, name, expected_result) -> None:
+def test_sitename_must_be_valid_regex(  # type:ignore[no-untyped-def]
+    tmp_path, name, expected_result
+) -> None:
     tmp_path.joinpath("omd/sites/lala").mkdir(parents=True)
 
     if expected_result:
@@ -260,14 +278,14 @@ def test_sitename_must_be_valid_regex(tmp_path, name, expected_result) -> None:
             omdlib.main.sitename_must_be_valid(omdlib.main.SiteContext(name))
 
 
-def test_sitename_must_be_valid_already_exists(tmp_path) -> None:
+def test_sitename_must_be_valid_already_exists(tmp_path) -> None:  # type:ignore[no-untyped-def]
     tmp_path.joinpath("omd/sites/lala").mkdir(parents=True)
 
     with pytest.raises(SystemExit, match="already existing"):
         omdlib.main.sitename_must_be_valid(omdlib.main.SiteContext("lala"))
 
 
-def test_get_orig_working_directory(tmp_path) -> None:
+def test_get_orig_working_directory(tmp_path) -> None:  # type:ignore[no-untyped-def]
     orig_wd = os.getcwd()
     try:
         base_path = tmp_path.joinpath("lala")
@@ -278,7 +296,7 @@ def test_get_orig_working_directory(tmp_path) -> None:
         os.chdir(orig_wd)
 
 
-def test_get_orig_working_directory_not_existing(tmp_path) -> None:
+def test_get_orig_working_directory_not_existing(tmp_path) -> None:  # type:ignore[no-untyped-def]
     orig_wd = os.getcwd()
     try:
         test_dir = tmp_path.joinpath("lala")

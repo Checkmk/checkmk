@@ -69,8 +69,8 @@ GCC_VERSION_MINOR      := 2
 GCC_VERSION_PATCHLEVEL := 0
 GCC_VERSION	       := "${GCC_VERSION_MAJOR}.${GCC_VERSION_MINOR}.${GCC_VERSION_PATCHLEVEL}"
 
-# When you update the Python version, you may have to update the test expectations
-# in test_03_pip_interpreter_version.
+# When you update the Python version, you have to update the test expectations
+# in test_03_python_interpreter_version and test_03_pip_interpreter_version.
 # Update omd/Licenses.csv, too.
 PYTHON_VERSION	   := $(shell grep -oP '(?<=python_version = ").*(?=")' Pipfile)
 

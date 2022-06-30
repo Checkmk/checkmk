@@ -44,16 +44,7 @@ def parse(string_table: StringTable) -> _SECTION:
     for line in string_table:
         if line[0].startswith("[[["):
             # new filesystem detected
-            parts = line[0][3:-3].split(":")
-
-            # compatible check for old format
-            # was changed in version 1.2.8
-            if len(parts) == 1:
-                mode = "usr"
-                filesys = line[0][3:-3]
-            elif len(parts) == 2:
-                # new format for check data
-                mode, filesys = parts
+            mode, filesys = line[0][3:-3].split(":")
 
             # new filesystem for quota
             parsed.setdefault(filesys, {})

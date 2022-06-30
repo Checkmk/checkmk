@@ -13,7 +13,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, Sta
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
 _STRING_TABLE = [
-    ["[[[/]]]"],
+    ["[[[usr:/]]]"],
     [
         "***",
         "Report",
@@ -29,7 +29,7 @@ _STRING_TABLE = [
     ["User", "used", "soft", "hard", "grace", "used", "soft", "hard", "grace"],
     ["----------------------------------------------------------------------"],
     ["root", "--", "6003424", "0", "0", "0", "167394", "0", "0", "0"],
-    ["[[[/quarktasche]]]"],
+    ["[[[usr:/quarktasche]]]"],
     ["***", "Report", "for", "user", "quotas", "on", "device", "/moo"],
     ["Block", "grace", "time:", "7days;", "Inode", "grace", "time:", "7days"],
     ["Block", "limits", "File", "limits"],
@@ -82,7 +82,7 @@ def test_discover() -> None:
             "/",
             lnx_quota._DEFAULT_PARAMETERS,
             [
-                ["[[[/]]]"],
+                ["[[[usr:/]]]"],
                 [
                     "***",
                     "Report",

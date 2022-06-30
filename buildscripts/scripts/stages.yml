@@ -155,7 +155,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/python3-license-headers-junit.xml"
 
     - NAME: 'Python Pipfile Test'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_PIPFILE
+      ONLY_WHEN_NOT_EMPTY: CHANGED_PIPFILE,CHANGED_PYTHON_FILES
       DIR: 'tests'
       ENV_VARS:
         PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-pipfile-junit.xml --color=no"

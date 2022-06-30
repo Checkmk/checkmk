@@ -16,6 +16,7 @@ help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 ${PLANTUML_JAR}:
+	rm -f plantuml*.jar
 	wget "http://downloads.sourceforge.net/project/plantuml/${PLANTUML_VERSION}/$@"
 	ln -sf $@ plantuml.jar
 

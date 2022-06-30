@@ -11,7 +11,7 @@ import cmk.utils.version as cmk_version
 
 
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="No agent deployment in raw edition")
-def test_deploy_agent(wsgi_app) -> None:
+def test_deploy_agent(wsgi_app) -> None:  # type:ignore[no-untyped-def]
     response = wsgi_app.get("/NO_SITE/check_mk/deploy_agent.py")
     assert response.text.startswith("ERROR: Missing or invalid")
 
@@ -19,7 +19,7 @@ def test_deploy_agent(wsgi_app) -> None:
     assert response.text.startswith("ERROR: Missing host")
 
 
-def test_download_agent_shipped_with_checkmk(
+def test_download_agent_shipped_with_checkmk(  # type:ignore[no-untyped-def]
     wsgi_app, with_automation_user, mocker: MockerFixture, tmp_path
 ):
     agent_bin_data = bytes.fromhex("01 02 03 04 05")

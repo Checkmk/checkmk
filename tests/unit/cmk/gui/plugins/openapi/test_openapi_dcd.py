@@ -30,7 +30,7 @@ mocked_phase_one_result = {
 
 
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="DCD not available in raw edition")
-def test_dcd_fetch_phase_one_result(
+def test_dcd_fetch_phase_one_result(  # type:ignore[no-untyped-def]
     wsgi_app,
     with_automation_user,
     mocker: MockerFixture,

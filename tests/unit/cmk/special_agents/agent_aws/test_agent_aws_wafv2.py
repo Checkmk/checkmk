@@ -178,7 +178,9 @@ def _test_limits(wafv2_sections):
 
 
 @pytest.mark.parametrize("names,tags,found_instances", wafv2_params)
-def test_agent_aws_wafv2_limits(get_wafv2_sections, names, tags, found_instances) -> None:
+def test_agent_aws_wafv2_limits(  # type:ignore[no-untyped-def]
+    get_wafv2_sections, names, tags, found_instances
+) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):
         _test_limits(wafv2_sections)
 
@@ -202,14 +204,16 @@ def _test_summary(wafv2_summary, found_instances):
 
 
 @pytest.mark.parametrize("names,tags,found_instances", wafv2_params)
-def test_agent_aws_wafv2_summary_w_limits(get_wafv2_sections, names, tags, found_instances) -> None:
+def test_agent_aws_wafv2_summary_w_limits(  # type:ignore[no-untyped-def]
+    get_wafv2_sections, names, tags, found_instances
+) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):
         _wafv2_limits_results = wafv2_sections["wafv2_limits"].run().results
         _test_summary(wafv2_sections["wafv2_summary"], found_instances)
 
 
 @pytest.mark.parametrize("names,tags,found_instances", wafv2_params)
-def test_agent_aws_wafv2_summary_wo_limits(
+def test_agent_aws_wafv2_summary_wo_limits(  # type:ignore[no-untyped-def]
     get_wafv2_sections, names, tags, found_instances
 ) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):
@@ -233,7 +237,7 @@ def _test_web_acl(wafv2_sections, found_instances):
 
 
 @pytest.mark.parametrize("names,tags,found_instances", wafv2_params)
-def test_agent_aws_wafv2_web_acls_w_limits(
+def test_agent_aws_wafv2_web_acls_w_limits(  # type:ignore[no-untyped-def]
     get_wafv2_sections, names, tags, found_instances
 ) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):
@@ -242,7 +246,7 @@ def test_agent_aws_wafv2_web_acls_w_limits(
 
 
 @pytest.mark.parametrize("names,tags,found_instances", wafv2_params)
-def test_agent_aws_wafv2_web_acls_wo_limits(
+def test_agent_aws_wafv2_web_acls_wo_limits(  # type:ignore[no-untyped-def]
     get_wafv2_sections, names, tags, found_instances
 ) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):

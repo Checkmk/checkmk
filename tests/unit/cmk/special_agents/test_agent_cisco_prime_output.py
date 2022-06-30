@@ -30,7 +30,7 @@ def fixture_accept_requests(return_code):
         )
 
 
-def test_wrong_arguments(capsys) -> None:
+def test_wrong_arguments(capsys) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises(SystemExit):
         main([])
     assert capsys.readouterr().out == ""
@@ -38,7 +38,7 @@ def test_wrong_arguments(capsys) -> None:
 
 @responses.activate
 @pytest.mark.parametrize("return_code", [200])
-def test_agent_output(capsys, accept_requests) -> None:
+def test_agent_output(capsys, accept_requests) -> None:  # type:ignore[no-untyped-def]
     main(["--debug", "--hostname", HOST, "-u", "%s:%s" % AUTH])
     assert capsys.readouterr() == (
         "<<<cisco_prime_wifi_access_points:sep(0)>>>\n"
@@ -53,7 +53,7 @@ def test_agent_output(capsys, accept_requests) -> None:
 
 @responses.activate
 @pytest.mark.parametrize("return_code", [401])
-def test_missing_credentials(capsys, accept_requests) -> None:
+def test_missing_credentials(capsys, accept_requests) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises(SystemExit):
         main(["--hostname", HOST])
     assert capsys.readouterr() == (

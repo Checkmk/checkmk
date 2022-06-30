@@ -62,7 +62,7 @@ def expected_output_engine():
     return chain(base, repeat(re_str))
 
 
-def test_section_dotnet_clrmemory(
+def test_section_dotnet_clrmemory(  # type:ignore[no-untyped-def]
     request, testconfig, expected_output, actual_output, testfile
 ) -> None:
     # special case wmi may timeout

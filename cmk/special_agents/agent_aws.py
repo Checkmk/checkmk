@@ -165,7 +165,7 @@ AWSStrings = Union[bytes, str]
 
 
 class AWSConfig:
-    def __init__(self, hostname, sys_argv, overall_tags) -> None:
+    def __init__(self, hostname, sys_argv, overall_tags) -> None:  # type:ignore[no-untyped-def]
         self.hostname = hostname
         self._overall_tags = self._prepare_tags(overall_tags)
         self.service_config: dict = {}
@@ -389,7 +389,9 @@ def _get_wafv2_web_acls(
     return web_acls
 
 
-def _fetch_tagged_resources_with_types(tagging_client, resource_type_filters: List[str]) -> list:
+def _fetch_tagged_resources_with_types(  # type:ignore[no-untyped-def]
+    tagging_client, resource_type_filters: List[str]
+) -> list:
     tagged_resources = []
     # The get_resource API call has a matching rule (AND) different than the one that we use in
     # checkmk (OR) so we need to fetch all the resources containing tags first and then apply our
@@ -406,7 +408,7 @@ def _fetch_tagged_resources_with_types(tagging_client, resource_type_filters: Li
     return tagged_resources
 
 
-def fetch_resources_matching_tags(
+def fetch_resources_matching_tags(  # type:ignore[no-untyped-def]
     tagging_client,
     tags_to_match: List[Dict[Literal["Key", "Value"], str]],
     resource_type_filters: List[str],
@@ -471,10 +473,10 @@ class ResultDistributor:
     def __init__(self) -> None:
         self._colleagues: list = []
 
-    def add(self, colleague) -> None:
+    def add(self, colleague) -> None:  # type:ignore[no-untyped-def]
         self._colleagues.append(colleague)
 
-    def distribute(self, sender, result) -> None:
+    def distribute(self, sender, result) -> None:  # type:ignore[no-untyped-def]
         for colleague in self._colleagues:
             if colleague.name != sender.name:
                 colleague.receive(sender, result)
@@ -492,12 +494,12 @@ class ResultDistributorS3Limits(ResultDistributor):
         super().__init__()
         self._received_results: dict = {}
 
-    def add(self, colleague) -> None:
+    def add(self, colleague) -> None:  # type:ignore[no-untyped-def]
         super().add(colleague)
         for sender, content in self._received_results.values():
             colleague.receive(sender, content)
 
-    def distribute(self, sender, result) -> None:
+    def distribute(self, sender, result) -> None:  # type:ignore[no-untyped-def]
         self._received_results.setdefault(sender.name, (sender, result))
         super().distribute(sender, result)
 
@@ -552,7 +554,9 @@ AWSCacheFilePath = Path(tmp_dir) / "agents" / "agent_aws"
 
 
 class AWSSection(DataCache):
-    def __init__(self, client, region, config, distributor=None) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, client, region, config, distributor=None
+    ) -> None:
         cache_dir = AWSCacheFilePath / region / config.hostname
         super().__init__(cache_dir, self.name)
         self._client = client
@@ -769,7 +773,9 @@ class AWSSection(DataCache):
 
 
 class AWSSectionLimits(AWSSection):
-    def __init__(self, client, region, config, distributor=None, quota_client=None) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, client, region, config, distributor=None, quota_client=None
+    ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._quota_client = quota_client
         self._limits: dict = {}
@@ -1259,7 +1265,9 @@ class EC2Limits(AWSSectionLimits):
 
 
 class EC2Summary(AWSSection):
-    def __init__(self, client, region, config, distributor=None) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, client, region, config, distributor=None
+    ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["ec2_names"]
         self._tags = self._config.service_config["ec2_tags"]
@@ -1411,7 +1419,9 @@ class EC2Labels(AWSSectionLabels):
 
 
 class EC2SecurityGroups(AWSSection):
-    def __init__(self, client, region, config, distributor=None) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, client, region, config, distributor=None
+    ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["ec2_names"]
         self._tags = self._config.service_config["ec2_tags"]
@@ -1713,7 +1723,9 @@ class EBSLimits(AWSSectionLimits):
 
 
 class EBSSummary(AWSSection):
-    def __init__(self, client, region, config, distributor=None) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, client, region, config, distributor=None
+    ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["ebs_names"]
         self._tags = self._config.service_config["ebs_tags"]
@@ -1983,7 +1995,9 @@ class S3Limits(AWSSectionLimits):
 
 
 class S3Summary(AWSSection):
-    def __init__(self, client, region, config, distributor=None) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, client, region, config, distributor=None
+    ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["s3_names"]
         self._tags = self._prepare_tags_for_api_response(self._config.service_config["s3_tags"])
@@ -2283,7 +2297,9 @@ class GlacierLimits(AWSSectionLimits):
 
 
 class GlacierSummary(AWSSection):
-    def __init__(self, client, region, config, distributor=None) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, client, region, config, distributor=None
+    ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["glacier_names"]
         self._tags = self._prepare_tags_for_api_response(
@@ -2496,7 +2512,9 @@ class ELBLimits(AWSSectionLimits):
 
 
 class ELBSummaryGeneric(AWSSection):
-    def __init__(self, client, region, config, distributor=None, resource="") -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, client, region, config, distributor=None, resource=""
+    ) -> None:
 
         self._resource = resource
         if self._resource == "elb":
@@ -2598,7 +2616,9 @@ class ELBSummaryGeneric(AWSSection):
 
 
 class ELBLabelsGeneric(AWSSectionLabels):
-    def __init__(self, client, region, config, distributor=None, resource="") -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, client, region, config, distributor=None, resource=""
+    ) -> None:
         self._resource = resource
         super().__init__(client, region, config, distributor=distributor)
 
@@ -3079,7 +3099,9 @@ class ELBv2ApplicationTargetGroupsResponses(AWSSectionCloudwatch):
     Additional monitoring for target groups of application load balancers.
     """
 
-    def __init__(self, client, region, config, distributor=None) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, client, region, config, distributor=None
+    ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._separator = " "
 
@@ -3367,7 +3389,9 @@ class RDSLimits(AWSSectionLimits):
 
 
 class RDSSummary(AWSSection):
-    def __init__(self, client, region, config, distributor=None) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, client, region, config, distributor=None
+    ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["rds_names"]
         self._tags = self._prepare_tags_for_api_response(self._config.service_config["rds_tags"])
@@ -3445,7 +3469,9 @@ class RDSSummary(AWSSection):
 
 
 class RDS(AWSSectionCloudwatch):
-    def __init__(self, client, region, config, distributor=None) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, client, region, config, distributor=None
+    ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._separator = " "
 
@@ -3548,7 +3574,9 @@ class RDS(AWSSectionCloudwatch):
 
 
 class CloudFrontSummary(AWSSection):
-    def __init__(self, client, tagging_client, region, config, distributor=None) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, client, tagging_client, region, config, distributor=None
+    ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._tagging_client = tagging_client
         self._names = self._config.service_config["cloudfront_names"]
@@ -3599,7 +3627,7 @@ class CloudFrontSummary(AWSSection):
 
 
 class CloudFront(AWSSectionCloudwatch):
-    def __init__(
+    def __init__(  # type:ignore[no-untyped-def]
         self,
         client,
         region,
@@ -3745,7 +3773,9 @@ class CloudwatchAlarmsLimits(AWSSectionLimits):
 
 
 class CloudwatchAlarms(AWSSection):
-    def __init__(self, client, region, config, distributor=None) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, client, region, config, distributor=None
+    ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["cloudwatch_alarms"]
 
@@ -3906,7 +3936,9 @@ class DynamoDBLimits(AWSSectionLimits):
 
 
 class DynamoDBSummary(AWSSection):
-    def __init__(self, client, region, config, distributor=None) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, client, region, config, distributor=None
+    ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["dynamodb_names"]
         self._tags = self._prepare_tags_for_api_response(
@@ -4099,7 +4131,9 @@ class DynamoDBTable(AWSSectionCloudwatch):
 
 
 class WAFV2Limits(AWSSectionLimits):
-    def __init__(self, client, region, config, scope, distributor=None, quota_client=None) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, client, region, config, scope, distributor=None, quota_client=None
+    ) -> None:
         super().__init__(client, region, config, distributor=distributor, quota_client=quota_client)
         self._region_report = _validate_wafv2_scope_and_region(scope, self._region)
         self._scope = scope
@@ -4191,7 +4225,9 @@ class WAFV2Limits(AWSSectionLimits):
 
 
 class WAFV2Summary(AWSSection):
-    def __init__(self, client, region, config, scope, distributor=None) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, client, region, config, scope, distributor=None
+    ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._region_report = _validate_wafv2_scope_and_region(scope, self._region)
         self._scope = scope
@@ -4274,7 +4310,9 @@ class WAFV2Summary(AWSSection):
 
 
 class WAFV2WebACL(AWSSectionCloudwatch):
-    def __init__(self, client, region, config, is_regional, distributor=None) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, client, region, config, is_regional, distributor=None
+    ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         if not is_regional:
             assert self._region == "us-east-1", (
@@ -4415,7 +4453,9 @@ class LambdaRegionLimits(AWSSectionLimits):
 
 
 class LambdaSummary(AWSSection):
-    def __init__(self, client, region, config, distributor=None) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, client, region, config, distributor=None
+    ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["lambda_names"]
         self._tags = self._prepare_tags_for_api_response(self._config.service_config["lambda_tags"])
@@ -4624,7 +4664,7 @@ class LambdaProvisionedConcurrency(AWSSection):
             for lambda_function in colleague_contents.content
         }
 
-    def _compute_content(
+    def _compute_content(  # type:ignore[no-untyped-def]
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ):
         return AWSComputedContent(
@@ -4632,7 +4672,7 @@ class LambdaProvisionedConcurrency(AWSSection):
             raw_content.cache_timestamp,
         )
 
-    def _create_results(self, computed_content: AWSComputedContent):
+    def _create_results(self, computed_content: AWSComputedContent):  # type:ignore[no-untyped-def]
         return [AWSSectionResult("", computed_content.content)]
 
     def _validate_result_content(self, content):
@@ -4643,7 +4683,7 @@ LambdaMetricStats = Sequence[Mapping[str, str]]
 
 
 class LambdaCloudwatchInsights(AWSSection):
-    def __init__(
+    def __init__(  # type:ignore[no-untyped-def]
         self,
         client,
         region: str,
@@ -4676,7 +4716,7 @@ class LambdaCloudwatchInsights(AWSSection):
         return AWSColleagueContents({}, 0.0)
 
     @staticmethod
-    def query_results(
+    def query_results(  # type:ignore[no-untyped-def]
         *, client, query_id: str, timeout_seconds: float, sleep_duration=0.1
     ) -> Optional[LambdaMetricStats]:
         "Synchronous wrapper for asynchronous query API with timeout checking. (agent should not be blocked)."
@@ -4790,7 +4830,9 @@ class HealthCheck(TypedDict, total=False):
 
 
 class Route53HealthChecks(AWSSection):
-    def __init__(self, client, region, config, distributor=None) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, client, region, config, distributor=None
+    ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["route53_names"]
         self._tags = self._prepare_tags_for_api_response(
@@ -4812,7 +4854,7 @@ class Route53HealthChecks(AWSSection):
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents([], 0.0)
 
-    def get_live_data(self, *args) -> Sequence[HealthCheck]:
+    def get_live_data(self, *args) -> Sequence[HealthCheck]:  # type:ignore[no-untyped-def]
         return list(
             itertools.chain.from_iterable(
                 self._get_response_content(page, "HealthChecks")
@@ -4820,18 +4862,24 @@ class Route53HealthChecks(AWSSection):
             )
         )
 
-    def _compute_content(self, raw_content, colleague_contents) -> AWSComputedContent:
+    def _compute_content(  # type:ignore[no-untyped-def]
+        self, raw_content, colleague_contents
+    ) -> AWSComputedContent:
         return AWSComputedContent(
             raw_content.content,
             raw_content.cache_timestamp,
         )
 
-    def _create_results(self, computed_content) -> List[AWSSectionResult]:
+    def _create_results(  # type:ignore[no-untyped-def]
+        self, computed_content
+    ) -> List[AWSSectionResult]:
         return [AWSSectionResult("", computed_content.content)]
 
 
 class Route53Cloudwatch(AWSSectionCloudwatch):
-    def __init__(self, client, region, config, distributor=None) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, client, region, config, distributor=None
+    ) -> None:
         super().__init__(client, region, config, distributor=None)
 
     @property
@@ -4852,7 +4900,9 @@ class Route53Cloudwatch(AWSSectionCloudwatch):
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
-    def _get_metrics(self, colleague_contents) -> Sequence[Mapping[str, Any]]:
+    def _get_metrics(  # type:ignore[no-untyped-def]
+        self, colleague_contents
+    ) -> Sequence[Mapping[str, Any]]:
         health_checks: Sequence[HealthCheck] = colleague_contents.content
         return [
             {
@@ -4885,13 +4935,17 @@ class Route53Cloudwatch(AWSSectionCloudwatch):
             ]
         ]
 
-    def _compute_content(self, raw_content, colleague_contents) -> AWSComputedContent:
+    def _compute_content(  # type:ignore[no-untyped-def]
+        self, raw_content, colleague_contents
+    ) -> AWSComputedContent:
         content_by_piggyback_hosts: Dict[str, List[str]] = {}
         for row in raw_content.content:
             content_by_piggyback_hosts.setdefault(row["Label"], []).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
-    def _create_results(self, computed_content) -> List[AWSSectionResult]:
+    def _create_results(  # type:ignore[no-untyped-def]
+        self, computed_content
+    ) -> List[AWSSectionResult]:
         return [AWSSectionResult("", rows) for _id, rows in computed_content.content.items()]
 
 
@@ -4941,7 +4995,7 @@ class SNSLimits(AWSSectionLimits):
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
-    def get_live_data(self, *args) -> Sequence[Mapping]:
+    def get_live_data(self, *args) -> Sequence[Mapping]:  # type:ignore[no-untyped-def]
         topics = [
             topic
             for page in self._client.get_paginator("list_topics").paginate()
@@ -5004,7 +5058,9 @@ class SNSLimits(AWSSectionLimits):
 
 
 class AWSSections(abc.ABC):
-    def __init__(self, hostname, session, debug=False, config=None) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, hostname, session, debug=False, config=None
+    ) -> None:
         self._hostname = hostname
         self._session = session
         self._debug = debug
@@ -5169,7 +5225,7 @@ class AWSSectionsUSEast(AWSSections):
             self._sections.append(cloudfront)
 
 
-def _create_lamdba_sections(
+def _create_lamdba_sections(  # type:ignore[no-untyped-def]
     lambda_client, cloudwatch_client, cloudwatch_logs_client, region: str, config: AWSConfig
 ) -> Tuple[
     LambdaRegionLimits,
@@ -5224,7 +5280,7 @@ def _create_lamdba_sections(
     )
 
 
-def _create_route53_sections(
+def _create_route53_sections(  # type:ignore[no-untyped-def]
     route53_client, cloudwatch_client, region: str, config: AWSConfig
 ) -> Tuple[Route53HealthChecks, Route53Cloudwatch]:
     route53_distributor = ResultDistributor()

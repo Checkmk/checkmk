@@ -85,13 +85,17 @@ def testfile_engine() -> str:
 
 
 @pytest.fixture(name="config_with_cpuload_method", params=["use_wmi", "use_perf"])
-def change_config_cpuload_method(request, make_yaml_config) -> Dict[str, Any]:
+def change_config_cpuload_method(  # type:ignore[no-untyped-def]
+    request, make_yaml_config
+) -> Dict[str, Any]:
     make_yaml_config["global"]["cpuload_method"] = request.param
     return make_yaml_config
 
 
 @pytest.fixture(params=["alone", "with_systemtime"])
-def testconfig(request, config_with_cpuload_method) -> Dict[str, Any]:
+def testconfig(  # type:ignore[no-untyped-def]
+    request, config_with_cpuload_method
+) -> Dict[str, Any]:
     Globals.alone = request.param == "alone"
     config_with_cpuload_method["global"]["sections"] = (
         Globals.section if Globals.alone else [Globals.section, "systemtime"]
@@ -101,7 +105,7 @@ def testconfig(request, config_with_cpuload_method) -> Dict[str, Any]:
 
 
 @pytest.fixture(name="expected")
-def expected_output_engine(testconfig) -> Sequence[str]:
+def expected_output_engine(testconfig) -> Sequence[str]:  # type:ignore[no-untyped-def]
     method = testconfig["global"]["cpuload_method"]
     expected = [
         re.escape(f"<<<{Globals.section}:sep(124)>>>"),
@@ -117,7 +121,7 @@ def expected_output_engine(testconfig) -> Sequence[str]:
     return expected
 
 
-def test_section_wmi_cpuload(
+def test_section_wmi_cpuload(  # type:ignore[no-untyped-def]
     expected: Sequence[str], actual_output: Sequence[str], testfile: AnyStr
 ):
     required_lines = 7

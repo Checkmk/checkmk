@@ -50,6 +50,8 @@ def expected_output_engine():
     return expected
 
 
-def test_section_mem(request, testconfig, expected_output, actual_output, testfile) -> None:
+def test_section_mem(  # type:ignore[no-untyped-def]
+    request, testconfig, expected_output, actual_output, testfile
+) -> None:
     # request.node.name gives test name
     local_test(expected_output, actual_output, testfile, request.node.name)

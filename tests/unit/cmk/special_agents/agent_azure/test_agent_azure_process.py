@@ -169,7 +169,7 @@ class MockMgmtApiClient:
         ),
     ],
 )
-def test_process_vm(
+def test_process_vm(  # type:ignore[no-untyped-def]
     mgmt_client: MgmtApiClient,
     vmach_info: Mapping[str, Any],
     args: Args,
@@ -214,7 +214,7 @@ def test_process_vm(
         )
     ],
 )
-def test_get_vm_labels_section(
+def test_get_vm_labels_section(  # type:ignore[no-untyped-def]
     vm: AzureResource, group_tags: GroupLabels, expected_result: Tuple[Sequence[str], Sequence[str]]
 ):
     labels_section = get_vm_labels_section(vm, group_tags)
@@ -328,7 +328,7 @@ def test_get_vm_labels_section(
         ),
     ],
 )
-def test_process_resource(
+def test_process_resource(  # type:ignore[no-untyped-def]
     mgmt_client: MgmtApiClient,
     resource_info: Mapping[str, Any],
     group_tags: GroupLabels,
@@ -361,7 +361,7 @@ def test_process_resource(
         )
     ],
 )
-def test_get_group_labels(
+def test_get_group_labels(  # type:ignore[no-untyped-def]
     mgmt_client: MgmtApiClient, monitored_groups: Sequence[str], expected_result: GroupLabels
 ):
     group_tags = get_group_labels(mgmt_client, monitored_groups)
@@ -403,7 +403,7 @@ def test_get_group_labels(
         )
     ],
 )
-def test_write_group_info(
+def test_write_group_info(  # type:ignore[no-untyped-def]
     monitored_groups: Sequence[str],
     monitored_resources: Sequence[AzureResource],
     group_tags: GroupLabels,

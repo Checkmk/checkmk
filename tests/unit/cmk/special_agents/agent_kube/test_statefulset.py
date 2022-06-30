@@ -13,7 +13,7 @@ from cmk.special_agents import agent_kube
 from cmk.special_agents.utils_kubernetes.schemata import section
 
 
-def test_write_statefulsets_api_sections_registers_sections_to_be_written(
+def test_write_statefulsets_api_sections_registers_sections_to_be_written(  # type:ignore[no-untyped-def]
     statefulset: agent_kube.StatefulSet,
     statefulsets_api_sections: Sequence[str],
     write_sections_mock: MagicMock,
@@ -24,7 +24,7 @@ def test_write_statefulsets_api_sections_registers_sections_to_be_written(
     assert list(write_sections_mock.call_args[0][0]) == statefulsets_api_sections
 
 
-def test_write_statefulsets_api_sections_maps_section_names_to_callables(
+def test_write_statefulsets_api_sections_maps_section_names_to_callables(  # type:ignore[no-untyped-def]
     statefulset: agent_kube.StatefulSet,
     statefulsets_api_sections: Sequence[str],
     write_sections_mock: MagicMock,
@@ -38,7 +38,7 @@ def test_write_statefulsets_api_sections_maps_section_names_to_callables(
     )
 
 
-def test_write_statefulsets_api_sections_calls_write_sections_for_each_statefulset(
+def test_write_statefulsets_api_sections_calls_write_sections_for_each_statefulset(  # type:ignore[no-untyped-def]
     new_statefulset: Callable[[], agent_kube.StatefulSet], write_sections_mock: MagicMock
 ):
     agent_kube.write_statefulsets_api_sections(
@@ -51,7 +51,7 @@ def test_write_statefulsets_api_sections_calls_write_sections_for_each_statefuls
 
 
 @pytest.mark.parametrize("statefulset_pods", [0, 10, 20])
-def test_statefulset_pod_resources_returns_all_pods(
+def test_statefulset_pod_resources_returns_all_pods(  # type:ignore[no-untyped-def]
     statefulset: agent_kube.StatefulSet, statefulset_pods: int
 ):
     resources = dict(statefulset.pod_resources())
@@ -69,7 +69,7 @@ def test_statefulset_pod_resources_one_pod_per_phase(statefulset: agent_kube.Sta
 @pytest.mark.parametrize(
     "phases", [["running"], ["pending"], ["succeeded"], ["failed"], ["unknown"]]
 )
-def test_statefulset_pod_resources_pods_in_phase(
+def test_statefulset_pod_resources_pods_in_phase(  # type:ignore[no-untyped-def]
     statefulset: agent_kube.StatefulSet, phases, statefulset_pods: int
 ):
     pods = statefulset.pods(phases[0])
@@ -79,14 +79,14 @@ def test_statefulset_pod_resources_pods_in_phase(
 @pytest.mark.parametrize(
     "phases", [["running"], ["pending"], ["succeeded"], ["failed"], ["unknown"]]
 )
-def test_statefulset_pod_resources_pods_in_phase_no_phase_param(
+def test_statefulset_pod_resources_pods_in_phase_no_phase_param(  # type:ignore[no-untyped-def]
     statefulset: agent_kube.StatefulSet, phases, statefulset_pods: int
 ):
     pods = statefulset.pods()
     assert len(pods) == statefulset_pods
 
 
-def test_statefulset_memory_resources(
+def test_statefulset_memory_resources(  # type:ignore[no-untyped-def]
     new_statefulset: Callable[[], agent_kube.StatefulSet],
     new_pod: Callable[[], agent_kube.Pod],
     pod_containers_count: int,
@@ -101,7 +101,7 @@ def test_statefulset_memory_resources(
     assert memory_resources.request == pod_containers_count * container_request_memory
 
 
-def test_statefulset_cpu_resources(
+def test_statefulset_cpu_resources(  # type:ignore[no-untyped-def]
     new_statefulset: Callable[[], agent_kube.StatefulSet],
     new_pod: Callable[[], agent_kube.Pod],
     pod_containers_count: int,

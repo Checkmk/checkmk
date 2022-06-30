@@ -28,5 +28,7 @@ def expected_output_engine():
     return [r"<<<systemtime>>>", r"\d+"]
 
 
-def test_section_systemtime(testconfig, expected_output, actual_output, testfile) -> None:
+def test_section_systemtime(  # type:ignore[no-untyped-def]
+    testconfig, expected_output, actual_output, testfile
+) -> None:
     local_test(expected_output, actual_output, testfile)

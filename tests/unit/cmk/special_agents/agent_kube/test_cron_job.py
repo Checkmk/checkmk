@@ -31,7 +31,7 @@ def fixture_cron_job(api_cron_job: api.CronJob) -> agent.CronJob:
 
 
 @pytest.mark.parametrize("cron_job_pods", [0, 10, 20])
-def test_cron_job_pods(
+def test_cron_job_pods(  # type:ignore[no-untyped-def]
     cron_job_pods: int, cron_job: agent.CronJob, new_pod: Callable[[], agent.Pod]
 ):
     for _ in range(cron_job_pods):

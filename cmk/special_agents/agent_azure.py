@@ -190,7 +190,7 @@ class ApiErrorMissingData(ApiError):
 class BaseApiClient(abc.ABC):
     AUTHORITY = "https://login.microsoftonline.com"
 
-    def __init__(self, base_url) -> None:
+    def __init__(self, base_url) -> None:  # type:ignore[no-untyped-def]
         self._ratelimit = float("Inf")
         self._headers: dict = {}
         self._base_url = base_url
@@ -292,7 +292,7 @@ class GraphApiClient(BaseApiClient):
 
 
 class MgmtApiClient(BaseApiClient):
-    def __init__(self, subscription) -> None:
+    def __init__(self, subscription) -> None:  # type:ignore[no-untyped-def]
         base_url = "%s/subscriptions/%s/" % (self.resource, subscription)
         super().__init__(base_url)
 
@@ -348,7 +348,7 @@ class MgmtApiClient(BaseApiClient):
 
 
 class GroupConfig:
-    def __init__(self, name) -> None:
+    def __init__(self, name) -> None:  # type:ignore[no-untyped-def]
         super().__init__()
         if not name:
             raise ValueError("falsey group name: %r" % name)
@@ -372,7 +372,7 @@ class GroupConfig:
 
 
 class ExplicitConfig:
-    def __init__(self, raw_list=()) -> None:
+    def __init__(self, raw_list=()) -> None:  # type:ignore[no-untyped-def]
         super().__init__()
         self.groups: dict = {}
         self.current_group = None
@@ -394,7 +394,7 @@ class ExplicitConfig:
             raise RuntimeError("missing arg: group=<name>")
         self.current_group.add_key(key, value)
 
-    def is_configured(self, resource) -> bool:
+    def is_configured(self, resource) -> bool:  # type:ignore[no-untyped-def]
         if self.fetchall:
             return True
         group_config = self.groups.get(resource.info["group"])
@@ -411,12 +411,12 @@ class ExplicitConfig:
 
 
 class TagBasedConfig:
-    def __init__(self, required, key_values) -> None:
+    def __init__(self, required, key_values) -> None:  # type:ignore[no-untyped-def]
         super().__init__()
         self._required = required
         self._values = key_values
 
-    def is_configured(self, resource) -> bool:
+    def is_configured(self, resource) -> bool:  # type:ignore[no-untyped-def]
         if not all(k in resource.tags for k in self._required):
             return False
         for key, val in self._values:
@@ -434,7 +434,7 @@ class TagBasedConfig:
 
 
 class Selector:
-    def __init__(self, args) -> None:
+    def __init__(self, args) -> None:  # type:ignore[no-untyped-def]
         super().__init__()
         self._explicit_config = ExplicitConfig(raw_list=args.explicit_config)
         self._tag_based_config = TagBasedConfig(args.require_tag, args.require_tag_value)
@@ -457,7 +457,9 @@ class Selector:
 class Section:
     LOCK = Lock()
 
-    def __init__(self, name, piggytargets, separator, options) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, name, piggytargets, separator, options
+    ) -> None:
         super().__init__()
         self._sep = chr(separator)
         self._piggytargets = list(piggytargets)
@@ -490,17 +492,19 @@ class Section:
 
 
 class AzureSection(Section):
-    def __init__(self, name, piggytargets=("",)) -> None:
+    def __init__(self, name, piggytargets=("",)) -> None:  # type:ignore[no-untyped-def]
         super().__init__("azure_%s" % name, piggytargets, separator=124, options=[])
 
 
 class LabelsSection(Section):
-    def __init__(self, piggytarget) -> None:
+    def __init__(self, piggytarget) -> None:  # type:ignore[no-untyped-def]
         super().__init__("labels", [piggytarget], separator=0, options=[])
 
 
 class UsageSection(Section):
-    def __init__(self, usage_details, piggytargets, cacheinfo) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, usage_details, piggytargets, cacheinfo
+    ) -> None:
         options = ["cached(%d,%d)" % cacheinfo]
         super().__init__(
             "azure_%s" % usage_details.section, piggytargets, separator=124, options=options
@@ -513,7 +517,7 @@ class IssueCollecter:
         super().__init__()
         self._list: list[tuple[str, str]] = []
 
-    def add(self, issue_type, issued_by, issue_msg) -> None:
+    def add(self, issue_type, issued_by, issue_msg) -> None:  # type:ignore[no-untyped-def]
         issue = {"type": issue_type, "issued_by": issued_by, "msg": issue_msg}
         self._list.append(("issue", json.dumps(issue)))
 
@@ -579,7 +583,7 @@ def get_attrs_from_uri(uri):
 
 
 class AzureResource:
-    def __init__(self, info) -> None:
+    def __init__(self, info) -> None:  # type:ignore[no-untyped-def]
         super().__init__()
         self.info = info
         self.info.update(get_attrs_from_uri(info["id"]))
@@ -615,7 +619,9 @@ def process_vm(mgmt_client, vmach, args):
 
 
 class MetricCache(DataCache):
-    def __init__(self, resource, metric_definition, ref_time, debug=False) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, resource, metric_definition, ref_time, debug=False
+    ) -> None:
         self.metric_definition = metric_definition
         metricnames = metric_definition[0]
         super().__init__(self.get_cache_path(resource), metricnames, debug=debug)
@@ -681,7 +687,7 @@ class UsageClient(DataCache):
         "offer MS-AZR-0144P",
     )
 
-    def __init__(self, client, subscription, debug=False) -> None:
+    def __init__(self, client, subscription, debug=False) -> None:  # type:ignore[no-untyped-def]
         super().__init__(AZURE_CACHE_FILE_PATH, "%s-usage" % subscription, debug=debug)
         self._client = client
 

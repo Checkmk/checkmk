@@ -144,7 +144,7 @@ def expected_output_engine():
     return expected
 
 
-def test_section_check_mk(
+def test_section_check_mk(  # type:ignore[no-untyped-def]
     request, testconfig_only_from, expected_output, actual_output, testfile
 ) -> None:
     # request.node.name gives test name

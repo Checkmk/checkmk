@@ -11,145 +11,24 @@ from cmk.base.check_legacy_includes.fjdarye import (
     _fjdarye_disks_states_summary,
     check_fjdarye_disks,
     check_fjdarye_disks_summary,
-    check_fjdarye_item,
     check_fjdarye_rluns,
     check_fjdarye_sum,
     discover_fjdarye_disks,
     discover_fjdarye_disks_summary,
-    discover_fjdarye_item,
     discover_fjdarye_rluns,
     discover_fjdarye_sum,
     FjdaryeDeviceStatus,
     FjdaryeDisk,
-    FjdaryeItem,
     FjdaryeRlun,
     parse_fjdarye_disks,
-    parse_fjdarye_item,
     parse_fjdarye_rluns,
     parse_fjdarye_sum,
     SectionFjdaryeDisk,
-    SectionFjdaryeItem,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 FjdaryeSection = Mapping[str, Mapping[str, int | str]]
 FjdaryeCheckResult = Sequence[tuple[int, str]]
-
-
-@pytest.mark.parametrize(
-    # Assumption: Section will always be a StringTable
-    "info, parse_result",
-    [
-        pytest.param(
-            [
-                ["0", "1"],
-                ["1", "1"],
-                ["2", "1"],
-                ["3", "1"],
-                ["4", "4"],
-            ],
-            {
-                "0": FjdaryeItem(item_index="0", status="1"),
-                "1": FjdaryeItem(item_index="1", status="1"),
-                "2": FjdaryeItem(item_index="2", status="1"),
-                "3": FjdaryeItem(item_index="3", status="1"),
-                "4": FjdaryeItem(item_index="4", status="4"),
-            },
-            id="Parse the raw section into a Mapping[str, FjdaryeItem]",
-        ),
-        pytest.param(
-            [],
-            {},
-            id="If the raw section is empty, no items are parsed",
-        ),
-    ],
-)
-def test_parse_fjdarye_item(
-    info: StringTable,
-    parse_result: SectionFjdaryeItem,
-) -> None:
-    assert parse_fjdarye_item(info) == parse_result
-
-
-@pytest.mark.parametrize(
-    "section, discovery_result",
-    [
-        pytest.param(
-            {
-                "0": FjdaryeItem(item_index="0", status="1"),
-                "1": FjdaryeItem(item_index="1", status="1"),
-                "2": FjdaryeItem(item_index="2", status="1"),
-                "3": FjdaryeItem(item_index="3", status="1"),
-            },
-            [
-                ("0", {}),
-                ("1", {}),
-                ("2", {}),
-                ("3", {}),
-            ],
-            id="Four valid items are discovered from the section",
-        ),
-        pytest.param(
-            {
-                "4": FjdaryeItem(item_index="4", status="4"),
-            },
-            [],
-            id="Discovery ignores items that have a status of 4 (invalid) and because of that no items are discovered",
-        ),
-        pytest.param(
-            {},
-            [],
-            id="If the section is empty, no items are discovered",
-        ),
-    ],
-)
-def test_discover_fjdarye_item(
-    section: SectionFjdaryeItem,
-    discovery_result: Sequence[tuple[str, dict]],
-) -> None:
-    assert list(discover_fjdarye_item(section)) == discovery_result
-
-
-@pytest.mark.parametrize(
-    # Assumption: The fjdarye_disks_status mapping consistantly gives us a tuple of (state, state_description)
-    "section, item, check_result",
-    [
-        pytest.param(
-            {
-                "0": FjdaryeItem(item_index="0", status="1"),
-                "1": FjdaryeItem(item_index="1", status="1"),
-                "2": FjdaryeItem(item_index="2", status="1"),
-                "3": FjdaryeItem(item_index="3", status="1"),
-            },
-            "1",
-            [(0, "Normal")],
-            id="If the given item is present in the section, the check result state and check summary are the mapped tuple from fjdarye_item_status",
-        ),
-        pytest.param(
-            {},
-            "4",
-            [],
-            id="If the raw section is empty, the check result is None",
-        ),
-        pytest.param(
-            {
-                "0": FjdaryeItem(item_index="0", status="1"),
-                "1": FjdaryeItem(item_index="1", status="1"),
-                "2": FjdaryeItem(item_index="2", status="1"),
-                "3": FjdaryeItem(item_index="3", status="1"),
-            },
-            "13",
-            [],
-            id="If the given item is not present in the raw section, the check result is None",
-        ),
-    ],
-)
-def test_check_fjdarye_item(
-    section: SectionFjdaryeItem,
-    item: str,
-    check_result: FjdaryeCheckResult,
-) -> None:
-    assert list(check_fjdarye_item(item, {}, section)) == check_result
 
 
 @pytest.mark.parametrize(

@@ -22,46 +22,6 @@ from typing import Any, Mapping, MutableMapping, NamedTuple, NewType, Optional
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
-fjdarye_item_status = {
-    "1": (0, "Normal"),
-    "2": (2, "Alarm"),
-    "3": (1, "Warning"),
-    "4": (2, "Invalid"),
-    "5": (2, "Maintenance"),
-    "6": (2, "Undefined"),
-}
-
-
-class FjdaryeItem(NamedTuple):
-    item_index: str
-    status: str
-
-
-SectionFjdaryeItem = Mapping[str, FjdaryeItem]
-
-
-def parse_fjdarye_item(info) -> SectionFjdaryeItem:  # type:ignore[no-untyped-def]
-    fjdarye_items: MutableMapping[str, FjdaryeItem] = {}
-    for item_index, status in info:
-        fjdarye_items.setdefault(item_index, FjdaryeItem(item_index=item_index, status=status))
-    return fjdarye_items
-
-
-# generic inventory item - status other than 'invalid' is ok for inventory
-def discover_fjdarye_item(section: SectionFjdaryeItem):  # type:ignore[no-untyped-def]
-    for item in section.values():
-        if item.status != "4":
-            yield item.item_index, {}
-
-
-# generic check_function returning the nagios-code and the status text
-def check_fjdarye_item(  # type:ignore[no-untyped-def]
-    item: str, _no_param, section: SectionFjdaryeItem
-):
-    if fjdarye_item := section.get(item):
-        yield fjdarye_item_status[fjdarye_item.status]
-
-
 # .
 #   .--single disks--------------------------------------------------------.
 #   |               _             _            _ _     _                   |

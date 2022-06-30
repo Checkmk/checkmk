@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -37,7 +36,7 @@ SECTION_IPMI = ipmi.parse_ipmi(
         ["FAN2_SYS", "2400.000", "RPM", "ok", "na", "600.000", "na", "na", "na", "na"],
         ["FAN3_SYS", "2400.000", "RPM", "ok", "na", "600.000", "na", "na", "na", "na"],
         ["FAN4_SYS", "1980.000", "RPM", "ok", "na", "600.000", "na", "na", "na", "na"],
-        ["FAN5_SYS", "2280.000", "RPM", "ok", "na", "600.000", "na", "na", "na", "na"],
+        ["FAN5_SYS", "2280.000", "RPM", "nc", "na", "600.000", "na", "na", "na", "na"],
         ["FAN_PSU1", "2320.000", "RPM", "ok", "na", "400.000", "na", "na", "na", "na"],
         ["FAN_PSU2", "2400.000", "RPM", "ok", "na", "400.000", "na", "na", "na", "na"],
         ["PSU1_Power", "18.000", "Watts", "ok", "na", "na", "na", "na", "na", "na"],
@@ -319,7 +318,7 @@ SECTION_IPMI_DISCRETE = ipmi.parse_ipmi(
             {
                 "discovery_mode": (
                     "single",
-                    {"ignored_sensorstates": ["ok", "ns"]},
+                    {"ignored_sensorstates": ["ok", "ns", "nc"]},
                 )
             },
             [],
@@ -351,7 +350,7 @@ def test_regression_discovery(
                 Metric("ambient_temp", 18.5),
                 Result(
                     state=State.CRIT,
-                    summary="147 sensors - 105 OK - 2 CRIT: PS1_Status (ok (Presence detected, Failure detected)), Drive_4 (ok (Drive Present, Drive Fault)) - 40 skipped",
+                    summary="147 sensors - 104 OK - 1 WARN: FAN5_SYS (nc) - 2 CRIT: PS1_Status (ok (Presence detected, Failure detected)), Drive_4 (ok (Drive Present, Drive Fault)) - 40 skipped",
                 ),
             ],
         ),
@@ -1048,7 +1047,7 @@ def test_regression_discovery(
         (
             "FAN5_SYS",
             [
-                Result(state=State.OK, summary="Status: ok"),
+                Result(state=State.WARN, summary="Status: nc"),
                 Result(state=State.OK, summary="2280.00 RPM"),
                 Metric("FAN5_SYS", 2280.0),
             ],

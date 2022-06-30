@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -123,16 +122,11 @@ from cmk.base.plugins.agent_based.utils import ipmi
                 crit_high=1.13,
             ),
             False,
-            lambda txt: State.OK,
+            lambda txt: State.WARN if txt.startswith("nc") else State.OK,
             [
-                Result(state=State.OK, summary="Status: nc"),
+                Result(state=State.WARN, summary="Status: nc"),
                 Result(state=State.OK, summary="1.04 Volts"),
                 Metric("PCH_1.05V", 1.04, levels=(None, 1.13)),
-                Result(
-                    state=State.WARN,
-                    summary="Sensor is non-critical",
-                    details="Sensor is non-critical",
-                ),
             ],
         ),
         (

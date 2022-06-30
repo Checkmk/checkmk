@@ -2563,10 +2563,6 @@ msgstr "Latenza AWS/S3"
 msgid "AWS/S3 Limits"
 msgstr "Limiti AWS/S3"
 
-#, fuzzy
-msgid "AWS/SNS Limits"
-msgstr "Limiti AWS/S3"
-
 msgid "AWS/WAFV2 Limits"
 msgstr "Limiti AWS/WAFV2"
 
@@ -18172,10 +18168,6 @@ msgstr "Porte FC"
 
 msgid "FCP"
 msgstr "FCP"
-
-#, fuzzy
-msgid "FIFO Topics"
-msgstr "Argomenti"
 
 msgid "FIN_WAIT1"
 msgstr "FIN_WAIT1"
@@ -43844,9 +43836,6 @@ msgstr "Valore di staleness per marcare host/servizi stantii"
 msgid "Standalone"
 msgstr "Standalone"
 
-msgid "Standard Topics"
-msgstr ""
-
 msgid "Standard deviation of roundtrip times in ms"
 msgstr "Deviazione standard dei tempi di andata e ritorno in ms"
 
@@ -64714,6 +64703,16 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#, fuzzy
+#~| msgid "AWS/S3 Limits"
+#~ msgid "AWS/SNS Limits"
+#~ msgstr "Limiti AWS/S3"
+
+#, fuzzy
+#~| msgid "Topics"
+#~ msgid "FIFO Topics"
+#~ msgstr "Argomenti"
 
 #, fuzzy
 #~| msgid "Invalid valid for based on. Must be id of builtin rule."

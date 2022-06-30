@@ -2219,10 +2219,6 @@ msgid "AWS/S3 Limits"
 msgstr "Adaugă limite"
 
 #, fuzzy
-msgid "AWS/SNS Limits"
-msgstr "Adaugă limite"
-
-#, fuzzy
 msgid "AWS/WAFV2 Limits"
 msgstr "Adaugă limite"
 
@@ -17556,9 +17552,6 @@ msgid "FC Ports"
 msgstr ""
 
 msgid "FCP"
-msgstr ""
-
-msgid "FIFO Topics"
 msgstr ""
 
 msgid "FIN_WAIT1"
@@ -42100,9 +42093,6 @@ msgstr ""
 msgid "Standalone"
 msgstr ""
 
-msgid "Standard Topics"
-msgstr ""
-
 msgid "Standard deviation of roundtrip times in ms"
 msgstr ""
 
@@ -59799,6 +59789,10 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "AWS/SNS Limits"
+#~ msgstr "Adaugă limite"
 
 #, fuzzy
 #~ msgid "Edit dashboard"

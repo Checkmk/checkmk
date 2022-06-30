@@ -5,9 +5,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2022-06-10 06:00+0000\n"
+"PO-Revision-Date: 2022-06-30 07:49+0000\n"
 "Last-Translator: hiroko toguchi <toguchi@jtc-i.co.jp>\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "software/ja/>\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.8.1\n"
+"X-Generator: Weblate 4.13\n"
 
 #, python-format
 msgid " %s, outage duration %s"
@@ -2142,7 +2142,7 @@ msgid ""
 msgstr ""
 
 msgid "A unique ID of this rule pack."
-msgstr "このルールパックの一意のID"
+msgstr "このルールパックの一意のID。"
 
 msgid ""
 "A unique ID of this rule. Each event will remember the rule it was "
@@ -2441,10 +2441,6 @@ msgstr "AWS/S3レイテンシ"
 msgid "AWS/S3 Limits"
 msgstr "AWS/S3の制限"
 
-#, fuzzy
-msgid "AWS/SNS Limits"
-msgstr "AWS/S3の制限"
-
 msgid "AWS/WAFV2 Limits"
 msgstr "AWS/WAFV2の制限"
 
@@ -2618,8 +2614,8 @@ msgstr ""
 "ストレージデバイスによって提示されたSSHホストキーを受け入れます。 注意:man-"
 "in-the-middle攻撃は認識されないため、これはセキュリティの問題である可能性があ"
 "ります。より良い解決策は、監視対象のストレージデバイスのSSHホストキーを、監視"
-"を実行しているユーザー(OMDの場合:サイトユーザー)の.ssh/known_hostsファイルに"
-"追加することです。"
+"を実行しているユーザー(OMDの場合:サイトユーザー)の.ssh/"
+"known_hostsファイルに追加することです"
 
 msgid "Access"
 msgstr "アクセス"
@@ -4278,9 +4274,9 @@ msgstr "消費電力が高すぎる場合のアラート"
 msgid "Alert overview"
 msgstr "ホストの概要"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Alert overview - %s"
-msgstr "ホストの概要"
+msgstr "アラート概要 - %s"
 
 msgid "Alert rule names"
 msgstr "アラートルール名"
@@ -5289,9 +5285,8 @@ msgstr "SLAをサービスに割り当てる"
 msgid "Assign service to following host"
 msgstr "次のホストにサービスを割り当てます"
 
-#, fuzzy
 msgid "Assign services to AWS host"
-msgstr "次のホストにサービスを割り当てます"
+msgstr "AWSホストにサービスを割り当てる"
 
 msgid ""
 "Assign services to piggyback host(s) named as the 'Origin Domain' configured "
@@ -6280,7 +6275,7 @@ msgid "Bar graphics representing the state history"
 msgstr "状態履歴を表すバーのグラフィック"
 
 msgid "Barplot"
-msgstr "Barplot"
+msgstr "棒グラフ"
 
 msgid "Barracuda: Mail Queue"
 msgstr "Barracuda:メールキュー"
@@ -6477,7 +6472,7 @@ msgid "Bluecat NTP Settings"
 msgstr "Bluecat NTP設定"
 
 msgid "Body"
-msgstr "Body"
+msgstr "ボディ"
 
 msgid "Body for report mail"
 msgstr "レポートメールの本文"
@@ -7237,9 +7232,8 @@ msgstr "バイト"
 msgid "Bytes accepted"
 msgstr "受け入れられたバイト"
 
-#, fuzzy
 msgid "Bytes downloaded"
-msgstr "バイトがドロップされました"
+msgstr "バイトダウンロード済"
 
 msgid "Bytes dropped"
 msgstr "バイトがドロップされました"
@@ -7262,9 +7256,8 @@ msgstr "送信されたバイト数"
 msgid "Bytes sent/received"
 msgstr "送信/受信　バイト数"
 
-#, fuzzy
 msgid "Bytes uploaded"
-msgstr "処理されたバイト"
+msgstr "バイトアップロード済"
 
 msgid "C"
 msgstr "C"
@@ -7297,7 +7290,7 @@ msgid "CARA"
 msgstr "CARA"
 
 msgid "CAdvisor"
-msgstr "CAdvisor"
+msgstr "cAdvisor"
 
 msgid "CAs to accept"
 msgstr "受け入れるCA"
@@ -7398,13 +7391,13 @@ msgid "CPU resources: StatefulSet"
 msgstr "CPUリソース: ステートフルセット"
 
 msgid "CPU usage"
-msgstr "CPU usage"
+msgstr "CPU使用率"
 
 msgid "CPU usage critical at"
-msgstr "で重要なCPU使用率"
+msgstr "CPU使用率クリティカル"
 
 msgid "CPU usage warning at"
-msgstr "でのCPU使用率の警告"
+msgstr "CPU使用率ワーニング"
 
 msgid "CPU usage: Namespace"
 msgstr "CPU usage: 名前空間"
@@ -9294,9 +9287,8 @@ msgstr "Cloud SQL"
 msgid "Cloud based environments"
 msgstr "クラウドベースの環境"
 
-#, fuzzy
 msgid "CloudFront"
-msgstr "CloudFront WAFs"
+msgstr "CloudFront"
 
 msgid "CloudFront WAFs"
 msgstr "CloudFront WAFs"
@@ -12126,9 +12118,8 @@ msgstr ""
 "HTTP POSTメソッドを介して送信するデータ。データがURLエンコードされていること"
 "を確認してください。"
 
-#, fuzzy
 msgid "Data transfer"
-msgstr "データ範囲"
+msgstr "データ転送"
 
 msgid "Data type"
 msgstr "データ・タイプ"
@@ -15572,7 +15563,6 @@ msgstr "ホスト属性を編集する"
 msgid "Edit host group"
 msgstr "ホストグループを編集する"
 
-#, fuzzy
 msgid "Edit layout"
 msgstr "ラジアルレイアウト"
 
@@ -16556,11 +16546,9 @@ msgstr "サービス出力でHTMLコードをエスケープする"
 msgid "Escape HTML globally enabled"
 msgstr "グローバルに有効化されたHTMLのエスケープ"
 
-#, fuzzy
 msgid "Escape HTML in host output (Dangerous to deactivate - read help)"
-msgstr ""
-"サービス出力でHTMLをエスケープします(非アクティブ化するのは危険です - ヘルプ"
-"を読んでください)"
+msgstr "ホスト出力でHTMLをエスケープします(非アクティブ化するのは危険です - "
+"ヘルプを読んでください)"
 
 msgid "Escape HTML in service output (Dangerous to deactivate - read help)"
 msgstr ""
@@ -17306,10 +17294,6 @@ msgstr "FCポート"
 
 msgid "FCP"
 msgstr "FCP"
-
-#, fuzzy
-msgid "FIFO Topics"
-msgstr "トピック"
 
 msgid "FIN_WAIT1"
 msgstr "FIN_WAIT1"
@@ -19093,9 +19077,8 @@ msgstr "一般的な文字列"
 msgid "Get file from SFTP server"
 msgstr "SFTPサーバーからファイルを取得する"
 
-#, fuzzy
 msgid "GiB"
-msgstr "GB"
+msgstr "GiB"
 
 msgid ""
 "Give FPGA utilization levels in percent. The possible range is from 0% to "
@@ -20301,12 +20284,10 @@ msgstr ""
 "ここでは、利用可能な冷却能力に関してさまざまな警告/クリティカルレベルを設定で"
 "きます。"
 
-#, fuzzy
 msgid ""
 "Here you can set different warn/crit levels regarding the free cooling "
 "positions."
-msgstr ""
-"ここでは、フリークーリングの位置に関するさまざまな警告/クリティカルレベルを設"
+msgstr "ここでは、フリークーリングの位置に関するさまざまな警告/クリティカルレベルを設"
 "定できます。"
 
 msgid ""
@@ -21621,9 +21602,9 @@ msgstr "ICMPパケット"
 msgid "ID"
 msgstr "ID"
 
-#, fuzzy, python-format
+#, python-format
 msgid "ID <b>%s</b> is reserved for internal use."
-msgstr "タググループ \"%s\" は内部使用のために予約されています。"
+msgstr "ID <b>%s</b>は内部使用のために予約されています。"
 
 msgid "ID cache size"
 msgstr "IDキャッシュサイズ"
@@ -25790,9 +25771,8 @@ msgstr "ファイル記述子の使用レベル"
 msgid "Levels for free memory"
 msgstr "空きメモリのレベル"
 
-#, fuzzy
 msgid "Levels for free space"
-msgstr "ファイルシステムの空き領域のレベル"
+msgstr "空き領域のレベル"
 
 msgid "Levels for half closed connections"
 msgstr "ハーフクローズ接続のレベル"
@@ -25965,9 +25945,8 @@ msgstr "使用済みプロセスのレベル"
 msgid "Levels for used space (reclaimable is considered as free)"
 msgstr "使用済みスペースのレベル(再生可能なものは空きスペースとみなす)"
 
-#, fuzzy
 msgid "Levels for used/free space"
-msgstr "使用済みディスクスペースのレベル"
+msgstr "使用済み/空きスペースのレベル"
 
 msgid "Levels for user managed backup files"
 msgstr "ユーザー管理のバックアップファイルのレベル"
@@ -26885,7 +26864,6 @@ msgstr "ログアウトしました。"
 msgid "Logging"
 msgstr "ロギング"
 
-#, fuzzy
 msgid "Logging level"
 msgstr "ロギングレベル"
 
@@ -28056,16 +28034,14 @@ msgstr "最大ファイル数"
 msgid "Maximal free cooling positions"
 msgstr "最大のフリークーリングポジション"
 
-#, fuzzy
 msgid "Maximal log file size"
-msgstr "最大サイズ"
+msgstr "ログファイルの最大サイズ"
 
 msgid "Maximal number of daemon threads"
 msgstr "デーモンスレッドの最大数"
 
-#, fuzzy
 msgid "Maximal number of log files to backup"
-msgstr "バックアップスペース上のすべてのファイルの最大サイズ"
+msgstr "バックアップするログファイルの最大数"
 
 msgid "Maximal number of threads"
 msgstr "スレッドの最大数"
@@ -28079,9 +28055,8 @@ msgstr "最大サイズ"
 msgid "Maximal size of a file"
 msgstr "ファイルの最大サイズ"
 
-#, fuzzy
 msgid "Maximal size of a log file"
-msgstr "ファイルの最大サイズ"
+msgstr "ログファイルの最大サイズ"
 
 msgid "Maximal size of largest file"
 msgstr "最大ファイルの最大サイズ"
@@ -34260,9 +34235,8 @@ msgstr ""
 "名を指定し、プラグインファイル名をコマンド<tt>check_foobar </tt>として設定し"
 "ます。"
 
-#, fuzzy
 msgid "Please enter the date in the format YYYY-MM-DD HH:mm:ss."
-msgstr "YYYY-MM-DDの形式で日付を入力してください。"
+msgstr "YYYY-MM-DD  HH:mm:ss の形式で日付を入力してください。"
 
 msgid "Please enter the date in the format YYYY-MM-DD."
 msgstr "YYYY-MM-DDの形式で日付を入力してください。"
@@ -40252,9 +40226,8 @@ msgstr "問題を黙って無視し、このグラフをスキップします"
 msgid "Silently skip exceeding messages"
 msgstr "超過メッセージをサイレントにスキップします"
 
-#, fuzzy
 msgid "Simple Notification Service (SNS)"
-msgstr "シンプルストレージサービス(S3)"
+msgstr "簡易通知サービス(SNS)"
 
 msgid "Simple Storage Service (S3)"
 msgstr "シンプルストレージサービス(S3)"
@@ -41572,9 +41545,6 @@ msgstr ""
 
 msgid "Standalone"
 msgstr "スタンドアロン"
-
-msgid "Standard Topics"
-msgstr ""
 
 msgid "Standard deviation of roundtrip times in ms"
 msgstr "往復時間の標準偏差(ミリ秒)"
@@ -43078,9 +43048,8 @@ msgstr "Systemdシングルサービス"
 msgid "Systemd single services discovery"
 msgstr "Systemdシングルサービスディスカバリー"
 
-#, fuzzy
 msgid "Systems larger than"
-msgstr "%sより大きい"
+msgstr "より大きいシステム"
 
 msgid "TCP"
 msgstr "TCP"
@@ -50707,12 +50676,11 @@ msgstr ""
 msgid "This stored report does not exist."
 msgstr ""
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "This suffix is already used by connection %s. Please choose another one."
-msgstr ""
-"このサフィックスは接続 %s ですでに使用されています。別のサフィックスを選択し"
-"てください。"
+msgstr "このサフィックスは接続 %s "
+"ですでに使用されています。別のものを選択してください。"
 
 msgid "This synchronization plugin has no parameters."
 msgstr "この同期プラグインにはパラメーターがありません。"
@@ -51281,33 +51249,26 @@ msgstr ""
 "次のインスタンスに進む前に、インスタンスへの接続が開くのを待つ時間。設定され"
 "ていない場合、ADOのデフォルト値が使用されます。"
 
-#, fuzzy
 msgid "Time until alert, if AVAILABLE condition is false"
-msgstr "Podが初期化されていない場合の、警告までの許容期間"
+msgstr "AVAILABLEがfalseの場合、警告までの許容期間"
 
-#, fuzzy
 msgid "Time until alert, if CONTAINERSREADY condition is false"
-msgstr "Podが初期化されていない場合の、警告までの許容期間"
+msgstr "AVAILABLEがfalseの場合の、警告までの許容期間"
 
-#, fuzzy
 msgid "Time until alert, if INITIALIZED condition is false"
-msgstr "Podが初期化されていない場合の、警告までの許容期間"
+msgstr "INITIALIZEDがfalse場合の、警告までの許容期間"
 
-#, fuzzy
 msgid "Time until alert, if PODSCHEDULED condition is false"
-msgstr "Podが初期化されていない場合の、警告までの許容期間"
+msgstr "PODSCHEDULED がfalseの場合の、警告までの許容期間"
 
-#, fuzzy
 msgid "Time until alert, if PROGRESSING condition is false"
-msgstr "Podが初期化されていない場合の、警告までの許容期間"
+msgstr "PROGRESSING がfalseの場合の、警告までの許容期間"
 
-#, fuzzy
 msgid "Time until alert, if READY condition is false"
-msgstr "Podが初期化されていない場合の、警告までの許容期間"
+msgstr "READYがfalseの場合の、警告までの許容期間"
 
-#, fuzzy
 msgid "Time until alert, if REPLICAFAILURE condition is true"
-msgstr "Podコンテナの準備ができていない場合、警告が出るまでの時間"
+msgstr "REPLICAFAILURE がtrueの場合の場合の、警告が出るまでの時間"
 
 msgid "Time until license expiration"
 msgstr "ライセンスの有効期限が切れるまでの時間"
@@ -51434,9 +51395,8 @@ msgstr "タイムスパンまたは期間(秒単位)"
 msgid "Timespecific parameters computed at %s"
 msgstr "%s で計算された時間固有のパラメーター"
 
-#, fuzzy
 msgid "Timestamp (YYYY-MM-DD HH:mm:ss)"
-msgstr "YYYY-MM-DD HH:MM:SS"
+msgstr "タイムスタンプ (YYYY-MM-DD HH:mm:ss)"
 
 msgid "Timestamp of a remote file"
 msgstr "リモートファイルのタイムスタンプ"
@@ -51653,13 +51613,11 @@ msgstr "合計コールドHDDスペース"
 msgid "Total Data in relation to RAM"
 msgstr "RAMに関連する合計データ"
 
-#, fuzzy
 msgid "Total General Purpose SSD (gp2) space"
-msgstr "合計汎用SSDスペース"
+msgstr "合計汎用SSD (gp2) スペース"
 
-#, fuzzy
 msgid "Total General Purpose SSD (gp3) space"
-msgstr "合計汎用SSDスペース"
+msgstr "合計汎用SSD (gp3) スペース"
 
 msgid "Total IO operations per second"
 msgstr "1秒あたりの合計IO操作"
@@ -51679,21 +51637,17 @@ msgstr "最小総パケット数"
 msgid "Total Pending Mails"
 msgstr "保留中のメールの合計"
 
-#, fuzzy
 msgid "Total Provisioned IOPS SSD (io1) IO operations per seconds"
-msgstr "1秒ごとの総プロビジョニングIOPS SSD IO動作"
+msgstr "1秒ごとの総プロビジョニングIOPS SSD(io1) IO動作"
 
-#, fuzzy
 msgid "Total Provisioned IOPS SSD (io1) space"
-msgstr "総プロビジョニングIOPS SSD スペース"
+msgstr "総プロビジョニングIOPS SSD (io1) スペース"
 
-#, fuzzy
 msgid "Total Provisioned IOPS SSD (io2) IO operations per seconds"
-msgstr "1秒ごとの総プロビジョニングIOPS SSD IO動作"
+msgstr "1秒ごとの総プロビジョニングIOPS SSD (io2) IO動作"
 
-#, fuzzy
 msgid "Total Provisioned IOPS SSD (io2) space"
-msgstr "総プロビジョニングIOPS SSD スペース"
+msgstr "総プロビジョニングIOPS SSD (io2)  スペース"
 
 msgid "Total RAM + Swap installed"
 msgstr "合計RAM +インストールされたスワップ"
@@ -60795,6 +60749,16 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "AWS/S3 Limits"
+#~ msgid "AWS/SNS Limits"
+#~ msgstr "AWS/S3の制限"
+
+#, fuzzy
+#~| msgid "Topics"
+#~ msgid "FIFO Topics"
+#~ msgstr "トピック"
 
 #, fuzzy
 #~| msgid "Invalid valid for based on. Must be id of builtin rule."

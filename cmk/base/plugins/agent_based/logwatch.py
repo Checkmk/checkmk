@@ -28,6 +28,7 @@ from typing import (
     Literal,
     Mapping,
     Match,
+    MutableMapping,
     Optional,
     Sequence,
     Set,
@@ -161,16 +162,15 @@ def check_logwatch(
     yield from logwatch.check_errors(section)
 
     value_store = get_value_store()
-    last_run = value_store.get("last_run", 0)
-    value_store["last_run"] = time.time()
 
-    loglines = []
-    for node, node_data in section.items():
-        item_data: logwatch.ItemData = node_data.logfiles.get(
-            item, {"attr": "missing", "lines": []}
-        )
-        if _is_cache_new(last_run, node):
-            loglines.extend(item_data["lines"])
+    loglines: list[str] = sum(
+        (
+            _extract_unseen_lines(node, value_store, node_data.logfiles[item]["lines"])
+            for node, node_data in section.items()
+            if item in node_data.logfiles
+        ),
+        [],
+    )
 
     yield from check_logwatch_generic(
         item=item,
@@ -185,6 +185,14 @@ def cluster_check_logwatch(
     item: str, section: Mapping[str, Optional[logwatch.Section]]
 ) -> CheckResult:
     yield from check_logwatch(item, {k: v for k, v in section.items() if v is not None})
+
+
+def _extract_unseen_lines(
+    node: str | None, value_store: MutableMapping[str, Any], item_lines: list[str]
+) -> list[str]:
+    last_run = value_store.get("last_run", 0)
+    value_store["last_run"] = time.time()
+    return item_lines if _is_cache_new(last_run, node) else []
 
 
 register.check_plugin(

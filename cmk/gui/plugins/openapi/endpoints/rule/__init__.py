@@ -382,7 +382,7 @@ def _serialize_rule(rule_entry: RuleEntry) -> DomainObject:
             "folder": "/" + rule_entry.folder.path(),
             "folder_index": rule_entry.index_nr,
             "properties": rule.rule_options.to_config(),
-            "value_raw": rule.value,
+            "value_raw": rule.ruleset.valuespec().mask(rule.value),
             "conditions": denilled(
                 {
                     "host_name": rule.conditions.host_name,

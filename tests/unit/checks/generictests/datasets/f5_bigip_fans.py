@@ -8,7 +8,13 @@
 # type: ignore
 checkname = 'f5_bigip_fans'
 
-info = [[['1', '15574'], ['2', '16266'], ['3', '15913'], ['4', '16266'], ['5', '0']], []]
+info = [[['1', '1', '15574'],
+         ['2', '1', '16266'],
+         ['3', '1', '15913'],
+         ['4', '1', '16266'],
+         ['5', '0', '0'],
+         ['6', '1', '0']],
+        []]
 
 discovery = {
     '': [
@@ -16,7 +22,8 @@ discovery = {
         ('Chassis 2', 'f5_bigip_fans_default_levels'),
         ('Chassis 3', 'f5_bigip_fans_default_levels'),
         ('Chassis 4', 'f5_bigip_fans_default_levels'),
-        ('Chassis 5', 'f5_bigip_fans_default_levels')
+        ('Chassis 5', 'f5_bigip_fans_default_levels'),
+        ('Chassis 6', 'f5_bigip_fans_default_levels')
     ]
 }
 
@@ -26,6 +33,7 @@ checks = {
         ('Chassis 2', (2000, 500), [(0, 'Speed: 16266 RPM', [])]),
         ('Chassis 3', (2000, 500), [(0, 'Speed: 15913 RPM', [])]),
         ('Chassis 4', (2000, 500), [(0, 'Speed: 16266 RPM', [])]),
-        ('Chassis 5', (2000, 500), [(2, 'Speed: 0 RPM (warn/crit below 2000 RPM/500 RPM)', [])])
+        ('Chassis 5', (2000, 500), [(2, 'Speed: 0 RPM (warn/crit below 2000 RPM/500 RPM)', [])]),
+        ('Chassis 6', (2000, 500), [(0, 'Fan Status: good', [])])
     ]
 }

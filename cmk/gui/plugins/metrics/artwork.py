@@ -828,20 +828,17 @@ def render_labels_with_graph_unit(
 
     graph_unit, scaled_labels = unit["graph_unit"](values)
 
-    scaled_label_specs: list[tuple[float, Union[None, str, float], int]] = []
-    # Merge the scaled labels into the label specifications
-    for index, label_spec in enumerate(label_specs):
-        if label_spec[1] not in ignored_values:
-            scaled_label_specs[index] = (label_spec[0], scaled_labels.pop(0), label_spec[2])
-        else:
-            scaled_label_specs[index] = (label_spec[0], label_spec[1], label_spec[2])
-
-    rendered_labels, max_label_length = render_labels(scaled_label_specs)
+    rendered_labels, max_label_length = render_labels(
+        label_spec
+        if label_spec[1] in ignored_values
+        else (label_spec[0], scaled_labels.pop(0), label_spec[2])
+        for label_spec in label_specs
+    )
     return rendered_labels, max_label_length, graph_unit
 
 
 def render_labels(
-    label_specs: Sequence[tuple[float, Union[None, str, float], int]],
+    label_specs: Iterable[tuple[float, Union[None, str, float], int]],
     render_func: Optional[UnitRenderFunc] = None,
 ) -> tuple[list[Label], int]:
     max_label_length = 0

@@ -31,8 +31,13 @@ from .agent_based_api.v1.type_defs import StringTable
 from .utils.mssql_counters import Section
 
 
-def to_timestamp(values: Sequence[str]) -> float:
-    """Translate time stamps given in formats known to be used for @utc_time to Unix time
+def get_datetime_from_obsolete_format(values: Sequence[str]) -> datetime:
+    """ In the past, the agent returned different datetime formats which were then
+    handled by the parse function. From agent versions 2.0.0p27, 2.1.0p5 and 2.2.0i1,
+    the agent returns the time in format %Y-%m-%d %H:%M:%S.
+    This function is left to have compatibility with older agents. It should be removed
+    at some point.
+
     >>> to_timestamp(('31.08.2017', '16:13:43'))
     1504196023.0
     >>> to_timestamp(('08/31/2017', '04:13:43', 'PM'))
@@ -54,29 +59,35 @@ def to_timestamp(values: Sequence[str]) -> float:
     >>> to_timestamp(('31/08/2017', '4:13:43', 'p.m.'))  # allow "a.m."/"p.m." instead of "AM/PM"
     1504196023.0
     """
+    with suppress(ValueError):
+        return datetime.strptime(' '.join(values).replace(". ", "."), '%d.%m.%Y %H:%M:%S')
+    with suppress(ValueError):
+        return datetime.strptime(' '.join(values), '%m/%d/%Y %I:%M:%S %p')
+    with suppress(ValueError):
+        return datetime.strptime(' '.join(values), '%Y/%m/%d %I:%M:%S %p')
+    with suppress(ValueError):
+        return datetime.strptime(' '.join(values), '%d/%m/%Y %H:%M:%S')
+    with suppress(ValueError):
+        return datetime.strptime(' '.join(values), '%d/%m/%y %H:%M:%S')
+    with suppress(ValueError):
+        return datetime.strptime(' '.join(values), '%d-%m-%Y %H:%M:%S')
+    with suppress(ValueError):
+        return datetime.strptime(" ".join(values).split(".")[0], "%Y-%m-%d %H:%M:%S")
+    with suppress(ValueError):
+        return datetime.strptime(' '.join(values), '%d.%m.%Y %H.%M.%S')
+    with suppress(ValueError):
+        return datetime.strptime(
+            ' '.join(values).replace("a.m.", "AM").replace("p.m.", "PM"),
+            '%d/%m/%Y %I:%M:%S %p',
+        )
+    raise ValueError(f'Time string {" ".join(values)} does not match any known pattern')
+
+
+def to_timestamp(values: Sequence[str]) -> float:
     def to_datetime(values: Sequence[str]) -> datetime:
         with suppress(ValueError):
-            return datetime.strptime(' '.join(values).replace(". ", "."), '%d.%m.%Y %H:%M:%S')
-        with suppress(ValueError):
-            return datetime.strptime(' '.join(values), '%m/%d/%Y %I:%M:%S %p')
-        with suppress(ValueError):
-            return datetime.strptime(' '.join(values), '%Y/%m/%d %I:%M:%S %p')
-        with suppress(ValueError):
-            return datetime.strptime(' '.join(values), '%d/%m/%Y %H:%M:%S')
-        with suppress(ValueError):
-            return datetime.strptime(' '.join(values), '%d/%m/%y %H:%M:%S')
-        with suppress(ValueError):
-            return datetime.strptime(' '.join(values), '%d-%m-%Y %H:%M:%S')
-        with suppress(ValueError):
-            return datetime.strptime(" ".join(values).split(".")[0], "%Y-%m-%d %H:%M:%S")
-        with suppress(ValueError):
-            return datetime.strptime(' '.join(values), '%d.%m.%Y %H.%M.%S')
-        with suppress(ValueError):
-            return datetime.strptime(
-                ' '.join(values).replace("a.m.", "AM").replace("p.m.", "PM"),
-                '%d/%m/%Y %I:%M:%S %p',
-            )
-        raise ValueError(f'Time string {" ".join(values)} does not match any known pattern')
+            return datetime.strptime(" ".join(values), "%Y-%m-%d %H:%M:%S")
+        return get_datetime_from_obsolete_format(values)
 
     return to_datetime(values).replace(tzinfo=timezone.utc).timestamp()
 

@@ -19,6 +19,7 @@
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
 
+namespace fs = std::filesystem;
 namespace rs = std::ranges;
 
 namespace cma::provider {
@@ -44,11 +45,7 @@ std::vector<std::string> TokenizeString(const std::string &val, int sub_match) {
 
 namespace {
 std::optional<std::tuple<int, bool>> ParseCacheAgeToken(std::string_view text) {
-    if (text.size() < 3) {
-        return {};
-    }
-
-    if (text[0] != '(' || text[text.size() - 1] != ')') {
+    if (text.size() < 3 || text[0] != '(' || text[text.size() - 1] != ')') {
         return {};
     }
 
@@ -80,7 +77,6 @@ std::string BuildValidPath(const std::string &path) {
 
 void MrpeEntry::loadFromString(const std::string &value) {
     full_path_name_.clear();
-    namespace fs = std::filesystem;
     auto tokens = TokenizeString(value,  // string to tokenize
                                  1);     // every passing will be added
 
@@ -158,10 +154,7 @@ void MrpeProvider::addParsedChecks() {
     }
 }
 
-std::pair<std::string, std::filesystem::path> ParseIncludeEntry(
-    const std::string &entry) {
-    namespace fs = std::filesystem;
-
+std::pair<std::string, fs::path> ParseIncludeEntry(const std::string &entry) {
     auto table = tools::SplitString(entry, "=", 2);
     auto yml_name = cfg::GetPathOfLoadedConfigAsString();
 
@@ -195,24 +188,24 @@ void AddCfgFileToEntries(const std::string &user,
 
     std::string line;
     for (unsigned lineno = 1; std::getline(ifs, line); ++lineno) {
-        cma::tools::AllTrim(line);
+        tools::AllTrim(line);
         if (line.empty() || line[0] == '#' || line[0] == ';')
             continue;  // skip empty lines and comments
 
         // split up line at = sign
-        auto tokens = cma::tools::SplitString(line, "=", 2);
+        auto tokens = tools::SplitString(line, "=", 2);
         if (tokens.size() != 2) {
             XLOG::d("mrpe: Invalid line '{}' in '{}:{}'", line, path, lineno);
             continue;
         }
 
-        auto &var = tokens[0];
-        auto &value = tokens[1];
-        cma::tools::AllTrim(var);
-        cma::tools::StringLower(var);
+        auto &var = tokens.at(0);
+        auto &value = tokens.at(1);
+        tools::AllTrim(var);
+        tools::StringLower(var);
 
         if (var == "check") {
-            cma::tools::AllTrim(value);
+            tools::AllTrim(value);
             entries.emplace_back(user, value);
         } else {
             XLOG::d("mrpe: Strange entry '{}' in '{}:{}'", line, path, lineno);
@@ -222,7 +215,7 @@ void AddCfgFileToEntries(const std::string &user,
 
 void MrpeProvider::addParsedIncludes() {
     for (const auto &entry : includes_) {
-        auto [user, path] = ParseIncludeEntry(entry);
+        const auto [user, path] = ParseIncludeEntry(entry);
         if (path.empty()) {
             continue;
         }
@@ -243,19 +236,18 @@ bool MrpeProvider::parseAndLoadEntry(const std::string &entry) {
         return false;
     }
 
-    // include entry determined when type is 'include'
-    // the type
-    auto type = table[0];
+    // include entry determined when type is 'include' the type
+    auto type = table.at(0);
     rs::transform(type, type.begin(), tolower);
     // include user = file   <-- src
     //        "user = file"  <-- value
-    auto pos = type.find("include", 0);
-    auto len = ::strlen("include");
+    const auto pos = type.find("include");
+    const auto len = ::strlen("include");
     if (pos != std::string::npos &&              // found
         (type[len] == 0 || type[len] == ' ')) {  // include has end
 
         auto value = entry.substr(len + pos, std::string::npos);
-        cma::tools::AllTrim(value);
+        tools::AllTrim(value);
         if (!value.empty()) {
             includes_.emplace_back(value);
             return true;
@@ -271,8 +263,8 @@ bool MrpeProvider::parseAndLoadEntry(const std::string &entry) {
     if (type == "check") {
         // check = anything   <-- src
         //        "anything"  <-- value
-        cma::tools::AllTrim(table[1]);
-        auto potential_path = cma::cfg::ReplacePredefinedMarkers(table[1]);
+        tools::AllTrim(table[1]);
+        auto potential_path = cfg::ReplacePredefinedMarkers(table[1]);
         checks_.emplace_back(potential_path);
         return true;
     }
@@ -363,8 +355,6 @@ std::string ExecMrpeEntry(const MrpeEntry &entry,
     return result;
 }
 
-void MrpeProvider::updateSectionStatus() {}
-
 std::string MrpeProvider::makeBody() {
     std::string out;
     auto parallel = cfg::GetVal(cfg::groups::kMrpe, cfg::vars::kMrpeParallel,
@@ -400,7 +390,7 @@ void MrpeCache::createLine(std::string_view key, int max_age, bool add_age) {
 bool MrpeCache::updateLine(std::string_view key, std::string_view data) {
     try {
         auto k = std::string(key);
-        if (cache_.find(k) == cache_.end()) {
+        if (!cache_.contains(k)) {
             XLOG::d("Suspicious attempt to cache unknown mrpe line '{}'", k);
             return false;
         }
@@ -419,7 +409,7 @@ bool MrpeCache::updateLine(std::string_view key, std::string_view data) {
 bool MrpeCache::eraseLine(std::string_view key) {
     try {
         auto k = std::string(key);
-        if (cache_.find(k) == cache_.end()) {
+        if (!cache_.contains(k)) {
             return false;
         }
         cache_.erase(k);
@@ -451,8 +441,9 @@ std::tuple<std::string, MrpeCache::LineState> MrpeCache::getLineData(
         auto diff = duration_cast<std::chrono::seconds>(time_pos - line.tp);
 
         auto result = line.data;
-        if (line.add_age)
+        if (line.add_age) {
             result += fmt::format(" ({};{})", diff.count(), line.max_age);
+        }
 
         auto status =
             diff.count() > line.max_age ? LineState::old : LineState::ready;

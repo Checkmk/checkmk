@@ -21,9 +21,6 @@ namespace wmi {
 constexpr char kSepChar = cma::section::kPipeSeparator;
 constexpr std::wstring_view kSepString = cma::section::kPipeSeparatorString;
 }  // namespace wmi
-namespace ohm {
-constexpr char kSepChar = ',';
-}
 /*
     # wmi_cpuload
     ## system_perf
@@ -38,8 +35,6 @@ constexpr char kSepChar = ',';
     ## msexch_rpcclientaccess
     */
 
-// separate class - too weak on functionality
-// no need to be included in Wmi hierarchy
 class SubSection {
 public:
     enum class Type {
@@ -66,8 +61,7 @@ public:
     auto nameSpace() const noexcept { return name_space_; }
 
 protected:
-    // *internal* function which correctly sets
-    // all parameters
+    // internal function which correctly sets all parameters
     void setupByName();
     std::string makeBody();
 
@@ -79,16 +73,15 @@ private:
     Type type_;
 };
 
-// configuration
 SubSection::Type GetSubSectionType(std::string_view name) noexcept;
 bool IsHeaderless(std::string_view name) noexcept;
 
-class Wmi : public Asynchronous {
+class WmiBase : public Asynchronous {
 public:
-    Wmi(std::string_view name, char separator)
-        : Wmi(name, separator, SubSection::Mode::standard) {}
+    WmiBase(std::string_view name, char separator)
+        : WmiBase(name, separator, SubSection::Mode::standard) {}
 
-    Wmi(std::string_view name, char separator, SubSection::Mode mode)
+    WmiBase(std::string_view name, char separator, SubSection::Mode mode)
         : Asynchronous(name, separator), subsection_mode_{mode} {
         setupByName();
     }
@@ -107,7 +100,7 @@ public:
 
 protected:
     void setupByName();
-    std::string makeBody() override;
+    std::string getData();
 
 private:
     std::wstring name_space_;  // WMI namespace "root\\Cimv2" for example
@@ -120,6 +113,18 @@ private:
         sub_objects_;  // Windows WMI Object name for the case when we have
 
     SubSection::Mode subsection_mode_{SubSection::Mode::standard};
+};
+
+class Wmi : public WmiBase {
+public:
+    Wmi(std::string_view name, char separator)
+        : WmiBase(name, separator, SubSection::Mode::standard) {}
+
+    Wmi(std::string_view name, char separator, SubSection::Mode mode)
+        : WmiBase(name, separator, mode) {}
+
+protected:
+    std::string makeBody() override { return getData(); }
 };
 
 // this is proposed API

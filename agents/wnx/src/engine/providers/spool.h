@@ -19,16 +19,11 @@ namespace cma::provider {
 
 class SpoolProvider : public Asynchronous {
 public:
-    SpoolProvider() : Asynchronous(cma::section::kSpool) {}
+    SpoolProvider() : Asynchronous(section::kSpool) {}
 
     SpoolProvider(std::string_view name, char separator)
         : Asynchronous(name, separator) {}
 
-    void loadConfig() override;
-
-    void updateSectionStatus() override;
-
-    // empty header
     std::string makeHeader(
         const std::string_view /*section_name*/) const override {
         return {};

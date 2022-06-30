@@ -22,33 +22,20 @@
 namespace fs = std::filesystem;
 
 namespace cma::provider {
-
-// makes OHM binary filename
 fs::path GetOhmCliPath() noexcept { return GetOhmCliPath(cfg::GetUserDir()); }
 
 fs::path GetOhmCliPath(const fs::path &dir) noexcept {
-    fs::path ohm_exe = dir;
-    ohm_exe /= cfg::dirs::kUserBin;
-    ohm_exe /= ohm::kExeModule;
-
-    return ohm_exe;
-}
-
-void OhmProvider::loadConfig() {
-    // normally open hardware monitor does nothing
-    // during loading config
+    return dir / cfg::dirs::kUserBin / ohm::kExeModule;
 }
 
 void OhmProvider::updateSectionStatus() {
-    // normally open hardware monitor does nothing
-    // during loading config
     if (!cma::tools::win::IsElevated()) {
         XLOG::d("You may have problems with OHM: service is not elevated");
     }
 }
 
 std::string OhmProvider::makeBody() {
-    auto result = Wmi::makeBody();
+    auto result = getData();
     if (result.empty()) {
         XLOG::d.t("No data for OHM, error number [{}]", registerError() + 1);
         return {};

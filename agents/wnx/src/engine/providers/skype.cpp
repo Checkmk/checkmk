@@ -20,7 +20,7 @@ extern bool g_skype_testing;
 
 namespace {
 template <typename... T>
-auto SkypeTestLog(const std::string& format, T... args) {
+auto SkypeTestLog(const std::string &format, T... args) noexcept {
     if (g_skype_testing) {
         XLOG::l.i(format, args...);
     }
@@ -28,16 +28,6 @@ auto SkypeTestLog(const std::string& format, T... args) {
 }  // namespace
 
 namespace cma::provider {
-
-void SkypeProvider::loadConfig() {
-    // we do not need config for skype(at least initially)
-}
-
-void SkypeProvider::updateSectionStatus() {
-    // stub
-    // the same - no need, still may be in the future
-}
-
 // "sampletime,12321414,1231312\n"
 std::string SkypeProvider::makeFirstLine() {
     return fmt::format("sampletime,{},{}\n", wtools::QueryPerformanceCo(),
@@ -48,7 +38,7 @@ constexpr std::wstring_view g_skype_asp_some_counter{
     L"ASP.NET Apps v4.0.30319"};
 
 // not const for tests. not const wstring because of STL
-std::vector<std::wstring> g_skype_counter_names{
+const std::vector<std::wstring> g_skype_counter_names{
     L"LS:WEB - Address Book Web Query",
     L"LS:WEB - Address Book File Download",
     L"LS:WEB - Location Information Service",
@@ -83,29 +73,27 @@ std::vector<std::wstring> g_skype_counter_names{
 };
 
 namespace internal {
-std::vector<std::wstring>* GetSkypeCountersVector() {
-    return &g_skype_counter_names;
+std::vector<std::wstring> *GetSkypeCountersVector() {
+    return const_cast<std::vector<std::wstring> *>(&g_skype_counter_names);
 }
 std::wstring_view GetSkypeAspSomeCounter() { return g_skype_asp_some_counter; }
 }  // namespace internal
 
 namespace {
 std::wstring GetCounters(
-    const PERF_OBJECT_TYPE* object, std::wstring_view name,
-    std::vector<const PERF_COUNTER_DEFINITION*>& counters) {
-    namespace perf = wtools::perf;
-
+    const PERF_OBJECT_TYPE *object, std::wstring_view name,
+    const std::vector<const PERF_COUNTER_DEFINITION *> &counters) {
     // first line generate
     std::wstring wide{L"[" + std::wstring(name) + L"]\ninstance"};
 
     // second line and data
-    auto name_map = perf::GenerateNameMap();
-    auto counter_names = perf::GenerateCounterNames(object, name_map);
+    auto name_map = wtools::perf::GenerateNameMap();
+    auto counter_names = wtools::perf::GenerateCounterNames(object, name_map);
 
     SkypeTestLog("scanning {} names and {} counters and map {}",
                  counter_names.size(), counters.size(), name_map.size());
 
-    for (auto& counter_name : counter_names) {
+    for (const auto &counter_name : counter_names) {
         SkypeTestLog("scanning {} name", wtools::ToUtf8(counter_name));
         wide += L"," + counter_name;
     }
@@ -113,9 +101,9 @@ std::wstring GetCounters(
     return wide;
 }
 
-void AddData(std::wstring& body,
-             const std::vector<std::wstring>& instance_names,
-             const std::vector<std::vector<ULONGLONG>>& columns) {
+void AddData(std::wstring &body,
+             const std::vector<std::wstring> &instance_names,
+             const std::vector<std::vector<ULONGLONG>> &columns) {
     const auto row_count = columns[0].size();
     SkypeTestLog("scanning {} columns, row_count is {}", columns.size(),
                  row_count);
@@ -129,7 +117,7 @@ void AddData(std::wstring& body,
             row < instance_names.size() ? instance_names[row] : L"\"\"";
         body += instance_name;
 
-        for (const auto& column : columns) {
+        for (const auto &column : columns) {
             body += L"," + std::to_wstring(column[row]);
         }
         body += L"\n";
@@ -149,7 +137,7 @@ std::wstring SkypeProvider::makeSubSection(std::wstring_view name) {
     namespace perf = wtools::perf;
 
     auto reg_name = wtools::ToUtf8(name);
-    SkypeTestLog("Skyping Perf Counter '{}'", reg_name);
+    SkypeTestLog("Skype Perf Counter '{}'", reg_name);
 
     uint32_t key_index = 0;
     auto data = details::LoadWinPerfData(std::wstring(name), key_index);
@@ -158,14 +146,14 @@ std::wstring SkypeProvider::makeSubSection(std::wstring_view name) {
         return {};
     }
 
-    const auto* object = perf::FindPerfObject(data, key_index);
+    const auto *object = perf::FindPerfObject(data, key_index);
     if (object == nullptr) {
         SkypeTestLog("Not found index {}, for value '{}'", key_index, reg_name);
         return {};
     }
     SkypeTestLog("index {}, for value '{}'", key_index, reg_name);
 
-    const PERF_COUNTER_BLOCK* block{nullptr};
+    const PERF_COUNTER_BLOCK *block{nullptr};
     auto counters = perf::GenerateCounters(object, block);
     auto body = GetCounters(object, name, counters);
 
@@ -174,7 +162,7 @@ std::wstring SkypeProvider::makeSubSection(std::wstring_view name) {
     auto instances = perf::GenerateInstances(object);
 
     std::vector<std::vector<ULONGLONG>> columns;
-    for (const auto& counter : counters) {
+    for (const auto &counter : counters) {
         std::vector<ULONGLONG> v;
         if (instances.empty()) {
             v.emplace_back(perf::GetValueFromBlock(*counter, block));
@@ -197,7 +185,7 @@ std::wstring SkypeProvider::makeSubSection(std::wstring_view name) {
 std::string SkypeProvider::makeBody() {
     std::wstring subsections;
 
-    for (auto& registry_name : g_skype_counter_names) {
+    for (const auto &registry_name : g_skype_counter_names) {
         subsections += makeSubSection(registry_name);
     }
 

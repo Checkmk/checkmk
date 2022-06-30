@@ -19,26 +19,24 @@ namespace cma::provider {
 // mrpe:
 class SkypeProvider : public Asynchronous {
 public:
-    SkypeProvider() : Asynchronous(cma::section::kSkype, ',') {
-        delay_on_fail_ = cma::cfg::G_DefaultDelayOnFail;
+    SkypeProvider() : Asynchronous(section::kSkype, ',') {
+        delay_on_fail_ = cfg::G_DefaultDelayOnFail;
     }
 
-    SkypeProvider(const std::string_view& name, char separator)
+    SkypeProvider(const std::string_view &name, char separator)
         : Asynchronous(name, separator) {}
 
-    void loadConfig() override;
-
-    void updateSectionStatus() override;
-
 protected:
+    std::string makeBody() override;
+
+private:
     static std::string makeFirstLine();
     static std::wstring makeSubSection(std::wstring_view name);
-    std::string makeBody() override;
 };
 
 // Special API used for testing
 namespace internal {
-std::vector<std::wstring>* GetSkypeCountersVector();
+std::vector<std::wstring> *GetSkypeCountersVector();
 std::wstring_view GetSkypeAspSomeCounter();
 }  // namespace internal
 

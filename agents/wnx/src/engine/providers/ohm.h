@@ -3,8 +3,6 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-// provides basic api to start and stop service
-
 #pragma once
 #ifndef ohm_h__
 #define ohm_h__
@@ -24,6 +22,7 @@ std::filesystem::path GetOhmCliPath(const std::filesystem::path &dir) noexcept;
 std::filesystem::path GetOhmCliPath() noexcept;
 
 namespace ohm {
+constexpr char kSepChar = ',';
 constexpr std::string_view kExeModule = "OpenHardwareMonitorCLI.exe";
 constexpr std::wstring_view kExeModuleWide = L"OpenHardwareMonitorCLI.exe";
 constexpr std::wstring_view kDriverNameWide = L"winring0_1_2_0";
@@ -31,21 +30,14 @@ constexpr std::wstring_view kResetCommand =
     LR"(-command "Get-WmiObject -query \"Select * From __Namespace Where Name='OpenHardwareMonitor'\" -Namespace \"root\" | Remove-WmiObject")";
 };  // namespace ohm
 
-// openhardwaremonitor:
-class OhmProvider : public Wmi {
+class OhmProvider : public WmiBase {
 public:
-    OhmProvider(std::string_view name, char separator) : Wmi(name, separator) {}
-    void loadConfig() override;
-
+    OhmProvider(std::string_view name, char separator)
+        : WmiBase(name, separator) {}
     void updateSectionStatus() override;
 
 protected:
     std::string makeBody() override;
-
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class OhmTest;
-    FRIEND_TEST(OhmTest, Base);
-#endif
 };
 
 }  // namespace cma::provider

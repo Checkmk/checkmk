@@ -3,10 +3,6 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-// provides basic api to start and stop service
-
-// Code and logic mirrors functionality of LA
-
 #pragma once
 #ifndef mrpe_h__
 #define mrpe_h__
@@ -96,8 +92,6 @@ public:
         : Asynchronous(name, separator) {}
 
     void loadConfig() override;
-
-    void updateSectionStatus() override;
 
     auto entries() const noexcept { return entries_; }
     const auto &includes() const noexcept { return includes_; }

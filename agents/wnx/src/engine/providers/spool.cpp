@@ -18,15 +18,11 @@
 #include "logger.h"
 #include "tools/_raii.h"
 
+namespace fs = std::filesystem;
+
 namespace cma::provider {
 
-void SpoolProvider::loadConfig() {}
-
-void SpoolProvider::updateSectionStatus() {}
-
 bool IsDirectoryValid(const std::filesystem::path &dir) {
-    namespace fs = std::filesystem;
-
     std::error_code ec;
     if (!fs::exists(dir, ec)) {
         XLOG::l("Spool directory '{}' is absent error [{}]", dir, ec.value());
@@ -43,9 +39,6 @@ bool IsDirectoryValid(const std::filesystem::path &dir) {
 
 // direct conversion from LWA
 bool IsSpoolFileValid(const std::filesystem::path &path) {
-    namespace fs = std::filesystem;
-
-    // Checking the file is good
     std::error_code ec;
     if (!fs::exists(path, ec)) {
         XLOG::d("File is absent. '{}' ec:{}", path, ec.value());
@@ -88,9 +81,7 @@ bool IsSpoolFileValid(const std::filesystem::path &path) {
 }
 
 std::string SpoolProvider::makeBody() {
-    namespace fs = std::filesystem;
-
-    fs::path dir = cma::cfg::GetSpoolDir();
+    fs::path dir = cfg::GetSpoolDir();
 
     if (!IsDirectoryValid(dir)) {
         XLOG::d("Spool directory absent. But spool is requested");
@@ -112,20 +103,17 @@ std::string SpoolProvider::makeBody() {
             continue;
         }
 
-        auto data = cma::tools::ReadFileInVector(path);
-        if (data) {
-            auto add_size = data->size();
-            if (add_size == 0) continue;
-
-            auto old_size = out.size();
-            try {
-                out.resize(add_size + old_size);
-                memcpy(out.data() + old_size, data->data(), add_size);
-            } catch (const std::exception &e) {
-                XLOG::l(XLOG_FLINE + " Out of *memory* {}", e.what());
-                continue;
-            }
+        auto data = tools::ReadFileInVector(path);
+        if (!data) {
+            continue;
         }
+        auto add_size = data->size();
+        if (add_size == 0) {
+            continue;
+        }
+        auto old_size = out.size();
+        out.resize(add_size + old_size);
+        memcpy(out.data() + old_size, data->data(), add_size);
     }
 
     return out;

@@ -157,7 +157,7 @@ SubSection::Type GetSubSectionType(std::string_view name) noexcept {
 
 bool IsHeaderless(std::string_view name) noexcept { return name == kMsExch; }
 
-void Wmi::setupByName() {
+void WmiBase::setupByName() {
     try {
         std::tie(name_space_, object_) = g_section_objects.at(uniq_name_);
     } catch (const std::out_of_range &e) {
@@ -246,7 +246,7 @@ static std::wstring CharToWideString(char ch) {
 // works in two modes
 // aggregated: object is absent, data are gathered from the subsections
 // standard: usual section, object must be present
-std::string Wmi::makeBody() {
+std::string WmiBase::getData() {
     if (object_.empty()) {
         // special case for aggregating subs section into one
         std::string subs_out;
@@ -289,7 +289,7 @@ std::string Wmi::makeBody() {
     return {};
 }
 
-bool Wmi::isAllowedByCurrentConfig() const {
+bool WmiBase::isAllowedByCurrentConfig() const {
     const auto name = getUniqName();
 
     if (!cfg::groups::global.allowedSection(name)) {

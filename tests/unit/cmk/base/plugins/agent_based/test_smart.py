@@ -492,7 +492,7 @@ def test_parse_smart(string_table, section) -> None:
 @pytest.mark.parametrize(
     "section, discovered",
     [
-        (
+        pytest.param(
             SECTION_SD,
             [
                 Service(
@@ -507,17 +507,20 @@ def test_parse_smart(string_table, section) -> None:
                     },
                 ),
             ],
+            id="SD",
         ),
-        (
+        pytest.param(
             SECTION_NVME,
             [
                 Service(
                     item="/dev/nvme0n1",
                     parameters={
                         "Critical_Warning": 0,
+                        "Media_and_Data_Integrity_Errors": 0,
                     },
                 ),
             ],
+            id="NVME",
         ),
     ],
 )

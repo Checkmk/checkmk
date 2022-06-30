@@ -166,6 +166,7 @@ DISCOVERED_PARAMETERS: Final = (
     "CRC_Error_Count",
     # nvme
     "Critical_Warning",
+    "Media_and_Data_Integrity_Errors",
 )
 
 

@@ -7,9 +7,9 @@
 import os
 import re
 import time
-from typing import Any, NamedTuple, Type
+from typing import Any, cast, NamedTuple, Type
 
-from livestatus import SiteConfiguration, SiteConfigurations, SiteId
+from livestatus import NetworkSocketDetails, SiteConfiguration, SiteConfigurations, SiteId
 
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
@@ -686,7 +686,7 @@ def _create_nagvis_backends(sites_config):
         "; MANAGED BY CHECK_MK WATO - Last Update: %s" % time.strftime("%Y-%m-%d %H:%M:%S"),
     ]
     for site_id, site in sites_config.items():
-        if site == omd_site():
+        if site_id == omd_site():
             continue  # skip local site, backend already added by omd
 
         socket = _encode_socket_for_nagvis(site_id, site)
@@ -699,7 +699,7 @@ def _create_nagvis_backends(sites_config):
         ]
 
         if site.get("status_host"):
-            cfg.append('statushost="%s"' % ":".join(site["status_host"]))
+            cfg.append('statushost="%s:%s"' % site["status_host"])
 
         if site["proxy"] is None and is_livestatus_encrypted(site):
             address_spec = site["socket"][1]
@@ -712,9 +712,10 @@ def _create_nagvis_backends(sites_config):
     )
 
 
-def _encode_socket_for_nagvis(site_id, site):
+def _encode_socket_for_nagvis(site_id: SiteId, site: SiteConfiguration) -> str:
     if site["proxy"] is None and is_livestatus_encrypted(site):
-        return "tcp-tls:%s:%d" % site["socket"][1]["address"]
+        assert isinstance(site["socket"], tuple) and site["socket"][0] in ["tcp", "tcp6"]
+        return "tcp-tls:%s:%d" % cast(NetworkSocketDetails, site["socket"][1])["address"]
     return cmk.gui.sites.encode_socket_for_livestatus(site_id, site)
 
 
@@ -743,9 +744,14 @@ def _update_distributed_wato_file(sites):
         _delete_distributed_wato_file()
 
 
-def is_livestatus_encrypted(site) -> bool:
+def is_livestatus_encrypted(site: SiteConfiguration) -> bool:
+    if not isinstance(site["socket"], tuple):
+        return False
     family_spec, address_spec = site["socket"]
-    return family_spec in ["tcp", "tcp6"] and address_spec["tls"][0] != "plain_text"
+    return (
+        family_spec in ["tcp", "tcp6"]
+        and cast(NetworkSocketDetails, address_spec)["tls"][0] != "plain_text"
+    )
 
 
 def site_globals_editable(site_id, site) -> bool:

@@ -24,6 +24,7 @@ from typing import (
     Dict,
     Iterator,
     List,
+    Literal,
     NamedTuple,
     NewType,
     Optional,
@@ -32,12 +33,77 @@ from typing import (
     Set,
     Tuple,
     Type,
+    TypedDict,
     Union,
 )
 
 UserId = NewType("UserId", str)
 SiteId = NewType("SiteId", str)
-SiteConfiguration = NewType("SiteConfiguration", Dict[str, Any])
+
+
+class TLSParams(TypedDict, total=False):
+    verify: bool
+    ca_file_path: Optional[str]
+
+
+TLSInfo = tuple[Literal["encrypted", "plain_text"], TLSParams]
+
+
+class NetworkSocketDetails(TypedDict):
+    address: tuple[str, int]
+    tls: TLSInfo
+
+
+class UnixSocketDetails(TypedDict):
+    path: str
+
+
+UnixSocketInfo = tuple[Literal["unix"], UnixSocketDetails]
+NetworkSocketInfo = tuple[Literal["tcp", "tcp6"], NetworkSocketDetails]
+LocalSocketInfo = tuple[Literal["local"], None]
+
+
+SiteGlobals = dict[str, Any]
+
+
+class ProxyConfig(TypedDict, total=False):
+    cache: bool
+    params: None
+
+
+class SiteConfiguration(TypedDict, total=False):
+    """SiteConfiguration = NewType("SiteConfiguration", Dict[str, Any])"""
+
+    alias: str
+    ca_file_path: Optional[str]
+    customer: str
+    disable_wato: bool
+    disabled: bool
+    globals: SiteGlobals
+    id: SiteId
+    insecure: bool
+    multisiteurl: str
+    persist: bool
+    proxy: Optional[ProxyConfig]
+    replicate_ec: bool
+    replicate_mkps: bool
+    replication: Optional[str]
+    secret: str
+    status_host: Optional[tuple[SiteId, bytes]]
+    timeout: int
+    url_prefix: str
+    user_login: bool
+    user_sync: Optional[str]
+
+    # Thanks to SingleSiteConnection we need str here. The convertion can
+    # probably be moved into the SingleSiteConnection
+    socket: Union[str, Union[UnixSocketInfo, NetworkSocketInfo, LocalSocketInfo]]
+
+    # Livestatus specific
+    cache: bool
+    tls: TLSInfo
+
+
 SiteConfigurations = NewType("SiteConfigurations", Dict[SiteId, SiteConfiguration])
 
 LivestatusColumn = Any
@@ -973,7 +1039,7 @@ class MultiSiteConnection(Helpers):
                     elif shs == 3:
                         ex = "The remote monitoring host's state it not yet determined"
                     elif shs == 4:
-                        ex = "Invalid status host: site %s has no host %s" % (
+                        ex = "Invalid status host: site %s has no host %r" % (
                             status_host[0],
                             status_host[1],
                         )
@@ -990,6 +1056,7 @@ class MultiSiteConnection(Helpers):
     ) -> SingleSiteConnection:
         """Helper function for connecting to a site"""
         url = site["socket"]
+        assert isinstance(url, str)
         persist = not temporary and site.get("persist", False)
         tls_type, tls_params = site.get("tls", ("plain_text", {}))
 
@@ -1220,6 +1287,7 @@ class MultiSiteConnection(Helpers):
     # Return connection to localhost (UNIX), if available
     def local_connection(self) -> SingleSiteConnection:
         for _sitename, site, connection in self.connections:
+            assert isinstance(site["socket"], str)
             if site["socket"].startswith("unix:") and "liveproxy" not in site["socket"]:
                 return connection
         raise MKLivestatusConfigError("No livestatus connection to local host")

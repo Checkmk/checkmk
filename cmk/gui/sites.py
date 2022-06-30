@@ -7,16 +7,19 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import Any, cast, Dict, Iterator, List, NamedTuple, NewType, Optional, Tuple, Union
+from typing import cast, Iterator, Literal, NamedTuple, NewType, Optional, TypedDict, Union
 
 from livestatus import (
     LivestatusOutputFormat,
     lqencode,
     MKLivestatusQueryError,
     MultiSiteConnection,
+    NetworkSocketDetails,
+    NetworkSocketInfo,
     SiteConfiguration,
     SiteConfigurations,
     SiteId,
+    UnixSocketInfo,
 )
 
 from cmk.utils.paths import livestatus_unix_socket
@@ -52,8 +55,21 @@ def live(
     return g.live
 
 
-SiteStatus = NewType("SiteStatus", Dict[str, Any])
-SiteStates = NewType("SiteStates", Dict[SiteId, SiteStatus])
+class SiteStatus(TypedDict, total=False):
+    """The status of a remote site
+
+    Used to be: NewType("SiteStatus", Dict[str, Any]), feel free to add other
+    attributes if you find them ;-)"""
+
+    core_pid: int
+    exception: MKLivestatusQueryError
+    livestatus_version: str
+    program_start: int
+    program_version: str
+    state: Literal["online", "disabled", "down", "unreach", "dead", "waiting", "missing", "unknown"]
+
+
+SiteStates = NewType("SiteStates", dict[SiteId, SiteStatus])
 
 
 def states(
@@ -91,13 +107,13 @@ def disconnect() -> None:
 
 
 # TODO: This should live somewhere else, it's just a random helper...
-def all_groups(what: str) -> List[Tuple[str, str]]:
+def all_groups(what: str) -> list[tuple[str, str]]:
     """Returns a list of host/service/contact groups (pairs of name/alias)
 
     Groups are collected via livestatus from all sites. In case no alias is defined
     the name is used as second element. The list is sorted by lower case alias in the first place."""
     query = "GET %sgroups\nCache: reload\nColumns: name alias\n" % what
-    groups = cast(List[Tuple[str, str]], live().query(query))
+    groups = cast(list[tuple[str, str]], live().query(query))
     # The dict() removes duplicate group names. Aliases don't need be deduplicated.
     return sorted(
         [(name, alias or name) for name, alias in dict(groups).items()], key=lambda e: e[1].lower()
@@ -233,7 +249,7 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
 
 def _get_enabled_and_disabled_sites(
     user: LoggedInUser,
-) -> Tuple[SiteConfigurations, SiteConfigurations]:
+) -> tuple[SiteConfigurations, SiteConfigurations]:
     enabled_sites: SiteConfigurations = SiteConfigurations({})
     disabled_sites: SiteConfigurations = SiteConfigurations({})
 
@@ -257,15 +273,13 @@ def _site_config_for_livestatus(site_id: SiteId, site_spec: SiteConfiguration) -
     a) Tell livestatus not to strip away the cache header
     b) Connect in plain text to the sites local proxy unix socket
     """
-    copied_site: SiteConfiguration = SiteConfiguration(site_spec.copy())
+    copied_site: SiteConfiguration = site_spec.copy()
 
-    # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
-    # pylint: disable=unsupported-assignment-operation
-    if copied_site["proxy"] is not None:
+    if site_spec["proxy"] is not None:
         copied_site["cache"] = site_spec["proxy"].get("cache", True)
     else:
-        if copied_site["socket"][0] in ["tcp", "tcp6"]:
-            copied_site["tls"] = site_spec["socket"][1]["tls"]
+        if isinstance(site_spec["socket"], tuple) and site_spec["socket"][0] in ["tcp", "tcp6"]:
+            copied_site["tls"] = cast(NetworkSocketDetails, site_spec["socket"][1])["tls"]
     copied_site["socket"] = encode_socket_for_livestatus(site_id, site_spec)
 
     return copied_site
@@ -273,19 +287,24 @@ def _site_config_for_livestatus(site_id: SiteId, site_spec: SiteConfiguration) -
 
 def encode_socket_for_livestatus(site_id: SiteId, site_spec: SiteConfiguration) -> str:
     socket_spec = site_spec["socket"]
-    family_spec, address_spec = socket_spec
 
     if site_spec["proxy"] is not None:
         return "unix:%sproxy/%s" % (livestatus_unix_socket, site_id)
 
-    if family_spec == "local":
+    if socket_spec[0] == "local":
         return "unix:%s" % livestatus_unix_socket
 
-    if family_spec == "unix":
-        return "%s:%s" % (family_spec, address_spec["path"])
+    if socket_spec[0] == "unix":
+        unix_family_spec, unix_address_spec = cast(UnixSocketInfo, socket_spec)
+        return "%s:%s" % (unix_family_spec, unix_address_spec["path"])
 
-    if family_spec in ["tcp", "tcp6"]:
-        return "%s:%s:%d" % (family_spec, address_spec["address"][0], address_spec["address"][1])
+    if socket_spec[0] in ("tcp", "tcp6"):
+        tcp_family_spec, tcp_address_spec = cast(NetworkSocketInfo, socket_spec)
+        return "%s:%s:%d" % (
+            tcp_family_spec,
+            tcp_address_spec["address"][0],
+            tcp_address_spec["address"][1],
+        )
 
     raise NotImplementedError()
 
@@ -315,7 +334,7 @@ _STATUS_NAMES = {
 }
 
 
-def site_state_titles() -> Dict[str, str]:
+def site_state_titles() -> dict[str, str]:
     return {
         "online": _("This site is online."),
         "disabled": _("The connection to this site has been disabled."),
@@ -374,7 +393,7 @@ def _livestatus_auth_user(user: LoggedInUser, force_authuser: Optional[UserId]) 
 
 
 @contextmanager
-def only_sites(sites: Union[None, List[SiteId], SiteId]) -> Iterator[None]:
+def only_sites(sites: Union[None, list[SiteId], SiteId]) -> Iterator[None]:
     """Livestatus query over sites"""
     if not sites:
         sites = None
@@ -423,10 +442,10 @@ def set_limit(limit: Optional[int]) -> Iterator[None]:
 
 class GroupedSiteState(NamedTuple):
     readable: str
-    site_ids: List[SiteId]
+    site_ids: list[SiteId]
 
 
-def get_grouped_site_states() -> Dict[str, GroupedSiteState]:
+def get_grouped_site_states() -> dict[str, GroupedSiteState]:
     grouped_states = {
         "ok": GroupedSiteState(
             readable=_("OK"),
@@ -454,7 +473,7 @@ def _map_site_state(state: str) -> str:
     return "error"
 
 
-def filter_available_site_choices(choices: List[Tuple[SiteId, str]]) -> List[Tuple[SiteId, str]]:
+def filter_available_site_choices(choices: list[tuple[SiteId, str]]) -> list[tuple[SiteId, str]]:
     # Only add enabled sites to choices
     all_site_states = states()
     sites_enabled = []

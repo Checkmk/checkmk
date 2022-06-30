@@ -12,7 +12,7 @@ from dataclasses import asdict, dataclass, field, fields, make_dataclass
 from functools import partial
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Callable, Dict, List, Tuple, Union
+from typing import Any, Callable, Dict, List
 
 from livestatus import SiteConfiguration, SiteConfigurations
 
@@ -275,91 +275,8 @@ def prepare_raw_site_config(site_config: SiteConfigurations) -> SiteConfiguratio
 
 
 def _migrate_old_site_config(site_config: SiteConfigurations) -> SiteConfigurations:
-    for site_id, site_cfg in site_config.items():
-        # Until 1.6 "replication" could be not present or
-        # set to "" instead of None
-        if site_cfg.get("replication", "") == "":
-            site_cfg["replication"] = None
-
-        # Until 1.6 "url_prefix" was an optional attribute
-        if "url_prefix" not in site_cfg:
-            site_cfg["url_prefix"] = "/%s/" % site_id
-
-        site_cfg.setdefault("proxy", None)
-
-        _migrate_pre_16_socket_config(site_cfg)
-
+    # Fresh migration code can be added here
     return site_config
-
-
-# During development of the 1.6 version the site configuration has been cleaned up in several ways:
-# 1. The "socket" attribute could be "disabled" to disable a site connection. This has already been
-#    deprecated long time ago and was not configurable in WATO. This has now been superseded by
-#    the dedicated "disabled" attribute.
-# 2. The "socket" attribute was optional. A not present socket meant "connect to local unix" socket.
-#    This is now replaced with a value like this ("local", None) to reflect the generic
-#    CascadingDropdown() data structure of "(type, attributes)".
-# 3. The "socket" attribute was stored in the livestatus.py socketurl encoded format, at least when
-#    livestatus proxy was not used. This is now stored in the CascadingDropdown() native format and
-#    converted here to the correct format.
-# 4. When the livestatus proxy was enabled for a site, the settings were stored in the "socket"
-#    attribute. The proxy settings were an additional dict which also held a "socket" key containing
-#    the final socket connection properties.
-#    This has now been split up. The top level socket settings are now used independent of the proxy.
-#    The proxy options are stored in the separate key "proxy" which is a mandatory key.
-def _migrate_pre_16_socket_config(site_cfg: Dict[str, Any]) -> None:
-    socket = site_cfg.get("socket")
-    if socket is None:
-        site_cfg["socket"] = ("local", None)
-        return
-
-    if isinstance(socket, tuple) and socket[0] == "proxy":
-        site_cfg["proxy"] = socket[1]
-
-        # "socket" of proxy could either be None or two element tuple for "tcp"
-        proxy_socket = site_cfg["proxy"].pop("socket", None)
-        if proxy_socket is None:
-            site_cfg["socket"] = ("local", None)
-
-        elif isinstance(socket, tuple):
-            site_cfg["socket"] = (
-                "tcp",
-                {
-                    "address": proxy_socket,
-                    "tls": ("plain_text", {}),
-                },
-            )
-
-        else:
-            raise NotImplementedError("Unhandled proxy socket: %r" % proxy_socket)
-
-        return
-
-    if socket == "disabled":
-        site_cfg["disabled"] = True
-        site_cfg["socket"] = ("local", None)
-        return
-
-    if isinstance(socket, str):
-        site_cfg["socket"] = _migrate_string_encoded_socket(socket)
-
-
-def _migrate_string_encoded_socket(value: str) -> Tuple[str, Union[Dict]]:
-    family_txt, address = value.split(":", 1)
-
-    if family_txt == "unix":
-        return "unix", {
-            "path": value.split(":", 1)[1],
-        }
-
-    if family_txt in ["tcp", "tcp6"]:
-        host, port = address.rsplit(":", 1)
-        return family_txt, {
-            "address": (host, int(port)),
-            "tls": ("plain_text", {}),
-        }
-
-    raise NotImplementedError()
 
 
 def default_single_site_configuration() -> SiteConfigurations:

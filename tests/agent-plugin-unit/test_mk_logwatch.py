@@ -25,6 +25,11 @@ except ImportError:
 
 _TEST_CONFIG = u"""
 
+
+GLOBAL OPTIONS
+ ignore invalid options
+ retention_period 42
+
 not a cluster line
 
 CLUSTER duck
@@ -60,7 +65,7 @@ CLUSTER empty
 
 @pytest.fixture(name="parsed_config", scope="module")
 def _get_parsed_config():
-    # type: () -> tuple[Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]]
+    # type: () -> tuple[lw.GlobalOptions, Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]]
     return lw.read_config(_TEST_CONFIG.split("\n"), files=[], debug=False)
 
 
@@ -165,10 +170,18 @@ def test_raise_no_config_lines():
     lw.read_config([], files=[], debug=False)
 
 
+def test_read_global_options(parsed_config):
+    # type: (tuple[lw.GlobalOptions, Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]]) -> None
+    global_options, _logfile_config, _cluster_config = parsed_config
+
+    assert isinstance(global_options, lw.GlobalOptions)
+    assert global_options.retention_period == 42
+
+
 def test_read_config_cluster(parsed_config):
-    # type: (tuple[Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]]) -> None
+    # type: (tuple[lw.GlobalOptions, Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]]) -> None
     """checks if the agent plugin parses the configuration appropriately."""
-    __, c_config = parsed_config
+    _global_options, _logfile_config, c_config = parsed_config
 
     assert len(c_config) == 2
     assert isinstance(c_config[0], lw.ClusterConfigBlock)
@@ -181,10 +194,10 @@ def test_read_config_cluster(parsed_config):
 
 
 def test_read_config_logfiles(parsed_config):
-    # type: (tuple[Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]]) -> None
+    # type: (tuple[lw.GlobalOptions, Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]]) -> None
     """checks if the agent plugin parses the configuration appropriately."""
 
-    l_config, __ = parsed_config
+    _global_options, l_config, _cluster_config = parsed_config
 
     assert len(l_config) == 5
     assert all(isinstance(lf, lw.PatternConfigBlock) for lf in l_config)

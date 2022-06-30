@@ -18,7 +18,19 @@ import errno
 import socket
 import time
 from pathlib import Path
-from typing import Any, Counter, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple, Union
+from typing import (
+    Any,
+    Counter,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
@@ -41,7 +53,7 @@ from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
     SyslogMessage,
 )
 
-from .agent_based_api.v1 import Metric, register, Result, Service, State
+from .agent_based_api.v1 import get_value_store, Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils import logwatch
 
@@ -61,6 +73,7 @@ def check_logwatch_ec(params: Mapping[str, Any], section: logwatch.Section) -> C
         params,
         {None: section},
         service_level=_get_effective_service_level(CheckPluginName("logwatch_ec"), None),
+        value_store=get_value_store(),
     )
 
 
@@ -73,6 +86,7 @@ def cluster_check_logwatch_ec(
         params,
         {k: v for k, v in section.items() if v is not None},
         service_level=_get_effective_service_level(CheckPluginName("logwatch_ec"), None),
+        value_store=get_value_store(),
     )
 
 
@@ -105,6 +119,7 @@ def check_logwatch_ec_single(
         params,
         {None: section},
         service_level=_get_effective_service_level(CheckPluginName("logwatch_ec_single"), item),
+        value_store=get_value_store(),
     )
 
 
@@ -119,6 +134,7 @@ def cluster_check_logwatch_ec_single(
         params,
         {k: v for k, v in section.items() if v is not None},
         service_level=_get_effective_service_level(CheckPluginName("logwatch_ec_single"), item),
+        value_store=get_value_store(),
     )
 
 
@@ -208,12 +224,16 @@ def discover_logwatch_ec_common(
         yield Service(item=log, parameters=single_log_params.copy())
 
 
-def _filter_accumulated_lines(cluster_section: ClusterSection, item: str) -> Iterable[str]:
+def _filter_accumulated_lines(
+    cluster_section: ClusterSection,
+    item: str,
+    value_store: MutableMapping[str, Any],
+) -> Iterable[str]:
     yield from (
         line
         for node_data in cluster_section.values()
         if (item_data := node_data.logfiles.get(item)) is not None
-        for line in item_data["lines"]
+        for line in logwatch.extract_unseen_lines(value_store, item_data["lines"])
         if line[0] not in (".", "I") and len(line) > 1
     )
 
@@ -224,6 +244,7 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
     parsed: ClusterSection,
     *,
     service_level: int,
+    value_store: MutableMapping[str, Any],
 ) -> CheckResult:
     yield from logwatch.check_errors(parsed)
 
@@ -295,7 +316,7 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
             logfile_reclassify_settings["reclassify_patterns"].extend(settings)
 
     for logfile in used_logfiles:
-        lines = _filter_accumulated_lines(parsed, logfile)
+        lines = _filter_accumulated_lines(parsed, logfile, value_store)
 
         logfile_reclassify_settings["reclassify_patterns"] = []
         logfile_reclassify_settings["reclassify_states"] = {}

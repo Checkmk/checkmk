@@ -21,6 +21,7 @@ from typing import (
     Iterable,
     List,
     Mapping,
+    MutableMapping,
     NamedTuple,
     Optional,
     Sequence,
@@ -39,12 +40,28 @@ from ..agent_based_api.v1 import regex, Result, State
 
 class ItemData(TypedDict):
     attr: str
-    lines: List[str]
+    lines: dict[str, list[str]]
 
 
 class Section(NamedTuple):
     errors: Sequence[str]
     logfiles: Mapping[str, ItemData]
+
+
+def extract_unseen_lines(
+    value_store: MutableMapping[str, Any],
+    batches_of_lines: Mapping[str, list[str]],
+) -> list[str]:
+    # Watch out: we cannot write an empty set to the value_store :-(
+    seen_batches = value_store.get("seen_batches", ())
+    value_store["seen_batches"] = tuple(batches_of_lines)
+
+    return [
+        line
+        for batch, lines in sorted(batches_of_lines.items())
+        if batch not in seen_batches
+        for line in lines
+    ]
 
 
 def get_ec_rule_params() -> list:

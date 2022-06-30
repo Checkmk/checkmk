@@ -147,6 +147,7 @@ def test_check_logwatch_ec_common_single_node() -> None:
                 "node1": parse_logwatch(INFO1),
             },
             service_level=10,
+            value_store={},
         )
     ) == [
         Result(state=State.OK, summary="Forwarded 0 messages"),
@@ -163,6 +164,7 @@ def test_check_logwatch_ec_common_single_node_item_missing() -> None:
                 "node1": parse_logwatch(INFO2),
             },
             service_level=10,
+            value_store={},
         )
     )
 
@@ -177,6 +179,7 @@ def test_check_logwatch_ec_common_multiple_nodes() -> None:
                 "node2": parse_logwatch(INFO1),
             },
             service_level=10,
+            value_store={},
         )
     ) == [
         Result(state=State.OK, summary="Forwarded 0 messages"),
@@ -194,6 +197,7 @@ def test_check_logwatch_ec_common_multiple_nodes_item_completely_missing() -> No
                 "node2": parse_logwatch(INFO2),
             },
             service_level=10,
+            value_store={},
         )
     )
 
@@ -208,6 +212,7 @@ def test_check_logwatch_ec_common_multiple_nodes_item_partially_missing() -> Non
                 "node2": parse_logwatch(INFO2),
             },
             service_level=10,
+            value_store={},
         )
     ) == [
         Result(state=State.OK, summary="Forwarded 0 messages"),

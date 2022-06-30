@@ -267,6 +267,19 @@ def iter_config_lines(files, debug=False):
             pass
 
 
+def consume_global_options_block(config_lines):
+    # type (list[str]) -> GlobalOptions
+    config_lines.pop(0)
+    options = GlobalOptions()
+
+    while config_lines and is_indented(config_lines[0]):
+        attr, value = config_lines.pop(0).split(None, 1)
+        if attr == "retention_period":
+            options.retention_period = int(value)
+
+    return options
+
+
 def consume_cluster_definition(config_lines):
     # type: (list[str]) -> ClusterConfigBlock
     cluster_name = config_lines.pop(0)[8:].strip()  # e.g.: CLUSTER duck
@@ -312,7 +325,7 @@ def consume_logfile_definition(config_lines):
 
 
 def read_config(config_lines, files, debug=False):
-    # type: (Iterable[str], list[str], bool) -> tuple[Sequence[PatternConfigBlock], Sequence[ClusterConfigBlock]]
+    # type: (Iterable[str], list[str], bool) -> tuple[GlobalOptions, Sequence[PatternConfigBlock], Sequence[ClusterConfigBlock]]
     """
     Read logwatch.cfg (patterns, cluster mapping, etc.).
 
@@ -329,9 +342,11 @@ def read_config(config_lines, files, debug=False):
 
     logfiles_configs = []
     cluster_configs = []
+    global_options = GlobalOptions()
 
     # parsing has to consider the following possible lines:
     # - comment lines (begin with #)
+    # - global options (block begins with "GLOBAL OPTIONS")
     # - logfiles line (begin not with #, are not empty and do not contain CLUSTER)
     # - cluster lines (begin with CLUSTER)
     # - logfiles patterns (follow logfiles lines, begin with whitespace)
@@ -343,6 +358,9 @@ def read_config(config_lines, files, debug=False):
         if is_indented(first_line):
             raise ValueError("Missing block definition for line %r" % first_line)
 
+        if first_line.startswith("GLOBAL OPTIONS"):
+            global_options = consume_global_options_block(config_lines)
+
         if first_line.startswith("CLUSTER "):
             cluster_configs.append(consume_cluster_definition(config_lines))
         else:
@@ -350,7 +368,7 @@ def read_config(config_lines, files, debug=False):
 
     LOGGER.info("Logfiles configurations: %r", logfiles_configs)
     LOGGER.info("Optional cluster configurations: %r", cluster_configs)
-    return logfiles_configs, cluster_configs
+    return global_options, logfiles_configs, cluster_configs
 
 
 class State(object):  # pylint: disable=useless-object-inheritance
@@ -843,6 +861,12 @@ class Options(object):  # pylint: disable=useless-object-inheritance
             raise
 
 
+class GlobalOptions(object):  # pylint: disable=useless-object-inheritance
+    def __init__(self):
+        super(GlobalOptions, self).__init__()
+        self.retention_period = 60
+
+
 class PatternConfigBlock(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, files, patterns):
         super(PatternConfigBlock, self).__init__()
@@ -1125,9 +1149,41 @@ def filter_output(lines, options):
     return [ensure_str(l) for l in lines]
 
 
-def write_output(lines):
+def _is_outdated_batch(batch_file, retention_period, now):
+    # type: (str, float, float) -> bool
+    return now - os.stat(batch_file).st_mtime > retention_period
+
+
+def write_batch_file(lines, batch_id, batch_dir):
+    # type: (Iterable[str], str, str) -> None
+    with open(os.path.join(batch_dir, "logwatch-batch-file-%s" % batch_id), "w") as handle:
+        handle.writelines(lines)
+
+
+def process_batches(current_batch, current_batch_id, remote, retention_period, now):
+    # type: (Iterable[str], str, str, float, float) -> None
+    batch_dir = os.path.join(MK_VARDIR, "logwatch-batches", remote)
+
+    os.makedirs(batch_dir, exist_ok=True)
+
+    pre_existing_batch_files = os.listdir(batch_dir)
+
+    write_batch_file(current_batch, current_batch_id, batch_dir)
+
     sys.stdout.write("<<<logwatch>>>\n")
-    sys.stdout.writelines(lines)
+    sys.stdout.writelines(current_batch)
+
+    for base_name in pre_existing_batch_files:
+        batch_file = os.path.join(batch_dir, base_name)
+        try:
+            if _is_outdated_batch(batch_file, retention_period, now):
+                os.unlink(batch_file)
+            else:
+                with open(batch_file) as fh:
+                    sys.stdout.writelines(fh)
+                continue
+        except EnvironmentError:
+            pass
 
 
 def main(argv=None):  # pylint: disable=too-many-branches
@@ -1136,10 +1192,12 @@ def main(argv=None):  # pylint: disable=too-many-branches
 
     args = ArgsParser(argv)
     init_logging(args.verbosity)
+    now = int(time.time())
+    batch_id = "%s-%s" % (now, "".join("%03d" % int(b) for b in os.urandom(16)))
 
     try:
         files = get_config_files(MK_CONFDIR, config_file_arg=args.config)
-        logfiles_config, cluster_config = read_config(
+        global_options, logfiles_config, cluster_config = read_config(
             iter_config_lines(files, args.debug), files, args.debug
         )
     except Exception as exc:
@@ -1179,7 +1237,10 @@ def main(argv=None):  # pylint: disable=too-many-branches
         filestate = state.get(section.name_fs)
         try:
             header, log_lines = process_logfile(section, filestate, args.debug)
-            item_data = [header] + filter_output(log_lines, section.options)
+            item_data = [
+                header,
+                "BATCH: %s\n" % batch_id,
+            ] + filter_output(log_lines, section.options)
         except Exception as exc:
             if args.debug:
                 raise
@@ -1187,7 +1248,7 @@ def main(argv=None):  # pylint: disable=too-many-branches
 
         output.extend(item_data)
 
-    write_output(output)
+    process_batches(output, batch_id, REMOTE, global_options.retention_period, now)
 
     if args.debug:
         LOGGER.debug("State file not written (debug mode)")

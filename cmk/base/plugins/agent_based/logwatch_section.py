@@ -13,6 +13,7 @@
 #                                                                                       #
 #########################################################################################
 
+import os
 from typing import Dict, Literal, Optional
 
 from .agent_based_api.v1 import register
@@ -56,6 +57,23 @@ def _extract_item_attribute(
             return header, "ok"
 
 
+def _extract_batch(
+    line: str,
+) -> str | None:
+    """Check line for next batch marker
+
+    >>> print(_extract_batch("W no new batch here"))
+    None
+    >>> _extract_batch("BATCH: 1234-this-is-unique")
+    '1234-this-is-unique'
+    """
+    return line[7:] if line.startswith("BATCH: ") else None
+
+
+def _random_string() -> str:
+    return "".join("%03d" % int(b) for b in os.urandom(16))
+
+
 def parse_logwatch(string_table: StringTable) -> Section:
     """
     >>> import pprint
@@ -70,18 +88,15 @@ def parse_logwatch(string_table: StringTable) -> Section:
     ... ])
     >>> pprint.pprint(section.errors)
     []
-    >>> pprint.pprint(section.logfiles)
-    {'empty.log': {'attr': 'ok', 'lines': []},
-     'missinglog': {'attr': 'missing', 'lines': []},
-     'my_other_log': {'attr': 'ok', 'lines': ['W watch your step!']},
-     'mylog': {'attr': 'ok', 'lines': ['C whoha! Someone mooped!']},
-     'unreadablelog': {'attr': 'cannotopen', 'lines': []}}
+    >>> pprint.pprint(list(section.logfiles))
+    ['mylog', 'missinglog', 'unreadablelog', 'empty.log', 'my_other_log']
     """
 
     errors = []
     logfiles: Dict[str, ItemData] = {}
 
     item_data: Optional[ItemData] = None
+    batch = _random_string()  # needed for legacy
 
     for raw_line in string_table:
         line = " ".join(raw_line)
@@ -93,11 +108,15 @@ def parse_logwatch(string_table: StringTable) -> Section:
 
         item, attribute = _extract_item_attribute(line)
         if item is not None:
-            item_data = logfiles.setdefault(item, {"attr": attribute, "lines": []})
+            item_data = logfiles.setdefault(item, {"attr": attribute, "lines": {}})
+            continue
+
+        if (detected_batch := _extract_batch(line)) is not None:
+            batch = detected_batch
             continue
 
         if item_data is not None:
-            item_data["lines"].append(line)
+            item_data["lines"].setdefault(batch, []).append(line)
 
     return Section(errors=errors, logfiles=logfiles)
 

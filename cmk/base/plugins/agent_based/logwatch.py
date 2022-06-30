@@ -27,7 +27,6 @@ from typing import (
     Literal,
     Mapping,
     Match,
-    MutableMapping,
     Optional,
     Sequence,
     Set,
@@ -77,12 +76,6 @@ def _compile_params(item: str) -> Dict[str, Any]:
             compiled_params["reclassify_patterns"].extend(rule)
 
     return compiled_params
-
-
-def _is_cache_new(last_run: float, node: Optional[str]) -> bool:
-    return (
-        node is None or pathlib.Path(cmk.utils.paths.tcp_cache_dir, node).stat().st_mtime > last_run
-    )
 
 
 # New rule-stule logwatch_rules in WATO friendly consistent rule notation:
@@ -163,7 +156,7 @@ def check_logwatch(
 
     loglines: list[str] = sum(
         (
-            _extract_unseen_lines(node, value_store, node_data.logfiles[item]["lines"])
+            logwatch.extract_unseen_lines(value_store, node_data.logfiles[item]["lines"])
             for node, node_data in section.items()
             if item in node_data.logfiles
         ),
@@ -183,14 +176,6 @@ def cluster_check_logwatch(
     item: str, section: Mapping[str, Optional[logwatch.Section]]
 ) -> CheckResult:
     yield from check_logwatch(item, {k: v for k, v in section.items() if v is not None})
-
-
-def _extract_unseen_lines(
-    node: str | None, value_store: MutableMapping[str, Any], item_lines: list[str]
-) -> list[str]:
-    last_run = value_store.get("last_run", 0)
-    value_store["last_run"] = time.time()
-    return item_lines if _is_cache_new(last_run, node) else []
 
 
 register.check_plugin(
@@ -310,13 +295,14 @@ def check_logwatch_groups(
 
     group_patterns = set(params["group_patterns"])
 
+    value_store = get_value_store()
     loglines = []
     # node name ignored (only used in regular logwatch check)
     for node_data in section.values():
         for logfile_name, item_data in node_data.logfiles.items():
             for inclusion, exclusion in group_patterns:
                 if _match_group_patterns(logfile_name, inclusion, exclusion):
-                    loglines.extend(item_data["lines"])
+                    loglines.extend(logwatch.extract_unseen_lines(value_store, item_data["lines"]))
                 break
 
     yield from check_logwatch_generic(

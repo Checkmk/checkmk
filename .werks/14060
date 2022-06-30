@@ -1,0 +1,17 @@
+Title: mssql_counters: Fix crash in parsing mssql_counters
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1656598102
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p6
+
+Parsing mssql_counters was failing for timestamps of different formats.
+Now, we changed the mssql.vbs agent to always provide the timestamp in
+the same format, independent of the localization.
+
+If you have a crash in mssql_counters with the message 'Time string
+does not match any known pattern', update the mssql.vbs agent.

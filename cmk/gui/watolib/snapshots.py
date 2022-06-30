@@ -59,7 +59,7 @@ def create_snapshot(comment):
     _do_create_snapshot(data)
     _do_snapshot_maintenance()
 
-    log_audit("snapshot-created", _("Created snapshot %s") % snapshot_name)
+    log_audit("snapshot-created", "Created snapshot %s" % snapshot_name)
     logger.debug("Backup snapshot creation took %.4f", time.time() - start)
 
 
@@ -176,7 +176,8 @@ def _do_snapshot_maintenance():
 
     snapshots.sort(reverse=True)
     while len(snapshots) > active_config.wato_max_snapshots:
-        # log_audit("snapshot-removed", _("Removed snapshot %s") % snapshots[-1])
+        # TODO can this be removed or will it ever come back to live?
+        # log_audit("snapshot-removed", "Removed snapshot %s" % snapshots[-1])
         os.remove(snapshot_dir + snapshots.pop())
 
 

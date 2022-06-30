@@ -969,7 +969,7 @@ class ActivateChangesManager(ActivateChanges):
         log_audit("activate-changes", log_msg)
 
         if self._comment:
-            log_audit("activate-changes", "%s: %s" % (_("Comment"), self._comment))
+            log_audit("activate-changes", "Comment: %s" % self._comment)
 
     def get_state(self) -> ActivationState:
         return {"sites": {site_id: self.get_site_state(site_id) for site_id in self._sites}}  #
@@ -1573,7 +1573,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             # The PID itself is used to detect whether the sites activation process is still running
             self._mark_running()
 
-            log_audit("activate-changes", _("Started activation of site %s") % self._site_id)
+            log_audit("activate-changes", "Started activation of site %s" % self._site_id)
 
             if cmk_version.is_expired_trial() and self._site_id != omd_site():
                 raise MKGeneralException(get_trial_expired_message())
@@ -2153,9 +2153,9 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
             % traceback.format_exc()
         )
 
-    cmk.gui.watolib.changes.log_audit(
+    log_audit(
         "replication",
-        _("Synchronized configuration from central site (local site ID is %s.)") % site_id,
+        "Synchronized configuration from central site (local site ID is %s.)" % site_id,
     )
 
 

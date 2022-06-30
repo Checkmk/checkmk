@@ -255,7 +255,7 @@ class ModeBackupUploadKey(backup.PageBackupUploadKey, WatoMode):
         super().__init__(key_store=make_site_backup_keypair_store())
 
     def _upload_key(self, key_file: str, alias: str, passphrase: str) -> None:
-        log_audit("upload-backup-key", _("Uploaded backup key '%s'") % alias)
+        log_audit("upload-backup-key", "Uploaded backup key '%s'" % alias)
         super()._upload_key(key_file, alias, passphrase)
 
 

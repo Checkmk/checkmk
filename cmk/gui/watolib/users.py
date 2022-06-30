@@ -65,7 +65,7 @@ def delete_users(users_to_delete):
         for user_id in deleted_users:
             log_audit(
                 "edit-user",
-                _("Deleted user: %s") % user_id,
+                "Deleted user: %s" % user_id,
                 object_ref=make_user_object_ref(user_id),
             )
         add_change("edit-users", _("Deleted user: %s") % ", ".join(deleted_users))
@@ -95,9 +95,7 @@ def edit_users(changed_users):
         log_audit(
             action="edit-user",
             message=(
-                _("Created new user: %s") % user_id
-                if is_new_user
-                else _("Modified user: %s") % user_id
+                "Created new user: %s" % user_id if is_new_user else "Modified user: %s" % user_id
             ),
             diff_text=make_diff_text(old_object, make_user_audit_log_object(user_attrs)),
             object_ref=make_user_object_ref(user_id),

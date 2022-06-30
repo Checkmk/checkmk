@@ -208,6 +208,9 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("fjdarye101_sum"): CheckPluginName("fjdarye_summary_status"),
     CheckPluginName("fjdarye100_sum"): CheckPluginName("fjdarye_summary_status"),
     CheckPluginName("fjdarye60_sum"): CheckPluginName("fjdarye_summary_status"),
+    CheckPluginName("fjdarye60_rluns"): CheckPluginName("fjdarye_rluns"),
+    CheckPluginName("fjdarye100_rluns"): CheckPluginName("fjdarye_rluns"),
+    CheckPluginName("fjdarye101_rluns"): CheckPluginName("fjdarye_rluns"),
     CheckPluginName("df_netapp32"): CheckPluginName("df_netapp"),
 }
 

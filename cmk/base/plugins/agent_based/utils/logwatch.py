@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -22,6 +21,7 @@ from typing import (
     Iterable,
     List,
     Mapping,
+    MutableMapping,
     NamedTuple,
     Optional,
     Sequence,
@@ -35,17 +35,12 @@ from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation
     host_name,
 )
 
-from ..agent_based_api.v1 import regex, Result
-from ..agent_based_api.v1 import State as state
+from ..agent_based_api.v1 import regex, Result, State
 
-ItemData = TypedDict(
-    "ItemData",
-    {
-        "attr": str,
-        "lines": List[str],
-    },
-    total=True,
-)
+
+class ItemData(TypedDict):
+    attr: str
+    lines: dict[str, list[str]]
 
 
 class Section(NamedTuple):
@@ -53,7 +48,23 @@ class Section(NamedTuple):
     logfiles: Mapping[str, ItemData]
 
 
-def get_ec_rule_params():
+def extract_unseen_lines(
+    value_store: MutableMapping[str, Any],
+    batches_of_lines: Mapping[str, list[str]],
+) -> list[str]:
+    # Watch out: we cannot write an empty set to the value_store :-(
+    seen_batches = value_store.get("seen_batches", ())
+    value_store["seen_batches"] = tuple(batches_of_lines)
+
+    return [
+        line
+        for batch, lines in sorted(batches_of_lines.items())
+        if batch not in seen_batches
+        for line in lines
+    ]
+
+
+def get_ec_rule_params() -> list:
     """Isolate the remaining API violation w.r.t. parameters"""
     return host_extra_conf(
         host_name(),
@@ -140,6 +151,6 @@ def check_errors(cluster_section: Mapping[Optional[str], Section]) -> Iterable[R
     for node, node_data in cluster_section.items():
         for error_msg in node_data.errors:
             yield Result(
-                state=state.UNKNOWN,
+                state=State.UNKNOWN,
                 summary=error_msg if node is None else "[%s] %s" % (node, error_msg),
             )

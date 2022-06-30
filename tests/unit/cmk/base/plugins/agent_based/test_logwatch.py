@@ -74,24 +74,21 @@ SECTION1 = logwatch.logwatch.Section(
     logfiles={
         "mylog": {
             "attr": "ok",
-            "lines": ["C whoha! Someone mooped!"],
+            "lines": {"test-batch-id": ["C whoha! Someone mooped!"]},
         },
         "missinglog": {
             "attr": "missing",
-            "lines": [],
+            "lines": {},
         },
         "unreadablelog": {
             "attr": "cannotopen",
-            "lines": [],
+            "lines": {},
         },
         "empty.log": {
             "attr": "ok",
-            "lines": [],
+            "lines": {},
         },
-        "my_other_log": {
-            "attr": "ok",
-            "lines": ["W watch your step!"],
-        },
+        "my_other_log": {"attr": "ok", "lines": {"test-batch-id": ["W watch your step!"]}},
     },
 )
 
@@ -136,23 +133,23 @@ SECTION2 = logwatch.logwatch.Section(
     logfiles={
         "log1": {
             "attr": "ok",
-            "lines": [],
+            "lines": {},
         },
         "log2": {
             "attr": "ok",
-            "lines": [],
+            "lines": {},
         },
         "log3": {
             "attr": "missing",
-            "lines": [],
+            "lines": {},
         },
         "log4": {
             "attr": "cannotopen",
-            "lines": [],
+            "lines": {},
         },
         "log5": {
             "attr": "ok",
-            "lines": [],
+            "lines": {},
         },
     },
 )

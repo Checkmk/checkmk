@@ -45,6 +45,13 @@ import shutil
 import socket
 import time
 
+try:
+    from typing import Dict, Generator, Iterable, Sequence
+except ImportError:
+    # We need typing only for testing
+    pass
+
+
 # For Python 3 sys.stdout creates \r\n as newline for Windows.
 # Checkmk can't handle this therefore we rewrite sys.stdout to a new_stdout function.
 # If you want to use the old behaviour just use old_stdout.
@@ -61,6 +68,12 @@ DUPLICATE_LINE_MESSAGE_FMT = "[the above message was repeated %d times]"
 MK_VARDIR = os.getenv("LOGWATCH_DIR") or os.getenv("MK_VARDIR") or os.getenv("MK_STATEDIR") or "."
 
 MK_CONFDIR = os.getenv("LOGWATCH_DIR") or os.getenv("MK_CONFDIR") or "."
+
+REMOTE = (
+    os.getenv("REMOTE")
+    or os.getenv("REMOTE_ADDR")
+    or ("local" if sys.stdout.isatty() else "remote-unknown")
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -146,10 +159,9 @@ class ArgsParser(object):  # pylint: disable=too-few-public-methods, useless-obj
         self.no_state = "--no_state" in argv
 
 
-def get_status_filename(cluster_config):
+def get_status_filename(cluster_config, remote):
     """
     Side effect:
-    - Depend on ENV var.
     - In case agent plugin is called with debug option set -> depends on global
       LOGGER and stdout.
 
@@ -171,12 +183,7 @@ def get_status_filename(cluster_config):
     underscores (_) for IPv4 address or is plain $REMOTE in case it does not match
     an IPv4 or IPv6 address.
     """
-    remote = os.getenv("REMOTE", os.getenv("REMOTE_ADDR"))
-    if not remote:
-        status_filename = "logwatch.state" + (".local" if sys.stdout.isatty() else "")
-        return os.path.join(MK_VARDIR, status_filename)
     remote_hostname = remote.replace(":", "_")
-
     match = IPV4_REGEX.match(remote) or IPV6_REGEX.match(remote)
     if not match:
         LOGGER.debug("REMOTE %r neither IPv4 nor IPv6 address.", remote)
@@ -244,29 +251,37 @@ def get_config_files(directory, config_file_arg=None):
 
 
 def iter_config_lines(files, debug=False):
-    no_cfg_content_yielded = True
+    # type: (list[str], bool) -> Generator[str, None, None]
+    LOGGER.debug("Config files: %r", files)
+
     for file_ in files:
         try:
             with open(file_, "rb") as fid:
                 try:
-                    decoded = (line.decode("utf-8") for line in fid)
-                    for line in decoded:
-                        if not is_comment(line) and not is_empty(line):
-                            yield line.rstrip()
-                            no_cfg_content_yielded = False
+                    for line in fid:
+                        yield line.decode("utf-8")
                 except UnicodeDecodeError:
                     msg = "Error reading file %r (please use utf-8 encoding!)\n" % file_
                     sys.stdout.write(CONFIG_ERROR_PREFIX + msg)
         except IOError:
             pass
 
-    if debug and no_cfg_content_yielded:
-        # We need at least one config file *with* content in one of the places:
-        # logwatch.d or MK_CONFDIR
-        raise IOError("Did not find any content in config files: %s" % ", ".join(files))
+
+def consume_global_options_block(config_lines):
+    # type (list[str]) -> GlobalOptions
+    config_lines.pop(0)
+    options = GlobalOptions()
+
+    while config_lines and is_indented(config_lines[0]):
+        attr, value = config_lines.pop(0).split(None, 1)
+        if attr == "retention_period":
+            options.retention_period = int(value)
+
+    return options
 
 
 def consume_cluster_definition(config_lines):
+    # type: (list[str]) -> ClusterConfigBlock
     cluster_name = config_lines.pop(0)[8:].strip()  # e.g.: CLUSTER duck
     cluster = ClusterConfigBlock(cluster_name, [])
     LOGGER.debug("new ClusterConfigBlock: %s", cluster_name)
@@ -278,6 +293,7 @@ def consume_cluster_definition(config_lines):
 
 
 def consume_logfile_definition(config_lines):
+    # type: (list[str]) -> PatternConfigBlock
     cont_list = []
     rewrite_list = []
     filenames = parse_filenames(config_lines.pop(0))
@@ -308,25 +324,29 @@ def consume_logfile_definition(config_lines):
     return logfiles
 
 
-def read_config(files, debug=False):
+def read_config(config_lines, files, debug=False):
+    # type: (Iterable[str], list[str], bool) -> tuple[GlobalOptions, Sequence[PatternConfigBlock], Sequence[ClusterConfigBlock]]
     """
     Read logwatch.cfg (patterns, cluster mapping, etc.).
-
-    Side effect: Reads filesystem files logwatch.cfg and /logwatch.d/*.cfg
 
     Returns configuration as list. List elements are namedtuples.
     Namedtuple either describes logile patterns and is PatternConfigBlock(files, patterns).
     Or tuple describes optional cluster mapping and is ClusterConfigBlock(name, ips_or_subnets)
     with ips as list of strings.
     """
-    LOGGER.debug("Config files: %r", files)
+    config_lines = [l.rstrip() for l in config_lines if not is_comment(l) and not is_empty(l)]
+    if debug and not config_lines:
+        # We need at least one config file *with* content in one of the places:
+        # logwatch.d or MK_CONFDIR
+        raise IOError("Did not find any content in config files: %s" % ", ".join(files))
 
     logfiles_configs = []
     cluster_configs = []
-    config_lines = list(iter_config_lines(files, debug=debug))
+    global_options = GlobalOptions()
 
     # parsing has to consider the following possible lines:
     # - comment lines (begin with #)
+    # - global options (block begins with "GLOBAL OPTIONS")
     # - logfiles line (begin not with #, are not empty and do not contain CLUSTER)
     # - cluster lines (begin with CLUSTER)
     # - logfiles patterns (follow logfiles lines, begin with whitespace)
@@ -338,6 +358,9 @@ def read_config(files, debug=False):
         if is_indented(first_line):
             raise ValueError("Missing block definition for line %r" % first_line)
 
+        if first_line.startswith("GLOBAL OPTIONS"):
+            global_options = consume_global_options_block(config_lines)
+
         if first_line.startswith("CLUSTER "):
             cluster_configs.append(consume_cluster_definition(config_lines))
         else:
@@ -345,7 +368,7 @@ def read_config(files, debug=False):
 
     LOGGER.info("Logfiles configurations: %r", logfiles_configs)
     LOGGER.info("Optional cluster configurations: %r", cluster_configs)
-    return logfiles_configs, cluster_configs
+    return global_options, logfiles_configs, cluster_configs
 
 
 class State(object):  # pylint: disable=useless-object-inheritance
@@ -417,7 +440,7 @@ class LogLinesIter(object):  # pylint: disable=useless-object-inheritance
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, *exc_info):
         self.close()
         return False  # Do not swallow exceptions
 
@@ -530,7 +553,7 @@ def should_log_line_with_level(level, nocontext):
     return not (nocontext and level == ".")
 
 
-def process_logfile(section, filestate, debug):
+def process_logfile(section, filestate, debug):  # pylint: disable=too-many-branches
     """
     Returns tuple of (
         logfile lines,
@@ -731,7 +754,8 @@ class Options(object):  # pylint: disable=useless-object-inheritance
     }
 
     def __init__(self):
-        self.values = {}
+        # type: () -> None
+        self.values = {}  # type: Dict
 
     @property
     def encoding(self):
@@ -835,6 +859,12 @@ class Options(object):  # pylint: disable=useless-object-inheritance
         except (ValueError, LookupError) as exc:
             sys.stdout.write("INVALID CONFIGURATION: %s\n" % exc)
             raise
+
+
+class GlobalOptions(object):  # pylint: disable=useless-object-inheritance
+    def __init__(self):
+        super(GlobalOptions, self).__init__()
+        self.retention_period = 60
 
 
 class PatternConfigBlock(object):  # pylint: disable=useless-object-inheritance
@@ -1106,7 +1136,7 @@ def _filter_consecutive_duplicates(lines, nocontext):
         current_line = next_line
 
 
-def write_output(header, lines, options):
+def filter_output(lines, options):
 
     if options.maxcontextlines:
         lines = _filter_maxcontextlines(lines, *options.maxcontextlines)
@@ -1116,41 +1146,81 @@ def write_output(header, lines, options):
     if options.skipconsecutiveduplicated:
         lines = _filter_consecutive_duplicates(lines, options.nocontext)
 
-    sys.stdout.write(header)
-    sys.stdout.writelines(map(ensure_str, lines))
+    return [ensure_str(l) for l in lines]
 
 
-def main(argv=None):
+def _is_outdated_batch(batch_file, retention_period, now):
+    # type: (str, float, float) -> bool
+    return now - os.stat(batch_file).st_mtime > retention_period
+
+
+def write_batch_file(lines, batch_id, batch_dir):
+    # type: (Iterable[str], str, str) -> None
+    with open(os.path.join(batch_dir, "logwatch-batch-file-%s" % batch_id), "w") as handle:
+        handle.writelines(lines)
+
+
+def process_batches(current_batch, current_batch_id, remote, retention_period, now):
+    # type: (Iterable[str], str, str, float, float) -> None
+    batch_dir = os.path.join(MK_VARDIR, "logwatch-batches", remote)
+
+    os.makedirs(batch_dir, exist_ok=True)
+
+    pre_existing_batch_files = os.listdir(batch_dir)
+
+    write_batch_file(current_batch, current_batch_id, batch_dir)
+
+    sys.stdout.write("<<<logwatch>>>\n")
+    sys.stdout.writelines(current_batch)
+
+    for base_name in pre_existing_batch_files:
+        batch_file = os.path.join(batch_dir, base_name)
+        try:
+            if _is_outdated_batch(batch_file, retention_period, now):
+                os.unlink(batch_file)
+            else:
+                with open(batch_file) as fh:
+                    sys.stdout.writelines(fh)
+                continue
+        except EnvironmentError:
+            pass
+
+
+def main(argv=None):  # pylint: disable=too-many-branches
     if argv is None:
         argv = sys.argv
 
     args = ArgsParser(argv)
     init_logging(args.verbosity)
-
-    sys.stdout.write("<<<logwatch>>>\n")
+    now = int(time.time())
+    batch_id = "%s-%s" % (now, "".join("%03d" % int(b) for b in os.urandom(16)))
 
     try:
         files = get_config_files(MK_CONFDIR, config_file_arg=args.config)
-        logfiles_config, cluster_config = read_config(files, args.debug)
+        global_options, logfiles_config, cluster_config = read_config(
+            iter_config_lines(files, args.debug), files, args.debug
+        )
     except Exception as exc:
         if args.debug:
             raise
-        sys.stdout.write(CONFIG_ERROR_PREFIX + "%s\n" % exc)
+        sys.stdout.write("<<<logwatch>>>\n%s%s\n" % (CONFIG_ERROR_PREFIX, exc))
         sys.exit(1)
 
-    status_filename = get_status_filename(cluster_config)
+    status_filename = get_status_filename(cluster_config, REMOTE)
     # Copy the last known state from the logwatch.state when there is no status_filename yet.
     if not os.path.exists(status_filename) and os.path.exists("%s/logwatch.state" % MK_VARDIR):
         shutil.copy("%s/logwatch.state" % MK_VARDIR, status_filename)
+
+    output = []
 
     found_sections, non_matching_patterns = parse_sections(logfiles_config)
 
     for pattern in non_matching_patterns:
         # Python 2.5/2.6 compatible solution
         if sys.version_info[0] == 3:
-            sys.stdout.write("[[[%s:missing]]]\n" % pattern)
+            output.append("[[[%s:missing]]]\n" % pattern)
         else:
-            sys.stdout.write(("[[[%s:missing]]]\n" % pattern).encode("utf-8"))
+            output.append(("[[[%s:missing]]]\n" % pattern).encode("utf-8"))
 
     state = State(status_filename)
     try:
@@ -1166,12 +1236,19 @@ def main(argv=None):
     for section in found_sections:
         filestate = state.get(section.name_fs)
         try:
-            header, output = process_logfile(section, filestate, args.debug)
-            write_output(header, output, section.options)
+            header, log_lines = process_logfile(section, filestate, args.debug)
+            item_data = [
+                header,
+                "BATCH: %s\n" % batch_id,
+            ] + filter_output(log_lines, section.options)
         except Exception as exc:
             if args.debug:
                 raise
             LOGGER.debug("Exception when processing %r: %s", section.name_fs, exc)
+
+        output.extend(item_data)
+
+    process_batches(output, batch_id, REMOTE, global_options.retention_period, now)
 
     if args.debug:
         LOGGER.debug("State file not written (debug mode)")

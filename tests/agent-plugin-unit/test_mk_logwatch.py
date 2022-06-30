@@ -16,6 +16,61 @@ import sys
 import pytest
 from utils import import_module
 
+try:
+    from typing import Any, Sequence
+except ImportError:
+    pass  # only needed for type comments
+
+
+_TEST_CONFIG = u"""
+
+GLOBAL OPTIONS
+ ignore invalid options
+ retention_period 42
+
+not a cluster line
+
+CLUSTER duck
+ 192.168.1.1
+ 192.168.1.2
+
+CLUSTER empty
+
+/var/log/messages
+ C Fail event detected on md device
+ I mdadm.*: Rebuild.*event detected
+ W mdadm\\[
+ W ata.*hard resetting link
+ W ata.*soft reset failed (.*FIS failed)
+ W device-mapper: thin:.*reached low water mark
+ C device-mapper: thin:.*no free space
+ C Error: (.*)
+
+/var/log/auth.log
+ W sshd.*Corrupted MAC on input
+
+"c:\\a path\\with spaces" "d:\\another path\\with spaces"
+ I registered panic notifier
+ C panic
+ C Oops
+ W generic protection rip
+ W .*Unrecovered read error - auto reallocate failed
+
+/var/log/äumlaut.log
+ W sshd.*Corrupted MAC on input
+"""
+
+
+@pytest.fixture(name="lw", scope="module")
+def _mk_logwatch():
+    return import_module("mk_logwatch.py")
+
+
+@pytest.fixture(name="parsed_config", scope="module")
+def _get_parsed_config(lw):  # type: ignore[name-defined]
+    # type: (Any) -> tuple[lw.GlobalOptions, Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]]
+    return lw.read_config(_TEST_CONFIG.split("\n"), files=[], debug=False)
+
 
 def text_type():
     if sys.version_info[0] == 2:
@@ -45,17 +100,12 @@ def ensure_binary(s, encoding='utf-8', errors='strict'):
     raise TypeError("not expecting type '%s'" % type(s))
 
 
-@pytest.fixture(scope="module")
-def mk_logwatch():
-    return import_module("mk_logwatch.py")
-
-
-def test_options_defaults(mk_logwatch):
-    opt = mk_logwatch.Options()
+def test_options_defaults(lw) -> None:
+    opt = lw.Options()
     for attribute in ('encoding', 'maxfilesize', 'maxlines', 'maxtime', 'maxlinesize', 'regex',
                       'overflow', 'nocontext', 'maxcontextlines', 'maxoutputsize',
                       'skipconsecutiveduplicated'):
-        assert getattr(opt, attribute) == mk_logwatch.Options.DEFAULTS[attribute]
+        assert getattr(opt, attribute) == lw.Options.DEFAULTS[attribute]
 
 
 @pytest.mark.parametrize("option_string, key, expected_value", [
@@ -76,8 +126,8 @@ def test_options_defaults(mk_logwatch):
     ("skipconsecutiveduplicated=False", 'skipconsecutiveduplicated', False),
     ("skipconsecutiveduplicated=True", 'skipconsecutiveduplicated', True),
 ])
-def test_options_setter(mk_logwatch, option_string, key, expected_value):
-    opt = mk_logwatch.Options()
+def test_options_setter(lw, option_string, key, expected_value) -> None:  # type:ignore[no-untyped-def]
+    opt = lw.Options()
     opt.set_opt(option_string)
     actual_value = getattr(opt, key)
     assert isinstance(actual_value, type(expected_value))
@@ -88,102 +138,77 @@ def test_options_setter(mk_logwatch, option_string, key, expected_value):
     ("regex=foobar", 'foobar', re.UNICODE),
     ("iregex=foobar", 'foobar', re.IGNORECASE | re.UNICODE),
 ])
-def test_options_setter_regex(mk_logwatch, option_string, expected_pattern, expected_flags):
-    opt = mk_logwatch.Options()
+def test_options_setter_regex(lw, option_string, expected_pattern, expected_flags) -> None:  # type:ignore[no-untyped-def]
+    opt = lw.Options()
     opt.set_opt(option_string)
     assert opt.regex.pattern == expected_pattern
     assert opt.regex.flags == expected_flags
 
 
-def test_get_config_files(mk_logwatch, tmpdir):
+def test_get_config_files(lw, tmpdir) -> None:  # type:ignore[no-untyped-def]
     fake_config_dir = os.path.join(str(tmpdir), "test")
     os.mkdir(fake_config_dir)
 
     logwatch_d_dir = os.path.join(fake_config_dir, "logwatch.d")
     os.mkdir(logwatch_d_dir)
 
-    open(os.path.join(logwatch_d_dir, "custom.cfg"), mode="w")# pylint:disable=consider-using-with
+    with open(os.path.join(logwatch_d_dir, "custom.cfg"), mode="w"):
 
-    expected = [
+        expected = [
         str(os.path.join(fake_config_dir, "logwatch.cfg")),
         str(os.path.join(fake_config_dir, "logwatch.d/custom.cfg"))
-    ]
+        ]
 
-    assert mk_logwatch.get_config_files(str(fake_config_dir)) == expected
+    assert lw.get_config_files(str(fake_config_dir)) == expected
 
 
-def test_iter_config_lines(mk_logwatch, tmpdir):
-    """Fakes a logwatch config file and checks if the agent plugin reads it appropriately"""
-    # setup
-    fake_config_path = os.path.join(str(tmpdir), "test")
-    os.mkdir(fake_config_path)
-
-    fake_config_file = os.path.join(fake_config_path, "logwatch.cfg")
-    files = [fake_config_file]
+def test_raise_no_config_lines(lw):
 
     # No config file at all available, raise in debug mode!
     with pytest.raises(IOError):
-        list(mk_logwatch.iter_config_lines(files, debug=True))
+        lw.read_config([], files=[], debug=True)
 
     # But it's ok without debug
-    list(mk_logwatch.iter_config_lines(files))
-
-    with open(fake_config_file, "wb") as f:
-        f.write(u"# this is a comment\nthis is a line   ".encode("utf-8"))
-
-    read = list(mk_logwatch.iter_config_lines(files))
-
-    assert read == ['this is a line']
+    lw.read_config([], files=[], debug=False)
 
 
-@pytest.mark.parametrize("config_lines, cluster_name, cluster_data", [
-    (
-        [
-            'not a cluster line',
-            '',
-            'CLUSTER duck',
-            ' 192.168.1.1',
-            ' 192.168.1.2  ',
-        ],
-        "duck",
-        ['192.168.1.1', '192.168.1.2'],
-    ),
-    (
-        [
-            'CLUSTER empty',
-            '',
-        ],
-        "empty",
-        [],
-    ),
-])
-def test_read_config_cluster(mk_logwatch, config_lines, cluster_name, cluster_data, monkeypatch):
+def test_read_global_options(lw, parsed_config):  # type: ignore[name-defined]
+    # type: (Any, tuple[lw.GlobalOptions, Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]]) -> None
+    global_options, _logfile_config, _cluster_config = parsed_config
+
+    assert isinstance(global_options, lw.GlobalOptions)
+    assert global_options.retention_period == 42
+
+
+def test_read_config_cluster(lw, parsed_config):  # type: ignore[name-defined]
+    # type: (Any, tuple[lw.GlobalOptions, Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]]) -> None
     """checks if the agent plugin parses the configuration appropriately."""
-    monkeypatch.setattr(mk_logwatch, 'iter_config_lines', lambda _files, **kw: iter(config_lines))
+    _global_options, _logfile_config, c_config = parsed_config
 
-    __, c_config = mk_logwatch.read_config(None)
-    cluster = c_config[0]
+    assert len(c_config) == 2
+    assert isinstance(c_config[0], lw.ClusterConfigBlock)
 
-    assert isinstance(cluster, mk_logwatch.ClusterConfigBlock)
-    assert cluster.name == cluster_name
-    assert cluster.ips_or_subnets == cluster_data
+    assert c_config[0].name == "duck"
+    assert c_config[0].ips_or_subnets == ['192.168.1.1', '192.168.1.2']
+
+    assert c_config[1].name == "empty"
+    assert not c_config[1].ips_or_subnets
 
 
-@pytest.mark.parametrize("config_lines, logfiles_files, logfiles_patterns", [
-    (
-        [
-            u'/var/log/messages',
-            u' C Fail event detected on md device',
-            u' I mdadm.*: Rebuild.*event detected',
-            u' W mdadm\\[',
-            u' W ata.*hard resetting link',
-            u' W ata.*soft reset failed (.*FIS failed)',
-            u' W device-mapper: thin:.*reached low water mark',
-            u' C device-mapper: thin:.*no free space',
-            u' C Error: (.*)',
-        ],
-        [u'/var/log/messages'],
-        [
+def test_read_config_logfiles(lw, parsed_config):  # type: ignore[name-defined]
+    # type: (Any, tuple[lw.GlobalOptions, Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]]) -> None
+    """checks if the agent plugin parses the configuration appropriately."""
+
+    _global_options, l_config, _cluster_config = parsed_config
+
+    assert len(l_config) == 5
+    assert all(isinstance(lf, lw.PatternConfigBlock) for lf in l_config)
+
+    assert l_config[0].files == [u'not', u'a', u'cluster', u'line']
+    assert not l_config[0].patterns
+
+    assert l_config[1].files == [u'/var/log/messages']
+    assert l_config[1].patterns == [
             (u'C', u'Fail event detected on md device', [], []),
             (u'I', u'mdadm.*: Rebuild.*event detected', [], []),
             (u'W', u'mdadm\\[', [], []),
@@ -192,92 +217,48 @@ def test_read_config_cluster(mk_logwatch, config_lines, cluster_name, cluster_da
             (u'W', u'device-mapper: thin:.*reached low water mark', [], []),
             (u'C', u'device-mapper: thin:.*no free space', [], []),
             (u'C', u'Error: (.*)', [], []),
-        ],
-    ),
-    (
-        [
-            u'/var/log/auth.log',
-            u' W sshd.*Corrupted MAC on input',
-        ],
-        [u'/var/log/auth.log'],
-        [(u'W', u'sshd.*Corrupted MAC on input', [], [])],
-    ),
-    (
-        [
-            u'"c:\\a path\\with spaces" "d:\\another path\\with spaces"',
-            u' I registered panic notifier',
-            u' C panic',
-            u' C Oops',
-            u' W generic protection rip',
-            u' W .*Unrecovered read error - auto reallocate failed',
-        ],
-        [u'c:\\a path\\with spaces', u'd:\\another path\\with spaces'],
-        [
-            (u'I', u'registered panic notifier', [], []),
-            (u'C', u'panic', [], []),
-            (u'C', u'Oops', [], []),
-            (u'W', u'generic protection rip', [], []),
-            (u'W', u'.*Unrecovered read error - auto reallocate failed', [], []),
-        ],
-    ),
-    (
-        [
-            u'/var/log/äumlaut.log',
-            u' W sshd.*Corrupted MAC on input',
-        ],
-        [u'/var/log/äumlaut.log'],
-        [(u'W', u'sshd.*Corrupted MAC on input', [], [])],
-    ),
-])
-def test_read_config_logfiles(mk_logwatch, config_lines, logfiles_files, logfiles_patterns,
-                              monkeypatch):
-    """checks if the agent plugin parses the configuration appropriately."""
-    monkeypatch.setattr(mk_logwatch, 'iter_config_lines', lambda _files, **kw: iter(config_lines))
+        ]
 
-    l_config, __ = mk_logwatch.read_config(None)
-    logfiles = l_config[0]
+    assert l_config[2].files == [u'/var/log/auth.log']
+    assert l_config[2].patterns == [(u'W', u'sshd.*Corrupted MAC on input', [], [])]
 
-    assert isinstance(logfiles, mk_logwatch.PatternConfigBlock)
-    assert logfiles.files == logfiles_files
-    assert len(logfiles.patterns) == len(logfiles_patterns)
-    for actual, expected in zip(logfiles.patterns, logfiles_patterns):
-        assert isinstance(actual, type(expected))
-        assert actual == expected
+    assert l_config[3].files == [u'c:\\a path\\with spaces', u'd:\\another path\\with spaces']
+    assert l_config[3].patterns == [(u'I', u'registered panic notifier', [], []),
+        (u'C', u'panic', [], []),
+        (u'C', u'Oops', [], []),
+        (u'W', u'generic protection rip', [], []),
+        (u'W', u'.*Unrecovered read error - auto reallocate failed', [], []),
+    ]
+
+    assert l_config[4].files == [u'/var/log/äumlaut.log']
+    assert l_config[4].patterns == [(u'W', u'sshd.*Corrupted MAC on input', [], [])]
 
 
 @pytest.mark.parametrize(
-    "env_var, istty, statusfile",
+    "env_var, expected_status_filename",
     [
-        ("192.168.2.1", False, "/path/to/config/logwatch.state.192.168.2.1"),  # tty doesnt matter
-        ("::ffff:192.168.2.1", False,
-         "/path/to/config/logwatch.state.__ffff_192.168.2.1"),  # tty doesnt matter
-        ("192.168.1.4", False, "/path/to/config/logwatch.state.my_cluster"),
-        ("1262:0:0:0:0:B03:1:AF18", False,
-         "/path/to/config/logwatch.state.1262_0_0_0_0_B03_1_AF18"),
-        ("1762:0:0:0:0:B03:1:AF18", False, "/path/to/config/logwatch.state.another_cluster"),
-        ("", True, "/path/to/config/logwatch.state.local"),
-        ("", False, "/path/to/config/logwatch.state"),
-        ("::ffff:192.168.1.2", False,
-         "/path/to/config/logwatch.state.my_cluster"),  # tty doesnt matter
+        ("192.168.2.1", "/path/to/config/logwatch.state.192.168.2.1"),
+        ("::ffff:192.168.2.1", "/path/to/config/logwatch.state.__ffff_192.168.2.1"),
+        ("192.168.1.4", "/path/to/config/logwatch.state.my_cluster"),
+        ("1262:0:0:0:0:B03:1:AF18", "/path/to/config/logwatch.state.1262_0_0_0_0_B03_1_AF18"),
+        ("1762:0:0:0:0:B03:1:AF18", "/path/to/config/logwatch.state.another_cluster"),
+        ("local", "/path/to/config/logwatch.state.local"),
+        ("::ffff:192.168.1.2", "/path/to/config/logwatch.state.my_cluster"),
     ])
-def test_get_status_filename(mk_logwatch, env_var, istty, statusfile, monkeypatch, mocker):
-    """
-    May not be executed with pytest option -s set. pytest stdout redirection would colide
-    with stdout mock.
-    """
-    monkeypatch.setenv("REMOTE", env_var)
-    monkeypatch.setattr(mk_logwatch, "MK_VARDIR", '/path/to/config')
-    stdout_mock = mocker.patch("mk_logwatch.sys.stdout")
-    stdout_mock.isatty.return_value = istty
+def test_get_status_filename(lw, env_var, expected_status_filename, monkeypatch, mocker) -> None:  # type:ignore[no-untyped-def]
+    monkeypatch.setattr(lw, "MK_VARDIR", '/path/to/config')
     fake_config = [
-        mk_logwatch.ClusterConfigBlock(
-            "my_cluster", ['192.168.1.1', '192.168.1.2', '192.168.1.3', '192.168.1.4']),
-        mk_logwatch.ClusterConfigBlock("another_cluster",
-                                       ['192.168.1.5', '192.168.1.6', '1762:0:0:0:0:B03:1:AF18'])
+        lw.ClusterConfigBlock(
+            "my_cluster",
+            ['192.168.1.1', '192.168.1.2', '192.168.1.3', '192.168.1.4'],
+        ),
+        lw.ClusterConfigBlock(
+            "another_cluster",
+            ['192.168.1.5', '192.168.1.6', '1762:0:0:0:0:B03:1:AF18'],
+        ),
     ]
 
-    status_filename = mk_logwatch.get_status_filename(fake_config)
-    assert status_filename == statusfile
+    assert lw.get_status_filename(fake_config, env_var) == expected_status_filename
 
 
 @pytest.mark.parametrize("state_data, state_dict", [
@@ -334,19 +315,19 @@ def test_get_status_filename(mk_logwatch, env_var, istty, statusfile, monkeypatc
         },
     }),
 ])
-def test_state_load(mk_logwatch, tmpdir, state_data, state_dict):
+def test_state_load(lw, tmpdir, state_data, state_dict) -> None:  # type:ignore[no-untyped-def]
     # setup for reading
     file_path = os.path.join(str(tmpdir), "logwatch.state.testcase")
 
     # In case the file is not created yet, read should not raise
-    state = mk_logwatch.State(file_path).read()
+    state = lw.State(file_path).read()
     assert state._data == {}
 
     with open(file_path, "wb") as f:
         f.write(state_data.encode("utf-8"))
 
     # loading and __getitem__
-    state = mk_logwatch.State(file_path).read()
+    state = lw.State(file_path).read()
     assert state._data == state_dict
     for expected_data in state_dict.values():
         key = expected_data['file']
@@ -372,10 +353,10 @@ def test_state_load(mk_logwatch, tmpdir, state_data, state_dict):
         }
     },
 ])
-def test_state_write(mk_logwatch, tmpdir, state_dict):
+def test_state_write(lw, tmpdir, state_dict) -> None:  # type:ignore[no-untyped-def]
     # setup for writing
     file_path = os.path.join(str(tmpdir), "logwatch.state.testcase")
-    state = mk_logwatch.State(file_path)
+    state = lw.State(file_path)
     assert not state._data
 
     # writing
@@ -387,7 +368,7 @@ def test_state_write(mk_logwatch, tmpdir, state_dict):
         filestate['inode'] = data['inode']
     state.write()
 
-    read_state = mk_logwatch.State(file_path).read()
+    read_state = lw.State(file_path).read()
     assert read_state._data == state_dict
 
 
@@ -409,10 +390,10 @@ STAR_FILES = [
         (b"/symlink_to_dir/yet_another_file.log", u"/symlink_to_dir/yet_another_file.log")
     ]),
 ])
-def test_find_matching_logfiles(mk_logwatch, fake_filesystem, pattern_suffix, file_suffixes):
+def test_find_matching_logfiles(lw, fake_filesystem, pattern_suffix, file_suffixes) -> None:  # type:ignore[no-untyped-def]
     fake_fs_path_u = ensure_text(fake_filesystem)
     fake_fs_path_b = bytes(fake_filesystem, "utf-8")
-    files = mk_logwatch.find_matching_logfiles(fake_fs_path_u + pattern_suffix)
+    files = lw.find_matching_logfiles(fake_fs_path_u + pattern_suffix)
     fake_fs_file_suffixes = [
         (fake_fs_path_b + path[0], fake_fs_path_u + path[1]) for path in file_suffixes
     ]
@@ -426,12 +407,12 @@ def test_find_matching_logfiles(mk_logwatch, fake_filesystem, pattern_suffix, fi
         assert actual[1] == expected[1]
 
 
-def test_ip_in_subnetwork(mk_logwatch):
-    assert mk_logwatch.ip_in_subnetwork("192.168.1.1", "192.168.1.0/24") is True
-    assert mk_logwatch.ip_in_subnetwork("192.160.1.1", "192.168.1.0/24") is False
-    assert mk_logwatch.ip_in_subnetwork("1762:0:0:0:0:B03:1:AF18",
+def test_ip_in_subnetwork(lw) -> None:
+    assert lw.ip_in_subnetwork("192.168.1.1", "192.168.1.0/24") is True
+    assert lw.ip_in_subnetwork("192.160.1.1", "192.168.1.0/24") is False
+    assert lw.ip_in_subnetwork("1762:0:0:0:0:B03:1:AF18",
                                         "1762:0000:0000:0000:0000:0000:0000:0000/64") is True
-    assert mk_logwatch.ip_in_subnetwork("1760:0:0:0:0:B03:1:AF18",
+    assert lw.ip_in_subnetwork("1760:0:0:0:0:B03:1:AF18",
                                         "1762:0000:0000:0000:0000:0000:0000:0000/64") is False
 
 
@@ -440,18 +421,19 @@ def test_ip_in_subnetwork(mk_logwatch):
     (b'\xFF\xFE', 'utf_16', 2),
     (b'no encoding in this file!', locale.getpreferredencoding(), 0),
 ])
-def test_log_lines_iter_encoding(mk_logwatch, monkeypatch, buff, encoding, position):
+def test_log_lines_iter_encoding(lw, monkeypatch, buff, encoding, position) -> None:  # type:ignore[no-untyped-def]
     monkeypatch.setattr(os, 'open', lambda *_args: None)
     monkeypatch.setattr(os, 'close', lambda *_args: None)
     monkeypatch.setattr(os, 'read', lambda *_args: buff)
     monkeypatch.setattr(os, 'lseek', lambda *_args: len(buff))
-    with mk_logwatch.LogLinesIter('void', None) as log_iter:
+    with lw.LogLinesIter('void', None) as log_iter:
         assert log_iter._enc == encoding
         assert log_iter.get_position() == position
 
 
-def test_log_lines_iter(mk_logwatch):
-    with mk_logwatch.LogLinesIter(mk_logwatch.__file__, None) as log_iter:
+def test_log_lines_iter(lw) -> None:
+    txt_file = lw.__file__.rstrip('c')
+    with lw.LogLinesIter(txt_file, None) as log_iter:
         log_iter.set_position(122)
         assert log_iter.get_position() == 122
 
@@ -466,7 +448,7 @@ def test_log_lines_iter(mk_logwatch):
 
         log_iter.skip_remaining()
         assert log_iter.next_line() is None
-        assert log_iter.get_position() == os.stat(mk_logwatch.__file__).st_size
+        assert log_iter.get_position() == os.stat(txt_file).st_size
 
 
 @pytest.mark.parametrize(
@@ -503,15 +485,15 @@ def test_log_lines_iter(mk_logwatch):
             u"abc3\n",
         ]),
     ])
-def test_non_ascii_line_processing(mk_logwatch, tmpdir, monkeypatch, use_specific_encoding, lines,
-                                   expected_result):
+def test_non_ascii_line_processing(lw, tmpdir, monkeypatch, use_specific_encoding, lines,
+        expected_result):
     # Write test logfile first
     log_path = os.path.join(str(tmpdir), "testlog")
     with open(log_path, "wb") as f:
         f.write(b"\n".join(lines) + b"\n")
 
     # Now test processing
-    with mk_logwatch.LogLinesIter(log_path, None) as log_iter:
+    with lw.LogLinesIter(log_path, None) as log_iter:
         if use_specific_encoding:
             log_iter._enc = use_specific_encoding
 
@@ -593,15 +575,15 @@ class MockStdout(object):  # pylint: disable=useless-object-inheritance
         ),
         ('locked door', [], {}, {}, [u"[[[locked door:cannotopen]]]\n"]),
     ])
-def test_process_logfile(mk_logwatch, monkeypatch, logfile, patterns, opt_raw, state,
+def test_process_logfile(lw, monkeypatch, logfile, patterns, opt_raw, state,
                          expected_output):
 
-    section = mk_logwatch.LogfileSection((logfile, logfile))
+    section = lw.LogfileSection((logfile, logfile))
     section.options.values.update(opt_raw)
     section._compiled_patterns = patterns
 
     monkeypatch.setattr(sys, 'stdout', MockStdout())
-    header, warning_and_errors = mk_logwatch.process_logfile(section, state, False)
+    header, warning_and_errors = lw.process_logfile(section, state, False)
     output = [header] + warning_and_errors
     assert output == expected_output
     if len(output) > 1:
@@ -614,9 +596,9 @@ def test_process_logfile(mk_logwatch, monkeypatch, logfile, patterns, opt_raw, s
                           (["0", "1", "2", "C 3", "4", "5", "6", "7", "8", "9", "W 10"
                            ], 2, 3, ["1", "2", "C 3", "4", "5", "6", "8", "9", "W 10"]),
                           (["C 0", "1", "2"], 12, 17, ["C 0", "1", "2"])])
-def test_filter_maxcontextlines(mk_logwatch, input_lines, before, after, expected_output):
+def test_filter_maxcontextlines(lw, input_lines, before, after, expected_output) -> None:  # type:ignore[no-untyped-def]
 
-    assert expected_output == list(mk_logwatch._filter_maxcontextlines(input_lines, before, after))
+    assert expected_output == list(lw._filter_maxcontextlines(input_lines, before, after))
 
 
 @pytest.mark.parametrize("input_lines, nocontext, expected_output",
@@ -635,9 +617,9 @@ def test_filter_maxcontextlines(mk_logwatch, input_lines, before, after, expecte
                            ((str(i) for i in range(3)),
                            False,
                            ["0", "1", "2"])])
-def test_filter_consecutive_duplicates(mk_logwatch, input_lines, nocontext, expected_output):
+def test_filter_consecutive_duplicates(lw, input_lines, nocontext, expected_output) -> None:  # type:ignore[no-untyped-def]
     assert expected_output == list(
-        mk_logwatch._filter_consecutive_duplicates(input_lines, nocontext)
+        lw._filter_consecutive_duplicates(input_lines, nocontext)
     )
 
 

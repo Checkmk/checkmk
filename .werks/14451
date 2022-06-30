@@ -1,0 +1,44 @@
+Title: mk_logwatch: lost log messages
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1657619397
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p9
+
+This werk fixes the occasional loss of messages reported by the agent plugin <i>mk_logwatch</i>.
+
+Sometimes messages could be "stolen" by (for instance) a manual execution of <tt>cmk -d MyHost</tt>.
+
+<b>Previously:</b>
+
+Every time the logwatch plugin was executed, it gathered all relevant log messages that have accumulated since its last execution.
+Those messages where then reported as agent output during this execution of the plugin, and never again.
+
+The problem:
+Log messages are only dealt with by the checking engine of Checkmk.
+If the plugin is executed in a different context (such as the HW/SW inventory or service discovery) the reported log messages are lost.
+To mitigate this problem, the default caching parameters of a site are carefully calibrated so that this should rarely only occur.
+However a manual execution of <tt>cmk -d MyHost</tt> for instance can always result in data loss.
+
+<b>From now on:</b>
+
+Every time the plugin is executed, as previously the plugin gathers all relevant messages since its last execution.
+It now puts these messages in a bundle and stores it on disk.
+Then all bundles that have been created within a configurable period, the <i>retention period</i>, are output and sent to the monitoring site.
+The monitoring site will keep track of the bundles, and only process the ones it has not seen before.
+
+You can configure the <i>retention period</i> using the ruleset <i>Text logfiles (Linux, Solaris, Windows)</i>.
+
+The <i>retention period</i> should be - at least - as long as the check interval of the host, to decrease the risk of data loss drastically.
+A value that is much smaller than the hosts check intervall, will not automatically lead to data loss, tough.
+It will just not help preventing it.
+
+Note that putting the N-fold of the hosts check intervall will result in every bundle of messages being fetched N times (during regular operation).
+As a result the amount of transmitted data increases, obviously.
+Also those bundles are stored on disk on the monitored host, taking up as much space as the transmitted data.
+Those are the two ressources that are being traded for a reduced risk of data loss.
+

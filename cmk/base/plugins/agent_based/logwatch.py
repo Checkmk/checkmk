@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -45,8 +44,7 @@ from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation
     service_extra_conf,
 )
 
-from .agent_based_api.v1 import get_value_store, regex, register, render, Result, Service
-from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import get_value_store, regex, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils import eval_regex, logwatch
 
@@ -78,12 +76,6 @@ def _compile_params(item: str) -> Dict[str, Any]:
             compiled_params["reclassify_patterns"].extend(rule)
 
     return compiled_params
-
-
-def _is_cache_new(last_run: float, node: Optional[str]) -> bool:
-    return (
-        node is None or pathlib.Path(cmk.utils.paths.tcp_cache_dir, node).stat().st_mtime > last_run
-    )
 
 
 # New rule-stule logwatch_rules in WATO friendly consistent rule notation:
@@ -161,16 +153,15 @@ def check_logwatch(
     yield from logwatch.check_errors(section)
 
     value_store = get_value_store()
-    last_run = value_store.get("last_run", 0)
-    value_store["last_run"] = time.time()
 
-    loglines = []
-    for node, node_data in section.items():
-        item_data: logwatch.ItemData = node_data.logfiles.get(
-            item, {"attr": "missing", "lines": []}
-        )
-        if _is_cache_new(last_run, node):
-            loglines.extend(item_data["lines"])
+    loglines: list[str] = sum(
+        (
+            logwatch.extract_unseen_lines(value_store, node_data.logfiles[item]["lines"])
+            for node, node_data in section.items()
+            if item in node_data.logfiles
+        ),
+        [],
+    )
 
     yield from check_logwatch_generic(
         item=item,
@@ -304,13 +295,14 @@ def check_logwatch_groups(
 
     group_patterns = set(params["group_patterns"])
 
+    value_store = get_value_store()
     loglines = []
     # node name ignored (only used in regular logwatch check)
     for node_data in section.values():
         for logfile_name, item_data in node_data.logfiles.items():
             for inclusion, exclusion in group_patterns:
                 if _match_group_patterns(logfile_name, inclusion, exclusion):
-                    loglines.extend(item_data["lines"])
+                    loglines.extend(logwatch.extract_unseen_lines(value_store, item_data["lines"]))
                 break
 
     yield from check_logwatch_generic(
@@ -359,10 +351,10 @@ class LogwatchBlock:
     CHAR_TO_STATE = {"O": 0, "W": 1, "u": 1, "C": 2}
     STATE_TO_STR = {0: "OK", 1: "WARN"}
 
-    def __init__(self, header, patterns):
+    def __init__(self, header, patterns) -> None:
         self._timestamp = header.strip("<>").rsplit(None, 1)[0]
         self.worst = -1
-        self.lines = []
+        self.lines: list = []
         self.saw_lines = False
         self.last_worst_line = ""
         self.counts: Counter[int] = Counter()  # matches of a certain pattern
@@ -401,7 +393,7 @@ class LogwatchBlock:
 
 
 class LogwatchBlockCollector:
-    def __init__(self):
+    def __init__(self) -> None:
         self.worst = 0
         self.last_worst_line = ""
         self.saw_lines = False
@@ -450,7 +442,7 @@ def _logmsg_file_path(item: str) -> pathlib.Path:
     return logmsg_dir / item.replace("/", "\\")
 
 
-def check_logwatch_generic(
+def check_logwatch_generic(  # pylint: disable=too-many-branches
     *,
     item: str,
     patterns,
@@ -463,7 +455,7 @@ def check_logwatch_generic(
     # Logfile (=item) section not found and no local file found. This usually
     # means, that the corresponding logfile also vanished on the target host.
     if not found and not logmsg_file_path.exists():
-        yield Result(state=state.UNKNOWN, summary="log not present anymore")
+        yield Result(state=State.UNKNOWN, summary="log not present anymore")
         return
 
     block_collector = LogwatchBlockCollector()
@@ -526,7 +518,7 @@ def check_logwatch_generic(
     #
 
     if block_collector.worst <= 0:
-        yield Result(state=state.OK, summary="No error messages")
+        yield Result(state=State.OK, summary="No error messages")
         return
 
     info = block_collector.get_count_info()
@@ -538,7 +530,7 @@ def check_logwatch_generic(
         summary, details = info.split("\n", 1)
 
     yield Result(
-        state=state(block_collector.worst),
+        state=State(block_collector.worst),
         summary=summary,
         details=details,
     )
@@ -598,7 +590,7 @@ def _extract_blocks(
 
 def _dropped_msg_result(max_size: int) -> Result:
     return Result(
-        state=state.CRIT,
+        state=State.CRIT,
         summary=(
             "Unacknowledged messages have exceeded max size, new messages are dropped "
             "(limit %s)" % render.filesize(max_size)

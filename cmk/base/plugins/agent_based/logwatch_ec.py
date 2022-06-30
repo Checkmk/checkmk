@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -19,7 +18,19 @@ import errno
 import socket
 import time
 from pathlib import Path
-from typing import Any, Counter, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple, Union
+from typing import (
+    Any,
+    Counter,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
@@ -42,8 +53,7 @@ from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
     SyslogMessage,
 )
 
-from .agent_based_api.v1 import Metric, register, Result, Service
-from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import get_value_store, Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils import logwatch
 
@@ -63,6 +73,7 @@ def check_logwatch_ec(params: Mapping[str, Any], section: logwatch.Section) -> C
         params,
         {None: section},
         service_level=_get_effective_service_level(CheckPluginName("logwatch_ec"), None),
+        value_store=get_value_store(),
     )
 
 
@@ -75,6 +86,7 @@ def cluster_check_logwatch_ec(
         params,
         {k: v for k, v in section.items() if v is not None},
         service_level=_get_effective_service_level(CheckPluginName("logwatch_ec"), None),
+        value_store=get_value_store(),
     )
 
 
@@ -107,6 +119,7 @@ def check_logwatch_ec_single(
         params,
         {None: section},
         service_level=_get_effective_service_level(CheckPluginName("logwatch_ec_single"), item),
+        value_store=get_value_store(),
     )
 
 
@@ -121,6 +134,7 @@ def cluster_check_logwatch_ec_single(
         params,
         {k: v for k, v in section.items() if v is not None},
         service_level=_get_effective_service_level(CheckPluginName("logwatch_ec_single"), item),
+        value_store=get_value_store(),
     )
 
 
@@ -210,29 +224,27 @@ def discover_logwatch_ec_common(
         yield Service(item=log, parameters=single_log_params.copy())
 
 
-def _filter_accumulated_lines(cluster_section: ClusterSection, item: str) -> Iterable[str]:
+def _filter_accumulated_lines(
+    cluster_section: ClusterSection,
+    item: str,
+    value_store: MutableMapping[str, Any],
+) -> Iterable[str]:
     yield from (
         line
-        # node info ignored (only used in regular logwatch check)
         for node_data in cluster_section.values()
-        for line in node_data.logfiles.get(
-            item,
-            logwatch.ItemData(
-                attr="",
-                lines=[],
-            ),
-        )["lines"]
-        # skip context lines, ignore lines and empty lines
-        if line[0] not in [".", "I"] and len(line) > 1
+        if (item_data := node_data.logfiles.get(item)) is not None
+        for line in logwatch.extract_unseen_lines(value_store, item_data["lines"])
+        if line[0] not in (".", "I") and len(line) > 1
     )
 
 
-def check_logwatch_ec_common(
+def check_logwatch_ec_common(  # pylint: disable=too-many-branches
     item: Optional[str],
     params: Mapping[str, Any],
     parsed: ClusterSection,
     *,
     service_level: int,
+    value_store: MutableMapping[str, Any],
 ) -> CheckResult:
     yield from logwatch.check_errors(parsed)
 
@@ -256,7 +268,7 @@ def check_logwatch_ec_common(
     if params.get("monitor_logfilelist"):
         if "expected_logfiles" not in params:
             yield Result(
-                state=state.WARN,
+                state=State.WARN,
                 summary=(
                     "You enabled monitoring the list of forwarded logfiles. "
                     "You need to redo service discovery."
@@ -267,14 +279,14 @@ def check_logwatch_ec_common(
             missing = [f for f in expected if f not in used_logfiles]
             if missing:
                 yield Result(
-                    state=state.WARN,
+                    state=State.WARN,
                     summary="Missing logfiles: %s" % (", ".join(missing)),
                 )
 
             exceeding = [f for f in used_logfiles if f not in expected]
             if exceeding:
                 yield Result(
-                    state=state.WARN,
+                    state=State.WARN,
                     summary="Newly appeared logfiles: %s" % (", ".join(exceeding)),
                 )
 
@@ -304,7 +316,7 @@ def check_logwatch_ec_common(
             logfile_reclassify_settings["reclassify_patterns"].extend(settings)
 
     for logfile in used_logfiles:
-        lines = _filter_accumulated_lines(parsed, logfile)
+        lines = _filter_accumulated_lines(parsed, logfile, value_store)
 
         logfile_reclassify_settings["reclassify_patterns"] = []
         logfile_reclassify_settings["reclassify_states"] = {}
@@ -355,7 +367,7 @@ def check_logwatch_ec_common(
         result = logwatch_forward_messages(params.get("method"), item, syslog_messages)
 
         yield Result(
-            state=state.OK,
+            state=State.OK,
             summary="Forwarded %d messages%s" % (result.num_forwarded, logfile_info),
         )
         yield Metric("messages", result.num_forwarded)
@@ -364,13 +376,13 @@ def check_logwatch_ec_common(
 
         if result.num_spooled:
             yield Result(
-                state=state.WARN,
+                state=State.WARN,
                 summary="Spooled %d messages%s" % (result.num_spooled, exc_txt),
             )
 
         if result.num_dropped:
             yield Result(
-                state=state.CRIT,
+                state=State.CRIT,
                 summary="Dropped %d messages%s" % (result.num_dropped, exc_txt),
             )
 
@@ -378,21 +390,21 @@ def check_logwatch_ec_common(
         if cmk.utils.debug.enabled():
             raise
         yield Result(
-            state=state.CRIT,
+            state=State.CRIT,
             summary="Failed to forward messages (%s). Lost %d messages."
             % (exc, len(syslog_messages)),
         )
 
     if rclfd_total:
         yield Result(
-            state=state.OK,
+            state=State.OK,
             summary="Reclassified %d messages through logwatch patterns (%d to IGNORE)"
             % (rclfd_total, rclfd_to_ignore),
         )
 
 
 class LogwatchFordwardResult:
-    def __init__(self, num_forwarded=0, num_spooled=0, num_dropped=0, exception=None):
+    def __init__(self, num_forwarded=0, num_spooled=0, num_dropped=0, exception=None) -> None:
         self.num_forwarded = num_forwarded
         self.num_spooled = num_spooled
         self.num_dropped = num_dropped
@@ -503,7 +515,7 @@ def logwatch_forward_tcp(
     if logwatch_shall_spool_messages(method):
         logwatch_spool_messages(message_chunks, result, spool_path)
     else:
-        result.num_dropped = sum([len(c[2]) for c in message_chunks])
+        result.num_dropped = sum(len(c[2]) for c in message_chunks)
 
     return result
 

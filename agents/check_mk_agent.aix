@@ -832,18 +832,18 @@ _mrpe_get_interval() {
     echo "${1}" | grep -Eo '^\([^)]*\)' | grep -Eo 'interval=[^:)]*' | cut -d= -f2
 }
 
-#
-# END COMMON AGENT CODE
-#
-
 run_remote_plugins() {
     configfile="${1}"
-
+    prefix="${2}"
     [ -f "${configfile}" ] || return
 
     _non_comment_lines "${configfile}" | while read -r descr rest; do
         interval="$(_mrpe_get_interval "${rest}")"
         cmdline="${rest#(*) }"
+
+        if [ -n "${prefix}" ]; then
+            cmdline="${prefix}'${cmdline}'"
+        fi
 
         if [ -z "${interval}" ]; then
             ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
@@ -868,6 +868,10 @@ run_mrpe() {
 
     unset descr PLUGIN OUTPUT STATUS
 }
+
+#
+# END COMMON AGENT CODE
+#
 
 run_purely_synchronous_sections() {
     _log_section_time section_checkmk

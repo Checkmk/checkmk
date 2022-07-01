@@ -766,18 +766,18 @@ _mrpe_get_interval() {
     echo "${1}" | grep -Eo '^\([^)]*\)' | grep -Eo 'interval=[^:)]*' | cut -d= -f2
 }
 
-#
-# END COMMON AGENT CODE
-#
-
-run_mrpe_plugins() {
+run_remote_plugins() {
     configfile="${1}"
-
+    prefix="${2}"
     [ -f "${configfile}" ] || return
 
     _non_comment_lines "${configfile}" | while read -r descr rest; do
         interval="$(_mrpe_get_interval "${rest}")"
         cmdline="${rest#(*) }"
+
+        if [ -n "${prefix}" ]; then
+            cmdline="${prefix}'${cmdline}'"
+        fi
 
         if [ -z "${interval}" ]; then
             ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
@@ -786,7 +786,6 @@ run_mrpe_plugins() {
         fi
 
     done
-
 }
 
 run_mrpe() {
@@ -803,6 +802,10 @@ run_mrpe() {
 
     unset descr PLUGIN OUTPUT STATUS
 }
+
+#
+# END COMMON AGENT CODE
+#
 
 run_partially_asynchronous_sections() {
     # kept to keep agents similar. Currently no section in this agent calls run_cached.
@@ -842,7 +845,7 @@ main_mixed_parts() {
 
     run_plugins
 
-    run_mrpe_plugins "${MK_CONFDIR}/mrpe.cfg"
+    run_remote_plugins "${MK_CONFDIR}/mrpe.cfg"
 }
 
 main_async_parts() {

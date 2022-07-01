@@ -8,5 +8,7 @@ Knowledge: undoc
 Level: 1
 Version: 2.2.0i1
 
-The features of the Unix agents with respect to the MRPE functionality are unified.
-The Checkmk agents for AIX and FreeBSD now support asynchronous executions of remote plugins (MRPE).
+The features of the Unix agents with respect to the MRPE functionality are unified:
+
+LI: The Checkmk agents for AIX and FreeBSD now support asynchronous executions of remote plugins (MRPE).
+LI: The Checkmk agent for OpenWRT now fully supports MRPE plugins

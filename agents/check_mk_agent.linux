@@ -1735,10 +1735,6 @@ _mrpe_get_interval() {
     echo "${1}" | grep -Eo '^\([^)]*\)' | grep -Eo 'interval=[^:)]*' | cut -d= -f2
 }
 
-#
-# END COMMON AGENT CODE
-#
-
 run_remote_plugins() {
     configfile="${1}"
     prefix="${2}"
@@ -1773,8 +1769,12 @@ run_mrpe() {
     printf "(%s) %s %s %s" "${PLUGIN##*/}" "${descr}" "${STATUS}" "${OUTPUT}" | tr \\n \\1
     printf "\n"
 
-    unset -v descr PLUGIN OUTPUT STATUS
+    unset descr PLUGIN OUTPUT STATUS
 }
+
+#
+# END COMMON AGENT CODE
+#
 
 run_runas_executor() {
     [ -f "${MK_CONFDIR}/runas.cfg" ] || return

@@ -848,30 +848,16 @@ _non_comment_lines() {
 # END COMMON AGENT CODE
 #
 
+_mrpe_get_interval() {
+    echo "${1}" | grep -Eo '^\([^)]*\)' | grep -Eo 'interval=[^:)]*' | cut -d= -f2
+}
+
 run_remote_plugins() {
     [ -f "${MK_CONFDIR}/mrpe.cfg" ] || return
 
-    # SC2162: read without -r will mangle backslashes.
-    # The following suppression was added when we enabled the corresponding shellcheck.
-    # It may well be that "read -r" would be more appropriate.
-    # shellcheck disable=SC2162
-    _non_comment_lines "${MK_CONFDIR}/mrpe.cfg" | while read descr cmdline; do
-        interval=
-        if [[ ${cmdline} =~ \(([^\)]*)\)[[:space:]](.*) ]]; then
-            parameters=${BASH_REMATCH[1]}
-            cmdline=${BASH_REMATCH[2]}
-
-            # split multiple parameter assignments
-            for par in $(echo "${parameters}" | tr ":" "\n"); do
-                # split each assignment
-                key=$(echo "${par}" | cut -d= -f1)
-                value=$(echo "${par}" | cut -d= -f2)
-
-                if [ "${key}" = "interval" ]; then
-                    interval=${value}
-                fi
-            done
-        fi
+    _non_comment_lines "${MK_CONFDIR}/mrpe.cfg" | while read -r descr rest; do
+        interval="$(_mrpe_get_interval "${rest}")"
+        cmdline="${rest#(*) }"
 
         if [ -z "${interval}" ]; then
             ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"

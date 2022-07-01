@@ -23,6 +23,7 @@ from typing import (
     Any,
     Callable,
     Dict,
+    Generator,
     List,
     Literal,
     Mapping,
@@ -339,8 +340,11 @@ class Endpoint:
             normally trigger a regeneration of the configuration. This can be turned off by
             setting `update_config_generation` to False.
 
-        **options:
-            Various keys which will be directly applied to the OpenAPI operation object.
+        deprecated_urls:
+            A map from deprecated URL to Werk ID. The given URLs will be rendered exactly like the
+            non-deprecated Endpoint, yet marked as *deprecated*. Additionally, a warning is written
+            into its documentation string, explaining the deprecation and a link to the Werk.
+            The URLs need to start with a slash /
 
     """
 
@@ -369,6 +373,7 @@ class Endpoint:
         permissions_description: Optional[Mapping[str, str]] = None,
         valid_from: Optional[Version] = None,
         valid_until: Optional[Version] = None,
+        deprecated_urls: Optional[Mapping[str, int]] = None,
         update_config_generation: bool = True,
     ):
         self.path = path
@@ -393,6 +398,11 @@ class Endpoint:
         self.permissions_description = self._dict(permissions_description)
         self.valid_from = valid_from
         self.valid_until = valid_until
+        if deprecated_urls is not None:
+            for url in deprecated_urls:
+                if not url.startswith("/"):
+                    raise ValueError(f"Deprecated URL {url!r} doesn't start with a slash /.")
+        self.deprecated_urls = deprecated_urls
 
         self.operation_id: str
         self.func: WrappedFunc
@@ -891,11 +901,20 @@ class Endpoint:
             headers=headers,
         )
 
-    def to_operation_dict(self) -> OperationSpecType:
+    def operation_dicts(self) -> Generator[Tuple[str, OperationSpecType], None, None]:
         """Generate the openapi spec part of this endpoint.
 
         The result needs to be added to the `apispec` instance manually.
         """
+        yield self.path, self.to_operation_dict()
+        if self.deprecated_urls is not None:
+            for url, werk_id in self.deprecated_urls.items():
+                yield url, self.to_operation_dict(werk_id)
+
+    def to_operation_dict(  # pylint: disable=too-many-branches
+        self,
+        werk_id: Optional[int] = None,
+    ) -> OperationSpecType:
         assert self.func is not None, "This object must be used in a decorator environment."
         assert self.operation_id is not None, "This object must be used in a decorator environment."
 
@@ -1009,13 +1028,20 @@ class Endpoint:
         docstring_desc = _docstring_description(module_obj.__doc__)
         if docstring_desc:
             tag_obj["description"] = docstring_desc
+
         _add_tag(tag_obj, tag_group=self.tag_group)
 
         operation_spec: OperationSpecType = {
-            "operationId": self.operation_id,
             "tags": [docstring_name],
             "description": "",
         }
+        if werk_id:
+            operation_spec["deprecated"] = True
+            # ReDoc uses operationIds to build its URLs, so it needs a unique operationId,
+            # otherwise links won't work properly.
+            operation_spec["operationId"] = f"{self.operation_id}-{werk_id}"
+        else:
+            operation_spec["operationId"] = self.operation_id
 
         header_params: List[RawParameter] = []
         query_params: Sequence[RawParameter] = (
@@ -1076,9 +1102,9 @@ class Endpoint:
         else:
             raise RuntimeError(f"Please put a docstring onto {self.operation_id}")
 
-        docstring_desc = _docstring_description(self.func.__doc__)
-        if docstring_desc:
-            operation_spec["description"] = docstring_desc
+        if description := _build_description(_docstring_description(self.func.__doc__), werk_id):
+            # The validator will complain on empty descriptions being set, even though it's valid.
+            operation_spec["description"] = description
 
         if self.permissions_required is not None:
             # Check that all the names are known to the system.
@@ -1103,6 +1129,49 @@ class Endpoint:
         apispec.utils.deepupdate(operation_spec, self.options)
 
         return {self.method: operation_spec}  # type: ignore[misc]
+
+
+def _build_description(description_text: Optional[str], werk_id: Optional[int] = None) -> str:
+    r"""Build a OperationSpecType description.
+
+    Examples:
+
+        >>> _build_description(None)
+        ''
+
+        >>> _build_description("Foo")
+        'Foo'
+
+        >>> _build_description(None, 12345)
+        '`WARNING`: This URL is deprecated, see [Werk 12345](https://checkmk.com/werk/12345) for more details.\n\n'
+
+        >>> _build_description('Foo', 12345)
+        '`WARNING`: This URL is deprecated, see [Werk 12345](https://checkmk.com/werk/12345) for more details.\n\nFoo'
+
+    Args:
+        description_text:
+            The text of the description. This may be None.
+
+        werk_id:
+            A Werk ID for a deprecation warning. This may be None.
+
+    Returns:
+        Either a complete description or None
+
+    """
+    if werk_id:
+        werk_link = f"https://checkmk.com/werk/{werk_id}"
+        description = (
+            f"`WARNING`: This URL is deprecated, see [Werk {werk_id}]({werk_link}) for more "
+            "details.\n\n"
+        )
+    else:
+        description = ""
+
+    if description_text is not None:
+        description += description_text
+
+    return description
 
 
 def _verify_parameters(

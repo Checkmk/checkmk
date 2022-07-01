@@ -762,11 +762,6 @@ run_plugins() {
 # END COMMON AGENT CODE
 #
 
-run_partially_asynchronous_sections() {
-    # kept to keep agents similar. Currently no section in this agent calls run_cached.
-    :
-}
-
 run_mrpe_plugins() {
 
     # currently caching is not supported:
@@ -787,6 +782,11 @@ run_mrpe_plugins() {
                 echo
             done
     fi
+}
+
+run_partially_asynchronous_sections() {
+    # kept to keep agents similar. Currently no section in this agent calls run_cached.
+    :
 }
 
 main_setup() {

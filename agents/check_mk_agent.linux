@@ -1519,71 +1519,6 @@ run_real_time_checks_for_remote() {
     done
 }
 
-_non_comment_lines() {
-    grep -Ev '^[[:space:]]*($|#)' "${1}"
-}
-
-_mrpe_get_interval() {
-    echo "${1}" | grep -Eo '^\([^)]*\)' | grep -Eo 'interval=[^:)]*' | cut -d= -f2
-}
-
-run_remote_plugins() {
-    configfile="${1}"
-    prefix="${2}"
-    [ -f "${configfile}" ] || return
-
-    _non_comment_lines "${configfile}" | while read -r descr rest; do
-        interval="$(_mrpe_get_interval "${rest}")"
-        cmdline="${rest#(*) }"
-
-        if [ -n "${prefix}" ]; then
-            cmdline="${prefix}'${cmdline}'"
-        fi
-
-        if [ -z "${interval}" ]; then
-            ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
-        else
-            run_cached "mrpe_${descr}" "${interval}" "run_mrpe '${descr}' '${cmdline}'"
-        fi
-
-    done
-}
-
-run_runas_executor() {
-    [ -f "${MK_CONFDIR}/runas.cfg" ] || return
-
-    _non_comment_lines "${MK_CONFDIR}/runas.cfg" | while read -r type user configfile; do
-        prefix=""
-        if [ "${user}" != "-" ]; then
-            prefix="su ${user} -c "
-        fi
-
-        # mrpe includes
-        if [ "${type}" = "mrpe" ]; then
-            run_remote_plugins "${configfile}" "${prefix}"
-
-        # local and plugin includes
-        elif [ "${type}" = "local" ] || [ "${type}" = "plugin" ]; then
-            if ${MK_RUN_SYNC_PARTS}; then
-                if [ "${type}" = "local" ]; then
-                    echo "<<<local:sep(0)>>>"
-                fi
-
-                find "${configfile}/" -executable -type f |
-                    while read -r filename; do
-                        if [ -n "${prefix}" ]; then
-                            cmdline="${prefix}\"${filename}\""
-                        else
-                            cmdline=${filename}
-                        fi
-
-                        _log_section_time "${cmdline}"
-                    done
-            fi
-        fi
-    done
-}
-
 _this_shell() {
     ps -o args= -p $$ | sed -e 's/^-//' -e 's/\ .*//'
 }
@@ -1796,6 +1731,36 @@ run_plugins() {
 # END COMMON AGENT CODE
 #
 
+_non_comment_lines() {
+    grep -Ev '^[[:space:]]*($|#)' "${1}"
+}
+
+_mrpe_get_interval() {
+    echo "${1}" | grep -Eo '^\([^)]*\)' | grep -Eo 'interval=[^:)]*' | cut -d= -f2
+}
+
+run_remote_plugins() {
+    configfile="${1}"
+    prefix="${2}"
+    [ -f "${configfile}" ] || return
+
+    _non_comment_lines "${configfile}" | while read -r descr rest; do
+        interval="$(_mrpe_get_interval "${rest}")"
+        cmdline="${rest#(*) }"
+
+        if [ -n "${prefix}" ]; then
+            cmdline="${prefix}'${cmdline}'"
+        fi
+
+        if [ -z "${interval}" ]; then
+            ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
+        else
+            run_cached "mrpe_${descr}" "${interval}" "run_mrpe '${descr}' '${cmdline}'"
+        fi
+
+    done
+}
+
 run_mrpe() {
     descr="${1}"
     shift
@@ -1809,6 +1774,41 @@ run_mrpe() {
     printf "\n"
 
     unset -v descr PLUGIN OUTPUT STATUS
+}
+
+run_runas_executor() {
+    [ -f "${MK_CONFDIR}/runas.cfg" ] || return
+
+    _non_comment_lines "${MK_CONFDIR}/runas.cfg" | while read -r type user configfile; do
+        prefix=""
+        if [ "${user}" != "-" ]; then
+            prefix="su ${user} -c "
+        fi
+
+        # mrpe includes
+        if [ "${type}" = "mrpe" ]; then
+            run_remote_plugins "${configfile}" "${prefix}"
+
+        # local and plugin includes
+        elif [ "${type}" = "local" ] || [ "${type}" = "plugin" ]; then
+            if ${MK_RUN_SYNC_PARTS}; then
+                if [ "${type}" = "local" ]; then
+                    echo "<<<local:sep(0)>>>"
+                fi
+
+                find "${configfile}/" -executable -type f |
+                    while read -r filename; do
+                        if [ -n "${prefix}" ]; then
+                            cmdline="${prefix}\"${filename}\""
+                        else
+                            cmdline=${filename}
+                        fi
+
+                        _log_section_time "${cmdline}"
+                    done
+            fi
+        fi
+    done
 }
 
 run_purely_synchronous_sections() {

@@ -965,19 +965,6 @@ section_pvecm() {
     fi
 }
 
-run_mrpe() {
-    local descr=${1}
-    shift
-
-    PLUGIN="${1%% *}"
-    OUTPUT="$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time $*")"
-    STATUS="$?"
-
-    printf '<<<mrpe>>>\n'
-    printf "(%s) %s %s %s" "${PLUGIN##*/}" "${descr}" "${STATUS}" "${OUTPUT}" | tr \\n \\1
-    printf "\n"
-}
-
 # Implements Real-Time Check feature of the Checkmk agent which can send
 # some section data in 1 second resolution. Useful for fast notifications and
 # detailed graphing (if you configure your RRDs to this resolution).
@@ -1252,6 +1239,19 @@ run_plugins() {
 #
 # END COMMON AGENT CODE
 #
+
+run_mrpe() {
+    local descr=${1}
+    shift
+
+    PLUGIN="${1%% *}"
+    OUTPUT="$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time $*")"
+    STATUS="$?"
+
+    printf '<<<mrpe>>>\n'
+    printf "(%s) %s %s %s" "${PLUGIN##*/}" "${descr}" "${STATUS}" "${OUTPUT}" | tr \\n \\1
+    printf "\n"
+}
 
 run_purely_synchronous_sections() {
     section_checkmk

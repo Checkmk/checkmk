@@ -1,0 +1,16 @@
+Title: Fix results in quicksearch if configured limit is reached
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1656680597
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p7
+
+The quicksearch just returned a warning like "More than 80 results" if the
+configured "Number of elements to show in Quicksearch" was reached.
+
+This werk restores the behaviour from 1.6 versions. The configured number of
+search results to show is now shown below this warning.

@@ -9,7 +9,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Age, Dictionary, Integer, MonitoringState, RegExp, Tuple
+from cmk.gui.valuespec import Age, Checkbox, Dictionary, Integer, MonitoringState, RegExp, Tuple
 
 
 def _parameter_valuespec_mobileiron_compliance():
@@ -19,15 +19,22 @@ def _parameter_valuespec_mobileiron_compliance():
             (
                 "policy_violation_levels",
                 Tuple(
-                    title=_("Policy violation levels"),
+                    title=_("Configure policy violation levels"),
                     elements=[
                         Integer(title=_("Warning at"), default_value=2),
                         Integer(title=_("Critical at"), default_value=3),
                     ],
                 ),
-            )
+            ),
+            (
+                "ignore_compliance",
+                Checkbox(
+                    default_value=False,
+                    title=_("Configure compliance state checking"),
+                    label=_("Ignore compliance state"),
+                ),
+            ),
         ],
-        optional_keys=[],
     )
 
 

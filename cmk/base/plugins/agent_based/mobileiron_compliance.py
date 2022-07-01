@@ -20,10 +20,16 @@ def check_mobileiron_compliance(params: Mapping[str, Any], section: Section) -> 
         render_func=lambda v: str(int(v)),
     )
 
-    yield Result(
-        state=State.OK if section.compliance_state else State.CRIT,
-        summary=f"Compliance state: {section.compliance_state}",
-    )
+    if not params["ignore_compliance"]:
+        yield Result(
+            state=State.OK if section.compliance_state else State.CRIT,
+            summary=f"Compliance state: {section.compliance_state}",
+        )
+    else:
+        yield Result(
+            state=State.OK,
+            summary=f"Compliance state: {section.compliance_state} and ignored",
+        )
 
 
 def discover_single(section: Section) -> DiscoveryResult:
@@ -37,5 +43,5 @@ register.check_plugin(
     discovery_function=discover_single,
     check_function=check_mobileiron_compliance,
     check_ruleset_name="mobileiron_compliance",
-    check_default_parameters={"policy_violation_levels": (2, 3)},
+    check_default_parameters={"policy_violation_levels": (2, 3), "ignore_compliance": False},
 )

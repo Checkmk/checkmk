@@ -77,16 +77,22 @@ def _parse_filestats_load_lines(info):
 #   '----------------------------------------------------------------------'
 
 
-def check_filestats_count(count, params):
+def check_filestats_count(count, params, show_files, reported_lines):
     """common check result - used by main and count_only check"""
     levels = params.get("maxcount", (None, None)) + params.get("mincount", (None, None))
-    return check_levels(
+    result = check_levels(
         count,
         "file_count",
         levels,
         infoname="Files in total",
         human_readable_func=lambda i: "%d" % i,
     )
+    state, info, perf = result
+    if not show_files or state == 0:
+        return result
+
+    details = f"{info}\n" + "\n".join([f"[{l['path']}]" for l in reported_lines if l.get("path")])
+    return (state, details, perf)
 
 
 def check_filestats_extremes(files, params, show_files=False):
@@ -174,8 +180,12 @@ def check_filestats(_item, params, data):
     _output_variety, reported_lines = data
     sumry = [s for s in reported_lines if s.get("type") == "summary"]
     count = sumry[0].get("count", None) if sumry else None
+
+    # only WARN/CRIT files are shown
+    show_files = bool(params.get("show_all_files", False))
+
     if count is not None:
-        yield check_filestats_count(count, params)
+        yield check_filestats_count(count, params, show_files, reported_lines)
 
     files = [i for i in reported_lines if i.get("type") == "file"]
 

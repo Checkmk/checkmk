@@ -1,0 +1,25 @@
+Title: Main dashboard: Remove unwanted data from the graph "Percentage of total service problems"
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1656689269
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p7
+
+In particular setups, the graph "Percentage of total service problems" comprised unwanted data. This
+happened in setups with Checkmk hosts (hosts running Checkmk sites) whose sites were not connected
+via distributed monitoring to the site(s) on which these hosts were monitored. The sketch below
+visualizes such a setup.
+
+C+:
+Site A monitors host B, but Site A and Site B are not connected via distributed monitoring.
+
+Checkmk host A --- Site A
+                        |
+                    monitoring
+                        |
+                   Checkmk host B --- Site B
+C-:

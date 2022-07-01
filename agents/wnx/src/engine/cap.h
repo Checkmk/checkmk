@@ -17,8 +17,6 @@
 
 #include "cfg.h"
 #include "common/cfg_info.h"
-#include "common/wtools.h"
-#include "logger.h"
 
 namespace cma::cfg::cap {
 
@@ -78,9 +76,7 @@ bool ExtractAll(const std::string &cap_name, const std::filesystem::path &to);
 std::wstring ProcessPluginPath(const std::string &name);
 
 // Low Level API
-// Returns -1 is a bad value, not nice
-// #TODO think over API
-uint32_t ReadFileNameLength(std::ifstream &cap_file);
+std::optional<uint32_t> ReadFileNameLength(std::ifstream &cap_file);
 std::string ReadFileName(std::ifstream &cap_file, uint32_t length);
 std::optional<std::vector<char>> ReadFileData(std::ifstream &cap_file);
 FileInfo ExtractFile(std::ifstream &cap_file);
@@ -96,7 +92,7 @@ bool StoreFile(const std::wstring &name, const std::vector<char> &data);
 [[nodiscard]] bool IsStoreFileAgressive() noexcept;
 [[nodiscard]] bool IsAllowedToKill(std::wstring_view proc_name);
 
-// idiotic API form thje past. Do not for what hell, but let it stay
+///
 bool CheckAllFilesWritable(const std::string &directory);
 
 // tgt,src

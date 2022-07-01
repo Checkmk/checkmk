@@ -43,7 +43,7 @@ def test_htmllib_integration() -> None:
         (LazyString(str, "'"), "&#x27;"),
     ],
 )
-def test_escape_attribute(inp, out) -> None:
+def test_escape_attribute(inp, out) -> None:  # type:ignore[no-untyped-def]
     assert escaping.escape_attribute(inp) == out
 
 
@@ -110,7 +110,7 @@ def test_escape_attribute(inp, out) -> None:
         ),
     ],
 )
-def test_escape_text(inp, out) -> None:
+def test_escape_text(inp, out) -> None:  # type:ignore[no-untyped-def]
     if out is None:
         out = inp
     assert escaping.escape_text(inp) == out
@@ -125,5 +125,5 @@ def test_escape_text(inp, out) -> None:
         (LazyString(str, "some <a>link</a> in lazy text"), "some link in lazy text"),
     ],
 )
-def test_strip_tags(inp, out) -> None:
+def test_strip_tags(inp, out) -> None:  # type:ignore[no-untyped-def]
     assert escaping.strip_tags(inp) == out

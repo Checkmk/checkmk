@@ -47,7 +47,7 @@ def fixture_local_plugin(main_module_name):
 
 
 @pytest.mark.usefixtures("local_plugin")
-def test_load_local_plugin(main_module_name) -> None:
+def test_load_local_plugin(main_module_name) -> None:  # type:ignore[no-untyped-def]
     main_module = importlib.import_module(f"cmk.gui.{main_module_name}")
     assert "ding" not in main_module.__dict__
 
@@ -92,7 +92,7 @@ def fixture_plugin_module_dir(request):
     return request.param
 
 
-def test_plugins_loaded(plugin_module_dir) -> None:
+def test_plugins_loaded(plugin_module_dir) -> None:  # type:ignore[no-untyped-def]
     if plugin_module_dir == "bi":
         raise pytest.skip("No plugin at the moment")
 

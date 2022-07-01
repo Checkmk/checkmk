@@ -24,5 +24,5 @@ from cmk.gui.default_name import unique_default_name_suggestion
         ),
     ],
 )
-def test_urlencode_vars(template, used_names, suggestion) -> None:
+def test_urlencode_vars(template, used_names, suggestion) -> None:  # type:ignore[no-untyped-def]
     assert unique_default_name_suggestion(template, used_names) == suggestion

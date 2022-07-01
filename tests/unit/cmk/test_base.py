@@ -29,7 +29,7 @@ def cache_clear() -> None:
         ("2.1.0p3.cpe", cmk_version.Edition.CPE),
     ],
 )
-def test_is_enterprise_edition(
+def test_is_enterprise_edition(  # type:ignore[no-untyped-def]
     monkeypatch,
     omd_version_str: str,
     expected: cmk_version.Edition,

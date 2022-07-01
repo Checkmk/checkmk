@@ -19,7 +19,7 @@ from cmk.gui.utils import is_allowed_url
         ),
     ],
 )
-def test_is_allowed_url_regression(url, expected) -> None:
+def test_is_allowed_url_regression(url, expected) -> None:  # type:ignore[no-untyped-def]
     """Test for allowed urls
 
     is_allowed_url has also several doctests

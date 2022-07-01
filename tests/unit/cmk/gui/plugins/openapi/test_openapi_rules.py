@@ -26,7 +26,7 @@ def new_rule_fixture(logged_in_admin_wsgi_app):
     )
 
 
-def _create_rule(
+def _create_rule(  # type:ignore[no-untyped-def]
     wsgi_app,
     folder,
     comment="",
@@ -103,7 +103,9 @@ def _create_folder(wsgi_app, base, folder_name, parent="/"):
     )
 
 
-def test_openapi_create_rule_regression(logged_in_admin_wsgi_app) -> None:
+def test_openapi_create_rule_regression(  # type:ignore[no-untyped-def]
+    logged_in_admin_wsgi_app,
+) -> None:
     wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
     values = {
@@ -121,7 +123,9 @@ def test_openapi_create_rule_regression(logged_in_admin_wsgi_app) -> None:
     )
 
 
-def test_openapi_rules_href_escaped(logged_in_admin_wsgi_app) -> None:
+def test_openapi_rules_href_escaped(  # type:ignore[no-untyped-def]
+    logged_in_admin_wsgi_app,
+) -> None:
     wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
     resp = wsgi_app.get(
@@ -136,7 +140,9 @@ def test_openapi_rules_href_escaped(logged_in_admin_wsgi_app) -> None:
     )
 
 
-def test_openapi_create_rule_failure(logged_in_admin_wsgi_app) -> None:
+def test_openapi_create_rule_failure(  # type:ignore[no-untyped-def]
+    logged_in_admin_wsgi_app,
+) -> None:
     wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
 
@@ -162,7 +168,9 @@ def test_openapi_create_rule_failure(logged_in_admin_wsgi_app) -> None:
     assert "You have not defined any host group yet" in resp.json["detail"]
 
 
-def test_openapi_create_rule(logged_in_admin_wsgi_app, new_rule) -> None:
+def test_openapi_create_rule(  # type:ignore[no-untyped-def]
+    logged_in_admin_wsgi_app, new_rule
+) -> None:
     wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
 
@@ -198,7 +206,9 @@ def test_openapi_create_rule(logged_in_admin_wsgi_app, new_rule) -> None:
     assert stored_condition == expected_condition
 
 
-def test_create_rule_with_string_value(logged_in_admin_wsgi_app) -> None:
+def test_create_rule_with_string_value(  # type:ignore[no-untyped-def]
+    logged_in_admin_wsgi_app,
+) -> None:
     wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
 
@@ -222,7 +232,9 @@ def test_create_rule_with_string_value(logged_in_admin_wsgi_app) -> None:
     assert resp.json["extensions"]["value_raw"] == "'d,u,r,f,s'"
 
 
-def test_openapi_list_rules(logged_in_admin_wsgi_app, new_rule) -> None:
+def test_openapi_list_rules(  # type:ignore[no-untyped-def]
+    logged_in_admin_wsgi_app, new_rule
+) -> None:
     wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
 
@@ -246,7 +258,9 @@ def test_openapi_list_rules(logged_in_admin_wsgi_app, new_rule) -> None:
     assert stored["conditions"]["host_tags"] == values["conditions"]["host_tags"]
 
 
-def test_openapi_delete_rule(logged_in_admin_wsgi_app, new_rule) -> None:
+def test_openapi_delete_rule(  # type:ignore[no-untyped-def]
+    logged_in_admin_wsgi_app, new_rule
+) -> None:
     wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
 
@@ -280,7 +294,9 @@ def test_openapi_delete_rule(logged_in_admin_wsgi_app, new_rule) -> None:
 
 
 @pytest.mark.parametrize("ruleset", ["host_groups", "special_agents:gcp"])
-def test_openapi_show_ruleset(logged_in_admin_wsgi_app, ruleset) -> None:
+def test_openapi_show_ruleset(  # type:ignore[no-untyped-def]
+    logged_in_admin_wsgi_app, ruleset
+) -> None:
     wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
     resp = wsgi_app.get(
@@ -290,7 +306,9 @@ def test_openapi_show_ruleset(logged_in_admin_wsgi_app, ruleset) -> None:
     assert resp.json["extensions"]["name"] == ruleset
 
 
-def test_openapi_show_non_existing_ruleset(logged_in_admin_wsgi_app) -> None:
+def test_openapi_show_non_existing_ruleset(  # type:ignore[no-untyped-def]
+    logged_in_admin_wsgi_app,
+) -> None:
     wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
     # Request a ruleset that doesn't exist should return a 400 Bad Request.
@@ -301,7 +319,7 @@ def test_openapi_show_non_existing_ruleset(logged_in_admin_wsgi_app) -> None:
     )
 
 
-def test_openapi_list_rulesets(logged_in_admin_wsgi_app) -> None:
+def test_openapi_list_rulesets(logged_in_admin_wsgi_app) -> None:  # type:ignore[no-untyped-def]
     wsgi_app = logged_in_admin_wsgi_app
 
     base = "/NO_SITE/check_mk/api/1.0"
@@ -312,12 +330,16 @@ def test_openapi_list_rulesets(logged_in_admin_wsgi_app) -> None:
     assert len(resp.json["value"]) == 2
 
 
-def test_openapi_has_rule(aut_user_auth_wsgi_app, base, new_rule, test_folders) -> None:
+def test_openapi_has_rule(  # type:ignore[no-untyped-def]
+    aut_user_auth_wsgi_app, base, new_rule, test_folders
+) -> None:
     wsgi_app = aut_user_auth_wsgi_app
     assert _order_of_rules(wsgi_app, base) == ["They made me do it!"]
 
 
-def test_openapi_create_rule_order(aut_user_auth_wsgi_app, base, new_rule, test_folders) -> None:
+def test_openapi_create_rule_order(  # type:ignore[no-untyped-def]
+    aut_user_auth_wsgi_app, base, new_rule, test_folders
+) -> None:
     wsgi_app = aut_user_auth_wsgi_app
     folder_name_one, folder_name_two = test_folders
     rule1, _ = _create_rule(wsgi_app, f"/{folder_name_one}", comment="rule1")
@@ -334,7 +356,7 @@ def test_openapi_create_rule_order(aut_user_auth_wsgi_app, base, new_rule, test_
     _ensure_on_folder(wsgi_app, base, rule2_id, f"/{folder_name_two}")
 
 
-def test_openapi_move_rule_to_top_of_folder(
+def test_openapi_move_rule_to_top_of_folder(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app, base, new_rule, test_folders
 ) -> None:
     wsgi_app = aut_user_auth_wsgi_app
@@ -432,7 +454,7 @@ def _move_to(wsgi_app, base, _rule_id, position, dest_rule_id=None, folder=None)
     return _resp
 
 
-def _order_of_rules(wsgi_app, base) -> list[str]:
+def _order_of_rules(wsgi_app, base) -> list[str]:  # type:ignore[no-untyped-def]
     _resp = wsgi_app.get(
         base + "/domain-types/rule/collections/all?ruleset_name=inventory_df_rules",
         headers={"Accept": "application/json"},

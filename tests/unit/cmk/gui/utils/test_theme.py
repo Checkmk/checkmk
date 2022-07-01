@@ -42,7 +42,9 @@ def fixture_my_theme(theme_dirs, monkeypatch):
     return my_dir
 
 
-def test_theme_request_context_integration(my_theme, request_context) -> None:
+def test_theme_request_context_integration(  # type:ignore[no-untyped-def]
+    my_theme, request_context
+) -> None:
     theme.from_config("facelift")
 
     theme.set("")
@@ -101,7 +103,7 @@ def test_base_dir(th: Theme) -> None:
     ],
 )
 @pytest.mark.parametrize("with_logo", [True, False])
-def test_has_custom_logo(
+def test_has_custom_logo(  # type:ignore[no-untyped-def]
     monkeypatch, th: Theme, edition: cmk.utils.version.Edition, with_logo: bool
 ) -> None:
     monkeypatch.setattr(
@@ -113,15 +115,15 @@ def test_has_custom_logo(
     assert th.has_custom_logo() is (edition is cmk.utils.version.Edition.CME and with_logo)
 
 
-def test_theme_choices_empty(theme_dirs) -> None:
+def test_theme_choices_empty(theme_dirs) -> None:  # type:ignore[no-untyped-def]
     assert theme_choices() == []
 
 
-def test_theme_choices_normal(my_theme) -> None:
+def test_theme_choices_normal(my_theme) -> None:  # type:ignore[no-untyped-def]
     assert theme_choices() == [("my_theme", "Määh Theme :-)")]
 
 
-def test_theme_choices_local_theme(theme_dirs, my_theme) -> None:
+def test_theme_choices_local_theme(theme_dirs, my_theme) -> None:  # type:ignore[no-untyped-def]
     local_theme_path = theme_dirs[1]
 
     my_dir = local_theme_path / "my_improved_theme"
@@ -138,7 +140,7 @@ def test_theme_choices_local_theme(theme_dirs, my_theme) -> None:
     )
 
 
-def test_theme_choices_override(theme_dirs, my_theme) -> None:
+def test_theme_choices_override(theme_dirs, my_theme) -> None:  # type:ignore[no-untyped-def]
     local_theme_path = theme_dirs[1]
 
     my_dir = local_theme_path / "my_theme"
@@ -154,7 +156,7 @@ def test_theme_choices_override(theme_dirs, my_theme) -> None:
     )
 
 
-def test_theme_broken_meta(my_theme) -> None:
+def test_theme_broken_meta(my_theme) -> None:  # type:ignore[no-untyped-def]
     (my_theme / "theme.json").open(mode="w", encoding="utf-8").write(
         str('{"titlewrong": xyz"bla"}')
     )

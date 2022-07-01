@@ -35,7 +35,7 @@ def _raw_api():
     return RawAPI(kubernetes_api_client(), timeout=(10, 10))
 
 
-def test_raw_api_get_healthz_ok(raw_api) -> None:
+def test_raw_api_get_healthz_ok(raw_api) -> None:  # type:ignore[no-untyped-def]
     Entry.single_register(Entry.GET, "http://api-unittest/some_health_endpoint", body="response-ok")
     with Mocketizer():
         result = raw_api._get_healthz("/some_health_endpoint")
@@ -45,7 +45,7 @@ def test_raw_api_get_healthz_ok(raw_api) -> None:
     assert result.verbose_response is None
 
 
-def test_raw_api_get_healthz_nok(raw_api) -> None:
+def test_raw_api_get_healthz_nok(raw_api) -> None:  # type:ignore[no-untyped-def]
     Entry.single_register(
         Entry.GET, "http://api-unittest/some_health_endpoint", body="response-nok", status=500
     )
@@ -128,7 +128,9 @@ version_json_pytest_params = [
 
 
 @pytest.mark.parametrize("version_json, _", version_json_pytest_params)
-def test_version_endpoint(version_json: Mapping[str, str], _, raw_api) -> None:
+def test_version_endpoint(  # type:ignore[no-untyped-def]
+    version_json: Mapping[str, str], _, raw_api
+) -> None:
     # arrange
     version_json_dump = json.dumps(version_json)
     Entry.single_register(
@@ -144,7 +146,7 @@ def test_version_endpoint(version_json: Mapping[str, str], _, raw_api) -> None:
     assert queried_version == version_json_dump
 
 
-def test_version_endpoint_no_json(raw_api) -> None:
+def test_version_endpoint_no_json(raw_api) -> None:  # type:ignore[no-untyped-def]
     """
 
     Invalid endpoint, since returned data is not json. RawAPI will not
@@ -156,7 +158,7 @@ def test_version_endpoint_no_json(raw_api) -> None:
     assert result == "I'm not json"
 
 
-def test_version_endpoint_invalid_json(raw_api) -> None:
+def test_version_endpoint_invalid_json(raw_api) -> None:  # type:ignore[no-untyped-def]
     """
 
     Invalid endpoint, since gitVersion field is missing. RawAPI will not
@@ -178,7 +180,9 @@ def test_version_endpoint_invalid_json(raw_api) -> None:
 
 
 @pytest.mark.parametrize("version_json, result", version_json_pytest_params)
-def test_version_from_json(version_json: Mapping[str, str], result) -> None:
+def test_version_from_json(  # type:ignore[no-untyped-def]
+    version_json: Mapping[str, str], result
+) -> None:
     assert result == version_from_json(json.dumps(version_json))
 
 
@@ -254,7 +258,7 @@ formatter = logging.Formatter("%(levelname)s %(message)s")
         ),
     ],
 )
-def test_decompose_git_version(
+def test_decompose_git_version(  # type:ignore[no-untyped-def]
     git_version: str,
     result: Union[api.KubernetesVersion, api.UnknownKubernetesVersion],
     logs: Sequence[str],
@@ -298,7 +302,7 @@ def test_decompose_git_version(
         ),
     ],
 )
-def test__verify_version_support_continue_processing(
+def test__verify_version_support_continue_processing(  # type:ignore[no-untyped-def]
     kubernetes_version: Union[api.KubernetesVersion, api.UnknownKubernetesVersion],
     logs: Sequence[str],
     caplog,
@@ -325,7 +329,7 @@ def test__verify_version_support_continue_processing(
         ),
     ],
 )
-def test__verify_version_support_abort_processing(
+def test__verify_version_support_abort_processing(  # type:ignore[no-untyped-def]
     kubernetes_version: Union[api.KubernetesVersion, api.UnknownKubernetesVersion],
     message: str,
 ):

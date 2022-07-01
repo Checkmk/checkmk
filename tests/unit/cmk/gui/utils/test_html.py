@@ -19,7 +19,7 @@ from cmk.gui.utils.html import HTML
         "Oneüლ,ᔑ•ﺪ͟͠•ᔐ.ლ",
     ],
 )
-def test_class_HTML_value(value) -> None:
+def test_class_HTML_value(value) -> None:  # type:ignore[no-untyped-def]
     assert isinstance(HTML(value).value, str)
     assert HTML(HTML(value)) == HTML(value)
 

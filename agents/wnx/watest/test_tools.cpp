@@ -91,11 +91,11 @@ private:
     fs::path temp_dir_;
 };
 
-::testing::Environment *const g_env =
+const ::testing::Environment *const g_env =
     ::testing::AddGlobalTestEnvironment(new TestEnvironment);
 
 fs::path GetTempDir() {
-    return dynamic_cast<TestEnvironment *>(g_env)->getTempDir();
+    return dynamic_cast<const TestEnvironment *>(g_env)->getTempDir();
 }
 
 TempDirPair::TempDirPair(const std::string &case_name) {
@@ -172,7 +172,6 @@ void SafeCleanTempDir() {
 }
 
 void SafeCleanTmpxDir() {
-    namespace fs = std::filesystem;
     if (very_temp != "tmpx") {
         XLOG::l.crit(
             "Recursive folder remove is allowed only for very temporary folders");
@@ -183,16 +182,15 @@ void SafeCleanTmpxDir() {
     // clean
     std::error_code ec;
     fs::remove_all(very_temp, ec);
-    if (ec)
+    if (ec) {
         XLOG::l("error removing '{}' with {} ", wtools::ToUtf8(very_temp),
                 ec.message());
+    }
 }
 
 void SafeCleanTempDir(std::string_view sub_dir) {
-    namespace fs = std::filesystem;
     auto temp_dir = cma::cfg::GetTempDir();
-    auto really_temp_dir = temp_dir.find(L"\\tmp", 0) != std::wstring::npos;
-    if (!really_temp_dir) {
+    if (temp_dir.find(L"\\tmp", 0) == std::wstring::npos) {
         XLOG::l("attempt to delete suspicious dir {}",
                 wtools::ToUtf8(temp_dir));
         return;
@@ -202,8 +200,9 @@ void SafeCleanTempDir(std::string_view sub_dir) {
     fs::path t_d = temp_dir;
     std::error_code ec;
     fs::remove_all(t_d / sub_dir, ec);
-    if (ec)
+    if (ec) {
         XLOG::l("error removing '{}' with {} ", t_d / sub_dir, ec.message());
+    }
     fs::create_directory(t_d / sub_dir);
 }
 
@@ -265,8 +264,8 @@ void DisableSectionsNode(std::string_view value, bool update_global) {
     return ChangeSectionMode(value, update_global, SectionMode::disable);
 }
 
-std::vector<std::string> ReadFileAsTable(const std::string &Name) {
-    std::ifstream in(Name.c_str());
+std::vector<std::string> ReadFileAsTable(const std::string &name) {
+    std::ifstream in(name.c_str());
     std::stringstream sstr;
     sstr << in.rdbuf();
     auto content = sstr.str();
@@ -376,7 +375,7 @@ bool TempCfgFs::reloadConfig() const {
     if (mode_ == Mode::standard) {
         cfg_files.emplace_back(cma::cfg::files::kDefaultMainConfig);
     } else {
-        XLOG::l("No io mode doesnt allow reloading");
+        XLOG::l("No io mode doesn't allow reloading");
         return false;
     }
 

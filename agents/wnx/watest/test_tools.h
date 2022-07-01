@@ -163,10 +163,10 @@ const std::string_view very_temp = "tmpx";
 
 void SafeCleanTmpxDir();
 
-std::vector<std::string> ReadFileAsTable(const std::string &Name);
+std::vector<std::string> ReadFileAsTable(const std::string &name);
 inline std::vector<std::string> ReadFileAsTable(
     const std::filesystem::path &name) {
-    return ReadFileAsTable(name.u8string());
+    return ReadFileAsTable(wtools::ToUtf8(name.wstring()));
 }
 
 using CheckYamlVector =
@@ -267,7 +267,7 @@ bool WaitForSuccessIndicate(std::chrono::milliseconds ms,
                             const std::function<bool()> &predicat);
 
 /// Usage:
-///     FirewallOpener fwo;
+///     FirewallOpener fwo
 class FirewallOpener {
 public:
     FirewallOpener();
@@ -283,7 +283,7 @@ private:
     std::wstring argv0_;
 };
 
-inline uint16_t TestPort() {
+inline uint16_t TestPort() noexcept {
     static uint32_t r =
         (static_cast<uint32_t>(::GetCurrentProcessId()) / 4U % 0xFFU) + 22000;
     return static_cast<uint16_t>(r);

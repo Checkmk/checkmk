@@ -1,0 +1,17 @@
+Title: Unix agents: Change error handling for non-terminating asynchrounus agent plugins
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1656673233
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+This change affects asynchronously executed agent plugins for the Checkmk agents for Linux, AIX, Solaris, FreeBSD and OpenWRT.
+
+If such plugins did not terminate after a set amount of time, the corresponding process is killed by the agent.
+
+Previously, the cached data would still be transmitted, eventually letting the affected services go stale.
+With this werk we no longer transmit the outdated data, which will result in the services being UNKNOWN.
+This behaviour is consistent with a synchrounus plugin that crashes.

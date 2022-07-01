@@ -608,13 +608,13 @@ run_cached() {
 
     if ${MK_RUN_ASYNC_PARTS}; then
 
-        # Check if the creation of the cache takes suspiciously long.
-        # Kill the process if the cache file has not been accessed for more than TIMEOUT seconds.
+        # Check if the process is running too long (cache file not accessed for more than TIMEOUT seconds).
+        # If so, kill the process and remove the cache files (both)
         for cfile in "${CACHEFILE}.new."*; do
             [ -e "${cfile}" ] || break # no match
             if [ $((NOW - $(get_file_atime "${cfile}"))) -ge "${TIMEOUT}" ]; then
                 kill -9 "${cfile##*.new.}" # TODO: what about child processes?
-                rm -f "${cfile}"
+                rm -f "${cfile}" "${CACHEFILE}"
             fi
         done
 

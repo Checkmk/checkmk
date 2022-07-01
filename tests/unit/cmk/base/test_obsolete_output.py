@@ -23,22 +23,24 @@ def read(stream):
     return stream.read()
 
 
-def test_output_without_args(stream) -> None:
+def test_output_without_args(stream) -> None:  # type:ignore[no-untyped-def]
     out.output("hello", stream=stream)
     assert read(stream) == "hello"
 
 
-def test_output_with_args(stream) -> None:
+def test_output_with_args(stream) -> None:  # type:ignore[no-untyped-def]
     out.output("hello %s %i", "bob", 42, stream=stream)
     assert read(stream) == "hello bob 42"
 
 
-def test_output_with_wrong_args(stream) -> None:
+def test_output_with_wrong_args(stream) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises(TypeError):
         out.output("hello %s %i", "wrong", "args", stream=stream)
 
 
-def test_output_ignores_stream_errors(stream, mocker, monkeypatch) -> None:
+def test_output_ignores_stream_errors(  # type:ignore[no-untyped-def]
+    stream, mocker, monkeypatch
+) -> None:
     mock = mocker.Mock(side_effect=IOError("bad luck"))
     monkeypatch.setattr(stream, "flush", mock)
 

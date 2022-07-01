@@ -70,7 +70,9 @@ from cmk.snmplib.utils import evaluate_snmp_detection
         ),
     ],
 )
-def test_cisco_related_snmp_detection(fix_register, oid_data, detected, not_detected) -> None:
+def test_cisco_related_snmp_detection(  # type:ignore[no-untyped-def]
+    fix_register, oid_data, detected, not_detected
+) -> None:
 
     for name in detected | not_detected:
         section = fix_register.snmp_sections.get(SectionName(name))

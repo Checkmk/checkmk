@@ -27,7 +27,7 @@ from cmk.base.api.agent_based.type_defs import Parameters
         "",
     ],
 )
-def test_paramters_invalid(data) -> None:
+def test_paramters_invalid(data) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises(TypeError, match="expected dict"):
         _ = Parameters(data)
 
@@ -74,7 +74,7 @@ def test_service_label() -> None:
         (None, None, ["foo:bar"]),
     ],
 )
-def test_service_invalid(item, parameters, labels) -> None:
+def test_service_invalid(item, parameters, labels) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises(TypeError):
         _ = Service(item=item, parameters=parameters, labels=labels)
 
@@ -154,7 +154,7 @@ def test_state() -> None:
         ((0, 1, 2, 3, state.UNKNOWN), state.OK),
     ],
 )
-def test_best_state(states, best_state) -> None:
+def test_best_state(states, best_state) -> None:  # type:ignore[no-untyped-def]
     assert state.best(*states) is best_state
 
 
@@ -174,7 +174,7 @@ def test_metric_kwarg() -> None:
         ("name", 7, (23, 42), (None, "max")),
     ],
 )
-def test_metric_invalid(name, value, levels, boundaries) -> None:
+def test_metric_invalid(name, value, levels, boundaries) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises(TypeError):
         _ = Metric(name, value, levels=levels, boundaries=boundaries)
 
@@ -203,7 +203,7 @@ def test_metric() -> None:
         (state.OK, "summary", None, {"at the moment": "impossible", "someday": "maybe"}),
     ],
 )
-def test_result_invalid(state_, summary, notice, details) -> None:
+def test_result_invalid(state_, summary, notice, details) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises((TypeError, ValueError)):
         _ = Result(
             state=state_,

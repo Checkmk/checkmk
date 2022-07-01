@@ -12,7 +12,7 @@ import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 
 
-def test_get_registered_check_plugins(monkeypatch) -> None:
+def test_get_registered_check_plugins(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     test_plugin = CheckPlugin(
         CheckPluginName("check_unit_test"),
         [],

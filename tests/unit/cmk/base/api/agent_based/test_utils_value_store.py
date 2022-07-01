@@ -21,7 +21,9 @@ from cmk.base.api.agent_based.utils import get_average, get_rate, GetRateError
         (None, 0, 42, True, "Initialized: 'foo'"),
     ],
 )
-def test_get_rate_raises(pre_state, time, value, raise_of, errmsg) -> None:
+def test_get_rate_raises(  # type:ignore[no-untyped-def]
+    pre_state, time, value, raise_of, errmsg
+) -> None:
     store = {"foo": pre_state}
     with pytest.raises(GetRateError, match=errmsg):
         get_rate(store, "foo", time, value, raise_overflow=raise_of)
@@ -36,7 +38,9 @@ def test_get_rate_raises(pre_state, time, value, raise_of, errmsg) -> None:
         ((0, 42), 19, 23, False, -1.0),
     ],
 )
-def test_get_rate(pre_state, time, value, raise_of, expected) -> None:
+def test_get_rate(  # type:ignore[no-untyped-def]
+    pre_state, time, value, raise_of, expected
+) -> None:
     store = {"foo": pre_state}
     result = get_rate(store, "foo", time, value, raise_overflow=raise_of)
     assert result == expected
@@ -81,7 +85,7 @@ def test_get_rate(pre_state, time, value, raise_of, expected) -> None:
         ),
     ],
 )
-def test_get_average(backlog_min, timeseries) -> None:
+def test_get_average(backlog_min, timeseries) -> None:  # type:ignore[no-untyped-def]
     store: Dict[str, Tuple[float, float, float]] = {}
     for idx, (this_time, this_value, expected_average) in enumerate(timeseries):
         avg = get_average(

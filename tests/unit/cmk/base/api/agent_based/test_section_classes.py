@@ -10,13 +10,13 @@ from cmk.base.api.agent_based.section_classes import OIDBytes, OIDCached, SNMPTr
 
 
 @pytest.mark.parametrize("value", [3, ("foo", "bar")])
-def test_oidspec_invalid_type(value) -> None:
+def test_oidspec_invalid_type(value) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises(TypeError):
         SNMPTree.validate_oid_string(value)
 
 
 @pytest.mark.parametrize("value", ["", "foo", "1."])
-def test_oidspec_invalid_value(value) -> None:
+def test_oidspec_invalid_value(value) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises(ValueError):
         SNMPTree.validate_oid_string(value)
 

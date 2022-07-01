@@ -109,7 +109,7 @@ class Test_StaticDiskSyncedMapping:
             deserializer=literal_eval,
         )
 
-    def test_mapping_features(self, mocker, tmp_path: Path) -> None:
+    def test_mapping_features(self, mocker, tmp_path: Path) -> None:  # type:ignore[no-untyped-def]
 
         self._mock_load(mocker)
         sdsm = self._get_sdsm(tmp_path)
@@ -126,7 +126,7 @@ class Test_StaticDiskSyncedMapping:
         ]
         assert len(sdsm) == 2
 
-    def test_store(self, mocker, tmp_path: Path) -> None:
+    def test_store(self, mocker, tmp_path: Path) -> None:  # type:ignore[no-untyped-def]
 
         self._mock_load(mocker)
         self._mock_store(mocker)

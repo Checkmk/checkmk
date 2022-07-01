@@ -28,6 +28,6 @@ def test_oid_end_compat_with_backend() -> None:
         (".1.2", ["42.1", "42.2"]),  # 42 should be in base
     ],
 )
-def test_snmptree_valid(base, oids) -> None:
+def test_snmptree_valid(base, oids) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises((ValueError, TypeError)):
         SNMPTree(base=base, oids=oids).validate()

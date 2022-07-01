@@ -710,8 +710,8 @@ class QuicksearchSnapin(SidebarSnapin):
             return
 
         try:
-            results = self._quicksearch_manager.generate_results(query)
-            QuicksearchResultRenderer().show(results, query)
+            search_objects = self._quicksearch_manager._determine_search_objects(query)
+            self._quicksearch_manager._conduct_search(search_objects)
 
         except TooManyRowsError as e:
             html.show_warning(str(e))
@@ -727,6 +727,9 @@ class QuicksearchSnapin(SidebarSnapin):
             if config.debug:
                 raise
             html.show_error(traceback.format_exc())
+
+        QuicksearchResultRenderer().show(
+            self._quicksearch_manager._evaluate_results(search_objects), query)
 
     def _page_search_open(self) -> None:
         """Generate the URL to the view that is opened when confirming the search field"""

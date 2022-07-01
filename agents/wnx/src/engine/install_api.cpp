@@ -511,7 +511,8 @@ std::pair<std::wstring, bool> CheckForUpdateFile(
     }
 
     if (!NeedInstall(msi_base)) {
-        auto skip_file = msi_base.u8string() + ".skip";
+        fs::path skip_file = msi_base;
+        skip_file += ".skip";
         RmFile(skip_file);
         MvFile(msi_base, skip_file);
         return {{}, false};
@@ -588,6 +589,24 @@ std::optional<fs::path> FindMsiLog() {
     return {msi_log_file};
 }
 
+std::optional<fs::path> FindInstallApiLog() {
+    auto install_api_log_file =
+        fs::path{cfg::GetLogDir()} / api_err::kLogFileName;
+    std::error_code ec;
+    if (!fs::exists(install_api_log_file, ec)) {
+        return {};
+    }
+
+    return {install_api_log_file};
+}
+
+auto ReadFileAsTable(const fs::path &name) {
+    std::ifstream in(wtools::ToUtf8(name.wstring()));
+    std::stringstream sstr;
+    sstr << in.rdbuf();
+    return tools::SplitString(sstr.str(), "\n");
+}
+
 /// \brief reads the file which must be encoded as LE BOM<summary>
 std::wstring ReadLeBom(const fs::path &file) {
     constexpr size_t max_log_size{8192U * 1024};
@@ -602,7 +621,7 @@ std::wstring ReadLeBom(const fs::path &file) {
             return {};
         }
         f1.seekg(0, std::ifstream::beg);
-        std::array<unsigned char, 2> buf;
+        std::array<unsigned char, 2> buf{0, 0};
         f1.read(reinterpret_cast<char *>(buf.data()), buf.size());
         if (buf != le_bom_marker) {
             XLOG::l(
@@ -649,9 +668,18 @@ std::wstring ExpectedMarker() {
     return product_marker;
 }
 
+void DeleteInstallApiLog() {
+    if (auto log_file = FindInstallApiLog()) {
+        fs::path bak_file = *log_file;
+        bak_file += ".bak";
+        RmFile(bak_file);
+        MvFile(*log_file, bak_file);
+    }
+}
+
 }  // namespace
 
-std::optional<std::wstring> GetLastInstallFailReason() {
+std::optional<std::wstring> GetLastMsiFailReason() {
     const auto msi_log = FindMsiLog();
     if (!msi_log) {
         return {};
@@ -665,4 +693,31 @@ std::optional<std::wstring> GetLastInstallFailReason() {
     }
     return {};
 }
+
+namespace api_err {
+std::optional<std::wstring> Get() {
+    const auto api_log = FindInstallApiLog();
+    if (!api_log) {
+        return {};
+    }
+    for (const auto &line : ReadFileAsTable(*api_log)) {
+        if (line.starts_with(api_err::kFailMarker)) {
+            return wtools::ConvertToUTF16(line.c_str() +
+                                          api_err::kFailMarker.length());
+        }
+    }
+
+    return {};
+}
+
+void Register(const std::string &error) {
+    DeleteInstallApiLog();
+    std::ofstream ofs(fs::path{cfg::GetLogDir()} / api_err::kLogFileName,
+                      std::ios::trunc);
+    ofs << api_err::kFailMarker << error << "\n";
+}
+
+void Clean() { DeleteInstallApiLog(); }
+}  // namespace api_err
+
 };  // namespace cma::install

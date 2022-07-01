@@ -121,7 +121,7 @@ std::string CheckMk::makeBody() {
         out += json + "\n";
     }
 
-    if (install::GetLastInstallFailReason()) {
+    if (install::GetLastMsiFailReason()) {
         out += "<<<check_mk>>>\n";
         out +=
             "UpdateFailed: The last agent update failed. Supplied Python environment is not compatible with OS. \n";

@@ -59,6 +59,10 @@ private:
 constexpr std::wstring_view kDefaultMsiFileName{L"check_mk_agent.msi"};
 constexpr std::string_view kMsiLogFileName{"agent_msi.log"};
 constexpr std::wstring_view kAgentProductName{L"Check MK Agent 2.1"};
+namespace api_err {
+constexpr std::string_view kLogFileName{"install_api.log"};
+constexpr std::string_view kFailMarker{"fail: "};
+}  // namespace api_err
 
 namespace registry {
 // Names are from WIX Msi, please, check that they are in sync
@@ -122,8 +126,16 @@ bool NeedInstall(const std::filesystem::path &incoming_file,
 bool IsPostInstallRequired();
 void ClearPostInstallFlag();
 
-/// Returns string with error message if the installation failed.
-std::optional<std::wstring> GetLastInstallFailReason();
+/// Returns string with error message if the MSI installation failed.
+std::optional<std::wstring> GetLastMsiFailReason();
+
+namespace api_err {
+/// Returns string with error message if the install API failed.
+std::optional<std::wstring> Get();
+/// calls if something is going wrong during installation.
+void Register(const std::string &err);
+void Clean();
+}  // namespace api_err
 
 bool IsMigrationRequired();
 

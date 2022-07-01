@@ -13,6 +13,7 @@
 
 namespace fs = std::filesystem;
 using namespace std::chrono_literals;
+using namespace std::string_literals;
 
 namespace cma::install {
 
@@ -249,6 +250,7 @@ TEST(InstallAuto, FindAgentMsiSkippable) {
     auto agent_msi = FindProductMsi(install::kAgentProductName);
     if (!agent_msi) {
         GTEST_SKIP();
+        return;
     }
     ASSERT_TRUE(fs::exists(*agent_msi));
 }
@@ -259,13 +261,58 @@ TEST(InstallAuto, FindProductMsi) {
     ASSERT_TRUE(fs::exists(*msi));
 }
 
-TEST(InstallAuto, LastInstallFailReason) {
+TEST(InstallAuto, LastMsiFailReason) {
     auto temp_fs = tst::TempCfgFs::Create();
-    EXPECT_FALSE(GetLastInstallFailReason());
+    EXPECT_FALSE(GetLastMsiFailReason());
     tst::misc::CopyFailedPythonLogFileToLog(temp_fs->data());
-    auto result = GetLastInstallFailReason();
+    auto result = GetLastMsiFailReason();
     EXPECT_TRUE(result);
     EXPECT_NE(result->find(L"This version supports only"), std::wstring::npos);
+}
+
+class InstallAutoFixture : public testing::Test {
+protected:
+    void SetUp() override {
+        fs_ = tst::TempCfgFs::Create();
+        log_file_ = fs::path{cfg::GetLogDir()} / api_err::kLogFileName;
+        bak_file_ = log_file_;
+        bak_file_ += ".bak";
+    }
+
+    const auto &logFile() const noexcept { return log_file_; }
+    bool existsBak() const noexcept {
+        std::error_code ec;
+        return fs::exists(bak_file_, ec);
+    }
+
+    void createLogFile(std::string_view text) {
+        tst::CreateTextFile(logFile(), text);
+    }
+
+private:
+    std::unique_ptr<tst::TempCfgFs> fs_;
+    fs::path log_file_;
+    fs::path bak_file_;
+};
+
+TEST_F(InstallAutoFixture, InstallApiError) {
+    EXPECT_FALSE(api_err::Get());
+    createLogFile("failed x");
+    EXPECT_FALSE(api_err::Get());
+
+    createLogFile("x\n"s + std::string{api_err::kFailMarker} + "failed x\nx\n");
+    auto result = api_err::Get();
+    EXPECT_TRUE(result);
+    EXPECT_EQ(*result, L"failed x"s);
+
+    api_err::Register("zzz");
+    result = api_err::Get();
+    EXPECT_TRUE(result);
+    EXPECT_EQ(*result, L"zzz"s);
+    EXPECT_TRUE(existsBak());
+
+    api_err::Clean();
+    EXPECT_FALSE(api_err::Get());
 }
 
 }  // namespace cma::install

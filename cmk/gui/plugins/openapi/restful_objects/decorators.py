@@ -338,7 +338,7 @@ class Endpoint:
                 {"wato.godmode": "You can do whatever you want!"}
 
         update_config_generation:
-            Wether to generate a new configuration. All endpoints with methods other than `get`
+            Whether to generate a new configuration. All endpoints with methods other than `get`
             normally trigger a regeneration of the configuration. This can be turned off by
             setting `update_config_generation` to False.
 

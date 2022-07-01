@@ -247,6 +247,7 @@ CEE_UNUSED_PACKAGES = [
     "click",
     "defusedxml",
     "docutils",
+    "grpcio",
     "gunicorn",
     "idna",
     "importlib_metadata",

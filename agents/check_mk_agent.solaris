@@ -840,6 +840,10 @@ run_plugins() {
     done
 }
 
+_non_comment_lines() {
+    grep -Ev '^[[:space:]]*($|#)' "${1}"
+}
+
 #
 # END COMMON AGENT CODE
 #
@@ -851,31 +855,30 @@ run_remote_plugins() {
     # The following suppression was added when we enabled the corresponding shellcheck.
     # It may well be that "read -r" would be more appropriate.
     # shellcheck disable=SC2162
-    grep -v '^ *#' "${MK_CONFDIR}/mrpe.cfg" | grep -v '^ *$' |
-        while read descr cmdline; do
-            interval=
-            if [[ ${cmdline} =~ \(([^\)]*)\)[[:space:]](.*) ]]; then
-                parameters=${BASH_REMATCH[1]}
-                cmdline=${BASH_REMATCH[2]}
+    _non_comment_lines "${MK_CONFDIR}/mrpe.cfg" | while read descr cmdline; do
+        interval=
+        if [[ ${cmdline} =~ \(([^\)]*)\)[[:space:]](.*) ]]; then
+            parameters=${BASH_REMATCH[1]}
+            cmdline=${BASH_REMATCH[2]}
 
-                # split multiple parameter assignments
-                for par in $(echo "${parameters}" | tr ":" "\n"); do
-                    # split each assignment
-                    key=$(echo "${par}" | cut -d= -f1)
-                    value=$(echo "${par}" | cut -d= -f2)
+            # split multiple parameter assignments
+            for par in $(echo "${parameters}" | tr ":" "\n"); do
+                # split each assignment
+                key=$(echo "${par}" | cut -d= -f1)
+                value=$(echo "${par}" | cut -d= -f2)
 
-                    if [ "${key}" = "interval" ]; then
-                        interval=${value}
-                    fi
-                done
-            fi
+                if [ "${key}" = "interval" ]; then
+                    interval=${value}
+                fi
+            done
+        fi
 
-            if [ -z "${interval}" ]; then
-                ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
-            else
-                run_cached "mrpe_${descr}" "${interval}" "run_mrpe '${descr}' '${cmdline}'"
-            fi
-        done
+        if [ -z "${interval}" ]; then
+            ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
+        else
+            run_cached "mrpe_${descr}" "${interval}" "run_mrpe '${descr}' '${cmdline}'"
+        fi
+    done
 }
 
 run_mrpe() {

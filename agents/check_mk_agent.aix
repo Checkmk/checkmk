@@ -824,6 +824,10 @@ run_plugins() {
     done
 }
 
+_non_comment_lines() {
+    grep -Ev '^[[:space:]]*($|#)' "${1}"
+}
+
 #
 # END COMMON AGENT CODE
 #
@@ -840,7 +844,7 @@ run_remote_plugins() {
     # The following suppression was added when we enabled the corresponding shellcheck.
     # It may well be that "read -r" would be more appropriate.
     # shellcheck disable=SC2162
-    grep -Ev '^[[:space:]]*($|#)' "${MK_CONFDIR}/mrpe.cfg" |
+    _non_comment_lines "${MK_CONFDIR}/mrpe.cfg" |
         while read descr cmdline; do
             PLUGIN=${cmdline%% *}
             OUTPUT=$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time ${cmdline}")

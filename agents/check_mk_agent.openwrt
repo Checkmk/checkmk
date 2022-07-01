@@ -1236,10 +1236,15 @@ run_plugins() {
     done
 }
 
+_non_comment_lines() {
+    grep -Ev '^[[:space:]]*($|#)' "${1}"
+}
+
 #
 # END COMMON AGENT CODE
 #
 
+# This is far from working, but we're getting there.
 run_mrpe() {
     local descr=${1}
     shift

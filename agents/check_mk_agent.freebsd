@@ -771,20 +771,22 @@ _mrpe_get_interval() {
 #
 
 run_mrpe_plugins() {
+    configfile="${1}"
 
-    if [ -e "${MK_CONFDIR}/mrpe.cfg" ]; then
-        _non_comment_lines "${MK_CONFDIR}/mrpe.cfg" | while read -r descr rest; do
-            interval="$(_mrpe_get_interval "${rest}")"
-            cmdline="${rest#(*) }"
+    [ -f "${configfile}" ] || return
 
-            if [ -z "${interval}" ]; then
-                ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
-            else
-                run_cached "mrpe_${descr}" "${interval}" "run_mrpe '${descr}' '${cmdline}'"
-            fi
+    _non_comment_lines "${configfile}" | while read -r descr rest; do
+        interval="$(_mrpe_get_interval "${rest}")"
+        cmdline="${rest#(*) }"
 
-        done
-    fi
+        if [ -z "${interval}" ]; then
+            ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
+        else
+            run_cached "mrpe_${descr}" "${interval}" "run_mrpe '${descr}' '${cmdline}'"
+        fi
+
+    done
+
 }
 
 run_mrpe() {
@@ -840,7 +842,7 @@ main_mixed_parts() {
 
     run_plugins
 
-    run_mrpe_plugins
+    run_mrpe_plugins "${MK_CONFDIR}/mrpe.cfg"
 }
 
 main_async_parts() {

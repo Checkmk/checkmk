@@ -837,10 +837,11 @@ _mrpe_get_interval() {
 #
 
 run_remote_plugins() {
+    configfile="${1}"
 
-    [ -f "${MK_CONFDIR}/mrpe.cfg" ] || return
+    [ -f "${configfile}" ] || return
 
-    _non_comment_lines "${MK_CONFDIR}/mrpe.cfg" | while read -r descr rest; do
+    _non_comment_lines "${configfile}" | while read -r descr rest; do
         interval="$(_mrpe_get_interval "${rest}")"
         cmdline="${rest#(*) }"
 
@@ -945,7 +946,7 @@ main_mixed_parts() {
     run_partially_asynchronous_sections
 
     # run_remote_plugins -> _log_section_time CMD
-    run_remote_plugins
+    run_remote_plugins "${MK_CONFDIR}/mrpe.cfg"
 
     # run_local_checks -> _log_section_time CMD
     #                  -> run_cached _log_section_time CMD

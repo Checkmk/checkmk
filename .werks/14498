@@ -1,0 +1,16 @@
+Title: sansymphony_pool: added support for magic factor
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1656661165
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+The Sansymphony Pool plugin now supports magic factor for determination of
+levels according to the overall pool size. For more information on magic
+factor, please refer to the user guide.
+
+The agent plugin sansymphony.ps1 must be upgraded on the hosts in order to be
+able to use this feature.

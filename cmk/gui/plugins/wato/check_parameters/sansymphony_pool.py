@@ -5,45 +5,31 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato.check_parameters.filesystem_utils import FilesystemElements, vs_filesystem
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Transform, Tuple
+from cmk.gui.valuespec import TextInput, Transform
 
 
 def _transform_valuespec_sansymphony_pool(params):
     """Transform to Checkmk version 2.2"""
     if isinstance(params, tuple):
         return {
-            "allocated_pools_percentage_upper": (float(params[0]), float(params[1])),
+            "levels": (float(params[0]), float(params[1])),
         }
     return params
 
 
 def _parameter_valuespec_sansymphony_pool():
     return Transform(
-        valuespec=Dictionary(
+        valuespec=vs_filesystem(
             elements=[
-                (
-                    "allocated_pools_percentage_upper",
-                    Tuple(
-                        title=_("Allocated pools"),
-                        help=_("Set upper thresholds for the percentage of allocated pools"),
-                        elements=[
-                            Percentage(
-                                title=_("Warning at"),
-                                default_value=80.0,
-                            ),
-                            Percentage(
-                                title=_("Critical at"),
-                                default_value=90.0,
-                            ),
-                        ],
-                    ),
-                ),
-            ],
+                FilesystemElements.levels_percent,
+                FilesystemElements.magic_factor,
+            ]
         ),
         forth=_transform_valuespec_sansymphony_pool,
     )

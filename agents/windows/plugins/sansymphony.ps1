@@ -93,7 +93,7 @@ if($?)  {
 
 	# output allocation of disk pools
 
-	write-host "<<<sansymphony_pool>>>"
+	write-host "<<<sansymphony_pool_v2>>>"
 
 	$a = @()
 	foreach ($Item in $poolstatus) {
@@ -102,9 +102,15 @@ if($?)  {
 	}
 
 	$b = @()
+	$bytes_allocated = @()
+	$bytes_available = @()
+	$bytes_total = @()
 	foreach ($Item in $poolinfo) {
 	    $poolallocation=$Item.PercentAllocated
 	    $b += $poolallocation
+	    $bytes_allocated += $Item.BytesAllocated
+	    $bytes_available += $Item.BytesAvailable
+	    $bytes_total += $Item.BytesTotal
 	}
 
         $c = @()
@@ -118,7 +124,7 @@ if($?)  {
 
 	$i=0
 	do {
-            Write-Host $a[$i] $b[$i] $c[$i] $d[$i] $e[$i]; $i++
+            Write-Host $a[$i] $b[$i] $c[$i] $d[$i] $e[$i] $bytes_allocated[$i] $bytes_available[$i] $bytes_total[$i]; $i++
            }while ($i -le $poolinfo.length-1)
 
 	exit 0

@@ -103,12 +103,12 @@ def test_create_graph_recipe_from_template() -> None:
     lq_row = {"site": "", "host_name": "", "service_description": ""}
 
     assert gt.create_graph_recipe_from_template(graph_template, translated_metrics, lq_row) == {
-        "title": "Used filesystem space",
+        "title": "Used space",
         "metrics": [
             {
                 "unit": "bytes",
                 "color": "#00ffc6",
-                "title": "Used filesystem space",
+                "title": "Used space",
                 "line_type": "area",
                 "expression": ("rrd", "", "", "", "_", "max", 1048576),
             },
@@ -129,7 +129,7 @@ def test_create_graph_recipe_from_template() -> None:
             {
                 "unit": "bytes",
                 "color": "#006040",
-                "title": "Filesystem size",
+                "title": "Total size",
                 "line_type": "line",
                 "expression": ("rrd", "", "", "", "fs_size", "max", 1048576),
             },

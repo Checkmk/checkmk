@@ -23,49 +23,49 @@ from cmk.gui.plugins.metrics.utils import graph_info, metric_info
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
 metric_info["fs_free"] = {
-    "title": _("Free filesystem space"),
+    "title": _("Free space"),
     "unit": "bytes",
     "color": "#e3fff9",
 }
 
 metric_info["reserved"] = {
-    "title": _("Reserved filesystem space"),
+    "title": _("Reserved space"),
     "unit": "bytes",
     "color": "#ffcce6",
 }
 
 metric_info["fs_used"] = {
-    "title": _("Used filesystem space"),
+    "title": _("Used space"),
     "unit": "bytes",
     "color": "#00ffc6",
 }
 
 metric_info["fs_used_percent"] = {
-    "title": _("Used filesystem space %"),
+    "title": _("Used space %"),
     "unit": "%",
     "color": "#00ffc6",
 }
 
 metric_info["fs_size"] = {
-    "title": _("Filesystem size"),
+    "title": _("Total size"),
     "unit": "bytes",
     "color": "#006040",
 }
 
 metric_info["fs_growth"] = {
-    "title": _("Filesystem growth"),
+    "title": _("Growth"),
     "unit": "bytes/d",
     "color": "#29cfaa",
 }
 
 metric_info["fs_trend"] = {
-    "title": _("Trend of filesystem growth"),
+    "title": _("Growth trend"),
     "unit": "bytes/d",
     "color": "#808080",
 }
 
 metric_info["fs_provisioning"] = {
-    "title": _("Provisioned filesystem space"),
+    "title": _("Provisioned space"),
     "unit": "bytes",
     "color": "#ff8000",
 }
@@ -83,7 +83,7 @@ metric_info["fs_provisioning"] = {
 #   '----------------------------------------------------------------------'
 
 graph_info["fs_used"] = {
-    "title": _("Filesystem size and used space"),
+    "title": _("Size and used space"),
     "metrics": [
         ("fs_used", "area"),
         ("fs_size,fs_used,-#e3fff9", "stack", _("Free space")),
@@ -99,7 +99,7 @@ graph_info["fs_used"] = {
 
 # draw a different graph if space reserved for root was excluded
 graph_info["fs_used_2"] = {
-    "title": _("Filesystem size and usage"),
+    "title": _("Size and used space"),
     "metrics": [
         ("fs_used", "area"),
         ("fs_free", "stack"),
@@ -133,7 +133,7 @@ graph_info["shrinking"] = {
 }
 
 graph_info["fs_trend"] = {
-    "title": _("Trend of filesystem growth"),
+    "title": _("Growth trend"),
     "metrics": [
         ("fs_trend", "line"),
     ],

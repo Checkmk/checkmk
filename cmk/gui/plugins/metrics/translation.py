@@ -478,6 +478,10 @@ check_metrics["check_mk-dell_compellent_folder"] = df_translation
 check_metrics["check_mk-nimble_volumes"] = df_translation
 check_metrics["check_mk-ceph_df"] = df_translation
 check_metrics["check_mk-lvm_vgs"] = df_translation
+check_metrics["check_mk-sansymphony_pool"] = {
+    **df_translation,
+    "percent_allocated": {"name": "fs_used_percent"},
+}
 
 check_metrics["check_mk-netapp_api_volumes"] = {
     "fs_used": {"scale": MB},

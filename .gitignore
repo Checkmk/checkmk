@@ -90,6 +90,9 @@ web/htdocs/js/*_min.js.map
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode
 
+# Used by pyenv
+.python-version
+
 ### VisualStudioCode ###
 .vscode/*
 *.code-workspace

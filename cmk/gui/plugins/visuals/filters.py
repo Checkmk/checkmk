@@ -2471,6 +2471,7 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
 
     def columns_for_filter_table(self, context: VisualContext) -> Iterable[str]:
         if self.ID in context:
+            yield "host_name"
             yield "service_description"
             yield "long_plugin_output"
 
@@ -2497,7 +2498,11 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
         # ids and core pids from the service output
         sites_and_pids_from_services = []
         rows_right_service = []
-        for row in rows:
+        # we sort to be independent of the order of the incoming rows
+        for row in sorted(
+            rows,
+            key=lambda r: (r.get("site", ""), r["host_name"], r["service_description"]),
+        ):
             if not re.match("Site [^ ]* statistics$", row["service_description"]):
                 continue
             rows_right_service.append(row)

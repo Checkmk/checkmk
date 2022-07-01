@@ -1551,3 +1551,18 @@ class TestFilterCMKSiteStatisticsByCorePIDs:
             )
             == livestatus_data
         )
+
+    @pytest.mark.usefixtures("patch_site_states")
+    def test_filter_table_unsorted(
+        self,
+        filter_core_pid: filters.FilterCMKSiteStatisticsByCorePIDs,
+        livestatus_data: filters.Rows,
+        expected_result: filters.Rows,
+    ) -> None:
+        assert (
+            filter_core_pid.filter_table(
+                {"service_cmk_site_statistics_core_pid": {}},
+                livestatus_data[::-1],
+            )
+            == expected_result
+        )

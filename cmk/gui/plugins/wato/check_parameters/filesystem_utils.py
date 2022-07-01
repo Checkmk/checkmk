@@ -33,6 +33,7 @@ MutableParamType = MutableMapping[str, Any]
 
 class FilesystemElements(Enum):
     levels = "levels"
+    levels_percent = "levels_percent"  # sansymphony_pool
     levels_unbound = "levels_unbound"  # These are percentage levels with no maximum value.
     # I assume this is due to overprovisioning of virtual filesystems, see netapp_volumes
     show_levels = "show_levels"  # TODO: deprecate
@@ -65,6 +66,7 @@ def _get_free_used_dynamic_valuespec(
     default_value=(80.0, 90.0),
     *,
     maxvalue: Union[None, float],
+    do_include_absolutes: bool = True,
 ) -> ValueSpec:
     if level_perspective == "used":
         title = _("used space")
@@ -91,23 +93,26 @@ def _get_free_used_dynamic_valuespec(
                     maxvalue=maxvalue,
                 ),
             ],
-        ),
-        Tuple(
-            title=_("Absolute"),
-            elements=[
-                Integer(
-                    title=_("Warning if %s") % course,
-                    unit=_("MB"),
-                    minvalue=0 if level_perspective == "used" else 1,
-                ),
-                Integer(
-                    title=_("Critical if %s") % course,
-                    unit=_("MB"),
-                    minvalue=0 if level_perspective == "used" else 1,
-                ),
-            ],
-        ),
+        )
     ]
+    if do_include_absolutes is True:
+        vs_subgroup.append(
+            Tuple(
+                title=_("Absolute"),
+                elements=[
+                    Integer(
+                        title=_("Warning if %s") % course,
+                        unit=_("MB"),
+                        minvalue=0 if level_perspective == "used" else 1,
+                    ),
+                    Integer(
+                        title=_("Critical if %s") % course,
+                        unit=_("MB"),
+                        minvalue=0 if level_perspective == "used" else 1,
+                    ),
+                ],
+            )
+        )
 
     def validate_dynamic_levels(value, varprefix):
         if [v for v in value if v[0] < 0]:
@@ -150,7 +155,10 @@ def _transform_filesystem_free(value):
     return result
 
 
-def _filesystem_levels_elements(maxvalue: Optional[float] = 101.0) -> List[DictionaryEntry]:
+def _filesystem_levels_elements(
+    maxvalue: Optional[float] = 101.0,
+    do_include_absolutes: bool = True,
+) -> List[DictionaryEntry]:
     return [
         (
             "levels",
@@ -160,12 +168,17 @@ def _filesystem_levels_elements(maxvalue: Optional[float] = 101.0) -> List[Dicti
                 default_value=(80.0, 90.0),
                 match=match_dual_level_type,
                 elements=[
-                    _get_free_used_dynamic_valuespec("used", maxvalue=maxvalue),
+                    _get_free_used_dynamic_valuespec(
+                        "used",
+                        maxvalue=maxvalue,
+                        do_include_absolutes=do_include_absolutes,
+                    ),
                     Transform(
                         valuespec=_get_free_used_dynamic_valuespec(
                             "free",
                             default_value=(20.0, 10.0),
                             maxvalue=maxvalue,
+                            do_include_absolutes=do_include_absolutes,
                         ),
                         title=_("Levels for free space"),
                         forth=_transform_filesystem_free,
@@ -183,6 +196,10 @@ def _filesystem_levels_elements_bound() -> List[DictionaryEntry]:
 
 def _filesystem_levels_elements_unbound() -> List[DictionaryEntry]:
     return _filesystem_levels_elements(maxvalue=None)
+
+
+def _filesystem_levels_percent_only() -> List[DictionaryEntry]:
+    return _filesystem_levels_elements(do_include_absolutes=False)
 
 
 def _filesystem_show_levels_elements() -> List[DictionaryEntry]:
@@ -490,6 +507,7 @@ def size_trend_elements() -> List[DictionaryEntry]:
 
 FILESYSTEM_ELEMENTS_SELECTOR: Mapping[FilesystemElements, Callable[[], List[DictionaryEntry]]] = {
     FilesystemElements.levels: _filesystem_levels_elements_bound,
+    FilesystemElements.levels_percent: _filesystem_levels_percent_only,
     FilesystemElements.levels_unbound: _filesystem_levels_elements_unbound,
     FilesystemElements.show_levels: _filesystem_show_levels_elements,
     FilesystemElements.reserved: _filesystem_reserved_elements,

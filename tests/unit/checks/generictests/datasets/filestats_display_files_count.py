@@ -32,7 +32,7 @@ checks = {
             'show_all_files': True
         },
         [
-            (2, 'Files in total: 3 (warn/crit at 1/1)', [
+            (2, 'Files in total: 3 (warn/crit at 1/1)\n[/var/bla]\n[/var/foo]\n[/var/boo]', [
                 ('file_count', 3, 1.0, 1.0, None, None),
             ]),
             (0, 'Smallest: 18.51 kB', []),

@@ -271,6 +271,14 @@ preamble_5() {
     fi
 }
 
+export_utility_functions() {
+    # At the time of writing of this function, the solaris agent exports
+    # some helper functions, so I consolidate those exports here.
+    # I am not sure whether this is a good idea, though.
+    # Their API is unstable.
+    export -f run_mrpe
+}
+
 section_checkmk() {
     echo "<<<check_mk>>>"
     echo "Version: 2.2.0i1"
@@ -673,8 +681,6 @@ run_mrpe() {
     printf "\n"
 }
 
-export -f run_mrpe
-
 _this_shell() {
     echo /usr/bin/bash
 }
@@ -765,9 +771,6 @@ HERE
 
     unset NAME MAXAGE TIMEOUT REFRESH_INTERVAL CACHEFILE NOW MTIME CACHE_INFO
 }
-
-#
-#
 
 run_local_checks() {
     cd "${LOCALDIR}" || return
@@ -956,6 +959,7 @@ main_setup() {
 
     preamble_5
 
+    export_utility_functions
 }
 
 main_sync_parts() {

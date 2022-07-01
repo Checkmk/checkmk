@@ -305,7 +305,6 @@ if inpath timeout; then
     waitmax() {
         timeout "$@"
     }
-    export -f waitmax
 fi
 
 set_up_encryption() {
@@ -352,6 +351,16 @@ set_up_disabled_sections() {
         # shellcheck source=agents/cfg_examples/exclude_sections.cfg
         . "${MK_CONFDIR}/exclude_sections.cfg"
     fi
+}
+
+export_utility_functions() {
+    # At the time of writing of this function, the linux agent exports
+    # some helper functions, so I consolidate those exports here.
+    # I am not sure whether this is a good idea, though.
+    # Their API is unstable.
+    export -f run_mrpe
+    export -f waitmax
+    export -f run_cached
 }
 
 section_checkmk() {
@@ -1666,17 +1675,6 @@ HERE
     unset NAME MAXAGE TIMEOUT REFRESH_INTERVAL CACHEFILE NOW MTIME CACHE_INFO
 }
 
-#
-# END COMMON AGENT CODE
-#
-
-# Make run_cached available for subshells (plugins, local checks, etc.)
-export -f run_cached
-
-#
-# BEGIN COMMON AGENT CODE
-#
-
 run_local_checks() {
     cd "${LOCALDIR}" || return
 
@@ -1812,8 +1810,6 @@ run_mrpe() {
 
     unset -v descr PLUGIN OUTPUT STATUS
 }
-
-export -f run_mrpe
 
 run_purely_synchronous_sections() {
     _log_section_time section_checkmk
@@ -1999,6 +1995,7 @@ main_setup() {
     set_up_encryption
     set_up_disabled_sections
 
+    export_utility_functions
 }
 
 main_sync_parts() {

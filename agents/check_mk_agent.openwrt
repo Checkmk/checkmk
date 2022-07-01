@@ -1132,9 +1132,6 @@ HERE
     unset NAME MAXAGE TIMEOUT REFRESH_INTERVAL CACHEFILE NOW MTIME CACHE_INFO
 }
 
-#
-#
-
 run_local_checks() {
     cd "${LOCALDIR}" || return
 

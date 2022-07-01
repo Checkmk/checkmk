@@ -381,6 +381,9 @@ bool ExecuteUpdate::copyScriptToTemp() const {
                       fs::copy_options::overwrite_existing);
         return fs::exists(temp_script_file_);
     } catch (const fs::filesystem_error &e) {
+        api_err::Register(
+            fmt::format("Failure in copyScriptToTemp '{}' f1= '{}' f2= '{}'",
+                        e.what(), e.path1(), e.path2()));
         XLOG::l("Failure in copyScriptToTemp '{}' f1= '{}' f2= '{}'", e.what(),
                 e.path1(), e.path2());
     }
@@ -466,13 +469,10 @@ std::optional<fs::path> CreateInstallFile(const fs::path &msi_base,
         return {};
     }
 
-    // remove target file
     if (RmFile(msi_to_install)) {
-        // actual move
         if (!MvFile(msi_base, msi_to_install)) {
             return {};
         }
-
     } else {
         // THIS BRANCH TESTED MANUALLY
         XLOG::l.i("Fallback to use random name");
@@ -518,8 +518,11 @@ std::pair<std::wstring, bool> CheckForUpdateFile(
         return {{}, false};
     }
 
+    api_err::Clean();
+
     auto msi_to_install = CreateInstallFile(msi_base, msi_name);
     if (!msi_to_install) {
+        api_err::Register("Impossible to copy MSI, please, check log file");
         return {{}, false};
     }
 
@@ -543,8 +546,11 @@ std::pair<std::wstring, bool> CheckForUpdateFile(
         auto command = eu.getCommand();
         return {command, tools::RunStdCommand(command, false) != 0};
     } catch (const std::exception &e) {
-        XLOG::l("Unexpected exception '{}' during attempt to exec update ",
-                e.what());
+        auto log_text = fmt::format(
+            "Unexpected exception '{}' during attempt to execute agent update",
+            e.what());
+        api_err::Register(log_text);
+        XLOG::l(log_text);
     }
     return {{}, false};
 }
@@ -671,7 +677,7 @@ std::wstring ExpectedMarker() {
 void DeleteInstallApiLog() {
     if (auto log_file = FindInstallApiLog()) {
         fs::path bak_file = *log_file;
-        bak_file += ".bak";
+        bak_file += ".bak";  // backing up is always useful
         RmFile(bak_file);
         MvFile(*log_file, bak_file);
     }

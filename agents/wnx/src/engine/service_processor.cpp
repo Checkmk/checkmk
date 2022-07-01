@@ -95,6 +95,7 @@ void TryCleanOnExit() {
     }
 
     fw::RemoveRule(srv::kSrvFirewallRuleName);
+    install::api_err::Clean();
 
     const auto mode = details::GetCleanDataFolderMode();  // read config
     XLOG::l.i(

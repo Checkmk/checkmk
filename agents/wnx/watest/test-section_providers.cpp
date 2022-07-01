@@ -9,6 +9,7 @@
 #include "cfg.h"
 #include "common/version.h"
 #include "common/wtools.h"
+#include "install_api.h"
 #include "providers/check_mk.h"
 #include "providers/df.h"
 #include "providers/internal.h"
@@ -221,7 +222,7 @@ TEST_F(SectionProviderCheckMkFixture, OnlyFromField) {
     }
 }
 
-TEST_F(SectionProviderCheckMkFixture, FailedInstall) {
+TEST_F(SectionProviderCheckMkFixture, FailedPythonInstall) {
     tst::misc::CopyFailedPythonLogFileToLog(createDataDir());
 
     auto result = getFullResultAsTable();
@@ -229,6 +230,19 @@ TEST_F(SectionProviderCheckMkFixture, FailedInstall) {
               section::MakeHeader(section::kCheckMk));
     EXPECT_TRUE(result[full_lines_ - 2].starts_with("UpdateFailed:"));
     EXPECT_TRUE(result[full_lines_ - 1].starts_with("UpdateRecoverAction:"));
+}
+
+TEST_F(SectionProviderCheckMkFixture, FailedInstallApi) {
+    tst::misc::CopyFailedPythonLogFileToLog(createDataDir());
+    install::api_err::Register("disaster!");
+
+    auto result = getFullResultAsTable();
+    EXPECT_EQ(result[full_lines_ - 3] + "\n",
+              section::MakeHeader(section::kCheckMk));
+    EXPECT_TRUE(result[full_lines_ - 2].starts_with("UpdateFailed:"));
+    EXPECT_TRUE(result[full_lines_ - 2].ends_with("disaster!"));
+    EXPECT_TRUE(result[full_lines_ - 1].starts_with(
+        "UpdateRecoverAction: Contact with system administrator."));
 }
 
 class SectionProvidersMemFixture : public ::testing::Test {

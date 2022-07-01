@@ -116,12 +116,17 @@ std::string CheckMk::makeBody() {
     out += MakeDirs();
     out += "OnlyFrom: "s + makeOnlyFrom() + "\n"s;
     out += section::MakeHeader(section::kCheckMkCtlStatus);
-    const auto json = ac::DetermineAgentCtlStatus();
-    if (!json.empty()) {
+
+    if (const auto json = ac::DetermineAgentCtlStatus(); !json.empty()) {
         out += json + "\n";
     }
 
-    if (install::GetLastMsiFailReason()) {
+    if (auto install_api_err = install::api_err::Get()) {
+        out += "<<<check_mk>>>\n";
+        out += fmt::format("UpdateFailed: The last agent update failed. {}\n",
+                           wtools::ToUtf8(*install_api_err));
+        out += "UpdateRecoverAction: Contact with system administrator.\n";
+    } else if (install::GetLastMsiFailReason()) {
         out += "<<<check_mk>>>\n";
         out +=
             "UpdateFailed: The last agent update failed. Supplied Python environment is not compatible with OS. \n";

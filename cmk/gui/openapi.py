@@ -37,10 +37,12 @@ def generate_data(target: EndpointTarget, validate: bool = True) -> Dict[str, An
     ):
         if target in endpoint.blacklist_in:
             continue
-        SPEC.path(
-            path=endpoint.path,
-            operations=endpoint.to_operation_dict(),
-        )
+
+        for path, operation_dict in endpoint.operation_dicts():
+            SPEC.path(
+                path=path,
+                operations=operation_dict,
+            )
 
     generated_spec = SPEC.to_dict()
     #   return generated_spec

@@ -369,6 +369,7 @@ OperationSpecType = TypedDict(
         "parameters": Sequence[SchemaParameter],
         "requestBody": Dict[str, Any],
         "summary": str,
+        "deprecated": bool,
     },
     total=False,
 )

@@ -41,7 +41,7 @@ jobs:
       uses: actions/checkout@v2
     - name: Parse Python version from defines.make
       run: |
-        echo "PYTHON_VERSION=$(make --no-print-directory --file=defines.make print-PYTHON_MAJOR_DOT_MINOR)" >> $GITHUB_ENV
+        echo "PYTHON_VERSION=$(make --no-print-directory --file=defines.make print-PYTHON_VERSION)" >> $GITHUB_ENV
     - name: Setup Python
       uses: actions/setup-python@v2
       with:

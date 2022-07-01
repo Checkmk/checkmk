@@ -839,18 +839,28 @@ run_remote_plugins() {
     [ -f "${MK_CONFDIR}/mrpe.cfg" ] || return
 
     # MK's Remote Plugin Executor
-    echo '<<<mrpe>>>'
     # SC2162: read without -r will mangle backslashes.
     # The following suppression was added when we enabled the corresponding shellcheck.
     # It may well be that "read -r" would be more appropriate.
     # shellcheck disable=SC2162
-    _non_comment_lines "${MK_CONFDIR}/mrpe.cfg" |
-        while read descr cmdline; do
-            PLUGIN=${cmdline%% *}
-            OUTPUT=$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time ${cmdline}")
-            echo "(${PLUGIN##*/}) ${descr} $? ${OUTPUT}" | tr \\n \\1
-            echo
-        done
+    _non_comment_lines "${MK_CONFDIR}/mrpe.cfg" | while read descr cmdline; do
+        run_mrpe "${descr}" "${cmdline}"
+    done
+}
+
+run_mrpe() {
+    descr="${1}"
+    shift
+
+    PLUGIN="${1%% *}"
+    OUTPUT="$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time $*")"
+    STATUS="$?"
+
+    printf "<<<mrpe>>>\n"
+    printf "(%s) %s %s %s" "${PLUGIN##*/}" "${descr}" "${STATUS}" "${OUTPUT}" | tr \\n \\1
+    printf "\n"
+
+    unset descr PLUGIN OUTPUT STATUS
 }
 
 run_purely_synchronous_sections() {

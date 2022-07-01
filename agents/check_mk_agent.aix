@@ -828,23 +828,28 @@ _non_comment_lines() {
     grep -Ev '^[[:space:]]*($|#)' "${1}"
 }
 
+_mrpe_get_interval() {
+    echo "${1}" | grep -Eo '^\([^)]*\)' | grep -Eo 'interval=[^:)]*' | cut -d= -f2
+}
+
 #
 # END COMMON AGENT CODE
 #
 
 run_remote_plugins() {
-    # caching currently not supported
-    ${MK_RUN_SYNC_PARTS} || return
 
     [ -f "${MK_CONFDIR}/mrpe.cfg" ] || return
 
-    # MK's Remote Plugin Executor
-    # SC2162: read without -r will mangle backslashes.
-    # The following suppression was added when we enabled the corresponding shellcheck.
-    # It may well be that "read -r" would be more appropriate.
-    # shellcheck disable=SC2162
-    _non_comment_lines "${MK_CONFDIR}/mrpe.cfg" | while read descr cmdline; do
-        run_mrpe "${descr}" "${cmdline}"
+    _non_comment_lines "${MK_CONFDIR}/mrpe.cfg" | while read -r descr rest; do
+        interval="$(_mrpe_get_interval "${rest}")"
+        cmdline="${rest#(*) }"
+
+        if [ -z "${interval}" ]; then
+            ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
+        else
+            run_cached "mrpe_${descr}" "${interval}" "run_mrpe '${descr}' '${cmdline}'"
+        fi
+
     done
 }
 

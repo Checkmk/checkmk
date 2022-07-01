@@ -844,13 +844,13 @@ _non_comment_lines() {
     grep -Ev '^[[:space:]]*($|#)' "${1}"
 }
 
-#
-# END COMMON AGENT CODE
-#
-
 _mrpe_get_interval() {
     echo "${1}" | grep -Eo '^\([^)]*\)' | grep -Eo 'interval=[^:)]*' | cut -d= -f2
 }
+
+#
+# END COMMON AGENT CODE
+#
 
 run_remote_plugins() {
     [ -f "${MK_CONFDIR}/mrpe.cfg" ] || return

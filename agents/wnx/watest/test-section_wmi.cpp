@@ -452,14 +452,6 @@ TEST(WmiProviderTest, WmiWebServicesSimulationIntegrationExt) {
 
 static const std::string section_name{cma::section::kUseEmbeddedName};
 #define FNAME_USE "x.xxx"
-auto ReadFileAsTable(const std::string Name) {
-    std::ifstream in(Name.c_str());
-    std::stringstream sstr;
-    sstr << in.rdbuf();
-    auto content = sstr.str();
-    return cma::tools::SplitString(content, "\n");
-}
-
 TEST(WmiProviderTest, WmiDotnet_Integration) {
     using namespace cma::section;
     using namespace cma::provider;
@@ -493,7 +485,7 @@ TEST(WmiProviderTest, WmiDotnet_Integration) {
     std::error_code ec;
     ASSERT_TRUE(fs::exists(f, ec));  // check that file is exists
     {
-        auto table = ReadFileAsTable(f.u8string());
+        auto table = tst::ReadFileAsTable(f);
         ASSERT_TRUE(table.size() > 1);  // more than 1 line should be present
         EXPECT_EQ(table[0] + "\n", cma::section::MakeHeader(wmi_name, ','));
 
@@ -597,7 +589,7 @@ protected:
         if (!fs::exists(f, ec)) {
             return {};
         }
-        return ReadFileAsTable(f.u8string());
+        return tst::ReadFileAsTable(f);
     }
 
 private:

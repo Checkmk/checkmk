@@ -847,8 +847,6 @@ run_plugins() {
 run_remote_plugins() {
     [ -f "${MK_CONFDIR}/mrpe.cfg" ] || return
 
-    # MK's Remote Plugin Executor
-    echo '<<<mrpe>>>'
     # SC2162: read without -r will mangle backslashes.
     # The following suppression was added when we enabled the corresponding shellcheck.
     # It may well be that "read -r" would be more appropriate.

@@ -69,6 +69,8 @@ MK_VARDIR = os.getenv("LOGWATCH_DIR") or os.getenv("MK_VARDIR") or os.getenv("MK
 
 MK_CONFDIR = os.getenv("LOGWATCH_DIR") or os.getenv("MK_CONFDIR") or "."
 
+REMOTE = os.getenv("REMOTE", os.getenv("REMOTE_ADDR"))
+
 LOGGER = logging.getLogger(__name__)
 
 IPV4_REGEX = re.compile(r"^(::ffff:|::ffff:0:|)(?:[0-9]{1,3}\.){3}[0-9]{1,3}$")
@@ -153,10 +155,9 @@ class ArgsParser(object):  # pylint: disable=too-few-public-methods, useless-obj
         self.no_state = "--no_state" in argv
 
 
-def get_status_filename(cluster_config):
+def get_status_filename(cluster_config, remote):
     """
     Side effect:
-    - Depend on ENV var.
     - In case agent plugin is called with debug option set -> depends on global
       LOGGER and stdout.
 
@@ -178,7 +179,6 @@ def get_status_filename(cluster_config):
     underscores (_) for IPv4 address or is plain $REMOTE in case it does not match
     an IPv4 or IPv6 address.
     """
-    remote = os.getenv("REMOTE", os.getenv("REMOTE_ADDR"))
     if not remote:
         status_filename = "logwatch.state" + (".local" if sys.stdout.isatty() else "")
         return os.path.join(MK_VARDIR, status_filename)
@@ -1148,7 +1148,7 @@ def main(argv=None):  # pylint: disable=too-many-branches
         sys.stdout.write("<<<logwatch>>>\n%s%s\n" % (CONFIG_ERROR_PREFIX, exc))
         sys.exit(1)
 
-    status_filename = get_status_filename(cluster_config)
+    status_filename = get_status_filename(cluster_config, REMOTE)
     # Copy the last known state from the logwatch.state when there is no status_filename yet.
     if not os.path.exists(status_filename) and os.path.exists("%s/logwatch.state" % MK_VARDIR):
         shutil.copy("%s/logwatch.state" % MK_VARDIR, status_filename)

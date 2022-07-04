@@ -1,0 +1,15 @@
+Title: KUBE kube_node_conditions: remove misleading "not available" text in check parameters
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1656935922
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p6
+
+The Kubernetes node conditions check parameters allow the user to configure the monitoring state
+if a condition is either faulty or unavailable. However, the unavailability keyword is misleading
+as the condition could be either unknown or completely missing. This werk, therefore, rephrases the
+parameter titles to make this more explicit.

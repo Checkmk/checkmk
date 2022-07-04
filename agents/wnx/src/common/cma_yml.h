@@ -22,9 +22,11 @@ void LogException(const std::string &format, std::string_view name,
 template <typename T>
 std::optional<T> GetVal(YAML::Node yaml, const std::string &group_name,
                         const std::string &value_name) noexcept {
-    if (yaml.size() == 0) return {};
-
     try {
+        if (yaml.size() == 0) {
+            return {};
+        }
+
         auto group = yaml[group_name];
         if (!group.IsMap()) {
             return {};
@@ -62,9 +64,9 @@ inline YAML::Node GetNode(YAML::Node yaml, const std::string &section,
 
 inline std::optional<YAML::Node> GetGroup(
     YAML::Node yaml, const std::string &value_name) noexcept {
-    if (yaml.size() == 0) return {};
-
     try {
+        if (yaml.size() == 0) return {};
+
         auto node = yaml[value_name];
         return node;
     } catch (const std::exception &e) {
@@ -76,9 +78,9 @@ inline std::optional<YAML::Node> GetGroup(
 // safe method yo extract value from the yaml
 template <typename T>
 std::optional<T> GetVal(YAML::Node yaml, const std::string &name) noexcept {
-    if (yaml.size() == 0) return {};
-
     try {
+        if (yaml.size() == 0) return {};
+
         auto val = yaml[name];
         if (!val.IsDefined()) return {};
 
@@ -95,9 +97,9 @@ std::optional<T> GetVal(YAML::Node yaml, const std::string &name) noexcept {
 template <>
 inline std::optional<YAML::Node> GetVal(YAML::Node yaml,
                                         const std::string &name) noexcept {
-    if (yaml.size() == 0) return {};
-
     try {
+        if (yaml.size() == 0) return {};
+
         return yaml[name];
     } catch (const std::exception &e) {
         LogException("Cannot read yml node '{}' code: [{}]", name, e);

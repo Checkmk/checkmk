@@ -47,6 +47,12 @@ if not "%errorlevel%" == "0" powershell Write-Host "Failed cargo build" -Foregro
 powershell Write-Host "Building Rust SUCCESS" -Foreground Green
 
 :: 3. Test
+:: Validate elevation, because full testing is possible only in elevated mode!
+net session > nul 2>&1 
+IF NOT %ERRORLEVEL% EQU 0 (
+    echo You must be elevated. Exiting...
+    exit /B 21
+)
 powershell Write-Host "Testing Rust executables" -Foreground White
 cargo test --release --target %target% -- --test-threads=4 2>&1
 if not "%errorlevel%" == "0" powershell Write-Host "Failed cargo build" -Foreground Red && exit /b 19

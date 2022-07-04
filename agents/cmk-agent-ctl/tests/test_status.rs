@@ -12,6 +12,14 @@ use predicates::prelude::*;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_status_ok() {
+    #[cfg(windows)]
+    if !is_elevated::is_elevated() {
+        // SK: There is no better method to avoid annoying failures if your
+        // IDE is not elevated. Do not worry, that you may occasionally do not
+        // test something - the testing script will require elevation in any case.
+        println!("Test is skipped, must be in elevated mode");
+        return;
+    }
     let test_dir = common::setup_test_dir("cmk-agent-ctl_test_status");
 
     #[cfg(unix)]

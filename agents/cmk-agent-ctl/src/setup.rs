@@ -2,6 +2,8 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+#[cfg(windows)]
+use super::misc;
 use super::{cli, constants, types};
 #[cfg(unix)]
 use anyhow::Context;
@@ -259,6 +261,9 @@ pub fn init() -> AnyhowResult<(cli::Args, PathResolver)> {
     }
     // Parse args as first action to directly exit from --help or malformatted arguments
     let args = cli::Args::from_args();
+    #[cfg(windows)]
+    misc::validate_elevation()?;
+
     let paths = setup(&args)?;
     Ok((args, paths))
 }

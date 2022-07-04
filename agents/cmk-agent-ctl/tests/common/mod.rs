@@ -6,6 +6,8 @@ use cmk_agent_ctl::{certs as lib_certs, config, site_spec, types};
 use std::{path::Path, str::FromStr};
 pub mod agent;
 pub mod certs;
+#[cfg(windows)]
+pub use is_elevated;
 
 use anyhow::{anyhow, Result as AnyhowResult};
 

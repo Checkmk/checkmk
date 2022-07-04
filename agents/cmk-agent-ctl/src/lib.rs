@@ -27,10 +27,10 @@ use modes::pull::pull;
 use modes::push::handle_push_cycle as push;
 use modes::registration::{proxy_register, register};
 use modes::status::status;
+pub use setup::init;
 
 #[cfg(windows)]
 pub use misc::validate_elevation;
-pub use setup::init;
 
 pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> AnyhowResult<()> {
     agent_socket_operational(&args)?;

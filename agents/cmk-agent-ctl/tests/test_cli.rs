@@ -62,6 +62,14 @@ fn get_pseudo_random_port() -> u16 {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_dump() -> AnyhowResult<()> {
+    #[cfg(windows)]
+    if !is_elevated::is_elevated() {
+        // SK: There is no better method to avoid annoying failures if your
+        // IDE is not elevated. Do not worry, that you may occasionally do not
+        // test something - the testing script will require elevation in any case.
+        println!("Test is skipped, must be in elevated mode");
+        return Ok(());
+    }
     let port = get_pseudo_random_port();
     let test_dir = common::setup_test_dir("cmk_agent_ctl_test_dump-");
 
@@ -71,7 +79,7 @@ async fn test_dump() -> AnyhowResult<()> {
     #[cfg(unix)]
     let expected_remote_address = Some("\n");
     #[cfg(windows)]
-    let agent_socket_address = format!("localhost:{}", &port).to_string();
+    let agent_socket_address = format!("localhost:{}", &port);
     #[cfg(windows)]
     let expected_remote_address: Option<&str> = None;
     let agent_stream_thread = tokio::spawn(common::agent::one_time_agent_response(

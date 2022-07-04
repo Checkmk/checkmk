@@ -15,6 +15,7 @@ class Interface(NamedTuple):
     if_index: str
     if_name: str
     ip_address: str
+    address_type: str
     subnet: List[str]
 
 
@@ -46,6 +47,7 @@ def parse_fortinet_firewall_network_interfaces(
                 if_index=if_index,
                 if_name=if_names_lookup[if_index],
                 ip_address=if_ip,
+                address_type="IPv4",
                 subnet=[if_subnet],
             )
 
@@ -90,6 +92,7 @@ def inventory_fortinet_firewall(section: SectionFortinetInterface) -> InventoryR
             inventory_columns={
                 "index": interface.if_index,
                 "device": interface.if_name,
+                "type": interface.address_type,
                 "subnet": ",".join(interface.subnet),
             },
         )

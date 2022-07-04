@@ -41,30 +41,35 @@ def test_parse_inventory_fortinet_firewall() -> None:
             if_index="20",
             if_name="internal1.101",
             ip_address="127.0.0.1",
+            address_type="IPv4",
             subnet=["255.255.255.0"],
         ),
         "127.0.0.2": Interface(
             if_index="21",
             if_name="internal1.102",
             ip_address="127.0.0.2",
+            address_type="IPv4",
             subnet=["255.255.255.224"],
         ),
         "127.0.0.3": Interface(
             if_index="22",
             if_name="internal1.103",
             ip_address="127.0.0.3",
+            address_type="IPv4",
             subnet=["255.255.255.224"],
         ),
         "127.0.0.4": Interface(
             if_index="25",
             if_name="internal1.106",
             ip_address="127.0.0.4",
+            address_type="IPv4",
             subnet=["255.255.255.224"],
         ),
         "127.0.0.5": Interface(
             if_index="133",
             if_name="internal1.107",
             ip_address="127.0.0.5",
+            address_type="IPv4",
             subnet=["255.255.255.224"],
         ),
     }
@@ -91,6 +96,7 @@ def test_inventory_fortinet_firewall_with_section() -> None:
             if_index="22",
             if_name="internal1.103",
             ip_address="127.0.0.3",
+            address_type="IPv4",
             subnet=["255.255.255.224"],
         ),
     }
@@ -106,6 +112,7 @@ def test_inventory_fortinet_firewall_with_section() -> None:
             inventory_columns={
                 "index": "22",
                 "device": "internal1.103",
+                "type": "IPv4",
                 "subnet": "255.255.255.224",
             },
         )

@@ -1,0 +1,14 @@
+Title: PostgreSQL agent plug-in on Linux: last analyze time wrong
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1656941506
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p6
+
+Previously, the agent plug-in mk_postgres.py would incorrectly set the VACUUM time to be equal to
+the ANALYZE time. Thus, the ANALYZE time could not be monitored. Thank you, Thomas Glöckner for
+this fix.

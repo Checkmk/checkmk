@@ -20,7 +20,7 @@ def _parameter_valuespec():
             (
                 "ready",
                 MonitoringState(
-                    title=_("Monitoring state if the READY condition is faulty or not available"),
+                    title=_("Monitoring state if the READY condition is faulty or unknown"),
                     default_value=2,
                 ),
             ),
@@ -28,7 +28,7 @@ def _parameter_valuespec():
                 "memorypressure",
                 MonitoringState(
                     title=_(
-                        "Monitoring state if the MEMORYPRESSURE condition is faulty or not available"
+                        "Monitoring state if the MEMORYPRESSURE condition is faulty or unknown"
                     ),
                     default_value=2,
                 ),
@@ -36,18 +36,14 @@ def _parameter_valuespec():
             (
                 "diskpressure",
                 MonitoringState(
-                    title=_(
-                        "Monitoring state if the DISKPRESSURE condition is faulty or not available"
-                    ),
+                    title=_("Monitoring state if the DISKPRESSURE condition is faulty or unknown"),
                     default_value=2,
                 ),
             ),
             (
                 "pidpressure",
                 MonitoringState(
-                    title=_(
-                        "Monitoring state if the PIDPRESSURE condition is faulty or not available"
-                    ),
+                    title=_("Monitoring state if the PIDPRESSURE condition is faulty or unknown"),
                     default_value=2,
                 ),
             ),
@@ -55,7 +51,7 @@ def _parameter_valuespec():
                 "networkunavailable",
                 MonitoringState(
                     title=_(
-                        "Monitoring state if the NETWORKUNAVAILABLE condition is faulty or not available"
+                        "Monitoring state if the NETWORKUNAVAILABLE condition is faulty or unknown"
                     ),
                     default_value=2,
                 ),

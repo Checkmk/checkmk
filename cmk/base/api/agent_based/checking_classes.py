@@ -283,16 +283,13 @@ class Metric(
         )
 
 
-class Result(
-    NamedTuple(  # pylint: disable=typing-namedtuple-call
-        "_ResultTuple",
-        [
-            ("state", State),
-            ("summary", str),
-            ("details", str),
-        ],
-    ),
-):
+class ResultTuple(NamedTuple):
+    state: State
+    summary: str
+    details: str
+
+
+class Result(ResultTuple):
     """A result to be yielded by check functions
 
     This is the class responsible for creating service output and setting the state of a service.

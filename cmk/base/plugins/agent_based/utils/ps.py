@@ -665,7 +665,7 @@ def individual_process_check(
                 name = value
             if the_item == "pid":
                 pid = value
-            elif the_item.startswith("cpu usage"):
+            elif the_item == "cpu usage":
                 cpu_usage += value
 
         result, *_ = check_levels(

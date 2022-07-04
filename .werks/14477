@@ -1,0 +1,10 @@
+Title: Sanitize SiteConfiguration before logging it
+Class: security
+Compatible: compat
+Component: wato
+Date: 1656065652
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p27

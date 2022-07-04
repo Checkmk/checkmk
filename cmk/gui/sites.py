@@ -160,7 +160,9 @@ def _ensure_connected(user: Optional[LoggedInUser], force_authuser: Optional[Use
     _connect_multiple_sites(user)
     _set_livestatus_auth(user, force_authuser)
 
-    logger.debug("Site states: %r", g.site_status)
+    site_states_to_log = g.site_status.copy()
+    site_states_to_log.update({"secret": "REDACTED"})
+    logger.debug("Site states: %r", site_states_to_log)
 
 
 def _connect_multiple_sites(user: LoggedInUser) -> None:

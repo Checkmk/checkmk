@@ -27,13 +27,13 @@ timeout(time: 12, unit: 'HOURS') {
             notify = load 'buildscripts/scripts/lib/notify.groovy'
             str_mod = load 'buildscripts/scripts/lib/str_mod.groovy'
             versioning = load 'buildscripts/scripts/lib/versioning.groovy'
-    
+
             // Image Version Tag
             VERS_TAG = versioning.get_docker_tag(scm)
             BRANCH = versioning.get_branch(scm)
             BRANCH_VERSION = versioning.get_branch_version()
         }
-    
+
         // Since this is the job that builds our build containers, we can not
         // use the build containers :-). Create some throw away container with
         // a minimal set of things tools to bootstrap our build containers.
@@ -46,13 +46,13 @@ timeout(time: 12, unit: 'HOURS') {
             // lsb-release: needed for adding the correct docker mirror info
             sh('apt-get update')
             sh('apt-get install -y git curl gnupg2 lsb-release')
-    
+
             // docker: needed for creating the containers
             sh('curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -')
             sh('echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" >/etc/apt/sources.list.d/docker.list')
             sh('apt-get update')
             sh('DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce')
-    
+
             try {
                 DISTRO_LIST.each { DISTRO ->
                     DOCKER_BUILDS[DISTRO] = {
@@ -68,11 +68,11 @@ timeout(time: 12, unit: 'HOURS') {
                                         def RESOLVED_IMAGE_ID = sh(script: "../../docker_image_aliases/resolve.sh ${IMAGE_ALIAS_NAME}", returnStdout: true).replaceAll("[\r\n]+", "");
                                         println("Using IMAGE_ALIAS_NAME: ${IMAGE_ALIAS_NAME}=${RESOLVED_IMAGE_ID}");
                                         def DOCKER_ARGS = (
-                                            " --build-arg $IMAGE_ALIAS_NAME=$RESOLVED_IMAGE_ID" + 
-                                            " --build-arg DOCKER_REGISTRY='$DOCKER_REGISTRY_NOHTTP'" + 
+                                            " --build-arg $IMAGE_ALIAS_NAME=$RESOLVED_IMAGE_ID" +
+                                            " --build-arg DOCKER_REGISTRY='$DOCKER_REGISTRY_NOHTTP'" +
                                             " --build-arg NEXUS_ARCHIVES_URL='$NEXUS_ARCHIVES_URL'" +
                                             " --build-arg DISTRO='$DISTRO'" +
-                                            " --build-arg NEXUS_USERNAME='$USERNAME'" + 
+                                            " --build-arg NEXUS_USERNAME='$USERNAME'" +
                                             " --build-arg NEXUS_PASSWORD='$PASSWORD'" +
                                             " --build-arg ARTIFACT_STORAGE='$ARTIFACT_STORAGE'" +
                                             " --build-arg VERS_TAG='$VERS_TAG'" +
@@ -84,7 +84,7 @@ timeout(time: 12, unit: 'HOURS') {
                                 }
                             }
                         }
-    
+
                         stage('upload ' + DISTRO) {
                             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                                 IMAGE.push()

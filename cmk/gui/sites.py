@@ -275,7 +275,8 @@ def _site_config_for_livestatus(site_id: SiteId, site_spec: SiteConfiguration) -
     """
     copied_site: SiteConfiguration = site_spec.copy()
 
-    if site_spec["proxy"] is not None:
+    if site_spec.get("proxy") is not None:
+        assert site_spec["proxy"] is not None
         copied_site["cache"] = site_spec["proxy"].get("cache", True)
     else:
         if isinstance(site_spec["socket"], tuple) and site_spec["socket"][0] in ["tcp", "tcp6"]:
@@ -288,7 +289,7 @@ def _site_config_for_livestatus(site_id: SiteId, site_spec: SiteConfiguration) -
 def encode_socket_for_livestatus(site_id: SiteId, site_spec: SiteConfiguration) -> str:
     socket_spec = site_spec["socket"]
 
-    if site_spec["proxy"] is not None:
+    if site_spec.get("proxy") is not None:
         return "unix:%sproxy/%s" % (livestatus_unix_socket, site_id)
 
     if socket_spec[0] == "local":

@@ -724,8 +724,8 @@ def individual_process_check(
                 name = value
             if the_item == "pid":
                 pid = value
-            elif the_item.startswith("cpu usage"):
-                cpu_usage += float(value)  # float conversion fo mypy
+            elif the_item == "cpu usage":
+                cpu_usage += float(value)
 
         result, *_ = check_levels(
             cpu_usage,

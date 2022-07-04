@@ -9,10 +9,11 @@ import itertools
 from typing import Any, Dict, List, NamedTuple, Optional
 
 import pytest
+from pytest_mock import MockerFixture
 
 from tests.testlib import on_time
 
-from cmk.base.plugins.agent_based import ps_section
+from cmk.base.plugins.agent_based import ps_check, ps_section
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.utils import ps as ps_utils
@@ -908,3 +909,55 @@ def test_cpu_util_single_process_levels(cpu_cores):
         )
 
     assert output == reference
+
+
+def test_parse_ps_windows(mocker: MockerFixture):
+    section_ps = ps_section.parse_ps(
+        splitter(
+            """(\\LS\0tribe29,150364,40016,0,2080,1,387119531250,2225698437500,111,2,263652)	CPUSTRES64.EXE""",
+            "\t",
+        )
+    )
+
+    section_mem = None
+    section_mem_used = None
+    section_cpu = None
+    params = {"levels": (0, 0, 0, 0), "single_cpulevels": (0, 0, 0, 0)}
+
+    service = next(
+        iter(
+            ps_utils.discover_ps(
+                params=[
+                    {"descr": "CPUSTRES64", "match": "CPUSTRES64.EXE", "default_params": {}},
+                    {},
+                ],
+                section_ps=section_ps,
+                section_mem=section_mem,
+                section_mem_used=section_mem_used,
+                section_cpu=section_cpu,
+            )
+        )
+    )
+    if service.item is None:
+        assert False, "how do I not have an item"
+    item = service.item
+
+    mocker.patch("cmk.base.plugins.agent_based.utils.ps.cpu_rate", return_value=1000000)
+    mocker.patch("cmk.base.plugins.agent_based.agent_based_api.v1.get_value_store", return_value={})
+    results = list(
+        ps_check.check_ps(
+            item=item,
+            params=params,
+            section_ps=section_ps,
+            section_mem=section_mem,
+            section_mem_used=section_mem_used,
+            section_cpu=section_cpu,
+        )
+    )
+    single_process_result = next(
+        r for r in results if isinstance(r, Result) and "PID 2080" in r.summary
+    )
+    assert single_process_result == Result(
+        state=state.CRIT,
+        summary="CPUSTRES64.EXE with PID 2080 CPU: 20.00% (warn/crit at 0%/0%)",
+    )

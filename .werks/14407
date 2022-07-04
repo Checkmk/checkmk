@@ -1,0 +1,13 @@
+Title: single process cpu utilization on windows
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1656938795
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p6
+
+On windows the per process cpu utilization used to be twice as large as expected.
+This has been fixed. No user interaction required.

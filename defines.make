@@ -72,10 +72,13 @@ GCC_VERSION	       := "${GCC_VERSION_MAJOR}.${GCC_VERSION_MINOR}.${GCC_VERSION_P
 # When you update the Python version, you may have to update the test expectations
 # in test_03_pip_interpreter_version.
 # Update omd/Licenses.csv, too.
-# NOTE: PYTHON_VERSION is also needed in agents/modules/windows/Makefile. The plain grep solution won't work:
-# grep -oP '(?<=python_version = ").*(?=")' $(REPO_PATH)/Pipfile --> Windows node currently has no grep with Perl support
-# As python is installed on every node, we're going this way...
-PYTHON_VERSION	   := $(shell python -c "import sys; import re; print([m.groups(1) for l in open(sys.argv[1]).readlines() for m in (re.match('^python_version = \"(.*)\"', l),) if m][0][0])" $(REPO_PATH)/Pipfile)
+# NOTE: PYTHON_VERSION is also needed in agents/modules/windows/Makefile. The plain grep solution won't work there, as
+# the Windows node currently has no grep with Perl support however we have python installed.
+ifeq ($(OS),Windows_NT)
+PYTHON_VERSION	:= $(shell python -c "import sys; import re; print([m.groups(1) for l in open(sys.argv[1]).readlines() for m in (re.match('^python_version = \"(.*)\"', l),) if m][0][0])" $(REPO_PATH)/Pipfile)
+else
+PYTHON_VERSION	:= $(shell grep -oP '(?<=python_version = ").*(?=")' $(REPO_PATH)/Pipfile)
+endif
 
 # convenience stuff derived from PYTHON_VERSION
 PY_ARRAY	       := $(subst ., ,$(PYTHON_VERSION))

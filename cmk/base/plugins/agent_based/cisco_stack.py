@@ -71,7 +71,7 @@ register.snmp_section(
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1208"),  # cat29xxStack
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1745"),  # cat38xxstack
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.516"),   # catalyst37xxStack
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.516"),  # catalyst37xxStack
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2694"),  # ciscoCat9200LFixedSwitchStack
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2695"),  # ciscoCat9200FixedSwitchStack
     ),

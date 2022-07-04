@@ -768,7 +768,7 @@ class PostgresLinux(PostgresBase):
             "current_database() AS datname, nspname AS sname, "
             "relname AS tname, CASE WHEN v IS NULL THEN -1 "
             "ELSE round(extract(epoch FROM v)) END AS vtime, "
-            "CASE WHEN g IS NULL THEN -1 ELSE round(extract(epoch FROM v)) "
+            "CASE WHEN g IS NULL THEN -1 ELSE round(extract(epoch FROM g)) "
             "END AS atime FROM (SELECT nspname, relname, "
             "GREATEST(pg_stat_get_last_vacuum_time(c.oid), "
             "pg_stat_get_last_autovacuum_time(c.oid)) AS v, "

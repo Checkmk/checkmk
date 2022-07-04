@@ -742,6 +742,7 @@ class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
             validate=fields.ValidateAnyOfValidators([
                 fields.ValidateIPv4(),
                 fields.ValidateIPv6(),
+                fields.validate_hostname,
             ]))
 
 

@@ -53,6 +53,7 @@ from cmk.gui.fields.attributes import (
     HostContactGroup,
 )
 from cmk.gui.fields.validators import (
+    validate_hostname,
     ValidateAnyOfValidators,
     ValidateIPv4,
     ValidateIPv4Network,
@@ -107,4 +108,5 @@ __all__ = [
     'ValidateIPv4',
     'ValidateIPv4Network',
     'ValidateIPv6',
+    'validate_hostname',
 ]

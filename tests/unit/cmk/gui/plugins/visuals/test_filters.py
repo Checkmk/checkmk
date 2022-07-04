@@ -8,6 +8,8 @@
 from collections import namedtuple
 import pytest  # type: ignore[import]
 
+from pytest_mock import MockerFixture
+
 import cmk.utils.version as cmk_version
 import cmk.utils.tags
 
@@ -16,11 +18,12 @@ import cmk.gui.inventory
 from cmk.gui.globals import html
 import cmk.gui.plugins.visuals
 from cmk.gui.plugins.visuals.wato import FilterWatoFolder
-from cmk.gui.type_defs import InfoName, VisualContext
+from cmk.gui.type_defs import VisualContext
 
 # Triggers plugin loading
 import cmk.gui.views
 import cmk.gui.visuals
+from cmk.gui.plugins.visuals import filters
 
 from testlib import on_time
 
@@ -1166,4 +1169,248 @@ def _set_expected_queries(filt_ident, live):
     if filt_ident in ["host_check_command", "check_command"]:
         live.expect_query(
             'GET commands\nCache: reload\nColumns: name\nColumnHeaders: off'
+        )
+
+class TestFilterCMKSiteStatisticsByCorePIDs:
+    @pytest.fixture(name="filter_core_pid")
+    def fixture_filter_core_pid(self) -> filters.FilterCMKSiteStatisticsByCorePIDs:
+        assert isinstance(
+            filter_core_pid := filters.filter_registry[
+                filters.FilterCMKSiteStatisticsByCorePIDs.ID
+            ],
+            filters.FilterCMKSiteStatisticsByCorePIDs,
+        )
+        return filter_core_pid
+
+    @pytest.fixture(name="patch_site_states")
+    def fixture_patch_site_states(self, mocker: MockerFixture) -> None:
+        mocker.patch.object(
+            filters.sites,
+            "states",
+            return_value={
+                "heute": {"core_pid": 23231, "state": "online"},
+                "heute_remote_1": {"core_pid": 24610, "state": "online"},
+            },
+        )
+
+    @pytest.fixture(name="livestatus_data")
+    def fixture_livestatus_data(self) -> filters.Rows:
+        return [
+            {
+                "site": "heute",
+                "service_description": "Site standalone statistics",
+                "service_perf_data": "cmk_hosts_up=3;;;; cmk_hosts_down=0;;;; cmk_hosts_unreachable=0;;;; cmk_hosts_in_downtime=0;;;; cmk_services_ok=81;;;; cmk_services_in_downtime=0;;;; cmk_services_on_down_hosts=0;;;; cmk_services_warning=315;;;; cmk_services_unknown=0;;;; cmk_services_critical=408;;;;",
+                "long_plugin_output": "Total hosts: 3\\nHosts in state UP: 3\\nHosts in state DOWN: 0\\nUnreachable hosts: 0\\nHosts in downtime: 0\\nTotal services: 804\\nServices in state OK: 81\\nServices in downtime: 0\\nServices of down hosts: 0\\nServices in state WARNING: 315\\nServices in state UNKNOWN: 0\\nServices in state CRITICAL: 408\\nCore PID: 28388",
+                "service_metrics": [
+                    "cmk_services_critical",
+                    "cmk_services_unknown",
+                    "cmk_services_warning",
+                    "cmk_services_on_down_hosts",
+                    "cmk_services_in_downtime",
+                    "cmk_services_ok",
+                    "cmk_hosts_in_downtime",
+                    "cmk_hosts_unreachable",
+                    "cmk_hosts_down",
+                    "cmk_hosts_up",
+                ],
+                "host_name": "heute",
+                "service_check_command": "check_mk-cmk_site_statistics",
+            },
+            {
+                "site": "heute",
+                "service_description": "Site heute statistics",
+                "service_perf_data": "cmk_hosts_up=1;;;; cmk_hosts_down=0;;;; cmk_hosts_unreachable=0;;;; cmk_hosts_in_downtime=0;;;; cmk_services_ok=50;;;; cmk_services_in_downtime=0;;;; cmk_services_on_down_hosts=0;;;; cmk_services_warning=4;;;; cmk_services_unknown=0;;;; cmk_services_critical=4;;;;",
+                "long_plugin_output": "Total hosts: 1\\nHosts in state UP: 1\\nHosts in state DOWN: 0\\nUnreachable hosts: 0\\nHosts in downtime: 0\\nTotal services: 58\\nServices in state OK: 50\\nServices in downtime: 0\\nServices of down hosts: 0\\nServices in state WARNING: 4\\nServices in state UNKNOWN: 0\\nServices in state CRITICAL: 4\\nCore PID: 23231",
+                "service_metrics": [
+                    "cmk_services_critical",
+                    "cmk_services_unknown",
+                    "cmk_services_warning",
+                    "cmk_services_on_down_hosts",
+                    "cmk_services_in_downtime",
+                    "cmk_services_ok",
+                    "cmk_hosts_in_downtime",
+                    "cmk_hosts_unreachable",
+                    "cmk_hosts_down",
+                    "cmk_hosts_up",
+                ],
+                "host_name": "heute",
+                "service_check_command": "check_mk-cmk_site_statistics",
+            },
+            {
+                "site": "heute",
+                "service_description": "Site heute_remote_1 statistics",
+                "service_perf_data": "cmk_hosts_up=1;;;; cmk_hosts_down=0;;;; cmk_hosts_unreachable=0;;;; cmk_hosts_in_downtime=0;;;; cmk_services_ok=50;;;; cmk_services_in_downtime=0;;;; cmk_services_on_down_hosts=0;;;; cmk_services_warning=3;;;; cmk_services_unknown=0;;;; cmk_services_critical=5;;;;",
+                "long_plugin_output": "Total hosts: 1\\nHosts in state UP: 1\\nHosts in state DOWN: 0\\nUnreachable hosts: 0\\nHosts in downtime: 0\\nTotal services: 58\\nServices in state OK: 50\\nServices in downtime: 0\\nServices of down hosts: 0\\nServices in state WARNING: 3\\nServices in state UNKNOWN: 0\\nServices in state CRITICAL: 5\\nCore PID: 24610",
+                "service_metrics": [
+                    "cmk_services_critical",
+                    "cmk_services_unknown",
+                    "cmk_services_warning",
+                    "cmk_services_on_down_hosts",
+                    "cmk_services_in_downtime",
+                    "cmk_services_ok",
+                    "cmk_hosts_in_downtime",
+                    "cmk_hosts_unreachable",
+                    "cmk_hosts_down",
+                    "cmk_hosts_up",
+                ],
+                "host_name": "heute",
+                "service_check_command": "check_mk-cmk_site_statistics",
+            },
+            {
+                "site": "heute_remote_1",
+                "service_description": "Site heute statistics",
+                "service_perf_data": "cmk_hosts_up=1;;;; cmk_hosts_down=0;;;; cmk_hosts_unreachable=0;;;; cmk_hosts_in_downtime=0;;;; cmk_services_ok=50;;;; cmk_services_in_downtime=0;;;; cmk_services_on_down_hosts=0;;;; cmk_services_warning=3;;;; cmk_services_unknown=0;;;; cmk_services_critical=5;;;;",
+                "long_plugin_output": "Total hosts: 1\\nHosts in state UP: 1\\nHosts in state DOWN: 0\\nUnreachable hosts: 0\\nHosts in downtime: 0\\nTotal services: 58\\nServices in state OK: 50\\nServices in downtime: 0\\nServices of down hosts: 0\\nServices in state WARNING: 3\\nServices in state UNKNOWN: 0\\nServices in state CRITICAL: 5\\nCore PID: 23231",
+                "service_metrics": [
+                    "cmk_services_critical",
+                    "cmk_services_unknown",
+                    "cmk_services_warning",
+                    "cmk_services_on_down_hosts",
+                    "cmk_services_in_downtime",
+                    "cmk_services_ok",
+                    "cmk_hosts_in_downtime",
+                    "cmk_hosts_unreachable",
+                    "cmk_hosts_down",
+                    "cmk_hosts_up",
+                ],
+                "host_name": "heute_remote_1",
+                "service_check_command": "check_mk-cmk_site_statistics",
+            },
+            {
+                "site": "heute_remote_1",
+                "service_description": "Site heute_remote_1 statistics",
+                "service_perf_data": "cmk_hosts_up=1;;;; cmk_hosts_down=0;;;; cmk_hosts_unreachable=0;;;; cmk_hosts_in_downtime=0;;;; cmk_services_ok=50;;;; cmk_services_in_downtime=0;;;; cmk_services_on_down_hosts=0;;;; cmk_services_warning=3;;;; cmk_services_unknown=0;;;; cmk_services_critical=5;;;;",
+                "long_plugin_output": "Total hosts: 1\\nHosts in state UP: 1\\nHosts in state DOWN: 0\\nUnreachable hosts: 0\\nHosts in downtime: 0\\nTotal services: 58\\nServices in state OK: 50\\nServices in downtime: 0\\nServices of down hosts: 0\\nServices in state WARNING: 3\\nServices in state UNKNOWN: 0\\nServices in state CRITICAL: 5\\nCore PID: 24610",
+                "service_metrics": [
+                    "cmk_services_critical",
+                    "cmk_services_unknown",
+                    "cmk_services_warning",
+                    "cmk_services_on_down_hosts",
+                    "cmk_services_in_downtime",
+                    "cmk_services_ok",
+                    "cmk_hosts_in_downtime",
+                    "cmk_hosts_unreachable",
+                    "cmk_hosts_down",
+                    "cmk_hosts_up",
+                ],
+                "host_name": "heute_remote_1",
+                "service_check_command": "check_mk-cmk_site_statistics",
+            },
+            {
+                "site": "heute_remote_1",
+                "service_description": "Site standalone statistics",
+                "service_perf_data": "cmk_hosts_up=3;;;; cmk_hosts_down=0;;;; cmk_hosts_unreachable=0;;;; cmk_hosts_in_downtime=0;;;; cmk_services_ok=81;;;; cmk_services_in_downtime=0;;;; cmk_services_on_down_hosts=0;;;; cmk_services_warning=314;;;; cmk_services_unknown=0;;;; cmk_services_critical=409;;;;",
+                "long_plugin_output": "Total hosts: 3\\nHosts in state UP: 3\\nHosts in state DOWN: 0\\nUnreachable hosts: 0\\nHosts in downtime: 0\\nTotal services: 804\\nServices in state OK: 81\\nServices in downtime: 0\\nServices of down hosts: 0\\nServices in state WARNING: 314\\nServices in state UNKNOWN: 0\\nServices in state CRITICAL: 409\\nCore PID: 28388",
+                "service_metrics": [
+                    "cmk_services_critical",
+                    "cmk_services_unknown",
+                    "cmk_services_warning",
+                    "cmk_services_on_down_hosts",
+                    "cmk_services_in_downtime",
+                    "cmk_services_ok",
+                    "cmk_hosts_in_downtime",
+                    "cmk_hosts_unreachable",
+                    "cmk_hosts_down",
+                    "cmk_hosts_up",
+                ],
+                "host_name": "heute_remote_1",
+                "service_check_command": "check_mk-cmk_site_statistics",
+            },
+        ]
+
+    @pytest.fixture(name="expected_result")
+    def fixture_expected_result(self) -> filters.Rows:
+        return [
+            {
+                "host_name": "heute",
+                "long_plugin_output": "Total hosts: 1\\nHosts in state UP: 1\\nHosts in "
+                "state DOWN: 0\\nUnreachable hosts: 0\\nHosts in "
+                "downtime: 0\\nTotal services: 58\\nServices in state "
+                "OK: 50\\nServices in downtime: 0\\nServices of down "
+                "hosts: 0\\nServices in state WARNING: 4\\nServices in "
+                "state UNKNOWN: 0\\nServices in state CRITICAL: "
+                "4\\nCore PID: 23231",
+                "service_check_command": "check_mk-cmk_site_statistics",
+                "service_description": "Site heute statistics",
+                "service_metrics": [
+                    "cmk_services_critical",
+                    "cmk_services_unknown",
+                    "cmk_services_warning",
+                    "cmk_services_on_down_hosts",
+                    "cmk_services_in_downtime",
+                    "cmk_services_ok",
+                    "cmk_hosts_in_downtime",
+                    "cmk_hosts_unreachable",
+                    "cmk_hosts_down",
+                    "cmk_hosts_up",
+                ],
+                "service_perf_data": "cmk_hosts_up=1;;;; cmk_hosts_down=0;;;; "
+                "cmk_hosts_unreachable=0;;;; "
+                "cmk_hosts_in_downtime=0;;;; cmk_services_ok=50;;;; "
+                "cmk_services_in_downtime=0;;;; "
+                "cmk_services_on_down_hosts=0;;;; "
+                "cmk_services_warning=4;;;; cmk_services_unknown=0;;;; "
+                "cmk_services_critical=4;;;;",
+                "site": "heute",
+            },
+            {
+                "host_name": "heute",
+                "long_plugin_output": "Total hosts: 1\\nHosts in state UP: 1\\nHosts in "
+                "state DOWN: 0\\nUnreachable hosts: 0\\nHosts in "
+                "downtime: 0\\nTotal services: 58\\nServices in state "
+                "OK: 50\\nServices in downtime: 0\\nServices of down "
+                "hosts: 0\\nServices in state WARNING: 3\\nServices in "
+                "state UNKNOWN: 0\\nServices in state CRITICAL: "
+                "5\\nCore PID: 24610",
+                "service_check_command": "check_mk-cmk_site_statistics",
+                "service_description": "Site heute_remote_1 statistics",
+                "service_metrics": [
+                    "cmk_services_critical",
+                    "cmk_services_unknown",
+                    "cmk_services_warning",
+                    "cmk_services_on_down_hosts",
+                    "cmk_services_in_downtime",
+                    "cmk_services_ok",
+                    "cmk_hosts_in_downtime",
+                    "cmk_hosts_unreachable",
+                    "cmk_hosts_down",
+                    "cmk_hosts_up",
+                ],
+                "service_perf_data": "cmk_hosts_up=1;;;; cmk_hosts_down=0;;;; "
+                "cmk_hosts_unreachable=0;;;; "
+                "cmk_hosts_in_downtime=0;;;; cmk_services_ok=50;;;; "
+                "cmk_services_in_downtime=0;;;; "
+                "cmk_services_on_down_hosts=0;;;; "
+                "cmk_services_warning=3;;;; cmk_services_unknown=0;;;; "
+                "cmk_services_critical=5;;;;",
+                "site": "heute",
+            },
+        ]
+
+    @pytest.mark.usefixtures("patch_site_states")
+    def test_filter_table(
+        self,
+        filter_core_pid: filters.FilterCMKSiteStatisticsByCorePIDs,
+        livestatus_data: filters.Rows,
+        expected_result: filters.Rows,
+    ) -> None:
+        assert (
+            filter_core_pid.filter_table(
+                {"service_cmk_site_statistics_core_pid": {}},
+                livestatus_data,
+            )
+            == expected_result
+        )
+
+    def test_filter_table_filter_not_active(
+        self,
+        filter_core_pid: filters.FilterCMKSiteStatisticsByCorePIDs,
+        livestatus_data: filters.Rows,
+    ) -> None:
+        assert (
+            filter_core_pid.filter_table(
+                {},
+                livestatus_data,
+            )
+            == livestatus_data
         )

@@ -1,0 +1,20 @@
+Title: Fujitsu storage systems: "Summary Status 0" turns to UNKNOWN
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1657027691
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+
+The incompatibility of this change affects users who monitor the "Summary Status 0" service on Fujitsu storage systems.
+The status of the service "Summary Status 0" turns to unknown due to a changed service name. This means that this service needs to be rediscovered on the hosts.
+The new service name is "Summary Status".
+
+Affected checks: <br>
+<li>fjdarye60_sum</li>
+<li>fjdarye100_sum</li>
+<li>fjdarye101_sum</li>
+<li>fjdarye500_sum</li>

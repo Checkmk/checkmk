@@ -206,6 +206,10 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("fjdarye101_disks_summary"): CheckPluginName("fjdarye_disks_summary"),
     CheckPluginName("fjdarye500_disks_summary"): CheckPluginName("fjdarye_disks_summary"),
     CheckPluginName("fjdarye60_disks_summary"): CheckPluginName("fjdarye_disks_summary"),
+    CheckPluginName("fjdarye500_sum"): CheckPluginName("fjdarye_summary_status"),
+    CheckPluginName("fjdarye101_sum"): CheckPluginName("fjdarye_summary_status"),
+    CheckPluginName("fjdarye100_sum"): CheckPluginName("fjdarye_summary_status"),
+    CheckPluginName("fjdarye60_sum"): CheckPluginName("fjdarye_summary_status"),
 }
 
 

@@ -3,19 +3,15 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Mapping, Optional, Sequence
+from typing import Mapping, Sequence
 
 import pytest
 
 from cmk.base.check_legacy_includes.fjdarye import (
     check_fjdarye_rluns,
-    check_fjdarye_sum,
     discover_fjdarye_rluns,
-    discover_fjdarye_sum,
-    FjdaryeDeviceStatus,
     FjdaryeRlun,
     parse_fjdarye_rluns,
-    parse_fjdarye_sum,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
@@ -186,90 +182,3 @@ def test_check_fjdarye_rluns(
     rluns_check_result: FjdaryeCheckResult,
 ) -> None:
     assert list(check_fjdarye_rluns(item, {}, section)) == rluns_check_result
-
-
-@pytest.mark.parametrize(
-    "section, parse_sum_result",
-    [
-        pytest.param(
-            [["3"]],
-            FjdaryeDeviceStatus("3"),
-            id="If the length of the input section is 1, a Mapping containing the status is parsed.",
-        ),
-        pytest.param(
-            [["3", "4"]],
-            None,
-            id="If the length of the input section is more than 1, nothing in parsed",
-        ),
-        pytest.param(
-            [],
-            None,
-            id="If the length of the input section is 0, nothing is parsed",
-        ),
-    ],
-)
-def test_parse_fjdarye_sum(
-    section: StringTable,
-    parse_sum_result: Optional[FjdaryeDeviceStatus],
-) -> None:
-    assert parse_fjdarye_sum(section) == parse_sum_result
-
-
-@pytest.mark.parametrize(
-    "section, discovery_result",
-    [
-        # Assumption: The input will always be a FjdaryeDeviceStatus, because it's the output of the parse_fjdarye_sum function,
-        pytest.param(
-            FjdaryeDeviceStatus("3"),
-            [("0", {})],
-            id="If the length of the input section is 1, a service with name '0' is discovered",
-        ),
-        pytest.param(
-            None,
-            [],
-            id="If the length of the input section is not 1, no services are discovered",
-        ),
-    ],
-)
-def test_discover_fjdarye_sum(
-    section: Optional[FjdaryeDeviceStatus],
-    discovery_result: Sequence[tuple[str, Mapping]],
-) -> None:
-    assert list(discover_fjdarye_sum(section)) == discovery_result
-
-
-@pytest.mark.parametrize(
-    "section, check_sum_result",
-    [
-        pytest.param(
-            None,
-            [],
-            id="If the input is None, the check result is an empty list, which leads to the state going to UNKNOWN",
-        ),
-        pytest.param(
-            FjdaryeDeviceStatus("3"),
-            [(0, "Status: ok")],
-            id="If the summary status is equal to 3, the check result state is OK",
-        ),
-        pytest.param(
-            FjdaryeDeviceStatus("4"),
-            [(1, "Status: warning")],
-            id="If the summary status is equal 4, the check result state is WARN",
-        ),
-        pytest.param(
-            FjdaryeDeviceStatus("5"),
-            [(2, "Status: failed")],
-            id="If the summary status is 1 or 2 or 5, the check result state is WARN and the description is the corresponding value from the fjdarye_sum_status mapping",
-        ),
-        pytest.param(
-            FjdaryeDeviceStatus("6"),
-            [(3, "Status: unknown")],
-            id="If the summary status not known, the check result is UNKNOWN.",
-        ),
-    ],
-)
-def test_check_fjdarye_sum(
-    section: Optional[FjdaryeDeviceStatus],
-    check_sum_result: Sequence[tuple[int, str]],
-) -> None:
-    assert list(check_fjdarye_sum(_item="", _no_param={}, section=section)) == check_sum_result

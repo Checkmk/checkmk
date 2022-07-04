@@ -17,7 +17,7 @@
 # <oid>.3: Status
 # the latter can be one of the following:
 
-from typing import Mapping, MutableMapping, NamedTuple, NewType, Optional
+from typing import Mapping, MutableMapping, NamedTuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
@@ -81,35 +81,3 @@ def check_fjdarye_rluns(item: str, _no_param: Mapping, section: Mapping[str, Fjd
         rlun.raw_string[2],  # The result state and summary are dependent on the third byte
         (2, "RLUN in unknown state"),
     )
-
-
-# .
-FjdaryeDeviceStatus = NewType("FjdaryeDeviceStatus", str)
-
-
-def parse_fjdarye_sum(info: StringTable) -> Optional[FjdaryeDeviceStatus]:
-
-    for status in info:
-        if len(status) == 1:
-            return FjdaryeDeviceStatus(status[0])
-    return None
-
-
-def discover_fjdarye_sum(section: Optional[FjdaryeDeviceStatus]):
-    if section:
-        yield "0", {}
-
-
-FJDARYE_SUM_STATUS = {
-    "1": (2, "unknown"),
-    "2": (2, "unused"),
-    "3": (0, "ok"),
-    "4": (1, "warning"),
-    "5": (2, "failed"),
-}
-
-
-def check_fjdarye_sum(_item: str, _no_param, section: Optional[FjdaryeDeviceStatus]):
-    if section is not None:
-        state, state_desc = FJDARYE_SUM_STATUS.get(section, (3, "unknown"))
-        yield state, f"Status: {state_desc}"

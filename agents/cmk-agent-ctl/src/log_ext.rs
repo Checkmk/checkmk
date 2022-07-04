@@ -58,7 +58,7 @@ pub fn send_log_to_mailslot(log_text: &str, mailslot_name: &str) {
 }
 
 pub fn send_log_to_service_mailslot(log_text: &str) {
-    send_log_to_mailslot(log_text, &AGENT_SERVICE_MAILSLOT_NAME);
+    send_log_to_mailslot(log_text, AGENT_SERVICE_MAILSLOT_NAME);
 }
 
 #[derive(Debug)]

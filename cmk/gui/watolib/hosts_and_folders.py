@@ -46,7 +46,6 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils import store
 from cmk.utils.iterables import first
-from cmk.utils.memoize import MemoizeCache
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.redis import get_redis_client, Pipeline
 from cmk.utils.regex import regex, WATO_FOLDER_PATH_NAME_CHARS, WATO_FOLDER_PATH_NAME_REGEX
@@ -833,11 +832,6 @@ class WithUniqueIdentifier(abc.ABC):
     @abc.abstractmethod
     def _store_file_name(self) -> str:
         """The filename to which to persist this object."""
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def _clear_id_cache(self) -> None:
-        """Clear the cache if applicable."""
         raise NotImplementedError()
 
     @classmethod
@@ -2438,7 +2432,6 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             ),
         )
         hooks.call("folder-created", new_subfolder)
-        self._clear_id_cache()
         need_sidebar_reload()
         return new_subfolder
 
@@ -2473,7 +2466,6 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         )
         del self._subfolders[name]
         shutil.rmtree(subfolder.filesystem_path())
-        self._clear_id_cache()
         Folder.invalidate_caches()
         need_sidebar_reload()
         Folder.delete_host_lookup_cache()
@@ -2519,7 +2511,6 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         old_filesystem_path = subfolder.filesystem_path()
         shutil.move(old_filesystem_path, target_folder.filesystem_path())
 
-        self._clear_id_cache()
         Folder.invalidate_caches()
 
         # Reload folder at new location and rewrite host files
@@ -2593,7 +2584,6 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             sites=affected_sites,
             diff_text=make_diff_text(old_object, make_folder_audit_log_object(self._attributes)),
         )
-        self._clear_id_cache()
 
     def prepare_create_hosts(self):
         user.need_permission("wato.manage_hosts")
@@ -2889,12 +2879,28 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def _store_file_name(self):
         return self.wato_info_path()
 
-    def _clear_id_cache(self):
-        folders_by_id.clear_cache()
-
     @classmethod
     def _mapped_by_id(cls) -> "Dict[str, Type[CREFolder]]":
-        return folders_by_id()
+        """Map all reachable folders via their uuid.uuid4() id.
+
+        This will essentially flatten all Folders into one dictionary, yet uniquely identifiable via
+        their respective ids.
+
+        Returns:
+            A dictionary of uuid4 keys (hex encoded, byte-string) to Folder instances. It's
+            hex-encoded because the repr() output of a string is smaller than the repr() output of the
+            same byte-sequence (due to escaping characters).
+        """
+
+        def _update_mapping(_folder, _mapping):
+            if not _folder.is_root():
+                _mapping[_folder.id()] = _folder
+            for _sub_folder in _folder.subfolders():
+                _update_mapping(_sub_folder, _mapping)
+
+        mapping: Dict[str, Type[CREFolder]] = SetOnceDict()
+        _update_mapping(Folder.root_folder(), mapping)
+        return mapping
 
 
 class WATOFoldersOnDemand(Mapping[PathWithoutSlash, Optional[CREFolder]]):
@@ -3613,7 +3619,6 @@ class CMEFolder(CREFolder):
             self._check_childs_customer_conflicts(site_id)
 
         super().edit(new_title, new_attributes)
-        self._clear_id_cache()
 
     def _check_parent_customer_conflicts(self, site_id):
         new_customer_id = managed.get_customer_of_site(site_id)
@@ -3844,39 +3849,6 @@ def _get_host_and_folder_class() -> Tuple[Type[CREFolder], Type[CREHost]]:
 host_and_folder_classes = _get_host_and_folder_class()
 Folder: Type[CREFolder] = host_and_folder_classes[0]
 Host: Type[CREHost] = host_and_folder_classes[1]
-
-
-@MemoizeCache
-def folders_by_id() -> Dict[str, Type[CREFolder]]:
-    """Map all reachable folders via their uuid.uuid4() id.
-
-    This will essentially flatten all Folders into one dictionary, yet uniquely identifiable via
-    their respective ids.
-
-    Returns:
-        A dictionary of uuid4 keys (hex encoded, byte-string) to Folder instances. It's
-        hex-encoded because the repr() output of a string is smaller than the repr() output of the
-        same byte-sequence (due to escaping characters).
-    """
-
-    # Rationale:
-    #   This is pretty wasteful but should not have any loop-holes. The problem with these sorts
-    #   of caches is the "identity" of the objects instantiated. Is the representation on disk or
-    #   the instantiated object the source of truth? Of course, it is the file on disk,
-    #   which means that we have to make sure that the state of all instances always reflect
-    #   the state on disk faithfully. In order to do that, we drop the entire cache on every
-    #   modification of any folder. (via folders_by_id.clear_cache(), part of lru_cache)
-    #   Downside is of course a lot of wasted CPU cycles/IO on big installations, but in order to
-    #   be more efficient the Folder classes need more invasive changes.
-    def _update_mapping(_folder, _mapping):
-        if not _folder.is_root():
-            _mapping[_folder.id()] = _folder
-        for _sub_folder in _folder.subfolders():
-            _update_mapping(_sub_folder, _mapping)
-
-    mapping: Dict[str, Type[CREFolder]] = SetOnceDict()
-    _update_mapping(Folder.root_folder(), mapping)
-    return mapping
 
 
 def call_hook_hosts_changed(folder: CREFolder) -> None:

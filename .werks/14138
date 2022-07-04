@@ -1,0 +1,19 @@
+Title: Reduce erroneous retrieval and flushing of RRDs
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1656916604
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p6
+
+The built-in dashboard Kubernetes and would provide insufficient context
+information for it's dashlets. This led to error messages in the cmc.log, e.g.,
+
+Error flushing RRD: Usage: rrdtool rrdtool flushcached [--daemon|-d <addr>] <file> [<file> ...]
+Error accessing RRD: don't understand 'kube_cpu_usage'
+
+These errors are harmless, but spam the log. With this werk, the erroneous commands are no longer
+produced if opening the Kubernetes dashboard.

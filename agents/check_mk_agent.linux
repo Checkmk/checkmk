@@ -1621,12 +1621,12 @@ run_cached() {
 
         # Output the file (even if it is outdated)
         CACHE_INFO="cached(${MTIME},${MAXAGE})"
+        # prefix or insert cache info, unless already present.
+        # WATCH OUT: AIX does not allow us to pass this as a single '-e' option!
         if [ "${NAME%%_*}" = "local" ] || [ "${NAME%%_*}" = "mrpe" ]; then
-            # prefix CACHE_INFO, but skip any headers and lines with existing CACHE_INFO
-            sed -e "/^<<<.*>>>/{p;d;}; /^cached([0-9]*,[0-9]*) /{p;d;}; s/^/${CACHE_INFO} /" "${CACHEFILE}"
+            sed -e '/^<<<.*>>>/{p;d;}' -e "/^cached([0-9]*,[0-9]*) /{p;d;}; s/^/${CACHE_INFO} /" "${CACHEFILE}"
         else
-            # insert CACHE_INFO in header, but skip headers with existing CACHE_INFO
-            sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}; s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
+            sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}' -e 's/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
         fi
 
     fi

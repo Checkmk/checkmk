@@ -323,9 +323,9 @@ inline void LeftTrim(std::string &str) {
               }));
 }
 
-inline void RightTrim(std::string &str) {
+inline void RightTrim(std::string &str) noexcept {
     str.erase(std::find_if(str.crbegin(), str.crend(),
-                           [](int Ch) { return std::isspace(Ch) == 0; })
+                           [](int ch) { return std::isspace(ch) == 0; })
                   .base(),
               str.end());
 }
@@ -576,7 +576,7 @@ namespace fmt {
 
 // formatter extender for variable count of parameters
 template <typename... Args>
-auto formatv(const std::string format_string, const Args &...args) {
+auto formatv(const std::string &format_string, const Args &...args) {
     std::string buffer;
     try {
         auto x = std::make_tuple(format_string, args...);

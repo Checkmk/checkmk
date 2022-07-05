@@ -806,8 +806,8 @@ def test_openapi_discovery_fails_on_invalid_content_type(
 ) -> None:
     resp = aut_user_auth_wsgi_app.call_method(
         "post",
-        f"{base}/objects/host/example.com/actions/discover_services/invoke",
-        params='{"mode": "foo"}',
+        f"{base}/domain-types/service_discovery_run/actions/start/invoke",
+        params='{"mode": "foo", "host_name": "example.com"}',
         headers={"Accept": "application/json"},
         status=415,
     )
@@ -825,8 +825,8 @@ def test_openapi_discovery_on_invalid_mode(
 ) -> None:
     resp = aut_user_auth_wsgi_app.call_method(
         "post",
-        f"{base}/objects/host/example.com/actions/discover_services/invoke",
-        params='{"mode": "foo"}',
+        f"{base}/domain-types/service_discovery_run/actions/start/invoke",
+        params='{"mode": "foo", "host_name": "example.com"}',
         content_type="application/json",
         headers={"Accept": "application/json"},
         status=400,
@@ -845,8 +845,8 @@ def test_openapi_discovery_refresh_services(
 ) -> None:
     resp = aut_user_auth_wsgi_app.call_method(
         "post",
-        f"{base}/objects/host/example.com/actions/discover_services/invoke",
-        params='{"mode": "refresh"}',
+        f"{base}/domain-types/service_discovery_run/actions/start/invoke",
+        params='{"mode": "refresh", "host_name": "example.com"}',
         content_type="application/json",
         headers={"Accept": "application/json"},
         status=302,
@@ -872,8 +872,8 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
 ) -> None:
     aut_user_auth_wsgi_app.call_method(
         "post",
-        f"{base}/objects/host/example.com/actions/discover_services/invoke",
-        params='{"mode": "refresh"}',
+        f"{base}/domain-types/service_discovery_run/actions/start/invoke",
+        params='{"mode": "refresh", "host_name": "example.com"}',
         content_type="application/json",
         headers={"Accept": "application/json"},
         status=302,
@@ -1155,8 +1155,8 @@ def test_openapi_refresh_job_status(
     host_name = "example.com"
     aut_user_auth_wsgi_app.call_method(
         "post",
-        f"{base}/objects/host/{host_name}/actions/discover_services/invoke",
-        params='{"mode": "refresh"}',
+        f"{base}/domain-types/service_discovery_run/actions/start/invoke",
+        params='{"mode": "refresh", "host_name": "example.com"}',
         content_type="application/json",
         headers={"Accept": "application/json"},
         status=302,
@@ -1173,3 +1173,19 @@ def test_openapi_refresh_job_status(
     assert "state" in resp.json["extensions"]
     assert "result" in resp.json["extensions"]["logs"]
     assert "progress" in resp.json["extensions"]["logs"]
+
+
+@pytest.mark.usefixtures("with_host", "inline_background_jobs")
+def test_openapi_deprecated_execute_discovery_endpoint(
+    base: str,
+    aut_user_auth_wsgi_app,
+    mock_try_discovery: MagicMock,
+):
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        f"{base}/objects/host/example.com/actions/discover_services/invoke",
+        params='{"mode": "refresh"}',
+        content_type="application/json",
+        headers={"Accept": "application/json"},
+        status=302,
+    )

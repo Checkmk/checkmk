@@ -60,6 +60,17 @@ from cmk.gui.watolib.services import (
 
 from cmk import fields
 
+DISCOVERY_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.edit"),
+        permissions.Optional(permissions.Perm("wato.service_discovery_to_undecided")),
+        permissions.Optional(permissions.Perm("wato.service_discovery_to_monitored")),
+        permissions.Optional(permissions.Perm("wato.service_discovery_to_ignored")),
+        permissions.Optional(permissions.Perm("wato.service_discovery_to_removed")),
+        permissions.Optional(permissions.Perm("wato.services")),
+    ]
+)
+
 SERVICE_DISCOVERY_PHASES = {
     "undecided": "new",
     "vanished": "vanished",
@@ -311,12 +322,44 @@ def show_service_discovery_run(params: Mapping[str, Any]) -> Response:
     )
 
 
+class DiscoverServicesDeprecated(BaseSchema):
+    mode = _discovery_mode(default_mode="fix_all")
+
+
 class DiscoverServices(BaseSchema):
+    host_name = gui_fields.HostField(
+        description="The host of the service which shall be updated.",
+        example="example.com",
+    )
     mode = _discovery_mode(default_mode="fix_all")
 
 
 def assert_never(value: NoReturn) -> NoReturn:
     assert False, f"Unhandled discovery action: {value} ({type(value).__name__})"
+
+
+@Endpoint(
+    constructors.domain_type_action_href("service_discovery_run", "start"),
+    ".../update",
+    method="post",
+    tag_group="Setup",
+    status_descriptions={
+        302: "The service discovery background job has been initialized. Redirecting to the "
+        "'Show discovery service background job' endpoint.",
+        409: "A service discovery background job is currently running",
+    },
+    additional_status_codes=[302, 409],
+    request_schema=DiscoverServices,
+    response_schema=response_schemas.DomainObject,
+    permissions_required=DISCOVERY_PERMISSIONS,
+)
+def execute_service_discovery(params: Mapping[str, Any]) -> Response:
+    """Execute a service discovery on a host"""
+    user.need_permission("wato.edit")
+    body = params["body"]
+    host = Host.load_host(body["host_name"])
+    discovery_action = APIDiscoveryAction(body["mode"])
+    return _execute_service_discovery(discovery_action, host)
 
 
 @Endpoint(
@@ -328,22 +371,16 @@ def assert_never(value: NoReturn) -> NoReturn:
         302: "The service discovery background job has been initialized. Redirecting to the "
         "'Show discovery service background job' endpoint.",
         404: "Host could not be found",
-        409: "A service discovery run background job is currently running",
+        409: "A service discovery background job is currently running",
     },
     additional_status_codes=[302, 409],
     path_params=[HOST_NAME],
-    request_schema=DiscoverServices,
+    request_schema=DiscoverServicesDeprecated,
     response_schema=response_schemas.DomainObject,
-    permissions_required=permissions.AllPerm(
-        [
-            permissions.Perm("wato.edit"),
-            permissions.Optional(permissions.Perm("wato.service_discovery_to_undecided")),
-            permissions.Optional(permissions.Perm("wato.service_discovery_to_monitored")),
-            permissions.Optional(permissions.Perm("wato.service_discovery_to_ignored")),
-            permissions.Optional(permissions.Perm("wato.service_discovery_to_removed")),
-            permissions.Optional(permissions.Perm("wato.services")),
-        ]
-    ),
+    permissions_required=DISCOVERY_PERMISSIONS,
+    deprecated_urls={
+        "/objects/host/{host_name}/actions/discover_services/invoke": 14538,
+    },
 )
 def execute(params: Mapping[str, Any]) -> Response:
     """Execute a service discovery on a host"""
@@ -351,18 +388,19 @@ def execute(params: Mapping[str, Any]) -> Response:
     host = Host.load_host(params["host_name"])
     body = params["body"]
     discovery_action = APIDiscoveryAction(body["mode"])
+    return _execute_service_discovery(discovery_action, host)
 
+
+def _execute_service_discovery(discovery_action: APIDiscoveryAction, host: CREHost) -> Response:
     service_discovery_job = ServiceDiscoveryBackgroundJob(host.name())
     if service_discovery_job.is_active():
         return Response(status=409)
-
     discovery_options = _discovery_options(DISCOVERY_ACTION[discovery_action.value])
     if not has_discovery_action_specific_permissions(discovery_options.action):
         return problem(
             403,
             "You do not have the necessary permissions to execute this action",
         )
-
     discovery_result = get_check_table(
         StartDiscoveryRequest(
             host,
@@ -370,7 +408,6 @@ def execute(params: Mapping[str, Any]) -> Response:
             options=discovery_options,
         )
     )
-
     match discovery_action:
         case APIDiscoveryAction.new:
             discovery_result = perform_service_discovery(

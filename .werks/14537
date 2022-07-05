@@ -1,0 +1,17 @@
+Title: service_discovery: addition of new endpoint to show full service discovery result
+Class: feature
+Compatible: compat
+Component: rest-api
+Date: 1657016593
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p7
+
+This werk introduces the new /objects/service_discovery/{host_name} endpoint which
+returns the latest service discovery result of a host. The response object includes the
+check table with all discovered services, the host labels, the vanished and new labels.
+The existing /domain-types/service/collections/services endpoint, which only returned the
+discovered services of a specific phase is deprecated and will be removed with Checkmk 2.3.
+Users should consider migrating the functionalities to the new endpoint.

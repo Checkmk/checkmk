@@ -1,0 +1,10 @@
+Title: Dashboard element "Host state": Fix $HOST_ALIAS$ macro
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cee
+Version: 2.2.0i1
+Date: 1657013654
+Class: fix
+
+The title macro $HOST_ALIAS$ did not work for Host state dashlets. This is fixed and the macro is replaced by the given host alias.

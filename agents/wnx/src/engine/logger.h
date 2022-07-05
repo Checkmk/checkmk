@@ -129,15 +129,15 @@ inline void RmCr(std::string &s) noexcept {
     }
 }
 
-inline bool IsNoCrFlag(int Flag) noexcept { return (Flag & kNoCr) != 0; }
-inline bool IsAddCrFlag(int Flag) noexcept { return (Flag & kAddCr) != 0; }
+constexpr bool IsNoCrFlag(int flag) noexcept { return (flag & kNoCr) != 0; }
+constexpr bool IsAddCrFlag(int flag) noexcept { return (flag & kAddCr) != 0; }
 
 // Public Engine to print all
-inline std::string formatString(int Fl, const char *Prefix,
-                                const char *String) {
+inline std::string formatString(int flag, const char *dflt_prefix,
+                                const char *str) {
     std::string s;
-    auto length = String != nullptr ? strlen(String) : 0;
-    const auto *prefix = (Fl & Flags::kNoPrefix) != 0 ? nullptr : Prefix;
+    auto length = str != nullptr ? strlen(str) : 0;
+    const auto *prefix = (flag & Flags::kNoPrefix) != 0 ? nullptr : dflt_prefix;
     length += prefix != nullptr ? strlen(prefix) : 0;
     length++;
 
@@ -146,16 +146,16 @@ inline std::string formatString(int Fl, const char *Prefix,
         if (prefix != nullptr) {
             s = prefix;
         }
-        if (String != nullptr) {
-            s += String;
+        if (str != nullptr) {
+            s += str;
         }
     } catch (const std::exception &) {
         return {};
     }
 
-    if (IsNoCrFlag(Fl)) {
+    if (IsNoCrFlag(flag)) {
         RmCr(s);
-    } else if (IsAddCrFlag(Fl)) {
+    } else if (IsAddCrFlag(flag)) {
         AddCr(s);
     }
 
@@ -221,7 +221,7 @@ constexpr uint16_t CalculateColor(Colors color, uint16_t OldColorAttributes) {
 }
 }  // namespace internal
 
-inline void sendStringToDebugger(const char *String) {
+inline void sendStringToDebugger(const char *String) noexcept {
     internal_PrintStringDebugger(String);
 }
 
@@ -458,28 +458,11 @@ public:
     }
     // **********************************
 
-    static void bp() {
+    static void bp() noexcept {
         if (bp_allowed_) {
             xdbg::bp();
         }
     }
-
-    // Bunch of functions to provide special output
-    // Main use case
-    // write to log important data, which are not error
-    // XLOG::l.i("We have finished. Count {}", count);
-    // or
-    // XLOG::l.i()<< "We have finished. Count " << count;
-
-    // Write to Debug "interesting" result
-    // XLOG::d.t(XLOG_FUNC + " this shit is not implemented. WHADDAHEL??");
-    // or
-    // XLOG::d.t() << XLOG_FUNC + " this shit is not implemented.
-    // WHADDAHEL??";
-
-    // those functions are SHORTCUTTING those calls:
-    // XLOG::l(XLOG::kInfo)(...);
-    // XLOG::d(XLOG::kTrace)(...);
 
     template <typename... Args>
     auto exec(int modifications, const std::string &format,
@@ -591,7 +574,7 @@ public:
     }
 #pragma warning(pop)
     // set filename to log
-    void configFile(const std::string &log_file) {
+    void configFile(const std::string &log_file) noexcept {
         if (log_file.empty()) {
             log_param_.setFileName(nullptr);
         } else {
@@ -599,7 +582,7 @@ public:
         }
     }
 
-    void configPrefix(const std::wstring &prefix) {
+    void configPrefix(const std::wstring &prefix) noexcept {
         if (prefix.empty()) {
             log_param_.initPrefix(nullptr);
         } else {
@@ -613,7 +596,7 @@ public:
         backup_log_max_size_ = std::clamp(size, min_file_size, max_file_size);
     }
 
-    void enableFileLog(bool enable) {
+    void enableFileLog(bool enable) noexcept {
         if (enable) {
             log_param_.directions_ |= xlog::Directions::kFilePrint;
         } else {
@@ -621,7 +604,7 @@ public:
         }
     }
 
-    void enableEventLog(bool enable) {
+    void enableEventLog(bool enable) noexcept {
         if (type_ == LogType::log) {
             // only kLog has right to create event log entries
             if (enable) {
@@ -632,7 +615,7 @@ public:
         }
     }
 
-    void enableWinDbg(bool enable) {
+    void enableWinDbg(bool enable) noexcept {
         if (enable) {
             log_param_.directions_ |= xlog::Directions::kDebuggerPrint;
         } else {
@@ -640,11 +623,11 @@ public:
         }
     }
 
-    bool isWinDbg() const {
+    bool isWinDbg() const noexcept {
         return (log_param_.directions_ | xlog::Directions::kDebuggerPrint) != 0;
     }
 
-    bool isFileDbg() const {
+    bool isFileDbg() const noexcept {
         return (log_param_.directions_ | xlog::Directions::kFilePrint) != 0;
     }
 

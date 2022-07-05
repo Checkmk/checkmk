@@ -55,9 +55,11 @@ namespace {
 // on exception(malicious plugin @ 32 bit OS) returns false
 bool AddVectorGracefully(std::vector<uint8_t> &out_data,
                          const std::vector<uint8_t> &in_data) {
-    if (in_data.empty()) return true;
+    if (in_data.empty()) {
+        return true;
+    }
 
-    auto old_size = out_data.size();
+    const auto old_size = out_data.size();
     try {
         // a bit of optimization
         out_data.reserve(out_data.size() + in_data.size());

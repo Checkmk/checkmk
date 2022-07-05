@@ -248,7 +248,7 @@ TEST(UpgradeTest, CheckProtocolUpdate) {
     auto new_file = ConstructProtocolFileName(new_location);
     EXPECT_TRUE(fs::exists(new_file, ec));
     EXPECT_FALSE(fs::exists(old_file, ec));
-    auto content = tools::ReadFileInString(new_file.string().c_str());
+    auto content = tools::ReadFileInString(new_file.string());
     ASSERT_TRUE(content.has_value());
     EXPECT_TRUE(content->find("old_file") != std::string::npos);
 
@@ -257,7 +257,7 @@ TEST(UpgradeTest, CheckProtocolUpdate) {
         UpdateProtocolFile(new_location.wstring(), old_location.wstring()));
     EXPECT_TRUE(fs::exists(new_file, ec));
     EXPECT_FALSE(fs::exists(old_file, ec));
-    content = tools::ReadFileInString(new_file.string().c_str());
+    content = tools::ReadFileInString(new_file.string());
     ASSERT_TRUE(content.has_value());
     EXPECT_TRUE(content->find("old_file") != std::string::npos);
 }

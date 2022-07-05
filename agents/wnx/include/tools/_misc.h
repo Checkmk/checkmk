@@ -12,6 +12,7 @@
 #include <chrono>
 #include <cwctype>
 #include <filesystem>
+#include <ranges>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -41,30 +42,29 @@ inline void sleep(std::chrono::duration<T, B> dur) noexcept {
     std::this_thread::sleep_until(std::chrono::steady_clock::now() + dur);
 }
 
+inline bool CompareIgnoreCase(char lhs, char rhs) noexcept {
+    // TODO(sk): naive implementation
+    return std::tolower(lhs) == std::tolower(rhs);
+}
+
+inline bool CompareIgnoreCase(wchar_t lhs, wchar_t rhs) noexcept {
+    // TODO(sk): naive implementation
+    return std::towlower(lhs) == std::towlower(rhs);
+}
+
 [[nodiscard]] inline bool IsEqual(std::string_view lhs, std::string_view rhs) {
-    return std::equal(
-        lhs.cbegin(), lhs.cend(), rhs.cbegin(), rhs.cend(),
-        [](char l, char r) { return std::tolower(l) == std::tolower(r); });
+    return std::ranges::equal(
+        lhs, rhs, [](auto l, auto r) { return CompareIgnoreCase(l, r); });
 }
 
 [[nodiscard]] inline bool IsEqual(std::wstring_view lhs,
                                   std::wstring_view rhs) {
-    return std::equal(lhs.cbegin(), lhs.cend(), rhs.cbegin(), rhs.cend(),
-                      [](wchar_t l, wchar_t r) {
-                          return std::tolower(l) == std::tolower(r);
-                      });
+    return std::ranges::equal(
+        lhs, rhs, [](auto l, auto r) { return CompareIgnoreCase(l, r); });
 }
 
-[[nodiscard]] inline bool IsEqual(const std::wstring &lhs,
-                                  const std::wstring &rhs) {
-    return std::equal(lhs.cbegin(), lhs.cend(), rhs.cbegin(), rhs.cend(),
-                      [](wchar_t l, wchar_t r) {
-                          return std::tolower(l) == std::tolower(r);
-                      });
-}
-
-[[nodiscard]] inline bool IsLess(const std::string &lhs,
-                                 const std::string &rhs) {
+[[nodiscard]] inline bool IsLess(std::string_view lhs,
+                                 std::string_view rhs) noexcept {
     auto li = lhs.cbegin();
     auto ri = rhs.cbegin();
     for (; li != lhs.cend() && ri != rhs.cend(); ++ri, ++li) {
@@ -318,14 +318,15 @@ std::basic_string<T> GetEnv(const std::basic_string_view<T> &name) noexcept {
 #endif
 
 inline void LeftTrim(std::string &str) {
-    str.erase(str.begin(), std::find_if(str.cbegin(), str.cend(), [](int Ch) {
-                  return std::isspace(Ch) == 0;
+    str.erase(str.begin(), std::ranges::find_if(str, [](int ch) {
+                  return std::isspace(ch) == 0;
               }));
 }
 
 inline void RightTrim(std::string &str) noexcept {
-    str.erase(std::find_if(str.crbegin(), str.crend(),
-                           [](int ch) { return std::isspace(ch) == 0; })
+    // attention: reverse search here
+    str.erase(std::ranges::find_if(str.rbegin(), str.rend(),
+                                   [](int ch) { return std::isspace(ch) == 0; })
                   .base(),
               str.end());
 }
@@ -480,18 +481,19 @@ inline std::wstring JoinVector(const std::vector<std::wstring> &values,
     }
 
     size_t sz = 0;
-    for_each(values.begin(), values.end(),
-             [&sz](const std::wstring &entry) { sz += entry.size() + 1; });
+    std::ranges::for_each(values, [&](const auto &entry) {
+        sz += entry.size() + separator.size();
+    });
 
     std::wstring values_string;
     values_string.reserve(sz);
 
-    values_string = *values.begin();
-    for_each(values.begin() + 1, values.end(),
-             [&values_string, separator](std::wstring_view entry) {
-                 values_string += separator;
-                 values_string += entry;
-             });
+    std::ranges::for_each(values,
+                          [&values_string, separator](std::wstring_view entry) {
+                              values_string += entry;
+                              values_string += separator;
+                          });
+    values_string.resize(sz - separator.length());
     return values_string;
 }
 
@@ -503,31 +505,32 @@ inline std::string JoinVector(const std::vector<std::string> &values,
     }
 
     size_t sz = 0;
-    for_each(values.begin(), values.end(),
-             [&sz](const std::string &entry) { sz += entry.size() + 1; });
+    std::ranges::for_each(values, [&](const auto &entry) {
+        sz += entry.size() + separator.size();
+    });
 
     std::string values_string;
     values_string.reserve(sz);
 
-    values_string = *values.begin();
-    for_each(values.begin() + 1, values.end(),
-             [&values_string, separator](std::string_view entry) {
-                 values_string += separator;
-                 values_string += entry;
-             });
+    std::ranges::for_each(values, [&](const auto &entry) {
+        values_string += entry;
+        values_string += separator;
+    });
+
+    values_string.resize(sz - separator.length());
     return values_string;
 }
 
 template <typename T>
 void ConcatVector(std::vector<T> &target, const std::vector<T> &source) {
-    std::copy(source.begin(), source.end(), std::back_inserter(target));
+    std::ranges::copy(source, std::back_inserter(target));
 }
 
 inline std::string TimeToString(
     std::chrono::system_clock::time_point time_point) {
     auto in_time_t = std::chrono::system_clock::to_time_t(time_point);
     std::stringstream sss;
-    auto *loc_time = std::localtime(&in_time_t);
+    const auto *loc_time = std::localtime(&in_time_t);
     auto p_time = std::put_time(loc_time, "%Y-%m-%d %T");
     sss << p_time << std::ends;
     return sss.str();

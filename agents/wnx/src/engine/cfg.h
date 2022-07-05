@@ -100,7 +100,7 @@ std::vector<std::wstring> DefaultConfigArray();
 void ProcessKnownConfigGroups();
 void SetupEnvironmentFromGroups();
 
-inline bool ReloadConfigAutomatically() { return false; }
+consteval bool ReloadConfigAutomatically() noexcept { return false; }
 
 // returns stored value from Windows OS
 // This is Absolute Global per OS
@@ -228,7 +228,8 @@ inline std::optional<YAML::Node> GetGroup(
     return {};
 }
 
-inline std::optional<YAML::Node> GetGroupLoaded(const std::string &section) {
+inline std::optional<YAML::Node> GetGroupLoaded(
+    const std::string &section) noexcept {
     return GetGroup(GetLoadedConfig(), section);
 }
 
@@ -306,7 +307,7 @@ inline StringPairArray ConvertNode2StringPairArray(
             return {};
         }
 
-        auto sz = val.size();
+        const auto sz = val.size();
         StringPairArray arr;
         arr.reserve(sz);
 
@@ -467,7 +468,7 @@ void LoadGlobal();
 
 struct Group {
 public:
-    Group() : enabled_in_cfg_(false), exist_in_cfg_(false) {}
+    Group() noexcept : enabled_in_cfg_(false), exist_in_cfg_(false) {}
     bool existInConfig() const {
         std::lock_guard lk(lock_);
         return exist_in_cfg_;
@@ -691,8 +692,8 @@ private:
                 continue;
             }
 
-            bool only_v4 = !ipv6_;
-            bool entry_ipv6 = of::IsIpV6(entry);
+            const bool only_v4 = !ipv6_;
+            const bool entry_ipv6 = of::IsIpV6(entry);
 
             // skipping ipv6 entries in ipv4 mode
             if (only_v4 && entry_ipv6) {
@@ -779,7 +780,7 @@ struct WinPerf : public Group {
 public:
     struct Counter {
         Counter() = default;
-        Counter(std::string id, std::string name)
+        Counter(std::string id, std::string name) noexcept
             : id_(std::move(id)), name_(std::move(name)) {}
         [[nodiscard]] auto name() const noexcept { return name_; }
         [[nodiscard]] auto id() const noexcept { return id_; }
@@ -1030,7 +1031,7 @@ public:
     }
     void go();
 
-    bool isLocal() const { return local_; }
+    bool isLocal() const noexcept { return local_; }
 
 private:
     bool local_{false};
@@ -1065,8 +1066,8 @@ extern Plugins plugins;
 extern Plugins localGroup;
 }  // namespace groups
 
-inline bool LogPluginOutput() { return false; }
-inline bool LogMrpeOutput() { return false; }
+inline bool LogPluginOutput() noexcept { return false; }
+inline bool LogMrpeOutput() noexcept { return false; }
 
 }  // namespace cma::cfg
 

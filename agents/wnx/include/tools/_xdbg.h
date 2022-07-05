@@ -59,7 +59,7 @@ inline void hardcodedBP() { ; }
 #endif
 
 #if !defined(KDBG_NO_BP) && defined(KDBG_DEBUG)
-inline void bp() { hardcodedBP(); }
+inline void bp() noexcept { hardcodedBP(); }
 #if !defined(BP)
 #define BP xdbg::bp()
 #endif

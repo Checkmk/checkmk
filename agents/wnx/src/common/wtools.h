@@ -42,11 +42,11 @@
 namespace wtools {
 constexpr const wchar_t *kWToolsLogName = L"check_mk_wtools.log";
 
-inline void *ProcessHeapAlloc(size_t size) {
+inline void *ProcessHeapAlloc(size_t size) noexcept {
     return ::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size);
 }
 
-inline void ProcessHeapFree(void *data) {
+inline void ProcessHeapFree(void *data) noexcept {
     if (data != nullptr) {
         ::HeapFree(::GetProcessHeap(), 0, data);
     }
@@ -60,8 +60,10 @@ public:
     explicit SecurityAttributeKeeper(SecurityLevel sl);
     ~SecurityAttributeKeeper();
 
-    [[nodiscard]] const SECURITY_ATTRIBUTES *get() const { return sa_; }
-    SECURITY_ATTRIBUTES *get() { return sa_; }
+    [[nodiscard]] const SECURITY_ATTRIBUTES *get() const noexcept {
+        return sa_;
+    }
+    SECURITY_ATTRIBUTES *get() noexcept { return sa_; }
 
 private:
     bool allocAll(SecurityLevel sl);
@@ -178,7 +180,7 @@ public:
 // keeps two handles
 class SimplePipe {
 public:
-    SimplePipe() {
+    SimplePipe() noexcept {
         sa_.lpSecurityDescriptor = &sd_;
         sa_.nLength = sizeof(SECURITY_ATTRIBUTES);
         sa_.bInheritHandle = TRUE;  // allow handle inherit for child process
@@ -353,8 +355,10 @@ public:
                 job_handle_ = nullptr;
 
                 // process:
-                CloseHandle(process_handle_);  // must
-                process_handle_ = nullptr;
+                if (process_handle_ != nullptr) {
+                    ::CloseHandle(process_handle_);  // must
+                    process_handle_ = nullptr;
+                }
             } else {
                 if (kProcessTreeKillAllowed) {
                     KillProcessTree(proc_id);
@@ -364,24 +368,21 @@ public:
             return;
         }
 
-        if (exit_code_ == STILL_ACTIVE) {
-            auto success = KillProcess(proc_id, -1);
-            if (!success) {
-                xlog::v("Failed kill {} status {}", proc_id, GetLastError());
-            }
+        if (exit_code_ == STILL_ACTIVE && !KillProcess(proc_id, -1)) {
+            xlog::v("Failed kill {} status {}", proc_id, GetLastError());
         }
     }
 
-    auto getCmdLine() const { return cmd_line_; }
-    auto processId() const { return process_id_.load(); }
-    auto exitCode() const { return exit_code_; }
-    auto getStdioRead() const { return stdio_.getRead(); }
-    auto getStderrRead() const { return stderr_.getRead(); }
+    auto getCmdLine() const noexcept { return cmd_line_; }
+    auto processId() const noexcept { return process_id_.load(); }
+    auto exitCode() const noexcept { return exit_code_; }
+    auto getStdioRead() const noexcept { return stdio_.getRead(); }
+    auto getStderrRead() const noexcept { return stderr_.getRead(); }
 
-    const auto &getData() const { return data_; }
-    auto &getData() { return data_; }
+    const auto &getData() const noexcept { return data_; }
+    auto &getData() noexcept { return data_; }
 
-    bool trySetExitCode(uint32_t pid, uint32_t code) {
+    bool trySetExitCode(uint32_t pid, uint32_t code) noexcept {
         if ((pid != 0U) && pid == process_id_) {
             exit_code_ = code;
             return true;
@@ -393,7 +394,7 @@ private:
     void prepareResources(std::wstring_view command_line,
                           bool create_pipe) noexcept;
     void cleanResources() noexcept;
-    void setExitCode(uint32_t code) { exit_code_ = code; }
+    void setExitCode(uint32_t code) noexcept { exit_code_ = code; }
     std::wstring cmd_line_;
     std::atomic<uint32_t> process_id_{0};
     HANDLE job_handle_{nullptr};
@@ -466,7 +467,7 @@ protected:
                                    : check_point++;
 
         // Report the status of the service to the SCM.
-        auto ret = ::SetServiceStatus(status_handle_, &status_);
+        const auto ret = ::SetServiceStatus(status_handle_, &status_);
         xlog::l("Setting state %d result %d", current_state,
                 ret != 0 ? 0 : GetLastError())
             .print();
@@ -543,9 +544,9 @@ private:
 inline std::string ToUtf8(const std::wstring_view src) noexcept {
 #if defined(WINDOWS_OS)
     // Windows only
-    auto in_len = static_cast<int>(src.length());
-    auto out_len = ::WideCharToMultiByte(CP_UTF8, 0, src.data(), in_len,
-                                         nullptr, 0, nullptr, nullptr);
+    const auto in_len = static_cast<int>(src.length());
+    const auto out_len = ::WideCharToMultiByte(CP_UTF8, 0, src.data(), in_len,
+                                               nullptr, 0, nullptr, nullptr);
     if (out_len == 0) {
         return {};
     }
@@ -589,8 +590,7 @@ inline std::wstring ConvertToUTF16(std::string_view src) noexcept {
     std::wstring wstr;
     try {
         wstr.resize(out_len);
-    } catch (const std::exception &e) {
-        xlog::l("memory lacks %s", e.what());
+    } catch (const std::exception & /*e*/) {
         return {};
     }
 
@@ -662,7 +662,7 @@ inline int64_t QueryPerformanceFreq() noexcept {
     return frequency.QuadPart;
 }
 
-inline int64_t QueryPerformanceCo() {
+inline int64_t QueryPerformanceCo() noexcept {
     LARGE_INTEGER counter;
     ::QueryPerformanceCounter(&counter);
     return counter.QuadPart;
@@ -674,7 +674,7 @@ std::filesystem::path GetCurrentExePath();
 
 // wrapper for win32 specific function
 // return 0 when no data or error
-inline int DataCountOnHandle(HANDLE handle) {
+inline int DataCountOnHandle(HANDLE handle) noexcept {
     DWORD read_count = 0;
     // MSDN says to do so
     if (::PeekNamedPipe(handle, nullptr, 0, nullptr, &read_count, nullptr) ==
@@ -686,7 +686,7 @@ inline int DataCountOnHandle(HANDLE handle) {
 }
 
 template <typename T>
-bool IsVectorMarkedAsUTF16(const std::vector<T> &data) {
+bool IsVectorMarkedAsUTF16(const std::vector<T> &data) noexcept {
     static_assert(sizeof(T) == 1, "Invalid Data Type in template");
     constexpr auto char_0 = static_cast<T>('\xFF');
     constexpr auto char_1 = static_cast<T>('\xFE');
@@ -719,7 +719,7 @@ inline void AddSafetyEndingNull(std::string &data) {
     // trick to place in string 0 at the
     // end without changing length
     // this is required for some stupid engines like iostream+YAML
-    auto length = data.size();
+    const auto length = data.size();
     if (data.capacity() <= length) {
         data.reserve(length + 1);
     }
@@ -1046,10 +1046,10 @@ public:
     Bstr &operator=(const Bstr &) = delete;
     Bstr &operator=(Bstr &&) = delete;
 
-    explicit Bstr(std::wstring_view str)
+    explicit Bstr(std::wstring_view str) noexcept
         : data_{::SysAllocString(str.data())} {}
     ~Bstr() { ::SysFreeString(data_); }
-    [[nodiscard]] BSTR bstr() const { return data_; }
+    [[nodiscard]] BSTR bstr() const noexcept { return data_; }
     BSTR data_;
 };
 

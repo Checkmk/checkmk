@@ -106,7 +106,7 @@ uint16_t GetPortFromString(const std::string &str) {
         return 0;
     }
 
-    auto port = ToInt(table[1]);
+    const auto port = ToInt(table[1]);
     return port > 1'000 && port < 60'000 ? static_cast<uint16_t>(port) : 0U;
 }
 
@@ -287,7 +287,7 @@ std::optional<uint32_t> StartAgentController() {
 
 // TODO(sk): make public API and replace all Trailing/trim with this one
 void TrimRight(std::string &s, std::string_view chars) {
-    auto end = s.find_last_not_of(chars);
+    const auto end = s.find_last_not_of(chars);
     if (end != std::string::npos) {
         s.erase(end + 1);
     }
@@ -375,7 +375,7 @@ bool CreateLegacyModeFile(const fs::path &marker) {
             marker, "is absent, assuming fresh install");
     }
 
-    auto timestamp = fs::last_write_time(marker, ec);
+    const auto timestamp = fs::last_write_time(marker, ec);
     if (ec) {
         return ConditionallyCreateLegacyFile(marker,
                                              "is strange, assuming bad file");
@@ -389,13 +389,13 @@ bool CreateLegacyModeFile(const fs::path &marker) {
             marker, "is too old, assuming fresh install");
     }
 
-    auto data = tools::ReadFileInString(marker.wstring().c_str());
+    auto data = tools::ReadFileInString(marker.wstring());
     if (!data.has_value()) {
         return ConditionallyCreateLegacyFile(marker,
                                              "is bad, assuming fresh install");
     }
 
-    if (bool reinstall_new =
+    if (const auto reinstall_new =
             (*data).starts_with(kCmkAgentMarkerNewDeprecated) ||
             (*data).starts_with(kCmkAgentMarkerLatest);
         reinstall_new) {

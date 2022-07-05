@@ -98,16 +98,16 @@ public:
     // called in kick. NO AUTOMATION HERE.
     void loadStandardConfig();
     virtual void loadConfig() {}
-    int timeout() const { return timeout_; }
+    int timeout() const noexcept { return timeout_; }
     virtual void registerCommandLine(const std::string &command_line);
 
     void registerOwner(cma::srv::ServiceProcessor *sp);
 
     virtual void preStart() {}
-    uint64_t errorCount() const { return error_count_; }
-    uint64_t resetError() { return error_count_.exchange(0); }
+    uint64_t errorCount() const noexcept { return error_count_; }
+    uint64_t resetError() noexcept { return error_count_.exchange(0); }
 
-    char separator() const { return separator_; }
+    char separator() const noexcept { return separator_; }
 
     void stopWatchStart() { sw_.start(); }
     uint64_t stopWatchStop() { return sw_.stop(); }

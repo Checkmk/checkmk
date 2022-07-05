@@ -131,7 +131,7 @@ namespace xlog {
     }
 
     inline size_t ConvertWchar2Char(char *output, size_t len,
-                                    const wchar_t *input) {
+                                    const wchar_t *input) noexcept {
         if (input == nullptr || len == 0 || output == nullptr) {
             return 0;
         }
@@ -140,7 +140,8 @@ namespace xlog {
         return ::strlen(output);
     }
 
-    inline size_t ConvertInt2Char(char *output, size_t len, int value) {
+    inline size_t ConvertInt2Char(char *output, size_t len,
+                                  int value) noexcept {
         if (len == 0 || output == nullptr) {
             return 0;
         }
@@ -396,7 +397,8 @@ namespace xlog {
             return print(true);
         }  // NOLINT
 
-        [[maybe_unused]] const TextInfo &print(bool enable) const {  // NOLINT
+        [[maybe_unused]] const TextInfo &print(
+            bool enable) const noexcept {  // NOLINT
             if (enable) {
                 internal_PrintStringStdio(text());
             }
@@ -404,9 +406,9 @@ namespace xlog {
         }
 
         //
-        [[nodiscard]] const T *text() const { return text_.c_str(); }
+        [[nodiscard]] const T *text() const noexcept { return text_.c_str(); }
 
-        [[nodiscard]] size_t len() const { text_.length(); }
+        [[nodiscard]] size_t len() const noexcept { text_.length(); }
 
     private:
         void setText(const T *text) {
@@ -440,7 +442,7 @@ namespace xlog {
 
     class LogParam {
     public:
-        explicit LogParam(const wchar_t *const prefix)
+        explicit LogParam(const wchar_t *const prefix) noexcept
             : type_(Type::kDebugOut)
             , mark_(Marker::kTraceMark)
             , directions_(XLOG_DEFAULT_DIRECTIONS)
@@ -448,7 +450,7 @@ namespace xlog {
             file_name_out_[0] = 0;
             initPrefix(prefix);
         }
-        LogParam() : LogParam(nullptr) {}
+        LogParam() noexcept : LogParam(nullptr) {}
 
         [[nodiscard]] const char *filename() const { return file_name_out_; }
         void setFileName(const char *fname) noexcept {
@@ -477,7 +479,7 @@ namespace xlog {
             return prefix_ascii_;
         }
 
-        void initPrefix(const wchar_t *prefix_text) {
+        void initPrefix(const wchar_t *prefix_text) noexcept {
             const auto *const prefix =
                 prefix_text != nullptr ? prefix_text : GetPrefix().data();
 
@@ -542,7 +544,7 @@ namespace xlog {
         }
     }
 
-    inline void kill_cr(wchar_t * buf) {
+    inline void kill_cr(wchar_t * buf) noexcept {
         if (buf == nullptr) {
             return;
         }
@@ -562,7 +564,7 @@ namespace xlog {
         }
     }
 
-    inline void kill_cr(char *buf) {
+    inline void kill_cr(char *buf) noexcept {
         if (buf == nullptr) {
             return;
         }
@@ -583,7 +585,7 @@ namespace xlog {
         }
     }
 
-    inline void add_cr(wchar_t * buf) {
+    inline void add_cr(wchar_t * buf) noexcept {
         if (buf == nullptr) {
             return;
         }
@@ -593,7 +595,7 @@ namespace xlog {
         buf[len + 1] = 0;
     }
 
-    inline void add_cr(char *buf) {
+    inline void add_cr(char *buf) noexcept {
         if (buf == nullptr) {
             return;
         }
@@ -632,9 +634,9 @@ namespace xlog {
             xdbg::bp();
         }
 
-        auto offset = log_param.flags_ & Flags::kNoPrefix
-                          ? 0
-                          : calc_len(log_param.prefix());
+        const auto offset = log_param.flags_ & Flags::kNoPrefix
+                                ? 0
+                                : calc_len(log_param.prefix());
 
         return TextInfo<T>(buf + offset);
     }

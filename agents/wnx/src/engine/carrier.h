@@ -40,7 +40,6 @@ inline std::string BuildPortName(const std::string &carrier_name,
     return carrier_name + kCarrierNameDelimiter + address;
 }
 
-// #TODO unit test
 // Used to send data Provider <-> Agent
 // struct is to recall that this is POD
 // ctor and dtor are private.
@@ -66,13 +65,13 @@ struct CarrierDataHeader {
             CarrierDataHeader::destroy);
     }
 
-    static void destroy(CarrierDataHeader *cdh) {
+    static void destroy(CarrierDataHeader *cdh) noexcept {
         if (cdh != nullptr) {
             delete[] reinterpret_cast<char *>(cdh);
         }
     }
 
-    [[nodiscard]] const void *data() const {
+    [[nodiscard]] const void *data() const noexcept {
         const auto *p = reinterpret_cast<const char *>(this);
 
         return data_length_ != 0U ? static_cast<const void *>(p + sizeof(*this))
@@ -91,14 +90,16 @@ struct CarrierDataHeader {
         return std::string(str, str + data_length_);
     }
 
-    [[nodiscard]] auto providerId() const { return provider_id_; }
-    [[nodiscard]] auto answerId() const { return data_id_; }
-    [[nodiscard]] auto length() const { return data_length_; }
-    [[nodiscard]] auto fullLength() const {
+    [[nodiscard]] auto providerId() const noexcept { return provider_id_; }
+    [[nodiscard]] auto answerId() const noexcept { return data_id_; }
+    [[nodiscard]] auto length() const noexcept { return data_length_; }
+    [[nodiscard]] auto fullLength() const noexcept {
         return data_length_ + sizeof(CarrierDataHeader);
     }
-    [[nodiscard]] auto info() const { return info_; }
-    [[nodiscard]] auto type() const { return static_cast<DataType>(type_); }
+    [[nodiscard]] auto info() const noexcept { return info_; }
+    [[nodiscard]] auto type() const noexcept {
+        return static_cast<DataType>(type_);
+    }
 
 private:
     /// \brief - requires ON_OUT_OF SCOPE
@@ -140,7 +141,7 @@ private:
         }
     }
 
-    void *data() {
+    void *data() noexcept {
         auto *p = const_cast<char *>(reinterpret_cast<const char *>(this));
 
         return data_length_ != 0u ? static_cast<void *>(p + sizeof(*this))
@@ -167,9 +168,6 @@ private:
 // THREAD SAFE
 class CoreCarrier {
 public:
-    CoreCarrier() : first_file_write_(true) {}
-    virtual ~CoreCarrier() = default;
-
     // BASE API
     bool establishCommunication(const std::string &internal_port);
     bool sendData(const std::string &peer_name, uint64_t answer_id,
@@ -184,7 +182,6 @@ public:
         return carrier_address_;
     }
 
-    // Helper API
     static inline bool FireSend(
         const std::wstring &peer_name,  // assigned by caller
         const std::wstring &port_name,  // standard format
@@ -204,7 +201,6 @@ public:
         return false;
     }
 
-    // Helper API #TODO gtest
     template <typename T>
     static bool FireCommand(const std::wstring &peer_name, const T &port_name,
                             const void *data, size_t length) {
@@ -217,7 +213,6 @@ public:
         return true;
     }
 
-    // Helper API #TODO gtest
     template <typename T>
     static bool FireLog(const std::wstring &peer_name, const T &port_name,
                         const void *data, size_t length) {
@@ -249,7 +244,7 @@ private:
     std::string carrier_name_;
     std::string carrier_address_;
 
-    bool first_file_write_;  // used for a "file" carrier
+    bool first_file_write_{true};  // used for a "file" carrier
 
     std::function<bool(CoreCarrier *This, DataType data_type,
                        const std::string &peer_name, uint64_t Marker,

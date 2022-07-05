@@ -704,7 +704,7 @@ bool ReInstall() {
     };
 
     try {
-        for (const auto [name, func] : data_vector) {
+        for (const auto &[name, func] : data_vector) {
             auto target = user_dir / name;
             auto source = root_dir / name;
 

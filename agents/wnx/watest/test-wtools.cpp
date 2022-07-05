@@ -49,7 +49,7 @@ protected:
 
     static void KillTmpProcesses() {
         // kill process
-        wtools::ScanProcessList([](const PROCESSENTRY32 &entry) -> auto {
+        wtools::ScanProcessList([](const PROCESSENTRY32 &entry) -> auto{
             if (std::wstring{entry.szExeFile} == nameToUse()) {
                 wtools::KillProcess(entry.th32ProcessID, 99);
             }
@@ -73,7 +73,7 @@ protected:
     static std::tuple<std::wstring, uint32_t> FindExpectedProcess() {
         uint32_t pid = 0;
         std::wstring path;
-        ScanProcessList([&path, &pid ](const PROCESSENTRY32 &entry) -> auto {
+        ScanProcessList([&path, &pid ](const PROCESSENTRY32 &entry) -> auto{
             if (std::wstring{entry.szExeFile} != nameToUse()) {
                 return true;  // continue scan
             }
@@ -149,7 +149,7 @@ protected:
         std::vector<std::string> names;
         temp_fs = tst::TempCfgFs::Create();
 
-        wtools::ScanProcessList([&names](const PROCESSENTRY32 &entry) -> auto {
+        wtools::ScanProcessList([&names](const PROCESSENTRY32 &entry) -> auto{
             names.emplace_back(wtools::ToUtf8(entry.szExeFile));
             if (names.back() == "watest32.exe" ||
                 names.back() == "watest64.exe") {
@@ -189,7 +189,7 @@ protected:
     bool findProcessByPid(uint32_t pid) const {
         bool found = false;
         wtools::ScanProcessList(
-            [&found, pid ](const PROCESSENTRY32 &entry) -> auto {
+            [&found, pid ](const PROCESSENTRY32 &entry) -> auto{
                 if (entry.th32ProcessID == pid) {
                     found = true;
                     EXPECT_FALSE(true) << "bullshit found " << pid << "name is "
@@ -203,7 +203,7 @@ protected:
     bool findProcessByParentPid(uint32_t pid) const {
         bool found = false;
         wtools::ScanProcessList(
-            [&found, pid ](const PROCESSENTRY32 &entry) -> auto {
+            [&found, pid ](const PROCESSENTRY32 &entry) -> auto{
                 if (entry.th32ParentProcessID == pid) {
                     found = true;
                 }
@@ -217,7 +217,7 @@ protected:
         std::wstring proc_name;
         DWORD parent_process_id = 0;
         wtools::ScanProcessList([ proc_id, &proc_name, &parent_process_id ](
-                                    const PROCESSENTRY32 &entry) -> auto {
+                                    const PROCESSENTRY32 &entry) -> auto{
             if (entry.th32ProcessID == proc_id) {
                 proc_name = entry.szExeFile;
                 parent_process_id = entry.th32ParentProcessID;
@@ -605,8 +605,8 @@ TEST(Wtools, Registry) {
         if (fs::exists(in_normalized)) {
             EXPECT_TRUE(fs::equivalent(in_normalized, expected_normalized));
         } else {
-            EXPECT_TRUE(
-                cma::tools::IsEqual(in_normalized, expected_normalized));
+            EXPECT_TRUE(cma::tools::IsEqual(in_normalized.wstring(),
+                                            expected_normalized.wstring()));
         }
     }
 

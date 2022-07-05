@@ -120,7 +120,7 @@ inline std::wstring ConstructCommandToExec(const std::filesystem::path &path) {
     std::wstring out;
     try {
         return fmt::format(wrapper, path.wstring());
-    } catch (std::exception &e) {
+    } catch (const std::exception &e) {
         XLOG::l("impossible to format Data for file '{}' exception: '{}'", path,
                 e.what());
     }
@@ -132,7 +132,8 @@ inline std::wstring ConstructCommandToExec(const std::filesystem::path &path) {
 namespace cma {
 class TheMiniBox {
 public:
-    TheMiniBox() { stop_event_ = ::CreateEvent(nullptr, TRUE, FALSE, nullptr); }
+    TheMiniBox() noexcept
+        : stop_event_{::CreateEvent(nullptr, TRUE, FALSE, nullptr)} {}
     TheMiniBox(const TheMiniBox &) = delete;
     TheMiniBox &operator=(const TheMiniBox &) = delete;
 
@@ -142,7 +143,7 @@ public:
 
     ~TheMiniBox() {
         clean();
-        CloseHandle(stop_event_);
+        ::CloseHandle(stop_event_);
     }
 
     //
@@ -196,7 +197,7 @@ public:
         return process_->processId();
     }
 
-    [[nodiscard]] uint32_t startedProcId() const { return proc_id_; }
+    [[nodiscard]] uint32_t startedProcId() const noexcept { return proc_id_; }
 
     bool appendResult(HANDLE handle, const std::vector<char> &buf) {
         if (buf.empty()) {
@@ -233,19 +234,23 @@ public:
 
     // normally kill process and associated data
     // also removes and resets other resources
-    void clean() {
+    void clean() noexcept {
         // resources clean
-        std::unique_lock lk(lock_);
-        auto *process = process_;
-        process_ = nullptr;
-        cmd_.clear();
-        id_.clear();
-        exec_.clear();
-        stop_set_ = false;
-        proc_id_ = 0;
-        lk.unlock();
+        try {
+            std::unique_lock lk(lock_);
+            auto *process = process_;
+            process_ = nullptr;
+            cmd_.clear();
+            id_.clear();
+            exec_.clear();
+            stop_set_ = false;
+            proc_id_ = 0;
+            lk.unlock();
 
-        delete process;
+            delete process;
+        } catch (const std::exception & /*e*/) {
+            // do nothing
+        }
     }
 
     // stupid wrapper
@@ -444,7 +449,7 @@ public:
             return {};
         }
 
-        auto now = std::chrono::steady_clock::now();
+        const auto now = std::chrono::steady_clock::now();
         auto diff =
             std::chrono::duration_cast<std::chrono::seconds>(now - data_time_)
                 .count();
@@ -519,11 +524,11 @@ public:
 
     bool isNoDataAndNoThread() const {
         std::unique_lock lk_data(data_lock_);
-        bool no_data = data_.empty();
+        const bool no_data = data_.empty();
         lk_data.unlock();
 
         std::unique_lock lk_thread(lock_);
-        bool no_thread = !main_thread_ || !thread_on_;
+        const bool no_thread = !main_thread_ || !thread_on_;
         lk_thread.unlock();
         return no_data && no_thread;
     }
@@ -539,7 +544,7 @@ public:
 
     std::wstring cmdLine() const noexcept { return cmd_line_; }
 
-    const wtools::InternalUser &getUser() const { return iu_; }
+    const wtools::InternalUser &getUser() const noexcept { return iu_; }
 
 protected:
     std::optional<std::string> startProcessName();

@@ -25,20 +25,20 @@ class StopWatch {
 public:
     StopWatch() = default;
     StopWatch(const StopWatch &sw) {
-        auto [c, t] = sw.get();
+        const auto [c, t] = sw.get();
         counter_ = c;
         time_ = t;
         started_ = false;
     }
     StopWatch(StopWatch &&sw) noexcept {
-        auto [c, t] = sw.getAndReset();
+        const auto [c, t] = sw.getAndReset();
         counter_ = c;
         time_ = t;
         started_ = false;
     }
     StopWatch &operator=(const StopWatch &sw) {
         std::lock_guard lk(lock_);
-        auto [c, t] = sw.get();
+        const auto [c, t] = sw.get();
         counter_ = c;
         time_ = t;
         started_ = false;
@@ -46,7 +46,7 @@ public:
     }
     StopWatch &operator=(StopWatch &&sw) noexcept {
         std::lock_guard lk(lock_);
-        auto [c, t] = sw.getAndReset();
+        const auto [c, t] = sw.getAndReset();
         counter_ = c;
         time_ = t;
         started_ = false;
@@ -69,7 +69,7 @@ public:
         }
         started_ = false;
         counter_++;
-        auto t = std::chrono::steady_clock::now();
+        const auto t = std::chrono::steady_clock::now();
         last_ = std::chrono::duration_cast<std::chrono::microseconds>(t - pos_);
         time_ += last_;
         return last_.count();
@@ -85,13 +85,13 @@ public:
         if (!started_) {
             return 0;
         }
-        auto t = std::chrono::steady_clock::now();
-        auto c =
+        const auto t = std::chrono::steady_clock::now();
+        const auto c =
             std::chrono::duration_cast<std::chrono::microseconds>(t - pos_);
         return c.count();
     }
 
-    bool isStarted() const { return started_; }
+    bool isStarted() const noexcept { return started_; }
 
     uint64_t getUsCount() const {
         std::lock_guard lk(lock_);

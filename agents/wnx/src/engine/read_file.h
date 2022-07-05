@@ -46,11 +46,8 @@ void DisplayReadFileError(const T *file_name) {
 }
 
 inline uint32_t GetFileStreamSize(std::ifstream &f) {
-    // size obtain
     f.seekg(0, std::ios::end);
-    auto fsize = static_cast<uint32_t>(f.tellg());
-
-    // read contents
+    const auto fsize = static_cast<uint32_t>(f.tellg());
     f.seekg(0, std::ios::beg);
     return fsize;
 }
@@ -60,29 +57,19 @@ inline uint32_t GetFileStreamSize(std::ifstream &f) {
 // more or less tested indirectly with test-player
 template <typename T>
 std::optional<std::vector<uint8_t>> ReadFileInVector(
-    const T *FileName) noexcept {
-    if (FileName == nullptr) {
+    const T *file_name) noexcept {
+    if (file_name == nullptr) {
         return {};
     }
     try {
-        auto f = details::OpenFileStream(FileName);
-        /*
-        #if defined(_MSC_BUILD)
-                std::ifstream f(FileName, std::ios::binary);
-        #else
-                // GCC can't wchar, conversion required
-                std::basic_string<T> str(FileName);
-                std::string file_name(str.begin(), str.end());
-                std::ifstream f(file_name, std::ios::binary);
-        #endif
-        */
+        auto f = details::OpenFileStream(file_name);
 
         if (!f.good()) {
-            details::DisplayReadFileError(FileName);
+            details::DisplayReadFileError(file_name);
             return {};
         }
 
-        auto fsize = details::GetFileStreamSize(f);
+        const auto fsize = details::GetFileStreamSize(f);
         std::vector<uint8_t> v;
         v.resize(fsize);
         f.read(reinterpret_cast<char *>(v.data()), fsize);
@@ -96,24 +83,39 @@ std::optional<std::vector<uint8_t>> ReadFileInVector(
     return {};
 }
 
-template <typename T>
-std::optional<std::string> ReadFileInString(const T *FileName) noexcept {
+inline std::optional<std::string> ReadFileInString(
+    const std::string &file_name) noexcept {
     try {
-#if defined(_MSC_BUILD)
-        std::ifstream f(FileName, std::ios::binary);
-#else
-        // GCC can't wchar, conversion required
-        std::basic_string<T> str(FileName);
-        std::string file_name(str.begin(), str.end());
-        std::ifstream f(file_name, std::ios::binary);
-#endif
-
+        std::ifstream f(file_name.c_str(), std::ios::binary);
         if (!f.good()) {
-            details::DisplayReadFileError(FileName);
+            details::DisplayReadFileError(file_name.c_str());
             return {};
         }
 
-        auto fsize = details::GetFileStreamSize(f);
+        const auto fsize = details::GetFileStreamSize(f);
+        std::string v;
+        v.resize(fsize);
+        f.read(reinterpret_cast<char *>(v.data()), fsize);
+        return v;
+    } catch (const std::exception &e) {
+        // catching possible exceptions in the
+        // ifstream or memory allocations
+        XLOG::l(XLOG_FUNC + "Exception '{}' generated in read file", e.what());
+        return {};
+    }
+    return {};
+}
+
+inline std::optional<std::string> ReadFileInString(
+    const std::wstring &file_name) noexcept {
+    try {
+        std::ifstream f(file_name.c_str(), std::ios::binary);
+        if (!f.good()) {
+            details::DisplayReadFileError(file_name.c_str());
+            return {};
+        }
+
+        const auto fsize = details::GetFileStreamSize(f);
         std::string v;
         v.resize(fsize);
         f.read(reinterpret_cast<char *>(v.data()), fsize);
@@ -128,13 +130,13 @@ std::optional<std::string> ReadFileInString(const T *FileName) noexcept {
 }
 
 inline std::optional<std::vector<uint8_t>> ReadFileInVector(
-    const std::filesystem::path &File) noexcept {
-    auto path = File.u8string();
+    const std::filesystem::path &file) noexcept {
+    const auto path = file.wstring();
     if (path.empty()) {
         return {};
     }
 
-    return ReadFileInVector(path.c_str());
+    return ReadFileInVector(wtools::ToUtf8(path).c_str());
 }
 
 }  // namespace cma::tools

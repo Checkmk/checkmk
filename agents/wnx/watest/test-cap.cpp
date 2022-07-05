@@ -323,29 +323,29 @@ TEST(CapTest, GetProcessToKill) {
 TEST(CapTest, StoreFileAgressive) {
     ASSERT_TRUE(IsStoreFileAgressive()) << "should be set normally";
 
-    using namespace std::chrono;
-
     auto work = tst::MakeTempFolderInTempPath(wtools::ConvertToUTF16(
         ::testing::UnitTest::GetInstance()->current_test_info()->name()));
     fs::create_directories(work);
 
     fs::path ping(R"(c:\windows\system32\ping.exe)");
-    if (!fs::exists(ping)) GTEST_SKIP() << "there is no ping.exe";
+    if (!fs::exists(ping)) {
+        GTEST_SKIP() << "there is no ping.exe";
+    }
     fs::path cmk_test_ping = work / "cmk-update-aGent.exe";
     wtools::KillProcessFully(cmk_test_ping.filename().wstring(), 9);
     cma::tools::sleep(200ms);
     ASSERT_TRUE(fs::copy_file(ping, cmk_test_ping,
                               fs::copy_options::overwrite_existing));
-    ASSERT_TRUE(
-        tools::RunDetachedCommand(cmk_test_ping.u8string() + " -t 8.8.8.8"));
+    ASSERT_TRUE(tools::RunDetachedCommand(
+        wtools::ToUtf8(cmk_test_ping.wstring()) + " -t 8.8.8.8"));
     cma::tools::sleep(200ms);
     std::vector<char> buf = {'_', '_'};
     ASSERT_FALSE(StoreFile(cmk_test_ping, buf));
     ASSERT_TRUE(StoreFileAgressive(cmk_test_ping, buf, 1));
     ASSERT_TRUE(fs::copy_file(ping, cmk_test_ping,
                               fs::copy_options::overwrite_existing));
-    ASSERT_TRUE(
-        tools::RunDetachedCommand(cmk_test_ping.u8string() + " -t 8.8.8.8"));
+    ASSERT_TRUE(tools::RunDetachedCommand(
+        wtools::ToUtf8(cmk_test_ping.wstring()) + " -t 8.8.8.8"));
     cma::tools::sleep(200ms);
 
     std::error_code ec;
@@ -365,7 +365,7 @@ public:
 
     const std::array<std::wstring, 2> &names() const { return names_; };
 
-    void makeFilesInPlugins() {
+    void makeFilesInPlugins() const {
         fs::create_directories(GetUserPluginsDir());
         ASSERT_TRUE(temp_fs_->createDataFile(
             fs::path{"plugins"} / "windows_if.ps1", "1"));
@@ -383,7 +383,7 @@ TEST_F(CapTestProcessFixture, ValidFile) {
     auto cap = tst::MakePathToCapTestFiles() / "plugins.test.cap";
 
     std::vector<std::wstring> files;
-    EXPECT_TRUE(Process(cap.u8string(), ProcMode::list, files));
+    EXPECT_TRUE(Process(wtools::ToUtf8(cap.wstring()), ProcMode::list, files));
     ASSERT_EQ(files.size(), 2);
     for (int i = 0; i < 2; ++i) {
         EXPECT_EQ(files[i], names()[i])
@@ -395,7 +395,7 @@ TEST_F(CapTestProcessFixture, EmptyFile) {
     auto cap = tst::MakePathToCapTestFiles() / "plugins_null.test.cap";
 
     std::vector<std::wstring> files;
-    auto ret = Process(cap.u8string(), ProcMode::list, files);
+    auto ret = Process(wtools::ToUtf8(cap.wstring()), ProcMode::list, files);
     EXPECT_TRUE(ret);
     EXPECT_EQ(files.size(), 0);
 }
@@ -405,7 +405,8 @@ TEST_F(CapTestProcessFixture, Install) {
     auto cap = tst::MakePathToCapTestFiles() / "plugins.test.cap";
 
     std::vector<std::wstring> files;
-    EXPECT_TRUE(Process(cap.u8string(), ProcMode::install, files));
+    EXPECT_TRUE(
+        Process(wtools::ToUtf8(cap.wstring()), ProcMode::install, files));
     ASSERT_EQ(files.size(), 2);
     for (int i = 0; i < 2; ++i) {
         EXPECT_EQ(files[i], names()[i])
@@ -419,7 +420,8 @@ TEST_F(CapTestProcessFixture, Remove) {
     makeFilesInPlugins();
 
     std::vector<std::wstring> files;
-    EXPECT_TRUE(Process(cap.u8string(), ProcMode::remove, files));
+    EXPECT_TRUE(
+        Process(wtools::ToUtf8(cap.wstring()), ProcMode::remove, files));
 
     ASSERT_EQ(files.size(), 2);
     for (int i = 0; i < 2; ++i) {
@@ -443,7 +445,8 @@ TEST_F(CapTestProcessFixture, BadFiles) {
     for (auto const &test : data) {
         auto bad_cap = tst::MakePathToCapTestFiles() / test.first;
         std::vector<std::wstring> results;
-        EXPECT_FALSE(Process(bad_cap.u8string(), ProcMode::list, results));
+        EXPECT_FALSE(Process(wtools::ToUtf8(bad_cap.wstring()), ProcMode::list,
+                             results));
         ASSERT_EQ(results.size(), test.second)
             << "this file is invalid, but first file should be ok: "
             << test.first;
@@ -469,7 +472,8 @@ TEST(CapTest, InvalidFile) {
     auto file_name = CreateInvalidCap();
     ASSERT_TRUE(fs::exists(file_name));
     std::vector<std::wstring> files;
-    EXPECT_FALSE(Process(file_name.u8string(), ProcMode::list, files));
+    EXPECT_FALSE(
+        Process(wtools::ToUtf8(file_name.wstring()), ProcMode::list, files));
 }
 
 TEST(CapTest, GetExampleYmlNames) {
@@ -489,7 +493,6 @@ TEST(CapTest, GetExampleYmlNames) {
 // Build  check_mk.install.yml is present, but not installed
 // Build  check_mk.install.yml is present and installed
 TEST(CapTest, ReInstallRestoreIntegration) {
-    using namespace cma::tools;
     enum class Mode { build, wato };
     for (auto mode : {Mode::build, Mode::wato}) {
         auto test_fs = tst::TempCfgFs::Create();
@@ -525,23 +528,23 @@ TEST(CapTest, ReInstallRestoreIntegration) {
         }
 
         // change folders
-        auto user_gen = [u](const std::wstring_view name) -> auto {
+        auto user_gen = [u](const std::wstring_view name) {
             return (u / dirs::kInstall / name).wstring();
         };
 
-        auto root_gen = [r](const std::wstring_view name) -> auto {
+        auto root_gen = [r](const std::wstring_view name) {
             return (r / dirs::kInstall / name).wstring();
         };
 
         // Main Function
-        EXPECT_TRUE(cma::cfg::cap::ReInstall());
+        EXPECT_TRUE(cfg::cap::ReInstall());
 
-        auto bakery = cma::tools::ReadFileInString(
-            (u / dirs::kBakery / files::kBakeryYmlFile).wstring().c_str());
-        auto user_cap_size = fs::file_size(user_gen(L"plugins.cap").c_str());
-        auto root_cap_size = fs::file_size(root_gen(L"plugins.cap").c_str());
-        auto user_dat = ReadFileInString(user_gen(L"checkmk.dat").c_str());
-        auto root_dat = ReadFileInString(root_gen(L"checkmk.dat").c_str());
+        auto bakery = tools::ReadFileInString(
+            (u / dirs::kBakery / files::kBakeryYmlFile).wstring());
+        auto user_cap_size = fs::file_size(user_gen(L"plugins.cap"));
+        auto root_cap_size = fs::file_size(root_gen(L"plugins.cap"));
+        auto user_dat = tools::ReadFileInString(user_gen(L"checkmk.dat"));
+        auto root_dat = tools::ReadFileInString(root_gen(L"checkmk.dat"));
         ASSERT_EQ(user_cap_size, root_cap_size);
         ASSERT_TRUE(user_dat);
         ASSERT_TRUE(bakery.has_value() == (mode == Mode::wato));
@@ -571,12 +574,12 @@ TEST(CapTest, ReInstallRestoreIntegration) {
         destroy_file(u / dirs::kBakery / files::kBakeryYmlFile);
 
         // main Function again
-        EXPECT_TRUE(cma::cfg::cap::ReInstall());
+        EXPECT_TRUE(cfg::cap::ReInstall());
 
-        bakery = cma::tools::ReadFileInString(
-            (u / dirs::kBakery / files::kBakeryYmlFile).wstring().c_str());
-        user_cap_size = fs::file_size(user_gen(L"plugins.cap").c_str());
-        user_dat = ReadFileInString(user_gen(L"checkmk.dat").c_str());
+        bakery = tools::ReadFileInString(
+            (u / dirs::kBakery / files::kBakeryYmlFile).wstring());
+        user_cap_size = fs::file_size(user_gen(L"plugins.cap"));
+        user_dat = tools::ReadFileInString(user_gen(L"checkmk.dat"));
         ASSERT_EQ(user_cap_size, root_cap_size);
         ASSERT_TRUE(user_dat);
         EXPECT_TRUE(user_dat == root_dat);

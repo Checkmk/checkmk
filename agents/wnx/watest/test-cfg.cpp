@@ -206,7 +206,7 @@ TEST(CmaCfg, RemoveLegacy_Long) {
     auto path = cfg::CreateWmicUninstallFile(temp_dir, "zzz");
     EXPECT_TRUE(!path.empty());
     EXPECT_TRUE(fs::exists(path));
-    auto content = tools::ReadFileInString(path.wstring().c_str());
+    auto content = tools::ReadFileInString(path.wstring());
     ON_OUT_OF_SCOPE(fs::remove(path););
     ASSERT_TRUE(content.has_value());
     EXPECT_EQ(content.value(), cfg::CreateWmicCommand("zzz"));

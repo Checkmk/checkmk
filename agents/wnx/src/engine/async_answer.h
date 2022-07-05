@@ -20,9 +20,11 @@
 
 namespace cma::srv {
 using AnswerId = std::chrono::time_point<std::chrono::steady_clock>;
-inline AnswerId GenerateAnswerId() { return std::chrono::steady_clock::now(); }
+inline AnswerId GenerateAnswerId() noexcept {
+    return std::chrono::steady_clock::now();
+}
 
-inline auto AnswerIdToNumber(AnswerId id) {
+inline auto AnswerIdToNumber(AnswerId id) noexcept {
     return id.time_since_epoch().count();
 }
 inline std::wstring AnswerIdToWstring(AnswerId id) {
@@ -38,11 +40,11 @@ class AsyncAnswer {
 public:
     using DataBlock = std::vector<uint8_t>;
     enum class Order { random, plugins_last };
-    AsyncAnswer() { tp_id_ = GenerateAnswerId(); }
+    AsyncAnswer() noexcept : tp_id_{GenerateAnswerId()} {}
 
     bool isAnswerOlder(std::chrono::milliseconds period) const;
 
-    auto getId() const { return tp_id_; }
+    auto getId() const noexcept { return tp_id_; }
 
     bool isAnswerInUse() const {
         std::lock_guard lk(lock_);
@@ -94,12 +96,12 @@ public:
         return external_ip_;
     }
 
-    const wtools::StopWatch &getStopWatch() const { return sw_; }
+    const wtools::StopWatch &getStopWatch() const noexcept { return sw_; }
 
 private:
     wtools::StopWatch sw_;
 
-    bool isAnswerInUseNoLock() const {
+    bool isAnswerInUseNoLock() const noexcept {
         return !external_ip_.empty() || !segments_.empty() ||
                awaited_segments_ != 0 || received_segments_ != 0;
     }

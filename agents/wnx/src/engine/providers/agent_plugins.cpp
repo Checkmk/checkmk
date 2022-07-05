@@ -21,7 +21,7 @@ enum class FileType { ps1, cmd, vbs, py, other };
 
 size_t GetLength(std::ifstream &ifs) {
     ifs.seekg(0, ifs.end);
-    auto length = ifs.tellg();
+    const auto length = ifs.tellg();
     ifs.seekg(0, ifs.beg);
     return static_cast<size_t>(length);
 }
@@ -30,7 +30,7 @@ std::string ReadFileToString(const fs::path &file) {
     std::string ret;
     std::ifstream ifs(file, std::ifstream::in);
     if (ifs) {
-        auto length = GetLength(ifs);
+        const auto length = GetLength(ifs);
         ret.resize(static_cast<size_t>(length));
         ifs.read(ret.data(), length);
         if (ifs.good() || ifs.eof()) {
@@ -87,25 +87,23 @@ std::string FindVersionInfo(const fs::path &file, FileType file_type) {
     return {};
 }
 
-std::vector<std::string> ScanDir(const fs::path dir) {
+std::vector<std::string> ScanDir(const fs::path &dir) {
     std::vector<std::string> result;
     std::error_code ec;
     for (auto const &entry : fs::recursive_directory_iterator{dir, ec}) {
         if (fs::is_directory(entry, ec) || !fs::is_regular_file(entry, ec)) {
             continue;
         }
-        auto file = entry.path();
+        const auto &file = entry.path();
         auto extension = file.extension().wstring();
         tools::WideLower(extension);
         std::string text;
         const std::unordered_map<std::wstring, FileType> map = {
-            {L".ps1", FileType::ps1},
-            {L".cmd", FileType::cmd},
-            {L".bat", FileType::cmd},
-            {L".vbs", FileType::vbs},
+            {L".ps1", FileType::ps1}, {L".cmd", FileType::cmd},
+            {L".bat", FileType::cmd}, {L".vbs", FileType::vbs},
             {L".py", FileType::py},
         };
-        auto type =
+        const auto type =
             map.contains(extension) ? map.at(extension) : FileType::other;
         auto version_text = FindVersionInfo(file, type);
         if (!version_text.empty()) {

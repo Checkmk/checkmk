@@ -195,13 +195,13 @@ public:
             }
         }
 
-        [[nodiscard]] bool exists() const { return exists_; }
-        [[nodiscard]] bool bad() const { return bad_; }
-        [[nodiscard]] bool changed() const {
+        [[nodiscard]] bool exists() const noexcept { return exists_; }
+        [[nodiscard]] bool bad() const noexcept { return bad_; }
+        [[nodiscard]] bool changed() const noexcept {
             return last_loaded_time_ != timestamp_;
         }
-        [[nodiscard]] const std::string &data() const { return data_; }
-        [[nodiscard]] auto timestamp() const { return timestamp_; }
+        [[nodiscard]] const std::string &data() const noexcept { return data_; }
+        [[nodiscard]] auto timestamp() const noexcept { return timestamp_; }
 
         std::filesystem::path path_;
 
@@ -301,8 +301,8 @@ public:
         return user_yaml_path_;
     }
 
-    bool isGenerated() const { return generated_; }
-    bool isOk() const { return ok_; }
+    bool isGenerated() const noexcept { return generated_; }
+    bool isOk() const noexcept { return ok_; }
 
     auto getExePaths() const {
         std::lock_guard lk(lock_);
@@ -456,7 +456,6 @@ private:
 
     std::wstring path_to_msi_exec_;
 
-    void GenerateDefaultConfig() {}
     mutable std::mutex lock_;
 
     YAML::Node yaml_;

@@ -44,7 +44,7 @@ def parse_kemp_loadmaster_services(string_table: List[List[str]]) -> Section:
             int(conns) if conns.isdigit() else None,
             *_VS_STATE_MAP.get(state, (State.UNKNOWN, f"unknown[{state}]")),
         )
-        for name, state, conns in string_table
+        for name, state, conns, in string_table
         if name != ""
     }
 

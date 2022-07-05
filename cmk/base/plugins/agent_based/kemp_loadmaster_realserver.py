@@ -3,22 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Final, Mapping, NamedTuple
+from collections import defaultdict
+from typing import Final, Mapping, NamedTuple, Sequence
 
 from .agent_based_api.v1 import any_of, equals, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 class RealServer(NamedTuple):
-    ip_address: str
     state: State
     state_txt: str
 
 
-Section = Mapping[str, RealServer]
+Section = Mapping[str, Sequence[RealServer]]
 
 
-_STATE_MAP: Final = {
+_RS_STATE_MAP: Final = {
     "1": (State.OK, "in service"),
     "2": (State.CRIT, "out of service"),
     "3": (State.CRIT, "failed"),
@@ -27,11 +27,13 @@ _STATE_MAP: Final = {
 
 
 def parse_kemp_loadmaster_realserver(string_table: StringTable) -> Section:
-    return {
-        ip_address: RealServer(ip_address, *_STATE_MAP[state])
-        for ip_address, state in string_table
-        if state
-    }
+    section = defaultdict(list)
+    for server, state in string_table:
+        section[server].append(
+            RealServer(*_RS_STATE_MAP.get(state, (State.UNKNOWN, f"unknown[{state}]")))
+        )
+    section.default_factory = None
+    return section
 
 
 register.snmp_section(
@@ -53,16 +55,20 @@ register.snmp_section(
 
 def discover_kemp_loadmaster_realserver(section: Section) -> DiscoveryResult:
     yield from (
-        Service(item=rs.ip_address) for rs in section.values() if rs.state_txt != "disabled"
+        Service(item=item)
+        for item, rservers in section.items()
+        # If at least one of the virtual services are enabled, we want to
+        # monitor it.
+        if not all(rs.state_txt == "disabled" for rs in rservers)
     )
 
 
 def check_kemp_loadmaster_realserver(item: str, section: Section) -> CheckResult:
-    realserver = section.get(item)
-    if realserver is None:
+    rservers = section.get(item)
+    if rservers is None:
         return
 
-    yield Result(state=realserver.state, summary=realserver.state_txt.title())
+    yield from (Result(state=rs.state, summary=rs.state_txt.capitalize()) for rs in rservers)
 
 
 register.check_plugin(

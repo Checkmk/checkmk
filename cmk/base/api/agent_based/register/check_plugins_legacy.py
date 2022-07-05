@@ -91,6 +91,10 @@ def _create_discovery_function(
             return
 
         for element in original_discovery_result:
+            if isinstance(element, Service):
+                yield element
+                continue
+
             if isinstance(element, tuple) and len(element) in (2, 3):
                 item, raw_params = element[0], element[-1]
                 if item is not None and not isinstance(item, str):
@@ -205,6 +209,10 @@ def _create_check_function(name: str, check_info_dict: Dict[str, Any]) -> Callab
 
         for idx, subresult in enumerate(subresults):
 
+            if isinstance(subresult, (Result, Metric)):
+                yield subresult
+                continue
+
             if "\n" in subresult[1]:
                 yield from _create_new_results_with_details(subresults[idx:])
                 break
@@ -221,6 +229,9 @@ def _create_new_results_with_details(
 ) -> CheckResult:
     state_sorted = defaultdict(list)
     for result in results:
+        if isinstance(result, (Result, Metric)):
+            yield result
+            continue
         state = State(result[0])
         state_sorted[state].append(result)
 
@@ -301,7 +312,7 @@ def _create_new_metric(legacy_metrics: Union[tuple, list] = ()) -> Generator[Met
 def _create_signature_check_function(
     requires_item: bool,
     original_function: Callable,
-) -> Callable[..., tuple | Iterable[tuple]]:
+) -> Callable[..., tuple | Iterable[tuple | Result | Metric]]:
     """Create the function for a check function with the required signature"""
     if requires_item:
 

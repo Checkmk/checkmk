@@ -1,0 +1,16 @@
+Title: service_discovery: migrate "execute service discovery" functionality to new endpoint
+Class: feature
+Compatible: compat
+Component: rest-api
+Date: 1657017182
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p7
+
+This werk moves the existing "Execute a service discovery on a host" functionality to the
+new /domain-types/service_discovery_run/actions/start/invoke endpoint. The existing
+/objects/host/{host_name}/actions/discover_services/invoke endpoint is itself deprecated
+and will be removed with Checkmk 2.3. Users should consider migrating the functionalities
+to the new endpoint.

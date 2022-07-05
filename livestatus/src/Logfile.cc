@@ -124,8 +124,6 @@ long Logfile::freeMessages(unsigned logclasses) {
     // container invalidates the iterator pointing to it. The solution is the
     // usual post-increment idiom, see Scott Meyers' "Effective STL", item 9
     // ("Choose carefully among erasing options.").
-    // TODO(sp,sk): Looks as an error/useless complication, std method is better
-    //        it = _entries.erase(it);
     for (auto it = _entries.begin(); it != _entries.end();) {
         if (((1U << static_cast<int>(it->second->log_class())) & logclasses) !=
             0U) {

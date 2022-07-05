@@ -145,22 +145,22 @@ class Interface:
         self.total_octets = self.in_octets + self.out_octets
 
 
-@dataclass
+@dataclass(frozen=True)
 class Rates:
-    intraffic: float
-    inmcast: float
-    inbcast: float
-    inucast: float
-    innucast: float
-    indisc: float
-    inerr: float
-    outtraffic: float
-    outmcast: float
-    outbcast: float
-    outucast: float
-    outnucast: float
-    outdisc: float
-    outerr: float
+    intraffic: Optional[float]
+    inmcast: Optional[float]
+    inbcast: Optional[float]
+    inucast: Optional[float]
+    innucast: Optional[float]
+    indisc: Optional[float]
+    inerr: Optional[float]
+    outtraffic: Optional[float]
+    outmcast: Optional[float]
+    outbcast: Optional[float]
+    outucast: Optional[float]
+    outnucast: Optional[float]
+    outdisc: Optional[float]
+    outerr: Optional[float]
     total: Optional[float] = None
 
 
@@ -1554,7 +1554,22 @@ def _render_floating_point(value: float, precision: int, unit: str) -> str:
     return f"{value:.{precision}f}".rstrip("0.") + unit
 
 
-def _output_packet_rates(
+def _sum_optional_floats(*vs: Optional[float]) -> Optional[float]:
+    """
+    >>> _sum_optional_floats(1.1, 2, 0)
+    3.1
+    >>> _sum_optional_floats(123.12312, None, 0) is None
+    True
+    """
+    s = 0.0
+    for v in vs:
+        if v is None:
+            return None
+        s += v
+    return s
+
+
+def _output_packet_rates(  # pylint: disable=too-many-branches
     abs_packet_levels: GeneralPacketLevels,
     perc_packet_levels: GeneralPacketLevels,
     nucast_levels: Optional[Tuple[float, float]],
@@ -1587,8 +1602,8 @@ def _output_packet_rates(
         ),
     ]:
 
-        all_pacrate = urate + nurate + errorrate
-        success_pacrate = urate + nurate
+        all_pacrate = _sum_optional_floats(urate, nurate, errorrate)
+        success_pacrate = _sum_optional_floats(urate, nurate)
         for value, abs_levels, perc_levels, display_name, metric_name, pacrate in [
             (
                 errorrate,
@@ -1623,10 +1638,14 @@ def _output_packet_rates(
                 success_pacrate,
             ),
         ]:
+            if value is None:
+                continue
 
             # Calculate the metric with actual levels, no matter if they
             # come from perc_- or abs_levels
             if perc_levels is not None:
+                if pacrate is None:
+                    continue
                 if pacrate > 0:
                     merged_levels: Optional[Tuple[float, float]] = (
                         perc_levels[0] / 100.0 * pacrate,
@@ -1657,6 +1676,8 @@ def _output_packet_rates(
                 infotxt += f" average {average_bmcast}min"
 
             if perc_levels is not None:
+                if pacrate is None:
+                    continue
                 # Note: A rate of 0% for a pacrate of 0 is mathematically incorrect,
                 # but it yields the best information for the "no packets" case in the check output.
                 perc_value = 0 if pacrate == 0 else value * 100 / pacrate
@@ -1686,6 +1707,8 @@ def _output_packet_rates(
             ("Non-unicast", "nucast", nurate, nucast_levels),
             ("Discards", "disc", discrate, disc_levels),
         ]:
+            if rate is None:
+                continue
             yield from check_levels(
                 rate,
                 levels_upper=levels,

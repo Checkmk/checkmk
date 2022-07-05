@@ -62,7 +62,7 @@ def test_all_offline_hosts_with_wato_default_config(monkeypatch: MonkeyPatch) ->
     ts.set_ruleset(
         "only_hosts",
         [
-            (["!offline"], config.ALL_HOSTS),
+            {"condition": {"host_tags": {"criticality": {"$ne": "offline"}}}, "value": True},
         ],
     )
     ts.add_host(HostName("blub1"), tags={"criticality": "offline"})
@@ -77,7 +77,7 @@ def test_all_configured_offline_hosts(monkeypatch: MonkeyPatch) -> None:
     ts.set_ruleset(
         "only_hosts",
         [
-            (["!offline"], config.ALL_HOSTS),
+            {"condition": {"host_tags": {"criticality": {"$ne": "offline"}}}, "value": True},
         ],
     )
     ts.add_host(HostName("blub1"), tags={"criticality": "offline", "site": "site1"})
@@ -188,12 +188,12 @@ def test_host_folder_matching(
     ts.set_ruleset(
         "agent_ports",
         [
-            (22, ["/wato/level11/level22/+"], config.ALL_HOSTS),
-            (11, ["/wato/level11/+"], config.ALL_HOSTS),
-            (3, ["/wato/level1/level3/+"], config.ALL_HOSTS),
-            (2, ["/wato/level1/level2/+"], config.ALL_HOSTS),
-            (1, ["/wato/level1/+"], config.ALL_HOSTS),
-            (0, [], config.ALL_HOSTS),
+            {"condition": {"host_folder": "/wato/level11/level22/"}, "value": 22},
+            {"condition": {"host_folder": "/wato/level11/"}, "value": 11},
+            {"condition": {"host_folder": "/wato/level1/level3/"}, "value": 3},
+            {"condition": {"host_folder": "/wato/level1/level2/"}, "value": 2},
+            {"condition": {"host_folder": "/wato/level1/"}, "value": 1},
+            {"condition": {}, "value": 0},
         ],
     )
 
@@ -331,35 +331,27 @@ def test_is_no_ip_host(
             "testhost",
             {"address_family": "ip-v4-only"},
             False,
-            [
-                ("ipv6", [], config.ALL_HOSTS, {}),
-            ],
+            [{"condition": {}, "options": {}, "value": "ipv6"}],
         ),
         ("testhost", {"address_family": "ip-v4v6"}, False, []),
         (
             "testhost",
             {"address_family": "ip-v4v6"},
             True,
-            [
-                ("ipv6", [], config.ALL_HOSTS, {}),
-            ],
+            [{"condition": {}, "options": {}, "value": "ipv6"}],
         ),
         ("testhost", {"address_family": "ip-v6-only"}, True, []),
         (
             "testhost",
             {"address_family": "ip-v6-only"},
             True,
-            [
-                ("ipv4", [], config.ALL_HOSTS, {}),
-            ],
+            [{"condition": {}, "options": {}, "value": "ipv4"}],
         ),
         (
             "testhost",
             {"address_family": "ip-v6-only"},
             True,
-            [
-                ("ipv6", [], config.ALL_HOSTS, {}),
-            ],
+            [{"condition": {}, "options": {}, "value": "ipv6"}],
         ),
         ("testhost", {"address_family": "no-ip"}, False, []),
     ],
@@ -568,7 +560,7 @@ def test_is_usewalk_host(monkeypatch: MonkeyPatch) -> None:
     ts.set_ruleset(
         "usewalk_hosts",
         [
-            ([hostname], config.ALL_HOSTS, {}),
+            {"condition": {"host_tag": {hostname: hostname}}, "value": False, "options": {}},
         ],
     )
 
@@ -649,9 +641,7 @@ def test_host_config_agent_port(monkeypatch: MonkeyPatch, hostname_str: str, res
     ts.add_host(hostname)
     ts.set_ruleset(
         "agent_ports",
-        [
-            (1337, [], ["testhost2"], {}),
-        ],
+        [{"condition": {"host_name": ["testhost2"]}, "value": 1337, "options": {}}],
     )
     config_cache = ts.apply(monkeypatch)
     assert config_cache.get_host_config(hostname).agent_port == result
@@ -672,9 +662,7 @@ def test_host_config_tcp_connect_timeout(
     ts.add_host(hostname)
     ts.set_ruleset(
         "tcp_connect_timeouts",
-        [
-            (12.0, [], ["testhost2"], {}),
-        ],
+        [{"condition": {"host_name": ["testhost2"]}, "value": 12.0, "options": {}}],
     )
     config_cache = ts.apply(monkeypatch)
     assert config_cache.get_host_config(hostname).tcp_connect_timeout == result
@@ -696,7 +684,11 @@ def test_host_config_agent_encryption(
     ts.set_ruleset(
         "agent_encryption",
         [
-            ({"use_regular": "enforce", "use_realtime": "disable"}, [], ["testhost2"], {}),
+            {
+                "condition": {"host_name": ["testhost2"]},
+                "value": {"use_regular": "enforce", "use_realtime": "disable"},
+                "options": {},
+            }
         ],
     )
     config_cache = ts.apply(monkeypatch)
@@ -719,7 +711,11 @@ def test_host_config_agent_target_version(
     ts.set_ruleset(
         "check_mk_agent_target_versions",
         [
-            ("site", [], ["testhost2"], {}),
+            {
+                "condition": {"host_name": ["testhost2"]},
+                "value": "site",
+                "options": {},
+            }
         ],
     )
     config_cache = ts.apply(monkeypatch)
@@ -742,7 +738,11 @@ def test_host_config_datasource_program(
     ts.set_ruleset(
         "datasource_programs",
         [
-            ("echo 1", [], ["testhost2"], {}),
+            {
+                "condition": {"host_name": ["testhost2"]},
+                "value": "echo 1",
+                "options": {},
+            }
         ],
     )
     config_cache = ts.apply(monkeypatch)
@@ -772,10 +772,18 @@ def test_host_config_special_agents(
         "special_agents",
         {
             "abc": [
-                ({"param1": 1}, [], ["testhost2"], {}),
+                {
+                    "condition": {"host_name": ["testhost2"]},
+                    "value": {"param1": 1},
+                    "options": {},
+                }
             ],
             "xyz": [
-                ({"param2": 1}, [], ["testhost2"], {}),
+                {
+                    "condition": {"host_name": ["testhost2"]},
+                    "value": {"param2": 1},
+                    "options": {},
+                }
             ],
         },
     )
@@ -800,22 +808,16 @@ def test_host_config_only_from(
         "agent_config",
         {
             "only_from": [
-                (
-                    [
-                        "127.0.0.1",
-                    ],
-                    [],
-                    ["testhost2"],
-                    {},
-                ),
-                (
-                    [
-                        "127.0.0.2",
-                    ],
-                    [],
-                    ["testhost2"],
-                    {},
-                ),
+                {
+                    "condition": {"host_name": ["testhost2"]},
+                    "value": ["127.0.0.1"],
+                    "options": {},
+                },
+                {
+                    "condition": {"host_name": ["testhost2"]},
+                    "value": ["127.0.0.2"],
+                    "options": {},
+                },
             ],
         },
     )
@@ -842,9 +844,21 @@ def test_host_config_explicit_check_command(
     ts.set_option(
         "host_check_commands",
         [
-            ("command1", [], ["testhost2"], {}),
-            ("command2", [], ["testhost2"], {}),
-            ("smart", [], ["testhost3"], {}),
+            {
+                "condition": {"host_name": ["testhost2"]},
+                "value": "command1",
+                "options": {},
+            },
+            {
+                "condition": {"host_name": ["testhost2"]},
+                "value": "command2",
+                "options": {},
+            },
+            {
+                "condition": {"host_name": ["testhost3"]},
+                "value": "smart",
+                "options": {},
+            },
         ],
     )
     config_cache = ts.apply(monkeypatch)
@@ -867,30 +881,21 @@ def test_host_config_ping_levels(
     ts.set_ruleset(
         "ping_levels",
         [
-            (
-                {
-                    "ding": 1,
-                },
-                [],
-                ["testhost2"],
-                {},
-            ),
-            (
-                {
-                    "ding": 3,
-                },
-                [],
-                ["testhost2"],
-                {},
-            ),
-            (
-                {
-                    "dong": 1,
-                },
-                [],
-                ["testhost2"],
-                {},
-            ),
+            {
+                "condition": {"host_name": ["testhost2"]},
+                "value": {"ding": 1},
+                "options": {},
+            },
+            {
+                "condition": {"host_name": ["testhost2"]},
+                "value": {"ding": 3},
+                "options": {},
+            },
+            {
+                "condition": {"host_name": ["testhost2"]},
+                "value": {"dong": 1},
+                "options": {},
+            },
         ],
     )
     config_cache = ts.apply(monkeypatch)
@@ -913,9 +918,21 @@ def test_host_config_icons_and_actions(
     ts.set_ruleset(
         "host_icons_and_actions",
         [
-            ("icon1", [], ["testhost2"], {}),
-            ("icon1", [], ["testhost2"], {}),
-            ("icon2", [], ["testhost2"], {}),
+            {
+                "condition": {"host_name": ["testhost2"]},
+                "value": "icon1",
+                "options": {},
+            },
+            {
+                "condition": {"host_name": ["testhost2"]},
+                "value": "icon1",
+                "options": {},
+            },
+            {
+                "condition": {"host_name": ["testhost2"]},
+                "value": "icon2",
+                "options": {},
+            },
         ],
     )
     config_cache = ts.apply(monkeypatch)
@@ -939,40 +956,28 @@ def test_host_config_extra_host_attributes(
         "extra_host_conf",
         {
             "dingdong": [
-                (
-                    [
-                        "value1",
-                    ],
-                    [],
-                    ["testhost2"],
-                    {},
-                ),
-                (
-                    [
-                        "value2",
-                    ],
-                    [],
-                    ["testhost2"],
-                    {},
-                ),
+                {
+                    "condition": {"host_name": ["testhost2"]},
+                    "value": ["value1"],
+                    "options": {},
+                },
+                {
+                    "condition": {"host_name": ["testhost2"]},
+                    "value": ["value2"],
+                    "options": {},
+                },
             ],
             "_custom": [
-                (
-                    [
-                        "value1",
-                    ],
-                    [],
-                    ["testhost2"],
-                    {},
-                ),
-                (
-                    [
-                        "value2",
-                    ],
-                    [],
-                    ["testhost2"],
-                    {},
-                ),
+                {
+                    "condition": {"host_name": ["testhost2"]},
+                    "value": ["value1"],
+                    "options": {},
+                },
+                {
+                    "condition": {"host_name": ["testhost2"]},
+                    "value": ["value2"],
+                    "options": {},
+                },
             ],
         },
     )
@@ -1003,22 +1008,16 @@ def test_host_config_inventory_parameters(
         "inv_parameters",
         {
             "if": [
-                (
-                    {
-                        "value1": 1,
-                    },
-                    [],
-                    ["testhost2"],
-                    {},
-                ),
-                (
-                    {
-                        "value2": 2,
-                    },
-                    [],
-                    ["testhost2"],
-                    {},
-                ),
+                {
+                    "condition": {"host_name": ["testhost2"]},
+                    "value": {"value1": 1},
+                    "options": {},
+                },
+                {
+                    "condition": {"host_name": ["testhost2"]},
+                    "value": {"value2": 2},
+                    "options": {},
+                },
             ],
         },
     )
@@ -1055,28 +1054,26 @@ def test_host_config_discovery_check_parameters(
     ts.set_option(
         "periodic_discovery",
         [
-            (
-                {
+            {
+                "condition": {"host_name": ["testhost2"]},
+                "value": {
                     "check_interval": 1,
                     "severity_unmonitored": 1,
                     "severity_vanished": 0,
                     "severity_new_host_label": 1,
                 },
-                [],
-                ["testhost2"],
-                {},
-            ),
-            (
-                {
+                "options": {},
+            },
+            {
+                "condition": {"host_name": ["testhost2"]},
+                "value": {
                     "check_interval": 2,
                     "severity_unmonitored": 1,
                     "severity_vanished": 0,
                     "severity_new_host_label": 1,
                 },
-                [],
-                ["testhost2"],
-                {},
-            ),
+                "options": {},
+            },
         ],
     )
     config_cache = ts.apply(monkeypatch)
@@ -1106,23 +1103,21 @@ def test_host_config_notification_plugin_parameters(
         "notification_parameters",
         {
             "mail": [
-                (
-                    {
+                {
+                    "condition": {"host_name": ["testhost2"]},
+                    "value": {
                         "value1": 1,
                     },
-                    [],
-                    ["testhost2"],
-                    {},
-                ),
-                (
-                    {
+                    "options": {},
+                },
+                {
+                    "condition": {"host_name": ["testhost2"]},
+                    "value": {
                         "value1": 2,
                         "value2": 2,
                     },
-                    [],
-                    ["testhost2"],
-                    {},
-                ),
+                    "options": {},
+                },
             ],
         },
     )
@@ -1161,11 +1156,29 @@ def test_host_config_active_checks(
         "active_checks",
         {
             "abc": [
-                ({"param1": 1}, [], ["testhost2"], {}),
-                ({"param2": 2}, [], ["testhost2"], {}),
+                {
+                    "condition": {"host_name": ["testhost2"]},
+                    "value": {
+                        "param1": 1,
+                    },
+                    "options": {},
+                },
+                {
+                    "condition": {"host_name": ["testhost2"]},
+                    "value": {
+                        "param2": 2,
+                    },
+                    "options": {},
+                },
             ],
             "xyz": [
-                ({"param2": 1}, [], ["testhost2"], {}),
+                {
+                    "condition": {"host_name": ["testhost2"]},
+                    "value": {
+                        "param2": 1,
+                    },
+                    "options": {},
+                },
             ],
         },
     )
@@ -1189,8 +1202,20 @@ def test_host_config_custom_checks(
     ts.set_ruleset(
         "custom_checks",
         [
-            ({"param1": 1}, [], ["testhost2"], {}),
-            ({"param2": 2}, [], ["testhost2"], {}),
+            {
+                "condition": {"host_name": ["testhost2"]},
+                "value": {
+                    "param1": 1,
+                },
+                "options": {},
+            },
+            {
+                "condition": {"host_name": ["testhost2"]},
+                "value": {
+                    "param2": 2,
+                },
+                "options": {},
+            },
         ],
     )
     config_cache = ts.apply(monkeypatch)
@@ -1230,8 +1255,16 @@ def test_host_config_static_checks(
         "static_checks",
         {
             "checkgroup": [
-                (("checktype1", "item1", {"param1": 1}), [], ["testhost2"], {}),
-                (("checktype2", "item2", {"param2": 2}), [], ["testhost2"], {}),
+                {
+                    "condition": {"host_name": ["testhost2"]},
+                    "value": ("checktype1", "item1", {"param1": 1}),
+                    "options": {},
+                },
+                {
+                    "condition": {"host_name": ["testhost2"]},
+                    "value": ("checktype2", "item2", {"param2": 2}),
+                    "options": {},
+                },
             ],
         },
     )
@@ -1255,7 +1288,11 @@ def test_host_config_hostgroups(
     ts.set_ruleset(
         "host_groups",
         [
-            ("dingdong", [], ["testhost2"], {}),
+            {
+                "condition": {"host_name": ["testhost2"]},
+                "value": "dingdong",
+                "options": {},
+            },
         ],
     )
     config_cache = ts.apply(monkeypatch)
@@ -1286,10 +1323,26 @@ def test_host_config_contactgroups(
         [
             # Seems both, a list of groups and a group name is allowed. We should clean
             # this up to be always a list of groups in the future...
-            ("dingdong", [], ["testhost2", "testhost3"], {}),
-            (["abc"], [], ["testhost2", "testhost3"], {}),
-            (["xyz"], [], ["testhost2", "testhost3"], {}),
-            ("haha", [], ["testhost3"], {}),
+            {
+                "condition": {"host_name": ["testhost2", "testhost3"]},
+                "value": "dingdong",
+                "options": {},
+            },
+            {
+                "condition": {"host_name": ["testhost2", "testhost3"]},
+                "value": ["abc"],
+                "options": {},
+            },
+            {
+                "condition": {"host_name": ["testhost2", "testhost3"]},
+                "value": ["xyz"],
+                "options": {},
+            },
+            {
+                "condition": {"host_name": ["testhost3"]},
+                "value": "haha",
+                "options": {},
+            },
         ],
     )
     config_cache = ts.apply(monkeypatch)
@@ -1312,15 +1365,14 @@ def test_host_config_exit_code_spec_overall(
     ts.set_ruleset(
         "check_mk_exit_status",
         [
-            (
-                {
+            {
+                "condition": {"host_name": ["testhost2"]},
+                "value": {
                     "overall": {"empty_output": 1},
                     "individual": {"snmp": {"empty_output": 4}},
                 },
-                [],
-                ["testhost2"],
-                {},
-            ),
+                "options": {},
+            },
         ],
     )
     config_cache = ts.apply(monkeypatch)
@@ -1343,15 +1395,14 @@ def test_host_config_exit_code_spec_individual(
     ts.set_ruleset(
         "check_mk_exit_status",
         [
-            (
-                {
+            {
+                "condition": {"host_name": ["testhost2"]},
+                "value": {
                     "overall": {"empty_output": 1},
                     "individual": {"snmp": {"empty_output": 4}},
                 },
-                [],
-                ["testhost2"],
-                {},
-            ),
+                "options": {},
+            },
         ],
     )
     config_cache = ts.apply(monkeypatch)
@@ -1399,7 +1450,11 @@ def test_host_config_exit_code_spec(monkeypatch: MonkeyPatch, ruleset: Dict[str,
     ts.set_ruleset(
         "check_mk_exit_status",
         [
-            (ruleset, [], ["hostname"], {}),
+            {
+                "condition": {"host_name": ["hostname"]},
+                "value": ruleset,
+                "options": {},
+            },
         ],
     )
     config_cache = ts.apply(monkeypatch)
@@ -1441,8 +1496,16 @@ def test_host_config_snmp_credentials_of_version(
     ts.set_ruleset(
         "snmp_communities",
         [
-            ("bla", [], ["testhost2", "testhost3"], {}),
-            (("noAuthNoPriv", "v3"), [], ["testhost2", "testhost4"], {}),
+            {
+                "condition": {"host_name": ["testhost2", "testhost3"]},
+                "value": "bla",
+                "options": {},
+            },
+            {
+                "condition": {"host_name": ["testhost2", "testhost4"]},
+                "value": ("noAuthNoPriv", "v3"),
+                "options": {},
+            },
         ],
     )
     config_cache = ts.apply(monkeypatch)
@@ -1468,7 +1531,11 @@ def test_host_config_snmp_check_interval(
     ts.set_ruleset(
         "snmp_check_interval",
         [
-            (("snmp_uptime", 4), [], ["testhost2"], {}),
+            {
+                "condition": {"host_name": ["testhost2"]},
+                "value": ("snmp_uptime", 4),
+                "options": {},
+            },
         ],
     )
     config_cache = ts.apply(monkeypatch)
@@ -1715,7 +1782,14 @@ def test_tags_of_service(monkeypatch: MonkeyPatch) -> None:
     ts.set_ruleset(
         "service_tag_rules",
         [
-            ([("criticality", "prod")], ["no-agent"], config.ALL_HOSTS, ["CPU load$"], {}),
+            {
+                "condition": {
+                    "service_description": [{"$regex": "CPU load$"}],
+                    "host_tags": {"agent": "no-agent"},
+                },
+                "options": {},
+                "value": [("criticality", "prod")],
+            }
         ],
     )
 
@@ -1762,8 +1836,16 @@ def test_host_config_labels(monkeypatch: MonkeyPatch) -> None:
     ts.set_ruleset(
         "host_label_rules",
         [
-            ({"from-rule": "rule1"}, ["no-agent"], config.ALL_HOSTS, {}),
-            ({"from-rule2": "rule2"}, ["no-agent"], config.ALL_HOSTS, {}),
+            {
+                "condition": {"host_tags": {"agent": "no-agent"}},
+                "options": {},
+                "value": {"from-rule": "rule1"},
+            },
+            {
+                "condition": {"host_tags": {"agent": "no-agent"}},
+                "options": {},
+                "value": {"from-rule2": "rule2"},
+            },
         ],
     )
 
@@ -1821,8 +1903,22 @@ def test_labels_of_service(monkeypatch: MonkeyPatch) -> None:
     ts.set_ruleset(
         "service_label_rules",
         [
-            ({"label1": "val1"}, ["no-agent"], config.ALL_HOSTS, ["CPU load$"], {}),
-            ({"label2": "val2"}, ["no-agent"], config.ALL_HOSTS, ["CPU load$"], {}),
+            {
+                "condition": {
+                    "service_description": [{"$regex": "CPU load$"}],
+                    "host_tags": {"agent": "no-agent"},
+                },
+                "options": {},
+                "value": {"label1": "val1"},
+            },
+            {
+                "condition": {
+                    "service_description": [{"$regex": "CPU load$"}],
+                    "host_tags": {"agent": "no-agent"},
+                },
+                "options": {},
+                "value": {"label2": "val2"},
+            },
         ],
     )
 
@@ -1896,47 +1992,50 @@ def test_config_cache_extra_attributes_of_service(
         "extra_service_conf",
         {
             "check_interval": [
-                ("10", [], ["testhost2"], "CPU load$", {}),
+                {
+                    "condition": {
+                        "service_description": [{"$regex": "CPU load$"}],
+                        "host_name": ["testhost2"],
+                    },
+                    "options": {},
+                    "value": "10",
+                },
             ],
             "dingdong": [
-                (
-                    [
-                        "value1",
-                    ],
-                    [],
-                    ["testhost2"],
-                    "CPU load$",
-                    {},
-                ),
-                (
-                    [
-                        "value2",
-                    ],
-                    [],
-                    ["testhost2"],
-                    "CPU load$",
-                    {},
-                ),
+                {
+                    "condition": {
+                        "service_description": [{"$regex": "CPU load$"}],
+                        "host_name": ["testhost2"],
+                    },
+                    "options": {},
+                    "value": ["value1"],
+                },
+                {
+                    "condition": {
+                        "service_description": [{"$regex": "CPU load$"}],
+                        "host_name": ["testhost2"],
+                    },
+                    "options": {},
+                    "value": ["value2"],
+                },
             ],
             "_custom": [
-                (
-                    [
-                        "value1",
-                    ],
-                    [],
-                    ["testhost2"],
-                    "CPU load$",
-                    {},
-                ),
-                (
-                    [
-                        "value2",
-                    ],
-                    [],
-                    ["testhost2"],
-                    "CPU load$",
-                    {},
-                ),
+                {
+                    "condition": {
+                        "service_description": [{"$regex": "CPU load$"}],
+                        "host_name": ["testhost2"],
+                    },
+                    "options": {},
+                    "value": ["value1"],
+                },
+                {
+                    "condition": {
+                        "service_description": [{"$regex": "CPU load$"}],
+                        "host_name": ["testhost2"],
+                    },
+                    "options": {},
+                    "value": ["value2"],
+                },
             ],
         },
     )
@@ -1961,9 +2060,30 @@ def test_config_cache_icons_and_actions(
     ts.set_ruleset(
         "service_icons_and_actions",
         [
-            ("icon1", [], ["testhost2"], "CPU load$", {}),
-            ("icon1", [], ["testhost2"], "CPU load$", {}),
-            ("icon2", [], ["testhost2"], "CPU load$", {}),
+            {
+                "condition": {
+                    "service_description": [{"$regex": "CPU load$"}],
+                    "host_name": ["testhost2"],
+                },
+                "options": {},
+                "value": "icon1",
+            },
+            {
+                "condition": {
+                    "service_description": [{"$regex": "CPU load$"}],
+                    "host_name": ["testhost2"],
+                },
+                "options": {},
+                "value": "icon1",
+            },
+            {
+                "condition": {
+                    "service_description": [{"$regex": "CPU load$"}],
+                    "host_name": ["testhost2"],
+                },
+                "options": {},
+                "value": "icon2",
+            },
         ],
     )
     config_cache = ts.apply(monkeypatch)
@@ -1993,7 +2113,14 @@ def test_config_cache_servicegroups_of_service(
     ts.set_ruleset(
         "service_groups",
         [
-            ("dingdong", [], ["testhost2"], "CPU load$", {}),
+            {
+                "condition": {
+                    "service_description": [{"$regex": "CPU load$"}],
+                    "host_name": ["testhost2"],
+                },
+                "options": {},
+                "value": "dingdong",
+            },
         ],
     )
     config_cache = ts.apply(monkeypatch)
@@ -2025,10 +2152,38 @@ def test_config_cache_contactgroups_of_service(
             # Just like host_contactgroups, a list of groups and a group name is
             # allowed. We should clean this up to be always a list of groups in the
             # future...
-            ("dingdong", [], ["testhost2", "testhost3"], "CPU load", {}),
-            (["abc"], [], ["testhost2", "testhost3"], "CPU load", {}),
-            (["xyz"], [], ["testhost2", "testhost3"], "CPU load", {}),
-            ("haha", [], ["testhost3"], "CPU load", {}),
+            {
+                "condition": {
+                    "service_description": [{"$regex": "CPU load$"}],
+                    "host_name": ["testhost2", "testhost3"],
+                },
+                "options": {},
+                "value": "dingdong",
+            },
+            {
+                "condition": {
+                    "service_description": [{"$regex": "CPU load$"}],
+                    "host_name": ["testhost2", "testhost3"],
+                },
+                "options": {},
+                "value": ["abc"],
+            },
+            {
+                "condition": {
+                    "service_description": [{"$regex": "CPU load$"}],
+                    "host_name": ["testhost2", "testhost3"],
+                },
+                "options": {},
+                "value": ["xyz"],
+            },
+            {
+                "condition": {
+                    "service_description": [{"$regex": "CPU load$"}],
+                    "host_name": ["testhost3"],
+                },
+                "options": {},
+                "value": "haha",
+            },
         ],
     )
     config_cache = ts.apply(monkeypatch)
@@ -2051,7 +2206,14 @@ def test_config_cache_passive_check_period_of_service(
     ts.set_ruleset(
         "check_periods",
         [
-            ("workhours", [], ["testhost2"], ["CPU load$"], {}),
+            {
+                "condition": {
+                    "service_description": [{"$regex": "CPU load$"}],
+                    "host_name": ["testhost2"],
+                },
+                "options": {},
+                "value": "workhours",
+            },
         ],
     )
     config_cache = ts.apply(monkeypatch)
@@ -2080,25 +2242,27 @@ def test_config_cache_custom_attributes_of_service(
     ts.set_ruleset(
         "custom_service_attributes",
         [
-            (
-                [
+            {
+                "condition": {
+                    "service_description": [{"$regex": "CPU load$"}],
+                    "host_name": ["testhost2"],
+                },
+                "options": {},
+                "value": [
                     ("ATTR1", "value1"),
                     ("ATTR2", "value2"),
                 ],
-                [],
-                ["testhost2"],
-                ["CPU load$"],
-                {},
-            ),
-            (
-                [
+            },
+            {
+                "condition": {
+                    "service_description": [{"$regex": "CPU load$"}],
+                    "host_name": ["testhost2"],
+                },
+                "options": {},
+                "value": [
                     ("ATTR1", "value1"),
                 ],
-                [],
-                ["testhost2"],
-                ["CPU load$"],
-                {},
-            ),
+            },
         ],
     )
     config_cache = ts.apply(monkeypatch)
@@ -2121,8 +2285,22 @@ def test_config_cache_service_level_of_service(
     ts.set_ruleset(
         "service_service_levels",
         [
-            (10, [], ["testhost2"], ["CPU load$"], {}),
-            (2, [], ["testhost2"], ["CPU load$"], {}),
+            {
+                "condition": {
+                    "service_description": [{"$regex": "CPU load$"}],
+                    "host_name": ["testhost2"],
+                },
+                "options": {},
+                "value": 10,
+            },
+            {
+                "condition": {
+                    "service_description": [{"$regex": "CPU load$"}],
+                    "host_name": ["testhost2"],
+                },
+                "options": {},
+                "value": 2,
+            },
         ],
     )
     config_cache = ts.apply(monkeypatch)
@@ -2146,9 +2324,30 @@ def test_config_cache_check_period_of_service(
     ts.set_ruleset(
         "check_periods",
         [
-            ("24X7", [], ["testhost2"], ["CPU load$"], {}),
-            ("xyz", [], ["testhost3"], ["CPU load$"], {}),
-            ("zzz", [], ["testhost3"], ["CPU load$"], {}),
+            {
+                "condition": {
+                    "service_description": [{"$regex": "CPU load$"}],
+                    "host_name": ["testhost2"],
+                },
+                "options": {},
+                "value": "24X7",
+            },
+            {
+                "condition": {
+                    "service_description": [{"$regex": "CPU load$"}],
+                    "host_name": ["testhost3"],
+                },
+                "options": {},
+                "value": "xyz",
+            },
+            {
+                "condition": {
+                    "service_description": [{"$regex": "CPU load$"}],
+                    "host_name": ["testhost3"],
+                },
+                "options": {},
+                "value": "zzz",
+            },
         ],
     )
     config_cache = ts.apply(monkeypatch)
@@ -2376,10 +2575,10 @@ def test_host_ruleset_match_object_of_service(monkeypatch: MonkeyPatch) -> None:
     [
         (False, None),
         (False, []),
-        (False, [(None, [], config.ALL_HOSTS, {})]),
-        (False, [({}, [], config.ALL_HOSTS, {})]),
-        (True, [({"status_data_inventory": True}, [], config.ALL_HOSTS, {})]),
-        (False, [({"status_data_inventory": False}, [], config.ALL_HOSTS, {})]),
+        (False, [{"condition": {}, "options": {}, "value": None}]),
+        (False, [{"condition": {}, "options": {}, "value": {}}]),
+        (True, [{"condition": {}, "options": {}, "value": {"status_data_inventory": True}}]),
+        (False, [{"condition": {}, "options": {}, "value": {"status_data_inventory": False}}]),
     ],
 )
 def test_host_config_do_status_data_inventory(
@@ -2415,8 +2614,16 @@ def test_host_config_service_level(
     ts.set_ruleset(
         "host_service_levels",
         [
-            (10, [], ["testhost2"], {}),
-            (2, [], ["testhost2"], {}),
+            {
+                "condition": {"host_name": ["testhost2"]},
+                "value": 10,
+                "options": {},
+            },
+            {
+                "condition": {"host_name": ["testhost2"]},
+                "value": 2,
+                "options": {},
+            },
         ],
     )
     config_cache = ts.apply(monkeypatch)

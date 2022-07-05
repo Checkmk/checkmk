@@ -1,0 +1,15 @@
+Title: kemp_loadmaster_realserver: incorporate virtual services
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1657012097
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p11
+
+The Kemp LoadMaster may provide multiple server states for the same Real Server, each state
+corresponding to a virtual service. Previously, the check kemp_loadmaster_realserver would
+incorrectly assume that these states do not differ across different virtual services. With this
+werk, each service will display all of connected Real server states.

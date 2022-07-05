@@ -4,13 +4,14 @@ catalog: hw/network/kemp
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors the state of all enabled backend servers which are connected to a Kemp
- Loadmaster. The check result is OK if the server's state is 'in service'. When the detected server state
- is 'out of service' or 'failed' the check's result will be CRIT.
+ This check monitors the states of all enabled backend servers which are
+ connected to a Kemp Loadmaster, and displays them along with the name of the
+ corresponding virtual service. The check result is OK if all the servers
+ states are 'in service'. If any of the detected server states is 'out of
+ service' or 'failed' the check's result will be CRIT.
 
 item:
  IP address of the realserver
 
 discovery:
  One service is created for each backend server if it is not disabled.
- Each one is defined by its ID.

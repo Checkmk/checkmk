@@ -915,18 +915,18 @@ def _page_menu_dashboards(name) -> Iterable[PageMenuTopic]:
         linked_dashboards = ["main", "problems", "checkmk"]
 
     yield PageMenuTopic(
-        title=_("Related Dashboards"),
+        title=_("Related dashboards"),
         entries=list(_dashboard_related_entries(name, linked_dashboards)),
     )
     yield PageMenuTopic(
-        title=_("Other Dashboards"),
+        title=_("Other dashboards"),
         entries=list(_dashboard_other_entries(name, linked_dashboards)),
     )
     yield PageMenuTopic(
         title=_("Customize"),
         entries=[
             PageMenuEntry(
-                title=_("Customize Dashboards"),
+                title=_("Customize dashboards"),
                 icon_name="dashboard",
                 item=make_simple_link("edit_dashboards.py"),
             )
@@ -1259,13 +1259,13 @@ def _dashboard_add_graphs_dashlet_entries(name: DashboardName) -> Iterable[PageM
 def _dashboard_add_state_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntryCEEOnly]:
 
     yield PageMenuEntryCEEOnly(
-        title="Host State",
+        title="Host state",
         icon_name="host_state",
         item=_dashboard_add_non_view_dashlet_link(name, "state_host"),
     )
 
     yield PageMenuEntryCEEOnly(
-        title="Service State",
+        title="Service state",
         icon_name="service_state",
         item=_dashboard_add_non_view_dashlet_link(name, "state_service"),
     )
@@ -1292,7 +1292,7 @@ def _dashboard_add_state_dashlet_entries(name: DashboardName) -> Iterable[PageMe
 def _dashboard_add_inventory_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntryCEEOnly]:
 
     yield PageMenuEntryCEEOnly(
-        title="Host Inventory",
+        title="Host inventory",
         icon_name="inventory",
         item=_dashboard_add_non_view_dashlet_link(name, "inventory"),
     )
@@ -1631,7 +1631,7 @@ def _add_context_to_dashboard(board: DashboardConfig) -> DashboardConfig:
 def page_edit_dashboards() -> None:
     visuals.page_list(
         what="dashboards",
-        title=_("Edit Dashboards"),
+        title=_("Edit dashboards"),
         visuals=get_all_dashboards(),
         render_custom_buttons=_render_dashboard_buttons,
     )
@@ -1733,7 +1733,7 @@ def create_dashboard(old_dashboard: DashboardConfig, dashboard: DashboardConfig)
 
 def _vs_dashboard() -> Dictionary:
     return Dictionary(
-        title=_("Dashboard Properties"),
+        title=_("Dashboard properties"),
         render="form",
         optional_keys=False,
         elements=[

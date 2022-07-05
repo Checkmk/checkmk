@@ -4735,10 +4735,6 @@ msgstr "Destinado ao armazenamento de documentos"
 msgid "Allocated pod resources"
 msgstr "Armazenamento alocado"
 
-#, fuzzy
-msgid "Allocated pools"
-msgstr "Protocolos permitidos"
-
 msgid "Allocated space"
 msgstr "Espaço alocado"
 
@@ -18777,20 +18773,8 @@ msgstr "Descoberta do sistema de arquivos"
 msgid "Filesystem grouping patterns"
 msgstr "Padrões de agrupamento de sistemas de arquivos"
 
-msgid "Filesystem growth"
-msgstr "Crescimento do sistema de arquivos"
-
 msgid "Filesystem mount options (Linux/UNIX)"
 msgstr "Opções de montagem do sistema de arquivos (Linux/UNIX)"
-
-msgid "Filesystem size"
-msgstr "Tamanho do sistema de arquivos"
-
-msgid "Filesystem size and usage"
-msgstr "Tamanho e utilização do sistema de arquivos"
-
-msgid "Filesystem size and used space"
-msgstr "Tamanho do sistema de arquivos e espaço usado"
 
 msgid "Filesystem types to ignore"
 msgstr "Tipos de sistemas de arquivo a ignorar"
@@ -19639,9 +19623,6 @@ msgstr "Papéis de Kubernetes"
 msgid "Free RAM"
 msgstr "RAM grátis"
 
-msgid "Free filesystem space"
-msgstr "Espaço livre no sistema de arquivos"
-
 msgid "Free leases levels"
 msgstr "Níveis de arrendamento gratuito"
 
@@ -20356,6 +20337,10 @@ msgstr "Crescimento"
 #, python-format
 msgid "Growth interrupted %d/%d"
 msgstr "Crescimento interrompido %d/%d"
+
+#, fuzzy
+msgid "Growth trend"
+msgstr "Crescimento"
 
 msgid "Guest memory usage"
 msgstr "Utilização da memória dos hóspedes"
@@ -37118,8 +37103,9 @@ msgstr ""
 "Forneça a URL base para as chamadas do motor API do docker. Por padrão "
 "estamos tentando nos conectar através do soquete unix em %s."
 
-msgid "Provisioned filesystem space"
-msgstr "Espaço do sistema de arquivos provisionado"
+#, fuzzy
+msgid "Provisioned space"
+msgstr "Espaço SSD IOPS provisionado"
 
 msgid "Provisioning Levels"
 msgstr "Níveis de provisionamento"
@@ -38805,9 +38791,6 @@ msgstr "Remarcar verificação"
 
 msgid "Reserved DB instances"
 msgstr "Reservadas instâncias do BD"
-
-msgid "Reserved filesystem space"
-msgstr "Espaço reservado no sistema de arquivos"
 
 msgid "Reserved space"
 msgstr "Espaço reservado"
@@ -41569,12 +41552,6 @@ msgstr ""
 "Definir níveis superiores na idade do processo (não o tempo consumido pela "
 "CPU, mas o tempo real)."
 
-#, fuzzy
-msgid "Set upper thresholds for the percentage of allocated pools"
-msgstr ""
-"Esta regra estabelece os níveis de alerta e de critérios para a percentagem "
-"de reservatórios atribuídos"
-
 msgid "Set width"
 msgstr "Largura do conjunto"
 
@@ -42554,6 +42531,10 @@ msgstr "Tamanho e idade de um único arquivo (mk_filestats)"
 
 msgid "Size and age of single files"
 msgstr "Tamanho e idade dos arquivos individuais"
+
+#, fuzzy
+msgid "Size and used space"
+msgstr "Tamanho do sistema de arquivos e espaço usado"
 
 msgid "Size delta"
 msgstr "Tamanho delta"
@@ -55252,9 +55233,6 @@ msgstr "Cálculo das tendências"
 msgid "Trend flexibility%s"
 msgstr "Flexibilidade de tendências%s"
 
-msgid "Trend of filesystem growth"
-msgstr "Tendência de crescimento do sistema de arquivos"
-
 msgid "Trend of memory usage growth"
 msgstr "Tendência de crescimento do uso de memória"
 
@@ -57615,12 +57593,6 @@ msgstr "Usado por etiquetas"
 msgid "Used file handles"
 msgstr "Alças de arquivo usadas"
 
-msgid "Used filesystem space"
-msgstr "Espaço do sistema de arquivos usado"
-
-msgid "Used filesystem space %"
-msgstr "Espaço do sistema de arquivos usado % %"
-
 msgid "Used host tags"
 msgstr "Tags de anfitrião usadas"
 
@@ -57654,6 +57626,14 @@ msgstr "Quota usada: Níveis superiores absolutos ou relativos"
 
 msgid "Used size of log files"
 msgstr "Tamanho usado dos ficheiros de registo"
+
+#, fuzzy
+msgid "Used space"
+msgstr "Espaço não utilizado"
+
+#, fuzzy
+msgid "Used space %"
+msgstr "Espaço não utilizado"
 
 msgid "Used space in ZFS pools and filesystems"
 msgstr "Espaço usado em pools e sistemas de arquivos ZFS"
@@ -64515,6 +64495,47 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 
 #, fuzzy
+#~| msgid "Allowed protocols"
+#~ msgid "Allocated pools"
+#~ msgstr "Protocolos permitidos"
+
+#~ msgid "Filesystem growth"
+#~ msgstr "Crescimento do sistema de arquivos"
+
+#~ msgid "Filesystem size"
+#~ msgstr "Tamanho do sistema de arquivos"
+
+#~ msgid "Filesystem size and usage"
+#~ msgstr "Tamanho e utilização do sistema de arquivos"
+
+#~ msgid "Free filesystem space"
+#~ msgstr "Espaço livre no sistema de arquivos"
+
+#~ msgid "Provisioned filesystem space"
+#~ msgstr "Espaço do sistema de arquivos provisionado"
+
+#~ msgid "Reserved filesystem space"
+#~ msgstr "Espaço reservado no sistema de arquivos"
+
+#, fuzzy
+#~| msgid ""
+#~| "This rule sets the warn and crit levels for the percentage of allocated "
+#~| "pools"
+#~ msgid "Set upper thresholds for the percentage of allocated pools"
+#~ msgstr ""
+#~ "Esta regra estabelece os níveis de alerta e de critérios para a "
+#~ "percentagem de reservatórios atribuídos"
+
+#~ msgid "Trend of filesystem growth"
+#~ msgstr "Tendência de crescimento do sistema de arquivos"
+
+#~ msgid "Used filesystem space"
+#~ msgstr "Espaço do sistema de arquivos usado"
+
+#~ msgid "Used filesystem space %"
+#~ msgstr "Espaço do sistema de arquivos usado % %"
+
+#, fuzzy
 #~| msgid "AWS/S3 Limits"
 #~ msgid "AWS/SNS Limits"
 #~ msgstr "Limites AWS/S3"
@@ -67735,9 +67756,6 @@ msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 
 #~ msgid "Provisioned IOPS SSD IO operations per second"
 #~ msgstr "Operações IOPS SSD IO provisionadas por segundo"
-
-#~ msgid "Provisioned IOPS SSD space"
-#~ msgstr "Espaço SSD IOPS provisionado"
 
 #, fuzzy
 #~| msgid "Maximum concurrent executions"

@@ -4489,10 +4489,6 @@ msgid "Allocated pod resources"
 msgstr "spatiu utilizat"
 
 #, fuzzy
-msgid "Allocated pools"
-msgstr "spatiu utilizat"
-
-#, fuzzy
 msgid "Allocated space"
 msgstr "spatiu utilizat"
 
@@ -18209,22 +18205,8 @@ msgstr "Inventariere in masa"
 msgid "Filesystem grouping patterns"
 msgstr ""
 
-msgid "Filesystem growth"
-msgstr ""
-
 msgid "Filesystem mount options (Linux/UNIX)"
 msgstr ""
-
-msgid "Filesystem size"
-msgstr ""
-
-#, fuzzy
-msgid "Filesystem size and usage"
-msgstr "Spațiu liber exact"
-
-#, fuzzy
-msgid "Filesystem size and used space"
-msgstr "Spațiu liber exact"
 
 msgid "Filesystem types to ignore"
 msgstr ""
@@ -19002,10 +18984,6 @@ msgid "Free RAM"
 msgstr ""
 
 #, fuzzy
-msgid "Free filesystem space"
-msgstr "Spațiu liber exact"
-
-#, fuzzy
 msgid "Free leases levels"
 msgstr "trei nivele"
 
@@ -19713,6 +19691,9 @@ msgstr ""
 
 #, python-format
 msgid "Growth interrupted %d/%d"
+msgstr ""
+
+msgid "Growth trend"
 msgstr ""
 
 #, fuzzy
@@ -35641,8 +35622,9 @@ msgid ""
 "to connect via the unix socket at %s."
 msgstr ""
 
-msgid "Provisioned filesystem space"
-msgstr ""
+#, fuzzy
+msgid "Provisioned space"
+msgstr "spatiu utilizat"
 
 msgid "Provisioning Levels"
 msgstr ""
@@ -37370,10 +37352,6 @@ msgstr "<b>reprogramează o verificare imediată"
 #, fuzzy
 msgid "Reserved DB instances"
 msgstr "spatiu utilizat"
-
-#, fuzzy
-msgid "Reserved filesystem space"
-msgstr "Spațiu liber exact"
 
 #, fuzzy
 msgid "Reserved space"
@@ -40155,10 +40133,6 @@ msgid ""
 "the real time)."
 msgstr ""
 
-#, fuzzy
-msgid "Set upper thresholds for the percentage of allocated pools"
-msgstr "Nivel-urile absolute de licențe neutilizate"
-
 msgid "Set width"
 msgstr ""
 
@@ -41138,6 +41112,10 @@ msgstr ""
 
 msgid "Size and age of single files"
 msgstr ""
+
+#, fuzzy
+msgid "Size and used space"
+msgstr "Spațiu liber exact"
 
 #, fuzzy
 msgid "Size delta"
@@ -51480,9 +51458,6 @@ msgstr ""
 msgid "Trend flexibility%s"
 msgstr ""
 
-msgid "Trend of filesystem growth"
-msgstr ""
-
 #, fuzzy
 msgid "Trend of memory usage growth"
 msgstr "Nivelurile maxime pentru voltaj"
@@ -53784,14 +53759,6 @@ msgstr "Spațiu liber exact"
 msgid "Used file handles"
 msgstr "licente nefolosite"
 
-#, fuzzy
-msgid "Used filesystem space"
-msgstr "Spațiu liber exact"
-
-#, fuzzy
-msgid "Used filesystem space %"
-msgstr "Spațiu liber exact"
-
 msgid "Used host tags"
 msgstr ""
 
@@ -53828,6 +53795,14 @@ msgstr "Numarul maxim de mesaje"
 #, fuzzy
 msgid "Used size of log files"
 msgstr "Dimensiunea maxima pentru cel mai mare fisier"
+
+#, fuzzy
+msgid "Used space"
+msgstr "spatiu utilizat"
+
+#, fuzzy
+msgid "Used space %"
+msgstr "spatiu utilizat"
 
 msgid "Used space in ZFS pools and filesystems"
 msgstr ""
@@ -59789,6 +59764,34 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Allocated pools"
+#~ msgstr "spatiu utilizat"
+
+#, fuzzy
+#~ msgid "Filesystem size and usage"
+#~ msgstr "Spațiu liber exact"
+
+#, fuzzy
+#~ msgid "Free filesystem space"
+#~ msgstr "Spațiu liber exact"
+
+#, fuzzy
+#~ msgid "Reserved filesystem space"
+#~ msgstr "Spațiu liber exact"
+
+#, fuzzy
+#~ msgid "Set upper thresholds for the percentage of allocated pools"
+#~ msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+#~ msgid "Used filesystem space"
+#~ msgstr "Spațiu liber exact"
+
+#, fuzzy
+#~ msgid "Used filesystem space %"
+#~ msgstr "Spațiu liber exact"
 
 #, fuzzy
 #~ msgid "AWS/SNS Limits"

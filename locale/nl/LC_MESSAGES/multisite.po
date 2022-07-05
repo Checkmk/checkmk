@@ -4740,10 +4740,6 @@ msgstr "Toegewezen voor documentenopslag"
 msgid "Allocated pod resources"
 msgstr "Toegewezen opslag"
 
-#, fuzzy
-msgid "Allocated pools"
-msgstr "Toegestane protocollen"
-
 msgid "Allocated space"
 msgstr "Toegewezen ruimte"
 
@@ -18774,20 +18770,8 @@ msgstr "Bestandssysteem ontdekking"
 msgid "Filesystem grouping patterns"
 msgstr "Groeperingspatronen bestandssysteem"
 
-msgid "Filesystem growth"
-msgstr "Bestandssysteem groei"
-
 msgid "Filesystem mount options (Linux/UNIX)"
 msgstr "Bestandssysteem mount opties (Linux/UNIX)"
-
-msgid "Filesystem size"
-msgstr "Grootte bestandssysteem"
-
-msgid "Filesystem size and usage"
-msgstr "Bestandssysteem grootte en gebruik"
-
-msgid "Filesystem size and used space"
-msgstr "Bestandssysteem grootte en gebruikte ruimte"
 
 msgid "Filesystem types to ignore"
 msgstr "Te negeren bestandssysteemtypes"
@@ -19641,9 +19625,6 @@ msgstr "Kubernetes rollen"
 msgid "Free RAM"
 msgstr "Gratis RAM"
 
-msgid "Free filesystem space"
-msgstr "Vrije ruimte bestandssysteem"
-
 msgid "Free leases levels"
 msgstr "Gratis leases niveaus"
 
@@ -20355,6 +20336,10 @@ msgstr "Groei"
 #, python-format
 msgid "Growth interrupted %d/%d"
 msgstr "Groei onderbroken %d/%d"
+
+#, fuzzy
+msgid "Growth trend"
+msgstr "Groei"
 
 msgid "Guest memory usage"
 msgstr "Gebruik van gastgeheugen"
@@ -37097,8 +37082,9 @@ msgstr ""
 "Geef de basis URL voor docker API engine aanroepen. Standaard proberen we te "
 "verbinden via de unix socket op %s."
 
-msgid "Provisioned filesystem space"
-msgstr "Geplande bestandssysteem ruimte"
+#, fuzzy
+msgid "Provisioned space"
+msgstr "Geprovisioneerde IOPS SSD ruimte"
 
 msgid "Provisioning Levels"
 msgstr "Provisioning Niveaus"
@@ -38782,9 +38768,6 @@ msgstr "Opnieuw plannen controle"
 
 msgid "Reserved DB instances"
 msgstr "Gereserveerde DB-instanties"
-
-msgid "Reserved filesystem space"
-msgstr "Gereserveerde bestandssysteem ruimte"
 
 msgid "Reserved space"
 msgstr "Gereserveerde ruimte"
@@ -41550,12 +41533,6 @@ msgstr ""
 "Stel bovengrenzen aan de leeftijd van het proces (niet de verbruikte CPU-"
 "tijd, maar de werkelijke tijd)."
 
-#, fuzzy
-msgid "Set upper thresholds for the percentage of allocated pools"
-msgstr ""
-"Deze regel stelt de waarschuwings- en crit-niveaus in voor het percentage "
-"toegewezen pools"
-
 msgid "Set width"
 msgstr "Breedte instellen"
 
@@ -42536,6 +42513,10 @@ msgstr "Grootte en leeftijd van een enkel bestand (mk_filestats)"
 
 msgid "Size and age of single files"
 msgstr "Grootte en leeftijd van afzonderlijke bestanden"
+
+#, fuzzy
+msgid "Size and used space"
+msgstr "Bestandssysteem grootte en gebruikte ruimte"
 
 msgid "Size delta"
 msgstr "Grootte delta"
@@ -55299,9 +55280,6 @@ msgstr "Trendberekening"
 msgid "Trend flexibility%s"
 msgstr "Trend flexibiliteit%s"
 
-msgid "Trend of filesystem growth"
-msgstr "Trend van bestandssysteem groei"
-
 msgid "Trend of memory usage growth"
 msgstr "Trend van groei geheugengebruik"
 
@@ -57669,12 +57647,6 @@ msgstr "Gebruikt door tags"
 msgid "Used file handles"
 msgstr "Gebruikte bestandshandvatten"
 
-msgid "Used filesystem space"
-msgstr "Gebruikte bestandssysteem ruimte"
-
-msgid "Used filesystem space %"
-msgstr "Gebruikte bestandssysteem ruimte %"
-
 msgid "Used host tags"
 msgstr "Gebruikte host tags"
 
@@ -57708,6 +57680,14 @@ msgstr "Gebruikt quotum: Absolute of relatieve bovengrenzen"
 
 msgid "Used size of log files"
 msgstr "Gebruikte grootte van logbestanden"
+
+#, fuzzy
+msgid "Used space"
+msgstr "Ongebruikte ruimte"
+
+#, fuzzy
+msgid "Used space %"
+msgstr "Ongebruikte ruimte"
 
 msgid "Used space in ZFS pools and filesystems"
 msgstr "Gebruikte ruimte in ZFS pools en bestandssystemen"
@@ -64582,6 +64562,47 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
 
 #, fuzzy
+#~| msgid "Allowed protocols"
+#~ msgid "Allocated pools"
+#~ msgstr "Toegestane protocollen"
+
+#~ msgid "Filesystem growth"
+#~ msgstr "Bestandssysteem groei"
+
+#~ msgid "Filesystem size"
+#~ msgstr "Grootte bestandssysteem"
+
+#~ msgid "Filesystem size and usage"
+#~ msgstr "Bestandssysteem grootte en gebruik"
+
+#~ msgid "Free filesystem space"
+#~ msgstr "Vrije ruimte bestandssysteem"
+
+#~ msgid "Provisioned filesystem space"
+#~ msgstr "Geplande bestandssysteem ruimte"
+
+#~ msgid "Reserved filesystem space"
+#~ msgstr "Gereserveerde bestandssysteem ruimte"
+
+#, fuzzy
+#~| msgid ""
+#~| "This rule sets the warn and crit levels for the percentage of allocated "
+#~| "pools"
+#~ msgid "Set upper thresholds for the percentage of allocated pools"
+#~ msgstr ""
+#~ "Deze regel stelt de waarschuwings- en crit-niveaus in voor het percentage "
+#~ "toegewezen pools"
+
+#~ msgid "Trend of filesystem growth"
+#~ msgstr "Trend van bestandssysteem groei"
+
+#~ msgid "Used filesystem space"
+#~ msgstr "Gebruikte bestandssysteem ruimte"
+
+#~ msgid "Used filesystem space %"
+#~ msgstr "Gebruikte bestandssysteem ruimte %"
+
+#, fuzzy
 #~| msgid "AWS/S3 Limits"
 #~ msgid "AWS/SNS Limits"
 #~ msgstr "AWS/S3 Grenzen"
@@ -67782,9 +67803,6 @@ msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Provisioned IOPS SSD IO operations per second"
 #~ msgstr "Geprovisioneerde IOPS SSD IO-bewerkingen per seconde"
-
-#~ msgid "Provisioned IOPS SSD space"
-#~ msgstr "Geprovisioneerde IOPS SSD ruimte"
 
 #, fuzzy
 #~| msgid "Maximum concurrent executions"

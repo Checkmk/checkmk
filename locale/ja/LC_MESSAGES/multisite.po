@@ -5,9 +5,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2022-06-30 07:49+0000\n"
+"PO-Revision-Date: 2022-07-01 06:00+0000\n"
 "Last-Translator: hiroko toguchi <toguchi@jtc-i.co.jp>\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "software/ja/>\n"
@@ -2614,8 +2614,8 @@ msgstr ""
 "ストレージデバイスによって提示されたSSHホストキーを受け入れます。 注意:man-"
 "in-the-middle攻撃は認識されないため、これはセキュリティの問題である可能性があ"
 "ります。より良い解決策は、監視対象のストレージデバイスのSSHホストキーを、監視"
-"を実行しているユーザー(OMDの場合:サイトユーザー)の.ssh/"
-"known_hostsファイルに追加することです"
+"を実行しているユーザー(OMDの場合:サイトユーザー)の.ssh/known_hostsファイルに"
+"追加することです"
 
 msgid "Access"
 msgstr "アクセス"
@@ -4527,9 +4527,6 @@ msgstr "ドキュメントストレージに割り当てられます"
 
 msgid "Allocated pod resources"
 msgstr "Pod リソースの割り当て"
-
-msgid "Allocated pools"
-msgstr "割り当てられたプール"
 
 msgid "Allocated space"
 msgstr "割り当てられたスペース"
@@ -16547,8 +16544,9 @@ msgid "Escape HTML globally enabled"
 msgstr "グローバルに有効化されたHTMLのエスケープ"
 
 msgid "Escape HTML in host output (Dangerous to deactivate - read help)"
-msgstr "ホスト出力でHTMLをエスケープします(非アクティブ化するのは危険です - "
-"ヘルプを読んでください)"
+msgstr ""
+"ホスト出力でHTMLをエスケープします(非アクティブ化するのは危険です - ヘルプを"
+"読んでください)"
 
 msgid "Escape HTML in service output (Dangerous to deactivate - read help)"
 msgstr ""
@@ -17933,20 +17931,8 @@ msgstr "ファイルシステムの発見"
 msgid "Filesystem grouping patterns"
 msgstr "ファイルシステムのグループ化パターン"
 
-msgid "Filesystem growth"
-msgstr "ファイルシステムの成長"
-
 msgid "Filesystem mount options (Linux/UNIX)"
 msgstr "ファイルシステムのマウントオプション(Linux/UNIX)"
-
-msgid "Filesystem size"
-msgstr "ファイルシステムのサイズ"
-
-msgid "Filesystem size and usage"
-msgstr "ファイルシステムのサイズと使用法"
-
-msgid "Filesystem size and used space"
-msgstr "ファイルシステムのサイズと使用スペース"
 
 msgid "Filesystem types to ignore"
 msgstr "無視するファイルシステムの種類"
@@ -18747,9 +18733,6 @@ msgstr "空きPods: クラスター"
 msgid "Free RAM"
 msgstr "空きRAM"
 
-msgid "Free filesystem space"
-msgstr "ファイルシステムの空き容量"
-
 msgid "Free leases levels"
 msgstr "無料リースレベル"
 
@@ -19425,6 +19408,10 @@ msgstr "拡張"
 #, python-format
 msgid "Growth interrupted %d/%d"
 msgstr "拡張が中断された%d/%d"
+
+#, fuzzy
+msgid "Growth trend"
+msgstr "拡張"
 
 msgid "Guest memory usage"
 msgstr "ゲストのメモリ使用量"
@@ -20287,7 +20274,8 @@ msgstr ""
 msgid ""
 "Here you can set different warn/crit levels regarding the free cooling "
 "positions."
-msgstr "ここでは、フリークーリングの位置に関するさまざまな警告/クリティカルレベルを設"
+msgstr ""
+"ここでは、フリークーリングの位置に関するさまざまな警告/クリティカルレベルを設"
 "定できます。"
 
 msgid ""
@@ -35259,8 +35247,9 @@ msgid ""
 "to connect via the unix socket at %s."
 msgstr ""
 
-msgid "Provisioned filesystem space"
-msgstr "プロビジョニングされたファイルシステムスペース"
+#, fuzzy
+msgid "Provisioned space"
+msgstr "プロビジョニングされたIOPSSSDスペース"
 
 msgid "Provisioning Levels"
 msgstr "プロビジョニングレベル"
@@ -36885,9 +36874,6 @@ msgstr "再スケジュールチェック"
 
 msgid "Reserved DB instances"
 msgstr "予約済みDBインスタンス"
-
-msgid "Reserved filesystem space"
-msgstr "予約済みのファイルシステムスペース"
 
 msgid "Reserved space"
 msgstr "予約スペース"
@@ -39521,9 +39507,6 @@ msgstr ""
 "プロセスの経過時間(消費されたCPU時間ではなく、リアルタイム)に上位レベルを設定"
 "します。"
 
-msgid "Set upper thresholds for the percentage of allocated pools"
-msgstr "割り当てられたプールの割合の上限しきい値の設定"
-
 msgid "Set width"
 msgstr "幅を設定する"
 
@@ -40457,6 +40440,10 @@ msgstr "単一ファイルのサイズと経過時間(mk_filestats)"
 
 msgid "Size and age of single files"
 msgstr "単一ファイルのサイズと経過時間"
+
+#, fuzzy
+msgid "Size and used space"
+msgstr "ファイルシステムのサイズと使用スペース"
 
 msgid "Size delta"
 msgstr "サイズデルタ"
@@ -50679,8 +50666,9 @@ msgstr ""
 #, python-format
 msgid ""
 "This suffix is already used by connection %s. Please choose another one."
-msgstr "このサフィックスは接続 %s "
-"ですでに使用されています。別のものを選択してください。"
+msgstr ""
+"このサフィックスは接続 %s ですでに使用されています。別のものを選択してくださ"
+"い。"
 
 msgid "This synchronization plugin has no parameters."
 msgstr "この同期プラグインにはパラメーターがありません。"
@@ -52077,9 +52065,6 @@ msgstr "トレンド計算"
 #, python-format
 msgid "Trend flexibility%s"
 msgstr "トレンドの柔軟性%s"
-
-msgid "Trend of filesystem growth"
-msgstr "ファイルシステムの増加の傾向"
 
 msgid "Trend of memory usage growth"
 msgstr "メモリ使用量の増加傾向"
@@ -54322,12 +54307,6 @@ msgstr "タグで使用"
 msgid "Used file handles"
 msgstr "使用済みファイルハンドル"
 
-msgid "Used filesystem space"
-msgstr "使用済みファイルシステムスペース"
-
-msgid "Used filesystem space %"
-msgstr "使用済みファイルシステムスペース %"
-
 msgid "Used host tags"
 msgstr "使用されたホストタグ"
 
@@ -54361,6 +54340,14 @@ msgstr "使用済みクォータ: 絶対または相対的な上位レベル"
 
 msgid "Used size of log files"
 msgstr "ログファイルの使用サイズ"
+
+#, fuzzy
+msgid "Used space"
+msgstr "未使用スペース"
+
+#, fuzzy
+msgid "Used space %"
+msgstr "未使用スペース"
 
 msgid "Used space in ZFS pools and filesystems"
 msgstr "ZFSプールおよびファイルシステムの使用済みスペース"
@@ -55164,7 +55151,7 @@ msgid "WARN"
 msgstr "警告"
 
 msgid "WARN - if this router is being used"
-msgstr "警告-このルーターが使用されている場合"
+msgstr "WARN-このルーターが使用されている場合"
 
 msgid "WARN - if this router is not being used"
 msgstr "WARN - このルーターが使用されていない場合"
@@ -56632,9 +56619,8 @@ msgstr "Windows WMIタイムアウト"
 msgid "Windows agent controller troubleshooting"
 msgstr "Windowsエージェントコントローラーのトラブルシューティング"
 
-#, fuzzy
 msgid "Windows agent logging"
-msgstr "Windows イベント ログ"
+msgstr "Windows エージェント ログ"
 
 msgid "Windows authentication"
 msgstr "Windows認証"
@@ -60750,6 +60736,39 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
+#~ msgid "Allocated pools"
+#~ msgstr "割り当てられたプール"
+
+#~ msgid "Filesystem growth"
+#~ msgstr "ファイルシステムの成長"
+
+#~ msgid "Filesystem size"
+#~ msgstr "ファイルシステムのサイズ"
+
+#~ msgid "Filesystem size and usage"
+#~ msgstr "ファイルシステムのサイズと使用法"
+
+#~ msgid "Free filesystem space"
+#~ msgstr "ファイルシステムの空き容量"
+
+#~ msgid "Provisioned filesystem space"
+#~ msgstr "プロビジョニングされたファイルシステムスペース"
+
+#~ msgid "Reserved filesystem space"
+#~ msgstr "予約済みのファイルシステムスペース"
+
+#~ msgid "Set upper thresholds for the percentage of allocated pools"
+#~ msgstr "割り当てられたプールの割合の上限しきい値の設定"
+
+#~ msgid "Trend of filesystem growth"
+#~ msgstr "ファイルシステムの増加の傾向"
+
+#~ msgid "Used filesystem space"
+#~ msgstr "使用済みファイルシステムスペース"
+
+#~ msgid "Used filesystem space %"
+#~ msgstr "使用済みファイルシステムスペース %"
+
 #, fuzzy
 #~| msgid "AWS/S3 Limits"
 #~ msgid "AWS/SNS Limits"
@@ -63738,9 +63757,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Proportion of healthy host"
 #~ msgstr "ヘルシーなホストの割合"
-
-#~ msgid "Provisioned IOPS SSD space"
-#~ msgstr "プロビジョニングされたIOPSSSDスペース"
 
 #, fuzzy
 #~| msgid "Maximum concurrent executions"

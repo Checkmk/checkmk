@@ -272,14 +272,39 @@ def test_get_check_table(
         "static_checks",
         {
             "temperature": [
-                (("smart.temp", "/dev/sda", {}), [], ["no-autochecks", "autocheck-overwrite"]),
-                (("blub.bla", "ITEM", {}), [], ["ignore-not-existing-checks"]),
-                (("smart.temp", "ITEM1", {}), [], ["ignore-disabled-rules"], {"disabled": True}),
-                (("smart.temp", "ITEM2", {}), [], ["ignore-disabled-rules"]),
-                (("smart.temp", "/dev/sda", {"rule": 1}), [], ["static-check-overwrite"]),
-                (("smart.temp", "/dev/sda", {"rule": 2}), [], ["static-check-overwrite"]),
-                (("smart.temp", "static-node1", {}), [], ["node1"]),
-                (("smart.temp", "static-cluster", {}), [], ["cluster1"]),
+                {
+                    "condition": {"host_name": ["no-autochecks", "autocheck-overwrite"]},
+                    "value": ("smart.temp", "/dev/sda", {}),
+                },
+                {
+                    "condition": {"host_name": ["ignore-not-existing-checks"]},
+                    "value": ("blub.bla", "ITEM", {}),
+                },
+                {
+                    "condition": {"host_name": ["ignore-disabled-rules"]},
+                    "options": {"disabled": True},
+                    "value": ("smart.temp", "ITEM1", {}),
+                },
+                {
+                    "condition": {"host_name": ["ignore-disabled-rules"]},
+                    "value": ("smart.temp", "ITEM2", {}),
+                },
+                {
+                    "condition": {"host_name": ["static-check-overwrite"]},
+                    "value": ("smart.temp", "/dev/sda", {"rule": 1}),
+                },
+                {
+                    "condition": {"host_name": ["static-check-overwrite"]},
+                    "value": ("smart.temp", "/dev/sda", {"rule": 2}),
+                },
+                {
+                    "condition": {"host_name": ["node1"]},
+                    "value": ("smart.temp", "static-node1", {}),
+                },
+                {
+                    "condition": {"host_name": ["cluster1"]},
+                    "value": ("smart.temp", "static-cluster", {}),
+                },
             ]
         },
     )
@@ -395,7 +420,10 @@ def test_get_check_table__static_checks_win(monkeypatch: MonkeyPatch) -> None:
         "static_checks",
         {
             "filesystem": [
-                ((str(plugin_name), item, {"source": "static"}), [], [hostname_str]),
+                {
+                    "condition": {"host_name": [hostname_str]},
+                    "value": (plugin_name, item, {"source": "static"}),
+                }
             ],
         },
     )
@@ -427,7 +455,13 @@ def test_check_table__get_static_check_entries(
 
     static_parameters_default = {"levels": (1, 2, 3, 4)}
     static_checks: Dict[str, List] = {
-        "ps": [(("ps", "item", static_parameters_default), [], [hostname], {})],
+        "ps": [
+            {
+                "condition": {"service_description": [], "host_name": [hostname]},
+                "options": {},
+                "value": ("ps", "item", static_parameters_default),
+            }
+        ],
     }
 
     ts = Scenario()

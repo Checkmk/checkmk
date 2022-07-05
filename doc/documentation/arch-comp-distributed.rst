@@ -43,7 +43,7 @@ The most important advantages are:
   between central and remote site. In this way hundreds of locations, or more,
   can be connected.
 
-* *Reliabile*: If a network connection to a remote site fails the local
+* *Reliable*: If a network connection to a remote site fails the local
   monitoring nonetheless continues operating normally. There is no *hole* in the
   data recording and also no data *jam*. A local notification will still
   function. However, spooled notifications will be delayed until the connection
@@ -59,19 +59,19 @@ The most important advantages are:
 We have some commonly discussed architectural disadvantages:
 
 * The client needs to have more features for combining the result sets from the
-  different sites to a final result sets.
+  different sites to a final result set.
 
-* The data fetched via Livestatus is always gathered on demand, means the view
+* The data fetched via Livestatus is always gathered on demand, meaning the view
   rendering times are highly affected by the network connection reliability and
   performance between the Checkmk sites.
 
 * Users in the central site can also only access historical information from a
   remote site in case the remote site is available.
 
-* Changing host assignments to sites is more complex because the host related
+* Changing host assignments to sites is more complex because the host-related
   data needs to be moved around.
 
-In addition to that we also have some limitations in the current implementation:
+In addition to that, we also have some limitations in the current implementation:
 
 * The Livestatus server is currently implementing filtering and limiting.
   Sorting of results is not implemented by the Livestatus server. Instead it is
@@ -116,8 +116,8 @@ integrates the data of multiple sites to get a `central view on the status
 <https://docs.checkmk.com/latest/en/distributed_monitoring.html#central_status>`_
 information.
 
-Use case 2: Central status view , central configuration
--------------------------------------------------------
+Use case 2: Central status view, central configuration
+------------------------------------------------------
 
 The standard form of distributed setup. You have the features of *Use case 1*
 with the addition that the central site is used for `managing the configuration

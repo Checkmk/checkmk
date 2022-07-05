@@ -1,0 +1,22 @@
+Title: Interface services: Do not abort upon counter overflow
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1657013442
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p9
+
+Most of the interface check plugins (such as <tt>if64</tt>) are counter-based. This means that the
+rates shown in the service outputs are computed by Checkmk based on these counters. One property of
+these counters is that they may overflow and subsequently re-start from zero. When this happens, no
+useful rate can be computed for this check cycle.
+
+Before this werk, Checkmk aborted and did not produce any service output in this case. Now, Checkmk
+instead skips the metrics for which the corresponding counters overflowed, but still produces the
+remaining, unaffected results.
+
+Note thas this only applies to ungrouped interfaces, i.e. the vast majority of all interface
+services.

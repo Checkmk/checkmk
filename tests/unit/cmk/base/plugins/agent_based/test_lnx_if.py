@@ -10,12 +10,7 @@ from typing import Mapping
 import pytest
 
 from cmk.base.plugins.agent_based import lnx_if
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Attributes,
-    IgnoreResultsError,
-    Result,
-    Service,
-)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, Metric, Result, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 from cmk.base.plugins.agent_based.utils import bonding, interfaces
@@ -206,15 +201,14 @@ def test_check_lnx_if(monkeypatch):
     section_if = [INTERFACE]
     section: lnx_if.Section = (section_if, {})
     monkeypatch.setattr("time.time", lambda: 0)
-    with pytest.raises(IgnoreResultsError):
-        list(
-            lnx_if.check_lnx_if(
-                INTERFACE.index,
-                PARAMS,
-                section,
-                None,
-            )
+    list(
+        lnx_if.check_lnx_if(
+            INTERFACE.index,
+            PARAMS,
+            section,
+            None,
         )
+    )
     monkeypatch.setattr("time.time", lambda: 1)
     result_lnx_if = list(
         lnx_if.check_lnx_if(
@@ -245,15 +239,14 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
         section[iface.node] = ifaces_node, {}
         ifaces += ifaces_node
     monkeypatch.setattr("time.time", lambda: 0)
-    with pytest.raises(IgnoreResultsError):
-        list(
-            lnx_if.cluster_check_lnx_if(
-                INTERFACE.index,
-                PARAMS,
-                section,
-                {},
-            )
+    list(
+        lnx_if.cluster_check_lnx_if(
+            INTERFACE.index,
+            PARAMS,
+            section,
+            {},
         )
+    )
     monkeypatch.setattr("time.time", lambda: 1)
     result_lnx_if = list(
         lnx_if.cluster_check_lnx_if(
@@ -392,6 +385,16 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
                         Result(state=state.OK, summary="(up)", details="Operational state: up"),
                         Result(state=state.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
                         Result(state=state.OK, summary="Speed: unknown"),
+                        Metric("outqlen", 0.0),
+                        Result(
+                            state=state.OK,
+                            notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
+                            "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
+                            "innucast: Initialized: 'innucast.None', indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', "
+                            "outtraffic: Initialized: 'outtraffic.None', outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', "
+                            "outucast: Initialized: 'outucast.None', outnucast: Initialized: 'outnucast.None', outdisc: Initialized: 'outdisc.None', "
+                            "outerr: Initialized: 'outerr.None'",
+                        ),
                     ],
                 ),
                 (
@@ -402,6 +405,16 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
                         Result(state=state.OK, summary="(up)", details="Operational state: up"),
                         Result(state=state.OK, summary="MAC: AA:AA:AA:AA:AA:BB"),
                         Result(state=state.OK, summary="Speed: unknown"),
+                        Metric("outqlen", 0.0),
+                        Result(
+                            state=state.OK,
+                            notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
+                            "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
+                            "innucast: Initialized: 'innucast.None', indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', "
+                            "outtraffic: Initialized: 'outtraffic.None', outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', "
+                            "outucast: Initialized: 'outucast.None', outnucast: Initialized: 'outnucast.None', outdisc: Initialized: 'outdisc.None', "
+                            "outerr: Initialized: 'outerr.None'",
+                        ),
                     ],
                 ),
             ],
@@ -535,6 +548,16 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
                         Result(state=state.OK, summary="(up)", details="Operational state: up"),
                         Result(state=state.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
                         Result(state=state.OK, summary="Speed: unknown"),
+                        Metric("outqlen", 0.0),
+                        Result(
+                            state=state.OK,
+                            notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
+                            "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
+                            "innucast: Initialized: 'innucast.None', indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', "
+                            "outtraffic: Initialized: 'outtraffic.None', outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', "
+                            "outucast: Initialized: 'outucast.None', outnucast: Initialized: 'outnucast.None', outdisc: Initialized: 'outdisc.None', "
+                            "outerr: Initialized: 'outerr.None'",
+                        ),
                     ],
                 ),
                 (
@@ -545,6 +568,16 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
                         Result(state=state.OK, summary="(up)", details="Operational state: up"),
                         Result(state=state.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
                         Result(state=state.OK, summary="Speed: unknown"),
+                        Metric("outqlen", 0.0),
+                        Result(
+                            state=state.OK,
+                            notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
+                            "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
+                            "innucast: Initialized: 'innucast.None', indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', "
+                            "outtraffic: Initialized: 'outtraffic.None', outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', "
+                            "outucast: Initialized: 'outucast.None', outnucast: Initialized: 'outnucast.None', outdisc: Initialized: 'outdisc.None', "
+                            "outerr: Initialized: 'outerr.None'",
+                        ),
                     ],
                 ),
             ],
@@ -678,6 +711,16 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
                         Result(state=state.OK, summary="(up)", details="Operational state: up"),
                         Result(state=state.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
                         Result(state=state.OK, summary="Speed: unknown"),
+                        Metric("outqlen", 0.0),
+                        Result(
+                            state=state.OK,
+                            notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
+                            "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
+                            "innucast: Initialized: 'innucast.None', indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', "
+                            "outtraffic: Initialized: 'outtraffic.None', outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', "
+                            "outucast: Initialized: 'outucast.None', outnucast: Initialized: 'outnucast.None', outdisc: Initialized: 'outdisc.None', "
+                            "outerr: Initialized: 'outerr.None'",
+                        ),
                     ],
                 ),
                 (
@@ -688,6 +731,16 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
                         Result(state=state.OK, summary="(up)", details="Operational state: up"),
                         Result(state=state.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
                         Result(state=state.OK, summary="Speed: unknown"),
+                        Metric("outqlen", 0.0),
+                        Result(
+                            state=state.OK,
+                            notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
+                            "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
+                            "innucast: Initialized: 'innucast.None', indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', "
+                            "outtraffic: Initialized: 'outtraffic.None', outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', "
+                            "outucast: Initialized: 'outucast.None', outnucast: Initialized: 'outnucast.None', outdisc: Initialized: 'outdisc.None', "
+                            "outerr: Initialized: 'outerr.None'",
+                        ),
                     ],
                 ),
             ],
@@ -731,6 +784,16 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
                         Result(state=state.OK, summary="(up)", details="Operational state: up"),
                         Result(state=state.OK, summary="MAC: 00:AA:11:BB:22:CC"),
                         Result(state=state.OK, summary="Speed: 1 GBit/s"),
+                        Metric("outqlen", 0.0),
+                        Result(
+                            state=state.OK,
+                            notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
+                            "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
+                            "innucast: Initialized: 'innucast.None', indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', "
+                            "outtraffic: Initialized: 'outtraffic.None', outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', "
+                            "outucast: Initialized: 'outucast.None', outnucast: Initialized: 'outnucast.None', outdisc: Initialized: 'outdisc.None', "
+                            "outerr: Initialized: 'outerr.None'",
+                        ),
                     ],
                 ),
                 (
@@ -740,6 +803,16 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
                         Result(state=state.OK, summary="[tun0]"),
                         Result(state=state.OK, summary="(up)", details="Operational state: up"),
                         Result(state=state.OK, summary="Speed: unknown"),
+                        Metric("outqlen", 0.0),
+                        Result(
+                            state=state.OK,
+                            notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
+                            "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
+                            "innucast: Initialized: 'innucast.None', indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', "
+                            "outtraffic: Initialized: 'outtraffic.None', outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', "
+                            "outucast: Initialized: 'outucast.None', outnucast: Initialized: 'outnucast.None', outdisc: Initialized: 'outdisc.None', "
+                            "outerr: Initialized: 'outerr.None'",
+                        ),
                     ],
                 ),
                 (
@@ -749,6 +822,16 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
                         Result(state=state.OK, summary="[tun1]"),
                         Result(state=state.OK, summary="(up)", details="Operational state: up"),
                         Result(state=state.OK, summary="Speed: unknown"),
+                        Metric("outqlen", 0.0),
+                        Result(
+                            state=state.OK,
+                            notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
+                            "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
+                            "innucast: Initialized: 'innucast.None', indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', "
+                            "outtraffic: Initialized: 'outtraffic.None', outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', "
+                            "outucast: Initialized: 'outucast.None', outnucast: Initialized: 'outnucast.None', outdisc: Initialized: 'outdisc.None', "
+                            "outerr: Initialized: 'outerr.None'",
+                        ),
                     ],
                 ),
             ],
@@ -790,25 +873,24 @@ def test_lnx_if_regression(
 
     node_name = "node"
     for item, par, res in items_params_results:
-        assert (
-            list(
-                lnx_if.cluster_check_lnx_if(
-                    item,
-                    par,
-                    {node_name: section},
-                    {},
-                )
-            )
-            == [
-                Result(  # type: ignore[call-overload]
-                    state=res[0].state,
-                    summary=res[0].summary + " on %s" % node_name if res[0].summary else None,
-                    notice=res[0].summary + " on %s" % node_name if not res[0].summary else None,
-                    details=res[0].details + " on %s" % node_name if res[0].details else None,
-                ),
-            ]
-            + res[1:]
-        )
+        assert list(lnx_if.cluster_check_lnx_if(item, par, {node_name: section}, {},)) == [
+            Result(  # type: ignore[call-overload]
+                state=res[0].state,
+                summary=res[0].summary + " on %s" % node_name if res[0].summary else None,
+                notice=res[0].summary + " on %s" % node_name if not res[0].summary else None,
+                details=res[0].details + " on %s" % node_name if res[0].details else None,
+            ),
+            *res[1:-1],
+            Result(
+                state=state.OK,
+                notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.node', "
+                "inmcast: Initialized: 'inmcast.node', inbcast: Initialized: 'inbcast.node', inucast: Initialized: 'inucast.node', "
+                "innucast: Initialized: 'innucast.node', indisc: Initialized: 'indisc.node', inerr: Initialized: 'inerr.node', "
+                "outtraffic: Initialized: 'outtraffic.node', outmcast: Initialized: 'outmcast.node', outbcast: Initialized: 'outbcast.node', "
+                "outucast: Initialized: 'outucast.node', outnucast: Initialized: 'outnucast.node', outdisc: Initialized: 'outdisc.node', "
+                "outerr: Initialized: 'outerr.node'",
+            ),
+        ]
 
 
 def test_lnx_if_with_bonding(monkeypatch) -> None:
@@ -936,6 +1018,16 @@ def test_lnx_if_with_bonding(monkeypatch) -> None:
         Result(state=state.OK, summary="(up)", details="Operational state: up"),
         Result(state=state.OK, summary="MAC: BB:BB:BB:BB:BB:BB"),
         Result(state=state.OK, summary="Speed: unknown"),
+        Metric("outqlen", 0.0),
+        Result(
+            state=state.OK,
+            notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
+            "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
+            "innucast: Initialized: 'innucast.None', indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', "
+            "outtraffic: Initialized: 'outtraffic.None', outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', "
+            "outucast: Initialized: 'outucast.None', outnucast: Initialized: 'outnucast.None', outdisc: Initialized: 'outdisc.None', "
+            "outerr: Initialized: 'outerr.None'",
+        ),
     ]
 
 

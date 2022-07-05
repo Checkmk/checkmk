@@ -160,6 +160,16 @@ def test_discover_fritz_wan_if(
                     state=State.OK,
                     summary="Speed: 25.1 MBit/s",
                 ),
+                Metric("outqlen", 0.0),
+                Result(
+                    state=State.OK,
+                    notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
+                    "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
+                    "innucast: Initialized: 'innucast.None', indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', "
+                    "outtraffic: Initialized: 'outtraffic.None', outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', "
+                    "outucast: Initialized: 'outucast.None', outnucast: Initialized: 'outnucast.None', outdisc: Initialized: 'outdisc.None', "
+                    "outerr: Initialized: 'outerr.None'",
+                ),
             ],
             id="standard case",
         ),

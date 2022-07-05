@@ -687,24 +687,19 @@ def _check_ungrouped_ifs(
     last_results = None
     results_from_fastest_interface = None
     max_out_traffic = -1.0
-    ignore_res_error = None
 
     for interface in section:
         if item_matches(item, interface.index, interface.alias, interface.descr):
-            try:
-                last_results = list(
-                    check_single_interface(
-                        item,
-                        params,
-                        interface,
-                        timestamp=timestamp,
-                        input_is_rate=input_is_rate,
-                        use_discovered_state_and_speed=interface.node is None,
-                    )
+            last_results = list(
+                check_single_interface(
+                    item,
+                    params,
+                    interface,
+                    timestamp=timestamp,
+                    input_is_rate=input_is_rate,
+                    use_discovered_state_and_speed=interface.node is None,
                 )
-            except IgnoreResultsError as excpt:
-                ignore_res_error = excpt
-                continue
+            )
             for result in last_results:
                 if (
                     isinstance(
@@ -717,14 +712,14 @@ def _check_ungrouped_ifs(
                     max_out_traffic = result.value
                     results_from_fastest_interface = last_results
 
-    if results_from_fastest_interface is not None:
+    if results_from_fastest_interface:
         yield from results_from_fastest_interface
+        return
     # in case there were results, but they did not contain the metric for outgoing traffic, we
     # simply report the last result
-    elif last_results is not None:
+    if last_results:
         yield from last_results
-    elif ignore_res_error:
-        raise ignore_res_error
+        return
 
 
 def _check_grouped_ifs(
@@ -1082,8 +1077,8 @@ def check_single_interface(
     if str(interface.oper_status) == "2":
         return
 
-    rates_dict: Dict[str, float] = {}
-    caught_ignore_results_error = False
+    rates_dict: dict[str, Optional[float]] = {}
+    overflow_dict: dict[str, IgnoreResultsError] = {}
     rate_content = [
         ("intraffic", interface.in_octets),
         ("inmcast", interface.in_mcast),
@@ -1104,27 +1099,18 @@ def check_single_interface(
         rate_content.append(("total", interface.total_octets))
     for name, counter in rate_content:
         try:
-            rate = _get_rate(
+            rates_dict[name] = _get_rate(
                 value_store,
                 _get_value_store_key(name, str(interface.node)),
                 timestamp,
                 counter,
                 input_is_rate,
             )
-            rates_dict[name] = rate
-        except IgnoreResultsError:
-            caught_ignore_results_error = True
-            # continue, other counters might wrap as well
+        except IgnoreResultsError as get_rate_excpt:
+            rates_dict[name] = None
+            overflow_dict[name] = get_rate_excpt
 
-    # if at least one counter wrapped, we do not handle the counters at all
-    if caught_ignore_results_error:
-        # If there is a threshold on the bandwidth, we cannot proceed
-        # further (the check would be flapping to green on a wrap)
-        if any(traffic_levels.values()):
-            raise IgnoreResultsError("Initializing counters")
-        return
-
-    rates: Rates = Rates(**rates_dict)
+    rates = Rates(**rates_dict)
 
     yield Metric(
         "outqlen",
@@ -1158,6 +1144,15 @@ def check_single_interface(
         value_store=value_store,
         timestamp=timestamp,
     )
+
+    if overflow_dict:
+        overflows_human_readable = (
+            f"{counter}: {get_rate_excpt}" for counter, get_rate_excpt in overflow_dict.items()
+        )
+        yield Result(
+            state=State.OK,
+            notice=f"Could not compute rates for the following counter(s): {', '.join(overflows_human_readable)}",
+        )
 
 
 def _interface_name(

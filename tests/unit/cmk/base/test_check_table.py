@@ -48,7 +48,15 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
     ts.add_cluster("cluster", nodes=["node"])
     ts.set_ruleset(
         "clustered_services",
-        [([], ["node"], ["Temperature SMART auto-clustered$"])],
+        [
+            {
+                "condition": {
+                    "service_description": [{"$regex": "Temperature SMART auto-clustered$"}],
+                    "host_name": ["node"],
+                },
+                "value": True,
+            }
+        ],
     )
     ts.set_autochecks("node", [AutocheckEntry(*service_id, {}, {})])
     ts.apply(monkeypatch)
@@ -278,7 +286,13 @@ def test_get_check_table(
     ts.set_ruleset(
         "clustered_services",
         [
-            ([], ["node1"], ["Temperature SMART auto-clustered$"]),
+            {
+                "condition": {
+                    "service_description": [{"$regex": "Temperature SMART auto-clustered$"}],
+                    "host_name": ["node1"],
+                },
+                "value": True,
+            }
         ],
     )
     ts.set_autochecks(
@@ -423,7 +437,13 @@ def test_check_table__get_static_check_entries(
     ts.set_ruleset(
         "checkgroup_parameters",
         {
-            "ps": [(check_group_parameters, [hostname], [], {})],
+            "ps": [
+                {
+                    "condition": {"service_description": [], "host_name": [hostname]},
+                    "options": {},
+                    "value": check_group_parameters,
+                }
+            ],
         },
     )
 

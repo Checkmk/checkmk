@@ -48,6 +48,7 @@ from cmk.gui.watolib.services import (
     Discovery,
     DiscoveryAction,
     DiscoveryOptions,
+    DiscoveryResult,
     get_check_table,
     has_discovery_action_specific_permissions,
     perform_fix_all,
@@ -113,6 +114,33 @@ DISCOVERY_ACTION = {
 
 
 @Endpoint(
+    constructors.object_href("service_discovery", "{host_name}"),
+    "cmk/list",
+    method="get",
+    response_schema=response_schemas.DomainObject,
+    tag_group="Setup",
+    path_params=[
+        {
+            "host_name": gui_fields.HostField(
+                description="The host of the service discovery result",
+                example="example.com",
+                required=True,
+            )
+        }
+    ],
+)
+def show_service_discovery_result(params: Mapping[str, Any]) -> Response:
+    """Show the current service discovery result"""
+    host = Host.load_host(params["host_name"])
+    discovery_result = get_check_table(
+        StartDiscoveryRequest(
+            host=host, folder=host.folder(), options=_discovery_options(DiscoveryAction.NONE)
+        )
+    )
+    return serve_json(serialize_discovery_result(host, discovery_result))
+
+
+@Endpoint(
     collection_href("service", "services"),
     ".../collection",
     method="get",
@@ -133,6 +161,7 @@ DISCOVERY_ACTION = {
             ),
         }
     ],
+    deprecated_urls={"/domain-types/service/collections/services": 14537},
 )
 def show_services(params: Mapping[str, Any]) -> Response:
     """Show all services of specific phase"""
@@ -327,16 +356,6 @@ def execute(params: Mapping[str, Any]) -> Response:
     if service_discovery_job.is_active():
         return Response(status=409)
 
-    def _discovery_options(action_mode: str):
-        return DiscoveryOptions(
-            action=action_mode,
-            show_checkboxes=False,
-            show_parameters=False,
-            show_discovered_labels=False,
-            show_plugin_names=False,
-            ignore_errors=True,
-        )
-
     discovery_options = _discovery_options(DISCOVERY_ACTION[discovery_action.value])
     if not has_discovery_action_specific_permissions(discovery_options.action):
         return problem(
@@ -389,11 +408,7 @@ def execute(params: Mapping[str, Any]) -> Response:
         case _:
             assert_never(discovery_action)
 
-    return _serve_services(
-        host,
-        discovery_result.check_table,
-        list(SERVICE_DISCOVERY_PHASES.keys()),
-    )
+    return serve_json(serialize_discovery_result(host, discovery_result))
 
 
 def _discovery_run_link(host_name: str) -> LinkType:
@@ -402,14 +417,6 @@ def _discovery_run_link(host_name: str) -> LinkType:
         "cmk/show",
         parameters={"host_name": host_name},
     )
-
-
-def _serve_services(
-    host: CREHost,
-    discovered_services: Sequence[CheckPreviewEntry],
-    discovery_phases: List[str],
-) -> Response:
-    return serve_json(serialize_service_discovery(host, discovered_services, discovery_phases))
 
 
 def _in_phase(phase_to_check: str, discovery_phases: List[str]) -> bool:
@@ -426,75 +433,77 @@ def _lookup_phase_name(internal_phase_name: str) -> str:
     raise ValueError(f"Key {internal_phase_name} not found in dict.")
 
 
-def serialize_service_discovery(
+def serialize_discovery_result(
     host: CREHost,
-    discovered_services: Sequence[CheckPreviewEntry],
-    discovery_phases: List[str],
+    discovery_result: DiscoveryResult,
 ):
-    members = {}
+    services = {}
     host_name = host.name()
-    for entry in discovered_services:
-        if _in_phase(entry.check_source, discovery_phases):
-            service_phase = _lookup_phase_name(entry.check_source)
-            members[f"{entry.check_plugin_name}-{entry.item}"] = object_property(
-                name=entry.description,
-                title=f"The service is currently {service_phase!r}",
-                value=service_phase,
-                prop_format="string",
-                linkable=False,
-                extensions={
-                    "host_name": host_name,
-                    "check_plugin_name": entry.check_plugin_name,
-                    "service_name": entry.description,
-                    "service_item": entry.item,
-                    "service_phase": service_phase,
-                },
-                base="",
-                links=[
-                    link_rel(
-                        rel="cmk/service.move-monitored",
-                        href=update_service_phase.path.format(host_name=host_name),
-                        body_params={
-                            "target_phase": "monitored",
-                            "check_type": entry.check_plugin_name,
-                            "service_item": entry.item,
-                        },
-                        method="put",
-                        title="Move the service to monitored",
-                    ),
-                    link_rel(
-                        rel="cmk/service.move-undecided",
-                        href=update_service_phase.path.format(host_name=host_name),
-                        body_params={
-                            "target_phase": "undecided",
-                            "check_type": entry.check_plugin_name,
-                            "service_item": entry.item,
-                        },
-                        method="put",
-                        title="Move the service to undecided",
-                    ),
-                    link_rel(
-                        rel="cmk/service.move-ignored",
-                        href=update_service_phase.path.format(host_name=host_name),
-                        body_params={
-                            "target_phase": "ignored",
-                            "check_type": entry.check_plugin_name,
-                            "service_item": entry.item,
-                        },
-                        method="put",
-                        title="Move the service to ignored",
-                    ),
-                ],
-            )
+    for entry in discovery_result.check_table:
+        service_phase = _lookup_phase_name(entry.check_source)
+        services[f"{entry.check_plugin_name}-{entry.item}"] = object_property(
+            name=entry.description,
+            title=f"The service is currently {service_phase!r}",
+            value=service_phase,
+            prop_format="string",
+            linkable=False,
+            extensions={
+                "host_name": host_name,
+                "check_plugin_name": entry.check_plugin_name,
+                "service_name": entry.description,
+                "service_item": entry.item,
+                "service_phase": service_phase,
+            },
+            base="",
+            links=[
+                link_rel(
+                    rel="cmk/service.move-monitored",
+                    href=update_service_phase.path.format(host_name=host_name),
+                    body_params={
+                        "target_phase": "monitored",
+                        "check_type": entry.check_plugin_name,
+                        "service_item": entry.item,
+                    },
+                    method="put",
+                    title="Move the service to monitored",
+                ),
+                link_rel(
+                    rel="cmk/service.move-undecided",
+                    href=update_service_phase.path.format(host_name=host_name),
+                    body_params={
+                        "target_phase": "undecided",
+                        "check_type": entry.check_plugin_name,
+                        "service_item": entry.item,
+                    },
+                    method="put",
+                    title="Move the service to undecided",
+                ),
+                link_rel(
+                    rel="cmk/service.move-ignored",
+                    href=update_service_phase.path.format(host_name=host_name),
+                    body_params={
+                        "target_phase": "ignored",
+                        "check_type": entry.check_plugin_name,
+                        "service_item": entry.item,
+                    },
+                    method="put",
+                    title="Move the service to ignored",
+                ),
+            ],
+        )
 
     return domain_object(
         domain_type="service_discovery",
-        identifier=f"{host_name}-services-wato",
-        title="Services discovery",
-        members=members,
+        identifier=f"service_discovery-{host_name}",
+        title=f"Service discovery result of host {host_name}",
         editable=False,
         deletable=False,
-        extensions={},
+        extensions={
+            "check_table": services,
+            "host_labels": discovery_result.host_labels,
+            "vanished_labels": discovery_result.vanished_labels,
+            "changed_labels": discovery_result.changed_labels,
+        },
     )
 
 
@@ -591,6 +600,17 @@ def show_bulk_discovery_status(params: Mapping[str, Any]) -> Response:
     return _serve_background_job(job)
 
 
+def _discovery_options(action_mode: str):
+    return DiscoveryOptions(
+        action=action_mode,
+        show_checkboxes=False,
+        show_parameters=False,
+        show_discovered_labels=False,
+        show_plugin_names=False,
+        ignore_errors=True,
+    )
+
+
 def _serve_background_job(job: BulkDiscoveryBackgroundJob) -> Response:
     job_id = job.get_job_id()
     status_details = bulk_discovery_job_status(job)
@@ -606,5 +626,79 @@ def _serve_background_job(job: BulkDiscoveryBackgroundJob) -> Response:
             },
             deletable=False,
             editable=False,
+        )
+    )
+
+
+def _serve_services(
+    host: CREHost,
+    discovered_services: Sequence[CheckPreviewEntry],
+    discovery_phases: List[str],
+) -> Response:
+    members = {}
+    host_name = host.name()
+    for entry in discovered_services:
+        if _in_phase(entry.check_source, discovery_phases):
+            service_phase = _lookup_phase_name(entry.check_source)
+            members[f"{entry.check_plugin_name}-{entry.item}"] = object_property(
+                name=entry.description,
+                title=f"The service is currently {service_phase!r}",
+                value=service_phase,
+                prop_format="string",
+                linkable=False,
+                extensions={
+                    "host_name": host_name,
+                    "check_plugin_name": entry.check_plugin_name,
+                    "service_name": entry.description,
+                    "service_item": entry.item,
+                    "service_phase": service_phase,
+                },
+                base="",
+                links=[
+                    link_rel(
+                        rel="cmk/service.move-monitored",
+                        href=update_service_phase.path.format(host_name=host_name),
+                        body_params={
+                            "target_phase": "monitored",
+                            "check_type": entry.check_plugin_name,
+                            "service_item": entry.item,
+                        },
+                        method="put",
+                        title="Move the service to monitored",
+                    ),
+                    link_rel(
+                        rel="cmk/service.move-undecided",
+                        href=update_service_phase.path.format(host_name=host_name),
+                        body_params={
+                            "target_phase": "undecided",
+                            "check_type": entry.check_plugin_name,
+                            "service_item": entry.item,
+                        },
+                        method="put",
+                        title="Move the service to undecided",
+                    ),
+                    link_rel(
+                        rel="cmk/service.move-ignored",
+                        href=update_service_phase.path.format(host_name=host_name),
+                        body_params={
+                            "target_phase": "ignored",
+                            "check_type": entry.check_plugin_name,
+                            "service_item": entry.item,
+                        },
+                        method="put",
+                        title="Move the service to ignored",
+                    ),
+                ],
+            )
+
+    return serve_json(
+        domain_object(
+            domain_type="service_discovery",
+            identifier=f"{host_name}-services-wato",
+            title="Services discovery",
+            members=members,
+            editable=False,
+            deletable=False,
+            extensions={},
         )
     )

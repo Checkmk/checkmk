@@ -6,9 +6,10 @@
 // API "Internal transport"
 
 #pragma once
-#include <chrono>      // timestamps
-#include <cstdint>     // wchar_t when compiler options set weird
-#include <functional>  // callback in the main function
+#include <chrono>       // timestamps
+#include <cstdint>      // wchar_t when compiler options set weird
+#include <functional>   // callback in the main function
+#include <string_view>  // callback in the main function
 
 #include "common/cfg_info.h"  // default logfile name
 #include "common/wtools.h"    // conversion
@@ -27,17 +28,18 @@ enum DataType {
 // must 4-byte length
 constexpr size_t kCarrierNameLength = 4;
 constexpr char kCarrierNameDelimiter = ':';
-constexpr const char *kCarrierMailslotName = "mail";
-constexpr const char *kCarrierGrpcName = "grpc";
-constexpr const char *kCarrierAsioName = "asio";
-constexpr const char *kCarrierRestName = "rest";
-constexpr const char *kCarrierNullName = "null";
-constexpr const char *kCarrierFileName = "file";
-constexpr const char *kCarrierDumpName = "dump";
+constexpr std::string_view kCarrierMailslotName = "mail";
+constexpr std::string_view kCarrierGrpcName = "grpc";
+constexpr std::string_view kCarrierAsioName = "asio";
+constexpr std::string_view kCarrierRestName = "rest";
+constexpr std::string_view kCarrierNullName = "null";
+constexpr std::string_view kCarrierFileName = "file";
+constexpr std::string_view kCarrierDumpName = "dump";
 
-inline std::string BuildPortName(const std::string &carrier_name,
-                                 const std::string &address) noexcept {
-    return carrier_name + kCarrierNameDelimiter + address;
+inline std::string BuildPortName(std::string_view carrier_name,
+                                 std::string_view address) noexcept {
+    return std::string{carrier_name} + kCarrierNameDelimiter +
+           std::string{address};
 }
 
 // Used to send data Provider <-> Agent
@@ -230,26 +232,31 @@ private:
                             uint64_t answer_id, const void *data,
                             size_t length);
     bool mailSlotSend(DataType data_type, const std::string &peer_name,
-                      uint64_t answer_id, const void *data, size_t length);
+                      uint64_t answer_id, const void *data,
+                      size_t length) const;
     bool dumpSlotSend(DataType type, const std::string &peer_name,
-                      uint64_t marker, const void *data_in, size_t length);
+                      uint64_t marker, const void *data_in,
+                      size_t length) const;
     bool fileSlotSend(DataType data_type, const std::string &peer_name,
-                      uint64_t answer_id, const void *data, size_t length);
+                      uint64_t answer_id, const void *data,
+                      size_t length) const;
     bool nullSlotSend(DataType data_type, const std::string &peer_name,
-                      uint64_t answer_id, const void *data, size_t length);
+                      uint64_t answer_id, const void *data,
+                      size_t length) const;
     bool asioSlotSend(DataType data_type, const std::string &peer_name,
-                      uint64_t answer_id, const void *data, size_t length);
+                      uint64_t answer_id, const void *data,
+                      size_t length) const;
 
     std::mutex lock_;
     std::string carrier_name_;
     std::string carrier_address_;
 
-    bool first_file_write_{true};  // used for a "file" carrier
+    mutable bool first_file_write_{true};  // used for a "file" carrier
 
-    std::function<bool(CoreCarrier *This, DataType data_type,
-                       const std::string &peer_name, uint64_t Marker,
-                       const void *data, size_t Length)>
-        data_sender_ = nullptr;
+    std::function<bool(CoreCarrier *self, DataType data_type,
+                       const std::string &peer_name, uint64_t marker,
+                       const void *data, size_t length)>
+        data_sender_{nullptr};
 };
 void InformByMailSlot(std::string_view mail_slot, std::string_view cmd);
 

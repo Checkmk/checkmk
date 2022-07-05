@@ -16,20 +16,22 @@ namespace rs = std::ranges;
 
 namespace cma::carrier {
 
-static const std::vector<std::string> g_supported_carriers = {
-    kCarrierMailslotName,  // standard internal
-    kCarrierNullName,      // drop
-    kCarrierDumpName,      // log only
-    kCarrierFileName       // write to file
+namespace {
+const std::vector<std::string> g_supported_carriers = {
+    std::string{kCarrierMailslotName},  // standard internal
+    std::string{kCarrierNullName},      // drop
+    std::string{kCarrierDumpName},      // log only
+    std::string{kCarrierFileName}       // write to file
 };
 
-static const std::vector<std::string> g_unsupported_carriers = {
-    kCarrierAsioName,  // future use
+const std::vector<std::string> g_unsupported_carriers = {
+    std::string{kCarrierAsioName},  // future use
 };
 
-static auto ParseInternalPort(const std::string &internal_port) {
-    return cma::tools::ParseKeyValue(internal_port, kCarrierNameDelimiter);
+auto ParseInternalPort(const std::string &internal_port) {
+    return tools::ParseKeyValue(internal_port, kCarrierNameDelimiter);
 }
+}  // namespace
 
 bool CoreCarrier::establishCommunication(const std::string &internal_port) {
     std::lock_guard lk(lock_);
@@ -38,7 +40,8 @@ bool CoreCarrier::establishCommunication(const std::string &internal_port) {
         return false;
     }
 
-    auto [carrier_name, carrier_address] = ParseInternalPort(internal_port);
+    const auto [carrier_name, carrier_address] =
+        ParseInternalPort(internal_port);
 
     if (rs::find(g_supported_carriers, carrier_name) !=
         g_supported_carriers.end()) {
@@ -102,13 +105,6 @@ bool CoreCarrier::sendCommand(std::string_view peer_name,
 
 void CoreCarrier::shutdownCommunication() {
     std::lock_guard lk(lock_);
-    if (carrier_address_ == kCarrierMailslotName) {
-        // nothing todo
-    } else if (carrier_address_ == kCarrierAsioName) {
-        // close connection
-    } else {
-    }
-
     carrier_address_ = "";
     carrier_name_ = "";
 }
@@ -129,7 +125,7 @@ bool CoreCarrier::sendDataDispatcher(DataType data_type,
 
 bool CoreCarrier::mailSlotSend(DataType data_type, const std::string &peer_name,
                                uint64_t answer_id, const void *data,
-                               size_t length) {
+                               size_t length) const {
     cma::MailSlot postman(carrier_address_.c_str());
     auto cdh = CarrierDataHeader::createPtr(peer_name.c_str(), answer_id,
                                             data_type, data, length);
@@ -138,17 +134,17 @@ bool CoreCarrier::mailSlotSend(DataType data_type, const std::string &peer_name,
         return false;
     }
 
-    auto ret = postman.ExecPost(cdh.get(), cdh->fullLength());
-    if (!ret) {
+    if (!postman.ExecPost(cdh.get(), cdh->fullLength())) {
         XLOG::l("Failed to send data to mail slot");
+        return false;
     }
-    return ret;
+    return true;
 }
 
 bool CoreCarrier::dumpSlotSend(DataType data_type,
                                const std::string & /*peer_name*/,
                                uint64_t /*answer_id*/, const void *data,
-                               size_t /*length*/)
+                               size_t /*length*/) const
 
 {
     if (data != nullptr) {
@@ -162,7 +158,7 @@ bool CoreCarrier::dumpSlotSend(DataType data_type,
 
 bool CoreCarrier::fileSlotSend(DataType data_type, const std::string &peer_name,
                                uint64_t /*answer_id*/, const void *data,
-                               size_t length) {
+                               size_t length) const {
     try {
         std::ofstream f;
         switch (data_type) {
@@ -175,13 +171,13 @@ bool CoreCarrier::fileSlotSend(DataType data_type, const std::string &peer_name,
             case kLog:
                 f.open(carrier_address_ + ".log", std::ios::app);
                 break;
-            case kCommand: {
-                std::string cmd(static_cast<const char *>(data), length);
-                auto rcp = cma::commander::ObtainRunCommandProcessor();
-                if (rcp != nullptr) {
+            case kCommand:
+                if (auto rcp = cma::commander::ObtainRunCommandProcessor();
+                    rcp != nullptr) {
+                    std::string cmd{static_cast<const char *>(data), length};
                     rcp(peer_name, cmd);
                 }
-            } break;
+                break;
 
             default:
                 f.open(carrier_address_ + ".unknown",
@@ -207,7 +203,7 @@ bool CoreCarrier::fileSlotSend(DataType data_type, const std::string &peer_name,
 bool CoreCarrier::nullSlotSend(DataType /*data_type*/,
                                const std::string & /*peer_name*/,
                                uint64_t /*answer_id*/, const void * /*data*/,
-                               size_t /*length*/) {
+                               size_t /*length*/) const {
     return true;
 }
 
@@ -215,16 +211,17 @@ bool CoreCarrier::nullSlotSend(DataType /*data_type*/,
 bool CoreCarrier::asioSlotSend(DataType /*data_type*/,
                                const std::string & /*peer_name*/,
                                uint64_t /*answer_id*/, const void * /*data*/,
-                               size_t /*length*/) {
+                               size_t /*length*/) const {
     return false;
 }
 
 void InformByMailSlot(std::string_view mail_slot, std::string_view cmd) {
-    cma::carrier::CoreCarrier cc;
+    carrier::CoreCarrier cc;
 
-    auto internal_port = BuildPortName(kCarrierMailslotName, mail_slot.data());
+    auto internal_port = BuildPortName(std::string{kCarrierMailslotName},
+                                       std::string{mail_slot});
     cc.establishCommunication(internal_port);
-    cc.sendCommand(cma::commander::kMainPeer, cmd);
+    cc.sendCommand(commander::kMainPeer, cmd);
 
     cc.shutdownCommunication();
 }

@@ -36,6 +36,11 @@ set pkg=grep
 set version=
 call :process
 
+rem ugrep, version is latest, required for some scripts
+set pkg=ugrep
+set version=
+call :process
+
 rem diff, version is latest
 set pkg=diffutils
 set version=

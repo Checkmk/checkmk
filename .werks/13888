@@ -1,0 +1,15 @@
+Title: Handle comments/downtimes for vanished hosts/services
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1657021204
+Edition: cee
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.1.0p6
+
+There was a regression compared to 2.0 when loading the CMC state:
+Comments/downtimes for vanished hosts/services resulted in a CMC crash.
+This has been fixed, such comments/downtimes are now silently ignored, as
+before.

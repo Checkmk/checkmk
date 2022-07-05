@@ -151,12 +151,13 @@ def _get_value(results: Sequence[GCPResult], spec: MetricSpec) -> float:
     ret_val = 0.0
     for result in results:
         proto_value = result.points[0]["value"]
-        if result.value_type == MetricSpec.DType.FLOAT:
-            value = float(proto_value["double_value"])
-        elif result.value_type == MetricSpec.DType.INT:
-            value = float(proto_value["int64_value"])
-        else:
-            raise NotImplementedError("unknown dtype")
+        match result.value_type:
+            case MetricSpec.DType.FLOAT:
+                value = float(proto_value["double_value"])
+            case MetricSpec.DType.INT:
+                value = float(proto_value["int64_value"])
+            case _:
+                raise NotImplementedError("unknown dtype")
         ret_val += value * spec.scale
     return ret_val
 

@@ -143,9 +143,9 @@ python-snap7 = "==0.10"  # needed by Siemens PLC special agent
 pymssql = "==2.2.5"  # needed by check_sql active check
 PyMySQL = "==0.9.3"  # needed by check_sql active check
 psycopg2-binary = "==2.9.1"  # needed by check_sql active check
-apispec = "==5.1.1"  # direct dependency
-marshmallow = "==3.14.1"  # direct dependency
-marshmallow-oneofschema = "==2.1.0"  # direct dependency
+apispec = "==5.2.2"  # direct dependency
+marshmallow = "==3.17.0"  # direct dependency
+marshmallow-oneofschema = "==3.0.1"  # direct dependency
 mypy_extensions = "==0.4.3" # direct dependency
 apispec-oneofschema = "==3.0.0"  # direct dependency
 typing_extensions = "==3.10"   # required by pydantic

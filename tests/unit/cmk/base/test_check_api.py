@@ -345,14 +345,21 @@ def test_get_effective_service_level(monkeypatch) -> None:
     ts.set_ruleset(
         "host_service_levels",
         [
-            (10, [], ["testhost2"], {}),
-            (2, [], ["testhost2"], {}),
+            {"condition": {"host_name": ["testhost2"]}, "options": {}, "value": 10},
+            {"condition": {"host_name": ["testhost2"]}, "options": {}, "value": 2},
         ],
     )
     ts.set_ruleset(
         "service_service_levels",
         [
-            (33, [], ["testhost1"], ["CPU load$"], {}),
+            {
+                "condition": {
+                    "service_description": [{"$regex": "CPU load$"}],
+                    "host_name": ["testhost1"],
+                },
+                "options": {},
+                "value": 33,
+            }
         ],
     )
     ts.apply(monkeypatch)

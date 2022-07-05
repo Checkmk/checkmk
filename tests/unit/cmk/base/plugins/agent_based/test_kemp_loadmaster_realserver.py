@@ -8,24 +8,22 @@ import cmk.base.plugins.agent_based.kemp_loadmaster_realserver as klr
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 
 STRING_TABLE = [
-    ["10.20.30.101", "1", "1"],
-    ["10.20.30.102", "2", "1"],
-    ["10.20.30.101", "3", "1"],
-    ["10.20.30.102", "4", "1"],
-    ["10.20.30.101", "5", "1"],
-    ["10.20.30.102", "6", "1"],
+    ["10.20.30.101", "1"],
+    ["10.20.30.102", "1"],
+    ["10.20.30.101", "1"],
+    ["10.20.30.102", "1"],
+    ["10.20.30.101", "1"],
+    ["10.20.30.102", "1"],
 ]
 
 SECTION: klr.Section = {
     "10.20.30.101": klr.RealServer(
         ip_address="10.20.30.101",
-        rsid="5",
         state=State.OK,
         state_txt="in service",
     ),
     "10.20.30.102": klr.RealServer(
         ip_address="10.20.30.102",
-        rsid="6",
         state=State.OK,
         state_txt="in service",
     ),

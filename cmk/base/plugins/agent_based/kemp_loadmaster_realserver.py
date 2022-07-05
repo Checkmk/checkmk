@@ -12,7 +12,6 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 
 class RealServer(NamedTuple):
     ip_address: str
-    rsid: str
     state: State
     state_txt: str
 
@@ -30,8 +29,8 @@ _STATE_MAP: Final = {
 
 def parse_kemp_loadmaster_realserver(string_table: StringTable) -> Section:
     return {
-        ip_address: RealServer(ip_address, rsid, *_STATE_MAP[state])
-        for ip_address, rsid, state in string_table
+        ip_address: RealServer(ip_address, *_STATE_MAP[state])
+        for ip_address, state in string_table
         if state
     }
 
@@ -43,7 +42,6 @@ register.snmp_section(
         base=".1.3.6.1.4.1.12196.13.2.1",
         oids=[
             "2",  # IP address: B100-MIB::rSip
-            "5",  # ID: B100-MIB::rSidx
             "8",  # state: B100-MIB::rSstate
         ],
     ),

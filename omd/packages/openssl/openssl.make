@@ -1,8 +1,8 @@
 OPENSSL := openssl
-OPENSSL_VERS := 1.1.1p
+OPENSSL_VERS := 1.1.1q
 OPENSSL_DIR := $(OPENSSL)-$(OPENSSL_VERS)
 # Increase this to enforce a recreation of the build cache
-OPENSSL_BUILD_ID := 2
+OPENSSL_BUILD_ID := 3
 
 OPENSSL_UNPACK := $(BUILD_HELPER_DIR)/$(OPENSSL_DIR)-unpack
 OPENSSL_BUILD := $(BUILD_HELPER_DIR)/$(OPENSSL_DIR)-build

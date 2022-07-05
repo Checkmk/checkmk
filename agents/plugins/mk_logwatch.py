@@ -69,7 +69,11 @@ MK_VARDIR = os.getenv("LOGWATCH_DIR") or os.getenv("MK_VARDIR") or os.getenv("MK
 
 MK_CONFDIR = os.getenv("LOGWATCH_DIR") or os.getenv("MK_CONFDIR") or "."
 
-REMOTE = os.getenv("REMOTE", os.getenv("REMOTE_ADDR"))
+REMOTE = (
+    os.getenv("REMOTE")
+    or os.getenv("REMOTE_ADDR")
+    or ("local" if sys.stdout.isatty() else "remote-unknown")
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -179,11 +183,7 @@ def get_status_filename(cluster_config, remote):
     underscores (_) for IPv4 address or is plain $REMOTE in case it does not match
     an IPv4 or IPv6 address.
     """
-    if not remote:
-        status_filename = "logwatch.state" + (".local" if sys.stdout.isatty() else "")
-        return os.path.join(MK_VARDIR, status_filename)
     remote_hostname = remote.replace(":", "_")
-
     match = IPV4_REGEX.match(remote) or IPV6_REGEX.match(remote)
     if not match:
         LOGGER.debug("REMOTE %r neither IPv4 nor IPv6 address.", remote)

@@ -242,37 +242,30 @@ def test_read_config_logfiles(config_lines, logfiles_files, logfiles_patterns,
 
 
 @pytest.mark.parametrize(
-    "env_var, istty, statusfile",
+    "env_var, expected_status_filename",
     [
-        ("192.168.2.1", False, "/path/to/config/logwatch.state.192.168.2.1"),  # tty doesnt matter
-        ("::ffff:192.168.2.1", False,
-         "/path/to/config/logwatch.state.__ffff_192.168.2.1"),  # tty doesnt matter
-        ("192.168.1.4", False, "/path/to/config/logwatch.state.my_cluster"),
-        ("1262:0:0:0:0:B03:1:AF18", False,
-         "/path/to/config/logwatch.state.1262_0_0_0_0_B03_1_AF18"),
-        ("1762:0:0:0:0:B03:1:AF18", False, "/path/to/config/logwatch.state.another_cluster"),
-        ("", True, "/path/to/config/logwatch.state.local"),
-        ("", False, "/path/to/config/logwatch.state"),
-        ("::ffff:192.168.1.2", False,
-         "/path/to/config/logwatch.state.my_cluster"),  # tty doesnt matter
+        ("192.168.2.1", "/path/to/config/logwatch.state.192.168.2.1"),
+        ("::ffff:192.168.2.1", "/path/to/config/logwatch.state.__ffff_192.168.2.1"),
+        ("192.168.1.4", "/path/to/config/logwatch.state.my_cluster"),
+        ("1262:0:0:0:0:B03:1:AF18", "/path/to/config/logwatch.state.1262_0_0_0_0_B03_1_AF18"),
+        ("1762:0:0:0:0:B03:1:AF18", "/path/to/config/logwatch.state.another_cluster"),
+        ("local", "/path/to/config/logwatch.state.local"),
+        ("::ffff:192.168.1.2", "/path/to/config/logwatch.state.my_cluster"),
     ])
-def test_get_status_filename(env_var, istty, statusfile, monkeypatch, mocker) -> None:  # type:ignore[no-untyped-def]
-    """
-    May not be executed with pytest option -s set. pytest stdout redirection would colide
-    with stdout mock.
-    """
+def test_get_status_filename(env_var, expected_status_filename, monkeypatch, mocker) -> None:  # type:ignore[no-untyped-def]
     monkeypatch.setattr(mk_logwatch, "MK_VARDIR", '/path/to/config')
-    stdout_mock = mocker.patch("sys.stdout")
-    stdout_mock.isatty.return_value = istty
     fake_config = [
         mk_logwatch.ClusterConfigBlock(
-            "my_cluster", ['192.168.1.1', '192.168.1.2', '192.168.1.3', '192.168.1.4']),
-        mk_logwatch.ClusterConfigBlock("another_cluster",
-                                       ['192.168.1.5', '192.168.1.6', '1762:0:0:0:0:B03:1:AF18'])
+            "my_cluster",
+            ['192.168.1.1', '192.168.1.2', '192.168.1.3', '192.168.1.4'],
+        ),
+        mk_logwatch.ClusterConfigBlock(
+            "another_cluster",
+            ['192.168.1.5', '192.168.1.6', '1762:0:0:0:0:B03:1:AF18'],
+        ),
     ]
 
-    status_filename = mk_logwatch.get_status_filename(fake_config, env_var)
-    assert status_filename == statusfile
+    assert mk_logwatch.get_status_filename(fake_config, env_var) == expected_status_filename
 
 
 @pytest.mark.parametrize("state_data, state_dict", [

@@ -22,8 +22,7 @@ from calendar import timegm
 from time import strptime, time
 from typing import Any, Dict
 
-from .agent_based_api.v1 import check_levels, register, render, Result, Service
-from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 
 
 def parse_chrony(string_table):
@@ -92,7 +91,7 @@ def check_chrony(params, section_chrony, section_ntp):
     check if stratum is too high
     """
     if "error" in section_chrony:
-        yield Result(state=state.CRIT, summary="%s" % section_chrony["error"])
+        yield Result(state=State.CRIT, summary="%s" % section_chrony["error"])
         return
 
     address = section_chrony.get("address")
@@ -101,7 +100,7 @@ def check_chrony(params, section_chrony, section_ntp):
         address = "unreachable"
     ref_id = section_chrony.get("Reference ID")
     yield Result(
-        state=state.WARN if address == "unreachable" else state.OK,
+        state=State.WARN if address == "unreachable" else State.OK,
         notice=f"NTP servers: {address}\nReference ID: {ref_id}",
     )
 
@@ -137,7 +136,7 @@ def check_chrony(params, section_chrony, section_ntp):
             )
         else:
             yield Result(
-                state=state.OK,
+                state=State.OK,
                 summary=(
                     f"Last synchronization appears to be {render.timespan(-last_sync)}"
                     " in the future (check your system time)"

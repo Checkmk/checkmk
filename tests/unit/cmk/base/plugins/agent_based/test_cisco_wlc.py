@@ -6,8 +6,7 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.cisco_wlc import (
     check_cisco_wlc,
     cluster_check_cisco_wlc,
@@ -49,13 +48,13 @@ def test_discovery_cisco_wlc(section, services) -> None:
             "AP19",
             {},
             {"AP19": "1", "AP02": "1"},
-            [Result(state=state.OK, summary="Accesspoint: online")],
+            [Result(state=State.OK, summary="Accesspoint: online")],
         ),
         (
             "AP18",
             {},
             {"AP19": "1", "AP02": "1"},
-            [Result(state=state.CRIT, summary="Accesspoint not found")],
+            [Result(state=State.CRIT, summary="Accesspoint not found")],
         ),
     ],
 )
@@ -70,13 +69,13 @@ def test_check_cisco_wlc(item, params, section, results) -> None:
             "AP19",
             {},
             {"node1": {"AP19": "1", "AP02": "1"}},
-            [Result(state=state.OK, summary="Accesspoint: online (connected to node1)")],
+            [Result(state=State.OK, summary="Accesspoint: online (connected to node1)")],
         ),
         (
             "AP18",
             {},
             {"node1": {"AP19": "1", "AP02": "1"}},
-            [Result(state=state.CRIT, summary="Accesspoint not found")],
+            [Result(state=State.CRIT, summary="Accesspoint not found")],
         ),
     ],
 )

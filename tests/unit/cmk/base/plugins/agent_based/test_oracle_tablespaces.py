@@ -14,9 +14,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Metric,
     Result,
     Service,
+    State,
+    TableRow,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
-from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 from cmk.base.plugins.agent_based.oracle_tablespaces import inventory_oracle_tablespaces
 from cmk.base.plugins.agent_based.utils.oracle import OraErrors, SectionTableSpaces
 
@@ -380,7 +380,7 @@ def test_discovery() -> None:
             oracle_tablespaces.ORACLE_TABLESPACES_DEFAULTS,
             [
                 Result(
-                    state=state.UNKNOWN,
+                    state=State.UNKNOWN,
                     summary="Invalid check item (must be <SID>.<tablespace>)",
                     details="Invalid check item (must be <SID>.<tablespace>)",
                 )
@@ -391,7 +391,7 @@ def test_discovery() -> None:
             oracle_tablespaces.ORACLE_TABLESPACES_DEFAULTS,
             [
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary="1 files with missing filename in TEMPORARY Tablespace, space calculation not possible",
                     details="1 files with missing filename in TEMPORARY Tablespace, space calculation not possible",
                 )
@@ -402,7 +402,7 @@ def test_discovery() -> None:
             oracle_tablespaces.ORACLE_TABLESPACES_DEFAULTS,
             [
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="ONLINE (TEMPORARY), Size: 707 MiB, 0.51% used (168 MiB of max. 32.0 GiB), Free: 31.8 GiB",
                     details="ONLINE (TEMPORARY), Size: 707 MiB, 0.51% used (168 MiB of max. 32.0 GiB), Free: 31.8 GiB",
                 ),
@@ -414,7 +414,7 @@ def test_discovery() -> None:
                 ),
                 Metric("used", 176160768.0),
                 Metric("max_size", 34359721984.0),
-                Result(state=state.OK, summary="autoextend"),
+                Result(state=State.OK, summary="autoextend"),
             ],
         ),
         (
@@ -425,7 +425,7 @@ def test_discovery() -> None:
             },
             [
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="ONLINE (TEMPORARY), Size: 707 MiB, 0.51% used (168 MiB of max. 32.0 GiB), Free: 31.8 GiB",
                     details="ONLINE (TEMPORARY), Size: 707 MiB, 0.51% used (168 MiB of max. 32.0 GiB), Free: 31.8 GiB",
                 ),
@@ -437,9 +437,9 @@ def test_discovery() -> None:
                 ),
                 Metric("used", 176160768.0),
                 Metric("max_size", 34359721984.0),
-                Result(state=state.OK, summary="autoextend"),
+                Result(state=State.OK, summary="autoextend"),
                 Result(
-                    state=state.WARN,
+                    state=State.WARN,
                     summary="Space left: 31.8 GiB (warn/crit below 31.9 GiB/25.6 GiB)",
                     details="Space left: 31.8 GiB (warn/crit below 31.9 GiB/25.6 GiB)",
                 ),
@@ -450,7 +450,7 @@ def test_discovery() -> None:
             oracle_tablespaces.ORACLE_TABLESPACES_DEFAULTS,
             [
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="ONLINE (TEMPORARY), Size: 707 MiB, 23.76% used (168 MiB of max. 707 MiB), Free: 539 MiB",
                     details="ONLINE (TEMPORARY), Size: 707 MiB, 23.76% used (168 MiB of max. 707 MiB), Free: 539 MiB",
                 ),
@@ -462,9 +462,9 @@ def test_discovery() -> None:
                 ),
                 Metric("used", 176160768.0),
                 Metric("max_size", 741343232.0),
-                Result(state=state.OK, summary="no autoextend"),
+                Result(state=State.OK, summary="no autoextend"),
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="1 data files (1 avail, 0 autoext)",
                     details="1 data files (1 avail, 0 autoext)",
                 ),
@@ -475,7 +475,7 @@ def test_discovery() -> None:
             oracle_tablespaces.ORACLE_TABLESPACES_DEFAULTS,
             [
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary="One or more datafiles OFFLINE or RECOVER",
                     details="One or more datafiles OFFLINE or RECOVER",
                 )
@@ -486,11 +486,11 @@ def test_discovery() -> None:
             {"levels": (10.0, 5.0), "map_file_online_states": [("OFFLINE", 2)]},
             [
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="ONLINE (TEMPORARY), Size: 17.6 GiB, 53.12% used (10.4 GiB of max. 19.5 GiB), Free: 9.16 GiB",
                     details="ONLINE (TEMPORARY), Size: 17.6 GiB, 53.12% used (10.4 GiB of max. 19.5 GiB), Free: 9.16 GiB",
                 ),
-                Result(state=state.OK, summary="10 increments (1.95 GiB)"),
+                Result(state=State.OK, summary="10 increments (1.95 GiB)"),
                 Metric(
                     "size",
                     18874368000.0,
@@ -499,9 +499,9 @@ def test_discovery() -> None:
                 ),
                 Metric("used", 11141120000.0),
                 Metric("max_size", 20971520000.0),
-                Result(state=state.OK, summary="autoextend"),
+                Result(state=State.OK, summary="autoextend"),
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary="Datafiles OFFLINE: PPD",
                     details="Datafiles OFFLINE: PPD",
                 ),
@@ -512,11 +512,11 @@ def test_discovery() -> None:
             oracle_tablespaces.ORACLE_TABLESPACES_DEFAULTS,
             [
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="ONLINE (TEMPORARY), Size: 35.2 GiB, 53.10% used (20.7 GiB of max. 39.1 GiB), Free: 20.3 GiB",
                     details="ONLINE (TEMPORARY), Size: 35.2 GiB, 53.10% used (20.7 GiB of max. 39.1 GiB), Free: 20.3 GiB",
                 ),
-                Result(state=state.OK, summary="20 increments (3.91 GiB)"),
+                Result(state=State.OK, summary="20 increments (3.91 GiB)"),
                 Metric(
                     "size",
                     37748736000.0,
@@ -525,9 +525,9 @@ def test_discovery() -> None:
                 ),
                 Metric("used", 22271754240.0),
                 Metric("max_size", 41943040000.0),
-                Result(state=state.OK, summary="autoextend"),
+                Result(state=State.OK, summary="autoextend"),
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="2 data files (2 avail, 2 autoext)",
                     details="2 data files (2 avail, 2 autoext)",
                 ),
@@ -566,12 +566,12 @@ def test_check_cluster() -> None:
 
     assert [
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="ONLINE (TEMPORARY), Size: 35.2 GiB, 53.10% used (20.7 GiB of max. 39.1 GiB), Free: 20.3 GiB",
             details="ONLINE (TEMPORARY), Size: 35.2 GiB, 53.10% used (20.7 GiB of max. 39.1 GiB), Free: 20.3 GiB",
         ),
         Result(
-            state=state.OK, summary="20 increments (3.91 GiB)", details="20 increments (3.91 GiB)"
+            state=State.OK, summary="20 increments (3.91 GiB)", details="20 increments (3.91 GiB)"
         ),
         Metric(
             "size",
@@ -581,9 +581,9 @@ def test_check_cluster() -> None:
         ),
         Metric("used", 22271754240.0),
         Metric("max_size", 41943040000.0),
-        Result(state=state.OK, summary="autoextend"),
+        Result(state=State.OK, summary="autoextend"),
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="2 data files (2 avail, 2 autoext)",
             details="2 data files (2 avail, 2 autoext)",
         ),

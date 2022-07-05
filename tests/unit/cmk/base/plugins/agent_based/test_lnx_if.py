@@ -15,9 +15,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     Result,
     Service,
+    State,
+    TableRow,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
-from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 from cmk.base.plugins.agent_based.utils import bonding, interfaces
 
 
@@ -388,20 +388,20 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
                     "1",
                     {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
                     [
-                        Result(state=state.OK, summary="[docker0]"),
-                        Result(state=state.OK, summary="(up)", details="Operational state: up"),
-                        Result(state=state.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
-                        Result(state=state.OK, summary="Speed: unknown"),
+                        Result(state=State.OK, summary="[docker0]"),
+                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(state=State.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
+                        Result(state=State.OK, summary="Speed: unknown"),
                     ],
                 ),
                 (
                     "4",
                     {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
                     [
-                        Result(state=state.OK, summary="[wlp3s0]"),
-                        Result(state=state.OK, summary="(up)", details="Operational state: up"),
-                        Result(state=state.OK, summary="MAC: AA:AA:AA:AA:AA:BB"),
-                        Result(state=state.OK, summary="Speed: unknown"),
+                        Result(state=State.OK, summary="[wlp3s0]"),
+                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(state=State.OK, summary="MAC: AA:AA:AA:AA:AA:BB"),
+                        Result(state=State.OK, summary="Speed: unknown"),
                     ],
                 ),
             ],
@@ -531,20 +531,20 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
                     "2",
                     {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
                     [
-                        Result(state=state.OK, summary="[docker0]"),
-                        Result(state=state.OK, summary="(up)", details="Operational state: up"),
-                        Result(state=state.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
-                        Result(state=state.OK, summary="Speed: unknown"),
+                        Result(state=State.OK, summary="[docker0]"),
+                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(state=State.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
+                        Result(state=State.OK, summary="Speed: unknown"),
                     ],
                 ),
                 (
                     "4",
                     {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
                     [
-                        Result(state=state.OK, summary="[wlp3s0]"),
-                        Result(state=state.OK, summary="(up)", details="Operational state: up"),
-                        Result(state=state.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
-                        Result(state=state.OK, summary="Speed: unknown"),
+                        Result(state=State.OK, summary="[wlp3s0]"),
+                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(state=State.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
+                        Result(state=State.OK, summary="Speed: unknown"),
                     ],
                 ),
             ],
@@ -674,20 +674,20 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
                     "2",
                     {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
                     [
-                        Result(state=state.OK, summary="[docker0]"),
-                        Result(state=state.OK, summary="(up)", details="Operational state: up"),
-                        Result(state=state.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
-                        Result(state=state.OK, summary="Speed: unknown"),
+                        Result(state=State.OK, summary="[docker0]"),
+                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(state=State.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
+                        Result(state=State.OK, summary="Speed: unknown"),
                     ],
                 ),
                 (
                     "4",
                     {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
                     [
-                        Result(state=state.OK, summary="[wlp3s0]"),
-                        Result(state=state.OK, summary="(up)", details="Operational state: up"),
-                        Result(state=state.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
-                        Result(state=state.OK, summary="Speed: unknown"),
+                        Result(state=State.OK, summary="[wlp3s0]"),
+                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(state=State.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
+                        Result(state=State.OK, summary="Speed: unknown"),
                     ],
                 ),
             ],
@@ -727,28 +727,28 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
                     "1",
                     {"errors": {"both": ("abs", (10, 20))}, "speed": 1000000000, "state": ["1"]},
                     [
-                        Result(state=state.OK, summary="[em0]"),
-                        Result(state=state.OK, summary="(up)", details="Operational state: up"),
-                        Result(state=state.OK, summary="MAC: 00:AA:11:BB:22:CC"),
-                        Result(state=state.OK, summary="Speed: 1 GBit/s"),
+                        Result(state=State.OK, summary="[em0]"),
+                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(state=State.OK, summary="MAC: 00:AA:11:BB:22:CC"),
+                        Result(state=State.OK, summary="Speed: 1 GBit/s"),
                     ],
                 ),
                 (
                     "2",
                     {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
                     [
-                        Result(state=state.OK, summary="[tun0]"),
-                        Result(state=state.OK, summary="(up)", details="Operational state: up"),
-                        Result(state=state.OK, summary="Speed: unknown"),
+                        Result(state=State.OK, summary="[tun0]"),
+                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(state=State.OK, summary="Speed: unknown"),
                     ],
                 ),
                 (
                     "3",
                     {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
                     [
-                        Result(state=state.OK, summary="[tun1]"),
-                        Result(state=state.OK, summary="(up)", details="Operational state: up"),
-                        Result(state=state.OK, summary="Speed: unknown"),
+                        Result(state=State.OK, summary="[tun1]"),
+                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(state=State.OK, summary="Speed: unknown"),
                     ],
                 ),
             ],
@@ -932,10 +932,10 @@ def test_lnx_if_with_bonding(monkeypatch) -> None:
             section_bonding,
         )
     ) == [
-        Result(state=state.OK, summary="[wlp3s0]"),
-        Result(state=state.OK, summary="(up)", details="Operational state: up"),
-        Result(state=state.OK, summary="MAC: BB:BB:BB:BB:BB:BB"),
-        Result(state=state.OK, summary="Speed: unknown"),
+        Result(state=State.OK, summary="[wlp3s0]"),
+        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+        Result(state=State.OK, summary="MAC: BB:BB:BB:BB:BB:BB"),
+        Result(state=State.OK, summary="Speed: unknown"),
     ]
 
 

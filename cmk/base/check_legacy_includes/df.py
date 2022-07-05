@@ -211,7 +211,7 @@ def df_check_filesystem_single_coroutine(  # pylint: disable=too-many-branches
         size_mb, used_max, avail_mb, used_mb, params, show_levels
     ):
         if isinstance(result, Result):
-            state = state.worst(state, result.state)
+            state = State.worst(state, result.state)
             infotext.append(result.summary)
         elif isinstance(result, Metric):
             name = result.name

@@ -9,8 +9,7 @@ import pytest
 from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based import timesyncd
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -91,16 +90,16 @@ def test_discover_timesyncd(
             STRING_TABLE_STANDARD,
             timesyncd.default_check_parameters,
             [
-                Result(state=state.OK, summary="Offset: 54 milliseconds"),
+                Result(state=State.OK, summary="Offset: 54 milliseconds"),
                 Metric("time_offset", 0.053991, levels=(0.2, 0.5)),
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary="Time since last sync: 22 hours 1 minute (warn/crit at 2 hours 5 minutes/3 hours 0 minutes)",
                 ),
-                Result(state=state.OK, summary="Stratum: 2.00"),
-                Result(state=state.OK, summary="Jitter: Jan 01 1970 00:00:00"),
+                Result(state=State.OK, summary="Stratum: 2.00"),
+                Result(state=State.OK, summary="Jitter: Jan 01 1970 00:00:00"),
                 Metric("jitter", 0.0, levels=(0.2, 0.5)),
-                Result(state=state.OK, summary="Synchronized on 91.189.91.157"),
+                Result(state=State.OK, summary="Synchronized on 91.189.91.157"),
             ],
         ),
         (
@@ -108,18 +107,18 @@ def test_discover_timesyncd(
             timesyncd.default_check_parameters,
             [
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary="Offset: 2 years 175 days (warn/crit at 200 milliseconds/500 milliseconds)",
                 ),
                 Metric("time_offset", 78198540.000053991, levels=(0.2, 0.5)),
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary="Time since last sync: 22 hours 1 minute (warn/crit at 2 hours 5 minutes/3 hours 0 minutes)",
                 ),
-                Result(state=state.OK, summary="Stratum: 2.00"),
-                Result(state=state.OK, summary="Jitter: Jan 01 1970 00:00:00"),
+                Result(state=State.OK, summary="Stratum: 2.00"),
+                Result(state=State.OK, summary="Jitter: Jan 01 1970 00:00:00"),
                 Metric("jitter", 0.0, levels=(0.2, 0.5)),
-                Result(state=state.OK, summary="Synchronized on 91.189.91.157"),
+                Result(state=State.OK, summary="Synchronized on 91.189.91.157"),
             ],
         ),
         (
@@ -127,10 +126,10 @@ def test_discover_timesyncd(
             timesyncd.default_check_parameters,
             [
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary="Time since last sync: 22 hours 1 minute (warn/crit at 2 hours 5 minutes/3 hours 0 minutes)",
                 ),
-                Result(state=state.OK, summary="Found no time server"),
+                Result(state=State.OK, summary="Found no time server"),
             ],
         ),
     ],
@@ -154,10 +153,10 @@ def test_check_timesyncd_freeze(
             timesyncd.default_check_parameters,
             [
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary="Cannot reasonably calculate time since last synchronization (hosts time is running ahead)",
                 ),
-                Result(state=state.OK, summary="Found no time server"),
+                Result(state=State.OK, summary="Found no time server"),
             ],
         ),
     ],

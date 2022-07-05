@@ -17,9 +17,9 @@ from .agent_based_api.v1 import (
     render,
     Result,
     Service,
+    State,
+    type_defs,
 )
-from .agent_based_api.v1 import State as state
-from .agent_based_api.v1 import type_defs
 from .utils import cpu_util, netapp_api
 
 # <<<netapp_api_vf_stats:sep(9)>>>
@@ -130,7 +130,7 @@ def _check_netapp_api_vf_stats(
         value_store=value_store,
         this_time=now,
     )
-    yield Result(state=state.OK, notice="Number of processors: %d" % num_processors)
+    yield Result(state=State.OK, notice="Number of processors: %d" % num_processors)
 
 
 register.check_plugin(

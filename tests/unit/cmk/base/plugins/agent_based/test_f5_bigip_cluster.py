@@ -6,15 +6,14 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.f5_bigip_cluster import (
     check_f5_bigip_config_sync_pre_v11,
     check_f5_bigip_config_sync_v11_plus,
     CONFIG_SYNC_DEFAULT_PARAMETERS,
+    NodeState,
     parse_f5_bigip_config_sync_pre_v11,
     parse_f5_bigip_config_sync_v11_plus,
-    State,
 )
 
 
@@ -53,25 +52,25 @@ def test_parse_f5_bigip_config_sync_v11_plus(string_table, expected_parsed_data)
     [
         (
             ("-1", "uninitialized or disabled config state"),
-            [Result(state=state.CRIT, summary="uninitialized or disabled config state")],
+            [Result(state=State.CRIT, summary="uninitialized or disabled config state")],
         ),
         (
             ("3", "Config modified on both systems, manual intervention required"),
             [
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary="Config modified on both systems, manual intervention required",
                 )
             ],
         ),
         (
             ("0", "Synchronized"),
-            [Result(state=state.OK, summary="Synchronized")],
+            [Result(state=State.OK, summary="Synchronized")],
         ),
     ],
 )
 def test_check_f5_bigip_config_sync_pre_v11(section, result) -> None:
-    assert list(check_f5_bigip_config_sync_pre_v11(State(*section))) == result
+    assert list(check_f5_bigip_config_sync_pre_v11(NodeState(*section))) == result
 
 
 @pytest.mark.parametrize(
@@ -79,15 +78,15 @@ def test_check_f5_bigip_config_sync_pre_v11(section, result) -> None:
     [
         (
             ("2", "Changes Pending"),
-            [Result(state=state.WARN, summary="Need Manual Sync - Changes Pending")],
+            [Result(state=State.WARN, summary="Need Manual Sync - Changes Pending")],
         ),
         (
             ("3", "In Sync"),
-            [Result(state=state.OK, summary="In Sync")],
+            [Result(state=State.OK, summary="In Sync")],
         ),
         (
             ("6", "Standalone"),
-            [Result(state=state.CRIT, summary="Standalone")],
+            [Result(state=State.CRIT, summary="Standalone")],
         ),
     ],
 )
@@ -96,7 +95,7 @@ def test_check_f5_bigip_config_sync_v11_plus(section, result) -> None:
         list(
             check_f5_bigip_config_sync_v11_plus(
                 CONFIG_SYNC_DEFAULT_PARAMETERS,
-                State(*section),
+                NodeState(*section),
             )
         )
         == result

@@ -9,8 +9,7 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.printer_pages import parse_printer_pages
 from cmk.base.plugins.agent_based.printer_pages_canon import parse_printer_pages_canon
 from cmk.base.plugins.agent_based.printer_pages_ricoh import parse_printer_pages_ricoh
@@ -80,11 +79,11 @@ def test_parse_printer_pages_ricoh(string_table, expected_parsed_data) -> None:
         (
             {"pages_color": 21693, "pages_bw": 54198},
             [
-                Result(state=state.OK, summary="total prints: 75891"),
+                Result(state=State.OK, summary="total prints: 75891"),
                 Metric("pages_total", 75891.0),
-                Result(state=state.OK, summary="b/w: 54198"),
+                Result(state=State.OK, summary="b/w: 54198"),
                 Metric("pages_bw", 54198.0),
-                Result(state=state.OK, summary="color: 21693"),
+                Result(state=State.OK, summary="color: 21693"),
                 Metric("pages_color", 21693.0),
             ],
         ),

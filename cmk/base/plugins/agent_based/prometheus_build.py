@@ -8,9 +8,7 @@
 import json
 from typing import Any, Dict, Optional
 
-from .agent_based_api.v1 import register, Result, Service
-from .agent_based_api.v1 import State as state
-from .agent_based_api.v1 import type_defs
+from .agent_based_api.v1 import register, Result, Service, State, type_defs
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 Section = Dict[str, Any]
@@ -50,7 +48,7 @@ def check_prometheus_build(section: Section) -> CheckResult:
             version_summary = "Version: multiple instances"
             version_details = f"Versions: {', '.join(section['version'])}"
         yield Result(
-            state=state.OK,
+            state=State.OK,
             summary=version_summary,
             details=version_details,
         )
@@ -59,10 +57,10 @@ def check_prometheus_build(section: Section) -> CheckResult:
         successful_reload = section["reload_config_status"]
         if successful_reload:
             reload_message = "Success"
-            status = state.OK
+            status = State.OK
         else:
             reload_message = "Failure"
-            status = state.CRIT
+            status = State.CRIT
 
         yield Result(
             state=status,
@@ -71,7 +69,7 @@ def check_prometheus_build(section: Section) -> CheckResult:
 
     if "storage_retention" in section:
         yield Result(
-            state=state.OK,
+            state=State.OK,
             summary=f"Storage retention: {section['storage_retention']}",
         )
 
@@ -83,9 +81,9 @@ def check_prometheus_build(section: Section) -> CheckResult:
 
         if len(down_targets):
             down_target_names = f" (Targets in down state: {', '.join(down_targets)})"
-            status = state.WARN
+            status = State.WARN
         else:
-            status = state.OK
+            status = State.OK
             down_target_names = ""
 
         summary = f"Scrape Targets in up state: {up_number} out of {total_number}"

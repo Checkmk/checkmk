@@ -17,8 +17,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Metric,
     Result,
     Service,
+    State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 
 NOW_SIMULATED = "1988-06-08 17:00:00.000000"
 NOW_EPOCH = (
@@ -162,20 +162,20 @@ def value_store_fixture(monkeypatch):
                     levels=(80.0, 90.0),
                     boundaries=(0.0, 100.0),
                 ),
-                Result(state=state.OK, summary="Used: 26.47% - 84.7 MiB of 320 MiB"),
+                Result(state=State.OK, summary="Used: 26.47% - 84.7 MiB of 320 MiB"),
                 Metric("fs_size", 320.0, boundaries=(0.0, None)),
                 Metric("growth", -4470.553049074118),
-                Result(state=state.OK, summary="trend per 1 day 0 hours: +621 TiB"),
-                Result(state=state.OK, summary="trend per 1 day 0 hours: +203357489.65%"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +621 TiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +203357489.65%"),
                 Metric(
                     "trend",
                     650743966.868858,
                     boundaries=(0.0, 13.333333333333334),
                 ),
-                Result(state=state.OK, summary="Time left until disk full: 31 milliseconds"),
-                Result(state=state.OK, summary="Service: scriptserver"),
+                Result(state=State.OK, summary="Time left until disk full: 31 milliseconds"),
+                Result(state=State.OK, summary="Service: scriptserver"),
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="Path: /hana/data/H62/mnt00007/hdb00020/datavolume_0000.dat",
                 ),
             ],
@@ -202,26 +202,26 @@ def value_store_fixture(monkeypatch):
                     boundaries=(0.0, 100.0),
                 ),
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary="Used: 26.47% - 84.7 MiB of 320 MiB (warn/crit at 10.00%/15.00% used)",
                 ),
                 Metric("fs_size", 320.0, boundaries=(0.0, None)),
                 Metric("growth", -4470.553049074118),
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary="trend per 1 day 0 hours: +621 TiB (warn/crit at +10.0 MiB/+20.0 MiB)",
                 ),
-                Result(state=state.OK, summary="trend per 1 day 0 hours: +203357489.65%"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +203357489.65%"),
                 Metric(
                     "trend",
                     650743966.868858,
                     levels=(10.0, 20.0),
                     boundaries=(0.0, 13.333333333333334),
                 ),
-                Result(state=state.OK, summary="Time left until disk full: 31 milliseconds"),
-                Result(state=state.OK, summary="Service: scriptserver"),
+                Result(state=State.OK, summary="Time left until disk full: 31 milliseconds"),
+                Result(state=State.OK, summary="Service: scriptserver"),
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="Path: /hana/data/H62/mnt00007/hdb00020/datavolume_0000.dat",
                 ),
             ],

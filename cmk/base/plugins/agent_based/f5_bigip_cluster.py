@@ -7,13 +7,12 @@
 """
 from typing import Any, List, Mapping, NamedTuple, Optional
 
-from .agent_based_api.v1 import all_of, register, Result, Service, SNMPTree
-from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import all_of, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.f5_bigip import F5_BIGIP, VERSION_PRE_V11, VERSION_V11_PLUS
 
 
-class State(NamedTuple):
+class NodeState(NamedTuple):
     state: str
     description: str
 
@@ -45,19 +44,19 @@ CONFIG_SYNC_STATE_NAMES = {
 }
 
 
-def discover_f5_bigip_config_sync(section: State) -> DiscoveryResult:
+def discover_f5_bigip_config_sync(section: NodeState) -> DiscoveryResult:
     # run inventory unless we found a device in unconfigured state
     # don't need to loop over the input as there's only one status
     if not section.state == "-1":
         yield Service()
 
 
-def parse_f5_bigip_config_sync_pre_v11(string_table: List[StringTable]) -> Optional[State]:
+def parse_f5_bigip_config_sync_pre_v11(string_table: List[StringTable]) -> Optional[NodeState]:
     """Read a node status encoded as stringified int
     >>> parse_f5_bigip_config_sync_pre_v11([[["0 - Synchronized"]]])
-    State(state='0', description='Synchronized')
+    NodeState(state='0', description='Synchronized')
     """
-    return State(*string_table[0][0][0].split(" - ", 1)) if string_table[0] else None
+    return NodeState(*string_table[0][0][0].split(" - ", 1)) if string_table[0] else None
 
 
 # see: 1.3.6.1.4.1.3375.2.1.1.1.1.6.0
@@ -67,7 +66,7 @@ def parse_f5_bigip_config_sync_pre_v11(string_table: List[StringTable]) -> Optio
 # F5 nodes need to be ntp synced otherwise status reports might be wrong.
 
 
-def check_f5_bigip_config_sync_pre_v11(section: State) -> CheckResult:
+def check_f5_bigip_config_sync_pre_v11(section: NodeState) -> CheckResult:
     # possible state values:
     #  -1   unconfigured,           ok only if original status
     #                               otherwise this would mean something is heavily broken?
@@ -75,14 +74,14 @@ def check_f5_bigip_config_sync_pre_v11(section: State) -> CheckResult:
     # 1/2   one system outdated,    warn
     #   3   both systems outdated,  crit   (config split brain)
     if section.state == "0":
-        yield Result(state=state.OK, summary=section.description)
+        yield Result(state=State.OK, summary=section.description)
     elif section.state in {"-1", "3"}:
-        yield Result(state=state.CRIT, summary=section.description)
+        yield Result(state=State.CRIT, summary=section.description)
     elif section.state in {"1", "2"}:
-        yield Result(state=state.WARN, summary=section.description)
+        yield Result(state=State.WARN, summary=section.description)
     else:
         yield Result(
-            state=state.UNKNOWN,
+            state=State.UNKNOWN,
             summary="unexpected output from SNMP Agent %r" % section.description,
         )
 
@@ -112,28 +111,30 @@ register.check_plugin(
 # F5 nodes need to be ntp synced otherwise status reports might be wrong.
 
 
-def parse_f5_bigip_config_sync_v11_plus(string_table: List[StringTable]) -> Optional[State]:
+def parse_f5_bigip_config_sync_v11_plus(string_table: List[StringTable]) -> Optional[NodeState]:
     """Read a node status encoded as stringified int
     >>> parse_f5_bigip_config_sync_v11_plus([[['3', 'In Sync']]])
-    State(state='3', description='In Sync')
+    NodeState(state='3', description='In Sync')
     """
-    return State(*string_table[0][0]) if string_table[0] else None
+    return NodeState(*string_table[0][0]) if string_table[0] else None
 
 
-def check_f5_bigip_config_sync_v11_plus(params: Mapping[str, Any], section: State) -> CheckResult:
+def check_f5_bigip_config_sync_v11_plus(
+    params: Mapping[str, Any], section: NodeState
+) -> CheckResult:
     """
     >> for r in check_f5_bigip_config_sync_v11_plus(
     ...         params=CONFIG_SYNC_DEFAULT_PARAMETERS,
     ...         section={"node1": 0, "node2": 3}):
     ...     print(r)
-    Result(state=<state.OK: 0>, summary='Node [node1] is standby')
+    Result(state=<State.OK: 0>, summary='Node [node1] is standby')
     """
     status = params[section.state]
     status_name = CONFIG_SYNC_STATE_NAMES[section.state]
     infotext = status_name
     if status_name != section.description:
         infotext += " - " + section.description
-    yield Result(state=state(status), summary=infotext)
+    yield Result(state=State(status), summary=infotext)
 
 
 register.snmp_section(

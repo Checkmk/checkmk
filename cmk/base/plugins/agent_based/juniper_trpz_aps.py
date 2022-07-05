@@ -5,8 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import List, Mapping, Optional, Tuple
 
-from .agent_based_api.v1 import any_of, Metric, register, Result, Service, SNMPTree, startswith
-from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import (
+    any_of,
+    Metric,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    startswith,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 Section = Tuple[int, int]
@@ -26,7 +34,7 @@ def discovery_juniper_trpz_aps(section: Section) -> DiscoveryResult:
 
 def _check_common_juniper_trpz_aps(node_name: str, section: Section) -> CheckResult:
     yield Result(
-        state=state.OK,
+        state=State.OK,
         summary="%sOnline access points: %d, Sessions: %d"
         % (node_name and "[%s] " % node_name, section[0], section[1]),
     )
@@ -60,7 +68,7 @@ def cluster_check_juniper_trpz_aps(section: Mapping[str, Optional[Section]]) -> 
 
     if len(section) > 1:
         yield Result(
-            state=state.OK,
+            state=State.OK,
             summary="Total: %d access points, Sessions: %d" % (total_aps, total_sessions),
         )
     yield Metric("ap_devices_total", total_aps)

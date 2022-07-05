@@ -7,8 +7,12 @@
 import pytest
 
 import cmk.base.plugins.agent_based.sap_hana_status as sap_hana_status
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Result, Service
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    IgnoreResultsError,
+    Result,
+    Service,
+    State,
+)
 
 ITEM = "H90 33"
 SECTION = {
@@ -89,12 +93,12 @@ def test_sap_hana_status_discovery() -> None:
 @pytest.mark.parametrize(
     "section, check_type, results",
     [
-        (SECTION, "Status", Result(state=state.OK, summary="Status: OK, Details: Yes")),
+        (SECTION, "Status", Result(state=State.OK, summary="Status: OK, Details: Yes")),
         (
             SECTION,
             "Version",
             Result(
-                state=state.OK,
+                state=State.OK,
                 summary="Version: 1.00.122.22.1543461992 (fa/hana1sp12)",
                 details="Version: 1.00.122.22.1543461992 (fa/hana1sp12)",
             ),
@@ -102,13 +106,13 @@ def test_sap_hana_status_discovery() -> None:
         (
             SECTION_WARNING,
             "Status",
-            Result(state=state.WARN, summary="Status: WARNING, Details: Yes"),
+            Result(state=State.WARN, summary="Status: WARNING, Details: Yes"),
         ),
         (
             SECTION_ERROR,
             "Status",
             Result(
-                state=state.CRIT, summary="Status: error, Details: hdbsql ERROR: There was an error"
+                state=State.CRIT, summary="Status: error, Details: hdbsql ERROR: There was an error"
             ),
         ),
     ],
@@ -133,6 +137,6 @@ def test_sap_hana_status_cluster_check() -> None:
         sap_hana_status.cluster_check_sap_hana_status("Status %s" % ITEM, section)
     )
     assert yielded_results == [
-        Result(state=state.OK, summary="Nodes: node 1, node 2"),
-        Result(state=state.OK, summary="Status: OK, Details: Yes"),
+        Result(state=State.OK, summary="Nodes: node 1, node 2"),
+        Result(state=State.OK, summary="Status: OK, Details: Yes"),
     ]

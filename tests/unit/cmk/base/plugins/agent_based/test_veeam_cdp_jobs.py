@@ -9,9 +9,7 @@ import pytest
 from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based import veeam_cdp_jobs
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
-from cmk.base.plugins.agent_based.agent_based_api.v1 import type_defs
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State, type_defs
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 DATA = [
@@ -50,8 +48,8 @@ def test_veeam_cdp_jobs_discovery(
             veeam_cdp_jobs.CheckParams(age=(108000, 172800)),
             DATA,
             [
-                Result(state=state.OK, summary="State: Running"),
-                Result(state=state.OK, summary="Time since last CDP Run: 1 minute 40 seconds"),
+                Result(state=State.OK, summary="State: Running"),
+                Result(state=State.OK, summary="Time since last CDP Run: 1 minute 40 seconds"),
             ],
         ),
         (
@@ -59,9 +57,9 @@ def test_veeam_cdp_jobs_discovery(
             veeam_cdp_jobs.CheckParams(age=(100, 300)),
             DATA,
             [
-                Result(state=state.CRIT, summary="State: Failed"),
+                Result(state=State.CRIT, summary="State: Failed"),
                 Result(
-                    state=state.WARN,
+                    state=State.WARN,
                     summary="Time since last CDP Run: 1 minute 40 seconds (warn/crit at 1 minute 40 seconds/5 minutes 0 seconds)",
                 ),
             ],
@@ -71,9 +69,9 @@ def test_veeam_cdp_jobs_discovery(
             veeam_cdp_jobs.CheckParams(age=(60, 80)),
             DATA,
             [
-                Result(state=state.CRIT, summary="State: Stopped"),
+                Result(state=State.CRIT, summary="State: Stopped"),
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary="Time since last CDP Run: 1 minute 40 seconds (warn/crit at 1 minute 0 seconds/1 minute 20 seconds)",
                 ),
             ],

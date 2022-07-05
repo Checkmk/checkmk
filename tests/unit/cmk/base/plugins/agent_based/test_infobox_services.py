@@ -6,8 +6,7 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.infoblox_services import (
     check_infoblox_services,
     discovery_infoblox_services,
@@ -115,7 +114,7 @@ def test_discovery_infoblox_services(section, result) -> None:
         (
             "memory",
             example_parsed_data,
-            [Result(state=state.OK, summary="Status: working (14% - System memory usage is OK.)")],
+            [Result(state=State.OK, summary="Status: working (14% - System memory usage is OK.)")],
         ),
     ],
 )

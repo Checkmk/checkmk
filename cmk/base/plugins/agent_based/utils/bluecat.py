@@ -6,9 +6,7 @@
 
 from typing import Any, Dict, Mapping, NamedTuple, Optional, Sequence, Union
 
-from ..agent_based_api.v1 import equals, IgnoreResults, Metric, Result
-from ..agent_based_api.v1 import State as state
-from ..agent_based_api.v1 import type_defs
+from ..agent_based_api.v1 import equals, IgnoreResults, Metric, Result, State, type_defs
 from ..agent_based_api.v1.clusterize import make_node_notice_results
 
 Section = Mapping[str, int]
@@ -63,11 +61,11 @@ def check_bluecat_operational_state(
     oper_state = section["oper_state"]
     service_name = _get_service_name(section)
 
-    mon_state = state.OK
+    mon_state = State.OK
     if oper_state in params["oper_states"]["warning"]:
-        mon_state = state.WARN
+        mon_state = State.WARN
     elif oper_state in params["oper_states"]["critical"]:
-        mon_state = state.CRIT
+        mon_state = State.CRIT
 
     yield Result(
         state=mon_state,
@@ -81,7 +79,7 @@ def check_bluecat_operational_state(
     if service_name == "DHCP":
         leases = section["leases"]
         yield Result(
-            state=state.OK,
+            state=State.OK,
             summary="%s lease%s per second" % (leases, "" if leases == 1 else "s"),
         )
         yield Metric(
@@ -102,7 +100,7 @@ def cluster_check_bluecat_operational_state(
 
     results: Dict[str, Sequence[Union[IgnoreResults, Metric, Result]]] = {}
     ok_node_results = None
-    overall_state = state.OK
+    overall_state = State.OK
 
     for node_name, node_section in section.items():
         if node_section is None:
@@ -120,12 +118,12 @@ def cluster_check_bluecat_operational_state(
 
         monitoring_state_result = node_results[0]
         assert isinstance(monitoring_state_result, Result)
-        if monitoring_state_result.state is state.OK:
+        if monitoring_state_result.state is State.OK:
             ok_node_results = OKNodeResults(
                 name=node_name,
                 results=node_results,
             )
-        overall_state = state.worst(
+        overall_state = State.worst(
             overall_state,
             monitoring_state_result.state,
         )

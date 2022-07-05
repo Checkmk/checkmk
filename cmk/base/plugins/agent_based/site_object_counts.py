@@ -6,9 +6,7 @@
 
 from typing import Dict, Mapping, Optional
 
-from .agent_based_api.v1 import Metric, register, Result, Service
-from .agent_based_api.v1 import State as state
-from .agent_based_api.v1 import type_defs
+from .agent_based_api.v1 import Metric, register, Result, Service, State, type_defs
 
 Section = Dict[str, Dict[str, Mapping[str, int]]]
 
@@ -67,7 +65,7 @@ def check_site_object_counts(section: Section) -> type_defs.CheckResult:
                 site_counts.append("%s %s" % (count, counted_obj))
             site_info.append("%s: %s" % (cmds_or_tags.title(), ", ".join(site_counts)))
         yield Result(
-            state=state.OK,
+            state=State.OK,
             notice="[%s] %s" % (site, ", ".join(site_info)),
         )
 
@@ -83,7 +81,7 @@ def check_site_object_counts(section: Section) -> type_defs.CheckResult:
         global_info.append("%s: %s" % (cmds_or_tags.title(), ", ".join(cmds_or_tags_info)))
 
     yield Result(
-        state=state.OK,
+        state=State.OK,
         summary=", ".join(global_info),
     )
 

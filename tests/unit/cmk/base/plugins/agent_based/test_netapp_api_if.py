@@ -7,8 +7,7 @@
 import pytest
 
 from cmk.base.plugins.agent_based import netapp_api_if
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.utils import interfaces
 
 
@@ -117,10 +116,10 @@ from cmk.base.plugins.agent_based.utils import interfaces
                         "discovered_oper_status": ["1"],
                     },
                     [
-                        Result(state=state.OK, summary="[GTB1020-2-CL_mgmt]"),
-                        Result(state=state.OK, summary="(up)", details="Operational state: up"),
-                        Result(state=state.OK, summary="Speed: 1 GBit/s"),
-                        Result(state=state.OK, summary="Current Port: e0f-112 (is home port)"),
+                        Result(state=State.OK, summary="[GTB1020-2-CL_mgmt]"),
+                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(state=State.OK, summary="Speed: 1 GBit/s"),
+                        Result(state=State.OK, summary="Current Port: e0f-112 (is home port)"),
                     ],
                 ),
                 (
@@ -131,10 +130,10 @@ from cmk.base.plugins.agent_based.utils import interfaces
                         "discovered_oper_status": ["1"],
                     },
                     [
-                        Result(state=state.OK, summary="[GTB1020-2_ic1]"),
-                        Result(state=state.OK, summary="(up)", details="Operational state: up"),
-                        Result(state=state.OK, summary="Speed: 1 GBit/s"),
-                        Result(state=state.OK, summary="Current Port: e0f-2231 (is home port)"),
+                        Result(state=State.OK, summary="[GTB1020-2_ic1]"),
+                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(state=State.OK, summary="Speed: 1 GBit/s"),
+                        Result(state=State.OK, summary="Current Port: e0f-2231 (is home port)"),
                     ],
                 ),
             ],
@@ -221,12 +220,12 @@ from cmk.base.plugins.agent_based.utils import interfaces
                         "discovered_oper_status": ["1"],
                     },
                     [
-                        Result(state=state.OK, summary="[ifgrp_sto]"),
-                        Result(state=state.OK, summary="(up)", details="Operational state: up"),
-                        Result(state=state.OK, summary="MAC: 01:B0:89:22:DF:02"),
-                        Result(state=state.OK, summary="Speed: 1 GBit/s"),
-                        Result(state=state.OK, summary="Physical interfaces: e0c(up)"),
-                        Result(state=state.OK, summary="e0d(up)"),
+                        Result(state=State.OK, summary="[ifgrp_sto]"),
+                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(state=State.OK, summary="MAC: 01:B0:89:22:DF:02"),
+                        Result(state=State.OK, summary="Speed: 1 GBit/s"),
+                        Result(state=State.OK, summary="Physical interfaces: e0c(up)"),
+                        Result(state=State.OK, summary="e0d(up)"),
                     ],
                 ),
             ],
@@ -291,10 +290,10 @@ from cmk.base.plugins.agent_based.utils import interfaces
                         "discovered_oper_status": ["1"],
                     },
                     [
-                        Result(state=state.OK, summary="[cluster_mgmt]"),
-                        Result(state=state.OK, summary="(up)", details="Operational state: up"),
-                        Result(state=state.OK, summary="Speed: auto"),
-                        Result(state=state.OK, summary="Current Port: e0a (is home port)"),
+                        Result(state=State.OK, summary="[cluster_mgmt]"),
+                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(state=State.OK, summary="Speed: auto"),
+                        Result(state=State.OK, summary="Current Port: e0a (is home port)"),
                     ],
                 ),
             ],

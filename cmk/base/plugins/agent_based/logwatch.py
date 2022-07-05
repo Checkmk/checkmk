@@ -46,8 +46,7 @@ from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation
     service_extra_conf,
 )
 
-from .agent_based_api.v1 import get_value_store, regex, register, render, Result, Service
-from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import get_value_store, regex, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils import eval_regex, logwatch
 
@@ -471,7 +470,7 @@ def check_logwatch_generic(  # pylint: disable=too-many-branches
     # Logfile (=item) section not found and no local file found. This usually
     # means, that the corresponding logfile also vanished on the target host.
     if not found and not logmsg_file_path.exists():
-        yield Result(state=state.UNKNOWN, summary="log not present anymore")
+        yield Result(state=State.UNKNOWN, summary="log not present anymore")
         return
 
     block_collector = LogwatchBlockCollector()
@@ -534,7 +533,7 @@ def check_logwatch_generic(  # pylint: disable=too-many-branches
     #
 
     if block_collector.worst <= 0:
-        yield Result(state=state.OK, summary="No error messages")
+        yield Result(state=State.OK, summary="No error messages")
         return
 
     info = block_collector.get_count_info()
@@ -546,7 +545,7 @@ def check_logwatch_generic(  # pylint: disable=too-many-branches
         summary, details = info.split("\n", 1)
 
     yield Result(
-        state=state(block_collector.worst),
+        state=State(block_collector.worst),
         summary=summary,
         details=details,
     )
@@ -606,7 +605,7 @@ def _extract_blocks(
 
 def _dropped_msg_result(max_size: int) -> Result:
     return Result(
-        state=state.CRIT,
+        state=State.CRIT,
         summary=(
             "Unacknowledged messages have exceeded max size, new messages are dropped "
             "(limit %s)" % render.filesize(max_size)

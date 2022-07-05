@@ -9,8 +9,12 @@ from typing import Any
 import pytest
 
 from cmk.base.plugins.agent_based import aix_diskiod
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Metric, Result
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    IgnoreResultsError,
+    Metric,
+    Result,
+    State,
+)
 
 DISK = {
     "read_throughput": 2437253982208,
@@ -37,9 +41,9 @@ def test_check_disk() -> None:
         list(aix_diskiod._check_disk({}, DISK, value_store, now))
 
     assert list(aix_diskiod._check_disk({}, DISK, value_store, now + 60)) == [
-        Result(state=state.OK, summary="Read: 0.00 B/s"),
+        Result(state=State.OK, summary="Read: 0.00 B/s"),
         Metric("disk_read_throughput", 0.0),
-        Result(state=state.OK, summary="Write: 0.00 B/s"),
+        Result(state=State.OK, summary="Write: 0.00 B/s"),
         Metric("disk_write_throughput", 0.0),
     ]
 

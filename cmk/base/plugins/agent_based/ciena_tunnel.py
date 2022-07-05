@@ -5,8 +5,7 @@
 
 from typing import Literal, Mapping
 
-from .agent_based_api.v1 import register, Result, Service, SNMPTree
-from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils.ciena_ces import DETECT_CIENA_5142, DETECT_CIENA_5171
 from .utils.ciena_ces import OperStateSection as Section
@@ -28,7 +27,7 @@ def check_ciena_tunnel(
     if item not in section:
         return
     yield Result(
-        state=state.OK if section[item].name == params["discovered_oper_state"] else state.CRIT,
+        state=State.OK if section[item].name == params["discovered_oper_state"] else State.CRIT,
         summary=f"Tunnel is {section[item].name}",
     )
 

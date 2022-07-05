@@ -6,8 +6,7 @@
 
 from typing import Mapping, Optional
 
-from .agent_based_api.v1 import IgnoreResultsError, register, Result, Service
-from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import IgnoreResultsError, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import sap_hana
 
@@ -50,11 +49,11 @@ register.agent_section(
 def _check_sap_hana_status_data(data):
     state_name = data["state_name"]
     if state_name.lower() == "ok":
-        cur_state = state.OK
+        cur_state = State.OK
     elif state_name.lower() in ["unknown", "error"]:
-        cur_state = state.CRIT
+        cur_state = State.CRIT
     else:
-        cur_state = state.WARN
+        cur_state = State.WARN
     return cur_state, f"Status: {state_name}, Details: {data['message']}"
 
 
@@ -73,7 +72,7 @@ def check_sap_hana_status(item: str, section: sap_hana.ParsedSection) -> CheckRe
         cur_state, infotext = _check_sap_hana_status_data(data)
         yield Result(state=cur_state, summary=infotext)
     else:
-        yield Result(state=state.OK, summary="Version: %s" % data["version"])
+        yield Result(state=State.OK, summary="Version: %s" % data["version"])
 
 
 def cluster_check_sap_hana_status(
@@ -81,7 +80,7 @@ def cluster_check_sap_hana_status(
     section: Mapping[str, Optional[sap_hana.ParsedSection]],
 ) -> CheckResult:
 
-    yield Result(state=state.OK, summary="Nodes: %s" % ", ".join(section.keys()))
+    yield Result(state=State.OK, summary="Nodes: %s" % ", ".join(section.keys()))
     for node_section in section.values():
         if node_section is not None and item in node_section:
             yield from check_sap_hana_status(item, node_section)

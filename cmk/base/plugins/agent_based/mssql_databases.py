@@ -6,8 +6,7 @@
 
 from typing import Any, Dict, Mapping, Optional
 
-from .agent_based_api.v1 import IgnoreResults, register, Result, Service
-from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import IgnoreResults, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 SectionDatabases = Dict[str, Dict[str, str]]
@@ -74,16 +73,16 @@ def check_mssql_databases(
 
     db_state = data["Status"]
     if db_state.startswith("ERROR: "):
-        yield Result(state=state.CRIT, summary=db_state[7:])
+        yield Result(state=State.CRIT, summary=db_state[7:])
         return
     state_int = params.get("map_db_states", {}).get(db_state.replace(" ", "_").upper(), 0)
-    yield Result(state=state(state_int), summary="Status: %s" % db_state)
-    yield Result(state=state.OK, summary="Recovery: %s" % data["Recovery"])
+    yield Result(state=State(state_int), summary="Status: %s" % db_state)
+    yield Result(state=State.OK, summary="Recovery: %s" % data["Recovery"])
 
     for what in ["close", "shrink"]:
         state_int, state_readable = map_states[data["auto_%s" % what]]
         state_int = params.get("map_auto_%s_state" % what, {}).get(state_readable, state_int)
-        yield Result(state=state(state_int), summary="Auto %s: %s" % (what, state_readable))
+        yield Result(state=State(state_int), summary="Auto %s: %s" % (what, state_readable))
 
 
 def cluster_check_mssql_databases(

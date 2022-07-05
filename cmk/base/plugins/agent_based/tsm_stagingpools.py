@@ -6,9 +6,7 @@
 
 from typing import Any, Dict, List, Mapping, Optional
 
-from .agent_based_api.v1 import check_levels, Metric, register, Result, Service
-from .agent_based_api.v1 import State as state
-from .agent_based_api.v1 import type_defs
+from .agent_based_api.v1 import check_levels, Metric, register, Result, Service, State, type_defs
 
 # <<<tsm_stagingpools>>>
 # tsmfarm2       SL8500_STGPOOL_05       99.9
@@ -99,7 +97,7 @@ def check_tsm_stagingpools(
             num_free_tapes += 1
 
     if num_tapes == 0:
-        yield Result(state=state.UNKNOWN, summary="No tapes in this pool or pool not existant.")
+        yield Result(state=State.UNKNOWN, summary="No tapes in this pool or pool not existant.")
         return
 
     yield from check_levels(
@@ -133,7 +131,7 @@ def cluster_check_tsm_stagingspools(
     if len(datasets) == 0:
         return
 
-    yield Result(state=state.OK, summary="%s: " % "/".join(nodeinfos))
+    yield Result(state=State.OK, summary="%s: " % "/".join(nodeinfos))
 
     # In the 1.6 version of this check, a different node may have been checked as in Python 2.7
     # dicts were unordered.
@@ -142,7 +140,7 @@ def cluster_check_tsm_stagingspools(
     # In cluster mode we check if data sets are equal from all nodes
     # else we have only one data set
     if len(set(datasets)) > 1:
-        yield Result(state=state.UNKNOWN, summary="Cluster: data from nodes are not equal")
+        yield Result(state=State.UNKNOWN, summary="Cluster: data from nodes are not equal")
 
 
 register.check_plugin(

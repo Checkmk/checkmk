@@ -56,7 +56,7 @@ def test_check_discovery_total_zero() -> None:
             {},
             [
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="Longterm: 54.76% - 23.0 MiB of 42.0 MiB",
                 ),
             ],
@@ -69,7 +69,7 @@ def test_check_discovery_total_zero() -> None:
             {},
             [
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="Longterm: 54.76% - 23.0 MiB of 42.0 MiB",
                 ),
             ],
@@ -82,7 +82,7 @@ def test_check_discovery_total_zero() -> None:
             {},
             [
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="Longterm: 54.76% - 23.0 MiB of 42.0 MiB",
                 ),
             ],
@@ -95,7 +95,7 @@ def test_check_discovery_total_zero() -> None:
             {},
             [
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="Longterm: 54.76% - 23.0 MiB of 42.0 MiB",
                 ),
             ],
@@ -109,7 +109,7 @@ def test_check_discovery_total_zero() -> None:
             {},
             [
                 Result(
-                    state=state.WARN,
+                    state=State.WARN,
                     summary="Longterm: 54.76% - 23.0 MiB of 42.0 MiB (warn/crit at 50.00%/69.00% used)",
                 ),
             ],
@@ -122,7 +122,7 @@ def test_check_discovery_total_zero() -> None:
             {},
             [
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary="Longterm: 54.76% - 23.0 MiB of 42.0 MiB (warn/crit below 60.00%/50.00% free)",
                 ),
             ],
@@ -135,7 +135,7 @@ def test_check_discovery_total_zero() -> None:
             {},
             [
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary="Longterm: 54.76% - 23.0 MiB of 42.0 MiB (warn/crit at 10.0 KiB/20.0 MiB used)",
                 ),
             ],
@@ -148,7 +148,7 @@ def test_check_discovery_total_zero() -> None:
             {},
             [
                 Result(
-                    state=state.WARN,
+                    state=State.WARN,
                     summary=(
                         "Longterm: 54.76% - 23.0 MiB of 42.0 MiB"
                         " (warn/crit below 20.0 MiB/5.00 MiB free)"
@@ -165,7 +165,7 @@ def test_check_discovery_total_zero() -> None:
             {"metric_name": "my_memory", "show_free": True},
             [
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary=(
                         "Longterm: 45.24% free - 19.0 MiB of 42.0 MiB"
                         " (warn/crit below 60.00%/50.00% free)"
@@ -190,7 +190,7 @@ def test_check_discovery_total_zero() -> None:
             },
             [
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary=(
                         "Longterm: 54.76% - 23.0 MiB of 42.0 MiB Hirn"
                         " (warn/crit below 60.00%/50.00% free)"
@@ -281,7 +281,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
             (43, 43),
             MEMINFO_MINI,
             [
-                Result(state=state.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
                 Metric("mem_used", 22020096, boundaries=(0, 44040192)),
                 Metric("mem_used_percent", 50.0, boundaries=(0, 100.0)),
                 Metric(
@@ -298,7 +298,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
             MEMINFO_SWAP_ZERO,
             [
                 Result(
-                    state=state.OK, summary="Total (RAM + Swap): 50.00% - 21.0 MiB of 42.0 MiB RAM"
+                    state=State.OK, summary="Total (RAM + Swap): 50.00% - 21.0 MiB of 42.0 MiB RAM"
                 ),
                 Metric("swap_used", 0, boundaries=(0, 0)),
                 Metric("mem_used", 22020096, boundaries=(0, 44040192)),
@@ -309,7 +309,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
                     levels=(45088768.0, 45088768.0),
                     boundaries=(0, 44040192),
                 ),
-                Result(state=state.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
             ],
         ),
         (
@@ -317,7 +317,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
             MEMINFO_SWAP_ZERO,
             [
                 Result(
-                    state=state.WARN,
+                    state=State.WARN,
                     summary="Total (RAM + Swap): 50.00% - 21.0 MiB of 42.0 MiB RAM (warn/crit at 20.0 MiB/43.0 MiB used)",
                 ),
                 Metric("swap_used", 0, boundaries=(0, 0)),
@@ -329,7 +329,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
                     levels=(20971520.0, 45088768.0),
                     boundaries=(0, 44040192),
                 ),
-                Result(state=state.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
             ],
         ),
         (
@@ -337,7 +337,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
             MEMINFO_SWAP_ZERO,
             [
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary="Total (RAM + Swap): 50.00% - 21.0 MiB of 42.0 MiB RAM (warn/crit at 20.0 MiB/20.0 MiB used)",
                 ),
                 Metric("swap_used", 0, boundaries=(0, 0)),
@@ -349,7 +349,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
                     levels=(20971520.0, 20971520.0),
                     boundaries=(0, 44040192),
                 ),
-                Result(state=state.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
             ],
         ),
         # NEGATIVE ABSOLUTE levels OK, WARN, CRIT
@@ -358,7 +358,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
             MEMINFO_SWAP_ZERO,
             [
                 Result(
-                    state=state.OK, summary="Total (RAM + Swap): 50.00% - 21.0 MiB of 42.0 MiB RAM"
+                    state=State.OK, summary="Total (RAM + Swap): 50.00% - 21.0 MiB of 42.0 MiB RAM"
                 ),
                 Metric("swap_used", 0, boundaries=(0, 0)),
                 Metric("mem_used", 22020096, boundaries=(0, 44040192)),
@@ -369,7 +369,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
                     levels=(39845888.0, 40894464.0),
                     boundaries=(0, 44040192),
                 ),
-                Result(state=state.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
             ],
         ),
         (
@@ -377,7 +377,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
             MEMINFO_SWAP_ZERO,
             [
                 Result(
-                    state=state.WARN,
+                    state=State.WARN,
                     summary=(
                         "Total (RAM + Swap): 50.00% - 21.0 MiB of 42.0 MiB RAM"
                         " (warn/crit below 43.0 MiB/3.00 MiB free)"
@@ -392,7 +392,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
                     levels=(-1048576.0, 40894464.0),
                     boundaries=(0, 44040192),
                 ),
-                Result(state=state.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
             ],
         ),
         (
@@ -400,7 +400,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
             MEMINFO_SWAP_ZERO,
             [
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary=(
                         "Total (RAM + Swap): 50.00% - 21.0 MiB of 42.0 MiB RAM"
                         " (warn/crit below 41.0 MiB/41.0 MiB free)"
@@ -415,7 +415,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
                     levels=(1048576.0, 1048576.0),
                     boundaries=(0, 44040192),
                 ),
-                Result(state=state.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
             ],
         ),
         # POSITIVE Percentage levels OK, WARN, CRIT
@@ -424,7 +424,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
             MEMINFO_SWAP_ZERO,
             [
                 Result(
-                    state=state.OK, summary="Total (RAM + Swap): 50.00% - 21.0 MiB of 42.0 MiB RAM"
+                    state=State.OK, summary="Total (RAM + Swap): 50.00% - 21.0 MiB of 42.0 MiB RAM"
                 ),
                 Metric("swap_used", 0, boundaries=(0, 0)),
                 Metric("mem_used", 22020096, boundaries=(0, 44040192)),
@@ -435,7 +435,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
                     levels=(35232153.6, 39636172.800000004),
                     boundaries=(0, 44040192),
                 ),
-                Result(state=state.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
             ],
         ),
         (
@@ -443,7 +443,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
             MEMINFO_SWAP_ZERO,
             [
                 Result(
-                    state=state.WARN,
+                    state=State.WARN,
                     summary=(
                         "Total (RAM + Swap): 50.00% - 21.0 MiB of 42.0 MiB RAM"
                         " (warn/crit at 10.00%/90.00% used)"
@@ -458,7 +458,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
                     levels=(4404019.2, 39636172.800000004),
                     boundaries=(0, 44040192),
                 ),
-                Result(state=state.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
             ],
         ),
         (
@@ -466,7 +466,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
             MEMINFO_SWAP_ZERO,
             [
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary=(
                         "Total (RAM + Swap): 50.00% - 21.0 MiB of 42.0 MiB RAM"
                         " (warn/crit at 10.00%/10.00% used)"
@@ -481,7 +481,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
                     levels=(4404019.2, 4404019.2),
                     boundaries=(0, 44040192),
                 ),
-                Result(state=state.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
             ],
         ),
         # NEGATIVE Percentage levels OK, WARN, CRIT
@@ -490,7 +490,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
             MEMINFO_SWAP_ZERO,
             [
                 Result(
-                    state=state.OK, summary="Total (RAM + Swap): 50.00% - 21.0 MiB of 42.0 MiB RAM"
+                    state=State.OK, summary="Total (RAM + Swap): 50.00% - 21.0 MiB of 42.0 MiB RAM"
                 ),
                 Metric("swap_used", 0, boundaries=(0, 0)),
                 Metric("mem_used", 22020096, boundaries=(0, 44040192)),
@@ -501,7 +501,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
                     levels=(39636172.8, 39636172.8),
                     boundaries=(0, 44040192),
                 ),
-                Result(state=state.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
             ],
         ),
         (
@@ -509,7 +509,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
             MEMINFO_SWAP_ZERO,
             [
                 Result(
-                    state=state.WARN,
+                    state=State.WARN,
                     summary=(
                         "Total (RAM + Swap): 50.00% - 21.0 MiB of 42.0 MiB RAM"
                         " (warn/crit below 90.00%/10.00% free)"
@@ -524,7 +524,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
                     levels=(4404019.1999999955, 39636172.8),
                     boundaries=(0, 44040192),
                 ),
-                Result(state=state.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
             ],
         ),
         (
@@ -532,7 +532,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
             MEMINFO_SWAP_ZERO,
             [
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary=(
                         "Total (RAM + Swap): 50.00% - 21.0 MiB of 42.0 MiB RAM"
                         " (warn/crit below 90.00%/80.00% free)"
@@ -547,7 +547,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
                     levels=(4404019.1999999955, 8808038.399999999),
                     boundaries=(0, 44040192),
                 ),
-                Result(state=state.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
             ],
         ),
         # now with swap != 0
@@ -556,7 +556,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
             MEMINFO_SWAP,
             [
                 Result(
-                    state=state.OK, summary="Total (RAM + Swap): 100.00% - 42.0 MiB of 42.0 MiB RAM"
+                    state=State.OK, summary="Total (RAM + Swap): 100.00% - 42.0 MiB of 42.0 MiB RAM"
                 ),
                 Metric("swap_used", 22020096, boundaries=(0, 44040192)),
                 Metric("mem_used", 22020096, boundaries=(0, 44040192)),
@@ -567,8 +567,8 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
                     levels=(45088768.0, 45088768.0),
                     boundaries=(0, 88080384),
                 ),
-                Result(state=state.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
-                Result(state=state.OK, summary="Swap: 50.00% - 21.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="Swap: 50.00% - 21.0 MiB of 42.0 MiB"),
             ],
         ),
         (
@@ -576,7 +576,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
             MEMINFO_SWAP,
             [
                 Result(
-                    state=state.WARN,
+                    state=State.WARN,
                     summary=(
                         "Total (RAM + Swap): 100.00% - 42.0 MiB of 42.0 MiB RAM"
                         " (warn/crit at 23.0 MiB/43.0 MiB used)"
@@ -591,8 +591,8 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
                     levels=(24117248.0, 45088768.0),
                     boundaries=(0, 88080384),
                 ),
-                Result(state=state.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
-                Result(state=state.OK, summary="Swap: 50.00% - 21.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="Swap: 50.00% - 21.0 MiB of 42.0 MiB"),
             ],
         ),
         (
@@ -600,7 +600,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
             MEMINFO_SWAP,
             [
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary=(
                         "Total (RAM + Swap): 100.00% - 42.0 MiB of 42.0 MiB RAM"
                         " (warn/crit at 23.0 MiB/23.0 MiB used)"
@@ -615,8 +615,8 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
                     levels=(24117248.0, 24117248.0),
                     boundaries=(0, 88080384),
                 ),
-                Result(state=state.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
-                Result(state=state.OK, summary="Swap: 50.00% - 21.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="Swap: 50.00% - 21.0 MiB of 42.0 MiB"),
             ],
         ),
         # Buffer + Cached
@@ -625,7 +625,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
             MEMINFO_SWAP_BUFFERS,
             [
                 Result(
-                    state=state.OK, summary="Total (RAM + Swap): 100.00% - 42.0 MiB of 42.0 MiB RAM"
+                    state=State.OK, summary="Total (RAM + Swap): 100.00% - 42.0 MiB of 42.0 MiB RAM"
                 ),
                 Metric("swap_used", 22020096, boundaries=(0, 44040192)),
                 Metric("mem_used", 22020096, boundaries=(0, 44040192)),
@@ -636,8 +636,8 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
                     levels=(45088768.0, 45088768.0),
                     boundaries=(0, 88080384),
                 ),
-                Result(state=state.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
-                Result(state=state.OK, summary="Swap: 50.00% - 21.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="Swap: 50.00% - 21.0 MiB of 42.0 MiB"),
             ],
         ),
         (
@@ -645,7 +645,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
             MEMINFO_SWAP_CACHED,
             [
                 Result(
-                    state=state.OK, summary="Total (RAM + Swap): 100.00% - 42.0 MiB of 42.0 MiB RAM"
+                    state=State.OK, summary="Total (RAM + Swap): 100.00% - 42.0 MiB of 42.0 MiB RAM"
                 ),
                 Metric("swap_used", 22020096, boundaries=(0, 44040192)),
                 Metric("mem_used", 22020096, boundaries=(0, 44040192)),
@@ -656,8 +656,8 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
                     levels=(45088768.0, 45088768.0),
                     boundaries=(0, 88080384),
                 ),
-                Result(state=state.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
-                Result(state=state.OK, summary="Swap: 50.00% - 21.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="Swap: 50.00% - 21.0 MiB of 42.0 MiB"),
             ],
         ),
         # page tables
@@ -666,7 +666,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
             MEMINFO_PAGE,
             [
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="Total (RAM + Swap + Pagetables): 100.00% - 42.0 MiB of 42.0 MiB RAM",
                 ),
                 Metric("swap_used", 22020096, boundaries=(0, 44040192)),
@@ -679,9 +679,9 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
                     levels=(45088768.0, 45088768.0),
                     boundaries=(0, 88080384),
                 ),
-                Result(state=state.OK, summary="RAM: 33.33% - 14.0 MiB of 42.0 MiB"),
-                Result(state=state.OK, summary="Swap: 50.00% - 21.0 MiB of 42.0 MiB"),
-                Result(state=state.OK, summary="Pagetables: 7.00 MiB"),
+                Result(state=State.OK, summary="RAM: 33.33% - 14.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="Swap: 50.00% - 21.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="Pagetables: 7.00 MiB"),
             ],
         ),
         # averaging
@@ -690,7 +690,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
             MEMINFO_MINI,
             [
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="RAM: 50.00% - 21.0 MiB of 42.0 MiB, 3 min average 50.0%",
                 ),
                 Metric("mem_used", 22020096, boundaries=(0, 44040192)),
@@ -710,7 +710,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
             MEMINFO_PAGE_MAPPED,
             [
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="Total (RAM + Swap + Pagetables): 100.00% - 42.0 MiB of 42.0 MiB RAM",
                 ),
                 Metric("swap_used", 22020096, boundaries=(0, 44040192)),
@@ -723,14 +723,14 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
                     levels=(66060288.0, 83676364.8),
                     boundaries=(0, 88080384),
                 ),
-                Result(state=state.OK, summary="RAM: 33.33% - 14.0 MiB of 42.0 MiB"),
-                Result(state=state.OK, summary="Swap: 50.00% - 21.0 MiB of 42.0 MiB"),
-                Result(state=state.OK, summary="Pagetables: 7.00 MiB"),
-                Result(state=state.OK, summary="Mapped: 12.0 MiB"),
+                Result(state=State.OK, summary="RAM: 33.33% - 14.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="Swap: 50.00% - 21.0 MiB of 42.0 MiB"),
+                Result(state=State.OK, summary="Pagetables: 7.00 MiB"),
+                Result(state=State.OK, summary="Mapped: 12.0 MiB"),
                 Metric("mem_lnx_mapped", 12582912),
-                Result(state=state.OK, summary="Committed: 3.00 MiB"),
+                Result(state=State.OK, summary="Committed: 3.00 MiB"),
                 Metric("mem_lnx_committed_as", 3145728),
-                Result(state=state.OK, summary="Shared: 1.00 MiB"),
+                Result(state=State.OK, summary="Shared: 1.00 MiB"),
                 Metric("mem_lnx_shmem", 1048576),
             ],
         ),

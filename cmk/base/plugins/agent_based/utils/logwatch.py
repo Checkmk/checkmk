@@ -35,8 +35,7 @@ from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation
     host_name,
 )
 
-from ..agent_based_api.v1 import regex, Result
-from ..agent_based_api.v1 import State as state
+from ..agent_based_api.v1 import regex, Result, State
 
 
 class ItemData(TypedDict):
@@ -136,6 +135,6 @@ def check_errors(cluster_section: Mapping[Optional[str], Section]) -> Iterable[R
     for node, node_data in cluster_section.items():
         for error_msg in node_data.errors:
             yield Result(
-                state=state.UNKNOWN,
+                state=State.UNKNOWN,
                 summary=error_msg if node is None else "[%s] %s" % (node, error_msg),
             )

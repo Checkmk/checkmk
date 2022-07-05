@@ -16,8 +16,7 @@
 
 from typing import Dict, List
 
-from .agent_based_api.v1 import register, Result, Service, SNMPTree
-from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.liebert import DETECT_LIEBERT, parse_liebert_without_unit
 
@@ -40,9 +39,9 @@ def check_liebert_system(item: str, section: ParsedSection) -> CheckResult:
     # used in this check funtion.
     for key, value in sorted(section.items()):
         if key == "System Status" and "Normal Operation" not in value:
-            yield Result(state=state.CRIT, summary="%s: %s" % (key, value))
+            yield Result(state=State.CRIT, summary="%s: %s" % (key, value))
         else:
-            yield Result(state=state.OK, summary="%s: %s" % (key, value))
+            yield Result(state=State.OK, summary="%s: %s" % (key, value))
 
 
 register.snmp_section(

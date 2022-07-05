@@ -6,8 +6,7 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.mssql_databases import (
     check_mssql_databases,
     discover_mssql_databases,
@@ -47,15 +46,15 @@ def test_discover_mssql_databases(section) -> None:
 def test_check_error(section) -> None:
 
     assert list(check_mssql_databases("MSSQL_Mouse -", {}, section)) == [
-        Result(state=state.CRIT, summary="We are out of cheese!"),
+        Result(state=State.CRIT, summary="We are out of cheese!"),
     ]
 
 
 def test_check_warn_auto_shrink(section) -> None:
 
     assert list(check_mssql_databases("MSSQL_MSSQL46 NOC_ALARM_T", {}, section)) == [
-        Result(state=state.OK, summary="Status: ONLINE"),
-        Result(state=state.OK, summary="Recovery: FULL"),
-        Result(state=state.OK, summary="Auto close: off"),
-        Result(state=state.WARN, summary="Auto shrink: on"),
+        Result(state=State.OK, summary="Status: ONLINE"),
+        Result(state=State.OK, summary="Recovery: FULL"),
+        Result(state=State.OK, summary="Auto close: off"),
+        Result(state=State.WARN, summary="Auto shrink: on"),
     ]

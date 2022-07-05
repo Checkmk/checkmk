@@ -9,9 +9,7 @@ import json
 from enum import Enum
 from typing import Dict, List, NamedTuple, Optional, Tuple, TypedDict
 
-from .agent_based_api.v1 import register, Result, Service
-from .agent_based_api.v1 import State as state
-from .agent_based_api.v1 import type_defs
+from .agent_based_api.v1 import register, Result, Service, State, type_defs
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 
@@ -94,11 +92,11 @@ default_check_parameters = CheckParams(
 )
 
 default_state_mapping = {
-    RuleState.INACTIVE: state.OK,
-    RuleState.PENDING: state.OK,
-    RuleState.FIRING: state.CRIT,
-    RuleState.NONE: state.UNKNOWN,
-    RuleState.NA: state.UNKNOWN,
+    RuleState.INACTIVE: State.OK,
+    RuleState.PENDING: State.OK,
+    RuleState.FIRING: State.CRIT,
+    RuleState.NONE: State.UNKNOWN,
+    RuleState.NA: State.UNKNOWN,
 }
 
 
@@ -124,11 +122,11 @@ def _create_group_service(group_name: str, group: Group, params: DiscoveryParams
     )
 
 
-def _get_rule_state(rule: Rule, params: CheckParams) -> state:
+def _get_rule_state(rule: Rule, params: CheckParams) -> State:
     mapping = _get_mapping(rule, params)
     if mapping:
         # Needed because Dicts cannot handle "None" as Key but Enums can
-        return state(mapping[rule.status.value if rule.status.value else "n/a"])
+        return State(mapping[rule.status.value if rule.status.value else "n/a"])
     return default_state_mapping[rule.status]
 
 
@@ -181,14 +179,14 @@ def check_alertmanager_rules(item: str, params: CheckParams, section: Section) -
             status = _get_rule_state(rule, params)
             if rule.severity:
                 yield Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="Severity: %s" % rule.severity.value,
                 )
             yield Result(
-                state=state.OK,
+                state=State.OK,
                 summary="Group name: %s" % rule.group_name,
             )
-            if status != state.OK:
+            if status != State.OK:
                 yield Result(
                     state=status,
                     summary="Active alert",
@@ -228,10 +226,10 @@ def discovery_alertmanager_groups(params: DiscoveryParams, section: Section) -> 
 def check_alertmanager_groups(item: str, params: CheckParams, section: Section) -> CheckResult:
     group = section.get(item)
     if group:
-        yield Result(state=state.OK, summary="Number of rules: %s" % len(group))
+        yield Result(state=State.OK, summary="Number of rules: %s" % len(group))
         for rule in group.values():
             status = _get_rule_state(rule, params)
-            if status != state.OK:
+            if status != State.OK:
                 yield Result(
                     state=status,
                     summary="Active alert: %s" % rule.rule_name,
@@ -269,11 +267,11 @@ def discovery_alertmanager_summary(params: DiscoveryParams, section: Section) ->
 
 
 def check_alertmanager_summary(params: CheckParams, section: Section) -> CheckResult:
-    yield Result(state=state.OK, summary="Number of rules: %s" % _get_summary_count(section))
+    yield Result(state=State.OK, summary="Number of rules: %s" % _get_summary_count(section))
     for rules in section.values():
         for rule in rules.values():
             status = _get_rule_state(rule, params)
-            if status != state.OK:
+            if status != State.OK:
                 yield Result(
                     state=status,
                     summary="Active alert: %s" % rule.rule_name,

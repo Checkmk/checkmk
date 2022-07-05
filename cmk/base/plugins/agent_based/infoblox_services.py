@@ -7,8 +7,16 @@
 """
 from typing import Dict, List, Tuple
 
-from .agent_based_api.v1 import any_of, contains, register, Result, Service, SNMPTree, startswith
-from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import (
+    any_of,
+    contains,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    startswith,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 Section = Dict[str, Tuple[str, str]]
@@ -89,10 +97,10 @@ STATUS_ID = {
     "5": "unknown",
 }
 STATE = {
-    "working": state.OK,
-    "warning": state.WARN,
-    "failed": state.CRIT,
-    "unexpected": state.UNKNOWN,
+    "working": State.OK,
+    "warning": State.WARN,
+    "failed": State.CRIT,
+    "unexpected": State.UNKNOWN,
 }
 
 

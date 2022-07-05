@@ -13,8 +13,7 @@ import pytest
 from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based import ps_section
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.utils import ps as ps_utils
 
 
@@ -334,36 +333,36 @@ CheckResult = tuple
 check_results = [
     [
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="Processes: 1",
         ),
         Metric("count", 1, levels=(100000, 100000), boundaries=(0, None)),
         Result(
-            state=state.WARN,
+            state=State.WARN,
             summary="virtual: 1.00 GiB (warn/crit at 1.00 GiB/2.00 GiB)",
         ),
         Metric("vsz", 1050360, levels=(1073741824, 2147483648)),
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="physical: 296 MiB",
         ),
         Metric("rss", 303252, levels=(1073741824, 2147483648)),
         Result(
-            state=state.WARN,
+            state=State.WARN,
             summary="Percentage of total RAM: 28.92% (warn/crit at 25.00%/50.00%)",
         ),
         Metric("pcpu", 0.0),
         Metric("pcpuavg", 0.0, boundaries=(0, 15)),
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="CPU: 0%, 15 min average: 0%",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="Running for: 1 day 3 hours",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice=(
                 "<table><tr><th>name</th><th>user</th><th>virtual size</th>"
                 "<th>resident size</th><th>creation time</th><th>pid</th><th>cpu usage</th></tr>"
@@ -374,25 +373,25 @@ check_results = [
     ],
     [
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="Processes: 1",
         ),
         Metric("count", 1, levels=(100000, 100000), boundaries=(0, None)),
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="virtual: 2.79 GiB",
         ),
         Metric("vsz", 2924232),
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="physical: 461 MiB",
         ),
         Metric("rss", 472252),
         Metric("pcpu", 0.0),
-        Result(state=state.OK, summary="CPU: 0%"),
-        Result(state=state.OK, summary="Running for: 7 hours 24 minutes"),
+        Result(state=State.OK, summary="CPU: 0%"),
+        Result(state=State.OK, summary="Running for: 7 hours 24 minutes"),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice=(
                 "name /usr/lib/firefox/firefox, user on, virtual size 2.79 GiB,"
                 " resident size 461 MiB, creation time Oct 24 2018 04:38:07, pid 7912,"
@@ -401,17 +400,17 @@ check_results = [
         ),
     ],
     [
-        Result(state=state.OK, summary="Processes: 1"),
+        Result(state=State.OK, summary="Processes: 1"),
         Metric("count", 1, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=state.OK, summary="virtual: 10.9 MiB"),
+        Result(state=State.OK, summary="virtual: 10.9 MiB"),
         Metric("vsz", 11180),
-        Result(state=state.OK, summary="physical: 1.12 MiB"),
+        Result(state=State.OK, summary="physical: 1.12 MiB"),
         Metric("rss", 1144),
         Metric("pcpu", 0.0),
-        Result(state=state.OK, summary="CPU: 0%"),
-        Result(state=state.OK, summary="Running for: 3 hours 54 minutes"),
+        Result(state=State.OK, summary="CPU: 0%"),
+        Result(state=State.OK, summary="Running for: 3 hours 54 minutes"),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice=(
                 "name /omd/sites/heute/lib/cmc/checkhelper, user heute, virtual size 10.9 MiB,"
                 " resident size 1.12 MiB, creation time Oct 24 2018 08:08:12, pid 10884,"
@@ -420,20 +419,20 @@ check_results = [
         ),
     ],
     [
-        Result(state=state.OK, summary="Processes: 2"),
+        Result(state=State.OK, summary="Processes: 2"),
         Metric("count", 2, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=state.OK, summary="virtual: 21.8 MiB"),
+        Result(state=State.OK, summary="virtual: 21.8 MiB"),
         Metric("vsz", 22360),
-        Result(state=state.OK, summary="physical: 2.33 MiB"),
+        Result(state=State.OK, summary="physical: 2.33 MiB"),
         Metric("rss", 2388),
         Metric("pcpu", 0.0),
-        Result(state=state.OK, summary="CPU: 0%"),
-        Result(state=state.OK, summary="Youngest running for: 2 hours 37 minutes"),
+        Result(state=State.OK, summary="CPU: 0%"),
+        Result(state=State.OK, summary="Youngest running for: 2 hours 37 minutes"),
         Metric("age_youngest", 9459.0),
-        Result(state=state.OK, summary="Oldest running for: 3 hours 54 minutes"),
+        Result(state=State.OK, summary="Oldest running for: 3 hours 54 minutes"),
         Metric("age_oldest", 14050.0),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice=(
                 "name /omd/sites/heute/lib/cmc/checkhelper, user heute, virtual size 10.9 MiB,"
                 " resident size 1.12 MiB, creation time Oct 24 2018 08:08:12, pid 10884,"
@@ -444,17 +443,17 @@ check_results = [
         ),
     ],
     [
-        Result(state=state.OK, summary="Processes: 1"),
+        Result(state=State.OK, summary="Processes: 1"),
         Metric("count", 1, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=state.OK, summary="virtual: 10.9 MiB"),
+        Result(state=State.OK, summary="virtual: 10.9 MiB"),
         Metric("vsz", 11180),
-        Result(state=state.OK, summary="physical: 1.21 MiB"),
+        Result(state=State.OK, summary="physical: 1.21 MiB"),
         Metric("rss", 1244),
         Metric("pcpu", 0.0),
-        Result(state=state.OK, summary="CPU: 0%"),
-        Result(state=state.OK, summary="Running for: 2 hours 37 minutes"),
+        Result(state=State.OK, summary="CPU: 0%"),
+        Result(state=State.OK, summary="Running for: 2 hours 37 minutes"),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice=(
                 "name /omd/sites/twelve/lib/cmc/checkhelper, user twelve, virtual size 10.9 MiB,"
                 " resident size 1.21 MiB, creation time Oct 24 2018 09:24:43, pid 30136,"
@@ -463,45 +462,45 @@ check_results = [
         ),
     ],
     [
-        Result(state=state.OK, summary="Processes: 2"),
+        Result(state=State.OK, summary="Processes: 2"),
         Metric("count", 2, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=state.OK, summary="virtual: 20.7 MiB"),
+        Result(state=State.OK, summary="virtual: 20.7 MiB"),
         Metric("vsz", 21232),
-        Result(state=state.OK, summary="physical: 18.6 MiB"),
+        Result(state=State.OK, summary="physical: 18.6 MiB"),
         Metric("rss", 19052),
         Metric("pcpu", 0.0),
-        Result(state=state.OK, summary="CPU: 0%"),
-        Result(state=state.OK, summary="Running for: 52 days 4 hours"),
+        Result(state=State.OK, summary="CPU: 0%"),
+        Result(state=State.OK, summary="Running for: 52 days 4 hours"),
     ],
     [
-        Result(state=state.OK, summary="Processes: 1"),
+        Result(state=State.OK, summary="Processes: 1"),
         Metric("count", 1, levels=(100000, 100000), boundaries=(0, None)),
         Metric("pcpu", 0.0),
-        Result(state=state.OK, summary="CPU: 0%"),
-        Result(state=state.OK, summary="Running for: 0 seconds"),
+        Result(state=State.OK, summary="CPU: 0%"),
+        Result(state=State.OK, summary="Running for: 0 seconds"),
     ],
     [
-        Result(state=state.OK, summary="Processes: 3"),
+        Result(state=State.OK, summary="Processes: 3"),
         Metric("count", 3, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=state.OK, summary="virtual: 136 MiB"),
+        Result(state=State.OK, summary="virtual: 136 MiB"),
         Metric("vsz", 139532, levels=(1073741824000, 2147483648000)),
-        Result(state=state.OK, summary="physical: 38.6 MiB"),
+        Result(state=State.OK, summary="physical: 38.6 MiB"),
         Metric("rss", 39516, levels=(104857600, 209715200)),
         Result(
-            state=state.UNKNOWN,
+            state=State.UNKNOWN,
             summary="Percentual RAM levels configured, but total RAM is unknown",
         ),
         Metric("pcpu", 0.0, levels=(90.0, 98.0)),
-        Result(state=state.OK, summary="CPU: 0%"),
+        Result(state=State.OK, summary="CPU: 0%"),
         Result(
-            state=state.WARN,
+            state=State.WARN,
             summary="Process handles: 1204 (warn/crit at 1000/2000)",
         ),
         Metric("process_handles", 1204, levels=(1000, 2000)),
-        Result(state=state.OK, summary="Youngest running for: 12 seconds"),
+        Result(state=State.OK, summary="Youngest running for: 12 seconds"),
         Metric("age_youngest", 12.0),
         Result(
-            state=state.WARN,
+            state=State.WARN,
             summary=(
                 "Oldest running for: 1 hour 11 minutes"
                 " (warn/crit at 1 hour 0 minutes/2 hours 0 minutes)"
@@ -510,15 +509,15 @@ check_results = [
         Metric("age_oldest", 4300.0, levels=(3600.0, 7200.0)),
     ],
     [
-        Result(state=state.OK, summary="Processes: 1"),
+        Result(state=State.OK, summary="Processes: 1"),
         Metric("count", 1, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=state.OK, summary="virtual: 4.47 MiB"),
+        Result(state=State.OK, summary="virtual: 4.47 MiB"),
         Metric("vsz", 4576),
-        Result(state=state.OK, summary="physical: 316 KiB"),
+        Result(state=State.OK, summary="physical: 316 KiB"),
         Metric("rss", 316),
         Metric("pcpu", 0.0),
-        Result(state=state.OK, summary="CPU: 0%"),
-        Result(state=state.OK, summary="Process handles: 53"),
+        Result(state=State.OK, summary="CPU: 0%"),
+        Result(state=State.OK, summary="Process handles: 53"),
         Metric("process_handles", 53),
     ],
 ]
@@ -686,15 +685,15 @@ def test_check_ps_common_cpu(data) -> None:
     output = time_info(service, data.agent_info, 60, data.cputime, data.cpu_cores)
 
     assert output[:6] == [
-        Result(state=state.OK, summary="Processes: 1"),
+        Result(state=State.OK, summary="Processes: 1"),
         Metric("count", 1, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=state.OK, summary="virtual: 105 KiB"),
+        Result(state=State.OK, summary="virtual: 105 KiB"),
         Metric("vsz", 105),
-        Result(state=state.OK, summary="physical: 30.0 KiB"),
+        Result(state=State.OK, summary="physical: 30.0 KiB"),
         Metric("rss", 30),
     ]
     assert output[8:] == [
-        Result(state=state.OK, summary="Running for: 3 hours 59 minutes"),
+        Result(state=State.OK, summary="Running for: 3 hours 59 minutes"),
     ]
 
 
@@ -704,14 +703,14 @@ def test_check_ps_common_cpu(data) -> None:
         (
             (1, 1, 99999, 99999),
             [
-                Result(state=state.CRIT, summary="Processes: 0 (warn/crit below 1/1)"),
+                Result(state=State.CRIT, summary="Processes: 0 (warn/crit below 1/1)"),
                 Metric("count", 0, levels=(100000, 100000), boundaries=(0, None)),
             ],
         ),
         (
             (0, 0, 99999, 99999),
             [
-                Result(state=state.OK, summary="Processes: 0"),
+                Result(state=State.OK, summary="Processes: 0"),
                 Metric("count", 0, levels=(100000, 100000), boundaries=(0, None)),
             ],
         ),
@@ -814,7 +813,7 @@ def test_subset_patterns() -> None:
                 total_ram_map={},
             )
         )
-        assert output[0] == Result(state=state.OK, summary="Processes: %s" % count)
+        assert output[0] == Result(state=State.OK, summary="Processes: %s" % count)
 
 
 @pytest.mark.parametrize("cpu_cores", [2, 4, 5])
@@ -862,21 +861,21 @@ def test_cpu_util_single_process_levels(cpu_cores) -> None:
     cpu_util_s = ps_utils.render.percent(cpu_util)
     single_msg = "firefox with PID 25898 CPU: %s (warn/crit at 45.00%%/80.00%%)" % cpu_util_s
     reference = [
-        Result(state=state.OK, summary="Processes: 4"),
+        Result(state=State.OK, summary="Processes: 4"),
         Metric("count", 4, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=state.OK, summary="virtual: 13.0 GiB"),
+        Result(state=State.OK, summary="virtual: 13.0 GiB"),
         Metric("vsz", 13631104),
-        Result(state=state.OK, summary="physical: 1.06 GiB"),
+        Result(state=State.OK, summary="physical: 1.06 GiB"),
         Metric("rss", 1106568),
         Metric("pcpu", cpu_util),
-        Result(state=state.OK, summary="CPU: %s" % cpu_util_s),
+        Result(state=State.OK, summary="CPU: %s" % cpu_util_s),
         # beware! an item will be inserted here
-        Result(state=state.OK, summary="Youngest running for: 6 minutes 57 seconds"),
+        Result(state=State.OK, summary="Youngest running for: 6 minutes 57 seconds"),
         Metric("age_youngest", 417.0),
-        Result(state=state.OK, summary="Oldest running for: 26 minutes 58 seconds"),
+        Result(state=State.OK, summary="Oldest running for: 26 minutes 58 seconds"),
         Metric("age_oldest", 1618.0),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="\r\n".join(
                 [
                     "name firefox, user on, virtual size 2.17 GiB, resident size 424 MiB,"
@@ -896,7 +895,7 @@ def test_cpu_util_single_process_levels(cpu_cores) -> None:
         reference.insert(
             8,
             Result(
-                state=state.WARN if cpu_util < params["single_cpulevels"][1] else state.CRIT,
+                state=State.WARN if cpu_util < params["single_cpulevels"][1] else State.CRIT,
                 summary=single_msg,
             ),
         )

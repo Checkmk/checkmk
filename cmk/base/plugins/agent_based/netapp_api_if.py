@@ -7,9 +7,7 @@
 
 from typing import Any, List, Mapping, MutableMapping, Optional, Sequence, Tuple, TypedDict, Union
 
-from .agent_based_api.v1 import get_value_store, register, Result
-from .agent_based_api.v1 import State as state
-from .agent_based_api.v1 import type_defs
+from .agent_based_api.v1 import get_value_store, register, Result, State, type_defs
 from .utils import interfaces, netapp_api
 
 MACList = List[Tuple[str, Optional[str]]]
@@ -239,7 +237,7 @@ def _check_netapp_api_if(  # pylint: disable=too-many-branches
                 mon_state = 0 if is_home_port else home_state
                 home_attribute = "is %shome port" % ("" if is_home_port else "not ")
                 yield Result(
-                    state=state(mon_state),
+                    state=State(mon_state),
                     summary="Current Port: %s (%s)" % (vif["home_port"], home_attribute),
                 )
 
@@ -255,7 +253,7 @@ def _check_netapp_api_if(  # pylint: disable=too-many-branches
 
                     if first_member:
                         yield Result(
-                            state=state(mon_state),
+                            state=State(mon_state),
                             summary="Physical interfaces: %s(%s)"
                             % (
                                 member_name,
@@ -265,13 +263,13 @@ def _check_netapp_api_if(  # pylint: disable=too-many-branches
                         first_member = False
                     else:
                         yield Result(
-                            state=state(mon_state),
+                            state=State(mon_state),
                             summary="%s(%s)" % (member_name, interfaces.statename(member_state)),
                         )
 
             if "speed_differs" in vif and speed_info_included:
                 yield Result(
-                    state=state(speed_state),
+                    state=State(speed_state),
                     summary="Interfaces do not have the same speed",
                 )
 

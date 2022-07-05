@@ -6,8 +6,7 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.liebert_system import (
     check_liebert_system,
     discover_liebert_system,
@@ -109,22 +108,22 @@ def test_discover_liebert_system(section, result) -> None:
             },
             [
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="System Model Number: Liebert CRV",
                     details="System Model Number: Liebert CRV",
                 ),
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="System Status: Normal Operation",
                     details="System Status: Normal Operation",
                 ),
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="Unit Operating State: standby",
                     details="Unit Operating State: standby",
                 ),
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="Unit Operating State Reason: Reason Unknown",
                     details="Unit Operating State Reason: Reason Unknown",
                 ),
@@ -139,22 +138,22 @@ def test_discover_liebert_system(section, result) -> None:
             },
             [
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="System Model Number: Liebert CRV",
                     details="System Model Number: Liebert CRV",
                 ),
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="System Status: Normal Operation",
                     details="System Status: Normal Operation",
                 ),
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="Unit Operating State: on",
                     details="Unit Operating State: on",
                 ),
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="Unit Operating State Reason: Reason Unknown",
                     details="Unit Operating State Reason: Reason Unknown",
                 ),

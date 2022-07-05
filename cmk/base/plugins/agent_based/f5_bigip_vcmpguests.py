@@ -8,8 +8,7 @@
 
 from typing import List, Mapping, Optional
 
-from .agent_based_api.v1 import all_of, register, Result, Service, SNMPTree
-from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import all_of, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.f5_bigip import F5_BIGIP, VERSION_V11_2_PLUS
 
@@ -30,7 +29,7 @@ def discovery_f5_bigip_vcmpguests(section: Section) -> DiscoveryResult:
 
 def check_f5_bigip_vcmpguests(section: Section) -> CheckResult:
     for guest, status in sorted(section.items()):
-        yield Result(state=state.OK, summary="Guest [%s] is %s" % (guest, status))
+        yield Result(state=State.OK, summary="Guest [%s] is %s" % (guest, status))
 
 
 register.snmp_section(

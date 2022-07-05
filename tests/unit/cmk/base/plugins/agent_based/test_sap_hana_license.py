@@ -12,8 +12,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Metric,
     Result,
     Service,
+    State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 
 SECTION = {
     "Y04 10": {
@@ -108,10 +108,10 @@ def test_sap_hana_license_discovery() -> None:
         (
             "Y04 10",
             [
-                Result(state=state.OK, summary="Status: unlimited"),
-                Result(state=state.WARN, summary="License: not FALSE"),
+                Result(state=State.OK, summary="Status: unlimited"),
+                Result(state=State.WARN, summary="License: not FALSE"),
                 Result(
-                    state=state.WARN,
+                    state=State.WARN,
                     summary="Expiration date: 2020-08-02 23:59:59.999999000",
                     details="Expiration date: 2020-08-02 23:59:59.999999000",
                 ),
@@ -120,20 +120,20 @@ def test_sap_hana_license_discovery() -> None:
         (
             "H62 10",
             [
-                Result(state=state.OK, summary="Status: unlimited"),
-                Result(state=state.OK, summary="License: TRUE"),
+                Result(state=State.OK, summary="Status: unlimited"),
+                Result(state=State.OK, summary="License: TRUE"),
             ],
         ),
         (
             "X04 55",
             [
-                Result(state=state.OK, summary="Size: 5 B"),
+                Result(state=State.OK, summary="Size: 5 B"),
                 Metric("license_size", 5.0),
-                Result(state=state.OK, summary="Usage: 50.00%"),
+                Result(state=State.OK, summary="Usage: 50.00%"),
                 Metric("license_usage_perc", 50.0),
-                Result(state=state.WARN, summary="License: not FALSE"),
+                Result(state=State.WARN, summary="License: not FALSE"),
                 Result(
-                    state=state.WARN,
+                    state=State.WARN,
                     summary="Expiration date: 2020-08-02 23:59:59.999999000",
                     details="Expiration date: 2020-08-02 23:59:59.999999000",
                 ),
@@ -142,16 +142,16 @@ def test_sap_hana_license_discovery() -> None:
         (
             "X00 00",
             [
-                Result(state=state.OK, summary="Size: 5 B"),
+                Result(state=State.OK, summary="Size: 5 B"),
                 Metric("license_size", 5.0),
                 Result(
-                    state=state.WARN,
+                    state=State.WARN,
                     summary="Usage: cannot calculate",
                     details="Usage: cannot calculate",
                 ),
-                Result(state=state.WARN, summary="License: not FALSE"),
+                Result(state=State.WARN, summary="License: not FALSE"),
                 Result(
-                    state=state.WARN,
+                    state=State.WARN,
                     summary="Expiration date: 2020-08-02 23:59:59.999999000",
                     details="Expiration date: 2020-08-02 23:59:59.999999000",
                 ),

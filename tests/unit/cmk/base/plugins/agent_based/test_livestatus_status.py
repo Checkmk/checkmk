@@ -10,8 +10,7 @@ import pytest
 
 import cmk.base.plugins.agent_based.livestatus_status as livestatus_status
 from cmk.base.api.agent_based.type_defs import Parameters
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 
 STRING_TABLE_STATUS = [
     ["[heute]"],
@@ -661,9 +660,9 @@ def test_discovery() -> None:
 @pytest.fixture(name="fetcher_checker_counters", scope="module")
 def fixture_fetcher_checker_counters_list():
     return [
-        Result(state=state.OK, notice="Fetcher helper usage: 0%"),
+        Result(state=State.OK, notice="Fetcher helper usage: 0%"),
         Metric("helper_usage_fetcher", 0.0, levels=(80.0, 90.0), boundaries=(0.0, None)),
-        Result(state=state.OK, notice="Checker helper usage: 0%"),
+        Result(state=State.OK, notice="Checker helper usage: 0%"),
         Metric("helper_usage_checker", 0.0, levels=(80.0, 90.0), boundaries=(0.0, None)),
     ]
 
@@ -691,52 +690,52 @@ def test_check_new_counters_in_oldstabe(fetcher_checker_counters) -> None:
 
 
 _RESULTS = [
-    Result(state=state.OK, summary="Livestatus version: 2019.05.31"),
-    Result(state=state.OK, summary="Host checks: 0.0/s"),
+    Result(state=State.OK, summary="Livestatus version: 2019.05.31"),
+    Result(state=State.OK, summary="Host checks: 0.0/s"),
     Metric("host_checks", 7.615869237677187e-05, boundaries=(0.0, None)),
-    Result(state=state.OK, summary="Service checks: 0.0/s"),
+    Result(state=State.OK, summary="Service checks: 0.0/s"),
     Metric("service_checks", 0.0002685888198403617, boundaries=(0.0, None)),
-    Result(state=state.OK, notice="Process creations: -0.0/s"),
+    Result(state=State.OK, notice="Process creations: -0.0/s"),
     Metric("forks", -3.4376948802370615e-09, boundaries=(0.0, None)),
-    Result(state=state.OK, notice="Livestatus connects: 0.0/s"),
+    Result(state=State.OK, notice="Livestatus connects: 0.0/s"),
     Metric("connections", 6.261761224351807e-06, boundaries=(0.0, None)),
-    Result(state=state.OK, notice="Livestatus requests: 0.0/s"),
+    Result(state=State.OK, notice="Livestatus requests: 0.0/s"),
     Metric("requests", 8.090614900637924e-06, boundaries=(0.0, None)),
-    Result(state=state.OK, notice="Log messages: 0.0/s"),
+    Result(state=State.OK, notice="Log messages: 0.0/s"),
     Metric("log_messages", 1.5985281193102335e-06, boundaries=(0.0, None)),
-    Result(state=state.OK, notice="Average check latency: 0.000s"),
+    Result(state=State.OK, notice="Average check latency: 0.000s"),
     Metric("average_latency_generic", 2.23711e-06, levels=(30.0, 60.0), boundaries=(0.0, None)),
-    Result(state=state.OK, notice="Average Checkmk latency: 0.000s"),
+    Result(state=State.OK, notice="Average Checkmk latency: 0.000s"),
     Metric("average_latency_cmk", 2.01088e-05, levels=(30.0, 60.0), boundaries=(0.0, None)),
-    Result(state=state.OK, notice="Average fetcher latency: 0.000s"),
+    Result(state=State.OK, notice="Average fetcher latency: 0.000s"),
     Metric("average_latency_fetcher", 2.01088e-05, levels=(30.0, 60.0), boundaries=(0.0, None)),
-    Result(state=state.OK, notice="Check helper usage: 1.43%"),
+    Result(state=State.OK, notice="Check helper usage: 1.43%"),
     Metric("helper_usage_generic", 1.42967, levels=(80.0, 90.0), boundaries=(0.0, None)),
-    Result(state=state.OK, notice="Checkmk helper usage: 0.04%"),
+    Result(state=State.OK, notice="Checkmk helper usage: 0.04%"),
     Metric("helper_usage_cmk", 0.043827200000000004, levels=(80.0, 90.0), boundaries=(0.0, None)),
-    Result(state=state.OK, notice="Fetcher helper usage: 0.04%"),
+    Result(state=State.OK, notice="Fetcher helper usage: 0.04%"),
     Metric(
         "helper_usage_fetcher", 0.043827200000000004, levels=(80.0, 90.0), boundaries=(0.0, None)
     ),
-    Result(state=state.OK, notice="Checker helper usage: 0.04%"),
+    Result(state=State.OK, notice="Checker helper usage: 0.04%"),
     Metric(
         "helper_usage_checker", 0.043827200000000004, levels=(80.0, 90.0), boundaries=(0.0, None)
     ),
-    Result(state=state.OK, notice="Livestatus usage: <0.01%"),
+    Result(state=State.OK, notice="Livestatus usage: <0.01%"),
     Metric("livestatus_usage", 3.46e-321, levels=(60.0, 80.0), boundaries=(0.0, None)),
-    Result(state=state.OK, notice="Livestatus overflow rate: 0.0/s"),
+    Result(state=State.OK, notice="Livestatus overflow rate: 0.0/s"),
     Metric("livestatus_overflows_rate", 0.0, levels=(0.01, 0.02), boundaries=(0.0, None)),
-    Result(state=state.OK, notice="Hosts: 2.00"),
+    Result(state=State.OK, notice="Hosts: 2.00"),
     Metric("monitored_hosts", 2.0, boundaries=(0.0, None)),
-    Result(state=state.OK, notice="Services: 513.00"),
+    Result(state=State.OK, notice="Services: 513.00"),
     Metric("monitored_services", 513.0, boundaries=(0.0, None)),
-    Result(state=state.OK, notice="Core version: Checkmk 2019.05.31"),
+    Result(state=State.OK, notice="Core version: Checkmk 2019.05.31"),
     Result(
-        state=state.OK,
+        state=State.OK,
         notice="Site certificate valid until Oct 01 3017",
     ),
     Result(
-        state=state.OK,
+        state=State.OK,
         notice="Expiring in: 1029 years 363 days",
     ),
     Metric("site_cert_days", 375948.7452314815),

@@ -42,8 +42,7 @@ from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
     SyslogMessage,
 )
 
-from .agent_based_api.v1 import Metric, register, Result, Service
-from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils import logwatch
 
@@ -256,7 +255,7 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
     if params.get("monitor_logfilelist"):
         if "expected_logfiles" not in params:
             yield Result(
-                state=state.WARN,
+                state=State.WARN,
                 summary=(
                     "You enabled monitoring the list of forwarded logfiles. "
                     "You need to redo service discovery."
@@ -267,14 +266,14 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
             missing = [f for f in expected if f not in used_logfiles]
             if missing:
                 yield Result(
-                    state=state.WARN,
+                    state=State.WARN,
                     summary="Missing logfiles: %s" % (", ".join(missing)),
                 )
 
             exceeding = [f for f in used_logfiles if f not in expected]
             if exceeding:
                 yield Result(
-                    state=state.WARN,
+                    state=State.WARN,
                     summary="Newly appeared logfiles: %s" % (", ".join(exceeding)),
                 )
 
@@ -355,7 +354,7 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
         result = logwatch_forward_messages(params.get("method"), item, syslog_messages)
 
         yield Result(
-            state=state.OK,
+            state=State.OK,
             summary="Forwarded %d messages%s" % (result.num_forwarded, logfile_info),
         )
         yield Metric("messages", result.num_forwarded)
@@ -364,13 +363,13 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
 
         if result.num_spooled:
             yield Result(
-                state=state.WARN,
+                state=State.WARN,
                 summary="Spooled %d messages%s" % (result.num_spooled, exc_txt),
             )
 
         if result.num_dropped:
             yield Result(
-                state=state.CRIT,
+                state=State.CRIT,
                 summary="Dropped %d messages%s" % (result.num_dropped, exc_txt),
             )
 
@@ -378,14 +377,14 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
         if cmk.utils.debug.enabled():
             raise
         yield Result(
-            state=state.CRIT,
+            state=State.CRIT,
             summary="Failed to forward messages (%s). Lost %d messages."
             % (exc, len(syslog_messages)),
         )
 
     if rclfd_total:
         yield Result(
-            state=state.OK,
+            state=State.OK,
             summary="Reclassified %d messages through logwatch patterns (%d to IGNORE)"
             % (rclfd_total, rclfd_to_ignore),
         )

@@ -35,8 +35,8 @@ from ..agent_based_api.v1 import (
     render,
     Result,
     Service,
+    State,
 )
-from ..agent_based_api.v1 import State as state
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, HostLabelGenerator
 from . import cpu, memory
 
@@ -603,7 +603,7 @@ def check_ps_common(
 
     if processes.count and params.get("process_info") is not None:
         yield Result(
-            state=state.OK,
+            state=State.OK,
             notice=format_process_list(processes, params["process_info"] == "html"),
         )
 
@@ -625,7 +625,7 @@ def count_check(
     )
     if processes.running_on_nodes:
         yield Result(
-            state=state.OK,
+            state=State.OK,
             summary="Running on nodes %s" % ", ".join(sorted(processes.running_on_nodes)),
         )
 
@@ -666,7 +666,7 @@ def memory_perc_check(
         total_ram = sum(total_ram_map[node] for node in nodes)
     except KeyError:
         yield Result(
-            state=state.UNKNOWN,
+            state=State.UNKNOWN,
             summary="Percentual RAM levels configured, but total RAM is unknown",
         )
         return
@@ -737,7 +737,7 @@ def individual_process_check(
         # only generate output in case WARN level has been reached.
         # In case a full list of processes is desired, one should enable
         # `process_info`, i.E."Enable per-process details in long-output"
-        if result.state is not state.OK:
+        if result.state is not State.OK:
             yield Result(
                 state=result.state,
                 notice=result.summary,

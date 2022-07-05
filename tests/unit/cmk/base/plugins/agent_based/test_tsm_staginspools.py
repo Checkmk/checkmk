@@ -6,8 +6,7 @@
 import pytest
 
 from cmk.base.plugins.agent_based import tsm_stagingpools
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 
 SECTION = {"bar": ["99.9", "97.9"], "foo": ["7.1"]}
 NODE_SECTION = {"node1": SECTION, "node2": SECTION, "node3": {"foo": ["7.1", "9.3"]}}
@@ -22,7 +21,7 @@ NODE_SECTION = {"node1": SECTION, "node2": SECTION, "node3": {"foo": ["7.1", "9.
             tsm_stagingpools.TSM_STAGINGPOOLS_DEFAULT_LEVELS,
             [
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="Total tapes: 1, Utilization: 0.1 tapes, Tapes less then 70% full: 1",
                     details="Total tapes: 1, Utilization: 0.1 tapes, Tapes less then 70% full: 1",
                 ),
@@ -36,7 +35,7 @@ NODE_SECTION = {"node1": SECTION, "node2": SECTION, "node3": {"foo": ["7.1", "9.
             {"levels": (2, 1), "free_below": 70},
             [
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary="Total tapes: 2, Utilization: 2.0 tapes, Tapes less then 70% full: 0 (warn/crit below 2/1)",
                     details="Total tapes: 2, Utilization: 2.0 tapes, Tapes less then 70% full: 0 (warn/crit below 2/1)",
                 ),
@@ -61,9 +60,9 @@ def test_check(item, params, expected) -> None:
             "foo",
             tsm_stagingpools.TSM_STAGINGPOOLS_DEFAULT_LEVELS,
             [
-                Result(state=state.OK, summary="node1/node2/node3: "),
+                Result(state=State.OK, summary="node1/node2/node3: "),
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="Total tapes: 1, Utilization: 0.1 tapes, Tapes less then 70% full: 1",
                     details="Total tapes: 1, Utilization: 0.1 tapes, Tapes less then 70% full: 1",
                 ),
@@ -71,7 +70,7 @@ def test_check(item, params, expected) -> None:
                 Metric("tapes", 1.0),
                 Metric("util", 0.071),
                 Result(
-                    state=state.UNKNOWN,
+                    state=State.UNKNOWN,
                     summary="Cluster: data from nodes are not equal",
                     details="Cluster: data from nodes are not equal",
                 ),
@@ -81,9 +80,9 @@ def test_check(item, params, expected) -> None:
             "bar",
             {"levels": (2, 1), "free_below": 70},
             [
-                Result(state=state.OK, summary="node1/node2: "),
+                Result(state=State.OK, summary="node1/node2: "),
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary="Total tapes: 2, Utilization: 2.0 tapes, Tapes less then 70% full: 0 (warn/crit below 2/1)",
                     details="Total tapes: 2, Utilization: 2.0 tapes, Tapes less then 70% full: 0 (warn/crit below 2/1)",
                 ),

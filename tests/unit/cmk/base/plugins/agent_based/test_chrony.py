@@ -7,8 +7,7 @@
 from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based import chrony
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 
 
 def test_chrony_parse_errmsg() -> None:
@@ -64,7 +63,7 @@ def test_chrony_servers_unreachable() -> None:
         )
     ) == [
         Result(
-            state=state.WARN,
+            state=State.WARN,
             notice="NTP servers: unreachable\nReference ID: 55DCBEF6 ()",
         )
     ]
@@ -83,9 +82,9 @@ def test_chrony_stratum_crit() -> None:
             None,
         )
     ) == [
-        Result(state=state.OK, notice="NTP servers: (foo.bar)\nReference ID: None"),
+        Result(state=State.OK, notice="NTP servers: (foo.bar)\nReference ID: None"),
         Result(
-            state=state.CRIT,
+            state=State.CRIT,
             summary="Stratum: 3 (warn/crit at 2/2)",
         ),
     ]
@@ -104,9 +103,9 @@ def test_chrony_offet_crit() -> None:
             None,
         )
     ) == [
-        Result(state=state.OK, notice="NTP servers: (moo)\nReference ID: None"),
+        Result(state=State.OK, notice="NTP servers: (moo)\nReference ID: None"),
         Result(
-            state=state.WARN,
+            state=State.WARN,
             summary="Offset: 0.2751 ms (warn/crit at 0.1200 ms/0.4200 ms)",
         ),
         Metric("offset", 0.275117, levels=(0.12, 0.42), boundaries=(0.0, None)),
@@ -124,9 +123,9 @@ def test_chrony_last_sync() -> None:
             None,
         )
     ) == [
-        Result(state=state.OK, notice="NTP servers: (moo)\nReference ID: None"),
+        Result(state=State.OK, notice="NTP servers: (moo)\nReference ID: None"),
         Result(
-            state=state.WARN,
+            state=State.WARN,
             summary="Time since last sync: 31 minutes 0 seconds (warn/crit at 30 minutes 0 seconds/1 hour 0 minutes)",
         ),
     ]
@@ -143,9 +142,9 @@ def test_chrony_negative_sync_time() -> None:
             None,
         )
     ) == [
-        Result(state=state.OK, notice="NTP servers: (moo)\nReference ID: None"),
+        Result(state=State.OK, notice="NTP servers: (moo)\nReference ID: None"),
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="Last synchronization appears to be 3 minutes 20 seconds in the future (check your system time)",
         ),
     ]

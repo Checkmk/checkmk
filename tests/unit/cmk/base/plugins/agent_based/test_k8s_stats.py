@@ -7,8 +7,7 @@ from typing import Any, Dict
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.k8s_stats_fs import (
     _check__k8s_stats_fs__core,
     discover_k8s_stats_fs,
@@ -301,7 +300,7 @@ def test_discover_k8s_stats_network(section, expected_items) -> None:
                     levels=(80.0, 90.0),
                     boundaries=(0.0, 100.0),
                 ),
-                Result(state=state.OK, summary="Used: 25.21% - 4.06 GiB of 16.1 GiB"),
+                Result(state=State.OK, summary="Used: 25.21% - 4.06 GiB of 16.1 GiB"),
                 Metric("fs_size", 16492.3984375, boundaries=(0.0, None)),
             ],
         )
@@ -340,19 +339,19 @@ def test__check_k8s_stats_fs(section, expected_results) -> None:
         (
             parsed_data,
             [
-                Result(state=state.OK, summary="In: 0.00 Bit/s"),
+                Result(state=State.OK, summary="In: 0.00 Bit/s"),
                 Metric("in", 0.0),
-                Result(state=state.OK, summary="Out: 0.00 Bit/s"),
+                Result(state=State.OK, summary="Out: 0.00 Bit/s"),
                 Metric("out", 0.0),
                 Metric("if_in_pkts", 0.0, boundaries=(0.0, None)),
                 Metric("if_in_errors", 0.0, boundaries=(0.0, None)),
-                Result(state=state.OK, summary="Input error rate: 0.00/s"),
+                Result(state=State.OK, summary="Input error rate: 0.00/s"),
                 Metric("if_out_pkts", 0.0, boundaries=(0.0, None)),
                 Metric("if_out_errors", 0.0, boundaries=(0.0, None)),
-                Result(state=state.OK, summary="Output error rate: 0.00/s"),
-                Result(state=state.OK, summary="Input Discards: 0.00/s"),
+                Result(state=State.OK, summary="Output error rate: 0.00/s"),
+                Result(state=State.OK, summary="Input Discards: 0.00/s"),
                 Metric("if_in_discards", 0.0, boundaries=(0.0, None)),
-                Result(state=state.OK, summary="Output Discards: 0.00/s"),
+                Result(state=State.OK, summary="Output Discards: 0.00/s"),
                 Metric("if_out_discards", 0.0, boundaries=(0.0, None)),
             ],
         )

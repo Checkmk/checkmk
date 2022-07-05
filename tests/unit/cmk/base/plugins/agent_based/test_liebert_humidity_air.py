@@ -6,8 +6,7 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.liebert_humidity_air import (
     check_liebert_humidity_air,
     discover_liebert_humidity_air,
@@ -83,7 +82,7 @@ def test_discover_liebert_humidity_air(section, extra_section, result) -> None:
             PARSED_SECTION,
             PARSED_EXTRA_SECTION,
             [
-                Result(state=state.OK, summary="36.50 % RH"),
+                Result(state=State.OK, summary="36.50 % RH"),
                 Metric(name="humidity", value=36.5, levels=(50.0, 55.0), boundaries=(0.0, None)),
             ],
         ),
@@ -97,7 +96,7 @@ def test_discover_liebert_humidity_air(section, extra_section, result) -> None:
             PARSED_EXTRA_SECTION,
             [
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="Unit is in standby (unavailable)",
                     details="Unit is in standby (unavailable)",
                 ),

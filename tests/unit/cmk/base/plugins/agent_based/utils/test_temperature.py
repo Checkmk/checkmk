@@ -15,8 +15,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     Metric,
     Result,
+    State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.utils import temperature
 
 UNIQUE_NAME = "unique_name"
@@ -54,7 +54,7 @@ def test_check_trend_simple() -> None:
                 "my_test",
             )
         )
-    assert results == [Result(state=state.OK, summary="Temperature trend: +12.0°C per 2 min")]
+    assert results == [Result(state=State.OK, summary="Temperature trend: +12.0°C per 2 min")]
 
 
 def test_check_trend_ok() -> None:
@@ -74,7 +74,7 @@ def test_check_trend_ok() -> None:
                 "my_test",
             )
         )
-    assert results == [Result(state=state.OK, summary="Temperature trend: +12.0°C per 2 min")]
+    assert results == [Result(state=State.OK, summary="Temperature trend: +12.0°C per 2 min")]
 
 
 def test_check_trend_warn_upper() -> None:
@@ -96,7 +96,7 @@ def test_check_trend_warn_upper() -> None:
         )
     assert results == [
         Result(
-            state=state.WARN,
+            state=State.WARN,
             summary="Temperature trend: +12.0°C per 2 min (warn/crit at +10.0°C per 2 min/+15.0°C per 2 min)",
         )
     ]
@@ -121,7 +121,7 @@ def test_check_trend_crit_upper() -> None:
         )
     assert results == [
         Result(
-            state=state.CRIT,
+            state=State.CRIT,
             summary="Temperature trend: +12.0°C per 2 min (warn/crit at +7.0°C per 2 min/+10.0°C per 2 min)",
         )
     ]
@@ -146,7 +146,7 @@ def test_check_trend_warn_lower() -> None:
         )
     assert results == [
         Result(
-            state=state.WARN,
+            state=State.WARN,
             summary="Temperature trend: -12.0°C per 2 min (warn/crit below -10.0°C per 2 min/-15.0°C per 2 min)",
         )
     ]
@@ -171,7 +171,7 @@ def test_check_trend_crit_lower() -> None:
         )
     assert results == [
         Result(
-            state=state.CRIT,
+            state=State.CRIT,
             summary="Temperature trend: -12.0°C per 2 min (warn/crit below -5.0°C per 2 min/-10.0°C per 2 min)",
         )
     ]
@@ -196,8 +196,8 @@ def test_check_trend_time_period_ok() -> None:
             )
         )
     assert results == [
-        Result(state=state.OK, summary="Temperature trend: +5.0°C per 1 min"),
-        Result(state=state.OK, summary="Time until temperature limit reached: 6 minutes 0 seconds"),
+        Result(state=State.OK, summary="Temperature trend: +5.0°C per 1 min"),
+        Result(state=State.OK, summary="Time until temperature limit reached: 6 minutes 0 seconds"),
     ]
 
 
@@ -220,9 +220,9 @@ def test_check_trend_time_period_warn_upper() -> None:
             )
         )
     assert results == [
-        Result(state=state.OK, summary="Temperature trend: +5.0°C per 1 min"),
+        Result(state=State.OK, summary="Temperature trend: +5.0°C per 1 min"),
         Result(
-            state=state.WARN,
+            state=State.WARN,
             summary="Time until temperature limit reached: 6 minutes 0 seconds (warn/crit below 7 minutes 0 seconds/2 minutes 0 seconds)",
         ),
     ]
@@ -247,9 +247,9 @@ def test_check_trend_time_period_crit_upper() -> None:
             )
         )
     assert results == [
-        Result(state=state.OK, summary="Temperature trend: +5.0°C per 1 min"),
+        Result(state=State.OK, summary="Temperature trend: +5.0°C per 1 min"),
         Result(
-            state=state.CRIT,
+            state=State.CRIT,
             summary="Time until temperature limit reached: 6 minutes 0 seconds (warn/crit below 8 minutes 0 seconds/7 minutes 0 seconds)",
         ),
     ]
@@ -274,9 +274,9 @@ def test_check_trend_time_period_warn_lower() -> None:
             )
         )
     assert results == [
-        Result(state=state.OK, summary="Temperature trend: -5.0°C per 1 min"),
+        Result(state=State.OK, summary="Temperature trend: -5.0°C per 1 min"),
         Result(
-            state=state.WARN,
+            state=State.WARN,
             summary="Time until temperature limit reached: 7 minutes 0 seconds (warn/crit below 8 minutes 0 seconds/6 minutes 0 seconds)",
         ),
     ]
@@ -301,9 +301,9 @@ def test_check_trend_time_period_crit_lower() -> None:
             )
         )
     assert results == [
-        Result(state=state.OK, summary="Temperature trend: -5.0°C per 1 min"),
+        Result(state=State.OK, summary="Temperature trend: -5.0°C per 1 min"),
         Result(
-            state=state.CRIT,
+            state=State.CRIT,
             summary="Time until temperature limit reached: 3 minutes 0 seconds (warn/crit below 8 minutes 0 seconds/6 minutes 0 seconds)",
         ),
     ]
@@ -328,9 +328,9 @@ def test_check_trend_time_period_zero_lower_bound() -> None:
             )
         )
     assert results == [
-        Result(state=state.OK, summary="Temperature trend: -5.0°C per 1 min"),
+        Result(state=State.OK, summary="Temperature trend: -5.0°C per 1 min"),
         Result(
-            state=state.CRIT,
+            state=State.CRIT,
             summary="Time until temperature limit reached: 1 minute 0 seconds (warn/crit below 8 minutes 0 seconds/6 minutes 0 seconds)",
         ),
     ]
@@ -347,9 +347,9 @@ def test_check_temperature_simple() -> None:
     )
     assert results == [
         Metric(name="temp", value=23.0),
-        Result(state=state.OK, summary="Temperature: 23.0°C"),
+        Result(state=State.OK, summary="Temperature: 23.0°C"),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="Configuration: prefer user levels over device levels (no levels found)",
         ),
     ]
@@ -368,9 +368,9 @@ def test_check_temperature_user_levels_ok() -> None:
     )
     assert results == [
         Metric("temp", 23.0, levels=(26.0, 30.0)),
-        Result(state=state.OK, summary="Temperature: 23.0°C"),
+        Result(state=State.OK, summary="Temperature: 23.0°C"),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="Configuration: prefer user levels over device levels (used user levels)",
         ),
     ]
@@ -389,9 +389,9 @@ def test_check_temperature_user_levels_warn_upper() -> None:
     )
     assert results == [
         Metric("temp", 23.0, levels=(23.0, 30.0)),
-        Result(state=state.WARN, summary="Temperature: 23.0°C (warn/crit at 23.0°C/30.0°C)"),
+        Result(state=State.WARN, summary="Temperature: 23.0°C (warn/crit at 23.0°C/30.0°C)"),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="Configuration: prefer user levels over device levels (used user levels)",
         ),
     ]
@@ -410,9 +410,9 @@ def test_check_temperature_user_levels_crit_upper() -> None:
     )
     assert results == [
         Metric("temp", 30.0, levels=(23.0, 30.0)),
-        Result(state=state.CRIT, summary="Temperature: 30.0°C (warn/crit at 23.0°C/30.0°C)"),
+        Result(state=State.CRIT, summary="Temperature: 30.0°C (warn/crit at 23.0°C/30.0°C)"),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="Configuration: prefer user levels over device levels (used user levels)",
         ),
     ]
@@ -431,9 +431,9 @@ def test_check_temperature_user_levels_warn_lower() -> None:
     )
     assert results == [
         Metric("temp", -1.0),
-        Result(state=state.WARN, summary="Temperature: -1.0°C (warn/crit below 0.0°C/-15.0°C)"),
+        Result(state=State.WARN, summary="Temperature: -1.0°C (warn/crit below 0.0°C/-15.0°C)"),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="Configuration: prefer user levels over device levels (used user levels)",
         ),
     ]
@@ -452,9 +452,9 @@ def test_check_temperature_user_levels_crit_lower() -> None:
     )
     assert results == [
         Metric("temp", -16.0),
-        Result(state=state.CRIT, summary="Temperature: -16.0°C (warn/crit below 0.0°C/-15.0°C)"),
+        Result(state=State.CRIT, summary="Temperature: -16.0°C (warn/crit below 0.0°C/-15.0°C)"),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="Configuration: prefer user levels over device levels (used user levels)",
         ),
     ]
@@ -473,9 +473,9 @@ def test_check_temperature_output_unit() -> None:
     )
     assert results == [
         Metric("temp", 10.0),
-        Result(state=state.OK, summary="Temperature: 50.0°F"),
+        Result(state=State.OK, summary="Temperature: 50.0°F"),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="Configuration: prefer user levels over device levels (no levels found)",
         ),
     ]
@@ -494,9 +494,9 @@ def test_check_temperature_input_unit() -> None:
     )
     assert results == [
         Metric("temp", 10.0),
-        Result(state=state.OK, summary="Temperature: 10.0°C"),
+        Result(state=State.OK, summary="Temperature: 10.0°C"),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="Configuration: prefer user levels over device levels (no levels found)",
         ),
     ]
@@ -514,9 +514,9 @@ def test_check_temperature_device_levels_ok() -> None:
     )
     assert results == [
         Metric("temp", 10.0, levels=(54.0, 70.0)),
-        Result(state=state.OK, summary="Temperature: 10.0°C"),
+        Result(state=State.OK, summary="Temperature: 10.0°C"),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="Configuration: prefer user levels over device levels (used device levels)",
         ),
     ]
@@ -534,9 +534,9 @@ def test_check_temperature_device_levels_warn_upper() -> None:
     )
     assert results == [
         Metric("temp", 10.0, levels=(10.0, 15.0)),
-        Result(state=state.WARN, summary="Temperature: 10.0°C (warn/crit at 10.0°C/15.0°C)"),
+        Result(state=State.WARN, summary="Temperature: 10.0°C (warn/crit at 10.0°C/15.0°C)"),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="Configuration: prefer user levels over device levels (used device levels)",
         ),
     ]
@@ -554,9 +554,9 @@ def test_check_temperature_device_levels_crit_upper() -> None:
     )
     assert results == [
         Metric("temp", 18.0, levels=(10.0, 15.0)),
-        Result(state=state.CRIT, summary="Temperature: 18.0°C (warn/crit at 10.0°C/15.0°C)"),
+        Result(state=State.CRIT, summary="Temperature: 18.0°C (warn/crit at 10.0°C/15.0°C)"),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="Configuration: prefer user levels over device levels (used device levels)",
         ),
     ]
@@ -575,9 +575,9 @@ def test_check_temperature_device_levels_warn_lower() -> None:
     )
     assert results == [
         Metric("temp", 0.0, levels=(10.0, 15.0)),
-        Result(state=state.WARN, summary="Temperature: 0.0°C (warn/crit below 1.0°C/-15.0°C)"),
+        Result(state=State.WARN, summary="Temperature: 0.0°C (warn/crit below 1.0°C/-15.0°C)"),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="Configuration: prefer user levels over device levels (used device levels)",
         ),
     ]
@@ -596,9 +596,9 @@ def test_check_temperature_device_levels_crit_lower() -> None:
     )
     assert results == [
         Metric("temp", -20.0, levels=(10.0, 15.0)),
-        Result(state=state.CRIT, summary="Temperature: -20.0°C (warn/crit below 1.0°C/-15.0°C)"),
+        Result(state=State.CRIT, summary="Temperature: -20.0°C (warn/crit below 1.0°C/-15.0°C)"),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="Configuration: prefer user levels over device levels (used device levels)",
         ),
     ]
@@ -621,8 +621,8 @@ def test_check_temperature_use_user_levels() -> None:
     )
     assert results == [
         Metric("temp", -20.0, levels=(50.0, 75.0)),
-        Result(state=state.OK, summary="Temperature: -20.0°C"),
-        Result(state=state.OK, notice="Configuration: only use user levels"),
+        Result(state=State.OK, summary="Temperature: -20.0°C"),
+        Result(state=State.OK, notice="Configuration: only use user levels"),
     ]
 
 
@@ -643,8 +643,8 @@ def test_check_temperature_use_device_levels() -> None:
     )
     assert results == [
         Metric("temp", -20.0, levels=(10.0, 15.0)),
-        Result(state=state.CRIT, summary="Temperature: -20.0°C (warn/crit below 1.0°C/-15.0°C)"),
-        Result(state=state.OK, notice="Configuration: only use device levels"),
+        Result(state=State.CRIT, summary="Temperature: -20.0°C (warn/crit below 1.0°C/-15.0°C)"),
+        Result(state=State.OK, notice="Configuration: only use device levels"),
     ]
 
 
@@ -665,9 +665,9 @@ def test_check_temperature_default_device_levels() -> None:
     )
     assert results == [
         Metric("temp", -20.0, levels=(10.0, 15.0)),
-        Result(state=state.CRIT, summary="Temperature: -20.0°C (warn/crit below 1.0°C/-15.0°C)"),
+        Result(state=State.CRIT, summary="Temperature: -20.0°C (warn/crit below 1.0°C/-15.0°C)"),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="Configuration: prefer device levels over user levels (used device levels)",
         ),
     ]
@@ -687,9 +687,9 @@ def test_check_temperature_default_user_levels() -> None:
     )
     assert results == [
         Metric("temp", -20.0),
-        Result(state=state.OK, summary="Temperature: -20.0°C"),
+        Result(state=State.OK, summary="Temperature: -20.0°C"),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="Configuration: prefer user levels over device levels (used user levels)",
         ),
     ]
@@ -708,9 +708,9 @@ def test_check_temperature_use_device_default_no_levels() -> None:
     )
     assert results == [
         Metric("temp", -20.0),
-        Result(state=state.OK, summary="Temperature: -20.0°C"),
+        Result(state=State.OK, summary="Temperature: -20.0°C"),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="Configuration: prefer device levels over user levels (no levels found)",
         ),
     ]
@@ -730,9 +730,9 @@ def test_check_temperature_use_user_default_device_levels() -> None:
     )
     assert results == [
         Metric("temp", -20.0),
-        Result(state=state.CRIT, summary="Temperature: -20.0°C (warn/crit below 1.0°C/-15.0°C)"),
+        Result(state=State.CRIT, summary="Temperature: -20.0°C (warn/crit below 1.0°C/-15.0°C)"),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="Configuration: prefer user levels over device levels (used device levels)",
         ),
     ]
@@ -754,9 +754,9 @@ def test_check_temperature_use_user_default_user_levels() -> None:
     )
     assert results == [
         Metric("temp", -20.0),
-        Result(state=state.OK, summary="Temperature: -20.0°C"),
+        Result(state=State.OK, summary="Temperature: -20.0°C"),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="Configuration: prefer user levels over device levels (used user levels)",
         ),
     ]
@@ -775,9 +775,9 @@ def test_check_temperature_use_user_default_no_levels() -> None:
     )
     assert results == [
         Metric("temp", -20.0),
-        Result(state=state.OK, summary="Temperature: -20.0°C"),
+        Result(state=State.OK, summary="Temperature: -20.0°C"),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="Configuration: prefer user levels over device levels (no levels found)",
         ),
     ]
@@ -800,8 +800,8 @@ def test_check_temperature_show_worst() -> None:
     )
     assert results == [
         Metric("temp", -20.0, levels=(10.0, 15.0)),
-        Result(state=state.CRIT, summary="Temperature: -20.0°C (warn/crit below 1.0°C/-15.0°C)"),
-        Result(state=state.OK, notice="Configuration: show most critical state"),
+        Result(state=State.CRIT, summary="Temperature: -20.0°C (warn/crit below 1.0°C/-15.0°C)"),
+        Result(state=State.OK, notice="Configuration: show most critical state"),
     ]
 
 
@@ -822,8 +822,8 @@ def test_check_temperature_show_best() -> None:
     )
     assert results == [
         Metric("temp", -20.0, levels=(50.0, 75.0)),
-        Result(state=state.OK, summary="Temperature: -20.0°C"),
-        Result(state=state.OK, notice="Configuration: show least critical state"),
+        Result(state=State.OK, summary="Temperature: -20.0°C"),
+        Result(state=State.OK, notice="Configuration: show least critical state"),
     ]
 
 
@@ -846,9 +846,9 @@ def test_check_temperature_device_status_override_best() -> None:
     )
     assert results == [
         Metric("temp", -20.0, levels=(10.0, 15.0)),
-        Result(state=state.OK, summary="Temperature: -20.0°C"),
-        Result(state=state.WARN, summary="State on device: banana"),
-        Result(state=state.OK, notice="Configuration: show least critical state"),
+        Result(state=State.OK, summary="Temperature: -20.0°C"),
+        Result(state=State.WARN, summary="State on device: banana"),
+        Result(state=State.OK, notice="Configuration: show least critical state"),
     ]
 
 
@@ -871,9 +871,9 @@ def test_check_temperature_device_status_override_worst() -> None:
     )
     assert results == [
         Metric("temp", 5.0, levels=(10.0, 15.0)),
-        Result(state=state.OK, summary="Temperature: 5.0°C"),
-        Result(state=state.CRIT, summary="State on device: banana"),
-        Result(state=state.OK, notice="Configuration: show most critical state"),
+        Result(state=State.OK, summary="Temperature: 5.0°C"),
+        Result(state=State.CRIT, summary="State on device: banana"),
+        Result(state=State.OK, notice="Configuration: show most critical state"),
     ]
 
 
@@ -896,9 +896,9 @@ def test_check_temperature_device_status_override_ok() -> None:
     )
     assert results == [
         Metric("temp", 5.0, levels=(20.0, 25.0)),
-        Result(state=state.OK, summary="Temperature: 5.0°C"),
-        Result(state=state.OK, notice="State on device: banana"),
-        Result(state=state.OK, notice="Configuration: show least critical state"),
+        Result(state=State.OK, summary="Temperature: 5.0°C"),
+        Result(state=State.OK, notice="State on device: banana"),
+        Result(state=State.OK, notice="Configuration: show least critical state"),
     ]
 
 
@@ -940,10 +940,10 @@ def test_check_temperature_ignores_trend_computation() -> None:
 
     assert results == [
         Metric("temp", 20.0),
-        Result(state=state.OK, summary="Temperature: 20.0°C"),
-        Result(state=state.OK, summary="Temperature trend: +20.0°C per 30 min"),
+        Result(state=State.OK, summary="Temperature: 20.0°C"),
+        Result(state=State.OK, summary="Temperature trend: +20.0°C per 30 min"),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="Configuration: prefer user levels over device levels (no levels found)",
         ),
     ]

@@ -7,9 +7,7 @@
 import pytest
 
 from cmk.base.plugins.agent_based import alertmanager
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
-from cmk.base.plugins.agent_based.agent_based_api.v1 import type_defs
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State, type_defs
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 DATA = [
@@ -68,17 +66,17 @@ custom_remapping_check_params = alertmanager.CheckParams(
 @pytest.mark.parametrize(
     "alertmanager_rule_state, params, status",
     [
-        (alertmanager.RuleState.INACTIVE, custom_remapping_check_params, state.OK),
-        (alertmanager.RuleState.PENDING, custom_remapping_check_params, state.CRIT),
-        (alertmanager.RuleState.FIRING, custom_remapping_check_params, state.WARN),
-        (alertmanager.RuleState.NONE, custom_remapping_check_params, state.WARN),
-        (alertmanager.RuleState.NA, custom_remapping_check_params, state.UNKNOWN),
+        (alertmanager.RuleState.INACTIVE, custom_remapping_check_params, State.OK),
+        (alertmanager.RuleState.PENDING, custom_remapping_check_params, State.CRIT),
+        (alertmanager.RuleState.FIRING, custom_remapping_check_params, State.WARN),
+        (alertmanager.RuleState.NONE, custom_remapping_check_params, State.WARN),
+        (alertmanager.RuleState.NA, custom_remapping_check_params, State.UNKNOWN),
     ],
 )
 def test_alertmanager_get_rule_state_remapping(
     alertmanager_rule_state: alertmanager.RuleState,
     params: alertmanager.CheckParams,
-    status: state,
+    status: State,
 ):
     rule = alertmanager.Rule(
         rule_name="foo",
@@ -140,9 +138,9 @@ def test_alertmanager_discover_rules(
             alertmanager.default_check_parameters,
             DATA,
             [
-                Result(state=state.OK, summary="Severity: info"),
-                Result(state=state.OK, summary="Group name: test_alert_group_2"),
-                Result(state=state.CRIT, summary="Active alert", details="testmessage"),
+                Result(state=State.OK, summary="Severity: info"),
+                Result(state=State.OK, summary="Group name: test_alert_group_2"),
+                Result(state=State.CRIT, summary="Active alert", details="testmessage"),
             ],
         ),
         (
@@ -150,9 +148,9 @@ def test_alertmanager_discover_rules(
             alternative_check_params,
             DATA,
             [
-                Result(state=state.OK, summary="Severity: critical"),
-                Result(state=state.OK, summary="Group name: test_alert_group_1"),
-                Result(state=state.CRIT, summary="Active alert", details="fööbär"),
+                Result(state=State.OK, summary="Severity: critical"),
+                Result(state=State.OK, summary="Group name: test_alert_group_1"),
+                Result(state=State.CRIT, summary="Active alert", details="fööbär"),
             ],
         ),
     ],
@@ -208,9 +206,9 @@ def test_alertmanager_discover_groups(
             alertmanager.default_check_parameters,
             DATA,
             [
-                Result(state=state.OK, summary="Number of rules: 4"),
+                Result(state=State.OK, summary="Number of rules: 4"),
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary="Active alert: test_rule_3",
                     details="test_rule_3: foobar",
                 ),
@@ -268,13 +266,13 @@ def test_alertmanager_discover_summary(
             alertmanager.default_check_parameters,
             DATA,
             [
-                Result(state=state.OK, summary="Number of rules: 5"),
+                Result(state=State.OK, summary="Number of rules: 5"),
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary="Active alert: test_rule_3",
                     details="test_rule_3: foobar",
                 ),
-                Result(state=state.CRIT, summary="Active alert: foo", details="foo: testmessage"),
+                Result(state=State.CRIT, summary="Active alert: foo", details="foo: testmessage"),
             ],
         )
     ],

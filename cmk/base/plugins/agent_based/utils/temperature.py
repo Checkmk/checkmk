@@ -7,8 +7,7 @@
 import time
 from typing import Any, Generator, MutableMapping, Optional, Tuple, TypedDict, Union
 
-from ..agent_based_api.v1 import check_levels, get_average, get_rate, Result
-from ..agent_based_api.v1 import State as state
+from ..agent_based_api.v1 import check_levels, get_average, get_rate, Result, State
 from ..agent_based_api.v1.render import timespan
 from ..agent_based_api.v1.type_defs import CheckResult
 
@@ -377,7 +376,7 @@ def check_temperature(  # pylint: disable=too-many-branches
     if dev_status is not None:
         dev_results.append(
             Result(
-                state=state(dev_status),
+                state=State(dev_status),
                 notice="State on device: %s" % dev_status_name,
             )
         )
@@ -385,13 +384,13 @@ def check_temperature(  # pylint: disable=too-many-branches
     if device_levels_handling == "usr":
         yield usr_metric
         yield from usr_results
-        yield Result(state=state.OK, notice="Configuration: only use user levels")
+        yield Result(state=State.OK, notice="Configuration: only use user levels")
         return
 
     if device_levels_handling == "dev":
         yield dev_metric
         yield from dev_results
-        yield Result(state=state.OK, notice="Configuration: only use device levels")
+        yield Result(state=State.OK, notice="Configuration: only use device levels")
         return
 
     if device_levels_handling == "usrdefault":
@@ -411,7 +410,7 @@ def check_temperature(  # pylint: disable=too-many-branches
             suffix = "(no levels found)"
 
         yield Result(
-            state=state.OK,
+            state=State.OK,
             notice="Configuration: prefer user levels over device levels %s" % suffix,
         )
 
@@ -434,16 +433,16 @@ def check_temperature(  # pylint: disable=too-many-branches
             suffix = "(no levels found)"
 
         yield Result(
-            state=state.OK,
+            state=State.OK,
             notice="Configuration: prefer device levels over user levels %s" % suffix,
         )
 
         return
 
     if device_levels_handling == "worst":
-        usr_overall_state = state.worst(*(result.state for result in usr_results))
-        dev_overall_state = state.worst(*(result.state for result in dev_results))
-        worst_state = state.worst(usr_overall_state, dev_overall_state)
+        usr_overall_state = State.worst(*(result.state for result in usr_results))
+        dev_overall_state = State.worst(*(result.state for result in dev_results))
+        worst_state = State.worst(usr_overall_state, dev_overall_state)
 
         if usr_overall_state == worst_state:
             yield usr_metric
@@ -452,14 +451,14 @@ def check_temperature(  # pylint: disable=too-many-branches
             yield dev_metric
             yield from dev_results
 
-        yield Result(state=state.OK, notice="Configuration: show most critical state")
+        yield Result(state=State.OK, notice="Configuration: show most critical state")
 
         return
 
     if device_levels_handling == "best":
-        usr_overall_state = state.worst(*(result.state for result in usr_results))
-        dev_overall_state = state.worst(*(result.state for result in dev_results))
-        best_state = state.best(usr_overall_state, dev_overall_state)
+        usr_overall_state = State.worst(*(result.state for result in usr_results))
+        dev_overall_state = State.worst(*(result.state for result in dev_results))
+        best_state = State.best(usr_overall_state, dev_overall_state)
 
         if usr_overall_state == best_state:
             yield usr_metric
@@ -468,6 +467,6 @@ def check_temperature(  # pylint: disable=too-many-branches
             yield dev_metric
             yield from dev_results
 
-        yield Result(state=state.OK, notice="Configuration: show least critical state")
+        yield Result(state=State.OK, notice="Configuration: show least critical state")
 
         return

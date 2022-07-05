@@ -17,9 +17,7 @@ from typing import (
     Sequence,
 )
 
-from .agent_based_api.v1 import register, Result, Service
-from .agent_based_api.v1 import State as state
-from .agent_based_api.v1 import type_defs
+from .agent_based_api.v1 import register, Result, Service, State, type_defs
 
 # <<<veritas_vcs>>>
 # ClusState        RUNNING
@@ -135,7 +133,7 @@ ClusterSection = Mapping[str, Optional[Section]]
 class ClusterNodeResults(NamedTuple):
     node_name: str
     node_state_text: str
-    node_frozen_state: state
+    node_frozen_state: State
     node_summaries: Sequence[str]
 
 
@@ -202,7 +200,15 @@ def _frozen_state_results(
         if vcs.attr.endswith("Frozen") and vcs.value != "0"
     )
     yield from (
-        Result(state=state(state_mapping.get(s, state(3))), summary=s.replace("t", "temporarily "))
+        Result(
+            state=State(
+                state_mapping.get(
+                    s,
+                    State.UNKNOWN,
+                )
+            ),
+            summary=s.replace("t", "temporarily "),
+        )
         for s in frozen_states
     )
 
@@ -227,14 +233,14 @@ def check_veritas_vcs_subsection(
     states = [vcs.value for vcs in list_vcs_tuples if vcs.attr.endswith("State")]
     state_text = veritas_vcs_boil_down_states_in_cluster(states)
     yield Result(
-        state=state(state_mapping.get(state_text, state_mapping["default"])),
+        state=State(state_mapping.get(state_text, state_mapping["default"])),
         summary=", ".join(map(lambda s: s.lower(), states)),
     )
 
     cluster_name = _cluster_name(list_vcs_tuples)
     if cluster_name is not None:
         yield Result(
-            state=state.OK,
+            state=State.OK,
             summary="cluster: %s" % cluster_name,
         )
 
@@ -253,9 +259,9 @@ def cluster_check_veritas_vcs_subsection(
 
         node_summaries = []
 
-        node_frozen_state = state.OK
+        node_frozen_state = State.OK
         if frozen_results := list(_frozen_state_results(item_subsection, params["map_frozen"])):
-            node_frozen_state = state.worst(*(f.state for f in frozen_results))
+            node_frozen_state = State.worst(*(f.state for f in frozen_results))
             node_summaries.extend([f.summary for f in frozen_results])
 
         node_state_text = veritas_vcs_boil_down_states_in_cluster(
@@ -278,8 +284,8 @@ def cluster_check_veritas_vcs_subsection(
         return
 
     state_mapping = params["map_states"]
-    cluster_state = state.worst(
-        state(
+    cluster_state = State.worst(
+        State(
             state_mapping.get(
                 veritas_vcs_boil_down_states_in_cluster([n.node_state_text for n in node_results]),
                 state_mapping["default"],
@@ -288,9 +294,9 @@ def cluster_check_veritas_vcs_subsection(
         *(n.node_frozen_state for n in node_results),
     )
 
-    if cluster_state is state.OK:
+    if cluster_state is State.OK:
         yield Result(
-            state=state.OK,
+            state=State.OK,
             summary="All nodes OK",
         )
 
@@ -301,7 +307,7 @@ def cluster_check_veritas_vcs_subsection(
 
     if cluster_name:
         yield Result(
-            state=state.OK,
+            state=State.OK,
             summary=f"cluster: {cluster_name}",
         )
 

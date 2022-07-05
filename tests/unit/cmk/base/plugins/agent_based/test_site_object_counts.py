@@ -5,8 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.plugins.agent_based import site_object_counts
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 
 SECTION: site_object_counts.Section = {
     "heute": {"Service check commands": {"lnx_if": 3, "omd_apache": 2}, "Tags": {"snmp": 1}},
@@ -37,11 +36,11 @@ def test_parse_site_object_counts() -> None:
 def test_check_site_object_counts() -> None:
     assert list(site_object_counts.check_site_object_counts(SECTION)) == [
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="[heute] Service Check Commands: 3 lnx_if, 2 omd_apache, Tags: 1 snmp",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="[stable] Service Check Commands: 1 hr_cpu, 2 omd_apache, Tags: 2 prod, 2 snmp",
         ),
         Metric("service_check_commands_lnx_if", 3.0),
@@ -52,7 +51,7 @@ def test_check_site_object_counts() -> None:
         Metric("tags_snmp", 3.0),
         Metric("tags_prod", 2.0),
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="Service Check Commands: 3 lnx_if, 4 omd_apache, 1 hr_cpu, Tags: 3 snmp, 2 prod",
             details="Service Check Commands: 3 lnx_if, 4 omd_apache, 1 hr_cpu, Tags: 3 snmp, 2 prod",
         ),
@@ -77,15 +76,15 @@ def test_cluster_check_site_object_counts() -> None:
         )
     ) == [
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="[heute/node1] Service Check Commands: 3 lnx_if, 2 omd_apache, Tags: 1 snmp",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="[stable/node1] Service Check Commands: 1 hr_cpu, 2 omd_apache, Tags: 2 prod, 2 snmp",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="[stable/node2:] Service Check Commands: 3 hr_cpu, 2 lnx_if, Tags: 2 prod, 5 tcp",
         ),
         Metric("service_check_commands_lnx_if", 5.0),
@@ -97,7 +96,7 @@ def test_cluster_check_site_object_counts() -> None:
         Metric("tags_prod", 4.0),
         Metric("tags_tcp", 5.0),
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="Service Check Commands: 5 lnx_if, 4 omd_apache, 4 hr_cpu, Tags: 3 snmp, 4 prod, 5 tcp",
             details="Service Check Commands: 5 lnx_if, 4 omd_apache, 4 hr_cpu, Tags: 3 snmp, 4 prod, 5 tcp",
         ),

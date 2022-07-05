@@ -5,8 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.plugins.agent_based import bluecat_dhcp
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 
 
 def check_bluecat_dhcp_ok():
@@ -25,11 +24,11 @@ def check_bluecat_dhcp_ok():
         )
     ) == [
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="DHCP is running normally",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="11 leases per second",
         ),
         Metric(
@@ -55,11 +54,11 @@ def check_bluecat_dhcp_crit():
         )
     ) == [
         Result(
-            state=state.CRIT,
+            state=State.CRIT,
             summary="DHCP is fault",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="1 lease per second",
         ),
         Metric(
@@ -85,11 +84,11 @@ def check_bluecat_dhcp_one_lease():
         )
     ) == [
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="DHCP is running normally",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="1 lease per second",
         ),
         Metric(
@@ -121,27 +120,27 @@ def test_cluster_check_bluecat_all_ok() -> None:
         )
     ) == [
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="[node1]: DHCP is running normally",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="[node1]: 11 leases per second",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="[node2]: DHCP is running normally",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="[node2]: 11 leases per second",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="DHCP is running normally on node2",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="11 leases per second on node2",
         ),
         Metric(
@@ -173,27 +172,27 @@ def test_cluster_check_bluecat_one_ok() -> None:
         )
     ) == [
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="[node1]: DHCP is running normally",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="[node1]: 13 leases per second",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="[node2]: DHCP is currently stopping(!)",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="[node2]: 11 leases per second",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="DHCP is running normally on node1",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="13 leases per second on node1",
         ),
         Metric(
@@ -225,23 +224,23 @@ def test_cluster_check_bluecat_none_ok() -> None:
         )
     ) == [
         Result(
-            state=state.WARN,
+            state=State.WARN,
             notice="[node1]: DHCP is running normally",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="[node1]: 0 leases per second",
         ),
         Result(
-            state=state.CRIT,
+            state=State.CRIT,
             notice="[node2]: DHCP is currently starting",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="[node2]: 1 lease per second",
         ),
         Result(
-            state=state.CRIT,
+            state=State.CRIT,
             summary="No node with OK DHCP state",
         ),
     ]

@@ -14,9 +14,9 @@ from .agent_based_api.v1 import (
     render,
     Result,
     Service,
+    State,
+    TableRow,
 )
-from .agent_based_api.v1 import State as state
-from .agent_based_api.v1 import TableRow
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
 from .utils import db, oracle
 
@@ -185,7 +185,7 @@ def check_oracle_tablespaces(  # pylint: disable=too-many-branches
         else:
             sid, ts_name = item.split(".", 1)
     except ValueError:
-        yield Result(state=state.UNKNOWN, summary="Invalid check item (must be <SID>.<tablespace>)")
+        yield Result(state=State.UNKNOWN, summary="Invalid check item (must be <SID>.<tablespace>)")
         return
 
     if sid in section["error_sids"]:
@@ -219,7 +219,7 @@ def check_oracle_tablespaces(  # pylint: disable=too-many-branches
     #          in most cases the temporary Tablespace is empty
     if tablespace["amount_missing_filenames"] > 0:
         yield Result(
-            state=state.CRIT,
+            state=State.CRIT,
             summary="%d files with missing filename in %s Tablespace, space calculation not possible"
             % (tablespace["amount_missing_filenames"], ts_type),
         )
@@ -246,11 +246,11 @@ def check_oracle_tablespaces(  # pylint: disable=too-many-branches
             True,
         )
     except oracle.DatafilesException as exc:
-        yield Result(state=state.CRIT, summary=str(exc))
+        yield Result(state=State.CRIT, summary=str(exc))
         return
 
     yield Result(
-        state=state.OK,
+        state=State.OK,
         summary="%s (%s), Size: %s, %s used (%s of max. %s), Free: %s"
         % (
             ts_status,
@@ -266,7 +266,7 @@ def check_oracle_tablespaces(  # pylint: disable=too-many-branches
     if num_extensible > 0 and db_version <= 10:
         # only display the number of remaining extents in Databases <= 10g
         yield Result(
-            state=state.OK,
+            state=State.OK,
             summary="%d increments (%s)" % (num_increments, render.bytes(increment_size)),
         )
 
@@ -291,7 +291,7 @@ def check_oracle_tablespaces(  # pylint: disable=too-many-branches
         # Check increment size, should not be set to default (1)
         if params.get("defaultincrement"):
             if uses_default_increment:
-                yield Result(state=state.WARN, summary="DEFAULT INCREMENT")
+                yield Result(state=State.WARN, summary="DEFAULT INCREMENT")
 
     # Check autoextend status if parameter not set to None
     if autoext is not None and ts_status != "READONLY":
@@ -304,13 +304,13 @@ def check_oracle_tablespaces(  # pylint: disable=too-many-branches
             autoext_info = None
 
         if autoext_info:
-            yield Result(state=state(params.get("autoextend_severity", 2)), summary=autoext_info)
+            yield Result(state=State(params.get("autoextend_severity", 2)), summary=autoext_info)
 
     elif num_extensible > 0:
-        yield Result(state=state.OK, summary="autoextend")
+        yield Result(state=State.OK, summary="autoextend")
 
     else:
-        yield Result(state=state.OK, summary="no autoextend")
+        yield Result(state=State.OK, summary="no autoextend")
 
     # Check free space, but only if status is not READONLY
     # and Tablespace-Type must be PERMANENT or TEMPORARY, when temptablespace is True
@@ -325,14 +325,14 @@ def check_oracle_tablespaces(  # pylint: disable=too-many-branches
         )
     if num_files != 1 or num_avail != 1 or num_extensible != 1:
         yield Result(
-            state=state.OK,
+            state=State.OK,
             summary="%d data files (%d avail, %d autoext)" % (num_files, num_avail, num_extensible),
         )
 
     for file_online_state, attrs in file_online_states.items():
         this_state = attrs["state"]
         yield Result(
-            state=state(this_state),
+            state=State(this_state),
             summary="Datafiles %s: %s" % (file_online_state, ", ".join(attrs["sids"])),
         )
 

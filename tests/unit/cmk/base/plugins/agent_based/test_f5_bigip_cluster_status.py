@@ -6,8 +6,7 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.f5_bigip_cluster_status import (
     check_f5_bigip_cluster_status,
     check_f5_bigip_cluster_status_v11_2,
@@ -36,10 +35,10 @@ def test_parse_f5_bigip_cluster_status(string_table, expected_parsed_data) -> No
 @pytest.mark.parametrize(
     "arg,result",
     [
-        ((def_params, 3), [Result(state=state.OK, summary="Node is active")]),
-        ((def_params, 2), [Result(state=state.OK, summary="Node is active 2")]),
-        ((def_params, 1), [Result(state=state.OK, summary="Node is active 1")]),
-        ((def_params, 0), [Result(state=state.OK, summary="Node is standby")]),
+        ((def_params, 3), [Result(state=State.OK, summary="Node is active")]),
+        ((def_params, 2), [Result(state=State.OK, summary="Node is active 2")]),
+        ((def_params, 1), [Result(state=State.OK, summary="Node is active 1")]),
+        ((def_params, 0), [Result(state=State.OK, summary="Node is standby")]),
     ],
 )
 def test_check_f5_bigip_cluster_status(arg, result) -> None:
@@ -49,7 +48,7 @@ def test_check_f5_bigip_cluster_status(arg, result) -> None:
 @pytest.mark.parametrize(
     "arg,result",
     [
-        ((def_params, 4), [Result(state=state.OK, summary="Node is active")]),
+        ((def_params, 4), [Result(state=State.OK, summary="Node is active")]),
         (
             (
                 {
@@ -58,12 +57,12 @@ def test_check_f5_bigip_cluster_status(arg, result) -> None:
                 },
                 4,
             ),
-            [Result(state=state.OK, summary="Node is active")],
+            [Result(state=State.OK, summary="Node is active")],
         ),
-        ((def_params, 3), [Result(state=state.OK, summary="Node is standby")]),
-        ((def_params, 2), [Result(state=state.CRIT, summary="Node is forced offline")]),
-        ((def_params, 1), [Result(state=state.CRIT, summary="Node is offline")]),
-        ((def_params, 0), [Result(state=state.UNKNOWN, summary="Node is unknown")]),
+        ((def_params, 3), [Result(state=State.OK, summary="Node is standby")]),
+        ((def_params, 2), [Result(state=State.CRIT, summary="Node is forced offline")]),
+        ((def_params, 1), [Result(state=State.CRIT, summary="Node is offline")]),
+        ((def_params, 0), [Result(state=State.UNKNOWN, summary="Node is unknown")]),
     ],
 )
 def test_check_f5_bigip_cluster_status_v11_2(arg, result) -> None:
@@ -76,22 +75,22 @@ def test_check_f5_bigip_cluster_status_v11_2(arg, result) -> None:
         (
             (def_params, {"node1": 3}),
             [
-                Result(state=state.OK, summary="Node [node1] is active"),
+                Result(state=State.OK, summary="Node [node1] is active"),
             ],
         ),
         (
             (def_params, {"node1": 0, "node2": 3}),
             [
-                Result(state=state.OK, summary="Node [node1] is standby"),
-                Result(state=state.OK, summary="Node [node2] is active"),
+                Result(state=State.OK, summary="Node [node1] is standby"),
+                Result(state=State.OK, summary="Node [node2] is active"),
             ],
         ),
         (
             (def_params, {"node1": 3, "node2": 3}),
             [
-                Result(state=state.CRIT, summary="More than 1 node is active: "),
-                Result(state=state.OK, summary="Node [node1] is active"),
-                Result(state=state.OK, summary="Node [node2] is active"),
+                Result(state=State.CRIT, summary="More than 1 node is active: "),
+                Result(state=State.OK, summary="Node [node1] is active"),
+                Result(state=State.OK, summary="Node [node2] is active"),
             ],
         ),
     ],
@@ -106,30 +105,30 @@ def test_cluster_check_f5_bigip_cluster_status(arg, result) -> None:
         (
             (def_params, {"node1": 4}),
             [
-                Result(state=state.OK, summary="Node [node1] is active"),
+                Result(state=State.OK, summary="Node [node1] is active"),
             ],
         ),
         (
             (def_params, {"node1": 3, "node2": 4}),
             [
-                Result(state=state.OK, summary="Node [node1] is standby"),
-                Result(state=state.OK, summary="Node [node2] is active"),
+                Result(state=State.OK, summary="Node [node1] is standby"),
+                Result(state=State.OK, summary="Node [node2] is active"),
             ],
         ),
         (
             (def_params, {"node1": 3, "node2": 3}),
             [
-                Result(state=state.CRIT, summary="No active node found: "),
-                Result(state=state.OK, summary="Node [node1] is standby"),
-                Result(state=state.OK, summary="Node [node2] is standby"),
+                Result(state=State.CRIT, summary="No active node found: "),
+                Result(state=State.OK, summary="Node [node1] is standby"),
+                Result(state=State.OK, summary="Node [node2] is standby"),
             ],
         ),
         (
             (def_params, {"node1": 4, "node2": 4}),
             [
-                Result(state=state.CRIT, summary="More than 1 node is active: "),
-                Result(state=state.OK, summary="Node [node1] is active"),
-                Result(state=state.OK, summary="Node [node2] is active"),
+                Result(state=State.CRIT, summary="More than 1 node is active: "),
+                Result(state=State.OK, summary="Node [node1] is active"),
+                Result(state=State.OK, summary="Node [node2] is active"),
             ],
         ),
     ],

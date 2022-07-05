@@ -17,8 +17,8 @@ from .agent_based_api.v1 import (
     render,
     Result,
     Service,
+    State,
 )
-from .agent_based_api.v1 import State as state
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.livestatus_status import LivestatusSection
 
@@ -145,10 +145,10 @@ def _generate_livestatus_results(  # pylint: disable=too-many-branches
     # Ignore down sites. This happens on a regular basis due to restarts
     # of the core. The availability of a site is monitored with 'omd_status'.
     if status is None:
-        yield Result(state=state(params["site_stopped"]), summary="Site is currently not running")
+        yield Result(state=State(params["site_stopped"]), summary="Site is currently not running")
         return
 
-    yield Result(state=state.OK, summary="Livestatus version: %s" % status["livestatus_version"])
+    yield Result(state=State.OK, summary="Livestatus version: %s" % status["livestatus_version"])
 
     for key, title in [
         ("host_checks", "Host checks"),
@@ -170,9 +170,9 @@ def _generate_livestatus_results(  # pylint: disable=too-many-branches
             continue
 
         if key in ("host_checks", "service_checks"):
-            yield Result(state=state.OK, summary="%s: %.1f/s" % (title, value))
+            yield Result(state=State.OK, summary="%s: %.1f/s" % (title, value))
         else:
-            yield Result(state=state.OK, notice="%s: %.1f/s" % (title, value))
+            yield Result(state=State.OK, notice="%s: %.1f/s" % (title, value))
 
         yield Metric(name=key, value=value, boundaries=(0, None))
 
@@ -232,7 +232,7 @@ def _generate_livestatus_results(  # pylint: disable=too-many-branches
     )
     # Output some general information
     yield Result(
-        state=state.OK,
+        state=State.OK,
         notice="Core version: %s" % status["program_version"].replace("Check_MK", "Checkmk"),
     )
 
@@ -250,7 +250,7 @@ def _generate_livestatus_results(  # pylint: disable=too-many-branches
     if valid_until_str:
         valid_until = int(valid_until_str)
         yield Result(
-            state=state.OK,
+            state=State.OK,
             notice="Site certificate valid until %s" % render.date(valid_until),
         )
         secs_left = valid_until - this_time
@@ -281,7 +281,7 @@ def _generate_livestatus_results(  # pylint: disable=too-many-branches
     # Check settings of enablings. Here we are quiet unless a non-OK state is found
     for settingname, title in settings:
         if status[settingname] != "1":
-            yield Result(state=state(params[settingname]), notice=title)
+            yield Result(state=State(params[settingname]), notice=title)
 
     # special considerations for enable_event_handlers
     if status["program_version"].startswith("Check_MK 1.2.6"):
@@ -295,7 +295,7 @@ def _generate_livestatus_results(  # pylint: disable=too-many-branches
         return
     if status["enable_event_handlers"] != "1":
         yield Result(
-            state=state(params["enable_event_handlers"]),
+            state=State(params["enable_event_handlers"]),
             notice="Alert handlers are disabled",
         )
 

@@ -9,8 +9,7 @@ from typing import Any, Dict
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.juniper_trpz_aps import (
     check_juniper_trpz_aps,
     cluster_check_juniper_trpz_aps,
@@ -171,7 +170,7 @@ def test_parse_juniper_trpz_aps(section, parsed_sections) -> None:
     ((1, 0), [
         Metric('ap_devices_total', 1.0),
         Metric('total_sessions', 0.0),
-        Result(state=state.OK, summary='Online access points: 1, Sessions: 0'),
+        Result(state=State.OK, summary='Online access points: 1, Sessions: 0'),
         ]),
 ])
 def test_check_juniper_trpz_aps(section, expected_results) -> None:
@@ -186,11 +185,11 @@ def test_check_juniper_trpz_aps(section, expected_results) -> None:
         "node1": (1, 2),
         "node2": (3, 4)
     }, [
-        Result(state=state.OK, summary='Total: 4 access points, Sessions: 6'),
+        Result(state=State.OK, summary='Total: 4 access points, Sessions: 6'),
         Metric('ap_devices_total', 4.0),
         Metric('total_sessions', 6.0),
-        Result(state=state.OK, summary='[node1] Online access points: 1, Sessions: 2'),
-        Result(state=state.OK, summary='[node2] Online access points: 3, Sessions: 4'),
+        Result(state=State.OK, summary='[node1] Online access points: 1, Sessions: 2'),
+        Result(state=State.OK, summary='[node2] Online access points: 3, Sessions: 4'),
     ]),
 ])
 def test_cluster_check_juniper_trpz_aps(node_sections, expected_results) -> None:
@@ -226,9 +225,9 @@ def test_discovery_juniper_trpz_aps_sessions(node_sections, expected_items) -> N
     ({
         "node1": PARSED_DATA["node1"]
     }, [
-        Result(state=state.OK, summary='[node1/n/A] Status: operational'),
-        Result(state=state.OK, summary='Radio 1: Input: 0.00 Bit/s, Output: 0.00 Bit/s, Errors: 0, Resets: 0, Retries: 0, Sessions: 0, Noise: 0 dBm'),
-        Result(state=state.OK, summary='Radio 2: Input: 0.00 Bit/s, Output: 0.00 Bit/s, Errors: 0, Resets: 0, Retries: 0, Sessions: 0, Noise: 0 dBm'),
+        Result(state=State.OK, summary='[node1/n/A] Status: operational'),
+        Result(state=State.OK, summary='Radio 1: Input: 0.00 Bit/s, Output: 0.00 Bit/s, Errors: 0, Resets: 0, Retries: 0, Sessions: 0, Noise: 0 dBm'),
+        Result(state=State.OK, summary='Radio 2: Input: 0.00 Bit/s, Output: 0.00 Bit/s, Errors: 0, Resets: 0, Retries: 0, Sessions: 0, Noise: 0 dBm'),
         Metric('if_out_unicast', 0.0),
         Metric('if_out_unicast_octets', 0.0),
         Metric('if_out_non_unicast', 0.0),
@@ -252,9 +251,9 @@ def test__check_common_juniper_trpz_aps_sessions_single(node_sections, expected_
 
 @pytest.mark.parametrize("node_sections,expected_results", [
     (PARSED_DATA, [
-        Result(state=state.OK, summary='[node2/n/A] Status: redundant'),
-        Result(state=state.OK, summary='Radio 1: Input: 0.00 Bit/s, Output: 0.00 Bit/s, Errors: 0, Resets: 0, Retries: 0, Sessions: 0, Noise: 0 dBm'),
-        Result(state=state.OK, summary='Radio 2: Input: 0.00 Bit/s, Output: 0.00 Bit/s, Errors: 0, Resets: 0, Retries: 0, Sessions: 0, Noise: 0 dBm'),
+        Result(state=State.OK, summary='[node2/n/A] Status: redundant'),
+        Result(state=State.OK, summary='Radio 1: Input: 0.00 Bit/s, Output: 0.00 Bit/s, Errors: 0, Resets: 0, Retries: 0, Sessions: 0, Noise: 0 dBm'),
+        Result(state=State.OK, summary='Radio 2: Input: 0.00 Bit/s, Output: 0.00 Bit/s, Errors: 0, Resets: 0, Retries: 0, Sessions: 0, Noise: 0 dBm'),
         Metric('if_out_unicast', 0.0),
         Metric('if_out_unicast_octets', 0.0),
         Metric('if_out_non_unicast', 0.0),

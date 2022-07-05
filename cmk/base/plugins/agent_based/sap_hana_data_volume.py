@@ -6,8 +6,14 @@
 from contextlib import suppress
 from typing import Any, Mapping
 
-from .agent_based_api.v1 import get_value_store, IgnoreResultsError, register, Result, Service
-from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import (
+    get_value_store,
+    IgnoreResultsError,
+    register,
+    Result,
+    Service,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import df, sap_hana
 
@@ -69,14 +75,14 @@ def check_sap_hana_data_volume(
 
     service = item_data.get("service")
     if service:
-        yield Result(state=state.OK, summary="Service: %s" % service)
+        yield Result(state=State.OK, summary="Service: %s" % service)
     path = item_data.get("path")
     if path:
-        yield Result(state=state.OK, summary="Path: %s" % path)
+        yield Result(state=State.OK, summary="Path: %s" % path)
 
 
 def cluster_check_sap_hana_data_volume(item, params, section):
-    yield Result(state=state.OK, summary="Nodes: %s" % ", ".join(section.keys()))
+    yield Result(state=State.OK, summary="Nodes: %s" % ", ".join(section.keys()))
     for node_section in section.values():
         if item in node_section:
             yield from check_sap_hana_data_volume(item, params, node_section)

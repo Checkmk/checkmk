@@ -6,9 +6,16 @@
 
 from typing import Any, Iterable, List, Mapping, Optional, Sequence, Tuple, TypedDict
 
-from .agent_based_api.v1 import check_levels, register, render, Result, Service, SNMPTree
-from .agent_based_api.v1 import State as state
-from .agent_based_api.v1 import type_defs
+from .agent_based_api.v1 import (
+    check_levels,
+    register,
+    render,
+    Result,
+    Service,
+    SNMPTree,
+    State,
+    type_defs,
+)
 from .utils.netscaler import SNMP_DETECT
 
 netscaler_vserver_states = {
@@ -241,7 +248,7 @@ def _check_netscaler_vservers(
     min_state = min(stat_list)
     yield from (
         Result(
-            state=state(min_state if cluster_status == "best" else vserver["service_state"][0]),
+            state=State(min_state if cluster_status == "best" else vserver["service_state"][0]),
             summary="Status: %s%s"
             % (
                 vserver["service_state"][1],
@@ -263,7 +270,7 @@ def _check_netscaler_vservers(
         )
 
     yield Result(
-        state=state.OK,
+        state=State.OK,
         summary="Type: %s, Protocol: %s, Socket: %s"
         % (
             first_vserver["entity_service_type"],

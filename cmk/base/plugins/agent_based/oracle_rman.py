@@ -6,8 +6,15 @@
 
 from typing import Any, Dict, Mapping, Optional, TypedDict
 
-from .agent_based_api.v1 import check_levels, IgnoreResultsError, register, render, Result, Service
-from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import (
+    check_levels,
+    IgnoreResultsError,
+    register,
+    render,
+    Result,
+    Service,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import oracle
 
@@ -210,7 +217,7 @@ def check_oracle_rman(
         if backupage is None:
             # backupage in agent was empty. That's only possible with really old agents.
             yield Result(
-                state=state.UNKNOWN,
+                state=State.UNKNOWN,
                 summary="Unknown backupage in check found. Please update agent.",
             )
 
@@ -225,13 +232,13 @@ def check_oracle_rman(
             )
 
         if backupscn > 0:
-            yield Result(state=state.OK, summary="Incremental SCN %i" % backupscn)
+            yield Result(state=State.OK, summary="Incremental SCN %i" % backupscn)
 
         if rman_backup["used_incr_0"]:
-            yield Result(state=state.OK, summary="Last DB_INCR_0 used")
+            yield Result(state=State.OK, summary="Last DB_INCR_0 used")
     else:
         yield Result(
-            state=state.CRIT,
+            state=State.CRIT,
             summary="no COMPLETED backup found in last 14 days (very old plugin in use?)",
         )
 

@@ -12,8 +12,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Metric,
     Result,
     Service,
+    State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 
@@ -139,7 +139,7 @@ def test_discovery() -> None:
             get_parsed_section(),
             [
                 Result(
-                    state=state.CRIT,
+                    state=State.CRIT,
                     summary="Time since last backup: 1 hour 43 minutes (warn/crit at 50 seconds/1 minute 0 seconds)",
                     details="Time since last backup: 1 hour 43 minutes (warn/crit at 50 seconds/1 minute 0 seconds)",
                 ),
@@ -152,7 +152,7 @@ def test_discovery() -> None:
             get_parsed_section(),
             [
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="Time since last backup: 1 hour 43 minutes",
                     details="Time since last backup: 1 hour 43 minutes",
                 ),
@@ -165,17 +165,17 @@ def test_discovery() -> None:
             get_parsed_section(),
             [
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="Time since last backup: 7 hours 40 minutes",
                     details="Time since last backup: 7 hours 40 minutes",
                 ),
                 Metric("age", 27600.0),
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     summary="Incremental SCN 545791334",
                     details="Incremental SCN 545791334",
                 ),
-                Result(state=state.OK, summary="Last DB_INCR_0 used"),
+                Result(state=State.OK, summary="Last DB_INCR_0 used"),
             ],
         ),
     ],
@@ -205,7 +205,7 @@ def test_cluster_check() -> None:
     yielded_results = list(oracle_rman.cluster_check_oracle_rman(item, {}, node_sections))
     assert [
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="Time since last backup: 1 minute 0 seconds",
             details="Time since last backup: 1 minute 0 seconds",
         ),

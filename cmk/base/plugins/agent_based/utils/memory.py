@@ -6,8 +6,7 @@
 
 from typing import Literal, Mapping, Optional, Tuple, TypedDict, Union
 
-from ..agent_based_api.v1 import Metric, render, Result
-from ..agent_based_api.v1 import State as state
+from ..agent_based_api.v1 import Metric, render, Result, State
 from ..agent_based_api.v1.type_defs import CheckResult
 
 _LevelsMode = Literal["abs_used", "abs_free", "perc_used", "perc_free"]
@@ -112,7 +111,7 @@ def normalize_levels(
     return warn_used, crit_used, levels_text
 
 
-def compute_state(value: float, warn: Optional[float], crit: Optional[float]) -> state:
+def compute_state(value: float, warn: Optional[float], crit: Optional[float]) -> State:
     """get state according to levels
 
     >>> print(compute_state(23., 12, 42))
@@ -120,10 +119,10 @@ def compute_state(value: float, warn: Optional[float], crit: Optional[float]) ->
 
     """
     if crit is not None and value >= crit:
-        return state.CRIT
+        return State.CRIT
     if warn is not None and value >= warn:
-        return state.WARN
-    return state.OK
+        return State.WARN
+    return State.OK
 
 
 def check_element(
@@ -178,7 +177,7 @@ def check_element(
         warn, crit, levels_text = normalize_levels(mode, warn, crit, total)
 
     my_state = compute_state(used, warn, crit)
-    if my_state != state.OK and levels_text:
+    if my_state != State.OK and levels_text:
         infotext = "%s (%s)" % (infotext, levels_text)
     yield Result(state=my_state, summary=infotext)
 

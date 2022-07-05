@@ -9,8 +9,13 @@ from typing import Any, Dict
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResults, Metric, Result, Service
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    IgnoreResults,
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.mssql_counters_cache_hits import (
     check_mssql_counters_cache_hits,
     discovery_mssql_counters_cache_hits,
@@ -353,7 +358,7 @@ def test_discovery_mssql_counters_cache_hits(params, section, expected_services)
 
 @pytest.mark.parametrize("item,section,expected_results", [
     ('MSSQL_VEEAMSQL2012:Catalog_Metadata tempdb cache_hit_ratio', big_parsed_data, [
-        Result(state=state.OK, summary='99.51%'),
+        Result(state=State.OK, summary='99.51%'),
         Metric('cache_hit_ratio', 99.50596864711571),
     ]),
 ])
@@ -376,27 +381,27 @@ def test_discovery_mssql_counters_file_sizes(section, expected_services) -> None
 
 @pytest.mark.parametrize("item,params,section,expected_results", [
     ("MSSQL_VEEAMSQL2012 tempdb", {}, big_parsed_data, [
-        Result(state=state.OK, summary='Data files: 161 MiB'),
+        Result(state=State.OK, summary='Data files: 161 MiB'),
         Metric('data_files', 168886272.0, boundaries=(0.0, None)),
-        Result(state=state.OK, summary='Log files total: 13.3 MiB'),
+        Result(state=State.OK, summary='Log files total: 13.3 MiB'),
         Metric('log_files', 13950976.0, boundaries=(0.0, None)),
-        Result(state=state.OK, summary='Log files used: 629 KiB'),
+        Result(state=State.OK, summary='Log files used: 629 KiB'),
         Metric('log_files_used', 644096.0, boundaries=(0.0, None)),
     ]),
     ("MSSQL_VEEAMSQL2012 tempdb", {'log_files_used': (12555878, 13253427),}, big_parsed_data, [
-        Result(state=state.OK, summary='Data files: 161 MiB'),
+        Result(state=State.OK, summary='Data files: 161 MiB'),
         Metric('data_files', 168886272.0, boundaries=(0.0, None)),
-        Result(state=state.OK, summary='Log files total: 13.3 MiB'),
+        Result(state=State.OK, summary='Log files total: 13.3 MiB'),
         Metric('log_files', 13950976.0, boundaries=(0.0, None)),
-        Result(state=state.OK, summary='Log files used: 629 KiB'),
+        Result(state=State.OK, summary='Log files used: 629 KiB'),
         Metric('log_files_used', 644096.0, levels=(12555878.0, 13253427.0), boundaries=(0.0, None)),
     ]),
     ("MSSQL_VEEAMSQL2012 tempdb", {'log_files_used': (90.0, 95.0),}, big_parsed_data, [
-        Result(state=state.OK, summary='Data files: 161 MiB'),
+        Result(state=State.OK, summary='Data files: 161 MiB'),
         Metric('data_files', 168886272.0, boundaries=(0.0, None)),
-        Result(state=state.OK, summary='Log files total: 13.3 MiB'),
+        Result(state=State.OK, summary='Log files total: 13.3 MiB'),
         Metric('log_files', 13950976.0, boundaries=(0.0, None)),
-        Result(state=state.OK, summary='Log files used: 4.62%'),
+        Result(state=State.OK, summary='Log files used: 4.62%'),
         Metric('log_files_used', 644096.0, levels=(12555878.4, 13253427.2), boundaries=(0.0, None)),
     ]),
 ])
@@ -422,7 +427,7 @@ def test_discovery_mssql_counters_locks_per_batch(section, expected_services) ->
 @pytest.mark.parametrize("item,params,section,expected_results", [
     ("MSSQL_VEEAMSQL2012", {}, big_parsed_data, [
         IgnoreResults(value="Cannot calculate rates yet"),
-        Result(state=state.OK, summary='0.0'),
+        Result(state=State.OK, summary='0.0'),
         Metric('locks_per_batch', 0.0, boundaries=(0.0, None)),
     ]),
 ])
@@ -455,13 +460,13 @@ def test_discovery_mssql_counters_locks(section, expected_services) -> None:
         IgnoreResults(value="Cannot calculate rates yet"),
         IgnoreResults(value="Cannot calculate rates yet"),
         IgnoreResults(value="Cannot calculate rates yet"),
-        Result(state=state.OK, summary='Requests: 0.0/s'),
+        Result(state=State.OK, summary='Requests: 0.0/s'),
         Metric('lock_requests_per_second', 0.0, boundaries=(0.0, None)),
-        Result(state=state.OK, summary='Timeouts: 0.0/s'),
+        Result(state=State.OK, summary='Timeouts: 0.0/s'),
         Metric('lock_timeouts_per_second', 0.0, boundaries=(0.0, None)),
-        Result(state=state.OK, summary='Deadlocks: 0.0/s'),
+        Result(state=State.OK, summary='Deadlocks: 0.0/s'),
         Metric('number_of_deadlocks_per_second', 0.0, boundaries=(0.0, None)),
-        Result(state=state.OK, summary='Waits: 0.0/s'),
+        Result(state=State.OK, summary='Waits: 0.0/s'),
         Metric('lock_waits_per_second', 0.0, boundaries=(0.0, None))
     ]),
 ])
@@ -492,9 +497,9 @@ def test_discovery_mssql_counters_pageactivity(section, expected_services) -> No
     ("MSSQL_VEEAMSQL2012:Buffer_Manager None", {}, big_parsed_data, [
         IgnoreResults(value="Cannot calculate rates yet"),
         IgnoreResults(value="Cannot calculate rates yet"),
-        Result(state=state.OK, summary='Writes: 0.0/s'),
+        Result(state=State.OK, summary='Writes: 0.0/s'),
         Metric('page_writes_per_second', 0.0, boundaries=(0.0, None)),
-        Result(state=state.OK, summary='Lookups: 0.0/s'),
+        Result(state=State.OK, summary='Lookups: 0.0/s'),
         Metric('page_lookups_per_second', 0.0, boundaries=(0.0, None)),
     ]),
 ])
@@ -526,7 +531,7 @@ def test_discovery_mssql_counters_sqlstats(section, expected_services) -> None:
 @pytest.mark.parametrize("item,params,section,expected_results", [
     ("MSSQL_VEEAMSQL2012:SQL_Statistics None sql_compilations/sec", {}, big_parsed_data, [
         IgnoreResults(value="Cannot calculate rates yet"),
-        Result(state=state.OK, summary='0.0/s'),
+        Result(state=State.OK, summary='0.0/s'),
         Metric('sql_compilations_per_second', 0.0, boundaries=(0.0, None)),
     ]),
 ])
@@ -558,11 +563,11 @@ def test_discovery_mssql_counters_transactions(section, expected_services) -> No
         IgnoreResults(value="Cannot calculate rates yet"),
         IgnoreResults(value="Cannot calculate rates yet"),
         IgnoreResults(value="Cannot calculate rates yet"),
-        Result(state=state.OK, summary='Transactions: 0.0/s'),
+        Result(state=State.OK, summary='Transactions: 0.0/s'),
         Metric('transactions_per_second', 0.0, boundaries=(0.0, None)),
-        Result(state=state.OK, summary='Write Transactions: 0.0/s'),
+        Result(state=State.OK, summary='Write Transactions: 0.0/s'),
         Metric('write_transactions_per_second', 0.0, boundaries=(0.0, None)),
-        Result(state=state.OK, summary='Tracked Transactions: 0.0/s'),
+        Result(state=State.OK, summary='Tracked Transactions: 0.0/s'),
         Metric('tracked_transactions_per_second', 0.0, boundaries=(0.0, None)),
     ]),
 ])

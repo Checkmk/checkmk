@@ -28,8 +28,8 @@ from .agent_based_api.v1 import (
     Service,
     SNMPTree,
     startswith,
+    State,
 )
-from .agent_based_api.v1 import State as state
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 RadioCounters = List[float]
@@ -50,15 +50,15 @@ ApDict = Dict[str, ApInfo]
 Section = Tuple[ApDict, RadioDict]
 
 AP_STATES = {
-    "1": (state.CRIT, "cleared"),
-    "2": (state.WARN, "init"),
-    "3": (state.CRIT, "boot started"),
-    "4": (state.CRIT, "image downloaded"),
-    "5": (state.CRIT, "connect failed"),
-    "6": (state.WARN, "configuring"),
-    "7": (state.OK, "operational"),
-    "10": (state.OK, "redundant"),
-    "20": (state.CRIT, "conn outage"),
+    "1": (State.CRIT, "cleared"),
+    "2": (State.WARN, "init"),
+    "3": (State.CRIT, "boot started"),
+    "4": (State.CRIT, "image downloaded"),
+    "5": (State.CRIT, "connect failed"),
+    "6": (State.WARN, "configuring"),
+    "7": (State.OK, "operational"),
+    "10": (State.OK, "redundant"),
+    "20": (State.CRIT, "conn outage"),
 }
 
 
@@ -154,7 +154,7 @@ def _check_common_juniper_trpz_aps_sessions(
     Metric('noise_floor', 0.0)
     """
     if all(item not in node_aps for node_aps, _ in section.values()):
-        yield Result(state=state.WARN, summary="Access point not reachable")
+        yield Result(state=State.WARN, summary="Access point not reachable")
         return
 
     item_status, item_active_node, item_passive_node, item_radios = "", "n/A", "n/A", {}
@@ -169,7 +169,7 @@ def _check_common_juniper_trpz_aps_sessions(
         else:
             item_passive_node = node_name
 
-    state_code, state_string = AP_STATES.get(item_status, (state.UNKNOWN, "unknown"))
+    state_code, state_string = AP_STATES.get(item_status, (State.UNKNOWN, "unknown"))
     yield Result(
         state=state_code,
         summary="%sStatus: %s"
@@ -201,7 +201,7 @@ def _check_common_juniper_trpz_aps_sessions(
                 ap_rates[nr] += radio_rate
 
         yield Result(
-            state=state.OK,
+            state=State.OK,
             summary="Radio %s: %s"
             % (
                 radio_number,

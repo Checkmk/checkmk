@@ -8,9 +8,7 @@ import time
 from enum import Enum
 from typing import Mapping, NamedTuple, Tuple, TypedDict
 
-from .agent_based_api.v1 import check_levels, register, render, Result, Service
-from .agent_based_api.v1 import State as state
-from .agent_based_api.v1 import type_defs
+from .agent_based_api.v1 import check_levels, register, render, Result, Service, State, type_defs
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 
@@ -27,11 +25,11 @@ class CDPJob(NamedTuple):
     state: CDPState
 
 
-STATE_MAPPING: Mapping[CDPState, state] = {
-    CDPState.RUNNING: state.OK,
-    CDPState.FAILED: state.CRIT,
-    CDPState.STOPPED: state.CRIT,
-    CDPState.UNKNOWN: state.UNKNOWN,
+STATE_MAPPING: Mapping[CDPState, State] = {
+    CDPState.RUNNING: State.OK,
+    CDPState.FAILED: State.CRIT,
+    CDPState.STOPPED: State.CRIT,
+    CDPState.UNKNOWN: State.UNKNOWN,
 }
 
 Section = Mapping[str, CDPJob]
@@ -64,7 +62,7 @@ def check_veeam_cdp_jobs(item: str, params: CheckParams, section: Section) -> Ch
         return
 
     yield Result(
-        state=STATE_MAPPING.get(cdp.state, state.UNKNOWN),
+        state=STATE_MAPPING.get(cdp.state, State.UNKNOWN),
         summary=f"State: {cdp.state.value}",
     )
     yield from check_levels(

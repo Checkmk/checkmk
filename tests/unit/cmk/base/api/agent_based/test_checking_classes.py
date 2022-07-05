@@ -13,8 +13,8 @@ from cmk.base.api.agent_based.checking_classes import (
     Result,
     Service,
     ServiceLabel,
+    State,
 )
-from cmk.base.api.agent_based.checking_classes import State as state
 from cmk.base.api.agent_based.type_defs import Parameters
 
 
@@ -113,49 +113,49 @@ def test_service_features() -> None:
 
 
 def test_state() -> None:
-    assert int(state.OK) == 0
-    assert int(state.WARN) == 1
-    assert int(state.CRIT) == 2
-    assert int(state.UNKNOWN) == 3
+    assert int(State.OK) == 0
+    assert int(State.WARN) == 1
+    assert int(State.CRIT) == 2
+    assert int(State.UNKNOWN) == 3
 
-    assert state.worst(state.WARN, state.UNKNOWN, state.CRIT) is state.CRIT
-    assert state.worst(state.OK, state.WARN, state.UNKNOWN) is state.UNKNOWN
-    assert state.worst(state.OK, state.WARN) is state.WARN
-    assert state.worst(state.OK) is state.OK
-    assert state.worst(state.OK, 3) is state.UNKNOWN
+    assert State.worst(State.WARN, State.UNKNOWN, State.CRIT) is State.CRIT
+    assert State.worst(State.OK, State.WARN, State.UNKNOWN) is State.UNKNOWN
+    assert State.worst(State.OK, State.WARN) is State.WARN
+    assert State.worst(State.OK) is State.OK
+    assert State.worst(State.OK, 3) is State.UNKNOWN
 
-    assert state(0) is state.OK
-    assert state(1) is state.WARN
-    assert state(2) is state.CRIT
-    assert state(3) is state.UNKNOWN
+    assert State(0) is State.OK
+    assert State(1) is State.WARN
+    assert State(2) is State.CRIT
+    assert State(3) is State.UNKNOWN
 
-    assert state["OK"] is state.OK
-    assert state["WARN"] is state.WARN
-    assert state["CRIT"] is state.CRIT
-    assert state["UNKNOWN"] is state.UNKNOWN
+    assert State["OK"] is State.OK
+    assert State["WARN"] is State.WARN
+    assert State["CRIT"] is State.CRIT
+    assert State["UNKNOWN"] is State.UNKNOWN
 
     with pytest.raises(TypeError):
-        _ = state.OK < state.WARN  # type: ignore[operator]
+        _ = State.OK < State.WARN  # type: ignore[operator]
 
 
 @pytest.mark.parametrize(
     "states, best_state",
     [
-        ((state.OK,), state.OK),
-        ((state.OK, state.WARN), state.OK),
-        ((state.OK, state.WARN, state.UNKNOWN), state.OK),
-        ((state.OK, state.WARN, state.UNKNOWN, state.CRIT), state.OK),
-        ((state.WARN,), state.WARN),
-        ((state.WARN, state.UNKNOWN), state.WARN),
-        ((state.WARN, state.UNKNOWN, state.CRIT), state.WARN),
-        ((state.UNKNOWN,), state.UNKNOWN),
-        ((state.UNKNOWN, state.CRIT), state.UNKNOWN),
-        ((state.CRIT,), state.CRIT),
-        ((0, 1, 2, 3, state.UNKNOWN), state.OK),
+        ((State.OK,), State.OK),
+        ((State.OK, State.WARN), State.OK),
+        ((State.OK, State.WARN, State.UNKNOWN), State.OK),
+        ((State.OK, State.WARN, State.UNKNOWN, State.CRIT), State.OK),
+        ((State.WARN,), State.WARN),
+        ((State.WARN, State.UNKNOWN), State.WARN),
+        ((State.WARN, State.UNKNOWN, State.CRIT), State.WARN),
+        ((State.UNKNOWN,), State.UNKNOWN),
+        ((State.UNKNOWN, State.CRIT), State.UNKNOWN),
+        ((State.CRIT,), State.CRIT),
+        ((0, 1, 2, 3, State.UNKNOWN), State.OK),
     ],
 )
 def test_best_state(states, best_state) -> None:  # type:ignore[no-untyped-def]
-    assert state.best(*states) is best_state
+    assert State.best(*states) is best_state
 
 
 def test_metric_kwarg() -> None:
@@ -195,12 +195,12 @@ def test_metric() -> None:
     "state_, summary, notice, details",
     [
         (8, "foo", None, None),
-        (state.OK, b"foo", None, None),
-        (state.OK, "newline is a \no-no", None, None),
-        (state.OK, "", "", "details"),  # either is required
-        (state.OK, None, None, "details"),  # either is required
-        (state.OK, "these are", "mutually exclusive", None),
-        (state.OK, "summary", None, {"at the moment": "impossible", "someday": "maybe"}),
+        (State.OK, b"foo", None, None),
+        (State.OK, "newline is a \no-no", None, None),
+        (State.OK, "", "", "details"),  # either is required
+        (State.OK, None, None, "details"),  # either is required
+        (State.OK, "these are", "mutually exclusive", None),
+        (State.OK, "summary", None, {"at the moment": "impossible", "someday": "maybe"}),
     ],
 )
 def test_result_invalid(state_, summary, notice, details) -> None:  # type:ignore[no-untyped-def]
@@ -216,22 +216,22 @@ def test_result_invalid(state_, summary, notice, details) -> None:  # type:ignor
 @pytest.mark.parametrize(
     "state_, summary, notice, details, expected_triple",
     [
-        (state.OK, "summary", None, "details", (state.OK, "summary", "details")),
-        (state.OK, "summary", None, None, (state.OK, "summary", "summary")),
-        (state.OK, None, "notice", "details", (state.OK, "", "details")),
-        (state.OK, None, "notice", None, (state.OK, "", "notice")),
-        (state.WARN, "summary", None, "details", (state.WARN, "summary", "details")),
-        (state.WARN, "summary", None, None, (state.WARN, "summary", "summary")),
-        (state.WARN, None, "notice", "details", (state.WARN, "notice", "details")),
-        (state.WARN, None, "notice", None, (state.WARN, "notice", "notice")),
+        (State.OK, "summary", None, "details", (State.OK, "summary", "details")),
+        (State.OK, "summary", None, None, (State.OK, "summary", "summary")),
+        (State.OK, None, "notice", "details", (State.OK, "", "details")),
+        (State.OK, None, "notice", None, (State.OK, "", "notice")),
+        (State.WARN, "summary", None, "details", (State.WARN, "summary", "details")),
+        (State.WARN, "summary", None, None, (State.WARN, "summary", "summary")),
+        (State.WARN, None, "notice", "details", (State.WARN, "notice", "details")),
+        (State.WARN, None, "notice", None, (State.WARN, "notice", "notice")),
     ],
 )
 def test_result(
-    state_: state,
+    state_: State,
     summary: Optional[str],
     notice: Optional[str],
     details: Optional[str],
-    expected_triple: Tuple[state, str, str],
+    expected_triple: Tuple[State, str, str],
 ) -> None:
     result = Result(
         state=state_,

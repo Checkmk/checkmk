@@ -14,8 +14,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Metric,
     Result,
     Service,
+    State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.liebert_temp_air import (
     _check_liebert_temp_air,
@@ -94,9 +94,9 @@ def test_discover_liebert_temp_air(section, extra_section, result) -> None:
             PARSED_EXTRA_SECTION,
             [
                 Metric(name="temp", value=42.0, levels=(50.0, 55.0)),
-                Result(state=state.OK, summary="Temperature: 42.0°C"),
+                Result(state=State.OK, summary="Temperature: 42.0°C"),
                 Result(
-                    state=state.OK,
+                    state=State.OK,
                     notice="Configuration: prefer user levels over device levels (used user levels)",
                 ),
             ],
@@ -110,7 +110,7 @@ def test_discover_liebert_temp_air(section, extra_section, result) -> None:
             PARSED_SECTION,
             PARSED_EXTRA_SECTION,
             [
-                Result(state=state.OK, summary="Unit is in standby (unavailable)"),
+                Result(state=State.OK, summary="Unit is in standby (unavailable)"),
             ],
         ),
     ],
@@ -152,10 +152,10 @@ def test_check_liebert_temp_air_trend() -> None:
 
     assert result == [
         Metric("temp", 4.444444444444445, levels=(50.0, 55.0)),
-        Result(state=state.CRIT, summary="Temperature: 4.4°C (warn/crit below 10°C/15°C)"),
-        Result(state=state.OK, summary="Temperature trend: +5.6°C per 60 min"),
+        Result(state=State.CRIT, summary="Temperature: 4.4°C (warn/crit below 10°C/15°C)"),
+        Result(state=State.OK, summary="Temperature trend: +5.6°C per 60 min"),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="Configuration: prefer user levels over device levels (used user levels)",
         ),
     ]

@@ -8,8 +8,7 @@
 
 from typing import List, Mapping, Optional
 
-from .agent_based_api.v1 import all_of, register, Result, Service, SNMPTree
-from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import all_of, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.f5_bigip import (
     F5_BIGIP,
@@ -56,7 +55,7 @@ def _node_result(
     state_mapping_from_params = {int(k): v for k, v in params.get("v11_2_states", {}).items()}
     state_mapping = {**{0: 3, 1: 2, 2: 2, 3: 0, 4: 0}, **state_mapping_from_params}
     return Result(
-        state=state(state_mapping[node_state] if is_gt_v11_2 else 0),
+        state=State(state_mapping[node_state] if is_gt_v11_2 else 0),
         summary="Node %sis %s"
         % (
             ("[%s] " % node_name) if node_name else "",
@@ -91,11 +90,11 @@ def _cluster_check_f5_bigip_cluster_status_common(
     num_active_nodes = sum(x == STATE_NAMES[is_gt_v11_2].index("active") for x in section.values())
 
     if params["type"] == "active_standby" and num_active_nodes > 1:
-        yield Result(state=state.CRIT, summary="More than 1 node is active: ")
+        yield Result(state=State.CRIT, summary="More than 1 node is active: ")
 
     # Only applies if this check runs on a cluster
     elif num_active_nodes == 0 and len(section) > 1:
-        yield Result(state=state.CRIT, summary="No active node found: ")
+        yield Result(state=State.CRIT, summary="No active node found: ")
 
     for node_name, node_state in sorted(section.items()):
         if node_state is not None:

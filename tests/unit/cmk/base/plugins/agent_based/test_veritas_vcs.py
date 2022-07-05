@@ -7,8 +7,7 @@
 import pytest
 
 from cmk.base.plugins.agent_based import veritas_vcs
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.veritas_vcs import Vcs
 
 STRING_TABLE = [
@@ -325,7 +324,7 @@ PARAMS = {
 def test_check_veritas_vcs() -> None:
     assert list(veritas_vcs.check_veritas_vcs("minions", PARAMS, SECTION)) == [
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="running",
         ),
     ]
@@ -334,11 +333,11 @@ def test_check_veritas_vcs() -> None:
 def test_check_veritas_vcs_system() -> None:
     assert list(veritas_vcs.check_veritas_vcs_system("stuart", PARAMS, SECTION)) == [
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="running",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="cluster: minions",
         ),
     ]
@@ -347,15 +346,15 @@ def test_check_veritas_vcs_system() -> None:
 def test_check_veritas_vcs_group() -> None:
     assert list(veritas_vcs.check_veritas_vcs_group("nepharius", PARAMS, SECTION_HASHES,)) == [
         Result(
-            state=state.WARN,
+            state=State.WARN,
             summary="temporarily frozen",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="online",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="cluster: c7dbacpt",
         ),
     ]
@@ -364,11 +363,11 @@ def test_check_veritas_vcs_group() -> None:
 def test_check_veritas_vcs_resource() -> None:
     assert list(veritas_vcs.check_veritas_vcs_resource("bob3-dg", PARAMS, SECTION,)) == [
         Result(
-            state=state.WARN,
+            state=State.WARN,
             summary="offline",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="cluster: minions",
         ),
     ]
@@ -386,11 +385,11 @@ def test_cluster_check_veritas_vcs() -> None:
         )
     ) == [
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="All nodes OK",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="[node1]: running",
         ),
     ]
@@ -408,15 +407,15 @@ def test_cluster_check_veritas_vcs_system() -> None:
         )
     ) == [
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="All nodes OK",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="[node1]: running, [node2]: running",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="cluster: c7dbacpt",
         ),
     ]
@@ -435,11 +434,11 @@ def test_cluster_check_veritas_vcs_group() -> None:
         )
     ) == [
         Result(
-            state=state.CRIT,
+            state=State.CRIT,
             notice="[node1]: online, [node2]: frozen, online",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="cluster: c7dbacpt",
         ),
     ]
@@ -462,13 +461,13 @@ def test_cluster_check_veritas_vcs_resource() -> None:
             },
         )
     ) == [
-        Result(state=state.OK, summary="All nodes OK"),
+        Result(state=State.OK, summary="All nodes OK"),
         Result(
-            state=state.OK,
+            state=State.OK,
             notice="[node1]: offline, [node2]: online, [node3]: offline",
         ),
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="cluster: minions",
         ),
     ]
@@ -505,8 +504,8 @@ def test_cluster_check_veritas_vcs_resource() -> None:
                 },
             },
             [
-                Result(state=state.OK, summary="All nodes OK"),
-                Result(state=state.OK, notice="[node1]: running, [node2]: running"),
+                Result(state=State.OK, summary="All nodes OK"),
+                Result(state=State.OK, notice="[node1]: running, [node2]: running"),
             ],
             id="State is OK when all nodes have state RUNNING",
         ),
@@ -520,8 +519,8 @@ def test_cluster_check_veritas_vcs_resource() -> None:
                 },
             },
             [
-                Result(state=state.OK, summary="All nodes OK"),
-                Result(state=state.OK, notice="[node1]: running, [node2]: offline"),
+                Result(state=State.OK, summary="All nodes OK"),
+                Result(state=State.OK, notice="[node1]: running, [node2]: offline"),
             ],
             id="State is WARN when at least one node has state RUNNING, and others are OFFLINE",
         ),
@@ -535,7 +534,7 @@ def test_cluster_check_veritas_vcs_resource() -> None:
                 },
             },
             [
-                Result(state=state.WARN, summary="[node1]: offline, [node2]: offline"),
+                Result(state=State.WARN, summary="[node1]: offline, [node2]: offline"),
             ],
             id="State is WARN when all nodes are OFFLINE",
         ),
@@ -549,7 +548,7 @@ def test_cluster_check_veritas_vcs_resource() -> None:
                 },
             },
             [
-                Result(state=state.CRIT, summary="[node1]: faulted, [node2]: running"),
+                Result(state=State.CRIT, summary="[node1]: faulted, [node2]: running"),
             ],
             id="State is CRIT when at least one node has state FAULTED, and others are RUNNING",
         ),
@@ -563,7 +562,7 @@ def test_cluster_check_veritas_vcs_resource() -> None:
                 },
             },
             [
-                Result(state=state.CRIT, summary="[node1]: faulted, [node2]: offline"),
+                Result(state=State.CRIT, summary="[node1]: faulted, [node2]: offline"),
             ],
             id="State is CRIT when at least one node has state FAULTED, and others are OFFLINE",
         ),

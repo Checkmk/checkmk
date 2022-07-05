@@ -6,8 +6,7 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.cisco_mem_asa import (
     _idem_check_cisco_mem,
     discovery_cisco_mem,
@@ -100,7 +99,7 @@ def test_discovery_cisco_mem(string_table, expected_parsed_data) -> None:
                 },
             },
             (
-                Result(state=state.OK, summary="Usage: 53.17% - 409 MiB of 770 MiB"),
+                Result(state=State.OK, summary="Usage: 53.17% - 409 MiB of 770 MiB"),
                 Metric("mem_used_percent", 53.16899356888102, boundaries=(0.0, None)),
             ),
         ),

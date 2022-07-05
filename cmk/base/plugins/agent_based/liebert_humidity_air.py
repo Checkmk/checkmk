@@ -14,8 +14,7 @@
 
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 
-from .agent_based_api.v1 import check_levels, register, Result, Service, SNMPTree
-from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import check_levels, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.liebert import DETECT_LIEBERT, parse_liebert
 
@@ -74,7 +73,7 @@ def check_liebert_humidity_air(
 
     device_state = section_liebert_system.get("Unit Operating State")
     if "Unavailable" in value and device_state == "standby":
-        yield Result(state=state.OK, summary="Unit is in standby (unavailable)")
+        yield Result(state=State.OK, summary="Unit is in standby (unavailable)")
         return
 
     try:

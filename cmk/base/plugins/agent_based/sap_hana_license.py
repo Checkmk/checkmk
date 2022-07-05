@@ -6,8 +6,15 @@
 
 from typing import Any, Dict, Mapping, NamedTuple, Optional, Union
 
-from .agent_based_api.v1 import check_levels, IgnoreResultsError, register, render, Result, Service
-from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import (
+    check_levels,
+    IgnoreResultsError,
+    register,
+    render,
+    Result,
+    Service,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import sap_hana
 
@@ -79,23 +86,23 @@ def check_sap_hana_license(
     if enforced.bool:
         yield from _check_product_usage(data["size"], data["limit"], params)
     elif enforced.bool is None:
-        yield Result(state=state.UNKNOWN, summary="Status: unknown[%s]" % enforced.value)
+        yield Result(state=State.UNKNOWN, summary="Status: unknown[%s]" % enforced.value)
     else:
-        yield Result(state=state.OK, summary="Status: unlimited")
+        yield Result(state=State.OK, summary="Status: unlimited")
 
     permanent = data["permanent"]
     if permanent.bool:
-        yield Result(state=state.OK, summary="License: %s" % permanent.value)
+        yield Result(state=State.OK, summary="License: %s" % permanent.value)
     else:
-        yield Result(state=state.WARN, summary="License: not %s" % permanent.value)
+        yield Result(state=State.WARN, summary="License: not %s" % permanent.value)
 
     valid = data["valid"]
     if not valid.bool:
-        yield Result(state=state.WARN, summary="not %s" % valid.value)
+        yield Result(state=State.WARN, summary="not %s" % valid.value)
 
     expiration_date = data["expiration_date"]
     if expiration_date != "?":
-        yield Result(state=state.WARN, summary="Expiration date: %s" % expiration_date)
+        yield Result(state=State.WARN, summary="Expiration date: %s" % expiration_date)
 
 
 def _check_product_usage(size, limit, params):
@@ -110,7 +117,7 @@ def _check_product_usage(size, limit, params):
     try:
         usage_perc = 100.0 * size / limit
     except ZeroDivisionError:
-        yield Result(state=state.WARN, summary="Usage: cannot calculate")
+        yield Result(state=State.WARN, summary="Usage: cannot calculate")
     else:
         yield from check_levels(
             usage_perc,
@@ -124,7 +131,7 @@ def _check_product_usage(size, limit, params):
 def cluster_check_sap_hana_license(
     item: str, params: Mapping[str, Any], section: Mapping[str, Optional[sap_hana.ParsedSection]]
 ) -> CheckResult:
-    yield Result(state=state.OK, summary="Nodes: %s" % ", ".join(section.keys()))
+    yield Result(state=State.OK, summary="Nodes: %s" % ", ".join(section.keys()))
     for node_section in section.values():
         if node_section is not None and item in node_section:
             yield from check_sap_hana_license(item, params, node_section)

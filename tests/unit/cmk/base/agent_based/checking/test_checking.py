@@ -15,8 +15,7 @@ from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSe
 from cmk.utils.type_defs import LegacyCheckParameters
 
 import cmk.base.agent_based.checking as checking
-from cmk.base.api.agent_based.checking_classes import Metric, Result
-from cmk.base.api.agent_based.checking_classes import State as state
+from cmk.base.api.agent_based.checking_classes import Metric, Result, State
 
 
 def make_timespecific_params_list(
@@ -197,20 +196,20 @@ def test_time_resolved_check_parameters(
         ([], ServiceCheckResult.item_not_found()),
         (
             [
-                Result(state=state.OK, notice="details"),
+                Result(state=State.OK, notice="details"),
             ],
             ServiceCheckResult(0, "Everything looks OK - 1 detail available\ndetails", []),
         ),
         (
             [
-                Result(state=state.OK, summary="summary1", details="detailed info1"),
-                Result(state=state.WARN, summary="summary2", details="detailed info2"),
+                Result(state=State.OK, summary="summary1", details="detailed info1"),
+                Result(state=State.WARN, summary="summary2", details="detailed info2"),
             ],
             ServiceCheckResult(1, "summary1, summary2(!)\ndetailed info1\ndetailed info2(!)", []),
         ),
         (
             [
-                Result(state=state.OK, summary="summary"),
+                Result(state=State.OK, summary="summary"),
                 Metric(name="name", value=42),
             ],
             ServiceCheckResult(0, "summary\nsummary", [("name", 42.0, None, None, None, None)]),

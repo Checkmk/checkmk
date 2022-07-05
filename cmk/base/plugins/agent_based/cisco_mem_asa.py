@@ -39,8 +39,8 @@ from .agent_based_api.v1 import (
     Service,
     SNMPTree,
     startswith,
+    State,
 )
-from .agent_based_api.v1 import State as state
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.memory import check_element, get_levels_mode_from_value
 from .utils.size_trend import size_trend
@@ -196,7 +196,7 @@ def check_cisco_mem_sub(
 ) -> CheckResult:
     if not mem_total:
         yield Result(
-            state=state.UNKNOWN,
+            state=State.UNKNOWN,
             summary="Cannot calculate memory usage: Device reports total memory 0",
         )
         return

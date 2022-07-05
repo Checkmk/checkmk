@@ -23,8 +23,7 @@ OVERALL 2
 
 from typing import Any, Dict, Mapping, Optional
 
-from .agent_based_api.v1 import register, Result, Service
-from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 Section = Dict[str, Dict[str, Any]]
@@ -120,18 +119,18 @@ def _check_omd_status(
     Result(state=<State.OK: 0>, summary='running')
     """
     if "overall" not in site_services:
-        yield Result(state=state.CRIT, summary="defective installation")
+        yield Result(state=State.CRIT, summary="defective installation")
     elif site_services["overall"] == "running":
-        yield Result(state=state.OK, summary="running")
+        yield Result(state=State.OK, summary="running")
     elif site_services["overall"] == "stopped":
         # stopped sites are only CRIT when all are stopped
         yield Result(
-            state=(state.OK if others_running else state.CRIT), summary="stopped%s" % extra_text
+            state=(State.OK if others_running else State.CRIT), summary="stopped%s" % extra_text
         )
     else:
         # partially running sites are always CRIT
         yield Result(
-            state=state.CRIT,
+            state=State.CRIT,
             summary="partially running, stopped services: %s"
             % (", ".join(site_services["stopped"])),
         )

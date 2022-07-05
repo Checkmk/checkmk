@@ -35,8 +35,7 @@ False
 
 from typing import Any, Dict, List, Mapping, Optional
 
-from .agent_based_api.v1 import any_of, equals, register, Result, Service, SNMPTree
-from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import any_of, equals, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.cisco_wlc import CISCO_WLC_OIDS
 
@@ -57,9 +56,9 @@ _DETECT_SPEC = any_of(*(equals(_OID_sysObjectID, device_id) for device_id in _DE
 
 
 map_states = {
-    "1": (state.OK, "online"),
-    "2": (state.CRIT, "critical"),
-    "3": (state.WARN, "warning"),
+    "1": (State.OK, "online"),
+    "2": (State.CRIT, "critical"),
+    "3": (State.WARN, "warning"),
 }
 
 
@@ -84,11 +83,11 @@ def _node_not_found(item: str, params: Mapping[str, Any]) -> Result:
     for ap_name, ap_state in params.get("ap_name", []):
         if item.startswith(ap_name):
             return Result(state=ap_state, summary=infotext)
-    return Result(state=state.CRIT, summary=infotext)
+    return Result(state=State.CRIT, summary=infotext)
 
 
 def _ap_info(node: Optional[str], wlc_status: str) -> Result:
-    status, state_readable = map_states.get(wlc_status, (state.UNKNOWN, "unknown[%s]" % wlc_status))
+    status, state_readable = map_states.get(wlc_status, (State.UNKNOWN, "unknown[%s]" % wlc_status))
     return Result(
         state=status,
         summary="Accesspoint: %s%s"

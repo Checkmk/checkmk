@@ -15,9 +15,9 @@ from .agent_based_api.v1 import (
     Service,
     SNMPTree,
     startswith,
+    State,
+    type_defs,
 )
-from .agent_based_api.v1 import State as state
-from .agent_based_api.v1 import type_defs
 from .utils import interfaces, temperature
 
 # .1.3.6.1.4.1.1991.1.1.3.3.6.1.1.1  41.4960 C: Normal
@@ -351,7 +351,7 @@ def _check_light(
         ),
         "dBm",
     )
-    mon_state = state(_monitoring_state(reading, params.get(metric_name, False)))
+    mon_state = State(_monitoring_state(reading, params.get(metric_name, False)))
     if lane_num is None:
         yield Result(
             state=mon_state,
@@ -388,12 +388,12 @@ def check_brocade_optical(
     oper_status_readable = OPER_STATUS_MAP.get(oper_status, "unknown[%s]" % oper_status)
     if add_info:
         yield Result(
-            state=state.OK,
+            state=State.OK,
             summary="[%s] Operational %s" % (", ".join(add_info), oper_status_readable),
         )
     else:
         yield Result(
-            state=state.OK,
+            state=State.OK,
             summary="Operational %s" % oper_status_readable,
         )
 

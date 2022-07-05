@@ -6,9 +6,16 @@
 
 from typing import Final, List, Mapping, NamedTuple
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State
-
-kemp_loadmaster_service_default_levels = (1500, 2000)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    any_of,
+    equals,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    State,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 _VS_STATE_MAP: Final = {
     "1": (State.OK, "in service"),
@@ -43,37 +50,42 @@ def parse_kemp_loadmaster_services(string_table: List[List[str]]) -> Section:
     }
 
 
-def discover_kemp_loadmaster_services(section: Section):
-    for name, virtual_service in section.items():
-        if virtual_service.state_txt not in ["disabled", "unknown[]"]:
-            yield name, "kemp_loadmaster_service_default_levels"
-
-
-def check_kemp_loadmaster_services(item: str, _no_params, section: Section):
-    virtual_service = section.get(item)
-    if virtual_service is None:
-        return
-    yield int(virtual_service.state), f"Status: {virtual_service.state_txt}"
-    if virtual_service.connections is not None:
-        yield int(State.OK), f"Active connections: {virtual_service.connections}", [
-            ("conns", virtual_service.connections)
-        ]
-
-
-check_info["kemp_loadmaster_services"] = {
-    "parse_function": parse_kemp_loadmaster_services,
-    "inventory_function": discover_kemp_loadmaster_services,
-    "check_function": check_kemp_loadmaster_services,
-    "service_description": "Service %s",
-    "has_perfdata": True,
-    "snmp_info": (
-        ".1.3.6.1.4.1.12196.13.1.1",
-        [
+register.snmp_section(
+    name="kemp_loadmaster_services",
+    parse_function=parse_kemp_loadmaster_services,
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.12196.13.1.1",
+        oids=[
             "13",  # B100-MIB::vSname
             "14",  # B100-MIB::vSstate
             "21",  # B100-MIB::conns
         ],
     ),
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.12196.250.10"
-    or oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.2021.250.10",
-}
+    detect=any_of(
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12196.250.10"),
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2021.250.10"),
+    ),
+)
+
+
+def discover_kemp_loadmaster_services(section: Section) -> DiscoveryResult:
+    for name, virtual_service in section.items():
+        if virtual_service.state_txt not in ["disabled", "unknown[]"]:
+            yield Service(item=name)
+
+
+def check_kemp_loadmaster_services(item: str, section: Section) -> CheckResult:
+    virtual_service = section.get(item)
+    if virtual_service is None:
+        return
+    yield Result(state=virtual_service.state, summary=f"Status: {virtual_service.state_txt}")
+    if virtual_service.connections is not None:
+        yield Result(state=State.OK, summary=f"Active connections: {virtual_service.connections}")
+
+
+register.check_plugin(
+    name="kemp_loadmaster_services",
+    service_name="Service %s",
+    check_function=check_kemp_loadmaster_services,
+    discovery_function=discover_kemp_loadmaster_services,
+)

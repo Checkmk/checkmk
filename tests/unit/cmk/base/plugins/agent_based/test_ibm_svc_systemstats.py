@@ -8,15 +8,19 @@ from typing import Any, Mapping, Sequence
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.type_defs import CheckPluginName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    StringTable,
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.base.plugins.agent_based.ibm_svc_systemstats import (
+    check_ibm_svc_systemstats_cache,
+    check_ibm_svc_systemstats_cpu,
+    check_ibm_svc_systemstats_disk_latency,
+    check_ibm_svc_systemstats_diskio,
+    check_ibm_svc_systemstats_iops,
+    discovery_ibm_svc_systemstats_cache,
+    discovery_ibm_svc_systemstats_cpu,
+    discovery_ibm_svc_systemstats_disks,
+    ibm_svc_systemstats_parse,
+    IBMSystemStats,
 )
 
 TEST_INFO: Sequence[Sequence[str]] = [
@@ -72,32 +76,73 @@ TEST_INFO: Sequence[Sequence[str]] = [
     ["iser_io", "0", "0", "220623092541"],
 ]
 
+TEST_SECTION = IBMSystemStats(
+    cpu_pc=91,
+    total_cache_pc=2,
+    write_cache_pc=0,
+    disks={
+        "VDisks": {
+            "r_mb": 100,
+            "r_io": 10,
+            "r_ms": 5,
+            "w_mb": 50,
+            "w_io": 10,
+            "w_ms": 20,
+        },
+        "MDisks": {
+            "r_mb": 200,
+            "r_io": 0,
+            "r_ms": 0,
+            "w_mb": 300,
+            "w_io": 0,
+            "w_ms": 0,
+        },
+        "Drives": {"r_mb": 39, "r_io": 155, "r_ms": 1, "w_mb": 0, "w_io": 0, "w_ms": 0},
+    },
+)
+
 
 @pytest.mark.parametrize(
-    "string_table, expected_discovery",
+    "string_table, expected_section",
     [
         pytest.param(
             TEST_INFO,
+            TEST_SECTION,
+            id="parse_ibm_svc_systemstats",
+        )
+    ],
+)
+def test_ibm_svc_systemstats_parse(
+    string_table: StringTable,
+    expected_section: IBMSystemStats,
+) -> None:
+    result = ibm_svc_systemstats_parse(string_table)
+    assert result == expected_section
+
+
+@pytest.mark.parametrize(
+    "section, expected_discovery",
+    [
+        pytest.param(
+            TEST_SECTION,
             [Service(item="VDisks"), Service(item="MDisks"), Service(item="Drives")],
             id="diskio",
         )
     ],
 )
-def test_inventory_ibm_svc_systemstats_diskio(
-    fix_register: FixRegister,
-    string_table: StringTable,
-    expected_discovery: Sequence[DiscoveryResult],
+def test_discovery_ibm_svc_systemstats_disks(
+    section: IBMSystemStats,
+    expected_discovery: Sequence[Service],
 ) -> None:
-    check_plugin = fix_register.check_plugins[CheckPluginName("ibm_svc_systemstats_diskio")]
-    result = list(check_plugin.discovery_function(string_table))
+    result = list(discovery_ibm_svc_systemstats_disks(section))
     assert result == expected_discovery
 
 
 @pytest.mark.parametrize(
-    "string_table, item, expected_result",
+    "section, item, expected_result",
     [
         pytest.param(
-            TEST_INFO,
+            TEST_SECTION,
             "VDisks",
             [
                 Result(state=State.OK, summary="105 MB/s read, 52.4 MB/s write"),
@@ -107,7 +152,7 @@ def test_inventory_ibm_svc_systemstats_diskio(
             id="diskio",
         ),
         pytest.param(
-            TEST_INFO,
+            TEST_SECTION,
             "unknown_item",
             [Result(state=State.UNKNOWN, summary="unknown_item not found in agent output")],
             id="diskio_no_item",
@@ -115,41 +160,19 @@ def test_inventory_ibm_svc_systemstats_diskio(
     ],
 )
 def test_check_ibm_svc_systemstats_diskio(
-    fix_register: FixRegister,
-    string_table: Mapping[str, int],
+    section: IBMSystemStats,
     item: str,
     expected_result: Sequence[CheckResult],
 ) -> None:
-    check_plugin = fix_register.check_plugins[CheckPluginName("ibm_svc_systemstats_diskio")]
-    result = list(check_plugin.check_function(item=item, params={}, section=string_table))
+    result = list(check_ibm_svc_systemstats_diskio(item=item, section=section))
     assert result == expected_result
 
 
 @pytest.mark.parametrize(
-    "string_table, expected_discovery",
+    "section, item, expected_result",
     [
         pytest.param(
-            TEST_INFO,
-            [Service(item="VDisks"), Service(item="MDisks"), Service(item="Drives")],
-            id="iops",
-        )
-    ],
-)
-def test_inventory_ibm_svc_systemstats_iops(
-    fix_register: FixRegister,
-    string_table: StringTable,
-    expected_discovery: Sequence[DiscoveryResult],
-) -> None:
-    check_plugin = fix_register.check_plugins[CheckPluginName("ibm_svc_systemstats_iops")]
-    result = list(check_plugin.discovery_function(string_table))
-    assert result == expected_discovery
-
-
-@pytest.mark.parametrize(
-    "string_table, item, expected_result",
-    [
-        pytest.param(
-            TEST_INFO,
+            TEST_SECTION,
             "VDisks",
             [
                 Result(state=State.OK, summary="10 IO/s read, 10 IO/s write"),
@@ -159,7 +182,7 @@ def test_inventory_ibm_svc_systemstats_iops(
             id="iops",
         ),
         pytest.param(
-            TEST_INFO,
+            TEST_SECTION,
             "unknown_item",
             [Result(state=State.UNKNOWN, summary="unknown_item not found in agent output")],
             id="iops_no_item",
@@ -167,68 +190,46 @@ def test_inventory_ibm_svc_systemstats_iops(
     ],
 )
 def test_check_ibm_svc_systemstats_iops(
-    fix_register: FixRegister,
-    string_table: Mapping[str, int],
+    section: IBMSystemStats,
     item: str,
     expected_result: Sequence[CheckResult],
 ) -> None:
-    check_plugin = fix_register.check_plugins[CheckPluginName("ibm_svc_systemstats_iops")]
-    result = list(check_plugin.check_function(item=item, params={}, section=string_table))
+    result = list(check_ibm_svc_systemstats_iops(item=item, section=section))
     assert result == expected_result
 
 
 @pytest.mark.parametrize(
-    "string_table, expected_discovery",
+    "section, item, params, expected_result",
     [
         pytest.param(
-            TEST_INFO,
-            [Service(item="VDisks"), Service(item="MDisks"), Service(item="Drives")],
-            id="disk_latency",
-        )
-    ],
-)
-def test_inventory_ibm_svc_systemstats_disk_latency(
-    fix_register: FixRegister,
-    string_table: StringTable,
-    expected_discovery: Sequence[DiscoveryResult],
-) -> None:
-    check_plugin = fix_register.check_plugins[CheckPluginName("ibm_svc_systemstats_disk_latency")]
-    result = list(check_plugin.discovery_function(string_table))
-    assert result == expected_discovery
-
-
-@pytest.mark.parametrize(
-    "string_table, item, params, expected_result",
-    [
-        pytest.param(
-            TEST_INFO,
+            TEST_SECTION,
             "VDisks",
             {},
             [
-                Result(state=State.OK, summary="read latency: 5.00 ms"),
+                Result(state=State.OK, summary="read latency: 5 ms"),
                 Metric("read_latency", 5.0),
-                Result(state=State.OK, summary="write latency: 20.00 ms"),
+                Result(state=State.OK, summary="write latency: 20 ms"),
                 Metric("write_latency", 20.0),
             ],
             id="disk_latency",
         ),
         pytest.param(
-            TEST_INFO,
+            TEST_SECTION,
             "VDisks",
             {"read": (4.0, 10.0), "write": (25.0, 50.0)},
             [
                 Result(
                     state=State.WARN,
-                    summary="read latency: 5.00 ms (warn/crit at 4.00 ms/10.00 ms)",
+                    summary="read latency: 5 ms (warn/crit at 4.0 ms/10.0 ms)",
                 ),
                 Metric("read_latency", 5.0, levels=(4.0, 10.0)),
-                Result(state=State.OK, summary="write latency: 20.00 ms"),
+                Result(state=State.OK, summary="write latency: 20 ms"),
                 Metric("write_latency", 20.0, levels=(25.0, 50.0)),
             ],
             id="disk_latency_params",
         ),
         pytest.param(
-            TEST_INFO,
+            TEST_SECTION,
             "unknown_item",
             {},
             [Result(state=State.UNKNOWN, summary="unknown_item not found in agent output")],
@@ -237,71 +238,66 @@ def test_inventory_ibm_svc_systemstats_disk_latency(
     ],
 )
 def test_check_ibm_svc_systemstats_disk_latency(
-    fix_register: FixRegister,
-    string_table: Mapping[str, int],
+    section: IBMSystemStats,
     item: str,
     params: Mapping[str, Any],
     expected_result: Sequence[CheckResult],
 ) -> None:
-    check_plugin = fix_register.check_plugins[CheckPluginName("ibm_svc_systemstats_disk_latency")]
-    result = list(check_plugin.check_function(item=item, params=params, section=string_table))
+    result = list(check_ibm_svc_systemstats_disk_latency(item=item, params=params, section=section))
     assert result == expected_result
 
 
 @pytest.mark.parametrize(
-    "string_table, expected_discovery",
+    "section, expected_discovery",
     [
         pytest.param(
-            TEST_INFO,
-            [Service(parameters={"auto-migration-wrapper-key": (90.0, 95.0)})],
+            TEST_SECTION,
+            [Service()],
             id="cpu",
         )
     ],
 )
-def test_inventory_ibm_svc_systemstats_cpu(
-    fix_register: FixRegister,
-    string_table: StringTable,
-    expected_discovery: Sequence[DiscoveryResult],
+def test_discovery_ibm_svc_systemstats_cpu(
+    section: IBMSystemStats,
+    expected_discovery: Sequence[Service],
 ) -> None:
-    check_plugin = fix_register.check_plugins[CheckPluginName("ibm_svc_systemstats_cpu_util")]
-    result = list(check_plugin.discovery_function(string_table))
+    result = list(discovery_ibm_svc_systemstats_cpu(section))
     assert result == expected_discovery
 
 
 @pytest.mark.parametrize(
-    "string_table, item, params, expected_result",
+    "section, params, expected_result",
     [
         pytest.param(
-            TEST_INFO,
-            None,
+            TEST_SECTION,
             {"util": (10.0, 25.0)},
             [
                 Result(state=State.CRIT, summary="Total CPU: 91.00% (warn/crit at 10.00%/25.00%)"),
-                Metric("util", 91.0, levels=(10.0, 25.0), boundaries=(0.0, 100.0)),
+                Metric("util", 91.0, levels=(10.0, 25.0), boundaries=(0.0, None)),
             ],
             id="cpu",
         ),
         pytest.param(
-            TEST_INFO,
-            None,
-            {"auto-migration-wrapper-key": (90.0, 95.0)},
+            TEST_SECTION,
+            {"util": (90.0, 95.0)},
             [
                 Result(state=State.WARN, summary="Total CPU: 91.00% (warn/crit at 90.00%/95.00%)"),
-                Metric("util", 91.0, levels=(90.0, 95.0), boundaries=(0.0, 100.0)),
+                Metric("util", 91.0, levels=(90.0, 95.0), boundaries=(0.0, None)),
             ],
             id="cpu_default_params",
         ),
         pytest.param(
-            [
-                ["temp_c", "27", "27", "220623092541"],
-                ["temp_f", "80", "80", "220623092541"],
-            ],
-            None,
-            {"auto-migration-wrapper-key": (90.0, 95.0)},
+            IBMSystemStats(
+                cpu_pc=None,
+                total_cache_pc=2,
+                write_cache_pc=None,
+                disks={},
+            ),
+            {"util": (90.0, 95.0)},
             [
                 Result(
                     state=State.UNKNOWN,
-                    summary="value cpu_pc not found in agent output for node None",
+                    summary="value cpu_pc not found in agent output",
                 )
             ],
             id="cpu_no_cpu_pc",
@@ -309,43 +305,37 @@ def test_inventory_ibm_svc_systemstats_cpu(
     ],
 )
 def test_check_ibm_svc_systemstats_cpu(
-    fix_register: FixRegister,
-    string_table: Mapping[str, int],
-    item: str,
+    section: IBMSystemStats,
     params: Mapping[str, Any],
     expected_result: Sequence[CheckResult],
 ) -> None:
-    check_plugin = fix_register.check_plugins[CheckPluginName("ibm_svc_systemstats_cpu_util")]
-    result = list(check_plugin.check_function(item=item, params=params, section=string_table))
+    result = list(check_ibm_svc_systemstats_cpu(params=params, section=section))
     assert result == expected_result
 
 
 @pytest.mark.parametrize(
-    "string_table, expected_discovery",
+    "section, expected_discovery",
     [
         pytest.param(
-            TEST_INFO,
+            TEST_SECTION,
             [Service()],
             id="disk_latency",
         )
     ],
 )
-def test_inventory_ibm_svc_systemstats_cache(
-    fix_register: FixRegister,
-    string_table: StringTable,
-    expected_discovery: Sequence[DiscoveryResult],
+def test_discovery_ibm_svc_systemstats_cache(
+    section: IBMSystemStats,
+    expected_discovery: Sequence[Service],
 ) -> None:
-    check_plugin = fix_register.check_plugins[CheckPluginName("ibm_svc_systemstats_cache")]
-    result = list(check_plugin.discovery_function(string_table))
+    result = list(discovery_ibm_svc_systemstats_cache(section))
     assert result == expected_discovery
 
 
 @pytest.mark.parametrize(
-    "string_table, item, expected_result",
+    "section, expected_result",
     [
         pytest.param(
-            TEST_INFO,
-            None,
+            TEST_SECTION,
             [
                 Result(
                     state=State.OK, summary="Write cache usage is 0 %, total cache usage is 2 %"
@@ -356,30 +346,30 @@ def test_inventory_ibm_svc_systemstats_cache(
             id="cpu",
         ),
         pytest.param(
-            [
-                ["temp_c", "27", "27", "220623092541"],
-                ["temp_f", "80", "80", "220623092541"],
-            ],
-            None,
+            IBMSystemStats(
+                cpu_pc=91,
+                total_cache_pc=None,
+                write_cache_pc=None,
+                disks={},
+            ),
             [Result(state=State.UNKNOWN, summary="value total_cache_pc not found in agent output")],
             id="cpu_no_total_cache_pc",
         ),
         pytest.param(
-            [
-                ["total_cache_pc", "2", "2", "220623092541"],
-            ],
-            None,
+            IBMSystemStats(
+                cpu_pc=91,
+                total_cache_pc=2,
+                write_cache_pc=None,
+                disks={},
+            ),
             [Result(state=State.UNKNOWN, summary="value write_cache_pc not found in agent output")],
             id="cpu_no_write_cache_pc",
         ),
     ],
 )
 def test_check_ibm_svc_systemstats_cache(
-    fix_register: FixRegister,
-    string_table: Mapping[str, int],
-    item: str,
+    section: IBMSystemStats,
     expected_result: Sequence[CheckResult],
 ) -> None:
-    check_plugin = fix_register.check_plugins[CheckPluginName("ibm_svc_systemstats_cache")]
-    result = list(check_plugin.check_function(item=item, params={}, section=string_table))
+    result = list(check_ibm_svc_systemstats_cache(section=section))
     assert result == expected_result

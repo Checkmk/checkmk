@@ -242,7 +242,6 @@ def test_section_parse_function_does_something(fix_register) -> None:  # type:ig
         "hpux_tunables",
         "ibm_svc_enclosurestats",
         "ibm_svc_nodestats",
-        "ibm_svc_systemstats",
         "j4p_performance",
         "jolokia_metrics",
         "libelle_business_shadow",

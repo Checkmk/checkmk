@@ -11,7 +11,7 @@ import pytest
 from cmk.base.plugins.agent_based import lnx_if
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Attributes,
-    IgnoreResultsError,
+    GetRateError,
     Result,
     Service,
     State,
@@ -205,7 +205,7 @@ def test_check_lnx_if(monkeypatch) -> None:
     section_if = [INTERFACE]
     section: lnx_if.Section = (section_if, {})
     monkeypatch.setattr("time.time", lambda: 0)
-    with pytest.raises(IgnoreResultsError):
+    with pytest.raises(GetRateError):
         list(
             lnx_if.check_lnx_if(
                 INTERFACE.index,
@@ -244,7 +244,7 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
         section[iface.node] = ifaces_node, {}
         ifaces += ifaces_node
     monkeypatch.setattr("time.time", lambda: 0)
-    with pytest.raises(IgnoreResultsError):
+    with pytest.raises(GetRateError):
         list(
             lnx_if.cluster_check_lnx_if(
                 INTERFACE.index,

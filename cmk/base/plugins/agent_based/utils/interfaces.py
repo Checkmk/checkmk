@@ -31,8 +31,8 @@ from ..agent_based_api.v1 import (
     get_average,
     get_rate,
     get_value_store,
+    GetRateError,
     IgnoreResults,
-    IgnoreResultsError,
     Metric,
     regex,
     render,
@@ -703,7 +703,7 @@ def _check_ungrouped_ifs(
                         value_store=value_store,
                     )
                 )
-            except IgnoreResultsError as excpt:
+            except GetRateError as excpt:
                 ignore_res_error = excpt
                 continue
             for result in last_results:
@@ -830,7 +830,7 @@ def _check_grouped_ifs(  # pylint: disable=too-many-branches
                         saveint(counter),
                         raise_overflow=True,
                     )
-                except IgnoreResultsError:
+                except GetRateError:
                     yield IgnoreResults(value="Initializing counters")
                     # continue, other counters might wrap as well
 
@@ -1121,7 +1121,7 @@ def check_single_interface(
                 input_is_rate,
             )
             rates_dict[name] = rate
-        except IgnoreResultsError:
+        except GetRateError:
             caught_ignore_results_error = True
             # continue, other counters might wrap as well
 
@@ -1130,7 +1130,7 @@ def check_single_interface(
         # If there is a threshold on the bandwidth, we cannot proceed
         # further (the check would be flapping to green on a wrap)
         if any(traffic_levels.values()):
-            raise IgnoreResultsError("Initializing counters")
+            raise GetRateError("Initializing counters")
         return
 
     rates: Rates = Rates(**rates_dict)

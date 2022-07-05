@@ -74,6 +74,7 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     LocationType,
     OpenAPIParameter,
     OpenAPITag,
+    OperationObject,
     OperationSpecType,
     PathItem,
     RawParameter,
@@ -911,7 +912,7 @@ class Endpoint:
             headers=headers,
         )
 
-    def operation_dicts(self) -> Generator[Tuple[str, OperationSpecType], None, None]:
+    def operation_dicts(self) -> Generator[Tuple[str, OperationObject], None, None]:
         """Generate the openapi spec part of this endpoint.
 
         The result needs to be added to the `apispec` instance manually.
@@ -928,7 +929,7 @@ class Endpoint:
     def to_operation_dict(  # pylint: disable=too-many-branches
         self,
         werk_id: Optional[int] = None,
-    ) -> OperationSpecType:
+    ) -> OperationObject:
         assert self.func is not None, "This object must be used in a decorator environment."
         assert self.operation_id is not None, "This object must be used in a decorator environment."
 
@@ -1140,7 +1141,7 @@ class Endpoint:
                     operation_spec["description"] += "\n\n"
                 operation_spec["description"] += description
 
-        return {self.method: operation_spec}  # type: ignore[misc]
+        return {self.method: operation_spec}
 
 
 def _build_description(description_text: Optional[str], werk_id: Optional[int] = None) -> str:

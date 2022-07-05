@@ -406,7 +406,7 @@ Keys 'optional1', 'required1' occur more than once.
 
     def __init__(  # type:ignore[no-untyped-def]
         self,
-        nested: typing.Sequence[typing.Union[typing.Type[fields.SchemaABC], fields.SchemaABC]],
+        nested: typing.Sequence[typing.Union[typing.Type[Schema], Schema]],
         mode: typing.Literal["anyOf", "allOf"] = "anyOf",
         *,
         default: typing.Any = fields.missing_,
@@ -634,7 +634,7 @@ Keys 'optional1', 'required1' occur more than once.
     def _check_key_by_key(
         self,
         value: Result,
-        schema_inst: BaseSchema,
+        schema_inst: Schema,
         error_store: ErrorStore,
     ) -> Result:
         result = {}

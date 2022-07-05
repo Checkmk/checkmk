@@ -8,7 +8,7 @@ from typing import Optional, Tuple
 
 from apispec.ext import marshmallow  # type: ignore[import]
 from apispec.ext.marshmallow import common, field_converter  # type: ignore[import]
-from marshmallow import base, fields
+from marshmallow import fields, Schema
 
 from cmk.gui.fields.base import FieldWrapper, MultiNested, ValueTypedDictSchema
 
@@ -41,9 +41,11 @@ def type_and_format_of_field(field: fields.Field) -> Tuple[str, Optional[str]]:
         A tuple representing the type and the format of this field.
 
     """
-    for class_, spec in field_converter.DEFAULT_FIELD_MAPPING.items():
+    for class_, (schema_type, schema_format) in field_converter.DEFAULT_FIELD_MAPPING.items():
         if isinstance(field, class_):
-            return spec
+            if schema_type is None:
+                raise ValueError(f"No spec possible for field {field!r}.")
+            return schema_type, schema_format
     raise ValueError(f"No fitting spec found for field {field!r}.")
 
 
@@ -111,8 +113,8 @@ class CheckmkOpenAPIConverter(marshmallow.OpenAPIConverter):
 
         if isinstance(schema.value_type, FieldWrapper):
             properties = field_properties(schema.value_type.field)
-        elif isinstance(schema.value_type, base.SchemaABC) or (
-            isinstance(schema.value_type, type) and issubclass(schema.value_type, base.SchemaABC)
+        elif isinstance(schema.value_type, Schema) or (
+            isinstance(schema.value_type, type) and issubclass(schema.value_type, Schema)
         ):
             schema_instance = common.resolve_schema_instance(schema.value_type)
             schema_key = common.make_schema_key(schema_instance)

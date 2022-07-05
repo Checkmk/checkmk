@@ -375,6 +375,8 @@ OperationSpecType = TypedDict(
     total=False,
 )
 
+OperationObject = Mapping[HTTPMethod, OperationSpecType]
+
 OpenAPITag = TypedDict(
     "OpenAPITag",
     {

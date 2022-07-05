@@ -255,11 +255,11 @@ def test_create_nagios_host_spec(
         "extra_host_conf",
         {
             "alias": [
-                ("lOCALhost", ["host2"]),
-                ("CLUSTer", ["cluster2"]),
+                {"condition": {"host_name": ["host2"]}, "value": "lOCALhost"},
+                {"condition": {"host_name": ["cluster2"]}, "value": "CLUSTer"},
             ],
             "parents": [
-                ("switch", ["node1", "node2"]),
+                {"condition": {"host_name": ["node1", "node2"]}, "value": "switch"},
             ],
         },
     )

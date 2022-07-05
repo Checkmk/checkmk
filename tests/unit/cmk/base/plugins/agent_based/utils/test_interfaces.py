@@ -9,7 +9,6 @@ import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    GetRateError,
     IgnoreResults,
     Metric,
     Result,
@@ -1000,15 +999,14 @@ def test_check_single_interface(
     params: Mapping[str, Any],
     result: CheckResults,
 ) -> None:
-    with pytest.raises(GetRateError):
-        list(
-            interfaces.check_single_interface(
-                item,
-                params,
-                _create_interfaces(0)[int(item) - 1],
-                timestamp=0,
-            )
+    list(
+        interfaces.check_single_interface(
+            item,
+            params,
+            _create_interfaces(0)[int(item) - 1],
+            timestamp=0,
         )
+    )
     assert (
         list(
             interfaces.check_single_interface(
@@ -1048,15 +1046,14 @@ def test_check_single_interface_admin_status(
         **params,
         "discovered_admin_status": "1",
     }
-    with pytest.raises(GetRateError):
-        list(
-            interfaces.check_single_interface(
-                item,
-                params,
-                _create_interfaces(0, admin_status="1")[int(item) - 1],
-                timestamp=0,
-            )
+    list(
+        interfaces.check_single_interface(
+            item,
+            params,
+            _create_interfaces(0, admin_status="1")[int(item) - 1],
+            timestamp=0,
         )
+    )
     assert list(
         interfaces.check_single_interface(
             item,
@@ -1077,19 +1074,18 @@ def test_check_single_interface_states(
     params: Mapping[str, Any],
     result: CheckResults,
 ) -> None:
-    with pytest.raises(GetRateError):
-        list(
-            interfaces.check_single_interface(
-                item,
-                {
-                    **params,
-                    "state": ["4"],
-                    "admin_state": ["2"],
-                },
-                _create_interfaces(0, admin_status="1")[int(item) - 1],
-                timestamp=0,
-            )
+    list(
+        interfaces.check_single_interface(
+            item,
+            {
+                **params,
+                "state": ["4"],
+                "admin_state": ["2"],
+            },
+            _create_interfaces(0, admin_status="1")[int(item) - 1],
+            timestamp=0,
         )
+    )
     assert list(
         interfaces.check_single_interface(
             item,
@@ -1115,24 +1111,23 @@ def test_check_single_interface_map_states_independently(
     params: Mapping[str, Any],
     result: CheckResults,
 ) -> None:
-    with pytest.raises(GetRateError):
-        list(
-            interfaces.check_single_interface(
-                item,
-                {
-                    **params,
-                    "state_mappings": (
-                        "independent_mappings",
-                        {
-                            "map_operstates": [(["1"], 3)],
-                            "map_admin_states": [(["2"], 3)],
-                        },
-                    ),
-                },
-                _create_interfaces(0, admin_status="2")[int(item) - 1],
-                timestamp=0,
-            )
+    list(
+        interfaces.check_single_interface(
+            item,
+            {
+                **params,
+                "state_mappings": (
+                    "independent_mappings",
+                    {
+                        "map_operstates": [(["1"], 3)],
+                        "map_admin_states": [(["2"], 3)],
+                    },
+                ),
+            },
+            _create_interfaces(0, admin_status="2")[int(item) - 1],
+            timestamp=0,
         )
+    )
     assert list(
         interfaces.check_single_interface(
             item,
@@ -1163,27 +1158,26 @@ def test_check_single_interface_map_states_combined_matching(
     params: Mapping[str, Any],
     result: CheckResults,
 ) -> None:
-    with pytest.raises(GetRateError):
-        list(
-            interfaces.check_single_interface(
-                item,
-                {
-                    **params,
-                    "state": ["4"],
-                    "admin_state": ["1"],
-                    "state_mappings": (
-                        "combined_mappings",
-                        [
-                            ("1", "2", 3),
-                            ("5", "2", 3),
-                            ("2", "2", 2),
-                        ],
-                    ),
-                },
-                _create_interfaces(0, admin_status="2")[int(item) - 1],
-                timestamp=0,
-            )
+    list(
+        interfaces.check_single_interface(
+            item,
+            {
+                **params,
+                "state": ["4"],
+                "admin_state": ["1"],
+                "state_mappings": (
+                    "combined_mappings",
+                    [
+                        ("1", "2", 3),
+                        ("5", "2", 3),
+                        ("2", "2", 2),
+                    ],
+                ),
+            },
+            _create_interfaces(0, admin_status="2")[int(item) - 1],
+            timestamp=0,
         )
+    )
     assert list(
         interfaces.check_single_interface(
             item,
@@ -1220,25 +1214,24 @@ def test_check_single_interface_map_states_combined_not_matching(
     params: Mapping[str, Any],
     result: CheckResults,
 ) -> None:
-    with pytest.raises(GetRateError):
-        list(
-            interfaces.check_single_interface(
-                item,
-                {
-                    **params,
-                    "state_mappings": (
-                        "combined_mappings",
-                        [
-                            ("1", "2", 3),
-                            ("5", "2", 3),
-                            ("2", "2", 2),
-                        ],
-                    ),
-                },
-                _create_interfaces(0, admin_status="3")[int(item) - 1],
-                timestamp=0,
-            )
+    list(
+        interfaces.check_single_interface(
+            item,
+            {
+                **params,
+                "state_mappings": (
+                    "combined_mappings",
+                    [
+                        ("1", "2", 3),
+                        ("5", "2", 3),
+                        ("2", "2", 2),
+                    ],
+                ),
+            },
+            _create_interfaces(0, admin_status="3")[int(item) - 1],
+            timestamp=0,
         )
+    )
     assert list(
         interfaces.check_single_interface(
             item,
@@ -1270,27 +1263,26 @@ def test_check_single_interface_map_states_combined_not_matching_with_target_sta
     params: Mapping[str, Any],
     result: CheckResults,
 ) -> None:
-    with pytest.raises(GetRateError):
-        list(
-            interfaces.check_single_interface(
-                item,
-                {
-                    **params,
-                    "state": ["4"],
-                    "admin_state": ["1"],
-                    "state_mappings": (
-                        "combined_mappings",
-                        [
-                            ("1", "2", 3),
-                            ("5", "2", 3),
-                            ("2", "2", 2),
-                        ],
-                    ),
-                },
-                _create_interfaces(0, admin_status="3")[int(item) - 1],
-                timestamp=0,
-            )
+    list(
+        interfaces.check_single_interface(
+            item,
+            {
+                **params,
+                "state": ["4"],
+                "admin_state": ["1"],
+                "state_mappings": (
+                    "combined_mappings",
+                    [
+                        ("1", "2", 3),
+                        ("5", "2", 3),
+                        ("2", "2", 2),
+                    ],
+                ),
+            },
+            _create_interfaces(0, admin_status="3")[int(item) - 1],
+            timestamp=0,
         )
+    )
     assert list(
         interfaces.check_single_interface(
             item,
@@ -1324,18 +1316,17 @@ def test_check_single_interface_ignore_state(
     params: Mapping[str, Any],
     result: CheckResults,
 ) -> None:
-    with pytest.raises(GetRateError):
-        list(
-            interfaces.check_single_interface(
-                item,
-                {
-                    **params,
-                    "state": None,
-                },
-                _create_interfaces(0, oper_status=4)[int(item) - 1],
-                timestamp=0,
-            )
+    list(
+        interfaces.check_single_interface(
+            item,
+            {
+                **params,
+                "state": None,
+            },
+            _create_interfaces(0, oper_status=4)[int(item) - 1],
+            timestamp=0,
         )
+    )
     assert (
         list(
             interfaces.check_single_interface(
@@ -1401,15 +1392,14 @@ def test_check_single_interface_averaging(
     params: Mapping[str, Any],
     result: CheckResults,
 ) -> None:
-    with pytest.raises(GetRateError):
-        list(
-            interfaces.check_single_interface(
-                item,
-                params,
-                _create_interfaces(0)[int(item) - 1],
-                timestamp=0,
-            )
+    list(
+        interfaces.check_single_interface(
+            item,
+            params,
+            _create_interfaces(0)[int(item) - 1],
+            timestamp=0,
         )
+    )
     assert (
         list(
             interfaces.check_single_interface(
@@ -1438,16 +1428,15 @@ def test_check_single_interface_group(
             {"name": "wlp2s0", "oper_status_name": "up"},
         ]
     }
-    with pytest.raises(GetRateError):
-        list(
-            interfaces.check_single_interface(
-                item,
-                params,
-                _create_interfaces(0)[int(item) - 1],
-                group_members=group_members,
-                timestamp=0,
-            )
+    list(
+        interfaces.check_single_interface(
+            item,
+            params,
+            _create_interfaces(0)[int(item) - 1],
+            group_members=group_members,
+            timestamp=0,
         )
+    )
     assert list(
         interfaces.check_single_interface(
             item,
@@ -1496,16 +1485,15 @@ def test_check_single_interface_group_admin_status(
             {"name": "wlp2s0", "oper_status_name": "up", "admin_status_name": "testing"},
         ]
     }
-    with pytest.raises(GetRateError):
-        list(
-            interfaces.check_single_interface(
-                item,
-                params,
-                _create_interfaces(0)[int(item) - 1],
-                group_members=group_members,
-                timestamp=0,
-            )
+    list(
+        interfaces.check_single_interface(
+            item,
+            params,
+            _create_interfaces(0)[int(item) - 1],
+            group_members=group_members,
+            timestamp=0,
         )
+    )
     assert list(
         interfaces.check_single_interface(
             item,
@@ -1528,15 +1516,14 @@ def test_check_single_interface_w_node(
     result: CheckResults,
 ) -> None:
     node_name = "node"
-    with pytest.raises(GetRateError):
-        list(
-            interfaces.check_single_interface(
-                item,
-                params,
-                _create_interfaces(0, node=node_name)[int(item) - 1],
-                timestamp=0,
-            )
+    list(
+        interfaces.check_single_interface(
+            item,
+            params,
+            _create_interfaces(0, node=node_name)[int(item) - 1],
+            timestamp=0,
         )
+    )
     assert list(
         interfaces.check_single_interface(
             item,
@@ -1563,16 +1550,15 @@ def test_check_single_interface_group_w_nodes(
             {"name": "wlp2s0", "oper_status_name": "up"},
         ],
     }
-    with pytest.raises(GetRateError):
-        list(
-            interfaces.check_single_interface(
-                item,
-                params,
-                _create_interfaces(0)[int(item) - 1],
-                group_members=group_members,
-                timestamp=0,
-            )
+    list(
+        interfaces.check_single_interface(
+            item,
+            params,
+            _create_interfaces(0)[int(item) - 1],
+            group_members=group_members,
+            timestamp=0,
         )
+    )
     assert list(
         interfaces.check_single_interface(
             item,
@@ -1782,15 +1768,14 @@ def test_check_multiple_interfaces(
     params: Mapping[str, Any],
     result: CheckResults,
 ) -> None:
-    with pytest.raises(GetRateError):
-        list(
-            interfaces.check_multiple_interfaces(
-                item,
-                params,
-                _create_interfaces(0),
-                timestamp=0,
-            )
+    list(
+        interfaces.check_multiple_interfaces(
+            item,
+            params,
+            _create_interfaces(0),
+            timestamp=0,
         )
+    )
     assert (
         list(
             interfaces.check_multiple_interfaces(
@@ -1812,15 +1797,14 @@ def test_check_multiple_interfaces_duplicate_descr(
 ) -> None:
     description = "description"
     item = "%s %s" % (description, item)
-    with pytest.raises(GetRateError):
-        list(
-            interfaces.check_multiple_interfaces(
-                item,
-                params,
-                _create_interfaces(0, descr=description),
-                timestamp=0,
-            )
+    list(
+        interfaces.check_multiple_interfaces(
+            item,
+            params,
+            _create_interfaces(0, descr=description),
+            timestamp=0,
         )
+    )
     assert (
         list(
             interfaces.check_multiple_interfaces(
@@ -1843,15 +1827,14 @@ def test_check_multiple_interfaces_duplicate_alias(
     alias = "alias"
     index = item
     item = "%s %s" % (alias, index)
-    with pytest.raises(GetRateError):
-        list(
-            interfaces.check_multiple_interfaces(
-                item,
-                params,
-                _create_interfaces(0, alias=alias),
-                timestamp=0,
-            )
+    list(
+        interfaces.check_multiple_interfaces(
+            item,
+            params,
+            _create_interfaces(0, alias=alias),
+            timestamp=0,
         )
+    )
     ifaces = _create_interfaces(4000000, alias=alias)
     assert list(interfaces.check_multiple_interfaces(item, params, ifaces, timestamp=5,)) == [
         Result(
@@ -1883,15 +1866,14 @@ def test_check_multiple_interfaces_group_simple() -> None:
         "state": ["8"],
         "speed": 123456,
     }
-    with pytest.raises(GetRateError):
-        list(
-            interfaces.check_multiple_interfaces(
-                "group",
-                params,
-                _create_interfaces(0),
-                timestamp=0,
-            )
+    list(
+        interfaces.check_multiple_interfaces(
+            "group",
+            params,
+            _create_interfaces(0),
+            timestamp=0,
         )
+    )
     assert list(
         interfaces.check_multiple_interfaces(
             "group",
@@ -1964,15 +1946,15 @@ def test_check_multiple_interfaces_group_exclude() -> None:
         "discovered_oper_status": ["1"],
         "discovered_speed": 20000000,
     }
-    with pytest.raises(GetRateError):
-        list(
-            interfaces.check_multiple_interfaces(
-                "group",
-                params,
-                _create_interfaces(0),
-                timestamp=0,
-            )
+
+    list(
+        interfaces.check_multiple_interfaces(
+            "group",
+            params,
+            _create_interfaces(0),
+            timestamp=0,
         )
+    )
     assert list(
         interfaces.check_multiple_interfaces(
             "group",
@@ -2040,18 +2022,18 @@ def test_check_multiple_interfaces_group_by_agent() -> None:
         "discovered_oper_status": ["1"],
         "discovered_speed": 20000000,
     }
-    with pytest.raises(GetRateError):
-        ifaces = _create_interfaces(0)
-        ifaces[3].group = "group"
-        ifaces[5].group = "group"
-        list(
-            interfaces.check_multiple_interfaces(
-                "group",
-                params,
-                ifaces,
-                timestamp=0,
-            )
+
+    ifaces = _create_interfaces(0)
+    ifaces[3].group = "group"
+    ifaces[5].group = "group"
+    list(
+        interfaces.check_multiple_interfaces(
+            "group",
+            params,
+            ifaces,
+            timestamp=0,
         )
+    )
 
     ifaces = _create_interfaces(4000000)
     ifaces[3].group = "group"
@@ -2106,15 +2088,14 @@ def test_check_multiple_interfaces_w_node(
     result: CheckResults,
 ) -> None:
     node_name = "node"
-    with pytest.raises(GetRateError):
-        list(
-            interfaces.check_multiple_interfaces(
-                item,
-                params,
-                _create_interfaces(0, node=node_name),
-                timestamp=0,
-            )
+    list(
+        interfaces.check_multiple_interfaces(
+            item,
+            params,
+            _create_interfaces(0, node=node_name),
+            timestamp=0,
         )
+    )
     assert list(
         interfaces.check_multiple_interfaces(
             item,
@@ -2133,18 +2114,17 @@ def test_check_multiple_interfaces_same_item_twice_cluster(
 ) -> None:
     node_name_1 = "node1"
     node_name_2 = "node2"
-    with pytest.raises(GetRateError):
-        list(
-            interfaces.check_multiple_interfaces(
-                item,
-                params,
-                [
-                    *_create_interfaces(0, node=node_name_1),
-                    *_create_interfaces(0, node=node_name_2),
-                ],
-                timestamp=0,
-            )
+    list(
+        interfaces.check_multiple_interfaces(
+            item,
+            params,
+            [
+                *_create_interfaces(0, node=node_name_1),
+                *_create_interfaces(0, node=node_name_2),
+            ],
+            timestamp=0,
         )
+    )
     assert list(
         interfaces.check_multiple_interfaces(
             item,
@@ -2182,23 +2162,22 @@ def test_check_multiple_interfaces_group_multiple_nodes() -> None:
         "discovered_speed": 20000000,
     }
     node_names = ["node1", "node2", "node3"]
-    with pytest.raises(GetRateError):
-        list(
-            interfaces.check_multiple_interfaces(
-                "group",
-                params,
-                [
-                    interface
-                    for idx, node_name in enumerate(node_names)
-                    for interface in _create_interfaces(
-                        0,
-                        admin_status=str(idx + 1),
-                        node=node_name,
-                    )
-                ],
-                timestamp=0,
-            )
+    list(
+        interfaces.check_multiple_interfaces(
+            "group",
+            params,
+            [
+                interface
+                for idx, node_name in enumerate(node_names)
+                for interface in _create_interfaces(
+                    0,
+                    admin_status=str(idx + 1),
+                    node=node_name,
+                )
+            ],
+            timestamp=0,
         )
+    )
     assert list(
         interfaces.check_multiple_interfaces(
             "group",
@@ -2283,14 +2262,13 @@ def test_cluster_check(monkeypatch: MonkeyPatch) -> None:
         section[iface.node] = ifaces_node
         ifaces += ifaces_node
     monkeypatch.setattr("time.time", lambda: 0)
-    with pytest.raises(GetRateError):
-        list(
-            interfaces.cluster_check(
-                "1",
-                params,
-                section,
-            )
+    list(
+        interfaces.cluster_check(
+            "1",
+            params,
+            section,
         )
+    )
     monkeypatch.setattr("time.time", lambda: 1)
     result_cluster_check = list(
         interfaces.cluster_check(
@@ -2345,5 +2323,15 @@ def test_cluster_check_ignore_discovered_params() -> None:
         Result(
             state=State.OK,
             summary="Speed: 100 kBit/s",
+        ),
+        Metric("outqlen", 0.0),
+        Result(
+            state=State.OK,
+            notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.node', "
+            "inmcast: Initialized: 'inmcast.node', inbcast: Initialized: 'inbcast.node', inucast: Initialized: 'inucast.node', "
+            "innucast: Initialized: 'innucast.node', indisc: Initialized: 'indisc.node', inerr: Initialized: 'inerr.node', "
+            "outtraffic: Initialized: 'outtraffic.node', outmcast: Initialized: 'outmcast.node', outbcast: Initialized: 'outbcast.node', "
+            "outucast: Initialized: 'outucast.node', outnucast: Initialized: 'outnucast.node', outdisc: Initialized: 'outdisc.node', "
+            "outerr: Initialized: 'outerr.node'",
         ),
     ]

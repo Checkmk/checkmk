@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.base.plugins.agent_based import netapp_api_if
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.utils import interfaces
 
 
@@ -118,6 +118,16 @@ from cmk.base.plugins.agent_based.utils import interfaces
                         Result(state=State.OK, summary="[GTB1020-2-CL_mgmt]"),
                         Result(state=State.OK, summary="(up)", details="Operational state: up"),
                         Result(state=State.OK, summary="Speed: 1 GBit/s"),
+                        Metric("outqlen", 0.0),
+                        Result(
+                            state=State.OK,
+                            notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
+                            "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
+                            "innucast: Initialized: 'innucast.None', indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', "
+                            "outtraffic: Initialized: 'outtraffic.None', outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', "
+                            "outucast: Initialized: 'outucast.None', outnucast: Initialized: 'outnucast.None', outdisc: Initialized: 'outdisc.None', "
+                            "outerr: Initialized: 'outerr.None'",
+                        ),
                         Result(state=State.OK, summary="Current Port: e0f-112 (is home port)"),
                     ],
                 ),
@@ -132,6 +142,16 @@ from cmk.base.plugins.agent_based.utils import interfaces
                         Result(state=State.OK, summary="[GTB1020-2_ic1]"),
                         Result(state=State.OK, summary="(up)", details="Operational state: up"),
                         Result(state=State.OK, summary="Speed: 1 GBit/s"),
+                        Metric("outqlen", 0.0),
+                        Result(
+                            state=State.OK,
+                            notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
+                            "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
+                            "innucast: Initialized: 'innucast.None', indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', "
+                            "outtraffic: Initialized: 'outtraffic.None', outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', "
+                            "outucast: Initialized: 'outucast.None', outnucast: Initialized: 'outnucast.None', outdisc: Initialized: 'outdisc.None', "
+                            "outerr: Initialized: 'outerr.None'",
+                        ),
                         Result(state=State.OK, summary="Current Port: e0f-2231 (is home port)"),
                     ],
                 ),
@@ -223,6 +243,16 @@ from cmk.base.plugins.agent_based.utils import interfaces
                         Result(state=State.OK, summary="(up)", details="Operational state: up"),
                         Result(state=State.OK, summary="MAC: 01:B0:89:22:DF:02"),
                         Result(state=State.OK, summary="Speed: 1 GBit/s"),
+                        Metric("outqlen", 0.0),
+                        Result(
+                            state=State.OK,
+                            notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
+                            "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
+                            "innucast: Initialized: 'innucast.None', indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', "
+                            "outtraffic: Initialized: 'outtraffic.None', outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', "
+                            "outucast: Initialized: 'outucast.None', outnucast: Initialized: 'outnucast.None', outdisc: Initialized: 'outdisc.None', "
+                            "outerr: Initialized: 'outerr.None'",
+                        ),
                         Result(state=State.OK, summary="Physical interfaces: e0c(up)"),
                         Result(state=State.OK, summary="e0d(up)"),
                     ],
@@ -292,6 +322,16 @@ from cmk.base.plugins.agent_based.utils import interfaces
                         Result(state=State.OK, summary="[cluster_mgmt]"),
                         Result(state=State.OK, summary="(up)", details="Operational state: up"),
                         Result(state=State.OK, summary="Speed: auto"),
+                        Metric("outqlen", 0.0),
+                        Result(
+                            state=State.OK,
+                            notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
+                            "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
+                            "innucast: Initialized: 'innucast.None', indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', "
+                            "outtraffic: Initialized: 'outtraffic.None', outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', "
+                            "outucast: Initialized: 'outucast.None', outnucast: Initialized: 'outnucast.None', outdisc: Initialized: 'outdisc.None', "
+                            "outerr: Initialized: 'outerr.None'",
+                        ),
                         Result(state=State.OK, summary="Current Port: e0a (is home port)"),
                     ],
                 ),

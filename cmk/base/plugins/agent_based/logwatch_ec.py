@@ -212,17 +212,10 @@ def discover_logwatch_ec_common(
 def _filter_accumulated_lines(cluster_section: ClusterSection, item: str) -> Iterable[str]:
     yield from (
         line
-        # node info ignored (only used in regular logwatch check)
         for node_data in cluster_section.values()
-        for line in node_data.logfiles.get(
-            item,
-            logwatch.ItemData(
-                attr="",
-                lines=[],
-            ),
-        )["lines"]
-        # skip context lines, ignore lines and empty lines
-        if line[0] not in [".", "I"] and len(line) > 1
+        if (item_data := node_data.logfiles.get(item)) is not None
+        for line in item_data["lines"]
+        if line[0] not in (".", "I") and len(line) > 1
     )
 
 

@@ -4,31 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# .1.3.6.1.4.1.12196.13.1.1.13.1 Exchange HTTPS
-# .1.3.6.1.4.1.12196.13.1.1.13.3 Exchange MAPI
-# .1.3.6.1.4.1.12196.13.1.1.13.4 Exchange SMTP
-# .1.3.6.1.4.1.12196.13.1.1.13.5 Lync Internal WebSvc HTTP
-# .1.3.6.1.4.1.12196.13.1.1.13.6 Lync Internal WebSvc HTTPS
-# .1.3.6.1.4.1.12196.13.1.1.14.1 1
-# .1.3.6.1.4.1.12196.13.1.1.14.3 1
-# .1.3.6.1.4.1.12196.13.1.1.14.4 1
-# .1.3.6.1.4.1.12196.13.1.1.14.5 1
-# .1.3.6.1.4.1.12196.13.1.1.14.6 1
-# .1.3.6.1.4.1.12196.13.1.1.21.1 882
-# .1.3.6.1.4.1.12196.13.1.1.21.3 6386
-# .1.3.6.1.4.1.12196.13.1.1.21.4 3
-# .1.3.6.1.4.1.12196.13.1.1.21.5 1
-# .1.3.6.1.4.1.12196.13.1.1.21.6 1
-
-# Some devices provide strange, wrong or incomplete data
-# and it's not possible to exclude them via std. OIDs
-# .1.3.6.1.4.1.12196.13.1.1.13.1 lbwebinterface --> B100-MIB::vSname.1
-# .1.3.6.1.4.1.12196.13.1.1.13.2 --> B100-MIB::vSname.2
-# .1.3.6.1.4.1.12196.13.1.1.13.3 --> B100-MIB::vSname.3
-# .1.3.6.1.4.1.12196.13.1.1.14.1 LB_WI --> B100-MIB::vSstate.1
-# .1.3.6.1.4.1.12196.13.1.1.14.2 --> B100-MIB::vSstate.2
-# .1.3.6.1.4.1.12196.13.1.1.14.3 CAG_LB --> B100-MIB::vSstate.3
-
 from typing import Final, List, Mapping, NamedTuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State

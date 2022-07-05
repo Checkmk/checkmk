@@ -33,14 +33,14 @@ class IBMSystemStats(NamedTuple):
     cpu_pc: int | None = None
     total_cache_pc: int | None = None
     write_cache_pc: int | None = None
-    disks: Mapping[Item, Mapping[StatName, int]] = {}
+    disks: Mapping[Item, Mapping[StatName, float]] = {}
 
 
 def ibm_svc_systemstats_parse(string_table: StringTable) -> IBMSystemStats:
     cpu_pc = None
     total_cache_pc = None
     write_cache_pc = None
-    disks: dict[Item, dict[StatName, int]] = defaultdict(dict)
+    disks: dict[Item, dict[StatName, float]] = defaultdict(dict)
 
     for stat_name, stat_current, _stat_peak, _stat_peak_time in string_table:
         if stat_name == "cpu_pc":
@@ -54,15 +54,15 @@ def ibm_svc_systemstats_parse(string_table: StringTable) -> IBMSystemStats:
 
         if stat_name in VDISK_STATS:
             short_stat_name = stat_name.replace("vdisk_", "")
-            disks["VDisks"][short_stat_name] = int(stat_current)
+            disks["VDisks"][short_stat_name] = float(stat_current)
 
         elif stat_name in MDISK_STATS:
             short_stat_name = stat_name.replace("mdisk_", "")
-            disks["MDisks"][short_stat_name] = int(stat_current)
+            disks["MDisks"][short_stat_name] = float(stat_current)
 
         elif stat_name in DRIVE_STATS:
             short_stat_name = stat_name.replace("drive_", "")
-            disks["Drives"][short_stat_name] = int(stat_current)
+            disks["Drives"][short_stat_name] = float(stat_current)
 
     return IBMSystemStats(
         cpu_pc=cpu_pc, total_cache_pc=total_cache_pc, write_cache_pc=write_cache_pc, disks=disks

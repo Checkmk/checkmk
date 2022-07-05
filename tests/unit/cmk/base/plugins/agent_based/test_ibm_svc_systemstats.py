@@ -109,7 +109,31 @@ TEST_SECTION = IBMSystemStats(
             TEST_INFO,
             TEST_SECTION,
             id="parse_ibm_svc_systemstats",
-        )
+        ),
+        pytest.param(
+            [
+                ["mdisk_r_mb", "200.1", "1000", "220623092541"],
+                ["vdisk_r_ms", "5.00", "10", "220623092541"],
+                ["drive_w_io", "0.000", "5", "220623092516"],
+            ],
+            IBMSystemStats(
+                cpu_pc=None,
+                total_cache_pc=None,
+                write_cache_pc=None,
+                disks={
+                    "MDisks": {
+                        "r_mb": 200.1,
+                    },
+                    "VDisks": {
+                        "r_ms": 5.0,
+                    },
+                    "Drives": {
+                        "w_io": 0.0,
+                    },
+                },
+            ),
+            id="parse_ibm_svc_systemstats_floats",
+        ),
     ],
 )
 def test_ibm_svc_systemstats_parse(

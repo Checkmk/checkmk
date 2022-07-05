@@ -15,7 +15,6 @@ import shutil
 import subprocess
 import time
 import uuid
-from collections.abc import Mapping as ABCMapping
 from contextlib import contextmanager, suppress
 from enum import Enum
 from pathlib import Path
@@ -45,6 +44,7 @@ from livestatus import SiteId
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils import store
+from cmk.utils.datastructures import deep_update
 from cmk.utils.iterables import first
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.redis import get_redis_client, Pipeline
@@ -1021,43 +1021,6 @@ class BaseFolder:
 
     def site_id(self):
         raise NotImplementedError()
-
-
-def deep_update(original, update, overwrite=True):
-    """Update a dictionary with another's keys.
-
-    Args:
-        original: The original dictionary. This is being updated.
-        update: The keys to be set on the original dictionary. May contain new keys.
-        overwrite (bool): Also set already set values, even if they aren't None.
-
-    Examples:
-
-        If we don't want to overwrite the original's keys we can set the overwrite
-        parameter to false.
-
-        >>> res = deep_update({'meta_data': {'ca': 123, 'cb': 'foo'}},
-        ...                   {'meta_data': {'ca': 234, 'ua': 123}}, overwrite=False)
-        >>> assert res == {'meta_data': {'ca': 123, 'ua': 123, 'cb': 'foo'}}, res
-
-        When 'overwrite' is set to true, every key is always set.
-
-        >>> res = deep_update({'meta_data': {'ca': 123, 'cb': 'foo'}},
-        ...                   {'meta_data': {'ca': 234, 'ua': 123}}, overwrite=True)
-        >>> assert res == {'meta_data': {'ca': 234, 'ua': 123, 'cb': 'foo'}}, res
-
-    Returns:
-        The updated original dictionary, changed in place.
-
-    """
-    # Adapted from https://stackoverflow.com/a/3233356
-    for k, v in update.items():
-        if isinstance(v, ABCMapping):
-            original[k] = deep_update(original.get(k, {}), v, overwrite=overwrite)
-        else:
-            if overwrite or k not in original or original[k] is None:
-                original[k] = v
-    return original
 
 
 def update_metadata(

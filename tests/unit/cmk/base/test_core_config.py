@@ -194,11 +194,32 @@ def test_get_cmk_passive_service_attributes(monkeypatch, hostname, result) -> No
         "extra_service_conf",
         {
             "contact_groups": [
-                ("ding", ["localhost"], ["CPU load$"]),
+                {
+                    "condition": {
+                        "service_description": [{"$regex": "CPU load$"}],
+                        "host_name": ["localhost"],
+                    },
+                    "options": {},
+                    "value": "ding",
+                },
             ],
             "check_interval": [
-                (40.0, ["blub"], ["Check_MK$"]),
-                (33.0, ["localhost"], ["CPU load$"]),
+                {
+                    "condition": {
+                        "service_description": [{"$regex": "Check_MK$"}],
+                        "host_name": ["blub"],
+                    },
+                    "options": {},
+                    "value": 40.0,
+                },
+                {
+                    "condition": {
+                        "service_description": [{"$regex": "CPU load$"}],
+                        "host_name": ["localhost"],
+                    },
+                    "options": {},
+                    "value": 33.0,
+                },
             ],
         },
     )

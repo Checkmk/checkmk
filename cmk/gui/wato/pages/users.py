@@ -1354,4 +1354,4 @@ def select_language(user_spec: UserSpec) -> None:
 
 
 def _is_two_factor_enabled(user_spec: UserSpec) -> bool:
-    return user_spec.get("two_factor_credentials", {}).get("webauthn_credentials") is not None
+    return bool(user_spec.get("two_factor_credentials", {}).get("webauthn_credentials"))

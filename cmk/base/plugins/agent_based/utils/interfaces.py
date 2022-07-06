@@ -1407,13 +1407,13 @@ def _output_bandwidth_rates(  # type:ignore[no-untyped-def] # pylint: disable=to
     assumed_speed_out: Optional[int],
     *,
     monitor_total: bool,
-):
+) -> type_defs.CheckResult:
     if unit == "Bit":
         bandwidth_renderer: Callable[[float], str] = render.nicspeed
     else:
         bandwidth_renderer = render.iobandwidth
 
-    for what, traffic, speed in [
+    for direction, traffic, speed in [
         ("in", rates.intraffic, speed_b_in),
         ("out", rates.outtraffic, speed_b_out),
         *(
@@ -1429,107 +1429,134 @@ def _output_bandwidth_rates(  # type:ignore[no-untyped-def] # pylint: disable=to
         ),
     ]:
         if traffic is None:
-            # rates.total is None if total traffic is not monitored
             continue
+        yield from _check_single_bandwidth(
+            direction=direction,
+            traffic=traffic,
+            speed=speed,
+            renderer=bandwidth_renderer,
+            average=average,
+            traffic_levels=traffic_levels,
+            value_store=value_store,
+            timestamp=timestamp,
+            item=item,
+            assumed_speed_in=assumed_speed_in,
+            assumed_speed_out=assumed_speed_out,
+        )
 
-        use_predictive_levels = (what, "predictive") in traffic_levels
 
-        # We have to specify metric like this, because we want to postpone the output,
-        # and this a possibility to make mypy happy when collecting from different places.
-        metric: Optional[Metric] = None
+def _check_single_bandwidth(  # pylint: disable=too-many-branches
+    *,
+    direction: str,
+    traffic: float,
+    speed: float,
+    renderer: Callable[[float], str],
+    average: Optional[int],
+    traffic_levels: SpecificTrafficLevels,
+    value_store: MutableMapping[str, Any],
+    timestamp: float,
+    item: str,
+    assumed_speed_in: Optional[int],
+    assumed_speed_out: Optional[int],
+) -> type_defs.CheckResult:
+    use_predictive_levels = (direction, "predictive") in traffic_levels
 
-        # The "normal" upper/lower levels can be valid for the raw value or the average value.
-        # We display them in the raw signal's graph for both cases.
-        # However, predictive levels are different in it's nature and will be handled seperately
-        if use_predictive_levels:
-            levels_upper = None
-            levels_lower = None
-        else:
-            levels_upper = (
-                traffic_levels[(what, "upper", "warn")],
-                traffic_levels[(what, "upper", "crit")],
-            )
-            levels_lower = (
-                traffic_levels[(what, "lower", "warn")],
-                traffic_levels[(what, "lower", "crit")],
-            )
-        if average or not use_predictive_levels:
-            # For these cases, we have to yield the raw traffic metric explicitly.
-            # Otherwise (= use_predictive_levels and not average), it will be
-            # yielded from check_levels_predictive
-            metric = Metric(
-                what,
-                traffic,
-                levels=levels_upper,
-                boundaries=(0, speed),
-            )
+    # We have to specify metric like this, because we want to postpone the output,
+    # and this a possibility to make mypy happy when collecting from different places.
+    metric: Optional[Metric] = None
 
+    # The "normal" upper/lower levels can be valid for the raw value or the average value.
+    # We display them in the raw signal's graph for both cases.
+    # However, predictive levels are different in it's nature and will be handled seperately
+    if use_predictive_levels:
+        levels_upper = None
+        levels_lower = None
+    else:
+        levels_upper = (
+            traffic_levels[(direction, "upper", "warn")],
+            traffic_levels[(direction, "upper", "crit")],
+        )
+        levels_lower = (
+            traffic_levels[(direction, "lower", "warn")],
+            traffic_levels[(direction, "lower", "crit")],
+        )
+    if average or not use_predictive_levels:
+        # For these cases, we have to yield the raw traffic metric explicitly.
+        # Otherwise (= use_predictive_levels and not average), it will be
+        # yielded from check_levels_predictive
+        metric = Metric(
+            direction,
+            traffic,
+            levels=levels_upper,
+            boundaries=(0, speed),
+        )
+
+    if average:
+        filtered_traffic = get_average(
+            value_store,
+            "%s.%s.avg" % (direction, item),
+            timestamp,
+            traffic,
+            average,
+        )  # apply levels to average traffic
+        title = "%s average %dmin" % (direction.title(), average)
+    else:
+        filtered_traffic = traffic
+        title = direction.title()
+
+    if use_predictive_levels:
         if average:
-            filtered_traffic = get_average(
-                value_store,
-                "%s.%s.avg" % (what, item),
-                timestamp,
-                traffic,
-                average,
-            )  # apply levels to average traffic
-            title = "%s average %dmin" % (what.title(), average)
+            dsname = "%s_avg_%d" % (direction, average)
         else:
-            filtered_traffic = traffic
-            title = what.title()
+            dsname = direction
 
-        if use_predictive_levels:
-            if average:
-                dsname = "%s_avg_%d" % (what, average)
-            else:
-                dsname = what
-
-            levels_predictive = traffic_levels[(what, "predictive")]
-            result, tmp_metric, *ref_curve = check_levels_predictive(
-                filtered_traffic,
-                levels=levels_predictive,
-                metric_name=dsname,
-                render_func=bandwidth_renderer,
-                label=title,
-            )
-            assert isinstance(result, Result)
-            assert isinstance(tmp_metric, Metric)
-            metric = tmp_metric
-            # This metric may be the raw metric or the average metric.
-            # The avg is not needed for displaying a graph, but it's historic
-            # value will be needed for the future calculation of the ref_curve,
-            # so we can't dump it.
-            yield metric
-            if ref_curve:
-                yield from ref_curve  # reference curve for predictive levels
-        else:
-            # The metric already got yielded, so it's only the result that is
-            # needed here.
-            (result,) = check_levels(
-                filtered_traffic,
-                levels_upper=levels_upper,
-                levels_lower=levels_lower,
-                render_func=bandwidth_renderer,
-                label=title,
-            )
-
-        # We have a valid result now. Just enhance it by the percentage info,
-        # if available
-        if speed:
-            perc_info = render.percent(100.0 * filtered_traffic / speed)
-            if assumed_speed_in or assumed_speed_out:
-                perc_info += "/" + bandwidth_renderer(speed)
-
-            yield Result(
-                state=result.state,
-                summary="%s (%s)" % (result.summary, perc_info),
-            )
-        else:
-            yield result
-
-        # output metric after result. this makes it easier to analyze the check output,
-        # as this is the "normal" order when yielding from check_levels.
-        assert metric is not None
+        levels_predictive = traffic_levels[(direction, "predictive")]
+        result, tmp_metric, *ref_curve = check_levels_predictive(
+            filtered_traffic,
+            levels=levels_predictive,
+            metric_name=dsname,
+            render_func=renderer,
+            label=title,
+        )
+        assert isinstance(result, Result)
+        assert isinstance(tmp_metric, Metric)
+        metric = tmp_metric
+        # This metric may be the raw metric or the average metric.
+        # The avg is not needed for displaying a graph, but it's historic
+        # value will be needed for the future calculation of the ref_curve,
+        # so we can't dump it.
         yield metric
+        if ref_curve:
+            yield from ref_curve  # reference curve for predictive levels
+    else:
+        # The metric already got yielded, so it's only the result that is
+        # needed here.
+        (result,) = check_levels(
+            filtered_traffic,
+            levels_upper=levels_upper,
+            levels_lower=levels_lower,
+            render_func=renderer,
+            label=title,
+        )
+
+    # We have a valid result now. Just enhance it by the percentage info,
+    # if available
+    if speed:
+        perc_info = render.percent(100.0 * filtered_traffic / speed)
+        if assumed_speed_in or assumed_speed_out:
+            perc_info += "/" + renderer(speed)
+
+        yield Result(
+            state=result.state,
+            summary="%s (%s)" % (result.summary, perc_info),
+        )
+    else:
+        yield result
+
+    # output metric after result. this makes it easier to analyze the check output,
+    # as this is the "normal" order when yielding from check_levels.
+    assert metric is not None
+    yield metric
 
 
 def _render_floating_point(value: float, precision: int, unit: str) -> str:
@@ -1571,7 +1598,7 @@ def _sum_optional_floats(*vs: float | None) -> float | None:
     return s
 
 
-def _output_packet_rates(  # pylint: disable=too-many-branches
+def _output_packet_rates(
     abs_packet_levels: GeneralPacketLevels,
     perc_packet_levels: GeneralPacketLevels,
     nucast_levels: Optional[Tuple[float, float]],
@@ -1603,10 +1630,9 @@ def _output_packet_rates(  # pylint: disable=too-many-branches
             rates.outerr,
         ),
     ]:
-
         all_pacrate = _sum_optional_floats(urate, nurate, errorrate)
         success_pacrate = _sum_optional_floats(urate, nurate)
-        for value, abs_levels, perc_levels, display_name, metric_name, pacrate in [
+        for rate, abs_levels, perc_levels, display_name, metric_name, reference_rate in [
             (
                 errorrate,
                 abs_packet_levels["errors"][direction],
@@ -1640,70 +1666,22 @@ def _output_packet_rates(  # pylint: disable=too-many-branches
                 success_pacrate,
             ),
         ]:
-            if value is None:
+            if rate is None:
                 continue
 
-            # Calculate the metric with actual levels, no matter if they
-            # come from perc_- or abs_levels
-            if perc_levels is not None:
-                if pacrate is None:
-                    continue
-                if pacrate > 0:
-                    merged_levels: Optional[Tuple[float, float]] = (
-                        perc_levels[0] / 100.0 * pacrate,
-                        perc_levels[1] / 100.0 * pacrate,
-                    )
-                else:
-                    merged_levels = None
-            else:
-                merged_levels = abs_levels
-
-            metric = Metric(
-                f"{direction}{metric_name}",
-                value,
-                levels=merged_levels,
+            yield from _check_single_packet_rate(
+                rate=rate,
+                direction=direction,
+                abs_levels=abs_levels,
+                perc_levels=perc_levels,
+                display_name=display_name,
+                metric_name=metric_name,
+                reference_rate=reference_rate,
+                average_bmcast=average_bmcast,
+                item=item,
+                value_store=value_store,
+                timestamp=timestamp,
             )
-
-            # Further calculation now precedes with average value,
-            # if requested.
-            infotxt = f"{display_name.title()} {direction}"
-            if average_bmcast is not None and display_name not in ("errors", "unicast"):
-                value = get_average(
-                    value_store,
-                    "%s.%s.%s.avg" % (direction, display_name, item),
-                    timestamp,
-                    value,
-                    average_bmcast,
-                )
-                infotxt += f" average {average_bmcast}min"
-
-            if perc_levels is not None:
-                if pacrate is None:
-                    continue
-                # Note: A rate of 0% for a pacrate of 0 is mathematically incorrect,
-                # but it yields the best information for the "no packets" case in the check output.
-                perc_value = 0 if pacrate == 0 else value * 100 / pacrate
-                (result,) = check_levels(
-                    perc_value,
-                    levels_upper=perc_levels,
-                    render_func=partial(_render_floating_point, precision=3, unit="%"),
-                    label=infotxt,
-                    notice_only=True,
-                )
-                yield result
-            else:
-                (result,) = check_levels(
-                    value,
-                    levels_upper=abs_levels,
-                    render_func=partial(_render_floating_point, precision=2, unit=" packets/s"),
-                    label=infotxt,
-                    notice_only=True,
-                )
-                yield result
-
-            # output metric after result. this makes it easier to analyze the check output,
-            # as this is the "normal" order when yielding from check_levels.
-            yield metric
 
         for display_name, metric_name, rate, levels in [
             ("Non-unicast", "nucast", nurate, nucast_levels),
@@ -1719,6 +1697,83 @@ def _output_packet_rates(  # pylint: disable=too-many-branches
                 label=f"{display_name} {direction}",
                 notice_only=True,
             )
+
+
+def _check_single_packet_rate(
+    *,
+    rate: float,
+    direction: str,
+    abs_levels: Any,
+    perc_levels: Any,
+    display_name: str,
+    metric_name: str,
+    reference_rate: float | None,
+    average_bmcast: Optional[int],
+    item: str,
+    value_store: MutableMapping[str, Any],
+    timestamp: float,
+) -> type_defs.CheckResult:
+    # Calculate the metric with actual levels, no matter if they
+    # come from perc_- or abs_levels
+    if perc_levels is not None:
+        if reference_rate is None:
+            return
+        if reference_rate > 0:
+            merged_levels: Optional[Tuple[float, float]] = (
+                perc_levels[0] / 100.0 * reference_rate,
+                perc_levels[1] / 100.0 * reference_rate,
+            )
+        else:
+            merged_levels = None
+    else:
+        merged_levels = abs_levels
+
+    metric = Metric(
+        f"{direction}{metric_name}",
+        rate,
+        levels=merged_levels,
+    )
+
+    # Further calculation now precedes with average value,
+    # if requested.
+    infotxt = f"{display_name.title()} {direction}"
+    if average_bmcast is not None and display_name not in ("errors", "unicast"):
+        rate = get_average(
+            value_store,
+            "%s.%s.%s.avg" % (direction, display_name, item),
+            timestamp,
+            rate,
+            average_bmcast,
+        )
+        infotxt += f" average {average_bmcast}min"
+
+    if perc_levels is not None:
+        if reference_rate is None:
+            return
+        # Note: A rate of 0% for a pacrate of 0 is mathematically incorrect,
+        # but it yields the best information for the "no packets" case in the check output.
+        perc_value = 0 if reference_rate == 0 else rate * 100 / reference_rate
+        (result,) = check_levels(
+            perc_value,
+            levels_upper=perc_levels,
+            render_func=partial(_render_floating_point, precision=3, unit="%"),
+            label=infotxt,
+            notice_only=True,
+        )
+        yield result
+    else:
+        (result,) = check_levels(
+            rate,
+            levels_upper=abs_levels,
+            render_func=partial(_render_floating_point, precision=2, unit=" packets/s"),
+            label=infotxt,
+            notice_only=True,
+        )
+        yield result
+
+    # output metric after result. this makes it easier to analyze the check output,
+    # as this is the "normal" order when yielding from check_levels.
+    yield metric
 
 
 def cluster_check(

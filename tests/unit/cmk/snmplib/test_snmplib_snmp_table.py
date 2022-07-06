@@ -113,7 +113,10 @@ def test_sanitize_snmp_encoding(  # type:ignore[no-untyped-def]
     ts.set_ruleset(
         "snmp_character_encodings",
         [
-            (encoding, [], config.ALL_HOSTS, {}),
+            {
+                "condition": {},
+                "value": encoding,
+            },
         ],
     )
     config_cache = ts.apply(monkeypatch)
@@ -126,9 +129,7 @@ def test_is_bulkwalk_host(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     ts = Scenario()
     ts.set_ruleset(
         "bulkwalk_hosts",
-        [
-            ([], ["localhost"], {}),
-        ],
+        [{"condition": {"host_name": ["localhost"]}, "value": True}],
     )
     ts.add_host("abc")
     ts.add_host("localhost")
@@ -141,15 +142,11 @@ def test_is_classic_at_snmp_v1_host(monkeypatch) -> None:  # type:ignore[no-unty
     ts = Scenario()
     ts.set_ruleset(
         "bulkwalk_hosts",
-        [
-            ([], ["bulkwalk_h"], {}),
-        ],
+        [{"condition": {"host_name": ["bulkwalk_h"]}, "value": True}],
     )
     ts.set_ruleset(
         "snmpv2c_hosts",
-        [
-            ([], ["v2c_h"], {}),
-        ],
+        [{"condition": {"host_name": ["v2c_h"]}, "value": True}],
     )
     ts.add_host("bulkwalk_h")
     ts.add_host("v2c_h")

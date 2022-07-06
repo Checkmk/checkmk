@@ -11,10 +11,9 @@ from cmk.base.check_legacy_includes.df import (
     df_check_filesystem_list,
     FILESYSTEM_DEFAULT_PARAMS,
     filesystem_groups,
-    inventory_df_exclude_mountpoints,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.df import df_discovery
+from cmk.base.plugins.agent_based.utils.df import df_discovery, EXCLUDED_MOUNTPOINTS
 
 DiscoveryResult = Iterable
 CheckResult = Iterable
@@ -212,7 +211,7 @@ def discovery_zfsget(section: Section) -> DiscoveryResult:
     params = host_extra_conf(host_name(), filesystem_groups)
     return df_discovery(
         params,
-        [mp for mp in section if mp not in inventory_df_exclude_mountpoints],
+        [mp for mp in section if mp not in EXCLUDED_MOUNTPOINTS],
     )
 
 

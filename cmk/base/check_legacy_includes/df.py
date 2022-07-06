@@ -29,11 +29,6 @@ from .size_trend import size_trend  # type: ignore[attr-defined]
 filesystem_levels: List[Any] = []  # obsolete. Just here to check config and warn if changed
 filesystem_default_levels: Dict[str, Any] = {}  # can also be dropped some day in future
 
-# Filesystems to ignore. They should not be sent by agent anyway and
-# will indeed not be sent on Linux beginning with 1.6.0
-# TODO: Check other agents
-inventory_df_exclude_mountpoints = ["/dev"]
-
 # Grouping of filesystems into groups that are monitored as one entity
 # Example:
 # filesystem_groups = [

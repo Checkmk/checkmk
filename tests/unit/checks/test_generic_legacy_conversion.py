@@ -538,7 +538,6 @@ def test_all_check_variables_present(fix_plugin_legacy) -> None:
         "innovaphone_mem_default_levels",
         "innovaphone_temp_default_levels",
         "inventory_df_exclude_fs",
-        "inventory_df_exclude_mountpoints",
         "inventory_df_rules",
         "inventory_fujitsu_ca_ports",
         "inventory_multipath_rules",

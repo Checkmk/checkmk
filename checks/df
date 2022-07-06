@@ -10,10 +10,15 @@ from typing import Any, Iterable, Iterator, Mapping, NamedTuple, Sequence
 from cmk.base.check_legacy_includes.df import (
     df_check_filesystem_list_coroutine,
     FILESYSTEM_DEFAULT_PARAMS,
-    inventory_df_exclude_mountpoints,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1 import regex
-from cmk.base.plugins.agent_based.utils.df import df_discovery, DfBlock, DfInode, DfSection
+from cmk.base.plugins.agent_based.utils.df import (
+    df_discovery,
+    DfBlock,
+    DfInode,
+    DfSection,
+    EXCLUDED_MOUNTPOINTS,
+)
 
 factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
@@ -29,7 +34,7 @@ def _filter_df_blocks(
     never_ignore_mountpoints = inventory_options.get("never_ignore_mountpoints", [])
 
     for df_block in df_blocks:
-        if df_block.mountpoint in inventory_df_exclude_mountpoints:
+        if df_block.mountpoint in EXCLUDED_MOUNTPOINTS:
             continue
 
         if df_block.mountpoint.startswith("/var/lib/docker/"):

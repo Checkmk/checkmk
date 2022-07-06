@@ -24,5 +24,4 @@ item:
  Linux SNMP agents this is the mount point.
 
 discovery:
- One service is created for each fixed disk if the description
- of the filesystem in not listed in {inventory_df_exclude_mountpoints}.
+ One service is created for each fixed disk.

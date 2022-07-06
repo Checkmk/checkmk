@@ -61,12 +61,9 @@ item:
  the item is the name of the group.
 
 discovery:
- One service is created for each filesystem
- the agent reports except mount points listed in
- {inventory_df_exclude_mountpoints} and filesystem types
- listed in {inventory_df_exclude_fs}. The Windows agent
- only reports fixed disks. The Linux agent reports filesystems
- that have a size and are not of type smbfs, tmpfs, cifs or nfs.
+ One service is created for each filesystem the agent reports except filesystem types listed in {inventory_df_exclude_fs}.
+ The Windows agent only reports fixed disks.
+ The Linux agent reports filesystems that have a size and are not of type smbfs, tmpfs, cifs or nfs.
 
  If filesystem groups are configured in the ruleset "Filesystem Discovery" and a found filesystem
  is matching one of the patterns of a group, then instead of a

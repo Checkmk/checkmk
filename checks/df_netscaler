@@ -11,7 +11,7 @@ from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-impo
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.plugins.agent_based.utils.df import df_discovery
+from cmk.base.plugins.agent_based.utils.df import df_discovery, EXCLUDED_MOUNTPOINTS
 
 #
 # Example Output:
@@ -29,7 +29,7 @@ factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 def inventory_df_netscaler(info):
     mplist = []
     for mp, size_mb, _avail_mb in info:
-        if int(size_mb) > 0 and mp not in inventory_df_exclude_mountpoints:
+        if int(size_mb) > 0 and mp not in EXCLUDED_MOUNTPOINTS:
             mplist.append(mp)
     return df_discovery(host_extra_conf(host_name(), filesystem_groups), mplist)
 

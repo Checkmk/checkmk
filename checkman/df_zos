@@ -11,8 +11,7 @@ description:
  the check and its numerous features.
 
 discovery:
- One service is created for each filesystem except mount points listed
- in {inventory_df_exclude_mountpoints} and filesystems with zero size.
+ One service is created for each filesystem except filesystems with zero size.
 
 item:
  The mount point of the filesystem

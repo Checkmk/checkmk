@@ -1,0 +1,16 @@
+Title: Filesystem services: drop configuration via .mk file
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1657141188
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+This Werk only affects users that configured <i>Filesystem</i> services to ignore individual mount points via the variable <tt>inventory_df_exclude_mountpoints</tt> in a <tt>.mk</tt> file.
+
+This variable is no longer supported (as the corresponding plugins are migrated to the new API).
+
+You can use the <i>Disabled services</i> ruleset to disable those services in the <i>Setup</i> menu.
+

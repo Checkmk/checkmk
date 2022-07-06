@@ -11,6 +11,7 @@ from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-impo
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.df import EXCLUDED_MOUNTPOINTS
 
 factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
@@ -18,7 +19,7 @@ factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 def inventory_emc_datadomain_fs(info):
     mplist = []
     for line in info:
-        if line[1] in inventory_df_exclude_mountpoints:
+        if line[1] in EXCLUDED_MOUNTPOINTS:
             continue
         mplist.append((line[1], None))
     return mplist

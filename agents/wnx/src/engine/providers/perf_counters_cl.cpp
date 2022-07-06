@@ -19,7 +19,7 @@
 namespace cma::provider {
 
 namespace {
-void RemoveTrailingCR(std::string &accu) {
+void RemoveTrailingCR(std::string &accu) noexcept {
     if (!accu.empty() && accu.back() == '\n') {
         accu.pop_back();
     }
@@ -30,7 +30,7 @@ std::string AccumulateCounters(
     std::wstring_view prefix_name,
     const std::vector<std::wstring_view> &counter_array) {
     std::string accu;
-    for (const auto &cur_counter : counter_array) {
+    for (const auto cur_counter : counter_array) {
         auto [key, name] =
             tools::ParseKeyValue(cur_counter, exe::cmdline::kSplitter);
 
@@ -42,8 +42,9 @@ std::string AccumulateCounters(
 
         std::ranges::replace(key, L'*', L' ');
 
-        if (!name.empty() && !key.empty())
+        if (!name.empty() && !key.empty()) {
             accu += provider::BuildWinPerfSection(prefix_name, name, key);
+        }
     }
 
     RemoveTrailingCR(accu);
@@ -62,12 +63,12 @@ int RunPerf(
     const std::wstring &port,       // format as in carrier.h mail:*
     const std::wstring &answer_id,  // answer id, should be set
     int /*timeout*/,                // how long wait for execution
-    const std::vector<std::wstring_view> counter_array  // name of counters
+    const std::vector<std::wstring_view> &counter_array  // name of counters
 ) {
     auto accu = AccumulateCounters(peer_name, counter_array);
 
-    auto result = carrier::CoreCarrier::FireSend(peer_name, port, answer_id,
-                                                 accu.c_str(), accu.size());
+    const auto result = carrier::CoreCarrier::FireSend(
+        peer_name, port, answer_id, accu.c_str(), accu.size());
     XLOG::d.i("Send at port '{}' '{}' by '{}' [{}]", wtools::ToUtf8(port),
               result ? "success" : "failed", wtools::ToUtf8(peer_name),
               accu.size());

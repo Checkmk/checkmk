@@ -18,12 +18,13 @@
 namespace cma::provider {
 class UptimeSync : public Synchronous {
 public:
-    UptimeSync() : Synchronous(cma::section::kUptimeName, 0) {}
+    UptimeSync() noexcept : Synchronous(cma::section::kUptimeName, 0) {}
 
-    UptimeSync(const std::string &name, char separator)
+    UptimeSync(const std::string &name, char separator) noexcept
         : Synchronous(name, separator) {}
 
-    explicit UptimeSync(const std::string &name) : Synchronous(name, 0) {}
+    explicit UptimeSync(const std::string &name) noexcept
+        : Synchronous(name, 0) {}
 
 protected:
     std::string makeBody() override;
@@ -31,12 +32,13 @@ protected:
 
 class UptimeAsync : public Asynchronous {
 public:
-    UptimeAsync() : Asynchronous(cma::section::kUptimeName, 0) {}
+    UptimeAsync() noexcept : Asynchronous(cma::section::kUptimeName, 0) {}
 
-    UptimeAsync(const std::string &name, char separator)
+    UptimeAsync(const std::string &name, char separator) noexcept
         : Asynchronous(name, separator) {}
 
-    explicit UptimeAsync(const std::string &name) : Asynchronous(name, 0) {}
+    explicit UptimeAsync(const std::string &name) noexcept
+        : Asynchronous(name, 0) {}
 
 protected:
     std::string makeBody() override;

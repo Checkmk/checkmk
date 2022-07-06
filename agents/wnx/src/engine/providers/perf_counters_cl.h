@@ -23,7 +23,7 @@ int RunPerf(
     const std::wstring &port,       // format as in carrier.h mail:*
     const std::wstring &answer_id,  // answer id, should be a number
     int /*timeout*/,                // how long wait for execution
-    const std::vector<std::wstring_view> counter_array  // name of counters
+    const std::vector<std::wstring_view> &counter_array  // name of counters
 );
 
 // internal procedure to get all data from all counters and format for CMK

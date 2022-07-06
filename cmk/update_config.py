@@ -48,7 +48,6 @@ import cmk.utils.paths
 import cmk.utils.site
 import cmk.utils.tty as tty
 from cmk.utils import password_store, version
-from cmk.utils.bi.bi_legacy_config_converter import BILegacyPacksConverter
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.exceptions import MKGeneralException
@@ -82,7 +81,6 @@ import cmk.gui.watolib.hosts_and_folders
 import cmk.gui.watolib.rulesets
 import cmk.gui.watolib.tags
 from cmk.gui import main_modules
-from cmk.gui.bi import BIManager
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.logged_in import SuperUserContext
@@ -318,7 +316,6 @@ class UpdateConfig:
             # NEXT CAUTION: self._migrate_dashlets, must be called *after* migrate_pagetype_topics_to_ids!
             (self._migrate_dashlets, "Migrate dashlets"),
             (self._migrate_ldap_connections, "Migrate LDAP connections"),
-            (self._rewrite_bi_configuration, "Rewrite BI Configuration"),
             (self._adjust_user_attributes, "Set version specific user attributes"),
             (self._rewrite_py2_inventory_data, "Rewriting inventory data"),
             (self._migrate_pre_2_0_audit_log, "Migrate audit log"),
@@ -1268,10 +1265,6 @@ class UpdateConfig:
                 connection["bind"] = (dn, ("password", password))
 
         save_connection_config(connections)
-
-    def _rewrite_bi_configuration(self) -> None:
-        """Convert the bi configuration to the new (REST API compatible) format"""
-        BILegacyPacksConverter(self._logger, BIManager.bi_configuration_file()).convert_config()
 
     def _migrate_dashlets(self) -> None:
         global_config = load_configuration_settings(full_config=True)

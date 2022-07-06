@@ -68,8 +68,8 @@ inline bool CompareIgnoreCase(wchar_t lhs, wchar_t rhs) noexcept {
     auto li = lhs.cbegin();
     auto ri = rhs.cbegin();
     for (; li != lhs.cend() && ri != rhs.cend(); ++ri, ++li) {
-        auto right_char = std::tolower(*ri);
-        auto left_char = std::tolower(*li);
+        const auto right_char = std::tolower(*ri);
+        const auto left_char = std::tolower(*li);
         if (left_char != right_char) {
             return left_char < right_char;
         }
@@ -166,7 +166,7 @@ inline void AddVector(std::vector<char> &accu, const T &add) noexcept {
 
 template <typename T>
 auto ParseKeyValue(const std::basic_string<T> value, T splitter) {
-    auto end = value.find_first_of(splitter);
+    const auto end = value.find_first_of(splitter);
     if (end == std::basic_string<T>::npos) {
         return std::make_tuple(std::basic_string<T>(), std::basic_string<T>());
     }
@@ -177,12 +177,12 @@ auto ParseKeyValue(const std::basic_string<T> value, T splitter) {
 
 template <typename T>
 auto ParseKeyValue(const std::basic_string_view<T> value, T splitter) {
-    auto end = value.find_first_of(splitter);
+    const auto end = value.find_first_of(splitter);
     if (end == std::basic_string<T>::npos) {
         return std::make_tuple(std::basic_string<T>(), std::basic_string<T>());
     }
-    auto k = value.substr(0, end);
-    auto v = value.substr(end + 1);
+    const auto k = value.substr(0, end);
+    const auto v = value.substr(end + 1);
     return std::make_tuple(std::basic_string<T>(k), std::basic_string<T>(v));
 }
 

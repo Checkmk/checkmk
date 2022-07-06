@@ -20,14 +20,9 @@
 #include "read_file.h"
 #include "tools/_misc.h"
 
-// Class to be used internally
-// placed in h not cpp to be unit tested.
-// should be used as global variable
-// not thread safe
-// initialized ONCE on start
 namespace cma::cfg::details {
 
-// tool to get ImagePath value from Registry
+/// get ImagePath value from Registry
 std::wstring FindServiceImagePath(std::wstring_view service_name);
 
 std::filesystem::path ExtractPathFromServiceName(
@@ -37,8 +32,7 @@ std::filesystem::path FindRootByExePath(const std::wstring &cmd_line);
 
 enum class CleanMode { none, smart, all };
 
-// The flag is based on AW report - only on positive report true
-// TODO(sk): Update comment and build till 5.03.2021
+// The flag is based on AW report
 constexpr bool g_remove_dirs_on_clean = true;
 
 CleanMode GetCleanDataFolderMode();
@@ -58,7 +52,7 @@ public:
     void createDataFolderStructure(const std::wstring &proposed_folder,
                                    Protection protection);
 
-    // for testing and reloading
+    /// for reloading
     void cleanAll();
 
     [[nodiscard]] inline std::filesystem::path getSystemPlugins() const {
@@ -134,8 +128,7 @@ public:
     [[nodiscard]] inline std::filesystem::path getData() const { return data_; }
 
 private:
-    // make [recursive] folder in windows
-    // returns path if folder was created successfully
+    /// returns path if folder was created successfully
     static std::filesystem::path makeDefaultDataFolder(
         std::wstring_view data_folder, Protection protection);
     std::filesystem::path root_;          // where is root
@@ -143,7 +136,6 @@ private:
     std::filesystem::path public_logs_;   //
     std::filesystem::path private_logs_;  //
 
-    // testing, enabled only in header we see gtest.h
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class AgentConfig;
     FRIEND_TEST(AgentConfig, FoldersTest);
@@ -163,14 +155,15 @@ int CreateTree(const std::filesystem::path &base_path);
 namespace cma::cfg {
 namespace details {
 constexpr size_t kMaxFoldersStackSize = 32;
-// low level API to combine sequences
+
+/// low level API to combine sequences
 enum class Combine { overwrite, merge, merge_value };
 constexpr Combine GetCombineMode(std::string_view name);
 void CombineSequence(std::string_view name, YAML::Node target_value,
                      const YAML::Node &source_value, Combine combine);
 
-// critical and invisible global variables
-// YAML config and PAThs are here
+/// critical and invisible global variables
+/// YAML config and PAThs are here
 class ConfigInfo {
 public:
     struct YamlData {
@@ -207,8 +200,8 @@ public:
 
     private:
         std::string data_;
-        // verifies exists and timestamp
-        void checkStatus() {
+        /// verifies exists and timestamp
+        void checkStatus() noexcept {
             namespace fs = std::filesystem;
             std::error_code ec;
             exists_ = fs::exists(path_, ec);
@@ -219,7 +212,7 @@ public:
             }
         }
 
-        // try to load data as yaml
+        /// try to load data as yaml
         void checkData() {
             try {
                 auto yaml = YAML::Load(data_);
@@ -490,10 +483,7 @@ std::wstring FindMsiExec();
 std::string FindHostName();
 }  // namespace details
 details::ConfigInfo &GetCfg() noexcept;
-}  // namespace cma::cfg
-
-namespace cma::cfg {
-using CfgNode = cma::cfg::details::ConfigInfo::sptr;
+using CfgNode = details::ConfigInfo::sptr;
 
 CfgNode CreateNode(const std::string &name);
 CfgNode GetNode(const std::string &name);

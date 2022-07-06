@@ -75,7 +75,7 @@ STRING_TABLE_NO_SYNC = [
         ([], []),
     ],
 )
-def test_discover_timesyncd(
+def test_discover_timesyncd(  # type:ignore[no-untyped-def]
     string_table: StringTable,
     result: DiscoveryResult,
 ):
@@ -134,7 +134,7 @@ def test_discover_timesyncd(
         ),
     ],
 )
-def test_check_timesyncd_freeze(
+def test_check_timesyncd_freeze(  # type:ignore[no-untyped-def]
     string_table: StringTable,
     params: timesyncd.CheckParams,
     result: CheckResult,
@@ -161,7 +161,7 @@ def test_check_timesyncd_freeze(
         ),
     ],
 )
-def test_check_timesyncd_negative_time(
+def test_check_timesyncd_negative_time(  # type:ignore[no-untyped-def]
     string_table: StringTable,
     params: timesyncd.CheckParams,
     result: CheckResult,

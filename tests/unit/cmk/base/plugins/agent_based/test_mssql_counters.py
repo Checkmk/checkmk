@@ -343,14 +343,14 @@ big_services = [
         },
     )
 ])
-def test_parse_mssql_counters(string_table, expected_parsed_data) -> None:
+def test_parse_mssql_counters(string_table, expected_parsed_data) -> None:# type:ignore[no-untyped-def]
     assert parse_mssql_counters(string_table) == expected_parsed_data
 
 
 @pytest.mark.parametrize("params,section,expected_services", [
     ({}, big_parsed_data, big_services),
 ])
-def test_discovery_mssql_counters_cache_hits(params, section, expected_services) -> None:
+def test_discovery_mssql_counters_cache_hits(params, section, expected_services) -> None:# type:ignore[no-untyped-def]
     results = list(discovery_mssql_counters_cache_hits(params, section))
     print(",\n".join(str(r) for r in results))
     assert results == expected_services
@@ -362,7 +362,7 @@ def test_discovery_mssql_counters_cache_hits(params, section, expected_services)
         Metric('cache_hit_ratio', 99.50596864711571),
     ]),
 ])
-def test_check_mssql_counters_cache_hits(item, section, expected_results) -> None:
+def test_check_mssql_counters_cache_hits(item, section, expected_results) -> None:# type:ignore[no-untyped-def]
     results = list(check_mssql_counters_cache_hits(item, section))
     print(",\n".join(str(r) for r in results))
     assert results == expected_results
@@ -373,7 +373,7 @@ def test_check_mssql_counters_cache_hits(item, section, expected_results) -> Non
         Service(item='MSSQL_VEEAMSQL2012 tempdb'),
     ]),
 ])
-def test_discovery_mssql_counters_file_sizes(section, expected_services) -> None:
+def test_discovery_mssql_counters_file_sizes(section, expected_services) -> None:# type:ignore[no-untyped-def]
     results = list(discovery_mssql_counters_file_sizes(section=section))
     print(",\n".join(str(r) for r in results))
     assert results == expected_services
@@ -405,7 +405,7 @@ def test_discovery_mssql_counters_file_sizes(section, expected_services) -> None
         Metric('log_files_used', 644096.0, levels=(12555878.4, 13253427.2), boundaries=(0.0, None)),
     ]),
 ])
-def test_check_mssql_counters_file_sizes(item, params, section, expected_results) -> None:
+def test_check_mssql_counters_file_sizes(item, params, section, expected_results) -> None:# type:ignore[no-untyped-def]
     results = list(check_mssql_counters_file_sizes(
         item=item,
         params=params,
@@ -418,7 +418,7 @@ def test_check_mssql_counters_file_sizes(item, params, section, expected_results
 @pytest.mark.parametrize("section,expected_services", [
     (big_parsed_data, [Service(item='MSSQL_VEEAMSQL2012')]),
 ])
-def test_discovery_mssql_counters_locks_per_batch(section, expected_services) -> None:
+def test_discovery_mssql_counters_locks_per_batch(section, expected_services) -> None:# type:ignore[no-untyped-def]
     results = list(discovery_mssql_counters_locks_per_batch(section))
     print(",\n".join(str(r) for r in results))
     assert results == expected_services
@@ -431,7 +431,7 @@ def test_discovery_mssql_counters_locks_per_batch(section, expected_services) ->
         Metric('locks_per_batch', 0.0, boundaries=(0.0, None)),
     ]),
 ])
-def test_check_mssql_locks_per_batch(item, params, section, expected_results) -> None:
+def test_check_mssql_locks_per_batch(item, params, section, expected_results) -> None:# type:ignore[no-untyped-def]
     # re-run check_locks_per_batch_base() once in order to get rates
     vs: Dict[str, Any] = {}
     results = []
@@ -448,7 +448,7 @@ def test_check_mssql_locks_per_batch(item, params, section, expected_results) ->
         Service(item='MSSQL_VEEAMSQL2012:Locks _Total'),
     ]),
 ])
-def test_discovery_mssql_counters_locks(section, expected_services) -> None:
+def test_discovery_mssql_counters_locks(section, expected_services) -> None:# type:ignore[no-untyped-def]
     results = list(discovery_mssql_counters_locks(section))
     print(",\n".join(str(r) for r in results))
     assert results == expected_services
@@ -470,7 +470,7 @@ def test_discovery_mssql_counters_locks(section, expected_services) -> None:
         Metric('lock_waits_per_second', 0.0, boundaries=(0.0, None))
     ]),
 ])
-def test_check_mssql_locks(item, params, section, expected_results) -> None:
+def test_check_mssql_locks(item, params, section, expected_results) -> None:# type:ignore[no-untyped-def]
     # re-run cluster_check_locks_per_batch_base() once in order to get rates
     vs: ValueStore = {}
     results = []
@@ -487,7 +487,7 @@ def test_check_mssql_locks(item, params, section, expected_results) -> None:
         Service(item='MSSQL_VEEAMSQL2012:Buffer_Manager None'),
     ]),
 ])
-def test_discovery_mssql_counters_pageactivity(section, expected_services) -> None:
+def test_discovery_mssql_counters_pageactivity(section, expected_services) -> None:# type:ignore[no-untyped-def]
     results = list(discovery_mssql_counters_pageactivity(section))
     print(",\n".join(str(r) for r in results))
     assert results == expected_services
@@ -503,7 +503,7 @@ def test_discovery_mssql_counters_pageactivity(section, expected_services) -> No
         Metric('page_lookups_per_second', 0.0, boundaries=(0.0, None)),
     ]),
 ])
-def test_check_mssql_counters_pageactivity(item, params, section, expected_results) -> None:
+def test_check_mssql_counters_pageactivity(item, params, section, expected_results) -> None:# type:ignore[no-untyped-def]
     # re-run cluster_check_locks_per_batch_base() once in order to get rates
     vs: ValueStore = {}
     results = []
@@ -522,7 +522,7 @@ def test_check_mssql_counters_pageactivity(item, params, section, expected_resul
         Service(item='MSSQL_VEEAMSQL2012:SQL_Statistics None sql_re-compilations/sec'),
     ]),
 ])
-def test_discovery_mssql_counters_sqlstats(section, expected_services) -> None:
+def test_discovery_mssql_counters_sqlstats(section, expected_services) -> None:# type:ignore[no-untyped-def]
     results = list(discovery_mssql_counters_sqlstats(section))
     print(",\n".join(str(r) for r in results))
     assert results == expected_services
@@ -535,7 +535,7 @@ def test_discovery_mssql_counters_sqlstats(section, expected_services) -> None:
         Metric('sql_compilations_per_second', 0.0, boundaries=(0.0, None)),
     ]),
 ])
-def test_check_mssql_counters_sqlstats(item, params, section, expected_results) -> None:
+def test_check_mssql_counters_sqlstats(item, params, section, expected_results) -> None:# type:ignore[no-untyped-def]
     # re-run cluster_check_locks_per_batch_base() once in order to get rates
     vs: ValueStore = {}
     results = []
@@ -552,7 +552,7 @@ def test_check_mssql_counters_sqlstats(item, params, section, expected_results) 
         Service(item='MSSQL_VEEAMSQL2012 tempdb'),
     ]),
 ])
-def test_discovery_mssql_counters_transactions(section, expected_services) -> None:
+def test_discovery_mssql_counters_transactions(section, expected_services) -> None:# type:ignore[no-untyped-def]
     results = list(discovery_mssql_counters_transactions(section))
     print(",\n".join(str(r) for r in results))
     assert results == expected_services
@@ -571,7 +571,7 @@ def test_discovery_mssql_counters_transactions(section, expected_services) -> No
         Metric('tracked_transactions_per_second', 0.0, boundaries=(0.0, None)),
     ]),
 ])
-def test_check_mssql_counters_transactions(item, params, section, expected_results) -> None:
+def test_check_mssql_counters_transactions(item, params, section, expected_results) -> None:# type:ignore[no-untyped-def]
     # re-run cluster_check_locks_per_batch_base() once in order to get rates
     vs: ValueStore = {}
     results = []

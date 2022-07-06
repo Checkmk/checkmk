@@ -32,7 +32,7 @@ DATA = [
         ),
     ],
 )
-def test_veeam_cdp_jobs_discovery(
+def test_veeam_cdp_jobs_discovery(  # type:ignore[no-untyped-def]
     data: type_defs.StringTable,
     result: DiscoveryResult,
 ):
@@ -78,7 +78,7 @@ def test_veeam_cdp_jobs_discovery(
         ),
     ],
 )
-def test_veeam_cdp_jobs_check(
+def test_veeam_cdp_jobs_check(  # type:ignore[no-untyped-def]
     item: str,
     params: veeam_cdp_jobs.CheckParams,
     data: type_defs.StringTable,

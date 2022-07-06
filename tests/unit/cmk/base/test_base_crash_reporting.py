@@ -73,7 +73,7 @@ def test_base_crash_report_save() -> None:
     assert crash.crash_info["time"] == crash2.crash_info["time"]
 
 
-def test_check_crash_report_from_exception(monkeypatch) -> None:
+def test_check_crash_report_from_exception(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     Scenario().apply(monkeypatch)
     crash = None
     try:
@@ -117,7 +117,7 @@ def test_check_crash_report_from_exception(monkeypatch) -> None:
         assert crash.crash_info["details"][key] == value, "%r has invalid value" % key
 
 
-def test_check_crash_report_save(monkeypatch) -> None:
+def test_check_crash_report_save(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     Scenario().apply(monkeypatch)
     store = crash_reporting.CrashReportStore()
     try:
@@ -137,7 +137,7 @@ def test_check_crash_report_save(monkeypatch) -> None:
     assert crash2.crash_info["exc_value"] == "DING"
 
 
-def test_check_crash_report_read_agent_output(monkeypatch) -> None:
+def test_check_crash_report_read_agent_output(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     Scenario().apply(monkeypatch)
     cache_path = Path(cmk.utils.paths.tcp_cache_dir, "testhost")
     cache_path.parent.mkdir(parents=True, exist_ok=True)
@@ -162,7 +162,7 @@ def test_check_crash_report_read_agent_output(monkeypatch) -> None:
     assert crash.snmp_info is None
 
 
-def test_check_crash_report_read_snmp_info(monkeypatch) -> None:
+def test_check_crash_report_read_snmp_info(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     Scenario().apply(monkeypatch)
     cache_path = Path(cmk.utils.paths.data_source_cache_dir, "snmp", "testhost")
     cache_path.parent.mkdir(parents=True, exist_ok=True)

@@ -27,7 +27,7 @@ pytestmark = pytest.mark.checks
         ("2 hr(s)", 7200),
     ],
 )
-def test_human_read_uptime(string, result) -> None:
+def test_human_read_uptime(string, result) -> None:  # type:ignore[no-untyped-def]
     assert uptime.parse_human_read_uptime(string) == result
 
 
@@ -38,7 +38,7 @@ def test_human_read_uptime(string, result) -> None:
         (uptime_utils.Section(None, None), False),
     ],
 )
-def test_uptime_discovery(section, do_discover) -> None:
+def test_uptime_discovery(section, do_discover) -> None:  # type:ignore[no-untyped-def]
     assert bool(list(uptime_utils.discover(section))) is do_discover
 
 
@@ -218,7 +218,7 @@ def test_uptime_check_zero() -> None:
         ),
     ],
 )
-def test_uptime_solaris_inputs(info, reference) -> None:
+def test_uptime_solaris_inputs(info, reference) -> None:  # type:ignore[no-untyped-def]
 
     section = uptime.parse_uptime(info)
     assert section is not None

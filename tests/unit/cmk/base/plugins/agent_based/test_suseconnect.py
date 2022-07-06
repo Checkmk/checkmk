@@ -53,11 +53,11 @@ def _get_section_1() -> Section:
     return parse_suseconnect(STRING_TABLE_1)
 
 
-def test_discovery(discover_suseconnect, section_1: Section) -> None:
+def test_discovery(discover_suseconnect, section_1: Section) -> None:  # type:ignore[no-untyped-def]
     assert list(discover_suseconnect(section_1)) == [Service()]
 
 
-def test_check(check_suseconnect, section_1: Section) -> None:
+def test_check(check_suseconnect, section_1: Section) -> None:  # type:ignore[no-untyped-def]
     with on_time("2020-07-15 00:00:00", "UTC"):
         assert list(
             check_suseconnect(
@@ -79,7 +79,7 @@ def test_check(check_suseconnect, section_1: Section) -> None:
         ]
 
 
-def test_agent_output_parsable(check_suseconnect) -> None:
+def test_agent_output_parsable(check_suseconnect) -> None:  # type:ignore[no-untyped-def]
     with on_time("2020-07-15 00:00:00", "UTC"):
         assert list(
             check_suseconnect(

@@ -14,7 +14,7 @@ import cmk.base.config as config
 from cmk.base.sources import fetcher_configuration
 
 
-def make_scenario(hostname, tags) -> Scenario:
+def make_scenario(hostname, tags) -> Scenario:  # type:ignore[no-untyped-def]
     ts = Scenario()
     ts.add_host(hostname, tags=tags)
     return ts
@@ -51,7 +51,9 @@ def make_scenario(hostname, tags) -> Scenario:
         ),
     ],
 )
-def test_generates_correct_sections(hostname, tags, fetchers, monkeypatch, fixup_ip_lookup) -> None:
+def test_generates_correct_sections(  # type:ignore[no-untyped-def]
+    hostname, tags, fetchers, monkeypatch, fixup_ip_lookup
+) -> None:
     make_scenario(hostname, tags).apply(monkeypatch)
     conf = fetcher_configuration.fetchers(config.HostConfig.make_host_config(hostname))
     assert [FetcherType[f["fetcher_type"]] for f in conf["fetchers"]] == fetchers

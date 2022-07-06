@@ -397,7 +397,7 @@ from ..utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventorize_interfaces(
+def test_inventorize_interfaces(  # type:ignore[no-untyped-def]
     mocker,
     params: InventoryParams,
     interfaces: Sequence[Interface],

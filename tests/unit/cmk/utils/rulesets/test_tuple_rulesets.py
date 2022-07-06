@@ -36,7 +36,7 @@ def ts(monkeypatch):
     return ts
 
 
-def test_service_extra_conf(ts) -> None:
+def test_service_extra_conf(ts) -> None:  # type:ignore[no-untyped-def]
     ruleset: List[Tuple[str, List[str], List[str], List[str], Dict]] = [
         ("1", [], tuple_rulesets.ALL_HOSTS, tuple_rulesets.ALL_SERVICES, {}),
         (
@@ -98,7 +98,7 @@ def host_ruleset():
     ]
 
 
-def test_host_extra_conf(ts, host_ruleset) -> None:
+def test_host_extra_conf(ts, host_ruleset) -> None:  # type:ignore[no-untyped-def]
     assert ts.config_cache.host_extra_conf("host1", host_ruleset) == [
         {"1": True},
         {"2": True},
@@ -116,7 +116,7 @@ def test_host_extra_conf(ts, host_ruleset) -> None:
     ]
 
 
-def test_host_extra_conf_merged(ts, host_ruleset) -> None:
+def test_host_extra_conf_merged(ts, host_ruleset) -> None:  # type:ignore[no-untyped-def]
     assert ts.config_cache.host_extra_conf_merged("host1", host_ruleset) == {
         "1": True,
         "2": True,
@@ -214,7 +214,7 @@ def test_host_extra_conf_merged(ts, host_ruleset) -> None:
         ],
     ],
 )
-def test_in_boolean_serviceconf_list(ts, parameters) -> None:
+def test_in_boolean_serviceconf_list(ts, parameters) -> None:  # type:ignore[no-untyped-def]
     ruleset, outcome_host1, outcome_host2 = parameters
 
     assert (
@@ -225,7 +225,7 @@ def test_in_boolean_serviceconf_list(ts, parameters) -> None:
     )
 
 
-def test_all_matching_hosts(ts) -> None:
+def test_all_matching_hosts(ts) -> None:  # type:ignore[no-untyped-def]
     config_cache = ts.config_cache
     assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {"agent": "no-agent"}}, with_foreign_hosts=False
@@ -374,5 +374,7 @@ def test_hosttags_match_taglist_negate() -> None:
         ([r"OMD ([a-z]+) \1"], "OMD stable stable", True),
     ],
 )
-def test_in_extraconf_servicelist(service_patterns, service, expected) -> None:
+def test_in_extraconf_servicelist(  # type:ignore[no-untyped-def]
+    service_patterns, service, expected
+) -> None:
     assert config.in_extraconf_servicelist(service_patterns, service) == expected

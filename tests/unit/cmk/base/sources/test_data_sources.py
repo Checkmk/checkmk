@@ -108,7 +108,9 @@ def test_host_config_creates_passing_source_sources(
         (TCPSource, {}),
     ],
 )
-def test_data_source_preselected(monkeypatch, source, kwargs) -> None:
+def test_data_source_preselected(  # type:ignore[no-untyped-def]
+    monkeypatch, source, kwargs
+) -> None:
 
     selected_sections = {SectionName("keep")}  # <- this is what we care about
 

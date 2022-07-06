@@ -52,7 +52,9 @@ def source_fixture(scenario, hostname, ipaddress):
     )
 
 
-def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch) -> None:
+def test_snmp_ipaddress_from_mgmt_board_unresolvable(  # type:ignore[no-untyped-def]
+    hostname, monkeypatch
+) -> None:
     def fake_lookup_ip_address(*_a, **_kw):
         raise MKIPAddressLookupError("Failed to ...")
 
@@ -71,20 +73,22 @@ def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch) -> N
     assert config.lookup_mgmt_board_ip_address(host_config) is None
 
 
-def test_attribute_defaults(source, hostname, ipaddress, monkeypatch) -> None:
+def test_attribute_defaults(  # type:ignore[no-untyped-def]
+    source, hostname, ipaddress, monkeypatch
+) -> None:
     assert source.hostname == hostname
     assert source.ipaddress == ipaddress
     assert source.id == "snmp"
     assert source._on_snmp_scan_error == OnError.RAISE
 
 
-def test_description_with_ipaddress(source, monkeypatch) -> None:
+def test_description_with_ipaddress(source, monkeypatch) -> None:  # type:ignore[no-untyped-def]
     default = "SNMP (Community: 'public', Bulk walk: no, Port: 161, Backend: Classic)"
     assert source.description == default
 
 
 class TestSNMPSource_SNMP:
-    def test_attribute_defaults(self, monkeypatch) -> None:
+    def test_attribute_defaults(self, monkeypatch) -> None:  # type:ignore[no-untyped-def]
         hostname = "testhost"
         ipaddress = "1.2.3.4"
 
@@ -105,7 +109,7 @@ class TestSNMPSource_SNMP:
 
 
 class TestSNMPSource_MGMT:
-    def test_attribute_defaults(self, monkeypatch) -> None:
+    def test_attribute_defaults(self, monkeypatch) -> None:  # type:ignore[no-untyped-def]
         hostname = "testhost"
         ipaddress = "1.2.3.4"
 
@@ -139,14 +143,14 @@ class TestSNMPSummaryResult:
         return HostName("testhost")
 
     @pytest.fixture
-    def scenario(self, hostname: HostName, monkeypatch):
+    def scenario(self, hostname: HostName, monkeypatch):  # type:ignore[no-untyped-def]
         ts = Scenario()
         ts.add_host(hostname)
         ts.apply(monkeypatch)
         return ts
 
     @pytest.fixture
-    def source(self, hostname: HostName):
+    def source(self, hostname: HostName):  # type:ignore[no-untyped-def]
         return SNMPSource(
             hostname,
             "1.2.3.4",
@@ -159,13 +163,13 @@ class TestSNMPSummaryResult:
         )
 
     @pytest.mark.usefixtures("scenario")
-    def test_defaults(self, source) -> None:
+    def test_defaults(self, source) -> None:  # type:ignore[no-untyped-def]
         assert source.summarize(result.OK(HostSections[AgentRawDataSection]())) == [
             ActiveCheckResult(0, "Success")
         ]
 
     @pytest.mark.usefixtures("scenario")
-    def test_with_exception(self, source) -> None:
+    def test_with_exception(self, source) -> None:  # type:ignore[no-untyped-def]
         assert source.summarize(result.Error(Exception())) == [ActiveCheckResult(3)]
 
 

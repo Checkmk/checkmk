@@ -39,7 +39,9 @@ fun_args_stdin: Tuple[Tuple[SpecialAgentInfoFunctionResult, Tuple[str, Optional[
 
 class TestDSProgramChecker:
     @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
-    def test_attribute_defaults(self, ipaddress, monkeypatch) -> None:
+    def test_attribute_defaults(  # type:ignore[no-untyped-def]
+        self, ipaddress, monkeypatch
+    ) -> None:
         template = ""
         hostname = HostName("testhost")
         ts = Scenario()
@@ -59,7 +61,9 @@ class TestDSProgramChecker:
         assert source.id == "agent"
 
     @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
-    def test_template_translation(self, ipaddress, monkeypatch) -> None:
+    def test_template_translation(  # type:ignore[no-untyped-def]
+        self, ipaddress, monkeypatch
+    ) -> None:
         template = "<NOTHING>x<IP>x<HOST>x<host>x<ip>x"
         hostname = HostName("testhost")
         ts = Scenario()

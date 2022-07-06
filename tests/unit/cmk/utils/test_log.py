@@ -16,7 +16,7 @@ def test_get_logger() -> None:
     assert l.parent == log.logger
 
 
-def test_setup_console_logging(capsys) -> None:
+def test_setup_console_logging(capsys) -> None:  # type:ignore[no-untyped-def]
     out, err = capsys.readouterr()
     log.clear_console_logging()
 
@@ -41,7 +41,7 @@ def test_setup_console_logging(capsys) -> None:
     assert err == ""
 
 
-def test_open_log(tmp_path) -> None:
+def test_open_log(tmp_path) -> None:  # type:ignore[no-untyped-def]
     log_file = tmp_path / "test.log"
     log.open_log(log_file)
 

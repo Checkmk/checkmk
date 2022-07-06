@@ -93,7 +93,9 @@ def test_host_labels_ps_match() -> None:
         (["root", "/sbin/init", "splash"], "/sbin/init", None, True),
     ],
 )
-def test_process_matches(ps_line, ps_pattern, user_pattern, result) -> None:
+def test_process_matches(  # type:ignore[no-untyped-def]
+    ps_line, ps_pattern, user_pattern, result
+) -> None:
     psi = ps.PsInfo(ps_line[0])
     matches_attr = ps.process_attributes_match(psi, user_pattern, (None, False))
     matches_proc = ps.process_matches(ps_line[1:], ps_pattern)
@@ -111,7 +113,7 @@ def test_process_matches(ps_line, ps_pattern, user_pattern, result) -> None:
         (["test", "c:\\a\\b\\123_foo"], "~.*\\\\(.*)_foo", None, ["123"], True),
     ],
 )
-def test_process_matches_match_groups(
+def test_process_matches_match_groups(  # type:ignore[no-untyped-def]
     ps_line, ps_pattern, user_pattern, match_groups, result
 ) -> None:
     psi = ps.PsInfo(ps_line[0])
@@ -134,7 +136,7 @@ def test_process_matches_match_groups(
         ("users", "user", False),
     ],
 )
-def test_ps_match_user(attribute, pattern, result) -> None:
+def test_ps_match_user(attribute, pattern, result) -> None:  # type:ignore[no-untyped-def]
     assert ps.match_attribute(attribute, pattern) == result
 
 
@@ -155,7 +157,9 @@ def test_ps_match_user(attribute, pattern, result) -> None:
         ("%s %2 %s %1", ("one", "two", "three", "four"), "three two four one"),
     ],
 )
-def test_replace_service_description(service_description, matches, result) -> None:
+def test_replace_service_description(  # type:ignore[no-untyped-def]
+    service_description, matches, result
+) -> None:
     assert ps.replace_service_description(service_description, matches, "") == result
 
 
@@ -196,7 +200,9 @@ PROCESSES = [
         ),
     ],
 )
-def test_format_process_list(processes, formatted_list, html_flag) -> None:
+def test_format_process_list(  # type:ignore[no-untyped-def]
+    processes, formatted_list, html_flag
+) -> None:
     assert ps.format_process_list(processes, html_flag) == formatted_list
 
 
@@ -340,6 +346,8 @@ def test_memory_perc_check_cluster() -> None:
         )
     ],
 )
-def test_process_capture(process_lines, params, expected_processes) -> None:
+def test_process_capture(  # type:ignore[no-untyped-def]
+    process_lines, params, expected_processes
+) -> None:
     process_aggregator = ps.process_capture(process_lines, params, 1, {})
     assert process_aggregator.processes == expected_processes

@@ -47,67 +47,67 @@ void WriteToLogFileWithBackup(std::string_view filename, size_t max_size,
                               std::string_view text) noexcept;
 
 // check status of duplication
-bool IsDuplicatedOnStdio();
-bool IsColoredOnStdio();
+bool IsDuplicatedOnStdio() noexcept;
+bool IsColoredOnStdio() noexcept;
 
-unsigned short LoggerEventLevelToWindowsEventType(EventLevel level);
+unsigned short LoggerEventLevelToWindowsEventType(EventLevel level) noexcept;
 
 void WriteToWindowsEventLog(unsigned short type, int code,
-                            std::string_view log_name, std::string_view text);
+                            std::string_view log_name,
+                            std::string_view text) noexcept;
 
 // main engine to write something in the Windows Event Log
 template <typename... Args>
-void LogWindowsEventAlways(EventLevel Level, int Code, const char *Format,
-                           Args &&...args) {
-    auto type = LoggerEventLevelToWindowsEventType(Level);
+void LogWindowsEventAlways(EventLevel level, int code, const char *format_str,
+                           Args &&...args) noexcept {
+    const auto type = LoggerEventLevelToWindowsEventType(level);
     std::string x;
     try {
-        x = fmt::format(Format, args...);
+        x = fmt::format(format_str, args...);
     } catch (...) {
-        x = Format;
+        x = format_str;
     }
 
-    WriteToWindowsEventLog(type, Code, cma::cfg::kDefaultEventLogName, x);
+    WriteToWindowsEventLog(type, code, cma::cfg::kDefaultEventLogName, x);
 }
 
 template <typename... Args>
-void LogWindowsEvent(EventLevel Level, int Code, const char *Format,
-                     Args &&...args) {
-    auto allowed_level = cma::cfg::GetCurrentEventLevel();
-    if (Level > allowed_level) {
+void LogWindowsEvent(EventLevel level, int code, const char *format_str,
+                     Args &&...args) noexcept {
+    if (level > cma::cfg::GetCurrentEventLevel()) {
         return;
     }
 
-    LogWindowsEventAlways(Level, Code, Format, std::forward<Args>(args)...);
+    LogWindowsEventAlways(level, code, format_str, std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-void LogWindowsEventCritical(int Code, const char *Format, Args &&...args) {
-    LogWindowsEvent(EventLevel::critical, Code, Format,
+void LogWindowsEventCritical(int code, const char *format_str, Args &&...args) {
+    LogWindowsEvent(EventLevel::critical, code, format_str,
                     std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-void LogWindowsEventError(int Code, const char *Format, Args &&...args) {
-    LogWindowsEvent(EventLevel::error, Code, Format,
+void LogWindowsEventError(int code, const char *format_str, Args &&...args) {
+    LogWindowsEvent(EventLevel::error, code, format_str,
                     std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-void LogWindowsEventSuccess(int Code, const char *Format, Args &&...args) {
-    LogWindowsEvent(EventLevel::success, Code, Format,
+void LogWindowsEventSuccess(int code, const char *format_str, Args &&...args) {
+    LogWindowsEvent(EventLevel::success, code, format_str,
                     std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-void LogWindowsEventWarn(int Code, const char *Format, Args &&...args) {
-    LogWindowsEvent(EventLevel::warning, Code, Format,
+void LogWindowsEventWarn(int code, const char *format_str, Args &&...args) {
+    LogWindowsEvent(EventLevel::warning, code, format_str,
                     std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-void LogWindowsEventInfo(int Code, const char *Format, Args &&...args) {
-    LogWindowsEvent(EventLevel::information, Code, Format,
+void LogWindowsEventInfo(int code, const char *format_str, Args &&...args) {
+    LogWindowsEvent(EventLevel::information, code, format_str,
                     std::forward<Args>(args)...);
 }
 
@@ -129,8 +129,12 @@ inline void RmCr(std::string &s) noexcept {
     }
 }
 
-constexpr bool IsNoCrFlag(int flag) noexcept { return (flag & kNoCr) != 0; }
-constexpr bool IsAddCrFlag(int flag) noexcept { return (flag & kAddCr) != 0; }
+constexpr bool IsNoCrFlag(int flag) noexcept {
+    return (flag & Flags::kNoCr) != 0;
+}
+constexpr bool IsAddCrFlag(int flag) noexcept {
+    return (flag & Flags::kAddCr) != 0;
+}
 
 // Public Engine to print all
 inline std::string formatString(int flag, const char *dflt_prefix,
@@ -200,13 +204,13 @@ constexpr int GetBitOffset(uint16_t color_mask) {
     return bit_offset;
 }
 
-constexpr uint16_t CalculateColor(Colors color, uint16_t OldColorAttributes) {
+constexpr uint16_t CalculateColor(Colors color, uint16_t old_color_attributes) {
     // Let's reuse the BG
     constexpr uint16_t background_mask = BACKGROUND_BLUE | BACKGROUND_GREEN |
                                          BACKGROUND_RED | BACKGROUND_INTENSITY;
     constexpr uint16_t foreground_mask = FOREGROUND_BLUE | FOREGROUND_GREEN |
                                          FOREGROUND_RED | FOREGROUND_INTENSITY;
-    uint16_t existing_bg = OldColorAttributes & background_mask;
+    const uint16_t existing_bg = old_color_attributes & background_mask;
 
     uint16_t new_color =
         GetColorAttribute(color) | existing_bg | FOREGROUND_INTENSITY;
@@ -266,9 +270,9 @@ constexpr size_t min_file_size = 256 * 1024;
 constexpr size_t max_file_size = 256 * 1024 * 1024;
 
 namespace setup {
-void DuplicateOnStdio(bool on);
-void ColoredOutputOnStdio(bool On);
-void SetContext(std::string_view context);
+void DuplicateOnStdio(bool on) noexcept;
+void ColoredOutputOnStdio(bool On) noexcept;
+void SetContext(std::string_view context) noexcept;
 
 }  // namespace setup
 
@@ -316,7 +320,6 @@ enum Mods : int {
 
 };
 
-// This is de-facto name
 enum class LogType {
     log = 0,  // this is logger for user
     debug,    // this is logger for developer
@@ -327,12 +330,11 @@ enum class LogType {
 
 class Emitter {
 public:
-    enum { kConstructedValue = 0xFFA1B2C0 };
+    static constexpr uint32_t kConstructedValue = 0xFFA1B2C0;
 
-    explicit Emitter(XLOG::LogType t) : Emitter(t, false) {}
+    explicit Emitter(XLOG::LogType t) noexcept : Emitter(t, false) {}
 
-    Emitter(XLOG::LogType t, bool breakpoint)
-        : type_(t), copy_(false), mods_(Mods::kCopy) {
+    Emitter(XLOG::LogType t, bool breakpoint) noexcept : type_(t) {
         // setting up parameters for print in log_param_
         switch (t) {
             case LogType::log:
@@ -355,8 +357,8 @@ public:
                 log_param_.flags_ =
                     xlog::Flags::kAddCr | xlog::Flags::kNoPrefix;
 
-                log_param_.setFileName(nullptr);
-                log_param_.initPrefix(nullptr);
+                log_param_.setFileName({});
+                log_param_.initPrefix({});
                 break;
             default:
                 log_param_.type_ = xlog::Type::kDebugOut;
@@ -369,9 +371,13 @@ public:
 
     Emitter operator=(const Emitter &Rhs) = delete;
 
-    ~Emitter() {
+    ~Emitter() noexcept {
         if (copy_) {
-            flush();
+            try {
+                flush();
+            } catch (const std::exception & /*e*/) {
+                // do nothing
+            }
         }
     }
 
@@ -575,19 +581,11 @@ public:
 #pragma warning(pop)
     // set filename to log
     void configFile(const std::string &log_file) noexcept {
-        if (log_file.empty()) {
-            log_param_.setFileName(nullptr);
-        } else {
-            log_param_.setFileName(log_file.c_str());
-        }
+        log_param_.setFileName(log_file);
     }
 
     void configPrefix(const std::wstring &prefix) noexcept {
-        if (prefix.empty()) {
-            log_param_.initPrefix(nullptr);
-        } else {
-            log_param_.initPrefix(prefix.c_str());
-        }
+        log_param_.initPrefix(prefix);
     }
 
     void setLogRotation(unsigned int count, size_t size) {
@@ -665,7 +663,7 @@ private:
         }
     }
 
-    void postProcessAndPrint(const std::string &text);
+    void postProcessAndPrint(const std::string &text) const;
 
     mutable std::mutex lock_;
     xlog::LogParam log_param_;  // this is fixed base
@@ -674,8 +672,8 @@ private:
     std::ostringstream os_;  // stream storage
     XLOG::LogType type_;
 
-    bool copy_;  // informs us that whole structure is temporary
-    int mods_;   // here we keep modifications to fixed base
+    bool copy_{false};       // informs us that whole structure is temporary
+    int mods_{Mods::kCopy};  // here we keep modifications to fixed base
 
     static bool bp_allowed_;
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
@@ -705,22 +703,22 @@ void Configure(const std::string &log_file_name, int debug_level, bool windbg,
                bool event_log);
 
 /// \brief switch d to send output into the file
-void EnableDebugLog(bool enable);
+void EnableDebugLog(bool enable) noexcept;
 
 /// \brief switch t to send output into the file
-void EnableTraceLog(bool enable);
+void EnableTraceLog(bool enable) noexcept;
 
 /// \brief change file name for all loggers
-void ChangeLogFileName(const std::string &log_file_name);
+void ChangeLogFileName(const std::string &log_file_name) noexcept;
 
 /// \brief change debug level
-void ChangeDebugLogLevel(int level);
+void ChangeDebugLogLevel(int level) noexcept;
 
 /// \brief disable enable windbg for all loggers
-void EnableWinDbg(bool enable);
+void EnableWinDbg(bool enable) noexcept;
 
 /// \brief reports log status
-bool IsEventLogEnabled();
+bool IsEventLogEnabled() noexcept;
 
 }  // namespace setup
 
@@ -735,9 +733,9 @@ namespace cma::tools {
 // simple class to log time of execution, to be moved in separate header
 // will be extended with dtor(to dump) and other functions
 // Usage:
-// TimeLog tl(name);
-// .......
-// tl.writeLog(data_count);
+/// TimeLog time_log(name)
+/// .......
+/// time_log.writeLog(data_count)
 class TimeLog {
 public:
     // time is set at the moment of creation

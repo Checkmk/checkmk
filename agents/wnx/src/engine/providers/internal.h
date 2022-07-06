@@ -39,9 +39,7 @@ inline std::string MakeStateFileName(std::string_view name,
     std::transform(ip.cbegin(), ip.cend(), ip.begin(),
                    [](char c) { return std::isalnum(c) != 0 ? c : L'_'; });
 
-    auto out = std::string{name} + ip + std::string{extension};
-
-    return out;
+    return std::string{name} + ip + std::string{extension};
 }
 
 inline std::string MakeStateFileName(std::string_view name,
@@ -51,17 +49,11 @@ inline std::string MakeStateFileName(std::string_view name,
 
 class Basic {
 public:
-    Basic(std::string_view name, char separator)
-        : uniq_name_{name}
-        , separator_{separator}
-        , delay_on_fail_{0}
-        , timeout_{0}
-        , enabled_{true}
-        , headerless_{false}
-        , error_count_{0} {
+    Basic(std::string_view name, char separator) noexcept
+        : uniq_name_{name}, separator_{separator} {
         allowed_from_time_ = std::chrono::steady_clock::now();
     }
-    explicit Basic(std::string_view name) : Basic(name, '\0') {}
+    explicit Basic(std::string_view name) noexcept : Basic(name, '\0') {}
     virtual ~Basic() = default;
 
     virtual bool startExecution(
@@ -120,7 +112,7 @@ protected:
     // conditionally(depending from the name of section) sets delay after error
     void setupDelayOnFail() noexcept;
 
-    void setHeaderless() { headerless_ = true; }
+    void setHeaderless() noexcept { headerless_ = true; }
 
     // to stop section from rerunning during time defined in setupDelayOnFail
     // usually related to the openhardware monitor
@@ -140,33 +132,33 @@ protected:
 
     carrier::CoreCarrier carrier_;  // transport
     std::chrono::time_point<std::chrono::steady_clock> allowed_from_time_;
-    std::chrono::seconds
-        delay_on_fail_;  // this value may be set when we have problems with
-                         // obtaining data. Next try will be set from
-                         // now + delay_on_fail_ if delay_on_fail_ is not 0
-                         // check ToggleIf in legacy Agent
+    std::chrono::seconds delay_on_fail_{
+        0};  // this value may be set when we have problems with
+             // obtaining data. Next try will be set from
+             // now + delay_on_fail_ if delay_on_fail_ is not 0
+             // check ToggleIf in legacy Agent
 
-    int timeout_;  // may be set in...
-    bool enabled_;
+    int timeout_{0};
+    bool enabled_{true};
     // optional API to store info about errors used, for example by OHM
-    uint64_t registerError() { return error_count_.fetch_add(1); }
+    uint64_t registerError() noexcept { return error_count_.fetch_add(1); }
 
     srv::ServiceProcessor *getHostSp() const noexcept { return host_sp_; }
 
 private:
-    bool headerless_;  // if true no makeHeader called during content generation
+    bool headerless_{false};  // if true no makeHeader call
     std::string ip_;
     char separator_;
-    std::atomic<uint64_t> error_count_ = 0;
-    srv::ServiceProcessor *host_sp_ = nullptr;
+    std::atomic<uint64_t> error_count_{0};
+    srv::ServiceProcessor *host_sp_{nullptr};
 };
 
 // Reference *SYNC* Class for internal Sections
 // use as a parent
 class Synchronous : public Basic {
 public:
-    explicit Synchronous(std::string_view name) : Basic(name, 0) {}
-    Synchronous(std::string_view name, char separator)
+    explicit Synchronous(std::string_view name) noexcept : Basic(name, 0) {}
+    Synchronous(std::string_view name, char separator) noexcept
         : Basic(name, separator) {}
     ~Synchronous() override = default;
 
@@ -182,8 +174,8 @@ public:
 // When you need choice, then  use this class
 class Asynchronous : public Basic {
 public:
-    explicit Asynchronous(std::string_view name) : Basic(name, 0) {}
-    Asynchronous(std::string_view name, char separator)
+    explicit Asynchronous(std::string_view name) noexcept : Basic(name, 0) {}
+    Asynchronous(std::string_view name, char separator) noexcept
         : Basic(name, separator) {}
     ~Asynchronous() override = default;
 
@@ -195,19 +187,17 @@ public:
     bool stop(bool wait) override;
 
 protected:
-    // ASYNCHRONOUS PART:
     void threadProc(const std::string &internal_port,
                     const std::string &command_line,
                     std::chrono::milliseconds period);
 
 private:
-    // thread
     std::thread thread_;
 
     // stopping code(standard)
     std::condition_variable stop_thread_;
     mutable std::mutex lock_stopper_;
-    bool stop_requested_ = false;
+    bool stop_requested_{false};
 };
 
 }  // namespace cma::provider

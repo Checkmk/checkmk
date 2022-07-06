@@ -92,12 +92,11 @@ void somefoo_about_video()
 #error "MS VS should be at least 2013"
 #endif
 
-#define XLOG_DEFAULT_DIRECTIONS Directions::kDebuggerPrint
-
 #include <chrono>
 #include <cwchar>
 #include <functional>
 #include <iomanip>
+#include <ranges>
 #include <string>
 #include <strstream>
 #include <type_traits>
@@ -151,7 +150,7 @@ namespace xlog {
 
     template <typename T>
     void internal_Print2Buffer(const wchar_t *prefix, T *buf, size_t len,
-                               const T *format_string, ...) {
+                               const T *format_string, ...) noexcept {
         static_assert(sizeof(T) == 1 || sizeof(T) == 2);
 
         va_list args = nullptr;
@@ -176,7 +175,7 @@ namespace xlog {
     }
 
     // Windows Event Log VERY BASIC support
-    enum LogEvents {
+    enum class LogEvents {
         kSuccess = 99,
         kCritical = 1,
         kError = 2,
@@ -188,7 +187,7 @@ namespace xlog {
     /// Windows Specific log for App, mildly usable.
     template <typename T, typename... Args>
     void SysLogEvent(const T *log_name, LogEvents event_level, int code,
-                     const T *event_text, Args... args) {
+                     const T *event_text, Args &&...args) {
         auto eventSource = ::RegisterEventSource(nullptr, log_name);
         if (eventSource == nullptr) {
             return;
@@ -196,21 +195,18 @@ namespace xlog {
 
         unsigned short type = EVENTLOG_ERROR_TYPE;
         switch (event_level) {
-            case kSuccess:
+            case LogEvents::kSuccess:
                 type = EVENTLOG_SUCCESS;
                 break;
-            case kInformation:
+            case LogEvents::kInformation:
                 type = EVENTLOG_INFORMATION_TYPE;
                 break;
-            case kWarning:
+            case LogEvents::kWarning:
                 type = EVENTLOG_WARNING_TYPE;
                 break;
-            case kError:
-            case kCritical:
+            case LogEvents::kError:
+            case LogEvents::kCritical:
                 type = EVENTLOG_ERROR_TYPE;
-                break;
-            default:
-                type = EVENTLOG_INFORMATION_TYPE;
                 break;
         }
         T buf[4096] = {0};
@@ -237,13 +233,9 @@ namespace xlog {
     using WorkString = std::basic_string<T>;
     constexpr std::wstring_view kDefaultPrefix{L"***: "};
     constexpr std::string_view kDefaultLogFileName{"default.log"};
-    constexpr std::string_view kDefaultFile;
 
-    enum Consts {
-        kInternalMaxOut = 8192,
-        kInternalMaxPrefix = 16,
-        kFileNameLength = 512
-    };
+    constexpr size_t kInternalMaxOut = 8192;
+    constexpr size_t kInternalMaxPrefix = 16;
 
     // Determines WHEN message is generated
     enum class Type {
@@ -259,29 +251,19 @@ namespace xlog {
         kWarningMark = 2,  // just not clear situation, but bad
         kTraceMark = 3,    // typical programmers dump
     };
+    namespace Directions {
+    constexpr uint32_t kDebuggerPrint = 1;
+    constexpr uint32_t kStdioPrint = 2;
+    constexpr uint32_t kFilePrint = 4;
+    constexpr uint32_t kEventPrint = 8;
+    };  // namespace Directions
+    constexpr auto XLOG_DEFAULT_DIRECTIONS = Directions::kDebuggerPrint;
 
-    // Determine Message attribute
-    enum Directions {
-        kDebuggerPrint = 1,  //
-        kStdioPrint = 2,     //
-        kFilePrint = 4,      //
-        kEventPrint = 8,     // eventlog too
-    };
-
-    enum Flags {
-        kNoPrefix = 1,  //
-        kNoCr = 2,      //
-        kAddCr = 4,     //
-    };
-
-    enum LogCodes {
-        kIamLazy = 13,
-        kBadParameters = 100,  // wrong data, json for example
-        kNullData = 200,       // nullptr
-        kLogicFail = 300,      // it is impossible case
-        kTodo = 400,           // not implemented yet
-        kBadData = 500,        // something wrong
-    };
+    namespace Flags {
+    constexpr uint32_t kNoPrefix = 1;
+    constexpr uint32_t kNoCr = 2;
+    constexpr uint32_t kAddCr = 4;
+    };  // namespace Flags
 
     inline std::string CurrentTime() {
         using std::chrono::system_clock;
@@ -304,11 +286,7 @@ namespace xlog {
             return std::string{file};
         }
 
-#if defined(DBG_NAME)
-        return std::string{DBG_NAME} + ".log";
-#else
-    return std::string{kDefaultLogFileName};
-#endif
+        return std::string{kDefaultLogFileName};
     }
 
     // Small tool to print data in file
@@ -336,17 +314,17 @@ namespace xlog {
     }
 
     inline void internal_PrintStringDebugger(const wchar_t *txt) noexcept {
-        OutputDebugStringW(txt);
-    };
+        ::OutputDebugStringW(txt);
+    }
     inline void internal_PrintStringDebugger(const char *txt) noexcept {
-        OutputDebugStringA(txt);
-    };
+        ::OutputDebugStringA(txt);
+    }
     inline void internal_PrintStringStdio(const wchar_t *txt) noexcept {
-        printf("%ls", txt);
-    };
+        ::printf("%ls", txt);
+    }
     inline void internal_PrintStringStdio(const char *txt) noexcept {
-        printf("%s", txt);
-    };
+        ::printf("%s", txt);
+    }
 
     // utility class which contains data of the last dump and can be post
     // processed
@@ -393,7 +371,7 @@ namespace xlog {
         }
 
         // print on screen
-        [[maybe_unused]] const TextInfo &print() const {
+        [[maybe_unused]] const TextInfo &print() const noexcept {
             return print(true);
         }  // NOLINT
 
@@ -422,82 +400,45 @@ namespace xlog {
         std::basic_string<T> text_;
     };
 
-    inline std::wstring_view GetPrefix() noexcept {
-#if defined(DBG_NAME_DYNAMIC)
-        static wchar_t prefix[256] = L"";
-        ConvertChar2Wchar(prefix, 128, DBG_NAME_DYNAMIC);
-        return prefix;
-#elif defined(DBG_NAME)
-    static bool first_run = true;
-    static wchar_t prefix[256] = L"";
-    if (first_run) {
-        first_run = false;
-        ConvertChar2Wchar(prefix, 128, DBG_NAME);
-    }
-    return prefix;
-#else
-    return kDefaultPrefix;
-#endif
-    }
-
     class LogParam {
     public:
-        explicit LogParam(const wchar_t *const prefix) noexcept
-            : type_(Type::kDebugOut)
-            , mark_(Marker::kTraceMark)
-            , directions_(XLOG_DEFAULT_DIRECTIONS)
-            , flags_(kAddCr) {
-            file_name_out_[0] = 0;
+        explicit LogParam(const std::wstring &prefix) noexcept {
             initPrefix(prefix);
         }
-        LogParam() noexcept : LogParam(nullptr) {}
+        LogParam() noexcept : LogParam(std::wstring{}) {}
 
-        [[nodiscard]] const char *filename() const { return file_name_out_; }
-        void setFileName(const char *fname) noexcept {
-            if (fname == nullptr) {
-                file_name_out_[0] = 0;
-            } else {
-                if (::strlen(fname) < kFileNameLength) {
-                    ::strcpy(file_name_out_, fname);
-                }
-            }
+        [[nodiscard]] std::string filename() const noexcept {
+            return file_name_out_;
+        }
+        void setFileName(std::string_view file_name) noexcept {
+            file_name_out_ = file_name;
         }
 
-        xlog::Type type_;
-        xlog::Marker mark_;  // # TODO this is not a good place
-        uint32_t directions_;
-        uint32_t flags_;
-
-    private:
-        wchar_t prefix_[kInternalMaxPrefix];
-        char prefix_ascii_[kInternalMaxPrefix];
-        char file_name_out_[kFileNameLength];
-
-    public:
         [[nodiscard]] auto prefix() const noexcept { return prefix_; }
         [[nodiscard]] auto prefixAscii() const noexcept {
             return prefix_ascii_;
         }
 
-        void initPrefix(const wchar_t *prefix_text) noexcept {
-            const auto *const prefix =
-                prefix_text != nullptr ? prefix_text : GetPrefix().data();
+        void initPrefix(const std::wstring &prefix_text) noexcept {
+            prefix_ = prefix_text.empty() ? std::wstring{kDefaultPrefix}
+                                          : prefix_text;
+            prefix_.resize(std::min(kInternalMaxPrefix, prefix_.length()));
 
-            // safe ASCIIZ copy
-            const auto len = static_cast<int>(::wcslen(prefix));
-            auto to_copy = std::min(len, kFileNameLength - 1);
-            memcpy(prefix_, prefix, to_copy * sizeof(wchar_t));
-            prefix_[to_copy] = 0;
-
-            // "safe" UTF16 to UTF8 conversion, for prefix enough
-            for (int i = 0;; ++i) {
-                const auto ch = prefix_[i];
-                prefix_ascii_[i] = static_cast<char>(ch);
-                if (ch == 0) {
-                    break;
-                }
-            }
+            // 'safe' ASCIIZ conversion
+            prefix_ascii_.clear();
+            std::ranges::transform(prefix_, std::back_inserter(prefix_ascii_),
+                                   [](auto w) { return static_cast<char>(w); });
         }
+
+        xlog::Type type_{Type::kDebugOut};
+        xlog::Marker mark_{Marker::kTraceMark};
+        uint32_t directions_{XLOG_DEFAULT_DIRECTIONS};
+        uint32_t flags_{Flags::kAddCr};
+
+    private:
+        std::wstring prefix_;
+        std::string prefix_ascii_;
+        std::string file_name_out_;
     };
 
     class AdvancedLog {
@@ -613,12 +554,13 @@ namespace xlog {
         T buf[kInternalMaxOut] = {0};
 
         internal_Print2Buffer(
-            log_param.flags_ & Flags::kNoPrefix ? nullptr : log_param.prefix(),
+            log_param.flags_ & Flags::kNoPrefix ? nullptr
+                                                : log_param.prefix().c_str(),
             buf, kInternalMaxOut, format_string, std::forward<Args>(args)...);
 
-        if (log_param.flags_ & kNoCr) {
+        if (log_param.flags_ & Flags::kNoCr) {
             kill_cr(buf);
-        } else if (log_param.flags_ & kAddCr) {
+        } else if (log_param.flags_ & Flags::kAddCr) {
             kill_cr(buf);
             add_cr(buf);
         }
@@ -634,9 +576,9 @@ namespace xlog {
             xdbg::bp();
         }
 
-        const auto offset = log_param.flags_ & Flags::kNoPrefix
-                                ? 0
-                                : calc_len(log_param.prefix());
+        const size_t offset = log_param.flags_ & Flags::kNoPrefix
+                                  ? 0U
+                                  : log_param.prefix().length();
 
         return TextInfo<T>(buf + offset);
     }
@@ -739,7 +681,6 @@ namespace xlog {
         return Concatenator<char>{file_line.c_str()};
     }
 } // namespace xlog
-;  // namespace xlog
 
 #define KX_FUNCTION_PREFIX xlog::FunctionPrefix(__FUNCTION__)
 #define XLOG_FUNC xlog::FunctionPrefix(__FUNCTION__)

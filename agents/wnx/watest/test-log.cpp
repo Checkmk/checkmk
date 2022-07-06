@@ -13,11 +13,11 @@
 
 namespace xlog {
 TEST(xlogTest, xlogLowLevel) {
-    EXPECT_TRUE(xlog::IsAddCrFlag(xlog::kAddCr));
-    EXPECT_FALSE(xlog::IsAddCrFlag(~xlog::kAddCr));
+    EXPECT_TRUE(xlog::IsAddCrFlag(xlog::Flags::kAddCr));
+    EXPECT_FALSE(xlog::IsAddCrFlag(~xlog::Flags::kAddCr));
 
-    EXPECT_TRUE(xlog::IsNoCrFlag(xlog::kNoCr));
-    EXPECT_FALSE(xlog::IsNoCrFlag(~xlog::kNoCr));
+    EXPECT_TRUE(xlog::IsNoCrFlag(xlog::Flags::kNoCr));
+    EXPECT_FALSE(xlog::IsNoCrFlag(~xlog::Flags::kNoCr));
 
     std::string s;
     EXPECT_NO_THROW(xlog::RmCr(s));
@@ -42,22 +42,26 @@ TEST(LogInternalTest, Type2MarkerCheck) {
 }
 
 TEST(LogInternalTest, Mods2DirectionsCheck) {
-    xlog::LogParam lp{0};
+    xlog::LogParam lp{std::wstring{}};
     constexpr int mark = 0x1000'0000;
     lp.directions_ = mark;
 
-    EXPECT_EQ(Mods2Directions(lp, Mods::kFile), mark | xlog::kFilePrint);
-    EXPECT_EQ(Mods2Directions(lp, Mods::kStdio), mark | xlog::kStdioPrint);
-    EXPECT_EQ(Mods2Directions(lp, Mods::kEvent), mark | xlog::kEventPrint);
+    EXPECT_EQ(Mods2Directions(lp, Mods::kFile),
+              mark | xlog::Directions::kFilePrint);
+    EXPECT_EQ(Mods2Directions(lp, Mods::kStdio),
+              mark | xlog::Directions::kStdioPrint);
+    EXPECT_EQ(Mods2Directions(lp, Mods::kEvent),
+              mark | xlog::Directions::kEventPrint);
 
     constexpr int all_mark = 0xFFFF'FFFF;
     lp.directions_ = all_mark;
 
-    EXPECT_EQ(Mods2Directions(lp, Mods::kNoFile), all_mark & ~xlog::kFilePrint);
+    EXPECT_EQ(Mods2Directions(lp, Mods::kNoFile),
+              all_mark & ~xlog::Directions::kFilePrint);
     EXPECT_EQ(Mods2Directions(lp, Mods::kNoStdio),
-              all_mark & ~xlog::kStdioPrint);
+              all_mark & ~xlog::Directions::kStdioPrint);
     EXPECT_EQ(Mods2Directions(lp, Mods::kNoEvent),
-              all_mark & ~xlog::kEventPrint);
+              all_mark & ~xlog::Directions::kEventPrint);
 }
 }  // namespace internal
 
@@ -290,21 +294,31 @@ TEST(LogTest, All) {
     EXPECT_EQ(std::string(""), XLOG::stdio.getLogParam().filename());
 
     setup::EnableDebugLog(true);
-    EXPECT_TRUE(XLOG::d.getLogParam().directions_ & xlog::kFilePrint);
+    EXPECT_TRUE(XLOG::d.getLogParam().directions_ &
+                xlog::Directions::kFilePrint);
     setup::EnableDebugLog(false);
-    EXPECT_FALSE(XLOG::d.getLogParam().directions_ & xlog::kFilePrint);
+    EXPECT_FALSE(XLOG::d.getLogParam().directions_ &
+                 xlog::Directions::kFilePrint);
 
     setup::EnableWinDbg(false);
-    EXPECT_FALSE(XLOG::l.getLogParam().directions_ & xlog::kDebuggerPrint);
-    EXPECT_FALSE(XLOG::d.getLogParam().directions_ & xlog::kDebuggerPrint);
-    EXPECT_FALSE(XLOG::t.getLogParam().directions_ & xlog::kDebuggerPrint);
-    EXPECT_FALSE(XLOG::stdio.getLogParam().directions_ & xlog::kDebuggerPrint);
+    EXPECT_FALSE(XLOG::l.getLogParam().directions_ &
+                 xlog::Directions::kDebuggerPrint);
+    EXPECT_FALSE(XLOG::d.getLogParam().directions_ &
+                 xlog::Directions::kDebuggerPrint);
+    EXPECT_FALSE(XLOG::t.getLogParam().directions_ &
+                 xlog::Directions::kDebuggerPrint);
+    EXPECT_FALSE(XLOG::stdio.getLogParam().directions_ &
+                 xlog::Directions::kDebuggerPrint);
 
     setup::EnableWinDbg(true);
-    EXPECT_TRUE(XLOG::l.getLogParam().directions_ & xlog::kDebuggerPrint);
-    EXPECT_TRUE(XLOG::d.getLogParam().directions_ & xlog::kDebuggerPrint);
-    EXPECT_TRUE(XLOG::t.getLogParam().directions_ & xlog::kDebuggerPrint);
-    EXPECT_FALSE(XLOG::stdio.getLogParam().directions_ & xlog::kDebuggerPrint);
+    EXPECT_TRUE(XLOG::l.getLogParam().directions_ &
+                xlog::Directions::kDebuggerPrint);
+    EXPECT_TRUE(XLOG::d.getLogParam().directions_ &
+                xlog::Directions::kDebuggerPrint);
+    EXPECT_TRUE(XLOG::t.getLogParam().directions_ &
+                xlog::Directions::kDebuggerPrint);
+    EXPECT_FALSE(XLOG::stdio.getLogParam().directions_ &
+                 xlog::Directions::kDebuggerPrint);
 
     setup::ReConfigure();
     EXPECT_EQ(XLOG::l.getLogParam().filename(), GetCurrentLogFileName());
@@ -312,22 +326,34 @@ TEST(LogTest, All) {
     EXPECT_EQ(XLOG::t.getLogParam().filename(), GetCurrentLogFileName());
     EXPECT_EQ(XLOG::stdio.getLogParam().filename(), std::string(""));
 
-    EXPECT_TRUE(XLOG::l.getLogParam().directions_ & xlog::kFilePrint);
-    EXPECT_TRUE(XLOG::d.getLogParam().directions_ & xlog::kFilePrint)
+    EXPECT_TRUE(XLOG::l.getLogParam().directions_ &
+                xlog::Directions::kFilePrint);
+    EXPECT_TRUE(XLOG::d.getLogParam().directions_ &
+                xlog::Directions::kFilePrint)
         << "check debug=yes in cfg";
-    EXPECT_FALSE(XLOG::t.getLogParam().directions_ & xlog::kFilePrint)
+    EXPECT_FALSE(XLOG::t.getLogParam().directions_ &
+                 xlog::Directions::kFilePrint)
         << "check debug=yes in cfg";
-    EXPECT_FALSE(XLOG::stdio.getLogParam().directions_ & xlog::kFilePrint);
+    EXPECT_FALSE(XLOG::stdio.getLogParam().directions_ &
+                 xlog::Directions::kFilePrint);
 
-    EXPECT_TRUE(XLOG::l.getLogParam().directions_ & xlog::kDebuggerPrint);
-    EXPECT_TRUE(XLOG::d.getLogParam().directions_ & xlog::kDebuggerPrint);
-    EXPECT_TRUE(XLOG::t.getLogParam().directions_ & xlog::kDebuggerPrint);
-    EXPECT_FALSE(XLOG::stdio.getLogParam().directions_ & xlog::kDebuggerPrint);
+    EXPECT_TRUE(XLOG::l.getLogParam().directions_ &
+                xlog::Directions::kDebuggerPrint);
+    EXPECT_TRUE(XLOG::d.getLogParam().directions_ &
+                xlog::Directions::kDebuggerPrint);
+    EXPECT_TRUE(XLOG::t.getLogParam().directions_ &
+                xlog::Directions::kDebuggerPrint);
+    EXPECT_FALSE(XLOG::stdio.getLogParam().directions_ &
+                 xlog::Directions::kDebuggerPrint);
 
-    EXPECT_FALSE(XLOG::l.getLogParam().directions_ & xlog::kEventPrint);
-    EXPECT_FALSE(XLOG::d.getLogParam().directions_ & xlog::kEventPrint);
-    EXPECT_FALSE(XLOG::t.getLogParam().directions_ & xlog::kEventPrint);
-    EXPECT_FALSE(XLOG::stdio.getLogParam().directions_ & xlog::kEventPrint);
+    EXPECT_FALSE(XLOG::l.getLogParam().directions_ &
+                 xlog::Directions::kEventPrint);
+    EXPECT_FALSE(XLOG::d.getLogParam().directions_ &
+                 xlog::Directions::kEventPrint);
+    EXPECT_FALSE(XLOG::t.getLogParam().directions_ &
+                 xlog::Directions::kEventPrint);
+    EXPECT_FALSE(XLOG::stdio.getLogParam().directions_ &
+                 xlog::Directions::kEventPrint);
 
     // Output to log
     XLOG::l() << L"This streamed Log Entry and"  // body
@@ -435,7 +461,7 @@ TEST(LogTest, Functional) {
     fs::remove(logf);
 
     cma::OnStart(cma::AppType::test);
-    setup::ChangeLogFileName(logf.u8string());
+    setup::ChangeLogFileName(wtools::ToUtf8(logf.wstring()));
 
     XLOG::l("simple test");
     XLOG::l(kCritError)("<GTEST> std test {}", 5);

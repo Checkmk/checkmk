@@ -6,39 +6,15 @@
 // //////////////////////////////////////////////////////////////////////////
 // xdbg
 // simplified hardware breakpoints file
-// no CPP file required
 // //////////////////////////////////////////////////////////////////////////
 
 // Setup
-/*
-#define KDBG_NO_BP		// no BP in source code
-*/
-
-// Usage
-/*
-#include "_kdbg.h"
-        BP;
-        BPO;// once per start
-        xdbg::bp();
-        xdbg::bpo();
-*/
-
 #pragma once
 // Target determination
 #if DBG || defined(_DEBUG) || defined(DEBUG)
 #define KDBG_DEBUG
 #endif
 
-// xdbg
-#if defined(NTDRV)
-// nothing should be included before!
-#elif defined(NTVIDEO)
-#elif defined(WIN32)
-#include <windows.h>
-#elif defined(LINUX)
-#elif defined(__APPLE__)
-#else
-#endif
 namespace xdbg {
 #if defined(NTDRV)
 inline void hardcodedBP() { DbgBreakPoint(); }

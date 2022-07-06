@@ -34,7 +34,7 @@ class MergeKey(t.NamedTuple):
     name: str
 
 
-class DefaultLoadingFailed(BaseException):
+class DefaultLoadingFailed(Exception):
     pass
 
 

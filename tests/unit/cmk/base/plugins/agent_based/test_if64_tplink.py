@@ -84,7 +84,6 @@ def test_parse_if64_tplink() -> None:
             group=None,
             node=None,
             admin_status=None,
-            total_octets=1210297578,
         ),
         Interface(
             index="49153",
@@ -112,6 +111,5 @@ def test_parse_if64_tplink() -> None:
             group=None,
             node=None,
             admin_status=None,
-            total_octets=332811808271,
         ),
     ]

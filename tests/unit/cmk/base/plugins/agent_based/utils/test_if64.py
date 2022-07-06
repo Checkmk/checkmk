@@ -78,7 +78,6 @@ def test_generic_parse_if64() -> None:
             out_qlen=0,
             phys_address=[0, 12, 206, 149, 55, 128],
             oper_status_name="up",
-            total_octets=778514493241,
         ),
         Interface(
             index="3",
@@ -102,6 +101,5 @@ def test_generic_parse_if64() -> None:
             out_qlen=0,
             phys_address=[220, 166, 50, 183, 252, 79],
             oper_status_name="up",
-            total_octets=87886946606,
         ),
     ]

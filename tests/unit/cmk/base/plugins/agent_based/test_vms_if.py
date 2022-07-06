@@ -36,7 +36,6 @@ def test_parse_vms_if() -> None:
             out_errors=0,
             out_qlen=0,
             oper_status_name="up",
-            total_octets=0,
         ),
         Interface(
             index="2",
@@ -59,7 +58,6 @@ def test_parse_vms_if() -> None:
             out_errors=0,
             out_qlen=0,
             oper_status_name="up",
-            total_octets=3937514030,
         ),
         Interface(
             index="3",
@@ -82,6 +80,5 @@ def test_parse_vms_if() -> None:
             out_errors=0,
             out_qlen=0,
             oper_status_name="up",
-            total_octets=6061662,
         ),
     ]

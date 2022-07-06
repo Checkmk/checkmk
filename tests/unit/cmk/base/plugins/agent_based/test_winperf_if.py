@@ -89,7 +89,6 @@ from .utils_inventory import sort_inventory_result
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=61386860,
                     ),
                 },
                 found_windows_if=False,
@@ -166,7 +165,6 @@ from .utils_inventory import sort_inventory_result
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=61386860,
                     ),
                 },
                 found_windows_if=False,
@@ -302,7 +300,6 @@ from .utils_inventory import sort_inventory_result
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=8902209474,
                     ),
                     "QLogic 1 10GbE Server Adapter": Interface(
                         index="2",
@@ -330,7 +327,6 @@ from .utils_inventory import sort_inventory_result
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=23935663,
                     ),
                     "Intel[R] I350 Gigabit Network Connection": Interface(
                         index="3",
@@ -358,7 +354,6 @@ from .utils_inventory import sort_inventory_result
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=0,
                     ),
                     "Intel[R] I350 Gigabit Network Connection 2": Interface(
                         index="4",
@@ -386,7 +381,6 @@ from .utils_inventory import sort_inventory_result
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=0,
                     ),
                     "Intel[R] I350 Gigabit Network Connection 3": Interface(
                         index="5",
@@ -414,7 +408,6 @@ from .utils_inventory import sort_inventory_result
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=0,
                     ),
                     "Intel[R] I350 Gigabit Network Connection 4": Interface(
                         index="6",
@@ -442,7 +435,6 @@ from .utils_inventory import sort_inventory_result
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=0,
                     ),
                     "IBM USB Remote NDIS Network Device 2": Interface(
                         index="7",
@@ -470,7 +462,6 @@ from .utils_inventory import sort_inventory_result
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=622938240,
                     ),
                     "isatap.{A447D54F-0E4B-40B3-9FBA-228F7DCE8FC7}": Interface(
                         index="8",
@@ -498,7 +489,6 @@ from .utils_inventory import sort_inventory_result
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=0,
                     ),
                     "isatap.{4FCE4C48-6217-465A-B807-B61499AE570C}": Interface(
                         index="9",
@@ -526,7 +516,6 @@ from .utils_inventory import sort_inventory_result
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=0,
                     ),
                 },
                 found_windows_if=False,
@@ -1036,7 +1025,6 @@ from .utils_inventory import sort_inventory_result
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=176685745,
                     ),
                     "Intel[R] Ethernet 10G 2P X520 Adapter": Interface(
                         index="2",
@@ -1064,7 +1052,6 @@ from .utils_inventory import sort_inventory_result
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=5355972550276,
                     ),
                     "Intel[R] Ethernet 10G 2P X520 Adapter 2": Interface(
                         index="3",
@@ -1092,7 +1079,6 @@ from .utils_inventory import sort_inventory_result
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=1581894368422,
                     ),
                     "Intel[R] Gigabit 4P I350-t rNDC 2": Interface(
                         index="4",
@@ -1120,7 +1106,6 @@ from .utils_inventory import sort_inventory_result
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=0,
                     ),
                     "Intel[R] Gigabit 4P I350-t rNDC 3": Interface(
                         index="5",
@@ -1148,7 +1133,6 @@ from .utils_inventory import sort_inventory_result
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=0,
                     ),
                     "Intel[R] Gigabit 4P I350-t rNDC 4": Interface(
                         index="6",
@@ -1176,7 +1160,6 @@ from .utils_inventory import sort_inventory_result
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=0,
                     ),
                     "Intel[R] Ethernet 10G 2P X520 Adapter 3": Interface(
                         index="7",
@@ -1204,7 +1187,6 @@ from .utils_inventory import sort_inventory_result
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=271891678,
                     ),
                     "Intel[R] Ethernet 10G 2P X520 Adapter 4": Interface(
                         index="8",
@@ -1232,7 +1214,6 @@ from .utils_inventory import sort_inventory_result
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=145209040,
                     ),
                     "isatap.corp.nintendo.eu": Interface(
                         index="9",
@@ -1260,7 +1241,6 @@ from .utils_inventory import sort_inventory_result
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=0,
                     ),
                     "isatap.{0143C2F2-BFF1-4839-8766-82C6EB3FC440}": Interface(
                         index="10",
@@ -1288,7 +1268,6 @@ from .utils_inventory import sort_inventory_result
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=0,
                     ),
                     "isatap.{16377083-0A9A-456B-AB35-9A37E78B3FD4}": Interface(
                         index="11",
@@ -1316,7 +1295,6 @@ from .utils_inventory import sort_inventory_result
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=0,
                     ),
                     "isatap.{7A093D2B-D64D-43DF-A0F6-050996EE8D9A}": Interface(
                         index="12",
@@ -1344,7 +1322,6 @@ from .utils_inventory import sort_inventory_result
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=0,
                     ),
                 },
                 found_windows_if=True,
@@ -2319,7 +2296,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=61386860,
                 ),
             },
             None,
@@ -2351,7 +2327,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=61386860,
                 ),
             ],
             id="agent data only",
@@ -2384,7 +2359,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=8902209474,
                 ),
                 "QLogic 1 10GbE Server Adapter": Interface(
                     index="2",
@@ -2412,7 +2386,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=23935663,
                 ),
                 "Intel[R] I350 Gigabit Network Connection": Interface(
                     index="3",
@@ -2440,7 +2413,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=0,
                 ),
                 "Intel[R] I350 Gigabit Network Connection 2": Interface(
                     index="4",
@@ -2468,7 +2440,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=0,
                 ),
                 "Intel[R] I350 Gigabit Network Connection 3": Interface(
                     index="5",
@@ -2496,7 +2467,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=0,
                 ),
                 "Intel[R] I350 Gigabit Network Connection 4": Interface(
                     index="6",
@@ -2524,7 +2494,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=0,
                 ),
                 "IBM USB Remote NDIS Network Device 2": Interface(
                     index="7",
@@ -2552,7 +2521,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=622938240,
                 ),
                 "isatap.{A447D54F-0E4B-40B3-9FBA-228F7DCE8FC7}": Interface(
                     index="8",
@@ -2580,7 +2548,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=0,
                 ),
                 "isatap.{4FCE4C48-6217-465A-B807-B61499AE570C}": Interface(
                     index="9",
@@ -2608,7 +2575,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=0,
                 ),
             },
             None,
@@ -2713,7 +2679,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=8902209474,
                 ),
                 Interface(
                     index="2",
@@ -2741,7 +2706,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=23935663,
                 ),
                 Interface(
                     index="3",
@@ -2769,7 +2733,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=0,
                 ),
                 Interface(
                     index="4",
@@ -2797,7 +2760,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=0,
                 ),
                 Interface(
                     index="5",
@@ -2825,7 +2787,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=0,
                 ),
                 Interface(
                     index="6",
@@ -2853,7 +2814,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=0,
                 ),
                 Interface(
                     index="7",
@@ -2881,7 +2841,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=622938240,
                 ),
                 Interface(
                     index="8",
@@ -2909,7 +2868,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=0,
                 ),
                 Interface(
                     index="9",
@@ -2937,7 +2895,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=0,
                 ),
             ],
             id="with additional data",
@@ -2970,7 +2927,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=176685745,
                 ),
                 "Intel[R] Ethernet 10G 2P X520 Adapter": Interface(
                     index="2",
@@ -2998,7 +2954,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=5355972550276,
                 ),
                 "Intel[R] Ethernet 10G 2P X520 Adapter 2": Interface(
                     index="3",
@@ -3026,7 +2981,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=1581894368422,
                 ),
                 "Intel[R] Gigabit 4P I350-t rNDC 2": Interface(
                     index="4",
@@ -3054,7 +3008,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=0,
                 ),
                 "Intel[R] Gigabit 4P I350-t rNDC 3": Interface(
                     index="5",
@@ -3082,7 +3035,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=0,
                 ),
                 "Intel[R] Gigabit 4P I350-t rNDC 4": Interface(
                     index="6",
@@ -3110,7 +3062,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=0,
                 ),
                 "Intel[R] Ethernet 10G 2P X520 Adapter 3": Interface(
                     index="7",
@@ -3138,7 +3089,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=271891678,
                 ),
                 "Intel[R] Ethernet 10G 2P X520 Adapter 4": Interface(
                     index="8",
@@ -3166,7 +3116,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=145209040,
                 ),
                 "isatap.corp.nintendo.eu": Interface(
                     index="9",
@@ -3194,7 +3143,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=0,
                 ),
                 "isatap.{0143C2F2-BFF1-4839-8766-82C6EB3FC440}": Interface(
                     index="10",
@@ -3222,7 +3170,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=0,
                 ),
                 "isatap.{16377083-0A9A-456B-AB35-9A37E78B3FD4}": Interface(
                     index="11",
@@ -3250,7 +3197,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=0,
                 ),
                 "isatap.{7A093D2B-D64D-43DF-A0F6-050996EE8D9A}": Interface(
                     index="12",
@@ -3278,7 +3224,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=0,
                 ),
             },
             {
@@ -3418,7 +3363,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=176685745,
                 ),
                 Interface(
                     index="2",
@@ -3446,7 +3390,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group="MAPI-NET",
                     node=None,
                     admin_status=None,
-                    total_octets=5355972550276,
                 ),
                 Interface(
                     index="3",
@@ -3474,7 +3417,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group="DAG-NET",
                     node=None,
                     admin_status=None,
-                    total_octets=1581894368422,
                 ),
                 Interface(
                     index="4",
@@ -3502,7 +3444,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=0,
                 ),
                 Interface(
                     index="5",
@@ -3530,7 +3471,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=0,
                 ),
                 Interface(
                     index="6",
@@ -3558,7 +3498,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=0,
                 ),
                 Interface(
                     index="7",
@@ -3586,7 +3525,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group="MAPI-NET",
                     node=None,
                     admin_status=None,
-                    total_octets=271891678,
                 ),
                 Interface(
                     index="8",
@@ -3614,7 +3552,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group="DAG-NET",
                     node=None,
                     admin_status=None,
-                    total_octets=145209040,
                 ),
                 Interface(
                     index="9",
@@ -3642,7 +3579,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=0,
                 ),
                 Interface(
                     index="10",
@@ -3670,7 +3606,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=0,
                 ),
                 Interface(
                     index="11",
@@ -3698,7 +3633,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=0,
                 ),
                 Interface(
                     index="12",
@@ -3726,7 +3660,6 @@ def test_parse_winperf_if_dhcp() -> None:
                     group=None,
                     node=None,
                     admin_status=None,
-                    total_octets=0,
                 ),
             ],
             id="with additional data",
@@ -3838,7 +3771,6 @@ def test_inventory_winperf_if() -> None:
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=8902209474,
                     ),
                     "QLogic 1 10GbE Server Adapter": Interface(
                         index="2",
@@ -3866,7 +3798,6 @@ def test_inventory_winperf_if() -> None:
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=23935663,
                     ),
                     "Intel[R] I350 Gigabit Network Connection": Interface(
                         index="3",
@@ -3894,7 +3825,6 @@ def test_inventory_winperf_if() -> None:
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=0,
                     ),
                     "Intel[R] I350 Gigabit Network Connection 2": Interface(
                         index="4",
@@ -3922,7 +3852,6 @@ def test_inventory_winperf_if() -> None:
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=0,
                     ),
                     "IBM USB Remote NDIS Network Device 2": Interface(
                         index="7",
@@ -3950,7 +3879,6 @@ def test_inventory_winperf_if() -> None:
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=622938240,
                     ),
                     "isatap.{A447D54F-0E4B-40B3-9FBA-228F7DCE8FC7}": Interface(
                         index="8",
@@ -3978,7 +3906,6 @@ def test_inventory_winperf_if() -> None:
                         group=None,
                         node=None,
                         admin_status=None,
-                        total_octets=0,
                     ),
                 },
                 found_windows_if=False,

@@ -66,7 +66,6 @@ def test_parse_mcdata_fcport() -> None:
             out_errors=0,
             out_qlen=0,
             oper_status_name="down",
-            total_octets=0,
         ),
         Interface(
             index="02",
@@ -89,7 +88,6 @@ def test_parse_mcdata_fcport() -> None:
             out_errors=0,
             out_qlen=0,
             oper_status_name="up",
-            total_octets=8125098497876,
         ),
         Interface(
             index="32",
@@ -112,6 +110,5 @@ def test_parse_mcdata_fcport() -> None:
             out_errors=0,
             out_qlen=0,
             oper_status_name="up",
-            total_octets=1062508833480,
         ),
     ]

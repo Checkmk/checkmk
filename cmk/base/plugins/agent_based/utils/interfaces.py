@@ -124,7 +124,6 @@ class Interface:
     group: Optional[str] = None
     node: Optional[str] = None
     admin_status: Optional[str] = None
-    total_octets: float = 0
     extra_info: Optional[str] = None
 
     def __post_init__(self) -> None:
@@ -141,8 +140,6 @@ class Interface:
         self.descr = cleanup_if_strings(self.descr)
         self.alias = cleanup_if_strings(self.alias)
 
-        self.total_octets = self.in_octets + self.out_octets
-
 
 @dataclass(frozen=True)
 class Rates:
@@ -150,17 +147,14 @@ class Rates:
     inmcast: float | None
     inbcast: float | None
     inucast: float | None
-    innucast: float | None
     indisc: float | None
     inerr: float | None
     outtraffic: float | None
     outmcast: float | None
     outbcast: float | None
     outucast: float | None
-    outnucast: float | None
     outdisc: float | None
     outerr: float | None
-    total: float | None = None
 
 
 Section = Sequence[Interface]
@@ -812,8 +806,6 @@ def _check_grouped_ifs(  # pylint: disable=too-many-branches
                 ("outdisc", interface.out_discards),
                 ("outerr", interface.out_errors),
             ]
-            if "total_traffic" in params:
-                rate_counter.append(("total", interface.total_octets))
             for name, counter in rate_counter:
                 try:
                     # We make sure that every group member has valid rates before adding up the
@@ -845,7 +837,6 @@ def _check_grouped_ifs(  # pylint: disable=too-many-branches
         cumulated_interface.out_discards += interface.out_discards
         cumulated_interface.out_errors += interface.out_errors
         cumulated_interface.out_qlen += interface.out_qlen
-        cumulated_interface.total_octets += interface.total_octets
 
         # This is the fallback ifType if None is set in the parameters
         cumulated_interface.type = interface.type
@@ -1032,8 +1023,6 @@ def check_single_interface(
     general_traffic_levels = get_traffic_levels(params)
     abs_packet_levels, perc_packet_levels = _get_packet_levels(params)
 
-    monitor_total_traffic = "total_traffic" in params
-
     yield from _interface_name(
         group_name=group_name if group_members else None,
         item=item,
@@ -1093,19 +1082,15 @@ def check_single_interface(
         ("inmcast", interface.in_mcast),
         ("inbcast", interface.in_bcast),
         ("inucast", interface.in_ucast),
-        ("innucast", saveint(interface.in_mcast) + saveint(interface.in_bcast)),
         ("indisc", interface.in_discards),
         ("inerr", interface.in_errors),
         ("outtraffic", interface.out_octets),
         ("outmcast", interface.out_mcast),
         ("outbcast", interface.out_bcast),
         ("outucast", interface.out_ucast),
-        ("outnucast", saveint(interface.out_mcast) + saveint(interface.out_bcast)),
         ("outdisc", interface.out_discards),
         ("outerr", interface.out_errors),
     ]
-    if monitor_total_traffic:
-        rate_content.append(("total", interface.total_octets))
     for name, counter in rate_content:
         try:
             rates_dict[name] = _get_rate(
@@ -1139,6 +1124,7 @@ def check_single_interface(
         item,
         assumed_speed_in,
         assumed_speed_out,
+        monitor_total="total_traffic" in params,
     )
 
     yield from _output_packet_rates(
@@ -1419,6 +1405,8 @@ def _output_bandwidth_rates(  # type:ignore[no-untyped-def] # pylint: disable=to
     item: str,
     assumed_speed_in: Optional[int],
     assumed_speed_out: Optional[int],
+    *,
+    monitor_total: bool,
 ):
     if unit == "Bit":
         bandwidth_renderer: Callable[[float], str] = render.nicspeed
@@ -1428,7 +1416,17 @@ def _output_bandwidth_rates(  # type:ignore[no-untyped-def] # pylint: disable=to
     for what, traffic, speed in [
         ("in", rates.intraffic, speed_b_in),
         ("out", rates.outtraffic, speed_b_out),
-        ("total", rates.total, speed_b_total),
+        *(
+            [
+                (
+                    "total",
+                    _sum_optional_floats(rates.intraffic, rates.outtraffic),
+                    speed_b_total,
+                )
+            ]
+            if monitor_total
+            else []
+        ),
     ]:
         if traffic is None:
             # rates.total is None if total traffic is not monitored
@@ -1591,7 +1589,7 @@ def _output_packet_rates(  # pylint: disable=too-many-branches
             rates.inmcast,
             rates.inbcast,
             rates.inucast,
-            rates.innucast,
+            _sum_optional_floats(rates.inmcast, rates.inbcast),
             rates.indisc,
             rates.inerr,
         ),
@@ -1600,7 +1598,7 @@ def _output_packet_rates(  # pylint: disable=too-many-branches
             rates.outmcast,
             rates.outbcast,
             rates.outucast,
-            rates.outnucast,
+            _sum_optional_floats(rates.outmcast, rates.outbcast),
             rates.outdisc,
             rates.outerr,
         ),

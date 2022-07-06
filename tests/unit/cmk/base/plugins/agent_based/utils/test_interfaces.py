@@ -2384,9 +2384,8 @@ def test_cluster_check_ignore_discovered_params() -> None:
             state=State.OK,
             notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.node', "
             "inmcast: Initialized: 'inmcast.node', inbcast: Initialized: 'inbcast.node', inucast: Initialized: 'inucast.node', "
-            "innucast: Initialized: 'innucast.node', indisc: Initialized: 'indisc.node', inerr: Initialized: 'inerr.node', "
-            "outtraffic: Initialized: 'outtraffic.node', outmcast: Initialized: 'outmcast.node', outbcast: Initialized: 'outbcast.node', "
-            "outucast: Initialized: 'outucast.node', outnucast: Initialized: 'outnucast.node', outdisc: Initialized: 'outdisc.node', "
-            "outerr: Initialized: 'outerr.node'",
+            "indisc: Initialized: 'indisc.node', inerr: Initialized: 'inerr.node', outtraffic: Initialized: 'outtraffic.node', "
+            "outmcast: Initialized: 'outmcast.node', outbcast: Initialized: 'outbcast.node', outucast: Initialized: 'outucast.node', "
+            "outdisc: Initialized: 'outdisc.node', outerr: Initialized: 'outerr.node'",
         ),
     ]

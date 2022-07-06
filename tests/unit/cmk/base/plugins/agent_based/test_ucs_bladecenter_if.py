@@ -89,7 +89,6 @@ def test_parse_ucs_bladecenter_if() -> None:
             out_errors=0,
             out_qlen=0,
             oper_status_name="down",
-            total_octets=18239111194162080,
         ),
         Interface(
             index="1",
@@ -112,6 +111,5 @@ def test_parse_ucs_bladecenter_if() -> None:
             out_errors=0,
             out_qlen=0,
             oper_status_name="down",
-            total_octets=17434337402294160,
         ),
     ]

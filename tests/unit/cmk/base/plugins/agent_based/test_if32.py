@@ -57,6 +57,5 @@ def test_parse_if() -> None:
             group=None,
             node=None,
             admin_status=None,
-            total_octets=770633095,
         )
     ]

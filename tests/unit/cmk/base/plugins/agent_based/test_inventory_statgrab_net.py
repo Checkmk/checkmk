@@ -42,7 +42,6 @@ _SECTION = [
         group=None,
         node=None,
         admin_status=None,
-        total_octets=0,
     ),
     Interface(
         index="2",
@@ -70,7 +69,6 @@ _SECTION = [
         group=None,
         node=None,
         admin_status=None,
-        total_octets=126141297819,
     ),
     Interface(
         index="3",
@@ -98,7 +96,6 @@ _SECTION = [
         group=None,
         node=None,
         admin_status=None,
-        total_octets=19804691571510,
         extra_info=None,
     ),
 ]

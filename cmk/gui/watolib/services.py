@@ -11,7 +11,7 @@ import os
 import sys
 import time
 from hashlib import sha256
-from typing import Any, Iterable, List, NamedTuple, Sequence, Set, Tuple
+from typing import Any, Iterable, List, Mapping, NamedTuple, Sequence, Set, Tuple
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.type_defs import HostOrServiceConditions, SetAutochecksTable
@@ -25,7 +25,13 @@ from cmk.gui.globals import config, user
 from cmk.gui.i18n import _
 from cmk.gui.sites import get_site_config, site_is_local
 from cmk.gui.watolib.automations import sync_changes_before_remote_automation
-from cmk.gui.watolib.check_mk_automations import discovery, set_autochecks, try_discovery
+from cmk.gui.watolib.check_mk_automations import (
+    analyse_service,
+    discovery,
+    set_autochecks,
+    try_discovery,
+)
+from cmk.gui.watolib.hosts_and_folders import CREHost
 from cmk.gui.watolib.rulesets import RuleConditions, service_description_to_condition
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
@@ -135,10 +141,12 @@ class StartDiscoveryRequest(NamedTuple):
 
 
 class Discovery:
-    def __init__(self, host, discovery_options, api_request):
+    def __init__(
+        self, host: CREHost, discovery_options: DiscoveryOptions, api_request: Mapping[str, Any]
+    ):
         self._host = host
         self._options = discovery_options
-        self._discovery_info = {
+        self._discovery_info: Mapping[str, Any] = {
             "update_source": api_request.get("update_source"),
             "update_target": api_request["update_target"],
             "update_services": api_request.get("update_services", []),  # list of service hash
@@ -279,9 +287,17 @@ class Discovery:
         # the host specific setting above and remove all services from the service list
         # that are fine without an additional change.
         for service in list(services):
-            value_without_host_rule = ruleset.analyse_ruleset(self._host.name(), service, service)[
-                0
-            ]
+            service_result = analyse_service(
+                self._host.site_id(),
+                self._host.name(),
+                service,
+            )
+            value_without_host_rule, _ = ruleset.analyse_ruleset(
+                self._host.name(),
+                service,
+                service,
+                service_result=service_result,
+            )
             if (
                 not value and value_without_host_rule in [None, False]
             ) or value == value_without_host_rule:

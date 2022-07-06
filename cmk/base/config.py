@@ -3774,7 +3774,7 @@ class ConfigCache:
             return {}
 
     def ruleset_match_object_of_service(
-        self, hostname: HostName, svc_desc: ServiceName
+        self, hostname: HostName, svc_desc: ServiceName, svc_labels: Optional[Labels] = None
     ) -> RulesetMatchObject:
         """Construct the object that is needed to match this service to rulesets
 
@@ -3792,16 +3792,23 @@ class ConfigCache:
         if cache_id in self._cache_match_object_service:
             return self._cache_match_object_service[cache_id]
 
+        service_labels = (
+            svc_labels
+            if svc_labels
+            else self.labels.labels_of_service(self.ruleset_matcher, hostname, svc_desc)
+        )
         result = RulesetMatchObject(
-            host_name=hostname,
-            service_description=svc_desc,
-            service_labels=self.labels.labels_of_service(self.ruleset_matcher, hostname, svc_desc),
+            host_name=hostname, service_description=svc_desc, service_labels=service_labels
         )
         self._cache_match_object_service[cache_id] = result
         return result
 
     def ruleset_match_object_for_checkgroup_parameters(
-        self, hostname: HostName, item: Item, svc_desc: ServiceName
+        self,
+        hostname: HostName,
+        item: Item,
+        svc_desc: ServiceName,
+        svc_labels: Optional[Labels] = None,
     ) -> RulesetMatchObject:
         """Construct the object that is needed to match checkgroup parameters rulesets
 
@@ -3818,7 +3825,9 @@ class ConfigCache:
         result = RulesetMatchObject(
             host_name=hostname,
             service_description=item,
-            service_labels=self.labels.labels_of_service(self.ruleset_matcher, hostname, svc_desc),
+            service_labels=svc_labels
+            if svc_labels
+            else self.labels.labels_of_service(self.ruleset_matcher, hostname, svc_desc),
         )
         self._cache_match_object_service_checkgroup[cache_id] = result
         return result

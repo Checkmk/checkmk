@@ -52,21 +52,23 @@ def get_ruleset_matcher() -> RulesetMatcher:
 
 
 def ruleset_match_object_of_service(
-    hostname: HostName, svc_desc: ServiceName
+    hostname: HostName, svc_desc: ServiceName, svc_labels: Labels
 ) -> RulesetMatchObject:
     """Construct the object that is needed to match service rulesets"""
     _load_config()
     config_cache = config.get_config_cache()
-    return config_cache.ruleset_match_object_of_service(hostname, svc_desc)
+    return config_cache.ruleset_match_object_of_service(hostname, svc_desc, svc_labels=svc_labels)
 
 
 def ruleset_match_object_for_checkgroup_parameters(
-    hostname: HostName, item: Item, svc_desc: ServiceName
+    hostname: HostName, item: Item, svc_desc: ServiceName, svc_labels: Labels
 ) -> RulesetMatchObject:
     """Construct the object that is needed to match checkgroup parameter rulesets"""
     _load_config()
     config_cache = config.get_config_cache()
-    return config_cache.ruleset_match_object_for_checkgroup_parameters(hostname, item, svc_desc)
+    return config_cache.ruleset_match_object_for_checkgroup_parameters(
+        hostname, item, svc_desc, svc_labels=svc_labels
+    )
 
 
 def get_host_labels(hostname: HostName) -> Labels:

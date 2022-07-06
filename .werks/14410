@@ -1,0 +1,15 @@
+Title: UI displays rule evaluation correctly for disovered service labels
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1657722900
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p7
+
+When using service labels to match rulesets the web UI and checking engine disagreed if a ruleset should be applied.
+The UI did not correctly show rule matches for services with discovered labels.
+However, the checking engine correctly matches and applies rules based on discovered or assigned service labels.
+
+This has been fixed now. The UI now correctly shows rule matches for discovered service labels.

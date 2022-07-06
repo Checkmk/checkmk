@@ -1,0 +1,26 @@
+Title: Main dashboard: Render host & service problems graphs in certain multi-site setups
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1657095023
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p7
+
+In certain multi-site setups, the host and service problems graphs in the main dashboard ("Total
+host problems", "Total service problems", "Percentage of total service problems") are not rendered.
+This happens if there are too many Checkmk hosts (hosts running Checkmk sites) in the monitoring,
+which leads to error messages such as
+C+:
+Sorry, you cannot create combined graphs for more than 100 objects
+C-:
+or
+C+:
+As soon as you add your Checkmk server(s) to the monitoring, a graph showing the history of your
+host problems will appear here.
+C-:
+
+This werk solves this issue for setups with many Checkmk hosts whose sites are however <i>not</i>
+connected via distributed monitoring to the site(s) on which these hosts are monitored.

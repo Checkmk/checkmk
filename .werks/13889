@@ -1,0 +1,13 @@
+Title: Fixed unit/description translation of SNMP traps
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1657097880
+Edition: cre
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.1.0p6
+
+Due to a regression in 2.1, the translation of units and descriptions of
+SNMP traps was broken, this has been fixed.

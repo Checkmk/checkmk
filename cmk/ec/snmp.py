@@ -326,8 +326,8 @@ class SNMPTrapTranslator:
         node = mib_var[0].getMibNode()
         translated_oid = mib_var[0].prettyPrint().replace('"', "")
         translated_value = mib_var[1].prettyPrint()
-        if units := getattr(node, "getUnits", ""):
+        if units := getattr(node, "getUnits", lambda: "")():
             translated_value += " %s" % units
-        if description := getattr(node, "getDescription", ""):
+        if description := getattr(node, "getDescription", lambda: "")():
             translated_value += "(%s)" % description
         return translated_oid, translated_value

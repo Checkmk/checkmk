@@ -8,18 +8,13 @@ from enum import Enum
 from typing import (
     Any,
     Callable,
-    Dict,
     Generator,
-    List,
     Literal,
     Mapping,
     MutableMapping,
     NamedTuple,
     NewType,
-    Optional,
     Sequence,
-    Set,
-    Tuple,
     Union,
 )
 
@@ -30,23 +25,23 @@ from .size_trend import size_trend
 
 class DfBlock(NamedTuple):
     device: str
-    fs_type: Optional[str]
+    fs_type: str | None
     size_mb: float
     avail_mb: float
     reserved_mb: float
     mountpoint: str
-    uuid: Optional[str]
+    uuid: str | None
 
 
 class DfInode(NamedTuple):
-    device: Optional[str]
+    device: str | None
     total: int
     avail: int
     mountpoint: str
-    uuid: Optional[str]
+    uuid: str | None
 
 
-FSBlock = Tuple[str, Optional[float], Optional[float], float]
+FSBlock = tuple[str, float | None, float | None, float]
 FSBlocks = Sequence[FSBlock]
 BlocksSubsection = Sequence[DfBlock]
 InodesSubsection = Sequence[DfInode]
@@ -116,7 +111,7 @@ FILESYSTEM_DEFAULT_PARAMS: Mapping[str, Any] = {
 }
 
 
-def _determine_levels_for_filesystem(levels: list, filesystem_size: Bytes) -> Tuple[Any, Any]:
+def _determine_levels_for_filesystem(levels: list, filesystem_size: Bytes) -> tuple[Any, Any]:
     """Determine levels based on the given filesystem size from a list of
     levels configured by the user.
 
@@ -157,7 +152,7 @@ def _adjust_levels(
     factor: float,
     filesystem_size: Bytes,
     reference_size: Bytes,
-    minimum_levels: Tuple[float, float],
+    minimum_levels: tuple[float, float],
 ) -> FilesystemLevels:
     """The magic factor adjusts thresholds set for free or used filesystem
     space based on a factor (aka "magic factor") and relative to a
@@ -316,11 +311,11 @@ def _parse_filesystem_levels(levels: object, filesystem_size: Bytes) -> Filesyst
 
 
 def _ungrouped_mountpoints_and_groups(
-    mount_points: Dict[str, Dict],
-    group_patterns: Mapping[str, Tuple[Sequence[str], Sequence[str]]],
-) -> Tuple[Set[str], Dict[str, Set[str]]]:
+    mount_points: Mapping[str, Mapping],
+    group_patterns: Mapping[str, tuple[Sequence[str], Sequence[str]]],
+) -> tuple[set[str], Mapping[str, set[str]]]:
     ungrouped_mountpoints = set(mount_points)
-    groups: Dict[str, Set[str]] = {}
+    groups: dict[str, set[str]] = {}
     for group_name, (patterns_include, patterns_exclude) in group_patterns.items():
         mp_groups = mountpoints_in_group(mount_points, patterns_include, patterns_exclude)
         if mp_groups:
@@ -351,10 +346,10 @@ def get_filesystem_levels(
 
 
 def mountpoints_in_group(
-    mplist: Dict[str, Dict],
+    mplist: Mapping[str, Mapping],
     patterns_include: Sequence[str],
     patterns_exclude: Sequence[str],
-) -> List[str]:
+) -> list[str]:
     """Returns a list of mount points that are in patterns_include,
     but not in patterns_exclude"""
     matching_mountpoints = []
@@ -407,7 +402,7 @@ def check_inodes(
     else:
         inodes_warn_variant, inodes_crit_variant = inodes_levels
 
-    inodes_abs: Optional[Tuple[float, float]] = None
+    inodes_abs: tuple[float, float] | None = None
     human_readable_func: Callable[[float], str] = _render_integer
     if isinstance(inodes_warn_variant, int) and isinstance(inodes_crit_variant, int):
         # Levels in absolute numbers
@@ -461,7 +456,7 @@ def check_inodes(
 
 
 def df_discovery(params, mplist):
-    group_patterns: Dict[str, Tuple[List[str], List[str]]] = {}
+    group_patterns: dict[str, tuple[list[str], list[str]]] = {}
     for groups in params:
         for group in groups.get("groups", []):
             grouping_entry = group_patterns.setdefault(group["group_name"], ([], []))
@@ -470,10 +465,10 @@ def df_discovery(params, mplist):
 
     ungrouped_mountpoints, groups = _ungrouped_mountpoints_and_groups(mplist, group_patterns)
 
-    ungrouped: List[Tuple[str, Dict[str, Tuple[List[str], List[str]]]]] = [
+    ungrouped: list[tuple[str, dict[str, tuple[list[str], list[str]]]]] = [
         (mp, {}) for mp in ungrouped_mountpoints
     ]
-    grouped: List[Tuple[str, Dict[str, Tuple[List[str], List[str]]]]] = [
+    grouped: list[tuple[str, dict[str, tuple[list[str], list[str]]]]] = [
         (group, {"patterns": group_patterns[group]}) for group in groups
     ]
     return ungrouped + grouped
@@ -536,11 +531,11 @@ def check_filesystem_levels(  # type:ignore[no-untyped-def]
 def df_check_filesystem_single(  # type:ignore[no-untyped-def]
     value_store: MutableMapping[str, Any],
     mountpoint: str,
-    filesystem_size: Optional[float],
-    free_space: Optional[float],
-    reserved_space: Optional[float],
-    inodes_total: Optional[float],
-    inodes_avail: Optional[float],
+    filesystem_size: float | None,
+    free_space: float | None,
+    reserved_space: float | None,
+    inodes_total: float | None,
+    inodes_avail: float | None,
     params: Mapping[str, Any],
     this_time=None,
 ) -> CheckResult:
@@ -683,5 +678,5 @@ def df_check_filesystem_list(  # type:ignore[no-untyped-def]
     yield Result(state=State.OK, summary="%d filesystems" % len(matching_mountpoints))
 
 
-def _mb_to_perc(value: Optional[float], size_mb: float) -> Optional[float]:
+def _mb_to_perc(value: float | None, size_mb: float) -> float | None:
     return None if value is None else 100.0 * value / size_mb

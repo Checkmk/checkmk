@@ -161,7 +161,7 @@ class InterfaceWithCounters:
 
 
 @dataclass(frozen=True)
-class Rates:
+class _Rates:
     intraffic: float | None
     inmcast: float | None
     inbcast: float | None
@@ -174,6 +174,67 @@ class Rates:
     outucast: float | None
     outdisc: float | None
     outerr: float | None
+
+
+@dataclass(frozen=True)
+class Rates:
+    in_octets: float | None = None
+    in_mcast: float | None = None
+    in_bcast: float | None = None
+    in_ucast: float | None = None
+    in_disc: float | None = None
+    in_err: float | None = None
+    out_octets: float | None = None
+    out_mcast: float | None = None
+    out_bcast: float | None = None
+    out_ucast: float | None = None
+    out_disc: float | None = None
+    out_err: float | None = None
+
+
+@dataclass
+class InterfaceWithRates:
+    attributes: Attributes
+    rates: Rates
+    get_rate_errors: Sequence[tuple[str, GetRateError]]
+
+
+@dataclass(frozen=True)
+class Average:
+    value: float
+    backlog: int
+
+
+@dataclass(frozen=True)
+class RateWithAverage:
+    rate: float
+    average: Average | None
+
+
+@dataclass(frozen=True)
+class RatesWithAverages:
+    in_octets: RateWithAverage | None = None
+    in_mcast: RateWithAverage | None = None
+    in_bcast: RateWithAverage | None = None
+    in_nucast: RateWithAverage | None = None
+    in_ucast: RateWithAverage | None = None
+    in_disc: RateWithAverage | None = None
+    in_err: RateWithAverage | None = None
+    out_octets: RateWithAverage | None = None
+    out_mcast: RateWithAverage | None = None
+    out_bcast: RateWithAverage | None = None
+    out_nucast: RateWithAverage | None = None
+    out_ucast: RateWithAverage | None = None
+    out_disc: RateWithAverage | None = None
+    out_err: RateWithAverage | None = None
+    total_octets: RateWithAverage | None = None
+
+
+@dataclass
+class InterfaceWithRatesAndAverages:
+    attributes: Attributes
+    rates_with_averages: RatesWithAverages
+    get_rate_errors: Sequence[tuple[str, GetRateError]]
 
 
 Section = Sequence[InterfaceWithCounters]
@@ -261,7 +322,7 @@ def item_matches(
 
 # Pads port numbers with zeroes, so that items
 # nicely sort alphabetically
-def pad_with_zeroes(
+def _pad_with_zeroes(
     section: Section,
     ifIndex: str,
     pad_portnumbers: bool,
@@ -411,7 +472,7 @@ def _compute_item(
     elif uses_alias and attributes.alias:
         item = attributes.alias
     else:
-        item = pad_with_zeroes(section, attributes.index, pad_portnumbers)
+        item = _pad_with_zeroes(section, attributes.index, pad_portnumbers)
     return item
 
 
@@ -1191,7 +1252,7 @@ def check_single_interface(
             rates_dict[name] = None
             overflow_dict[name] = get_rate_excpt
 
-    rates = Rates(**rates_dict)
+    rates = _Rates(**rates_dict)
 
     yield Metric(
         "outqlen",
@@ -1479,8 +1540,8 @@ def _output_group_members(
     )
 
 
-def _output_bandwidth_rates(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
-    rates: Rates,
+def _output_bandwidth_rates(  # pylint: disable=too-many-branches
+    rates: _Rates,
     speed_b_in: float,
     speed_b_out: float,
     speed_b_total: float,
@@ -1684,7 +1745,7 @@ def _output_packet_rates(
     average_bmcast: Optional[int],
     *,
     item: str,
-    rates: Rates,
+    rates: _Rates,
     value_store: MutableMapping[str, Any],
     timestamp: float,
 ) -> type_defs.CheckResult:

@@ -6,7 +6,7 @@
 
 from typing import Mapping, NamedTuple
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, State
 
 
 class VirtualService(NamedTuple):
@@ -18,3 +18,8 @@ class VirtualService(NamedTuple):
 
 
 VSSection = Mapping[str, VirtualService]
+
+DETECT_KEMP_LOADMASTER = any_of(
+    equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12196.250.10"),
+    equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2021.250.10"),
+)

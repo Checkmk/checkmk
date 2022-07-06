@@ -6,8 +6,6 @@
 from typing import Final, List
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    any_of,
-    equals,
     OIDEnd,
     register,
     Result,
@@ -16,7 +14,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from cmk.base.plugins.agent_based.utils.kemp_loadmaster import VirtualService
+from cmk.base.plugins.agent_based.utils.kemp_loadmaster import (
+    DETECT_KEMP_LOADMASTER,
+    VirtualService,
+)
 from cmk.base.plugins.agent_based.utils.kemp_loadmaster import VSSection as Section
 
 _VS_STATE_MAP: Final = {
@@ -55,10 +56,7 @@ register.snmp_section(
             OIDEnd(),
         ],
     ),
-    detect=any_of(
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12196.250.10"),
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2021.250.10"),
-    ),
+    detect=DETECT_KEMP_LOADMASTER,
 )
 
 

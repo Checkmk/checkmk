@@ -6,9 +6,9 @@
 from collections import defaultdict
 from typing import Final, Mapping, NamedTuple, Sequence
 
-from .agent_based_api.v1 import any_of, equals, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.kemp_loadmaster import VSSection
+from .utils.kemp_loadmaster import DETECT_KEMP_LOADMASTER, VSSection
 
 
 class RealServer(NamedTuple):
@@ -52,10 +52,7 @@ register.snmp_section(
             "8",  # state: B100-MIB::rSstate
         ],
     ),
-    detect=any_of(
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12196.250.10"),
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2021.250.10"),
-    ),
+    detect=DETECT_KEMP_LOADMASTER,
 )
 
 

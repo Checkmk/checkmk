@@ -40,8 +40,6 @@
 #include "tools/_xlog.h"
 
 namespace wtools {
-constexpr const wchar_t *kWToolsLogName = L"check_mk_wtools.log";
-
 inline void *ProcessHeapAlloc(size_t size) noexcept {
     return ::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size);
 }
@@ -522,7 +520,6 @@ private:
 
     // The singleton service instance.
     std::unique_ptr<BaseServiceProcessor> processor_;
-    const wchar_t *log_name_{wtools::kWToolsLogName};
 
     std::unique_ptr<wchar_t[]> name_;
     bool can_stop_{false};
@@ -542,8 +539,6 @@ private:
 // we support two converters
 // one is deprecated, second is windows only
 inline std::string ToUtf8(const std::wstring_view src) noexcept {
-#if defined(WINDOWS_OS)
-    // Windows only
     const auto in_len = static_cast<int>(src.length());
     const auto out_len = ::WideCharToMultiByte(CP_UTF8, 0, src.data(), in_len,
                                                nullptr, 0, nullptr, nullptr);
@@ -563,15 +558,6 @@ inline std::string ToUtf8(const std::wstring_view src) noexcept {
     ::WideCharToMultiByte(CP_UTF8, 0, src.data(), -1, str.data(), out_len,
                           nullptr, nullptr);
     return str;
-#else
-    // standard but deprecated
-    try {
-        return wstring_convert<codecvt_utf8<wchar_t>>().to_bytes(src);
-    } catch (const exception &e) {
-        xlog::l("Failed to convert %ls", src.c_str());
-        return "";
-    }
-#endif  // endif
 }
 
 inline std::string ToUtf8(std::string_view src) noexcept {
@@ -582,10 +568,9 @@ std::wstring ToCanonical(std::wstring_view raw_app_name);
 // standard Windows converter from Microsoft
 // WINDOWS ONLY
 inline std::wstring ConvertToUTF16(std::string_view src) noexcept {
-#if defined(WINDOWS_OS)
-    auto in_len = static_cast<int>(src.length());
+    const auto in_len = static_cast<int>(src.length());
     const auto *utf8_str = src.data();
-    auto out_len =
+    const auto out_len =
         MultiByteToWideChar(CP_UTF8, 0, utf8_str, in_len, nullptr, 0);
     std::wstring wstr;
     try {
@@ -599,10 +584,6 @@ inline std::wstring ConvertToUTF16(std::string_view src) noexcept {
         return wstr;
     }
     return {};
-#else
-    xlog::l(XLOG_FUNC + ": UR crazy");
-    return {};
-#endif
 }
 
 namespace perf {
@@ -668,12 +649,12 @@ inline int64_t QueryPerformanceCo() noexcept {
     return counter.QuadPart;
 }
 
-// util to get in windows find path to your binary
-// MAY NOT WORK when you are running as a service
+/// to get in windows find path to your binary
+/// MAY NOT WORK when you are running as a service
 std::filesystem::path GetCurrentExePath();
 
-// wrapper for win32 specific function
-// return 0 when no data or error
+/// wrapper for win32 specific function
+/// return 0 when no data or error
 inline int DataCountOnHandle(HANDLE handle) noexcept {
     DWORD read_count = 0;
     // MSDN says to do so
@@ -726,7 +707,7 @@ inline void AddSafetyEndingNull(std::string &data) {
     data[length] = 0;
 }
 
-// templated to support uint8_t and int8_t and char and unsigned char
+// generic to support uint8_t and int8_t and char and unsigned char
 template <typename T>
 std::string ConditionallyConvertFromUTF16(const std::vector<T> &original_data) {
     static_assert(sizeof(T) == 1, "Invalid Data Type in template");
@@ -757,11 +738,7 @@ inline uint32_t LocalReadUint32(const char *root_name, const char *name,
                                 reinterpret_cast<PBYTE>(&value), &size);
     ::RegCloseKey(hkey);
 
-    if (result == ERROR_SUCCESS) {
-        return value;
-    }
-
-    return default_value;
+    return result == ERROR_SUCCESS ? value : default_value;
 }
 
 void InitWindowsCom();
@@ -917,17 +894,17 @@ uint64_t WmiUint64FromObject(IWbemClassObject *object,
 IEnumWbemClassObject *WmiExecQuery(IWbemServices *services,
                                    const std::wstring &query) noexcept;
 
-// returned codes from the wmi
+/// returned codes from the wmi
 enum class WmiStatus { ok, timeout, error, fail_open, fail_connect, bad_param };
 
 std::tuple<IWbemClassObject *, WmiStatus> WmiGetNextObject(
     IEnumWbemClassObject *enumerator, uint32_t timeout);
 
-// in exception column we have
+/// in exception column we have
 enum class StatusColumn { ok, timeout };
 std::string StatusColumnText(StatusColumn exception_column) noexcept;
 
-// "decorator" for WMI tables with OK, Timeout: WMIStatus
+/// "decorator" for WMI tables with OK, Timeout: WMIStatus
 std::string WmiPostProcess(const std::string &in, StatusColumn exception_column,
                            char separator);
 
@@ -951,15 +928,15 @@ public:
         const std::vector<std::wstring> &names, std::wstring_view separator,
         uint32_t wmi_timeout) noexcept;
 
-    // work horse to ask certain names from the target
-    // on error returns empty string and timeout status
+    /// work horse to ask certain names from the target
+    /// on error returns empty string and timeout status
     std::tuple<std::wstring, WmiStatus> queryTable(
         const std::vector<std::wstring> &names, const std::wstring &target,
         std::wstring_view separator, uint32_t wmi_timeout) noexcept;
 
-    // special purposes: formatting for PS for example
-    // on error returns nullptr
-    // You have to call Release for returned object!!!
+    /// special purposes: formatting for PS for example
+    /// on error returns nullptr
+    /// You have to call Release for returned object!!!
     IEnumWbemClassObject *queryEnumerator(
         const std::vector<std::wstring> &names,
         const std::wstring &target) noexcept;
@@ -976,12 +953,12 @@ private:
 
 HMODULE LoadWindowsLibrary(const std::wstring &DllPath);
 
-// Look into the registry in order to find out, which
-// event logs are available
-// return false only when something wrong with registry
+/// Look into the registry in order to find out, which
+/// event logs are available
+/// return false only when something wrong with registry
 std::vector<std::string> EnumerateAllRegistryKeys(const char *RegPath);
 
-// returns data from the root machine registry
+/// returns data from the root machine registry
 uint32_t GetRegistryValue(std::wstring_view path, std::wstring_view value_name,
                           uint32_t dflt) noexcept;
 bool DeleteRegistryValue(std::wstring_view path,

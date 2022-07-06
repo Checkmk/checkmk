@@ -90,7 +90,7 @@ bool ChangeAccessRights(
 
 std::pair<uint32_t, uint32_t> GetProcessExitCode(uint32_t pid) {
     HANDLE h = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
-    if (nullptr == h) {
+    if (h == nullptr) {
         return {0, ::GetLastError()};
     }
 
@@ -123,7 +123,7 @@ std::wstring GetProcessPath(uint32_t pid) noexcept {
 int KillProcessesByDir(const fs::path &dir) noexcept {
     constexpr size_t minimum_path_len = 12;
 
-    if (dir.u8string().size() < minimum_path_len) {
+    if (dir.wstring().size() < minimum_path_len) {
         // safety: we do not want to kill as admin something important
         return -1;
     }
@@ -131,7 +131,7 @@ int KillProcessesByDir(const fs::path &dir) noexcept {
     int killed_count = 0;
 
     ScanProcessList([dir, &killed_count](const PROCESSENTRY32W &entry) {
-        auto pid = entry.th32ProcessID;
+        const auto pid = entry.th32ProcessID;
         auto exe = wtools::GetProcessPath(pid);
         if (exe.length() < minimum_path_len) {
             return true;  // skip short path
@@ -139,8 +139,8 @@ int KillProcessesByDir(const fs::path &dir) noexcept {
 
         fs::path p{exe};
         std::error_code ec;
-        auto shift = fs::relative(p, dir).u8string();
-        if (!ec && !shift.empty() && shift[0] != '.') {
+        const auto shift = fs::relative(p, dir).wstring();
+        if (!ec && !shift.empty() && shift[0] != L'.') {
             XLOG::d.i("Killing process '{}'", p);
             KillProcess(pid, 99);
             killed_count++;
@@ -439,12 +439,12 @@ void TryStopService(SC_HANDLE service, std::string_view name) {
     }
 
     XLOG::l(XLOG::kStdio).i("Stopping '{}'.", name);
-    Sleep(1000);
+    ::Sleep(1000);
 
     while (::QueryServiceStatus(service, &service_status) == TRUE) {
         if (service_status.dwCurrentState == SERVICE_STOP_PENDING) {
             xlog::sendStringToStdio(".");
-            Sleep(1000);
+            ::Sleep(1000);
         } else
             break;
     }
@@ -808,15 +808,13 @@ DWORD WINAPI ServiceController::ServiceCtrlHandlerEx(DWORD control_code,
 // C-like here to be more windows
 namespace perf {
 
-// read MULTI_SZ string from the registry
-// #TODO gtest
+/// read MULTI_SZ string from the registry
 std::vector<wchar_t> ReadPerfCounterKeyFromRegistry(PerfCounterReg type) {
     DWORD counters_size = 0;
 
     auto *key = type == PerfCounterReg::national ? HKEY_PERFORMANCE_NLSTEXT
                                                  : HKEY_PERFORMANCE_TEXT;
 
-    // preflight
     ::RegQueryValueExW(key, L"Counter", nullptr, nullptr, nullptr,
                        &counters_size);
     if (counters_size == 0) {
@@ -831,7 +829,7 @@ std::vector<wchar_t> ReadPerfCounterKeyFromRegistry(PerfCounterReg type) {
     ::RegQueryValueExW(key, L"Counter", nullptr, nullptr,
                        reinterpret_cast<LPBYTE>(result.data()), &counters_size);
 
-    result[counters_size] = 0;  // to stop all possible strlens here
+    result[counters_size] = 0;  // safety
 
     return result;
 }
@@ -887,7 +885,9 @@ NameMap GenerateNameMap() {
 
         // check name
         auto id = ::wcstol(id_as_text, nullptr, 10);
-        if (id > 0) nm[id] = potential_name;
+        if (id > 0) {
+            nm[id] = potential_name;
+        }
     }
     return nm;
 }
@@ -1011,15 +1011,17 @@ const PERF_OBJECT_TYPE *FindPerfObject(const DataSequence &data_buffer,
 }
 
 std::vector<const PERF_INSTANCE_DEFINITION *> GenerateInstances(
-    const PERF_OBJECT_TYPE *Object) noexcept {
-    if (Object->NumInstances <= 0L) return {};
+    const PERF_OBJECT_TYPE *object) noexcept {
+    if (object->NumInstances <= 0L) {
+        return {};
+    }
 
     std::vector<const PERF_INSTANCE_DEFINITION *> result;
     try {
-        result.reserve(Object->NumInstances);  // optimization
+        result.reserve(object->NumInstances);  // optimization
 
-        const auto *instance = FirstInstance(Object);
-        for (auto i = 0L; i < Object->NumInstances; ++i) {
+        const auto *instance = FirstInstance(object);
+        for (auto i = 0L; i < object->NumInstances; ++i) {
             result.push_back(instance);
             instance = NextInstance(instance);
         }
@@ -1175,15 +1177,11 @@ std::vector<uint64_t> GenerateValues(
 
 uint64_t GetValueFromBlock(const PERF_COUNTER_DEFINITION &counter,
                            const PERF_COUNTER_BLOCK *block) noexcept {
-    if (block) {
-        return GetCounterValueFromBlock(counter, block);
-    }
-    return 0;
+    return block != nullptr ? GetCounterValueFromBlock(counter, block) : 0;
 }
 
 std::string GetName(uint32_t counter_type) noexcept {
     // probably we need a map here
-    // looks terrible
     switch (counter_type) {
         case PERF_COUNTER_COUNTER:
             return "counter";
@@ -1283,7 +1281,6 @@ void InitWindowsCom() {
 
     auto hres = ::CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 
-    // Use the MAKEWORD(lowbyte, highbyte) macro declared in Windef.h
     auto version_requested = MAKEWORD(2, 2);
     WSADATA wsa_data{0};
     int err = ::WSAStartup(version_requested, &wsa_data);
@@ -1384,10 +1381,7 @@ std::wstring WmiStringFromObject(IWbemClassObject *object,
                                  std::wstring_view separator) {
     std::wstring result;
     for (const auto &name : names) {
-        // data
         VARIANT value;
-
-        // clearing of the value
         memset(&value, 0,
                sizeof(value));  // prevents potential usage
                                 // of the non-initialized data
@@ -1417,7 +1411,6 @@ std::wstring WmiStringFromObject(IWbemClassObject *object,
     return result;
 }
 
-// optimized versions
 std::wstring WmiStringFromObject(IWbemClassObject *object,
                                  const std::wstring &name) {
     VARIANT value{0};
@@ -1429,7 +1422,6 @@ std::wstring WmiStringFromObject(IWbemClassObject *object,
     return wtools::WmiGetWstring(value);
 }
 
-// optimized version
 std::optional<std::wstring> WmiTryGetString(IWbemClassObject *object,
                                             const std::wstring &name) {
     VARIANT value{0};
@@ -1458,9 +1450,8 @@ uint64_t WmiUint64FromObject(IWbemClassObject *object,
     return wtools::WmiGetUint64(value);
 }
 
-// gtest
-// returns name vector
-// on error returns empty
+/// returns name vector
+/// on error returns empty
 std::vector<std::wstring> WmiGetNamesFromObject(IWbemClassObject *WmiObject) {
     SAFEARRAY *names = nullptr;
     HRESULT res = WmiObject->GetNames(
@@ -1469,7 +1460,7 @@ std::vector<std::wstring> WmiGetNamesFromObject(IWbemClassObject *WmiObject) {
         XLOG::l.e("Failed to get names from WmiObject {:#X}", res);
         return {};  // Program has failed.
     }
-    ON_OUT_OF_SCOPE(if (names)::SafeArrayDestroy(names););
+    ON_OUT_OF_SCOPE(if (names) { ::SafeArrayDestroy(names); });
 
     LONG start = 0;
     LONG end = 0;
@@ -1525,23 +1516,21 @@ IEnumWbemClassObject *WmiExecQuery(IWbemServices *Services,
     // SHOULD NOT HAPPEN
     XLOG::l.e("Failed query wmi {:#X}, query is {}",
               static_cast<unsigned>(hres), ToUtf8(Query));
-    return nullptr;  // Program has failed.
+    return nullptr;
 }
 
-bool WmiWrapper::open() noexcept {  // Obtain the initial locator to Windows
-                                    // Management
-                                    // on a particular host computer.
+bool WmiWrapper::open() noexcept {
     std::lock_guard lk(lock_);
     IWbemLocator *locator = nullptr;
 
-    auto hres =
-        CoCreateInstance(CLSID_WbemLocator, nullptr, CLSCTX_INPROC_SERVER,
-                         IID_IWbemLocator, reinterpret_cast<void **>(&locator));
+    auto hres = ::CoCreateInstance(CLSID_WbemLocator, nullptr,
+                                   CLSCTX_INPROC_SERVER, IID_IWbemLocator,
+                                   reinterpret_cast<void **>(&locator));
 
     if (FAILED(hres)) {
         XLOG::l.crit("Can't Create Instance WMI {:#X}",
                      static_cast<unsigned long>(hres));
-        return false;  // Program has failed.
+        return false;
     }
     locator_ = locator;
     return true;

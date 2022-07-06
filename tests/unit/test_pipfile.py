@@ -261,6 +261,7 @@ CEE_UNUSED_PACKAGES = [
     "jsonschema",
     "more-itertools",
     "multidict",
+    "mypy_extensions",
     "ordered-set",
     "pbr",
     "ply",

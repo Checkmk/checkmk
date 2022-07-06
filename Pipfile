@@ -144,6 +144,7 @@ psycopg2-binary = "==2.9.1"  # needed by check_sql active check
 apispec = "==5.1.1"  # direct dependency
 marshmallow = "==3.14.1"  # direct dependency
 marshmallow-oneofschema = "==2.1.0"  # direct dependency
+mypy_extensions = "==0.4.3" # direct dependency
 apispec-oneofschema = "==3.0.0"  # direct dependency
 typing_extensions = "==3.10"   # required by pydantic
 pydantic = "==1.8.2"  # needed by special agents

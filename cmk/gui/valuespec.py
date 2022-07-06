@@ -19,6 +19,7 @@ import abc
 import base64
 import datetime
 import hashlib
+import hmac
 import io
 import ipaddress
 import itertools
@@ -35,6 +36,7 @@ import uuid
 from collections.abc import MutableMapping
 from collections.abc import Sequence as ABCSequence
 from enum import Enum
+from functools import lru_cache
 from pathlib import Path
 from typing import (
     Any,
@@ -5644,10 +5646,21 @@ class Password(TextAscii):
             return _("none")
         return u'******'
 
+    @staticmethod
+    @lru_cache
+    def _cached_key() -> bytes:
+        return os.urandom(32)
+
     def value_to_json_safe(self, value: _Optional[str]) -> str:
         if value is None:
             return "none"
-        password_hash = hashlib.sha256(value.encode()).hexdigest()
+
+        # This is a band-aid for CMK-10745.
+        # It is only here because object_diff.make_text_diff, which is used when logging rule
+        # changes to the audit log, needs different passwords to be masked to different values.
+        # Otherwise the diff will be empty. It would be better if the diffing or the diff result
+        # was aware of password types so we could just mask after diffing.
+        password_hash = hmac.new(Password._cached_key(), value.encode(), hashlib.sha256).hexdigest()
         return f"hash:{password_hash[:10]}"
 
     def from_html_vars(self, varprefix: str) -> str:

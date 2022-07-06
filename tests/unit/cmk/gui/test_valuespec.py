@@ -460,3 +460,23 @@ def test_value_encrypter_transparent():
 def test_mask_to_json(valuespec, value, expected):
     masked = valuespec.mask(value)
     assert valuespec.value_to_json(masked) == expected
+
+
+def _hash_pw(v):
+    return vs.Password().value_to_json_safe(v)
+
+
+@pytest.mark.parametrize(
+    "pw1,pw2",
+    [
+        ("", ""),
+        ("", "non-empty"),
+        ("the-same", "the-same"),
+        ("some pass", "other pass"),
+        ("🔥🔥🔥", "🔥🔥🔥"),
+    ],
+)
+def test_hash_password(pw1, pw2):
+    hash1, hash2 = _hash_pw(pw1), _hash_pw(pw2)
+    assert hash1.startswith("hash:") and hash2.startswith("hash:"), "hash is not empty"
+    assert (pw1 == pw2) == (hash1 == hash2), "same password produces same hash"

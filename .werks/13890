@@ -1,0 +1,15 @@
+Title: Resurrect magic column name prefixing for cached state history table
+Class: fix
+Compatible: compat
+Component: livestatus
+Date: 1657111508
+Edition: cee
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.1.0p6
+
+There was a regression in 2.1 which broke the magic prefixing of column
+names for the statehist table with "current_".  This in turn broke various
+availability-related things in the GUI which relied on that hack.
+

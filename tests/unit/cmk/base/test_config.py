@@ -560,12 +560,15 @@ def test_is_usewalk_host(monkeypatch: MonkeyPatch) -> None:
     ts.set_ruleset(
         "usewalk_hosts",
         [
-            {"condition": {"host_tag": {hostname: hostname}}, "value": False, "options": {}},
+            {
+                "condition": {"host_name": [hostname]},
+                "value": True,
+            },
         ],
     )
 
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).is_usewalk_host is False
+    assert config_cache.get_host_config(hostname).is_usewalk_host is True
 
 
 @pytest.mark.parametrize(

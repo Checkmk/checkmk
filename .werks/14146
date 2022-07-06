@@ -1,0 +1,20 @@
+Title: Rule matching for hosts
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1657092070
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The search for host rules in Setup did not work as expected when matching host regex conditions.
+
+The issue did not affect the rule matching visualization nor the actual rule matching.
+
+When checking the matching rules for hosts the rules with regular expressions
+would not get a green background although the regex should match, which indicates
+the rule is not matching the current search.
+
+Now the rule matching is fixed and the rules will get a green background if they match the search.
+

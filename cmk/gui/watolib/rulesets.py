@@ -1336,9 +1336,17 @@ class Rule:
 
 
 def _match_search_expression(search_options: SearchOptions, attr_name: str, search_in: str) -> bool:
+    """
+    >>> _match_search_expression({"rule_host_list": "foobar123"}, "rule_host_list", "~.*foo.*")
+    True
+    >>> _match_search_expression({"rule_host_list": "foobar123"}, "rule_host_list", "foobar123")
+    True
+    """
     if attr_name not in search_options:
         return True  # not searched for this. Matching!
 
+    if search_in and search_in.startswith("~"):
+        return re.search(search_in.lstrip("~"), search_options[attr_name], re.I) is not None
     return bool(search_in and re.search(search_options[attr_name], search_in, re.I) is not None)
 
 

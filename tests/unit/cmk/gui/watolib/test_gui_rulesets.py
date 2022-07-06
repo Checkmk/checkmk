@@ -565,3 +565,74 @@ def test_rule_clone(request_context) -> None:
     assert rule.folder == cloned_rule.folder
     assert rule.ruleset == cloned_rule.ruleset
     assert rule.id != cloned_rule.id
+
+
+@pytest.mark.parametrize(
+    "search_options, rule_config, folder_name, expected_result",
+    [
+        (
+            {"rule_host_list": "foobar123"},
+            {
+                "id": "2a983a0a-7fab-4403-ab9d-5922fd8be529",
+                "value": "all",
+                "condition": {
+                    "host_name": [{"$regex": ".*foo.*"}],
+                },
+                "options": {"disabled": False, "description": "foo"},
+            },
+            "regex_check",
+            True,
+        ),
+        (
+            {"rule_host_list": "foobar123"},
+            {
+                "id": "efd67dab-68f8-4d3c-a417-9f7e29ab48d5",
+                "value": "all",
+                "condition": {},
+                "options": {"description": 'Put all hosts into the contact group "all"'},
+            },
+            "",
+            True,
+        ),
+        (
+            {"rule_host_list": "foobar123"},
+            {
+                "id": "59d84cde-ee3a-4f8d-8bec-fce35a2b0d15",
+                "value": "all",
+                "condition": {
+                    "host_name": ["foobar123"],
+                },
+                "options": {"description": "foo"},
+            },
+            "regex_check",
+            True,
+        ),
+        (
+            {"rule_host_list": "foobar123"},
+            {
+                "id": "e10843c55-11ea-4eb2-bfbc-bce65cd2ae22",
+                "value": "all",
+                "condition": {
+                    "host_name": [{"$regex": ".*foo123.*"}],
+                },
+                "options": {"description": "foo"},
+            },
+            "regex_check",
+            False,
+        ),
+    ],
+)
+def test_matches_search_with_rules(
+    with_admin_login,
+    search_options: rulesets.SearchOptions,
+    rule_config: RuleSpec,
+    folder_name: str,
+    expected_result: bool,
+):
+    hosts_and_folders.Folder.create_missing_folders(folder_name)
+    folder = hosts_and_folders.Folder.folder(folder_name)
+    ruleset = _ruleset("host_contactgroups")
+    rule = rulesets.Rule.from_config(folder, ruleset, rule_config)
+    ruleset.append_rule(folder, rule)
+
+    assert ruleset.matches_search_with_rules(search_options) == expected_result

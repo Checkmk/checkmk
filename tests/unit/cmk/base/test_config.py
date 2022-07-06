@@ -331,27 +331,27 @@ def test_is_no_ip_host(
             "testhost",
             {"address_family": "ip-v4-only"},
             False,
-            [{"condition": {}, "options": {}, "value": "ipv6"}],
+            [{"condition": {}, "value": "ipv6"}],
         ),
         ("testhost", {"address_family": "ip-v4v6"}, False, []),
         (
             "testhost",
             {"address_family": "ip-v4v6"},
             True,
-            [{"condition": {}, "options": {}, "value": "ipv6"}],
+            [{"condition": {}, "value": "ipv6"}],
         ),
         ("testhost", {"address_family": "ip-v6-only"}, True, []),
         (
             "testhost",
             {"address_family": "ip-v6-only"},
             True,
-            [{"condition": {}, "options": {}, "value": "ipv4"}],
+            [{"condition": {}, "value": "ipv4"}],
         ),
         (
             "testhost",
             {"address_family": "ip-v6-only"},
             True,
-            [{"condition": {}, "options": {}, "value": "ipv6"}],
+            [{"condition": {}, "value": "ipv6"}],
         ),
         ("testhost", {"address_family": "no-ip"}, False, []),
     ],
@@ -690,7 +690,6 @@ def test_host_config_agent_encryption(
             {
                 "condition": {"host_name": ["testhost2"]},
                 "value": {"use_regular": "enforce", "use_realtime": "disable"},
-                "options": {},
             }
         ],
     )
@@ -717,7 +716,6 @@ def test_host_config_agent_target_version(
             {
                 "condition": {"host_name": ["testhost2"]},
                 "value": "site",
-                "options": {},
             }
         ],
     )
@@ -744,7 +742,6 @@ def test_host_config_datasource_program(
             {
                 "condition": {"host_name": ["testhost2"]},
                 "value": "echo 1",
-                "options": {},
             }
         ],
     )
@@ -778,14 +775,12 @@ def test_host_config_special_agents(
                 {
                     "condition": {"host_name": ["testhost2"]},
                     "value": {"param1": 1},
-                    "options": {},
                 }
             ],
             "xyz": [
                 {
                     "condition": {"host_name": ["testhost2"]},
                     "value": {"param2": 1},
-                    "options": {},
                 }
             ],
         },
@@ -814,12 +809,10 @@ def test_host_config_only_from(
                 {
                     "condition": {"host_name": ["testhost2"]},
                     "value": ["127.0.0.1"],
-                    "options": {},
                 },
                 {
                     "condition": {"host_name": ["testhost2"]},
                     "value": ["127.0.0.2"],
-                    "options": {},
                 },
             ],
         },
@@ -850,17 +843,14 @@ def test_host_config_explicit_check_command(
             {
                 "condition": {"host_name": ["testhost2"]},
                 "value": "command1",
-                "options": {},
             },
             {
                 "condition": {"host_name": ["testhost2"]},
                 "value": "command2",
-                "options": {},
             },
             {
                 "condition": {"host_name": ["testhost3"]},
                 "value": "smart",
-                "options": {},
             },
         ],
     )
@@ -887,17 +877,14 @@ def test_host_config_ping_levels(
             {
                 "condition": {"host_name": ["testhost2"]},
                 "value": {"ding": 1},
-                "options": {},
             },
             {
                 "condition": {"host_name": ["testhost2"]},
                 "value": {"ding": 3},
-                "options": {},
             },
             {
                 "condition": {"host_name": ["testhost2"]},
                 "value": {"dong": 1},
-                "options": {},
             },
         ],
     )
@@ -924,17 +911,14 @@ def test_host_config_icons_and_actions(
             {
                 "condition": {"host_name": ["testhost2"]},
                 "value": "icon1",
-                "options": {},
             },
             {
                 "condition": {"host_name": ["testhost2"]},
                 "value": "icon1",
-                "options": {},
             },
             {
                 "condition": {"host_name": ["testhost2"]},
                 "value": "icon2",
-                "options": {},
             },
         ],
     )
@@ -962,24 +946,20 @@ def test_host_config_extra_host_attributes(
                 {
                     "condition": {"host_name": ["testhost2"]},
                     "value": ["value1"],
-                    "options": {},
                 },
                 {
                     "condition": {"host_name": ["testhost2"]},
                     "value": ["value2"],
-                    "options": {},
                 },
             ],
             "_custom": [
                 {
                     "condition": {"host_name": ["testhost2"]},
                     "value": ["value1"],
-                    "options": {},
                 },
                 {
                     "condition": {"host_name": ["testhost2"]},
                     "value": ["value2"],
-                    "options": {},
                 },
             ],
         },
@@ -1014,12 +994,10 @@ def test_host_config_inventory_parameters(
                 {
                     "condition": {"host_name": ["testhost2"]},
                     "value": {"value1": 1},
-                    "options": {},
                 },
                 {
                     "condition": {"host_name": ["testhost2"]},
                     "value": {"value2": 2},
-                    "options": {},
                 },
             ],
         },
@@ -1065,7 +1043,6 @@ def test_host_config_discovery_check_parameters(
                     "severity_vanished": 0,
                     "severity_new_host_label": 1,
                 },
-                "options": {},
             },
             {
                 "condition": {"host_name": ["testhost2"]},
@@ -1075,7 +1052,6 @@ def test_host_config_discovery_check_parameters(
                     "severity_vanished": 0,
                     "severity_new_host_label": 1,
                 },
-                "options": {},
             },
         ],
     )
@@ -1111,7 +1087,6 @@ def test_host_config_notification_plugin_parameters(
                     "value": {
                         "value1": 1,
                     },
-                    "options": {},
                 },
                 {
                     "condition": {"host_name": ["testhost2"]},
@@ -1119,7 +1094,6 @@ def test_host_config_notification_plugin_parameters(
                         "value1": 2,
                         "value2": 2,
                     },
-                    "options": {},
                 },
             ],
         },
@@ -1164,14 +1138,12 @@ def test_host_config_active_checks(
                     "value": {
                         "param1": 1,
                     },
-                    "options": {},
                 },
                 {
                     "condition": {"host_name": ["testhost2"]},
                     "value": {
                         "param2": 2,
                     },
-                    "options": {},
                 },
             ],
             "xyz": [
@@ -1180,7 +1152,6 @@ def test_host_config_active_checks(
                     "value": {
                         "param2": 1,
                     },
-                    "options": {},
                 },
             ],
         },
@@ -1210,14 +1181,12 @@ def test_host_config_custom_checks(
                 "value": {
                     "param1": 1,
                 },
-                "options": {},
             },
             {
                 "condition": {"host_name": ["testhost2"]},
                 "value": {
                     "param2": 2,
                 },
-                "options": {},
             },
         ],
     )
@@ -1261,12 +1230,10 @@ def test_host_config_static_checks(
                 {
                     "condition": {"host_name": ["testhost2"]},
                     "value": ("checktype1", "item1", {"param1": 1}),
-                    "options": {},
                 },
                 {
                     "condition": {"host_name": ["testhost2"]},
                     "value": ("checktype2", "item2", {"param2": 2}),
-                    "options": {},
                 },
             ],
         },
@@ -1294,7 +1261,6 @@ def test_host_config_hostgroups(
             {
                 "condition": {"host_name": ["testhost2"]},
                 "value": "dingdong",
-                "options": {},
             },
         ],
     )
@@ -1329,22 +1295,18 @@ def test_host_config_contactgroups(
             {
                 "condition": {"host_name": ["testhost2", "testhost3"]},
                 "value": "dingdong",
-                "options": {},
             },
             {
                 "condition": {"host_name": ["testhost2", "testhost3"]},
                 "value": ["abc"],
-                "options": {},
             },
             {
                 "condition": {"host_name": ["testhost2", "testhost3"]},
                 "value": ["xyz"],
-                "options": {},
             },
             {
                 "condition": {"host_name": ["testhost3"]},
                 "value": "haha",
-                "options": {},
             },
         ],
     )
@@ -1374,7 +1336,6 @@ def test_host_config_exit_code_spec_overall(
                     "overall": {"empty_output": 1},
                     "individual": {"snmp": {"empty_output": 4}},
                 },
-                "options": {},
             },
         ],
     )
@@ -1404,7 +1365,6 @@ def test_host_config_exit_code_spec_individual(
                     "overall": {"empty_output": 1},
                     "individual": {"snmp": {"empty_output": 4}},
                 },
-                "options": {},
             },
         ],
     )
@@ -1456,7 +1416,6 @@ def test_host_config_exit_code_spec(monkeypatch: MonkeyPatch, ruleset: Dict[str,
             {
                 "condition": {"host_name": ["hostname"]},
                 "value": ruleset,
-                "options": {},
             },
         ],
     )
@@ -1502,12 +1461,10 @@ def test_host_config_snmp_credentials_of_version(
             {
                 "condition": {"host_name": ["testhost2", "testhost3"]},
                 "value": "bla",
-                "options": {},
             },
             {
                 "condition": {"host_name": ["testhost2", "testhost4"]},
                 "value": ("noAuthNoPriv", "v3"),
-                "options": {},
             },
         ],
     )
@@ -1537,7 +1494,6 @@ def test_host_config_snmp_check_interval(
             {
                 "condition": {"host_name": ["testhost2"]},
                 "value": ("snmp_uptime", 4),
-                "options": {},
             },
         ],
     )
@@ -1790,7 +1746,6 @@ def test_tags_of_service(monkeypatch: MonkeyPatch) -> None:
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_tags": {"agent": "no-agent"},
                 },
-                "options": {},
                 "value": [("criticality", "prod")],
             }
         ],
@@ -1841,12 +1796,10 @@ def test_host_config_labels(monkeypatch: MonkeyPatch) -> None:
         [
             {
                 "condition": {"host_tags": {"agent": "no-agent"}},
-                "options": {},
                 "value": {"from-rule": "rule1"},
             },
             {
                 "condition": {"host_tags": {"agent": "no-agent"}},
-                "options": {},
                 "value": {"from-rule2": "rule2"},
             },
         ],
@@ -1911,7 +1864,6 @@ def test_labels_of_service(monkeypatch: MonkeyPatch) -> None:
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_tags": {"agent": "no-agent"},
                 },
-                "options": {},
                 "value": {"label1": "val1"},
             },
             {
@@ -1919,7 +1871,6 @@ def test_labels_of_service(monkeypatch: MonkeyPatch) -> None:
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_tags": {"agent": "no-agent"},
                 },
-                "options": {},
                 "value": {"label2": "val2"},
             },
         ],
@@ -2000,7 +1951,6 @@ def test_config_cache_extra_attributes_of_service(
                         "service_description": [{"$regex": "CPU load$"}],
                         "host_name": ["testhost2"],
                     },
-                    "options": {},
                     "value": "10",
                 },
             ],
@@ -2010,7 +1960,6 @@ def test_config_cache_extra_attributes_of_service(
                         "service_description": [{"$regex": "CPU load$"}],
                         "host_name": ["testhost2"],
                     },
-                    "options": {},
                     "value": ["value1"],
                 },
                 {
@@ -2018,7 +1967,6 @@ def test_config_cache_extra_attributes_of_service(
                         "service_description": [{"$regex": "CPU load$"}],
                         "host_name": ["testhost2"],
                     },
-                    "options": {},
                     "value": ["value2"],
                 },
             ],
@@ -2028,7 +1976,6 @@ def test_config_cache_extra_attributes_of_service(
                         "service_description": [{"$regex": "CPU load$"}],
                         "host_name": ["testhost2"],
                     },
-                    "options": {},
                     "value": ["value1"],
                 },
                 {
@@ -2036,7 +1983,6 @@ def test_config_cache_extra_attributes_of_service(
                         "service_description": [{"$regex": "CPU load$"}],
                         "host_name": ["testhost2"],
                     },
-                    "options": {},
                     "value": ["value2"],
                 },
             ],
@@ -2068,7 +2014,6 @@ def test_config_cache_icons_and_actions(
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": ["testhost2"],
                 },
-                "options": {},
                 "value": "icon1",
             },
             {
@@ -2076,7 +2021,6 @@ def test_config_cache_icons_and_actions(
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": ["testhost2"],
                 },
-                "options": {},
                 "value": "icon1",
             },
             {
@@ -2084,7 +2028,6 @@ def test_config_cache_icons_and_actions(
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": ["testhost2"],
                 },
-                "options": {},
                 "value": "icon2",
             },
         ],
@@ -2121,7 +2064,6 @@ def test_config_cache_servicegroups_of_service(
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": ["testhost2"],
                 },
-                "options": {},
                 "value": "dingdong",
             },
         ],
@@ -2160,7 +2102,6 @@ def test_config_cache_contactgroups_of_service(
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": ["testhost2", "testhost3"],
                 },
-                "options": {},
                 "value": "dingdong",
             },
             {
@@ -2168,7 +2109,6 @@ def test_config_cache_contactgroups_of_service(
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": ["testhost2", "testhost3"],
                 },
-                "options": {},
                 "value": ["abc"],
             },
             {
@@ -2176,7 +2116,6 @@ def test_config_cache_contactgroups_of_service(
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": ["testhost2", "testhost3"],
                 },
-                "options": {},
                 "value": ["xyz"],
             },
             {
@@ -2184,7 +2123,6 @@ def test_config_cache_contactgroups_of_service(
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": ["testhost3"],
                 },
-                "options": {},
                 "value": "haha",
             },
         ],
@@ -2214,7 +2152,6 @@ def test_config_cache_passive_check_period_of_service(
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": ["testhost2"],
                 },
-                "options": {},
                 "value": "workhours",
             },
         ],
@@ -2250,7 +2187,6 @@ def test_config_cache_custom_attributes_of_service(
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": ["testhost2"],
                 },
-                "options": {},
                 "value": [
                     ("ATTR1", "value1"),
                     ("ATTR2", "value2"),
@@ -2261,7 +2197,6 @@ def test_config_cache_custom_attributes_of_service(
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": ["testhost2"],
                 },
-                "options": {},
                 "value": [
                     ("ATTR1", "value1"),
                 ],
@@ -2293,7 +2228,6 @@ def test_config_cache_service_level_of_service(
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": ["testhost2"],
                 },
-                "options": {},
                 "value": 10,
             },
             {
@@ -2301,7 +2235,6 @@ def test_config_cache_service_level_of_service(
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": ["testhost2"],
                 },
-                "options": {},
                 "value": 2,
             },
         ],
@@ -2332,7 +2265,6 @@ def test_config_cache_check_period_of_service(
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": ["testhost2"],
                 },
-                "options": {},
                 "value": "24X7",
             },
             {
@@ -2340,7 +2272,6 @@ def test_config_cache_check_period_of_service(
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": ["testhost3"],
                 },
-                "options": {},
                 "value": "xyz",
             },
             {
@@ -2348,7 +2279,6 @@ def test_config_cache_check_period_of_service(
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": ["testhost3"],
                 },
-                "options": {},
                 "value": "zzz",
             },
         ],
@@ -2578,10 +2508,10 @@ def test_host_ruleset_match_object_of_service(monkeypatch: MonkeyPatch) -> None:
     [
         (False, None),
         (False, []),
-        (False, [{"condition": {}, "options": {}, "value": None}]),
-        (False, [{"condition": {}, "options": {}, "value": {}}]),
-        (True, [{"condition": {}, "options": {}, "value": {"status_data_inventory": True}}]),
-        (False, [{"condition": {}, "options": {}, "value": {"status_data_inventory": False}}]),
+        (False, [{"condition": {}, "value": None}]),
+        (False, [{"condition": {}, "value": {}}]),
+        (True, [{"condition": {}, "value": {"status_data_inventory": True}}]),
+        (False, [{"condition": {}, "value": {"status_data_inventory": False}}]),
     ],
 )
 def test_host_config_do_status_data_inventory(
@@ -2620,12 +2550,10 @@ def test_host_config_service_level(
             {
                 "condition": {"host_name": ["testhost2"]},
                 "value": 10,
-                "options": {},
             },
             {
                 "condition": {"host_name": ["testhost2"]},
                 "value": 2,
-                "options": {},
             },
         ],
     )

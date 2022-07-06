@@ -73,7 +73,7 @@ def ibm_svc_systemstats_parse(info):
             if "VDisks" not in parsed:
                 parsed["VDisks"] = {}
             stat_name = stat_name.replace("vdisk_", "")
-            parsed["VDisks"][stat_name] = int(stat_current)
+            parsed["VDisks"][stat_name] = float(stat_current)
         if stat_name in (
             "mdisk_r_mb",
             "mdisk_w_mb",
@@ -85,7 +85,7 @@ def ibm_svc_systemstats_parse(info):
             if "MDisks" not in parsed:
                 parsed["MDisks"] = {}
             stat_name = stat_name.replace("mdisk_", "")
-            parsed["MDisks"][stat_name] = int(stat_current)
+            parsed["MDisks"][stat_name] = float(stat_current)
         if stat_name in (
             "drive_r_mb",
             "drive_w_mb",
@@ -97,7 +97,7 @@ def ibm_svc_systemstats_parse(info):
             if "Drives" not in parsed:
                 parsed["Drives"] = {}
             stat_name = stat_name.replace("drive_", "")
-            parsed["Drives"][stat_name] = int(stat_current)
+            parsed["Drives"][stat_name] = float(stat_current)
     return parsed
 
 

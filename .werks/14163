@@ -1,0 +1,11 @@
+Title: liveproxyd: fixed bug that caused livestatus to disconnect the client connection
+Class: fix
+Compatible: compat
+Component: liveproxy
+Date: 1657091363
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p27
+
+This error was never visible in the user interface, but has nevertheless been fixed.

@@ -9,6 +9,7 @@ from typing import (
     Any,
     Callable,
     Generator,
+    Iterable,
     Literal,
     Mapping,
     MutableMapping,
@@ -311,7 +312,7 @@ def _parse_filesystem_levels(levels: object, filesystem_size: Bytes) -> Filesyst
 
 
 def _ungrouped_mountpoints_and_groups(
-    mount_points: Mapping[str, Mapping],
+    mount_points: Iterable[str],
     group_patterns: Mapping[str, tuple[Sequence[str], Sequence[str]]],
 ) -> tuple[set[str], Mapping[str, set[str]]]:
     ungrouped_mountpoints = set(mount_points)
@@ -346,7 +347,7 @@ def get_filesystem_levels(
 
 
 def mountpoints_in_group(
-    mplist: Mapping[str, Mapping],
+    mplist: Iterable[str],
     patterns_include: Sequence[str],
     patterns_exclude: Sequence[str],
 ) -> list[str]:
@@ -455,8 +456,14 @@ def check_inodes(
         yield Result(state=inode_result.state, notice=inodes_info)
 
 
-def df_discovery(params, mplist):
-    group_patterns: dict[str, tuple[list[str], list[str]]] = {}
+_GroupingSpec = tuple[list[str], list[str]]
+
+
+def df_discovery(
+    params: Iterable[Mapping[str, Any]],
+    mplist: Iterable[str],
+) -> Sequence[tuple[str, Mapping[str, _GroupingSpec]]]:
+    group_patterns: dict[str, _GroupingSpec] = {}
     for groups in params:
         for group in groups.get("groups", []):
             grouping_entry = group_patterns.setdefault(group["group_name"], ([], []))
@@ -465,10 +472,10 @@ def df_discovery(params, mplist):
 
     ungrouped_mountpoints, groups = _ungrouped_mountpoints_and_groups(mplist, group_patterns)
 
-    ungrouped: list[tuple[str, dict[str, tuple[list[str], list[str]]]]] = [
+    ungrouped: list[tuple[str, Mapping[str, _GroupingSpec]]] = [
         (mp, {}) for mp in ungrouped_mountpoints
     ]
-    grouped: list[tuple[str, dict[str, tuple[list[str], list[str]]]]] = [
+    grouped: list[tuple[str, Mapping[str, _GroupingSpec]]] = [
         (group, {"patterns": group_patterns[group]}) for group in groups
     ]
     return ungrouped + grouped
@@ -481,7 +488,7 @@ def check_filesystem_levels(  # type:ignore[no-untyped-def]
     used_space: float,
     params: Mapping[str, Any],
     show_levels: Literal["onmagic", "always", "onproblem"] = "onproblem",
-):
+) -> Generator[Result | Metric, None, None]:
     # Get warning and critical levels already with 'magic factor' applied
     filesystem_levels = get_filesystem_levels(filesystem_size / 1024.0, params)
     warn_mb, crit_mb = (

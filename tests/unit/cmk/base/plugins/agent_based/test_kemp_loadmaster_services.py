@@ -16,10 +16,10 @@ from cmk.base.plugins.agent_based.kemp_loadmaster_services import (
 )
 
 STRING_TABLE = [
-    ["vs adaptive method type", "1", "100"],
-    ["another vs adaptive method type", "1", "200"],
-    ["yet another vs adaptive method type", "4", "100"],
-    ["Bar", "8", "0"],
+    ["vs adaptive method type", "1", "100", "1"],
+    ["another vs adaptive method type", "1", "200", "2"],
+    ["yet another vs adaptive method type", "4", "100", "3"],
+    ["Bar", "8", "0", "4"],
 ]
 
 

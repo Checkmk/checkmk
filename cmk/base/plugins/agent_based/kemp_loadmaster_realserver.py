@@ -8,14 +8,16 @@ from typing import Final, Mapping, NamedTuple, Sequence
 
 from .agent_based_api.v1 import any_of, equals, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.kemp_loadmaster import VSSection
 
 
 class RealServer(NamedTuple):
     state: State
     state_txt: str
+    id_virtual_service: str
 
 
-Section = Mapping[str, Sequence[RealServer]]
+RSSection = Mapping[str, Sequence[RealServer]]
 
 
 _RS_STATE_MAP: Final = {
@@ -26,11 +28,14 @@ _RS_STATE_MAP: Final = {
 }
 
 
-def parse_kemp_loadmaster_realserver(string_table: StringTable) -> Section:
+def parse_kemp_loadmaster_realserver(string_table: StringTable) -> RSSection:
     section = defaultdict(list)
-    for server, state in string_table:
-        section[server].append(
-            RealServer(*_RS_STATE_MAP.get(state, (State.UNKNOWN, f"unknown[{state}]")))
+    for id_virtual_service, ip_address, state in string_table:
+        section[ip_address].append(
+            RealServer(
+                *_RS_STATE_MAP.get(state, (State.UNKNOWN, f"unknown[{state}]")),
+                id_virtual_service,
+            )
         )
     section.default_factory = None
     return section
@@ -42,6 +47,7 @@ register.snmp_section(
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12196.13.2.1",
         oids=[
+            "1",  # ID of virtual Service B100-MIB::rSvsidx
             "2",  # IP address: B100-MIB::rSip
             "8",  # state: B100-MIB::rSstate
         ],
@@ -53,26 +59,42 @@ register.snmp_section(
 )
 
 
-def discover_kemp_loadmaster_realserver(section: Section) -> DiscoveryResult:
+def discover_kemp_loadmaster_realserver(
+    section_kemp_loadmaster_realserver: RSSection | None,
+    section_kemp_loadmaster_services: VSSection | None,
+) -> DiscoveryResult:
+    if section_kemp_loadmaster_realserver is None:
+        return
     yield from (
         Service(item=item)
-        for item, rservers in section.items()
+        for item, rservers in section_kemp_loadmaster_realserver.items()
         # If at least one of the virtual services are enabled, we want to
         # monitor it.
         if not all(rs.state_txt == "disabled" for rs in rservers)
     )
 
 
-def check_kemp_loadmaster_realserver(item: str, section: Section) -> CheckResult:
-    rservers = section.get(item)
+def check_kemp_loadmaster_realserver(
+    item: str,
+    section_kemp_loadmaster_realserver: RSSection | None,
+    section_kemp_loadmaster_services: VSSection | None,
+) -> CheckResult:
+    rservers = (section_kemp_loadmaster_realserver or {}).get(item)
     if rservers is None:
         return
 
-    yield from (Result(state=rs.state, summary=rs.state_txt.capitalize()) for rs in rservers)
+    vservices = (section_kemp_loadmaster_services or {}).values()
+    for rs in rservers:
+        summary = rs.state_txt.capitalize()
+        for vservice in vservices:
+            if rs.id_virtual_service == vservice.oid_end:
+                summary = f"{vservice.name}: {summary}"
+        yield Result(state=rs.state, summary=summary)
 
 
 register.check_plugin(
     name="kemp_loadmaster_realserver",
+    sections=["kemp_loadmaster_realserver", "kemp_loadmaster_services"],
     discovery_function=discover_kemp_loadmaster_realserver,
     check_function=check_kemp_loadmaster_realserver,
     service_name="Real Server %s",

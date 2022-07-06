@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Final, List, Mapping, NamedTuple
+from typing import Final, List
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     any_of,
     equals,
+    OIDEnd,
     register,
     Result,
     Service,
@@ -15,6 +16,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.utils.kemp_loadmaster import VirtualService
+from cmk.base.plugins.agent_based.utils.kemp_loadmaster import VSSection as Section
 
 _VS_STATE_MAP: Final = {
     "1": (State.OK, "in service"),
@@ -27,24 +30,15 @@ _VS_STATE_MAP: Final = {
 }
 
 
-class VirtualService(NamedTuple):
-    name: str
-    connections: int | None
-    state: State
-    state_txt: str
-
-
-Section = Mapping[str, VirtualService]
-
-
 def parse_kemp_loadmaster_services(string_table: List[List[str]]) -> Section:
     return {
         name: VirtualService(
             name,
             int(conns) if conns.isdigit() else None,
             *_VS_STATE_MAP.get(state, (State.UNKNOWN, f"unknown[{state}]")),
+            oid_end,
         )
-        for name, state, conns, in string_table
+        for name, state, conns, oid_end in string_table
         if name != ""
     }
 
@@ -58,6 +52,7 @@ register.snmp_section(
             "13",  # B100-MIB::vSname
             "14",  # B100-MIB::vSstate
             "21",  # B100-MIB::conns
+            OIDEnd(),
         ],
     ),
     detect=any_of(

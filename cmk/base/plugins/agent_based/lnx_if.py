@@ -54,7 +54,7 @@ from .utils.inventory_interfaces import inventorize_interfaces
 #         Link detected: yes
 
 SectionInventory = Dict[str, Dict[str, Union[str, Sequence[str]]]]
-Section = Tuple[interfaces.Section, SectionInventory]
+Section = Tuple[Sequence[interfaces.InterfaceWithCounters], SectionInventory]
 
 
 def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:

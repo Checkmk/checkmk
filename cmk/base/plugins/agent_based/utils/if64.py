@@ -3,10 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, List, Mapping, Optional, Union
+from typing import Any, List, Mapping, Optional, Sequence, Union
 
 from ..agent_based_api.v1 import exists, OIDBytes, type_defs
 from . import interfaces
+
+Section = Sequence[interfaces.InterfaceWithCounters]
 
 BASE_OID = ".1.3.6.1.2.1"
 
@@ -316,7 +318,7 @@ def port_mapping(name, port_map: Mapping[str, str]) -> Optional[str]:  # type:ig
 def generic_parse_if64(
     string_table: type_defs.StringByteTable,
     port_map: Optional[Mapping[str, str]] = None,
-) -> interfaces.Section:
+) -> Section:
     return [
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -349,7 +351,7 @@ def generic_parse_if64(
     ]
 
 
-def parse_if64(string_table: type_defs.StringByteTable) -> interfaces.Section:
+def parse_if64(string_table: type_defs.StringByteTable) -> Section:
     preprocessed_lines: type_defs.StringByteTable = []
     for line in string_table:
         # some DLINK switches apparently report a broken interface with index 0, filter that out
@@ -376,7 +378,7 @@ def parse_if64(string_table: type_defs.StringByteTable) -> interfaces.Section:
 def generic_check_if64(
     item: str,
     params: Mapping[str, Any],
-    section: interfaces.Section,
+    section: Section,
 ) -> type_defs.CheckResult:
     yield from interfaces.check_multiple_interfaces(
         item,

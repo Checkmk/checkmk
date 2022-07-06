@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import itertools
 import time
 from collections import defaultdict
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, fields, replace
 from functools import partial
 from typing import (
     Any,
@@ -23,6 +24,7 @@ from typing import (
     Set,
     Tuple,
     TypedDict,
+    TypeGuard,
     Union,
 )
 
@@ -33,7 +35,6 @@ from ..agent_based_api.v1 import (
     get_rate,
     get_value_store,
     GetRateError,
-    IgnoreResults,
     Metric,
     regex,
     render,
@@ -165,22 +166,6 @@ class InterfaceWithCounters:
 
 
 @dataclass(frozen=True)
-class _Rates:
-    intraffic: float | None
-    inmcast: float | None
-    inbcast: float | None
-    inucast: float | None
-    indisc: float | None
-    inerr: float | None
-    outtraffic: float | None
-    outmcast: float | None
-    outbcast: float | None
-    outucast: float | None
-    outdisc: float | None
-    outerr: float | None
-
-
-@dataclass(frozen=True)
 class Rates:
     in_octets: float | None = None
     in_mcast: float | None = None
@@ -302,6 +287,17 @@ class RatesWithAverages:
     out_disc: RateWithAverage | None = None
     out_err: RateWithAverage | None = None
     total_octets: RateWithAverage | None = None
+
+    def __add__(self, other: "RatesWithAverages") -> "RatesWithAverages":
+        return RatesWithAverages(
+            **{
+                field.name: value + other_value
+                if (value := getattr(self, field.name)) is not None
+                and (other_value := getattr(other, field.name)) is not None
+                else None
+                for field in fields(self)
+            }
+        )
 
 
 @dataclass
@@ -443,7 +439,7 @@ class InterfaceWithRatesAndAverages:
         return rate_with_avg
 
 
-Section = Sequence[InterfaceWithCounters]
+Section = Sequence[InterfaceWithCounters] | Sequence[InterfaceWithRates]
 
 
 def saveint(i: Any) -> int:
@@ -943,16 +939,6 @@ def discover_interfaces(  # pylint: disable=too-many-branches
         )
 
 
-def _get_value_store_key(
-    name: str,
-    *add_to_key: str,
-) -> str:
-    key = name
-    for to_add in add_to_key:
-        key += ".%s" % to_add
-    return key
-
-
 GroupMembers = Dict[Optional[str], List[Dict[str, str]]]
 
 
@@ -961,8 +947,7 @@ def _check_ungrouped_ifs(
     params: Mapping[str, Any],
     section: Section,
     timestamp: float,
-    input_is_rate: bool,
-    value_store: Optional[MutableMapping[str, Any]] = None,
+    value_store: MutableMapping[str, Any],
 ) -> type_defs.CheckResult:
     """
     Check one or more ungrouped interfaces. In a non-cluster setup, only one interface will match
@@ -982,11 +967,13 @@ def _check_ungrouped_ifs(
                 check_single_interface(
                     item,
                     params,
-                    interface,
-                    timestamp=timestamp,
-                    input_is_rate=input_is_rate,
+                    InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
+                        interface,
+                        timestamp=timestamp,
+                        value_store=value_store,
+                        params=params,
+                    ),
                     use_discovered_state_and_speed=interface.attributes.node is None,
-                    value_store=value_store,
                 )
             )
             for result in last_results:
@@ -1016,8 +1003,8 @@ def _filter_matching_interfaces(
     item: str,
     group_config: GroupConfiguration,
     section: Section,
-) -> Collection[InterfaceWithCounters]:
-    return [
+) -> Iterable[InterfaceWithCounters | InterfaceWithRates]:
+    yield from (
         interface
         for interface in section
         if _check_group_matching_conditions(
@@ -1025,15 +1012,21 @@ def _filter_matching_interfaces(
             item,
             group_config,
         )
-    ]
+    )
 
 
 def _accumulate_attributes(
     *,
-    cumulated_attributes: Attributes,
     matching_attributes: Collection[Attributes],
+    item: str,
     group_config: GroupConfiguration,
-) -> None:
+) -> Attributes:
+    cumulated_attributes = Attributes(
+        index=item,
+        descr=item,
+        alias="",
+        type="",
+    )
     num_up = 0
     nodes = set()
 
@@ -1070,61 +1063,34 @@ def _accumulate_attributes(
 
     cumulated_attributes.alias = ", ".join(alias_info)
 
+    return cumulated_attributes
 
-def _accumulate_counters(
-    *,
-    cumulated_interface: InterfaceWithCounters,
-    matching_interfaces: Iterable[InterfaceWithCounters],
-    input_is_rate: bool,
-    timestamp: float,
-    value_store: MutableMapping[str, Any],
-) -> type_defs.CheckResult:
-    for idx, interface in enumerate(matching_interfaces):
-        if not input_is_rate:
-            # Only these values are packed into counters
-            # We might need to enlarge this table
-            # However, more values leads to more MKCounterWrapped...
-            rate_counter = [
-                ("in", interface.counters.in_octets),
-                ("inucast", interface.counters.in_ucast),
-                ("inmcast", interface.counters.in_mcast),
-                ("inbcast", interface.counters.in_bcast),
-                ("indisc", interface.counters.in_disc),
-                ("inerr", interface.counters.in_err),
-                ("out", interface.counters.out_octets),
-                ("outucast", interface.counters.out_ucast),
-                ("outmcast", interface.counters.out_mcast),
-                ("outbcast", interface.counters.out_bcast),
-                ("outdisc", interface.counters.out_disc),
-                ("outerr", interface.counters.out_err),
+
+def _accumulate_rates_with_averages(
+    matching_interfaces: Iterable[InterfaceWithRatesAndAverages],
+) -> RatesWithAverages:
+    return (
+        sum(
+            data_of_up_interfaces[1:],
+            start=data_of_up_interfaces[0],
+        )
+        if (
+            data_of_up_interfaces := [
+                iface.rates_with_averages for iface in matching_interfaces if iface.attributes.is_up
             ]
-            for name, counter in rate_counter:
-                try:
-                    # We make sure that every group member has valid rates before adding up the
-                    # counters
-                    get_rate(
-                        value_store,
-                        _get_value_store_key(name, str(interface.attributes.node), str(idx)),
-                        timestamp,
-                        saveint(counter),
-                        raise_overflow=True,
-                    )
-                except GetRateError:
-                    yield IgnoreResults(value="Initializing counters")
-                    # continue, other counters might wrap as well
+        )
+        else RatesWithAverages()
+    )
 
-        cumulated_interface.counters.in_octets += interface.counters.in_octets
-        cumulated_interface.counters.in_ucast += interface.counters.in_ucast
-        cumulated_interface.counters.in_mcast += interface.counters.in_mcast
-        cumulated_interface.counters.in_bcast += interface.counters.in_bcast
-        cumulated_interface.counters.in_disc += interface.counters.in_disc
-        cumulated_interface.counters.in_err += interface.counters.in_err
-        cumulated_interface.counters.out_octets += interface.counters.out_octets
-        cumulated_interface.counters.out_ucast += interface.counters.out_ucast
-        cumulated_interface.counters.out_mcast += interface.counters.out_mcast
-        cumulated_interface.counters.out_bcast += interface.counters.out_bcast
-        cumulated_interface.counters.out_disc += interface.counters.out_disc
-        cumulated_interface.counters.out_err += interface.counters.out_err
+
+def _accumulate_get_rate_errors(
+    matching_interfaces: Iterable[InterfaceWithRatesAndAverages],
+) -> Sequence[tuple[str, GetRateError]]:
+    return list(
+        itertools.chain.from_iterable(
+            iface.get_rate_errors for iface in matching_interfaces if iface.attributes.is_up
+        )
+    )
 
 
 def _group_members(
@@ -1165,68 +1131,53 @@ def _group_members(
     return group_members
 
 
-def _check_grouped_ifs(  # pylint: disable=too-many-branches
+def _check_grouped_ifs(
     item: str,
     params: Mapping[str, Any],
     section: Section,
     group_name: str,
     timestamp: float,
-    input_is_rate: bool,
-    value_store: Optional[MutableMapping[str, Any]] = None,
+    value_store: MutableMapping[str, Any],
 ) -> type_defs.CheckResult:
     """
     Grouped interfaces are combined into a single interface, which is then passed to
     check_single_interface.
     """
-    matching_interfaces = _filter_matching_interfaces(
-        item=item,
-        group_config=params["aggregate"],
-        section=section,
-    )
-
-    used_value_store = value_store if value_store is not None else get_value_store()
-
-    cumulated_interface = InterfaceWithCounters(
-        attributes=Attributes(
-            index=item,
-            descr=item,
-            alias="",
-            type="",
-        ),
-        counters=Counters(),
-    )
-
-    _accumulate_attributes(
-        cumulated_attributes=cumulated_interface.attributes,
-        matching_attributes=[iface.attributes for iface in matching_interfaces],
-        group_config=params["aggregate"],
-    )
-
-    yield from _accumulate_counters(
-        cumulated_interface=cumulated_interface,
-        matching_interfaces=matching_interfaces,
-        input_is_rate=input_is_rate,
-        timestamp=timestamp,
-        value_store=used_value_store,
-    )
-
+    matching_interfaces = [
+        InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
+            iface,
+            timestamp=timestamp,
+            value_store=value_store,
+            params=params,
+        )
+        for iface in _filter_matching_interfaces(
+            item=item,
+            group_config=params["aggregate"],
+            section=section,
+        )
+    ]
     yield from check_single_interface(
         item,
         params,
-        cumulated_interface,
+        InterfaceWithRatesAndAverages(
+            attributes=_accumulate_attributes(
+                matching_attributes=[iface.attributes for iface in matching_interfaces],
+                item=item,
+                group_config=params["aggregate"],
+            ),
+            rates_with_averages=_accumulate_rates_with_averages(matching_interfaces),
+            get_rate_errors=_accumulate_get_rate_errors(matching_interfaces),
+        ),
         group_members=_group_members(
-            matching_attributes=[iface.attributes for iface in matching_interfaces],
+            matching_attributes=(iface.attributes for iface in matching_interfaces),
             item=item,
             group_config=params["aggregate"],
             section=section,
         ),
         group_name=group_name,
-        timestamp=timestamp,
-        input_is_rate=input_is_rate,
         # the discovered speed corresponds to only one of the nodes, so it cannot be used for
         # interface groups on clusters; same for state
         use_discovered_state_and_speed=section[0].attributes.node is None,
-        value_store=used_value_store,
     )
 
 
@@ -1237,12 +1188,13 @@ def check_multiple_interfaces(
     *,
     group_name: str = "Interface group",
     timestamp: Optional[float] = None,
-    input_is_rate: bool = False,
     value_store: Optional[MutableMapping[str, Any]] = None,
 ) -> type_defs.CheckResult:
 
     if timestamp is None:
         timestamp = time.time()
+    if value_store is None:
+        value_store = get_value_store()
 
     if "aggregate" in params:
         yield from _check_grouped_ifs(
@@ -1251,7 +1203,6 @@ def check_multiple_interfaces(
             section,
             group_name,
             timestamp,
-            input_is_rate,
             value_store,
         )
     else:
@@ -1260,27 +1211,8 @@ def check_multiple_interfaces(
             params,
             section,
             timestamp,
-            input_is_rate,
             value_store,
         )
-
-
-def _get_rate(
-    value_store: MutableMapping[str, Any],
-    key: str,
-    timestamp: float,
-    value: float,
-    input_is_rate: bool,
-) -> float:
-    if input_is_rate:
-        return value
-    return get_rate(
-        value_store,
-        key,
-        timestamp,
-        value,
-        raise_overflow=True,
-    )
 
 
 def _get_map_states(defined_mapping: Iterable[Tuple[Iterable[str], int]]) -> Mapping[str, State]:
@@ -1338,36 +1270,22 @@ def _check_speed(attributes: Attributes, targetspeed: Optional[int]) -> Result:
     return Result(state=State.OK, summary="Speed: %s" % (attributes.speed_as_text or "unknown"))
 
 
-# TODO: Check what the relationship between Errors, Discards, and ucast/mcast actually is.
-# One case of winperf_if appeared to indicate that in that case Errors = Discards.
 def check_single_interface(
     item: str,
     params: Mapping[str, Any],
-    interface: InterfaceWithCounters,
+    interface: InterfaceWithRatesAndAverages,
     group_members: Optional[GroupMembers] = None,
     *,
     group_name: str = "Interface group",
-    timestamp: Optional[float] = None,
-    input_is_rate: bool = False,
     use_discovered_state_and_speed: bool = True,
-    value_store: Optional[MutableMapping[str, Any]] = None,
 ) -> type_defs.CheckResult:
-
-    if timestamp is None:
-        timestamp = time.time()
-    used_value_store = value_store if value_store is not None else get_value_store()
-
-    # Params now must be a dict. Some keys might
-    # be set to None
     if use_discovered_state_and_speed:
         targetspeed = params.get("speed", params.get("discovered_speed"))
     else:
         targetspeed = params.get("speed")
     assumed_speed_in = params.get("assumed_speed_in")
     assumed_speed_out = params.get("assumed_speed_out")
-    average = params.get("average")
     unit = "Bit" if params.get("unit") in ["Bit", "bit"] else "B"
-    average_bmcast = params.get("average_bm")
 
     # broadcast storm detection is turned off by default
     nucast_levels = params.get("nucasts")
@@ -1429,74 +1347,34 @@ def check_single_interface(
     if str(interface.attributes.oper_status) == "2":
         return
 
-    rates_dict: dict[str, float | None] = {}
-    overflow_dict: dict[str, GetRateError] = {}
-    rate_content = [
-        ("intraffic", interface.counters.in_octets),
-        ("inmcast", interface.counters.in_mcast),
-        ("inbcast", interface.counters.in_bcast),
-        ("inucast", interface.counters.in_ucast),
-        ("indisc", interface.counters.in_disc),
-        ("inerr", interface.counters.in_err),
-        ("outtraffic", interface.counters.out_octets),
-        ("outmcast", interface.counters.out_mcast),
-        ("outbcast", interface.counters.out_bcast),
-        ("outucast", interface.counters.out_ucast),
-        ("outdisc", interface.counters.out_disc),
-        ("outerr", interface.counters.out_err),
-    ]
-    for name, counter in rate_content:
-        try:
-            rates_dict[name] = _get_rate(
-                used_value_store,
-                _get_value_store_key(name, str(interface.attributes.node)),
-                timestamp,
-                counter,
-                input_is_rate,
-            )
-        except GetRateError as get_rate_excpt:
-            rates_dict[name] = None
-            overflow_dict[name] = get_rate_excpt
-
-    rates = _Rates(**rates_dict)
-
     yield Metric(
         "outqlen",
         interface.attributes.out_qlen,
     )
 
     yield from _output_bandwidth_rates(
-        rates,
+        interface.rates_with_averages,
         speed_b_in,
         speed_b_out,
         speed_b_total,
-        average,
         unit,
         traffic_levels,
-        used_value_store,
-        timestamp,
-        item,
         assumed_speed_in,
         assumed_speed_out,
         monitor_total="total_traffic" in params,
     )
 
     yield from _output_packet_rates(
-        # This is only temporary and will be handled with CMK-6472
         abs_packet_levels,
         perc_packet_levels,
         nucast_levels,
         disc_levels,
-        average_bmcast,
-        item=item,
-        rates=rates,
-        value_store=used_value_store,
-        timestamp=timestamp,
+        rates=interface.rates_with_averages,
     )
 
-    if overflow_dict:
+    if interface.get_rate_errors:
         overflows_human_readable = (
-            f"{counter}: {get_rate_excpt}" for counter, get_rate_excpt in overflow_dict.items()
+            f"{counter}: {get_rate_excpt}" for counter, get_rate_excpt in interface.get_rate_errors
         )
         yield Result(
             state=State.OK,
@@ -1747,16 +1625,12 @@ def _output_group_members(
 
 
 def _output_bandwidth_rates(  # pylint: disable=too-many-branches
-    rates: _Rates,
+    rates: RatesWithAverages,
     speed_b_in: float,
     speed_b_out: float,
     speed_b_total: float,
-    average: Optional[int],
     unit: str,
     traffic_levels: SpecificTrafficLevels,
-    value_store: MutableMapping[str, Any],
-    timestamp: float,
-    item: str,
     assumed_speed_in: Optional[int],
     assumed_speed_out: Optional[int],
     *,
@@ -1768,13 +1642,13 @@ def _output_bandwidth_rates(  # pylint: disable=too-many-branches
         bandwidth_renderer = render.iobandwidth
 
     for direction, traffic, speed in [
-        ("in", rates.intraffic, speed_b_in),
-        ("out", rates.outtraffic, speed_b_out),
+        ("in", rates.in_octets, speed_b_in),
+        ("out", rates.out_octets, speed_b_out),
         *(
             [
                 (
                     "total",
-                    _sum_optional_floats(rates.intraffic, rates.outtraffic),
+                    rates.total_octets,
                     speed_b_total,
                 )
             ]
@@ -1789,11 +1663,7 @@ def _output_bandwidth_rates(  # pylint: disable=too-many-branches
             traffic=traffic,
             speed=speed,
             renderer=bandwidth_renderer,
-            average=average,
             traffic_levels=traffic_levels,
-            value_store=value_store,
-            timestamp=timestamp,
-            item=item,
             assumed_speed_in=assumed_speed_in,
             assumed_speed_out=assumed_speed_out,
         )
@@ -1802,14 +1672,10 @@ def _output_bandwidth_rates(  # pylint: disable=too-many-branches
 def _check_single_bandwidth(  # pylint: disable=too-many-branches
     *,
     direction: str,
-    traffic: float,
+    traffic: RateWithAverage,
     speed: float,
     renderer: Callable[[float], str],
-    average: Optional[int],
     traffic_levels: SpecificTrafficLevels,
-    value_store: MutableMapping[str, Any],
-    timestamp: float,
-    item: str,
     assumed_speed_in: Optional[int],
     assumed_speed_out: Optional[int],
 ) -> type_defs.CheckResult:
@@ -1831,22 +1697,16 @@ def _check_single_bandwidth(  # pylint: disable=too-many-branches
             traffic_levels[(direction, "lower", "crit")],
         )
 
-    if average:
-        filtered_traffic = get_average(
-            value_store,
-            "%s.%s.avg" % (direction, item),
-            timestamp,
-            traffic,
-            average,
-        )  # apply levels to average traffic
-        title = "%s average %dmin" % (direction.title(), average)
+    if traffic.average:
+        filtered_traffic = traffic.average.value
+        title = "%s average %dmin" % (direction.title(), traffic.average.backlog)
     else:
-        filtered_traffic = traffic
+        filtered_traffic = traffic.rate
         title = direction.title()
 
     if use_predictive_levels:
-        if average:
-            dsname = "%s_avg_%d" % (direction, average)
+        if traffic.average:
+            dsname = "%s_avg_%d" % (direction, traffic.average.backlog)
         else:
             dsname = direction
 
@@ -1860,7 +1720,7 @@ def _check_single_bandwidth(  # pylint: disable=too-many-branches
         )
         assert isinstance(result, Result)
 
-        if average:
+        if traffic.average:
             # The avg is not needed for displaying a graph, but it's historic
             # value will be needed for the future calculation of the ref_curve,
             # so we can't dump it.
@@ -1898,7 +1758,7 @@ def _check_single_bandwidth(  # pylint: disable=too-many-branches
     # our graphs
     yield Metric(
         direction,
-        traffic,
+        traffic.rate,
         levels=levels_upper,
         boundaries=(0, speed),
     )
@@ -1948,35 +1808,38 @@ def _output_packet_rates(
     perc_packet_levels: GeneralPacketLevels,
     nucast_levels: Optional[Tuple[float, float]],
     disc_levels: Optional[Tuple[float, float]],
-    average_bmcast: Optional[int],
     *,
-    item: str,
-    rates: _Rates,
-    value_store: MutableMapping[str, Any],
-    timestamp: float,
+    rates: RatesWithAverages,
 ) -> type_defs.CheckResult:
     for direction, mrate, brate, urate, nurate, discrate, errorrate in [
         (
             "in",
-            rates.inmcast,
-            rates.inbcast,
-            rates.inucast,
-            _sum_optional_floats(rates.inmcast, rates.inbcast),
-            rates.indisc,
-            rates.inerr,
+            rates.in_mcast,
+            rates.in_bcast,
+            rates.in_ucast,
+            rates.in_nucast,
+            rates.in_disc,
+            rates.in_err,
         ),
         (
             "out",
-            rates.outmcast,
-            rates.outbcast,
-            rates.outucast,
-            _sum_optional_floats(rates.outmcast, rates.outbcast),
-            rates.outdisc,
-            rates.outerr,
+            rates.out_mcast,
+            rates.out_bcast,
+            rates.out_ucast,
+            rates.out_nucast,
+            rates.out_disc,
+            rates.out_err,
         ),
     ]:
-        all_pacrate = _sum_optional_floats(urate, nurate, errorrate)
-        success_pacrate = _sum_optional_floats(urate, nurate)
+        all_pacrate = _sum_optional_floats(
+            urate.rate if urate else None,
+            nurate.rate if nurate else None,
+            errorrate.rate if errorrate else None,
+        )
+        success_pacrate = _sum_optional_floats(
+            urate.rate if urate else None,
+            nurate.rate if nurate else None,
+        )
         for rate, abs_levels, perc_levels, display_name, metric_name, reference_rate in [
             (
                 errorrate,
@@ -2015,27 +1878,23 @@ def _output_packet_rates(
                 continue
 
             yield from _check_single_packet_rate(
-                rate=rate,
+                packets=rate,
                 direction=direction,
                 abs_levels=abs_levels,
                 perc_levels=perc_levels,
                 display_name=display_name,
                 metric_name=metric_name,
                 reference_rate=reference_rate,
-                average_bmcast=average_bmcast,
-                item=item,
-                value_store=value_store,
-                timestamp=timestamp,
             )
 
-        for display_name, metric_name, rate, levels in [
+        for display_name, metric_name, packets, levels in [
             ("Non-unicast", "nucast", nurate, nucast_levels),
             ("Discards", "disc", discrate, disc_levels),
         ]:
-            if rate is None:
+            if packets is None:
                 continue
             yield from check_levels(
-                rate,
+                packets.rate,
                 levels_upper=levels,
                 metric_name=f"{direction}{metric_name}",
                 render_func=partial(_render_floating_point, precision=2, unit=" packets/s"),
@@ -2046,17 +1905,13 @@ def _output_packet_rates(
 
 def _check_single_packet_rate(
     *,
-    rate: float,
+    packets: RateWithAverage,
     direction: str,
     abs_levels: Any,
     perc_levels: Any,
     display_name: str,
     metric_name: str,
     reference_rate: float | None,
-    average_bmcast: Optional[int],
-    item: str,
-    value_store: MutableMapping[str, Any],
-    timestamp: float,
 ) -> type_defs.CheckResult:
     # Calculate the metric with actual levels, no matter if they
     # come from perc_- or abs_levels
@@ -2073,31 +1928,21 @@ def _check_single_packet_rate(
     else:
         merged_levels = abs_levels
 
-    metric = Metric(
-        f"{direction}{metric_name}",
-        rate,
-        levels=merged_levels,
-    )
-
     # Further calculation now precedes with average value,
     # if requested.
     infotxt = f"{display_name.title()} {direction}"
-    if average_bmcast is not None and display_name not in ("errors", "unicast"):
-        rate = get_average(
-            value_store,
-            "%s.%s.%s.avg" % (direction, display_name, item),
-            timestamp,
-            rate,
-            average_bmcast,
-        )
-        infotxt += f" average {average_bmcast}min"
+    if packets.average:
+        infotxt += f" average {packets.average.backlog}min"
+        rate_check = packets.average.value
+    else:
+        rate_check = packets.rate
 
     if perc_levels is not None:
         if reference_rate is None:
             return
         # Note: A rate of 0% for a pacrate of 0 is mathematically incorrect,
         # but it yields the best information for the "no packets" case in the check output.
-        perc_value = 0 if reference_rate == 0 else rate * 100 / reference_rate
+        perc_value = 0 if reference_rate == 0 else rate_check * 100 / reference_rate
         (result,) = check_levels(
             perc_value,
             levels_upper=perc_levels,
@@ -2108,7 +1953,7 @@ def _check_single_packet_rate(
         yield result
     else:
         (result,) = check_levels(
-            rate,
+            rate_check,
             levels_upper=abs_levels,
             render_func=partial(_render_floating_point, precision=2, unit=" packets/s"),
             label=infotxt,
@@ -2120,7 +1965,23 @@ def _check_single_packet_rate(
     # as this is the "normal" order when yielding from check_levels.
     # Note: we always yield the unaveraged values here, since this is what we want to display in
     # our graphs
-    yield metric
+    yield Metric(
+        f"{direction}{metric_name}",
+        packets.rate,
+        levels=merged_levels,
+    )
+
+
+def _counters_only(
+    ifaces: Sequence[InterfaceWithCounters | InterfaceWithRates],
+) -> TypeGuard[Sequence[InterfaceWithCounters]]:
+    return all(isinstance(iface, InterfaceWithCounters) for iface in ifaces)
+
+
+def _rates_only(
+    ifaces: Sequence[InterfaceWithCounters | InterfaceWithRates],
+) -> TypeGuard[Sequence[InterfaceWithRates]]:
+    return all(isinstance(iface, InterfaceWithRates) for iface in ifaces)
 
 
 def cluster_check(
@@ -2128,23 +1989,35 @@ def cluster_check(
     params: Mapping[str, Any],
     section: Mapping[str, Optional[Section]],
 ) -> type_defs.CheckResult:
-
     ifaces = [
-        InterfaceWithCounters(
-            attributes=Attributes(
-                **{  # type: ignore[arg-type]
-                    **asdict(iface.attributes),
-                    "node": node,
-                }
+        replace(
+            iface,
+            attributes=replace(
+                iface.attributes,
+                node=node,
             ),
-            counters=iface.counters,
         )
         for node, node_ifaces in section.items()
         for iface in node_ifaces or ()
     ]
 
-    yield from check_multiple_interfaces(
-        item,
-        params,
-        ifaces,
+    if _counters_only(ifaces):
+        yield from check_multiple_interfaces(
+            item,
+            params,
+            ifaces,
+        )
+        return
+
+    if _rates_only(ifaces):
+        yield from check_multiple_interfaces(
+            item,
+            params,
+            ifaces,
+        )
+        return
+
+    # should never happen
+    raise ValueError(
+        "Cannot cluster a mixture of interfaces with counters and interfaces with rates"
     )

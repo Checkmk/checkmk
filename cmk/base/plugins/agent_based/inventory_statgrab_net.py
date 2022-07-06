@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict
+from typing import Dict, Sequence
 
 from .agent_based_api.v1 import register, type_defs
 from .agent_based_api.v1.type_defs import InventoryResult
@@ -11,8 +11,10 @@ from .utils import interfaces
 from .utils.inventory_interfaces import Interface as InterfaceInv
 from .utils.inventory_interfaces import inventorize_interfaces
 
+Section = Sequence[interfaces.InterfaceWithCounters]
 
-def parse_statgrab_net(string_table: type_defs.StringTable) -> interfaces.Section:
+
+def parse_statgrab_net(string_table: type_defs.StringTable) -> Section:
     nics: Dict[str, Dict[str, str]] = {}
     for nic_varname, value in string_table:
         nic_id, varname = nic_varname.split(".")
@@ -49,7 +51,7 @@ register.agent_section(
 )
 
 
-def inventory_statgrab_net(section: interfaces.Section) -> InventoryResult:
+def inventory_statgrab_net(section: Section) -> InventoryResult:
     if not section:
         return
 

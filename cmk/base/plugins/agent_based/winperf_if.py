@@ -434,7 +434,7 @@ def _merge_sections(
     ifaces: Mapping[str, interfaces.InterfaceWithCounters],
     section_teaming: Optional[SectionTeaming],
     section_extended: Optional[SectionExtended],
-) -> interfaces.Section:
+) -> Sequence[interfaces.InterfaceWithCounters]:
 
     section_teaming = section_teaming or {}
     additional_data = (

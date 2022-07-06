@@ -176,8 +176,8 @@ def convert_esx_counters_if(section: Section) -> interfaces.Section:
     # }
 
     return [
-        interfaces.InterfaceWithCounters(
-            interfaces.Attributes(
+        interfaces.InterfaceWithRates(
+            attributes=interfaces.Attributes(
                 index=str(index),
                 descr=name,
                 alias=name,
@@ -186,12 +186,13 @@ def convert_esx_counters_if(section: Section) -> interfaces.Section:
                 oper_status=str(iface_rates.get("state", 1)),
                 phys_address=interfaces.mac_address_from_hexstring(mac_addresses.get(name, "")),
             ),
-            interfaces.Counters(
-                **{  # type: ignore[arg-type]
+            rates=interfaces.Rates(
+                **{
                     if_field: iface_rates.get(ctr_name, 0) * _get_ctr_multiplier(ctr_name)
                     for ctr_name, if_field in _CTR_TO_IF_FIELDS.items()
                 },
             ),
+            get_rate_errors=[],
         )
         for index, (name, iface_rates) in enumerate(sorted(rates.items()))
         if name  # Skip summary entry without interface name
@@ -219,7 +220,6 @@ def check_esx_vsphere_counters_if(
         item,
         params,
         convert_esx_counters_if(section),
-        input_is_rate=True,  # ESX does not send *counters* but *rates*
     )
 
 

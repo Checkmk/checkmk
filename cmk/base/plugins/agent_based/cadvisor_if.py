@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+import time
 from typing import Mapping
 
-from .agent_based_api.v1 import Metric, register, Result, Service
+from .agent_based_api.v1 import get_value_store, Metric, register, Result, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import interfaces
 
@@ -57,22 +58,27 @@ def check_cadvisor_if(item: str, section: Section) -> CheckResult:
     for output in interfaces.check_single_interface(
         item,
         {},
-        interfaces.InterfaceWithCounters(
-            interfaces.Attributes(
-                index="0",
-                descr=item,
-                alias=item,
-                type="1",
-                oper_status="1",
+        interfaces.InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
+            interfaces.InterfaceWithCounters(
+                attributes=interfaces.Attributes(
+                    index="0",
+                    descr=item,
+                    alias=item,
+                    type="1",
+                    oper_status="1",
+                ),
+                counters=interfaces.Counters(
+                    in_octets=section["if_in_total"],
+                    in_disc=section["if_in_discards"],
+                    in_err=section["if_in_errors"],
+                    out_octets=section["if_out_total"],
+                    out_disc=section["if_out_discards"],
+                    out_err=section["if_out_errors"],
+                ),
             ),
-            interfaces.Counters(
-                in_octets=section["if_in_total"],
-                in_disc=section["if_in_discards"],
-                in_err=section["if_in_errors"],
-                out_octets=section["if_out_total"],
-                out_disc=section["if_out_discards"],
-                out_err=section["if_out_errors"],
-            ),
+            timestamp=time.time(),
+            value_store=get_value_store(),
+            params={},
         ),
     ):
         if (

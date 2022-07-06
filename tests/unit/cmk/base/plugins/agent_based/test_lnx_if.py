@@ -414,11 +414,13 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
                         Metric("outqlen", 0.0),
                         Result(
                             state=State.OK,
-                            notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
-                            "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
-                            "indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', outtraffic: Initialized: 'outtraffic.None', "
-                            "outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', outucast: Initialized: 'outucast.None', "
-                            "outdisc: Initialized: 'outdisc.None', outerr: Initialized: 'outerr.None'",
+                            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.1.docker0.docker0.None', "
+                            "in_ucast: Initialized: 'in_ucast.1.docker0.docker0.None', in_mcast: Initialized: 'in_mcast.1.docker0.docker0.None', "
+                            "in_bcast: Initialized: 'in_bcast.1.docker0.docker0.None', in_disc: Initialized: 'in_disc.1.docker0.docker0.None', "
+                            "in_err: Initialized: 'in_err.1.docker0.docker0.None', out_octets: Initialized: 'out_octets.1.docker0.docker0.None', "
+                            "out_ucast: Initialized: 'out_ucast.1.docker0.docker0.None', out_mcast: Initialized: 'out_mcast.1.docker0.docker0.None', "
+                            "out_bcast: Initialized: 'out_bcast.1.docker0.docker0.None', out_disc: Initialized: 'out_disc.1.docker0.docker0.None', "
+                            "out_err: Initialized: 'out_err.1.docker0.docker0.None'",
                         ),
                     ],
                 ),
@@ -433,11 +435,13 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
                         Metric("outqlen", 0.0),
                         Result(
                             state=State.OK,
-                            notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
-                            "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
-                            "indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', outtraffic: Initialized: 'outtraffic.None', "
-                            "outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', outucast: Initialized: 'outucast.None', "
-                            "outdisc: Initialized: 'outdisc.None', outerr: Initialized: 'outerr.None'",
+                            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.4.wlp3s0.wlp3s0.None', "
+                            "in_ucast: Initialized: 'in_ucast.4.wlp3s0.wlp3s0.None', in_mcast: Initialized: 'in_mcast.4.wlp3s0.wlp3s0.None', "
+                            "in_bcast: Initialized: 'in_bcast.4.wlp3s0.wlp3s0.None', in_disc: Initialized: 'in_disc.4.wlp3s0.wlp3s0.None', "
+                            "in_err: Initialized: 'in_err.4.wlp3s0.wlp3s0.None', out_octets: Initialized: 'out_octets.4.wlp3s0.wlp3s0.None', "
+                            "out_ucast: Initialized: 'out_ucast.4.wlp3s0.wlp3s0.None', out_mcast: Initialized: 'out_mcast.4.wlp3s0.wlp3s0.None', "
+                            "out_bcast: Initialized: 'out_bcast.4.wlp3s0.wlp3s0.None', out_disc: Initialized: 'out_disc.4.wlp3s0.wlp3s0.None', "
+                            "out_err: Initialized: 'out_err.4.wlp3s0.wlp3s0.None'",
                         ),
                     ],
                 ),
@@ -575,11 +579,13 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
                         Metric("outqlen", 0.0),
                         Result(
                             state=State.OK,
-                            notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
-                            "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
-                            "indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', outtraffic: Initialized: 'outtraffic.None', "
-                            "outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', outucast: Initialized: 'outucast.None', "
-                            "outdisc: Initialized: 'outdisc.None', outerr: Initialized: 'outerr.None'",
+                            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.2.docker0.docker0.None', "
+                            "in_ucast: Initialized: 'in_ucast.2.docker0.docker0.None', in_mcast: Initialized: 'in_mcast.2.docker0.docker0.None', "
+                            "in_bcast: Initialized: 'in_bcast.2.docker0.docker0.None', in_disc: Initialized: 'in_disc.2.docker0.docker0.None', "
+                            "in_err: Initialized: 'in_err.2.docker0.docker0.None', out_octets: Initialized: 'out_octets.2.docker0.docker0.None', "
+                            "out_ucast: Initialized: 'out_ucast.2.docker0.docker0.None', out_mcast: Initialized: 'out_mcast.2.docker0.docker0.None', "
+                            "out_bcast: Initialized: 'out_bcast.2.docker0.docker0.None', out_disc: Initialized: 'out_disc.2.docker0.docker0.None', "
+                            "out_err: Initialized: 'out_err.2.docker0.docker0.None'",
                         ),
                     ],
                 ),
@@ -594,11 +600,13 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
                         Metric("outqlen", 0.0),
                         Result(
                             state=State.OK,
-                            notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
-                            "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
-                            "indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', outtraffic: Initialized: 'outtraffic.None', "
-                            "outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', outucast: Initialized: 'outucast.None', "
-                            "outdisc: Initialized: 'outdisc.None', outerr: Initialized: 'outerr.None'",
+                            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.4.wlp3s0.wlp3s0.None', "
+                            "in_ucast: Initialized: 'in_ucast.4.wlp3s0.wlp3s0.None', in_mcast: Initialized: 'in_mcast.4.wlp3s0.wlp3s0.None', "
+                            "in_bcast: Initialized: 'in_bcast.4.wlp3s0.wlp3s0.None', in_disc: Initialized: 'in_disc.4.wlp3s0.wlp3s0.None', "
+                            "in_err: Initialized: 'in_err.4.wlp3s0.wlp3s0.None', out_octets: Initialized: 'out_octets.4.wlp3s0.wlp3s0.None', "
+                            "out_ucast: Initialized: 'out_ucast.4.wlp3s0.wlp3s0.None', out_mcast: Initialized: 'out_mcast.4.wlp3s0.wlp3s0.None', "
+                            "out_bcast: Initialized: 'out_bcast.4.wlp3s0.wlp3s0.None', out_disc: Initialized: 'out_disc.4.wlp3s0.wlp3s0.None', "
+                            "out_err: Initialized: 'out_err.4.wlp3s0.wlp3s0.None'",
                         ),
                     ],
                 ),
@@ -736,11 +744,13 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
                         Metric("outqlen", 0.0),
                         Result(
                             state=State.OK,
-                            notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
-                            "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
-                            "indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', outtraffic: Initialized: 'outtraffic.None', "
-                            "outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', outucast: Initialized: 'outucast.None', "
-                            "outdisc: Initialized: 'outdisc.None', outerr: Initialized: 'outerr.None'",
+                            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.2.docker0.docker0.None', "
+                            "in_ucast: Initialized: 'in_ucast.2.docker0.docker0.None', in_mcast: Initialized: 'in_mcast.2.docker0.docker0.None', "
+                            "in_bcast: Initialized: 'in_bcast.2.docker0.docker0.None', in_disc: Initialized: 'in_disc.2.docker0.docker0.None', "
+                            "in_err: Initialized: 'in_err.2.docker0.docker0.None', out_octets: Initialized: 'out_octets.2.docker0.docker0.None', "
+                            "out_ucast: Initialized: 'out_ucast.2.docker0.docker0.None', out_mcast: Initialized: 'out_mcast.2.docker0.docker0.None', "
+                            "out_bcast: Initialized: 'out_bcast.2.docker0.docker0.None', out_disc: Initialized: 'out_disc.2.docker0.docker0.None', "
+                            "out_err: Initialized: 'out_err.2.docker0.docker0.None'",
                         ),
                     ],
                 ),
@@ -755,11 +765,13 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
                         Metric("outqlen", 0.0),
                         Result(
                             state=State.OK,
-                            notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
-                            "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
-                            "indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', outtraffic: Initialized: 'outtraffic.None', "
-                            "outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', outucast: Initialized: 'outucast.None', "
-                            "outdisc: Initialized: 'outdisc.None', outerr: Initialized: 'outerr.None'",
+                            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.4.wlp3s0.wlp3s0.None', "
+                            "in_ucast: Initialized: 'in_ucast.4.wlp3s0.wlp3s0.None', in_mcast: Initialized: 'in_mcast.4.wlp3s0.wlp3s0.None', "
+                            "in_bcast: Initialized: 'in_bcast.4.wlp3s0.wlp3s0.None', in_disc: Initialized: 'in_disc.4.wlp3s0.wlp3s0.None', "
+                            "in_err: Initialized: 'in_err.4.wlp3s0.wlp3s0.None', out_octets: Initialized: 'out_octets.4.wlp3s0.wlp3s0.None', "
+                            "out_ucast: Initialized: 'out_ucast.4.wlp3s0.wlp3s0.None', out_mcast: Initialized: 'out_mcast.4.wlp3s0.wlp3s0.None', "
+                            "out_bcast: Initialized: 'out_bcast.4.wlp3s0.wlp3s0.None', out_disc: Initialized: 'out_disc.4.wlp3s0.wlp3s0.None', "
+                            "out_err: Initialized: 'out_err.4.wlp3s0.wlp3s0.None'",
                         ),
                     ],
                 ),
@@ -807,11 +819,12 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
                         Metric("outqlen", 0.0),
                         Result(
                             state=State.OK,
-                            notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
-                            "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
-                            "indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', outtraffic: Initialized: 'outtraffic.None', "
-                            "outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', outucast: Initialized: 'outucast.None', "
-                            "outdisc: Initialized: 'outdisc.None', outerr: Initialized: 'outerr.None'",
+                            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.1.em0.em0.None', "
+                            "in_ucast: Initialized: 'in_ucast.1.em0.em0.None', in_mcast: Initialized: 'in_mcast.1.em0.em0.None', in_bcast: Initialized: "
+                            "'in_bcast.1.em0.em0.None', in_disc: Initialized: 'in_disc.1.em0.em0.None', in_err: Initialized: 'in_err.1.em0.em0.None', "
+                            "out_octets: Initialized: 'out_octets.1.em0.em0.None', out_ucast: Initialized: 'out_ucast.1.em0.em0.None', "
+                            "out_mcast: Initialized: 'out_mcast.1.em0.em0.None', out_bcast: Initialized: 'out_bcast.1.em0.em0.None', "
+                            "out_disc: Initialized: 'out_disc.1.em0.em0.None', out_err: Initialized: 'out_err.1.em0.em0.None'",
                         ),
                     ],
                 ),
@@ -825,11 +838,13 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
                         Metric("outqlen", 0.0),
                         Result(
                             state=State.OK,
-                            notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
-                            "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
-                            "indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', outtraffic: Initialized: 'outtraffic.None', "
-                            "outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', outucast: Initialized: 'outucast.None', "
-                            "outdisc: Initialized: 'outdisc.None', outerr: Initialized: 'outerr.None'",
+                            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.2.tun0.tun0.None', "
+                            "in_ucast: Initialized: 'in_ucast.2.tun0.tun0.None', in_mcast: Initialized: 'in_mcast.2.tun0.tun0.None', "
+                            "in_bcast: Initialized: 'in_bcast.2.tun0.tun0.None', in_disc: Initialized: 'in_disc.2.tun0.tun0.None', "
+                            "in_err: Initialized: 'in_err.2.tun0.tun0.None', out_octets: Initialized: 'out_octets.2.tun0.tun0.None', "
+                            "out_ucast: Initialized: 'out_ucast.2.tun0.tun0.None', out_mcast: Initialized: 'out_mcast.2.tun0.tun0.None', "
+                            "out_bcast: Initialized: 'out_bcast.2.tun0.tun0.None', out_disc: Initialized: 'out_disc.2.tun0.tun0.None', "
+                            "out_err: Initialized: 'out_err.2.tun0.tun0.None'",
                         ),
                     ],
                 ),
@@ -843,11 +858,13 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
                         Metric("outqlen", 0.0),
                         Result(
                             state=State.OK,
-                            notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
-                            "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
-                            "indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', outtraffic: Initialized: 'outtraffic.None', "
-                            "outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', outucast: Initialized: 'outucast.None', "
-                            "outdisc: Initialized: 'outdisc.None', outerr: Initialized: 'outerr.None'",
+                            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.3.tun1.tun1.None', "
+                            "in_ucast: Initialized: 'in_ucast.3.tun1.tun1.None', in_mcast: Initialized: 'in_mcast.3.tun1.tun1.None', "
+                            "in_bcast: Initialized: 'in_bcast.3.tun1.tun1.None', in_disc: Initialized: 'in_disc.3.tun1.tun1.None', "
+                            "in_err: Initialized: 'in_err.3.tun1.tun1.None', out_octets: Initialized: 'out_octets.3.tun1.tun1.None', "
+                            "out_ucast: Initialized: 'out_ucast.3.tun1.tun1.None', out_mcast: Initialized: 'out_mcast.3.tun1.tun1.None', "
+                            "out_bcast: Initialized: 'out_bcast.3.tun1.tun1.None', out_disc: Initialized: 'out_disc.3.tun1.tun1.None', "
+                            "out_err: Initialized: 'out_err.3.tun1.tun1.None'",
                         ),
                     ],
                 ),
@@ -890,7 +907,7 @@ def test_lnx_if_regression(
 
     node_name = "node"
     for item, par, res in items_params_results:
-        assert list(lnx_if.cluster_check_lnx_if(item, par, {node_name: section}, {},)) == [
+        assert list(lnx_if.cluster_check_lnx_if(item, par, {node_name: section}, {},))[:-1] == [
             Result(  # type: ignore[call-overload]
                 state=res[0].state,
                 summary=res[0].summary + " on %s" % node_name if res[0].summary else None,
@@ -898,14 +915,6 @@ def test_lnx_if_regression(
                 details=res[0].details + " on %s" % node_name if res[0].details else None,
             ),
             *res[1:-1],
-            Result(
-                state=State.OK,
-                notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.node', "
-                "inmcast: Initialized: 'inmcast.node', inbcast: Initialized: 'inbcast.node', inucast: Initialized: 'inucast.node', "
-                "indisc: Initialized: 'indisc.node', inerr: Initialized: 'inerr.node', outtraffic: Initialized: 'outtraffic.node', "
-                "outmcast: Initialized: 'outmcast.node', outbcast: Initialized: 'outbcast.node', outucast: Initialized: 'outucast.node', "
-                "outdisc: Initialized: 'outdisc.node', outerr: Initialized: 'outerr.node'",
-            ),
         ]
 
 
@@ -1037,11 +1046,13 @@ def test_lnx_if_with_bonding(monkeypatch) -> None:
         Metric("outqlen", 0.0),
         Result(
             state=State.OK,
-            notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
-            "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
-            "indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', outtraffic: Initialized: 'outtraffic.None', "
-            "outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', outucast: Initialized: 'outucast.None', "
-            "outdisc: Initialized: 'outdisc.None', outerr: Initialized: 'outerr.None'",
+            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.4.wlp3s0.wlp3s0.None', "
+            "in_ucast: Initialized: 'in_ucast.4.wlp3s0.wlp3s0.None', in_mcast: Initialized: 'in_mcast.4.wlp3s0.wlp3s0.None', "
+            "in_bcast: Initialized: 'in_bcast.4.wlp3s0.wlp3s0.None', in_disc: Initialized: 'in_disc.4.wlp3s0.wlp3s0.None', "
+            "in_err: Initialized: 'in_err.4.wlp3s0.wlp3s0.None', out_octets: Initialized: 'out_octets.4.wlp3s0.wlp3s0.None', "
+            "out_ucast: Initialized: 'out_ucast.4.wlp3s0.wlp3s0.None', out_mcast: Initialized: 'out_mcast.4.wlp3s0.wlp3s0.None', "
+            "out_bcast: Initialized: 'out_bcast.4.wlp3s0.wlp3s0.None', out_disc: Initialized: 'out_disc.4.wlp3s0.wlp3s0.None', "
+            "out_err: Initialized: 'out_err.4.wlp3s0.wlp3s0.None'",
         ),
     ]
 

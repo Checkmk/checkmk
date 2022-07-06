@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
+import time
 from typing import Any, Mapping, Optional
 
-from .agent_based_api.v1 import register, render, Service
+from .agent_based_api.v1 import get_value_store, register, render, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import gcp, interfaces, uptime
 
@@ -101,20 +102,26 @@ def check_network(
         ),
     }
     metrics = {k: gcp._get_value(section, desc) for k, desc in metric_descs.items()}
-    interface = interfaces.InterfaceWithCounters(
-        interfaces.Attributes(
-            index="0",
-            descr=item,
-            alias=item,
-            type="1",
-            oper_status="1",
+    interface = interfaces.InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
+        interfaces.InterfaceWithRates(
+            attributes=interfaces.Attributes(
+                index="0",
+                descr=item,
+                alias=item,
+                type="1",
+                oper_status="1",
+            ),
+            rates=interfaces.Rates(
+                in_octets=metrics["in"],
+                out_octets=metrics["out"],
+            ),
+            get_rate_errors=[],
         ),
-        interfaces.Counters(
-            in_octets=metrics["in"],
-            out_octets=metrics["out"],
-        ),
+        timestamp=time.time(),
+        value_store=get_value_store(),
+        params=params,
     )
-    yield from interfaces.check_single_interface(item, params, interface, input_is_rate=True)
+    yield from interfaces.check_single_interface(item, params, interface)
 
 
 register.check_plugin(

@@ -21,7 +21,6 @@ def check_interfaces(
         section=section,
         group_name="Interface group",
         timestamp=time.time(),
-        input_is_rate=False,
     )
 
 

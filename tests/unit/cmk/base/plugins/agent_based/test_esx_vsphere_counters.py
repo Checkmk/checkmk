@@ -237,7 +237,7 @@ def test_convert_esx_counters_if() -> None:
             }
         )
     ) == [
-        interfaces.InterfaceWithCounters(
+        interfaces.InterfaceWithRates(
             interfaces.Attributes(
                 index="1",
                 descr="vmnic0",
@@ -253,7 +253,7 @@ def test_convert_esx_counters_if() -> None:
                 node=None,
                 admin_status=None,
             ),
-            interfaces.Counters(
+            interfaces.Rates(
                 in_octets=1024,
                 in_ucast=324,
                 in_mcast=114,
@@ -267,8 +267,9 @@ def test_convert_esx_counters_if() -> None:
                 out_disc=0,
                 out_err=0,
             ),
+            get_rate_errors=[],
         ),
-        interfaces.InterfaceWithCounters(
+        interfaces.InterfaceWithRates(
             interfaces.Attributes(
                 index="2",
                 descr="vmnic1",
@@ -284,7 +285,7 @@ def test_convert_esx_counters_if() -> None:
                 node=None,
                 admin_status=None,
             ),
-            interfaces.Counters(
+            interfaces.Rates(
                 in_octets=0,
                 in_ucast=0,
                 in_mcast=0,
@@ -298,8 +299,9 @@ def test_convert_esx_counters_if() -> None:
                 out_disc=0,
                 out_err=0,
             ),
+            get_rate_errors=[],
         ),
-        interfaces.InterfaceWithCounters(
+        interfaces.InterfaceWithRates(
             interfaces.Attributes(
                 index="3",
                 descr="vmnic2",
@@ -315,7 +317,7 @@ def test_convert_esx_counters_if() -> None:
                 node=None,
                 admin_status=None,
             ),
-            interfaces.Counters(
+            interfaces.Rates(
                 in_octets=0,
                 in_ucast=0,
                 in_mcast=0,
@@ -329,8 +331,9 @@ def test_convert_esx_counters_if() -> None:
                 out_disc=0,
                 out_err=0,
             ),
+            get_rate_errors=[],
         ),
-        interfaces.InterfaceWithCounters(
+        interfaces.InterfaceWithRates(
             interfaces.Attributes(
                 index="4",
                 descr="vmnic3",
@@ -346,7 +349,7 @@ def test_convert_esx_counters_if() -> None:
                 node=None,
                 admin_status=None,
             ),
-            interfaces.Counters(
+            interfaces.Rates(
                 in_octets=0,
                 in_ucast=0,
                 in_mcast=0,
@@ -360,8 +363,9 @@ def test_convert_esx_counters_if() -> None:
                 out_disc=0,
                 out_err=0,
             ),
+            get_rate_errors=[],
         ),
-        interfaces.InterfaceWithCounters(
+        interfaces.InterfaceWithRates(
             interfaces.Attributes(
                 index="5",
                 descr="vmnic4",
@@ -377,7 +381,7 @@ def test_convert_esx_counters_if() -> None:
                 node=None,
                 admin_status=None,
             ),
-            interfaces.Counters(
+            interfaces.Rates(
                 in_octets=105472,
                 in_ucast=2437,
                 in_mcast=113,
@@ -391,8 +395,9 @@ def test_convert_esx_counters_if() -> None:
                 out_disc=0,
                 out_err=0,
             ),
+            get_rate_errors=[],
         ),
-        interfaces.InterfaceWithCounters(
+        interfaces.InterfaceWithRates(
             interfaces.Attributes(
                 index="6",
                 descr="vmnic5",
@@ -408,7 +413,7 @@ def test_convert_esx_counters_if() -> None:
                 node=None,
                 admin_status=None,
             ),
-            interfaces.Counters(
+            interfaces.Rates(
                 in_octets=55296,
                 in_ucast=4549,
                 in_mcast=113,
@@ -422,6 +427,7 @@ def test_convert_esx_counters_if() -> None:
                 out_disc=0,
                 out_err=0,
             ),
+            get_rate_errors=[],
         ),
     ]
 

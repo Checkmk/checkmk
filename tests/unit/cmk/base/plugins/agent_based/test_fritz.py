@@ -162,11 +162,13 @@ def test_discover_fritz_wan_if(
                 Metric("outqlen", 0.0),
                 Result(
                     state=State.OK,
-                    notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
-                    "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
-                    "indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', outtraffic: Initialized: 'outtraffic.None', "
-                    "outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', outucast: Initialized: 'outucast.None', "
-                    "outdisc: Initialized: 'outdisc.None', outerr: Initialized: 'outerr.None'",
+                    notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.0.WAN.WAN.None', "
+                    "in_ucast: Initialized: 'in_ucast.0.WAN.WAN.None', in_mcast: Initialized: 'in_mcast.0.WAN.WAN.None', "
+                    "in_bcast: Initialized: 'in_bcast.0.WAN.WAN.None', in_disc: Initialized: 'in_disc.0.WAN.WAN.None', "
+                    "in_err: Initialized: 'in_err.0.WAN.WAN.None', out_octets: Initialized: 'out_octets.0.WAN.WAN.None', "
+                    "out_ucast: Initialized: 'out_ucast.0.WAN.WAN.None', out_mcast: Initialized: 'out_mcast.0.WAN.WAN.None', "
+                    "out_bcast: Initialized: 'out_bcast.0.WAN.WAN.None', out_disc: Initialized: 'out_disc.0.WAN.WAN.None', "
+                    "out_err: Initialized: 'out_err.0.WAN.WAN.None'",
                 ),
             ],
             id="standard case",

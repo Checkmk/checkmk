@@ -21,10 +21,10 @@ from cmk.base.plugins.agent_based.utils import interfaces
 CheckResults = Sequence[Union[Result, Metric, IgnoreResults]]
 
 
-def _create_interfaces(
+def _create_interfaces_with_counters(
     bandwidth_change: int,
     **attr_kwargs: Any,
-) -> interfaces.Section:
+) -> Sequence[interfaces.InterfaceWithCounters]:
     ifaces = [
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -118,6 +118,34 @@ def _create_interfaces(
     return ifaces
 
 
+def _create_interfaces_with_rates(
+    *,
+    bandwidth_change: int = 0,
+    timedelta: int = 0,
+    params: Mapping[str, Any] | None = None,
+    **attr_kwargs: Any,
+) -> Sequence[interfaces.InterfaceWithRatesAndAverages]:
+    value_store: dict[str, Any] = {}
+    _init = [
+        interfaces.InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
+            iface,
+            timestamp=0,
+            value_store=value_store,
+            params=params or {},
+        )
+        for iface in _create_interfaces_with_counters(0, **attr_kwargs)
+    ]
+    return [
+        interfaces.InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
+            iface,
+            timestamp=timedelta,
+            value_store=value_store,
+            params=params or {},
+        )
+        for iface in _create_interfaces_with_counters(bandwidth_change, **attr_kwargs)
+    ]
+
+
 def _add_node_name_to_results(
     results: CheckResults,
     node_name: str,
@@ -177,7 +205,7 @@ def test_discovery_ungrouped_all() -> None:
         list(
             interfaces.discover_interfaces(
                 [DEFAULT_DISCOVERY_PARAMS],
-                _create_interfaces(0),
+                _create_interfaces_with_counters(0),
             )
         )
         == SINGLE_SERVICES
@@ -209,7 +237,7 @@ def test_discovery_ungrouped_empty_section() -> None:
 
 
 def test_discovery_ungrouped_admin_status() -> None:
-    ifaces = _create_interfaces(0, admin_status="1")
+    ifaces = _create_interfaces_with_counters(0, admin_status="1")
     ifaces[-1].attributes.admin_status = "2"
     assert list(
         interfaces.discover_interfaces(
@@ -257,7 +285,7 @@ def test_discovery_ungrouped_one() -> None:
                     },
                     DEFAULT_DISCOVERY_PARAMS,
                 ],
-                _create_interfaces(0),
+                _create_interfaces_with_counters(0),
             )
         )
         == SINGLE_SERVICES[1:]
@@ -275,7 +303,7 @@ def test_discovery_ungrouped_off() -> None:
                     },
                     DEFAULT_DISCOVERY_PARAMS,
                 ],
-                _create_interfaces(0),
+                _create_interfaces_with_counters(0),
             )
         )
         == []
@@ -286,7 +314,7 @@ def test_discovery_duplicate_index() -> None:
     assert list(
         interfaces.discover_interfaces(
             [DEFAULT_DISCOVERY_PARAMS],
-            _create_interfaces(0, index="1"),
+            _create_interfaces_with_counters(0, index="1"),
         )
     ) == [
         Service(
@@ -315,7 +343,7 @@ def test_discovery_duplicate_descr() -> None:
                     ),
                 }
             ],
-            _create_interfaces(0, descr="description"),
+            _create_interfaces_with_counters(0, descr="description"),
         )
     ) == [
         Service(
@@ -357,7 +385,7 @@ def test_discovery_duplicate_alias() -> None:
                     ),
                 }
             ],
-            _create_interfaces(0, alias="alias"),
+            _create_interfaces_with_counters(0, alias="alias"),
         )
     ) == [
         Service(
@@ -372,7 +400,7 @@ def test_discovery_duplicate_alias() -> None:
 
 
 def test_discovery_partial_duplicate_desc_duplicate_alias() -> None:
-    ifaces = _create_interfaces(0)
+    ifaces = _create_interfaces_with_counters(0)
     ifaces[3].attributes.descr = "duplicate_descr"
     ifaces[4].attributes.descr = "duplicate_descr"
     for iface in ifaces:
@@ -446,7 +474,7 @@ def test_discovery_grouped_simple() -> None:
                 },
                 DEFAULT_DISCOVERY_PARAMS,
             ],
-            _create_interfaces(0),
+            _create_interfaces_with_counters(0),
         )
     ) == SINGLE_SERVICES + [
         Service(
@@ -504,7 +532,7 @@ def test_discovery_grouped_hierarchy() -> None:
                 },
                 DEFAULT_DISCOVERY_PARAMS,
             ],
-            _create_interfaces(0),
+            _create_interfaces_with_counters(0),
         )
     ) == SINGLE_SERVICES + [
         Service(
@@ -557,7 +585,7 @@ def test_discovery_grouped_exclusion_condition() -> None:
                 },
                 DEFAULT_DISCOVERY_PARAMS,
             ],
-            _create_interfaces(0),
+            _create_interfaces_with_counters(0),
         )
     ) == SINGLE_SERVICES + [
         Service(
@@ -602,7 +630,7 @@ def test_discovery_grouped_empty() -> None:
                     },
                     DEFAULT_DISCOVERY_PARAMS,
                 ],
-                _create_interfaces(0),
+                _create_interfaces_with_counters(0),
             )
         )
         == SINGLE_SERVICES
@@ -610,7 +638,7 @@ def test_discovery_grouped_empty() -> None:
 
 
 def test_discovery_grouped_by_agent() -> None:
-    ifaces = _create_interfaces(0)
+    ifaces = _create_interfaces_with_counters(0)
     ifaces[0].attributes.group = "group"
     ifaces[1].attributes.group = "group"
     assert list(
@@ -634,7 +662,7 @@ def test_discovery_grouped_by_agent() -> None:
 
 
 def test_discovery_grouped_by_agent_and_in_rules() -> None:
-    ifaces = _create_interfaces(0)
+    ifaces = _create_interfaces_with_counters(0)
     ifaces[0].attributes.group = "group"
     ifaces[1].attributes.group = "group"
     assert list(
@@ -729,7 +757,7 @@ def test_discovery_labels() -> None:
                 },
                 DEFAULT_DISCOVERY_PARAMS,
             ],
-            _create_interfaces(0),
+            _create_interfaces_with_counters(0),
         )
     ) == [
         Service(
@@ -952,21 +980,16 @@ def test_check_single_interface(
     params: Mapping[str, Any],
     result: CheckResults,
 ) -> None:
-    list(
-        interfaces.check_single_interface(
-            item,
-            params,
-            _create_interfaces(0)[int(item) - 1],
-            timestamp=0,
-        )
-    )
     assert (
         list(
             interfaces.check_single_interface(
                 item,
                 params,
-                _create_interfaces(4000000)[int(item) - 1],
-                timestamp=5,
+                _create_interfaces_with_rates(
+                    bandwidth_change=4000000,
+                    timedelta=5,
+                    params=params,
+                )[int(item) - 1],
             )
         )
         == result
@@ -975,11 +998,17 @@ def test_check_single_interface(
 
 def test_check_single_interface_same_index_descr_alias() -> None:
     item = "07"
-    result = next(  # type: ignore[call-overload]
-        interfaces.check_single_interface(
-            item,
-            {},
-            _create_interfaces(0, index=item, descr=item, alias=item)[0],
+    result = next(
+        iter(
+            interfaces.check_single_interface(
+                item,
+                {},
+                _create_interfaces_with_rates(
+                    index=item,
+                    descr=item,
+                    alias=item,
+                )[0],
+            )
         )
     )
     assert result == Result(
@@ -999,20 +1028,16 @@ def test_check_single_interface_admin_status(
         **params,
         "discovered_admin_status": "1",
     }
-    list(
-        interfaces.check_single_interface(
-            item,
-            params,
-            _create_interfaces(0, admin_status="1")[int(item) - 1],
-            timestamp=0,
-        )
-    )
     assert list(
         interfaces.check_single_interface(
             item,
             params,
-            _create_interfaces(4000000, admin_status="1")[int(item) - 1],
-            timestamp=5,
+            _create_interfaces_with_rates(
+                bandwidth_change=4000000,
+                timedelta=5,
+                params=params,
+                admin_status="1",
+            )[int(item) - 1],
         )
     ) == [
         *result[:2],
@@ -1027,18 +1052,6 @@ def test_check_single_interface_states(
     params: Mapping[str, Any],
     result: CheckResults,
 ) -> None:
-    list(
-        interfaces.check_single_interface(
-            item,
-            {
-                **params,
-                "state": ["4"],
-                "admin_state": ["2"],
-            },
-            _create_interfaces(0, admin_status="1")[int(item) - 1],
-            timestamp=0,
-        )
-    )
     assert list(
         interfaces.check_single_interface(
             item,
@@ -1047,8 +1060,12 @@ def test_check_single_interface_states(
                 "state": ["4"],
                 "admin_state": ["2"],
             },
-            _create_interfaces(4000000, admin_status="1")[int(item) - 1],
-            timestamp=5,
+            _create_interfaces_with_rates(
+                bandwidth_change=4000000,
+                timedelta=5,
+                params=params,
+                admin_status="1",
+            )[int(item) - 1],
         )
     ) == [
         result[0],
@@ -1064,23 +1081,6 @@ def test_check_single_interface_map_states_independently(
     params: Mapping[str, Any],
     result: CheckResults,
 ) -> None:
-    list(
-        interfaces.check_single_interface(
-            item,
-            {
-                **params,
-                "state_mappings": (
-                    "independent_mappings",
-                    {
-                        "map_operstates": [(["1"], 3)],
-                        "map_admin_states": [(["2"], 3)],
-                    },
-                ),
-            },
-            _create_interfaces(0, admin_status="2")[int(item) - 1],
-            timestamp=0,
-        )
-    )
     assert list(
         interfaces.check_single_interface(
             item,
@@ -1094,8 +1094,12 @@ def test_check_single_interface_map_states_independently(
                     },
                 ),
             },
-            _create_interfaces(4000000, admin_status="2")[int(item) - 1],
-            timestamp=5,
+            _create_interfaces_with_rates(
+                bandwidth_change=4000000,
+                timedelta=5,
+                params=params,
+                admin_status="2",
+            )[int(item) - 1],
         )
     ) == [
         result[0],
@@ -1111,26 +1115,6 @@ def test_check_single_interface_map_states_combined_matching(
     params: Mapping[str, Any],
     result: CheckResults,
 ) -> None:
-    list(
-        interfaces.check_single_interface(
-            item,
-            {
-                **params,
-                "state": ["4"],
-                "admin_state": ["1"],
-                "state_mappings": (
-                    "combined_mappings",
-                    [
-                        ("1", "2", 3),
-                        ("5", "2", 3),
-                        ("2", "2", 2),
-                    ],
-                ),
-            },
-            _create_interfaces(0, admin_status="2")[int(item) - 1],
-            timestamp=0,
-        )
-    )
     assert list(
         interfaces.check_single_interface(
             item,
@@ -1147,8 +1131,12 @@ def test_check_single_interface_map_states_combined_matching(
                     ],
                 ),
             },
-            _create_interfaces(4000000, admin_status="2")[int(item) - 1],
-            timestamp=5,
+            _create_interfaces_with_rates(
+                bandwidth_change=4000000,
+                timedelta=5,
+                params=params,
+                admin_status="2",
+            )[int(item) - 1],
         )
     ) == [
         result[0],
@@ -1167,24 +1155,6 @@ def test_check_single_interface_map_states_combined_not_matching(
     params: Mapping[str, Any],
     result: CheckResults,
 ) -> None:
-    list(
-        interfaces.check_single_interface(
-            item,
-            {
-                **params,
-                "state_mappings": (
-                    "combined_mappings",
-                    [
-                        ("1", "2", 3),
-                        ("5", "2", 3),
-                        ("2", "2", 2),
-                    ],
-                ),
-            },
-            _create_interfaces(0, admin_status="3")[int(item) - 1],
-            timestamp=0,
-        )
-    )
     assert list(
         interfaces.check_single_interface(
             item,
@@ -1199,8 +1169,12 @@ def test_check_single_interface_map_states_combined_not_matching(
                     ],
                 ),
             },
-            _create_interfaces(4000000, admin_status="3")[int(item) - 1],
-            timestamp=5,
+            _create_interfaces_with_rates(
+                bandwidth_change=4000000,
+                timedelta=5,
+                params=params,
+                admin_status="3",
+            )[int(item) - 1],
         )
     ) == [
         result[0],
@@ -1216,26 +1190,6 @@ def test_check_single_interface_map_states_combined_not_matching_with_target_sta
     params: Mapping[str, Any],
     result: CheckResults,
 ) -> None:
-    list(
-        interfaces.check_single_interface(
-            item,
-            {
-                **params,
-                "state": ["4"],
-                "admin_state": ["1"],
-                "state_mappings": (
-                    "combined_mappings",
-                    [
-                        ("1", "2", 3),
-                        ("5", "2", 3),
-                        ("2", "2", 2),
-                    ],
-                ),
-            },
-            _create_interfaces(0, admin_status="3")[int(item) - 1],
-            timestamp=0,
-        )
-    )
     assert list(
         interfaces.check_single_interface(
             item,
@@ -1252,8 +1206,12 @@ def test_check_single_interface_map_states_combined_not_matching_with_target_sta
                     ],
                 ),
             },
-            _create_interfaces(4000000, admin_status="3")[int(item) - 1],
-            timestamp=5,
+            _create_interfaces_with_rates(
+                bandwidth_change=4000000,
+                timedelta=5,
+                params=params,
+                admin_status="3",
+            )[int(item) - 1],
         )
     ) == [
         result[0],
@@ -1269,17 +1227,6 @@ def test_check_single_interface_ignore_state(
     params: Mapping[str, Any],
     result: CheckResults,
 ) -> None:
-    list(
-        interfaces.check_single_interface(
-            item,
-            {
-                **params,
-                "state": None,
-            },
-            _create_interfaces(0, oper_status=4)[int(item) - 1],
-            timestamp=0,
-        )
-    )
     assert (
         list(
             interfaces.check_single_interface(
@@ -1288,8 +1235,12 @@ def test_check_single_interface_ignore_state(
                     **params,
                     "state": None,
                 },
-                _create_interfaces(4000000, oper_status=4)[int(item) - 1],
-                timestamp=5,
+                _create_interfaces_with_rates(
+                    bandwidth_change=4000000,
+                    timedelta=5,
+                    params=params,
+                    oper_status=4,
+                )[int(item) - 1],
             )
         )
         == result
@@ -1345,24 +1296,20 @@ def test_check_single_interface_bandwidth_averaging(
     params: Mapping[str, Any],
     result: CheckResults,
 ) -> None:
-    list(
-        interfaces.check_single_interface(
-            item,
-            params,
-            _create_interfaces(0)[int(item) - 1],
-            timestamp=0,
-        )
-    )
+    params = {
+        **params,
+        "average": 5,
+    }
     assert (
         list(
             interfaces.check_single_interface(
                 item,
-                {
-                    **params,
-                    "average": 5,
-                },
-                _create_interfaces(4000000)[int(item) - 1],
-                timestamp=5,
+                params,
+                _create_interfaces_with_rates(
+                    bandwidth_change=4000000,
+                    timedelta=5,
+                    params=params,
+                )[int(item) - 1],
             )
         )
         == result
@@ -1372,20 +1319,15 @@ def test_check_single_interface_bandwidth_averaging(
 def test_check_single_interface_bm_averaging() -> None:
     item = "6"
     params = {"average_bm": 13}
-    list(
-        interfaces.check_single_interface(
-            item,
-            params,
-            _create_interfaces(0)[int(item) - 1],
-            timestamp=0,
-        )
-    )
     assert list(
         interfaces.check_single_interface(
             item,
             params,
-            _create_interfaces(4000000)[int(item) - 1],
-            timestamp=5,
+            _create_interfaces_with_rates(
+                bandwidth_change=4000000,
+                timedelta=5,
+                params=params,
+            )[int(item) - 1],
         )
     ) == [
         Result(state=State.OK, summary="[wlp2s0]"),
@@ -1436,49 +1378,18 @@ def test_check_single_interface_group(
             {"name": "wlp2s0", "oper_status_name": "up"},
         ]
     }
-    list(
-        interfaces.check_single_interface(
-            item,
-            params,
-            _create_interfaces(0)[int(item) - 1],
-            group_members=group_members,
-            timestamp=0,
-        )
-    )
     assert list(
         interfaces.check_single_interface(
             item,
             params,
-            _create_interfaces(4000000)[int(item) - 1],
+            _create_interfaces_with_rates(
+                bandwidth_change=4000000,
+                timedelta=5,
+                params=params,
+            )[int(item) - 1],
             group_members=group_members,
-            timestamp=5,
         )
     ) == _add_group_info_to_results(result, "Members: [vboxnet0 (up), wlp2s0 (up)]")
-
-
-@pytest.mark.parametrize(
-    "item, params",
-    [
-        (
-            item,
-            params,
-        )
-        for item, params, _results in ITEM_PARAMS_RESULTS
-    ],
-)
-def test_check_single_interface_input_is_rate(
-    item: str,
-    params: Mapping[str, Any],
-) -> None:
-    # check that this does not raise an GetRateError, since no rates are computed
-    list(
-        interfaces.check_single_interface(
-            item,
-            params,
-            _create_interfaces(0)[int(item) - 1],
-            input_is_rate=True,
-        )
-    )
 
 
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
@@ -1493,22 +1404,16 @@ def test_check_single_interface_group_admin_status(
             {"name": "wlp2s0", "oper_status_name": "up", "admin_status_name": "testing"},
         ]
     }
-    list(
-        interfaces.check_single_interface(
-            item,
-            params,
-            _create_interfaces(0)[int(item) - 1],
-            group_members=group_members,
-            timestamp=0,
-        )
-    )
     assert list(
         interfaces.check_single_interface(
             item,
             params,
-            _create_interfaces(4000000)[int(item) - 1],
+            _create_interfaces_with_rates(
+                bandwidth_change=4000000,
+                timedelta=5,
+                params=params,
+            )[int(item) - 1],
             group_members=group_members,
-            timestamp=5,
         )
     ) == _add_group_info_to_results(
         result,
@@ -1524,20 +1429,16 @@ def test_check_single_interface_w_node(
     result: CheckResults,
 ) -> None:
     node_name = "node"
-    list(
-        interfaces.check_single_interface(
-            item,
-            params,
-            _create_interfaces(0, node=node_name)[int(item) - 1],
-            timestamp=0,
-        )
-    )
     assert list(
         interfaces.check_single_interface(
             item,
             params,
-            _create_interfaces(4000000, node=node_name)[int(item) - 1],
-            timestamp=5,
+            _create_interfaces_with_rates(
+                bandwidth_change=4000000,
+                timedelta=5,
+                params=params,
+                node=node_name,
+            )[int(item) - 1],
         )
     ) == _add_node_name_to_results(result, node_name)
 
@@ -1558,22 +1459,16 @@ def test_check_single_interface_group_w_nodes(
             {"name": "wlp2s0", "oper_status_name": "up"},
         ],
     }
-    list(
-        interfaces.check_single_interface(
-            item,
-            params,
-            _create_interfaces(0)[int(item) - 1],
-            group_members=group_members,
-            timestamp=0,
-        )
-    )
     assert list(
         interfaces.check_single_interface(
             item,
             params,
-            _create_interfaces(4000000)[int(item) - 1],
+            _create_interfaces_with_rates(
+                bandwidth_change=4000000,
+                timedelta=5,
+                params=params,
+            )[int(item) - 1],
             group_members=group_members,
-            timestamp=5,
         )
     ) == _add_group_info_to_results(
         result,
@@ -1604,7 +1499,7 @@ def test_check_single_interface_packet_levels() -> None:
                 },
                 "discards": (50.0, 300.0),
             },
-            interfaces.InterfaceWithCounters(
+            interfaces.InterfaceWithRatesAndAverages(
                 interfaces.Attributes(
                     index="1",
                     descr="lo",
@@ -1614,22 +1509,25 @@ def test_check_single_interface_packet_levels() -> None:
                     oper_status="1",
                     phys_address="\x00\x00\x00\x00\x00\x00",
                 ),
-                interfaces.Counters(
-                    in_octets=266045395,
-                    in_ucast=10,
-                    in_mcast=20,
-                    in_bcast=30,
-                    in_disc=40,
-                    in_err=50,
-                    out_octets=266045395,
-                    out_ucast=60,
-                    out_mcast=70,
-                    out_bcast=80,
-                    out_disc=90,
-                    out_err=100,
+                interfaces.RatesWithAverages(
+                    in_octets=interfaces.RateWithAverage(266045395, None),
+                    in_ucast=interfaces.RateWithAverage(10, None),
+                    in_mcast=interfaces.RateWithAverage(20, None),
+                    in_bcast=interfaces.RateWithAverage(30, None),
+                    in_nucast=interfaces.RateWithAverage(50, None),
+                    in_disc=interfaces.RateWithAverage(40, None),
+                    in_err=interfaces.RateWithAverage(50, None),
+                    out_octets=interfaces.RateWithAverage(266045395, None),
+                    out_ucast=interfaces.RateWithAverage(60, None),
+                    out_mcast=interfaces.RateWithAverage(70, None),
+                    out_bcast=interfaces.RateWithAverage(80, None),
+                    out_nucast=interfaces.RateWithAverage(150, None),
+                    out_disc=interfaces.RateWithAverage(90, None),
+                    out_err=interfaces.RateWithAverage(100, None),
+                    total_octets=interfaces.RateWithAverage(532090790, None),
                 ),
+                get_rate_errors=[],
             ),
-            input_is_rate=True,
         )
     ) == [
         Result(
@@ -1792,7 +1690,7 @@ def test_check_multiple_interfaces(
         interfaces.check_multiple_interfaces(
             item,
             params,
-            _create_interfaces(0),
+            _create_interfaces_with_counters(0),
             timestamp=0,
         )
     )
@@ -1801,7 +1699,7 @@ def test_check_multiple_interfaces(
             interfaces.check_multiple_interfaces(
                 item,
                 params,
-                _create_interfaces(4000000),
+                _create_interfaces_with_counters(4000000),
                 timestamp=5,
             )
         )
@@ -1821,7 +1719,7 @@ def test_check_multiple_interfaces_duplicate_descr(
         interfaces.check_multiple_interfaces(
             item,
             params,
-            _create_interfaces(0, descr=description),
+            _create_interfaces_with_counters(0, descr=description),
             timestamp=0,
         )
     )
@@ -1830,7 +1728,7 @@ def test_check_multiple_interfaces_duplicate_descr(
             interfaces.check_multiple_interfaces(
                 item,
                 params,
-                _create_interfaces(4000000, descr=description),
+                _create_interfaces_with_counters(4000000, descr=description),
                 timestamp=5,
             )
         )
@@ -1851,11 +1749,11 @@ def test_check_multiple_interfaces_duplicate_alias(
         interfaces.check_multiple_interfaces(
             item,
             params,
-            _create_interfaces(0, alias=alias),
+            _create_interfaces_with_counters(0, alias=alias),
             timestamp=0,
         )
     )
-    ifaces = _create_interfaces(4000000, alias=alias)
+    ifaces = _create_interfaces_with_counters(4000000, alias=alias)
     assert list(interfaces.check_multiple_interfaces(item, params, ifaces, timestamp=5,)) == [
         Result(
             state=State.OK,
@@ -1890,7 +1788,7 @@ def test_check_multiple_interfaces_group_simple() -> None:
         interfaces.check_multiple_interfaces(
             "group",
             params,
-            _create_interfaces(0),
+            _create_interfaces_with_counters(0),
             timestamp=0,
         )
     )
@@ -1898,7 +1796,7 @@ def test_check_multiple_interfaces_group_simple() -> None:
         interfaces.check_multiple_interfaces(
             "group",
             params,
-            _create_interfaces(4000000),
+            _create_interfaces_with_counters(4000000),
             timestamp=5,
         )
     ) == [
@@ -1971,7 +1869,7 @@ def test_check_multiple_interfaces_group_exclude() -> None:
         interfaces.check_multiple_interfaces(
             "group",
             params,
-            _create_interfaces(0),
+            _create_interfaces_with_counters(0),
             timestamp=0,
         )
     )
@@ -1979,7 +1877,7 @@ def test_check_multiple_interfaces_group_exclude() -> None:
         interfaces.check_multiple_interfaces(
             "group",
             params,
-            _create_interfaces(4000000),
+            _create_interfaces_with_counters(4000000),
             timestamp=5,
         )
     ) == [
@@ -2043,7 +1941,7 @@ def test_check_multiple_interfaces_group_by_agent() -> None:
         "discovered_speed": 20000000,
     }
 
-    ifaces = _create_interfaces(0)
+    ifaces = _create_interfaces_with_counters(0)
     ifaces[3].attributes.group = "group"
     ifaces[5].attributes.group = "group"
     list(
@@ -2055,7 +1953,7 @@ def test_check_multiple_interfaces_group_by_agent() -> None:
         )
     )
 
-    ifaces = _create_interfaces(4000000)
+    ifaces = _create_interfaces_with_counters(4000000)
     ifaces[3].attributes.group = "group"
     ifaces[5].attributes.group = "group"
     assert list(interfaces.check_multiple_interfaces("group", params, ifaces, timestamp=5,)) == [
@@ -2112,7 +2010,7 @@ def test_check_multiple_interfaces_w_node(
         interfaces.check_multiple_interfaces(
             item,
             params,
-            _create_interfaces(0, node=node_name),
+            _create_interfaces_with_counters(0, node=node_name),
             timestamp=0,
         )
     )
@@ -2120,7 +2018,7 @@ def test_check_multiple_interfaces_w_node(
         interfaces.check_multiple_interfaces(
             item,
             params,
-            _create_interfaces(4000000, node=node_name),
+            _create_interfaces_with_counters(4000000, node=node_name),
             timestamp=5,
         )
     ) == _add_node_name_to_results(result, node_name)
@@ -2139,8 +2037,8 @@ def test_check_multiple_interfaces_same_item_twice_cluster(
             item,
             params,
             [
-                *_create_interfaces(0, node=node_name_1),
-                *_create_interfaces(0, node=node_name_2),
+                *_create_interfaces_with_counters(0, node=node_name_1),
+                *_create_interfaces_with_counters(0, node=node_name_2),
             ],
             timestamp=0,
         )
@@ -2150,8 +2048,8 @@ def test_check_multiple_interfaces_same_item_twice_cluster(
             item,
             params,
             [
-                *_create_interfaces(4000000, node=node_name_1),
-                *_create_interfaces(4000000, node=node_name_2),
+                *_create_interfaces_with_counters(4000000, node=node_name_1),
+                *_create_interfaces_with_counters(4000000, node=node_name_2),
             ],
             timestamp=5,
         )
@@ -2189,7 +2087,7 @@ def test_check_multiple_interfaces_group_multiple_nodes() -> None:
             [
                 interface
                 for idx, node_name in enumerate(node_names)
-                for interface in _create_interfaces(
+                for interface in _create_interfaces_with_counters(
                     0,
                     admin_status=str(idx + 1),
                     node=node_name,
@@ -2205,7 +2103,7 @@ def test_check_multiple_interfaces_group_multiple_nodes() -> None:
             [
                 interface
                 for idx, node_name in enumerate(node_names)
-                for interface in _create_interfaces(
+                for interface in _create_interfaces_with_counters(
                     4000000,
                     admin_status=str(idx + 1),
                     node=node_name,
@@ -2276,7 +2174,7 @@ def test_cluster_check(monkeypatch: MonkeyPatch) -> None:
     section = {}
     ifaces = []
     for i in range(3):
-        iface = _create_interfaces(0)[0]
+        iface = _create_interfaces_with_counters(0)[0]
         iface.attributes.node = "node%s" % i
         ifaces_node = [iface] * (i + 1)
         section[iface.attributes.node] = ifaces_node
@@ -2350,10 +2248,12 @@ def test_cluster_check_ignore_discovered_params() -> None:
         Metric("outqlen", 0.0),
         Result(
             state=State.OK,
-            notice="Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.node', "
-            "inmcast: Initialized: 'inmcast.node', inbcast: Initialized: 'inbcast.node', inucast: Initialized: 'inucast.node', "
-            "indisc: Initialized: 'indisc.node', inerr: Initialized: 'inerr.node', outtraffic: Initialized: 'outtraffic.node', "
-            "outmcast: Initialized: 'outmcast.node', outbcast: Initialized: 'outbcast.node', outucast: Initialized: 'outucast.node', "
-            "outdisc: Initialized: 'outdisc.node', outerr: Initialized: 'outerr.node'",
+            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.1.descr.alias.node', "
+            "in_ucast: Initialized: 'in_ucast.1.descr.alias.node', in_mcast: Initialized: 'in_mcast.1.descr.alias.node', "
+            "in_bcast: Initialized: 'in_bcast.1.descr.alias.node', in_disc: Initialized: 'in_disc.1.descr.alias.node', "
+            "in_err: Initialized: 'in_err.1.descr.alias.node', out_octets: Initialized: 'out_octets.1.descr.alias.node', "
+            "out_ucast: Initialized: 'out_ucast.1.descr.alias.node', out_mcast: Initialized: 'out_mcast.1.descr.alias.node', "
+            "out_bcast: Initialized: 'out_bcast.1.descr.alias.node', out_disc: Initialized: 'out_disc.1.descr.alias.node', "
+            "out_err: Initialized: 'out_err.1.descr.alias.node'",
         ),
     ]

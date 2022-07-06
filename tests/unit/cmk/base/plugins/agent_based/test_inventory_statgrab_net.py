@@ -10,6 +10,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryR
 from cmk.base.plugins.agent_based.inventory_statgrab_net import (
     inventory_statgrab_net,
     parse_statgrab_net,
+    Section,
 )
 from cmk.base.plugins.agent_based.utils import interfaces
 
@@ -215,7 +216,7 @@ def test_parse_statgrab_net() -> None:
     ],
 )
 def test_inventory_statgrab_net(
-    section: interfaces.Section,
+    section: Section,
     expected_result: InventoryResult,
 ) -> None:
     assert sort_inventory_result(inventory_statgrab_net(section)) == sort_inventory_result(

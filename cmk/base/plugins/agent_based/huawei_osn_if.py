@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 from typing import Any, List, Mapping
 
-from .agent_based_api.v1 import register, Service, SNMPTree
+from .agent_based_api.v1 import get_value_store, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import huawei_osn, interfaces
 
@@ -81,7 +82,12 @@ def check_huawei_osn_if(
     yield from interfaces.check_single_interface(
         item,
         params,
-        interface,
+        interfaces.InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
+            interface,
+            timestamp=time.time(),
+            value_store=get_value_store(),
+            params=params,
+        ),
     )
 
 

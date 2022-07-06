@@ -916,10 +916,14 @@ class Endpoint:
 
         The result needs to be added to the `apispec` instance manually.
         """
-        yield self.path, self.to_operation_dict()
+        deprecate_self: bool = False
         if self.deprecated_urls is not None:
             for url, werk_id in self.deprecated_urls.items():
+                deprecate_self |= url == self.path
                 yield url, self.to_operation_dict(werk_id)
+
+        if not deprecate_self:
+            yield self.path, self.to_operation_dict()
 
     def to_operation_dict(  # pylint: disable=too-many-branches
         self,

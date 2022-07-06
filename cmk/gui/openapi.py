@@ -7,7 +7,7 @@
 import copy
 import json
 import sys
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 from apispec.yaml_utils import dict_to_yaml  # type: ignore[import]
 from openapi_spec_validator import validate_spec  # type: ignore[import]
@@ -27,22 +27,43 @@ from cmk.gui.utils.script_helpers import application_and_request_context
 #   This removes variation from the code.
 
 
+Ident = Tuple[str, str]
+
+
 def generate_data(target: EndpointTarget, validate: bool = True) -> Dict[str, Any]:
     endpoint: Endpoint
 
     methods = ["get", "put", "post", "delete"]
 
-    for endpoint in sorted(
-        ENDPOINT_REGISTRY, key=lambda e: (e.func.__module__, methods.index(e.method))
-    ):
+    def module_name(func: Any) -> str:
+        return f"{func.__module__}.{func.__name__}"
+
+    def sort_key(e: Endpoint) -> tuple[str, int, str]:
+        return module_name(e.func), methods.index(e.method), e.path
+
+    # Depends on another commit. This Any will go away.
+    seen_paths = dict[Ident, Any]()
+
+    ident: Ident
+    for endpoint in sorted(ENDPOINT_REGISTRY, key=sort_key):
         if target in endpoint.blacklist_in:
             continue
 
         for path, operation_dict in endpoint.operation_dicts():
+            ident = endpoint.method, path
+            if ident in seen_paths:
+                raise ValueError(
+                    f"{ident} has already been defined.\n\n"
+                    f"This one: {operation_dict}\n\n"
+                    f"The previous one: {seen_paths[ident]}\n\n"
+                )
+            seen_paths[ident] = operation_dict
             SPEC.path(
                 path=path,
                 operations=operation_dict,
             )
+
+    del seen_paths
 
     generated_spec = SPEC.to_dict()
     #   return generated_spec

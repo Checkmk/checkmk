@@ -992,7 +992,18 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:
             }
         ],
     )
-    ts.set_ruleset("clustered_services", [([], [node1_hostname], ["fs_"])])
+    ts.set_ruleset(
+        "clustered_services",
+        [
+            {
+                "condition": {
+                    "service_description": [{"$regex": "fs_"}],
+                    "host_name": [node1_hostname],
+                },
+                "value": True,
+            }
+        ],
+    )
     host_config = ts.apply(monkeypatch).get_host_config(hostname)
 
     DiscoveredHostLabelsStore(node1_hostname).save(

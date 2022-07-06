@@ -83,7 +83,10 @@ class Scenario:
         self.set_ruleset(
             "datasource_programs",
             [
-                ("cat %s/<HOST>" % cmk.utils.paths.tcp_cache_dir, [], test_hosts, {}),
+                {
+                    "condition": {"host_name": list(test_hosts)},
+                    "value": f"cat {cmk.utils.paths.tcp_cache_dir}/<HOST>",
+                }
             ],
         )
         linux_agent_output = get_standard_linux_agent_output()

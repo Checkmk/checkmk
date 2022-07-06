@@ -19,11 +19,7 @@ namespace fs = std::filesystem;
 
 namespace cma::cfg {
 
-Global::Global() {
-    // may crash on init XLOG::l.t("Global init");
-    setDefaults();
-    setupLogEnvironment();
-}
+Global::Global() { setDefaults(); }
 
 // loader of yaml is going here
 void Global::loadFromMainConfig() {

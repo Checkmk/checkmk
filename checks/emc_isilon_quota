@@ -4,29 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, NamedTuple
+from typing import Any, Generator, Mapping, NamedTuple
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.df import df_check_filesystem_list_coroutine, filesystem_groups
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.utils.df import df_discovery, FILESYSTEM_DEFAULT_PARAMS
 
-# emc_isilon_quota_types = {
-#     0: "default_user",
-#     1: "user",
-#     2: "default-group",
-#     3: "group",
-#     4: "directory",
-#     5: "special",
-#     6: "max"
-# }
-from cmk.base.plugins.agent_based.utils.df import df_discovery
-
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
+Service = tuple[str, Mapping[str, Any]]
+CheckResult = Generator[tuple, None, None]
 
 
 class IsilonQuota(NamedTuple):
@@ -63,11 +48,34 @@ def parse_emc_isilon_quota(string_table: StringTable) -> Section:
     }
 
 
-def inventory_emc_isilon_quota(section: Section):
-    return df_discovery(host_extra_conf(host_name(), filesystem_groups), list(section))
+check_info["emc_isilon_quota"] = {
+    "parse_function": parse_emc_isilon_quota,
+    "snmp_info": (
+        ".1.3.6.1.4.1.12124.1.12.1.1",
+        [
+            5,  # quotaPath
+            7,  # quotaHardThreshold
+            8,  # quotaSoftThresholdDefined
+            9,  # quotaSoftThreshold
+            10,  # quotaAdvisoryThresholdDefined
+            11,  # quotaAdvisoryThreshold
+            13,  # quotaUsage
+        ],
+    ),
+    "snmp_scan_function": lambda oid: "isilon" in oid(".1.3.6.1.2.1.1.1.0").lower(),
+}
 
 
-def check_emc_isilon_quota(item, params, section: Section):
+def discovery_emc_isilon_quota(section: Section) -> Service:
+    params = host_extra_conf(host_name(), filesystem_groups)
+    return df_discovery(params, list(section))
+
+
+def _percent_levels(value: float, total: float, fallback: float) -> float:
+    return value * 100.0 / total if value else fallback
+
+
+def check_emc_isilon_quota(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     byte_to_mb = float(1024 * 1024)
 
     fslist_blocks = []
@@ -84,50 +92,32 @@ def check_emc_isilon_quota(item, params, section: Section):
             if "levels" not in params and (
                 quota.soft_threshold_defined == "1" or quota.advisory_threshold_defined == "1"
             ):
-                # if a soft threshold is set, it will be used as crit
-                # (since the hard_threshold can't be exceeded anyway)
-                crit = quota.soft_threshold or (assumed_size * 0.9)
-                # if a advisory threshold is set, it will be used as warning level
-                warn = quota.advisory_threshold or (assumed_size * 0.8)
-
-                params = params.copy()
-                params["levels"] = (warn * 100.0) / assumed_size, (crit * 100.0) / assumed_size
+                params = {
+                    "levels": (
+                        # if a advisory threshold is set, it will be used as warning level
+                        _percent_levels(quota.advisory_threshold, assumed_size, 80.0),
+                        # if a soft threshold is set, it will be used as crit
+                        # (since the hard_threshold can't be exceeded anyway)
+                        _percent_levels(quota.soft_threshold, assumed_size, 90.0),
+                    ),
+                    **params,
+                }
 
             avail = assumed_size - quota.usage
-            fslist_blocks.append(
-                (path, assumed_size / byte_to_mb, avail / byte_to_mb, 0)
-            )  # fixed: true-division
+            fslist_blocks.append((path, assumed_size / byte_to_mb, avail / byte_to_mb, 0))
 
-    return df_check_filesystem_list(item, params, fslist_blocks)
+    yield from df_check_filesystem_list_coroutine(item, params, fslist_blocks)
 
 
-check_info["emc_isilon_quota"] = {
-    "parse_function": parse_emc_isilon_quota,
-    "check_function": check_emc_isilon_quota,
-    "inventory_function": inventory_emc_isilon_quota,
-    "service_description": "Quota %s",
-    "has_perfdata": True,
-    "snmp_info": (
-        ".1.3.6.1.4.1.12124.1.12.1.1",
-        [
-            5,  # quotaPath
-            7,  # quotaHardThreshold
-            8,  # quotaSoftThresholdDefined
-            9,  # quotaSoftThreshold
-            10,  # quotaAdvisoryThresholdDefined
-            11,  # quotaAdvisoryThreshold
-            13,  # quotaUsage
-            # 2,    # quotaType
-            # 6,    # quotaHardThresholdDefined
-            # 14,   # quotaUsageWithOverhead
-            # 16,   # quotaIncludesOverhead
-            # 12,   # quotaGracePeriod
-            # 15,   # quotaInodeUsage  # apparently doesn't provide the total
-            # number of inodes, so this is
-            # useless to us
-        ],
-    ),
-    "snmp_scan_function": lambda oid: "isilon" in oid(".1.3.6.1.2.1.1.1.0").lower(),
-    "group": "filesystem",
-    "default_levels_variable": "filesystem_default_levels",
-}
+check_info["emc_isilon_quota"].update(
+    {
+        "check_function": check_emc_isilon_quota,
+        "inventory_function": discovery_emc_isilon_quota,
+        "service_description": "Quota %s",
+        "has_perfdata": True,
+        "group": "filesystem",
+        "default_levels_variable": "filesystem_default_levels",
+    }
+)
+
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS

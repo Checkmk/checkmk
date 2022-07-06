@@ -3117,6 +3117,11 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
             _("Used in the host and service problems graphs of the main dashboard. Not intended "
               "for any other purposes."))
 
+    def filter(self, infoname):
+        return (
+            f"Filter: service_description ~~ Site ({'|'.join(self._connected_sites_to_pids())}) statistics$"
+            if html.request.has_var(self.ID) else "")
+
     def columns_for_filter_table(self, context: VisualContext) -> Iterable[str]:
         if self._should_apply(context):
             yield "host_name"

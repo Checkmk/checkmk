@@ -81,19 +81,19 @@ def ibm_svc_systemstats_parse(info):
             if "VDisks" not in parsed.keys():
                 parsed["VDisks"] = {}
             stat_name = stat_name.replace("vdisk_", "")
-            parsed["VDisks"][stat_name] = int(stat_current)
+            parsed["VDisks"][stat_name] = float(stat_current)
         if stat_name in ("mdisk_r_mb", "mdisk_w_mb", "mdisk_r_io", "mdisk_w_io", "mdisk_r_ms",
                          "mdisk_w_ms"):
             if "MDisks" not in parsed.keys():
                 parsed["MDisks"] = {}
             stat_name = stat_name.replace("mdisk_", "")
-            parsed["MDisks"][stat_name] = int(stat_current)
+            parsed["MDisks"][stat_name] = float(stat_current)
         if stat_name in ("drive_r_mb", "drive_w_mb", "drive_r_io", "drive_w_io", "drive_r_ms",
                          "drive_w_ms"):
             if "Drives" not in parsed.keys():
                 parsed["Drives"] = {}
             stat_name = stat_name.replace("drive_", "")
-            parsed["Drives"][stat_name] = int(stat_current)
+            parsed["Drives"][stat_name] = float(stat_current)
     return parsed
 
 

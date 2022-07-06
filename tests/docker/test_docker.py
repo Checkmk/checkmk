@@ -29,6 +29,7 @@ import docker  # type: ignore[import]
 build_path = os.path.join(testlib.repo_path(), "docker")
 image_prefix = "docker-tests"
 branch_name = os.environ.get("BRANCH", current_base_branch_name())
+distro_codename = "jammy"
 
 logger = logging.getLogger()
 
@@ -56,7 +57,7 @@ def _image_name(version):
 
 
 def _package_name(version: testlib.CMKVersion) -> str:
-    return f"check-mk-{version.edition()}-{version.version}_0.buster_amd64.deb"
+    return f"check-mk-{version.edition()}-{version.version}_0.{distro_codename}_amd64.deb"
 
 
 def _prepare_build():
@@ -418,7 +419,8 @@ def test_start_enable_mail(request, client):
     cmds = [p[-1] for p in c.top()["Processes"]]
 
     assert "syslogd" in cmds
-    assert "/usr/lib/postfix/sbin/master" in cmds
+    # Might have a param like `-w`
+    assert "/usr/lib/postfix/sbin/master" in " ".join(cmds)
 
     assert _exec_run(c, ["which", "mail"], user="cmk")[0] == 0
 

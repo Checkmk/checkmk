@@ -1,0 +1,23 @@
+Title: Change base image of docker container
+Class: security
+Compatible: compat
+Component: distros
+Date: 1666700489
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p16
+
+With this Werk we change the base image of the Checkmk docker container from Debian buster to Ubuntu jammy.
+
+Ubuntu jammy has more up to date packages.
+This should reduce the amount of "vulnerabilities" found in the docker container by ~90%.
+
+Please note that these vulnerabilities are either fixed by a backport of the fix or the configuration did not allow a exploitation.
+The packages in the container were updated whenever a new container was build.
+Unfortunately not all vulnerability-scanners were able to recognise this.
+
+To our knowledge none of the vulnerabilities were exploitable.
+We rate this with a CVSS of 0 (None) (CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:N).
+This CVSS is primarily meant to please automatic scanners.

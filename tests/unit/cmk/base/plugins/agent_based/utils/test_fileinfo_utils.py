@@ -242,11 +242,32 @@ def test_fileinfo_check_timeranges(params, expected_result):
             1189181234,
             {"timeofday": [((8, 0), (9, 0))]},
             [
+                Result(state=State.OK, summary="Out of relevant time of day"),
                 Result(state=State.OK, summary="Size: 539 B"),
                 Metric("size", 539.0),
                 Result(state=State.OK, summary="Age: 2 hours 2 minutes"),
                 Metric("age", 7366.0),
+            ],
+        ),
+        (
+            FileinfoItem(
+                name="z:\\working\\client\\todo\\BP-15f86cb7-89d7-41a9-8aec-04b9e179f0b4.xml",
+                missing=False,
+                failed=False,
+                size=539,
+                time=1189173868,
+            ),
+            1189181234,
+            {"timeofday": [((8, 0), (9, 0))], "maxage": (100, 10000)},
+            [
                 Result(state=State.OK, summary="Out of relevant time of day"),
+                Result(state=State.OK, summary="Size: 539 B"),
+                Metric("size", 539.0),
+                Result(
+                    state=State.OK,
+                    summary="Age: 2 hours 2 minutes (warn/crit at 1 minute 40 seconds/2 hours 46 minutes)",
+                ),
+                Metric("age", 7366.0, levels=(100.0, 10000.0)),
             ],
         ),
         (

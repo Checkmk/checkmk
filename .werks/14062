@@ -1,0 +1,16 @@
+Title: fileinfo: Fix state for "Out of relevant time of day"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1657105877
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p7
+
+After the migration to the new check API in version 2.1.0, fileinfo
+check didn't calculate the CheckMk state correctly. Levels were
+applied even when checked outside of relevant time of day.
+Now, state will always be OK if outside of relevant time period.
+

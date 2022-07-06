@@ -343,6 +343,14 @@ def _fileinfo_check_function(
         )
 
 
+def change_results_state_to_ok(results: CheckResult):
+    for result in results:
+        if isinstance(result, Result):
+            yield Result(state=State.OK, summary=result.summary)
+        else:
+            yield result
+
+
 def check_fileinfo_data(
     file_info: Optional[FileinfoItem],
     reftime: int,
@@ -363,10 +371,13 @@ def check_fileinfo_data(
                 MetricInfo("Size", "size", file_info.size, render.filesize),
                 MetricInfo("Age", "age", age, render.timespan),
             ]
-            yield from _fileinfo_check_function(check_definition, params)
+            check_results = _fileinfo_check_function(check_definition, params)
 
             if outof_range_txt:
                 yield Result(state=State.OK, summary=outof_range_txt)
+                yield from change_results_state_to_ok(check_results)
+            else:
+                yield from check_results
 
     elif outof_range_txt:
         yield Result(state=State.OK, summary="File not found - %s" % outof_range_txt)

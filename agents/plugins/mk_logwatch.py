@@ -1178,8 +1178,8 @@ def main(argv=None):  # pylint: disable=too-many-branches
     for section in found_sections:
         filestate = state.get(section.name_fs)
         try:
-            header, output = process_logfile(section, filestate, args.debug)
-            item_data = [header] + filter_output(output, section.options)
+            header, log_lines = process_logfile(section, filestate, args.debug)
+            item_data = [header] + filter_output(log_lines, section.options)
         except Exception as exc:
             if args.debug:
                 raise

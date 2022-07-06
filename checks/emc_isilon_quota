@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Mapping, NamedTuple
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
@@ -11,6 +13,7 @@ from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-impo
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 # emc_isilon_quota_types = {
 #     0: "default_user",
@@ -26,62 +29,71 @@ from cmk.base.plugins.agent_based.utils.df import df_discovery
 factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
-def inventory_emc_isilon_quota(info):
-    mount_points = []
-
-    for (
-        path,
-        _hard_threshold,
-        _soft_threshold_defined,
-        _soft_threshold,
-        _advisory_threshold_defined,
-        _advisory_threshold,
-        _usage,
-    ) in info:
-        mount_points.append(path)
-
-    return df_discovery(host_extra_conf(host_name(), filesystem_groups), mount_points)
+class IsilonQuota(NamedTuple):
+    hard_threshold: int
+    soft_threshold_defined: str
+    soft_threshold: int
+    advisory_threshold_defined: str
+    advisory_threshold: int
+    usage: int
 
 
-def check_emc_isilon_quota(item, params, info):
+Section = Mapping[str, IsilonQuota]
+
+
+def parse_emc_isilon_quota(string_table: StringTable) -> Section:
+    return {
+        path: IsilonQuota(
+            int(hard_threshold),  # can't be exceeded
+            soft_threshold_defined,
+            int(soft_threshold),  # write-protect after grace period
+            advisory_threshold_defined,
+            int(advisory_threshold),  # warning only
+            int(usage),
+        )
+        for (
+            path,
+            hard_threshold,
+            soft_threshold_defined,
+            soft_threshold,
+            advisory_threshold_defined,
+            advisory_threshold,
+            usage,
+        ) in string_table
+    }
+
+
+def inventory_emc_isilon_quota(section: Section):
+    return df_discovery(host_extra_conf(host_name(), filesystem_groups), list(section))
+
+
+def check_emc_isilon_quota(item, params, section: Section):
     byte_to_mb = float(1024 * 1024)
 
     fslist_blocks = []
 
-    for (
-        path,
-        hard_threshold,
-        soft_threshold_defined,
-        soft_threshold,
-        advisory_threshold_defined,
-        advisory_threshold,
-        usage,
-    ) in info:
-
+    for path, quota in section.items():
         if "patterns" in params or item == path:
             # note 1: quota type is currently unused
             # note 2: even if quotaHardThresholdDefined is 0 the
             #         quotaHardThreshold is still often set to a reasonable value. Otherwise,
             #         use the "hardest" threshold that isn't 0 for the disk limit
-            hard_threshold = int(hard_threshold)  # can't be exceeded
-            soft_threshold = int(soft_threshold)  # write-protect after grace period
-            advisory_threshold = int(advisory_threshold)  # warning only
-            assumed_size = hard_threshold or soft_threshold or advisory_threshold
+            assumed_size = quota.hard_threshold or quota.soft_threshold or quota.advisory_threshold
 
             # If the users has not configured levels, we use the soft/advisory threshold
             if "levels" not in params and (
-                soft_threshold_defined == "1" or advisory_threshold_defined == "1"
+                quota.soft_threshold_defined == "1" or quota.advisory_threshold_defined == "1"
             ):
-                # if a soft threshold is set, it will be used as crit (since the hard_threshold can't be
-                # exceeded anyway)
-                crit = soft_threshold or (assumed_size * 0.9)
+                # if a soft threshold is set, it will be used as crit
+                # (since the hard_threshold can't be exceeded anyway)
+                crit = quota.soft_threshold or (assumed_size * 0.9)
                 # if a advisory threshold is set, it will be used as warning level
-                warn = advisory_threshold or (assumed_size * 0.8)
+                warn = quota.advisory_threshold or (assumed_size * 0.8)
 
                 params = params.copy()
                 params["levels"] = (warn * 100.0) / assumed_size, (crit * 100.0) / assumed_size
 
-            avail = assumed_size - int(usage)
+            avail = assumed_size - quota.usage
             fslist_blocks.append(
                 (path, assumed_size / byte_to_mb, avail / byte_to_mb, 0)
             )  # fixed: true-division
@@ -90,6 +102,7 @@ def check_emc_isilon_quota(item, params, info):
 
 
 check_info["emc_isilon_quota"] = {
+    "parse_function": parse_emc_isilon_quota,
     "check_function": check_emc_isilon_quota,
     "inventory_function": inventory_emc_isilon_quota,
     "service_description": "Quota %s",

@@ -24,23 +24,28 @@ def make_scenario(hostname, tags):
     ts.set_ruleset(
         "datasource_programs",
         [
-            ("echo 1", [], ["ds-host-14", "all-agents-host", "all-special-host"], {}),
+            {
+                "condition": {
+                    "host_name": ["ds-host-14", "all-agents-host", "all-special-host"],
+                },
+                "value": "echo 1",
+            },
         ],
     )
     ts.set_option(
         "special_agents",
         {
             "jolokia": [
-                (
-                    {},
-                    [],
-                    [
-                        "special-host-14",
-                        "all-agents-host",
-                        "all-special-host",
-                    ],
-                    {},
-                ),
+                {
+                    "condition": {
+                        "host_name": [
+                            "special-host-14",
+                            "all-agents-host",
+                            "all-special-host",
+                        ],
+                    },
+                    "value": {},
+                },
             ]
         },
     )

@@ -92,7 +92,6 @@ def discovery_ibm_svc_systemstats_disks(section: IBMSystemStats) -> DiscoveryRes
 
 def check_ibm_svc_systemstats_diskio(item: str, section: IBMSystemStats) -> CheckResult:
     if item not in section.disks:
-        yield Result(state=State.UNKNOWN, summary=f"{item} not found in agent output")
         return
 
     read_bytes = section.disks[item]["r_mb"] * 1024 * 1024
@@ -127,7 +126,6 @@ register.check_plugin(
 
 def check_ibm_svc_systemstats_iops(item: str, section: IBMSystemStats) -> CheckResult:
     if item not in section.disks:
-        yield Result(state=State.UNKNOWN, summary=f"{item} not found in agent output")
         return
 
     read_iops = section.disks[item]["r_io"]
@@ -162,7 +160,6 @@ def check_ibm_svc_systemstats_disk_latency(
     item: str, params: Mapping[str, Any], section: IBMSystemStats
 ) -> CheckResult:
     if item not in section.disks:
-        yield Result(state=State.UNKNOWN, summary=f"{item} not found in agent output")
         return
 
     for name, value in [

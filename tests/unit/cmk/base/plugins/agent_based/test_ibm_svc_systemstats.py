@@ -178,7 +178,7 @@ def test_discovery_ibm_svc_systemstats_disks(
         pytest.param(
             TEST_SECTION,
             "unknown_item",
-            [Result(state=State.UNKNOWN, summary="unknown_item not found in agent output")],
+            [],
             id="diskio_no_item",
         ),
     ],
@@ -208,7 +208,7 @@ def test_check_ibm_svc_systemstats_diskio(
         pytest.param(
             TEST_SECTION,
             "unknown_item",
-            [Result(state=State.UNKNOWN, summary="unknown_item not found in agent output")],
+            [],
             id="iops_no_item",
         ),
     ],
@@ -256,7 +256,7 @@ def test_check_ibm_svc_systemstats_iops(
             TEST_SECTION,
             "unknown_item",
             {},
-            [Result(state=State.UNKNOWN, summary="unknown_item not found in agent output")],
+            [],
             id="disk_latency_no_item",
         ),
     ],

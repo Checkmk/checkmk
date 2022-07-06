@@ -7,7 +7,19 @@
 import json
 import re
 from functools import partial
-from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Container,
+    Dict,
+    Iterable,
+    List,
+    Literal,
+    Mapping,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import livestatus
 
@@ -2470,23 +2482,19 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
         )
 
     def columns_for_filter_table(self, context: VisualContext) -> Iterable[str]:
-        if self.ID in context:
+        if self._should_apply(context):
             yield "host_name"
             yield "service_description"
             yield "long_plugin_output"
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        if self.ID not in context:
+        if not self._should_apply(context):
             return rows
 
         # ids and core pids of connected sites, i.e., what we hope to find the service output
-        pids_of_connected_sites = {
-            site_id: site_status["core_pid"]
-            for site_id, site_status in sites.states().items()
-            if site_status["state"] == "online"
-        }
+        pids_of_connected_sites = dict(self._connected_sites_to_pids())
         # apply potential filters on sites
-        if only_sites := get_only_sites_from_context(context):
+        if (only_sites := get_only_sites_from_context(context)) is not None:
             pids_of_connected_sites = {
                 site_id: core_pid
                 for site_id, core_pid in pids_of_connected_sites.items()
@@ -2556,6 +2564,18 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
                 del pids_of_connected_sites[site]
 
         return rows_filtered
+
+    @classmethod
+    def _should_apply(cls, ctx: Container[str]) -> bool:
+        return cls.ID in ctx
+
+    @staticmethod
+    def _connected_sites_to_pids() -> Mapping[livestatus.SiteId, int]:
+        return {
+            site_id: site_status["core_pid"]
+            for site_id, site_status in sites.states().items()
+            if site_status["state"] == "online"
+        }
 
 
 filter_registry.register(

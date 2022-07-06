@@ -316,7 +316,7 @@ class SiteManagement:
 
         sites = prepare_raw_site_config(raw_sites)
         for site in sites.values():
-            if site["proxy"] is not None:
+            if site.get("proxy") is not None:
                 site["proxy"] = cls.transform_old_connection_params(site["proxy"])
 
         return sites

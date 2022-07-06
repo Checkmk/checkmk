@@ -367,7 +367,6 @@ class Endpoint:
         header_params: Optional[Sequence[RawParameter]] = None,
         etag: Optional[ETagBehaviour] = None,
         status_descriptions: Optional[Dict[StatusCodeInt, str]] = None,
-        options: Optional[Dict[str, str]] = None,
         tag_group: Literal["Monitoring", "Setup", "Checkmk Internal"] = "Setup",
         blacklist_in: Optional[Sequence[EndpointTarget]] = None,
         additional_status_codes: Optional[Sequence[StatusCodeInt]] = None,
@@ -393,7 +392,6 @@ class Endpoint:
         self.header_params = header_params
         self.etag = etag
         self.status_descriptions = self._dict(status_descriptions)
-        self.options = self._dict(options)
         self.tag_group = tag_group
         self.blacklist_in: List[EndpointTarget] = self._list(blacklist_in)
         self.additional_status_codes = self._list(additional_status_codes)
@@ -1137,8 +1135,6 @@ class Endpoint:
                 if not operation_spec["description"]:
                     operation_spec["description"] += "\n\n"
                 operation_spec["description"] += description
-
-        apispec.utils.deepupdate(operation_spec, self.options)
 
         return {self.method: operation_spec}  # type: ignore[misc]
 

@@ -10,6 +10,8 @@ from typing import Collection, Iterable, Optional, Type
 
 from cmk.utils.type_defs import CheckPluginNameStr, HostName, Item, ServiceName
 
+from cmk.automations.results import AnalyseServiceResult
+
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place
 import cmk.base.export  # pylint: disable=cmk-module-layer-violation
@@ -36,6 +38,7 @@ from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.wato.pages.rulesets import ModeEditRuleset
+from cmk.gui.watolib.check_mk_automations import analyse_service
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively
 from cmk.gui.watolib.search import (
@@ -183,7 +186,7 @@ class ModePatternEditor(WatoMode):
     def _vs_host(self):
         return ConfigHostname()
 
-    def _show_patterns(self):
+    def _show_patterns(self):  # pylint: disable=too-many-branches
         import cmk.gui.logwatch as logwatch
 
         collection = SingleRulesetRecursively("logwatch_rules")
@@ -208,6 +211,17 @@ class ModePatternEditor(WatoMode):
         # Loop all rules for this ruleset
         already_matched = False
         abs_rulenr = 0
+        service_result: Optional[AnalyseServiceResult] = None
+        if self._hostname:
+            service_desc = self._get_service_description(self._hostname, "logwatch", self._item)
+            host = Folder.current().host(self._hostname)
+            if not host:
+                raise MKUserError("host", _("The given host does not exist"))
+            service_result = analyse_service(
+                host.site_id(),
+                self._hostname,
+                service_desc,
+            )
         for folder, rulenr, rule in ruleset.get_rules():
             # Check if this rule applies to the given host/service
             if self._hostname:
@@ -215,7 +229,11 @@ class ModePatternEditor(WatoMode):
 
                 # If hostname (and maybe filename) try match it
                 rule_matches = rule.matches_host_and_item(
-                    Folder.current(), self._hostname, self._item, service_desc
+                    Folder.current(),
+                    self._hostname,
+                    self._item,
+                    service_desc,
+                    service_result=service_result,
                 )
             else:
                 # If no host/file given match all rules

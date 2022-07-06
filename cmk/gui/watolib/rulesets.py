@@ -32,6 +32,8 @@ from cmk.utils.type_defs import (
     TagIDToTaggroupID,
 )
 
+from cmk.automations.results import AnalyseServiceResult
+
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place
 import cmk.base.export  # pylint: disable=cmk-module-layer-violation
@@ -834,7 +836,13 @@ class Ruleset:
 
     # Returns the outcoming value or None and a list of matching rules. These are pairs
     # of rule_folder and rule_number
-    def analyse_ruleset(self, hostname, svc_desc_or_item, svc_desc):
+    def analyse_ruleset(
+        self,
+        hostname,
+        svc_desc_or_item,
+        svc_desc,
+        service_result: Optional[AnalyseServiceResult],
+    ):
         resultlist = []
         resultdict: Dict[str, Any] = {}
         effectiverules = []
@@ -843,7 +851,11 @@ class Ruleset:
                 continue
 
             if not rule.matches_host_and_item(
-                Folder.current(), hostname, svc_desc_or_item, svc_desc
+                Folder.current(),
+                hostname,
+                svc_desc_or_item,
+                svc_desc,
+                service_result=service_result,
             ):
                 continue
 
@@ -1059,20 +1071,39 @@ class Rule:
                 svc_desc_or_item=None,
                 svc_desc=None,
                 only_host_conditions=True,
+                service_result=None,
             )
         )
 
-    def matches_host_and_item(self, host_folder, hostname, svc_desc_or_item, svc_desc):
+    def matches_host_and_item(
+        self,
+        host_folder,
+        hostname,
+        svc_desc_or_item,
+        svc_desc,
+        service_result: Optional[AnalyseServiceResult],
+    ):
         """Whether or not the given folder/host/item matches this rule"""
         return not any(
             True
             for _r in self.get_mismatch_reasons(
-                host_folder, hostname, svc_desc_or_item, svc_desc, only_host_conditions=False
+                host_folder,
+                hostname,
+                svc_desc_or_item,
+                svc_desc,
+                only_host_conditions=False,
+                service_result=service_result,
             )
         )
 
     def get_mismatch_reasons(
-        self, host_folder, hostname, svc_desc_or_item, svc_desc, only_host_conditions
+        self,
+        host_folder,
+        hostname,
+        svc_desc_or_item,
+        svc_desc,
+        only_host_conditions,
+        service_result: Optional[AnalyseServiceResult],
     ):
         """A generator that provides the reasons why a given folder/host/item not matches this rule"""
         host = host_folder.host(hostname)
@@ -1091,13 +1122,16 @@ class Rule:
         # real service description.
         if only_host_conditions:
             match_object = ruleset_matcher.RulesetMatchObject(hostname)
-        elif self.ruleset.item_type() == "service":
+        elif self.ruleset.item_type() == "service" and service_result:
             match_object = cmk.base.export.ruleset_match_object_of_service(
-                hostname, svc_desc_or_item
+                hostname, svc_desc_or_item, svc_labels=service_result.service_info["labels"]
             )
-        elif self.ruleset.item_type() == "item":
+        elif self.ruleset.item_type() == "item" and service_result:
             match_object = cmk.base.export.ruleset_match_object_for_checkgroup_parameters(
-                hostname, svc_desc_or_item, svc_desc
+                hostname,
+                svc_desc_or_item,
+                svc_desc,
+                svc_labels=service_result.service_info["labels"],
             )
         elif not self.ruleset.item_type():
             match_object = ruleset_matcher.RulesetMatchObject(hostname)

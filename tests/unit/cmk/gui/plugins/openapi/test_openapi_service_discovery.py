@@ -869,7 +869,13 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_try_discovery: MagicMock,
     mock_set_autochecks: MagicMock,
+    mocker: MockerFixture,
 ) -> None:
+    mocker.patch(
+        # one would like to mock the call in the library and not the import. WHY????
+        "cmk.gui.watolib.services.analyse_service",
+        return_value=None,
+    )
     aut_user_auth_wsgi_app.call_method(
         "post",
         f"{base}/domain-types/service_discovery_run/actions/start/invoke",

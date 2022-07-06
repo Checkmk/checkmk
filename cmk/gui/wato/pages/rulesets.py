@@ -36,6 +36,8 @@ from cmk.utils.type_defs import (
     TagID,
 )
 
+from cmk.automations.results import AnalyseServiceResult
+
 import cmk.gui.forms as forms
 import cmk.gui.view_utils
 import cmk.gui.watolib.bakery as bakery
@@ -96,9 +98,15 @@ from cmk.gui.valuespec import (
     ValueSpecText,
 )
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
-from cmk.gui.watolib.check_mk_automations import get_check_information
+from cmk.gui.watolib.check_mk_automations import analyse_service, get_check_information
 from cmk.gui.watolib.host_label_sync import execute_host_label_sync
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, Host, make_action_link
+from cmk.gui.watolib.hosts_and_folders import (
+    CREHost,
+    Folder,
+    folder_preserving_link,
+    Host,
+    make_action_link,
+)
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import (
     AllRulesets,
@@ -736,7 +744,6 @@ class ModeEditRuleset(WatoMode):
 
         self._item: Optional[ServiceName] = None
         self._service: Optional[ServiceName] = None
-        self._hostname: Optional[HostName] = None
 
         # TODO: Clean this up. In which case is it used?
         # - The calculation for the service_description is not even correct, because it does not
@@ -776,8 +783,16 @@ class ModeEditRuleset(WatoMode):
                     pass
 
         hostname = request.get_ascii_input("host")
-        if hostname and self._folder.has_host(hostname):
+        self._host: Optional[CREHost] = None
+        self._hostname: Optional[HostName] = None
+        if hostname:
             self._hostname = HostName(hostname)
+            host = Folder.current().host(self._hostname)
+            self._host = host
+            if self._host:
+                self._host.need_permission("read")
+            else:
+                raise MKUserError("host", _("The given host does not exist."))
 
         # The service argument is only needed for performing match testing of rules
         if not self._service:
@@ -1032,6 +1047,13 @@ class ModeEditRuleset(WatoMode):
 
         html.div("", id_="row_info")
         num_rows = 0
+        service_result: Optional[AnalyseServiceResult] = None
+        if self._hostname and self._host and self._service:
+            service_result = analyse_service(
+                self._host.site_id(),
+                self._hostname,
+                self._service,
+            )
         for folder, folder_rules in groups:
             with table_element(
                 "rules_%s_%s" % (self._name, folder.ident()),
@@ -1052,7 +1074,9 @@ class ModeEditRuleset(WatoMode):
                     num_rows += 1
                     table.row(css=self._css_for_rule(search_options, rule))
                     self._set_focus(rule)
-                    self._show_rule_icons(table, match_state, folder, rule, rulenr)
+                    self._show_rule_icons(
+                        table, match_state, folder, rule, rulenr, service_result=service_result
+                    )
                     self._rule_cells(table, rule)
 
         row_info = _("1 row") if num_rows == 1 else _("%d rows") % num_rows
@@ -1085,10 +1109,11 @@ class ModeEditRuleset(WatoMode):
         folder,
         rule: Rule,
         rulenr,
+        service_result: Optional[AnalyseServiceResult] = None,
     ) -> None:
-        if self._hostname:
+        if service_result:
             table.cell(_("Ma."))
-            title, img = self._match(match_state, rule)
+            title, img = self._match(match_state, rule, service_result=service_result)
             html.icon("rule%s" % img, title)
 
         table.cell("", css=["buttons"])
@@ -1129,7 +1154,9 @@ class ModeEditRuleset(WatoMode):
             icon="delete",
         )
 
-    def _match(self, match_state, rule: Rule) -> _Tuple[str, str]:
+    def _match(
+        self, match_state, rule: Rule, service_result: Optional[AnalyseServiceResult]
+    ) -> _Tuple[str, str]:
         self._get_host_labels_from_remote_site()
         reasons = (
             [_("This rule is disabled")]
@@ -1141,6 +1168,7 @@ class ModeEditRuleset(WatoMode):
                     self._item,
                     self._service,
                     only_host_conditions=False,
+                    service_result=service_result,
                 )
             )
         )

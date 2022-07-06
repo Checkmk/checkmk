@@ -11,6 +11,8 @@ from typing import Collection, Iterator, List, Optional
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
+from cmk.automations.results import AnalyseServiceResult
+
 import cmk.gui.forms as forms
 import cmk.gui.view_utils
 from cmk.gui.breadcrumb import Breadcrumb
@@ -110,10 +112,11 @@ class ModeObjectParameters(WatoMode):
         for_host: bool = not self._service
 
         # Object type specific detail information
+        service_result: Optional[AnalyseServiceResult] = None
         if for_host:
             self._show_host_info()
         else:
-            self._show_service_info(all_rulesets)
+            service_result = self._show_service_info(all_rulesets=all_rulesets)
 
         last_maingroup = None
         for groupname in sorted(rulespec_group_registry.get_host_rulespec_group_names(for_host)):
@@ -137,12 +140,16 @@ class ModeObjectParameters(WatoMode):
                     html.help(rulegroup.help)
 
                 self._output_analysed_ruleset(
-                    all_rulesets, rulespec, svc_desc_or_item=self._service, svc_desc=self._service
+                    all_rulesets,
+                    rulespec,
+                    svc_desc_or_item=self._service,
+                    svc_desc=self._service,
+                    service_result=service_result,
                 )
 
         forms.end()
 
-    def _show_host_info(self):
+    def _show_host_info(self) -> None:
         host_info = analyse_host(
             self._host.site_id(),
             self._hostname,
@@ -153,16 +160,19 @@ class ModeObjectParameters(WatoMode):
         forms.header(_("Host information"), isopen=True, narrow=True, css="rulesettings")
         self._show_labels(host_info.labels, "host", host_info.label_sources)
 
-    def _show_service_info(self, all_rulesets):  # pylint: disable=too-many-branches
+    def _show_service_info(  # pylint: disable=too-many-branches
+        self, all_rulesets: AllRulesets
+    ) -> AnalyseServiceResult:
         assert self._service is not None
 
-        serviceinfo = analyse_service(
+        service_result = analyse_service(
             self._host.site_id(),
             self._hostname,
             self._service,
-        ).service_info
+        )
+        serviceinfo = service_result.service_info
         if not serviceinfo:
-            return
+            return AnalyseServiceResult(service_info={})
 
         forms.header(_("Check origin and parameters"), isopen=True, narrow=True, css="rulesettings")
         origin = serviceinfo["origin"]
@@ -199,6 +209,7 @@ class ModeObjectParameters(WatoMode):
                     svc_desc_or_item=serviceinfo["item"],
                     svc_desc=self._service,
                     known_settings=serviceinfo["parameters"],
+                    service_result=service_result,
                 )
 
             else:
@@ -221,7 +232,7 @@ class ModeObjectParameters(WatoMode):
                             True,
                             _("This check is not configurable via WATO"),
                         )
-                        return
+                        return service_result
 
                     url = folder_preserving_link(
                         [
@@ -248,6 +259,7 @@ class ModeObjectParameters(WatoMode):
                         svc_desc_or_item=serviceinfo["item"],
                         svc_desc=self._service,
                         known_settings=serviceinfo["parameters"],
+                        service_result=service_result,
                     )
 
         elif origin == "static":
@@ -272,6 +284,7 @@ class ModeObjectParameters(WatoMode):
                     svc_desc_or_item=serviceinfo["item"],
                     svc_desc=self._service,
                     known_settings=self._PARAMETERS_OMIT,
+                    service_result=service_result,
                 )
                 assert isinstance(rulespec.valuespec, Tuple)
                 html.write_text(
@@ -290,12 +303,13 @@ class ModeObjectParameters(WatoMode):
                 svc_desc_or_item=None,
                 svc_desc=None,
                 known_settings=serviceinfo["parameters"],
+                service_result=service_result,
             )
 
         elif origin == "classic":
             ruleset = all_rulesets.get("custom_checks")
             origin_rule_result = self._get_custom_check_origin_rule(
-                ruleset, self._hostname, self._service
+                ruleset, self._hostname, self._service, service_result=service_result
             )
             if origin_rule_result is None:
                 raise MKUserError(
@@ -341,13 +355,15 @@ class ModeObjectParameters(WatoMode):
             serviceinfo.get("labels", {}), "service", serviceinfo.get("label_sources", {})
         )
 
+        return service_result
+
     def _get_custom_check_origin_rule(
-        self, ruleset: Ruleset, hostname: str, svc_desc: str
+        self, ruleset: Ruleset, hostname: str, svc_desc: str, service_result: AnalyseServiceResult
     ) -> Optional[_Tuple[CREFolder, int, Rule]]:
         # We could use the outcome of _setting instead of the outcome of
         # the automation call in the future
         _setting, rules = ruleset.analyse_ruleset(
-            self._hostname, svc_desc_or_item=None, svc_desc=None
+            self._hostname, svc_desc_or_item=None, svc_desc=None, service_result=service_result
         )
 
         for rule_folder, rule_index, rule in rules:
@@ -401,7 +417,13 @@ class ModeObjectParameters(WatoMode):
         html.close_table()
 
     def _output_analysed_ruleset(  # pylint: disable=too-many-branches
-        self, all_rulesets, rulespec, svc_desc_or_item, svc_desc, known_settings=None
+        self,
+        all_rulesets,
+        rulespec,
+        svc_desc_or_item,
+        svc_desc,
+        service_result: Optional[AnalyseServiceResult],
+        known_settings=None,
     ):
         if known_settings is None:
             known_settings = self._PARAMETERS_UNKNOWN
@@ -438,7 +460,9 @@ class ModeObjectParameters(WatoMode):
         forms.section(HTMLWriter.render_a(rulespec.title, url))
 
         ruleset = all_rulesets.get(varname)
-        setting, rules = ruleset.analyse_ruleset(self._hostname, svc_desc_or_item, svc_desc)
+        setting, rules = ruleset.analyse_ruleset(
+            self._hostname, svc_desc_or_item, svc_desc, service_result=service_result
+        )
 
         html.open_table(class_="setting")
         html.open_tr()

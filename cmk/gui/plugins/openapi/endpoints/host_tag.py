@@ -30,7 +30,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
 )
 from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.watolib.tags import (
-    change_host_tags_in_folders,
+    change_host_tags,
     edit_tag_group,
     is_builtin,
     load_tag_config,
@@ -215,9 +215,7 @@ def delete_host_tag_group(params):
             detail=f"The built-in host tag group {ident} cannot be deleted",
         )
 
-    affected = change_host_tags_in_folders(
-        OperationRemoveTagGroup(ident), TagCleanupMode.CHECK, watolib.Folder.root_folder()
-    )
+    affected = change_host_tags(OperationRemoveTagGroup(ident), TagCleanupMode.CHECK)
     if any(affected):
         if not params["repair"]:
             return problem(
@@ -229,9 +227,7 @@ def delete_host_tag_group(params):
                 ),
             )
         watolib.host_attributes.undeclare_host_tag_attribute(ident)
-        _ = change_host_tags_in_folders(
-            OperationRemoveTagGroup(ident), TagCleanupMode("delete"), watolib.Folder.root_folder()
-        )
+        _ = change_host_tags(OperationRemoveTagGroup(ident), TagCleanupMode("delete"))
 
     tag_config = load_tag_config()
     tag_config.remove_tag_group(ident)

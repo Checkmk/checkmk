@@ -9,9 +9,7 @@ import abc
 import errno
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Final, List, Optional, Set
-from typing import Tuple as _Tuple
-from typing import Union
+from typing import Any, Dict, Final, List, Optional, Set, Tuple, Union
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -23,6 +21,8 @@ from cmk.utils.type_defs import TagConfigSpec
 import cmk.gui.watolib as watolib
 from cmk.gui.config import load_config
 from cmk.gui.exceptions import MKAuthException, MKGeneralException
+from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost
+from cmk.gui.watolib.rulesets import Ruleset
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 
 
@@ -177,18 +177,16 @@ def edit_tag_group(ident: str, edited_group: TagGroup, allow_repair=False):
     tag_config.update_tag_group(edited_group)
     tag_config.validate_config()
     operation = OperationReplaceGroupedTags(ident, tag_ids_to_remove, tag_ids_to_replace)
-    affected = change_host_tags_in_folders(
+    affected = change_host_tags(
         operation,
         TagCleanupMode.CHECK,
-        watolib.Folder.root_folder(),
     )
     if any(affected):
         if not allow_repair:
             raise RepairError("Permission missing")
-        _ = change_host_tags_in_folders(
+        _ = change_host_tags(
             operation,
             TagCleanupMode("repair"),
-            watolib.Folder.root_folder(),
         )
     update_tag_config(tag_config)
 
@@ -291,7 +289,39 @@ class OperationReplaceGroupedTags(ABCOperation):
         return _("Confirm tag modifications")
 
 
-def change_host_tags_in_folders(operation, mode, folder):
+def change_host_tags(
+    operation: ABCOperation, mode: TagCleanupMode
+) -> Tuple[List[CREFolder], List[CREHost], List[Ruleset]]:
+    return _change_host_tags_in_folders(
+        operation,
+        mode,
+        watolib.Folder.root_folder(),
+    )
+
+
+#    # Enabled in next commit, rulesets get an own rename mechanic
+#    #change_host_tags_in_rulesets(operation, mode)
+#
+#
+# def change_host_tags_in_rulesets(operation, mode):
+#    See _rename_tags_after_confirmation() doc string for additional information.
+#    """
+#
+#    affected_rulesets = set()
+#    all_rulesets = cmk.gui.watolib.rulesets.AllRulesets()
+#    all_rulesets.load()
+#    import pprint
+#    logger.warning(pprint.pformat(all_rulesets))
+#    try:
+#        pass
+#    finally:
+#        if mode != TagCleanupMode.CHECK:
+#            all_rulesets.save()
+
+
+def _change_host_tags_in_folders(
+    operation: ABCOperation, mode: TagCleanupMode, folder: Any
+) -> Tuple[List[CREFolder], List[CREHost], List[Ruleset]]:
     """Update host tag assignments in hosts/folders
 
     See _rename_tags_after_confirmation() doc string for additional information.
@@ -312,7 +342,7 @@ def change_host_tags_in_folders(operation, mode, folder):
                 pass
 
         for subfolder in folder.subfolders():
-            aff_folders, aff_hosts, aff_rulespecs = change_host_tags_in_folders(
+            aff_folders, aff_hosts, aff_rulespecs = _change_host_tags_in_folders(
                 operation, mode, subfolder
             )
             affected_folders += aff_folders
@@ -422,7 +452,7 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):
     if not isinstance(operation, OperationReplaceGroupedTags):
         raise NotImplementedError()
 
-    tag_map: List[_Tuple[Optional[str], Any]] = list(operation.replace_tag_ids.items())
+    tag_map: List[Tuple[Optional[str], Any]] = list(operation.replace_tag_ids.items())
     tag_map += [(tag_id, False) for tag_id in operation.remove_tag_ids]
 
     # Removal or renaming of single tag choices

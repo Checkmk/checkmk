@@ -57,7 +57,7 @@ from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost
 from cmk.gui.watolib.rulesets import Ruleset
 from cmk.gui.watolib.tags import (
     ABCOperation,
-    change_host_tags_in_folders,
+    change_host_tags,
     identify_modified_tags,
     OperationRemoveAuxTag,
     OperationRemoveTagGroup,
@@ -554,8 +554,8 @@ class ModeTagUsage(ABCTagMode):
         operation = OperationReplaceGroupedTags(
             tag_group.id, remove_tag_ids=[tag.id], replace_tag_ids={}
         )
-        affected_folders, affected_hosts, affected_rulesets = change_host_tags_in_folders(
-            operation, TagCleanupMode.CHECK, watolib.Folder.root_folder()
+        affected_folders, affected_hosts, affected_rulesets = change_host_tags(
+            operation, TagCleanupMode.CHECK
         )
 
         table.cell(_("Explicitly set on folders"))
@@ -603,8 +603,8 @@ class ModeTagUsage(ABCTagMode):
         if aux_tag.id is None:
             raise Exception("uninitialized tag")
         operation = OperationRemoveAuxTag(aux_tag.id)
-        affected_folders, affected_hosts, affected_rulesets = change_host_tags_in_folders(
-            operation, TagCleanupMode.CHECK, watolib.Folder.root_folder()
+        affected_folders, affected_hosts, affected_rulesets = change_host_tags(
+            operation, TagCleanupMode.CHECK
         )
 
         table.cell(_("Explicitly set on folders"))
@@ -919,9 +919,7 @@ def _rename_tags_after_confirmation(
         if isinstance(operation, OperationRemoveTagGroup):
             watolib.host_attributes.undeclare_host_tag_attribute(operation.tag_group_id)
 
-        affected_folders, affected_hosts, affected_rulesets = change_host_tags_in_folders(
-            operation, mode, watolib.Folder.root_folder()
-        )
+        affected_folders, affected_hosts, affected_rulesets = change_host_tags(operation, mode)
 
         return _("Modified folders: %d, modified hosts: %d, modified rulesets: %d") % (
             len(affected_folders),
@@ -930,8 +928,8 @@ def _rename_tags_after_confirmation(
         )
 
     message = HTML()
-    affected_folders, affected_hosts, affected_rulesets = change_host_tags_in_folders(
-        operation, TagCleanupMode.CHECK, watolib.Folder.root_folder()
+    affected_folders, affected_hosts, affected_rulesets = change_host_tags(
+        operation, TagCleanupMode.CHECK
     )
 
     if affected_folders:

@@ -224,7 +224,7 @@ This example filters for the host "example.com" only when the `state` column is 
 means the state is OK.
 
     {'op': 'and', 'expr': [{'op': '=', 'left': 'host_name', 'right': 'example.com'},
-                            {'op': '=', 'left': 'state', 'right': 0}}
+                            {'op': '=', 'left': 'state', 'right': 0}]}
 
 # Table definitions
 

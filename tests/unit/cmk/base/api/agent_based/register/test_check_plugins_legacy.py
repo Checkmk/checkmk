@@ -29,7 +29,7 @@ MINIMAL_CHECK_INFO = {
 }
 
 
-def test_create_discovery_function(monkeypatch) -> None:
+def test_create_discovery_function(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     def insane_discovery(info):
         """Completely crazy discovery function:
 

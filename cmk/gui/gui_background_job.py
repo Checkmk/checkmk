@@ -204,7 +204,7 @@ class GUIBackgroundJobSnapshottedFunctions(background_job.BackgroundJob):
 class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions):
     _background_process_class = GUIBackgroundProcess
 
-    def __init__(self, job_id, **kwargs) -> None:
+    def __init__(self, job_id, **kwargs) -> None:  # type:ignore[no-untyped-def]
         logger = log.logger.getChild("background-job")
         kwargs["user"] = user.id
         kwargs["logfile_path"] = "~/var/log/web.log"
@@ -258,7 +258,7 @@ job_registry = GUIBackgroundJobRegistry()
 # TODO: BackgroundJob should provide an explicit status object, which we can use
 # here without any metaprogramming Kung Fu and arcane inheritance hierarchies.
 class GUIBackgroundStatusSnapshot:
-    def __init__(self, job) -> None:
+    def __init__(self, job) -> None:  # type:ignore[no-untyped-def]
         super().__init__()
         self._job_status = job.get_status()
         self._logger = job._logger.getChild("snapshot")
@@ -477,7 +477,7 @@ class JobRenderer:
         html.close_table()
 
     @classmethod
-    def _get_extra_info(cls, job_status) -> str:
+    def _get_extra_info(cls, job_status) -> str:  # type:ignore[no-untyped-def]
         return " (%s)" % job_status["title"] if job_status.get("title") else ""
 
     @classmethod
@@ -530,7 +530,9 @@ class JobRenderer:
         ]
 
     @classmethod
-    def render_job_row(cls, job_id, job_status, odd, job_details_back_url=None) -> None:
+    def render_job_row(  # type:ignore[no-untyped-def]
+        cls, job_id, job_status, odd, job_details_back_url=None
+    ) -> None:
         html.open_tr(css="data %s0" % odd)
 
         # Actions

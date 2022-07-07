@@ -148,7 +148,7 @@ def check_sap_hana_backup(item: str, params: Mapping[str, Any], section: Section
         yield Result(state=State.OK, summary="Message: %s" % data.message)
 
 
-def cluster_check_sap_hana_backup(
+def cluster_check_sap_hana_backup(  # type:ignore[no-untyped-def]
     item: str,
     params: Mapping[str, Any],
     section: Mapping[str, Optional[Section]],

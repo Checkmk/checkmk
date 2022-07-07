@@ -27,7 +27,7 @@ class MemBytes(
         "MemBytes", [("bytes", int), ("kb", float), ("mb", float)]
     )
 ):
-    def __new__(cls, value: Union[float, int]):
+    def __new__(cls, value: Union[float, int]):  # type:ignore[no-untyped-def]
         return super().__new__(cls, int(value * 1024), float(value), value / 1024.0)
 
     def render(self) -> str:

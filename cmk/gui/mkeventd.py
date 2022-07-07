@@ -129,7 +129,7 @@ def service_levels():
     return active_config.mkeventd_service_levels
 
 
-def action_choices(omit_hidden=False) -> List[Tuple[str, str]]:
+def action_choices(omit_hidden=False) -> List[Tuple[str, str]]:  # type:ignore[no-untyped-def]
     # The possible actions are configured in mkeventd.mk,
     # not in multisite.mk (like the service levels). That
     # way we have not direct access to them but need
@@ -152,7 +152,7 @@ def daemon_running() -> bool:
     return _socket_path().exists()
 
 
-def send_event(event) -> str:
+def send_event(event) -> str:  # type:ignore[no-untyped-def]
     syslog_message_str = repr(
         ec.SyslogMessage(
             facility=event["facility"],

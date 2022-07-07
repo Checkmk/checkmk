@@ -133,7 +133,7 @@ class BIAggregationPacks:
     def get_packs(self) -> Dict[str, BIAggregationPack]:
         return self.packs
 
-    def add_pack(self, pack: BIAggregationPack):
+    def add_pack(self, pack: BIAggregationPack):  # type:ignore[no-untyped-def]
         self.packs[pack.id] = pack
 
     def get_pack(self, pack_id: str) -> Optional[BIAggregationPack]:
@@ -282,7 +282,7 @@ class BIAggregationPacks:
         self.cleanup()
         self._instantiate_packs(config["packs"])
 
-    def _instantiate_packs(self, packs_data: List[Dict[str, Any]]):
+    def _instantiate_packs(self, packs_data: List[Dict[str, Any]]):  # type:ignore[no-untyped-def]
         self.packs = {x["id"]: BIAggregationPack(x) for x in packs_data}
 
     def save_config(self) -> None:
@@ -332,7 +332,7 @@ class BIAggregationPacks:
         for toplevel_rule in toplevel_rules:
             self._traverse_rule(self.get_rule_mandatory(toplevel_rule))
 
-    def _traverse_rule(self, bi_rule: BIRule, parents=None) -> None:
+    def _traverse_rule(self, bi_rule: BIRule, parents=None) -> None:  # type:ignore[no-untyped-def]
         if not parents:
             parents = []
 
@@ -398,7 +398,7 @@ class BIAggregationPackSchema(Schema):
     aggregations = ReqList(fields.Nested(BIAggregationSchema()), dump_default=[])
 
     @pre_dump
-    def pre_dumper(self, obj: BIAggregationPack, many=False) -> Dict:
+    def pre_dumper(self, obj: BIAggregationPack, many=False) -> Dict:  # type:ignore[no-untyped-def]
         # Convert aggregations and rules to list
         return {
             "id": obj.id,
@@ -415,7 +415,7 @@ class BIAggregationPacksSchema(Schema):
     packs = ReqList(ReqNested(BIAggregationPackSchema))
 
     @pre_dump
-    def pre_dumper(self, obj: BIAggregationPacks, many=None) -> Dict:
+    def pre_dumper(self, obj: BIAggregationPacks, many=None) -> Dict:  # type:ignore[no-untyped-def]
         # Convert packs to list
         return {"packs": obj.packs.values()}
 

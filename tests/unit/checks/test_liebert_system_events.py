@@ -40,7 +40,7 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_parse_liebert_system_events(string_table, section) -> None:
+def test_parse_liebert_system_events(string_table, section) -> None:  # type:ignore[no-untyped-def]
     check = Check("liebert_system_events")
     assert check.run_parse(string_table) == section
 
@@ -69,7 +69,9 @@ def test_parse_liebert_system_events(string_table, section) -> None:
         ),
     ],
 )
-def test_discover_liebert_system_events(string_table, discovered_item) -> None:
+def test_discover_liebert_system_events(  # type:ignore[no-untyped-def]
+    string_table, discovered_item
+) -> None:
     check = Check("liebert_system_events")
     assert check.run_discovery(string_table) == discovered_item
 
@@ -108,6 +110,8 @@ def test_discover_liebert_system_events(string_table, discovered_item) -> None:
         ),
     ],
 )
-def test_check_liebert_system_events(string_table, check_results) -> None:
+def test_check_liebert_system_events(  # type:ignore[no-untyped-def]
+    string_table, check_results
+) -> None:
     check = Check("liebert_system_events")
     assert list(check.run_check(None, {}, string_table)) == check_results

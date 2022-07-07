@@ -78,7 +78,9 @@ def parse_multiline(string_table: StringTable) -> DockerParseMultilineResult:
     return DockerParseMultilineResult(generator(), version)
 
 
-def parse(string_table: StringTable, *, strict=True) -> DockerParseResult:
+def parse(  # type:ignore[no-untyped-def]
+    string_table: StringTable, *, strict=True
+) -> DockerParseResult:
     """
     expected layout of string_table:
 

@@ -662,7 +662,7 @@ def has_inventory(hostname: HostName) -> bool:
     )
 
 
-def inventory_of_host(host_name: HostName, api_request):
+def inventory_of_host(host_name: HostName, api_request):  # type:ignore[no-untyped-def]
     raw_site = api_request.get("site")
     site = livestatus.SiteId(raw_site) if raw_site is not None else None
     verify_permission(host_name, site)

@@ -40,7 +40,7 @@ def parse_human_read_uptime(string: str) -> int:
     return 86400 * days + 3600 * hrs + 60 * mins
 
 
-def parse_solaris_uptime(info, from_boot_time) -> uptime.Section:
+def parse_solaris_uptime(info, from_boot_time) -> uptime.Section:  # type:ignore[no-untyped-def]
     """Solaris agent Version>= 1.5.0p15 delivers a lot of context information
 
         This was necesary because Solaris returns very inconsistent output for

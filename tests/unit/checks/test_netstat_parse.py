@@ -31,6 +31,6 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_parse_netstat(info, expected_parsed) -> None:
+def test_parse_netstat(info, expected_parsed) -> None:  # type:ignore[no-untyped-def]
     parsed = Check("netstat").run_parse(info)
     assert parsed == expected_parsed

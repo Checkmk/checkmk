@@ -97,7 +97,7 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
     return ip_stats
 
 
-def _parse_lnx_if_sections(string_table: type_defs.StringTable):
+def _parse_lnx_if_sections(string_table: type_defs.StringTable):  # type:ignore[no-untyped-def]
     ip_stats = {}
     ethtool_stats: Dict[str, Dict[str, Union[str, int, Sequence[int]]]] = {}
     iface = None

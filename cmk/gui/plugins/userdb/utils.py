@@ -316,7 +316,7 @@ def _get_builtin_roles() -> Roles:
 
 
 class UserConnector(abc.ABC):
-    def __init__(self, cfg) -> None:
+    def __init__(self, cfg) -> None:  # type:ignore[no-untyped-def]
         self._config = cfg
 
     @classmethod
@@ -355,12 +355,14 @@ class UserConnector(abc.ABC):
     #     False       -> Login failed
     #     None        -> Unknown user
     @abc.abstractmethod
-    def check_credentials(self, user_id, password) -> CheckCredentialsResult:
+    def check_credentials(  # type:ignore[no-untyped-def]
+        self, user_id, password
+    ) -> CheckCredentialsResult:
         return None
 
     # Optional: Hook function can be registered here to be executed
     # to synchronize all users.
-    def do_sync(
+    def do_sync(  # type:ignore[no-untyped-def]
         self,
         *,
         add_to_changelog: bool,

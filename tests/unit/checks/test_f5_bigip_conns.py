@@ -52,7 +52,7 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_get_conn_rate_params(config, result) -> None:
+def test_get_conn_rate_params(config, result) -> None:  # type:ignore[no-untyped-def]
     check = Check("f5_bigip_conns")
     assert check.context["get_conn_rate_params"](config) == result
 
@@ -79,7 +79,9 @@ def test_get_conn_rate_params(config, result) -> None:
         )
     ],
 )
-def test_get_conn_rate_params_exception(config, exception_msg) -> None:
+def test_get_conn_rate_params_exception(  # type:ignore[no-untyped-def]
+    config, exception_msg
+) -> None:
     check = Check("f5_bigip_conns")
     with pytest.raises(ValueError, match=exception_msg):
         check.context["get_conn_rate_params"](config)

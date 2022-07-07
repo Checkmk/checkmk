@@ -52,7 +52,7 @@ def save_timeperiods(timeperiods: TimeperiodSpecs) -> None:
     load_timeperiods.cache_clear()
 
 
-def save_timeperiod(name, timeperiod) -> None:
+def save_timeperiod(name, timeperiod) -> None:  # type:ignore[no-untyped-def]
     existing_timeperiods = load_timeperiods()
     existing_timeperiods[name] = timeperiod
     save_timeperiods(existing_timeperiods)
@@ -69,7 +69,7 @@ def _filter_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> TimeperiodSpecs
 
 
 class TimeperiodSelection(DropdownChoice):
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs) -> None:  # type:ignore[no-untyped-def]
         kwargs.setdefault("no_preselect_title", _("Select a timeperiod"))
         DropdownChoice.__init__(self, choices=self._get_choices, **kwargs)
 

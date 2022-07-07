@@ -422,7 +422,9 @@ def get_ranged_table(s: str) -> Optional[RangedTables]:
     return None
 
 
-def recover_pre_2_1_range_filter_request_vars(query: query_filters.NumberRangeQuery):
+def recover_pre_2_1_range_filter_request_vars(  # type:ignore[no-untyped-def]
+    query: query_filters.NumberRangeQuery,
+):
     """Some range filters used the _to suffix instead of the standard _until.
 
     Do inverse translation to search for this request vars."""
@@ -509,7 +511,7 @@ class FilterTime(Filter):
             is_show_more=is_show_more,
         )
 
-    def display(self, value: FilterHTTPVariables):
+    def display(self, value: FilterHTTPVariables):  # type:ignore[no-untyped-def]
         html.open_table(class_="filtertime")
         for what, whatname in [("from", _("From")), ("until", _("Until"))]:
             varprefix = self.ident + "_" + what
@@ -539,7 +541,9 @@ class FilterTime(Filter):
         return recover_pre_2_1_range_filter_request_vars(self.query_filter)
 
 
-def checkbox_component(htmlvar: str, value: FilterHTTPVariables, label: str):
+def checkbox_component(  # type:ignore[no-untyped-def]
+    htmlvar: str, value: FilterHTTPVariables, label: str
+):
     html.open_nobr()
     html.checkbox(htmlvar, bool(value.get(htmlvar)), label=label)
     html.close_nobr()

@@ -214,7 +214,7 @@ class LDAPUserConnector(UserConnector):
 
         return cfg
 
-    def __init__(self, cfg) -> None:
+    def __init__(self, cfg) -> None:  # type:ignore[no-untyped-def]
         super().__init__(self.transform_config(cfg))
 
         self._ldap_obj: Optional[ldap.ldapobject.ReconnectLDAPObject] = None
@@ -452,7 +452,9 @@ class LDAPUserConnector(UserConnector):
                 )
             )
 
-    def _bind(self, user_dn, password_id: password_store.PasswordId, catch=True, conn=None):
+    def _bind(  # type:ignore[no-untyped-def]
+        self, user_dn, password_id: password_store.PasswordId, catch=True, conn=None
+    ):
         if conn is None:
             conn = self._ldap_obj
         self._logger.info("LDAP_BIND %s" % user_dn)
@@ -1120,7 +1122,9 @@ class LDAPUserConnector(UserConnector):
     #
 
     # This function only validates credentials, no locked checking or similar
-    def check_credentials(self, user_id, password: str) -> CheckCredentialsResult:
+    def check_credentials(  # type:ignore[no-untyped-def]
+        self, user_id, password: str
+    ) -> CheckCredentialsResult:
         # Connect only to servers of connections, the user is configured for,
         # to avoid connection errors for unrelated servers
         user_connection_id = self._connection_id_of_user(user_id)
@@ -1205,7 +1209,7 @@ class LDAPUserConnector(UserConnector):
         suffix = self._get_suffix()
         return "%s@%s" % (username, suffix)
 
-    def do_sync(  # pylint: disable=too-many-branches
+    def do_sync(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
         self,
         *,
         add_to_changelog: bool,
@@ -1657,7 +1661,9 @@ def ldap_filter_of_connection(connection_id, *args, **kwargs):
     return connection.ldap_filter(*args, **kwargs)
 
 
-def ldap_sync_simple(user_id: str, ldap_user: dict, user: dict, user_attr: str, attr: str):
+def ldap_sync_simple(  # type:ignore[no-untyped-def]
+    user_id: str, ldap_user: dict, user: dict, user_attr: str, attr: str
+):
     if attr in ldap_user:
         attr_value = ldap_user[attr][0]
         # LDAP attribute in boolean format sends str "TRUE" or "FALSE"

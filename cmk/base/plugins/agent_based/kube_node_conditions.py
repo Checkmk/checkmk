@@ -76,7 +76,9 @@ def check(
         yield from _check_node_custom_conditions(section_kube_node_custom_conditions)
 
 
-def _check_node_conditions(params: Mapping[str, int], section: NodeConditions):
+def _check_node_conditions(  # type:ignore[no-untyped-def]
+    params: Mapping[str, int], section: NodeConditions
+):
     cond: Union[Optional[FalsyNodeCondition], FalsyNodeCondition, TruthyNodeCondition] = None
     for name, cond in section:
         if not cond:
@@ -94,7 +96,7 @@ def _check_node_conditions(params: Mapping[str, int], section: NodeConditions):
             )
 
 
-def _check_node_custom_conditions(section: NodeCustomConditions):
+def _check_node_custom_conditions(section: NodeCustomConditions):  # type:ignore[no-untyped-def]
     for cond in section.custom_conditions:
         if cond.is_ok():
             yield Result(

@@ -40,7 +40,7 @@ def discovery_kube_pod_resources(
     yield Service()
 
 
-def parse_kube_pod_resources(string_table: StringTable):
+def parse_kube_pod_resources(string_table: StringTable):  # type:ignore[no-untyped-def]
     """
     >>> parse_kube_pod_resources([[
     ...     '{"running": ["checkmk-cluster-agent", "storage-provisioner"],'
@@ -61,7 +61,7 @@ register.agent_section(
 )
 
 
-def parse_kube_allocatable_pods(string_table: StringTable):
+def parse_kube_allocatable_pods(string_table: StringTable):  # type:ignore[no-untyped-def]
     """
     >>> parse_kube_allocatable_pods([[
     ...     '{"capacity": 110,'

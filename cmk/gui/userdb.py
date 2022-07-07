@@ -364,7 +364,7 @@ class UserSelection(DropdownChoice):
             default_value=default_value,
         )
 
-    def _generate_wato_users_elements_function(
+    def _generate_wato_users_elements_function(  # type:ignore[no-untyped-def]
         self, none_value: Optional[str], only_contacts: bool = False, only_automation: bool = False
     ):
         def get_wato_users(nv: Optional[str]) -> List[Tuple[Optional[UserId], str]]:

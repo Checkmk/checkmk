@@ -479,7 +479,7 @@ def df_discovery(params, mplist):
     return ungrouped + grouped
 
 
-def check_filesystem_levels(
+def check_filesystem_levels(  # type:ignore[no-untyped-def]
     filesystem_size: float,
     allocatable_filesystem_size: float,
     free_space: float,
@@ -533,7 +533,7 @@ def check_filesystem_levels(
     yield Result(state=status, summary=summary)
 
 
-def df_check_filesystem_single(
+def df_check_filesystem_single(  # type:ignore[no-untyped-def]
     value_store: MutableMapping[str, Any],
     mountpoint: str,
     filesystem_size: Optional[float],
@@ -600,7 +600,7 @@ def df_check_filesystem_single(
         yield from check_inodes(params, inodes_total, inodes_avail)
 
 
-def df_check_filesystem_list(
+def df_check_filesystem_list(  # type:ignore[no-untyped-def]
     value_store: MutableMapping[str, Any],
     item: str,
     params: Mapping[str, Any],

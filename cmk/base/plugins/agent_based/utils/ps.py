@@ -206,7 +206,9 @@ def process_attributes_match(process_info, userspec, cgroupspec):
     return True
 
 
-def process_matches(command_line: Sequence[str], process_pattern, match_groups=None):
+def process_matches(  # type:ignore[no-untyped-def]
+    command_line: Sequence[str], process_pattern, match_groups=None
+):
 
     if not process_pattern:
         # Process name not relevant
@@ -233,7 +235,7 @@ def process_matches(command_line: Sequence[str], process_pattern, match_groups=N
 # value is again a 2-field tuple, first is the value, second is the unit.
 # This function is actually fairly generic so it could be used for other
 # data structured the same way
-def format_process_list(processes: "ProcessAggregator", html_output):
+def format_process_list(processes: "ProcessAggregator", html_output):  # type:ignore[no-untyped-def]
     def format_value(pvalue: _ProcessValue) -> str:
         value, unit = pvalue
         if unit == "kB":
@@ -320,7 +322,7 @@ def cpu_rate(value_store, counter, now, lifetime):
 class ProcessAggregator:
     """Collects information about all instances of monitored processes"""
 
-    def __init__(self, cpu_cores, params) -> None:
+    def __init__(self, cpu_cores, params) -> None:  # type:ignore[no-untyped-def]
         self.cpu_cores = cpu_cores
         self.params = params
         self.virtual_size = 0
@@ -363,7 +365,7 @@ class ProcessAggregator:
         # Use default of division
         return 1.0 / self.cpu_cores
 
-    def lifetimes(self, process_info, process: _Process):
+    def lifetimes(self, process_info, process: _Process):  # type:ignore[no-untyped-def]
         # process_info.cputime contains the used CPU time and possibly,
         # separated by /, also the total elapsed time since the birth of the
         # process.
@@ -393,7 +395,9 @@ class ProcessAggregator:
                     )
                 )
 
-    def cpu_usage(self, value_store, process_info, process: _Process):
+    def cpu_usage(  # type:ignore[no-untyped-def]
+        self, value_store, process_info, process: _Process
+    ):
 
         now = time.time()
 

@@ -138,7 +138,7 @@ class ABCConfigDomain(abc.ABC):
         ]
 
     @classmethod
-    def get_domain_settings(cls, change) -> SerializedSettings:
+    def get_domain_settings(cls, change) -> SerializedSettings:  # type:ignore[no-untyped-def]
         return change.get("domain_settings", {}).get(cls.ident(), {})
 
     @classmethod
@@ -154,7 +154,7 @@ def _get_all_default_globals() -> Dict[str, Any]:
     return settings
 
 
-def get_config_domain(domain_ident: ConfigDomainName):
+def get_config_domain(domain_ident: ConfigDomainName):  # type:ignore[no-untyped-def]
     return config_domain_registry[domain_ident]
 
 

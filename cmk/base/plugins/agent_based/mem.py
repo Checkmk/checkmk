@@ -46,7 +46,7 @@ register.agent_section(
 )
 
 
-def inventory_mem(section: memory.SectionMem):
+def inventory_mem(section: memory.SectionMem):  # type:ignore[no-untyped-def]
     yield Attributes(
         path=["hardware", "memory"],
         inventory_attributes={

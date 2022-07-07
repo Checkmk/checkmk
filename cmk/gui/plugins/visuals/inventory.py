@@ -66,7 +66,7 @@ class FilterInvText(InputTextFilter):
             is_show_more=is_show_more,
         )
 
-    def need_inventory(self, value) -> bool:
+    def need_inventory(self, value) -> bool:  # type:ignore[no-untyped-def]
         return bool(value.get(self.htmlvars[0], "").strip().lower())
 
 
@@ -221,7 +221,7 @@ class FilterInvtableAvailable(FilterOption):
         )
 
 
-def port_types(info: str):
+def port_types(info: str):  # type:ignore[no-untyped-def]
     return [
         (str(k), str(v))
         for k, v in sorted(defines.interface_port_types().items(), key=lambda t: t[0])
@@ -272,7 +272,7 @@ class FilterInvBool(FilterOption):
             is_show_more=is_show_more,
         )
 
-    def need_inventory(self, value) -> bool:
+    def need_inventory(self, value) -> bool:  # type:ignore[no-untyped-def]
         return self.query_filter.selection_value(value) != self.query_filter.ignore
 
 
@@ -291,7 +291,7 @@ class FilterHasInv(FilterOption):
             is_show_more=True,
         )
 
-    def need_inventory(self, value) -> bool:
+    def need_inventory(self, value) -> bool:  # type:ignore[no-untyped-def]
         return self.query_filter.selection_value(value) != self.query_filter.ignore
 
 

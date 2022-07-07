@@ -147,7 +147,7 @@ class SingleOptionQuery(Query):
 
 
 class TristateQuery(SingleOptionQuery):
-    def __init__(
+    def __init__(  # type:ignore[no-untyped-def]
         self,
         *,
         ident,
@@ -532,7 +532,7 @@ def filter_by_host_inventory(
     def row_filter(filtertext: str, column: str) -> Callable[[Row], bool]:
         regex = re_ignorecase(filtertext, column)
 
-        def filt(row: Row):
+        def filt(row: Row):  # type:ignore[no-untyped-def]
             invdata = inventory.get_attribute(row["host_inventory"], inventory_path)
             if not isinstance(invdata, str):
                 invdata = ""
@@ -864,7 +864,7 @@ def empty_hostgroup_filter(value: FilterHTTPVariables) -> FilterHeader:
 def options_toggled_filter(column: str, value: FilterHTTPVariables) -> FilterHeader:
     "When VALUE keys are the options, return filterheaders that equal column to option."
 
-    def drop_column_prefix(var: str):
+    def drop_column_prefix(var: str):  # type:ignore[no-untyped-def]
         if var.startswith(column + "_"):
             return var[len(column) + 1 :]
         return var
@@ -874,7 +874,7 @@ def options_toggled_filter(column: str, value: FilterHTTPVariables) -> FilterHea
     return lq_logic("Filter: %s =" % column, selected, "Or")
 
 
-def svc_state_min_options(prefix: str):
+def svc_state_min_options(prefix: str):  # type:ignore[no-untyped-def]
     return [
         (prefix + "0", _("OK")),
         (prefix + "1", _("WARN")),
@@ -960,7 +960,7 @@ def log_class_filter(value: FilterHTTPVariables) -> FilterHeader:
 def if_oper_status_filter_table(ident: str, context: VisualContext, rows: Rows) -> Rows:
     values = context.get(ident, {})
 
-    def _add_row(row) -> bool:
+    def _add_row(row) -> bool:  # type:ignore[no-untyped-def]
         # Apply filter if and only if a filter value is set
         if (filter_key := "%s_%d" % (ident, row["invinterface_oper_status"])) in values:
             return values[filter_key] == "on"

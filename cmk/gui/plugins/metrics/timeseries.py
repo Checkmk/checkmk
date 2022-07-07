@@ -76,7 +76,9 @@ def compute_graph_curves(metrics: Sequence[GraphMetric], rrd_data: RRDData) -> l
     return curves
 
 
-def evaluate_time_series_expression(expression, rrd_data: RRDData) -> Sequence[TimeSeries]:
+def evaluate_time_series_expression(  # type:ignore[no-untyped-def]
+    expression, rrd_data: RRDData
+) -> Sequence[TimeSeries]:
     ident, parameters = expression[0], expression[1:]
 
     try:

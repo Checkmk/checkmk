@@ -67,7 +67,9 @@ def discover(
         yield Service()
 
 
-def _component_check(component: str, component_log: Optional[CollectorHandlerLog]):
+def _component_check(  # type:ignore[no-untyped-def]
+    component: str, component_log: Optional[CollectorHandlerLog]
+):
     if component_log is None:
         return
 

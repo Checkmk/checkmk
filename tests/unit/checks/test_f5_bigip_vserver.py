@@ -86,6 +86,8 @@ from tests.testlib import Check
         ),
     ],
 )
-def test_wmi_cpu_load_discovery(info, item, expected_item_data) -> None:
+def test_wmi_cpu_load_discovery(  # type:ignore[no-untyped-def]
+    info, item, expected_item_data
+) -> None:
     check = Check("f5_bigip_vserver")
     assert sorted(check.run_parse(info)[item].items()) == sorted(expected_item_data.items())

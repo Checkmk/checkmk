@@ -119,7 +119,7 @@ def hostname():
     return socket.gethostname()
 
 
-def is_canonical(directory) -> bool:
+def is_canonical(directory) -> bool:  # type:ignore[no-untyped-def]
     if not directory.endswith("/"):
         directory += "/"
     return (
@@ -130,7 +130,7 @@ def is_canonical(directory) -> bool:
 
 # TODO: Locking!
 class Config:
-    def __init__(self, file_path) -> None:
+    def __init__(self, file_path) -> None:  # type:ignore[no-untyped-def]
         self._file_path = file_path
 
     def load(self):
@@ -158,7 +158,7 @@ class Config:
 
 
 class BackupEntity:
-    def __init__(self, ident, config) -> None:
+    def __init__(self, ident, config) -> None:  # type:ignore[no-untyped-def]
         self._ident = ident
         self._config: dict = {}
 
@@ -181,7 +181,7 @@ class BackupEntity:
 
 
 class BackupEntityCollection:
-    def __init__(self, config_file_path, cls, config_attr) -> None:
+    def __init__(self, config_file_path, cls, config_attr) -> None:  # type:ignore[no-untyped-def]
         self._config_path = config_file_path
         self._config = Config(config_file_path).load()
         self._cls = cls
@@ -433,7 +433,7 @@ class Job(MKBackupJob, BackupEntity):
 
 
 class Jobs(BackupEntityCollection):
-    def __init__(self, config_file_path) -> None:
+    def __init__(self, config_file_path) -> None:  # type:ignore[no-untyped-def]
         super().__init__(config_file_path, cls=Job, config_attr="jobs")
 
         etc_path = os.path.dirname(os.path.dirname(config_file_path))
@@ -686,7 +686,7 @@ class PageBackup:
 
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
-    def _delete_job(self, job) -> None:
+    def _delete_job(self, job) -> None:  # type:ignore[no-untyped-def]
         if job.is_running():
             raise MKUserError("_job", _("This job is currently running."))
 
@@ -696,11 +696,11 @@ class PageBackup:
         jobs.save()
         flash(_("The job has been deleted."))
 
-    def _start_job(self, job) -> None:
+    def _start_job(self, job) -> None:  # type:ignore[no-untyped-def]
         job.start()
         flash(_("The backup has been started."))
 
-    def _stop_job(self, job) -> None:
+    def _stop_job(self, job) -> None:  # type:ignore[no-untyped-def]
         job.stop()
         flash(_("The backup has been stopped."))
 
@@ -1142,7 +1142,7 @@ class Target(BackupEntity):
 
 
 class Targets(BackupEntityCollection):
-    def __init__(self, config_file_path) -> None:
+    def __init__(self, config_file_path) -> None:  # type:ignore[no-untyped-def]
         super().__init__(config_file_path, cls=Target, config_attr="targets")
 
     def show_list(self, title=None, editable=True):
@@ -1457,7 +1457,7 @@ class ABCBackupTargetType(abc.ABC):
     def title(cls):
         raise NotImplementedError()
 
-    def __init__(self, params) -> None:
+    def __init__(self, params) -> None:  # type:ignore[no-untyped-def]
         self._params = params
 
     @classmethod
@@ -1746,7 +1746,9 @@ def show_key_download_warning(keys: dict[int, key_mgmt.Key]) -> None:
 
 
 class RestoreJob(MKBackupJob):
-    def __init__(self, target_ident, backup_ident, passphrase=None) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, target_ident, backup_ident, passphrase=None
+    ) -> None:
         super().__init__()
         self._target_ident = target_ident
         self._backup_ident = backup_ident
@@ -1877,7 +1879,7 @@ class PageBackupRestore:
 
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_restore")]))
 
-    def _delete_backup(self, backup_ident) -> None:
+    def _delete_backup(self, backup_ident) -> None:  # type:ignore[no-untyped-def]
         if self._restore_is_running():
             raise MKUserError(
                 None,
@@ -1901,7 +1903,7 @@ class PageBackupRestore:
     def _restore_is_running(self):
         return RestoreJob(self._target_ident, None).is_running()
 
-    def _start_restore(self, backup_ident) -> ActionResult:
+    def _start_restore(self, backup_ident) -> ActionResult:  # type:ignore[no-untyped-def]
         if self._target is None:
             raise Exception("no backup target")
         backup_info = self._target.get_backup(backup_ident)
@@ -1909,10 +1911,12 @@ class PageBackupRestore:
             return self._start_encrypted_restore(backup_ident, backup_info)
         return self._start_unencrypted_restore(backup_ident)
 
-    def _complete_restore(self, backup_ident) -> None:
+    def _complete_restore(self, backup_ident) -> None:  # type:ignore[no-untyped-def]
         RestoreJob(self._target_ident, None).complete()
 
-    def _start_encrypted_restore(self, backup_ident, backup_info) -> ActionResult:
+    def _start_encrypted_restore(  # type:ignore[no-untyped-def]
+        self, backup_ident, backup_info
+    ) -> ActionResult:
         key_digest = backup_info["config"]["encrypt"]
 
         try:
@@ -1986,12 +1990,14 @@ class PageBackupRestore:
             render="form",
         )
 
-    def _start_unencrypted_restore(self, backup_ident) -> ActionResult:
+    def _start_unencrypted_restore(  # type:ignore[no-untyped-def]
+        self, backup_ident
+    ) -> ActionResult:
         RestoreJob(self._target_ident, backup_ident).start()
         flash(_("The restore has been started."))
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_restore")]))
 
-    def _stop_restore(self, backup_ident) -> None:
+    def _stop_restore(self, backup_ident) -> None:  # type:ignore[no-untyped-def]
         RestoreJob(self._target_ident, backup_ident).stop()
         flash(_("The restore has been stopped."))
 

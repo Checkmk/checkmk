@@ -36,6 +36,6 @@ from tests.testlib import Check
         ([["[[H11 11]]"]], {"H11 11": {"log": "", "timestamp": "not available"}}),
     ],
 )
-def test_parse_sap_hana_ess_migration(info, expected_result) -> None:
+def test_parse_sap_hana_ess_migration(info, expected_result) -> None:  # type:ignore[no-untyped-def]
     result = Check("sap_hana_ess_migration").run_parse(info)
     assert result == expected_result

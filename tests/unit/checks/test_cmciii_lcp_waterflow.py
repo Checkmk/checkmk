@@ -79,7 +79,9 @@ def test_parse_cmciii_lcp_waterflow_empty_section() -> None:
         ),
     ],
 )
-def test_discover_cmciii_lcp_waterflow(string_table: StringTable, discovered_item) -> None:
+def test_discover_cmciii_lcp_waterflow(  # type:ignore[no-untyped-def]
+    string_table: StringTable, discovered_item
+) -> None:
     check = Check("cmciii_lcp_waterflow")
     assert list(check.run_discovery(string_table)) == discovered_item
 

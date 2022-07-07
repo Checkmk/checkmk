@@ -49,7 +49,7 @@ def discover_checkpoint_connections(section: Section) -> DiscoveryResult:
     yield Service()
 
 
-def check_checkpoint_connections(
+def check_checkpoint_connections(  # type:ignore[no-untyped-def]
     params,
     section: Section,
 ) -> CheckResult:

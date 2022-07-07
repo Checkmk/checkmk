@@ -167,7 +167,9 @@ def test_parse_cmciii_lcp_water(string_table: StringTable, section: StringTable)
         )
     ],
 )
-def test_discover_cmciii_lcp_water(string_table: StringTable, discovered_item) -> None:
+def test_discover_cmciii_lcp_water(  # type:ignore[no-untyped-def]
+    string_table: StringTable, discovered_item
+) -> None:
     check = Check("cmciii_lcp_water")
     assert list(check.run_discovery(string_table)) == discovered_item
 

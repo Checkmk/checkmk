@@ -55,7 +55,7 @@ class HostAttributeTopic(abc.ABC):
 
 
 class HostAttributeTopicRegistry(cmk.utils.plugin_registry.Registry[Type[HostAttributeTopic]]):
-    def plugin_name(self, instance: Type[HostAttributeTopic]):
+    def plugin_name(self, instance: Type[HostAttributeTopic]):  # type:ignore[no-untyped-def]
         return instance().ident
 
     def get_choices(self):
@@ -447,7 +447,9 @@ def get_sorted_host_attribute_topics(for_what: str, new: bool) -> List[Tuple[str
     ]
 
 
-def get_sorted_host_attributes_by_topic(topic_id) -> List[ABCHostAttribute]:
+def get_sorted_host_attributes_by_topic(  # type:ignore[no-untyped-def]
+    topic_id,
+) -> List[ABCHostAttribute]:
     # Hack to sort the address family host tag attribute above the IPv4/v6 addresses
     # TODO: Clean this up by implementing some sort of explicit sorting
     def sort_host_attributes(a, b):
@@ -467,7 +469,7 @@ def get_sorted_host_attributes_by_topic(topic_id) -> List[ABCHostAttribute]:
 
 # Is used for dynamic host attribute declaration (based on host tags)
 # + Kept for comatibility with pre 1.6 plugins
-def declare_host_attribute(
+def declare_host_attribute(  # type:ignore[no-untyped-def]
     a: Type[ABCHostAttribute],
     show_in_table: bool = True,
     show_in_folder: bool = True,
@@ -1024,7 +1026,7 @@ def TextAttribute(
 
 
 # TODO: Kept for pre 1.6 plugin compatibility
-def NagiosTextAttribute(
+def NagiosTextAttribute(  # type:ignore[no-untyped-def]
     name: str,
     nag_name: str,
     title: str,
@@ -1148,7 +1150,9 @@ def _validate_host_tags(host_tags):
             )
 
 
-def validate_host_attributes(attributes, extra_attrs: Sequence[str] = (), new=False):
+def validate_host_attributes(  # type:ignore[no-untyped-def]
+    attributes, extra_attrs: Sequence[str] = (), new=False
+):
     # `extra_attrs` is only necessary for the webapi and should be removed later.
     _validate_general_host_attributes(
         dict((key, value) for key, value in attributes.items() if not key.startswith("tag_")),
@@ -1160,7 +1164,9 @@ def validate_host_attributes(attributes, extra_attrs: Sequence[str] = (), new=Fa
     )
 
 
-def _validate_general_host_attributes(host_attributes, extra_attrs: Sequence[str], new: bool):
+def _validate_general_host_attributes(  # type:ignore[no-untyped-def]
+    host_attributes, extra_attrs: Sequence[str], new: bool
+):
     """Check if the given attribute name exists, no type check"""
     all_host_attribute_names = _retrieve_host_attributes()
     all_host_attribute_names.extend(extra_attrs)

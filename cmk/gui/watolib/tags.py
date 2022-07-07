@@ -21,8 +21,9 @@ from cmk.utils.type_defs import TagConfigSpec
 import cmk.gui.watolib as watolib
 from cmk.gui.config import load_config
 from cmk.gui.exceptions import MKAuthException, MKGeneralException
+from cmk.gui.hooks import request_memoize
 from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost
-from cmk.gui.watolib.rulesets import Ruleset
+from cmk.gui.watolib.rulesets import AllRulesets, Ruleset
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 
 
@@ -292,43 +293,45 @@ class OperationReplaceGroupedTags(ABCOperation):
 def change_host_tags(
     operation: ABCOperation, mode: TagCleanupMode
 ) -> Tuple[List[CREFolder], List[CREHost], List[Ruleset]]:
-    return _change_host_tags_in_folders(
+    affected_folder, affected_hosts = _change_host_tags_in_folders(
         operation,
         mode,
         watolib.Folder.root_folder(),
     )
 
+    affected_rulesets = change_host_tags_in_rulesets(operation, mode)
+    return affected_folder, affected_hosts, affected_rulesets
 
-#    # Enabled in next commit, rulesets get an own rename mechanic
-#    #change_host_tags_in_rulesets(operation, mode)
-#
-#
-# def change_host_tags_in_rulesets(operation, mode):
-#    See _rename_tags_after_confirmation() doc string for additional information.
-#    """
-#
-#    affected_rulesets = set()
-#    all_rulesets = cmk.gui.watolib.rulesets.AllRulesets()
-#    all_rulesets.load()
-#    import pprint
-#    logger.warning(pprint.pformat(all_rulesets))
-#    try:
-#        pass
-#    finally:
-#        if mode != TagCleanupMode.CHECK:
-#            all_rulesets.save()
+
+@request_memoize()
+def _get_all_rulesets() -> AllRulesets:
+    all_rulesets = cmk.gui.watolib.rulesets.AllRulesets()
+    all_rulesets.load()
+    return all_rulesets
+
+
+def change_host_tags_in_rulesets(operation: ABCOperation, mode: TagCleanupMode) -> List[Ruleset]:
+    affected_rulesets = set()
+    all_rulesets = _get_all_rulesets()
+    for ruleset in all_rulesets.get_rulesets().values():
+        for _folder, _rulenr, rule in ruleset.get_rules():
+            affected_rulesets.update(_change_host_tags_in_rule(operation, mode, ruleset, rule))
+
+    if mode != TagCleanupMode.CHECK:
+        all_rulesets.save()
+
+    return sorted(affected_rulesets, key=lambda x: x.title() or "")
 
 
 def _change_host_tags_in_folders(
     operation: ABCOperation, mode: TagCleanupMode, folder: Any
-) -> Tuple[List[CREFolder], List[CREHost], List[Ruleset]]:
+) -> Tuple[List[CREFolder], List[CREHost]]:
     """Update host tag assignments in hosts/folders
 
     See _rename_tags_after_confirmation() doc string for additional information.
     """
     affected_folders = []
     affected_hosts = []
-    affected_rulesets = []
 
     if not isinstance(operation, OperationRemoveAuxTag):
         aff_folders = _change_host_tags_in_host_or_folder(operation, mode, folder)
@@ -342,17 +345,13 @@ def _change_host_tags_in_folders(
                 pass
 
         for subfolder in folder.subfolders():
-            aff_folders, aff_hosts, aff_rulespecs = _change_host_tags_in_folders(
-                operation, mode, subfolder
-            )
+            aff_folders, aff_hosts = _change_host_tags_in_folders(operation, mode, subfolder)
             affected_folders += aff_folders
             affected_hosts += aff_hosts
-            affected_rulesets += aff_rulespecs
 
         affected_hosts += _change_host_tags_in_hosts(operation, mode, folder)
 
-    affected_rulesets += _change_host_tags_in_rules(operation, mode, folder)
-    return affected_folders, affected_hosts, affected_rulesets
+    return affected_folders, affected_hosts
 
 
 def _change_host_tags_in_hosts(operation, mode, folder):
@@ -403,31 +402,6 @@ def _change_host_tags_in_host_or_folder(operation, mode, host_or_folder):
                 raise NotImplementedError()
 
     return affected
-
-
-def _change_host_tags_in_rules(operation, mode, folder):
-    """Update tags in all rules
-
-    The function parses all rules in all rulesets and looks for host tags that
-    have been removed or renamed. If tags are removed then the depending on the
-    mode affected rules are either deleted ("delete") or the vanished tags are
-    removed from the rule ("remove").
-
-    See _rename_tags_after_confirmation() doc string for additional information.
-    """
-    affected_rulesets = set()
-
-    rulesets = watolib.FolderRulesets(folder)
-    rulesets.load()
-
-    for ruleset in rulesets.get_rulesets().values():
-        for _folder, _rulenr, rule in ruleset.get_rules():
-            affected_rulesets.update(_change_host_tags_in_rule(operation, mode, ruleset, rule))
-
-    if affected_rulesets and mode != TagCleanupMode.CHECK:
-        rulesets.save()
-
-    return sorted(affected_rulesets, key=lambda x: x.title())
 
 
 def _change_host_tags_in_rule(operation, mode, ruleset, rule):

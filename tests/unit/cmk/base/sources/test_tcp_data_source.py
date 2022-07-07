@@ -14,7 +14,7 @@ from cmk.utils.type_defs import HostName
 from cmk.base.sources.tcp import TCPSource
 
 
-def test_attribute_defaults(monkeypatch) -> None:
+def test_attribute_defaults(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     ipaddress = "1.2.3.4"
     hostname = HostName("testhost")
 

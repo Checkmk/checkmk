@@ -717,7 +717,7 @@ def test_create_nagios_servicedefs_active_check(
         ),
     ],
 )
-def test_create_nagios_servicedefs_with_warnings(
+def test_create_nagios_servicedefs_with_warnings(  # type:ignore[no-untyped-def]
     active_checks: Tuple[str, Sequence[Mapping[str, str]]],
     active_check_info: Mapping[str, Mapping[str, str]],
     host_attrs: Dict[str, Any],

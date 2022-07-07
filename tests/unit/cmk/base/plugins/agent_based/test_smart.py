@@ -485,7 +485,7 @@ SECTION_NVME = {
 @pytest.mark.parametrize(
     "string_table, section", [(STRING_TABLE_SD, SECTION_SD), (STRING_TABLE_NVME, SECTION_NVME)]
 )
-def test_parse_smart(string_table, section) -> None:
+def test_parse_smart(string_table, section) -> None:  # type:ignore[no-untyped-def]
     assert smart.parse_raw_values(string_table) == section
 
 
@@ -524,7 +524,7 @@ def test_parse_smart(string_table, section) -> None:
         ),
     ],
 )
-def test_discover_smart_stats(section, discovered) -> None:
+def test_discover_smart_stats(section, discovered) -> None:  # type:ignore[no-untyped-def]
     assert list(smart.discover_smart_stats(section)) == discovered
 
 
@@ -587,7 +587,7 @@ def test_discover_smart_stats(section, discovered) -> None:
         ),
     ],
 )
-def test_check_smart_stats(item, params, section, result) -> None:
+def test_check_smart_stats(item, params, section, result) -> None:  # type:ignore[no-untyped-def]
     assert list(smart.check_smart_stats(item, params, section)) == result
 
 

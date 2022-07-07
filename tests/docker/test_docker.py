@@ -62,7 +62,7 @@ def _prepare_build():
     assert subprocess.run(["make", "needed-packages"], cwd=build_path, check=False).returncode == 0
 
 
-def _prepare_package(version: testlib.CMKVersion):
+def _prepare_package(version: testlib.CMKVersion):  # type:ignore[no-untyped-def]
     """On Jenkins copies a previously built package to the build path."""
     if "WORKSPACE" not in os.environ:
         logger.info("Not executed on CI: Do not prepare a Checkmk .deb in %s", build_path)
@@ -265,7 +265,7 @@ def _exec_run(c, *args, **kwargs):
     return exit_code, output.decode("utf-8")
 
 
-def test_start_simple(request, client, version) -> None:
+def test_start_simple(request, client, version) -> None:  # type:ignore[no-untyped-def]
     c = _start(request, client)
 
     cmds = [p[-1] for p in c.top()["Processes"]]
@@ -294,7 +294,7 @@ def test_start_simple(request, client, version) -> None:
     assert exit_code == 0
 
 
-def test_start_cmkadmin_passsword(request, client) -> None:
+def test_start_cmkadmin_passsword(request, client) -> None:  # type:ignore[no-untyped-def]
     c = _start(
         request,
         client,
@@ -313,7 +313,7 @@ def test_start_cmkadmin_passsword(request, client) -> None:
     )
 
 
-def test_start_custom_site_id(request, client) -> None:
+def test_start_custom_site_id(request, client) -> None:  # type:ignore[no-untyped-def]
     c = _start(
         request,
         client,
@@ -325,7 +325,7 @@ def test_start_custom_site_id(request, client) -> None:
     assert _exec_run(c, ["omd", "status"], user="xyz")[0] == 0
 
 
-def test_start_enable_livestatus(request, client) -> None:
+def test_start_enable_livestatus(request, client) -> None:  # type:ignore[no-untyped-def]
     c = _start(
         request,
         client,
@@ -339,7 +339,7 @@ def test_start_enable_livestatus(request, client) -> None:
     assert output == "on\n"
 
 
-def test_start_execute_custom_command(request, client) -> None:
+def test_start_execute_custom_command(request, client) -> None:  # type:ignore[no-untyped-def]
     c = _start(request, client)
 
     exit_code, output = _exec_run(c, ["echo", "1"], user="cmk")
@@ -347,7 +347,7 @@ def test_start_execute_custom_command(request, client) -> None:
     assert output == "1\n"
 
 
-def test_start_with_custom_command(request, client, version) -> None:
+def test_start_with_custom_command(request, client, version) -> None:  # type:ignore[no-untyped-def]
     image, _build_logs = _build(request, client, version)
     output = client.containers.run(
         image=image.id, detach=False, command=["bash", "-c", "echo 1"]
@@ -358,7 +358,7 @@ def test_start_with_custom_command(request, client, version) -> None:
 
 
 # Test that the local deb package is used by making the build fail because of an empty file
-def test_build_using_local_deb(request, client, version) -> None:
+def test_build_using_local_deb(request, client, version) -> None:  # type:ignore[no-untyped-def]
     package_path = Path(build_path, _package_name(version))
     package_path.write_bytes(b"")
     with pytest.raises(docker.errors.BuildError):
@@ -369,7 +369,9 @@ def test_build_using_local_deb(request, client, version) -> None:
 
 # Test that the deb package from the download server is used.
 # Works only with daily enterprise builds.
-def test_build_using_package_from_download_server(request, client, version) -> None:
+def test_build_using_package_from_download_server(  # type:ignore[no-untyped-def]
+    request, client, version
+) -> None:
     if not (
         version.edition() == "enterprise" and re.match(r"^\d\d\d\d\.\d\d\.\d\d$", version.version)
     ):
@@ -382,7 +384,9 @@ def test_build_using_package_from_download_server(request, client, version) -> N
 
 
 # Test that the local GPG file is used by making the build fail because of an empty file
-def test_build_using_local_gpg_pubkey(request, client, version) -> None:
+def test_build_using_local_gpg_pubkey(  # type:ignore[no-untyped-def]
+    request, client, version
+) -> None:
     pkg_path = os.path.join(build_path, "Check_MK-pubkey.gpg")
     pkg_path_sav = os.path.join(build_path, "Check_MK-pubkey.gpg.sav")
     try:
@@ -398,7 +402,7 @@ def test_build_using_local_gpg_pubkey(request, client, version) -> None:
         os.rename(pkg_path_sav, pkg_path)
 
 
-def test_start_enable_mail(request, client) -> None:
+def test_start_enable_mail(request, client) -> None:  # type:ignore[no-untyped-def]
     c = _start(
         request,
         client,
@@ -421,7 +425,7 @@ def test_start_enable_mail(request, client) -> None:
     )
 
 
-def test_http_access_base_redirects_work(request, client) -> None:
+def test_http_access_base_redirects_work(request, client) -> None:  # type:ignore[no-untyped-def]
     c = _start(request, client)
 
     assert (
@@ -444,7 +448,7 @@ def test_http_access_base_redirects_work(request, client) -> None:
 
 # Would like to test this from the outside of the container, but this is not possible
 # because most of our systems already have something listening on port 80
-def test_redirects_work_with_standard_port(request, client) -> None:
+def test_redirects_work_with_standard_port(request, client) -> None:  # type:ignore[no-untyped-def]
     c = _start(request, client)
 
     # Use no explicit port
@@ -501,7 +505,7 @@ def test_redirects_work_with_standard_port(request, client) -> None:
     )
 
 
-def test_redirects_work_with_custom_port(request, client) -> None:
+def test_redirects_work_with_custom_port(request, client) -> None:  # type:ignore[no-untyped-def]
     # Use some free address port to be able to bind to. For the moment there is no
     # conflict with others, since this test is executed only once at the same time.
     # TODO: We'll have to use some branch specific port in the future.
@@ -544,7 +548,7 @@ def test_redirects_work_with_custom_port(request, client) -> None:
     assert response.headers["Location"] == "http://%s/cmk/" % address[0]
 
 
-def test_http_access_login_screen(request, client) -> None:
+def test_http_access_login_screen(request, client) -> None:  # type:ignore[no-untyped-def]
     c = _start(request, client)
 
     assert (
@@ -563,7 +567,7 @@ def test_http_access_login_screen(request, client) -> None:
     )
 
 
-def test_container_agent(request, client) -> None:
+def test_container_agent(request, client) -> None:  # type:ignore[no-untyped-def]
     c = _start(request, client)
     # Is the agent installed and executable?
     assert _exec_run(c, ["check_mk_agent"])[-1].startswith("<<<check_mk>>>\n")
@@ -572,7 +576,7 @@ def test_container_agent(request, client) -> None:
     assert ":::6556" in _exec_run(c, ["netstat", "-tln"])[-1]
 
 
-def test_update(request, client, version) -> None:
+def test_update(request, client, version) -> None:  # type:ignore[no-untyped-def]
     container_name = "%s-monitoring" % branch_name
 
     # Pick a random old version that we can use to the setup the initial site with

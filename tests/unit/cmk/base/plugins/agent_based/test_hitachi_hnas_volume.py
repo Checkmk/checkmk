@@ -173,7 +173,9 @@ def test_check_hitachi_hnas_volume(value_store_patch, item, params, section, exp
     ],
     ids=["standard", "virtual"],
 )
-def test_check_hitachi_hnas_virtual_volume(item, params, section, expected) -> None:
+def test_check_hitachi_hnas_virtual_volume(  # type:ignore[no-untyped-def]
+    item, params, section, expected
+) -> None:
     """Hitachi virtual volume check function returns expected results for different volume params"""
     results = tuple(check_hitachi_hnas_virtual_volume(item, params, section))
     assert results == expected

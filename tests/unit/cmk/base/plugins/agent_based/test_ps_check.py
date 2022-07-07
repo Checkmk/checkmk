@@ -529,7 +529,7 @@ check_results = [
     list(zip(PS_DISCOVERED_ITEMS, check_results)),
     ids=[s.item for s in PS_DISCOVERED_ITEMS],
 )
-def test_check_ps_common(inv_item, reference) -> None:
+def test_check_ps_common(inv_item, reference) -> None:  # type:ignore[no-untyped-def]
     parsed: List = []
     for info in generate_inputs():
         _cpu_cores, data = ps_section.parse_ps(info)
@@ -648,7 +648,7 @@ cpu_util_data = [
 
 
 @pytest.mark.parametrize("data", cpu_util_data, ids=[a.name for a in cpu_util_data])
-def test_check_ps_common_cpu(data) -> None:
+def test_check_ps_common_cpu(data) -> None:  # type:ignore[no-untyped-def]
     def time_info(service, agent_info, check_time, cputime, cpu_cores):
         with on_time(datetime.datetime.utcfromtimestamp(check_time), "CET"):
             _cpu_info, parsed_lines = ps_section.parse_ps(splitter(agent_info.format(cputime)))
@@ -717,7 +717,7 @@ def test_check_ps_common_cpu(data) -> None:
         ),
     ],
 )
-def test_check_ps_common_count(levels, reference) -> None:
+def test_check_ps_common_count(levels, reference) -> None:  # type:ignore[no-untyped-def]
     _cpu_info, parsed_lines = ps_section.parse_ps(
         splitter("(on,105,30,00:00:{:02}/03:59:39,902) single")
     )
@@ -818,7 +818,7 @@ def test_subset_patterns() -> None:
 
 
 @pytest.mark.parametrize("cpu_cores", [2, 4, 5])
-def test_cpu_util_single_process_levels(cpu_cores) -> None:
+def test_cpu_util_single_process_levels(cpu_cores) -> None:  # type:ignore[no-untyped-def]
     """Test CPU utilization per single process.
     - Check that Number of cores weight is active
     - Check that single process CPU utilization is present only on warn/crit states"""
@@ -904,7 +904,7 @@ def test_cpu_util_single_process_levels(cpu_cores) -> None:
     assert output == reference
 
 
-def test_parse_ps_windows(mocker: MockerFixture):
+def test_parse_ps_windows(mocker: MockerFixture):  # type:ignore[no-untyped-def]
     section_ps = ps_section.parse_ps(
         splitter(
             """(\\LS\0tribe29,150364,40016,0,2080,1,387119531250,2225698437500,111,2,263652)	CPUSTRES64.EXE""",

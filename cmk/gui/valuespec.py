@@ -787,7 +787,7 @@ class UUID(TextInput):
         html.hidden_field(varprefix, value, add_var=True)
 
 
-def ID(  # pylint: disable=redefined-builtin
+def ID(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
     label: _Optional[str] = None,
     size: Union[int, Literal["max"]] = 25,
     try_max_width: bool = False,
@@ -838,7 +838,7 @@ def ID(  # pylint: disable=redefined-builtin
     )
 
 
-def UserID(  # pylint: disable=redefined-builtin
+def UserID(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
     label: _Optional[str] = None,
     size: Union[int, Literal["max"]] = 25,
     try_max_width: bool = False,
@@ -1000,7 +1000,9 @@ class RegExp(TextInput):
 
         return " ".join("%s" % h for h in help_text)
 
-    def _css_classes(self, case_sensitive: bool, mode: _Optional[str]):
+    def _css_classes(  # type:ignore[no-untyped-def]
+        self, case_sensitive: bool, mode: _Optional[str]
+    ):
         classes = ["text", "regexp"]
 
         if case_sensitive is True:
@@ -1156,7 +1158,7 @@ def IPNetwork(  # pylint: disable=redefined-builtin
 
             raise MKUserError(varprefix, _("Invalid %s address: %s") % (ip_class_text, exc))
 
-    def _validate_value_for_both_classes(value: str, varprefix: str):
+    def _validate_value_for_both_classes(value: str, varprefix: str):  # type:ignore[no-untyped-def]
         errors = {}
         for ipc in (ipaddress.IPv4Network, ipaddress.IPv6Network):
             try:
@@ -1201,7 +1203,7 @@ def IPv4Address(  # pylint: disable=redefined-builtin
     help: _Optional[ValueSpecHelp] = None,
     default_value: ValueSpecDefault[str] = DEF_VALUE,
 ) -> TextInput:
-    def _validate_value(value: str, varprefix: str):
+    def _validate_value(value: str, varprefix: str):  # type:ignore[no-untyped-def]
         try:
             ipaddress.IPv4Address(value)
         except ValueError as exc:
@@ -1217,7 +1219,7 @@ def IPv4Address(  # pylint: disable=redefined-builtin
     )
 
 
-def Hostname(  # pylint: disable=redefined-builtin
+def Hostname(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
     # TextInput
     allow_empty=False,
     # ValueSpec
@@ -1498,7 +1500,7 @@ class Url(TextInput):
         return value
 
 
-def HTTPUrl(  # pylint: disable=redefined-builtin
+def HTTPUrl(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
     show_as_link: bool = True,
     # Url
     regex: Union[None, str, Pattern[str]] = None,
@@ -1526,7 +1528,7 @@ def HTTPUrl(  # pylint: disable=redefined-builtin
     )
 
 
-def CheckMKVersion(
+def CheckMKVersion(  # type:ignore[no-untyped-def]
     # ValueSpec
     title: _Optional[str] = None,
     default_value: ValueSpecDefault[str] = DEF_VALUE,
@@ -2817,7 +2819,7 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
         return [(self._option_for_html(val), title) for val, title in orig_options]
 
     @staticmethod
-    def option_id(val) -> str:
+    def option_id(val) -> str:  # type:ignore[no-untyped-def]
         return "%s" % hashlib.sha256(repr(val).encode()).hexdigest()
 
     def _validate_value(self, value: DropdownChoiceModel, varprefix: str) -> None:
@@ -3087,7 +3089,7 @@ class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
 
 
 # TODO: Rename to ServiceState() or something like this
-def MonitoringState(  # pylint: disable=redefined-builtin
+def MonitoringState(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
     # DropdownChoice
     sorted: bool = False,
     label: _Optional[str] = None,
@@ -3138,7 +3140,7 @@ def MonitoringState(  # pylint: disable=redefined-builtin
     )
 
 
-def HostState(  # pylint: disable=redefined-builtin
+def HostState(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
     # DropdownChoice
     sorted: bool = False,
     label: _Optional[str] = None,
@@ -4132,7 +4134,7 @@ def _today() -> int:
 _sorted = sorted
 
 
-def Weekday(  # pylint: disable=redefined-builtin
+def Weekday(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
     # DropdownChoice
     sorted: bool = False,
     label: _Optional[str] = None,
@@ -5809,7 +5811,9 @@ class Dictionary(ValueSpec[DictionaryModel]):
             if param in section_elements
         )
 
-    def render_input_form_header(self, varprefix, value, title, section_elements, css) -> None:
+    def render_input_form_header(  # type:ignore[no-untyped-def]
+        self, varprefix, value, title, section_elements, css
+    ) -> None:
         for param, vs in self._get_elements():
             if param in self._hidden_keys:
                 continue
@@ -6936,7 +6940,9 @@ class PageAutocompleteLabels(AjaxPage):
             self._get_labels(Labels.World(api_request["world"]), api_request["search_label"])
         )
 
-    def _get_labels(self, world, search_label: str) -> Sequence[tuple[str, str]]:
+    def _get_labels(  # type:ignore[no-untyped-def]
+        self, world, search_label: str
+    ) -> Sequence[tuple[str, str]]:
         if world is Labels.World.CONFIG:
             return self._get_labels_from_config(search_label)
 
@@ -7540,7 +7546,7 @@ class SSHKeyPair(ValueSpec[_Optional[SSHKeyPairValue]]):
         return ":".join(a + b for a, b in zip(fp_plain[::2], fp_plain[1::2]))
 
 
-def SchedulePeriod(  # pylint: disable=redefined-builtin
+def SchedulePeriod(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
     from_end=True,
     # CascadingDropdown
     label: _Optional[str] = None,

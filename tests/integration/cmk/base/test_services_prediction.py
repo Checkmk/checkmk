@@ -24,7 +24,7 @@ from cmk.base import prediction
 
 
 @pytest.fixture(name="cfg_setup", scope="module")
-def cfg_setup_fixture(request, web, site: Site):
+def cfg_setup_fixture(request, web, site: Site):  # type:ignore[no-untyped-def]
     hostname = "test-prediction"
 
     # Enforce use of the pre-created RRD file from the git. The restart of the core
@@ -120,7 +120,9 @@ custom_checks = [
         ),
     ],
 )
-def test_get_rrd_data(cfg_setup, utcdate, timezone, period, result) -> None:
+def test_get_rrd_data(  # type:ignore[no-untyped-def]
+    cfg_setup, utcdate, timezone, period, result
+) -> None:
 
     with on_time(utcdate, timezone):
         timestamp = time.time()
@@ -145,7 +147,9 @@ def test_get_rrd_data(cfg_setup, utcdate, timezone, period, result) -> None:
     "max_entries, result",
     [(400, (180, 401)), (20, (3600, 21)), (50, (1800, 41)), (1000, (120, 600)), (1200, (60, 1200))],
 )
-def test_get_rrd_data_point_max(cfg_setup, max_entries, result) -> None:
+def test_get_rrd_data_point_max(  # type:ignore[no-untyped-def]
+    cfg_setup, max_entries, result
+) -> None:
     from_time, until_time = 1543430040, 1543502040
     timeseries = cmk.utils.prediction.get_rrd_data(
         HostName("test-prediction"), "CPU load", "load15", "MAX", from_time, until_time, max_entries
@@ -414,7 +418,9 @@ def test_get_rrd_data_point_max(cfg_setup, max_entries, result) -> None:
         ),
     ],
 )
-def test_retieve_grouped_data_from_rrd(cfg_setup, utcdate, timezone, params, reference) -> None:
+def test_retieve_grouped_data_from_rrd(  # type:ignore[no-untyped-def]
+    cfg_setup, utcdate, timezone, params, reference
+) -> None:
     "This mostly verifies the up-sampling"
 
     period_info = prediction._PREDICTION_PERIODS[params["period"]]
@@ -467,8 +473,9 @@ def _load_expected_result(path: str) -> object:
         ),
     ],
 )
-def test_calculate_data_for_prediction(cfg_setup, utcdate, timezone, params) -> None:
-
+def test_calculate_data_for_prediction(  # type:ignore[no-untyped-def]
+    cfg_setup, utcdate, timezone, params
+) -> None:
     period_info = prediction._PREDICTION_PERIODS[params["period"]]
     with on_time(utcdate, timezone):
         now = int(time.time())
@@ -515,7 +522,9 @@ def test_calculate_data_for_prediction(cfg_setup, utcdate, timezone, params) -> 
         ),
     ],
 )
-def test_get_rrd_data_incomplete(cfg_setup, timerange, result) -> None:
+def test_get_rrd_data_incomplete(  # type:ignore[no-untyped-def]
+    cfg_setup, timerange, result
+) -> None:
     from_time, until_time = timerange
     timeseries = cmk.utils.prediction.get_rrd_data(
         HostName("test-prediction"), "CPU load", "load15", "MAX", from_time, until_time
@@ -526,7 +535,7 @@ def test_get_rrd_data_incomplete(cfg_setup, timerange, result) -> None:
     assert (timeseries.step, timeseries.values) == result
 
 
-def test_get_rrd_data_fails(cfg_setup) -> None:
+def test_get_rrd_data_fails(cfg_setup) -> None:  # type:ignore[no-untyped-def]
     timestamp = time.mktime(datetime.strptime("2018-11-28 12", "%Y-%m-%d %H").timetuple())
     _, from_time, until_time, _ = prediction._get_prediction_timegroup(
         int(timestamp), prediction._PREDICTION_PERIODS["hour"]

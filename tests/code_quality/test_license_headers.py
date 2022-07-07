@@ -40,7 +40,7 @@ def needs_enterprise_license(path: str) -> bool:
     return path in enterprise_files
 
 
-def get_file_header(path: str, lenght=30) -> str:
+def get_file_header(path: str, lenght=30) -> str:  # type:ignore[no-untyped-def]
     with open(path, "r") as file:
         head = [file.readline() for x in range(lenght)]
         return "\n".join(head)

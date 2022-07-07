@@ -221,7 +221,7 @@ class Table:
             [] if css is None else css, state, collect_headers, fixed, id_, onmouseover, onmouseout
         )
 
-    def cell(
+    def cell(  # type:ignore[no-untyped-def]
         self,
         title: HTMLContent = "",
         text: HTMLContent = "",
@@ -276,7 +276,7 @@ class Table:
 
         self.limit_reached = False if self.limit is None else len(self.rows) > self.limit
 
-    def _add_cell(
+    def _add_cell(  # type:ignore[no-untyped-def]
         self,
         title: HTMLContent,
         text: HTMLContent,

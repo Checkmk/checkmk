@@ -22,7 +22,7 @@ from cmk.base.plugins.agent_based.proxmox_ve_snapshot_age import (
         ('{"snaptimes": [1]}', {"snaptimes": [1]}),
     ],
 )
-def test_parse_proxmox_ve_snapshot_age(data, expected) -> None:
+def test_parse_proxmox_ve_snapshot_age(data, expected) -> None:  # type:ignore[no-untyped-def]
     assert parse_proxmox_ve_snapshot_age([[data]]) == expected
 
 
@@ -37,7 +37,9 @@ def test_parse_proxmox_ve_snapshot_age(data, expected) -> None:
         ),
     ],
 )
-def test_check_proxmox_ve_snapshot_age_no_snapshot(now, params, section, expected) -> None:
+def test_check_proxmox_ve_snapshot_age_no_snapshot(  # type:ignore[no-untyped-def]
+    now, params, section, expected
+) -> None:
     with on_time(now, "CET"):
         assert list(check_proxmox_ve_snapshot_age(params, section)) == expected
 

@@ -76,7 +76,7 @@ class AjaxPage(Page, abc.ABC):
         """Override this to implement the page functionality"""
         raise NotImplementedError()
 
-    def _handle_exc(self, method) -> None:
+    def _handle_exc(self, method) -> None:  # type:ignore[no-untyped-def]
         try:
             # FIXME: These methods write to the response themselves. This needs to be refactored.
             method()

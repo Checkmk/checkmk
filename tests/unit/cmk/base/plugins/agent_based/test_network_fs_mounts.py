@@ -94,7 +94,7 @@ size2 = SizeBasic(
         ),
     ],
 )
-def test_network_fs_mounts_discovery(
+def test_network_fs_mounts_discovery(  # type:ignore[no-untyped-def]
     string_table: StringTable,
     discovery_result: DiscoveryResult,
 ):
@@ -195,7 +195,7 @@ def test_network_fs_mounts_discovery(
         ),
     ],
 )
-def test_network_fs_mounts_check(
+def test_network_fs_mounts_check(  # type:ignore[no-untyped-def]
     string_table: StringTable,
     item: str,
     check_result: CheckResult,
@@ -243,7 +243,7 @@ def test_network_fs_mounts_check(
         ),
     ],
 )
-def test_nfsmount_v2_check(
+def test_nfsmount_v2_check(  # type:ignore[no-untyped-def]
     string_table: StringTable,
     item: str,
     check_result: CheckResult,

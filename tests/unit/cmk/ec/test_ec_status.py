@@ -137,7 +137,7 @@ def fixture_status_server(
     )
 
 
-def test_handle_client(status_server) -> None:
+def test_handle_client(status_server) -> None:  # type:ignore[no-untyped-def]
     s = FakeStatusSocket(b"GET events")
 
     status_server.handle_client(s, True, "127.0.0.1")
@@ -147,7 +147,9 @@ def test_handle_client(status_server) -> None:
     assert "event_id" in response[0]
 
 
-def test_mkevent_check_query_perf(config, event_status, status_server) -> None:
+def test_mkevent_check_query_perf(  # type:ignore[no-untyped-def]
+    config, event_status, status_server
+) -> None:
     for num in range(10000):
         event_status.new_event(
             CMKEventConsole.new_event(

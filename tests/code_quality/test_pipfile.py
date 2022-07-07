@@ -36,7 +36,7 @@ def load_pipfile():
     return Pipfile.load(filename=repo_path() + "/Pipfile")
 
 
-def test_all_deployment_packages_pinned(loaded_pipfile) -> None:
+def test_all_deployment_packages_pinned(loaded_pipfile) -> None:  # type:ignore[no-untyped-def]
     unpinned_packages = [f"'{n}'" for n, v in loaded_pipfile.data["default"].items() if v == "*"]
     assert not unpinned_packages, (
         "The following packages are not pinned: %s. "
@@ -44,7 +44,7 @@ def test_all_deployment_packages_pinned(loaded_pipfile) -> None:
     ) % " ,".join(unpinned_packages)
 
 
-def test_pipfile_syntax(loaded_pipfile) -> None:
+def test_pipfile_syntax(loaded_pipfile) -> None:  # type:ignore[no-untyped-def]
     # pipenv is currently (e.g. in version 2022.1.8) accepting false Pipfile syntax like:
     # pysmb = "1.2"
     # So it will not throw an error or warning if the comparision operator is missing.
@@ -312,13 +312,13 @@ def test_dependencies_are_declared() -> None:
     )
 
 
-def _get_lockfile_hash(lockfile_path) -> str:
+def _get_lockfile_hash(lockfile_path) -> str:  # type:ignore[no-untyped-def]
     lockfile = json.loads(lockfile_path.read_text())
     if "_meta" in lockfile and hasattr(lockfile, "keys"):
         return lockfile["_meta"].get("hash", {}).get("sha256")
     return ""
 
 
-def test_pipfile_lock_up_to_date(loaded_pipfile) -> None:
+def test_pipfile_lock_up_to_date(loaded_pipfile) -> None:  # type:ignore[no-untyped-def]
     lockfile_hash = _get_lockfile_hash(Path(repo_path(), "Pipfile.lock"))
     assert loaded_pipfile.hash == lockfile_hash

@@ -421,7 +421,7 @@ def _management_config_ruleset() -> List[Dict[str, Any]]:
         ),
     ],
 )
-def test_host_config_management_credentials(
+def test_host_config_management_credentials(  # type:ignore[no-untyped-def]
     monkeypatch: MonkeyPatch,
     protocol: Optional[str],
     credentials: Optional[Dict[str, str]],

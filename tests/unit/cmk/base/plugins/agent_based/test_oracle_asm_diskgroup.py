@@ -213,7 +213,7 @@ def value_store_fixture(monkeypatch):
         ),
     ],
 )
-def test_parse(string_table, expected) -> None:
+def test_parse(string_table, expected) -> None:  # type:ignore[no-untyped-def]
     parsed_section = asm.parse_oracle_asm_diskgroup(string_table)
     assert parsed_section == expected
 
@@ -243,7 +243,7 @@ def test_parse(string_table, expected) -> None:
         (SECTION_OLD_DISMOUNTED, [Service(item=ITEM)]),
     ],
 )
-def test_discovery(section, expected) -> None:
+def test_discovery(section, expected) -> None:  # type:ignore[no-untyped-def]
     yielded_services = list(asm.discovery_oracle_asm_diskgroup(section))
     assert yielded_services == expected
 
@@ -389,7 +389,7 @@ def test_discovery(section, expected) -> None:
         ),
     ],
 )
-def test_check(value_store_patch, section, params, expected) -> None:
+def test_check(value_store_patch, section, params, expected) -> None:  # type:ignore[no-untyped-def]
     with on_time(*NOW_SIMULATED):
 
         assert expected == list(asm.check_oracle_asm_diskgroup(ITEM, params, section))
@@ -438,7 +438,9 @@ def test_check(value_store_patch, section, params, expected) -> None:
         ),
     ],
 )
-def test_cluster(value_store_patch, section, params, expected) -> None:
+def test_cluster(  # type:ignore[no-untyped-def]
+    value_store_patch, section, params, expected
+) -> None:
     with on_time(*NOW_SIMULATED):
         yielded_results = list(asm.cluster_check_oracle_asm_diskgroup(ITEM, params, section))
         assert yielded_results == expected

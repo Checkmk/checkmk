@@ -136,7 +136,7 @@ def _modify_start_time(
         ("35:30:2.12", 35 * 60**2 + 30 * 60 + 2.12),
     ],
 )
-def test_job_parse_real_time(timestr, expected_result) -> None:
+def test_job_parse_real_time(timestr, expected_result) -> None:  # type:ignore[no-untyped-def]
     assert job._job_parse_real_time(timestr) == expected_result
 
 
@@ -258,7 +258,7 @@ def test_job_parse_real_time(timestr, expected_result) -> None:
         ),
     ],
 )
-def test_parse(string_table, expected_parsed_data) -> None:
+def test_parse(string_table, expected_parsed_data) -> None:  # type:ignore[no-untyped-def]
     assert job.parse_job(string_table) == expected_parsed_data
 
 
@@ -533,6 +533,6 @@ def test_process_job_stats(
         ),
     ],
 )
-def test_check_job(item, params, section, expected_results) -> None:
+def test_check_job(item, params, section, expected_results) -> None:  # type:ignore[no-untyped-def]
     with on_time(*TIME):
         assert list(job.check_job(item, params, section)) == expected_results

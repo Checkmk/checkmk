@@ -31,7 +31,9 @@ def set_fixed_timezone():
         ([["Signatures", "Missing"]], 0, {}),
     ],
 )
-def test_parse_kaspersky_av_client(string_table, now, expected_section) -> None:
+def test_parse_kaspersky_av_client(  # type:ignore[no-untyped-def]
+    string_table, now, expected_section
+) -> None:
     assert kaspersky_av_client._parse_kaspersky_av_client(string_table, now=now) == expected_section
 
 
@@ -81,6 +83,6 @@ def test_parse_kaspersky_av_client(string_table, now, expected_section) -> None:
         ),
     ],
 )
-def test_check_kaskpersky_av_client(section, results) -> None:
+def test_check_kaskpersky_av_client(section, results) -> None:  # type:ignore[no-untyped-def]
     test_params = dict(signature_age=(2, 3), fullscan_age=(2, 3))
     assert list(kaspersky_av_client.check_kaspersky_av_client(test_params, section)) == results

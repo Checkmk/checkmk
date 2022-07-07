@@ -95,7 +95,7 @@ ClearEvent = Literal[
 ClearEvents = Union[List[ClearEvent], ClearEvent]
 
 
-def _scoped_memoize(
+def _scoped_memoize(  # type:ignore[no-untyped-def]
     clear_events: ClearEvents,
     maxsize: Optional[int] = 128,
     typed: bool = False,
@@ -137,7 +137,9 @@ def _scoped_memoize(
     return _decorator
 
 
-def request_memoize(maxsize: Optional[int] = 128, typed: bool = False):
+def request_memoize(  # type:ignore[no-untyped-def]
+    maxsize: Optional[int] = 128, typed: bool = False
+):
     """A cache decorator which only has a scope for one request.
 
     Args:

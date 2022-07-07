@@ -72,7 +72,7 @@ DEVICE_DATA_OTHER = parse_mobileiron(
         ("290101", 7776000, (False, -2530)),
     ],
 )
-def test_is_too_old(string, seconds, expected_results) -> None:
+def test_is_too_old(string, seconds, expected_results) -> None:  # type:ignore[no-untyped-def]
     with on_time(1643360266, "UTC"):
         assert is_too_old(string, seconds) == expected_results
 
@@ -195,7 +195,9 @@ def test_is_too_old_raises() -> None:
         ),
     ],
 )
-def test_check_mobileiron_versions(params, section, expected_results) -> None:
+def test_check_mobileiron_versions(  # type:ignore[no-untyped-def]
+    params, section, expected_results
+) -> None:
     with on_time(1643360266, "UTC"):
         results = tuple(check_mobileiron_versions(params, section))
         assert results == expected_results

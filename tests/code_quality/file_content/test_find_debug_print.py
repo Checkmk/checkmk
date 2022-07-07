@@ -44,12 +44,14 @@ def find_debugs(line):
 @pytest.mark.parametrize(
     "line", ['  print "hello Word"', 'print("variable")', "  pprint(dict)", "  pprint.pprint(list)"]
 )
-def test_find_debugs(changed_files: ChangedFiles, line) -> None:
+def test_find_debugs(changed_files: ChangedFiles, line) -> None:  # type:ignore[no-untyped-def]
     assert find_debugs(line)
 
 
 @pytest.mark.parametrize("line", ['sys.stdout.write("message")', "# print(variable)"])
-def test_find_debugs_false(changed_files: ChangedFiles, line) -> None:
+def test_find_debugs_false(  # type:ignore[no-untyped-def]
+    changed_files: ChangedFiles, line
+) -> None:  # type:ignore[no-untyped-def]
     assert find_debugs(line) is None
 
 
@@ -63,7 +65,7 @@ def test_find_debugs_false(changed_files: ChangedFiles, line) -> None:
         if os.path.exists(p)
     ],
 )
-def test_find_debug_code(changed_files: ChangedFiles, path) -> None:
+def test_find_debug_code(changed_files: ChangedFiles, path) -> None:  # type:ignore[no-untyped-def]
     scanned = 0
 
     for dirpath, _, filenames in os.walk(path):

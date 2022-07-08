@@ -45,19 +45,19 @@ class MountPoint(TypedDict):
 Section = Mapping[str, MountPoint]
 
 
-def parse_df_zos(info: StringTable) -> Section:
-    parsed: dict[str, MountPoint] = {}
+def parse_df_zos(string_table: StringTable) -> Section:
+    section: dict[str, MountPoint] = {}
     fs = None
     usage: list[str] = []
     options: list[str] = []
 
-    for line in info:
+    for line in string_table:
         if line[0].startswith("#####"):
             # Add item for filesystem
             if fs and usage and options:
-                parsed.setdefault(fs, {})
-                parsed[fs].setdefault("size", usage)
-                parsed[fs].setdefault("options", options)
+                section.setdefault(fs, {})
+                section[fs].setdefault("size", usage)
+                section[fs].setdefault("options", options)
 
             fs = None
             usage = []
@@ -78,21 +78,21 @@ def parse_df_zos(info: StringTable) -> Section:
                     options.remove("Read")
                     options.remove("Only")
                     options.append("ReadOnly")
-    return parsed
+    return section
 
 
 df_zos_exclude_list = ["AUTOMNT", "TFS", "NFS"]
 
 
-def inventory_df_zos(parsed: Section) -> DiscoveryResult:
+def discover_df_zos(section: Section) -> DiscoveryResult:
     mplist = []
 
-    for item in parsed:
+    for item in section:
         fs_rw = False
         fs_ex = False
 
         # Check filesystem options
-        for option in parsed[item]["options"]:
+        for option in section[item]["options"]:
             # Check if filesystem is rw
             if option == "Read/Write":
                 fs_rw = True
@@ -106,10 +106,10 @@ def inventory_df_zos(parsed: Section) -> DiscoveryResult:
     return df_discovery(host_extra_conf(host_name(), filesystem_groups), mplist)
 
 
-def check_df_zos(item: str, params: Mapping[str, Any], parsed: Section) -> CheckResult:
+def check_df_zos(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     fslist = []
 
-    for filesystem, fs_data in parsed.items():
+    for filesystem, fs_data in section.items():
         (size_mb, used_mb, avail_mb) = map(float, fs_data["size"][0:3])
         size_mb /= 1024
         used_mb /= 1024
@@ -124,8 +124,8 @@ factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 check_info["df_zos"] = {
     "parse_function": parse_df_zos,
+    "inventory_function": discover_df_zos,
     "check_function": check_df_zos,
-    "inventory_function": inventory_df_zos,
     "service_description": "Filesystem %s",
     "has_perfdata": True,
     "group": "filesystem",

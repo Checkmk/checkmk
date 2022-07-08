@@ -264,7 +264,7 @@ class PainterServiceIcons(Painter):
     def ident(self) -> str:
         return "service_icons"
 
-    def title(self, cell) -> str:
+    def title(self, cell) -> str:  # type:ignore[no-untyped-def]
         return _("Service icons")
 
     def short_title(self, cell: Cell) -> str:
@@ -5284,7 +5284,9 @@ class AbstractPainterSpecificMetric(Painter):
             key=lambda x: x[1],
         )
 
-    def _render(self, row, cell, perf_data_entries, check_command) -> tuple[str, str]:
+    def _render(  # type:ignore[no-untyped-def]
+        self, row, cell, perf_data_entries, check_command
+    ) -> tuple[str, str]:
         show_metric = cell.painter_parameters()["metric"]
         translated_metrics = metrics.translate_perf_data(
             perf_data_entries, check_command=check_command

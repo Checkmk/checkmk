@@ -280,7 +280,7 @@ class RulesetCollection:
 
         self.from_config(folder, store.load_mk_file(path, config_dict), only_varname)
 
-    def from_config(
+    def from_config(  # type:ignore[no-untyped-def]
         self, folder: CREFolder, rulesets_config, only_varname: Optional[RulesetName] = None
     ) -> None:
         varnames = [only_varname] if only_varname else rulespec_registry.keys()
@@ -345,13 +345,13 @@ class RulesetCollection:
     def exists(self, name: RulesetName) -> bool:
         return name in self._rulesets
 
-    def get(self, name: RulesetName, deflt=None) -> Ruleset:
+    def get(self, name: RulesetName, deflt=None) -> Ruleset:  # type:ignore[no-untyped-def]
         return self._rulesets[name]
 
     def set(self, name: RulesetName, ruleset: Ruleset) -> None:
         self._rulesets[name] = ruleset
 
-    def delete(self, name: RulesetName):
+    def delete(self, name: RulesetName):  # type:ignore[no-untyped-def]
         del self._rulesets[name]
 
     def get_rulesets(self) -> Mapping[RulesetName, Ruleset]:
@@ -616,7 +616,7 @@ class Ruleset:
         self._rules_by_id[rule.id] = rule
         self._on_change()
 
-    def from_config(self, folder: CREFolder, rules_config) -> None:
+    def from_config(self, folder: CREFolder, rules_config) -> None:  # type:ignore[no-untyped-def]
         if not rules_config:
             return
 

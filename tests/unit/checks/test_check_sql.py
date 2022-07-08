@@ -38,7 +38,7 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_check_sql_argument_parsing(params, expected_args) -> None:
+def test_check_sql_argument_parsing(params, expected_args) -> None:  # type:ignore[no-untyped-def]
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_sql")
     assert active_check.run_argument_function(params) == expected_args

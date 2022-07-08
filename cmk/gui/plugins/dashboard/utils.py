@@ -127,7 +127,7 @@ def macro_mapping_from_context(
     return macro_mapping
 
 
-def render_title_with_macros_string(
+def render_title_with_macros_string(  # type:ignore[no-untyped-def]
     context: VisualContext,
     single_infos: SingleInfos,
     title: str,
@@ -521,7 +521,9 @@ class VsResultGeneralSettings(TypedDict):
     single_infos: List[str]
 
 
-def dashlet_vs_general_settings(dashlet_type: Type[Dashlet], single_infos: SingleInfos):
+def dashlet_vs_general_settings(  # type:ignore[no-untyped-def]
+    dashlet_type: Type[Dashlet], single_infos: SingleInfos
+):
     return Dictionary(
         title=_("General Settings"),
         render="form",
@@ -901,7 +903,7 @@ def _transform_dashlets_mut(dashlet_spec: DashletConfig) -> DashletConfig:
     return dashlet_spec
 
 
-def _transform_event_bar_chart_dashlet(dashlet_spec: DashletConfig):
+def _transform_event_bar_chart_dashlet(dashlet_spec: DashletConfig):  # type:ignore[no-untyped-def]
     if "render_mode" not in dashlet_spec:
         dashlet_spec["render_mode"] = (
             "bar_chart",
@@ -1128,7 +1130,7 @@ def service_table_query(properties, context, column_generator):
     return _table_query(properties, context, column_generator, "services", ["host", "service"])
 
 
-def _table_query(
+def _table_query(  # type:ignore[no-untyped-def]
     properties, context, column_generator, table: str, infos: List[str]
 ) -> Tuple[List[str], LivestatusResponse]:
     filter_headers, only_sites = visuals.get_filter_headers(table, infos, context)
@@ -1180,7 +1182,7 @@ def create_service_view_url(context):
     )
 
 
-def create_data_for_single_metric(
+def create_data_for_single_metric(  # type:ignore[no-untyped-def]
     properties,
     context: VisualContext,
     column_generator: Callable[[Any, VisualContext], List[str]],
@@ -1276,7 +1278,9 @@ class ServiceStateFormatter(StateFormatter):
         self.message_template = message_template
 
 
-def state_map(conf: Optional[Tuple[str, str]], row: Row, formatter: StateFormatter):
+def state_map(  # type:ignore[no-untyped-def]
+    conf: Optional[Tuple[str, str]], row: Row, formatter: StateFormatter
+):
     style = dict(zip(("paint", "status"), conf)) if isinstance(conf, tuple) else {}
     state, status_name = formatter.state_names(row)
     return {

@@ -542,7 +542,9 @@ def _graph_padding_styles(graph_render_options: GraphRenderOptions) -> str:
     return "padding: %0.2fex %0.2fex %0.2fex %0.2fex;" % _graph_margin_ex(graph_render_options)
 
 
-def _graph_margin_ex(graph_render_options: GraphRenderOptions, defaults=(8, 16, 4, 8)) -> Bounds:
+def _graph_margin_ex(  # type:ignore[no-untyped-def]
+    graph_render_options: GraphRenderOptions, defaults=(8, 16, 4, 8)
+) -> Bounds:
     """Return 4-Tuple for top, right, bottom, left spacing"""
     if graph_render_options["preview"]:
         return Bounds(0, 0, 0, 0)

@@ -939,7 +939,7 @@ def _rulespec_class_for(varname: str, has_valuespec: bool, has_itemtype: bool) -
 
 
 class RulespecRegistry(cmk.utils.plugin_registry.Registry[Rulespec]):
-    def __init__(self, group_registry) -> None:
+    def __init__(self, group_registry) -> None:  # type:ignore[no-untyped-def]
         super().__init__()
         self._group_registry = group_registry
 

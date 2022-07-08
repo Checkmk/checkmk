@@ -298,7 +298,7 @@ class VisualTypeViews(VisualType):
     def permitted_visuals(self):
         return get_permitted_views()
 
-    def link_from(
+    def link_from(  # type:ignore[no-untyped-def]
         self, linking_view, linking_view_rows, visual, context_vars: HTTPVariables
     ) -> bool:
         """This has been implemented for HW/SW inventory views which are often useless when a host
@@ -725,7 +725,7 @@ class ABCViewRenderer(abc.ABC):
         self._menu_topics[dropdown].append(topic)
 
     @abc.abstractmethod
-    def render(
+    def render(  # type:ignore[no-untyped-def]
         self,
         rows: Rows,
         show_checkboxes: bool,
@@ -741,7 +741,7 @@ class GUIViewRenderer(ABCViewRenderer):
         super().__init__(view)
         self._show_buttons = show_buttons
 
-    def render(  # pylint: disable=too-many-branches
+    def render(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
         self,
         rows: Rows,
         show_checkboxes: bool,
@@ -1057,7 +1057,9 @@ class GUIViewRenderer(ABCViewRenderer):
     def _page_menu_dropdowns_context(self, rows: Rows) -> List[PageMenuDropdown]:
         return _get_context_page_menu_dropdowns(self.view, rows, mobile=False)
 
-    def _page_menu_dropdowns_ntop(self, host_address) -> PageMenuDropdown:
+    def _page_menu_dropdowns_ntop(  # type:ignore[no-untyped-def]
+        self, host_address
+    ) -> PageMenuDropdown:
         return _get_ntop_page_menu_dropdown(self.view, host_address)
 
     def _page_menu_entries_export_data(self) -> Iterator[PageMenuEntry]:
@@ -1508,7 +1510,7 @@ def _cmp_host_tag(r1, r2, tgid):
     return (host_tag_1 > host_tag_2) - (host_tag_1 < host_tag_2)
 
 
-def _get_tag_group_value(row, what, tag_group_id) -> str:
+def _get_tag_group_value(row, what, tag_group_id) -> str:  # type:ignore[no-untyped-def]
     tag_id = get_tag_groups(row, "host").get(tag_group_id)
 
     tag_group = active_config.tags.get_tag_group(tag_group_id)
@@ -1926,7 +1928,9 @@ class PageAjaxCascadingRenderPainterParameters(AjaxPage):
         raise MKGeneralException("Invaild choice")
 
 
-def render_view_config(view_spec: ViewSpec, general_properties=True) -> None:
+def render_view_config(  # type:ignore[no-untyped-def]
+    view_spec: ViewSpec, general_properties=True
+) -> None:
     ds_name = view_spec.get("datasource", request.var("datasource"))
     if not ds_name:
         raise MKInternalError(_("No datasource defined."))
@@ -2214,7 +2218,7 @@ def _process_regular_view(view_renderer: ABCViewRenderer) -> None:
     _show_view(view_renderer, unfiltered_amount_of_rows, rows)
 
 
-def _add_rest_api_menu_entries(view_renderer, queries: List[str]):
+def _add_rest_api_menu_entries(view_renderer, queries: List[str]):  # type:ignore[no-untyped-def]
     from cmk.utils.livestatus_helpers.queries import Query
 
     from cmk.gui.plugins.openapi.utils import create_url
@@ -2885,7 +2889,9 @@ def _get_ntop_page_menu_topics(view, host_address):
     return topics
 
 
-def _get_ntop_entry_item_link(host_name: str, host_address: str, tab: str):
+def _get_ntop_entry_item_link(  # type:ignore[no-untyped-def]
+    host_name: str, host_address: str, tab: str
+):
     return make_simple_link(
         makeuri(
             request,

@@ -193,7 +193,7 @@ class AvailabilityColumns:
         self.service = self._service_availability_columns()
         self.bi = self._bi_availability_columns()
 
-    def __getitem__(self, key) -> List[ColumnSpec]:
+    def __getitem__(self, key) -> List[ColumnSpec]:  # type:ignore[no-untyped-def]
         return getattr(self, key)
 
     def _host_availability_columns(self) -> List[ColumnSpec]:
@@ -2367,7 +2367,7 @@ def get_timeline_containers(
 
 # Not a real class, more a struct
 class TimelineContainer:
-    def __init__(self, aggr_row) -> None:
+    def __init__(self, aggr_row) -> None:  # type:ignore[no-untyped-def]
         self._aggr_row = aggr_row
 
         # PUBLIC accessible data

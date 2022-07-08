@@ -498,16 +498,16 @@ class ActivateChanges:
         changes = self._changes_of_site(site_id)
         return bool([c for c in changes if self._is_foreign(c)])
 
-    def is_sync_needed(self, site_id) -> bool:
+    def is_sync_needed(self, site_id) -> bool:  # type:ignore[no-untyped-def]
         if site_is_local(site_id):
             return False
 
         return any(c["need_sync"] for c in self._changes_of_site(site_id))
 
-    def _is_activate_needed(self, site_id) -> bool:
+    def _is_activate_needed(self, site_id) -> bool:  # type:ignore[no-untyped-def]
         return any(c["need_restart"] for c in self._changes_of_site(site_id))
 
-    def _last_activation_state(self, site_id: SiteId):
+    def _last_activation_state(self, site_id: SiteId):  # type:ignore[no-untyped-def]
         """This function returns the last known persisted activation state"""
         return store.load_object_from_file(
             ActivateChangesManager.persisted_site_state_path(site_id), default={}
@@ -529,7 +529,7 @@ class ActivateChanges:
             if self._is_foreign(change) and self._affects_all_sites(change)
         )
 
-    def _is_foreign(self, change) -> bool:
+    def _is_foreign(self, change) -> bool:  # type:ignore[no-untyped-def]
         return change["user_id"] and change["user_id"] != user.id
 
     def _affects_all_sites(self, change):
@@ -1671,7 +1671,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             else:
                 store.release_lock(_site_replication_status_path(self._site_id))
 
-    def _is_currently_activating(self, site_rep_status) -> bool:
+    def _is_currently_activating(self, site_rep_status) -> bool:  # type:ignore[no-untyped-def]
         current_activation_id = site_rep_status.get("current_activation")
         if not current_activation_id:
             return False
@@ -1941,7 +1941,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         finally:
             site_changes.write(changes)
 
-    def _set_result(
+    def _set_result(  # type:ignore[no-untyped-def]
         self,
         phase: Phase,
         status_text: str,

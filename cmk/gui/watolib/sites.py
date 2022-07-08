@@ -322,7 +322,7 @@ class SiteManagement:
         return sites
 
     @classmethod
-    def save_sites(cls, sites: SiteConfigurations, activate=True):
+    def save_sites(cls, sites: SiteConfigurations, activate=True):  # type:ignore[no-untyped-def]
         # TODO: Clean this up
         from cmk.gui.watolib.hosts_and_folders import Folder
 
@@ -634,7 +634,7 @@ class CEESiteManagement(SiteManagement):
 
 # TODO: Change to factory
 class LivestatusViaTCP(Dictionary):
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs) -> None:  # type:ignore[no-untyped-def]
         kwargs["elements"] = [
             (
                 "port",
@@ -754,7 +754,7 @@ def is_livestatus_encrypted(site: SiteConfiguration) -> bool:
     )
 
 
-def site_globals_editable(site_id, site) -> bool:
+def site_globals_editable(site_id, site) -> bool:  # type:ignore[no-untyped-def]
     # Site is a remote site of another site. Allow to edit probably pushed site
     # specific globals when remote WATO is enabled
     if is_wato_slave_site():

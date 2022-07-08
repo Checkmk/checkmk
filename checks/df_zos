@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Iterable, Mapping, TypedDict
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
@@ -11,7 +13,11 @@ from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-impo
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils.df import df_discovery
+
+DiscoveryResult = Iterable[tuple[str, Mapping[str, Any]]]
+CheckResult = Iterable[tuple[int, str, list]]
 
 # <<<df_zos>>>
 # SYS5.OMVS.ALF0.HFS         720          92        504       16% /ALF0
@@ -31,11 +37,19 @@ from cmk.base.plugins.agent_based.utils.df import df_discovery
 # HFS
 
 
-def parse_df_zos(info):
-    parsed = {}
+class MountPoint(TypedDict):
+    size: list[str]
+    options: list[str]
+
+
+Section = Mapping[str, MountPoint]
+
+
+def parse_df_zos(info: StringTable) -> Section:
+    parsed: dict[str, MountPoint] = {}
     fs = None
-    usage = []
-    options = []
+    usage: list[str] = []
+    options: list[str] = []
 
     for line in info:
         if line[0].startswith("#####"):
@@ -70,7 +84,7 @@ def parse_df_zos(info):
 df_zos_exclude_list = ["AUTOMNT", "TFS", "NFS"]
 
 
-def inventory_df_zos(parsed):
+def inventory_df_zos(parsed: Section) -> DiscoveryResult:
     mplist = []
 
     for item in parsed:
@@ -92,7 +106,7 @@ def inventory_df_zos(parsed):
     return df_discovery(host_extra_conf(host_name(), filesystem_groups), mplist)
 
 
-def check_df_zos(item, params, parsed):
+def check_df_zos(item: str, params: Mapping[str, Any], parsed: Section) -> CheckResult:
     fslist = []
 
     for filesystem, fs_data in parsed.items():

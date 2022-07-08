@@ -39,7 +39,7 @@ CheckResult = Iterable[tuple[int, str, list]]
 
 class MountPoint(TypedDict):
     size: list[str]
-    options: list[str]
+    options: set[str]
 
 
 Section = Mapping[str, MountPoint]
@@ -49,7 +49,7 @@ def parse_df_zos(string_table: StringTable) -> Section:
     section: dict[str, MountPoint] = {}
     fs = None
     usage: list[str] = []
-    options: list[str] = []
+    options: set[str] = set()
 
     for line in string_table:
         if line[0].startswith("#####"):
@@ -61,7 +61,7 @@ def parse_df_zos(string_table: StringTable) -> Section:
 
             fs = None
             usage = []
-            options = []
+            options = set()
         elif line[0].startswith("Filesystem"):
             # Ignore header line
             continue
@@ -73,11 +73,11 @@ def parse_df_zos(string_table: StringTable) -> Section:
             elif not options:
                 # Second line: filesystem options
                 for option in line:
-                    options.append(option.replace(",", ""))
+                    options.add(option.replace(",", ""))
                 if "Read" in options and "Only" in options:
                     options.remove("Read")
                     options.remove("Only")
-                    options.append("ReadOnly")
+                    options.add("ReadOnly")
     return section
 
 
@@ -85,24 +85,12 @@ df_zos_exclude_list = ["AUTOMNT", "TFS", "NFS"]
 
 
 def discover_df_zos(section: Section) -> DiscoveryResult:
-    mplist = []
+    mplist = [
+        item
+        for item, mp in section.items()
+        if "Read/Write" in mp["options"] and not mp["options"].intersection(df_zos_exclude_list)
+    ]
 
-    for item in section:
-        fs_rw = False
-        fs_ex = False
-
-        # Check filesystem options
-        for option in section[item]["options"]:
-            # Check if filesystem is rw
-            if option == "Read/Write":
-                fs_rw = True
-
-            # Check if filesystem is excluded
-            if option in df_zos_exclude_list:
-                fs_ex = True
-
-        if fs_rw and not fs_ex:
-            mplist.append(item)
     return df_discovery(host_extra_conf(host_name(), filesystem_groups), mplist)
 
 

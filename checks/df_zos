@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Iterable, Mapping, TypedDict
+from typing import Any, Iterable, Mapping, NamedTuple
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
@@ -37,8 +37,8 @@ CheckResult = Iterable[tuple[int, str, list]]
 # HFS
 
 
-class MountPoint(TypedDict):
-    size: list[str]
+class MountPoint(NamedTuple):
+    usage: tuple[str, str, str]
     options: set[str]
 
 
@@ -47,29 +47,23 @@ Section = Mapping[str, MountPoint]
 
 def parse_df_zos(string_table: StringTable) -> Section:
     section: dict[str, MountPoint] = {}
-    fs = None
-    usage: list[str] = []
+    usage: tuple[str, str, str] | None = None
     options: set[str] = set()
 
     for line in string_table:
         if line[0].startswith("#####"):
             # Add item for filesystem
-            if fs and usage and options:
-                section.setdefault(fs, {})
-                section[fs].setdefault("size", usage)
-                section[fs].setdefault("options", options)
+            if usage and options:
+                section[usage[0]] = MountPoint(usage, options)
 
-            fs = None
-            usage = []
+            usage = None
             options = set()
         elif line[0].startswith("Filesystem"):
             # Ignore header line
             continue
         else:
-            if fs is None:
-                # First line: filesystem with usage information
-                fs = line[5]
-                usage = line[1:5]
+            if usage is None:
+                usage = (line[5], line[1], line[3])
             elif not options:
                 # Second line: filesystem options
                 for option in line:
@@ -88,9 +82,8 @@ def discover_df_zos(section: Section) -> DiscoveryResult:
     mplist = [
         item
         for item, mp in section.items()
-        if "Read/Write" in mp["options"] and not mp["options"].intersection(df_zos_exclude_list)
+        if "Read/Write" in mp.options and not mp.options.intersection(df_zos_exclude_list)
     ]
-
     return df_discovery(host_extra_conf(host_name(), filesystem_groups), mplist)
 
 
@@ -98,11 +91,9 @@ def check_df_zos(item: str, params: Mapping[str, Any], section: Section) -> Chec
     fslist = []
 
     for filesystem, fs_data in section.items():
-        (size_mb, used_mb, avail_mb) = map(float, fs_data["size"][0:3])
-        size_mb /= 1024
-        used_mb /= 1024
-        avail_mb /= 1024
-        fslist.append((filesystem, size_mb, avail_mb, 0))
+        fslist.append(
+            (filesystem, float(fs_data.usage[1]) / 1024.0, float(fs_data.usage[2]) / 1024.0, 0.0)
+        )
 
     return df_check_filesystem_list(item, params, fslist)
 

@@ -38,7 +38,7 @@ CheckResult = Iterable[tuple[int, str, list]]
 
 
 class MountPoint(NamedTuple):
-    usage: tuple[str, str, str]
+    usage: tuple[str, float, float, float]
     options: set[str]
 
 
@@ -47,7 +47,7 @@ Section = Mapping[str, MountPoint]
 
 def parse_df_zos(string_table: StringTable) -> Section:
     section: dict[str, MountPoint] = {}
-    usage: tuple[str, str, str] | None = None
+    usage: tuple[str, float, float, float] | None = None
     options: set[str] = set()
 
     for line in string_table:
@@ -63,7 +63,7 @@ def parse_df_zos(string_table: StringTable) -> Section:
             continue
         else:
             if usage is None:
-                usage = (line[5], line[1], line[3])
+                usage = (line[5], float(line[1]) / 1024.0, float(line[3]) / 1024.0, 0.0)
             elif not options:
                 # Second line: filesystem options
                 for option in line:
@@ -88,13 +88,7 @@ def discover_df_zos(section: Section) -> DiscoveryResult:
 
 
 def check_df_zos(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    fslist = []
-
-    for filesystem, fs_data in section.items():
-        fslist.append(
-            (filesystem, float(fs_data.usage[1]) / 1024.0, float(fs_data.usage[2]) / 1024.0, 0.0)
-        )
-
+    fslist = [mp.usage for mp in section.values()]
     return df_check_filesystem_list(item, params, fslist)
 
 

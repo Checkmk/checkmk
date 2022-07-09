@@ -6,7 +6,7 @@
 
 import pytest
 
-import cmk.base.plugins.agent_based.ceph_df as ceph_df
+import cmk.base.plugins.agent_based.ceph_df_json_section as ceph_df
 
 SECTION1 = [
     ("SUMMARY", 28536947.359375, 22427607.171875, 0),

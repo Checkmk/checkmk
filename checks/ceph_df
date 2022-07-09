@@ -4,20 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+import re
+from typing import Any, Mapping
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.df import (
+    df_check_filesystem_list_coroutine,
+    FILESYSTEM_DEFAULT_PARAMS,
+    filesystem_groups,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils.df import df_discovery, FSBlocks
 
 
-def _sanitize_line(line):
+def _sanitize_line(line: list[str]) -> list[str]:
     """Merges units to values in case values and units are contained in separate line elements."""
     units = ("k", "K", "B", "M", "G", "T", "P", "E", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB")
-    sanitized_line = []
+    sanitized_line: list[str] = []
     for word in line:
         if word in units and sanitized_line:
             sanitized_line[-1] += word
@@ -26,17 +28,41 @@ def _sanitize_line(line):
     return sanitized_line
 
 
-def parse_ceph_df(info) -> FSBlocks:  # pylint: disable=too-many-branches
-    parsed = {}
+def _parse_byte_values(value_str: str) -> float:
+    """
+    Returns the used storage in mebibytes.
+    """
+    # sanitize to possible units to single representation
+    value_str = value_str.rstrip("iB")
+
+    if value_str.endswith("E"):
+        return float(value_str[:-1]) * 1024**4
+    if value_str.endswith("P"):
+        return float(value_str[:-1]) * 1024**3
+    if value_str.endswith("T"):
+        return float(value_str[:-1]) * 1024**2
+    if value_str.endswith("G"):
+        return float(value_str[:-1]) * 1024
+    if value_str.endswith("M"):
+        return float(value_str[:-1])
+    if value_str.lower().endswith("k"):
+        return float(value_str[:-1]) / 1024
+    if value_str == "N/A":
+        return 0.0
+    return float(value_str) / (1024**2)
+
+
+def parse_ceph_df(string_table: StringTable) -> FSBlocks:  # pylint: disable=too-many-branches
+    parsed: dict[str, dict[str, str]] = {}
     section = None
     global_headers = None
     pools_headers = None
 
-    for line in info:
+    for line in string_table:
         if line[0] in ["GLOBAL:", "RAW"] or re.sub("[-: ]", "", "".join(line)) == "RAWSTORAGE":
             section = "global"
             continue
-        elif re.sub("[-: ]", "", "".join(line)) == "POOLS":
+        if re.sub("[-: ]", "", "".join(line)) == "POOLS":
             section = "pools"
             continue
 
@@ -279,29 +305,6 @@ def parse_ceph_df(info) -> FSBlocks:  # pylint: disable=too-many-branches
             elif pools_headers is not None:
                 parsed.setdefault(line[0], dict(zip(pools_headers[1:], line[1:])))
 
-    def parse_byte_values(value_str):
-        """
-        Returns the used storage in mebibytes.
-        """
-        # sanitize to possible units to single representation
-        value_str = value_str.rstrip("iB")
-
-        if value_str.endswith("E"):
-            return float(value_str[:-1]) * 1024**4
-        elif value_str.endswith("P"):
-            return float(value_str[:-1]) * 1024**3
-        elif value_str.endswith("T"):
-            return float(value_str[:-1]) * 1024**2
-        elif value_str.endswith("G"):
-            return float(value_str[:-1]) * 1024
-        elif value_str.endswith("M"):
-            return float(value_str[:-1])
-        elif value_str.lower().endswith("k"):
-            return float(value_str[:-1]) / 1024
-        elif value_str == "N/A":
-            return 0.0
-        return float(value_str) / (1024**2)
-
     mps = []
     for mp, data in parsed.items():
         # http://docs.ceph.com/docs/master/rados/operations/monitoring/
@@ -312,23 +315,28 @@ def parse_ceph_df(info) -> FSBlocks:  # pylint: disable=too-many-branches
         #   USED: The notional amount of data stored in kilobytes, unless the number appends M for megabytes or G for gigabytes.
         #   MAX AVAIL: An estimate of the notional amount of data that can be written to this pool.
         if mp == "SUMMARY":
-            size_mb = parse_byte_values(data["SIZE"])
-            avail_mb = parse_byte_values(data["AVAIL"])
+            size_mb = _parse_byte_values(data["SIZE"])
+            avail_mb = _parse_byte_values(data["AVAIL"])
         else:
-            avail_mb = parse_byte_values(data["MAX AVAIL"])
+            avail_mb = _parse_byte_values(data["MAX AVAIL"])
 
             # from ceph version pacific STORED is a notional amount of data stored
             # USED is the total data stored (incl. replication)
             # https://docs.ceph.com/en/latest/rados/operations/monitoring/
             # werk 12199
             used_size = data["STORED"] if "STORED" in data else data["USED"]
-            size_mb = avail_mb + parse_byte_values(used_size)
+            size_mb = avail_mb + _parse_byte_values(used_size)
         mps.append((mp, size_mb, avail_mb, 0))
     return mps
 
 
-def inventory_ceph_df(mps):
-    return df_discovery(host_extra_conf(host_name(), filesystem_groups), [x[0] for x in mps])
+def discover_ceph_df(section: FSBlocks):
+    params = host_extra_conf(host_name(), filesystem_groups)
+    return df_discovery(params, [x[0] for x in section])
+
+
+def check_ceph_df(item: str, params: Mapping[str, Any], section: FSBlocks):
+    yield from df_check_filesystem_list_coroutine(item, params, section)
 
 
 factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
@@ -336,8 +344,8 @@ factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 check_info["ceph_df"] = {
     "parse_function": parse_ceph_df,
-    "inventory_function": inventory_ceph_df,
-    "check_function": df_check_filesystem_list,
+    "inventory_function": discover_ceph_df,
+    "check_function": check_ceph_df,
     "service_description": "Ceph Pool %s",
     "has_perfdata": True,
     "group": "filesystem",

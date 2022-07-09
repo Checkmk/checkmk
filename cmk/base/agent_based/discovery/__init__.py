@@ -61,7 +61,6 @@ import cmk.base.agent_based.checking as checking
 import cmk.base.agent_based.error_handling as error_handling
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
-import cmk.base.check_table as check_table
 import cmk.base.check_utils
 import cmk.base.config as config
 import cmk.base.core
@@ -1099,7 +1098,7 @@ def _get_host_services(
     services.update(_reclassify_disabled_items(host_config.hostname, services))
 
     # remove the ones shadowed by enforced services
-    enforced_services = _enforced_services(host_config)
+    enforced_services = host_config.enforced_services_table()
     return _group_by_transition({k: v for k, v in services.items() if k not in enforced_services})
 
 
@@ -1158,12 +1157,6 @@ def _node_service_source(
     if check_source == "old":
         return "clustered_old"
     return "clustered_new"
-
-
-def _enforced_services(
-    host_config: HostConfig,
-) -> Mapping[ServiceID, ConfiguredService]:
-    return check_table.get_check_table(host_config.hostname, skip_autochecks=True)
 
 
 def _reclassify_disabled_items(
@@ -1367,7 +1360,7 @@ def get_check_preview(
                 found_on_nodes=[host_config.hostname],
                 value_store_manager=value_store_manager,
             )
-            for service in _enforced_services(host_config).values()
+            for _ruleset_name, service in host_config.enforced_services_table().values()
         ]
 
     return [

@@ -3014,7 +3014,6 @@ class HostConfig:
         """Return the free form configured custom checks without formalization"""
         return self._config_cache.host_extra_conf(self.hostname, custom_checks)
 
-    @property
     def enforced_services_table(
         self,
     ) -> Mapping[

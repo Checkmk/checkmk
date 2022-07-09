@@ -742,7 +742,7 @@ class AutomationAnalyseServices(Automation):
         # 4. active checks
 
         # 1. Enforced services
-        for checkgroup_name, service in host_config.enforced_services_table.values():
+        for checkgroup_name, service in host_config.enforced_services_table().values():
             if service.description == servicedesc:
                 return {
                     "origin": "static",  # TODO: (how) can we change this to "enforced"?

@@ -5,15 +5,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from typing import Any, Mapping
+import time
+from typing import Any, Mapping, Sequence
 
-from cmk.base.check_legacy_includes.df import (
-    df_check_filesystem_list_coroutine,
-    FILESYSTEM_DEFAULT_PARAMS,
-    filesystem_groups,
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, register, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.df import df_discovery, FSBlocks
+from cmk.base.plugins.agent_based.utils.df import (
+    df_check_filesystem_list,
+    df_discovery,
+    FILESYSTEM_DEFAULT_PARAMS,
+    FSBlocks,
+)
 
 
 def _sanitize_line(line: list[str]) -> list[str]:
@@ -333,24 +339,36 @@ def parse_ceph_df(string_table: StringTable) -> FSBlocks:
     return mps
 
 
-def discover_ceph_df(section: FSBlocks):
-    params = host_extra_conf(host_name(), filesystem_groups)
-    return df_discovery(params, [x[0] for x in section])
+register.agent_section(
+    name="ceph_df",
+    parse_function=parse_ceph_df,
+)
 
 
-def check_ceph_df(item: str, params: Mapping[str, Any], section: FSBlocks):
-    yield from df_check_filesystem_list_coroutine(item, params, section)
+def discover_ceph_df(params: Sequence[Mapping[str, Any]], section: FSBlocks) -> DiscoveryResult:
+    yield from (
+        Service(item=i, parameters=p) for i, p in df_discovery(params, [x[0] for x in section])
+    )
 
 
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
+def check_ceph_df(item: str, params: Mapping[str, Any], section: FSBlocks) -> CheckResult:
+    yield from df_check_filesystem_list(
+        value_store=get_value_store(),
+        item=item,
+        params=params,
+        fslist_blocks=section,
+        this_time=time.time(),
+    )
 
 
-check_info["ceph_df"] = {
-    "parse_function": parse_ceph_df,
-    "inventory_function": discover_ceph_df,
-    "check_function": check_ceph_df,
-    "service_description": "Ceph Pool %s",
-    "has_perfdata": True,
-    "group": "filesystem",
-    "default_levels_variable": "filesystem_default_levels",
-}
+register.check_plugin(
+    name="ceph_df",
+    service_name="Ceph Pool %s",
+    discovery_function=discover_ceph_df,
+    discovery_ruleset_name="filesystem_groups",
+    discovery_ruleset_type=register.RuleSetType.ALL,
+    discovery_default_parameters={"groups": []},
+    check_function=check_ceph_df,
+    check_ruleset_name="filesystem",
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
+)

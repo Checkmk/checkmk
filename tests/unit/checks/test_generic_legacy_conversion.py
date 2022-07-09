@@ -1141,7 +1141,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "casa_power",
         "cbl_airlaser.status",
         "cbl_airlaser.hardware",
-        "ceph_df",
         "ceph_status",
         "ceph_status.osds",
         "ceph_status.pgs",

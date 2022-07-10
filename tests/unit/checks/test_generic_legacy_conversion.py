@@ -1606,7 +1606,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "hitachi_hnas_pnode",
         "hitachi_hnas_psu",
         "hitachi_hnas_quorumdevice",
-        "hitachi_hnas_span",
         "hitachi_hnas_temp",
         "hitachi_hnas_vnode",
         "hitachi_hus_dkc",

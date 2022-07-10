@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections import OrderedDict
+
 from cmk.base.plugins.agent_based import esx_vsphere_counters
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.utils.interfaces import Interface
@@ -66,173 +68,175 @@ def test_parse_esx_vsphere_counters() -> None:
 
 def test_convert_esx_counters_if() -> None:
     assert esx_vsphere_counters.convert_esx_counters_if(
-        {
-            "net.bandwidth": {
-                "vmnic0": [(["1000000000"], "bytes")],
-                "vmnic4": [(["10000000000"], "bytes")],
-                "vmnic5": [(["10000000000"], "bytes")],
-            },
-            "net.broadcastRx": {
-                "": [(["660", "592"], "number")],
-                "vmnic0": [(["220", "200"], "number")],
-                "vmnic1": [(["0", "0"], "number")],
-                "vmnic2": [(["0", "0"], "number")],
-                "vmnic3": [(["0", "0"], "number")],
-                "vmnic4": [(["220", "196"], "number")],
-                "vmnic5": [(["220", "196"], "number")],
-            },
-            "net.broadcastTx": {
-                "": [(["0", "4"], "number")],
-                "vmnic0": [(["0", "0"], "number")],
-                "vmnic1": [(["0", "0"], "number")],
-                "vmnic2": [(["0", "0"], "number")],
-                "vmnic3": [(["0", "0"], "number")],
-                "vmnic4": [(["0", "4"], "number")],
-                "vmnic5": [(["0", "0"], "number")],
-            },
-            "net.bytesRx": {
-                "": [(["84", "234"], "kiloBytesPerSecond")],
-                "vmnic0": [(["1", "1"], "kiloBytesPerSecond")],
-                "vmnic1": [(["0", "0"], "kiloBytesPerSecond")],
-                "vmnic2": [(["0", "0"], "kiloBytesPerSecond")],
-                "vmnic3": [(["0", "0"], "kiloBytesPerSecond")],
-                "vmnic4": [(["19", "187"], "kiloBytesPerSecond")],
-                "vmnic5": [(["63", "46"], "kiloBytesPerSecond")],
-            },
-            "net.bytesTx": {
-                "": [(["962", "675"], "kiloBytesPerSecond")],
-                "vmnic0": [(["0", "0"], "kiloBytesPerSecond")],
-                "vmnic1": [(["0", "0"], "kiloBytesPerSecond")],
-                "vmnic2": [(["0", "0"], "kiloBytesPerSecond")],
-                "vmnic3": [(["0", "0"], "kiloBytesPerSecond")],
-                "vmnic4": [(["33", "118"], "kiloBytesPerSecond")],
-                "vmnic5": [(["928", "557"], "kiloBytesPerSecond")],
-            },
-            "net.droppedRx": {
-                "": [(["0", "0"], "number")],
-                "vmnic0": [(["0", "0"], "number")],
-                "vmnic1": [(["0", "0"], "number")],
-                "vmnic2": [(["0", "0"], "number")],
-                "vmnic3": [(["0", "0"], "number")],
-                "vmnic4": [(["0", "0"], "number")],
-                "vmnic5": [(["0", "0"], "number")],
-            },
-            "net.droppedTx": {
-                "": [(["0", "0"], "number")],
-                "vmnic0": [(["0", "0"], "number")],
-                "vmnic1": [(["0", "0"], "number")],
-                "vmnic2": [(["0", "0"], "number")],
-                "vmnic3": [(["0", "0"], "number")],
-                "vmnic4": [(["0", "0"], "number")],
-                "vmnic5": [(["0", "0"], "number")],
-            },
-            "net.errorsRx": {
-                "": [(["0", "0"], "number")],
-                "vmnic0": [(["0", "0"], "number")],
-                "vmnic1": [(["0", "0"], "number")],
-                "vmnic2": [(["0", "0"], "number")],
-                "vmnic3": [(["0", "0"], "number")],
-                "vmnic4": [(["0", "0"], "number")],
-                "vmnic5": [(["0", "0"], "number")],
-            },
-            "net.errorsTx": {
-                "": [(["0", "0"], "number")],
-                "vmnic0": [(["0", "0"], "number")],
-                "vmnic1": [(["0", "0"], "number")],
-                "vmnic2": [(["0", "0"], "number")],
-                "vmnic3": [(["0", "0"], "number")],
-                "vmnic4": [(["0", "0"], "number")],
-                "vmnic5": [(["0", "0"], "number")],
-            },
-            "net.macaddress": {
-                "vmnic0": [(["1c:c1:de:1b:ec:dc"], "mac")],
-                "vmnic1": [(["1c:c1:de:1b:ec:de"], "mac")],
-                "vmnic2": [(["1c:c1:de:1b:ec:e0"], "mac")],
-                "vmnic3": [(["1c:c1:de:1b:ec:e2"], "mac")],
-                "vmnic4": [(["64:51:06:f0:c5:d0"], "mac")],
-                "vmnic5": [(["64:51:06:f0:c5:d4"], "mac")],
-            },
-            "net.multicastRx": {
-                "": [(["470", "212"], "number")],
-                "vmnic0": [(["157", "71"], "number")],
-                "vmnic1": [(["0", "0"], "number")],
-                "vmnic2": [(["0", "0"], "number")],
-                "vmnic3": [(["0", "0"], "number")],
-                "vmnic4": [(["157", "70"], "number")],
-                "vmnic5": [(["156", "71"], "number")],
-            },
-            "net.multicastTx": {
-                "": [(["0", "0"], "number")],
-                "vmnic0": [(["0", "0"], "number")],
-                "vmnic1": [(["0", "0"], "number")],
-                "vmnic2": [(["0", "0"], "number")],
-                "vmnic3": [(["0", "0"], "number")],
-                "vmnic4": [(["0", "0"], "number")],
-                "vmnic5": [(["0", "0"], "number")],
-            },
-            "net.packetsRx": {
-                "": [(["7417", "7204"], "number")],
-                "vmnic0": [(["383", "266"], "number")],
-                "vmnic1": [(["0", "0"], "number")],
-                "vmnic2": [(["0", "0"], "number")],
-                "vmnic3": [(["0", "0"], "number")],
-                "vmnic4": [(["952", "3922"], "number")],
-                "vmnic5": [(["6082", "3016"], "number")],
-            },
-            "net.packetsTx": {
-                "": [(["3162", "3488"], "number")],
-                "vmnic0": [(["0", "0"], "number")],
-                "vmnic1": [(["0", "0"], "number")],
-                "vmnic2": [(["0", "0"], "number")],
-                "vmnic3": [(["0", "0"], "number")],
-                "vmnic4": [(["401", "1892"], "number")],
-                "vmnic5": [(["2761", "1596"], "number")],
-            },
-            "net.received": {
-                "": [(["84", "234"], "kiloBytesPerSecond")],
-                "vmnic0": [(["1", "1"], "kiloBytesPerSecond")],
-                "vmnic1": [(["0", "0"], "kiloBytesPerSecond")],
-                "vmnic2": [(["0", "0"], "kiloBytesPerSecond")],
-                "vmnic3": [(["0", "0"], "kiloBytesPerSecond")],
-                "vmnic4": [(["19", "187"], "kiloBytesPerSecond")],
-                "vmnic5": [(["63", "46"], "kiloBytesPerSecond")],
-            },
-            "net.state": {
-                "vmnic0": [(["1"], "state")],
-                "vmnic1": [(["2"], "state")],
-                "vmnic2": [(["2"], "state")],
-                "vmnic3": [(["2"], "state")],
-                "vmnic4": [(["1"], "state")],
-                "vmnic5": [(["1"], "state")],
-            },
-            "net.transmitted": {
-                "": [(["962", "675"], "kiloBytesPerSecond")],
-                "vmnic0": [(["0", "0"], "kiloBytesPerSecond")],
-                "vmnic1": [(["0", "0"], "kiloBytesPerSecond")],
-                "vmnic2": [(["0", "0"], "kiloBytesPerSecond")],
-                "vmnic3": [(["0", "0"], "kiloBytesPerSecond")],
-                "vmnic4": [(["33", "118"], "kiloBytesPerSecond")],
-                "vmnic5": [(["928", "557"], "kiloBytesPerSecond")],
-            },
-            "net.unknownProtos": {
-                "": [(["0", "0"], "number")],
-                "vmnic0": [(["0", "0"], "number")],
-                "vmnic1": [(["0", "0"], "number")],
-                "vmnic2": [(["0", "0"], "number")],
-                "vmnic3": [(["0", "0"], "number")],
-                "vmnic4": [(["0", "0"], "number")],
-                "vmnic5": [(["0", "0"], "number")],
-            },
-            "net.usage": {
-                "": [(["1046", "910"], "kiloBytesPerSecond")],
-                "vmnic0": [(["1", "1"], "kiloBytesPerSecond")],
-                "vmnic1": [(["0", "0"], "kiloBytesPerSecond")],
-                "vmnic2": [(["0", "0"], "kiloBytesPerSecond")],
-                "vmnic3": [(["0", "0"], "kiloBytesPerSecond")],
-                "vmnic4": [(["53", "305"], "kiloBytesPerSecond")],
-                "vmnic5": [(["991", "603"], "kiloBytesPerSecond")],
-            },
-        }
+        OrderedDict(
+            {
+                "net.bandwidth": {
+                    "vmnic0": [(["1000000000"], "bytes")],
+                    "vmnic4": [(["10000000000"], "bytes")],
+                    "vmnic5": [(["10000000000"], "bytes")],
+                },
+                "net.broadcastRx": {
+                    "": [(["660", "592"], "number")],
+                    "vmnic0": [(["220", "200"], "number")],
+                    "vmnic1": [(["0", "0"], "number")],
+                    "vmnic2": [(["0", "0"], "number")],
+                    "vmnic3": [(["0", "0"], "number")],
+                    "vmnic4": [(["220", "196"], "number")],
+                    "vmnic5": [(["220", "196"], "number")],
+                },
+                "net.broadcastTx": {
+                    "": [(["0", "4"], "number")],
+                    "vmnic0": [(["0", "0"], "number")],
+                    "vmnic1": [(["0", "0"], "number")],
+                    "vmnic2": [(["0", "0"], "number")],
+                    "vmnic3": [(["0", "0"], "number")],
+                    "vmnic4": [(["0", "4"], "number")],
+                    "vmnic5": [(["0", "0"], "number")],
+                },
+                "net.bytesRx": {
+                    "": [(["84", "234"], "kiloBytesPerSecond")],
+                    "vmnic0": [(["1", "1"], "kiloBytesPerSecond")],
+                    "vmnic1": [(["0", "0"], "kiloBytesPerSecond")],
+                    "vmnic2": [(["0", "0"], "kiloBytesPerSecond")],
+                    "vmnic3": [(["0", "0"], "kiloBytesPerSecond")],
+                    "vmnic4": [(["19", "187"], "kiloBytesPerSecond")],
+                    "vmnic5": [(["63", "46"], "kiloBytesPerSecond")],
+                },
+                "net.bytesTx": {
+                    "": [(["962", "675"], "kiloBytesPerSecond")],
+                    "vmnic0": [(["0", "0"], "kiloBytesPerSecond")],
+                    "vmnic1": [(["0", "0"], "kiloBytesPerSecond")],
+                    "vmnic2": [(["0", "0"], "kiloBytesPerSecond")],
+                    "vmnic3": [(["0", "0"], "kiloBytesPerSecond")],
+                    "vmnic4": [(["33", "118"], "kiloBytesPerSecond")],
+                    "vmnic5": [(["928", "557"], "kiloBytesPerSecond")],
+                },
+                "net.droppedRx": {
+                    "": [(["0", "0"], "number")],
+                    "vmnic0": [(["0", "0"], "number")],
+                    "vmnic1": [(["0", "0"], "number")],
+                    "vmnic2": [(["0", "0"], "number")],
+                    "vmnic3": [(["0", "0"], "number")],
+                    "vmnic4": [(["0", "0"], "number")],
+                    "vmnic5": [(["0", "0"], "number")],
+                },
+                "net.droppedTx": {
+                    "": [(["0", "0"], "number")],
+                    "vmnic0": [(["0", "0"], "number")],
+                    "vmnic1": [(["0", "0"], "number")],
+                    "vmnic2": [(["0", "0"], "number")],
+                    "vmnic3": [(["0", "0"], "number")],
+                    "vmnic4": [(["0", "0"], "number")],
+                    "vmnic5": [(["0", "0"], "number")],
+                },
+                "net.errorsRx": {
+                    "": [(["0", "0"], "number")],
+                    "vmnic0": [(["0", "0"], "number")],
+                    "vmnic1": [(["0", "0"], "number")],
+                    "vmnic2": [(["0", "0"], "number")],
+                    "vmnic3": [(["0", "0"], "number")],
+                    "vmnic4": [(["0", "0"], "number")],
+                    "vmnic5": [(["0", "0"], "number")],
+                },
+                "net.errorsTx": {
+                    "": [(["0", "0"], "number")],
+                    "vmnic0": [(["0", "0"], "number")],
+                    "vmnic1": [(["0", "0"], "number")],
+                    "vmnic2": [(["0", "0"], "number")],
+                    "vmnic3": [(["0", "0"], "number")],
+                    "vmnic4": [(["0", "0"], "number")],
+                    "vmnic5": [(["0", "0"], "number")],
+                },
+                "net.macaddress": {
+                    "vmnic0": [(["1c:c1:de:1b:ec:dc"], "mac")],
+                    "vmnic1": [(["1c:c1:de:1b:ec:de"], "mac")],
+                    "vmnic2": [(["1c:c1:de:1b:ec:e0"], "mac")],
+                    "vmnic3": [(["1c:c1:de:1b:ec:e2"], "mac")],
+                    "vmnic4": [(["64:51:06:f0:c5:d0"], "mac")],
+                    "vmnic5": [(["64:51:06:f0:c5:d4"], "mac")],
+                },
+                "net.multicastRx": {
+                    "": [(["470", "212"], "number")],
+                    "vmnic0": [(["157", "71"], "number")],
+                    "vmnic1": [(["0", "0"], "number")],
+                    "vmnic2": [(["0", "0"], "number")],
+                    "vmnic3": [(["0", "0"], "number")],
+                    "vmnic4": [(["157", "70"], "number")],
+                    "vmnic5": [(["156", "71"], "number")],
+                },
+                "net.multicastTx": {
+                    "": [(["0", "0"], "number")],
+                    "vmnic0": [(["0", "0"], "number")],
+                    "vmnic1": [(["0", "0"], "number")],
+                    "vmnic2": [(["0", "0"], "number")],
+                    "vmnic3": [(["0", "0"], "number")],
+                    "vmnic4": [(["0", "0"], "number")],
+                    "vmnic5": [(["0", "0"], "number")],
+                },
+                "net.packetsRx": {
+                    "": [(["7417", "7204"], "number")],
+                    "vmnic0": [(["383", "266"], "number")],
+                    "vmnic1": [(["0", "0"], "number")],
+                    "vmnic2": [(["0", "0"], "number")],
+                    "vmnic3": [(["0", "0"], "number")],
+                    "vmnic4": [(["952", "3922"], "number")],
+                    "vmnic5": [(["6082", "3016"], "number")],
+                },
+                "net.packetsTx": {
+                    "": [(["3162", "3488"], "number")],
+                    "vmnic0": [(["0", "0"], "number")],
+                    "vmnic1": [(["0", "0"], "number")],
+                    "vmnic2": [(["0", "0"], "number")],
+                    "vmnic3": [(["0", "0"], "number")],
+                    "vmnic4": [(["401", "1892"], "number")],
+                    "vmnic5": [(["2761", "1596"], "number")],
+                },
+                "net.received": {
+                    "": [(["84", "234"], "kiloBytesPerSecond")],
+                    "vmnic0": [(["1", "1"], "kiloBytesPerSecond")],
+                    "vmnic1": [(["0", "0"], "kiloBytesPerSecond")],
+                    "vmnic2": [(["0", "0"], "kiloBytesPerSecond")],
+                    "vmnic3": [(["0", "0"], "kiloBytesPerSecond")],
+                    "vmnic4": [(["19", "187"], "kiloBytesPerSecond")],
+                    "vmnic5": [(["63", "46"], "kiloBytesPerSecond")],
+                },
+                "net.state": {
+                    "vmnic0": [(["1"], "state")],
+                    "vmnic1": [(["2"], "state")],
+                    "vmnic2": [(["2"], "state")],
+                    "vmnic3": [(["2"], "state")],
+                    "vmnic4": [(["1"], "state")],
+                    "vmnic5": [(["1"], "state")],
+                },
+                "net.transmitted": {
+                    "": [(["962", "675"], "kiloBytesPerSecond")],
+                    "vmnic0": [(["0", "0"], "kiloBytesPerSecond")],
+                    "vmnic1": [(["0", "0"], "kiloBytesPerSecond")],
+                    "vmnic2": [(["0", "0"], "kiloBytesPerSecond")],
+                    "vmnic3": [(["0", "0"], "kiloBytesPerSecond")],
+                    "vmnic4": [(["33", "118"], "kiloBytesPerSecond")],
+                    "vmnic5": [(["928", "557"], "kiloBytesPerSecond")],
+                },
+                "net.unknownProtos": {
+                    "": [(["0", "0"], "number")],
+                    "vmnic0": [(["0", "0"], "number")],
+                    "vmnic1": [(["0", "0"], "number")],
+                    "vmnic2": [(["0", "0"], "number")],
+                    "vmnic3": [(["0", "0"], "number")],
+                    "vmnic4": [(["0", "0"], "number")],
+                    "vmnic5": [(["0", "0"], "number")],
+                },
+                "net.usage": {
+                    "": [(["1046", "910"], "kiloBytesPerSecond")],
+                    "vmnic0": [(["1", "1"], "kiloBytesPerSecond")],
+                    "vmnic1": [(["0", "0"], "kiloBytesPerSecond")],
+                    "vmnic2": [(["0", "0"], "kiloBytesPerSecond")],
+                    "vmnic3": [(["0", "0"], "kiloBytesPerSecond")],
+                    "vmnic4": [(["53", "305"], "kiloBytesPerSecond")],
+                    "vmnic5": [(["991", "603"], "kiloBytesPerSecond")],
+                },
+            }
+        )
     ) == [
         Interface(
             index="1",
@@ -402,13 +406,15 @@ def test_convert_esx_counters_if() -> None:
 def test_discovery_counters_diskio() -> None:
     assert list(
         esx_vsphere_counters.discover_esx_vsphere_counters_diskio(
-            {
-                "disk.read": {"": [(["11", "12", "13"], "kiloBytesPerSecond")]},
-                "disk.numberReadAveraged": {"": [(["110", "140", "150"], "number")]},
-                "disk.write": {"": [(["51", "49", "53"], "kiloBytesPerSecond")]},
-                "disk.numberWriteAveraged": {"": [(["11", "102", "5"], "number")]},
-                "disk.deviceLatency": {"": [(["700", "900", "23"], "millisecond")]},
-            }
+            OrderedDict(
+                {
+                    "disk.read": {"": [(["11", "12", "13"], "kiloBytesPerSecond")]},
+                    "disk.numberReadAveraged": {"": [(["110", "140", "150"], "number")]},
+                    "disk.write": {"": [(["51", "49", "53"], "kiloBytesPerSecond")]},
+                    "disk.numberWriteAveraged": {"": [(["11", "102", "5"], "number")]},
+                    "disk.deviceLatency": {"": [(["700", "900", "23"], "millisecond")]},
+                }
+            )
         )
     ) == [Service(item="SUMMARY")]
 
@@ -418,13 +424,15 @@ def test_check_counters_diskio() -> None:
         esx_vsphere_counters.check_esx_vsphere_counters_diskio(
             "SUMMARY",
             {},
-            {
-                "disk.read": {"": [(["11", "12", "13"], "kiloBytesPerSecond")]},
-                "disk.numberReadAveraged": {"": [(["110", "140", "150"], "number")]},
-                "disk.write": {"": [(["51", "49", "53"], "kiloBytesPerSecond")]},
-                "disk.numberWriteAveraged": {"": [(["11", "102", "5"], "number")]},
-                "disk.deviceLatency": {"": [(["700", "900", "23"], "millisecond")]},
-            },
+            OrderedDict(
+                {
+                    "disk.read": {"": [(["11", "12", "13"], "kiloBytesPerSecond")]},
+                    "disk.numberReadAveraged": {"": [(["110", "140", "150"], "number")]},
+                    "disk.write": {"": [(["51", "49", "53"], "kiloBytesPerSecond")]},
+                    "disk.numberWriteAveraged": {"": [(["11", "102", "5"], "number")]},
+                    "disk.deviceLatency": {"": [(["700", "900", "23"], "millisecond")]},
+                }
+            ),
         )
     ) == [
         Result(state=State.OK, summary="Read: 12.3 kB/s"),

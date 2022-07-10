@@ -5,11 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 from .agent_based_api.v1 import get_value_store, IgnoreResultsError, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import diskstat, interfaces
+from .utils import diskstat, esx_vsphere, interfaces
+from .utils.esx_vsphere import CounterValues, Section, SubSectionCounter
 
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>
@@ -44,12 +45,8 @@ from .utils import diskstat, interfaces
 # ...
 # sys.uptime||630664|second
 
-Values = Sequence[str]
-SubSectionCounter = Dict[str, List[Tuple[Values, str]]]
-Section = Dict[str, SubSectionCounter]
 
-
-def parse_esx_vsphere_counters(string_table: StringTable) -> Section:
+def parse_esx_vsphere_counters(string_table: StringTable) -> esx_vsphere.SectionCounter:
     """
     >>> from pprint import pprint
     >>> pprint(parse_esx_vsphere_counters([
@@ -70,7 +67,7 @@ def parse_esx_vsphere_counters(string_table: StringTable) -> Section:
      'net.errorsRx': {'': [(['0', '0'], 'number')]}}
     """
 
-    parsed: Section = {}
+    parsed: dict[str, dict[str, list[tuple[esx_vsphere.CounterValues, str]]]] = {}
     # The data reported by the ESX system is split into multiple real time samples with
     # a fixed duration of 20 seconds. A check interval of one minute reports 3 samples
     # The esx_vsphere_counters checks need to figure out by themselves how to handle this data
@@ -88,7 +85,8 @@ register.agent_section(
 )
 
 
-def average_parsed_data(values: Values) -> float:
+# TODO: this belongs to utils
+def average_parsed_data(values: CounterValues) -> float:
     """
     >>> average_parsed_data(['1', '2'])
     1.5

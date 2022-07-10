@@ -5,7 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import OrderedDict
-from typing import Dict, List
+from typing import Mapping, Sequence
 
 Section = OrderedDict
-SectionVM = Dict[str, List[str]]
+SectionVM = dict[str, list[str]]
+
+CounterValues = Sequence[str]
+SubSectionCounter = Mapping[str, list[tuple[CounterValues, str]]]
+SectionCounter = Mapping[str, SubSectionCounter]

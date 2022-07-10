@@ -12,6 +12,7 @@ from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-impo
 from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.plugins.agent_based.utils.df import df_discovery, FILESYSTEM_DEFAULT_PARAMS
+from cmk.base.plugins.agent_based.utils.esx_vsphere import SectionCounter
 
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>
@@ -181,22 +182,24 @@ esx_vsphere_counters_ramdisk_sizes = {
 }
 
 
-def inventory_esx_vsphere_counters_ramdisk(parsed):
+def discover_esx_vsphere_counters_ramdisk(section: SectionCounter):
     ramdisks = []
 
-    for instance in parsed.get("sys.resourceMemConsumed", {}):
+    for instance in section.get("sys.resourceMemConsumed", {}):
         if instance.startswith("host/system/kernel/kmanaged/visorfs/"):
             ramdisks.append(instance.split("/")[-1])
 
     return df_discovery(host_extra_conf(host_name(), filesystem_groups), ramdisks)
 
 
-def check_esx_vsphere_counters_ramdisk(item, params, parsed):
-    if "sys.resourceMemConsumed" not in parsed:
+def check_esx_vsphere_counters_ramdisk(
+    item: str, params: Mapping[str, Any], section: SectionCounter
+):
+    if "sys.resourceMemConsumed" not in section:
         raise MKCounterWrapped("Counter data is missing")
 
     ramdisks = []
-    for instance in parsed.get("sys.resourceMemConsumed"):
+    for instance in section.get("sys.resourceMemConsumed"):
         if instance.startswith("host/system/kernel/kmanaged/visorfs/"):
             name = instance.split("/")[-1]
             try:
@@ -204,9 +207,8 @@ def check_esx_vsphere_counters_ramdisk(item, params, parsed):
             except KeyError:
                 if item == name:
                     return 3, "Unhandled ramdisk found (%s)" % name
-                else:
-                    continue
-            used_mb = float(parsed["sys.resourceMemConsumed"][instance][0][0][-1]) / 1000.0
+                continue
+            used_mb = float(section["sys.resourceMemConsumed"][instance][0][0][-1]) / 1000.0
             avail_mb = size_mb - used_mb
             ramdisks.append((name, size_mb, avail_mb, 0))
 
@@ -217,7 +219,7 @@ factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 check_info["esx_vsphere_counters.ramdisk"] = {
-    "inventory_function": inventory_esx_vsphere_counters_ramdisk,
+    "inventory_function": discover_esx_vsphere_counters_ramdisk,
     "check_function": check_esx_vsphere_counters_ramdisk,
     "service_description": "Ramdisk %s",
     "has_perfdata": True,

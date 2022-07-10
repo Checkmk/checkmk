@@ -393,7 +393,6 @@ def test_all_check_variables_present(fix_plugin_legacy) -> None:
         "enterasys_temp_default_levels",
         "enviromux_default_levels",
         "epson_beamer_lamp_default_levels",
-        "esx_vsphere_counters_ramdisk_sizes",
         "esx_vsphere_objects_default_levels",
         "etherbox2_temp_default_levels",
         "etherbox_info",

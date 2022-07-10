@@ -4,38 +4,45 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Mapping
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.check_legacy_includes.hitachi_hnas import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.plugins.agent_based.utils.df import df_discovery
+from cmk.base.plugins.agent_based.utils.df import df_discovery, FSBlock
 
 factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
-
-def inventory_hitachi_hnas_span(info):
-    mplist = []
-    for id_, label, _total_upper, _total_lower, _used_upper, _used_lower in info:
-        mplist.append(id_ + " " + label)
-    return df_discovery(host_extra_conf(host_name(), filesystem_groups), mplist)
+Section = Mapping[str, FSBlock]
 
 
-def check_hitachi_hnas_span(item, params, info):
-    fslist = []
-    for id_, label, total_upper, total_lower, used_upper, used_lower in info:
-        if id_ + " " + label == item:
-            size_mb = (int(total_upper) * 2**32 + int(total_lower)) / 1048576.0
-            used_mb = (int(used_upper) * 2**32 + int(used_lower)) / 1048576.0
-            avail_mb = size_mb - used_mb
-            fslist.append((item, size_mb, avail_mb, 0))
+def parse_hitachi_hnas_span(string_table) -> Section:
+    section = {}
+    for id_, label, total_upper, total_lower, used_upper, used_lower in string_table:
+        item = f"{id_} {label}"
+        size_mb = (int(total_upper) * 2**32 + int(total_lower)) / 1024.0**2
+        avail_mb = size_mb - (int(used_upper) * 2**32 + int(used_lower)) / 1024.0**2
+        section[item] = (item, size_mb, avail_mb, 0.0)
 
-            return df_check_filesystem_list(item, params, fslist)
+    return section
 
-    return 3, "Span %s not found" % item
+
+def inventory_hitachi_hnas_span(section: Section):
+    params = host_extra_conf(host_name(), filesystem_groups)
+    return df_discovery(params, list(section.values()))
+
+
+def check_hitachi_hnas_span(item, params, section: Section):
+    if (fs := section.get(item)) is None:
+        return None
+
+    return df_check_filesystem_list(item, params, [fs])
 
 
 check_info["hitachi_hnas_span"] = {
+    "parse_function": parse_hitachi_hnas_span,
     "check_function": check_hitachi_hnas_span,
     "inventory_function": inventory_hitachi_hnas_span,
     "service_description": "Span %s",

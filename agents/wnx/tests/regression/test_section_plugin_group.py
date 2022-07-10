@@ -115,7 +115,7 @@ def expected_output_engine():
             r"\[[0-9a-f]{,4}(:[0-9a-f]{,4})+(%\d+)?\]):\d+"
             r"\s+(ABH.REN|HERGESTELLT|WARTEND|SCHLIESSEN_WARTEN|SYN_GESENDET"
             r"|LISTENING|ESTABLISHED|TIME_WAIT|CLOSE_WAIT|FIN_WAIT_\d|SYN_SENT|LAST_ACK"
-            r"|SCHLIESSEND|FIN_WARTEN_\d|ZULETZT_ACK)"
+            r"|SCHLIESSEND|SYN_RECEIVED|FIN_WARTEN_\d|ZULETZT_ACK)"
             r"|\s+UDP\s+\d+\.\d+\.\d+\.\d+:\d+\s+\*:\*"
             r"|\-?\d+( \d+)+ [\w\(\)]+"
         )

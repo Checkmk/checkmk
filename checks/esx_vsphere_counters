@@ -4,17 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Final
-
 import cmk.base.plugins.agent_based.esx_vsphere_counters as esx_vsphere_counters
-
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.plugins.agent_based.utils.df import df_discovery, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.plugins.agent_based.utils.esx_vsphere import SectionCounter
+from cmk.base.check_legacy_includes.diskstat import check_diskstat_dict, inventory_diskstat_generic
+from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
 
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>
@@ -159,86 +151,6 @@ check_info["esx_vsphere_counters.uptime"] = {
     "group": "uptime",
 }
 
-# .
-#   .--Ramdisk-------------------------------------------------------------.
-#   |                ____                     _ _     _                    |
-#   |               |  _ \ __ _ _ __ ___   __| (_)___| | __                |
-#   |               | |_) / _` | '_ ` _ \ / _` | / __| |/ /                |
-#   |               |  _ < (_| | | | | | | (_| | \__ \   <                 |
-#   |               |_| \_\__,_|_| |_| |_|\__,_|_|___/_|\_\                |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-
-# We assume that all ramdisks have the same size (in mb) on all hosts
-# -> To get size infos about unknown ramdisks, connect to the ESX host via
-#    SSH and check the size of the disk via "du" command
-ESX_VSPHERE_COUNTERS_RAMDISK_SIZES: Final = {
-    "root": 32,
-    "etc": 28,
-    "tmp": 192,
-    "hostdstats": 319,
-    "snmptraps": 1,
-    "upgradescratch": 300,
-    "ibmscratch": 300,
-    "sfcbtickets": 1,
-}
-
-
-def _instance_to_item(instance: str) -> str | None:
-    return (
-        instance.split("/")[-1]
-        if instance.startswith("host/system/kernel/kmanaged/visorfs/")
-        else None
-    )
-
-
-def discover_esx_vsphere_counters_ramdisk(section: SectionCounter):
-    params = host_extra_conf(host_name(), filesystem_groups)
-    ramdisks = [
-        name
-        for instance in section.get("sys.resourceMemConsumed", {})
-        if (name := _instance_to_item(instance)) is not None
-    ]
-    return df_discovery(params, ramdisks)
-
-
-def check_esx_vsphere_counters_ramdisk(
-    item: str, params: Mapping[str, Any], section: SectionCounter
-):
-    if (mem_counter := section.get("sys.resourceMemConsumed")) is None:
-        return
-
-    ramdisks = []
-    for instance, counter in mem_counter.items():
-        if (name := _instance_to_item(instance)) is None:
-            continue
-
-        try:
-            size_mb = ESX_VSPHERE_COUNTERS_RAMDISK_SIZES[name]
-        except KeyError:
-            if item == name:
-                yield 3, "Unhandled ramdisk found (%s)" % name
-                return
-            continue
-
-        used_mb = float(counter[0][0][-1]) / 1000.0
-        avail_mb = size_mb - used_mb
-        ramdisks.append((name, size_mb, avail_mb, 0))
-
-    yield from df_check_filesystem_list_coroutine(item, params, ramdisks)
-
-
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
-
-
-check_info["esx_vsphere_counters.ramdisk"] = {
-    "inventory_function": discover_esx_vsphere_counters_ramdisk,
-    "check_function": check_esx_vsphere_counters_ramdisk,
-    "service_description": "Ramdisk %s",
-    "has_perfdata": True,
-    "group": "filesystem",
-    "default_levels_variable": "filesystem_default_levels",
-}
 
 #   .--swap----------------------------------------------------------------.
 #   |                                                                      |

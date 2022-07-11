@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import re
 from typing import Optional
 
 from cmk.gui.breadcrumb import Breadcrumb
@@ -63,7 +63,10 @@ def _make_wato_page_state() -> PageState:
     changelog_url = "wato.py?mode=changelog"
     span_id = "changes_info"
     if changes_info:
-        changes_number, changes_str = changes_info.split()
+        match = re.match(r"(\d+\+?)(.*)", changes_info)
+        assert match is not None  # only for mypy, semantically useless
+        changes_number = match[1]
+        changes_str = match[2]
         return PageState(
             text=html.render_span(
                 html.render_span(changes_number, class_="changes_number")

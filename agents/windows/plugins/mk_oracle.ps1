@@ -201,17 +201,22 @@ Function get_dbversion_database ($ORACLE_HOME) {
 }
 
 
-function is_async_running {
+function is_async_running ($fullPath) {
      if (-not(Test-Path -path "$ASYNC_PROC_PATH")) {
           # no file, no running process
           return $false
      }
 
      $proc_pid = (Get-Content ${ASYNC_PROC_PATH})
-     $proc = Get-Process -id $proc_pid -ErrorAction SilentlyContinue
-     if ($proc) {
+
+     # Check if the process with `$proc_pid` is still running AND if its commandline contains `$fullPath`.
+     # Our async process always contains `$fullPath` in their own command line.
+     $command_line = (Get-WmiObject -Query "SELECT CommandLine FROM Win32_Process WHERE ProcessID = $proc_pid").commandline
+
+     if ($command_line -like "*$fullPath*") {
          return $true
      }
+
      # The process to the PID cannot be found, so remove also the proc file
      rm $ASYNC_PROC_PATH
      return $false
@@ -505,7 +510,7 @@ Function sqlcall {
                # now we ensure that the async SQL Calls have up-to-date SQL outputs, running this job asynchronously...
                #####################################################
                debug_echo "about to call bg task $sql_message"
-               if (-not(is_async_running)) {
+               if (-not(is_async_running($fullPath))) {
 
                     $command = {
                         param([string]$sql_connect, [string]$sql, [string]$path, [string]$sql_sid)
@@ -2302,5 +2307,3 @@ if ($the_count -gt 0) {
 
 }
 debug_echo "got to the end"
-
-

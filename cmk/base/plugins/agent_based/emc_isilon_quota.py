@@ -4,14 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Generator, Mapping, NamedTuple
+from typing import Any, Mapping, NamedTuple, Sequence
 
-from cmk.base.check_legacy_includes.df import df_check_filesystem_list_coroutine, filesystem_groups
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.df import df_discovery, FILESYSTEM_DEFAULT_PARAMS
-
-Service = tuple[str, Mapping[str, Any]]
-CheckResult = Generator[tuple, None, None]
+from .agent_based_api.v1 import contains, get_value_store, register, Service, SNMPTree
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.df import df_check_filesystem_list, df_discovery, FILESYSTEM_DEFAULT_PARAMS
 
 
 class IsilonQuota(NamedTuple):
@@ -48,27 +45,29 @@ def parse_emc_isilon_quota(string_table: StringTable) -> Section:
     }
 
 
-check_info["emc_isilon_quota"] = {
-    "parse_function": parse_emc_isilon_quota,
-    "snmp_info": (
-        ".1.3.6.1.4.1.12124.1.12.1.1",
-        [
-            5,  # quotaPath
-            7,  # quotaHardThreshold
-            8,  # quotaSoftThresholdDefined
-            9,  # quotaSoftThreshold
-            10,  # quotaAdvisoryThresholdDefined
-            11,  # quotaAdvisoryThreshold
-            13,  # quotaUsage
+register.snmp_section(
+    name="emc_isilon_quota",
+    parse_function=parse_emc_isilon_quota,
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.12124.1.12.1.1",
+        oids=[
+            "5",  # quotaPath
+            "7",  # quotaHardThreshold
+            "8",  # quotaSoftThresholdDefined
+            "9",  # quotaSoftThreshold
+            "10",  # quotaAdvisoryThresholdDefined
+            "11",  # quotaAdvisoryThreshold
+            "13",  # quotaUsage
         ],
     ),
-    "snmp_scan_function": lambda oid: "isilon" in oid(".1.3.6.1.2.1.1.1.0").lower(),
-}
+    detect=contains(".1.3.6.1.2.1.1.1.0", "isilon"),
+)
 
 
-def discovery_emc_isilon_quota(section: Section) -> Service:
-    params = host_extra_conf(host_name(), filesystem_groups)
-    return df_discovery(params, list(section))
+def discover_emc_isilon_quota(
+    params: Sequence[Mapping[str, Any]], section: Section
+) -> DiscoveryResult:
+    yield from (Service(item=i, parameters=p) for i, p in df_discovery(params, list(section)))
 
 
 def _percent_levels(value: float, total: float, fallback: float) -> float:
@@ -106,18 +105,22 @@ def check_emc_isilon_quota(item: str, params: Mapping[str, Any], section: Sectio
             avail = assumed_size - quota.usage
             fslist_blocks.append((path, assumed_size / byte_to_mb, avail / byte_to_mb, 0))
 
-    yield from df_check_filesystem_list_coroutine(item, params, fslist_blocks)
+    yield from df_check_filesystem_list(
+        value_store=get_value_store(),
+        item=item,
+        params=params,
+        fslist_blocks=fslist_blocks,
+    )
 
 
-check_info["emc_isilon_quota"].update(
-    {
-        "check_function": check_emc_isilon_quota,
-        "inventory_function": discovery_emc_isilon_quota,
-        "service_description": "Quota %s",
-        "has_perfdata": True,
-        "group": "filesystem",
-        "default_levels_variable": "filesystem_default_levels",
-    }
+register.check_plugin(
+    name="emc_isilon_quota",
+    service_name="Quota %s",
+    discovery_function=discover_emc_isilon_quota,
+    discovery_ruleset_name="filesystem_groups",
+    discovery_ruleset_type=register.RuleSetType.ALL,
+    discovery_default_parameters={"groups": []},
+    check_function=check_emc_isilon_quota,
+    check_ruleset_name="filesystem",
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )
-
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS

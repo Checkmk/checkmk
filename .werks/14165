@@ -1,0 +1,11 @@
+Title: BI configuration: Automatically show/hide "Business intelligence" menu entry
+Class: feature
+Compatible: compat
+Component: bi
+Date: 1657553295
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0p7
+
+The <tt>Business intelligence</tt> menu entry is only shown when at least one aggregation is activated.

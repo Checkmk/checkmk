@@ -13,6 +13,7 @@ entering the password.
 import json
 from typing import cast
 
+from cmk.gui.globals import user
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.plugins.openapi.endpoints.utils import complement_customer, update_customer_info
@@ -43,6 +44,8 @@ from cmk.utils import version
           response_schema=response_schemas.DomainObject)
 def create_password(params):
     """Create a password"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.passwords")
     body = params['body']
     ident = body['ident']
     password_details = cast(
@@ -67,6 +70,8 @@ def create_password(params):
           response_schema=response_schemas.DomainObject)
 def update_password(params):
     """Update a password"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.passwords")
     body = params['body']
     ident = params['name']
     try:
@@ -87,6 +92,8 @@ def update_password(params):
           output_empty=True)
 def delete_password(params):
     """Delete a password"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.passwords")
     ident = params['name']
     if ident not in load_passwords():
         return problem(
@@ -103,6 +110,7 @@ def delete_password(params):
           response_schema=response_schemas.PasswordSchema)
 def show_password(params):
     """Show a password"""
+    user.need_permission("wato.passwords")
     ident = params['name']
     passwords = load_passwords()
     if ident not in passwords:
@@ -119,6 +127,7 @@ def show_password(params):
           response_schema=response_schemas.DomainObjectCollection)
 def list_passwords(params):
     """Show all passwords"""
+    user.need_permission("wato.passwords")
     password_collection = {
         'id': 'password',
         'domainType': 'password',

@@ -20,6 +20,7 @@ from typing import List, Dict, Any, Tuple, Union
 
 from marshmallow.utils import from_iso_time
 
+from cmk.gui.globals import user
 from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
 from cmk.gui.plugins.openapi.utils import ProblemException
 from cmk.utils.type_defs import TimeperiodSpec
@@ -45,6 +46,8 @@ TIME_RANGE = Tuple[str, str]
           response_schema=response_schemas.DomainObject)
 def create_timeperiod(params):
     """Create a time period"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.timeperiods")
     body = params['body']
     name = body['name']
     exceptions = _format_exceptions(body.get("exceptions", []))
@@ -67,6 +70,8 @@ def create_timeperiod(params):
 def update_timeperiod(params):
     """Update a time period"""
 
+    user.need_permission("wato.edit")
+    user.need_permission("wato.timeperiods")
     body = params['body']
     name = params['name']
     if name == "24X7":
@@ -99,6 +104,8 @@ def update_timeperiod(params):
           output_empty=True)
 def delete(params):
     """Delete a time period"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.timeperiods")
     name = params['name']
     time_periods = load_timeperiods()
     if name not in time_periods:
@@ -115,6 +122,7 @@ def delete(params):
           response_schema=response_schemas.ConcreteTimePeriod)
 def show_time_period(params):
     """Show a time period"""
+    user.need_permission("wato.timeperiods")
     name = params['name']
     time_periods = load_timeperiods()
     if name not in time_periods:
@@ -129,6 +137,7 @@ def show_time_period(params):
           response_schema=response_schemas.DomainObjectCollection)
 def list_time_periods(params):
     """Show all time periods"""
+    user.need_permission("wato.timeperiods")
     time_periods = []
     for time_period_id, time_period_details in load_timeperiods().items():
         alias = time_period_details['alias']

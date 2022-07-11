@@ -16,6 +16,7 @@ You can find an introduction to the acknowledgement of problems in the
 from urllib.parse import unquote
 
 from cmk.gui import config, fields, sites, http
+from cmk.gui.globals import user
 from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_host_problem,
     acknowledge_hostgroup_problem,
@@ -210,6 +211,8 @@ def set_acknowledgement_on_services(params):
                 detail='All queried services are OK.',
             )
 
+        # We need to check for this permission, even if we don't have a single service
+        user.need_permission("action.acknowledge")
         for service in services:
             if not service.state:
                 continue

@@ -17,6 +17,7 @@ You can find an introduction to BI in the
 import http
 import http.client
 
+from cmk.gui.globals import user
 from cmk.gui.http import Response
 from cmk.gui import fields
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -80,6 +81,7 @@ class BIRuleEndpointSchema(BIRuleSchema):
           response_schema=BIRuleEndpointSchema)
 def get_bi_rule(params):
     """Show a BI rule"""
+    user.need_permission("wato.bi_rules")
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
     try:
@@ -117,6 +119,8 @@ def post_bi_rule(params):
 
 
 def _update_bi_rule(params, must_exist: bool):
+    user.need_permission("wato.edit")
+    user.need_permission("wato.bi_rules")
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
     rule_config = params["body"]
@@ -184,6 +188,7 @@ class BIAggregationEndpointSchema(BIAggregationSchema):
           response_schema=BIAggregationEndpointSchema)
 def get_bi_aggregation(params):
     """Get a BI aggregation"""
+    user.need_permission("wato.bi_rules")
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
     try:
@@ -221,6 +226,8 @@ def post_bi_aggregation(params):
 
 
 def _update_bi_aggregation(params, must_exist: bool):
+    user.need_permission("wato.edit")
+    user.need_permission("wato.bi_rules")
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
     aggregation_config = params["body"]
@@ -284,6 +291,7 @@ def delete_bi_aggregation(params):
 def get_bi_packs(params):
     """Show all BI packs"""
 
+    user.need_permission("wato.bi_rules")
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
     packs = [
@@ -312,6 +320,7 @@ def get_bi_packs(params):
           response_schema=response_schemas.DomainObject)
 def get_bi_pack(params):
     """Get a BI pack and its rules and aggregations"""
+    user.need_permission("wato.bi_rules")
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
     bi_pack = bi_packs.get_pack(params["pack_id"])
@@ -363,6 +372,9 @@ def get_bi_pack(params):
           output_empty=True)
 def delete_bi_pack(params):
     """Delete BI pack"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.bi_rules")
+    user.need_permission("wato.bi_admin")
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
 
@@ -413,6 +425,9 @@ def post_bi_pack(params):
 
 
 def _update_bi_pack(params, must_exist: bool):
+    user.need_permission("wato.edit")
+    user.need_permission("wato.bi_rules")
+    user.need_permission("wato.bi_admin")
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
 

@@ -47,6 +47,7 @@ import operator
 
 from cmk.gui import watolib
 from cmk.gui.exceptions import MKUserError, MKAuthException
+from cmk.gui.globals import user
 from cmk.gui.http import Response
 from cmk.gui import fields
 from cmk.gui.plugins.openapi.endpoints.utils import folder_slug
@@ -305,6 +306,7 @@ def bulk_update_hosts(params):
           response_schema=response_schemas.HostConfigSchema)
 def rename_host(params):
     """Rename a host"""
+    user.need_permission("wato.rename_hosts")
     if activate_changes.get_pending_changes_info():
         return problem(
             status=409,
@@ -333,6 +335,7 @@ def rename_host(params):
           response_schema=response_schemas.HostConfigSchema)
 def move(params):
     """Move a host to another folder"""
+    user.need_permission("wato.move_hosts")
     host_name = params['host_name']
     host: watolib.CREHost = watolib.Host.load_host(host_name)
     _require_host_etag(host)

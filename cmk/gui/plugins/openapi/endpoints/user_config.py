@@ -9,6 +9,7 @@ import datetime as dt
 from typing import Dict, Tuple, Union, Any, TypedDict, Literal, Mapping, Optional, Sequence
 import time
 
+from cmk.gui.globals import user
 from cmk.gui.http import Response
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -38,6 +39,7 @@ TIMESTAMP_RANGE = Tuple[float, float]
 )
 def show_user(params):
     """Show an user"""
+    user.need_permission("wato.users")
     username = params['username']
     try:
         return serve_user(username)
@@ -57,6 +59,7 @@ def show_user(params):
 )
 def list_users(params):
     """Show all users"""
+    user.need_permission("wato.users")
     users = []
     for user_id, attrs in userdb.load_users(False).items():
         user_attributes = _internal_to_api_format(attrs)
@@ -76,6 +79,8 @@ def list_users(params):
 )
 def create_user(params):
     """Create a user"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.users")
     api_attrs = params['body']
     username = api_attrs['username']
 
@@ -105,6 +110,8 @@ def create_user(params):
           output_empty=True)
 def delete_user(params):
     """Delete a user"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.users")
     username = params['username']
     try:
         delete_users([username])
@@ -125,6 +132,8 @@ def delete_user(params):
 def edit_user(params):
     """Edit an user"""
     # last_pw_change & serial must be changed manually if edit happens
+    user.need_permission("wato.edit")
+    user.need_permission("wato.users")
     username = params['username']
     api_attrs = params['body']
     internal_attrs = _api_to_internal_format(_load_user(username), api_attrs)

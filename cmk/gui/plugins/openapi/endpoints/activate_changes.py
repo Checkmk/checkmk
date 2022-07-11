@@ -18,7 +18,7 @@ You can find an introduction to the configuration of Checkmk including activatio
 
 from cmk.gui import fields, watolib
 from cmk.gui.exceptions import MKUserError, MKAuthException
-from cmk.gui.globals import request
+from cmk.gui.globals import request, user
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.utils import may_fail
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -57,6 +57,7 @@ ACTIVATION_ID = {
           response_schema=response_schemas.DomainObject)
 def activate_changes(params):
     """Activate pending changes"""
+    user.need_permission("wato.activate")
     body = params['body']
     sites = body['sites']
     with may_fail(MKUserError), may_fail(MKAuthException, status=401):
@@ -114,6 +115,7 @@ def activate_changes_wait_for_completion(params):
 
     This endpoint will periodically redirect on itself to prevent timeouts.
     """
+    user.need_permission("wato.activate")
     activation_id = params['activation_id']
     manager = watolib.ActivateChangesManager()
     manager.load()
@@ -141,6 +143,7 @@ def activate_changes_wait_for_completion(params):
 def show_activation(params):
     """Show the activation status
     """
+    user.need_permission("wato.activate")
     activation_id = params['activation_id']
     manager = watolib.ActivateChangesManager()
     manager.load()

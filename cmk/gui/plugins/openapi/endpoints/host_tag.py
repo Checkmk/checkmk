@@ -19,6 +19,7 @@ import json
 from typing import Dict, Any
 
 import cmk.gui.watolib as watolib
+from cmk.gui.globals import user
 
 from cmk.gui.http import Response
 
@@ -82,6 +83,8 @@ HOST_TAG_GROUP_NAME = {
 )
 def create_host_tag_group(params):
     """Create a host tag group"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.hosttags")
     host_tag_group_details = params['body']
     save_tag_group(TagGroup(host_tag_group_details))
     return _serve_host_tag_group(_retrieve_group(host_tag_group_details['id']).get_dict_format())
@@ -97,6 +100,7 @@ def create_host_tag_group(params):
 )
 def show_host_tag_group(params):
     """Show a host tag group"""
+    user.need_permission("wato.hosttags")
     ident = params['name']
     tag_group = _retrieve_group(ident=ident)
     return _serve_host_tag_group(tag_group.get_dict_format())
@@ -110,6 +114,7 @@ def show_host_tag_group(params):
 )
 def list_host_tag_groups(params):
     """Show all host tag groups"""
+    user.need_permission("wato.hosttags")
     tag_config = load_tag_config()
     tag_config += BuiltinTagConfig()
     host_tag_groups = [
@@ -132,6 +137,8 @@ def list_host_tag_groups(params):
 def update_host_tag_group(params):
     """Update a host tag group"""
     # TODO: ident verification mechanism with ParamDict replacement
+    user.need_permission("wato.edit")
+    user.need_permission("wato.hosttags")  # see cmk.gui.wato.pages.tags
     body = params['body']
     ident = params['name']
     if is_builtin(ident):
@@ -167,6 +174,8 @@ def update_host_tag_group(params):
 )
 def delete_host_tag_group(params):
     """Delete a host tag group"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.hosttags")
     ident = params['name']
     if is_builtin(ident):
         return problem(

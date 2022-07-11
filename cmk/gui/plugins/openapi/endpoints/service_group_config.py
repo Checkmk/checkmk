@@ -20,6 +20,7 @@ A service group object can have the following relations present in `links`:
 """
 
 from cmk.gui import watolib
+from cmk.gui.globals import user
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.utils import (
     serve_group,
@@ -52,6 +53,8 @@ from cmk.utils import version
           response_schema=response_schemas.DomainObject)
 def create(params):
     """Create a service group"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.groups")
     body = params['body']
     name = body['name']
     group_details = {"alias": body.get("alias")}
@@ -69,6 +72,8 @@ def create(params):
           response_schema=response_schemas.DomainObjectCollection)
 def bulk_create(params):
     """Bulk create service groups"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.groups")
     body = params['body']
     entries = body['entries']
     service_group_details = prepare_groups("service", entries)
@@ -88,6 +93,7 @@ def bulk_create(params):
           response_schema=response_schemas.LinkedValueDomainObjectCollection)
 def list_groups(params):
     """Show all service groups"""
+    user.need_permission("wato.groups")
     collection = [{
         "id": k,
         "alias": v["alias"]
@@ -105,6 +111,7 @@ def list_groups(params):
 )
 def show_group(params):
     """Show a service group"""
+    user.need_permission("wato.groups")
     name = params['name']
     group = fetch_group(name, "service")
     return serve_group(group, serialize_group('service_group_config'))
@@ -117,6 +124,8 @@ def show_group(params):
           output_empty=True)
 def delete(params):
     """Delete a service group"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.groups")
     name = params['name']
     watolib.delete_group(name, group_type='service')
     return Response(status=204)
@@ -129,6 +138,8 @@ def delete(params):
           output_empty=True)
 def bulk_delete(params):
     """Bulk delete service groups"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.groups")
     body = params['body']
     entries = body['entries']
     for group_name in entries:
@@ -150,6 +161,8 @@ def bulk_delete(params):
           request_schema=request_schemas.UpdateGroup)
 def update(params):
     """Update a service group"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.groups")
     name = params['name']
     group = fetch_group(name, "service")
     constructors.require_etag(constructors.etag_of_dict(group))
@@ -170,6 +183,8 @@ def bulk_update(params):
     [Updating Values]("lost update problem"), which is normally prevented by the ETag locking
     mechanism. Use at your own risk.
     """
+    user.need_permission("wato.edit")
+    user.need_permission("wato.groups")
     body = params['body']
     entries = body['entries']
     updated_service_groups = update_groups("service", entries)

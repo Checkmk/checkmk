@@ -274,7 +274,7 @@ class TimeAllowedRange(BaseSchema, CheckmkTuple):
     >>> schema = TimeAllowedRange()
     >>> rv = schema.dump(((12, 0), (24, 0)))
     >>> rv
-    OrderedDict([('start', '12:00:00'), ('end', '23:59:59')])
+    {'start': '12:00:00', 'end': '23:59:59'}
 
     >>> schema.load(rv)
     ((12, 0), (23, 59))

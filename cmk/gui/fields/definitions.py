@@ -459,7 +459,7 @@ class _ListOfColumns(base.List):
         ...          mandatory=[Hosts.name])
         >>> schema = FooSchema()
         >>> schema.load({'columns': ['alias']})
-        OrderedDict([('columns', [Column(hosts.name: string), Column(hosts.alias: string)])])
+        {'columns': [Column(hosts.name: string), Column(hosts.alias: string)]}
 
     """
 

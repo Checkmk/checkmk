@@ -40,6 +40,10 @@ class BaseSchema(Schema):
     # try to dump (superfluous fields are filtered anyway) we need to do it ourselves.
     validate_on_dump: bool = False
 
+    @property
+    def dict_class(self) -> type:
+        return dict
+
     @post_load(pass_many=True)
     @post_dump(pass_many=True)
     def remove_ordered_dict(self, data, **kwargs):

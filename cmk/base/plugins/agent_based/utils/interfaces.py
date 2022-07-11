@@ -137,6 +137,10 @@ class Attributes:
     def is_up(self) -> bool:
         return self.oper_status == self.oper_status_up
 
+    @property
+    def id_for_value_store(self) -> str:
+        return f"{self.index}.{self.descr}.{self.alias}.{self.node}"
+
 
 @dataclass
 class Counters:
@@ -198,17 +202,87 @@ class InterfaceWithRates:
     rates: Rates
     get_rate_errors: Sequence[tuple[str, GetRateError]]
 
+    @classmethod
+    def from_interface_with_counters(
+        cls,
+        iface_counters: InterfaceWithCounters,
+        *,
+        timestamp: float,
+        value_store: MutableMapping[str, Any],
+    ) -> "InterfaceWithRates":
+        return cls(
+            iface_counters.attributes,
+            *cls._compute_rates(
+                iface_counters,
+                timestamp=timestamp,
+                value_store=value_store,
+            ),
+        )
+
+    @classmethod
+    def _compute_rates(
+        cls,
+        iface_counters: InterfaceWithCounters,
+        *,
+        timestamp: float,
+        value_store: MutableMapping[str, Any],
+    ) -> tuple[Rates, Sequence[tuple[str, GetRateError]]]:
+        rates: MutableMapping[str, float | None] = {}
+        rate_errors = []
+        for rate_name, counter_value in (
+            ("in_octets", (counters := iface_counters.counters).in_octets),
+            ("in_ucast", counters.in_ucast),
+            ("in_mcast", counters.in_mcast),
+            ("in_bcast", counters.in_bcast),
+            ("in_disc", counters.in_disc),
+            ("in_err", counters.in_err),
+            ("out_octets", counters.out_octets),
+            ("out_ucast", counters.out_ucast),
+            ("out_mcast", counters.out_mcast),
+            ("out_bcast", counters.out_bcast),
+            ("out_disc", counters.out_disc),
+            ("out_err", counters.out_err),
+        ):
+            try:
+                rates[rate_name] = get_rate(
+                    value_store=value_store,
+                    key=f"{rate_name}.{iface_counters.attributes.id_for_value_store}",
+                    time=timestamp,
+                    value=counter_value,
+                    raise_overflow=True,
+                )
+            except GetRateError as get_rate_error:
+                rates[rate_name] = None
+                rate_errors.append((rate_name, get_rate_error))
+        return Rates(**rates), rate_errors
+
 
 @dataclass(frozen=True)
 class Average:
     value: float
     backlog: int
 
+    def __add__(self, other: "Average") -> "Average":
+        if self.backlog == other.backlog:
+            return Average(
+                value=self.value + other.value,
+                backlog=self.backlog,
+            )
+        raise ValueError("Attempting to add two averages with different backlogs")
+
 
 @dataclass(frozen=True)
 class RateWithAverage:
     rate: float
     average: Average | None
+
+    def __add__(self, other: "RateWithAverage") -> "RateWithAverage":
+        return RateWithAverage(
+            rate=self.rate + other.rate,
+            average=self.average + other.average
+            if (self.average is not None and other.average is not None)
+            else None,
+        )
 
 
 @dataclass(frozen=True)
@@ -235,6 +309,138 @@ class InterfaceWithRatesAndAverages:
     attributes: Attributes
     rates_with_averages: RatesWithAverages
     get_rate_errors: Sequence[tuple[str, GetRateError]]
+
+    @classmethod
+    def from_interface_with_counters_or_rates(
+        cls,
+        iface: InterfaceWithCounters | InterfaceWithRates,
+        *,
+        timestamp: float,
+        value_store: MutableMapping[str, Any],
+        params: Mapping[str, Any],
+    ) -> "InterfaceWithRatesAndAverages":
+        iface_rates = (
+            iface
+            if isinstance(iface, InterfaceWithRates)
+            else InterfaceWithRates.from_interface_with_counters(
+                iface,
+                timestamp=timestamp,
+                value_store=value_store,
+            )
+        )
+        averages = cls._compute_averages(
+            iface_rates,
+            timestamp=timestamp,
+            value_store=value_store,
+            average_backlog_octets=params.get("average"),
+            average_backlog_bmcast=params.get("average_bm"),
+        )
+        return cls(
+            attributes=iface.attributes,
+            rates_with_averages=RatesWithAverages(
+                **{
+                    rate_name: None
+                    if rate is None
+                    else RateWithAverage(
+                        rate=rate,
+                        average=averages.get(rate_name),
+                    )
+                    for rate_name, rate in asdict(iface_rates.rates).items()
+                },
+                in_nucast=cls._add_rates_and_averages(
+                    *(
+                        None
+                        if (rate := getattr(iface_rates.rates, rate_name)) is None
+                        else RateWithAverage(
+                            rate,
+                            averages.get(rate_name),
+                        )
+                        for rate_name in ("in_mcast", "in_bcast")
+                    ),
+                ),
+                out_nucast=cls._add_rates_and_averages(
+                    *(
+                        None
+                        if (rate := getattr(iface_rates.rates, rate_name)) is None
+                        else RateWithAverage(
+                            rate,
+                            averages.get(rate_name),
+                        )
+                        for rate_name in ("out_mcast", "out_bcast")
+                    ),
+                ),
+                total_octets=cls._add_rates_and_averages(
+                    *(
+                        None
+                        if (rate := getattr(iface_rates.rates, rate_name)) is None
+                        else RateWithAverage(
+                            rate,
+                            averages.get(rate_name),
+                        )
+                        for rate_name in ("in_octets", "out_octets")
+                    ),
+                ),
+            ),
+            get_rate_errors=iface_rates.get_rate_errors,
+        )
+
+    @staticmethod
+    def _compute_averages(
+        iface_rates: InterfaceWithRates,
+        *,
+        timestamp: float,
+        value_store: MutableMapping[str, Any],
+        average_backlog_octets: int | None,
+        average_backlog_bmcast: int | None,
+    ) -> Mapping[str, Average]:
+        return {
+            rate_name: Average(
+                value=get_average(
+                    value_store=value_store,
+                    key=f"{rate_name}.{iface_rates.attributes.id_for_value_store}.average",
+                    time=timestamp,
+                    value=rate,
+                    backlog_minutes=average_backlog,
+                ),
+                backlog=average_backlog,
+            )
+            for average_backlog, rate_names in (
+                (
+                    average_backlog_octets,
+                    (
+                        "in_octets",
+                        "out_octets",
+                    ),
+                ),
+                (
+                    average_backlog_bmcast,
+                    (
+                        "in_mcast",
+                        "in_bcast",
+                        "out_mcast",
+                        "out_bcast",
+                    ),
+                ),
+            )
+            for rate_name in rate_names
+            if average_backlog is not None
+            and (rate := getattr(iface_rates.rates, rate_name)) is not None
+        }
+
+    @staticmethod
+    def _add_rates_and_averages(
+        r0: RateWithAverage | None,
+        /,
+        *rs: RateWithAverage | None,
+    ) -> RateWithAverage | None:
+        if r0 is None:
+            return None
+        rate_with_avg = r0
+        for r in rs:
+            if r is None:
+                return None
+            rate_with_avg = rate_with_avg + r
+        return rate_with_avg
 
 
 Section = Sequence[InterfaceWithCounters]

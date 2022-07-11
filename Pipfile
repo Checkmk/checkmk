@@ -148,7 +148,7 @@ marshmallow = "==3.17.0"  # direct dependency
 marshmallow-oneofschema = "==3.0.1"  # direct dependency
 mypy_extensions = "==0.4.3" # direct dependency
 apispec-oneofschema = "==3.0.0"  # direct dependency
-typing_extensions = "==3.10"   # required by pydantic
+typing_extensions = "==4.3.0"   # required by pydantic
 pydantic = "==1.9.1"
 paho-mqtt = "==1.6.1"  # needed for MQTT special agent
 python-active-directory = "==1.0.5"

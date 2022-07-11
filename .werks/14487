@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cee
 State: unknown
-Version: 2.1.0p6
+Version: 2.1.0p7
 Date: 1657013654
 
 The title macro $HOST_ALIAS$ did not work for Host state dashlets. This is fixed and the macro is replaced by the given host alias.

@@ -1,0 +1,12 @@
+Title: Fix HW/SW inventory filter
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1657545782
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p7
+
+Since version 2.1.0 multiple HW/SW inventory filter showed "From:" and "To:" as
+input fields instead of text input for e.g. the software package name.

@@ -77,7 +77,7 @@ from cmk.gui.plugins.visuals.inventory import (
 from cmk.gui.plugins.visuals.utils import (
     filter_registry,
     get_livestatus_filter_headers,
-    get_ranged_table,
+    get_ranged_table_filter_name,
     visual_info_registry,
     VisualInfo,
 )
@@ -939,28 +939,30 @@ def _declare_invtable_column(
 
     # Sync this with _declare_inv_column()
     filter_class = hint.get("filter")
+    ident = infoname + "_" + name
+    filter_title: str = topic + ": " + title
     if filter_class:
         filter_registry.register(
             filter_class(
                 inv_info=infoname,
-                ident=infoname + "_" + name,
-                title=topic + ": " + title,
+                ident=ident,
+                title=filter_title,
             )
         )
-    elif (ranged_table := get_ranged_table(infoname)) is not None:
+    elif (ranged_table := get_ranged_table_filter_name(ident)) is not None:
         filter_registry.register(
             FilterInvtableIDRange(
-                inv_info=ranged_table,
-                ident=infoname + "_" + name,
-                title=topic + ": " + title,
+                inv_info=infoname,
+                ident=ranged_table,
+                title=filter_title,
             )
         )
     else:
         filter_registry.register(
             FilterInvtableText(
                 inv_info=infoname,
-                ident=infoname + "_" + name,
-                title=topic + ": " + title,
+                ident=ident,
+                title=filter_title,
             )
         )
 

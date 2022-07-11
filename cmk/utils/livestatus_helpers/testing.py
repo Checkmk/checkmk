@@ -388,8 +388,12 @@ program_start num_hosts num_services core_pid'
         if not connections:
             raise LivestatusTestingError("Query should be at least expected at one site")
 
-        for conn in connections:
-            conn.expect_query(query, match_type, force_pos)
+        if query.startswith("COMMAND"):
+            first_conn = connections[0]
+            first_conn.expect_query(query, match_type, force_pos)
+        else:
+            for conn in connections:
+                conn.expect_query(query, match_type, force_pos)
 
         return self
 

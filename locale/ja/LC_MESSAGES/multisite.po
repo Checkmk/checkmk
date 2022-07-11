@@ -11726,14 +11726,15 @@ msgstr "カスタマイズ"
 msgid "Customize %s and use them"
 msgstr "%s をカスタマイズして使用する"
 
-msgid "Customize Dashboards"
-msgstr "ダッシュボードをカスタマイズする"
-
 msgid "Customize GUI design"
 msgstr "GUIデザインをカスタマイズする"
 
 msgid "Customize builtin dashboard"
 msgstr "組み込みのダッシュボードをカスタマイズする"
+
+#, fuzzy
+msgid "Customize dashboards"
+msgstr "ダッシュボードをカスタマイズする"
 
 msgid "Customize login screen"
 msgstr "ログイン画面をカスタマイズする"
@@ -12016,15 +12017,16 @@ msgstr "危険な"
 msgid "Dashboard"
 msgstr "ダッシュボード"
 
-msgid "Dashboard Properties"
-msgstr "ダッシュボードのプロパティ"
-
 msgid "Dashboard element"
 msgstr "ダッシュボード要素"
 
 #, python-format
 msgid "Dashboard of user %s"
 msgstr "ユーザ―%sのダッシュボード"
+
+#, fuzzy
+msgid "Dashboard properties"
+msgstr "ダッシュボードのプロパティ"
 
 msgid "Dashboards"
 msgstr "ダッシュボード"
@@ -15454,9 +15456,6 @@ msgstr "集計を編集する"
 msgid "Edit BI Pack %s"
 msgstr "BIパック %s を編集する"
 
-msgid "Edit Dashboards"
-msgstr "ダッシュボードの編集"
-
 msgid "Edit Downtimes"
 msgstr "ダウンタイムの編集"
 
@@ -15527,6 +15526,10 @@ msgstr "カスタムグラフを編集する"
 #, python-format
 msgid "Edit customer %s"
 msgstr "顧客%sを編集する"
+
+#, fuzzy
+msgid "Edit dashboards"
+msgstr "ダッシュボードの編集"
 
 msgid "Edit element"
 msgstr "要素を編集する"
@@ -20745,9 +20748,6 @@ msgstr "ホストの問題(未処理)"
 
 msgid "Host Properties"
 msgstr "ホストのプロパティ"
-
-msgid "Host State"
-msgstr "ホストの状態"
 
 msgid "Host Status Grouping"
 msgstr "ホストステータスのグループ化"
@@ -29370,24 +29370,25 @@ msgstr "サービスが非アクティブ場合、状態を監視する"
 msgid "Monitoring state if task is not enabled"
 msgstr "タスクが有効になっていない場合の状態の監視"
 
-msgid ""
-"Monitoring state if the DISKPRESSURE condition is faulty or not available"
-msgstr ""
+#, fuzzy
+msgid "Monitoring state if the DISKPRESSURE condition is faulty or unknown"
+msgstr "READY状態に異常がある場合、または使用できない場合の監視状態"
 
-msgid ""
-"Monitoring state if the MEMORYPRESSURE condition is faulty or not available"
-msgstr ""
+#, fuzzy
+msgid "Monitoring state if the MEMORYPRESSURE condition is faulty or unknown"
+msgstr "READY状態に異常がある場合、または使用できない場合の監視状態"
 
+#, fuzzy
 msgid ""
-"Monitoring state if the NETWORKUNAVAILABLE condition is faulty or not "
-"available"
-msgstr ""
+"Monitoring state if the NETWORKUNAVAILABLE condition is faulty or unknown"
+msgstr "READY状態に異常がある場合、または使用できない場合の監視状態"
 
-msgid ""
-"Monitoring state if the PIDPRESSURE condition is faulty or not available"
-msgstr ""
+#, fuzzy
+msgid "Monitoring state if the PIDPRESSURE condition is faulty or unknown"
+msgstr "READY状態に異常がある場合、または使用できない場合の監視状態"
 
-msgid "Monitoring state if the READY condition is faulty or not available"
+#, fuzzy
+msgid "Monitoring state if the READY condition is faulty or unknown"
 msgstr "READY状態に異常がある場合、または使用できない場合の監視状態"
 
 msgid "Monitoring state if the wrong unit is active/standby"
@@ -32668,14 +32669,15 @@ msgstr "元のテキスト"
 msgid "Other"
 msgstr "その他"
 
-msgid "Other Dashboards"
-msgstr "その他のダッシュボード"
-
 msgid "Other Services"
 msgstr "他のサービス"
 
 msgid "Other components"
 msgstr "その他のコンポーネント"
+
+#, fuzzy
+msgid "Other dashboards"
+msgstr "その他のダッシュボード"
 
 msgid "Other entities"
 msgstr "その他のエンティティ"
@@ -36207,11 +36209,12 @@ msgstr "拒否されたセッション"
 msgid "Related"
 msgstr "関連"
 
-msgid "Related Dashboards"
-msgstr "関連ダッシュボード"
-
 msgid "Related Views"
 msgstr "関連ビュー"
+
+#, fuzzy
+msgid "Related dashboards"
+msgstr "関連ダッシュボード"
 
 msgid "Relational Database Service (RDS)"
 msgstr "リレーショナルデータベースサービス(RDS)"
@@ -38836,9 +38839,6 @@ msgstr "サービス正規表現:"
 
 msgid "Service Speed-O-Meter"
 msgstr "サービス速度-O-Meter"
-
-msgid "Service State"
-msgstr "サービス状態"
 
 msgid "Service Status Grouping"
 msgstr "サービスステータスのグループ化"
@@ -60736,6 +60736,15 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
+#~ msgid "Edit Dashboards"
+#~ msgstr "ダッシュボードの編集"
+
+#~ msgid "Host State"
+#~ msgstr "ホストの状態"
+
+#~ msgid "Service State"
+#~ msgstr "サービス状態"
+
 #~ msgid "Allocated pools"
 #~ msgstr "割り当てられたプール"
 
@@ -60801,9 +60810,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Bulk walk: Hosts using bulk walk (enforces SNMP v2c)"
 #~ msgstr "バルクウォーク: バルクウォークを使用するホスト(SNMP v2cを適用)"
-
-#~ msgid "Edit dashboard"
-#~ msgstr "ダッシュボードの編集"
 
 #~ msgid "Legacy SNMP devices using SNMP v2c"
 #~ msgstr "SNMPv2cを使用するレガシーSNMPデバイス"

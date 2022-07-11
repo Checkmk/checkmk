@@ -5,10 +5,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: marketing@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-11-27 15:34+0000\n"
-"Last-Translator: Weblate Admin <marketing@tribe29.com>\n"
+"PO-Revision-Date: 2022-07-11 17:01+0000\n"
+"Last-Translator: Jörg Herbel <joerg.herbel@tribe29.com>\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/software/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 4.8.1\n"
+"X-Generator: Weblate 4.13\n"
 
 #, python-format
 msgid " %s, outage duration %s"
@@ -434,10 +434,10 @@ msgstr "%d espaço temporal"
 msgid "%d translations"
 msgstr "%d traduções"
 
-#, python-format
+#, fuzzy, python-format
 msgid "%d unacknowledged incompatible werk"
 msgid_plural "%d unacknowledged incompatible werks"
-msgstr[0] ""
+msgstr[0] "Mostrar werks incompatíveis não reconhecidos"
 msgstr[1] ""
 
 msgid "%m-%d"
@@ -12322,14 +12322,15 @@ msgstr "Personalizar"
 msgid "Customize %s and use them"
 msgstr "Personalizar %s e usá-las"
 
-msgid "Customize Dashboards"
-msgstr "Personalizar Painel de Controle"
-
 msgid "Customize GUI design"
 msgstr "Personalizar o design da GUI"
 
 msgid "Customize builtin dashboard"
 msgstr "Personalizar o painel de instrumentos"
+
+#, fuzzy
+msgid "Customize dashboards"
+msgstr "Personalizar Painel de Controle"
 
 msgid "Customize login screen"
 msgstr "Personalize a tela de login"
@@ -12617,14 +12618,15 @@ msgstr "Perigoso"
 msgid "Dashboard"
 msgstr "Painel de instrumentos"
 
-msgid "Dashboard Properties"
-msgstr "Propriedades do Painel de Controle"
-
 msgid "Dashboard element"
 msgstr "Elemento de tablier"
 
 #, fuzzy, python-format
 msgid "Dashboard of user %s"
+msgstr "Propriedades do Painel de Controle"
+
+#, fuzzy
+msgid "Dashboard properties"
 msgstr "Propriedades do Painel de Controle"
 
 msgid "Dashboards"
@@ -16210,9 +16212,6 @@ msgstr "Editar Agregação"
 msgid "Edit BI Pack %s"
 msgstr "Editar BI Pack %s"
 
-msgid "Edit Dashboards"
-msgstr "Editar Painel de Controle"
-
 msgid "Edit Downtimes"
 msgstr "Editar tempos de paragem"
 
@@ -16284,6 +16283,10 @@ msgstr "Editar gráfico personalizado"
 #, python-format
 msgid "Edit customer %s"
 msgstr "Editar %s de clientes"
+
+#, fuzzy
+msgid "Edit dashboards"
+msgstr "Editar painel de instrumentos"
 
 msgid "Edit element"
 msgstr "Elemento de edição"
@@ -21781,10 +21784,6 @@ msgstr "Problemas com o anfitrião (sem manuseio)"
 
 msgid "Host Properties"
 msgstr "Propriedades anfitriãs"
-
-#, fuzzy
-msgid "Host State"
-msgstr "Estado anfitrião"
 
 msgid "Host Status Grouping"
 msgstr "Agrupamento do status de anfitrião"
@@ -30937,25 +30936,25 @@ msgstr "Estado de monitoramento se o serviço estiver inativo"
 msgid "Monitoring state if task is not enabled"
 msgstr "Estado de monitoramento se a tarefa não estiver ativada"
 
-msgid ""
-"Monitoring state if the DISKPRESSURE condition is faulty or not available"
-msgstr ""
-
-msgid ""
-"Monitoring state if the MEMORYPRESSURE condition is faulty or not available"
-msgstr ""
-
-msgid ""
-"Monitoring state if the NETWORKUNAVAILABLE condition is faulty or not "
-"available"
-msgstr ""
-
-msgid ""
-"Monitoring state if the PIDPRESSURE condition is faulty or not available"
-msgstr ""
+#, fuzzy
+msgid "Monitoring state if the DISKPRESSURE condition is faulty or unknown"
+msgstr "Estado de monitoramento se a tarefa não estiver ativada"
 
 #, fuzzy
-msgid "Monitoring state if the READY condition is faulty or not available"
+msgid "Monitoring state if the MEMORYPRESSURE condition is faulty or unknown"
+msgstr "Estado de monitoramento se a tarefa não estiver ativada"
+
+#, fuzzy
+msgid ""
+"Monitoring state if the NETWORKUNAVAILABLE condition is faulty or unknown"
+msgstr "Estado de monitoramento se a tarefa não estiver ativada"
+
+#, fuzzy
+msgid "Monitoring state if the PIDPRESSURE condition is faulty or unknown"
+msgstr "Estado de monitoramento se a tarefa não estiver ativada"
+
+#, fuzzy
+msgid "Monitoring state if the READY condition is faulty or unknown"
 msgstr "Estado de monitoramento se a tarefa não estiver ativada"
 
 msgid "Monitoring state if the wrong unit is active/standby"
@@ -34374,14 +34373,15 @@ msgstr "Texto original"
 msgid "Other"
 msgstr "Outros"
 
-msgid "Other Dashboards"
-msgstr "Outros Dashboards"
-
 msgid "Other Services"
 msgstr "Outros Serviços"
 
 msgid "Other components"
 msgstr "Outros componentes"
+
+#, fuzzy
+msgid "Other dashboards"
+msgstr "Outros Dashboards"
 
 msgid "Other entities"
 msgstr "Outras entidades"
@@ -35452,7 +35452,7 @@ msgstr "Níveis percentuais para taxas de erro"
 
 #, python-format
 msgid "Percentual levels for free %s"
-msgstr ""
+msgstr "Níveis percentuais para %s usados"
 
 msgid "Percentual levels for unused licenses"
 msgstr "Níveis percentuais para licenças não utilizadas"
@@ -38101,11 +38101,12 @@ msgstr "Sessões rejeitadas"
 msgid "Related"
 msgstr "Relacionado"
 
-msgid "Related Dashboards"
-msgstr "Dashboards relacionados"
-
 msgid "Related Views"
 msgstr "Visões Relacionadas"
+
+#, fuzzy
+msgid "Related dashboards"
+msgstr "Dashboards relacionados"
 
 msgid "Relational Database Service (RDS)"
 msgstr "Serviço de Base de Dados Relacionais (RDS)"
@@ -40841,10 +40842,6 @@ msgstr "Serviço Regex:"
 
 msgid "Service Speed-O-Meter"
 msgstr "Medidor de Velocidade de Serviço"
-
-#, fuzzy
-msgid "Service State"
-msgstr "Estado de serviço"
 
 msgid "Service Status Grouping"
 msgstr "Agrupamento do status do serviço"
@@ -56046,7 +56043,7 @@ msgid "Unknown/Unreach"
 msgstr "Desconhecido/Desenvolvimento"
 
 msgid "Unkown"
-msgstr ""
+msgstr "Desconhecido"
 
 msgid "Unlocked"
 msgstr "Desbloqueado"
@@ -63153,7 +63150,7 @@ msgid "force"
 msgstr "força"
 
 msgid "forced"
-msgstr ""
+msgstr "força"
 
 msgid "forced-commands-only"
 msgstr "apenas para comandos forçados"
@@ -64494,6 +64491,19 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 
+#~ msgid "Edit Dashboards"
+#~ msgstr "Editar Painel de Controle"
+
+#, fuzzy
+#~| msgid "Host state"
+#~ msgid "Host State"
+#~ msgstr "Estado anfitrião"
+
+#, fuzzy
+#~| msgid "Service state"
+#~ msgid "Service State"
+#~ msgstr "Estado de serviço"
+
 #, fuzzy
 #~| msgid "Allowed protocols"
 #~ msgid "Allocated pools"
@@ -64565,9 +64575,6 @@ msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 #~ msgstr ""
 #~ "Passeio a granel: Anfitriões que usam o passeio a granel (aplica o SNMP "
 #~ "v2c)"
-
-#~ msgid "Edit dashboard"
-#~ msgstr "Editar painel de instrumentos"
 
 #~ msgid "Legacy SNMP devices using SNMP v2c"
 #~ msgstr "Dispositivos SNMP legados usando SNMP v2c"

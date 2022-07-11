@@ -11726,15 +11726,15 @@ msgid "Customize %s and use them"
 msgstr ""
 
 #, fuzzy
-msgid "Customize Dashboards"
-msgstr "rapoarte"
-
-#, fuzzy
 msgid "Customize GUI design"
 msgstr "Atribute personalizate"
 
 msgid "Customize builtin dashboard"
 msgstr ""
+
+#, fuzzy
+msgid "Customize dashboards"
+msgstr "rapoarte"
 
 msgid "Customize login screen"
 msgstr ""
@@ -12033,9 +12033,6 @@ msgstr ""
 msgid "Dashboard"
 msgstr "rapoarte"
 
-msgid "Dashboard Properties"
-msgstr ""
-
 #, fuzzy
 msgid "Dashboard element"
 msgstr "rapoarte"
@@ -12043,6 +12040,10 @@ msgstr "rapoarte"
 #, fuzzy, python-format
 msgid "Dashboard of user %s"
 msgstr "Parola"
+
+#, fuzzy
+msgid "Dashboard properties"
+msgstr "Proprietatile Folderului"
 
 msgid "Dashboards"
 msgstr ""
@@ -15598,9 +15599,6 @@ msgstr "Agregare noua"
 msgid "Edit BI Pack %s"
 msgstr ""
 
-msgid "Edit Dashboards"
-msgstr ""
-
 #, fuzzy
 msgid "Edit Downtimes"
 msgstr "Întreruperi adhoc"
@@ -15679,6 +15677,10 @@ msgstr "Atribute personalizate"
 #, python-format
 msgid "Edit customer %s"
 msgstr ""
+
+#, fuzzy
+msgid "Edit dashboards"
+msgstr "Adaugă element"
 
 #, fuzzy
 msgid "Edit element"
@@ -20881,10 +20883,6 @@ msgstr ""
 
 msgid "Host Properties"
 msgstr ""
-
-#, fuzzy
-msgid "Host State"
-msgstr "Numele Elementului"
 
 msgid "Host Status Grouping"
 msgstr ""
@@ -29535,25 +29533,25 @@ msgstr " pe siteul de monitorizare: "
 msgid "Monitoring state if task is not enabled"
 msgstr ""
 
-msgid ""
-"Monitoring state if the DISKPRESSURE condition is faulty or not available"
-msgstr ""
-
-msgid ""
-"Monitoring state if the MEMORYPRESSURE condition is faulty or not available"
-msgstr ""
-
-msgid ""
-"Monitoring state if the NETWORKUNAVAILABLE condition is faulty or not "
-"available"
-msgstr ""
-
-msgid ""
-"Monitoring state if the PIDPRESSURE condition is faulty or not available"
-msgstr ""
+#, fuzzy
+msgid "Monitoring state if the DISKPRESSURE condition is faulty or unknown"
+msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
-msgid "Monitoring state if the READY condition is faulty or not available"
+msgid "Monitoring state if the MEMORYPRESSURE condition is faulty or unknown"
+msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+msgid ""
+"Monitoring state if the NETWORKUNAVAILABLE condition is faulty or unknown"
+msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+msgid "Monitoring state if the PIDPRESSURE condition is faulty or unknown"
+msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+msgid "Monitoring state if the READY condition is faulty or unknown"
 msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
@@ -33015,16 +33013,16 @@ msgid "Other"
 msgstr ""
 
 #, fuzzy
-msgid "Other Dashboards"
-msgstr "rapoarte"
-
-#, fuzzy
 msgid "Other Services"
 msgstr "servicii"
 
 #, fuzzy
 msgid "Other components"
 msgstr "cu comentariu"
+
+#, fuzzy
+msgid "Other dashboards"
+msgstr "rapoarte"
 
 #, fuzzy
 msgid "Other entities"
@@ -36653,12 +36651,12 @@ msgstr "sesiuni"
 msgid "Related"
 msgstr "spatiu utilizat"
 
-#, fuzzy
-msgid "Related Dashboards"
-msgstr "rapoarte"
-
 msgid "Related Views"
 msgstr ""
+
+#, fuzzy
+msgid "Related dashboards"
+msgstr "rapoarte"
 
 msgid "Relational Database Service (RDS)"
 msgstr ""
@@ -39416,10 +39414,6 @@ msgstr ""
 
 msgid "Service Speed-O-Meter"
 msgstr ""
-
-#, fuzzy
-msgid "Service State"
-msgstr "Statusul Serverului"
 
 #, fuzzy
 msgid "Service Status Grouping"
@@ -59766,6 +59760,14 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Host State"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "Service State"
+#~ msgstr "Statusul Serverului"
+
+#, fuzzy
 #~ msgid "Allocated pools"
 #~ msgstr "spatiu utilizat"
 
@@ -59796,10 +59798,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "AWS/SNS Limits"
 #~ msgstr "Adaugă limite"
-
-#, fuzzy
-#~ msgid "Edit dashboard"
-#~ msgstr "Adaugă element"
 
 #, fuzzy
 #~ msgid "Top alerters"

@@ -1,0 +1,19 @@
+Title: mk_oracle.ps1: missing async sections
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1657532231
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p7
+
+In some cases, the plugin <tt>mk_oracle.ps1</tt> may deliver empty
+async sections. This is possible in a situation when the async process,
+which delivers the data for async sections, is terminated(e.g. due to a
+crash or killed by Agent due to timeout), but PID of this async process
+is reused by Windows for some another unrelated process.
+
+Since this release, mk_oracle.ps1 performs an additional checking of
+the PID of the async process, thus eliminating the problem.

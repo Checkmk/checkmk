@@ -1671,8 +1671,13 @@ class BIModeEditAggregation(ABCBIMode):
                 % aggregation_ids[new_bi_aggregation.id][0].id,
             )
 
+        had_previous_aggregations = self._bi_packs.get_num_enabled_aggregations() > 0
         self.bi_pack.add_aggregation(new_bi_aggregation)
         self._bi_packs.save_config()
+        redirect_kwargs = {"pack": self.bi_pack.id}
+        if had_previous_aggregations != (self._bi_packs.get_num_enabled_aggregations() > 0):
+            redirect_kwargs["reload_page"] = 1
+
         if self._new:
             self._add_change(
                 "bi-new-aggregation", _("Add new BI aggregation %s") % new_bi_aggregation.id
@@ -1681,7 +1686,8 @@ class BIModeEditAggregation(ABCBIMode):
             self._add_change(
                 "bi-edit-aggregation", _("Modified BI aggregation %s") % (new_bi_aggregation.id)
             )
-        return redirect(mode_url("bi_aggregations", pack=self.bi_pack.id))
+
+        return redirect(mode_url("bi_aggregations", **redirect_kwargs))
 
     def page(self) -> None:
         html.begin_form("biaggr", method="POST")
@@ -2070,6 +2076,10 @@ class BIModeAggregations(ABCBIMode):
         )
 
     def page(self) -> None:
+        if html.request.has_var("reload_page"):
+            url = mode_url(self.name(), pack=self.bi_pack.id)
+            html.reload_whole_page(url)
+
         html.begin_form("bulk_action_form", method="POST")
         self._render_aggregations()
         html.hidden_field("selection_id", weblib.selection_id())

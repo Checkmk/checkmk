@@ -25,7 +25,7 @@ from cmk.gui.plugins.visuals.utils import (
     FilterNumberRange,
     FilterOption,
     InputTextFilter,
-    RangedTables,
+    RangedTableFilterName,
     visual_info_registry,
     VisualInfo,
 )
@@ -71,7 +71,7 @@ class FilterInvText(InputTextFilter):
 
 
 class FilterInvtableTimestampAsAge(FilterNumberRange):
-    def __init__(self, *, inv_info: RangedTables, ident: str, title: str) -> None:
+    def __init__(self, *, inv_info: RangedTableFilterName, ident: str, title: str) -> None:
         super().__init__(
             title=title,
             sort_index=800,
@@ -91,7 +91,7 @@ class FilterInvtableTimestampAsAge(FilterNumberRange):
 class FilterInvtableIDRange(FilterNumberRange):
     """Filter for choosing a range in which a certain integer lies"""
 
-    def __init__(self, *, inv_info: RangedTables, ident: str, title: str) -> None:
+    def __init__(self, *, inv_info: str, ident: RangedTableFilterName, title: str) -> None:
         super().__init__(
             title=title,
             sort_index=800,

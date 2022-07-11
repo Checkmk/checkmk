@@ -91,7 +91,7 @@ from cmk.gui.plugins.visuals.inventory import (
 from cmk.gui.plugins.visuals.utils import (
     filter_registry,
     get_livestatus_filter_headers,
-    get_ranged_table,
+    get_ranged_table_filter_name,
     visual_info_registry,
     VisualInfo,
 )
@@ -689,24 +689,25 @@ class ColumnDisplayHint:
         | FilterInvtableInterfaceType
         | FilterInvtableIDRange
     ):
+        title: str = topic + ": " + self.title
         if self.filter_class:
             return self.filter_class(
                 inv_info=inv_info,
                 ident=ident,
-                title=topic + ": " + self.title,
+                title=title,
             )
 
-        if (ranged_table := get_ranged_table(inv_info)) is not None:
+        if (ranged_table_filter_name := get_ranged_table_filter_name(ident)) is not None:
             return FilterInvtableIDRange(
-                inv_info=ranged_table,
-                ident=ident,
-                title=topic + ": " + self.title,
+                inv_info=inv_info,
+                ident=ranged_table_filter_name,
+                title=title,
             )
 
         return FilterInvtableText(
             inv_info=inv_info,
             ident=ident,
-            title=topic + ": " + self.title,
+            title=title,
         )
 
 

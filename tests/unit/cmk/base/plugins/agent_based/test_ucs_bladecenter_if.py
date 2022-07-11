@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.plugins.agent_based.ucs_bladecenter_if import parse_ucs_bladecenter_if
-from cmk.base.plugins.agent_based.utils.interfaces import Interface
+from cmk.base.plugins.agent_based.utils import interfaces
 
 
 def test_parse_ucs_bladecenter_if() -> None:
@@ -68,48 +68,56 @@ def test_parse_ucs_bladecenter_if() -> None:
             ],
         ]
     ) == [
-        Interface(
-            index="0",
-            descr="Slot 1 FC-Switch A Port 5",
-            alias="Slot 1 FC-Switch A Port 5",
-            type="6",
-            speed=0,
-            oper_status="2",
-            in_octets=6269002983258720,
-            in_ucast=3349919871277380,
-            in_mcast=0,
-            in_bcast=0,
-            in_discards=0,
-            in_errors=748131763181460,
-            out_octets=11970108210903360,
-            out_ucast=2992509872856660,
-            out_mcast=0,
-            out_bcast=0,
-            out_discards=0,
-            out_errors=0,
-            out_qlen=0,
-            oper_status_name="down",
+        interfaces.InterfaceWithCounters(
+            interfaces.Attributes(
+                index="0",
+                descr="Slot 1 FC-Switch A Port 5",
+                alias="Slot 1 FC-Switch A Port 5",
+                type="6",
+                speed=0,
+                oper_status="2",
+                out_qlen=0,
+                oper_status_name="down",
+            ),
+            interfaces.Counters(
+                in_octets=6269002983258720,
+                in_ucast=3349919871277380,
+                in_mcast=0,
+                in_bcast=0,
+                in_disc=0,
+                in_err=748131763181460,
+                out_octets=11970108210903360,
+                out_ucast=2992509872856660,
+                out_mcast=0,
+                out_bcast=0,
+                out_disc=0,
+                out_err=0,
+            ),
         ),
-        Interface(
-            index="1",
-            descr="Slot 1 FC-Switch B Port 5",
-            alias="Slot 1 FC-Switch B Port 5",
-            type="6",
-            speed=0,
-            oper_status="2",
-            in_octets=6000859585097280,
-            in_ucast=3199011900400260,
-            in_mcast=0,
-            in_bcast=0,
-            in_discards=0,
-            in_errors=714588068607510,
-            out_octets=11433477817196880,
-            out_ucast=2858352274430040,
-            out_mcast=0,
-            out_bcast=0,
-            out_discards=0,
-            out_errors=0,
-            out_qlen=0,
-            oper_status_name="down",
+        interfaces.InterfaceWithCounters(
+            interfaces.Attributes(
+                index="1",
+                descr="Slot 1 FC-Switch B Port 5",
+                alias="Slot 1 FC-Switch B Port 5",
+                type="6",
+                speed=0,
+                oper_status="2",
+                out_qlen=0,
+                oper_status_name="down",
+            ),
+            interfaces.Counters(
+                in_octets=6000859585097280,
+                in_ucast=3199011900400260,
+                in_mcast=0,
+                in_bcast=0,
+                in_disc=0,
+                in_err=714588068607510,
+                out_octets=11433477817196880,
+                out_ucast=2858352274430040,
+                out_mcast=0,
+                out_bcast=0,
+                out_disc=0,
+                out_err=0,
+            ),
         ),
     ]

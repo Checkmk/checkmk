@@ -10,17 +10,21 @@ from .utils import hitachi_hnas, if64, interfaces
 
 def parse_hitachi_hnas_fc_if(string_table: List[type_defs.StringTable]) -> interfaces.Section:
     return [
-        interfaces.Interface(
-            index="%d%03d" % (int(line[0]), int(line[1])),
-            descr=line[0] + "." + line[1],  # ClusterNode.InterfaceIndex
-            alias=line[0] + "." + line[1],  # same as description
-            type="",
-            speed=int(line[3]) * 1000000000,
-            oper_status=line[2] == "1" and "1" or "2",
-            in_octets=interfaces.saveint(line[4]),
-            in_discards=interfaces.saveint(line[13]),
-            in_errors=sum(map(int, line[6:13])),
-            out_octets=interfaces.saveint(line[5]),
+        interfaces.InterfaceWithCounters(
+            interfaces.Attributes(
+                index="%d%03d" % (int(line[0]), int(line[1])),
+                descr=line[0] + "." + line[1],  # ClusterNode.InterfaceIndex
+                alias=line[0] + "." + line[1],  # same as description
+                type="",
+                speed=int(line[3]) * 1000000000,
+                oper_status=line[2] == "1" and "1" or "2",
+            ),
+            interfaces.Counters(
+                in_octets=interfaces.saveint(line[4]),
+                in_disc=interfaces.saveint(line[13]),
+                in_err=sum(map(int, line[6:13])),
+                out_octets=interfaces.saveint(line[5]),
+            ),
         )
         for line in string_table[0]
     ]

@@ -19,30 +19,34 @@ _VMS_IF_COUNTERS_ORDER = [
     "in_ucast",
     "in_mcast",
     "in_bcast",
-    "in_discards",
-    "in_errors",
+    "in_disc",
+    "in_err",
     "out_octets",
     "out_ucast",
     "out_mcast",
     "out_bcast",
-    "out_discards",
-    "out_errors",
+    "out_disc",
+    "out_err",
 ]
 
 
 def parse_vms_if(string_table: type_defs.StringTable) -> interfaces.Section:
     return [
-        interfaces.Interface(
-            index=str(idx + 1),
-            descr=line[0],
-            alias=line[0],
-            type="6",  # Ethernet
-            speed=1000000000,
-            oper_status="1",
-            **{  # type: ignore[arg-type]
-                counter: wrap_negative(str_val)
-                for counter, str_val in zip(_VMS_IF_COUNTERS_ORDER, line[1:])
-            },
+        interfaces.InterfaceWithCounters(
+            interfaces.Attributes(
+                index=str(idx + 1),
+                descr=line[0],
+                alias=line[0],
+                type="6",  # Ethernet
+                speed=1000000000,
+                oper_status="1",
+            ),
+            interfaces.Counters(
+                **{  # type: ignore[arg-type]
+                    counter: wrap_negative(str_val)
+                    for counter, str_val in zip(_VMS_IF_COUNTERS_ORDER, line[1:])
+                },
+            ),
         )
         for idx, line in enumerate(string_table)
     ]

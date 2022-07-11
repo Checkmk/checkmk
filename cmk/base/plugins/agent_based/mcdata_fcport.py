@@ -22,22 +22,28 @@ def _bin_to_64(bin_: Union[str, Sequence[int]]) -> int:
     return sum(b * 265**i for i, b in enumerate(bin_[::-1]))
 
 
-def _line_to_interface(line: Iterable[Union[str, Sequence[int]]]) -> interfaces.Interface:
+def _line_to_interface(
+    line: Iterable[Union[str, Sequence[int]]]
+) -> interfaces.InterfaceWithCounters:
     index, opStatus, speed, txWords64, rxWords64, txFrames64, rxFrames64, c3Discards64, crcs = line
     index = "%02d" % int(str(index))
-    return interfaces.Interface(
-        index=index,
-        descr=index,
-        alias=index,
-        type="6",
-        speed=mcdata_fcport_speedbits.get(str(speed), 0),
-        oper_status=mcdata_fcport_opstatus.get(str(opStatus), "unknown"),
-        in_octets=_bin_to_64(rxWords64) * 4,
-        in_ucast=_bin_to_64(rxFrames64),
-        in_errors=int(str(crcs)),
-        out_octets=_bin_to_64(txWords64) * 4,
-        out_ucast=_bin_to_64(txFrames64),
-        out_discards=_bin_to_64(c3Discards64),
+    return interfaces.InterfaceWithCounters(
+        interfaces.Attributes(
+            index=index,
+            descr=index,
+            alias=index,
+            type="6",
+            speed=mcdata_fcport_speedbits.get(str(speed), 0),
+            oper_status=mcdata_fcport_opstatus.get(str(opStatus), "unknown"),
+        ),
+        interfaces.Counters(
+            in_octets=_bin_to_64(rxWords64) * 4,
+            in_ucast=_bin_to_64(rxFrames64),
+            in_err=int(str(crcs)),
+            out_octets=_bin_to_64(txWords64) * 4,
+            out_ucast=_bin_to_64(txFrames64),
+            out_disc=_bin_to_64(c3Discards64),
+        ),
     )
 
 

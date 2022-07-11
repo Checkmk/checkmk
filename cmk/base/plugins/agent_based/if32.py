@@ -9,27 +9,31 @@ from .utils import interfaces
 
 def parse_if(string_table: type_defs.StringByteTable) -> interfaces.Section:
     return [
-        interfaces.Interface(
-            index=str(line[0]),
-            descr=str(line[1]),
-            type=str(line[2]),
-            speed=interfaces.saveint(line[3]),
-            oper_status=str(line[4]),
-            in_octets=interfaces.saveint(line[5]),
-            in_ucast=interfaces.saveint(line[6]),
-            in_mcast=interfaces.saveint(line[7]),
-            in_bcast=0,
-            in_discards=interfaces.saveint(line[8]),
-            in_errors=interfaces.saveint(line[9]),
-            out_octets=interfaces.saveint(line[10]),
-            out_ucast=interfaces.saveint(line[11]),
-            out_mcast=0,
-            out_bcast=interfaces.saveint(line[12]),
-            out_discards=interfaces.saveint(line[13]),
-            out_errors=interfaces.saveint(line[14]),
-            out_qlen=interfaces.saveint(line[15]),
-            alias=str(line[1]),
-            phys_address=line[16],
+        interfaces.InterfaceWithCounters(
+            interfaces.Attributes(
+                index=str(line[0]),
+                descr=str(line[1]),
+                type=str(line[2]),
+                speed=interfaces.saveint(line[3]),
+                oper_status=str(line[4]),
+                out_qlen=interfaces.saveint(line[15]),
+                alias=str(line[1]),
+                phys_address=line[16],
+            ),
+            interfaces.Counters(
+                in_octets=interfaces.saveint(line[5]),
+                in_ucast=interfaces.saveint(line[6]),
+                in_mcast=interfaces.saveint(line[7]),
+                in_bcast=0,
+                in_disc=interfaces.saveint(line[8]),
+                in_err=interfaces.saveint(line[9]),
+                out_octets=interfaces.saveint(line[10]),
+                out_ucast=interfaces.saveint(line[11]),
+                out_mcast=0,
+                out_bcast=interfaces.saveint(line[12]),
+                out_disc=interfaces.saveint(line[13]),
+                out_err=interfaces.saveint(line[14]),
+            ),
         )
         for line in string_table
         if interfaces.saveint(line[0]) > 0

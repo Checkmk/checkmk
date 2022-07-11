@@ -17,6 +17,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
     TableRow,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils import bonding, interfaces
 
 
@@ -48,26 +49,32 @@ from cmk.base.plugins.agent_based.utils import bonding, interfaces
                 ["wlp3s0", "130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0"],
             ],
             [
-                "1",
-                "wlp3s0",
-                "wlp3s0",
-                "6",
-                0,
-                "2",
-                130923553,
-                217262,
-                16078,
-                0,
-                0,
-                0,
-                23586281,
-                142684,
-                0,
-                0,
-                0,
-                0,
-                0,
-                "\xaa\xaa\xaa\xaa\xaa\xaa",
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="1",
+                        descr="wlp3s0",
+                        alias="wlp3s0",
+                        type="6",
+                        speed=0,
+                        oper_status="2",
+                        out_qlen=0,
+                        phys_address="\xaa\xaa\xaa\xaa\xaa\xaa",
+                    ),
+                    interfaces.Counters(
+                        in_octets=130923553,
+                        in_ucast=217262,
+                        in_mcast=16078,
+                        in_bcast=0,
+                        in_disc=0,
+                        in_err=0,
+                        out_octets=23586281,
+                        out_ucast=142684,
+                        out_mcast=0,
+                        out_bcast=0,
+                        out_disc=0,
+                        out_err=0,
+                    ),
+                ),
             ],
         ),
         (
@@ -95,26 +102,32 @@ from cmk.base.plugins.agent_based.utils import bonding, interfaces
                 ["wlp3s0", "130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0"],
             ],
             [
-                "1",
-                "wlp3s0",
-                "wlp3s0",
-                "6",
-                0,
-                "2",
-                130923553,
-                217262,
-                16078,
-                0,
-                0,
-                0,
-                23586281,
-                142684,
-                0,
-                0,
-                0,
-                0,
-                0,
-                "\xbb\xbb\xbb\xbb\xbb\xbb",
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="1",
+                        descr="wlp3s0",
+                        alias="wlp3s0",
+                        type="6",
+                        speed=0,
+                        oper_status="2",
+                        out_qlen=0,
+                        phys_address="\xbb\xbb\xbb\xbb\xbb\xbb",
+                    ),
+                    interfaces.Counters(
+                        in_octets=130923553,
+                        in_ucast=217262,
+                        in_mcast=16078,
+                        in_bcast=0,
+                        in_disc=0,
+                        in_err=0,
+                        out_octets=23586281,
+                        out_ucast=142684,
+                        out_mcast=0,
+                        out_bcast=0,
+                        out_disc=0,
+                        out_err=0,
+                    ),
+                )
             ],
         ),
         (
@@ -142,55 +155,64 @@ from cmk.base.plugins.agent_based.utils import bonding, interfaces
                 ["wlp3s0", "130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0"],
             ],
             [
-                "1",
-                "wlp3s0",
-                "wlp3s0",
-                "6",
-                0,
-                "1",
-                130923553,
-                217262,
-                16078,
-                0,
-                0,
-                0,
-                23586281,
-                142684,
-                0,
-                0,
-                0,
-                0,
-                0,
-                "\xbb\xbb\xbb\xbb\xbb\xbb",
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="1",
+                        descr="wlp3s0",
+                        alias="wlp3s0",
+                        type="6",
+                        speed=0,
+                        oper_status="1",
+                        out_qlen=0,
+                        phys_address="\xbb\xbb\xbb\xbb\xbb\xbb",
+                    ),
+                    interfaces.Counters(
+                        in_octets=130923553,
+                        in_ucast=217262,
+                        in_mcast=16078,
+                        in_bcast=0,
+                        in_disc=0,
+                        in_err=0,
+                        out_octets=23586281,
+                        out_ucast=142684,
+                        out_mcast=0,
+                        out_bcast=0,
+                        out_disc=0,
+                        out_err=0,
+                    ),
+                ),
             ],
         ),
     ],
 )
-def test_parse_lnx_if(string_table, result) -> None:
-    assert lnx_if.parse_lnx_if(string_table)[0][0] == interfaces.Interface(*result)
+def test_parse_lnx_if(string_table: StringTable, result: interfaces.Section) -> None:
+    assert lnx_if.parse_lnx_if(string_table)[0] == result
 
 
-INTERFACE = interfaces.Interface(
-    "1",
-    "wlp3s0",
-    "wlp3s0",
-    "6",
-    0,
-    "1",
-    130923553,
-    217262,
-    16078,
-    0,
-    0,
-    0,
-    23586281,
-    142684,
-    0,
-    0,
-    0,
-    0,
-    0,
-    "\xaa\xaa\xaa\xaa\xaa\xaa",
+INTERFACE = interfaces.InterfaceWithCounters(
+    interfaces.Attributes(
+        index="1",
+        descr="wlp3s0",
+        alias="wlp3s0",
+        type="6",
+        speed=0,
+        oper_status="1",
+        phys_address="\xaa\xaa\xaa\xaa\xaa\xaa",
+    ),
+    interfaces.Counters(
+        130923553,
+        217262,
+        16078,
+        0,
+        0,
+        0,
+        23586281,
+        142684,
+        0,
+        0,
+        0,
+        0,
+    ),
 )
 
 PARAMS = {
@@ -207,7 +229,7 @@ def test_check_lnx_if(monkeypatch) -> None:
     monkeypatch.setattr("time.time", lambda: 0)
     list(
         lnx_if.check_lnx_if(
-            INTERFACE.index,
+            INTERFACE.attributes.index,
             PARAMS,
             section,
             None,
@@ -216,7 +238,7 @@ def test_check_lnx_if(monkeypatch) -> None:
     monkeypatch.setattr("time.time", lambda: 1)
     result_lnx_if = list(
         lnx_if.check_lnx_if(
-            INTERFACE.index,
+            INTERFACE.attributes.index,
             PARAMS,
             section,
             None,
@@ -225,7 +247,7 @@ def test_check_lnx_if(monkeypatch) -> None:
     monkeypatch.setattr("time.time", lambda: 2)
     result_interfaces = list(
         interfaces.check_multiple_interfaces(
-            INTERFACE.index,
+            INTERFACE.attributes.index,
             PARAMS,
             section_if,
         )
@@ -237,15 +259,15 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
     section: dict[str, lnx_if.Section] = {}
     ifaces = []
     for i in range(3):
-        iface = copy.copy(INTERFACE)
-        iface.node = "node%s" % i
+        iface = copy.deepcopy(INTERFACE)
+        iface.attributes.node = "node%s" % i
         ifaces_node = [iface] * (i + 1)
-        section[iface.node] = ifaces_node, {}
+        section[iface.attributes.node] = ifaces_node, {}
         ifaces += ifaces_node
     monkeypatch.setattr("time.time", lambda: 0)
     list(
         lnx_if.cluster_check_lnx_if(
-            INTERFACE.index,
+            INTERFACE.attributes.index,
             PARAMS,
             section,
             {},
@@ -254,7 +276,7 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
     monkeypatch.setattr("time.time", lambda: 1)
     result_lnx_if = list(
         lnx_if.cluster_check_lnx_if(
-            INTERFACE.index,
+            INTERFACE.attributes.index,
             PARAMS,
             section,
             {},
@@ -263,7 +285,7 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:
     monkeypatch.setattr("time.time", lambda: 2)
     result_interfaces = list(
         interfaces.check_multiple_interfaces(
-            INTERFACE.index,
+            INTERFACE.attributes.index,
             PARAMS,
             ifaces,
         )

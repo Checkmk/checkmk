@@ -224,27 +224,31 @@ def parse_lnx_if(  # pylint: disable=too-many-branches
             ifPhysAddress = ""
 
         if_table.append(
-            interfaces.Interface(
-                index=str(ifIndex),
-                descr=str(ifDescr),
-                type=str(ifType),
-                speed=ifSpeed,
-                oper_status=str(ifOperStatus),
-                in_octets=ifInOctets,
-                in_ucast=inucast,
-                in_mcast=inmcast,
-                in_bcast=inbcast,
-                in_discards=ifInDiscards,
-                in_errors=ifInErrors,
-                out_octets=ifOutOctets,
-                out_ucast=outucast,
-                out_mcast=outmcast,
-                out_bcast=outbcast,
-                out_discards=ifOutDiscards,
-                out_errors=ifOutErrors,
-                out_qlen=ifOutQLen,
-                alias=ifAlias,
-                phys_address=ifPhysAddress,
+            interfaces.InterfaceWithCounters(
+                interfaces.Attributes(
+                    index=str(ifIndex),
+                    descr=str(ifDescr),
+                    type=str(ifType),
+                    speed=ifSpeed,
+                    oper_status=str(ifOperStatus),
+                    out_qlen=ifOutQLen,
+                    alias=ifAlias,
+                    phys_address=ifPhysAddress,
+                ),
+                interfaces.Counters(
+                    in_octets=ifInOctets,
+                    in_ucast=inucast,
+                    in_mcast=inmcast,
+                    in_bcast=inbcast,
+                    in_disc=ifInDiscards,
+                    in_err=ifInErrors,
+                    out_octets=ifOutOctets,
+                    out_ucast=outucast,
+                    out_mcast=outmcast,
+                    out_bcast=outbcast,
+                    out_disc=ifOutDiscards,
+                    out_err=ifOutErrors,
+                ),
             )
         )
 
@@ -266,7 +270,9 @@ def discover_lnx_if(
     if section_lnx_if is None:
         return
     # Always exclude dockers veth* interfaces on docker nodes
-    if_table = [iface for iface in section_lnx_if[0] if not iface.descr.startswith("veth")]
+    if_table = [
+        iface for iface in section_lnx_if[0] if not iface.attributes.descr.startswith("veth")
+    ]
     yield from interfaces.discover_interfaces(
         params,
         if_table,
@@ -274,14 +280,20 @@ def discover_lnx_if(
 
 
 def _fix_bonded_mac(
-    interface: interfaces.Interface,
+    interface: interfaces.InterfaceWithCounters,
     mac_map: Mapping[str, str],
-) -> interfaces.Interface:
+) -> interfaces.InterfaceWithCounters:
     try:
-        mac = mac_map.get(interface.alias) or mac_map[interface.descr]
+        mac = mac_map.get(interface.attributes.alias) or mac_map[interface.attributes.descr]
     except KeyError:
         return interface
-    return replace(interface, phys_address=interfaces.mac_address_from_hexstring(mac))
+    return replace(
+        interface,
+        attributes=replace(
+            interface.attributes,
+            phys_address=interfaces.mac_address_from_hexstring(mac),
+        ),
+    )
 
 
 def _get_fixed_bonded_if_table(
@@ -343,29 +355,29 @@ register.check_plugin(
 
 
 def _make_inventory_interface(
-    interface: interfaces.Interface,
+    interface: interfaces.InterfaceWithCounters,
     mac_map: Mapping[str, str],
     bond_map: Mapping[str, str],
 ) -> Optional[InterfaceInv]:
     # Always exclude dockers veth* interfaces on docker nodes.
     # Useless entries for "TenGigabitEthernet2/1/21--Uncontrolled".
     # Ignore useless half-empty tables (e.g. Viprinet-Router).
-    if interface.descr.startswith("veth") or interface.type in ("231", "232"):
+    if interface.attributes.descr.startswith("veth") or interface.attributes.type in ("231", "232"):
         return None
 
     mac = (
-        mac_map.get(interface.descr)
-        or mac_map.get(interface.alias)
-        or interfaces.render_mac_address(interface.phys_address)
+        mac_map.get(interface.attributes.descr)
+        or mac_map.get(interface.attributes.alias)
+        or interfaces.render_mac_address(interface.attributes.phys_address)
     )
 
     return InterfaceInv(
-        index=interface.index,
-        descr=interface.descr,
-        alias=interface.alias,
-        type=interface.type,
-        speed=int(interface.speed),
-        oper_status=int(interface.oper_status),
+        index=interface.attributes.index,
+        descr=interface.attributes.descr,
+        alias=interface.attributes.alias,
+        type=interface.attributes.type,
+        speed=int(interface.attributes.speed),
+        oper_status=int(interface.attributes.oper_status),
         phys_address=mac,
         bond=bond_map.get(mac),
     )

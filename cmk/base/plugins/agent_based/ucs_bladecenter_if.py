@@ -88,36 +88,36 @@ _UCS_FIELDS_TO_IF_FIELDS = {
     "fibrechannel": {
         "in_octets": [("fcStats", "BytesRx")],
         "in_ucast": [("fcStats", "PacketsRx")],
-        "in_discards": [("fcErrStats", "DiscardRx")],
-        "in_errors": [("fcErrStats", "Rx"), ("fcErrStats", "CrcRx")],
+        "in_disc": [("fcErrStats", "DiscardRx")],
+        "in_err": [("fcErrStats", "Rx"), ("fcErrStats", "CrcRx")],
         "out_octets": [("fcStats", "BytesTx")],
         "out_ucast": [("fcStats", "PacketsTx")],
-        "out_discards": [("fcErrStats", "DiscardTx")],
-        "out_errors": [("fcErrStats", "Tx")],
+        "out_disc": [("fcErrStats", "DiscardTx")],
+        "out_err": [("fcErrStats", "Tx")],
     },
     "ethernet": {
         "in_octets": [("etherRxStats", "TotalBytes")],
         "in_ucast": [("etherRxStats", "UnicastPackets")],
         "in_mcast": [("etherRxStats", "MulticastPackets")],
         "in_bcast": [("etherRxStats", "BroadcastPackets")],
-        "in_errors": [("etherErrStats", "Rcv")],
+        "in_err": [("etherErrStats", "Rcv")],
         "out_octets": [("etherTxStats", "TotalBytes")],
         "out_ucast": [("etherTxStats", "UnicastPackets")],
         "out_mcast": [("etherTxStats", "MulticastPackets")],
         "out_bcast": [("etherTxStats", "BroadcastPackets")],
-        "out_discards": [("etherErrStats", "OutDiscard")],
+        "out_disc": [("etherErrStats", "OutDiscard")],
     },
     "interconnect": {
         "in_octets": [("etherRxStats", "TotalBytes")],
         "in_ucast": [("etherRxStats", "UnicastPackets")],
         "in_mcast": [("etherRxStats", "MulticastPackets")],
         "in_bcast": [("etherRxStats", "BroadcastPackets")],
-        "in_errors": [("etherErrStats", "Rcv")],
+        "in_err": [("etherErrStats", "Rcv")],
         "out_octets": [("etherTxStats", "TotalBytes")],
         "out_ucast": [("etherTxStats", "UnicastPackets")],
         "out_mcast": [("etherTxStats", "MulticastPackets")],
         "out_bcast": [("etherTxStats", "BroadcastPackets")],
-        "out_discards": [("etherErrStats", "OutDiscard")],
+        "out_disc": [("etherErrStats", "OutDiscard")],
     },
 }
 
@@ -177,24 +177,29 @@ def parse_ucs_bladecenter_if(string_table: type_defs.StringTable) -> interfaces.
 
             speed = speed.replace("gbps", "000000000")
 
-            iface = interfaces.Interface(
-                index=iface_index,
-                descr=item,
-                alias=item,
-                # This means Ethernet. We should set the real type here, but 56 is currently not
-                # supported.
-                type="6",
-                speed=interfaces.saveint(speed),
-                oper_status=is_up and "1" or "2",
-                group=group,
+            iface = interfaces.InterfaceWithCounters(
+                interfaces.Attributes(
+                    index=iface_index,
+                    descr=item,
+                    alias=item,
+                    # This means Ethernet. We should set the real type here, but 56 is currently not
+                    # supported.
+                    type="6",
+                    speed=interfaces.saveint(speed),
+                    oper_status=is_up and "1" or "2",
+                    group=group,
+                ),
                 # On summing keys there is a possiblility to overlook some counter wraps.
                 # Right now, it's only Recv-Errors (therefore unlikely). We can live with that
-                **{  # type: ignore[arg-type]
-                    iface_field: sum(
-                        int(values[ctr_class].get(ctr_key, "0")) for ctr_class, ctr_key in ctr_keys
-                    )
-                    for iface_field, ctr_keys in _UCS_FIELDS_TO_IF_FIELDS[what].items()
-                },
+                interfaces.Counters(
+                    **{  # type: ignore[arg-type]
+                        iface_field: sum(
+                            int(values[ctr_class].get(ctr_key, "0"))
+                            for ctr_class, ctr_key in ctr_keys
+                        )
+                        for iface_field, ctr_keys in _UCS_FIELDS_TO_IF_FIELDS[what].items()
+                    },
+                ),
             )
 
             converted.append(iface)

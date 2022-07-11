@@ -23,145 +23,98 @@ CheckResults = Sequence[Union[Result, Metric, IgnoreResults]]
 
 def _create_interfaces(
     bandwidth_change: int,
-    **kwargs: Any,
+    **attr_kwargs: Any,
 ) -> interfaces.Section:
     ifaces = [
-        interfaces.Interface(
-            "1",
-            "lo",
-            "lo",
-            "24",
-            0,
-            "1",
-            266045395,
-            97385,
-            0,
-            0,
-            0,
-            0,
-            266045395,
-            97385,
-            0,
-            0,
-            0,
-            0,
-            0,
-            "\x00\x00\x00\x00\x00\x00",
+        interfaces.InterfaceWithCounters(
+            interfaces.Attributes(
+                index="1",
+                descr="lo",
+                alias="lo",
+                type="24",
+                speed=0,
+                oper_status="1",
+                phys_address="\x00\x00\x00\x00\x00\x00",
+            ),
+            interfaces.Counters(
+                in_octets=266045395,
+                in_ucast=97385,
+                out_octets=266045395,
+                out_ucast=97385,
+            ),
         ),
-        interfaces.Interface(
-            "2",
-            "docker0",
-            "docker0",
-            "6",
-            0,
-            "2",
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            "\x02B\x9d\xa42/",
+        interfaces.InterfaceWithCounters(
+            interfaces.Attributes(
+                index="2",
+                descr="docker0",
+                alias="docker0",
+                type="6",
+                speed=0,
+                oper_status="2",
+                phys_address="\x02B\x9d\xa42/",
+            ),
+            interfaces.Counters(),
         ),
-        interfaces.Interface(
-            "3",
-            "enp0s31f6",
-            "enp0s31f6",
-            "6",
-            0,
-            "2",
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            "\xe4\xb9z6\x93\xad",
+        interfaces.InterfaceWithCounters(
+            interfaces.Attributes(
+                index="3",
+                descr="enp0s31f6",
+                alias="enp0s31f6",
+                type="6",
+                speed=0,
+                oper_status="2",
+                phys_address="\xe4\xb9z6\x93\xad",
+            ),
+            interfaces.Counters(),
         ),
-        interfaces.Interface(
-            "4",
-            "enxe4b97ab99f99",
-            "enxe4b97ab99f99",
-            "6",
-            10000000,
-            "2",
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            "\xe4\xb9z\xb9\x9f\x99",
+        interfaces.InterfaceWithCounters(
+            interfaces.Attributes(
+                index="4",
+                descr="enxe4b97ab99f99",
+                alias="enxe4b97ab99f99",
+                type="6",
+                speed=10000000,
+                oper_status="2",
+                phys_address="\xe4\xb9z\xb9\x9f\x99",
+            ),
+            interfaces.Counters(),
         ),
-        interfaces.Interface(
-            "5",
-            "vboxnet0",
-            "vboxnet0",
-            "6",
-            10000000,
-            "1",
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            20171,
-            113,
-            0,
-            0,
-            0,
-            0,
-            0,
-            "\n\x00'\x00\x00\x00",
+        interfaces.InterfaceWithCounters(
+            interfaces.Attributes(
+                index="5",
+                descr="vboxnet0",
+                alias="vboxnet0",
+                type="6",
+                speed=10000000,
+                oper_status="1",
+                phys_address="\n\x00'\x00\x00\x00",
+            ),
+            interfaces.Counters(
+                out_octets=20171,
+                out_ucast=113,
+            ),
         ),
-        interfaces.Interface(
-            "6",
-            "wlp2s0",
-            "wlp2s0",
-            "6",
-            0,
-            "1",
-            346922243 + bandwidth_change,
-            244867,
-            0,
-            0,
-            0,
-            0,
-            6570143 + 4 * bandwidth_change,
-            55994,
-            0,
-            0,
-            0,
-            0,
-            0,
-            "d]\x86\xe4P/",
+        interfaces.InterfaceWithCounters(
+            interfaces.Attributes(
+                index="6",
+                descr="wlp2s0",
+                alias="wlp2s0",
+                type="6",
+                speed=0,
+                oper_status="1",
+                phys_address="d]\x86\xe4P/",
+            ),
+            interfaces.Counters(
+                in_octets=346922243 + bandwidth_change,
+                in_ucast=244867,
+                out_octets=6570143 + 4 * bandwidth_change,
+                out_ucast=55994,
+            ),
         ),
     ]
     for iface in ifaces:
-        for k, v in kwargs.items():
-            setattr(iface, k, v)
+        for k, v in attr_kwargs.items():
+            setattr(iface.attributes, k, v)
     return ifaces
 
 
@@ -257,7 +210,7 @@ def test_discovery_ungrouped_empty_section() -> None:
 
 def test_discovery_ungrouped_admin_status() -> None:
     ifaces = _create_interfaces(0, admin_status="1")
-    ifaces[-1].admin_status = "2"
+    ifaces[-1].attributes.admin_status = "2"
     assert list(
         interfaces.discover_interfaces(
             [
@@ -420,10 +373,10 @@ def test_discovery_duplicate_alias() -> None:
 
 def test_discovery_partial_duplicate_desc_duplicate_alias() -> None:
     ifaces = _create_interfaces(0)
-    ifaces[3].descr = "duplicate_descr"
-    ifaces[4].descr = "duplicate_descr"
+    ifaces[3].attributes.descr = "duplicate_descr"
+    ifaces[4].attributes.descr = "duplicate_descr"
     for iface in ifaces:
-        iface.alias = "alias"
+        iface.attributes.alias = "alias"
     assert list(
         interfaces.discover_interfaces(
             [
@@ -658,8 +611,8 @@ def test_discovery_grouped_empty() -> None:
 
 def test_discovery_grouped_by_agent() -> None:
     ifaces = _create_interfaces(0)
-    ifaces[0].group = "group"
-    ifaces[1].group = "group"
+    ifaces[0].attributes.group = "group"
+    ifaces[1].attributes.group = "group"
     assert list(
         interfaces.discover_interfaces(
             [DEFAULT_DISCOVERY_PARAMS],
@@ -682,8 +635,8 @@ def test_discovery_grouped_by_agent() -> None:
 
 def test_discovery_grouped_by_agent_and_in_rules() -> None:
     ifaces = _create_interfaces(0)
-    ifaces[0].group = "group"
-    ifaces[1].group = "group"
+    ifaces[0].attributes.group = "group"
+    ifaces[1].attributes.group = "group"
     assert list(
         interfaces.discover_interfaces(
             [
@@ -1651,19 +1604,31 @@ def test_check_single_interface_packet_levels() -> None:
                 },
                 "discards": (50.0, 300.0),
             },
-            _create_interfaces(
-                0,
-                in_ucast=10,
-                in_mcast=20,
-                in_bcast=30,
-                in_discards=40,
-                in_errors=50,
-                out_ucast=60,
-                out_mcast=70,
-                out_bcast=80,
-                out_discards=90,
-                out_errors=100,
-            )[0],
+            interfaces.InterfaceWithCounters(
+                interfaces.Attributes(
+                    index="1",
+                    descr="lo",
+                    alias="lo",
+                    type="24",
+                    speed=0,
+                    oper_status="1",
+                    phys_address="\x00\x00\x00\x00\x00\x00",
+                ),
+                interfaces.Counters(
+                    in_octets=266045395,
+                    in_ucast=10,
+                    in_mcast=20,
+                    in_bcast=30,
+                    in_disc=40,
+                    in_err=50,
+                    out_octets=266045395,
+                    out_ucast=60,
+                    out_mcast=70,
+                    out_bcast=80,
+                    out_disc=90,
+                    out_err=100,
+                ),
+            ),
             input_is_rate=True,
         )
     ) == [
@@ -1894,7 +1859,7 @@ def test_check_multiple_interfaces_duplicate_alias(
     assert list(interfaces.check_multiple_interfaces(item, params, ifaces, timestamp=5,)) == [
         Result(
             state=State.OK,
-            summary="[%s/%s]" % (alias, ifaces[int(index) - 1].descr),
+            summary="[%s/%s]" % (alias, ifaces[int(index) - 1].attributes.descr),
         ),
         *result[1:],
     ]
@@ -2079,8 +2044,8 @@ def test_check_multiple_interfaces_group_by_agent() -> None:
     }
 
     ifaces = _create_interfaces(0)
-    ifaces[3].group = "group"
-    ifaces[5].group = "group"
+    ifaces[3].attributes.group = "group"
+    ifaces[5].attributes.group = "group"
     list(
         interfaces.check_multiple_interfaces(
             "group",
@@ -2091,8 +2056,8 @@ def test_check_multiple_interfaces_group_by_agent() -> None:
     )
 
     ifaces = _create_interfaces(4000000)
-    ifaces[3].group = "group"
-    ifaces[5].group = "group"
+    ifaces[3].attributes.group = "group"
+    ifaces[5].attributes.group = "group"
     assert list(interfaces.check_multiple_interfaces("group", params, ifaces, timestamp=5,)) == [
         Result(state=State.OK, summary="Interface group"),
         Result(state=State.CRIT, summary="(degraded)", details="Operational state: degraded"),
@@ -2312,9 +2277,9 @@ def test_cluster_check(monkeypatch: MonkeyPatch) -> None:
     ifaces = []
     for i in range(3):
         iface = _create_interfaces(0)[0]
-        iface.node = "node%s" % i
+        iface.attributes.node = "node%s" % i
         ifaces_node = [iface] * (i + 1)
-        section[iface.node] = ifaces_node
+        section[iface.attributes.node] = ifaces_node
         ifaces += ifaces_node
     monkeypatch.setattr("time.time", lambda: 0)
     list(
@@ -2353,13 +2318,16 @@ def test_cluster_check_ignore_discovered_params() -> None:
             },
             {
                 "node": [
-                    interfaces.Interface(
-                        index="1",
-                        descr="descr",
-                        alias="alias",
-                        type="10",
-                        speed=100000,
-                        oper_status="1",
+                    interfaces.InterfaceWithCounters(
+                        interfaces.Attributes(
+                            index="1",
+                            descr="descr",
+                            alias="alias",
+                            type="10",
+                            speed=100000,
+                            oper_status="1",
+                        ),
+                        interfaces.Counters(),
                     ),
                 ],
             },

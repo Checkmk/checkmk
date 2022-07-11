@@ -19,20 +19,24 @@ def parse_statgrab_net(string_table: type_defs.StringTable) -> interfaces.Sectio
         nics.setdefault(nic_id, {})[varname] = value
 
     return [
-        interfaces.Interface(
-            index=str(nr + 1),
-            descr=nic_id,
-            alias=nic.get("interface_name", nic_id),
-            type=nic_id.startswith("lo") and "24" or "6",
-            speed=int(nic.get("speed", 0)) * 1000000,
-            oper_status=nic.get("up") == "true" and "1" or "2",
-            in_octets=interfaces.saveint(nic.get("rx", 0)),
-            in_ucast=interfaces.saveint(nic.get("ipackets", 0)),
-            in_errors=interfaces.saveint(nic.get("ierrors", 0)),
-            out_octets=interfaces.saveint(nic.get("tx", 0)),
-            out_ucast=interfaces.saveint(nic.get("opackets", 0)),
-            out_discards=interfaces.saveint(nic.get("collisions", 0)),
-            out_errors=interfaces.saveint(nic.get("oerrors", 0)),
+        interfaces.InterfaceWithCounters(
+            interfaces.Attributes(
+                index=str(nr + 1),
+                descr=nic_id,
+                alias=nic.get("interface_name", nic_id),
+                type=nic_id.startswith("lo") and "24" or "6",
+                speed=int(nic.get("speed", 0)) * 1000000,
+                oper_status=nic.get("up") == "true" and "1" or "2",
+            ),
+            interfaces.Counters(
+                in_octets=interfaces.saveint(nic.get("rx", 0)),
+                in_ucast=interfaces.saveint(nic.get("ipackets", 0)),
+                in_err=interfaces.saveint(nic.get("ierrors", 0)),
+                out_octets=interfaces.saveint(nic.get("tx", 0)),
+                out_ucast=interfaces.saveint(nic.get("opackets", 0)),
+                out_disc=interfaces.saveint(nic.get("collisions", 0)),
+                out_err=interfaces.saveint(nic.get("oerrors", 0)),
+            ),
         )
         for nr, (nic_id, nic) in enumerate(nics.items())
     ]
@@ -68,16 +72,16 @@ def inventory_statgrab_net(section: interfaces.Section) -> InventoryResult:
         },
         (
             InterfaceInv(
-                index=interface.index,
-                descr=interface.descr,
-                alias=interface.alias,
-                type=interface.type,
-                speed=int(interface.speed),
-                oper_status=int(interface.oper_status),
-                phys_address=interfaces.render_mac_address(interface.phys_address),
+                index=interface.attributes.index,
+                descr=interface.attributes.descr,
+                alias=interface.attributes.alias,
+                type=interface.attributes.type,
+                speed=int(interface.attributes.speed),
+                oper_status=int(interface.attributes.oper_status),
+                phys_address=interfaces.render_mac_address(interface.attributes.phys_address),
             )
-            for interface in sorted(section, key=lambda i: i.index)
-            if interface.speed
+            for interface in sorted(section, key=lambda i: i.attributes.index)
+            if interface.attributes.speed
         ),
         len(section),
     )

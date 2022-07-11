@@ -99,25 +99,13 @@ CHECK_DEFAULT_PARAMETERS = {
 
 
 @dataclass
-class Interface:
+class Attributes:
     index: str
     descr: str
     alias: str
     type: str
     speed: float = 0
     oper_status: str = ""
-    in_octets: float = 0
-    in_ucast: float = 0
-    in_mcast: float = 0
-    in_bcast: float = 0
-    in_discards: float = 0
-    in_errors: float = 0
-    out_octets: float = 0
-    out_ucast: float = 0
-    out_mcast: float = 0
-    out_bcast: float = 0
-    out_discards: float = 0
-    out_errors: float = 0
     out_qlen: float = 0
     phys_address: Union[Iterable[int], str] = ""
     oper_status_name: str = ""
@@ -130,7 +118,7 @@ class Interface:
     def __post_init__(self) -> None:
         self.finalize()
 
-    def finalize(self):
+    def finalize(self) -> None:
         if not self.oper_status_name:
             self.oper_status_name = statename(self.oper_status)
 
@@ -140,6 +128,36 @@ class Interface:
 
         self.descr = cleanup_if_strings(self.descr)
         self.alias = cleanup_if_strings(self.alias)
+
+    @property
+    def oper_status_up(self) -> str:
+        return "1"
+
+    @property
+    def is_up(self) -> bool:
+        return self.oper_status == self.oper_status_up
+
+
+@dataclass
+class Counters:
+    in_octets: float = 0
+    in_mcast: float = 0
+    in_bcast: float = 0
+    in_ucast: float = 0
+    in_disc: float = 0
+    in_err: float = 0
+    out_octets: float = 0
+    out_mcast: float = 0
+    out_bcast: float = 0
+    out_ucast: float = 0
+    out_disc: float = 0
+    out_err: float = 0
+
+
+@dataclass
+class InterfaceWithCounters:
+    attributes: Attributes
+    counters: Counters
 
 
 @dataclass(frozen=True)
@@ -158,7 +176,7 @@ class Rates:
     outerr: float | None
 
 
-Section = Sequence[Interface]
+Section = Sequence[InterfaceWithCounters]
 
 
 def saveint(i: Any) -> int:
@@ -249,7 +267,7 @@ def pad_with_zeroes(
     pad_portnumbers: bool,
 ) -> str:
     if pad_portnumbers:
-        max_index = max(int(interface.index) for interface in section)
+        max_index = max(int(interface.attributes.index) for interface in section)
         digits = len(str(max_index))
         return ("%0" + str(digits) + "d") % int(ifIndex)
     return ifIndex
@@ -383,17 +401,17 @@ def _uses_description_and_alias(item_appearance: str) -> Tuple[bool, bool]:
 
 def _compute_item(
     item_appearance: str,
-    interface: Interface,
+    attributes: Attributes,
     section: Section,
     pad_portnumbers: bool,
 ) -> str:
     uses_description, uses_alias = _uses_description_and_alias(item_appearance)
-    if uses_description and interface.descr:
-        item = interface.descr
-    elif uses_alias and interface.alias:
-        item = interface.alias
+    if uses_description and attributes.descr:
+        item = attributes.descr
+    elif uses_alias and attributes.alias:
+        item = attributes.alias
     else:
-        item = pad_with_zeroes(section, interface.index, pad_portnumbers)
+        item = pad_with_zeroes(section, attributes.index, pad_portnumbers)
     return item
 
 
@@ -410,7 +428,7 @@ def check_regex_match_conditions(
 
 
 def _check_single_matching_conditions(
-    interface: Interface,
+    attributes: Attributes,
     matching_conditions: MatchingConditions,
 ) -> bool:
 
@@ -425,15 +443,15 @@ def _check_single_matching_conditions(
     admin_states = matching_conditions.get("admin_states")
 
     return (
-        check_regex_match_conditions(interface.index, match_index)
-        and check_regex_match_conditions(interface.alias, match_alias)
-        and check_regex_match_conditions(interface.descr, match_desc)
-        and (porttypes is None or interface.type in porttypes)
-        and (portstates is None or interface.oper_status in portstates)
+        check_regex_match_conditions(attributes.index, match_index)
+        and check_regex_match_conditions(attributes.alias, match_alias)
+        and check_regex_match_conditions(attributes.descr, match_desc)
+        and (porttypes is None or attributes.type in porttypes)
+        and (portstates is None or attributes.oper_status in portstates)
         and (
             admin_states is None
-            or interface.admin_status is None
-            or interface.admin_status in admin_states
+            or attributes.admin_status is None
+            or attributes.admin_status in admin_states
         )
     )
 
@@ -446,22 +464,22 @@ class GroupConfiguration(TypedDict, total=False):
 
 
 def _check_group_matching_conditions(
-    interface: Interface,
+    attributes: Attributes,
     group_name: str,
     group_configuration: GroupConfiguration,
 ) -> bool:
 
     # group defined in agent output
     if "inclusion_condition" not in group_configuration:
-        return group_name == interface.group
+        return group_name == attributes.group
 
     # group defined in rules
     return _check_single_matching_conditions(
-        interface,
+        attributes,
         group_configuration["inclusion_condition"],
     ) and not any(
         _check_single_matching_conditions(
-            interface,
+            attributes,
             exclusion_condition,
         )
         for exclusion_condition in group_configuration["exclusion_conditions"]
@@ -527,7 +545,7 @@ def discover_interfaces(  # pylint: disable=too-many-branches
         # discovery settings
         for rule in params:
             if "discovery_single" in rule and _check_single_matching_conditions(
-                interface,
+                interface.attributes,
                 rule["matching_conditions"][1],
             ):
                 discover_single_interface, single_interface_settings = rule["discovery_single"]
@@ -542,13 +560,13 @@ def discover_interfaces(  # pylint: disable=too-many-branches
 
         for item_appearance in (
             ["index", "descr", "alias"]
-            if interface.descr != interface.alias
+            if interface.attributes.descr != interface.attributes.alias
             else ["index", "descr"]
         ):
             n_times_item_seen[
                 _compute_item(
                     item_appearance,
-                    interface,
+                    interface.attributes,
                     section,
                     pad_portnumbers,
                 )
@@ -560,22 +578,24 @@ def discover_interfaces(  # pylint: disable=too-many-branches
                 "item_appearance",
                 DISCOVERY_DEFAULT_PARAMETERS["discovery_single"][1]["item_appearance"],
             ),
-            interface,
+            interface.attributes,
             section,
             pad_portnumbers,
         )
 
         # discover single interface
-        if discover_single_interface and interface.index not in seen_indices:
+        if discover_single_interface and interface.attributes.index not in seen_indices:
             discovered_params_single = {
-                "discovered_oper_status": [interface.oper_status],
-                "discovered_speed": interface.speed,
+                "discovered_oper_status": [interface.attributes.oper_status],
+                "discovered_speed": interface.attributes.speed,
             }
-            if interface.admin_status is not None:
-                discovered_params_single["discovered_admin_status"] = [interface.admin_status]
+            if interface.attributes.admin_status is not None:
+                discovered_params_single["discovered_admin_status"] = [
+                    interface.attributes.admin_status
+                ]
 
             try:
-                index_as_item = int(item) == int(interface.index)
+                index_as_item = int(item) == int(interface.attributes.index)
             except (TypeError, ValueError):
                 index_as_item = False
 
@@ -583,19 +603,19 @@ def discover_interfaces(  # pylint: disable=too-many-branches
                 (
                     item,
                     discovered_params_single,
-                    int(interface.index),
+                    int(interface.attributes.index),
                     index_as_item,
                     single_interface_settings.get("labels"),
                 )
             )
-            seen_indices.add(interface.index)
+            seen_indices.add(interface.attributes.index)
 
         # special case: the agent output already set this interface to grouped, in this case, we do
         # not use any matching conditions but instead check if interface.group == group_name, see
         # below
-        if interface.group:
+        if interface.attributes.group:
             interface_groups.setdefault(
-                interface.group,
+                interface.attributes.group,
                 {
                     "member_appearance": single_interface_settings.get(
                         "item_appearance",
@@ -619,14 +639,18 @@ def discover_interfaces(  # pylint: disable=too-many-branches
         # find all interfaces matching the group to compute state and speed
         for interface in section:
             if _check_group_matching_conditions(
-                interface,
+                interface.attributes,
                 group_name,
                 group_configuration,
             ):
                 groups_has_members = True
                 # if at least one is up (1) then up is considered as valid
-                group_oper_status = "1" if interface.oper_status == "1" else group_oper_status
-                group_speed += interface.speed
+                group_oper_status = (
+                    interface.attributes.oper_status_up
+                    if interface.attributes.is_up
+                    else group_oper_status
+                )
+                group_speed += interface.attributes.speed
 
         # only discover non-empty groups
         if groups_has_members:
@@ -684,7 +708,9 @@ def _check_ungrouped_ifs(
     max_out_traffic = -1.0
 
     for interface in section:
-        if item_matches(item, interface.index, interface.alias, interface.descr):
+        if item_matches(
+            item, interface.attributes.index, interface.attributes.alias, interface.attributes.descr
+        ):
             last_results = list(
                 check_single_interface(
                     item,
@@ -692,7 +718,7 @@ def _check_ungrouped_ifs(
                     interface,
                     timestamp=timestamp,
                     input_is_rate=input_is_rate,
-                    use_discovered_state_and_speed=interface.node is None,
+                    use_discovered_state_and_speed=interface.attributes.node is None,
                     value_store=value_store,
                 )
             )
@@ -723,12 +749,12 @@ def _filter_matching_interfaces(
     item: str,
     group_config: GroupConfiguration,
     section: Section,
-) -> Collection[Interface]:
+) -> Collection[InterfaceWithCounters]:
     return [
         interface
         for interface in section
         if _check_group_matching_conditions(
-            interface,
+            interface.attributes,
             item,
             group_config,
         )
@@ -737,34 +763,33 @@ def _filter_matching_interfaces(
 
 def _accumulate_attributes(
     *,
-    cumulated_interface: Interface,
-    matching_interfaces: Collection[Interface],
+    cumulated_attributes: Attributes,
+    matching_attributes: Collection[Attributes],
     group_config: GroupConfiguration,
 ) -> None:
     num_up = 0
     nodes = set()
 
-    for interface in matching_interfaces:
-        nodes.add(str(interface.node))
-        is_up = interface.oper_status == "1"
-        if is_up:
+    for attributes in matching_attributes:
+        nodes.add(str(attributes.node))
+        if attributes.is_up:
             num_up += 1
 
         # Add interface info to group info
-        if is_up:
-            cumulated_interface.speed += interface.speed
-        cumulated_interface.out_qlen += interface.out_qlen
+        if attributes.is_up:
+            cumulated_attributes.speed += attributes.speed
+        cumulated_attributes.out_qlen += attributes.out_qlen
 
         # This is the fallback ifType if None is set in the parameters
-        cumulated_interface.type = interface.type
+        cumulated_attributes.type = attributes.type
 
-    if num_up == len(matching_interfaces):
-        cumulated_interface.oper_status = "1"  # up
+    if num_up == len(matching_attributes):
+        cumulated_attributes.oper_status = cumulated_attributes.oper_status_up  # up
     elif num_up > 0:
-        cumulated_interface.oper_status = "8"  # degraded
+        cumulated_attributes.oper_status = "8"  # degraded
     else:
-        cumulated_interface.oper_status = "2"  # down
-    cumulated_interface.oper_status_name = statename(cumulated_interface.oper_status)
+        cumulated_attributes.oper_status = "2"  # down
+    cumulated_attributes.oper_status_name = statename(cumulated_attributes.oper_status)
 
     alias_info = []
     if len(nodes) > 1:
@@ -774,15 +799,15 @@ def _accumulate_attributes(
     if (iftype := group_config.get("iftype")) is not None:
         alias_info.append("type: %s" % iftype)
     if group_config.get("items"):
-        alias_info.append("%d grouped interfaces" % len(matching_interfaces))
+        alias_info.append("%d grouped interfaces" % len(matching_attributes))
 
-    cumulated_interface.alias = ", ".join(alias_info)
+    cumulated_attributes.alias = ", ".join(alias_info)
 
 
 def _accumulate_counters(
     *,
-    cumulated_interface: Interface,
-    matching_interfaces: Iterable[Interface],
+    cumulated_interface: InterfaceWithCounters,
+    matching_interfaces: Iterable[InterfaceWithCounters],
     input_is_rate: bool,
     timestamp: float,
     value_store: MutableMapping[str, Any],
@@ -793,18 +818,18 @@ def _accumulate_counters(
             # We might need to enlarge this table
             # However, more values leads to more MKCounterWrapped...
             rate_counter = [
-                ("in", interface.in_octets),
-                ("inucast", interface.in_ucast),
-                ("inmcast", interface.in_mcast),
-                ("inbcast", interface.in_bcast),
-                ("indisc", interface.in_discards),
-                ("inerr", interface.in_errors),
-                ("out", interface.out_octets),
-                ("outucast", interface.out_ucast),
-                ("outmcast", interface.out_mcast),
-                ("outbcast", interface.out_bcast),
-                ("outdisc", interface.out_discards),
-                ("outerr", interface.out_errors),
+                ("in", interface.counters.in_octets),
+                ("inucast", interface.counters.in_ucast),
+                ("inmcast", interface.counters.in_mcast),
+                ("inbcast", interface.counters.in_bcast),
+                ("indisc", interface.counters.in_disc),
+                ("inerr", interface.counters.in_err),
+                ("out", interface.counters.out_octets),
+                ("outucast", interface.counters.out_ucast),
+                ("outmcast", interface.counters.out_mcast),
+                ("outbcast", interface.counters.out_bcast),
+                ("outdisc", interface.counters.out_disc),
+                ("outerr", interface.counters.out_err),
             ]
             for name, counter in rate_counter:
                 try:
@@ -812,7 +837,7 @@ def _accumulate_counters(
                     # counters
                     get_rate(
                         value_store,
-                        _get_value_store_key(name, str(interface.node), str(idx)),
+                        _get_value_store_key(name, str(interface.attributes.node), str(idx)),
                         timestamp,
                         saveint(counter),
                         raise_overflow=True,
@@ -821,30 +846,30 @@ def _accumulate_counters(
                     yield IgnoreResults(value="Initializing counters")
                     # continue, other counters might wrap as well
 
-        cumulated_interface.in_octets += interface.in_octets
-        cumulated_interface.in_ucast += interface.in_ucast
-        cumulated_interface.in_mcast += interface.in_mcast
-        cumulated_interface.in_bcast += interface.in_bcast
-        cumulated_interface.in_discards += interface.in_discards
-        cumulated_interface.in_errors += interface.in_errors
-        cumulated_interface.out_octets += interface.out_octets
-        cumulated_interface.out_ucast += interface.out_ucast
-        cumulated_interface.out_mcast += interface.out_mcast
-        cumulated_interface.out_bcast += interface.out_bcast
-        cumulated_interface.out_discards += interface.out_discards
-        cumulated_interface.out_errors += interface.out_errors
+        cumulated_interface.counters.in_octets += interface.counters.in_octets
+        cumulated_interface.counters.in_ucast += interface.counters.in_ucast
+        cumulated_interface.counters.in_mcast += interface.counters.in_mcast
+        cumulated_interface.counters.in_bcast += interface.counters.in_bcast
+        cumulated_interface.counters.in_disc += interface.counters.in_disc
+        cumulated_interface.counters.in_err += interface.counters.in_err
+        cumulated_interface.counters.out_octets += interface.counters.out_octets
+        cumulated_interface.counters.out_ucast += interface.counters.out_ucast
+        cumulated_interface.counters.out_mcast += interface.counters.out_mcast
+        cumulated_interface.counters.out_bcast += interface.counters.out_bcast
+        cumulated_interface.counters.out_disc += interface.counters.out_disc
+        cumulated_interface.counters.out_err += interface.counters.out_err
 
 
 def _group_members(
     *,
-    matching_interfaces: Iterable[Interface],
+    matching_attributes: Iterable[Attributes],
     item: str,
     group_config: GroupConfiguration,
     section: Section,
 ) -> GroupMembers:
     group_members: GroupMembers = {}
-    for interface in matching_interfaces:
-        groups_node = group_members.setdefault(interface.node, [])
+    for attributes in matching_attributes:
+        groups_node = group_members.setdefault(attributes.node, [])
         member_info = {
             "name": _compute_item(
                 group_config.get(
@@ -861,14 +886,14 @@ def _group_members(
                         )
                     ),
                 ),
-                interface,
+                attributes,
                 section,
                 item[0] == "0",
             ),
-            "oper_status_name": interface.oper_status_name,
+            "oper_status_name": attributes.oper_status_name,
         }
-        if interface.admin_status is not None:
-            member_info["admin_status_name"] = statename(interface.admin_status)
+        if attributes.admin_status is not None:
+            member_info["admin_status_name"] = statename(attributes.admin_status)
         groups_node.append(member_info)
     return group_members
 
@@ -894,16 +919,19 @@ def _check_grouped_ifs(  # pylint: disable=too-many-branches
 
     used_value_store = value_store if value_store is not None else get_value_store()
 
-    cumulated_interface = Interface(
-        index=item,
-        descr=item,
-        alias="",
-        type="",
+    cumulated_interface = InterfaceWithCounters(
+        attributes=Attributes(
+            index=item,
+            descr=item,
+            alias="",
+            type="",
+        ),
+        counters=Counters(),
     )
 
     _accumulate_attributes(
-        cumulated_interface=cumulated_interface,
-        matching_interfaces=matching_interfaces,
+        cumulated_attributes=cumulated_interface.attributes,
+        matching_attributes=[iface.attributes for iface in matching_interfaces],
         group_config=params["aggregate"],
     )
 
@@ -920,7 +948,7 @@ def _check_grouped_ifs(  # pylint: disable=too-many-branches
         params,
         cumulated_interface,
         group_members=_group_members(
-            matching_interfaces=matching_interfaces,
+            matching_attributes=[iface.attributes for iface in matching_interfaces],
             item=item,
             group_config=params["aggregate"],
             section=section,
@@ -930,7 +958,7 @@ def _check_grouped_ifs(  # pylint: disable=too-many-branches
         input_is_rate=input_is_rate,
         # the discovered speed corresponds to only one of the nodes, so it cannot be used for
         # interface groups on clusters; same for state
-        use_discovered_state_and_speed=section[0].node is None,
+        use_discovered_state_and_speed=section[0].attributes.node is None,
         value_store=used_value_store,
     )
 
@@ -1017,16 +1045,16 @@ def _check_status(
     return mon_state
 
 
-def _check_speed(interface: Interface, targetspeed: Optional[int]) -> Result:
+def _check_speed(attributes: Attributes, targetspeed: Optional[int]) -> Result:
     """Check speed settings of interface
 
     Only if speed information is available. This is not always the case.
     """
-    if interface.speed:
-        speed_actual = render.nicspeed(interface.speed / 8)
+    if attributes.speed:
+        speed_actual = render.nicspeed(attributes.speed / 8)
         speed_expected = (
             ""
-            if (targetspeed is None or int(interface.speed) == targetspeed)
+            if (targetspeed is None or int(attributes.speed) == targetspeed)
             else " (expected: %s)" % render.nicspeed(targetspeed / 8)
         )
         return Result(
@@ -1040,7 +1068,7 @@ def _check_speed(interface: Interface, targetspeed: Optional[int]) -> Result:
             summary="Speed: %s (assumed)" % render.nicspeed(targetspeed / 8),
         )
 
-    return Result(state=State.OK, summary="Speed: %s" % (interface.speed_as_text or "unknown"))
+    return Result(state=State.OK, summary="Speed: %s" % (attributes.speed_as_text or "unknown"))
 
 
 # TODO: Check what the relationship between Errors, Discards, and ucast/mcast actually is.
@@ -1048,7 +1076,7 @@ def _check_speed(interface: Interface, targetspeed: Optional[int]) -> Result:
 def check_single_interface(
     item: str,
     params: Mapping[str, Any],
-    interface: Interface,
+    interface: InterfaceWithCounters,
     group_members: Optional[GroupMembers] = None,
     *,
     group_name: str = "Interface group",
@@ -1086,28 +1114,28 @@ def check_single_interface(
         group_name=group_name if group_members else None,
         item=item,
         params=params,
-        interface=interface,
+        attributes=interface.attributes,
     )
 
     yield from _interface_status(
         params=params,
-        interface=interface,
+        attributes=interface.attributes,
         use_discovered_states=use_discovered_state_and_speed,
     )
 
-    if interface.extra_info:
-        yield Result(state=State.OK, summary=interface.extra_info)
+    if interface.attributes.extra_info:
+        yield Result(state=State.OK, summary=interface.attributes.extra_info)
 
-    yield from _interface_mac(interface=interface)
+    yield from _interface_mac(interface.attributes)
 
     yield from _output_group_members(group_members=group_members)
 
-    yield _check_speed(interface, targetspeed)
+    yield _check_speed(interface.attributes, targetspeed)
 
     # prepare reference speed for computing relative bandwidth usage
     ref_speed = None
-    if interface.speed:
-        ref_speed = interface.speed / 8.0
+    if interface.attributes.speed:
+        ref_speed = interface.attributes.speed / 8.0
     elif targetspeed:
         ref_speed = targetspeed / 8.0
 
@@ -1131,30 +1159,30 @@ def check_single_interface(
     # but we spotted devices, which do report error packes even for down interfaces.
     # To deal with it, we simply skip over all performance counter checks for down
     # interfaces.
-    if str(interface.oper_status) == "2":
+    if str(interface.attributes.oper_status) == "2":
         return
 
     rates_dict: dict[str, float | None] = {}
     overflow_dict: dict[str, GetRateError] = {}
     rate_content = [
-        ("intraffic", interface.in_octets),
-        ("inmcast", interface.in_mcast),
-        ("inbcast", interface.in_bcast),
-        ("inucast", interface.in_ucast),
-        ("indisc", interface.in_discards),
-        ("inerr", interface.in_errors),
-        ("outtraffic", interface.out_octets),
-        ("outmcast", interface.out_mcast),
-        ("outbcast", interface.out_bcast),
-        ("outucast", interface.out_ucast),
-        ("outdisc", interface.out_discards),
-        ("outerr", interface.out_errors),
+        ("intraffic", interface.counters.in_octets),
+        ("inmcast", interface.counters.in_mcast),
+        ("inbcast", interface.counters.in_bcast),
+        ("inucast", interface.counters.in_ucast),
+        ("indisc", interface.counters.in_disc),
+        ("inerr", interface.counters.in_err),
+        ("outtraffic", interface.counters.out_octets),
+        ("outmcast", interface.counters.out_mcast),
+        ("outbcast", interface.counters.out_bcast),
+        ("outucast", interface.counters.out_ucast),
+        ("outdisc", interface.counters.out_disc),
+        ("outerr", interface.counters.out_err),
     ]
     for name, counter in rate_content:
         try:
             rates_dict[name] = _get_rate(
                 used_value_store,
-                _get_value_store_key(name, str(interface.node)),
+                _get_value_store_key(name, str(interface.attributes.node)),
                 timestamp,
                 counter,
                 input_is_rate,
@@ -1167,7 +1195,7 @@ def check_single_interface(
 
     yield Metric(
         "outqlen",
-        interface.out_qlen,
+        interface.attributes.out_qlen,
     )
 
     yield from _output_bandwidth_rates(
@@ -1214,7 +1242,7 @@ def _interface_name(  # pylint: disable=too-many-branches
     group_name: Optional[str],
     item: str,
     params: Mapping[str, Any],
-    interface: Interface,
+    attributes: Attributes,
 ) -> Iterable[Result]:
     if group_name:
         # The detailed group info is added later on
@@ -1224,15 +1252,15 @@ def _interface_name(  # pylint: disable=too-many-branches
     if "infotext_format" in params:
         bracket_info = ""
         if params["infotext_format"] == "alias":
-            bracket_info = interface.alias
+            bracket_info = attributes.alias
         elif params["infotext_format"] == "description":
-            bracket_info = interface.descr
+            bracket_info = attributes.descr
         elif params["infotext_format"] == "alias_and_description":
-            bracket_info = ", ".join([i for i in [interface.alias, interface.descr] if i])
+            bracket_info = ", ".join([i for i in [attributes.alias, attributes.descr] if i])
         elif params["infotext_format"] == "alias_or_description":
-            bracket_info = interface.alias if interface.alias else interface.descr
+            bracket_info = attributes.alias if attributes.alias else attributes.descr
         elif params["infotext_format"] == "desription_or_alias":
-            bracket_info = interface.descr if interface.descr else interface.alias
+            bracket_info = attributes.descr if attributes.descr else attributes.alias
 
         if bracket_info:
             info_interface = "[%s]" % bracket_info
@@ -1242,30 +1270,30 @@ def _interface_name(  # pylint: disable=too-many-branches
         # Display port number or alias in summary_interface if that is not part
         # of the service description anyway
         if (
-            (item == interface.index or item.lstrip("0") == interface.index)
-            and interface.alias in (item, "")
-            and interface.descr in (item, "")
+            (item == attributes.index or item.lstrip("0") == attributes.index)
+            and attributes.alias in (item, "")
+            and attributes.descr in (item, "")
         ):  # description trivial
             info_interface = ""
         elif (
-            item == "%s %s" % (interface.alias, interface.index) and interface.descr != ""
+            item == "%s %s" % (attributes.alias, attributes.index) and attributes.descr != ""
         ):  # non-unique Alias
-            info_interface = "[%s/%s]" % (interface.alias, interface.descr)
-        elif interface.alias not in (item, ""):  # alias useful
-            info_interface = "[%s]" % interface.alias
-        elif interface.descr not in (item, ""):  # description useful
-            info_interface = "[%s]" % interface.descr
+            info_interface = "[%s/%s]" % (attributes.alias, attributes.descr)
+        elif attributes.alias not in (item, ""):  # alias useful
+            info_interface = "[%s]" % attributes.alias
+        elif attributes.descr not in (item, ""):  # description useful
+            info_interface = "[%s]" % attributes.descr
         else:
-            info_interface = "[%s]" % interface.index
+            info_interface = "[%s]" % attributes.index
 
-    if interface.node is not None:
+    if attributes.node is not None:
         if info_interface:
             info_interface = "%s on %s" % (
                 info_interface,
-                interface.node,
+                attributes.node,
             )
         else:
-            info_interface = "On %s" % interface.node
+            info_interface = "On %s" % attributes.node
 
     if info_interface:
         yield Result(
@@ -1274,18 +1302,18 @@ def _interface_name(  # pylint: disable=too-many-branches
         )
 
 
-def _interface_mac(*, interface: Interface) -> Iterable[Result]:
-    if interface.phys_address:
+def _interface_mac(attributes: Attributes) -> Iterable[Result]:
+    if attributes.phys_address:
         yield Result(
             state=State.OK,
-            summary="MAC: %s" % render_mac_address(interface.phys_address),
+            summary="MAC: %s" % render_mac_address(attributes.phys_address),
         )
 
 
 def _interface_status(
     *,
     params: Mapping[str, Any],
-    interface: Interface,
+    attributes: Attributes,
     use_discovered_states: bool,
 ) -> Iterable[Result]:
 
@@ -1304,7 +1332,7 @@ def _interface_status(
         ),
     )
     yield from _check_oper_and_admin_state(
-        interface,
+        attributes,
         state_mapping_type=state_mapping_type,
         state_mappings=state_mappings,
         target_oper_states=target_oper_states,
@@ -1313,7 +1341,7 @@ def _interface_status(
 
 
 def _check_oper_and_admin_state(
-    interface: Interface,
+    attributes: Attributes,
     state_mapping_type: Literal["independent_mappings", "combined_mappings"],
     state_mappings: Union[
         Iterable[Tuple[str, str, int]], Mapping[str, Iterable[Tuple[Iterable[str], int]]]  #
@@ -1322,7 +1350,7 @@ def _check_oper_and_admin_state(
     target_admin_states: Optional[Container[str]],
 ) -> Iterable[Result]:
     if combined_mon_state := _check_oper_and_admin_state_combined(
-        interface,
+        attributes,
         state_mapping_type,
         state_mappings,
     ):
@@ -1335,7 +1363,7 @@ def _check_oper_and_admin_state(
     )
 
     yield from _check_oper_and_admin_state_independent(
-        interface,
+        attributes,
         target_oper_states=target_oper_states,
         target_admin_states=target_admin_states,
         map_oper_states=map_oper_states,
@@ -1356,7 +1384,7 @@ def _get_oper_and_admin_states_maps_independent(
 
 
 def _check_oper_and_admin_state_independent(
-    interface: Interface,
+    attributes: Attributes,
     target_oper_states: Optional[Container[str]],
     target_admin_states: Optional[Container[str]],
     map_oper_states: Iterable[Tuple[Iterable[str], int]],
@@ -1364,35 +1392,35 @@ def _check_oper_and_admin_state_independent(
 ) -> Iterable[Result]:
     yield Result(
         state=_check_status(
-            interface.oper_status,
+            attributes.oper_status,
             target_oper_states,
             _get_map_states(map_oper_states),
         ),
-        summary=f"({interface.oper_status_name})",
-        details=f"Operational state: {interface.oper_status_name}",
+        summary=f"({attributes.oper_status_name})",
+        details=f"Operational state: {attributes.oper_status_name}",
     )
 
-    if not interface.admin_status:
+    if not attributes.admin_status:
         return
 
     yield Result(
         state=_check_status(
-            str(interface.admin_status),
+            str(attributes.admin_status),
             target_admin_states,
             _get_map_states(map_admin_states),
         ),
-        summary=f"Admin state: {statename(interface.admin_status)}",
+        summary=f"Admin state: {statename(attributes.admin_status)}",
     )
 
 
 def _check_oper_and_admin_state_combined(
-    interface: Interface,
+    attributes: Attributes,
     state_mapping_type: Literal["combined_mappings", "independent_mappings"],
     state_mappings: Union[
         Iterable[Tuple[str, str, int]], Mapping[str, Iterable[Tuple[Iterable[str], int]]]  #
     ],
 ) -> Optional[Result]:
-    if interface.admin_status is None:
+    if attributes.admin_status is None:
         return None
     if state_mapping_type == "independent_mappings":
         return None
@@ -1405,16 +1433,16 @@ def _check_oper_and_admin_state_combined(
             for oper_state, admin_state, mon_state in state_mappings
         }.get(
             (
-                interface.oper_status,
-                interface.admin_status,
+                attributes.oper_status,
+                attributes.admin_status,
             )
         )
     ) is None:
         return None
     return Result(
         state=combined_mon_state,
-        summary=f"(op. state: {interface.oper_status_name}, admin state: {statename(interface.admin_status)})",
-        details=f"Operational state: {interface.oper_status_name}, Admin state: {statename(interface.admin_status)}",
+        summary=f"(op. state: {attributes.oper_status_name}, admin state: {statename(attributes.admin_status)})",
+        details=f"Operational state: {attributes.oper_status_name}, Admin state: {statename(attributes.admin_status)}",
     )
 
 
@@ -1835,11 +1863,14 @@ def cluster_check(
 ) -> type_defs.CheckResult:
 
     ifaces = [
-        Interface(
-            **{  # type: ignore[arg-type]
-                **asdict(iface),
-                "node": node,
-            }
+        InterfaceWithCounters(
+            attributes=Attributes(
+                **{  # type: ignore[arg-type]
+                    **asdict(iface.attributes),
+                    "node": node,
+                }
+            ),
+            counters=iface.counters,
         )
         for node, node_ifaces in section.items()
         for iface in node_ifaces or ()

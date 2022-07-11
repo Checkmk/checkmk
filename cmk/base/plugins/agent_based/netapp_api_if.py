@@ -128,25 +128,29 @@ def parse_netapp_api_if(  # pylint: disable=too-many-branches
         # Only add interfaces with counters
         if "recv_data" in values:
             nics.append(
-                interfaces.Interface(
-                    index=str(idx + 1),
-                    descr=nic_name,
-                    alias=values.get("interface-name", ""),
-                    type="6",
-                    speed=interfaces.saveint(speed),
-                    oper_status=oper_status,
-                    in_octets=interfaces.saveint(values.get("recv_data")),
-                    in_ucast=interfaces.saveint(values.get("recv_packet")),
-                    in_mcast=interfaces.saveint(values.get("recv_mcasts")),
-                    in_errors=interfaces.saveint(values.get("recv_errors")),
-                    out_octets=interfaces.saveint(values.get("send_data")),
-                    out_ucast=interfaces.saveint(values.get("send_packet")),
-                    out_mcast=interfaces.saveint(values.get("send_mcasts")),
-                    out_errors=interfaces.saveint(values.get("send_errors")),
-                    phys_address=interfaces.mac_address_from_hexstring(
-                        values.get("mac-address", "")
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index=str(idx + 1),
+                        descr=nic_name,
+                        alias=values.get("interface-name", ""),
+                        type="6",
+                        speed=interfaces.saveint(speed),
+                        oper_status=oper_status,
+                        phys_address=interfaces.mac_address_from_hexstring(
+                            values.get("mac-address", "")
+                        ),
+                        speed_as_text=speed == "auto" and "auto" or "",
                     ),
-                    speed_as_text=speed == "auto" and "auto" or "",
+                    interfaces.Counters(
+                        in_octets=interfaces.saveint(values.get("recv_data")),
+                        in_ucast=interfaces.saveint(values.get("recv_packet")),
+                        in_mcast=interfaces.saveint(values.get("recv_mcasts")),
+                        in_err=interfaces.saveint(values.get("recv_errors")),
+                        out_octets=interfaces.saveint(values.get("send_data")),
+                        out_ucast=interfaces.saveint(values.get("send_packet")),
+                        out_mcast=interfaces.saveint(values.get("send_mcasts")),
+                        out_err=interfaces.saveint(values.get("send_errors")),
+                    ),
                 )
             )
             if "home-port" in values:
@@ -207,11 +211,11 @@ def _check_netapp_api_if(  # pylint: disable=too-many-branches
     )
 
     for iface in nics:
-        descr_cln = interfaces.cleanup_if_strings(iface.descr)
-        alias_cln = interfaces.cleanup_if_strings(iface.alias)
+        descr_cln = interfaces.cleanup_if_strings(iface.attributes.descr)
+        alias_cln = interfaces.cleanup_if_strings(iface.attributes.alias)
         first_member = True
-        if interfaces.item_matches(item, iface.index, alias_cln, descr_cln):
-            vif = extra_info.get(iface.descr)
+        if interfaces.item_matches(item, iface.attributes.index, alias_cln, descr_cln):
+            vif = extra_info.get(iface.attributes.descr)
             if vif is None:
                 continue
 
@@ -242,7 +246,7 @@ def _check_netapp_api_if(  # pylint: disable=too-many-branches
 
             if "grouped_if" in vif:
                 for member_name, member_state in sorted(vif.get("grouped_if", [])):
-                    if member_state is None or member_name == iface.descr:
+                    if member_state is None or member_name == iface.attributes.descr:
                         continue  # Not a real member or the grouped interface itself
 
                     if member_state == "2":

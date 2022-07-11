@@ -39,18 +39,22 @@ def _section_to_interface(section: Section) -> interfaces.Section:
     if not _WAN_IF_KEYS & set(section):
         return []
     return [
-        interfaces.Interface(
-            index="0",
-            descr="WAN",
-            alias="WAN",
-            type="6",
-            speed=int(section.get("NewLayer1DownstreamMaxBitRate", 0)),
-            oper_status=_LINK_STATUS_MAP.get(
-                section.get("NewLinkStatus") or section.get("NewPhysicalLinkStatus"),
-                "2",
+        interfaces.InterfaceWithCounters(
+            interfaces.Attributes(
+                index="0",
+                descr="WAN",
+                alias="WAN",
+                type="6",
+                speed=int(section.get("NewLayer1DownstreamMaxBitRate", 0)),
+                oper_status=_LINK_STATUS_MAP.get(
+                    section.get("NewLinkStatus") or section.get("NewPhysicalLinkStatus"),
+                    "2",
+                ),
             ),
-            in_octets=int(section.get("NewTotalBytesReceived", 0)),
-            out_octets=int(section.get("NewTotalBytesSent", 0)),
+            interfaces.Counters(
+                in_octets=int(section.get("NewTotalBytesReceived", 0)),
+                out_octets=int(section.get("NewTotalBytesSent", 0)),
+            ),
         )
     ]
 

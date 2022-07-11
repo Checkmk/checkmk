@@ -7,8 +7,8 @@ from typing import Any, Mapping
 
 from .agent_based_api.v1 import IgnoreResultsError, register
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils import interfaces
 from .utils.aws import discover_aws_generic, extract_aws_metrics_by_labels, parse_aws
-from .utils.interfaces import CHECK_DEFAULT_PARAMETERS, check_single_interface, Interface
 
 Section = Mapping[str, float]
 
@@ -77,18 +77,22 @@ def check_aws_ec2_network_io(
     section: Section,
 ) -> CheckResult:
     try:
-        interface = Interface(
-            index="0",
-            descr=item,
-            alias=item,
-            type="1",
-            oper_status="1",
-            in_octets=section["NetworkIn"] / 60,
-            out_octets=section["NetworkOut"] / 60,
+        interface = interfaces.InterfaceWithCounters(
+            interfaces.Attributes(
+                index="0",
+                descr=item,
+                alias=item,
+                type="1",
+                oper_status="1",
+            ),
+            interfaces.Counters(
+                in_octets=section["NetworkIn"] / 60,
+                out_octets=section["NetworkOut"] / 60,
+            ),
         )
     except KeyError:
         raise IgnoreResultsError("Currently no data from AWS")
-    yield from check_single_interface(item, params, interface, input_is_rate=True)
+    yield from interfaces.check_single_interface(item, params, interface, input_is_rate=True)
 
 
 register.check_plugin(
@@ -97,6 +101,6 @@ register.check_plugin(
     service_name="AWS/EC2 Network IO %s",
     discovery_function=discover_aws_ec2_network_io,
     check_ruleset_name="if",
-    check_default_parameters=CHECK_DEFAULT_PARAMETERS,
+    check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
     check_function=check_aws_ec2_network_io,
 )

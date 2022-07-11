@@ -115,7 +115,7 @@ def parse_if_brocade_lancom(
     ...     {'eth0': 'LAN'},
     ...     {},
     ...     {'Local'}):
-    ...   print(result.descr, result.alias, result.speed)
+    ...   print(result.attributes.descr, result.attributes.alias, result.attributes.speed)
     eth0 Logical LAN eth1 30000000
     """
     return if64.generic_parse_if64(

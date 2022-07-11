@@ -7,6 +7,7 @@ from typing import Any, Dict, Mapping
 
 from .agent_based_api.v1 import IgnoreResultsError, register
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils import interfaces
 from .utils.aws import (
     aws_rds_service_item,
     AWSSectionMetrics,
@@ -14,7 +15,6 @@ from .utils.aws import (
     extract_aws_metrics_by_labels,
     parse_aws,
 )
-from .utils.interfaces import CHECK_DEFAULT_PARAMETERS, check_single_interface, Interface
 
 
 def parse_aws_rds(string_table: StringTable) -> AWSSectionMetrics:
@@ -95,18 +95,22 @@ def check_aws_rds_network_io(
     if metrics is None:
         return
     try:
-        interface = Interface(
-            index="0",
-            descr=item,
-            alias=metrics.get("DBInstanceIdentifier", item),
-            type="1",
-            oper_status="1",
-            in_octets=metrics["NetworkReceiveThroughput"],
-            out_octets=metrics["NetworkTransmitThroughput"],
+        interface = interfaces.InterfaceWithCounters(
+            interfaces.Attributes(
+                index="0",
+                descr=item,
+                alias=metrics.get("DBInstanceIdentifier", item),
+                type="1",
+                oper_status="1",
+            ),
+            interfaces.Counters(
+                in_octets=metrics["NetworkReceiveThroughput"],
+                out_octets=metrics["NetworkTransmitThroughput"],
+            ),
         )
     except KeyError:
         raise IgnoreResultsError("Currently no data from AWS")
-    yield from check_single_interface(item, params, interface, input_is_rate=True)
+    yield from interfaces.check_single_interface(item, params, interface, input_is_rate=True)
 
 
 register.check_plugin(
@@ -115,6 +119,6 @@ register.check_plugin(
     service_name="AWS/RDS %s Network IO",
     discovery_function=discover_aws_rds_network_io,
     check_ruleset_name="if",
-    check_default_parameters=CHECK_DEFAULT_PARAMETERS,
+    check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
     check_function=check_aws_rds_network_io,
 )

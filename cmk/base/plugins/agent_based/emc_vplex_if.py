@@ -14,14 +14,18 @@ def parse_emc_vplex_if(string_table: List[type_defs.StringTable]) -> interfaces.
         directors[ip] = director
 
     return [
-        interfaces.Interface(
-            index=str(idx + 1),
-            descr=frontend_info[0],
-            alias="%s %s" % (directors[frontend_info[3].rsplit(".", 1)[0]], frontend_info[0]),
-            type="",
-            oper_status="1",
-            in_octets=int(frontend_info[1]),
-            out_octets=int(frontend_info[2]),
+        interfaces.InterfaceWithCounters(
+            interfaces.Attributes(
+                index=str(idx + 1),
+                descr=frontend_info[0],
+                alias="%s %s" % (directors[frontend_info[3].rsplit(".", 1)[0]], frontend_info[0]),
+                type="",
+                oper_status="1",
+            ),
+            interfaces.Counters(
+                in_octets=int(frontend_info[1]),
+                out_octets=int(frontend_info[2]),
+            ),
         )
         for idx, frontend_info in enumerate(string_table[1] + string_table[2])
     ]

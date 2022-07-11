@@ -18,17 +18,7 @@ from typing import (
 
 from .agent_based_api.v1 import register, Result, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
-from .utils.interfaces import (
-    CHECK_DEFAULT_PARAMETERS,
-    check_multiple_interfaces,
-    discover_interfaces,
-    DISCOVERY_DEFAULT_PARAMETERS,
-    Interface,
-    mac_address_from_hexstring,
-    render_mac_address,
-    saveint,
-)
-from .utils.interfaces import Section as SectionInterfaces
+from .utils import interfaces
 from .utils.inventory_interfaces import Interface as InterfaceInv
 from .utils.inventory_interfaces import inventorize_interfaces
 
@@ -58,7 +48,7 @@ def _line_to_mapping(
 
 class SectionCounters(NamedTuple):
     timestamp: Optional[float]
-    interfaces: Mapping[str, Interface]
+    interfaces: Mapping[str, interfaces.InterfaceWithCounters]
     found_windows_if: bool
     found_mk_dhcp_enabled: bool
 
@@ -94,35 +84,39 @@ def _parse_timestamp_and_instance_names(
 def _parse_counters(
     raw_nic_names: Sequence[str],
     agent_section: Mapping[str, Line],
-) -> Mapping[str, Interface]:
-    interfaces: MutableMapping[str, Interface] = {}
+) -> Mapping[str, interfaces.InterfaceWithCounters]:
+    ifaces: MutableMapping[str, interfaces.InterfaceWithCounters] = {}
     for idx, raw_nic_name in enumerate(raw_nic_names):
         name = _canonize_name(raw_nic_name)
         counters = {counter: int(line[idx]) for counter, line in agent_section.items()}
-        interfaces.setdefault(
+        ifaces.setdefault(
             name,
-            Interface(
-                index=str(idx + 1),
-                descr=name,
-                alias=name,
-                type="loopback" in name.lower() and "24" or "6",
-                speed=counters["10"],
-                oper_status="1",
-                in_octets=counters["-246"],
-                in_ucast=counters["14"],
-                in_bcast=counters["16"],
-                in_discards=counters["18"],
-                in_errors=counters["20"],
-                out_octets=counters["-4"],
-                out_ucast=counters["26"],
-                out_bcast=counters["28"],
-                out_discards=counters["30"],
-                out_errors=counters["32"],
-                out_qlen=counters["34"],
-                oper_status_name="Connected",
+            interfaces.InterfaceWithCounters(
+                interfaces.Attributes(
+                    index=str(idx + 1),
+                    descr=name,
+                    alias=name,
+                    type="loopback" in name.lower() and "24" or "6",
+                    speed=counters["10"],
+                    oper_status="1",
+                    out_qlen=counters["34"],
+                    oper_status_name="Connected",
+                ),
+                interfaces.Counters(
+                    in_octets=counters["-246"],
+                    in_ucast=counters["14"],
+                    in_bcast=counters["16"],
+                    in_disc=counters["18"],
+                    in_err=counters["20"],
+                    out_octets=counters["-4"],
+                    out_ucast=counters["26"],
+                    out_bcast=counters["28"],
+                    out_disc=counters["30"],
+                    out_err=counters["32"],
+                ),
             ),
         )
-    return interfaces
+    return ifaces
 
 
 def _filter_out_deprecated_plugin_lines(
@@ -287,7 +281,8 @@ def parse_winperf_if_win32_networkadapter(string_table: StringTable) -> SectionE
             alias=line_dict["NetConnectionID"],
             # Some interfaces report several exabyte as bandwidth when down ...
             speed=speed
-            if "Speed" in line_dict and (speed := saveint(line_dict["Speed"])) <= 1024**5
+            if "Speed" in line_dict
+            and (speed := interfaces.saveint(line_dict["Speed"])) <= 1024**5
             else 0,
             oper_status=oper_status,
             oper_status_name=oper_status_name,
@@ -436,15 +431,15 @@ def _match_add_data_to_interfaces(  # type:ignore[no-untyped-def]
 
 
 def _merge_sections(
-    interfaces: Mapping[str, Interface],
+    ifaces: Mapping[str, interfaces.InterfaceWithCounters],
     section_teaming: Optional[SectionTeaming],
     section_extended: Optional[SectionExtended],
-) -> SectionInterfaces:
+) -> interfaces.Section:
 
     section_teaming = section_teaming or {}
     additional_data = (
         _match_add_data_to_interfaces(
-            interfaces,
+            ifaces,
             section_teaming,
             section_extended,
         )
@@ -453,24 +448,27 @@ def _merge_sections(
     )
 
     return [
-        Interface(
-            **{
-                **asdict(interface),
-                **dict(
-                    alias=add_if_data.alias,
-                    speed=add_if_data.speed or interface.speed,
-                    group=section_teaming[add_if_data.guid].team_name
-                    if add_if_data.guid in section_teaming
-                    else None,
-                    oper_status=add_if_data.oper_status,
-                    oper_status_name=add_if_data.oper_status_name,
-                    phys_address=mac_address_from_hexstring(add_if_data.mac_address),
-                ),
-            }
+        interfaces.InterfaceWithCounters(
+            attributes=interfaces.Attributes(
+                **{
+                    **asdict(interface.attributes),
+                    **dict(
+                        alias=add_if_data.alias,
+                        speed=add_if_data.speed or interface.attributes.speed,
+                        group=section_teaming[add_if_data.guid].team_name
+                        if add_if_data.guid in section_teaming
+                        else None,
+                        oper_status=add_if_data.oper_status,
+                        oper_status_name=add_if_data.oper_status_name,
+                        phys_address=interfaces.mac_address_from_hexstring(add_if_data.mac_address),
+                    ),
+                },
+            ),
+            counters=interface.counters,
         )
         if (add_if_data := additional_data.get(name))
         else interface
-        for name, interface in interfaces.items()
+        for name, interface in ifaces.items()
     ]
 
 
@@ -483,7 +481,7 @@ def discover_winperf_if(
 ) -> DiscoveryResult:
     if not section_winperf_if:
         return
-    yield from discover_interfaces(
+    yield from interfaces.discover_interfaces(
         params,
         _merge_sections(
             section_winperf_if.interfaces,
@@ -504,7 +502,7 @@ def check_winperf_if(
     if not section_winperf_if:
         return
 
-    yield from check_multiple_interfaces(
+    yield from interfaces.check_multiple_interfaces(
         item,
         params,
         _merge_sections(
@@ -590,10 +588,10 @@ register.check_plugin(
     service_name="Interface %s",
     discovery_ruleset_name="inventory_if_rules",
     discovery_ruleset_type=register.RuleSetType.ALL,
-    discovery_default_parameters=dict(DISCOVERY_DEFAULT_PARAMETERS),
+    discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
     discovery_function=discover_winperf_if,
     check_ruleset_name="if",
-    check_default_parameters=CHECK_DEFAULT_PARAMETERS,
+    check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
     check_function=check_winperf_if,
 )
 
@@ -605,7 +603,7 @@ def inventory_winperf_if(
 ) -> InventoryResult:
     if not section_winperf_if:
         return
-    interfaces = _merge_sections(
+    ifaces = _merge_sections(
         section_winperf_if.interfaces,
         section_winperf_if_teaming,
         section_winperf_if_extended,
@@ -629,23 +627,23 @@ def inventory_winperf_if(
         },
         (
             InterfaceInv(
-                index=interface.index[-1],
-                descr=interface.descr,
-                alias=interface.alias,
-                type=interface.type,
-                speed=int(interface.speed),
-                oper_status=int(interface.oper_status[0]),
-                phys_address=render_mac_address(interface.phys_address),
+                index=interface.attributes.index[-1],
+                descr=interface.attributes.descr,
+                alias=interface.attributes.alias,
+                type=interface.attributes.type,
+                speed=int(interface.attributes.speed),
+                oper_status=int(interface.attributes.oper_status[0]),
+                phys_address=interfaces.render_mac_address(interface.attributes.phys_address),
             )
             for interface in sorted(
-                interfaces,
-                key=lambda iface: int(iface.index[-1]),
+                ifaces,
+                key=lambda iface: int(iface.attributes.index[-1]),
             )
             # Useless entries for "TenGigabitEthernet2/1/21--Uncontrolled"
             # Ignore useless half-empty tables (e.g. Viprinet-Router)
-            if interface.type not in ("231", "232") and interface.speed
+            if interface.attributes.type not in ("231", "232") and interface.attributes.speed
         ),
-        len(interfaces),
+        len(ifaces),
     )
 
 

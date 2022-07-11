@@ -70,7 +70,10 @@ from cmk.base.plugins.agent_based.if_brocade_lancom import parse_if_brocade_lanc
 def test_parse_if_brocade_lancom(if_table, name_map, port_map, ignore, expected_results) -> None:
     results = tuple(
         (r.index, r.descr, r.alias, r.type, r.speed)
-        for r in parse_if_brocade_lancom(if_table, name_map, port_map, ignore)
+        for r in (
+            iface.attributes
+            for iface in parse_if_brocade_lancom(if_table, name_map, port_map, ignore)
+        )
     )
     assert results == expected_results
 
@@ -603,7 +606,8 @@ def test_parse_if_brocade_lancom(if_table, name_map, port_map, ignore, expected_
 )
 def test_parse_if_lancom(string_table, expected_results) -> None:
     results = tuple(
-        (r.index, r.descr, r.extra_info, r.type, r.speed) for r in parse_if_lancom(string_table)  #
+        (r.index, r.descr, r.extra_info, r.type, r.speed)
+        for r in (iface.attributes for iface in parse_if_lancom(string_table))
     )
     print("\n" + ",\n".join(map(str, results)))
     assert results == expected_results

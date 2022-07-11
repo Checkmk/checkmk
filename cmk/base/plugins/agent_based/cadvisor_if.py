@@ -8,7 +8,7 @@ from typing import Mapping
 
 from .agent_based_api.v1 import Metric, register, Result, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.interfaces import check_single_interface, Interface
+from .utils import interfaces
 
 Section = Mapping[str, float]
 
@@ -54,21 +54,25 @@ def discover_cadvisor_if(section: Section) -> DiscoveryResult:
 
 
 def check_cadvisor_if(item: str, section: Section) -> CheckResult:
-    for output in check_single_interface(
+    for output in interfaces.check_single_interface(
         item,
         {},
-        Interface(
-            index="0",
-            descr=item,
-            alias=item,
-            type="1",
-            oper_status="1",
-            in_octets=section["if_in_total"],
-            in_discards=section["if_in_discards"],
-            in_errors=section["if_in_errors"],
-            out_octets=section["if_out_total"],
-            out_discards=section["if_out_discards"],
-            out_errors=section["if_out_errors"],
+        interfaces.InterfaceWithCounters(
+            interfaces.Attributes(
+                index="0",
+                descr=item,
+                alias=item,
+                type="1",
+                oper_status="1",
+            ),
+            interfaces.Counters(
+                in_octets=section["if_in_total"],
+                in_disc=section["if_in_discards"],
+                in_err=section["if_in_errors"],
+                out_octets=section["if_out_total"],
+                out_disc=section["if_out_discards"],
+                out_err=section["if_out_errors"],
+            ),
         ),
     ):
         if (

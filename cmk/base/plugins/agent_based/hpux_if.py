@@ -11,14 +11,14 @@ _HPUX_FIELDS_TO_IF_FIELDS = {
     "Inbound Unicast Packets": "in_ucast",
     "Inbound Multicast Packets": "in_mcast",
     "Inbound Broadcast Packets": "in_bcast",
-    "Inbound Discards": "in_discards",
-    "Inbound Errors": "in_errors",
+    "Inbound Discards": "in_disc",
+    "Inbound Errors": "in_err",
     "Outbound Octets": "out_octets",
     "Outbound Unicast Packets": "out_ucast",
     "Outbound Multicast Packets": "out_mcast",
     "Outbound Broadcast Packets": "out_bcast",
-    "Outbound Discards": "out_discards",
-    "Outbound Errors": "out_errors",
+    "Outbound Discards": "out_disc",
+    "Outbound Errors": "out_err",
 }
 
 
@@ -27,11 +27,14 @@ def parse_hpux_if(string_table: type_defs.StringTable) -> interfaces.Section:
     for line in string_table:
 
         if "***" in line:
-            iface = interfaces.Interface(
-                index="0",
-                descr="0",
-                alias="0",
-                type="6",
+            iface = interfaces.InterfaceWithCounters(
+                interfaces.Attributes(
+                    index="0",
+                    descr="0",
+                    alias="0",
+                    type="6",
+                ),
+                interfaces.Counters(),
             )
             nics.append(iface)
             continue
@@ -43,25 +46,27 @@ def parse_hpux_if(string_table: type_defs.StringTable) -> interfaces.Section:
         right = right.strip()
 
         if left == "PPA Number":
-            iface.index = right
+            iface.attributes.index = right
         elif left == "Interface Name":
-            iface.descr = iface.alias = right
+            iface.attributes.descr = iface.attributes.alias = right
         elif left == "Speed":
-            iface.speed = hpux_parse_speed(right)
+            iface.attributes.speed = hpux_parse_speed(right)
         elif left == "Operation Status":
-            iface.oper_status = hpux_parse_operstatus(right)
+            iface.attributes.oper_status = hpux_parse_operstatus(right)
         elif left == "Station Address":
             h = right[2:]
-            iface.phys_address = "".join([chr(int(x + y, 16)) for (x, y) in zip(h[::2], h[1::2])])
+            iface.attributes.phys_address = "".join(
+                [chr(int(x + y, 16)) for (x, y) in zip(h[::2], h[1::2])]
+            )
         elif left in _HPUX_FIELDS_TO_IF_FIELDS:
             setattr(
-                iface,
+                iface.counters,
                 _HPUX_FIELDS_TO_IF_FIELDS[left],
                 interfaces.saveint(right),
             )
 
     for iface in nics:
-        iface.finalize()
+        iface.attributes.finalize()
 
     return nics
 

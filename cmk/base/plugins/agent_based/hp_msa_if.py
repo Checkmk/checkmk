@@ -117,16 +117,20 @@ def parse_hp_msa_if(string_table: type_defs.StringTable) -> interfaces.Section:
             status = "2"
 
         parsed.append(
-            interfaces.Interface(
-                index=str(idx + 1),
-                descr=values["port"],
-                alias="",
-                type="6",
-                speed=speed,
-                oper_status=status,
-                in_octets=int(values["data-read-numeric"]),
-                out_octets=int(values["data-written-numeric"]),
-                out_qlen=int(values["queue-depth"]),
+            interfaces.InterfaceWithCounters(
+                interfaces.Attributes(
+                    index=str(idx + 1),
+                    descr=values["port"],
+                    alias="",
+                    type="6",
+                    speed=speed,
+                    oper_status=status,
+                    out_qlen=int(values["queue-depth"]),
+                ),
+                interfaces.Counters(
+                    in_octets=int(values["data-read-numeric"]),
+                    out_octets=int(values["data-written-numeric"]),
+                ),
             )
         )
 

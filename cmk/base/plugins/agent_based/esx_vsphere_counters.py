@@ -123,14 +123,14 @@ _CTR_TO_IF_FIELDS = {
     "packetsRx": "in_ucast",
     "multicastRx": "in_mcast",
     "broadcastRx": "in_bcast",
-    "droppedRx": "in_discards",
-    "errorsRx": "in_errors",
+    "droppedRx": "in_disc",
+    "errorsRx": "in_err",
     "bytesTx": "out_octets",  # is in Kilobytes!
     "packetsTx": "out_ucast",
     "multicastTx": "out_mcast",
     "broadcastTx": "out_bcast",
-    "droppedTx": "out_discards",
-    "errorsTx": "out_errors",
+    "droppedTx": "out_disc",
+    "errorsTx": "out_err",
 }
 
 
@@ -176,18 +176,22 @@ def convert_esx_counters_if(section: Section) -> interfaces.Section:
     # }
 
     return [
-        interfaces.Interface(
-            index=str(index),
-            descr=name,
-            alias=name,
-            type="6",  # Ethernet
-            speed=iface_rates.get("bandwidth", 0),
-            oper_status=str(iface_rates.get("state", 1)),
-            phys_address=interfaces.mac_address_from_hexstring(mac_addresses.get(name, "")),
-            **{  # type: ignore[arg-type]
-                if_field: iface_rates.get(ctr_name, 0) * _get_ctr_multiplier(ctr_name)
-                for ctr_name, if_field in _CTR_TO_IF_FIELDS.items()
-            },
+        interfaces.InterfaceWithCounters(
+            interfaces.Attributes(
+                index=str(index),
+                descr=name,
+                alias=name,
+                type="6",  # Ethernet
+                speed=iface_rates.get("bandwidth", 0),
+                oper_status=str(iface_rates.get("state", 1)),
+                phys_address=interfaces.mac_address_from_hexstring(mac_addresses.get(name, "")),
+            ),
+            interfaces.Counters(
+                **{  # type: ignore[arg-type]
+                    if_field: iface_rates.get(ctr_name, 0) * _get_ctr_multiplier(ctr_name)
+                    for ctr_name, if_field in _CTR_TO_IF_FIELDS.items()
+                },
+            ),
         )
         for index, (name, iface_rates) in enumerate(sorted(rates.items()))
         if name  # Skip summary entry without interface name

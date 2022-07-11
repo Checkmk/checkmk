@@ -17,32 +17,35 @@ def parse_aix_if(  # pylint: disable=too-many-branches
         if line[0].startswith("["):
             nic = line[0][1:-1]
             index += 1
-            ifaces[nic] = iface = interfaces.Interface(
-                index=str(index),
-                descr=nic,
-                alias=nic,
-                type="24" if nic.startswith("lo") else "6",
+            ifaces[nic] = iface = interfaces.InterfaceWithCounters(
+                interfaces.Attributes(
+                    index=str(index),
+                    descr=nic,
+                    alias=nic,
+                    type="24" if nic.startswith("lo") else "6",
+                ),
+                interfaces.Counters(),
             )
         elif line[0] == "Bytes:" and line[2] == "Bytes:":
-            iface.out_octets = interfaces.saveint(line[1])
-            iface.in_octets = interfaces.saveint(line[3])
+            iface.counters.out_octets = interfaces.saveint(line[1])
+            iface.counters.in_octets = interfaces.saveint(line[3])
         elif line[0] == "Packets:" and line[2] == "Packets:":
-            iface.out_ucast = interfaces.saveint(line[1])
-            iface.in_ucast = interfaces.saveint(line[3])
+            iface.counters.out_ucast = interfaces.saveint(line[1])
+            iface.counters.in_ucast = interfaces.saveint(line[3])
         elif line[0] == "Transmit" and line[1] == "Errors:":
-            iface.out_errors = interfaces.saveint(line[2])
-            iface.in_errors = interfaces.saveint(line[5])
+            iface.counters.out_err = interfaces.saveint(line[2])
+            iface.counters.in_err = interfaces.saveint(line[5])
         elif " ".join(line[0:2]) == "Broadcast Packets:":
-            iface.out_bcast = interfaces.saveint(line[2])
-            iface.in_bcast = interfaces.saveint(line[5])
+            iface.counters.out_bcast = interfaces.saveint(line[2])
+            iface.counters.in_bcast = interfaces.saveint(line[5])
         elif " ".join(line[0:2]) == "Multicast Packets:":
-            iface.out_mcast = interfaces.saveint(line[2])
-            iface.in_mcast = interfaces.saveint(line[5])
+            iface.counters.out_mcast = interfaces.saveint(line[2])
+            iface.counters.in_mcast = interfaces.saveint(line[5])
         elif " ".join(line[0:2]) == "Hardware Address:":
-            iface.phys_address = interfaces.mac_address_from_hexstring(line[2])
+            iface.attributes.phys_address = interfaces.mac_address_from_hexstring(line[2])
         elif " ".join(line[0:3]) == "Adapter Data Rate:":
             # speed is in Mb/s
-            iface.speed = int(line[3]) * 1000000
+            iface.attributes.speed = int(line[3]) * 1000000
         elif " ".join(line[0:2]) == "Driver Flags:":
             flags[nic] = line[2:]
         elif " ".join(line[0:3]) == "KIM Driver Flags:":
@@ -53,15 +56,15 @@ def parse_aix_if(  # pylint: disable=too-many-branches
     for nic, iface in ifaces.items():
         iface_flags = flags.get(nic, [])
         if "Up" in iface_flags:
-            iface.oper_status = "1"
+            iface.attributes.oper_status = "1"
         elif "Down" in flags:
-            iface.oper_status = "2"
+            iface.attributes.oper_status = "2"
         # No information from entstat. We consider interfaces up
         # if they have been used at least some time since the
         # system boot.
-        elif iface.in_octets > 0:
-            iface.oper_status = "1"
-        iface.finalize()
+        elif iface.counters.in_octets > 0:
+            iface.attributes.oper_status = "1"
+        iface.attributes.finalize()
 
     return list(ifaces.values())
 

@@ -47,7 +47,7 @@ def _add_admin_status_to_ifaces(
     if section_if64adm is None or len(section_if64) != len(section_if64adm):
         return
     for iface, admin_status in zip(section_if64, section_if64adm):
-        iface.admin_status = admin_status
+        iface.attributes.admin_status = admin_status
 
 
 def discover_if64(

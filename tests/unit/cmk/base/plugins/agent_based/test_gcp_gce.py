@@ -6,13 +6,13 @@
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.gcp_assets import parse_assets
 from cmk.base.plugins.agent_based.gcp_gce import (
-    CHECK_DEFAULT_PARAMETERS,
     check_disk_summary,
     check_network,
     check_summary,
     parse_gce_uptime,
 )
 from cmk.base.plugins.agent_based.utils import gcp, uptime
+from cmk.base.plugins.agent_based.utils.interfaces import CHECK_DEFAULT_PARAMETERS
 
 from cmk.special_agents import agent_gcp
 

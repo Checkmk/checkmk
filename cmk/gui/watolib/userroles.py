@@ -127,13 +127,13 @@ def validate_new_alias(old_alias: str, new_alias: str) -> None:
 
 def validate_new_roleid(old_roleid: str, new_roleid: str) -> None:
     existing_role: UserRole = get_role(RoleID(old_roleid))
-    if existing_role.builtin:
-        raise ValidationError(_("The ID of a builtin user role cannot be changed"))
-
     if not new_roleid:
         raise ValidationError(_("You have to provide a role ID."))
 
     if old_roleid != new_roleid:
+        if existing_role.builtin:
+            raise ValidationError(_("The ID of a builtin user role cannot be changed"))
+
         if new_roleid in get_all_roles():
             raise ValidationError(_("The ID is already used by another role"))
 

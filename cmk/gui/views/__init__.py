@@ -214,14 +214,17 @@ from cmk.gui.views.inventory import (
     transform_legacy_display_hints,
     update_paint_functions,
 )
-from cmk.gui.watolib.activate_changes import get_pending_changes_info, get_pending_changes_tooltip
+from cmk.gui.watolib.activate_changes import (
+    ActivateChanges,
+    get_pending_changes_tooltip,
+    has_pending_changes,
+)
 
 if not cmk_version.is_raw_edition():
     from cmk.gui.cee.ntop.connector import get_cache  # pylint: disable=no-name-in-module
 
 from cmk.gui.type_defs import (
     ColumnName,
-    FilterHeader,
     FilterName,
     HTTPVariables,
     InfoName,
@@ -1003,7 +1006,7 @@ class GUIViewRenderer(ABCViewRenderer):
         menu = PageMenu(
             dropdowns=page_menu_dropdowns,
             breadcrumb=breadcrumb,
-            has_pending_changes=bool(get_pending_changes_info()),
+            has_pending_changes=has_pending_changes(),
             pending_changes_tooltip=get_pending_changes_tooltip(),
         )
 

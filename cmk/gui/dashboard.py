@@ -29,7 +29,6 @@ from cmk.utils.exceptions import MKException
 
 import cmk.gui.crash_handler as crash_handler
 import cmk.gui.forms as forms
-import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.utils as utils
 import cmk.gui.visuals as visuals
@@ -126,7 +125,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.views import ABCAjaxInitialFilters, view_choices
 from cmk.gui.views.datasource_selection import show_create_view_dialog
-from cmk.gui.watolib.activate_changes import get_pending_changes_info, get_pending_changes_tooltip
+from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
 
 loaded_with_language: Union[None, bool, str] = False
 
@@ -908,7 +907,7 @@ def _page_menu(
             ),
         ],
         breadcrumb=breadcrumb,
-        has_pending_changes=bool(get_pending_changes_info()),
+        has_pending_changes=has_pending_changes(),
         pending_changes_tooltip=get_pending_changes_tooltip(),
     )
 

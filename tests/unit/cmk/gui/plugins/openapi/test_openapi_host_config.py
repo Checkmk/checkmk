@@ -946,7 +946,9 @@ def test_openapi_host_rename(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     monkeypatch: pytest.MonkeyPatch,
 ):
-    monkeypatch.setattr("cmk.gui.watolib.activate_changes.get_pending_changes_info", lambda: [])
+    monkeypatch.setattr(
+        "cmk.gui.plugins.openapi.endpoints.host_config.has_pending_changes", lambda: False
+    )
     monkeypatch.setattr(
         "cmk.gui.watolib.host_rename.rename_hosts",
         lambda *args, **kwargs: RenameHostsResult({}),
@@ -992,7 +994,9 @@ def test_openapi_host_rename_error_on_not_existing_host(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     monkeypatch,
 ):
-    monkeypatch.setattr("cmk.gui.watolib.activate_changes.get_pending_changes_info", lambda: [])
+    monkeypatch.setattr(
+        "cmk.gui.plugins.openapi.endpoints.host_config.has_pending_changes", lambda: False
+    )
 
     base = "/NO_SITE/check_mk/api/1.0"
 
@@ -1027,7 +1031,9 @@ def test_openapi_host_rename_on_invalid_hostname(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     monkeypatch,
 ):
-    monkeypatch.setattr("cmk.gui.watolib.activate_changes.get_pending_changes_info", lambda: [])
+    monkeypatch.setattr(
+        "cmk.gui.plugins.openapi.endpoints.host_config.has_pending_changes", lambda: False
+    )
 
     base = "/NO_SITE/check_mk/api/1.0"
 

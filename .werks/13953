@@ -1,0 +1,13 @@
+Title: Prevent a crash with pending changes and Japanese locale
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1657538092
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The system would crash if there was a pending change and the japanese locale set.
+This is no longer the case.
+

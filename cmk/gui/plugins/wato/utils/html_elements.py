@@ -15,7 +15,7 @@ from cmk.gui.i18n import _
 # TODO: Change all call sites to directly import from cmk.gui.page_menu
 from cmk.gui.page_menu import PageMenu, search_form  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.page_state import PageState
-from cmk.gui.watolib.activate_changes import get_pending_changes_info, get_pending_changes_tooltip
+from cmk.gui.watolib.activate_changes import ActivateChanges, get_pending_changes_tooltip
 
 # TODO: Refactor to context handler or similar?
 _html_head_open = False
@@ -61,12 +61,13 @@ def wato_html_footer(show_body_end: bool = True) -> None:
 
 
 def _make_wato_page_state() -> PageState:
-    changes_info = get_pending_changes_info()
+    changes_info = ActivateChanges().get_pending_changes_info()
     tooltip = get_pending_changes_tooltip()
     changelog_url = "wato.py?mode=changelog"
     span_id = "changes_info"
-    if changes_info:
-        changes_number, changes_str = changes_info.split()
+    if changes_info.has_changes():
+        changes_number = changes_info.number
+        changes_str = changes_info.message
         return PageState(
             text=HTMLWriter.render_span(
                 HTMLWriter.render_span(changes_number, class_="changes_number")

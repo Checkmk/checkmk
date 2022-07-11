@@ -68,7 +68,7 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.view_utils import format_plugin_output, render_labels
 from cmk.gui.wato.pages.hosts import ModeEditHost
-from cmk.gui.watolib.activate_changes import get_pending_changes_info, get_pending_changes_tooltip
+from cmk.gui.watolib.activate_changes import ActivateChanges, get_pending_changes_tooltip
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.check_mk_automations import active_check
@@ -336,7 +336,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             "body": page_code,
             "fixall": fix_all_code,
             "page_menu": self._get_page_menu(discovery_options, host),
-            "pending_changes_info": get_pending_changes_info(),
+            "pending_changes_info": ActivateChanges().get_pending_changes_info().message,
             "pending_changes_tooltip": get_pending_changes_tooltip(),
             "discovery_options": discovery_options._asdict(),
             "discovery_result": discovery_result.serialize(),

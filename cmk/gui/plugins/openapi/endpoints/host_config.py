@@ -46,7 +46,6 @@ from urllib.parse import urlencode
 import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import HostName
 
-import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.bakery as bakery
 from cmk.gui import fields as gui_fields
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -64,6 +63,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.plugins.openapi.utils import problem, serve_json
 from cmk.gui.plugins.webapi.utils import check_hostname
+from cmk.gui.watolib.activate_changes import has_pending_changes
 from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.host_rename import perform_rename_hosts
 from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, Folder, Host
@@ -466,7 +466,7 @@ def rename_host(params: Mapping[str, Any]) -> Response:
     """Rename a host"""
     user.need_permission("wato.edit")
     user.need_permission("wato.rename_hosts")
-    if activate_changes.get_pending_changes_info():
+    if has_pending_changes():
         return problem(
             status=409,
             title="Pending changes are present",

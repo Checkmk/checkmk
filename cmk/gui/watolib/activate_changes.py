@@ -23,12 +23,11 @@ import io
 import logging
 import multiprocessing
 import os
-import re
 import shutil
 import subprocess
 import time
 import traceback
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from itertools import filterfalse
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, NamedTuple, Optional, Set, Tuple, Union
@@ -391,6 +390,15 @@ def _load_replication_status(lock=False):
     }
 
 
+@dataclass
+class PendingChangesInfo:
+    number: int
+    message: Optional[str]
+
+    def has_changes(self):
+        return self.number > 0
+
+
 class ActivateChanges:
     def __init__(self) -> None:
         self._repstatus: dict = {}
@@ -437,19 +445,33 @@ class ActivateChanges:
         SiteChanges(SiteChanges.make_path(site_id)).clear()
         cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
 
-    def get_changes_estimate(self) -> Optional[str]:
+    @staticmethod
+    def _get_number_of_pending_changes() -> int:
         changes_counter = 0
         # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
         # pylint: disable=not-an-iterable
         for site_id in activation_sites():
             changes_counter += len(SiteChanges(SiteChanges.make_path(site_id)).read())
-            if changes_counter > 10:
-                return _("10+ changes")
-        if changes_counter == 1:
+        return changes_counter
+
+    @staticmethod
+    def _make_changes_message(number_of_changes: int) -> Optional[str]:
+        if number_of_changes > 10:
+            return _("10+ changes")
+        if number_of_changes == 1:
             return _("1 change")
-        if changes_counter > 1:
-            return _("%d changes") % changes_counter
+        if number_of_changes > 1:
+            return _("%d changes") % number_of_changes
         return None
+
+    def get_changes_estimate(self) -> Optional[str]:
+        number_of_changes = self._get_number_of_pending_changes()
+        return self._make_changes_message(number_of_changes)
+
+    def get_pending_changes_info(self) -> PendingChangesInfo:
+        number_of_changes = self._get_number_of_pending_changes()
+        message = self._make_changes_message(number_of_changes)
+        return PendingChangesInfo(number=number_of_changes, message=message)
 
     def grouped_changes(self):
         return self._changes
@@ -2080,20 +2102,19 @@ def confirm_all_local_changes() -> None:
     ActivateChanges().confirm_site_changes(omd_site())
 
 
-def get_pending_changes_info() -> Optional[str]:
-    changes = ActivateChanges()
-    return changes.get_changes_estimate()
+def has_pending_changes() -> bool:
+    return ActivateChanges().get_pending_changes_info().has_changes()
 
 
 def get_pending_changes_tooltip() -> str:
-    changes_info = get_pending_changes_info()
-    if changes_info:
-        n_changes = int(re.findall(r"\d+", changes_info)[0])
+    changes_info = ActivateChanges().get_pending_changes_info()
+    if changes_info.has_changes():
+        n_changes = changes_info.number
         return (
             (
                 _("Currently, there is one pending change not yet activated.")
                 if n_changes == 1
-                else _("Currently, there are %s not yet activated.") % changes_info
+                else _("Currently, there are %s not yet activated.") % n_changes
             )
             + "\n"
             + _("Click here for details.")

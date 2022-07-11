@@ -5,11 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module contains helpers to trigger acknowledgments.
 """
+from cmk.utils.livestatus_helpers import tables
+from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
+from cmk.utils.livestatus_helpers.tables import Hosts
+
+from cmk.gui.globals import user as _user
 from cmk.gui.livestatus_utils.commands.downtimes import QueryException
 from cmk.gui.livestatus_utils.commands.lowlevel import send_command
-from cmk.utils.livestatus_helpers import tables
-from cmk.utils.livestatus_helpers.queries import Query, detailed_connection
-from cmk.utils.livestatus_helpers.tables import Hosts
 
 
 def acknowledge_service_problem(
@@ -54,13 +56,27 @@ def acknowledge_service_problem(
     Examples:
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
+        >>> from cmk.gui.utils.script_helpers import application_and_request_context
+        >>> from cmk.gui.config import SuperUserContext
+        >>> from cmk.gui.config import load_config
+
         >>> cmd = "COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;example.com;drain;1;0;0;;"
-        >>> with simple_expect() as live:
+        >>> with simple_expect() as live, application_and_request_context(), SuperUserContext():
+        ...     load_config()
         ...     _ = live.expect_query("GET hosts\\nColumns: name\\nFilter: name = example.com")
-        ...     _ = live.expect_query(cmd, match_type="ellipsis", site_id='NO_SITE')
+        ...     _ = live.expect_query(cmd, match_type="ellipsis")
         ...     acknowledge_service_problem(live, 'example.com', 'drain')
 
+        Not authenticated users can't call this function:
+
+            >>> with application_and_request_context():
+            ...     acknowledge_service_problem(live, 'example.com', 'drain')   # doctest: +ELLIPSIS
+            Traceback (most recent call last):
+            ...
+            cmk.gui.exceptions.MKAuthException: ...
     """
+    _user.need_permission("action.acknowledge")
+
     site_id = _query_site(connection, host_name)
 
     acknowledgement = 2 if sticky else 1  # 1: normal, 2: sticky
@@ -121,6 +137,8 @@ def acknowledge_servicegroup_problem(
             When the servicegroup could not be found.
 
     """
+    _user.need_permission("action.acknowledge")
+
     with detailed_connection(connection) as conn:
         group_entries = Query(
             [tables.Servicegroups.members],
@@ -186,13 +204,28 @@ def acknowledge_host_problem(
     Examples:
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
+        >>> from cmk.gui.utils.script_helpers import application_and_request_context
+        >>> from cmk.gui.config import SuperUserContext
+        >>> from cmk.gui.config import load_config
+
         >>> cmd = "COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;example.com;1;0;0;;"
-        >>> with simple_expect() as live:
+        >>> with simple_expect() as live, application_and_request_context(), SuperUserContext():
+        ...     load_config()
         ...     _ = live.expect_query("GET hosts\\nColumns: name\\nFilter: name = example.com")
-        ...     _ = live.expect_query(cmd, match_type="ellipsis", site_id="NO_SITE")
+        ...     _ = live.expect_query(cmd, match_type="ellipsis")
         ...     acknowledge_host_problem(live, 'example.com')
 
+        Not authenticated users can't call this function:
+
+            >>> with application_and_request_context():
+            ...     acknowledge_host_problem(live, 'example.com')   # doctest: +ELLIPSIS
+            Traceback (most recent call last):
+            ...
+            cmk.gui.exceptions.MKAuthException: ...
+
     """
+    _user.need_permission("action.acknowledge")
+
     acknowledgement = 2 if sticky else 1  # 1: normal, 2: sticky
 
     with detailed_connection(connection) as conn:
@@ -253,6 +286,8 @@ def acknowledge_hostgroup_problem(
             when the Hostgroup in question doesn't exist.
 
     """
+    _user.need_permission("action.acknowledge")
+
     with detailed_connection(connection) as conn:
         group_entries = Query([tables.Hostgroups.members],
                               tables.Hostgroups.name.equals(hostgroup_name)).fetchall(conn)

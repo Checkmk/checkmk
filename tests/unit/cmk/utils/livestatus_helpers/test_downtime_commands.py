@@ -5,99 +5,107 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime as dt
 
-import pytest  # type: ignore[import]
+import pytest
 import pytz
 
-from cmk.gui import sites
 import cmk.gui.livestatus_utils.commands.downtimes as downtimes
+from cmk.gui import sites
+from cmk.gui.config import load_config
+
+# HACK: This is needed to populate the PermissionRegistry
+from cmk.gui.plugins.views import commands  # pylint: disable=unused-import
+from cmk.gui.config import SuperUserContext
+from cmk.gui.utils.script_helpers import application_and_request_context
 
 
-@pytest.fixture(name='dates')
+@pytest.fixture(name="dates")
 def _dates():
-    return (dt.datetime(1970, 1, 1, tzinfo=pytz.timezone("UTC")),
-            dt.datetime(1970, 1, 2, tzinfo=pytz.timezone("UTC")))
+    return (
+        dt.datetime(1970, 1, 1, tzinfo=pytz.timezone("UTC")),
+        dt.datetime(1970, 1, 2, tzinfo=pytz.timezone("UTC")),
+    )
 
 
 def test_host_downtime(mock_livestatus, with_request_context, dates):
     start_time, end_time = dates
 
-    with mock_livestatus(expect_status_query=True) as live:
-        live.expect_query('GET hosts\nColumns: name\nFilter: name = example.com')
+    with mock_livestatus(expect_status_query=True) as live, application_and_request_context(
+    ), SuperUserContext():
+        load_config()
+        live.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
         live.expect_query(
-            'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;12;0;120;;Going down',
-            match_type='ellipsis',
-            site_id="NO_SITE",
+            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;12;0;120;;Going down",
+            match_type="ellipsis",
         )
         downtimes.schedule_host_downtime(
             sites.live(),
-            'example.com',
+            "example.com",
             start_time,
             end_time,
-            recur='weekday_start',
+            recur="weekday_start",
             duration=120,
-            comment='Going down',
+            comment="Going down",
         )
 
 
 def test_host_downtime_with_services(mock_livestatus, with_request_context, dates):
     start_time, end_time = dates
 
-    with mock_livestatus(expect_status_query=True) as live:
-        live.expect_query('GET hosts\nColumns: name\nFilter: name = example.com')
+    with mock_livestatus(expect_status_query=True) as live, application_and_request_context(
+    ), SuperUserContext():
+        load_config()
+        live.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
         live.expect_query(
-            'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;12;0;120;;Going down',
-            match_type='ellipsis',
-            site_id="NO_SITE",
+            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;12;0;120;;Going down",
+            match_type="ellipsis",
         )
         live.expect_query(
-            'GET services\nColumns: host_name description\nFilter: host_name = example.com',)
+            "GET services\nColumns: host_name description\nFilter: host_name = example.com",)
         live.expect_query(
-            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;12;0;120;;Going down',
-            match_type='ellipsis',
-            site_id="NO_SITE",
+            "COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;12;0;120;;Going down",
+            match_type="ellipsis",
         )
         live.expect_query(
-            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;0;86400;12;0;120;;Going down',
-            match_type='ellipsis',
-            site_id="NO_SITE",
+            "COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;0;86400;12;0;120;;Going down",
+            match_type="ellipsis",
         )
         downtimes.schedule_host_downtime(
             sites.live(),
-            'example.com',
+            "example.com",
             start_time,
             end_time,
             include_all_services=True,
-            recur='weekday_start',
+            recur="weekday_start",
             duration=120,
-            comment='Going down',
+            comment="Going down",
         )
 
 
 def test_hostgroup_host_downtime(mock_livestatus, with_request_context, dates):
     start_time, end_time = dates
 
-    with mock_livestatus(expect_status_query=True) as live:
+    with mock_livestatus(expect_status_query=True) as live, application_and_request_context(
+    ), SuperUserContext():
+        load_config()
         live.expect_query([
             "GET hostgroups",
             "Columns: members",
             "Filter: name = example",
         ])
         live.expect_query(
-            'GET hosts\nColumns: name\nFilter: name = example.com\nFilter: name = heute\nOr: 2')
+            "GET hosts\nColumns: name\nFilter: name = example.com\nFilter: name = heute\nOr: 2")
         live.expect_query(
-            'COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;0;86400;16;0;120;;Boom',
-            match_type='ellipsis',
-            site_id="NO_SITE",
+            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;0;86400;16;0;120;;Boom",
+            match_type="ellipsis",
         )
         live.expect_query(
-            'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom',
-            match_type='ellipsis',
-            site_id="NO_SITE",
+            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom",
+            match_type="ellipsis",
         )
 
         downtimes.schedule_hostgroup_host_downtime(
             sites.live(),
-            'example',
+            "example",
             start_time,
             end_time,
             recur="day_of_month",
@@ -109,43 +117,43 @@ def test_hostgroup_host_downtime(mock_livestatus, with_request_context, dates):
 def test_hostgroup_host_downtime_with_services(mock_livestatus, with_request_context, dates):
     start_time, end_time = dates
 
-    with mock_livestatus(expect_status_query=True) as live:
+    with mock_livestatus(expect_status_query=True) as live, application_and_request_context(
+    ), SuperUserContext():
+        load_config()
         live.expect_query([
             "GET hostgroups",
             "Columns: members",
             "Filter: name = example",
         ])
         live.expect_query(
-            'GET hosts\nColumns: name\nFilter: name = example.com\nFilter: name = heute\nOr: 2')
+            "GET hosts\nColumns: name\nFilter: name = example.com\nFilter: name = heute\nOr: 2")
         live.expect_query(
-            'COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;0;86400;16;0;120;;Boom',
-            match_type='ellipsis',
-            site_id="NO_SITE",
-        )
-        live.expect_query('COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom',
-                          match_type='ellipsis',
-                          site_id="NO_SITE")
-        live.expect_query(
-            'GET services\nColumns: host_name description\nFilter: host_name = heute\nFilter: host_name = example.com\nOr: 2'
+            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;0;86400;16;0;120;;Boom",
+            match_type="ellipsis",
         )
         live.expect_query(
-            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;16;0;120;;Boom',
-            match_type='ellipsis',
-            site_id="NO_SITE",
+            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom",
+            match_type="ellipsis",
         )
         live.expect_query(
-            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;0;86400;16;0;120;;Boom',
-            match_type='ellipsis',
-            site_id="NO_SITE",
+            "GET services\nColumns: host_name description\nFilter: host_name = heute\nFilter: host_name = example.com\nOr: 2"
         )
         live.expect_query(
-            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;heute;CPU load;0;86400;16;0;120;;Boom',
-            match_type='ellipsis',
-            site_id="NO_SITE")
+            "COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;16;0;120;;Boom",
+            match_type="ellipsis",
+        )
+        live.expect_query(
+            "COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;0;86400;16;0;120;;Boom",
+            match_type="ellipsis",
+        )
+        live.expect_query(
+            "COMMAND [...] SCHEDULE_SVC_DOWNTIME;heute;CPU load;0;86400;16;0;120;;Boom",
+            match_type="ellipsis",
+        )
 
         downtimes.schedule_hostgroup_host_downtime(
             sites.live(),
-            'example',
+            "example",
             start_time,
             end_time,
             include_all_services=True,
@@ -158,30 +166,29 @@ def test_hostgroup_host_downtime_with_services(mock_livestatus, with_request_con
 def test_servicegroup_service_downtime(mock_livestatus, with_request_context, dates):
     start_time, end_time = dates
 
-    with mock_livestatus(expect_status_query=True) as live:
+    with mock_livestatus(expect_status_query=True) as live, application_and_request_context(
+    ), SuperUserContext():
+        load_config()
         live.expect_query([
             "GET servicegroups",
             "Columns: members",
             "Filter: name = example",
         ])
         live.expect_query(
-            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;16;0;120;;Boom',
-            match_type='ellipsis',
-            site_id="NO_SITE",
+            "COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;16;0;120;;Boom",
+            match_type="ellipsis",
         )
         live.expect_query(
-            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;0;86400;16;0;120;;Boom',
-            match_type='ellipsis',
-            site_id="NO_SITE",
+            "COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;0;86400;16;0;120;;Boom",
+            match_type="ellipsis",
         )
         live.expect_query(
-            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;heute;CPU load;0;86400;16;0;120;;Boom',
-            match_type='ellipsis',
-            site_id="NO_SITE",
+            "COMMAND [...] SCHEDULE_SVC_DOWNTIME;heute;CPU load;0;86400;16;0;120;;Boom",
+            match_type="ellipsis",
         )
         downtimes.schedule_servicegroup_service_downtime(
             sites.live(),
-            'example',
+            "example",
             start_time,
             end_time,
             recur="day_of_month",
@@ -193,43 +200,40 @@ def test_servicegroup_service_downtime(mock_livestatus, with_request_context, da
 def test_servicegroup_service_downtime_and_hosts(mock_livestatus, with_request_context, dates):
     start_time, end_time = dates
 
-    with mock_livestatus(expect_status_query=True) as live:
+    with mock_livestatus(expect_status_query=True) as live, application_and_request_context(
+    ), SuperUserContext():
+        load_config()
         live.expect_query([
             "GET servicegroups",
             "Columns: members",
             "Filter: name = example",
         ])
         live.expect_query(
-            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;16;0;120;;Boom',
-            match_type='ellipsis',
-            site_id="NO_SITE",
+            "COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;16;0;120;;Boom",
+            match_type="ellipsis",
         )
         live.expect_query(
-            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;0;86400;16;0;120;;Boom',
-            match_type='ellipsis',
-            site_id="NO_SITE",
+            "COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;0;86400;16;0;120;;Boom",
+            match_type="ellipsis",
         )
         live.expect_query(
-            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;heute;CPU load;0;86400;16;0;120;;Boom',
-            match_type='ellipsis',
-            site_id="NO_SITE",
+            "COMMAND [...] SCHEDULE_SVC_DOWNTIME;heute;CPU load;0;86400;16;0;120;;Boom",
+            match_type="ellipsis",
         )
 
         live.expect_query(
-            'GET hosts\nColumns: name\nFilter: name = example.com\nFilter: name = heute\nOr: 2')
+            "GET hosts\nColumns: name\nFilter: name = example.com\nFilter: name = heute\nOr: 2")
         live.expect_query(
-            'COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;0;86400;16;0;120;;Boom',
-            match_type='ellipsis',
-            site_id="NO_SITE",
+            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;0;86400;16;0;120;;Boom",
+            match_type="ellipsis",
         )
         live.expect_query(
-            'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom',
-            match_type='ellipsis',
-            site_id="NO_SITE",
+            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom",
+            match_type="ellipsis",
         )
         downtimes.schedule_servicegroup_service_downtime(
             sites.live(),
-            'example',
+            "example",
             start_time,
             end_time,
             include_hosts=True,

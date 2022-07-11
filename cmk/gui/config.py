@@ -35,7 +35,7 @@ from cmk.gui.exceptions import MKAuthException, MKConfigError
 # this is a bit difficult due to our beloved circular imports. :-/ Or should we
 # do this the other way round? Anyway, we will know when the cycle has been
 # broken...
-from cmk.gui.globals import local, user
+from cmk.gui.globals import local, user, request_local_attr
 from cmk.gui.i18n import _
 # This import is added for static analysis tools like pylint to make them
 # know about all shipped config options. The default config options are
@@ -890,15 +890,33 @@ def _set_user(_user: LoggedInUser) -> None:
 
 
 @contextlib.contextmanager
+def SuperUserContext() -> Iterator[None]:
+    """Execute a block code as the superuser
+
+    After the block exits, the previous user will be replaced again.
+
+    Returns:
+        The context manager.
+
+    """
+    return _UserContext(LoggedInSuperUser())
+
+
+@contextlib.contextmanager
 def UserContext(user_id: UserId) -> Iterator[None]:
+    return _UserContext(LoggedInUser(user_id))
+
+
+def _UserContext(user_obj: LoggedInUser) -> Iterator[None]:
     """Managing authenticated user context
 
     After the user has been authenticated, initialize the global user object."""
+    old_user = request_local_attr().user
     try:
-        set_user_by_id(user_id)
+        request_local_attr().user = user_obj
         yield
     finally:
-        clear_user_login()
+        request_local_attr().user = old_user
 
 
 #.

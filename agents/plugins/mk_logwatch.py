@@ -46,7 +46,7 @@ import socket
 import time
 
 try:
-    from typing import Dict
+    from typing import Dict, Generator
 except ImportError:
     # We need typing only for testing
     pass
@@ -251,6 +251,7 @@ def get_config_files(directory, config_file_arg=None):
 
 
 def iter_config_lines(files, debug=False):
+    # type: (list[str], bool) -> Generator[str, None, None]
     no_cfg_content_yielded = True
     for file_ in files:
         try:
@@ -274,6 +275,7 @@ def iter_config_lines(files, debug=False):
 
 
 def consume_cluster_definition(config_lines):
+    # type (list[str]) -> ClusterConfigBlock
     cluster_name = config_lines.pop(0)[8:].strip()  # e.g.: CLUSTER duck
     cluster = ClusterConfigBlock(cluster_name, [])
     LOGGER.debug("new ClusterConfigBlock: %s", cluster_name)
@@ -285,6 +287,7 @@ def consume_cluster_definition(config_lines):
 
 
 def consume_logfile_definition(config_lines):
+    # type (list[str]) -> PatternConfigBlock
     cont_list = []
     rewrite_list = []
     filenames = parse_filenames(config_lines.pop(0))
@@ -316,6 +319,7 @@ def consume_logfile_definition(config_lines):
 
 
 def read_config(files, debug=False):
+    # type (list[str]) -> tuple[PatternConfigBlock, ClusterConfigBlock]
     """
     Read logwatch.cfg (patterns, cluster mapping, etc.).
 

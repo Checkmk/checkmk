@@ -43,7 +43,7 @@ def discover_hitachi_hnas_span(
     params: Sequence[Mapping[str, Any]], section: Section
 ) -> DiscoveryResult:
     yield from (
-        Service(item=i, parameters=p) for i, p in df_discovery(params, list(section.values()))
+        Service(item=i, parameters=p) for i, p in df_discovery(params, list(section))
     )
 
 

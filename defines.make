@@ -72,12 +72,7 @@ GCC_VERSION	       := "${GCC_VERSION_MAJOR}.${GCC_VERSION_MINOR}.${GCC_VERSION_P
 # When you update the Python version, you may have to update the test expectations
 # in test_03_pip_interpreter_version.
 # Update omd/Licenses.csv, too.
-# NOTE: PYTHON_VERSION is also needed in agents/modules/windows/Makefile. We need to use upgrep there.
-ifeq ($(OS),Windows_NT)
-PYTHON_VERSION	:= $(shell ugrep -oP "(?<=python_version = \").*(?=\")" $(REPO_PATH)/Pipfile)
-else
-PYTHON_VERSION	:= $(shell grep -oP '(?<=python_version = ").*(?=")' $(REPO_PATH)/Pipfile)
-endif
+PYTHON_VERSION  := 3.10.4
 
 # convenience stuff derived from PYTHON_VERSION
 PY_ARRAY	       := $(subst ., ,$(PYTHON_VERSION))

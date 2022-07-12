@@ -177,4 +177,6 @@ lxml = "==4.8.0"  # used via beautifulsoup4 as a parser and in the agent_netapp 
 grpcio = "==1.46.3"  # newer versions (1.47) caused problems in Centos7 and SLES12
 
 [requires]
-python_version = "3.10.4"
+# As pipenv {sync,lock} does currently not support env variable expansion in and out Pipfile.lock,
+# we do not require a python_version here and defines.make is our single point of truth.
+# the PYTHON_VERSION will be injected during pipenv calls in Makefile.

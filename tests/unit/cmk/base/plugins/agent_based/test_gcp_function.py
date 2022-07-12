@@ -24,6 +24,7 @@ from cmk.base.plugins.agent_based.gcp_function import (
     check_gcp_function_execution,
     check_gcp_function_instances,
     check_gcp_function_network,
+    check_summary,
     discover,
     parse_gcp_function,
 )
@@ -252,3 +253,9 @@ def test_yield_results_as_specified(plugin) -> None:
 def test_yield_metrics_as_specified(plugin) -> None:
     results = {r.name for r in generate_results(plugin) if isinstance(r, Metric)}
     assert results == set(plugin.metrics)
+
+
+def test_check_summary():
+    assets = parse_assets(ASSET_TABLE)
+    results = set(check_summary(section=assets))
+    assert results == {Result(state=State.OK, summary="3 Functions", details="Found 3 functions")}

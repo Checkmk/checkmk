@@ -11,6 +11,9 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
+from cmk.utils.type_defs.pluginname import CheckPluginName
+
+from cmk.base.api.agent_based import register
 from cmk.base.api.agent_based.checking_classes import CheckFunction, IgnoreResults, ServiceLabel
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -23,6 +26,7 @@ from cmk.base.plugins.agent_based.gcp_redis import (
     check_cpu_util,
     check_hitratio,
     check_memory_util,
+    check_summary,
     discover,
     parse,
 )
@@ -223,3 +227,21 @@ def test_hitratio_no_results_if_item_not_found() -> None:
         section_gcp_assets=parse_assets(ASSET_TABLE),
     )
     assert len(list(results)) == 0
+
+
+def test_check_summary():
+    assets = parse_assets(ASSET_TABLE)
+    results = set(check_summary(section=assets))
+    assert results == {Result(state=State.OK, summary="1 Instance", details="Found 1 instance")}
+
+
+def test_summary_service_name():
+    plugin = register.get_check_plugin(CheckPluginName("gcp_redis_summary"))
+    assert plugin is not None
+    assert plugin.service_name == "Redis - summary"
+
+
+def test_service_name():
+    plugin = register.get_check_plugin(CheckPluginName("gcp_redis_hitratio"))
+    assert plugin is not None
+    assert plugin.service_name == "Redis - %s - hitratio"

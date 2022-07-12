@@ -137,3 +137,16 @@ register.check_plugin(
     check_function=check_gcp_function_network,
     check_default_parameters={"net_data_sent": None},
 )
+
+
+def check_summary(section: gcp.AssetSection) -> CheckResult:
+    yield from gcp.check_summary(ASSET_TYPE, "Function", section)
+
+
+register.check_plugin(
+    name="gcp_function_summary",
+    sections=["gcp_assets"],
+    service_name=service_namer.summary_name(),
+    discovery_function=gcp.discovery_summary,
+    check_function=check_summary,
+)

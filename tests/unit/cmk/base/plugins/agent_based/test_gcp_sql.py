@@ -21,6 +21,7 @@ from cmk.base.plugins.agent_based.gcp_sql import (
     check_gcp_sql_memory,
     check_gcp_sql_network,
     check_gcp_sql_status,
+    check_summary,
     discover,
     parse,
 )
@@ -246,3 +247,9 @@ def test_yield_results_as_specified(plugin) -> None:
 def test_yield_metrics_as_specified(plugin) -> None:
     results = {r.name for r in generate_results(plugin) if isinstance(r, Metric)}
     assert results == set(plugin.metrics)
+
+
+def test_check_summary():
+    assets = parse_assets(ASSET_TABLE)
+    results = set(check_summary(section=assets))
+    assert results == {Result(state=State.OK, summary="1 Server", details="Found 1 server")}

@@ -200,3 +200,16 @@ register.check_plugin(
         "faas_execution_times": None,
     },
 )
+
+
+def check_summary(section: gcp.AssetSection) -> CheckResult:
+    yield from gcp.check_summary(ASSET_TYPE, "Service", section)
+
+
+register.check_plugin(
+    name="gcp_run_summary",
+    sections=["gcp_assets"],
+    service_name=service_namer.summary_name(),
+    discovery_function=gcp.discovery_summary,
+    check_function=check_summary,
+)

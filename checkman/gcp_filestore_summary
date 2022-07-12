@@ -1,0 +1,9 @@
+title: GCP Filestore: Summary
+agents: gcp
+catalog: cloud/gcp
+license: GPLv2
+distribution: check_mk
+description:
+ counts number of filestore instances
+discovery:
+ One service is created

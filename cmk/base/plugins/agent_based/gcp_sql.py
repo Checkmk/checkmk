@@ -237,3 +237,16 @@ register.check_plugin(
         "disk_read_ios": None,
     },
 )
+
+
+def check_summary(section: gcp.AssetSection) -> CheckResult:
+    yield from gcp.check_summary(ASSET_TYPE, "Server", section)
+
+
+register.check_plugin(
+    name="gcp_sql_summary",
+    sections=["gcp_assets"],
+    service_name=service_namer.summary_name(),
+    discovery_function=gcp.discovery_summary,
+    check_function=check_summary,
+)

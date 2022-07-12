@@ -30,6 +30,7 @@ def parse_assets(string_table: StringTable) -> AssetSection:
         "redis.googleapis.com/Instance": lambda a: a.resource_data["name"],
         "run.googleapis.com/Service": lambda a: a.resource_data["metadata"]["name"],
         "sqladmin.googleapis.com/Instance": lambda a: a.resource_data["name"],
+        "compute.googleapis.com/Instance": lambda a: a.resource_data["name"],
     }
     # fmt: on
     typed_assets: dict[AssetType, AssetTypeSection] = {}

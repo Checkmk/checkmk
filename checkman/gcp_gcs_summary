@@ -1,0 +1,9 @@
+title: GCP GCS: Summary
+agents: gcp
+catalog: cloud/gcp
+license: GPLv2
+distribution: check_mk
+description:
+ counts number of buckets
+discovery:
+ One service is created

@@ -1,0 +1,9 @@
+title: GCP Cloud Run: Summary
+agents: gcp
+catalog: cloud/gcp
+license: GPLv2
+distribution: check_mk
+description:
+ counts number of cloud run services
+discovery:
+ One service is created

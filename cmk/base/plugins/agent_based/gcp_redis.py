@@ -133,3 +133,16 @@ register.check_plugin(
     check_function=check_hitratio,
     check_default_parameters={"levels_upper_hitratio": None, "levels_lower_hitratio": None},
 )
+
+
+def check_summary(section: gcp.AssetSection) -> CheckResult:
+    yield from gcp.check_summary(ASSET_TYPE, "Instance", section)
+
+
+register.check_plugin(
+    name="gcp_redis_summary",
+    sections=["gcp_assets"],
+    service_name=service_namer.summary_name(),
+    discovery_function=gcp.discovery_summary,
+    check_function=check_summary,
+)

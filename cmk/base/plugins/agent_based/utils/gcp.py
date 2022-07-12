@@ -8,8 +8,8 @@ from dataclasses import dataclass
 from enum import IntEnum, unique
 from typing import Any, Callable, Mapping, Optional, Sequence
 
-from ..agent_based_api.v1 import check_levels, check_levels_predictive
-from ..agent_based_api.v1.type_defs import CheckResult, StringTable
+from ..agent_based_api.v1 import check_levels, check_levels_predictive, Result, Service, State
+from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 @dataclass(frozen=True)
@@ -202,8 +202,30 @@ def check(
     yield from generic_check(spec, timeseries, params)
 
 
-def service_name_factory(gcp_service: str) -> Callable[[str], str]:
-    def f(name: str) -> str:
-        return f"{gcp_service} - %s - {name}"
+class ServiceNamer:
+    def __init__(self, service: str) -> None:
+        self.service = service
 
-    return f
+    def __call__(self, name: str) -> str:
+        return f"{self.service} - %s - {name}"
+
+    def summary_name(self) -> str:
+        return f"{self.service} - summary"
+
+
+def service_name_factory(gcp_service: str) -> ServiceNamer:
+    return ServiceNamer(gcp_service)
+
+
+def discovery_summary(section: AssetSection) -> DiscoveryResult:
+    yield Service()
+
+
+def check_summary(asset_type: str, descriptor: str, section: AssetSection) -> CheckResult:
+    n = len(section[asset_type])
+    appendix = "s" if n > 1 else ""
+    yield Result(
+        state=State.OK,
+        summary=f"{n} {descriptor}{appendix}",
+        details=f"Found {n} {descriptor.lower() if not descriptor.isupper() else descriptor}{appendix}",
+    )

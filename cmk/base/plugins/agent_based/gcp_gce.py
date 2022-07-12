@@ -170,3 +170,21 @@ register.check_plugin(
     },
     check_function=check_disk_summary,
 )
+
+
+ASSET_TYPE = "compute.googleapis.com/Instance"
+
+
+def check_summary(section: gcp.AssetSection) -> CheckResult:
+    yield from gcp.check_summary(ASSET_TYPE, "VM", section)
+
+
+service_namer = gcp.service_name_factory("GCE")
+
+register.check_plugin(
+    name="gcp_gce_summary",
+    sections=["gcp_assets"],
+    service_name=service_namer.summary_name(),
+    discovery_function=gcp.discovery_summary,
+    check_function=check_summary,
+)

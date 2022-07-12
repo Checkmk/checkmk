@@ -121,3 +121,16 @@ register.check_plugin(
     check_function=check_gcp_gcs_object,
     check_default_parameters={"aws_bucket_size": None, "aws_num_objects": None},
 )
+
+
+def check_summary(section: gcp.AssetSection) -> CheckResult:
+    yield from gcp.check_summary(ASSET_TYPE, "Bucket", section)
+
+
+register.check_plugin(
+    name="gcp_gcs_summary",
+    sections=["gcp_assets"],
+    service_name=service_namer.summary_name(),
+    discovery_function=gcp.discovery_summary,
+    check_function=check_summary,
+)

@@ -15,7 +15,14 @@ from typing import Any, Callable, Dict, Generator, Iterable, List, Optional, Tup
 from cmk.utils.check_utils import maincheckify, unwrap_parameters, wrap_parameters
 
 from cmk.base import item_state  # pylint: disable=cmk-module-layer-violation
-from cmk.base.api.agent_based.checking_classes import CheckPlugin, Metric, Result, Service, State
+from cmk.base.api.agent_based.checking_classes import (
+    CheckPlugin,
+    CheckResult,
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
 from cmk.base.api.agent_based.type_defs import Parameters, ParametersTypeAlias
 
@@ -74,7 +81,7 @@ def _create_discovery_function(
 
     # 1) ensure we have the correct signature
     # 2) ensure it is a generator of Service instances
-    def discovery_migration_wrapper(section):
+    def discovery_migration_wrapper(section: object) -> object:
         disco_func = check_info_dict.get("inventory_function")
         if not callable(disco_func):  # never discover:
             return
@@ -174,7 +181,7 @@ def _create_check_function(name: str, check_info_dict: Dict[str, Any]) -> Callab
 
     # 2) unwrap parameters and ensure it is a generator of valid instances
     @functools.wraps(sig_function)
-    def check_result_generator(*args, **kwargs):
+    def check_result_generator(*args, **kwargs) -> CheckResult:
         assert not args, "pass arguments as keywords to check function"
         assert "params" in kwargs, "'params' is missing in kwargs: %r" % (kwargs,)
         parameters = kwargs["params"]
@@ -196,16 +203,13 @@ def _create_check_function(name: str, check_info_dict: Dict[str, Any]) -> Callab
 
         subresults = _normalize_check_function_return_value(sig_function(**kwargs))
 
-        # Do we have results with details?
-        try:
-            idx = next(i for i, val in enumerate(subresults) if "\n" in val[1])
-        except StopIteration:
-            idx = len(subresults)
+        for idx, subresult in enumerate(subresults):
 
-        for subresult in subresults[:idx]:
+            if "\n" in subresult[1]:
+                yield from _create_new_results_with_details(subresults[idx:])
+                break
+
             yield from _create_new_result(*subresult)
-
-        yield from _create_new_results_with_details(subresults[idx:])
 
         item_state.raise_counter_wrap()
 
@@ -214,7 +218,7 @@ def _create_check_function(name: str, check_info_dict: Dict[str, Any]) -> Callab
 
 def _create_new_results_with_details(
     results: list,
-) -> Generator[Union[Metric, Result], None, None]:
+) -> CheckResult:
     state_sorted = defaultdict(list)
     for result in results:
         state = State(result[0])
@@ -272,7 +276,7 @@ def _create_new_result(
     legacy_state: int,
     legacy_text: str,
     legacy_metrics: Union[Tuple, List] = (),
-) -> Generator[Union[Metric, Result], None, None]:
+) -> CheckResult:
 
     if legacy_state or legacy_text:  # skip "Null"-Result
         yield Result(state=State(legacy_state), summary=legacy_text.strip())
@@ -297,7 +301,7 @@ def _create_new_metric(legacy_metrics: Union[tuple, list] = ()) -> Generator[Met
 def _create_signature_check_function(
     requires_item: bool,
     original_function: Callable,
-) -> Callable:
+) -> Callable[..., tuple | Iterable[tuple]]:
     """Create the function for a check function with the required signature"""
     if requires_item:
 

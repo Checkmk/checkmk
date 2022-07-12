@@ -3,6 +3,7 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# mypy: disallow_untyped_defs
 
 import abc
 from typing import Any, Mapping, Optional, Sequence, Union
@@ -114,13 +115,13 @@ def generate_results(plugin: Plugin) -> CheckResult:
 
 
 @pytest.mark.parametrize("plugin", PLUGINS)
-def test_yield_results_as_specified(plugin) -> None:
+def test_yield_results_as_specified(plugin: Plugin) -> None:
     results = {r for r in generate_results(plugin) if isinstance(r, Result)}
     assert results == set(plugin.results)
 
 
 @pytest.mark.parametrize("plugin", PLUGINS)
-def test_yield_metrics_as_specified(plugin) -> None:
+def test_yield_metrics_as_specified(plugin: Plugin) -> None:
     results = {r.name for r in generate_results(plugin) if isinstance(r, Metric)}
     assert results == set(plugin.metrics)
 
@@ -168,7 +169,7 @@ class ABCTestRedisChecks(abc.ABC):
     )
     def test_yield_levels(
         self, state: State, hitratio: float, check: CheckFunction, summary_ext: str
-    ):
+    ) -> None:
         levels_upper = (80, 90)
         levels_lower = (40, 30)
         params = {"levels_upper_hitratio": levels_upper, "levels_lower_hitratio": levels_lower}
@@ -212,7 +213,7 @@ class TestRedisGCP(ABCTestRedisChecks):
         return parse(generate_timeseries(item, hitratio, REDIS))
 
 
-def test_hitratio_return_when_section_is_empty():
+def test_hitratio_return_when_section_is_empty() -> None:
     results = list(check_hitratio("item", {}, None, None))
     assert len(results) == 0
 
@@ -229,19 +230,19 @@ def test_hitratio_no_results_if_item_not_found() -> None:
     assert len(list(results)) == 0
 
 
-def test_check_summary():
+def test_check_summary() -> None:
     assets = parse_assets(ASSET_TABLE)
     results = set(check_summary(section=assets))
     assert results == {Result(state=State.OK, summary="1 Instance", details="Found 1 instance")}
 
 
-def test_summary_service_name():
+def test_summary_service_name() -> None:
     plugin = register.get_check_plugin(CheckPluginName("gcp_redis_summary"))
     assert plugin is not None
     assert plugin.service_name == "Redis - summary"
 
 
-def test_service_name():
+def test_service_name() -> None:
     plugin = register.get_check_plugin(CheckPluginName("gcp_redis_hitratio"))
     assert plugin is not None
     assert plugin.service_name == "Redis - %s - hitratio"

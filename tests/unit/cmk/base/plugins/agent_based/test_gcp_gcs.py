@@ -3,6 +3,7 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# mypy: disallow_untyped_defs
 
 from typing import Optional
 
@@ -145,18 +146,18 @@ def generate_results(plugin: Plugin) -> CheckResult:
 
 
 @pytest.mark.parametrize("plugin", PLUGINS)
-def test_yield_results_as_specified(plugin) -> None:
+def test_yield_results_as_specified(plugin: Plugin) -> None:
     results = {r for r in generate_results(plugin) if isinstance(r, Result)}
     assert results == set(plugin.results)
 
 
 @pytest.mark.parametrize("plugin", PLUGINS)
-def test_yield_metrics_as_specified(plugin) -> None:
+def test_yield_metrics_as_specified(plugin: Plugin) -> None:
     results = {r.name for r in generate_results(plugin) if isinstance(r, Metric)}
     assert results == set(plugin.metrics)
 
 
-def test_check_summary():
+def test_check_summary() -> None:
     assets = parse_assets(ASSET_TABLE)
     results = set(check_summary(section=assets))
     assert results == {Result(state=State.OK, summary="4 Buckets", details="Found 4 buckets")}

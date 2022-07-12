@@ -3,6 +3,7 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# mypy: disallow_untyped_defs
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.gcp_assets import parse_assets
 from cmk.base.plugins.agent_based.gcp_gce import (
@@ -125,7 +126,7 @@ ASSET_TABLE = [
 ]
 
 
-def test_check_summary():
+def test_check_summary() -> None:
     assets = parse_assets(ASSET_TABLE)
     results = set(check_summary(section=assets))
     assert results == {Result(state=State.OK, summary="1 VM", details="Found 1 VM")}

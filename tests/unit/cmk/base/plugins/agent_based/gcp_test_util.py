@@ -3,6 +3,7 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# mypy: disallow_untyped_defs
 import datetime
 import json
 from abc import ABC, abstractmethod
@@ -54,7 +55,7 @@ class DiscoverTester(ABC):
         return parse_assets(self._assets)
 
     @pytest.fixture(name="services")
-    def fixture_services(self, asset_section):
+    def fixture_services(self, asset_section: gcp.AssetSection) -> Sequence[Service]:
         return list(self.discover(assets=asset_section))
 
     #######################
@@ -111,7 +112,7 @@ class Plugin:
     results: Sequence[Result]
     function: Callable[..., CheckResult]
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         assert len(self.metrics) == len(
             self.results
         ), "expect to have the same number of metrics and results"

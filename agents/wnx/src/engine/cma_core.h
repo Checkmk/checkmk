@@ -569,7 +569,7 @@ protected:
     bool registerProcess(uint32_t Id);
     // this is not normal situation
     // as a rule only after timeout
-    void unregisterProcess();
+    void unregisterProcess() noexcept;
 
 private:
     wtools::InternalUser iu_;

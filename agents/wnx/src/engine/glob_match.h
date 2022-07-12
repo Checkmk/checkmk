@@ -19,12 +19,12 @@ namespace cma::tools::gm {
 template <typename T>
 T MakeQuestionMark();
 template <>
-inline char MakeQuestionMark<char>() {
+inline char MakeQuestionMark<char>() noexcept {
     return '?';
 }
 
 template <>
-inline wchar_t MakeQuestionMark<wchar_t>() {
+inline wchar_t MakeQuestionMark<wchar_t>() noexcept {
     return L'?';
 }
 
@@ -32,12 +32,12 @@ inline wchar_t MakeQuestionMark<wchar_t>() {
 template <typename T>
 T MakeCap();
 template <>
-inline char MakeCap<char>() {
+inline char MakeCap<char>() noexcept {
     return '^';
 }
 
 template <>
-inline wchar_t MakeCap<wchar_t>() {
+inline wchar_t MakeCap<wchar_t>() noexcept {
     return L'^';
 }
 
@@ -45,12 +45,12 @@ inline wchar_t MakeCap<wchar_t>() {
 template <typename T>
 T MakeDot();
 template <>
-inline char MakeDot<char>() {
+inline char MakeDot<char>() noexcept {
     return '.';
 }
 
 template <>
-inline wchar_t MakeDot<wchar_t>() {
+inline wchar_t MakeDot<wchar_t>() noexcept {
     return L'.';
 }
 
@@ -58,12 +58,12 @@ inline wchar_t MakeDot<wchar_t>() {
 template <typename T>
 T MakeDollar();
 template <>
-inline char MakeDollar<char>() {
+inline char MakeDollar<char>() noexcept {
     return '$';
 }
 
 template <>
-inline wchar_t MakeDollar<wchar_t>() {
+inline wchar_t MakeDollar<wchar_t>() noexcept {
     return L'$';
 }
 
@@ -71,33 +71,33 @@ inline wchar_t MakeDollar<wchar_t>() {
 template <typename T>
 T MakeStar();
 template <>
-inline char MakeStar<char>() {
+inline char MakeStar<char>() noexcept {
     return '*';
 }
 
 template <>
-inline wchar_t MakeStar<wchar_t>() {
+inline wchar_t MakeStar<wchar_t>() noexcept {
     return L'*';
 }
 
 template <typename T>
-inline T MakeBackSlash() {}
+inline T MakeBackSlash() noexcept {}
 
 template <>
-inline char MakeBackSlash<char>() {
+inline char MakeBackSlash<char>() noexcept {
     return '\\';
 }
 template <>
-inline wchar_t MakeBackSlash<wchar_t>() {
+inline wchar_t MakeBackSlash<wchar_t>() noexcept {
     return L'\\';
 }
 
-inline bool NeedsEscape(char c) {
+constexpr bool NeedsEscape(char c) {
     const std::string s{"$()+.[]^{|}\\"};
     return s.find(c) != std::string::npos;
 }
 
-inline bool NeedsEscape(wchar_t c) {
+constexpr bool NeedsEscape(wchar_t c) {
     const std::wstring s{L"$()+.[]^{|}\\"};
     return s.find(c) != std::wstring::npos;
 }
@@ -106,8 +106,7 @@ template <typename T>
 void InsertEscapes(std::basic_string<T> &pattern) {
     // Escape special characters (apart from '*' and '?')
     for (size_t pos = 0; pos != pattern.size(); ++pos) {
-        auto insert_escape = NeedsEscape(pattern[pos]);
-        if (insert_escape) {
+        if (NeedsEscape(pattern[pos])) {
             pattern.insert(pos++, 1, MakeBackSlash<T>());
         }
     }

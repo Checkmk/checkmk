@@ -455,7 +455,6 @@ def _get_files(history: History, logger: Logger, query: QueryGET) -> Iterable[An
         "event_text",
         "event_comment",
         "event_host",
-        "event_host_regex",
         "event_contact",
         "event_application",
         "event_rule_id",

@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: marketing@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2022-07-11 17:06+0000\n"
 "Last-Translator: Jörg Herbel <joerg.herbel@tribe29.com>\n"
@@ -37854,6 +37854,14 @@ msgstr ""
 "Actualizar la configuración de comprobación del host [%s] con los servicios "
 "%d"
 
+#, python-format
+msgid "Refusing to read file not owned by site user: \"%s\""
+msgstr ""
+
+#, python-format
+msgid "Refusing to read world writable file: \"%s\""
+msgstr ""
+
 msgid "Regard required mirror space as free space"
 msgstr "Considerar el espacio de réplica necesario como espacio libre"
 
@@ -39775,6 +39783,9 @@ msgstr "Recompilaciones SQL/seg."
 
 msgid "SQL-Server to connect to"
 msgstr "Servidor SQL al que conectarse"
+
+msgid "SQLAnywhere"
+msgstr ""
 
 msgid "SSH Port"
 msgstr "Puerto SSH"

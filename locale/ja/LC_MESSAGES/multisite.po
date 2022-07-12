@@ -36064,6 +36064,14 @@ msgstr "ホスト '%s' の確認設定を更新しました"
 msgid "Refreshed check configuration of host [%s] with %d services"
 msgstr "ホスト[%s]のチェック構成を%dサービスでリフレッシュしました"
 
+#, python-format
+msgid "Refusing to read file not owned by site user: \"%s\""
+msgstr ""
+
+#, python-format
+msgid "Refusing to read world writable file: \"%s\""
+msgstr ""
+
 msgid "Regard required mirror space as free space"
 msgstr "必要なミラースペースを空きスペースと見なします"
 
@@ -37914,6 +37922,9 @@ msgstr "SQL再コンパイル/秒"
 
 msgid "SQL-Server to connect to"
 msgstr "接続するSQL-Server"
+
+msgid "SQLAnywhere"
+msgstr ""
 
 msgid "SSH Port"
 msgstr "SSHポート"

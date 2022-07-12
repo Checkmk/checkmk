@@ -36505,6 +36505,14 @@ msgstr ""
 msgid "Refreshed check configuration of host [%s] with %d services"
 msgstr ""
 
+#, python-format
+msgid "Refusing to read file not owned by site user: \"%s\""
+msgstr ""
+
+#, python-format
+msgid "Refusing to read world writable file: \"%s\""
+msgstr ""
+
 msgid "Regard required mirror space as free space"
 msgstr ""
 
@@ -38445,6 +38453,9 @@ msgid "SQL Re-Compilations/sec"
 msgstr ""
 
 msgid "SQL-Server to connect to"
+msgstr ""
+
+msgid "SQLAnywhere"
 msgstr ""
 
 #, fuzzy

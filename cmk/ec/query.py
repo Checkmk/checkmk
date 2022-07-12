@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from logging import Logger
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Literal, Optional
 
 import cmk.utils.regex
 from cmk.utils.exceptions import MKException
@@ -52,24 +52,30 @@ def filter_operator_in(a: Any, b: Any) -> bool:
     return a.lower() in (e.lower() for e in b)
 
 
-_filter_operators: dict[str, Callable[[Any, Any], bool]] = {
-    "=": (lambda a, b: a == b),
-    ">": (lambda a, b: a > b),
-    "<": (lambda a, b: a < b),
-    ">=": (lambda a, b: a >= b),
-    "<=": (lambda a, b: a <= b),
-    "~": (lambda a, b: bool(cmk.utils.regex.regex(b).search(a))),
-    "=~": (lambda a, b: a.lower() == b.lower()),
-    "~~": (lambda a, b: bool(cmk.utils.regex.regex(b.lower()).search(a.lower()))),
-    "in": filter_operator_in,
+OperatorName = Literal["=", ">", "<", ">=", "<=", "~", "=~", "~~", "in"]
+
+
+# NOTE: mypy is currently too dumb to narrow down a type via "in" or "get()", so we have to work
+# around that somehow: We either duplicate the operator names below or we introduce a case in
+# operator_for(). We're choosing evil no. 1... :-/
+_filter_operators: dict[str, tuple[OperatorName, Callable[[Any, Any], bool]]] = {
+    "=": ("=", lambda a, b: a == b),
+    ">": (">", lambda a, b: a > b),
+    "<": ("<", lambda a, b: a < b),
+    ">=": (">=", lambda a, b: a >= b),
+    "<=": ("<=", lambda a, b: a <= b),
+    "~": ("~", lambda a, b: bool(cmk.utils.regex.regex(b).search(a))),
+    "=~": ("=~", lambda a, b: a.lower() == b.lower()),
+    "~~": ("~~", lambda a, b: bool(cmk.utils.regex.regex(b.lower()).search(a.lower()))),
+    "in": ("in", filter_operator_in),
 }
 
 
-def operator_for(name: str) -> Callable[[Any, Any], bool]:
-    func = _filter_operators.get(name)
-    if func is None:
+def operator_for(name: str) -> tuple[OperatorName, Callable[[Any, Any], bool]]:
+    name_and_func = _filter_operators.get(name)
+    if name_and_func is None:
         raise MKClientError("Unknown filter operator '%s'" % name)
-    return func
+    return name_and_func
 
 
 class QueryGET(Query):
@@ -79,7 +85,7 @@ class QueryGET(Query):
         self.table = status_server.table(self.table_name)
         self.requested_columns = self.table.column_names
         # NOTE: history's _get_mongodb and _get_files access filters and limits directly.
-        self.filters: list[tuple[str, str, Callable, Any]] = []
+        self.filters: list[tuple[str, OperatorName, Callable, Any]] = []
         self.limit: Optional[int] = None
         # NOTE: StatusTableEvents uses only_host for optimization.
         self.only_host: Optional[set[Any]] = None
@@ -113,7 +119,7 @@ class QueryGET(Query):
         else:
             logger.info("Ignoring not-implemented header %s" % header)
 
-    def _parse_filter(self, textspec: str) -> tuple[str, str, Callable[[Any], bool], Any]:
+    def _parse_filter(self, textspec: str) -> tuple[str, OperatorName, Callable[[Any], bool], Any]:
         # Examples:
         # id = 17
         # name ~= This is some .* text
@@ -130,6 +136,7 @@ class QueryGET(Query):
                 f"Unknown column: {column} (Available are: {self.table.column_names})"
             )
 
+        op_name, operator_function = operator_for(operator_name)
         # TODO: BUG: The query is decoded to unicode after receiving it from
         # the socket. The columns with type str (initialied with "") will apply
         # str(argument) here and convert the value back to str! This will crash
@@ -139,12 +146,11 @@ class QueryGET(Query):
         # TODO: Fix the typing chaos below!
         argument = (
             [convert(arg) for arg in raw_argument.split()]
-            if operator_name == "in"
+            if op_name == "in"
             else convert(raw_argument)
         )
 
-        operator_function = operator_for(operator_name)
-        return (column, operator_name, lambda x: operator_function(x, argument), argument)
+        return (column, op_name, lambda x: operator_function(x, argument), argument)
 
     def requested_column_indexes(self) -> list[Optional[int]]:
         # If a column is not known: Use None as index and None value later.

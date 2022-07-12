@@ -12,13 +12,15 @@ from logging import Logger
 from pathlib import Path
 from typing import Any, AnyStr, Iterable, Optional, Union
 
+from typing_extensions import assert_never
+
 from cmk.utils.log import VERBOSE
 from cmk.utils.misc import quote_shell_string
 from cmk.utils.render import date_and_time
 
 from .config import Config
 from .event import Event
-from .query import QueryGET
+from .query import OperatorName, QueryGET
 from .settings import Settings
 
 # TODO: As one can see clearly below, we should really have a class hierarchy here...
@@ -247,9 +249,7 @@ def _get_mongodb(  # pylint: disable=too-many-branches
         elif operator_name == "in":
             mongo_filter = {"$in": argument}
         else:
-            raise Exception(
-                "Filter operator of filter %s not implemented for MongoDB archive" % column_name
-            )
+            assert_never(operator_name)
 
         if column_name[:6] == "event_":
             mongo_query["event." + column_name[6:]] = mongo_filter
@@ -478,7 +478,10 @@ def _get_files(history: History, logger: Logger, query: QueryGET) -> Iterable[An
         # actual logfiles. They will be joined with ".*"!
         try:
             nr = grepping_filters.index(column_name)
-            if operator_name in ["=", "~~"]:
+            if operator_name == "=":
+                grep_pairs.append((nr, str(argument)))
+            if operator_name == "~~":
+                # NOTE: We should probably do something different here!
                 grep_pairs.append((nr, str(argument)))
         except Exception:
             pass
@@ -526,7 +529,9 @@ def _get_files(history: History, logger: Logger, query: QueryGET) -> Iterable[An
     return history_entries
 
 
-def _greatest_lower_bound_for_filters(filters: Iterable[tuple[str, float]]) -> Optional[float]:
+def _greatest_lower_bound_for_filters(
+    filters: Iterable[tuple[OperatorName, float]]
+) -> Optional[float]:
     result: Optional[float] = None
     for operator, value in filters:
         glb = _greatest_lower_bound_for_filter(operator, value)
@@ -535,15 +540,19 @@ def _greatest_lower_bound_for_filters(filters: Iterable[tuple[str, float]]) -> O
     return result
 
 
-def _greatest_lower_bound_for_filter(operator: str, value: float) -> Optional[float]:
-    if operator in ("==", ">="):
+def _greatest_lower_bound_for_filter(operator: OperatorName, value: float) -> Optional[float]:
+    if operator == "=":
+        return value
+    if operator == ">=":
         return value
     if operator == ">":
         return value + 1
     return None
 
 
-def _least_upper_bound_for_filters(filters: Iterable[tuple[str, float]]) -> Optional[float]:
+def _least_upper_bound_for_filters(
+    filters: Iterable[tuple[OperatorName, float]]
+) -> Optional[float]:
     result: Optional[float] = None
     for operator, value in filters:
         lub = _least_upper_bound_for_filter(operator, value)
@@ -552,8 +561,10 @@ def _least_upper_bound_for_filters(filters: Iterable[tuple[str, float]]) -> Opti
     return result
 
 
-def _least_upper_bound_for_filter(operator: str, value: float) -> Optional[float]:
-    if operator in ("==", "<="):
+def _least_upper_bound_for_filter(operator: OperatorName, value: float) -> Optional[float]:
+    if operator == "=":
+        return value
+    if operator == "<=":
         return value
     if operator == "<":
         return value - 1

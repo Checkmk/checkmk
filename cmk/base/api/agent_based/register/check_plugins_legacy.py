@@ -10,7 +10,7 @@ import functools
 import itertools
 from collections import defaultdict
 from contextlib import suppress
-from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Generator, Iterable, List, Optional, Tuple, Union
 
 from cmk.utils.check_utils import maincheckify, unwrap_parameters, wrap_parameters
 
@@ -138,6 +138,27 @@ def _resolve_string_parameters(
         )
 
 
+def _normalize_check_function_return_value(subresults: object) -> list:
+    """Normalize the return value of a check function
+
+    Check functions are known to (and *should*) either return
+     * None
+     * a single subresult (a tuple)
+     * a list of subresults
+     * a generator of subresults
+
+    However, anything that was an iterable of subresults worked in the past, so we just try our
+    best to normalize it.
+    """
+    if subresults is None:
+        return []
+    if isinstance(subresults, tuple):
+        return [subresults]
+    if isinstance(subresults, Iterable):
+        return list(subresults)
+    raise TypeError(f"expected None, Tuple or Iterable, got {subresults=}")
+
+
 def _create_check_function(name: str, check_info_dict: Dict[str, Any]) -> Callable:
     """Create an API compliant check function"""
     service_descr = check_info_dict["service_description"]
@@ -173,15 +194,7 @@ def _create_check_function(name: str, check_info_dict: Dict[str, Any]) -> Callab
             # our tests complain about the ruleset not being for plugins with item :-(
             kwargs = {k: v for k, v in kwargs.items() if k != "item"}
 
-        subresults = sig_function(**kwargs)
-
-        if subresults is None:
-            return
-
-        if isinstance(subresults, tuple):  # just one result
-            subresults = [subresults]
-        else:
-            subresults = list(subresults)
+        subresults = _normalize_check_function_return_value(sig_function(**kwargs))
 
         # Do we have results with details?
         try:

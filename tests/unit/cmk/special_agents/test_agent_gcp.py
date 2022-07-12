@@ -3,11 +3,13 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# mypy: disallow_untyped_defs
 import datetime
 import json
-from typing import Any, Iterable, Optional, Sequence
+from typing import Any, Callable, Iterable, Optional, Sequence
 
 import pytest
+from _pytest.capture import CaptureFixture
 from google.cloud import asset_v1, monitoring_v3
 from google.cloud.monitoring_v3 import Aggregation
 from google.cloud.monitoring_v3.types import TimeSeries
@@ -56,7 +58,9 @@ class FakeMonitoringClient:
                 yield agent_gcp.Result.deserialize(ts).ts
 
     def _fixed_list_time_series(self) -> Iterable[TimeSeries]:
-        def _make_interval(end_time, start_time):
+        def _make_interval(
+            end_time: datetime.datetime, start_time: datetime.datetime
+        ) -> monitoring_v3.TimeInterval:
             interval = monitoring_v3.TimeInterval(end_time=end_time, start_time=start_time)
             return interval
 
@@ -131,8 +135,10 @@ class FakeClient:
         return self.asset_client.list_assets(request)
 
 
-def collector_factory(container: list[agent_gcp.Section]):
-    def f(sections: Iterable[agent_gcp.Section]):
+def collector_factory(
+    container: list[agent_gcp.Section],
+) -> Callable[[Iterable[agent_gcp.Section]], None]:
+    def f(sections: Iterable[agent_gcp.Section]) -> None:
         container.extend(list(sections))
 
     return f
@@ -159,7 +165,9 @@ def test_output_contains_one_asset_section(agent_output: Sequence[agent_gcp.Sect
     assert asset_sections[0].project == "test"
 
 
-def test_metric_serialization(agent_output: Sequence[agent_gcp.Section], capsys) -> None:
+def test_metric_serialization(
+    agent_output: Sequence[agent_gcp.Section], capsys: CaptureFixture
+) -> None:
     result_section = next(s for s in agent_output if isinstance(s, agent_gcp.ResultSection))
     agent_gcp.gcp_serializer([result_section])
     captured = capsys.readouterr()
@@ -184,7 +192,9 @@ def test_metric_retrieval() -> None:
     assert len(results) == len(agent_gcp.RUN.metrics)
 
 
-def test_asset_serialization(agent_output: Sequence[agent_gcp.Section], capsys) -> None:
+def test_asset_serialization(
+    agent_output: Sequence[agent_gcp.Section], capsys: CaptureFixture
+) -> None:
     asset_section = next(s for s in agent_output if isinstance(s, agent_gcp.AssetSection))
     agent_gcp.gcp_serializer([asset_section])
     captured = capsys.readouterr()
@@ -196,7 +206,7 @@ def test_asset_serialization(agent_output: Sequence[agent_gcp.Section], capsys) 
 
 
 @pytest.fixture(name="piggy_back_sections")
-def piggy_back_sections_fixture():
+def piggy_back_sections_fixture() -> Sequence[agent_gcp.PiggyBackSection]:
     client = FakeClient("test", FakeMonitoringClient(), FakeAssetClient())
     sections: list[agent_gcp.Section] = []
     collector = collector_factory(sections)
@@ -235,16 +245,20 @@ def test_can_hash_client() -> None:
     assert hash(client)
 
 
-def test_piggyback_identify_hosts(piggy_back_sections) -> None:
+def test_piggyback_identify_hosts(
+    piggy_back_sections: Sequence[agent_gcp.PiggyBackSection],
+) -> None:
     assert piggy_back_sections[0].name == "a"
     assert piggy_back_sections[1].name == "b"
 
 
-def test_serialize_piggy_back_section(piggy_back_sections, capsys) -> None:
+def test_serialize_piggy_back_section(
+    piggy_back_sections: Sequence[agent_gcp.PiggyBackSection], capsys: CaptureFixture
+) -> None:
     section = piggy_back_sections[1]
     agent_gcp.gcp_serializer([section])
     captured = capsys.readouterr()
-    output = captured.out.rstrip().split("\n")
+    output: Sequence[str] = captured.out.rstrip().split("\n")
     assert output[0] == f"<<<<{section.name}>>>>"
     assert output[-1] == "<<<<>>>>"
 
@@ -260,7 +274,9 @@ def test_serialize_piggy_back_section(piggy_back_sections, capsys) -> None:
     assert section_names == {"gcp_service_testing_uptime:sep(0)"}
 
 
-def test_piggy_back_sort_values_to_host(piggy_back_sections) -> None:
+def test_piggy_back_sort_values_to_host(
+    piggy_back_sections: Sequence[agent_gcp.PiggyBackSection],
+) -> None:
     # I need two sections I can compare
     assert len(piggy_back_sections) == 2
     host_a = piggy_back_sections[0]
@@ -269,7 +285,7 @@ def test_piggy_back_sort_values_to_host(piggy_back_sections) -> None:
     assert next(next(host_b.sections).results).ts.points[0].value.double_value == pytest.approx(42)
 
 
-def test_piggy_back_host_labels(piggy_back_sections) -> None:
+def test_piggy_back_host_labels(piggy_back_sections: Sequence[agent_gcp.PiggyBackSection]) -> None:
     assert piggy_back_sections[0].labels == {
         "gcp/labels/van": "halen",
         "gcp/labels/iron": "maiden",

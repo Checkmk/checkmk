@@ -3,11 +3,12 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# mypy: disallow_untyped_defs
 import json
 import time
 from dataclasses import dataclass, field
 from functools import cache
-from typing import Any, Callable, Iterable, Mapping, Optional, Protocol, Sequence, Union
+from typing import Any, Callable, Iterable, Iterator, Mapping, Optional, Protocol, Sequence, Union
 
 from google.cloud import asset_v1, monitoring_v3
 from google.cloud.monitoring_v3 import Aggregation as gAggregation
@@ -61,11 +62,11 @@ class Client:
     project: str
 
     @cache  # pylint: disable=method-cache-max-size-none
-    def monitoring(self):
+    def monitoring(self) -> monitoring_v3.MetricServiceClient:
         return monitoring_v3.MetricServiceClient.from_service_account_info(self.account_info)
 
     @cache  # pylint: disable=method-cache-max-size-none
-    def asset(self):
+    def asset(self) -> asset_v1.AssetServiceClient:
         return asset_v1.AssetServiceClient.from_service_account_info(self.account_info)
 
     def list_time_series(self, request: Any) -> Iterable[TimeSeries]:
@@ -165,7 +166,7 @@ class Result:
     ts: TimeSeries
 
     @staticmethod
-    def serialize(obj) -> str:
+    def serialize(obj: "Result") -> str:
         return json.dumps(TimeSeries.to_dict(obj.ts))
 
     @classmethod
@@ -185,7 +186,7 @@ class AssetSection:
 @dataclass(frozen=True)
 class ResultSection:
     name: str
-    results: Iterable[Result]
+    results: Iterator[Result]
 
 
 @dataclass(frozen=True)
@@ -193,7 +194,7 @@ class PiggyBackSection:
     name: str
     service_name: str
     labels: Labels
-    sections: Iterable[ResultSection]
+    sections: Iterator[ResultSection]
 
 
 Section = Union[AssetSection, ResultSection, PiggyBackSection]
@@ -203,20 +204,20 @@ Section = Union[AssetSection, ResultSection, PiggyBackSection]
 #################
 
 
-def _asset_serializer(section: AssetSection):
+def _asset_serializer(section: AssetSection) -> None:
     with SectionWriter("gcp_assets") as w:
         w.append(json.dumps(dict(project=section.project, config=section.config)))
         for a in section.assets:
             w.append(Asset.serialize(a))
 
 
-def _result_serializer(section: ResultSection):
+def _result_serializer(section: ResultSection) -> None:
     with SectionWriter(f"gcp_service_{section.name}") as w:
         for r in section.results:
             w.append(Result.serialize(r))
 
 
-def _piggyback_serializer(section: PiggyBackSection):
+def _piggyback_serializer(section: PiggyBackSection) -> None:
     with ConditionalPiggybackSection(section.name):
         with SectionWriter("labels") as w:
             w.append(json.dumps(section.labels))
@@ -250,7 +251,7 @@ class ResourceFilter:
 
 def time_series(
     client: ClientProtocol, service: Service, filter_by: Optional[ResourceFilter]
-) -> Iterable[Result]:
+) -> Iterator[Result]:
     now = time.time()
     seconds = int(now)
     nanos = int((now - seconds) * 10**9)
@@ -282,7 +283,7 @@ def time_series(
 
 def run_metrics(
     client: ClientProtocol, services: Iterable[Service], filter_by: Optional[ResourceFilter] = None
-) -> Iterable[ResultSection]:
+) -> Iterator[ResultSection]:
     for s in services:
         yield ResultSection(s.name, time_series(client, s, filter_by))
 

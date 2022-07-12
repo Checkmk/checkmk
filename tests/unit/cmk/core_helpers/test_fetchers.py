@@ -225,7 +225,7 @@ class TestIPMIFetcher:
             assert get_raw_data(file_cache, fetcher, Mode.CHECKING).is_ok()
 
     def test_command_raises_IpmiException_handling(self, monkeypatch: MonkeyPatch) -> None:
-        def open_(*args: object):
+        def open_(*args: object):  # type:ignore[no-untyped-def]
             raise IpmiException()
 
         monkeypatch.setattr(IPMIFetcher, "open", open_)

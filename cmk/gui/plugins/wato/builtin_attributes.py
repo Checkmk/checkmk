@@ -384,7 +384,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
             description="A list of parents of this host.",
         )
 
-    def is_visible(self, for_what, new) -> bool:
+    def is_visible(self, for_what, new) -> bool:  # type:ignore[no-untyped-def]
         return for_what != "cluster"
 
     def to_nagios(self, value):
@@ -1084,7 +1084,7 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
             ),
         )
 
-    def filter_matches(
+    def filter_matches(  # type:ignore[no-untyped-def]
         self, crit: list[str], value: Union[list[str], tuple[str, str, str]], hostname
     ) -> bool:
         return crit == list(value)

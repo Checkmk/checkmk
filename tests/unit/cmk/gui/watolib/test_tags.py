@@ -84,13 +84,13 @@ wato_tags = %s
         tags_mk.unlink()
 
 
-def test_tag_config_load(test_cfg) -> None:
+def test_tag_config_load(test_cfg) -> None:  # type:ignore[no-untyped-def]
     assert len(test_cfg.tag_groups) == 2
     assert len(test_cfg.aux_tag_list.get_tags()) == 1
 
 
 @pytest.mark.usefixtures("test_cfg")
-def test_tag_config_save(mocker) -> None:
+def test_tag_config_save(mocker) -> None:  # type:ignore[no-untyped-def]
     export_mock = mocker.patch.object(cmk.gui.watolib.tags, "_export_hosttags_to_php")
 
     config_file = TagConfigFile()

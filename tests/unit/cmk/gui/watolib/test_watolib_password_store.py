@@ -108,7 +108,7 @@ def test_password_store_save(store: PasswordStore) -> None:
 
 
 @pytest.fixture(name="test_store")
-def fixture_test_store(store) -> PasswordStore:
+def fixture_test_store(store) -> PasswordStore:  # type:ignore[no-untyped-def]
     entries = {
         "ding": Password(
             {
@@ -126,21 +126,21 @@ def fixture_test_store(store) -> PasswordStore:
 
 
 @pytest.mark.usefixtures("with_admin_login")
-def test_password_store_filter_usable_entries_by_permission(
+def test_password_store_filter_usable_entries_by_permission(  # type:ignore[no-untyped-def]
     test_store: PasswordStore,
 ):
     assert test_store.filter_usable_entries(test_store.load_for_reading()) != {}
 
 
 @pytest.mark.usefixtures("with_user_login")
-def test_password_store_filter_usable_entries_not_permitted(
+def test_password_store_filter_usable_entries_not_permitted(  # type:ignore[no-untyped-def]
     test_store: PasswordStore,
 ):
     assert test_store.filter_usable_entries(test_store.load_for_reading()) == {}
 
 
 @pytest.mark.usefixtures("with_user_login")
-def test_password_store_filter_usable_entries_shared_with_user_group(
+def test_password_store_filter_usable_entries_shared_with_user_group(  # type:ignore[no-untyped-def]
     test_store: PasswordStore, monkeypatch: pytest.MonkeyPatch
 ):
     monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group2"])
@@ -148,7 +148,7 @@ def test_password_store_filter_usable_entries_shared_with_user_group(
 
 
 @pytest.mark.usefixtures("with_user_login")
-def test_password_store_filter_usable_entries_owned_by_user_group(
+def test_password_store_filter_usable_entries_owned_by_user_group(  # type:ignore[no-untyped-def]
     test_store: PasswordStore, monkeypatch: pytest.MonkeyPatch
 ):
     monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group1"])
@@ -156,21 +156,21 @@ def test_password_store_filter_usable_entries_owned_by_user_group(
 
 
 @pytest.mark.usefixtures("with_admin_login")
-def test_password_store_filter_editable_entries_by_permission(
+def test_password_store_filter_editable_entries_by_permission(  # type:ignore[no-untyped-def]
     test_store: PasswordStore,
 ):
     assert test_store.filter_editable_entries(test_store.load_for_reading()) != {}
 
 
 @pytest.mark.usefixtures("with_user_login")
-def test_password_store_filter_editable_entries_not_permitted(
+def test_password_store_filter_editable_entries_not_permitted(  # type:ignore[no-untyped-def]
     test_store: PasswordStore,
 ):
     assert test_store.filter_editable_entries(test_store.load_for_reading()) == {}
 
 
 @pytest.mark.usefixtures("with_user_login")
-def test_password_store_filter_editable_entries_shared_with_user_group(
+def test_password_store_filter_editable_entries_shared_with_user_group(  # type:ignore[no-untyped-def]
     test_store: PasswordStore, monkeypatch: pytest.MonkeyPatch
 ):
     monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group2"])
@@ -178,7 +178,7 @@ def test_password_store_filter_editable_entries_shared_with_user_group(
 
 
 @pytest.mark.usefixtures("with_user_login")
-def test_password_store_filter_editable_entries_owned_by_user_group(
+def test_password_store_filter_editable_entries_owned_by_user_group(  # type:ignore[no-untyped-def]
     test_store: PasswordStore, monkeypatch: pytest.MonkeyPatch
 ):
     monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group1"])

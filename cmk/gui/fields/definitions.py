@@ -96,7 +96,9 @@ class PythonString(base.String):
 
     """
 
-    def _serialize(self, value, attr, obj, **kwargs) -> typing.Optional[str]:
+    def _serialize(  # type:ignore[no-untyped-def]
+        self, value, attr, obj, **kwargs
+    ) -> typing.Optional[str]:
         return repr(value)
 
     def _deserialize(self, value, attr, data, **kwargs):
@@ -211,7 +213,9 @@ class FolderField(base.String):
                 raise self.make_error("not_found", folder_id=value)
         return None
 
-    def _serialize(self, value, attr, obj, **kwargs) -> typing.Optional[str]:
+    def _serialize(  # type:ignore[no-untyped-def]
+        self, value, attr, obj, **kwargs
+    ) -> typing.Optional[str]:
         if isinstance(value, str):
             if not value.startswith("/"):
                 value = f"/{value}"
@@ -361,7 +365,9 @@ class _ExprNested(base.Nested):
         return tree_to_expr(_data, table=self.metadata["table"])
 
 
-def query_field(table: typing.Type[Table], required: bool = False, example=None) -> base.Nested:
+def query_field(  # type:ignore[no-untyped-def]
+    table: typing.Type[Table], required: bool = False, example=None
+) -> base.Nested:
     """Returns a Nested ExprSchema Field which validates a Livestatus query.
 
     Args:
@@ -467,7 +473,7 @@ class _ListOfColumns(base.List):
         "unknown_column": "Unknown default column: {table_name}.{column_name}",
     }
 
-    def __init__(
+    def __init__(  # type:ignore[no-untyped-def]
         self,
         cls_or_instance: typing.Union[_fields.Field, type],
         table: typing.Type[Table],
@@ -544,7 +550,7 @@ class HostField(base.String):
         "invalid_name": "The provided name for host {host_name!r} is invalid: {invalid_reason!r}",
     }
 
-    def __init__(
+    def __init__(  # type:ignore[no-untyped-def]
         self,
         example="example.com",
         pattern=HOST_NAME_REGEXP,
@@ -667,7 +673,9 @@ class CustomAttributes(ValueTypedDictSchema):
     )
 
     @post_load
-    def _valid(self, data: dict[str, Any], **kwargs) -> dict[str, Any]:
+    def _valid(  # type:ignore[no-untyped-def]
+        self, data: dict[str, Any], **kwargs
+    ) -> dict[str, Any]:
         # NOTE
         # If an attribute gets deleted AFTER it has already been set to a host or a folder,
         # then this would break here. We therefore can't validate outbound data as thoroughly
@@ -747,7 +755,9 @@ class TagGroupAttributes(ValueTypedDictSchema):
         return allowed_ids
 
     @pre_dump
-    def _pre_dump(self, data: dict[str, str], **kwargs) -> dict[str, str]:
+    def _pre_dump(  # type:ignore[no-untyped-def]
+        self, data: dict[str, str], **kwargs
+    ) -> dict[str, str]:
         rv: dict[str, str] = {}
         for key, value in data.items():
             allowed_ids = self._validate_tag_group(key)
@@ -760,7 +770,9 @@ class TagGroupAttributes(ValueTypedDictSchema):
         return rv
 
     @post_load
-    def _post_load(self, data: dict[str, str], **kwargs) -> dict[str, str]:
+    def _post_load(  # type:ignore[no-untyped-def]
+        self, data: dict[str, str], **kwargs
+    ) -> dict[str, str]:
         rv: dict[str, str] = {}
         for key, value in data.items():
             allowed_ids = self._validate_tag_group(key)
@@ -875,7 +887,7 @@ class _CustomerField(base.String):
         "should_not_exist": "Customer {customer!r} already exists.",
     }
 
-    def __init__(
+    def __init__(  # type:ignore[no-untyped-def]
         self,
         example="provider",
         description="By specifying a customer, you configure on which sites the user object will be "
@@ -932,7 +944,7 @@ class GroupField(base.String):
         "Activate the configuration?",
     }
 
-    def __init__(
+    def __init__(  # type:ignore[no-untyped-def]
         self,
         group_type,
         example,
@@ -982,7 +994,7 @@ class PasswordIdent(base.String):
         "should_not_exist": "Identifier {name!r} already exists.",
     }
 
-    def __init__(
+    def __init__(  # type:ignore[no-untyped-def]
         self,
         example,
         required=True,
@@ -998,7 +1010,7 @@ class PasswordIdent(base.String):
             **kwargs,
         )
 
-    def _validate(self, value: str):
+    def _validate(self, value: str):  # type:ignore[no-untyped-def]
         super()._validate(value)
 
         if ":" in value:
@@ -1158,7 +1170,9 @@ class X509ReqPEMFieldUUID(base.String):
         except ValueError:
             raise self.make_error("cn_no_uuid", cn=cn)
 
-    def _deserialize(self, value, attr, data, **kwargs) -> CertificateSigningRequest:
+    def _deserialize(  # type:ignore[no-untyped-def]
+        self, value, attr, data, **kwargs
+    ) -> CertificateSigningRequest:
         try:
             return load_pem_x509_csr(
                 super()

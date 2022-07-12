@@ -303,7 +303,7 @@ def SNMPCredentials(  # pylint: disable=redefined-builtin
                 return 3  # authPriv
         raise MKGeneralException("invalid SNMP credential format %s" % x)
 
-    def allow_none_match(x) -> int:
+    def allow_none_match(x) -> int:  # type:ignore[no-untyped-def]
         return 0 if x is None else (alternative_match(x) + 1)
 
     if allow_none:
@@ -606,7 +606,9 @@ def translation_elements(what: str) -> List[_Tuple[str, ValueSpec]]:
 # TODO: Refactor this and all other childs of ElementSelection() to base on
 #       DropdownChoice(). Then remove ElementSelection()
 class _GroupSelection(ElementSelection):
-    def __init__(self, what, choices, no_selection=None, **kwargs) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, what, choices, no_selection=None, **kwargs
+    ) -> None:
         kwargs.setdefault(
             "empty_text",
             _(
@@ -689,7 +691,7 @@ def passwordstore_choices() -> Choices:
     ]
 
 
-def PasswordFromStore(  # pylint: disable=redefined-builtin
+def PasswordFromStore(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
     allow_empty: bool = True,
@@ -727,7 +729,7 @@ def PasswordFromStore(  # pylint: disable=redefined-builtin
     )
 
 
-def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
+def IndividualOrStoredPassword(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
     allow_empty: bool = True,
@@ -747,7 +749,9 @@ def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
 _allowed_schemes = frozenset({"http", "https", "socks4", "socks4a", "socks5", "socks5h"})
 
 
-def HTTPProxyReference(allowed_schemes=_allowed_schemes) -> ValueSpec:
+def HTTPProxyReference(  # type:ignore[no-untyped-def]
+    allowed_schemes=_allowed_schemes,
+) -> ValueSpec:
     """Use this valuespec in case you want the user to configure a HTTP proxy
     The configured value is is used for preparing requests to work in a proxied environment."""
 
@@ -1313,7 +1317,7 @@ def valuespec_check_plugin_selection(
 
 
 class _CheckTypeHostSelection(DualListChoice):
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs) -> None:  # type:ignore[no-untyped-def]
         super().__init__(rows=25, **kwargs)
 
     def get_elements(self):
@@ -1327,7 +1331,7 @@ class _CheckTypeHostSelection(DualListChoice):
 
 
 class _CheckTypeMgmtSelection(DualListChoice):
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs) -> None:  # type:ignore[no-untyped-def]
         super().__init__(rows=25, **kwargs)
 
     def get_elements(self):
@@ -1649,7 +1653,9 @@ class ABCEventsMode(WatoMode, abc.ABC):
     def _add_change(self, log_what, log_text):
         raise NotImplementedError()
 
-    def _generic_rule_list_actions(self, rules, what, what_title, save_rules) -> None:
+    def _generic_rule_list_actions(  # type:ignore[no-untyped-def]
+        self, rules, what, what_title, save_rules
+    ) -> None:
         if request.has_var("_delete"):
             nr = request.get_integer_input_mandatory("_delete")
             self._add_change(what + "-delete-rule", _("Deleted %s %d") % (what_title, nr))
@@ -2110,7 +2116,7 @@ def register_notification_parameters(scriptname, valuespec):
 
 
 class DictHostTagCondition(Transform):
-    def __init__(self, title, help_txt) -> None:
+    def __init__(self, title, help_txt) -> None:  # type:ignore[no-untyped-def]
         super().__init__(
             valuespec=ListOfMultiple(
                 title=title,
@@ -2284,7 +2290,7 @@ class DictHostTagCondition(Transform):
             orientation="horizontal",
         )
 
-    def _is_or_is_not(self, **kwargs) -> DropdownChoice:
+    def _is_or_is_not(self, **kwargs) -> DropdownChoice:  # type:ignore[no-untyped-def]
         return DropdownChoice(
             choices=[
                 ("is", _("is")),
@@ -2472,7 +2478,7 @@ class HostTagCondition(ValueSpec[Sequence[str]]):
 
 
 class LabelCondition(Transform):
-    def __init__(self, title, help_txt) -> None:
+    def __init__(self, title, help_txt) -> None:  # type:ignore[no-untyped-def]
         super().__init__(
             valuespec=ListOf(
                 valuespec=Tuple(
@@ -2701,14 +2707,14 @@ def get_hosts_from_checkboxes(filterfunc=None):
 
 
 class FullPathFolderChoice(DropdownChoice):
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs) -> None:  # type:ignore[no-untyped-def]
         kwargs["choices"] = _hosts_and_folders.Folder.folder_choices_fulltitle
         kwargs.setdefault("title", _("Folder"))
         DropdownChoice.__init__(self, **kwargs)
 
 
 class FolderChoice(DropdownChoice):
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs) -> None:  # type:ignore[no-untyped-def]
         kwargs["choices"] = _hosts_and_folders.Folder.folder_choices
         kwargs.setdefault("title", _("Folder"))
         DropdownChoice.__init__(self, **kwargs)

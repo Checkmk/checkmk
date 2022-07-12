@@ -259,7 +259,7 @@ def _field_from_attr(attr):
     return fields.String(**kwargs)
 
 
-def _schema_from_dict(name, schema_dict) -> Type[BaseSchema]:
+def _schema_from_dict(name, schema_dict) -> Type[BaseSchema]:  # type:ignore[no-untyped-def]
     dict_ = schema_dict.copy()
     dict_["cast_to_dict"] = True
     return type(name, (BaseSchema,), dict_)
@@ -321,7 +321,7 @@ def attr_openapi_schema(
     return _schema_from_dict(class_name, schema)
 
 
-def tree_to_expr(filter_dict, table: Any = None) -> QueryExpression:
+def tree_to_expr(filter_dict, table: Any = None) -> QueryExpression:  # type:ignore[no-untyped-def]
     """Turn a filter-dict into a QueryExpression.
 
     Examples:
@@ -423,7 +423,7 @@ def tree_to_expr(filter_dict, table: Any = None) -> QueryExpression:
     raise ValueError(f"Unknown operator: {op}")
 
 
-def _lookup_column(table_name, column_name) -> UnaryExpression:
+def _lookup_column(table_name, column_name) -> UnaryExpression:  # type:ignore[no-untyped-def]
     if isinstance(table_name, str):
         table_class = getattr(tables, table_name.title())
     else:
@@ -437,7 +437,7 @@ def _lookup_column(table_name, column_name) -> UnaryExpression:
     return column.expr
 
 
-def _table_name(table) -> str:
+def _table_name(table) -> str:  # type:ignore[no-untyped-def]
     if isinstance(table, str):
         return table
 

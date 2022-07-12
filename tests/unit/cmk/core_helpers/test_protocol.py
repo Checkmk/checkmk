@@ -52,12 +52,12 @@ class TestCMCLogLevel:
 
 class TestCMCHeader:
     @pytest.mark.parametrize("state", [CMCHeader.State.RESULT, "RESULT "])
-    def test_result_header(self, state) -> None:
+    def test_result_header(self, state) -> None:  # type:ignore[no-untyped-def]
         header = CMCHeader("name", state, "crit", 41)
         assert header == b"name :RESULT :crit    :41              :"
 
     @pytest.mark.parametrize("state", [CMCHeader.State.LOG, "LOG    "])
-    def test_log_header(self, state) -> None:
+    def test_log_header(self, state) -> None:  # type:ignore[no-untyped-def]
         header = CMCHeader("fetch", state, "crit", 42)
         assert header == b"fetch:LOG    :crit    :42              :"
 
@@ -118,7 +118,7 @@ class TestCMCHeader:
 
 class TestCMCMessage:
     @pytest.mark.parametrize("count", list(range(10)))
-    def test_serialization(self, count) -> None:
+    def test_serialization(self, count) -> None:  # type:ignore[no-untyped-def]
         fetcher_payload = AgentResultMessage(AgentRawData(69 * b"\xff"))
         fetcher_stats = ResultStats(Snapshot.null())
         fetcher_message = FetcherMessage(
@@ -190,7 +190,7 @@ class TestCMCResultsStats:
     def stats(self):
         return FetcherResultsStats(7, Snapshot.null())
 
-    def test_from_bytes(self, stats) -> None:
+    def test_from_bytes(self, stats) -> None:  # type:ignore[no-untyped-def]
         assert isinstance(repr(stats), str)
         assert FetcherResultsStats.from_bytes(bytes(stats)) == stats
 
@@ -226,7 +226,7 @@ class TestCMCResults:
             FetcherResultsStats(timeout=7, duration=Snapshot.null()),
         )
 
-    def test_from_bytes(self, payload) -> None:
+    def test_from_bytes(self, payload) -> None:  # type:ignore[no-untyped-def]
         assert CMCResults.from_bytes(bytes(payload)) == payload
 
 
@@ -235,7 +235,7 @@ class TestCMCLogging:
     def payload(self):
         return CMCLogging("This is very interesting!")
 
-    def test_from_bytes(self, payload) -> None:
+    def test_from_bytes(self, payload) -> None:  # type:ignore[no-untyped-def]
         assert CMCLogging.from_bytes(bytes(payload)) == payload
 
 
@@ -244,7 +244,7 @@ class TestCMCEndOfReply:
     def eor(self):
         return CMCMessage.end_of_reply()
 
-    def test_from_bytes(self, eor) -> None:
+    def test_from_bytes(self, eor) -> None:  # type:ignore[no-untyped-def]
         assert CMCMessage.from_bytes(bytes(eor)) is eor
 
 
@@ -253,7 +253,7 @@ class TestAgentResultMessage:
     def agent_payload(self):
         return AgentResultMessage(AgentRawData(b"<<<hello>>>\nworld"))
 
-    def test_from_bytes_success(self, agent_payload) -> None:
+    def test_from_bytes_success(self, agent_payload) -> None:  # type:ignore[no-untyped-def]
         assert AgentResultMessage.from_bytes(bytes(agent_payload)) == agent_payload
 
 
@@ -263,7 +263,7 @@ class TestSNMPResultMessage:
         table: Sequence[SNMPTable] = []
         return SNMPResultMessage({SectionName("name"): table})
 
-    def test_from_bytes_success(self, snmp_payload) -> None:
+    def test_from_bytes_success(self, snmp_payload) -> None:  # type:ignore[no-untyped-def]
         assert SNMPResultMessage.from_bytes(bytes(snmp_payload)) == snmp_payload
 
 
@@ -300,7 +300,7 @@ class TestErrorResultMessage:
     def error(self, exception):
         return ErrorResultMessage(exception)
 
-    def test_exception_serialization(self, exception, error) -> None:
+    def test_exception_serialization(self, exception, error) -> None:  # type:ignore[no-untyped-def]
         assert exception.__traceback__
         assert error.result().error is exception
 
@@ -311,7 +311,7 @@ class TestErrorResultMessage:
         assert other_exc.args == exception.args
         assert not other_exc.__traceback__
 
-    def test_from_bytes_success(self, error) -> None:
+    def test_from_bytes_success(self, error) -> None:  # type:ignore[no-untyped-def]
         other = ErrorResultMessage.from_bytes(bytes(error))
         assert other is not error
         assert other == error
@@ -322,10 +322,10 @@ class TestErrorResultMessage:
         with pytest.raises(ValueError):
             ErrorResultMessage.from_bytes(b"random bytes")
 
-    def test_hash(self, error) -> None:
+    def test_hash(self, error) -> None:  # type:ignore[no-untyped-def]
         assert hash(error) == hash(bytes(error))
 
-    def test_len(self, error) -> None:
+    def test_len(self, error) -> None:  # type:ignore[no-untyped-def]
         assert len(error) == len(bytes(error))
 
 
@@ -340,20 +340,20 @@ class TestFetcherHeader:
             stats_length=1337,
         )
 
-    def test_from_bytes_success(self, header) -> None:
+    def test_from_bytes_success(self, header) -> None:  # type:ignore[no-untyped-def]
         assert FetcherHeader.from_bytes(bytes(header) + 42 * b"*") == header
 
     def test_from_bytes_failure(self) -> None:
         with pytest.raises(ValueError):
             FetcherHeader.from_bytes(b"random bytes")
 
-    def test_repr(self, header) -> None:
+    def test_repr(self, header) -> None:  # type:ignore[no-untyped-def]
         assert isinstance(repr(header), str)
 
-    def test_hash(self, header) -> None:
+    def test_hash(self, header) -> None:  # type:ignore[no-untyped-def]
         assert hash(header) == hash(bytes(header))
 
-    def test_len(self, header) -> None:
+    def test_len(self, header) -> None:  # type:ignore[no-untyped-def]
         assert len(header) == len(bytes(header))
         assert len(header) == FetcherHeader.length
 
@@ -389,7 +389,7 @@ class TestFetcherHeaderEq:
             stats_length=stats_length,
         )
 
-    def test_eq(
+    def test_eq(  # type:ignore[no-untyped-def]
         self, header, fetcher_type, payload_type, status, payload_length, stats_length
     ) -> None:
         assert header == bytes(header)
@@ -403,7 +403,7 @@ class TestFetcherHeaderEq:
             stats_length=stats_length,
         )
 
-    def test_neq_other_payload_type(self, header) -> None:
+    def test_neq_other_payload_type(self, header) -> None:  # type:ignore[no-untyped-def]
         other = FetcherType.TCP
         assert other != header.payload_type
 
@@ -415,7 +415,7 @@ class TestFetcherHeaderEq:
             stats_length=header.stats_length,
         )
 
-    def test_neq_other_result_type(self, header) -> None:
+    def test_neq_other_result_type(self, header) -> None:  # type:ignore[no-untyped-def]
         other = PayloadType.ERROR
         assert other != header.payload_type
 
@@ -427,7 +427,7 @@ class TestFetcherHeaderEq:
             stats_length=header.stats_length,
         )
 
-    def test_neq_other_status(self, header, status) -> None:
+    def test_neq_other_status(self, header, status) -> None:  # type:ignore[no-untyped-def]
         other = status + 1
         assert other != header.status
 
@@ -439,7 +439,9 @@ class TestFetcherHeaderEq:
             stats_length=header.stats_length,
         )
 
-    def test_neq_other_payload_length(self, header, payload_length) -> None:
+    def test_neq_other_payload_length(  # type:ignore[no-untyped-def]
+        self, header, payload_length
+    ) -> None:
         other = payload_length + 1
         assert other != header.payload_length
 
@@ -451,7 +453,7 @@ class TestFetcherHeaderEq:
             stats_length=header.stats_length,
         )
 
-    def test_add(self, header, payload_length) -> None:
+    def test_add(self, header, payload_length) -> None:  # type:ignore[no-untyped-def]
         payload = payload_length * b"\0"
 
         message = header + payload
@@ -467,7 +469,7 @@ class TestResultStats:
     def l3stats(self):
         return ResultStats(Snapshot.null())
 
-    def test_encode_decode(self, l3stats) -> None:
+    def test_encode_decode(self, l3stats) -> None:  # type:ignore[no-untyped-def]
         assert ResultStats.from_bytes(bytes(l3stats)) == l3stats
 
 
@@ -507,35 +509,39 @@ class TestFetcherMessage:
     def agent_raw_data(self):
         return AgentRawData(b"<<<check_mk>>>")
 
-    def test_accessors(self, message, header, payload) -> None:
+    def test_accessors(self, message, header, payload) -> None:  # type:ignore[no-untyped-def]
         assert message.header == header
 
-    def test_from_bytes_success(self, message) -> None:
+    def test_from_bytes_success(self, message) -> None:  # type:ignore[no-untyped-def]
         assert FetcherMessage.from_bytes(bytes(message) + 42 * b"*") == message
 
     def test_from_bytes_failure(self) -> None:
         with pytest.raises(ValueError):
             FetcherMessage.from_bytes(b"random bytes")
 
-    def test_len(self, message, header, payload, stats) -> None:
+    def test_len(self, message, header, payload, stats) -> None:  # type:ignore[no-untyped-def]
         assert len(message) == len(header) + len(payload) + len(stats)
 
     @pytest.mark.parametrize("fetcher_type", [FetcherType.TCP])
-    def test_from_raw_data_standard(self, agent_raw_data, duration, fetcher_type) -> None:
+    def test_from_raw_data_standard(  # type:ignore[no-untyped-def]
+        self, agent_raw_data, duration, fetcher_type
+    ) -> None:
         raw_data: result.Result[AgentRawData, Exception] = result.OK(agent_raw_data)
         message = FetcherMessage.from_raw_data(raw_data, duration, fetcher_type)
         assert message.header.fetcher_type is fetcher_type
         assert message.header.payload_type is PayloadType.AGENT
         assert message.raw_data == raw_data
 
-    def test_from_raw_data_snmp(self, snmp_raw_data, duration) -> None:
+    def test_from_raw_data_snmp(  # type:ignore[no-untyped-def]
+        self, snmp_raw_data, duration
+    ) -> None:
         raw_data: result.Result[SNMPRawData, Exception] = result.OK(snmp_raw_data)
         message = FetcherMessage.from_raw_data(raw_data, duration, FetcherType.SNMP)
         assert message.header.fetcher_type is FetcherType.SNMP
         assert message.header.payload_type is PayloadType.SNMP
         assert message.raw_data == raw_data
 
-    def test_from_raw_data_exception(self, duration) -> None:
+    def test_from_raw_data_exception(self, duration) -> None:  # type:ignore[no-untyped-def]
         error: result.Result[AgentRawData, Exception] = result.Error(ValueError("zomg!"))
         message = FetcherMessage.from_raw_data(error, duration, FetcherType.TCP)
         assert message.header.fetcher_type is FetcherType.TCP
@@ -545,17 +551,19 @@ class TestFetcherMessage:
         assert message.raw_data.error.args == error.error.args
 
     @pytest.mark.parametrize("fetcher_type", [FetcherType.TCP])
-    def test_raw_data_tcp_standard(self, agent_raw_data, duration, fetcher_type) -> None:
+    def test_raw_data_tcp_standard(  # type:ignore[no-untyped-def]
+        self, agent_raw_data, duration, fetcher_type
+    ) -> None:
         raw_data: result.Result[AgentRawData, Exception] = result.OK(agent_raw_data)
         message = FetcherMessage.from_raw_data(raw_data, duration, fetcher_type)
         assert message.raw_data == raw_data
 
-    def test_raw_data_snmp(self, snmp_raw_data, duration) -> None:
+    def test_raw_data_snmp(self, snmp_raw_data, duration) -> None:  # type:ignore[no-untyped-def]
         raw_data: result.Result[SNMPRawData, Exception] = result.OK(snmp_raw_data)
         message = FetcherMessage.from_raw_data(raw_data, duration, FetcherType.SNMP)
         assert message.raw_data == raw_data
 
-    def test_raw_data_exception(self, duration) -> None:
+    def test_raw_data_exception(self, duration) -> None:  # type:ignore[no-untyped-def]
         raw_data: result.Result[AgentRawData, Exception] = result.Error(Exception("zomg!"))
         message = FetcherMessage.from_raw_data(raw_data, duration, FetcherType.TCP)
         assert isinstance(message.raw_data.error, Exception)

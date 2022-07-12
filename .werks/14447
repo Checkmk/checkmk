@@ -1,0 +1,15 @@
+Title: mk_oracle: Cleanup long running processes on AIX
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1657005981
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p27
+
+The cleanup of long running processes forked by the mk_oracle plugin was not working reliably on AIX.
+With this werk we switch to the more robust approach used by the agents.
+
+We also remove the cache files of those jobs, as they are outdated anyway.

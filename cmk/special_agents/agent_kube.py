@@ -11,6 +11,8 @@ Kubernetes version v1.21 or higher. Moreover, read access to the Kubernetes API
 endpoints monitored by Checkmk must be provided.
 """
 
+# mypy: warn_return_any
+
 from __future__ import annotations
 
 import abc

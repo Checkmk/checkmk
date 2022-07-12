@@ -6,7 +6,7 @@
 
 import abc
 import re
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Literal, Optional
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
@@ -270,7 +270,7 @@ class Rulespec(abc.ABC):
         title: Optional[Callable[[], str]],
         valuespec: Callable[[], ValueSpec],
         match_type: str,
-        item_type: Optional[str],
+        item_type: Optional[Literal["service", "item"]],
         # WATCH OUT: passing a Callable[[], Transform] will not work (see the
         # isinstance check in the item_spec property)!
         item_spec: Optional[Callable[[], ValueSpec]],
@@ -475,9 +475,9 @@ class ServiceRulespec(Rulespec):
         name: str,
         group: Type[RulespecBaseGroup],
         valuespec: Callable[[], ValueSpec],
+        item_type: Literal["item", "service"],
         title: Optional[Callable[[], str]] = None,
         match_type: str = "first",
-        item_type: Optional[str] = None,
         item_name: Optional[Callable[[], str]] = None,
         item_spec: Optional[Callable[[], ValueSpec]] = None,
         item_help: Optional[Callable[[], str]] = None,
@@ -494,7 +494,7 @@ class ServiceRulespec(Rulespec):
             valuespec=valuespec,
             match_type=match_type,
             is_binary_ruleset=is_binary_ruleset,
-            item_type=item_type or "service",
+            item_type=item_type,
             item_name=item_name,
             item_spec=item_spec,
             item_help=item_help,
@@ -552,7 +552,7 @@ class BinaryServiceRulespec(ServiceRulespec):
         group: Type[RulespecBaseGroup],
         title: Optional[Callable[[], str]] = None,
         match_type: str = "first",
-        item_type: Optional[str] = None,
+        item_type: Literal["item", "service"] = "service",
         item_name: Optional[Callable[[], str]] = None,
         item_spec: Optional[Callable[[], ValueSpec]] = None,
         item_help: Optional[Callable[[], str]] = None,
@@ -568,7 +568,7 @@ class BinaryServiceRulespec(ServiceRulespec):
             match_type=match_type,
             is_optional=is_optional,
             is_deprecated=is_deprecated,
-            item_type=item_type or "service",
+            item_type=item_type,
             item_spec=item_spec,
             item_name=item_name,
             item_help=item_help,
@@ -640,7 +640,7 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
         parameter_valuespec: Callable[[], ValueSpec],
         title: Optional[Callable[[], str]] = None,
         match_type: Optional[str] = None,
-        item_type: Optional[str] = None,
+        item_type: Literal["item", "service"] = "item",
         item_name: Optional[Callable[[], str]] = None,
         item_spec: Optional[Callable[[], ValueSpec]] = None,
         item_help: Optional[Callable[[], str]] = None,
@@ -665,7 +665,7 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
             name=name,
             group=group,
             title=title,
-            item_type=item_type or "item",
+            item_type=item_type,
             item_name=item_name,
             item_spec=item_spec,
             item_help=item_help,

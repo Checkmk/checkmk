@@ -57,6 +57,7 @@ def dummy_rulespec() -> ServiceRulespec:
         name="dummy",
         group=DummyRulespecGroup,
         valuespec=lambda: FixedValue(value=None),
+        item_type="service",
     )
 
 

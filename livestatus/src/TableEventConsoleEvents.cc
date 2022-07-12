@@ -47,7 +47,8 @@ void TableEventConsoleEvents::addColumns(Table *table) {
     table->addColumn(ECRow::makeIntColumn(
         "event_sl", "The service level for this event", offsets));
     table->addColumn(ECRow::makeStringColumn(
-        "event_host", "Host name for this event", offsets));
+        "event_host", "The host name for this event, potentially rewritten",
+        offsets));
     table->addColumn(ECRow::makeStringColumn("event_contact",
                                              "Contact information", offsets));
     table->addColumn(ECRow::makeStringColumn(
@@ -74,15 +75,24 @@ void TableEventConsoleEvents::addColumns(Table *table) {
     table->addColumn(ECRow::makeListColumn("event_contact_groups",
                                            "Contact groups", offsets));
     table->addColumn(ECRow::makeStringColumn(
+        "event_ipaddress", "The IP address where the event originated",
+        offsets));
+    table->addColumn(ECRow::makeStringColumn(
+        "event_orig_host", "The original host name for this event", offsets));
+    table->addColumn(ECRow::makeStringColumn(
         "event_contact_groups_precedence",
         "Whether or not the host- or rule groups have precedence", offsets));
     table->addColumn(ECRow::makeStringColumn(
-        "event_ipaddress", "The IP address where the event originated",
+        "event_core_host",
+        "The canoncial name of the host for this event as known in the monitoring",
         offsets));
     table->addColumn(ECRow::makeIntColumn(
         "event_host_in_downtime",
         "Whether or not the host (if found in core) was in downtime during event creation (0/1)",
         offsets));
+    table->addColumn(
+        ECRow::makeListColumn("event_match_groups_syslog_application",
+                              "The sylog application match groups", offsets));
 
     TableHosts::addColumns(table, "host_", offsets.add([](Row r) {
         return r.rawData<ECRow>()->host();

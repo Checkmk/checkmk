@@ -1,0 +1,20 @@
+Title: Added missing event console columns in Livestatus
+Class: feature
+Compatible: compat
+Component: livestatus
+Date: 1657626039
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p7
+
+A few columns which are actually available in the event console were not
+available via Livestatus:
+<ul>
+<li>event_core_host</li>
+<li>event_match_groups_syslog_application</li>
+<li>event_orig_host</li>
+</ul>
+in the eventconsoleevents and eventconsolehistory tables.  These have been
+added now for completeness, our GUI is not using them.

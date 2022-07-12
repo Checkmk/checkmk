@@ -42,9 +42,7 @@ def parse_hitachi_hnas_span(string_table: StringTable) -> Section:
 def discover_hitachi_hnas_span(
     params: Sequence[Mapping[str, Any]], section: Section
 ) -> DiscoveryResult:
-    yield from (
-        Service(item=i, parameters=p) for i, p in df_discovery(params, list(section))
-    )
+    yield from (Service(item=i, parameters=p) for i, p in df_discovery(params, list(section)))
 
 
 def check_hitachi_hnas_span(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:

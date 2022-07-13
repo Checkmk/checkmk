@@ -21,7 +21,9 @@ def _na_float(str_value: str) -> Optional[float]:
     return None if str_value in _NA_VALUES else float(str_value)
 
 
-def parse_ipmi_sensors(string_table: StringTable) -> ipmi_utils.Section:
+def parse_ipmi_sensors(  # pylint: disable=too-many-branches
+    string_table: StringTable,
+) -> ipmi_utils.Section:
     section: ipmi_utils.Section = {}
     for line in string_table:
         status_txt_ok = True
@@ -73,6 +75,11 @@ def parse_ipmi_sensors(string_table: StringTable) -> ipmi_utils.Section:
 
         elif len(stripped_line) == 6:
             _sid, _name, _sensortype, reading_str, unit = stripped_line[:-1]
+            sensor.value = _na_float(reading_str)
+            sensor.unit = _na_str(unit)
+
+        elif len(stripped_line) == 7:
+            _sid, _name, _sensortype, _sensorstatus, reading_str, unit = stripped_line[:-1]
             sensor.value = _na_float(reading_str)
             sensor.unit = _na_str(unit)
 

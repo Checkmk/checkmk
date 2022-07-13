@@ -266,7 +266,6 @@ class ErrorReporter:
         ("discovery", "discovery_hr_processes_rules"),
         ("discovery", "discovery_mssql_backup"),
         ("discovery", "discovery_netapp_api_fan_rules"),
-        ("discovery", "discovery_netapp_api_ports_ignored"),
         ("discovery", "discovery_netapp_api_psu_rules"),
         ("discovery", "discovery_win_dhcp_pools"),
         ("discovery", "inventory_df_rules"),

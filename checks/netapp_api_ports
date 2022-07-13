@@ -4,9 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils import netapp_api
 
 # consideration of health status and port speed availability status quo
 discovery_netapp_api_ports_ignored = []
@@ -19,7 +17,7 @@ def parse_netapp_ports(info):
         except KeyError:
             return name
 
-    return netapp_api_parse_lines(info, item_func=port_name)
+    return netapp_api.parse_netapp_api_single_instance(info, custom_keys=None, item_func=port_name)
 
 
 def discovery_netapp_api_port(parsed):

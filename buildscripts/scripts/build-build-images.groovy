@@ -1,102 +1,112 @@
-def DISTRO_LIST_DEFAULT
-def NODE = ''
-withFolderProperties{
-    DISTRO_LIST_DEFAULT = env.DISTRO_LIST
-    NODE = env.BUILD_NODE
-}
+#!groovy
 
-properties([
-  buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
-  parameters([
-    string(name: 'DISTROS', defaultValue: DISTRO_LIST_DEFAULT, description: 'List of targeted distros' )
-   ])
-])
-def DISTRO_LIST = DISTROS.split(' ')
-def DOCKER_BUILDS = [:]
+/// Build base images on top of (pinned) upstream OS images
 
-currentBuild.description = 'Building for the following Distros:\n' + DISTRO_LIST
+/// Parameters / environment values:
+///
+/// Jenkins artifacts: ???
+/// Other artifacts: ???
+/// Depends on: image aliases for upstream OS images on Nexus, ???
 
-timeout(time: 12, unit: 'HOURS') {
-    node (NODE) {
-        def VERS_TAG
-        def BRANCH
-        def BRANCH_VERSION
-        stage('checkout sources') {
-            checkout(scm)
-            // Load libraries
-            notify = load 'buildscripts/scripts/lib/notify.groovy'
-            str_mod = load 'buildscripts/scripts/lib/str_mod.groovy'
-            versioning = load 'buildscripts/scripts/lib/versioning.groovy'
+def main() {
+    global_dry_run_level = 0;
+    
+    check_job_parameters([
+        "SYNC_WITH_IMAGES_WITH_UPSTREAM",
+        "PUBLISH_IMAGES",
+        "OVERRIDE_DISTROS",
+    ]);
 
-            // Image Version Tag
-            VERS_TAG = versioning.get_docker_tag(scm)
-            BRANCH = versioning.get_branch(scm)
-            BRANCH_VERSION = versioning.get_branch_version()
+    check_environment_variables([
+        "ARTIFACT_STORAGE",
+        "NEXUS_ARCHIVES_URL",
+    ]);
+
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+    def distros = versioning.configured_or_overridden_distros("enterprise", OVERRIDE_DISTROS);
+
+    def vers_tag = versioning.get_docker_tag(scm, checkout_dir);
+    def branch_name = versioning.safe_branch_name(scm);
+    def branch_version = versioning.get_branch_version(checkout_dir);
+    def publish_images = PUBLISH_IMAGES=='true';  // FIXME should be case sensitive
+
+    print(
+        """
+        |===== CONFIGURATION ===============================
+        |distros:........................(local)  │${distros}│
+        |publish_images:.................(local)  │${publish_images}│
+        |vers_tag:.......................(local)  │${vers_tag}│
+        |branch_name:....................(local)  │${branch_name}│
+        |branch_version:.................(local)  │${branch_version}│
+        |===================================================
+        """.stripMargin());
+
+    currentBuild.description = (
+        """
+        |Building for the following Distros:
+        |${distros}
+        |""".stripMargin());
+
+
+    withCredentials([
+        usernamePassword(
+            credentialsId: 'nexus',
+            usernameVariable: 'USERNAME',
+            passwordVariable: 'PASSWORD')
+    ]) {
+        def alias_names = [:];
+        def image_ids = [:];
+        def dockerfiles = [:];
+
+        dir("${checkout_dir}") {
+            distros.each { distro ->
+                dockerfiles[distro] = "${distro}/Dockerfile";
+                alias_names[distro] = cmd_output(
+                    "grep 'ARG IMAGE_' " +
+                    "buildscripts/infrastructure/build-nodes/${dockerfiles[distro]}" +
+                    " | awk '{print \$2}'").replaceAll("[\r\n]+", "");
+                image_ids[distro] = resolve_docker_image_alias(alias_names[distro]);
+            }
+            sh("cp defines.make Pipfile omd/strip_binaries buildscripts/infrastructure/build-nodes/scripts");
         }
 
-        // Since this is the job that builds our build containers, we can not
-        // use the build containers :-). Create some throw away container with
-        // a minimal set of things tools to bootstrap our build containers.
-        def BASE_IMAGE = docker.build("base-image:${env.BUILD_ID}", "--pull buildscripts/docker_image_aliases/IMAGE_UBUNTU_20_04")
-
-        BASE_IMAGE.inside('-u 0:0 --ulimit nofile=1024:1024 -v /var/run/docker.sock:/var/run/docker.sock --cap-add=SYS_ADMIN') {
-            // git: needed for fetching our repository and working with it
-            // curl: needed for fetching the docker public key below
-            // gnupg2: needed for importing the docker public key below
-            // lsb-release: needed for adding the correct docker mirror info
-            sh('apt-get update')
-            sh('apt-get install -y git curl gnupg2 lsb-release')
-
-            // docker: needed for creating the containers
-            sh('curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -')
-            sh('echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" >/etc/apt/sources.list.d/docker.list')
-            sh('apt-get update')
-            sh('DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce')
-
-            try {
-                DISTRO_LIST.each { DISTRO ->
-                    DOCKER_BUILDS[DISTRO] = {
-                        def IMAGE
-                        stage('build ' + DISTRO) {
-                            dir('buildscripts/infrastructure/build-nodes') {
-                                sh('cp ../../../{defines.make,Pipfile,omd/strip_binaries} scripts')  // we need it *within* the context :-P
-                                def DOCKER_REGISTRY_NOHTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
-                                withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                                    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                                        def DOCKERFILE = "$DISTRO/Dockerfile";
-                                        def IMAGE_ALIAS_NAME = sh(script: "grep 'ARG IMAGE_' ${DOCKERFILE} | awk '{print \$2}'", returnStdout: true).replaceAll("[\r\n]+", "");
-                                        def RESOLVED_IMAGE_ID = sh(script: "../../docker_image_aliases/resolve.sh ${IMAGE_ALIAS_NAME}", returnStdout: true).replaceAll("[\r\n]+", "");
-                                        println("Using IMAGE_ALIAS_NAME: ${IMAGE_ALIAS_NAME}=${RESOLVED_IMAGE_ID}");
-                                        def DOCKER_ARGS = (
-                                            " --build-arg $IMAGE_ALIAS_NAME=$RESOLVED_IMAGE_ID" +
-                                            " --build-arg DOCKER_REGISTRY='$DOCKER_REGISTRY_NOHTTP'" +
-                                            " --build-arg NEXUS_ARCHIVES_URL='$NEXUS_ARCHIVES_URL'" +
-                                            " --build-arg DISTRO='$DISTRO'" +
-                                            " --build-arg NEXUS_USERNAME='$USERNAME'" +
-                                            " --build-arg NEXUS_PASSWORD='$PASSWORD'" +
-                                            " --build-arg ARTIFACT_STORAGE='$ARTIFACT_STORAGE'" +
-                                            " --build-arg VERS_TAG='$VERS_TAG'" +
-                                            " --build-arg BRANCH_VERSION='$BRANCH_VERSION'" +
-                                            " -f $DOCKERFILE .");
-                                        println("Using DOCKER_ARGS: ${DOCKER_ARGS}");
-                                        IMAGE = docker.build(DISTRO + ':' + VERS_TAG, DOCKER_ARGS);
-                                    }
-                                }
+        dir("${checkout_dir}/buildscripts/infrastructure/build-nodes") {
+            // TODO: here it would be nice to iterate through all known distros
+            //       and use a conditional_stage(distro in distros) approach
+            def stages = distros.collectEntries { distro ->
+                [("${distro}") : {
+                        stage("Build ${distro}") {
+                            on_dry_run_omit(GLOBAL_IMPACT, "docker.build(${distro}:${vers_tag})") {
+                                def DOCKER_ARGS = (
+                                    " --build-arg ${alias_names[distro]}=${image_ids[distro]}" +
+                                    " --build-arg DOCKER_REGISTRY='${docker_registry_no_http}'" +
+                                    " --build-arg NEXUS_ARCHIVES_URL='$NEXUS_ARCHIVES_URL'" +
+                                    " --build-arg DISTRO='$distro'" +
+                                    " --build-arg NEXUS_USERNAME='$USERNAME'" +
+                                    " --build-arg NEXUS_PASSWORD='$PASSWORD'" +
+                                    " --build-arg ARTIFACT_STORAGE='$ARTIFACT_STORAGE'" +
+                                    " --build-arg VERS_TAG='$vers_tag'" +
+                                    " --build-arg BRANCH_VERSION='$branch_version'" +
+                                    " -f ${dockerfiles[distro]} .");
+                                docker.build("${distro}:${vers_tag}", DOCKER_ARGS);
                             }
-                        }
+                        }}
+                ]
+            }
+            def images = parallel(stages);
 
-                        stage('upload ' + DISTRO) {
-                            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                                IMAGE.push()
-                                IMAGE.push(BRANCH + '-latest')
-                            }
+            conditional_stage('upload images', publish_images) {
+                docker.withRegistry(DOCKER_REGISTRY, "nexus") {
+                    images.each { distro, image ->
+                        on_dry_run_omit(GLOBAL_IMPACT, "PUBLISH |${distro}|${image}|") {
+                            image.push();
+                            image.push("${branch_name}-latest");
                         }
                     }
                 }
-                parallel DOCKER_BUILDS
-            } catch(Exception e) {
-                notify.notify_error(e)
             }
         }
     }
 }
+return this;
+

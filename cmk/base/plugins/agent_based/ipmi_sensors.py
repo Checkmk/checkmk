@@ -58,14 +58,13 @@ def parse_ipmi_sensors(string_table: StringTable) -> ipmi_utils.Section:
             case [reading_levels]:
                 if "(" in reading_levels:
                     # 339 Voltage_3.3VCC 3.33_V_(NA/NA) [OK]
-                    reading, levels = reading_levels.split("(")
-                    lower, upper = levels[:-1].split("/")
+                    reading, levels = reading_levels[:-1].split("(")
                 else:
                     # 59 M2_Temp0(PCIe1)_(Temperature) NA/79.00_41.00_C [OK]
                     levels, reading = reading_levels.split("_", 1)
-                    lower, upper = levels.split("/")
 
                 value, unit, *_ = reading.split("_")
+                lower, upper = levels.split("/")
 
                 sensor.value = _na_float(value)
                 sensor.unit = _na_str(unit)

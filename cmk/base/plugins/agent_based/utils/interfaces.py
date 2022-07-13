@@ -10,6 +10,7 @@ from functools import partial
 from typing import (
     Any,
     Callable,
+    Collection,
     Container,
     Dict,
     Iterable,
@@ -717,77 +718,76 @@ def _check_ungrouped_ifs(
         return
 
 
-def _check_grouped_ifs(  # pylint: disable=too-many-branches
+def _filter_matching_interfaces(
+    *,
     item: str,
-    params: Mapping[str, Any],
+    group_config: GroupConfiguration,
     section: Section,
-    group_name: str,
-    timestamp: float,
-    input_is_rate: bool,
-    value_store: Optional[MutableMapping[str, Any]] = None,
-) -> type_defs.CheckResult:
-    """
-    Grouped interfaces are combined into a single interface, which is then passed to
-    check_single_interface.
-    """
-
-    group_members: GroupMembers = {}
-    matching_interfaces = []
-
-    for interface in section:
-        if_member_item = _compute_item(
-            params["aggregate"].get(
-                "member_appearance",
-                # This happens when someones upgrades from v1.6 to v1.7, where the structure of the
-                # discovered parameters changed. Interface groups defined by the user will stop
-                # working, users have to do a re-discovery in that case, as we wrote in werk #11361.
-                # However, we can still support groups defined already in the agent output, since
-                # these work purley by the group name.
-                params["aggregate"].get(
-                    "item_type",
-                    DISCOVERY_DEFAULT_PARAMETERS["discovery_single"][1]["item_appearance"],
-                ),
-            ),
-            interface,
-            section,
-            item[0] == "0",
-        )
-
+) -> Collection[Interface]:
+    return [
+        interface
+        for interface in section
         if _check_group_matching_conditions(
             interface,
             item,
-            params["aggregate"],
-        ):
-            matching_interfaces.append((if_member_item, interface))
+            group_config,
+        )
+    ]
 
-    # Now we're done and have all matching interfaces
-    # Accumulate info over matching_interfaces
-    used_value_store = value_store if value_store is not None else get_value_store()
 
-    cumulated_interface = Interface(
-        index=item,
-        descr=item,
-        alias="",
-        type="",
-    )
-
+def _accumulate_attributes(
+    *,
+    cumulated_interface: Interface,
+    matching_interfaces: Collection[Interface],
+    group_config: GroupConfiguration,
+) -> None:
     num_up = 0
     nodes = set()
-    for idx, (if_member_item, interface) in enumerate(matching_interfaces):
+
+    for interface in matching_interfaces:
         nodes.add(str(interface.node))
         is_up = interface.oper_status == "1"
         if is_up:
             num_up += 1
 
-        groups_node = group_members.setdefault(interface.node, [])
-        member_info = {
-            "name": if_member_item,
-            "oper_status_name": interface.oper_status_name,
-        }
-        if interface.admin_status is not None:
-            member_info["admin_status_name"] = statename(interface.admin_status)
-        groups_node.append(member_info)
+        # Add interface info to group info
+        if is_up:
+            cumulated_interface.speed += interface.speed
+        cumulated_interface.out_qlen += interface.out_qlen
 
+        # This is the fallback ifType if None is set in the parameters
+        cumulated_interface.type = interface.type
+
+    if num_up == len(matching_interfaces):
+        cumulated_interface.oper_status = "1"  # up
+    elif num_up > 0:
+        cumulated_interface.oper_status = "8"  # degraded
+    else:
+        cumulated_interface.oper_status = "2"  # down
+    cumulated_interface.oper_status_name = statename(cumulated_interface.oper_status)
+
+    alias_info = []
+    if len(nodes) > 1:
+        alias_info.append("nodes: %s" % ", ".join(nodes))
+
+    # From pre-2.0
+    if (iftype := group_config.get("iftype")) is not None:
+        alias_info.append("type: %s" % iftype)
+    if group_config.get("items"):
+        alias_info.append("%d grouped interfaces" % len(matching_interfaces))
+
+    cumulated_interface.alias = ", ".join(alias_info)
+
+
+def _accumulate_counters(
+    *,
+    cumulated_interface: Interface,
+    matching_interfaces: Iterable[Interface],
+    input_is_rate: bool,
+    timestamp: float,
+    value_store: MutableMapping[str, Any],
+) -> type_defs.CheckResult:
+    for idx, interface in enumerate(matching_interfaces):
         if not input_is_rate:
             # Only these values are packed into counters
             # We might need to enlarge this table
@@ -811,7 +811,7 @@ def _check_grouped_ifs(  # pylint: disable=too-many-branches
                     # We make sure that every group member has valid rates before adding up the
                     # counters
                     get_rate(
-                        used_value_store,
+                        value_store,
                         _get_value_store_key(name, str(interface.node), str(idx)),
                         timestamp,
                         saveint(counter),
@@ -821,9 +821,6 @@ def _check_grouped_ifs(  # pylint: disable=too-many-branches
                     yield IgnoreResults(value="Initializing counters")
                     # continue, other counters might wrap as well
 
-        # Add interface info to group info
-        if is_up:
-            cumulated_interface.speed += interface.speed
         cumulated_interface.in_octets += interface.in_octets
         cumulated_interface.in_ucast += interface.in_ucast
         cumulated_interface.in_mcast += interface.in_mcast
@@ -836,36 +833,98 @@ def _check_grouped_ifs(  # pylint: disable=too-many-branches
         cumulated_interface.out_bcast += interface.out_bcast
         cumulated_interface.out_discards += interface.out_discards
         cumulated_interface.out_errors += interface.out_errors
-        cumulated_interface.out_qlen += interface.out_qlen
 
-        # This is the fallback ifType if None is set in the parameters
-        cumulated_interface.type = interface.type
 
-    if num_up == len(matching_interfaces):
-        cumulated_interface.oper_status = "1"  # up
-    elif num_up > 0:
-        cumulated_interface.oper_status = "8"  # degraded
-    else:
-        cumulated_interface.oper_status = "2"  # down
-    cumulated_interface.oper_status_name = statename(cumulated_interface.oper_status)
+def _group_members(
+    *,
+    matching_interfaces: Iterable[Interface],
+    item: str,
+    group_config: GroupConfiguration,
+    section: Section,
+) -> GroupMembers:
+    group_members: GroupMembers = {}
+    for interface in matching_interfaces:
+        groups_node = group_members.setdefault(interface.node, [])
+        member_info = {
+            "name": _compute_item(
+                group_config.get(
+                    "member_appearance",
+                    # This happens when someones upgrades from v1.6 to v2,0, where the structure of the
+                    # discovered parameters changed. Interface groups defined by the user will stop
+                    # working, users have to do a re-discovery in that case, as we wrote in werk #11361.
+                    # However, we can still support groups defined already in the agent output, since
+                    # these work purley by the group name.
+                    str(
+                        group_config.get(
+                            "item_type",
+                            DISCOVERY_DEFAULT_PARAMETERS["discovery_single"][1]["item_appearance"],
+                        )
+                    ),
+                ),
+                interface,
+                section,
+                item[0] == "0",
+            ),
+            "oper_status_name": interface.oper_status_name,
+        }
+        if interface.admin_status is not None:
+            member_info["admin_status_name"] = statename(interface.admin_status)
+        groups_node.append(member_info)
+    return group_members
 
-    alias_info = []
-    if len(nodes) > 1:
-        alias_info.append("nodes: %s" % ", ".join(nodes))
 
-    attrs = params["aggregate"]
-    if attrs.get("iftype"):
-        alias_info.append("type: %s" % attrs["iftype"])
-    if attrs.get("items"):
-        alias_info.append("%d grouped interfaces" % len(matching_interfaces))
+def _check_grouped_ifs(  # pylint: disable=too-many-branches
+    item: str,
+    params: Mapping[str, Any],
+    section: Section,
+    group_name: str,
+    timestamp: float,
+    input_is_rate: bool,
+    value_store: Optional[MutableMapping[str, Any]] = None,
+) -> type_defs.CheckResult:
+    """
+    Grouped interfaces are combined into a single interface, which is then passed to
+    check_single_interface.
+    """
+    matching_interfaces = _filter_matching_interfaces(
+        item=item,
+        group_config=params["aggregate"],
+        section=section,
+    )
 
-    cumulated_interface.alias = ", ".join(alias_info)
+    used_value_store = value_store if value_store is not None else get_value_store()
+
+    cumulated_interface = Interface(
+        index=item,
+        descr=item,
+        alias="",
+        type="",
+    )
+
+    _accumulate_attributes(
+        cumulated_interface=cumulated_interface,
+        matching_interfaces=matching_interfaces,
+        group_config=params["aggregate"],
+    )
+
+    yield from _accumulate_counters(
+        cumulated_interface=cumulated_interface,
+        matching_interfaces=matching_interfaces,
+        input_is_rate=input_is_rate,
+        timestamp=timestamp,
+        value_store=used_value_store,
+    )
 
     yield from check_single_interface(
         item,
         params,
         cumulated_interface,
-        group_members=group_members,
+        group_members=_group_members(
+            matching_interfaces=matching_interfaces,
+            item=item,
+            group_config=params["aggregate"],
+            section=section,
+        ),
         group_name=group_name,
         timestamp=timestamp,
         input_is_rate=input_is_rate,
@@ -1041,7 +1100,7 @@ def check_single_interface(
 
     yield from _interface_mac(interface=interface)
 
-    yield from _group_members(group_members=group_members)
+    yield from _output_group_members(group_members=group_members)
 
     yield _check_speed(interface, targetspeed)
 
@@ -1359,7 +1418,7 @@ def _check_oper_and_admin_state_combined(
     )
 
 
-def _group_members(
+def _output_group_members(
     *,
     group_members: Optional[GroupMembers],
 ) -> Iterable[Result]:

@@ -1,0 +1,18 @@
+Title: Add support for new CPU's to the OHM plugin
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1657711115
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0p27
+
+- Intel CPU including 12-th generation
+- Intel SSD SC2
+- AMD CPU 10-th generation models 60 and 70
+
+SUP-10718
+CMK-10902
+

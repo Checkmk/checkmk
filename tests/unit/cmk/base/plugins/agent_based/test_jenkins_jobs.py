@@ -18,10 +18,24 @@ def _section() -> jn.Section:
     return jn.parse_jenkins_jobs(
         [
             [
-                '[{"_class":"jenkins.branch.OrganizationFolder","displayNameOrNull":null,"name":"gitea","healthReport":[],"jobs":[]},{"_class":"com.cloudbees.hudson.plugins.folder.Folder","displayNameOrNull":"Folder1","name":"project","healthReport":[{"score":50}],"jobs":[{"_class":"org.jenkinsci.plugins.workflow.job.WorkflowJob","displayNameOrNull":"Job","name":"Job","color":"blue","healthReport":[{"score":80}],"lastBuild":{"_class":"org.jenkinsci.plugins.workflow.job.WorkflowRun","duration":507524,"number":53,"result":"SUCCESS","timestamp":1637059997346},"lastSuccessfulBuild":{"_class":"org.jenkinsci.plugins.workflow.job.WorkflowRun","timestamp":1637059997346}},{"_class":"org.jenkinsci.plugins.workflow.job.WorkflowJob","displayNameOrNull":"Job 1","name":"Job1","color":"notbuilt","healthReport":[],"lastBuild":"null"},{"_class":"org.jenkinsci.plugins.workflow.job.WorkflowJob","displayNameOrNull":"Job 2","name":"Job2","color":"blue","healthReport":[{"score":50}],"lastBuild":{"_class":"org.jenkinsci.plugins.workflow.job.WorkflowRun","duration":212036,"number":30,"result":"SUCCESS","timestamp":1637062224758},"lastSuccessfulBuild":{"_class":"org.jenkinsci.plugins.workflow.job.WorkflowRun","timestamp":1637062224758}},{"_class":"org.jenkinsci.plugins.workflow.job.WorkflowJob","displayNameOrNull":"Job 3","name":"Job3","color":"blue","healthReport":[{"score":100}],"lastBuild":{"_class":"org.jenkinsci.plugins.workflow.job.WorkflowRun","duration":193715,"number":26,"result":"FAILURE","timestamp":1637062443432},"lastSuccessfulBuild":{"_class":"org.jenkinsci.plugins.workflow.job.WorkflowRun","timestamp":1637062443432}}]}]'
+                '[{"_class": "com.cloudbees.hudson.plugins.folder.Folder", "displayNameOrNull": "Folder1", "name": "project", "healthReport": [{"score": 50}], "jobs": [{"_class": "org.jenkinsci.plugins.workflow.job.WorkflowJob", "displayNameOrNull": "Job", "name": "Job", "color": "blue", "healthReport": [{"score": 80}], "lastBuild": {"_class": "org.jenkinsci.plugins.workflow.job.WorkflowRun", "duration": 507524, "number": 53, "result": "SUCCESS", "timestamp": 1637059997346}, "lastSuccessfulBuild": {"_class": "org.jenkinsci.plugins.workflow.job.WorkflowRun", "timestamp": 1637059997346}}, {"_class": "org.jenkinsci.plugins.workflow.job.WorkflowJob", "displayNameOrNull": "Job 1", "name": "Job1", "color": "notbuilt", "healthReport": [], "lastBuild": "null"}, {"_class": "org.jenkinsci.plugins.workflow.job.WorkflowJob", "displayNameOrNull": "Job 2", "name": "Job2", "color": "blue", "healthReport": [{"score": 50}], "lastBuild": {"_class": "org.jenkinsci.plugins.workflow.job.WorkflowRun", "duration": 212036, "number": 30, "result": "SUCCESS", "timestamp": 1637062224758}, "lastSuccessfulBuild": {"_class": "org.jenkinsci.plugins.workflow.job.WorkflowRun", "timestamp": 1637062224758}}, {"_class": "org.jenkinsci.plugins.workflow.job.WorkflowJob", "displayNameOrNull": "Job 3", "name": "Job3", "color": "blue", "healthReport": [{"score": 100}], "lastBuild": {"_class": "org.jenkinsci.plugins.workflow.job.WorkflowRun", "duration": 193715, "number": 26, "result": "FAILURE", "timestamp": 1637062443432}, "lastSuccessfulBuild": {"_class": "org.jenkinsci.plugins.workflow.job.WorkflowRun", "timestamp": 1637062443432}}]}]'
             ]
         ]
     )
+
+
+def test_discovery_jenkins_org_folder():
+    section = jn.parse_jenkins_jobs(
+        [
+            [
+                '[{"_class":"jenkins.branch.OrganizationFolder","displayNameOrNull":null,"name":"gitea","healthReport":[],"jobs":[]},{"_class":"com.cloudbees.hudson.plugins.folder.Folder","displayNameOrNull":null,"name":"Powershell","healthReport":[],"jobs":[{"_class":"hudson.model.FreeStyleProject","displayNameOrNull":null,"name":"Add-Laptops-Group","color":"red","healthReport":[{"score":40}],"lastBuild":{"_class":"hudson.model.FreeStyleBuild","duration":1189,"number":219,"result":"FAILURE","timestamp":1643800688467},"lastSuccessfulBuild":{"_class":"hudson.model.FreeStyleBuild","timestamp":1643800687047}}]}]'
+            ]
+        ]
+    )
+
+    assert list(jn.discovery_jenkins_jobs(section)) == [
+        jn.Service(item="Powershell/Add-Laptops-Group"),
+    ]
 
 
 def test_discovery(section: jn.Section) -> None:

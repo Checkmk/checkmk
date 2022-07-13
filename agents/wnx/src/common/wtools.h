@@ -1089,6 +1089,7 @@ std::string RunCommand(std::wstring_view cmd);
 /// Validates pid is connected to the port<summary>
 bool CheckProcessUsePort(uint16_t port, uint32_t pid, uint16_t peer_port);
 
+uint32_t GetServiceStatus(const std::wstring &name) noexcept;
 }  // namespace wtools
 
 #endif  // wtools_h__

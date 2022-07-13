@@ -746,4 +746,10 @@ TEST(Wtools, RunCommandCheck) {
     EXPECT_FALSE(s.empty());
 }
 
+TEST(Wtools, GetServiceStatus) {
+    EXPECT_EQ(GetServiceStatus(L"vds"), SERVICE_STOPPED);
+    EXPECT_EQ(GetServiceStatus(L"vds-bad-service"), 0U);
+    EXPECT_EQ(GetServiceStatus(L"SamSS"), SERVICE_RUNNING);
+}
+
 }  // namespace wtools

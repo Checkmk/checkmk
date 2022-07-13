@@ -3257,7 +3257,92 @@ Cleanup:
 }
 
 #endif
+namespace {
+class ServiceControl {
+public:
+    enum class Mode { query, control };
+    ServiceControl(std::wstring_view service_name, Mode mode) {
+        openService(service_name, mode);
+    }
 
+    ServiceControl(const ServiceControl &) = delete;
+    ServiceControl(ServiceControl &&) = delete;
+    ServiceControl &operator=(const ServiceControl &) = delete;
+    ServiceControl &operator=(ServiceControl &&) = delete;
+
+    ~ServiceControl() noexcept {
+        if (manager_ != nullptr) {
+            ::CloseServiceHandle(manager_);
+        }
+        if (service_ != nullptr) {
+            ::CloseServiceHandle(service_);
+        }
+    }
+    uint32_t getStatus() const noexcept;
+
+protected:
+    void openService(std::wstring_view service_name, Mode mode);
+    uint32_t flagsFromMode(Mode mode);
+
+private:
+    SC_HANDLE manager_{nullptr};
+    SC_HANDLE service_{nullptr};
+    int error_{0};
+};
+
+uint32_t ServiceControl::flagsFromMode(Mode mode) {
+    switch (mode) {
+        case Mode::control:
+            return SERVICE_STOP | SERVICE_START | SERVICE_QUERY_STATUS |
+                   SERVICE_ENUMERATE_DEPENDENTS;
+        case Mode::query:
+            return SERVICE_QUERY_STATUS | SERVICE_ENUMERATE_DEPENDENTS;
+    }
+    // unreachable
+    return 0U;
+}
+
+void ServiceControl::openService(std::wstring_view service_name, Mode mode) {
+    manager_ = ::OpenSCManager(nullptr,  // local computer
+                               nullptr,  // ServicesActive database
+                               SC_MANAGER_ALL_ACCESS);
+    if (manager_ == nullptr) {
+        error_ = ::GetLastError();
+        XLOG::l("OpenSCManager failed [{}]", error_);
+        return;
+    }
+    service_ = ::OpenService(manager_,  // SCM database
+                             service_name.data(), flagsFromMode(mode));
+    if (service_ == nullptr) {
+        error_ = ::GetLastError();
+        XLOG::l("OpenService '{}' failed [{}]", wtools::ToUtf8(service_name),
+                error_);
+        return;
+    }
+}
+
+uint32_t ServiceControl::getStatus() const noexcept {
+    if (service_ == nullptr) {
+        return 0;
+    }
+    DWORD bytes_needed = 0;
+    SERVICE_STATUS_PROCESS ssp;
+    auto buffer = reinterpret_cast<BYTE *>(&ssp);
+
+    if (::QueryServiceStatusEx(service_, SC_STATUS_PROCESS_INFO, buffer,
+                               sizeof(SERVICE_STATUS_PROCESS),
+                               &bytes_needed) == FALSE) {
+        XLOG::l("QueryServiceStatusEx failed [{}]", ::GetLastError());
+        return 0;
+    }
+    return ssp.dwCurrentState;
+}
+}  // namespace
+
+uint32_t GetServiceStatus(const std::wstring &name) noexcept {
+    ServiceControl sc(name, ServiceControl::Mode::query);
+    return sc.getStatus();
+}
 }  // namespace wtools
 
 // verified code from the legacy client

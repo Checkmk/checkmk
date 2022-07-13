@@ -22,12 +22,9 @@ def parse_netapp_ports(info):
     return netapp_api_parse_lines(info, item_func=port_name)
 
 
-def _identify_ignored_port_types(discovery_ignored):
-    return host_extra_conf_merged(host_name(), discovery_ignored).get("ignored_ports", ())
-
-
 def discovery_netapp_api_port(parsed):
-    ignored_ports = _identify_ignored_port_types(discovery_netapp_api_ports_ignored)
+    params = host_extra_conf_merged(host_name(), discovery_netapp_api_ports_ignored)
+    ignored_ports = params.get("ignored_ports", ())
     for item, values in parsed.items():
         if values.get("port-type") in ignored_ports:
             continue

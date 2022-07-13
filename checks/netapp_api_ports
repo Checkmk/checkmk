@@ -4,8 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping
+from typing import Any, Mapping
 
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils import netapp_api
 
 # consideration of health status and port speed availability status quo
@@ -19,21 +20,27 @@ def port_name(name: str, values: Mapping[str, str]) -> str:
         return name
 
 
-def parse_netapp_ports(info):
-    return netapp_api.parse_netapp_api_single_instance(info, custom_keys=None, item_func=port_name)
+def parse_netapp_ports(string_table: StringTable) -> netapp_api.SectionSingleInstance:
+    return netapp_api.parse_netapp_api_single_instance(
+        string_table, custom_keys=None, item_func=port_name
+    )
 
 
-def discovery_netapp_api_port(parsed):
+def discovery_netapp_api_port(section: netapp_api.SectionSingleInstance):
     params = host_extra_conf_merged(host_name(), discovery_netapp_api_ports_ignored)
     ignored_ports = params.get("ignored_ports", ())
-    for item, values in parsed.items():
+    for item, values in section.items():
         if values.get("port-type") in ignored_ports:
             continue
         if "health-status" in values:
             yield item, {}
 
 
-def check_netapp_api_port(item, params, section):
+def check_netapp_api_port(
+    item: str,
+    params: Mapping[str, Any],
+    section: netapp_api.SectionSingleInstance,
+):
     if (data := section.get(item)) is None:
         return
 

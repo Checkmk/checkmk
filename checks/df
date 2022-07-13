@@ -7,10 +7,7 @@
 from enum import auto, Enum
 from typing import Any, Iterable, Iterator, Mapping, NamedTuple, Sequence
 
-from cmk.base.check_legacy_includes.df import (
-    df_check_filesystem_list_coroutine,
-    FILESYSTEM_DEFAULT_PARAMS,
-)
+from cmk.base.check_legacy_includes.df import df_check_filesystem_list_coroutine
 from cmk.base.plugins.agent_based.agent_based_api.v1 import regex
 from cmk.base.plugins.agent_based.utils.df import (
     df_discovery,
@@ -18,9 +15,11 @@ from cmk.base.plugins.agent_based.utils.df import (
     DfInode,
     DfSection,
     EXCLUDED_MOUNTPOINTS,
+    FILESYSTEM_DEFAULT_PARAMS,
 )
 
 DiscoveryResult = Iterable[tuple[str, Mapping[str, Any]]]
+CheckResult = Iterable[tuple]
 
 factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
@@ -160,12 +159,12 @@ def _handle_block_devices(
     return handled_df_blocks
 
 
-def inventory_df(parsed: DfSection) -> DiscoveryResult:
+def discover_df(section: DfSection) -> DiscoveryResult:
     params = host_extra_conf_merged(host_name(), inventory_df_rules)
     mountpoint_for_block_devices = _get_item_behaviour_for_block_devices(params)
     item_and_grouping = _get_item_and_grouping(params)
 
-    df_blocks, _df_inodes = parsed
+    df_blocks, _df_inodes = section
     df_blocks = _handle_block_devices(df_blocks, mountpoint_for_block_devices)
 
     filtered_blocks = _filter_df_blocks(df_blocks, params)
@@ -224,11 +223,11 @@ def _get_mountpoint_from_item(
     return item
 
 
-def check_df(item: str, params: Mapping[str, Any], parsed: DfSection):
+def check_df(item: str, params: Mapping[str, Any], section: DfSection) -> CheckResult:
     mountpoint_for_block_devices = _get_item_behaviour_for_block_devices(params)
     item_and_grouping = _get_item_and_grouping(params)
 
-    df_blocks, df_inodes = parsed
+    df_blocks, df_inodes = section
     df_blocks = _handle_block_devices(df_blocks, mountpoint_for_block_devices)
 
     item = _get_mountpoint_from_item(item, params, df_blocks)
@@ -255,7 +254,7 @@ def check_df(item: str, params: Mapping[str, Any], parsed: DfSection):
 
 
 check_info["df"] = {
-    "inventory_function": inventory_df,
+    "inventory_function": discover_df,
     "check_function": check_df,
     "service_description": "Filesystem %s",
     "has_perfdata": True,

@@ -7,9 +7,10 @@
 from enum import auto, Enum
 from typing import Any, Iterable, Iterator, Mapping, NamedTuple, Sequence
 
-from cmk.base.check_legacy_includes.df import df_check_filesystem_list_coroutine
-from cmk.base.plugins.agent_based.agent_based_api.v1 import regex
-from cmk.base.plugins.agent_based.utils.df import (
+from .agent_based_api.v1 import get_value_store, regex, register, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from .utils.df import (
+    df_check_filesystem_list,
     df_discovery,
     DfBlock,
     DfInode,
@@ -18,20 +19,13 @@ from cmk.base.plugins.agent_based.utils.df import (
     FILESYSTEM_DEFAULT_PARAMS,
 )
 
-DiscoveryResult = Iterable[tuple[str, Mapping[str, Any]]]
-CheckResult = Iterable[tuple]
-
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
-
-
-inventory_df_rules = []
-inventory_df_exclude_fs = ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"]
+_INVENTORY_DF_EXCLUDE_FS = ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"]
 
 
 def _filter_df_blocks(
     df_blocks: Iterable[DfBlock], inventory_options: Mapping[str, Any]
 ) -> Iterator[DfBlock]:
-    ignore_fs_types = inventory_options.get("ignore_fs_types", inventory_df_exclude_fs)
+    ignore_fs_types = inventory_options.get("ignore_fs_types", _INVENTORY_DF_EXCLUDE_FS)
     never_ignore_mountpoints = inventory_options.get("never_ignore_mountpoints", [])
 
     for df_block in df_blocks:
@@ -159,8 +153,7 @@ def _handle_block_devices(
     return handled_df_blocks
 
 
-def discover_df(section: DfSection) -> DiscoveryResult:
-    params = host_extra_conf_merged(host_name(), inventory_df_rules)
+def discover_df(params: Mapping[str, Any], section: DfSection) -> DiscoveryResult:
     mountpoint_for_block_devices = _get_item_behaviour_for_block_devices(params)
     item_and_grouping = _get_item_and_grouping(params)
 
@@ -196,7 +189,7 @@ def discover_df(section: DfSection) -> DiscoveryResult:
         # in the check because "mountpoint" may contain a free-text group name.
         additional_params["mountpoint_for_block_devices"] = mountpoint_for_block_devices.name
         additional_params["item_appearance"] = item_and_grouping.item
-        yield mountpoint, {**discovered_params, **additional_params}
+        yield Service(item=mountpoint, parameters={**discovered_params, **additional_params})
 
 
 # Legacy params
@@ -248,16 +241,24 @@ def check_df(item: str, params: Mapping[str, Any], section: DfSection) -> CheckR
 
     if params.get("show_volume_name"):
         volume_name = [d.device for d in df_blocks if d.mountpoint == item][0]
-        yield 0, f"[{volume_name}]"
+        yield Result(state=State.OK, summary=f"[{volume_name}]")
 
-    yield from df_check_filesystem_list_coroutine(item, params, raw_df_blocks, raw_df_inodes)
+    yield from df_check_filesystem_list(
+        value_store=get_value_store(),
+        item=item,
+        params=params,
+        fslist_blocks=raw_df_blocks,
+        fslist_inodes=raw_df_inodes,
+    )
 
 
-check_info["df"] = {
-    "inventory_function": discover_df,
-    "check_function": check_df,
-    "service_description": "Filesystem %s",
-    "has_perfdata": True,
-    "group": "filesystem",
-    "default_levels_variable": "filesystem_default_levels",
-}
+register.check_plugin(
+    name="df",
+    service_name="Filesystem %s",
+    discovery_function=discover_df,
+    discovery_default_parameters={},
+    discovery_ruleset_name="inventory_df_rules",
+    check_function=check_df,
+    check_ruleset_name="filesystem",
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
+)

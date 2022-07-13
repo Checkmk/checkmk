@@ -3,21 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Iterable
+
 import pytest
 
-from tests.testlib import Check
-
+from cmk.base.plugins.agent_based import df
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.df_section import parse_df
-
-from .checktestlib import (
-    assertCheckResultsEqual,
-    assertDiscoveryResultsEqual,
-    CheckResult,
-    DiscoveryResult,
-    MockHostExtraConf,
-)
-
-pytestmark = pytest.mark.checks
 
 #   .--Test info sections--------------------------------------------------.
 #   |                _____         _     _        __                       |
@@ -424,17 +416,9 @@ info_empty_inodes = [
     ],
 )
 def test_df_discovery_with_parse(info, expected_result, inventory_df_rules) -> None:
-    check = Check("df")
-
-    def mocked_host_extra_conf_merged(_hostname, ruleset):
-        if ruleset is check.context.get("inventory_df_rules"):
-            return inventory_df_rules
-        raise AssertionError("Unknown/unhandled ruleset used in mock of host_extra_conf")
-
-    with MockHostExtraConf(check, mocked_host_extra_conf_merged, "host_extra_conf_merged"):
-        discovery_result = DiscoveryResult(check.run_discovery(parse_df(info)))
-
-    assertDiscoveryResultsEqual(check, discovery_result, DiscoveryResult(expected_result))
+    assert sorted(df.discover_df(inventory_df_rules, parse_df(info))) == sorted(
+        Service(item=i, parameters=p) for i, p in expected_result
+    )
 
 
 def make_test_df_params():
@@ -451,123 +435,173 @@ def make_test_df_params():
     }
 
 
+def _extract_value_to_mock_for_zero_growth(results: Iterable[Result | Metric]) -> float:
+    for r in results:
+        if isinstance(r, Metric) and r.name == "fs_used":
+            return r.value
+    return 0.0
+
+
 @pytest.mark.parametrize(
-    "item,params,info,expected_result",
+    "item, counter, params ,info, expected_result",
     [
         (
+            "/",
             "/",
             make_test_df_params(),
             info_df_lnx,
             [
-                (
-                    0,
-                    "Used: 75.79% - 104 GiB of 137 GiB",
-                    [
-                        (
-                            "fs_used",
-                            106418.50390625,
-                            112333.35625,
-                            126375.02578125,
-                            0,
-                            None,
-                        ),
-                        ("fs_free", 33998.19140625, None, None, 0, None),
-                        ("fs_used_percent", 75.78764310712029, 80.0, 90.0, 0.0, 100.0),
-                        ("fs_size", 140416.6953125, None, None, 0, None),
-                    ],
+                Metric(
+                    "fs_used",
+                    106418.50390625,
+                    levels=(112333.35624980927, 126375.0257806778),
+                    boundaries=(0.0, None),
                 ),
-                (
-                    0,
-                    "",
-                    [
-                        ("inodes_used", 1654272, 8228044.8, 8685158.4, 0, 9142272),
-                    ],
+                Metric("fs_free", 33998.19140625, boundaries=(0, None)),
+                Metric(
+                    "fs_used_percent",
+                    75.78764310712029,
+                    levels=(79.99999999986416, 89.99999999959249),
+                    boundaries=(0.0, 100.0),
+                ),
+                Result(state=State.OK, summary="Used: 75.79% - 104 GiB of 137 GiB"),
+                Metric("fs_size", 140416.6953125, boundaries=(0, None)),
+                Metric("growth", 0.0),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
+                Metric("trend", 0.0, boundaries=(0.0, 5850.695638020833)),
+                Metric(
+                    "inodes_used",
+                    1654272.0,
+                    levels=(8228044.8, 8685158.4),
+                    boundaries=(0.0, 9142272.0),
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Inodes used: 18.09%, Inodes available: 7,488,000 (81.91%)",
                 ),
             ],
         ),
         (
             "/dev/sda4 /",
+            "/",
             make_test_df_params(),
             info_df_lnx,
             [
-                (
-                    0,
-                    "Used: 75.79% - 104 GiB of 137 GiB",
-                    [
-                        (
-                            "fs_used",
-                            106418.50390625,
-                            112333.35625,
-                            126375.02578125,
-                            0,
-                            None,
-                        ),
-                        ("fs_free", 33998.19140625, None, None, 0, None),
-                        ("fs_used_percent", 75.78764310712029, 80.0, 90.0, 0.0, 100.0),
-                        ("fs_size", 140416.6953125, None, None, 0, None),
-                    ],
+                Metric(
+                    "fs_used",
+                    106418.50390625,
+                    levels=(112333.35624980927, 126375.0257806778),
+                    boundaries=(0.0, None),
                 ),
-                (
-                    0,
-                    "",
-                    [
-                        ("inodes_used", 1654272, 8228044.8, 8685158.4, 0, 9142272),
-                    ],
+                Metric("fs_free", 33998.19140625, boundaries=(0.0, None)),
+                Metric(
+                    "fs_used_percent",
+                    75.78764310712029,
+                    levels=(79.99999999986416, 89.99999999959249),
+                    boundaries=(0.0, 100.0),
+                ),
+                Result(state=State.OK, summary="Used: 75.79% - 104 GiB of 137 GiB"),
+                Metric("fs_size", 140416.6953125, boundaries=(0.0, None)),
+                Metric("growth", 0.0),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
+                Metric("trend", 0.0, boundaries=(0.0, 5850.695638020833)),
+                Metric(
+                    "inodes_used",
+                    1654272.0,
+                    levels=(8228044.8, 8685158.4),
+                    boundaries=(0.0, 9142272.0),
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Inodes used: 18.09%, Inodes available: 7,488,000 (81.91%)",
                 ),
             ],
         ),
         (
             "E:/",
+            "E:/",
             make_test_df_params(),
             info_df_win,
             [
-                (
-                    0,
-                    "Used: 1.82% - 182 MiB of 9.77 GiB",
-                    [
-                        ("fs_used", 181.890625, 8000.621875, 9000.699609375, 0, None),
-                        ("fs_free", 9818.88671875, None, None, 0, None),
-                        ("fs_used_percent", 1.8187648694496015, 80.0, 90.0, 0.0, 100.0),
-                        ("fs_size", 10000.77734375, None, None, 0, None),
-                    ],
+                Metric(
+                    "fs_used",
+                    181.890625,
+                    levels=(8000.621874809265, 9000.699608802795),
+                    boundaries=(0.0, None),
                 ),
+                Metric("fs_free", 9818.88671875, boundaries=(0.0, None)),
+                Metric(
+                    "fs_used_percent",
+                    1.8187648694496013,
+                    levels=(79.9999999980928, 89.9999999942784),
+                    boundaries=(0.0, 100.0),
+                ),
+                Result(state=State.OK, summary="Used: 1.82% - 182 MiB of 9.77 GiB"),
+                Metric("fs_size", 10000.77734375, boundaries=(0.0, None)),
+                Metric("growth", 0.0),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
+                Metric("trend", 0.0, boundaries=(0.0, 416.6990559895833)),
             ],
         ),
         (
             "New_Volume E:/",
+            "E:/",
             make_test_df_params(),
             info_df_win,
             [
-                (
-                    0,
-                    "Used: 1.82% - 182 MiB of 9.77 GiB",
-                    [
-                        ("fs_used", 181.890625, 8000.621875, 9000.699609375, 0, None),
-                        ("fs_free", 9818.88671875, None, None, 0, None),
-                        ("fs_used_percent", 1.8187648694496015, 80.0, 90.0, 0.0, 100.0),
-                        ("fs_size", 10000.77734375, None, None, 0, None),
-                    ],
+                Metric(
+                    "fs_used",
+                    181.890625,
+                    levels=(8000.621874809265, 9000.699608802795),
+                    boundaries=(0.0, None),
                 ),
+                Metric("fs_free", 9818.88671875, boundaries=(0.0, None)),
+                Metric(
+                    "fs_used_percent",
+                    1.8187648694496013,
+                    levels=(79.9999999980928, 89.9999999942784),
+                    boundaries=(0.0, 100.0),
+                ),
+                Result(state=State.OK, summary="Used: 1.82% - 182 MiB of 9.77 GiB"),
+                Metric("fs_size", 10000.77734375, boundaries=(0.0, None)),
+                Metric("growth", 0.0),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
+                Metric("trend", 0.0, boundaries=(0.0, 416.6990559895833)),
             ],
         ),
         (
             "btrfs /dev/sda1",
+            "btrfs /dev/sda1",
             make_test_df_params(),
             info_df_btrfs,
             [
-                (
-                    0,
-                    "Used: 21.13% - 4.23 GiB of 20.0 GiB",
-                    [
-                        ("fs_used", 4327.29296875, 16383.2, 18431.1, 0, None),
-                        ("fs_free", 16151.70703125, None, None, 0, None),
-                        ("fs_used_percent", 21.130391956394355, 80.0, 90.0, 0.0, 100.0),
-                        ("fs_size", 20479.0, None, None, 0, None),
-                    ],
+                Metric(
+                    "fs_used",
+                    4327.29296875,
+                    levels=(16383.199999809265, 18431.099999427795),
+                    boundaries=(0.0, None),
                 ),
+                Metric("fs_free", 16151.70703125, boundaries=(0.0, None)),
+                Metric(
+                    "fs_used_percent",
+                    21.130391956394355,
+                    levels=(79.99999999906863, 89.99999999720589),
+                    boundaries=(0.0, 100.0),
+                ),
+                Result(state=State.OK, summary="Used: 21.13% - 4.23 GiB of 20.0 GiB"),
+                Metric("fs_size", 20479.0, boundaries=(0.0, None)),
+                Metric("growth", 0.0),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
+                Metric("trend", 0.0, boundaries=(0.0, 853.2916666666666)),
             ],
         ),
         (
+            "/home",
             "/home",
             make_test_df_params(),
             info_df_lnx,
@@ -575,41 +609,62 @@ def make_test_df_params():
         ),
         (
             "btrfs /dev/sda1",
+            "btrfs /dev/sda1",
             {**make_test_df_params(), "show_volume_name": True},
             info_df_btrfs,
             [
-                (0, "[/dev/sda1]"),
-                (
-                    0,
-                    "Used: 21.13% - 4.23 GiB of 20.0 GiB",
-                    [
-                        ("fs_used", 4327.29296875, 16383.2, 18431.1, 0, None),
-                        ("fs_free", 16151.70703125, None, None, 0, None),
-                        ("fs_used_percent", 21.130391956394355, 80.0, 90.0, 0.0, 100.0),
-                        ("fs_size", 20479.0, None, None, 0, None),
-                    ],
+                Result(state=State.OK, summary="[/dev/sda1]"),
+                Metric(
+                    "fs_used",
+                    4327.29296875,
+                    levels=(16383.199999809265, 18431.099999427795),
+                    boundaries=(0.0, None),
                 ),
+                Metric("fs_free", 16151.70703125, boundaries=(0.0, None)),
+                Metric(
+                    "fs_used_percent",
+                    21.130391956394355,
+                    levels=(79.99999999906863, 89.99999999720589),
+                    boundaries=(0.0, 100.0),
+                ),
+                Result(state=State.OK, summary="Used: 21.13% - 4.23 GiB of 20.0 GiB"),
+                Metric("fs_size", 20479.0, boundaries=(0.0, None)),
+                Metric("growth", 0.0),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
+                Metric("trend", 0.0, boundaries=(0.0, 853.2916666666666)),
             ],
         ),
         (
             "btrfs /dev/sda1",
+            "btrfs /dev/sda1",
             make_test_df_params(),
             info_df_btrfs,
             [
-                (
-                    0,
-                    "Used: 21.13% - 4.23 GiB of 20.0 GiB",
-                    [
-                        ("fs_used", 4327.29296875, 16383.2, 18431.1, 0, None),
-                        ("fs_free", 16151.70703125, None, None, 0, None),
-                        ("fs_used_percent", 21.130391956394355, 80.0, 90.0, 0.0, 100.0),
-                        ("fs_size", 20479.0, None, None, 0, None),
-                    ],
+                Metric(
+                    "fs_used",
+                    4327.29296875,
+                    levels=(16383.199999809265, 18431.099999427795),
+                    boundaries=(0.0, None),
                 ),
+                Metric("fs_free", 16151.70703125, boundaries=(0.0, None)),
+                Metric(
+                    "fs_used_percent",
+                    21.130391956394355,
+                    levels=(79.99999999906863, 89.99999999720589),
+                    boundaries=(0.0, 100.0),
+                ),
+                Result(state=State.OK, summary="Used: 21.13% - 4.23 GiB of 20.0 GiB"),
+                Metric("fs_size", 20479.0, boundaries=(0.0, None)),
+                Metric("growth", 0.0),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
+                Metric("trend", 0.0, boundaries=(0.0, 853.2916666666666)),
             ],
         ),
         # btrfs with uuid as mountpoint
         (
+            "btrfs 12345678-9012-3456-7890-123456789012",
             "btrfs 12345678-9012-3456-7890-123456789012",
             {
                 **make_test_df_params(),
@@ -617,24 +672,43 @@ def make_test_df_params():
             },
             info_df_btrfs,
             [
-                (
-                    0,
-                    "Used: 21.13% - 4.23 GiB of 20.0 GiB",
-                    [
-                        ("fs_used", 4327.29296875, 16383.2, 18431.1, 0, None),
-                        ("fs_free", 16151.70703125, None, None, 0, None),
-                        ("fs_used_percent", 21.130391956394355, 80.0, 90.0, 0.0, 100.0),
-                        ("fs_size", 20479.0, None, None, 0, None),
-                    ],
+                Metric(
+                    "fs_used",
+                    4327.29296875,
+                    levels=(16383.199999809265, 18431.099999427795),
+                    boundaries=(0.0, None),
                 ),
+                Metric("fs_free", 16151.70703125, boundaries=(0.0, None)),
+                Metric(
+                    "fs_used_percent",
+                    21.130391956394355,
+                    levels=(79.99999999906863, 89.99999999720589),
+                    boundaries=(0.0, 100.0),
+                ),
+                Result(state=State.OK, summary="Used: 21.13% - 4.23 GiB of 20.0 GiB"),
+                Metric("fs_size", 20479.0, boundaries=(0.0, None)),
+                Metric("growth", 0.0),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
+                Metric("trend", 0.0, boundaries=(0.0, 853.2916666666666)),
             ],
         ),
     ],
 )
-def test_df_check_with_parse(item, params, info, expected_result) -> None:
-    check = Check("df")
-    actual = CheckResult(check.run_check(item, params, parse_df(info)))
-    assertCheckResultsEqual(actual, CheckResult(expected_result))
+def test_df_check_with_parse(
+    item, counter: str, params, info, expected_result, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        df,
+        "get_value_store",
+        lambda: {
+            f"{counter}.delta": (
+                0,
+                _extract_value_to_mock_for_zero_growth(expected_result),
+            )
+        },
+    )
+    assert list(df.check_df(item, params, parse_df(info))) == expected_result
 
 
 # .
@@ -1000,21 +1074,9 @@ info_df_groups = [
     ],
 )
 def test_df_discovery_groups_with_parse(inventory_df_rules, expected_result) -> None:
-    check = Check("df")
-
-    def mocked_host_extra_conf_merged(_hostname, ruleset):
-        if ruleset is check.context.get("inventory_df_rules"):
-            return inventory_df_rules
-        raise AssertionError(
-            "Unknown/unhandled ruleset 'inventory_df_rules' used in mock of host_extra_conf_merged"
-        )
-
-    with MockHostExtraConf(check, mocked_host_extra_conf_merged, "host_extra_conf_merged"):
-        raw_discovery_result = check.run_discovery(parse_df(info_df_groups))
-        discovery_result = DiscoveryResult(raw_discovery_result)
-
-    expected_result = DiscoveryResult(expected_result)
-    assertDiscoveryResultsEqual(check, discovery_result, expected_result)
+    assert sorted(df.discover_df(inventory_df_rules, parse_df(info_df_groups))) == sorted(
+        Service(item=i, parameters=p) for i, p in expected_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -1026,17 +1088,24 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, expected_result) -> 
                 "patterns": (["/", "/foo"], ["/bar"]),
             },
             [
-                (
-                    2,
-                    "Used: 90.00% - 189 KiB of 210 KiB (warn/crit at 80.00%/90.00% used)",
-                    [
-                        ("fs_used", 0.1845703125, 0.1640625, 0.1845703125, 0, None),
-                        ("fs_free", 0.0205078125, None, None, 0, None),
-                        ("fs_used_percent", 90.0, 80.0, 90.0, 0.0, 100.0),
-                        ("fs_size", 0.205078125, None, None, 0, None),
-                    ],
+                Metric(
+                    "fs_used",
+                    0.1845703125,
+                    levels=(0.1640625, 0.1845703125),
+                    boundaries=(0.0, None),
                 ),
-                (0, "2 filesystems", []),
+                Metric("fs_free", 0.0205078125, boundaries=(0.0, None)),
+                Metric("fs_used_percent", 90.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+                Result(
+                    state=State.CRIT,
+                    summary="Used: 90.00% - 189 KiB of 210 KiB (warn/crit at 80.00%/90.00% used)",
+                ),
+                Metric("fs_size", 0.205078125, boundaries=(0.0, None)),
+                Metric("growth", 0.0),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
+                Metric("trend", 0.0, boundaries=(0.0, 0.008544921875)),
+                Result(state=State.OK, summary="2 filesystems"),
             ],
         ),
         (
@@ -1046,17 +1115,24 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, expected_result) -> 
                 "patterns": (["/", "/foo"], ["/bar"]),
             },
             [
-                (
-                    2,
-                    "Used: 90.00% - 189 KiB of 210 KiB (warn/crit at 80.00%/90.00% used)",
-                    [
-                        ("fs_used", 0.1845703125, 0.1640625, 0.1845703125, 0, None),
-                        ("fs_free", 0.0205078125, None, None, 0, None),
-                        ("fs_used_percent", 90.0, 80.0, 90.0, 0.0, 100.0),
-                        ("fs_size", 0.205078125, None, None, 0, None),
-                    ],
+                Metric(
+                    "fs_used",
+                    0.1845703125,
+                    levels=(0.1640625, 0.1845703125),
+                    boundaries=(0.0, None),
                 ),
-                (0, "2 filesystems", []),
+                Metric("fs_free", 0.0205078125, boundaries=(0.0, None)),
+                Metric("fs_used_percent", 90.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+                Result(
+                    state=State.CRIT,
+                    summary="Used: 90.00% - 189 KiB of 210 KiB (warn/crit at 80.00%/90.00% used)",
+                ),
+                Metric("fs_size", 0.205078125, boundaries=(0.0, None)),
+                Metric("growth", 0.0),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
+                Metric("trend", 0.0, boundaries=(0.0, 0.008544921875)),
+                Result(state=State.OK, summary="2 filesystems"),
             ],
         ),
         (
@@ -1066,17 +1142,24 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, expected_result) -> 
                 "patterns": (["/dev/sda1 /", "/dev/sda2 /foo"], ["/dev/sda3 /bar"]),
             },
             [
-                (
-                    2,
-                    "Used: 90.00% - 189 KiB of 210 KiB (warn/crit at 80.00%/90.00% used)",
-                    [
-                        ("fs_used", 0.1845703125, 0.1640625, 0.1845703125, 0, None),
-                        ("fs_free", 0.0205078125, None, None, 0, None),
-                        ("fs_used_percent", 90.0, 80.0, 90.0, 0.0, 100.0),
-                        ("fs_size", 0.205078125, None, None, 0, None),
-                    ],
+                Metric(
+                    "fs_used",
+                    0.1845703125,
+                    levels=(0.1640625, 0.1845703125),
+                    boundaries=(0.0, None),
                 ),
-                (0, "2 filesystems", []),
+                Metric("fs_free", 0.0205078125, boundaries=(0.0, None)),
+                Metric("fs_used_percent", 90.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+                Result(
+                    state=State.CRIT,
+                    summary="Used: 90.00% - 189 KiB of 210 KiB (warn/crit at 80.00%/90.00% used)",
+                ),
+                Metric("fs_size", 0.205078125, boundaries=(0.0, None)),
+                Metric("growth", 0.0),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
+                Metric("trend", 0.0, boundaries=(0.0, 0.008544921875)),
+                Result(state=State.OK, summary="2 filesystems"),
             ],
         ),
         # unknowns; only happens if patterns are adapted without discovery
@@ -1087,7 +1170,7 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, expected_result) -> 
                 "patterns": (["/dev/sda1 /", "/dev/sda2 /foo"], ["/dev/sda3 /bar"]),
             },
             [
-                (3, "No filesystem matching the patterns", []),
+                Result(state=State.UNKNOWN, summary="No filesystem matching the patterns"),
             ],
         ),
         (
@@ -1097,7 +1180,7 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, expected_result) -> 
                 "patterns": (["/", "/foo"], ["/bar"]),
             },
             [
-                (3, "No filesystem matching the patterns", []),
+                Result(state=State.UNKNOWN, summary="No filesystem matching the patterns"),
             ],
         ),
         # mixed btrfs and mps
@@ -1108,17 +1191,24 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, expected_result) -> 
                 "patterns": (["/", "btrfs /dev/sdb1"], ["/foo", "/bar"]),
             },
             [
-                (
-                    2,
-                    "Used: 90.00% - 207 KiB of 230 KiB (warn/crit at 80.00%/90.00% used)",
-                    [
-                        ("fs_used", 0.2021484375, 0.1796875, 0.2021484375, 0, None),
-                        ("fs_free", 0.0224609375, None, None, 0, None),
-                        ("fs_used_percent", 90.0, 80.0, 90.0, 0.0, 100.0),
-                        ("fs_size", 0.224609375, None, None, 0, None),
-                    ],
+                Metric(
+                    "fs_used",
+                    0.2021484375,
+                    levels=(0.1796875, 0.2021484375),
+                    boundaries=(0.0, None),
                 ),
-                (0, "2 filesystems", []),
+                Metric("fs_free", 0.0224609375, boundaries=(0.0, None)),
+                Metric("fs_used_percent", 90.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+                Result(
+                    state=State.CRIT,
+                    summary="Used: 90.00% - 207 KiB of 230 KiB (warn/crit at 80.00%/90.00% used)",
+                ),
+                Metric("fs_size", 0.224609375, boundaries=(0.0, None)),
+                Metric("growth", 0.0),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
+                Metric("trend", 0.0, boundaries=(0.0, 0.009358723958333334)),
+                Result(state=State.OK, summary="2 filesystems"),
             ],
         ),
         (
@@ -1131,17 +1221,21 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, expected_result) -> 
                 ),
             },
             [
-                (
-                    2,
-                    "Used: 90.00% - 207 KiB of 230 KiB (warn/crit at 80.00%/90.00% used)",
-                    [
-                        ("fs_used", 0.2021484375, 0.1796875, 0.2021484375, 0, None),
-                        ("fs_free", 0.0224609375, None, None, 0, None),
-                        ("fs_used_percent", 90.0, 80.0, 90.0, 0.0, 100.0),
-                        ("fs_size", 0.224609375, None, None, 0, None),
-                    ],
+                Metric(
+                    "fs_used", 0.2021484375, levels=(0.1796875, 0.2021484375), boundaries=(0, None)
                 ),
-                (0, "2 filesystems", []),
+                Metric("fs_free", 0.0224609375, boundaries=(0, None)),
+                Metric("fs_used_percent", 90.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+                Result(
+                    state=State.CRIT,
+                    summary="Used: 90.00% - 207 KiB of 230 KiB (warn/crit at 80.00%/90.00% used)",
+                ),
+                Metric("fs_size", 0.224609375, boundaries=(0, None)),
+                Metric("growth", 0.0),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
+                Metric("trend", 0.0, boundaries=(0.0, 0.009358723958333334)),
+                Result(state=State.OK, summary="2 filesystems"),
             ],
         ),
         # unknowns; only happens if patterns are adapted without discovery
@@ -1155,7 +1249,7 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, expected_result) -> 
                 ),
             },
             [
-                (3, "No filesystem matching the patterns", []),
+                Result(state=State.UNKNOWN, summary="No filesystem matching the patterns"),
             ],
         ),
         (
@@ -1164,17 +1258,23 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, expected_result) -> 
                 "grouping_behaviour": "volume_name_and_mountpoint",
                 "patterns": (["/", "btrfs /dev/sdb1"], ["/foo", "/bar"]),
             },
-            [
-                (3, "No filesystem matching the patterns", []),
-            ],
+            [Result(state=State.UNKNOWN, summary="No filesystem matching the patterns")],
         ),
     ],
 )
-def test_df_check_groups_with_parse(add_params, expected_result) -> None:
-    check = Check("df")
-    params = make_test_df_params()
-    params.update(add_params)
-
-    actual = CheckResult(check.run_check("my-group", params, parse_df(info_df_groups)))
-    expected = CheckResult(expected_result)
-    assertCheckResultsEqual(actual, expected)
+def test_df_check_groups_with_parse(
+    add_params, expected_result, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        df,
+        "get_value_store",
+        lambda: {"my-group.delta": (0, _extract_value_to_mock_for_zero_growth(expected_result))},
+    )
+    assert (
+        list(
+            df.check_df(
+                "my-group", {**make_test_df_params(), **add_params}, parse_df(info_df_groups)
+            )
+        )
+        == expected_result
+    )

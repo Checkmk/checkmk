@@ -30,8 +30,10 @@ def discovery_netapp_api_port(parsed):
             yield item, {}
 
 
-@get_parsed_item_data
-def check_netapp_api_port(item, params, data):
+def check_netapp_api_port(item, params, section):
+    if (data := section.get(item)) is None:
+        return
+
     health_state = data.get("health-status", "unknown")
     status = {"healthy": 0, "unknown": 3}.get(health_state, 2)
     yield status, "Health status: %s, Operational speed: %s" % (

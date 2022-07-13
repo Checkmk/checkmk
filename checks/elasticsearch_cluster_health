@@ -43,6 +43,12 @@ tasks_info = {
     "task_max_waiting_in_queue_millis": "Task max waiting",
 }
 
+default_cluster_state = {
+    "green": 0,
+    "yellow": 1,
+    "red": 2,
+}
+
 
 def parse_elasticsearch_cluster_health(info):
     parsed = {}
@@ -50,20 +56,22 @@ def parse_elasticsearch_cluster_health(info):
     for line in info:
         try:
             if any(s in line for s in cluster_info):
-                if "status" in line:
-                    inst = handle_cluster_state(parsed, line)
+                inst = parsed.setdefault("Info", {})
+                if line[0] == "status":
+                    inst[line[0]] = line[1], default_cluster_state.get(line[1], 2)
                 else:
-                    inst = parsed.setdefault(("Info"), {line[0]: [line[1], cluster_info[line[0]]]})
+                    inst[line[0]] = line[1], cluster_info[line[0]]
+                continue
+
             if any(s in line for s in shards_info):
-                inst = parsed.setdefault(("Shards"), {line[0]: [line[1], shards_info[line[0]]]})
-            if any(s in line for s in tasks_info):
-                inst = parsed.setdefault(("Tasks"), {line[0]: [line[1], tasks_info[line[0]]]})
-            if any(s in inst for s in cluster_info) and "status" not in line:
-                inst[line[0]] = line[1], cluster_info[line[0]]
-            elif any(s in inst for s in shards_info):
+                inst = parsed.setdefault("Shards", {})
                 inst[line[0]] = line[1], shards_info[line[0]]
-            elif any(s in inst for s in tasks_info):
+                continue
+
+            if any(s in line for s in tasks_info):
+                inst = parsed.setdefault("Tasks", {})
                 inst[line[0]] = line[1], tasks_info[line[0]]
+                continue
 
         except (IndexError, ValueError):
             pass
@@ -83,11 +91,12 @@ def check_elasticsearch_cluster_health(no_item, params, parsed):
         if info == "cluster_name":
             yield 0, "%s: %s" % (infotext, value)
         elif info == "status":
+            default_state = infotext
             infotext = "Status:"
-            if params.get(value):
+            if value in params:
                 yield params[value], "%s %s (State changed by rule)" % (infotext, value)
             else:
-                yield 0, "%s %s" % (infotext, value)
+                yield default_state, "%s %s" % (infotext, value)
         else:
             warn, crit = params.get(info) or (None, None)
             yield check_levels(
@@ -97,18 +106,6 @@ def check_elasticsearch_cluster_health(no_item, params, parsed):
                 human_readable_func=int,
                 infoname=infotext,
             )
-
-
-def handle_cluster_state(parsed, line):
-    state = 0
-    if line[1] == "yellow":
-        state = 1
-    else:
-        state = 2
-
-    inst = parsed.setdefault("Info", {line[0]: [line[1], state]})
-
-    return inst
 
 
 check_info["elasticsearch_cluster_health"] = {

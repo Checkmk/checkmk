@@ -20,6 +20,8 @@ from cmk.base.plugins.agent_based.utils.df import (
     EXCLUDED_MOUNTPOINTS,
 )
 
+DiscoveryResult = Iterable[tuple[str, Mapping[str, Any]]]
+
 factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
@@ -158,15 +160,15 @@ def _handle_block_devices(
     return handled_df_blocks
 
 
-def inventory_df(parsed: DfSection):
-    inventory_options = host_extra_conf_merged(host_name(), inventory_df_rules)
-    mountpoint_for_block_devices = _get_item_behaviour_for_block_devices(inventory_options)
-    item_and_grouping = _get_item_and_grouping(inventory_options)
+def inventory_df(parsed: DfSection) -> DiscoveryResult:
+    params = host_extra_conf_merged(host_name(), inventory_df_rules)
+    mountpoint_for_block_devices = _get_item_behaviour_for_block_devices(params)
+    item_and_grouping = _get_item_and_grouping(params)
 
     df_blocks, _df_inodes = parsed
     df_blocks = _handle_block_devices(df_blocks, mountpoint_for_block_devices)
 
-    filtered_blocks = _filter_df_blocks(df_blocks, inventory_options)
+    filtered_blocks = _filter_df_blocks(df_blocks, params)
 
     mplist = [
         _prepare_item_name(df_block, item_and_grouping.for_all) for df_block in filtered_blocks
@@ -176,12 +178,13 @@ def inventory_df(parsed: DfSection):
     #      df_inventory should also return a list of DfBlocks or similar.
     mp_to_df_block = {df_block.mountpoint: df_block for df_block in df_blocks}
 
-    for mountpoint, params in df_discovery([inventory_options], mplist):
+    for mountpoint, discovered_params in df_discovery([params], mplist):
         df_block = mp_to_df_block.get(mountpoint)
-        if "patterns" in params:
-            # Add the grouping_behaviour info to the discovered parameters of this service. With this information
-            # the check can easily reconstruct the discovered grouping.
-            params["grouping_behaviour"] = item_and_grouping.grouping
+        additional_params = {}
+        if "patterns" in discovered_params:
+            # Add the grouping_behaviour info to the discovered parameters of this service.
+            # With this information the check can easily reconstruct the discovered grouping.
+            additional_params = {"grouping_behaviour": item_and_grouping.grouping}
 
         elif df_block:
             # Somehow the user wanted to see the volume name in the service description,
@@ -192,9 +195,9 @@ def inventory_df(parsed: DfSection):
 
         # We have to add these parameters in any case in order to reconstruct df blocks
         # in the check because "mountpoint" may contain a free-text group name.
-        params["mountpoint_for_block_devices"] = mountpoint_for_block_devices.name
-        params["item_appearance"] = item_and_grouping.item
-        yield mountpoint, params
+        additional_params["mountpoint_for_block_devices"] = mountpoint_for_block_devices.name
+        additional_params["item_appearance"] = item_and_grouping.item
+        yield mountpoint, {**discovered_params, **additional_params}
 
 
 # Legacy params

@@ -1,0 +1,14 @@
+Title: elasticsearch_cluster_health: Handle status correctly
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1657722239
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p7
+
+The "Elasticsearch Cluster Health" ignored the elasticsearch status
+(green, yellow, red) and always showed up with state "OK".
+This also held true for a custom mapping defined by service parameters.

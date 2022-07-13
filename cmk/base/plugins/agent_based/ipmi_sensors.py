@@ -46,20 +46,13 @@ def parse_ipmi_sensors(string_table: StringTable) -> ipmi_utils.Section:
 
         sensorname = stripped_line[1].replace(" ", "_")
 
-        if not (
-            sensor := (
-                section.setdefault(
-                    sensorname,
-                    ipmi_utils.Sensor(
-                        status_txt=status.txt,
-                        unit="",
-                    ),
-                )
-                if status.is_ok
-                else section.get(sensorname)
-            )
-        ):
+        if not status.is_ok and sensorname not in section:
             continue
+
+        sensor = section.setdefault(
+            sensorname,
+            ipmi_utils.Sensor(status_txt=status.txt, unit=""),
+        )
 
         if len(stripped_line) == 4:
             if "(" in stripped_line[2]:

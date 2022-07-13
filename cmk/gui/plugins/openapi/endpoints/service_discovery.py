@@ -12,7 +12,9 @@ You can find an introduction to services including service discovery in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_services.html).
 """
 import enum
-from typing import Any, List, Mapping, NoReturn, Optional, Sequence
+from typing import Any, List, Mapping, Optional, Sequence
+
+from typing_extensions import assert_never
 
 from cmk.automations.results import CheckPreviewEntry
 
@@ -332,10 +334,6 @@ class DiscoverServices(BaseSchema):
         example="example.com",
     )
     mode = _discovery_mode(default_mode="fix_all")
-
-
-def assert_never(value: NoReturn) -> NoReturn:
-    assert False, f"Unhandled discovery action: {value} ({type(value).__name__})"
 
 
 @Endpoint(

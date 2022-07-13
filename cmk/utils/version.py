@@ -26,11 +26,12 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, NamedTuple, Tuple, Union
 
+from typing_extensions import assert_never
+
 import livestatus
 
 import cmk.utils.paths
 from cmk.utils.i18n import _
-from cmk.utils.type_defs._misc import assert_never
 
 
 class _EditionValue(NamedTuple):
@@ -282,6 +283,7 @@ class Version:
             return "%d.%d.%d-%s" % (v.major, v.minor, v.sub, v.date.strftime("%Y.%m.%d"))
 
         assert_never(v)
+        return ""  # silence pylint's broken inconsistent-return-statements
 
     def __lt__(self, other: Version) -> bool:
         return self._cmp(other) < 0

@@ -25,6 +25,8 @@ from typing import (
     Union,
 )
 
+from typing_extensions import assert_never
+
 import livestatus
 
 import cmk.utils.cleanup
@@ -37,7 +39,6 @@ from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import (
-    assert_never,
     CheckPluginName,
     DiscoveryResult,
     EVERYTHING,

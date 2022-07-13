@@ -1343,7 +1343,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "dell_poweredge_pci",
         "dell_poweredge_status",
         "dell_poweredge_temp",
-        "df_zos",
         "didactum_can_sensors_analog",
         "didactum_can_sensors_analog.humidity",
         "didactum_can_sensors_analog.voltage",

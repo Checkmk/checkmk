@@ -36,7 +36,9 @@ def test_request_memoize() -> None:
     assert blah() == [1, 1]
 
 
-def test_request_memoize_request_integration(logged_in_wsgi_app, mocker) -> None:
+def test_request_memoize_request_integration(  # type:ignore[no-untyped-def]
+    logged_in_wsgi_app, mocker
+) -> None:
     mock = mocker.MagicMock()
 
     @hooks.request_memoize()
@@ -114,7 +116,7 @@ def test_hook_registration() -> None:
     assert len(hooks.get("bli")) == 0
 
 
-def test_call(mocker) -> None:
+def test_call(mocker) -> None:  # type:ignore[no-untyped-def]
     hook1_mock = mocker.Mock()
     hook2_mock = mocker.Mock()
     hooks.register("bla", hook1_mock)
@@ -129,7 +131,7 @@ def test_call(mocker) -> None:
     hook2_mock.assert_called_once()
 
 
-def test_call_exception_handling(request_context, mocker) -> None:
+def test_call_exception_handling(request_context, mocker) -> None:  # type:ignore[no-untyped-def]
     hooks.register_builtin("bli", lambda: 1.0 / 0.0)
     hook3_mock = mocker.Mock()
     hooks.register("bli", hook3_mock)

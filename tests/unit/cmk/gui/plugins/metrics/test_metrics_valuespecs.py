@@ -30,7 +30,9 @@ from cmk.gui.plugins.metrics import valuespecs
         ),
     ],
 )
-def test_transform_graph_render_options_title_format(entry, result) -> None:
+def test_transform_graph_render_options_title_format(  # type:ignore[no-untyped-def]
+    entry, result
+) -> None:
     assert valuespecs.transform_graph_render_options_title_format(entry) == result
 
 
@@ -53,5 +55,5 @@ def test_transform_graph_render_options_title_format(entry, result) -> None:
         ),
     ],
 )
-def test_transform_graph_render_options(entry, result) -> None:
+def test_transform_graph_render_options(entry, result) -> None:  # type:ignore[no-untyped-def]
     assert valuespecs.transform_graph_render_options(entry) == result

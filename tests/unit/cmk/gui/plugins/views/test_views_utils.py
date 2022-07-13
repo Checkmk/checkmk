@@ -35,7 +35,7 @@ from cmk.gui.views import View
         ),
     ],
 )
-def test_url_sorters_parse_encode(url, sorters) -> None:
+def test_url_sorters_parse_encode(url, sorters) -> None:  # type:ignore[no-untyped-def]
     sorters = [SorterSpec(*s) for s in sorters]
     assert _parse_url_sorters(url) == sorters
     assert _encode_sorter_url(sorters) == url
@@ -81,10 +81,10 @@ def test_replace_action_url_macros(
     assert replace_action_url_macros(url, what, row) == result
 
 
-def test_group_value(monkeypatch) -> None:
+def test_group_value(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     monkeypatch.setattr(utils, "painter_registry", PainterRegistry())
 
-    def rendr(row) -> tuple[str, str]:
+    def rendr(row) -> tuple[str, str]:  # type:ignore[no-untyped-def]
         return ("abc", "xyz")
 
     utils.register_painter(

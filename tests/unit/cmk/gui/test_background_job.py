@@ -115,7 +115,7 @@ class DummyBackgroundJob(gui_background_job.GUIBackgroundJob):
         time.sleep(100)
 
 
-def test_start_job(request_context) -> None:
+def test_start_job(request_context) -> None:  # type:ignore[no-untyped-def]
     job = DummyBackgroundJob()
     job.set_function(job.execute_hello)
 
@@ -146,7 +146,7 @@ def test_start_job(request_context) -> None:
     assert "Hallo :-)" in output
 
 
-def test_stop_job(request_context) -> None:
+def test_stop_job(request_context) -> None:  # type:ignore[no-untyped-def]
     job = DummyBackgroundJob()
     job.set_function(job.execute_endless)
     job.start()

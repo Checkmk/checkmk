@@ -26,13 +26,13 @@ def tm():
     return TransactionManager(request, MockLoggedInUser())
 
 
-def test_request_context_integration(request_context) -> None:
+def test_request_context_integration(request_context) -> None:  # type:ignore[no-untyped-def]
     assert callable(transactions.transaction_valid)
     assert callable(transactions.is_transaction)
     assert callable(transactions.check_transaction)
 
 
-def test_transaction_new_id(tm) -> None:
+def test_transaction_new_id(tm) -> None:  # type:ignore[no-untyped-def]
     assert tm._new_transids == []
     trans_id = tm.get()
     assert isinstance(trans_id, str)
@@ -71,7 +71,9 @@ class MockLoggedInUser(LoggedInUser):
         ("%d/abc" % time.time(), False, True, True),
     ],
 )
-def test_transaction_valid(tm, transid, ignore_transids, result, mocker, is_existing) -> None:
+def test_transaction_valid(  # type:ignore[no-untyped-def]
+    tm, transid, ignore_transids, result, mocker, is_existing
+) -> None:
     assert tm._ignore_transids is False
     if ignore_transids:
         tm.ignore()
@@ -88,17 +90,17 @@ def test_transaction_valid(tm, transid, ignore_transids, result, mocker, is_exis
     assert tm.transaction_valid() == result
 
 
-def test_is_transaction(tm) -> None:
+def test_is_transaction(tm) -> None:  # type:ignore[no-untyped-def]
     assert not tm.is_transaction()
     tm._request.set_var("_transid", "123")
     assert tm.is_transaction()
 
 
-def test_check_transaction_invalid(tm, monkeypatch) -> None:
+def test_check_transaction_invalid(tm, monkeypatch) -> None:  # type:ignore[no-untyped-def]
     assert tm.check_transaction() is False
 
 
-def test_check_transaction_valid(tm, monkeypatch, mocker) -> None:
+def test_check_transaction_valid(tm, monkeypatch, mocker) -> None:  # type:ignore[no-untyped-def]
     valid_transid = "%d/abc" % time.time()
     tm._request.set_var("_transid", valid_transid)
     tm._user._ids = [valid_transid]
@@ -108,7 +110,9 @@ def test_check_transaction_valid(tm, monkeypatch, mocker) -> None:
     invalidate.assert_called_once_with(valid_transid)
 
 
-def test_check_transaction_automation(tm, monkeypatch, mocker) -> None:
+def test_check_transaction_automation(  # type:ignore[no-untyped-def]
+    tm, monkeypatch, mocker
+) -> None:
     tm.ignore()
     tm._request.set_var("_transid", "-1")
 

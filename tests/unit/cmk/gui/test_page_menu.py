@@ -48,7 +48,7 @@ def test_make_form_submit_link() -> None:
     )
 
 
-def test_simple_page_menu(request_context) -> None:
+def test_simple_page_menu(request_context) -> None:  # type:ignore[no-untyped-def]
     pm = PageMenu(
         [
             PageMenuDropdown(

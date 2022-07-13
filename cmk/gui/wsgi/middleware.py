@@ -11,7 +11,7 @@ from cmk.gui import hooks
 
 
 class CallHooks:
-    def __init__(self, app) -> None:
+    def __init__(self, app) -> None:  # type:ignore[no-untyped-def]
         self.app = app
 
     def __call__(self, environ, start_response):
@@ -47,7 +47,7 @@ class OverrideRequestMethod:
     as this should be handled by other layers.
     """
 
-    def __init__(self, app) -> None:
+    def __init__(self, app) -> None:  # type:ignore[no-untyped-def]
         self.app = app
 
     def __call__(self, environ, start_response):

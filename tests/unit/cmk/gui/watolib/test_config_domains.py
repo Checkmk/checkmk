@@ -74,7 +74,7 @@ class TestConfigDomainCACertificates:
             ),
         ],
     )
-    def test_save_empty(
+    def test_save_empty(  # type:ignore[no-untyped-def]
         self,
         mocked_ca_config: ConfigDomainCACertificates,
         ca_settings,

@@ -111,7 +111,9 @@ def _expected_replication_paths():
     return expected
 
 
-def test_get_replication_paths_defaults(edition, monkeypatch) -> None:
+def test_get_replication_paths_defaults(  # type:ignore[no-untyped-def]
+    edition, monkeypatch
+) -> None:
     expected = _expected_replication_paths()
     assert sorted(activate_changes.get_replication_paths()) == sorted(expected)
 
@@ -184,7 +186,7 @@ def test_get_replication_components(
     ) == sorted(expected)
 
 
-def test_add_replication_paths_pre_17(monkeypatch) -> None:
+def test_add_replication_paths_pre_17(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     monkeypatch.setattr(cmk.utils.paths, "omd_root", Path("/path"))
     # dir/file, ident, path, optional list of excludes
     activate_changes.add_replication_paths(
@@ -229,7 +231,7 @@ def test_add_replication_paths() -> None:
         (True, {"livestatus_version": "1.5.0p23"}),
     ],
 )
-def test_is_pre_17_remote_site(site_status, expected) -> None:
+def test_is_pre_17_remote_site(site_status, expected) -> None:  # type:ignore[no-untyped-def]
     assert cmk.gui.watolib.utils.is_pre_17_remote_site(site_status) == expected
 
 
@@ -544,7 +546,7 @@ def _get_test_file_infos():
     return remote, central
 
 
-def test_get_sync_archive(tmp_path) -> None:
+def test_get_sync_archive(tmp_path) -> None:  # type:ignore[no-untyped-def]
     sync_archive = _get_test_sync_archive(tmp_path)
     with tarfile.TarFile(mode="r", fileobj=io.BytesIO(sync_archive)) as f:
         assert sorted(f.getnames()) == sorted(

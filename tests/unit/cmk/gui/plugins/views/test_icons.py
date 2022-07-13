@@ -67,7 +67,7 @@ def test_builtin_icons_and_actions() -> None:
     assert builtin_icons == sorted(expected_icons_and_actions)
 
 
-def test_legacy_icon_plugin(monkeypatch) -> None:
+def test_legacy_icon_plugin(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     icon: Dict[str, Any] = {
         "columns": ["column"],
         "host_columns": ["hcol"],
@@ -88,7 +88,7 @@ def test_legacy_icon_plugin(monkeypatch) -> None:
     assert registered_icon.sort_index() == 10
 
 
-def test_legacy_icon_plugin_defaults(monkeypatch) -> None:
+def test_legacy_icon_plugin_defaults(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     icon = {
         "columns": ["column"],
         "host_columns": ["hcol"],

@@ -26,7 +26,7 @@ from cmk.gui.utils.urls import doc_reference_url, DocReference, urlencode, urlen
         ([("a", None)], "a="),
     ],
 )
-def test_urlencode_vars(inp, out) -> None:
+def test_urlencode_vars(inp, out) -> None:  # type:ignore[no-untyped-def]
     assert urlencode_vars(inp) == out
 
 
@@ -44,7 +44,7 @@ def test_urlencode_vars(inp, out) -> None:
         ("/", "%2F"),
     ],
 )
-def test_urlencode(inp, out) -> None:
+def test_urlencode(inp, out) -> None:  # type:ignore[no-untyped-def]
     assert urlencode(inp) == out
 
 

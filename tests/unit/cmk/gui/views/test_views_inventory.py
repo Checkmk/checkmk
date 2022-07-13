@@ -121,7 +121,7 @@ EXPECTED_INV_MULTI_KEYS = [
 
 
 @pytest.mark.usefixtures("request_context")
-def test_query_row_table_inventory(monkeypatch) -> None:
+def test_query_row_table_inventory(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     row_table = RowTableInventory(
         "invtesttable", cmk.gui.inventory.InventoryPath.parse(".foo.bar:")
     )
@@ -134,7 +134,9 @@ def test_query_row_table_inventory(monkeypatch) -> None:
 
 
 @pytest.mark.usefixtures("request_context")
-def test_query_row_table_inventory_unknown_columns(monkeypatch) -> None:
+def test_query_row_table_inventory_unknown_columns(  # type:ignore[no-untyped-def]
+    monkeypatch,
+) -> None:
     row_table = RowTableInventory(
         "invtesttable", cmk.gui.inventory.InventoryPath.parse(".foo.bar:")
     )
@@ -147,7 +149,7 @@ def test_query_row_table_inventory_unknown_columns(monkeypatch) -> None:
 
 
 @pytest.mark.usefixtures("request_context")
-def test_query_row_table_inventory_add_columns(monkeypatch) -> None:
+def test_query_row_table_inventory_add_columns(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     row_table = RowTableInventory(
         "invtesttable", cmk.gui.inventory.InventoryPath.parse(".foo.bar:")
     )
@@ -160,7 +162,7 @@ def test_query_row_table_inventory_add_columns(monkeypatch) -> None:
 
 
 @pytest.mark.usefixtures("request_context")
-def test_query_row_table_inventory_history(monkeypatch) -> None:
+def test_query_row_table_inventory_history(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     row_table = RowTableInventoryHistory()
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
@@ -171,7 +173,9 @@ def test_query_row_table_inventory_history(monkeypatch) -> None:
 
 
 @pytest.mark.usefixtures("request_context")
-def test_query_row_table_inventory_history_unknown_columns(monkeypatch) -> None:
+def test_query_row_table_inventory_history_unknown_columns(  # type:ignore[no-untyped-def]
+    monkeypatch,
+) -> None:
     row_table = RowTableInventoryHistory()
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
@@ -182,7 +186,9 @@ def test_query_row_table_inventory_history_unknown_columns(monkeypatch) -> None:
 
 
 @pytest.mark.usefixtures("request_context")
-def test_query_row_table_inventory_history_add_columns(monkeypatch) -> None:
+def test_query_row_table_inventory_history_add_columns(  # type:ignore[no-untyped-def]
+    monkeypatch,
+) -> None:
     row_table = RowTableInventoryHistory()
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS2)
@@ -193,7 +199,7 @@ def test_query_row_table_inventory_history_add_columns(monkeypatch) -> None:
 
 
 @pytest.mark.usefixtures("request_context")
-def test_query_row_multi_table_inventory(monkeypatch) -> None:
+def test_query_row_multi_table_inventory(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     sources = list(
         zip(
             ["invtesttable1", "invtesttable2"],
@@ -213,7 +219,9 @@ def test_query_row_multi_table_inventory(monkeypatch) -> None:
 
 
 @pytest.mark.usefixtures("request_context")
-def test_query_row_multi_table_inventory_unknown_columns(monkeypatch) -> None:
+def test_query_row_multi_table_inventory_unknown_columns(  # type:ignore[no-untyped-def]
+    monkeypatch,
+) -> None:
     sources = list(
         zip(
             ["invtesttable1", "invtesttable2"],
@@ -233,7 +241,9 @@ def test_query_row_multi_table_inventory_unknown_columns(monkeypatch) -> None:
 
 
 @pytest.mark.usefixtures("request_context")
-def test_query_row_multi_table_inventory_add_columns(monkeypatch) -> None:
+def test_query_row_multi_table_inventory_add_columns(  # type:ignore[no-untyped-def]
+    monkeypatch,
+) -> None:
     sources = list(
         zip(
             ["invtesttable1", "invtesttable2"],
@@ -263,7 +273,9 @@ def test_query_row_multi_table_inventory_add_columns(monkeypatch) -> None:
         (0, 1, -1),
     ],
 )
-def test__cmp_inventory_node(monkeypatch, val_a, val_b, result) -> None:
+def test__cmp_inventory_node(  # type:ignore[no-untyped-def]
+    monkeypatch, val_a, val_b, result
+) -> None:
     monkeypatch.setattr(cmk.gui.inventory, "get_attribute", lambda val, path: val)
     assert (
         cmk.gui.views.inventory._cmp_inventory_node(

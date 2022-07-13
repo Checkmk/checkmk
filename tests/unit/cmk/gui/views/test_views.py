@@ -164,7 +164,7 @@ def test_registered_command_groups() -> None:
     assert sorted(expected) == sorted(names)
 
 
-def test_legacy_register_command_group(monkeypatch) -> None:
+def test_legacy_register_command_group(monkeypatch) -> None: # type:ignore[no-untyped-def]
     monkeypatch.setattr(cmk.gui.plugins.views.utils, "command_group_registry",
                         cmk.gui.plugins.views.utils.CommandGroupRegistry())
     cmk.gui.plugins.views.utils.register_command_group("abc", "A B C", 123)
@@ -297,7 +297,7 @@ def test_registered_commands() -> None:
         assert cmd.permission.name == cmd_spec["permission"]
 
 
-def test_legacy_register_command(monkeypatch) -> None:
+def test_legacy_register_command(monkeypatch) -> None: # type:ignore[no-untyped-def]
     monkeypatch.setattr(cmk.gui.plugins.views.utils, "command_registry",
                         cmk.gui.plugins.views.utils.CommandRegistry())
 
@@ -674,7 +674,7 @@ def test_registered_datasources() -> None:
         assert ds.id_keys == spec["idkeys"]
         assert ds.infos == spec["infos"]
 
-def test_painter_export_title(monkeypatch) -> None:
+def test_painter_export_title(monkeypatch) -> None: # type:ignore[no-untyped-def]
     painters: list[Painter] = [painter_class() for painter_class in cmk.gui.plugins.views.utils.painter_registry.values()]
     painters_and_cells: list[Tuple[Painter, Cell]] = [
                                                       (
@@ -693,7 +693,7 @@ def test_painter_export_title(monkeypatch) -> None:
         assert painter.export_title(cell) == expected_title
 
 
-def test_legacy_register_painter(monkeypatch) -> None:
+def test_legacy_register_painter(monkeypatch) -> None: # type:ignore[no-untyped-def]
     monkeypatch.setattr(cmk.gui.plugins.views.utils, "painter_registry",
                         cmk.gui.plugins.views.utils.PainterRegistry())
 
@@ -2355,7 +2355,7 @@ def test_registered_sorters() -> None:
         assert sorter.load_inv == spec.get("load_inv", False)
 
 
-def test_register_sorter(monkeypatch) -> None:
+def test_register_sorter(monkeypatch) -> None: # type:ignore[no-untyped-def]
     monkeypatch.setattr(cmk.gui.plugins.views.utils, "sorter_registry",
                         cmk.gui.plugins.views.utils.SorterRegistry())
 
@@ -2376,7 +2376,7 @@ def test_register_sorter(monkeypatch) -> None:
     assert sorter.cmp.__name__ == cmpfunc.__name__
 
 
-def test_get_needed_regular_columns(view) -> None:
+def test_get_needed_regular_columns(view) -> None: # type:ignore[no-untyped-def]
     class SomeFilter(Filter):
         def display(self, value):
             return
@@ -2435,7 +2435,7 @@ def test_get_needed_regular_columns(view) -> None:
     ])
 
 
-def test_get_needed_join_columns(view, load_config) -> None:
+def test_get_needed_join_columns(view, load_config) -> None: # type:ignore[no-untyped-def]
     view_spec = copy.deepcopy(view.spec)
     view_spec["painters"].append(PainterSpec('service_description', None, None, u'CPU load'))
     view = cmk.gui.views.View(view.name, view_spec, view_spec.get("context", {}))
@@ -2471,7 +2471,7 @@ def test_create_view_basics() -> None:
     assert view.only_sites is None
 
 
-def test_view_row_limit(view) -> None:
+def test_view_row_limit(view) -> None: # type:ignore[no-untyped-def]
     assert view.row_limit is None
     view.row_limit = 101
     assert view.row_limit == 101
@@ -2493,7 +2493,7 @@ def test_view_row_limit(view) -> None:
     ("hard", {"general.ignore_soft_limit": True, "general.ignore_hard_limit": True}, 5000),
     ("none", {"general.ignore_soft_limit": True, "general.ignore_hard_limit": True}, None),
 ])
-def test_gui_view_row_limit(request_context, monkeypatch, mocker, limit, permissions, result) -> None:
+def test_gui_view_row_limit(request_context, monkeypatch, mocker, limit, permissions, result) -> None: # type:ignore[no-untyped-def]
     if limit is not None:
         monkeypatch.setitem(html.request._vars, "limit", limit)
 
@@ -2502,19 +2502,19 @@ def test_gui_view_row_limit(request_context, monkeypatch, mocker, limit, permiss
     assert cmk.gui.views.get_limit() == result
 
 
-def test_view_only_sites(view) -> None:
+def test_view_only_sites(view) -> None: # type:ignore[no-untyped-def]
     assert view.only_sites is None
     view.only_sites = ["unit"]
     assert view.only_sites == ["unit"]
 
 
-def test_view_user_sorters(view) -> None:
+def test_view_user_sorters(view) -> None: # type:ignore[no-untyped-def]
     assert view.user_sorters is None
     view.user_sorters = [("abc", True)]
     assert view.user_sorters == [("abc", True)]
 
 
-def test_view_want_checkboxes(view) -> None:
+def test_view_want_checkboxes(view) -> None: # type:ignore[no-untyped-def]
     assert view.want_checkboxes is False
     view.want_checkboxes = True
     assert view.want_checkboxes is True
@@ -3035,7 +3035,7 @@ def test_get_inventory_display_hint() -> None:
     assert isinstance(hint, dict)
 
 
-def test_view_page(logged_in_admin_wsgi_app, mock_livestatus) -> None:
+def test_view_page(logged_in_admin_wsgi_app, mock_livestatus) -> None: # type:ignore[no-untyped-def]
     wsgi_app = logged_in_admin_wsgi_app
 
     def _prepend(prefix, dict_):

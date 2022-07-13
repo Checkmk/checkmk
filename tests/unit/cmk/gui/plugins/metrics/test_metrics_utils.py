@@ -22,7 +22,7 @@ from cmk.gui.type_defs import Perfdata
         ("hé ßß", ["hé", "ßß"]),
     ],
 )
-def test_split_perf_data(data_string, result) -> None:
+def test_split_perf_data(data_string, result) -> None:  # type:ignore[no-untyped-def]
     assert utils._split_perf_data(data_string) == result
 
 
@@ -73,11 +73,13 @@ def test_split_perf_data(data_string, result) -> None:
         ),
     ],
 )
-def test_parse_perf_data(request_context, perf_str, check_command, result) -> None:
+def test_parse_perf_data(  # type:ignore[no-untyped-def]
+    request_context, perf_str, check_command, result
+) -> None:
     assert utils.parse_perf_data(perf_str, check_command) == result
 
 
-def test_parse_perf_data2(request_context, monkeypatch) -> None:
+def test_parse_perf_data2(request_context, monkeypatch) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises(ValueError):
         monkeypatch.setattr(active_config, "debug", True)
         utils.parse_perf_data("hi ho", None)
@@ -95,7 +97,9 @@ def test_parse_perf_data2(request_context, monkeypatch) -> None:
         ("fake", "check_mk-imaginary", {"auto_graph": True, "name": "fake", "scale": 1.0}),
     ],
 )
-def test_perfvar_translation(perf_name, check_command, result) -> None:
+def test_perfvar_translation(  # type:ignore[no-untyped-def]
+    perf_name, check_command, result
+) -> None:
     assert utils.perfvar_translation(perf_name, check_command) == result
 
 
@@ -132,7 +136,9 @@ def test_perfvar_translation(perf_name, check_command, result) -> None:
         ),
     ],
 )
-def test_normalize_perf_data(perf_data, check_command, result) -> None:
+def test_normalize_perf_data(  # type:ignore[no-untyped-def]
+    perf_data, check_command, result
+) -> None:
     assert utils.normalize_perf_data(perf_data, check_command) == result
 
 
@@ -214,7 +220,9 @@ def test_reverse_translation_metric_name(
         ),
     ],
 )
-def test_get_graph_templates(metric_names, check_command, graph_ids) -> None:
+def test_get_graph_templates(  # type:ignore[no-untyped-def]
+    metric_names, check_command, graph_ids
+) -> None:
     perfdata: Perfdata = [(n, 0, "", None, None, None, None) for n in metric_names]
     translated_metrics = utils.translate_metrics(perfdata, check_command)
     assert set(graph_ids) == set(t["id"] for t in utils.get_graph_templates(translated_metrics))
@@ -238,7 +246,7 @@ def test_replace_expression() -> None:
         ("fs_size,fs_used,-@kb#e3fff9", ("fs_size,fs_used,-", "kb", "e3fff9")),
     ],
 )
-def test_extract_rpn(text, out) -> None:
+def test_extract_rpn(text, out) -> None:  # type:ignore[no-untyped-def]
     assert utils.split_expression(text) == out
 
 
@@ -308,7 +316,9 @@ def test_evaluate() -> None:
         ),
     ],
 )
-def test_stack_resolver(elements, is_operator, apply_operator, apply_element, result) -> None:
+def test_stack_resolver(  # type:ignore[no-untyped-def]
+    elements, is_operator, apply_operator, apply_element, result
+) -> None:
     assert utils.stack_resolver(elements, is_operator, apply_operator, apply_element) == result
 
 
@@ -352,7 +362,9 @@ def test_graph_titles() -> None:
         ),
     ],
 )
-def test_horizontal_rules_from_thresholds(perf_string, result) -> None:
+def test_horizontal_rules_from_thresholds(  # type:ignore[no-untyped-def]
+    perf_string, result
+) -> None:
     assert (
         utils.horizontal_rules_from_thresholds(
             [

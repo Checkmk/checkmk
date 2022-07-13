@@ -67,33 +67,33 @@ class TestAuditLogStore:
     def fixture_store(self, tmp_path):
         return AuditLogStore(tmp_path / "audit.log")
 
-    def test_read_not_existing(self, store) -> None:
+    def test_read_not_existing(self, store) -> None:  # type:ignore[no-untyped-def]
         assert not store.exists()
         assert list(store.read()) == []
 
-    def test_clear_not_existing(self, store) -> None:
+    def test_clear_not_existing(self, store) -> None:  # type:ignore[no-untyped-def]
         assert not store.exists()
         store.clear()
 
-    def test_append(self, store) -> None:
+    def test_append(self, store) -> None:  # type:ignore[no-untyped-def]
         entry = AuditLogStore.Entry(int(time.time()), None, "user", "action", "Mässädsch", None)
         store.append(entry)
         assert list(store.read()) == [entry]
 
-    def test_append_multiple(self, store) -> None:
+    def test_append_multiple(self, store) -> None:  # type:ignore[no-untyped-def]
         entry = AuditLogStore.Entry(int(time.time()), None, "user", "action", "Mässädsch", None)
         store.append(entry)
         store.append(entry)
         assert list(store.read()) == [entry, entry]
 
-    def test_transport_html(self, store, request_context) -> None:
+    def test_transport_html(self, store, request_context) -> None:  # type:ignore[no-untyped-def]
         entry = AuditLogStore.Entry(
             int(time.time()), None, "user", "action", HTML("Mäss<b>ädsch</b>"), None
         )
         store.append(entry)
         assert list(store.read()) == [entry]
 
-    def test_clear(self, store) -> None:
+    def test_clear(self, store) -> None:  # type:ignore[no-untyped-def]
         entry = AuditLogStore.Entry(int(time.time()), None, "user", "action", "Mässädsch", None)
         store.append(entry)
         assert list(store.read()) == [entry]
@@ -104,7 +104,9 @@ class TestAuditLogStore:
         archive_path = store._path.with_name(store._path.name + time.strftime(".%Y-%m-%d"))
         assert archive_path.exists()
 
-    def test_clear_produced_archive_file_per_clear(self, store) -> None:
+    def test_clear_produced_archive_file_per_clear(  # type:ignore[no-untyped-def]
+        self, store
+    ) -> None:
         entry = AuditLogStore.Entry(int(time.time()), None, "user", "action", "Mässädsch", None)
 
         for n in range(5):
@@ -143,15 +145,15 @@ class TestSiteChanges:
             "need_restart": True,
         }
 
-    def test_read_not_existing(self, store) -> None:
+    def test_read_not_existing(self, store) -> None:  # type:ignore[no-untyped-def]
         assert not store.exists()
         assert list(store.read()) == []
 
-    def test_clear_not_existing(self, store) -> None:
+    def test_clear_not_existing(self, store) -> None:  # type:ignore[no-untyped-def]
         assert not store.exists()
         store.clear()
 
-    def test_write(self, store, entry) -> None:
+    def test_write(self, store, entry) -> None:  # type:ignore[no-untyped-def]
         store.append(entry)
         assert list(store.read()) == [entry]
 
@@ -161,11 +163,11 @@ class TestSiteChanges:
         store.write([entry2])
         assert list(store.read()) == [entry2]
 
-    def test_append(self, store, entry) -> None:
+    def test_append(self, store, entry) -> None:  # type:ignore[no-untyped-def]
         store.append(entry)
         assert list(store.read()) == [entry]
 
-    def test_clear(self, store, entry) -> None:
+    def test_clear(self, store, entry) -> None:  # type:ignore[no-untyped-def]
         store.append(entry)
         assert list(store.read()) == [entry]
 
@@ -181,7 +183,9 @@ class TestSiteChanges:
             ("CMEFolder", ObjectRefType.Folder),
         ],
     )
-    def test_read_pre_20_host_change(self, store, old_type, ref_type) -> None:
+    def test_read_pre_20_host_change(  # type:ignore[no-untyped-def]
+        self, store, old_type, ref_type
+    ) -> None:
         with store._path.open("wb") as f:
             f.write(
                 repr(
@@ -203,7 +207,7 @@ class TestSiteChanges:
         assert store.read()[0]["object"] == ObjectRef(ref_type, "node1")
 
 
-def test_log_audit_with_object_diff(request_context) -> None:
+def test_log_audit_with_object_diff(request_context) -> None:  # type:ignore[no-untyped-def]
     old = {
         "a": "b",
         "b": "c",
@@ -234,7 +238,7 @@ def test_log_audit_with_object_diff(request_context) -> None:
     ]
 
 
-def test_log_audit_with_html_message(request_context) -> None:
+def test_log_audit_with_html_message(request_context) -> None:  # type:ignore[no-untyped-def]
     with on_time("2018-04-15 16:50", "CET"):
         log_audit(
             object_ref=None,

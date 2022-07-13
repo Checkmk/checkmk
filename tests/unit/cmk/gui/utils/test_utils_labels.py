@@ -173,7 +173,7 @@ SINGLE_SETUP_ROWS = _LivestatusLabelResponse(
         ],
     ],
 )
-def test_collect_labels_from_livestatus_rows(
+def test_collect_labels_from_livestatus_rows(  # type:ignore[no-untyped-def]
     livestatus_label_response: _LivestatusLabelResponse, expected: _MergedLabels
 ):
     assert (
@@ -223,7 +223,7 @@ DISTRIBUTED_RESULT: List[Dict[str, str]] = [
         ]
     ],
 )
-def test_get_deserialized_labels(
+def test_get_deserialized_labels(  # type:ignore[no-untyped-def]
     redis_result: List[Dict[str, str]],
     expected: List[Tuple[str, str]],
 ):

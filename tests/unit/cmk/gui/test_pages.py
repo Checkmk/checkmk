@@ -235,7 +235,7 @@ def test_registered_pages() -> None:
     assert len(differences) == 0
 
 
-def test_pages_register(monkeypatch, capsys) -> None:
+def test_pages_register(monkeypatch, capsys) -> None:  # type:ignore[no-untyped-def]
     monkeypatch.setattr(cmk.gui.pages, "page_registry", cmk.gui.pages.PageRegistry())
 
     @cmk.gui.pages.register("123handler")
@@ -249,7 +249,7 @@ def test_pages_register(monkeypatch, capsys) -> None:
     assert capsys.readouterr()[0] == "123"
 
 
-def test_pages_register_handler(monkeypatch, capsys) -> None:
+def test_pages_register_handler(monkeypatch, capsys) -> None:  # type:ignore[no-untyped-def]
     monkeypatch.setattr(cmk.gui.pages, "page_registry", cmk.gui.pages.PageRegistry())
 
     class PageClass:
@@ -265,7 +265,7 @@ def test_pages_register_handler(monkeypatch, capsys) -> None:
     assert capsys.readouterr()[0] == "234"
 
 
-def test_page_registry_register_page(monkeypatch, capsys) -> None:
+def test_page_registry_register_page(monkeypatch, capsys) -> None:  # type:ignore[no-untyped-def]
     page_registry = cmk.gui.pages.PageRegistry()
 
     @page_registry.register_page("234handler")

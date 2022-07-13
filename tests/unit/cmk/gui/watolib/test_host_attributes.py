@@ -339,7 +339,7 @@ expected_attributes = {
 }
 
 
-def test_registered_host_attributes(load_config) -> None:
+def test_registered_host_attributes(load_config) -> None:  # type:ignore[no-untyped-def]
     names = attrs.host_attribute_registry.keys()
     assert sorted(expected_attributes.keys()) == sorted(names)
 
@@ -362,7 +362,9 @@ def test_registered_host_attributes(load_config) -> None:
         assert spec["from_config"] == attr.from_config()
 
 
-def test_legacy_register_rulegroup_with_defaults(monkeypatch) -> None:
+def test_legacy_register_rulegroup_with_defaults(  # type:ignore[no-untyped-def]
+    monkeypatch,
+) -> None:
     monkeypatch.setattr(attrs, "host_attribute_registry", attrs.HostAttributeRegistry())
 
     assert "lat" not in attrs.host_attribute_registry
@@ -391,7 +393,9 @@ def test_legacy_register_rulegroup_with_defaults(monkeypatch) -> None:
     assert attr.from_config() is False
 
 
-def test_legacy_register_rulegroup_without_defaults(monkeypatch) -> None:
+def test_legacy_register_rulegroup_without_defaults(  # type:ignore[no-untyped-def]
+    monkeypatch,
+) -> None:
     monkeypatch.setattr(attrs, "host_attribute_registry", attrs.HostAttributeRegistry())
 
     assert "lat" not in attrs.host_attribute_registry
@@ -446,7 +450,7 @@ def test_legacy_register_rulegroup_without_defaults(monkeypatch) -> None:
         ("xyz_unknown", "custom_attributes"),
     ],
 )
-def test_custom_host_attribute_transform(old, new) -> None:
+def test_custom_host_attribute_transform(old, new) -> None:  # type:ignore[no-untyped-def]
     attributes = [
         {
             "add_custom_macro": True,
@@ -473,7 +477,7 @@ def test_custom_host_attribute_transform(old, new) -> None:
         "bulk",
     ],
 )
-def test_host_attribute_topics(for_what) -> None:
+def test_host_attribute_topics(for_what) -> None:  # type:ignore[no-untyped-def]
     assert attrs.get_sorted_host_attribute_topics(for_what=for_what, new=False) == [
         ("basic", "Basic settings"),
         ("address", "Network address"),
@@ -509,7 +513,7 @@ def test_host_attribute_topics_for_folders() -> None:
     ],
 )
 @pytest.mark.parametrize("new", [True, False])
-def test_host_attributes(for_what, new) -> None:
+def test_host_attributes(for_what, new) -> None:  # type:ignore[no-untyped-def]
     topics = {
         "basic": [
             "alias",

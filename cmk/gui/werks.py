@@ -223,7 +223,9 @@ def _page_menu_entries_ack_all_werks() -> Iterator[PageMenuEntry]:
     )
 
 
-def _extend_display_dropdown(menu, werk_table_options: Dict[str, Any]) -> None:
+def _extend_display_dropdown(  # type:ignore[no-untyped-def]
+    menu, werk_table_options: Dict[str, Any]
+) -> None:
     display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
     display_dropdown.topics.insert(
         0,
@@ -252,7 +254,9 @@ def _render_werk_options_form(werk_table_options: Dict[str, Any]) -> HTML:
         html.open_div(class_="side_popup_content")
         for name, height, vs, _default_value in _werk_table_option_entries():
 
-            def renderer(name=name, vs=vs, werk_table_options=werk_table_options) -> None:
+            def renderer(  # type:ignore[no-untyped-def]
+                name=name, vs=vs, werk_table_options=werk_table_options
+            ) -> None:
                 vs.render_input("wo_" + name, werk_table_options[name])
 
             html.render_floating_option(name, height, vs.title(), renderer)
@@ -327,7 +331,7 @@ def page_werk():
     html.footer()
 
 
-def _page_menu_werk(breadcrumb: Breadcrumb, werk: Dict[str, Any]):
+def _page_menu_werk(breadcrumb: Breadcrumb, werk: Dict[str, Any]):  # type:ignore[no-untyped-def]
     return PageMenu(
         dropdowns=[
             PageMenuDropdown(
@@ -600,7 +604,7 @@ def render_werks_table(werk_table_options: Dict[str, Any]) -> None:
         html.h3(_("No matching Werks found."))
 
 
-def render_werks_table_row(table, translator, werk) -> None:
+def render_werks_table_row(table, translator, werk) -> None:  # type:ignore[no-untyped-def]
     table.row()
     table.cell(_("ID"), render_werk_id(werk, with_link=True), css="number narrow")
     table.cell(_("Version"), werk["version"], css="number narrow")
@@ -690,18 +694,18 @@ def _werk_table_options_from_request() -> Dict[str, Any]:
     return werk_table_options
 
 
-def render_werk_id(werk, with_link) -> Union[HTML, str]:
+def render_werk_id(werk, with_link) -> Union[HTML, str]:  # type:ignore[no-untyped-def]
     if with_link:
         url = makeuri_contextless(request, [("werk", werk["id"])], filename="werk.py")
         return HTMLWriter.render_a("#%04d" % werk["id"], href=url)
     return "#%04d" % werk["id"]
 
 
-def render_werk_date(werk) -> str:
+def render_werk_date(werk) -> str:  # type:ignore[no-untyped-def]
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(werk["date"]))
 
 
-def render_werk_title(werk) -> HTML:
+def render_werk_title(werk) -> HTML:  # type:ignore[no-untyped-def]
     title = werk["title"]
     # if the title begins with the name or names of check plugins, then
     # we link to the man pages of those checks
@@ -711,7 +715,9 @@ def render_werk_title(werk) -> HTML:
     return escape_to_html_permissive(title)
 
 
-def render_werk_description(werk) -> HTML:  # pylint: disable=too-many-branches
+def render_werk_description(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
+    werk,
+) -> HTML:
     with output_funnel.plugged():
         html.open_p()
         in_list = False

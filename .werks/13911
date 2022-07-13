@@ -1,0 +1,18 @@
+Title: Improve RRD logging when path to DB is missing
+Class: fix
+Compatible: compat
+Component: livestatus
+Date: 1657713567
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p7
+
+Attempts to flush the DB when the path to the RRD database is
+missing would produce the rather unhelpful error
+
+"Error flushing RRD: Usage: rrdtool flushcached [--daemon|-d <addr>] <file> [<file> ...]"
+
+This fix removes the flushing attempt and silences the
+corresponding error in the log.

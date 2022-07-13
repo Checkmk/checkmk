@@ -214,7 +214,8 @@ detail::Data RRDDataMaker::make(const std::pair<std::string, std::string>
     // https://github.com/oetiker/rrdtool-1.x/issues/1062
 
     auto *logger = _mc->loggerRRD();
-    if (_mc->pnp4nagiosEnabled() && !_mc->rrdcachedSocketPath().empty()) {
+    if (_mc->pnp4nagiosEnabled() && !_mc->rrdcachedSocketPath().empty() &&
+        !touched_rrds.empty()) {
         std::vector<std::string> daemon_argv_s{
             "rrdtool flushcached",  // name of program (ignored)
             "--daemon", _mc->rrdcachedSocketPath()};

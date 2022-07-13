@@ -4,19 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Mapping
+
 from cmk.base.plugins.agent_based.utils import netapp_api
 
 # consideration of health status and port speed availability status quo
 discovery_netapp_api_ports_ignored = []
 
 
-def parse_netapp_ports(info):
-    def port_name(name, values):
-        try:
-            return "%s port %s" % (values["port-type"].capitalize(), name)
-        except KeyError:
-            return name
+def port_name(name: str, values: Mapping[str, str]) -> str:
+    try:
+        return "%s port %s" % (values["port-type"].capitalize(), name)
+    except KeyError:
+        return name
 
+
+def parse_netapp_ports(info):
     return netapp_api.parse_netapp_api_single_instance(info, custom_keys=None, item_func=port_name)
 
 

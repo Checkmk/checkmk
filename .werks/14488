@@ -1,0 +1,11 @@
+Title: Mega menu: Expand search bar width
+Level: 1
+Component: multisite
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 2.1.0p7
+Date: 1657699486
+
+The search bars in the mega menus "Monitor" and "Setup" are set to a higher default width and they now grow with the mega menu's width. Users can now put in longer and more complex search terms without running out of space.

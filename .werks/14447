@@ -6,7 +6,7 @@ Date: 1657005981
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0p5
+Version: 2.1.0p7
 
 The cleanup of long running processes forked by the mk_oracle plugin was not working reliably on AIX.
 With this werk we switch to the more robust approach used by the agents.

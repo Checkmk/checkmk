@@ -1191,7 +1191,7 @@ std::optional<std::string> PluginEntry::startProcessName() {
 
 void PluginEntry::restartIfRequired() {
     // check is valid parameters
-    if (cacheAge() < cma::cfg::kMinimumCacheAge) {
+    if (cacheAge() < cfg::kMinimumCacheAge) {
         XLOG::l(
             "Plugin '{}' requested to be async restarted, but has no valid cache age",
             path());
@@ -1236,8 +1236,8 @@ void PluginEntry::storeData(uint32_t proc_id, const std::vector<char> &data) {
     }
 
     process_id_ = 0;
-    auto now = std::chrono::steady_clock::now();
-    auto diff =
+    const auto now = std::chrono::steady_clock::now();
+    const auto diff =
         std::chrono::duration_cast<std::chrono::seconds>(now - start_time_)
             .count();
     if (diff > static_cast<int64_t>(timeout())) {
@@ -1254,11 +1254,11 @@ void PluginEntry::storeData(uint32_t proc_id, const std::vector<char> &data) {
     }
 
     data_time_ = std::chrono::steady_clock::now();
-    auto legacy_time = ::time(nullptr);
+    const auto legacy_time = ::time(nullptr);
 
     if (cacheAge() > 0) {
         data_.clear();
-        auto mode = local_ ? HackDataMode::line : HackDataMode::header;
+        const auto mode = local_ ? HackDataMode::line : HackDataMode::header;
         auto patch_string = ConstructPatchString(legacy_time, cacheAge(), mode);
         HackDataWithCacheInfo(data_, data, patch_string, mode);
     } else {

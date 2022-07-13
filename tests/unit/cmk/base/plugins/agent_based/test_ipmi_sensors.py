@@ -74,6 +74,17 @@ _STRING_TABLES = [
         ["187", "Megacell Status", "Battery", "N/A", "", "OK"],
         ["35", "CPU Utilization", "Processor", "68.00", "", "OK"],
     ],
+    [  # This data occurs, if the --output-sensor-thresholds is disabled. See CMK-10948
+        [
+            "14 ",
+            " Temp 1          ",
+            " Temperature  ",
+            " Nominal  ",
+            " 23.00      ",
+            " C     ",
+            " 'OK'",
+        ],
+    ],
 ]
 
 _SECTIONS = [
@@ -342,6 +353,17 @@ _SECTIONS = [
             warn_high=None,
             crit_high=None,
         ),
+    },
+    {
+        "Temp_1": ipmi_utils.Sensor(
+            status_txt="OK",
+            unit="C",
+            value=23.0,
+            crit_low=None,
+            warn_low=None,
+            warn_high=None,
+            crit_high=None,
+        )
     },
 ]
 

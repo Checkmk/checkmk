@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping, NamedTuple, Optional
 
 from .agent_based_api.v1 import register, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -21,24 +21,28 @@ def _na_float(str_value: str) -> Optional[float]:
     return None if str_value in _NA_VALUES else float(str_value)
 
 
-def parse_ipmi_sensors(  # pylint: disable=too-many-branches
-    string_table: StringTable,
-) -> ipmi_utils.Section:
+class Status(NamedTuple):
+    txt: str
+    is_ok: bool
+
+
+def _parse_status_txt(status_txt: str) -> Status:
+    if status_txt.startswith("[") or status_txt.startswith("'"):
+        status_txt = status_txt[1:]
+    if status_txt.endswith("]") or status_txt.endswith("'"):
+        status_txt = status_txt[:-1]
+    if status_txt in ["NA", "N/A", "Unknown"] or "_=_" in status_txt:
+        return Status(txt=status_txt.replace("_", " "), is_ok=False)
+    if status_txt in ["S0G0", "S0/G0"]:
+        return Status(txt="System full operational, working", is_ok=True)
+    return Status(txt=status_txt.replace("_", " "), is_ok=True)
+
+
+def parse_ipmi_sensors(string_table: StringTable) -> ipmi_utils.Section:
     section: ipmi_utils.Section = {}
     for line in string_table:
-        status_txt_ok = True
         stripped_line = [x.strip(" \n\t\x00") for x in line]
-        status_txt = stripped_line[-1]
-        if status_txt.startswith("[") or status_txt.startswith("'"):
-            status_txt = status_txt[1:]
-        if status_txt.endswith("]") or status_txt.endswith("'"):
-            status_txt = status_txt[:-1]
-        if status_txt in ["NA", "N/A", "Unknown"] or "_=_" in status_txt:
-            status_txt_ok = False
-        elif status_txt in ["S0G0", "S0/G0"]:
-            status_txt = "System full operational, working"
-        else:
-            status_txt = status_txt.replace("_", " ")
+        status = _parse_status_txt(stripped_line[-1])
 
         sensorname = stripped_line[1].replace(" ", "_")
 
@@ -47,11 +51,11 @@ def parse_ipmi_sensors(  # pylint: disable=too-many-branches
                 section.setdefault(
                     sensorname,
                     ipmi_utils.Sensor(
-                        status_txt=status_txt,
+                        status_txt=status.txt,
                         unit="",
                     ),
                 )
-                if status_txt_ok
+                if status.is_ok
                 else section.get(sensorname)
             )
         ):

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public Licensv2
 # This filis part of Checkmk (https://checkmk.com). It is subject to thterms and
 # conditions defined in thfilCOPYING, which is part of this sourccodpackage.

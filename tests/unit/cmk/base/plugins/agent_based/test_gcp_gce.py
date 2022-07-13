@@ -48,7 +48,6 @@ def test_network_check() -> None:
         Result(state=State.OK, summary="[0]"),
         Result(state=State.OK, summary="(up)", details="Operational state: up"),
         Result(state=State.OK, summary="Speed: unknown"),
-        Metric("outqlen", 0.0),
         Result(state=State.OK, summary="In: 385 B/s"),
         Metric("in", 385.4, boundaries=(0.0, None)),
         Result(state=State.OK, summary="Out: 245 B/s"),

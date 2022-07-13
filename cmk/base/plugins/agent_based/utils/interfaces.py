@@ -107,7 +107,7 @@ class Attributes:
     type: str
     speed: float = 0
     oper_status: str = ""
-    out_qlen: float = 0
+    out_qlen: float | None = None
     phys_address: Union[Iterable[int], str] = ""
     oper_status_name: str = ""
     speed_as_text: str = ""
@@ -145,18 +145,18 @@ class Attributes:
 
 @dataclass
 class Counters:
-    in_octets: float = 0
-    in_mcast: float = 0
-    in_bcast: float = 0
-    in_ucast: float = 0
-    in_disc: float = 0
-    in_err: float = 0
-    out_octets: float = 0
-    out_mcast: float = 0
-    out_bcast: float = 0
-    out_ucast: float = 0
-    out_disc: float = 0
-    out_err: float = 0
+    in_octets: float | None = None
+    in_mcast: float | None = None
+    in_bcast: float | None = None
+    in_ucast: float | None = None
+    in_disc: float | None = None
+    in_err: float | None = None
+    out_octets: float | None = None
+    out_mcast: float | None = None
+    out_bcast: float | None = None
+    out_ucast: float | None = None
+    out_disc: float | None = None
+    out_err: float | None = None
 
 
 @dataclass
@@ -229,12 +229,16 @@ class InterfaceWithRates:
             ("out_err", counters.out_err),
         ):
             try:
-                rates[rate_name] = get_rate(
-                    value_store=value_store,
-                    key=f"{rate_name}.{iface_counters.attributes.id_for_value_store}",
-                    time=timestamp,
-                    value=counter_value,
-                    raise_overflow=True,
+                rates[rate_name] = (
+                    get_rate(
+                        value_store=value_store,
+                        key=f"{rate_name}.{iface_counters.attributes.id_for_value_store}",
+                        time=timestamp,
+                        value=counter_value,
+                        raise_overflow=True,
+                    )
+                    if counter_value is not None
+                    else None
                 )
             except GetRateError as get_rate_error:
                 rates[rate_name] = None
@@ -1026,6 +1030,7 @@ def _accumulate_attributes(
         descr=item,
         alias="",
         type="",
+        out_qlen=0,
     )
     num_up = 0
     nodes = set()
@@ -1038,7 +1043,10 @@ def _accumulate_attributes(
         # Add interface info to group info
         if attributes.is_up:
             cumulated_attributes.speed += attributes.speed
-        cumulated_attributes.out_qlen += attributes.out_qlen
+            cumulated_attributes.out_qlen = _sum_optional_floats(
+                cumulated_attributes.out_qlen,
+                attributes.out_qlen,
+            )
 
         # This is the fallback ifType if None is set in the parameters
         cumulated_attributes.type = attributes.type
@@ -1049,6 +1057,7 @@ def _accumulate_attributes(
         cumulated_attributes.oper_status = "8"  # degraded
     else:
         cumulated_attributes.oper_status = "2"  # down
+        cumulated_attributes.out_qlen = None
     cumulated_attributes.oper_status_name = statename(cumulated_attributes.oper_status)
 
     alias_info = []
@@ -1347,10 +1356,11 @@ def check_single_interface(
     if str(interface.attributes.oper_status) == "2":
         return
 
-    yield Metric(
-        "outqlen",
-        interface.attributes.out_qlen,
-    )
+    if interface.attributes.out_qlen is not None:
+        yield Metric(
+            "outqlen",
+            interface.attributes.out_qlen,
+        )
 
     yield from _output_bandwidth_rates(
         interface.rates_with_averages,

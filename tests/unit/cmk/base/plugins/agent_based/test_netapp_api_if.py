@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.base.plugins.agent_based import netapp_api_if
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.utils import interfaces
 
 
@@ -118,15 +118,12 @@ from cmk.base.plugins.agent_based.utils import interfaces
                         Result(state=State.OK, summary="[GTB1020-2-CL_mgmt]"),
                         Result(state=State.OK, summary="(up)", details="Operational state: up"),
                         Result(state=State.OK, summary="Speed: 1 GBit/s"),
-                        Metric("outqlen", 0.0),
                         Result(
                             state=State.OK,
                             notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.1.GTB1020-2-CL_mgmt..None', "
                             "in_ucast: Initialized: 'in_ucast.1.GTB1020-2-CL_mgmt..None', in_mcast: Initialized: 'in_mcast.1.GTB1020-2-CL_mgmt..None', "
-                            "in_bcast: Initialized: 'in_bcast.1.GTB1020-2-CL_mgmt..None', in_disc: Initialized: 'in_disc.1.GTB1020-2-CL_mgmt..None', "
                             "in_err: Initialized: 'in_err.1.GTB1020-2-CL_mgmt..None', out_octets: Initialized: 'out_octets.1.GTB1020-2-CL_mgmt..None', "
                             "out_ucast: Initialized: 'out_ucast.1.GTB1020-2-CL_mgmt..None', out_mcast: Initialized: 'out_mcast.1.GTB1020-2-CL_mgmt..None', "
-                            "out_bcast: Initialized: 'out_bcast.1.GTB1020-2-CL_mgmt..None', out_disc: Initialized: 'out_disc.1.GTB1020-2-CL_mgmt..None', "
                             "out_err: Initialized: 'out_err.1.GTB1020-2-CL_mgmt..None'",
                         ),
                         Result(state=State.OK, summary="Current Port: e0f-112 (is home port)"),
@@ -143,15 +140,12 @@ from cmk.base.plugins.agent_based.utils import interfaces
                         Result(state=State.OK, summary="[GTB1020-2_ic1]"),
                         Result(state=State.OK, summary="(up)", details="Operational state: up"),
                         Result(state=State.OK, summary="Speed: 1 GBit/s"),
-                        Metric("outqlen", 0.0),
                         Result(
                             state=State.OK,
                             notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.2.GTB1020-2_ic1..None', "
                             "in_ucast: Initialized: 'in_ucast.2.GTB1020-2_ic1..None', in_mcast: Initialized: 'in_mcast.2.GTB1020-2_ic1..None', "
-                            "in_bcast: Initialized: 'in_bcast.2.GTB1020-2_ic1..None', in_disc: Initialized: 'in_disc.2.GTB1020-2_ic1..None', "
                             "in_err: Initialized: 'in_err.2.GTB1020-2_ic1..None', out_octets: Initialized: 'out_octets.2.GTB1020-2_ic1..None', "
                             "out_ucast: Initialized: 'out_ucast.2.GTB1020-2_ic1..None', out_mcast: Initialized: 'out_mcast.2.GTB1020-2_ic1..None', "
-                            "out_bcast: Initialized: 'out_bcast.2.GTB1020-2_ic1..None', out_disc: Initialized: 'out_disc.2.GTB1020-2_ic1..None', "
                             "out_err: Initialized: 'out_err.2.GTB1020-2_ic1..None'",
                         ),
                         Result(state=State.OK, summary="Current Port: e0f-2231 (is home port)"),
@@ -245,15 +239,12 @@ from cmk.base.plugins.agent_based.utils import interfaces
                         Result(state=State.OK, summary="(up)", details="Operational state: up"),
                         Result(state=State.OK, summary="MAC: 01:B0:89:22:DF:02"),
                         Result(state=State.OK, summary="Speed: 1 GBit/s"),
-                        Metric("outqlen", 0.0),
                         Result(
                             state=State.OK,
                             notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.5.ifgrp_sto..None', "
                             "in_ucast: Initialized: 'in_ucast.5.ifgrp_sto..None', in_mcast: Initialized: 'in_mcast.5.ifgrp_sto..None', "
-                            "in_bcast: Initialized: 'in_bcast.5.ifgrp_sto..None', in_disc: Initialized: 'in_disc.5.ifgrp_sto..None', "
                             "in_err: Initialized: 'in_err.5.ifgrp_sto..None', out_octets: Initialized: 'out_octets.5.ifgrp_sto..None', "
                             "out_ucast: Initialized: 'out_ucast.5.ifgrp_sto..None', out_mcast: Initialized: 'out_mcast.5.ifgrp_sto..None', "
-                            "out_bcast: Initialized: 'out_bcast.5.ifgrp_sto..None', out_disc: Initialized: 'out_disc.5.ifgrp_sto..None', "
                             "out_err: Initialized: 'out_err.5.ifgrp_sto..None'",
                         ),
                         Result(state=State.OK, summary="Physical interfaces: e0c(up)"),
@@ -325,15 +316,12 @@ from cmk.base.plugins.agent_based.utils import interfaces
                         Result(state=State.OK, summary="[cluster_mgmt]"),
                         Result(state=State.OK, summary="(up)", details="Operational state: up"),
                         Result(state=State.OK, summary="Speed: auto"),
-                        Metric("outqlen", 0.0),
                         Result(
                             state=State.OK,
                             notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.1.cluster_mgmt..None', "
                             "in_ucast: Initialized: 'in_ucast.1.cluster_mgmt..None', in_mcast: Initialized: 'in_mcast.1.cluster_mgmt..None', "
-                            "in_bcast: Initialized: 'in_bcast.1.cluster_mgmt..None', in_disc: Initialized: 'in_disc.1.cluster_mgmt..None', "
                             "in_err: Initialized: 'in_err.1.cluster_mgmt..None', out_octets: Initialized: 'out_octets.1.cluster_mgmt..None', "
                             "out_ucast: Initialized: 'out_ucast.1.cluster_mgmt..None', out_mcast: Initialized: 'out_mcast.1.cluster_mgmt..None', "
-                            "out_bcast: Initialized: 'out_bcast.1.cluster_mgmt..None', out_disc: Initialized: 'out_disc.1.cluster_mgmt..None', "
                             "out_err: Initialized: 'out_err.1.cluster_mgmt..None'",
                         ),
                         Result(state=State.OK, summary="Current Port: e0a (is home port)"),

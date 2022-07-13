@@ -87,6 +87,7 @@ def _create_interfaces_with_counters(
                 type="6",
                 speed=10000000,
                 oper_status="1",
+                out_qlen=32.2,
                 phys_address="\n\x00'\x00\x00\x00",
             ),
             interfaces.Counters(
@@ -102,13 +103,22 @@ def _create_interfaces_with_counters(
                 type="6",
                 speed=0,
                 oper_status="1",
+                out_qlen=0,
                 phys_address="d]\x86\xe4P/",
             ),
             interfaces.Counters(
                 in_octets=346922243 + bandwidth_change,
                 in_ucast=244867,
+                in_bcast=0,
+                in_mcast=0,
+                in_err=0,
+                in_disc=0,
                 out_octets=6570143 + 4 * bandwidth_change,
                 out_ucast=55994,
+                out_bcast=0,
+                out_mcast=0,
+                out_err=0,
+                out_disc=0,
             ),
         ),
     ]
@@ -835,35 +845,11 @@ ITEM_PARAMS_RESULTS = (
             Result(state=State.OK, summary="(up)", details="Operational state: up"),
             Result(state=State.OK, summary="MAC: 0A:00:27:00:00:00"),
             Result(state=State.OK, summary="Speed: 10 MBit/s"),
-            Metric("outqlen", 0.0),
-            Result(state=State.OK, summary="In: 0.00 B/s (0%)"),
-            Metric("in", 0.0, levels=(62500.0, 250000.0), boundaries=(0.0, 1250000.0)),
+            Metric("outqlen", 32.2),
             Result(state=State.OK, summary="Out: 0.00 B/s (0%)"),
             Metric("out", 0.0, levels=(62500.0, 250000.0), boundaries=(0.0, 1250000.0)),
-            Result(state=State.OK, notice="Errors in: 0 packets/s"),
-            Metric("inerr", 0.0, levels=(10.0, 20.0)),
-            Result(state=State.OK, notice="Multicast in: 0 packets/s"),
-            Metric("inmcast", 0.0),
-            Result(state=State.OK, notice="Broadcast in: 0 packets/s"),
-            Metric("inbcast", 0.0),
-            Result(state=State.OK, notice="Unicast in: 0 packets/s"),
-            Metric("inucast", 0.0),
-            Result(state=State.OK, notice="Non-unicast in: 0 packets/s"),
-            Metric("innucast", 0.0),
-            Result(state=State.OK, notice="Discards in: 0 packets/s"),
-            Metric("indisc", 0.0),
-            Result(state=State.OK, notice="Errors out: 0 packets/s"),
-            Metric("outerr", 0.0, levels=(10.0, 20.0)),
-            Result(state=State.OK, notice="Multicast out: 0 packets/s"),
-            Metric("outmcast", 0.0),
-            Result(state=State.OK, notice="Broadcast out: 0 packets/s"),
-            Metric("outbcast", 0.0),
             Result(state=State.OK, notice="Unicast out: 0 packets/s"),
             Metric("outucast", 0.0),
-            Result(state=State.OK, notice="Non-unicast out: 0 packets/s"),
-            Metric("outnucast", 0.0),
-            Result(state=State.OK, notice="Discards out: 0 packets/s"),
-            Metric("outdisc", 0.0),
         ],
     ),
     (
@@ -1255,13 +1241,9 @@ def test_check_single_interface_ignore_state(
             ITEM_PARAMS_RESULTS[0][1],
             ITEM_PARAMS_RESULTS[0][2][:5]
             + [
-                Result(state=State.OK, summary="In average 5min: 0.00 B/s (0%)"),
-            ]
-            + [ITEM_PARAMS_RESULTS[0][2][6]]
-            + [
                 Result(state=State.OK, summary="Out average 5min: 0.00 B/s (0%)"),
             ]
-            + ITEM_PARAMS_RESULTS[0][2][8:],
+            + ITEM_PARAMS_RESULTS[0][2][6:],
         ),
         (
             ITEM_PARAMS_RESULTS[1][0],
@@ -1547,10 +1529,6 @@ def test_check_single_interface_packet_levels() -> None:
             state=State.OK,
             summary="Speed: unknown",
         ),
-        Metric(
-            "outqlen",
-            0.0,
-        ),
         Result(
             state=State.OK,
             summary="In: 266 MB/s",
@@ -1807,41 +1785,12 @@ def test_check_multiple_interfaces_group_simple() -> None:
             summary="Members: [1 (up), 2 (down), 3 (down), 4 (down), 5 (up), 6 (up)]",
         ),
         Result(state=State.WARN, summary="Speed: 10 MBit/s (expected: 123 kBit/s)"),
-        Metric("outqlen", 0.0),
-        Result(state=State.CRIT, summary="In: 800 kB/s (warn/crit at 62.5 kB/s/250 kB/s) (64.00%)"),
-        Metric("in", 800000.0, levels=(62500.0, 250000.0), boundaries=(0.0, 1250000.0)),
         Result(
             state=State.CRIT, summary="Out: 3.20 MB/s (warn/crit at 62.5 kB/s/250 kB/s) (256.00%)"
         ),
         Metric("out", 3200000.0, levels=(62500.0, 250000.0), boundaries=(0.0, 1250000.0)),
-        Result(
-            state=State.CRIT, summary="Total: 4.00 MB/s (warn/crit at 250 kB/s/750 kB/s) (160.00%)"
-        ),
-        Metric("total", 4000000.0, levels=(250000.0, 750000.0), boundaries=(0.0, 2500000.0)),
-        Result(state=State.OK, notice="Errors in: 0 packets/s"),
-        Metric("inerr", 0.0, levels=(10.0, 20.0)),
-        Result(state=State.OK, notice="Multicast in: 0 packets/s"),
-        Metric("inmcast", 0.0),
-        Result(state=State.OK, notice="Broadcast in: 0 packets/s"),
-        Metric("inbcast", 0.0),
-        Result(state=State.OK, notice="Unicast in: 0 packets/s"),
-        Metric("inucast", 0.0),
-        Result(state=State.OK, notice="Non-unicast in: 0 packets/s"),
-        Metric("innucast", 0.0),
-        Result(state=State.OK, notice="Discards in: 0 packets/s"),
-        Metric("indisc", 0.0),
-        Result(state=State.OK, notice="Errors out: 0 packets/s"),
-        Metric("outerr", 0.0, levels=(10.0, 20.0)),
-        Result(state=State.OK, notice="Multicast out: 0 packets/s"),
-        Metric("outmcast", 0.0),
-        Result(state=State.OK, notice="Broadcast out: 0 packets/s"),
-        Metric("outbcast", 0.0),
         Result(state=State.OK, notice="Unicast out: 0 packets/s"),
         Metric("outucast", 0.0),
-        Result(state=State.OK, notice="Non-unicast out: 0 packets/s"),
-        Metric("outnucast", 0.0),
-        Result(state=State.OK, notice="Discards out: 0 packets/s"),
-        Metric("outdisc", 0.0),
     ]
 
 
@@ -1885,7 +1834,6 @@ def test_check_multiple_interfaces_group_exclude() -> None:
         Result(state=State.CRIT, summary="(degraded)", details="Operational state: degraded"),
         Result(state=State.OK, summary="Members: [1 (up), 2 (down), 3 (down), 6 (up)]"),
         Result(state=State.OK, summary="Speed: 20 MBit/s (assumed)"),
-        Metric("outqlen", 0.0),
         Result(state=State.CRIT, summary="In: 800 kB/s (warn/crit at 125 kB/s/500 kB/s) (32.00%)"),
         Metric("in", 800000.0, levels=(125000.0, 500000.0), boundaries=(0.0, 2500000.0)),
         Result(
@@ -1896,30 +1844,10 @@ def test_check_multiple_interfaces_group_exclude() -> None:
             state=State.CRIT, summary="Total: 4.00 MB/s (warn/crit at 500 kB/s/1.50 MB/s) (80.00%)"
         ),
         Metric("total", 4000000.0, levels=(500000.0, 1500000.0), boundaries=(0.0, 5000000.0)),
-        Result(state=State.OK, notice="Errors in: 0 packets/s"),
-        Metric("inerr", 0.0, levels=(10.0, 20.0)),
-        Result(state=State.OK, notice="Multicast in: 0 packets/s"),
-        Metric("inmcast", 0.0),
-        Result(state=State.OK, notice="Broadcast in: 0 packets/s"),
-        Metric("inbcast", 0.0),
         Result(state=State.OK, notice="Unicast in: 0 packets/s"),
         Metric("inucast", 0.0),
-        Result(state=State.OK, notice="Non-unicast in: 0 packets/s"),
-        Metric("innucast", 0.0),
-        Result(state=State.OK, notice="Discards in: 0 packets/s"),
-        Metric("indisc", 0.0),
-        Result(state=State.OK, notice="Errors out: 0 packets/s"),
-        Metric("outerr", 0.0, levels=(10.0, 20.0)),
-        Result(state=State.OK, notice="Multicast out: 0 packets/s"),
-        Metric("outmcast", 0.0),
-        Result(state=State.OK, notice="Broadcast out: 0 packets/s"),
-        Metric("outbcast", 0.0),
         Result(state=State.OK, notice="Unicast out: 0 packets/s"),
         Metric("outucast", 0.0),
-        Result(state=State.OK, notice="Non-unicast out: 0 packets/s"),
-        Metric("outnucast", 0.0),
-        Result(state=State.OK, notice="Discards out: 0 packets/s"),
-        Metric("outdisc", 0.0),
     ]
 
 
@@ -2119,41 +2047,13 @@ def test_check_multiple_interfaces_group_multiple_nodes() -> None:
             summary="Members: [5 (op. state: up, admin state: up), 6 (op. state: up, admin state: up) on node node1] [5 (op. state: up, admin state: down), 6 (op. state: up, admin state: down) on node node2]",
         ),
         Result(state=State.OK, summary="Speed: 20 MBit/s"),
-        Metric("outqlen", 0.0),
-        Result(state=State.CRIT, summary="In: 1.60 MB/s (warn/crit at 125 kB/s/500 kB/s) (64.00%)"),
-        Metric("in", 1600000.0, levels=(125000.0, 500000.0), boundaries=(0.0, 2500000.0)),
+        Metric("outqlen", 64.4),
         Result(
             state=State.CRIT, summary="Out: 6.40 MB/s (warn/crit at 125 kB/s/500 kB/s) (256.00%)"
         ),
         Metric("out", 6400000.0, levels=(125000.0, 500000.0), boundaries=(0.0, 2500000.0)),
-        Result(
-            state=State.CRIT, summary="Total: 8.00 MB/s (warn/crit at 500 kB/s/1.50 MB/s) (160.00%)"
-        ),
-        Metric("total", 8000000.0, levels=(500000.0, 1500000.0), boundaries=(0.0, 5000000.0)),
-        Result(state=State.OK, notice="Errors in: 0 packets/s"),
-        Metric("inerr", 0.0, levels=(10.0, 20.0)),
-        Result(state=State.OK, notice="Multicast in: 0 packets/s"),
-        Metric("inmcast", 0.0),
-        Result(state=State.OK, notice="Broadcast in: 0 packets/s"),
-        Metric("inbcast", 0.0),
-        Result(state=State.OK, notice="Unicast in: 0 packets/s"),
-        Metric("inucast", 0.0),
-        Result(state=State.OK, notice="Non-unicast in: 0 packets/s"),
-        Metric("innucast", 0.0),
-        Result(state=State.OK, notice="Discards in: 0 packets/s"),
-        Metric("indisc", 0.0),
-        Result(state=State.OK, notice="Errors out: 0 packets/s"),
-        Metric("outerr", 0.0, levels=(10.0, 20.0)),
-        Result(state=State.OK, notice="Multicast out: 0 packets/s"),
-        Metric("outmcast", 0.0),
-        Result(state=State.OK, notice="Broadcast out: 0 packets/s"),
-        Metric("outbcast", 0.0),
         Result(state=State.OK, notice="Unicast out: 0 packets/s"),
         Metric("outucast", 0.0),
-        Result(state=State.OK, notice="Non-unicast out: 0 packets/s"),
-        Metric("outnucast", 0.0),
-        Result(state=State.OK, notice="Discards out: 0 packets/s"),
-        Metric("outdisc", 0.0),
     ]
 
 
@@ -2244,16 +2144,5 @@ def test_cluster_check_ignore_discovered_params() -> None:
         Result(
             state=State.OK,
             summary="Speed: 100 kBit/s",
-        ),
-        Metric("outqlen", 0.0),
-        Result(
-            state=State.OK,
-            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.1.descr.alias.node', "
-            "in_ucast: Initialized: 'in_ucast.1.descr.alias.node', in_mcast: Initialized: 'in_mcast.1.descr.alias.node', "
-            "in_bcast: Initialized: 'in_bcast.1.descr.alias.node', in_disc: Initialized: 'in_disc.1.descr.alias.node', "
-            "in_err: Initialized: 'in_err.1.descr.alias.node', out_octets: Initialized: 'out_octets.1.descr.alias.node', "
-            "out_ucast: Initialized: 'out_ucast.1.descr.alias.node', out_mcast: Initialized: 'out_mcast.1.descr.alias.node', "
-            "out_bcast: Initialized: 'out_bcast.1.descr.alias.node', out_disc: Initialized: 'out_disc.1.descr.alias.node', "
-            "out_err: Initialized: 'out_err.1.descr.alias.node'",
         ),
     ]

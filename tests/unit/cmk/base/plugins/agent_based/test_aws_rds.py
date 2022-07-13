@@ -3038,7 +3038,6 @@ def test_check_aws_rds_network_io() -> None:
         Result(state=State.OK, summary="[database-1]"),
         Result(state=State.OK, summary="(up)", details="Operational state: up"),
         Result(state=State.OK, summary="Speed: unknown"),
-        Metric("outqlen", 0.0),
         Result(state=State.OK, summary="In: 417 B/s"),
         Metric("in", 417.41570964272285, boundaries=(0.0, None)),
         Result(state=State.OK, summary="Out: 2.67 kB/s"),

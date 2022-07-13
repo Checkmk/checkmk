@@ -1,0 +1,17 @@
+Title: Interface checks: Stop producing constantly zero and potentially wrong metrics
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1657792095
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The interface checks process a lot of different metrics (input and output bandwidth, input and
+output error rates, input and and output packet rates, etc.). Before this werk, for any metric not
+reported by a device, the interface checks returned constantly zero values. For example, for EC2
+instances in AWS, the only metrics reported by the AWS special agent are input and output bandwidth.
+Before this werk, the interface check constantly reported zero for all packet rates in this case.
+This is however useless and potentially wrong in many places. Therefore, as of this werk, the
+interface checks only return metrics for which the corresponding device actually reports values.

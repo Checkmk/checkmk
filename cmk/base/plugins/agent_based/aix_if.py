@@ -62,7 +62,7 @@ def parse_aix_if(  # pylint: disable=too-many-branches
         # No information from entstat. We consider interfaces up
         # if they have been used at least some time since the
         # system boot.
-        elif iface.counters.in_octets > 0:
+        elif iface.counters.in_octets:
             iface.attributes.oper_status = "1"
         iface.attributes.finalize()
 

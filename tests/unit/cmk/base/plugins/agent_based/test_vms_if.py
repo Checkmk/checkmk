@@ -23,7 +23,6 @@ def test_parse_vms_if() -> None:
                 type="6",
                 speed=1000000000,
                 oper_status="1",
-                out_qlen=0,
                 oper_status_name="up",
             ),
             interfaces.Counters(
@@ -49,7 +48,6 @@ def test_parse_vms_if() -> None:
                 type="6",
                 speed=1000000000,
                 oper_status="1",
-                out_qlen=0,
                 oper_status_name="up",
             ),
             interfaces.Counters(
@@ -58,13 +56,6 @@ def test_parse_vms_if() -> None:
                 in_mcast=1246887166,
                 in_bcast=0,
                 in_disc=0,
-                in_err=0,
-                out_octets=0,
-                out_ucast=0,
-                out_mcast=0,
-                out_bcast=0,
-                out_disc=0,
-                out_err=0,
             ),
         ),
         interfaces.InterfaceWithCounters(
@@ -75,7 +66,6 @@ def test_parse_vms_if() -> None:
                 type="6",
                 speed=1000000000,
                 oper_status="1",
-                out_qlen=0,
                 oper_status_name="up",
             ),
             interfaces.Counters(
@@ -84,13 +74,6 @@ def test_parse_vms_if() -> None:
                 in_mcast=4858067,
                 in_bcast=0,
                 in_disc=0,
-                in_err=0,
-                out_octets=0,
-                out_ucast=0,
-                out_mcast=0,
-                out_bcast=0,
-                out_disc=0,
-                out_err=0,
             ),
         ),
     ]

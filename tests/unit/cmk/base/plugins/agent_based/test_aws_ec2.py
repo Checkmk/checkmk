@@ -12,7 +12,6 @@ def test_check_aws_ec2_network_io() -> None:
         Result(state=State.OK, summary="[0]"),
         Result(state=State.OK, summary="(up)", details="Operational state: up"),
         Result(state=State.OK, summary="Speed: unknown"),
-        Metric("outqlen", 0.0),
         Result(state=State.OK, summary="In: 0.02 B/s"),
         Metric("in", 0.016666666666666666, boundaries=(0.0, None)),
         Result(state=State.OK, summary="Out: 0.03 B/s"),

@@ -1,0 +1,17 @@
+Title: activate changes: performance issues when synchronising users and user settings
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1657695024
+Edition: cme
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p9
+
+The activate changes process could be slow when activating changes for multiple
+sites in a distributed monitoring set-up. The activation would eventually run
+into an error similar to "Failed to start activation [502]: Proxy Error". This
+was due to the implementation that synchronises users and user settings across
+all sites. Instead of copying these files in their entirety, a hard link is now
+created, reducing I/O on the monitoring server.

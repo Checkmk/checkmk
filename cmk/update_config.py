@@ -217,6 +217,7 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("fjdarye100_rluns"): CheckPluginName("fjdarye_rluns"),
     CheckPluginName("fjdarye101_rluns"): CheckPluginName("fjdarye_rluns"),
     CheckPluginName("df_netapp32"): CheckPluginName("df_netapp"),
+    CheckPluginName("fjdarye500_ca_ports"): CheckPluginName("fjdarye_ca_ports"),
 }
 
 

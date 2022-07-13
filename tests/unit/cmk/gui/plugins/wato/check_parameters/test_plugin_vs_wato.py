@@ -267,7 +267,6 @@ class ErrorReporter:
         ("discovery", "discovery_netapp_api_fan_rules"),
         ("discovery", "discovery_netapp_api_psu_rules"),
         ("discovery", "discovery_win_dhcp_pools"),
-        ("discovery", "inventory_fujitsu_ca_ports"),
         ("discovery", "inventory_sap_values"),
         ("discovery", "oracle_performance_discovery"),
         ("discovery", "sap_value_groups"),

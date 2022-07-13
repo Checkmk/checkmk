@@ -41,10 +41,11 @@ def _parse_status_txt(status_txt: str) -> Status:
 def parse_ipmi_sensors(string_table: StringTable) -> ipmi_utils.Section:
     section: ipmi_utils.Section = {}
     for line in string_table:
-        stripped_line = [x.strip(" \n\t\x00") for x in line]
-        status = _parse_status_txt(stripped_line[-1])
-
-        sensorname = stripped_line[1].replace(" ", "_")
+        _sid, sensorname, *reading_levels_and_more, status_txt = [
+            x.strip(" \n\t\x00") for x in line
+        ]
+        status = _parse_status_txt(status_txt)
+        sensorname = sensorname.replace(" ", "_")
 
         if not status.is_ok and sensorname not in section:
             continue
@@ -54,7 +55,7 @@ def parse_ipmi_sensors(string_table: StringTable) -> ipmi_utils.Section:
             ipmi_utils.Sensor(status_txt=status.txt, unit=""),
         )
 
-        match stripped_line[2:-1]:
+        match reading_levels_and_more:
             case [reading_levels]:
                 if "(" in reading_levels:
                     # 339 Voltage_3.3VCC 3.33_V_(NA/NA) [OK]

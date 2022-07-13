@@ -165,8 +165,8 @@ def update_permissions(role: UserRole, new_permissions: Iterator[Tuple[str, str]
                 pass  # Already at defaults
 
 
-def save_updated_role(role: UserRole, old_roleid: RoleID) -> None:
+def update_role(role: UserRole, old_roleid: RoleID, new_roleid: RoleID) -> None:
     all_roles: Dict[RoleID, UserRole] = get_all_roles()
     del all_roles[old_roleid]
-    all_roles[RoleID(role.name)] = role
+    all_roles[new_roleid] = role
     save_all_roles(all_roles)

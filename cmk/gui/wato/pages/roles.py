@@ -242,7 +242,7 @@ class ModeEditRole(WatoMode):
         self._role.name = new_id
 
         userroles.update_permissions(self._role, request.itervars(prefix="perm_"))
-        userroles.save_updated_role(self._role, self._role_id)
+        userroles.update_role(role=self._role, old_roleid=self._role_id, new_roleid=RoleID(new_id))
         self._role_id = RoleID(new_id)
 
         _changes.add_change(

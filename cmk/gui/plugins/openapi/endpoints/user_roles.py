@@ -231,5 +231,9 @@ def edit_userrole(params: Mapping[str, Any]) -> Response:
     if new_permissions := body.get("new_permissions"):
         userroles.update_permissions(userrole_to_edit, new_permissions.items())
 
-    userroles.save_updated_role(userrole_to_edit, existing_roleid)
+    userroles.update_role(
+        role=userrole_to_edit,
+        old_roleid=RoleID(existing_roleid),
+        new_roleid=RoleID(userrole_to_edit.name),
+    )
     return serve_json(data=serialize_user_role(userrole_to_edit))

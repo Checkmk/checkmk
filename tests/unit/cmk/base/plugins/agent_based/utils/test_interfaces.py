@@ -1387,7 +1387,7 @@ def test_check_single_interface_ignore_state(
         ),
     ],
 )
-def test_check_single_interface_averaging(
+def test_check_single_interface_bandwidth_averaging(
     item: str,
     params: Mapping[str, Any],
     result: CheckResults,
@@ -1414,6 +1414,61 @@ def test_check_single_interface_averaging(
         )
         == result
     )
+
+
+def test_check_single_interface_bm_averaging() -> None:
+    item = "6"
+    params = {"average_bm": 13}
+    list(
+        interfaces.check_single_interface(
+            item,
+            params,
+            _create_interfaces(0)[int(item) - 1],
+            timestamp=0,
+        )
+    )
+    assert list(
+        interfaces.check_single_interface(
+            item,
+            params,
+            _create_interfaces(4000000)[int(item) - 1],
+            timestamp=5,
+        )
+    ) == [
+        Result(state=State.OK, summary="[wlp2s0]"),
+        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+        Result(state=State.OK, summary="MAC: 64:5D:86:E4:50:2F"),
+        Result(state=State.OK, summary="Speed: unknown"),
+        Metric("outqlen", 0.0),
+        Result(state=State.OK, summary="In: 800 kB/s"),
+        Metric("in", 800000.0, boundaries=(0.0, None)),
+        Result(state=State.OK, summary="Out: 3.20 MB/s"),
+        Metric("out", 3200000.0, boundaries=(0.0, None)),
+        Result(state=State.OK, notice="Errors in: 0 packets/s"),
+        Metric("inerr", 0.0),
+        Result(state=State.OK, notice="Multicast in average 13min: 0 packets/s"),
+        Metric("inmcast", 0.0),
+        Result(state=State.OK, notice="Broadcast in average 13min: 0 packets/s"),
+        Metric("inbcast", 0.0),
+        Result(state=State.OK, notice="Unicast in: 0 packets/s"),
+        Metric("inucast", 0.0),
+        Result(state=State.OK, notice="Non-unicast in: 0 packets/s"),
+        Metric("innucast", 0.0),
+        Result(state=State.OK, notice="Discards in: 0 packets/s"),
+        Metric("indisc", 0.0),
+        Result(state=State.OK, notice="Errors out: 0 packets/s"),
+        Metric("outerr", 0.0),
+        Result(state=State.OK, notice="Multicast out average 13min: 0 packets/s"),
+        Metric("outmcast", 0.0),
+        Result(state=State.OK, notice="Broadcast out average 13min: 0 packets/s"),
+        Metric("outbcast", 0.0),
+        Result(state=State.OK, notice="Unicast out: 0 packets/s"),
+        Metric("outucast", 0.0),
+        Result(state=State.OK, notice="Non-unicast out: 0 packets/s"),
+        Metric("outnucast", 0.0),
+        Result(state=State.OK, notice="Discards out: 0 packets/s"),
+        Metric("outdisc", 0.0),
+    ]
 
 
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)

@@ -67,10 +67,10 @@ diskstat_diskless_pattern = re.compile("x?[shv]d[a-z]*[0-9]+")
 # ==================================================================================================
 def inventory_diskstat_generic(  # pylint: disable=too-many-branches
     parsed: Sequence[Sequence[Any]],
-) -> Optional[Sequence[Tuple[str, Optional[str]]]]:
+) -> Sequence[tuple[str, Mapping[str, Any]]]:
     # Skip over on empty data
     if not parsed:
-        return None
+        return []
 
     # New style: use rule based configuration, defaulting to summary mode
     if diskstat_inventory_mode == "rule":
@@ -87,28 +87,28 @@ def inventory_diskstat_generic(  # pylint: disable=too-many-branches
     else:
         modes = ["legacy"]
 
-    inventory: MutableSequence[Tuple[str, Optional[str]]] = []
+    inventory = []
     if "summary" in modes:
-        inventory.append(("SUMMARY", "diskstat_default_levels"))
+        inventory.append(("SUMMARY", {**diskstat_default_levels}))
 
     if "legacy" in modes:
-        inventory += [("read", None), ("write", None)]
+        inventory += [("read", {}), ("write", {})]
 
     for line in parsed:
         name = line[1]
-        if "physical" in modes and not " " in name and not diskstat_diskless_pattern.match(name):
-            inventory.append((name, "diskstat_default_levels"))
+        if "physical" in modes and " " not in name and not diskstat_diskless_pattern.match(name):
+            inventory.append((name, {**diskstat_default_levels}))
 
         if "lvm" in modes and name.startswith("LVM "):
-            inventory.append((name, "diskstat_default_levels"))
+            inventory.append((name, {**diskstat_default_levels}))
 
         if "vxvm" in modes and name.startswith("VxVM "):
-            inventory.append((name, "diskstat_default_levels"))
+            inventory.append((name, {**diskstat_default_levels}))
 
         if "diskless" in modes and diskstat_diskless_pattern.match(name):
             # Sort of partitions with disks - typical in XEN virtual setups.
             # Eg. there are xvda1, xvda2, but no xvda...
-            inventory.append((name, "diskstat_default_levels"))
+            inventory.append((name, {**diskstat_default_levels}))
 
     return inventory
 

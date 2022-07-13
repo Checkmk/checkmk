@@ -70,6 +70,7 @@ def inventory_esx_systeminfo(section: Section) -> InventoryResult:
                 key: section[raw_key]
                 for key, raw_key in (
                     ("vendor", "vendor"),
+                    ("build", "build"),
                     ("name", "name"),
                     ("version", "version"),
                     ("type", "osType"),

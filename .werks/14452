@@ -1,0 +1,12 @@
+Title: ESX vSphere: Add build number to HW/SW inventory
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1657698708
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+
+

@@ -1,0 +1,31 @@
+Title: fileinfo: Remove 'Only check during the following times of the day' parameter
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1657711051
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+This werk is only incompatible for users who had both 'Only check during the following
+times of the day' and timespecific parameters configured in the same rule.
+
+After the introduction of 'Enable timespecific parameters', the 'Only check during the
+following times of the day' (timeofday) parameter became obsolete.
+With this werk, it's removed from the UI and the existing parameters are transformed
+to be timespecific parameters.
+
+If you had a combination of timeofday and timespecific parameters, your parameters
+are migrated in the following way:
+<ul>
+<li>If you've configured the timeofday parameter as the default when no time period matches,
+the timeofday parameter is converted to a time period, and your default configuration is used
+for this time period.</li>
+<li>If you've configured the timeofday parameter within a time period, the time period is
+assumed to be the correct time period during which the corresponding thresholds should be
+applied, and the timeofday parameter is removed.</li>
+</ul>
+
+If this migration isn't correct for your example, please fix your fileinfo
+configuration.

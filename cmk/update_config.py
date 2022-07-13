@@ -22,6 +22,7 @@ import subprocess
 import time
 from contextlib import contextmanager, suppress
 from datetime import datetime
+from datetime import time as dt_time
 from pathlib import Path, PureWindowsPath
 from typing import (
     Any,
@@ -33,6 +34,7 @@ from typing import (
     Mapping,
     MutableMapping,
     Optional,
+    Sequence,
     Set,
     Tuple,
 )
@@ -79,6 +81,7 @@ import cmk.gui.watolib.groups
 import cmk.gui.watolib.hosts_and_folders
 import cmk.gui.watolib.rulesets
 import cmk.gui.watolib.tags
+import cmk.gui.watolib.timeperiods as timeperiods
 from cmk.gui import main_modules
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger as gui_logger
@@ -115,6 +118,9 @@ from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.rulesets import RulesetCollection
 from cmk.gui.watolib.sites import site_globals_editable, SiteManagementFactory
+from cmk.gui.watolib.timeperiods import TimeperiodSpec
+
+TimeRange = Tuple[Tuple[int, int], Tuple[int, int]]
 
 # mapping removed check plugins to their replacement:
 REMOVED_CHECK_PLUGIN_MAP = {
@@ -640,6 +646,7 @@ class UpdateConfig:
         self._extract_disabled_snmp_sections_from_ignored_checks(all_rulesets)
         self._extract_checkmk_agent_rule_from_check_mk_config(all_rulesets)
         self._extract_checkmk_agent_rule_from_exit_spec(all_rulesets)
+        self._transform_fileinfo_timeofday_to_timeperiods(all_rulesets)
         self._transform_replaced_wato_rulesets(all_rulesets)
         self._transform_wato_rulesets_params(all_rulesets)
         self._transform_discovery_disabled_services(all_rulesets)
@@ -1028,6 +1035,74 @@ class UpdateConfig:
                     rule,
                     create_change=False,
                 )
+
+    def _transform_time_range(self, time_range: TimeRange) -> Tuple[str, str]:
+        begin_time = dt_time(hour=time_range[0][0], minute=time_range[0][1])
+        end_time = dt_time(hour=time_range[1][0], minute=time_range[1][1])
+        return (begin_time.strftime("%H:%M"), end_time.strftime("%H:%M"))
+
+    def _get_timeperiod_name(self, timeofday: Sequence[TimeRange]) -> str:
+        periods = [self._transform_time_range(t) for t in timeofday]
+        period_string = "_".join((f"{b}-{e}" for b, e in periods)).replace(":", "")
+        return f"timeofday_{period_string}"
+
+    def _create_timeperiod(self, name: str, timeofday: Sequence[TimeRange]) -> None:
+        periods = [self._transform_time_range(t) for t in timeofday]
+        periods_alias = ", ".join((f"{b}-{e}" for b, e in periods))
+
+        timeperiod: TimeperiodSpec = {
+            "alias": f"Created by migration of timeofday parameter ({periods_alias})",
+            **{
+                d: periods
+                for d in (
+                    "monday",
+                    "tuesday",
+                    "wednesday",
+                    "thursday",
+                    "friday",
+                    "saturday",
+                    "sunday",
+                )
+            },
+        }
+        timeperiods.save_timeperiod(name, timeperiod)
+
+    def _transform_fileinfo_timeofday_to_timeperiods(self, all_rulesets: RulesetCollection) -> None:
+        """Transforms the deprecated timeofday parameter to timeperiods
+
+        In the general case, timeperiods shouldn't be specified if timeofday is used.
+        It wasn't restriced, but it doesn't make sense to have both.
+        In case of timeofday in the default timeperiod, timeofday time range is
+        used and other timeperiods are removed.
+        In case of timeofday in the non-default timeperiod, timeofday param is removed.
+
+        This transformation is introduced in v2.2 and can be removed in v2.3.
+        """
+        ruleset = all_rulesets.get_rulesets()["checkgroup_parameters:fileinfo"]
+        for _folder, _folder_index, rule in ruleset.get_rules():
+            # in case there are timeperiods, look at default timepriod params
+            rule_params = rule.value.get("tp_default_value", rule.value)
+
+            timeofday = rule_params.get("timeofday")
+            if not timeofday:
+                # delete timeofday from non-default timeperiods
+                # this configuration doesn't make sense at all, there is nothing to transform it to
+                for _, tp_params in rule.value.get("tp_values", {}):
+                    tp_params.pop("timeofday", None)
+                continue
+
+            timeperiod_name = self._get_timeperiod_name(timeofday)
+            if timeperiod_name not in timeperiods.load_timeperiods():
+                self._create_timeperiod(timeperiod_name, timeofday)
+
+            thresholds = {
+                k: p
+                for k, p in rule_params.items()
+                if k not in ("timeofday", "tp_default_value", "tp_values")
+            }
+            tp_values = [(timeperiod_name, thresholds)]
+
+            rule.value = {"tp_default_value": {}, "tp_values": tp_values}
 
     def _check_failed_gui_plugins(self) -> None:
         failed_plugins = cmk.gui.utils.get_failed_plugins()

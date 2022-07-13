@@ -901,7 +901,6 @@ def test_fileinfo_group_discovery(info, params, expected_result) -> None:
                 Metric("age_oldest", 28741),
                 Result(state=State.OK, summary="Newest age: 7 hours 59 minutes"),
                 Metric("age_newest", 28741),
-                Result(state=State.OK, summary="Out of relevant time of day"),
             ],
         ),
     ],

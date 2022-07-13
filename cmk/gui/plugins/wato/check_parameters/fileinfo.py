@@ -9,15 +9,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import (
-    Age,
-    Dictionary,
-    Filesize,
-    ListOfTimeRanges,
-    MonitoringState,
-    TextInput,
-    Tuple,
-)
+from cmk.gui.valuespec import Age, Dictionary, Filesize, MonitoringState, TextInput, Tuple
 
 
 def _parameter_valuespec_fileinfo():
@@ -61,13 +53,6 @@ def _parameter_valuespec_fileinfo():
                         Filesize(title=_("Warning at or above")),
                         Filesize(title=_("Critical at or above")),
                     ],
-                ),
-            ),
-            (
-                "timeofday",
-                ListOfTimeRanges(
-                    title=_("Only check during the following times of the day"),
-                    help=_("Outside these ranges the check will always be OK"),
                 ),
             ),
             (

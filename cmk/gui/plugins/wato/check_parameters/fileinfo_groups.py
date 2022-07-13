@@ -19,7 +19,6 @@ from cmk.gui.valuespec import (
     Filesize,
     Integer,
     ListOf,
-    ListOfTimeRanges,
     MonitoringState,
     TextInput,
     Transform,
@@ -282,13 +281,6 @@ def get_fileinfo_groups_param_elements():
                     Integer(title=_("Warning at or above")),
                     Integer(title=_("Critical at or above")),
                 ],
-            ),
-        ),
-        (
-            "timeofday",
-            ListOfTimeRanges(
-                title=_("Only check during the following times of the day"),
-                help=_("Outside these ranges the check will always be OK"),
             ),
         ),
         (

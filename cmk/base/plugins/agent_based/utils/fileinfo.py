@@ -297,29 +297,6 @@ def discovery_fileinfo_groups(
     yield from discovery_fileinfo_common(params, section, CheckType.GROUP)
 
 
-def fileinfo_in_timerange(
-    now: time.struct_time,
-    range_from: Tuple[int, int],
-    range_to: Tuple[int, int],
-) -> bool:
-    minutes_from = range_from[0] * 60 + range_from[1]
-    minutes_to = range_to[0] * 60 + range_to[1]
-    minutes_now = now.tm_hour * 60 + now.tm_min
-    return minutes_to > minutes_now >= minutes_from
-
-
-def fileinfo_check_timeranges(params: Mapping[str, Any]) -> str:
-    ranges = params.get("timeofday")
-    if ranges is None:
-        return ""
-
-    now = time.localtime()
-    for range_spec in ranges:
-        if fileinfo_in_timerange(now, *range_spec):
-            return ""
-    return "Out of relevant time of day"
-
-
 def _fileinfo_check_function(
     check_definition: List[MetricInfo],
     params: Mapping[str, Any],
@@ -347,8 +324,6 @@ def check_fileinfo_data(
     reftime: int,
     params: Mapping[str, Any],
 ) -> CheckResult:
-    outof_range_txt = fileinfo_check_timeranges(params)
-
     if file_info is not None and not file_info.missing:
         if file_info.failed:
             yield Result(state=State.WARN, summary="File stat failed")
@@ -363,12 +338,6 @@ def check_fileinfo_data(
                 MetricInfo("Age", "age", age, render.timespan),
             ]
             yield from _fileinfo_check_function(check_definition, params)
-
-            if outof_range_txt:
-                yield Result(state=State.OK, summary=outof_range_txt)
-
-    elif outof_range_txt:
-        yield Result(state=State.OK, summary="File not found - %s" % outof_range_txt)
 
     else:
         yield Result(
@@ -592,9 +561,4 @@ def check_fileinfo_groups_data(
         )
 
     yield from _fileinfo_check_function(check_definition, params)
-
-    outof_range_txt = fileinfo_check_timeranges(params)
-    if outof_range_txt:
-        yield Result(state=State.OK, summary=outof_range_txt)
-
     yield from _fileinfo_check_conjunctions(check_definition, params)

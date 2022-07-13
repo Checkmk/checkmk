@@ -26,6 +26,7 @@ from cmk.utils.type_defs import CheckPluginName, ContactgroupName, RulesetName, 
 from cmk.utils.version import is_raw_edition
 
 import cmk.gui.config
+import cmk.gui.watolib.timeperiods as timeperiods
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
@@ -998,3 +999,80 @@ def _read_sitespecific_mknotifyd_config() -> dict[str, Any]:
         key="notification_spooler_config",
         default={},
     )
+
+
+def test__transform_time_range(uc: update_config.UpdateConfig) -> None:
+    time_range = ((8, 0), (16, 0))
+    assert uc._transform_time_range(time_range) == ("08:00", "16:00")
+
+
+def test__get_timeperiod_name(uc: update_config.UpdateConfig) -> None:
+    time_range = [((8, 0), (16, 0)), ((17, 0), (20, 0))]
+    assert uc._get_timeperiod_name(time_range) == "timeofday_0800-1600_1700-2000"
+
+
+@pytest.mark.usefixtures("request_context")
+def test__create_timeperiod(uc: update_config.UpdateConfig) -> None:
+    time_range = [((8, 0), (16, 0)), ((17, 0), (20, 0))]
+    uc._create_timeperiod("timeofday_0800-1600_1700-2000", time_range)
+
+    timeperiod = timeperiods.load_timeperiods()["timeofday_0800-1600_1700-2000"]
+    assert timeperiod == {
+        "alias": "Created by migration of timeofday parameter (08:00-16:00, 17:00-20:00)",
+        "monday": [("08:00", "16:00"), ("17:00", "20:00")],
+        "tuesday": [("08:00", "16:00"), ("17:00", "20:00")],
+        "wednesday": [("08:00", "16:00"), ("17:00", "20:00")],
+        "thursday": [("08:00", "16:00"), ("17:00", "20:00")],
+        "friday": [("08:00", "16:00"), ("17:00", "20:00")],
+        "saturday": [("08:00", "16:00"), ("17:00", "20:00")],
+        "sunday": [("08:00", "16:00"), ("17:00", "20:00")],
+    }
+
+
+@pytest.mark.parametrize(
+    "old_param_value, transformed_param_value",
+    [
+        pytest.param(
+            {"timeofday": [((8, 0), (16, 0)), ((17, 0), (20, 0))], "minage": (2, 1)},
+            {
+                "tp_default_value": {},
+                "tp_values": [("timeofday_0800-1600_1700-2000", {"minage": (2, 1)})],
+            },
+            id="without_timeperiods",
+        ),
+        pytest.param(
+            {
+                "tp_default_value": {"timeofday": [((8, 0), (16, 0))], "minage": (2, 1)},
+                "tp_values": [("24x7", {"maxage": (200, 1000)})],
+            },
+            {
+                "tp_default_value": {},
+                "tp_values": [("timeofday_0800-1600", {"minage": (2, 1)})],
+            },
+            id="timeofday_in_default_timeperiod",
+        ),
+        pytest.param(
+            {
+                "tp_default_value": {"minage": (2, 1)},
+                "tp_values": [("24x7", {"timeofday": [((8, 0), (16, 0))], "minage": (2, 1)})],
+            },
+            {
+                "tp_default_value": {"minage": (2, 1)},
+                "tp_values": [("24x7", {"minage": (2, 1)})],
+            },
+            id="timeofday_in_nondefault_timeperiod",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test__transform_fileinfo_timeofday_to_timeperiods(
+    uc: update_config.UpdateConfig, old_param_value: RuleValue, transformed_param_value: RuleValue
+):
+    rulesets = RulesetCollection()
+    ruleset = _instantiate_ruleset("checkgroup_parameters:fileinfo", old_param_value)
+    rulesets.set_rulesets({"checkgroup_parameters:fileinfo": ruleset})
+
+    uc._transform_fileinfo_timeofday_to_timeperiods(rulesets)
+
+    ruleset = rulesets.get_rulesets()["checkgroup_parameters:fileinfo"]
+    assert ruleset.get_rules()[0][2].value == transformed_param_value

@@ -21,7 +21,6 @@ from cmk.base.plugins.agent_based.utils.fileinfo import (
     check_fileinfo_data,
     check_fileinfo_groups_data,
     Fileinfo,
-    fileinfo_check_timeranges,
     fileinfo_groups_get_group_name,
     FileinfoItem,
     MetricInfo,
@@ -188,26 +187,6 @@ def test_fileinfo_groups_get_group_name_error(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize(
-    "params, expected_result",
-    [
-        (
-            {"timeofday": [((8, 0), (17, 0))]},
-            "",
-        ),
-        (
-            {"timeofday": [((8, 0), (9, 0))]},
-            "Out of relevant time of day",
-        ),
-    ],
-)
-@freeze_time("2021-07-12 12:00")
-def test_fileinfo_check_timeranges(params, expected_result) -> None:  # type:ignore[no-untyped-def]
-    result = fileinfo_check_timeranges(params)
-
-    assert result == expected_result
-
-
-@pytest.mark.parametrize(
     "file_stat, reftime, params, expected_result",
     [
         (
@@ -219,7 +198,7 @@ def test_fileinfo_check_timeranges(params, expected_result) -> None:  # type:ign
                 time=None,
             ),
             123456,
-            {"timeofday": [((8, 0), (9, 0))]},
+            {},
             [Result(state=State.WARN, summary="File stat time failed")],
         ),
         (
@@ -231,8 +210,8 @@ def test_fileinfo_check_timeranges(params, expected_result) -> None:  # type:ign
                 time=1189173868,
             ),
             123456,
-            {"timeofday": [((8, 0), (9, 0))]},
-            [Result(state=State.OK, summary="File not found - Out of relevant time of day")],
+            {},
+            [Result(state=State.UNKNOWN, summary="File not found")],
         ),
         (
             FileinfoItem(
@@ -243,13 +222,12 @@ def test_fileinfo_check_timeranges(params, expected_result) -> None:  # type:ign
                 time=1189173868,
             ),
             1189181234,
-            {"timeofday": [((8, 0), (9, 0))]},
+            {},
             [
                 Result(state=State.OK, summary="Size: 539 B"),
                 Metric("size", 539.0),
                 Result(state=State.OK, summary="Age: 2 hours 2 minutes"),
                 Metric("age", 7366.0),
-                Result(state=State.OK, summary="Out of relevant time of day"),
             ],
         ),
         (

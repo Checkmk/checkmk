@@ -157,7 +157,7 @@ def test_read_config_cluster(config_lines, cluster_name, cluster_data, monkeypat
     """checks if the agent plugin parses the configuration appropriately."""
     monkeypatch.setattr(mk_logwatch, 'iter_config_lines', lambda _files, **kw: iter(config_lines))
 
-    __, c_config = mk_logwatch.read_config(None)
+    __, c_config = mk_logwatch.read_config(None)  # type: ignore # just for a moment
     cluster = c_config[0]
 
     assert isinstance(cluster, mk_logwatch.ClusterConfigBlock)
@@ -230,7 +230,7 @@ def test_read_config_logfiles(config_lines, logfiles_files, logfiles_patterns,
     """checks if the agent plugin parses the configuration appropriately."""
     monkeypatch.setattr(mk_logwatch, 'iter_config_lines', lambda _files, **kw: iter(config_lines))
 
-    l_config, __ = mk_logwatch.read_config(None)
+    l_config, __ = mk_logwatch.read_config(None)  # type: ignore # just for a moment
     logfiles = l_config[0]
 
     assert isinstance(logfiles, mk_logwatch.PatternConfigBlock)

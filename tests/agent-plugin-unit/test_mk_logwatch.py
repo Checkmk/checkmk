@@ -17,6 +17,11 @@ import pytest
 
 import agents.plugins.mk_logwatch as mk_logwatch
 
+try:
+    from typing import Iterable
+except ImportError:
+    pass  # only needed for type comments
+
 
 def text_type():
     if sys.version_info[0] == 2:
@@ -108,28 +113,15 @@ def test_get_config_files(tmpdir) -> None:  # type:ignore[no-untyped-def]
     assert mk_logwatch.get_config_files(str(fake_config_dir)) == expected
 
 
-def test_iter_config_lines(tmpdir) -> None:  # type:ignore[no-untyped-def]
-    """Fakes a logwatch config file and checks if the agent plugin reads it appropriately"""
-    # setup
-    fake_config_path = os.path.join(str(tmpdir), "test")
-    os.mkdir(fake_config_path)
-
-    fake_config_file = os.path.join(fake_config_path, "logwatch.cfg")
-    files = [fake_config_file]
+def test_raise_no_config_lines():
+    # type: () -> None
 
     # No config file at all available, raise in debug mode!
     with pytest.raises(IOError):
-        list(mk_logwatch.iter_config_lines(files, debug=True))
+        mk_logwatch.read_config([], files=[], debug=True)
 
     # But it's ok without debug
-    list(mk_logwatch.iter_config_lines(files))
-
-    with open(fake_config_file, "wb") as f:
-        f.write(u"# this is a comment\nthis is a line   ".encode("utf-8"))
-
-    read = list(mk_logwatch.iter_config_lines(files))
-
-    assert read == ['this is a line']
+    mk_logwatch.read_config([], files=[], debug=False)
 
 
 @pytest.mark.parametrize("config_lines, cluster_name, cluster_data", [
@@ -153,11 +145,10 @@ def test_iter_config_lines(tmpdir) -> None:  # type:ignore[no-untyped-def]
         [],
     ),
 ])
-def test_read_config_cluster(config_lines, cluster_name, cluster_data, monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_read_config_cluster(config_lines, cluster_name, cluster_data):
+    # type: (Iterable[str], str, list[str]) -> None
     """checks if the agent plugin parses the configuration appropriately."""
-    monkeypatch.setattr(mk_logwatch, 'iter_config_lines', lambda _files, **kw: iter(config_lines))
-
-    __, c_config = mk_logwatch.read_config(None)  # type: ignore # just for a moment
+    __, c_config = mk_logwatch.read_config(config_lines, files=[], debug=False)
     cluster = c_config[0]
 
     assert isinstance(cluster, mk_logwatch.ClusterConfigBlock)
@@ -225,12 +216,11 @@ def test_read_config_cluster(config_lines, cluster_name, cluster_data, monkeypat
         [(u'W', u'sshd.*Corrupted MAC on input', [], [])],
     ),
 ])
-def test_read_config_logfiles(config_lines, logfiles_files, logfiles_patterns,
-                              monkeypatch):
+def test_read_config_logfiles(config_lines, logfiles_files, logfiles_patterns):
+    # type: (Iterable[str], list[str], list[tuple[str, list, list]]) -> None
     """checks if the agent plugin parses the configuration appropriately."""
-    monkeypatch.setattr(mk_logwatch, 'iter_config_lines', lambda _files, **kw: iter(config_lines))
 
-    l_config, __ = mk_logwatch.read_config(None)  # type: ignore # just for a moment
+    l_config, __ = mk_logwatch.read_config(config_lines, files=[], debug=False)
     logfiles = l_config[0]
 
     assert isinstance(logfiles, mk_logwatch.PatternConfigBlock)

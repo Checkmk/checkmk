@@ -46,7 +46,7 @@ import socket
 import time
 
 try:
-    from typing import Dict, Generator, Sequence
+    from typing import Dict, Generator, Iterable, Sequence
 except ImportError:
     # We need typing only for testing
     pass
@@ -252,26 +252,19 @@ def get_config_files(directory, config_file_arg=None):
 
 def iter_config_lines(files, debug=False):
     # type: (list[str], bool) -> Generator[str, None, None]
-    no_cfg_content_yielded = True
+    LOGGER.debug("Config files: %r", files)
+
     for file_ in files:
         try:
             with open(file_, "rb") as fid:
                 try:
-                    decoded = (line.decode("utf-8") for line in fid)
-                    for line in decoded:
-                        if not is_comment(line) and not is_empty(line):
-                            yield line.rstrip()
-                            no_cfg_content_yielded = False
+                    for line in fid:
+                        yield line.decode("utf-8")
                 except UnicodeDecodeError:
                     msg = "Error reading file %r (please use utf-8 encoding!)\n" % file_
                     sys.stdout.write(CONFIG_ERROR_PREFIX + msg)
         except IOError:
             pass
-
-    if debug and no_cfg_content_yielded:
-        # We need at least one config file *with* content in one of the places:
-        # logwatch.d or MK_CONFDIR
-        raise IOError("Did not find any content in config files: %s" % ", ".join(files))
 
 
 def consume_cluster_definition(config_lines):
@@ -318,23 +311,24 @@ def consume_logfile_definition(config_lines):
     return logfiles
 
 
-def read_config(files, debug=False):
-    # type: (list[str], bool) -> tuple[Sequence[PatternConfigBlock], Sequence[ClusterConfigBlock]]
+def read_config(config_lines, files, debug=False):
+    # type: (Iterable[str], list[str], bool) -> tuple[Sequence[PatternConfigBlock], Sequence[ClusterConfigBlock]]
     """
     Read logwatch.cfg (patterns, cluster mapping, etc.).
-
-    Side effect: Reads filesystem files logwatch.cfg and /logwatch.d/*.cfg
 
     Returns configuration as list. List elements are namedtuples.
     Namedtuple either describes logile patterns and is PatternConfigBlock(files, patterns).
     Or tuple describes optional cluster mapping and is ClusterConfigBlock(name, ips_or_subnets)
     with ips as list of strings.
     """
-    LOGGER.debug("Config files: %r", files)
+    config_lines = [l.rstrip() for l in config_lines if not is_comment(l) and not is_empty(l)]
+    if debug and not config_lines:
+        # We need at least one config file *with* content in one of the places:
+        # logwatch.d or MK_CONFDIR
+        raise IOError("Did not find any content in config files: %s" % ", ".join(files))
 
     logfiles_configs = []
     cluster_configs = []
-    config_lines = list(iter_config_lines(files, debug=debug))
 
     # parsing has to consider the following possible lines:
     # - comment lines (begin with #)
@@ -1145,7 +1139,9 @@ def main(argv=None):  # pylint: disable=too-many-branches
 
     try:
         files = get_config_files(MK_CONFDIR, config_file_arg=args.config)
-        logfiles_config, cluster_config = read_config(files, args.debug)
+        logfiles_config, cluster_config = read_config(
+            iter_config_lines(files, args.debug), files, args.debug
+        )
     except Exception as exc:
         if args.debug:
             raise

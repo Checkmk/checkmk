@@ -1,7 +1,9 @@
+#!groovy
+
 // library for uploading packages
 package lib
 
-versioning = load 'buildscripts/scripts/lib/versioning.groovy'
+def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
 def upload(Map args) {
     // needed args + desc:
@@ -35,6 +37,16 @@ def download_docker_tar(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITI
 }
 
 def download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, PATTERN = "*", INFO = 'all packages') {
+    println("""
+        ||== download_version_dir() ================================================================
+        || DOWNLOAD_SOURCE = |${DOWNLOAD_SOURCE}|
+        || PORT =            |${PORT}|
+        || CMK_VERSION =     |${CMK_VERSION}|
+        || DOWNLOAD_DEST =   |${DOWNLOAD_DEST}|
+        || PATTERN =         |${PATTERN}|
+        || INFO =            |${INFO}|
+        ||==========================================================================================
+        """.stripMargin());
     stage("Download from shared storage (${INFO})") {
         withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
             sh("mkdir -p ${DOWNLOAD_DEST}")
@@ -48,8 +60,7 @@ def download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, PATT
     }
 }
 
-def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT)
-{
+def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT) {
     stage('Upload to download server') {
         withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
             sh """

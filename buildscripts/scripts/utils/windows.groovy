@@ -1,3 +1,5 @@
+#!groovy
+
 // library for Windows builds
 package lib
 

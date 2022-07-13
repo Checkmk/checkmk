@@ -1,3 +1,5 @@
+#!groovy
+
 // library for simple string modifications
 package lib
 

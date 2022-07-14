@@ -24,7 +24,7 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
         *,
         hostname: HostName,
         address: Optional[HostAddress],
-        time_settings: List[Tuple[Optional[str], str, int]],
+        time_settings: Sequence[Tuple[Optional[str], str, int]],
     ) -> None:
         super().__init__(logging.getLogger("cmk.helper.piggyback"))
         self.hostname: Final = hostname
@@ -106,7 +106,7 @@ class PiggybackSummarizer(Summarizer):
         *,
         hostname: HostName,
         ipaddress: Optional[HostAddress],
-        time_settings: List[Tuple[Optional[str], str, int]],
+        time_settings: Sequence[Tuple[Optional[str], str, int]],
         always: bool,
     ) -> None:
         super().__init__(exit_spec)

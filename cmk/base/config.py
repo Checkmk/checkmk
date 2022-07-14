@@ -4096,7 +4096,7 @@ class ConfigCache:
 
     def get_piggybacked_hosts_time_settings(
         self, piggybacked_hostname: Optional[HostName] = None
-    ) -> List[Tuple[Optional[str], str, int]]:
+    ) -> Sequence[Tuple[Optional[str], str, int]]:
         time_settings: List[Tuple[Optional[str], str, int]] = []
         for source_hostname in sorted(piggyback.get_source_hostnames(piggybacked_hostname)):
             time_settings.extend(self.get_host_config(source_hostname).piggybacked_host_files)

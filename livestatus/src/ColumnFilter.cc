@@ -30,6 +30,8 @@ Filters ColumnFilter::conjuncts() const {
     return filters;
 }
 
+const ColumnFilter *ColumnFilter::as_column_filter() const { return this; };
+
 std::ostream &ColumnFilter::print(std::ostream &os) const {
     return os << "Filter: " << columnName() << " " << oper() << " " << value();
 }

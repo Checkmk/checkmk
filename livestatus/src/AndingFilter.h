@@ -19,6 +19,7 @@
 
 #include "Filter.h"
 #include "contact_fwd.h"
+class ColumnFilter;
 class Row;
 
 class AndingFilter : public Filter {
@@ -47,6 +48,7 @@ public:
     [[nodiscard]] bool is_contradiction() const override;
     [[nodiscard]] Filters disjuncts() const override;
     [[nodiscard]] Filters conjuncts() const override;
+    [[nodiscard]] const ColumnFilter *as_column_filter() const override;
 
     // NOTE: This is effectively private, but it can't be declared like this
     // because of std::make_unique.

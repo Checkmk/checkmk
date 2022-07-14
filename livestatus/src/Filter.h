@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "contact_fwd.h"
+class ColumnFilter;
 class Filter;
 class Row;
 
@@ -72,6 +73,9 @@ public:
     /// Combining the returned filters with *and* yields a filter equivalent to
     /// the current one.
     [[nodiscard]] virtual Filters conjuncts() const = 0;
+
+    // Our home-grown RTTI... :-/
+    [[nodiscard]] virtual const ColumnFilter *as_column_filter() const = 0;
 
     friend std::ostream &operator<<(std::ostream &os, const Filter &filter) {
         return filter.print(os);

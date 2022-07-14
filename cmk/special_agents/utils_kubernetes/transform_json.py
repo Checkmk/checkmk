@@ -91,20 +91,10 @@ class JSONStatefulSetSpec(TypedDict):
     updateStrategy: JSONStatefulSetUpdateStrategy
 
 
-class JSONStatefulSetStatusBelow23(TypedDict, total=False):
+class JSONStatefulSetStatus(TypedDict, total=False):
     readyReplicas: int
     updatedReplicas: int
-
-
-class JSONStatefulSetStatusAt23Mandatory(TypedDict):
     availableReplicas: int
-
-
-class JSONStatefulSetStatusAt23(JSONStatefulSetStatusAt23Mandatory, JSONStatefulSetStatusBelow23):
-    pass
-
-
-JSONStatefulSetStatus = Union[JSONStatefulSetStatusAt23, JSONStatefulSetStatusBelow23]
 
 
 class JSONStatefulSet(TypedDict):

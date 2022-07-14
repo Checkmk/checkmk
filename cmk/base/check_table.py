@@ -8,7 +8,6 @@ import enum
 from contextlib import suppress
 from typing import Iterable, Iterator, Mapping, Set
 
-from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, HostName, ServiceID
 
 import cmk.base.config as config
@@ -136,13 +135,7 @@ def _get_enforced_services(
             check_plugin_name=check_plugin_name,
             item=item,
             description=descr,
-            parameters=config.compute_check_parameters(
-                config_cache.host_of_clustered_service(host_config.hostname, descr),
-                check_plugin_name,
-                item,
-                {},
-                configured_parameters=TimespecificParameters((params,)),
-            ),
+            parameters=params,
             discovered_parameters=None,
             service_labels={},
         )

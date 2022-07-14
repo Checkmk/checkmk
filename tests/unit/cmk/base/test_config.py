@@ -1206,15 +1206,25 @@ def test_host_config_custom_checks(
                     "checkgroup",
                     CheckPluginName("checktype1"),
                     "item1",
-                    "Unimplemented check checktype1 / item1",
-                    TimespecificParameterSet({"param1": 1}, ()),
+                    "Test fake checktype1 / item1",
+                    TimespecificParameters(
+                        (
+                            TimespecificParameterSet({"param1": 1}, ()),
+                            TimespecificParameterSet({}, ()),
+                        )
+                    ),
                 ),
                 ServiceID(CheckPluginName("checktype2"), "item2"): (
                     "checkgroup",
                     CheckPluginName("checktype2"),
                     "item2",
-                    "Unimplemented check checktype2 / item2",
-                    TimespecificParameterSet({"param2": 2}, ()),
+                    "Test fake checktype2 / item2",
+                    TimespecificParameters(
+                        (
+                            TimespecificParameterSet({"param2": 2}, ()),
+                            TimespecificParameterSet({}, ()),
+                        )
+                    ),
                 ),
             },
         ),
@@ -1223,6 +1233,18 @@ def test_host_config_custom_checks(
 def test_host_config_static_checks(
     monkeypatch: MonkeyPatch, hostname_str: str, result: Mapping[ServiceID, tuple]
 ) -> None:
+    class MockPlugin:
+        def __init__(self, name: CheckPluginName) -> None:
+            self.name = name
+            self.service_name = "Test fake %s / %%s" % name
+            self.check_default_parameters: dict = {}
+
+    monkeypatch.setattr(
+        config.agent_based_register,
+        "get_check_plugin",
+        MockPlugin,
+    )
+
     hostname = HostName(hostname_str)
     ts = Scenario()
     ts.add_host(hostname)

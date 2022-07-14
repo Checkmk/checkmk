@@ -3018,7 +3018,7 @@ class HostConfig:
     def enforced_services_table(
         self,
     ) -> Mapping[
-        ServiceID, tuple[RulesetName, CheckPluginName, Item, ServiceName, TimespecificParameterSet]
+        ServiceID, tuple[RulesetName, CheckPluginName, Item, ServiceName, TimespecificParameters]
     ]:
         """Return a table of enforced services
 
@@ -3032,7 +3032,13 @@ class HostConfig:
                 check_plugin_name,
                 item,
                 descr,
-                params,
+                compute_check_parameters(
+                    self._config_cache.host_of_clustered_service(self.hostname, descr),
+                    check_plugin_name,
+                    item,
+                    {},
+                    configured_parameters=TimespecificParameters((params,)),
+                ),
             )
             for checkgroup_name, ruleset in static_checks.items()
             for check_plugin_name, item, params in (

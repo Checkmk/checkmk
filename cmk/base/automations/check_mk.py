@@ -26,7 +26,6 @@ from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKSNMPError, OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.macros import replace_macros_in_str
-from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.paths import (
     autochecks_dir,
     counters_dir,
@@ -743,8 +742,6 @@ class AutomationAnalyseServices(Automation):
         # 4. active checks
 
         # 1. Enforced services
-        # If we used the check table here, we would end up with the
-        # *effective* parameters, these are the *configured* ones.
         for (
             checkgroup_name,
             check_plugin_name,
@@ -758,9 +755,7 @@ class AutomationAnalyseServices(Automation):
                     "checkgroup": checkgroup_name,
                     "checktype": str(check_plugin_name),
                     "item": item,
-                    "parameters": TimespecificParameters((params,)).preview(
-                        cmk.base.core.timeperiod_active
-                    ),
+                    "parameters": params.preview(cmk.base.core.timeperiod_active),
                 }
 
         # 2. Load all autochecks of the host in question and try to find

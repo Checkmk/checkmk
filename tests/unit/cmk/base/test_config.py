@@ -1204,26 +1204,34 @@ def test_host_config_custom_checks(
             {
                 ServiceID(CheckPluginName("checktype1"), "item1"): (
                     "checkgroup",
-                    CheckPluginName("checktype1"),
-                    "item1",
-                    "Test fake checktype1 / item1",
-                    TimespecificParameters(
-                        (
-                            TimespecificParameterSet({"param1": 1}, ()),
-                            TimespecificParameterSet({}, ()),
-                        )
+                    ConfiguredService(
+                        check_plugin_name=CheckPluginName("checktype1"),
+                        item="item1",
+                        description="Test fake checktype1 / item1",
+                        parameters=TimespecificParameters(
+                            (
+                                TimespecificParameterSet({"param1": 1}, ()),
+                                TimespecificParameterSet({}, ()),
+                            )
+                        ),
+                        discovered_parameters={},
+                        service_labels={},
                     ),
                 ),
                 ServiceID(CheckPluginName("checktype2"), "item2"): (
                     "checkgroup",
-                    CheckPluginName("checktype2"),
-                    "item2",
-                    "Test fake checktype2 / item2",
-                    TimespecificParameters(
-                        (
-                            TimespecificParameterSet({"param2": 2}, ()),
-                            TimespecificParameterSet({}, ()),
-                        )
+                    ConfiguredService(
+                        check_plugin_name=CheckPluginName("checktype2"),
+                        item="item2",
+                        description="Test fake checktype2 / item2",
+                        parameters=TimespecificParameters(
+                            (
+                                TimespecificParameterSet({"param2": 2}, ()),
+                                TimespecificParameterSet({}, ()),
+                            )
+                        ),
+                        discovered_parameters={},
+                        service_labels={},
                     ),
                 ),
             },
@@ -1231,7 +1239,9 @@ def test_host_config_custom_checks(
     ],
 )
 def test_host_config_static_checks(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: Mapping[ServiceID, tuple]
+    monkeypatch: MonkeyPatch,
+    hostname_str: str,
+    result: Mapping[ServiceID, tuple[str, ConfiguredService]],
 ) -> None:
     class MockPlugin:
         def __init__(self, name: CheckPluginName) -> None:

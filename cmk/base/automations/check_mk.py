@@ -742,20 +742,14 @@ class AutomationAnalyseServices(Automation):
         # 4. active checks
 
         # 1. Enforced services
-        for (
-            checkgroup_name,
-            check_plugin_name,
-            item,
-            descr,
-            params,
-        ) in host_config.enforced_services_table.values():
-            if descr == servicedesc:
+        for checkgroup_name, service in host_config.enforced_services_table.values():
+            if service.description == servicedesc:
                 return {
                     "origin": "static",  # TODO: (how) can we change this to "enforced"?
                     "checkgroup": checkgroup_name,
-                    "checktype": str(check_plugin_name),
-                    "item": item,
-                    "parameters": params.preview(cmk.base.core.timeperiod_active),
+                    "checktype": str(service.check_plugin_name),
+                    "item": service.item,
+                    "parameters": service.parameters.preview(cmk.base.core.timeperiod_active),
                 }
 
         # 2. Load all autochecks of the host in question and try to find

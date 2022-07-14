@@ -130,17 +130,7 @@ def _get_enforced_services(
     config_cache: ConfigCache,
     host_config: HostConfig,
 ) -> Iterable[ConfiguredService]:
-    return [
-        ConfiguredService(
-            check_plugin_name=check_plugin_name,
-            item=item,
-            description=descr,
-            parameters=params,
-            discovered_parameters=None,
-            service_labels={},
-        )
-        for _checkgroup_name, check_plugin_name, item, descr, params in host_config.enforced_services_table.values()
-    ]
+    return [service for _ruleset_name, service in host_config.enforced_services_table.values()]
 
 
 def _get_clustered_services(

@@ -3018,26 +3018,31 @@ class HostConfig:
     def enforced_services_table(
         self,
     ) -> Mapping[
-        ServiceID, tuple[RulesetName, CheckPluginName, Item, ServiceName, TimespecificParameters]
+        cmk.base.check_utils.ServiceID, tuple[RulesetName, cmk.base.check_utils.ConfiguredService]
     ]:
         """Return a table of enforced services
 
         Note: We need to reverse the order of the enforced services.
         Users assume that earlier rules have precedence over later ones.
-        Important if there are two rules for a host with the same plugin name and item.
+        Important if there are two rules for a host with the same combination of plugin name
+        and item.
         """
         return {
             ServiceID(check_plugin_name, item): (
                 RulesetName(checkgroup_name),
-                check_plugin_name,
-                item,
-                descr,
-                compute_check_parameters(
-                    self._config_cache.host_of_clustered_service(self.hostname, descr),
-                    check_plugin_name,
-                    item,
-                    {},
-                    configured_parameters=TimespecificParameters((params,)),
+                cmk.base.check_utils.ConfiguredService(
+                    check_plugin_name=check_plugin_name,
+                    item=item,
+                    description=descr,
+                    parameters=compute_check_parameters(
+                        self._config_cache.host_of_clustered_service(self.hostname, descr),
+                        check_plugin_name,
+                        item,
+                        {},
+                        configured_parameters=TimespecificParameters((params,)),
+                    ),
+                    discovered_parameters={},
+                    service_labels={},
                 ),
             )
             for checkgroup_name, ruleset in static_checks.items()

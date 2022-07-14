@@ -100,7 +100,7 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
                             TimespecificParameterSet({"levels": (35, 40)}, ()),
                         )
                     ),
-                    discovered_parameters=None,
+                    discovered_parameters={},
                     service_labels={},
                 ),
             },
@@ -119,7 +119,7 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
                             TimespecificParameterSet({"levels": (35, 40)}, ()),
                         )
                     ),
-                    discovered_parameters=None,
+                    discovered_parameters={},
                     service_labels={},
                 ),
                 (CheckPluginName("smart_temp"), "/dev/sdb"): ConfiguredService(
@@ -158,7 +158,7 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
                     item="ITEM",
                     description="Unimplemented check blub_bla / ITEM",
                     parameters=TimespecificParameters(),
-                    discovered_parameters=None,
+                    discovered_parameters={},
                     service_labels={},
                 ),
             },
@@ -176,7 +176,7 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
                             TimespecificParameterSet({"levels": (35, 40)}, ()),
                         )
                     ),
-                    discovered_parameters=None,
+                    discovered_parameters={},
                     service_labels={},
                 ),
             },
@@ -194,7 +194,7 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
                             TimespecificParameterSet({"levels": (35, 40)}, ()),
                         )
                     ),
-                    discovered_parameters=None,
+                    discovered_parameters={},
                     service_labels={},
                 )
             },
@@ -222,7 +222,7 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
                             TimespecificParameterSet({"levels": (35, 40)}, ()),
                         )
                     ),
-                    discovered_parameters=None,
+                    discovered_parameters={},
                     service_labels={},
                 ),
             },
@@ -240,7 +240,7 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
                             TimespecificParameterSet({"levels": (35, 40)}, ()),
                         )
                     ),
-                    discovered_parameters=None,
+                    discovered_parameters={},
                     service_labels={},
                 ),
                 (CheckPluginName("smart_temp"), "auto-clustered"): ConfiguredService(

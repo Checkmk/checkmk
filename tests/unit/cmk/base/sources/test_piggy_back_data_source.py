@@ -29,6 +29,7 @@ def test_attribute_defaults(monkeypatch: MonkeyPatch, ipaddress: HostAddress) ->
         ipaddress,
         simulation_mode=True,
         agent_simulator=True,
+        time_settings=[],
     )
     assert source.host_config.hostname == hostname
     assert source.ipaddress == ipaddress

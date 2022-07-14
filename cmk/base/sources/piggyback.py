@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Final, Optional
+from typing import Final, Optional, Sequence, Tuple
 
 from cmk.utils.paths import tmp_dir
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
@@ -14,7 +14,6 @@ from cmk.core_helpers import FetcherType, PiggybackFetcher
 from cmk.core_helpers.agent import AgentFileCache, NoCacheFactory
 from cmk.core_helpers.piggyback import PiggybackSummarizer
 
-import cmk.base.config as config
 from cmk.base.config import HostConfig
 
 from .agent import AgentSource
@@ -28,6 +27,7 @@ class PiggybackSource(AgentSource):
         *,
         simulation_mode: bool,
         agent_simulator: bool,
+        time_settings: Sequence[Tuple[Optional[str], str, int]],
     ) -> None:
         super().__init__(
             host_config,
@@ -40,9 +40,7 @@ class PiggybackSource(AgentSource):
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
         )
-        self.time_settings: Final = config.get_config_cache().get_piggybacked_hosts_time_settings(
-            piggybacked_hostname=host_config.hostname
-        )
+        self.time_settings: Final = time_settings
 
     def _make_file_cache(self) -> AgentFileCache:
         return NoCacheFactory(

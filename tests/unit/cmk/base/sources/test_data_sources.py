@@ -117,7 +117,7 @@ def test_host_config_creates_passing_source_sources(
     [
         (SpecialAgentSource, {"special_agent_id": None, "params": None}),
         (DSProgramSource, {"template": ""}),
-        (PiggybackSource, {}),
+        (PiggybackSource, {"time_settings": ()}),
         (TCPSource, {}),
     ],
 )

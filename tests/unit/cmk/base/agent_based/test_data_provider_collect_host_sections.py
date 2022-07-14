@@ -5,6 +5,8 @@
 
 # pylint: disable=protected-access
 
+import functools
+
 import pytest
 
 from tests.testlib.base import Scenario
@@ -177,7 +179,7 @@ class TestMakeHostSectionsHosts:
     @pytest.mark.parametrize(
         "source",
         [
-            PiggybackSource,
+            functools.partial(PiggybackSource, time_settings=()),
             lambda hostname, ipaddress, simulation_mode, agent_simulator: ProgramSource.ds(
                 hostname,
                 ipaddress,

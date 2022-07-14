@@ -121,6 +121,9 @@ class _Builder:
                     self.ipaddress,
                     simulation_mode=self.simulation_mode,
                     agent_simulator=self.agent_simulator,
+                    time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
+                        piggybacked_hostname=self.host_config.hostname
+                    ),
                 )
             )
 

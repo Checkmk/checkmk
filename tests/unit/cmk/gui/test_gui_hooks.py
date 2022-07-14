@@ -7,6 +7,8 @@ from typing import List
 
 import pytest
 
+from cmk.utils.exceptions import MKGeneralException
+
 import cmk.gui.hooks as hooks
 from cmk.gui.pages import Page, page_registry
 
@@ -134,7 +136,7 @@ def test_call_exception_handling(request_context, mocker) -> None:  # type:ignor
     hooks.register_builtin("bli", lambda: 1.0 / 0.0)
     hook3_mock = mocker.Mock()
     hooks.register("bli", hook3_mock)
-    with pytest.raises(ZeroDivisionError, match="float division by zero"):
+    with pytest.raises(MKGeneralException, match="float division by zero"):
         hooks.call("bli")
     hook3_mock.assert_not_called()
 

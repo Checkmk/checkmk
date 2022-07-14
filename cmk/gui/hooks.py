@@ -8,9 +8,7 @@ import sys
 import traceback
 from typing import Any, Callable, Dict, List, Literal, NamedTuple, Optional, Union
 
-from cmk.gui.config import active_config
-from cmk.gui.htmllib.html import html
-from cmk.gui.i18n import _
+from cmk.utils.exceptions import MKGeneralException
 
 
 class Hook(NamedTuple):
@@ -67,14 +65,9 @@ def call(name: str, *args: Any) -> None:
         try:
             hook.handler(*args)
         except Exception as e:
-            if active_config.debug:
-                t, v, tb = sys.exc_info()
-                msg = "".join(traceback.format_exception(t, v, tb, None))
-                html.show_error(
-                    "<h1>" + _("Error executing hook") + " %s #%d: %s</h1>"
-                    "<pre>%s</pre>" % (name, n, e, msg)
-                )
-            raise
+            t, v, tb = sys.exc_info()
+            msg = "".join(traceback.format_exception(t, v, tb, None))
+            raise MKGeneralException(msg) from e
 
 
 ClearEvent = Literal[

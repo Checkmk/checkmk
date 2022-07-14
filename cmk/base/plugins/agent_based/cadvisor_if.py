@@ -23,7 +23,14 @@ _RESULTS_TO_ABANDON = {
     "Unicast out",
     "Non-unicast out",
 }
-_METRICS_TO_KEEP = {"in", "indisc", "inerr", "out", "outdisc", "outerr"}
+_METRICS_TO_KEEP = {
+    "in",
+    "if_in_discards",
+    "if_in_errors",
+    "out",
+    "if_out_discards",
+    "if_out_errors",
+}
 
 
 def parse_cadvisor_if(string_table: StringTable) -> Section:

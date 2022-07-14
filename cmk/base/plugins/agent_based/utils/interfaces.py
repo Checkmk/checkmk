@@ -1856,7 +1856,7 @@ def _output_packet_rates(
                 abs_packet_levels["errors"][direction],
                 perc_packet_levels["errors"][direction],
                 "errors",
-                "err",
+                "errors",
                 all_pacrate,
             ),
             (
@@ -1880,7 +1880,7 @@ def _output_packet_rates(
                 abs_packet_levels["unicast"][direction],
                 perc_packet_levels["unicast"][direction],
                 "unicast",
-                "ucast",
+                "unicast",
                 success_pacrate,
             ),
         ]:
@@ -1898,15 +1898,15 @@ def _output_packet_rates(
             )
 
         for display_name, metric_name, packets, levels in [
-            ("Non-unicast", "nucast", nurate, nucast_levels),
-            ("Discards", "disc", discrate, disc_levels),
+            ("Non-unicast", "non_unicast", nurate, nucast_levels),
+            ("Discards", "discards", discrate, disc_levels),
         ]:
             if packets is None:
                 continue
             yield from check_levels(
                 packets.rate,
                 levels_upper=levels,
-                metric_name=f"{direction}{metric_name}",
+                metric_name=f"if_{direction}_{metric_name}",
                 render_func=partial(_render_floating_point, precision=2, unit=" packets/s"),
                 label=f"{display_name} {direction}",
                 notice_only=True,
@@ -1976,7 +1976,7 @@ def _check_single_packet_rate(
     # Note: we always yield the unaveraged values here, since this is what we want to display in
     # our graphs
     yield Metric(
-        f"{direction}{metric_name}",
+        f"if_{direction}_{metric_name}",
         packets.rate,
         levels=merged_levels,
     )

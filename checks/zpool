@@ -8,9 +8,9 @@ from typing import Any, Iterable, Mapping
 
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, filesystem_groups
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.df import df_discovery, FILESYSTEM_DEFAULT_PARAMS
+from cmk.base.plugins.agent_based.utils.df import df_discovery, FILESYSTEM_DEFAULT_PARAMS, FSBlock
 
-Section = Mapping[str, Mapping[str, str]]
+Section = Mapping[str, FSBlock]
 
 DiscoveryResult = Iterable[tuple[str, Mapping]]
 CheckResult = Iterable[tuple]
@@ -52,7 +52,11 @@ def parse_zpool(string_table: StringTable) -> Section | None:
     raw_header, *content = string_table
 
     header = [_canonize_header_entry(item.lower()) for item in raw_header[0]]
-    return {line[0]: dict(zip(header, line)) for line in content}
+    return {
+        line[0]: (line[0], _mb(entry["size"]), _mb(entry["free"]), 0)
+        for line in content
+        if (entry := dict(zip(header, line)))
+    }
 
 
 def discover_zpool(section: Section) -> DiscoveryResult:
@@ -61,13 +65,7 @@ def discover_zpool(section: Section) -> DiscoveryResult:
 
 
 def check_zpool(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-
-    fslist = []
-    for pool, entry in section.items():
-        if "patterns" in params or item == pool:
-            fslist.append((pool, _mb(entry["size"]), _mb(entry["free"]), 0))
-
-    return df_check_filesystem_list(item, params, fslist)
+    return df_check_filesystem_list(item, params, list(section.values()))
 
 
 check_info["zpool"] = {

@@ -24,19 +24,34 @@ CheckResult = Iterable[tuple]
 # sth_ds      278G   127G   151G    45%  ONLINE  -
 
 
+def _canonize_header_entry(entry: str) -> str:
+    if entry == "used":
+        return "alloc"
+    if entry == "avail":
+        return "free"
+    return entry
+
+
+# this belongs to the parse function.
+def _mb(val: str) -> float:
+    idx = None
+    # split number from unit
+    for idx, ch in enumerate(val):
+        if ch not in "0123456789.-":
+            break
+    num = float(val[:idx])
+    unit_str = val[idx:].lstrip().lower()
+    unit = ["b", "k", "m", "g", "t", "p"].index(unit_str)
+
+    return num * (1024 ** (unit - 2))
+
+
 def parse_zpool(string_table: StringTable) -> Section | None:
     if not string_table:
         return None
     raw_header, *content = string_table
 
-    def canonize_header_entry(entry: str) -> str:
-        if entry == "used":
-            return "alloc"
-        if entry == "avail":
-            return "free"
-        return entry
-
-    header = [canonize_header_entry(item.lower()) for item in raw_header[0]]
+    header = [_canonize_header_entry(item.lower()) for item in raw_header[0]]
     return {line[0]: dict(zip(header, line)) for line in content}
 
 
@@ -47,23 +62,10 @@ def discover_zpool(section: Section) -> DiscoveryResult:
 
 def check_zpool(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
 
-    # this belongs to the parse function.
-    def mb(val: str) -> float:
-        idx = None
-        # split number from unit
-        for idx, ch in enumerate(val):
-            if ch not in "0123456789.-":
-                break
-        num = float(val[:idx])
-        unit_str = val[idx:].lstrip().lower()
-        unit = ["b", "k", "m", "g", "t", "p"].index(unit_str)
-
-        return num * (1024 ** (unit - 2))
-
     fslist = []
     for pool, entry in section.items():
         if "patterns" in params or item == pool:
-            fslist.append((pool, mb(entry["size"]), mb(entry["free"]), 0))
+            fslist.append((pool, _mb(entry["size"]), _mb(entry["free"]), 0))
 
     return df_check_filesystem_list(item, params, fslist)
 

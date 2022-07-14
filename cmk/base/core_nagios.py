@@ -1358,6 +1358,8 @@ def _plugins_for_special_agents(host_config: HostConfig) -> Iterable[CheckPlugin
         for s in sources.make_non_cluster_sources(
             host_config,
             ipaddress,
+            simulation_mode=config.simulation_mode,
+            agent_simulator=config.agent_simulator,
         )
         if isinstance(s, sources.programs.SpecialAgentSource)
     )

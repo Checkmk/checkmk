@@ -74,6 +74,8 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         persisted_section_dir: Optional[Path] = None,
         title: str,
         on_scan_error: OnError,
+        simulation_mode: bool,
+        agent_simulator: bool,
     ):
         super().__init__(
             host_config,
@@ -88,6 +90,8 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             id_=id_,
             cache_dir=cache_dir,
             persisted_section_dir=persisted_section_dir,
+            simulation_mode=simulation_mode,
+            agent_simulator=agent_simulator,
         )
         self.selected_sections = selected_sections
         self.snmp_config = (
@@ -108,6 +112,8 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         selected_sections: SectionNameCollection,
         on_scan_error: OnError,
         force_cache_refresh: bool,
+        simulation_mode: bool,
+        agent_simulator: bool,
     ) -> "SNMPSource":
         return cls(
             host_config,
@@ -118,6 +124,8 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             title="SNMP",
             on_scan_error=on_scan_error,
             force_cache_refresh=force_cache_refresh,
+            simulation_mode=simulation_mode,
+            agent_simulator=agent_simulator,
         )
 
     @classmethod
@@ -129,6 +137,8 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         selected_sections: SectionNameCollection,
         on_scan_error: OnError,
         force_cache_refresh: bool,
+        simulation_mode: bool,
+        agent_simulator: bool,
     ) -> "SNMPSource":
         return cls(
             host_config,
@@ -139,13 +149,15 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             title="Management board - SNMP",
             on_scan_error=on_scan_error,
             force_cache_refresh=force_cache_refresh,
+            simulation_mode=simulation_mode,
+            agent_simulator=agent_simulator,
         )
 
     def _make_file_cache(self) -> FileCache[SNMPRawData]:
         return SNMPFileCacheFactory(
             self.host_config.hostname,
             base_path=self.file_cache_base_path,
-            simulation=config.simulation_mode,
+            simulation=self.simulation_mode,
             max_age=self.file_cache_max_age,
         ).make(force_cache_refresh=self._force_cache_refresh)
 

@@ -1347,10 +1347,21 @@ class AutomationDiagHost(Automation):
         tcp_connect_timeout: Optional[float],
     ) -> Tuple[int, str]:
         state, output = 0, ""
-        for source in sources.make_non_cluster_sources(host_config, ipaddress):
+        for source in sources.make_non_cluster_sources(
+            host_config,
+            ipaddress,
+            simulation_mode=config.simulation_mode,
+            agent_simulator=config.agent_simulator,
+        ):
             source.file_cache_max_age = config.max_cachefile_age()
             if isinstance(source, sources.programs.DSProgramSource) and cmd:
-                source = source.ds(host_config, ipaddress, template=cmd)
+                source = source.ds(
+                    host_config,
+                    ipaddress,
+                    template=cmd,
+                    simulation_mode=config.simulation_mode,
+                    agent_simulator=config.agent_simulator,
+                )
             elif isinstance(source, sources.tcp.TCPSource):
                 source.port = agent_port
                 if tcp_connect_timeout is not None:
@@ -1670,7 +1681,12 @@ class AutomationGetAgentOutput(Automation):
                 cmk.core_helpers.cache.FileCacheFactory.maybe = (
                     not cmk.core_helpers.cache.FileCacheFactory.disabled
                 )
-                for source in sources.make_non_cluster_sources(host_config, ipaddress):
+                for source in sources.make_non_cluster_sources(
+                    host_config,
+                    ipaddress,
+                    simulation_mode=config.simulation_mode,
+                    agent_simulator=config.agent_simulator,
+                ):
                     source.file_cache_max_age = config.max_cachefile_age()
                     if not isinstance(source, sources.agent.AgentSource):
                         continue

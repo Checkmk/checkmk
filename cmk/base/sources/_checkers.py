@@ -58,6 +58,8 @@ class _Builder:
         selected_sections: SectionNameCollection,
         on_scan_error: OnError,
         force_snmp_cache_refresh: bool,
+        simulation_mode: bool,
+        agent_simulator: bool,
     ) -> None:
         super().__init__()
         self.host_config: Final = host_config
@@ -65,6 +67,8 @@ class _Builder:
         self.selected_sections: Final = selected_sections
         self.on_scan_error: Final = on_scan_error
         self.force_snmp_cache_refresh: Final = force_snmp_cache_refresh
+        self.simulation_mode: Final = simulation_mode
+        self.agent_simulator: Final = agent_simulator
         self._elems: Dict[str, Source] = {}
 
         self._initialize()
@@ -111,7 +115,14 @@ class _Builder:
             )
 
         if "no-piggyback" not in self.host_config.tags:
-            self._add(PiggybackSource(self.host_config, self.ipaddress))
+            self._add(
+                PiggybackSource(
+                    self.host_config,
+                    self.ipaddress,
+                    simulation_mode=self.simulation_mode,
+                    agent_simulator=self.agent_simulator,
+                )
+            )
 
     def _initialize_snmp_based(self) -> None:
         if not self.host_config.is_snmp_host:
@@ -123,6 +134,8 @@ class _Builder:
                 selected_sections=self.selected_sections,
                 on_scan_error=self.on_scan_error,
                 force_cache_refresh=self.force_snmp_cache_refresh,
+                simulation_mode=self.simulation_mode,
+                agent_simulator=self.agent_simulator,
             )
         )
 
@@ -145,6 +158,8 @@ class _Builder:
                     selected_sections=self.selected_sections,
                     on_scan_error=self.on_scan_error,
                     force_cache_refresh=self.force_snmp_cache_refresh,
+                    simulation_mode=self.simulation_mode,
+                    agent_simulator=self.agent_simulator,
                 )
             )
         elif protocol == "ipmi":
@@ -152,6 +167,8 @@ class _Builder:
                 IPMISource(
                     self.host_config,
                     ip_address,
+                    simulation_mode=self.simulation_mode,
+                    agent_simulator=self.agent_simulator,
                 )
             )
         else:
@@ -177,6 +194,8 @@ class _Builder:
                 self.ipaddress,
                 main_data_source=main_data_source,
                 template=datasource_program,
+                simulation_mode=self.simulation_mode,
+                agent_simulator=self.agent_simulator,
             )
 
         connection_mode = self.host_config.agent_connection_mode()
@@ -184,12 +203,16 @@ class _Builder:
             return PushAgentSource(
                 self.host_config,
                 self.ipaddress,
+                simulation_mode=self.simulation_mode,
+                agent_simulator=self.agent_simulator,
             )
         if connection_mode == "pull-agent":
             return TCPSource(
                 self.host_config,
                 self.ipaddress,
                 main_data_source=main_data_source,
+                simulation_mode=self.simulation_mode,
+                agent_simulator=self.agent_simulator,
             )
         raise NotImplementedError(f"connection mode {connection_mode!r}")
 
@@ -200,6 +223,8 @@ class _Builder:
                 self.ipaddress,
                 special_agent_id=agentname,
                 params=params,
+                simulation_mode=self.simulation_mode,
+                agent_simulator=self.agent_simulator,
             )
             for agentname, params in self.host_config.special_agents
         ]
@@ -212,6 +237,8 @@ def make_non_cluster_sources(
     force_snmp_cache_refresh: bool = False,
     selected_sections: SectionNameCollection = NO_SELECTION,
     on_scan_error: OnError = OnError.RAISE,
+    simulation_mode: bool,
+    agent_simulator: bool,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
     return _Builder(
@@ -220,6 +247,8 @@ def make_non_cluster_sources(
         selected_sections=selected_sections,
         on_scan_error=on_scan_error,
         force_snmp_cache_refresh=force_snmp_cache_refresh,
+        simulation_mode=simulation_mode,
+        agent_simulator=agent_simulator,
     ).sources
 
 
@@ -254,6 +283,9 @@ def fetch_all(
 def make_cluster_sources(
     config_cache: config.ConfigCache,
     host_config: HostConfig,
+    *,
+    simulation_mode: bool,
+    agent_simulator: bool,
 ) -> Sequence[Source]:
     """Abstract clusters/nodes/hosts"""
     assert host_config.nodes is not None
@@ -265,6 +297,8 @@ def make_cluster_sources(
             HostConfig.make_host_config(host_name),
             config.lookup_ip_address(config_cache.get_host_config(host_name)),
             force_snmp_cache_refresh=False,
+            simulation_mode=simulation_mode,
+            agent_simulator=agent_simulator,
         )
     ]
 
@@ -277,6 +311,8 @@ def make_sources(
     selected_sections: SectionNameCollection,
     force_snmp_cache_refresh: bool,
     on_scan_error: OnError,
+    simulation_mode: bool,
+    agent_simulator: bool,
 ) -> Sequence[Source]:
     return (
         make_non_cluster_sources(
@@ -285,10 +321,14 @@ def make_sources(
             selected_sections=selected_sections,
             force_snmp_cache_refresh=force_snmp_cache_refresh,
             on_scan_error=on_scan_error,
+            simulation_mode=simulation_mode,
+            agent_simulator=agent_simulator,
         )
         if host_config.nodes is None
         else make_cluster_sources(
             config_cache,
             host_config,
+            simulation_mode=simulation_mode,
+            agent_simulator=agent_simulator,
         )
     )

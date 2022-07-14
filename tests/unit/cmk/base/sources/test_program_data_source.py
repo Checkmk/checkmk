@@ -51,6 +51,8 @@ class TestDSProgramChecker:
             HostConfig.make_host_config(hostname),
             ipaddress,
             template=template,
+            simulation_mode=True,
+            agent_simulator=True,
         )
         assert source.host_config.hostname == hostname
         assert source.ipaddress == ipaddress
@@ -69,7 +71,11 @@ class TestDSProgramChecker:
         ts.add_host(hostname)
         ts.apply(monkeypatch)
         source = DSProgramSource(
-            HostConfig.make_host_config(hostname), ipaddress, template=template
+            HostConfig.make_host_config(hostname),
+            ipaddress,
+            template=template,
+            simulation_mode=True,
+            agent_simulator=True,
         )
 
         assert source.cmdline == "<NOTHING>x%sx%sx<host>x<ip>x" % (
@@ -131,6 +137,8 @@ class TestSpecialAgentChecker:
             ipaddress,
             special_agent_id=special_agent_id,
             params=params,
+            simulation_mode=True,
+            agent_simulator=True,
         )
         assert source.host_config.hostname == hostname
         assert source.ipaddress == ipaddress

@@ -25,6 +25,9 @@ class PiggybackSource(AgentSource):
         self,
         host_config: HostConfig,
         ipaddress: Optional[HostAddress],
+        *,
+        simulation_mode: bool,
+        agent_simulator: bool,
     ) -> None:
         super().__init__(
             host_config,
@@ -34,6 +37,8 @@ class PiggybackSource(AgentSource):
             description=PiggybackSource._make_description(host_config.hostname),
             id_="piggyback",
             main_data_source=False,
+            simulation_mode=simulation_mode,
+            agent_simulator=agent_simulator,
         )
         self.time_settings: Final = config.get_config_cache().get_piggybacked_hosts_time_settings(
             piggybacked_hostname=host_config.hostname

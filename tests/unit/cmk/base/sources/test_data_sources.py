@@ -101,7 +101,15 @@ def test_host_config_creates_passing_source_sources(
     host_config = HostConfig.make_host_config(hostname)
     ipaddress = "127.0.0.1"
 
-    assert [type(c) for c in make_non_cluster_sources(host_config, ipaddress)] == sources
+    assert [
+        type(c)
+        for c in make_non_cluster_sources(
+            host_config,
+            ipaddress,
+            simulation_mode=True,
+            agent_simulator=True,
+        )
+    ] == sources
 
 
 @pytest.mark.parametrize(
@@ -118,6 +126,8 @@ def test_data_source_preselected(  # type:ignore[no-untyped-def]
 ) -> None:
 
     selected_sections = {SectionName("keep")}  # <- this is what we care about
+    kwargs["simulation_mode"] = True
+    kwargs["agent_simulator"] = True
 
     # a lot of hocus pocus to instantiate a source:
     make_scenario("hostname", {}).apply(monkeypatch)

@@ -151,6 +151,8 @@ class TestMakeHostSectionsHosts:
                         selected_sections=NO_SELECTION,
                         force_cache_refresh=False,
                         on_scan_error=OnError.RAISE,
+                        simulation_mode=True,
+                        agent_simulator=True,
                     ),
                     FetcherMessage.from_raw_data(
                         result.OK(raw_data),
@@ -176,10 +178,12 @@ class TestMakeHostSectionsHosts:
         "source",
         [
             PiggybackSource,
-            lambda hostname, ipaddress: ProgramSource.ds(
+            lambda hostname, ipaddress, simulation_mode, agent_simulator: ProgramSource.ds(
                 hostname,
                 ipaddress,
                 template="",
+                simulation_mode=simulation_mode,
+                agent_simulator=agent_simulator,
             ),
             TCPSource,
         ],
@@ -187,7 +191,12 @@ class TestMakeHostSectionsHosts:
     def test_one_nonsnmp_source(  # type:ignore[no-untyped-def]
         self, hostname, ipaddress, config_cache, host_config, source
     ) -> None:
-        source = source(host_config, ipaddress)
+        source = source(
+            host_config,
+            ipaddress,
+            simulation_mode=True,
+            agent_simulator=True,
+        )
         assert source.source_type is SourceType.HOST
 
         host_sections = _collect_host_sections(
@@ -222,8 +231,19 @@ class TestMakeHostSectionsHosts:
         host_config,
     ):
         sources = [
-            ProgramSource.ds(host_config, ipaddress, template=""),
-            TCPSource(host_config, ipaddress),
+            ProgramSource.ds(
+                host_config,
+                ipaddress,
+                template="",
+                simulation_mode=True,
+                agent_simulator=True,
+            ),
+            TCPSource(
+                host_config,
+                ipaddress,
+                simulation_mode=True,
+                agent_simulator=True,
+            ),
         ]
 
         host_sections = _collect_host_sections(
@@ -262,10 +282,24 @@ class TestMakeHostSectionsHosts:
 
         sources = [
             ProgramSource.ds(
-                HostConfig.make_host_config(HostName(f"{hostname}0")), ipaddress, template=""
+                HostConfig.make_host_config(HostName(f"{hostname}0")),
+                ipaddress,
+                template="",
+                simulation_mode=True,
+                agent_simulator=True,
             ),
-            TCPSource(HostConfig.make_host_config(HostName(f"{hostname}1")), ipaddress),
-            TCPSource(HostConfig.make_host_config(HostName(f"{hostname}2")), ipaddress),
+            TCPSource(
+                HostConfig.make_host_config(HostName(f"{hostname}1")),
+                ipaddress,
+                simulation_mode=True,
+                agent_simulator=True,
+            ),
+            TCPSource(
+                HostConfig.make_host_config(HostName(f"{hostname}2")),
+                ipaddress,
+                simulation_mode=True,
+                agent_simulator=True,
+            ),
         ]
 
         host_sections = _collect_host_sections(
@@ -370,7 +404,12 @@ class TestMakeHostSectionsClusters:
     def test_no_sources(  # type:ignore[no-untyped-def]
         self, cluster, nodes, config_cache, host_config
     ) -> None:
-        sources = make_cluster_sources(config_cache, host_config)
+        sources = make_cluster_sources(
+            config_cache,
+            host_config,
+            simulation_mode=True,
+            agent_simulator=True,
+        )
 
         host_sections = _collect_host_sections(
             fetched=[
@@ -448,7 +487,12 @@ def test_get_host_sections_cluster(monkeypatch, mocker) -> None:  # type:ignore[
     # Create a cluster
     host_config.nodes = list(hosts.keys())
 
-    sources = make_cluster_sources(config_cache, host_config)
+    sources = make_cluster_sources(
+        config_cache,
+        host_config,
+        simulation_mode=True,
+        agent_simulator=True,
+    )
 
     host_sections = _collect_host_sections(
         fetched=[

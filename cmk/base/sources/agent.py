@@ -44,6 +44,8 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
         description: str,
         id_: str,
         main_data_source: bool,
+        simulation_mode: bool,
+        agent_simulator: bool,
     ):
         super().__init__(
             host_config,
@@ -58,6 +60,8 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
             persisted_section_dir=(Path(cmk.utils.paths.var_dir) / "persisted")
             if main_data_source
             else None,
+            simulation_mode=simulation_mode,
+            agent_simulator=agent_simulator,
         )
         # TODO: We should cleanup these old directories one day.
         #       Then we can remove this special case
@@ -74,6 +78,6 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
             keep_outdated=self.use_outdated_persisted_sections,
             translation=config.get_piggyback_translations(self.host_config.hostname),
             encoding_fallback=config.fallback_agent_output_encoding,
-            simulation=config.agent_simulator,
+            simulation=self.agent_simulator,
             logger=self._logger,
         )

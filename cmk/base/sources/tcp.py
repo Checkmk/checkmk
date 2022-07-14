@@ -12,7 +12,6 @@ from cmk.utils.type_defs import HostAddress, SourceType
 from cmk.core_helpers import FetcherType, TCPFetcher
 from cmk.core_helpers.agent import AgentFileCache, AgentFileCacheFactory, AgentSummarizerDefault
 
-import cmk.base.config as config
 from cmk.base.config import HostConfig
 
 from .agent import AgentSource
@@ -31,6 +30,8 @@ class TCPSource(AgentSource):
         ipaddress: Optional[HostAddress],
         *,
         main_data_source: bool = False,
+        simulation_mode: bool,
+        agent_simulator: bool,
     ) -> None:
         super().__init__(
             host_config,
@@ -40,6 +41,8 @@ class TCPSource(AgentSource):
             description=TCPSource._make_description(ipaddress, host_config.agent_port),
             id_="agent",
             main_data_source=main_data_source,
+            simulation_mode=simulation_mode,
+            agent_simulator=agent_simulator,
         )
         self.port: Optional[int] = None
         self.timeout: Optional[float] = None
@@ -48,7 +51,7 @@ class TCPSource(AgentSource):
         return AgentFileCacheFactory(
             self.host_config.hostname,
             base_path=self.file_cache_base_path,
-            simulation=config.simulation_mode,
+            simulation=self.simulation_mode,
             use_only_cache=self.use_only_cache,
             max_age=self.file_cache_max_age,
         ).make()

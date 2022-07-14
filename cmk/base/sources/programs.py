@@ -31,6 +31,8 @@ class ProgramSource(AgentSource):
         main_data_source: bool,
         cmdline: str,
         stdin: Optional[str],
+        simulation_mode: bool,
+        agent_simulator: bool,
     ) -> None:
         super().__init__(
             host_config,
@@ -43,6 +45,8 @@ class ProgramSource(AgentSource):
             ),
             id_=id_,
             main_data_source=main_data_source,
+            simulation_mode=simulation_mode,
+            agent_simulator=agent_simulator,
         )
         self.cmdline = cmdline
         self.stdin = stdin
@@ -55,6 +59,8 @@ class ProgramSource(AgentSource):
         main_data_source: bool = False,
         special_agent_id: str,
         params: Dict,
+        simulation_mode: bool,
+        agent_simulator: bool,
     ) -> "SpecialAgentSource":
         return SpecialAgentSource(
             host_config,
@@ -62,6 +68,8 @@ class ProgramSource(AgentSource):
             main_data_source=main_data_source,
             special_agent_id=special_agent_id,
             params=params,
+            simulation_mode=simulation_mode,
+            agent_simulator=agent_simulator,
         )
 
     @staticmethod
@@ -71,19 +79,23 @@ class ProgramSource(AgentSource):
         *,
         main_data_source: bool = False,
         template: str,
+        simulation_mode: bool,
+        agent_simulator: bool,
     ) -> "DSProgramSource":
         return DSProgramSource(
             host_config,
             ipaddress,
             main_data_source=main_data_source,
             template=template,
+            simulation_mode=simulation_mode,
+            agent_simulator=agent_simulator,
         )
 
     def _make_file_cache(self) -> AgentFileCache:
         return AgentFileCacheFactory(
             self.host_config.hostname,
             base_path=self.file_cache_base_path,
-            simulation=config.simulation_mode,
+            simulation=self.simulation_mode,
             max_age=self.file_cache_max_age,
         ).make()
 
@@ -113,6 +125,8 @@ class DSProgramSource(ProgramSource):
         *,
         main_data_source: bool = False,
         template: str,
+        simulation_mode: bool,
+        agent_simulator: bool,
     ) -> None:
         super().__init__(
             host_config,
@@ -125,6 +139,8 @@ class DSProgramSource(ProgramSource):
                 ipaddress,
             ),
             stdin=None,
+            simulation_mode=simulation_mode,
+            agent_simulator=agent_simulator,
         )
 
     @staticmethod
@@ -184,6 +200,8 @@ class SpecialAgentSource(ProgramSource):
         main_data_source: bool = False,
         special_agent_id: str,
         params: Dict,
+        simulation_mode: bool,
+        agent_simulator: bool,
     ) -> None:
         super().__init__(
             host_config,
@@ -202,6 +220,8 @@ class SpecialAgentSource(ProgramSource):
                 special_agent_id,
                 params,
             ),
+            simulation_mode=simulation_mode,
+            agent_simulator=agent_simulator,
         )
         self.special_agent_id = special_agent_id
         self.special_agent_plugin_file_name = "agent_%s" % special_agent_id

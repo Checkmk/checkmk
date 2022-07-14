@@ -99,7 +99,13 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     )
 
     agenttypes = [
-        source.description for source in sources.make_non_cluster_sources(host_config, ipaddress)
+        source.description
+        for source in sources.make_non_cluster_sources(
+            host_config,
+            ipaddress,
+            simulation_mode=config.simulation_mode,
+            agent_simulator=config.agent_simulator,
+        )
     ]
 
     if host_config.is_ping_host:

@@ -11,8 +11,9 @@ from cmk.utils.type_defs import HostAddress
 
 from cmk.core_helpers import FetcherType
 
+import cmk.base.config as config
 import cmk.base.core_config as core_config
-from cmk.base.config import HostConfig, max_cachefile_age
+from cmk.base.config import HostConfig
 
 from ._abstract import Source
 from ._checkers import make_non_cluster_sources
@@ -37,7 +38,7 @@ def _fixup_caching_info(source: Source) -> Source:
         # For TCP, we ensure updated caches by triggering the "Check_MK" service whenever the
         # user manually triggers "Check_MK Discovery", but then use cached data during the actual
         # discovery
-        source.file_cache_max_age = max_cachefile_age()
+        source.file_cache_max_age = config.max_cachefile_age()
     return source
 
 
@@ -50,7 +51,12 @@ def fetchers(host_config: HostConfig) -> Dict[str, Any]:
                 "fetcher_params": _fixup_caching_info(c).fetcher_configuration,
                 "file_cache_params": _fixup_caching_info(c).file_cache_configuration,
             }
-            for c in make_non_cluster_sources(host_config, ipaddress)
+            for c in make_non_cluster_sources(
+                host_config,
+                ipaddress,
+                simulation_mode=config.simulation_mode,
+                agent_simulator=config.agent_simulator,
+            )
         ]
     }
 

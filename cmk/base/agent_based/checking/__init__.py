@@ -145,6 +145,8 @@ def commandline_checking(
             selected_sections=selected_sections,
             force_snmp_cache_refresh=False,
             on_scan_error=OnError.RAISE,
+            simulation_mode=config.simulation_mode,
+            agent_simulator=config.agent_simulator,
         ),
         file_cache_max_age=host_config.max_cachefile_age,
         mode=Mode.CHECKING if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS,

@@ -9,7 +9,14 @@ import json
 import cmk.gui.sites as sites
 from cmk.gui.globals import html, request, response, transactions, user
 from cmk.gui.i18n import _
-from cmk.gui.plugins.sidebar.utils import render_link, SidebarSnapin, snapin_registry
+from cmk.gui.plugins.sidebar.utils import (
+    begin_footnote_links,
+    end_footnote_links,
+    link,
+    render_link,
+    SidebarSnapin,
+    snapin_registry,
+)
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.urls import makeactionuri_contextless
 
@@ -26,7 +33,7 @@ class SiteStatus(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("Site Status")
+        return _("Site status")
 
     @classmethod
     def description(cls):
@@ -77,11 +84,41 @@ class SiteStatus(SidebarSnapin):
                 html.status_label_button(
                     content=state,
                     status=state,
-                    title=_("enable this site") if state == "disabled" else _("disable this site"),
+                    title=_("Enable this site") if state == "disabled" else _("Disable this site"),
                     onclick="cmk.sidebar.switch_site(%s)" % (json.dumps(url)),
                 )
             html.close_tr()
         html.close_table()
+
+        enable_all_url = makeactionuri_contextless(
+            request,
+            transactions,
+            [
+                ("_new_state", "online"),
+            ],
+            filename="set_all_sites.py",
+        )
+        disable_all_url = makeactionuri_contextless(
+            request,
+            transactions,
+            [
+                ("_new_state", "disabled"),
+            ],
+            filename="set_all_sites.py",
+        )
+
+        begin_footnote_links()
+        link(
+            _("Enable all"),
+            "javascript:void(0)",
+            onclick="cmk.sidebar.switch_site(%s)" % json.dumps(enable_all_url),
+        )
+        link(
+            _("Disable all"),
+            "javascript:void(0)",
+            onclick="cmk.sidebar.switch_site(%s)" % json.dumps(disable_all_url),
+        )
+        end_footnote_links()
 
     @classmethod
     def allowed_roles(cls):
@@ -90,6 +127,7 @@ class SiteStatus(SidebarSnapin):
     def page_handlers(self):
         return {
             "switch_site": self._ajax_switch_site,
+            "set_all_sites": self._ajax_set_all_sites,
         }
 
     def _ajax_switch_site(self):
@@ -114,3 +152,19 @@ class SiteStatus(SidebarSnapin):
                     user.disable_site(sitename)
 
             user.save_site_config()
+
+    def _ajax_set_all_sites(self):
+        sites.update_site_states_from_dead_sites()
+        new_state = request.var("_new_state")
+
+        for sitename, _sitealias in sites.sorted_sites():
+            current_state = sites.states().get(sitename, sites.SiteStatus({})).get("state")
+
+            # Enable all disabled sites
+            if new_state == "online" and current_state == "disabled":
+                user.enable_site(sitename)
+            # Disable all online sites
+            elif new_state == "disabled" and current_state == "online":
+                user.disable_site(sitename)
+
+        user.save_site_config()

@@ -113,6 +113,7 @@ def test_registered_pages():
         "robotmk",
         "robotmk_report",
         "search_open",
+        "set_all_sites",
         "side",
         "sidebar_add_snapin",
         "sidebar_ajax_add_snapin",

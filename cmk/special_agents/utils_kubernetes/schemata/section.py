@@ -36,6 +36,10 @@ objects and that options from the `Kubernetes` rule have been taken into account
 """
 
 
+class Section(BaseModel):
+    pass
+
+
 class PerformanceMetric(BaseModel):
     value: float
     timestamp: float
@@ -90,7 +94,7 @@ class Components(BaseModel):
     checkmk_agent_version: Optional[Version]
 
 
-class NamespaceInfo(BaseModel):
+class NamespaceInfo(Section):
     """section: kube_namespace_info_v1"""
 
     name: api.NamespaceName
@@ -122,7 +126,7 @@ class NodeMetadata(BaseModel):
     components: Mapping[str, NodeComponent]
 
 
-class CollectorComponentsMetadata(BaseModel):
+class CollectorComponentsMetadata(Section):
     """section: kube_collector_metadata_v1"""
 
     processing_log: CollectorHandlerLog
@@ -130,14 +134,14 @@ class CollectorComponentsMetadata(BaseModel):
     nodes: Optional[Sequence[NodeMetadata]]
 
 
-class CollectorProcessingLogs(BaseModel):
+class CollectorProcessingLogs(Section):
     """section: kube_collector_processing_logs_v1"""
 
     container: CollectorHandlerLog
     machine: CollectorHandlerLog
 
 
-class Resources(BaseModel):
+class Resources(Section):
     """sections: "[kube_memory_resources_v1, kube_cpu_resources_v1]"""
 
     request: float
@@ -148,7 +152,7 @@ class Resources(BaseModel):
     count_total: int
 
 
-class AllocatableResource(BaseModel):
+class AllocatableResource(Section):
     """sections: [kube_allocatable_cpu_resource_v1, kube_allocatable_memory_resource_v1]"""
 
     context: Literal["cluster", "node"]
@@ -182,7 +186,7 @@ class Controller(BaseModel):
 ControlChain = Sequence[Controller]
 
 
-class PodInfo(BaseModel):
+class PodInfo(Section):
     """section: kube_pod_info_v1"""
 
     namespace: Optional[api.NamespaceName]
@@ -204,7 +208,7 @@ class PodInfo(BaseModel):
     cluster: str
 
 
-class PodResources(BaseModel):
+class PodResources(Section):
     """section: kube_pod_resources_v1"""
 
     running: PodSequence = []
@@ -214,14 +218,14 @@ class PodResources(BaseModel):
     unknown: PodSequence = []
 
 
-class AllocatablePods(BaseModel):
+class AllocatablePods(Section):
     """section: kube_allocatable_pods_v1"""
 
     capacity: int
     allocatable: int
 
 
-class PodLifeCycle(BaseModel):
+class PodLifeCycle(Section):
     """section: kube_pod_lifecycle_v1"""
 
     phase: api.Phase
@@ -234,7 +238,7 @@ class PodCondition(BaseModel):
     last_transition_time: Optional[int]
 
 
-class PodConditions(BaseModel):
+class PodConditions(Section):
     """section: kube_pod_conditions_v1"""
 
     initialized: Optional[PodCondition]
@@ -243,7 +247,7 @@ class PodConditions(BaseModel):
     ready: Optional[PodCondition]
 
 
-class PodContainers(BaseModel):
+class PodContainers(Section):
     """section: kube_pod_containers_v1"""
 
     containers: Mapping[str, api.ContainerStatus]
@@ -253,7 +257,7 @@ class ContainerSpec(BaseModel):
     image_pull_policy: api.ImagePullPolicy
 
 
-class ContainerSpecs(BaseModel):
+class ContainerSpecs(Section):
     """section: kube_pod_container_specs_v1"""
 
     containers: Mapping[ContainerName, ContainerSpec]
@@ -281,14 +285,14 @@ class ReadyCount(BaseModel):
         return self.ready + self.not_ready
 
 
-class NodeCount(BaseModel):
+class NodeCount(Section):
     """section: kube_node_count_v1"""
 
     worker: ReadyCount = ReadyCount()
     control_plane: ReadyCount = ReadyCount()
 
 
-class NodeInfo(api.NodeInfo):
+class NodeInfo(api.NodeInfo, Section):
     """section: kube_node_info_v1"""
 
     name: api.NodeName
@@ -327,7 +331,7 @@ class FalsyNodeCustomCondition(FalsyNodeCondition):
     type_: str
 
 
-class NodeConditions(BaseModel):
+class NodeConditions(Section):
     """section: kube_node_conditions_v1"""
 
     ready: TruthyNodeCondition
@@ -337,13 +341,13 @@ class NodeConditions(BaseModel):
     networkunavailable: Optional[FalsyNodeCondition]
 
 
-class NodeCustomConditions(BaseModel):
+class NodeCustomConditions(Section):
     """section: kube_node_custom_conditions_v1"""
 
     custom_conditions: Sequence[FalsyNodeCustomCondition]
 
 
-class DeploymentInfo(BaseModel):
+class DeploymentInfo(Section):
     """section: kube_deployment_info_v1"""
 
     name: str
@@ -356,7 +360,7 @@ class DeploymentInfo(BaseModel):
     cluster: str
 
 
-class DaemonSetInfo(BaseModel):
+class DaemonSetInfo(Section):
     """section: kube_daemonset_info_v1"""
 
     name: str
@@ -369,7 +373,7 @@ class DaemonSetInfo(BaseModel):
     cluster: str
 
 
-class StatefulSetInfo(BaseModel):
+class StatefulSetInfo(Section):
     """section: kube_statefulset_info_v1"""
 
     name: str
@@ -382,7 +386,7 @@ class StatefulSetInfo(BaseModel):
     cluster: str
 
 
-class DeploymentConditions(BaseModel):
+class DeploymentConditions(Section):
     """section: kube_deployment_conditions_v1"""
 
     available: Optional[api.DeploymentCondition]
@@ -390,7 +394,7 @@ class DeploymentConditions(BaseModel):
     replicafailure: Optional[api.DeploymentCondition]
 
 
-class ContainerCount(BaseModel):
+class ContainerCount(Section):
     """section: kube_node_container_count_v1"""
 
     running: int = 0
@@ -403,7 +407,7 @@ DisplayableStrategy = Union[
 ]
 
 
-class UpdateStrategy(BaseModel):
+class UpdateStrategy(Section):
     """section: kube_update_strategy_v1"""
 
     strategy: DisplayableStrategy = Field(discriminator="type_")
@@ -419,20 +423,20 @@ class Cpu(BaseModel):
     usage: float
 
 
-class PerformanceUsage(BaseModel):
+class PerformanceUsage(Section):
     """section: [kube_performance_cpu_v1, kube_performance_memory_v1]"""
 
     resource: Union[Cpu, Memory] = Field(discriminator="type_")
 
 
-class ClusterInfo(BaseModel):
+class ClusterInfo(Section):
     """section: kube_cluster_info_v1"""
 
     name: str
     version: api.GitVersion
 
 
-class ClusterDetails(BaseModel):
+class ClusterDetails(Section):
     """section: kube_cluster_details_v1"""
 
     api_health: api.APIHealth
@@ -456,7 +460,7 @@ class CommonReplicas(BaseModel):
     updated: int
 
 
-class DaemonSetReplicas(CommonReplicas):
+class DaemonSetReplicas(Section, CommonReplicas):
     """section: kube_daemonset_replicas_v1
 
     Model for a given DaemonSet supplied to the kube_replicas check.
@@ -480,7 +484,7 @@ class DaemonSetReplicas(CommonReplicas):
     misscheduled: int
 
 
-class StatefulSetReplicas(CommonReplicas):
+class StatefulSetReplicas(Section, CommonReplicas):
     """section: kube_statefulset_replicas_v1
 
     Model for a given StatefulSet supplied to the kube_replicas check.
@@ -501,7 +505,7 @@ class StatefulSetReplicas(CommonReplicas):
     # creation, this behaviour can't be configured as of v1.23.
 
 
-class DeploymentReplicas(CommonReplicas):
+class DeploymentReplicas(Section, CommonReplicas):
     """section: kube_deployment_replicas_v1
 
     Model for a given Deployment supplied to the kube_replicas check.
@@ -543,7 +547,7 @@ class NodeCollectorReplica(BaseModel):
     desired: int
 
 
-class CollectorDaemons(BaseModel):
+class CollectorDaemons(Section):
     """section: kube_collector_daemons_v1
 
     Model containing information about the DaemonSets of the node-collectors.
@@ -554,3 +558,17 @@ class CollectorDaemons(BaseModel):
     machine: Optional[NodeCollectorReplica]
     container: Optional[NodeCollectorReplica]
     errors: IdentificationError
+
+
+class StartTime(Section):
+    """section: kube_start_time_v1"""
+
+    start_time: int
+
+
+class KubeletInfo(Section, api.KubeletInfo):
+    """section: kube_node_kubelet_v1"""
+
+
+class HardResourceRequirement(Section, api.HardResourceRequirement):
+    """sections: [kube_resource_quota_memory_v1, kube_resource_quota_cpu_v1]"""

@@ -199,8 +199,6 @@ class ScopedResourceMatchExpression(BaseModel):
 
 
 class HardResourceRequirement(BaseModel):
-    """sections: [kube_resource_quota_memory_v1, kube_resource_quota_cpu_v1]"""
-
     limit: Optional[float] = None
     request: Optional[float] = None
 
@@ -291,8 +289,6 @@ class APIHealth(BaseModel):
 
 
 class KubeletInfo(BaseModel):
-    """section: kube_node_kubelet_v1"""
-
     version: str
     proxy_version: str
     health: HealthZ
@@ -534,12 +530,6 @@ class ContainerStatus(BaseModel):
     ready: bool
     state: ContainerState
     restart_count: int
-
-
-class StartTime(BaseModel):
-    """section: kube_start_time_v1"""
-
-    start_time: int
 
 
 class ConditionType(str, enum.Enum):

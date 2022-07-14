@@ -481,10 +481,10 @@ class Pod:
             }
         )
 
-    def start_time(self) -> Optional[api.StartTime]:
+    def start_time(self) -> section.StartTime | None:
         if self.status.start_time is None:
             return None
-        return api.StartTime(start_time=self.status.start_time)
+        return section.StartTime(start_time=self.status.start_time)
 
     def add_controller(self, controller: Union[Deployment, DaemonSet, StatefulSet]) -> None:
         """Add a handling controller of the pod
@@ -800,8 +800,8 @@ class Node(PodOwner):
             allocatable=self.resources["allocatable"].pods,
         )
 
-    def kubelet(self) -> api.KubeletInfo:
-        return self.kubelet_info
+    def kubelet(self) -> section.KubeletInfo:
+        return section.KubeletInfo.parse_obj(self.kubelet_info)
 
     def info(
         self,
@@ -1478,10 +1478,14 @@ def write_namespaces_api_sections(
 
     def output_resource_quota_sections(resource_quota: api.ResourceQuota) -> None:
         sections = {
-            "kube_resource_quota_memory_resources_v1": lambda: resource_quota.spec.hard.memory
+            "kube_resource_quota_memory_resources_v1": lambda: section.HardResourceRequirement.parse_obj(
+                resource_quota.spec.hard.memory
+            )
             if resource_quota.spec.hard
             else None,
-            "kube_resource_quota_cpu_resources_v1": lambda: resource_quota.spec.hard.cpu
+            "kube_resource_quota_cpu_resources_v1": lambda: section.HardResourceRequirement.parse_obj(
+                resource_quota.spec.hard.cpu
+            )
             if resource_quota.spec.hard
             else None,
         }

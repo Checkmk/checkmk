@@ -18,11 +18,9 @@ from typing import (
     Union,
 )
 
-from pydantic import BaseModel
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import check_levels, Metric, render, Result
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
-from cmk.base.plugins.agent_based.utils.kube import PerformanceUsage
+from cmk.base.plugins.agent_based.utils.kube import PerformanceUsage, Section
 
 ResourceType = Literal["memory", "cpu"]
 RequirementType = Literal["request", "limit", "allocatable"]
@@ -32,7 +30,7 @@ AllocatableKubernetesObject = Literal["cluster", "node"]
 # TODO: Resources is a bad name, this should be changed to something like Requirements. When
 # choosing a name, other section BaseModel names like AllocatableResource and PerformanceUsage
 # be taken into account
-class Resources(BaseModel):
+class Resources(Section):
     """sections: "[kube_memory_resources_v1, kube_cpu_resources_v1]"""
 
     request: float
@@ -43,14 +41,14 @@ class Resources(BaseModel):
     count_total: int
 
 
-class AllocatableResource(BaseModel):
+class AllocatableResource(Section):
     """sections: [kube_allocatable_cpu_resource_v1, kube_allocatable_memory_resource_v1]"""
 
     context: AllocatableKubernetesObject
     value: float
 
 
-class HardResourceRequirement(BaseModel):
+class HardResourceRequirement(Section):
     """sections: [kube_resource_quota_memory_v1, kube_resource_quota_cpu_v1]"""
 
     limit: Optional[float] = None

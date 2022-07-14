@@ -37,7 +37,8 @@ objects and that options from the `Kubernetes` rule have been taken into account
 
 
 class Section(BaseModel):
-    pass
+    class Config:
+        allow_mutation = False
 
 
 class PerformanceMetric(BaseModel):

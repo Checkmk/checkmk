@@ -130,7 +130,8 @@ class ControllerType(enum.Enum):
 
 
 class Section(BaseModel):
-    pass
+    class Config:
+        allow_mutation = False
 
 
 class Controller(BaseModel):

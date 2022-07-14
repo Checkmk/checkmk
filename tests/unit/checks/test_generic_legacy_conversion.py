@@ -1515,7 +1515,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "fireeye_smtp_conn",
         "fireeye_sys_image",
         "fireeye_temp",
-        "fjdarye200_pools",
         "fjdarye500_pfm",
         "fortigate_cpu",
         "fortigate_cpu_base",

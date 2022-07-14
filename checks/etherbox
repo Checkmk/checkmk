@@ -44,15 +44,21 @@ StringByteTable = List[List[Union[str, List[str]]]]
 
 @dataclass(frozen=True)
 class SensorData:
-    index: str
     name: str
-    sensor_type: str
     value: int
 
 
-Section = list[SensorData]
+Index = str
+Type = str
 
 
+@dataclass(frozen=True)
+class Section:
+    unit_of_measurement: str
+    sensor_data: Mapping[Index, Mapping[Type, SensorData]]
+
+
+# placeholder to delete and replace with imports during migration
 def Result(state: State, summary: str) -> tuple[State, str]:
     return (state, summary)
 
@@ -62,31 +68,32 @@ def Metric(name: str, value: float) -> tuple[str, str, list[tuple[str, float]]]:
 
 
 def etherbox_convert(info) -> Section:
-    sensor_data: Section = []
+    data: dict[Index, dict[Type, SensorData]] = {}
     for i in range(0, len(info[1])):
-        sensor_data.append(SensorData(info[1][i][1], info[2][i][1], info[3][i][1], info[4][i][1]))
-    return sensor_data
+        index, sensor_type = info[1][i][1], info[3][i][1]
+        if index not in data:
+            data[index] = {}
+        data[index][sensor_type] = SensorData(info[2][i][1], int(info[4][i][1]))
+    return Section({"0": "c", "1": "f", "2": "k"}[info[0][0][0]], data)
 
 
 def inventory_etherbox(info: StringByteTable, req_sensor_type: str) -> DiscoveryResult:
-    sensor_data = etherbox_convert(info)
-    for data in sensor_data:
-        # Ignore not connected Sensors
-        if data.sensor_type in ("1", "3") and data.value == "0":
-            continue
-        if data.sensor_type == req_sensor_type:
-            yield Service(f"{data.index}.{data.sensor_type}")
+    section = etherbox_convert(info)
+    for index, index_data in section.sensor_data.items():
+        for sensor_type, data in index_data.items():
+            if sensor_type in ("1", "3") and data.value == 0:
+                continue
+            if sensor_type == req_sensor_type:
+                yield Service(f"{index}.{sensor_type}")
 
 
-def etherbox_get_sensor(item: str, info: StringByteTable) -> Tuple[str, int]:
-    sensor_data = etherbox_convert(info)
+def etherbox_get_sensor(item: str, section: Section) -> SensorData:
     item_index, item_type = item.split(".")
-    for data in sensor_data:
-        if data.index == item_index:
-            if data.sensor_type != item_type:
-                raise Exception("Sensor type changed %s" % item)
-            return data.name, data.value
-    raise Exception("Sensor not found")
+    if item_index not in section.sensor_data:
+        raise Exception("Sensor not found")
+    if item_type not in section.sensor_data[item_index]:
+        raise Exception(f"Sensor type changed {item}")
+    return section.sensor_data[item_index][item_type]
 
 
 def etherbox_scan(oid):
@@ -126,15 +133,17 @@ etherbox_info = [
 
 def check_etherbox_temp(item: str, params: Mapping[str, Any], info: StringByteTable):
     try:
-        name, value = etherbox_get_sensor(item, info)
+        section = etherbox_convert(info)
+        data = etherbox_get_sensor(item, section)
     except Exception as error:
         yield Result(state=State.UNKNOWN, summary=str(error))
         return
 
-    uom = {"0": "c", "1": "f", "2": "k"}[info[0][0][0]]
-    temp = int(value) / 10.0
-    state, infotext, perfdata = check_temperature(temp, params, "etherbox_temp_%s" % item, uom)
-    yield Result(state=State(state), summary=f"[{name}] {infotext}")
+    temp = data.value / 10.0
+    state, infotext, perfdata = check_temperature(
+        temp, params, "etherbox_temp_%s" % item, section.unit_of_measurement
+    )
+    yield Result(state=State(state), summary=f"[{data.name}] {infotext}")
     yield "", "", perfdata
 
 
@@ -161,13 +170,14 @@ check_info["etherbox.temp"] = {
 
 def check_etherbox_humidity(item: str, params: Mapping[str, Any], info: StringByteTable):
     try:
-        name, value = etherbox_get_sensor(item, info)
+        section = etherbox_convert(info)
+        data = etherbox_get_sensor(item, section)
     except Exception as error:
         yield Result(state=State.UNKNOWN, summary=str(error))
         return
 
-    state, infotext, perfdata = check_humidity(int(value) / 10.0, params)
-    yield Result(state=State(state), summary=f"[{name}] {infotext}")
+    state, infotext, perfdata = check_humidity(data.value / 10.0, params)
+    yield Result(state=State(state), summary=f"[{data.name}] {infotext}")
     yield "", "", perfdata
 
 
@@ -194,13 +204,14 @@ check_info["etherbox.humidity"] = {
 
 def check_etherbox_switch_contact(item: str, params: Mapping[str, Any], info: StringByteTable):
     try:
-        name, value = etherbox_get_sensor(item, info)
+        section = etherbox_convert(info)
+        data = etherbox_get_sensor(item, section)
     except Exception as error:
         yield Result(state=State.UNKNOWN, summary=str(error))
         return
 
     state = State.OK
-    switch_state = "open" if value == "1000" else "closed"
+    switch_state = "open" if data.value == 1000 else "closed"
 
     extra_info = ""
     if params and params != "ignore":
@@ -209,8 +220,8 @@ def check_etherbox_switch_contact(item: str, params: Mapping[str, Any], info: St
             extra_info = f", should be {params}"
 
     infotext = f"Switch contact {switch_state}{extra_info}"
-    yield Result(state=state, summary=f"[{name}] {infotext}")
-    yield Metric("switch_contact", value)
+    yield Result(state=state, summary=f"[{data.name}] {infotext}")
+    yield Metric("switch_contact", data.value)
 
 
 check_info["etherbox.switch"] = {
@@ -236,18 +247,19 @@ check_info["etherbox.switch"] = {
 
 def check_etherbox_smoke(item: str, no_params: Mapping[str, Any], info: StringByteTable):
     try:
-        name, value = etherbox_get_sensor(item, info)
+        section = etherbox_convert(info)
+        data = etherbox_get_sensor(item, section)
     except Exception as error:
         yield Result(state=State.UNKNOWN, summary=str(error))
         return
 
     state = State.OK
     infotext = "Status: OK"
-    if value != "0":
+    if data.value != 0:
         infotext = "Status: smoke alarm"
         state = State.CRIT
-    yield Result(state=state, summary=f"[{name}] {infotext}")
-    yield Metric(name="smoke", value=value)
+    yield Result(state=state, summary=f"[{data.name}] {infotext}")
+    yield Metric(name="smoke", value=data.value)
 
 
 check_info["etherbox.smoke"] = {

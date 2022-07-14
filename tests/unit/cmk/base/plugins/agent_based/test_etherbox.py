@@ -42,7 +42,7 @@ def _check_temp(fix_register: FixRegister) -> CheckFunction:
 def test_discovery(discovery: DiscoveryFunction) -> None:
     # ignore second entry
     section = [
-        [],
+        [["0"]],
         [["", "9"], ["", "4"]],  # index
         [["", "n"], ["", "4"]],  # name
         [["", "1"], ["", "1"]],  # type
@@ -54,7 +54,7 @@ def test_discovery(discovery: DiscoveryFunction) -> None:
 
 def test_sensor_type_not_found(check_smoke: CheckFunction) -> None:
     section = [
-        [],
+        [["0"]],
         [["", "9"]],  # index
         [["", "n"]],  # name
         [["", "8"]],  # type
@@ -68,7 +68,7 @@ def test_sensor_type_not_found(check_smoke: CheckFunction) -> None:
 
 def test_sensor_not_found(check_smoke: CheckFunction) -> None:
     section = [
-        [],
+        [["0"]],
         [["", "4"]],  # index
         [["", "n"]],  # name
         [["", "6"]],  # type
@@ -82,7 +82,7 @@ def test_sensor_not_found(check_smoke: CheckFunction) -> None:
 
 def test_check_smoke(check_smoke: CheckFunction) -> None:
     section = [
-        [],
+        [["0"]],
         [["", "9"]],  # index
         [["", "n"]],  # name
         [["", "6"]],  # type
@@ -97,7 +97,7 @@ def test_check_smoke(check_smoke: CheckFunction) -> None:
 
 def test_check_switch(check_switch: CheckFunction) -> None:
     section = [
-        [],
+        [["0"]],
         [["", "9"]],  # index
         [["", "n"]],  # name
         [["", "3"]],  # type
@@ -112,7 +112,7 @@ def test_check_switch(check_switch: CheckFunction) -> None:
 
 def test_check_humidity(check_humidity: CheckFunction) -> None:
     section = [
-        [],
+        [["0"]],
         [["", "9"]],  # index
         [["", "n"]],  # name
         [["", "4"]],  # type

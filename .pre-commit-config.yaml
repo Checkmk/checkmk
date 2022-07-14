@@ -25,6 +25,9 @@ repos:
           - id: check-yaml
           - id: end-of-file-fixer
             exclude: .werks/.*
+          - id: fix-encoding-pragma
+            args: ["--remove"]
+            exclude: agents/plugins/
     - repo: local
       hooks:
           - id: isort

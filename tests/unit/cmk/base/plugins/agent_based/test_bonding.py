@@ -76,5 +76,5 @@ from cmk.base.plugins.agent_based.bonding import _check_ieee_302_3ad_specific
         ),
     ],
 )
-def test_check_ieee_302_3ad_specific(params, status, result) -> None:
+def test_check_ieee_302_3ad_specific(params, status, result) -> None:  # type:ignore[no-untyped-def]
     assert list(_check_ieee_302_3ad_specific(params, status)) == result

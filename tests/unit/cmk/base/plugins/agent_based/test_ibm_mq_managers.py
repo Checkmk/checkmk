@@ -64,5 +64,5 @@ from cmk.base.plugins.agent_based.ibm_mq_managers import inventory_ibm_mq_manage
         ),
     ],
 )
-def test_inv_aix_baselevel(parsed, expected_result) -> None:
+def test_inv_aix_baselevel(parsed, expected_result) -> None:  # type:ignore[no-untyped-def]
     assert list(inventory_ibm_mq_managers(parsed)) == expected_result

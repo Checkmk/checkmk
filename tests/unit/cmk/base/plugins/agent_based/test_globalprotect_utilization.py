@@ -21,7 +21,7 @@ from cmk.base.plugins.agent_based.globalprotect_utilization import (
     "string_table, expected_result",
     [([[3, 250, 8]], Section(utilization=3, max_tunnels=250, active_tunnels=8)), ([[]], None)],
 )
-def test_parse_globalprotect_utilization(
+def test_parse_globalprotect_utilization(  # type:ignore[no-untyped-def]
     string_table: StringTable, expected_result: Optional[Section]
 ):
     section = parse_globalprotect_utilization(string_table)
@@ -55,7 +55,7 @@ def test_discover_globalprotect_utilization(
         )
     ],
 )
-def test_check_globalprotect_utilization(
+def test_check_globalprotect_utilization(  # type:ignore[no-untyped-def]
     params: Mapping[str, Any], section: Section, expected_result: List[Union[Metric, Result]]
 ):
     result = list(check_globalprotect_utilization(params, section))

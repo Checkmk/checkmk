@@ -96,7 +96,7 @@ from cmk.base.plugins.agent_based.haproxy import (
         )
     ],
 )
-def test_parse_haproxy(info, expected_parsed) -> None:
+def test_parse_haproxy(info, expected_parsed) -> None:  # type:ignore[no-untyped-def]
     data = parse_haproxy(info)
     assert data == expected_parsed
 
@@ -229,7 +229,7 @@ def test_parse_haproxy(info, expected_parsed) -> None:
         )
     ],
 )
-def test_discover_haproxy_frontent(info, expected_result) -> None:
+def test_discover_haproxy_frontent(info, expected_result) -> None:  # type:ignore[no-untyped-def]
     data = parse_haproxy(info)
     result = discover_haproxy_frontend(data)
     assert list(result) == expected_result
@@ -674,7 +674,9 @@ def test_discover_haproxy_frontent(info, expected_result) -> None:
     "cmk.base.plugins.agent_based.haproxy.get_value_store",
     mock.MagicMock(return_value={"sessions.some_server": (time(), 0.0)}),
 )
-def test_haproxy_frontend(item, params, info, expected_result) -> None:
+def test_haproxy_frontend(  # type:ignore[no-untyped-def]
+    item, params, info, expected_result
+) -> None:
     data = parse_haproxy(info)
     result = check_haproxy_frontend(item, params, data)
     assert list(result) == expected_result
@@ -808,7 +810,7 @@ def test_haproxy_frontend(item, params, info, expected_result) -> None:
         )
     ],
 )
-def test_discover_haproxy_server(info, expected_result) -> None:
+def test_discover_haproxy_server(info, expected_result) -> None:  # type:ignore[no-untyped-def]
     data = parse_haproxy(info)
     result = discover_haproxy_server(data)
     assert list(result) == expected_result
@@ -1352,7 +1354,7 @@ def test_discover_haproxy_server(info, expected_result) -> None:
         ),
     ],
 )
-def test_haproxy_server(item, params, info, expected_result) -> None:
+def test_haproxy_server(item, params, info, expected_result) -> None:  # type:ignore[no-untyped-def]
     data = parse_haproxy(info)
     result = check_haproxy_server(item, params, data)
     assert list(result) == expected_result

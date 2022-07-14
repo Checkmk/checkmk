@@ -54,7 +54,7 @@ ITEM_RESULT = [
 ]
 
 
-def _run_parse_and_check(
+def _run_parse_and_check(  # type:ignore[no-untyped-def]
     item: str,
     info: List[StringTable],
     params: Optional[VsResult] = None,
@@ -66,7 +66,7 @@ def _run_parse_and_check(
 
 
 @pytest.mark.parametrize("item, result", ITEM_RESULT)
-def test_aruba_wlc_clients(item, result) -> None:
+def test_aruba_wlc_clients(item, result) -> None:  # type:ignore[no-untyped-def]
     assert _run_parse_and_check(item, INFO) == result
 
 

@@ -71,7 +71,7 @@ STRING_TABLE_RELATIVE: StringTable = [
         ),
     ],
 )
-def test_cpu_threads_regression(info, check_result) -> None:
+def test_cpu_threads_regression(info, check_result) -> None:  # type:ignore[no-untyped-def]
     section = parse_cpu(info)
     assert section is not None
     params = {"levels": ("levels", (2000, 4000))}

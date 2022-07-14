@@ -398,7 +398,7 @@ def test_agent_data_success(
 
 
 @pytest.mark.usefixtures("symlink_push_host")
-def test_agent_data_move_error(
+def test_agent_data_move_error(  # type:ignore[no-untyped-def]
     caplog,
     client: TestClient,
     uuid: UUID,

@@ -117,7 +117,9 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventory_solaris_addresses(string_table, expected_result) -> None:
+def test_inventory_solaris_addresses(  # type:ignore[no-untyped-def]
+    string_table, expected_result
+) -> None:
     assert sort_inventory_result(
         inventory_solaris_addresses(parse_solaris_addresses(string_table))
     ) == sort_inventory_result(expected_result)

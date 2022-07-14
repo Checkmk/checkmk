@@ -131,7 +131,7 @@ def test_discover_adva_fsp_if() -> None:
         ),
     ],
 )
-def test_check_huawei_osn_if(item, params, expected_result) -> None:
+def test_check_huawei_osn_if(item, params, expected_result) -> None:  # type:ignore[no-untyped-def]
     assert (
         list(
             adva_fsp_if.check_adva_fsp_if(

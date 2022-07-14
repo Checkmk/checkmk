@@ -76,7 +76,7 @@ _CHECK_PARAMS = {
         ),
     ],
 )
-def test_cisco_asa_failover_parse(string_table, expected) -> None:
+def test_cisco_asa_failover_parse(string_table, expected) -> None:  # type:ignore[no-untyped-def]
     assert parse_cisco_asa_failover(string_table) == expected
 
 
@@ -97,7 +97,7 @@ def test_cisco_asa_failover_parse(string_table, expected) -> None:
         ),
     ],
 )
-def test_cisco_asa_failover_discover(section, expected) -> None:
+def test_cisco_asa_failover_discover(section, expected) -> None:  # type:ignore[no-untyped-def]
     assert list(discovery_cisco_asa_failover(section)) == expected
 
 
@@ -216,6 +216,6 @@ def test_cisco_asa_failover_discover(section, expected) -> None:
         ),
     ],
 )
-def test_cisco_asa_failover(params, section, expected) -> None:
+def test_cisco_asa_failover(params, section, expected) -> None:  # type:ignore[no-untyped-def]
     result = check_cisco_asa_failover(params, section)
     assert list(result) == expected

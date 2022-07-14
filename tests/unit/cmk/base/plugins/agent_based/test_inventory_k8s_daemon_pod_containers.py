@@ -51,7 +51,9 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_k8s_daemon_pod_containers(raw_section, expected_result) -> None:
+def test_k8s_daemon_pod_containers(  # type:ignore[no-untyped-def]
+    raw_section, expected_result
+) -> None:
     assert sort_inventory_result(
         inventory_k8s_daemon_pod_containers(parse_k8s_daemon_pod_containers(raw_section))
     ) == sort_inventory_result(expected_result)

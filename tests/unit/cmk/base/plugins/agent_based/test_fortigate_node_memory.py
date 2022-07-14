@@ -19,7 +19,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
         ([[["ebnfwa02-1", "21", "1"]]], [Service(item="Cluster")]),
     ],
 )
-def test_fortigate_node_memory_discover(string_table, expected) -> None:
+def test_fortigate_node_memory_discover(  # type:ignore[no-untyped-def]
+    string_table, expected
+) -> None:
     section = fortigate_memory.parse_fortigate_node_memory(string_table)
     services = list(fortigate_memory.discovery_fortigate_node_memory(section))
     assert services == expected
@@ -54,7 +56,9 @@ def test_fortigate_node_memory_discover(string_table, expected) -> None:
         ),
     ],
 )
-def test_fortigate_node_memory_check(item, params, data, expected) -> None:
+def test_fortigate_node_memory_check(  # type:ignore[no-untyped-def]
+    item, params, data, expected
+) -> None:
     section = fortigate_memory.parse_fortigate_node_memory(data)
     result = fortigate_memory.check_fortigate_node_memory(item, params, section)
     assert list(result) == expected

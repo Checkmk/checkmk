@@ -191,7 +191,7 @@ def test_get_last_backup(last_backup: Optional[str], expected_result: Optional[d
     "controller_data, expected_result",
     [(WLAN_CONTROLLERS, WLAN_CONTROLLERS_SECTION)],
 )
-def test_parse_cisco_prime_wlan_controller(
+def test_parse_cisco_prime_wlan_controller(  # type:ignore[no-untyped-def]
     controller_data: Dict[str, Any], expected_result: Dict[str, WlanController]
 ):
     string_table = [[json.dumps(controller_data)]]
@@ -202,7 +202,7 @@ def test_parse_cisco_prime_wlan_controller(
     "section, expected_result",
     [(WLAN_CONTROLLERS_SECTION, [Service(item="wism21"), Service(item="wism22")])],
 )
-def test_discovery_wlan_controller(
+def test_discovery_wlan_controller(  # type:ignore[no-untyped-def]
     section: Dict[str, WlanController], expected_result: List[Service]
 ):
     services = discovery_wlan_controller(section)
@@ -229,7 +229,7 @@ def test_discovery_wlan_controller(
         ("wism23", WLAN_CONTROLLERS_SECTION, []),
     ],
 )
-def test_check_wlan_controller_metadata(
+def test_check_wlan_controller_metadata(  # type:ignore[no-untyped-def]
     item: str, section: Dict[str, WlanController], expected_result: List[CheckResult]
 ):
     result = check_wlan_controller_metadata(item, section)
@@ -247,7 +247,7 @@ def test_check_wlan_controller_metadata(
         ("wism23", WLAN_CONTROLLERS_SECTION, []),
     ],
 )
-def test_check_wlan_controller_alarm_status(
+def test_check_wlan_controller_alarm_status(  # type:ignore[no-untyped-def]
     item: str, section: Dict[str, WlanController], expected_result: List[CheckResult]
 ):
     result = check_wlan_controller_alarm_status(item, section)
@@ -269,7 +269,7 @@ def test_check_wlan_controller_alarm_status(
         ("wism23", {"access_points": (300, 500)}, WLAN_CONTROLLERS_SECTION, []),
     ],
 )
-def test_check_wlan_controller_access_points(
+def test_check_wlan_controller_access_points(  # type:ignore[no-untyped-def]
     item: str,
     params: Mapping[str, Tuple[float, float]],
     section: Dict[str, WlanController],
@@ -294,7 +294,7 @@ def test_check_wlan_controller_access_points(
         ("wism23", {}, WLAN_CONTROLLERS_SECTION, []),
     ],
 )
-def test_check_wlan_controller_clients(
+def test_check_wlan_controller_clients(  # type:ignore[no-untyped-def]
     item: str,
     params: Mapping[str, Tuple[float, float]],
     section: Dict[str, WlanController],
@@ -320,7 +320,7 @@ def test_check_wlan_controller_clients(
         ("wism23", WLAN_CONTROLLERS_SECTION, []),
     ],
 )
-def test_check_wlan_controller_reachability(
+def test_check_wlan_controller_reachability(  # type:ignore[no-untyped-def]
     item: str, section: Dict[str, WlanController], expected_result: List[CheckResult]
 ):
     result = check_wlan_controller_reachability(item, section)
@@ -352,7 +352,7 @@ def test_check_wlan_controller_reachability(
     ],
 )
 @freeze_time("2021-10-27 00:00:00.000000")
-def test_check_wlan_controller_last_backup(
+def test_check_wlan_controller_last_backup(  # type:ignore[no-untyped-def]
     item: str,
     params: Mapping[str, Tuple[float, float]],
     section: Dict[str, WlanController],

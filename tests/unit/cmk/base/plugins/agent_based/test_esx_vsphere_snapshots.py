@@ -52,14 +52,16 @@ def test_parse_esx_vsphere_snapshots() -> None:
     ],
 )
 @freeze_time("2020-11-23")
-def test_check_snapshots_summary(section, expected_result, monkeypatch) -> None:
+def test_check_snapshots_summary(  # type:ignore[no-untyped-def]
+    section, expected_result, monkeypatch
+) -> None:
     monkeypatch.setattr(time, "localtime", time.gmtime)
     result = check_snapshots_summary({}, section)
     assert list(result) == expected_result
 
 
 @freeze_time("2020-11-23")
-def test_check_snapshots(monkeypatch) -> None:
+def test_check_snapshots(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     monkeypatch.setattr(time, "localtime", time.gmtime)
     assert list(
         check_snapshots(

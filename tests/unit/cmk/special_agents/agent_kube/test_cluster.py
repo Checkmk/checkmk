@@ -58,7 +58,7 @@ def test_cluster_namespaces(
 
 
 @pytest.mark.parametrize("cluster_pods", [0, 10, 20])
-def test_cluster_resources(
+def test_cluster_resources(  # type:ignore[no-untyped-def]
     cluster_details: api.ClusterDetails,
     cluster_pods: int,
     new_pod: Callable[[], agent.Pod],
@@ -72,7 +72,7 @@ def test_cluster_resources(
     assert sum(len(pods) for _phase, pods in cluster.pod_resources()) == cluster_pods
 
 
-def test_cluster_allocatable_memory_resource(
+def test_cluster_allocatable_memory_resource(  # type:ignore[no-untyped-def]
     node_allocatable_memory: float, cluster_nodes: int, cluster: agent.Cluster
 ):
     expected = section.AllocatableResource(
@@ -82,7 +82,7 @@ def test_cluster_allocatable_memory_resource(
     assert actual == expected
 
 
-def test_cluster_allocatable_cpu_resource(
+def test_cluster_allocatable_cpu_resource(  # type:ignore[no-untyped-def]
     node_allocatable_cpu: float, cluster_nodes: int, cluster: agent.Cluster
 ):
     expected = section.AllocatableResource(
@@ -92,14 +92,14 @@ def test_cluster_allocatable_cpu_resource(
     assert actual == expected
 
 
-def test_write_cluster_api_sections_registers_sections_to_be_written(
+def test_write_cluster_api_sections_registers_sections_to_be_written(  # type:ignore[no-untyped-def]
     cluster: agent.Cluster, cluster_api_sections: Sequence[str], write_sections_mock
 ):
     agent.write_cluster_api_sections("cluster", cluster)
     assert list(write_sections_mock.call_args[0][0]) == cluster_api_sections
 
 
-def test_write_cluster_api_sections_maps_section_names_to_callables(
+def test_write_cluster_api_sections_maps_section_names_to_callables(  # type:ignore[no-untyped-def]
     cluster: agent.Cluster, cluster_api_sections: Sequence[str], write_sections_mock
 ):
     agent.write_cluster_api_sections("cluster", cluster)
@@ -110,7 +110,7 @@ def test_write_cluster_api_sections_maps_section_names_to_callables(
 
 
 @pytest.mark.parametrize("cluster_nodes", [0, 10, 20])
-def test_node_count_returns_number_of_nodes_ready_not_ready(
+def test_node_count_returns_number_of_nodes_ready_not_ready(  # type:ignore[no-untyped-def]
     cluster_nodes: int, cluster: agent.Cluster
 ):
     node_count = cluster.node_count()
@@ -139,7 +139,7 @@ def test_node_control_plane_not_ready_count(
 
 
 @pytest.mark.parametrize("cluster_daemon_sets", [0, 10, 20])
-def test_daemon_sets_returns_daemon_sets_of_cluster(
+def test_daemon_sets_returns_daemon_sets_of_cluster(  # type:ignore[no-untyped-def]
     cluster_daemon_sets: int, cluster: agent.Cluster
 ):
     daemon_sets = cluster.daemon_sets()
@@ -147,7 +147,9 @@ def test_daemon_sets_returns_daemon_sets_of_cluster(
 
 
 @pytest.mark.parametrize("cluster_statefulsets", [0, 10, 20])
-def test_statefulsets_returns_statefulsets_of_cluster(cluster_statefulsets, cluster) -> None:
+def test_statefulsets_returns_statefulsets_of_cluster(  # type:ignore[no-untyped-def]
+    cluster_statefulsets, cluster
+) -> None:
     statefulsets = cluster.statefulsets()
     assert len(statefulsets) == cluster_statefulsets
 
@@ -176,7 +178,7 @@ def test_statefulsets_returns_statefulsets_of_cluster(cluster_statefulsets, clus
         ),
     ],
 )
-def test_cluster_allocatable_memory_resource_exclude_roles(
+def test_cluster_allocatable_memory_resource_exclude_roles(  # type:ignore[no-untyped-def]
     api_node_roles_per_node: Sequence[Sequence[str]],
     cluster_nodes: int,
     excluded_node_roles: Sequence[str],
@@ -223,7 +225,7 @@ def test_cluster_allocatable_memory_resource_exclude_roles(
         ),
     ],
 )
-def test_cluster_allocatable_cpu_resource_cluster(
+def test_cluster_allocatable_cpu_resource_cluster(  # type:ignore[no-untyped-def]
     api_node_roles_per_node: Sequence[Sequence[str]],
     cluster_nodes: int,
     excluded_node_roles: Sequence[str],
@@ -268,7 +270,7 @@ def test_cluster_allocatable_cpu_resource_cluster(
         ),
     ],
 )
-def test_cluster_usage_resources(
+def test_cluster_usage_resources(  # type:ignore[no-untyped-def]
     excluded_node_role: str,
     node_podcount_roles: Sequence[Tuple[str, int, Sequence[str]]],
 ):
@@ -312,7 +314,7 @@ def test_cluster_usage_resources(
         ),
     ],
 )
-def test_cluster_allocatable_pods(
+def test_cluster_allocatable_pods(  # type:ignore[no-untyped-def]
     excluded_node_role: str,
     node_podcount_roles: Sequence[Tuple[str, int, Sequence[str]]],
 ):
@@ -365,7 +367,7 @@ def test_cluster_allocatable_pods(
         ),
     ],
 )
-def test_write_kube_object_performance_section_cluster(
+def test_write_kube_object_performance_section_cluster(  # type:ignore[no-untyped-def]
     phase_all_pods: api.Phase,
     excluded_node_role: str,
     node_podcount_roles: Sequence[Tuple[str, int, Sequence[str]]],

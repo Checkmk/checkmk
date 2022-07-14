@@ -93,7 +93,9 @@ example_parsed_data = {
         (example_snmp_string_table, example_parsed_data),
     ],
 )
-def test_parse_infoblox_services(string_table, expected_parsed_data) -> None:
+def test_parse_infoblox_services(  # type:ignore[no-untyped-def]
+    string_table, expected_parsed_data
+) -> None:
     assert parse_infoblox_services(string_table) == expected_parsed_data
 
 
@@ -103,7 +105,7 @@ def test_parse_infoblox_services(string_table, expected_parsed_data) -> None:
         (example_parsed_data, [Service(item=key) for key in example_parsed_data]),
     ],
 )
-def test_discovery_infoblox_services(section, result) -> None:
+def test_discovery_infoblox_services(section, result) -> None:  # type:ignore[no-untyped-def]
     assert list(discovery_infoblox_services(section)) == result
 
 
@@ -117,5 +119,5 @@ def test_discovery_infoblox_services(section, result) -> None:
         ),
     ],
 )
-def test_check_infoblox_services(item, section, result) -> None:
+def test_check_infoblox_services(item, section, result) -> None:  # type:ignore[no-untyped-def]
     assert list(check_infoblox_services(item, section)) == result

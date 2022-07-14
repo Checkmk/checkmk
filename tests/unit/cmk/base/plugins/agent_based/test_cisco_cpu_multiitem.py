@@ -90,7 +90,7 @@ def test_check_cisco_cpu_multiitem(parsed_section: Section) -> None:
         ),
     ),
 )
-def test_discover_cisco_cpu_multiitem(
+def test_discover_cisco_cpu_multiitem(  # type:ignore[no-untyped-def]
     parsed_section: Section, discovery_params, expected_discovery_result
 ) -> None:
     assert (
@@ -290,5 +290,5 @@ data = [
 
 
 @pytest.mark.parametrize("string_table, expected", data)
-def test_parse(string_table, expected) -> None:
+def test_parse(string_table, expected) -> None:  # type:ignore[no-untyped-def]
     assert parse_cisco_cpu_multiitem(string_table) == expected

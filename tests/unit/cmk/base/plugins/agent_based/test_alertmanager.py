@@ -72,7 +72,7 @@ custom_remapping_check_params = alertmanager.CheckParams(
         (alertmanager.RuleState.NA, custom_remapping_check_params, State.UNKNOWN),
     ],
 )
-def test_alertmanager_get_rule_state_remapping(
+def test_alertmanager_get_rule_state_remapping(  # type:ignore[no-untyped-def]
     alertmanager_rule_state: alertmanager.RuleState,
     params: alertmanager.CheckParams,
     status: State,
@@ -120,7 +120,7 @@ def test_alertmanager_get_rule_state_remapping(
         ),
     ],
 )
-def test_alertmanager_discover_rules(
+def test_alertmanager_discover_rules(  # type:ignore[no-untyped-def]
     params: alertmanager.DiscoveryParams,
     data: type_defs.StringTable,
     result: DiscoveryResult,
@@ -154,7 +154,7 @@ def test_alertmanager_discover_rules(
         ),
     ],
 )
-def test_alertmanager_check_rules(
+def test_alertmanager_check_rules(  # type:ignore[no-untyped-def]
     item: str,
     params: alertmanager.CheckParams,
     data: type_defs.StringTable,
@@ -188,7 +188,7 @@ def test_alertmanager_check_rules(
         (alternative_discovery_params, DATA, []),
     ],
 )
-def test_alertmanager_discover_groups(
+def test_alertmanager_discover_groups(  # type:ignore[no-untyped-def]
     params: alertmanager.DiscoveryParams,
     data: type_defs.StringTable,
     result: DiscoveryResult,
@@ -215,7 +215,7 @@ def test_alertmanager_discover_groups(
         )
     ],
 )
-def test_alertmanager_check_groups(
+def test_alertmanager_check_groups(  # type:ignore[no-untyped-def]
     item: str,
     params: alertmanager.CheckParams,
     data: type_defs.StringTable,
@@ -249,7 +249,7 @@ def test_alertmanager_check_groups(
         (alternative_discovery_params, DATA, []),
     ],
 )
-def test_alertmanager_discover_summary(
+def test_alertmanager_discover_summary(  # type:ignore[no-untyped-def]
     params: alertmanager.DiscoveryParams,
     data: type_defs.StringTable,
     result: DiscoveryResult,
@@ -276,7 +276,7 @@ def test_alertmanager_discover_summary(
         )
     ],
 )
-def test_alertmanager_check_summary(
+def test_alertmanager_check_summary(  # type:ignore[no-untyped-def]
     params: alertmanager.CheckParams,
     data: type_defs.StringTable,
     result: CheckResult,

@@ -185,7 +185,7 @@ def make_section_2() -> Dict[str, Dict[str, float]]:
         (make_agent_output_2(), make_section_2()),
     ],
 )
-def test_parse_function(string_table, section) -> None:
+def test_parse_function(string_table, section) -> None:  # type:ignore[no-untyped-def]
     assert apache_status.apache_status_parse(string_table) == section
 
 
@@ -195,7 +195,7 @@ def test_discovery() -> None:
     ]
 
 
-def test_check_function(monkeypatch) -> None:
+def test_check_function(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     monkeypatch.setattr(
         apache_status,
         "get_value_store",

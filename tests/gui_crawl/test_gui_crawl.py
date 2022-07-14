@@ -64,7 +64,7 @@ class Progress:
         self.done_total = 0
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # type:ignore[no-untyped-def]
         logger.info(
             "%d done in %.3f secs %s",
             self.done_total,
@@ -421,7 +421,7 @@ class Crawler:
             else:
                 self.handle_new_reference(url, referer_url=referer_url)
 
-    def check_logs(self, url: Url, logs: Iterable[str]):
+    def check_logs(self, url: Url, logs: Iterable[str]):  # type:ignore[no-untyped-def]
         accepted_logs = [
             "Missing object for SimpleBar initiation.",
         ]

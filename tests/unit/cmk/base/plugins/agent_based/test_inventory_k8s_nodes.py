@@ -47,7 +47,7 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_k8s_nodes(parsed, expected_result) -> None:
+def test_k8s_nodes(parsed, expected_result) -> None:  # type:ignore[no-untyped-def]
     assert sort_inventory_result(inventory_k8s_nodes(parsed)) == sort_inventory_result(
         expected_result
     )

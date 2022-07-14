@@ -3,8 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from dataclasses import dataclass
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
+from typing import Any, Iterable, Mapping
+
+from cmk.base.api.agent_based.checking_classes import State
 from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
@@ -26,32 +31,61 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 
 # TODO: insert missing snmp output
 
+ServiceType = tuple[str, None]
 
-def etherbox_convert(info):
-    sensor_data = []
+
+def Service(item: str) -> ServiceType:
+    return item, None
+
+
+DiscoveryResult = Iterable[ServiceType]
+StringByteTable = List[List[Union[str, List[str]]]]
+
+
+@dataclass(frozen=True)
+class SensorData:
+    index: str
+    name: str
+    sensor_type: str
+    value: int
+
+
+Section = list[SensorData]
+
+
+def Result(state: State, summary: str) -> tuple[State, str]:
+    return (state, summary)
+
+
+def Metric(name: str, value: float) -> tuple[str, str, list[tuple[str, float]]]:
+    return "", "", [(name, value)]
+
+
+def etherbox_convert(info) -> Section:
+    sensor_data: Section = []
     for i in range(0, len(info[1])):
-        sensor_data.append((info[1][i][1], info[2][i][1], info[3][i][1], info[4][i][1]))
+        sensor_data.append(SensorData(info[1][i][1], info[2][i][1], info[3][i][1], info[4][i][1]))
     return sensor_data
 
 
-def inventory_etherbox(info, req_sensor_type):
+def inventory_etherbox(info: StringByteTable, req_sensor_type: str) -> DiscoveryResult:
     sensor_data = etherbox_convert(info)
-    for index, _name, sensor_type, value in sensor_data:
+    for data in sensor_data:
         # Ignore not connected Sensors
-        if sensor_type in ("1", "3") and value == "0":
+        if data.sensor_type in ("1", "3") and data.value == "0":
             continue
-        if sensor_type == req_sensor_type:
-            yield "%s.%s" % (index, sensor_type), None
+        if data.sensor_type == req_sensor_type:
+            yield Service(f"{data.index}.{data.sensor_type}")
 
 
-def etherbox_get_sensor(item, item_type, info):
+def etherbox_get_sensor(item: str, info: StringByteTable) -> Tuple[str, int]:
     sensor_data = etherbox_convert(info)
     item_index, item_type = item.split(".")
-    for index, name, sensor_type, value in sensor_data:
-        if index == item_index:
-            if sensor_type != item_type:
+    for data in sensor_data:
+        if data.index == item_index:
+            if data.sensor_type != item_type:
                 raise Exception("Sensor type changed %s" % item)
-            return name, value
+            return data.name, data.value
     raise Exception("Sensor not found")
 
 
@@ -90,16 +124,18 @@ etherbox_info = [
 #   '----------------------------------------------------------------------'
 
 
-def check_etherbox_temp(item, params, info):
+def check_etherbox_temp(item: str, params: Mapping[str, Any], info: StringByteTable):
     try:
-        name, value = etherbox_get_sensor(item, "1", info)
+        name, value = etherbox_get_sensor(item, info)
     except Exception as error:
-        return 3, str(error)
+        yield Result(state=State.UNKNOWN, summary=str(error))
+        return
 
     uom = {"0": "c", "1": "f", "2": "k"}[info[0][0][0]]
     temp = int(value) / 10.0
     state, infotext, perfdata = check_temperature(temp, params, "etherbox_temp_%s" % item, uom)
-    return state, "[%s] %s" % (name, infotext), perfdata
+    yield Result(state=State(state), summary=f"[{name}] {infotext}")
+    yield "", "", perfdata
 
 
 check_info["etherbox.temp"] = {
@@ -123,14 +159,16 @@ check_info["etherbox.temp"] = {
 #   '----------------------------------------------------------------------'
 
 
-def check_etherbox_humidity(item, params, info):
+def check_etherbox_humidity(item: str, params: Mapping[str, Any], info: StringByteTable):
     try:
-        name, value = etherbox_get_sensor(item, "3", info)
+        name, value = etherbox_get_sensor(item, info)
     except Exception as error:
-        return 3, str(error)
+        yield Result(state=State.UNKNOWN, summary=str(error))
+        return
 
     state, infotext, perfdata = check_humidity(int(value) / 10.0, params)
-    return state, "[%s] %s" % (name, infotext), perfdata
+    yield Result(state=State(state), summary=f"[{name}] {infotext}")
+    yield "", "", perfdata
 
 
 check_info["etherbox.humidity"] = {
@@ -154,25 +192,25 @@ check_info["etherbox.humidity"] = {
 #   '----------------------------------------------------------------------'
 
 
-def check_etherbox_switch_contact(item, params, info):
+def check_etherbox_switch_contact(item: str, params: Mapping[str, Any], info: StringByteTable):
     try:
-        name, value = etherbox_get_sensor(item, "4", info)
+        name, value = etherbox_get_sensor(item, info)
     except Exception as error:
-        return 3, str(error)
+        yield Result(state=State.UNKNOWN, summary=str(error))
+        return
 
-    state = 0
-    perfdata = [("switch_contact", value)]
+    state = State.OK
     switch_state = "open" if value == "1000" else "closed"
 
-    state = 0
     extra_info = ""
     if params and params != "ignore":
         if switch_state != params:
-            state = 2
-            extra_info = ", should be %s" % params
+            state = State.CRIT
+            extra_info = f", should be {params}"
 
-    infotext = "[%s] Switch contact %s%s" % (name, switch_state, extra_info)
-    return (state, infotext, perfdata)
+    infotext = f"Switch contact {switch_state}{extra_info}"
+    yield Result(state=state, summary=f"[{name}] {infotext}")
+    yield Metric("switch_contact", value)
 
 
 check_info["etherbox.switch"] = {
@@ -196,19 +234,20 @@ check_info["etherbox.switch"] = {
 #   '----------------------------------------------------------------------'
 
 
-def check_etherbox_smoke(item, no_params, info):
+def check_etherbox_smoke(item: str, no_params: Mapping[str, Any], info: StringByteTable):
     try:
-        name, value = etherbox_get_sensor(item, "6", info)
+        name, value = etherbox_get_sensor(item, info)
     except Exception as error:
-        return 3, str(error)
+        yield Result(state=State.UNKNOWN, summary=str(error))
+        return
 
-    state = 0
-    perfdata = [("smoke", value)]
+    state = State.OK
     infotext = "Status: OK"
     if value != "0":
         infotext = "Status: smoke alarm"
-        state = 2
-    return state, "[%s] %s" % (name, infotext), perfdata
+        state = State.CRIT
+    yield Result(state=state, summary=f"[{name}] {infotext}")
+    yield Metric(name="smoke", value=value)
 
 
 check_info["etherbox.smoke"] = {

@@ -161,7 +161,7 @@ def test__transform_replaced_wato_rulesets_and_params(
     assert rule[2].value == transformed_param_value
 
 
-def _instantiate_ruleset(ruleset_name, param_value) -> Ruleset:
+def _instantiate_ruleset(ruleset_name, param_value) -> Ruleset:  # type:ignore[no-untyped-def]
     ruleset = Ruleset(ruleset_name, {})
     rule = Rule.from_ruleset_defaults(Folder(""), ruleset)
     rule.value = param_value

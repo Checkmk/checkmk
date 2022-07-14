@@ -100,7 +100,7 @@ class APIDiscoveryAction(enum.Enum):
     only_host_labels = "only_host_labels"
 
 
-def _discovery_mode(default_mode: str):
+def _discovery_mode(default_mode: str):  # type:ignore[no-untyped-def]
     return fields.String(
         description="""The mode of the discovery action. Can be one of:
 
@@ -467,7 +467,7 @@ def _lookup_phase_name(internal_phase_name: str) -> str:
     raise ValueError(f"Key {internal_phase_name} not found in dict.")
 
 
-def serialize_discovery_result(
+def serialize_discovery_result(  # type:ignore[no-untyped-def]
     host: CREHost,
     discovery_result: DiscoveryResult,
 ):
@@ -634,7 +634,7 @@ def show_bulk_discovery_status(params: Mapping[str, Any]) -> Response:
     return _serve_background_job(job)
 
 
-def _discovery_options(action_mode: str):
+def _discovery_options(action_mode: str):  # type:ignore[no-untyped-def]
     return DiscoveryOptions(
         action=action_mode,
         show_checkboxes=False,

@@ -19,7 +19,7 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 
 @pytest.fixture(name="value_store_patch")
-def value_store_fixture(monkeypatch) -> None:
+def value_store_fixture(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     value_store_patched = {
         "QUOTA-10.user.delta": [0, 0],
     }
@@ -250,7 +250,7 @@ def test_inventory_netapp_api_qtree_quota(
         )
     ],
 )
-def test_get_item_names(qtree: Qtree, expected_result) -> None:
+def test_get_item_names(qtree: Qtree, expected_result) -> None:  # type:ignore[no-untyped-def]
     result = get_item_names(qtree)
     assert result == expected_result
 

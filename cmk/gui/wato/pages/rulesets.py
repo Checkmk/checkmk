@@ -671,18 +671,18 @@ def _page_menu_entry_search_rules(
     )
 
 
-def _is_deprecated_rulesets_page(search_options) -> bool:
+def _is_deprecated_rulesets_page(search_options) -> bool:  # type:ignore[no-untyped-def]
     return search_options.get("ruleset_deprecated") is True
 
 
-def _is_ineffective_rules_page(search_options) -> bool:
+def _is_ineffective_rules_page(search_options) -> bool:  # type:ignore[no-untyped-def]
     return (
         search_options.get("ruleset_deprecated") is False
         and search_options.get("rule_ineffective") is True
     )
 
 
-def _is_used_rulesets_page(search_options) -> bool:
+def _is_used_rulesets_page(search_options) -> bool:  # type:ignore[no-untyped-def]
     return (
         search_options.get("ruleset_deprecated") is False
         and search_options.get("ruleset_used") is True
@@ -1009,7 +1009,7 @@ class ModeEditRuleset(WatoMode):
         self._rule_listing(ruleset)
         self._create_form()
 
-    def _explain_match_type(self, match_type) -> None:
+    def _explain_match_type(self, match_type) -> None:  # type:ignore[no-untyped-def]
         html.open_div(class_="matching_message")
         html.b("%s: " % _("Matching"))
         if match_type == "first":
@@ -1082,7 +1082,7 @@ class ModeEditRuleset(WatoMode):
         html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))
 
     @staticmethod
-    def _css_for_rule(search_options, rule: Rule) -> list[str]:
+    def _css_for_rule(search_options, rule: Rule) -> list[str]:  # type:ignore[no-untyped-def]
         css = []
         if rule.is_disabled():
             css.append("disabled")
@@ -1101,7 +1101,7 @@ class ModeEditRuleset(WatoMode):
         if self._just_edited_rule and self._just_edited_rule.id == rule.id:
             html.focus_here()
 
-    def _show_rule_icons(
+    def _show_rule_icons(  # type:ignore[no-untyped-def]
         self,
         table: Table,
         match_state,
@@ -1153,7 +1153,7 @@ class ModeEditRuleset(WatoMode):
             icon="delete",
         )
 
-    def _match(
+    def _match(  # type:ignore[no-untyped-def]
         self, match_state, rule: Rule, service_result: Optional[AnalyseServiceResult]
     ) -> _Tuple[str, str]:
         self._get_host_labels_from_remote_site()
@@ -1229,7 +1229,7 @@ class ModeEditRuleset(WatoMode):
         execute_host_label_sync(self._hostname, site_id)
         g.setdefault("host_label_sync", {})[cache_id] = True
 
-    def _action_url(self, action, folder, rule_id) -> str:
+    def _action_url(self, action, folder, rule_id) -> str:  # type:ignore[no-untyped-def]
         vars_ = [
             ("mode", request.var("mode", "edit_ruleset")),
             ("ruleset_back_mode", self._back_mode),
@@ -1999,7 +1999,9 @@ class ABCEditRuleMode(WatoMode):
             # In case of validation problems render the input with default values
             vs.render_input("explicit_conditions", RuleConditions(host_folder=self._folder.path()))
 
-    def _vs_explicit_conditions(self, **kwargs) -> VSExplicitConditions:
+    def _vs_explicit_conditions(  # type:ignore[no-untyped-def]
+        self, **kwargs
+    ) -> VSExplicitConditions:
         return VSExplicitConditions(rulespec=self._rulespec, **kwargs)
 
     def _vs_rule_options(self, rule: Rule, disabling: bool = True) -> Dictionary:
@@ -2036,7 +2038,7 @@ class ABCEditRuleMode(WatoMode):
 class VSExplicitConditions(Transform):
     """Valuespec for editing a set of explicit rule conditions"""
 
-    def __init__(self, rulespec: Rulespec, **kwargs) -> None:
+    def __init__(self, rulespec: Rulespec, **kwargs) -> None:  # type:ignore[no-untyped-def]
         self._rulespec = rulespec
         super().__init__(
             valuespec=Dictionary(
@@ -2427,7 +2429,9 @@ class RuleConditionRenderer:
     def _service_label_conditions(self, conditions: RuleConditions) -> Iterable[HTML]:
         return self._label_conditions(conditions.service_labels, "service", _("Service"))
 
-    def _label_conditions(self, label_conditions, object_type, object_title) -> Iterable[HTML]:
+    def _label_conditions(  # type:ignore[no-untyped-def]
+        self, label_conditions, object_type, object_title
+    ) -> Iterable[HTML]:
         if not label_conditions:
             return
 
@@ -2443,7 +2447,9 @@ class RuleConditionRenderer:
             )
         )
 
-    def _single_label_condition(self, object_type, label_id, label_spec) -> HTML:
+    def _single_label_condition(  # type:ignore[no-untyped-def]
+        self, object_type, label_id, label_spec
+    ) -> HTML:
         negate = False
         label_value = label_spec
         if isinstance(label_spec, dict):

@@ -56,7 +56,7 @@ def fixture_time(mocker):
         ),
     ],
 )
-def test_check_kube_pod_info(
+def test_check_kube_pod_info(  # type:ignore[no-untyped-def]
     section: PodInfo, expected_check_result: Tuple[Result, ...], time
 ) -> None:
     assert tuple(check_kube_pod_info(section)) == expected_check_result

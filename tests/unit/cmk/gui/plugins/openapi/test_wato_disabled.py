@@ -11,7 +11,7 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_wato_disabled_blocks_query(
+def test_openapi_wato_disabled_blocks_query(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):

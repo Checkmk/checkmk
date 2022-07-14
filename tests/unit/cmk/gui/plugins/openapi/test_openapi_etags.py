@@ -9,13 +9,15 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 
 @pytest.fixture(scope="function", name="etags_off")
-def etags_off_fixture(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def etags_off_fixture(aut_user_auth_wsgi_app: WebTestAppForCMK):  # type:ignore[no-untyped-def]
     with aut_user_auth_wsgi_app.set_config(rest_api_etag_locking=False):
         yield
 
 
 @pytest.mark.usefixtures("with_host")
-def test_openapi_etag_disabled(etags_off, aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+def test_openapi_etag_disabled(  # type:ignore[no-untyped-def]
+    etags_off, aut_user_auth_wsgi_app: WebTestAppForCMK
+) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     resp = aut_user_auth_wsgi_app.call_method(

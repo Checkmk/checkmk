@@ -48,13 +48,13 @@ from cmk.gui.fields.utils import BaseSchema
         ("~DCN~DE.KAE.BS", True),
     ],
 )
-def test_folder_regexp(given, expected) -> None:
+def test_folder_regexp(given, expected) -> None:  # type:ignore[no-untyped-def]
     regexp = re.compile(f"(?:^{FOLDER_PATTERN})$")
     match = regexp.findall(given)
     assert bool(match) == expected, match
 
 
-def test_folder_schema(request_context) -> None:
+def test_folder_schema(request_context) -> None:  # type:ignore[no-untyped-def]
     class FolderSchema(BaseSchema):
         folder = FolderField(required=True)
 
@@ -276,7 +276,7 @@ def test_openapi_folder_config_collections(aut_user_auth_wsgi_app: WebTestAppFor
     )
 
 
-def test_openapi_folder_hosts_sub_resource(
+def test_openapi_folder_hosts_sub_resource(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK, with_host
 ) -> None:
     aut_user_auth_wsgi_app.call_method(
@@ -567,8 +567,10 @@ def test_openapi_folder_remove_attribute(aut_user_auth_wsgi_app: WebTestAppForCM
     assert "tag_address_family" not in resp.json["extensions"]["attributes"]
 
 
-def test_openapi_folder_config_collections_recursive_list(aut_user_auth_wsgi_app: WebTestAppForCMK):
-    def _create_folder(fname: str, parent: str):
+def test_openapi_folder_config_collections_recursive_list(  # type:ignore[no-untyped-def]
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+):
+    def _create_folder(fname: str, parent: str):  # type:ignore[no-untyped-def]
         params = f'{{"name": "{fname}", "title": "{fname}", "parent": "{parent}"}}'
         aut_user_auth_wsgi_app.call_method(
             "post",
@@ -580,7 +582,7 @@ def test_openapi_folder_config_collections_recursive_list(aut_user_auth_wsgi_app
         )
         parent += f"{fname}~"
 
-    def _create_folders_recursive(folders: Sequence[str]):
+    def _create_folders_recursive(folders: Sequence[str]):  # type:ignore[no-untyped-def]
         _create_folder(folders[0], "~")
         parent = f"~{folders[0]}"
         for fname in folders[1:]:

@@ -45,7 +45,7 @@ def fixture_time(mocker):
         ),
     ],
 )
-def test_check_kube_deployment_info(
+def test_check_kube_deployment_info(  # type:ignore[no-untyped-def]
     section: DeploymentInfo, expected_check_result: Tuple[Result, ...], time
 ) -> None:
     assert tuple(check_kube_deployment_info(section)) == expected_check_result

@@ -13,7 +13,7 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
-def test_openapi_list_all_downtimes(
+def test_openapi_list_all_downtimes(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
@@ -39,7 +39,7 @@ def test_openapi_list_all_downtimes(
 
 
 @pytest.mark.usefixtures("with_groups")
-def test_openapi_schedule_hostgroup_downtime(
+def test_openapi_schedule_hostgroup_downtime(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
@@ -86,7 +86,7 @@ def test_openapi_schedule_hostgroup_downtime(
 
 
 @pytest.mark.usefixtures("with_host")
-def test_openapi_schedule_host_downtime(
+def test_openapi_schedule_host_downtime(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
@@ -118,7 +118,7 @@ def test_openapi_schedule_host_downtime(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_schedule_host_downtime_for_host_without_config(
+def test_openapi_schedule_host_downtime_for_host_without_config(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
@@ -162,7 +162,7 @@ def test_openapi_schedule_host_downtime_for_host_without_config(
 
 
 @pytest.mark.usefixtures("with_groups")
-def test_openapi_schedule_servicegroup_downtime(
+def test_openapi_schedule_servicegroup_downtime(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
@@ -214,7 +214,7 @@ def test_openapi_schedule_servicegroup_downtime(
 
 
 @pytest.mark.usefixtures("with_host")
-def test_openapi_schedule_service_downtime(
+def test_openapi_schedule_service_downtime(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
@@ -250,7 +250,7 @@ def test_openapi_schedule_service_downtime(
         )
 
 
-def test_openapi_schedule_service_downtime_with_non_matching_query(
+def test_openapi_schedule_service_downtime_with_non_matching_query(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
@@ -278,7 +278,7 @@ def test_openapi_schedule_service_downtime_with_non_matching_query(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_schedule_host_downtime_with_non_matching_query(
+def test_openapi_schedule_host_downtime_with_non_matching_query(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
@@ -305,7 +305,7 @@ def test_openapi_schedule_host_downtime_with_non_matching_query(
         )
 
 
-def test_openapi_show_downtimes_with_query(
+def test_openapi_show_downtimes_with_query(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
@@ -360,7 +360,7 @@ def test_openapi_show_downtimes_with_query(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_show_downtime_with_params(
+def test_openapi_show_downtime_with_params(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
@@ -416,7 +416,7 @@ def test_openapi_show_downtime_with_params(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_show_downtime_of_non_existing_host(
+def test_openapi_show_downtime_of_non_existing_host(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
@@ -471,7 +471,7 @@ def test_openapi_show_downtime_of_non_existing_host(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_create_host_downtime_with_query(
+def test_openapi_create_host_downtime_with_query(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
@@ -551,7 +551,7 @@ def test_openapi_create_host_downtime_with_query(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_create_service_downtime_with_query(
+def test_openapi_create_service_downtime_with_query(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
@@ -609,7 +609,7 @@ def test_openapi_create_service_downtime_with_query(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_create_service_downtime_with_non_matching_query(
+def test_openapi_create_service_downtime_with_non_matching_query(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
@@ -658,7 +658,7 @@ def test_openapi_create_service_downtime_with_non_matching_query(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_delete_downtime_with_query(
+def test_openapi_delete_downtime_with_query(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
@@ -718,7 +718,7 @@ def test_openapi_delete_downtime_with_query(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_delete_downtime_by_id(
+def test_openapi_delete_downtime_by_id(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
@@ -778,7 +778,7 @@ def test_openapi_delete_downtime_by_id(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_delete_downtime_with_params(
+def test_openapi_delete_downtime_with_params(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
@@ -845,7 +845,7 @@ def test_openapi_delete_downtime_with_params(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_downtime_non_existing_instance(
+def test_openapi_downtime_non_existing_instance(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK, mock_livestatus: MockLiveStatusConnection
 ):
     base = "/NO_SITE/check_mk/api/1.0"
@@ -892,7 +892,7 @@ def test_openapi_downtime_non_existing_groups(aut_user_auth_wsgi_app: WebTestApp
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 @pytest.mark.parametrize("wato_enabled", [True, False])
-def test_openapi_downtime_get_single(
+def test_openapi_downtime_get_single(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK, mock_livestatus, wato_enabled: bool
 ):
     live: MockLiveStatusConnection = mock_livestatus
@@ -947,7 +947,7 @@ def test_openapi_downtime_get_single(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_downtime_invalid_single(
+def test_openapi_downtime_invalid_single(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):

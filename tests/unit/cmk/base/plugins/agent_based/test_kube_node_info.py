@@ -52,7 +52,7 @@ def fixture_time(mocker):
         ),
     ],
 )
-def test_check_kube_node_info(
+def test_check_kube_node_info(  # type:ignore[no-untyped-def]
     section: NodeInfo, expected_check_result: Sequence[Result], time
 ) -> None:
     assert list(check_kube_node_info(section)) == expected_check_result

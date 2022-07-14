@@ -48,7 +48,7 @@ def test_openapi_list_currently_running_activations(
     )
 
 
-def test_openapi_activate_changes(
+def test_openapi_activate_changes(  # type:ignore[no-untyped-def]
     monkeypatch: pytest.MonkeyPatch,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus: MockLiveStatusConnection,

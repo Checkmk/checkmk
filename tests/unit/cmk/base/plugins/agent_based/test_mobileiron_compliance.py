@@ -113,6 +113,8 @@ NO_COUNT_DEVICE_DATA = parse_mobileiron(
         ),
     ],
 )
-def test_check_mobileiron_compliance(params, section, expected_results) -> None:
+def test_check_mobileiron_compliance(  # type:ignore[no-untyped-def]
+    params, section, expected_results
+) -> None:
     results = tuple(check_mobileiron_compliance(params, section))
     assert results == expected_results

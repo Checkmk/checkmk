@@ -56,7 +56,9 @@ LAST_TIME_EPOCH = (
         ),
     ],
 )
-def test_parse_sap_hana_diskusage(fix_register, info, expected_result) -> None:
+def test_parse_sap_hana_diskusage(  # type:ignore[no-untyped-def]
+    fix_register, info, expected_result
+) -> None:
     section_plugin = fix_register.agent_sections[SectionName("sap_hana_diskusage")]
     assert section_plugin.parse_function(info) == expected_result
 
@@ -79,7 +81,9 @@ def test_parse_sap_hana_diskusage(fix_register, info, expected_result) -> None:
         ),
     ],
 )
-def test_inventory_sap_hana_diskusage(fix_register, info, expected_result) -> None:
+def test_inventory_sap_hana_diskusage(  # type:ignore[no-untyped-def]
+    fix_register, info, expected_result
+) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_diskusage")].parse_function(info)
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_diskusage")]
     assert list(plugin.discovery_function(section)) == expected_result
@@ -190,7 +194,7 @@ def value_store_fixture(monkeypatch):
     ],
 )
 @freeze_time(NOW_SIMULATED)
-def test_check_sap_hana_diskusage(
+def test_check_sap_hana_diskusage(  # type:ignore[no-untyped-def]
     fix_register, value_store_patch, item, info, expected_result
 ) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_diskusage")].parse_function(info)
@@ -222,7 +226,9 @@ def test_check_sap_hana_diskusage(
         ),
     ],
 )
-def test_check_sap_hana_diskusage_stale(fix_register, item, info) -> None:
+def test_check_sap_hana_diskusage_stale(  # type:ignore[no-untyped-def]
+    fix_register, item, info
+) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_diskusage")].parse_function(info)
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_diskusage")]
     with pytest.raises(IgnoreResultsError):

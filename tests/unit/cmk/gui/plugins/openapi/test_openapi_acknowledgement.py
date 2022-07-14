@@ -24,7 +24,7 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
         ["heute", "Memory", False],  # service OK, not failed.
     ],
 )
-def test_openapi_acknowledge_all_services(
+def test_openapi_acknowledge_all_services(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
     host_name,
@@ -91,7 +91,7 @@ def test_openapi_acknowledge_all_services(
         ["CPU load", False],  # service OK, ack not sent
     ],
 )
-def test_openapi_acknowledge_specific_service(
+def test_openapi_acknowledge_specific_service(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
     service,
@@ -174,7 +174,7 @@ def test_openapi_acknowledge_specific_service(
         ["heute", False],  # host ok, ack not sent
     ],
 )
-def test_openapi_acknowledge_host(
+def test_openapi_acknowledge_host(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
     host_name,
@@ -226,7 +226,7 @@ def test_openapi_acknowledge_host(
         )
 
 
-def test_openapi_bulk_acknowledge(
+def test_openapi_bulk_acknowledge(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ) -> None:
@@ -292,7 +292,7 @@ def test_openapi_bulk_acknowledge(
 
 
 @pytest.mark.usefixtures("with_groups")
-def test_openapi_acknowledge_servicegroup(
+def test_openapi_acknowledge_servicegroup(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ) -> None:
@@ -340,7 +340,7 @@ def test_openapi_acknowledge_servicegroup(
 
 
 @pytest.mark.usefixtures("with_groups")
-def test_openapi_acknowledge_hostgroup(
+def test_openapi_acknowledge_hostgroup(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ) -> None:
@@ -425,7 +425,7 @@ def test_openapi_acknowledge_hostgroup(
         )
 
 
-def test_openapi_acknowledge_host_with_query(
+def test_openapi_acknowledge_host_with_query(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ) -> None:
@@ -472,7 +472,7 @@ def test_openapi_acknowledge_host_with_query(
         )
 
 
-def test_openapi_acknowledge_host_with_non_matching_query(
+def test_openapi_acknowledge_host_with_non_matching_query(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ) -> None:

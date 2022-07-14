@@ -23,6 +23,8 @@ DEVICE_DATA = parse_mobileiron_source_host([['{"queryTime": 12, "total_count": 2
         ),
     ],
 )
-def test_check_mobileiron_sourcehost(section, expected_results) -> None:
+def test_check_mobileiron_sourcehost(  # type:ignore[no-untyped-def]
+    section, expected_results
+) -> None:
     results = tuple(check_mobileiron_sourcehost(section))
     assert results == expected_results

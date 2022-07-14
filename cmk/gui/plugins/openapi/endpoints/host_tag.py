@@ -248,7 +248,7 @@ def _serve_host_tag_group(tag_details: TaggroupSpec) -> Response:
     return response
 
 
-def serialize_host_tag_group(details: Dict[str, Any]):
+def serialize_host_tag_group(details: Dict[str, Any]):  # type:ignore[no-untyped-def]
     return constructors.domain_object(
         domain_type="host_tag_group",
         identifier=details["id"],

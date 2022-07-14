@@ -40,7 +40,7 @@ import cmk
         )
     ],
 )
-def test_check_oracle_performance_dbtime(
+def test_check_oracle_performance_dbtime(  # type:ignore[no-untyped-def]
     fix_register: FixRegister,
     monkeypatch,
     item: str,
@@ -85,7 +85,7 @@ def test_check_oracle_performance_dbtime(
         )
     ],
 )
-def test_check_oracle_performance_memory(
+def test_check_oracle_performance_memory(  # type:ignore[no-untyped-def]
     fix_register: FixRegister,
     item: str,
     params: Mapping[str, Sequence[Tuple[str, Tuple[float, float]]]],
@@ -129,7 +129,7 @@ def test_check_oracle_performance_memory(
         )
     ],
 )
-def test_check_oracle_performance_iostat_ios(
+def test_check_oracle_performance_iostat_ios(  # type:ignore[no-untyped-def]
     fix_register: FixRegister,
     item: str,
     params: Mapping[str, Sequence[Tuple[str, Tuple[float, float]]]],
@@ -167,7 +167,7 @@ def test_check_oracle_performance_iostat_ios(
         )
     ],
 )
-def test_check_oracle_performance_waitclasses(
+def test_check_oracle_performance_waitclasses(  # type:ignore[no-untyped-def]
     fix_register: FixRegister,
     monkeypatch,
     item: str,

@@ -46,7 +46,7 @@ def fixture_time(mocker):
         ),
     ],
 )
-def test_check_kube_statefulset_info(
+def test_check_kube_statefulset_info(  # type:ignore[no-untyped-def]
     section: StatefulSetInfo, expected_check_result: Tuple[Result, ...], time
 ) -> None:
     assert tuple(check_kube_statefulset_info(section)) == expected_check_result

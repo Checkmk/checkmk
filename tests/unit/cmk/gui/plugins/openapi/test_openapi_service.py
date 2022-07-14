@@ -13,7 +13,7 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
-def test_openapi_livestatus_service(
+def test_openapi_livestatus_service(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
@@ -97,7 +97,7 @@ def test_openapi_livestatus_service(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
-def test_openapi_livestatus_collection_link(
+def test_openapi_livestatus_collection_link(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
@@ -150,7 +150,7 @@ def test_openapi_livestatus_collection_link(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
-def test_openapi_specific_service(
+def test_openapi_specific_service(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
@@ -208,7 +208,7 @@ def test_openapi_specific_service(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
-def test_openapi_service_with_slash_character(
+def test_openapi_service_with_slash_character(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
@@ -268,7 +268,7 @@ def test_openapi_service_with_slash_character(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
-def test_openapi_non_existing_service(
+def test_openapi_non_existing_service(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):

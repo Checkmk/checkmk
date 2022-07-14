@@ -80,7 +80,7 @@ def move_rule_to(param: typing.Mapping[str, typing.Any]) -> http.Response:
     source_entry = _get_rule_by_id(rule_id)
 
     @contextlib.contextmanager
-    def _log_rule_change(
+    def _log_rule_change(  # type:ignore[no-untyped-def]
         _rule: Rule,
         _old_folder: CREFolder,
         _message: str,
@@ -298,7 +298,7 @@ def show_rule(param):
     return serve_json(_serialize_rule(rule_entry))
 
 
-def _get_rule_by_id(rule_uuid: str, all_rulesets=None) -> RuleEntry:
+def _get_rule_by_id(rule_uuid: str, all_rulesets=None) -> RuleEntry:  # type:ignore[no-untyped-def]
     if all_rulesets is None:
         all_rulesets = AllRulesets()
         all_rulesets.load()

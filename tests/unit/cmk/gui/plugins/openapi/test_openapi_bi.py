@@ -33,7 +33,7 @@ def test_openapi_get_bi_rule_non_existing_id(
     )
 
 
-def test_openapi_get_bi_aggregation_non_existing_id(
+def test_openapi_get_bi_aggregation_non_existing_id(  # type:ignore[no-untyped-def]
     base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
 ):
     aut_user_auth_wsgi_app.get(
@@ -390,7 +390,9 @@ def test_openapi_delete_pack_forbidden(aut_user_auth_wsgi_app: WebTestAppForCMK)
     )
 
 
-def test_get_aggregation_state_empty(aut_user_auth_wsgi_app, mock_livestatus) -> None:
+def test_get_aggregation_state_empty(  # type:ignore[no-untyped-def]
+    aut_user_auth_wsgi_app, mock_livestatus
+) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
     postfix = "/domain-types/bi_aggregation/actions/aggregation_state/invoke"
     url = f"{base}{postfix}"
@@ -412,7 +414,9 @@ def test_get_aggregation_state_empty(aut_user_auth_wsgi_app, mock_livestatus) ->
         )
 
 
-def test_get_aggregation_state_filter_names(aut_user_auth_wsgi_app, mock_livestatus) -> None:
+def test_get_aggregation_state_filter_names(  # type:ignore[no-untyped-def]
+    aut_user_auth_wsgi_app, mock_livestatus
+) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
     postfix = "/domain-types/bi_aggregation/actions/aggregation_state/invoke"
     url = f"{base}{postfix}"

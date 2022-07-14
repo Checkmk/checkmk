@@ -109,7 +109,9 @@ LEVELS_CRIT = {
         )
     ],
 )
-def test_sap_hana_data_volume_parse(string_table_row, expected_parsed_data) -> None:
+def test_sap_hana_data_volume_parse(  # type:ignore[no-untyped-def]
+    string_table_row, expected_parsed_data
+) -> None:
     assert sap_hana_data_volume.parse_sap_hana_data_volume(string_table_row) == expected_parsed_data
 
 
@@ -228,7 +230,9 @@ def value_store_fixture(monkeypatch):
     ],
 )
 @freeze_time(NOW_SIMULATED)
-def test_sap_hana_data_volume_check(value_store_patch, item, params, expected_results) -> None:
+def test_sap_hana_data_volume_check(  # type:ignore[no-untyped-def]
+    value_store_patch, item, params, expected_results
+) -> None:
 
     yielded_results = list(
         sap_hana_data_volume.check_sap_hana_data_volume(item, params, PARSED_SECTION)
@@ -242,6 +246,6 @@ def test_sap_hana_data_volume_check(value_store_patch, item, params, expected_re
         ("H62 10 - DATA 20", {}),
     ],
 )
-def test_sap_hana_data_volume_check_stale(item, section) -> None:
+def test_sap_hana_data_volume_check_stale(item, section) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises(IgnoreResultsError):
         list(sap_hana_data_volume.check_sap_hana_data_volume(item, {}, section))

@@ -45,7 +45,7 @@ def fixture_time(mocker):
         ),
     ],
 )
-def test_check_kube_daemonset_info(
+def test_check_kube_daemonset_info(  # type:ignore[no-untyped-def]
     section: DaemonSetInfo, expected_check_result: Tuple[Result, ...], time
 ) -> None:
     assert tuple(check_kube_daemonset_info(section)) == expected_check_result

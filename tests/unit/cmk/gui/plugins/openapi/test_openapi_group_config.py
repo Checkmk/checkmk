@@ -18,7 +18,9 @@ managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #
 
 @managedtest
 @pytest.mark.parametrize("group_type", ["host", "contact", "service"])
-def test_openapi_groups(group_type, aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+def test_openapi_groups(  # type:ignore[no-untyped-def]
+    group_type, aut_user_auth_wsgi_app: WebTestAppForCMK
+) -> None:
 
     name = _random_string(10)
     alias = _random_string(10)
@@ -80,7 +82,7 @@ def test_openapi_groups(group_type, aut_user_auth_wsgi_app: WebTestAppForCMK) ->
 
 @managedtest
 @pytest.mark.parametrize("group_type", ["host", "service", "contact"])
-def test_openapi_bulk_groups(
+def test_openapi_bulk_groups(  # type:ignore[no-untyped-def]
     group_type,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ):
@@ -182,7 +184,7 @@ def test_openapi_bulk_groups(
 
 @managedtest
 @pytest.mark.parametrize("group_type", ["host", "contact", "service"])
-def test_openapi_groups_with_customer(
+def test_openapi_groups_with_customer(  # type:ignore[no-untyped-def]
     group_type,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ):
@@ -237,7 +239,9 @@ def test_openapi_groups_with_customer(
 
 @managedtest
 @pytest.mark.parametrize("group_type", ["host", "contact", "service"])
-def test_openapi_group_values_are_links(group_type, wsgi_app, with_automation_user) -> None:
+def test_openapi_group_values_are_links(  # type:ignore[no-untyped-def]
+    group_type, wsgi_app, with_automation_user
+) -> None:
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 

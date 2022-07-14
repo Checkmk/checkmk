@@ -19,7 +19,7 @@ def fixture_time(mocker):
     return time_mock
 
 
-def test_check_kube_namespace_info(time) -> None:
+def test_check_kube_namespace_info(time) -> None:  # type:ignore[no-untyped-def]
     info = NamespaceInfo(
         name="namespace",
         creation_timestamp=1600000000.0,

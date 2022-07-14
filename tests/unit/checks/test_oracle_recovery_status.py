@@ -35,7 +35,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
         )
     ],
 )
-def test_check_oracle_recovery_status(
+def test_check_oracle_recovery_status(  # type:ignore[no-untyped-def]
     fix_register: FixRegister,
     item: str,
     info: List[List[str]],

@@ -53,7 +53,7 @@ def test_man_page_path_only_shipped() -> None:
     assert man_pages.man_page_path("not_existant") is None
 
 
-def test_man_page_path_both_dirs(tmp_path) -> None:
+def test_man_page_path_both_dirs(tmp_path) -> None:  # type:ignore[no-untyped-def]
     f1 = tmp_path / "file1"
     f1.write_text("x", encoding="utf-8")
 
@@ -73,7 +73,7 @@ def test_all_manpages_migrated(all_pages: ManPages) -> None:
         assert CheckPluginName(name)
 
 
-def test_all_man_pages(tmp_path) -> None:
+def test_all_man_pages(tmp_path) -> None:  # type:ignore[no-untyped-def]
     (tmp_path / ".asd").write_text("", encoding="utf-8")
     (tmp_path / "asd~").write_text("", encoding="utf-8")
     (tmp_path / "if").write_text("", encoding="utf-8")
@@ -93,7 +93,7 @@ def test_load_all_man_pages(all_pages: ManPages) -> None:
         assert isinstance(man_page, man_pages.ManPage)
 
 
-def test_print_man_page_table(capsys) -> None:
+def test_print_man_page_table(capsys) -> None:  # type:ignore[no-untyped-def]
     man_pages.print_man_page_table()
     out, err = capsys.readouterr()
     assert err == ""
@@ -110,7 +110,7 @@ def man_page_catalog_titles():
     assert man_pages.CATALOG_TITLES["os"]
 
 
-def test_load_man_page_catalog(catalog) -> None:
+def test_load_man_page_catalog(catalog) -> None:  # type:ignore[no-untyped-def]
     assert isinstance(catalog, dict)
 
     for path, entries in catalog.items():
@@ -164,7 +164,7 @@ def test_find_missing_plugins(
     ), f"The following manpages have no corresponding plugins: {', '.join(missing_plugins)}"
 
 
-def test_cluster_check_functions_match_manpages_cluster_sections(
+def test_cluster_check_functions_match_manpages_cluster_sections(  # type:ignore[no-untyped-def]
     fix_register: FixRegister,
     all_pages: ManPages,
 ):
@@ -185,7 +185,7 @@ def test_cluster_check_functions_match_manpages_cluster_sections(
     assert not unexpected_cluster_description
 
 
-def test_no_subtree_and_entries_on_same_level(catalog) -> None:
+def test_no_subtree_and_entries_on_same_level(catalog) -> None:  # type:ignore[no-untyped-def]
     for category, entries in catalog.items():
         has_entries = entries != []
         has_categories = man_pages._manpage_catalog_subtree_names(catalog, category) != []
@@ -201,7 +201,7 @@ def test_load_man_page_not_existing() -> None:
     assert man_pages.load_man_page("not_existing") is None
 
 
-def test_print_man_page_nowiki_index(capsys) -> None:
+def test_print_man_page_nowiki_index(capsys) -> None:  # type:ignore[no-untyped-def]
     renderer = man_pages.NowikiManPageRenderer("if64")
     index_entry = renderer.index_entry()
     out, err = capsys.readouterr()
@@ -212,7 +212,7 @@ def test_print_man_page_nowiki_index(capsys) -> None:
     assert "[check_if64|" in index_entry
 
 
-def test_print_man_page_nowiki_content(capsys) -> None:
+def test_print_man_page_nowiki_content(capsys) -> None:  # type:ignore[no-untyped-def]
     renderer = man_pages.NowikiManPageRenderer("if64")
     content = renderer.render()
     out, err = capsys.readouterr()
@@ -224,7 +224,7 @@ def test_print_man_page_nowiki_content(capsys) -> None:
     assert "License:" in content
 
 
-def test_print_man_page(capsys) -> None:
+def test_print_man_page(capsys) -> None:  # type:ignore[no-untyped-def]
     man_pages.ConsoleManPageRenderer("if64").paint()
     out, err = capsys.readouterr()
     assert err == ""

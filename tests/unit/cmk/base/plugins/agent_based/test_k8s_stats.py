@@ -256,7 +256,7 @@ parsed_data = {
         ),
     ],
 )
-def test_parse_k8s(string_table, expected_parsed_data) -> None:
+def test_parse_k8s(string_table, expected_parsed_data) -> None:  # type:ignore[no-untyped-def]
     assert parse_k8s([[string_table]]) == expected_parsed_data
 
 
@@ -266,7 +266,7 @@ def test_parse_k8s(string_table, expected_parsed_data) -> None:
         (parsed_data, [Service(item="/dev/sda1")]),
     ],
 )
-def test_discover_k8s_stats_fs(section, expected_items) -> None:
+def test_discover_k8s_stats_fs(section, expected_items) -> None:  # type:ignore[no-untyped-def]
     assert list(discover_k8s_stats_fs(section)) == expected_items
 
 
@@ -276,7 +276,7 @@ def test_discover_k8s_stats_fs(section, expected_items) -> None:
         (parsed_data, [Service(item="eth1"), Service(item="eth0"), Service(item="sit0")]),
     ],
 )
-def test_discover_k8s_stats_network(section, expected_items) -> None:
+def test_discover_k8s_stats_network(section, expected_items) -> None:  # type:ignore[no-untyped-def]
     assert list(discover_k8s_stats_network(section, None)) == expected_items
 
 
@@ -305,7 +305,7 @@ def test_discover_k8s_stats_network(section, expected_items) -> None:
         )
     ],
 )
-def test__check_k8s_stats_fs(section, expected_results) -> None:
+def test__check_k8s_stats_fs(section, expected_results) -> None:  # type:ignore[no-untyped-def]
     vs: Dict[str, Any] = {}
     for _ in range(2):
         results = list(
@@ -356,7 +356,7 @@ def test__check_k8s_stats_fs(section, expected_results) -> None:
         )
     ],
 )
-def test__check_k8s_stats_network(section, expected_results) -> None:
+def test__check_k8s_stats_network(section, expected_results) -> None:  # type:ignore[no-untyped-def]
     vs: Dict[str, Any] = {}
     for _ in range(2):
         section = {

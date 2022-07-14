@@ -1152,7 +1152,7 @@ def test_openapi_bulk_discovery_with_invalid_hostname(
 
 
 @pytest.mark.usefixtures("with_host", "inline_background_jobs")
-def test_openapi_refresh_job_status(
+def test_openapi_refresh_job_status(  # type:ignore[no-untyped-def]
     base: str,
     aut_user_auth_wsgi_app,
     mock_try_discovery: MagicMock,
@@ -1181,7 +1181,7 @@ def test_openapi_refresh_job_status(
 
 
 @pytest.mark.usefixtures("with_host", "inline_background_jobs")
-def test_openapi_deprecated_execute_discovery_endpoint(
+def test_openapi_deprecated_execute_discovery_endpoint(  # type:ignore[no-untyped-def]
     base: str,
     aut_user_auth_wsgi_app,
     mock_try_discovery: MagicMock,

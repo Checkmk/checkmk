@@ -11,7 +11,7 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_livestatus_hosts_generic_filter(
+def test_openapi_livestatus_hosts_generic_filter(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
@@ -66,7 +66,7 @@ def test_openapi_livestatus_hosts_generic_filter(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_livestatus_hosts_empty_query(
+def test_openapi_livestatus_hosts_empty_query(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):

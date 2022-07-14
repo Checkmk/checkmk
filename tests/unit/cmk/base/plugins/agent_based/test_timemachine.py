@@ -36,7 +36,9 @@ def test_discovery_timemachine_no_discovered_service(fix_register: FixRegister) 
     assert list(result) == []
 
 
-def test_check_timemachine_state_ok(fix_register: FixRegister, monkeypatch) -> None:
+def test_check_timemachine_state_ok(  # type:ignore[no-untyped-def]
+    fix_register: FixRegister, monkeypatch
+) -> None:
     check = fix_register.check_plugins[CheckPluginName("timemachine")]
     info = "/Volumes/Backup/Backups.backupdb/macvm/2022-05-05-202610"
     monkeypatch.setattr(datetime, "datetime", MockedDateTime)
@@ -50,7 +52,9 @@ def test_check_timemachine_state_ok(fix_register: FixRegister, monkeypatch) -> N
     ]
 
 
-def test_check_timemachine_state_crit(fix_register: FixRegister, monkeypatch) -> None:
+def test_check_timemachine_state_crit(  # type:ignore[no-untyped-def]
+    fix_register: FixRegister, monkeypatch
+) -> None:
     check = fix_register.check_plugins[CheckPluginName("timemachine")]
     monkeypatch.setattr(datetime, "datetime", MockedDateTime)
     monkeypatch.setenv("TZ", "Europe/Berlin")
@@ -68,7 +72,9 @@ def test_check_timemachine_state_crit(fix_register: FixRegister, monkeypatch) ->
     ]
 
 
-def test_check_timemachine_state_warn(fix_register: FixRegister, monkeypatch) -> None:
+def test_check_timemachine_state_warn(  # type:ignore[no-untyped-def]
+    fix_register: FixRegister, monkeypatch
+) -> None:
     check = fix_register.check_plugins[CheckPluginName("timemachine")]
     monkeypatch.setattr(datetime, "datetime", MockedDateTime)
     monkeypatch.setenv("TZ", "Europe/Berlin")
@@ -95,7 +101,9 @@ def test_check_agent_failure(fix_register: FixRegister) -> None:
     ]
 
 
-def test_check_future_backup_date(fix_register: FixRegister, monkeypatch) -> None:
+def test_check_future_backup_date(  # type:ignore[no-untyped-def]
+    fix_register: FixRegister, monkeypatch
+) -> None:
     check = fix_register.check_plugins[CheckPluginName("timemachine")]
     monkeypatch.setattr(datetime, "datetime", MockedDateTime)
     monkeypatch.setenv("TZ", "Europe/Berlin")

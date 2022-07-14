@@ -87,7 +87,9 @@ SECTION_MSSQL = msdt.parse_mssql_datafiles(
         ),
     ],
 )
-def test_discovery_mssql_transactionlogs(section_mssql, section_df) -> None:
+def test_discovery_mssql_transactionlogs(  # type:ignore[no-untyped-def]
+    section_mssql, section_df
+) -> None:
     assert sorted(
         msdt.discover_mssql_transactionlogs([{}], section_mssql, section_df),
         key=lambda s: s.item or "",  # type: ignore[attr-defined]
@@ -221,7 +223,9 @@ def test_discovery_mssql_transactionlogs(section_mssql, section_df) -> None:
         ),
     ],
 )
-def test_check_mssql_transactionlogs(item, section_mssql, section_df, check_results) -> None:
+def test_check_mssql_transactionlogs(  # type:ignore[no-untyped-def]
+    item, section_mssql, section_df, check_results
+) -> None:
     assert (
         list(
             msdt.check_mssql_transactionlogs(

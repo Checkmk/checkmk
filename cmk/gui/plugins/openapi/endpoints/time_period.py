@@ -192,7 +192,7 @@ def _serve_time_period(time_period):
     return response
 
 
-def _to_api_format(
+def _to_api_format(  # type:ignore[no-untyped-def]
     time_period: TimeperiodSpec, builtin_period: bool = False, internal_format: bool = False
 ):
     """Convert time_period to API format as specified in request schema

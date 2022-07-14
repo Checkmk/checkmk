@@ -44,15 +44,13 @@ class NodeCustomConditionsFactory(ModelFactory):
     )
 
 
-@pytest.fixture
-def params():
-    return dict(
-        ready=int(State.CRIT),
-        memorypressure=int(State.CRIT),
-        diskpressure=int(State.CRIT),
-        pidpressure=int(State.CRIT),
-        networkunavailable=int(State.CRIT),
-    )
+PARAMS = dict(
+    ready=int(State.CRIT),
+    memorypressure=int(State.CRIT),
+    diskpressure=int(State.CRIT),
+    pidpressure=int(State.CRIT),
+    networkunavailable=int(State.CRIT),
+)
 
 
 @pytest.fixture
@@ -76,8 +74,8 @@ def custom_section(custom_string_table) -> kube_node_conditions.NodeCustomCondit
 
 
 @pytest.fixture
-def check_result(params, section, custom_section) -> CheckResult:
-    return kube_node_conditions.check(params, section, custom_section)
+def check_result(section, custom_section) -> CheckResult:
+    return kube_node_conditions.check(PARAMS, section, custom_section)
 
 
 @pytest.mark.parametrize("section", [None])
@@ -104,17 +102,14 @@ def test_check_all_results_state_ok(check_result) -> None:
         kube.NodeConditionStatus.UNKNOWN,
     ],
 )
-def test_check_with_falsy_condition_yields_as_much_results_as_section_items(
-    params,
-    disk_pressure_status,
-):
+def test_check_with_falsy_condition_yields_as_much_results_as_section_items(disk_pressure_status):
     # Arrange
     section = NodeConditionsFactory.build(
         diskpressure=NodeConditionFactory.build(status=disk_pressure_status)
     )
     custom_section = NodeCustomConditionsFactory.build()
     # Act
-    results = list(kube_node_conditions.check(params, section, custom_section))
+    results = list(kube_node_conditions.check(PARAMS, section, custom_section))
     # Assert
     assert len(results) == len(list(section)) + len(list(custom_section))
 
@@ -126,10 +121,7 @@ def test_check_with_falsy_condition_yields_as_much_results_as_section_items(
         kube.NodeConditionStatus.UNKNOWN,
     ],
 )
-def test_check_with_falsy_condition_yields_one_crit_among_others_ok(
-    params,
-    disk_pressure_status,
-):
+def test_check_with_falsy_condition_yields_one_crit_among_others_ok(disk_pressure_status):
     # Arrange
     section = NodeConditionsFactory.build(
         diskpressure=NodeConditionFactory.build(status=disk_pressure_status)
@@ -139,7 +131,7 @@ def test_check_with_falsy_condition_yields_one_crit_among_others_ok(
     # Act
     results = [
         r
-        for r in kube_node_conditions.check(params, section, custom_section)
+        for r in kube_node_conditions.check(PARAMS, section, custom_section)
         if isinstance(r, Result)
     ]
     # Assert
@@ -147,14 +139,14 @@ def test_check_with_falsy_condition_yields_one_crit_among_others_ok(
     assert len([result for result in results if result.state == State.OK]) == expected_ok_results
 
 
-def test_check_ignores_missing_network_unavailable_when_all_conditions_pass(params) -> None:
+def test_check_ignores_missing_network_unavailable_when_all_conditions_pass() -> None:
     # Arrange
     section = NodeConditionsFactory.build(networkunavailable=None)
     custom_section = NodeCustomConditionsFactory.build()
     # Act
     results = [
         r
-        for r in kube_node_conditions.check(params, section, custom_section)
+        for r in kube_node_conditions.check(PARAMS, section, custom_section)
         if isinstance(r, Result)
     ]
     # Assert
@@ -169,7 +161,7 @@ def test_check_ignores_missing_network_unavailable_when_all_conditions_pass(para
     ],
 )
 def test_check_ignores_missing_network_unavailable_when_a_condition_does_not_pass(
-    params, disk_pressure_status
+    disk_pressure_status,
 ):
     # Arrange
     section = NodeConditionsFactory.build(
@@ -181,7 +173,7 @@ def test_check_ignores_missing_network_unavailable_when_a_condition_does_not_pas
     # Act
     results = [
         r
-        for r in kube_node_conditions.check(params, section, custom_section)
+        for r in kube_node_conditions.check(PARAMS, section, custom_section)
         if isinstance(r, Result)
     ]
     # Assert
@@ -189,14 +181,14 @@ def test_check_ignores_missing_network_unavailable_when_a_condition_does_not_pas
     assert len([result for result in results if result.state == State.OK]) == expected_ok_results
 
 
-def test_check_with_missing_network_unavailable_all_states_ok(params) -> None:
+def test_check_with_missing_network_unavailable_all_states_ok() -> None:
     # Arrange
     section = NodeConditionsFactory.build(networkunavailable=None)
     custom_section = NodeCustomConditionsFactory.build()
     # Act
     results = [
         r
-        for r in kube_node_conditions.check(params, section, custom_section)
+        for r in kube_node_conditions.check(PARAMS, section, custom_section)
         if isinstance(r, Result)
     ]
     # Assert
@@ -204,7 +196,7 @@ def test_check_with_missing_network_unavailable_all_states_ok(params) -> None:
     assert results[0].state == State.OK
 
 
-def test_check_with_builtin_conditions_true_but_one_false_custom_condition(params):
+def test_check_with_builtin_conditions_true_but_one_false_custom_condition():
     # Arrange
     section = NodeConditionsFactory.build()
     custom_section = NodeCustomConditionsFactory.build(
@@ -216,7 +208,7 @@ def test_check_with_builtin_conditions_true_but_one_false_custom_condition(param
     # Act
     results = [
         r
-        for r in kube_node_conditions.check(params, section, custom_section)
+        for r in kube_node_conditions.check(PARAMS, section, custom_section)
         if isinstance(r, Result)
     ]
     # Assert

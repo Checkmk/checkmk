@@ -21,7 +21,11 @@
 #include "tools/_misc.h"
 #include "tools/_process.h"
 namespace fs = std::filesystem;
+namespace rs = std::ranges;
 using namespace std::chrono_literals;
+namespace {
+const std::wstring web_services_service{L"AppHostSvc"};
+}
 
 namespace wtools {
 
@@ -436,18 +440,24 @@ TEST(WmiProviderTest, SimulationIntegration) {
     }
 }
 
-// IntegrationExt because may be not available in CI
-TEST(WmiProviderTest, WmiWebServicesSimulationIntegrationExt) {
+TEST(WmiProviderTest, WmiWebServicesDefaults) {
     Wmi wmi_web(kWmiWebservices, wmi::kSepChar);
 
     EXPECT_EQ(wmi_web.object(), L"Win32_PerfRawData_W3SVC_WebService");
     EXPECT_EQ(wmi_web.nameSpace(), L"Root\\Cimv2");
     EXPECT_TRUE(wmi_web.isAllowedByCurrentConfig());
     EXPECT_TRUE(wmi_web.isAllowedByTime());
+}
+
+TEST(WmiProviderTest, WmiWebServicesIntegration) {
+    Wmi wmi_web(kWmiWebservices, wmi::kSepChar);
     auto body = wmi_web.generateContent();
-    auto table = tools::SplitString(body, "\n");
-    table.erase(table.begin());
-    EXPECT_GE(table.size(), 3U);
+
+    if (wtools::GetServiceStatus(web_services_service) == 0) {
+        EXPECT_TRUE(body.empty());
+    } else {
+        EXPECT_GE(tools::SplitString(body, "\n").size(), 4U);
+    }
 }
 
 static const std::string section_name{cma::section::kUseEmbeddedName};
@@ -455,7 +465,6 @@ static const std::string section_name{cma::section::kUseEmbeddedName};
 TEST(WmiProviderTest, WmiDotnet_Integration) {
     using namespace cma::section;
     using namespace cma::provider;
-    namespace fs = std::filesystem;
 
     auto wmi_name = kDotNetClrMemory;
     fs::path f(FNAME_USE);
@@ -583,7 +592,7 @@ protected:
         EXPECT_TRUE(e2.isAllowedByTime());
 
         auto cmd_line = std::to_string(12345) + " " + wmi_name.data() + " ";
-        e2.startExecution(fmt::format("file:{}", f.u8string()), cmd_line);
+        e2.startExecution(fmt::format("file:{}", f), cmd_line);
 
         std::error_code ec;
         if (!fs::exists(f, ec)) {
@@ -609,14 +618,30 @@ TEST_F(WmiProviderTestFixture, WmiMsExch) {
               cma::section::MakeHeader(kMsExch, wmi::kSepChar));
 }
 
-// Test is IntegrationExt because wmi web services may be not available
-TEST_F(WmiProviderTestFixture, WmiWebIntegrationExt) {
-    auto table = execWmiProvider(
+TEST_F(WmiProviderTestFixture, WmiWebServicesAbsentIntegration) {
+    if (wtools::GetServiceStatus(web_services_service) != 0) {
+        GTEST_SKIP() << fmt::format(L"'{}' is presented", web_services_service);
+        return;
+    }
+
+    const auto table = execWmiProvider(
         kWmiWebservices,
         ::testing::UnitTest::GetInstance()->current_test_info()->name());
-    ASSERT_TRUE(table.size() > 1);  // more than 1 line should be present
+    ASSERT_TRUE(table.empty());
+}
+
+TEST_F(WmiProviderTestFixture, WmiWebServicesPresentedIntegration) {
+    if (wtools::GetServiceStatus(web_services_service) == 0) {
+        GTEST_SKIP() << fmt::format(L"'{}' is absent", web_services_service);
+        return;
+    }
+
+    const auto table = execWmiProvider(
+        kWmiWebservices,
+        ::testing::UnitTest::GetInstance()->current_test_info()->name());
+    ASSERT_GT(table.size(), 3U);
     EXPECT_EQ(table[0] + "\n",
-              cma::section::MakeHeader(kWmiWebservices, wmi::kSepChar));
+              section::MakeHeader(kWmiWebservices, wmi::kSepChar));
 }
 
 TEST_F(WmiProviderTestFixture, WmiCpu) {
@@ -625,15 +650,14 @@ TEST_F(WmiProviderTestFixture, WmiCpu) {
         ::testing::UnitTest::GetInstance()->current_test_info()->name());
 
     ASSERT_TRUE(table.size() >= 5);  // header, two subheaders and two lines
-    EXPECT_EQ(table[0] + "\n",
-              cma::section::MakeHeader(kWmiCpuLoad, wmi::kSepChar));
+    EXPECT_EQ(table[0] + "\n", section::MakeHeader(kWmiCpuLoad, wmi::kSepChar));
 
-    for (const auto &section :
+    for (const auto section :
          {kSubSectionSystemPerf, kSubSectionComputerSystem}) {
-        auto header = cma::section::MakeSubSectionHeader(section);
+        auto header = section::MakeSubSectionHeader(section);
         header.pop_back();
-        EXPECT_TRUE(std::ranges::any_of(
-            table, [header](auto const &e) { return e == header; }));
+        EXPECT_TRUE(
+            rs::any_of(table, [header](auto const &e) { return e == header; }));
     }
 }
 

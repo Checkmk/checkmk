@@ -9,6 +9,7 @@
 
 #include <chrono>
 #include <iostream>
+#include <ranges>
 #include <string>
 #include <unordered_map>
 
@@ -17,12 +18,14 @@
 #include "tools/_raii.h"
 
 using namespace std::string_literals;
+namespace rs = std::ranges;
 
 // controls behavior, we may want in the future,  works with older servers
 // normally always true
 constexpr bool g_add_wmi_status_column = true;
 
 namespace cma::provider {
+bool IsHeaderless(std::string_view name) noexcept { return name == kMsExch; }
 
 // use cache if body is empty(typical for new client, which returns empty on
 // timeout) post process result
@@ -50,7 +53,7 @@ std::string WmiCachedDataHelper(std::string &cache_data,
     XLOG::d.t(XLOG_FUNC + " no data to provide, cache is also empty");
     return {};
 }
-
+namespace {
 // ["Name", [Value1,Value2,...] ]
 // ["msexch", [msexch_shit1, msexch_shit2] ] <-example
 using NamedWideStringVector =
@@ -59,73 +62,112 @@ using NamedWideStringVector =
 using NamedStringVector =
     std::unordered_map<std::string, std::vector<std::string>>;
 
-// pair from the "Connect point" and "Object"
+/// Description of wmi source
 // for example "Root\\Cimv2" and "Win32_PerfRawData_W3SVC_WebService"
-using WmiSource = std::pair<std::wstring, std::wstring>;
+struct WmiSource {
+    std::wstring name_space;
+    std::wstring object_name;
+    std::vector<std::wstring> service_names;
+};
 
 // Link section name and WmiSource
 using NamedWmiSources = std::unordered_map<std::string, WmiSource>;
 
-// we configure our provider using static table with strings
-// NOTHING MORE. ZERO OF PROGRAMMING
-
+// We configure our provider using static table with strings
 const NamedWmiSources g_section_objects = {
-    // start
-
-    //
     {std::string{kDotNetClrMemory},  //
-     {kWmiPathStd.data(), L"Win32_PerfRawData_NETFramework_NETCLRMemory"}},
-
-    //
+     {
+         .name_space{kWmiPathStd},
+         .object_name{L"Win32_PerfRawData_NETFramework_NETCLRMemory"},
+         .service_names{},
+     }},
     {std::string{kWmiWebservices},  //
-     {kWmiPathStd.data(), L"Win32_PerfRawData_W3SVC_WebService"}},
-
-    //
+     {
+         .name_space{kWmiPathStd},
+         .object_name{L"Win32_PerfRawData_W3SVC_WebService"},
+         .service_names{
+             L"AppHostSvc",  // Application Host Helper Service IIS 7
+             L"WAS",         // Windows Process Activation Service IIS 6
+             L"W3SVC",       // World Wide Web Publishing Service IIS ?
+         },
+     }},
     {std::string{kOhm},  //
-     {kWmiPathOhm.data(), L"Sensor"}},
-
+     {
+         .name_space{kWmiPathOhm},
+         .object_name{L"Sensor"},
+         .service_names{},
+     }},
     {std::string{kBadWmi},  // used for a testing
-     {L"Root\\BadWmiPath", L"BadSensor"}},
-
-    {"OhmBad",  // used for a testing
-     {kWmiPathOhm.data(), L"BadSensor"}},
-
-    // WMI CPULOAD group
-    {"system_perf"s,  //
-     {kWmiPathStd.data(), L"Win32_PerfRawData_PerfOS_System"}},
-
+     {
+         .name_space{L"Root\\BadWmiPath"},
+         .object_name{L"BadSensor"},
+         .service_names{},
+     }},
+    {"OhmBad"s,  // used for a testing
+     {
+         .name_space{kWmiPathOhm},
+         .object_name{L"BadSensor"},
+         .service_names{},
+     }},
+    {"system_perf"s,  // WMI CPULOAD group
+     {
+         .name_space{kWmiPathStd},
+         .object_name{L"Win32_PerfRawData_PerfOS_System"},
+         .service_names{},
+     }},
     {"computer_system"s,  //
-     {kWmiPathStd.data(), L"Win32_ComputerSystem"}},
-
+     {
+         .name_space{kWmiPathStd},
+         .object_name{L"Win32_ComputerSystem"},
+         .service_names{},
+     }},
     {"msexch_activesync"s,
-     {kWmiPathStd.data(),
-      L"Win32_PerfRawData_MSExchangeActiveSync_MSExchangeActiveSync"}},
-
-    // MSEXCHANGE group
-    {"msexch_availability"s,
-     {kWmiPathStd.data(),
-      L"Win32_PerfRawData_MSExchangeAvailabilityService_MSExchangeAvailabilityService"}},
-
+     {
+         .name_space{kWmiPathStd},
+         .object_name{
+             L"Win32_PerfRawData_MSExchangeActiveSync_MSExchangeActiveSync"},
+         .service_names{},
+     }},
+    {"msexch_availability"s,  // MSEXCHANGE group
+     {
+         .name_space{kWmiPathStd},
+         .object_name{
+             L"Win32_PerfRawData_MSExchangeAvailabilityService_MSExchangeAvailabilityService"},
+         .service_names{},
+     }},
     {"msexch_owa"s,  //
-     {kWmiPathStd.data(), L"Win32_PerfRawData_MSExchangeOWA_MSExchangeOWA"}},
-
+     {
+         .name_space{kWmiPathStd},
+         .object_name{L"Win32_PerfRawData_MSExchangeOWA_MSExchangeOWA"},
+         .service_names{},
+     }},
     {"msexch_autodiscovery"s,
-     {kWmiPathStd.data(),
-      L"Win32_PerfRawData_MSExchangeAutodiscover_MSExchangeAutodiscover"}},
-
+     {
+         .name_space{kWmiPathStd},
+         .object_name{
+             L"Win32_PerfRawData_MSExchangeAutodiscover_MSExchangeAutodiscover"},
+         .service_names{},
+     }},
     {"msexch_isclienttype"s,
-     {kWmiPathStd.data(),
-      L"Win32_PerfRawData_MSExchangeISClientType_MSExchangeISClientType"}},
-
+     {
+         .name_space{kWmiPathStd},
+         .object_name{
+             L"Win32_PerfRawData_MSExchangeISClientType_MSExchangeISClientType"},
+         .service_names{},
+     }},
     {"msexch_isstore"s,
-     {kWmiPathStd.data(),
-      L"Win32_PerfRawData_MSExchangeISStore_MSExchangeISStore"}},
-
+     {
+         .name_space{kWmiPathStd},
+         .object_name{L"Win32_PerfRawData_MSExchangeISStore_MSExchangeISStore"},
+         .service_names{},
+     }},
     {"msexch_rpcclientaccess"s,
-     {kWmiPathStd.data(),
-      L"Win32_PerfRawData_MSExchangeRpcClientAccess_MSExchangeRpcClientAccess"}}
-
-    // end
+     {
+         .name_space{kWmiPathStd},
+         .object_name{
+             L"Win32_PerfRawData_MSExchangeRpcClientAccess_MSExchangeRpcClientAccess"},
+         .service_names{},
+     }},
 };
 
 // Columns
@@ -151,21 +193,31 @@ const NamedStringVector g_section_subs = {
     // end
 };
 
+WmiSource GetWmiSource(const std::string &uniq_name) {
+    try {
+        return g_section_objects.at(uniq_name);
+    } catch (const std::out_of_range &) {
+        XLOG::t.i("Section provider '{}' has no own WMI paths", uniq_name);
+    }
+    return {
+        .name_space{L""},
+        .object_name{L""},
+        .service_names{},
+    };
+}
+}  // namespace
+
 SubSection::Type GetSubSectionType(std::string_view name) noexcept {
     return name == kMsExch ? SubSection::Type::full : SubSection::Type::sub;
 }
 
-bool IsHeaderless(std::string_view name) noexcept { return name == kMsExch; }
+std::string Wmi::makeBody() { return getData(); }
 
 void WmiBase::setupByName() {
-    try {
-        std::tie(name_space_, object_) = g_section_objects.at(uniq_name_);
-    } catch (const std::out_of_range &e) {
-        XLOG::t.i("Section provider '{}' has no won WMI paths", uniq_name_,
-                  e.what());
-        object_ = L"";
-        name_space_ = L"";
-    }
+    auto src = GetWmiSource(uniq_name_);
+    object_ = src.object_name;
+    name_space_ = src.name_space;
+    services_ = src.service_names;
 
     if (IsHeaderless(uniq_name_)) {
         setHeaderless();
@@ -180,7 +232,7 @@ void WmiBase::setupByName() {
     try {
         const auto &subs = g_section_subs.at(uniq_name_);
         const auto type = GetSubSectionType(uniq_name_);
-        for (auto &sub : subs) {
+        for (const auto &sub : subs) {
             sub_objects_.emplace_back(sub, type);
         }
     } catch (const std::out_of_range &) {
@@ -243,10 +295,24 @@ static std::wstring CharToWideString(char ch) {
     return sep;
 }
 
+namespace {
+bool IsAllAbsent(const std::vector<std::wstring> &services) {
+    return rs::all_of(services, [](const auto &n) {
+        return wtools::GetServiceStatus(n) == 0;
+    });
+}
+}  // namespace
+
 // works in two modes
 // aggregated: object is absent, data are gathered from the subsections
 // standard: usual section, object must be present
 std::string WmiBase::getData() {
+    if (!services_.empty() && IsAllAbsent(services_)) {
+        XLOG::t("Neither from required services '{}' has been installed",
+                wtools::ToUtf8(tools::JoinVector(services_, L" ")));
+        return {};
+    }
+
     if (object_.empty()) {
         // special case for aggregating subs section into one
         std::string subs_out;
@@ -320,14 +386,9 @@ bool WmiBase::isAllowedByCurrentConfig() const {
 // ****************************
 
 void SubSection::setupByName() {
-    try {
-        std::tie(name_space_, object_) = g_section_objects.at(uniq_name_);
-    } catch (const std::out_of_range &e) {
-        XLOG::l("Invalid Name of the sub section '{}'. Exception: '{}'",
-                uniq_name_, e.what());
-        object_ = L"";
-        name_space_ = L"";
-    }
+    auto src = GetWmiSource(uniq_name_);
+    object_ = src.object_name;
+    name_space_ = src.name_space;
 }
 
 std::string SubSection::makeBody() {
@@ -381,5 +442,4 @@ std::string SubSection::generateContent(Mode mode) {
     }
     return {};
 }
-
 };  // namespace cma::provider

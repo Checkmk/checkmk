@@ -105,7 +105,8 @@ protected:
 private:
     std::wstring name_space_;  // WMI namespace "root\\Cimv2" for example
     std::wstring object_;      // WMI Object name
-    std::string cache_;        // cached data to reuse
+    std::vector<std::wstring> services_;  // required services
+    std::string cache_;                   // cached data to reuse
 
     std::vector<std::wstring> columns_;
 
@@ -124,7 +125,7 @@ public:
         : WmiBase(name, separator, mode) {}
 
 protected:
-    std::string makeBody() override { return getData(); }
+    std::string makeBody() override;
 };
 
 // this is proposed API

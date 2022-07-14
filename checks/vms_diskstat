@@ -4,14 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping
+from typing import Any, Iterable, Mapping
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.df import df_check_filesystem_single, filesystem_groups
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.df import df_discovery, FSBlock
+from cmk.base.plugins.agent_based.utils.df import df_discovery, FILESYSTEM_DEFAULT_PARAMS, FSBlock
+
+DiscoveryResult = Iterable[tuple]
+CheckResult = Iterable[tuple] | None
 
 Section = Mapping[str, FSBlock]
 
@@ -26,8 +26,6 @@ Section = Mapping[str, FSBlock]
 # $1$DGA1123: TEST_WORK 2171743836 1102431184 0.00
 # $1$DGA1124: TEMP_02 3171743836 102431184 1.10
 # $1$DGA1125: DATA_01 1171743836 202431184 0.20
-
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 def _mb(raw: str) -> float:
@@ -50,21 +48,24 @@ check_info["vms_diskstat"] = {
 }
 
 
-def inventory_vms_diskstat_fs(section: Section):
-    return df_discovery(host_extra_conf(host_name(), filesystem_groups), section)
+def discover_vms_diskstat_df(section: Section) -> DiscoveryResult:
+    params = host_extra_conf(host_name(), filesystem_groups)
+    return df_discovery(params, section)
 
 
-def check_vms_diskstat_fs(item, params, section: Section):
+def check_vms_diskstat_df(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     if (volume := section.get(item)) is None:
         return None
     return df_check_filesystem_single(*volume, None, None, params)
 
 
 check_info["vms_diskstat.df"] = {
-    "check_function": check_vms_diskstat_fs,
-    "inventory_function": inventory_vms_diskstat_fs,
+    "check_function": check_vms_diskstat_df,
+    "inventory_function": discover_vms_diskstat_df,
     "service_description": "Filesystem %s",
     "has_perfdata": True,
     "group": "filesystem",
     "default_levels_variable": "filesystem_default_levels",
 }
+
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS

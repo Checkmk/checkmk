@@ -59,25 +59,25 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
         cache_dir: Optional[Path] = None,
         persisted_section_dir: Optional[Path] = None,
     ) -> None:
-        self.hostname: Final[HostName] = hostname
-        self.ipaddress: Final[Optional[str]] = ipaddress
-        self.source_type: Final[SourceType] = source_type
-        self.fetcher_type: Final[FetcherType] = fetcher_type
-        self.description: Final[str] = description
+        self.hostname: Final = hostname
+        self.ipaddress: Final = ipaddress
+        self.source_type: Final = source_type
+        self.fetcher_type: Final = fetcher_type
+        self.description: Final = description
         self.default_raw_data: Final = default_raw_data
-        self.default_host_sections: Final[HostSections[TRawDataSection]] = default_host_sections
-        self.id: Final[str] = id_
+        self.default_host_sections: Final = default_host_sections
+        self.id: Final = id_
         if not cache_dir:
             cache_dir = Path(cmk.utils.paths.data_source_cache_dir) / self.id
         if not persisted_section_dir:
             persisted_section_dir = Path(cmk.utils.paths.var_dir) / "persisted_sections" / self.id
 
-        self.file_cache_base_path: Final[Path] = cache_dir
+        self.file_cache_base_path: Final = cache_dir
         self.file_cache_max_age: file_cache.MaxAge = file_cache.MaxAge.none()
-        self.persisted_sections_file_path: Final[Path] = persisted_section_dir / self.hostname
+        self.persisted_sections_file_path: Final = persisted_section_dir / self.hostname
 
-        self.host_config: Final[HostConfig] = HostConfig.make_host_config(hostname)
-        self._logger: Final[logging.Logger] = logging.getLogger("cmk.base.data_source.%s" % id_)
+        self.host_config: Final = HostConfig.make_host_config(hostname)
+        self._logger: Final = logging.getLogger("cmk.base.data_source.%s" % id_)
 
         self.exit_spec = self.host_config.exit_code_spec(id_)
 

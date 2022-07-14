@@ -18,6 +18,11 @@ $(OMD_INSTALL): omdlib-install
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/omd.bin $(DESTDIR)$(OMD_ROOT)/bin/omd
 	sed -i 's|###OMD_VERSION###|$(OMD_VERSION)|g' $(DESTDIR)$(OMD_ROOT)/bin/omd
+	$(DEPLOY_SSH_WITH_SYSTEM_OPENSSL)
+# SUP-10161: our openssl is incompatible with the system openssl for ssh on sles15sp3
+ifeq ($(filter $(DISTRO_CODE),sles15sp3),)
+	install -m 755 $(PACKAGE_DIR)/$(OMD)/ssh_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/ssh
+endif
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/man/man8
 	install -m 644 $(PACKAGE_DIR)/$(OMD)/omd.8 $(DESTDIR)$(OMD_ROOT)/share/man/man8
 	gzip -f $(DESTDIR)$(OMD_ROOT)/share/man/man8/omd.8

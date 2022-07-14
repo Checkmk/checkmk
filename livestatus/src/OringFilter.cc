@@ -135,6 +135,8 @@ Filters OringFilter::conjuncts() const {
     return filters;
 }
 
+const ColumnFilter *OringFilter::as_column_filter() const { return nullptr; };
+
 std::ostream &OringFilter::print(std::ostream &os) const {
     for (const auto &filter : _subfilters) {
         os << *filter << "\\n";

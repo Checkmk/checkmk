@@ -33,6 +33,7 @@ public:
     [[nodiscard]] bool is_contradiction() const override;
     [[nodiscard]] Filters disjuncts() const override;
     [[nodiscard]] Filters conjuncts() const override;
+    [[nodiscard]] const ColumnFilter *as_column_filter() const override;
 
 private:
     const std::string _columnName;

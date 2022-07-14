@@ -128,6 +128,8 @@ Filters AndingFilter::conjuncts() const {
     return filters;
 }
 
+const ColumnFilter *AndingFilter::as_column_filter() const { return nullptr; };
+
 std::ostream &AndingFilter::print(std::ostream &os) const {
     for (const auto &filter : _subfilters) {
         os << *filter << "\\n";

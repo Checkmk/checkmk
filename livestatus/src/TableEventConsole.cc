@@ -18,14 +18,17 @@
 #include <utility>
 
 #include "Column.h"
+#include "ColumnFilter.h"
 #include "DoubleColumn.h"
 #include "EventConsoleConnection.h"
+#include "Filter.h"
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "Row.h"
 #include "StringColumn.h"
 #include "StringUtils.h"
 #include "TimeColumn.h"
+#include "opids.h"
 
 using namespace std::chrono_literals;
 
@@ -108,6 +111,39 @@ private:
 
     void emitGreppingFilter(std::ostream &os) {
         for (const auto &column_name : grepping_filters) {
+            auto conjuncts =
+                query_
+                    .partialFilter(
+                        column_name,
+                        [&column_name](const std::string &columnName) {
+                            return column_name == columnName;
+                        })
+                    ->conjuncts();
+            if (conjuncts.size() == 1) {
+                if (const auto *column_filter =
+                        conjuncts[0]->as_column_filter()) {
+                    // NOTE: Keep this in sync with EC code. Ugly...
+                    switch (column_filter->oper()) {
+                        case RelationalOperator::equal:
+                        case RelationalOperator::matches_icase:
+                            os << "\nFilter: " << column_name << " "
+                               << column_filter->oper() << " "
+                               << column_filter->value();
+                            continue;
+                        case RelationalOperator::not_equal:
+                        case RelationalOperator::matches:
+                        case RelationalOperator::doesnt_match:
+                        case RelationalOperator::equal_icase:
+                        case RelationalOperator::not_equal_icase:
+                        case RelationalOperator::doesnt_match_icase:
+                        case RelationalOperator::less:
+                        case RelationalOperator::greater_or_equal:
+                        case RelationalOperator::greater:
+                        case RelationalOperator::less_or_equal:
+                            break;
+                    }
+                }
+            }
             if (auto svr = query_.stringValueRestrictionFor(column_name)) {
                 os << "\nFilter: " << column_name << " = " << *svr;
             } else {

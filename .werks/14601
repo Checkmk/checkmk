@@ -1,0 +1,18 @@
+Title: iis_app_pool_state: Fix service description formatting
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1657805403
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p8
+
+Note: For most users, this change will be compatible and purely cosmetic.
+
+Before this change, the service item for the "IIS Application Pool" service
+was surrounded by some ugly characters. They aspired to be single-quotes, but
+they didn't make it through the GUI.
+
+If you happen to rely on the old service name by rule condidions, you'll
+have to adapt the corresponding entries.

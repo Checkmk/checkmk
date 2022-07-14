@@ -82,7 +82,7 @@ def check_iis_app_pool_state(
 
 register.check_plugin(
     name="iis_app_pool_state",
-    service_name="IIS Application Pool '%s'",
+    service_name="IIS Application Pool %s",
     discovery_function=discover_iis_app_pool_state,
     check_function=check_iis_app_pool_state,
     check_default_parameters=DefaultCheckParameters,

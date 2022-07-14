@@ -4,16 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Iterable, Mapping
+from typing import Any, Mapping, Sequence
 
-from cmk.base.check_legacy_includes.df import df_check_filesystem_list, filesystem_groups
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.df import df_discovery, FILESYSTEM_DEFAULT_PARAMS, FSBlock
+from .agent_based_api.v1 import get_value_store, register, Service
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.df import df_check_filesystem_list, df_discovery, FILESYSTEM_DEFAULT_PARAMS, FSBlock
 
 Section = Mapping[str, FSBlock]
-
-DiscoveryResult = Iterable[tuple[str, Mapping]]
-CheckResult = Iterable[tuple]
 
 # NAME    SIZE  ALLOC   FREE  CAP  HEALTH  ALTROOT
 # app02  39.8G  14.1G  25.6G  35%  ONLINE  -
@@ -59,23 +56,33 @@ def parse_zpool(string_table: StringTable) -> Section | None:
     }
 
 
-def discover_zpool(section: Section) -> DiscoveryResult:
-    params = host_extra_conf(host_name(), filesystem_groups)
-    return df_discovery(params, section)
+register.agent_section(
+    name="zpool",
+    parse_function=parse_zpool,
+)
+
+
+def discover_zpool(params: Sequence[Mapping[str, Any]], section: Section) -> DiscoveryResult:
+    yield from (Service(item=i, parameters=p) for i, p in df_discovery(params, section))
 
 
 def check_zpool(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    return df_check_filesystem_list(item, params, list(section.values()))
+    yield from df_check_filesystem_list(
+        value_store=get_value_store(),
+        item=item,
+        params=params,
+        fslist_blocks=list(section.values()),
+    )
 
 
-check_info["zpool"] = {
-    "check_function": check_zpool,
-    "inventory_function": discover_zpool,
-    "parse_function": parse_zpool,
-    "service_description": "Storage Pool %s",
-    "has_perfdata": True,
-    "group": "filesystem",
-    "default_levels_variable": "filesystem_default_levels",
-}
-
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
+register.check_plugin(
+    name="zpool",
+    service_name="Storage Pool %s",
+    discovery_function=discover_zpool,
+    discovery_default_parameters={"groups": []},
+    discovery_ruleset_name="filesystem_groups",
+    discovery_ruleset_type=register.RuleSetType.ALL,
+    check_function=check_zpool,
+    check_ruleset_name="filesystem",
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
+)

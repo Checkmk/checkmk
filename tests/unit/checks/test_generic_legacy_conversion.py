@@ -2441,7 +2441,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "zfs_arc_cache.l2",
         "zfsget",
         "zorp_connections",
-        "zpool",
     }
     current_legacy_checks = set(fix_plugin_legacy.check_info)
 

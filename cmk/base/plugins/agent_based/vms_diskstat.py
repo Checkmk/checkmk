@@ -4,14 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Iterable, Mapping
+from typing import Any, Mapping, Sequence
 
-from cmk.base.check_legacy_includes.df import df_check_filesystem_single, filesystem_groups
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.df import df_discovery, FILESYSTEM_DEFAULT_PARAMS, FSBlock
-
-DiscoveryResult = Iterable[tuple]
-CheckResult = Iterable[tuple] | None
+from .agent_based_api.v1 import get_value_store, register, Service
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.df import df_check_filesystem_single, df_discovery, FILESYSTEM_DEFAULT_PARAMS, FSBlock
 
 Section = Mapping[str, FSBlock]
 
@@ -43,29 +40,33 @@ def parse_vms_diskstat(string_table: StringTable) -> Section:
     }
 
 
-check_info["vms_diskstat"] = {
-    "parse_function": parse_vms_diskstat,
-}
+register.agent_section(
+    name="vms_diskstat",
+    parse_function=parse_vms_diskstat,
+)
 
 
-def discover_vms_diskstat_df(section: Section) -> DiscoveryResult:
-    params = host_extra_conf(host_name(), filesystem_groups)
-    return df_discovery(params, section)
+def discover_vms_diskstat_df(
+    params: Sequence[Mapping[str, Any]], section: Section
+) -> DiscoveryResult:
+    yield from (Service(item=i, parameters=p) for i, p in df_discovery(params, section))
 
 
 def check_vms_diskstat_df(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     if (volume := section.get(item)) is None:
-        return None
-    return df_check_filesystem_single(*volume, None, None, params)
+        return
+    yield from df_check_filesystem_single(get_value_store(), *volume, None, None, params)
 
 
-check_info["vms_diskstat.df"] = {
-    "check_function": check_vms_diskstat_df,
-    "inventory_function": discover_vms_diskstat_df,
-    "service_description": "Filesystem %s",
-    "has_perfdata": True,
-    "group": "filesystem",
-    "default_levels_variable": "filesystem_default_levels",
-}
-
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
+register.check_plugin(
+    name="vms_diskstat_df",
+    sections=["vms_diskstat"],
+    service_name="Filesystem %s",
+    discovery_function=discover_vms_diskstat_df,
+    discovery_default_parameters={"groups": []},
+    discovery_ruleset_name="filesystem_groups",
+    discovery_ruleset_type=register.RuleSetType.ALL,
+    check_function=check_vms_diskstat_df,
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
+    check_ruleset_name="filesystem",
+)

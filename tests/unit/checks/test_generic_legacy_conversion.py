@@ -2389,8 +2389,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "viprinet_serial",
         "viprinet_temp",
         "vms_cpu",
-        "vms_diskstat.df",
-        "vms_diskstat",
         "vms_queuejobs",
         "vms_system.ios",
         "vms_system.procs",

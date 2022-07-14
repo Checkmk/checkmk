@@ -3030,14 +3030,15 @@ class HostConfig:
     @property
     def enforced_services_table(
         self,
-    ) -> Sequence[Tuple[RulesetName, CheckPluginName, Item, TimespecificParameterSet]]:
+    ) -> Sequence[Tuple[RulesetName, CheckPluginName, Item, ServiceName, TimespecificParameterSet]]:
         return [
-            (RulesetName(checkgroup_name), check_plugin_name, item, params)
+            (RulesetName(checkgroup_name), check_plugin_name, item, descr, params)
             for checkgroup_name, ruleset in static_checks.items()
             for check_plugin_name, item, params in (
                 self._sanitize_enforced_entry(*entry)
                 for entry in self._config_cache.host_extra_conf(self.hostname, ruleset)
             )
+            if (descr := service_description(self.hostname, check_plugin_name, item))
         ]
 
     @staticmethod

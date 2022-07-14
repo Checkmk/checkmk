@@ -721,8 +721,13 @@ class AutomationAnalyseServices(Automation):
         # 1. Enforced services
         # If we used the check table here, we would end up with the
         # *effective* parameters, these are the *configured* ones.
-        for checkgroup_name, check_plugin_name, item, params in host_config.enforced_services_table:
-            descr = config.service_description(hostname, check_plugin_name, item)
+        for (
+            checkgroup_name,
+            check_plugin_name,
+            item,
+            descr,
+            params,
+        ) in host_config.enforced_services_table:
             if descr == servicedesc:
                 return {
                     "origin": "static",  # TODO: (how) can we change this to "enforced"?

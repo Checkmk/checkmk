@@ -131,9 +131,14 @@ def _get_enforced_services(
     host_config: config.HostConfig,
 ) -> Iterator[ConfiguredService]:
     entries = []
-    for _checkgroup_name, check_plugin_name, item, params in host_config.enforced_services_table:
+    for (
+        _checkgroup_name,
+        check_plugin_name,
+        item,
+        descr,
+        params,
+    ) in host_config.enforced_services_table:
 
-        descr = config.service_description(host_config.hostname, check_plugin_name, item)
         entries.append(
             ConfiguredService(
                 check_plugin_name=check_plugin_name,

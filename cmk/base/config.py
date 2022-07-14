@@ -3032,17 +3032,14 @@ class HostConfig:
     def enforced_services_table(
         self,
     ) -> Sequence[Tuple[RulesetName, CheckPluginName, Item, TimespecificParameterSet]]:
-        matched = []
-        for checkgroup_name, ruleset in static_checks.items():
-            for entry in self._config_cache.host_extra_conf(self.hostname, ruleset):
-                matched.append(
-                    (
-                        RulesetName(checkgroup_name),
-                        *self._sanitize_enforced_entry(*entry),
-                    )
-                )
-
-        return matched
+        return [
+            (RulesetName(checkgroup_name), check_plugin_name, item, params)
+            for checkgroup_name, ruleset in static_checks.items()
+            for check_plugin_name, item, params in (
+                self._sanitize_enforced_entry(*entry)
+                for entry in self._config_cache.host_extra_conf(self.hostname, ruleset)
+            )
+        ]
 
     @staticmethod
     def _sanitize_enforced_entry(

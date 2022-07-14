@@ -73,7 +73,7 @@ TEST_F(PerfCpuLoadTest, Generation) {
         << "bad line is:" << table[6];
     EXPECT_FALSE(cpus[0].empty());
     auto cpu_count = std::stoull(cpus[1]);
-    EXPECT_TRUE(1 <= cpu_count && cpu_count <= 16u);
+    EXPECT_TRUE(1 <= cpu_count && cpu_count <= 32u);
     auto cpu_count_phys = std::stoull(cpus[2]);
     EXPECT_GT(cpu_count_phys, 0u);
     EXPECT_EQ(cpus[3], "OK");

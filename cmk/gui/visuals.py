@@ -50,6 +50,7 @@ from cmk.gui import hooks
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKGeneralException, MKUserError
 from cmk.gui.globals import config, g, html, output_funnel, request, transactions, user
+from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
 from cmk.gui.main_menu import mega_menu_registry
@@ -369,16 +370,21 @@ def transform_pre_2_1_single_infos(
     return unsingle
 
 
-def transform_pre_2_1_range_filters() -> Callable[
-    [FilterName, FilterHTTPVariables], Tuple[FilterName, FilterHTTPVariables]
-]:
-    # Update Visual Range Filters
-    range_filters = [
+@request_memoize()
+def _get_range_filters():
+    return [
         filter_ident
         for filter_ident, filter_object in filter_registry.items()
         if hasattr(filter_object, "query_filter")
         and isinstance(filter_object.query_filter, query_filters.NumberRangeQuery)  # type: ignore[attr-defined]
     ]
+
+
+def transform_pre_2_1_range_filters() -> Callable[
+    [FilterName, FilterHTTPVariables], Tuple[FilterName, FilterHTTPVariables]
+]:
+    # Update Visual Range Filters
+    range_filters = _get_range_filters()
 
     def transform_range_vars(
         fident: FilterName, vals: FilterHTTPVariables

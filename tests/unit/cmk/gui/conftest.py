@@ -152,7 +152,7 @@ def suppress_remote_automation_calls(mocker: MagicMock) -> Iterator[RemoteAutoma
 @pytest.fixture()
 def make_html_object_explode(mocker: MagicMock) -> None:
     class HtmlExploder:
-        def __init__(self, *args, **kw) -> None:
+        def __init__(self, *args, **kw) -> None:  # type:ignore[no-untyped-def]
             raise NotImplementedError("Tried to instantiate html")
 
     mocker.patch("cmk.gui.htmllib.html", new=HtmlExploder)
@@ -186,7 +186,7 @@ def with_automation_user(request_context: None, load_config: None) -> Iterator[t
         yield user
 
 
-def get_link(resp: dict, rel: str):
+def get_link(resp: dict, rel: str):  # type:ignore[no-untyped-def]
     for link in resp.get("links", []):
         if link["rel"].startswith(rel):
             return link
@@ -213,19 +213,21 @@ def _expand_rel(rel: str) -> str:
 class WebTestAppForCMK(webtest.TestApp):
     """A webtest.TestApp class with helper functions for automation user APIs"""
 
-    def __init__(self, *args, **kw) -> None:
+    def __init__(self, *args, **kw) -> None:  # type:ignore[no-untyped-def]
         super().__init__(*args, **kw)
         self.username: Optional[str] = None
         self.password: Optional[str] = None
 
-    def set_credentials(self, username, password) -> None:
+    def set_credentials(self, username, password) -> None:  # type:ignore[no-untyped-def]
         self.username = username
         self.password = password
 
-    def call_method(self, method: HTTPMethod, url, *args, **kw) -> webtest.TestResponse:
+    def call_method(  # type:ignore[no-untyped-def]
+        self, method: HTTPMethod, url, *args, **kw
+    ) -> webtest.TestResponse:
         return getattr(self, method.lower())(url, *args, **kw)
 
-    def has_link(self, resp: webtest.TestResponse, rel) -> bool:
+    def has_link(self, resp: webtest.TestResponse, rel) -> bool:  # type:ignore[no-untyped-def]
         if resp.status_code == 204:
             return False
         try:
@@ -234,7 +236,7 @@ class WebTestAppForCMK(webtest.TestApp):
         except KeyError:
             return False
 
-    def follow_link(
+    def follow_link(  # type:ignore[no-untyped-def]
         self,
         resp: webtest.TestResponse,
         rel,

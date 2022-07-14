@@ -37,7 +37,7 @@ class CheckmkTestApp(CheckmkApp):
 
 def make_start_response() -> StartResponse:
     def start_response(status, headers, exc_info=None):
-        def start(output) -> None:
+        def start(output) -> None:  # type:ignore[no-untyped-def]
             return None
 
         return start

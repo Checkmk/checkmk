@@ -26,7 +26,9 @@ class ProfileSwitcher:
 
     """
 
-    def __init__(self, app, profile_file: Optional[pathlib.Path] = None) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, app, profile_file: Optional[pathlib.Path] = None
+    ) -> None:
         self.app = app
         if profile_file is None:
             profile_file = pathlib.Path(cmk.utils.paths.var_dir) / "multisite.profile"
@@ -74,7 +76,7 @@ class ProfileSwitcher:
         return app(environ, start_response)
 
 
-def _profiling_enabled(environ) -> bool:
+def _profiling_enabled(environ) -> bool:  # type:ignore[no-untyped-def]
     profile_setting = _load_profiling_setting()
     if not profile_setting:
         return False

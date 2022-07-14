@@ -111,7 +111,9 @@ def test_diagnostics_element_general() -> None:
     )
 
 
-def test_diagnostics_element_general_content(tmp_path, _collectors) -> None:
+def test_diagnostics_element_general_content(  # type:ignore[no-untyped-def]
+    tmp_path, _collectors
+) -> None:
     diagnostics_element = diagnostics.GeneralDiagnosticsElement()
     tmppath = Path(tmp_path).joinpath("tmp")
     filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
@@ -144,7 +146,9 @@ def test_diagnostics_element_perfdata() -> None:
     )
 
 
-def test_diagnostics_element_perfdata_content(tmp_path, _collectors, mock_livestatus) -> None:
+def test_diagnostics_element_perfdata_content(  # type:ignore[no-untyped-def]
+    tmp_path, _collectors, mock_livestatus
+) -> None:
 
     test_columns = {
         "connections": 1253,
@@ -189,7 +193,9 @@ def test_diagnostics_element_hw_info() -> None:
     assert diagnostics_element.description == ("Hardware information of the Checkmk Server")
 
 
-def test_diagnostics_element_hw_info_content(tmp_path, _collectors) -> None:
+def test_diagnostics_element_hw_info_content(  # type:ignore[no-untyped-def]
+    tmp_path, _collectors
+) -> None:
     diagnostics_element = diagnostics.HWDiagnosticsElement()
     tmppath = Path(tmp_path).joinpath("tmp")
     filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
@@ -217,7 +223,9 @@ def test_diagnostics_element_local_files_json() -> None:
     )
 
 
-def test_diagnostics_element_local_files_json_content(tmp_path, _collectors) -> None:
+def test_diagnostics_element_local_files_json_content(  # type:ignore[no-untyped-def]
+    tmp_path, _collectors
+) -> None:
     diagnostics_element = diagnostics.LocalFilesJSONDiagnosticsElement()
 
     def create_test_package(name):
@@ -330,7 +338,9 @@ def test_diagnostics_element_local_files_csv() -> None:
     )
 
 
-def test_diagnostics_element_local_files_csv_content(tmp_path, _collectors) -> None:
+def test_diagnostics_element_local_files_csv_content(  # type:ignore[no-untyped-def]
+    tmp_path, _collectors
+) -> None:
     diagnostics_element = diagnostics.LocalFilesCSVDiagnosticsElement()
     check_dir = cmk.utils.paths.local_checks_dir
 
@@ -403,7 +413,9 @@ def test_diagnostics_element_environment() -> None:
     assert diagnostics_element.description == ("Variables set in the site user's environment")
 
 
-def test_diagnostics_element_environment_content(monkeypatch, tmp_path, _collectors) -> None:
+def test_diagnostics_element_environment_content(  # type:ignore[no-untyped-def]
+    monkeypatch, tmp_path, _collectors
+) -> None:
 
     environment_vars = {"France": "Paris", "Italy": "Rome", "Germany": "Berlin"}
 
@@ -434,7 +446,9 @@ def test_diagnostics_element_filesize() -> None:
     assert diagnostics_element.description == ("List of all files in the site including their size")
 
 
-def test_diagnostics_element_filesize_content(monkeypatch, tmp_path, _collectors) -> None:
+def test_diagnostics_element_filesize_content(  # type:ignore[no-untyped-def]
+    monkeypatch, tmp_path, _collectors
+) -> None:
 
     diagnostics_element = diagnostics.FilesSizeCSVDiagnosticsElement()
 
@@ -480,7 +494,9 @@ def test_diagnostics_element_omd_config() -> None:
     )
 
 
-def test_diagnostics_element_omd_config_content(tmp_path, _collectors) -> None:
+def test_diagnostics_element_omd_config_content(  # type:ignore[no-untyped-def]
+    tmp_path, _collectors
+) -> None:
     diagnostics_element = diagnostics.OMDConfigDiagnosticsElement()
 
     # Fake raw output of site.conf
@@ -749,7 +765,9 @@ def test_diagnostics_element_checkmk_overview_content(
         ),
     ],
 )
-def test_diagnostics_element_checkmk_files(diag_elem, ident, title, description) -> None:
+def test_diagnostics_element_checkmk_files(  # type:ignore[no-untyped-def]
+    diag_elem, ident, title, description
+) -> None:
     files = ["/path/to/raw-conf-file1", "/path/to/raw-conf-file2"]
     diagnostics_element = diag_elem(files)
     assert diagnostics_element.ident == ident
@@ -764,7 +782,9 @@ def test_diagnostics_element_checkmk_files(diag_elem, ident, title, description)
         diagnostics.CheckmkLogFilesDiagnosticsElement,
     ],
 )
-def test_diagnostics_element_checkmk_files_error(tmp_path, _collectors, diag_elem) -> None:
+def test_diagnostics_element_checkmk_files_error(  # type:ignore[no-untyped-def]
+    tmp_path, _collectors, diag_elem
+) -> None:
     short_test_conf_filepath = "/no/such/file"
     diagnostics_element = diag_elem([short_test_conf_filepath])
     tmppath = Path(tmp_path).joinpath("tmp")

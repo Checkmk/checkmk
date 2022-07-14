@@ -426,7 +426,7 @@ def _check_auth_by_cookie() -> Optional[UserId]:
     return None
 
 
-def _check_auth_cookie_for_web_server_auth(user_id: UserId):
+def _check_auth_cookie_for_web_server_auth(user_id: UserId):  # type:ignore[no-untyped-def]
     """Session handling also has to be initialized when the authentication is done
     by the web server.
 

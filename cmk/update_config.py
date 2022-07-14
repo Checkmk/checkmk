@@ -236,7 +236,7 @@ _MATCH_SINGLE_BACKSLASH = re.compile(r"[^\\]\\[^\\]")
 
 
 @contextmanager
-def _save_user_instances(visual_type: str, all_visuals: Dict):
+def _save_user_instances(visual_type: str, all_visuals: Dict):  # type:ignore[no-untyped-def]
     modified_user_instances: Set[UserId] = set()
 
     yield modified_user_instances
@@ -947,7 +947,7 @@ class UpdateConfig:
         self,
         all_rulesets: RulesetCollection,
     ) -> None:
-        def format_error(msg: str):
+        def format_error(msg: str):  # type:ignore[no-untyped-def]
             return "\033[91m {}\033[00m".format(msg)
 
         num_errors = 0
@@ -1121,7 +1121,7 @@ class UpdateConfig:
         the transformed visual in this update step. All user configs are rewriten.
         The load and transform functions are specific to each visual, saving is generic."""
 
-        def updates(visual_type: str, all_visuals: Dict):
+        def updates(visual_type: str, all_visuals: Dict):  # type:ignore[no-untyped-def]
             with _save_user_instances(visual_type, all_visuals) as affected_user:
                 # skip builtins, only users
                 affected_user.update(owner for owner, _name in all_visuals if owner)

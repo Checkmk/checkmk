@@ -245,7 +245,7 @@ class Authenticate:
 
 
 @functools.lru_cache
-def serve_file(
+def serve_file(  # type:ignore[no-untyped-def]
     file_name: str,
     content: bytes,
     default_content_type="text/plain; charset=utf-8",
@@ -356,7 +356,7 @@ def _url(environ: WSGIEnvironment) -> str:
 
 
 class ServeSwaggerUI:
-    def __init__(self, prefix="") -> None:
+    def __init__(self, prefix="") -> None:  # type:ignore[no-untyped-def]
         self.prefix = prefix
         self.data: Optional[Dict[str, Any]] = None
 

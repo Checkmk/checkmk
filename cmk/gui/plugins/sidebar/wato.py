@@ -38,7 +38,7 @@ from cmk.gui.watolib.search import (
 )
 
 
-def render_wato(mini) -> None | bool:
+def render_wato(mini) -> None | bool:  # type:ignore[no-untyped-def]
     if not active_config.wato_enabled:
         html.write_text(_("Setup is disabled."))
         return False
@@ -259,7 +259,7 @@ def compute_foldertree():
 # Note: the dictionary that represents the folder here is *not*
 # the datastructure from WATO but a result of compute_foldertree(). The reason:
 # We fetch the information via livestatus - not from WATO.
-def render_tree_folder(tree_id, folder, js_func) -> None:
+def render_tree_folder(tree_id, folder, js_func) -> None:  # type:ignore[no-untyped-def]
     subfolders = folder.get(".folders", {}).values()
     is_leaf = len(subfolders) == 0
 

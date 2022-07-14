@@ -18,7 +18,7 @@ def test_gui_crash_report_registry() -> None:
     assert cmk.utils.crash_reporting.crash_report_registry["gui"] == crash_handler.GUICrashReport
 
 
-def test_gui_crash_report_get_packed(request_context) -> None:
+def test_gui_crash_report_get_packed(request_context) -> None:  # type:ignore[no-untyped-def]
     store = crash_handler.CrashReportStore()
     try:
         crash_dir = Path()

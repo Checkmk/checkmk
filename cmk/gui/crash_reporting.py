@@ -70,7 +70,7 @@ class ABCCrashReportPage(cmk.gui.pages.Page, abc.ABC):
         self._crash_id = request.get_str_input_mandatory("crash_id")
         self._site_id = request.get_str_input_mandatory("site")
 
-    def _get_crash_info(self, row) -> CrashInfo:
+    def _get_crash_info(self, row) -> CrashInfo:  # type:ignore[no-untyped-def]
         return json.loads(row["crash_info"])
 
     def _get_crash_row(self):
@@ -396,7 +396,7 @@ class PageCrash(ABCCrashReportPage):
     def _format_traceback(self, tb):
         return "".join(traceback.format_list(tb))
 
-    def _show_crash_report_details(self, crash_info: CrashInfo, row):
+    def _show_crash_report_details(self, crash_info: CrashInfo, row):  # type:ignore[no-untyped-def]
         self._crash_type_renderer(crash_info["crash_type"]).show_details(crash_info, row)
 
     def _crash_type_renderer(self, crash_type):
@@ -418,7 +418,7 @@ class ABCReportRenderer(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def show_details(self, crash_info: CrashInfo, row):
+    def show_details(self, crash_info: CrashInfo, row):  # type:ignore[no-untyped-def]
         raise NotImplementedError()
 
 
@@ -442,7 +442,7 @@ class ReportRendererGeneric(ABCReportRenderer):
         # We don't want to produce anything here
         yield from ()
 
-    def show_details(self, crash_info: CrashInfo, row) -> None:
+    def show_details(self, crash_info: CrashInfo, row) -> None:  # type:ignore[no-untyped-def]
         if not crash_info["details"]:
             return
 
@@ -466,7 +466,7 @@ class ReportRendererSection(ABCReportRenderer):
         # We don't want to produce anything here
         yield from ()
 
-    def show_details(self, crash_info: CrashInfo, row) -> None:
+    def show_details(self, crash_info: CrashInfo, row) -> None:  # type:ignore[no-untyped-def]
         self._show_crashed_section_details(crash_info)
         _show_agent_output(row)
 
@@ -536,7 +536,7 @@ class ReportRendererCheck(ABCReportRenderer):
             item=make_simple_link(service_url),
         )
 
-    def show_details(self, crash_info: CrashInfo, row) -> None:
+    def show_details(self, crash_info: CrashInfo, row) -> None:  # type:ignore[no-untyped-def]
         self._show_crashed_check_details(crash_info)
         _show_agent_output(row)
 
@@ -583,7 +583,7 @@ class ReportRendererGUI(ABCReportRenderer):
         return
         yield  # pylint: disable=unreachable
 
-    def show_details(self, crash_info: CrashInfo, row) -> None:
+    def show_details(self, crash_info: CrashInfo, row) -> None:  # type:ignore[no-untyped-def]
         details = crash_info["details"]
 
         html.h3(_("Details"), class_="table")

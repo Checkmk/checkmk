@@ -61,7 +61,9 @@ def fixture_umask():
 
 
 @pytest.fixture(name="edition", params=["cre", "cee", "cme", "cpe"])
-def fixture_edition(monkeypatch, request) -> Iterable[cmk_version.Edition]:
+def fixture_edition(  # type:ignore[no-untyped-def]
+    monkeypatch, request
+) -> Iterable[cmk_version.Edition]:
     edition_short = request.param
     if edition_short == "cpe" and not is_plus_repo():
         pytest.skip("Needed files are not available")

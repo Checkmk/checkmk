@@ -24,14 +24,16 @@ def patch_config_paths(monkeypatch, tmp_path):
     (gui_confd / "wato").mkdir(parents=True)
 
 
-def test_load_group_information_empty(tmp_path, run_as_superuser) -> None:
+def test_load_group_information_empty(  # type:ignore[no-untyped-def]
+    tmp_path, run_as_superuser
+) -> None:
     with application_and_request_context(), run_as_superuser():
         assert groups.load_contact_group_information() == {}
         assert gui_groups.load_host_group_information() == {}
         assert gui_groups.load_service_group_information() == {}
 
 
-def test_load_group_information(tmp_path, run_as_superuser) -> None:
+def test_load_group_information(tmp_path, run_as_superuser) -> None:  # type:ignore[no-untyped-def]
     with open(cmk.utils.paths.check_mk_config_dir + "/wato/groups.mk", "w") as f:
         f.write(
             """# encoding: utf-8

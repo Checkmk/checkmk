@@ -138,15 +138,6 @@ class ContainerMetadata(BaseModel):
     pod_lookup_name: PodLookupName
 
 
-class PathPrefixAction(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        if not values:
-            return ""
-        path_prefix = "/" + values.strip("/")
-        setattr(namespace, self.dest, path_prefix)
-        return None
-
-
 class TCPTimeout(BaseModel):
     connect: int
     read: int

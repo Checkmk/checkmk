@@ -23,7 +23,14 @@ def test_attribute_defaults(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     ts.apply(monkeypatch)
 
     host_config = HostConfig.make_host_config(hostname)
-    source = TCPSource(host_config, ipaddress, simulation_mode=True, agent_simulator=True)
+    source = TCPSource(
+        host_config,
+        ipaddress,
+        simulation_mode=True,
+        agent_simulator=True,
+        translation={},
+        encoding_fallback="ascii",
+    )
     monkeypatch.setattr(source, "file_cache_base_path", Path("/my/path/"))
     assert source.fetcher_configuration == {
         "family": socket.AF_INET,

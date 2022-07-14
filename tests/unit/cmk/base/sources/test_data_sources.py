@@ -108,6 +108,8 @@ def test_host_config_creates_passing_source_sources(
             ipaddress,
             simulation_mode=True,
             agent_simulator=True,
+            translation={},
+            encoding_fallback="ascii",
         )
     ] == sources
 
@@ -128,6 +130,8 @@ def test_data_source_preselected(  # type:ignore[no-untyped-def]
     selected_sections = {SectionName("keep")}  # <- this is what we care about
     kwargs["simulation_mode"] = True
     kwargs["agent_simulator"] = True
+    kwargs["translation"] = {}
+    kwargs["encoding_fallback"] = "ascii"
 
     # a lot of hocus pocus to instantiate a source:
     make_scenario("hostname", {}).apply(monkeypatch)

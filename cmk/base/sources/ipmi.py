@@ -7,6 +7,7 @@
 from typing import cast, Final, Optional
 
 from cmk.utils.exceptions import MKAgentError
+from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import HostAddress, SourceType
 
 from cmk.core_helpers import FetcherType, IPMIFetcher
@@ -26,6 +27,8 @@ class IPMISource(AgentSource):
         *,
         simulation_mode: bool,
         agent_simulator: bool,
+        translation: TranslationOptions,
+        encoding_fallback: str,
     ) -> None:
         super().__init__(
             host_config,
@@ -40,6 +43,8 @@ class IPMISource(AgentSource):
             main_data_source=False,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
+            translation=translation,
+            encoding_fallback=encoding_fallback,
         )
         self.credentials: Final[IPMICredentials] = self.get_ipmi_credentials(host_config)
 

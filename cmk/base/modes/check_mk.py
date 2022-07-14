@@ -445,6 +445,8 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
             ipaddress,
             simulation_mode=config.simulation_mode,
             agent_simulator=config.agent_simulator,
+            translation=config.get_piggyback_translations(host_config.hostname),
+            encoding_fallback=config.fallback_agent_output_encoding,
         ):
             source.file_cache_max_age = config.max_cachefile_age()
             if not isinstance(source, sources.agent.AgentSource):

@@ -15,6 +15,7 @@ from cmk.utils import version
 from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
+from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import HostAddress
 
 import cmk.core_helpers.cache as file_cache
@@ -60,6 +61,8 @@ class _Builder:
         force_snmp_cache_refresh: bool,
         simulation_mode: bool,
         agent_simulator: bool,
+        translation: TranslationOptions,
+        encoding_fallback: str,
     ) -> None:
         super().__init__()
         self.host_config: Final = host_config
@@ -69,6 +72,8 @@ class _Builder:
         self.force_snmp_cache_refresh: Final = force_snmp_cache_refresh
         self.simulation_mode: Final = simulation_mode
         self.agent_simulator: Final = agent_simulator
+        self.translation: Final = translation
+        self.encoding_fallback: Final = encoding_fallback
         self._elems: Dict[str, Source] = {}
 
         self._initialize()
@@ -124,6 +129,8 @@ class _Builder:
                     time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
                         piggybacked_hostname=self.host_config.hostname
                     ),
+                    translation=self.translation,
+                    encoding_fallback=self.encoding_fallback,
                 )
             )
 
@@ -172,6 +179,8 @@ class _Builder:
                     ip_address,
                     simulation_mode=self.simulation_mode,
                     agent_simulator=self.agent_simulator,
+                    translation=self.translation,
+                    encoding_fallback=self.encoding_fallback,
                 )
             )
         else:
@@ -199,6 +208,8 @@ class _Builder:
                 template=datasource_program,
                 simulation_mode=self.simulation_mode,
                 agent_simulator=self.agent_simulator,
+                translation=self.translation,
+                encoding_fallback=self.encoding_fallback,
             )
 
         connection_mode = self.host_config.agent_connection_mode()
@@ -208,6 +219,8 @@ class _Builder:
                 self.ipaddress,
                 simulation_mode=self.simulation_mode,
                 agent_simulator=self.agent_simulator,
+                translation=self.translation,
+                encoding_fallback=self.encoding_fallback,
             )
         if connection_mode == "pull-agent":
             return TCPSource(
@@ -216,6 +229,8 @@ class _Builder:
                 main_data_source=main_data_source,
                 simulation_mode=self.simulation_mode,
                 agent_simulator=self.agent_simulator,
+                translation=self.translation,
+                encoding_fallback=self.encoding_fallback,
             )
         raise NotImplementedError(f"connection mode {connection_mode!r}")
 
@@ -228,6 +243,8 @@ class _Builder:
                 params=params,
                 simulation_mode=self.simulation_mode,
                 agent_simulator=self.agent_simulator,
+                translation=self.translation,
+                encoding_fallback=self.encoding_fallback,
             )
             for agentname, params in self.host_config.special_agents
         ]
@@ -242,6 +259,8 @@ def make_non_cluster_sources(
     on_scan_error: OnError = OnError.RAISE,
     simulation_mode: bool,
     agent_simulator: bool,
+    translation: TranslationOptions,
+    encoding_fallback: str,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
     return _Builder(
@@ -252,6 +271,8 @@ def make_non_cluster_sources(
         force_snmp_cache_refresh=force_snmp_cache_refresh,
         simulation_mode=simulation_mode,
         agent_simulator=agent_simulator,
+        translation=translation,
+        encoding_fallback=encoding_fallback,
     ).sources
 
 
@@ -289,6 +310,8 @@ def make_cluster_sources(
     *,
     simulation_mode: bool,
     agent_simulator: bool,
+    translation: TranslationOptions,
+    encoding_fallback: str,
 ) -> Sequence[Source]:
     """Abstract clusters/nodes/hosts"""
     assert host_config.nodes is not None
@@ -302,6 +325,8 @@ def make_cluster_sources(
             force_snmp_cache_refresh=False,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
+            translation=translation,
+            encoding_fallback=encoding_fallback,
         )
     ]
 
@@ -316,6 +341,8 @@ def make_sources(
     on_scan_error: OnError,
     simulation_mode: bool,
     agent_simulator: bool,
+    translation: TranslationOptions,
+    encoding_fallback: str,
 ) -> Sequence[Source]:
     return (
         make_non_cluster_sources(
@@ -326,6 +353,8 @@ def make_sources(
             on_scan_error=on_scan_error,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
+            translation=translation,
+            encoding_fallback=encoding_fallback,
         )
         if host_config.nodes is None
         else make_cluster_sources(
@@ -333,5 +362,7 @@ def make_sources(
             host_config,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
+            translation=translation,
+            encoding_fallback=encoding_fallback,
         )
     )

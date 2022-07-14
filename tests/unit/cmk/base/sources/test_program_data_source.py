@@ -53,6 +53,8 @@ class TestDSProgramChecker:
             template=template,
             simulation_mode=True,
             agent_simulator=True,
+            translation={},
+            encoding_fallback="ascii",
         )
         assert source.host_config.hostname == hostname
         assert source.ipaddress == ipaddress
@@ -76,6 +78,8 @@ class TestDSProgramChecker:
             template=template,
             simulation_mode=True,
             agent_simulator=True,
+            translation={},
+            encoding_fallback="ascii",
         )
 
         assert source.cmdline == "<NOTHING>x%sx%sx<host>x<ip>x" % (
@@ -139,6 +143,8 @@ class TestSpecialAgentChecker:
             params=params,
             simulation_mode=True,
             agent_simulator=True,
+            translation={},
+            encoding_fallback="ascii",
         )
         assert source.host_config.hostname == hostname
         assert source.ipaddress == ipaddress

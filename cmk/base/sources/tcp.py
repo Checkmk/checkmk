@@ -7,6 +7,7 @@
 import socket
 from typing import Optional
 
+from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import HostAddress, SourceType
 
 from cmk.core_helpers import FetcherType, TCPFetcher
@@ -32,6 +33,8 @@ class TCPSource(AgentSource):
         main_data_source: bool = False,
         simulation_mode: bool,
         agent_simulator: bool,
+        translation: TranslationOptions,
+        encoding_fallback: str,
     ) -> None:
         super().__init__(
             host_config,
@@ -43,6 +46,8 @@ class TCPSource(AgentSource):
             main_data_source=main_data_source,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
+            translation=translation,
+            encoding_fallback=encoding_fallback,
         )
         self.port: Optional[int] = None
         self.timeout: Optional[float] = None

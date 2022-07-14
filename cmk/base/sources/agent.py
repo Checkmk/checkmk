@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Final, Optional
 
 import cmk.utils.misc
+from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import AgentRawData, HostAddress, SourceType
 
 from cmk.core_helpers.agent import AgentParser, AgentRawDataSection
@@ -15,7 +16,6 @@ from cmk.core_helpers.cache import SectionStore
 from cmk.core_helpers.controller import FetcherType
 from cmk.core_helpers.host_sections import HostSections
 
-import cmk.base.config as config
 from cmk.base.config import HostConfig
 
 from ._abstract import Source
@@ -46,6 +46,8 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
         main_data_source: bool,
         simulation_mode: bool,
         agent_simulator: bool,
+        translation: TranslationOptions,
+        encoding_fallback: str,
     ):
         super().__init__(
             host_config,
@@ -66,6 +68,8 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
         # TODO: We should cleanup these old directories one day.
         #       Then we can remove this special case
         self.main_data_source: Final[bool] = main_data_source
+        self.translation: Final = translation
+        self.encoding_fallback: Final = encoding_fallback
 
     def _make_parser(self) -> AgentParser:
         return AgentParser(
@@ -76,8 +80,8 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
             ),
             check_interval=self.host_config.check_mk_check_interval,
             keep_outdated=self.use_outdated_persisted_sections,
-            translation=config.get_piggyback_translations(self.host_config.hostname),
-            encoding_fallback=config.fallback_agent_output_encoding,
+            translation=self.translation,
+            encoding_fallback=self.encoding_fallback,
             simulation=self.agent_simulator,
             logger=self._logger,
         )

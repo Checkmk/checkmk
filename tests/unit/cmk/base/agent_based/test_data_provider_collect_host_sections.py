@@ -180,12 +180,14 @@ class TestMakeHostSectionsHosts:
         "source",
         [
             functools.partial(PiggybackSource, time_settings=()),
-            lambda hostname, ipaddress, simulation_mode, agent_simulator: ProgramSource.ds(
+            lambda hostname, ipaddress, simulation_mode, agent_simulator, translation, encoding_fallback: ProgramSource.ds(
                 hostname,
                 ipaddress,
                 template="",
                 simulation_mode=simulation_mode,
                 agent_simulator=agent_simulator,
+                translation=translation,
+                encoding_fallback=encoding_fallback,
             ),
             TCPSource,
         ],
@@ -198,6 +200,8 @@ class TestMakeHostSectionsHosts:
             ipaddress,
             simulation_mode=True,
             agent_simulator=True,
+            translation={},
+            encoding_fallback="ascii",
         )
         assert source.source_type is SourceType.HOST
 
@@ -239,12 +243,16 @@ class TestMakeHostSectionsHosts:
                 template="",
                 simulation_mode=True,
                 agent_simulator=True,
+                translation={},
+                encoding_fallback="ascii",
             ),
             TCPSource(
                 host_config,
                 ipaddress,
                 simulation_mode=True,
                 agent_simulator=True,
+                translation={},
+                encoding_fallback="ascii",
             ),
         ]
 
@@ -289,18 +297,24 @@ class TestMakeHostSectionsHosts:
                 template="",
                 simulation_mode=True,
                 agent_simulator=True,
+                translation={},
+                encoding_fallback="ascii",
             ),
             TCPSource(
                 HostConfig.make_host_config(HostName(f"{hostname}1")),
                 ipaddress,
                 simulation_mode=True,
                 agent_simulator=True,
+                translation={},
+                encoding_fallback="ascii",
             ),
             TCPSource(
                 HostConfig.make_host_config(HostName(f"{hostname}2")),
                 ipaddress,
                 simulation_mode=True,
                 agent_simulator=True,
+                translation={},
+                encoding_fallback="ascii",
             ),
         ]
 
@@ -411,6 +425,8 @@ class TestMakeHostSectionsClusters:
             host_config,
             simulation_mode=True,
             agent_simulator=True,
+            translation={},
+            encoding_fallback="ascii",
         )
 
         host_sections = _collect_host_sections(
@@ -494,6 +510,8 @@ def test_get_host_sections_cluster(monkeypatch, mocker) -> None:  # type:ignore[
         host_config,
         simulation_mode=True,
         agent_simulator=True,
+        translation={},
+        encoding_fallback="ascii",
     )
 
     host_sections = _collect_host_sections(

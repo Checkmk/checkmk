@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Final, Optional, Sequence, Tuple
 
 from cmk.utils.paths import tmp_dir
+from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
 from cmk.core_helpers import FetcherType, PiggybackFetcher
@@ -28,6 +29,8 @@ class PiggybackSource(AgentSource):
         simulation_mode: bool,
         agent_simulator: bool,
         time_settings: Sequence[Tuple[Optional[str], str, int]],
+        translation: TranslationOptions,
+        encoding_fallback: str,
     ) -> None:
         super().__init__(
             host_config,
@@ -39,6 +42,8 @@ class PiggybackSource(AgentSource):
             main_data_source=False,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
+            translation=translation,
+            encoding_fallback=encoding_fallback,
         )
         self.time_settings: Final = time_settings
 

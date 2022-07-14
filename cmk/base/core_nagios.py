@@ -1360,6 +1360,8 @@ def _plugins_for_special_agents(host_config: HostConfig) -> Iterable[CheckPlugin
             ipaddress,
             simulation_mode=config.simulation_mode,
             agent_simulator=config.agent_simulator,
+            translation=config.get_piggyback_translations(host_config.hostname),
+            encoding_fallback=config.fallback_agent_output_encoding,
         )
         if isinstance(s, sources.programs.SpecialAgentSource)
     )

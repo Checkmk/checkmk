@@ -9,6 +9,7 @@ from typing import Dict, Optional
 
 import cmk.utils.paths
 from cmk.utils.macros import replace_macros_in_str
+from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
 from cmk.core_helpers import FetcherType, ProgramFetcher
@@ -33,6 +34,8 @@ class ProgramSource(AgentSource):
         stdin: Optional[str],
         simulation_mode: bool,
         agent_simulator: bool,
+        translation: TranslationOptions,
+        encoding_fallback: str,
     ) -> None:
         super().__init__(
             host_config,
@@ -47,6 +50,8 @@ class ProgramSource(AgentSource):
             main_data_source=main_data_source,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
+            translation=translation,
+            encoding_fallback=encoding_fallback,
         )
         self.cmdline = cmdline
         self.stdin = stdin
@@ -61,6 +66,8 @@ class ProgramSource(AgentSource):
         params: Dict,
         simulation_mode: bool,
         agent_simulator: bool,
+        translation: TranslationOptions,
+        encoding_fallback: str,
     ) -> "SpecialAgentSource":
         return SpecialAgentSource(
             host_config,
@@ -70,6 +77,8 @@ class ProgramSource(AgentSource):
             params=params,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
+            translation=translation,
+            encoding_fallback=encoding_fallback,
         )
 
     @staticmethod
@@ -81,6 +90,8 @@ class ProgramSource(AgentSource):
         template: str,
         simulation_mode: bool,
         agent_simulator: bool,
+        translation: TranslationOptions,
+        encoding_fallback: str,
     ) -> "DSProgramSource":
         return DSProgramSource(
             host_config,
@@ -89,6 +100,8 @@ class ProgramSource(AgentSource):
             template=template,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
+            translation=translation,
+            encoding_fallback=encoding_fallback,
         )
 
     def _make_file_cache(self) -> AgentFileCache:
@@ -127,6 +140,8 @@ class DSProgramSource(ProgramSource):
         template: str,
         simulation_mode: bool,
         agent_simulator: bool,
+        translation: TranslationOptions,
+        encoding_fallback: str,
     ) -> None:
         super().__init__(
             host_config,
@@ -141,6 +156,8 @@ class DSProgramSource(ProgramSource):
             stdin=None,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
+            translation=translation,
+            encoding_fallback=encoding_fallback,
         )
 
     @staticmethod
@@ -202,6 +219,8 @@ class SpecialAgentSource(ProgramSource):
         params: Dict,
         simulation_mode: bool,
         agent_simulator: bool,
+        translation: TranslationOptions,
+        encoding_fallback: str,
     ) -> None:
         super().__init__(
             host_config,
@@ -222,6 +241,8 @@ class SpecialAgentSource(ProgramSource):
             ),
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
+            translation=translation,
+            encoding_fallback=encoding_fallback,
         )
         self.special_agent_id = special_agent_id
         self.special_agent_plugin_file_name = "agent_%s" % special_agent_id

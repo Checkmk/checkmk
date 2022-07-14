@@ -30,6 +30,8 @@ def test_attribute_defaults(monkeypatch: MonkeyPatch, ipaddress: HostAddress) ->
         simulation_mode=True,
         agent_simulator=True,
         time_settings=[],
+        translation={},
+        encoding_fallback="ascii",
     )
     assert source.host_config.hostname == hostname
     assert source.ipaddress == ipaddress

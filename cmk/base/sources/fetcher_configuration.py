@@ -56,6 +56,8 @@ def fetchers(host_config: HostConfig) -> Dict[str, Any]:
                 ipaddress,
                 simulation_mode=config.simulation_mode,
                 agent_simulator=config.agent_simulator,
+                translation=config.get_piggyback_translations(host_config.hostname),
+                encoding_fallback=config.fallback_agent_output_encoding,
             )
         ]
     }

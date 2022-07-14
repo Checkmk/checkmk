@@ -105,6 +105,8 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
             ipaddress,
             simulation_mode=config.simulation_mode,
             agent_simulator=config.agent_simulator,
+            translation=config.get_piggyback_translations(host_config.hostname),
+            encoding_fallback=config.fallback_agent_output_encoding,
         )
     ]
 

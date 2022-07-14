@@ -31,6 +31,8 @@ def test_attribute_defaults(monkeypatch) -> None:  # type:ignore[no-untyped-def]
         ipaddress,
         simulation_mode=True,
         agent_simulator=True,
+        translation={},
+        encoding_fallback="ascii",
     )
     assert source.host_config.hostname == hostname
     assert source.ipaddress == ipaddress
@@ -66,6 +68,8 @@ def test_ipmi_ipaddress_from_mgmt_board(monkeypatch) -> None:  # type:ignore[no-
         ipaddress,
         simulation_mode=True,
         agent_simulator=True,
+        translation={},
+        encoding_fallback="ascii",
     )
     assert source.host_config.management_address == ipaddress
 

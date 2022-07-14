@@ -4,14 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from typing import Any, Iterable, Mapping
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.plugins.agent_based.utils.df import df_discovery
+from cmk.base.check_legacy_includes.df import df_check_filesystem_list, filesystem_groups
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.utils.df import df_discovery, FILESYSTEM_DEFAULT_PARAMS
+
+Section = Mapping[str, Mapping[str, str]]
+
+DiscoveryResult = Iterable[tuple[str, Mapping]]
+CheckResult = Iterable[tuple]
 
 # NAME    SIZE  ALLOC   FREE  CAP  HEALTH  ALTROOT
 # app02  39.8G  14.1G  25.6G  35%  ONLINE  -
@@ -21,46 +23,45 @@ from cmk.base.plugins.agent_based.utils.df import df_discovery
 # NAME        SIZE   USED  AVAIL    CAP  HEALTH  ALTROOT
 # sth_ds      278G   127G   151G    45%  ONLINE  -
 
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
+def parse_zpool(string_table: StringTable) -> Section | None:
+    if not string_table:
+        return None
+    raw_header, *content = string_table
 
-def parse_zpool(info):
-    def canonize_header_entry(entry):
+    def canonize_header_entry(entry: str) -> str:
         if entry == "used":
             return "alloc"
-        elif entry == "avail":
+        if entry == "avail":
             return "free"
         return entry
 
-    result = {}
-    if len(info) == 0:
-        return result
-
-    header = [canonize_header_entry(item.lower()) for item in info[0]]
-    for line in info[1:]:
-        result[line[0]] = dict(zip(header, line))
-    return result
+    header = [canonize_header_entry(item.lower()) for item in raw_header[0]]
+    return {line[0]: dict(zip(header, line)) for line in content}
 
 
-def inventory_zpool(parsed):
-    return df_discovery(host_extra_conf(host_name(), filesystem_groups), list(parsed))
+def discover_zpool(section: Section) -> DiscoveryResult:
+    params = host_extra_conf(host_name(), filesystem_groups)
+    return df_discovery(params, section)
 
 
-def check_zpool(item, params, parsed):
-    def mb(val):
+def check_zpool(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+
+    # this belongs to the parse function.
+    def mb(val: str) -> float:
         idx = None
         # split number from unit
         for idx, ch in enumerate(val):
             if ch not in "0123456789.-":
                 break
         num = float(val[:idx])
-        unit = val[idx:].lstrip().lower()
-        unit = ["b", "k", "m", "g", "t", "p"].index(unit)
+        unit_str = val[idx:].lstrip().lower()
+        unit = ["b", "k", "m", "g", "t", "p"].index(unit_str)
 
         return num * (1024 ** (unit - 2))
 
     fslist = []
-    for pool, entry in parsed.items():
+    for pool, entry in section.items():
         if "patterns" in params or item == pool:
             fslist.append((pool, mb(entry["size"]), mb(entry["free"]), 0))
 
@@ -69,10 +70,12 @@ def check_zpool(item, params, parsed):
 
 check_info["zpool"] = {
     "check_function": check_zpool,
-    "inventory_function": inventory_zpool,
+    "inventory_function": discover_zpool,
     "parse_function": parse_zpool,
     "service_description": "Storage Pool %s",
     "has_perfdata": True,
     "group": "filesystem",
     "default_levels_variable": "filesystem_default_levels",
 }
+
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS

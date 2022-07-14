@@ -1461,10 +1461,6 @@ def _check_single_bandwidth(  # pylint: disable=too-many-branches
 ) -> type_defs.CheckResult:
     use_predictive_levels = (direction, "predictive") in traffic_levels
 
-    # We have to specify metric like this, because we want to postpone the output,
-    # and this a possibility to make mypy happy when collecting from different places.
-    metric: Optional[Metric] = None
-
     # The "normal" upper/lower levels can be valid for the raw value or the average value.
     # We display them in the raw signal's graph for both cases.
     # However, predictive levels are different in it's nature and will be handled seperately
@@ -1479,16 +1475,6 @@ def _check_single_bandwidth(  # pylint: disable=too-many-branches
         levels_lower = (
             traffic_levels[(direction, "lower", "warn")],
             traffic_levels[(direction, "lower", "crit")],
-        )
-    if average or not use_predictive_levels:
-        # For these cases, we have to yield the raw traffic metric explicitly.
-        # Otherwise (= use_predictive_levels and not average), it will be
-        # yielded from check_levels_predictive
-        metric = Metric(
-            direction,
-            traffic,
-            levels=levels_upper,
-            boundaries=(0, speed),
         )
 
     if average:
@@ -1511,7 +1497,7 @@ def _check_single_bandwidth(  # pylint: disable=too-many-branches
             dsname = direction
 
         levels_predictive = traffic_levels[(direction, "predictive")]
-        result, tmp_metric, *ref_curve = check_levels_predictive(
+        result, metric_from_pred_check, *ref_curve = check_levels_predictive(
             filtered_traffic,
             levels=levels_predictive,
             metric_name=dsname,
@@ -1519,15 +1505,14 @@ def _check_single_bandwidth(  # pylint: disable=too-many-branches
             label=title,
         )
         assert isinstance(result, Result)
-        assert isinstance(tmp_metric, Metric)
-        metric = tmp_metric
-        # This metric may be the raw metric or the average metric.
-        # The avg is not needed for displaying a graph, but it's historic
-        # value will be needed for the future calculation of the ref_curve,
-        # so we can't dump it.
-        yield metric
-        if ref_curve:
-            yield from ref_curve  # reference curve for predictive levels
+
+        if average:
+            # The avg is not needed for displaying a graph, but it's historic
+            # value will be needed for the future calculation of the ref_curve,
+            # so we can't dump it.
+            yield metric_from_pred_check
+
+        yield from ref_curve  # reference curve for predictive levels
     else:
         # The metric already got yielded, so it's only the result that is
         # needed here.
@@ -1555,8 +1540,14 @@ def _check_single_bandwidth(  # pylint: disable=too-many-branches
 
     # output metric after result. this makes it easier to analyze the check output,
     # as this is the "normal" order when yielding from check_levels.
-    assert metric is not None
-    yield metric
+    # Note: we always yield the unaveraged values here, since this is what we want to display in
+    # our graphs
+    yield Metric(
+        direction,
+        traffic,
+        levels=levels_upper,
+        boundaries=(0, speed),
+    )
 
 
 def _render_floating_point(value: float, precision: int, unit: str) -> str:
@@ -1773,6 +1764,8 @@ def _check_single_packet_rate(
 
     # output metric after result. this makes it easier to analyze the check output,
     # as this is the "normal" order when yielding from check_levels.
+    # Note: we always yield the unaveraged values here, since this is what we want to display in
+    # our graphs
     yield metric
 
 

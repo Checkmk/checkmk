@@ -15,28 +15,33 @@ from cmk.core_helpers.agent import AgentFileCache, NoCacheFactory
 from cmk.core_helpers.piggyback import PiggybackSummarizer
 
 import cmk.base.config as config
+from cmk.base.config import HostConfig
 
 from .agent import AgentSource
 
 
 class PiggybackSource(AgentSource):
-    def __init__(self, hostname: HostName, ipaddress: Optional[HostAddress]) -> None:
+    def __init__(
+        self,
+        host_config: HostConfig,
+        ipaddress: Optional[HostAddress],
+    ) -> None:
         super().__init__(
-            hostname,
+            host_config,
             ipaddress,
             source_type=SourceType.HOST,
             fetcher_type=FetcherType.PIGGYBACK,
-            description=PiggybackSource._make_description(hostname),
+            description=PiggybackSource._make_description(host_config.hostname),
             id_="piggyback",
             main_data_source=False,
         )
         self.time_settings: Final = config.get_config_cache().get_piggybacked_hosts_time_settings(
-            piggybacked_hostname=hostname
+            piggybacked_hostname=host_config.hostname
         )
 
     def _make_file_cache(self) -> AgentFileCache:
         return NoCacheFactory(
-            self.hostname,
+            self.host_config.hostname,
             base_path=self.file_cache_base_path,
             simulation=False,  # TODO Quickfix for SUP-9912, should be handled in a better way
             max_age=self.file_cache_max_age,
@@ -44,7 +49,7 @@ class PiggybackSource(AgentSource):
 
     def _make_fetcher(self) -> PiggybackFetcher:
         return PiggybackFetcher(
-            hostname=self.hostname,
+            hostname=self.host_config.hostname,
             address=self.ipaddress,
             time_settings=self.time_settings,
         )
@@ -52,7 +57,7 @@ class PiggybackSource(AgentSource):
     def _make_summarizer(self) -> PiggybackSummarizer:
         return PiggybackSummarizer(
             self.exit_spec,
-            hostname=self.hostname,
+            hostname=self.host_config.hostname,
             ipaddress=self.ipaddress,
             time_settings=self.time_settings,
             # Tag: 'Always use and expect piggback data'

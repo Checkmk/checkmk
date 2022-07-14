@@ -16,7 +16,7 @@ from cmk.core_helpers.agent import AgentFileCache, AgentFileCacheFactory, AgentS
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
-from cmk.base.config import SpecialAgentConfiguration
+from cmk.base.config import HostConfig, SpecialAgentConfiguration
 
 from .agent import AgentSource
 
@@ -24,7 +24,7 @@ from .agent import AgentSource
 class ProgramSource(AgentSource):
     def __init__(
         self,
-        hostname: HostName,
+        host_config: HostConfig,
         ipaddress: Optional[HostAddress],
         *,
         id_: str,
@@ -33,7 +33,7 @@ class ProgramSource(AgentSource):
         stdin: Optional[str],
     ) -> None:
         super().__init__(
-            hostname,
+            host_config,
             ipaddress,
             source_type=SourceType.HOST,
             fetcher_type=FetcherType.PROGRAM,
@@ -49,7 +49,7 @@ class ProgramSource(AgentSource):
 
     @staticmethod
     def special_agent(
-        hostname: HostName,
+        host_config: HostConfig,
         ipaddress: Optional[HostAddress],
         *,
         main_data_source: bool = False,
@@ -57,7 +57,7 @@ class ProgramSource(AgentSource):
         params: Dict,
     ) -> "SpecialAgentSource":
         return SpecialAgentSource(
-            hostname,
+            host_config,
             ipaddress,
             main_data_source=main_data_source,
             special_agent_id=special_agent_id,
@@ -66,14 +66,14 @@ class ProgramSource(AgentSource):
 
     @staticmethod
     def ds(
-        hostname: HostName,
+        host_config: HostConfig,
         ipaddress: HostAddress,
         *,
         main_data_source: bool = False,
         template: str,
     ) -> "DSProgramSource":
         return DSProgramSource(
-            hostname,
+            host_config,
             ipaddress,
             main_data_source=main_data_source,
             template=template,
@@ -81,7 +81,7 @@ class ProgramSource(AgentSource):
 
     def _make_file_cache(self) -> AgentFileCache:
         return AgentFileCacheFactory(
-            self.hostname,
+            self.host_config.hostname,
             base_path=self.file_cache_base_path,
             simulation=config.simulation_mode,
             max_age=self.file_cache_max_age,
@@ -108,20 +108,20 @@ class ProgramSource(AgentSource):
 class DSProgramSource(ProgramSource):
     def __init__(
         self,
-        hostname: HostName,
+        host_config: HostConfig,
         ipaddress: Optional[HostAddress],
         *,
         main_data_source: bool = False,
         template: str,
     ) -> None:
         super().__init__(
-            hostname,
+            host_config,
             ipaddress,
             id_="agent",
             main_data_source=main_data_source,
             cmdline=DSProgramSource._translate(
                 template,
-                hostname,
+                host_config,
                 ipaddress,
             ),
             stdin=None,
@@ -130,12 +130,11 @@ class DSProgramSource(ProgramSource):
     @staticmethod
     def _translate(
         cmd: str,
-        hostname: HostName,
+        host_config: HostConfig,
         ipaddress: Optional[HostAddress],
     ) -> str:
-        host_config = config.HostConfig.make_host_config(hostname)
         return DSProgramSource._translate_host_macros(
-            DSProgramSource._translate_legacy_macros(cmd, hostname, ipaddress),
+            DSProgramSource._translate_legacy_macros(cmd, host_config.hostname, ipaddress),
             host_config,
         )
 
@@ -155,7 +154,7 @@ class DSProgramSource(ProgramSource):
         )
 
     @staticmethod
-    def _translate_host_macros(cmd: str, host_config: config.HostConfig) -> str:
+    def _translate_host_macros(cmd: str, host_config: HostConfig) -> str:
         config_cache = config.get_config_cache()
         attrs = core_config.get_host_attributes(host_config.hostname, config_cache)
         if host_config.is_cluster:
@@ -179,7 +178,7 @@ class DSProgramSource(ProgramSource):
 class SpecialAgentSource(ProgramSource):
     def __init__(
         self,
-        hostname: HostName,
+        host_config: HostConfig,
         ipaddress: Optional[HostAddress],
         *,
         main_data_source: bool = False,
@@ -187,18 +186,18 @@ class SpecialAgentSource(ProgramSource):
         params: Dict,
     ) -> None:
         super().__init__(
-            hostname,
+            host_config,
             ipaddress,
             id_="special_%s" % special_agent_id,
             main_data_source=main_data_source,
             cmdline=SpecialAgentSource._make_cmdline(
-                hostname,
+                host_config.hostname,
                 ipaddress,
                 special_agent_id,
                 params,
             ),
             stdin=SpecialAgentSource._make_stdin(
-                hostname,
+                host_config.hostname,
                 ipaddress,
                 special_agent_id,
                 params,

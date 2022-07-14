@@ -14,7 +14,7 @@ import cmk.utils.paths
 from cmk.utils.type_defs import HostName
 
 import cmk.base.config as config
-from cmk.base.config import SpecialAgentConfiguration, SpecialAgentInfoFunctionResult
+from cmk.base.config import HostConfig, SpecialAgentConfiguration, SpecialAgentInfoFunctionResult
 from cmk.base.sources.programs import DSProgramSource, SpecialAgentSource
 
 fun_args_stdin: Tuple[Tuple[SpecialAgentInfoFunctionResult, Tuple[str, Optional[str]]]] = (
@@ -48,11 +48,11 @@ class TestDSProgramChecker:
         ts.apply(monkeypatch)
 
         source = DSProgramSource(
-            hostname,
+            HostConfig.make_host_config(hostname),
             ipaddress,
             template=template,
         )
-        assert source.hostname == hostname
+        assert source.host_config.hostname == hostname
         assert source.ipaddress == ipaddress
         assert source.cmdline == ""
         assert source.stdin is None
@@ -68,7 +68,9 @@ class TestDSProgramChecker:
         ts = Scenario()
         ts.add_host(hostname)
         ts.apply(monkeypatch)
-        source = DSProgramSource(hostname, ipaddress, template=template)
+        source = DSProgramSource(
+            HostConfig.make_host_config(hostname), ipaddress, template=template
+        )
 
         assert source.cmdline == "<NOTHING>x%sx%sx<host>x<ip>x" % (
             ipaddress if ipaddress is not None else "",
@@ -125,12 +127,12 @@ class TestSpecialAgentChecker:
         # end of setup
 
         source = SpecialAgentSource(
-            hostname,
+            HostConfig.make_host_config(hostname),
             ipaddress,
             special_agent_id=special_agent_id,
             params=params,
         )
-        assert source.hostname == hostname
+        assert source.host_config.hostname == hostname
         assert source.ipaddress == ipaddress
         assert source.cmdline == (  #
             str(agent_dir / "special" / ("agent_%s" % special_agent_id)) + " " + expected_args

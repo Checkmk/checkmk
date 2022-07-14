@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Final, Optional
 
 import cmk.utils.misc
-from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, SourceType
+from cmk.utils.type_defs import AgentRawData, HostAddress, SourceType
 
 from cmk.core_helpers.agent import AgentParser, AgentRawDataSection
 from cmk.core_helpers.cache import SectionStore
@@ -16,6 +16,7 @@ from cmk.core_helpers.controller import FetcherType
 from cmk.core_helpers.host_sections import HostSections
 
 import cmk.base.config as config
+from cmk.base.config import HostConfig
 
 from ._abstract import Source
 
@@ -35,7 +36,7 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
 
     def __init__(
         self,
-        hostname: HostName,
+        host_config: HostConfig,
         ipaddress: Optional[HostAddress],
         *,
         source_type: SourceType,
@@ -45,7 +46,7 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
         main_data_source: bool,
     ):
         super().__init__(
-            hostname,
+            host_config,
             ipaddress,
             source_type=source_type,
             fetcher_type=fetcher_type,
@@ -63,16 +64,15 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
         self.main_data_source: Final[bool] = main_data_source
 
     def _make_parser(self) -> AgentParser:
-        check_interval = config.HostConfig.make_host_config(self.hostname).check_mk_check_interval
         return AgentParser(
-            self.hostname,
+            self.host_config.hostname,
             SectionStore[AgentRawDataSection](
                 self.persisted_sections_file_path,
                 logger=self._logger,
             ),
-            check_interval=check_interval,
+            check_interval=self.host_config.check_mk_check_interval,
             keep_outdated=self.use_outdated_persisted_sections,
-            translation=config.get_piggyback_translations(self.hostname),
+            translation=config.get_piggyback_translations(self.host_config.hostname),
             encoding_fallback=config.fallback_agent_output_encoding,
             simulation=config.agent_simulator,
             logger=self._logger,

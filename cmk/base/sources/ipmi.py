@@ -7,7 +7,7 @@
 from typing import cast, Final, Optional
 
 from cmk.utils.exceptions import MKAgentError
-from cmk.utils.type_defs import HostAddress, HostName, SourceType
+from cmk.utils.type_defs import HostAddress, SourceType
 
 from cmk.core_helpers import FetcherType, IPMIFetcher
 from cmk.core_helpers.agent import AgentFileCache, AgentFileCacheFactory
@@ -20,22 +20,20 @@ from .agent import AgentSource
 
 
 class IPMISource(AgentSource):
-    def __init__(self, hostname: HostName, ipaddress: Optional[HostAddress]) -> None:
+    def __init__(self, host_config: HostConfig, ipaddress: Optional[HostAddress]) -> None:
         super().__init__(
-            hostname,
+            host_config,
             ipaddress,
             source_type=SourceType.MANAGEMENT,
             fetcher_type=FetcherType.IPMI,
             description=IPMISource._make_description(
                 ipaddress,
-                cast(IPMICredentials, HostConfig.make_host_config(hostname).management_credentials),
+                cast(IPMICredentials, host_config.management_credentials),
             ),
             id_="mgmt_ipmi",
             main_data_source=False,
         )
-        self.credentials: Final[IPMICredentials] = self.get_ipmi_credentials(
-            HostConfig.make_host_config(hostname)
-        )
+        self.credentials: Final[IPMICredentials] = self.get_ipmi_credentials(host_config)
 
     @staticmethod
     def get_ipmi_credentials(host_config: HostConfig) -> IPMICredentials:
@@ -48,7 +46,7 @@ class IPMISource(AgentSource):
 
     def _make_file_cache(self) -> AgentFileCache:
         return AgentFileCacheFactory(
-            self.hostname,
+            self.host_config.hostname,
             base_path=self.file_cache_base_path,
             simulation=config.simulation_mode,
             max_age=self.file_cache_max_age,

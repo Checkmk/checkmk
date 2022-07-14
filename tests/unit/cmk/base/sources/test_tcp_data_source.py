@@ -10,6 +10,7 @@ from tests.testlib.base import Scenario
 
 from cmk.utils.type_defs import HostName
 
+from cmk.base.config import HostConfig
 from cmk.base.sources.tcp import TCPSource
 
 
@@ -21,7 +22,8 @@ def test_attribute_defaults(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     ts.add_host(hostname)
     ts.apply(monkeypatch)
 
-    source = TCPSource(hostname, ipaddress)
+    host_config = HostConfig.make_host_config(hostname)
+    source = TCPSource(host_config, ipaddress)
     monkeypatch.setattr(source, "file_cache_base_path", Path("/my/path/"))
     assert source.fetcher_configuration == {
         "family": socket.AF_INET,

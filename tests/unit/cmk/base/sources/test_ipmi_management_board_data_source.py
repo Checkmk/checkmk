@@ -12,6 +12,7 @@ from cmk.core_helpers.host_sections import HostSections
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
+from cmk.base.config import HostConfig
 from cmk.base.sources.agent import AgentRawDataSection
 from cmk.base.sources.ipmi import IPMISource
 
@@ -22,11 +23,11 @@ def test_attribute_defaults(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     ts.add_host(hostname)
     ts.apply(monkeypatch)
 
-    host_config = config.get_config_cache().get_host_config(hostname)
+    host_config = HostConfig.make_host_config(hostname)
     ipaddress = config.lookup_mgmt_board_ip_address(host_config)
 
-    source = IPMISource(hostname, ipaddress)
-    assert source.hostname == hostname
+    source = IPMISource(host_config, ipaddress)
+    assert source.host_config.hostname == hostname
     assert source.ipaddress == ipaddress
     assert source.description == "Management board - IPMI"
     assert source.source_type is SourceType.MANAGEMENT
@@ -55,7 +56,7 @@ def test_ipmi_ipaddress_from_mgmt_board(monkeypatch) -> None:  # type:ignore[no-
         },
     )
 
-    source = IPMISource(hostname, ipaddress)
+    source = IPMISource(HostConfig.make_host_config(hostname), ipaddress)
     assert source.host_config.management_address == ipaddress
 
 

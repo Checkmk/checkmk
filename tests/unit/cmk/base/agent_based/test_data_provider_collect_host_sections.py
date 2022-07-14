@@ -31,6 +31,7 @@ from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import _collect_host_sections
+from cmk.base.config import HostConfig
 from cmk.base.sources import make_cluster_sources, Source
 from cmk.base.sources.agent import AgentRawDataSection
 from cmk.base.sources.piggyback import PiggybackSource
@@ -99,7 +100,9 @@ class TestMakeHostSectionsHosts:
             lambda self, raw_data, *, selection: result.OK(
                 DummyHostSection(
                     sections={
-                        SectionName("section_name_%s" % self.hostname): [["section_content"]]
+                        SectionName("section_name_%s" % self.host_config.hostname): [
+                            ["section_content"]
+                        ]
                     },
                     cache_info={},
                     piggybacked_raw_data={},
@@ -143,7 +146,7 @@ class TestMakeHostSectionsHosts:
             fetched=[
                 (
                     SNMPSource.snmp(
-                        hostname,
+                        host_config,
                         ipaddress,
                         selected_sections=NO_SELECTION,
                         force_cache_refresh=False,
@@ -184,7 +187,7 @@ class TestMakeHostSectionsHosts:
     def test_one_nonsnmp_source(  # type:ignore[no-untyped-def]
         self, hostname, ipaddress, config_cache, host_config, source
     ) -> None:
-        source = source(hostname, ipaddress)
+        source = source(host_config, ipaddress)
         assert source.source_type is SourceType.HOST
 
         host_sections = _collect_host_sections(
@@ -219,8 +222,8 @@ class TestMakeHostSectionsHosts:
         host_config,
     ):
         sources = [
-            ProgramSource.ds(hostname, ipaddress, template=""),
-            TCPSource(hostname, ipaddress),
+            ProgramSource.ds(host_config, ipaddress, template=""),
+            TCPSource(host_config, ipaddress),
         ]
 
         host_sections = _collect_host_sections(
@@ -250,13 +253,19 @@ class TestMakeHostSectionsHosts:
             ["section_content"]
         ]
 
-    def test_multiple_sources_from_different_hosts(
-        self, hostname, ipaddress, config_cache, host_config
-    ):
+    def test_multiple_sources_from_different_hosts(self, hostname, ipaddress, monkeypatch):
+        ts = Scenario()
+        ts.add_host(f"{hostname}0")
+        ts.add_host(f"{hostname}1")
+        ts.add_host(f"{hostname}2")
+        ts.apply(monkeypatch)
+
         sources = [
-            ProgramSource.ds(HostName(f"{hostname}0"), ipaddress, template=""),
-            TCPSource(HostName(f"{hostname}1"), ipaddress),
-            TCPSource(HostName(f"{hostname}2"), ipaddress),
+            ProgramSource.ds(
+                HostConfig.make_host_config(HostName(f"{hostname}0")), ipaddress, template=""
+            ),
+            TCPSource(HostConfig.make_host_config(HostName(f"{hostname}1")), ipaddress),
+            TCPSource(HostConfig.make_host_config(HostName(f"{hostname}2")), ipaddress),
         ]
 
         host_sections = _collect_host_sections(
@@ -282,8 +291,8 @@ class TestMakeHostSectionsHosts:
         }
 
         for source in sources:
-            assert host_sections[HostKey(source.hostname, SourceType.HOST)].sections[
-                SectionName(f"section_name_{source.hostname}")
+            assert host_sections[HostKey(source.host_config.hostname, SourceType.HOST)].sections[
+                SectionName(f"section_name_{source.host_config.hostname}")
             ] == [["section_content"]]
 
 
@@ -313,8 +322,8 @@ class TestMakeHostSectionsClusters:
             lambda self, *args, **kwargs: result.OK(
                 DummyHostSection(
                     sections={
-                        SectionName("section_name_%s" % self.hostname): [
-                            ["section_content_%s" % self.hostname]
+                        SectionName("section_name_%s" % self.host_config.hostname): [
+                            ["section_content_%s" % self.host_config.hostname]
                         ]
                     },
                     cache_info={},

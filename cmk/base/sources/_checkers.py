@@ -15,7 +15,7 @@ from cmk.utils import version
 from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
-from cmk.utils.type_defs import HostAddress, HostName
+from cmk.utils.type_defs import HostAddress
 
 import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers.protocol import FetcherMessage
@@ -70,10 +70,6 @@ class _Builder:
         self._initialize()
 
     @property
-    def hostname(self) -> HostName:
-        return self.host_config.hostname
-
-    @property
     def sources(self) -> Sequence[Source]:
         # Always execute piggyback at the end
         return sorted(
@@ -115,14 +111,14 @@ class _Builder:
             )
 
         if "no-piggyback" not in self.host_config.tags:
-            self._add(PiggybackSource(self.hostname, self.ipaddress))
+            self._add(PiggybackSource(self.host_config, self.ipaddress))
 
     def _initialize_snmp_based(self) -> None:
         if not self.host_config.is_snmp_host:
             return
         self._add(
             SNMPSource.snmp(
-                self.hostname,
+                self.host_config,
                 self.ipaddress,
                 selected_sections=self.selected_sections,
                 on_scan_error=self.on_scan_error,
@@ -144,7 +140,7 @@ class _Builder:
         if protocol == "snmp":
             self._add(
                 SNMPSource.management_board(
-                    self.hostname,
+                    self.host_config,
                     ip_address,
                     selected_sections=self.selected_sections,
                     on_scan_error=self.on_scan_error,
@@ -154,7 +150,7 @@ class _Builder:
         elif protocol == "ipmi":
             self._add(
                 IPMISource(
-                    self.hostname,
+                    self.host_config,
                     ip_address,
                 )
             )
@@ -177,7 +173,7 @@ class _Builder:
         datasource_program = self.host_config.datasource_program
         if datasource_program is not None:
             return DSProgramSource(
-                self.hostname,
+                self.host_config,
                 self.ipaddress,
                 main_data_source=main_data_source,
                 template=datasource_program,
@@ -186,12 +182,12 @@ class _Builder:
         connection_mode = self.host_config.agent_connection_mode()
         if connection_mode == "push-agent":
             return PushAgentSource(
-                self.hostname,
+                self.host_config,
                 self.ipaddress,
             )
         if connection_mode == "pull-agent":
             return TCPSource(
-                self.hostname,
+                self.host_config,
                 self.ipaddress,
                 main_data_source=main_data_source,
             )
@@ -200,7 +196,7 @@ class _Builder:
     def _get_special_agents(self) -> Sequence[Source]:
         return [
             SpecialAgentSource(
-                self.hostname,
+                self.host_config,
                 self.ipaddress,
                 special_agent_id=agentname,
                 params=params,

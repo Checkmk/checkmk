@@ -10,6 +10,7 @@ from tests.testlib.base import Scenario
 from cmk.utils.type_defs import result, SectionName
 
 from cmk.base import config
+from cmk.base.config import HostConfig
 from cmk.base.sources import make_non_cluster_sources
 from cmk.base.sources.piggyback import PiggybackSource
 from cmk.base.sources.programs import DSProgramSource, SpecialAgentSource
@@ -97,7 +98,7 @@ def test_host_config_creates_passing_source_sources(
     ts = make_scenario(hostname, tags)
     ts.apply(monkeypatch)
 
-    host_config = config.HostConfig.make_host_config(hostname)
+    host_config = HostConfig.make_host_config(hostname)
     ipaddress = "127.0.0.1"
 
     assert [type(c) for c in make_non_cluster_sources(host_config, ipaddress)] == sources
@@ -122,7 +123,7 @@ def test_data_source_preselected(  # type:ignore[no-untyped-def]
     make_scenario("hostname", {}).apply(monkeypatch)
     monkeypatch.setattr(config, "special_agent_info", {None: lambda *a: []})
     source_inst = source(
-        "hostname",
+        HostConfig.make_host_config("hostname"),
         "127.0.0.1",
         **kwargs,
     )

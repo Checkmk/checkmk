@@ -7,7 +7,7 @@
 import socket
 from typing import Optional
 
-from cmk.utils.type_defs import HostAddress, HostName, SourceType
+from cmk.utils.type_defs import HostAddress, SourceType
 
 from cmk.core_helpers import FetcherType, TCPFetcher
 from cmk.core_helpers.agent import AgentFileCache, AgentFileCacheFactory, AgentSummarizerDefault
@@ -27,27 +27,26 @@ class TCPSource(AgentSource):
 
     def __init__(
         self,
-        hostname: HostName,
+        host_config: HostConfig,
         ipaddress: Optional[HostAddress],
         *,
         main_data_source: bool = False,
     ) -> None:
         super().__init__(
-            hostname,
+            host_config,
             ipaddress,
             source_type=SourceType.HOST,
             fetcher_type=FetcherType.TCP,
-            description=TCPSource._make_description(hostname, ipaddress),
+            description=TCPSource._make_description(ipaddress, host_config.agent_port),
             id_="agent",
             main_data_source=main_data_source,
         )
         self.port: Optional[int] = None
         self.timeout: Optional[float] = None
-        self.host_name = hostname
 
     def _make_file_cache(self) -> AgentFileCache:
         return AgentFileCacheFactory(
-            self.hostname,
+            self.host_config.hostname,
             base_path=self.file_cache_base_path,
             simulation=config.simulation_mode,
             use_only_cache=self.use_only_cache,
@@ -58,7 +57,7 @@ class TCPSource(AgentSource):
         return TCPFetcher(
             family=socket.AF_INET6 if self.host_config.is_ipv6_primary else socket.AF_INET,
             address=(self.ipaddress, self.port or self.host_config.agent_port),
-            host_name=self.host_name,
+            host_name=self.host_config.hostname,
             timeout=self.timeout or self.host_config.tcp_connect_timeout,
             encryption_settings=self.host_config.agent_encryption,
         )
@@ -67,8 +66,5 @@ class TCPSource(AgentSource):
         return AgentSummarizerDefault(self.exit_spec)
 
     @staticmethod
-    def _make_description(hostname: HostName, ipaddress: Optional[HostAddress]) -> str:
-        return "TCP: %s:%d" % (
-            ipaddress,
-            HostConfig.make_host_config(hostname).agent_port,
-        )
+    def _make_description(ipaddress: Optional[HostAddress], agent_port: int) -> str:
+        return "TCP: %s:%d" % (ipaddress, agent_port)

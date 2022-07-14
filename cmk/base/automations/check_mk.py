@@ -1350,7 +1350,7 @@ class AutomationDiagHost(Automation):
         for source in sources.make_non_cluster_sources(host_config, ipaddress):
             source.file_cache_max_age = config.max_cachefile_age()
             if isinstance(source, sources.programs.DSProgramSource) and cmd:
-                source = source.ds(source.hostname, ipaddress, template=cmd)
+                source = source.ds(host_config, ipaddress, template=cmd)
             elif isinstance(source, sources.tcp.TCPSource):
                 source.port = agent_port
                 if tcp_connect_timeout is not None:

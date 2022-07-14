@@ -13,6 +13,7 @@ from cmk.utils.type_defs import HostAddress, HostName, result
 from cmk.core_helpers.agent import AgentRawDataSection
 from cmk.core_helpers.host_sections import HostSections
 
+from cmk.base.config import HostConfig
 from cmk.base.sources.piggyback import PiggybackSource
 
 
@@ -23,8 +24,8 @@ def test_attribute_defaults(monkeypatch: MonkeyPatch, ipaddress: HostAddress) ->
     ts.add_host(hostname)
     ts.apply(monkeypatch)
 
-    source = PiggybackSource(hostname, ipaddress)
-    assert source.hostname == hostname
+    source = PiggybackSource(HostConfig.make_host_config(hostname), ipaddress)
+    assert source.host_config.hostname == hostname
     assert source.ipaddress == ipaddress
     assert source.description.startswith("Process piggyback data from")
     assert not source.summarize(result.OK(HostSections[AgentRawDataSection]()))

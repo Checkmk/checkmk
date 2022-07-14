@@ -19,6 +19,7 @@ from cmk.core_helpers.type_defs import NO_SELECTION
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
+from cmk.base.config import HostConfig
 from cmk.base.sources.agent import AgentRawDataSection
 from cmk.base.sources.snmp import SNMPSource
 
@@ -43,7 +44,7 @@ def scenario_fixture(hostname, monkeypatch):
 @pytest.fixture(name="source")
 def source_fixture(scenario, hostname, ipaddress):
     return SNMPSource.snmp(
-        hostname,
+        HostConfig.make_host_config(hostname),
         ipaddress,
         selected_sections=NO_SELECTION,
         on_scan_error=OnError.RAISE,
@@ -75,7 +76,7 @@ def test_snmp_ipaddress_from_mgmt_board_unresolvable(  # type:ignore[no-untyped-
 def test_attribute_defaults(  # type:ignore[no-untyped-def]
     source, hostname, ipaddress, monkeypatch
 ) -> None:
-    assert source.hostname == hostname
+    assert source.host_config.hostname == hostname
     assert source.ipaddress == ipaddress
     assert source.id == "snmp"
     assert source._on_snmp_scan_error == OnError.RAISE
@@ -88,7 +89,7 @@ def test_description_with_ipaddress(source, monkeypatch) -> None:  # type:ignore
 
 class TestSNMPSource_SNMP:
     def test_attribute_defaults(self, monkeypatch) -> None:  # type:ignore[no-untyped-def]
-        hostname = "testhost"
+        hostname = HostName("testhost")
         ipaddress = "1.2.3.4"
 
         ts = Scenario()
@@ -96,7 +97,7 @@ class TestSNMPSource_SNMP:
         ts.apply(monkeypatch)
 
         source = SNMPSource.snmp(
-            HostName(hostname),
+            HostConfig.make_host_config(hostname),
             ipaddress,
             selected_sections=NO_SELECTION,
             on_scan_error=OnError.RAISE,
@@ -109,7 +110,7 @@ class TestSNMPSource_SNMP:
 
 class TestSNMPSource_MGMT:
     def test_attribute_defaults(self, monkeypatch) -> None:  # type:ignore[no-untyped-def]
-        hostname = "testhost"
+        hostname = HostName("testhost")
         ipaddress = "1.2.3.4"
 
         ts = Scenario()
@@ -124,7 +125,7 @@ class TestSNMPSource_MGMT:
         ts.apply(monkeypatch)
 
         source = SNMPSource.management_board(
-            HostName(hostname),
+            HostConfig.make_host_config(hostname),
             ipaddress,
             force_cache_refresh=False,
             selected_sections=NO_SELECTION,
@@ -151,7 +152,7 @@ class TestSNMPSummaryResult:
     @pytest.fixture
     def source(self, hostname: HostName):  # type:ignore[no-untyped-def]
         return SNMPSource(
-            hostname,
+            HostConfig.make_host_config(hostname),
             "1.2.3.4",
             force_cache_refresh=False,
             selected_sections=NO_SELECTION,

@@ -17,7 +17,7 @@ import cmk.utils.misc
 import cmk.utils.paths
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import HostAddress, HostName, result, SourceType
+from cmk.utils.type_defs import HostAddress, result, SourceType
 
 from cmk.snmplib.type_defs import TRawData
 
@@ -28,11 +28,9 @@ from cmk.core_helpers.controller import FetcherType
 from cmk.core_helpers.host_sections import HostSections, TRawDataSection
 from cmk.core_helpers.type_defs import Mode, SectionNameCollection
 
-import cmk.base.config as config
+from cmk.base.config import HostConfig
 
 __all__ = ["Source"]
-
-HostConfig = config.HostConfig
 
 
 class Source(Generic[TRawData, TRawDataSection], abc.ABC):
@@ -47,7 +45,7 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
 
     def __init__(
         self,
-        hostname: HostName,
+        host_config: HostConfig,
         ipaddress: Optional[HostAddress],
         *,
         source_type: SourceType,
@@ -59,7 +57,7 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
         cache_dir: Optional[Path] = None,
         persisted_section_dir: Optional[Path] = None,
     ) -> None:
-        self.hostname: Final = hostname
+        self.host_config: Final = host_config
         self.ipaddress: Final = ipaddress
         self.source_type: Final = source_type
         self.fetcher_type: Final = fetcher_type
@@ -74,9 +72,8 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
 
         self.file_cache_base_path: Final = cache_dir
         self.file_cache_max_age: file_cache.MaxAge = file_cache.MaxAge.none()
-        self.persisted_sections_file_path: Final = persisted_section_dir / self.hostname
+        self.persisted_sections_file_path: Final = persisted_section_dir / self.host_config.hostname
 
-        self.host_config: Final = HostConfig.make_host_config(hostname)
         self._logger: Final = logging.getLogger("cmk.base.data_source.%s" % id_)
 
         self.exit_spec = self.host_config.exit_code_spec(id_)
@@ -84,7 +81,7 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
     def __repr__(self) -> str:
         return "%s(%r, %r, description=%r, id=%r)" % (
             type(self).__name__,
-            self.hostname,
+            self.host_config,
             self.ipaddress,
             self.description,
             self.id,

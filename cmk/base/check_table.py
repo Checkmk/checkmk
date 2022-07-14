@@ -145,11 +145,7 @@ def _get_enforced_services(
             discovered_parameters=None,
             service_labels={},
         )
-        for _checkgroup_name, check_plugin_name, item, descr, params in
-        # Note: We need to reverse the order of the enforced services.
-        # Users assume that earlier rules have precedence over later ones.
-        # Important if there are two rules for a host with the same combination of plugin name and item.
-        reversed(host_config.enforced_services_table)
+        for _checkgroup_name, check_plugin_name, item, descr, params in host_config.enforced_services_table.values()
     ]
 
 

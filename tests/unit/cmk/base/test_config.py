@@ -6,7 +6,7 @@
 import re
 import shutil
 from pathlib import Path
-from typing import Any, Dict, Generator, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Generator, List, Mapping, Optional, Sequence, Tuple, Union
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -27,6 +27,7 @@ from cmk.utils.type_defs import (
     HostName,
     RuleSetName,
     SectionName,
+    ServiceID,
     SourceType,
 )
 
@@ -1196,30 +1197,30 @@ def test_host_config_custom_checks(
 @pytest.mark.parametrize(
     "hostname_str,result",
     [
-        ("testhost1", []),
+        ("testhost1", {}),
         (
             "testhost2",
-            [
-                (
+            {
+                ServiceID(CheckPluginName("checktype1"), "item1"): (
                     "checkgroup",
                     CheckPluginName("checktype1"),
                     "item1",
                     "Unimplemented check checktype1 / item1",
                     TimespecificParameterSet({"param1": 1}, ()),
                 ),
-                (
+                ServiceID(CheckPluginName("checktype2"), "item2"): (
                     "checkgroup",
                     CheckPluginName("checktype2"),
                     "item2",
                     "Unimplemented check checktype2 / item2",
                     TimespecificParameterSet({"param2": 2}, ()),
                 ),
-            ],
+            },
         ),
     ],
 )
 def test_host_config_static_checks(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: List[Tuple]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: Mapping[ServiceID, tuple]
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()

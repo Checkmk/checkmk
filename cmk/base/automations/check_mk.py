@@ -727,7 +727,7 @@ class AutomationAnalyseServices(Automation):
             item,
             descr,
             params,
-        ) in host_config.enforced_services_table:
+        ) in host_config.enforced_services_table.values():
             if descr == servicedesc:
                 return {
                     "origin": "static",  # TODO: (how) can we change this to "enforced"?

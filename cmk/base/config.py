@@ -92,6 +92,7 @@ from cmk.utils.type_defs import (
     Seconds,
     SectionName,
     ServicegroupName,
+    ServiceID,
     ServiceName,
     SourceType,
     TaggroupIDToTagID,
@@ -3030,16 +3031,30 @@ class HostConfig:
     @property
     def enforced_services_table(
         self,
-    ) -> Sequence[Tuple[RulesetName, CheckPluginName, Item, ServiceName, TimespecificParameterSet]]:
-        return [
-            (RulesetName(checkgroup_name), check_plugin_name, item, descr, params)
+    ) -> Mapping[
+        ServiceID, tuple[RulesetName, CheckPluginName, Item, ServiceName, TimespecificParameterSet]
+    ]:
+        """Return a table of enforced services
+
+        Note: We need to reverse the order of the enforced services.
+        Users assume that earlier rules have precedence over later ones.
+        Important if there are two rules for a host with the same plugin name and item.
+        """
+        return {
+            ServiceID(check_plugin_name, item): (
+                RulesetName(checkgroup_name),
+                check_plugin_name,
+                item,
+                descr,
+                params,
+            )
             for checkgroup_name, ruleset in static_checks.items()
             for check_plugin_name, item, params in (
                 self._sanitize_enforced_entry(*entry)
-                for entry in self._config_cache.host_extra_conf(self.hostname, ruleset)
+                for entry in reversed(self._config_cache.host_extra_conf(self.hostname, ruleset))
             )
             if (descr := service_description(self.hostname, check_plugin_name, item))
-        ]
+        }
 
     @staticmethod
     def _sanitize_enforced_entry(

@@ -129,37 +129,28 @@ class _ServiceFilter:
 def _get_enforced_services(
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
-) -> Iterator[ConfiguredService]:
-    entries = []
-    for (
-        _checkgroup_name,
-        check_plugin_name,
-        item,
-        descr,
-        params,
-    ) in host_config.enforced_services_table:
-
-        entries.append(
-            ConfiguredService(
-                check_plugin_name=check_plugin_name,
-                item=item,
-                description=descr,
-                parameters=config.compute_check_parameters(
-                    config_cache.host_of_clustered_service(host_config.hostname, descr),
-                    check_plugin_name,
-                    item,
-                    {},
-                    configured_parameters=TimespecificParameters((params,)),
-                ),
-                discovered_parameters=None,
-                service_labels={},
-            )
+) -> Iterable[ConfiguredService]:
+    return [
+        ConfiguredService(
+            check_plugin_name=check_plugin_name,
+            item=item,
+            description=descr,
+            parameters=config.compute_check_parameters(
+                config_cache.host_of_clustered_service(host_config.hostname, descr),
+                check_plugin_name,
+                item,
+                {},
+                configured_parameters=TimespecificParameters((params,)),
+            ),
+            discovered_parameters=None,
+            service_labels={},
         )
-
-    # Note: We need to reverse the order of the enforced services.
-    # Users assume that earlier rules have precedence over later ones.
-    # Important if there are two rules for a host with the same combination of plugin name and item.
-    return reversed(entries)
+        for _checkgroup_name, check_plugin_name, item, descr, params in
+        # Note: We need to reverse the order of the enforced services.
+        # Users assume that earlier rules have precedence over later ones.
+        # Important if there are two rules for a host with the same combination of plugin name and item.
+        reversed(host_config.enforced_services_table)
+    ]
 
 
 def _get_clustered_services(

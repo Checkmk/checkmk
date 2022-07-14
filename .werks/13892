@@ -1,0 +1,17 @@
+Title: Improved performance of event console time range filters
+Class: feature
+Compatible: compat
+Component: ec
+Date: 1657790011
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p7
+
+When a time range filter for the event console history table was used with
+an equality operator, an important performance optimization was not
+triggered.  Luckily enough, the Checkmk GUI never creates such queries, so
+this change only affects setups where queries are generated externally (via
+e.g. scripts).
+

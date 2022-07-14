@@ -12,6 +12,7 @@ from typing import Dict, List, NamedTuple, Optional, Tuple
 import cmk.utils.paths
 
 from cmk.gui.ctx_stack import request_local_attr
+from cmk.gui.hooks import request_memoize
 from cmk.gui.utils.speaklater import LazyString
 
 # .
@@ -42,6 +43,7 @@ def _translation() -> Optional[Translation]:
     return None
 
 
+@request_memoize()
 def _(message: str, /) -> str:
     """
     Positional-only argument to simplify additional linting of localized strings.
@@ -133,18 +135,19 @@ def get_languages() -> List[Tuple[str, str]]:
     return sorted(list(languages), key=lambda x: x[1])
 
 
-def unlocalize() -> None:
+def _unlocalize() -> None:
     request_local_attr().translation = None
 
 
 def localize(lang: Optional[str]) -> None:
+    _.cache_clear()  # type:ignore[attr-defined]
     if lang is None:
-        unlocalize()
+        _unlocalize()
         return
 
     gettext_translation = _init_language(lang)
     if not gettext_translation:
-        unlocalize()
+        _unlocalize()
         return
 
     request_local_attr().translation = Translation(translation=gettext_translation, name=lang)

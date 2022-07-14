@@ -12,6 +12,7 @@ endpoints monitored by Checkmk must be provided.
 """
 
 # mypy: warn_return_any
+# mypy: disallow_untyped_defs
 
 from __future__ import annotations
 
@@ -382,7 +383,7 @@ class Pod:
         self._controllers: List[Union[Deployment, DaemonSet, StatefulSet]] = []
 
     @property
-    def phase(self):
+    def phase(self) -> api.Phase:
         return self.status.phase
 
     @property

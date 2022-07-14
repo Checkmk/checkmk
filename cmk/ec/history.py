@@ -533,7 +533,7 @@ def _greatest_lower_bound_for_filters(filters: Iterable[tuple[str, float]]) -> O
 
 
 def _greatest_lower_bound_for_filter(operator: str, value: float) -> Optional[float]:
-    if operator in ("==", ">="):
+    if operator in ("=", ">="):
         return value
     if operator == ">":
         return value + 1
@@ -550,7 +550,7 @@ def _least_upper_bound_for_filters(filters: Iterable[tuple[str, float]]) -> Opti
 
 
 def _least_upper_bound_for_filter(operator: str, value: float) -> Optional[float]:
-    if operator in ("==", "<="):
+    if operator in ("=", "<="):
         return value
     if operator == "<":
         return value - 1

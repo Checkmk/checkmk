@@ -8,6 +8,7 @@
 
 import json
 import os
+import re
 import subprocess
 from typing import List
 
@@ -54,30 +55,36 @@ def _get_import_names_from_pipfile() -> List[str]:
     return import_names
 
 
-def _get_python_version_from_pipfile() -> VersionInfo:
-    return VersionInfo.parse(_load_pipfile_data()["_meta"]["requires"]["python_version"])
+def _get_python_version_from_defines_make() -> VersionInfo:
+    with open(repo_path() + "/defines.make") as defines:
+        python_version = (
+            [line for line in defines.readlines() if re.match(r"^PYTHON_VERSION .*:=", line)][0]
+            .split(":=")[1]
+            .strip()
+        )
+    return VersionInfo.parse(python_version)
 
 
 def test_01_python_interpreter_exists(site: Site) -> None:
-    assert os.path.exists(site.root + f"/bin/python{_get_python_version_from_pipfile().major}")
+    assert os.path.exists(site.root + f"/bin/python{_get_python_version_from_defines_make().major}")
 
 
 def test_02_python_interpreter_path(site: Site) -> None:
-    major = _get_python_version_from_pipfile().major
+    major = _get_python_version_from_defines_make().major
     p = site.execute(["which", f"python{major}"], stdout=subprocess.PIPE)
     path = p.stdout.read().strip() if p.stdout else "<NO STDOUT>"
     assert path == f"/omd/sites/{site.id}/bin/python{major}"
 
 
 def test_03_python_interpreter_version(site: Site) -> None:
-    python_version = _get_python_version_from_pipfile()
+    python_version = _get_python_version_from_defines_make()
     p = site.execute([f"python{python_version.major}", "-V"], stdout=subprocess.PIPE)
     version = p.stdout.read() if p.stdout else "<NO STDOUT>"
     assert version.startswith(f"Python {str(python_version)}")
 
 
 def test_03_python_path(site: Site) -> None:
-    python_version = _get_python_version_from_pipfile()
+    python_version = _get_python_version_from_defines_make()
     p = site.execute(
         [f"python{python_version.major}", "-c", "import sys,json; json.dump(sys.path, sys.stdout)"],
         stdout=subprocess.PIPE,

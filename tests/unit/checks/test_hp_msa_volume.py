@@ -139,11 +139,9 @@ def test_df_check() -> None:
 
 
 def test_io_discovery_yields_summary() -> None:
-    parsed = {"Foo": {"durable-id": "Bar"}}
-    expected_yield = ("SUMMARY", "diskstat_default_levels")
-    check = Check("hp_msa_volume.io")
-    for item in check.run_discovery(parsed):
-        assert item == expected_yield
+    assert list(Check("hp_msa_volume.io").run_discovery({"Foo": {"durable-id": "Bar"}})) == [
+        ("SUMMARY", {}),
+    ]
 
 
 def test_io_check() -> None:

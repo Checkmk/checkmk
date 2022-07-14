@@ -4,39 +4,46 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from typing import Any, Mapping
+
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.utils import netapp_api
 
 # consideration of health status and port speed availability status quo
 discovery_netapp_api_ports_ignored = []
 
 
-def parse_netapp_ports(info):
-    def port_name(name, values):
-        try:
-            return "%s port %s" % (values["port-type"].capitalize(), name)
-        except KeyError:
-            return name
-
-    return netapp_api_parse_lines(info, item_func=port_name)
+def port_name(name: str, values: Mapping[str, str]) -> str:
+    try:
+        return "%s port %s" % (values["port-type"].capitalize(), name)
+    except KeyError:
+        return name
 
 
-def _identify_ignored_port_types(discovery_ignored):
-    return host_extra_conf_merged(host_name(), discovery_ignored).get("ignored_ports", ())
+def parse_netapp_ports(string_table: StringTable) -> netapp_api.SectionSingleInstance:
+    return netapp_api.parse_netapp_api_single_instance(
+        string_table, custom_keys=None, item_func=port_name
+    )
 
 
-def discovery_netapp_api_port(parsed):
-    ignored_ports = _identify_ignored_port_types(discovery_netapp_api_ports_ignored)
-    for item, values in parsed.items():
+def discovery_netapp_api_port(section: netapp_api.SectionSingleInstance):
+    params = host_extra_conf_merged(host_name(), discovery_netapp_api_ports_ignored)
+    ignored_ports = params.get("ignored_ports", ())
+    for item, values in section.items():
         if values.get("port-type") in ignored_ports:
             continue
         if "health-status" in values:
             yield item, {}
 
 
-@get_parsed_item_data
-def check_netapp_api_port(item, params, data):
+def check_netapp_api_port(
+    item: str,
+    params: Mapping[str, Any],
+    section: netapp_api.SectionSingleInstance,
+):
+    if (data := section.get(item)) is None:
+        return
+
     health_state = data.get("health-status", "unknown")
     status = {"healthy": 0, "unknown": 3}.get(health_state, 2)
     yield status, "Health status: %s, Operational speed: %s" % (

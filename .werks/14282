@@ -1,0 +1,13 @@
+Title: Master control: Fix rendering errors of dead sites
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1657919812
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p7
+
+Rendering the master control snapin could fail with an exception like
+"TypeError: Unsupported type <class 'livestatus.MKLivestatusSocketError'>" in
+case a site was not reachable.

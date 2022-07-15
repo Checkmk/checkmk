@@ -52,7 +52,7 @@ if cmk_version.is_managed_edition():
 
 
 def _clear_group_information_request_cache() -> None:
-    load_group_information.cache_clear()
+    load_group_information.cache_clear()  # type: ignore[attr-defined]
 
 
 def add_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) -> None:

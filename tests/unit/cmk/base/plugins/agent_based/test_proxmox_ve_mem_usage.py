@@ -38,7 +38,9 @@ MEM_DATA = {"mem": 1024**3, "max_mem": 2 * 1024**3}
         ),
     ],
 )
-def test_check_proxmox_ve_mem_usage(params, section, expected_results) -> None:
+def test_check_proxmox_ve_mem_usage(  # type:ignore[no-untyped-def]
+    params, section, expected_results
+) -> None:
     results = tuple(check_proxmox_ve_mem_usage(params, section))
     print("\n" + "\n".join(map(str, results)))
     assert results == expected_results

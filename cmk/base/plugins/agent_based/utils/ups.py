@@ -187,7 +187,7 @@ def discover_ups_battery_state(
     yield Service()
 
 
-def check_ups_battery_state(
+def check_ups_battery_state(  # type:ignore[no-untyped-def]
     section_ups_battery_warnings: Optional[Battery],
     section_ups_on_battery: Optional[Battery],
     section_ups_seconds_on_battery: Optional[Battery],

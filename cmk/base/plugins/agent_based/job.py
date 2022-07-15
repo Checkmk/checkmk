@@ -165,7 +165,9 @@ _METRIC_SPECS: Mapping[str, Tuple[str, Callable]] = {
 }
 
 
-def _check_job_levels(job: Job, metric: str, notice_only: bool = True):
+def _check_job_levels(  # type:ignore[no-untyped-def]
+    job: Job, metric: str, notice_only: bool = True
+):
     label, render_func = _METRIC_SPECS[metric]
     yield from check_levels(
         job["metrics"][metric],

@@ -225,7 +225,7 @@ LXC_CONTAINER_CPU_CGROUPV2_10 = [
         ],
     ],
 )
-def test_container_cpu_cgroupv1(
+def test_container_cpu_cgroupv1(  # type:ignore[no-untyped-def]
     section_name: str,
     plugin_name: str,
     string_table_0,

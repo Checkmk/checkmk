@@ -279,7 +279,7 @@ from cmk.base.plugins.agent_based.utils import ipmi
         ),
     ],
 )
-def test_check_ipmi_detailed(
+def test_check_ipmi_detailed(  # type:ignore[no-untyped-def]
     item: str,
     params: Mapping[str, Any],
     sensor: ipmi.Sensor,
@@ -485,7 +485,9 @@ SECTION = {
         ),
     ],
 )
-def test_check_ipmi_summarized(params, status_txt_mapping, exp_result) -> None:
+def test_check_ipmi_summarized(  # type:ignore[no-untyped-def]
+    params, status_txt_mapping, exp_result
+) -> None:
     assert (
         list(
             ipmi.check_ipmi_summarized(

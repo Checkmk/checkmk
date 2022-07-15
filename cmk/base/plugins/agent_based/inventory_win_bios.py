@@ -46,7 +46,7 @@ register.agent_section(
 )
 
 
-def inventory_win_bios(section: Mapping[str, Union[str, int]]):
+def inventory_win_bios(section: Mapping[str, Union[str, int]]):  # type:ignore[no-untyped-def]
 
     attr = {k: section[k] for k in ("date", "model", "vendor", "version") if k in section}
     with suppress(KeyError):

@@ -8,7 +8,9 @@ from cmk.utils.type_defs import CheckPluginName
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 
 
-def test_make_sure_bluecat_threads_can_handle_new_params_format(fix_register) -> None:
+def test_make_sure_bluecat_threads_can_handle_new_params_format(  # type:ignore[no-untyped-def]
+    fix_register,
+) -> None:
     plugin = fix_register.check_plugins[CheckPluginName("bluecat_threads")]
     assert plugin
     assert list(

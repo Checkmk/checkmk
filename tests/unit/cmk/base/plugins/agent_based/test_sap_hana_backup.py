@@ -65,7 +65,7 @@ SECTION = {
         )
     ],
 )
-def test_parse(string_table_row, expected_parsed_data) -> None:
+def test_parse(string_table_row, expected_parsed_data) -> None:  # type:ignore[no-untyped-def]
     assert sap_hana_backup.parse_sap_hana_backup(string_table_row) == expected_parsed_data
 
 

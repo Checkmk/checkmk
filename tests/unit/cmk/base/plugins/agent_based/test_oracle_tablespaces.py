@@ -534,7 +534,7 @@ def test_discovery() -> None:
         ),
     ],
 )
-def test_check(item, params, expected) -> None:
+def test_check(item, params, expected) -> None:  # type:ignore[no-untyped-def]
     assert expected == list(
         oracle_tablespaces.check_oracle_tablespaces(
             item,

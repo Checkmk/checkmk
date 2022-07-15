@@ -97,7 +97,9 @@ class BIAggregation:
             self.groups,
         )
 
-    def _verify_all_branches_start_with_rule(self, branches) -> List[BICompiledRule]:
+    def _verify_all_branches_start_with_rule(  # type:ignore[no-untyped-def]
+        self, branches
+    ) -> List[BICompiledRule]:
         new_branches: List[BICompiledRule] = [x for x in branches if isinstance(x, BICompiledRule)]
         assert len(branches) == len(new_branches)
         return new_branches

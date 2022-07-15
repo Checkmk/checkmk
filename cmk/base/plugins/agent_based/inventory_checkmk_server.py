@@ -16,7 +16,9 @@ from .agent_based_api.v1 import Attributes, register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult
 
 
-def _service_status(status: Mapping[str, Sequence[str]], service_name: str):
+def _service_status(  # type:ignore[no-untyped-def]
+    status: Mapping[str, Sequence[str]], service_name: str
+):
     """
     >>> status={'stopped':['cmd', 'dcd'], 'existing':['crontab','cmd']}
     >>> _service_status(status, 'cmd')

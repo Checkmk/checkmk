@@ -78,7 +78,9 @@ SECTION_ERROR = {
         ),
     ],
 )
-def test_sap_hana_status_parse(string_table_row, expected_parsed_data) -> None:
+def test_sap_hana_status_parse(  # type:ignore[no-untyped-def]
+    string_table_row, expected_parsed_data
+) -> None:
     assert sap_hana_status.parse_sap_hana_status(string_table_row) == expected_parsed_data
 
 
@@ -116,7 +118,7 @@ def test_sap_hana_status_discovery() -> None:
         ),
     ],
 )
-def test_sap_hana_status_check(check_type, results, section) -> None:
+def test_sap_hana_status_check(check_type, results, section) -> None:  # type:ignore[no-untyped-def]
 
     yielded_results = list(
         sap_hana_status.check_sap_hana_status("%s %s" % (check_type, ITEM), section)
@@ -125,7 +127,7 @@ def test_sap_hana_status_check(check_type, results, section) -> None:
 
 
 @pytest.mark.parametrize("section, item", [({"Status H62 10": {}}, "Status H62 10")])
-def test_sap_hana_status_check_stale(section, item) -> None:
+def test_sap_hana_status_check_stale(section, item) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises(IgnoreResultsError):
         list(sap_hana_status.check_sap_hana_status(item, section))
 

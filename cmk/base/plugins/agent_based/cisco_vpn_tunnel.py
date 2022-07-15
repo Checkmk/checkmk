@@ -102,7 +102,7 @@ class VPNTunnel:
 Section = Mapping[str, VPNTunnel]
 
 
-def _parse_phase_2(table_phase_2) -> Mapping[str, Phase]:
+def _parse_phase_2(table_phase_2) -> Mapping[str, Phase]:  # type:ignore[no-untyped-def]
     phase_2_data: Dict[str, Phase] = {}
     for index, state, phase_2_in, phase_2_out in table_phase_2:
         if state == "2":

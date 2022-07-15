@@ -469,7 +469,7 @@ from cmk.base.plugins.agent_based.utils.aws import (
         ),
     ],
 )
-def test_parse_aws(string_table, expected_result) -> None:
+def test_parse_aws(string_table, expected_result) -> None:  # type:ignore[no-untyped-def]
     assert parse_aws(string_table) == expected_result
 
 

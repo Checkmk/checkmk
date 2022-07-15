@@ -40,6 +40,6 @@ pytestmark = pytest.mark.checks
         )
     ],
 )
-def test_get_filesystem_levels(info, expected_result) -> None:
+def test_get_filesystem_levels(info, expected_result) -> None:  # type:ignore[no-untyped-def]
     result = parse_netapp_api_multiple_instances(info)
     assert result == expected_result

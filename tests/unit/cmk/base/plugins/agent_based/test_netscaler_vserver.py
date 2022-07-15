@@ -36,7 +36,9 @@ def clustered_vservers_fixture():
     ]
 
 
-def test_check_netscaler_vservers_clustered_best(clustered_vservers) -> None:
+def test_check_netscaler_vservers_clustered_best(  # type:ignore[no-untyped-def]
+    clustered_vservers,
+) -> None:
     assert list(
         _check_netscaler_vservers(
             {
@@ -68,7 +70,9 @@ def test_check_netscaler_vservers_clustered_best(clustered_vservers) -> None:
     ]
 
 
-def test_check_netscaler_vservers_clustered_worst(clustered_vservers) -> None:
+def test_check_netscaler_vservers_clustered_worst(  # type:ignore[no-untyped-def]
+    clustered_vservers,
+) -> None:
     clustered_vservers[0]["service_state"] = (
         1,
         "transition to out of service",

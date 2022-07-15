@@ -22,7 +22,9 @@ from cmk.base.plugins.agent_based.utils.printer import check_printer_pages_types
         ([[["585"]]], {"pages_total": 585}),
     ],
 )
-def test_parse_printer_pages(string_table, expected_parsed_data) -> None:
+def test_parse_printer_pages(  # type:ignore[no-untyped-def]
+    string_table, expected_parsed_data
+) -> None:
     assert parse_printer_pages(string_table) == expected_parsed_data
 
 
@@ -36,7 +38,9 @@ def test_parse_printer_pages(string_table, expected_parsed_data) -> None:
         ),
     ],
 )
-def test_parse_printer_pages_canon(string_table, expected_parsed_data) -> None:
+def test_parse_printer_pages_canon(  # type:ignore[no-untyped-def]
+    string_table, expected_parsed_data
+) -> None:
     assert parse_printer_pages_canon(string_table) == expected_parsed_data
 
 
@@ -68,7 +72,9 @@ def test_parse_printer_pages_canon(string_table, expected_parsed_data) -> None:
         ),
     ],
 )
-def test_parse_printer_pages_ricoh(string_table, expected_parsed_data) -> None:
+def test_parse_printer_pages_ricoh(  # type:ignore[no-untyped-def]
+    string_table, expected_parsed_data
+) -> None:
     assert parse_printer_pages_ricoh(string_table) == expected_parsed_data
 
 
@@ -88,7 +94,9 @@ def test_parse_printer_pages_ricoh(string_table, expected_parsed_data) -> None:
         ),
     ],
 )
-def test_check_printer_pages_types(section, expected_results) -> None:
+def test_check_printer_pages_types(  # type:ignore[no-untyped-def]
+    section, expected_results
+) -> None:
     assert list(check_printer_pages_types(section)) == expected_results
 
 

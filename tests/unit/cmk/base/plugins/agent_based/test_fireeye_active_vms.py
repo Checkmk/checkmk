@@ -36,29 +36,37 @@ def _get_section() -> StringTable:
     return [["42"]]
 
 
-def test_discover_nothing(discover_fireeye_active_vms) -> None:
+def test_discover_nothing(discover_fireeye_active_vms) -> None:  # type:ignore[no-untyped-def]
     assert not list(discover_fireeye_active_vms([]))
 
 
-def test_discover_somehting(discover_fireeye_active_vms, section: StringTable) -> None:
+def test_discover_somehting(  # type:ignore[no-untyped-def]
+    discover_fireeye_active_vms, section: StringTable
+) -> None:
     assert list(discover_fireeye_active_vms(section)) == [Service()]
 
 
-def test_check_ok(check_fireeye_active_vms, section: StringTable) -> None:
+def test_check_ok(  # type:ignore[no-untyped-def]
+    check_fireeye_active_vms, section: StringTable
+) -> None:
     assert list(check_fireeye_active_vms({"vms": (50, 100)}, section)) == [
         Result(state=State.OK, summary="Active VMs: 42"),
         Metric("active_vms", 42.0, levels=(50.0, 100.0)),
     ]
 
 
-def test_check_warn(check_fireeye_active_vms, section: StringTable) -> None:
+def test_check_warn(  # type:ignore[no-untyped-def]
+    check_fireeye_active_vms, section: StringTable
+) -> None:
     assert list(check_fireeye_active_vms({"vms": (23, 50)}, section)) == [
         Result(state=State.WARN, summary="Active VMs: 42 (warn/crit at 23.0/50.0)"),
         Metric("active_vms", 42.0, levels=(23.0, 50.0)),
     ]
 
 
-def test_check_crit(check_fireeye_active_vms, section: StringTable) -> None:
+def test_check_crit(  # type:ignore[no-untyped-def]
+    check_fireeye_active_vms, section: StringTable
+) -> None:
     assert list(check_fireeye_active_vms({"vms": (23, 36)}, section)) == [
         Result(state=State.CRIT, summary="Active VMs: 42 (warn/crit at 23.0/36.0)"),
         Metric("active_vms", 42.0, levels=(23.0, 36.0)),

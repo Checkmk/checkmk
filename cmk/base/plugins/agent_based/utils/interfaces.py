@@ -1411,7 +1411,7 @@ def _group_members(
     )
 
 
-def _output_bandwidth_rates(  # pylint: disable=too-many-branches
+def _output_bandwidth_rates(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
     rates: Rates,
     speed_b_in: float,
     speed_b_out: float,

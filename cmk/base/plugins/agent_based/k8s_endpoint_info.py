@@ -74,7 +74,7 @@ class SubsetsSchema(Schema):
     subsets = fields.List(fields.Nested(SubsetSchema))
 
     @post_load
-    def make_object(self, data, **kwargs) -> Sequence[k8s.Subset]:
+    def make_object(self, data, **kwargs) -> Sequence[k8s.Subset]:  # type:ignore[no-untyped-def]
         return data["subsets"]
 
 

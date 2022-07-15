@@ -17,7 +17,7 @@ class CheckResults(NamedTuple):
 ParsedSection = Dict[str, Dict]
 
 
-def parse_sap_hana(info: StringTable):
+def parse_sap_hana(info: StringTable):  # type:ignore[no-untyped-def]
     parsed: Dict[str, List[Any]] = {}
     instance = None
     for line in info:

@@ -20,7 +20,7 @@ from cmk.base.plugins.agent_based.utils.hitachi_hnas import (
         )
     ],
 )
-def test_parse_physical_volumes(volume_data, expected) -> None:
+def test_parse_physical_volumes(volume_data, expected) -> None:  # type:ignore[no-untyped-def]
     assert parse_physical_volumes(volume_data) == expected
 
 
@@ -37,5 +37,5 @@ def test_parse_physical_volumes(volume_data, expected) -> None:
         )
     ],
 )
-def test_parse_virtual_volumes(volume_data, expected) -> None:
+def test_parse_virtual_volumes(volume_data, expected) -> None:  # type:ignore[no-untyped-def]
     assert parse_virtual_volumes(*volume_data) == expected

@@ -22,7 +22,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Stat
         ),
     ],
 )
-def test_parse_pulse_secure_users(string_table, expected_parsed_data) -> None:
+def test_parse_pulse_secure_users(  # type:ignore[no-untyped-def]
+    string_table, expected_parsed_data
+) -> None:
     assert pulse_secure_users.parse_pulse_secure_users(string_table) == expected_parsed_data
 
 

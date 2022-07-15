@@ -26,7 +26,7 @@ STRING_TABLE = [
 ITEM = "WEBIO-094849 Input 0"
 
 
-def _parse_mandatory(string_table) -> Section:
+def _parse_mandatory(string_table) -> Section:  # type:ignore[no-untyped-def]
     section = parse_wut_webio(string_table)
     assert section
     return section
@@ -52,5 +52,5 @@ def test_discovery() -> None:
         ),
     ],
 )
-def test_check(params, expected) -> None:
+def test_check(params, expected) -> None:  # type:ignore[no-untyped-def]
     assert list(check_wut_webio(ITEM, params, _parse_mandatory(STRING_TABLE))) == expected

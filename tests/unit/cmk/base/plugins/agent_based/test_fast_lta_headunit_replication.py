@@ -29,7 +29,7 @@ def _get_check_function(plugin):
 
 
 @pytest.mark.parametrize("info, expected", [([[["60", "1", "1"]]], [Service()])])
-def test_discovery_fast_lta_headunit_replication(
+def test_discovery_fast_lta_headunit_replication(  # type:ignore[no-untyped-def]
     discover_fast_lta_headunit_replication, info, expected
 ) -> None:
     assert list(discover_fast_lta_headunit_replication(info)) == expected
@@ -71,7 +71,7 @@ def test_discovery_fast_lta_headunit_replication(
         ),
     ],
 )
-def test_check_fast_lta_headunit_replication(
+def test_check_fast_lta_headunit_replication(  # type:ignore[no-untyped-def]
     check_fast_lta_headunit_replication, info, expected
 ) -> None:
     assert list(check_fast_lta_headunit_replication(None, {}, info)) == expected

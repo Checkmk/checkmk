@@ -55,7 +55,7 @@ MAP_BUILD_STATES = {
 Section = Mapping[str, JenkinsJobInfo]
 
 
-def parse_jenkins_jobs(string_table) -> Section:
+def parse_jenkins_jobs(string_table) -> Section:  # type:ignore[no-untyped-def]
     parsed: Dict[str, JenkinsJobInfo] = {}
 
     for line in string_table:

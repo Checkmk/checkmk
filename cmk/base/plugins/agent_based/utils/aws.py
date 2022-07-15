@@ -108,7 +108,7 @@ def check_aws_limits(
         )
 
 
-def extract_aws_metrics_by_labels(
+def extract_aws_metrics_by_labels(  # type:ignore[no-untyped-def]
     expected_metric_names: Iterable[str],
     section: GenericAWSSection,
     extra_keys: Optional[Iterable[str]] = None,

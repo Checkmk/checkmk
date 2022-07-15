@@ -48,7 +48,9 @@ from cmk.base.plugins.agent_based.utils.fileinfo import Fileinfo, FileinfoItem
         ),
     ],
 )
-def test_sap_hana_fileinfo(fix_register, item, parsed, expected_result) -> None:
+def test_sap_hana_fileinfo(  # type:ignore[no-untyped-def]
+    fix_register, item, parsed, expected_result
+) -> None:
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_fileinfo")]
     result = list(plugin.check_function(item=item, params={}, section=parsed))
 
@@ -64,7 +66,7 @@ def test_sap_hana_fileinfo(fix_register, item, parsed, expected_result) -> None:
         ),
     ],
 )
-def test_sap_hana_fileinfo_stale(fix_register, item, parsed) -> None:
+def test_sap_hana_fileinfo_stale(fix_register, item, parsed) -> None:  # type:ignore[no-untyped-def]
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_fileinfo")]
     with pytest.raises(IgnoreResultsError) as e:
         list(plugin.check_function(item=item, params={}, section=parsed))
@@ -100,7 +102,9 @@ def test_sap_hana_fileinfo_stale(fix_register, item, parsed) -> None:
         ),
     ],
 )
-def test_sap_hana_fileinfo_groups(fix_register, item, parsed, params, expected_result) -> None:
+def test_sap_hana_fileinfo_groups(  # type:ignore[no-untyped-def]
+    fix_register, item, parsed, params, expected_result
+) -> None:
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_fileinfo_groups")]
 
     result = list(plugin.check_function(item=item, params=params, section=parsed))
@@ -116,7 +120,9 @@ def test_sap_hana_fileinfo_groups(fix_register, item, parsed, params, expected_r
         ),
     ],
 )
-def test_sap_hana_fileinfo_groups_stale(fix_register, item, parsed) -> None:
+def test_sap_hana_fileinfo_groups_stale(  # type:ignore[no-untyped-def]
+    fix_register, item, parsed
+) -> None:
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_fileinfo_groups")]
     with pytest.raises(IgnoreResultsError) as e:
         list(plugin.check_function(item=item, params={}, section=parsed))

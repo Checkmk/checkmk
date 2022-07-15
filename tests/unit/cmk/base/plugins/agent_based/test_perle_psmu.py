@@ -49,7 +49,7 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventory_perle_psmu(string_table, expected_result) -> None:
+def test_inventory_perle_psmu(string_table, expected_result) -> None:  # type:ignore[no-untyped-def]
     assert sort_inventory_result(
         inventory_perle_psmu(parse_perle_psmu(string_table))
     ) == sort_inventory_result(expected_result)

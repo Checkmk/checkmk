@@ -31,7 +31,7 @@ def discover_bi_aggregation(section: Section) -> DiscoveryResult:
         yield Service(item=aggr_name)
 
 
-def render_bi_infos(infos) -> None | list[str]:
+def render_bi_infos(infos) -> None | list[str]:  # type:ignore[no-untyped-def]
     if not infos:
         return None
 

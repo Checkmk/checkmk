@@ -18,7 +18,7 @@ _MAP_NODE_STATES: Final = {
 Section = Mapping[str, Sequence[Mapping]]
 
 
-def parse_jenkins_nodes(string_table) -> Section:
+def parse_jenkins_nodes(string_table) -> Section:  # type:ignore[no-untyped-def]
     parsed: Dict[str, List[Mapping]] = {}
 
     for line in string_table:

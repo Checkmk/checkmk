@@ -27,7 +27,7 @@ register.agent_section(
 )
 
 
-def inventory_ipmi_firmware(section: Section):
+def inventory_ipmi_firmware(section: Section):  # type:ignore[no-untyped-def]
     yield Attributes(
         path=["hardware", "management_interface"],
         inventory_attributes=section,

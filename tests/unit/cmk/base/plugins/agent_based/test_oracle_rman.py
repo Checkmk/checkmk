@@ -179,7 +179,7 @@ def test_discovery() -> None:
         ),
     ],
 )
-def test_check(item, params, section, results) -> None:
+def test_check(item, params, section, results) -> None:  # type:ignore[no-untyped-def]
     yielded_results = list(oracle_rman.check_oracle_rman(item, params, section))
     assert yielded_results == results
 
@@ -253,5 +253,5 @@ def test_cluster_check() -> None:
         ),
     ],
 )
-def test_parse_oracle_rman(string_table, section) -> None:
+def test_parse_oracle_rman(string_table, section) -> None:  # type:ignore[no-untyped-def]
     assert oracle_rman.parse_oracle_rman(string_table) == section

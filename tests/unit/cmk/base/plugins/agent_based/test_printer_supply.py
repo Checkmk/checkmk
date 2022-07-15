@@ -29,7 +29,7 @@ from cmk.base.plugins.agent_based.printer_supply import (
         ),
     ],
 )
-def test_parse_printer_supply(string_table, expected_result) -> None:
+def test_parse_printer_supply(string_table, expected_result) -> None:  # type:ignore[no-untyped-def]
     assert parse_printer_supply(string_table) == expected_result
 
 
@@ -45,7 +45,7 @@ def test_parse_printer_supply(string_table, expected_result) -> None:
         )
     ],
 )
-def test_inventory_printer_supply(info, expected_result) -> None:
+def test_inventory_printer_supply(info, expected_result) -> None:  # type:ignore[no-untyped-def]
     section = parse_printer_supply(info)
     result = discovery_printer_supply(section)
     assert list(result) == expected_result
@@ -324,7 +324,9 @@ def test_inventory_printer_supply(info, expected_result) -> None:
         ),
     ],
 )
-def test_check_printer_supply(item, params, info, expected_result) -> None:
+def test_check_printer_supply(  # type:ignore[no-untyped-def]
+    item, params, info, expected_result
+) -> None:
     section = parse_printer_supply(info)
     result = check_printer_supply(item, params, section)
     assert list(result) == expected_result

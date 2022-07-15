@@ -64,7 +64,7 @@ def parse_k8s_unavailability(value: Union[str, int], total: int) -> int:
     return math.floor(percentage * total)
 
 
-def discover_k8s_replicas(section) -> DiscoveryResult:
+def discover_k8s_replicas(section) -> DiscoveryResult:  # type:ignore[no-untyped-def]
     # the deployment must either be paused or return numbers for running pods
     if (section["ready_replicas"] is not None and section["replicas"] is not None) or section[
         "paused"
@@ -72,7 +72,7 @@ def discover_k8s_replicas(section) -> DiscoveryResult:
         yield Service()
 
 
-def check_k8s_replicas(section) -> CheckResult:
+def check_k8s_replicas(section) -> CheckResult:  # type:ignore[no-untyped-def]
     ready, total = section["ready_replicas"], section["replicas"]
     paused, strategy = section["paused"], section["strategy_type"]
     value_store = get_value_store()

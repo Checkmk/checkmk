@@ -10,7 +10,7 @@ from cmk.base.plugin_contexts import current_host, current_service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result
 
 
-def test_check_levels_predictive_default_render_func(mocker) -> None:
+def test_check_levels_predictive_default_render_func(mocker) -> None:  # type:ignore[no-untyped-def]
     mocker.patch(
         "cmk.base.check_api._prediction.get_levels", return_value=(None, (2.2, 4.2, None, None))
     )

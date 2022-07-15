@@ -18,7 +18,7 @@ from cmk.base.plugins.agent_based.utils import hp_hh3c
         )
     ],
 )
-def test_hp_device_discover(string_table, expected_result) -> None:
+def test_hp_device_discover(string_table, expected_result) -> None:  # type:ignore[no-untyped-def]
     section = hp_hh3c.parse_hp_hh3c_device(string_table)
     assert list(hp_hh3c.discover_hp_hh3c_device(section)) == expected_result
 
@@ -43,6 +43,8 @@ def test_hp_device_discover(string_table, expected_result) -> None:
         ),
     ],
 )
-def test_hp_device_check(string_table, item, expected_result) -> None:
+def test_hp_device_check(  # type:ignore[no-untyped-def]
+    string_table, item, expected_result
+) -> None:
     section = hp_hh3c.parse_hp_hh3c_device(string_table)
     assert list(hp_hh3c.check_hp_hh3c_device(item, section)) == expected_result

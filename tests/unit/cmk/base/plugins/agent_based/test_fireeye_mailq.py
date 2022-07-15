@@ -33,18 +33,22 @@ def _get_check_function(plugin):
 
 
 @pytest.fixture(scope="module", name="section")
-def _get_section(fix_register) -> Mapping[str, str]:
+def _get_section(fix_register) -> Mapping[str, str]:  # type:ignore[no-untyped-def]
     parse_fireeye_mailq = fix_register.snmp_sections[SectionName("fireeye_mailq")].parse_function
     return parse_fireeye_mailq([[["0", "0", "0", "3", "5"]]])
 
 
-def test_discover_somehting(discover_fireeye_mailq, section: Mapping[str, str]) -> None:
+def test_discover_somehting(  # type:ignore[no-untyped-def]
+    discover_fireeye_mailq, section: Mapping[str, str]
+) -> None:
     assert list(discover_fireeye_mailq(section)) == [
         Service(),
     ]
 
 
-def test_check(check_fireeye_mailq, section: Mapping[str, str]) -> None:
+def test_check(  # type:ignore[no-untyped-def]
+    check_fireeye_mailq, section: Mapping[str, str]
+) -> None:
     params = {
         # deferred not present
         "hold": (1, 5),  # OK case

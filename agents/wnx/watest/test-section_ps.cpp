@@ -34,6 +34,7 @@ const std::vector<std::string_view> g_special_processes{
     {"Secure System"sv},
     {"init"sv},
     {"fish"sv},
+    {"wininit.exe"sv},
     {"bash"sv}};
 
 }  // namespace
@@ -48,7 +49,7 @@ TEST(PsTest, Integration) {
                   out.find("svchost.exe\t-k") != std::string::npos);
         auto all = tools::SplitString(out, "\n");
         for (const auto &in : all) {
-            EXPECT_LE(in.length(), 1512U) << in;  // due to pascom crash handler
+            EXPECT_LE(in.length(), 2048U) << in;  // due to pascom crash handler
             auto by_tab = tools::SplitString(in, "\t");
             EXPECT_TRUE(all.size() > 10);
             SCOPED_TRACE(fmt::format("'{}'", in));
@@ -90,8 +91,6 @@ TEST(PsTest, Integration) {
     }
 }
 
-namespace {
-
 TEST(PsTest, ConvertWmiTimeInvalid) {
     std::string in = "2019052313140";
 
@@ -100,9 +99,22 @@ TEST(PsTest, ConvertWmiTimeInvalid) {
     EXPECT_EQ(ConvertWmiTimeToHumanTime(""), 0);
 }
 
+namespace {
+
 auto ToTm(const std::string &in) {
     auto check_time = ConvertWmiTimeToHumanTime(in);
     return *std::localtime(&check_time);
+}
+
+bool IsAccountExist(const std::string &account) {
+    SID_NAME_USE snu;
+    SID sid{0};
+    auto sz = static_cast<DWORD>(sizeof(sid));
+    DWORD rd_size{0};
+    char *rd{nullptr};
+    auto succ = ::LookupAccountNameA(nullptr, account.c_str(), &sid, &sz, rd,
+                                     &rd_size, &snu);
+    return succ || ::GetLastError() != ERROR_INSUFFICIENT_BUFFER;
 }
 
 }  // namespace
@@ -201,16 +213,6 @@ TEST(PsTest, GetProcessListFromWmi) {
     EXPECT_GT(table.size(), 10UL);
 }
 
-bool IsAccountExist(const std::string &account) {
-    SID_NAME_USE snu;
-    SID sid{0};
-    auto sz = static_cast<DWORD>(sizeof(sid));
-    DWORD rd_size{0};
-    char *rd{nullptr};
-    auto succ = ::LookupAccountNameA(nullptr, account.c_str(), &sid, &sz, rd,
-                                     &rd_size, &snu);
-    return succ || ::GetLastError() != ERROR_INSUFFICIENT_BUFFER;
-}
 TEST(PsTest, GetProcessOwner) {
     auto name = GetProcessOwner(GetCurrentProcessId());
     ASSERT_TRUE(IsAccountExist(name));

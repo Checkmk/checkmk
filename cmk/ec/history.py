@@ -519,8 +519,14 @@ def _get_files(history: History, logger: Logger, query: QueryGET) -> Iterable[An
             logger.debug("query limit reached")
             break
         if _intersects(time_range, _get_logfile_timespan(path)):
-            logger.debug("parsing history file %s", path)
-            new_entries = _parse_history_file(history, path, query, greptexts, limit, logger)
+            # If we have greptexts we pre-filter the file using the extremely
+            # fast GNU Grep
+            # Revert lines from the log file to have the newer lines processed first
+            cmd = "tac %s" % quote_shell_string(str(path))
+            if greptexts:
+                cmd += " | egrep -i -e %s" % quote_shell_string(".*".join(greptexts))
+            logger.debug("preprocessing history file with command [%s]", cmd)
+            new_entries = _parse_history_file(history, path, query, cmd, limit, logger)
             history_entries += new_entries
             if limit is not None:
                 limit -= len(new_entries)
@@ -583,19 +589,13 @@ def _intersects(
 def _parse_history_file(
     history: History,
     path: Path,
-    query: Any,
-    greptexts: list[str],
+    query: QueryGET,
+    cmd: str,
     limit: Optional[int],
     logger: Logger,
 ) -> list[Any]:
     entries: list[Any] = []
     line_no = 0
-    # If we have greptexts we pre-filter the file using the extremely
-    # fast GNU Grep
-    # Revert lines from the log file to have the newer lines processed first
-    cmd = "tac %s" % quote_shell_string(str(path))
-    if greptexts:
-        cmd += " | egrep -i -e %s" % quote_shell_string(".*".join(greptexts))
     with subprocess.Popen(
         cmd,
         shell=True,  # nosec

@@ -250,7 +250,6 @@ def test_section_parse_function_does_something(fix_register) -> None:  # type:ig
         "nvidia",
         "sap",
         "siemens_plc",
-        "vms_diskstat",
         "vms_system",
         "winperf",
     }

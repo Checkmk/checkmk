@@ -4,11 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Mapping
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.plugins.agent_based.utils.df import df_discovery
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.utils.df import df_discovery, FSBlock
+
+Section = Mapping[str, FSBlock]
 
 # Example output from agent:
 # <<<vms_diskstat>>>
@@ -22,7 +27,6 @@ from cmk.base.plugins.agent_based.utils.df import df_discovery
 # $1$DGA1124: TEMP_02 3171743836 102431184 1.10
 # $1$DGA1125: DATA_01 1171743836 202431184 0.20
 
-
 factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
@@ -30,17 +34,30 @@ def _mb(raw: str) -> float:
     return int(raw) * 512 / (1024.0 * 1024.0)
 
 
-def inventory_vms_diskstat_fs(info):
-    return df_discovery(host_extra_conf(host_name(), filesystem_groups), [line[1] for line in info])
+def parse_vms_diskstat(string_table: StringTable) -> Section:
+    return {
+        label: (label, _mb(size), _mb(avail), 0)
+        # Note that items can repeat, as seen in the output above.
+        # Prior to this refactoring, the check function picked the first occurring item.
+        # We stick to that for now, hence the "reversed".
+        # I'm not sure it makes sense :-(
+        for _device, label, size, avail, _ios in reversed(string_table)
+    }
 
 
-def check_vms_diskstat_fs(item, params, info):
-    for line in info:
-        if line[1] == item:
-            _device, label, size, avail, _ios = line
-            return df_check_filesystem_single(label, _mb(size), _mb(avail), 0, None, None, params)
+check_info["vms_diskstat"] = {
+    "parse_function": parse_vms_diskstat,
+}
 
-    return (3, "no such disk")
+
+def inventory_vms_diskstat_fs(section: Section):
+    return df_discovery(host_extra_conf(host_name(), filesystem_groups), section)
+
+
+def check_vms_diskstat_fs(item, params, section: Section):
+    if (volume := section.get(item)) is None:
+        return None
+    return df_check_filesystem_single(*volume, None, None, params)
 
 
 check_info["vms_diskstat.df"] = {

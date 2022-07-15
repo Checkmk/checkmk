@@ -35,7 +35,9 @@ from cmk.base.plugins.agent_based.omd_status import (
         ([], {}),
     ],
 )
-def test_parse_omd_status(string_table, expected_parsed_data) -> None:
+def test_parse_omd_status(  # type:ignore[no-untyped-def]
+    string_table, expected_parsed_data
+) -> None:
     assert parse_omd_status(string_table) == expected_parsed_data
 
 
@@ -78,7 +80,9 @@ def test_parse_omd_status(string_table, expected_parsed_data) -> None:
         ),
     ],
 )
-def test_check_omd_status(item, section_omd_status, section_omd_info, result) -> None:
+def test_check_omd_status(  # type:ignore[no-untyped-def]
+    item, section_omd_status, section_omd_info, result
+) -> None:
     assert list(check_omd_status(item, section_omd_status, section_omd_info)) == result
 
 
@@ -144,5 +148,7 @@ def test_check_omd_status(item, section_omd_status, section_omd_info, result) ->
         ),
     ],
 )
-def test_cluster_check_omd_status(item, section_omd_status, section_omd_info, result) -> None:
+def test_cluster_check_omd_status(  # type:ignore[no-untyped-def]
+    item, section_omd_status, section_omd_info, result
+) -> None:
     assert list(cluster_check_omd_status(item, section_omd_status, section_omd_info)) == result

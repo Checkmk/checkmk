@@ -144,7 +144,9 @@ _INSTALLED_DATE = 123
         ),
     ],
 )
-def test_inventory_win_exefiles(monkeypatch, string_table, expected_result) -> None:
+def test_inventory_win_exefiles(  # type:ignore[no-untyped-def]
+    monkeypatch, string_table, expected_result
+) -> None:
     monkeypatch.setattr(time, "mktime", lambda s: _INSTALLED_DATE)
     assert sort_inventory_result(
         inventory_win_exefiles(parse_win_exefiles(string_table))

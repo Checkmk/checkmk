@@ -86,5 +86,5 @@ from cmk.base.plugins.agent_based.inventory_lnx_ip_r import inventory_lnx_ip_r, 
         ),
     ],
 )
-def test_lnx_ip_r(string_table, expected_result) -> None:
+def test_lnx_ip_r(string_table, expected_result) -> None:  # type:ignore[no-untyped-def]
     assert list(inventory_lnx_ip_r(parse_lnx_ip_r(string_table))) == expected_result

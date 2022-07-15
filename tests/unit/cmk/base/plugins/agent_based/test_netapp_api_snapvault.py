@@ -112,7 +112,9 @@ from cmk.base.plugins.agent_based.netapp_api_snapvault import (
         ),
     ],
 )
-def test_parse_netapp_api_snapvault(string_table, expected_parsed) -> None:
+def test_parse_netapp_api_snapvault(  # type:ignore[no-untyped-def]
+    string_table, expected_parsed
+) -> None:
     assert parse_netapp_api_snapvault(string_table) == expected_parsed
 
 
@@ -219,7 +221,9 @@ def test_parse_netapp_api_snapvault(string_table, expected_parsed) -> None:
         ),
     ],
 )
-def test_discover_netapp_api_snapvault(string_table, discovery_params, expected_discovery) -> None:
+def test_discover_netapp_api_snapvault(  # type:ignore[no-untyped-def]
+    string_table, discovery_params, expected_discovery
+) -> None:
     assert (
         list(
             discover_netapp_api_snapvault(
@@ -400,5 +404,7 @@ def test_discover_netapp_api_snapvault(string_table, discovery_params, expected_
         ),
     ],
 )
-def test_check_netapp_api_snapvault(item, params, parsed, expected_result) -> None:
+def test_check_netapp_api_snapvault(  # type:ignore[no-untyped-def]
+    item, params, parsed, expected_result
+) -> None:
     assert list(check_netapp_api_snapvault(item, params, parsed)) == expected_result

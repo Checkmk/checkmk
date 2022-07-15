@@ -80,7 +80,9 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventory_win_networkadapter(string_table, expected_result) -> None:
+def test_inventory_win_networkadapter(  # type:ignore[no-untyped-def]
+    string_table, expected_result
+) -> None:
     assert sort_inventory_result(
         inventory_win_networkadapter(parse_win_networkadapter(string_table))
     ) == sort_inventory_result(expected_result)

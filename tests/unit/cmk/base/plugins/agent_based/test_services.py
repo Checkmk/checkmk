@@ -85,7 +85,9 @@ def test_parse() -> None:
         ),
     ],
 )
-def test_discovery_windows_services(params, discovered_services) -> None:
+def test_discovery_windows_services(  # type:ignore[no-untyped-def]
+    params, discovered_services
+) -> None:
     assert discovered_services == list(services.discovery_windows_services(params, PARSED))
 
 
@@ -161,7 +163,9 @@ def test_discovery_windows_services(params, discovered_services) -> None:
         ),
     ],
 )
-def test_check_windows_services(item, params, yielded_results) -> None:
+def test_check_windows_services(  # type:ignore[no-untyped-def]
+    item, params, yielded_results
+) -> None:
     assert yielded_results == list(services.check_windows_services(item, params, PARSED))
 
 
@@ -196,7 +200,9 @@ def test_check_windows_services(item, params, yielded_results) -> None:
         ),
     ],
 )
-def test_cluster_windows_services(item, params, yielded_results) -> None:
+def test_cluster_windows_services(  # type:ignore[no-untyped-def]
+    item, params, yielded_results
+) -> None:
     assert yielded_results == list(
         services.cluster_check_windows_services(
             item, params, {"node1": PARSED, "node2": PARSED_NODE}
@@ -262,5 +268,5 @@ def test_discovery_services_summary() -> None:
         ),
     ],
 )
-def test_check_services_summary(params, yielded_results) -> None:
+def test_check_services_summary(params, yielded_results) -> None:  # type:ignore[no-untyped-def]
     assert yielded_results == list(services.check_services_summary(params, PARSED_AUTO))

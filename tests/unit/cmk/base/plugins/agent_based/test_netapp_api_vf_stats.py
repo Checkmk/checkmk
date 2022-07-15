@@ -69,7 +69,7 @@ SECTION_NETAPP_API_CPU: netapp_api_cpu.CPUSection = {
         ),
     ],
 )
-def test_check_netapp_api_vf_stats(params, exp_res) -> None:
+def test_check_netapp_api_vf_stats(params, exp_res) -> None:  # type:ignore[no-untyped-def]
     now = 0.0
     value_store: dict[str, Any] = {}
     # initialize counters

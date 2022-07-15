@@ -62,7 +62,7 @@ def test_parse_windows_updates_failed() -> None:
     )
 
 
-def test_discover_windows_updates(fix_register) -> None:
+def test_discover_windows_updates(fix_register) -> None:  # type:ignore[no-untyped-def]
     discover_windows_updates = fix_register.check_plugins[
         CheckPluginName("windows_updates")
     ].discovery_function
@@ -74,7 +74,7 @@ def check_windows_updates_fixture(fix_register):
     return fix_register.check_plugins[CheckPluginName("windows_updates")].check_function
 
 
-def test_check_windows_updates_ok(check_windows_updates) -> None:
+def test_check_windows_updates_ok(check_windows_updates) -> None:  # type:ignore[no-untyped-def]
     assert list(
         check_windows_updates(
             params=dict(
@@ -96,7 +96,7 @@ def test_check_windows_updates_ok(check_windows_updates) -> None:
     ]
 
 
-def test_check_windows_updates_failed(check_windows_updates) -> None:
+def test_check_windows_updates_failed(check_windows_updates) -> None:  # type:ignore[no-untyped-def]
     assert list(
         check_windows_updates(
             params=dict(
@@ -115,7 +115,7 @@ def test_check_windows_updates_failed(check_windows_updates) -> None:
     ]
 
 
-def test_reboot_required(check_windows_updates) -> None:
+def test_reboot_required(check_windows_updates) -> None:  # type:ignore[no-untyped-def]
     section = Section(
         reboot_required=True,
         important_updates=[],
@@ -174,7 +174,7 @@ def test_reboot_required(check_windows_updates) -> None:
         ),
     ],
 )
-def test_time_until_force_reboot(
+def test_time_until_force_reboot(  # type:ignore[no-untyped-def]
     check_windows_updates,
     mocker: MockerFixture,
     reboot_time: float,

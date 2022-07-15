@@ -141,7 +141,7 @@ def test_item(section, item, discovery, request):
     assert services[0][0] == item
 
 
-def test_nfsiostat_check(section1, discovery, check) -> None:
+def test_nfsiostat_check(section1, discovery, check) -> None:  # type:ignore[no-untyped-def]
     services = list(discovery(section1))
     item = services[0][0]
     results = list(check(item=item, params={}, section=section1))
@@ -177,7 +177,7 @@ def test_nfsiostat_check(section1, discovery, check) -> None:
     ]
 
 
-def test_nfsiostat_check2(section2, discovery, check) -> None:
+def test_nfsiostat_check2(section2, discovery, check) -> None:  # type:ignore[no-untyped-def]
     services = list(discovery(section2))
     item = services[0][0]
     results = list(check(item=item, params={}, section=section2))

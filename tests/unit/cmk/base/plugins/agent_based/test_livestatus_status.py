@@ -667,7 +667,9 @@ def fixture_fetcher_checker_counters_list():
 
 
 @pytest.mark.usefixtures("fetcher_checker_counters")
-def test_check_new_counters_in_oldstabe(fetcher_checker_counters) -> None:
+def test_check_new_counters_in_oldstabe(  # type:ignore[no-untyped-def]
+    fetcher_checker_counters,
+) -> None:
     yielded_results = list(
         livestatus_status._generate_livestatus_results(
             "oldstable",

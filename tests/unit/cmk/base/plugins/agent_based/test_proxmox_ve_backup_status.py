@@ -244,7 +244,9 @@ def set_null_values(backup_data):
         ),
     ),
 )
-def test_check_proxmox_ve_vm_backup_status(params, section, expected_results) -> None:
+def test_check_proxmox_ve_vm_backup_status(  # type:ignore[no-untyped-def]
+    params, section, expected_results
+) -> None:
     results = tuple(check_proxmox_ve_vm_backup_status(FROZEN_TIME, params, section))
     print("\n" + ",\n".join(map(str, results)))
     assert results == expected_results

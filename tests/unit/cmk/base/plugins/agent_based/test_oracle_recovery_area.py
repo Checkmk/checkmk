@@ -28,7 +28,9 @@ _AGENT_OUTPUT = [
         ),
     ],
 )
-def test_discover_oracle_recovery_area(fix_register, string_table, expected_result) -> None:
+def test_discover_oracle_recovery_area(  # type:ignore[no-untyped-def]
+    fix_register, string_table, expected_result
+) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("oracle_recovery_area")]
     assert sorted(check_plugin.discovery_function(string_table)) == expected_result
 
@@ -50,7 +52,9 @@ def test_discover_oracle_recovery_area(fix_register, string_table, expected_resu
         ),
     ],
 )
-def test_check_oracle_recovery_area(fix_register, string_table, item, expected_result) -> None:
+def test_check_oracle_recovery_area(  # type:ignore[no-untyped-def]
+    fix_register, string_table, item, expected_result
+) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("oracle_recovery_area")]
     assert (
         list(
@@ -87,7 +91,9 @@ def test_check_oracle_recovery_area(fix_register, string_table, item, expected_r
         ),
     ],
 )
-def test_inventory_oracle_recovery_area(string_table, expected_result) -> None:
+def test_inventory_oracle_recovery_area(  # type:ignore[no-untyped-def]
+    string_table, expected_result
+) -> None:
     assert sort_inventory_result(
         inventory_oracle_recovery_area(string_table)
     ) == sort_inventory_result(expected_result)

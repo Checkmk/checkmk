@@ -20,7 +20,9 @@ from cmk.base.plugins.agent_based.kaspersky_av_updates import (
         ([["stripped_field", "  stripped   "]], dict(stripped_field="stripped")),
     ],
 )
-def test_parse_kaspersky_av_updates(string_table, expected_section) -> None:
+def test_parse_kaspersky_av_updates(  # type:ignore[no-untyped-def]
+    string_table, expected_section
+) -> None:
     assert parse_kaspersky_av_updates(string_table) == expected_section
 
 
@@ -53,5 +55,5 @@ def test_parse_kaspersky_av_updates(string_table, expected_section) -> None:
         ),
     ],
 )
-def test_check_kaskpersky_av_updates(section, results) -> None:
+def test_check_kaskpersky_av_updates(section, results) -> None:  # type:ignore[no-untyped-def]
     assert list(check_kaspersky_av_updates(section)) == results

@@ -199,7 +199,9 @@ def test_check_discovery_total_zero() -> None:
         ),
     ],
 )
-def test_check_memory_element(label, used, total, levels, kwargs, expected) -> None:
+def test_check_memory_element(  # type:ignore[no-untyped-def]
+    label, used, total, levels, kwargs, expected
+) -> None:
     result = list(memory.check_element(label, used, total, levels, **kwargs))
     assert result == expected
 
@@ -267,7 +269,9 @@ MEMINFO_PAGE_MAPPED = {
         ({}, {"MemTotal": 42 * KILO, "MemFree": 28 * KILO, "SwapFree": 23}, KeyError),
     ],
 )
-def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
+def test_check_memory_fails(  # type:ignore[no-untyped-def]
+    params, meminfo, fail_with_exception
+) -> None:
     with pytest.raises(fail_with_exception):
         list(check_mem_used(params, meminfo))
 
@@ -735,7 +739,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception) -> None:
         ),
     ],
 )
-def test_check_memory(params, meminfo, expected) -> None:
+def test_check_memory(params, meminfo, expected) -> None:  # type:ignore[no-untyped-def]
     copy_info = meminfo.copy()
 
     result = list(check_mem_used(params, meminfo))

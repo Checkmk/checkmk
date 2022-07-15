@@ -300,7 +300,9 @@ def test_discover_veritas_vcs_resource() -> None:
         ),
     ],
 )
-def test_veritas_vcs_boil_down_states_in_cluster(states, expected_state) -> None:
+def test_veritas_vcs_boil_down_states_in_cluster(  # type:ignore[no-untyped-def]
+    states, expected_state
+) -> None:
     assert veritas_vcs.veritas_vcs_boil_down_states_in_cluster(states) == expected_state
 
 
@@ -567,7 +569,9 @@ def test_cluster_check_veritas_vcs_resource() -> None:
         ),
     ],
 )
-def test_cluster_check_veritas_vcs_states(section, expected_check_result) -> None:
+def test_cluster_check_veritas_vcs_states(  # type:ignore[no-untyped-def]
+    section, expected_check_result
+) -> None:
     assert (
         list(
             veritas_vcs.cluster_check_veritas_vcs_subsection(

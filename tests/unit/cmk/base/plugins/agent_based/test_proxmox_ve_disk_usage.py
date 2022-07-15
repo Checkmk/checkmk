@@ -77,7 +77,9 @@ DISK_DATA = {"disk": 1024**4, "max_disk": 2 * 1024**4}
         ),
     ),
 )
-def test_check_proxmox_ve_disk_usage(params, section, expected_results) -> None:
+def test_check_proxmox_ve_disk_usage(  # type:ignore[no-untyped-def]
+    params, section, expected_results
+) -> None:
     results = tuple(check_proxmox_ve_disk_usage(params, section))
     print("\n" + "\n".join(map(str, results)))
     assert results == expected_results

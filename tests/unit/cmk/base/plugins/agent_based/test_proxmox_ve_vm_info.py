@@ -55,7 +55,9 @@ VM_DATA = parse_proxmox_ve_vm_info(
         ),
     ],
 )
-def test_check_proxmox_ve_vm_info(params, section, expected_results) -> None:
+def test_check_proxmox_ve_vm_info(  # type:ignore[no-untyped-def]
+    params, section, expected_results
+) -> None:
     results = tuple(check_proxmox_ve_vm_info(params, section))
     print("\n" + "\n".join(map(str, results)))
     assert results == expected_results

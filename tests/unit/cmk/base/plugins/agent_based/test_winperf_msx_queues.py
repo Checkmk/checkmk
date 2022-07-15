@@ -57,7 +57,7 @@ EXCHANGE_2013_SERVER_SECTION: winperf_msx_queues.ParsedSection = {
         (EXCHANGE_2013_SERVER_INFO, EXCHANGE_2013_SERVER_SECTION),
     ],
 )
-def test_parse_function(info, section) -> None:
+def test_parse_function(info, section) -> None:  # type:ignore[no-untyped-def]
     assert winperf_msx_queues.parse_winperf_msx_queues(info) == section
 
 
@@ -74,7 +74,7 @@ def test_parse_function(info, section) -> None:
         ),
     ],
 )
-def test_discovery(section, services) -> None:
+def test_discovery(section, services) -> None:  # type:ignore[no-untyped-def]
     assert (
         list(
             winperf_msx_queues.discover_winperf_msx_queues(
@@ -112,7 +112,7 @@ def test_discovery(section, services) -> None:
         ),
     ],
 )
-def test_check(item, params, result) -> None:
+def test_check(item, params, result) -> None:  # type:ignore[no-untyped-def]
     assert (
         list(
             winperf_msx_queues.check_winperf_msx_queues(item, params, EXCHANGE_2013_SERVER_SECTION)

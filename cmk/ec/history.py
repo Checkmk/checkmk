@@ -11,7 +11,7 @@ import threading
 import time
 from logging import Logger
 from pathlib import Path
-from typing import Any, AnyStr, Iterable, Optional, Union
+from typing import Any, AnyStr, Callable, Iterable, Optional, Union
 
 from typing_extensions import assert_never
 
@@ -439,39 +439,60 @@ def _expire_logfiles(
             logger.exception("Error expiring log files: %s" % e)
 
 
+# Please note: Keep this in sync with livestatus/src/TableEventConsole.cc.
+_GREPABLE_COLUMNS = {
+    "event_id",
+    "event_text",
+    "event_comment",
+    "event_host",
+    "event_contact",
+    "event_application",
+    "event_rule_id",
+    "event_owner",
+    "event_ipaddress",
+    "event_core_host",
+}
+
+
+# Optimization: use grep in order to reduce amount of read lines based on some frequently used
+# filters. It's OK if the filters don't match 100% accurately on the right lines. If in doubt, you
+# can output more lines than necessary. This is only a kind of prefiltering.
+def _grep_pipeline(filters: list[tuple[str, OperatorName, Callable, Any]]) -> list[str]:
+    return [
+        command
+        for column_name, operator_name, _predicate, argument in filters
+        if column_name in _GREPABLE_COLUMNS
+        for command in [_grep_command(operator_name, argument)]
+        if command is not None
+    ]
+
+
+def _grep_command(operator_name: OperatorName, argument: Any) -> str | None:
+    if operator_name == "=":
+        return f"grep -F {_grep_pattern(argument)}"
+    if operator_name == "=~":
+        return f"grep -F -i {_grep_pattern(argument)}"
+    if operator_name == "~":
+        return f"grep -E {_grep_pattern(argument)}"
+    if operator_name == "~~":
+        return f"grep -E -i {_grep_pattern(argument)}"
+    return None
+
+
+def _grep_pattern(argument: Any) -> str:
+    return f"-e {shlex.quote(str(argument))}"
+
+
 def _get_files(history: History, logger: Logger, query: QueryGET) -> Iterable[Any]:
-    filters, limit = query.filters, query.limit
-    history_entries: list[Any] = []
     if not history._settings.paths.history_dir.value.exists():
         return []
 
+    filters = query.filters
     logger.debug("Filters: %r", filters)
+    limit = query.limit
     logger.debug("Limit: %r", limit)
 
-    # Be aware: The order here is important. It must match the order of the fields
-    # in the history file entries (See get_event_history_from_file). The fields in
-    # the file are currectly in the same order as StatusTableHistory.columns.
-    #
-    # Please note: Keep this in sync with livestatus/src/TableEventConsole.cc.
-    grepping_filters = [
-        "event_id",
-        "event_text",
-        "event_comment",
-        "event_host",
-        "event_contact",
-        "event_application",
-        "event_rule_id",
-        "event_owner",
-        "event_ipaddress",
-        "event_core_host",
-    ]
-
-    # Optimization: use grep in order to reduce amount of read lines based on
-    # some frequently used filters.
-    #
-    # It's ok if the filters don't match 100% accurately on the right lines. If in
-    # doubt, you can output more lines than necessary. This is only a kind of
-    # prefiltering.
+    grep_pipeline = _grep_pipeline(filters)
 
     time_filters = [
         (operator_name, argument)
@@ -497,34 +518,21 @@ def _get_files(history: History, logger: Logger, query: QueryGET) -> Iterable[An
     # already be done by the GUI, so we don't do that twice. Skipping
     # this # will lead into some lines of a single file to be limited in
     # wrong order. But this should be better than before.
+    history_entries: list[Any] = []
     for path in sorted(history._settings.paths.history_dir.value.glob("*.log"), reverse=True):
         if limit is not None and limit <= 0:
             logger.debug("query limit reached")
             break
-        if _intersects(time_range, _get_logfile_timespan(path)):
-            # If we have greptexts we pre-filter the file using the extremely
-            # fast GNU Grep
-            # Revert lines from the log file to have the newer lines processed first
-            cmd = f"tac {shlex.quote(str(path))}"
-            for column_name, operator_name, _predicate, argument in filters:
-                if column_name not in grepping_filters:
-                    continue
-                arg = shlex.quote(str(argument))
-                if operator_name == "=":
-                    cmd += f" | grep -F -e {arg}"
-                elif operator_name == "=~":
-                    cmd += f" | grep -F -i -e {arg}"
-                elif operator_name == "~":
-                    cmd += f" | grep -E -e {arg}"
-                elif operator_name == "~~":
-                    cmd += f" | grep -E -i -e {arg}"
-            logger.debug("preprocessing history file with command [%s]", cmd)
-            new_entries = _parse_history_file(history, path, query, cmd, limit, logger)
-            history_entries += new_entries
-            if limit is not None:
-                limit -= len(new_entries)
-        else:
+        if not _intersects(time_range, _get_logfile_timespan(path)):
             logger.debug("skipping history file %s because of time filters", path)
+            continue
+        tac = f"tac {shlex.quote(str(path))}"  # Process younger lines first
+        cmd = " | ".join([tac] + grep_pipeline)
+        logger.debug("preprocessing history file with command [%s]", cmd)
+        new_entries = _parse_history_file(history, path, query, cmd, limit, logger)
+        history_entries += new_entries
+        if limit is not None:
+            limit -= len(new_entries)
     return history_entries
 
 

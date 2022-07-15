@@ -27,7 +27,11 @@ repos:
             exclude: .werks/.*
           - id: fix-encoding-pragma
             args: ["--remove"]
-            exclude: agents/plugins/
+            exclude: |
+                (?x)^(
+                    ^agents/plugins/|
+                    ^tests/agent-plugin-unit/
+                )
     - repo: local
       hooks:
           - id: isort

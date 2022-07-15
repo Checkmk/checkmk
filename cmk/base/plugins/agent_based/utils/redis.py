@@ -28,3 +28,13 @@ def check_cache_hitratio(hitratio: float, params: Mapping[str, Any]) -> CheckRes
         render_func=render.percent,
         label="Hitratio",
     )
+
+
+def check_clients_connected(connected_clients: float, params: Mapping[str, Any]) -> CheckResult:
+    levels_upper = params["clients_connected"]
+    yield from check_levels(
+        connected_clients,
+        levels_upper=levels_upper,
+        metric_name="clients_connected",
+        label="Connected Clients",
+    )

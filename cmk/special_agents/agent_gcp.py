@@ -611,6 +611,12 @@ REDIS = Service(
                 per_series_aligner=Aligner.ALIGN_MAX,
             ),
         ),
+        Metric(
+            name="redis.googleapis.com/clients/connected",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
+        ),
     ],
 )
 

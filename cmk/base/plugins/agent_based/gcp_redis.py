@@ -147,3 +147,34 @@ register.check_plugin(
     discovery_function=gcp.discovery_summary,
     check_function=check_summary,
 )
+
+
+def check_connected_clients(
+    item: str,
+    params: Mapping[str, Any],
+    section_gcp_service_redis: Optional[gcp.Section],
+    section_gcp_assets: Optional[gcp.AssetSection],
+) -> CheckResult:
+    if section_gcp_service_redis is None:
+        return
+    if section_gcp_assets is None or item not in section_gcp_assets[ASSET_TYPE]:
+        return
+    metric = gcp.MetricSpec(
+        "redis.googleapis.com/clients/connected",
+        "",
+        str,
+    )
+    timeseries = section_gcp_service_redis.get(item, gcp.SectionItem(rows=[])).rows
+    connected_clients = gcp._get_value(timeseries, metric)
+    yield from redis.check_clients_connected(connected_clients, params)
+
+
+register.check_plugin(
+    name="gcp_redis_clients_connected",
+    sections=["gcp_service_redis", "gcp_assets"],
+    service_name=service_namer("clients_connected"),
+    check_ruleset_name="gcp_redis_clients_connected",
+    discovery_function=discover,
+    check_function=check_connected_clients,
+    check_default_parameters={"clients_connected": None},
+)

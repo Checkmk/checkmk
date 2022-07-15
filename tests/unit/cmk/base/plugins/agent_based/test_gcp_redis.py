@@ -23,6 +23,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 )
 from cmk.base.plugins.agent_based.gcp_assets import parse_assets
 from cmk.base.plugins.agent_based.gcp_redis import (
+    check_connected_clients,
     check_cpu_util,
     check_hitratio,
     check_memory_util,
@@ -92,6 +93,16 @@ PLUGINS = [
             ],
         ),
         id="memory",
+    ),
+    pytest.param(
+        Plugin(
+            function=check_connected_clients,
+            metrics=["clients_connected"],
+            results=[
+                Result(state=State.OK, summary="Connected Clients: 0.42"),
+            ],
+        ),
+        id="connected_clients",
     ),
 ]
 

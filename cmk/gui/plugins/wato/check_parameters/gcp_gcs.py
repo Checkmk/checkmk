@@ -374,6 +374,29 @@ rulespec_registry.register(
 )
 
 
+def _vs_redis_clients_connected() -> ValueSpec:
+    return Dictionary(
+        title=_("Levels clients"),
+        elements=[
+            (
+                "clients_connected",
+                Levels(title=_("Number of connected clients")),
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="gcp_redis_clients_connected",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_redis_clients_connected,
+        title=lambda: _("GCP/Memorystore redis clients connected"),
+    )
+)
+
+
 def _vs_gce_cpu() -> Dictionary:
     return Dictionary(
         title=_("Levels CPU"),

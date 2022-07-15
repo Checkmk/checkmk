@@ -175,6 +175,7 @@ google-cloud-asset = "==3.8.0"  # used by the gcp special agent
 exchangelib = "==4.7.2"  # used by active checks for mail
 lxml = "==4.8.0"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent
 grpcio = "==1.46.3"  # newer versions (1.47) caused problems in Centos7 and SLES12
+google-api-python-client = "==2.53.0"  # use rest api to query big query for gcp cost monitoring
 
 [requires]
 # As pipenv {sync,lock} does currently not support env variable expansion in and out Pipfile.lock,

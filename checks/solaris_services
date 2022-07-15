@@ -3,16 +3,37 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Iterable, Mapping, TypedDict
+
+from cmk.base.plugins.agent_based.agent_based_api.v1 import regex
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+# these are just temorary, until migration.
+DiscoveryResult = Iterable[tuple[str | None, Mapping[str, Any]]]
+CheckResult = tuple | Iterable[tuple]
+
+
+class SolarisService(TypedDict):
+    state: str
+    stime: str
+    type: str
+    category: str
+    name: str
+    instance: str | None
+
+
+Section = Mapping[str, SolarisService]
+
 # OLD
 # <<<solaris_services>>>
 # STATE    STIME    FMRI
 # $STATE   $STIME   $TYPE:${/CATEGORY/PATH/}$NAME:$INSTANCE
 
-inventory_solaris_services_rules = []
+inventory_solaris_services_rules: list = []
 
 
-def parse_solaris_services(info):
-    def get_parts_of_descr(descr):
+def parse_solaris_services(string_table: StringTable) -> Section:
+    def get_parts_of_descr(descr: str) -> tuple[str, str, str, str | None]:
         svc_attrs = descr.split(":")
         if len(svc_attrs) == 3:
             svc_instance = svc_attrs[-1]
@@ -21,8 +42,8 @@ def parse_solaris_services(info):
         svc_category, svc_name = svc_attrs[1].rsplit("/", 1)
         return svc_attrs[0], svc_category, svc_name, svc_instance
 
-    parsed = {}
-    for line in info:
+    parsed: dict[str, SolarisService] = {}
+    for line in string_table:
         if len(line) < 3 or line == ["STATE", "STIME", "FMRI"]:
             continue
         svc_descr = line[-1]
@@ -62,23 +83,23 @@ factory_settings["solaris_services_default_levels"] = {
 }
 
 
-def inventory_solaris_services(parsed):
-    def regex_match(what, name):
+def discover_solaris_services(section: Section) -> DiscoveryResult:
+    def regex_match(what: Iterable[str], name: str) -> bool:
         if not what:
             return True
         for entry in what:
             if entry.startswith("~") and regex(entry[1:]).match(name):
                 return True
-            elif entry == name:
+            if entry == name:
                 return True
         return False
 
-    def state_match(rule_state, state):
+    def state_match(rule_state: str | None, state: str) -> bool:
         if rule_state is not None and rule_state != state:
             return False
         return True
 
-    def get_svc_name(svc_attrs):
+    def get_svc_name(svc_attrs: SolarisService) -> str:
         return "%s/%s:%s" % (svc_attrs["category"], svc_attrs["name"], svc_attrs["instance"])
 
     for settings in host_extra_conf(host_name(), inventory_solaris_services_rules):
@@ -87,12 +108,12 @@ def inventory_solaris_services(parsed):
         names = settings.get("names", [])
         instances = settings.get("instances", [])
         state = settings.get("state")
-        for svc_descr, attrs in parsed.items():
+        for svc_descr, attrs in section.items():
             if (
                 regex_match(descriptions, svc_descr)
                 and regex_match(categories, attrs["category"])
                 and regex_match(names, attrs["name"])
-                and regex_match(instances, attrs["instance"])
+                and regex_match(instances, attrs["instance"])  # type: ignore[arg-type]  # bug?
                 and state_match(state, attrs["state"])
             ):
                 if settings.get("outcome") in [None, "full_descr"]:
@@ -102,8 +123,8 @@ def inventory_solaris_services(parsed):
                 yield name, {}
 
 
-def check_solaris_services(item, params, parsed):
-    for svc_name, attrs in parsed.items():
+def check_solaris_services(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    for svc_name, attrs in section.items():
         if item in svc_name or svc_name in params["additional_servicenames"]:
             svc_state = attrs["state"]
             svc_stime = attrs["stime"]
@@ -130,7 +151,7 @@ def check_solaris_services(item, params, parsed):
 
 check_info["solaris_services"] = {
     "parse_function": parse_solaris_services,
-    "inventory_function": inventory_solaris_services,
+    "inventory_function": discover_solaris_services,
     "check_function": check_solaris_services,
     "service_description": "SMF Service %s",  # Service Management Facility
     "group": "solaris_services",
@@ -148,15 +169,17 @@ check_info["solaris_services"] = {
 #   '----------------------------------------------------------------------'
 
 
-def inventory_solaris_services_summary(parsed):
+def discover_solaris_services_summary(section: Section) -> DiscoveryResult:
     return [(None, {})]
 
 
-def check_solaris_services_summary(_no_item, params, parsed):
-    yield 0, "%d services" % len(parsed)
+def check_solaris_services_summary(
+    _no_item: None, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    yield 0, "%d services" % len(section)
 
-    services_by_state = {}
-    for svc_name, attrs in parsed.items():
+    services_by_state: dict[str, list[str]] = {}
+    for svc_name, attrs in section.items():
         services = services_by_state.setdefault(attrs["state"], [])
         services.append(svc_name)
 
@@ -172,7 +195,7 @@ def check_solaris_services_summary(_no_item, params, parsed):
 
 check_info["solaris_services.summary"] = {
     "parse_function": parse_solaris_services,
-    "inventory_function": inventory_solaris_services_summary,
+    "inventory_function": discover_solaris_services_summary,
     "check_function": check_solaris_services_summary,
     "service_description": "SMF Services Summary",  # Service Management Facility
     "group": "solaris_services_summary",

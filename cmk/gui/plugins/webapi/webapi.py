@@ -650,7 +650,7 @@ class APICallUsers(APICallCollection):
             user_attrs.update(set_attributes)
             for entry in unset_attributes:
                 if entry in user_attrs:
-                    del user_attrs[entry]
+                    del user_attrs[entry]  # type: ignore[misc]
 
             new_password = set_attributes.get("password")
             if new_password:

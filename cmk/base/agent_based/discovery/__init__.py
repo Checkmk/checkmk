@@ -183,6 +183,10 @@ def commandline_discovery(
                     agent_simulator=config.agent_simulator,
                     translation=config.get_piggyback_translations(host_config.hostname),
                     encoding_fallback=config.fallback_agent_output_encoding,
+                    missing_sys_description=config.get_config_cache().in_binary_hostlist(
+                        host_config.hostname,
+                        config.snmp_without_sys_descr,
+                    ),
                 ),
                 file_cache_max_age=config.max_cachefile_age(),
                 mode=mode,
@@ -351,6 +355,10 @@ def automation_discovery(
                 agent_simulator=config.agent_simulator,
                 translation=config.get_piggyback_translations(host_config.hostname),
                 encoding_fallback=config.fallback_agent_output_encoding,
+                missing_sys_description=config.get_config_cache().in_binary_hostlist(
+                    host_config.hostname,
+                    config.snmp_without_sys_descr,
+                ),
             ),
             file_cache_max_age=max_cachefile_age,
             mode=Mode.DISCOVERY,
@@ -571,6 +579,10 @@ def commandline_check_discovery(
             agent_simulator=config.agent_simulator,
             translation=config.get_piggyback_translations(host_config.hostname),
             encoding_fallback=config.fallback_agent_output_encoding,
+            missing_sys_description=config.get_config_cache().in_binary_hostlist(
+                host_config.hostname,
+                config.snmp_without_sys_descr,
+            ),
         ),
         file_cache_max_age=config.max_cachefile_age(
             discovery=None if cmk.core_helpers.cache.FileCacheFactory.maybe else 0
@@ -1263,6 +1275,10 @@ def get_check_preview(
             agent_simulator=config.agent_simulator,
             translation=config.get_piggyback_translations(host_config.hostname),
             encoding_fallback=config.fallback_agent_output_encoding,
+            missing_sys_description=config.get_config_cache().in_binary_hostlist(
+                host_config.hostname,
+                config.snmp_without_sys_descr,
+            ),
         ),
         file_cache_max_age=max_cachefile_age,
         mode=Mode.DISCOVERY,

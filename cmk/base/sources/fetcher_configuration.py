@@ -58,6 +58,10 @@ def fetchers(host_config: HostConfig) -> Dict[str, Any]:
                 agent_simulator=config.agent_simulator,
                 translation=config.get_piggyback_translations(host_config.hostname),
                 encoding_fallback=config.fallback_agent_output_encoding,
+                missing_sys_description=config.get_config_cache().in_binary_hostlist(
+                    host_config.hostname,
+                    config.snmp_without_sys_descr,
+                ),
             )
         ]
     }

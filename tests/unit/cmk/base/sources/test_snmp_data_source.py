@@ -51,6 +51,7 @@ def source_fixture(scenario, hostname, ipaddress):
         force_cache_refresh=False,
         simulation_mode=True,
         agent_simulator=True,
+        missing_sys_description=False,
     )
 
 
@@ -106,6 +107,7 @@ class TestSNMPSource_SNMP:
             force_cache_refresh=False,
             simulation_mode=True,
             agent_simulator=True,
+            missing_sys_description=False,
         )
         assert source.description == (
             "SNMP (Community: 'public', Bulk walk: no, Port: 161, Backend: Classic)"
@@ -136,6 +138,7 @@ class TestSNMPSource_MGMT:
             on_scan_error=OnError.RAISE,
             simulation_mode=True,
             agent_simulator=True,
+            missing_sys_description=False,
         )
         assert source.description == (
             "Management board - SNMP "
@@ -168,6 +171,7 @@ class TestSNMPSummaryResult:
             on_scan_error=OnError.RAISE,
             simulation_mode=True,
             agent_simulator=True,
+            missing_sys_description=False,
         )
 
     @pytest.mark.usefixtures("scenario")

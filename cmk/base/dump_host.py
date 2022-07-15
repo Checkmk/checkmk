@@ -107,6 +107,10 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
             agent_simulator=config.agent_simulator,
             translation=config.get_piggyback_translations(host_config.hostname),
             encoding_fallback=config.fallback_agent_output_encoding,
+            missing_sys_description=config.get_config_cache().in_binary_hostlist(
+                host_config.hostname,
+                config.snmp_without_sys_descr,
+            ),
         )
     ]
 

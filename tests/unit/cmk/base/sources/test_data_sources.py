@@ -110,6 +110,7 @@ def test_host_config_creates_passing_source_sources(
             agent_simulator=True,
             translation={},
             encoding_fallback="ascii",
+            missing_sys_description=False,
         )
     ] == sources
 

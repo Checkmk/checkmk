@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Dict, Optional, Set
+from typing import Dict, Final, Optional, Set
 
 from cmk.utils.exceptions import OnError
 from cmk.utils.type_defs import HostAddress, SectionName, SourceType
@@ -27,7 +27,6 @@ from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
-import cmk.base.config as config
 from cmk.base.config import HostConfig
 
 from ._abstract import Source
@@ -76,6 +75,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         on_scan_error: OnError,
         simulation_mode: bool,
         agent_simulator: bool,
+        missing_sys_description: bool,
     ):
         super().__init__(
             host_config,
@@ -100,6 +100,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             if self.source_type is SourceType.HOST
             else self.host_config.management_snmp_config
         )
+        self.missing_sys_description: Final = missing_sys_description
         self._on_snmp_scan_error = on_scan_error
         self._force_cache_refresh = force_cache_refresh
 
@@ -114,6 +115,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         force_cache_refresh: bool,
         simulation_mode: bool,
         agent_simulator: bool,
+        missing_sys_description: bool,
     ) -> "SNMPSource":
         return cls(
             host_config,
@@ -126,6 +128,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             force_cache_refresh=force_cache_refresh,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
+            missing_sys_description=missing_sys_description,
         )
 
     @classmethod
@@ -139,6 +142,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         force_cache_refresh: bool,
         simulation_mode: bool,
         agent_simulator: bool,
+        missing_sys_description: bool,
     ) -> "SNMPSource":
         return cls(
             host_config,
@@ -151,6 +155,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             force_cache_refresh=force_cache_refresh,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
+            missing_sys_description=missing_sys_description,
         )
 
     def _make_file_cache(self) -> FileCache[SNMPRawData]:
@@ -179,10 +184,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         return SNMPFetcher(
             sections=self._make_sections(),
             on_error=self._on_snmp_scan_error,
-            missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                self.snmp_config.hostname,
-                config.snmp_without_sys_descr,
-            ),
+            missing_sys_description=self.missing_sys_description,
             do_status_data_inventory=self.host_config.do_status_data_inventory,
             section_store_path=self.persisted_sections_file_path,
             snmp_config=self.snmp_config,

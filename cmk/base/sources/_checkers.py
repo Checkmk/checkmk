@@ -63,6 +63,7 @@ class _Builder:
         agent_simulator: bool,
         translation: TranslationOptions,
         encoding_fallback: str,
+        missing_sys_description: bool,
     ) -> None:
         super().__init__()
         self.host_config: Final = host_config
@@ -74,6 +75,7 @@ class _Builder:
         self.agent_simulator: Final = agent_simulator
         self.translation: Final = translation
         self.encoding_fallback: Final = encoding_fallback
+        self.missing_sys_description: Final = missing_sys_description
         self._elems: Dict[str, Source] = {}
 
         self._initialize()
@@ -146,6 +148,7 @@ class _Builder:
                 force_cache_refresh=self.force_snmp_cache_refresh,
                 simulation_mode=self.simulation_mode,
                 agent_simulator=self.agent_simulator,
+                missing_sys_description=self.missing_sys_description,
             )
         )
 
@@ -170,6 +173,7 @@ class _Builder:
                     force_cache_refresh=self.force_snmp_cache_refresh,
                     simulation_mode=self.simulation_mode,
                     agent_simulator=self.agent_simulator,
+                    missing_sys_description=self.missing_sys_description,
                 )
             )
         elif protocol == "ipmi":
@@ -261,6 +265,7 @@ def make_non_cluster_sources(
     agent_simulator: bool,
     translation: TranslationOptions,
     encoding_fallback: str,
+    missing_sys_description: bool,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
     return _Builder(
@@ -273,6 +278,7 @@ def make_non_cluster_sources(
         agent_simulator=agent_simulator,
         translation=translation,
         encoding_fallback=encoding_fallback,
+        missing_sys_description=missing_sys_description,
     ).sources
 
 
@@ -312,6 +318,7 @@ def make_cluster_sources(
     agent_simulator: bool,
     translation: TranslationOptions,
     encoding_fallback: str,
+    missing_sys_description: bool,
 ) -> Sequence[Source]:
     """Abstract clusters/nodes/hosts"""
     assert host_config.nodes is not None
@@ -327,6 +334,7 @@ def make_cluster_sources(
             agent_simulator=agent_simulator,
             translation=translation,
             encoding_fallback=encoding_fallback,
+            missing_sys_description=missing_sys_description,
         )
     ]
 
@@ -343,6 +351,7 @@ def make_sources(
     agent_simulator: bool,
     translation: TranslationOptions,
     encoding_fallback: str,
+    missing_sys_description: bool,
 ) -> Sequence[Source]:
     return (
         make_non_cluster_sources(
@@ -355,6 +364,7 @@ def make_sources(
             agent_simulator=agent_simulator,
             translation=translation,
             encoding_fallback=encoding_fallback,
+            missing_sys_description=missing_sys_description,
         )
         if host_config.nodes is None
         else make_cluster_sources(
@@ -364,5 +374,6 @@ def make_sources(
             agent_simulator=agent_simulator,
             translation=translation,
             encoding_fallback=encoding_fallback,
+            missing_sys_description=missing_sys_description,
         )
     )

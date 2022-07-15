@@ -155,6 +155,7 @@ class TestMakeHostSectionsHosts:
                         on_scan_error=OnError.RAISE,
                         simulation_mode=True,
                         agent_simulator=True,
+                        missing_sys_description=False,
                     ),
                     FetcherMessage.from_raw_data(
                         result.OK(raw_data),
@@ -427,6 +428,7 @@ class TestMakeHostSectionsClusters:
             agent_simulator=True,
             translation={},
             encoding_fallback="ascii",
+            missing_sys_description=True,
         )
 
         host_sections = _collect_host_sections(
@@ -512,6 +514,7 @@ def test_get_host_sections_cluster(monkeypatch, mocker) -> None:  # type:ignore[
         agent_simulator=True,
         translation={},
         encoding_fallback="ascii",
+        missing_sys_description=True,
     )
 
     host_sections = _collect_host_sections(

@@ -4,10 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from typing import Any, Iterable, Mapping
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils.df import (
     df_discovery,
     FILESYSTEM_DEFAULT_LEVELS,
@@ -16,6 +18,11 @@ from cmk.base.plugins.agent_based.utils.df import (
     mountpoints_in_group,
     TREND_DEFAULT_PARAMS,
 )
+
+CheckResult = Iterable[tuple[int, str, list] | tuple[int, str]]
+DiscoveryResult = Iterable[tuple[str, Mapping]]
+
+Section = Mapping[str, Mapping[str, int | str]]
 
 # <<<netapp_api_volumes:sep(9)>>>
 # volume vol0 size-available 556613632    state online    files-total 25876   files-used 8646 size-total 848203776    fcp_write_data 0    fcp_read_data 0cifs_write_data 0    iscsi_read_latency 0    iscsi_write_data 0  read_data 201265528798  nfs_write_latency 977623886 san_write_latency 0 san_write_data 0read_latency 1529821621 cifs_read_latency 0 fcp_write_latency 0 fcp_read_latency 0  iscsi_write_latency 0   nfs_read_latency 1491050012 iscsi_read_data 0   instance_name vol0  cifs_read_data 0    nfs_read_data 197072260981  write_latency 1528780977    san_read_data 0 san_read_latency 0  write_data 13926719804  nfs_write_data 2789744628   cifs_write_latency 0
@@ -29,9 +36,9 @@ factory_settings["netapp_api_volumes_default_levels"] = {
 }
 
 
-def parse_netapp_api_volumes(info):
+def parse_netapp_api_volumes(string_table: StringTable) -> Section:
     volumes = {}
-    for line in info:
+    for line in string_table:
         volume = {}
         name = line[0].split(" ", 1)[1]
         for element in line[1:]:
@@ -51,17 +58,18 @@ def parse_netapp_api_volumes(info):
     return volumes
 
 
-def discovery_netapp_api_volumes(parsed):
-    return df_discovery(host_extra_conf(host_name(), filesystem_groups), parsed)
+def discovery_netapp_api_volumes(section: Section) -> DiscoveryResult:
+    params = host_extra_conf(host_name(), filesystem_groups)
+    return df_discovery(params, section)
 
 
-def _create_key(protocol, mode, field):
+def _create_key(protocol: str, mode: str, field: str) -> str:
     if protocol:
         return "_".join([protocol, mode, field])
     return "_".join([mode, field])
 
 
-def _check_single_netapp_api_volume(item, params, volume):
+def _check_single_netapp_api_volume(item: str, params: Mapping[str, Any], volume) -> CheckResult:
     mega = 1024.0 * 1024.0
     inodes_total = volume["files-total"]
     yield from df_check_filesystem_single_coroutine(
@@ -78,9 +86,9 @@ def _check_single_netapp_api_volume(item, params, volume):
 
 
 def _generate_volume_metrics(
-    params,
-    volume,
-):
+    params: Mapping[str, Any],
+    volume: Mapping[str, float],
+) -> Iterable[tuple[str, float]]:
     now = time.time()
     base = {}
     metrics_map = {"write_ops": "write_ops_s"}
@@ -149,45 +157,47 @@ def _generate_volume_metrics(
                 yield metrics_map.get(key, key), delta
 
 
-def _combine_netapp_api_volumes(volumes_in_group, parsed):
-    combined_volume = {}
+def _combine_netapp_api_volumes(
+    volumes_in_group: list[str], section: Section
+) -> tuple[Mapping[str, float], Mapping[str, str]]:
+    combined_volume: dict[str, float] = {}
     volumes_not_online = {}
 
     for volume_name in volumes_in_group:
-        volume = parsed[volume_name]
+        volume = section[volume_name]
 
-        state = volume.get("state")
+        state = str(volume.get("state"))
         if volume.get("state") != "online":
             volumes_not_online[volume_name] = state
 
         else:
             for k, v in volume.items():
                 if isinstance(v, int):
-                    combined_volume.setdefault(k, 0)
+                    combined_volume.setdefault(k, 0.0)
                     combined_volume[k] += v
 
     n_vols_online = len(volumes_in_group) - len(volumes_not_online)
     if n_vols_online:
-        for k, v in combined_volume.items():
+        for k, vs in combined_volume.items():
             if k.endswith("latency"):
-                combined_volume[k] = float(v) / n_vols_online
+                combined_volume[k] = float(vs) / n_vols_online
 
     return combined_volume, volumes_not_online
 
 
 # Cannot use decorator get_parsed_item_data for this check function due to the
 # specific error message for legacy checks with a UUID as item
-def check_netapp_api_volumes(item, params, parsed):
+def check_netapp_api_volumes(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     if "patterns" in params:
 
-        volumes_in_group = mountpoints_in_group(parsed, *params["patterns"])
+        volumes_in_group = mountpoints_in_group(section, *params["patterns"])
         if not volumes_in_group:
             yield 3, "No volumes matching the patterns of this group"
             return
 
         combined_volumes, volumes_not_online = _combine_netapp_api_volumes(
             volumes_in_group,
-            parsed,
+            section,
         )
 
         for vol, state in volumes_not_online.items():
@@ -200,7 +210,7 @@ def check_netapp_api_volumes(item, params, parsed):
 
         return
 
-    volume = parsed.get(item)
+    volume = section.get(item)
 
     if not volume:
         if item.count("-") >= 4:

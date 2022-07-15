@@ -48,7 +48,7 @@ def save_timeperiods(timeperiods: TimeperiodSpecs) -> None:
         _filter_builtin_timeperiods(timeperiods),
         pprint_value=active_config.wato_pprint_config,
     )
-    load_timeperiods.cache_clear()
+    load_timeperiods.cache_clear()  # type: ignore[attr-defined]
 
 
 def save_timeperiod(name, timeperiod) -> None:  # type:ignore[no-untyped-def]

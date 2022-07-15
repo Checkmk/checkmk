@@ -1,0 +1,15 @@
+Title: Improve event console history filtering performance
+Class: feature
+Compatible: compat
+Component: ec
+Date: 1657878632
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p7
+
+By handling case-sensitivity in the filter expressions more correctly, the
+performance of event console history filters has been improved for various
+cases.
+

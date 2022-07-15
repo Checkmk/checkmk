@@ -275,10 +275,6 @@ class ValueSpec(abc.ABC, Generic[T]):
     def value_from_json(self, json_value: JSONValue) -> T:
         raise NotImplementedError()
 
-    def value_to_json_safe(self, value: T) -> JSONValue:
-        """Return a JSON compatible format without sensitive information like passwords"""
-        return self.value_to_json(value)
-
     @abc.abstractmethod
     def from_html_vars(self, varprefix: str) -> T:
         """Create a value from the current settings of the HTML variables
@@ -1885,9 +1881,6 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
     def value_from_json(self, json_value: JSONValue) -> Sequence[str]:
         return [self._valuespec.value_from_json(e) for e in json_value]
 
-    def value_to_json_safe(self, value: Sequence[str]) -> JSONValue:
-        return [self._valuespec.value_to_json_safe(e) for e in value]
-
     def transform_value(self, value: Sequence[str]) -> Sequence[str]:
         return [self._valuespec.transform_value(v) for v in value]
 
@@ -2207,9 +2200,6 @@ class ListOf(ValueSpec[ListOfModel[T]]):
     def value_from_json(self, json_value: JSONValue) -> ListOfModel[T]:
         return [self._valuespec.value_from_json(e) for e in json_value]
 
-    def value_to_json_safe(self, value: ListOfModel[T]) -> JSONValue:
-        return [self._valuespec.value_to_json_safe(e) for e in value]
-
     def transform_value(self, value: ListOfModel[T]) -> ListOfModel[T]:
         return [self._valuespec.transform_value(v) for v in value]
 
@@ -2388,11 +2378,6 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
         return {
             ident: self._choice_dict[ident].value_from_json(val)
             for ident, val in json_value.items()
-        }
-
-    def value_to_json_safe(self, value: ListOfMultipleModel) -> JSONValue:
-        return {
-            ident: self._choice_dict[ident].value_to_json_safe(val) for ident, val in value.items()
         }
 
     def from_html_vars(self, varprefix: str) -> ListOfMultipleModel:
@@ -3523,23 +3508,6 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
             value = vs.value_from_json(json_value[1])
             vs.validate_datatype(value, "")
             return (ident, value)
-        except Exception:  # TODO: fix exc
-            return None
-
-    def value_to_json_safe(self, value: CascadingDropdownChoiceValue) -> JSONValue:
-        choice = self._choice_from_value(value)
-        if not choice:
-            return None  # just by passes should be considered a bug, value_to_json is not guarantied to return a value
-        ident, _title, vs = choice
-
-        if vs is None and ident == value:
-            return value
-
-        assert isinstance(value, tuple) and vs is not None
-
-        try:
-            vs.validate_datatype(value[1], "")
-            return [ident, vs.value_to_json_safe(value[1])]
         except Exception:  # TODO: fix exc
             return None
 
@@ -4928,11 +4896,6 @@ class Timerange(CascadingDropdown):
                 return ident
         return value
 
-    def value_to_json_safe(self, value: CascadingDropdownChoiceValue) -> JSONValue:
-        if isinstance(value, int):  # Handle default graph_timeranges
-            return super().value_to_json_safe(("age", value))
-        return super().value_to_json_safe(value)
-
     @staticmethod
     def compute_range(  # pylint: disable=too-many-branches
         rangespec: TimerangeValue,
@@ -5281,13 +5244,6 @@ class Optional(ValueSpec[_Optional[T]]):
             return tuple(json_value)
         return json_value
 
-    def value_to_json_safe(self, value: _Optional[T]) -> JSONValue:
-        if value is not None:
-            return self._valuespec.value_to_json_safe(value)
-        if isinstance(value, tuple):
-            return list(value)
-        return value
-
 
 AlternativeModel = Any
 
@@ -5432,12 +5388,6 @@ class Alternative(ValueSpec[AlternativeModel]):
         # inside json_value here. An example ruleset is "ESX Multipath Count".
         return json_value
 
-    def value_to_json_safe(self, value: AlternativeModel) -> JSONValue:
-        vs, match_value = self.matching_alternative(value)
-        if vs is None:
-            raise ValueError(_("Invalid value: %s") % vs)
-        return vs.value_to_json_safe(match_value)
-
     def from_html_vars(self, varprefix: str) -> AlternativeModel:
         nr = request.get_integer_input_mandatory(varprefix + "_use")
         vs = self._elements[nr]
@@ -5575,9 +5525,6 @@ class Tuple(ValueSpec):
 
     def value_from_json(self, json_value: JSONValue) -> tuple[Any, ...]:
         return tuple(el.value_from_json(val) for _, el, val in self._iter_value(json_value))
-
-    def value_to_json_safe(self, value: tuple[Any, ...]) -> JSONValue:
-        return [el.value_to_json_safe(val) for _, el, val in self._iter_value(value)]
 
     def from_html_vars(self, varprefix: str) -> tuple[Any, ...]:
         return tuple(e.from_html_vars(f"{varprefix}_{idx}") for idx, e in enumerate(self._elements))
@@ -5910,13 +5857,6 @@ class Dictionary(ValueSpec[DictionaryModel]):
             if param in json_value
         }
 
-    def value_to_json_safe(self, value: DictionaryModel) -> JSONValue:
-        return {
-            param: vs.value_to_json_safe(value[param])
-            for param, vs in self._get_elements()
-            if param in value
-        }
-
     def from_html_vars(self, varprefix: str) -> DictionaryModel:
         return {
             param: vs.from_html_vars(f"{varprefix}_p_{param}")
@@ -6152,9 +6092,6 @@ class Foldable(ValueSpec[T]):
     def value_from_json(self, json_value: JSONValue) -> T:
         return self._valuespec.value_from_json(json_value)
 
-    def value_to_json_safe(self, value: T) -> JSONValue:
-        return self._valuespec.value_to_json_safe(value)
-
     def validate_datatype(self, value: Any, varprefix: str) -> None:
         self._valuespec.validate_datatype(value, varprefix)
 
@@ -6264,9 +6201,6 @@ class Transform(ValueSpec):
 
     def value_from_json(self, json_value: JSONValue) -> Any:
         return self.back(self._valuespec.value_from_json(json_value))
-
-    def value_to_json_safe(self, value: Any) -> JSONValue:
-        return self._valuespec.value_to_json_safe(self.forth(value))
 
 
 class LDAPDistinguishedName(TextInput):
@@ -6459,12 +6393,6 @@ class Password(TextInput):
         if value is None:
             return _("none")
         return "******"
-
-    def value_to_json_safe(self, value: _Optional[str]) -> JSONValue:
-        if value is None:
-            return "none"
-        password_hash = hashlib.sha256(value.encode()).hexdigest()
-        return f"hash:{password_hash[:10]}"
 
     def from_html_vars(self, varprefix: str) -> str:
         value = super().from_html_vars(varprefix)
@@ -7505,11 +7433,6 @@ class SSHKeyPair(ValueSpec[_Optional[SSHKeyPairValue]]):
         if json_value == []:
             return None
         return (json_value[0], json_value[1])
-
-    def value_to_json_safe(self, value: _Optional[SSHKeyPairValue]) -> JSONValue:
-        if value is None:
-            return ""
-        return f"fingerprint:{self._get_key_fingerprint(value)}"
 
     def from_html_vars(self, varprefix: str) -> SSHKeyPairValue:
         if request.has_var(varprefix):

@@ -10,11 +10,11 @@ import os
 import pprint
 import re
 from enum import auto, Enum
-from typing import Any, cast, Container, Dict, List, Mapping, Optional, Tuple, Union
+from typing import Any, Callable, cast, Container, Dict, List, Mapping, Optional, Tuple, Union
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.store as store
-from cmk.utils.object_diff import make_diff_text
+from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.regex import escape_regex_chars
 from cmk.utils.type_defs import (
     HostOrServiceConditionRegex,
@@ -756,7 +756,7 @@ class Ruleset:
         """Diff two rules, masking secrets and serializing the rule value to a log-friendly format"""
         if old is None:
             return make_diff_text({}, new.to_log())
-        return make_diff_text(old.to_log(), new.to_log())
+        return old.diff_to(new)
 
     def edit_rule(self, orig_rule: Rule, rule: Rule) -> None:
         folder_rules = self._rules[orig_rule.folder.path()]
@@ -1014,29 +1014,53 @@ class Rule:
             rule_config["value"],
         )
 
+    def value_masked(self) -> RuleValue:
+        """Return a copy of the value with all secrets masked"""
+        return self.ruleset.valuespec().mask(self.value)
+
+    def diff_to(self, other: Rule) -> str:
+        """Diff to another rule, masking secrets"""
+        # We cannot mask passwords after diffing because the diff result has no type information.
+        # When masking before diffing, however, we won't detect changed passwords, so we have to add
+        # that extra info.
+        # If masking changes the diff, secrets must have changed.
+        if make_diff(self.value, other.value) != make_diff(
+            self.value_masked(), other.value_masked()
+        ):
+            report = _("Redacted secrets changed.")
+            if diff := make_diff(self.to_log(), other.to_log()):
+                report = diff + "\n" + report
+            return report
+
+        return make_diff_text(self.to_log(), other.to_log())
+
     def to_config(self) -> RuleSpec:
         # Special case: The main folder must not have a host_folder condition, because
         # these rules should also affect non WATO hosts.
         return self._to_config(
-            use_host_folder=UseHostFolder.NONE if self.folder.is_root() else UseHostFolder.MACRO,
-            hide_secrets=False,
+            use_host_folder=UseHostFolder.NONE if self.folder.is_root() else UseHostFolder.MACRO
         )
 
     def to_web_api(self) -> RuleSpec:
-        return self._to_config(use_host_folder=UseHostFolder.NONE, hide_secrets=False)
+        return self._to_config(use_host_folder=UseHostFolder.NONE)
 
     def to_log(self) -> RuleSpec:
         """Returns a JSON compatible format suitable for logging, where passwords are replaced"""
-        return self._to_config(use_host_folder=UseHostFolder.NONE, hide_secrets=True)
+        vs = self.ruleset.valuespec()
+        return self._to_config(
+            use_host_folder=UseHostFolder.NONE,
+            transform_value=lambda value: vs.value_to_json(vs.mask(self.value)),
+        )
 
-    def _to_config(self, *, use_host_folder: UseHostFolder, hide_secrets: bool) -> RuleSpec:
+    def _to_config(
+        self,
+        *,
+        use_host_folder: UseHostFolder,
+        transform_value: Callable[[RuleValue], RuleValue] | None = None,
+    ) -> RuleSpec:
         rule_spec = RuleSpec(
             id=self.id,
-            value=(
-                self.ruleset.valuespec().value_to_json_safe(self.value)
-                if hide_secrets
-                else self.value
-            ),
+            value=transform_value(self.value) if transform_value else self.value,
             condition=self.conditions.to_config(use_host_folder),
         )
         if options := self.rule_options.to_config():

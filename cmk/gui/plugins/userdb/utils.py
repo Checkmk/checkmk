@@ -167,7 +167,7 @@ def get_connection(connection_id: Optional[str]) -> "Optional[UserConnector]":
 
 
 def clear_user_connection_cache() -> None:
-    get_connection.cache_clear()
+    get_connection.cache_clear()  # type: ignore[attr-defined]
 
 
 def active_connections() -> "List[Tuple[str, UserConnector]]":

@@ -30,8 +30,6 @@ from cmk.utils.type_defs import (
     TagIDToTaggroupID,
 )
 
-from cmk.automations.results import AnalyseServiceResult
-
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place
 import cmk.base.export  # pylint: disable=cmk-module-layer-violation
@@ -840,7 +838,7 @@ class Ruleset:
         hostname,
         svc_desc_or_item,
         svc_desc,
-        service_result: Optional[AnalyseServiceResult],
+        service_labels: Optional[Labels],
     ):
         resultlist = []
         resultdict: Dict[str, Any] = {}
@@ -854,7 +852,7 @@ class Ruleset:
                 hostname,
                 svc_desc_or_item,
                 svc_desc,
-                service_result=service_result,
+                service_labels=service_labels,
             ):
                 continue
 
@@ -1072,7 +1070,7 @@ class Rule:
                 svc_desc_or_item=None,
                 svc_desc=None,
                 only_host_conditions=True,
-                service_result=None,
+                service_labels=None,
             )
         )
 
@@ -1082,7 +1080,7 @@ class Rule:
         hostname,
         svc_desc_or_item,
         svc_desc,
-        service_result: Optional[AnalyseServiceResult],
+        service_labels: Optional[Labels],
     ):
         """Whether or not the given folder/host/item matches this rule"""
         return not any(
@@ -1093,7 +1091,7 @@ class Rule:
                 svc_desc_or_item,
                 svc_desc,
                 only_host_conditions=False,
-                service_result=service_result,
+                service_labels=service_labels,
             )
         )
 
@@ -1104,7 +1102,7 @@ class Rule:
         svc_desc_or_item,
         svc_desc,
         only_host_conditions,
-        service_result: Optional[AnalyseServiceResult],
+        service_labels: Optional[Labels],
     ):
         """A generator that provides the reasons why a given folder/host/item not matches this rule"""
         host = host_folder.host(hostname)
@@ -1123,16 +1121,13 @@ class Rule:
         # real service description.
         if only_host_conditions:
             match_object = ruleset_matcher.RulesetMatchObject(hostname)
-        elif self.ruleset.item_type() == "service" and service_result:
+        elif self.ruleset.item_type() == "service" and service_labels is not None:
             match_object = cmk.base.export.ruleset_match_object_of_service(
-                hostname, svc_desc_or_item, svc_labels=service_result.service_info["labels"]
+                hostname, svc_desc_or_item, svc_labels=service_labels
             )
-        elif self.ruleset.item_type() == "item" and service_result:
+        elif self.ruleset.item_type() == "item" and service_labels is not None:
             match_object = cmk.base.export.ruleset_match_object_for_checkgroup_parameters(
-                hostname,
-                svc_desc_or_item,
-                svc_desc,
-                svc_labels=service_result.service_info["labels"],
+                hostname, svc_desc_or_item, svc_desc, svc_labels=service_labels
             )
         elif not self.ruleset.item_type():
             match_object = ruleset_matcher.RulesetMatchObject(hostname)

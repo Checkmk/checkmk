@@ -25,6 +25,7 @@ from cmk.utils.type_defs import (
     HostName,
     HostOrServiceConditions,
     HostOrServiceConditionsSimple,
+    Labels,
     RuleOptions,
     ServiceName,
     TagConditionNE,
@@ -34,8 +35,6 @@ from cmk.utils.type_defs import (
     TaggroupIDToTagCondition,
     TagID,
 )
-
-from cmk.automations.results import AnalyseServiceResult
 
 import cmk.gui.forms as forms
 import cmk.gui.view_utils
@@ -1021,13 +1020,13 @@ class ModeEditRuleset(WatoMode):
 
         html.div("", id_="row_info")
         num_rows = 0
-        service_result: Optional[AnalyseServiceResult] = None
+        service_labels: Optional[Labels] = None
         if self._hostname and self._host and self._service:
-            service_result = analyse_service(
+            service_labels = analyse_service(
                 self._host.site_id(),
                 self._hostname,
                 self._service,
-            )
+            ).service_info["labels"]
         for folder, folder_rules in groups:
             with table_element(
                 "rules_%s_%s" % (self._name, folder.ident()),
@@ -1049,7 +1048,7 @@ class ModeEditRuleset(WatoMode):
                     table.row(css=self._css_for_rule(search_options, rule))
                     self._set_focus(rule)
                     self._show_rule_icons(
-                        table, match_state, folder, rule, rulenr, service_result=service_result
+                        table, match_state, folder, rule, rulenr, service_labels=service_labels
                     )
                     self._rule_cells(table, rule)
 
@@ -1083,11 +1082,11 @@ class ModeEditRuleset(WatoMode):
         folder,
         rule: Rule,
         rulenr,
-        service_result: Optional[AnalyseServiceResult] = None,
+        service_labels: Optional[Labels] = None,
     ) -> None:
-        if service_result:
+        if service_labels:
             table.cell(_("Ma."))
-            title, img = self._match(match_state, rule, service_result=service_result)
+            title, img = self._match(match_state, rule, service_labels=service_labels)
             html.icon("rule%s" % img, title)
 
         table.cell("", css="buttons")
@@ -1132,9 +1131,7 @@ class ModeEditRuleset(WatoMode):
             icon="delete",
         )
 
-    def _match(
-        self, match_state, rule: Rule, service_result: Optional[AnalyseServiceResult]
-    ) -> _Tuple[str, str]:
+    def _match(self, match_state, rule: Rule, service_labels: Optional[Labels]) -> _Tuple[str, str]:
         self._get_host_labels_from_remote_site()
         reasons = (
             [_("This rule is disabled")]
@@ -1146,7 +1143,7 @@ class ModeEditRuleset(WatoMode):
                     self._item,
                     self._service,
                     only_host_conditions=False,
-                    service_result=service_result,
+                    service_labels=service_labels,
                 )
             )
         )

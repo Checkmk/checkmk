@@ -29,6 +29,7 @@ from cmk.utils.type_defs import (
     NotifyBulks,
     RulesetName,
     ServiceDetails,
+    ServiceName,
     ServiceState,
 )
 from cmk.utils.type_defs import UpdateDNSCacheResult as UpdateDNSCacheResultRaw
@@ -195,6 +196,18 @@ class AnalyseServiceResult(ABCAutomationResult):
 
 
 result_type_registry.register(AnalyseServiceResult)
+
+
+@dataclass
+class GetServicesLabelsResult(ABCAutomationResult):
+    labels: Mapping[ServiceName, Labels]
+
+    @staticmethod
+    def automation_call() -> str:
+        return "get-services-labels"
+
+
+result_type_registry.register(GetServicesLabelsResult)
 
 
 @dataclass

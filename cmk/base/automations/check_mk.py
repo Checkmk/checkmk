@@ -667,6 +667,23 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
 automations.register(AutomationRenameHosts())
 
 
+class AutomationGetServicesLabels(Automation):
+    cmd = "get-services-labels"
+    needs_config = True
+    needs_checks = True
+
+    def execute(self, args: List[str]) -> automation_results.GetServicesLabelsResult:
+        hostname, services = HostName(args[0]), args[1:]
+        config_cache = config.get_config_cache()
+
+        return automation_results.GetServicesLabelsResult(
+            {service: config_cache.labels_of_service(hostname, service) for service in services}
+        )
+
+
+automations.register(AutomationGetServicesLabels())
+
+
 class AutomationAnalyseServices(Automation):
     cmd = "analyse-service"
     needs_config = True

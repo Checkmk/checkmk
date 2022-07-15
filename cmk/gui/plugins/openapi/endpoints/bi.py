@@ -444,7 +444,7 @@ def get_bi_pack(params: Mapping[str, Any]) -> Response:
         ("aggregation", bi_pack.get_aggregations()),
         ("rule", bi_pack.get_rules()),
     ]:
-        elements = entities.values()
+        elements = entities.values()  # type: ignore[attr-defined]
         domain_members["%ss" % name] = constructors.object_collection(
             name=name,
             domain_type="bi_" + name,  # type: ignore[arg-type]

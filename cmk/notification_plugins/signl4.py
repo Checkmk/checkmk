@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # SIGNL4 Alerting
 
 # (c) 2020 Derdack GmbH - License: GNU Public License v2

@@ -4,18 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from typing import Any, Iterable, Mapping
+from typing import Any, Mapping, Sequence
 
-from cmk.base.check_legacy_includes.df import (
+from .agent_based_api.v1 import get_value_store, register, Service
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.df import (
     df_check_filesystem_list,
+    df_discovery,
+    EXCLUDED_MOUNTPOINTS,
     FILESYSTEM_DEFAULT_PARAMS,
-    filesystem_groups,
+    FSBlock,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.df import df_discovery, EXCLUDED_MOUNTPOINTS, FSBlock
-
-DiscoveryResult = Iterable
-CheckResult = Iterable
 
 Section = Mapping[str, FSBlock]
 
@@ -174,16 +173,16 @@ def _parse_df(
     return parsed
 
 
-def parse_zfsget(section: StringTable) -> Section:
+def parse_zfsget(string_table: StringTable) -> Section:
     parsed = {}
 
     # check if a section for df exists and split info into two section lists
-    if ["[df]"] in section:
-        idx = section.index(["[df]"])
-        info_zfs = section[:idx]
-        info_df = section[idx + 1 :]
+    if ["[df]"] in string_table:
+        idx = string_table.index(["[df]"])
+        info_zfs = string_table[:idx]
+        info_df = string_table[idx + 1 :]
     else:
-        info_zfs = section
+        info_zfs = string_table
         info_df = []
 
     # parse both lists of lines
@@ -216,27 +215,39 @@ def parse_zfsget(section: StringTable) -> Section:
     }
 
 
-def discovery_zfsget(section: Section) -> DiscoveryResult:
-    params = host_extra_conf(host_name(), filesystem_groups)
-    return df_discovery(
-        params,
-        [mp for mp in section if mp not in EXCLUDED_MOUNTPOINTS],
+register.agent_section(
+    name="zfsget",
+    parse_function=parse_zfsget,
+)
+
+
+def discover_zfsget(params: Sequence[Mapping[str, Any]], section: Section) -> DiscoveryResult:
+    yield from (
+        Service(item=i, parameters=p)
+        for i, p in df_discovery(
+            params,
+            [mp for mp in section if mp not in EXCLUDED_MOUNTPOINTS],
+        )
     )
 
 
 def check_zfsget(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    return df_check_filesystem_list(item, params, list(section.values()))
+    yield from df_check_filesystem_list(
+        value_store=get_value_store(),
+        item=item,
+        params=params,
+        fslist_blocks=list(section.values()),
+    )
 
 
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
-
-
-check_info["zfsget"] = {
-    "parse_function": parse_zfsget,
-    "check_function": check_zfsget,
-    "inventory_function": discovery_zfsget,
-    "service_description": "Filesystem %s",
-    "has_perfdata": True,
-    "group": "filesystem",
-    "default_levels_variable": "filesystem_default_levels",
-}
+register.check_plugin(
+    name="zfsget",
+    service_name="Filesystem %s",
+    discovery_function=discover_zfsget,
+    discovery_default_parameters={"groups": []},
+    discovery_ruleset_name="filesystem_groups",
+    discovery_ruleset_type=register.RuleSetType.ALL,
+    check_function=check_zfsget,
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
+    check_ruleset_name="filesystem",
+)

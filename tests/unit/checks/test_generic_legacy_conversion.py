@@ -2425,7 +2425,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "zerto_vpg_rpo",
         "zfs_arc_cache",
         "zfs_arc_cache.l2",
-        "zfsget",
         "zorp_connections",
     }
     current_legacy_checks = set(fix_plugin_legacy.check_info)

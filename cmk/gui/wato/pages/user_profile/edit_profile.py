@@ -78,7 +78,7 @@ class UserProfile(ABCUserProfilePage):
                 vs = attr.valuespec()
                 value = vs.from_html_vars("ua_" + name)
                 vs.validate_value(value, "ua_" + name)
-                user_spec[name] = value
+                user_spec[name] = value  # type: ignore[literal-required]
 
         userdb.save_users(users, datetime.now())
 
@@ -158,7 +158,7 @@ def _show_custom_user_attr(user_spec: UserSpec, custom_attr) -> None:
         if attr.user_editable():
             vs = attr.valuespec()
             forms.section(_u(vs.title()))
-            value = user_spec.get(name, vs.default_value())
+            value = user_spec.get(name, vs.default_value())  # type: ignore[literal-required]
             if not attr.permission() or user.may(attr.permission()):
                 vs.render_input("ua_" + name, value)
                 html.help(_u(vs.help()))

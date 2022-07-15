@@ -113,6 +113,20 @@ export function open_popup(popup_id) {
 }
 
 function do_open_popup(popup) {
+    // This prevents an exception when a view is rendered as a dashlet.
+    // Since a dashlet is in an iframe, it can't access the popup_filters menu
+    // The whole dashboard will do this anyway, but having no error on the
+    // console and in the gui crawler is nice.
+    if (
+        window.location.pathname.endsWith("/check_mk/dashboard_dashlet.py") &&
+        popup === "popup_filters"
+    ) {
+        return;
+    }
+    if (popup === null || popup === undefined) {
+        return;
+    }
+
     utils.add_class(popup, "active");
 
     // Call registered hook

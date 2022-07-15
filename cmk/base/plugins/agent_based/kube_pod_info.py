@@ -2,6 +2,7 @@
 # Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# mypy: disallow_untyped_defs
 
 import json
 
@@ -21,7 +22,7 @@ from cmk.base.plugins.agent_based.utils.kube import (
 from cmk.base.plugins.agent_based.utils.kube_info import check_info
 
 
-def parse_kube_pod_info(string_table: StringTable):
+def parse_kube_pod_info(string_table: StringTable) -> PodInfo:
     """
     >>> parse_kube_pod_info([[
     ... '{"namespace": "redis", '

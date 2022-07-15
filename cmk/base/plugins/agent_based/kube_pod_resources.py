@@ -2,6 +2,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# mypy: disallow_untyped_defs
 
 import json
 import math
@@ -39,7 +40,7 @@ def discovery_kube_pod_resources(
     yield Service()
 
 
-def parse_kube_pod_resources(string_table: StringTable):  # type:ignore[no-untyped-def]
+def parse_kube_pod_resources(string_table: StringTable) -> PodResources:
     """
     >>> parse_kube_pod_resources([[
     ...     '{"running": ["checkmk-cluster-agent", "storage-provisioner"],'
@@ -60,7 +61,7 @@ register.agent_section(
 )
 
 
-def parse_kube_allocatable_pods(string_table: StringTable):  # type:ignore[no-untyped-def]
+def parse_kube_allocatable_pods(string_table: StringTable) -> AllocatablePods:
     """
     >>> parse_kube_allocatable_pods([[
     ...     '{"capacity": 110,'

@@ -5,7 +5,9 @@
 import functools
 import sys
 import traceback
-from typing import Any, Callable, Dict, List, Literal, NamedTuple, Optional, Union
+import typing
+from collections.abc import Callable
+from typing import Any, Dict, List, Literal, NamedTuple, Optional, Union
 
 from cmk.utils.exceptions import MKGeneralException
 
@@ -86,12 +88,22 @@ ClearEvent = Literal[
 
 ClearEvents = Union[List[ClearEvent], ClearEvent]
 
+R = typing.TypeVar("R")
+P = typing.ParamSpec("P")
 
-def _scoped_memoize(  # type:ignore[no-untyped-def]
+
+# NOTE
+# We can't make a type alias like Foo = Callable[P, R] right now, because of a bug in mypy. We
+# therefore need to duplicate the Callable[P, R] part in every site of use. It seems to work, but
+# the declaration itself raises an error.
+# For more detailed information see: https://github.com/python/mypy/issues/11855
+
+
+def _scoped_memoize(
     clear_events: ClearEvents,
     maxsize: Optional[int] = 128,
     typed: bool = False,
-):
+) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """A scoped memoization decorator.
 
     This caches the decorated function with a `functools.lru_cache`, however the cache will be
@@ -120,18 +132,19 @@ def _scoped_memoize(  # type:ignore[no-untyped-def]
     if not clear_events:
         raise ValueError(f"No clear-events specified. Use one of: {ClearEvent!r}")
 
-    def _decorator(func):
+    def _decorator(func: Callable[P, R]) -> Callable[P, R]:
         cached_func = functools.lru_cache(maxsize=maxsize, typed=typed)(func)
         for clear_event in clear_events:
             register_builtin(clear_event, cached_func.cache_clear)  # hooks.register_builtin
-        return cached_func
+        # TODO: mypy does more complex type overloads depending on arity
+        return typing.cast(Callable[P, R], cached_func)
 
     return _decorator
 
 
-def request_memoize(  # type:ignore[no-untyped-def]
+def request_memoize(
     maxsize: Optional[int] = 128, typed: bool = False
-):
+) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """A cache decorator which only has a scope for one request.
 
     Args:

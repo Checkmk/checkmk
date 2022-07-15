@@ -35,6 +35,7 @@ const std::vector<std::string_view> g_special_processes{
     {"init"sv},
     {"fish"sv},
     {"wininit.exe"sv},
+    {"LsaIso.exe"sv},
     {"bash"sv}};
 
 }  // namespace

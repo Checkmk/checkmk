@@ -42,6 +42,7 @@ UCD = any_of(
     contains(".1.3.6.1.2.1.1.1.0", "pfsense"),
     contains(".1.3.6.1.2.1.1.1.0", "genugate"),
     contains(".1.3.6.1.2.1.1.1.0", "bomgar"),
+    contains(".1.3.6.1.2.1.1.1.0", "beyondtrust"),
     contains(".1.3.6.1.2.1.1.1.0", "pulse secure"),
     contains(".1.3.6.1.2.1.1.1.0", "microsens"),
     all_of(  # Artec email archive appliances
@@ -68,6 +69,7 @@ _NOT_UCD = all_of(
     not_contains(".1.3.6.1.2.1.1.1.0", "pfsense"),
     not_contains(".1.3.6.1.2.1.1.1.0", "genugate"),
     not_contains(".1.3.6.1.2.1.1.1.0", "bomgar"),
+    not_contains(".1.3.6.1.2.1.1.1.0", "beyondtrust"),
     not_contains(".1.3.6.1.2.1.1.1.0", "pulse secure"),
     not_contains(".1.3.6.1.2.1.1.1.0", "microsens"),
     any_of(  # Artec email archive appliances
@@ -100,6 +102,10 @@ _UCD_MEM = any_of(
         not_exists(".1.3.6.1.2.1.25.1.1.0"),
     ),
     all_of(
+        contains(".1.3.6.1.2.1.1.1.0", "beyondtrust"),
+        not_exists(".1.3.6.1.2.1.25.1.1.0"),
+    ),
+    all_of(
         # Astaro and Synology are Linux but should use hr_mem
         # Otherwise Cache/Buffers are included in used memory
         # generating critical state
@@ -125,6 +131,10 @@ _NOT_UCD_MEM = all_of(
     ),
     any_of(
         not_contains(".1.3.6.1.2.1.1.1.0", "bomgar"),
+        exists(".1.3.6.1.2.1.25.1.1.0"),
+    ),
+    any_of(
+        not_contains(".1.3.6.1.2.1.1.1.0", "beyondtrust"),
         exists(".1.3.6.1.2.1.25.1.1.0"),
     ),
     any_of(

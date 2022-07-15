@@ -12,6 +12,7 @@ import cmk.utils.paths
 from cmk.utils.version import is_managed_edition
 
 from cmk.gui.ctx_stack import request_local_attr
+from cmk.gui.hooks import request_memoize
 
 
 class Theme:
@@ -44,6 +45,7 @@ class Theme:
         """
         return ["facelift"] if self._theme == "facelift" else [self._theme, "facelift"]
 
+    @request_memoize()
     def detect_icon_path(self, icon_name: str, prefix: str) -> str:
         """Detect from which place an icon shall be used and return it's path relative to htdocs/
 

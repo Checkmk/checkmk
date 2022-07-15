@@ -4,13 +4,25 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Iterable, Mapping
+from typing import Any, Iterable, Mapping, MutableMapping, Sequence
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_rate,
+    get_value_store,
+    GetRateError,
+    Metric,
+    register,
+    Result,
+    Service,
+    State,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.utils.df import (
+    df_check_filesystem_single,
     df_discovery,
     FILESYSTEM_DEFAULT_LEVELS,
     INODES_DEFAULT_PARAMS,
@@ -19,35 +31,23 @@ from cmk.base.plugins.agent_based.utils.df import (
     TREND_DEFAULT_PARAMS,
 )
 
-CheckResult = Iterable[tuple[int, str, list] | tuple[int, str]]
-DiscoveryResult = Iterable[tuple[str, Mapping]]
-
 Section = Mapping[str, Mapping[str, int | str]]
 
 # <<<netapp_api_volumes:sep(9)>>>
 # volume vol0 size-available 556613632    state online    files-total 25876   files-used 8646 size-total 848203776    fcp_write_data 0    fcp_read_data 0cifs_write_data 0    iscsi_read_latency 0    iscsi_write_data 0  read_data 201265528798  nfs_write_latency 977623886 san_write_latency 0 san_write_data 0read_latency 1529821621 cifs_read_latency 0 fcp_write_latency 0 fcp_read_latency 0  iscsi_write_latency 0   nfs_read_latency 1491050012 iscsi_read_data 0   instance_name vol0  cifs_read_data 0    nfs_read_data 197072260981  write_latency 1528780977    san_read_data 0 san_read_latency 0  write_data 13926719804  nfs_write_data 2789744628   cifs_write_latency 0
 
 
-factory_settings["netapp_api_volumes_default_levels"] = {
-    **FILESYSTEM_DEFAULT_LEVELS,
-    **MAGIC_FACTOR_DEFAULT_PARAMS,
-    **INODES_DEFAULT_PARAMS,
-    **TREND_DEFAULT_PARAMS,
-}
-
-
 def parse_netapp_api_volumes(string_table: StringTable) -> Section:
     volumes = {}
     for line in string_table:
-        volume = {}
+        volume: dict[str, int | str] = {}
         name = line[0].split(" ", 1)[1]
         for element in line[1:]:
             key, val = element.split(" ", 1)
             try:
-                val = int(val)
+                volume[key] = int(val)
             except ValueError:
-                pass
-            volume[key] = val
+                volume[key] = val
 
         # Clustermode specific
         if "vserver_name" in volume:
@@ -58,9 +58,16 @@ def parse_netapp_api_volumes(string_table: StringTable) -> Section:
     return volumes
 
 
-def discovery_netapp_api_volumes(section: Section) -> DiscoveryResult:
-    params = host_extra_conf(host_name(), filesystem_groups)
-    return df_discovery(params, section)
+register.agent_section(
+    name="netapp_api_volumes",
+    parse_function=parse_netapp_api_volumes,
+)
+
+
+def discover_netapp_api_volumes(
+    params: Sequence[Mapping[str, Any]], section: Section
+) -> DiscoveryResult:
+    yield from (Service(item=i, parameters=p) for i, p in df_discovery(params, section))
 
 
 def _create_key(protocol: str, mode: str, field: str) -> str:
@@ -70,9 +77,11 @@ def _create_key(protocol: str, mode: str, field: str) -> str:
 
 
 def _check_single_netapp_api_volume(item: str, params: Mapping[str, Any], volume) -> CheckResult:
+    value_store = get_value_store()
     mega = 1024.0 * 1024.0
     inodes_total = volume["files-total"]
-    yield from df_check_filesystem_single_coroutine(
+    yield from df_check_filesystem_single(
+        value_store,
         item,
         volume["size-total"] / mega,
         volume["size-available"] / mega,
@@ -82,13 +91,14 @@ def _check_single_netapp_api_volume(item: str, params: Mapping[str, Any], volume
         params,
     )
 
-    yield 0, "", list(_generate_volume_metrics(params, volume))
+    yield from _generate_volume_metrics(value_store, params, volume)
 
 
 def _generate_volume_metrics(
+    value_store: MutableMapping[str, Any],
     params: Mapping[str, Any],
     volume: Mapping[str, float],
-) -> Iterable[tuple[str, float]]:
+) -> Iterable[Metric]:
     now = time.time()
     base = {}
     metrics_map = {"write_ops": "write_ops_s"}
@@ -103,8 +113,8 @@ def _generate_volume_metrics(
                     continue
 
                 try:
-                    delta = get_rate(key, now, value, onwrap=RAISE)
-                except MKCounterWrapped:
+                    delta = get_rate(value_store, key, now, value, raise_overflow=True)
+                except GetRateError:
                     continue
 
                 # Quite hacky.. this base information is used later on by the "latency" field
@@ -154,7 +164,7 @@ def _generate_volume_metrics(
                         ]
                     )  # fixed: true-division
 
-                yield metrics_map.get(key, key), delta
+                yield Metric(metrics_map.get(key, key), delta)
 
 
 def _combine_netapp_api_volumes(
@@ -192,7 +202,10 @@ def check_netapp_api_volumes(item: str, params: Mapping[str, Any], section: Sect
 
         volumes_in_group = mountpoints_in_group(section, *params["patterns"])
         if not volumes_in_group:
-            yield 3, "No volumes matching the patterns of this group"
+            yield Result(
+                state=State.UNKNOWN,
+                summary="No volumes matching the patterns of this group",
+            )
             return
 
         combined_volumes, volumes_not_online = _combine_netapp_api_volumes(
@@ -201,12 +214,12 @@ def check_netapp_api_volumes(item: str, params: Mapping[str, Any], section: Sect
         )
 
         for vol, state in volumes_not_online.items():
-            yield 1, "Volume %s is %s" % (vol, state)
+            yield Result(state=State.WARN, summary="Volume %s is %s" % (vol, state))
 
         if combined_volumes:
             yield from _check_single_netapp_api_volume(item, params, combined_volumes)
 
-        yield 0, "\n%d volume(s) in group" % len(volumes_in_group)
+            yield Result(state=State.OK, notice="%d volume(s) in group" % len(volumes_in_group))
 
         return
 
@@ -214,22 +227,32 @@ def check_netapp_api_volumes(item: str, params: Mapping[str, Any], section: Sect
 
     if not volume:
         if item.count("-") >= 4:
-            yield 3, "Service description with UUID is no longer supported. Please rediscover."
+            yield Result(
+                state=State.UNKNOWN,
+                summary="Service description with UUID is no longer supported. Please rediscover.",
+            )
         return
 
     if volume.get("state") != "online":
-        yield 1, "Volume is %s" % volume.get("state")
+        yield Result(state=State.WARN, summary="Volume is %s" % volume.get("state"))
         return
 
     yield from _check_single_netapp_api_volume(item, params, volume)
 
 
-check_info["netapp_api_volumes"] = {
-    "check_function": check_netapp_api_volumes,
-    "inventory_function": discovery_netapp_api_volumes,
-    "parse_function": parse_netapp_api_volumes,
-    "service_description": "Volume %s",
-    "has_perfdata": True,
-    "group": "netapp_volumes",
-    "default_levels_variable": "netapp_api_volumes_default_levels",
-}
+register.check_plugin(
+    name="netapp_api_volumes",
+    service_name="Volume %s",
+    discovery_function=discover_netapp_api_volumes,
+    discovery_default_parameters={"groups": []},
+    discovery_ruleset_name="filesystem_groups",
+    discovery_ruleset_type=register.RuleSetType.ALL,
+    check_function=check_netapp_api_volumes,
+    check_default_parameters={
+        **FILESYSTEM_DEFAULT_LEVELS,
+        **MAGIC_FACTOR_DEFAULT_PARAMS,
+        **INODES_DEFAULT_PARAMS,
+        **TREND_DEFAULT_PARAMS,
+    },
+    check_ruleset_name="netapp_volumes",
+)

@@ -1981,7 +1981,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "netapp_api_systemtime",
         "netapp_api_temp",
         "netapp_api_vf_status",
-        "netapp_api_volumes",
         "netapp_api_vs_status",
         "netapp_api_vs_traffic",
         "netapp_cluster",

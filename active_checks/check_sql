@@ -31,6 +31,7 @@ DEFAULT_PORTS = {
     "mssql": 1433,
     "oracle": 1521,
     "db2": 50000,
+    "sqlanywhere": 2638,
 }
 
 MP_INF: Tuple[float, float] = (float("-inf"), float("+inf"))

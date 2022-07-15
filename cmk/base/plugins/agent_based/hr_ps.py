@@ -3,21 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Iterable, Mapping, Match, NamedTuple, Sequence
+from typing import Any, Mapping, Match, NamedTuple, Sequence
 
-import cmk.base.plugins.agent_based.utils.ps as ps
-
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.ucd_hr import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.plugins.agent_based.agent_based_api.v1 import regex
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-
-DiscoveryResult = Iterable[tuple[str, Mapping]]
-CheckResult = Iterable[tuple[int, str, list] | tuple[int, str]]
-
-
-discovery_hr_processes_rules = []
+from .agent_based_api.v1 import check_levels, regex, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils import ps
+from .utils.ucd_hr_detection import HR
 
 _HR_PS_STATUS_MAP = {
     "1": ("running", "running", ""),
@@ -38,11 +29,6 @@ class HRProcess(NamedTuple):
 Section = Sequence[HRProcess]
 
 
-factory_settings["hr_ps_default_levels"] = {
-    "levels": (1, 1, 99999, 99999),
-}
-
-
 def parse_hr_ps(string_table: StringTable) -> Section:
     parsed = []
     for name, path, status in string_table:
@@ -51,11 +37,25 @@ def parse_hr_ps(string_table: StringTable) -> Section:
     return parsed
 
 
-def discover_hr_ps(section: Section) -> DiscoveryResult:
-    params = host_extra_conf(host_name(), discovery_hr_processes_rules)
+register.snmp_section(
+    name="hr_ps",
+    parse_function=parse_hr_ps,
+    fetch=SNMPTree(
+        base=".1.3.6.1.2.1.25.4.2.1",
+        oids=[  # HOST-RESOURCES-MIB
+            "2",  # hrSWRunName
+            "4",  # hrSWRunPath
+            "7",  # hrSWRunStatus
+        ],
+    ),
+    detect=HR,
+)
+
+
+def discover_hr_ps(params: Sequence[Mapping[str, Any]], section: Section) -> DiscoveryResult:
     discovered_items: dict[str, Mapping[str, Any]] = {}
     for process in section:
-        for rule in params:
+        for rule in params[:-1]:  # skip default
             match_name_or_path = rule.get("match_name_or_path")
             match_status = rule.get("match_status")
 
@@ -80,7 +80,7 @@ def discover_hr_ps(section: Section) -> DiscoveryResult:
                     "match_groups": match_groups,
                 },
             )
-    return list(discovered_items.items())
+    yield from (Service(item=i, parameters=p) for i, p in discovered_items.items())
 
 
 def check_hr_ps(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -98,8 +98,13 @@ def check_hr_ps(item: str, params: Mapping[str, Any], section: Section) -> Check
             ).append(process)
 
     lc, lw, uw, uc = params.get("levels", (None, None, None, None))
-    yield check_levels(
-        count_processes, "processes", (uw, uc, lw, lc), unit="processes", human_readable_func=int
+    yield from check_levels(
+        count_processes,
+        metric_name="processes",
+        levels_lower=(lw, lc),
+        levels_upper=(uw, uc),
+        label="Processes",
+        render_func=lambda x: str(int(x)),
     )
 
     process_state_map = dict(params.get("status", []))
@@ -109,12 +114,12 @@ def check_hr_ps(item: str, params: Mapping[str, Any], section: Section) -> Check
             state_info = "%s (%s)" % (state_short, state_long)
         else:
             state_info = state_short
-        yield state, "%s %s" % (len(processes), state_info)
+        yield Result(state=State(state), summary="%s %s" % (len(processes), state_info))
 
 
 def _match_hr_process(
     process: HRProcess,
-    match_name_or_path: Any,  # str, tuple, None ???
+    match_name_or_path: Any | None,  # str, tuple, None ???
     match_status: Sequence[str] | None,
     match_groups: list[str] | None,
 ) -> bool | Match[str]:
@@ -144,20 +149,19 @@ def _match_hr_process(
     return pattern_to_match == match_pattern
 
 
-check_info["hr_ps"] = {
-    "parse_function": parse_hr_ps,
-    "inventory_function": discover_hr_ps,
-    "check_function": check_hr_ps,
-    "service_description": "Process %s",
-    "snmp_scan_function": is_hr,
-    "snmp_info": (
-        ".1.3.6.1.2.1.25.4.2.1",
-        [  # HOST-RESOURCES-MIB
-            "2",  # hrSWRunName
-            "4",  # hrSWRunPath
-            "7",  # hrSWRunStatus
-        ],
-    ),
-    "group": "hr_ps",
-    "default_levels_variable": "hr_ps_default_levels",
-}
+register.check_plugin(
+    name="hr_ps",
+    service_name="Process %s",
+    discovery_function=discover_hr_ps,
+    discovery_default_parameters={
+        "descr": "%s",
+        "default_params": {},
+    },
+    discovery_ruleset_name="discovery_hr_processes_rules",
+    discovery_ruleset_type=register.RuleSetType.ALL,
+    check_function=check_hr_ps,
+    check_default_parameters={
+        "levels": (1, 1, 99999, 99999),
+    },
+    check_ruleset_name="hr_ps",
+)

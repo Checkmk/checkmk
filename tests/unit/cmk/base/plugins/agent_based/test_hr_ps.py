@@ -5,11 +5,8 @@
 
 import pytest
 
-from tests.testlib import Check
-
-from .checktestlib import assertDiscoveryResultsEqual, DiscoveryResult, MockHostExtraConf
-
-pytestmark = pytest.mark.checks
+from cmk.base.plugins.agent_based import hr_ps
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Service
 
 
 @pytest.mark.parametrize(
@@ -96,13 +93,6 @@ def test_hr_ps_discovery(info, discovery_params, expected_discovery_result) -> N
     """Test that the hr_ps check returns the correct discovery results given different
     discovery parameters.
     """
-    check = Check("hr_ps")
-
-    with MockHostExtraConf(check, discovery_params, "host_extra_conf"):
-        actual_discovery_result = check.run_discovery(check.run_parse(info))
-
-    assertDiscoveryResultsEqual(
-        check,
-        DiscoveryResult(actual_discovery_result),
-        DiscoveryResult(expected_discovery_result),
+    assert sorted(hr_ps.discover_hr_ps([discovery_params, {}], hr_ps.parse_hr_ps(info))) == sorted(
+        Service(item=i, parameters=p) for i, p in expected_discovery_result
     )

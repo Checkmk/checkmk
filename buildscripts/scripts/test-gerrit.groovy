@@ -84,8 +84,8 @@ def main() {
                 sh("ls -alF ${result_dir}");
                 time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
             }
+            currentBuild.result = allStagesPassed ? "SUCCESS" : "FAILED";
         }
-        currentBuild.result = allStagesPassed ? "SUCCESS" : "FAILED";
     } finally {
         test_gerrit_helper.desc_add_line("Executed on: ${NODE_NAME} in ${WORKSPACE}");
         stage("Analyse Issues") {

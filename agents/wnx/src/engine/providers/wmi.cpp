@@ -70,6 +70,45 @@ struct WmiSource {
     std::vector<std::wstring> service_names;
 };
 
+const std::vector<std::wstring> msexch_service_all_names = {
+    L"MSExchangeADTopology",
+    L"MSExchangeAntispamUpdate",
+    L"MSExchangeCompliance",
+    L"MSExchangeDagMgmt",
+    L"MSExchangeDelivery",
+    L"MSExchangeDiagnostics",
+    L"MSExchangeEdgeSync",
+    L"MSExchangeFastSearch",
+    L"MSExchangeFrontEndTransport",
+    L"MSExchangeHM",
+    L"MSExchangeHMRecovery",
+    L"MSExchangeImap4",
+    L"MSExchangeIMAP4BE",
+    L"MSExchangeIS",
+    L"MSExchangeMailboxAssistants",
+    L"MSExchangeMailboxReplication",
+    L"MSExchangeMitigation",
+    L"MSExchangeNotificationsBroker",
+    L"MSExchangePop3",
+    L"MSExchangePOP3BE",
+    L"MSExchangeRepl",
+    L"MSExchangeRPC",
+    L"MSExchangeServiceHost",
+    L"MSExchangeSubmission",
+    L"MSExchangeThrottling",
+    L"MSExchangeTransport",
+    L"MSExchangeTransportLogSearch",
+    L"MSExchangeUM",
+    L"MSExchangeUMCR",
+};
+
+const std::vector<std::wstring> msexch_service_reasonable_names = {
+    L"MSExchangeDiagnostics",
+    L"MSExchangeHM",
+    L"MSExchangeServiceHost",
+    L"MSExchangeTransport",
+};
+
 // Link section name and WmiSource
 using NamedWmiSources = std::unordered_map<std::string, WmiSource>;
 
@@ -126,47 +165,47 @@ const NamedWmiSources g_section_objects = {
          .name_space{kWmiPathStd},
          .object_name{
              L"Win32_PerfRawData_MSExchangeActiveSync_MSExchangeActiveSync"},
-         .service_names{},
+         .service_names{msexch_service_reasonable_names},
      }},
     {"msexch_availability"s,  // MSEXCHANGE group
      {
          .name_space{kWmiPathStd},
          .object_name{
              L"Win32_PerfRawData_MSExchangeAvailabilityService_MSExchangeAvailabilityService"},
-         .service_names{},
+         .service_names{msexch_service_reasonable_names},
      }},
     {"msexch_owa"s,  //
      {
          .name_space{kWmiPathStd},
          .object_name{L"Win32_PerfRawData_MSExchangeOWA_MSExchangeOWA"},
-         .service_names{},
+         .service_names{msexch_service_reasonable_names},
      }},
     {"msexch_autodiscovery"s,
      {
          .name_space{kWmiPathStd},
          .object_name{
              L"Win32_PerfRawData_MSExchangeAutodiscover_MSExchangeAutodiscover"},
-         .service_names{},
+         .service_names{msexch_service_reasonable_names},
      }},
     {"msexch_isclienttype"s,
      {
          .name_space{kWmiPathStd},
          .object_name{
              L"Win32_PerfRawData_MSExchangeISClientType_MSExchangeISClientType"},
-         .service_names{},
+         .service_names{msexch_service_reasonable_names},
      }},
     {"msexch_isstore"s,
      {
          .name_space{kWmiPathStd},
          .object_name{L"Win32_PerfRawData_MSExchangeISStore_MSExchangeISStore"},
-         .service_names{},
+         .service_names{msexch_service_reasonable_names},
      }},
     {"msexch_rpcclientaccess"s,
      {
          .name_space{kWmiPathStd},
          .object_name{
              L"Win32_PerfRawData_MSExchangeRpcClientAccess_MSExchangeRpcClientAccess"},
-         .service_names{},
+         .service_names{msexch_service_reasonable_names},
      }},
 };
 

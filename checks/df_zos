@@ -44,6 +44,9 @@ class MountPoint(NamedTuple):
 Section = Mapping[str, MountPoint]
 
 
+_DF_ZOS_EXCLUDE_LIST = ["AUTOMNT", "TFS", "NFS"]
+
+
 def parse_df_zos(string_table: StringTable) -> Section:
     section: dict[str, MountPoint] = {}
     usage: tuple[str, float, float, float] | None = None
@@ -74,14 +77,11 @@ def parse_df_zos(string_table: StringTable) -> Section:
     return section
 
 
-df_zos_exclude_list = ["AUTOMNT", "TFS", "NFS"]
-
-
 def discover_df_zos(section: Section) -> DiscoveryResult:
     mplist = [
         item
         for item, mp in section.items()
-        if "Read/Write" in mp.options and not mp.options.intersection(df_zos_exclude_list)
+        if "Read/Write" in mp.options and not mp.options.intersection(_DF_ZOS_EXCLUDE_LIST)
     ]
     return df_discovery(host_extra_conf(host_name(), filesystem_groups), mplist)
 

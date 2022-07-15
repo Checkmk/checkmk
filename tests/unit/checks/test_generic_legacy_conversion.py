@@ -341,7 +341,6 @@ def test_all_check_variables_present(fix_plugin_legacy) -> None:
         "dell_powerconnect_psu_status_map",
         "dell_powerconnect_psu_supply_map",
         "dell_powerconnect_temp_default_values",
-        "df_zos_exclude_list",
         "discovery_cisco_dom_rules",
         "discovery_hr_processes_rules",
         "discovery_mssql_backup",

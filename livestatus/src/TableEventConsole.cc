@@ -125,15 +125,15 @@ private:
                     // NOTE: Keep this in sync with EC code. Ugly...
                     switch (column_filter->oper()) {
                         case RelationalOperator::equal:
+                        case RelationalOperator::matches:
+                        case RelationalOperator::equal_icase:
                         case RelationalOperator::matches_icase:
                             os << "\nFilter: " << column_name << " "
                                << column_filter->oper() << " "
                                << column_filter->value();
                             continue;
                         case RelationalOperator::not_equal:
-                        case RelationalOperator::matches:
                         case RelationalOperator::doesnt_match:
-                        case RelationalOperator::equal_icase:
                         case RelationalOperator::not_equal_icase:
                         case RelationalOperator::doesnt_match_icase:
                         case RelationalOperator::less:

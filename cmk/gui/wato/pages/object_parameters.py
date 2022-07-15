@@ -362,7 +362,10 @@ class ModeObjectParameters(WatoMode):
         # We could use the outcome of _setting instead of the outcome of
         # the automation call in the future
         _setting, rules = ruleset.analyse_ruleset(
-            self._hostname, svc_desc_or_item=None, svc_desc=None, service_result=service_result
+            self._hostname,
+            svc_desc_or_item=None,
+            svc_desc=None,
+            service_labels=service_result.service_info["labels"],
         )
 
         for rule_folder, rule_index, rule in rules:

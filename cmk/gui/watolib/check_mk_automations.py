@@ -207,6 +207,21 @@ def rename_hosts(
     )
 
 
+def get_services_labels(
+    site_id: SiteId,
+    host_name: HostName,
+    service_names: Sequence[ServiceName],
+) -> results.GetServicesLabelsResult:
+    return _deserialize(
+        _automation_serialized(
+            "get-services-labels",
+            siteid=site_id,
+            args=[host_name, *service_names],
+        ),
+        results.GetServicesLabelsResult,
+    )
+
+
 def analyse_service(
     site_id: SiteId,
     host_name: HostName,

@@ -7,9 +7,7 @@
 import re
 from typing import Collection, Iterable, Optional, Type
 
-from cmk.utils.type_defs import CheckPluginNameStr, HostName, Item, ServiceName
-
-from cmk.automations.results import AnalyseServiceResult
+from cmk.utils.type_defs import CheckPluginNameStr, HostName, Item, Labels, ServiceName
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place
@@ -210,17 +208,17 @@ class ModePatternEditor(WatoMode):
         # Loop all rules for this ruleset
         already_matched = False
         abs_rulenr = 0
-        service_result: Optional[AnalyseServiceResult] = None
+        service_labels: Optional[Labels] = None
         if self._hostname:
             service_desc = self._get_service_description(self._hostname, "logwatch", self._item)
             host = Folder.current().host(self._hostname)
             if not host:
                 raise MKUserError("host", _("The given host does not exist"))
-            service_result = analyse_service(
+            service_labels = analyse_service(
                 host.site_id(),
                 self._hostname,
                 service_desc,
-            )
+            ).service_info["labels"]
         for folder, rulenr, rule in ruleset.get_rules():
             # Check if this rule applies to the given host/service
             if self._hostname:
@@ -232,7 +230,7 @@ class ModePatternEditor(WatoMode):
                     self._hostname,
                     self._item,
                     service_desc,
-                    service_result=service_result,
+                    service_labels=service_labels,
                 )
             else:
                 # If no host/file given match all rules

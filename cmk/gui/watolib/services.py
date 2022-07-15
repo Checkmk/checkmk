@@ -41,8 +41,8 @@ from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.watolib.activate_changes import sync_changes_before_remote_automation
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import (
-    analyse_service,
     discovery,
+    get_services_labels,
     set_autochecks,
     try_discovery,
     update_host_labels,
@@ -320,17 +320,14 @@ class Discovery:
         # Check whether or not the service still needs a host specific setting after removing
         # the host specific setting above and remove all services from the service list
         # that are fine without an additional change.
+        services_labels = get_services_labels(self._host.site_id(), self._host.name(), services)
         for service in list(services):
-            service_result = analyse_service(
-                self._host.site_id(),
-                self._host.name(),
-                service,
-            )
+            service_labels = services_labels.labels[service]
             value_without_host_rule, _ = ruleset.analyse_ruleset(
                 self._host.name(),
                 service,
                 service,
-                service_result=service_result,
+                service_labels=service_labels,
             )
             if (
                 not value and value_without_host_rule in [None, False]

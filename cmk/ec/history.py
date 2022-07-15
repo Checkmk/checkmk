@@ -524,7 +524,7 @@ def _get_files(history: History, logger: Logger, query: QueryGET) -> Iterable[An
             # Revert lines from the log file to have the newer lines processed first
             cmd = "tac %s" % quote_shell_string(str(path))
             if greptexts:
-                cmd += " | egrep -i -e %s" % quote_shell_string(".*".join(greptexts))
+                cmd += " | grep -E -i -e %s" % quote_shell_string(".*".join(greptexts))
             logger.debug("preprocessing history file with command [%s]", cmd)
             new_entries = _parse_history_file(history, path, query, cmd, limit, logger)
             history_entries += new_entries

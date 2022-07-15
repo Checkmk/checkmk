@@ -7,7 +7,7 @@ import os
 import subprocess
 import time
 from logging import Logger
-from typing import Any, cast, Iterable, Optional
+from typing import Any, Iterable, Optional
 
 import cmk.utils.debug
 import cmk.utils.defines
@@ -17,7 +17,7 @@ from cmk.utils.type_defs import ContactgroupName
 from .config import Action, Config, EMailActionConfig, Rule, ScriptActionConfig
 from .core_queries import query_contactgroups_members, query_status_enable_notifications
 from .event import Event
-from .history import History, quote_shell_string
+from .history import History
 from .host_config import HostConfig
 from .settings import Settings
 
@@ -167,32 +167,6 @@ def _prepare_text(text: str, event_columns: Iterable[tuple[str, Any]], event: Ev
 
 def _escape_null_bytes(s: str) -> str:
     return s.replace("\000", "\\000")
-
-
-# TODO: Fix the typing and remove the cast!
-def _get_quoted_event(event: Event, logger: Logger) -> Event:
-    new_event: dict[str, Any] = {}
-    fields_to_quote = ["application", "match_groups", "text", "comment", "contact"]
-    for key, value in event.items():
-        if key not in fields_to_quote:
-            new_event[key] = value
-        else:
-            try:
-                if isinstance(value, list):
-                    new_event[key] = list(map(quote_shell_string, value))
-                elif isinstance(value, tuple):
-                    # TODO: Huh??? Shouldn't we map over the tuple?
-                    new_event[key] = value
-                elif isinstance(value, str):
-                    new_event[key] = quote_shell_string(value)
-                else:
-                    raise ValueError(f'unquotable field "{key}": {value}')
-            except Exception as e:
-                # If anything unforeseen happens, we use the intial value
-                new_event[key] = value
-                logger.exception(f"Unable to quote event text {key!r}: {value!r}, {e!r}")
-
-    return cast(Event, new_event)
 
 
 def _substitute_event_tags(

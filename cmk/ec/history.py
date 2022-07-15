@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+import shlex
 import struct
 import subprocess
 import threading
@@ -13,7 +14,6 @@ from pathlib import Path
 from typing import Any, AnyStr, Iterable, Optional, Union
 
 from cmk.utils.log import VERBOSE
-from cmk.utils.misc import quote_shell_string
 from cmk.utils.render import date_and_time
 
 from .config import Config
@@ -502,11 +502,11 @@ def _get_files(history: History, logger: Logger, query: QueryGET) -> Iterable[An
             # If we have greptexts we pre-filter the file using the extremely
             # fast GNU Grep
             # Revert lines from the log file to have the newer lines processed first
-            cmd = "tac %s" % quote_shell_string(str(path))
+            cmd = f"tac {shlex.quote(str(path))}"
             for column_name, operator_name, _predicate, argument in filters:
                 if column_name not in grepping_filters:
                     continue
-                arg = quote_shell_string(str(argument))
+                arg = shlex.quote(str(argument))
                 if operator_name == "=":
                     cmd += f" | grep -E -i -e {arg}"
                 elif operator_name == "~~":

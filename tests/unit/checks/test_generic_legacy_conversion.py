@@ -495,7 +495,6 @@ def test_all_check_variables_present(fix_plugin_legacy) -> None:
         "hpux_tunables_shmseg_default_levels",
         "hr_cpu_default_levels",
         "hr_ps_default_levels",
-        "hr_ps_status_map",
         "hsrp_states",
         "huawei_channel_default",
         "huawei_cpu_default",

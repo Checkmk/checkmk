@@ -2,54 +2,71 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from typing import Any, Iterable, Mapping, Match, NamedTuple, Sequence
+
 import cmk.base.plugins.agent_based.utils.ps as ps
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ucd_hr import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.agent_based_api.v1 import regex
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+DiscoveryResult = Iterable[tuple[str, str]]
+CheckResult = Iterable[tuple[int, str, list] | tuple[int, str]]
+
 
 discovery_hr_processes_rules = []
 
-hr_ps_status_map = {
+_HR_PS_STATUS_MAP = {
     "1": ("running", "running", ""),
     "2": ("runnable", "runnable", "waiting for resource"),
     "3": ("not_runnable", "not runnable", "loaded but waiting for event"),
     "4": ("invalid", "invalid", "not loaded"),
 }
 
-HRProcess = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
-    "HRProcess", ["name", "path", "state_key", "state_short", "state_long"]
-)
+
+class HRProcess(NamedTuple):
+    name: str
+    path: str
+    state_key: str
+    state_short: str
+    state_long: str
+
+
+Section = Sequence[HRProcess]
+
 
 factory_settings["hr_ps_default_levels"] = {
     "levels": (1, 1, 99999, 99999),
 }
 
 
-def parse_hr_ps(info):
+def parse_hr_ps(string_table: StringTable) -> Section:
     parsed = []
-    for name, path, status in info:
-        key, short, long_ = hr_ps_status_map.get(status, (status, "unknown[%s]" % status, ""))
+    for name, path, status in string_table:
+        key, short, long_ = _HR_PS_STATUS_MAP.get(status, (status, "unknown[%s]" % status, ""))
         parsed.append(HRProcess(name.strip(":"), path, key, short, long_))
     return parsed
 
 
-def discovery_hr_ps(parsed):
-    discovery_rules = host_extra_conf(host_name(), discovery_hr_processes_rules)
-    discovered_items = {}
-    for process in parsed:
-        for rule in discovery_rules:
+def discover_hr_ps(section: Section) -> DiscoveryResult:
+    params = host_extra_conf(host_name(), discovery_hr_processes_rules)
+    discovered_items: dict[str, str] = {}
+    for process in section:
+        for rule in params:
             match_name_or_path = rule.get("match_name_or_path")
             match_status = rule.get("match_status")
 
-            matches = _match_hr_process(process, match_name_or_path, match_status)
+            matches = _match_hr_process(process, match_name_or_path, match_status, None)
             if not matches:
                 continue
 
-            if hasattr(matches, "groups"):
-                match_groups = [g if g else "" for g in matches.groups()]
-            else:
+            if matches is True:
                 match_groups = []
+            else:
+                match_groups = [g if g else "" for g in matches.groups()]
 
             service_descr = ps.replace_service_description(
                 rule["descr"], match_groups, match_name_or_path
@@ -67,14 +84,14 @@ def discovery_hr_ps(parsed):
     return list(discovered_items.items())
 
 
-def check_hr_ps(item, params, parsed):
+def check_hr_ps(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     match_name_or_path = params.get("match_name_or_path")
     match_status = params.get("match_status")
     match_groups = params.get("match_groups")
 
     count_processes = 0
-    processes_by_state = {}
-    for process in parsed:
+    processes_by_state: dict[tuple[str, str, str], list[HRProcess]] = {}
+    for process in section:
         if _match_hr_process(process, match_name_or_path, match_status, match_groups):
             count_processes += 1
             processes_by_state.setdefault(
@@ -96,7 +113,12 @@ def check_hr_ps(item, params, parsed):
         yield state, "%s %s" % (len(processes), state_info)
 
 
-def _match_hr_process(process, match_name_or_path, match_status, match_groups=None):
+def _match_hr_process(
+    process: HRProcess,
+    match_name_or_path: Any,  # str, tuple, None ???
+    match_status: Sequence[str] | None,
+    match_groups: list[str] | None,
+) -> bool | Match[str]:
     if match_status and process.state_key not in match_status:
         return False
 
@@ -107,7 +129,7 @@ def _match_hr_process(process, match_name_or_path, match_status, match_groups=No
     pattern_to_match = {
         "match_name": process.name,
         "match_path": process.path,
-    }.get(match_type)
+    }[match_type]
 
     if match_pattern is not None and match_pattern.startswith("~"):
         # Regex for complete process name or path
@@ -125,7 +147,7 @@ def _match_hr_process(process, match_name_or_path, match_status, match_groups=No
 
 check_info["hr_ps"] = {
     "parse_function": parse_hr_ps,
-    "inventory_function": discovery_hr_ps,
+    "inventory_function": discover_hr_ps,
     "check_function": check_hr_ps,
     "service_description": "Process %s",
     "snmp_scan_function": is_hr,

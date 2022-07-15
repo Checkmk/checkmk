@@ -225,13 +225,7 @@ def discovery_zfsget(section: Section) -> DiscoveryResult:
 
 
 def check_zfsget(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    fslist = []
-    # contains item? -> ok, else gets added here
-    for mountpoint, entry in section.items():
-        if "patterns" in params or item == mountpoint:
-            fslist.append(entry)
-
-    return df_check_filesystem_list(item, params, fslist)
+    return df_check_filesystem_list(item, params, list(section.values()))
 
 
 factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS

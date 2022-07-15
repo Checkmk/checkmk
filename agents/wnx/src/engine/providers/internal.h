@@ -67,8 +67,8 @@ public:
 
     virtual bool stop(bool wait) = 0;
 
-    std::string getUniqName() const { return uniq_name_; }
-    std::string ip() const { return ip_; }
+    std::string getUniqName() const noexcept { return uniq_name_; }
+    std::string ip() const noexcept { return ip_; }
 
     // implemented only for very special providers which has to change
     // itself during generation of output(like plugins)
@@ -84,16 +84,16 @@ public:
     }
 
     virtual bool isAllowedByCurrentConfig() const;
-    bool isAllowedByTime() const;
+    bool isAllowedByTime() const noexcept;
     auto isAllowedFromTime() const noexcept { return allowed_from_time_; }
 
     // called in kick. NO AUTOMATION HERE.
-    void loadStandardConfig();
+    void loadStandardConfig() noexcept;
     virtual void loadConfig() {}
     int timeout() const noexcept { return timeout_; }
     virtual void registerCommandLine(const std::string &command_line);
 
-    void registerOwner(cma::srv::ServiceProcessor *sp);
+    void registerOwner(cma::srv::ServiceProcessor *sp) noexcept;
 
     virtual void preStart() {}
     uint64_t errorCount() const noexcept { return error_count_; }
@@ -119,7 +119,8 @@ protected:
     void disableSectionTemporary();
 
     bool sendGatheredData(const std::string &command_line);
-    virtual std::string makeHeader(std::string_view section_name) const {
+    virtual std::string makeHeader(
+        std::string_view section_name) const noexcept {
         return section::MakeHeader(
             section_name == cma::section::kUseEmbeddedName
                 ? std::string_view(uniq_name_)

@@ -359,7 +359,7 @@ public:
     }
 
     // typically called from the ::Open, to write data in
-    static HANDLE openMailSlotWrite(const char *name) {
+    static HANDLE openMailSlotWrite(const char *name) noexcept {
         return ::CreateFileA(name, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     }

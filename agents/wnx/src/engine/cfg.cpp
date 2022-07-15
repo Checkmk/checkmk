@@ -883,12 +883,14 @@ bool InitializeMainConfig(const std::vector<std::wstring> &config_filenames,
 
     auto code = GetCfg().loadAggregated(usable_name, cache_op);
 
-    if (code >= 0) {
+    if (code == LoadCfgStatus::kCacheLoaded ||
+        code == LoadCfgStatus::kFileLoaded) {
         return true;
     }
 
     XLOG::l.e("Failed usable_name: '{}' at root: '{}' code is '{}'",
-              wtools::ToUtf8(usable_name), GetCfg().getRootDir(), code);
+              wtools::ToUtf8(usable_name), GetCfg().getRootDir(),
+              static_cast<int>(code));
 
     return false;
 }

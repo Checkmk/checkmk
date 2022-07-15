@@ -25,7 +25,7 @@ public:
         : Asynchronous(name, separator) {}
 
     std::string makeHeader(
-        const std::string_view /*section_name*/) const override {
+        const std::string_view /*section_name*/) const noexcept override {
         return {};
     }
 

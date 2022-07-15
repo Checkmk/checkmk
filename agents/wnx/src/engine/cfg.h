@@ -23,14 +23,14 @@
 namespace cma::cfg {
 constexpr std::string_view kBuildHashValue = "DEFADEFADEFA";
 // bit mask
-enum LoadCfgStatus {
+enum class LoadCfgStatus {
     kAllFailed = -2,    // root config not found
     kCacheFailed = -1,  // cached not found, only root loaded, user is bad
     kFileLoaded = 0,    // all loaded
     kCacheLoaded = 1,   // user is bad, cache loaded
 };
 
-enum Error {
+enum class Error {
     kOk = 0,     //
     kEmpty = 1,  // config is empty
     kNotFound    // name not found

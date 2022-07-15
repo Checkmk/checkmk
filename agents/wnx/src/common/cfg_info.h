@@ -210,7 +210,7 @@ constexpr const char *ConvertLogWatchLevelToString(EventLevels Lvl) {
 }
 
 constexpr auto kFromBegin = std::numeric_limits<uint64_t>::max();
-inline const std::chrono::seconds G_DefaultDelayOnFail(3600);
+inline constexpr std::chrono::seconds G_DefaultDelayOnFail(3600);
 
 // Prefixes of mailslots' names
 constexpr const char *const kServiceMailSlot = "WinAgent";      // production

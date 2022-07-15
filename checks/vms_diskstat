@@ -26,6 +26,10 @@ from cmk.base.plugins.agent_based.utils.df import df_discovery
 factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
+def _mb(raw: str) -> float:
+    return int(raw) * 512 / (1024.0 * 1024.0)
+
+
 def inventory_vms_diskstat_fs(info):
     return df_discovery(host_extra_conf(host_name(), filesystem_groups), [line[1] for line in info])
 
@@ -33,10 +37,8 @@ def inventory_vms_diskstat_fs(info):
 def check_vms_diskstat_fs(item, params, info):
     for line in info:
         if line[1] == item:
-            _device, _label, size, used, _ios = line
-            size_mb = int(size) * 512 / (1024.0 * 1024.0)
-            avail_mb = int(used) * 512 / (1024.0 * 1024.0)
-            return df_check_filesystem_single(item, size_mb, avail_mb, 0, None, None, params)
+            _device, label, size, avail, _ios = line
+            return df_check_filesystem_single(label, _mb(size), _mb(avail), 0, None, None, params)
 
     return (3, "no such disk")
 

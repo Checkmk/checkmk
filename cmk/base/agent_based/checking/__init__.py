@@ -63,6 +63,7 @@ from cmk.base.api.agent_based import checking_classes, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
+from cmk.base.config import ConfigCache, HostConfig
 from cmk.base.keepalive import get_keepalive
 from cmk.base.sources import fetch_all, make_sources, Source
 
@@ -305,8 +306,8 @@ def _check_plugins_missing_data(
 
 def check_host_services(
     *,
-    config_cache: config.ConfigCache,
-    host_config: config.HostConfig,
+    config_cache: ConfigCache,
+    host_config: HostConfig,
     parsed_sections_broker: ParsedSectionsBroker,
     services: Sequence[ConfiguredService],
     run_plugin_names: Container[CheckPluginName],
@@ -349,7 +350,7 @@ def _filter_services_to_check(
     *,
     services: Sequence[ConfiguredService],
     run_plugin_names: Container[CheckPluginName],
-    config_cache: config.ConfigCache,
+    config_cache: ConfigCache,
     host_name: HostName,
 ) -> Sequence[ConfiguredService]:
     """Filter list of services to check
@@ -365,7 +366,7 @@ def _filter_services_to_check(
 
 
 def service_outside_check_period(
-    config_cache: config.ConfigCache, hostname: HostName, description: ServiceName
+    config_cache: ConfigCache, hostname: HostName, description: ServiceName
 ) -> bool:
     period = config_cache.check_period_of_service(hostname, description)
     if period is None:
@@ -403,7 +404,7 @@ def _submit_aggregated_results(
 
 def get_aggregated_result(
     parsed_sections_broker: ParsedSectionsBroker,
-    host_config: config.HostConfig,
+    host_config: HostConfig,
     service: ConfiguredService,
     plugin: Optional[checking_classes.CheckPlugin],
     *,
@@ -509,8 +510,8 @@ def get_aggregated_result(
 
 def _get_monitoring_data_kwargs(
     parsed_sections_broker: ParsedSectionsBroker,
-    host_config: config.HostConfig,
-    config_cache: config.ConfigCache,
+    host_config: HostConfig,
+    config_cache: ConfigCache,
     service: ConfiguredService,
     sections: Sequence[ParsedSectionName],
     source_type: Optional[SourceType] = None,

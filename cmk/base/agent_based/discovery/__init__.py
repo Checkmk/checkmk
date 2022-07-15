@@ -69,6 +69,7 @@ from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
 from cmk.base.agent_based.utils import check_parsing_errors, check_sources
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
+from cmk.base.config import ConfigCache, DiscoveryCheckParameters, HostConfig
 from cmk.base.core_config import (
     get_active_check_descriptions,
     get_host_attributes,
@@ -216,7 +217,7 @@ def commandline_discovery(
 
 def _preprocess_hostnames(
     arg_host_names: Set[HostName],
-    config_cache: config.ConfigCache,
+    config_cache: ConfigCache,
     only_host_labels: bool,
 ) -> Set[HostName]:
     """Default to all hosts and expand cluster names to their nodes"""
@@ -312,8 +313,8 @@ def _commandline_discovery_on_host(
 #                       False for a vanished item, that item is kept
 def automation_discovery(
     *,
-    config_cache: config.ConfigCache,
-    host_config: config.HostConfig,
+    config_cache: ConfigCache,
+    host_config: HostConfig,
     mode: DiscoveryMode,
     service_filters: Optional[_ServiceFilters],
     on_error: OnError,
@@ -663,7 +664,7 @@ def _check_service_lists(
     *,
     host_name: HostName,
     services_by_transition: ServicesByTransition,
-    params: config.DiscoveryCheckParameters,
+    params: DiscoveryCheckParameters,
     service_filters: _ServiceFilters,
     discovery_mode: DiscoveryMode,
 ) -> Tuple[Sequence[ActiveCheckResult], bool]:
@@ -904,8 +905,8 @@ def _get_up_hosts() -> Optional[Set[HostName]]:
 
 def _discover_marked_host(
     *,
-    config_cache: config.ConfigCache,
-    host_config: config.HostConfig,
+    config_cache: ConfigCache,
+    host_config: HostConfig,
     autodiscovery_queue: AutodiscoveryQueue,
     reference_time: float,
     oldest_queued: float,

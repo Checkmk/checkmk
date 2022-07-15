@@ -19,6 +19,7 @@ from cmk.utils.type_defs import HostKey, HostName
 
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
+from cmk.base.config import HostConfig
 from cmk.base.discovered_labels import HostLabel
 
 from .utils import QualifiedDiscovery
@@ -26,7 +27,7 @@ from .utils import QualifiedDiscovery
 
 def analyse_host_labels(
     *,
-    host_config: config.HostConfig,
+    host_config: HostConfig,
     load_labels: bool,
     save_labels: bool,
     parsed_sections_broker: ParsedSectionsBroker,
@@ -88,7 +89,7 @@ def analyse_node_labels(
 
 def analyse_cluster_labels(
     *,
-    host_config: config.HostConfig,
+    host_config: HostConfig,
     parsed_sections_broker: ParsedSectionsBroker,
     load_labels: bool,
     save_labels: bool,

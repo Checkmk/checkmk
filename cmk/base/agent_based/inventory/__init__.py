@@ -31,6 +31,7 @@ import cmk.base.config as config
 import cmk.base.section as section
 from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
 from cmk.base.agent_based.utils import check_parsing_errors, check_sources, get_section_kwargs
+from cmk.base.config import ConfigCache, HostConfig
 from cmk.base.sources import fetch_all, make_sources, Source
 
 from ._retentions import Retentions, RetentionsTracker
@@ -65,7 +66,7 @@ def commandline_inventory(
 
     for hostname in hostnames:
         section.section_begin(hostname)
-        host_config = config.HostConfig.make_host_config(hostname)
+        host_config = HostConfig.make_host_config(hostname)
         try:
             _commandline_inventory_on_host(
                 host_config=host_config,
@@ -83,7 +84,7 @@ def commandline_inventory(
 
 def _commandline_inventory_on_host(
     *,
-    host_config: config.HostConfig,
+    host_config: HostConfig,
     run_plugin_names: Container[InventoryPluginName],
     selected_sections: SectionNameCollection,
 ) -> None:
@@ -133,7 +134,7 @@ def active_check_inventory(hostname: HostName, options: Dict[str, int]) -> Activ
     sw_missing = options.get("sw-missing", 0)
     fail_status = options.get("inv-fail-status", 1)
 
-    host_config = config.HostConfig.make_host_config(hostname)
+    host_config = HostConfig.make_host_config(hostname)
 
     retentions_tracker = RetentionsTracker(host_config.inv_retention_intervals)
 
@@ -229,7 +230,7 @@ def _tree_nodes_are_equal(
 
 def _inventorize_host(
     *,
-    host_config: config.HostConfig,
+    host_config: HostConfig,
     run_plugin_names: Container[InventoryPluginName],
     selected_sections: SectionNameCollection,
     retentions_tracker: RetentionsTracker,
@@ -299,8 +300,8 @@ def _sources_failed(
 
 
 def do_inventory_actions_during_checking_for(
-    config_cache: config.ConfigCache,
-    host_config: config.HostConfig,
+    config_cache: ConfigCache,
+    host_config: HostConfig,
     *,
     parsed_sections_broker: ParsedSectionsBroker,
 ) -> None:
@@ -322,7 +323,7 @@ def do_inventory_actions_during_checking_for(
         status_data_store.save(host_name=host_config.hostname, tree=trees.status_data)
 
 
-def _do_inv_for_cluster(host_config: config.HostConfig) -> InventoryTrees:
+def _do_inv_for_cluster(host_config: HostConfig) -> InventoryTrees:
     inventory_tree = StructuredDataNode()
     _set_cluster_property(inventory_tree, host_config)
 
@@ -339,7 +340,7 @@ def _do_inv_for_cluster(host_config: config.HostConfig) -> InventoryTrees:
 
 
 def _do_inv_for_realhost(
-    host_config: config.HostConfig,
+    host_config: HostConfig,
     *,
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[InventoryPluginName],
@@ -406,7 +407,7 @@ def _do_inv_for_realhost(
 
 def _set_cluster_property(
     inventory_tree: StructuredDataNode,
-    host_config: config.HostConfig,
+    host_config: HostConfig,
 ) -> None:
     node = inventory_tree.setdefault_node(("software", "applications", "check_mk", "cluster"))
     node.attributes.add_pairs({"is_cluster": host_config.is_cluster})

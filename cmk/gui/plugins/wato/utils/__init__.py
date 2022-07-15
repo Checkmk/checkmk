@@ -647,17 +647,17 @@ def HostGroupSelection(**kwargs):
 
 def ContactGroupChoice(**kwargs):
     """Select multiple contact groups"""
-    return DualListChoice(choices=_sorted_contact_group_choices, **kwargs)
+    return DualListChoice(choices=_sorted_contact_group_choices, **kwargs)  # type: ignore[arg-type]
 
 
 def ServiceGroupChoice(**kwargs):
     """Select multiple service groups"""
-    return DualListChoice(choices=_sorted_service_group_choices, **kwargs)
+    return DualListChoice(choices=_sorted_service_group_choices, **kwargs)  # type: ignore[arg-type]
 
 
 def HostGroupChoice(**kwargs):
     """Select multiple host groups"""
-    return DualListChoice(choices=_sorted_host_group_choices, **kwargs)
+    return DualListChoice(choices=_sorted_host_group_choices, **kwargs)  # type: ignore[arg-type]
 
 
 @request_memoize()

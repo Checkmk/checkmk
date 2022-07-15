@@ -472,23 +472,6 @@ def _get_files(history: History, logger: Logger, query: QueryGET) -> Iterable[An
     # It's ok if the filters don't match 100% accurately on the right lines. If in
     # doubt, you can output more lines than necessary. This is only a kind of
     # prefiltering.
-    grep_pairs: list[tuple[int, str]] = []
-    for column_name, operator_name, _predicate, argument in filters:
-        # Make sure that the greptexts are in the same order as in the
-        # actual logfiles. They will be joined with ".*"!
-        try:
-            nr = grepping_filters.index(column_name)
-            if operator_name == "=":
-                grep_pairs.append((nr, str(argument)))
-            if operator_name == "~~":
-                # NOTE: We should probably do something different here!
-                grep_pairs.append((nr, str(argument)))
-        except Exception:
-            pass
-
-    grep_pairs.sort()
-    greptexts = [x[1] for x in grep_pairs]
-    logger.debug("Texts for grep: %r", greptexts)
 
     time_filters = [
         (operator_name, argument)
@@ -523,8 +506,15 @@ def _get_files(history: History, logger: Logger, query: QueryGET) -> Iterable[An
             # fast GNU Grep
             # Revert lines from the log file to have the newer lines processed first
             cmd = "tac %s" % quote_shell_string(str(path))
-            if greptexts:
-                cmd += " | grep -E -i -e %s" % quote_shell_string(".*".join(greptexts))
+            for column_name, operator_name, _predicate, argument in filters:
+                if column_name not in grepping_filters:
+                    continue
+                arg = quote_shell_string(str(argument))
+                if operator_name == "=":
+                    cmd += f" | grep -E -i -e {arg}"
+                elif operator_name == "~~":
+                    # NOTE: We should probably do something different here!
+                    cmd += f" | grep -E -i -e {arg}"
             logger.debug("preprocessing history file with command [%s]", cmd)
             new_entries = _parse_history_file(history, path, query, cmd, limit, logger)
             history_entries += new_entries

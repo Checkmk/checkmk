@@ -511,9 +511,8 @@ def _get_files(history: History, logger: Logger, query: QueryGET) -> Iterable[An
                     continue
                 arg = shlex.quote(str(argument))
                 if operator_name == "=":
-                    cmd += f" | grep -E -i -e {arg}"
+                    cmd += f" | grep -F -e {arg}"
                 elif operator_name == "~~":
-                    # NOTE: We should probably do something different here!
                     cmd += f" | grep -E -i -e {arg}"
             logger.debug("preprocessing history file with command [%s]", cmd)
             new_entries = _parse_history_file(history, path, query, cmd, limit, logger)

@@ -2242,6 +2242,7 @@ def _add_context_title(context: VisualContext, single_infos: List[str], title: s
 # Example: the info "history" (Event Console History) needs
 # the variables "event_id" and "history_line" to be set in order
 # to exactly specify one history entry.
+@request_memoize()
 def info_params(info_key: InfoName) -> List[FilterName]:
     return [key for key, _vs in visual_info_registry[info_key]().single_spec]
 
@@ -2272,11 +2273,12 @@ def get_singlecontext_vars(context: VisualContext, single_infos: SingleInfos) ->
     }
 
 
+@request_memoize()
 def may_add_site_hint(
     visual_name: str,
     info_keys: SingleInfos,
     single_info_keys: SingleInfos,
-    filter_names: List[FilterName],
+    filter_names: Tuple[FilterName, ...],
 ) -> bool:
     """Whether or not the site hint may be set when linking to a visual with the given details"""
     # When there is one non single site info used don't add the site hint

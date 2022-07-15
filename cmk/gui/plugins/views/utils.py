@@ -1408,9 +1408,9 @@ def _get_singlecontext_html_vars_from_row(
 
     add_site_hint = visuals.may_add_site_hint(
         visual_name,
-        info_keys=list(visual_info_registry.keys()),
-        single_info_keys=single_infos,
-        filter_names=list(url_vars.keys()),
+        info_keys=tuple(visual_info_registry.keys()),
+        single_info_keys=tuple(single_infos),
+        filter_names=tuple(url_vars.keys()),
     )
     if add_site_hint and row.get("site"):
         url_vars["site"] = row["site"]
@@ -1487,9 +1487,9 @@ def get_linked_visual_request_vars(
         # site may already be added earlier from the livestatus row
         add_site_hint = visuals.may_add_site_hint(
             visual["name"],
-            info_keys=list(visual_info_registry.keys()),
-            single_info_keys=visual["single_infos"],
-            filter_names=list(dict(vars_values).keys()),
+            info_keys=tuple(visual_info_registry.keys()),
+            single_info_keys=tuple(visual["single_infos"]),
+            filter_names=tuple(list(dict(vars_values).keys())),
         )
 
         if add_site_hint and request.var("site"):

@@ -636,3 +636,38 @@ def test_matches_search_with_rules(
     ruleset.append_rule(folder, rule)
 
     assert ruleset.matches_search_with_rules(search_options) == expected_result
+
+
+def _gcp_rule() -> rulesets.Rule:
+    return rulesets.Rule.from_config(
+        hosts_and_folders.Folder.root_folder(),
+        _ruleset("special_agents:gcp"),
+        {
+            "id": "1111",
+            "value": {
+                "project": "test",
+                "credentials": ("password", "hunter2"),
+                "services": ["gcs", "gce"],
+            },
+            "condition": {"host_name": ["HOSTLIST"]},
+        },
+    )
+
+
+def test_to_log_masks_secrets(request_context) -> None:
+    log = str(_gcp_rule().to_log())
+    assert "'password'" in log, "password tuple is present"
+    assert "hunter2" not in log, "password is masked"
+
+
+def test_diff_reports_changed_passwords(request_context) -> None:
+    old = _gcp_rule()
+    new = _gcp_rule()
+    ruleset = new.ruleset
+
+    assert (
+        "Attribute \"value\" with value {'project': 'test', 'credentials': ['password', 'hash:"
+        in ruleset.diff_rules(None, new)
+    ), "Attribes are added in new rule"
+
+    assert ruleset.diff_rules(old, new) == "Nothing was changed."

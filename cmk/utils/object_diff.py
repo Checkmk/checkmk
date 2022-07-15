@@ -3,30 +3,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Optional
-
 from deepdiff import DeepDiff  # type: ignore[import]
 from deepdiff.helper import get_type  # type: ignore[import]
 
 from cmk.utils.i18n import _
 
 __all__ = [
-    "make_object_diff",
+    "make_diff",
     "make_diff_text",
 ]
 
 
-def make_object_diff(old: Any, new: Any) -> str:
-    """Creates a text representing the object differences for humans"""
+def make_diff(old: object, new: object) -> str:
     diff = DeepDiff(old, new, view="tree")
-    text = pretty(diff)
-    return text or _("Nothing was changed.")
+    return pretty(diff)
 
 
-def make_diff_text(old_object: Any, new_object: Any) -> Optional[str]:
-    if old_object is not None and new_object is not None:
-        return make_object_diff(old_object, new_object)
-    return None
+def make_diff_text(old: object, new: object) -> str:
+    """Creates a text representing the object differences for humans"""
+    if old is None or new is None:
+        raise ValueError("cannot diff to None")
+    return make_diff(old, new) or _("Nothing was changed.")
 
 
 def pretty(diff: DeepDiff) -> str:

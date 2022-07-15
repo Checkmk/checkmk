@@ -18,7 +18,6 @@ from typing import Tuple as _Tuple
 from typing import Type, Union
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
-from cmk.utils.object_diff import make_diff_text
 from cmk.utils.regex import escape_regex_chars
 from cmk.utils.tags import GroupedTag
 from cmk.utils.type_defs import (
@@ -1782,7 +1781,7 @@ class ABCEditRuleMode(WatoMode):
                 _('Changed properties of rule "%s", moved rule from folder "%s" to "%s"')
                 % (self._ruleset.title(), self._folder.alias_path(), new_rule_folder.alias_path()),
                 sites=affected_sites,
-                diff_text=make_diff_text(self._orig_rule.to_log(), self._rule.to_log()),
+                diff_text=self._ruleset.diff_rules(self._orig_rule, self._rule),
                 object_ref=self._rule.object_ref(),
             )
 
@@ -2740,7 +2739,7 @@ class ModeNewRule(ABCEditRuleMode):
             _('Created new rule #%d in ruleset "%s" in folder "%s"')
             % (index, self._ruleset.title(), self._folder.alias_path()),
             sites=self._folder.all_site_ids(),
-            diff_text=make_diff_text({}, self._rule.to_log()),
+            diff_text=self._ruleset.diff_rules(None, self._rule),
             object_ref=self._rule.object_ref(),
         )
 

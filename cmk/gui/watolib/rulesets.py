@@ -579,7 +579,7 @@ class Ruleset:
             _('Cloned rule from rule %s in ruleset "%s" in folder "%s"')
             % (orig_rule.id, self.title(), rule.folder.alias_path()),
             sites=rule.folder.all_site_ids(),
-            diff_text=make_diff_text({}, rule.to_log()),
+            diff_text=self.diff_rules(None, rule),
             object_ref=rule.object_ref(),
         )
 
@@ -752,6 +752,12 @@ class Ruleset:
     def get_rule_by_id(self, rule_id: str) -> Rule:
         return self._rules_by_id[rule_id]
 
+    def diff_rules(self, old: Rule | None, new: Rule) -> str:
+        """Diff two rules, masking secrets and serializing the rule value to a log-friendly format"""
+        if old is None:
+            return make_diff_text({}, new.to_log())
+        return make_diff_text(old.to_log(), new.to_log())
+
     def edit_rule(self, orig_rule: Rule, rule: Rule) -> None:
         folder_rules = self._rules[orig_rule.folder.path()]
         index = folder_rules.index(orig_rule)
@@ -763,7 +769,7 @@ class Ruleset:
             _('Changed properties of rule #%d in ruleset "%s" in folder "%s"')
             % (index, self.title(), rule.folder.alias_path()),
             sites=rule.folder.all_site_ids(),
-            diff_text=make_diff_text(orig_rule.to_log(), rule.to_log()),
+            diff_text=self.diff_rules(orig_rule, rule),
             object_ref=rule.object_ref(),
         )
         self._on_change()

@@ -3,14 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Iterable, Mapping, TypedDict
+from typing import Any, Iterable, Mapping, Sequence, TypedDict
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import regex
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-
-# these are just temorary, until migration.
-DiscoveryResult = Iterable[tuple[str | None, Mapping[str, Any]]]
-CheckResult = tuple | Iterable[tuple]
+from .agent_based_api.v1 import regex, register, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 class SolarisService(TypedDict):
@@ -24,12 +20,13 @@ class SolarisService(TypedDict):
 
 Section = Mapping[str, SolarisService]
 
+DISCOVER_NOTHING = {"descriptions": ["~$^"]}
+
+
 # OLD
 # <<<solaris_services>>>
 # STATE    STIME    FMRI
 # $STATE   $STIME   $TYPE:${/CATEGORY/PATH/}$NAME:$INSTANCE
-
-inventory_solaris_services_rules: list = []
 
 
 def _get_parts_of_descr(descr: str) -> tuple[str, str, str, str | None]:
@@ -63,6 +60,12 @@ def parse_solaris_services(string_table: StringTable) -> Section:
     return parsed
 
 
+register.agent_section(
+    name="solaris_services",
+    parse_function=parse_solaris_services,
+)
+
+
 #   .--single--------------------------------------------------------------.
 #   |                          _             _                             |
 #   |                      ___(_)_ __   __ _| | ___                        |
@@ -94,8 +97,10 @@ def _get_svc_name(svc_attrs: SolarisService) -> str:
     return "%s/%s:%s" % (svc_attrs["category"], svc_attrs["name"], svc_attrs["instance"])
 
 
-def discover_solaris_services(section: Section) -> DiscoveryResult:
-    for settings in host_extra_conf(host_name(), inventory_solaris_services_rules):
+def discover_solaris_services(
+    params: Sequence[Mapping[str, Any]], section: Section
+) -> DiscoveryResult:
+    for settings in params:
         descriptions = settings.get("descriptions", [])
         categories = settings.get("categories", [])
         names = settings.get("names", [])
@@ -113,7 +118,7 @@ def discover_solaris_services(section: Section) -> DiscoveryResult:
                     name = svc_descr
                 else:
                     name = _get_svc_name(attrs)
-                yield name, {}
+                yield Service(item=name)
 
 
 def check_solaris_services(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -137,30 +142,35 @@ def check_solaris_services(item: str, params: Mapping[str, Any], section: Sectio
                 else:
                     check_state = p_state
                     break
-            return check_state, "Status: %s, %s" % (svc_state, info_stime)
+            yield Result(
+                state=State(check_state),
+                summary="Status: %s, %s" % (svc_state, info_stime),
+            )
+            return
 
-    return params["else"], "Service not found"
+    yield Result(state=State(params["else"]), summary="Service not found")
 
 
-check_info["solaris_services"] = {
-    "parse_function": parse_solaris_services,
-    "inventory_function": discover_solaris_services,
-    "check_function": check_solaris_services,
-    "service_description": "SMF Service %s",  # Service Management Facility
-    "group": "solaris_services",
-    "default_levels_variable": "solaris_services_default_levels",
-}
-
-factory_settings["solaris_services_default_levels"] = {
-    "states": [
-        ("online", None, 0),
-        ("disabled", None, 2),
-        ("legacy_run", None, 0),
-        ("maintenance", None, 0),
-    ],
-    "else": 2,
-    "additional_servicenames": [],
-}
+register.check_plugin(
+    name="solaris_services",
+    service_name="SMF Service %s",  # Service Management Facility
+    discovery_function=discover_solaris_services,
+    discovery_default_parameters=DISCOVER_NOTHING,
+    discovery_ruleset_name="inventory_solaris_services_rules",
+    discovery_ruleset_type=register.RuleSetType.ALL,
+    check_function=check_solaris_services,
+    check_ruleset_name="solaris_services",
+    check_default_parameters={
+        "states": [
+            ("online", None, 0),
+            ("disabled", None, 2),
+            ("legacy_run", None, 0),
+            ("maintenance", None, 0),
+        ],
+        "else": 2,
+        "additional_servicenames": [],
+    },
+)
 
 
 # .
@@ -175,13 +185,11 @@ factory_settings["solaris_services_default_levels"] = {
 
 
 def discover_solaris_services_summary(section: Section) -> DiscoveryResult:
-    return [(None, {})]
+    yield Service()
 
 
-def check_solaris_services_summary(
-    _no_item: None, params: Mapping[str, Any], section: Section
-) -> CheckResult:
-    yield 0, "%d services" % len(section)
+def check_solaris_services_summary(params: Mapping[str, Any], section: Section) -> CheckResult:
+    yield Result(state=State.OK, summary="%d services" % len(section))
 
     services_by_state: dict[str, list[str]] = {}
     for svc_name, attrs in section.items():
@@ -195,13 +203,18 @@ def check_solaris_services_summary(
             extra_info += " (%s)" % ", ".join(svc_names)
             state = params["maintenance_state"]
 
-        yield state, "%d %s%s" % (len(svc_names), svc_state.replace("_", " "), extra_info)
+        yield Result(
+            state=State(state),
+            summary="%d %s%s" % (len(svc_names), svc_state.replace("_", " "), extra_info),
+        )
 
 
-check_info["solaris_services.summary"] = {
-    "parse_function": parse_solaris_services,
-    "inventory_function": discover_solaris_services_summary,
-    "check_function": check_solaris_services_summary,
-    "service_description": "SMF Services Summary",  # Service Management Facility
-    "group": "solaris_services_summary",
-}
+register.check_plugin(
+    name="solaris_services_summary",
+    service_name="SMF Services Summary",  # Service Management Facility
+    sections=["solaris_services"],
+    discovery_function=discover_solaris_services_summary,
+    check_function=check_solaris_services_summary,
+    check_default_parameters={},
+    check_ruleset_name="solaris_services_summary",
+)

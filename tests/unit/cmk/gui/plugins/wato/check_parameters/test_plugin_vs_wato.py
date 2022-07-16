@@ -270,7 +270,6 @@ class ErrorReporter:
         ("discovery", "discovery_win_dhcp_pools"),
         ("discovery", "inventory_fujitsu_ca_ports"),
         ("discovery", "inventory_sap_values"),
-        ("discovery", "inventory_solaris_services_rules"),
         ("discovery", "oracle_performance_discovery"),
         ("discovery", "sap_value_groups"),
         ("inventory", "active_checks:cmk_inv"),

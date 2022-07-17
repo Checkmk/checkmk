@@ -6,6 +6,7 @@
 import time
 from typing import Any, Iterable, Mapping, NamedTuple, Sequence
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 # <<<mssql_backup>>>
@@ -143,37 +144,14 @@ def check_mssql_backup(item: str, params: Mapping[str, Any], section: Section) -
             backup_type_var = backup.type.strip().replace(" ", "_")
             perfkey = "backup_age_%s" % backup_type_var
             backup_type_info = "[%s]" % backup.type
-        state, infotext, perfdata = _check_mssql_backup(
-            backup.timestamp,  # type: ignore[arg-type]  # aparrently this does not happen
-            params.get(backup_type_var, (None, None)),
+        yield 0, f"{backup_type_info} Last backup: {render.datetime(backup.timestamp)}", []
+        yield check_levels(
+            time.time() - backup.timestamp,  # type: ignore[operator]  # aparrently this does not happen
             perfkey,
+            params.get(backup_type_var),
+            human_readable_func=render.timespan,
+            infoname="Time since last backup",
         )
-        yield state, "%s %s" % (backup_type_info, infotext), perfdata
-
-
-def _check_mssql_backup(
-    timestamp: float, levels: tuple[float | None, float | None], perfkey: str
-) -> Result:
-    state = 0
-    age_warn, age_crit = levels
-    sec_ago = time.time() - timestamp
-    if age_crit is not None and sec_ago >= age_crit:
-        state = 2
-    elif age_warn is not None and sec_ago >= age_warn:
-        state = 1
-
-    infotext = "Last backup was at %s (%s ago)" % (
-        time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp)),
-        get_age_human_readable(sec_ago),
-    )
-
-    if state:
-        infotext += " (warn/crit at %s/%s)" % (
-            get_age_human_readable(age_warn),
-            get_age_human_readable(age_crit),
-        )
-
-    return state, infotext, [(perfkey, sec_ago, age_warn, age_crit)]
 
 
 check_info["mssql_backup"] = {
@@ -231,10 +209,13 @@ def check_mssql_backup_per_type(
     for db_name, attrs in section.items():
         for backup in attrs:
             if item == _mssql_backup_per_type_item(db_name, backup):
-                yield _check_mssql_backup(
-                    backup.timestamp,  # type: ignore[arg-type] # apparently this does not happen
-                    params.get("levels", (None, None)),
+                yield 0, f"Last backup: {render.datetime(backup.timestamp)}", []
+                yield check_levels(
+                    time.time() - backup.timestamp,  # type: ignore[operator]  # aparrently this does not happen
                     "backup_age",
+                    params.get("levels"),
+                    human_readable_func=render.timespan,
+                    infoname="Time since last backup",
                 )
                 return
     # Assume general connection problem to the database, which is reported

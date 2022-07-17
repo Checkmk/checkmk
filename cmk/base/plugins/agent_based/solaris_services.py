@@ -189,7 +189,8 @@ def discover_solaris_services_summary(section: Section) -> DiscoveryResult:
 
 
 def check_solaris_services_summary(params: Mapping[str, Any], section: Section) -> CheckResult:
-    yield Result(state=State.OK, summary="%d services" % len(section))
+    count = len(section)
+    yield Result(state=State.OK, summary=f"{count} service{'' if count == 1 else 's'}")
 
     services_by_state: dict[str, list[str]] = {}
     for svc_name, attrs in section.items():

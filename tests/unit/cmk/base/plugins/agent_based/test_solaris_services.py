@@ -61,5 +61,5 @@ def check_regular(section: Section) -> None:
 
 def check_summary(section: Section) -> None:
     assert list(check_solaris_services_summary({}, section)) == [
-        Result(state=State.OK, summary="1 services"),  # FIXME
+        Result(state=State.OK, summary="1 service"),
     ]

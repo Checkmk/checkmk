@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Sequence
+import time
+from typing import Any, Iterable, Mapping, NamedTuple, Sequence
+
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 # <<<mssql_backup>>>
 # MSSQL_SQLEXPRESS1 test123 1331207325
@@ -32,6 +35,20 @@ from typing import Sequence
 # MSSQL_SQL0x4|msdb|2016-07-08 20:20:43|D
 # MSSQL_SQL0x4|msdb|2016-07-11 20:20:07|I
 
+DiscoveryResult = Iterable[tuple[str, Mapping]]
+Result = tuple[int, str, list]
+CheckResult = Iterable[Result]
+
+
+class Backup(NamedTuple):
+    timestamp: float | None
+    type: str | None
+    state: str
+
+
+Section = Mapping[str, Sequence[Backup]]
+
+
 _MAP_BACKUP_TYPES = {
     "D": "database",
     "I": "database diff",
@@ -44,10 +61,10 @@ _MAP_BACKUP_TYPES = {
 }
 
 
-discovery_mssql_backup = []
+discovery_mssql_backup: list = []
 
 
-def _parse_date_and_time(b_date, b_time):
+def _parse_date_and_time(b_date: str, b_time: str | None) -> float | None:
     try:
         if b_time is None:
             return int(b_date)
@@ -63,13 +80,12 @@ def _get_word(line: Sequence[str], idx: int) -> str | None:
         return None
 
 
-def parse_mssql_backup(info):
+def parse_mssql_backup(string_table: StringTable) -> Section:
 
-    parsed = {}
-    Backup = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
-        "Backup", ["timestamp", "type", "state"]
-    )
-    for line in info:
+    parsed: dict[str, list[Backup]] = {}
+
+    line: Sequence[str | None]
+    for line in string_table:
         if len(line) <= 2:
             continue
         # handle one special case where spaces are in date/time:
@@ -83,21 +99,21 @@ def parse_mssql_backup(info):
         timestamp = _parse_date_and_time(b_date, b_time)
 
         item = "%s %s" % (inst, tablespace)
-        backup = Backup(timestamp, _MAP_BACKUP_TYPES.get(b_type), b_state or "")
+        backup = Backup(timestamp, _MAP_BACKUP_TYPES.get(b_type) if b_type else None, b_state or "")
         parsed.setdefault(item, []).append(backup)
 
     return parsed
 
 
-def inventory_mssql_backup(parsed):
+def inventory_mssql_backup(section: Section) -> DiscoveryResult:
     discovery_mode = _mssql_backup_discovery_mode()
     if discovery_mode != "summary":
         return
-    for db_name in parsed:
+    for db_name in section:
         yield db_name, {}
 
 
-def _mssql_backup_discovery_mode():
+def _mssql_backup_discovery_mode() -> str:
     rules = host_extra_conf(host_name(), discovery_mssql_backup)
     try:
         return rules[0]["mode"]
@@ -105,8 +121,8 @@ def _mssql_backup_discovery_mode():
         return "summary"  # default, comp. to older versions
 
 
-def check_mssql_backup(item, params, parsed):
-    data = parsed.get(item)
+def check_mssql_backup(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    data = section.get(item)
     if data is None:
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
@@ -114,10 +130,10 @@ def check_mssql_backup(item, params, parsed):
 
     for backup in data:
         if backup.state == "no backup found":
-            yield params.get("not_found", 1), "No backup found"
+            yield params.get("not_found", 1), "No backup found", []
             continue
         if backup.state.startswith("ERROR: "):
-            yield 2, backup.state[7:]
+            yield 2, backup.state[7:], []
             continue
         if backup.type is None:
             backup_type_var = "database"
@@ -128,22 +144,26 @@ def check_mssql_backup(item, params, parsed):
             perfkey = "backup_age_%s" % backup_type_var
             backup_type_info = "[%s]" % backup.type
         state, infotext, perfdata = _check_mssql_backup(
-            backup, params.get(backup_type_var, (None, None)), perfkey
+            backup.timestamp,  # type: ignore[arg-type]  # aparrently this does not happen
+            params.get(backup_type_var, (None, None)),
+            perfkey,
         )
         yield state, "%s %s" % (backup_type_info, infotext), perfdata
 
 
-def _check_mssql_backup(backup, levels, perfkey):
+def _check_mssql_backup(
+    timestamp: float, levels: tuple[float | None, float | None], perfkey: str
+) -> Result:
     state = 0
     age_warn, age_crit = levels
-    sec_ago = time.time() - backup.timestamp
+    sec_ago = time.time() - timestamp
     if age_crit is not None and sec_ago >= age_crit:
         state = 2
     elif age_warn is not None and sec_ago >= age_warn:
         state = 1
 
     infotext = "Last backup was at %s (%s ago)" % (
-        time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(backup.timestamp)),
+        time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp)),
         get_age_human_readable(sec_ago),
     )
 
@@ -190,26 +210,33 @@ factory_settings["mssql_backup_default_levels"] = {
 #   '----------------------------------------------------------------------'
 
 
-def _mssql_backup_per_type_item(db_name, backup):
+def _mssql_backup_per_type_item(db_name: str, backup: Backup) -> str:
     if backup.type is None:
         return "%s UNKNOWN" % db_name
     return "%s %s" % (db_name, backup.type.title())
 
 
-def inventory_mssql_backup_per_type(parsed):
+def inventory_mssql_backup_per_type(section: Section) -> DiscoveryResult:
     discovery_mode = _mssql_backup_discovery_mode()
     if discovery_mode != "per_type":
         return
-    for db_name, attrs in parsed.items():
+    for db_name, attrs in section.items():
         for backup in attrs:
             yield _mssql_backup_per_type_item(db_name, backup), {}
 
 
-def check_mssql_backup_per_type(item, params, parsed):
-    for db_name, attrs in parsed.items():
+def check_mssql_backup_per_type(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    for db_name, attrs in section.items():
         for backup in attrs:
             if item == _mssql_backup_per_type_item(db_name, backup):
-                return _check_mssql_backup(backup, params.get("levels", (None, None)), "backup_age")
+                yield _check_mssql_backup(
+                    backup.timestamp,  # type: ignore[arg-type] # apparently this does not happen
+                    params.get("levels", (None, None)),
+                    "backup_age",
+                )
+                return
     # Assume general connection problem to the database, which is reported
     # by the "X Instance" service and skip this check.
     raise MKCounterWrapped("Failed to connect to database")

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Sequence
+
 # <<<mssql_backup>>>
 # MSSQL_SQLEXPRESS1 test123 1331207325
 
@@ -54,6 +56,13 @@ def _parse_date_and_time(b_date, b_time):
         return None
 
 
+def _get_word(line: Sequence[str], idx: int) -> str | None:
+    try:
+        return line[idx]
+    except IndexError:
+        return None
+
+
 def parse_mssql_backup(info):
 
     parsed = {}
@@ -67,8 +76,10 @@ def parse_mssql_backup(info):
         if len(line) == 4 and " " in line[2]:
             line = line[:2] + line[2].split(" ") + line[3:]
 
+        inst, tablespace, b_date = line[:3]
         # (fill up with Nones)
-        inst, tablespace, b_date, b_time, b_type, b_state = line + [None] * (6 - len(line))
+        b_time, b_type, b_state = (_get_word(line, i) for i in (3, 4, 5))
+
         timestamp = _parse_date_and_time(b_date, b_time)
 
         item = "%s %s" % (inst, tablespace)

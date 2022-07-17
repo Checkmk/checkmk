@@ -30,39 +30,31 @@
 # MSSQL_SQL0x4|msdb|2016-07-08 20:20:43|D
 # MSSQL_SQL0x4|msdb|2016-07-11 20:20:07|I
 
-discovery_mssql_backup = []
-
-factory_settings["mssql_backup_default_levels"] = {
-    "database": (None, None),
-    "database_diff": (None, None),
-    "log": (None, None),
-    "file_or_filegroup": (None, None),
-    "file_diff": (None, None),
-    "partial": (None, None),
-    "partial_diff": (None, None),
-    "unspecific": (None, None),
+_MAP_BACKUP_TYPES = {
+    "D": "database",
+    "I": "database diff",
+    "L": "log",
+    "F": "file or filegroup",
+    "G": "file diff",
+    "P": "partial",
+    "Q": "partial diff",
+    "-": "unspecific",
 }
 
 
-def parse_mssql_backup(info):
-    def _parse_date_and_time(b_date, b_time):
-        try:
-            if b_time is None:
-                return int(b_date)
-            return time.mktime(time.strptime("%s %s" % (b_date, b_time), "%Y-%m-%d %H:%M:%S"))
-        except ValueError:
-            return None
+discovery_mssql_backup = []
 
-    map_backup_types = {
-        "D": "database",
-        "I": "database diff",
-        "L": "log",
-        "F": "file or filegroup",
-        "G": "file diff",
-        "P": "partial",
-        "Q": "partial diff",
-        "-": "unspecific",
-    }
+
+def _parse_date_and_time(b_date, b_time):
+    try:
+        if b_time is None:
+            return int(b_date)
+        return time.mktime(time.strptime("%s %s" % (b_date, b_time), "%Y-%m-%d %H:%M:%S"))
+    except ValueError:
+        return None
+
+
+def parse_mssql_backup(info):
 
     parsed = {}
     Backup = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
@@ -80,7 +72,7 @@ def parse_mssql_backup(info):
         timestamp = _parse_date_and_time(b_date, b_time)
 
         item = "%s %s" % (inst, tablespace)
-        backup = Backup(timestamp, map_backup_types.get(b_type), b_state or "")
+        backup = Backup(timestamp, _MAP_BACKUP_TYPES.get(b_type), b_state or "")
         parsed.setdefault(item, []).append(backup)
 
     return parsed
@@ -165,6 +157,19 @@ check_info["mssql_backup"] = {
     "group": "mssql_backup",
     "default_levels_variable": "mssql_backup_default_levels",
 }
+
+
+factory_settings["mssql_backup_default_levels"] = {
+    "database": (None, None),
+    "database_diff": (None, None),
+    "log": (None, None),
+    "file_or_filegroup": (None, None),
+    "file_diff": (None, None),
+    "partial": (None, None),
+    "partial_diff": (None, None),
+    "unspecific": (None, None),
+}
+
 
 # .
 #   .--single--------------------------------------------------------------.

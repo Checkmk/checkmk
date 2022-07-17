@@ -19,7 +19,6 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,
     MonitoringState,
-    Transform,
     Tuple,
 )
 
@@ -75,37 +74,25 @@ rulespec_registry.register(
 
 
 def _parameter_valuespec_mssql_backup():
-    return Transform(
-        valuespec=Dictionary(
-            help=_(
-                "This rule allows you to set limits on the age of backups for "
-                "different backup types. If your agent does not support "
-                "backup types (e.g. <i>Log Backup</i>, <i>Database Diff "
-                "Backup</i>, etc.) you can use the option <i>Database Backup"
-                "</i> to set a general limit"
-            ),
-            elements=[
-                ("database", _vs_mssql_backup_age(_("Database backup"))),
-                ("database_diff", _vs_mssql_backup_age(_("Database diff backup"))),
-                ("log", _vs_mssql_backup_age(_("Log backup"))),
-                ("file_or_filegroup", _vs_mssql_backup_age(_("File or filegroup backup"))),
-                ("file_diff", _vs_mssql_backup_age(_("File diff backup"))),
-                ("partial", _vs_mssql_backup_age(_("Partial backup"))),
-                ("partial_diff", _vs_mssql_backup_age(_("Partial diff backup"))),
-                ("unspecific", _vs_mssql_backup_age(_("Unspecific backup"))),
-                ("not_found", MonitoringState(title=_("State if no backup found"))),
-            ],
+    return Dictionary(
+        help=_(
+            "This rule allows you to set limits on the age of backups for "
+            "different backup types. If your agent does not support "
+            "backup types (e.g. <i>Log Backup</i>, <i>Database Diff "
+            "Backup</i>, etc.) you can use the option <i>Database Backup"
+            "</i> to set a general limit"
         ),
-        forth=lambda params: (
-            params
-            if isinstance(params, dict)
-            else {
-                "database": (
-                    params[0],
-                    params[1],
-                )
-            }
-        ),
+        elements=[
+            ("database", _vs_mssql_backup_age(_("Database backup"))),
+            ("database_diff", _vs_mssql_backup_age(_("Database diff backup"))),
+            ("log", _vs_mssql_backup_age(_("Log backup"))),
+            ("file_or_filegroup", _vs_mssql_backup_age(_("File or filegroup backup"))),
+            ("file_diff", _vs_mssql_backup_age(_("File diff backup"))),
+            ("partial", _vs_mssql_backup_age(_("Partial backup"))),
+            ("partial_diff", _vs_mssql_backup_age(_("Partial diff backup"))),
+            ("unspecific", _vs_mssql_backup_age(_("Unspecific backup"))),
+            ("not_found", MonitoringState(title=_("State if no backup found"))),
+        ],
     )
 
 

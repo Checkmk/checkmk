@@ -101,9 +101,6 @@ def check_mssql_backup(item, params, parsed):
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
 
-    if not isinstance(params, dict):
-        params = {"database": params}
-
     for backup in data:
         if backup.state == "no backup found":
             yield params.get("not_found", 1), "No backup found"

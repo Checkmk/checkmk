@@ -36,6 +36,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTabl
 # MSSQL_SQL0x4|msdb|2016-07-08 20:20:43|D
 # MSSQL_SQL0x4|msdb|2016-07-11 20:20:07|I
 
+IgnoreResultsError = MKCounterWrapped
 DiscoveryResult = Iterable[tuple[str, Mapping]]
 Result = tuple[int, str, list]
 CheckResult = Iterable[Result]
@@ -106,7 +107,7 @@ def parse_mssql_backup(string_table: StringTable) -> Section:
     return parsed
 
 
-def inventory_mssql_backup(section: Section) -> DiscoveryResult:
+def discover_mssql_backup(section: Section) -> DiscoveryResult:
     discovery_mode = _mssql_backup_discovery_mode()
     if discovery_mode != "summary":
         return
@@ -127,7 +128,7 @@ def check_mssql_backup(item: str, params: Mapping[str, Any], section: Section) -
     if data is None:
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
-        raise MKCounterWrapped("Failed to connect to database")
+        raise IgnoreResultsError("Failed to connect to database")
 
     for backup in data:
         if backup.state == "no backup found":
@@ -156,8 +157,8 @@ def check_mssql_backup(item: str, params: Mapping[str, Any], section: Section) -
 
 check_info["mssql_backup"] = {
     "parse_function": parse_mssql_backup,
+    "inventory_function": discover_mssql_backup,
     "check_function": check_mssql_backup,
-    "inventory_function": inventory_mssql_backup,
     "service_description": "MSSQL %s Backup",
     "has_perfdata": True,
     "group": "mssql_backup",
@@ -194,7 +195,7 @@ def _mssql_backup_per_type_item(db_name: str, backup: Backup) -> str:
     return "%s %s" % (db_name, backup.type.title())
 
 
-def inventory_mssql_backup_per_type(section: Section) -> DiscoveryResult:
+def discover_mssql_backup_per_type(section: Section) -> DiscoveryResult:
     discovery_mode = _mssql_backup_discovery_mode()
     if discovery_mode != "per_type":
         return
@@ -220,12 +221,12 @@ def check_mssql_backup_per_type(
                 return
     # Assume general connection problem to the database, which is reported
     # by the "X Instance" service and skip this check.
-    raise MKCounterWrapped("Failed to connect to database")
+    raise IgnoreResultsError("Failed to connect to database")
 
 
 check_info["mssql_backup.per_type"] = {
+    "inventory_function": discover_mssql_backup_per_type,
     "check_function": check_mssql_backup_per_type,
-    "inventory_function": inventory_mssql_backup_per_type,
     "service_description": "MSSQL %s Backup",
     "has_perfdata": True,
     "group": "mssql_backup_per_type",

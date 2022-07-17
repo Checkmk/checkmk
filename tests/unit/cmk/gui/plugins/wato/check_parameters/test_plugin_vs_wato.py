@@ -263,7 +263,6 @@ class ErrorReporter:
         ("check", "checkgroup_parameters:temperature_trends"),
         ("discovery", "brocade_fcport_inventory"),
         ("discovery", "discovery_cisco_dom_rules"),
-        ("discovery", "discovery_mssql_backup"),
         ("discovery", "discovery_netapp_api_fan_rules"),
         ("discovery", "discovery_netapp_api_psu_rules"),
         ("discovery", "discovery_win_dhcp_pools"),

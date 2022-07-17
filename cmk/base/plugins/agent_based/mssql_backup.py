@@ -4,10 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Iterable, Mapping, NamedTuple, Sequence
+from typing import Any, Mapping, NamedTuple, Sequence
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1 import (
+    check_levels,
+    IgnoreResultsError,
+    register,
+    render,
+    Result,
+    Service,
+    State,
+)
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 # <<<mssql_backup>>>
 # MSSQL_SQLEXPRESS1 test123 1331207325
@@ -36,11 +44,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTabl
 # MSSQL_SQL0x4|msdb|2016-07-08 20:20:43|D
 # MSSQL_SQL0x4|msdb|2016-07-11 20:20:07|I
 
-IgnoreResultsError = MKCounterWrapped
-DiscoveryResult = Iterable[tuple[str, Mapping]]
-Result = tuple[int, str, list]
-CheckResult = Iterable[Result]
-
 
 class Backup(NamedTuple):
     timestamp: float | None
@@ -61,9 +64,6 @@ _MAP_BACKUP_TYPES = {
     "Q": "partial diff",
     "-": "unspecific",
 }
-
-
-discovery_mssql_backup: list = []
 
 
 def _parse_date_and_time(b_date: str, b_time: str | None) -> float | None:
@@ -107,20 +107,17 @@ def parse_mssql_backup(string_table: StringTable) -> Section:
     return parsed
 
 
-def discover_mssql_backup(section: Section) -> DiscoveryResult:
-    discovery_mode = _mssql_backup_discovery_mode()
-    if discovery_mode != "summary":
+register.agent_section(
+    name="mssql_backup",
+    parse_function=parse_mssql_backup,
+)
+
+
+def discover_mssql_backup(params: Mapping[str, Any], section: Section) -> DiscoveryResult:
+    if params["mode"] != "summary":
         return
     for db_name in section:
-        yield db_name, {}
-
-
-def _mssql_backup_discovery_mode() -> str:
-    rules = host_extra_conf(host_name(), discovery_mssql_backup)
-    try:
-        return rules[0]["mode"]
-    except (IndexError, KeyError):
-        return "summary"  # default, comp. to older versions
+        yield Service(item=db_name)
 
 
 def check_mssql_backup(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -132,10 +129,10 @@ def check_mssql_backup(item: str, params: Mapping[str, Any], section: Section) -
 
     for backup in data:
         if backup.state == "no backup found":
-            yield params.get("not_found", 1), "No backup found", []
+            yield Result(state=State(params.get("not_found", 1)), summary="No backup found")
             continue
         if backup.state.startswith("ERROR: "):
-            yield 2, backup.state[7:], []
+            yield Result(state=State.CRIT, summary=backup.state[7:])
             continue
         if backup.type is None:
             backup_type_var = "database"
@@ -145,37 +142,38 @@ def check_mssql_backup(item: str, params: Mapping[str, Any], section: Section) -
             backup_type_var = backup.type.strip().replace(" ", "_")
             perfkey = "backup_age_%s" % backup_type_var
             backup_type_info = "[%s]" % backup.type
-        yield 0, f"{backup_type_info} Last backup: {render.datetime(backup.timestamp)}", []
-        yield check_levels(
+        yield Result(
+            state=State.OK,
+            summary=f"{backup_type_info} Last backup: {render.datetime(backup.timestamp)}",
+        )
+        yield from check_levels(
             time.time() - backup.timestamp,  # type: ignore[operator]  # aparrently this does not happen
-            perfkey,
-            params.get(backup_type_var),
-            human_readable_func=render.timespan,
-            infoname="Time since last backup",
+            metric_name=perfkey,
+            levels_upper=params.get(backup_type_var),
+            render_func=render.timespan,
+            label="Time since last backup",
         )
 
 
-check_info["mssql_backup"] = {
-    "parse_function": parse_mssql_backup,
-    "inventory_function": discover_mssql_backup,
-    "check_function": check_mssql_backup,
-    "service_description": "MSSQL %s Backup",
-    "has_perfdata": True,
-    "group": "mssql_backup",
-    "default_levels_variable": "mssql_backup_default_levels",
-}
-
-
-factory_settings["mssql_backup_default_levels"] = {
-    "database": (None, None),
-    "database_diff": (None, None),
-    "log": (None, None),
-    "file_or_filegroup": (None, None),
-    "file_diff": (None, None),
-    "partial": (None, None),
-    "partial_diff": (None, None),
-    "unspecific": (None, None),
-}
+register.check_plugin(
+    name="mssql_backup",
+    service_name="MSSQL %s Backup",
+    discovery_function=discover_mssql_backup,
+    discovery_ruleset_name="discovery_mssql_backup",
+    discovery_default_parameters={"mode": "summary"},
+    check_function=check_mssql_backup,
+    check_ruleset_name="mssql_backup",
+    check_default_parameters={
+        "database": (None, None),
+        "database_diff": (None, None),
+        "log": (None, None),
+        "file_or_filegroup": (None, None),
+        "file_diff": (None, None),
+        "partial": (None, None),
+        "partial_diff": (None, None),
+        "unspecific": (None, None),
+    },
+)
 
 
 # .
@@ -195,13 +193,12 @@ def _mssql_backup_per_type_item(db_name: str, backup: Backup) -> str:
     return "%s %s" % (db_name, backup.type.title())
 
 
-def discover_mssql_backup_per_type(section: Section) -> DiscoveryResult:
-    discovery_mode = _mssql_backup_discovery_mode()
-    if discovery_mode != "per_type":
+def discover_mssql_backup_per_type(params: Mapping[str, Any], section: Section) -> DiscoveryResult:
+    if params["mode"] != "per_type":
         return
     for db_name, attrs in section.items():
         for backup in attrs:
-            yield _mssql_backup_per_type_item(db_name, backup), {}
+            yield Service(item=_mssql_backup_per_type_item(db_name, backup))
 
 
 def check_mssql_backup_per_type(
@@ -210,13 +207,16 @@ def check_mssql_backup_per_type(
     for db_name, attrs in section.items():
         for backup in attrs:
             if item == _mssql_backup_per_type_item(db_name, backup):
-                yield 0, f"Last backup: {render.datetime(backup.timestamp)}", []
-                yield check_levels(
+                yield Result(
+                    state=State.OK,
+                    summary=f"Last backup: {render.datetime(backup.timestamp)}",
+                )
+                yield from check_levels(
                     time.time() - backup.timestamp,  # type: ignore[operator]  # aparrently this does not happen
-                    "backup_age",
-                    params.get("levels"),
-                    human_readable_func=render.timespan,
-                    infoname="Time since last backup",
+                    metric_name="backup_age",
+                    levels_upper=params.get("levels"),
+                    render_func=render.timespan,
+                    label="Time since last backup",
                 )
                 return
     # Assume general connection problem to the database, which is reported
@@ -224,10 +224,14 @@ def check_mssql_backup_per_type(
     raise IgnoreResultsError("Failed to connect to database")
 
 
-check_info["mssql_backup.per_type"] = {
-    "inventory_function": discover_mssql_backup_per_type,
-    "check_function": check_mssql_backup_per_type,
-    "service_description": "MSSQL %s Backup",
-    "has_perfdata": True,
-    "group": "mssql_backup_per_type",
-}
+register.check_plugin(
+    name="mssql_backup_per_type",
+    service_name="MSSQL %s Backup",
+    sections=["mssql_backup"],
+    discovery_function=discover_mssql_backup_per_type,
+    discovery_ruleset_name="discovery_mssql_backup",
+    discovery_default_parameters={"mode": "summary"},
+    check_function=check_mssql_backup_per_type,
+    check_ruleset_name="mssql_backup_per_type",
+    check_default_parameters={},
+)

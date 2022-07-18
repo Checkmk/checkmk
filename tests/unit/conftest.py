@@ -52,6 +52,14 @@ def enable_debug_fixture():
     cmk.utils.debug.debug_mode = debug_mode
 
 
+@pytest.fixture
+def disable_debug():
+    debug_mode = cmk.utils.debug.debug_mode
+    cmk.utils.debug.disable()
+    yield
+    cmk.utils.debug.debug_mode = debug_mode
+
+
 @pytest.fixture(autouse=True)
 def fixture_umask():
     """Ensure the unit tests always use the same umask"""

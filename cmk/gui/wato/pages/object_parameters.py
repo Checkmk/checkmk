@@ -115,7 +115,13 @@ class ModeObjectParameters(WatoMode):
         if for_host:
             self._show_host_info()
         else:
-            service_result = self._show_service_info(all_rulesets=all_rulesets)
+            assert self._service is not None
+            service_result = analyse_service(
+                self._host.site_id(),
+                self._hostname,
+                self._service,
+            )
+            self._show_service_info(all_rulesets=all_rulesets, service_result=service_result)
 
         last_maingroup = None
         for groupname in sorted(rulespec_group_registry.get_host_rulespec_group_names(for_host)):
@@ -160,15 +166,9 @@ class ModeObjectParameters(WatoMode):
         self._show_labels(host_info.labels, "host", host_info.label_sources)
 
     def _show_service_info(  # pylint: disable=too-many-branches
-        self, all_rulesets: AllRulesets
+        self, all_rulesets: AllRulesets, service_result: AnalyseServiceResult
     ) -> AnalyseServiceResult:
         assert self._service is not None
-
-        service_result = analyse_service(
-            self._host.site_id(),
-            self._hostname,
-            self._service,
-        )
         serviceinfo = service_result.service_info
         if not serviceinfo:
             return AnalyseServiceResult(service_info={})

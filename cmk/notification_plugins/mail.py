@@ -568,16 +568,26 @@ def send_mail_smtp(  # pylint: disable=too-many-branches
             sys.stderr.write('mail to "%s" refused: %d, %r\n' % (target, errorcode, err_message))
         except smtplib.SMTPHeloError as e:
             retry_possible = True  # server is acting up, this may be fixed quickly
-            sys.stderr.write('protocol error from "%s": %s\n' % (smarthost, str(e)))
+            sys.stderr.write(
+                'protocol error from "%s": %s\n'
+                % (smarthost, _ensure_str_error_message(e.smtp_error))
+            )
         except smtplib.SMTPSenderRefused as e:
             sys.stderr.write(
-                'server didn\'t accept from-address "%s" refused: %s\n' % (from_address, str(e))
+                'server didn\'t accept from-address "%s" refused: %s\n'
+                % (from_address, _ensure_str_error_message(e.smtp_error))
             )
         except smtplib.SMTPAuthenticationError as e:
-            sys.stderr.write('authentication failed on "%s": %s\n' % (smarthost, str(e)))
+            sys.stderr.write(
+                'authentication failed on "%s": %s\n'
+                % (smarthost, _ensure_str_error_message(e.smtp_error))
+            )
         except smtplib.SMTPDataError as e:
             retry_possible = True  # unexpected error - give retry a chance
-            sys.stderr.write('unexpected error code from "%s": %s\n' % (smarthost, str(e)))
+            sys.stderr.write(
+                'unexpected error code from "%s": %s\n'
+                % (smarthost, _ensure_str_error_message(e.smtp_error))
+            )
         except smtplib.SMTPException as e:
             retry_possible = True  # who knows what went wrong, a retry might just work
             sys.stderr.write('undocumented error code from "%s": %s\n' % (smarthost, str(e)))
@@ -587,6 +597,10 @@ def send_mail_smtp(  # pylint: disable=too-many-branches
     if retry_possible:
         return 1
     return 2
+
+
+def _ensure_str_error_message(message: Union[bytes, str]) -> str:
+    return message.decode("utf-8") if isinstance(message, bytes) else message
 
 
 def send_mail_smtp_impl(
@@ -631,7 +645,7 @@ def send_mail_smtp_impl(
     try:
         conn.sendmail(from_address, target.split(","), message.as_string())
         sys.stdout.write(
-            "success %d - %s\n" % (conn.last_code, conn.last_repl)  # type: ignore[attr-defined]
+            "success %d - %s\n" % (conn.last_code, _ensure_str_error_message(conn.last_repl))  # type: ignore[attr-defined]
         )
     finally:
         conn.quit()

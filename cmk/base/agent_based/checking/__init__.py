@@ -192,7 +192,7 @@ def _execute_checkmk_checks_with_error_handling(
         state, text = error_handling.handle_failure(
             exc,
             host_config.exit_code_spec(),
-            hostname=hostname,
+            host_config=host_config,
             service_name="Check_MK",
             plugin_name="mk",
         )
@@ -524,7 +524,7 @@ def get_aggregated_result(
         result = ServiceCheckResult(
             3,
             cmk.base.crash_reporting.create_check_crash_dump(
-                host_name=host_config.hostname,
+                host_config=host_config,
                 service_name=service.description,
                 plugin_name=service.check_plugin_name,
                 plugin_kwargs={**item_kw, **params_kw, **section_kws},

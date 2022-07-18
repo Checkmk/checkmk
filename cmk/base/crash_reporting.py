@@ -25,7 +25,7 @@ from cmk.utils.type_defs import (
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 
-import cmk.base.config as config
+from cmk.base.config import HostConfig
 
 CrashReportStore = crash_reporting.CrashReportStore
 
@@ -74,7 +74,7 @@ def create_section_crash_dump(
 
 def create_check_crash_dump(
     *,
-    host_name: HostName,
+    host_config: HostConfig,
     service_name: ServiceName,
     plugin_name: Union[CheckPluginNameStr, CheckPluginName],
     plugin_kwargs: Mapping[str, Any],
@@ -89,7 +89,7 @@ def create_check_crash_dump(
     text = "check failed - please submit a crash report!"
     try:
         crash = CheckCrashReport.from_exception_and_context(
-            hostname=host_name,
+            host_config=host_config,
             check_plugin_name=str(plugin_name),
             check_plugin_kwargs=plugin_kwargs,
             is_enforced_service=is_enforced,
@@ -169,27 +169,24 @@ class CheckCrashReport(CrashReportWithAgentOutput):
     @classmethod
     def from_exception_and_context(
         cls,
-        hostname: HostName,
+        host_config: HostConfig,
         check_plugin_name: str,
         check_plugin_kwargs: Mapping[str, Any],
         is_enforced_service: bool,
         description: ServiceName,
         text: str,
     ) -> crash_reporting.ABCCrashReport:
-        config_cache = config.get_config_cache()
-        host_config = config_cache.get_host_config(hostname)
-
-        snmp_info = _read_snmp_info(hostname)
-        agent_output = _read_agent_output(hostname)
+        snmp_info = _read_snmp_info(host_config.hostname)
+        agent_output = _read_agent_output(host_config.hostname)
 
         return cls.from_exception(
             details={
                 "check_output": text,
-                "host": hostname,
+                "host": host_config.hostname,
                 "is_cluster": host_config.is_cluster,
                 "description": description,
                 "check_type": check_plugin_name,
-                "inline_snmp": host_config.snmp_config(hostname).snmp_backend
+                "inline_snmp": host_config.snmp_config(host_config.hostname).snmp_backend
                 == SNMPBackendEnum.INLINE,
                 "enforced_service": is_enforced_service,
                 **check_plugin_kwargs,

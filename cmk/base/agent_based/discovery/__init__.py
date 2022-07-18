@@ -606,7 +606,7 @@ def _execute_check_discovery_with_error_handling(
         state, text = error_handling.handle_failure(
             exc,
             host_config.exit_code_spec(),
-            hostname=host_name,
+            host_config=host_config,
             service_name="Check_MK Discovery",
             plugin_name="discover",
         )

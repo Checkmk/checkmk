@@ -7,10 +7,7 @@ from typing import Sequence, Union
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.type_defs import CheckPluginName, SectionName
-
+from cmk.base.plugins.agent_based import win_dhcp_pools as wdp
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
@@ -37,24 +34,24 @@ pytestmark = pytest.mark.checks
                 Result(state=State.OK, summary="Pending leases: 0"),
                 Result(state=State.OK, summary="0%"),
                 Metric("pending_dhcp_leases", 0.0, boundaries=(0.0, 18.0)),
-                Result(state=State.OK, summary="Values are averaged"),
+                Result(
+                    state=State.OK,
+                    summary="Values are averaged",
+                    details=(
+                        "All values are averaged, as the Windows DHCP plugin collects statistics, "
+                        "not real-time measurements"
+                    ),
+                ),
             ],
             id="Check results of a used Windows DHCP pool",
         ),
     ],
 )
 def test_check_win_dhcp_pools(
-    fix_register: FixRegister,
     string_table: StringTable,
     expected_check_result: Sequence[Union[Result, Metric]],
 ) -> None:
-    section = fix_register.agent_sections[SectionName("win_dhcp_pools")]
-    check = fix_register.check_plugins[CheckPluginName("win_dhcp_pools")]
     assert (
-        list(
-            check.check_function(
-                item="127.0.0.1", params={}, section=section.parse_function(string_table)
-            )
-        )
+        list(wdp.check_win_dhcp_pools("127.0.0.1", {}, wdp.parse_win_dhcp_pools(string_table)))
         == expected_check_result
     )

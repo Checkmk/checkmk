@@ -4,10 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Mapping, Sequence
 
-from cmk.base.check_legacy_includes.dhcp_pools import check_dhcp_pools_levels
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1 import (
+    check_levels,
+    get_rate,
+    get_value_store,
+    register,
+    Result,
+    Service,
+    State,
+)
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.dhcp_pools import check_dhcp_pools_levels
 
 # Example outputs from agent:
 #
@@ -45,8 +54,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTabl
 
 
 Section = Sequence[tuple[str, ...]]
-DiscoveryResult = Iterable[tuple[str, str]] | Iterable[tuple[None, None]]
-CheckResult = Iterable[tuple[int, str, list]]
 
 
 #   .--Pools---------------------------------------------------------------.
@@ -57,8 +64,6 @@ CheckResult = Iterable[tuple[int, str, list]]
 #   |                      |_|   \___/ \___/|_|___/                        |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-discovery_win_dhcp_pools = []
 
 # Attention:
 #
@@ -97,6 +102,12 @@ def parse_win_dhcp_pools(string_table: StringTable) -> Section:
     return [tuple(" ".join(line).rstrip(".").split(" = ")) for line in string_table]
 
 
+register.agent_section(
+    name="win_dhcp_pools",
+    parse_function=parse_win_dhcp_pools,
+)
+
+
 def _safe_int(raw: str) -> int:
     """
     Taken from the legacy API to allow migration.
@@ -108,11 +119,7 @@ def _safe_int(raw: str) -> int:
         return 0
 
 
-def discover_win_dhcp_pools(section: Section) -> DiscoveryResult:
-    params = host_extra_conf_merged(host_name(), discovery_win_dhcp_pools)
-    discover_empty = params.get("empty_pools", False)
-
-    inventory = []
+def discover_win_dhcp_pools(params: Mapping[str, Any], section: Section) -> DiscoveryResult:
     in_block = False
     last_pool = ""
     pool_stats: list[int] = []
@@ -129,9 +136,8 @@ def discover_win_dhcp_pools(section: Section) -> DiscoveryResult:
             in_block = False
             used, free, pending = pool_stats  # pylint: disable=unbalanced-tuple-unpacking
             size = used + free + pending
-            if size > 0 or discover_empty:
-                inventory.append((last_pool, {}))
-    return inventory
+            if size > 0 or params["empty_pools"]:
+                yield Service(item=last_pool)
 
 
 def check_win_dhcp_pools(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -150,35 +156,40 @@ def check_win_dhcp_pools(item: str, params: Mapping[str, Any], section: Section)
 
     used, free, pending = pool_stats
     if used is None or free is None or pending is None:
-        yield 3, "Pool information not found", []
+        yield Result(state=State.UNKNOWN, summary="Pool information not found")
         return
 
     size = used + free + pending
 
     # Catch unused pools
     if size == 0:
-        yield 3, "DHCP Pool contains no IP addresses / is deactivated", []
+        yield Result(
+            state=State.UNKNOWN,
+            summary="DHCP Pool contains no IP addresses / is deactivated",
+        )
         return
 
     yield from check_dhcp_pools_levels(free, used, pending, size, params)
-    # The Windows DHCP plugin collects statistics, not real-time measurements.
-    # Clarify this. See SUP-9126
-    yield 0, "Values are averaged", []
+    yield Result(  # See SUP-9126
+        state=State.OK,
+        summary="Values are averaged",
+        details=(
+            "All values are averaged, as the Windows DHCP plugin collects statistics, "
+            "not real-time measurements"
+        ),
+    )
 
 
-check_info["win_dhcp_pools"] = {
-    "parse_function": parse_win_dhcp_pools,
-    "check_function": check_win_dhcp_pools,
-    "inventory_function": discover_win_dhcp_pools,
-    "service_description": "DHCP Pool %s",
-    "has_perfdata": True,
-    "group": "win_dhcp_pools",
-    "default_levels_variable": "win_dhcp_pools_default_levels",
-}
-
-
-factory_settings["win_dhcp_pools_default_levels"] = {"free_leases": (10.0, 5.0)}
-
+register.check_plugin(
+    name="win_dhcp_pools",
+    service_name="DHCP Pool %s",
+    discovery_function=discover_win_dhcp_pools,
+    discovery_default_parameters={"empty_pools": False},
+    discovery_ruleset_name="discovery_win_dhcp_pools",
+    check_function=check_win_dhcp_pools,
+    check_default_parameters={"free_leases": (10.0, 5.0)},
+    check_ruleset_name="win_dhcp_pools",
+)
 
 # .
 #   .--Pool stats----------------------------------------------------------.
@@ -193,15 +204,12 @@ factory_settings["win_dhcp_pools_default_levels"] = {"free_leases": (10.0, 5.0)}
 
 def discover_win_dhcp_pools_stats(section: Section) -> DiscoveryResult:
     if any(first_word for first_word, *_rest in section):
-        yield None, {}
+        yield Service()
 
 
-def check_win_dhcp_pools_stats(
-    item: str, params: Mapping[str, Any], section: Section
-) -> CheckResult:
-    output = ""
-    perfdata = []
-    this_time = int(time.time())
+def check_win_dhcp_pools_stats(section: Section) -> CheckResult:
+    this_time = time.time()
+    value_store = get_value_store()
 
     for line in section:
         if len(line) > 0:
@@ -217,20 +225,18 @@ def check_win_dhcp_pools_stats(
                 "Scopes",
             ]:
                 value = _safe_int(line[1])
-                per_sec = get_rate("win_dhcp_stats.%s" % key, this_time, value)
-                output += "%s: %.0f/s, " % (key, per_sec)
-                perfdata.append((key, per_sec))
-
-    if output == "":
-        yield 3, "Information not available", []
-        return
-
-    yield 0, output.rstrip(", "), perfdata
+                yield from check_levels(
+                    get_rate(value_store, key, this_time, value),
+                    metric_name=key,
+                    render_func=lambda f: "{int(f)}/s",
+                    label=key,
+                )
 
 
-check_info["win_dhcp_pools.stats"] = {
-    "check_function": check_win_dhcp_pools_stats,
-    "inventory_function": discover_win_dhcp_pools_stats,
-    "service_description": "DHCP Stats",
-    "has_perfdata": True,
-}
+register.check_plugin(
+    name="win_dhcp_pools_stats",
+    service_name="DHCP Stats",
+    sections=["win_dhcp_pools"],
+    discovery_function=discover_win_dhcp_pools_stats,
+    check_function=check_win_dhcp_pools_stats,
+)

@@ -34,7 +34,4 @@ format."
                                   nil output-buffer nil
                                   "run" "yapf"
                                   "-l" (concat (number-to-string start-line) "-" (number-to-string end-line))))))))
- (scss-mode . ((eval setq flycheck-sass/scss-sass-lint-executable
-                     (concat (projectile-locate-dominating-file default-directory dir-locals-file)
-                             "node_modules/.bin/sass-lint"))))
  )

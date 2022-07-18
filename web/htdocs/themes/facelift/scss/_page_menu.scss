@@ -615,7 +615,7 @@ body.dashboard {
     left: 0;
     align-content: center;
     // Important needed to override swal2 internal definition
-    background-color: rgba($black, 0.2) !important; // sass-lint:disable-line no-important
+    background-color: rgba($black, 0.2) !important;
 
     .confirm_popup {
       width: 400px;

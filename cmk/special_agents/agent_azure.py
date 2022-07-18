@@ -62,6 +62,22 @@ METRICS_SELECTED = {
     "Microsoft.Web/sites": [
         ("CpuTime,AverageResponseTime,Http5xx", "PT1M", "total", None),
     ],
+    "Microsoft.DBforMySQL/servers": [
+        (
+            "cpu_percent,memory_percent,io_consumption_percent,serverlog_storage_percent,"
+            "storage_percent",
+            "PT1M",
+            "average",
+            None,
+        ),
+        (
+            "active_connections,connections_failed,seconds_behind_master,"
+            "network_bytes_ingress,network_bytes_egress",
+            "PT1M",
+            "total",
+            None,
+        ),
+    ],
 }
 
 AZURE_CACHE_FILE_PATH = Path(tmp_dir) / "agents" / "agent_azure"

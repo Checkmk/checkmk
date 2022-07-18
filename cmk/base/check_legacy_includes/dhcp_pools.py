@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import check_levels, get_percent_human_readable
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result
+from cmk.base.plugins.agent_based.utils import dhcp_pools
 
 # new params format
 # params = {
@@ -18,36 +19,15 @@ def check_dhcp_pools_levels(free, used, pending, size, params):
         # integer, thus we have to change them into floats
         params = {"free_leases": (float(params[0]), float(params[1]))}
 
-    for what, value in [("free", free), ("used", used), ("pending", pending)]:
-        if value is None:
-            continue
-
-        value_abs = value
-        value_perc = float(value) / size * 100.0 if size else 0.0
-
-        levels_abs: tuple[float | None, float | None] = None, None
-        levels_perc: tuple[float | None, float | None] = None, None
-        metric_levels: tuple[float | None, float | None] = None, None
-        if (levels := params.get("%s_leases" % what)) is not None:
-            if isinstance(levels[0], float):  # here we have levels in percent
-                levels_perc = levels
-                metric_levels = levels[0] / 100.0 * size, levels[1] / 100.0 * size
-            else:
-                levels_abs = levels
-                metric_levels = levels
-
-        yield check_levels(
-            value=value_abs,
-            dsname=None,
-            params=(None, None) + levels_abs,
-            human_readable_func=lambda x: str(int(x)),
-            infoname=f"{what.capitalize()} leases",
-        )
-        yield check_levels(
-            value=value_perc,
-            dsname=None,
-            params=(None, None) + levels_perc,
-            human_readable_func=get_percent_human_readable,
-            infoname="",
-        )
-        yield 0, "", [("%s_dhcp_leases" % what, value_abs, *metric_levels, 0, size)]
+    for new_api_object in dhcp_pools.check_dhcp_pools_levels(free, used, pending, size, params):
+        if isinstance(new_api_object, Result):
+            yield int(new_api_object.state), new_api_object.summary, []
+        if isinstance(new_api_object, Metric):
+            yield 0, "", [
+                (
+                    new_api_object.name,
+                    new_api_object.value,
+                    *new_api_object.levels,
+                    *new_api_object.boundaries,
+                )
+            ]

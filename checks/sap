@@ -112,18 +112,20 @@ def check_sap_dialog(item: str, params: Mapping[str, Any], section: Section) -> 
     def perf_clean_key(s: str) -> str:
         return s.replace("(", "_").replace(")", "_").replace(" ", "_").replace(".", "_").rstrip("_")
 
-    # {'UsersLoggedIn': (2, '-'), 'ResponseTime(StandardTran.)': (6, 'msec'), 'FrontEndNetTime': (0, 'msec'), 'ResponseTime': (77, 'msec')}
+    # {
+    #     'UsersLoggedIn': (2, '-'),
+    #     'ResponseTime(StandardTran.)': (6, 'msec'),
+    #     'FrontEndNetTime': (0, 'msec'),
+    #     'ResponseTime': (77, 'msec'),
+    # }
     for key, value in dialog.items():
-        state = 0
-        if key in params:
-            warn, crit = params[key]
-            if value[0] >= crit:
-                state = 2
-            elif value[0] >= warn:
-                state = 1
-        yield state, "%s: %d%s" % (key, value[0], (value[1] != "-" and value[1] or "")), [
-            (perf_clean_key(key), value[0])
-        ]
+        yield check_levels(
+            value[0],
+            dsname=perf_clean_key(key),
+            params=params.get(key),
+            human_readable_func=lambda x, t=f"%.2f {'' if value[1] == '-' else value[1]}": t % x,
+            infoname=key,
+        )
 
 
 check_info["sap.dialog"] = {

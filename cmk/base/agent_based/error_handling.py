@@ -17,7 +17,7 @@ from cmk.utils.exceptions import (
     MKTimeout,
 )
 from cmk.utils.log import console
-from cmk.utils.type_defs import CheckPluginNameStr, HostName, ServiceName, ServiceState
+from cmk.utils.type_defs import CheckPluginNameStr, ExitSpec, HostName, ServiceName, ServiceState
 
 import cmk.base.config as config
 import cmk.base.crash_reporting
@@ -25,6 +25,58 @@ import cmk.base.obsolete_output as out
 
 ActiveCheckFunction = Callable[..., ActiveCheckResult]
 WrappedActiveCheckFunction = Callable[..., ServiceState]
+
+
+def handle_success(result: ActiveCheckResult) -> Tuple[ServiceState, str]:
+    return result.state, "\n".join(
+        (
+            " | ".join((result.summary, " ".join(result.metrics))),
+            "".join(f"{line}\n" for line in result.details),
+        )
+    )
+
+
+def handle_failure(
+    exc: Exception,
+    exit_spec: ExitSpec,
+    *,
+    hostname: HostName,
+    service_name: ServiceName,
+    plugin_name: CheckPluginNameStr,
+) -> Tuple[ServiceState, str]:
+    if isinstance(exc, MKTimeout):
+        if _in_keepalive_mode():
+            raise exc
+        return exit_spec.get("timeout", 2), "Timed out\n"
+
+    if isinstance(exc, (MKAgentError, MKFetcherError, MKSNMPError, MKIPAddressLookupError)):
+        return exit_spec.get("connection", 2), f"{exc}\n"
+
+    if isinstance(exc, MKGeneralException):
+        return exit_spec.get("exception", 3), f"{exc}\n"
+
+    if cmk.utils.debug.enabled():
+        raise exc
+    return (
+        exit_spec.get("exception", 3),
+        cmk.base.crash_reporting.create_check_crash_dump(
+            host_name=hostname,
+            service_name=service_name,
+            plugin_name=plugin_name,
+            plugin_kwargs={},
+            is_enforced=False,
+        ).replace("Crash dump:\n", "Crash dump:\\n"),
+    )
+
+
+def handle_output(output_text: str, hostname: HostName) -> None:
+    if _in_keepalive_mode():
+        import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
+
+        keepalive.add_active_check_result(hostname, output_text)
+        console.verbose(output_text)
+    else:
+        out.output(output_text)
 
 
 def handle_check_mk_check_result(
@@ -39,56 +91,22 @@ def handle_check_mk_check_result(
             host_config = config.get_config_cache().get_host_config(hostname)
             exit_spec = host_config.exit_code_spec()
             try:
-                status, output_text = _combine_texts(check_func(hostname, *args, **kwargs))
-
-            except MKTimeout:
-                if _in_keepalive_mode():
-                    raise
-                status = exit_spec.get("timeout", 2)
-                output_text = "Timed out\n"
-
-            except (MKAgentError, MKFetcherError, MKSNMPError, MKIPAddressLookupError) as e:
-                status = exit_spec.get("connection", 2)
-                output_text = f"{e}\n"
-
-            except MKGeneralException as e:
-                status = exit_spec.get("exception", 3)
-                output_text = f"{e}\n"
-
-            except Exception:
-                if cmk.utils.debug.enabled():
-                    raise
-                status = exit_spec.get("exception", 3)
-                output_text = cmk.base.crash_reporting.create_check_crash_dump(
-                    host_name=hostname,
+                status, output_text = handle_success(check_func(hostname, *args, **kwargs))
+            except Exception as exc:
+                status, output_text = handle_failure(
+                    exc,
+                    exit_spec,
+                    hostname=hostname,
                     service_name=description,
                     plugin_name=check_plugin_name,
-                    plugin_kwargs={},
-                    is_enforced=False,
-                ).replace("Crash dump:\n", "Crash dump:\\n")
+                )
 
-            if _in_keepalive_mode():
-                import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
-
-                keepalive.add_active_check_result(hostname, output_text)
-                console.verbose(output_text)
-            else:
-                out.output(output_text)
-
+            handle_output(output_text, hostname)
             return status
 
         return wrapped_check_func
 
     return wrap
-
-
-def _combine_texts(result: ActiveCheckResult) -> Tuple[ServiceState, str]:
-    return result.state, "\n".join(
-        (
-            " | ".join((result.summary, " ".join(result.metrics))),
-            "".join(f"{line}\n" for line in result.details),
-        )
-    )
 
 
 def _in_keepalive_mode() -> bool:

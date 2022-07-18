@@ -632,6 +632,7 @@ class Ruleset:
             rules_config,
             is_service=self.rulespec.is_for_services,
             is_binary=self.rulespec.is_binary_ruleset,
+            use_ruleset_id_cache=False,
         )
 
         for rule_config in rules_config:

@@ -933,7 +933,6 @@ def parse_negated_condition_list(
     raise ValueError("unsupported conditions")
 
 
-# Class to help transition to new dict ruleset format. Can be deleted in 2.3
 class RulesetToDictTransformer:
     """Transforms all rules in the given ruleset from the pre 1.6 tuple format to the dict format
     This is done in place to keep the references to the ruleset working.
@@ -944,20 +943,18 @@ class RulesetToDictTransformer:
         self._tag_groups = tag_to_group_map
         self._transformed_ids: Set[int] = set()
 
-    def transform_in_place(self, ruleset, is_service, is_binary):
-        for rule in ruleset:
+    def transform_in_place(self, ruleset, is_service, is_binary, use_ruleset_id_cache=True):
+        if use_ruleset_id_cache:
+            ruleset_id = id(ruleset)
+            if ruleset_id in self._transformed_ids:
+                return
+
+        for index, rule in enumerate(ruleset):
             if not isinstance(rule, dict):
-                new_value = self._transform_rule(rule, is_service, is_binary)
-                raise MKGeneralException(
-                    "rule",
-                    (
-                        f"Found old style tuple ruleset ({rule}). "
-                        "Checkmk now expects dict rules. "
-                        "Please convert to new format, see werk 7352.\n "
-                        "The new ruleset format is \n"
-                        f"{new_value}"
-                    ),
-                )
+                ruleset[index] = self._transform_rule(rule, is_service, is_binary)
+
+        if use_ruleset_id_cache:
+            self._transformed_ids.add(ruleset_id)
 
     def _transform_rule(self, tuple_rule, is_service, is_binary):
         rule: Dict[str, Any] = {

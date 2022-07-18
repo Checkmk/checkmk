@@ -36,35 +36,25 @@ def ts(monkeypatch):
 
 
 def test_service_extra_conf(ts) -> None:  # type:ignore[no-untyped-def]
-    ruleset = [
-        {"condition": {}, "options": {}, "value": "1"},
-        {"condition": {}, "options": {}, "value": "2"},
-        {"condition": {"host_tags": {"agent": "no-agent"}}, "options": {}, "value": "3"},
-        {"condition": {"host_tags": {"criticality": "test"}}, "options": {}, "value": "4"},
-        {"condition": {"host_tags": {"tag3": "tag3"}}, "options": {}, "value": "5"},
-        {
-            "condition": {"host_tags": {"tag3": "tag3"}, "host_name": ["host1"]},
-            "options": {},
-            "value": "6",
-        },
-        {"condition": {"host_name": ["host1"]}, "options": {}, "value": "7"},
-        {
-            "condition": {"service_description": [{"$regex": "service1$"}], "host_name": ["host1"]},
-            "options": {},
-            "value": "8",
-        },
-        {
-            "condition": {"service_description": [{"$regex": "ser$"}], "host_name": ["host1"]},
-            "options": {},
-            "value": "9",
-        },
-        {
-            "condition": {"service_description": [{"$regex": "^serv$"}], "host_name": ["host1"]},
-            "options": {},
-            "value": "10",
-        },
-        {"condition": {"host_name": [{"$regex": "host"}]}, "options": {}, "value": "11"},
-        {"condition": {"host_name": {"$nor": ["host2"]}}, "options": {}, "value": "12"},
+    ruleset: List[Tuple[str, List[str], List[str], List[str], Dict]] = [
+        ("1", [], tuple_rulesets.ALL_HOSTS, tuple_rulesets.ALL_SERVICES, {}),
+        (
+            "2",
+            [],
+            tuple_rulesets.ALL_HOSTS,
+            tuple_rulesets.ALL_SERVICES,
+            {},
+        ),  # Duplicate test to detect caching issues
+        ("3", ["no-agent"], tuple_rulesets.ALL_HOSTS, tuple_rulesets.ALL_SERVICES, {}),
+        ("4", ["test"], tuple_rulesets.ALL_HOSTS, tuple_rulesets.ALL_SERVICES, {}),
+        ("5", ["tag3"], tuple_rulesets.ALL_HOSTS, tuple_rulesets.ALL_SERVICES, {}),
+        ("6", ["tag3"], ["host1"], tuple_rulesets.ALL_SERVICES, {}),
+        ("7", [], ["host1"], tuple_rulesets.ALL_SERVICES, {}),
+        ("8", [], ["host1"], ["service1$"], {}),
+        ("9", [], ["host1"], ["ser$"], {}),
+        ("10", [], ["host1"], ["^serv$"], {}),
+        ("11", [], ["~host"], tuple_rulesets.ALL_SERVICES, {}),
+        ("12", [], ["!host2"] + tuple_rulesets.ALL_HOSTS, tuple_rulesets.ALL_SERVICES, {}),
     ]
 
     assert ts.config_cache.service_extra_conf("host1", "service1", ruleset) == [
@@ -95,23 +85,15 @@ def test_service_extra_conf(ts) -> None:  # type:ignore[no-untyped-def]
 @pytest.fixture(scope="function")
 def host_ruleset():
     return [
-        {"condition": {}, "options": {}, "value": {"1": True}},
-        {"condition": {"host_tags": {"agent": "no-agent"}}, "options": {}, "value": {"2": True}},
-        {"condition": {"host_tags": {"criticality": "test"}}, "options": {}, "value": {"3": True}},
-        {"condition": {"host_tags": {"tag3": "tag3"}}, "options": {}, "value": {"4": True}},
-        {
-            "condition": {"host_tags": {"agent": "no-agent"}, "host_name": ["host1"]},
-            "options": {},
-            "value": {"5": True},
-        },
-        {
-            "condition": {"host_tags": {"tag3": "tag3"}, "host_name": ["host1"]},
-            "options": {},
-            "value": {"6": True},
-        },
-        {"condition": {"host_name": ["host1"]}, "options": {}, "value": {"7": True}},
-        {"condition": {"host_name": [{"$regex": "host"}]}, "options": {}, "value": {"8": True}},
-        {"condition": {"host_name": {"$nor": ["host2"]}}, "options": {}, "value": {"9": True}},
+        ({"1": True}, [], tuple_rulesets.ALL_HOSTS, {}),
+        ({"2": True}, ["no-agent"], tuple_rulesets.ALL_HOSTS, {}),
+        ({"3": True}, ["test"], tuple_rulesets.ALL_HOSTS, {}),
+        ({"4": True}, ["tag3"], tuple_rulesets.ALL_HOSTS, {}),
+        ({"5": True}, ["no-agent"], ["host1"], {}),
+        ({"6": True}, ["tag3"], ["host1"], {}),
+        ({"7": True}, [], ["host1"], {}),
+        ({"8": True}, [], ["~host"], {}),
+        ({"9": True}, [], ["!host2"] + tuple_rulesets.ALL_HOSTS, {}),
     ]
 
 
@@ -157,113 +139,74 @@ def test_host_extra_conf_merged(ts, host_ruleset) -> None:  # type:ignore[no-unt
         # ruleset, outcome host1, outcome host2
         [[], False, False],
         [
-            [{"condition": {}, "options": {}, "value": False}],
+            [(config.NEGATE, [], tuple_rulesets.ALL_HOSTS, tuple_rulesets.ALL_SERVICES, {})],
             False,
             False,
         ],
-        [[{"condition": {}, "options": {}, "value": True}], True, True],
+        [[([], tuple_rulesets.ALL_HOSTS, tuple_rulesets.ALL_SERVICES, {})], True, True],
         [
-            [{"condition": {"host_name": {"$nor": ["host1"]}}, "options": {}, "value": True}],
+            [([], ["!host1"] + tuple_rulesets.ALL_HOSTS, tuple_rulesets.ALL_SERVICES, {})],
             False,
             True,
         ],
         [
             [
-                {
-                    "condition": {"host_name": {"$nor": ["host1", "host2"]}},
-                    "options": {},
-                    "value": True,
-                }
+                (
+                    [],
+                    ["!host1", "!host2"] + tuple_rulesets.ALL_HOSTS,
+                    tuple_rulesets.ALL_SERVICES,
+                    {},
+                )
             ],
             False,
             False,
         ],
+        [[(["test"], tuple_rulesets.ALL_HOSTS, tuple_rulesets.ALL_SERVICES, {})], True, False],
         [
-            [{"condition": {"host_tags": {"criticality": "test"}}, "options": {}, "value": True}],
-            True,
-            False,
-        ],
-        [
-            [
-                {
-                    "condition": {
-                        "host_tags": {"criticality": "test"},
-                        "host_name": {"$nor": ["host1"]},
-                    },
-                    "options": {},
-                    "value": True,
-                }
-            ],
+            [(["test"], ["!host1"] + tuple_rulesets.ALL_HOSTS, tuple_rulesets.ALL_SERVICES, {})],
             False,
             False,
         ],
         [
-            [{"condition": {"host_name": {"$nor": ["host1"]}}, "options": {}, "value": True}],
+            [([], ["!host1"] + tuple_rulesets.ALL_HOSTS, tuple_rulesets.ALL_SERVICES, {})],
             False,
             True,
         ],
         [
-            [{"condition": {"host_name": {"$nor": ["host1"]}}, "options": {}, "value": False}],
-            False,
-            False,
-        ],
-        [
             [
-                {
-                    "condition": {
-                        "host_tags": {"criticality": "test"},
-                        "host_name": {"$nor": ["host1"]},
-                    },
-                    "options": {},
-                    "value": False,
-                }
+                (
+                    config.NEGATE,
+                    [],
+                    ["!host1"] + tuple_rulesets.ALL_HOSTS,
+                    tuple_rulesets.ALL_SERVICES,
+                    {},
+                )
             ],
             False,
             False,
         ],
         [
             [
-                {
-                    "condition": {"service_description": [{"$regex": "serv"}]},
-                    "options": {},
-                    "value": True,
-                }
-            ],
-            True,
-            True,
-        ],
-        [
-            [
-                {
-                    "condition": {"service_description": [{"$regex": "serv"}]},
-                    "options": {},
-                    "value": False,
-                }
+                (
+                    config.NEGATE,
+                    ["test"],
+                    ["!host1"] + tuple_rulesets.ALL_HOSTS,
+                    tuple_rulesets.ALL_SERVICES,
+                    {},
+                )
             ],
             False,
             False,
         ],
-        [
-            [
-                {
-                    "condition": {"service_description": [{"$regex": "service1"}]},
-                    "options": {},
-                    "value": False,
-                }
-            ],
-            False,
-            False,
-        ],
+        [[([], tuple_rulesets.ALL_HOSTS, ["serv"], {})], True, True],
+        [[(config.NEGATE, [], tuple_rulesets.ALL_HOSTS, ["serv"], {})], False, False],
+        [[(config.NEGATE, [], tuple_rulesets.ALL_HOSTS, ["service1"], {})], False, False],
         # Dual rule test, first rule matches host1 - negates -> False
         #                 second rule matches host2 -> True
         [
             [
-                {
-                    "condition": {"service_description": [{"$regex": "service1"}]},
-                    "options": {},
-                    "value": False,
-                },
-                {"condition": {}, "options": {}, "value": True},
+                (config.NEGATE, [], tuple_rulesets.ALL_HOSTS, ["service1"], {}),
+                ([], tuple_rulesets.ALL_HOSTS, tuple_rulesets.ALL_SERVICES, {}),
             ],
             False,
             True,

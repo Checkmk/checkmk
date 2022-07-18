@@ -230,7 +230,6 @@ def test_section_parse_function_does_something(fix_register) -> None:  # type:ig
         "vxvm_enclosures",
         "vxvm_multipath",
         "vxvm_objstatus",
-        "win_dhcp_pools",
         "windows_broadcom_bonding",
         "windows_multipath",
         "winperf_mem",

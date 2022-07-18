@@ -95,11 +95,11 @@ win_dhcp_pools_stats_translate = {
 }
 
 
-def parse_win_dhcp_pools(info: StringTable) -> Section:
-    return [tuple(" ".join(line).rstrip(".").split(" = ")) for line in info]
+def parse_win_dhcp_pools(string_table: StringTable) -> Section:
+    return [tuple(" ".join(line).rstrip(".").split(" = ")) for line in string_table]
 
 
-def inventory_win_dhcp_pools(info: StringTable) -> DiscoveryResult:
+def discover_win_dhcp_pools(section: Section) -> DiscoveryResult:
     settings = host_extra_conf_merged(host_name(), discovery_win_dhcp_pools)
     discover_empty = settings.get("empty_pools", win_dhcp_pools_inventorize_empty)
 
@@ -107,7 +107,7 @@ def inventory_win_dhcp_pools(info: StringTable) -> DiscoveryResult:
     in_block = False
     last_pool = ""
     pool_stats: list[int] = []
-    for line in parse_win_dhcp_pools(info):
+    for line in section:
         if win_dhcp_pools_stats_translate.get(line[0], line[0]) == "Subnet":
             in_block = True
             pool_stats = []
@@ -125,10 +125,10 @@ def inventory_win_dhcp_pools(info: StringTable) -> DiscoveryResult:
     return inventory
 
 
-def check_win_dhcp_pools(item: str, params: Mapping[str, Any], info: StringTable) -> CheckResult:
+def check_win_dhcp_pools(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     in_block = False
     pool_stats: list[int | None] = [None, None, None]
-    for line in parse_win_dhcp_pools(info):
+    for line in section:
         if win_dhcp_pools_stats_translate.get(line[0], line[0]) == "Subnet" and line[1] == item:
             in_block = True
             pool_stats = []
@@ -158,8 +158,9 @@ def check_win_dhcp_pools(item: str, params: Mapping[str, Any], info: StringTable
 
 
 check_info["win_dhcp_pools"] = {
+    "parse_function": parse_win_dhcp_pools,
     "check_function": check_win_dhcp_pools,
-    "inventory_function": inventory_win_dhcp_pools,
+    "inventory_function": discover_win_dhcp_pools,
     "service_description": "DHCP Pool %s",
     "has_perfdata": True,
     "group": "win_dhcp_pools",
@@ -176,18 +177,19 @@ check_info["win_dhcp_pools"] = {
 #   '----------------------------------------------------------------------'
 
 
-def inventory_win_dhcp_pools_stats(info: StringTable) -> DiscoveryResult:
-    return [(None, None) for line in info if line[0] != ""]
+def discover_win_dhcp_pools_stats(section: Section) -> DiscoveryResult:
+    if any(first_word for first_word, *_rest in section):
+        yield None, {}
 
 
 def check_win_dhcp_pools_stats(
-    item: str, params: Mapping[str, Any], info: StringTable
+    item: str, params: Mapping[str, Any], section: Section
 ) -> CheckResult:
     output = ""
     perfdata = []
     this_time = int(time.time())
 
-    for line in parse_win_dhcp_pools(info):
+    for line in section:
         if len(line) > 0:
             key = win_dhcp_pools_stats_translate.get(line[0], line[0])
             if key in [
@@ -214,7 +216,7 @@ def check_win_dhcp_pools_stats(
 
 check_info["win_dhcp_pools.stats"] = {
     "check_function": check_win_dhcp_pools_stats,
-    "inventory_function": inventory_win_dhcp_pools_stats,
+    "inventory_function": discover_win_dhcp_pools_stats,
     "service_description": "DHCP Stats",
     "has_perfdata": True,
 }

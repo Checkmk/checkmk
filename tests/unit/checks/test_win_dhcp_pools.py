@@ -9,7 +9,7 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, SectionName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
@@ -18,7 +18,7 @@ pytestmark = pytest.mark.checks
 
 
 @pytest.mark.parametrize(
-    "section,expected_check_result",
+    "string_table,expected_check_result",
     [
         pytest.param(
             [
@@ -45,11 +45,16 @@ pytestmark = pytest.mark.checks
 )
 def test_check_win_dhcp_pools(
     fix_register: FixRegister,
-    section: StringTable,
+    string_table: StringTable,
     expected_check_result: Sequence[Union[Result, Metric]],
 ) -> None:
+    section = fix_register.agent_sections[SectionName("win_dhcp_pools")]
     check = fix_register.check_plugins[CheckPluginName("win_dhcp_pools")]
     assert (
-        list(check.check_function(item="127.0.0.1", params={}, section=section))
+        list(
+            check.check_function(
+                item="127.0.0.1", params={}, section=section.parse_function(string_table)
+            )
+        )
         == expected_check_result
     )

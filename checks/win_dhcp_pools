@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.dhcp_pools import *  # pylint: disable=wildcard-import,unused-wildcard-import
+import time
+from typing import Any, Iterable, Mapping, Sequence
+
+from cmk.base.check_legacy_includes.dhcp_pools import check_dhcp_pools_levels
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 # Example outputs from agent:
 #
@@ -40,6 +42,12 @@ from cmk.base.check_legacy_includes.dhcp_pools import *  # pylint: disable=wildc
 #                 No. of Addresses in use = 1.
 #                 No. of free Addresses = 23.
 #                 No. of pending offers = 0.
+
+
+Section = Sequence[tuple[str, ...]]
+DiscoveryResult = Iterable[tuple[str, str]] | Iterable[tuple[None, None]]
+CheckResult = Iterable[tuple[int, str, list]]
+
 
 #   .--Pools---------------------------------------------------------------.
 #   |                       ____             _                             |
@@ -87,18 +95,18 @@ win_dhcp_pools_stats_translate = {
 }
 
 
-def parse_win_dhcp_pools(info):
-    return [" ".join(line).rstrip(".").split(" = ") for line in info]
+def parse_win_dhcp_pools(info: StringTable) -> Section:
+    return [tuple(" ".join(line).rstrip(".").split(" = ")) for line in info]
 
 
-def inventory_win_dhcp_pools(info):
+def inventory_win_dhcp_pools(info: StringTable) -> DiscoveryResult:
     settings = host_extra_conf_merged(host_name(), discovery_win_dhcp_pools)
     discover_empty = settings.get("empty_pools", win_dhcp_pools_inventorize_empty)
 
     inventory = []
     in_block = False
     last_pool = ""
-    pool_stats = []
+    pool_stats: list[int] = []
     for line in parse_win_dhcp_pools(info):
         if win_dhcp_pools_stats_translate.get(line[0], line[0]) == "Subnet":
             in_block = True
@@ -117,9 +125,9 @@ def inventory_win_dhcp_pools(info):
     return inventory
 
 
-def check_win_dhcp_pools(item, params, info):
+def check_win_dhcp_pools(item: str, params: Mapping[str, Any], info: StringTable) -> CheckResult:
     in_block = False
-    pool_stats = [None, None, None]
+    pool_stats: list[int | None] = [None, None, None]
     for line in parse_win_dhcp_pools(info):
         if win_dhcp_pools_stats_translate.get(line[0], line[0]) == "Subnet" and line[1] == item:
             in_block = True
@@ -137,16 +145,16 @@ def check_win_dhcp_pools(item, params, info):
 
         # Catch unused pools
         if size == 0:
-            yield 3, "DHCP Pool contains no IP addresses / is deactivated"
+            yield 3, "DHCP Pool contains no IP addresses / is deactivated", []
             return
 
         yield from check_dhcp_pools_levels(free, used, pending, size, params)
         # The Windows DHCP plugin collects statistics, not real-time measurements.
         # Clarify this. See SUP-9126
-        yield 0, "Values are averaged"
+        yield 0, "Values are averaged", []
 
     else:
-        yield 3, "Pool information not found"
+        yield 3, "Pool information not found", []
 
 
 check_info["win_dhcp_pools"] = {
@@ -168,11 +176,13 @@ check_info["win_dhcp_pools"] = {
 #   '----------------------------------------------------------------------'
 
 
-def inventory_win_dhcp_pools_stats(info):
+def inventory_win_dhcp_pools_stats(info: StringTable) -> DiscoveryResult:
     return [(None, None) for line in info if line[0] != ""]
 
 
-def check_win_dhcp_pools_stats(item, params, info):
+def check_win_dhcp_pools_stats(
+    item: str, params: Mapping[str, Any], info: StringTable
+) -> CheckResult:
     output = ""
     perfdata = []
     this_time = int(time.time())
@@ -196,8 +206,10 @@ def check_win_dhcp_pools_stats(item, params, info):
                 perfdata.append((key, per_sec))
 
     if output == "":
-        return (3, "Information not available")
-    return 0, output.rstrip(", "), perfdata
+        yield 3, "Information not available", []
+        return
+
+    yield 0, output.rstrip(", "), perfdata
 
 
 check_info["win_dhcp_pools.stats"] = {

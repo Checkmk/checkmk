@@ -111,7 +111,7 @@ info_msx_info_store_1 = [
         ("dotnet_clrmemory", [["WMItimeout"]], []),
     ],
 )
-def test_wmi_cpu_load_discovery(check_name, info, expected) -> None:
+def test_wmi_cpu_load_discovery(check_name, info, expected) -> None:  # type:ignore[no-untyped-def]
     check = Check(check_name)
     discovery_result = DiscoveryResult(check.run_discovery(check.run_parse(info)))
     discovery_expected = DiscoveryResult(expected)
@@ -124,7 +124,7 @@ def test_wmi_cpu_load_discovery(check_name, info, expected) -> None:
         ("wmi_webservices", info_wmi_timeout, None),
     ],
 )
-def test_wmi_timeout_exceptions(check_name, info, expected) -> None:
+def test_wmi_timeout_exceptions(check_name, info, expected) -> None:  # type:ignore[no-untyped-def]
     check = Check(check_name)
     with pytest.raises(MKCounterWrapped):
         CheckResult(check.run_check(None, {}, check.run_parse(info)))
@@ -156,7 +156,9 @@ def test_wmi_timeout_exceptions(check_name, info, expected) -> None:
         ),
     ],
 )
-def test_wmi_msexch_isclienttype_wato_params(check_name, expected) -> None:
+def test_wmi_msexch_isclienttype_wato_params(  # type:ignore[no-untyped-def]
+    check_name, expected
+) -> None:
     check = Check(check_name)
     result = list(
         check.run_check(

@@ -110,7 +110,7 @@ class ModeDiagnostics(WatoMode):
     def title(self) -> str:
         return _("Support diagnostics")
 
-    def page_menu(self, breadcrumb) -> PageMenu:
+    def page_menu(self, breadcrumb) -> PageMenu:  # type:ignore[no-untyped-def]
         menu = make_simple_form_page_menu(
             _("Diagnostics"),
             breadcrumb,
@@ -379,7 +379,7 @@ class ModeDiagnostics(WatoMode):
         ]
         return elements
 
-    def _get_component_specific_checkmk_files_elements(
+    def _get_component_specific_checkmk_files_elements(  # type:ignore[no-untyped-def]
         self,
         component,
     ) -> List[Tuple[str, ValueSpec]]:
@@ -576,7 +576,7 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
             job_interface.send_result_message(_("Creating dump file failed"))
 
 
-def _merge_results(results) -> CreateDiagnosticsDumpResult:
+def _merge_results(results) -> CreateDiagnosticsDumpResult:  # type:ignore[no-untyped-def]
     output: str = ""
     tarfile_created: bool = False
     tarfile_paths: List[str] = []

@@ -838,7 +838,7 @@ class Ruleset:
 
     # Returns the outcoming value or None and a list of matching rules. These are pairs
     # of rule_folder and rule_number
-    def analyse_ruleset(
+    def analyse_ruleset(  # type:ignore[no-untyped-def]
         self,
         hostname,
         svc_desc_or_item,
@@ -1101,7 +1101,7 @@ class Rule:
             )
         )
 
-    def matches_host_and_item(
+    def matches_host_and_item(  # type:ignore[no-untyped-def]
         self,
         host_folder,
         hostname,
@@ -1122,7 +1122,7 @@ class Rule:
             )
         )
 
-    def get_mismatch_reasons(
+    def get_mismatch_reasons(  # type:ignore[no-untyped-def]
         self,
         host_folder,
         hostname,

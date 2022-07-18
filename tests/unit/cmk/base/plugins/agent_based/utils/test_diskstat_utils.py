@@ -68,7 +68,7 @@ from cmk.base.plugins.agent_based.utils import diskstat
         ),
     ],
 )
-def test_discovery_diskstat_generic(params, exp_res) -> None:
+def test_discovery_diskstat_generic(params, exp_res) -> None:  # type:ignore[no-untyped-def]
     assert (
         list(
             diskstat.discovery_diskstat_generic(
@@ -341,7 +341,7 @@ def test_summarize_disks(
         ),
     ],
 )
-def test_scale_levels(levels, factor) -> None:
+def test_scale_levels(levels, factor) -> None:  # type:ignore[no-untyped-def]
     scaled_levels = diskstat._scale_levels(levels, factor)
     if levels is None:
         assert scaled_levels is None
@@ -501,7 +501,7 @@ def test_load_levels_wato() -> None:
         ),
     ],
 )
-def test_check_diskstat_dict(params, disk, exp_res) -> None:
+def test_check_diskstat_dict(params, disk, exp_res) -> None:  # type:ignore[no-untyped-def]
     exp_res = exp_res.copy()
     value_store: Dict[str, Any] = {}
 

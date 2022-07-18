@@ -80,7 +80,9 @@ expected_result_2 = CheckResult(
         (info_statgrab_cpu_hpux, mock_state_dict, expected_result_2),
     ],
 )
-def test_statgrab_cpu_check(info, mockstate, expected_result) -> None:
+def test_statgrab_cpu_check(  # type:ignore[no-untyped-def]
+    info, mockstate, expected_result
+) -> None:
 
     check = Check("statgrab_cpu")
 
@@ -96,7 +98,7 @@ def test_statgrab_cpu_check(info, mockstate, expected_result) -> None:
         (info_statgrab_cpu_hpux, mock_state_function),
     ],
 )
-def test_statgrab_cpu_check_error(info, mockstate) -> None:
+def test_statgrab_cpu_check_error(info, mockstate) -> None:  # type:ignore[no-untyped-def]
 
     check = Check("statgrab_cpu")
 

@@ -138,7 +138,7 @@ def make_user_object_ref(user_id: UserId) -> ObjectRef:
     return ObjectRef(ObjectRefType.User, str(user_id))
 
 
-def _validate_user_attributes(  # pylint: disable=too-many-branches
+def _validate_user_attributes(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
     all_users,
     user_id,
     user_attrs,

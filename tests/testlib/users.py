@@ -16,7 +16,9 @@ from cmk.gui.utils import get_random_string
 from cmk.gui.watolib.users import delete_users, edit_users
 
 
-def _mk_user_obj(username: str, password: str, automation: bool, role: str):
+def _mk_user_obj(  # type:ignore[no-untyped-def]
+    username: str, password: str, automation: bool, role: str
+):
     # This dramatically improves the performance of the unit tests using this in fixtures
     precomputed_hashes = {
         "Ischbinwischtisch": "$5$rounds=535000$mn3ra3ny1cbHVGsW$5kiJmJcgQ6Iwd1R.i4.kGAQcMF.7zbCt0BOdRG8Mn.9",

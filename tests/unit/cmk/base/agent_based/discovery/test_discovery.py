@@ -348,7 +348,9 @@ def test__get_post_discovery_services(
     result_new_item_names: List[str],
     result_counts: Tuple[int, int, int],
 ) -> None:
-    def _get_service_description(_hostname, _check_plugin_name, item) -> str:
+    def _get_service_description(  # type:ignore[no-untyped-def]
+        _hostname, _check_plugin_name, item
+    ) -> str:
         return "Test Description %s" % item
 
     monkeypatch.setattr(config, "service_description", _get_service_description)
@@ -973,7 +975,7 @@ class ClusterScenario(NamedTuple):
 
 
 @pytest.fixture(name="cluster_scenario")
-def _cluster_scenario(monkeypatch) -> ClusterScenario:
+def _cluster_scenario(monkeypatch) -> ClusterScenario:  # type:ignore[no-untyped-def]
     hostname = HostName("test-clusterhost")
     node1_hostname = HostName("test-node1")
     node2_hostname = HostName("test-node2")

@@ -148,7 +148,9 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_ra32e_sensors_inputs(info, discoveries_expected, checks_expected) -> None:
+def test_ra32e_sensors_inputs(  # type:ignore[no-untyped-def]
+    info, discoveries_expected, checks_expected
+) -> None:
     ra32e_sensors_checks = [
         "ra32e_sensors",
         "ra32e_sensors.humidity",

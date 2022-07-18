@@ -15,7 +15,7 @@ RA32E_POWER = "ra32e_power"
 
 
 @pytest.mark.parametrize("info,result", [([[""]], None), ([["0"]], [(None, {})])])
-def test_ra32e_power_discovery(info, result) -> None:
+def test_ra32e_power_discovery(info, result) -> None:  # type:ignore[no-untyped-def]
     check = Check(RA32E_POWER)
     assert check.run_discovery(info) == result
 

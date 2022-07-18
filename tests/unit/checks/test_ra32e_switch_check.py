@@ -59,7 +59,7 @@ RA32E_SWITCH = "ra32e_switch"
         )
     ],
 )
-def test_ra32e_switch_discovery(info, result) -> None:
+def test_ra32e_switch_discovery(info, result) -> None:  # type:ignore[no-untyped-def]
     check = Check(RA32E_SWITCH)
     assert list(check.run_discovery(info)) == result
 

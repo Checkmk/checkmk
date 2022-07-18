@@ -853,7 +853,9 @@ class RowTableLivestatus(RowTable):
         # columns to allow for repeatable tests.
         return [c for c in sorted(columns) if c not in datasource.add_columns], dynamic_columns
 
-    def create_livestatus_query(self, columns: Sequence[LivestatusColumn], headers) -> Query:
+    def create_livestatus_query(  # type:ignore[no-untyped-def]
+        self, columns: Sequence[LivestatusColumn], headers
+    ) -> Query:
         return Query(QuerySpecification(table=self.table_name, columns=columns, headers=headers))
 
     def query(

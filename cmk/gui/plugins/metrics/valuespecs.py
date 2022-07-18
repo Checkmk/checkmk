@@ -27,7 +27,7 @@ from cmk.gui.valuespec import (
 )
 
 
-def transform_graph_render_options_title_format(p) -> List[str]:
+def transform_graph_render_options_title_format(p) -> List[str]:  # type:ignore[no-untyped-def]
     # ->1.5.0i2 pnp_graph reportlet
     if p in ("add_host_name", "add_host_alias"):
         p = ("add_title_infos", [p])
@@ -69,7 +69,7 @@ def vs_graph_render_options(default_values=None, exclude=None):
     )
 
 
-def vs_title_infos(with_metric: bool = False):
+def vs_title_infos(with_metric: bool = False):  # type:ignore[no-untyped-def]
     choices = [
         ("plain", _("Graph title")),
         ("add_host_name", _("Host name")),
@@ -252,7 +252,7 @@ class ValuesWithUnits(CascadingDropdown):
         ]
 
     @staticmethod
-    def resolve_units(request) -> PageResult:
+    def resolve_units(request) -> PageResult:  # type:ignore[no-untyped-def]
         # This relies on python3.8 dictionaries being always ordered
         # Otherwise it is not possible to mach the unit name to value
         # CascadingDropdowns enumerate the options instead of using keys

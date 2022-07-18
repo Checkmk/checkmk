@@ -26,7 +26,7 @@ NOW_SIMULATED = "2021-06-08 17:02:00.000000"
     ],
 )
 @freeze_time(NOW_SIMULATED)
-def test_gui_vs_base_render_cache_info(cached_at, interval) -> None:
+def test_gui_vs_base_render_cache_info(cached_at, interval) -> None:  # type:ignore[no-untyped-def]
     cache_info_gui = render_cache_info(
         "",
         {

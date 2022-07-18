@@ -29,7 +29,7 @@ def _get_from_context(name, context={}):  # pylint: disable=dangerous-default-va
         ),
     ],
 )
-def test_parse_function(info, expected_parsed) -> None:
+def test_parse_function(info, expected_parsed) -> None:  # type:ignore[no-untyped-def]
     parse_nullmailer_mailq = _get_from_context("parse_nullmailer_mailq")
     queue = _get_from_context("Queue")
     assert parse_nullmailer_mailq(info) == [queue(*p) for p in expected_parsed]
@@ -69,7 +69,9 @@ def test_parse_function(info, expected_parsed) -> None:
         ),
     ],
 )
-def test_check_single_queue(raw_queue, levels_length, expected_result) -> None:
+def test_check_single_queue(  # type:ignore[no-untyped-def]
+    raw_queue, levels_length, expected_result
+) -> None:
     check_single_queue = _get_from_context("_check_single_queue")
     queue = _get_from_context("Queue")
     assertCheckResultsEqual(
@@ -92,7 +94,7 @@ def test_check_single_queue(raw_queue, levels_length, expected_result) -> None:
         ),
     ],
 )
-def test_check_nullmailer_mailq(raw_queues, expected_result) -> None:
+def test_check_nullmailer_mailq(raw_queues, expected_result) -> None:  # type:ignore[no-untyped-def]
     dummy_item = ""
     params = _get_from_context("nullmailer_mailq_default_levels")
     check_nullmailer_mailq = _get_from_context("check_nullmailer_mailq")

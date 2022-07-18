@@ -24,7 +24,9 @@ info = [
         ("jolokia_generic.rate", info, [("PingFederate-CUK-CDI MaxRequestTime", {})]),
     ],
 )
-def test_jolokia_generic_discovery(check, lines, expected_result) -> None:
+def test_jolokia_generic_discovery(  # type:ignore[no-untyped-def]
+    check, lines, expected_result
+) -> None:
     parsed = Check("jolokia_generic").run_parse(lines)
 
     check = Check(check)

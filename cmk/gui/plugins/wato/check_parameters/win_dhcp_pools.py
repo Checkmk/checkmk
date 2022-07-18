@@ -109,18 +109,9 @@ def _parameter_valuespec_win_dhcp_pools():
                 ),
             ]
         ),
-        forth=lambda params: isinstance(params, tuple)
-        and {
-            "free_leases": (
-                float(
-                    params[0],
-                ),
-                float(
-                    params[1],
-                ),
-            )
-        }
-        or params,
+        forth=lambda params: {"free_leases": (float(params[0]), float(params[1]))}
+        if isinstance(params, tuple)
+        else params,
     )
 
 

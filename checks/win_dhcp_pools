@@ -58,8 +58,6 @@ CheckResult = Iterable[tuple[int, str, list]]
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-win_dhcp_pools_default_levels = (10, 5)
-
 discovery_win_dhcp_pools = []
 
 # Attention:
@@ -132,7 +130,7 @@ def discover_win_dhcp_pools(section: Section) -> DiscoveryResult:
             used, free, pending = pool_stats  # pylint: disable=unbalanced-tuple-unpacking
             size = used + free + pending
             if size > 0 or discover_empty:
-                inventory.append((last_pool, "win_dhcp_pools_default_levels"))
+                inventory.append((last_pool, {}))
     return inventory
 
 
@@ -175,7 +173,12 @@ check_info["win_dhcp_pools"] = {
     "service_description": "DHCP Pool %s",
     "has_perfdata": True,
     "group": "win_dhcp_pools",
+    "default_levels_variable": "win_dhcp_pools_default_levels",
 }
+
+
+factory_settings["win_dhcp_pools_default_levels"] = {"free_leases": (10.0, 5.0)}
+
 
 # .
 #   .--Pool stats----------------------------------------------------------.

@@ -33,3 +33,25 @@ discovery = {
     ],
     'per_type': [],
 }
+
+
+freeze_time = "2016-07-15"
+
+checks = {
+    '': [
+        ("MSSQL_SQL0x4 master", {}, [
+            (0, "[database] Last backup was at 2016-07-08 20:20:27 (6 days 5 hours ago)", [
+                ("backup_age_database", 538773.0),
+            ]),
+        ]),
+        ("MSSQL_SQL0x4 bar", {}, [
+            (0, "[database] Last backup was at 1970-05-23 22:21:18 (46 years 64 days ago)", [
+                ('seconds', 1456195122.0),
+            ]),
+        ]),
+        ("MSSQL_Parrot Polly", {}, [
+            (2, 'Polly has no crackers', []),
+        ]),
+    ],
+    'per_type': [],
+}

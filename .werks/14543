@@ -1,0 +1,19 @@
+Title: Make <tt>ssh</tt> command work as site user on SUSE Linux Enterprise Server 15 SP3
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1657815560
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0p27
+
+On SUSE Linux Enterprise Server 15 SP3 systems, the <tt>ssh</tt> command crashed with
+C+:
+ssh: symbol lookup error: ssh: undefined symbol: EVP_KDF_CTX_free, version OPENSSL_1_1_1d
+C-:
+when executed as a site user.
+
+Note that this affected both the direct execution of <tt>ssh</tt> on the command line as well as
+other programs using this command, such as the special agent for IBM SVC / V7000 storage systems.

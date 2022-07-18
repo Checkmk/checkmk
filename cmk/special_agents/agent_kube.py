@@ -1158,36 +1158,39 @@ class Cluster:
         return self._cluster_details.version
 
     def node_collector_daemons(self) -> section.CollectorDaemons:
-        collector_daemons = section.CollectorDaemons(
-            machine=None,
-            container=None,
+        # Extract DaemonSets with label key `node_collector`
+        collector_daemons = defaultdict(list)
+        for daemonset in self.daemon_sets():
+            if "node-collector" in daemonset.metadata.labels:
+                collector_type = daemonset.metadata.labels[api.LabelName("node_collector")].value
+                collector_daemons[collector_type].append(daemonset._status)
+        collector_daemons.default_factory = None
+
+        # Only leave unknown collectors inside of `collector_daemons`
+        machine_status = collector_daemons.pop(api.LabelValue("machine-sections"), [])
+        container_status = collector_daemons.pop(api.LabelValue("container-metrics"), [])
+
+        return section.CollectorDaemons(
+            machine=_node_collector_replicas(machine_status),
+            container=_node_collector_replicas(container_status),
             errors=section.IdentificationError(
-                duplicate_machine_collector=False,
-                duplicate_container_collector=False,
-                unknown_collector=False,
+                duplicate_machine_collector=len(machine_status) > 1,
+                duplicate_cotainer_collector=len(container_status) > 1,
+                unknown_collector=len(collector_daemons) > 0,
             ),
         )
-        for daemonset in self.daemon_sets():
-            if labels := daemonset.metadata.labels:
-                if collector_label := labels.get(api.LabelName("node-collector")):
-                    data = section.NodeCollectorReplica(
-                        available=daemonset._status.number_available,
-                        desired=daemonset._status.desired_number_scheduled,
-                    )
-                    if collector_label.value == "machine-sections":
-                        if collector_daemons.machine is None:
-                            collector_daemons.machine = data
-                        else:
-                            collector_daemons.errors.duplicate_machine_collector = True
-                    elif collector_label.value == "container-metrics":
-                        if collector_daemons.container is None:
-                            collector_daemons.container = data
-                        else:
-                            collector_daemons.errors.duplicate_container_collector = True
-                    else:
-                        collector_daemons.errors.unknown_collector = True
 
-        return collector_daemons
+
+def _node_collector_replicas(
+    statuses: list[api.DaemonSetStatus],
+) -> section.NodeCollectorReplica | None:
+    if len(statuses) != 1:
+        return None
+    status = statuses[0]
+    return section.NodeCollectorReplica(
+        available=status.number_available,
+        desired=status.desired_number_scheduled,
+    )
 
 
 # Namespace & Resource Quota specific

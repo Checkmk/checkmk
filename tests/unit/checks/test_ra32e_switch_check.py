@@ -77,7 +77,7 @@ def test_ra32e_switch_check_open_expected_close() -> None:
     result = BasicCheckResult(
         *check.run_check(
             "Sensor 03",
-            "closed",
+            {"state": "closed"},
             [["1", "1", "0", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1"]],
         )
     )
@@ -89,6 +89,6 @@ def test_ra32e_switch_check_open_expected_close() -> None:
 
 def test_ra32e_switch_check_no_input() -> None:
     check = Check(RA32E_SWITCH)
-    result = BasicCheckResult(*check.run_check("Sensor 01", "ignore", [[""]]))
+    result = BasicCheckResult(*check.run_check("Sensor 01", {"state": "ignore"}, [[""]]))
 
     assert result.status == 3

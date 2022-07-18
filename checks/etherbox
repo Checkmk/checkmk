@@ -214,7 +214,7 @@ def check_etherbox_switch_contact(item: str, params: Mapping[str, Any], info: St
     switch_state = "open" if data.value == 1000 else "closed"
 
     extra_info = ""
-    if params and params != "ignore":
+    if params and params["state"] != "ignore":
         if switch_state != params:
             state = State.CRIT
             extra_info = f", should be {params}"

@@ -16,9 +16,9 @@ def check_ra32e_switch(item, params, info):
         return 3, "unknown status"
 
     state, infotext = 0, switch_state
-    if params and params != "ignore" and switch_state != params:
+    if params and params.get("state", "") != "ignore" and switch_state != params.get("state"):
         state = 2
-        infotext += " (expected %s)" % params
+        infotext += " (expected %s)" % params["state"]
 
     return state, infotext
 

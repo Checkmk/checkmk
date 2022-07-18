@@ -19,6 +19,8 @@
 
 import typing  # no from import allowed :-(
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import regex
+
 # This map converts between the SAP color codes (key values) and the
 # nagios state codes
 sap_nagios_state_map = [
@@ -27,6 +29,17 @@ sap_nagios_state_map = [
     1,  # YELLOW -> WARNING
     2,  # RED    -> CRITICAL
 ]
+
+
+def _safe_float(raw: str) -> float:
+    """
+    Taken from legacy API for now to allow migration.
+    Try to get rid of it!
+    """
+    try:
+        return float(raw)
+    except ValueError:
+        return 0.0
 
 
 def inventory_sap_dialog(info):
@@ -46,7 +59,7 @@ def check_sap_dialog(item, params, info):
     for line in info:
         if line[0] == item and line[3].startswith("SAP CCMS Monitor Templates/Dialog Overview/"):
             key = line[3].split("/")[-1]
-            perfval = savefloat(line[4])
+            perfval = _safe_float(line[4])
             uom = line[5]
             dialog[key] = perfval, uom
 
@@ -142,7 +155,7 @@ def check_sap_value(item, params, info):
             status = sap_nagios_state_map[int(line[1])]
             if line[4] != "-":
                 # This is a performance value, has no output
-                perfval = savefloat(line[4])
+                perfval = _safe_float(line[4])
                 perfdata = [("value", perfval)]
                 uom = line[5]
                 output = "%0.2f%s" % (perfval, uom)

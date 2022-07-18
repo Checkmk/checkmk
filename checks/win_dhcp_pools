@@ -99,6 +99,17 @@ def parse_win_dhcp_pools(string_table: StringTable) -> Section:
     return [tuple(" ".join(line).rstrip(".").split(" = ")) for line in string_table]
 
 
+def _safe_int(raw: str) -> int:
+    """
+    Taken from the legacy API to allow migration.
+    We really should parse properly :-(
+    """
+    try:
+        return int(raw)
+    except ValueError:
+        return 0
+
+
 def discover_win_dhcp_pools(section: Section) -> DiscoveryResult:
     settings = host_extra_conf_merged(host_name(), discovery_win_dhcp_pools)
     discover_empty = settings.get("empty_pools", win_dhcp_pools_inventorize_empty)
@@ -114,7 +125,7 @@ def discover_win_dhcp_pools(section: Section) -> DiscoveryResult:
             last_pool = line[1]
             continue
         if in_block:
-            pool_stats.append(saveint(line[1]))
+            pool_stats.append(_safe_int(line[1]))
 
         if len(pool_stats) == 3:
             in_block = False
@@ -135,7 +146,7 @@ def check_win_dhcp_pools(item: str, params: Mapping[str, Any], section: Section)
             continue
 
         if in_block:
-            pool_stats.append(saveint(line[1]))
+            pool_stats.append(_safe_int(line[1]))
             if len(pool_stats) == 3:
                 break
 
@@ -202,7 +213,7 @@ def check_win_dhcp_pools_stats(
                 "Releases",
                 "Scopes",
             ]:
-                value = saveint(line[1])
+                value = _safe_int(line[1])
                 per_sec = get_rate("win_dhcp_stats.%s" % key, this_time, value)
                 output += "%s: %.0f/s, " % (key, per_sec)
                 perfdata.append((key, per_sec))

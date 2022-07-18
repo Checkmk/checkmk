@@ -17,9 +17,14 @@
 # sap_XYZ    1    50 SAP CCMS Monitor Templates/Dialog Overview/Standardized Response Time/ResponseTime(StandardTran.)   7   msec
 # sap_XYZ    1    50 SAP CCMS Monitor Templates/Dialog Overview/Users Logged On/UsersLoggedIn    97  -
 
-import typing  # no from import allowed :-(
+from typing import Any, Iterable, Literal, Mapping, Match
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import regex
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+DiscoveryResult = Iterable[tuple[str, Mapping[str, Any]]]
+CheckResult = Iterable[tuple[int, str, list]]
+
 
 # This map converts between the SAP color codes (key values) and the
 # nagios state codes
@@ -42,8 +47,8 @@ def _safe_float(raw: str) -> float:
         return 0.0
 
 
-def inventory_sap_dialog(info):
-    inv = []
+def inventory_sap_dialog(info: StringTable) -> DiscoveryResult:
+    inv: list[tuple[str, Mapping[str, Any]]] = []
     for line in info:
         if (
             line[3]
@@ -53,7 +58,7 @@ def inventory_sap_dialog(info):
     return inv
 
 
-def check_sap_dialog(item, params, info):
+def check_sap_dialog(item: str, params: Mapping[str, Any], info: StringTable) -> CheckResult:
     # First extract all infos
     dialog = {}
     for line in info:
@@ -73,7 +78,7 @@ def check_sap_dialog(item, params, info):
         # There is no way inside this check to determine the host(s) that sent the data in info.
         raise MKCounterWrapped("no output about sap dialogs in agent output")
 
-    def perf_clean_key(s):
+    def perf_clean_key(s: str) -> str:
         return s.replace("(", "_").replace(")", "_").replace(" ", "_").replace(".", "_").rstrip("_")
 
     # {'UsersLoggedIn': (2, '-'), 'ResponseTime(StandardTran.)': (6, 'msec'), 'FrontEndNetTime': (0, 'msec'), 'ResponseTime': (77, 'msec')}
@@ -111,7 +116,7 @@ inventory_sap_values = []
 sap_value_groups = []
 
 
-def inventory_sap_value(info):
+def inventory_sap_value(info: StringTable) -> DiscoveryResult:
     inv = []
 
     patterns = []
@@ -132,7 +137,7 @@ def inventory_sap_value(info):
     return inv
 
 
-def sap_value_path_matches(path, pattern):
+def sap_value_path_matches(path: str, pattern: str | None) -> bool:
     if pattern is None:
         return True
 
@@ -143,7 +148,7 @@ def sap_value_path_matches(path, pattern):
     return path == pattern
 
 
-def check_sap_value(item, params, info):
+def check_sap_value(item: str, params: Mapping[str, Any], info: StringTable) -> CheckResult:
     status = None
     perfdata = []
     limit = params.get("limit_item_levels")
@@ -167,7 +172,7 @@ def check_sap_value(item, params, info):
     if status is None:
         raise MKCounterWrapped("no output about sap value in agent output")
 
-    return (status, output, perfdata)
+    yield status, output, perfdata
 
 
 check_info["sap.value"] = {
@@ -177,11 +182,13 @@ check_info["sap.value"] = {
     "has_perfdata": True,
 }
 
-GroupPatterns = typing.List[typing.Tuple[str, str]]
-SAPRules = typing.List[typing.List[typing.Tuple[str, typing.Tuple[str, str]]]]
+GroupPatterns = list[tuple[str, str]]
+SAPRules = list[list[tuple[str, tuple[str, str]]]]
 
 
-def _patterns_match(name, exclusion, inclusion):
+def _patterns_match(
+    name: str, exclusion: str | None, inclusion: str
+) -> Literal[False] | Match[str] | None:
     if exclusion and regex(exclusion).match(name):
         return False
     return regex(inclusion).match(name)
@@ -190,7 +197,7 @@ def _patterns_match(name, exclusion, inclusion):
 def sap_groups_of_value(
     value_name: str,
     patterns: SAPRules,
-) -> typing.Set[str]:
+) -> set[str]:
     return {
         group_name
         for line in patterns
@@ -199,15 +206,15 @@ def sap_groups_of_value(
     }
 
 
-def get_patterns_by_group_name(params: SAPRules) -> typing.Dict[str, GroupPatterns]:
-    rules_by_group: typing.Dict[str, GroupPatterns] = {}
+def get_patterns_by_group_name(params: SAPRules) -> Mapping[str, GroupPatterns]:
+    rules_by_group: dict[str, GroupPatterns] = {}
     for rule in params:
         for group_name, patterns in rule:
             rules_by_group.setdefault(group_name, []).append(patterns)
     return rules_by_group
 
 
-def discover_sap_value_groups(info):
+def discover_sap_value_groups(info: StringTable) -> DiscoveryResult:
     # TODO: this becomes a proper argument in the new API
     params = host_extra_conf(host_name(), sap_value_groups)
 
@@ -225,18 +232,19 @@ def discover_sap_value_groups(info):
         yield (item, {"_group_relevant_patterns": patterns_by_group[item]})
 
 
-def check_sap_value_groups(item, params, info):
+def check_sap_value_groups(item: str, params: Mapping[str, Any], info: StringTable) -> CheckResult:
 
     try:
         patterns: GroupPatterns = params["_group_relevant_patterns"]
     except KeyError:
-        yield 3, "Rules not found. Please rediscover the services of this host"
+        yield 3, "Rules not found. Please rediscover the services of this host", []
         return
 
     # this fake rules instance already only contains relevant patterns
     precompiled_rule: SAPRules = [[(item, pattern) for pattern in patterns]]
 
-    non_ok_results, all_results = [], []
+    non_ok_results: list[tuple[int, str, list]] = []
+    all_results: list[tuple[int, str, list]] = []
     count_ok, count_crit = 0, 0
     for line in info:
         path = line[3]
@@ -246,23 +254,23 @@ def check_sap_value_groups(item, params, info):
             if line[4] == "-":
                 output = " ".join(line[6:])
 
-            all_results.append((status, path + output))
+            all_results.append((status, path + output, []))
             if status > 0:
                 count_crit += 1
-                non_ok_results.append((status, path + output))
+                non_ok_results.append((status, path + output, []))
             else:
                 count_ok += 1
 
     if not all_results:
         raise MKCounterWrapped("no output about sap value groups in agent output")
 
-    yield 0, "%s OK, %s Critical" % (count_ok, count_crit)
+    yield 0, "%s OK, %s Critical" % (count_ok, count_crit), []
 
     for result in non_ok_results:
         yield result
 
-    for state, text in all_results:
-        yield state, "\n%s" % text
+    for state, text, metric in all_results:
+        yield state, "\n%s" % text, metric
 
 
 check_info["sap.value_groups"] = {

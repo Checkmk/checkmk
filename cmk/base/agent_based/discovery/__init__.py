@@ -56,7 +56,7 @@ from cmk.core_helpers.protocol import FetcherMessage
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
 import cmk.base.agent_based.checking as checking
-import cmk.base.agent_based.decorator as decorator
+import cmk.base.agent_based.error_handling as error_handling
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
 import cmk.base.check_table as check_table
@@ -545,7 +545,7 @@ def _make_diff(
 #   '----------------------------------------------------------------------'
 
 
-@decorator.handle_check_mk_check_result("discovery", "Check_MK Discovery")
+@error_handling.handle_check_mk_check_result("discovery", "Check_MK Discovery")
 def active_check_discovery(
     host_name: HostName,
     *,
@@ -554,7 +554,7 @@ def active_check_discovery(
     return _execute_check_discovery(host_name, fetched=fetched)
 
 
-@decorator.handle_check_mk_check_result("discovery", "Check_MK Discovery")
+@error_handling.handle_check_mk_check_result("discovery", "Check_MK Discovery")
 def commandline_check_discovery(
     host_name: HostName,
     ipaddress: Optional[HostAddress],

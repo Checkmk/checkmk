@@ -12,7 +12,7 @@ from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import MKAgentError, MKGeneralException, MKTimeout
 from cmk.utils.type_defs import HostName
 
-from cmk.base.agent_based.decorator import handle_check_mk_check_result
+from cmk.base.agent_based.error_handling import handle_check_mk_check_result
 
 
 @pytest.fixture(name="hostname")

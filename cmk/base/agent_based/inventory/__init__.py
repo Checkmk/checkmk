@@ -25,7 +25,7 @@ from cmk.utils.type_defs import EVERYTHING, HostName, InventoryPluginName, resul
 from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
-import cmk.base.agent_based.decorator as decorator
+import cmk.base.agent_based.error_handling as error_handling
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 import cmk.base.section as section
@@ -127,7 +127,7 @@ def _commandline_inventory_on_host(
 #   '----------------------------------------------------------------------'
 
 
-@decorator.handle_check_mk_check_result("check_mk_active-cmk_inv", "Check_MK HW/SW Inventory")
+@error_handling.handle_check_mk_check_result("check_mk_active-cmk_inv", "Check_MK HW/SW Inventory")
 def active_check_inventory(hostname: HostName, options: Dict[str, int]) -> ActiveCheckResult:
     hw_changes = options.get("hw-changes", 0)
     sw_changes = options.get("sw-changes", 0)

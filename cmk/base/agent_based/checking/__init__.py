@@ -43,6 +43,7 @@ from cmk.utils.type_defs import (
 from cmk.core_helpers.protocol import FetcherMessage, FetcherType
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
+import cmk.base.agent_based.error_handling as error_handling
 import cmk.base.agent_based.inventory as inventory
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
@@ -91,7 +92,7 @@ class _AggregatedResult(NamedTuple):
 #   '----------------------------------------------------------------------'
 
 
-@cmk.base.agent_based.decorator.handle_check_mk_check_result("mk", "Check_MK")
+@error_handling.handle_check_mk_check_result("mk", "Check_MK")
 def active_check_checking(
     hostname: HostName,
     *,
@@ -118,7 +119,7 @@ def active_check_checking(
 
 
 # TODO: see if we can/should drop the decorator. If so, make hostname a kwarg-only
-@cmk.base.agent_based.decorator.handle_check_mk_check_result("mk", "Check_MK")
+@error_handling.handle_check_mk_check_result("mk", "Check_MK")
 def commandline_checking(
     host_name: HostName,
     ipaddress: Optional[HostAddress],

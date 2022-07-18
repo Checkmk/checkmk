@@ -816,7 +816,6 @@ def test_all_check_variables_present(fix_plugin_legacy) -> None:
         "websphere_mq_queues_default_levels",
         "win_dhcp_pools_default_levels",
         "win_dhcp_pools_inventorize_empty",
-        "win_dhcp_pools_stats_translate",
         "win_netstat_states",
         "win_printer_default_levels",
         "windows_license_default_levels",

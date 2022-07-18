@@ -67,7 +67,7 @@ discovery_win_dhcp_pools = []
 # Tried to get the win-agent plugin to report always in utf-8, unfortunately without luck.
 # ...that's the reason why french translations with special characters must get provided like here.
 
-win_dhcp_pools_stats_translate = {
+_WIN_DHCP_POOLS_STATS_TRANSLATE = {
     "Entdeckungen": "Discovers",
     "Angebote": "Offers",
     "Anforderungen": "Requests",
@@ -119,7 +119,7 @@ def discover_win_dhcp_pools(section: Section) -> DiscoveryResult:
     last_pool = ""
     pool_stats: list[int] = []
     for line in section:
-        if win_dhcp_pools_stats_translate.get(line[0], line[0]) == "Subnet":
+        if _WIN_DHCP_POOLS_STATS_TRANSLATE.get(line[0], line[0]) == "Subnet":
             in_block = True
             pool_stats = []
             last_pool = line[1]
@@ -140,7 +140,7 @@ def check_win_dhcp_pools(item: str, params: Mapping[str, Any], section: Section)
     in_block = False
     pool_stats: list[int | None] = [None, None, None]
     for line in section:
-        if win_dhcp_pools_stats_translate.get(line[0], line[0]) == "Subnet" and line[1] == item:
+        if _WIN_DHCP_POOLS_STATS_TRANSLATE.get(line[0], line[0]) == "Subnet" and line[1] == item:
             in_block = True
             pool_stats = []
             continue
@@ -202,7 +202,7 @@ def check_win_dhcp_pools_stats(
 
     for line in section:
         if len(line) > 0:
-            key = win_dhcp_pools_stats_translate.get(line[0], line[0])
+            key = _WIN_DHCP_POOLS_STATS_TRANSLATE.get(line[0], line[0])
             if key in [
                 "Discovers",
                 "Offers",

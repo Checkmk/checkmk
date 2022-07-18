@@ -12,7 +12,8 @@ from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import MKAgentError, MKGeneralException, MKTimeout
 from cmk.utils.type_defs import HostName
 
-from cmk.base.agent_based.error_handling import handle_check_mk_check_result
+import cmk.base.agent_based.error_handling as error_handling
+from cmk.base.config import HostConfig
 
 
 @pytest.fixture(name="hostname")
@@ -26,51 +27,76 @@ def hostname_fixture(monkeypatch) -> HostName:
 
 
 def test_no_error_keeps_returns_status_from_callee(hostname: HostName, capsys) -> None:
-    @handle_check_mk_check_result("test", "description")
-    def fn(hostname: HostName) -> ActiveCheckResult:
-        return ActiveCheckResult(
+    state, text = error_handling.handle_success(
+        ActiveCheckResult(
             0,
             "summary",
             ("details", "lots of"),
             ("metrics", "x"),
         )
+    )
+    error_handling.handle_output(text, hostname)
 
-    assert fn(hostname) == 0
+    assert state == 0
     assert capsys.readouterr().out == "summary | metrics x\ndetails\nlots of\n"
 
 
 def test_MKTimeout_exception_returns_2(hostname: HostName, capsys) -> None:
-    @handle_check_mk_check_result("test", "description")
-    def fn(hostname: HostName) -> ActiveCheckResult:
-        raise MKTimeout("oops!")
+    host_config = HostConfig.make_host_config(hostname)
+    state, text = error_handling.handle_failure(
+        MKTimeout("oops!"),
+        host_config.exit_code_spec(),
+        hostname=hostname,
+        service_name="service_name",
+        plugin_name="pluging_name",
+    )
+    error_handling.handle_output(text, hostname)
 
-    assert fn(hostname) == 2
+    assert state == 2
     assert capsys.readouterr().out == "Timed out\n"
 
 
 def test_MKAgentError_exception_returns_2(hostname: HostName, capsys) -> None:
-    @handle_check_mk_check_result("test", "description")
-    def fn(hostname: HostName) -> ActiveCheckResult:
-        raise MKAgentError("oops!")
+    host_config = HostConfig.make_host_config(hostname)
+    state, text = error_handling.handle_failure(
+        MKAgentError("oops!"),
+        host_config.exit_code_spec(),
+        hostname=hostname,
+        service_name="service_name",
+        plugin_name="pluging_name",
+    )
+    error_handling.handle_output(text, hostname)
 
-    assert fn(hostname) == 2
+    assert state == 2
     assert capsys.readouterr().out == "oops!\n"
 
 
 def test_MKGeneralException_returns_3(hostname: HostName, capsys) -> None:
-    @handle_check_mk_check_result("test", "description")
-    def fn(hostname: HostName) -> ActiveCheckResult:
-        raise MKGeneralException("kaputt!")
+    host_config = HostConfig.make_host_config(hostname)
+    state, text = error_handling.handle_failure(
+        MKGeneralException("kaputt!"),
+        host_config.exit_code_spec(),
+        hostname=hostname,
+        service_name="service_name",
+        plugin_name="pluging_name",
+    )
+    error_handling.handle_output(text, hostname)
 
-    assert fn(hostname) == 3
+    assert state == 3
     assert capsys.readouterr().out == "kaputt!\n"
 
 
 @pytest.mark.usefixtures("disable_debug")
 def test_unhandled_exception_returns_3(hostname: HostName, capsys) -> None:
-    @handle_check_mk_check_result("test", "description")
-    def fn(hostname: HostName) -> ActiveCheckResult:
-        raise ValueError("unexpected :/")
+    host_config = HostConfig.make_host_config(hostname)
+    state, text = error_handling.handle_failure(
+        ValueError("unexpected :/"),
+        host_config.exit_code_spec(),
+        hostname=hostname,
+        service_name="service_name",
+        plugin_name="pluging_name",
+    )
+    error_handling.handle_output(text, hostname)
 
-    assert fn(hostname) == 3
+    assert state == 3
     assert capsys.readouterr().out.startswith("check failed - please submit a crash report!")

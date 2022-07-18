@@ -59,7 +59,7 @@ CheckResult = Iterable[tuple[int, str, list]]
 #   '----------------------------------------------------------------------'
 
 win_dhcp_pools_default_levels = (10, 5)
-win_dhcp_pools_inventorize_empty = False
+
 discovery_win_dhcp_pools = []
 
 # Attention:
@@ -111,8 +111,8 @@ def _safe_int(raw: str) -> int:
 
 
 def discover_win_dhcp_pools(section: Section) -> DiscoveryResult:
-    settings = host_extra_conf_merged(host_name(), discovery_win_dhcp_pools)
-    discover_empty = settings.get("empty_pools", win_dhcp_pools_inventorize_empty)
+    params = host_extra_conf_merged(host_name(), discovery_win_dhcp_pools)
+    discover_empty = params.get("empty_pools", False)
 
     inventory = []
     in_block = False

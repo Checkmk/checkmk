@@ -1,0 +1,12 @@
+Title: mssql_availability_groups: New service to monitor MSSQL availability groups
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1659093823
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+
+

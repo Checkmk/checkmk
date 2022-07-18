@@ -110,6 +110,7 @@ sections.add "datafiles", "<<<mssql_datafiles:sep(124)>>>"
 sections.add "clusters", "<<<mssql_cluster:sep(124)>>>"
 sections.add "jobs", "<<<mssql_jobs:sep(09)>>>"
 sections.add "mirroring", "<<<mssql_mirroring:sep(09)>>>"
+sections.add "availability_groups", "<<<mssql_availability_groups:sep(09)>>>"
 ' Has been deprecated with 1.4.0i1. Keep this for nicer transition for some versions.
 sections.add "versions", "<<<mssql_versions:sep(124)>>>"
 sections.add "connections", "<<<mssql_connections>>>"
@@ -769,6 +770,28 @@ For Each instance_id In instances.Keys: Do ' Continue trick
             'See following documentation for use of parameters and the GetString method:
             'https://docs.microsoft.com/en-us/sql/ado/reference/ado-api/getstring-method-ado?view=sql-server-ver15
             addOutput(instance_id & vbCrLf & RS.GetString(2,,vbTab,vbCrLf,""))
+        Loop
+        RS.Close
+    End If
+
+    addOutput(sections("availability_groups"))
+    RS.Open "SELECT " &_
+            "       GroupsName.name, " &_
+            "       Groups.primary_replica, " &_
+            "       Groups.synchronization_health, " &_
+            "       Groups.synchronization_health_desc, " &_
+            "       Groups.primary_recovery_health_desc " &_
+            "       FROM sys.dm_hadr_availability_group_states Groups " &_
+            "       INNER JOIN master.sys.availability_groups GroupsName ON Groups.group_id = GroupsName.group_id ", CONN
+
+    errMsg = checkConnErrors(CONN)
+    If Not errMsg = "" Then
+        addOutput(instance_id & " " & errMsg)
+    Else
+        Do While Not RS.Eof
+            'See following documentation for use of parameters and the GetString method:
+            'https://docs.microsoft.com/en-us/sql/ado/reference/ado-api/getstring-method-ado?view=sql-server-ver15
+            addOutput(RS.GetString(2,,vbTab,vbCrLf,""))
         Loop
         RS.Close
     End If

@@ -127,8 +127,27 @@ def _commandline_inventory_on_host(
 #   '----------------------------------------------------------------------'
 
 
-@error_handling.handle_check_mk_check_result("check_mk_active-cmk_inv", "Check_MK HW/SW Inventory")
-def active_check_inventory(hostname: HostName, options: Dict[str, int]) -> ActiveCheckResult:
+def active_check_inventory(hostname: HostName, options: Dict[str, int]) -> ServiceState:
+    host_config = HostConfig.make_host_config(hostname)
+    try:
+        state, text = error_handling.handle_success(
+            _execute_active_check_inventory(hostname, options)
+        )
+    except Exception as exc:
+        state, text = error_handling.handle_failure(
+            exc,
+            host_config.exit_code_spec(),
+            hostname=hostname,
+            plugin_name="check_mk_active-cmk_inv",
+            service_name="Check_MK HW/SW Inventory",
+        )
+    error_handling.handle_output(text, hostname)
+    return state
+
+
+def _execute_active_check_inventory(
+    hostname: HostName, options: Dict[str, int]
+) -> ActiveCheckResult:
     hw_changes = options.get("hw-changes", 0)
     sw_changes = options.get("sw-changes", 0)
     sw_missing = options.get("sw-missing", 0)

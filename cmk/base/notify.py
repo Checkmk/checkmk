@@ -1715,8 +1715,13 @@ def create_spoolfile(data: Any) -> None:
 def handle_spoolfile(spoolfile: str) -> int:
     notif_uuid = spoolfile.rsplit("/", 1)[-1]
     logger.info("----------------------------------------------------------------------")
+    data = None
     try:
-        data = store.load_object_from_file(spoolfile, default={})
+        data = store.load_object_from_file(spoolfile, default={}, lock=True)
+        if not data:
+            logger.warning("Skipping empty spool file %s", notif_uuid[:8])
+            return 2
+
         if "plugin" in data:
             plugin_context = data["context"]
             plugin_name = data["plugin"]
@@ -1750,7 +1755,8 @@ def handle_spoolfile(spoolfile: str) -> int:
         return 0  # No error handling for async delivery
 
     except Exception:
-        logger.exception("ERROR:")
+        logger.exception("ERROR while processing %s:", spoolfile)
+        logger.error("Content: %r", data)
         return 2
 
 

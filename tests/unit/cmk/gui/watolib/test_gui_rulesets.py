@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional
-
 import pytest
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
@@ -99,50 +97,21 @@ def test_rule_from_config_unhandled_format(
 
 
 @pytest.mark.parametrize(
-    "rule_options",
-    [
-        {"disabled": True},
-        None,
-    ],
-)
-@pytest.mark.parametrize(
-    "ruleset_name,rule_spec,expected_attributes",
+    "ruleset_name,rule_spec",
     [
         # non-binary host ruleset
         (
             "inventory_processes_rules",
             ("VAL", ["HOSTLIST"]),
-            {
-                "value": "VAL",
-                "conditions": {
-                    "host_name": ["HOSTLIST"],
-                },
-            },
         ),
         (
             "inventory_processes_rules",
             ("VAL", ["tag", "specs"], ["HOSTLIST"]),
-            {
-                "value": "VAL",
-                "conditions": {
-                    "host_name": ["HOSTLIST"],
-                    "host_tags": {
-                        "specs": "specs",
-                        "tag": "tag",
-                    },
-                },
-            },
         ),
         # binary host ruleset
         (
             "only_hosts",
             (["HOSTLIST"],),
-            {
-                "value": True,
-                "conditions": {
-                    "host_name": ["HOSTLIST"],
-                },
-            },
         ),
         (
             "only_hosts",
@@ -150,76 +119,30 @@ def test_rule_from_config_unhandled_format(
                 rulesets.NEGATE,
                 ["HOSTLIST"],
             ),
-            {
-                "value": False,
-                "conditions": {
-                    "host_name": ["HOSTLIST"],
-                },
-            },
         ),
         # non-binary service ruleset
         (
             "checkgroup_parameters:local",
             ("VAL", ["HOSTLIST"], ["SVC", "LIST"]),
-            {
-                "value": "VAL",
-                "conditions": {
-                    "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
-                    "host_name": ["HOSTLIST"],
-                },
-            },
         ),
         # binary service ruleset
         (
             "clustered_services",
             (["HOSTLIST"], ["SVC", "LIST"]),
-            {
-                "value": True,
-                "conditions": {
-                    "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
-                    "host_name": ["HOSTLIST"],
-                },
-            },
         ),
         (
             "clustered_services",
             (rulesets.NEGATE, ["HOSTLIST"], ["SVC", "LIST"]),
-            {
-                "value": False,
-                "conditions": {
-                    "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
-                    "host_name": ["HOSTLIST"],
-                },
-            },
         ),
     ],
 )
-def test_rule_from_config_tuple(
-    request_context,
-    ruleset_name,
-    rule_spec,
-    expected_attributes,
-    rule_options: Optional[RuleOptionsSpec],
-):
-    if rule_options is not None:
-        rule_spec = rule_spec + (rule_options,)
-
+def test_rule_from_config_tuple(ruleset_name, rule_spec):
     ruleset = rulesets.Ruleset(
         ruleset_name, ruleset_matcher.get_tag_to_group_map(active_config.tags)
     )
-    ruleset.from_config(hosts_and_folders.Folder.root_folder(), [rule_spec])
-    rule = ruleset.get_folder_rules(hosts_and_folders.Folder.root_folder())[0]
-
-    for key, val in expected_attributes.items():
-        if key == "conditions":
-            assert rule.conditions.to_config(rulesets.UseHostFolder.NONE) == val
-        else:
-            assert getattr(rule, key) == val
-
-    if rule_options is not None:
-        assert rule.rule_options == RuleOptions.from_config(rule_options)
-    else:
-        assert rule.rule_options == RuleOptions.from_config({})
+    error = "Found old style tuple ruleset"
+    with pytest.raises(MKGeneralException, match=error):
+        ruleset.from_config(hosts_and_folders.Folder.root_folder(), [rule_spec])
 
 
 @pytest.mark.parametrize(

@@ -1421,12 +1421,7 @@ def namespace_name(namespace: api.Namespace) -> api.NamespaceName:
     return namespace.metadata.name
 
 
-class JsonProtocol(Protocol):
-    def json(self) -> str:
-        ...
-
-
-def _write_sections(sections: Mapping[str, Callable[[], Optional[JsonProtocol]]]) -> None:
+def _write_sections(sections: Mapping[str, Callable[[], section.Section | None]]) -> None:
     for section_name, section_call in sections.items():
         if section_output := section_call():
             with SectionWriter(section_name) as writer:
@@ -1650,7 +1645,7 @@ def pod_api_based_checkmk_sections(
     cluster_name: str,
     annotation_key_pattern: AnnotationOption,
     pod: Pod,
-) -> Iterable[tuple[str, BaseModel | None]]:  # TODO: improve this type
+) -> Iterable[tuple[str, section.Section | None]]:
     sections = (
         ("kube_pod_conditions_v1", pod.conditions),
         ("kube_pod_containers_v1", pod.container_statuses),
@@ -1709,21 +1704,21 @@ def filter_outdated_and_non_monitored_pods(
 def _write_object_sections(containers: Collection[PerformanceContainer]) -> None:
     # Memory section
     with SectionWriter("kube_performance_memory_v1") as writer:
-        section_json = section.PerformanceUsage(
+        memory_section: section.Section = section.PerformanceUsage(
             resource=section.Memory(
                 usage=_aggregate_metric(containers, MetricName("memory_working_set_bytes"))
             ),
-        ).json()
-        writer.append(section_json)
+        )
+        writer.append(memory_section.json())
 
     # CPU section
     with SectionWriter("kube_performance_cpu_v1") as writer:
-        section_json = section.PerformanceUsage(
+        cpu_section: section.Section = section.PerformanceUsage(
             resource=section.Cpu(
                 usage=_aggregate_rate_metric(containers, MetricName("cpu_usage_seconds_total")),
             ),
-        ).json()
-        writer.append(section_json)
+        )
+        writer.append(cpu_section.json())
 
 
 def filter_associating_performance_pods_from_agent_pods(

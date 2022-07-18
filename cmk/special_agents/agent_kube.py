@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import abc
 import argparse
+import collections
 import contextlib
 import enum
 import functools
@@ -26,7 +27,6 @@ import os
 import re
 import sys
 import tempfile
-from collections import defaultdict
 from pathlib import Path
 from typing import (
     Any,
@@ -825,17 +825,10 @@ class Node(PodOwner):
         )
 
     def container_count(self) -> section.ContainerCount:
-        result = section.ContainerCount()
-        for pod in self._pods:
-            for container in pod.containers.values():
-                if container.state.type == api.ContainerStateType.running:
-                    result.running += 1
-                elif container.state.type == api.ContainerStateType.waiting:
-                    result.waiting += 1
-                else:
-                    result.terminated += 1
-
-        return result
+        type_count = collections.Counter(
+            container.state.type.name for pod in self._pods for container in pod.containers.values()
+        )
+        return section.ContainerCount(**type_count)
 
     def memory_resources(self) -> section.Resources:
         return _collect_memory_resources(self._pods)
@@ -1159,7 +1152,7 @@ class Cluster:
 
     def node_collector_daemons(self) -> section.CollectorDaemons:
         # Extract DaemonSets with label key `node_collector`
-        collector_daemons = defaultdict(list)
+        collector_daemons = collections.defaultdict(list)
         for daemonset in self.daemon_sets():
             if "node-collector" in daemonset.metadata.labels:
                 collector_type = daemonset.metadata.labels[api.LabelName("node_collector")].value
@@ -1357,14 +1350,14 @@ def _collect_cpu_resources_from_api_pods(pods: Sequence[api.Pod]) -> section.Res
 
 
 def _pod_resources(pods: Collection[Pod]) -> section.PodResources:
-    resources: DefaultDict[str, List[str]] = defaultdict(list)
+    resources: DefaultDict[str, List[str]] = collections.defaultdict(list)
     for pod in pods:
         resources[pod.phase].append(pod.name())
     return section.PodResources(**resources)
 
 
 def _pod_resources_from_api_pods(pods: Sequence[api.Pod]) -> section.PodResources:
-    resources: DefaultDict[str, List[str]] = defaultdict(list)
+    resources: DefaultDict[str, List[str]] = collections.defaultdict(list)
     for pod in pods:
         resources[pod.status.phase].append(pod_name(pod))
     return section.PodResources(**resources)
@@ -2115,7 +2108,9 @@ def group_metrics_by_container(
     if omit_metrics is None:
         omit_metrics = []
 
-    containers: DefaultDict[ContainerName, Dict[MetricName, PerformanceMetric]] = defaultdict(dict)
+    containers: DefaultDict[
+        ContainerName, Dict[MetricName, PerformanceMetric]
+    ] = collections.defaultdict(dict)
     for performance_metric in performance_metrics:
         if performance_metric.name in omit_metrics:
             continue

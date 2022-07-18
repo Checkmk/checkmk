@@ -1,0 +1,52 @@
+Title: Notification spooler: Fix producing corrupted spool files
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1658176356
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p8
+
+The Notification Spooler could create corrupted spool files which resulted in
+error messages like this in the <tt>var/log/mknotifyd.log</tt> log:
+
+C+:
+2022-07-18 21:49:14,276 [40] [cmk.mknotifyd] Corrupted spoolfile /omd/sites/stable/var/check_mk/notify/spool/ccaae1d5-8b33-403c-bbd8-e1b8796035ca:
+Traceback (most recent call last):
+  File "/omd/sites/stable/lib/python3/cmk/cee/mknotifyd/spool_handler.py", line 70, in _process_spool_directory
+    content: Message = evaluate_file(spoolfile_path)
+  File "/omd/sites/stable/lib/python3/cmk/cee/mknotifyd/utils.py", line 50, in evaluate_file
+    return ast.literal_eval(f.read())
+  File "/omd/sites/stable/lib/python3.9/ast.py", line 62, in literal_eval
+    node_or_string = parse(node_or_string, mode='eval')
+  File "/omd/sites/stable/lib/python3.9/ast.py", line 50, in parse
+    return compile(source, filename, mode, flags,
+  File "<unknown>", line 0
+    
+SyntaxError: unexpected EOF while parsing
+2022-07-18 21:49:14,728 [20] [cmk.mknotifyd] got exit code 2
+2022-07-18 21:49:14,728 [40] [cmk.mknotifyd] exception handling notification result 2 for 82bcd0e5-5d28-4162-9f46-84d008e1d73d:
+Traceback (most recent call last):
+  File "/omd/sites/stable/lib/python3/cmk/cee/mknotifyd/notification_queue.py", line 129, in _handle_result
+    content = evaluate_file(path.joinpath(filename))
+  File "/omd/sites/stable/lib/python3/cmk/cee/mknotifyd/utils.py", line 50, in evaluate_file
+    return ast.literal_eval(f.read())
+  File "/omd/sites/stable/lib/python3.9/ast.py", line 62, in literal_eval
+    node_or_string = parse(node_or_string, mode='eval')
+  File "/omd/sites/stable/lib/python3.9/ast.py", line 50, in parse
+    return compile(source, filename, mode, flags,
+  File "<unknown>", line 0
+    
+SyntaxError: unexpected EOF while parsing
+C-:
+
+The <tt>var/log/notify.log</tt> could also show errors in this situation, with messages like this:
+
+C+:
+2022-07-18 20:40:55,960 [40] [cmk.base.notify] ERROR:
+Traceback (most recent call last):
+  File "/omd/sites/stable/lib/python3/cmk/base/notify.py", line 1765, in handle_spoolfile
+    raw_context = data["context"]
+KeyError: 'context'
+C-:

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 from cmk.base.check_legacy_includes import dhcp_pools
 
 
@@ -17,15 +18,13 @@ def test_check_dhcp_pools_levels() -> None:
             params={"free_leases": (42.0, 10.0), "used_leases": (50, 23)},
         )
     ) == [
-        (
-            1,
-            "free: 23 leases (32.9%) (warn/crit below 42.0/10.0%)",
-            [("free_dhcp_leases", 23, 29, 7, 0, 70)],
-        ),
-        (
-            1,
-            "used: 42 leases (60.0%) (warn/crit below 50/23 used pool entries)",
-            [("used_dhcp_leases", 42, 50, 23, 0, 70)],
-        ),
-        (0, "5 leases pending", [("pending_dhcp_leases", 5, None, None, 0, 70)]),
+        (0, "Free leases: 23", []),
+        (1, "32.86% (warn/crit below 42.00%/10.00%)", []),
+        (0, "", [("free_dhcp_leases", 23, 29.4, 7, 0, 70)]),
+        (1, "Used leases: 42 (warn/crit below 50/23)", []),
+        (0, "60.00%", []),
+        (0, "", [("used_dhcp_leases", 42, 50, 23, 0, 70)]),
+        (0, "Pending leases: 5", []),
+        (0, "7.14%", []),
+        (0, "", [("pending_dhcp_leases", 5, None, None, 0, 70)]),
     ]

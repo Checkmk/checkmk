@@ -1,0 +1,14 @@
+Title: NagVis: Fix broken gadgets in Checkmk 2.1
+Class: fix
+Compatible: compat
+Component: packages
+Date: 1658157767
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p8
+
+The gadgets in NagVis maps did not work anymore. You get an access denied for
+all gadgets after it is added to the map.
+
+Thanks to Yogibaer75 for the fix.

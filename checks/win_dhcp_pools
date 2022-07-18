@@ -148,22 +148,22 @@ def check_win_dhcp_pools(item: str, params: Mapping[str, Any], section: Section)
             if len(pool_stats) == 3:
                 break
 
-    if all(v is not None for v in pool_stats):
-        used, free, pending = pool_stats
-        size = used + free + pending
-
-        # Catch unused pools
-        if size == 0:
-            yield 3, "DHCP Pool contains no IP addresses / is deactivated", []
-            return
-
-        yield from check_dhcp_pools_levels(free, used, pending, size, params)
-        # The Windows DHCP plugin collects statistics, not real-time measurements.
-        # Clarify this. See SUP-9126
-        yield 0, "Values are averaged", []
-
-    else:
+    used, free, pending = pool_stats
+    if used is None or free is None or pending is None:
         yield 3, "Pool information not found", []
+        return
+
+    size = used + free + pending
+
+    # Catch unused pools
+    if size == 0:
+        yield 3, "DHCP Pool contains no IP addresses / is deactivated", []
+        return
+
+    yield from check_dhcp_pools_levels(free, used, pending, size, params)
+    # The Windows DHCP plugin collects statistics, not real-time measurements.
+    # Clarify this. See SUP-9126
+    yield 0, "Values are averaged", []
 
 
 check_info["win_dhcp_pools"] = {

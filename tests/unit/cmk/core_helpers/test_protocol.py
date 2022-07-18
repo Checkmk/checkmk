@@ -15,6 +15,7 @@ from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import (
     MKBailOut,
     MKException,
+    MKFetcherError,
     MKGeneralException,
     MKIPAddressLookupError,
     MKSNMPError,
@@ -275,6 +276,7 @@ class TestErrorResultMessage:
             MKTerminate,
             MKBailOut,
             MKTimeout,
+            MKFetcherError,
             MKSNMPError,
             MKIPAddressLookupError,
             # Python exceptions
@@ -306,16 +308,15 @@ class TestErrorResultMessage:
         other = ErrorResultMessage.from_bytes(bytes(error))
         other_exc = other.result().error
 
-        assert type(other_exc) is type(exception)
-        assert other_exc.args == exception.args
+        # type information is lost for most exceptions, but message should remain
+        assert str(other_exc) == str(exception)
         assert not other_exc.__traceback__
 
     def test_from_bytes_success(self, error) -> None:  # type:ignore[no-untyped-def]
         other = ErrorResultMessage.from_bytes(bytes(error))
         assert other is not error
         assert other == error
-        assert type(other.result().error) == type(error.result().error)  # pylint: disable=C0123
-        assert other.result().error.args == error.result().error.args
+        assert str(other.result().error) == str(error.result().error)
 
     def test_from_bytes_failure(self) -> None:
         with pytest.raises(ValueError):

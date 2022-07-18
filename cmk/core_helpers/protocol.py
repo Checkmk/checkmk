@@ -58,9 +58,10 @@ import enum
 import json
 import logging
 import math
-import pickle
 import struct
 from typing import Final, Generic, Iterator, Sequence, Type, Union
+
+import pydantic
 
 import cmk.utils.log as log
 from cmk.utils.cpu_tracking import Snapshot
@@ -243,8 +244,55 @@ class SNMPResultMessage(ResultMessage[SNMPRawData]):
             raise ValueError(repr(data))
 
 
+class _ExceptionType(enum.Enum):
+    """limited type information for a serialized exception
+
+    The only specific types that are currently supported are MKFetcherError and MKTimeout.
+
+    This class is for internal use in ErrorResultMessage._Model only, but pydantic seems to require
+    a definition on module level.
+    """
+
+    UNKNOWN = enum.auto()
+    FETCHER_ERROR = enum.auto()
+    TIMEOUT = enum.auto()
+
+    @classmethod
+    def from_exception(cls, exception) -> _ExceptionType:
+        if isinstance(exception, MKTimeout):
+            return cls.TIMEOUT
+        if isinstance(exception, MKFetcherError):
+            return cls.FETCHER_ERROR
+        return cls.UNKNOWN
+
+    def type(self) -> Type[Exception | MKFetcherError | MKTimeout]:
+        return {
+            _ExceptionType.TIMEOUT: MKTimeout,
+            _ExceptionType.FETCHER_ERROR: MKFetcherError,
+            _ExceptionType.UNKNOWN: Exception,
+        }[self]
+
+
 class ErrorResultMessage(ResultMessage[AgentRawData]):
     payload_type = PayloadType.ERROR
+
+    class _Model(pydantic.BaseModel, arbitrary_types_allowed=True):
+        """pydantic model to serialize and deserialize errors
+
+        The model will retain exception type information where possible (for types specifically
+        covered in `_ExceptionType`). For all other exceptions the original type will be added
+        to the message.
+        """
+
+        exc_type: _ExceptionType
+        msg: str
+
+        @classmethod
+        def from_exception(cls, exception) -> ErrorResultMessage._Model:
+            return cls(exc_type=_ExceptionType.from_exception(exception), msg=str(exception))
+
+        def to_exception(self) -> Exception | MKFetcherError | MKTimeout:
+            return self.exc_type.type()(self.msg)
 
     def __init__(self, error: Exception) -> None:
         super().__init__()
@@ -278,14 +326,14 @@ class ErrorResultMessage(ResultMessage[AgentRawData]):
 
     @staticmethod
     def _serialize(error: Exception) -> bytes:
-        return pickle.dumps({"exc_type": type(error), "exc_args": error.args})
+        return ErrorResultMessage._Model.from_exception(error).json().encode()
 
     @staticmethod
     def _deserialize(data: bytes) -> Exception:
+        """Reconstruct an exception from the available type information and message"""
         try:
-            ser = pickle.loads(data)
-            return ser["exc_type"](*ser["exc_args"])
-        except pickle.UnpicklingError as exc:
+            return ErrorResultMessage._Model.parse_raw(data).to_exception()
+        except pydantic.ValidationError as exc:
             raise ValueError(data) from exc
 
 

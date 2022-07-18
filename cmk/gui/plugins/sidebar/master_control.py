@@ -109,7 +109,7 @@ class MasterControlSnapin(SidebarSnapin):
 
         if site_state["state"] == "unknown":
             if site_state.get("exception"):
-                html.show_error(site_state["exception"])
+                html.show_error(str(site_state["exception"]))
             else:
                 html.show_error(_("Site state is unknown"))
             return

@@ -53,7 +53,7 @@ def fixture_local_test_hosts(web: CMKWebSession, site: Site) -> Iterator[LocalTe
 
     site.write_text_file(
         "etc/check_mk/conf.d/local-test-hosts.mk",
-        "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ['test-host', 'test-host2']))\n",
+        "datasource_programs.append({'condition': {'host_name': ['test-host', 'test-host2']}, 'value': 'cat ~/var/check_mk/agent_output/<HOST>'})\n",
     )
 
     for hostname in ["test-host", "test-host2"]:
@@ -833,7 +833,7 @@ def graph_test_config_fixture(web: CMKWebSession, site: Site) -> Iterator[GraphT
 
         site.write_text_file(
             "etc/check_mk/conf.d/test-host-get-graph.mk",
-            "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ['test-host-get-graph']))\n",
+            "datasource_programs.append({'condition': {'host_name': ['test-host-get-graph']}, 'value': 'cat ~/var/check_mk/agent_output/<HOST>'})\n",
         )
 
         site.makedirs("var/check_mk/agent_output/")

@@ -406,8 +406,7 @@ def create_linux_test_host(request, site: Site, hostname):
 
     site.write_text_file(
         "etc/check_mk/conf.d/linux_test_host_%s.mk" % hostname,
-        "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ['%s']))\n"
-        % hostname,
+        f"datasource_programs.append({{'condition': {{'hostname': ['{hostname}']}}, 'value': 'cat ~/var/check_mk/agent_output/<HOST>'}})\n",
     )
 
     site.makedirs("var/check_mk/agent_output/")

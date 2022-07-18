@@ -53,7 +53,7 @@ def cfg_setup_fixture(request, web, site: Site):  # type:ignore[no-untyped-def]
 globals().setdefault('custom_checks', [])
 
 custom_checks = [
-    ( {'service_description': u'CPU load', 'has_perfdata': True}, [], ALL_HOSTS, {} ),
+    {'condition': {}, 'options': {}, 'value': {'service_description': u'CPU load', 'has_perfdata': True}},
 ] + custom_checks
 """,
     )

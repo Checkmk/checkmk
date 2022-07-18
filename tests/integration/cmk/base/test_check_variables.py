@@ -249,7 +249,7 @@ check_info["test_check_3"] = {
 checkgroup_parameters.setdefault('asd', [])
 
 checkgroup_parameters['asd'] = [
-    ( {'param2': 'xxx'}, [], ALL_HOSTS, {} ),
+    {'condition': {}, 'options': {}, 'value': {'param2': 'xxx'}},
 ] + checkgroup_parameters['asd']
 """,
     )

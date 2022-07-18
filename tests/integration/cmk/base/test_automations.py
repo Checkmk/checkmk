@@ -60,7 +60,7 @@ def test_cfg_fixture(site: Site, web) -> Generator:  # type:ignore[no-untyped-de
 
     site.write_text_file(
         "etc/check_mk/conf.d/modes-test-host.mk",
-        "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ALL_HOSTS))\n",
+        "datasource_programs.append({'condition': {}, 'value': 'cat ~/var/check_mk/agent_output/<HOST>'})\n",
     )
 
     site.makedirs("var/check_mk/agent_output/")

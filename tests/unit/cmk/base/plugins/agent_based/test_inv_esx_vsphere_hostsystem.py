@@ -15,6 +15,11 @@ from .utils_inventory import sort_inventory_result
 
 section = OrderedDict(
     (
+        ("config.product.build", ["123456"]),
+        ("config.product.licenseProductName", ["VMware ESX Server"]),
+        ("config.product.osType", ["vmnix-x86"]),
+        ("config.product.vendor", ["VMware"]),
+        ("config.product.version", ["6.7.0"]),
         ("hardware.biosInfo.biosVersion", ["-[ABIOSVERSION-1.0]-"]),
         ("hardware.biosInfo.releaseDate", ["2000-01-26T00:00:00Z"]),
         ("hardware.cpuInfo.hz", ["2933437096"]),
@@ -68,6 +73,17 @@ def test_inventory():
             Attributes(
                 path=["software", "bios"],
                 inventory_attributes={"version": "-[ABIOSVERSION-1.0]-", "date": "2000-01-26"},
+                status_attributes={},
+            ),
+            Attributes(
+                path=["software", "os"],
+                inventory_attributes={
+                    "name": "VMware ESX Server",
+                    "version": "6.7.0",
+                    "build": "123456",
+                    "vendor": "VMware",
+                    "type": "vmnix-x86",
+                },
                 status_attributes={},
             ),
             Attributes(

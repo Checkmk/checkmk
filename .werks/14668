@@ -1,0 +1,15 @@
+Title: VMware ESX, query esxi host inventory via vsphere server
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1660032339
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p10
+
+The vsphere agent can now query the esxi host information via the vsphere server.
+Host information is made available via piggy back hosts. This is for useful if your
+installation does not allow you direct access to the esxi hosts.
+

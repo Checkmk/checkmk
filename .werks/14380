@@ -1,0 +1,14 @@
+Title: Improve security of password hashes in audit log
+Class: security
+Compatible: compat
+Component: wato
+Date: 1658132096
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p9
+
+Hashes of passwords displayed in the audit log are now calculated using a keyed hash function.
+
+Previously, a truncated SHA256 hash of the password was displayed. While this is not an issue for long, randomly generated passwords, the hashes of weak passwords could have been reversed using brute-force.
+Passwords are now hashed using HMAC with a random key that is not persisted. Note that, as a consequence, users will not be able to recognize or validate password hashes in the audit log.

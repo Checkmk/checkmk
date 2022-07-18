@@ -51,13 +51,17 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify import (
+    create_spoolfile,
     ensure_utf8,
     find_wato_folder,
     notification_message,
     notification_result_message,
     NotificationContext,
+    NotificationForward,
     NotificationPluginName,
     NotificationResultCode,
+    NotificationViaPlainMail,
+    NotificationViaPlugin,
 )
 from cmk.utils.regex import regex
 from cmk.utils.timeout import MKTimeout, Timeout
@@ -330,7 +334,12 @@ def notify_notify(raw_context: EventContext, analyse: bool = False) -> Optional[
 
     # Spool notification to remote host, if this is enabled
     if config.notification_spooling in ("remote", "both"):
-        create_spoolfile({"context": raw_context, "forward": True})
+        create_spoolfile(
+            logger,
+            Path(notification_spooldir),
+            # TODO: cast will be cleaned up soon
+            NotificationForward({"context": cast(dict[str, str], raw_context), "forward": True}),
+        )
 
     if config.notification_spooling != "remote":
         return locally_deliver_raw_context(raw_context, analyse=analyse)
@@ -649,7 +658,11 @@ def _process_notifications(  # pylint: disable=too-many-branches
                     if bulk:
                         do_bulk_notify(plugin_name, params, context, bulk)
                     elif config.notification_spooling in ("local", "both"):
-                        create_spoolfile({"context": context, "plugin": plugin_name})
+                        create_spoolfile(
+                            logger,
+                            Path(notification_spooldir),
+                            NotificationViaPlugin({"context": context, "plugin": plugin_name}),
+                        )
                     else:
                         call_notification_script(plugin_name, context)
 
@@ -1272,7 +1285,11 @@ def notify_flexible(raw_context: EventContext, notification_table: NotificationT
         plugin_context = create_plugin_context(raw_context, parameters)
 
         if config.notification_spooling in ("local", "both"):
-            create_spoolfile({"context": plugin_context, "plugin": plugin_name})
+            create_spoolfile(
+                logger,
+                Path(notification_spooldir),
+                NotificationViaPlugin({"context": plugin_context, "plugin": plugin_name}),
+            )
         else:
             call_notification_script(plugin_name, plugin_context)
 
@@ -1468,7 +1485,11 @@ def notify_plain_email(raw_context: EventContext) -> None:
     plugin_context = create_plugin_context(raw_context, [])
 
     if config.notification_spooling in ("local", "both"):
-        create_spoolfile({"context": plugin_context, "plugin": None})
+        create_spoolfile(
+            logger,
+            Path(notification_spooldir),
+            NotificationViaPlainMail({"context": plugin_context, "plugin": None}),
+        )
     else:
         logger.info("Sending plain email to %s", plugin_context["CONTACTNAME"])
         notify_via_email(plugin_context)
@@ -1697,14 +1718,6 @@ def notification_script_env(plugin_context: PluginContext) -> PluginContext:
 #   +----------------------------------------------------------------------+
 #   |  Some functions dealing with the spooling of notifications.          |
 #   '----------------------------------------------------------------------'
-
-
-def create_spoolfile(data: Any) -> None:
-    if not os.path.exists(notification_spooldir):
-        os.makedirs(notification_spooldir)
-    file_path = "%s/%s" % (notification_spooldir, str(uuid.uuid4()))
-    logger.info("Creating spoolfile: %s", file_path)
-    store.save_object_to_file(file_path, data, pretty=True)
 
 
 # There are three types of spool files:

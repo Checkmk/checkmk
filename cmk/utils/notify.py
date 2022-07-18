@@ -5,10 +5,13 @@
 
 import os
 import subprocess
+import uuid
 from logging import Logger
-from typing import List, NewType, Optional, TypedDict
+from pathlib import Path
+from typing import Any, Dict, List, Literal, NewType, Optional, TypedDict, Union
 
 import cmk.utils.defines
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
@@ -21,6 +24,12 @@ MAX_PLUGIN_OUTPUT_LENGTH = 1000
 # 2 -> permanent issue
 NotificationResultCode = NewType("NotificationResultCode", int)
 NotificationPluginName = NewType("NotificationPluginName", str)
+# This is the origin raw notification context as produced by the monitoring core before it is being
+# processed by the the rule based notfication logic which may create multiple specific notification
+# contexts out of the raw notification context and the matching notification rule.
+# TODO: Consolidate with cmk.base.events.EventContext
+RawNotificationContext = NewType("RawNotificationContext", dict[str, str])
+# TODO: Consolidate with cmk.base.notify.PluginContext
 NotificationContext = NewType("NotificationContext", dict[str, str])
 
 
@@ -30,6 +39,27 @@ class NotificationResult(TypedDict, total=False):
     output: List[str]
     forward: bool
     context: NotificationContext
+
+
+class NotificationForward(TypedDict):
+    forward: Literal[True]
+    # TODO: Enable once RawNotificationContext has been consolidated with cmk.base.events.EventContext
+    # context: RawNotificationContext
+    context: Dict[str, Any]
+
+
+class NotificationViaPlainMail(TypedDict):
+    plugin: None
+    # TODO: Enable once NotificationContext has been consolidated with cmk.base.notify.PluginContext
+    # context: NotificationContext
+    context: Dict[str, Any]
+
+
+class NotificationViaPlugin(TypedDict):
+    plugin: str
+    # TODO: Enable once NotificationContext has been consolidated with cmk.base.notify.PluginContext
+    # context: NotificationContext
+    context: Dict[str, Any]
 
 
 def _state_for(exit_code: NotificationResultCode) -> str:
@@ -166,3 +196,16 @@ def ensure_utf8(logger: Optional[Logger] = None) -> None:
         logger.info(not_found_msg)
 
     return
+
+
+def create_spoolfile(
+    logger: Logger,
+    spool_dir: Path,
+    data: Union[
+        NotificationForward, NotificationResult, NotificationViaPlainMail, NotificationViaPlugin
+    ],
+) -> None:
+    spool_dir.mkdir(parents=True, exist_ok=True)
+    file_path = spool_dir / str(uuid.uuid4())
+    logger.info("Creating spoolfile: %s", file_path)
+    store.save_object_to_file(file_path, data, pretty=True)

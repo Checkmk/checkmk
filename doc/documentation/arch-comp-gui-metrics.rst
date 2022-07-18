@@ -49,9 +49,9 @@ recipes`` in dict ``graph_info``.
 Risks and technical debts
 =========================
 
-The metadata and output values of checks are controlled
-by their authors and can, hence, contain malicious payloads that are ultimately
-rendered on the client side within the monitoring and administration web interface.
-The metrics are calculated by check plugins and then written by the check plugin api.
-Sanitization has to be done there (e.g. numbers only), prior to being rendered on
+The meta data and output values of checks are controlled by their authors and
+can, hence, contain malicious payloads that are ultimately rendered on the
+client side within the monitoring and administration web interface. The metrics
+are calculated by check plugins and then written by the check plugin API. The
+data has to be sanitized there (e.g. numbers only), prior to being rendered on
 the client side.

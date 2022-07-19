@@ -1,0 +1,19 @@
+Title: Fix frozen Microcore (Livestatus not responding) during config reloads
+Class: fix
+Compatible: compat
+Component: core
+Date: 1658219750
+Edition: cee
+Knowledge: doc
+Level: 2
+Version: 2.1.0p8
+
+The reload of the Microcore core and it's helper processed could freeze when
+the core had notifications pending during reload. This was caused by a deadlock
+between the Notification helper and the Microcore. The Microcore was still
+alive but waiting to the notification helper to terminate while the
+notification helper waited for the Microcore.
+
+From the user perspective this resulted in Livestatus not being responsive
+while the cmc.log showed a message like: <tt>still X unsent events, sending
+them now</tt>.

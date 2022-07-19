@@ -27,9 +27,9 @@ constexpr bool g_add_wmi_status_column = true;
 namespace cma::provider {
 bool IsHeaderless(std::string_view name) noexcept { return name == kMsExch; }
 
-// use cache if body is empty(typical for new client, which returns empty on
-// timeout) post process result
-// update cache if data ok(not empty)
+/// use cache if body is empty(typical for new client, which returns empty on
+/// timeout) post process result
+/// update cache if data ok(not empty)
 std::string WmiCachedDataHelper(std::string &cache_data,
                                 const std::string &wmi_data, char separator) {
     // for very old servers
@@ -59,8 +59,8 @@ namespace {
 using NamedWideStringVector =
     std::unordered_map<std::string, std::vector<std::wstring>>;
 
-using NamedStringVector =
-    std::unordered_map<std::string, std::vector<std::string>>;
+using NamedStrVector =
+    std::unordered_map<std::string, std::vector<std::string_view>>;
 
 /// Description of wmi source
 // for example "Root\\Cimv2" and "Win32_PerfRawData_W3SVC_WebService"
@@ -211,26 +211,33 @@ const NamedWmiSources g_section_objects = {
 
 // Columns
 const NamedWideStringVector g_section_columns = {
-    // start
-    {kOhm.data(),  //
-     {L"Index", L"Name", L"Parent", L"SensorType", L"Value"}}
-    // end
-};
 
-const NamedStringVector g_section_subs = {
-    // start
-    {std::string{kWmiCpuLoad},  //
-     {kSubSectionSystemPerf.data(), kSubSectionComputerSystem.data()}},
-    {std::string{kMsExch},          //
-     {kMsExchActiveSync.data(),     //
-      kMsExchAvailability.data(),   //
-      kMsExchOwa.data(),            //
-      kMsExchAutoDiscovery.data(),  //
-      kMsExchIsClientType.data(),   //
-      kMsExchIsStore.data(),        //
-      kMsExchRpcClientAccess.data()}}
-    // end
-};
+    {kOhm.data(),
+     {
+         L"Index",
+         L"Name",
+         L"Parent",
+         L"SensorType",
+         L"Value",
+     }}};
+
+const NamedStrVector g_section_subs = {
+
+    {std::string{kWmiCpuLoad},
+     {
+         kSubSectionSystemPerf,
+         kSubSectionComputerSystem,
+     }},
+    {std::string{kMsExch},
+     {
+         kMsExchActiveSync,
+         kMsExchAvailability,
+         kMsExchOwa,
+         kMsExchAutoDiscovery,
+         kMsExchIsClientType,
+         kMsExchIsStore,
+         kMsExchRpcClientAccess,
+     }}};
 
 WmiSource GetWmiSource(const std::string &uniq_name) {
     try {
@@ -281,20 +288,17 @@ void WmiBase::setupByName() {
     setupDelayOnFail();
 }
 
-// Intermediate routine to build standard output WMI table
-// returns error code and string. String is empty if any error happens
-// String may be empty if not failed - this is important
-// WMI Timeout is NOT Error
-// #TODO Estimate optimization: do we really need to reconnect to wrapper every
-// time?
+/// Mid-level routine to build standard output WMI table.
+/// Returns error code and string. String is empty if any error happens
+/// String may be empty if not failed - this is important
+/// WMI Timeout is NOT Error
+/// #TODO Estimate optimization: do we need to reconnect to wrapper every time?
 std::pair<std::string, wtools::WmiStatus> GenerateWmiTable(
     std::wstring_view wmi_namespace, const std::wstring &wmi_object,
     const std::vector<std::wstring> &columns_table,
     std::wstring_view separator) {
-    using wtools::WmiStatus;
-
     if (wmi_object.empty() || wmi_namespace.empty()) {
-        return {"", WmiStatus::bad_param};
+        return {"", wtools::WmiStatus::bad_param};
     }
 
     const auto object_name = wtools::ToUtf8(wmi_object);
@@ -307,12 +311,12 @@ std::pair<std::string, wtools::WmiStatus> GenerateWmiTable(
     wtools::WmiWrapper wrapper;
     if (!wrapper.open()) {
         XLOG::l.e("WMI can't open '{}'", id());
-        return {"", WmiStatus::fail_open};
+        return {"", wtools::WmiStatus::fail_open};
     }
 
     if (!wrapper.connect(wmi_namespace)) {
         XLOG::l.e("WMI can't connect '{}'", id());
-        return {"", WmiStatus::fail_connect};
+        return {"", wtools::WmiStatus::fail_connect};
     }
 
     if (!wrapper.impersonate()) {
@@ -327,14 +331,11 @@ std::pair<std::string, wtools::WmiStatus> GenerateWmiTable(
     return {wtools::ToUtf8(ret), status};
 }
 
-static std::wstring CharToWideString(char ch) {
-    std::wstring sep;
-    sep += static_cast<wchar_t>(ch);
-
-    return sep;
+namespace {
+std::wstring CharToWideString(char ch) {
+    return wtools::ConvertToUTF16(std::string(1, ch));
 }
 
-namespace {
 bool IsAllAbsent(const std::vector<std::wstring> &services) {
     return rs::all_of(services, [](const auto &n) {
         return wtools::GetServiceStatus(n) == 0;
@@ -342,9 +343,9 @@ bool IsAllAbsent(const std::vector<std::wstring> &services) {
 }
 }  // namespace
 
-// works in two modes
-// aggregated: object is absent, data are gathered from the subsections
-// standard: usual section, object must be present
+/// works in two modes
+/// aggregated: object is absent, data are gathered from the subsections
+/// standard: usual section, object must be present
 std::string WmiBase::getData() {
     if (!services_.empty() && IsAllAbsent(services_)) {
         XLOG::t("Neither from required services '{}' has been installed",
@@ -420,10 +421,6 @@ bool WmiBase::isAllowedByCurrentConfig() const {
     return false;
 }
 
-// ****************************
-// SubSection
-// ****************************
-
 void SubSection::setupByName() {
     auto src = GetWmiSource(uniq_name_);
     object_ = src.object_name;
@@ -459,7 +456,6 @@ std::string SubSection::makeBody() {
 }
 
 std::string SubSection::generateContent(Mode mode) {
-    // print body
     try {
         auto section_body = makeBody();
         if (mode == Mode::standard && section_body.empty()) {
@@ -474,10 +470,7 @@ std::string SubSection::generateContent(Mode mode) {
                 return section::MakeSubSectionHeader(uniq_name_) + section_body;
         }
     } catch (const std::exception &e) {
-        XLOG::l.crit(XLOG_FUNC + " Exception '{}' in '{}'", e.what(),
-                     uniq_name_);
-    } catch (...) {
-        XLOG::l.crit(XLOG_FUNC + " Exception UNKNOWN in '{}'", uniq_name_);
+        XLOG::l.crit(XLOG_FUNC + " Exception '{}' in '{}'", e, uniq_name_);
     }
     return {};
 }

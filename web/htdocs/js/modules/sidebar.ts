@@ -878,18 +878,7 @@ export function add_bookmark(trans_id : null | string = null) {
 }
 
 /************************************************
- * Wiki search snapin
- *************************************************/
-
-export function wiki_search(omd_site) {
-    const oInput = document.getElementById("wiki_search_field");
-    top!.frames["main"].location.href =
-        "/" + encodeURIComponent(omd_site) + "/wiki/doku.php?do=search&id=" + escape((oInput as HTMLInputElement).value);
-    utils.prevent_default_events(event);
-}
-
-/************************************************
- * Wiki search snapin
+ * Speedometer snapin
  *************************************************/
 
 var g_needle_timeout : null | number = null;

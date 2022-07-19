@@ -480,24 +480,6 @@ div.spacertop {
   }
 }
 
-/* TODO: Reproduce this html element */
-#wiki_navigation {
-  text-align: left;
-}
-
-#wiki_search {
-  @extend %search-shared;
-
-  input {
-    width: 194px;
-    height: 25px;
-  }
-}
-
-#wiki_side_clear {
-  clear: both;
-}
-
 /*
  * Quicksearch snapin
  */

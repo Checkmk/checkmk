@@ -59,6 +59,10 @@ class NagiosCore(core_config.MonitoringCore):
     def name(cls) -> Literal["nagios"]:
         return "nagios"
 
+    @staticmethod
+    def is_cmc() -> Literal[False]:
+        return False
+
     def create_config(
         self,
         config_path: VersionedConfigPath,

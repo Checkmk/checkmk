@@ -15,6 +15,7 @@ from typing import (
     Mapping,
     Optional,
     overload,
+    Sequence,
     Set,
     Tuple,
     Type,
@@ -1243,7 +1244,10 @@ def mode_update() -> None:
 
     try:
         with cmk.base.core.activation_lock(mode=config.restart_locking):
-            do_create_config(create_core(config.monitoring_core))
+            do_create_config(
+                create_core(config.monitoring_core),
+                duplicates=config.duplicate_hosts(),
+            )
     except Exception as e:
         console.error("Configuration Error: %s\n" % e)
         if cmk.utils.debug.enabled():
@@ -1279,11 +1283,12 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_restart(args: List[str]) -> None:
+def mode_restart(args: Sequence[HostName]) -> None:
     cmk.base.core.do_restart(
         create_core(config.monitoring_core),
         hosts_to_update=set(args) if args else None,
         locking_mode=config.restart_locking,
+        duplicates=config.duplicate_hosts(),
     )
 
 
@@ -1315,11 +1320,12 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_reload(args: List[str]) -> None:
+def mode_reload(args: Sequence[HostName]) -> None:
     cmk.base.core.do_reload(
         create_core(config.monitoring_core),
         hosts_to_update=set(args) if args else None,
         locking_mode=config.restart_locking,
+        duplicates=config.duplicate_hosts(),
     )
 
 

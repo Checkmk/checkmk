@@ -1023,6 +1023,7 @@ class AutomationRestart(Automation):
                     self._mode(),
                     hosts_to_update=None if not args else set(args),
                     locking_mode=config.restart_locking,
+                    duplicates=config.duplicate_hosts(),
                 )
             except (MKBailOut, MKGeneralException) as e:
                 raise MKAutomationError(str(e))

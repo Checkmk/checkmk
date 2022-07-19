@@ -8,7 +8,7 @@ import enum
 import os
 import subprocess
 from contextlib import contextmanager
-from typing import Iterator, Literal, Optional
+from typing import Iterator, Literal, Optional, Sequence
 
 # suppress "Cannot find module" error from mypy
 import livestatus
@@ -20,7 +20,7 @@ import cmk.utils.store as store
 import cmk.utils.tty as tty
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKTimeout
-from cmk.utils.type_defs import HostsToUpdate, TimeperiodName
+from cmk.utils.type_defs import HostName, HostsToUpdate, TimeperiodName
 
 import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
@@ -54,12 +54,14 @@ def do_reload(
     hosts_to_update: HostsToUpdate = None,
     *,
     locking_mode: _LockingMode,
+    duplicates: Sequence[HostName],
 ) -> None:
     do_restart(
         core,
         action=CoreAction.RELOAD,
         hosts_to_update=hosts_to_update,
         locking_mode=locking_mode,
+        duplicates=duplicates,
     )
 
 
@@ -69,10 +71,15 @@ def do_restart(
     hosts_to_update: HostsToUpdate = None,
     *,
     locking_mode: _LockingMode,
+    duplicates: Sequence[HostName],
 ) -> None:
     try:
         with activation_lock(mode=locking_mode):
-            core_config.do_create_config(core, hosts_to_update=hosts_to_update)
+            core_config.do_create_config(
+                core,
+                hosts_to_update=hosts_to_update,
+                duplicates=duplicates,
+            )
             do_core_action(action, monitoring_core=core.name())
 
     except Exception as e:

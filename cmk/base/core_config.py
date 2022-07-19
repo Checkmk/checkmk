@@ -79,6 +79,11 @@ class MonitoringCore(abc.ABC):
     def name(cls) -> Literal["nagios", "cmc"]:
         raise NotImplementedError
 
+    @staticmethod
+    @abc.abstractmethod
+    def is_cmc() -> bool:
+        raise NotImplementedError
+
     @abc.abstractmethod
     def create_config(
         self,
@@ -301,7 +306,12 @@ def check_icmp_arguments_of(
 #   '----------------------------------------------------------------------'
 
 
-def do_create_config(core: MonitoringCore, hosts_to_update: HostsToUpdate = None) -> None:
+def do_create_config(
+    core: MonitoringCore,
+    hosts_to_update: HostsToUpdate = None,
+    *,
+    duplicates: Sequence[HostName],
+) -> None:
     """Creating the monitoring core configuration and additional files
 
     Ensures that everything needed by the monitoring core and it's helper processes is up-to-date
@@ -310,7 +320,7 @@ def do_create_config(core: MonitoringCore, hosts_to_update: HostsToUpdate = None
     out.output("Generating configuration for core (type %s)...\n" % core.name())
 
     try:
-        _create_core_config(core, hosts_to_update=hosts_to_update)
+        _create_core_config(core, hosts_to_update=hosts_to_update, duplicates=duplicates)
     except Exception as e:
         if cmk.utils.debug.enabled():
             raise
@@ -331,7 +341,7 @@ def _bake_on_restart() -> None:
 
 @contextmanager
 def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
-    if config.monitoring_core == "nagios":
+    if core.name() == "nagios":
         objects_file = cmk.utils.paths.nagios_objects_file
     else:
         objects_file = cmk.utils.paths.var_dir + "/core/config"
@@ -350,7 +360,7 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
             raise
 
         if (
-            config.monitoring_core == "nagios"
+            core.name() == "nagios"
             and Path(cmk.utils.paths.nagios_config_file).exists()
             and not do_check_nagiosconfig()
         ):
@@ -372,16 +382,19 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
 
 
 def _create_core_config(
-    core: MonitoringCore, hosts_to_update: HostsToUpdate = None
+    core: MonitoringCore,
+    hosts_to_update: HostsToUpdate = None,
+    *,
+    duplicates: Sequence[HostName],
 ) -> ConfigurationWarnings:
     initialize_warnings()
 
-    _verify_non_duplicate_hosts()
+    _verify_non_duplicate_hosts(duplicates)
     _verify_non_deprecated_checkgroups()
 
     config_path = next(VersionedConfigPath.current())
     config_cache = config.get_config_cache()
-    with config_path.create(is_cmc=config.is_cmc()), _backup_objects_file(core):
+    with config_path.create(is_cmc=core.is_cmc()), _backup_objects_file(core):
         core.create_config(config_path, config_cache, hosts_to_update=hosts_to_update)
 
     cmk.utils.password_store.save_for_helpers(config_path)
@@ -415,8 +428,7 @@ def _verify_non_deprecated_checkgroups() -> None:
             )
 
 
-def _verify_non_duplicate_hosts() -> None:
-    duplicates = config.duplicate_hosts()
+def _verify_non_duplicate_hosts(duplicates) -> None:
     if duplicates:
         warning(
             "The following host names have duplicates: %s. "

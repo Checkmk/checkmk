@@ -37,7 +37,7 @@ def fixture_config_path():
 
 
 def test_do_create_config_nagios(core_scenario, config_path) -> None:
-    core_config.do_create_config(create_core("nagios"))
+    core_config.do_create_config(create_core("nagios"), duplicates=())
 
     assert Path(cmk.utils.paths.nagios_objects_file).exists()
     assert config.PackedConfigStore.from_serial(LATEST_CONFIG).path.exists()

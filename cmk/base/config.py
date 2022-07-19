@@ -972,9 +972,9 @@ def _host_is_member_of_site(config_cache: "ConfigCache", hostname: HostName, sit
     )
 
 
-def duplicate_hosts() -> List[str]:
+def duplicate_hosts() -> Sequence[HostName]:
     return sorted(
-        hostname  #
+        hostname
         for hostname, count in Counter(
             # This function should only be used during duplicate host check! It has to work like
             # all_active_hosts() but with the difference that duplicates are not removed.
@@ -982,7 +982,7 @@ def duplicate_hosts() -> List[str]:
                 get_config_cache(),
                 strip_tags(list(all_hosts) + list(clusters) + list(_get_shadow_hosts())),
             )
-        ).items()  #
+        ).items()
         if count > 1
     )
 

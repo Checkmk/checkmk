@@ -904,9 +904,17 @@ def discover_marked_hosts(
             cmk.core_helpers.cache.FileCacheFactory.use_outdated = False
             cmk.core_helpers.cache.FileCacheFactory.maybe = True
             if config.monitoring_core == "cmc":
-                cmk.base.core.do_reload(core, locking_mode=config.restart_locking)
+                cmk.base.core.do_reload(
+                    core,
+                    locking_mode=config.restart_locking,
+                    duplicates=config.duplicate_hosts(),
+                )
             else:
-                cmk.base.core.do_restart(core, locking_mode=config.restart_locking)
+                cmk.base.core.do_restart(
+                    core,
+                    locking_mode=config.restart_locking,
+                    duplicates=config.duplicate_hosts(),
+                )
         finally:
             _config_cache.clear_all()
             config.get_config_cache().initialize()

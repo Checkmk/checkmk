@@ -28,17 +28,17 @@ CheckResult = Iterable[tuple[int, str, list]]
 
 # This map converts between the SAP color codes (key values) and the
 # nagios state codes
-sap_nagios_state_map = [
-    0,  # GRAY  (inactive or no current info available) -> OK
-    0,  # GREEN  -> OK
-    1,  # YELLOW -> WARNING
-    2,  # RED    -> CRITICAL
-]
+_SAP_NAGIOS_STATE_MAP = {
+    0: 0,  # GRAY  (inactive or no current info available) -> OK
+    1: 0,  # GREEN  -> OK
+    2: 1,  # YELLOW -> WARNING
+    3: 2,  # RED    -> CRITICAL
+}
 
 
 class Entry(NamedTuple):
     sid: str
-    state: str
+    state: int
     path: str
     reading: str
     unit: str
@@ -63,7 +63,7 @@ def parse_sap(string_table: StringTable) -> Section:
     return [
         Entry(
             sid=sid,
-            state=state,
+            state=_SAP_NAGIOS_STATE_MAP[int(state)],
             path=path,
             reading=reading,
             unit=unit,
@@ -190,7 +190,7 @@ def check_sap_value(item: str, params: Mapping[str, Any], section: Section) -> C
         this_path = "/".join(entry.path.split("/")[-limit:]) if limit else entry.path
 
         if entry.sid + " " + this_path == item:
-            status = sap_nagios_state_map[int(entry.state)]
+            status = entry.state
             if entry.reading != "-":
                 # This is a performance value, has no output
                 perfval = _safe_float(entry.reading)
@@ -280,7 +280,7 @@ def check_sap_value_groups(item: str, params: Mapping[str, Any], section: Sectio
     count_ok, count_crit = 0, 0
     for entry in section:
         if item in sap_groups_of_value(entry.path, precompiled_rule):
-            status = sap_nagios_state_map[int(entry.state)]
+            status = entry.state
             output = ""
             if entry.reading == "-":
                 output = entry.output

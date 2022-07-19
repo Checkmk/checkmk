@@ -724,7 +724,6 @@ def test_all_check_variables_present(fix_plugin_legacy) -> None:
         "sap_hana_ess_migration_state_map",
         "sap_hana_mem_database_default_levels",
         "sap_hana_mem_resident_default_levels",
-        "sap_nagios_state_map",
         "sap_value_groups",
         "saprouter_cert_default_levels",
         "security_master_temp_default_levels",

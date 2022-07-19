@@ -150,8 +150,6 @@ sap_value_groups = []
 
 
 def inventory_sap_value(section: Section) -> DiscoveryResult:
-    inv = []
-
     patterns = []
     for value in host_extra_conf(host_name(), inventory_sap_values):
         patterns.append((value["match"], value.get("limit_item_levels")))
@@ -159,15 +157,13 @@ def inventory_sap_value(section: Section) -> DiscoveryResult:
     for entry in section:
         for pattern, limit_item_levels in patterns:
             if sap_value_path_matches(entry.path, pattern):
-                params = {}
+                discovered_params = {}
                 if limit_item_levels:
                     path = "/".join(entry.path.split("/")[-limit_item_levels:])
-                    params["limit_item_levels"] = limit_item_levels
+                    discovered_params["limit_item_levels"] = limit_item_levels
                 else:
                     path = entry.path
-                inv.append((entry.sid + " " + path, params))
-
-    return inv
+                yield entry.sid + " " + path, discovered_params
 
 
 def sap_value_path_matches(path: str, pattern: str | None) -> bool:

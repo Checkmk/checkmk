@@ -6,7 +6,7 @@
 import contextlib
 import time
 from datetime import datetime
-from typing import Optional
+from typing import Generator, Optional
 
 from cmk.utils.type_defs import UserId
 
@@ -54,7 +54,7 @@ def rfc7662_subject(user_id: UserId, auth_type: AuthType) -> RFC7662:
 
 
 @contextlib.contextmanager
-def set_user_context(user_id: UserId, token_info: RFC7662):  # type:ignore[no-untyped-def]
+def set_user_context(user_id: UserId, token_info: RFC7662) -> Generator[None, None, None]:
     if user_id and token_info and user_id == token_info.get("sub"):
         with UserContext(user_id):
             set_auth_type(token_info["scope"])

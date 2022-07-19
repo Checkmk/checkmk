@@ -2315,17 +2315,20 @@ def dead_nagios_variable(value: str) -> bool:
     return True
 
 
-# TODO: Copy'n paste: enterprise/cmk/cee/mknotifyd/main.py, cmk/base/notify.py
+# TODO: Copy'n paste: enterprise/cmk/cee/mknotifyd/utils.py, cmk/base/notify.py
 def _log_to_history(message: str) -> None:
     _livestatus_cmd("LOG;%s" % message)
 
 
-# TODO: Copy'n paste: enterprise/cmk/cee/mknotifyd/main.py, cmk/base/notify.py
+# TODO: Copy'n paste: enterprise/cmk/cee/mknotifyd/utils.py, cmk/base/notify.py
 def _livestatus_cmd(command: str) -> None:
+    timeout = 2
     try:
-        livestatus.LocalConnection().command("[%d] %s" % (time.time(), command))
+        connection = livestatus.LocalConnection()
+        connection.set_timeout(timeout)
+        connection.command("[%d] %s" % (time.time(), command))
     except Exception as e:
         if cmk.utils.debug.enabled():
             raise
-        logger.info("WARNING: cannot send livestatus command: %s", e)
+        logger.info("WARNING: cannot send livestatus command (Timeout: %d sec): %s", timeout, e)
         logger.info("Command was: %s", command)

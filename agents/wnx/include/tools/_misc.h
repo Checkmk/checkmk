@@ -52,15 +52,31 @@ inline bool CompareIgnoreCase(wchar_t lhs, wchar_t rhs) noexcept {
     return std::towlower(lhs) == std::towlower(rhs);
 }
 
-[[nodiscard]] inline bool IsEqual(std::string_view lhs, std::string_view rhs) {
-    return std::ranges::equal(
-        lhs, rhs, [](auto l, auto r) { return CompareIgnoreCase(l, r); });
+template <class T>
+concept StringLike = std::is_convertible_v<T, std::string_view>;
+template <class T>
+concept WideStringLike = std::is_convertible_v<T, std::wstring_view>;
+template <class T>
+concept UniStringLike = StringLike<T> || WideStringLike<T>;
+
+template <class T>
+requires StringLike<T>
+[[nodiscard]] inline auto AsView(const T &p) noexcept {
+    return std::string_view{p};
 }
 
-[[nodiscard]] inline bool IsEqual(std::wstring_view lhs,
-                                  std::wstring_view rhs) {
-    return std::ranges::equal(
-        lhs, rhs, [](auto l, auto r) { return CompareIgnoreCase(l, r); });
+template <class T>
+requires WideStringLike<T>
+[[nodiscard]] inline auto AsView(const T &p) noexcept {
+    return std::wstring_view{p};
+}
+
+template <class T, class V>
+requires UniStringLike<T> && UniStringLike<V>
+[[nodiscard]] inline bool IsEqual(const T &lhs, const V &rhs) {
+    return std::ranges::equal(AsView(lhs), AsView(rhs), [](auto l, auto r) {
+        return CompareIgnoreCase(l, r);
+    });
 }
 
 [[nodiscard]] inline bool IsLess(std::string_view lhs,

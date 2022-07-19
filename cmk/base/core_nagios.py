@@ -11,7 +11,7 @@ import socket
 import sys
 from io import StringIO
 from pathlib import Path
-from typing import Any, cast, Dict, IO, Iterable, List, Literal, Optional, Set, Tuple
+from typing import Any, cast, Dict, IO, Iterable, List, Optional, Set, Tuple
 
 import cmk.utils.config_path
 import cmk.utils.paths
@@ -56,7 +56,7 @@ CHECK_INFO_BY_MIGRATED_NAME = {
 
 class NagiosCore(core_config.MonitoringCore):
     @classmethod
-    def name(cls) -> Literal["nagios"]:
+    def name(cls) -> str:
         return "nagios"
 
     def create_config(

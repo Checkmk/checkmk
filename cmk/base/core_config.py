@@ -76,7 +76,7 @@ AbstractServiceID = Union[ActiveServiceID, ServiceID]
 class MonitoringCore(abc.ABC):
     @classmethod
     @abc.abstractmethod
-    def name(cls) -> str:
+    def name(cls) -> Literal["nagios", "cmc"]:
         raise NotImplementedError
 
     @abc.abstractmethod

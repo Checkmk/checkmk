@@ -8,7 +8,7 @@ import enum
 import os
 import subprocess
 from contextlib import contextmanager
-from typing import Iterator, Optional
+from typing import Iterator, Literal, Optional
 
 # suppress "Cannot find module" error from mypy
 import livestatus
@@ -22,7 +22,6 @@ from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKTimeout
 from cmk.utils.type_defs import HostsToUpdate, TimeperiodName
 
-import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
 import cmk.base.obsolete_output as out
@@ -40,6 +39,8 @@ from cmk.base.core_config import MonitoringCore
 #   | Invoke actions affecting the core like reload/restart                |
 #   '----------------------------------------------------------------------'
 
+_LockingMode = Optional[Literal["abort", "wait"]]
+
 
 class CoreAction(enum.Enum):
     START = "start"
@@ -51,19 +52,28 @@ class CoreAction(enum.Enum):
 def do_reload(
     core: MonitoringCore,
     hosts_to_update: HostsToUpdate = None,
+    *,
+    locking_mode: _LockingMode,
 ) -> None:
-    do_restart(core, action=CoreAction.RELOAD, hosts_to_update=hosts_to_update)
+    do_restart(
+        core,
+        action=CoreAction.RELOAD,
+        hosts_to_update=hosts_to_update,
+        locking_mode=locking_mode,
+    )
 
 
 def do_restart(
     core: MonitoringCore,
     action: CoreAction = CoreAction.RESTART,
     hosts_to_update: HostsToUpdate = None,
+    *,
+    locking_mode: _LockingMode,
 ) -> None:
     try:
-        with activation_lock(mode=config.restart_locking):
+        with activation_lock(mode=locking_mode):
             core_config.do_create_config(core, hosts_to_update=hosts_to_update)
-            do_core_action(action)
+            do_core_action(action, monitoring_core=core.name())
 
     except Exception as e:
         if cmk.utils.debug.enabled():
@@ -76,7 +86,7 @@ def do_restart(
 # GUI process. In case the GUI calls an automation process, we would have a dead lock of these two
 # processes. We'll have to check whether or not we can move the locking.
 @contextmanager
-def activation_lock(mode: Optional[str]) -> Iterator[None]:
+def activation_lock(mode: Optional[Literal["abort", "wait"]]) -> Iterator[None]:
     """Try to acquire the activation lock and raise exception in case it was not possible"""
     if mode is None:
         # TODO: We really should purge this strange case from being configurable
@@ -100,11 +110,15 @@ def activation_lock(mode: Optional[str]) -> Iterator[None]:
     raise ValueError(f"Invalid lock mode: {mode}")
 
 
-def do_core_action(action: CoreAction, quiet: bool = False) -> None:
+def do_core_action(
+    action: CoreAction,
+    monitoring_core: Literal["nagios", "cmc"],
+    quiet: bool = False,
+) -> None:
     if not quiet:
         out.output("%sing monitoring core..." % action.value.title())
 
-    if config.monitoring_core == "nagios":
+    if monitoring_core == "nagios":
         os.putenv("CORE_NOVERIFY", "yes")
         command = ["%s/etc/init.d/core" % cmk.utils.paths.omd_root, action.value]
     else:

@@ -1281,7 +1281,9 @@ modes.register(
 
 def mode_restart(args: List[str]) -> None:
     cmk.base.core.do_restart(
-        create_core(config.monitoring_core), hosts_to_update=set(args) if args else None
+        create_core(config.monitoring_core),
+        hosts_to_update=set(args) if args else None,
+        locking_mode=config.restart_locking,
     )
 
 
@@ -1315,7 +1317,9 @@ modes.register(
 
 def mode_reload(args: List[str]) -> None:
     cmk.base.core.do_reload(
-        create_core(config.monitoring_core), hosts_to_update=set(args) if args else None
+        create_core(config.monitoring_core),
+        hosts_to_update=set(args) if args else None,
+        locking_mode=config.restart_locking,
     )
 
 

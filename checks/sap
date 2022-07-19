@@ -40,7 +40,7 @@ class Entry(NamedTuple):
     sid: str
     state: int
     path: str
-    reading: str
+    reading: float | None
     unit: str
     output: str
 
@@ -65,7 +65,7 @@ def parse_sap(string_table: StringTable) -> Section:
             sid=sid,
             state=_SAP_NAGIOS_STATE_MAP[int(state)],
             path=path,
-            reading=reading,
+            reading=None if reading == "-" else _safe_float(reading),
             unit=unit,
             output=" ".join(output),
         )
@@ -91,15 +91,13 @@ def inventory_sap_dialog(section: Section) -> DiscoveryResult:
 
 def check_sap_dialog(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     # First extract all infos
-    dialog = {}
-    for entry in section:
-        if entry.sid == item and entry.path.startswith(
-            "SAP CCMS Monitor Templates/Dialog Overview/"
-        ):
-            key = entry.path.split("/")[-1]
-            perfval = _safe_float(entry.reading)
-            uom = entry.unit
-            dialog[key] = perfval, uom
+    dialog = {
+        entry.path.split("/")[-1]: (entry.reading, entry.unit)
+        for entry in section
+        if entry.sid == item
+        and entry.path.startswith("SAP CCMS Monitor Templates/Dialog Overview/")
+        and entry.reading is not None
+    }
 
     if not dialog:
         # this isn't perfect. Sap data is delivered as piggyback output. Potentially multiple
@@ -191,12 +189,10 @@ def check_sap_value(item: str, params: Mapping[str, Any], section: Section) -> C
 
         if entry.sid + " " + this_path == item:
             status = entry.state
-            if entry.reading != "-":
+            if entry.reading is not None:
                 # This is a performance value, has no output
-                perfval = _safe_float(entry.reading)
-                perfdata = [("value", perfval)]
-                uom = entry.unit
-                output = "%0.2f%s" % (perfval, uom)
+                perfdata = [("value", entry.reading)]
+                output = "%0.2f%s" % (entry.reading, entry.unit)
             else:
                 # This is a status field without perfdata
                 output = entry.output
@@ -281,9 +277,7 @@ def check_sap_value_groups(item: str, params: Mapping[str, Any], section: Sectio
     for entry in section:
         if item in sap_groups_of_value(entry.path, precompiled_rule):
             status = entry.state
-            output = ""
-            if entry.reading == "-":
-                output = entry.output
+            output = entry.output if entry.reading is None else ""
 
             all_results.append((status, entry.path + output, []))
             if status > 0:

@@ -26,16 +26,6 @@ DiscoveryResult = Iterable[tuple[str, Mapping[str, Any]]]
 CheckResult = Iterable[tuple[int, str, list]]
 
 
-# This map converts between the SAP color codes (key values) and the
-# nagios state codes
-_SAP_NAGIOS_STATE_MAP = {
-    0: 0,  # GRAY  (inactive or no current info available) -> OK
-    1: 0,  # GREEN  -> OK
-    2: 1,  # YELLOW -> WARNING
-    3: 2,  # RED    -> CRITICAL
-}
-
-
 class Entry(NamedTuple):
     sid: str
     state: int
@@ -46,6 +36,19 @@ class Entry(NamedTuple):
 
 
 Section = Sequence[Entry]
+
+
+# This map converts between the SAP color codes (key values) and the
+# nagios state codes
+_SAP_NAGIOS_STATE_MAP = {
+    0: 0,  # GRAY  (inactive or no current info available) -> OK
+    1: 0,  # GREEN  -> OK
+    2: 1,  # YELLOW -> WARNING
+    3: 2,  # RED    -> CRITICAL
+}
+
+
+RESPONSE_TIME_PATH = "SAP CCMS Monitor Templates/Dialog Overview/"
 
 
 def _safe_float(raw: str) -> float:
@@ -79,14 +82,11 @@ check_info["sap"] = {
 
 
 def inventory_sap_dialog(section: Section) -> DiscoveryResult:
-    inv: list[tuple[str, Mapping[str, Any]]] = []
-    for entry in section:
-        if (
-            entry.path
-            == "SAP CCMS Monitor Templates/Dialog Overview/Dialog Response Time/ResponseTime"
-        ):
-            inv.append((entry.sid, {}))
-    return inv
+    yield from (
+        (entry.sid, {})
+        for entry in section
+        if entry.path == f"{RESPONSE_TIME_PATH}Dialog Response Time/ResponseTime"
+    )
 
 
 def check_sap_dialog(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -95,7 +95,7 @@ def check_sap_dialog(item: str, params: Mapping[str, Any], section: Section) -> 
         entry.path.split("/")[-1]: (entry.reading, entry.unit)
         for entry in section
         if entry.sid == item
-        and entry.path.startswith("SAP CCMS Monitor Templates/Dialog Overview/")
+        and entry.path.startswith(RESPONSE_TIME_PATH)
         and entry.reading is not None
     }
 

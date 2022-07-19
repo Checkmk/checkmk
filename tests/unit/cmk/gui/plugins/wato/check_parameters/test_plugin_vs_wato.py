@@ -262,7 +262,6 @@ class ErrorReporter:
         ("check", "checkgroup_parameters:statgrab_mem"),
         ("check", "checkgroup_parameters:temperature_trends"),
         ("discovery", "brocade_fcport_inventory"),
-        ("discovery", "discovery_cisco_dom_rules"),
         ("discovery", "discovery_netapp_api_fan_rules"),
         ("discovery", "discovery_netapp_api_psu_rules"),
         ("discovery", "inventory_sap_values"),

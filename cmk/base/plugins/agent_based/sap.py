@@ -17,18 +17,24 @@
 # sap_XYZ    1    50 SAP CCMS Monitor Templates/Dialog Overview/Standardized Response Time/ResponseTime(StandardTran.)   7   msec
 # sap_XYZ    1    50 SAP CCMS Monitor Templates/Dialog Overview/Users Logged On/UsersLoggedIn    97  -
 
-from typing import Any, Iterable, Literal, Mapping, Match, NamedTuple, Sequence
+from typing import Any, Literal, Mapping, Match, NamedTuple, Sequence
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import regex
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-
-DiscoveryResult = Iterable[tuple[str, Mapping[str, Any]]]
-CheckResult = Iterable[tuple[int, str, list]]
+from .agent_based_api.v1 import (
+    check_levels,
+    IgnoreResultsError,
+    Metric,
+    regex,
+    register,
+    Result,
+    Service,
+    State,
+)
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 class Entry(NamedTuple):
     sid: str
-    state: int
+    state: State
     path: str
     reading: float | None
     unit: str
@@ -41,10 +47,10 @@ Section = Sequence[Entry]
 # This map converts between the SAP color codes (key values) and the
 # nagios state codes
 _SAP_NAGIOS_STATE_MAP = {
-    0: 0,  # GRAY  (inactive or no current info available) -> OK
-    1: 0,  # GREEN  -> OK
-    2: 1,  # YELLOW -> WARNING
-    3: 2,  # RED    -> CRITICAL
+    0: State.OK,  # GRAY  (inactive or no current info available) -> OK
+    1: State.OK,  # GREEN  -> OK
+    2: State.WARN,  # YELLOW -> WARNING
+    3: State.CRIT,  # RED    -> CRITICAL
 }
 
 
@@ -76,14 +82,15 @@ def parse_sap(string_table: StringTable) -> Section:
     ]
 
 
-check_info["sap"] = {
-    "parse_function": parse_sap,
-}
+register.agent_section(
+    name="sap",
+    parse_function=parse_sap,
+)
 
 
-def inventory_sap_dialog(section: Section) -> DiscoveryResult:
+def discover_sap_dialog(section: Section) -> DiscoveryResult:
     yield from (
-        (entry.sid, {})
+        Service(item=entry.sid)
         for entry in section
         if entry.path == f"{RESPONSE_TIME_PATH}Dialog Response Time/ResponseTime"
     )
@@ -107,7 +114,7 @@ def check_sap_dialog(item: str, params: Mapping[str, Any], section: Section) -> 
         # And we would get here if the host isn't down if the item has simply disappeared from
         # the output.
         # There is no way inside this check to determine the host(s) that sent the data in info.
-        raise MKCounterWrapped("no output about sap dialogs in agent output")
+        raise IgnoreResultsError("no output about sap dialogs in agent output")
 
     def perf_clean_key(s: str) -> str:
         return s.replace("(", "_").replace(")", "_").replace(" ", "_").replace(".", "_").rstrip("_")
@@ -119,40 +126,32 @@ def check_sap_dialog(item: str, params: Mapping[str, Any], section: Section) -> 
     #     'ResponseTime': (77, 'msec'),
     # }
     for key, value in dialog.items():
-        yield check_levels(
+        yield from check_levels(
             value[0],
-            dsname=perf_clean_key(key),
-            params=params.get(key),
-            human_readable_func=lambda x, t=f"%.2f {'' if value[1] == '-' else value[1]}": t % x,
-            infoname=key,
+            metric_name=perf_clean_key(key),
+            levels_upper=params.get(key),
+            render_func=lambda x, t=f"%.2f {'' if value[1] == '-' else value[1]}": t % x,
+            label=key,
         )
 
 
-check_info["sap.dialog"] = {
-    "check_function": check_sap_dialog,
-    "group": "sap_dialog",
-    "inventory_function": inventory_sap_dialog,
-    "service_description": "%s Dialog",
-    "has_perfdata": True,
-}
+register.check_plugin(
+    name="sap_dialog",
+    service_name="%s Dialog",
+    sections=["sap"],
+    discovery_function=discover_sap_dialog,
+    check_function=check_sap_dialog,
+    check_default_parameters={},
+    check_ruleset_name="sap_dialog",
+)
 
 #
 # Simple processing of nodes reported by sap agent
 #
 
-# Holds a list of rules which are matching hosts by names or tags
-# and where each rule holds a dictionary of paramteters
-#
-# at the moment the following parameters are supported:
-# 1. match: the sap-path matching definition
-inventory_sap_values = []
-sap_value_groups = []
 
-
-def inventory_sap_value(section: Section) -> DiscoveryResult:
-    patterns = []
-    for value in host_extra_conf(host_name(), inventory_sap_values):
-        patterns.append((value["match"], value.get("limit_item_levels")))
+def discover_sap_value(params: Sequence[Mapping[str, Any]], section: Section) -> DiscoveryResult:
+    patterns = [(value["match"], value.get("limit_item_levels")) for value in params]
 
     for entry in section:
         for pattern, limit_item_levels in patterns:
@@ -163,7 +162,7 @@ def inventory_sap_value(section: Section) -> DiscoveryResult:
                     discovered_params["limit_item_levels"] = limit_item_levels
                 else:
                     path = entry.path
-                yield entry.sid + " " + path, discovered_params
+                yield Service(item=entry.sid + " " + path, parameters=discovered_params)
 
 
 def sap_value_path_matches(path: str, pattern: str | None) -> bool:
@@ -179,7 +178,6 @@ def sap_value_path_matches(path: str, pattern: str | None) -> bool:
 
 def check_sap_value(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     status = None
-    perfdata = []
     limit = params.get("limit_item_levels")
 
     for entry in section:
@@ -189,7 +187,7 @@ def check_sap_value(item: str, params: Mapping[str, Any], section: Section) -> C
             status = entry.state
             if entry.reading is not None:
                 # This is a performance value, has no output
-                perfdata = [("value", entry.reading)]
+                yield Metric("value", entry.reading)
                 output = "%0.2f%s" % (entry.reading, entry.unit)
             else:
                 # This is a status field without perfdata
@@ -197,17 +195,23 @@ def check_sap_value(item: str, params: Mapping[str, Any], section: Section) -> C
             break
 
     if status is None:
-        raise MKCounterWrapped("no output about sap value in agent output")
+        raise IgnoreResultsError("no output about sap value in agent output")
 
-    yield status, output, perfdata
+    yield Result(state=status, summary=output)
 
 
-check_info["sap.value"] = {
-    "check_function": check_sap_value,
-    "inventory_function": inventory_sap_value,
-    "service_description": "%s",
-    "has_perfdata": True,
-}
+register.check_plugin(
+    name="sap_value",
+    service_name="%s",
+    sections=["sap"],
+    discovery_function=discover_sap_value,
+    discovery_default_parameters={"match": "~$^"},
+    discovery_ruleset_name="inventory_sap_values",
+    discovery_ruleset_type=register.RuleSetType.ALL,
+    check_function=check_sap_value,
+    check_default_parameters={},
+)
+
 
 GroupPatterns = list[tuple[str, str]]
 SAPRules = list[tuple[str, tuple[str, str]]]
@@ -239,18 +243,16 @@ def get_patterns_by_group_name(patterns: SAPRules) -> Mapping[str, GroupPatterns
     return rules_by_group
 
 
-def discover_sap_value_groups(section: Section) -> DiscoveryResult:
-    # TODO: this becomes a proper argument in the new API
-    params = host_extra_conf(host_name(), sap_value_groups)
+def discover_sap_value_groups(
+    params: Sequence[Mapping[str, Any]], section: Section
+) -> DiscoveryResult:
     groups: SAPRules = [
-        pattern
-        for parameter_set in params
-        for pattern in parameter_set.get("grouping_patterns", [])
+        pattern for parameter_set in params for pattern in parameter_set["grouping_patterns"]
     ]
     patterns_by_group = get_patterns_by_group_name(groups)
 
     yield from (
-        (item, {"_group_relevant_patterns": patterns_by_group[item]})
+        Service(item=item, parameters={"_group_relevant_patterns": patterns_by_group[item]})
         for entry in section
         for item in sap_groups_of_value(entry.path, groups)
     )
@@ -261,41 +263,43 @@ def check_sap_value_groups(item: str, params: Mapping[str, Any], section: Sectio
     try:
         patterns: GroupPatterns = params["_group_relevant_patterns"]
     except KeyError:
-        yield 3, "Rules not found. Please rediscover the services of this host", []
+        yield Result(
+            state=State.UNKNOWN,
+            summary="Rules not found. Please rediscover the services of this host",
+        )
         return
 
     # this fake rules instance already only contains relevant patterns
     precompiled_rule = [(item, pattern) for pattern in patterns]
 
-    non_ok_results: list[tuple[int, str, list]] = []
-    all_results: list[tuple[int, str, list]] = []
+    results = []
     count_ok, count_crit = 0, 0
     for entry in section:
         if item in sap_groups_of_value(entry.path, precompiled_rule):
-            status = entry.state
             output = entry.output if entry.reading is None else ""
 
-            all_results.append((status, entry.path + output, []))
-            if status > 0:
+            results.append(Result(state=entry.state, notice=entry.path + output))
+            if entry.state is not State.OK:
                 count_crit += 1
-                non_ok_results.append((status, entry.path + output, []))
             else:
                 count_ok += 1
 
-    if not all_results:
-        raise MKCounterWrapped("no output about sap value groups in agent output")
+    if not results:
+        raise IgnoreResultsError("no output about sap value groups in agent output")
 
-    yield 0, "%s OK, %s Critical" % (count_ok, count_crit), []
-
-    for result in non_ok_results:
-        yield result
-
-    for state, text, metric in all_results:
-        yield state, "\n%s" % text, metric
+    yield Result(state=State.OK, summary=f"OK: {count_ok}")
+    yield Result(state=State.OK, summary=f"Critical: {count_crit}")
+    yield from results
 
 
-check_info["sap.value_groups"] = {
-    "check_function": check_sap_value_groups,
-    "inventory_function": discover_sap_value_groups,
-    "service_description": "%s",
-}
+register.check_plugin(
+    name="sap_value_groups",
+    service_name="%s",
+    sections=["sap"],
+    discovery_function=discover_sap_value_groups,
+    discovery_default_parameters={"grouping_patterns": []},
+    discovery_ruleset_name="sap_value_groups",
+    discovery_ruleset_type=register.RuleSetType.ALL,
+    check_function=check_sap_value_groups,
+    check_default_parameters={},
+)

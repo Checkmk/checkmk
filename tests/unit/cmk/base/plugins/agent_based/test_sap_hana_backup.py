@@ -169,3 +169,16 @@ def test_check_sap_hana_backup_empty() -> None:
     section_with_empty_backup = {ITEM: sap_hana_backup.Backup()}
     with pytest.raises(IgnoreResultsError):
         list(sap_hana_backup.check_sap_hana_backup(ITEM, {}, section_with_empty_backup))
+
+
+def test_cluster_check_sap_hana_backup_empty() -> None:
+    section_with_empty_backup = {ITEM: sap_hana_backup.Backup()}
+    section_by_node = {"node0": section_with_empty_backup}
+    with pytest.raises(IgnoreResultsError):
+        list(sap_hana_backup.cluster_check_sap_hana_backup(ITEM, {}, section_by_node))
+
+
+def test_cluster_check_sap_hana_backup_unexisting_item() -> None:
+    section_by_node = {"node0": SECTION}
+    with pytest.raises(IgnoreResultsError):
+        list(sap_hana_backup.cluster_check_sap_hana_backup("unexisting_item", {}, section_by_node))

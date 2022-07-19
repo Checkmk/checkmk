@@ -159,6 +159,9 @@ def cluster_check_sap_hana_backup(  # type:ignore[no-untyped-def]
         if item in node_section:
             yield from check_sap_hana_backup(item, params, node_section)
             return
+    # If the item is not found in the section, then the service should be reported as stale
+    # SUP-10479
+    raise IgnoreResultsError("Login into database failed.")
 
 
 register.check_plugin(

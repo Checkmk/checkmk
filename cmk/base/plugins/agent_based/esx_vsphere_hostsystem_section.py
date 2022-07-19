@@ -37,6 +37,10 @@ def parse_esx_vsphere_hostsystem(string_table: StringTable) -> Section:
 def host_label_function(section: Section) -> HostLabelGenerator:
     """Host label function
 
+    The function returns only label for ESXi hostsystem.
+    If you use agent_vsphere on vCenter, only for ESXi hostsystems 
+    the section "esx_vsphere_hostsystem" is generated.
+
     Labels:
 
         cmk/vsphere_object:

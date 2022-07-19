@@ -1,18 +1,25 @@
 @startuml
-
 class Manager
 class Site
 class Channel
 abstract class ABCClient
 abstract class ABCInternalClient extends ABCClient
-class Client extends ABCClient
-class HeartbeatClient extends ABCClient
 class InventoryUpdateClient extends ABCInternalClient
 
-Manager "1" *-- "many" Site : administrates >
-Site "1" *-- "many" Channel : manage &\nassign clients >
-Site "1" *-- "many" ABCClient : accept & assign\nto channel >
-Channel "1" *-- "1" ABCClient: process requests >
+Manager "1" o-- "many" Site : administrates >
+Process <|-- Site
+Site "1" o-- "many" Channel : manage &\nassign clients >
+Site "1" o-- "many" ABCClient : accept & assign\nto channel >
+Site *-- InventoryUpdater
+InventoryUpdater o-- Site
+InventoryUpdater ..> InventoryUpdateClient : instantiate
+InventoryUpdateClient o-- Site
+Channel "1" o-- "1" ABCClient: process requests >
+Thread <|-- Channel
+ABCClient o-- Site
+ABCClient o-- Channel
+ABCClient <|--- Client
+ABCClient <|--- HeartbeatClient
 
 note bottom of Client
   Processes standard
@@ -27,5 +34,4 @@ note bottom of InventoryUpdateClient
   from remote site and stores it centrally
   for the UI.
 end note
-
 @enduml

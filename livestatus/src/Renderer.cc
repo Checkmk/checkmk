@@ -68,7 +68,7 @@ void Renderer::output(char16_t value) {
 
 void Renderer::output(char32_t value) {
     if (value < 0x10000) {
-        output(char16_t(value));
+        output(static_cast<char16_t>(value));
     } else {
         OStreamStateSaver s(_os);
         _os << R"(\U)" << std::hex << std::setw(8) << std::setfill('0')
@@ -98,7 +98,8 @@ void Renderer::truncatedUTF8() {
 }
 
 void Renderer::invalidUTF8(unsigned char ch) {
-    Warning(_logger) << "invalid byte " << int(ch) << " in UTF-8 sequence";
+    Warning(_logger) << "invalid byte " << static_cast<int>(ch)
+                     << " in UTF-8 sequence";
 }
 
 void Renderer::outputByteString(const std::string &prefix,
@@ -155,8 +156,8 @@ void Renderer::outputUTF8(const char *start, const char *end) {
             if ((ch1 & 0xC0) != 0x80) {
                 return invalidUTF8(ch1);
             }
-            output(char32_t(((ch0 & 0x1F) << 6) |  //
-                            ((ch1 & 0x3F) << 0)));
+            output(static_cast<char32_t>(((ch0 & 0x1F) << 6) |  //
+                                         ((ch1 & 0x3F) << 0)));
         } else if ((ch0 & 0xF0) == 0xE0) {
             // 3 byte encoding
             if (end <= &p[2]) {
@@ -170,9 +171,9 @@ void Renderer::outputUTF8(const char *start, const char *end) {
             if ((ch2 & 0xC0) != 0x80) {
                 return invalidUTF8(ch2);
             }
-            output(char32_t(((ch0 & 0x0F) << 12) |  //
-                            ((ch1 & 0x3F) << 6) |   //
-                            ((ch2 & 0x3F) << 0)));
+            output(static_cast<char32_t>(((ch0 & 0x0F) << 12) |  //
+                                         ((ch1 & 0x3F) << 6) |   //
+                                         ((ch2 & 0x3F) << 0)));
         } else if ((ch0 & 0xF8) == 0xF0) {
             // 4 byte encoding
             if (ch0 == 0xF5 || ch0 == 0xF6 || ch0 == 0xF7) {
@@ -194,10 +195,10 @@ void Renderer::outputUTF8(const char *start, const char *end) {
             if ((ch3 & 0xC0) != 0x80) {
                 return invalidUTF8(ch3);
             }
-            output(char32_t(((ch0 & 0x07) << 18) |  //
-                            ((ch1 & 0x3F) << 12) |  //
-                            ((ch2 & 0x3f) << 6) |   //
-                            ((ch3 & 0x3f) << 0)));
+            output(static_cast<char32_t>(((ch0 & 0x07) << 18) |  //
+                                         ((ch1 & 0x3F) << 12) |  //
+                                         ((ch2 & 0x3f) << 6) |   //
+                                         ((ch3 & 0x3f) << 0)));
         } else {
             return invalidUTF8(ch0);
         }
@@ -230,8 +231,8 @@ void Renderer::outputMixed(const char *start, const char *end) {
             if ((ch1 & 0xC0) != 0x80) {
                 return invalidUTF8(ch1);
             }
-            output(char32_t(((ch0 & 0x1F) << 6) |  //
-                            ((ch1 & 0x3F) << 0)));
+            output(static_cast<char32_t>(((ch0 & 0x1F) << 6) |  //
+                                         ((ch1 & 0x3F) << 0)));
         } else {
             // Assume Latin1.
             output(char32_t{ch0});

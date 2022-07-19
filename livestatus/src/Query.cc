@@ -433,14 +433,14 @@ void Query::parseColumnsLine(const char *line) {
 }
 
 void Query::parseSeparatorsLine(char *line) {
-    std::string dsep =
-        std::string(1, char(nextNonNegativeIntegerArgument(&line)));
-    std::string fsep =
-        std::string(1, char(nextNonNegativeIntegerArgument(&line)));
-    std::string lsep =
-        std::string(1, char(nextNonNegativeIntegerArgument(&line)));
-    std::string hsep =
-        std::string(1, char(nextNonNegativeIntegerArgument(&line)));
+    std::string dsep = std::string(
+        1, static_cast<char>(nextNonNegativeIntegerArgument(&line)));
+    std::string fsep = std::string(
+        1, static_cast<char>(nextNonNegativeIntegerArgument(&line)));
+    std::string lsep = std::string(
+        1, static_cast<char>(nextNonNegativeIntegerArgument(&line)));
+    std::string hsep = std::string(
+        1, static_cast<char>(nextNonNegativeIntegerArgument(&line)));
     _separators = CSVSeparators(dsep, fsep, lsep, hsep);
 }
 

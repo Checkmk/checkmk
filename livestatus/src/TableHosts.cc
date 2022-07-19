@@ -751,7 +751,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             auto dir =
                 mc->mkLogwatchPath().empty() || std::string{hst.name}.empty()
                     ? std::filesystem::path()
-                    : std::filesystem::path(mc->mkLogwatchPath()) /
+                    : std::filesystem::path{mc->mkLogwatchPath()} /
                           pnp_cleanup(hst.name);
             return getLogwatchList(dir, col);
         }));

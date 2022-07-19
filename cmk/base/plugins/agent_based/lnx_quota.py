@@ -3,15 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Example output from old agent until version 1.2.6
-# <<<lnx_quota>>>
-# [[[/home]]]
-# root      -- 62743228       0       0      0  137561     0     0      0
-# proxy     --   288648       0       0      0   14370     0     0      0
-# http      --      208       0       0      0      53     0     0      0
-# mysql     --  7915856       0       0      0     173     0     0      0
-
-# Example output from new agent since version 1.2.8
 # [[[usr:/home]]]
 # root      -- 62743228       0       0      0  137561     0     0      0
 # proxy     --   288648       0       0      0   14370     0     0      0
@@ -23,37 +14,97 @@
 # http      --      208       0       0      0      53     0     0      0
 # mysql     --  7915856       0       0      0     173     0     0      0
 
-
+import abc
+import dataclasses
+import enum
 import time
-from typing import Dict, Mapping, Sequence, Tuple
+from collections import defaultdict
+from typing import Iterable, Mapping, Sequence
 
-from .agent_based_api.v1 import register, render, Result, Service, State
+from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
-_SECTION = Mapping[str, Mapping[str, Mapping[str, Sequence[int]]]]
-
-_DEFAULT_PARAMETERS = {"user": True}
+_DEFAULT_PARAMETERS = {"user": True, "group": False}
 
 
-def parse(string_table: StringTable) -> _SECTION:
-    parsed: Dict = {}
+class QuotasType(enum.Enum):
+    User = "usr"
+    Group = "grp"
+
+
+# https://github.com/python/mypy/issues/5374
+@dataclasses.dataclass(frozen=True)  # type: ignore[misc]
+class Quota(abc.ABC):
+    owner: str
+    used: int
+    soft: int
+    hard: int
+    grace: int
+
+    @staticmethod
+    @abc.abstractmethod
+    def human_readable(v: float) -> str:
+        ...
+
+    @staticmethod
+    @abc.abstractmethod
+    def exceeded_name() -> str:
+        ...
+
+    def exceeded_no_limit(self) -> str:
+        return f"{self.owner} is within quota limits"
+
+    def exceeded_soft_limit(self) -> str:
+        return f"{self.owner} exceeded {self.exceeded_name()} soft limit {self.human_readable(self.used)}/{self.human_readable(self.soft)}"
+
+    def exceeded_hard_limit(self) -> str:
+        return f"{self.owner} exceeded {self.exceeded_name()} hard limit {self.human_readable(self.used)}/{self.human_readable(self.hard)}"
+
+    def no_limits_set(self) -> str:
+        return f"{self.owner} has no {self.exceeded_name()} limits set"
+
+
+@dataclasses.dataclass(frozen=True)
+class BlockQuota(Quota):
+    @staticmethod
+    def human_readable(v: float) -> str:
+        return render.bytes(v)
+
+    @staticmethod
+    def exceeded_name() -> str:
+        return "space"
+
+
+@dataclasses.dataclass(frozen=True)
+class FileQuota(Quota):
+    @staticmethod
+    def human_readable(v: float) -> str:
+        return "%d" % v
+
+    @staticmethod
+    def exceeded_name() -> str:
+        return "file"
+
+
+_Section = Mapping[str, Mapping[QuotasType, Sequence[Quota]]]
+
+
+def parse(string_table: StringTable) -> _Section:
+    parsed: dict = defaultdict(lambda: defaultdict(list))
+
     mode = None
-    filesys = None
+    filesys_name = None
 
     for line in string_table:
         if line[0].startswith("[[["):
             # new filesystem detected
-            mode, filesys = line[0][3:-3].split(":")
+            mode, filesys_name = (line[0][3:-3]).split(":")
 
-            # new filesystem for quota
-            parsed.setdefault(filesys, {})
-            parsed[filesys].setdefault(mode, {})
-
-        elif filesys and mode and len(line) == 10:
+        elif filesys_name and mode and len(line) == 10:
             # new table entry for quota
-            parsed[filesys][mode][line[0]] = [int(x) * 1024 for x in line[2:5]] + [
-                int(x) for x in line[5:]
-            ]
+            cast_quota = [int(x) * 1024 for x in line[2:5]] + [int(x) for x in line[5:]]
+            parsed[filesys_name][QuotasType(mode)].append(BlockQuota(line[0], *cast_quota[:4]))
+            parsed[filesys_name][QuotasType(mode)].append(FileQuota(line[0], *cast_quota[4:]))
 
     return parsed
 
@@ -64,80 +115,62 @@ register.agent_section(
 )
 
 
-def discover(section: _SECTION) -> DiscoveryResult:
-    for item, data in section.items():
-        yield Service(item=item, parameters={"user": "usr" in data, "group": "grp" in data})
+def discover(section: _Section) -> DiscoveryResult:
+    for filesys_name, data in section.items():
+        yield Service(
+            item=filesys_name,
+            parameters={
+                "user": (QuotasType.User in data),
+                "group": (QuotasType.Group in data),
+            },
+        )
 
 
-def lnx_quota_limit_check(
-    mode: str, what: str, user: str, used: int, soft: int, hard: int, grace: int
-) -> Tuple[int, str]:
-    def fmt(value: float, what: str) -> str:
-        return "%d" % value if what == "files" else render.bytes(value)
-
-    if mode == "usr":
-        txt = "User %s" % user
-    elif mode == "grp":
-        txt = "Group %s" % user
-
-    if used > hard:
-        # check, if hard limit is exceeded
-        state = 2
-        if what == "blocks":
-            txt += " exceeded space hard limit %s/%s" % (fmt(used, what), fmt(hard, what))
-        elif what == "files":
-            txt += " exceeded file hard limit %s/%s" % (fmt(used, what), fmt(hard, what))
-    elif soft != 0 and used > soft:
-        # check, if soft limit is exceeded
-        state = 1
-        if what == "blocks":
-            txt += " exceeded space soft limit %s/%s" % (fmt(used, what), fmt(soft, what))
-        elif what == "files":
-            txt += " exceeded file soft limit %s/%s" % (fmt(used, what), fmt(soft, what))
-
-        if grace != 0:
-            # check, if grace time is specified
-            if grace <= time.time():
-                # check, if it was in grace time
-                state = 2
-                txt += ", grace time exceeded"
-            else:
-                # check, if it is in grace time
-                state = 1
-                txt += ", within grace time"
-    else:
-        state = 0
-        txt = ""
-    return state, txt
-
-
-def check(item: str, params: Mapping[str, bool], section: _SECTION) -> CheckResult:
-    if not (data := section.get(item)):
+def lnx_quota_limit_check(quota: Quota, filesys_mode: QuotasType) -> Iterable[Result]:
+    if quota.soft == 0 and quota.hard == 0:
+        yield Result(state=State.OK, notice=f"{filesys_mode.name} {quota.no_limits_set()}")
         return
-    for param_key, mode, name in [("user", "usr", "users"), ("group", "grp", "groups")]:
-        if params.get(param_key) is True:
-            at_least_one_problematic = False
-            for user, values in data[mode].items():
-                for what, (used, soft, hard, grace) in [
-                    ("blocks", values[:4]),
-                    ("files", values[4:]),
-                ]:
 
-                    if soft == 0 and hard == 0:
-                        continue  # skip entries without limits
+    (result,) = check_levels(
+        value=quota.used, levels_upper=(quota.soft, quota.hard), notice_only=True
+    )
+    match (result.state):
+        case State.OK:
+            yield Result(state=State.OK, notice=f"{filesys_mode.name} {quota.exceeded_no_limit()}")
+        case State.WARN:
+            if quota.soft != 0:
+                yield Result(
+                    state=State.WARN, summary=f"{filesys_mode.name} {quota.exceeded_soft_limit()}"
+                )
 
-                    state, txt = lnx_quota_limit_check(mode, what, user, used, soft, hard, grace)
+                if quota.grace != 0:
+                    # check, if grace time is specifieds
+                    if quota.grace <= time.time():
+                        yield Result(state=State.CRIT, summary="grace time exceeded")
+                    else:
+                        yield Result(state=State.WARN, summary="within grace time")
 
-                    if txt:
-                        at_least_one_problematic = True
-                    if state != 0 or txt:
-                        yield Result(state=State(state), summary=txt)
+        case State.CRIT:
+            yield Result(
+                state=State.CRIT, summary=f"{filesys_mode.name} {quota.exceeded_hard_limit()}"
+            )
 
-            if not at_least_one_problematic:
-                yield Result(state=State.OK, summary="All %s within quota limits" % name)
 
-    if params.get("user") is False and params.get("group") is False:
+def check(item: str, params: Mapping[str, bool], section: _Section) -> CheckResult:
+    if not (filesys := section.get(item)):
+        return
+
+    if params["user"] is False and params["group"] is False:
         yield Result(state=State.OK, summary="Disabled quota checking")
+        return
+    for mode, quotas in filesys.items():
+        if params[mode.name.lower()] is False:
+            continue
+        for quota in quotas:
+
+            # https://github.com/PyCQA/pylint/issues/5845
+
+            yield from lnx_quota_limit_check(quota, mode)  # pylint: disable=not-an-iterable
 
 
 register.check_plugin(

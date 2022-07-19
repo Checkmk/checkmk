@@ -48,14 +48,74 @@ _STRING_TABLE = [
 
 def test_parse() -> None:
     assert lnx_quota.parse(_STRING_TABLE) == {
-        "/": {"usr": {"root": [6147506176, 0, 0, 0, 167394, 0, 0, 0]}},
         "/nussecke": {
-            "grp": {
-                "root": [6147506176, 0, 0, 0, 167394, 0, 100000000, 0],
-                "www-data": [4510400512, 0, 0, 0, 49314, 31415, 100000000, 0],
-            }
+            lnx_quota.QuotasType("grp"): [
+                lnx_quota.BlockQuota(
+                    owner="root",
+                    used=6147506176,
+                    soft=0,
+                    hard=0,
+                    grace=0,
+                ),
+                lnx_quota.FileQuota(
+                    owner="root",
+                    used=167394,
+                    soft=0,
+                    hard=100000000,
+                    grace=0,
+                ),
+                lnx_quota.BlockQuota(
+                    owner="www-data",
+                    used=4510400512,
+                    soft=0,
+                    hard=0,
+                    grace=0,
+                ),
+                lnx_quota.FileQuota(
+                    owner="www-data",
+                    used=49314,
+                    soft=31415,
+                    hard=100000000,
+                    grace=0,
+                ),
+            ],
         },
-        "/quarktasche": {"usr": {"root": [6147506176, 0, 0, 0, 167394, 0, 100000000, 0]}},
+        "/": {
+            lnx_quota.QuotasType("usr"): [
+                lnx_quota.BlockQuota(
+                    owner="root",
+                    used=6147506176,
+                    soft=0,
+                    hard=0,
+                    grace=0,
+                ),
+                lnx_quota.FileQuota(
+                    owner="root",
+                    used=167394,
+                    soft=0,
+                    hard=0,
+                    grace=0,
+                ),
+            ],
+        },
+        "/quarktasche": {
+            lnx_quota.QuotasType("usr"): [
+                lnx_quota.BlockQuota(
+                    owner="root",
+                    used=6147506176,
+                    soft=0,
+                    hard=0,
+                    grace=0,
+                ),
+                lnx_quota.FileQuota(
+                    owner="root",
+                    used=167394,
+                    soft=0,
+                    hard=100000000,
+                    grace=0,
+                ),
+            ],
+        },
     }
 
 
@@ -74,7 +134,10 @@ def test_discover() -> None:
             "/",
             lnx_quota._DEFAULT_PARAMETERS,
             _STRING_TABLE,
-            [Result(state=State.OK, summary="All users within quota limits")],
+            [
+                Result(state=State.OK, notice="User root has no space limits set"),
+                Result(state=State.OK, notice="User root has no file limits set"),
+            ],
             id="everything ok",
         ),
         pytest.param(
@@ -98,12 +161,17 @@ def test_discover() -> None:
                 ["----------------------------------------------------------------------"],
                 ["root", "--", "6003424", "10", "0", "0", "167394", "0", "0", "0"],
             ],
-            [Result(state=State.CRIT, summary="User root exceeded space hard limit 5.73 GiB/0 B")],
+            [
+                Result(
+                    state=State.CRIT, summary="User root exceeded space hard limit 5.73 GiB/0 B"
+                ),
+                Result(state=State.OK, notice="User root has no file limits set"),
+            ],
             id="quota limits hard reached",
         ),
         pytest.param(
             "/nussecke",
-            {"group": True},
+            {"user": False, "group": True},
             [
                 ["[[[grp:/nussecke]]]"],
                 ["***", "Report", "for", "group", "quotas", "on", "device", "/huiboo"],
@@ -118,6 +186,7 @@ def test_discover() -> None:
                 Result(
                     state=State.CRIT, summary="Group root exceeded space hard limit 5.73 GiB/0 B"
                 ),
+                Result(state=State.OK, notice="Group www-data has no space limits set"),
                 Result(
                     state=State.WARN, summary="Group www-data exceeded file soft limit 49314/31415"
                 ),

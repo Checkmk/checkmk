@@ -466,7 +466,6 @@ class ErrorReporter:
         ("check", "liebert_fans", "checkgroup_parameters:hw_fans_perc"),
         ("check", "liebert_fans_condenser", "checkgroup_parameters:hw_fans_perc"),
         ("check", "liebert_humidity_air", "checkgroup_parameters:humidity"),
-        ("check", "lnx_quota", "checkgroup_parameters:lnx_quota"),
         ("check", "logins", "checkgroup_parameters:logins"),
         ("check", "logwatch_ec", "checkgroup_parameters:logwatch_ec"),
         ("check", "lvm_vgs", "checkgroup_parameters:volume_groups"),

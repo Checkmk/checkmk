@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-def cisco_sensor_item(description, sensor_id):
+def cisco_sensor_item(description: str, sensor_id: str) -> str:
     # trial_string can be:
     # Empty
     # A single string
@@ -34,5 +34,5 @@ def cisco_sensor_item(description, sensor_id):
             item += " " + sensor_id
 
         return item.replace("#", " ")
-    except Exception:
+    except (IndexError, TypeError):
         return sensor_id

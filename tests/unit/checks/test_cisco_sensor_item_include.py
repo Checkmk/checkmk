@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.base.check_legacy_includes.cisco_sensor_item import cisco_sensor_item
+from cmk.base.plugins.agent_based.utils.cisco_sensor_item import cisco_sensor_item
 
 pytestmark = pytest.mark.checks
 

@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.cisco_sensor_item import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.cisco_sensor_item import cisco_sensor_item
 
 cisco_fan_state_mapping = {
     "1": (0, "normal"),

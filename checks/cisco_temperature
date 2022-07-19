@@ -5,9 +5,9 @@
 
 from typing import Any, Iterable, Mapping, Sequence, Union
 
-from cmk.base.check_legacy_includes.cisco_sensor_item import cisco_sensor_item
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.utils.cisco_sensor_item import cisco_sensor_item
 from cmk.base.plugins.agent_based.utils.temperature import TempParamDict
 
 CheckResult = Iterable[tuple[int, str, list]]

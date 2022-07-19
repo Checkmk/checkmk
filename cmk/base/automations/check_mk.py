@@ -384,7 +384,11 @@ class AutomationRenameHosts(Automation):
         # it now.
         core_was_running = self._core_is_running()
         if core_was_running:
-            cmk.base.core.do_core_action(CoreAction.STOP, quiet=True)
+            cmk.base.core.do_core_action(
+                CoreAction.STOP,
+                quiet=True,
+                monitoring_core=config.monitoring_core,
+            )
 
         try:
             for oldname, newname in renamings:
@@ -1001,6 +1005,7 @@ class AutomationRestart(Automation):
                     create_core(config.monitoring_core),
                     self._mode(),
                     hosts_to_update=None if not args else set(args),
+                    locking_mode=config.restart_locking,
                 )
             except (MKBailOut, MKGeneralException) as e:
                 raise MKAutomationError(str(e))

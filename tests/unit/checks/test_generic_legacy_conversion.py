@@ -2170,6 +2170,7 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "sansymphony_ports",
         "sansymphony_serverstatus",
         "sansymphony_virtualdiskstatus",
+        "sap",
         "sap.dialog",
         "sap.value",
         "sap.value_groups",

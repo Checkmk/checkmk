@@ -247,7 +247,6 @@ def test_section_parse_function_does_something(fix_register) -> None:  # type:ig
         "netctr",
         "netif",
         "nvidia",
-        "sap",
         "siemens_plc",
         "vms_system",
         "winperf",

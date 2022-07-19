@@ -17,7 +17,7 @@
 # sap_XYZ    1    50 SAP CCMS Monitor Templates/Dialog Overview/Standardized Response Time/ResponseTime(StandardTran.)   7   msec
 # sap_XYZ    1    50 SAP CCMS Monitor Templates/Dialog Overview/Users Logged On/UsersLoggedIn    97  -
 
-from typing import Any, Iterable, Literal, Mapping, Match
+from typing import Any, Iterable, Literal, Mapping, Match, NamedTuple, Sequence
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import regex
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
@@ -36,6 +36,18 @@ sap_nagios_state_map = [
 ]
 
 
+class Entry(NamedTuple):
+    sid: str
+    state: str
+    path: str
+    reading: str
+    unit: str
+    output: str
+
+
+Section = Sequence[Entry]
+
+
 def _safe_float(raw: str) -> float:
     """
     Taken from legacy API for now to allow migration.
@@ -47,25 +59,46 @@ def _safe_float(raw: str) -> float:
         return 0.0
 
 
-def inventory_sap_dialog(info: StringTable) -> DiscoveryResult:
+def parse_sap(string_table: StringTable) -> Section:
+    return [
+        Entry(
+            sid=sid,
+            state=state,
+            path=path,
+            reading=reading,
+            unit=unit,
+            output=" ".join(output),
+        )
+        for sid, state, _unused, path, reading, unit, *output in string_table
+    ]
+
+
+check_info["sap"] = {
+    "parse_function": parse_sap,
+}
+
+
+def inventory_sap_dialog(section: Section) -> DiscoveryResult:
     inv: list[tuple[str, Mapping[str, Any]]] = []
-    for line in info:
+    for entry in section:
         if (
-            line[3]
+            entry.path
             == "SAP CCMS Monitor Templates/Dialog Overview/Dialog Response Time/ResponseTime"
         ):
-            inv.append((line[0], {}))
+            inv.append((entry.sid, {}))
     return inv
 
 
-def check_sap_dialog(item: str, params: Mapping[str, Any], info: StringTable) -> CheckResult:
+def check_sap_dialog(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     # First extract all infos
     dialog = {}
-    for line in info:
-        if line[0] == item and line[3].startswith("SAP CCMS Monitor Templates/Dialog Overview/"):
-            key = line[3].split("/")[-1]
-            perfval = _safe_float(line[4])
-            uom = line[5]
+    for entry in section:
+        if entry.sid == item and entry.path.startswith(
+            "SAP CCMS Monitor Templates/Dialog Overview/"
+        ):
+            key = entry.path.split("/")[-1]
+            perfval = _safe_float(entry.reading)
+            uom = entry.unit
             dialog[key] = perfval, uom
 
     if not dialog:
@@ -116,23 +149,23 @@ inventory_sap_values = []
 sap_value_groups = []
 
 
-def inventory_sap_value(info: StringTable) -> DiscoveryResult:
+def inventory_sap_value(section: Section) -> DiscoveryResult:
     inv = []
 
     patterns = []
     for value in host_extra_conf(host_name(), inventory_sap_values):
         patterns.append((value["match"], value.get("limit_item_levels")))
 
-    for line in info:
+    for entry in section:
         for pattern, limit_item_levels in patterns:
-            if sap_value_path_matches(line[3], pattern):
+            if sap_value_path_matches(entry.path, pattern):
                 params = {}
                 if limit_item_levels:
-                    path = "/".join(line[3].split("/")[-limit_item_levels:])
+                    path = "/".join(entry.path.split("/")[-limit_item_levels:])
                     params["limit_item_levels"] = limit_item_levels
                 else:
-                    path = line[3]
-                inv.append((line[0] + " " + path, params))
+                    path = entry.path
+                inv.append((entry.sid + " " + path, params))
 
     return inv
 
@@ -148,25 +181,25 @@ def sap_value_path_matches(path: str, pattern: str | None) -> bool:
     return path == pattern
 
 
-def check_sap_value(item: str, params: Mapping[str, Any], info: StringTable) -> CheckResult:
+def check_sap_value(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     status = None
     perfdata = []
     limit = params.get("limit_item_levels")
 
-    for line in info:
-        this_path = "/".join(line[3].split("/")[-limit:]) if limit else line[3]
+    for entry in section:
+        this_path = "/".join(entry.path.split("/")[-limit:]) if limit else entry.path
 
-        if line[0] + " " + this_path == item:
-            status = sap_nagios_state_map[int(line[1])]
-            if line[4] != "-":
+        if entry.sid + " " + this_path == item:
+            status = sap_nagios_state_map[int(entry.state)]
+            if entry.reading != "-":
                 # This is a performance value, has no output
-                perfval = _safe_float(line[4])
+                perfval = _safe_float(entry.reading)
                 perfdata = [("value", perfval)]
-                uom = line[5]
+                uom = entry.unit
                 output = "%0.2f%s" % (perfval, uom)
             else:
                 # This is a status field without perfdata
-                output = " ".join(line[6:])
+                output = entry.output
             break
 
     if status is None:
@@ -214,15 +247,14 @@ def get_patterns_by_group_name(params: SAPRules) -> Mapping[str, GroupPatterns]:
     return rules_by_group
 
 
-def discover_sap_value_groups(info: StringTable) -> DiscoveryResult:
+def discover_sap_value_groups(section: Section) -> DiscoveryResult:
     # TODO: this becomes a proper argument in the new API
     params = host_extra_conf(host_name(), sap_value_groups)
 
     inventory = set()
 
-    for line in info:
-        path = line[3]
-        inventory.update(sap_groups_of_value(path, params))
+    for entry in section:
+        inventory.update(sap_groups_of_value(entry.path, params))
 
     if not inventory:
         return
@@ -232,7 +264,7 @@ def discover_sap_value_groups(info: StringTable) -> DiscoveryResult:
         yield (item, {"_group_relevant_patterns": patterns_by_group[item]})
 
 
-def check_sap_value_groups(item: str, params: Mapping[str, Any], info: StringTable) -> CheckResult:
+def check_sap_value_groups(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
 
     try:
         patterns: GroupPatterns = params["_group_relevant_patterns"]
@@ -246,18 +278,17 @@ def check_sap_value_groups(item: str, params: Mapping[str, Any], info: StringTab
     non_ok_results: list[tuple[int, str, list]] = []
     all_results: list[tuple[int, str, list]] = []
     count_ok, count_crit = 0, 0
-    for line in info:
-        path = line[3]
-        if item in sap_groups_of_value(path, precompiled_rule):
-            status = sap_nagios_state_map[int(line[1])]
+    for entry in section:
+        if item in sap_groups_of_value(entry.path, precompiled_rule):
+            status = sap_nagios_state_map[int(entry.state)]
             output = ""
-            if line[4] == "-":
-                output = " ".join(line[6:])
+            if entry.reading == "-":
+                output = entry.output
 
-            all_results.append((status, path + output, []))
+            all_results.append((status, entry.path + output, []))
             if status > 0:
                 count_crit += 1
-                non_ok_results.append((status, path + output, []))
+                non_ok_results.append((status, entry.path + output, []))
             else:
                 count_ok += 1
 

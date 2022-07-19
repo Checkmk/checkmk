@@ -6,12 +6,14 @@
 from typing import Any, Mapping, Sequence
 
 import pytest
+from freezegun import freeze_time
 
 from tests.testlib import SpecialAgent
 
 pytestmark = pytest.mark.checks
 
 
+@freeze_time("2022-01-01")
 @pytest.mark.parametrize(
     "params, expected_result",
     [
@@ -22,11 +24,53 @@ pytestmark = pytest.mark.checks
                 "test",
                 "--credentials",
                 "definitely some json",
+                "--month",
+                "2022-01",
                 "--services",
                 "gcs",
                 "run",
             ],
             id="minimal case",
+        ),
+        pytest.param(
+            {
+                "project": "test",
+                "credentials": "definitely some json",
+                "cost": {"tableid": "checkmk"},
+                "services": [],
+            },
+            [
+                "--project",
+                "test",
+                "--credentials",
+                "definitely some json",
+                "--month",
+                "2022-01",
+                "--cost",
+                "checkmk",
+            ],
+            id="cost monitoring only",
+        ),
+        pytest.param(
+            {
+                "project": "test",
+                "credentials": "definitely some json",
+                "cost": {"tableid": "checkmk"},
+                "services": ["gcs"],
+            },
+            [
+                "--project",
+                "test",
+                "--credentials",
+                "definitely some json",
+                "--month",
+                "2022-01",
+                "--cost",
+                "checkmk",
+                "--services",
+                "gcs",
+            ],
+            id="cost monitoring and checks",
         ),
     ],
 )

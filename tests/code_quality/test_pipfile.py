@@ -246,7 +246,6 @@ CEE_UNUSED_PACKAGES = [
     "click",
     "defusedxml",
     "docutils",
-    "google-api-python-client",
     "grpcio",
     "gunicorn",
     "idna",

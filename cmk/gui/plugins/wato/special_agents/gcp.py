@@ -42,11 +42,29 @@ def _valuespec_special_agents_gcp():
                         "filestore",
                         "redis",
                     ],
-                    allow_empty=False,
+                    allow_empty=True,
+                ),
+            ),
+            (
+                "cost",
+                Dictionary(
+                    title="Costs",
+                    elements=[
+                        (
+                            "tableid",
+                            TextInput(
+                                title="BigQuery table ID",
+                                help=_(
+                                    "Table ID found in the Details of the table in the SQL workspace of BigQuery"
+                                ),
+                            ),
+                        )
+                    ],
+                    required_keys=["tableid"],
                 ),
             ),
         ],
-        optional_keys=[],
+        optional_keys=["cost"],
     )
 
 

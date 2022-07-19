@@ -5,7 +5,7 @@
 # mypy: disallow_untyped_defs
 import datetime
 import json
-from typing import Any, Callable, Iterable, Optional, Sequence
+from typing import Any, Callable, Iterable, Optional, Sequence, Tuple
 
 import pytest
 from _pytest.capture import CaptureFixture
@@ -133,6 +133,27 @@ class FakeClient:
     def list_assets(self, request: Any) -> Iterable[asset_v1.Asset]:
         return self.asset_client.list_assets(request)
 
+    def list_costs(
+        self, tableid: str, month: datetime.datetime
+    ) -> Tuple[agent_gcp.Schema, agent_gcp.Pages]:
+        schema = [
+            {"name": "name", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "cost", "type": "FLOAT", "mode": "NULLABLE"},
+            {"name": "currency", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "month", "type": "STRING", "mode": "NULLABLE"},
+        ]
+        rows = [
+            [
+                {"f": [{"v": "test"}, {"v": "42.21"}, {"v": "EUR"}, {"v": "202207"}]},
+                {"f": [{"v": "checkmk"}, {"v": "3.1415"}, {"v": "EUR"}, {"v": "202207"}]},
+            ],
+            [
+                {"f": [{"v": "test"}, {"v": "1337.0"}, {"v": "EUR"}, {"v": "202206"}]},
+                {"f": [{"v": "checkmk"}, {"v": "2.71"}, {"v": "EUR"}, {"v": "202206"}]},
+            ],
+        ]
+        return schema, rows
+
 
 def collector_factory(
     container: list[agent_gcp.Section],
@@ -148,7 +169,7 @@ def fixture_agent_output() -> Sequence[agent_gcp.Section]:
     client = FakeClient("test", FakeMonitoringClient(), FakeAssetClient())
     sections: list[agent_gcp.Section] = []
     collector = collector_factory(sections)
-    agent_gcp.run(client, list(agent_gcp.SERVICES.values()), [], serializer=collector)
+    agent_gcp.run(client, list(agent_gcp.SERVICES.values()), [], cost=None, serializer=collector)
     return list(sections)
 
 
@@ -183,7 +204,7 @@ def test_metric_retrieval() -> None:
     client = FakeClient("test", FakeMonitoringClient(timeseries), FakeAssetClient())
     sections: list[agent_gcp.Section] = []
     collector = collector_factory(sections)
-    agent_gcp.run(client, [agent_gcp.RUN], [], serializer=collector)
+    agent_gcp.run(client, [agent_gcp.RUN], [], cost=None, serializer=collector)
     result_section = next(
         s for s in sections if isinstance(s, agent_gcp.ResultSection) and s.name == "cloud_run"
     )
@@ -235,7 +256,7 @@ def piggy_back_sections_fixture() -> Sequence[agent_gcp.PiggyBackSection]:
             )
         ],
     )
-    agent_gcp.run(client, [], [piggy_back_section], serializer=collector)
+    agent_gcp.run(client, [], [piggy_back_section], cost=None, serializer=collector)
     return list(s for s in sections if isinstance(s, agent_gcp.PiggyBackSection))
 
 
@@ -308,7 +329,7 @@ def fixture_gce_sections() -> Sequence[agent_gcp.PiggyBackSection]:
     sections: list[agent_gcp.Section] = []
     collector = collector_factory(sections)
 
-    agent_gcp.run(client, [], [agent_gcp.GCE], serializer=collector)
+    agent_gcp.run(client, [], [agent_gcp.GCE], cost=None, serializer=collector)
     return list(s for s in sections if isinstance(s, agent_gcp.PiggyBackSection))
 
 
@@ -387,3 +408,37 @@ def test_metric_requests_additional_groupby_fields(interval: monitoring_v3.TimeI
         ),
     }
     assert request == expected
+
+
+@pytest.fixture(name="cost_output")
+def fixture_cost_output() -> Sequence[agent_gcp.Section]:
+    client = FakeClient("test", FakeMonitoringClient(), FakeAssetClient())
+    sections: list[agent_gcp.Section] = []
+    collector = collector_factory(sections)
+    cost = agent_gcp.CostArgument("some table", datetime.datetime(year=2022, month=7, day=12))
+    agent_gcp.run(client, list(agent_gcp.SERVICES.values()), [], cost=cost, serializer=collector)
+    return list(sections)
+
+
+def test_output_contains_cost_section(cost_output: Sequence[agent_gcp.Section]) -> None:
+    assert "cost" in {s.name for s in cost_output}
+    asset_sections = list(s for s in cost_output if isinstance(s, agent_gcp.AssetSection))
+    assert len(asset_sections) == 1
+
+
+def test_output_cost_sectoin(
+    cost_output: Sequence[agent_gcp.Section], capsys: CaptureFixture
+) -> None:
+    assert "cost" in {s.name for s in cost_output}
+    sections = list(s for s in cost_output if isinstance(s, agent_gcp.CostSection))
+    agent_gcp.gcp_serializer(sections)
+    captured = capsys.readouterr()
+    lines = captured.out.rstrip().split("\n")
+    assert lines == [
+        "<<<gcp_cost:sep(0)>>>",
+        '{"query_month": "202207"}',
+        '{"project": "test", "month": "202207", "amount": 42.21, "currency": "EUR"}',
+        '{"project": "checkmk", "month": "202207", "amount": 3.1415, "currency": "EUR"}',
+        '{"project": "test", "month": "202206", "amount": 1337.0, "currency": "EUR"}',
+        '{"project": "checkmk", "month": "202206", "amount": 2.71, "currency": "EUR"}',
+    ]

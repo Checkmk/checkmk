@@ -3,15 +3,31 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
+import datetime
 import json
 import time
 from dataclasses import dataclass, field
 from functools import cache
-from typing import Any, Callable, Iterable, Iterator, Mapping, Optional, Protocol, Sequence, Union
+from typing import (
+    Any,
+    Callable,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Protocol,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 from google.cloud import asset_v1, monitoring_v3
 from google.cloud.monitoring_v3 import Aggregation as gAggregation
 from google.cloud.monitoring_v3.types import TimeSeries
+from google.oauth2 import service_account  # type: ignore[import]
+from googleapiclient.discovery import build, Resource  # type: ignore[import]
+from googleapiclient.http import HttpRequest  # type: ignore[import]
 
 # Those are enum classes defined in the Aggregation class. Not nice but works
 Aligner = gAggregation.Aligner
@@ -43,6 +59,11 @@ class Asset:
         return cls(asset=asset)
 
 
+Schema = Sequence[Mapping[str, str]]
+Page = Sequence[Mapping[str, Sequence[Mapping[str, str]]]]
+Pages = Sequence[Page]
+
+
 class ClientProtocol(Protocol):
     @property
     def project(self) -> str:
@@ -52,6 +73,9 @@ class ClientProtocol(Protocol):
         ...
 
     def list_assets(self, request: Any) -> Iterable[asset_v1.Asset]:
+        ...
+
+    def list_costs(self, tableid: str, month: datetime.datetime) -> Tuple[Schema, Pages]:
         ...
 
 
@@ -68,11 +92,47 @@ class Client:
     def asset(self) -> asset_v1.AssetServiceClient:
         return asset_v1.AssetServiceClient.from_service_account_info(self.account_info)
 
+    @cache  # pylint: disable=method-cache-max-size-none
+    def bigquery(self) -> Resource:
+        credentials = service_account.Credentials.from_service_account_info(self.account_info)
+        scopes = ["https://www.googleapis.com/auth/bigquery.readonly"]
+        scoped_credentials = credentials.with_scopes(list(scopes))
+        service = build("bigquery", "v2", credentials=scoped_credentials)
+        return service.jobs()
+
     def list_time_series(self, request: Any) -> Iterable[TimeSeries]:
         return self.monitoring().list_time_series(request)
 
     def list_assets(self, request: Any) -> Iterable[asset_v1.Asset]:
         return self.asset().list_assets(request)
+
+    def list_costs(self, tableid: str, month: datetime.datetime) -> Tuple[Schema, Pages]:
+        prev_month = month - datetime.timedelta(days=1)
+        query = f'SELECT PROJECT.name, SUM(cost) AS cost, currency, invoice.month FROM `{tableid}` WHERE DATE(_PARTITIONTIME) >= "{prev_month.strftime("%Y-%m-01")}" GROUP BY PROJECT.name, currency, invoice.month'
+        body = {"query": query, "useLegacySql": False}
+        request: HttpRequest = self.bigquery().query(projectId=self.project, body=body)
+        response = request.execute()
+        schema: Schema = response["schema"]["fields"]
+
+        pages: List[Page] = [response["rows"]]
+        # collect all rows, even if we use pagination
+        if "pageToken" in response:
+            request = self.bigquery().getQueryResults(
+                projectId=self.project,
+                jobId=response["jobReference"]["jobId"],
+                location=response["jobReference"]["location"],
+                pageToken=response["pageToken"],
+            )
+            response = request.execute()
+            pages.append(response["rows"])
+
+            while next_request := self.bigquery().getQueryResults_next(request, response):
+                next_response = next_request.execute()
+                request = next_request
+                response = next_response
+                pages.append(response["rows"])
+
+        return schema, pages
 
 
 @dataclass(frozen=True)
@@ -196,7 +256,33 @@ class PiggyBackSection:
     sections: Iterator[ResultSection]
 
 
-Section = Union[AssetSection, ResultSection, PiggyBackSection]
+@dataclass(frozen=True)
+class CostRow:
+    project: str
+    month: str
+    amount: float
+    currency: str
+
+    @staticmethod
+    def serialize(row: "CostRow") -> str:
+        return json.dumps(
+            {
+                "project": row.project,
+                "month": row.month,
+                "amount": row.amount,
+                "currency": row.currency,
+            }
+        )
+
+
+@dataclass(frozen=True)
+class CostSection:
+    rows: Sequence[CostRow]
+    query_month: datetime.datetime
+    name: str = "cost"
+
+
+Section = Union[AssetSection, ResultSection, PiggyBackSection, CostSection]
 
 #################
 # Serialization #
@@ -225,6 +311,13 @@ def _piggyback_serializer(section: PiggyBackSection) -> None:
             _result_serializer(new_s)
 
 
+def _cost_serializer(section: CostSection) -> None:
+    with SectionWriter("gcp_cost") as w:
+        w.append(json.dumps({"query_month": section.query_month.strftime("%Y%m")}))
+        for row in section.rows:
+            w.append(CostRow.serialize(row))
+
+
 def gcp_serializer(sections: Iterable[Section]) -> None:
     for section in sections:
         if isinstance(section, AssetSection):
@@ -233,6 +326,8 @@ def gcp_serializer(sections: Iterable[Section]) -> None:
             _result_serializer(section)
         elif isinstance(section, PiggyBackSection):
             _piggyback_serializer(section)
+        elif isinstance(section, CostSection):
+            _cost_serializer(section)
         else:
             raise NotImplementedError
 
@@ -332,6 +427,40 @@ def run_piggy_back(
         yield from piggy_back(client, s, assets)
 
 
+########
+# cost #
+########
+@dataclass(frozen=True)
+class CostArgument:
+    tableid: str
+    month: datetime.datetime
+
+
+def gather_costs(client: ClientProtocol, cost: CostArgument) -> Sequence[CostRow]:
+    schema, pages = client.list_costs(tableid=cost.tableid, month=cost.month)
+    columns = {el["name"]: i for i, el in enumerate(schema)}
+    assert set(columns.keys()) == {"name", "cost", "currency", "month"}
+    cost_rows: List[CostRow] = []
+    for page in pages:
+        for row in page:
+            data = row["f"]
+            cost_rows.append(
+                CostRow(
+                    project=data[columns["name"]]["v"],
+                    month=data[columns["month"]]["v"],
+                    amount=float(data[columns["cost"]]["v"]),
+                    currency=data[columns["currency"]]["v"],
+                )
+            )
+    return cost_rows
+
+
+def run_cost(client: ClientProtocol, cost: Optional[CostArgument]) -> Iterable[CostSection]:
+    if cost is None:
+        return
+    yield CostSection(rows=gather_costs(client, cost), query_month=cost.month)
+
+
 #################
 # Orchestration #
 #################
@@ -342,11 +471,13 @@ def run(
     services: Sequence[Service],
     piggy_back_services: Sequence[PiggyBackService],
     serializer: Callable[[Union[Iterable[Section], Iterable[PiggyBackSection]]], None],
+    cost: Optional[CostArgument],
 ) -> None:
     assets = run_assets(client, [s.name for s in services])
     serializer([assets])
     serializer(run_metrics(client, services))
     serializer(run_piggy_back(client, piggy_back_services, assets.assets))
+    serializer(run_cost(client, cost))
 
 
 #######################################################################
@@ -719,12 +850,24 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
         "--credentials", type=str, help="JSON credentials for service account", required=True
     )
     parser.add_argument(
+        "--cost",
+        type=str,
+        help="Enable cost monitoring using specified big query table. Give full table id",
+        required=False,
+    )
+    parser.add_argument(
+        "--month",
+        type=lambda x: datetime.datetime.strptime(x, "%Y-%m"),
+        help="For which month to collect cost data. Also includes month prior",
+        required=False,
+    )
+    parser.add_argument(
         "--services",
         nargs="+",
         action="extend",
         help=f"implemented services: {','.join(list(SERVICES))}",
         choices=list(SERVICES) + list(PIGGY_BACK_SERVICES),
-        required=True,
+        required=False,
     )
     return parser.parse_args(argv)
 
@@ -733,7 +876,14 @@ def agent_gcp_main(args: Args) -> None:
     client = Client(json.loads(args.credentials), args.project)
     services = [SERVICES[s] for s in args.services if s in SERVICES]
     piggies = [PIGGY_BACK_SERVICES[s] for s in args.services if s in PIGGY_BACK_SERVICES]
-    run(client, services, piggies, serializer=gcp_serializer)
+    cost = CostArgument(args.cost, args.month) if args.cost else None
+    run(
+        client,
+        services,
+        piggies,
+        serializer=gcp_serializer,
+        cost=cost,
+    )
 
 
 def main() -> None:

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from typing import Any, Mapping, Optional, Sequence, Union
 
 
@@ -10,12 +11,19 @@ def agent_gcp_arguments(
     params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
 ) -> Sequence[Union[str, tuple[str, str, str]]]:
 
+    today = datetime.date.today()
+    month = today.replace(day=1)
     args = [
         "--project",
         params["project"],
         "--credentials",
         passwordstore_get_cmdline("%s", params["credentials"]),
+        "--month",
+        month.strftime("%Y-%m"),
     ]
+    if "cost" in params:
+        args.append("--cost")
+        args.append(params["cost"]["tableid"])
     if len(params["services"]) > 0:
         args.append("--services")
         args.extend(params["services"])

@@ -49,23 +49,25 @@ export function activate_changes(mode, site_id) {
         sites.push(site_id);
     }
 
-    var activate_until = document.getElementById("activate_until") as HTMLInputElement | null;
+    var activate_until = document.getElementById(
+        "activate_until"
+    ) as HTMLInputElement | null;
     if (!activate_until) return;
 
     var comment = "";
-    var comment_field = document.getElementsByName("activate_p_comment")[0] as HTMLInputElement | null;
-    if (comment_field && comment_field.value != "") comment = comment_field.value;
+    var comment_field = document.getElementsByName(
+        "activate_p_comment"
+    )[0] as HTMLInputElement | null;
+    if (comment_field && comment_field.value != "")
+        comment = comment_field.value;
 
     var activate_foreign = 0;
-    var foreign_checkbox = document.getElementsByName("activate_p_foreign")[0] as HTMLInputElement | null;
+    var foreign_checkbox = document.getElementsByName(
+        "activate_p_foreign"
+    )[0] as HTMLInputElement | null;
     if (foreign_checkbox && foreign_checkbox.checked) activate_foreign = 1;
 
-    start_activation(
-        sites,
-        activate_until.value,
-        comment,
-        activate_foreign
-    );
+    start_activation(sites, activate_until.value, comment, activate_foreign);
     initialize_site_progresses(sites);
 }
 
@@ -118,20 +120,31 @@ function handle_start_activation(_unused, response_json) {
 }
 
 function handle_start_activation_error(_unused, status_code, error_msg) {
-    async_progress.show_error("Failed to start activation [" + status_code + "]: " + error_msg);
+    async_progress.show_error(
+        "Failed to start activation [" + status_code + "]: " + error_msg
+    );
 }
 
 function lock_activation_controls(lock) {
     var elements: HTMLElement[] = [];
 
     elements = elements.concat(
-        Array.prototype.slice.call(document.getElementsByName("activate_p_comment"), 0)
+        Array.prototype.slice.call(
+            document.getElementsByName("activate_p_comment"),
+            0
+        )
     );
     elements = elements.concat(
-        Array.prototype.slice.call(document.getElementsByClassName("site_checkbox"), 0)
+        Array.prototype.slice.call(
+            document.getElementsByClassName("site_checkbox"),
+            0
+        )
     );
     elements = elements.concat(
-        Array.prototype.slice.call(document.getElementsByClassName("activate_site"), 0)
+        Array.prototype.slice.call(
+            document.getElementsByClassName("activate_site"),
+            0
+        )
     );
 
     for (var i = 0; i < elements.length; i++) {
@@ -163,7 +176,7 @@ function initialize_site_progresses(sites) {
     for (const site_id of sites) {
         var progress = document.getElementById("site_" + site_id + "_progress");
         // Temporarily disable the transition for the reset
-        if(!progress) throw new Error("progress shouldn't be null!");
+        if (!progress) throw new Error("progress shouldn't be null!");
         progress.style.transition = "none";
         progress.style.width = "0px";
         progress.style.transition = "";
@@ -196,8 +209,10 @@ function update_activation_state(_unused_handler_data, response) {
 
 export function update_site_activation_state(site_state) {
     // Show status text (overlay text on the progress bar)
-    const msg = document.getElementById("site_" + site_state["_site_id"] + "_status");
-    if(!msg) throw new Error("msg shouldn't be null!");
+    const msg = document.getElementById(
+        "site_" + site_state["_site_id"] + "_status"
+    );
+    if (!msg) throw new Error("msg shouldn't be null!");
     msg.innerHTML = site_state["_status_text"];
 
     if (site_state["_phase"] == "done") {
@@ -210,12 +225,21 @@ export function update_site_activation_state(site_state) {
 
     // Show status details
     if (site_state["_status_details"]) {
-        const details = document.getElementById("site_" + site_state["_site_id"] + "_details");
-        if(!details) throw new Error("details shouldn't be null!")
+        const details = document.getElementById(
+            "site_" + site_state["_site_id"] + "_details"
+        );
+        if (!details) throw new Error("details shouldn't be null!");
         let detail_content = site_state["_status_details"];
-        if (site_state["_state"] == "warning" || site_state["_state"] == "error") {
+        if (
+            site_state["_state"] == "warning" ||
+            site_state["_state"] == "error"
+        ) {
             detail_content =
-                "<div class='" + site_state["_state"] + "'>" + detail_content + "</div>";
+                "<div class='" +
+                site_state["_state"] +
+                "'>" +
+                detail_content +
+                "</div>";
         }
 
         details.innerHTML = detail_content;
@@ -227,8 +251,10 @@ export function update_site_activation_state(site_state) {
 function update_site_progress(site_state) {
     var max_width = 160;
 
-    var progress = document.getElementById("site_" + site_state["_site_id"] + "_progress");
-    if(!progress) throw new Error("progress shouldn't be null!");
+    var progress = document.getElementById(
+        "site_" + site_state["_site_id"] + "_progress"
+    );
+    if (!progress) throw new Error("progress shouldn't be null!");
 
     if (site_state["_phase"] == "done") {
         progress.style.width = max_width + "px";

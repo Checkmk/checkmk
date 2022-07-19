@@ -30,6 +30,7 @@ repos:
             exclude: |
                 (?x)^(
                     ^agents/plugins/|
+                    ^enterprise/agents/plugins/|
                     ^tests/agent-plugin-unit/
                 )
     - repo: local

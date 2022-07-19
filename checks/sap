@@ -214,7 +214,7 @@ check_info["sap.value"] = {
 }
 
 GroupPatterns = list[tuple[str, str]]
-SAPRules = list[list[tuple[str, tuple[str, str]]]]
+SAPRules = list[tuple[str, tuple[str, str]]]
 
 
 def _patterns_match(
@@ -231,33 +231,36 @@ def sap_groups_of_value(
 ) -> set[str]:
     return {
         group_name
-        for line in patterns
-        for group_name, (inclusion, exclusion) in line
+        for group_name, (inclusion, exclusion) in patterns
         if _patterns_match(value_name, exclusion, inclusion)
     }
 
 
-def get_patterns_by_group_name(params: SAPRules) -> Mapping[str, GroupPatterns]:
+def get_patterns_by_group_name(patterns: SAPRules) -> Mapping[str, GroupPatterns]:
     rules_by_group: dict[str, GroupPatterns] = {}
-    for rule in params:
-        for group_name, patterns in rule:
-            rules_by_group.setdefault(group_name, []).append(patterns)
+    for group_name, (inclusion, exclusion) in patterns:
+        rules_by_group.setdefault(group_name, []).append((inclusion, exclusion))
     return rules_by_group
 
 
 def discover_sap_value_groups(section: Section) -> DiscoveryResult:
     # TODO: this becomes a proper argument in the new API
     params = host_extra_conf(host_name(), sap_value_groups)
+    groups: SAPRules = [
+        pattern
+        for parameter_set in params
+        for pattern in parameter_set.get("grouping_patterns", [])
+    ]
 
     inventory = set()
 
     for entry in section:
-        inventory.update(sap_groups_of_value(entry.path, params))
+        inventory.update(sap_groups_of_value(entry.path, groups))
 
     if not inventory:
         return
 
-    patterns_by_group = get_patterns_by_group_name(params)
+    patterns_by_group = get_patterns_by_group_name(groups)
     for item in inventory:
         yield (item, {"_group_relevant_patterns": patterns_by_group[item]})
 
@@ -271,7 +274,7 @@ def check_sap_value_groups(item: str, params: Mapping[str, Any], section: Sectio
         return
 
     # this fake rules instance already only contains relevant patterns
-    precompiled_rule: SAPRules = [[(item, pattern) for pattern in patterns]]
+    precompiled_rule = [(item, pattern) for pattern in patterns]
 
     non_ok_results: list[tuple[int, str, list]] = []
     all_results: list[tuple[int, str, list]] = []

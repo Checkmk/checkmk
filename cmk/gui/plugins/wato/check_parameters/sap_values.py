@@ -87,38 +87,49 @@ rulespec_registry.register(
 
 
 def _valuespec_sap_value_groups():
-    return ListOf(
-        valuespec=Tuple(
-            help=_("This defines one value grouping pattern"),
-            show_titles=True,
-            orientation="horizontal",
+    return Transform(
+        valuespec=Dictionary(
+            title=_("SAP R/3 grouped values discovery"),
             elements=[
-                TextInput(
-                    title=_("Name of group"),
-                ),
-                Tuple(
-                    show_titles=True,
-                    orientation="vertical",
-                    elements=[
-                        RegExp(
-                            title=_("Include Pattern"),
-                            mode=RegExp.prefix,
+                (
+                    "grouping_patterns",
+                    ListOf(
+                        valuespec=Tuple(
+                            help=_("This defines one value grouping pattern"),
+                            show_titles=True,
+                            orientation="horizontal",
+                            elements=[
+                                TextInput(
+                                    title=_("Name of group"),
+                                ),
+                                Tuple(
+                                    show_titles=True,
+                                    orientation="vertical",
+                                    elements=[
+                                        RegExp(
+                                            title=_("Include Pattern"),
+                                            mode=RegExp.prefix,
+                                        ),
+                                        RegExp(
+                                            title=_("Exclude Pattern"),
+                                            mode=RegExp.prefix,
+                                        ),
+                                    ],
+                                ),
+                            ],
                         ),
-                        RegExp(
-                            title=_("Exclude Pattern"),
-                            mode=RegExp.prefix,
-                        ),
-                    ],
-                ),
+                        add_label=_("Add pattern group"),
+                    ),
+                )
             ],
+            optional_keys=[],
+            help=_(
+                "The check <tt>sap.value</tt> normally creates one service for each SAP value. "
+                "By defining grouping patterns, you can switch to the check <tt>sap.value_groups</tt>. "
+                "That check monitors a list of SAP values at once."
+            ),
         ),
-        add_label=_("Add pattern group"),
-        title=_("SAP value discovery"),
-        help=_(
-            "The check <tt>sap.value</tt> normally creates one service for each SAP value. "
-            "By defining grouping patterns, you can switch to the check <tt>sap.value_groups</tt>. "
-            "That check monitors a list of SAP values at once."
-        ),
+        forth=lambda p: p if isinstance(p, dict) else {"grouping_patterns": p},
     )
 
 

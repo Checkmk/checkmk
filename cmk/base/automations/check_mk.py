@@ -689,7 +689,7 @@ class AutomationAnalyseServices(Automation):
 
         service_info = self._get_service_info(config_cache, host_config, host_attrs, servicedesc)
         if not service_info:
-            return automation_results.AnalyseServiceResult({})
+            return automation_results.AnalyseServiceResult({"labels": {}, "label_sources": {}})
 
         return automation_results.AnalyseServiceResult(
             {

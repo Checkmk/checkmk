@@ -16,7 +16,7 @@ class Logger;
 class EventConsoleConnection {
 public:
     EventConsoleConnection(Logger *logger, std::string path);
-    ~EventConsoleConnection();
+    virtual ~EventConsoleConnection();
     void run();
 
 private:

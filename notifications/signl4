@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # SIGNL4 Alerting
 
 from cmk.notification_plugins import signl4

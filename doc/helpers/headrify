@@ -64,12 +64,10 @@ headrify() {
         bangpath="<?php"
     elif [[ "${headline:0:22}" = "#!/usr/bin/env python3" || "${headline:0:18}" = "#!/usr/bin/python3" ]]; then
         comment="# "
-        bangpath="#!/usr/bin/env python3
-# -*- coding: utf-8 -*-"
+        bangpath="#!/usr/bin/env python3"
     elif [[ "${headline:0:21}" = "#!/usr/bin/env python" || "${headline:0:17}" = "#!/usr/bin/python" ]]; then
         comment="# "
-        bangpath="#!/usr/bin/env python
-# -*- coding: utf-8 -*-"
+        bangpath="#!/usr/bin/env python"
     else
         bangpath=""
         case "${file##*/}" in
@@ -92,8 +90,7 @@ headrify() {
             *.sh) comment="# " ;;
             *.py)
                 comment="# "
-                bangpath="#!/usr/bin/env python
-# -*- coding: utf-8 -*-"
+                bangpath="#!/usr/bin/env python"
                 ;;
             *) if [ "$force" = false ]; then
                 echo "Skipping $file. No shebang or suffix match for Python, C/C++, JS, (S)CSS or Shell Script nor a Makefile."
@@ -103,8 +100,7 @@ headrify() {
     fi
 
     if [[ "$bangpath" == *"python"* && "$(realpath "$file")" == *"/tests/"* ]]; then
-        bangpath="#!/usr/bin/env python3
-# -*- coding: utf-8 -*-"
+        bangpath="#!/usr/bin/env python3"
     fi
 
     figletline="---------------------------------------------------"

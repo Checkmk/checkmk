@@ -5,13 +5,18 @@
 
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single
 from cmk.base.check_legacy_includes.netapp_api import netapp_api_parse_lines
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS, TREND_DEFAULT_PARAMS
+from cmk.base.plugins.agent_based.utils.df import (
+    FILESYSTEM_DEFAULT_LEVELS,
+    MAGIC_FACTOR_DEFAULT_PARAMS,
+    TREND_DEFAULT_PARAMS,
+)
 
 # <<<netapp_api_luns:sep(9)>>>
 # lun /vol/iscsi_crm_dblogs/crm_dblogs_lu01   read-only false size 644286182400   vserver ISCSI_CRM   size-used 538924421120  online true volume iscsi_crm_dblogs
 
 factory_settings["netapp_api_luns_default_levels"] = {
     **FILESYSTEM_DEFAULT_LEVELS,
+    **MAGIC_FACTOR_DEFAULT_PARAMS,
     **TREND_DEFAULT_PARAMS,
     "read_only": False,
 }

@@ -17,6 +17,7 @@ def _parameter_valuespec_netapp_luns():
     return vs_filesystem(
         elements=[
             FilesystemElements.levels,
+            FilesystemElements.magic_factor,
             FilesystemElements.size_trend,
         ],
         extra_elements=[

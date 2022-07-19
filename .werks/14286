@@ -1,0 +1,13 @@
+Title: mail: Add timeout to graph processing of HTML mail notifications
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1658222673
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p8
+
+In case fetching the graphs takes more than 10 seconds, the notification plugin
+aborts waiting for the graphs and continues to send the notification without
+graphs.

@@ -635,9 +635,15 @@ def render_cmk_graphs(context, is_bulk):
         )
     )
 
+    timeout = 10
     try:
-        with urlopen(url) as opened_file:
+        with urlopen(url, timeout=timeout) as opened_file:
             json_data = opened_file.read()
+    except socket.timeout:
+        if opt_debug:
+            raise
+        sys.stderr.write("ERROR: Timed out fetching graphs (%d sec)\nURL: %s\n" % url)
+        return []
     except Exception as e:
         if opt_debug:
             raise

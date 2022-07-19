@@ -780,8 +780,8 @@ def _get_tag_attributes(
 
 
 def get_cluster_attributes(
-    config_cache: config.ConfigCache,
-    host_config: config.HostConfig,
+    config_cache: ConfigCache,
+    host_config: HostConfig,
     nodes: Sequence[HostName],
 ) -> Dict:
     sorted_nodes = sorted(nodes)
@@ -842,8 +842,8 @@ def get_cluster_nodes_for_config(
 
 def _verify_cluster_address_family(
     nodes: List[HostName],
-    config_cache: config.ConfigCache,
-    host_config: config.HostConfig,
+    config_cache: ConfigCache,
+    host_config: HostConfig,
 ) -> None:
     cluster_host_family = "IPv6" if host_config.is_ipv6_primary else "IPv4"
 
@@ -871,8 +871,8 @@ def _verify_cluster_address_family(
 
 def _verify_cluster_datasource(
     nodes: List[HostName],
-    config_cache: config.ConfigCache,
-    host_config: config.HostConfig,
+    config_cache: ConfigCache,
+    host_config: HostConfig,
 ) -> None:
     cluster_tg = host_config.tag_groups
     cluster_agent_ds = cluster_tg.get("agent")
@@ -889,7 +889,7 @@ def _verify_cluster_datasource(
             warning("%s '%s': %s vs. %s" % (warn_text, nodename, cluster_snmp_ds, node_snmp_ds))
 
 
-def ip_address_of(host_config: config.HostConfig, family: socket.AddressFamily) -> Optional[str]:
+def ip_address_of(host_config: HostConfig, family: socket.AddressFamily) -> Optional[str]:
     try:
         return config.lookup_ip_address(host_config, family=family)
     except Exception as e:

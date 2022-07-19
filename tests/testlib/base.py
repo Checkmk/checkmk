@@ -15,6 +15,7 @@ from cmk.utils.type_defs import HostAddress, HostName
 
 import cmk.base.config as config
 from cmk.base import autochecks
+from cmk.base.config import ConfigCache
 
 
 class _AutochecksMocker(autochecks.AutochecksManager):
@@ -30,9 +31,9 @@ class Scenario:
     """Helper class to modify the Check_MK base configuration for unit tests"""
 
     @staticmethod
-    def _get_config_cache() -> config.ConfigCache:
+    def _get_config_cache() -> ConfigCache:
         cc = config.get_config_cache()
-        assert isinstance(cc, config.ConfigCache)
+        assert isinstance(cc, ConfigCache)
         return cc
 
     def __init__(self, site_id: str = "unit") -> None:
@@ -165,7 +166,7 @@ class Scenario:
     ) -> None:
         self._autochecks_mocker.raw_autochecks[hostname] = entries
 
-    def apply(self, monkeypatch: MonkeyPatch) -> config.ConfigCache:
+    def apply(self, monkeypatch: MonkeyPatch) -> ConfigCache:
         check_vars: Dict = {}
         for key, value in self.config.items():
             if key in config._check_variables:

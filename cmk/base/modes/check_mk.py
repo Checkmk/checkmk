@@ -78,6 +78,7 @@ import cmk.base.parent_scan
 import cmk.base.profiling as profiling
 import cmk.base.sources as sources
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
+from cmk.base.config import HostConfig
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option
 
@@ -994,7 +995,7 @@ def mode_snmpwalk(options: Dict, hostnames: List[str]) -> None:
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 
-        snmp_config = config.HostConfig.make_snmp_config(hostname, ipaddress)
+        snmp_config = HostConfig.make_snmp_config(hostname, ipaddress)
         snmp_modes.do_snmpwalk(options, backend=snmp_factory.backend(snmp_config, log.logger))
 
 
@@ -1069,7 +1070,7 @@ def mode_snmpget(args: List[str]) -> None:
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 
-        snmp_config = config.HostConfig.make_snmp_config(hostname, ipaddress)
+        snmp_config = HostConfig.make_snmp_config(hostname, ipaddress)
         snmp_modes.do_snmpget(oid, backend=snmp_factory.backend(snmp_config, log.logger))
 
 

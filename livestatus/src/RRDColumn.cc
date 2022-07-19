@@ -31,7 +31,7 @@ RRDColumnArgs::RRDColumnArgs(const std::string &arguments,
     // Example: fs_used,1024,/:1426411073:1426416473:5
     std::vector<char> args(arguments.begin(), arguments.end());
     args.push_back('\0');
-    char *scan = &args[0];
+    char *scan = args.data();
 
     // Reverse Polish Notation Expression for extraction start RRD
     char *rpn = next_token(&scan, ':');
@@ -149,7 +149,7 @@ detail::Data RRDDataMaker::make(const std::pair<std::string, std::string>
     std::string converted_rpn;  // convert foo.max -> foo-max
     std::vector<char> rpn_copy(_args.rpn.begin(), _args.rpn.end());
     rpn_copy.push_back('\0');
-    char *scan = &rpn_copy[0];
+    char *scan = rpn_copy.data();
 
     // map from RRD variable names to perf variable names. The latter ones
     // can contain several special characters (like @ and -) which the RRD
@@ -241,7 +241,7 @@ detail::Data RRDDataMaker::make(const std::pair<std::string, std::string>
         }
 
         if (rrd_flushcached(static_cast<int>(daemon_argv_s.size()),
-                            const_cast<char **>(&daemon_argv[0])) != 0) {
+                            const_cast<char **>(daemon_argv.data())) != 0) {
             Warning(logger) << "Error flushing RRD: " << rrd_get_error();
         }
     }
@@ -278,8 +278,8 @@ detail::Data RRDDataMaker::make(const std::pair<std::string, std::string>
     rrd_clear_error();
 
     if (rrd_xport(static_cast<int>(argv_s.size()),
-                  const_cast<char **>(&argv[0]), &xxsize, &start, &end, &step,
-                  &col_cnt, &legend_v, &rrd_data) != 0) {
+                  const_cast<char **>(argv.data()), &xxsize, &start, &end,
+                  &step, &col_cnt, &legend_v, &rrd_data) != 0) {
         Warning(logger) << "Error accessing RRD: " << rrd_get_error();
         return {};
     }

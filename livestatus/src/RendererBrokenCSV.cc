@@ -49,7 +49,7 @@ void RendererBrokenCSV::endDict() {}
 void RendererBrokenCSV::outputNull() {}
 
 void RendererBrokenCSV::outputBlob(const std::vector<char> &value) {
-    _os.write(&value[0], value.size());
+    _os.write(value.data(), value.size());
 }
 
 void RendererBrokenCSV::outputString(const std::string &value) { _os << value; }

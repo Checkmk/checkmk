@@ -377,7 +377,7 @@ void start_threads() {
 
     fl_thread_info.resize(g_livestatus_threads + 1);
     for (auto &info : fl_thread_info) {
-        ptrdiff_t idx = &info - &fl_thread_info[0];
+        ptrdiff_t idx = &info - fl_thread_info.data();
         if (idx == 0) {
             // start thread that listens on socket
             info.name = "main";
@@ -868,7 +868,7 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
 
     // TODO(sp) Nuke next_field and friends. Use C++ strings everywhere.
     std::vector<char> args_buf(args_orig, args_orig + strlen(args_orig) + 1);
-    char *args = &args_buf[0];
+    char *args = args_buf.data();
     while (char *token = next_field(&args)) {
         /* find = */
         char *part = token;

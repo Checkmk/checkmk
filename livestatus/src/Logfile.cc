@@ -97,8 +97,8 @@ void Logfile::loadRange(size_t max_lines_per_logfile, FILE *file,
                         unsigned missing_types, unsigned logclasses) {
     std::vector<char> linebuffer(65536);
     // TODO(sp) We should really use C++ I/O here...
-    while (fgets(&linebuffer[0], static_cast<int>(linebuffer.size()), file) !=
-           nullptr) {
+    while (fgets(linebuffer.data(), static_cast<int>(linebuffer.size()),
+                 file) != nullptr) {
         if (_lineno >= max_lines_per_logfile) {
             Error(_logger) << "more than " << max_lines_per_logfile
                            << " lines in " << _path << ", ignoring the rest!";
@@ -112,7 +112,7 @@ void Logfile::loadRange(size_t max_lines_per_logfile, FILE *file,
         if (it != linebuffer.end()) {
             *it = '\0';
         }
-        if (processLogLine(_lineno, &linebuffer[0], missing_types)) {
+        if (processLogLine(_lineno, linebuffer.data(), missing_types)) {
             _log_cache->logLineHasBeenAdded(this, logclasses);
         }
     }

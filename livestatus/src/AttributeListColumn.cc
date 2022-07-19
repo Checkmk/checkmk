@@ -36,7 +36,7 @@ std::string refValueFor(const std::string &value, Logger *logger) {
 
     std::vector<char> value_vec(value.begin(), value.end());
     value_vec.push_back('\0');
-    char *scan = &value_vec[0];
+    char *scan = value_vec.data();
 
     modified_attributes values;
     for (const char *t = nullptr; (t = next_token(&scan, ',')) != nullptr;) {

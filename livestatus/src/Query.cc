@@ -95,7 +95,7 @@ Query::Query(const std::list<std::string> &lines, Table &table,
         }
         std::vector<char> rest_copy(rest.begin(), rest.end());
         rest_copy.push_back('\0');
-        char *arguments = &rest_copy[0];
+        char *arguments = rest_copy.data();
         try {
             if (header == "Filter") {
                 parseFilterLine(arguments, filters);

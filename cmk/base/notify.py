@@ -24,6 +24,7 @@ import sys
 import time
 import traceback
 import uuid
+from functools import lru_cache
 from pathlib import Path
 from typing import (
     Any,
@@ -67,6 +68,7 @@ from cmk.utils.regex import regex
 from cmk.utils.timeout import MKTimeout, Timeout
 from cmk.utils.type_defs import (
     Contact,
+    ContactgroupName,
     ContactName,
     EventContext,
     EventRule,
@@ -1227,28 +1229,27 @@ def rbn_all_contacts(with_email: bool = False) -> List[ContactName]:
     return [contact_id for (contact_id, contact) in config.contacts.items() if contact.get("email")]
 
 
+@lru_cache()
+def _contactgroup_members() -> Mapping[ContactgroupName, Set[ContactName]]:
+    """Get the members of all contact groups
+
+    Is computed once  for the process lifetime since it's either a short lived process or in case of
+    the Microcore notify helper, it is restarted once a new configuration is applied to the core.
+    """
+    members: Dict[ContactgroupName, Set[ContactName]] = {}
+    for name, contact in config.contacts.items():
+        for group_name in contact.get("contactgroups", []):
+            members.setdefault(group_name, set()).add(name)
+    return members
+
+
 def rbn_groups_contacts(groups: List[str]) -> Set[str]:
+    """Return all members of the given groups"""
     if not groups:
-        return set()
+        return set()  # optimization only
 
-    query = "GET contactgroups\nColumns: members\n"
-    for group in groups:
-        query += "Filter: name = %s\n" % group
-    query += "Or: %d\n" % len(groups)
-
-    try:
-        contacts: Set[ContactName] = set()
-        for contact_list in livestatus.LocalConnection().query_column(query):
-            contacts.update(contact_list)
-        return contacts
-
-    except livestatus.MKLivestatusNotFoundError:
-        return set()
-
-    except Exception:
-        if cmk.utils.debug.enabled():
-            raise
-        return set()
+    members = _contactgroup_members()
+    return set(m for group in groups for m in members.get(group, []))
 
 
 def rbn_emails_contacts(emails: List[str]) -> List[str]:

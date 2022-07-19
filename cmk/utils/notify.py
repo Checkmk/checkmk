@@ -8,7 +8,7 @@ import subprocess
 import uuid
 from logging import Logger
 from pathlib import Path
-from typing import Any, Dict, List, Literal, NewType, Optional, TypedDict, Union
+from typing import Literal, NewType, Optional, TypedDict, Union
 
 import cmk.utils.defines
 from cmk.utils import store
@@ -36,7 +36,7 @@ NotificationContext = NewType("NotificationContext", dict[str, str])
 class NotificationResult(TypedDict, total=False):
     plugin: NotificationPluginName
     status: NotificationResultCode
-    output: List[str]
+    output: list[str]
     forward: bool
     context: NotificationContext
 
@@ -45,21 +45,21 @@ class NotificationForward(TypedDict):
     forward: Literal[True]
     # TODO: Enable once RawNotificationContext has been consolidated with cmk.base.events.EventContext
     # context: RawNotificationContext
-    context: Dict[str, Any]
+    context: dict[str, str]
 
 
 class NotificationViaPlainMail(TypedDict):
     plugin: None
     # TODO: Enable once NotificationContext has been consolidated with cmk.base.notify.PluginContext
     # context: NotificationContext
-    context: Dict[str, Any]
+    context: dict[str, str]
 
 
 class NotificationViaPlugin(TypedDict):
     plugin: str
     # TODO: Enable once NotificationContext has been consolidated with cmk.base.notify.PluginContext
     # context: NotificationContext
-    context: Dict[str, Any]
+    context: dict[str, str]
 
 
 def _state_for(exit_code: NotificationResultCode) -> str:
@@ -167,7 +167,7 @@ def ensure_utf8(logger: Optional[Logger] = None) -> None:
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
     )
-    locales_list: List[str] = []
+    locales_list: list[str] = []
     std_out: bytes = proc.communicate()[0]
     exit_code: int = proc.returncode
     error_msg: str = _("Command 'locale -a' could not be executed. Exit code of command was")

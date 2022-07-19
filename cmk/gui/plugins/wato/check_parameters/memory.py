@@ -6,11 +6,22 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.filesystem_utils import match_dual_level_type
 from cmk.gui.plugins.wato.utils import (
+    CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
+    RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersOperatingSystem,
 )
-from cmk.gui.valuespec import Alternative, Dictionary, Integer, Percentage, Transform, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import (
+    Alternative,
+    Dictionary,
+    Integer,
+    Percentage,
+    TextInput,
+    Transform,
+    Tuple,
+)
 
 
 # if you refactor this: grep for "DualMemoryLevels"
@@ -125,5 +136,28 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_memory,
         title=lambda: _("Main memory usage (UNIX / Other Devices)"),
+    )
+)
+
+
+def _parameter_valuespec_memory_utilization():
+    return Dictionary(
+        title=_("Levels memory"),
+        elements=[
+            (
+                "levels",
+                SimpleLevels(Percentage, title=_("Memory utilization")),
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="memory_utilization",
+        item_spec=lambda: TextInput(title=_("Memory Utilization")),
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_memory_utilization,
+        title=lambda: _("Memory Utilization"),
     )
 )

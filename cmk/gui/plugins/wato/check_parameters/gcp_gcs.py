@@ -445,3 +445,26 @@ rulespec_registry.register(
         title=lambda: _("GCP/GCE disk IO"),
     )
 )
+
+
+def _vs_cost() -> Dictionary:
+    return Dictionary(
+        title=_("Levels monthly GCP costs"),
+        elements=[
+            (
+                "levels",
+                Levels(title=_("Amount in billed currency")),
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="gcp_cost",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_cost,
+        title=lambda: _("GCP Cost"),
+    )
+)

@@ -11,6 +11,8 @@ from typing import Any, Callable, Mapping, Optional, Sequence
 from ..agent_based_api.v1 import check_levels, check_levels_predictive, Result, Service, State
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
+Project = str
+
 
 @dataclass(frozen=True)
 class GCPResult:
@@ -79,7 +81,6 @@ Section = Mapping[str, SectionItem]
 PiggyBackSection = Sequence[GCPResult]
 AssetType = str
 Item = str
-Project = str
 AssetTypeSection = Mapping[Item, GCPAsset]
 
 

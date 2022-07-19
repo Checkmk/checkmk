@@ -1,0 +1,16 @@
+Title: SAP HANA backup check in cluster mode: go stale if cannot connect to DB
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1658259601
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p9
+
+Before this werk, if the connection to a database failed, the SAP HANA
+Backup service in a cluster host was marked as OK.
+
+This is now changed and the service goes stale.
+

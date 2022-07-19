@@ -247,18 +247,13 @@ def discover_sap_value_groups(section: Section) -> DiscoveryResult:
         for parameter_set in params
         for pattern in parameter_set.get("grouping_patterns", [])
     ]
-
-    inventory = set()
-
-    for entry in section:
-        inventory.update(sap_groups_of_value(entry.path, groups))
-
-    if not inventory:
-        return
-
     patterns_by_group = get_patterns_by_group_name(groups)
-    for item in inventory:
-        yield (item, {"_group_relevant_patterns": patterns_by_group[item]})
+
+    yield from (
+        (item, {"_group_relevant_patterns": patterns_by_group[item]})
+        for entry in section
+        for item in sap_groups_of_value(entry.path, groups)
+    )
 
 
 def check_sap_value_groups(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:

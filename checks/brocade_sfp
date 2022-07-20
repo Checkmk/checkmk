@@ -5,8 +5,12 @@
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.brocade import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.brocade import (
+    brocade_fcport_getitem,
+    brocade_fcport_inventory,
+    brocade_fcport_inventory_this_port,
+)
+from cmk.base.check_legacy_includes.temperature import check_temperature
 
 
 def parse_brocade_sfp(info):

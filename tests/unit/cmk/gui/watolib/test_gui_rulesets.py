@@ -10,6 +10,7 @@ from typing import Callable
 import pytest
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+from cmk.utils import version
 from cmk.utils.type_defs import RuleOptions, RuleOptionsSpec, RuleSpec
 
 import cmk.gui.utils
@@ -22,6 +23,8 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_local
 from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
+
+managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
 
 def _ruleset(ruleset_name) -> rulesets.Ruleset:
@@ -681,7 +684,10 @@ class _RuleHelper:
 @pytest.fixture(
     params=[
         _RuleHelper(_RuleHelper.gcp_rule, "credentials", ("password", "geheim"), "project"),
-        _RuleHelper(_RuleHelper.ssh_rule, "sshkey", ("new_priv", "public_key"), "runas"),
+        pytest.param(
+            _RuleHelper(_RuleHelper.ssh_rule, "sshkey", ("new_priv", "public_key"), "runas"),
+            marks=managedtest,
+        ),
     ]
 )
 def rule_helper(request) -> _RuleHelper:

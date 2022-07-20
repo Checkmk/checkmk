@@ -1,0 +1,13 @@
+Title: Fix possible error using "Events of application" link
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1658299416
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p9
+
+If the burger menu entry "Events of application" was used and the application
+name contained slashes, the link led to an error like "Unhandled exception:
+400: Filter: invalid escape sequence: \T".

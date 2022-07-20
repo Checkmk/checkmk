@@ -7,59 +7,69 @@
 import re
 import shlex
 
-from cmk.gui.globals import config
+from cmk.utils.type_defs import TagID
+
+from cmk.gui.globals import config, request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
 from cmk.gui.sites import get_alias_of_host, get_site_config
-from cmk.gui.utils.urls import urlencode_vars
+from cmk.gui.type_defs import Dict, List, Row, Tuple, Union
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 @icon_and_action_registry.register
 class MkeventdIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "mkeventd"
 
     @classmethod
     def title(cls) -> str:
         return _("Events")
 
-    def default_toplevel(self):
+    def default_toplevel(self) -> bool:
         return False
 
-    def default_sort_index(self):
+    def default_sort_index(self) -> int:
         return 30
 
-    def columns(self):
+    def columns(self) -> List[str]:
         return ["check_command"]
 
-    def host_columns(self):
+    def host_columns(self) -> List[str]:
         return ["address", "name"]
 
-    def render(self, what, row, tags, custom_vars):
+    def render(
+        self,
+        what: str,
+        row: Row,
+        tags: List[TagID],
+        custom_vars: Dict[str, str],
+    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
         if not config.mkeventd_enabled:
-            return
+            return None
 
         # show for services based on the mkevents active check
         command = row[what + "_check_command"]
 
         if what != "service" or not command.startswith("check_mk_active-mkevents"):
-            return
+            return None
 
         # Split command by the parts (COMMAND!ARG0!...) Beware: Do not split by escaped exclamation mark.
         splitted_command = re.split(r"(?<!\\)!", command)
 
         # All arguments are space separated in in ARG0
         if len(splitted_command) != 2:
-            return
+            return None
 
         host = None
         app = None
 
         # Extract parameters from check_command
-        args = shlex.split(splitted_command[1])
+        args: List[str] = shlex.split(splitted_command[1])
         if not args:
-            return
+            return None
 
         # Handle -a and -H options. Sorry for the hack. We currently
         # have no better idea
@@ -74,7 +84,7 @@ class MkeventdIcon(Icon):
         # If we have no host then the command line from the check_command seems
         # to be garbled. Better show nothing in this case.
         if not host:
-            return
+            return None
 
         # It is possible to have a central event console, this is the default case.
         # Another possible architecture is to have an event console in each site in
@@ -94,11 +104,16 @@ class MkeventdIcon(Icon):
         title = _("Events of Host %s") % (row["host_name"])
 
         if len(args) >= 2:
-            app = args[1].strip("'").replace("\\\\", "\\").replace("\\!", "!")
-            title = _('Events of Application "%s" on Host %s') % (app, host)
+            app = args[1].strip("'")
+            title_app = app.replace("\\\\", "\\").replace("\\!", "!")
+            title = _('Events of Application "%s" on Host %s') % (title_app, host)
             url_vars.append(("event_application", app))
 
-        url = "view.py?" + urlencode_vars(url_vars)
+        url = makeuri_contextless(
+            request,
+            url_vars,
+            filename="view.py",
+        )
 
         return "mkeventd", title, url_prefix + url
 

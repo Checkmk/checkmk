@@ -24,26 +24,28 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import io
-import os
 import ast
+import io
+import json
+import os
 import pprint
+import shutil
+import subprocess
 import sys
 import tarfile
 import time
-import subprocess
-import json
 from cStringIO import StringIO
 from typing import NamedTuple
+
 from pathlib2 import Path
 
 import cmk.ec.export
+import cmk.utils.debug
 import cmk.utils.log
 import cmk.utils.paths
-import cmk.utils.tty as tty
 import cmk.utils.store as store
+import cmk.utils.tty as tty
 import cmk.utils.werks
-import cmk.utils.debug
 import cmk_base.utils
 
 logger = cmk.utils.log.get_logger(__name__)
@@ -464,6 +466,29 @@ def uninstall_package(package):
     os.remove(pac_dir + package["name"])
 
 
+def disable_package(package_name):
+    package_path, package_meta_info = _find_path_and_package_info(package_name)
+
+    if package_name in all_package_names():
+        uninstall_package(package_meta_info)
+
+    package_path.unlink()
+
+
+def _find_path_and_package_info(package_name):
+    for package_path in _get_enabled_package_paths():
+        tar = tarfile.open(name=str(package_path), mode="r:gz")
+        package_info_file = tar.extractfile("info")
+        if package_info_file is None:
+            continue
+        package = parse_package_info(package_info_file.read())
+        if (package["name"] == package_name or
+                format_file_name(name=package["name"], version=package["version"]) == package_name):
+            return package_path, package
+
+    raise PackageException("Package %s is not enabled" % package_name)
+
+
 def create_package(pkg_info):
     pacname = pkg_info["name"]
     if package_exists(pacname):
@@ -498,7 +523,36 @@ def _get_full_package_path(package_file_name):
 
 def install_optional_package(package_file_name):
     package_path = _get_full_package_path(package_file_name)
-    return _install_package(str(package_path))
+    try:
+        return _install_package(str(package_path))
+    finally:
+        # it is enabled, even if installing failed.
+        mark_as_enabled(package_path)
+
+
+def mark_as_enabled(package_path):
+    # type: (Path) -> None
+    """Mark the package as one of the enabled ones
+
+    Copying (or linking) the packages into the local hierarchy is the easiest way to get them to
+    be synchronized with the remote sites.
+    """
+    destination = cmk.utils.paths.local_enabled_packages_dir / package_path.name
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
+
+    # linking fails if the destination exists
+    try:
+        destination.unlink()
+    except OSError:
+        pass
+
+    try:
+        os.link(str(package_path), str(destination))
+    except OSError:
+        # if the source belongs to root (as the shipped packages do) we may not be allowed
+        # to hardlink them. We fall back to copying.
+        shutil.copy(str(package_path), str(destination))
 
 
 # Packaged files must either be unpackaged or already
@@ -753,6 +807,18 @@ def get_optional_package_infos():
     return optional
 
 
+def get_enabled_package_infos():
+    enabled = {}
+    for pkg_path in _get_enabled_package_paths():
+        with pkg_path.open("rb") as pkg:
+            pkg_info = get_package_info_from_package(pkg)
+            pkg_info.update(
+                is_local=pkg_path.resolve().parent != cmk.utils.paths.optional_packages_dir)
+            enabled[pkg_path.name.decode("utf-8")] = pkg_info
+
+    return enabled
+
+
 def get_package_info_from_package(file_object):
     tar = tarfile.open(fileobj=file_object, mode="r:gz")
     package_info_file = tar.extractfile("info")
@@ -778,6 +844,13 @@ def get_optional_package_paths():
         shipped = []
 
     return local + shipped
+
+
+def _get_enabled_package_paths():
+    try:
+        return list(cmk.utils.paths.local_enabled_packages_dir.iterdir())
+    except OSError:
+        return []
 
 
 def unpackaged_files():

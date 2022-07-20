@@ -33,6 +33,7 @@ OPT_LOCAL_FILES = "local-files"
 OPT_OMD_CONFIG = "omd-config"
 OPT_CHECKMK_OVERVIEW = "checkmk-overview"
 OPT_CHECKMK_CONFIG_FILES = "checkmk-config-files"
+OPT_CHECKMK_CORE_FILES = "checkmk-core-files"
 OPT_CHECKMK_LOG_FILES = "checkmk-log-files"
 
 # CEE specific options
@@ -43,6 +44,7 @@ OPT_COMP_GLOBAL_SETTINGS = "global-settings"
 OPT_COMP_HOSTS_AND_FOLDERS = "hosts-and-folders"
 OPT_COMP_NOTIFICATIONS = "notifications"
 OPT_COMP_BUSINESS_INTELLIGENCE = "business-intelligence"
+OPT_COMP_CMC = "cmc"
 
 _BOOLEAN_CONFIG_OPTS = [
     OPT_LOCAL_FILES,
@@ -53,6 +55,7 @@ _BOOLEAN_CONFIG_OPTS = [
 
 _FILES_OPTS = [
     OPT_CHECKMK_CONFIG_FILES,
+    OPT_CHECKMK_CORE_FILES,
     OPT_CHECKMK_LOG_FILES,
 ]
 
@@ -107,6 +110,7 @@ def serialize_wato_parameters(
         parameters.update(comp_specific_parameters)
 
     config_files: Set[str] = set()
+    core_files: Set[str] = set()
     log_files: Set[str] = set()
     boolean_opts: List[str] = []
     for key, value in sorted(parameters.items()):
@@ -116,6 +120,9 @@ def serialize_wato_parameters(
         elif key == OPT_CHECKMK_CONFIG_FILES:
             config_files |= _extract_list_of_files(value)
 
+        elif key == OPT_CHECKMK_CORE_FILES:
+            core_files |= _extract_list_of_files(value)
+
         elif key == OPT_CHECKMK_LOG_FILES:
             log_files |= _extract_list_of_files(value)
 
@@ -124,8 +131,10 @@ def serialize_wato_parameters(
                 OPT_COMP_HOSTS_AND_FOLDERS,
                 OPT_COMP_NOTIFICATIONS,
                 OPT_COMP_BUSINESS_INTELLIGENCE,
+                OPT_COMP_CMC,
         ]:
             config_files |= _extract_list_of_files(value.get("config_files"))
+            core_files |= _extract_list_of_files(value.get("core_files"))
             log_files |= _extract_list_of_files(value.get("log_files"))
 
     chunks: List[List[str]] = []
@@ -138,6 +147,11 @@ def serialize_wato_parameters(
             for i in range(0, len(sorted(config_files)), max_args)
     ]:
         chunks.append([OPT_CHECKMK_CONFIG_FILES, ','.join(config_args)])
+
+    for core_args in [
+            sorted(core_files)[i:i + max_args] for i in range(0, len(sorted(core_files)), max_args)
+    ]:
+        chunks.append([OPT_CHECKMK_CORE_FILES, ",".join(core_args)])
 
     for log_args in [
             sorted(log_files)[i:i + max_args] for i in range(0, len(sorted(log_files)), max_args)
@@ -211,6 +225,17 @@ def get_checkmk_config_files_map() -> CheckmkFilesMap:
             filepath = Path(root).joinpath(file_name)
             if filepath.suffix in (".mk", ".conf", ".bi") or filepath.name == ".wato":
                 rel_filepath = str(filepath.relative_to(cmk.utils.paths.default_config_dir))
+                files_map.setdefault(rel_filepath, filepath)
+    return files_map
+
+
+def get_checkmk_core_files_map() -> CheckmkFilesMap:
+    files_map: CheckmkFilesMap = {}
+    for root, _dirs, files in os.walk(cmk.utils.paths.var_dir + "/core"):
+        for file_name in files:
+            filepath = Path(root).joinpath(file_name)
+            if filepath.stem in ("state", "history", "config"):
+                rel_filepath = str(filepath.relative_to(cmk.utils.paths.var_dir))
                 files_map.setdefault(rel_filepath, filepath)
     return files_map
 
@@ -500,10 +525,40 @@ CheckmkFileInfoByRelFilePathMap: Dict[str, CheckmkFileInfo] = {
         sensitivity=CheckmkFileSensitivity(2),
         description="Contains GUI related user properties.",
     ),
+    # Core files
+    "core/config.pb": CheckmkFileInfo(
+        components=[
+            OPT_COMP_CMC,
+        ],
+        sensitivity=CheckmkFileSensitivity(1),
+        description="Contains the current configuration of the core in the protobuff format.",
+    ),
+    "core/state": CheckmkFileInfo(
+        components=[
+            OPT_COMP_CMC,
+        ],
+        sensitivity=CheckmkFileSensitivity(1),
+        description="Contains the current status of the core.",
+    ),
+    "core/state.pb": CheckmkFileInfo(
+        components=[
+            OPT_COMP_CMC,
+        ],
+        sensitivity=CheckmkFileSensitivity(1),
+        description="Contains the current status of the core in the protobuff format.",
+    ),
+    "core/history": CheckmkFileInfo(
+        components=[
+            OPT_COMP_CMC,
+        ],
+        sensitivity=CheckmkFileSensitivity(1),
+        description="Contains the latest state history of all hosts and services.",
+    ),
     # Log files
     "cmc.log": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
+            OPT_COMP_CMC,
         ],
         sensitivity=CheckmkFileSensitivity(1),
         description=
@@ -518,12 +573,16 @@ CheckmkFileInfoByRelFilePathMap: Dict[str, CheckmkFileInfo] = {
         "The log file of the checkmk weg gui. Here you can find all kind of automations call, ldap sync and some failing GUI extensions.",
     ),
     "liveproxyd.log": CheckmkFileInfo(
-        components=[],
+        components=[
+            OPT_COMP_CMC,
+        ],
         sensitivity=CheckmkFileSensitivity(1),
         description="Log file for the Livestatus proxies.",
     ),
     "liveproxyd.state": CheckmkFileInfo(
-        components=[],
+        components=[
+            OPT_COMP_CMC,
+        ],
         sensitivity=CheckmkFileSensitivity(1),
         description=
         "The current state of the Livestatus proxies in a readable form. This file is updated every 5 seconds.",

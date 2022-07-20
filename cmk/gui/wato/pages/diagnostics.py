@@ -16,6 +16,7 @@ from cmk.utils.diagnostics import (
     CheckmkFileSensitivity,
     DiagnosticsParameters,
     get_checkmk_config_files_map,
+    get_checkmk_core_files_map,
     get_checkmk_file_description,
     get_checkmk_file_info,
     get_checkmk_file_sensitivity_for_humans,
@@ -24,6 +25,7 @@ from cmk.utils.diagnostics import (
     OPT_CHECKMK_LOG_FILES,
     OPT_CHECKMK_OVERVIEW,
     OPT_COMP_BUSINESS_INTELLIGENCE,
+    OPT_COMP_CMC,
     OPT_COMP_GLOBAL_SETTINGS,
     OPT_COMP_HOSTS_AND_FOLDERS,
     OPT_COMP_NOTIFICATIONS,
@@ -82,6 +84,7 @@ class ModeDiagnostics(WatoMode):
 
     def _from_vars(self) -> None:
         self._checkmk_config_files_map = get_checkmk_config_files_map()
+        self._checkmk_core_files_map = get_checkmk_core_files_map()
         self._checkmk_log_files_map = get_checkmk_log_files_map()
         self._collect_dump = bool(html.request.get_ascii_input("_collect_dump"))
         self._diagnostics_parameters = self._get_diagnostics_parameters()
@@ -271,6 +274,18 @@ class ModeDiagnostics(WatoMode):
                  default_keys=["config_files"],
              )),
         ]
+
+        if not cmk_version.is_raw_edition():
+            elements.append((
+                OPT_COMP_CMC,
+                Dictionary(
+                    title=_("CMC (Checkmk Microcore)"),
+                    help=_("Core files (config, state and history) from var/check_mk/core.%s") %
+                    _CHECKMK_FILES_NOTE,
+                    elements=self._get_component_specific_checkmk_files_elements(OPT_COMP_CMC,),
+                    default_keys=["core_files"],
+                ),
+            ))
         return elements
 
     def _get_component_specific_checkmk_files_elements(
@@ -283,10 +298,21 @@ class ModeDiagnostics(WatoMode):
                         for fi in [get_checkmk_file_info(f, component)]
                         if component in fi.components]
         if config_files:
-            elements.append(
-                ("config_files",
-                 self._get_component_specific_checkmk_files_choices("Configuration files",
-                                                                    config_files)))
+            elements.append((
+                "config_files",
+                self._get_component_specific_checkmk_files_choices(_("Configuration files"),
+                                                                   config_files),
+            ))
+
+        core_files = [(f, fi)
+                      for f in self._checkmk_core_files_map
+                      for fi in [get_checkmk_file_info(f, component)]
+                      if component in fi.components]
+        if core_files:
+            elements.append((
+                "core_files",
+                self._get_component_specific_checkmk_files_choices(_("Core files"), core_files),
+            ))
 
         log_files = [(f, fi)
                      for f in self._checkmk_log_files_map
@@ -445,7 +471,8 @@ def _merge_results(results):
 
 def _join_sub_tars(tarfile_paths: List[str]) -> str:
     tarfile_path = str(
-        cmk.utils.paths.diagnostics_dir.joinpath(str(uuid.uuid4())).with_suffix(".tar.gz"))
+        cmk.utils.paths.diagnostics_dir.joinpath("sddump_%s" %
+                                                 str(uuid.uuid4())).with_suffix(".tar.gz"))
     with tarfile.open(name=tarfile_path, mode='w:gz') as dest:
         for filepath in tarfile_paths:
             with tarfile.open(name=filepath, mode='r:gz') as sub_tar:

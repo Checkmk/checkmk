@@ -1,0 +1,15 @@
+Title: Fix another source for frozen Microcore during config reloads (Addition to #14285)
+Class: fix
+Compatible: compat
+Component: core
+Date: 1658315724
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p9
+
+In addition to the werk #14285 we released with 2.1.0p8, this werk fixes
+another situation which could block the reload of the Microcore.
+
+This could happen in case you have notification rules configured which use the
+match condition "Match only during timeperiod".

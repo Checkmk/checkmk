@@ -181,7 +181,9 @@ def update_timeperiods_cache() -> None:
     tp_cache = _config_cache.get("timeperiods_cache")
 
     if not tp_cache:
-        response = livestatus.LocalConnection().query("GET timeperiods\nColumns: name in")
+        connection = livestatus.LocalConnection()
+        connection.set_timeout(2)
+        response = connection.query("GET timeperiods\nColumns: name in")
         for tp_name, tp_active in response:
             tp_cache[tp_name] = bool(tp_active)
 

@@ -33,7 +33,6 @@ from cmk.gui.groups import (
     load_service_group_information,
 )
 from cmk.gui.i18n import _
-from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.plugins.webapi.utils import (
     add_configuration_hash,
     api_call_collection_registry,
@@ -42,6 +41,7 @@ from cmk.gui.plugins.webapi.utils import (
     compute_config_hash,
     validate_config_hash,
 )
+from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.watolib.activate_changes import activate_changes_start, activate_changes_wait
 from cmk.gui.watolib.automations import do_site_login
 from cmk.gui.watolib.bakery import try_bake_agents_for_hosts

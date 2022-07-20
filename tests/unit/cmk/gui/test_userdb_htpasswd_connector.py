@@ -12,7 +12,7 @@ from passlib.hash import bcrypt  # type: ignore[import]
 
 from cmk.utils.type_defs import UserId
 
-import cmk.gui.plugins.userdb.htpasswd as htpasswd
+from cmk.gui.userdb import htpasswd
 
 
 @pytest.fixture(name="htpasswd_file")
@@ -22,7 +22,7 @@ def htpasswd_file_fixture(tmp_path: Path) -> Path:
         "\n".join(
             sorted(
                 [
-                    # Pre 1.6 hashing formats (see cmk.gui.plugins.userdb.htpasswd for more details)
+                    # Pre 1.6 hashing formats (see cmk.gui.userdb.htpasswd for more details)
                     "bärnd:$apr1$/FU.SwEZ$Ye0XG1Huf2j7Jws7KD.h2/",
                     "cmkadmin:NEr3kqi287FQc",
                     "harry:$1$478020$ldQUQ3RIwRYk5wjKfsWPD.",

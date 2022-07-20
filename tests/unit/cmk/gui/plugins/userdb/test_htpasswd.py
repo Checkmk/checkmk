@@ -4,7 +4,7 @@ import pytest
 
 from cmk.utils.type_defs import UserId
 
-import cmk.gui.plugins.userdb.htpasswd as htpasswd
+from cmk.gui.userdb import htpasswd
 
 
 @pytest.fixture(name="test_config")

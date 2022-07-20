@@ -53,8 +53,6 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.plugins.userdb.htpasswd import check_password, hash_password, Htpasswd
-from cmk.gui.plugins.userdb.ldap_connector import MKLDAPException
 from cmk.gui.plugins.userdb.utils import (
     active_connections,
     add_internal_attributes,
@@ -71,6 +69,9 @@ from cmk.gui.plugins.userdb.utils import (
 )
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import SessionInfo, TwoFactorCredentials, Users, UserSpec
+from cmk.gui.userdb import user_attributes
+from cmk.gui.userdb.htpasswd import check_password, hash_password, Htpasswd
+from cmk.gui.userdb.ldap_connector import MKLDAPException
 from cmk.gui.utils.roles import roles_of_user
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
@@ -1233,7 +1234,7 @@ def update_config_based_user_attributes() -> None:
                     from_config=True,
                 )
 
-    cmk.gui.plugins.userdb.ldap_connector.register_user_attribute_sync_plugins()
+    cmk.gui.userdb.ldap_connector.register_user_attribute_sync_plugins()
 
 
 def _clear_config_based_user_attributes() -> None:
@@ -1558,3 +1559,17 @@ def cleanup_abandoned_profiles(logger: Logger, now: datetime, max_age: timedelta
                 shutil.rmtree(profile_dir)
             except OSError:
                 logger.debug("Could not delete %s", profile_dir, exc_info=True)
+
+
+def _register_user_attributes() -> None:
+    user_attribute_registry.register(user_attributes.ForceAuthUserUserAttribute)
+    user_attribute_registry.register(user_attributes.DisableNotificationsUserAttribute)
+    user_attribute_registry.register(user_attributes.StartURLUserAttribute)
+    user_attribute_registry.register(user_attributes.UIThemeUserAttribute)
+    user_attribute_registry.register(user_attributes.UISidebarPosition)
+    user_attribute_registry.register(user_attributes.UIIconTitle)
+    user_attribute_registry.register(user_attributes.UIIconPlacement)
+    user_attribute_registry.register(user_attributes.UIBasicAdvancedToggle)
+
+
+_register_user_attributes()

@@ -4,12 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.userdb.utils import (
-    show_mode_choices,
-    user_attribute_registry,
-    UserAttribute,
-    validate_start_url,
-)
+from cmk.gui.plugins.userdb.utils import show_mode_choices, UserAttribute, validate_start_url
 from cmk.gui.utils.theme import theme_choices
 from cmk.gui.valuespec import (
     AbsoluteDate,
@@ -25,7 +20,6 @@ from cmk.gui.valuespec import (
 )
 
 
-@user_attribute_registry.register
 class ForceAuthUserUserAttribute(UserAttribute):
     @classmethod
     def name(cls) -> str:
@@ -49,7 +43,6 @@ class ForceAuthUserUserAttribute(UserAttribute):
         return "general.see_all"
 
 
-@user_attribute_registry.register
 class DisableNotificationsUserAttribute(UserAttribute):
     @classmethod
     def name(cls) -> str:
@@ -100,7 +93,6 @@ class DisableNotificationsUserAttribute(UserAttribute):
         return "check_mk"
 
 
-@user_attribute_registry.register
 class StartURLUserAttribute(UserAttribute):
     @classmethod
     def name(cls) -> str:
@@ -141,7 +133,6 @@ class StartURLUserAttribute(UserAttribute):
         return "multisite"
 
 
-@user_attribute_registry.register
 class UIThemeUserAttribute(UserAttribute):
     @classmethod
     def name(cls) -> str:
@@ -171,7 +162,6 @@ class UIThemeUserAttribute(UserAttribute):
         return "multisite"
 
 
-@user_attribute_registry.register
 class UISidebarPosition(UserAttribute):
     @classmethod
     def name(cls) -> str:
@@ -191,7 +181,6 @@ class UISidebarPosition(UserAttribute):
         return "multisite"
 
 
-@user_attribute_registry.register
 class UIIconTitle(UserAttribute):
     @classmethod
     def name(cls) -> str:
@@ -213,7 +202,6 @@ class UIIconTitle(UserAttribute):
         )
 
 
-@user_attribute_registry.register
 class UIIconPlacement(UserAttribute):
     @classmethod
     def name(cls) -> str:
@@ -239,7 +227,6 @@ class UIIconPlacement(UserAttribute):
         return "multisite"
 
 
-@user_attribute_registry.register
 class UIBasicAdvancedToggle(UserAttribute):
     @classmethod
     def name(cls) -> str:

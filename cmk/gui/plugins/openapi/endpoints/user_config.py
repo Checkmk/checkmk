@@ -9,7 +9,6 @@ from typing import Any, Dict, Literal, Mapping, Optional, Sequence, Tuple, Typed
 
 from cmk.utils.type_defs import UserId
 
-import cmk.gui.plugins.userdb.htpasswd as htpasswd
 from cmk.gui import userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
@@ -25,6 +24,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
 from cmk.gui.plugins.openapi.restful_objects.parameters import USERNAME
 from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.type_defs import UserSpec
+from cmk.gui.userdb import htpasswd
 from cmk.gui.watolib.users import delete_users, edit_users
 
 TIMESTAMP_RANGE = Tuple[float, float]

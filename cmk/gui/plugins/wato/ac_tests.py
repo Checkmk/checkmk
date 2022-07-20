@@ -19,9 +19,8 @@ from cmk.utils.paths import local_checks_dir, local_inventory_dir
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
-import cmk.gui.plugins.userdb.htpasswd
-import cmk.gui.plugins.userdb.ldap_connector as ldap
 import cmk.gui.userdb as userdb
+import cmk.gui.userdb.ldap_connector as ldap
 import cmk.gui.utils
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.http import request
@@ -35,6 +34,7 @@ from cmk.gui.site_config import (
     sitenames,
     wato_slave_sites,
 )
+from cmk.gui.userdb import htpasswd
 from cmk.gui.utils.urls import doc_reference_url, DocReference
 from cmk.gui.watolib.analyze_configuration import (
     ac_test_registry,
@@ -422,9 +422,7 @@ class ACTestOldDefaultCredentials(ACTest):
 
     def execute(self) -> Iterator[ACResult]:
         if (
-            cmk.gui.plugins.userdb.htpasswd.HtpasswdUserConnector({}).check_credentials(
-                UserId("omdadmin"), "omd"
-            )
+            htpasswd.HtpasswdUserConnector({}).check_credentials(UserId("omdadmin"), "omd")
             == "omdadmin"
         ):
             yield ACResultCRIT(

@@ -20,13 +20,13 @@ import cmk.utils.paths
 import cmk.utils.version
 from cmk.utils.type_defs import UserId
 
-import cmk.gui.plugins.userdb.htpasswd as htpasswd
-import cmk.gui.plugins.userdb.ldap_connector as ldap
 import cmk.gui.plugins.userdb.utils as utils
 import cmk.gui.userdb as userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.type_defs import SessionId, WebAuthnCredential
+from cmk.gui.userdb import htpasswd
+from cmk.gui.userdb import ldap_connector as ldap
 from cmk.gui.valuespec import Dictionary
 
 

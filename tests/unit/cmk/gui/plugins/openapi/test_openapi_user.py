@@ -414,7 +414,7 @@ def test_openapi_user_internal_auth_handling(monkeypatch, run_as_superuser) -> N
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
     monkeypatch.setattr(
-        "cmk.gui.plugins.userdb.htpasswd.hash_password",
+        "cmk.gui.userdb.htpasswd.hash_password",
         lambda x: "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
     )
 

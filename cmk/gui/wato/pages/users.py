@@ -41,7 +41,6 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.plugins.userdb.utils import get_connection, UserAttribute
 from cmk.gui.plugins.wato.utils import (
     flash,
@@ -54,6 +53,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserSpec
 from cmk.gui.user_sites import get_configured_site_choices
+from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import get_ntop_connection_mandatory, is_ntop_available

@@ -1,0 +1,9 @@
+Title: Fix a regression during events delete/archive
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1658307452
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1

@@ -485,12 +485,16 @@ def edit_package(pacname, new_package_info):
     write_package_info(new_package_info)
 
 
-def install_optional_package(package_file_name):
-    if package_file_name not in [p.name.decode("utf-8") for p in get_optional_package_paths()]:
-        raise PackageException("Optional package %s does not exist" % package_file_name)
+def _get_full_package_path(package_file_name):
+    for package in get_optional_package_paths():
+        if package_file_name == package.name.decode("utf-8"):
+            return package
+    raise PackageException("Optional package %s does not exist" % package_file_name)
 
-    return install_package(
-        "%s" % cmk.utils.paths.optional_packages_dir.joinpath(package_file_name.encode("utf-8")))
+
+def install_optional_package(package_file_name):
+    package_path = _get_full_package_path(package_file_name)
+    return install_package(str(package_path))
 
 
 # Packaged files must either be unpackaged or already
@@ -714,9 +718,22 @@ def get_package_info_from_package(file_object):
 
 
 def get_optional_package_paths():
-    if not cmk.utils.paths.optional_packages_dir.exists():
-        return []
-    return list(cmk.utils.paths.optional_packages_dir.iterdir())
+    try:
+        local = list(cmk.utils.paths.local_optional_packages_dir.iterdir())
+    except OSError:
+        local = []
+
+    local_mkp_names = {p.name for p in local}
+
+    try:
+        shipped = [
+            p for p in cmk.utils.paths.optional_packages_dir.iterdir()
+            if p.name not in local_mkp_names
+        ]
+    except OSError:
+        shipped = []
+
+    return local + shipped
 
 
 def unpackaged_files():

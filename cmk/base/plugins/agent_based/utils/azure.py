@@ -156,19 +156,45 @@ def discover_azure_by_metrics(
 #   +----------------------------------------------------------------------+
 
 
-def check_memory(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    resource = section.get(item)
-    if not resource:
-        raise IgnoreResultsError("Data not present at the moment")
+def check_azure_metric(
+    azure_metric_name: str,
+    metric_name: str,
+    metric_label: str,
+    render_func: Callable[[float], str],
+) -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
+    def check_metric(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+        resource = section.get(item)
+        if not resource:
+            raise IgnoreResultsError("Data not present at the moment")
 
-    memory = resource.metrics.get("average_memory_percent")
-    if not memory:
-        raise IgnoreResultsError("Data not present at the moment")
+        metric = resource.metrics.get(azure_metric_name)
+        if not metric:
+            raise IgnoreResultsError("Data not present at the moment")
 
-    yield from check_levels(
-        memory.value,
-        levels_upper=params.get("levels"),
-        metric_name="mem_used_percent",
-        label="Memory utilization",
-        render_func=render.percent,
+        yield from check_levels(
+            metric.value,
+            levels_upper=params.get("levels"),
+            metric_name=metric_name,
+            label=metric_label,
+            render_func=render_func,
+        )
+
+    return check_metric
+
+
+def check_memory() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
+    return check_azure_metric(
+        "average_memory_percent",
+        "mem_used_percent",
+        "Memory utilization",
+        render.percent,
+    )
+
+
+def check_cpu() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
+    return check_azure_metric(
+        "average_cpu_percent",
+        "util",
+        "CPU utilization",
+        render.percent,
     )

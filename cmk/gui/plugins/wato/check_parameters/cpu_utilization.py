@@ -5,11 +5,15 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
+    CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem,
     Levels,
     rulespec_registry,
+    RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersOperatingSystem,
+    TextInput,
 )
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
 from cmk.gui.valuespec import Age, Dictionary, DropdownChoice, Integer, Percentage, Transform, Tuple
 
 
@@ -301,5 +305,28 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_cpu_utilization,
         title=lambda: _("CPU utilization for Appliances"),
+    )
+)
+
+
+def _parameter_valuespec_cpu_utilization_simple():
+    return Dictionary(
+        title=_("Levels CPU"),
+        elements=[
+            (
+                "levels",
+                SimpleLevels(Percentage, title=_("CPU utilization"), default_levels=(65.0, 90.0)),
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="cpu_utilization_with_item",
+        item_spec=lambda: TextInput(title=_("CPU Utilization")),
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_cpu_utilization_simple,
+        title=lambda: _("CPU Utilization"),
     )
 )

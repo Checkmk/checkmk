@@ -19,6 +19,7 @@ from cmk.base.plugins.agent_based.utils.azure import (
     _get_metrics_number,
     _parse_resource,
     AzureMetric,
+    check_cpu,
     check_memory,
     discover_azure_by_metrics,
     parse_resources,
@@ -216,7 +217,7 @@ def test_check_memory(
     params: Mapping[str, Any],
     expected_result: Sequence[Union[Result, Metric]],
 ) -> None:
-    assert list(check_memory(item, params, section)) == expected_result
+    assert list(check_memory()(item, params, section)) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -245,4 +246,27 @@ def test_check_memory(
 )
 def test_check_memory_errors(section: Section, item: str, params: Mapping[str, Any]) -> None:
     with pytest.raises(IgnoreResultsError, match="Data not present at the moment"):
-        list(check_memory(item, params, section))
+        list(check_memory()(item, params, section))
+
+
+@pytest.mark.parametrize(
+    "section, item, params, expected_result",
+    [
+        (
+            PARSED_RESOURCES,
+            "checkmk-mysql-server",
+            {"levels": (0.0, 0.0)},
+            [
+                Result(state=State.CRIT, summary="CPU utilization: 0% (warn/crit at 0%/0%)"),
+                Metric("util", 0.0, levels=(0.0, 0.0)),
+            ],
+        ),
+    ],
+)
+def test_check_cpu(
+    section: Section,
+    item: str,
+    params: Mapping[str, Any],
+    expected_result: Sequence[Union[Result, Metric]],
+) -> None:
+    assert list(check_cpu()(item, params, section)) == expected_result

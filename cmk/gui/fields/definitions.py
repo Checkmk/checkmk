@@ -659,16 +659,24 @@ def validate_custom_host_attributes(
             attribute.validate_input(value, "")
         except MKUserError as exc:
             if errors == "raise":
-                raise ValidationError(str(exc)) from exc
+                raise ValidationError({name: str(exc)}) from exc
 
             _logger.error("Error validating %s: %s", name, str(exc))
 
     return host_attributes
 
 
+def _ensure_string(value):
+    if not isinstance(value, str):
+        raise ValidationError(f"Not a string, but a {type(value).__name__}")
+
+
 class CustomAttributes(ValueTypedDictSchema):
     value_type = ValueTypedDictSchema.field(
-        base.String(description="Each tag is a mapping of string to string")
+        base.String(
+            description="Each tag is a mapping of string to string",
+            validate=_ensure_string,
+        )
     )
 
     @post_load

@@ -116,7 +116,10 @@ class ValueTypedDictSchema(BaseSchema):
     def _serialize_field(self, data, field: fields.Field):  # type:ignore[no-untyped-def]
         result = {}
         for key, value in data.items():
-            field._validate(value)
+            try:
+                field._validate(value)
+            except ValidationError as exc:
+                raise ValidationError({key: exc.messages}) from exc
             try:
                 result[key] = field.serialize(obj=data, attr=key)
             except ValueError as exc:
@@ -126,7 +129,10 @@ class ValueTypedDictSchema(BaseSchema):
     def _deserialize_field(self, data, field: fields.Field):  # type:ignore[no-untyped-def]
         result = {}
         for key, value in data.items():
-            field._validate(value)
+            try:
+                field._validate(value)
+            except ValidationError as exc:
+                raise ValidationError({key: exc.messages}) from exc
             result[key] = field.deserialize(value=value, data=data, attr=key)
         return result
 
@@ -493,7 +499,7 @@ Keys 'optional1', 'required1' occur more than once.
         errors: typing.Union[str, typing.List, typing.Dict],
     ) -> None:
         if isinstance(errors, dict):
-            error_store.errors.update(errors)
+            error_store.store_error(errors)
         elif isinstance(errors, list):
             error_store.errors.setdefault("_schema", []).extend(errors)
         elif isinstance(errors, str):

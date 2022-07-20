@@ -1,0 +1,91 @@
+#!/bin/sh
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# NOTE: This agent plugin has been developed primarily for the Kubernetes use
+# case (more details, see function definition). For this reason, it is not
+# supported by the agent bakery.
+
+# Reason for this no-op: shellcheck disable=... before the first command disables the error for the
+# entire script.
+:
+
+# Disable unused variable error (needed to keep track of version)
+# shellcheck disable=SC2034
+CMK_VERSION="2.2.0i1"
+CONFIG_FILE="${MK_CONFDIR}/lnx_if_sys_class_net.cfg"
+
+__read_network_interface_files() {
+
+    path=${1}
+    files=${2}
+
+    for name in ${files}; do
+        printf "%s\v%s\t" "${name}" "$(cat "${path}/${name}" 2>/dev/null)"
+    done
+
+}
+
+section_lnx_if_sys_class_net() {
+
+    # This section essentially provides the same information as lnx_if, therefore
+    # only one of these sections should be used. It is recommended to use lnx_if
+    # (default in Checkmk).
+
+    # lnx_if obtains its data from /proc/net/dev, this section obtains it from
+    # /sys/class/net. The difference is that /proc/net/dev is a virtual filesystem
+    # and issues commands to the kernel, while /sys/class/net is a more static,
+    # file-based view of network interfaces.
+
+    # Use case: Kubernetes: The Checkmk agent runs inside a container on the
+    # Kubernetes cluster but aims to collect information of the underlying node.
+    # The node can be a real server, a VM, or a cloud server instance.
+    # /proc/net/dev only shows interfaces of the host namespace (in this case
+    # the container). Since files in /sys/class/net are real files, they are mounted
+    # from the node into the container and provide network information of the node in
+    # this way. Note that agent sections are sourced and run selectively, the lnx_if
+    # section is therefore excluded.
+
+    # HOST_PATH_PREFIX: This environment variable is used to provide a way to
+    # mount /sys/class/net to an alternative path. If not set, the default location
+    # is the system path (/sys/class/net).
+
+    interface_filepath="${HOST_PATH_PREFIX}/sys/class/net"
+    interface_statistics_subpath="statistics"
+
+    network_interface_metadata="ifindex ifalias address type carrier"
+    network_interface_speed="speed"
+    network_interface_rx_stats="rx_bytes rx_packets rx_errors rx_dropped multicast"
+    network_interface_tx_stats="tx_bytes tx_packets tx_errors tx_dropped tx_fifo_errors"
+
+    echo "<<<lnx_if_sys_class_net:sep(09)>>>"
+
+    for if_path in "${interface_filepath}"/*; do
+
+        # Directory does not exist or is empty
+        [ -e "${if_path}" ] || continue
+
+        printf "name\v%s\t" "$(basename "${if_path}")"
+        __read_network_interface_files "${if_path}" "${network_interface_metadata}"
+        __read_network_interface_files "${if_path}" "${network_interface_speed}"
+        __read_network_interface_files "${if_path}/${interface_statistics_subpath}" "${network_interface_rx_stats}"
+        __read_network_interface_files "${if_path}/${interface_statistics_subpath}" "${network_interface_tx_stats}"
+        printf "\n"
+
+    done
+
+}
+
+main() {
+
+    if [ -f "${CONFIG_FILE}" ]; then
+        # shellcheck source=agents/cfg_examples/lnx_if_sys_class_net.cfg
+        . "${CONFIG_FILE}"
+    fi
+
+    section_lnx_if_sys_class_net
+}
+
+[ -z "${MK_SOURCE_AGENT}" ] && main

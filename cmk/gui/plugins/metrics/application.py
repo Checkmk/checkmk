@@ -204,6 +204,13 @@ metric_info["database_apply_lag"] = {
     "color": "#006040",
 }
 
+metric_info["replication_lag"] = {
+    "title": _l("Replication lag"),
+    "help": _l("Amount of time that the replica server is lagging against the source server"),
+    "unit": "s",
+    "color": "14/a",
+}
+
 metric_info["jvm_garbage_collection_count"] = {
     "title": _l("Garbage collections"),
     "unit": "1/s",

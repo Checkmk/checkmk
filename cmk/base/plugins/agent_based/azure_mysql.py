@@ -3,8 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .agent_based_api.v1 import register
-from .utils.azure import check_cpu, check_memory, discover_azure_by_metrics, parse_resources
+from typing import Any, Callable, Mapping
+
+from .agent_based_api.v1 import register, render
+from .agent_based_api.v1.type_defs import CheckResult
+from .utils.azure import (
+    check_azure_metric,
+    check_cpu,
+    check_memory,
+    discover_azure_by_metrics,
+    parse_resources,
+    Section,
+)
 
 register.agent_section(
     name="azure_servers",
@@ -30,4 +40,24 @@ register.check_plugin(
     check_function=check_cpu(),
     check_ruleset_name="cpu_utilization_with_item",
     check_default_parameters={"levels": (65.0, 90.0)},
+)
+
+
+def check_replication() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
+    return check_azure_metric(
+        "total_seconds_behind_master",
+        "replication_lag",
+        "Replication lag",
+        render.timespan,
+    )
+
+
+register.check_plugin(
+    name="azure_mysql_replication",
+    sections=["azure_servers"],
+    service_name="Azure/DB for MySQL %s Replication",
+    discovery_function=discover_azure_by_metrics("total_seconds_behind_master"),
+    check_function=check_replication(),
+    check_ruleset_name="replication_lag",
+    check_default_parameters={},
 )

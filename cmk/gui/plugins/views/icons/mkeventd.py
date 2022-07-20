@@ -114,8 +114,9 @@ class MkeventdIcon(Icon):
         title = _('Events of Host %s') % (row["host_name"])
 
         if len(args) >= 2:
-            app = args[1].strip('\'').replace("\\\\", "\\").replace("\\!", "!")
-            title = _('Events of Application "%s" on Host %s') % (app, host)
+            app = args[1].strip('\'')
+            title_app = app.replace("\\\\", "\\").replace("\\!", "!")
+            title = _('Events of Application "%s" on Host %s') % (title_app, host)
             url_vars.append(("event_application", app))
 
         url = 'view.py?' + html.urlencode_vars(url_vars)

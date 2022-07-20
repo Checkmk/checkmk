@@ -47,7 +47,6 @@ from cmk.utils.type_defs import (
     RulesetName,
     ServiceID,
     ServiceName,
-    ServiceState,
 )
 
 from cmk.automations.results import CheckPreviewEntry
@@ -546,18 +545,20 @@ def _make_diff(
 #   '----------------------------------------------------------------------'
 
 
+@error_handling.handle_check_mk_check_result("discovery", "Check_MK Discovery")
 def active_check_discovery(
     host_name: HostName,
     *,
     fetched: Sequence[Tuple[Source, FetcherMessage]],
-) -> ServiceState:
-    return _execute_check_discovery_with_error_handling(host_name, fetched=fetched)
+) -> ActiveCheckResult:
+    return _execute_check_discovery(host_name, fetched=fetched)
 
 
+@error_handling.handle_check_mk_check_result("discovery", "Check_MK Discovery")
 def commandline_check_discovery(
     host_name: HostName,
     ipaddress: Optional[HostAddress],
-) -> ServiceState:
+) -> ActiveCheckResult:
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(host_name)
 
@@ -589,29 +590,7 @@ def commandline_check_discovery(
         mode=Mode.DISCOVERY,
     )
 
-    return _execute_check_discovery_with_error_handling(host_name, fetched=fetched)
-
-
-def _execute_check_discovery_with_error_handling(
-    host_name: HostName,
-    *,
-    fetched: Sequence[Tuple[Source, FetcherMessage]],
-) -> ServiceState:
-    host_config = HostConfig.make_host_config(host_name)
-    try:
-        state, text = error_handling.handle_success(
-            _execute_check_discovery(host_name, fetched=fetched)
-        )
-    except Exception as exc:
-        state, text = error_handling.handle_failure(
-            exc,
-            host_config.exit_code_spec(),
-            hostname=host_name,
-            service_name="Check_MK Discovery",
-            plugin_name="discover",
-        )
-    error_handling.handle_output(text, host_name)
-    return state
+    return _execute_check_discovery(host_name, fetched=fetched)
 
 
 def _execute_check_discovery(

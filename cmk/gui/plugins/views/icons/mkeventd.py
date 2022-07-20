@@ -8,10 +8,11 @@ import re
 import shlex
 
 import cmk.gui.config as config
-from cmk.gui.globals import html
+from cmk.gui.globals import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
 from cmk.gui.sites import get_alias_of_host
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 @icon_and_action_registry.register
@@ -94,11 +95,16 @@ class MkeventdIcon(Icon):
         title = _('Events of Host %s') % (row["host_name"])
 
         if len(args) >= 2:
-            app = args[1].strip('\'').replace("\\\\", "\\").replace("\\!", "!")
-            title = _('Events of Application "%s" on Host %s') % (app, host)
+            app = args[1].strip('\'')
+            title_app = app.replace("\\\\", "\\").replace("\\!", "!")
+            title = _('Events of Application "%s" on Host %s') % (title_app, host)
             url_vars.append(("event_application", app))
 
-        url = 'view.py?' + html.urlencode_vars(url_vars)
+        url = makeuri_contextless(
+            request,
+            url_vars,
+            filename="view.py",
+        )
 
         return 'mkeventd', title, url_prefix + url
 

@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import io
 import os
 import ast
 import pprint
@@ -34,16 +35,19 @@ import subprocess
 import json
 from cStringIO import StringIO
 from typing import NamedTuple
+from pathlib2 import Path
 
 import cmk.ec.export
 import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.tty as tty
+import cmk.utils.store as store
 import cmk.utils.werks
 import cmk.utils.debug
 import cmk_base.utils
 
 logger = cmk.utils.log.get_logger(__name__)
+
 pac_ext = ".mkp"
 
 
@@ -434,12 +438,12 @@ def package_remove(args):
     if not package:
         raise PackageException("No such package %s." % pacname)
 
-    logger.verbose("Removing package %s...", pacname)
-    remove_package(package)
-    logger.verbose("Successfully removed package %s.", pacname)
+    logger.verbose("Uninstall package %s...", pacname)
+    uninstall_package(package)
+    logger.verbose("Successfully uninstalled package %s.", pacname)
 
 
-def remove_package(package):
+def uninstall_package(package):
     for part in get_package_parts() + config_parts:
         filenames = package["files"].get(part.ident, [])
         if len(filenames) > 0:
@@ -494,7 +498,7 @@ def _get_full_package_path(package_file_name):
 
 def install_optional_package(package_file_name):
     package_path = _get_full_package_path(package_file_name)
-    return install_package(str(package_path))
+    return _install_package(str(package_path))
 
 
 # Packaged files must either be unpackaged or already
@@ -522,6 +526,32 @@ def validate_package_files_part(packages, pacname, part, directory, rel_paths):
                                            (path, other_pacname))
 
 
+def store_package(file_content):
+
+    with tarfile.open(fileobj=io.BytesIO(file_content), mode="r:gz") as tar:
+        package = parse_package_info(tar.extractfile("info").read())
+
+    base_name = format_file_name(name=package["name"], version=package["version"])
+    local_package_path = cmk.utils.paths.local_optional_packages_dir / base_name
+    shipped_package_path = cmk.utils.paths.optional_packages_dir / base_name
+
+    if local_package_path.exists() or shipped_package_path.exists():
+        raise PackageException("Package '%s' already exists on the site!" % base_name)
+
+    local_package_path.parent.mkdir(parents=True, exist_ok=True)
+    store.save_file(str(local_package_path), file_content)
+
+    return package
+
+
+def remove_optional_package(package_name):
+    """Remove a local optional package file
+
+    If the input is a `Path` (or `str` representing a path) only the base name is considered.
+    """
+    (cmk.utils.paths.local_optional_packages_dir / Path(package_name).name).unlink()
+
+
 def package_install(args):
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P install NAME")
@@ -529,11 +559,15 @@ def package_install(args):
     if not os.path.exists(path):
         raise PackageException("No such file %s." % path)
 
-    return install_package(file_name=path)
+    with Path(path).open('rb') as fh:
+        package = store_package(fh.read())
+
+    return install_optional_package(
+        format_file_name(name=package["name"], version=package["version"]))
 
 
-def install_package(file_name=None, file_object=None):
-    tar = tarfile.open(name=file_name, fileobj=file_object, mode="r:gz")
+def _install_package(file_name):
+    tar = tarfile.open(name=file_name, mode="r:gz")
     package = parse_package_info(tar.extractfile("info").read())
 
     pacname = package["name"]
@@ -713,6 +747,7 @@ def get_optional_package_infos():
     for pkg_path in get_optional_package_paths():
         with pkg_path.open("rb") as pkg:
             pkg_info = get_package_info_from_package(pkg)
+            pkg_info.update(is_local=pkg_path.parent != cmk.utils.paths.optional_packages_dir)
             optional[pkg_path.name.decode("utf-8")] = pkg_info
 
     return optional

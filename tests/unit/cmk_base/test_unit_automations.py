@@ -41,10 +41,11 @@ def test_registered_automations(site):
             'get-package',
             'create-package',
             'edit-package',
-            'install-package',
+            'disable-package',
             'remove-package',
             'release-package',
             'remove-unpackaged-file',
+            'upload-package',
             'install-optional-package',
         ]
 

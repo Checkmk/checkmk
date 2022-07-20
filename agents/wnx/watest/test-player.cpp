@@ -51,7 +51,7 @@ public:
 
 static TestStorage S_Storage;
 
-bool MailboxCallback(const cma::MailSlot *Slot, const void *Data, int Len,
+bool MailboxCallback(const mailslot::Slot *Slot, const void *Data, int Len,
                      void *Context) {
     using namespace std::chrono;
     auto storage = (TestStorage *)Context;

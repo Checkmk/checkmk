@@ -59,8 +59,8 @@ protected:
         return carrier::BuildPortName(carrier::kCarrierMailslotName,
                                       mailbox_.GetName());
     }
-    static bool ThreadCallback(const cma::MailSlot *slot, const void *data,
-                               int length, void *context) {
+    static bool ThreadCallback(const cma::mailslot::Slot *slot,
+                               const void *data, int length, void *context) {
         auto dt = static_cast<const carrier::CarrierDataHeader *>(data);
         switch (dt->type()) {
             case carrier::DataType::kLog: {
@@ -88,7 +88,7 @@ protected:
     }
 
 private:
-    cma::MailSlot mailbox_{"WatestMailSlot", 0};
+    cma::mailslot::Slot mailbox_{"WatestMailSlot", 0};
     carrier::CoreCarrier cc_;
     bool established_{false};
     bool maked_{false};

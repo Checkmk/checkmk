@@ -29,14 +29,14 @@
 #include "common/wtools.h"
 #include "tools/_xlog.h"  // trace and log
 
-namespace cma {
-class MailSlot;
-bool IsMailApiTraced() noexcept;
-std::string GetMailApiLog();
+namespace cma::mailslot {
+class Slot;
+bool IsApiLogged() noexcept;
+std::string GetApiLog();
 
 template <typename... Args>
-void MailSlotLog(Args... args) {
-    xlog::l(IsMailApiTraced(), args...).filelog(GetMailApiLog());
+void ApiLog(Args... args) {
+    xlog::l(IsApiLogged(), args...).filelog(GetApiLog());
 }
 
 // This is Thread Callback definition
@@ -45,12 +45,13 @@ void MailSlotLog(Args... args) {
 // Context is parameter supplied by YOU, my friend when you creates mailbox,
 // it may be nullptr or something important like an address of an object of
 // a class to which callback should deliver data
-using MailBoxThreadProc = bool (*)(const MailSlot *slot, const void *data,
-                                   int len, void *context);
+using ThreadProc = bool (*)(const Slot *slot, const void *data, int len,
+                            void *context);
 
 constexpr int DEFAULT_THREAD_SLEEP = 20;
+constexpr std::string_view controller_slot_prefix{"WinAgentCtl"};
 
-class MailSlot {
+class Slot {
 public:
     enum class Mode { client, server };
 
@@ -63,24 +64,30 @@ public:
         FAILED_CREATE = -5
     };
 
-    MailSlot(const MailSlot &) = delete;
-    MailSlot &operator=(const MailSlot &) = delete;
-    MailSlot(MailSlot &&) = delete;
-    MailSlot &operator=(MailSlot &&) = delete;
+    Slot(const Slot &) = delete;
+    Slot &operator=(const Slot &) = delete;
+    Slot(Slot &&) = delete;
+    Slot &operator=(Slot &&) = delete;
 
     /// convert slot name into fully qualified global object
-    static std::string BuildMailSlotName(std::string_view slot_name, int id,
-                                         std::string_view pc_name);
+    static std::string BuildMailSlotName(std::string_view slot_name,
+                                         uint32_t id,
+                                         std::string_view pc_name) noexcept;
 
-    MailSlot(std::string_view name, int id, std::string_view pc_name)
+    /// returns controller slot_name
+    static std::string ControllerMailSlotName(uint32_t pid) noexcept {
+        return BuildMailSlotName(controller_slot_prefix, pid, ".");
+    }
+
+    Slot(std::string_view name, uint32_t id, std::string_view pc_name) noexcept
         : name_{BuildMailSlotName(name, id, pc_name)} {}
 
-    MailSlot(std::string_view name, int id)
+    Slot(std::string_view name, uint32_t id) noexcept
         : name_{BuildMailSlotName(name, id, ".")} {}
 
-    explicit MailSlot(std::string_view name) : name_(name) {}
+    explicit Slot(std::string_view name) : name_(name) {}
 
-    ~MailSlot() { Close(); }
+    ~Slot() { Close(); }
 
     // Accessors
     [[nodiscard]] bool IsOwner() const noexcept {
@@ -92,7 +99,7 @@ public:
     [[nodiscard]] const char *GetName() const noexcept { return name_.c_str(); }
     [[nodiscard]] HANDLE GetHandle() const noexcept { return handle_; }
 
-    bool ConstructThread(MailBoxThreadProc foo, int sleep_ms, void *context,
+    bool ConstructThread(ThreadProc foo, int sleep_ms, void *context,
                          wtools::SecurityLevel sl);
     /// mailbox dies here
     void DismantleThread();
@@ -106,11 +113,10 @@ public:
     int Get(void *data, unsigned int max_len);
 
 private:
-    OVERLAPPED
-    CreateOverlapped() const noexcept;
+    OVERLAPPED CreateOverlapped() const noexcept;
     std::optional<DWORD> CheckMessageSize();
 
-    void MailBoxThread(MailBoxThreadProc foo, int sleep_value, void *context);
+    void MailBoxThread(ThreadProc foo, int sleep_value, void *context);
 
     static HANDLE openMailSlotWrite(const std::string &name) noexcept;
     static HANDLE createMailSlot(const std::string &name,
@@ -125,4 +131,4 @@ private:
     std::unique_ptr<std::thread>
         main_thread_{};  // controlled by Construct/Dismantle
 };
-};  // namespace cma
+};  // namespace cma::mailslot

@@ -82,8 +82,8 @@ private:
 // ASSORTED
 constexpr const wchar_t *kMainLogName = L"cmk_service.log";
 
-bool SystemMailboxCallback(const cma::MailSlot *, const void *data, int len,
-                           void *context);
+bool SystemMailboxCallback(const cma::mailslot::Slot *, const void *data,
+                           int len, void *context);
 
 class ServiceProcessor;
 

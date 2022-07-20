@@ -145,7 +145,7 @@ TEST(ServiceProcessorTest, StartStopExe) {
     });
     ON_OUT_OF_SCOPE(delete processor;);
 
-    cma::MailSlot mailbox(kTestingMailSlot, 0);
+    mailslot::Slot mailbox(kTestingMailSlot, 0);
     mailbox.ConstructThread(SystemMailboxCallback, 20, processor,
                             wtools::SecurityLevel::admin);
     ON_OUT_OF_SCOPE(mailbox.DismantleThread());

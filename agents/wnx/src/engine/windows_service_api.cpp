@@ -709,8 +709,8 @@ int ExecReloadConfig() {
     XLOG::setup::DuplicateOnStdio(true);
     XLOG::SendStringToStdio("Reloading configuration...\n",
                             XLOG::Colors::white);
-    MailSlot mailbox_service(cfg::kServiceMailSlot, 0);
-    MailSlot mailbox_test(cfg::kTestingMailSlot, 0);
+    mailslot::Slot mailbox_service(cfg::kServiceMailSlot, 0);
+    mailslot::Slot mailbox_test(cfg::kTestingMailSlot, 0);
 
     XLOG::l.i("Asking for reload service");
     carrier::InformByMailSlot(mailbox_service.GetName(), commander::kReload);
@@ -723,7 +723,7 @@ int ExecReloadConfig() {
 }
 
 int ExecUninstallAlert() {
-    MailSlot mailbox_service(cfg::kServiceMailSlot, 0);
+    mailslot::Slot mailbox_service(cfg::kServiceMailSlot, 0);
 
     carrier::InformByMailSlot(mailbox_service.GetName(),
                               commander::kUninstallAlert);

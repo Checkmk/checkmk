@@ -37,7 +37,7 @@ struct TestStorage {
 static TestStorage g_mailslot_storage;
 
 // testing callback
-bool MailboxCallbackPerfTest(const cma::MailSlot *Slot, const void *Data,
+bool MailboxCallbackPerfTest(const cma::mailslot::Slot *Slot, const void *Data,
                              int Len, void *Context) {
     using namespace std::chrono;
     auto storage = (TestStorage *)Context;
@@ -87,7 +87,7 @@ namespace cma::provider {
 
 TEST(SectionPerf, Runner) {
     //
-    cma::MailSlot mailbox("WinAgentPerfTest", 0);
+    mailslot::Slot mailbox("WinAgentPerfTest", 0);
 
     using namespace cma::carrier;
     using namespace cma::exe;

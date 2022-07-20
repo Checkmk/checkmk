@@ -126,7 +126,7 @@ bool CoreCarrier::sendDataDispatcher(DataType data_type,
 bool CoreCarrier::mailSlotSend(DataType data_type, const std::string &peer_name,
                                uint64_t answer_id, const void *data,
                                size_t length) const {
-    cma::MailSlot postman(carrier_address_.c_str());
+    mailslot::Slot postman(carrier_address_);
     auto cdh = CarrierDataHeader::createPtr(peer_name.c_str(), answer_id,
                                             data_type, data, length);
     if (!cdh) {

@@ -691,8 +691,8 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
                 ac::kCmkAgentUnistall,
             controller_params.has_value());
     }
-    MailSlot mailbox(is_service ? cfg::kServiceMailSlot : cfg::kTestingMailSlot,
-                     0);
+    mailslot::Slot mailbox(
+        is_service ? cfg::kServiceMailSlot : cfg::kTestingMailSlot, 0);
     internal_port_ = carrier::BuildPortName(carrier::kCarrierMailslotName,
                                             mailbox.GetName());
     try {
@@ -786,7 +786,7 @@ void ServiceProcessor::startTestingMainThread() {
 // Implementation of the Windows signals
 // ---------------- END ----------------
 
-bool SystemMailboxCallback(const MailSlot * /*nothing*/, const void *data,
+bool SystemMailboxCallback(const mailslot::Slot * /*nothing*/, const void *data,
                            int len, void *context) {
     auto *processor = static_cast<srv::ServiceProcessor *>(context);
     if (processor == nullptr) {

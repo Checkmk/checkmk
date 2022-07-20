@@ -43,7 +43,7 @@ class TestAPIDaemonSets:
         )
         with Mocketizer():
             daemon_set = list(apps_client.list_daemon_set_for_all_namespaces().items)[0]
-        metadata = parse_metadata(daemon_set.metadata)
+        metadata = parse_metadata(daemon_set.metadata, type_=str)
         assert isinstance(metadata, api.MetaData)
         assert metadata.name == "node-collector-container-metrics"
         assert isinstance(metadata.creation_timestamp, float)
@@ -76,7 +76,7 @@ class TestAPIDaemonSets:
         )
         with Mocketizer():
             daemon_set = list(apps_client.list_daemon_set_for_all_namespaces().items)[0]
-        metadata = parse_metadata(daemon_set.metadata)
+        metadata = parse_metadata(daemon_set.metadata, type_=str)
         assert metadata.labels == {}
         assert metadata.annotations == {}
 

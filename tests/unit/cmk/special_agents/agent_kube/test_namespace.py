@@ -9,7 +9,6 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
     APIPodFactory,
     APIResourceQuotaFactory,
     MetaDataFactory,
-    PodMetaDataFactory,
     PodSpecFactory,
     PodStatusFactory,
 )
@@ -256,7 +255,7 @@ def _pod_with_scopes_factory(  # type:ignore[no-untyped-def]
     terminating: bool = False,
 ):
     return APIPodFactory.build(
-        metadata=PodMetaDataFactory.build(name=name) if name else PodMetaDataFactory.build(),
+        metadata=MetaDataFactory.build(name=name) if name else MetaDataFactory.build(),
         status=PodStatusFactory.build(qos_class="besteffort" if best_effort else "guaranteed"),
         spec=PodSpecFactory.build(
             priority_class_name=priority_class,

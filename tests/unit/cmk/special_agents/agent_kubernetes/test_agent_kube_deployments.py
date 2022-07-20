@@ -44,7 +44,7 @@ class TestAPIDeployments:
         with Mocketizer():
             deployment = list(apps_client.list_deployment_for_all_namespaces().items)[0]
 
-        metadata = parse_metadata(deployment.metadata)
+        metadata = parse_metadata(deployment.metadata, type_=str)
         assert metadata.name == "cluster-collector"
         assert metadata.namespace == "checkmk-monitoring"
         assert isinstance(metadata.creation_timestamp, float)
@@ -77,7 +77,7 @@ class TestAPIDeployments:
         with Mocketizer():
             deployment = list(apps_client.list_deployment_for_all_namespaces().items)[0]
 
-        metadata = parse_metadata(deployment.metadata)
+        metadata = parse_metadata(deployment.metadata, type_=str)
         assert metadata.name == "cluster-collector"
         assert metadata.namespace == "checkmk-monitoring"
         assert isinstance(metadata.creation_timestamp, float)

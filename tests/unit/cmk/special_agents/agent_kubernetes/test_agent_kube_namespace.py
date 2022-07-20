@@ -9,7 +9,7 @@ from mocket import Mocketizer  # type: ignore[import]
 from mocket.mockhttp import Entry  # type: ignore[import]
 
 from cmk.special_agents.utils_kubernetes.schemata import api
-from cmk.special_agents.utils_kubernetes.transform import parse_namespace_metadata
+from cmk.special_agents.utils_kubernetes.transform import parse_metadata_no_namespace
 
 
 class TestAPINamespace:
@@ -39,8 +39,8 @@ class TestAPINamespace:
         )
         with Mocketizer():
             namespace = list(core_client.list_namespace().items)[0]
-        metadata = parse_namespace_metadata(namespace.metadata)
-        assert isinstance(metadata, api.NamespaceMetaData)
+        metadata = parse_metadata_no_namespace(namespace.metadata, api.NamespaceName)
+        assert isinstance(metadata, api.MetaDataNoNamespace)
         assert metadata.name == "checkmk-monitoring"
         assert isinstance(metadata.creation_timestamp, float)
         assert metadata.labels == {
@@ -74,6 +74,6 @@ class TestAPINamespace:
         )
         with Mocketizer():
             namespace = list(core_client.list_namespace().items)[0]
-        metadata = parse_namespace_metadata(namespace.metadata)
+        metadata = parse_metadata_no_namespace(namespace.metadata, type_=api.NamespaceName)
         assert metadata.labels == {}
         assert metadata.annotations == {}

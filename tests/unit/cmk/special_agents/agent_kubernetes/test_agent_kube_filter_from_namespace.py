@@ -9,7 +9,6 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
     APIDeploymentFactory,
     APIPodFactory,
     MetaDataFactory,
-    PodMetaDataFactory,
 )
 
 from cmk.special_agents.agent_kube import kube_objects_from_namespaces, pods_from_namespaces
@@ -21,16 +20,12 @@ def test_filter_pods_from_namespaces() -> None:
     pods = [
         api_to_agent_pod(
             APIPodFactory.build(
-                metadata=PodMetaDataFactory.build(
-                    name="one", namespace=api.NamespaceName("default")
-                ),
+                metadata=MetaDataFactory.build(name="one", namespace=api.NamespaceName("default")),
             )
         ),
         api_to_agent_pod(
             APIPodFactory.build(
-                metadata=PodMetaDataFactory.build(
-                    name="two", namespace=api.NamespaceName("standard")
-                )
+                metadata=MetaDataFactory.build(name="two", namespace=api.NamespaceName("standard"))
             )
         ),
     ]

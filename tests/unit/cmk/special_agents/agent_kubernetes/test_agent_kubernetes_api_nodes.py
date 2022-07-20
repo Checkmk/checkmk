@@ -11,7 +11,11 @@ from mocket import Mocketizer  # type: ignore[import]
 from mocket.mockhttp import Entry  # type: ignore[import]
 
 from cmk.special_agents.utils_kubernetes.schemata import api
-from cmk.special_agents.utils_kubernetes.transform import node_conditions, node_info, parse_metadata
+from cmk.special_agents.utils_kubernetes.transform import (
+    node_conditions,
+    node_info,
+    parse_metadata_no_namespace,
+)
 
 
 class TestAPINode:
@@ -40,10 +44,8 @@ class TestAPINode:
             "annotations": annotations,
         }
         metadata_obj = client.V1ObjectMeta(**node_raw_metadata)
-        metadata = parse_metadata(metadata_obj, model=api.NodeMetaData)
-        assert isinstance(metadata, api.NodeMetaData)
+        metadata = parse_metadata_no_namespace(metadata_obj, api.NodeName)
         assert metadata.name == "k8"
-        assert metadata.namespace is None
         assert metadata.labels
         assert metadata.annotations == {
             "node.alpha.kubernetes.io/ttl": "0",
@@ -59,7 +61,7 @@ class TestAPINode:
             "uid": "42c82288-5524-49cb-af75-065e73fedc88",
         }
         metadata_obj = client.V1ObjectMeta(**node_raw_metadata)
-        metadata = parse_metadata(metadata_obj, model=api.NodeMetaData)
+        metadata = parse_metadata_no_namespace(metadata_obj, api.NodeName)
         assert metadata.labels == {}
         assert metadata.annotations == {}
 
@@ -71,7 +73,7 @@ class TestAPINode:
             "uid": "f57f3e64-2a89-11ec-bb97-3f4358ab72b2",
         }
         metadata_obj = client.V1ObjectMeta(**node_raw_metadata)
-        metadata = parse_metadata(metadata_obj)
+        metadata = parse_metadata_no_namespace(metadata_obj, api.NodeName)
         assert metadata.creation_timestamp == now.timestamp()
 
     def test_parse_node_info(self, dummy_host, core_client) -> None:  # type:ignore[no-untyped-def]

@@ -20,7 +20,7 @@ import pytest
 from pydantic_factories import ModelFactory, Use
 
 # pylint: disable=comparison-with-callable,redefined-outer-name
-from tests.unit.cmk.special_agents.agent_kube.factory import MetaDataFactory
+from tests.unit.cmk.special_agents.agent_kube.factory import MetaDataFactory, NodeMetaDataFactory
 
 from cmk.special_agents import agent_kube
 from cmk.special_agents.utils_kubernetes.schemata import api
@@ -52,10 +52,6 @@ class ContainerSpecFactory(ModelFactory):
 
 
 # Pod Factories
-class PodMetaDataFactory(ModelFactory):
-    __model__ = api.PodMetaData
-
-    name = Use(lambda x: str(next(x)), itertools.count(0, 1))
 
 
 class PodStatusFactory(ModelFactory):
@@ -90,7 +86,7 @@ class APIPodFactory(ModelFactory):
         }
 
     uid = _uid
-    metadata = PodMetaDataFactory.build
+    metadata = MetaDataFactory.build
     status = PodStatusFactory.build
     spec = _spec
     containers = _containers
@@ -99,10 +95,6 @@ class APIPodFactory(ModelFactory):
 # Node Factories
 class KubeletInfoFactory(ModelFactory):
     __model__ = api.KubeletInfo
-
-
-class NodeMetaDataFactory(ModelFactory):
-    __model__ = api.NodeMetaData
 
 
 class NodeResourcesFactory(ModelFactory):
@@ -371,8 +363,8 @@ def node(
 
 
 @pytest.fixture
-def pod_metadata() -> api.PodMetaData:
-    return PodMetaDataFactory.build()
+def pod_metadata() -> api.MetaData[str]:
+    return MetaDataFactory.build()
 
 
 @pytest.fixture
@@ -390,7 +382,7 @@ def phase_generator(phases: Type[api.Phase]) -> Callable[[], Iterator[api.Phase]
 
 @pytest.fixture
 def new_pod(
-    pod_metadata: api.PodMetaData,
+    pod_metadata: api.MetaData[str],
     phase_generator: Callable[[], Iterator[api.Phase]],
     pod_spec: api.PodSpec,
     container_status: Callable[[], api.ContainerStatus],

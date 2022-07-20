@@ -55,7 +55,7 @@ def get_kube_parsed_section_types(
     return {name: f.__annotations__["return"] for name, f in kube_parse_functions.items()}
 
 
-_KNOWN_EXCEPTIONS = {
+_KNOWN_EXCEPTIONS: dict[SectionName, type[check.Section]] = {
     SectionName("kube_pod_containers_v1"): check.PodContainers,
     SectionName("kube_pod_init_containers_v1"): check.PodContainers,
     SectionName("kube_start_time_v1"): check.StartTime,

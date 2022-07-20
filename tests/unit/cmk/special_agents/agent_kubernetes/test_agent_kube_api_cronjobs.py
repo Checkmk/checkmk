@@ -20,7 +20,7 @@ class TestAPICronJob:
             "uid": "uid",
         }
         metadata_obj = client.V1ObjectMeta(**node_raw_metadata)
-        metadata = parse_metadata(metadata_obj)
+        metadata = parse_metadata(metadata_obj, type_=str)
         assert metadata.name == "cronjob"
         assert metadata.namespace is not None
 

@@ -65,7 +65,7 @@ class TestAPIPod:
         with Mocketizer():
             pod = list(core_client.list_pod_for_all_namespaces().items)[0]
 
-        metadata = parse_metadata(pod.metadata, model=api.PodMetaData)
+        metadata = parse_metadata(pod.metadata, type_=str)
         assert metadata.name == "cluster-collector-595b64557d-x9t5q"
         assert metadata.namespace == "checkmk-monitoring"
         assert isinstance(metadata.creation_timestamp, float)
@@ -111,7 +111,7 @@ class TestAPIPod:
         with Mocketizer():
             pod = list(core_client.list_pod_for_all_namespaces().items)[0]
 
-        metadata = parse_metadata(pod.metadata, model=api.PodMetaData)
+        metadata = parse_metadata(pod.metadata, type_=str)
         assert metadata.labels == {}
         assert metadata.annotations == {}
 

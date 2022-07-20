@@ -2,7 +2,6 @@
 # Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """
 The schemas contained in this file define the stable API between kubernetes and
 the special agent.
@@ -13,17 +12,28 @@ except the python standard library or pydantic.
 """
 
 import enum
-from typing import Dict, List, Literal, Mapping, NewType, Optional, Sequence, Union
+from typing import (
+    Dict,
+    Generic,
+    List,
+    Literal,
+    Mapping,
+    NewType,
+    Optional,
+    Sequence,
+    TypeVar,
+    Union,
+)
 
 from pydantic import BaseModel
 from pydantic.class_validators import validator
 from pydantic.fields import Field
+from pydantic.generics import GenericModel
 
 CronJobUID = NewType("CronJobUID", str)
 JobUID = NewType("JobUID", str)
 PodUID = NewType("PodUID", str)
 GitVersion = NewType("GitVersion", str)
-
 
 LabelValue = NewType("LabelValue", str)
 """
@@ -116,33 +126,22 @@ NamespaceName = NewType("NamespaceName", str)
 NodeName = NewType("NodeName", str)
 IpAddress = NewType("IpAddress", str)
 
+ObjectName = TypeVar("ObjectName", bound=str)
 
-class MetaData(BaseModel):
-    name: str
-    namespace: Optional[NamespaceName] = None
-    creation_timestamp: Optional[Timestamp] = None
+
+class MetaDataNoNamespace(GenericModel, Generic[ObjectName]):
+    name: ObjectName
+    creation_timestamp: Timestamp
     labels: Labels
     annotations: Annotations
 
 
-class NodeMetaData(MetaData):
-    creation_timestamp: Timestamp
-    labels: Labels
-
-
-class PodMetaData(MetaData):
+class MetaData(MetaDataNoNamespace[ObjectName], Generic[ObjectName]):
     namespace: NamespaceName
 
 
-class NamespaceMetaData(BaseModel):
-    name: NamespaceName
-    labels: Labels
-    annotations: Annotations
-    creation_timestamp: Timestamp
-
-
 class Namespace(BaseModel):
-    metadata: NamespaceMetaData
+    metadata: MetaDataNoNamespace[NamespaceName]
 
 
 # TODO: PodCrossNamespaceAffinity is currently not supported
@@ -251,7 +250,7 @@ class ResourceQuota(BaseModel):
         multiple RQs targeting the same namespace)
     """
 
-    metadata: MetaData
+    metadata: MetaData[str]
     spec: ResourceQuotaSpec
 
 
@@ -318,7 +317,7 @@ class NodeStatus(BaseModel):
 
 
 class Node(BaseModel):
-    metadata: NodeMetaData
+    metadata: MetaDataNoNamespace[NodeName]
     status: NodeStatus
     roles: Sequence[str]
     resources: Dict[str, NodeResources]
@@ -409,7 +408,7 @@ class DeploymentSpec(BaseModel):
 
 
 class Deployment(BaseModel):
-    metadata: MetaData
+    metadata: MetaData[str]
     spec: DeploymentSpec
     status: DeploymentStatus
     pods: Sequence[PodUID]
@@ -429,7 +428,7 @@ class DaemonSetStatus(BaseModel):
 
 
 class DaemonSet(BaseModel):
-    metadata: MetaData
+    metadata: MetaData[str]
     spec: DaemonSetSpec
     status: DaemonSetStatus
     pods: Sequence[PodUID]
@@ -447,7 +446,7 @@ class StatefulSetStatus(BaseModel):
 
 
 class StatefulSet(BaseModel):
-    metadata: MetaData
+    metadata: MetaData[str]
     spec: StatefulSetSpec
     status: StatefulSetStatus
     pods: Sequence[PodUID]
@@ -566,7 +565,7 @@ class PodStatus(BaseModel):
 
 class Pod(BaseModel):
     uid: PodUID
-    metadata: PodMetaData
+    metadata: MetaData[str]
     status: PodStatus
     spec: PodSpec
     containers: Mapping[str, ContainerStatus]
@@ -590,7 +589,7 @@ class CronJobSpec(BaseModel):
 
 class CronJob(BaseModel):
     uid: CronJobUID
-    metadata: MetaData
+    metadata: MetaData[str]
     spec: CronJobSpec
     pod_uids: Sequence[PodUID]
 

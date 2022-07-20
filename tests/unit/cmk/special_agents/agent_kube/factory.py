@@ -13,15 +13,11 @@ from cmk.special_agents.utils_kubernetes.schemata import api
 # General Factories
 
 
-class MetaDataFactory(ModelFactory):
-    __model__ = api.MetaData
+class MetaDataFactory(ModelFactory[api.MetaData[str]]):
+    __model__ = api.MetaData[str]
 
 
 # Pod related Factories
-
-
-class PodMetaDataFactory(ModelFactory):
-    __model__ = api.PodMetaData
 
 
 class PodSpecFactory(ModelFactory):
@@ -85,7 +81,7 @@ def api_to_agent_daemonset(api_daemonset: api.DaemonSet) -> agent.DaemonSet:
 
 
 class NamespaceMetaDataFactory(ModelFactory):
-    __model__ = api.NamespaceMetaData
+    __model__ = api.MetaDataNoNamespace[api.NamespaceName]
 
 
 class APIResourceQuotaFactory(ModelFactory):
@@ -97,3 +93,10 @@ class APIResourceQuotaFactory(ModelFactory):
 
 class PerformancePodFactory(ModelFactory):
     __model__ = agent.PerformancePod
+
+
+# Node related Factories
+
+
+class NodeMetaDataFactory(ModelFactory):
+    __model__ = api.MetaDataNoNamespace[api.NodeName]

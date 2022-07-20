@@ -2,7 +2,6 @@
 # Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """
 This file contains helper functions to convert kubernetes specific
 data structures to version independent data structured defined in schemata.api
@@ -10,19 +9,7 @@ data structures to version independent data structured defined in schemata.api
 
 from __future__ import annotations
 
-from typing import (
-    cast,
-    Dict,
-    Iterable,
-    List,
-    Literal,
-    Mapping,
-    Optional,
-    Sequence,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import cast, Dict, Iterable, List, Literal, Mapping, Optional, Sequence, TypeVar, Union
 
 from kubernetes import client  # type: ignore[import]
 
@@ -84,24 +71,27 @@ def parse_memory(value: str) -> float:  # pylint: disable=too-many-branches
     return float(value)
 
 
-def parse_metadata(
-    metadata: client.V1ObjectMeta, model: Type[api.MetaData] = api.MetaData
-) -> api.MetaData:
-    return model(
-        name=metadata.name,
-        namespace=metadata.namespace,
+def parse_metadata_no_namespace(
+    metadata: client.V1ObjectMeta, type_: type[api.ObjectName]
+) -> api.MetaDataNoNamespace[api.ObjectName]:
+    return api.MetaDataNoNamespace(
+        name=type_(metadata.name),
         creation_timestamp=convert_to_timestamp(metadata.creation_timestamp),
         labels=parse_labels(metadata.labels),
         annotations=parse_annotations(metadata.annotations),
     )
 
 
-def parse_namespace_metadata(metadata: client.V1ObjectMeta) -> api.NamespaceMetaData:
-    return api.NamespaceMetaData(
-        name=api.NamespaceName(metadata.name),
-        creation_timestamp=convert_to_timestamp(metadata.creation_timestamp),
-        labels=parse_labels(metadata.labels),
-        annotations=parse_annotations(metadata.annotations),
+def parse_metadata(
+    metadata: client.V1ObjectMeta, type_: type[api.ObjectName]
+) -> api.MetaData[api.ObjectName]:
+    metadata_no_namespace = parse_metadata_no_namespace(metadata, type_=type_)
+    return api.MetaData(
+        name=type_(metadata_no_namespace.name),
+        namespace=api.NamespaceName(metadata.namespace),
+        creation_timestamp=metadata_no_namespace.creation_timestamp,
+        labels=metadata_no_namespace.labels,
+        annotations=metadata_no_namespace.annotations,
     )
 
 
@@ -373,7 +363,7 @@ def deployment_conditions(
 def pod_from_client(pod: client.V1Pod) -> api.Pod:
     return api.Pod(
         uid=api.PodUID(pod.metadata.uid),
-        metadata=parse_metadata(pod.metadata, model=api.PodMetaData),
+        metadata=parse_metadata(pod.metadata, str),
         status=pod_status(pod),
         spec=pod_spec(pod),
         containers=pod_containers(pod.status.container_statuses),
@@ -396,7 +386,7 @@ def node_addresses_from_client(
 
 
 def node_from_client(node: client.V1Node, kubelet_health: api.HealthZ) -> api.Node:
-    metadata = parse_metadata(node.metadata, model=api.NodeMetaData)
+    metadata = parse_metadata_no_namespace(node.metadata, api.NodeName)
     return api.Node(
         metadata=metadata,
         status=api.NodeStatus(
@@ -455,7 +445,7 @@ def deployment_from_client(
     deployment: client.V1Deployment, pod_uids: Sequence[api.PodUID]
 ) -> api.Deployment:
     return api.Deployment(
-        metadata=parse_metadata(deployment.metadata),
+        metadata=parse_metadata(deployment.metadata, str),
         spec=parse_deployment_spec(deployment.spec),
         status=api.DeploymentStatus(
             conditions=deployment_conditions(deployment.status),
@@ -481,7 +471,7 @@ def cron_job_from_client(
 ) -> api.CronJob:
     return api.CronJob(
         uid=api.CronJobUID(cron_job.metadata.uid),
-        metadata=parse_metadata(cron_job.metadata),
+        metadata=parse_metadata(cron_job.metadata, str),
         spec=parse_cron_job_spec(cron_job.spec),
         pod_uids=pod_uids,
     )
@@ -518,7 +508,7 @@ def daemonset_from_client(
     daemonset: client.V1DaemonSet, pod_uids: Sequence[api.PodUID]
 ) -> api.DaemonSet:
     return api.DaemonSet(
-        metadata=parse_metadata(daemonset.metadata),
+        metadata=parse_metadata(daemonset.metadata, str),
         spec=parse_daemonset_spec(daemonset.spec),
         status=parse_daemonset_status(status=daemonset.status),
         pods=pod_uids,
@@ -557,7 +547,7 @@ def statefulset_from_client(
     statefulset: client.V1StatefulSet, pod_uids: Sequence[api.PodUID]
 ) -> api.StatefulSet:
     return api.StatefulSet(
-        metadata=parse_metadata(statefulset.metadata),
+        metadata=parse_metadata(statefulset.metadata, str),
         spec=parse_statefulset_spec(statefulset.spec),
         status=parse_statefulset_status(statefulset.status),
         pods=pod_uids,
@@ -566,7 +556,7 @@ def statefulset_from_client(
 
 def namespace_from_client(namespace: client.V1Namespace) -> api.Namespace:
     return api.Namespace(
-        metadata=parse_namespace_metadata(namespace.metadata),
+        metadata=parse_metadata_no_namespace(namespace.metadata, api.NamespaceName),
     )
 
 
@@ -644,7 +634,7 @@ def resource_quota_from_client(
         return None
 
     return api.ResourceQuota(
-        metadata=parse_metadata(resource_quota.metadata),
+        metadata=parse_metadata(resource_quota.metadata, str),
         spec=spec,
     )
 

@@ -368,7 +368,7 @@ class Pod:
     def __init__(
         self,
         uid: api.PodUID,
-        metadata: api.PodMetaData,
+        metadata: api.MetaData[str],
         status: api.PodStatus,
         spec: api.PodSpec,
         containers: Mapping[str, api.ContainerStatus],
@@ -524,7 +524,7 @@ def aggregate_resources(
 
 
 class CronJob(PodNamespacedOwner):
-    def __init__(self, metadata: api.MetaData, spec: api.CronJobSpec) -> None:
+    def __init__(self, metadata: api.MetaData[str], spec: api.CronJobSpec) -> None:
         super().__init__()
         self.metadata = metadata
         self.spec = spec
@@ -546,7 +546,7 @@ class CronJob(PodNamespacedOwner):
 class Deployment(PodNamespacedOwner):
     def __init__(
         self,
-        metadata: api.MetaData,
+        metadata: api.MetaData[str],
         spec: api.DeploymentSpec,
         status: api.DeploymentStatus,
     ) -> None:
@@ -632,7 +632,7 @@ def _thin_containers(pods: Collection[Pod]) -> section.ThinContainers:
 
 class DaemonSet(PodNamespacedOwner):
     def __init__(
-        self, metadata: api.MetaData, spec: api.DaemonSetSpec, status: api.DaemonSetStatus
+        self, metadata: api.MetaData[str], spec: api.DaemonSetSpec, status: api.DaemonSetStatus
     ) -> None:
         super().__init__()
         self.metadata = metadata
@@ -701,7 +701,7 @@ def daemonset_info(
 
 class StatefulSet(PodNamespacedOwner):
     def __init__(
-        self, metadata: api.MetaData, spec: api.StatefulSetSpec, status: api.StatefulSetStatus
+        self, metadata: api.MetaData[str], spec: api.StatefulSetSpec, status: api.StatefulSetStatus
     ) -> None:
         super().__init__()
         self.metadata = metadata
@@ -769,7 +769,7 @@ def statefulset_info(
 class Node(PodOwner):
     def __init__(
         self,
-        metadata: api.NodeMetaData,
+        metadata: api.MetaDataNoNamespace[api.NodeName],
         status: api.NodeStatus,
         resources: Dict[str, api.NodeResources],
         roles: Sequence[str],
@@ -1447,7 +1447,7 @@ def pod_namespace(pod: api.Pod) -> api.NamespaceName:
 def namespace_name(namespace: api.Namespace) -> api.NamespaceName:
     """The name of the namespace
     Examples:
-        >>> namespace_name(api.Namespace(metadata=api.MetaData(name="foo", creation_timestamp=0.0, labels={}, annotations={})))
+        >>> namespace_name(api.Namespace(metadata=api.MetaDataNoNamespace(name="foo", creation_timestamp=0.0, labels={}, annotations={})))
         'foo'
     """
     return namespace.metadata.name

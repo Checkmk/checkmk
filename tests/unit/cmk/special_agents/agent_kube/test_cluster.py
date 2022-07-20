@@ -42,7 +42,7 @@ class PerformanceContainerFactory(ModelFactory):
 
 
 def test_cluster_namespaces(
-    cluster_details: api.ClusterDetails, pod_metadata: api.PodMetaData
+    cluster_details: api.ClusterDetails, pod_metadata: api.MetaData[str]
 ) -> None:
     cluster = agent.Cluster(cluster_details=cluster_details, excluded_node_roles=[])
     api_pod = APIPodFactory.build(metadata=pod_metadata)

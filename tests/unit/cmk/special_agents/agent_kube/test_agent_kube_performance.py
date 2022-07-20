@@ -7,8 +7,8 @@ from typing import Sequence
 
 from tests.unit.cmk.special_agents.agent_kube.factory import (
     APIPodFactory,
+    MetaDataFactory,
     PerformancePodFactory,
-    PodMetaDataFactory,
 )
 
 from cmk.special_agents.agent_kube import (
@@ -93,9 +93,7 @@ def test_filter_associating_performance_pods_from_api_pods() -> None:
     pod_namespace = "default"
     pod_lookup_name = lookup_name(pod_namespace, pod_name)
     api_pods = [
-        APIPodFactory.build(
-            metadata=PodMetaDataFactory.build(name=pod_name, namespace=pod_namespace)
-        )
+        APIPodFactory.build(metadata=MetaDataFactory.build(name=pod_name, namespace=pod_namespace))
     ]
 
     performance_pods = [

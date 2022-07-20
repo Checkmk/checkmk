@@ -39,7 +39,7 @@ class TestAPIStatefulSets:
         )
         with Mocketizer():
             statefulset = list(apps_client.list_stateful_set_for_all_namespaces().items)[0]
-        metadata = parse_metadata(statefulset.metadata)
+        metadata = parse_metadata(statefulset.metadata, type_=str)
         assert isinstance(metadata, api.MetaData)
         assert metadata.name == "web"
         assert isinstance(metadata.creation_timestamp, float)
@@ -72,7 +72,7 @@ class TestAPIStatefulSets:
         )
         with Mocketizer():
             statefulset = list(apps_client.list_stateful_set_for_all_namespaces().items)[0]
-        metadata = parse_metadata(statefulset.metadata)
+        metadata = parse_metadata(statefulset.metadata, type_=str)
         assert metadata.labels == {}
         assert metadata.annotations == {}
 

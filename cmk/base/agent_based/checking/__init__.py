@@ -109,6 +109,7 @@ def active_check_checking(
         - `cmk.base.discovery.active_check_discovery()` for the discovery.
 
     """
+    host_config = HostConfig.make_host_config(hostname)
     return error_handling.check_result(
         partial(
             _execute_checkmk_checks,
@@ -119,7 +120,7 @@ def active_check_checking(
             dry_run=dry_run,
             show_perfdata=show_perfdata,
         ),
-        hostname=hostname,
+        host_config=host_config,
         service_name="Check_MK",
         plugin_name="mk",
     )
@@ -135,6 +136,7 @@ def commandline_checking(
     show_perfdata: bool = False,
 ) -> ServiceState:
     # The error handling is required for the Nagios core.
+    host_config = HostConfig.make_host_config(host_name)
     return error_handling.check_result(
         partial(
             _commandline_checking,
@@ -145,7 +147,7 @@ def commandline_checking(
             dry_run=dry_run,
             show_perfdata=show_perfdata,
         ),
-        hostname=host_name,
+        host_config=host_config,
         service_name="Check_MK",
         plugin_name="mk",
     )
@@ -523,7 +525,7 @@ def get_aggregated_result(
         result = ServiceCheckResult(
             3,
             cmk.base.crash_reporting.create_check_crash_dump(
-                host_name=host_config.hostname,
+                host_config=host_config,
                 service_name=service.description,
                 plugin_name=service.check_plugin_name,
                 plugin_kwargs={**item_kw, **params_kw, **section_kws},

@@ -27,22 +27,21 @@ from cmk.base.config import HostConfig
 def check_result(
     callback: Callable[[], ActiveCheckResult],
     *,
-    hostname: HostName,
+    host_config: HostConfig,
     service_name: ServiceName,
     plugin_name: CheckPluginNameStr,
 ) -> ServiceState:
-    host_config = HostConfig.make_host_config(hostname)
     try:
         state, text = _handle_success(callback())
     except Exception as exc:
         state, text = _handle_failure(
             exc,
             host_config.exit_code_spec(),
-            hostname=hostname,
+            host_config=host_config,
             service_name=service_name,
             plugin_name=plugin_name,
         )
-    _handle_output(text, hostname)
+    _handle_output(text, host_config.hostname)
     return state
 
 
@@ -59,7 +58,7 @@ def _handle_failure(
     exc: Exception,
     exit_spec: ExitSpec,
     *,
-    hostname: HostName,
+    host_config: HostConfig,
     service_name: ServiceName,
     plugin_name: CheckPluginNameStr,
 ) -> Tuple[ServiceState, str]:
@@ -79,7 +78,7 @@ def _handle_failure(
     return (
         exit_spec.get("exception", 3),
         cmk.base.crash_reporting.create_check_crash_dump(
-            host_name=hostname,
+            host_config=host_config,
             service_name=service_name,
             plugin_name=plugin_name,
             plugin_kwargs={},

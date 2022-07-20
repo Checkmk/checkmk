@@ -6,6 +6,7 @@
 import socket
 import time
 from contextlib import suppress
+from functools import partial
 from pathlib import Path
 from typing import (
     Callable,
@@ -47,6 +48,7 @@ from cmk.utils.type_defs import (
     RulesetName,
     ServiceID,
     ServiceName,
+    ServiceState,
 )
 
 from cmk.automations.results import CheckPreviewEntry
@@ -545,17 +547,32 @@ def _make_diff(
 #   '----------------------------------------------------------------------'
 
 
-@error_handling.handle_check_mk_check_result("discovery", "Check_MK Discovery")
 def active_check_discovery(
     host_name: HostName,
     *,
     fetched: Sequence[Tuple[Source, FetcherMessage]],
-) -> ActiveCheckResult:
-    return _execute_check_discovery(host_name, fetched=fetched)
+) -> ServiceState:
+    return error_handling.check_result(
+        partial(_execute_check_discovery, host_name, fetched=fetched),
+        hostname=host_name,
+        service_name="Check_MK Discovery",
+        plugin_name="discover",
+    )
 
 
-@error_handling.handle_check_mk_check_result("discovery", "Check_MK Discovery")
 def commandline_check_discovery(
+    host_name: HostName,
+    ipaddress: Optional[HostAddress],
+) -> ServiceState:
+    return error_handling.check_result(
+        partial(_commandline_check_discovery, host_name, ipaddress),
+        hostname=host_name,
+        service_name="Check_MK Discovery",
+        plugin_name="discover",
+    )
+
+
+def _commandline_check_discovery(
     host_name: HostName,
     ipaddress: Optional[HostAddress],
 ) -> ActiveCheckResult:

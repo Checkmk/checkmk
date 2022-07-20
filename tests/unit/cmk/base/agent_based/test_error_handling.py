@@ -27,7 +27,7 @@ def hostname_fixture(monkeypatch) -> HostName:
 
 
 def test_no_error_keeps_returns_status_from_callee(hostname: HostName, capsys) -> None:
-    state, text = error_handling.handle_success(
+    state, text = error_handling._handle_success(
         ActiveCheckResult(
             0,
             "summary",
@@ -35,7 +35,7 @@ def test_no_error_keeps_returns_status_from_callee(hostname: HostName, capsys) -
             ("metrics", "x"),
         )
     )
-    error_handling.handle_output(text, hostname)
+    error_handling._handle_output(text, hostname)
 
     assert state == 0
     assert capsys.readouterr().out == "summary | metrics x\ndetails\nlots of\n"
@@ -43,14 +43,14 @@ def test_no_error_keeps_returns_status_from_callee(hostname: HostName, capsys) -
 
 def test_MKTimeout_exception_returns_2(hostname: HostName, capsys) -> None:
     host_config = HostConfig.make_host_config(hostname)
-    state, text = error_handling.handle_failure(
+    state, text = error_handling._handle_failure(
         MKTimeout("oops!"),
         host_config.exit_code_spec(),
         hostname=hostname,
         service_name="service_name",
         plugin_name="pluging_name",
     )
-    error_handling.handle_output(text, hostname)
+    error_handling._handle_output(text, hostname)
 
     assert state == 2
     assert capsys.readouterr().out == "Timed out\n"
@@ -58,14 +58,14 @@ def test_MKTimeout_exception_returns_2(hostname: HostName, capsys) -> None:
 
 def test_MKAgentError_exception_returns_2(hostname: HostName, capsys) -> None:
     host_config = HostConfig.make_host_config(hostname)
-    state, text = error_handling.handle_failure(
+    state, text = error_handling._handle_failure(
         MKAgentError("oops!"),
         host_config.exit_code_spec(),
         hostname=hostname,
         service_name="service_name",
         plugin_name="pluging_name",
     )
-    error_handling.handle_output(text, hostname)
+    error_handling._handle_output(text, hostname)
 
     assert state == 2
     assert capsys.readouterr().out == "oops!\n"
@@ -73,14 +73,14 @@ def test_MKAgentError_exception_returns_2(hostname: HostName, capsys) -> None:
 
 def test_MKGeneralException_returns_3(hostname: HostName, capsys) -> None:
     host_config = HostConfig.make_host_config(hostname)
-    state, text = error_handling.handle_failure(
+    state, text = error_handling._handle_failure(
         MKGeneralException("kaputt!"),
         host_config.exit_code_spec(),
         hostname=hostname,
         service_name="service_name",
         plugin_name="pluging_name",
     )
-    error_handling.handle_output(text, hostname)
+    error_handling._handle_output(text, hostname)
 
     assert state == 3
     assert capsys.readouterr().out == "kaputt!\n"
@@ -89,14 +89,14 @@ def test_MKGeneralException_returns_3(hostname: HostName, capsys) -> None:
 @pytest.mark.usefixtures("disable_debug")
 def test_unhandled_exception_returns_3(hostname: HostName, capsys) -> None:
     host_config = HostConfig.make_host_config(hostname)
-    state, text = error_handling.handle_failure(
+    state, text = error_handling._handle_failure(
         ValueError("unexpected :/"),
         host_config.exit_code_spec(),
         hostname=hostname,
         service_name="service_name",
         plugin_name="pluging_name",
     )
-    error_handling.handle_output(text, hostname)
+    error_handling._handle_output(text, hostname)
 
     assert state == 3
     assert capsys.readouterr().out.startswith("check failed - please submit a crash report!")

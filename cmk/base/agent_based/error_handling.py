@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Callable, Tuple
+from typing import Callable, Tuple
 
 import cmk.utils.debug
 import cmk.utils.version as cmk_version
@@ -19,15 +19,34 @@ from cmk.utils.exceptions import (
 from cmk.utils.log import console
 from cmk.utils.type_defs import CheckPluginNameStr, ExitSpec, HostName, ServiceName, ServiceState
 
-import cmk.base.config as config
 import cmk.base.crash_reporting
 import cmk.base.obsolete_output as out
-
-ActiveCheckFunction = Callable[..., ActiveCheckResult]
-WrappedActiveCheckFunction = Callable[..., ServiceState]
+from cmk.base.config import HostConfig
 
 
-def handle_success(result: ActiveCheckResult) -> Tuple[ServiceState, str]:
+def check_result(
+    callback: Callable[[], ActiveCheckResult],
+    *,
+    hostname: HostName,
+    service_name: ServiceName,
+    plugin_name: CheckPluginNameStr,
+) -> ServiceState:
+    host_config = HostConfig.make_host_config(hostname)
+    try:
+        state, text = _handle_success(callback())
+    except Exception as exc:
+        state, text = _handle_failure(
+            exc,
+            host_config.exit_code_spec(),
+            hostname=hostname,
+            service_name=service_name,
+            plugin_name=plugin_name,
+        )
+    _handle_output(text, hostname)
+    return state
+
+
+def _handle_success(result: ActiveCheckResult) -> Tuple[ServiceState, str]:
     return result.state, "\n".join(
         (
             " | ".join((result.summary, " ".join(result.metrics))),
@@ -36,7 +55,7 @@ def handle_success(result: ActiveCheckResult) -> Tuple[ServiceState, str]:
     )
 
 
-def handle_failure(
+def _handle_failure(
     exc: Exception,
     exit_spec: ExitSpec,
     *,
@@ -69,7 +88,7 @@ def handle_failure(
     )
 
 
-def handle_output(output_text: str, hostname: HostName) -> None:
+def _handle_output(output_text: str, hostname: HostName) -> None:
     if _in_keepalive_mode():
         import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
 
@@ -77,36 +96,6 @@ def handle_output(output_text: str, hostname: HostName) -> None:
         console.verbose(output_text)
     else:
         out.output(output_text)
-
-
-def handle_check_mk_check_result(
-    check_plugin_name: CheckPluginNameStr,
-    description: ServiceName,
-) -> Callable[[ActiveCheckFunction], WrappedActiveCheckFunction]:
-    """Decorator function used to wrap all functions used to execute the "Check_MK *" checks
-    Main purpose: Equalize the exception handling of all such functions"""
-
-    def wrap(check_func: ActiveCheckFunction) -> WrappedActiveCheckFunction:
-        def wrapped_check_func(hostname: HostName, *args: Any, **kwargs: Any) -> int:
-            host_config = config.get_config_cache().get_host_config(hostname)
-            exit_spec = host_config.exit_code_spec()
-            try:
-                status, output_text = handle_success(check_func(hostname, *args, **kwargs))
-            except Exception as exc:
-                status, output_text = handle_failure(
-                    exc,
-                    exit_spec,
-                    hostname=hostname,
-                    service_name=description,
-                    plugin_name=check_plugin_name,
-                )
-
-            handle_output(output_text, hostname)
-            return status
-
-        return wrapped_check_func
-
-    return wrap
 
 
 def _in_keepalive_mode() -> bool:

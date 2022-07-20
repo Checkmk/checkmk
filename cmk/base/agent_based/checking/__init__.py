@@ -6,6 +6,7 @@
 
 from collections import defaultdict
 from contextlib import suppress
+from functools import partial
 from typing import (
     Container,
     DefaultDict,
@@ -36,6 +37,7 @@ from cmk.utils.type_defs import (
     MetricTuple,
     ParsedSectionName,
     ServiceName,
+    ServiceState,
     SourceType,
     state_markers,
 )
@@ -92,7 +94,6 @@ class _AggregatedResult(NamedTuple):
 #   '----------------------------------------------------------------------'
 
 
-@error_handling.handle_check_mk_check_result("mk", "Check_MK")
 def active_check_checking(
     hostname: HostName,
     *,
@@ -101,26 +102,56 @@ def active_check_checking(
     selected_sections: SectionNameCollection = NO_SELECTION,
     dry_run: bool = False,
     show_perfdata: bool = False,
-) -> ActiveCheckResult:
+) -> ServiceState:
     """
     See Also:
         - `commandline_checking()` to fetch the data before processing.
         - `cmk.base.discovery.active_check_discovery()` for the discovery.
 
     """
-    return _execute_checkmk_checks(
+    return error_handling.check_result(
+        partial(
+            _execute_checkmk_checks,
+            hostname=hostname,
+            fetched=fetched,
+            run_plugin_names=run_plugin_names,
+            selected_sections=selected_sections,
+            dry_run=dry_run,
+            show_perfdata=show_perfdata,
+        ),
         hostname=hostname,
-        fetched=fetched,
-        run_plugin_names=run_plugin_names,
-        selected_sections=selected_sections,
-        dry_run=dry_run,
-        show_perfdata=show_perfdata,
+        service_name="Check_MK",
+        plugin_name="mk",
     )
 
 
-# TODO: see if we can/should drop the decorator. If so, make hostname a kwarg-only
-@error_handling.handle_check_mk_check_result("mk", "Check_MK")
 def commandline_checking(
+    host_name: HostName,
+    ipaddress: Optional[HostAddress],
+    *,
+    run_plugin_names: Container[CheckPluginName] = EVERYTHING,
+    selected_sections: SectionNameCollection = NO_SELECTION,
+    dry_run: bool = False,
+    show_perfdata: bool = False,
+) -> ServiceState:
+    # The error handling is required for the Nagios core.
+    return error_handling.check_result(
+        partial(
+            _commandline_checking,
+            host_name,
+            ipaddress,
+            run_plugin_names=run_plugin_names,
+            selected_sections=selected_sections,
+            dry_run=dry_run,
+            show_perfdata=show_perfdata,
+        ),
+        hostname=host_name,
+        service_name="Check_MK",
+        plugin_name="mk",
+    )
+
+
+def _commandline_checking(
     host_name: HostName,
     ipaddress: Optional[HostAddress],
     *,

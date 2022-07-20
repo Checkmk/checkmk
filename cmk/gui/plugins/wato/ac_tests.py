@@ -15,7 +15,7 @@ import urllib3
 
 from livestatus import LocalConnection
 
-from cmk.utils.paths import local_inventory_dir
+from cmk.utils.paths import local_checks_dir, local_inventory_dir
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
@@ -35,6 +35,7 @@ from cmk.gui.site_config import (
     sitenames,
     wato_slave_sites,
 )
+from cmk.gui.utils.urls import doc_reference_url, DocReference
 from cmk.gui.watolib.analyze_configuration import (
     ac_test_registry,
     ACResult,
@@ -1178,6 +1179,41 @@ class ACTestRulebasedNotifications(ACTest):
             yield ACResultCRIT("Rulebased notifications are deactivated in the global settings")
         else:
             yield ACResultOK(_("Rulebased notifications are activated"))
+
+
+@ac_test_registry.register
+class ACTestDeprecatedCheckPlugins(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.deprecations
+
+    def title(self) -> str:
+        return _("Deprecated check plugins")
+
+    def help(self) -> str:
+        return _(
+            "The check plugin API for plugins in <tt>%s</tt> is deprecated."
+            " Plugin files in this folder are still considered, but starting from Checkmk version"
+            " 2.3 the API they are using may change at any time without notice."
+            " Please migrate the plugins to the new API."
+            " More information can be found in <a href='%s'>our online documentation</a>."
+        ) % (
+            "/".join(local_checks_dir.parts[-4:]),
+            doc_reference_url(DocReference.DEVEL_CHECK_PLUGINS),
+        )
+
+    def is_relevant(self) -> bool:
+        return True
+
+    def execute(self) -> Iterator[ACResult]:
+        with suppress(FileNotFoundError):
+            if plugin_files := list(local_checks_dir.iterdir()):
+                yield ACResultWARN(
+                    _("%d check plugins using the deprecated API: %s")
+                    % (len(plugin_files), ", ".join(f.name for f in plugin_files))
+                )
+                return
+
+        yield ACResultOK(_("No check plugins using the deprecated API"))
 
 
 @ac_test_registry.register

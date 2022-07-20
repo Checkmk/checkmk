@@ -12,12 +12,12 @@ client could no longer be upgraded, because v1.23.3 would reject valid
 API data, see CMK-10826.
 """
 
-from typing import Literal, Mapping, Sequence, TypedDict, Union
+from typing import cast, Iterable, Literal, Mapping, Sequence, TypedDict, Union
 
 from typing_extensions import NotRequired
 
 from .schemata import api
-from .transform_any import convert_to_timestamp, parse_annotations, parse_labels
+from .transform_any import convert_to_timestamp, parse_annotations, parse_labels, parse_match_labels
 
 # StatefulSet
 
@@ -55,7 +55,7 @@ JSONStatefulSetUpdateStrategy = JSONStatefulSetOnDelete | JSONStatefulSetRolling
 class JSONSelectorRequirement(TypedDict):
     key: str
     operator: str
-    values: Sequence[str]
+    values: Sequence[str] | None
 
 
 class JSONSelector(TypedDict, total=False):
@@ -95,10 +95,23 @@ def _metadata_from_json(metadata: JSONStatefulSetMetaData) -> api.MetaData:
     )
 
 
+def _parse_match_expression_from_json(
+    match_expressions: Iterable[JSONSelectorRequirement] | None,
+) -> api.MatchExpressions:
+    return [
+        api.MatchExpression(
+            key=api.LabelName(expression["key"]),
+            operator=cast(Literal["In", "NotIn", "Exists", "DoesNotExist"], expression["operator"]),
+            values=[api.LabelValue(v) for v in expression["values"] or []],
+        )
+        for expression in match_expressions or []
+    ]
+
+
 def _selector_from_json(selector: JSONSelector) -> api.Selector:
     return api.Selector(
-        match_labels=selector.get("matchLabels", {}),
-        match_expressions=selector.get("matchExpressions", []),
+        match_labels=parse_match_labels(selector.get("matchLabels", {})),
+        match_expressions=_parse_match_expression_from_json(selector.get("matchExpressions", [])),
     )
 
 

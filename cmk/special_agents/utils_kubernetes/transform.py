@@ -10,14 +10,26 @@ data structures to version independent data structured defined in schemata.api
 
 from __future__ import annotations
 
-from typing import Dict, Iterable, List, Literal, Mapping, Optional, Sequence, Type, TypeVar, Union
+from typing import (
+    cast,
+    Dict,
+    Iterable,
+    List,
+    Literal,
+    Mapping,
+    Optional,
+    Sequence,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from kubernetes import client  # type: ignore[import]
 
 from . import transform_json
 from .schemata import api
 from .schemata.api import Label, LabelName
-from .transform_any import convert_to_timestamp, parse_annotations, parse_labels
+from .transform_any import convert_to_timestamp, parse_annotations, parse_labels, parse_match_labels
 
 
 def parse_frac_prefix(value: str) -> float:
@@ -402,11 +414,23 @@ def node_from_client(node: client.V1Node, kubelet_health: api.HealthZ) -> api.No
     )
 
 
+def parse_match_expressions(
+    match_expressions: Iterable[client.V1LabelSelectorRequirement] | None,
+) -> api.MatchExpressions:
+    return [
+        api.MatchExpression(
+            key=api.LabelName(expression.key),
+            operator=cast(Literal["In", "NotIn", "Exists", "DoesNotExist"], expression.operator),
+            values=[api.LabelValue(v) for v in expression.values or []],
+        )
+        for expression in (match_expressions or [])
+    ]
+
+
 def parse_selector(selector: client.V1LabelSelector) -> api.Selector:
-    match_expressions = selector.match_expressions or []
     return api.Selector(
-        match_labels=selector.match_labels or {},
-        match_expressions=[expression.to_dict() for expression in match_expressions],
+        match_labels=parse_match_labels(selector.match_labels or {}),
+        match_expressions=parse_match_expressions(selector.match_expressions),
     )
 
 

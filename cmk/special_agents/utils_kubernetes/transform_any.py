@@ -78,3 +78,7 @@ def parse_labels(labels: Mapping[str, str] | None) -> Mapping[LabelName, Label]:
     if labels is None:
         return {}
     return {LabelName(k): Label(name=LabelName(k), value=LabelValue(v)) for k, v in labels.items()}
+
+
+def parse_match_labels(labels: Mapping[str, str]) -> Mapping[LabelName, LabelValue]:
+    return {LabelName(k): LabelValue(v) for k, v in labels.items()}

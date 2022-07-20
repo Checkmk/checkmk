@@ -1,0 +1,20 @@
+Title: added support for more lexmark printers
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1658431099
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p10
+
+Support for the printer check to detect the following printers was added.
+
+Lexmark International - MX521ade - Printer
+Lexmark - CX923de
+Lexmark International Optra T612
+Lexmark International CX410de
+Lexmark International Forms Printer 2580
+Lexmark International C4150
+Lexmark International CX725

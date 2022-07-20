@@ -512,6 +512,7 @@ cd $(ProjectDir)</Command>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\common\cma_yml.cpp" />
+    <ClCompile Include="..\common\mailslot_transport.cpp" />
     <ClCompile Include="..\common\object_repo.cpp" />
     <ClCompile Include="..\common\wtools.cpp" />
     <ClCompile Include="..\common\wtools_service.cpp" />

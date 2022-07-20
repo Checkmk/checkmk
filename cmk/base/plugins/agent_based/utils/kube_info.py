@@ -13,9 +13,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 )
 from cmk.base.plugins.agent_based.utils.kube import (
     ControlChain,
-    CreationTimestamp,
     FilteredAnnotations,
     kube_annotations_to_cmk_labels,
+    Timestamp,
 )
 
 
@@ -28,7 +28,7 @@ def result_simple(display_name: str, notice_only=False):  # type:ignore[no-untyp
     return result_func
 
 
-def result_from_age(value: CreationTimestamp) -> Result:
+def result_from_age(value: Timestamp) -> Result:
     return Result(
         state=State.OK,
         summary=f"Age: {render.timespan(time.time() - value)}",

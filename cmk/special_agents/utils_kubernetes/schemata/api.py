@@ -112,7 +112,6 @@ RestartPolicy = Literal["Always", "OnFailure", "Never"]
 # The Quality of Service (QOS) classification assigned to the pod based on resource requirements.
 QosClass = Literal["burstable", "besteffort", "guaranteed"]
 
-CreationTimestamp = NewType("CreationTimestamp", float)
 NamespaceName = NewType("NamespaceName", str)
 NodeName = NewType("NodeName", str)
 IpAddress = NewType("IpAddress", str)
@@ -121,13 +120,13 @@ IpAddress = NewType("IpAddress", str)
 class MetaData(BaseModel):
     name: str
     namespace: Optional[NamespaceName] = None
-    creation_timestamp: Optional[CreationTimestamp] = None
+    creation_timestamp: Optional[Timestamp] = None
     labels: Labels
     annotations: Annotations
 
 
 class NodeMetaData(MetaData):
-    creation_timestamp: CreationTimestamp
+    creation_timestamp: Timestamp
     labels: Labels
 
 
@@ -139,7 +138,7 @@ class NamespaceMetaData(BaseModel):
     name: NamespaceName
     labels: Labels
     annotations: Annotations
-    creation_timestamp: CreationTimestamp
+    creation_timestamp: Timestamp
 
 
 class Namespace(BaseModel):
@@ -271,9 +270,9 @@ class NodeCondition(BaseModel):
 
 
 class NodeResources(BaseModel):
-    cpu = 0.0
-    memory = 0.0
-    pods = 0
+    cpu: float = 0.0
+    memory: float = 0.0
+    pods: int = 0
 
 
 class HealthZ(BaseModel):

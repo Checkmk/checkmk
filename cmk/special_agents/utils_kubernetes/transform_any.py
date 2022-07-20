@@ -17,8 +17,7 @@ from .schemata import api
 from .schemata.api import Label, LabelName, LabelValue
 
 
-# TODO: change to Timestamp type
-def convert_to_timestamp(kube_date_time: Union[str, datetime.datetime]) -> float:
+def convert_to_timestamp(kube_date_time: Union[str, datetime.datetime]) -> api.Timestamp:
     if isinstance(kube_date_time, str):
         date_time = datetime.datetime.strptime(kube_date_time, "%Y-%m-%dT%H:%M:%SZ").replace(
             tzinfo=datetime.timezone.utc
@@ -32,7 +31,7 @@ def convert_to_timestamp(kube_date_time: Union[str, datetime.datetime]) -> float
             f"Can not convert to timestamp: '{kube_date_time}' of type {type(kube_date_time)}"
         )
 
-    return date_time.timestamp()
+    return api.Timestamp(date_time.timestamp())
 
 
 # See LabelValue for details

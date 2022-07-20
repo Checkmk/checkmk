@@ -99,7 +99,7 @@ class NamespaceInfo(Section):
     """section: kube_namespace_info_v1"""
 
     name: api.NamespaceName
-    creation_timestamp: Optional[api.CreationTimestamp]
+    creation_timestamp: Optional[api.Timestamp]
     labels: api.Labels
     annotations: FilteredAnnotations
     cluster: str
@@ -192,7 +192,7 @@ class PodInfo(Section):
 
     namespace: Optional[api.NamespaceName]
     name: str
-    creation_timestamp: Optional[api.CreationTimestamp]
+    creation_timestamp: Optional[api.Timestamp]
     labels: api.Labels  # used for host labels
     annotations: FilteredAnnotations  # used for host labels
     node: Optional[api.NodeName]  # this is optional, because there may be pods, which are not
@@ -297,7 +297,7 @@ class NodeInfo(api.NodeInfo, Section):
     """section: kube_node_info_v1"""
 
     name: api.NodeName
-    creation_timestamp: api.CreationTimestamp
+    creation_timestamp: api.Timestamp
     labels: api.Labels
     annotations: FilteredAnnotations
     addresses: api.NodeAddresses
@@ -356,7 +356,7 @@ class DeploymentInfo(Section):
     labels: api.Labels
     annotations: FilteredAnnotations
     selector: api.Selector
-    creation_timestamp: api.CreationTimestamp
+    creation_timestamp: api.Timestamp
     containers: ThinContainers
     cluster: str
 
@@ -369,7 +369,7 @@ class DaemonSetInfo(Section):
     labels: api.Labels
     annotations: FilteredAnnotations
     selector: api.Selector
-    creation_timestamp: api.CreationTimestamp
+    creation_timestamp: api.Timestamp
     containers: ThinContainers
     cluster: str
 
@@ -382,7 +382,7 @@ class StatefulSetInfo(Section):
     labels: api.Labels
     annotations: FilteredAnnotations
     selector: api.Selector
-    creation_timestamp: api.CreationTimestamp
+    creation_timestamp: api.Timestamp
     containers: ThinContainers
     cluster: str
 

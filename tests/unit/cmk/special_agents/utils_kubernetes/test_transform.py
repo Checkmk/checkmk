@@ -7,6 +7,7 @@ import datetime
 
 import pytest
 
+from cmk.special_agents.utils_kubernetes.schemata import api
 from cmk.special_agents.utils_kubernetes.transform import convert_to_timestamp
 
 
@@ -32,4 +33,4 @@ def test_convert_to_timestamp_raises_error(kube_date_time) -> None:  # type:igno
 def test_convert_to_timestamp_correct_conversion(  # type:ignore[no-untyped-def]
     kube_date_time,
 ) -> None:
-    assert 0 == convert_to_timestamp(kube_date_time)
+    assert api.Timestamp(0.0) == convert_to_timestamp(kube_date_time)

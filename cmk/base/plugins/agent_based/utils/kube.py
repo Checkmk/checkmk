@@ -89,7 +89,6 @@ class Label(BaseModel):
 ContainerName = NewType("ContainerName", str)
 Labels = Mapping[LabelName, Label]
 FilteredAnnotations = Mapping[LabelName, LabelValue]
-CreationTimestamp = NewType("CreationTimestamp", float)
 HostName = NewType("HostName", str)
 IpAddress = NewType("IpAddress", str)
 NamespaceName = NewType("NamespaceName", str)
@@ -424,7 +423,7 @@ class NodeInfo(Section):
     operating_system: str
     container_runtime_version: str
     name: NodeName
-    creation_timestamp: CreationTimestamp
+    creation_timestamp: Timestamp
     labels: Labels
     annotations: FilteredAnnotations
     addresses: NodeAddresses
@@ -456,7 +455,7 @@ class PodInfo(Section):
 
     namespace: Optional[NamespaceName]
     name: str
-    creation_timestamp: Optional[CreationTimestamp]
+    creation_timestamp: Optional[Timestamp]
     labels: Labels  # used for host labels
     annotations: FilteredAnnotations  # used for host labels
     node: Optional[NodeName]  # this is optional, because there may be pods, which are not
@@ -628,7 +627,7 @@ class DeploymentInfo(Section):
     labels: Labels
     annotations: FilteredAnnotations
     selector: Selector
-    creation_timestamp: CreationTimestamp
+    creation_timestamp: Timestamp
     containers: ThinContainers
     cluster: str
 
@@ -641,7 +640,7 @@ class DaemonSetInfo(Section):
     labels: Labels
     annotations: FilteredAnnotations
     selector: Selector
-    creation_timestamp: CreationTimestamp
+    creation_timestamp: Timestamp
     containers: ThinContainers
     cluster: str
 
@@ -654,7 +653,7 @@ class StatefulSetInfo(Section):
     labels: Labels
     annotations: FilteredAnnotations
     selector: Selector
-    creation_timestamp: CreationTimestamp
+    creation_timestamp: Timestamp
     containers: ThinContainers
     cluster: str
 
@@ -801,7 +800,7 @@ class NamespaceInfo(Section):
     """section: kube_namespace_info_v1"""
 
     name: NamespaceName
-    creation_timestamp: Optional[CreationTimestamp]
+    creation_timestamp: Optional[Timestamp]
     labels: Labels
     annotations: FilteredAnnotations
     cluster: str

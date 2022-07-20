@@ -1,0 +1,19 @@
+Title: Prevent from executing remotely fetched html when failing to activate changes in a remote site
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1657143099
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p9
+
+
+When there is an error in activating changes in a remote site, the
+returned response will be rendered in the GUI and this will cause any
+returned HTML code to be executed.
+
+This werk fixes the issue by html-escaping the returned response.
+
+SUP-9840

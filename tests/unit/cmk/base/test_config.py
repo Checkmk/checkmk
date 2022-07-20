@@ -39,6 +39,7 @@ from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import HostLabel, ParsedSectionName, SNMPSectionPlugin
 from cmk.base.autochecks import AutocheckEntry
 from cmk.base.check_utils import ConfiguredService
+from cmk.base.config import ConfigCache, HostConfig
 
 
 def test_duplicate_hosts(monkeypatch: MonkeyPatch) -> None:
@@ -1613,7 +1614,7 @@ def test_service_depends_on(monkeypatch: MonkeyPatch) -> None:
 
 
 @pytest.fixture(name="cluster_config")
-def cluster_config_fixture(monkeypatch: MonkeyPatch) -> config.ConfigCache:
+def cluster_config_fixture(monkeypatch: MonkeyPatch) -> ConfigCache:
     ts = Scenario()
     ts.add_host(HostName("node1"))
     ts.add_host(HostName("host1"))
@@ -1621,25 +1622,25 @@ def cluster_config_fixture(monkeypatch: MonkeyPatch) -> config.ConfigCache:
     return ts.apply(monkeypatch)
 
 
-def test_host_config_is_cluster(cluster_config: config.ConfigCache) -> None:
+def test_host_config_is_cluster(cluster_config: ConfigCache) -> None:
     assert cluster_config.get_host_config(HostName("node1")).is_cluster is False
     assert cluster_config.get_host_config(HostName("host1")).is_cluster is False
     assert cluster_config.get_host_config(HostName("cluster1")).is_cluster is True
 
 
-def test_host_config_part_of_clusters(cluster_config: config.ConfigCache) -> None:
+def test_host_config_part_of_clusters(cluster_config: ConfigCache) -> None:
     assert cluster_config.get_host_config(HostName("node1")).part_of_clusters == ["cluster1"]
     assert cluster_config.get_host_config(HostName("host1")).part_of_clusters == []
     assert cluster_config.get_host_config(HostName("cluster1")).part_of_clusters == []
 
 
-def test_host_config_nodes(cluster_config: config.ConfigCache) -> None:
+def test_host_config_nodes(cluster_config: ConfigCache) -> None:
     assert cluster_config.get_host_config(HostName("node1")).nodes is None
     assert cluster_config.get_host_config(HostName("host1")).nodes is None
     assert cluster_config.get_host_config(HostName("cluster1")).nodes == ["node1"]
 
 
-def test_host_config_parents(cluster_config: config.ConfigCache) -> None:
+def test_host_config_parents(cluster_config: ConfigCache) -> None:
     assert cluster_config.get_host_config(HostName("node1")).parents == []
     assert cluster_config.get_host_config(HostName("host1")).parents == []
     # TODO: Move cluster/node parent handling to HostConfig
@@ -2317,7 +2318,7 @@ def test_config_cache_get_host_config(
 
     host_config = cache.get_host_config(xyz_host)
     assert host_config.__class__.__name__ == expected_host_class_name
-    assert isinstance(host_config, config.HostConfig)
+    assert isinstance(host_config, HostConfig)
     assert host_config is cache.get_host_config(xyz_host)
 
 
@@ -2327,7 +2328,7 @@ def test_host_config_max_cachefile_age_no_cluster(monkeypatch: MonkeyPatch) -> N
     ts.add_host(xyz_host)
     ts.apply(monkeypatch)
 
-    host_config = config.HostConfig.make_host_config(xyz_host)
+    host_config = HostConfig.make_host_config(xyz_host)
     assert not host_config.is_cluster
     assert host_config.max_cachefile_age.get(Mode.CHECKING) == config.check_max_cachefile_age
     assert host_config.max_cachefile_age.get(Mode.CHECKING) != config.cluster_max_cachefile_age
@@ -2339,7 +2340,7 @@ def test_host_config_max_cachefile_age_cluster(monkeypatch: MonkeyPatch) -> None
     ts.add_cluster(clu)
     ts.apply(monkeypatch)
 
-    host_config = config.HostConfig.make_host_config(clu)
+    host_config = HostConfig.make_host_config(clu)
     assert host_config.is_cluster
     assert host_config.max_cachefile_age.get(Mode.CHECKING) != config.check_max_cachefile_age
     assert host_config.max_cachefile_age.get(Mode.CHECKING) == config.cluster_max_cachefile_age

@@ -40,6 +40,7 @@ from cmk.base.agent_based.data_provider import (
     SectionsParser,
 )
 from cmk.base.agent_based.discovery import _discovered_services
+from cmk.base.config import HostConfig
 from cmk.base.discovered_labels import HostLabel
 from cmk.base.sources.agent import AgentRawDataSection
 from cmk.base.sources.snmp import SNMPRawDataSection
@@ -965,7 +966,7 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
 
 
 class ClusterScenario(NamedTuple):
-    host_config: config.HostConfig
+    host_config: HostConfig
     parsed_sections_broker: ParsedSectionsBroker
     node1_hostname: HostName
     node2_hostname: HostName

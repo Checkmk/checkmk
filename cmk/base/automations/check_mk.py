@@ -84,6 +84,7 @@ import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.sources as sources
 from cmk.base.autochecks import AutocheckEntry, AutocheckServiceWithNodes
 from cmk.base.automations import Automation, automations, MKAutomationError
+from cmk.base.config import ConfigCache, HostConfig
 from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
@@ -94,9 +95,7 @@ HistoryFilePair = Tuple[HistoryFile, HistoryFile]
 
 
 class DiscoveryAutomation(Automation):
-    def _trigger_discovery_check(
-        self, config_cache: config.ConfigCache, host_config: config.HostConfig
-    ) -> None:
+    def _trigger_discovery_check(self, config_cache: ConfigCache, host_config: HostConfig) -> None:
         """if required, schedule the "Check_MK Discovery" check"""
         if not config.inventory_check_autotrigger:
             return
@@ -704,8 +703,8 @@ class AutomationAnalyseServices(Automation):
     # TODO: Refactor this huge function
     def _get_service_info(
         self,
-        config_cache: config.ConfigCache,
-        host_config: config.HostConfig,
+        config_cache: ConfigCache,
+        host_config: HostConfig,
         host_attrs: core_config.ObjectAttributes,
         servicedesc: str,
     ) -> Mapping[str, Union[None, str, LegacyCheckParameters]]:
@@ -781,7 +780,7 @@ class AutomationAnalyseServices(Automation):
 
     @staticmethod
     def _get_service_info_from_autochecks(
-        config_cache: config.ConfigCache, host_config: config.HostConfig, servicedesc: str
+        config_cache: ConfigCache, host_config: HostConfig, servicedesc: str
     ) -> Optional[Mapping[str, Union[None, str, LegacyCheckParameters]]]:
         # TODO: There is a lot of duplicated logic with discovery.py/check_table.py. Clean this
         # whole function up.
@@ -1331,7 +1330,7 @@ class AutomationDiagHost(Automation):
                 str(e),
             )
 
-    def _execute_ping(self, host_config: config.HostConfig, ipaddress: str) -> Tuple[int, str]:
+    def _execute_ping(self, host_config: HostConfig, ipaddress: str) -> Tuple[int, str]:
         base_cmd = "ping6" if host_config.is_ipv6_primary else "ping"
         completed_process = subprocess.run(
             [base_cmd, "-A", "-i", "0.2", "-c", "2", "-W", "5", ipaddress],
@@ -1344,7 +1343,7 @@ class AutomationDiagHost(Automation):
 
     def _execute_agent(
         self,
-        host_config: config.HostConfig,
+        host_config: HostConfig,
         ipaddress: HostAddress,
         agent_port: int,
         cmd: str,
@@ -1402,9 +1401,7 @@ class AutomationDiagHost(Automation):
 
         return state, output
 
-    def _execute_traceroute(
-        self, host_config: config.HostConfig, ipaddress: str
-    ) -> Tuple[int, str]:
+    def _execute_traceroute(self, host_config: HostConfig, ipaddress: str) -> Tuple[int, str]:
         family_flag = "-6" if host_config.is_ipv6_primary else "-4"
         try:
             completed_process = subprocess.run(
@@ -1681,7 +1678,7 @@ class AutomationGetAgentOutput(Automation):
     def execute(self, args: List[str]) -> automation_results.GetAgentOutputResult:
         hostname = HostName(args[0])
         ty = args[1]
-        host_config = config.HostConfig.make_host_config(hostname)
+        host_config = HostConfig.make_host_config(hostname)
 
         success = True
         output = ""
@@ -1721,7 +1718,7 @@ class AutomationGetAgentOutput(Automation):
             else:
                 if not ipaddress:
                     raise MKGeneralException("Failed to gather IP address of %s" % hostname)
-                snmp_config = config.HostConfig.make_snmp_config(hostname, ipaddress)
+                snmp_config = HostConfig.make_snmp_config(hostname, ipaddress)
                 backend = factory.backend(snmp_config, log.logger, use_cache=False)
 
                 lines = []

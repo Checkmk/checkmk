@@ -797,7 +797,7 @@ def _check_host_labels(
 
 def _schedule_rediscovery(
     *,
-    host_config: config.HostConfig,
+    host_config: HostConfig,
     need_rediscovery: bool,
 ) -> ActiveCheckResult:
     if not need_rediscovery:
@@ -1063,7 +1063,7 @@ def _may_rediscover(
 #    "clustered_old" : Old service found on a node that belongs to a cluster
 # This function is cluster-aware
 def _get_host_services(
-    host_config: config.HostConfig,
+    host_config: HostConfig,
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
 ) -> ServicesByTransition:
@@ -1153,7 +1153,7 @@ def _node_service_source(
 
 
 def _enforced_services(
-    host_config: config.HostConfig,
+    host_config: HostConfig,
 ) -> Mapping[ServiceID, ConfiguredService]:
     return check_table.get_check_table(host_config.hostname, skip_autochecks=True)
 
@@ -1187,7 +1187,7 @@ def _group_by_transition(
 
 
 def _get_cluster_services(
-    host_config: config.HostConfig,
+    host_config: HostConfig,
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
 ) -> ServicesTable[_Transition]:
@@ -1371,7 +1371,7 @@ def get_check_preview(
 
 def _check_preview_table_row(
     *,
-    host_config: config.HostConfig,
+    host_config: HostConfig,
     service: ConfiguredService,
     check_source: Union[_Transition, Literal["manual"]],
     parsed_sections_broker: ParsedSectionsBroker,
@@ -1406,7 +1406,7 @@ def _check_preview_table_row(
 
 
 def _custom_check_preview_rows(
-    host_config: config.HostConfig,
+    host_config: HostConfig,
 ) -> Sequence[CheckPreviewEntry]:
     return list(
         {
@@ -1427,7 +1427,7 @@ def _custom_check_preview_rows(
 
 
 def _active_check_preview_rows(
-    host_config: config.HostConfig,
+    host_config: HostConfig,
     host_attrs: ObjectAttributes,
 ) -> Sequence[CheckPreviewEntry]:
     return list(

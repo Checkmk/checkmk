@@ -46,7 +46,7 @@ def test_MKTimeout_exception_returns_2(hostname: HostName, capsys) -> None:
     state, text = error_handling.handle_failure(
         MKTimeout("oops!"),
         host_config.exit_code_spec(),
-        host_config=host_config,
+        hostname=hostname,
         service_name="service_name",
         plugin_name="pluging_name",
     )
@@ -61,7 +61,7 @@ def test_MKAgentError_exception_returns_2(hostname: HostName, capsys) -> None:
     state, text = error_handling.handle_failure(
         MKAgentError("oops!"),
         host_config.exit_code_spec(),
-        host_config=host_config,
+        hostname=hostname,
         service_name="service_name",
         plugin_name="pluging_name",
     )
@@ -76,7 +76,7 @@ def test_MKGeneralException_returns_3(hostname: HostName, capsys) -> None:
     state, text = error_handling.handle_failure(
         MKGeneralException("kaputt!"),
         host_config.exit_code_spec(),
-        host_config=host_config,
+        hostname=hostname,
         service_name="service_name",
         plugin_name="pluging_name",
     )
@@ -92,7 +92,7 @@ def test_unhandled_exception_returns_3(hostname: HostName, capsys) -> None:
     state, text = error_handling.handle_failure(
         ValueError("unexpected :/"),
         host_config.exit_code_spec(),
-        host_config=host_config,
+        hostname=hostname,
         service_name="service_name",
         plugin_name="pluging_name",
     )

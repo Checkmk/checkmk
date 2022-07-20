@@ -137,7 +137,7 @@ def active_check_inventory(hostname: HostName, options: Dict[str, int]) -> Servi
         state, text = error_handling.handle_failure(
             exc,
             host_config.exit_code_spec(),
-            host_config=host_config,
+            hostname=hostname,
             plugin_name="check_mk_active-cmk_inv",
             service_name="Check_MK HW/SW Inventory",
         )

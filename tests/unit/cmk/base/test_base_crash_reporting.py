@@ -11,7 +11,6 @@ import cmk.utils.crash_reporting
 from cmk.utils.type_defs import HostName
 
 import cmk.base.crash_reporting as crash_reporting
-from cmk.base.config import HostConfig
 
 
 def test_base_crash_report_registry() -> None:
@@ -74,14 +73,13 @@ def test_base_crash_report_save() -> None:
 
 
 def test_check_crash_report_from_exception(monkeypatch) -> None:  # type:ignore[no-untyped-def]
-    hostname = HostName("testhost")
     Scenario().apply(monkeypatch)
     crash = None
     try:
         raise Exception("DING")
     except Exception:
         crash = crash_reporting.CheckCrashReport.from_exception_and_context(
-            host_config=HostConfig.make_host_config(hostname),
+            hostname=HostName("testhost"),
             check_plugin_name="uptime",
             check_plugin_kwargs={"item": None, "params": None},
             is_enforced_service=False,
@@ -96,7 +94,7 @@ def test_check_crash_report_from_exception(monkeypatch) -> None:  # type:ignore[
 
     for key, (ty, value) in {
         "check_output": (str, "Output"),
-        "host": (str, hostname),
+        "host": (str, "testhost"),
         "is_cluster": (bool, False),
         "description": (str, "Uptime"),
         "check_type": (str, "uptime"),
@@ -119,14 +117,13 @@ def test_check_crash_report_from_exception(monkeypatch) -> None:  # type:ignore[
 
 
 def test_check_crash_report_save(monkeypatch) -> None:  # type:ignore[no-untyped-def]
-    hostname = HostName("testhost")
     Scenario().apply(monkeypatch)
     store = crash_reporting.CrashReportStore()
     try:
         raise Exception("DING")
     except Exception:
         crash = crash_reporting.CheckCrashReport.from_exception_and_context(
-            host_config=HostConfig.make_host_config(hostname),
+            hostname=HostName("testhost"),
             check_plugin_name="uptime",
             check_plugin_kwargs={},
             is_enforced_service=False,
@@ -140,9 +137,8 @@ def test_check_crash_report_save(monkeypatch) -> None:  # type:ignore[no-untyped
 
 
 def test_check_crash_report_read_agent_output(monkeypatch) -> None:  # type:ignore[no-untyped-def]
-    hostname = HostName("testhost")
     Scenario().apply(monkeypatch)
-    cache_path = Path(cmk.utils.paths.tcp_cache_dir, hostname)
+    cache_path = Path(cmk.utils.paths.tcp_cache_dir, "testhost")
     cache_path.parent.mkdir(parents=True, exist_ok=True)
     with cache_path.open("w", encoding="utf-8") as f:
         f.write("<<<abc>>>\nblablub\n")
@@ -152,7 +148,7 @@ def test_check_crash_report_read_agent_output(monkeypatch) -> None:  # type:igno
         raise Exception("DING")
     except Exception:
         crash = crash_reporting.CheckCrashReport.from_exception_and_context(
-            host_config=HostConfig.make_host_config(hostname),
+            hostname=HostName("testhost"),
             check_plugin_name="uptime",
             check_plugin_kwargs={},
             is_enforced_service=False,
@@ -166,9 +162,8 @@ def test_check_crash_report_read_agent_output(monkeypatch) -> None:  # type:igno
 
 
 def test_check_crash_report_read_snmp_info(monkeypatch) -> None:  # type:ignore[no-untyped-def]
-    hostname = HostName("testhost")
     Scenario().apply(monkeypatch)
-    cache_path = Path(cmk.utils.paths.data_source_cache_dir, "snmp", str(hostname))
+    cache_path = Path(cmk.utils.paths.data_source_cache_dir, "snmp", "testhost")
     cache_path.parent.mkdir(parents=True, exist_ok=True)
     with cache_path.open("w", encoding="utf-8") as f:
         f.write("[]\n")
@@ -178,7 +173,7 @@ def test_check_crash_report_read_snmp_info(monkeypatch) -> None:  # type:ignore[
         raise Exception("DING")
     except Exception:
         crash = crash_reporting.CheckCrashReport.from_exception_and_context(
-            host_config=HostConfig.make_host_config(hostname),
+            hostname=HostName("testhost"),
             check_plugin_name="snmp_uptime",
             check_plugin_kwargs={},
             is_enforced_service=False,

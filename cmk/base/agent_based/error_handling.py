@@ -21,7 +21,6 @@ from cmk.utils.type_defs import CheckPluginNameStr, ExitSpec, HostName, ServiceN
 
 import cmk.base.crash_reporting
 import cmk.base.obsolete_output as out
-from cmk.base.config import HostConfig
 
 
 def handle_success(result: ActiveCheckResult) -> Tuple[ServiceState, str]:
@@ -37,7 +36,7 @@ def handle_failure(
     exc: Exception,
     exit_spec: ExitSpec,
     *,
-    host_config: HostConfig,
+    hostname: HostName,
     service_name: ServiceName,
     plugin_name: CheckPluginNameStr,
 ) -> Tuple[ServiceState, str]:
@@ -57,7 +56,7 @@ def handle_failure(
     return (
         exit_spec.get("exception", 3),
         cmk.base.crash_reporting.create_check_crash_dump(
-            host_config=host_config,
+            host_name=hostname,
             service_name=service_name,
             plugin_name=plugin_name,
             plugin_kwargs={},

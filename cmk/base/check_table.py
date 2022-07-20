@@ -13,7 +13,6 @@ from cmk.utils.type_defs import CheckPluginName, HostName, ServiceID
 
 import cmk.base.config as config
 from cmk.base.check_utils import ConfiguredService
-from cmk.base.config import ConfigCache, HostConfig
 
 
 class FilterMode(enum.Enum):
@@ -45,8 +44,8 @@ class HostCheckTable(Mapping[ServiceID, ConfiguredService]):
 
 def _aggregate_check_table_services(
     *,
-    config_cache: ConfigCache,
-    host_config: HostConfig,
+    config_cache: config.ConfigCache,
+    host_config: config.HostConfig,
     skip_autochecks: bool,
     skip_ignored: bool,
     filter_mode: FilterMode,
@@ -81,8 +80,8 @@ class _ServiceFilter:
     def __init__(
         self,
         *,
-        config_cache: ConfigCache,
-        host_config: HostConfig,
+        config_cache: config.ConfigCache,
+        host_config: config.HostConfig,
         mode: FilterMode,
         skip_ignored: bool,
     ) -> None:
@@ -128,8 +127,8 @@ class _ServiceFilter:
 
 
 def _get_enforced_services(
-    config_cache: ConfigCache,
-    host_config: HostConfig,
+    config_cache: config.ConfigCache,
+    host_config: config.HostConfig,
 ) -> Iterable[ConfiguredService]:
     return [
         ConfiguredService(
@@ -151,8 +150,8 @@ def _get_enforced_services(
 
 
 def _get_clustered_services(
-    config_cache: ConfigCache,
-    host_config: HostConfig,
+    config_cache: config.ConfigCache,
+    host_config: config.HostConfig,
     skip_autochecks: bool,
 ) -> Iterable[ConfiguredService]:
     for node in host_config.nodes or []:

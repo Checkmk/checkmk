@@ -16,8 +16,8 @@ from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, HostName
 
 import cmk.base.autochecks as autochecks
+import cmk.base.config as config
 from cmk.base.check_utils import ConfiguredService
-from cmk.base.config import ConfigCache
 
 _COMPUTED_PARAMETERS_SENTINEL = TimespecificParameters(())
 
@@ -28,7 +28,7 @@ def autochecks_dir(monkeypatch, tmp_path):
 
 
 @pytest.fixture()
-def test_config(monkeypatch) -> ConfigCache:  # type:ignore[no-untyped-def]
+def test_config(monkeypatch) -> config.ConfigCache:  # type:ignore[no-untyped-def]
     ts = Scenario()
     ts.add_host("host")
     return ts.apply(monkeypatch)
@@ -57,7 +57,7 @@ def test_config(monkeypatch) -> ConfigCache:  # type:ignore[no-untyped-def]
     ],
 )
 def test_manager_get_autochecks_of(
-    test_config: ConfigCache,
+    test_config: config.ConfigCache,
     autochecks_content: str,
     expected_result: Sequence[ConfiguredService],
 ) -> None:

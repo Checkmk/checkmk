@@ -18,7 +18,6 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 import cmk.base.sources as sources
 from cmk.base.check_utils import LegacyCheckParameters
-from cmk.base.config import HostConfig
 
 
 def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
@@ -162,7 +161,7 @@ def _evaluate_params(params: Union[LegacyCheckParameters, TimespecificParameters
 
 
 def _ip_address_for_dump_host(
-    host_config: HostConfig,
+    host_config: config.HostConfig,
     *,
     family: socket.AddressFamily,
 ) -> Optional[str]:

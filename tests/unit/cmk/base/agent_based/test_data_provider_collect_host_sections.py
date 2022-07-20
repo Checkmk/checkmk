@@ -122,7 +122,7 @@ class TestMakeHostSectionsHosts:
 
     @pytest.fixture
     def host_config(self, hostname):
-        return HostConfig.make_host_config(hostname)
+        return config.HostConfig.make_host_config(hostname)
 
     @pytest.fixture
     def config_cache(self, hostname, ipaddress, monkeypatch):
@@ -405,7 +405,7 @@ class TestMakeHostSectionsClusters:
 
     @pytest.fixture
     def host_config(self, cluster):
-        return HostConfig.make_host_config(cluster)
+        return config.HostConfig.make_host_config(cluster)
 
     @pytest.fixture
     def config_cache(self, cluster, nodes, monkeypatch):
@@ -473,7 +473,7 @@ def test_get_host_sections_cluster(monkeypatch, mocker) -> None:  # type:ignore[
     tags = {"agent": "no-agent"}
     section_name = SectionName("test_section")
     config_cache = make_scenario(hostname, tags).apply(monkeypatch)
-    host_config = HostConfig.make_host_config(hostname)
+    host_config = config.HostConfig.make_host_config(hostname)
 
     def fake_lookup_ip_address(host_config, family=None):
         return hosts[host_config.hostname]

@@ -22,7 +22,6 @@ from cmk.utils.type_defs import Gateways, HostAddress, HostName
 
 import cmk.base.config as config
 import cmk.base.obsolete_output as out
-from cmk.base.config import ConfigCache
 
 
 def do_scan_parents(hosts: List[HostName]) -> None:  # pylint: disable=too-many-branches
@@ -123,7 +122,7 @@ def traceroute_available() -> Optional[str]:
 
 
 def scan_parents_of(  # pylint: disable=too-many-branches
-    config_cache: ConfigCache,
+    config_cache: config.ConfigCache,
     hosts: List[HostName],
     silent: bool = False,
     settings: Optional[Dict[str, int]] = None,
@@ -337,7 +336,9 @@ def gateway_reachable_via_ping(ip: HostAddress, probes: int) -> bool:
 # reverse DNS but the Checkmk mechanisms, since we do not
 # want to find the DNS name but the name of a matching host
 # from all_hosts
-def _ip_to_hostname(config_cache: ConfigCache, ip: Optional[HostAddress]) -> Optional[HostName]:
+def _ip_to_hostname(
+    config_cache: config.ConfigCache, ip: Optional[HostAddress]
+) -> Optional[HostName]:
     if "ip_to_hostname" not in _config_cache:
         cache = _config_cache.get("ip_to_hostname")
 

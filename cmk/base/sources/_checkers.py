@@ -22,7 +22,7 @@ from cmk.core_helpers.protocol import FetcherMessage
 from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.config as config
-from cmk.base.config import ConfigCache, HostConfig
+from cmk.base.config import HostConfig
 
 from ._abstract import Mode, Source
 from .ipmi import IPMISource
@@ -310,7 +310,7 @@ def fetch_all(
 
 
 def make_cluster_sources(
-    config_cache: ConfigCache,
+    config_cache: config.ConfigCache,
     host_config: HostConfig,
     *,
     simulation_mode: bool,
@@ -339,7 +339,7 @@ def make_cluster_sources(
 
 
 def make_sources(
-    config_cache: ConfigCache,
+    config_cache: config.ConfigCache,
     host_config: HostConfig,
     ip_address: Optional[HostAddress],
     *,

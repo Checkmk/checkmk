@@ -1298,7 +1298,7 @@ if '-d' in sys.argv:
 
 
 def _get_needed_plugin_names(
-    host_config: HostConfig,
+    host_config: config.HostConfig,
 ) -> Tuple[Set[CheckPluginNameStr], Set[CheckPluginName], Set[InventoryPluginName]]:
     from cmk.base import check_table  # pylint: disable=import-outside-toplevel
 

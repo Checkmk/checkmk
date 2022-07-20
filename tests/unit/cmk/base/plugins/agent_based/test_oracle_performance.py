@@ -9,7 +9,6 @@ from cmk.utils.type_defs import CheckPluginName
 
 import cmk.base.config
 import cmk.base.plugin_contexts
-from cmk.base.config import ConfigCache
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State, TableRow
 from cmk.base.plugins.agent_based.oracle_performance import (
     inventory_oracle_performance,
@@ -140,7 +139,7 @@ def test_check_oracle_performance(
 ) -> None:
     # TODO hack: clean this up as soon as the check is migrated
     monkeypatch.setattr(cmk.base.plugin_contexts, "_hostname", "foo")
-    monkeypatch.setattr(ConfigCache, "host_extra_conf_merged", lambda s, h, r: {})
+    monkeypatch.setattr(cmk.base.config.ConfigCache, "host_extra_conf_merged", lambda s, h, r: {})
     monkeypatch.setattr(cmk.base.item_state, "raise_counter_wrap", lambda: None)
 
     check_plugin = fix_register.check_plugins[CheckPluginName("oracle_performance")]

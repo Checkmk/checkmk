@@ -18,7 +18,6 @@ from cmk.automations.results import DiagHostResult
 import cmk.base.automations.check_mk as check_mk
 import cmk.base.config as config
 import cmk.base.core_config as core_config
-from cmk.base.config import HostConfig
 from cmk.base.sources.tcp import TCPSource
 
 
@@ -188,7 +187,7 @@ def test_automation_active_check(
     expected_result: automation_results.ActiveCheckResult,
     monkeypatch,
 ):
-    monkeypatch.setattr(HostConfig, "active_checks", active_checks)
+    monkeypatch.setattr(config.HostConfig, "active_checks", active_checks)
     monkeypatch.setattr(config, "active_check_info", active_check_info)
     monkeypatch.setattr(core_config, "get_host_attributes", lambda *_: host_attrs)
     monkeypatch.setattr(check_mk.AutomationActiveCheck, "_load_resource_file", lambda *_: None)
@@ -235,7 +234,7 @@ def test_automation_active_check_invalid_args(
     error_message: str,
     monkeypatch,
 ):
-    monkeypatch.setattr(HostConfig, "active_checks", active_checks)
+    monkeypatch.setattr(config.HostConfig, "active_checks", active_checks)
     monkeypatch.setattr(config, "active_check_info", active_check_info)
     monkeypatch.setattr(core_config, "get_host_attributes", lambda *_: host_attrs)
     monkeypatch.setattr(check_mk.AutomationActiveCheck, "_load_resource_file", lambda *_: None)

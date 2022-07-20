@@ -20,6 +20,7 @@ from .utils.fjdarye import check_fjdarye_item, discover_fjdarye_item, parse_fjda
 FJDARYE_SUPPORTED_DEVICES = [
     ".1.3.6.1.4.1.211.1.21.1.100",  # fjdarye100
     ".1.3.6.1.4.1.211.1.21.1.150",  # fjdarye500
+    ".1.3.6.1.4.1.211.1.21.1.153",  # fjdarye600
 ]
 
 

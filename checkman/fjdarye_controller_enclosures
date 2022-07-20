@@ -11,6 +11,7 @@ description:
  ETERNUS DX80
  ETERNUS DX80 S2
  ETERNUS DX500 S3
+ ETERNUS DX600
 
 item:
  The index of the controller enclosure in the SNMP table. It is of type

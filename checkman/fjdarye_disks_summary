@@ -11,6 +11,7 @@ description:
  ETERNUS DX80
  ETERNUS DX80 S2
  ETERNUS DX500 S3
+ ETERNUS DX600
 
  The check goes CRIT if the current state is not equal the state
  during discovery; otherwise OK.

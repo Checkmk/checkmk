@@ -8,10 +8,22 @@ from typing import Any, List, Mapping, MutableMapping, Sequence
 
 from cmk.base.plugins.agent_based.utils.diskstat import check_diskstat_dict
 
-from .agent_based_api.v1 import equals, get_value_store, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1 import (
+    any_of,
+    equals,
+    get_value_store,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
-FJDARYE_SUPPORTED_DEVICE = ".1.3.6.1.4.1.211.1.21.1.150"  # fjdarye500
+FJDARYE_SUPPORTED_DEVICES = [
+    ".1.3.6.1.4.1.211.1.21.1.150",  # fjdarye500
+    ".1.3.6.1.4.1.211.1.21.1.153",  # fjdarye600
+]
 
 FjdaryeCAPortsSection = Mapping[str, Mapping[str, float | str]]
 
@@ -26,26 +38,25 @@ def parse_fjdarye_ca_ports(
         "20": "Initiator",
     }
     parsed: MutableMapping[str, MutableMapping[str, float | str]] = {}
-    if not string_table:
-        return parsed
 
-    for index, mode, read_iops, write_iops, read_mb, write_mb in string_table[0]:
-        mode_readable = map_modes[mode]
-        port = parsed.setdefault(
-            index,
-            {
-                "mode": mode_readable,
-                "read_ios": float(read_iops),
-                "read_throughput": float(read_mb) * 1024**2,
-            },
-        )
-        if mode_readable != "Initiator":
-            port.update(
+    for ports in string_table:
+        for index, mode, read_iops, write_iops, read_mb, write_mb in ports:
+            mode_readable = map_modes[mode]
+            port = parsed.setdefault(
+                index,
                 {
-                    "write_ios": float(write_iops),
-                    "write_throughput": float(write_mb) * 1024**2,
-                }
+                    "mode": mode_readable,
+                    "read_ios": float(read_iops),
+                    "read_throughput": float(read_mb) * 1024**2,
+                },
             )
+            if mode_readable != "Initiator":
+                port.update(
+                    {
+                        "write_ios": float(write_iops),
+                        "write_throughput": float(write_mb) * 1024**2,
+                    }
+                )
     return parsed
 
 
@@ -54,7 +65,7 @@ register.snmp_section(
     parse_function=parse_fjdarye_ca_ports,
     fetch=[
         SNMPTree(
-            base=f"{FJDARYE_SUPPORTED_DEVICE}.5.5.2.1",
+            base=f"{device_oid}.5.5.2.1",
             oids=[
                 # fjdaryPfCaPortRdIOPS
                 #     "This shows the READ IOPS for the CA,CARA mode.
@@ -80,8 +91,11 @@ register.snmp_section(
                 "6",  # FJDARY-E150::fjdaryPfCaPortWtTp
             ],
         )
+        for device_oid in FJDARYE_SUPPORTED_DEVICES
     ],
-    detect=equals(".1.3.6.1.2.1.1.2.0", FJDARYE_SUPPORTED_DEVICE),
+    detect=any_of(
+        *[equals(".1.3.6.1.2.1.1.2.0", device_oid) for device_oid in FJDARYE_SUPPORTED_DEVICES]
+    ),
 )
 
 

@@ -9,6 +9,7 @@ description:
  Supported devices:
  ETERNUS DX80 S2
  ETERNUS DX500 S3
+ ETERNUS DX600
 
 item:
  The index of the power supply unit mounted on CE (CPSU) in the SNMP table.

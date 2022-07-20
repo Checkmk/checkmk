@@ -17,7 +17,7 @@
 from .agent_based_api.v1 import equals, register, SNMPTree
 from .utils.fjdarye import check_fjdarye_item, discover_fjdarye_item, parse_fjdarye_item
 
-FJDARYE_POWER_SUPPLY_UNIT = ".1.3.6.1.4.1.211.1.21.1.60"
+FJDARYE_POWER_SUPPLY_UNIT = ".1.3.6.1.4.1.211.1.21.1.60"  # fjdarye60
 
 register.snmp_section(
     name="fjdarye_power_supply_units",
@@ -25,7 +25,6 @@ register.snmp_section(
     fetch=[SNMPTree(base=f"{FJDARYE_POWER_SUPPLY_UNIT}.2.9.2.1", oids=["1", "3"])],
     detect=equals(".1.3.6.1.2.1.1.2.0", FJDARYE_POWER_SUPPLY_UNIT),
 )
-
 
 register.check_plugin(
     name="fjdarye_power_supply_units",

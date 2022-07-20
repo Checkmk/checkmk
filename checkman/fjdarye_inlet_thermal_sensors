@@ -10,6 +10,7 @@ description:
  ETERNUS DX60
  ETERNUS DX80
  ETERNUS DX500 S3
+ ETERNUS DX600
 
 item:
  The index of the inlet thermal sensor in the SNMP table. It is of type

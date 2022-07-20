@@ -9,6 +9,7 @@ description:
  ETERNUS DX60
  ETERNUS DX80
  ETERNUS DX80 S2
+ ETERNUS DX600
 
 item:
  The item is {0} (integer) in all cases because on system can only have one summary status.

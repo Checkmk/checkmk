@@ -7,6 +7,7 @@ description:
  This check monitors the CA ports of Fujitsu storage systems.
  Supported devices:
  ETERNUS DX500 S3
+ ETERNUS DX600
 
  In the discovery rule 'Fujtsu storage CA port discovery'
  port indices and port modes are configurable.

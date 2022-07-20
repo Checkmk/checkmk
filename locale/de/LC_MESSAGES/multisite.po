@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2022-07-11 16:33+0000\n"
-"Last-Translator: Jörg Herbel <joerg.herbel@tribe29.com>\n"
+"PO-Revision-Date: 2022-07-19 06:00+0000\n"
+"Last-Translator: Marc Nerreter <marc.nerreter@tribe29.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -109,7 +109,7 @@ msgid ""
 "the host will be used instead (if configured)."
 msgstr ""
 " Achtung: Wenn keine Kontaktinformation für den Service konfiguriert ist, "
-"wird die des Hosts verwendet (wenn konfiguriert)"
+"wird die des Hosts verwendet (wenn konfiguriert)."
 
 msgid ""
 " Note: if no service level is configured for a service then that of the host "
@@ -162,10 +162,10 @@ msgstr " in %d Tagen"
 
 #, python-format
 msgid " in relation to %s"
-msgstr "Im Verhältnis zu %s"
+msgstr " Im Verhältnis zu %s"
 
 msgid " larger than"
-msgstr "größer als"
+msgstr " größer als"
 
 msgid " next week"
 msgstr " nächste Woche"
@@ -410,8 +410,8 @@ msgstr "%d Zeilen"
 #, python-format
 msgid "%d site is %s."
 msgid_plural "%d sites are %s."
-msgstr[0] "%d Instanz ist %s"
-msgstr[1] "%d Instanzen sind %s"
+msgstr[0] "%d Instanz ist %s."
+msgstr[1] "%d Instanzen sind %s."
 
 #, python-format
 msgid "%d sites %s: %s"
@@ -853,7 +853,7 @@ msgstr ""
 
 #, python-format
 msgid ", elapsed cache lifespan: %s"
-msgstr ", elapsed cache lifespan: %s"
+msgstr ", elapsed Cache lifespan: %s"
 
 msgid ", errors occured"
 msgstr ", es sind Fehler aufgetreten"
@@ -1222,8 +1222,8 @@ msgid ""
 msgstr ""
 "<b>WARNUNG:</b> Die IP-Adresse von <b>%s</b> konnte nicht aufgelöst werden. "
 "Das Monitoring verwendet einstweilen die Adresse <tt>0.0.0.0</tt>. Bitte "
-"aktualisieren Sie  Ihren DNS-Server oder tragen Sie eine explizite IP-"
-"Adresse ein."
+"aktualisieren Sie Ihren DNS-Server oder tragen Sie eine explizite IP-Adresse "
+"ein."
 
 #, python-format
 msgid "<b>Warning:</b> There are %d unacknowledged incompatible werks:"
@@ -2266,9 +2266,9 @@ msgid ""
 "allows you to define checks on the size of tablespaces."
 msgstr ""
 "Ein Tablespace ist eine logische Einheit zum Speichern von Datenobjekten (z. "
-"B. Tabellen, Indizes).  Eine Datenbank besteht aus  einem oder mehreren "
+"B. Tabellen, Indizes). Eine Datenbank besteht aus einem oder mehreren "
 "Tablespaces. Ein Tablespace muss aus mindestens einem und kann aus mehreren "
-"Datenfiles bestehen. Mit dieser Regel können Sie die Grösse von Tablespaces "
+"Datenfiles bestehen. Mit dieser Regel können Sie die Größe von Tablespaces "
 "überwachen."
 
 msgid ""
@@ -3258,7 +3258,7 @@ msgid "Add aggregation"
 msgstr "Aggregation hinzufügen"
 
 msgid "Add alert handler rule"
-msgstr "Ereignisbehandlungsregel  hinzufügen"
+msgstr "Ereignisbehandlungsregel hinzufügen"
 
 msgid "Add all detected but not yet monitored services to the monitoring."
 msgstr ""
@@ -3357,7 +3357,7 @@ msgid "Add filter"
 msgstr "Filter hinzufügen"
 
 msgid "Add folder"
-msgstr "Unterverzeichnis hinzufügen"
+msgstr "Unterordner hinzufügen"
 
 msgid "Add group"
 msgstr "Gruppe hinzufügen"
@@ -3903,7 +3903,7 @@ msgstr "Adva Optical Transport Laser Leistung"
 
 msgid "Advanced: Disable SSL/TLS hostname extension support (SNI)"
 msgstr ""
-"Fortgeschritten: Unterstützung für  SSL/TLS Hostnamen Erweiterung (SNI) "
+"Fortgeschritten: Unterstützung für SSL/TLS Hostnamen Erweiterung (SNI) "
 "ausschalten"
 
 msgid "Aerohive HiveManager"
@@ -3981,8 +3981,8 @@ msgid ""
 "such a baked agent that contains the plugin. This needs to be done manually "
 "(for the last time)."
 msgstr ""
-"Nach erstellen einer Regel, die den Agentenupdater ausrollt, müssen die "
-"Agenten neu gebacken werden.  Auf allen Hosts, die automatische Updates "
+"Nach Erstellen einer Regel, die den Agentenupdater ausrollt, müssen die "
+"Agenten neu gebacken werden. Auf allen Hosts, die automatische Updates "
 "durchführen, muss ein solcher gebackener Agent, der das Plugin enthält, "
 "installiert sein. Dies muss einmalig manuell durchgeführt werden."
 
@@ -4040,8 +4040,8 @@ msgid ""
 msgstr ""
 "Nachdem der Monitoring Kern die konsolidierte Zeitreihe mit Tagesauflösung "
 "zurückgibt, wird der Trend berechnet. Es stehen zwei Verfahren zur "
-"Verfügung: Das Erste wendet eine lineare Regression auf die Daten an.  Das "
-"Zweite benutzt die Forecast engine um einen Forecast Graphen für den Trend "
+"Verfügung: Das Erste wendet eine lineare Regression auf die Daten an. Das "
+"Zweite benutzt die Forecast engine, um einen Forecast Graphen für den Trend "
 "der Daten zu berechnen. Dieses Verfahren ist relativ rechenintensiv und "
 "dauert deswegen auch länger. Es sollte nicht für Ansichten verwendet werden "
 "die unmittelbare Visualisierung benötigen, sondern eher in geplanten "
@@ -5807,7 +5807,7 @@ msgid "Authentication failures (last 5 minutes)"
 msgstr "Authentifizierungsfehler (der letzten 5 Minuten)"
 
 msgid "Authentication failures within the last 5 minutes"
-msgstr "Fehlerhafte Anmeldungen  in den letzten 5 Minuten"
+msgstr "Fehlerhafte Anmeldungen in den letzten 5 Minuten"
 
 msgid "Authentication mechanism"
 msgstr "Authentifizierungsmechanismus"
@@ -7348,7 +7348,7 @@ msgstr ""
 "Standardmäßig versucht der Server, den überwachten Host zu kontaktieren und "
 "die Daten durch Initialisierung einer TCP-Verbindung abzurufen. Auf der "
 "Seite %s können Sie eine Push-Konfiguration konfigurieren, bei der der "
-"überwachte Host die Daten an den Überwachungsserver senden soll, ohne aktiv "
+"überwachte Host die Daten an den Monitoring-Server senden soll, ohne aktiv "
 "ausgelöst zu werden."
 
 msgid ""
@@ -12299,7 +12299,6 @@ msgstr "GUI-Desing anpassen"
 msgid "Customize builtin dashboard"
 msgstr "Anpassen des eingebauten Dashboards"
 
-#, fuzzy
 msgid "Customize dashboards"
 msgstr "Dashboards anpassen"
 
@@ -12593,9 +12592,8 @@ msgstr "Dashboardelement"
 msgid "Dashboard of user %s"
 msgstr "Dashboard des Benutzers %s"
 
-#, fuzzy
 msgid "Dashboard properties"
-msgstr "Übersicht-Eigenschaften"
+msgstr "Dashboard-Eigenschaften"
 
 msgid "Dashboards"
 msgstr "Übersichten"
@@ -12679,7 +12677,7 @@ msgid ""
 "encoded (for example \"key1=val1&key2=val2\")."
 msgstr ""
 "Daten, die über HTTP POST verwendet werden. Bitte sicherstellen, dass die "
-"Daten URL-codiert sind  (z.B. example \"key1=val1&key2=val2\")."
+"Daten URL-codiert sind (z.B. example \"key1=val1&key2=val2\")."
 
 msgid ""
 "Data to send via HTTP POST method. Please make sure, that the data is URL-"
@@ -14248,6 +14246,10 @@ msgstr "TLS/SSL deaktivieren"
 msgid "Disable active checks"
 msgstr "Schalte aktive Checks ab"
 
+#, fuzzy
+msgid "Disable all"
+msgstr "Deaktiviert"
+
 msgid "Disable automatic user synchronization (use master site users)"
 msgstr ""
 "Keine automatische Benutzersynchronisation (nutze Nutzer der zentralen Site)"
@@ -14312,6 +14314,9 @@ msgstr "Inaktivitätstimeout deaktivieren"
 
 msgid "Disable this package"
 msgstr "Dieses Paket deaktivieren"
+
+msgid "Disable this site"
+msgstr "Diese Instanz deaktivieren"
 
 msgid "Disable this test"
 msgstr "Diesen Test deaktiveren"
@@ -15230,7 +15235,7 @@ msgstr "Nicht auffüllen"
 
 msgid "Do not perform any action, drop this message, stop processing"
 msgstr ""
-"Keine Aktion durchführen, diese Nachricht verwerfen,  Verarbeitung abbrechen"
+"Keine Aktion durchführen, diese Nachricht verwerfen, Verarbeitung abbrechen"
 
 msgid "Do not perform periodic service discovery check"
 msgstr "Keine periodische Serviceerkennung ausführen"
@@ -15616,7 +15621,7 @@ msgid "Don't escape HTML (Dangerous - please read context help)"
 msgstr "HTML nicht escapen (Gefährlich - bitte Kontexthilfe lesen)"
 
 msgid "Don't forget the instance: instance:dbname"
-msgstr "Vergessen Sie nicht den Instanznamen:  instance:dbname"
+msgstr "Vergessen Sie nicht den Instanznamen: instance:dbname"
 
 msgid "Don't handle Real-Time Checks"
 msgstr "Echtzeitchecks nicht verarbeiten"
@@ -16209,9 +16214,8 @@ msgstr "Benutzergraph editieren"
 msgid "Edit customer %s"
 msgstr "Kunde %s bearbeiten"
 
-#, fuzzy
 msgid "Edit dashboards"
-msgstr "Übersicht bearbeiten"
+msgstr "Dashboards bearbeiten"
 
 msgid "Edit element"
 msgstr "Element bearbeiten"
@@ -16672,6 +16676,10 @@ msgstr "Adhoc-Wartungszeiten aktivieren"
 msgid "Enable agent controller"
 msgstr "Aktivieren Sie den Agentencontroller"
 
+#, fuzzy
+msgid "Enable all"
+msgstr "Einschalten"
+
 msgid "Enable automatic agent updates"
 msgstr "Automatische Agentupdates aktivieren"
 
@@ -16786,6 +16794,9 @@ msgstr ""
 
 msgid "Enable this package"
 msgstr "Aktiviere dieses Paket"
+
+msgid "Enable this site"
+msgstr "Diese Instanz aktivieren"
 
 msgid "Enable timespecific parameters"
 msgstr "Zeitspezifische Parameter aktivieren"
@@ -17066,7 +17077,7 @@ msgstr "Layout-Modus aufrufen"
 
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr ""
-"Den Exitcode als 10 stellige, kleingeschriebenen Hexwert eingeben, z.B.  "
+"Den Exitcode als 10-stellige, kleingeschriebenen Hexwert eingeben, z.B. "
 "0x00000000."
 
 msgid ""
@@ -17188,9 +17199,6 @@ msgstr "Fehler während des Abgleichs"
 #, python-format
 msgid "Error executing GIT command <tt>%s</tt>:<br><br>%s"
 msgstr "Fehler beim Ausführen des GIT-Kommandos <tt>%s</tt>:<br><br>%s"
-
-msgid "Error executing hook"
-msgstr "Fehler bei hook-Ausführung"
 
 #, python-format
 msgid "Error fetching data: %s"
@@ -18938,7 +18946,7 @@ msgstr "Ordner"
 
 #, python-format
 msgid "Folder %r does not exist."
-msgstr "Der Ordner %s existiert nicht"
+msgstr "Der Ordner %r existiert nicht"
 
 #, python-format
 msgid "Folder %s does not exist"
@@ -19198,7 +19206,7 @@ msgid ""
 "For submitting license usage reports you must add customer portal "
 "credentials."
 msgstr ""
-"Um Lizenzverwendungsreports  zu übermitteln müssen zuerst die Customer "
+"Um Lizenzverwendungsreports zu übermitteln, müssen zuerst die Customer "
 "Portal Zugangsdaten hinzugefügt werden."
 
 #, python-format
@@ -19728,6 +19736,10 @@ msgstr "GCP/GCS-Anfragen"
 
 msgid "GCP/Memorystore redis CPU"
 msgstr "GCP/Memorystore redis CPU"
+
+#, fuzzy
+msgid "GCP/Memorystore redis clients connected"
+msgstr "GCP/Memorystore redis-Speicher"
 
 msgid "GCP/Memorystore redis memory"
 msgstr "GCP/Memorystore redis-Speicher"
@@ -21014,7 +21026,7 @@ msgid ""
 msgstr ""
 "Hier können Sie eine explizite Liste von Hostnamen angeben, für welche die "
 "Regel greifen oder nicht greifen soll. Wenn Sie die Option nicht verwenden, "
-"greift die Regel auf alle Hosts mit den oben eingestellten Merkmalen.  Die "
+"greift die Regel auf alle Hosts mit den oben eingestellten Merkmalen. Die "
 "Namen, die Sie hier angeben, werden unter Unterscheidung von Groß-/"
 "Kleinschrift verglichen. Alternativ können Sie reguläre Ausdrücke angeben. "
 "Stellen Sie dazu dem Ausdruck eine Tilde (<tt>~</tt>) voran. Der reguläre "
@@ -21289,7 +21301,7 @@ msgid ""
 "tt>."
 msgstr ""
 "Hier können Sie ein <tt>ORACLE_HOME</tt> angeben für den Zugriff auf "
-"entfernte ORACLE-Datenbank. Ansonstens wird das  <tt>ORACLE_HOME</tt> vom "
+"entfernte ORACLE-Datenbank. Ansonsten wird das <tt>ORACLE_HOME</tt> vom "
 "System genommen."
 
 msgid ""
@@ -23374,8 +23386,8 @@ msgid ""
 "averaging is turned off. "
 msgstr ""
 "Wenn dieser Parameter gesetzt ist, wird von allen Durchsätzen ein "
-"Durchschnitt  über das spezifizierte Zeitinterval gebildet. Als Default ist "
-"die Durchschnittsbildung abgeschaltet."
+"Durchschnitt über das spezifizierte Zeitintervall gebildet. Als Default ist "
+"die Durchschnittsbildung abgeschaltet. "
 
 msgid ""
 "If this parameter is set, the document count delta of the last minute will "
@@ -23691,10 +23703,10 @@ msgid ""
 "will be removed</b>."
 msgstr ""
 "Wenn Sie die Replikation von MKPs aktivieren, dann werden bei jedem "
-"<i>Änderungen aktivieren</i> alle auf der Zentrale installierten MKPs  und "
-"alle Dateien unterhalb von <tt>~/local/</tt> automatisch auf die entfernten "
+"<i>Änderungen aktivieren</i> alle auf der Zentralinstanz installierten MKPs "
+"und alle Dateien unterhalb von <tt>~/local/</tt> automatisch auf die Remote-"
 "Instanzen übertragen. Hinweis: <b>alle anderen MKPs und Dateien unterhalb "
-"von <tt>~/local/</tt> auf den entfernten Instanzen werden dabei entfernt</b>."
+"von <tt>~/local/</tt> auf den Remote-Instanzen werden dabei entfernt</b>."
 
 msgid ""
 "If you enable this option then every time an event matches a rule (by normal "
@@ -23975,10 +23987,10 @@ msgid ""
 "period (you can think of the notification period as the 'service time')."
 msgstr ""
 "Wenn Sie eine Alarmierungsperiode für einen Host festlegen, dann erfolgt "
-"eine Alarmeriung bei Host-Problemen (nicht von Services!) nur, wenn diese "
+"eine Alarmierung bei Host-Problemen (nicht von Services!) nur, wenn diese "
 "Probleme innerhalb der Alarmierungszeit auftreten. Außerdem können Sie "
 "Probleme in der Problemansicht für Objekte die nicht in ihrer "
-"Alarmierungszeit liegen  herausfiltern."
+"Alarmierungszeit liegen herausfiltern."
 
 msgid ""
 "If you specify a notification period for a service then active checks of "
@@ -26845,6 +26857,10 @@ msgstr "Schwellwerte Livestatusbenutzung"
 msgid "Levels Services"
 msgstr "Schwellwerte Services"
 
+#, fuzzy
+msgid "Levels clients"
+msgstr "Redis-Clients"
+
 msgid "Levels disk"
 msgstr "Ebenen-Scheibe"
 
@@ -27859,7 +27875,7 @@ msgid "Local: Send events to local Event Console in same OMD site"
 msgstr "Lokal: Ereignisse an lokale Eventkonsole derselben OMD Instanz senden"
 
 msgid "Local: Send events to local Event Console into unix socket"
-msgstr "Lokal:  Ereignisse an lokale Eventkonsole über Unix Socket senden"
+msgstr "Lokal: Ereignisse an lokale Eventkonsole über Unix Socket senden"
 
 msgid ""
 "Local: Spooling - Send events to local Event Console into given spool "
@@ -30671,17 +30687,15 @@ msgstr "Monitoring State falls der Service inaktiv ist"
 msgid "Monitoring state if task is not enabled"
 msgstr "Monitoring State falls der Task nicht aktiviert ist"
 
-#, fuzzy
 msgid "Monitoring state if the DISKPRESSURE condition is faulty or unknown"
 msgstr ""
-"Überwachungsstatus, wenn die DISKPRESSURE-Bedingung fehlerhaft oder nicht "
-"verfügbar ist"
+"Monitoring-Zustand, wenn die DISKPRESSURE-Bedingung fehlerhaft oder UNKNOWN "
+"ist"
 
-#, fuzzy
 msgid "Monitoring state if the MEMORYPRESSURE condition is faulty or unknown"
 msgstr ""
-"Überwachungsstatus, wenn die MEMORYPRESSURE-Bedingung fehlerhaft oder nicht "
-"verfügbar ist"
+"Monitoring-Zustand, wenn die MEMORYPRESSURE-Bedingung fehlerhaft oder "
+"UNKNOWN ist"
 
 #, fuzzy
 msgid ""
@@ -32407,7 +32421,7 @@ msgid ""
 "\"Check event state in Event Console\" to be configured."
 msgstr ""
 "Notiz: Mit diesem Befehl können alle Events eines Hosts archiviert werden. "
-"Die Regel \"Prüfe  Ereignisstatus in Event Console\" muss konfiguriert sein."
+"Die Regel \"Prüfe Ereignisstatus in Event Console\" muss konfiguriert sein."
 
 msgid ""
 "Note: enabling performance data for the latency might cause "
@@ -33613,9 +33627,6 @@ msgstr ""
 "Kümmern Sie sich nur um Hosts, die Huckepackdaten von Hosts erhalten, deren "
 "Name einem dieser regulären Ausdrücke entspricht."
 
-msgid "Only check during the following times of the day"
-msgstr "Nur während der folgenden Tageszeiten prüfen"
-
 msgid "Only digits and dots are allowed in the version number."
 msgstr "In der Versionsnummer sind nur Ziffern und Punkte erlaubt."
 
@@ -34262,9 +34273,6 @@ msgstr "Ausgehende Unicast-Octette"
 
 msgid "Output unicast packets"
 msgstr "Ausgehende Unicast-Pakete"
-
-msgid "Outside these ranges the check will always be OK"
-msgstr "Außerhalb dieser Bereiche wird der Check immer OK"
 
 msgid "Outside unique MACs"
 msgstr "Eindeutige MACs Aussenbereich"
@@ -36448,7 +36456,7 @@ msgid "Preview generation finished."
 msgstr "Erstellung der Vorschau beendet."
 
 msgid "Preview generation in progress..."
-msgstr "Erzeugen der Vorschau  läuft..."
+msgstr "Erzeugen der Vorschau läuft..."
 
 #, python-format
 msgid "Preview generation started in background job <a href=\"%s\">%s</a>"
@@ -39780,7 +39788,7 @@ msgid "Search all entries one level below the base DN"
 msgstr "Alle Einträge eine Ebene unter Basis DN suchen"
 
 msgid "Search all rules and rulesets"
-msgstr "Suche nach allen Regeln und  Regelketten"
+msgstr "Suche nach allen Regeln und Regelketten"
 
 msgid "Search filter"
 msgstr "Suchfilter"
@@ -40003,7 +40011,7 @@ msgid "Section of files to monitor"
 msgstr "Sektion zu überwachender Dateien"
 
 msgid "Section(s) cannot be disabled and enabled at the same time:"
-msgstr "Sektionen können nicht gleichzeitig  deaktiviert und aktiviert werden"
+msgstr "Sektion (s) können nicht gleichzeitig deaktiviert und aktiviert werden"
 
 msgid "Sections - data to collect"
 msgstr "Sektionen - Zu sammelnde Daten"
@@ -42059,9 +42067,6 @@ msgstr ""
 "IDs stimmen nicht überein: Unsere ID ist '%s' - Sie haben aber '%s' "
 "verwendet."
 
-msgid "Site Status"
-msgstr "Instanzstatus"
-
 msgid "Site alias"
 msgstr "Instanz Alias"
 
@@ -42142,6 +42147,9 @@ msgstr "Instanzspezifische globale Konfiguration"
 
 msgid "Site state is unknown"
 msgstr "Zustand der Instanz ist unbekannt"
+
+msgid "Site status"
+msgstr "Status der Instanz"
 
 #, python-format
 msgid "Site-specific global configuration for %s"
@@ -42803,7 +42811,7 @@ msgid ""
 msgstr ""
 "Legt fest wie das <a href='wato.py?"
 "mode=edit_ruleset&varname=filesystem_groups'>Dateisystem Gruppierungsmuster</"
-"a>  Feature dieses Dateisystem verarbeitet."
+"a> Feature dieses Dateisystem verarbeitet."
 
 msgid ""
 "Specifies the default layout to be used when an aggregation has no explict "
@@ -46947,8 +46955,8 @@ msgid ""
 "The defined levels will only apply if the metric label matches the one "
 "specified in the custom Prometheus service."
 msgstr ""
-"Die festgelegten Levels werden nur angewandt wenn das  Metriklabel dem im "
-"benutzerdefinierten Prometheus Service entspricht."
+"Die festgelegten Schwellwerte werden nur angewandt, wenn das Metriklabel dem "
+"im benutzerdefinierten Prometheus Service entspricht."
 
 msgid ""
 "The description is optional and can be used for explanations or documentation"
@@ -47047,7 +47055,7 @@ msgid ""
 "The engine IDs have to be configured as hex strings like "
 "<tt>8000000001020304</tt>."
 msgstr ""
-"Die Engine-ID muss als Hex-Text, wie z.B.  <tt>8000000001020304</tt>, "
+"Die Engine-ID muss als Hex-Text, wie z.B. <tt>8000000001020304</tt>, "
 "angegeben werden."
 
 msgid ""
@@ -47304,6 +47312,10 @@ msgid ""
 msgstr ""
 "Die Datei ist scheinbar keine iCalender-Datei. Sie muss die Endung <tt>.ics</"
 "tt> besitzen."
+
+#, fuzzy
+msgid "The given host does not exist"
+msgstr "Host existiert nicht."
 
 msgid "The given host does not exist."
 msgstr "Host existiert nicht."
@@ -62580,9 +62592,6 @@ msgstr "Anmeldung für diesen Zugang deaktivieren"
 msgid "disable this section"
 msgstr "Diese Sektion deaktivieren"
 
-msgid "disable this site"
-msgstr "diese Instanz deaktivieren"
-
 msgid "disabled"
 msgstr "deaktiviert"
 
@@ -62680,9 +62689,6 @@ msgstr "aktiviere formatierte Ausgabe für Regeln"
 
 msgid "enable sounds"
 msgstr "aktiviere Tonausgabe"
-
-msgid "enable this site"
-msgstr "diese Instanz aktivieren"
 
 msgid "end"
 msgstr "Ende"
@@ -64117,6 +64123,18 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Only check during the following times of the day"
+#~ msgstr "Nur während der folgenden Tageszeiten prüfen"
+
+#~ msgid "Outside these ranges the check will always be OK"
+#~ msgstr "Außerhalb dieser Bereiche wird der Check immer OK"
+
+#~ msgid "Error executing hook"
+#~ msgstr "Fehler bei hook-Ausführung"
+
+#~ msgid "Site Status"
+#~ msgstr "Instanzstatus"
 
 #~ msgid "Edit Dashboards"
 #~ msgstr "Übersichten bearbeiten"
@@ -76172,9 +76190,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Send performance data to Graphite"
 #~ msgstr "Performance-Daten an Graphite senden"
-
-#~ msgid "Site status"
-#~ msgstr "Status der Instanz"
 
 #~ msgid "Specify the Group DN"
 #~ msgstr "Legen Sie den Gruppen-DN fest"

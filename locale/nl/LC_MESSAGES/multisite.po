@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2022-07-11 16:36+0000\n"
-"Last-Translator: Jörg Herbel <joerg.herbel@tribe29.com>\n"
+"PO-Revision-Date: 2022-07-19 06:00+0000\n"
+"Last-Translator: Marc Nerreter <marc.nerreter@tribe29.com>\n"
 "Language-Team: Dutch <https://translate.checkmk.com/projects/checkmk/"
 "software/nl/>\n"
 "Language: nl\n"
@@ -1217,7 +1217,7 @@ msgid ""
 msgstr ""
 "<b>WAARSCHUWING: </b> het opzoeken van het IP adres van <b>%s</b> is "
 "mislukt. De core voorlopig gestart met het IP adres <tt>0.0.0.0</tt>. Pas de "
-"DNS  configuratie aan of zet het IP adres voor de betreffende host."
+"DNS configuratie aan of zet het IP adres voor de betreffende host."
 
 #, python-format
 msgid "<b>Warning:</b> There are %d unacknowledged incompatible werks:"
@@ -14216,6 +14216,10 @@ msgstr "Schakel TLS/SSL uit"
 msgid "Disable active checks"
 msgstr "Actieve controles uitschakelen"
 
+#, fuzzy
+msgid "Disable all"
+msgstr "Uitgeschakeld "
+
 msgid "Disable automatic user synchronization (use master site users)"
 msgstr ""
 "Schakel automatische gebruikerssynchronisatie uit (gebruik master site "
@@ -14281,6 +14285,10 @@ msgstr "De time-out voor het inloggen uitschakelen"
 
 msgid "Disable this package"
 msgstr "Schakel dit pakket uit"
+
+#, fuzzy
+msgid "Disable this site"
+msgstr "deze site uitschakelen"
 
 msgid "Disable this test"
 msgstr "Schakel deze test uit"
@@ -16625,6 +16633,10 @@ msgstr "Adhoc uitvaltijd mogelijk maken"
 msgid "Enable agent controller"
 msgstr "Activeer agent controller"
 
+#, fuzzy
+msgid "Enable all"
+msgstr "Activeer"
+
 msgid "Enable automatic agent updates"
 msgstr "Inschakelen automatische agent updates"
 
@@ -16739,6 +16751,10 @@ msgstr ""
 
 msgid "Enable this package"
 msgstr "Activeer dit pakket"
+
+#, fuzzy
+msgid "Enable this site"
+msgstr "deze site inschakelen"
 
 msgid "Enable timespecific parameters"
 msgstr "Tijdspecifieke parameters inschakelen"
@@ -17141,9 +17157,6 @@ msgstr "Fout tijdens synchronisatie"
 #, python-format
 msgid "Error executing GIT command <tt>%s</tt>:<br><br>%s"
 msgstr "Fout bij het uitvoeren van het GIT-commando <tt>%s</tt>:<br><br>%s"
-
-msgid "Error executing hook"
-msgstr "Fout bij het uitvoeren van de haak"
 
 #, python-format
 msgid "Error fetching data: %s"
@@ -19668,6 +19681,10 @@ msgstr "GCP/GCS Verzoeken"
 
 msgid "GCP/Memorystore redis CPU"
 msgstr "GCP/Memorystore redis CPU"
+
+#, fuzzy
+msgid "GCP/Memorystore redis clients connected"
+msgstr "GCP/Memorystore redis geheugen"
 
 msgid "GCP/Memorystore redis memory"
 msgstr "GCP/Memorystore redis geheugen"
@@ -26800,6 +26817,10 @@ msgstr "Niveaus Livestatus Gebruik"
 msgid "Levels Services"
 msgstr "Niveaus Diensten"
 
+#, fuzzy
+msgid "Levels clients"
+msgstr "Redis cliënten"
+
 msgid "Levels disk"
 msgstr "Niveauschijf"
 
@@ -33555,9 +33576,6 @@ msgstr ""
 "Let alleen op hosts die piggyback data ontvangen van hosts waarvan de naam "
 "overeenkomt met een van deze reguliere expressies."
 
-msgid "Only check during the following times of the day"
-msgstr "Controleer alleen tijdens de volgende uren van de dag"
-
 msgid "Only digits and dots are allowed in the version number."
 msgstr "Alleen cijfers en punten zijn toegestaan in het versienummer."
 
@@ -34206,9 +34224,6 @@ msgstr "Uitvoer unicast octetten"
 
 msgid "Output unicast packets"
 msgstr "Uitvoer unicast-pakketten"
-
-msgid "Outside these ranges the check will always be OK"
-msgstr "Buiten deze bereiken zal de controle altijd OK zijn"
 
 msgid "Outside unique MACs"
 msgstr "Buiten unieke MAC's"
@@ -41966,9 +41981,6 @@ msgstr "Plaats ID"
 msgid "Site ID mismatch. Our ID is '%s', but you are saying we are '%s'."
 msgstr "Site ID mismatch. Onze ID is '%s', maar u zegt dat we '%s' zijn."
 
-msgid "Site Status"
-msgstr "Plaats Status"
-
 msgid "Site alias"
 msgstr "Site alias"
 
@@ -42048,6 +42060,10 @@ msgstr "Locatiespecifieke algemene configuratie"
 
 msgid "Site state is unknown"
 msgstr "De staat van de site is onbekend"
+
+#, fuzzy
+msgid "Site status"
+msgstr "Plaats Status"
 
 #, python-format
 msgid "Site-specific global configuration for %s"
@@ -47227,6 +47243,10 @@ msgid ""
 msgstr ""
 "Het opgegeven bestand lijkt geen geldig iCalendar bestand te zijn. Het moet "
 "de bestandsextensie <tt>.ics</tt> hebben."
+
+#, fuzzy
+msgid "The given host does not exist"
+msgstr "De opgegeven host bestaat niet."
 
 msgid "The given host does not exist."
 msgstr "De opgegeven host bestaat niet."
@@ -62542,9 +62562,6 @@ msgstr "de login op deze rekening uitschakelen"
 msgid "disable this section"
 msgstr "dit gedeelte uitschakelen"
 
-msgid "disable this site"
-msgstr "deze site uitschakelen"
-
 msgid "disabled"
 msgstr "uitgeschakeld"
 
@@ -62642,9 +62659,6 @@ msgstr "maak het afdrukken van regels mogelijk"
 
 msgid "enable sounds"
 msgstr "geluiden inschakelen"
-
-msgid "enable this site"
-msgstr "deze site inschakelen"
 
 msgid "end"
 msgstr "einde"
@@ -64080,6 +64094,15 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Only check during the following times of the day"
+#~ msgstr "Controleer alleen tijdens de volgende uren van de dag"
+
+#~ msgid "Outside these ranges the check will always be OK"
+#~ msgstr "Buiten deze bereiken zal de controle altijd OK zijn"
+
+#~ msgid "Error executing hook"
+#~ msgstr "Fout bij het uitvoeren van de haak"
 
 #~ msgid "Edit Dashboards"
 #~ msgstr "Dashboards bewerken"

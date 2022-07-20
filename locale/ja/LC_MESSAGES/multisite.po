@@ -13621,6 +13621,10 @@ msgstr "TLS/SSL無効"
 msgid "Disable active checks"
 msgstr "アクティブチェックを無効にする"
 
+#, fuzzy
+msgid "Disable all"
+msgstr "無効 "
+
 msgid "Disable automatic user synchronization (use master site users)"
 msgstr "自動ユーザー同期を無効にする(マスターサイトユーザーを使用)"
 
@@ -13684,6 +13688,10 @@ msgstr "ログインタイムアウトを無効にする"
 
 msgid "Disable this package"
 msgstr "このパッケージを無効にする"
+
+#, fuzzy
+msgid "Disable this site"
+msgstr "このサイトを無効にする"
 
 msgid "Disable this test"
 msgstr "このテストを無効にする"
@@ -15987,6 +15995,10 @@ msgstr "アドホックダウンタイムを有効にする"
 msgid "Enable agent controller"
 msgstr "エージェントコントローラを有効にする"
 
+#, fuzzy
+msgid "Enable all"
+msgstr "有効にする"
+
 msgid "Enable automatic agent updates"
 msgstr "エージェントの自動更新を有効にする"
 
@@ -16099,6 +16111,10 @@ msgstr ""
 
 msgid "Enable this package"
 msgstr "このパッケージを有効にする"
+
+#, fuzzy
+msgid "Enable this site"
+msgstr "このサイトを有効にする"
 
 msgid "Enable timespecific parameters"
 msgstr "時間固有のパラメータを有効にする"
@@ -16483,9 +16499,6 @@ msgstr "同期中のエラー"
 #, python-format
 msgid "Error executing GIT command <tt>%s</tt>:<br><br>%s"
 msgstr "GITコマンドの実行中にエラー<tt>%s </ tt>:<br> <br>%s"
-
-msgid "Error executing hook"
-msgstr "フックの実行中にエラーが発生しました"
 
 #, python-format
 msgid "Error fetching data: %s"
@@ -18939,6 +18952,10 @@ msgstr "GCP/GCS リクエスト"
 
 msgid "GCP/Memorystore redis CPU"
 msgstr ""
+
+#, fuzzy
+msgid "GCP/Memorystore redis clients connected"
+msgstr "接続されたクライアント"
 
 msgid "GCP/Memorystore redis memory"
 msgstr ""
@@ -25628,6 +25645,10 @@ msgstr "ライブステータスの使用レベル"
 msgid "Levels Services"
 msgstr "レベルサービス"
 
+#, fuzzy
+msgid "Levels clients"
+msgstr "Redisクライアント"
+
 msgid "Levels disk"
 msgstr "diskレベル"
 
@@ -32217,9 +32238,6 @@ msgstr ""
 "名前がこれらの正規表現の1つと一致するホストからピギーバックデータを受信するホ"
 "ストのみを対象とします。"
 
-msgid "Only check during the following times of the day"
-msgstr "1日の次の時間帯にのみ確認してください"
-
 msgid "Only digits and dots are allowed in the version number."
 msgstr "バージョン番号には数字とドットのみを使用できます。"
 
@@ -32842,9 +32860,6 @@ msgstr "ユニキャストオクテットを出力します"
 
 msgid "Output unicast packets"
 msgstr "ユニキャストパケットを出力する"
-
-msgid "Outside these ranges the check will always be OK"
-msgstr "これらの範囲外では、チェックは常にOKです"
 
 msgid "Outside unique MACs"
 msgstr "一意のMACの外部"
@@ -40342,9 +40357,6 @@ msgstr ""
 "サイトIDの不一致。私たちのIDは '%s'ですが、あなたは私たちが '%s'であると言っ"
 "ています。"
 
-msgid "Site Status"
-msgstr "サイトのステータス"
-
 msgid "Site alias"
 msgstr "サイトエイリアス"
 
@@ -40426,6 +40438,10 @@ msgstr "サイト固有のグローバル設定"
 
 msgid "Site state is unknown"
 msgstr "サイトの状態は不明です"
+
+#, fuzzy
+msgid "Site status"
+msgstr "サイトのステータス"
 
 #, python-format
 msgid "Site-specific global configuration for %s"
@@ -45242,6 +45258,10 @@ msgid ""
 msgstr ""
 "指定されたファイルは有効なiCalendarファイルではないようです。ファイル拡張子"
 "は、<tt> .ics </tt>である必要があります。"
+
+#, fuzzy
+msgid "The given host does not exist"
+msgstr "指定されたホストは存在しません。"
 
 msgid "The given host does not exist."
 msgstr "指定されたホストは存在しません。"
@@ -59218,9 +59238,6 @@ msgstr "このアカウントへのログインを無効にする"
 msgid "disable this section"
 msgstr "このセクションを無効にする"
 
-msgid "disable this site"
-msgstr "このサイトを無効にする"
-
 msgid "disabled"
 msgstr "無効"
 
@@ -59318,9 +59335,6 @@ msgstr "ルールのプリティプリントを有効にする"
 
 msgid "enable sounds"
 msgstr "サウンドを有効にする"
-
-msgid "enable this site"
-msgstr "このサイトを有効にする"
 
 msgid "end"
 msgstr "終わり"
@@ -60746,6 +60760,15 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Only check during the following times of the day"
+#~ msgstr "1日の次の時間帯にのみ確認してください"
+
+#~ msgid "Outside these ranges the check will always be OK"
+#~ msgstr "これらの範囲外では、チェックは常にOKです"
+
+#~ msgid "Error executing hook"
+#~ msgstr "フックの実行中にエラーが発生しました"
 
 #~ msgid "Edit Dashboards"
 #~ msgstr "ダッシュボードの編集"

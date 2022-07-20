@@ -13696,6 +13696,10 @@ msgstr "(dezactivat)"
 msgid "Disable active checks"
 msgstr ""
 
+#, fuzzy
+msgid "Disable all"
+msgstr "(dezactivat)"
+
 msgid "Disable automatic user synchronization (use master site users)"
 msgstr ""
 
@@ -13765,6 +13769,10 @@ msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 msgid "Disable this package"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+msgid "Disable this site"
 msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
@@ -16167,6 +16175,10 @@ msgstr ""
 msgid "Enable agent controller"
 msgstr "trimite notificare"
 
+#, fuzzy
+msgid "Enable all"
+msgstr "Tabel"
+
 msgid "Enable automatic agent updates"
 msgstr ""
 
@@ -16276,6 +16288,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Enable this package"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+msgid "Enable this site"
 msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
@@ -16664,9 +16680,6 @@ msgstr ""
 
 #, python-format
 msgid "Error executing GIT command <tt>%s</tt>:<br><br>%s"
-msgstr ""
-
-msgid "Error executing hook"
 msgstr ""
 
 #, python-format
@@ -19201,6 +19214,10 @@ msgstr "cereri"
 
 msgid "GCP/Memorystore redis CPU"
 msgstr ""
+
+#, fuzzy
+msgid "GCP/Memorystore redis clients connected"
+msgstr "Conexiune Noua"
 
 msgid "GCP/Memorystore redis memory"
 msgstr ""
@@ -25438,6 +25455,10 @@ msgstr "Conexiuni Active"
 #, fuzzy
 msgid "Levels Services"
 msgstr "servicii"
+
+#, fuzzy
+msgid "Levels clients"
+msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
 msgid "Levels disk"
@@ -32535,9 +32556,6 @@ msgid ""
 "matches one of these regular expressions."
 msgstr ""
 
-msgid "Only check during the following times of the day"
-msgstr ""
-
 msgid "Only digits and dots are allowed in the version number."
 msgstr ""
 
@@ -33188,9 +33206,6 @@ msgid "Output unicast octets"
 msgstr ""
 
 msgid "Output unicast packets"
-msgstr ""
-
-msgid "Outside these ranges the check will always be OK"
 msgstr ""
 
 msgid "Outside unique MACs"
@@ -41002,10 +41017,6 @@ msgstr ""
 msgid "Site ID mismatch. Our ID is '%s', but you are saying we are '%s'."
 msgstr ""
 
-#, fuzzy
-msgid "Site Status"
-msgstr "Statusul Serverului"
-
 msgid "Site alias"
 msgstr ""
 
@@ -41091,6 +41102,10 @@ msgstr "Salveaza configuratia manuala a verificarilor"
 
 msgid "Site state is unknown"
 msgstr ""
+
+#, fuzzy
+msgid "Site status"
+msgstr "Statusul Serverului"
 
 #, python-format
 msgid "Site-specific global configuration for %s"
@@ -45589,6 +45604,10 @@ msgid ""
 "The given file does not seem to be a valid iCalendar file. It needs to have "
 "the file extension <tt>.ics</tt>."
 msgstr ""
+
+#, fuzzy
+msgid "The given host does not exist"
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 msgid "The given host does not exist."
 msgstr ""
@@ -58148,10 +58167,6 @@ msgstr ""
 msgid "disable this section"
 msgstr "Dezactiveaza Notificarile"
 
-#, fuzzy
-msgid "disable this site"
-msgstr "Dezactiveaza Notificarile"
-
 msgid "disabled"
 msgstr ""
 
@@ -58252,9 +58267,6 @@ msgid "enable pretty-printing of rules"
 msgstr ""
 
 msgid "enable sounds"
-msgstr ""
-
-msgid "enable this site"
 msgstr ""
 
 msgid "end"
@@ -59769,6 +59781,10 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Site Status"
+#~ msgstr "Statusul Serverului"
 
 #, fuzzy
 #~ msgid "Host State"
@@ -64153,10 +64169,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Silver"
 #~ msgstr "Salveaza"
-
-#, fuzzy
-#~ msgid "Site status"
-#~ msgstr "Statusul Serverului"
 
 #, fuzzy
 #~ msgid "Site-specific global configuration"

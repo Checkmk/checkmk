@@ -14426,6 +14426,10 @@ msgstr "Disabile "
 msgid "Disable active checks"
 msgstr "Disattivare i controlli attivi"
 
+#, fuzzy
+msgid "Disable all"
+msgstr "Disabile "
+
 msgid "Disable automatic user synchronization (use master site users)"
 msgstr ""
 "Disattivare la sincronizzazione automatica degli utenti (utilizzare gli "
@@ -14491,6 +14495,10 @@ msgstr "Disattivare il timeout di login"
 
 msgid "Disable this package"
 msgstr "Disattivare questo pacchetto"
+
+#, fuzzy
+msgid "Disable this site"
+msgstr "disabilitare questo sito"
 
 msgid "Disable this test"
 msgstr "Disattivare questo test"
@@ -16901,6 +16909,10 @@ msgstr "Abilitare i tempi morti adhoc"
 msgid "Enable agent controller"
 msgstr "Autenticazione Windows"
 
+#, fuzzy
+msgid "Enable all"
+msgstr "Abilita"
+
 msgid "Enable automatic agent updates"
 msgstr "Abilitare gli aggiornamenti automatici dell'agente"
 
@@ -17016,6 +17028,10 @@ msgstr ""
 
 msgid "Enable this package"
 msgstr "Abilita questo pacchetto"
+
+#, fuzzy
+msgid "Enable this site"
+msgstr "abilitare questo sito"
 
 msgid "Enable timespecific parameters"
 msgstr "Abilitare i parametri specifici per il tempo"
@@ -17423,9 +17439,6 @@ msgstr "Errore durante la sincronizzazione"
 #, python-format
 msgid "Error executing GIT command <tt>%s</tt>:<br><br>%s"
 msgstr "Errore nell'esecuzione del comando GIT <tt>%s</tt>:<br><br>%s"
-
-msgid "Error executing hook"
-msgstr "Errore nell'esecuzione del gancio"
 
 #, fuzzy, python-format
 msgid "Error fetching data: %s"
@@ -20008,6 +20021,10 @@ msgstr "Richieste IPv6"
 
 msgid "GCP/Memorystore redis CPU"
 msgstr "GCP/Memorystore redis CPU"
+
+#, fuzzy
+msgid "GCP/Memorystore redis clients connected"
+msgstr "GCP/Memorystore redis memoria"
 
 msgid "GCP/Memorystore redis memory"
 msgstr "GCP/Memorystore redis memoria"
@@ -27236,6 +27253,10 @@ msgid "Levels Services"
 msgstr "Livelli Servizi"
 
 #, fuzzy
+msgid "Levels clients"
+msgstr "Clienti Redis"
+
+#, fuzzy
 msgid "Levels disk"
 msgstr "Livelli"
 
@@ -34157,9 +34178,6 @@ msgstr ""
 "Si preoccupa solo degli host che ricevono dati piggyback da host il cui nome "
 "corrisponde a una di queste espressioni regolari."
 
-msgid "Only check during the following times of the day"
-msgstr "Controllare solo durante le seguenti ore del giorno"
-
 msgid "Only digits and dots are allowed in the version number."
 msgstr "Solo le cifre e i punti sono ammessi nel numero di versione."
 
@@ -34815,9 +34833,6 @@ msgstr "Ottetti unicast in uscita"
 
 msgid "Output unicast packets"
 msgstr "Uscita pacchetti unicast"
-
-msgid "Outside these ranges the check will always be OK"
-msgstr "Al di fuori di questi intervalli il controllo sarà sempre OK"
 
 msgid "Outside unique MACs"
 msgstr "Fuori dai MAC unici"
@@ -42745,9 +42760,6 @@ msgstr ""
 "Mancata corrispondenza dell'ID del sito. Il nostro ID è '%s', ma voi dite "
 "che siamo '%s'."
 
-msgid "Site Status"
-msgstr "Stato del sito"
-
 msgid "Site alias"
 msgstr "Alias del sito"
 
@@ -42828,6 +42840,10 @@ msgstr "Configurazione globale specifica del sito"
 
 msgid "Site state is unknown"
 msgstr "Lo stato del sito è sconosciuto"
+
+#, fuzzy
+msgid "Site status"
+msgstr "Stato del sito"
 
 #, python-format
 msgid "Site-specific global configuration for %s"
@@ -48052,6 +48068,10 @@ msgid ""
 msgstr ""
 "Il file dato non sembra essere un file iCalendar valido. Deve avere "
 "l'estensione <tt>.ics</tt>."
+
+#, fuzzy
+msgid "The given host does not exist"
+msgstr "L'host dato non esiste."
 
 msgid "The given host does not exist."
 msgstr "L'host dato non esiste."
@@ -63528,9 +63548,6 @@ msgstr "disabilita il login a questo account"
 msgid "disable this section"
 msgstr "disabilitare questa sezione"
 
-msgid "disable this site"
-msgstr "disabilitare questo sito"
-
 msgid "disabled"
 msgstr "disattivato"
 
@@ -63628,9 +63645,6 @@ msgstr "abilita la pretty-printing delle regole"
 
 msgid "enable sounds"
 msgstr "abilitare i suoni"
-
-msgid "enable this site"
-msgstr "abilitare questo sito"
 
 msgid "end"
 msgstr "fine"
@@ -65082,6 +65096,15 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#~ msgid "Only check during the following times of the day"
+#~ msgstr "Controllare solo durante le seguenti ore del giorno"
+
+#~ msgid "Outside these ranges the check will always be OK"
+#~ msgstr "Al di fuori di questi intervalli il controllo sarà sempre OK"
+
+#~ msgid "Error executing hook"
+#~ msgstr "Errore nell'esecuzione del gancio"
 
 #~ msgid "Edit Dashboards"
 #~ msgstr "Modifica dei cruscotti"

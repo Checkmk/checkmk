@@ -5,13 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import replace
-from typing import Any, Dict, Iterable, Mapping, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Iterable, Mapping, Optional, Sequence, Union
 
 from .agent_based_api.v1 import register, TableRow, type_defs
 from .agent_based_api.v1.type_defs import InventoryResult
 from .utils import bonding, interfaces
 from .utils.inventory_interfaces import Interface as InterfaceInv
 from .utils.inventory_interfaces import inventorize_interfaces
+from .utils.lnx_if import Section, SectionInventory
 
 # Example output from agent:
 
@@ -53,9 +54,6 @@ from .utils.inventory_interfaces import inventorize_interfaces
 #         Duplex: Full
 #         Auto-negotiation: on
 #         Link detected: yes
-
-SectionInventory = Dict[str, Dict[str, Union[str, Sequence[str]]]]
-Section = Tuple[interfaces.Section, SectionInventory]
 
 
 def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:

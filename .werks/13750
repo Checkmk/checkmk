@@ -1,0 +1,13 @@
+Title: Support Diagnostics: Add CMC dumps
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1658318758
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0p12
+
+The Support Diagnostics dumps now contain, if selected, the core history, config and state files,
+as well as cmcdump files.
+Having this information, the tribe29 support team is able to reproduce cmc core issues in your environment.

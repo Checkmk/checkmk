@@ -10,6 +10,7 @@ import json
 import os
 import platform
 import shutil
+import subprocess
 import tarfile
 import tempfile
 import textwrap
@@ -37,9 +38,11 @@ from cmk.utils.diagnostics import (
     DiagnosticsOptionalParameters,
     get_all_package_infos,
     get_checkmk_config_files_map,
+    get_checkmk_core_files_map,
     get_checkmk_log_files_map,
     get_local_files_csv,
     OPT_CHECKMK_CONFIG_FILES,
+    OPT_CHECKMK_CORE_FILES,
     OPT_CHECKMK_LOG_FILES,
     OPT_CHECKMK_OVERVIEW,
     OPT_LOCAL_FILES,
@@ -133,7 +136,8 @@ class DiagnosticsDump:
 
         dump_folder = cmk.utils.paths.diagnostics_dir
         self.dump_folder = dump_folder
-        self.tarfile_path = dump_folder.joinpath(str(uuid.uuid4())).with_suffix(SUFFIX)
+        _file_name = "sddump_%s" % str(uuid.uuid4())
+        self.tarfile_path = dump_folder.joinpath(_file_name).with_suffix(SUFFIX)
         self.tarfile_created = False
 
     def _get_fixed_elements(self) -> "List[ABCDiagnosticsElement]":
@@ -165,6 +169,11 @@ class DiagnosticsDump:
         rel_checkmk_config_files = parameters.get(OPT_CHECKMK_CONFIG_FILES)
         if rel_checkmk_config_files:
             optional_elements.append(CheckmkConfigFilesDiagnosticsElement(rel_checkmk_config_files))
+
+        rel_checkmk_core_files = parameters.get(OPT_CHECKMK_CORE_FILES)
+        if not cmk_version.is_raw_edition() and rel_checkmk_core_files:
+            optional_elements.append(CheckmkCoreFilesDiagnosticsElement(rel_checkmk_core_files))
+            optional_elements.append(CMCDumpDiagnosticsElement())
 
         rel_checkmk_log_files = parameters.get(OPT_CHECKMK_LOG_FILES)
         if rel_checkmk_log_files:
@@ -777,6 +786,27 @@ class CheckmkLogFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
 #   ---cee dumps------------------------------------------------------------
 
 
+class CheckmkCoreFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
+    @property
+    def ident(self) -> str:
+        # Unused because we directly pack the config, state and history file
+        return "checkmk_core_files"
+
+    @property
+    def title(self) -> str:
+        return _("Checkmk Core Files")
+
+    @property
+    def description(self) -> str:
+        return _("Core files (config, state and history) from var/check_mk/core: %s") % ", ".join(
+            self.rel_checkmk_files
+        )
+
+    @property
+    def _checkmk_files_map(self) -> CheckmkFilesMap:
+        return get_checkmk_core_files_map()
+
+
 class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
     @property
     def ident(self) -> str:
@@ -847,3 +877,50 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
         )
         with automation_secret_filepath.open("r", encoding="utf-8") as f:
             return f.read().strip()
+
+
+class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
+    @property
+    def ident(self) -> str:
+        return "cmcdump"
+
+    @property
+    def title(self) -> str:
+        return _("Config and state dumps of the CMC")
+
+    @property
+    def description(self) -> str:
+        return _(
+            "Configuration, status, and status history data of the CMC (Checkmk Microcore); "
+            "cmcdump output of the status and config."
+        )
+
+    def add_or_get_files(
+        self, tmp_dump_folder: Path, collectors: Collectors
+    ) -> DiagnosticsElementFilepaths:
+
+        command = [str(Path(cmk.utils.paths.omd_root).joinpath("bin/cmcdump"))]
+
+        for dump_args in (None, "config"):
+            tmpdir = tmp_dump_folder.joinpath("var/check_mk/core")
+            tmpdir.mkdir(parents=True, exist_ok=True)
+            suffix = ""
+
+            if dump_args is not None:
+                command.append(dump_args)
+                suffix = "%s" % dump_args
+
+            try:
+                output = subprocess.check_output(
+                    command, stderr=subprocess.STDOUT, timeout=15, encoding="utf-8"
+                )
+
+            except subprocess.CalledProcessError as e:
+                console.info("%s\n", _format_error(str(e)))
+                continue
+
+            filepath = tmpdir.joinpath("%s%s" % (self.ident, suffix))
+            with filepath.open("w") as f:
+                f.write(output)
+
+            yield filepath

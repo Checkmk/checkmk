@@ -148,8 +148,8 @@ def get_trial_expired_message() -> str:
     return _(
         "Sorry, but your unlimited 30-day trial of Checkmk has ended. "
         "The Checkmk Free Edition does not allow distributed setups after the 30-day trial period. "
-        "In case you want to test distributed setups, please "
-        '<a href="https://checkmk.com/contact.php?" target="_blank">contact us</a>.'
+        "In case you want to test distributed setups, please contact us at "
+        "https://checkmk.com/contact"
     )
 
 
@@ -1629,7 +1629,13 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             self._set_done_result(configuration_warnings)
         except Exception as e:
             self._logger.exception("error activating changes")
-            self._set_result(PHASE_DONE, _("Failed"), str(e), state=STATE_ERROR)
+            # The text of following exception will be rendered in the GUI and the error message may
+            # contain some remotely-fetched data (including HTML) so we are escaping it to avoid
+            # executing arbitrary HTML code.
+            # The escape function does not escape some simple tags used for formatting.
+            # SUP-9840
+            escaped_exception = escaping.escape_text(str(e))
+            self._set_result(PHASE_DONE, _("Failed"), escaped_exception, state=STATE_ERROR)
 
         finally:
             self._unlock_activation()

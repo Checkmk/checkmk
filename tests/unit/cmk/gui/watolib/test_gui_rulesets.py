@@ -24,8 +24,6 @@ from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_local
 from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
 
-managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
-
 
 def _ruleset(ruleset_name) -> rulesets.Ruleset:
     return rulesets.Ruleset(ruleset_name, ruleset_matcher.get_tag_to_group_map(active_config.tags))
@@ -686,7 +684,10 @@ class _RuleHelper:
         _RuleHelper(_RuleHelper.gcp_rule, "credentials", ("password", "geheim"), "project"),
         pytest.param(
             _RuleHelper(_RuleHelper.ssh_rule, "sshkey", ("new_priv", "public_key"), "runas"),
-            marks=managedtest,
+            marks=pytest.mark.skipif(
+                version.is_raw_edition(),
+                reason="lnx_remote_alert_handlers is not available in raw edition",
+            ),
         ),
     ]
 )

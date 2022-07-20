@@ -48,7 +48,7 @@ import cmk.utils.log as log
 import cmk.utils.paths
 import cmk.utils.site
 import cmk.utils.tty as tty
-from cmk.utils import password_store, version
+from cmk.utils import version
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.exceptions import MKGeneralException
@@ -115,7 +115,6 @@ from cmk.gui.watolib.global_settings import (
 )
 from cmk.gui.watolib.notifications import load_notification_rules, save_notification_rules
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
-from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.rulesets import RulesetCollection
 from cmk.gui.watolib.sites import site_globals_editable, SiteManagementFactory
 from cmk.gui.watolib.timeperiods import TimeperiodSpec
@@ -314,7 +313,6 @@ class UpdateConfig:
 
     def _steps(self) -> List[Tuple[Callable[[], None], str]]:
         return [
-            (self._rewrite_password_store, "Rewriting password store"),
             (self._rewrite_visuals, "Migrate Visuals context"),
             (self._update_global_settings, "Update global settings"),
             (self._rewrite_wato_tag_config, "Rewriting tags"),
@@ -517,41 +515,6 @@ class UpdateConfig:
             msg = f"Failed to rewrite autochecks file for hosts: {', '.join(failed_hosts)}"
             self._logger.error(msg)
             raise MKGeneralException(msg)
-
-    def _rewrite_password_store(self) -> None:
-        """With 2.1 the password store format changed. Ensure all sites get the new format"""
-        if (
-            not password_store.password_store_path().exists()
-            or password_store.password_store_path().stat().st_size == 0
-        ):
-            return
-
-        # First of all update the stored_passwords file
-        if self._is_pre_2_1_password_store():
-            passwords = self._load_pre_2_1_password_store()
-            password_store.save(passwords)
-
-        # Then load and save the setup config to update the passwords.mk
-        store = PasswordStore()
-        store.save(store.load_for_modification())
-
-    def _is_pre_2_1_password_store(self) -> bool:
-        return (
-            int.from_bytes(
-                password_store.password_store_path().read_bytes()[
-                    : password_store.PasswordStore.VERSION_BYTE_LENGTH
-                ],
-                byteorder="big",
-            )
-            != 0
-        )
-
-    def _load_pre_2_1_password_store(self) -> dict[str, str]:
-        passwords = {}
-        for line in password_store.password_store_path().read_text().splitlines():
-            ident, password = line.strip().split(":", 1)
-            passwords[ident] = password
-        return passwords
 
     def _transformed_params(
         self,

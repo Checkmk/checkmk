@@ -6,7 +6,6 @@
 # pylint: disable=redefined-outer-name
 import argparse
 import io
-import os
 import sys
 from pathlib import Path
 from typing import Any, Mapping, MutableMapping, Sequence, Tuple
@@ -21,7 +20,7 @@ from tests.unit.cmk.gui.conftest import load_plugins  # noqa: F401 # pylint: dis
 
 import cmk.utils.log
 import cmk.utils.paths
-from cmk.utils import password_store, store, version
+from cmk.utils import store, version
 from cmk.utils.type_defs import CheckPluginName, ContactgroupName, RulesetName, RuleSpec, RuleValue
 from cmk.utils.version import is_raw_edition
 
@@ -30,7 +29,6 @@ import cmk.gui.watolib.timeperiods as timeperiods
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
-from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
 
 import cmk.update_config as update_config
@@ -838,69 +836,6 @@ def test_update_global_config(
         "new_global_a": 1,
         "new_global_b": 15,
     }
-
-
-@pytest.fixture()
-def fixture_pre_2_1_password_store():
-    with password_store.password_store_path().open("w") as f:
-        f.write("ding:dong\n")
-
-    passwords_mk = Path(cmk.utils.paths.check_mk_config_dir, "wato", "passwords.mk")
-    with passwords_mk.open("w") as f:
-        f.write(
-            "stored_passwords.update(%r)"
-            % {
-                "ding": {
-                    "title": "asd",
-                    "comment": "asd\n",
-                    "docu_url": "",
-                    "password": "dong",
-                    "owned_by": None,
-                    "shared_with": [],
-                }
-            }
-        )
-
-
-def _read_passwords_mk() -> dict[str, password_store.Password]:
-    return store.load_from_mk_file(
-        Path(cmk.utils.paths.check_mk_config_dir, "wato", "passwords.mk"),
-        key="stored_passwords",
-        default={},
-    )
-
-
-@pytest.mark.usefixtures("fixture_pre_2_1_password_store")
-def test_rewrite_password_store_migrate(uc: update_config.UpdateConfig) -> None:
-    with pytest.raises(ValueError):
-        assert password_store.load()
-
-    with pytest.raises(ValueError):
-        assert PasswordStore().load_for_reading()
-
-    assert _read_passwords_mk()["ding"]["password"] == "dong"
-
-    uc._rewrite_password_store()
-
-    assert password_store.load()["ding"] == "dong"
-    assert _read_passwords_mk()["ding"]["password"] == ""
-    assert PasswordStore().load_for_reading()["ding"]["password"] == "dong"
-
-    # Once we have the new format, a second execution must not fail
-    uc._rewrite_password_store()
-
-
-def test_rewrite_password_store_skip_when_missing(uc: update_config.UpdateConfig) -> None:
-    assert not password_store.password_store_path().exists()
-    uc._rewrite_password_store()
-    assert not password_store.password_store_path().exists()
-
-
-def test_rewrite_password_store_skip_when_empty(uc: update_config.UpdateConfig) -> None:
-    store.save_text_to_file(password_store.password_store_path(), "")
-    assert os.path.getsize(password_store.password_store_path()) == 0
-    uc._rewrite_password_store()
-    assert os.path.getsize(password_store.password_store_path()) == 0
 
 
 @pytest.mark.usefixtures("request_context")

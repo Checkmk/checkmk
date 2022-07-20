@@ -58,4 +58,57 @@ All maintained versions (>=1.6) are subject to this vulnerability. It is likely
 that also previous versions were vulnerable. Users of previous versions are
 highly recommended to update or consider other mitigations.
 
+If you want to solve this issue for a site that is using an unpatched version,
+you can do it by replacing the file <tt>/omd/apache/[SITE].conf</tt> with a
+file like follows. Please note, that you will have to replace all occurrences
+<tt>[SITE]</tt> with the ID of your site and <tt>[PORT]</tt> with the port of
+the site apache. After you replaced the file, you will have to restart the
+system Apache.
+
+C+
+# version: 0
+
+# Make sure that symlink /omd does not make problems
+<Directory />
+  Options +FollowSymlinks
+</Directory>
+
+<IfModule mod_proxy_http.c>
+  ProxyRequests Off
+  ProxyPreserveHost On
+
+  <Proxy http://127.0.0.1:[PORT]/[SITE]>
+    Order allow,deny
+    allow from all
+  </Proxy>
+
+  <Location /[SITE]>
+    # Setting "retry=0" to prevent 60 second caching of problem states e.g. when
+    # the site apache is down and someone tries to access the page.
+    # "disablereuse=On" prevents the apache from keeping the connection which leads to
+    # wrong devlivered pages sometimes
+    ProxyPass http://127.0.0.1:[PORT]/[SITE] retry=0 disablereuse=On timeout=120
+    ProxyPassReverse http://127.0.0.1:[PORT]/[SITE]
+  </Location>
+</IfModule>
+
+<IfModule !mod_proxy_http.c>
+  Alias /[SITE] /omd/sites/[SITE]
+  <Directory /omd/sites/[SITE]>
+    Deny from all
+    ErrorDocument 403 "<h1>Checkmk: Incomplete Apache Installation</h1>You need mod_proxy and
+    mod_proxy_http in order to run the web interface of Checkmk."
+  </Directory>
+</IfModule>
+
+<Location /[SITE]>
+  ErrorDocument 503 "<meta http-equiv='refresh' content='60'><h1>Checkmk: Site Not Started</h1>You need to start this site in order to access the web interface.<!-- IE shows its own short useless error message otherwise: placeholder -->"
+</Location>
+C-:
+
+CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H 7.0
+(https://www.first.org/cvss/calculator/3.1#CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H)
+
+CVE will be added later.
+
 We thank Jan-Philipp Litza (PLUTEX GmbH) for reporting this issue!

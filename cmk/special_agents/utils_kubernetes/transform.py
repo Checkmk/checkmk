@@ -10,7 +10,7 @@ data structures to version independent data structured defined in schemata.api
 
 from __future__ import annotations
 
-from typing import Dict, Iterable, List, Literal, Mapping, Optional, Sequence, Type, Union
+from typing import Dict, Iterable, List, Literal, Mapping, Optional, Sequence, Type, TypeVar, Union
 
 from kubernetes import client  # type: ignore[import]
 
@@ -125,21 +125,28 @@ def containers_spec(containers: Sequence[client.V1Container]) -> Sequence[api.Co
     ]
 
 
-def pod_spec(pod: client.V1Pod) -> api.PodSpec:
-    if not pod.spec:
-        return api.PodSpec()
+T = TypeVar("T")
 
+
+def expect_value(v: T | None) -> T:
+    if v is None:
+        raise NotImplementedError("Unexpected missing value.")
+    return v
+
+
+def pod_spec(pod: client.V1Pod) -> api.PodSpec:
+    spec: client.V1PodSpec = expect_value(pod.spec)
     return api.PodSpec(
-        node=pod.spec.node_name,
-        host_network=pod.spec.host_network,
-        dns_policy=pod.spec.dns_policy,
-        restart_policy=pod.spec.restart_policy,
-        containers=containers_spec(pod.spec.containers),
+        node=spec.node_name,
+        host_network=spec.host_network,
+        dns_policy=spec.dns_policy,
+        restart_policy=spec.restart_policy,
+        containers=containers_spec(spec.containers),
         init_containers=containers_spec(
-            pod.spec.init_containers if pod.spec.init_containers is not None else []
+            spec.init_containers if spec.init_containers is not None else []
         ),
-        priority_class_name=pod.spec.priority_class_name,
-        active_deadline_seconds=pod.spec.active_deadline_seconds,
+        priority_class_name=spec.priority_class_name,
+        active_deadline_seconds=spec.active_deadline_seconds,
     )
 
 

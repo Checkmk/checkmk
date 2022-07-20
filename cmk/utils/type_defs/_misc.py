@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import dataclasses
 import enum
+import re
 import sys
 from collections.abc import Container
 from dataclasses import dataclass
@@ -254,7 +255,36 @@ class DiscoveryResult:
     diff_text: Optional[str] = None
 
 
-UserId = NewType("UserId", str)
+class UserId(str):
+    USER_ID_REGEX = re.compile(r"^[\w_][-\w.@_]*$")
+
+    @classmethod
+    def validate(cls, text: str) -> None:
+        """Check if it is a valid UserId
+
+        We use the userid to create file paths, so we we need to be strict...
+
+        >>> UserId.validate("cmkadmin")
+        >>> UserId.validate("foo/../")
+        Traceback (most recent call last):
+        ...
+        ValueError: Invalid username: 'foo/../'
+        """
+        if not cls.USER_ID_REGEX.match(text):
+            raise ValueError(f"Invalid username: {text!r}")
+
+    def __new__(cls, text: str) -> "UserId":
+        cls.validate(text)
+        return super().__new__(cls, text)
+
+    @classmethod
+    def empty(cls) -> "UserId":
+        """Return empty UserId, they are not valid but are used sometimes...
+
+        In some parts (e.g. cmk.gui.visuals) where we use empty UserIds...
+        This needs to be cleaned up in the future!"""
+        return super().__new__(cls, "")
+
 
 # This def is used to keep the API-exposed object in sync with our
 # implementation.

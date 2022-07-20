@@ -64,7 +64,7 @@ import cmk.utils.regex
 from cmk.utils.encryption import Encrypter, fetch_certificate_details
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.render import SecondsRenderer
-from cmk.utils.type_defs import Seconds, TimeRange
+from cmk.utils.type_defs import Seconds, TimeRange, UserId
 
 import cmk.gui.forms as forms
 import cmk.gui.site_config as site_config
@@ -853,9 +853,21 @@ def UserID(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
     default_value: ValueSpecDefault[str] = DEF_VALUE,
-    validate: _Optional[ValueSpecValidateFunc[str]] = None,
 ):
     """Internal ID as used in many places (for contact names, group name, an so on)"""
+
+    def _validate(varprefix: str, userid_str: str) -> None:
+        try:
+            UserId(userid_str)
+        except ValueError as exception:
+            raise MKUserError(
+                varprefix,
+                _(
+                    "An identifier must only consist of letters, digits, dash, dot, "
+                    "at and underscore. But it must start with a digit, letter or underscore."
+                ),
+            ) from exception
+
     return TextInput(
         label=label,
         size=size,
@@ -866,11 +878,6 @@ def UserID(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
         empty_text=empty_text,
         read_only=read_only,
         forbidden_chars=forbidden_chars,
-        regex=re.compile(r"^[\w][-\w.@]*$", re.UNICODE),
-        regex_error=_(
-            "An identifier must only consist of letters, digits, dash, dot, "
-            "at and underscore. But it must start with a digit, letter or underscore."
-        ),
         minlen=minlen,
         maxlen=maxlen,
         onkeyup=onkeyup,
@@ -880,7 +887,7 @@ def UserID(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
         title=title,
         help=help,
         default_value=default_value,
-        validate=validate,
+        validate=_validate,
     )
 
 

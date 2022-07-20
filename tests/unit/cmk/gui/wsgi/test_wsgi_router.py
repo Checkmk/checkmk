@@ -47,7 +47,7 @@ def test_webserver_auth(wsgi_app, with_user) -> None:  # type:ignore[no-untyped-
         "/NO_SITE/check_mk/api/1.0/version",
         headers={"Accept": "application/json"},
         status=200,
-        extra_environ={"REMOTE_USER": username},
+        extra_environ={"REMOTE_USER": str(username)},
     )
 
     wsgi_app.set_authorization(("Basic", ("unknown_random_dude", "foobazbar")))
@@ -55,7 +55,7 @@ def test_webserver_auth(wsgi_app, with_user) -> None:  # type:ignore[no-untyped-
         "/NO_SITE/check_mk/api/1.0/version",
         headers={"Accept": "application/json"},
         status=401,
-        extra_environ={"REMOTE_USER": username},
+        extra_environ={"REMOTE_USER": str(username)},
     )
 
 

@@ -315,7 +315,7 @@ def load(
                 continue
             visual[key] = str(value)
 
-        visuals[(UserId(""), name)] = visual
+        visuals[(UserId.empty(), name)] = visual
 
     # Add custom "user_*.mk" visuals
     visuals.update(_CombinedVisualsCache(VisualType(what)).load(builtin_visuals, skip_func))

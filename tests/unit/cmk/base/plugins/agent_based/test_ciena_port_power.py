@@ -92,5 +92,5 @@ from cmk.base.plugins.agent_based.ciena_port_power import (
         ),
     ],
 )
-def test_check_kube_pod_info(port_power: PortPower, expected: Sequence[Result]) -> None:
+def test_check_ciena_port_power(port_power: PortPower, expected: Sequence[Result]) -> None:
     assert list(check_ciena_port_power("1", {"1": port_power})) == expected

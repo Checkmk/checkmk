@@ -4,10 +4,44 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.plugins.agent_based.utils.brocade import (  # pylint: disable=unused-import
-    brocade_fcport_getitem,
-    brocade_fcport_inventory_this_port,
-)
+from typing import Mapping
+
+from cmk.base.plugins.agent_based.utils import brocade
 
 # This is the variable for the actual rule
 brocade_fcport_inventory: list = []
+
+
+def brocade_fcport_inventory_this_port(
+    admstate: int,
+    phystate: int,
+    opstate: int,
+    settings: Mapping[str, list[int]],
+) -> bool:
+    return brocade.brocade_fcport_inventory_this_port(
+        admstate,
+        phystate,
+        opstate,
+        {
+            "admstates": [1, 3, 4],
+            "phystates": [3, 4, 5, 6, 7, 8, 9, 10],
+            "opstates": [1, 2, 3, 4],
+            **settings,
+        },
+    )
+
+
+def brocade_fcport_getitem(
+    number_of_ports: int,
+    index: int,
+    portname: str,
+    is_isl: bool,
+    settings: Mapping[str, bool],
+) -> str:
+    return brocade.brocade_fcport_getitem(
+        number_of_ports,
+        index,
+        portname,
+        is_isl,
+        {"use_portname": True, "show_isl": True, **settings},
+    )

@@ -10,13 +10,13 @@ def brocade_fcport_inventory_this_port(
     admstate: int,
     phystate: int,
     opstate: int,
-    settings: Mapping[str, tuple[int, ...]],
+    settings: Mapping[str, list[int]],
 ) -> bool:
-    if admstate not in settings.get("admstates", (1, 3, 4)):
+    if admstate not in settings["admstates"]:
         return False
-    if phystate not in settings.get("phystates", (3, 4, 5, 6, 7, 8, 9, 10)):
+    if phystate not in settings["phystates"]:
         return False
-    return opstate in settings.get("opstates", (1, 2, 3, 4))
+    return opstate in settings["opstates"]
 
 
 def brocade_fcport_getitem(
@@ -27,12 +27,9 @@ def brocade_fcport_getitem(
     settings: Mapping[str, bool],
 ) -> str:
 
-    uses_portname = settings.get("use_portname", True)
-    shows_isl = settings.get("show_isl", True)
-
     itemname = ("%0" + str(len(str(number_of_ports))) + "d") % (index - 1)
-    if is_isl and shows_isl:
+    if is_isl and settings["show_isl"]:
         itemname += " ISL"
-    if portname.strip() and uses_portname:
+    if portname.strip() and settings["use_portname"]:
         itemname += " " + portname.strip()
     return itemname

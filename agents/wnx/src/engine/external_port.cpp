@@ -20,6 +20,16 @@ namespace rs = std::ranges;
 // with Monitor
 namespace cma::world {
 
+void LogWhenDebugging(const ByteVector &send_back) noexcept {
+    if (!tgt::IsDebug()) {
+        return;
+    }
+
+    std::string s(send_back.begin(), send_back.end());
+    auto t = tools::SplitString(s, "\n");
+    XLOG::t.i("Send {} last string is {}", send_back.size(), t.back());
+}
+
 void AsioSession::read_ip() {
     XLOG::t("Get ip");
     auto self(shared_from_this());
@@ -181,48 +191,79 @@ void AsioSession::do_write(const void *data_block, std::size_t data_length,
 
 namespace cma::world {
 
-// wake thread too
-void ExternalPort::putOnQueue(AsioSession::s_ptr asio_session) {
-    // short block
+namespace {
+template <typename V>
+std::pair<bool, size_t> PutOnQueue(std::mutex &lock, std::queue<V> &queue,
+                                   V value) {
     bool loaded = false;
-    std::unique_lock lk(queue_lock_);
-    auto size = session_queue_.size();
+    std::unique_lock lk(lock);
+    auto size = queue.size();
     if (size < kMaxSessionQueueLength) {
-        session_queue_.push(std::move(asio_session));
+        queue.push(std::move(value));
         loaded = true;
-        size = session_queue_.size();
+        size = queue.size();
     }
     lk.unlock();
+    return {loaded, size};
+}
 
-    if (loaded) {
+template <typename V>
+V GetFromQueue(std::mutex &lock, std::queue<V> &queue) {
+    std::unique_lock lk(lock);
+
+    if (queue.empty()) {
+        return {};
+    }
+    auto v = queue.front();
+    queue.pop();
+    auto sz = queue.size();
+    lk.unlock();
+
+    XLOG::t.i("Found connection on queue, in queue left[{}]", sz);
+    return v;
+}
+
+}  // namespace
+
+void ExternalPort::wakeThreadConditionally(bool wake, size_t sz) {
+    if (wake) {
         wakeThread();
-        XLOG::t.i("Put on queue, size is [{}]", size);
+        XLOG::t.i("Put on queue, size is [{}]", sz);
     } else {
         XLOG::l("queue is overflown");
     }
 }
 
-// thread safe
-// may return empty shared ptr
+void ExternalPort::putOnQueue(AsioSession::s_ptr asio_session) {
+    const auto [stored, size] =
+        PutOnQueue(queue_lock_, session_queue_, std::move(asio_session));
+
+    wakeThreadConditionally(stored, size);
+}
+
+void ExternalPort::putOnQueue(const std::string &request) {
+    const auto [stored, size] =
+        PutOnQueue(queue_lock_, request_queue_, request);
+
+    wakeThreadConditionally(stored, size);
+}
+
+namespace {}
+
+/// may return empty shared ptr
 AsioSession::s_ptr ExternalPort::getSession() {
-    std::unique_lock lk(queue_lock_);
+    return GetFromQueue(queue_lock_, session_queue_);
+}
 
-    if (session_queue_.empty()) return {};
-
-    auto as = session_queue_.front();
-    session_queue_.pop();
-    auto sz = session_queue_.size();
-    lk.unlock();
-
-    XLOG::t.i("Found connection on queue, in queue left[{}]", sz);
-    return as;
+std::string ExternalPort::getRequest() {
+    return GetFromQueue(queue_lock_, request_queue_);
 }
 
 void ExternalPort::timedWaitForSession() {
     using namespace std::chrono;
     std::unique_lock lk(wake_lock_);
     wake_thread_.wait_until(lk, steady_clock::now() + wake_delay_,
-                            [this]() { return !session_queue_.empty(); });
+                            [this]() { return entriesInQueue() != 0; });
 }
 #define TEST_RESTART_OVERLOAD  // should be defined in production
 
@@ -261,59 +302,96 @@ bool AllowLocalConnection() {
 }
 }  // namespace
 
-// singleton thread
-void ExternalPort::processQueue(const world::ReplyFunc &reply) {
-    while (true) {
-        // we must to catch exception in every thread, even so simple one
-        try {
-            // processing block
-            {
-                auto as = getSession();
+void ExternalPort::processSession(const ReplyFunc &reply,
+                                  AsioSession::s_ptr session) {
+    const auto [ip, p, ipv6] = GetSocketInfo(session->currentSocket());
+    XLOG::d.i("Connected from '{}' ipv6:{} port: {} <- queue", ip, ipv6, p);
 
-                if (as) {
-                    const auto [ip, p, ipv6] =
-                        GetSocketInfo(as->currentSocket());
-                    XLOG::d.i("Connected from '{}' ipv6:{} port: {} <- queue",
-                              ip, ipv6, p);
+    OverLoadMemory();
+    // controller can contact us
+    const bool local_connection = ip == "127.0.0.1" || ip == "::1";
+    if (cfg::groups::global.isIpAddressAllowed(ip) || local_connection) {
+        if (local_connection && AllowLocalConnection()) {
+            session->read_ip();
+        }
+        session->start(reply);
 
-                    OverLoadMemory();
-                    // controller can contact us
-                    bool local_connection = ip == "127.0.0.1" || ip == "::1";
-                    if (cfg::groups::global.isIpAddressAllowed(ip) ||
-                        local_connection) {
-                        if (local_connection && AllowLocalConnection()) {
-                            as->read_ip();
-                        }
-                        as->start(reply);
-
-                        // check memory block, terminate service if memory is
-                        // overused
-                        if (!wtools::monitor::IsAgentHealthy()) {
-                            XLOG::l.crit("Memory usage is too high [{}]",
-                                         wtools::GetOwnVirtualSize());
+        // check memory block, terminate service if memory is
+        // overused
+        if (!wtools::monitor::IsAgentHealthy()) {
+            XLOG::l.crit("Memory usage is too high [{}]",
+                         wtools::GetOwnVirtualSize());
 #if defined(TEST_RESTART_OVERLOAD)
-                            if (GetModus() == Modus::service) {
-                                std::terminate();
-                            }
+            if (GetModus() == Modus::service) {
+                std::terminate();
+            }
 #else
 #pragma message("**************************************")
 #pragma message("ATTENTION: Your has no RESTART on overload")
 #pragma message("**************************************")
 #endif
-                        }
-                    } else {
-                        XLOG::d(
-                            "Address '{}' is not allowed, this call should happen",
-                            ip);
-                    }
-                }
-            }
+        }
+    } else {
+        XLOG::d("Address '{}' is not allowed, this call should happen", ip);
+    }
+}
 
-            // wake block
+namespace {
+/// Requests are normally supplied through main mailslot
+struct RequestInfo {
+    std::string ip;
+    std::string comment;
+};
+RequestInfo ParseRequest(const std::string &request) {
+    std::string s = request;
+    tools::AllTrim(s);
+    auto table = tools::SplitString(s, " ", 1);
+    if (table.size() != 2) {
+        XLOG::l.e("Invalid request '{}'", request);
+        return {.ip = {}, .comment = {}};
+    }
+    return {.ip{table[0]}, .comment{table[1]}};
+}
+}  // namespace
+
+void ExternalPort::processRequest(const ReplyFunc &reply,
+                                  const std::string &request) {
+    XLOG::d.i("Request is '{}'", request);
+    auto r = ParseRequest(request);
+    if (r.ip.empty()) {
+        XLOG::l.e("Invalid request '{}'", request);
+        return;
+    }
+
+    auto send_back = reply(r.ip);
+    if (send_back.empty()) {
+        XLOG::d.i("No data to send");
+        return;
+    }
+
+    // TODO: SEND DATA TO MAILSLOT
+    // auto crypt = encrypt::MakeCrypt();
+    //  do_write(send_back.data(), send_back.size(), crypt.get());
+    XLOG::d.i("Send [{}] bytes of data", send_back.size());
+
+    LogWhenDebugging(send_back);
+}
+
+/// singleton thread
+void ExternalPort::processQueue(const world::ReplyFunc &reply) {
+    while (true) {
+        try {
+            if (auto as = getSession(); as) {
+                processSession(reply, std::move(as));
+            }
+            if (auto r = getRequest(); !r.empty()) {
+                processRequest(reply, r);
+            }
             timedWaitForSession();
 
-            // stop block
-            if (isShutdown()) break;
+            if (isShutdown()) {
+                break;
+            }
         } catch (const std::exception &e) {
             XLOG::l.bp(XLOG_FUNC + " Unexpected exception '{}'", e.what());
         }
@@ -329,7 +407,9 @@ void ExternalPort::wakeThread() {
 
 bool sinkProc(const cma::world::AsioSession::s_ptr &asio_session,
               ExternalPort *ex_port) {
-    ex_port->putOnQueue(asio_session);
+    if (ex_port != nullptr) {
+        ex_port->putOnQueue(asio_session);
+    }
     return true;
 }
 
@@ -338,7 +418,7 @@ bool sinkProc(const cma::world::AsioSession::s_ptr &asio_session,
 void ExternalPort::ioThreadProc(const ReplyFunc &reply_func, uint16_t port,
                                 LocalOnly local_only,
                                 std::optional<uint32_t> controller_pid) {
-    XLOG::t(XLOG_FUNC + " started");
+    XLOG::d.i(XLOG_FUNC + " started");
     // all threads must control exceptions
     try {
         asio::io_context context;
@@ -349,7 +429,7 @@ void ExternalPort::ioThreadProc(const ReplyFunc &reply_func, uint16_t port,
         ExternalPort::server sock(context, ipv6, port, local_only,
                                   controller_pid);
         sock.run_accept(sinkProc, this);
-        registerContext(&context);
+        registerAsioContext(&context);
 
         // server thread start
         auto processor_thread =
@@ -364,20 +444,39 @@ void ExternalPort::ioThreadProc(const ReplyFunc &reply_func, uint16_t port,
         }
 
         // no more reliable context here, delete it
-        if (!registerContext(nullptr)) {
+        if (!registerAsioContext(nullptr)) {
             XLOG::l.i(XLOG_FUNC + " terminated from outside");
         }
         XLOG::l.i("IO ends...");
 
     } catch (std::exception &e) {
-        registerContext(nullptr);  // cleanup
+        registerAsioContext(nullptr);  // cleanup
         std::cerr << "Exception: " << e.what() << "\n";
         XLOG::l(XLOG::kCritError)("IO broken with exception {}", e.what());
     }
 }
 
-// runs thread
-// can fail when thread is already running
+// Main mailslot thread
+void ExternalPort::mailslotThreadProc(const ReplyFunc &reply_func,
+                                      uint32_t controller_pid) {
+    XLOG::d.i(XLOG_FUNC + " started");
+    try {
+        auto processor_thread =
+            std::thread(&ExternalPort::processQueue, this, reply_func);
+
+        if (processor_thread.joinable()) {
+            processor_thread.join();
+        }
+        XLOG::l.i("IO ends...");
+
+    } catch (std::exception &e) {
+        std::cerr << "Exception: " << e.what() << "\n";
+        XLOG::l(XLOG::kCritError)("IO broken with exception {}", e.what());
+    }
+}
+
+/// starts thread
+/// can fail when thread is already running
 bool ExternalPort::startIo(const ReplyFunc &reply_func,
                            const IoParam &io_param) {
     std::lock_guard lk(io_thread_lock_);
@@ -387,15 +486,23 @@ bool ExternalPort::startIo(const ReplyFunc &reply_func,
 
     shutdown_thread_ = false;  // reset potentially dropped flag
 
-    io_thread_ = std::thread(&ExternalPort::ioThreadProc, this, reply_func,
-                             io_param.port, io_param.local_only, io_param.pid);
+    if (io_param.port == 0 && !io_param.pid.has_value()) {
+        XLOG::l("This is not allowed, fix code");
+        return false;
+    }
+
+    io_thread_ =
+        io_param.port == 0
+            ? std::thread(&ExternalPort::mailslotThreadProc, this, reply_func,
+                          io_param.pid.value())
+            : std::thread(&ExternalPort::ioThreadProc, this, reply_func,
+                          io_param.port, io_param.local_only, io_param.pid);
     io_started_ = true;
     return true;
 }
 
-// blocking call, signals thread and wait
+/// blocking call, signals thread and wait
 void ExternalPort::shutdownIo() {
-    // we just stopping, object is thread safe
     XLOG::l.i("Shutting down IO...");
     stopExecution();
 
@@ -411,9 +518,9 @@ void ExternalPort::shutdownIo() {
     }
 }
 
-size_t ExternalPort::sessionsInQueue() {
+size_t ExternalPort::entriesInQueue() const {
     std::scoped_lock lk(io_thread_lock_);
-    return session_queue_.size();
+    return std::max(session_queue_.size(), request_queue_.size());
 }
 
 void ExternalPort::server::run_accept(SinkFunc sink, ExternalPort *ext_port) {

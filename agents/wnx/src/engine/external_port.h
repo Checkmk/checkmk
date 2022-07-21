@@ -21,15 +21,20 @@
 
 namespace cma::world {
 using ReplyFunc =
-    std::function<std::vector<uint8_t>(const std::string IpAddress)>;
+    std::function<std::vector<uint8_t>(const std::string &ip_addr)>;
 }  // namespace cma::world
 
 namespace cma::world {
 
 /// Defines visibility of local socket for external world
 enum class LocalOnly { yes, no };
+constexpr size_t kMaxSessionQueueLength{16};
 
 bool IsIpAllowedAsException(const std::string &ip);
+
+/// prints last line of the output in the log
+/// to see how correct was an answer
+void LogWhenDebugging(const ByteVector &send_back) noexcept;
 
 /// implements asio logic for the low level TCP transport:
 /// based on ASIO example
@@ -40,41 +45,30 @@ public:
 
     explicit AsioSession(asio::ip::tcp::socket socket)
         : socket_(std::move(socket)) {}
-    virtual ~AsioSession() { XLOG::d("destroy connection"); }
+    ~AsioSession() { XLOG::d("destroy connection"); }
 
     void start(const ReplyFunc &reply_func) {
-        // standard functionality of current agent
-        // accept connection, get data, write data, close connection
         auto send_back = reply_func(getCurrentRemoteIp());
 
         if (send_back.empty()) {
             XLOG::d.i("No data to send");
             return;
         }
-
         auto crypt = cma::encrypt::MakeCrypt();
         do_write(send_back.data(), send_back.size(), crypt.get());
         XLOG::d.i("Send [{}] bytes of data", send_back.size());
 
-        logWhenDebugging(send_back);
+        LogWhenDebugging(send_back);
     }
 
-    const asio::ip::tcp::socket &currentSocket() const { return socket_; }
+    const asio::ip::tcp::socket &currentSocket() const noexcept {
+        return socket_;
+    }
+
+    /// `hack` to obtain ip from controller
     void read_ip();
 
 private:
-    // prints last line of the output in the log
-    // to see how correct was an answer
-    static void logWhenDebugging(const ByteVector &send_back) noexcept {
-        if (!tgt::IsDebug()) {
-            return;
-        }
-
-        std::string s(send_back.begin(), send_back.end());
-        auto t = tools::SplitString(s, "\n");
-        XLOG::t.i("Send {} last string is {}", send_back.size(), t.back());
-    }
-
     std::string getCurrentRemoteIp() const noexcept {
         {
             std::scoped_lock l(data_lock_);
@@ -134,7 +128,7 @@ inline std::tuple<std::string, uint16_t, bool> GetSocketInfo(
     const asio::ip::tcp::socket &sock) noexcept {
     std::error_code ec;
     auto remote_ep = sock.remote_endpoint(ec);
-    if (ec.value() != 0) {
+    if (ec) {
         XLOG::l("Error on socket [{}] with '{}'", ec.value(), ec.message());
         return {};  // empty socket
     }
@@ -144,7 +138,7 @@ inline std::tuple<std::string, uint16_t, bool> GetSocketInfo(
         bool ipv6 = addr.is_v6();
         return {ip, remote_ep.port(), ipv6};
     } catch (const std::exception &e) {
-        XLOG::d("Something goes wrong with socket '{}'", e.what());
+        XLOG::d("Something goes wrong with socket '{}'", e);
     }
     return {};
 }
@@ -157,7 +151,6 @@ public:
 
     virtual ~ExternalPort() = default;
 
-    // no copy, no move
     ExternalPort(const ExternalPort &) = delete;
     ExternalPort(ExternalPort &&) = delete;
     ExternalPort &operator=(const ExternalPort &) = delete;
@@ -171,12 +164,13 @@ public:
 
     // Main API
     bool startIo(const ReplyFunc &reply_func, const IoParam &io_param);
-    bool startIo(const ReplyFunc &reply_func, uint16_t port) {
-        return startIo(reply_func, IoParam{
-                                       .port{port},
-                                       .local_only{LocalOnly::no},
-                                       .pid{},
-                                   });
+    bool startIoTcpPort(const ReplyFunc &reply_func, uint16_t port) {
+        return startIo(reply_func,
+                       {.port{port}, .local_only{LocalOnly::no}, .pid{}});
+    }
+    bool startIoMailSlot(const ReplyFunc &reply_func, uint32_t pid) {
+        return startIo(reply_func,
+                       {.port{0U}, .local_only{LocalOnly::yes}, .pid{pid}});
     }
     void shutdownIo();
 
@@ -184,9 +178,8 @@ public:
     bool isIoStarted() const noexcept { return io_started_; }
 
     void putOnQueue(AsioSession::s_ptr asio_session);
-    size_t sessionsInQueue();
-
-    const size_t kMaxSessionQueueLength = 16;
+    void putOnQueue(const std::string &request);
+    size_t entriesInQueue() const;
 
 private:
     wtools::BaseServiceProcessor *owner_ = nullptr;
@@ -215,44 +208,44 @@ private:
         void run_accept(SinkFunc sink, ExternalPort *ext_port);
 
     private:
-        uint16_t port_;
+        uint16_t port_{0U};
         std::optional<uint32_t> controller_pid_;
         // ASIO magic
         asio::ip::tcp::acceptor acceptor_;
         asio::ip::tcp::socket socket_;
 
-        // configures mode Shot and Forget or Continuous
-        // Continuous mode is not supported
-        // copied from the owner
-        const bool mode_one_shot_ = cma::cfg::IsOneShotMode();
+        // the only supported now
+        const bool mode_one_shot_{cfg::IsOneShotMode()};
     };
 
 protected:
     // asio sessions API
-    std::shared_ptr<AsioSession> getSession();
+    AsioSession::s_ptr getSession();
+    std::string getRequest();
     void processQueue(const cma::world::ReplyFunc &reply);
+    void wakeThreadConditionally(bool wake, size_t sz);
     void wakeThread();
     void timedWaitForSession();
+    void processSession(const ReplyFunc &reply, AsioSession::s_ptr session);
+    void processRequest(const ReplyFunc &reply, const std::string &request);
 
-    // check for end
     bool isShutdown() const noexcept {
         std::lock_guard lk(io_thread_lock_);
         return shutdown_thread_;
     }
 
-    // returns thread continue status
-    bool registerContext(asio::io_context *Context) {
+    /// returns thread continue status
+    bool registerAsioContext(asio::io_context *context) {
         std::lock_guard<std::mutex> lk(io_thread_lock_);
         if (shutdown_thread_) {
             context_ = nullptr;
             return false;
         }
-        context_ = Context;
+        context_ = context;
         return true;
     }
 
     void stopExecution() {
-        // call of the function Signal under lock
         std::lock_guard<std::mutex> lk(io_thread_lock_);
         XLOG::l.t("Stopping execution");
         if (context_ != nullptr) {
@@ -261,8 +254,10 @@ protected:
         shutdown_thread_ = true;
     }
 
-    void ioThreadProc(const ReplyFunc &Reply, uint16_t port,
+    void ioThreadProc(const ReplyFunc &reply, uint16_t port,
                       LocalOnly local_only, std::optional<uint32_t> pid);
+
+    void mailslotThreadProc(const ReplyFunc &reply, uint32_t pid);
 
     // probably overkill, but we want to restart and want to be sure that
     // everything is going smooth
@@ -276,20 +271,12 @@ protected:
     // asio sessions queue data
     mutable std::mutex queue_lock_;
     std::queue<std::shared_ptr<AsioSession>> session_queue_;  // fallback mode
-
+    std::queue<std::string> request_queue_;                   // standard mode
 
     // asio sessions waker
     mutable std::mutex wake_lock_;
     std::condition_variable wake_thread_;
     std::chrono::milliseconds wake_delay_{500};
-
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class ExternalPortTest;
-    FRIEND_TEST(ExternalPortTest, CreateDelete);
-    FRIEND_TEST(ExternalPortTest, StartStop);
-    FRIEND_TEST(ExternalPortTest, LowLevelApiBase);
-    FRIEND_TEST(ExternalPortTest, ProcessQueue);
-#endif
 };
 
 }  // namespace cma::world

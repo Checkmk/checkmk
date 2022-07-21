@@ -8,8 +8,6 @@ import abc
 from typing import Any, Mapping, Optional, Sequence, Union
 
 import pytest
-from hypothesis import given
-from hypothesis import strategies as st
 
 from cmk.utils.type_defs.pluginname import CheckPluginName
 
@@ -187,13 +185,13 @@ class ABCTestRedisChecks(abc.ABC):
         summary = f"Hitratio: {(hitratio*100):.2f}%{summary_ext}"
         assert results[0] == Result(state=state, summary=summary)
 
-    @given(hitratio=st.floats(min_value=0, max_value=1))
+    @pytest.mark.parametrize("hitratio", [0, 1, 0.5])
     def test_yield_no_levels(self, hitratio: float, check: CheckFunction) -> None:
         params = {"levels_upper_hitratio": None, "levels_lower_hitratio": None}
         results = [el for el in self.run(hitratio, params, check) if isinstance(el, Result)]
         assert results[0].state == State.OK
 
-    @given(hitratio=st.floats(min_value=0, max_value=1))
+    @pytest.mark.parametrize("hitratio", [0, 1, 0.5])
     def test_metric(self, hitratio: float, check: CheckFunction) -> None:
         params = {"levels_upper_hitratio": None, "levels_lower_hitratio": None}
         metrics = [el for el in self.run(hitratio, params, check) if isinstance(el, Metric)]

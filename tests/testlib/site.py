@@ -906,29 +906,20 @@ class Site:
         web = CMKWebSession(self)
         web.login()
         web.enforce_non_localized_gui()
-        self._add_wato_test_config(web)
+        self._add_wato_test_config()
 
     # Add some test configuration that is not test specific. These settings are set only to have a
     # bit more complex Checkmk config.
-    def _add_wato_test_config(self, web: CMKWebSession) -> None:
+    def _add_wato_test_config(self) -> None:
         # This entry is interesting because it is a check specific setting. These
         # settings are only registered during check loading. In case one tries to
         # load the config without loading the checks in advance, this leads into an
         # exception.
         # We set this config option here trying to catch this kind of issue.
-        web.set_ruleset(
-            "fileinfo_groups",
-            {
-                "ruleset": {
-                    "": [  # "" -> folder
-                        {
-                            "condition": {},
-                            "options": {},
-                            "value": {"group_patterns": [("TESTGROUP", ("*gwia*", ""))]},
-                        },
-                    ],
-                }
-            },
+        self.openapi.create_rule(
+            ruleset_name="fileinfo_groups",
+            value={"group_patterns": [("TESTGROUP", ("*gwia*", ""))]},
+            folder="/",
         )
 
     def open_livestatus_tcp(self, encrypted: bool) -> None:

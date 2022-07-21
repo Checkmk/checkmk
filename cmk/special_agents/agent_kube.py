@@ -1152,11 +1152,11 @@ class Cluster:
         return self._cluster_details.version
 
     def node_collector_daemons(self) -> section.CollectorDaemons:
-        # Extract DaemonSets with label key `node_collector`
+        # Extract DaemonSets with label key `node-collector`
         collector_daemons = collections.defaultdict(list)
         for daemonset in self.daemon_sets():
             if "node-collector" in daemonset.metadata.labels:
-                collector_type = daemonset.metadata.labels[api.LabelName("node_collector")].value
+                collector_type = daemonset.metadata.labels[api.LabelName("node-collector")].value
                 collector_daemons[collector_type].append(daemonset._status)
         collector_daemons.default_factory = None
 
@@ -1169,7 +1169,7 @@ class Cluster:
             container=_node_collector_replicas(container_status),
             errors=section.IdentificationError(
                 duplicate_machine_collector=len(machine_status) > 1,
-                duplicate_cotainer_collector=len(container_status) > 1,
+                duplicate_container_collector=len(container_status) > 1,
                 unknown_collector=len(collector_daemons) > 0,
             ),
         )

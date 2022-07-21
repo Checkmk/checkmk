@@ -104,11 +104,11 @@ def _discovery_mode(default_mode: str):  # type:ignore[no-untyped-def]
     return fields.String(
         description="""The mode of the discovery action. Can be one of:
 
-     * `new` - Add undecided services to monitoring
-     * `remove` - Remove vanished services
-     * `fix_all` - Add undecided services and new host labels, remove vanished services
-     * `refresh` - Update inforomation from host, then remove all existing and add all just found services and host labels
-     * `only_host_labels` - Update host labels
+ * `new` - Add undecided services to monitoring
+ * `remove` - Remove vanished services
+ * `fix_all` - Add undecided services and new host labels, remove vanished services
+ * `refresh` - Update inforomation from host, then remove all existing and add all just found services and host labels
+ * `only_host_labels` - Update host labels
     """,
         enum=[a.value for a in APIDiscoveryAction],
         example="refresh",

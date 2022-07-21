@@ -5,7 +5,6 @@
 """Helper functions for dealing with host tags"""
 
 import abc
-import errno
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, Final, List, Optional, Set, Tuple, Union
@@ -27,9 +26,7 @@ from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 
 
 class TagConfigFile:
-    """Handles loading the 1.6 tag definitions from GUI tags.mk
-
-    The pre 1.6 tag configuration from hosttags.mk was loaded and transformed until 2.0.
+    """Handles loading the tag definitions from GUI tags.mk
 
     When saving the configuration it also writes out the tags.mk for the cmk.base world.
     """
@@ -58,7 +55,6 @@ class TagConfigFile:
     def save(self, cfg: TagConfigSpec) -> None:
         self._save_gui_config(cfg)
         self._save_base_config(cfg)
-        self._cleanup_pre_16_config()
         _export_hosttags_to_php(cfg)
 
     def _save_gui_config(self, cfg: TagConfigSpec) -> None:
@@ -68,14 +64,6 @@ class TagConfigFile:
     def _save_base_config(self, cfg: TagConfigSpec) -> None:
         self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_to_mk_file(Path(wato_root_dir()) / "tags.mk", "tag_config", cfg)
-
-    def _cleanup_pre_16_config(self) -> None:
-        # Cleanup pre 1.6 config files (tags were just saved with new path)
-        try:
-            Path(multisite_dir(), "hosttags.mk").unlink()
-        except OSError as e:
-            if e.errno != errno.ENOENT:
-                raise
 
 
 def load_tag_config() -> TagConfig:

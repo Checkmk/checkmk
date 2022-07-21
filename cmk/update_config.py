@@ -320,7 +320,6 @@ class UpdateConfig:
         return [
             (self._rewrite_visuals, "Migrate Visuals context"),
             (self._update_global_settings, "Update global settings"),
-            (self._rewrite_wato_tag_config, "Rewriting tags"),
             (self._rewrite_wato_host_and_folder_config, "Rewriting hosts and folders"),
             (self._rewrite_wato_rulesets, "Rewriting rulesets"),
             (self._rewrite_discovered_host_labels, "Rewriting discovered host labels"),
@@ -355,11 +354,6 @@ class UpdateConfig:
         cmk.base.config.load_all_agent_based_plugins(
             cmk.base.check_api.get_check_api_context,
         )
-
-    def _rewrite_wato_tag_config(self) -> None:
-        tag_config_file = cmk.gui.watolib.tags.TagConfigFile()
-        tag_config = cmk.utils.tags.TagConfig.from_config(tag_config_file.load_for_reading())
-        tag_config_file.save(tag_config.get_dict_format())
 
     def _rewrite_wato_host_and_folder_config(self) -> None:
         root_folder = cmk.gui.watolib.hosts_and_folders.Folder.root_folder()

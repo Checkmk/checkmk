@@ -33,8 +33,7 @@ fi
 # shellcheck disable=SC2086
 MYPYPATH="$REPO_PATH:\
 $REPO_PATH/livestatus/api/python:\
-$REPO_PATH/omd/packages/omd:\
-$REPO_PATH/agent-receiver" \
+$REPO_PATH/omd/packages/omd" \
     exec "$REPO_PATH/scripts/run-pipenv" run mypy \
     --python-version "${PYTHON_MAJOR_DOT_MINOR}" \
     --scripts-are-modules \

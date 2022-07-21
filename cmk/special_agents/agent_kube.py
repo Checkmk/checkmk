@@ -1978,9 +1978,9 @@ def make_api_client(arguments: argparse.Namespace) -> client.ApiClient:
     with requests.Session() as session:
         req = requests.models.Request(method="GET", url=host, data={}, params={})
         prep = session.prepare_request(req)
-        proxies = http_proxy_config.to_requests_proxies() or {}
+        proxies_mutable = collections.UserDict(http_proxy_config.to_requests_proxies() or {})
         proxies = session.merge_environment_settings(
-            prep.url, proxies, session.stream, session.verify, session.cert
+            prep.url, proxies_mutable, session.stream, session.verify, session.cert
         )["proxies"]
 
     config.proxy = proxies.get(urlparse(host).scheme)

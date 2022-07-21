@@ -117,12 +117,12 @@ def set_cmdline(cmdline: bytes) -> None:
     Change the process name and process command line on of the running process
     This works at least with Python 2.x on Linux
     """
-    argv = ctypes.POINTER(ctypes.c_char_p)()
+    argv = ctypes.POINTER(ctypes.c_char_p)()  # type: ignore[call-arg]
     argc = ctypes.c_int()
     ctypes.pythonapi.Py_GetArgcArgv(ctypes.byref(argc), ctypes.byref(argv))
     # This is all a bit weird: According to mypy argv[i] is a ctypes.c_char_p, but here we get back
     # a bytes object. We should probably just use the setproctitle package and nuke our Kung Fu.
-    cmdlen = sum(len(argv[i]) for i in range(argc.value)) + argc.value  # type: ignore[arg-type]
+    cmdlen = sum(len(argv[i]) for i in range(argc.value)) + argc.value  # type: ignore[arg-type, misc]
     # TODO: This can probably be simplified...
     _new_cmdline = ctypes.c_char_p(cmdline.ljust(cmdlen, b"\0"))  # noqa: F841
 

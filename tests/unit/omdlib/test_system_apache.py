@@ -56,7 +56,7 @@ def test_register_with_system_apache(
     content = apache_config.read_bytes()
     assert (
         sha256(content).hexdigest()
-        == "455845e3aae9269f19c58d296756cca485758beab4cd86acdbabdd9f5d9cbc88"
+        == "482227acabe270d7bfd6340153b02438c019aeffbfeb9c720156a152ea058d79"
     ), (
         "The content of [site].conf was changed. Have you updated the apache_hook_version()? The "
         "number needs to be increased with every change to inform the user about an additional step "

@@ -2721,8 +2721,8 @@ def main_update(  # pylint: disable=too-many-branches
         not is_apache_hook_up_to_date(site)
         and not global_opts.force
         and not dialog_yesno(
-            "This update requires additional actions: The system apache configuration needs to be "
-            "updated.\n\n"
+            "This update requires additional actions: The system apache configuration has changed "
+            "with the new version and needs to be updated.\n\n"
             f"You will have to execute 'omd update-apache-config {site.name}' as root user.\n\n"
             "Please do it right after 'omd update' to prevent inconsistencies. Have a look at "
             "#14281 for further information.\n\n"

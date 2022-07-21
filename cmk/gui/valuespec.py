@@ -469,7 +469,7 @@ class NumericRenderer:
         label: _Optional[str],
         unit: str,
         thousand_sep: _Optional[str],
-        align: str,
+        align: Literal["left", "right"],
     ):
         super().__init__()
         if size is not None:
@@ -522,7 +522,7 @@ class Integer(ValueSpec[int]):
         unit: str = "",
         thousand_sep: _Optional[str] = None,
         display_format: str = "%d",
-        align: str = "left",
+        align: Literal["left", "right"] = "left",
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
@@ -2448,7 +2448,7 @@ class Float(ValueSpec[float]):
         unit: str = "",
         thousand_sep: _Optional[str] = None,
         display_format: str = "%.2f",
-        align: str = "left",
+        align: Literal["left", "right"] = "left",
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
@@ -2523,7 +2523,7 @@ class Percentage(Float):
         unit: str = "%",
         thousand_sep: _Optional[str] = None,
         display_format: str = "%.1f",
-        align: str = "left",
+        align: Literal["left", "right"] = "left",
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
@@ -7270,7 +7270,7 @@ def Fontsize(  # pylint: disable=redefined-builtin
     label: _Optional[str] = None,
     thousand_sep: _Optional[str] = None,
     display_format: str = "%.2f",
-    align: str = "left",
+    align: Literal["left", "right"] = "left",
     # ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,

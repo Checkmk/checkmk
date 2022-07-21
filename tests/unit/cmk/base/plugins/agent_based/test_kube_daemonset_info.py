@@ -22,6 +22,7 @@ def fixture_time(mocker):
     return time_mock
 
 
+@pytest.mark.skip(reason="Causes resilience test failure, CMK-10052")
 @pytest.mark.parametrize(
     "section, expected_check_result",
     [

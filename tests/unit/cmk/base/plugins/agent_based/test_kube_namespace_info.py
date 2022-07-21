@@ -19,6 +19,7 @@ def fixture_time(mocker):
     return time_mock
 
 
+@pytest.mark.skip(reason="Causes resilience test failure, CMK-10052")
 def test_check_kube_namespace_info(time) -> None:  # type:ignore[no-untyped-def]
     info = NamespaceInfo(
         name="namespace",

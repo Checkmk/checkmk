@@ -275,14 +275,12 @@ def _get_speed_msg_and_value(is_isl, isl_speed, brocade_speed, porttype, if_spee
 
 
 def check_brocade_fcport(item, params, parsed):  # pylint: disable=too-many-branches
-    found_entry = None
     for if_entry in parsed:
         if int(item.split()[0]) + 1 == if_entry["index"]:
             found_entry = if_entry
             break
-
-    if found_entry is None:
-        return 3, "No SNMP data found"
+    else:
+        return
 
     index = found_entry["index"]
     txwords = found_entry["txwords"]
@@ -441,7 +439,7 @@ def check_brocade_fcport(item, params, parsed):  # pylint: disable=too-many-bran
         bbcredit_rate = get_rate("brocade_fcport.bbcredit.%s" % (item), this_time, bbcredits)
         perfdata.append(("fc_bbcredit_zero", bbcredit_rate))
 
-    return (summarystate, ", ".join(output), perfdata)
+    yield summarystate, ", ".join(output), perfdata
 
 
 check_info["brocade_fcport"] = {

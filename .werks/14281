@@ -65,7 +65,7 @@ file like follows. Please note, that you will have to replace all occurrences
 the site apache. After you replaced the file, you will have to restart the
 system Apache.
 
-C+
+C+:
 # version: 0
 
 # Make sure that symlink /omd does not make problems

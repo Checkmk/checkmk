@@ -3,12 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
+from typing import Any, Iterable, Mapping, Sequence
+
 from cmk.base.check_legacy_includes.brocade import (
     brocade_fcport_getitem,
     brocade_fcport_inventory,
     brocade_fcport_inventory_this_port,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+Section = Sequence[Mapping[str, Any]]
+CheckResult = Iterable[tuple[int, str, list]]
+DiscoveryResult = Iterable[tuple[str, Mapping[str, Any]]]
+
 
 # lookup tables for check implementation
 # Taken from swFCPortPhyState
@@ -84,14 +93,14 @@ factory_settings["brocade_fcport_default_levels"] = {
 }
 
 
-def _try_int(int_str):
+def _try_int(int_str: str) -> int | None:
     try:
         return int(int_str)
     except ValueError:
         return None
 
 
-def _to_int(raw_value):
+def _to_int(raw_value: Sequence[int]) -> int:
     """Convert a raw integer
 
     This is done by considering the string to be a little endian byte string.
@@ -106,7 +115,7 @@ def _to_int(raw_value):
     return value
 
 
-def _get_if_table_offset(speed_info, offset):
+def _get_if_table_offset(speed_info: StringTable, offset: int) -> int | None:
     # http://community.brocade.com/t5/Fibre-Channel-SAN/SNMP-FC-port-speed/td-p/64980
     # says that "1073741824" from if-table correlates with index 1 from
     # brocade-if-table.
@@ -120,8 +129,11 @@ def _get_if_table_offset(speed_info, offset):
     return None
 
 
-def parse_brocade_fcport(info):
-    if_info, link_info, speed_info, if64_info = info
+def parse_brocade_fcport(string_table) -> Section | None:
+    if_info: StringTable = string_table[0]
+    link_info: StringTable = string_table[1]
+    speed_info: StringTable = string_table[2]
+    if64_info = string_table[3]
 
     try:
         offset = int(if_info[0][0])
@@ -171,7 +183,7 @@ def parse_brocade_fcport(info):
         if if64_info:
             fcmgmt_portstats = []
             for oidend, tx_objects, rx_objects, tx_elements, rx_elements, bbcredits_64 in if64_info:
-                if index == oidend.split(".")[-1]:
+                if index == str(oidend).rsplit(".", 1)[-1]:
                     fcmgmt_portstats = [
                         _to_int(tx_objects),
                         _to_int(rx_objects),
@@ -181,16 +193,16 @@ def parse_brocade_fcport(info):
                     ]
                     break
             if fcmgmt_portstats:
-                txframes = fcmgmt_portstats[0]
-                rxframes = fcmgmt_portstats[1]
-                txwords = fcmgmt_portstats[2]
-                rxwords = fcmgmt_portstats[3]
-                bbcredits = fcmgmt_portstats[4]
+                txframes = str(fcmgmt_portstats[0])
+                rxframes = str(fcmgmt_portstats[1])
+                txwords = str(fcmgmt_portstats[2])
+                rxwords = str(fcmgmt_portstats[3])
+                bbcredits = str(fcmgmt_portstats[4])
             else:
-                txframes = 0
-                rxframes = 0
-                txwords = 0
-                rxwords = 0
+                txframes = "0"
+                rxframes = "0"
+                txwords = "0"
+                rxwords = "0"
 
         islspeed = None
         if index in isl_ports:
@@ -227,10 +239,10 @@ def parse_brocade_fcport(info):
     return parsed
 
 
-def inventory_brocade_fcport(parsed):
+def discover_brocade_fcport(section: Section) -> DiscoveryResult:
     settings = host_extra_conf_merged(host_name(), brocade_fcport_inventory)
 
-    for if_entry in parsed:
+    for if_entry in section:
         admstate = if_entry["admstate"]
         phystate = if_entry["phystate"]
         opstate = if_entry["opstate"]
@@ -242,7 +254,7 @@ def inventory_brocade_fcport(parsed):
         ):
             yield (
                 brocade_fcport_getitem(
-                    number_of_ports=len(parsed),
+                    number_of_ports=len(section),
                     index=if_entry["index"],
                     portname=if_entry["portname"],
                     is_isl=if_entry["is_isl"],
@@ -256,7 +268,14 @@ def inventory_brocade_fcport(parsed):
             )
 
 
-def _get_speed_msg_and_value(is_isl, isl_speed, brocade_speed, porttype, if_speed, params):
+def _get_speed_msg_and_value(
+    is_isl: bool,
+    isl_speed: float | None,
+    brocade_speed: int,
+    porttype: str,
+    if_speed: float | None,
+    params: Mapping[str, float],
+) -> tuple[str, float]:
     # Lookup port speed in ISL table for ISL ports (older switches do not provide this
     # information in the normal table)
     if is_isl and isl_speed is not None:
@@ -274,8 +293,12 @@ def _get_speed_msg_and_value(is_isl, isl_speed, brocade_speed, porttype, if_spee
     return "Assumed speed: %g Gbit/s", params["assumed_speed"]
 
 
-def check_brocade_fcport(item, params, parsed):  # pylint: disable=too-many-branches
-    for if_entry in parsed:
+def check_brocade_fcport(  # pylint: disable=too-many-branches
+    item: str,
+    params: Mapping[str, Any],
+    section: Section,
+) -> CheckResult:
+    for if_entry in section:
         if int(item.split()[0]) + 1 == if_entry["index"]:
             found_entry = if_entry
             break
@@ -305,7 +328,7 @@ def check_brocade_fcport(item, params, parsed):  # pylint: disable=too-many-bran
 
     summarystate = 0
     output = []
-    perfdata = []
+    perfdata: list[tuple] = []
     perfaverages = []
 
     speedmsg, gbit = _get_speed_msg_and_value(
@@ -445,7 +468,7 @@ def check_brocade_fcport(item, params, parsed):  # pylint: disable=too-many-bran
 check_info["brocade_fcport"] = {
     "parse_function": parse_brocade_fcport,
     "check_function": check_brocade_fcport,
-    "inventory_function": inventory_brocade_fcport,
+    "inventory_function": discover_brocade_fcport,
     "service_description": "Port %s",
     "has_perfdata": True,
     "snmp_info": [

@@ -3,22 +3,43 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
+from typing import Any, Iterable, List, Mapping, TypedDict
+
 from cmk.base.check_legacy_includes.brocade import (
     brocade_fcport_getitem,
     brocade_fcport_inventory,
     brocade_fcport_inventory_this_port,
 )
 from cmk.base.check_legacy_includes.temperature import check_temperature
+from cmk.base.plugins.agent_based.utils.temperature import TempParamDict
+
+CheckResult = Iterable[tuple[int, str, list]]
+DiscoveryResult = Iterable[tuple[str, Mapping]]
+StringTable = list[list[str]]
 
 
-def parse_brocade_sfp(info):
-    parsed = {}
+class Port(TypedDict):
+    port_name: str
+    temp: int
+    phystate: int
+    opstate: int
+    admstate: int
+    voltage: float
+    current: float
+    rx_power: float
+    tx_power: float
+    is_isl: bool
 
-    isl_ports = [int(x[0]) for x in info[1]]
 
-    for fcport_info, values in zip(info[0], info[2]):
+Section = Mapping[int, Port]
+
+
+def parse_brocade_sfp(string_table: List[StringTable]) -> Section:
+    parsed: dict[int, Port] = {}
+
+    isl_ports = [int(x[0]) for x in string_table[1]]
+
+    for fcport_info, values in zip(string_table[0], string_table[2]):
 
         # Observed in the wild: Either all of the values are present
         # or none of them.
@@ -43,22 +64,22 @@ def parse_brocade_sfp(info):
     return parsed
 
 
-def inventory_brocade_sfp(parsed):
-    settings = host_extra_conf_merged(host_name(), brocade_fcport_inventory)
-    number_of_ports = len(parsed)
-    for port_index, port_info in parsed.items():
+def inventory_brocade_sfp(section: Section) -> DiscoveryResult:
+    params = host_extra_conf_merged(host_name(), brocade_fcport_inventory)
+    number_of_ports = len(section)
+    for port_index, port_info in section.items():
         if brocade_fcport_inventory_this_port(
             admstate=port_info["admstate"],
             phystate=port_info["phystate"],
             opstate=port_info["opstate"],
-            settings=settings,
+            settings=params,
         ):
             yield brocade_fcport_getitem(
                 number_of_ports=number_of_ports,
                 index=port_index,
                 portname=port_info["port_name"],
                 is_isl=port_info["is_isl"],
-                settings=settings,
+                settings=params,
             ), {}
 
 
@@ -72,17 +93,17 @@ def inventory_brocade_sfp(parsed):
 #   '----------------------------------------------------------------------'
 
 
-def check_brocade_sfp_temp(item, params, parsed):
+def check_brocade_sfp_temp(item: str, params: TempParamDict, section: Section) -> CheckResult:
 
     # TODO: Move this magical plucking apart of the
     #       item to brocade.include and do the same
     #       for brocade.fcport.
     port_index = int(item.split()[0]) + 1
-    if port_index not in parsed:
-        return None
-    port_info = parsed[port_index]
+    if port_index not in section:
+        return
+    port_info = section[port_index]
 
-    return check_temperature(port_info["temp"], params, item)
+    yield from check_temperature(port_info["temp"], params, item)
 
 
 check_info["brocade_sfp.temp"] = {
@@ -106,15 +127,15 @@ check_info["brocade_sfp.temp"] = {
 #   '----------------------------------------------------------------------'
 
 
-def check_brocade_sfp(item, params, parsed):
+def check_brocade_sfp(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
 
     # TODO: Move this magical plucking apart of the
     #       item to brocade.include and do the same
     #       for brocade.fcport.
     port_index = int(item.split()[0]) + 1
-    if port_index not in parsed:
+    if port_index not in section:
         return
-    port_info = parsed[port_index]
+    port_info = section[port_index]
 
     def sort_params(key):
         # levels are given in an uncommon order at the rulespec

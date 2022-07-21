@@ -6,7 +6,7 @@
 import os
 import re
 import subprocess
-from typing import Generator
+from typing import Iterator
 
 import pytest
 
@@ -22,7 +22,7 @@ import cmk.base.autochecks as autochecks
 
 
 @pytest.fixture(name="test_cfg", scope="module")
-def test_cfg_fixture(site: Site, web) -> Generator:  # type:ignore[no-untyped-def]
+def test_cfg_fixture(site: Site) -> Iterator[None]:
     site.ensure_running()
 
     print("Applying default config")
@@ -74,10 +74,10 @@ def test_cfg_fixture(site: Site, web) -> Generator:  # type:ignore[no-untyped-de
         "var/check_mk/agent_output/modes-test-host3", get_standard_linux_agent_output()
     )
 
-    web.discover_services("modes-test-host")  # Replace with RestAPI call, see CMK-9249
-    web.discover_services("modes-test-host2")  # Replace with RestAPI call, see CMK-9249
-    web.discover_services("modes-test-host3")  # Replace with RestAPI call, see CMK-9249
-    web.discover_services("host_with_secondary_ip")  # Replace with RestAPI call, see CMK-9249
+    site.openapi.discover_services_and_wait_for_completion("modes-test-host")
+    site.openapi.discover_services_and_wait_for_completion("modes-test-host2")
+    site.openapi.discover_services_and_wait_for_completion("modes-test-host3")
+    site.openapi.discover_services_and_wait_for_completion("host_with_secondary_ip")
     icmp_rule_id = site.openapi.create_rule(
         ruleset_name="active_checks:icmp", value={"address": "all_ipv4addresses"}
     )

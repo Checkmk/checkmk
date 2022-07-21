@@ -5,7 +5,7 @@
 
 import re
 import subprocess
-from typing import Generator, List, NamedTuple
+from typing import Iterator, NamedTuple
 
 import pytest
 
@@ -14,7 +14,7 @@ from tests.testlib.utils import get_standard_linux_agent_output
 
 
 @pytest.fixture(name="test_cfg", scope="module")
-def test_cfg_fixture(site: Site, web) -> Generator:  # type:ignore[no-untyped-def]
+def test_cfg_fixture(site: Site) -> Iterator[None]:
     print("Applying default config")
     site.openapi.create_host(
         "modes-test-host",
@@ -60,9 +60,9 @@ def test_cfg_fixture(site: Site, web) -> Generator:  # type:ignore[no-untyped-de
         "var/check_mk/agent_output/modes-test-host3", get_standard_linux_agent_output()
     )
 
-    web.discover_services("modes-test-host")  # Replace with RestAPI call, see CMK-9249
-    web.discover_services("modes-test-host2")  # Replace with RestAPI call, see CMK-9249
-    web.discover_services("modes-test-host3")  # Replace with RestAPI call, see CMK-9249
+    site.openapi.discover_services_and_wait_for_completion("modes-test-host")
+    site.openapi.discover_services_and_wait_for_completion("modes-test-host2")
+    site.openapi.discover_services_and_wait_for_completion("modes-test-host3")
 
     try:
         site.activate_changes_and_wait_for_core_reload()
@@ -672,7 +672,7 @@ def test_check_discovery(execute) -> None:  # type:ignore[no-untyped-def]
 
 
 def test_check(execute) -> None:  # type:ignore[no-untyped-def]
-    opts: List[List[str]] = [["--check"], []]
+    opts: list[list[str]] = [["--check"], []]
     for opt in opts:
         p = execute(["cmk"] + opt + ["modes-test-host"])
         assert p.returncode == 0, on_failure(p)

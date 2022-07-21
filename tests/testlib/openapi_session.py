@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Any, NamedTuple, Optional, Union
+from typing import Any, NamedTuple, NoReturn, Optional, Union
 
 import requests
 
@@ -190,10 +190,50 @@ class CMKOpenApiSession(requests.Session):
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
 
-    def discover_services(self, hostname: str) -> None:
+    def discover_services(self, hostname: str) -> NoReturn:
         response = self.post(
-            f"/objects/host/{hostname}/actions/discover_services/invoke",
-            json={"mode": "new"},
+            "/domain-types/service_discovery_run/actions/start/invoke",
+            json={"host_name": hostname, "mode": "refresh"},
+            # We want to get the redirect response and handle that below. So don't let requests
+            # handle that for us.
+            allow_redirects=False,
+        )
+        if response.status_code == 302:
+            raise Redirect(redirect_url=response.headers["Location"])  # activation pending
+        raise UnexpectedResponse.from_response(response)
+
+    # Would be nice to consolidate this function and activate_changes_and_wait_for_completion,
+    # but we will have to extend the API a bit to have the same functionality first.
+    def discover_services_and_wait_for_completion(self, hostname: str) -> None:
+        timeout = 60
+        start = time.time()
+        try:
+            self.discover_services(hostname)
+        except Redirect as redirect:
+            redirect_url = redirect.redirect_url
+            body = {}
+            while redirect_url:
+                if time.time() > (start + timeout):
+                    raise TimeoutError("wait for completion on service discovery timed out")
+
+                response = self.get(redirect_url)
+                if response.status_code != 200:
+                    raise UnexpectedResponse.from_response(response)
+
+                body = response.json()
+                if body["extensions"]["active"]:
+                    time.sleep(0.5)
+                    continue  # Job is still running, wait for the result
+
+                if body["extensions"]["state"] == "finished":
+                    break  # Finished as intended
+
+                raise RuntimeError("Unhandled state: %r" % body)
+
+        # TODO: Once we have a "tabula rasa" mode, we can remove this second invocaton
+        response = self.post(
+            "/domain-types/service_discovery_run/actions/start/invoke",
+            json={"host_name": hostname, "mode": "fix_all"},
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)

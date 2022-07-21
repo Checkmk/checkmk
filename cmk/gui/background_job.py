@@ -19,6 +19,7 @@ from types import FrameType
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Type
 
 import psutil  # type: ignore[import]
+from setproctitle import setthreadtitle  # type: ignore[import] # pylint: disable=no-name-in-module
 
 import cmk.utils.daemon as daemon
 import cmk.utils.log
@@ -215,7 +216,13 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
     def _detach_from_parent(self):
         # Detach from parent and cleanup inherited file descriptors
         os.setsid()
-        daemon.set_procname(BackgroundJobDefines.process_name.encode())
+
+        # NOTE: Setting the thread title is not for cosmetics! BackgroundJob._is_correct_process()
+        # will not do the right thing without it! Furthermore, using setproctitle() instead of
+        # setthreadtitle() would be more fragile, because the former will only work if os.environ
+        # has not been damaged too much, but our tests do this via mock.patch.dict(os.environ, ...).
+        setthreadtitle(BackgroundJobDefines.process_name)
+
         sys.stdin.close()
         # NOTE
         # When forking off from an mod_wsgi process, these handles are not the standard stdout and

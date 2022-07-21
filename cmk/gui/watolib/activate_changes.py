@@ -33,12 +33,12 @@ from typing import Any, Callable, Dict, Iterable, List, NamedTuple, Optional, Se
 
 import psutil  # type: ignore[import]
 import werkzeug.urls
+from setproctitle import setthreadtitle  # type: ignore[import] # pylint: disable=no-name-in-module
 
 from livestatus import SiteConfiguration, SiteId
 
 import cmk.utils
 import cmk.utils.agent_registration as agent_registration
-import cmk.utils.daemon as daemon
 import cmk.utils.paths
 import cmk.utils.render as render
 import cmk.utils.store as store
@@ -1562,8 +1562,13 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         self._site_changes = changes
 
     def run(self):
-        # Ensure this process is not detected as apache process by the apache init script
-        daemon.set_procname(b"cmk-activate-changes")
+        # Ensure this process is not detected as apache process by the apache init script, see
+        # etc/init.d/apache:pidof_apache(): The main point is that this process is not called
+        # "apache2". The init script uses pgrep without an -f (= --full) flag, so setting the
+        # possibly truncated short name is enough. Note that our "interesting" unit tests damage
+        # os.environ enough that setting the full commandline with setproctitle() won't work,
+        # anyway. Let's talk about fragile interactions... :-/
+        setthreadtitle("cmk-activate-changes")
 
         self._detach_from_parent()
 

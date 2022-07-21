@@ -177,6 +177,7 @@ lxml = "==4.8.0"  # used via beautifulsoup4 as a parser and in the agent_netapp 
 grpcio = "==1.46.3"  # newer versions (1.47) caused problems in Centos7 and SLES12
 google-api-python-client = "==2.53.0"  # use rest api to query big query for gcp cost monitoring
 npyscreen = "==4.10.5"  # used by mkbench
+setproctitle = "==1.2.3"  # used by mkbench/dcd/liveproxyd
 
 [requires]
 # As pipenv {sync,lock} does currently not support env variable expansion in and out Pipfile.lock,

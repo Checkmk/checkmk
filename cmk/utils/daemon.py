@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ctypes
-import ctypes.util
 import os
 import sys
 from contextlib import contextmanager
@@ -110,45 +108,3 @@ def pid_file_lock(path: Path) -> Generator[None, None, None]:
         yield
     finally:
         _cleanup_locked_pid_file(path)
-
-
-def set_cmdline(cmdline: bytes) -> None:
-    """
-    Change the process name and process command line on of the running process
-    This works at least with Python 2.x on Linux
-    """
-    argv = ctypes.POINTER(ctypes.c_char_p)()  # type: ignore[call-arg]
-    argc = ctypes.c_int()
-    ctypes.pythonapi.Py_GetArgcArgv(ctypes.byref(argc), ctypes.byref(argv))
-    # This is all a bit weird: According to mypy argv[i] is a ctypes.c_char_p, but here we get back
-    # a bytes object. We should probably just use the setproctitle package and nuke our Kung Fu.
-    cmdlen = sum(len(argv[i]) for i in range(argc.value)) + argc.value  # type: ignore[arg-type, misc]
-    # TODO: This can probably be simplified...
-    _new_cmdline = ctypes.c_char_p(cmdline.ljust(cmdlen, b"\0"))  # noqa: F841
-
-    set_procname(cmdline)
-
-
-def set_procname(cmdline: bytes) -> None:
-    """
-    Change the process name of the running process
-    This works at least with Python 2.x on Linux
-    """
-    lib = ctypes.util.find_library("c")
-    if not lib:
-        return
-    libc = ctypes.cdll.LoadLibrary(lib)
-
-    # argv = ctypes.POINTER(ctypes.c_char_p)()
-
-    # replace the command line, which is available via /proc/<pid>/cmdline.
-    # This is .e.g used by ps
-    # libc.memcpy(argv.contents, new_cmdline, cmdlen)
-
-    # replace the prctl name, which is available via /proc/<pid>/status.
-    # This is for example used by top and killall
-    # libc.prctl(15, new_cmdline, 0, 0, 0)
-
-    name_buffer = ctypes.create_string_buffer(len(cmdline) + 1)
-    name_buffer.value = cmdline
-    libc.prctl(15, ctypes.byref(name_buffer), 0, 0, 0)

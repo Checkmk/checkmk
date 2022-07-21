@@ -37,8 +37,6 @@ __version__ = "2.2.0i1"
 import ast
 import collections
 import contextlib
-import ctypes
-import ctypes.util
 import errno
 import getopt
 import glob
@@ -64,6 +62,7 @@ import npyscreen  # type: ignore[import]  # pylint: disable=import-error
 import psutil  # type: ignore[import]
 from psutil._common import sdiskusage  # type: ignore[import]
 from psutil._pslinux import sdiskio, svmem  # type: ignore[import]
+from setproctitle import setproctitle  # type: ignore[import] # pylint: disable=no-name-in-module
 
 import livestatus
 
@@ -81,29 +80,6 @@ from cmk.utils.render import fmt_bytes
 #   +----------------------------------------------------------------------+
 #   | Different helper methods and classes                                 |
 #   '----------------------------------------------------------------------'
-
-
-# Changes the process name and process command line on of the running process
-# This works at least with Python 2.x on Linux
-def set_cmdline(cmdline):
-    libc_path = ctypes.util.find_library("c")
-    if libc_path is None:
-        raise MKGeneralException("Huh? libc not found???")
-    libc = ctypes.cdll.LoadLibrary(libc_path)
-
-    argv = ctypes.POINTER(ctypes.c_char_p)()  # type: ignore[call-arg]
-    argc = ctypes.c_int()
-    ctypes.pythonapi.Py_GetArgcArgv(ctypes.byref(argc), ctypes.byref(argv))
-    cmdlen = sum(len(argv[i]) for i in range(argc.value)) + argc.value  # type: ignore[arg-type, misc]
-    new_cmdline = ctypes.c_char_p(cmdline.ljust(cmdlen, "\0"))
-
-    # replace the command line, which is available via /proc/<pid>/cmdline.
-    # This is .e.g used by ps
-    libc.memcpy(argv.contents, new_cmdline, cmdlen)
-
-    # replace the prctl name, which is available via /proc/<pid>/status.
-    # This is for example used by top and killall
-    libc.prctl(15, new_cmdline, 0, 0, 0)
 
 
 def omd_root():
@@ -1100,16 +1076,13 @@ class AgentListener(multiprocessing.Process):
 
     def run(self):
         try:
-            self._set_process_name()
+            setproctitle(self.name)
             self._open_sockets()
             self._serve()
         except (KeyboardInterrupt, MKTerminate):
             pass
         finally:
             self._close_sockets()
-
-    def _set_process_name(self):
-        set_cmdline(self.name)
 
     def _open_sockets(self):
         for host_id in self._hosts:
@@ -3225,10 +3198,10 @@ opt_debug = False
 
 
 def main():  # pylint: disable=too-many-branches
+    setproctitle(" ".join(["mkbench"] + sys.argv[1:]))
+
     global opt_debug
     register_signal_handlers()
-
-    set_cmdline(" ".join(["mkbench"] + sys.argv[1:]))
 
     verify_is_site()
 

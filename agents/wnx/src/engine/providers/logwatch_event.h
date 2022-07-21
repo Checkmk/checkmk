@@ -102,9 +102,11 @@ public:
 
     auto entries() const { return entries_; }
     const LogWatchEntry *defaultEntry() const {
-        if (default_entry_ < entries().size()) return &entries_[default_entry_];
-        XLOG::l.crit("This can't happen index is {} size is {} ",
-                     default_entry_, entries().size());
+        if (default_entry_ < entries().size()) {
+            return &entries_[default_entry_];
+        }
+        XLOG::l("This can't happen index is {} size is {} ", default_entry_,
+                entries().size());
         return nullptr;
     };
     std::vector<std::filesystem::path> makeStateFilesTable() const;

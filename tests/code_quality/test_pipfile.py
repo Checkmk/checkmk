@@ -268,7 +268,6 @@ CEE_UNUSED_PACKAGES = [
     "pyrsistent",
     "requests-kerberos",
     "requests-toolbelt",
-    "rsa",
     "s3transfer",
     "setuptools_scm",
     "snmpsim",

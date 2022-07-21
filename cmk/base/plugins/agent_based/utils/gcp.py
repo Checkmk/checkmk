@@ -221,8 +221,9 @@ def service_name_factory(gcp_service: str) -> ServiceNamer:
     return ServiceNamer(gcp_service)
 
 
-def discovery_summary(section: AssetSection) -> DiscoveryResult:
-    yield Service()
+def discovery_summary(section: AssetSection, service: str) -> DiscoveryResult:
+    if section.config.is_enabled(service):
+        yield Service()
 
 
 def check_summary(asset_type: str, descriptor: str, section: AssetSection) -> CheckResult:

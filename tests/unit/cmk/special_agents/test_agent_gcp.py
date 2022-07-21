@@ -5,7 +5,7 @@
 # mypy: disallow_untyped_defs
 import datetime
 import json
-from typing import Any, Callable, Iterable, Optional, Sequence, Tuple
+from typing import Any, Callable, Iterable, Optional, Sequence, Tuple, Union
 
 import pytest
 from _pytest.capture import CaptureFixture
@@ -225,8 +225,10 @@ def test_asset_serialization(
         agent_gcp.Asset.deserialize(line)
 
 
-@pytest.fixture(name="piggy_back_sections")
-def piggy_back_sections_fixture() -> Sequence[agent_gcp.PiggyBackSection]:
+@pytest.fixture(name="asset_and_piggy_back_sections")
+def asset_and_piggy_back_sections_fixture() -> Sequence[
+    Union[agent_gcp.PiggyBackSection, agent_gcp.AssetSection]
+]:
     client = FakeClient("test", FakeMonitoringClient(), FakeAssetClient())
     sections: list[agent_gcp.Section] = []
     collector = collector_factory(sections)
@@ -257,7 +259,32 @@ def piggy_back_sections_fixture() -> Sequence[agent_gcp.PiggyBackSection]:
         ],
     )
     agent_gcp.run(client, [], [piggy_back_section], cost=None, serializer=collector)
-    return list(s for s in sections if isinstance(s, agent_gcp.PiggyBackSection))
+    return list(
+        s for s in sections if isinstance(s, (agent_gcp.PiggyBackSection, agent_gcp.AssetSection))
+    )
+
+
+def test_piggy_back_config_in_assets(
+    asset_and_piggy_back_sections: Sequence[
+        Union[agent_gcp.PiggyBackSection, agent_gcp.AssetSection]
+    ]
+) -> None:
+    section = list(
+        s for s in asset_and_piggy_back_sections if isinstance(s, agent_gcp.AssetSection)
+    )
+    assert len(section) == 1
+    assert section[0].config == ["testing"]
+
+
+@pytest.fixture(name="piggy_back_sections")
+def piggy_back_sections_fixture(
+    asset_and_piggy_back_sections: Sequence[
+        Union[agent_gcp.PiggyBackSection, agent_gcp.AssetSection]
+    ]
+) -> Sequence[agent_gcp.PiggyBackSection]:
+    return list(
+        s for s in asset_and_piggy_back_sections if isinstance(s, agent_gcp.PiggyBackSection)
+    )
 
 
 def test_can_hash_client() -> None:

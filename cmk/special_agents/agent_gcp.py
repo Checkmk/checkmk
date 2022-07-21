@@ -473,7 +473,7 @@ def run(
     serializer: Callable[[Union[Iterable[Section], Iterable[PiggyBackSection]]], None],
     cost: Optional[CostArgument],
 ) -> None:
-    assets = run_assets(client, [s.name for s in services])
+    assets = run_assets(client, [s.name for s in services] + [s.name for s in piggy_back_services])
     serializer([assets])
     serializer(run_metrics(client, services))
     serializer(run_piggy_back(client, piggy_back_services, assets.assets))

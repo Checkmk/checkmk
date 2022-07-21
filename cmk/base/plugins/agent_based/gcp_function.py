@@ -139,6 +139,10 @@ register.check_plugin(
 )
 
 
+def discovery_summary(section: gcp.AssetSection) -> DiscoveryResult:
+    yield from gcp.discovery_summary(section, "function")
+
+
 def check_summary(section: gcp.AssetSection) -> CheckResult:
     yield from gcp.check_summary(ASSET_TYPE, "Function", section)
 
@@ -147,6 +151,6 @@ register.check_plugin(
     name="gcp_function_summary",
     sections=["gcp_assets"],
     service_name=service_namer.summary_name(),
-    discovery_function=gcp.discovery_summary,
+    discovery_function=discovery_summary,
     check_function=check_summary,
 )

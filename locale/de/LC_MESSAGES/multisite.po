@@ -37564,6 +37564,10 @@ msgstr "Rekursion"
 msgid "Red"
 msgstr "Rot"
 
+#, fuzzy
+msgid "Redacted secrets changed."
+msgstr "Änderungsrate"
+
 msgid "Redirect URL (has to be https)"
 msgstr "URL für die Umleitung (muss HTTPS verwenden)"
 

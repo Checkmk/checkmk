@@ -38160,6 +38160,10 @@ msgstr "Ricorsione"
 msgid "Red"
 msgstr "Rosso"
 
+#, fuzzy
+msgid "Redacted secrets changed."
+msgstr "Tasso di cambiamento"
+
 msgid "Redirect URL (has to be https)"
 msgstr "URL di reindirizzamento (deve essere https)"
 

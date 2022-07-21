@@ -36456,6 +36456,10 @@ msgstr ""
 msgid "Red"
 msgstr ""
 
+#, fuzzy
+msgid "Redacted secrets changed."
+msgstr "servicii"
+
 msgid "Redirect URL (has to be https)"
 msgstr ""
 
@@ -62531,10 +62535,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Last service check"
 #~ msgstr "Numele Elementului"
-
-#, fuzzy
-#~ msgid "Last service state change"
-#~ msgstr "servicii"
 
 #, fuzzy
 #~ msgid "Levels for Datafiles"

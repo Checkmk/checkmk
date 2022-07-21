@@ -36020,6 +36020,10 @@ msgstr "再帰"
 msgid "Red"
 msgstr "赤"
 
+#, fuzzy
+msgid "Redacted secrets changed."
+msgstr "変化率"
+
 msgid "Redirect URL (has to be https)"
 msgstr "リダイレクトURL(httpsである必要があります)"
 

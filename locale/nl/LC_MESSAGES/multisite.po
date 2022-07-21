@@ -37483,6 +37483,10 @@ msgstr "Recursie"
 msgid "Red"
 msgstr "Red"
 
+#, fuzzy
+msgid "Redacted secrets changed."
+msgstr "Snelheid van verandering"
+
 msgid "Redirect URL (has to be https)"
 msgstr "Redirect URL (moet https zijn)"
 

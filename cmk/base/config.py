@@ -570,6 +570,7 @@ def _collect_parameter_rulesets_from_globals(global_dict: Dict[str, Any]) -> Non
     # list of discovery ruleset names which are used in migrated AND in legacy code; can be removed
     # once we have no such cases any more
     partially_migrated = {
+        "brocade_fcport_inventory",
         "diskstat_inventory",
         "filesystem_groups",
     }

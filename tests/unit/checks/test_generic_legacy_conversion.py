@@ -1090,8 +1090,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "brocade_mlx_fan",
         "brocade_mlx_power",
         "brocade_mlx_temp",
-        "brocade_sfp.temp",
-        "brocade_sfp",
         "brocade_sys.mem",
         "brocade_sys",
         "brocade_tm",

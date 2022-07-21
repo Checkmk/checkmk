@@ -3,19 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Iterable, List, Mapping, TypedDict
+from typing import Any, List, Mapping, TypedDict
 
-from cmk.base.check_legacy_includes.brocade import (
+from cmk.base.plugins.agent_based.utils.brocade import (
     brocade_fcport_getitem,
-    brocade_fcport_inventory,
     brocade_fcport_inventory_this_port,
 )
-from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.plugins.agent_based.utils.temperature import TempParamDict
+from cmk.base.plugins.agent_based.utils.temperature import check_temperature, TempParamDict
 
-CheckResult = Iterable[tuple[int, str, list]]
-DiscoveryResult = Iterable[tuple[str, Mapping]]
-StringTable = list[list[str]]
+from .agent_based_api.v1 import (
+    all_of,
+    check_levels,
+    exists,
+    get_value_store,
+    OIDCached,
+    register,
+    Service,
+    SNMPTree,
+    startswith,
+)
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 class Port(TypedDict):
@@ -32,6 +39,15 @@ class Port(TypedDict):
 
 
 Section = Mapping[int, Port]
+
+
+DISCOVERY_DEFAULT_PARAMETERS = {
+    "admstates": [1, 3, 4],
+    "phystates": [3, 4, 5, 6, 7, 8, 9, 10],
+    "opstates": [1, 2, 3, 4],
+    "use_portname": True,
+    "show_isl": True,
+}
 
 
 def parse_brocade_sfp(string_table: List[StringTable]) -> Section:
@@ -64,28 +80,29 @@ def parse_brocade_sfp(string_table: List[StringTable]) -> Section:
     return parsed
 
 
-check_info["brocade_sfp"] = {
-    "parse_function": parse_brocade_sfp,
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(
-        ".1.3.6.1.4.1.1588.2.1.1"
-    )
-    and oid(".1.3.6.1.4.1.1588.2.1.1.1.6.2.1.*") is not None,
-    "snmp_info": [
-        (
-            ".1.3.6.1.4.1.1588.2.1.1.1.6.2.1",
-            [
-                CACHED_OID("1"),  # swFCPortIndex
-                CACHED_OID("3"),  # swFCPortPhyState
-                CACHED_OID("4"),  # swFCPortOpStatus
-                CACHED_OID("5"),  # swFCPortAdmStatus
-                CACHED_OID("36"),  # swFCPortName  (not supported by all devices)
+register.snmp_section(
+    name="brocade_sfp",
+    parse_function=parse_brocade_sfp,
+    detect=all_of(
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.2.1.1"),
+        exists(".1.3.6.1.4.1.1588.2.1.1.1.6.2.1.*"),
+    ),
+    fetch=[
+        SNMPTree(
+            base=".1.3.6.1.4.1.1588.2.1.1.1.6.2.1",
+            oids=[
+                OIDCached("1"),  # swFCPortIndex
+                OIDCached("3"),  # swFCPortPhyState
+                OIDCached("4"),  # swFCPortOpStatus
+                OIDCached("5"),  # swFCPortAdmStatus
+                OIDCached("36"),  # swFCPortName  (not supported by all devices)
             ],
         ),
         # Information about Inter-Switch-Links (contains baud rate of port)
-        (
-            ".1.3.6.1.4.1.1588.2.1.1.1.2.9.1",
-            [
-                CACHED_OID("2"),  # swNbMyPort
+        SNMPTree(
+            base=".1.3.6.1.4.1.1588.2.1.1.1.2.9.1",
+            oids=[
+                OIDCached("2"),  # swNbMyPort
             ],
         ),
         # NOTE: It appears that the port name and index in connUnitPortEntry
@@ -96,9 +113,9 @@ check_info["brocade_sfp"] = {
         #       Please check the connUnitPortEntry table (.1.3.6.1.3.94.1.10.1)
         #       should you come across a device for which this assumption
         #       does not hold.
-        (
-            ".1.3.6.1.4.1.1588.2.1.1.1.28.1.1",
-            [  # FA-EXT-MIB::swSfpStatEntry
+        SNMPTree(
+            base=".1.3.6.1.4.1.1588.2.1.1.1.28.1.1",
+            oids=[  # FA-EXT-MIB::swSfpStatEntry
                 # AUGMENTS {connUnitPortEntry}
                 "1",  # swSfpTemperature
                 "2",  # swSfpVoltage
@@ -108,11 +125,10 @@ check_info["brocade_sfp"] = {
             ],
         ),
     ],
-}
+)
 
 
-def discover_brocade_sfp(section: Section) -> DiscoveryResult:
-    params = host_extra_conf_merged(host_name(), brocade_fcport_inventory)
+def discover_brocade_sfp(params: Mapping[str, Any], section: Section) -> DiscoveryResult:
     number_of_ports = len(section)
     for port_index, port_info in section.items():
         if brocade_fcport_inventory_this_port(
@@ -121,13 +137,15 @@ def discover_brocade_sfp(section: Section) -> DiscoveryResult:
             opstate=port_info["opstate"],
             settings=params,
         ):
-            yield brocade_fcport_getitem(
-                number_of_ports=number_of_ports,
-                index=port_index,
-                portname=port_info["port_name"],
-                is_isl=port_info["is_isl"],
-                settings=params,
-            ), {}
+            yield Service(
+                item=brocade_fcport_getitem(
+                    number_of_ports=number_of_ports,
+                    index=port_index,
+                    portname=port_info["port_name"],
+                    is_isl=port_info["is_isl"],
+                    settings=params,
+                )
+            )
 
 
 #   .--Temperature---------------------------------------------------------.
@@ -150,16 +168,22 @@ def check_brocade_sfp_temp(item: str, params: TempParamDict, section: Section) -
         return
     port_info = section[port_index]
 
-    yield from check_temperature(port_info["temp"], params, item)
+    yield from check_temperature(
+        port_info["temp"], params, unique_name=item, value_store=get_value_store()
+    )
 
 
-check_info["brocade_sfp.temp"] = {
-    "inventory_function": discover_brocade_sfp,
-    "check_function": check_brocade_sfp_temp,
-    "service_description": "SFP Temperature %s",
-    "has_perfdata": True,
-    "group": "temperature",
-}
+register.check_plugin(
+    name="brocade_sfp_temp",
+    service_name="SFP Temperature %s",
+    sections=["brocade_sfp"],
+    discovery_function=discover_brocade_sfp,
+    discovery_ruleset_name="brocade_fcport_inventory",
+    discovery_default_parameters=DISCOVERY_DEFAULT_PARAMETERS,
+    check_function=check_brocade_sfp_temp,
+    check_ruleset_name="temperature",
+    check_default_parameters={},
+)
 
 # .
 #   .--Power level - Main check--------------------------------------------.
@@ -184,43 +208,56 @@ def check_brocade_sfp(item: str, params: Mapping[str, Any], section: Section) ->
         return
     port_info = section[port_index]
 
-    def sort_params(key):
-        # levels are given in an uncommon order at the rulespec
-        # We have crit_lower, warn_lower, warn_upper, crit_upper,
-        # but we need warn_upper, warn_upper, warn_lower, crit_lower
-        if key not in params:
-            return None
+    # levels are given in an uncommon order at the rulespec
+    # We have crit_lower, warn_lower, warn_upper, crit_upper
+    # but we need warn_upper, warn_upper, warn_lower, crit_lower
+    def _levels_lower(key: str) -> tuple[float, float] | None:
+        return (v[1], v[0]) if (v := params.get(key)) else None
 
-        return params[key][2], params[key][3], params[key][1], params[key][0]
+    def _levels_upper(key: str) -> tuple[float, float] | None:
+        return (v[2], v[3]) if (v := params.get(key)) else None
 
-    yield check_levels(
+    yield from check_levels(
         port_info["rx_power"],
-        "input_signal_power_dbm",
-        sort_params("rx_power"),
-        infoname="Rx",
-        unit="dBm",
+        metric_name="input_signal_power_dbm",
+        levels_lower=_levels_lower("rx_power"),
+        levels_upper=_levels_upper("rx_power"),
+        render_func=lambda f: "%.2f dBm" % f,
+        label="Rx",
     )
-    yield check_levels(
+    yield from check_levels(
         port_info["tx_power"],
-        "output_signal_power_dbm",
-        sort_params("tx_power"),
-        infoname="Tx",
-        unit="dBm",
+        metric_name="output_signal_power_dbm",
+        levels_lower=_levels_lower("tx_power"),
+        levels_upper=_levels_upper("tx_power"),
+        render_func=lambda f: "%.2f dBm" % f,
+        label="Tx",
     )
-    yield check_levels(
-        port_info["current"], "current", sort_params("current"), infoname="Current", unit="A"
+    yield from check_levels(
+        port_info["current"],
+        metric_name="current",
+        levels_lower=_levels_lower("current"),
+        levels_upper=_levels_upper("current"),
+        render_func=lambda f: "%.2f A" % f,
+        label="Current",
     )
-    yield check_levels(
-        port_info["voltage"], "voltage", sort_params("voltage"), infoname="Voltage", unit="V"
+    yield from check_levels(
+        port_info["voltage"],
+        metric_name="voltage",
+        levels_lower=_levels_lower("voltage"),
+        levels_upper=_levels_upper("voltage"),
+        render_func=lambda f: "%.2f V" % f,
+        label="Voltage",
     )
 
 
-check_info["brocade_sfp"].update(
-    {
-        "inventory_function": discover_brocade_sfp,
-        "check_function": check_brocade_sfp,
-        "service_description": "SFP %s",
-        "has_perfdata": True,
-        "group": "brocade_sfp",
-    }
+register.check_plugin(
+    name="brocade_sfp",
+    service_name="SFP %s",
+    discovery_function=discover_brocade_sfp,
+    discovery_ruleset_name="brocade_fcport_inventory",
+    discovery_default_parameters=DISCOVERY_DEFAULT_PARAMETERS,
+    check_function=check_brocade_sfp,
+    check_ruleset_name="brocade_sfp",
+    check_default_parameters={},
 )

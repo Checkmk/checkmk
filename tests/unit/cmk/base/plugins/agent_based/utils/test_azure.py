@@ -53,6 +53,12 @@ PARSED_RESOURCES = {
         id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-server",
         name="checkmk-mysql-server",
         type="Microsoft.DBforMySQL/servers",
+        group="BurningMan",
+        kind=None,
+        location="westeurope",
+        tags={},
+        properties={},
+        specific_info={},
         metrics={
             "average_cpu_percent": AzureMetric(
                 name="cpu_percent", aggregation="average", value=0.0, unit="percent"
@@ -104,7 +110,7 @@ def test__get_metrics() -> None:
         pytest.param(
             [
                 [
-                    '{"id": "/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-server", "name": "checkmk-mysql-server", "type": "Microsoft.DBforMySQL/servers"}'
+                    '{"id": "/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-server", "name": "checkmk-mysql-server", "type": "Microsoft.DBforMySQL/servers", "group": "BurningMan"}'
                 ],
                 ["metrics following", "5"],
                 [
@@ -115,6 +121,7 @@ def test__get_metrics() -> None:
                 id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-server",
                 name="checkmk-mysql-server",
                 type="Microsoft.DBforMySQL/servers",
+                group="BurningMan",
                 metrics={
                     "average_cpu_percent": AzureMetric(
                         name="cpu_percent", aggregation="average", value=0.0, unit="percent"
@@ -126,7 +133,7 @@ def test__get_metrics() -> None:
         pytest.param(
             [
                 [
-                    '{"id": "/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-server", "name": "checkmk-mysql-server", "type": "Microsoft.DBforMySQL/servers"}'
+                    '{"id": "/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-server", "name": "checkmk-mysql-server", "type": "Microsoft.DBforMySQL/servers", "group": "BurningMan"}'
                 ],
                 ["metrics following", "5"],
             ],
@@ -134,13 +141,14 @@ def test__get_metrics() -> None:
                 id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-server",
                 name="checkmk-mysql-server",
                 type="Microsoft.DBforMySQL/servers",
+                group="BurningMan",
             ),
             id="resource_with_too_few_rows",
         ),
         pytest.param(
             [
                 [
-                    '{"id": "/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-server", "name": "checkmk-mysql-server", "type": "Microsoft.DBforMySQL/servers"}'
+                    '{"id": "/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-server", "name": "checkmk-mysql-server", "type": "Microsoft.DBforMySQL/servers", "group": "BurningMan"}'
                 ],
                 ["metrics following", "0"],
                 [
@@ -151,13 +159,14 @@ def test__get_metrics() -> None:
                 id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-server",
                 name="checkmk-mysql-server",
                 type="Microsoft.DBforMySQL/servers",
+                group="BurningMan",
             ),
             id="resource_without_metrics",
         ),
         pytest.param(
             [
                 [
-                    '{"id": "/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-server", "name": "checkmk-mysql-server", "type": "Microsoft.DBforMySQL/servers", "invalid_field"}'
+                    '{"id": "/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-server", "name": "checkmk-mysql-server", "type": "Microsoft.DBforMySQL/servers", "group": "BurningMan", "invalid_field"}'
                 ],
                 ["metrics following", "0"],
                 [
@@ -220,6 +229,7 @@ def test_check_memory(
                     id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-server",
                     name="checkmk-mysql-server",
                     type="Microsoft.DBforMySQL/servers",
+                    group="westeurope",
                     metrics={
                         "average_cpu_percent": AzureMetric(
                             name="cpu_percent", aggregation="average", value=0.0, unit="percent"

@@ -45,7 +45,7 @@ def check_azure_storageaccounts(_item, params, resource):
 
 
 check_info["azure_storageaccounts"] = {
-    "parse_function": parse_azure,
+    "parse_function": parse_resources,
     "inventory_function": discover(),
     "check_function": check_azure_storageaccounts,
     "service_description": "Storage %s account",

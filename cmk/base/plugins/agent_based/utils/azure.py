@@ -23,6 +23,12 @@ class Resource(NamedTuple):
     id: str
     name: str
     type: str
+    group: str
+    kind: str | None = None
+    location: str | None = None
+    tags: Mapping[str, str] = {}
+    properties: Mapping[str, str | int] = {}
+    specific_info: Mapping[str, str | int] = {}
     metrics: Mapping[str, AzureMetric] = {}
 
 
@@ -61,6 +67,21 @@ def _get_metrics(metrics_data: Sequence[Sequence[str]]) -> Iterable[Tuple[str, A
         )
 
 
+def _get_resource(resource: Mapping[str, Any], metrics=None):
+    return Resource(
+        resource["id"],
+        resource["name"],
+        resource["type"],
+        resource["group"],
+        resource.get("kind"),
+        resource.get("location"),
+        resource.get("tags", {}),
+        resource.get("properties", {}),
+        resource.get("specific_info", {}),
+        metrics or {},
+    )
+
+
 def _parse_resource(resource_data: Sequence[Sequence[str]]) -> Resource | None:
     """read resource json and parse metric lines
 
@@ -76,18 +97,14 @@ def _parse_resource(resource_data: Sequence[Sequence[str]]) -> Resource | None:
         return None
 
     if len(resource_data) < 3:
-        return Resource(resource["id"], resource["name"], resource["type"])
+        return _get_resource(resource)
 
     metrics_num = _get_metrics_number(resource_data[1])
     if metrics_num == 0:
-        return Resource(resource["id"], resource["name"], resource["type"])
+        return _get_resource(resource)
 
-    return Resource(
-        resource["id"],
-        resource["name"],
-        resource["type"],
-        dict(_get_metrics(resource_data[2 : 2 + metrics_num])),
-    )
+    metrics = dict(_get_metrics(resource_data[2 : 2 + metrics_num]))
+    return _get_resource(resource, metrics=metrics)
 
 
 def parse_resources(string_table: StringTable) -> Mapping[str, Resource]:

@@ -36,7 +36,7 @@ def check_azure_sites(_item, params, resource):
 
 
 check_info["azure_sites"] = {
-    "parse_function": parse_azure,
+    "parse_function": parse_resources,
     "inventory_function": discover(),
     "check_function": check_azure_sites,
     "has_perfdata": True,

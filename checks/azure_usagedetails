@@ -12,8 +12,8 @@ factory_settings["levels_azure_usagedetails"] = {}
 
 def parse_azure_usagedetails(info):
     parsed = {}
-    for detail in list(parse_azure(info).values()):
-        props = detail["properties"]
+    for detail in list(parse_resources(info).values()):
+        props = detail.properties
         service_name = props["consumedService"]
         data = parsed.setdefault(
             service_name,

@@ -1,0 +1,35 @@
+Title: Agent controller: Use host certificate store during registration
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1658404375
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+In order to register at a Checkmk site, the agent controller (<tt>cmk-agent-ctl</tt>) needs to know,
+among others, the name of the server where the site is running and a port. The port can either be
+included in the server name argument (<tt>-s<tt>), or it can be left out. In case it is left out,
+the agent controller tries to query the port from the REST API of the target site.
+
+In case the communication with the REST API is HTTPS-secured, the agent controller is supposed to
+use the certificate store of the host to verify the server certificate. This was however not the
+case, which in particular affected setups with server certificates signed by a custom CA (where the
+corresponding root certificate was correctly added to the certificate store of the host). The
+resulting error message read:
+
+C+:
+$ cmk-agent-ctl register ...
+...
+Failed to discover agent receiver port from Checkmk REST API, both with http and https.
+
+...
+
+Error with https:
+...
+invalid peer certificate contents: invalid peer certificate: UnknownIssuer
+C-:
+
+Note that, as mentioned above, this only happened if no explicit port was given during the agent
+registration.

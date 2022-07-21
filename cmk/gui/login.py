@@ -179,10 +179,6 @@ def _invalidate_auth_session() -> None:
     del_language_cookie(response)
 
 
-def _renew_auth_session(username: UserId, session_id: str) -> None:
-    _set_auth_cookie(username, session_id)
-
-
 def _create_auth_session(username: UserId, session_id: str) -> None:
     _set_auth_cookie(username, session_id)
 
@@ -231,20 +227,6 @@ def _get_session_id_from_cookie(username: UserId, revalidate_cookie: bool) -> st
     return session_id
 
 
-def _renew_cookie(cookie_name: str, username: UserId, session_id: str) -> None:
-    # Do not renew if:
-    # a) The _ajaxid var is set
-    # b) A logout is requested
-    requested_file = requested_file_name(request)
-    if (
-        requested_file != "logout" and not request.has_var("_ajaxid")
-    ) and cookie_name == auth_cookie_name():
-        auth_logger.debug(
-            "Renewing auth cookie (%s.py, vars: %r)" % (requested_file, dict(request.itervars()))
-        )
-        _renew_auth_session(username, session_id)
-
-
 def _check_auth_cookie(cookie_name: str) -> Optional[UserId]:
     username, session_id, cookie_hash = user_from_cookie(_fetch_cookie(cookie_name))
     check_parsed_auth_cookie(username, session_id, cookie_hash)
@@ -255,9 +237,6 @@ def _check_auth_cookie(cookie_name: str) -> Optional[UserId]:
     except MKAuthException:
         del_auth_cookie()
         raise
-
-    # Once reached this the cookie is a good one. Renew it!
-    _renew_cookie(cookie_name, username, session_id)
 
     _redirect_for_password_change(username, now)
     _redirect_for_two_factor_authentication(username)

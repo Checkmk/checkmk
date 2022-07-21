@@ -4,19 +4,31 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Mapping, MutableMapping, Sequence
 
-from cmk.base.check_legacy_includes.brocade import (
-    brocade_fcport_getitem,
-    brocade_fcport_inventory,
-    brocade_fcport_inventory_this_port,
+from .agent_based_api.v1 import (
+    get_average,
+    get_rate,
+    get_value_store,
+    Metric,
+    OIDBytes,
+    OIDEnd,
+    register,
+    render,
+    Result,
+    Service,
+    SNMPTree,
+    State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.brocade import (
+    brocade_fcport_getitem,
+    brocade_fcport_inventory_this_port,
+    DETECT,
+    DISCOVERY_DEFAULT_PARAMETERS,
+)
 
 Section = Sequence[Mapping[str, Any]]
-CheckResult = Iterable[tuple[int, str, list]]
-DiscoveryResult = Iterable[tuple[str, Mapping[str, Any]]]
 
 
 # lookup tables for check implementation
@@ -230,69 +242,65 @@ def parse_brocade_fcport(string_table) -> Section | None:
     return parsed
 
 
-check_info["brocade_fcport"] = {
-    "parse_function": parse_brocade_fcport,
-    "snmp_info": [
-        (
-            ".1.3.6.1.4.1.1588.2.1.1.1.6.2.1",
-            [
-                1,  # swFCPortIndex
-                3,  # swFCPortPhyState
-                4,  # swFCPortOpStatus
-                5,  # swFCPortAdmStatus
-                11,  # swFCPortTxWords
-                12,  # swFCPortRxWords
-                13,  # swFCPortTxFrames
-                14,  # swFCPortRxFrames
-                20,  # swFCPortNoTxCredits
-                22,  # swFCPortRxCrcs
-                21,  # swFCPortRxEncInFrs
-                26,  # swFCPortRxEncOutFrs
-                28,  # swFCPortC3Discards
-                35,  # swFCPortSpeed, deprecated from at least firmware version 7.2.1
-                36,  # swFCPortName  (not supported by all devices)
+register.snmp_section(
+    name="brocade_fcport",
+    parse_function=parse_brocade_fcport,
+    fetch=[
+        SNMPTree(
+            base=".1.3.6.1.4.1.1588.2.1.1.1.6.2.1",
+            oids=[
+                "1",  # swFCPortIndex
+                "3",  # swFCPortPhyState
+                "4",  # swFCPortOpStatus
+                "5",  # swFCPortAdmStatus
+                "11",  # swFCPortTxWords
+                "12",  # swFCPortRxWords
+                "13",  # swFCPortTxFrames
+                "14",  # swFCPortRxFrames
+                "20",  # swFCPortNoTxCredits
+                "22",  # swFCPortRxCrcs
+                "21",  # swFCPortRxEncInFrs
+                "26",  # swFCPortRxEncOutFrs
+                "28",  # swFCPortC3Discards
+                "35",  # swFCPortSpeed, deprecated from at least firmware version 7.2.1
+                "36",  # swFCPortName  (not supported by all devices)
             ],
         ),
         # Information about Inter-Switch-Links (contains baud rate of port)
-        (
-            ".1.3.6.1.4.1.1588.2.1.1.1.2.9.1",
-            [
-                2,  # swNbMyPort
-                5,  # swNbBaudRate
+        SNMPTree(
+            base=".1.3.6.1.4.1.1588.2.1.1.1.2.9.1",
+            oids=[
+                "2",  # swNbMyPort
+                "5",  # swNbBaudRate
             ],
         ),
         # new way to get port speed supported by Brocade
-        (
-            ".1.3.6.1.2.1",
-            [
-                OID_END,
+        SNMPTree(
+            base=".1.3.6.1.2.1",
+            oids=[
+                OIDEnd(),
                 "2.2.1.3",  # ifType, needed to extract fibre channel ifs only (type 56)
                 "31.1.1.1.15",  # IF-MIB::ifHighSpeed
             ],
         ),
         # Not every device supports that
-        (
-            ".1.3.6.1.3.94.4.5.1",
-            [
-                OID_END,
-                BINARY("4"),  # FCMGMT-MIB::connUnitPortStatCountTxObjects
-                BINARY("5"),  # FCMGMT-MIB::connUnitPortStatCountRxObjects
-                BINARY("6"),  # FCMGMT-MIB::connUnitPortStatCountTxElements
-                BINARY("7"),  # FCMGMT-MIB::connUnitPortStatCountRxElements
-                BINARY("8"),  # FCMGMT-MIB::connUnitPortStatCountBBCreditZero
+        SNMPTree(
+            base=".1.3.6.1.3.94.4.5.1",
+            oids=[
+                OIDEnd(),
+                OIDBytes("4"),  # FCMGMT-MIB::connUnitPortStatCountTxObjects
+                OIDBytes("5"),  # FCMGMT-MIB::connUnitPortStatCountRxObjects
+                OIDBytes("6"),  # FCMGMT-MIB::connUnitPortStatCountTxElements
+                OIDBytes("7"),  # FCMGMT-MIB::connUnitPortStatCountRxElements
+                OIDBytes("8"),  # FCMGMT-MIB::connUnitPortStatCountBBCreditZero
             ],
         ),
     ],
-    "snmp_scan_function": lambda oid: (
-        oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1588.2.1.1")
-        and oid(".1.3.6.1.4.1.1588.2.1.1.1.6.2.1.*") is not None
-    ),
-}
+    detect=DETECT,
+)
 
 
-def discover_brocade_fcport(section: Section) -> DiscoveryResult:
-    settings = host_extra_conf_merged(host_name(), brocade_fcport_inventory)
-
+def discover_brocade_fcport(params: Mapping[str, Any], section: Section) -> DiscoveryResult:
     for if_entry in section:
         admstate = if_entry["admstate"]
         phystate = if_entry["phystate"]
@@ -301,17 +309,17 @@ def discover_brocade_fcport(section: Section) -> DiscoveryResult:
             admstate=admstate,
             phystate=phystate,
             opstate=opstate,
-            settings=settings,
+            settings=params,
         ):
-            yield (
-                brocade_fcport_getitem(
+            yield Service(
+                item=brocade_fcport_getitem(
                     number_of_ports=len(section),
                     index=if_entry["index"],
                     portname=if_entry["portname"],
                     is_isl=if_entry["is_isl"],
-                    settings=settings,
+                    settings=params,
                 ),
-                {
+                parameters={
                     "phystate": [phystate],
                     "opstate": [opstate],
                     "admstate": [admstate],
@@ -349,6 +357,16 @@ def check_brocade_fcport(  # pylint: disable=too-many-branches
     params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
+    yield from _check_brocade_fcport(item, params, section, time.time(), get_value_store())
+
+
+def _check_brocade_fcport(  # pylint: disable=too-many-branches
+    item: str,
+    params: Mapping[str, Any],
+    section: Section,
+    this_time: float,
+    value_store: MutableMapping[str, Any],
+) -> CheckResult:
     for if_entry in section:
         if int(item.split()[0]) + 1 == if_entry["index"]:
             found_entry = if_entry
@@ -373,13 +391,12 @@ def check_brocade_fcport(  # pylint: disable=too-many-branches
     porttype = found_entry["porttype"]
     speed = found_entry.get("ifspeed")
 
-    this_time = time.time()
     average = params.get("average")  # range in minutes
     bw_thresh = params.get("bw")
 
     summarystate = 0
     output = []
-    perfdata: list[tuple] = []
+    perfdata = []
     perfaverages = []
 
     speedmsg, gbit = _get_speed_msg_and_value(
@@ -389,8 +406,8 @@ def check_brocade_fcport(  # pylint: disable=too-many-branches
 
     # convert gbit netto link-rate to Byte/s (8/10 enc) -> 10 bits per byte
     wirespeed = gbit * 1e8
-    in_bytes = 4 * get_rate("brocade_fcport.rxwords.%s" % index, this_time, rxwords)
-    out_bytes = 4 * get_rate("brocade_fcport.txwords.%s" % index, this_time, txwords)
+    in_bytes = 4 * get_rate(value_store, "rxwords.%s" % index, this_time, rxwords)
+    out_bytes = 4 * get_rate(value_store, "txwords.%s" % index, this_time, txwords)
 
     # B A N D W I D T H
     # convert thresholds in percentage into MB/s
@@ -409,15 +426,20 @@ def check_brocade_fcport(  # pylint: disable=too-many-branches
 
     for what, value in [("In", in_bytes), ("Out", out_bytes)]:
         output.append("%s: %s" % (what, render.iobandwidth(value)))
-        perfdata.append((what.lower(), value, warn_bytes, crit_bytes, 0, wirespeed))
+        perfdata.append(
+            Metric(what.lower(), value, levels=(warn_bytes, crit_bytes), boundaries=(0, wirespeed))
+        )
         # average turned on: use averaged traffic values instead of current ones
         if average:
-            value = get_average(
-                "brocade_fcport.%s.%s.avg" % (what, item), this_time, value, average
-            )
+            value = get_average(value_store, "%s.%s.avg" % (what, item), this_time, value, average)
             output.append("Average (%d min): %s" % (average, render.iobandwidth(value)))
             perfaverages.append(
-                ("%s_avg" % what.lower(), value, warn_bytes, crit_bytes, 0, wirespeed)
+                Metric(
+                    "%s_avg" % what.lower(),
+                    value,
+                    levels=(warn_bytes, crit_bytes),
+                    boundaries=(0, wirespeed),
+                )
             )
 
         # handle levels for in/out
@@ -433,15 +455,13 @@ def check_brocade_fcport(  # pylint: disable=too-many-branches
 
     # R X F R A M E S & T X F R A M E S
     # Put number of frames into performance data (honor averaging)
-    rxframes_rate = get_rate("brocade_fcport.rxframes.%s" % index, this_time, rxframes)
-    txframes_rate = get_rate("brocade_fcport.txframes.%s" % index, this_time, txframes)
+    rxframes_rate = get_rate(value_store, "rxframes.%s" % index, this_time, rxframes)
+    txframes_rate = get_rate(value_store, "txframes.%s" % index, this_time, txframes)
     for what, value in [("rxframes", rxframes_rate), ("txframes", txframes_rate)]:
-        perfdata.append((what, value))
+        perfdata.append(Metric(what, value))
         if average:
-            value = get_average(
-                "brocade_fcport.%s.%s.avg" % (what, item), this_time, value, average
-            )
-            perfdata.append(("%s_avg" % what, value))
+            value = get_average(value_store, "%s.%s.avg" % (what, item), this_time, value, average)
+            perfdata.append(Metric("%s_avg" % what, value))
 
     # E R R O R C O U N T E R S
     # handle levels on error counters
@@ -452,15 +472,15 @@ def check_brocade_fcport(  # pylint: disable=too-many-branches
         ("C3 discards", "c3discards", c3discards, txframes_rate),
         ("No TX buffer credits", "notxcredits", notxcredits, txframes_rate),
     ]:
-        per_sec = get_rate("brocade_fcport.%s.%s" % (counter, index), this_time, value)
-        perfdata.append((counter, per_sec))
+        per_sec = get_rate(value_store, "%s.%s" % (counter, index), this_time, value)
+        perfdata.append(Metric(counter, per_sec))
 
         # if averaging is on, compute average and apply levels to average
         if average:
             per_sec_avg = get_average(
-                "brocade_fcport.%s.%s.avg" % (counter, item), this_time, per_sec, average
+                value_store, ".%s.%s.avg" % (counter, item), this_time, per_sec, average
             )
-            perfdata.append(("%s_avg" % counter, per_sec_avg))
+            perfdata.append(Metric("%s_avg" % counter, per_sec_avg))
 
         # compute error rate (errors in relation to number of frames) (from 0.0 to 1.0)
         if ref > 0 or per_sec > 0:
@@ -472,7 +492,7 @@ def check_brocade_fcport(  # pylint: disable=too-many-branches
         # Honor averaging of error rate
         if average:
             rate = get_average(
-                "brocade_fcport.%s.%s.avgrate" % (counter, item), this_time, rate, average
+                value_store, "%s.%s.avgrate" % (counter, item), this_time, rate, average
             )
             text += ", Average: %.2f%%" % (rate * 100.0)
 
@@ -510,29 +530,27 @@ def check_brocade_fcport(  # pylint: disable=too-many-branches
         output.append("%s: %s%s" % (state_info, state_map[dev_state], errorflag))
 
     if bbcredits is not None:
-        bbcredit_rate = get_rate("brocade_fcport.bbcredit.%s" % (item), this_time, bbcredits)
-        perfdata.append(("fc_bbcredit_zero", bbcredit_rate))
+        bbcredit_rate = get_rate(value_store, "bbcredit.%s" % (item), this_time, bbcredits)
+        perfdata.append(Metric("fc_bbcredit_zero", bbcredit_rate))
 
-    yield summarystate, ", ".join(output), perfdata
+    yield Result(state=State(summarystate), summary=", ".join(output))
+    yield from perfdata
 
 
-check_info["brocade_fcport"].update(
-    {
-        "service_description": "Port %s",
-        "inventory_function": discover_brocade_fcport,
-        "check_function": check_brocade_fcport,
-        "has_perfdata": True,
-        "group": "brocade_fcport",
-        "default_levels_variable": "brocade_fcport_default_levels",
-    }
+register.check_plugin(
+    name="brocade_fcport",
+    service_name="Port %s",
+    discovery_function=discover_brocade_fcport,
+    discovery_ruleset_name="brocade_fcport_inventory",
+    discovery_default_parameters=DISCOVERY_DEFAULT_PARAMETERS,
+    check_function=check_brocade_fcport,
+    check_ruleset_name="brocade_fcport",
+    check_default_parameters={
+        "rxcrcs": (3.0, 20.0),  # allowed percentage of CRC errors
+        "rxencoutframes": (3.0, 20.0),  # allowed percentage of Enc-OUT Frames
+        "rxencinframes": (3.0, 20.0),  # allowed percentage of Enc-In Frames
+        "notxcredits": (3.0, 20.0),  # allowed percentage of No Tx Credits
+        "c3discards": (3.0, 20.0),  # allowed percentage of C3 discards
+        "assumed_speed": 2.0,  # used if speed not available in SNMP data
+    },
 )
-
-
-factory_settings["brocade_fcport_default_levels"] = {
-    "rxcrcs": (3.0, 20.0),  # allowed percentage of CRC errors
-    "rxencoutframes": (3.0, 20.0),  # allowed percentage of Enc-OUT Frames
-    "rxencinframes": (3.0, 20.0),  # allowed percentage of Enc-In Frames
-    "notxcredits": (3.0, 20.0),  # allowed percentage of No Tx Credits
-    "c3discards": (3.0, 20.0),  # allowed percentage of C3 discards
-    "assumed_speed": 2.0,  # used if speed not available in SNMP data
-}

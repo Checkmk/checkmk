@@ -8,19 +8,18 @@ from typing import Any, List, Mapping, TypedDict
 from cmk.base.plugins.agent_based.utils.brocade import (
     brocade_fcport_getitem,
     brocade_fcport_inventory_this_port,
+    DETECT,
+    DISCOVERY_DEFAULT_PARAMETERS,
 )
 from cmk.base.plugins.agent_based.utils.temperature import check_temperature, TempParamDict
 
 from .agent_based_api.v1 import (
-    all_of,
     check_levels,
-    exists,
     get_value_store,
     OIDCached,
     register,
     Service,
     SNMPTree,
-    startswith,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
@@ -39,15 +38,6 @@ class Port(TypedDict):
 
 
 Section = Mapping[int, Port]
-
-
-DISCOVERY_DEFAULT_PARAMETERS = {
-    "admstates": [1, 3, 4],
-    "phystates": [3, 4, 5, 6, 7, 8, 9, 10],
-    "opstates": [1, 2, 3, 4],
-    "use_portname": True,
-    "show_isl": True,
-}
 
 
 def parse_brocade_sfp(string_table: List[StringTable]) -> Section:
@@ -83,10 +73,7 @@ def parse_brocade_sfp(string_table: List[StringTable]) -> Section:
 register.snmp_section(
     name="brocade_sfp",
     parse_function=parse_brocade_sfp,
-    detect=all_of(
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.2.1.1"),
-        exists(".1.3.6.1.4.1.1588.2.1.1.1.6.2.1.*"),
-    ),
+    detect=DETECT,
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.1588.2.1.1.1.6.2.1",

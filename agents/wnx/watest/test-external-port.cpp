@@ -47,11 +47,14 @@ TEST(ExternalPortTest, StartStop) {
     wtools::TestProcessor2 tp;
     world::ExternalPort test_port(&tp);  //
 
-    EXPECT_TRUE(
-        test_port.startIo(reply, tst::TestPort(), world::LocalOnly::yes, {}));
+    ExternalPort::IoParam io_param{
+        .port{tst::TestPort()},
+        .local_only{LocalOnly::yes},
+        .pid{},
+    };
+    EXPECT_TRUE(test_port.startIo(reply, io_param));
     EXPECT_TRUE(test_port.io_thread_.joinable());
-    EXPECT_FALSE(
-        test_port.startIo(reply, tst::TestPort(), world::LocalOnly::yes, {}));
+    EXPECT_FALSE(test_port.startIo(reply, io_param));
 
     EXPECT_TRUE(tst::WaitForSuccessSilent(
         1000ms, [&test_port]() { return test_port.io_thread_.joinable(); }));
@@ -92,9 +95,18 @@ public:
     }
 };
 
+namespace {
+ExternalPort::IoParam makeIoParam(std::optional<uint32_t> pid) {
+    return {
+        .port{tst::TestPort()},
+        .local_only{LocalOnly::yes},
+        .pid{pid},
+    };
+}
+}  // namespace
+
 TEST_F(ExternalPortCheckProcessFixture, AnyProcess) {
-    EXPECT_TRUE(
-        test_port.startIo(reply, tst::TestPort(), world::LocalOnly::yes, {}));
+    EXPECT_TRUE(test_port.startIo(reply, makeIoParam({})));
 
     EXPECT_EQ(writeToSocket(tst::TestPort()), 6U);
     tst::WaitForSuccessSilent(100ms, [this]() { return !remote_ip.empty(); });
@@ -103,7 +115,7 @@ TEST_F(ExternalPortCheckProcessFixture, AnyProcess) {
 }
 
 TEST_F(ExternalPortCheckProcessFixture, InvalidProcess) {
-    EXPECT_TRUE(test_port.startIo(reply, tst::TestPort(), LocalOnly::yes, 1));
+    EXPECT_TRUE(test_port.startIo(reply, makeIoParam(1)));
 
     EXPECT_EQ(writeToSocket(tst::TestPort()), 6U);
     std::this_thread::sleep_for(300ms);
@@ -112,8 +124,7 @@ TEST_F(ExternalPortCheckProcessFixture, InvalidProcess) {
 }
 
 TEST_F(ExternalPortCheckProcessFixture, ValidProcess) {
-    EXPECT_TRUE(test_port.startIo(reply, tst::TestPort(), LocalOnly::yes,
-                                  ::GetCurrentProcessId()));
+    EXPECT_TRUE(test_port.startIo(reply, makeIoParam(::GetCurrentProcessId())));
 
     EXPECT_EQ(writeToSocket(tst::TestPort()), 6U);
     tst::WaitForSuccessSilent(100ms, [this]() { return !remote_ip.empty(); });
@@ -132,8 +143,9 @@ public:
         return data;
     };
     void SetUp() override {
-        test_port_.startIo(reply, tst::TestPort(), world::LocalOnly::no,
-                           {});  //
+        test_port_.startIo(
+            reply,
+            {.port{tst::TestPort()}, .local_only{LocalOnly::no}, .pid{}});
     }
 
     void TearDown() override {

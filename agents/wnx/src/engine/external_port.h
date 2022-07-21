@@ -163,11 +163,20 @@ public:
     ExternalPort &operator=(const ExternalPort &) = delete;
     ExternalPort &operator=(ExternalPort &&) = delete;
 
+    struct IoParam {
+        uint16_t port;  /// can be 0 for mailslot
+        LocalOnly local_only;
+        std::optional<uint32_t> pid;
+    };
+
     // Main API
-    bool startIo(const ReplyFunc &reply_func, uint16_t port,
-                 LocalOnly local_only, std::optional<uint32_t> controller_pid);
+    bool startIo(const ReplyFunc &reply_func, const IoParam &io_param);
     bool startIo(const ReplyFunc &reply_func, uint16_t port) {
-        return startIo(reply_func, port, LocalOnly::no, {});
+        return startIo(reply_func, IoParam{
+                                       .port{port},
+                                       .local_only{LocalOnly::no},
+                                       .pid{},
+                                   });
     }
     void shutdownIo();
 
@@ -266,7 +275,8 @@ protected:
 
     // asio sessions queue data
     mutable std::mutex queue_lock_;
-    std::queue<std::shared_ptr<AsioSession>> session_queue_;
+    std::queue<std::shared_ptr<AsioSession>> session_queue_;  // fallback mode
+
 
     // asio sessions waker
     mutable std::mutex wake_lock_;

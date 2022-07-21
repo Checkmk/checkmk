@@ -286,7 +286,8 @@ int TestIo() {
             [](const std::string & /*nothing*/) {
                 return std::vector<uint8_t>{};
             },
-            50555, world::LocalOnly::yes, {});
+            world::ExternalPort::IoParam{
+                .port = 50555, .local_only = world::LocalOnly::yes, .pid = {}});
         XLOG::l.i("testing 10 seconds");
         std::this_thread::sleep_until(std::chrono::steady_clock::now() +
                                       10000ms);
@@ -518,8 +519,8 @@ int ExecSection(const std::wstring &section, int repeat_pause,
 // on -exec
 // we run entry point as normal process
 // this is testing routine probably eliminated from the production build
-// THIS ROUTINE DOESN'T USE wtools::ServiceController and Windows Service API
-// Just internal to debug logic
+// THIS ROUTINE DOESN'T USE wtools::ServiceController and Windows Service
+// API Just internal to debug logic
 int ExecMainService(StdioLog stdio_log) {
     using namespace std::chrono_literals;
     XLOG::setup::ColoredOutputOnStdio(true);
@@ -580,8 +581,8 @@ constexpr bool g_use_colored_output_for_agent_updater = false;
 constexpr bool g_duplicate_updater_output_on_stdio = false;
 
 //
-// NOTE: again, business logic... Probably we have to test this in Unit(easy,
-// but public)/Integration(difficult but private) Tests.
+// NOTE: again, business logic... Probably we have to test this in
+// Unit(easy, but public)/Integration(difficult but private) Tests.
 //
 void ModifyStdio(bool yes) {
     if (g_use_colored_output_for_agent_updater) {

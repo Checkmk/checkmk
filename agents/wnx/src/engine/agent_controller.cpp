@@ -111,13 +111,17 @@ uint16_t GetPortFromString(const std::string &str) {
 }
 
 std::string GetConfiguredAgentChannel(Modus modus) {
-    if (UseSpecialPort(modus)) {
-        return fmt::format("localhost:{}", kWindowsInternalExePort);
-    }
     auto controller_config = GetControllerNode();
     auto result =
         cfg::GetVal(controller_config, cfg::vars::kControllerAgentChannel,
                     std::string{cfg::defaults::kControllerAgentChannelDefault});
+    if (tools::IsEqual(result, cfg::defaults::kControllerAgentChannelMaiSlot)) {
+        return result;
+    }
+
+    if (UseSpecialPort(modus)) {
+        return fmt::format("localhost:{}", kWindowsInternalExePort);
+    }
     if (GetPortFromString(result) == 0) {
         XLOG::l("Invalid configured agent channel '{}' use default", result);
         return std::string{cfg::defaults::kControllerAgentChannelDefault};

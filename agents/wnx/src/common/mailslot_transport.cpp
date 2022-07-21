@@ -37,6 +37,10 @@ constexpr bool kUsePublicProfileLog = true;  // to Profile(not to Windows)
 constexpr const char *const kMailSlotLogFileName = "cmk_mail.log";
 
 bool IsApiLogged() noexcept { return false; }
+std::string BuildMailSlotName(std::string_view slot_name, uint32_t id,
+                              std::string_view pc_name) noexcept {
+    return fmt::format(R"(\\{}\mailslot\Global\{}_{})", pc_name, slot_name, id);
+}
 
 std::string GetApiLog() {
     if (kUsePublicProfileLog) {
@@ -55,11 +59,6 @@ std::string GetApiLog() {
     }
 
     return {};
-}
-
-std::string Slot::BuildMailSlotName(std::string_view slot_name, uint32_t id,
-                                    std::string_view pc_name) noexcept {
-    return fmt::format(R"(\\{}\mailslot\Global\{}_{})", pc_name, slot_name, id);
 }
 
 bool Slot::ConstructThread(ThreadProc foo, int sleep_ms, void *context,

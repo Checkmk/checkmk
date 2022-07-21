@@ -281,6 +281,7 @@ constexpr std::string_view kModulesDir = "modules\\{}";
 constexpr std::string_view kModuleUsageDefaultMode = values::kModuleUsageAuto;
 
 constexpr uint32_t kServiceWaitNetwork = 30;
+constexpr std::string_view kControllerAgentChannelMaiSlot{"mailslot"};
 constexpr std::string_view kControllerAgentChannelDefault{"localhost:28250"};
 constexpr std::string_view kControllerOnCrashDefault{
     values::kControllerOnCrashIgnore};

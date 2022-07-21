@@ -139,6 +139,28 @@ TEST(AgentController, BuildCommandLineAgentChannelOk) {
               kWindowsInternalExePort);
 }
 
+TEST(AgentController, BuildCommandLineAgentChannelMailsLot) {
+    constexpr std::string_view with_mailslot =
+        "global:\n"
+        "  enabled: yes\n"
+        "system:\n"
+        "  controller:\n"
+        "    run: yes\n"
+        "    agent_channel: mailslot\n";
+    auto temp_fs = tst::TempCfgFs::CreateNoIo();
+    ASSERT_TRUE(temp_fs->loadContent(with_mailslot));
+    EXPECT_EQ(ac::BuildCommandLine(fs::path{"x"}),
+              L"x daemon --agent-channel mailslot -vv");
+    for (auto m : {
+             Modus::app,
+             Modus::integration,
+             Modus::service,
+             Modus::test,
+         }) {
+        EXPECT_EQ(GetConfiguredAgentChannelPort(m), 0);
+    }
+}
+
 TEST(AgentController, BuildCommandLineAgentChannelMalformed) {
     auto temp_fs = tst::TempCfgFs::CreateNoIo();
     ASSERT_TRUE(

@@ -51,6 +51,10 @@ using ThreadProc = bool (*)(const Slot *slot, const void *data, int len,
 constexpr int DEFAULT_THREAD_SLEEP = 20;
 constexpr std::string_view controller_slot_prefix{"WinAgentCtl"};
 
+/// convert slot name into fully qualified global object
+std::string BuildMailSlotName(std::string_view slot_name, uint32_t id,
+                              std::string_view pc_name) noexcept;
+
 class Slot {
 public:
     enum class Mode { client, server };
@@ -68,16 +72,6 @@ public:
     Slot &operator=(const Slot &) = delete;
     Slot(Slot &&) = delete;
     Slot &operator=(Slot &&) = delete;
-
-    /// convert slot name into fully qualified global object
-    static std::string BuildMailSlotName(std::string_view slot_name,
-                                         uint32_t id,
-                                         std::string_view pc_name) noexcept;
-
-    /// returns controller slot_name
-    static std::string ControllerMailSlotName(uint32_t pid) noexcept {
-        return BuildMailSlotName(controller_slot_prefix, pid, ".");
-    }
 
     Slot(std::string_view name, uint32_t id, std::string_view pc_name) noexcept
         : name_{BuildMailSlotName(name, id, pc_name)} {}
@@ -131,4 +125,10 @@ private:
     std::unique_ptr<std::thread>
         main_thread_{};  // controlled by Construct/Dismantle
 };
-};  // namespace cma::mailslot
+
+/// returns controller slot_name
+inline std::string ControllerMailSlotName(uint32_t pid) noexcept {
+    return BuildMailSlotName(controller_slot_prefix, pid, ".");
+}
+
+}  // namespace cma::mailslot

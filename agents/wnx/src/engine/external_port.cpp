@@ -378,9 +378,8 @@ void ExternalPort::ioThreadProc(const ReplyFunc &reply_func, uint16_t port,
 
 // runs thread
 // can fail when thread is already running
-bool ExternalPort::startIo(const ReplyFunc &reply_func, uint16_t port,
-                           LocalOnly local_only,
-                           std::optional<uint32_t> controller_pid) {
+bool ExternalPort::startIo(const ReplyFunc &reply_func,
+                           const IoParam &io_param) {
     std::lock_guard lk(io_thread_lock_);
     if (io_thread_.joinable()) {  // thread is in exec state
         return false;
@@ -389,7 +388,7 @@ bool ExternalPort::startIo(const ReplyFunc &reply_func, uint16_t port,
     shutdown_thread_ = false;  // reset potentially dropped flag
 
     io_thread_ = std::thread(&ExternalPort::ioThreadProc, this, reply_func,
-                             port, local_only, controller_pid);
+                             io_param.port, io_param.local_only, io_param.pid);
     io_started_ = true;
     return true;
 }

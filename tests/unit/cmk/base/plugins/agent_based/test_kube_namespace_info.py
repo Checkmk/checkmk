@@ -2,13 +2,18 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disallow_untyped_defs
+
+import pytest_mock
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.kube_namespace_info import check_kube_namespace_info
 from cmk.base.plugins.agent_based.utils import kube_info
 from cmk.base.plugins.agent_based.utils.kube import NamespaceInfo
 
 
-def test_check_kube_namespace_info(mocker) -> None:  # type:ignore[no-untyped-def]
+def test_check_kube_namespace_info(mocker: pytest_mock.MockerFixture) -> None:
     info = NamespaceInfo(
         name="namespace",
         creation_timestamp=1600000000.0,

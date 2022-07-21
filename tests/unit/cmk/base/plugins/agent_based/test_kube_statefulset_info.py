@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disallow_untyped_defs
+
 from typing import Tuple
 
 import pytest
+import pytest_mock
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.kube_statefulset_info import check_kube_statefulset_info
@@ -36,8 +39,10 @@ from cmk.base.plugins.agent_based.utils.kube import Selector, StatefulSetInfo, T
         ),
     ],
 )
-def test_check_kube_statefulset_info(  # type:ignore[no-untyped-def]
-    section: StatefulSetInfo, expected_check_result: Tuple[Result, ...], mocker
+def test_check_kube_statefulset_info(
+    section: StatefulSetInfo,
+    expected_check_result: Tuple[Result, ...],
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
     with mocker.patch.object(kube_info.time, "time", return_value=1600000001.0):
         assert tuple(check_kube_statefulset_info(section)) == expected_check_result

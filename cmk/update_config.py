@@ -222,16 +222,7 @@ REMOVED_CHECK_PLUGIN_MAP = {
 
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]
-REMOVED_GLOBALS_MAP: List[Tuple[str, str, Dict]] = [
-    # 2.0: The value has been changed from a bool to the ident of the backend
-    ("use_inline_snmp", "snmp_backend_default", {True: "inline", False: "classic"}),
-    # 2.0: Variable was renamed
-    ("config", "notification_spooler_config", {}),
-    # 2.0: Helper model was changed. We use the previous number of helpers to
-    # initialize the number of fetchers.
-    # 2.2: The option was removed from the UI as well.
-    ("cmc_cmk_helpers", "cmc_fetcher_helpers", {}),
-]
+REMOVED_GLOBALS_MAP: List[Tuple[str, str, Dict]] = []
 
 REMOVED_WATO_RULESETS_MAP = {
     "non_inline_snmp_hosts": "snmp_backend_hosts",

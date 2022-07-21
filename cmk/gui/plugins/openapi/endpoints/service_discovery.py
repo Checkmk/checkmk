@@ -102,12 +102,16 @@ class APIDiscoveryAction(enum.Enum):
 
 def _discovery_mode(default_mode: str):  # type:ignore[no-untyped-def]
     return fields.String(
-        description="""The mode of the discovery action. Can be one of:
+        description="""The mode of the discovery action. The 'refresh' mode starts a new service
+        discovery which will contact the host and identify undecided and vanished services and host
+        labels. Those services and host labels can be added or removed accordingly with the
+        'fix_all' mode. The 'new', 'remove' and 'only_host_labels' modes give you more granular
+        control. The corresponding user interface option for each discovery mode is shown below.
 
- * `new` - Add undecided services to monitoring
+ * `new` - Monitor undecided services
  * `remove` - Remove vanished services
- * `fix_all` - Add undecided services and new host labels, remove vanished services
- * `refresh` - Update inforomation from host, then remove all existing and add all just found services and host labels
+ * `fix_all` - Accept all
+ * `refresh` - Rescan
  * `only_host_labels` - Update host labels
     """,
         enum=[a.value for a in APIDiscoveryAction],

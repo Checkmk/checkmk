@@ -1,0 +1,14 @@
+Title: service discovery: changing the documentation for the discovery mode
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1658382009
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The previous documentation for the service discovery mode "refresh" caused some confusion
+as its description was close to the GUI's "Remove all and find new" option. This werk therefore
+overhauls the description of the discovery mode parameter.
+

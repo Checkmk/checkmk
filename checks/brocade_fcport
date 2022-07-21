@@ -230,7 +230,6 @@ def parse_brocade_fcport(info):
 def inventory_brocade_fcport(parsed):
     settings = host_extra_conf_merged(host_name(), brocade_fcport_inventory)
 
-    inventory = []
     for if_entry in parsed:
         admstate = if_entry["admstate"]
         phystate = if_entry["phystate"]
@@ -241,20 +240,20 @@ def inventory_brocade_fcport(parsed):
             opstate=opstate,
             settings=settings,
         ):
-            inventory.append(
-                (
-                    brocade_fcport_getitem(
-                        number_of_ports=len(parsed),
-                        index=if_entry["index"],
-                        portname=if_entry["portname"],
-                        is_isl=if_entry["is_isl"],
-                        settings=settings,
-                    ),
-                    '{ "phystate": [%d], "opstate": [%d], "admstate": [%d] }'
-                    % (phystate, opstate, admstate),
-                )
+            yield (
+                brocade_fcport_getitem(
+                    number_of_ports=len(parsed),
+                    index=if_entry["index"],
+                    portname=if_entry["portname"],
+                    is_isl=if_entry["is_isl"],
+                    settings=settings,
+                ),
+                {
+                    "phystate": [phystate],
+                    "opstate": [opstate],
+                    "admstate": [admstate],
+                },
             )
-    return inventory
 
 
 def _get_speed_msg_and_value(is_isl, isl_speed, brocade_speed, porttype, if_speed, params):

@@ -1,0 +1,40 @@
+Title: Fix crash on restarting the RRDHelper
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1658406832
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p9
+
+The RRDHelper may need to be restarted without a full
+restart of the CMC.  This could lead to an internal
+error and crash the CMC as well with a traceback such as
+
+<TT>
+/omd/sites/.../bin/cmc(_Z11sig_survivei+0xc2) [0x6656d2]
+/lib/x86_64-linux-gnu/libc.so.6(+0x42520) [0x7fca01440520]
+/lib/x86_64-linux-gnu/libc.so.6(pthread_kill+0x12c) [0x7fca01494a7c]
+/lib/x86_64-linux-gnu/libc.so.6(raise+0x16) [0x7fca01440476]
+/lib/x86_64-linux-gnu/libc.so.6(abort+0xd3) [0x7fca014267f3]
+/omd/sites/.../bin/cmc() [0x64e6a5]
+/omd/sites/.../bin/cmc(_ZN10__cxxabiv111__terminateEPFvvE+0xa) [0xa0e61a]
+/omd/sites/.../bin/cmc() [0xa0e685]
+/omd/sites/.../bin/cmc(_ZN16DataExportThreadIN9rrdcached8protocol6UpdateENS1_6ReloadEE5startEv+0x78) [0x755998]
+/omd/sites/.../bin/cmc(_ZN9RRDHelper6createEPK6Object9RRDFormatRKSt6vectorI6MetricSaIS5_EE+0x703) [0x74ef33]
+/omd/sites/.../bin/cmc(_ZN9RRDHelper13processSingleERK15PerformanceDataPK6ObjectRK7RRDInfo+0xab0) [0x753780]
+/omd/sites/.../bin/cmc(_ZN9RRDHelper15processPerfDataERK15PerformanceDataPK6Object+0xdd) [0x75452d]
+/omd/sites/.../bin/cmc(_ZN4Core15processPerfdataEPK6Object+0xa1) [0x66b4b1]
+/omd/sites/.../bin/cmc(_ZN4Core25objectStateHasBeenChangedEP6Object+0x1c0) [0x66c370]
+/omd/sites/.../bin/cmc(_ZN4Core18processCheckResultERK11CheckResult+0x91) [0x66c801]
+/omd/sites/.../bin/cmc(_ZN11CheckHelper9getResultEv+0xb69) [0x8698e9]
+/omd/sites/.../bin/cmc(_ZN11CheckHelper12communicate_ERK6Poller+0xe6) [0x869c66]
+/omd/sites/.../bin/cmc(_ZN15CheckHelperPool12communicate_ERK6Poller+0x45) [0x86b5f5]
+/omd/sites/.../bin/cmc(_ZN4Core8mainLoopEv+0x4f5) [0x6724e5]
+/omd/sites/.../bin/cmc(_ZN4Core3runEv+0xae5) [0x673415]
+/omd/sites/.../bin/cmc(main+0xf1f) [0x65410f]
+/lib/x86_64-linux-gnu/libc.so.6(+0x29d90) [0x7fca01427d90]
+/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x80) [0x7fca01427e40]
+/omd/sites/.../bin/cmc(_start+0x25) [0x65b675]
+</TT>

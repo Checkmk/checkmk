@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Literal, Optional
+from typing import Dict, Final, List, Literal, Optional
 
 import cmk.utils.paths
 from cmk.utils.type_defs import UserId
@@ -30,7 +30,20 @@ def get_role_permissions() -> Dict[str, List[str]]:
     return role_permissions
 
 
+_default_admin_permissions: Final[frozenset[str]] = frozenset(
+    {
+        "general.use",  # use Multisite
+        "wato.use",  # enter WATO
+        "wato.edit",  # make changes in WATO...
+        "wato.users",  # ... with access to user management
+    }
+)
+
+
 def may_with_roles(some_role_ids: List[str], pname: str) -> bool:
+    if "admin" in some_role_ids and pname in _default_admin_permissions:
+        return True
+
     # If at least one of the given roles has this permission, it's fine
     for role_id in some_role_ids:
         role = active_config.roles[role_id]

@@ -10,6 +10,8 @@ import urllib
 import pytest
 import webtest  # type: ignore[import]
 
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+
 from cmk.utils import paths
 from cmk.utils.store import load_mk_file
 
@@ -420,6 +422,33 @@ def test_openapi_move_rule_before_specific_rule(
     _ensure_on_folder(wsgi_app, base, rule_id, f"/{folder_name_two}")
 
     assert _order_of_rules(wsgi_app, base) == ["They made me do it!", "rule2", "rule1"]
+
+
+def test_create_rule_permission_error_regression(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    base: str,
+    with_admin,
+):
+    user, password = with_admin
+    aut_user_auth_wsgi_app.set_authorization(("Bearer", f"{user} {password}"))
+
+    _resp = aut_user_auth_wsgi_app.post(
+        url=base + "/domain-types/rule/collections/all",
+        params=json.dumps(
+            {
+                "ruleset": "agent_config:cmk_update_agent",
+                "folder": "~",
+                "properties": {"disabled": False},
+                "value_raw": '{"activated": True}',
+                "conditions": {},
+            }
+        ),
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        },
+        status=200,
+    )
 
 
 def _ensure_on_folder(wsgi_app, base, _rule_id, folder):

@@ -93,6 +93,9 @@ class AssetSection:
     def __getitem__(self, key: AssetType) -> AssetTypeSection:
         return self._assets[key]
 
+    def __contains__(self, key: AssetType) -> bool:
+        return key in self._assets
+
 
 def parse_gcp(
     string_table: StringTable, label_key: str, extract: Callable[[str], str] = lambda x: x
@@ -223,8 +226,8 @@ def discovery_summary(section: AssetSection) -> DiscoveryResult:
 
 
 def check_summary(asset_type: str, descriptor: str, section: AssetSection) -> CheckResult:
-    n = len(section[asset_type])
-    appendix = "s" if n > 1 else ""
+    n = len(section[asset_type]) if asset_type in section else 0
+    appendix = "s" if n != 1 else ""
     yield Result(
         state=State.OK,
         summary=f"{n} {descriptor}{appendix}",

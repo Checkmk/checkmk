@@ -244,6 +244,12 @@ def test_check_summary() -> None:
     assert results == {Result(state=State.OK, summary="1 Instance", details="Found 1 instance")}
 
 
+def test_check_summary_asset_not_included() -> None:
+    assets = parse_assets(ASSET_TABLE[:1])
+    results = list(check_summary(section=assets))
+    assert results == [Result(state=State.OK, summary="0 Instances", details="Found 0 instances")]
+
+
 def test_summary_service_name() -> None:
     plugin = register.get_check_plugin(CheckPluginName("gcp_redis_summary"))
     assert plugin is not None

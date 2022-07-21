@@ -13,16 +13,6 @@ from cmk.base.plugins.agent_based.utils import kube_info
 from cmk.base.plugins.agent_based.utils.kube import NodeInfo
 
 
-@pytest.fixture(name="time")
-def fixture_time(mocker):
-    import time as time_mock
-
-    time_mock.time = mocker.Mock(return_value=1600000001.0)
-    mocker.patch.object(kube_info, "time", time_mock)
-    return time_mock
-
-
-@pytest.mark.skip(reason="Causes resilience test failure, CMK-10052")
 @pytest.mark.parametrize(
     "section, expected_check_result",
     [
@@ -54,6 +44,7 @@ def fixture_time(mocker):
     ],
 )
 def test_check_kube_node_info(  # type:ignore[no-untyped-def]
-    section: NodeInfo, expected_check_result: Sequence[Result], time
+    section: NodeInfo, expected_check_result: Sequence[Result], mocker
 ) -> None:
-    assert list(check_kube_node_info(section)) == expected_check_result
+    with mocker.patch.object(kube_info.time, "time", return_value=1600000001.0):
+        assert list(check_kube_node_info(section)) == expected_check_result

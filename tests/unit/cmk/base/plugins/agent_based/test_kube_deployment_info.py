@@ -13,16 +13,6 @@ from cmk.base.plugins.agent_based.utils import kube_info
 from cmk.base.plugins.agent_based.utils.kube import DeploymentInfo, Selector, ThinContainers
 
 
-@pytest.fixture(name="time")
-def fixture_time(mocker):
-    import time as time_mock
-
-    time_mock.time = mocker.Mock(return_value=1600000001.0)
-    mocker.patch.object(kube_info, "time", time_mock)
-    return time_mock
-
-
-@pytest.mark.skip(reason="Causes resilience test failure, CMK-10052")
 @pytest.mark.parametrize(
     "section, expected_check_result",
     [
@@ -47,6 +37,7 @@ def fixture_time(mocker):
     ],
 )
 def test_check_kube_deployment_info(  # type:ignore[no-untyped-def]
-    section: DeploymentInfo, expected_check_result: Tuple[Result, ...], time
+    section: DeploymentInfo, expected_check_result: Tuple[Result, ...], mocker
 ) -> None:
-    assert tuple(check_kube_deployment_info(section)) == expected_check_result
+    with mocker.patch.object(kube_info.time, "time", return_value=1600000001.0):
+        assert tuple(check_kube_deployment_info(section)) == expected_check_result

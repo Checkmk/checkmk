@@ -79,7 +79,7 @@ def apache_hook_header(version: int) -> str:
 
 
 def apache_hook_version() -> int:
-    return 1
+    return 2
 
 
 def create_apache_hook(site: SiteContext, version: int) -> None:
@@ -130,15 +130,15 @@ def create_apache_hook(site: SiteContext, version: int) -> None:
 </IfModule>
 
 <IfModule !mod_proxy_http.c>
-  Alias /###SITE### /omd/sites/###SITE###
-  <Directory /omd/sites/###SITE###>
+  Alias /{site.name} /omd/sites/{site.name}
+  <Directory /omd/sites/{site.name}>
     Deny from all
     ErrorDocument 403 "<h1>Checkmk: Incomplete Apache Installation</h1>You need mod_proxy and
     mod_proxy_http in order to run the web interface of Checkmk."
   </Directory>
 </IfModule>
 
-<Location /###SITE###>
+<Location /{site.name}>
   ErrorDocument 503 "<meta http-equiv='refresh' content='60'><h1>Checkmk: Site Not Started</h1>You need to start this site in order to access the web interface.<!-- IE shows its own short useless error message otherwise: placeholder -->"
 </Location>
 """

@@ -59,7 +59,7 @@ EOF
     # Scratch Tapes
     echo '<<<tsm_scratch:sep(9)>>>'
     $dsmcmd <<EOF | sed -n "/^FOO/s//$INST/p"
-SELECT 'FOO', COUNT(*), library_name FROM libvolumes where status='Scratch' group by library_name
+SELECT 'FOO', COUNT(library_name), library_name FROM libvolumes where status='Scratch' group by library_name
 EOF
 
 }

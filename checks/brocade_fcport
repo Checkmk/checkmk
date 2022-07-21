@@ -122,16 +122,13 @@ def _get_if_table_offset(speed_info, offset):
 
 def parse_brocade_fcport(info):
     if_info, link_info, speed_info, if64_info = info
-    isl_ports = dict(link_info)
-
-    if len(if_info) == 0:
-        return None
 
     try:
         offset = int(if_info[0][0])
-    except ValueError:
+    except (ValueError, IndexError):
         return None
 
+    isl_ports = dict(link_info)
     # if-table and brocade-if-table do NOT have same length
     speed_info = [x[1:] for x in speed_info[_get_if_table_offset(speed_info, offset) :]]
 

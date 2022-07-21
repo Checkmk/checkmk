@@ -22,6 +22,7 @@ def parse_assets(string_table: StringTable) -> AssetSection:
     for a in assets:
         sorted_assets[a.asset_type].append(a)
 
+    # Known asset types that downstream checks can work with. Ignore others
     # fmt: off
     extractors: Mapping[AssetType, Callable[[GCPAsset], Item]] = {
         "file.googleapis.com/Instance": lambda a: a.resource_data["name"].split("/")[-1],
@@ -35,6 +36,8 @@ def parse_assets(string_table: StringTable) -> AssetSection:
     # fmt: on
     typed_assets: dict[AssetType, AssetTypeSection] = {}
     for asset_type, assets in sorted_assets.items():
+        if asset_type not in extractors:
+            continue
         extract = extractors[asset_type]
         typed_assets[asset_type] = {extract(a): a for a in assets}
 

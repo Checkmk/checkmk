@@ -21,8 +21,7 @@ import cmk.base.config as config
 
 # Test whether or not registration of check configuration variables works
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="flaky on raw edition")
-def test_test_check_1(request, site: Site, web):
-
+def test_test_check_1(request: pytest.FixtureRequest, site: Site) -> None:
     host_name = "check-variables-test-host"
 
     create_linux_test_host(request, site, host_name)
@@ -70,7 +69,7 @@ check_info["test_check_1"] = {
     assert "test_check_1_default_levels" in config._check_contexts["test_check_1"]
     assert config._check_contexts["test_check_1"]["test_check_1_default_levels"] == (10.0, 20.0)
 
-    web.discover_services(host_name)  # Replace with RestAPI call, see CMK-9249
+    site.openapi.discover_services_and_wait_for_completion(host_name)
 
     # Verify that the discovery worked as expected
     entries = autochecks.AutochecksStore(HostName(host_name)).read()
@@ -100,14 +99,14 @@ check_info["test_check_1"] = {
 
     # rediscover with the setting in the config
     site.delete_file(f"var/check_mk/autochecks/{host_name}.mk")
-    web.discover_services(host_name)  # Replace with RestAPI call, see CMK-9249
+    site.openapi.discover_services_and_wait_for_completion(host_name)
     entries = autochecks.AutochecksStore(HostName(host_name)).read()
     assert entries[0].parameters == (5.0, 30.1)
 
 
 # Test whether or not registration of discovery variables work
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="flaky on raw edition")
-def test_test_check_2(request, site, web):
+def test_test_check_2(request: pytest.FixtureRequest, site: Site) -> None:
     host_name = "check-variables-test-host"
 
     create_linux_test_host(request, site, host_name)
@@ -154,17 +153,17 @@ check_info["test_check_2"] = {
     assert "test_check_2" in config._check_contexts
     assert "discover_service" in config._check_contexts["test_check_2"]
 
-    web.discover_services(host_name)  # Replace with RestAPI call, see CMK-9249
+    site.openapi.discover_services_and_wait_for_completion(host_name)
 
     # Should have discovered nothing so far
-    assert site.read_file(f"var/check_mk/autochecks/{host_name}.mk") == "[\n]\n"
+    assert autochecks.AutochecksStore(HostName(host_name)).read() == []
 
-    web.discover_services(host_name)  # Replace with RestAPI call, see CMK-9249
+    site.openapi.discover_services_and_wait_for_completion(host_name)
 
     # And now overwrite the setting in the config
     site.write_text_file("etc/check_mk/conf.d/test_check_2.mk", "discover_service = True\n")
 
-    web.discover_services(host_name)  # Replace with RestAPI call, see CMK-9249
+    site.openapi.discover_services_and_wait_for_completion(host_name)
 
     # Verify that the discovery worked as expected
     entries = autochecks.AutochecksStore(HostName(host_name)).read()
@@ -176,7 +175,7 @@ check_info["test_check_2"] = {
 
 # Test whether or not factory settings and checkgroup parameters work
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="flaky on raw edition")
-def test_check_factory_settings(request, site: Site, web):
+def test_check_factory_settings(request: pytest.FixtureRequest, site: Site) -> None:
 
     host_name = "check-variables-test-host"
 
@@ -227,7 +226,7 @@ check_info["test_check_3"] = {
     assert "test_check_3" in config._check_contexts
     assert "test_check_3_default_levels" in config._check_contexts["test_check_3"]
 
-    web.discover_services(host_name)  # Replace with RestAPI call, see CMK-9249
+    site.openapi.discover_services_and_wait_for_completion(host_name)
 
     # Verify that the discovery worked as expected
     entries = autochecks.AutochecksStore(HostName(host_name)).read()

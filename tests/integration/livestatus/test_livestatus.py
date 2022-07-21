@@ -16,12 +16,12 @@ from tests.testlib.site import Site
 
 
 @pytest.fixture(name="default_cfg", scope="module")
-def default_cfg_fixture(request: pytest.FixtureRequest, site: Site, web) -> None:
+def default_cfg_fixture(request: pytest.FixtureRequest, site: Site) -> None:
     site.ensure_running()
     print("Applying default config")
     create_linux_test_host(request, site, "livestatus-test-host")
     create_linux_test_host(request, site, "livestatus-test-host.domain")
-    web.discover_services("livestatus-test-host")  # Replace with RestAPI call, see CMK-9249
+    site.openapi.discover_services_and_wait_for_completion("livestatus-test-host")
     site.activate_changes_and_wait_for_core_reload()
 
 

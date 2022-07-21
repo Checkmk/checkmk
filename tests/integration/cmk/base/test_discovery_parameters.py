@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 from tests.testlib import create_linux_test_host
 from tests.testlib.site import Site
 
@@ -12,7 +14,7 @@ from cmk.utils.type_defs import HostName
 import cmk.base.autochecks as autochecks
 
 
-def test_test_check_1_merged_rule(request, site: Site, web):
+def test_test_check_1_merged_rule(request: pytest.FixtureRequest, site: Site) -> None:
 
     host_name = "disco-params-test-host"
 
@@ -60,7 +62,7 @@ register.check_plugin(
 
     site.activate_changes_and_wait_for_core_reload()
 
-    web.discover_services(host_name)  # Replace with RestAPI call, see CMK-9249
+    site.openapi.discover_services_and_wait_for_completion(host_name)
 
     # Verify that the discovery worked as expected
     entries = autochecks.AutochecksStore(HostName(host_name)).read()
@@ -79,7 +81,7 @@ register.check_plugin(
 
     # rediscover with the setting in the config
     site.delete_file(f"var/check_mk/autochecks/{host_name}.mk")
-    web.discover_services(host_name)  # Replace with RestAPI call, see CMK-9249
+    site.openapi.discover_services_and_wait_for_completion(host_name)
     entries = autochecks.AutochecksStore(HostName(host_name)).read()
     for entry in entries:
         if str(entry.check_plugin_name) == "test_check_1":
@@ -89,7 +91,7 @@ register.check_plugin(
         raise AssertionError('"test_check_1" not discovered')
 
 
-def test_test_check_1_all_rule(request, site: Site, web):
+def test_test_check_1_all_rule(request: pytest.FixtureRequest, site: Site) -> None:
 
     host_name = "disco-params-test-host"
 
@@ -139,7 +141,7 @@ register.check_plugin(
 
     site.activate_changes_and_wait_for_core_reload()
 
-    web.discover_services(host_name)  # Replace with RestAPI call, see CMK-9249
+    site.openapi.discover_services_and_wait_for_completion(host_name)
 
     # Verify that the discovery worked as expected
     entries = autochecks.AutochecksStore(HostName(host_name)).read()
@@ -159,7 +161,7 @@ register.check_plugin(
 
     # rediscover with the setting in the config
     site.delete_file(f"var/check_mk/autochecks/{host_name}.mk")
-    web.discover_services(host_name)  # Replace with RestAPI call, see CMK-9249
+    site.openapi.discover_services_and_wait_for_completion(host_name)
     entries = autochecks.AutochecksStore(HostName(host_name)).read()
     for entry in entries:
         if str(entry.check_plugin_name) == "test_check_2":

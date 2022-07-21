@@ -47,7 +47,7 @@ class Theme:
 
     @request_memoize()
     def detect_icon_path(self, icon_name: str, prefix: str) -> str:
-        """Detect from which place an icon shall be used and return it's path relative to htdocs/
+        """Detect from which place an icon shall be used and return its path relative to htdocs/
 
         Priority:
         1. In case the modern-dark theme is active: <theme> = modern-dark -> priorities 3-6

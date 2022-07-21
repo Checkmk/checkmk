@@ -83,7 +83,7 @@ def _register_pre_21_plugin_api() -> None:
     Our builtin plugin have been changed to directly import from the .utils module. We add these old
     names to remain compatible with 3rd party plugins for now.
 
-    In the moment we define an official plugin API, we can drop this and require all plugins to
+    At the moment we define an official plugin API, we can drop this and require all plugins to
     switch to the new API. Until then let's not bother the users with it.
     """
     # Needs to be a local import to not influence the regular plugin loading order
@@ -327,7 +327,7 @@ class UserSidebarSnapin:
 class SidebarRenderer:
     def show(self, title: Optional[str] = None, content: Optional["HTML"] = None) -> None:
         # TODO: Right now the method renders the full HTML page, i.e.
-        # the header, sidebar, and page content. Ideallly we should
+        # the header, sidebar, and page content. Ideally we should
         # split this up. Possible solutions might be:
         #
         #     1. If we remove the page side.py the code for the header

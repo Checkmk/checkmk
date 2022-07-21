@@ -45,10 +45,10 @@ def rfc7662_subject(user_id: UserId, auth_type: AuthType) -> RFC7662:
             The user's user_id
 
         auth_type:
-            One of automation, cookie, web_server, http_header, bearer
+            One of 'automation', 'cookie', 'web_server', 'http_header', 'bearer'
 
     Returns:
-        The filled out dictionary.
+        The filled-out dictionary.
     """
     return {"sub": user_id, "iat": int(time.time()), "active": True, "scope": auth_type}
 

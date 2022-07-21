@@ -28,8 +28,8 @@ from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name
 
 def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]:
     # Ensure the user is authenticated. This call is wrapping all the different
-    # authentication modes the Checkmk GUI supports and initializes the logged
-    # in user objects.
+    # authentication modes the Checkmk GUI supports and initializes the logged-in
+    # user objects.
     @functools.wraps(func)
     def _call_auth() -> Response:
         with login.authenticate(request) as authenticated:
@@ -155,7 +155,7 @@ def handle_unhandled_exception() -> Response:
 
 
 def load_gui_log_levels() -> Dict[str, int]:
-    """Load the GUI log level global setting from the WATO GUI config"""
+    """Load the GUI log-level global setting from the WATO GUI config"""
     return load_single_global_wato_setting("log_levels", {"cmk.web": 30})
 
 
@@ -170,7 +170,7 @@ def load_single_global_wato_setting(varname: str, deflt: Any = None) -> Any:
     profile our whole WSGI app, including the config loading logic.
 
     We only process the WATO written global settings file to get the WATO
-    settings. Which should be enough for the most cases.
+    settings, which should be enough for most cases.
     """
     settings = cmk.utils.store.load_mk_file(
         cmk.utils.paths.default_config_dir + "/multisite.d/wato/global.mk", default={}

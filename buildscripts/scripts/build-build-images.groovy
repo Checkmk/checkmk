@@ -10,7 +10,7 @@
 
 def main() {
     global_dry_run_level = 0;
-    
+
     check_job_parameters([
         "SYNC_WITH_IMAGES_WITH_UPSTREAM",
         "PUBLISH_IMAGES",
@@ -67,7 +67,7 @@ def main() {
                     " | awk '{print \$2}'").replaceAll("[\r\n]+", "");
                 image_ids[distro] = resolve_docker_image_alias(alias_names[distro]);
             }
-            sh("cp defines.make Pipfile omd/strip_binaries buildscripts/infrastructure/build-nodes/scripts");
+            sh("cp defines.make omd/strip_binaries buildscripts/infrastructure/build-nodes/scripts");
         }
 
         dir("${checkout_dir}/buildscripts/infrastructure/build-nodes") {
@@ -109,4 +109,3 @@ def main() {
     }
 }
 return this;
-

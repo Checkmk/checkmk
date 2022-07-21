@@ -60,12 +60,14 @@ export function register_edge_listeners(obj) {
     if (!is_content_frame_accessible()) return;
 
     const edge = obj ? obj : parent.frames[0];
-    if (window.addEventListener !== null) edge.addEventListener("mousemove", on_mouse_leave, false);
+    if (window.addEventListener !== null)
+        edge.addEventListener("mousemove", on_mouse_leave, false);
     else edge.onmousemove = on_mouse_leave;
 }
 
 function on_mouse_leave() {
-    if (typeof quicksearch.close_popup != "undefined") quicksearch.close_popup();
+    if (typeof quicksearch.close_popup != "undefined")
+        quicksearch.close_popup();
     snapinTerminateDrag();
     return false;
 }
@@ -86,7 +88,12 @@ export function snapin_start_drag(event) {
     const button = utils.get_button(event);
 
     // Skip calls when already dragging or other button than left mouse
-    if (g_snapin_dragging !== false || button != "LEFT" || target.tagName != "DIV") return true;
+    if (
+        g_snapin_dragging !== false ||
+        button != "LEFT" ||
+        target.tagName != "DIV"
+    )
+        return true;
 
     event.cancelBubble = true;
 
@@ -159,7 +166,10 @@ function snapinDrop(event, targetpos) {
 
     // Catch quick clicks without movement on the title bar
     // Don't reposition the object in this case.
-    if (g_snapin_start_pos[0] == event.clientY && g_snapin_start_pos[1] == event.clientX) {
+    if (
+        g_snapin_start_pos[0] == event.clientY &&
+        g_snapin_start_pos[1] == event.clientX
+    ) {
         return utils.prevent_default_events(event);
     }
 
@@ -171,7 +181,8 @@ function snapinDrop(event, targetpos) {
     const thisId = g_snapin_dragging.id.replace("snapin_container_", "");
 
     let before = "";
-    if (targetpos != null) before = "&before=" + targetpos.id.replace("snapin_container_", "");
+    if (targetpos != null)
+        before = "&before=" + targetpos.id.replace("snapin_container_", "");
     ajax.get_url("sidebar_move_snapin.py?name=" + thisId + before);
 }
 
@@ -196,7 +207,7 @@ export function snapin_stop_drag(event) {
 }
 
 function getDivChildNodes(node) {
-    const children : ChildNode[] = [];
+    const children: ChildNode[] = [];
     for (const child of node.childNodes) {
         if (child.tagName === "DIV") {
             children.push(child);
@@ -206,7 +217,7 @@ function getDivChildNodes(node) {
 }
 
 function getSnapinList() {
-    const l : ChildNode[] = [];
+    const l: ChildNode[] = [];
     g_snapin_dragging = g_snapin_dragging as HTMLElement;
     for (const child of getDivChildNodes(g_snapin_dragging.parentNode)) {
         // Skip non snapin objects and the currently dragged object
@@ -299,7 +310,8 @@ export function update_content_location() {
     // title of the content URL title (window title or tab title)
     let page_title;
     if (content_frame.document.title != "") {
-        page_title = window.parent["orig_title"] + " - " + content_frame.document.title;
+        page_title =
+            window.parent["orig_title"] + " - " + content_frame.document.title;
     } else {
         page_title = window.parent["orig_title"];
     }
@@ -313,7 +325,8 @@ export function update_content_location() {
         content_frame.location.pathname +
         content_frame.location.search +
         content_frame.location.hash;
-    const index_url = cmk_path + "/index.py?start_url=" + encodeURIComponent(rel_url);
+    const index_url =
+        cmk_path + "/index.py?start_url=" + encodeURIComponent(rel_url);
 
     if (window.parent.history.replaceState) {
         if (rel_url && rel_url != "blank") {
@@ -371,13 +384,13 @@ function unfold_sidebar() {
 //
 
 // The refresh snapins do reload after a defined amount of time
-var refresh_snapins : string[][] = [];
+var refresh_snapins: string[][] = [];
 // The restart snapins are notified about the restart of the nagios instance(s)
-var restart_snapins : string[]  = [];
+var restart_snapins: string[] = [];
 // Snapins that only have to be reloaded on demand
-var static_snapins : string[] = [];
+var static_snapins: string[] = [];
 // Contains a timestamp which holds the time of the last nagios restart handling
-var sidebar_restart_time : number | null= null;
+var sidebar_restart_time: number | null = null;
 // Configures the number of seconds to reload all snapins which request it
 var sidebar_update_interval = null;
 
@@ -393,7 +406,7 @@ export function add_snapin(name) {
             const result = data.result;
 
             if (result.refresh) {
-                const entry : string[] = [result.name, result.url];
+                const entry: string[] = [result.name, result.url];
                 if (refresh_snapins.indexOf(entry) === -1) {
                     refresh_snapins.push(entry);
                 }
@@ -430,8 +443,12 @@ export function add_snapin(name) {
                 }
             }
 
-            const add_snapin_page = window.frames[0] ? window.frames[0].document : document;
-            const preview = add_snapin_page.getElementById("snapin_container_" + name);
+            const add_snapin_page = window.frames[0]
+                ? window.frames[0].document
+                : document;
+            const preview = add_snapin_page.getElementById(
+                "snapin_container_" + name
+            );
             if (preview) {
                 const container = preview.parentElement?.parentElement;
                 container?.remove();
@@ -480,7 +497,8 @@ function remove_snapin(id) {
     // reload main frame if it is currently displaying the "add snapin" page
     if (parent.frames[0]) {
         const href = encodeURIComponent(parent.frames[0].location.toString());
-        if (href.indexOf("sidebar_add_snapin.py") > -1) parent.frames[0].location.reload();
+        if (href.indexOf("sidebar_add_snapin.py") > -1)
+            parent.frames[0].location.reload();
     }
 }
 
@@ -491,7 +509,8 @@ export function toggle_sidebar_snapin(oH2, url) {
     let oContent, oHead;
     for (const i in childs) {
         const child = childs[i];
-        if (child.tagName == "DIV" && child.className == "content") oContent = child;
+        if (child.tagName == "DIV" && child.className == "content")
+            oContent = child;
         else if (
             child.tagName == "DIV" &&
             (child.className == "head open" || child.className == "head closed")
@@ -515,7 +534,10 @@ export function toggle_sidebar_snapin(oH2, url) {
 // TODO move to managed/web/htdocs/js
 export function switch_customer(customer_id, switch_state) {
     ajax.get_url(
-        "switch_customer.py?_customer_switch=" + customer_id + ":" + switch_state,
+        "switch_customer.py?_customer_switch=" +
+            customer_id +
+            ":" +
+            switch_state,
         utils.reload_whole_page,
         null
     );
@@ -534,7 +556,7 @@ function bulk_update_contents(ids, codes) {
             // since sidebar rendering or last update, skip it
             if (codes[i] !== "") {
                 utils.update_contents(ids[i], codes[i]);
-                sidebar_restart_time = Math.floor(new Date().getTime()  / 1000);
+                sidebar_restart_time = Math.floor(new Date().getTime() / 1000);
             }
         } else {
             utils.update_contents(ids[i], codes[i]);
@@ -542,8 +564,8 @@ function bulk_update_contents(ids, codes) {
     }
 }
 
-var g_seconds_to_update : null | number = null;
-var g_sidebar_scheduler_timer : null | number = null;
+var g_seconds_to_update: null | number = null;
+var g_sidebar_scheduler_timer: null | number = null;
 var g_sidebar_full_reload = false;
 
 export function refresh_single_snapin(name) {
@@ -564,7 +586,9 @@ export function reset_sidebar_scheduler() {
 
 export function execute_sidebar_scheduler() {
     g_seconds_to_update =
-        g_seconds_to_update !== null ? g_seconds_to_update - 1 : sidebar_update_interval;
+        g_seconds_to_update !== null
+            ? g_seconds_to_update - 1
+            : sidebar_update_interval;
 
     // Stop reload of the snapins in case the browser window / tab is not visible
     // for the user. Retry after short time.
@@ -575,7 +599,7 @@ export function execute_sidebar_scheduler() {
         return;
     }
 
-    const to_be_updated : string[] = [];
+    const to_be_updated: string[] = [];
 
     let url;
     for (let i = 0; i < refresh_snapins.length; i++) {
@@ -603,11 +627,16 @@ export function execute_sidebar_scheduler() {
     }
 
     // Are there any snapins to be bulk updated?
-    if (to_be_updated.length > 0 && g_seconds_to_update && g_seconds_to_update <= 0) {
+    if (
+        to_be_updated.length > 0 &&
+        g_seconds_to_update &&
+        g_seconds_to_update <= 0
+    ) {
         url = "sidebar_snapin.py?names=" + to_be_updated.join(",");
-        if (sidebar_restart_time !== null) url += "&since=" + sidebar_restart_time;
+        if (sidebar_restart_time !== null)
+            url += "&since=" + sidebar_restart_time;
 
-        const ids : string[] = [],
+        const ids: string[] = [],
             len = to_be_updated.length;
         for (let i = 0; i < len; i++) {
             ids.push("snapin_" + to_be_updated[i]);
@@ -628,12 +657,16 @@ export function execute_sidebar_scheduler() {
 
     // Detect page changes and re-register the mousemove event handler
     // in the content frame. another bad hack ... narf
-    if (is_content_frame_accessible() && g_content_loc != parent.frames[0].document.location.href) {
+    if (
+        is_content_frame_accessible() &&
+        g_content_loc != parent.frames[0].document.location.href
+    ) {
         register_edge_listeners(parent.frames[0]);
         update_content_location();
     }
 
-    if (g_seconds_to_update && g_seconds_to_update <= 0) g_seconds_to_update = sidebar_update_interval;
+    if (g_seconds_to_update && g_seconds_to_update <= 0)
+        g_seconds_to_update = sidebar_update_interval;
 
     g_sidebar_scheduler_timer = window.setTimeout(function () {
         execute_sidebar_scheduler();
@@ -651,7 +684,9 @@ function setCookie(cookieName, value, expiredays) {
         cookieName +
         "=" +
         encodeURIComponent(value) +
-        (expiredays == null ? "" : ";expires=" + exdate.toUTCString() + ";SameSite=Lax");
+        (expiredays == null
+            ? ""
+            : ";expires=" + exdate.toUTCString() + ";SameSite=Lax");
 }
 
 function getCookie(cookieName) {
@@ -663,17 +698,25 @@ function getCookie(cookieName) {
     cookieStart = cookieStart + cookieName.length + 1;
     let cookieEnd = document.cookie.indexOf(";", cookieStart);
     if (cookieEnd == -1) cookieEnd = document.cookie.length;
-    return decodeURIComponent(document.cookie.substring(cookieStart, cookieEnd));
+    return decodeURIComponent(
+        document.cookie.substring(cookieStart, cookieEnd)
+    );
 }
 
 export function initialize_scroll_position() {
     var scrollPosFromCookie = getCookie("sidebarScrollPos");
-    var scrollPos: number = scrollPosFromCookie ? parseInt(scrollPosFromCookie) : 0;
+    var scrollPos: number = scrollPosFromCookie
+        ? parseInt(scrollPosFromCookie)
+        : 0;
     g_scrollbar!.getScrollElement().scrollTop = scrollPos;
 }
 
 function store_scroll_position() {
-    setCookie("sidebarScrollPos", g_scrollbar!.getScrollElement().scrollTop, null);
+    setCookie(
+        "sidebarScrollPos",
+        g_scrollbar!.getScrollElement().scrollTop,
+        null
+    );
 }
 
 /************************************************
@@ -690,11 +733,13 @@ function highlight_link(link_obj, container_id) {
     let other_snapin;
     if (container_id == "snapin_container_wato_folders")
         other_snapin = document.getElementById("snapin_container_views");
-    else other_snapin = document.getElementById("snapin_container_wato_folders");
+    else
+        other_snapin = document.getElementById("snapin_container_wato_folders");
 
     if (this_snapin && other_snapin) {
         let links;
-        if (this_snapin.getElementsByClassName) links = this_snapin.getElementsByClassName("link");
+        if (this_snapin.getElementsByClassName)
+            links = this_snapin.getElementsByClassName("link");
         else links = document.getElementsByClassName("link");
 
         for (let i = 0; i < links.length; i++) {
@@ -708,7 +753,8 @@ function highlight_link(link_obj, container_id) {
 export function wato_folders_clicked(link_obj, folderpath) {
     g_last_folder = folderpath;
     highlight_link(link_obj, "snapin_container_wato_folders");
-    parent.frames[0].location = g_last_view + "&wato_folder=" + encodeURIComponent(g_last_folder);
+    parent.frames[0].location =
+        g_last_view + "&wato_folder=" + encodeURIComponent(g_last_folder);
 }
 
 export function wato_views_clicked(link_obj) {
@@ -735,7 +781,9 @@ export function wato_views_clicked(link_obj) {
 /* Foldable Tree in snapin */
 export function wato_tree_click(link_obj, folderpath) {
     const topic = (document.getElementById("topic") as HTMLInputElement).value;
-    const target = (document.getElementById("target_" + topic) as HTMLInputElement).value;
+    const target = (
+        document.getElementById("target_" + topic) as HTMLInputElement
+    ).value;
 
     let href;
     if (target.substr(0, 9) == "dashboard") {
@@ -757,7 +805,10 @@ export function wato_tree_topic_changed(topic_field) {
     // Hide all select fields but the wanted one
     const select_fields = document.getElementsByTagName("select");
     for (let i = 0; i < select_fields.length; i++) {
-        if (select_fields[i].id && select_fields[i].id.substr(0, 7) == "target_") {
+        if (
+            select_fields[i].id &&
+            select_fields[i].id.substr(0, 7) == "target_"
+        ) {
             select_fields[i].selectedIndex = -1;
             if (select_fields[i].id == "target_" + topic) {
                 select_fields[i].style.display = "inline";
@@ -781,7 +832,11 @@ export function wato_tree_target_changed(target_field) {
     // Send the info to python code via ajax call for persistance
     ajax.call_ajax("ajax_set_foldertree.py", {
         method: "POST",
-        post_data: "topic=" + encodeURIComponent(topic) + "&target=" + encodeURIComponent(target),
+        post_data:
+            "topic=" +
+            encodeURIComponent(topic) +
+            "&target=" +
+            encodeURIComponent(target),
     });
 }
 
@@ -822,7 +877,8 @@ export function fetch_nagvis_snapin_contents() {
 
     // Needs to be fetched via JS from NagVis because it needs to
     // be done in the user context.
-    const nagvis_url = "../nagvis/server/core/ajax_handler.php?mod=Multisite&act=getMaps";
+    const nagvis_url =
+        "../nagvis/server/core/ajax_handler.php?mod=Multisite&act=getMaps";
     ajax.call_ajax(nagvis_url, {
         add_ajax_id: false,
         response_handler: function (_unused_handler_data, ajax_response) {
@@ -832,8 +888,14 @@ export function fetch_nagvis_snapin_contents() {
                 method: "POST",
                 add_ajax_id: false,
                 post_data: "request=" + encodeURIComponent(ajax_response),
-                response_handler: function (_unused_handler_data, snapin_content_response) {
-                    utils.update_contents("snapin_nagvis_maps", snapin_content_response);
+                response_handler: function (
+                    _unused_handler_data,
+                    snapin_content_response
+                ) {
+                    utils.update_contents(
+                        "snapin_nagvis_maps",
+                        snapin_content_response
+                    );
                 },
             });
 
@@ -859,7 +921,7 @@ export function fetch_nagvis_snapin_contents() {
  * Bookmark snapin
  *************************************************/
 
-export function add_bookmark(trans_id : null | string = null) {
+export function add_bookmark(trans_id: null | string = null) {
     const url = parent.frames[0].location;
     const title = parent.frames[0].document.title;
     ajax.call_ajax("add_bookmark.py", {
@@ -881,9 +943,13 @@ export function add_bookmark(trans_id : null | string = null) {
  * Speedometer snapin
  *************************************************/
 
-var g_needle_timeout : null | number = null;
+var g_needle_timeout: null | number = null;
 
-export function speedometer_show_speed(last_perc, program_start, scheduled_rate) {
+export function speedometer_show_speed(
+    last_perc,
+    program_start,
+    scheduled_rate
+) {
     const url =
         "sidebar_ajax_speedometer.py" +
         "?last_perc=" +
@@ -1022,7 +1088,11 @@ export function init_messages_and_werks(interval, may_ack) {
         return;
     }
 
-    create_initial_ids("help_links", "werks", "change_log.py?show_unack=1&wo_compatibility=3");
+    create_initial_ids(
+        "help_links",
+        "werks",
+        "change_log.py?show_unack=1&wo_compatibility=3"
+    );
     update_unack_incomp_werks();
 }
 
@@ -1044,7 +1114,9 @@ function handle_update_messages(_data, response_text) {
 
 function update_messages() {
     // retrieve new messages
-    ajax.call_ajax("ajax_sidebar_get_messages.py", {response_handler: handle_update_messages});
+    ajax.call_ajax("ajax_sidebar_get_messages.py", {
+        response_handler: handle_update_messages,
+    });
 }
 
 export function update_message_trigger(msg_text, msg_count) {

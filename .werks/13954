@@ -1,0 +1,17 @@
+Title: REST API calls somtimes resulted in a 500 status code with a permissions error
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1658404931
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p9
+
+Even though the operation succeeded, some REST API calls would result
+in a 500 response status code, with a message saying,
+"Permission mismatch. See the server logs for more information."
+
+This is no longer the case and requires no further adjustments on the
+user side.

@@ -50,7 +50,7 @@ class LoggedInUser:
         self.alias = self._attributes.get("alias", self.id)
         self.email = self._attributes.get("email", self.id)
 
-        self._permissions = _initial_permission_cache(self.id)
+        self._permissions: dict[str, bool] = {}
         self._siteconf = self.load_file("siteconfig", {})
         self._button_counts: Dict[str, float] = {}
         self._stars: Set[str] = set()
@@ -354,8 +354,6 @@ class LoggedInUser:
         )
 
     def may(self, pname: str) -> bool:
-        if pname in self._permissions:
-            return self._permissions[pname]
         they_may = may_with_roles(self.role_ids, pname)
         self._permissions[pname] = they_may
 
@@ -529,22 +527,6 @@ def _most_permissive_baserole_id(baserole_ids: List[str]) -> str:
     if "user" in baserole_ids:
         return "user"
     return "guest"
-
-
-def _initial_permission_cache(user_id: Optional[UserId]) -> Dict[str, bool]:
-    if user_id is None:
-        return {}
-
-    # Prepare cache of already computed permissions
-    # Make sure, admin can restore permissions in any case!
-    if user_id in config.admin_users:
-        return {
-            "general.use": True,  # use Multisite
-            "wato.use": True,  # enter WATO
-            "wato.edit": True,  # make changes in WATO...
-            "wato.users": True,  # ... with access to user management
-        }
-    return {}
 
 
 def save_user_file(name: str, data: Any, user_id: UserId) -> None:

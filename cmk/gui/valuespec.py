@@ -859,6 +859,8 @@ def UserID(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
     def _validate(varprefix: str, userid_str: str) -> None:
         try:
             UserId(userid_str)
+            if userid_str.strip() == "":
+                raise ValueError("Empty Value not allowed")
         except ValueError as exception:
             raise MKUserError(
                 varprefix,

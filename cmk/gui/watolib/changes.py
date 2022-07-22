@@ -43,7 +43,7 @@ def add_change(
         action=action_name,
         message=text,
         object_ref=object_ref,
-        user_id=user.id if add_user else UserId.empty(),
+        user_id=user.id if add_user else UserId(""),
         diff_text=diff_text,
     )
     cmk.gui.watolib.sidebar_reload.need_sidebar_reload()

@@ -265,25 +265,22 @@ class UserId(str):
         We use the userid to create file paths, so we we need to be strict...
 
         >>> UserId.validate("cmkadmin")
+        >>> UserId.validate("")
         >>> UserId.validate("foo/../")
         Traceback (most recent call last):
         ...
         ValueError: Invalid username: 'foo/../'
         """
+        if text == "":
+            # For legacy reasons (e.g. cmk.gui.visuals)
+            return
+
         if not cls.USER_ID_REGEX.match(text):
             raise ValueError(f"Invalid username: {text!r}")
 
     def __new__(cls, text: str) -> "UserId":
         cls.validate(text)
         return super().__new__(cls, text)
-
-    @classmethod
-    def empty(cls) -> "UserId":
-        """Return empty UserId, they are not valid but are used sometimes...
-
-        In some parts (e.g. cmk.gui.visuals) where we use empty UserIds...
-        This needs to be cleaned up in the future!"""
-        return super().__new__(cls, "")
 
 
 # This def is used to keep the API-exposed object in sync with our

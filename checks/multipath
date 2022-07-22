@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from contextlib import suppress
 from typing import Any, Iterable, Mapping
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import regex, render
@@ -10,7 +11,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTabl
 
 DiscoveryResult = Iterable[tuple[str, Mapping[str, Any]]]
 CheckResult = Iterable[tuple[int, str]]
-Section = Mapping[str, Mapping[str, Any]]
+
+Group = Mapping[str, Any]
+Section = Mapping[str, Group]
 
 # Configuration for using alias instead of UUID
 inventory_multipath_rules = []
@@ -145,24 +148,27 @@ def discover_multipath(section: Section) -> DiscoveryResult:
 
 
 # item is UUID (e.g. '360a9800043346937686f456f59386741') or alias (e.g. 'mpath0')
+def _get_item_data(item: str, section: Section) -> Group | None:
+    # Keys in section are the UUIDs.
+    # First assume that we are looking for a UUID.
+    with suppress(KeyError):
+        return section[item]
+
+    # Fall back to aliases
+    for mmap in section.values():
+        if mmap.get("alias") == item:
+            return mmap
+
+    return None
+
+
+# item is UUID (e.g. '360a9800043346937686f456f59386741') or alias (e.g. 'mpath0')
 # def check_multipath(item, target_numpaths, parsed):
 def check_multipath(  # pylint: disable=too-many-branches
     item: str, params: Mapping[str, Any], section: Section
 ) -> CheckResult:
-    # Keys in parsed are the UUIDs. First assume that we are
-    # looking for a UUID. Then fall back to aliases
-    if item in section:
-        mmap = section[item]
-    elif item.strip() in section:
-        # support items discovered before 1.2.7
-        mmap = section[item.strip()]
-    else:
-        for mmap in section.values():
-            if mmap.get("alias") == item:
-                break
-        else:
-            yield 3, "Multipath device not found in agent output"
-            return
+    if (mmap := _get_item_data(item, section)) is None:
+        return
 
     # If the item is the alias, then show the UUID in the plugin output.
     # If the item is the UUID, then vice versa.

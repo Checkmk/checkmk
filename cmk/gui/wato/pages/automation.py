@@ -31,9 +31,9 @@ from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.watolib.automation_commands import automation_command_registry
 from cmk.gui.watolib.automations import (
     check_mk_local_automation_serialized,
+    cmk_version_of_remote_automation_source,
     compatible_with_central_site,
     local_automation_failure,
-    remote_automation_call_came_from_pre21,
 )
 
 
@@ -195,12 +195,12 @@ class ModeAutomation(AjaxPage):
         serialized_result: SerializedResult,
         cmk_command: str,
         cmdline_cmd: Iterable[str],
-    ) -> str:
+    ) -> SerializedResult:
         try:
             return (
-                repr(result_type_registry[cmk_command].deserialize(serialized_result).to_pre_21())
-                if remote_automation_call_came_from_pre21()
-                else serialized_result
+                result_type_registry[cmk_command]
+                .deserialize(serialized_result)
+                .serialize(cmk_version_of_remote_automation_source())
             )
         except SyntaxError as e:
             raise local_automation_failure(

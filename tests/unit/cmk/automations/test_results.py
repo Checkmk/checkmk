@@ -6,8 +6,8 @@
 from dataclasses import dataclass
 from typing import Mapping, Sequence
 
+from cmk.utils import version as cmk_version
 from cmk.utils.type_defs import DiscoveryResult as SingleHostDiscoveryResult
-from cmk.utils.version import is_raw_edition
 
 from cmk.automations.results import (
     ABCAutomationResult,
@@ -23,7 +23,7 @@ from cmk.base.automations import automations
 def test_result_type_registry_completeness() -> None:
     # ensures that all automation calls registered in cmk.base have a corresponding result type
     # registered in cmk.automations
-    automations_missing = {"bake-agents"} if is_raw_edition() else set()
+    automations_missing = {"bake-agents"} if cmk_version.is_raw_edition() else set()
     assert sorted(set(result_type_registry) - automations_missing) == sorted(
         automations._automations
     )
@@ -56,7 +56,9 @@ def test_serialization() -> None:
             "123": "456",
         },
     )
-    assert automation_res_test == AutomationResultTest.deserialize(automation_res_test.serialize())
+    assert automation_res_test == AutomationResultTest.deserialize(
+        automation_res_test.serialize(cmk_version.Version(cmk_version.__version__))
+    )
 
 
 class TestDiscoveryResult:
@@ -91,7 +93,7 @@ class TestDiscoveryResult:
 
     def test_serialization(self) -> None:
         assert DiscoveryResult.deserialize(
-            DiscoveryResult(self.HOSTS).serialize()
+            DiscoveryResult(self.HOSTS).serialize(cmk_version.Version(cmk_version.__version__))
         ) == DiscoveryResult(self.HOSTS)
 
 
@@ -120,4 +122,9 @@ class TestTryDiscoveryResult:
             vanished_labels={},
             changed_labels={},
         )
-        assert TryDiscoveryResult.deserialize(result.serialize()) == result
+        assert (
+            TryDiscoveryResult.deserialize(
+                result.serialize(cmk_version.Version(cmk_version.__version__))
+            )
+            == result
+        )

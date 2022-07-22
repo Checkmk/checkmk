@@ -12,7 +12,7 @@ import re
 import subprocess
 import uuid
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, NamedTuple, Optional, Sequence, Tuple
 
 import requests
 import urllib3
@@ -23,7 +23,6 @@ import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import PhaseOneResult, UserId
-from cmk.utils.version import base_version_parts, is_daily_build_of_master, parse_check_mk_version
 
 from cmk.automations.results import result_type_registry, SerializedResult
 
@@ -53,11 +52,9 @@ class MKAutomationException(MKGeneralException):
     pass
 
 
-def remote_automation_call_came_from_pre21() -> bool:
+def cmk_version_of_remote_automation_source() -> cmk_version.Version:
     # The header is sent by Checkmk as of 2.0.0p1. In case it is missing, assume we are too old.
-    if not (remote_version := request.headers.get("x-checkmk-version")):
-        return True
-    return parse_check_mk_version(remote_version) < parse_check_mk_version("2.1.0i1")
+    return cmk_version.Version(request.headers.get("x-checkmk-version", "1.6.0p1"))
 
 
 def check_mk_local_automation_serialized(
@@ -456,8 +453,7 @@ class CheckmkAutomationRequest(NamedTuple):
 
 class CheckmkAutomationGetStatusResponse(NamedTuple):
     job_status: Dict[str, Any]
-    # object occurs in case of a remote automation call from a pre-2.1 central site
-    result: Union[object, str]
+    result: str
 
 
 # There are already at least two custom background jobs that are wrapping remote automation
@@ -545,9 +541,7 @@ class AutomationCheckmkAutomationGetStatus(AutomationCommand):
         return ast.literal_eval(request.get_ascii_input_mandatory("request"))
 
     @staticmethod
-    def _load_result(path: Path) -> Union[str, object]:
-        if remote_automation_call_came_from_pre21():
-            return store.load_object_from_file(path, default=None)
+    def _load_result(path: Path) -> str:
         return store.load_text_from_file(path)
 
     def execute(self, api_request: str) -> Tuple:
@@ -596,23 +590,19 @@ class CheckmkAutomationBackgroundJob(WatoBackgroundJob):
         automation_cmd: str,
         cmdline_cmd: Iterable[str],
     ) -> None:
-        if remote_automation_call_came_from_pre21():
-            try:
-                store.save_object_to_file(
-                    path,
-                    result_type_registry[automation_cmd].deserialize(serialized_result).to_pre_21(),
-                )
-            except SyntaxError as e:
-                raise local_automation_failure(
-                    command=automation_cmd,
-                    cmdline=cmdline_cmd,
-                    out=serialized_result,
-                    exc=e,
-                )
-        else:
+        try:
             store.save_text_to_file(
                 path,
-                serialized_result,
+                result_type_registry[automation_cmd]
+                .deserialize(serialized_result)
+                .serialize(cmk_version_of_remote_automation_source()),
+            )
+        except SyntaxError as e:
+            raise local_automation_failure(
+                command=automation_cmd,
+                cmdline=cmdline_cmd,
+                out=serialized_result,
+                exc=e,
             )
 
     def execute_automation(
@@ -727,11 +717,13 @@ def compatible_with_central_site(
         return False
 
     # Daily builds of the master branch (format: YYYY.MM.DD) are always treated to be compatbile
-    if is_daily_build_of_master(central_version) or is_daily_build_of_master(remote_version):
+    if cmk_version.is_daily_build_of_master(
+        central_version
+    ) or cmk_version.is_daily_build_of_master(remote_version):
         return True
 
-    central_parts = base_version_parts(central_version)
-    remote_parts = base_version_parts(remote_version)
+    central_parts = cmk_version.base_version_parts(central_version)
+    remote_parts = cmk_version.base_version_parts(remote_version)
 
     # Same major version is allowed
     if central_parts == remote_parts:

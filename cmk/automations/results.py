@@ -6,8 +6,9 @@
 from abc import ABC, abstractmethod
 from ast import literal_eval
 from dataclasses import asdict, astuple, dataclass
-from typing import Any, List, Literal, Mapping, Optional, Sequence, Tuple, Type, TypeVar
+from typing import Any, List, Mapping, Optional, Sequence, Type, TypeVar
 
+from cmk.utils import version as cmk_version
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.type_defs import (
     AgentRawData,
@@ -31,7 +32,6 @@ from cmk.utils.type_defs import (
     ServiceName,
     ServiceState,
 )
-from cmk.utils.type_defs import UpdateDNSCacheResult as UpdateDNSCacheResultRaw
 
 
 class ResultTypeRegistry(Registry[Type["ABCAutomationResult"]]):
@@ -51,13 +51,11 @@ _DeserializedType = TypeVar("_DeserializedType", bound="ABCAutomationResult")
 
 @dataclass  # type: ignore[misc]  # https://github.com/python/mypy/issues/5374
 class ABCAutomationResult(ABC):
-    def serialize(self) -> SerializedResult:
-        return SerializedResult(repr(astuple(self)))
-
-    def to_pre_21(self) -> object:
-        # Needed to support remote automation calls from an old central site to a new remote site.
-        # In such cases, we must send the result in a format understood by the old central site.
-        return astuple(self)[0]
+    def serialize(
+        self,
+        for_cmk_version: cmk_version.Version,  # used to stay compatible with older central sites
+    ) -> SerializedResult:
+        return self._default_serialize()
 
     @classmethod
     def deserialize(
@@ -70,6 +68,9 @@ class ABCAutomationResult(ABC):
     @abstractmethod
     def automation_call() -> str:
         ...
+
+    def _default_serialize(self) -> SerializedResult:
+        return SerializedResult(repr(astuple(self)))
 
 
 @dataclass
@@ -85,11 +86,8 @@ class DiscoveryResult(ABCAutomationResult):
     ) -> Mapping[HostName, SingleHostDiscoveryResult]:
         return {k: SingleHostDiscoveryResult(**v) for k, v in serialized.items()}
 
-    def serialize(self) -> SerializedResult:
+    def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
         return SerializedResult(repr(self._to_dict()))
-
-    def to_pre_21(self) -> Mapping[Literal["results"], Mapping[HostName, Mapping[str, Any]]]:
-        return {"results": self._to_dict()}
 
     @classmethod
     def deserialize(cls, serialized_result: SerializedResult) -> "DiscoveryResult":
@@ -128,10 +126,7 @@ class TryDiscoveryResult(ABCAutomationResult):
     vanished_labels: DiscoveredHostLabelsDict
     changed_labels: DiscoveredHostLabelsDict
 
-    def to_pre_21(self) -> Mapping[str, Any]:
-        return asdict(self)
-
-    def serialize(self) -> SerializedResult:
+    def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
         return SerializedResult(repr(astuple(self)))
 
     @classmethod
@@ -149,9 +144,6 @@ result_type_registry.register(TryDiscoveryResult)
 
 @dataclass
 class SetAutochecksResult(ABCAutomationResult):
-    def to_pre_21(self) -> None:
-        return None
-
     @staticmethod
     def automation_call() -> str:
         return "set-autochecks"
@@ -162,9 +154,6 @@ result_type_registry.register(SetAutochecksResult)
 
 @dataclass
 class UpdateHostLabelsResult(ABCAutomationResult):
-    def to_pre_21(self) -> None:
-        return None
-
     @staticmethod
     def automation_call() -> str:
         return "update-host-labels"
@@ -214,9 +203,6 @@ class AnalyseHostResult(ABCAutomationResult):
     labels: Labels
     label_sources: LabelSources
 
-    def to_pre_21(self) -> Mapping[str, Any]:
-        return asdict(self)
-
     @staticmethod
     def automation_call() -> str:
         return "analyse-host"
@@ -227,9 +213,6 @@ result_type_registry.register(AnalyseHostResult)
 
 @dataclass
 class DeleteHostsResult(ABCAutomationResult):
-    def to_pre_21(self) -> None:
-        return None
-
     @staticmethod
     def automation_call() -> str:
         return "delete-hosts"
@@ -240,9 +223,6 @@ result_type_registry.register(DeleteHostsResult)
 
 @dataclass
 class DeleteHostsKnownRemoteResult(ABCAutomationResult):
-    def to_pre_21(self) -> None:
-        return None
-
     @staticmethod
     def automation_call() -> str:
         return "delete-hosts-known-remote"
@@ -326,12 +306,6 @@ class DiagHostResult(ABCAutomationResult):
     return_code: int
     response: str
 
-    def to_pre_21(self) -> Tuple[int, str]:
-        return (
-            self.return_code,
-            self.response,
-        )
-
     @staticmethod
     def automation_call() -> str:
         return "diag-host"
@@ -345,16 +319,6 @@ class ActiveCheckResult(ABCAutomationResult):
     state: Optional[ServiceState]
     output: ServiceDetails
 
-    def to_pre_21(self) -> Optional[Tuple[ServiceState, ServiceDetails]]:
-        return (
-            None
-            if self.state is None
-            else (
-                self.state,
-                self.output,
-            )
-        )
-
     @staticmethod
     def automation_call() -> str:
         return "active-check"
@@ -367,12 +331,6 @@ result_type_registry.register(ActiveCheckResult)
 class UpdateDNSCacheResult(ABCAutomationResult):
     n_updated: int
     failed_hosts: Sequence[HostName]
-
-    def to_pre_21(self) -> UpdateDNSCacheResultRaw:
-        return (
-            self.n_updated,
-            list(self.failed_hosts),
-        )
 
     @staticmethod
     def automation_call() -> str:
@@ -388,13 +346,6 @@ class GetAgentOutputResult(ABCAutomationResult):
     service_details: ServiceDetails
     raw_agent_data: AgentRawData
 
-    def to_pre_21(self) -> Tuple[bool, ServiceDetails, AgentRawData]:
-        return (
-            self.success,
-            self.service_details,
-            self.raw_agent_data,
-        )
-
     @staticmethod
     def automation_call() -> str:
         return "get-agent-output"
@@ -405,9 +356,6 @@ result_type_registry.register(GetAgentOutputResult)
 
 @dataclass
 class NotificationReplayResult(ABCAutomationResult):
-    def to_pre_21(self) -> None:
-        return None
-
     @staticmethod
     def automation_call() -> str:
         return "notification-replay"
@@ -445,9 +393,6 @@ class CreateDiagnosticsDumpResult(ABCAutomationResult):
     output: str
     tarfile_path: str
     tarfile_created: bool
-
-    def to_pre_21(self) -> Mapping[str, Any]:
-        return asdict(self)
 
     @staticmethod
     def automation_call() -> str:

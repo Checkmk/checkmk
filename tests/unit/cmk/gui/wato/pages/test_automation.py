@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
-from typing import Any, Mapping, Optional, Sequence, Tuple
+from typing import Optional, Sequence, Tuple
 
 import pytest
 
 import cmk.utils.version as cmk_version
 
-from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry
+from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, SerializedResult
 
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.http import request, response
@@ -20,14 +20,15 @@ from cmk.gui.watolib.utils import mk_repr
 
 @dataclass
 class ResultTest(ABCAutomationResult):
-    field_1: int
+    field_1: tuple[int, int]
     field_2: Optional[str]
 
-    def to_pre_21(self) -> Mapping[str, Any]:
-        return {
-            "field_1": self.field_1,
-            "field_2": self.field_2,
-        }
+    def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
+        return (
+            self._default_serialize()
+            if for_cmk_version >= cmk_version.Version("2.2.0i1")
+            else SerializedResult(repr((self.field_1,)))
+        )
 
     @staticmethod
     def automation_call() -> str:
@@ -60,9 +61,8 @@ class TestModeAutomation:
             self._check_mk_local_automation_serialized,
         )
 
-    @pytest.fixture(name="patch_version")
-    def patch_version_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setattr(cmk_version, "__version__", "2.1.0i1")
+    @pytest.fixture(name="patch_edition")
+    def patch_edition_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(cmk_version, "edition", lambda: cmk_version.Edition.CEE)
 
     @pytest.fixture(name="setup_request")
@@ -80,13 +80,13 @@ class TestModeAutomation:
         "result_type_registry",
         "check_mk_local_automation_serialized",
         "setup_request",
-        "patch_version",
+        "patch_edition",
     )
-    def test_execute_cmk_automation_post_21(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_execute_cmk_automation_current_version(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
             request,
             "headers",
-            {"x-checkmk-version": "2.1.0", "x-checkmk-edition": "cee"},
+            {"x-checkmk-version": cmk_version.__version__, "x-checkmk-edition": "cee"},
         )
         automation.ModeAutomation()._execute_cmk_automation()
         assert response.get_data() == b"((1, 2), 'abc')"
@@ -95,32 +95,31 @@ class TestModeAutomation:
         "result_type_registry",
         "check_mk_local_automation_serialized",
         "setup_request",
-        "patch_version",
+        "patch_edition",
     )
-    def test_execute_cmk_automation_pre_21(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_execute_cmk_automation_previous_version(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
             request,
             "headers",
-            {"x-checkmk-version": "2.0.0p10", "x-checkmk-edition": "cee"},
+            {"x-checkmk-version": "2.1.0p10", "x-checkmk-edition": "cee"},
         )
         automation.ModeAutomation()._execute_cmk_automation()
-        assert response.get_data() == b"{'field_1': (1, 2), 'field_2': 'abc'}"
+        assert response.get_data() == b"((1, 2),)"
 
     @pytest.mark.parametrize(
         "incomp_version",
         [
-            "1.6.0p23",  # prepre major
-            "2.2.0",  # newer major
-            "3.0.0",  # newer major
+            "1.6.0p23",  # very old major
+            "10.0.0",  # newer major
         ],
     )
     @pytest.mark.usefixtures(
         "result_type_registry",
         "check_mk_local_automation_serialized",
         "setup_request",
-        "patch_version",
+        "patch_edition",
     )
-    def test_execute_cmk_automation_pre_pre_major(
+    def test_execute_cmk_automation_incompatible(
         self, incomp_version: str, monkeypatch: pytest.MonkeyPatch
     ):
         monkeypatch.setattr(

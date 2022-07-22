@@ -9,7 +9,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry
+from cmk.utils import version as cmk_version
+
+from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, SerializedResult
 
 from cmk.gui.watolib import automations
 
@@ -21,10 +23,11 @@ class ResultTest(ABCAutomationResult):
     field_1: int
     field_2: Optional[str]
 
-    def to_pre_21(self) -> Tuple[int, Optional[str]]:
+    def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
         return (
-            self.field_1,
-            self.field_2,
+            self._default_serialize()
+            if for_cmk_version >= cmk_version.Version("2.2.0i1")
+            else SerializedResult("i was very different previously")
         )
 
     @staticmethod
@@ -37,14 +40,6 @@ class TestCheckmkAutomationBackgroundJob:
     def _mock_save(_path: Any, data: object, **kwargs: Any) -> None:
         global RESULT
         RESULT = data
-
-    @pytest.fixture(name="save_object_to_file")
-    def save_object_to_file_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setattr(
-            automations.store,
-            "save_object_to_file",
-            self._mock_save,
-        )
 
     @pytest.fixture(name="save_text_to_file")
     def save_text_to_file_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -86,11 +81,11 @@ class TestCheckmkAutomationBackgroundJob:
         "check_mk_local_automation_serialized",
         "save_text_to_file",
     )
-    def test_execute_automation_post_21(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_execute_automation_current_version(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
             automations.request,
             "headers",
-            {"x-checkmk-version": "2.1.0i1"},
+            {"x-checkmk-version": "2.2.0i1"},
         )
         automations.CheckmkAutomationBackgroundJob(
             "job_id",
@@ -111,16 +106,16 @@ class TestCheckmkAutomationBackgroundJob:
     @pytest.mark.usefixtures(
         "result_type_registry",
         "check_mk_local_automation_serialized",
-        "save_object_to_file",
+        "save_text_to_file",
     )
-    def test_execute_automation_pre_21(
+    def test_execute_automation_previous_version(
         self, set_version: bool, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         if set_version:
             monkeypatch.setattr(
                 automations.request,
                 "headers",
-                {"x-checkmk-version": "2.0.0p10"},
+                {"x-checkmk-version": "2.1.0p10"},
             )
 
         automations.CheckmkAutomationBackgroundJob(
@@ -136,4 +131,4 @@ class TestCheckmkAutomationBackgroundJob:
             MagicMock(),
             api_request,
         )
-        assert RESULT == (2, None)
+        assert RESULT == "i was very different previously"

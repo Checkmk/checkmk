@@ -3,13 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from typing import Any, Iterable, Mapping
+
+from cmk.base.plugins.agent_based.agent_based_api.v1 import regex, render
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+DiscoveryResult = Iterable[tuple[str, Mapping[str, Any]]]
+CheckResult = Iterable[tuple[int, str]]
+Section = Mapping[str, Mapping[str, Any]]
 
 # Configuration for using alias instead of UUID
 inventory_multipath_rules = []
 
 
-def parse_multipath(info):  # pylint: disable=too-many-branches
+def parse_multipath(string_table: StringTable) -> Section:  # pylint: disable=too-many-branches
     # New reported header lines need to be placed here
     # the matches need to be put in a list of tupples
     # while the structure of the tupple is:
@@ -29,12 +36,12 @@ def parse_multipath(info):  # pylint: disable=too-many-branches
 
     reg_prio = regex(r"[\[ ]prio=")
     reg_lun = regex("[0-9]+:[0-9]+:[0-9]+:[0-9]+")
-    uuid = None
+    uuid: str | None = None
     alias = None
-    groups = {}
-    group = {}
-    numpaths = None
-    for line in info:
+    groups: dict[str, dict[str, Any]] = {}
+    group: dict[str, Any] = {}
+    numpaths = 0
+    for line in string_table:
         # Ignore error messages due to invalid multipath.conf
         if line[0] == "multipath.conf":
             continue
@@ -85,9 +92,9 @@ def parse_multipath(info):  # pylint: disable=too-many-branches
 
             # initialize information about next device
             numpaths = 0
-            lun_info = []
-            paths_info = []
-            broken_paths = []
+            lun_info: list = []
+            paths_info: list = []
+            broken_paths: list = []
             group = {}
             group["paths"] = paths_info
             group["broken_paths"] = broken_paths
@@ -96,7 +103,8 @@ def parse_multipath(info):  # pylint: disable=too-many-branches
             group["state"] = None
             group["numpaths"] = 0
             group["device"] = dm_device
-            groups[uuid] = group
+            if uuid is not None:
+                groups[uuid] = group
 
             # If the device has an alias, then extract it
             if alias:
@@ -104,7 +112,7 @@ def parse_multipath(info):  # pylint: disable=too-many-branches
 
             # Proceed with next line after init
             continue
-        elif uuid is not None:
+        if uuid is not None:
             # Handle special syntax | |- 2:0:0:1 sda  ...
             if line[0] == "|":
                 line = line[1:]
@@ -114,7 +122,7 @@ def parse_multipath(info):  # pylint: disable=too-many-branches
                 luninfo = "%s(%s)" % (line[1], line[2])
                 lun_info.append(luninfo)
                 state = line[4]
-                if not "active" in state:
+                if "active" not in state:
                     broken_paths.append(luninfo)
                 numpaths += 1
                 group["numpaths"] = numpaths
@@ -124,32 +132,32 @@ def parse_multipath(info):  # pylint: disable=too-many-branches
 
 # Get list of UUIDs of all multipath devices
 # Length of UUID is 360a9800043346937686f456f59386741
-def inventory_multipath(parsed):
+def discover_multipath(section: Section) -> DiscoveryResult:
     settings = host_extra_conf_merged(host_name(), inventory_multipath_rules)
 
-    inventory = []
-    for uuid, info in parsed.items():
+    for uuid, info in section.items():
         # take current number of paths as target value
         if "alias" in info and settings.get("use_alias"):
             item = info["alias"]
         else:
             item = uuid
-        inventory.append((item, {"levels": info["numpaths"]}))
-    return inventory
+        yield item, {"levels": info["numpaths"]}
 
 
 # item is UUID (e.g. '360a9800043346937686f456f59386741') or alias (e.g. 'mpath0')
 # def check_multipath(item, target_numpaths, parsed):
-def check_multipath(item, params, parsed):  # pylint: disable=too-many-branches
+def check_multipath(  # pylint: disable=too-many-branches
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
     # Keys in parsed are the UUIDs. First assume that we are
     # looking for a UUID. Then fall back to aliases
-    if item in parsed:
-        mmap = parsed[item]
-    elif item.strip() in parsed:
+    if item in section:
+        mmap = section[item]
+    elif item.strip() in section:
         # support items discovered before 1.2.7
-        mmap = parsed[item.strip()]
+        mmap = section[item.strip()]
     else:
-        for mmap in parsed.values():
+        for mmap in section.values():
             if mmap.get("alias") == item:
                 break
         else:
@@ -200,7 +208,7 @@ def check_multipath(item, params, parsed):  # pylint: disable=too-many-branches
 
 check_info["multipath"] = {
     "check_function": check_multipath,
-    "inventory_function": inventory_multipath,
+    "inventory_function": discover_multipath,
     "parse_function": parse_multipath,
     "service_description": "Multipath %s",
     "group": "multipath",

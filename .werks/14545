@@ -1,0 +1,19 @@
+Title: Make ssh command work as site user on SUSE Linux Enterprise Server 15 SP2
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1658480692
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p9
+
+On SUSE Linux Enterprise Server 15 SP2 systems, the <tt>ssh</tt> command crashed with
+C+:
+ssh: relocation error: ssh: symbol EVP_KDF_CTX_free, version OPENSSL_1_1_1d not defined in file libcrypto.so.1.1 with link time reference
+C-:
+when executed as a site user.
+
+Note that this affected both the direct execution of <tt>ssh</tt> on the command line as well as
+other programs using this command, such as the special agent for IBM SVC / V7000 storage systems.

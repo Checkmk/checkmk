@@ -7,27 +7,13 @@ from typing import Final
 
 import pytest
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-
-
-@pytest.fixture(name="plugin", scope="module")
-def _get_plugin(fix_register):
-    return fix_register.check_plugins[CheckPluginName("multipath")]
-
-
-@pytest.fixture(name="discover_multipath", scope="module")
-def _get_disvovery_function(plugin):
-    return lambda section: plugin.discovery_function(section=section)
-
-
-@pytest.fixture(name="check_multipath", scope="module")
-def _get_check_function(plugin):
-    return lambda item, params, section: plugin.check_function(
-        item=item, params=params, section=section
-    )
-
+from cmk.base.plugins.agent_based.multipath import (
+    check_multipath,
+    discover_multipath,
+    parse_multipath,
+    Section,
+)
 
 STRING_TABLE: Final = [
     ["ORA_ZAPPL2T_DATA_3", "(3600601604d40310047cf93ce66f7e111)", "dm-67", "DGC,RAID", "5"],
@@ -46,24 +32,18 @@ STRING_TABLE: Final = [
 
 
 @pytest.fixture(name="section", scope="module")
-def _get_section(fix_register):
-    plugin = fix_register.agent_sections[SectionName("multipath")]
-    return plugin.parse_function(STRING_TABLE)
+def _get_section() -> Section:
+    return parse_multipath(STRING_TABLE)
 
 
-def test_discovery(monkeypatch, discover_multipath, section) -> None:
-    import cmk.base.plugin_contexts
-    from cmk.base.config import ConfigCache
-
-    monkeypatch.setattr(cmk.base.plugin_contexts, "_hostname", lambda: "foo")
-    monkeypatch.setattr(ConfigCache, "host_extra_conf_merged", lambda s, h, r: {})
-    assert sorted(discover_multipath(section)) == [
+def test_discovery(section: Section) -> None:
+    assert sorted(discover_multipath({"use_alias": False}, section)) == [
         Service(item="3600601604d40310047cf93ce66f7e111", parameters={"levels": 4}),
         Service(item="3600601604d403100912ab0b365f7e111", parameters={"levels": 1}),
     ]
 
 
-def test_check_percent_levels(check_multipath, section) -> None:
+def test_check_percent_levels(section: Section) -> None:
     assert list(
         check_multipath(
             "3600601604d40310047cf93ce66f7e111",
@@ -83,7 +63,7 @@ def test_check_percent_levels(check_multipath, section) -> None:
     ]
 
 
-def test_check_count_levels(check_multipath, section) -> None:
+def test_check_count_levels(section: Section) -> None:
     assert list(check_multipath("3600601604d40310047cf93ce66f7e111", {"levels": 3}, section,)) == [
         Result(
             state=State.OK,

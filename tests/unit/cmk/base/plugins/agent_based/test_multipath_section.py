@@ -8,7 +8,7 @@ import typing as t
 
 import pytest
 
-from tests.testlib import Check
+from cmk.base.plugins.agent_based import multipath
 
 # Mark all tests in this file as check related tests
 pytestmark = pytest.mark.checks
@@ -16,7 +16,7 @@ pytestmark = pytest.mark.checks
 
 class TupleTestData(t.NamedTuple):
     input: t.List[str]
-    output: t.Dict[str, t.Dict[str, t.Union[None, str, int, t.List[str]]]]
+    output: multipath.Section
 
 
 TEST_DATA = [
@@ -378,9 +378,10 @@ TEST_DATA = [
 
 @pytest.mark.parametrize("test_data", TEST_DATA, ids=[tt.input[0] for tt in TEST_DATA])
 def test_parse_multipath(test_data: TupleTestData) -> None:
-    check = Check("multipath")
-    result = check.run_parse([re.split(" +", line.strip()) for line in test_data.input])
-    assert test_data.output == result
+    assert (
+        multipath.parse_multipath([re.split(" +", line.strip()) for line in test_data.input])
+        == test_data.output
+    )
 
 
 @pytest.mark.parametrize(
@@ -437,6 +438,5 @@ def test_parse_multipath(test_data: TupleTestData) -> None:
         ),
     ],
 )
-def test_multipath_parse_groups(group, result) -> None:  # type:ignore[no-untyped-def]
-    check = Check("multipath")
-    assert result in check.run_parse([group])
+def test_multipath_parse_groups(group: t.List[str], result: str) -> None:
+    assert result in multipath.parse_multipath([group])

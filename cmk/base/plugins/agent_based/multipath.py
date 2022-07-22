@@ -4,19 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from contextlib import suppress
-from typing import Any, Iterable, Mapping
+from typing import Any, Mapping
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import regex, render
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-
-DiscoveryResult = Iterable[tuple[str, Mapping[str, Any]]]
-CheckResult = Iterable[tuple[int, str]]
+from .agent_based_api.v1 import check_levels, regex, register, render, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 Group = Mapping[str, Any]
 Section = Mapping[str, Group]
-
-# Configuration for using alias instead of UUID
-inventory_multipath_rules = []
 
 
 def parse_multipath(string_table: StringTable) -> Section:  # pylint: disable=too-many-branches
@@ -133,18 +127,23 @@ def parse_multipath(string_table: StringTable) -> Section:  # pylint: disable=to
     return groups
 
 
+register.agent_section(
+    name="multipath",
+    parse_function=parse_multipath,
+)
+
+
 # Get list of UUIDs of all multipath devices
 # Length of UUID is 360a9800043346937686f456f59386741
-def discover_multipath(section: Section) -> DiscoveryResult:
-    settings = host_extra_conf_merged(host_name(), inventory_multipath_rules)
+def discover_multipath(params: Mapping[str, Any], section: Section) -> DiscoveryResult:
 
     for uuid, info in section.items():
         # take current number of paths as target value
-        if "alias" in info and settings.get("use_alias"):
+        if "alias" in info and params["use_alias"]:
             item = info["alias"]
         else:
             item = uuid
-        yield item, {"levels": info["numpaths"]}
+        yield Service(item=item, parameters={"levels": info["numpaths"]})
 
 
 # item is UUID (e.g. '360a9800043346937686f456f59386741') or alias (e.g. 'mpath0')
@@ -162,8 +161,6 @@ def _get_item_data(item: str, section: Section) -> Group | None:
     return None
 
 
-# item is UUID (e.g. '360a9800043346937686f456f59386741') or alias (e.g. 'mpath0')
-# def check_multipath(item, target_numpaths, parsed):
 def check_multipath(  # pylint: disable=too-many-branches
     item: str, params: Mapping[str, Any], section: Section
 ) -> CheckResult:
@@ -190,32 +187,34 @@ def check_multipath(  # pylint: disable=too-many-branches
 
     levels = params.get("levels")
 
-    yield check_levels(
+    yield from check_levels(
         num_active / num_paths * 100.0,
-        None,
-        params=(None, None, levels[0], levels[1]) if isinstance(levels, tuple) else None,
-        human_readable_func=render.percent,
-        infoname=f"{aliasinfo}Paths active",
+        levels_lower=(levels[0], levels[1]) if isinstance(levels, tuple) else None,
+        render_func=render.percent,
+        label=f"{aliasinfo}Paths active",
     )
 
-    state = 0
+    state = State.OK
     infotext = f"{num_active} of {num_paths}"
     if isinstance(levels, int):
         infotext += f" (expected: {levels})"
         if num_active < levels:
-            state = 2
+            state = State.CRIT
         elif num_active > levels:
-            state = 1
-    yield state, infotext
+            state = State.WARN
+    yield Result(state=state, summary=infotext)
 
     if num_broken > 0:
-        yield 0, "Broken paths: %s" % ",".join(broken_paths)
+        yield Result(state=State.OK, summary="Broken paths: %s" % ",".join(broken_paths))
 
 
-check_info["multipath"] = {
-    "check_function": check_multipath,
-    "inventory_function": discover_multipath,
-    "parse_function": parse_multipath,
-    "service_description": "Multipath %s",
-    "group": "multipath",
-}
+register.check_plugin(
+    name="multipath",
+    service_name="Multipath %s",
+    discovery_function=discover_multipath,
+    discovery_ruleset_name="inventory_multipath_rules",
+    discovery_default_parameters={"use_alias": False},
+    check_function=check_multipath,
+    check_ruleset_name="multipath",
+    check_default_parameters={},
+)

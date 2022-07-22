@@ -195,7 +195,7 @@ class CMKWebSession:
                 "_login": "Login",
             },
         )
-        auth_cookie = r.cookies.get("auth_%s" % self.site.id)
+        auth_cookie = self.session.cookies.get("auth_%s" % self.site.id)
         assert auth_cookie
         assert auth_cookie.startswith("%s:" % username)
 

@@ -1998,7 +1998,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "orion_system.dc",
         "packeteer_fan_status",
         "packeteer_ps_status",
-        "palo_alto",
         "palo_alto_sessions",
         "pandacom_10gm_temp",
         "pandacom_fan",

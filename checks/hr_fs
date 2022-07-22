@@ -52,7 +52,7 @@ def parse_hr_fs(string_table: StringTable) -> Section:
         }:
             continue
 
-        section.append((hrdescr, hrunits, hrsize, hrused))
+        section.append((fix_hr_fs_mountpoint(hrdescr), hrunits, hrsize, hrused))
 
     return section
 
@@ -96,7 +96,6 @@ def fix_hr_fs_mountpoint(mp: str) -> str:
 def discover_hr_fs(section: Section) -> DiscoveryResult:
     mplist = []
     for hrdescr, _hrunits, hrsize, _hrused in section:
-        hrdescr = fix_hr_fs_mountpoint(hrdescr)
         if hrdescr not in EXCLUDED_MOUNTPOINTS and saveint(hrsize) != 0:
             mplist.append(hrdescr)
     return df_discovery(host_extra_conf(host_name(), filesystem_groups), mplist)
@@ -109,7 +108,6 @@ def check_hr_fs(item: str, params: Mapping[str, Any], section: Section) -> Check
         return 3, "check had an incompatible change, please re-discover services on this host", []
 
     for hrdescr, hrunits_str, hrsize_str, hrused_str in section:
-        hrdescr = fix_hr_fs_mountpoint(hrdescr)
         if "patterns" in params or item == hrdescr:
             unit_size = saveint(hrunits_str)
             size_mb = _to_mb(hrsize_str, unit_size)

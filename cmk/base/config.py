@@ -324,7 +324,6 @@ def load(
     # Such validation only makes sense when all checks have been loaded
     if all_checks_loaded():
         _validate_configuraton_variables(vars_before_config)
-        _verify_no_deprecated_check_rulesets()
 
     _verify_no_deprecated_variables_used()
 
@@ -677,20 +676,6 @@ def _verify_no_deprecated_variables_used() -> None:
             'Please use "static_checks" instead (which is configurable via "Enforced services" in Setup).\n'
         )
         sys.exit(1)
-
-
-def _verify_no_deprecated_check_rulesets() -> None:
-    # this used to do something until the migration of logwatch.
-    # TODO: decide wether we might still need this.
-    deprecated_rulesets: List[Tuple[str, str]] = []
-    for check_plugin_name, varname in deprecated_rulesets:
-        check_context = get_check_context(check_plugin_name)
-        if check_context.get(varname):
-            console.warning(
-                "Found rules for deprecated ruleset %r. These rules are not applied "
-                "anymore. In case you still need them, you need to migrate them by hand. "
-                "Otherwise you can remove them from your configuration." % varname
-            )
 
 
 def all_nonfunction_vars() -> Set[str]:

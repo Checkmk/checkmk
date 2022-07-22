@@ -46,15 +46,11 @@ from cmk.gui.wsgi.middleware import OverrideRequestMethod
 from cmk.gui.wsgi.wrappers import ParameterDict
 
 if TYPE_CHECKING:
+    from _typeshed.wsgi import StartResponse, WSGIApplication, WSGIEnvironment
+
     from cmk.gui.plugins.openapi.restful_objects import Endpoint
     from cmk.gui.plugins.openapi.restful_objects.type_defs import EndpointTarget
-    from cmk.gui.wsgi.type_defs import (
-        RFC7662,
-        StartResponse,
-        WSGIApplication,
-        WSGIEnvironment,
-        WSGIResponse,
-    )
+    from cmk.gui.wsgi.type_defs import RFC7662, WSGIResponse
 
 ARGS_KEY = "CHECK_MK_REST_API_ARGS"
 
@@ -447,7 +443,7 @@ class CheckmkRESTAPI:
                 )
             ]
         )
-        self.wsgi_app = OverrideRequestMethod(self._wsgi_app)
+        self.wsgi_app: WSGIApplication = OverrideRequestMethod(self._wsgi_app).wsgi_app
 
     def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         return self.wsgi_app(environ, start_response)

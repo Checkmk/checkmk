@@ -307,6 +307,7 @@ def test_dependencies_are_declared() -> None:
                 "pymongo",  # Optional except ImportError...
                 "pytest",  # In __main__ guarded section in cmk/special_agents/utils/misc.py
                 "tinkerforge",  # agents/plugins/mk_tinkerforge.py has its own install routine
+                "_typesched",  # used by mypy within typing.TYPE_CHECKING
             ]
         )
     )

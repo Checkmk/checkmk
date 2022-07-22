@@ -88,7 +88,7 @@ from cmk.gui.watolib.activate_changes import (
 from cmk.gui.watolib.git import do_git_commit
 
 if typing.TYPE_CHECKING:
-    from cmk.gui.wsgi.type_defs import WSGIApplication
+    from _typeshed.wsgi import WSGIApplication
 
 _SEEN_ENDPOINTS: Set[FunctionType] = set()
 

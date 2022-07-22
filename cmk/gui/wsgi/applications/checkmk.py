@@ -53,7 +53,9 @@ from cmk.gui.wsgi.applications.utils import (
 )
 
 if TYPE_CHECKING:
-    from cmk.gui.wsgi.type_defs import StartResponse, WSGIEnvironment, WSGIResponse
+    from _typeshed.wsgi import StartResponse, WSGIEnvironment
+
+    from cmk.gui.wsgi.type_defs import WSGIResponse
 
 # TODO
 #  * derive all exceptions from werkzeug's http exceptions.

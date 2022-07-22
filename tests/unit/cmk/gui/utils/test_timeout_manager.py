@@ -17,7 +17,9 @@ from cmk.gui.utils.timeout_manager import timeout_manager, TimeoutManager
 from cmk.gui.wsgi.applications.checkmk import CheckmkApp
 
 if t.TYPE_CHECKING:
-    from cmk.gui.wsgi.type_defs import StartResponse, WSGIEnvironment, WSGIResponse
+    from _typeshed.wsgi import StartResponse, WSGIEnvironment
+
+    from cmk.gui.wsgi.type_defs import WSGIResponse
 
 
 class CheckmkTestApp(CheckmkApp):

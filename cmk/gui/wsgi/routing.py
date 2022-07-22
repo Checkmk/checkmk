@@ -14,7 +14,9 @@ from cmk.gui.wsgi.applications import CheckmkApp, CheckmkRESTAPI
 from cmk.gui.wsgi.applications.helper_apps import discover_receiver, dump_environ_app, test_formdata
 
 if TYPE_CHECKING:
-    from cmk.gui.wsgi.type_defs import StartResponse, WSGIApplication, WSGIEnvironment, WSGIResponse
+    from _typeshed.wsgi import StartResponse, WSGIApplication, WSGIEnvironment
+
+    from cmk.gui.wsgi.type_defs import WSGIResponse
 
 
 WSGI_ENV_ARGS_NAME = "x-checkmk.args"
@@ -63,7 +65,7 @@ def make_router(debug: bool = False) -> WSGIApplication:
     url_map = create_url_map(debug=debug)
 
     # Fix wsgi.url_scheme with werkzeug.middleware.proxy_fix.ProxyFix
-    # would be always http instead
+    # would always be http instead
     cmk_app = ProxyFix(app=CheckmkApp(debug=debug).__call__)  # type: ignore[arg-type]
     api_app = ProxyFix(app=CheckmkRESTAPI(debug=debug).wsgi_app)
 

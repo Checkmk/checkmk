@@ -2,29 +2,36 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
 
 import functools
+import typing
 import wsgiref.util
 
 from cmk.gui import hooks
 
+if typing.TYPE_CHECKING:
+    from _typeshed.wsgi import StartResponse, WSGIApplication, WSGIEnvironment
+
+    from cmk.gui.wsgi.type_defs import WSGIResponse
+
 
 class CallHooks:
-    def __init__(self, app) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, app: WSGIApplication) -> None:
         self.app = app
 
-    def __call__(self, environ, start_response):
+    def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         hooks.call("request-start")
         response = self.app(environ, start_response)
         hooks.call("request-end")
         return response
 
 
-def apache_env(app):
+def apache_env(app: WSGIApplication) -> WSGIApplication:
     """Add missing WSGI environment keys when a request comes from Apache."""
 
     @functools.wraps(app)
-    def _add_apache_env(environ, start_response):
+    def _add_apache_env(environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         if not environ.get("REQUEST_URI"):
             environ["REQUEST_URI"] = wsgiref.util.request_uri(environ)
 
@@ -46,13 +53,13 @@ class OverrideRequestMethod:
     as this should be handled by other layers.
     """
 
-    def __init__(self, app) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, app: WSGIApplication) -> None:
         self.app = app
 
-    def __call__(self, environ, start_response):
+    def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         return self.wsgi_app(environ, start_response)
 
-    def wsgi_app(self, environ, start_response):
+    def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         override = environ.get("HTTP_X_HTTP_METHOD_OVERRIDE")
         if override:
             if environ["REQUEST_METHOD"].lower() == "post":

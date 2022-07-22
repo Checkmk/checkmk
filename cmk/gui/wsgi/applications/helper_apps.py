@@ -11,7 +11,9 @@ from typing import List, TYPE_CHECKING
 from cmk.utils.site import get_omd_config
 
 if TYPE_CHECKING:
-    from cmk.gui.wsgi.type_defs import StartResponse, WSGIApplication, WSGIEnvironment, WSGIResponse
+    from _typeshed.wsgi import StartResponse, WSGIApplication, WSGIEnvironment
+
+    from cmk.gui.wsgi.type_defs import WSGIResponse
 
 
 def discover_receiver(environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:

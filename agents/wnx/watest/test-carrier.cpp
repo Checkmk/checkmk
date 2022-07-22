@@ -34,18 +34,28 @@ class CarrierTestFixture : public ::testing::Test {
 protected:
     struct TestStorage {
         std::vector<uint8_t> buffer_;
-        bool delivered_;
-        uint64_t answer_id_;
+        bool delivered_{false};
+        uint64_t answer_id_{0U};
         std::string peer_name_;
+        size_t correct_yamls_{0};
+        size_t correct_logs_{0};
+        size_t correct_commands_{0};
+        void reset() {
+            buffer_.resize(0);
+            delivered_ = false;
+            correct_logs_ = 0U;
+            correct_yamls_ = 0U;
+            correct_commands_ = 0U;
+        }
     };
 
     static inline TestStorage g_mailslot_storage;
 
-    static bool MailboxCallbackCarrier(const mailslot::Slot *Slot,
-                                       const void *Data, int Len,
-                                       void *Context) {
+    static bool MailboxCallbackCarrier(const mailslot::Slot *slot,
+                                       const void *data, int len,
+                                       void *context) {
         using namespace std::chrono;
-        auto storage = (TestStorage *)Context;
+        auto storage = static_cast<TestStorage *>(context);
         if (!storage) {
             return false;
         }
@@ -53,9 +63,16 @@ protected:
         // your code is here
         auto fname = cfg::GetCurrentLogFileName();
 
-        auto dt = static_cast<const CarrierDataHeader *>(Data);
+        auto dt = static_cast<const CarrierDataHeader *>(data);
         switch (dt->type()) {
             case DataType::kLog:
+                try {
+                    auto s = AsString(dt);
+                    if (s == "aaa") {
+                        ++storage->correct_logs_;
+                    }
+                } catch (const std::exception & /*e*/) {
+                }
                 break;
 
             case DataType::kSegment: {
@@ -64,14 +81,29 @@ protected:
                 auto data_source = static_cast<const uint8_t *>(dt->data());
                 auto data_end = data_source + dt->length();
                 std::vector<uint8_t> vectorized_data(data_source, data_end);
-                g_mailslot_storage.buffer_ = vectorized_data;
-                g_mailslot_storage.answer_id_ = dt->answerId();
-                g_mailslot_storage.peer_name_ = dt->providerId();
-                g_mailslot_storage.delivered_ = true;
+                storage->buffer_ = vectorized_data;
+                storage->answer_id_ = dt->answerId();
+                storage->peer_name_ = dt->providerId();
                 break;
             }
 
             case DataType::kYaml:
+                try {
+                    auto s = AsString(dt);
+                    if (s == "aaa") {
+                        ++storage->correct_yamls_;
+                    }
+                } catch (const std::exception & /*e*/) {
+                }
+            case DataType::kCommand:
+                try {
+                    auto s = AsString(dt);
+                    if (s == "aaa") {
+                        ++storage->correct_commands_;
+                    }
+                } catch (const std::exception & /*e*/) {
+                }
+                storage->delivered_ = true;
                 break;
         }
 
@@ -81,8 +113,7 @@ protected:
     void SetUp() override {
         internal_port_ = BuildPortName(kCarrierMailslotName,
                                        mailbox_.GetName());  // port here
-        g_mailslot_storage.buffer_.resize(0);
-        g_mailslot_storage.delivered_ = false;
+        g_mailslot_storage.reset();
 
         mailbox_.ConstructThread(&CarrierTestFixture::MailboxCallbackCarrier,
                                  20, &g_mailslot_storage,
@@ -144,21 +175,24 @@ TEST_F(CarrierTestFixture, MailSlotIntegration) {
 
     // send data to mailslot
     cc_.sendData("a", 11, summary_output->data(), summary_output->size());
+    cc_.sendLog("x", "aaa", 3);
+    cc_.sendLog("x", "aaa", 3);
+    cc_.sendYaml("x", "aaa");
+    cc_.sendYaml("x", "aaa");
+    cc_.sendCommand("x", "aaa");
+    cc_.sendCommand("x", "aaa");
     cc_.shutdownCommunication();
 
-    int count = 1000;
-    while (count--) {
-        if (g_mailslot_storage.delivered_) {
-            break;
-        }
-
-        cma::tools::sleep(10ms);
-    }
+    tst::WaitForSuccessSilent(
+        10'000ms, []() { return g_mailslot_storage.correct_commands_ == 2U; });
 
     ASSERT_TRUE(g_mailslot_storage.delivered_);
     EXPECT_EQ(g_mailslot_storage.answer_id_, 11);
     EXPECT_EQ(g_mailslot_storage.peer_name_, "a");
     EXPECT_EQ(g_mailslot_storage.buffer_, summary_output);
+    EXPECT_EQ(g_mailslot_storage.correct_logs_, 2U);
+    EXPECT_EQ(g_mailslot_storage.correct_yamls_, 2U);
+    EXPECT_EQ(g_mailslot_storage.correct_commands_, 2U);
 }
 
 namespace {

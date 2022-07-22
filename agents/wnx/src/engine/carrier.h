@@ -177,6 +177,7 @@ public:
                   const void *data, size_t length);
     bool sendLog(const std::string &peer_name, const void *data, size_t length);
     bool sendCommand(std::string_view peer_name, std::string_view command);
+    bool sendYaml(std::string_view peer_name, std::string_view yaml);
     void shutdownCommunication();
 
     // Accessors

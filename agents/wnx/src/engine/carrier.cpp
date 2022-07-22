@@ -125,6 +125,12 @@ bool CoreCarrier::sendCommand(std::string_view peer_name,
                               command.data(), command.size());
 }
 
+bool CoreCarrier::sendYaml(std::string_view peer_name, std::string_view yaml) {
+    std::lock_guard lk(lock_);
+    return sendDataDispatcher(DataType::kYaml, std::string(peer_name), 0,
+                              yaml.data(), yaml.size());
+}
+
 void CoreCarrier::shutdownCommunication() {
     std::lock_guard lk(lock_);
     carrier_address_ = "";

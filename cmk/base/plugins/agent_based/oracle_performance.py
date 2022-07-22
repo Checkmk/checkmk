@@ -8,7 +8,8 @@ from typing import Any, Dict, Mapping
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
-Section = Mapping[str, Mapping[str, Mapping[str, Any]]]
+Instance = Mapping[str, Mapping[str, Any]]
+Section = Mapping[str, Instance]
 
 
 def parse_oracle_performance(string_table: StringTable) -> Section:

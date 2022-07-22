@@ -32,26 +32,31 @@
 # ENLT1|librarycache|TEMPORARY INDEX|18399|3046|18399|0|3046|0
 # ENLT1|librarycache|EDITION|4054576|4054369|7846832|7846023|366|0
 
-from typing import Iterable
+import time
+from typing import Any, Callable, Iterable, Mapping, Sequence, Union
 
 import cmk.utils.oracle_constants as oracle_constants
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
-from cmk.base.plugins.agent_based.oracle_performance import Section
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
+from cmk.base.plugins.agent_based.oracle_performance import Instance, Section
 
 DiscoveryResult = Iterable[tuple]
+
+Result = Union[tuple[int, str, list], tuple[int, str]]
+CheckResult = Iterable[Result]
+
 
 oracle_performance_discovery = []
 
 
-def _get_item_data(item, parsed):
-    data = parsed.get(item)
+def _get_item_data(item: str, section: Section) -> Instance:
+    data = section.get(item)
 
     # In case of missing information we assume that the login into
     # the database has failed and we simply skip this check. It won't
     # switch to UNKNOWN, but will get stale.
     if not data:
-        raise MKCounterWrapped("Login into database failed")
+        raise IgnoreResultsError("Login into database failed")
 
     return data
 
@@ -70,16 +75,17 @@ def discover_oracle_performance(section: Section) -> DiscoveryResult:
     yield from ((item, discovered_params.copy()) for item in section)
 
 
-def check_oracle_performance(item, params, parsed):  # pylint: disable=too-many-branches
-    data = _get_item_data(item, parsed)
+def check_oracle_performance(  # pylint: disable=too-many-branches
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    data = _get_item_data(item, section)
 
     now = time.time()
     perfdata = []
     infotexts = []
 
     if params.get("check_dbtime", True):
-        for result in _check_oracle_db_time(item, data, now, {}):
-            yield result
+        yield from _check_oracle_db_time(item, data, now, {})
 
     if params.get("check_memory", True):
         # old agents deliver not the needed data...
@@ -168,20 +174,21 @@ check_info["oracle_performance"] = {
 # ======================================
 
 
-def discover_oracle_performance_subcheck(subcheck_settings_name):
+def discover_oracle_performance_subcheck(
+    subcheck_settings_name: str,
+) -> Callable[[Section], DiscoveryResult]:
     """Subchecks are activated optionally via discovery configuration"""
 
-    def inventory_func(parsed):
-        settings = host_extra_conf_merged(host_name(), oracle_performance_discovery)
-        subcheck_settings = settings.get(subcheck_settings_name)
-        if subcheck_settings is not None:
-            for sid in parsed:
-                yield sid, {}
+    def inventory_func(section: Section) -> DiscoveryResult:
+        params = host_extra_conf_merged(host_name(), oracle_performance_discovery)
+        if params.get(subcheck_settings_name) is None:
+            return
+        yield from ((sid, {}) for sid in section)
 
     return inventory_func
 
 
-def _get_subcheck_params(full_params, subcheck_name):
+def _get_subcheck_params(full_params: Mapping[str, Any], subcheck_name: str) -> Mapping:
     params_list = full_params.get(subcheck_name, [])
     return {p[0]: p[1] for p in params_list}
 
@@ -191,18 +198,20 @@ def _get_subcheck_params(full_params, subcheck_name):
 #
 
 
-def _check_oracle_db_time(item, item_data, now, params):
+def _check_oracle_db_time(
+    item: str, item_data: Instance, now: float, params: Mapping[str, Any]
+) -> CheckResult:
     def get_db_time_rate(perfvar, val):
         return get_rate("oracle_perf.%s.sys_time_model.%s" % (item, perfvar), now, val)
 
     # old agents deliver no data for sys_time_model!
     sys_time_model = item_data.get("sys_time_model")
     if sys_time_model is None:
-        return []
+        return
 
     # sys_time_model: only DB_CPU and DB_Time!
-    cpu_time = sys_time_model.get("DB CPU")
-    db_time = sys_time_model.get("DB time")
+    cpu_time = sys_time_model["DB CPU"]
+    db_time = sys_time_model["DB time"]
     # db_time is the sum of cpu time and wait time (non-idle)
     wait_time = db_time - cpu_time
 
@@ -210,25 +219,22 @@ def _check_oracle_db_time(item, item_data, now, params):
     db_time_rate = get_db_time_rate("oracle_db_time", db_time)
     wait_time_rate = get_db_time_rate("oracle_db_wait_time", wait_time)
 
-    results = []
-
     for metric, infoname, rate in [
         ("oracle_db_time", "DB Time", db_time_rate),
         ("oracle_db_cpu", "DB CPU", cpu_time_rate),
         ("oracle_db_wait_time", "DB Non-Idle Wait", wait_time_rate),
     ]:
         metric_params = params.get(metric, (None, None))
-        results.append(check_levels(rate, metric, metric_params, unit="1/s", infoname=infoname))
-
-    return results
+        yield check_levels(rate, metric, metric_params, unit="1/s", infoname=infoname)
 
 
-def check_oracle_performance_dbtime(item, params, parsed):
+def check_oracle_performance_dbtime(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
     params = _get_subcheck_params(params, "dbtime")
-    data = _get_item_data(item, parsed)
+    data = _get_item_data(item, section)
     now = time.time()
-    for result in _check_oracle_db_time(item, data, now, params):
-        yield result
+    yield from _check_oracle_db_time(item, data, now, params)
 
 
 check_info["oracle_performance.dbtime"] = {
@@ -244,7 +250,7 @@ check_info["oracle_performance.dbtime"] = {
 #
 
 
-def _check_oracle_memory_info(data, params, sticky_fields, fields):
+def _check_oracle_memory_info(data, params, sticky_fields: Sequence[str], fields) -> CheckResult:
     results = []
 
     for ga_field in fields:
@@ -263,23 +269,21 @@ def _check_oracle_memory_info(data, params, sticky_fields, fields):
     return results
 
 
-def check_oracle_performance_memory(item, params, parsed):
+def check_oracle_performance_memory(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
     params = _get_subcheck_params(params, "memory")
-    data = _get_item_data(item, parsed)
+    data = _get_item_data(item, section)
     sga_info = data.get("SGA_info", {})
 
-    # sticky_results_sga, results_sga, perfdata_sga = _check_oracle_memory_info(
-    for result in _check_oracle_memory_info(
+    yield from _check_oracle_memory_info(
         sga_info, params, ["Maximum SGA Size"], oracle_constants.oracle_sga_fields
-    ):
-        yield result
+    )
 
-    # prepare PGA_info values. They come as two element array [x, 'bytes']
     pga_info = {field: value[0] for field, value in data.get("PGA_info", {}).items()}
-    for result in _check_oracle_memory_info(
+    yield from _check_oracle_memory_info(
         pga_info, params, ["total PGA allocated"], oracle_constants.oracle_pga_fields
-    ):
-        yield result
+    )
 
 
 check_info["oracle_performance.memory"] = {
@@ -295,7 +299,13 @@ check_info["oracle_performance.memory"] = {
 #
 
 
-def _check_oracle_performance_iostat_file(item, params, data, unit, io_fields):
+def _check_oracle_performance_iostat_file(
+    item: str,
+    params: Mapping[str, Any],
+    data: Instance,
+    unit,
+    io_fields,
+) -> CheckResult:
     now = time.time()
     totals = [0] * len(io_fields)
     error_results = []
@@ -347,9 +357,11 @@ def _check_oracle_performance_iostat_file(item, params, data, unit, io_fields):
         yield result
 
 
-def check_oracle_performance_iostat_bytes(item, params, parsed):
+def check_oracle_performance_iostat_bytes(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
     params = _get_subcheck_params(params, "iostat_bytes")
-    data = _get_item_data(item, parsed)
+    data = _get_item_data(item, section)
     return _check_oracle_performance_iostat_file(
         item,
         params,
@@ -373,9 +385,11 @@ check_info["oracle_performance.iostat_bytes"] = {
 }
 
 
-def check_oracle_performance_iostat_ios(item, params, parsed):
+def check_oracle_performance_iostat_ios(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
     params = _get_subcheck_params(params, "iostat_ios")
-    data = _get_item_data(item, parsed)
+    data = _get_item_data(item, section)
     return _check_oracle_performance_iostat_file(
         item,
         params,
@@ -403,9 +417,11 @@ check_info["oracle_performance.iostat_ios"] = {
 #
 
 
-def check_oracle_performance_waitclasses(item, params, parsed):
+def check_oracle_performance_waitclasses(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
     params = _get_subcheck_params(params, "waitclasses")
-    data = _get_item_data(item, parsed)
+    data = _get_item_data(item, section)
     now = time.time()
     error_results = []
 

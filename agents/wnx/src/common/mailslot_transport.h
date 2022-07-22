@@ -103,10 +103,10 @@ public:
     bool Create(wtools::SecurityLevel sl);
     bool Open();
     bool Close();
-    bool Post(const void *data, int len);
     int Get(void *data, unsigned int max_len);
 
 private:
+    bool Post(const void *data, int len);
     OVERLAPPED CreateOverlapped() const noexcept;
     std::optional<DWORD> CheckMessageSize();
 

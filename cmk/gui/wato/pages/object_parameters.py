@@ -365,7 +365,7 @@ class ModeObjectParameters(WatoMode):
             self._hostname,
             svc_desc_or_item=None,
             svc_desc=None,
-            service_labels=service_result.service_info["labels"],
+            service_labels=service_result.service_info.get("labels", {}),
         )
 
         for rule_folder, rule_index, rule in rules:
@@ -420,10 +420,10 @@ class ModeObjectParameters(WatoMode):
 
     def _output_analysed_ruleset(  # pylint: disable=too-many-branches
         self,
-        all_rulesets,
-        rulespec,
-        svc_desc_or_item,
-        svc_desc,
+        all_rulesets: AllRulesets,
+        rulespec: Rulespec,
+        svc_desc_or_item: str | None,
+        svc_desc: str | None,
         service_result: Optional[AnalyseServiceResult],
         known_settings=None,
     ):
@@ -463,7 +463,10 @@ class ModeObjectParameters(WatoMode):
 
         ruleset = all_rulesets.get(varname)
         setting, rules = ruleset.analyse_ruleset(
-            self._hostname, svc_desc_or_item, svc_desc, service_result=service_result
+            self._hostname,
+            svc_desc_or_item,
+            svc_desc,
+            service_labels=service_result.service_info.get("labels", {}) if service_result else {},
         )
 
         html.open_table(class_="setting")

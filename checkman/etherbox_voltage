@@ -1,0 +1,15 @@
+title: Etherbox / MessPC: Sensor Voltage
+catalog: hw/environment/betternet
+agents: snmp
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the value of an etherbox voltage sensor
+
+item:
+ The port number of the sensor followed by the sensor type
+
+ Example: "2.5" A humidity sensor(type 5) on port 2
+
+discovery:
+ One service is created for each voltage sensor.

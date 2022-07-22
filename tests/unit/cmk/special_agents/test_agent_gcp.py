@@ -5,7 +5,7 @@
 # mypy: disallow_untyped_defs
 import datetime
 import json
-from typing import Any, Callable, Iterable, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Iterable, Mapping, Optional, Sequence, Tuple, Union
 
 import pytest
 from _pytest.capture import CaptureFixture
@@ -154,6 +154,9 @@ class FakeClient:
         ]
         return schema, rows
 
+    def health_info(self) -> Mapping[str, Any]:
+        return {"fake": "test"}
+
 
 def collector_factory(
     container: list[agent_gcp.Section],
@@ -176,6 +179,13 @@ def fixture_agent_output() -> Sequence[agent_gcp.Section]:
 def test_output_contains_defined_metric_sections(agent_output: Sequence[agent_gcp.Section]) -> None:
     names = {s.name for s in agent_output}
     assert names.issuperset({s.name for s in agent_gcp.SERVICES.values()})
+
+
+def test_output_contains_one_health_section(agent_output: Sequence[agent_gcp.Section]) -> None:
+    assert "health" in {s.name for s in agent_output}
+    health_sections = list(s for s in agent_output if isinstance(s, agent_gcp.HealthSection))
+    assert len(health_sections) == 1
+    assert health_sections[0].date == datetime.date(year=2022, month=7, day=16)
 
 
 def test_output_contains_one_asset_section(agent_output: Sequence[agent_gcp.Section]) -> None:
@@ -223,6 +233,19 @@ def test_asset_serialization(
     assert json.loads(lines[1]) == {"project": "test", "config": list(agent_gcp.SERVICES)}
     for line in lines[2:]:
         agent_gcp.Asset.deserialize(line)
+
+
+def test_health_serialization(
+    agent_output: Sequence[agent_gcp.Section], capsys: CaptureFixture
+) -> None:
+    health_section = next(s for s in agent_output if isinstance(s, agent_gcp.HealthSection))
+    agent_gcp.gcp_serializer([health_section])
+    captured = capsys.readouterr()
+    lines = captured.out.rstrip().split("\n")
+    assert lines[0] == "<<<gcp_health:sep(0)>>>"
+    assert json.loads(lines[1]) == {"date": "2022-07-16"}
+    assert json.loads(lines[2]) == {"fake": "test"}
+    assert len(lines) == 3
 
 
 @pytest.fixture(name="asset_and_piggy_back_sections")

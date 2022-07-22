@@ -22,6 +22,8 @@ from typing import (
     Union,
 )
 
+import requests
+import typing_extensions
 from google.cloud import asset_v1, monitoring_v3
 from google.cloud.monitoring_v3 import Aggregation as gAggregation
 from google.cloud.monitoring_v3.types import TimeSeries
@@ -80,6 +82,9 @@ class ClientProtocol(Protocol):
     def list_costs(self, tableid: str) -> Tuple[Schema, Pages]:
         ...
 
+    def health_info(self) -> Mapping[str, Any]:
+        ...
+
 
 @dataclass(unsafe_hash=True)
 class Client:
@@ -136,6 +141,12 @@ class Client:
                 pages.append(response["rows"])
 
         return schema, pages
+
+    def health_info(self) -> Mapping[str, Any]:
+        resp = requests.get("https://status.cloud.google.com/incidents.json")
+        if resp.status_code == 200:
+            return resp.json()
+        return {}
 
 
 @dataclass(frozen=True)
@@ -285,7 +296,19 @@ class CostSection:
     name: str = "cost"
 
 
-Section = Union[AssetSection, ResultSection, PiggyBackSection, CostSection]
+@dataclass(frozen=True)
+class HealthSection:
+    date: datetime.date
+    # I do not want to make an explicit type for the incident schema
+    # https://status.cloud.google.com/incidents.schema.json
+    health_info: Mapping[str, Any]
+    name: str = "health"
+
+    def serialize(self) -> str:
+        return json.dumps(self.health_info)
+
+
+Section = Union[AssetSection, ResultSection, PiggyBackSection, CostSection, HealthSection]
 
 #################
 # Serialization #
@@ -321,6 +344,12 @@ def _cost_serializer(section: CostSection) -> None:
             w.append(CostRow.serialize(row))
 
 
+def _health_serializer(section: HealthSection) -> None:
+    with SectionWriter("gcp_health") as w:
+        w.append(json.dumps({"date": section.date.isoformat()}))
+        w.append(section.serialize())
+
+
 def gcp_serializer(sections: Iterable[Section]) -> None:
     for section in sections:
         if isinstance(section, AssetSection):
@@ -331,8 +360,10 @@ def gcp_serializer(sections: Iterable[Section]) -> None:
             _piggyback_serializer(section)
         elif isinstance(section, CostSection):
             _cost_serializer(section)
+        elif isinstance(section, HealthSection):
+            _health_serializer(section)
         else:
-            raise NotImplementedError
+            typing_extensions.assert_never(section)
 
 
 ###########
@@ -463,6 +494,15 @@ def run_cost(client: ClientProtocol, cost: Optional[CostArgument]) -> Iterable[C
     yield CostSection(rows=gather_costs(client, cost), query_date=client.date)
 
 
+##################
+# Service Health #
+##################
+
+
+def run_health(client: ClientProtocol) -> Iterable[HealthSection]:
+    yield HealthSection(date=client.date, health_info=client.health_info())
+
+
 #################
 # Orchestration #
 #################
@@ -480,6 +520,7 @@ def run(
     serializer(run_metrics(client, services))
     serializer(run_piggy_back(client, piggy_back_services, assets.assets))
     serializer(run_cost(client, cost))
+    serializer(run_health(client))
 
 
 #######################################################################

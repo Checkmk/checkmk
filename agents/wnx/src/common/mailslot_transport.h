@@ -90,7 +90,7 @@ public:
     [[nodiscard]] bool IsClient() const noexcept {
         return mode_ == Mode::client;
     }
-    [[nodiscard]] const char *GetName() const noexcept { return name_.c_str(); }
+    [[nodiscard]] std::string GetName() const noexcept { return name_; }
     [[nodiscard]] HANDLE GetHandle() const noexcept { return handle_; }
 
     bool ConstructThread(ThreadProc foo, int sleep_ms, void *context,

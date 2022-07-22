@@ -41,61 +41,6 @@ TEST(PlayerTest, Pipe) {
     delete p2;
 }
 
-struct TestStorage {
-public:
-    std::vector<uint8_t> buffer_;
-    bool delivered_;
-    uint64_t answer_id_;
-    std::string peer_name_;
-};
-
-static TestStorage S_Storage;
-
-bool MailboxCallback(const mailslot::Slot *Slot, const void *Data, int Len,
-                     void *Context) {
-    using namespace std::chrono;
-    auto storage = (TestStorage *)Context;
-    if (!storage) {
-        xlog::l("error in param\n");
-        return false;
-    }
-
-    // your code is here
-    xlog::l("Received \"%d\"\n", Len);
-
-    auto fname = cma::cfg::GetCurrentLogFileName();
-
-    auto dt = static_cast<const cma::carrier::CarrierDataHeader *>(Data);
-    switch (dt->type()) {
-        case cma::carrier::DataType::kLog:
-            // IMPORTANT ENTRY POINT
-            // Receive data for Logging to file
-            xlog::l("log: %s", dt->string().c_str()).filelog(fname.c_str());
-            break;
-
-        case cma::carrier::DataType::kSegment:
-            // IMPORTANT ENTRY POINT
-            // Receive data for Section
-            {
-                nanoseconds duration_since_epoch(dt->answerId());
-                time_point<steady_clock> tp(duration_since_epoch);
-                auto data_source = static_cast<const uint8_t *>(dt->data());
-                auto data_end = data_source + dt->length();
-                std::vector<uint8_t> vectorized_data(data_source, data_end);
-                S_Storage.buffer_ = vectorized_data;
-                S_Storage.answer_id_ = dt->answerId();
-                S_Storage.peer_name_ = dt->providerId();
-                S_Storage.delivered_ = true;
-                break;
-            }
-
-        case cma::carrier::DataType::kYaml:
-            break;
-    }
-
-    return true;
-}
-
 TEST(PlayerTest, Extensions) {
     using namespace std;
     cma::player::TheBox box;

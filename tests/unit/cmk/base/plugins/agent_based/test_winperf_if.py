@@ -452,9 +452,29 @@ def test_winperf_if_group_patterns(value_store):
         Result(state=state.OK, summary='[1]'),
         Result(state=state.OK, summary='(Connected)', details='Operational state: Connected'),
         Result(state=state.OK, summary='Speed: 1.41 GBit/s'),
+        Metric("outqlen", 0.0),
+        Result(
+            state=state.OK,
+            notice=
+            "Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
+            "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
+            "innucast: Initialized: 'innucast.None', indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', "
+            "outtraffic: Initialized: 'outtraffic.None', outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', "
+            "outucast: Initialized: 'outucast.None', outnucast: Initialized: 'outnucast.None', outdisc: Initialized: 'outdisc.None', "
+            "outerr: Initialized: 'outerr.None'",
+        ),
         Result(state=state.OK, summary='[2]'),
         Result(state=state.OK, summary='(Connected)', details='Operational state: Connected'),
         Result(state=state.OK, summary='Speed: 1.41 GBit/s'),
+        Metric("outqlen", 0.0),
+        Result(
+            state=state.OK,
+            notice=
+            'Could not compute rates for the following counter(s): intraffic: No time difference, inmcast: No time difference, '
+            'inbcast: No time difference, inucast: No time difference, innucast: No time difference, indisc: No time difference, '
+            'inerr: No time difference, outtraffic: No time difference, outmcast: No time difference, outbcast: No time difference, '
+            'outucast: No time difference, outnucast: No time difference, outdisc: No time difference, outerr: No time difference',
+        ),
         Result(state=state.OK, summary='Teaming'),
         Result(state=state.OK, summary='(up)', details='Operational state: up'),
         Result(
@@ -463,6 +483,15 @@ def test_winperf_if_group_patterns(value_store):
                      ' Broadcom ABC456 NetXtreme 456 GigE [Client2] 137 (Connected)]'),
         ),
         Result(state=state.OK, summary='Speed: 2.82 GBit/s'),
+        Metric("outqlen", 0.0),
+        Result(
+            state=state.OK,
+            notice=
+            'Could not compute rates for the following counter(s): intraffic: No time difference, inmcast: No time difference, '
+            'inbcast: No time difference, inucast: No time difference, innucast: No time difference, indisc: No time difference, '
+            'inerr: No time difference, outtraffic: No time difference, outmcast: No time difference, outbcast: No time difference, '
+            'outucast: No time difference, outnucast: No time difference, outdisc: No time difference, outerr: No time difference',
+        ),
         Result(state=state.OK, summary='Teaming'),
         Result(state=state.OK, summary='(up)', details='Operational state: up'),
         Result(
@@ -475,6 +504,15 @@ def test_winperf_if_group_patterns(value_store):
                      ' isatap.{F1F1F1F1-F1F1-F1F1-F1F1-F1F1F1F1F1F1} (Connected)]'),
         ),
         Result(state=state.OK, summary='Speed: 600 kBit/s'),
+        Metric("outqlen", 0.0),
+        Result(
+            state=state.OK,
+            notice=
+            'Could not compute rates for the following counter(s): intraffic: No time difference, inmcast: No time difference, '
+            'inbcast: No time difference, inucast: No time difference, innucast: No time difference, indisc: No time difference, '
+            'inerr: No time difference, outtraffic: No time difference, outmcast: No time difference, outbcast: No time difference, '
+            'outucast: No time difference, outnucast: No time difference, outdisc: No time difference, outerr: No time difference',
+        ),
     ]
 
 
@@ -738,6 +776,17 @@ def test_winperf_if_teaming_performance_data(monkeypatch, value_store, item, par
                            summary='(Connected)',
                            details='Operational state: Connected'),
                     Result(state=state.OK, summary='Speed: 10 GBit/s'),
+                    Metric("outqlen", 0.0),
+                    Result(
+                        state=state.OK,
+                        notice=
+                        "Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
+                        "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
+                        "innucast: Initialized: 'innucast.None', indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', "
+                        "outtraffic: Initialized: 'outtraffic.None', outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', "
+                        "outucast: Initialized: 'outucast.None', outnucast: Initialized: 'outnucast.None', outdisc: Initialized: 'outdisc.None', "
+                        "outerr: Initialized: 'outerr.None'",
+                    ),
                 ],
             ),
             (
@@ -755,6 +804,17 @@ def test_winperf_if_teaming_performance_data(monkeypatch, value_store, item, par
                            summary='(Connected)',
                            details='Operational state: Connected'),
                     Result(state=state.OK, summary='Speed: 10 GBit/s'),
+                    Metric("outqlen", 0.0),
+                    Result(
+                        state=state.OK,
+                        notice=
+                        "Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
+                        "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
+                        "innucast: Initialized: 'innucast.None', indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', "
+                        "outtraffic: Initialized: 'outtraffic.None', outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', "
+                        "outucast: Initialized: 'outucast.None', outnucast: Initialized: 'outnucast.None', outdisc: Initialized: 'outdisc.None', "
+                        "outerr: Initialized: 'outerr.None'",
+                    ),
                 ],
             ),
         ],
@@ -880,6 +940,17 @@ def test_winperf_if_teaming_performance_data(monkeypatch, value_store, item, par
                            summary='(Connected)',
                            details='Operational state: Connected'),
                     Result(state=state.OK, summary='Speed: 10 GBit/s'),
+                    Metric("outqlen", 0.0),
+                    Result(
+                        state=state.OK,
+                        notice=
+                        "Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
+                        "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
+                        "innucast: Initialized: 'innucast.None', indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', "
+                        "outtraffic: Initialized: 'outtraffic.None', outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', "
+                        "outucast: Initialized: 'outucast.None', outnucast: Initialized: 'outnucast.None', outdisc: Initialized: 'outdisc.None', "
+                        "outerr: Initialized: 'outerr.None'",
+                    ),
                 ],
             ),
             (
@@ -897,6 +968,17 @@ def test_winperf_if_teaming_performance_data(monkeypatch, value_store, item, par
                            summary='(Connected)',
                            details='Operational state: Connected'),
                     Result(state=state.OK, summary='Speed: 1 GBit/s'),
+                    Metric("outqlen", 0.0),
+                    Result(
+                        state=state.OK,
+                        notice=
+                        "Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
+                        "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
+                        "innucast: Initialized: 'innucast.None', indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', "
+                        "outtraffic: Initialized: 'outtraffic.None', outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', "
+                        "outucast: Initialized: 'outucast.None', outnucast: Initialized: 'outnucast.None', outdisc: Initialized: 'outdisc.None', "
+                        "outerr: Initialized: 'outerr.None'",
+                    ),
                 ],
             ),
             (
@@ -914,6 +996,17 @@ def test_winperf_if_teaming_performance_data(monkeypatch, value_store, item, par
                            summary='(Connected)',
                            details='Operational state: Connected'),
                     Result(state=state.OK, summary='Speed: 10 GBit/s'),
+                    Metric("outqlen", 0.0),
+                    Result(
+                        state=state.OK,
+                        notice=
+                        "Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
+                        "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
+                        "innucast: Initialized: 'innucast.None', indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', "
+                        "outtraffic: Initialized: 'outtraffic.None', outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', "
+                        "outucast: Initialized: 'outucast.None', outnucast: Initialized: 'outnucast.None', outdisc: Initialized: 'outdisc.None', "
+                        "outerr: Initialized: 'outerr.None'",
+                    ),
                 ],
             ),
             (
@@ -931,6 +1024,17 @@ def test_winperf_if_teaming_performance_data(monkeypatch, value_store, item, par
                            summary='(Connected)',
                            details='Operational state: Connected'),
                     Result(state=state.OK, summary='Speed: 1 GBit/s'),
+                    Metric("outqlen", 0.0),
+                    Result(
+                        state=state.OK,
+                        notice=
+                        "Could not compute rates for the following counter(s): intraffic: Initialized: 'intraffic.None', "
+                        "inmcast: Initialized: 'inmcast.None', inbcast: Initialized: 'inbcast.None', inucast: Initialized: 'inucast.None', "
+                        "innucast: Initialized: 'innucast.None', indisc: Initialized: 'indisc.None', inerr: Initialized: 'inerr.None', "
+                        "outtraffic: Initialized: 'outtraffic.None', outmcast: Initialized: 'outmcast.None', outbcast: Initialized: 'outbcast.None', "
+                        "outucast: Initialized: 'outucast.None', outnucast: Initialized: 'outnucast.None', outdisc: Initialized: 'outdisc.None', "
+                        "outerr: Initialized: 'outerr.None'",
+                    ),
                 ],
             ),
         ],

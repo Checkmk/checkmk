@@ -384,6 +384,11 @@ def do_login():
             default_origtarget = config.url_prefix() + "check_mk/"
             origtarget = html.get_url_input("_origtarget", default_origtarget)
 
+            if html.request.request_method != "POST":
+                logger.warning(
+                    "Using the GET method to authenticate against login.py leaks user credentials in the Apache logs (see more details in our Werk 14261). Consider using the POST method.",
+                )
+
             # Disallow redirections to:
             #  - logout.py: Happens after login
             #  - side.py: Happens when invalid login is detected during sidebar refresh

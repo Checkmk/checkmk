@@ -58,12 +58,8 @@ def test_discovery(monkeypatch, discover_multipath, section) -> None:
     monkeypatch.setattr(cmk.base.plugin_contexts, "_hostname", lambda: "foo")
     monkeypatch.setattr(ConfigCache, "host_extra_conf_merged", lambda s, h, r: {})
     assert sorted(discover_multipath(section)) == [
-        Service(
-            item="3600601604d40310047cf93ce66f7e111", parameters={"auto-migration-wrapper-key": 4}
-        ),
-        Service(
-            item="3600601604d403100912ab0b365f7e111", parameters={"auto-migration-wrapper-key": 1}
-        ),
+        Service(item="3600601604d40310047cf93ce66f7e111", parameters={"levels": 4}),
+        Service(item="3600601604d403100912ab0b365f7e111", parameters={"levels": 1}),
     ]
 
 
@@ -72,7 +68,7 @@ def test_check_percent_levels(check_multipath, section) -> None:
         check_multipath(
             "3600601604d40310047cf93ce66f7e111",
             # lower levels. these make no sense, but we want to see a WARN.
-            {"auto-migration-wrapper-key": (110.0, 40.0)},
+            {"levels": (110.0, 40.0)},
             section,
         )
     ) == [
@@ -84,13 +80,7 @@ def test_check_percent_levels(check_multipath, section) -> None:
 
 
 def test_check_count_levels(check_multipath, section) -> None:
-    assert list(
-        check_multipath(
-            "3600601604d40310047cf93ce66f7e111",
-            {"auto-migration-wrapper-key": 3},
-            section,
-        )
-    ) == [
+    assert list(check_multipath("3600601604d40310047cf93ce66f7e111", {"levels": 3}, section,)) == [
         Result(
             state=State.WARN,
             summary="(ORA_ZAPPL2T_DATA_3): Paths active: 4/4, Expected paths: 3 (warn at 3)",

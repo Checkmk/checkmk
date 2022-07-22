@@ -132,7 +132,7 @@ def inventory_multipath(parsed):
             item = info["alias"]
         else:
             item = uuid
-        inventory.append((item, info["numpaths"]))
+        inventory.append((item, {"levels": info["numpaths"]}))
     return inventory
 
 
@@ -174,8 +174,9 @@ def check_multipath(item, params, parsed):  # pylint: disable=too-many-branches
 
     infotext = "%sPaths active: %s/%s" % (aliasinfo, num_active, num_paths)
 
-    if isinstance(params, tuple):
-        warn, crit = params
+    levels = params.get("levels")
+    if isinstance(levels, tuple):
+        warn, crit = levels
         warn_num = (warn / 100.0) * num_paths
         crit_num = (crit / 100.0) * num_paths
         if num_active < crit_num:
@@ -190,8 +191,8 @@ def check_multipath(item, params, parsed):  # pylint: disable=too-many-branches
         yield state, infotext
 
     else:
-        if isinstance(params, int):
-            expected_paths = params
+        if isinstance(levels, int):
+            expected_paths = levels
         else:
             expected_paths = 2
 

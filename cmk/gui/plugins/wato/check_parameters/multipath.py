@@ -18,6 +18,7 @@ from cmk.gui.valuespec import (
     Integer,
     Percentage,
     TextInput,
+    Transform,
     Tuple,
 )
 
@@ -67,12 +68,8 @@ def _item_spec_multipath():
     )
 
 
-def _parameter_valuespec_multipath():
+def _multipath_lower_levels():
     return Alternative(
-        help=_(
-            "This rules sets the expected number of active paths for a multipath LUN "
-            "on Linux and Solaris hosts"
-        ),
         title=_("Expected number of active paths"),
         elements=[
             Integer(title=_("Expected number of active paths")),
@@ -84,6 +81,21 @@ def _parameter_valuespec_multipath():
                 ],
             ),
         ],
+    )
+
+
+def _parameter_valuespec_multipath():
+    return Transform(
+        valuespec=Dictionary(
+            help=_(
+                "This rules sets the expected number of active paths for a multipath LUN "
+                "on Linux and Solaris hosts"
+            ),
+            elements=[
+                ("levels", _multipath_lower_levels()),
+            ],
+        ),
+        forth=lambda p: p if isinstance(p, dict) else {"levels": p},
     )
 
 

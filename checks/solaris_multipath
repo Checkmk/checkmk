@@ -17,7 +17,7 @@
 def inventory_solaris_multipath(info):
     for device, _total, operational in info:
         item = device.split("/")[-1]
-        yield item, int(operational)
+        yield item, {"levels": int(operational)}
 
 
 def check_solaris_multipath(item, params, info):  # pylint: disable=too-many-branches
@@ -29,12 +29,13 @@ def check_solaris_multipath(item, params, info):  # pylint: disable=too-many-bra
 
             infotext = "%d paths operational, %d paths total" % (operational, total)
 
-            if not params:
+            levels = params.get("levels")
+            if levels is None:
                 state = 1
                 infotext += ", expected paths unknown, please redo service discovery"
             else:
-                if isinstance(params, tuple):
-                    warn, crit = params
+                if isinstance(levels, tuple):
+                    warn, crit = levels
                     warn_num = (warn / 100.0) * total
                     crit_num = (crit / 100.0) * total
                     levels = " (Warning/ Critical at %d/ %d)" % (warn_num, crit_num)
@@ -45,7 +46,7 @@ def check_solaris_multipath(item, params, info):  # pylint: disable=too-many-bra
                         return 1, info + levels
                     return 0, info
                 else:
-                    expected = int(params)  # should be int, just for legacy reasons
+                    expected = int(levels)  # should be int, just for legacy reasons
                 if operational > expected:
                     state = 1
                 elif expected == operational:

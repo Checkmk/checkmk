@@ -6,7 +6,7 @@
 
 # The etherbox supports the following sensor types on each port
 # sensor types
-# 0 = no sensor
+# 0 = no sensor        - implemented
 # 1 = temperature      - implemented
 # 2 = brightness
 # 3 = humidity         - implemented
@@ -288,5 +288,38 @@ register.check_plugin(
     sections=["etherbox"],
     check_function=check_etherbox_smoke,
     discovery_function=discovery_smoke,
+    service_name="Sensor %s",
+)
+
+
+# .
+#   .--nosensor------------------------------------------------------------.
+#   |                                                                      |
+#   |              _ __   ___  ___  ___ _ __  ___  ___  _ __               |
+#   |             | '_ \ / _ \/ __|/ _ \ '_ \/ __|/ _ \| '__|              |
+#   |             | | | | (_) \__ \  __/ | | \__ \ (_) | |                 |
+#   |             |_| |_|\___/|___/\___|_| |_|___/\___/|_|                 |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def check_etherbox_nosensor(item: str, section: Section) -> CheckResult:
+    try:
+        data = etherbox_get_sensor(item, section)
+    except SensorException as error:
+        yield Result(state=State.UNKNOWN, summary=str(error))
+        return
+    yield Result(state=State.OK, summary=f"[{data.name}] no sensor connected")
+
+
+def discovery_nosensor(section: Section) -> DiscoveryResult:
+    yield from discovery(section, "0")
+
+
+register.check_plugin(
+    name="etherbox_nosensor",
+    sections=["etherbox"],
+    check_function=check_etherbox_nosensor,
+    discovery_function=discovery_nosensor,
     service_name="Sensor %s",
 )

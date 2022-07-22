@@ -1,0 +1,15 @@
+Title: service discovery: addition of wait for completion endpoint
+Class: feature
+Compatible: incomp
+Component: rest-api
+Date: 1658472464
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+This werk introduces the wait for completion endpoint for a service discovery run.
+The current redirect link in the "Execute a service discovery on a host" with mode
+"refresh" which previously linked to the service_discovery_run object will be replaced
+by this newly introduced endpoint.
+

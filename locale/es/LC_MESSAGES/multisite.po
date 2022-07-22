@@ -336,6 +336,10 @@ msgid "%d chaotic state changes from %s until %s (%s)"
 msgstr "%d Cambio de estado caotico desde %s hasta %s (%s)"
 
 #, python-format
+msgid "%d check plugins using the deprecated API: %s"
+msgstr ""
+
+#, python-format
 msgid "%d columns"
 msgstr "%d columnas"
 
@@ -4985,6 +4989,9 @@ msgstr "Amazon S3 Glacier (Glaciar)"
 
 msgid "Amazon Web Services (AWS)"
 msgstr "Servicios web de Amazon (AWS)"
+
+msgid "Amount in billed currency"
+msgstr ""
 
 msgid "Amount of data processed"
 msgstr "Cantidad de datos procesados"
@@ -13985,6 +13992,10 @@ msgstr ""
 "Modos WATO obsoletos encontrados: %r. Necesitan ser refactorizados a la "
 "nueva API."
 
+#, fuzzy
+msgid "Deprecated check plugins"
+msgstr "Plugins de comprobación genéricos"
+
 msgid "Deprecated choice, please re-select"
 msgstr "Opción obsoleta, vuelva a seleccionarla"
 
@@ -19746,7 +19757,8 @@ msgstr "Tiempo de red del frontend"
 msgid "Frozen"
 msgstr "Congelado"
 
-msgid "Fujtsu storage CA port discovery"
+#, fuzzy
+msgid "Fujitsu storage CA port discovery"
 msgstr "Almacenamiento de Fujtsu Descubrimiento del puerto de CA"
 
 msgid "Full - Including RRA configuration"
@@ -19781,6 +19793,10 @@ msgstr "GB"
 
 msgid "GByte/s"
 msgstr "GByte/s"
+
+#, fuzzy
+msgid "GCP Cost"
+msgstr "Conexión TCP"
 
 msgid "GCP services to monitor"
 msgstr "Servicios globales para controlar"
@@ -27353,6 +27369,10 @@ msgstr "Niveles de espera"
 msgid "Levels memory"
 msgstr "Memoria de niveles"
 
+#, fuzzy
+msgid "Levels monthly GCP costs"
+msgstr "Niveles de carga de la CPU"
+
 #, python-format
 msgid "Levels of %s %s"
 msgstr "Niveles de %s %s"
@@ -31943,6 +31963,9 @@ msgstr "No se han encontrado extensiones rotas."
 
 msgid "No certificate"
 msgstr "Sin certificado"
+
+msgid "No check plugins using the deprecated API"
+msgstr ""
 
 msgid "No colon, slash or backslash is allowed in the filename."
 msgstr ""
@@ -39527,6 +39550,10 @@ msgstr "SAP R/3"
 msgid "SAP R/3 Monitoring plugin"
 msgstr "Plugin de monitorización de SAP R/3"
 
+#, fuzzy
+msgid "SAP R/3 grouped values discovery"
+msgstr "Descubrimiento del valor único de SAP R/3"
+
 msgid "SAP R/3 single value discovery"
 msgstr "Descubrimiento del valor único de SAP R/3"
 
@@ -39535,9 +39562,6 @@ msgstr "Certificado del router SAP"
 
 msgid "SAP router certificate time settings"
 msgstr "Configuración de la hora del certificado del router SAP"
-
-msgid "SAP value discovery"
-msgstr "Descubrimiento del valor de SAP"
 
 msgid "SAP-Client"
 msgstr "SAP-Client"
@@ -45352,6 +45376,10 @@ msgstr "Carril de potencia de la señal TX %d"
 msgid "Table"
 msgstr "Tabla"
 
+msgid ""
+"Table ID found in the Details of the table in the SQL workspace of BigQuery"
+msgstr ""
+
 msgid "Table Layout"
 msgstr "Disposición de la mesa"
 
@@ -46901,6 +46929,15 @@ msgstr ""
 "valor SAP. Al definir patrones de agrupación, se puede cambiar a la "
 "comprobación <tt>sap.value_groups</tt>. Esa comprobación supervisa una lista "
 "de valores SAP a la vez."
+
+#, python-format
+msgid ""
+"The check plugin API for plugins in <tt>%s</tt> is deprecated. Plugin files "
+"in this folder are still considered, but starting from Checkmk version 2.3 "
+"the API they are using may change at any time without notice. Please migrate "
+"the plugins to the new API. More information can be found in <a "
+"href='%s'>our online documentation</a>."
+msgstr ""
 
 msgid ""
 "The check takes this state in case the inventory cannot be updated because "
@@ -64629,6 +64666,9 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
+
+#~ msgid "SAP value discovery"
+#~ msgstr "Descubrimiento del valor de SAP"
 
 #~ msgid "Only check during the following times of the day"
 #~ msgstr "Compruebe sólo durante las siguientes horas del día"

@@ -331,6 +331,10 @@ msgid "%d chaotic state changes from %s until %s (%s)"
 msgstr "%d schimbări de stare haotică de la %s până la %s (%s)"
 
 #, python-format
+msgid "%d check plugins using the deprecated API: %s"
+msgstr ""
+
+#, python-format
 msgid "%d columns"
 msgstr "%d coloane"
 
@@ -4702,6 +4706,9 @@ msgid "Amazon S3 Glacier (Glacier)"
 msgstr ""
 
 msgid "Amazon Web Services (AWS)"
+msgstr ""
+
+msgid "Amount in billed currency"
 msgstr ""
 
 msgid "Amount of data processed"
@@ -13351,6 +13358,10 @@ msgstr "Ascude regulile de utilizator"
 msgid "Deprecated WATO modes found: %r. They need to be refactored to new API."
 msgstr ""
 
+#, fuzzy
+msgid "Deprecated check plugins"
+msgstr "Acces la Agenți"
+
 msgid "Deprecated choice, please re-select"
 msgstr ""
 
@@ -19103,7 +19114,7 @@ msgid "Frozen"
 msgstr ""
 
 #, fuzzy
-msgid "Fujtsu storage CA port discovery"
+msgid "Fujitsu storage CA port discovery"
 msgstr "Inventariere in masa"
 
 msgid "Full - Including RRA configuration"
@@ -19139,6 +19150,9 @@ msgid "GB"
 msgstr ""
 
 msgid "GByte/s"
+msgstr ""
+
+msgid "GCP Cost"
 msgstr ""
 
 #, fuzzy
@@ -25829,6 +25843,10 @@ msgstr "Nivelurile maxime pentru voltaj"
 msgid "Levels memory"
 msgstr "Nivelurile maxime pentru voltaj"
 
+#, fuzzy
+msgid "Levels monthly GCP costs"
+msgstr "Nivelurile maxime pentru voltaj"
+
 #, python-format
 msgid "Levels of %s %s"
 msgstr ""
@@ -30650,6 +30668,9 @@ msgstr ""
 #, fuzzy
 msgid "No certificate"
 msgstr "Notificari"
+
+msgid "No check plugins using the deprecated API"
+msgstr ""
 
 msgid "No colon, slash or backslash is allowed in the filename."
 msgstr ""
@@ -38194,6 +38215,10 @@ msgid "SAP R/3 Monitoring plugin"
 msgstr ""
 
 #, fuzzy
+msgid "SAP R/3 grouped values discovery"
+msgstr "Inventariere in masa"
+
+#, fuzzy
 msgid "SAP R/3 single value discovery"
 msgstr "Inventariere in masa"
 
@@ -38202,10 +38227,6 @@ msgstr ""
 
 msgid "SAP router certificate time settings"
 msgstr ""
-
-#, fuzzy
-msgid "SAP value discovery"
-msgstr "Inventariere in masa"
 
 msgid "SAP-Client"
 msgstr ""
@@ -43839,6 +43860,10 @@ msgstr ""
 msgid "Table"
 msgstr "Tabel"
 
+msgid ""
+"Table ID found in the Details of the table in the SQL workspace of BigQuery"
+msgstr ""
+
 msgid "Table Layout"
 msgstr "Asezare tabel"
 
@@ -45024,6 +45049,15 @@ msgid ""
 "The check <tt>sap.value</tt> normally creates one service for each SAP "
 "value. By defining grouping patterns, you can switch to the check <tt>sap."
 "value_groups</tt>. That check monitors a list of SAP values at once."
+msgstr ""
+
+#, python-format
+msgid ""
+"The check plugin API for plugins in <tt>%s</tt> is deprecated. Plugin files "
+"in this folder are still considered, but starting from Checkmk version 2.3 "
+"the API they are using may change at any time without notice. Please migrate "
+"the plugins to the new API. More information can be found in <a "
+"href='%s'>our online documentation</a>."
 msgstr ""
 
 msgid ""
@@ -59785,6 +59819,10 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "SAP value discovery"
+#~ msgstr "Inventariere in masa"
 
 #, fuzzy
 #~ msgid "Site Status"

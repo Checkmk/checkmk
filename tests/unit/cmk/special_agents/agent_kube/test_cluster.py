@@ -5,7 +5,7 @@
 
 import io
 from contextlib import redirect_stdout
-from typing import Callable, Sequence, Tuple
+from typing import Callable, Iterable, Mapping, Sequence, Tuple
 
 import pytest
 from pydantic_factories import ModelFactory
@@ -14,6 +14,7 @@ from cmk.base.plugins.agent_based.utils import kube_resources
 
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.schemata import api, section
+from cmk.special_agents.utils_kubernetes.transform_any import parse_labels
 
 from .conftest import (
     api_to_agent_cluster,
@@ -25,6 +26,7 @@ from .conftest import (
     PodSpecFactory,
     PodStatusFactory,
 )
+from .factory import api_to_agent_daemonset, APIDaemonSetFactory, MetaDataFactory
 
 
 class PerformanceMetricFactory(ModelFactory):
@@ -434,3 +436,230 @@ def test_write_kube_object_performance_section_cluster(  # type:ignore[no-untype
                 memory_section = kube_resources.parse_performance_usage([[next_row]])
         assert cpu_section.resource.usage == total * container_count * 1.0
         assert memory_section.resource.usage == total * container_count * 1.0 * ONE_GiB
+
+
+@pytest.mark.parametrize(
+    "labels_per_daemonset, expected_error",
+    [
+        pytest.param(
+            [
+                {"random-label": "machine-sections"},
+                {"node-collector": "machine-sections"},
+                {"node-collector": "container-metrics"},
+            ],
+            section.IdentificationError(
+                duplicate_machine_collector=False,
+                duplicate_container_collector=False,
+                unknown_collector=False,
+            ),
+            id="No errors.",
+        ),
+        pytest.param(
+            [
+                {"node-collector": ""},
+                {"node-collector": "machine-sections"},
+                {"node-collector": "container-metrics"},
+            ],
+            section.IdentificationError(
+                duplicate_machine_collector=False,
+                duplicate_container_collector=False,
+                unknown_collector=True,
+            ),
+            id="Unknown collector (empty label value).",
+        ),
+        pytest.param(
+            [
+                {"node-collector": "machine-sections"},
+                {"node-collector": "machine-sections"},
+            ],
+            section.IdentificationError(
+                duplicate_machine_collector=True,
+                duplicate_container_collector=False,
+                unknown_collector=False,
+            ),
+            id="Duplicate DaemonSet with machine-sections label.",
+        ),
+        pytest.param(
+            [
+                {"node-collector": "container-metrics"},
+                {"node-collector": "container-metrics"},
+            ],
+            section.IdentificationError(
+                duplicate_machine_collector=False,
+                duplicate_container_collector=True,
+                unknown_collector=False,
+            ),
+            id="Duplicate DaemonSet with container-metrics label.",
+        ),
+        pytest.param(
+            [
+                {"node-collector": "some-stuff"},
+                {"node-collector": "container-metrics"},
+                {"node-collector": "container-metrics"},
+                {"node-collector": "machine-sections"},
+                {"node-collector": "machine-sections"},
+            ],
+            section.IdentificationError(
+                duplicate_machine_collector=True,
+                duplicate_container_collector=True,
+                unknown_collector=True,
+            ),
+            id="All possible errors.",
+        ),
+    ],
+)
+def test__node_collector_daemons_error_handling(
+    labels_per_daemonset: Iterable[Mapping[str, str] | None],
+    expected_error: section.IdentificationError,
+) -> None:
+    daemonsets = [
+        api_to_agent_daemonset(
+            APIDaemonSetFactory.build(
+                metadata=MetaDataFactory.build(labels=parse_labels(labels)),
+            )
+        )
+        for labels in labels_per_daemonset
+    ]
+    collector_daemons = agent._node_collector_daemons(daemonsets)
+
+    assert collector_daemons.errors == expected_error
+    if expected_error.duplicate_container_collector:
+        assert collector_daemons.container is None
+    if expected_error.duplicate_machine_collector:
+        assert collector_daemons.machine is None
+
+
+DAEMONSET_MACHINE_SECTIONS = api_to_agent_daemonset(
+    APIDaemonSetFactory.build(
+        metadata=MetaDataFactory.build(
+            labels=parse_labels({"node-collector": "machine-sections"}),
+        ),
+    )
+)
+DAEMONSET_CONTAINER_METRICS = api_to_agent_daemonset(
+    APIDaemonSetFactory.build(
+        metadata=MetaDataFactory.build(
+            labels=parse_labels({"node-collector": "container-metrics"})
+        ),
+    )
+)
+DAEMONSET_NOT_A_COLLECTOR = api_to_agent_daemonset(
+    APIDaemonSetFactory.build(
+        metadata=MetaDataFactory.build(
+            labels=parse_labels({"random-label": "container-metrics"}),
+        ),
+    )
+)
+
+
+@pytest.mark.parametrize(
+    "daemonsets",
+    [
+        pytest.param(
+            [DAEMONSET_NOT_A_COLLECTOR, DAEMONSET_MACHINE_SECTIONS, DAEMONSET_CONTAINER_METRICS],
+            id="container-metrics node collector in last position.",
+        ),
+        pytest.param(
+            [DAEMONSET_CONTAINER_METRICS, DAEMONSET_MACHINE_SECTIONS, DAEMONSET_NOT_A_COLLECTOR],
+            id="container-metrics node collector in first position.",
+        ),
+    ],
+)
+def test__node_collector_daemons_identify_container_collector(
+    daemonsets: Iterable[agent.DaemonSet],
+) -> None:
+    collector_daemons = agent._node_collector_daemons(daemonsets)
+
+    assert collector_daemons.errors == section.IdentificationError(
+        duplicate_machine_collector=False,
+        duplicate_container_collector=False,
+        unknown_collector=False,
+    )
+    assert collector_daemons.container is not None
+    assert (
+        DAEMONSET_CONTAINER_METRICS._status.number_available
+        == collector_daemons.container.available
+    )
+    assert (
+        DAEMONSET_CONTAINER_METRICS._status.desired_number_scheduled
+        == collector_daemons.container.desired
+    )
+
+
+@pytest.mark.parametrize(
+    "daemonsets",
+    [
+        pytest.param(
+            [DAEMONSET_NOT_A_COLLECTOR, DAEMONSET_CONTAINER_METRICS, DAEMONSET_MACHINE_SECTIONS],
+            id="machine-metrics node collector in last position.",
+        ),
+        pytest.param(
+            [DAEMONSET_MACHINE_SECTIONS, DAEMONSET_NOT_A_COLLECTOR, DAEMONSET_CONTAINER_METRICS],
+            id="machine-metrics node collector in first position.",
+        ),
+    ],
+)
+def test__node_collector_daemons_identify_machine_collector(
+    daemonsets: Iterable[agent.DaemonSet],
+) -> None:
+    collector_daemons = agent._node_collector_daemons(daemonsets)
+
+    assert collector_daemons.errors == section.IdentificationError(
+        duplicate_machine_collector=False,
+        duplicate_container_collector=False,
+        unknown_collector=False,
+    )
+    assert collector_daemons.machine is not None
+    assert (
+        DAEMONSET_MACHINE_SECTIONS._status.number_available == collector_daemons.machine.available
+    )
+    assert (
+        DAEMONSET_MACHINE_SECTIONS._status.desired_number_scheduled
+        == collector_daemons.machine.desired
+    )
+
+
+@pytest.mark.parametrize(
+    "daemonsets",
+    [
+        pytest.param(
+            [DAEMONSET_NOT_A_COLLECTOR, DAEMONSET_MACHINE_SECTIONS],
+            id="The is no container-metrics node collector, but the"
+            "machine-sections collector is present.",
+        ),
+    ],
+)
+def test__node_collector_daemons_missing_container_collector(
+    daemonsets: Sequence[agent.DaemonSet],
+) -> None:
+    collector_daemons = agent._node_collector_daemons(daemonsets)
+
+    assert not collector_daemons.errors.duplicate_container_collector
+    assert collector_daemons.container is None
+
+
+@pytest.mark.parametrize(
+    "daemonsets",
+    [
+        pytest.param(
+            [DAEMONSET_CONTAINER_METRICS, DAEMONSET_NOT_A_COLLECTOR],
+            id="There is no machine-sections node collector, but the "
+            "container-metrics collector is present.",
+        ),
+    ],
+)
+def test__node_collector_daemons_missing_machine_collector(
+    daemonsets: Sequence[agent.DaemonSet],
+) -> None:
+    collector_daemons = agent._node_collector_daemons(daemonsets)
+
+    assert not collector_daemons.errors.duplicate_machine_collector
+    assert collector_daemons.machine is None
+
+
+def test__node_collector_daemons_no_daemonsets() -> None:
+    collector_daemons = agent._node_collector_daemons([])
+
+    assert not collector_daemons.errors.duplicate_machine_collector
+    assert collector_daemons.machine is None
+    assert collector_daemons.container is None

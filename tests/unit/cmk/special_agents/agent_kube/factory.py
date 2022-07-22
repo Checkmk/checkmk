@@ -66,6 +66,21 @@ def api_to_agent_deployment(api_deployment: api.Deployment) -> agent.Deployment:
     )
 
 
+# DaemonSet related Factories
+
+
+class APIDaemonSetFactory(ModelFactory):
+    __model__ = api.DaemonSet
+
+
+def api_to_agent_daemonset(api_daemonset: api.DaemonSet) -> agent.DaemonSet:
+    return agent.DaemonSet(
+        metadata=api_daemonset.metadata,
+        spec=api_daemonset.spec,
+        status=api_daemonset.status,
+    )
+
+
 # Namespace & Resource Quota related Factories
 
 

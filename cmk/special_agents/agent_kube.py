@@ -1152,27 +1152,31 @@ class Cluster:
         return self._cluster_details.version
 
     def node_collector_daemons(self) -> section.CollectorDaemons:
-        # Extract DaemonSets with label key `node-collector`
-        collector_daemons = collections.defaultdict(list)
-        for daemonset in self.daemon_sets():
-            if "node-collector" in daemonset.metadata.labels:
-                collector_type = daemonset.metadata.labels[api.LabelName("node-collector")].value
-                collector_daemons[collector_type].append(daemonset._status)
-        collector_daemons.default_factory = None
+        return _node_collector_daemons(self.daemon_sets())
 
-        # Only leave unknown collectors inside of `collector_daemons`
-        machine_status = collector_daemons.pop(api.LabelValue("machine-sections"), [])
-        container_status = collector_daemons.pop(api.LabelValue("container-metrics"), [])
 
-        return section.CollectorDaemons(
-            machine=_node_collector_replicas(machine_status),
-            container=_node_collector_replicas(container_status),
-            errors=section.IdentificationError(
-                duplicate_machine_collector=len(machine_status) > 1,
-                duplicate_container_collector=len(container_status) > 1,
-                unknown_collector=len(collector_daemons) > 0,
-            ),
-        )
+def _node_collector_daemons(daemonsets: Iterable[DaemonSet]) -> section.CollectorDaemons:
+    # Extract DaemonSets with label key `node-collector`
+    collector_daemons = collections.defaultdict(list)
+    for daemonset in daemonsets:
+        if (label := daemonset.metadata.labels.get(api.LabelName("node-collector"))) is not None:
+            collector_type = label.value
+            collector_daemons[collector_type].append(daemonset._status)
+    collector_daemons.default_factory = None
+
+    # Only leave unknown collectors inside of `collector_daemons`
+    machine_status = collector_daemons.pop(api.LabelValue("machine-sections"), [])
+    container_status = collector_daemons.pop(api.LabelValue("container-metrics"), [])
+
+    return section.CollectorDaemons(
+        machine=_node_collector_replicas(machine_status),
+        container=_node_collector_replicas(container_status),
+        errors=section.IdentificationError(
+            duplicate_machine_collector=len(machine_status) > 1,
+            duplicate_container_collector=len(container_status) > 1,
+            unknown_collector=len(collector_daemons) > 0,
+        ),
+    )
 
 
 def _node_collector_replicas(

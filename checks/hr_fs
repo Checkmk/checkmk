@@ -101,16 +101,11 @@ def discover_hr_fs(section: Section) -> DiscoveryResult:
 
 
 def check_hr_fs(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    fslist = []
 
     if "Label:" in item or "\\" in item:
         return 3, "check had an incompatible change, please re-discover services on this host", []
 
-    for descr, size, avail, reserved in section:
-        if "patterns" in params or item == descr:
-            fslist.append((descr, size, avail, reserved))
-
-    return df_check_filesystem_list(item, params, fslist)
+    return df_check_filesystem_list(item, params, section)
 
 
 factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS

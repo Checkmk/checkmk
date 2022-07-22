@@ -101,10 +101,6 @@ def discover_hr_fs(section: Section) -> DiscoveryResult:
 
 
 def check_hr_fs(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-
-    if "Label:" in item or "\\" in item:
-        return 3, "check had an incompatible change, please re-discover services on this host", []
-
     return df_check_filesystem_list(item, params, section)
 
 

@@ -172,3 +172,22 @@ def test_check_temp(check_temp: CheckFunction) -> None:
         ),
         Metric("temp", 4.2),
     }
+
+
+def test_check_voltage() -> None:
+    section = etherbox.etherbox_convert(
+        [
+            [["0"]],
+            [
+                ["1", "9", "n", "1", "42"],
+            ],
+        ]
+    )
+    assert section
+    results = list(
+        etherbox.check_etherbox_voltage(item="9.1", section=section, params={"levels": (0, 0)})
+    )
+    assert set(results) == {
+        Metric("voltage", 42.0, levels=(0.0, 0.0)),
+        Result(state=State.CRIT, summary="42.00 (warn/crit at 0.00/0.00)"),
+    }

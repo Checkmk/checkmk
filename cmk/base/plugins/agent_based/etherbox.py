@@ -11,7 +11,7 @@
 # 2 = brightness
 # 3 = humidity         - implemented
 # 4 = switch contact   - implemented
-# 5 = voltage detector
+# 5 = voltage detector - implemented
 # 6 = smoke sensor     - implemented
 
 # Note: The short contact config option in the etherbox is of type switch contact
@@ -21,6 +21,7 @@ from dataclasses import dataclass
 from typing import Any, List, Mapping
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    check_levels,
     get_value_store,
     Metric,
     OIDEnd,
@@ -322,4 +323,38 @@ register.check_plugin(
     check_function=check_etherbox_nosensor,
     discovery_function=discovery_nosensor,
     service_name="Sensor %s",
+)
+
+# .
+#   .--voltage-------------------------------------------------------------.
+#   |                             _ _                                      |
+#   |                 __   _____ | | |_ __ _  __ _  ___                    |
+#   |                 \ \ / / _ \| | __/ _` |/ _` |/ _ \                   |
+#   |                  \ V / (_) | | || (_| | (_| |  __/                   |
+#   |                   \_/ \___/|_|\__\__,_|\__, |\___|                   |
+#   |                                        |___/                         |
+#   '----------------------------------------------------------------------'
+
+
+def check_etherbox_voltage(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    try:
+        data = etherbox_get_sensor(item, section)
+    except SensorException as error:
+        yield Result(state=State.UNKNOWN, summary=str(error))
+        return
+    yield from check_levels(data.value, levels_upper=params["levels"], metric_name="voltage")
+
+
+def discovery_voltage(section: Section) -> DiscoveryResult:
+    yield from discovery(section, "5")
+
+
+register.check_plugin(
+    name="etherbox_voltage",
+    sections=["etherbox"],
+    check_function=check_etherbox_voltage,
+    discovery_function=discovery_voltage,
+    service_name="Sensor %s",
+    check_ruleset_name="etherbox_voltage",
+    check_default_parameters={"levels": (0, 0)},
 )

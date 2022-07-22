@@ -12,6 +12,7 @@ from cmk.base.plugins.agent_based.utils.df import (
     df_discovery,
     EXCLUDED_MOUNTPOINTS,
     FILESYSTEM_DEFAULT_PARAMS,
+    FSBlock,
 )
 
 # .1.3.6.1.2.1.25.2.3.1.2.1 .1.3.6.1.2.1.25.2.1.2 --> HOST-RESOURCES-MIB::hrStorageType.1
@@ -29,7 +30,7 @@ from cmk.base.plugins.agent_based.utils.df import (
 DiscoveryResult = Iterable[tuple[str, Mapping[str, Any]]]
 CheckResult = tuple[int, str, list]
 
-Section = Sequence[tuple[str, str, str, str]]  # for now.
+Section = Sequence[FSBlock]
 
 
 def _to_mb(raw: str, unit_size: int) -> float:
@@ -52,7 +53,11 @@ def parse_hr_fs(string_table: StringTable) -> Section:
         }:
             continue
 
-        section.append((fix_hr_fs_mountpoint(hrdescr), hrunits, hrsize, hrused))
+        unit_size = saveint(hrunits)
+        size_mb = _to_mb(hrsize, unit_size)
+        used_mb = _to_mb(hrused, unit_size)
+
+        section.append((fix_hr_fs_mountpoint(hrdescr), size_mb, size_mb - used_mb, 0))
 
     return section
 
@@ -94,10 +99,11 @@ def fix_hr_fs_mountpoint(mp: str) -> str:
 
 
 def discover_hr_fs(section: Section) -> DiscoveryResult:
-    mplist = []
-    for hrdescr, _hrunits, hrsize, _hrused in section:
-        if hrdescr not in EXCLUDED_MOUNTPOINTS and saveint(hrsize) != 0:
-            mplist.append(hrdescr)
+    mplist = [
+        descr
+        for descr, size, _avail, _reserved in section
+        if descr not in EXCLUDED_MOUNTPOINTS and size
+    ]
     return df_discovery(host_extra_conf(host_name(), filesystem_groups), mplist)
 
 
@@ -107,12 +113,9 @@ def check_hr_fs(item: str, params: Mapping[str, Any], section: Section) -> Check
     if "Label:" in item or "\\" in item:
         return 3, "check had an incompatible change, please re-discover services on this host", []
 
-    for hrdescr, hrunits_str, hrsize_str, hrused_str in section:
-        if "patterns" in params or item == hrdescr:
-            unit_size = saveint(hrunits_str)
-            size_mb = _to_mb(hrsize_str, unit_size)
-            used_mb = _to_mb(hrused_str, unit_size)
-            fslist.append((hrdescr, size_mb, size_mb - used_mb, 0))
+    for descr, size, avail, reserved in section:
+        if "patterns" in params or item == descr:
+            fslist.append((descr, size, avail, reserved))
 
     return df_check_filesystem_list(item, params, fslist)
 

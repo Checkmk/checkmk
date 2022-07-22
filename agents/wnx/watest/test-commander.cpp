@@ -10,44 +10,43 @@
 #include "logger.h"
 #include "service_processor.h"
 
+using namespace std::chrono_literals;
+
 namespace cma::commander {
 bool RunCommand(std::string_view peer, std::string_view cmd);
 
 static bool GetEnabledFlag(bool dflt) {
-    auto yaml = cma::cfg::GetLoadedConfig();
-    auto yaml_global = yaml[cma::cfg::groups::kGlobal];
-    return cma::cfg::GetVal(yaml_global, cma::cfg::vars::kEnabled, true);
+    auto yaml = cfg::GetLoadedConfig();
+    auto yaml_global = yaml[cfg::groups::kGlobal];
+    return cfg::GetVal(yaml_global, cfg::vars::kEnabled, true);
 }
 
 static void SetEnabledFlag(bool flag) {
-    auto yaml = cma::cfg::GetLoadedConfig();
-    auto yaml_global = yaml[cma::cfg::groups::kGlobal];
-    yaml_global[cma::cfg::vars::kEnabled] = flag;
+    auto yaml = cfg::GetLoadedConfig();
+    auto yaml_global = yaml[cfg::groups::kGlobal];
+    yaml_global[cfg::vars::kEnabled] = flag;
 }
 
 TEST(Commander, Base) {
-    using namespace std::chrono;
     //
-    auto yaml = cma::cfg::GetLoadedConfig();
-    auto yaml_global = yaml[cma::cfg::groups::kGlobal];
-    EXPECT_TRUE(yaml_global[cma::cfg::vars::kEnabled].IsScalar());
-    auto enabled =
-        cma::cfg::GetVal(yaml_global, cma::cfg::vars::kEnabled, false);
+    auto yaml = cfg::GetLoadedConfig();
+    auto yaml_global = yaml[cfg::groups::kGlobal];
+    EXPECT_TRUE(yaml_global[cfg::vars::kEnabled].IsScalar());
+    auto enabled = cfg::GetVal(yaml_global, cfg::vars::kEnabled, false);
     ASSERT_TRUE(enabled);
     SetEnabledFlag(false);
-    enabled = cma::cfg::GetVal(yaml_global, cma::cfg::vars::kEnabled, true);
+    enabled = cfg::GetVal(yaml_global, cfg::vars::kEnabled, true);
     ASSERT_FALSE(enabled);
-    cma::commander::RunCommand("a", cma::commander::kReload);
+    RunCommand("a", kReload);
     EXPECT_FALSE(enabled);
-    cma::commander::RunCommand(cma::commander::kMainPeer, "aa");
-    EXPECT_FALSE(enabled);
-
-    cma::commander::RunCommand(cma::commander::kMainPeer, "aa");
+    RunCommand(kMainPeer, "aa");
     EXPECT_FALSE(enabled);
 
-    EXPECT_NO_THROW(cma::commander::RunCommand("", ""));
-    cma::commander::RunCommand(cma::commander::kMainPeer,
-                               cma::commander::kReload);
+    RunCommand(kMainPeer, "aa");
+    EXPECT_FALSE(enabled);
+
+    EXPECT_NO_THROW(RunCommand("", ""));
+    RunCommand(kMainPeer, kReload);
     enabled = GetEnabledFlag(false);
     EXPECT_TRUE(enabled);
     SetEnabledFlag(false);
@@ -67,11 +66,11 @@ TEST(Commander, Base) {
     // "mail"
     auto ret = cc.establishCommunication(internal_port);
     EXPECT_TRUE(ret);
-    cc.sendCommand(cma::commander::kMainPeer, "a");
+    cc.sendCommand(kMainPeer, "a");
     cma::tools::sleep(100ms);
     enabled = GetEnabledFlag(true);
     EXPECT_FALSE(enabled);
-    cc.sendCommand(cma::commander::kMainPeer, cma::commander::kReload);
+    cc.sendCommand(kMainPeer, kReload);
     cma::tools::sleep(100ms);
 
     enabled = GetEnabledFlag(false);
@@ -95,7 +94,7 @@ TEST(Commander, RunCommandDefault) {
 TEST(Commander, GetSet) {
     ASSERT_TRUE(ObtainRunCommandProcessor() != nullptr);
     auto saved_rcp = ObtainRunCommandProcessor();
-    ASSERT_TRUE(saved_rcp == cma::commander::RunCommand);
+    ASSERT_TRUE(saved_rcp == RunCommand);
     ON_OUT_OF_SCOPE(ChangeRunCommandProcessor(saved_rcp));
     ChangeRunCommandProcessor(nullptr);
     EXPECT_TRUE(ObtainRunCommandProcessor() == nullptr);

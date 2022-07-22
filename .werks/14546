@@ -1,0 +1,13 @@
+Title: Fix 'Parameters for this service' in service dropdown menu
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1658505664
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p9
+
+The page showing the parameters configured for a given service, accessible via the service dropdown
+menu, crashed.

@@ -1020,13 +1020,13 @@ class ModeEditRuleset(WatoMode):
 
         html.div("", id_="row_info")
         num_rows = 0
-        service_labels: Optional[Labels] = None
+        service_labels: Labels = {}
         if self._hostname and self._host and self._service:
             service_labels = analyse_service(
                 self._host.site_id(),
                 self._hostname,
                 self._service,
-            ).service_info["labels"]
+            ).service_info.get("labels", {})
         for folder, folder_rules in groups:
             with table_element(
                 "rules_%s_%s" % (self._name, folder.ident()),
@@ -1082,12 +1082,11 @@ class ModeEditRuleset(WatoMode):
         folder,
         rule: Rule,
         rulenr,
-        service_labels: Optional[Labels] = None,
+        service_labels: Labels,
     ) -> None:
-        if service_labels:
-            table.cell(_("Ma."))
-            title, img = self._match(match_state, rule, service_labels=service_labels)
-            html.icon("rule%s" % img, title)
+        table.cell(_("Ma."))
+        title, img = self._match(match_state, rule, service_labels=service_labels)
+        html.icon("rule%s" % img, title)
 
         table.cell("", css="buttons")
         if rule.is_disabled():
@@ -1131,7 +1130,12 @@ class ModeEditRuleset(WatoMode):
             icon="delete",
         )
 
-    def _match(self, match_state, rule: Rule, service_labels: Optional[Labels]) -> _Tuple[str, str]:
+    def _match(
+        self,
+        match_state,
+        rule: Rule,
+        service_labels: Labels,
+    ) -> _Tuple[str, str]:
         self._get_host_labels_from_remote_site()
         reasons = (
             [_("This rule is disabled")]

@@ -29,7 +29,7 @@ from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.check_mk_automations import analyse_host, analyse_service
 from cmk.gui.watolib.hosts_and_folders import CREFolder
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset
-from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
+from cmk.gui.watolib.rulespecs import Rulespec, rulespec_group_registry, rulespec_registry
 
 
 @mode_registry.register
@@ -355,7 +355,7 @@ class ModeObjectParameters(WatoMode):
             self._hostname,
             svc_desc_or_item=None,
             svc_desc=None,
-            service_labels=service_result.service_info["labels"],
+            service_labels=service_result.service_info.get("labels", {}),
         )
 
         for rule_folder, rule_index, rule in rules:
@@ -410,10 +410,10 @@ class ModeObjectParameters(WatoMode):
 
     def _output_analysed_ruleset(
         self,
-        all_rulesets,
-        rulespec,
-        svc_desc_or_item,
-        svc_desc,
+        all_rulesets: AllRulesets,
+        rulespec: Rulespec,
+        svc_desc_or_item: Optional[str],
+        svc_desc: Optional[str],
         service_result: Optional[AnalyseServiceResult],
         known_settings=None,
     ):
@@ -453,7 +453,10 @@ class ModeObjectParameters(WatoMode):
 
         ruleset = all_rulesets.get(varname)
         setting, rules = ruleset.analyse_ruleset(
-            self._hostname, svc_desc_or_item, svc_desc, service_result=service_result
+            self._hostname,
+            svc_desc_or_item,
+            svc_desc,
+            service_labels=service_result.service_info.get("labels", {}) if service_result else {},
         )
 
         html.open_table(class_="setting")

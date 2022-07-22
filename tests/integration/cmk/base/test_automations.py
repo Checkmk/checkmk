@@ -248,7 +248,7 @@ def test_automation_analyse_service_no_check(test_cfg, site: Site):
         args=["modes-test-host", "XXX CPU load"],
     )
     assert isinstance(automation_result, results.AnalyseServiceResult)
-    assert automation_result.service_info == {"label_sources": {}, "labels": {}}
+    assert automation_result.service_info == {}
 
 
 def test_automation_try_discovery_not_existing_host(test_cfg, site: Site):

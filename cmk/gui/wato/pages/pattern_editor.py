@@ -203,7 +203,7 @@ class ModePatternEditor(WatoMode):
         # Loop all rules for this ruleset
         already_matched = False
         abs_rulenr = 0
-        service_labels: Optional[Labels] = None
+        service_labels: Labels = {}
         if self._hostname:
             service_desc = self._get_service_description(self._hostname, "logwatch", self._item)
             host = watolib.Folder.current().host(self._hostname)
@@ -213,7 +213,7 @@ class ModePatternEditor(WatoMode):
                 host.site_id(),
                 self._hostname,
                 service_desc,
-            ).service_info["labels"]
+            ).service_info.get("labels", {})
         for folder, rulenr, rule in ruleset.get_rules():
             # Check if this rule applies to the given host/service
             if self._hostname:

@@ -15,6 +15,28 @@
 namespace rs = std::ranges;
 
 namespace cma::carrier {
+std::string AsString(const CarrierDataHeader *dh) noexcept {
+    if (dh == nullptr) {
+        return {};
+    }
+    return dh->string();
+}
+
+std::vector<unsigned char> AsDataBlock(const CarrierDataHeader *dh) noexcept {
+    if (dh == nullptr || dh->data() == nullptr) {
+        return {};
+    }
+    const auto *data_source = static_cast<const uint8_t *>(dh->data());
+    const auto *data_end = data_source + dh->length();
+    std::vector<unsigned char> vectorized_data(data_source, data_end);
+
+    if (!vectorized_data.empty() && vectorized_data.back() == 0) {
+        XLOG::l.w("Section '{}' sends null terminated strings",
+                  dh->providerId());
+        vectorized_data.pop_back();
+    }
+    return vectorized_data;
+}
 
 namespace {
 const std::vector<std::string> g_supported_carriers = {
@@ -149,7 +171,7 @@ bool CoreCarrier::dumpSlotSend(DataType data_type,
 {
     if (data != nullptr) {
         std::cout << static_cast<const char *>(data);
-        if (data_type != kSegment) {
+        if (data_type != DataType::kSegment) {
             std::cerr << '\n';
         }
     }
@@ -162,16 +184,16 @@ bool CoreCarrier::fileSlotSend(DataType data_type, const std::string &peer_name,
     try {
         std::ofstream f;
         switch (data_type) {
-            case kSegment:
+            case DataType::kSegment:
                 f.open(carrier_address_,
                        first_file_write_ ? std::ios::trunc | std::ios::binary
                                          : std::ios::app | std::ios::binary);
                 first_file_write_ = false;
                 break;
-            case kLog:
+            case DataType::kLog:
                 f.open(carrier_address_ + ".log", std::ios::app);
                 break;
-            case kCommand:
+            case DataType::kCommand:
                 if (auto rcp = cma::commander::ObtainRunCommandProcessor();
                     rcp != nullptr) {
                     std::string cmd{static_cast<const char *>(data), length};
@@ -187,7 +209,7 @@ bool CoreCarrier::fileSlotSend(DataType data_type, const std::string &peer_name,
 
         if (data != nullptr) {
             f.write(static_cast<const char *>(data), length);
-            if (data_type == kLog) {
+            if (data_type == DataType::kLog) {
                 const char c = '\n';
                 f.write(&c, 1);
             }

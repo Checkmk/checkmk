@@ -18,11 +18,11 @@
 #include "tools/_xlog.h"
 
 namespace cma::carrier {
-enum DataType {
-    kLog = 0,
-    kSegment = 1,
-    kYaml = 2,  // future use
-    kCommand = 3
+enum class DataType {
+    kLog = 0,      /// write to log file
+    kSegment = 1,  /// write as section data
+    kYaml = 2,     /// universal/custom
+    kCommand = 3,  /// execute as internal command
 };
 
 // must 4-byte length
@@ -67,29 +67,30 @@ struct CarrierDataHeader {
             CarrierDataHeader::destroy);
     }
 
+    const char *asBuf() const noexcept {
+        return static_cast<const char *>(static_cast<const void *>(this));
+    }
+
     static void destroy(CarrierDataHeader *cdh) noexcept {
         if (cdh != nullptr) {
-            delete[] reinterpret_cast<char *>(cdh);
+            delete[] cdh->asBuf();
         }
     }
 
     [[nodiscard]] const void *data() const noexcept {
-        const auto *p = reinterpret_cast<const char *>(this);
+        const auto *p = asBuf();
 
         return data_length_ != 0U ? static_cast<const void *>(p + sizeof(*this))
                                   : nullptr;
     }
 
     [[nodiscard]] std::string string() const {
-        const auto *p = reinterpret_cast<const char *>(this);
-
-        const auto *str = data_length_ != 0U
-                              ? static_cast<const char *>(p + sizeof(*this))
-                              : nullptr;
+        const auto *p = asBuf();
+        const auto *str = data_length_ != 0U ? p + sizeof(*this) : nullptr;
         if (str == nullptr) {
             return {};
         }
-        return std::string(str, str + data_length_);
+        return std::string{str, static_cast<size_t>(data_length_)};
     }
 
     [[nodiscard]] auto providerId() const noexcept { return provider_id_; }
@@ -134,7 +135,7 @@ private:
             ::memset(cdh->reserved_, 0, sizeof(cdh->reserved_));
             cdh->data_id_ = answer_id;
             cdh->info_ = 0;
-            cdh->type_ = static_cast<DataType>(data_type);
+            cdh->type_ = static_cast<uint64_t>(data_type);
 
             // ready
             return cdh;
@@ -259,5 +260,7 @@ private:
         data_sender_{nullptr};
 };
 void InformByMailSlot(std::string_view mail_slot, std::string_view cmd);
+std::string AsString(const CarrierDataHeader *dh) noexcept;
 
+std::vector<unsigned char> AsDataBlock(const CarrierDataHeader *dh) noexcept;
 };  // namespace cma::carrier

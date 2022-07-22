@@ -14,10 +14,21 @@
 #include "tools/_misc.h"
 
 using namespace std::chrono_literals;
+using namespace std::string_literals;
 
 namespace cma::carrier {
 
 TEST(CarrierTest, NoMaiSlotTracing) { EXPECT_FALSE(mailslot::IsApiLogged()); }
+
+TEST(CarrierTest, DataHeaderConversion) {
+    EXPECT_EQ(AsString(nullptr), ""s);
+    EXPECT_EQ(AsDataBlock(nullptr), std::vector<unsigned char>{});
+    const std::vector<unsigned char> buf{'a', 'b', 'c', 'd', 'e'};
+    auto c1 =
+        CarrierDataHeader::createPtr("1", 1, DataType::kLog, buf.data(), 5U);
+    EXPECT_EQ(AsString(c1.get()), "abcde"s);
+    EXPECT_EQ(AsDataBlock(c1.get()), buf);
+}
 
 class CarrierTestFixture : public ::testing::Test {
 protected:

@@ -34,6 +34,7 @@ CronJobUID = NewType("CronJobUID", str)
 JobUID = NewType("JobUID", str)
 PodUID = NewType("PodUID", str)
 GitVersion = NewType("GitVersion", str)
+ContainerName = NewType("ContainerName", str)
 
 LabelValue = NewType("LabelValue", str)
 """
@@ -475,7 +476,7 @@ ImagePullPolicy = Literal["Always", "Never", "IfNotPresent"]
 
 class ContainerSpec(BaseModel):
     resources: ContainerResources
-    name: str
+    name: ContainerName
     image_pull_policy: ImagePullPolicy
 
 

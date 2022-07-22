@@ -2096,7 +2096,7 @@ def parse_performance_metrics(
         metric_name = metric["metric_name"].replace("container_", "", 1)
         metrics.append(
             PerformanceMetric(
-                container_name=section.ContainerName(metric["container_name"]),
+                container_name=ContainerName(metric["container_name"]),
                 name=MetricName(metric_name),
                 value=float(metric["metric_value_string"]),
                 timestamp=float(metric["timestamp"]),
@@ -2231,7 +2231,7 @@ def parse_containers_metadata(
         if (container_name := metric["container_name"]) in containers:
             continue
         containers[ContainerName(container_name)] = ContainerMetadata(
-            name=container_name, pod_lookup_name=lookup_func(metric)
+            name=ContainerName(container_name), pod_lookup_name=lookup_func(metric)
         )
     return containers
 

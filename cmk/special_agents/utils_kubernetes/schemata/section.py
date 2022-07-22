@@ -17,7 +17,6 @@ from pydantic import BaseModel, Field
 
 from cmk.special_agents.utils_kubernetes.schemata import api
 
-ContainerName = NewType("ContainerName", str)
 HostName = NewType("HostName", str)
 PodSequence = Sequence[str]
 NodeName = NewType("NodeName", str)
@@ -47,7 +46,7 @@ class PerformanceMetric(BaseModel):
 
 
 class PerformanceContainer(BaseModel):
-    name: ContainerName
+    name: api.ContainerName
 
 
 class CollectorState(enum.Enum):
@@ -286,7 +285,7 @@ class ContainerSpec(BaseModel):
 class ContainerSpecs(Section):
     """section: kube_pod_container_specs_v1"""
 
-    containers: Mapping[ContainerName, ContainerSpec]
+    containers: Mapping[api.ContainerName, ContainerSpec]
 
 
 class ThinContainers(BaseModel):
@@ -299,7 +298,7 @@ class ThinContainers(BaseModel):
     """
 
     images: frozenset[str]
-    names: Sequence[str]
+    names: Sequence[api.ContainerName]
 
 
 class ReadyCount(BaseModel):

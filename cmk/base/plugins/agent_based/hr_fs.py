@@ -3,17 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Mapping, Sequence
 
-from cmk.base.check_legacy_includes.df import df_check_filesystem_list, filesystem_groups
-from cmk.base.check_legacy_includes.ucd_hr import is_hr
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.df import (
+from .agent_based_api.v1 import get_value_store, register, Service, SNMPTree
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.df import (
+    df_check_filesystem_list,
     df_discovery,
     EXCLUDED_MOUNTPOINTS,
     FILESYSTEM_DEFAULT_PARAMS,
     FSBlock,
 )
+from .utils.ucd_hr_detection import HR
 
 # .1.3.6.1.2.1.25.2.3.1.2.1 .1.3.6.1.2.1.25.2.1.2 --> HOST-RESOURCES-MIB::hrStorageType.1
 # .1.3.6.1.2.1.25.2.3.1.2.3 .1.3.6.1.2.1.25.2.1.3 --> HOST-RESOURCES-MIB::hrStorageType.3
@@ -26,9 +27,6 @@ from cmk.base.plugins.agent_based.utils.df import (
 # .1.3.6.1.2.1.25.2.3.1.6.1 7749124 --> HOST-RESOURCES-MIB::hrStorageUsed.1
 # .1.3.6.1.2.1.25.2.3.1.6.3 7749124 --> HOST-RESOURCES-MIB::hrStorageUsed.3
 
-
-DiscoveryResult = Iterable[tuple[str, Mapping[str, Any]]]
-CheckResult = tuple[int, str, list]
 
 Section = Sequence[FSBlock]
 
@@ -65,20 +63,21 @@ def parse_hr_fs(string_table: StringTable) -> Section:
     return section
 
 
-check_info["hr_fs"] = {
-    "parse_function": parse_hr_fs,
-    "snmp_info": (
-        ".1.3.6.1.2.1.25.2.3.1",
-        [
-            2,  # hrStorageType
-            3,  # hrStorageDescr
-            4,  # hrStorageAllocationUnits
-            5,  # hrStorageSize
-            6,  # hrStorageUsed
+register.snmp_section(
+    name="hr_fs",
+    parse_function=parse_hr_fs,
+    fetch=SNMPTree(
+        base=".1.3.6.1.2.1.25.2.3.1",
+        oids=[
+            "2",  # hrStorageType
+            "3",  # hrStorageDescr
+            "4",  # hrStorageAllocationUnits
+            "5",  # hrStorageSize
+            "6",  # hrStorageUsed
         ],
     ),
-    "snmp_scan_function": is_hr,
-}
+    detect=HR,
+)
 
 
 # Juniper devices put information about the device into the
@@ -93,28 +92,32 @@ def fix_hr_fs_mountpoint(mp: str) -> str:
     return mp
 
 
-def discover_hr_fs(section: Section) -> DiscoveryResult:
-    mplist = [
-        descr for descr, _size, _avail, _reserved in section if descr not in EXCLUDED_MOUNTPOINTS
-    ]
-    return df_discovery(host_extra_conf(host_name(), filesystem_groups), mplist)
+def discover_hr_fs(params: Sequence[Mapping[str, Any]], section: Section) -> DiscoveryResult:
+    yield from (
+        Service(item=i, parameters=p)
+        for i, p in df_discovery(
+            params, [descr for descr, *_unused in section if descr not in EXCLUDED_MOUNTPOINTS]
+        )
+    )
 
 
 def check_hr_fs(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    return df_check_filesystem_list(item, params, section)
+    yield from df_check_filesystem_list(
+        value_store=get_value_store(),
+        item=item,
+        params=params,
+        fslist_blocks=section,
+    )
 
 
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
-
-
-check_info["hr_fs"].update(
-    {
-        "inventory_function": discover_hr_fs,
-        "check_function": check_hr_fs,
-        "service_description": "Filesystem %s",
-        "has_perfdata": True,
-        "group": "filesystem",
-        "default_levels_variable": "filesystem_default_levels",
-        "management_board": HOST_ONLY,
-    }
+register.check_plugin(
+    name="hr_fs",
+    service_name="Filesystem %s",
+    discovery_function=discover_hr_fs,
+    discovery_default_parameters={"groups": []},
+    discovery_ruleset_name="filesystem_groups",
+    discovery_ruleset_type=register.RuleSetType.ALL,
+    check_function=check_hr_fs,
+    check_ruleset_name="filesystem",
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

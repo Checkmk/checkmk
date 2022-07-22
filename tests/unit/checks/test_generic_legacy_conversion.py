@@ -1624,7 +1624,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "hpux_tunables.shmseg",
         "hpux_tunables.semmns",
         "hr_cpu",
-        "hr_fs",
         "huawei_osn_fan",
         "huawei_osn_laser",
         "huawei_osn_power",

@@ -179,8 +179,9 @@ def test_version_endpoint_invalid_json(raw_api) -> None:  # type:ignore[no-untyp
 
 
 @pytest.mark.parametrize("version_json, result", version_json_pytest_params)
-def test_version_from_json(  # type:ignore[no-untyped-def]
-    version_json: Mapping[str, str], result
+def test_version_from_json(
+    version_json: Mapping[str, str],
+    result: Union[api.UnknownKubernetesVersion, api.KubernetesVersion],
 ) -> None:
     assert result == version_from_json(json.dumps(version_json))
 
@@ -257,12 +258,12 @@ formatter = logging.Formatter("%(levelname)s %(message)s")
         ),
     ],
 )
-def test_decompose_git_version(  # type:ignore[no-untyped-def]
-    git_version: str,
+def test_decompose_git_version(
+    git_version: api.GitVersion,
     result: Union[api.KubernetesVersion, api.UnknownKubernetesVersion],
     logs: Sequence[str],
     caplog,
-):
+) -> None:
     with caplog.at_level(logging.WARN):
         assert result == decompose_git_version(git_version)
     assert [formatter.format(record) for record in caplog.records] == logs
@@ -328,10 +329,10 @@ def test__verify_version_support_continue_processing(  # type:ignore[no-untyped-
         ),
     ],
 )
-def test__verify_version_support_abort_processing(  # type:ignore[no-untyped-def]
+def test__verify_version_support_abort_processing(
     kubernetes_version: Union[api.KubernetesVersion, api.UnknownKubernetesVersion],
     message: str,
-):
+) -> None:
 
     with pytest.raises(UnsupportedEndpointData) as excinfo:
         _verify_version_support(kubernetes_version)

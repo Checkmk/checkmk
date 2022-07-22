@@ -217,7 +217,7 @@ def _extract_sequence_based_identifier(git_version: str) -> Optional[str]:
 
 
 def decompose_git_version(
-    git_version: str,
+    git_version: api.GitVersion,
 ) -> Union[api.KubernetesVersion, api.UnknownKubernetesVersion]:
     # One might think that version_json["major"] and version_json["minor"] would be more suitable
     # than parsing major from GitVersion. Sadly, the minor version is not an integer, e.g. "21+".

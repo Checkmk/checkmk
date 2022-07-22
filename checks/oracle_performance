@@ -32,9 +32,14 @@
 # ENLT1|librarycache|TEMPORARY INDEX|18399|3046|18399|0|3046|0
 # ENLT1|librarycache|EDITION|4054576|4054369|7846832|7846023|366|0
 
+from typing import Iterable
+
 import cmk.utils.oracle_constants as oracle_constants
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.oracle_performance import Section
+
+DiscoveryResult = Iterable[tuple]
 
 oracle_performance_discovery = []
 
@@ -56,19 +61,27 @@ def _get_item_data(item, parsed):
 #
 
 
+def discover_oracle_performance(section: Section) -> DiscoveryResult:
+    params = host_extra_conf_merged(host_name(), oracle_performance_discovery)
+    discovered_params = {
+        "check_dbtime": params.get("dbtime") is None,
+        "check_memory": params.get("memory") is None,
+    }
+    yield from ((item, discovered_params.copy()) for item in section)
+
+
 def check_oracle_performance(item, params, parsed):  # pylint: disable=too-many-branches
-    discovery_params = host_extra_conf_merged(host_name(), oracle_performance_discovery)
     data = _get_item_data(item, parsed)
 
     now = time.time()
     perfdata = []
     infotexts = []
 
-    if discovery_params.get("dbtime") is None:
+    if params.get("check_dbtime", True):
         for result in _check_oracle_db_time(item, data, now, {}):
             yield result
 
-    if discovery_params.get("memory") is None:
+    if params.get("check_memory", True):
         # old agents deliver not the needed data...
         sga_info = data.get("SGA_info")
         if sga_info:
@@ -144,11 +157,10 @@ def check_oracle_performance(item, params, parsed):  # pylint: disable=too-many-
 
 check_info["oracle_performance"] = {
     # section is already migrated!
-    "inventory_function": discover(),
+    "inventory_function": discover_oracle_performance,
     "check_function": check_oracle_performance,
     "service_description": "ORA %s Performance",
     "has_perfdata": True,
-    "group": "oracle_performance",
 }
 
 # ======================================

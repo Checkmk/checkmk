@@ -2,7 +2,10 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
+
 import pathlib
+import typing
 from typing import Literal, Optional, Union
 
 from repoze.profile import ProfileMiddleware  # type: ignore[import]
@@ -14,20 +17,23 @@ import cmk.utils.paths
 
 from cmk.gui.wsgi.applications.utils import load_single_global_wato_setting
 
+if typing.TYPE_CHECKING:
+    from _typeshed.wsgi import StartResponse, WSGIApplication, WSGIEnvironment
+
+    from cmk.gui.wsgi.type_defs import WSGIResponse
+
 
 class ProfileSwitcher:
     """Profile a WSGI application, configurable
 
-    The behaviour can be changed upon setting config.profile to either
+    The behaviour can be changed upon setting `config.profile` to either
         * True: profiling always enabled
         * False: profiling always off
         * "enable_by_var":  profiling enabled when "_profile" query parameter present in request
 
     """
 
-    def __init__(  # type:ignore[no-untyped-def]
-        self, app, profile_file: Optional[pathlib.Path] = None
-    ) -> None:
+    def __init__(self, app: WSGIApplication, profile_file: Optional[pathlib.Path] = None) -> None:
         self.app = app
         if profile_file is None:
             profile_file = pathlib.Path(cmk.utils.paths.var_dir) / "multisite.profile"
@@ -63,7 +69,7 @@ class ProfileSwitcher:
         self.cachegrind_file.unlink(missing_ok=True)
         self.profiled_app.profiler = profile.Profile()
 
-    def __call__(self, environ, start_response):
+    def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         if _profiling_enabled(environ):
             self._create_dump_script()
             if not self.accumulate:
@@ -75,7 +81,7 @@ class ProfileSwitcher:
         return app(environ, start_response)
 
 
-def _profiling_enabled(environ) -> bool:  # type:ignore[no-untyped-def]
+def _profiling_enabled(environ: WSGIEnvironment) -> bool:
     profile_setting = _load_profiling_setting()
     if not profile_setting:
         return False

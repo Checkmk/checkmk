@@ -98,6 +98,7 @@ class APIDiscoveryAction(enum.Enum):
     fix_all = "fix_all"
     refresh = "refresh"
     only_host_labels = "only_host_labels"
+    tabula_rasa = "tabula_rasa"
 
 
 def _discovery_mode(default_mode: str):  # type:ignore[no-untyped-def]
@@ -105,12 +106,14 @@ def _discovery_mode(default_mode: str):  # type:ignore[no-untyped-def]
         description="""The mode of the discovery action. The 'refresh' mode starts a new service
         discovery which will contact the host and identify undecided and vanished services and host
         labels. Those services and host labels can be added or removed accordingly with the
-        'fix_all' mode. The 'new', 'remove' and 'only_host_labels' modes give you more granular
-        control. The corresponding user interface option for each discovery mode is shown below.
+        'fix_all' mode. The 'tabula_rasa' mode combines these two procedures. The 'new', 'remove'
+        and 'only_host_labels' modes give you more granular control. The corresponding user
+        interface option for each discovery mode is shown below.
 
  * `new` - Monitor undecided services
  * `remove` - Remove vanished services
  * `fix_all` - Accept all
+ * `tabula_rasa` - Remove all and find new
  * `refresh` - Rescan
  * `only_host_labels` - Update host labels
     """,
@@ -126,6 +129,7 @@ DISCOVERY_ACTION = {
     "fix_all": DiscoveryAction.FIX_ALL,
     "refresh": DiscoveryAction.REFRESH,
     "only_host_labels": DiscoveryAction.UPDATE_HOST_LABELS,
+    "tabula_rasa": DiscoveryAction.TABULA_RASA,
 }
 
 
@@ -466,7 +470,7 @@ def _execute_service_discovery(discovery_action: APIDiscoveryAction, host: CREHo
                 host=host,
                 discovery_result=discovery_result,
             )
-        case APIDiscoveryAction.refresh:
+        case APIDiscoveryAction.refresh | APIDiscoveryAction.tabula_rasa:
             discovery_run = _discovery_wait_for_completion_link(host.name())
             response = Response(status=302)
             response.location = discovery_run["href"]

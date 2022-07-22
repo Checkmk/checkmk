@@ -182,7 +182,7 @@ class CMKOpenApiSession(requests.Session):
     def discover_services(self, hostname: str) -> NoReturn:
         response = self.post(
             "/domain-types/service_discovery_run/actions/start/invoke",
-            json={"host_name": hostname, "mode": "refresh"},
+            json={"host_name": hostname, "mode": "tabula_rasa"},
             # We want to get the redirect response and handle that below. So don't let requests
             # handle that for us.
             allow_redirects=False,
@@ -194,14 +194,6 @@ class CMKOpenApiSession(requests.Session):
     def discover_services_and_wait_for_completion(self, hostname: str) -> None:
         with self._wait_for_completion(timeout=60):
             self.discover_services(hostname)
-
-        # TODO: Once we have a "tabula rasa" mode, we can remove this second invocaton
-        response = self.post(
-            "/domain-types/service_discovery_run/actions/start/invoke",
-            json={"host_name": hostname, "mode": "fix_all"},
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
 
     @contextmanager
     def _wait_for_completion(self, timeout: int) -> Iterator[None]:

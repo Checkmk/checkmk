@@ -795,6 +795,11 @@ def fixture_mock_try_discovery(mocker: MockerFixture) -> MagicMock:
     )
 
 
+@pytest.fixture(name="mock_discovery")
+def fixture_mock_discovery(mocker: MockerFixture) -> MagicMock:
+    return mocker.patch("cmk.gui.watolib.services.discovery", return_value=None)
+
+
 @pytest.fixture(name="mock_set_autochecks")
 def fixture_mock_set_autochecks(mocker: MockerFixture) -> MagicMock:
     return mocker.patch(
@@ -866,6 +871,32 @@ def test_openapi_discovery_refresh_services(
         call("NO_SITE", ["@noscan"], "example.com"),
     ]
     mock_set_autochecks.assert_not_called()
+
+
+@pytest.mark.usefixtures("with_host", "inline_background_jobs")
+def test_openapi_discovery_tabula_rasa(
+    base: str,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_set_autochecks: MagicMock,
+    mock_try_discovery: MagicMock,
+    mock_discovery: MagicMock,
+) -> None:
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        f"{base}/domain-types/service_discovery_run/actions/start/invoke",
+        params='{"mode": "tabula_rasa", "host_name": "example.com"}',
+        content_type="application/json",
+        headers={"Accept": "application/json"},
+        status=302,
+    )
+    mock_set_autochecks.assert_not_called()
+    assert mock_discovery.mock_calls == [
+        call("NO_SITE", "refresh", ["@scan"], ["example.com"], non_blocking_http=True)
+    ]
+    assert mock_try_discovery.mock_calls == [
+        call("NO_SITE", ["@noscan"], "example.com"),
+        call("NO_SITE", ["@noscan"], "example.com"),
+    ]
 
 
 @pytest.mark.usefixtures("with_host", "inline_background_jobs")

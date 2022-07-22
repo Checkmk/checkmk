@@ -496,6 +496,7 @@ def create_package(pkg_info):
 
     validate_package_files(pacname, pkg_info["files"])
     write_package_info(pkg_info)
+    _create_enabled_mkp_from_installed_package(pkg_info)
 
 
 def edit_package(pacname, new_package_info):
@@ -510,8 +511,24 @@ def edit_package(pacname, new_package_info):
 
     validate_package_files(pacname, new_package_info["files"])
 
+    _create_enabled_mkp_from_installed_package(new_package_info)
     remove_package_info(pacname)
     write_package_info(new_package_info)
+
+
+def _create_enabled_mkp_from_installed_package(manifest):
+    """Creates an MKP, saves it on disk and enables it
+
+    After we changed and or created an MKP, we must make sure it is present on disk as
+    an MKP, just like the uploaded ones.
+    """
+    base_name = format_file_name(name=manifest["name"], version=manifest["version"])
+    file_path = cmk.utils.paths.local_optional_packages_dir / base_name
+
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+
+    create_mkp_file(manifest, file_name=str(file_path))
+    mark_as_enabled(file_path)
 
 
 def _get_full_package_path(package_file_name):

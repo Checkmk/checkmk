@@ -21,3 +21,10 @@ Now can always upload the package.
 It is then shown in the list of <i>available</i> packages.
 From this list, you can choose to <i>enable</i>, <i>download</i> and <i>remove</i> it.
 The operation of "enabling" might still fail for the reasons mentioned above, in which case the MKP will be displayed in the list of "inactive" packages.
+
+<b>Create new or edit existing MKPs</b>:
+Users can edit active packages (during operation) or create new MKPs from unpackaged files in the <tt>local</tt> folder.
+This is not changed.
+Previously the MKP was created "on demand" if the user clicked the <i>download</i> button.
+With this werk, the MKP is created immediately when the user hits "<i>Save</i>" in the package creation page.
+The <i>download</i> button can be found in the "<i>Available</i>" section.

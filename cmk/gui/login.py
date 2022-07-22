@@ -446,6 +446,11 @@ class LoginPage(Page):
             if not config.user_login and not _is_site_login():
                 raise MKUserError(None, _('Login is not allowed on this site.'))
 
+            if html.request.request_method != "POST":
+                logger.warning(
+                    "Using the GET method to authenticate against login.py leaks user credentials in the Apache logs (see more details in our Werk 14261). Consider using the POST method.",
+                )
+
             username_var = html.request.get_unicode_input('_username', '')
             assert username_var is not None
             username = UserId(username_var.rstrip())

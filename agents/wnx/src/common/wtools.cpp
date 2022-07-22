@@ -565,7 +565,7 @@ void ServiceController::Stop() {
     try {
         XLOG::l.i("Initiating stop routine...");
         setServiceStatus(SERVICE_STOP_PENDING);
-        processor_->stopService();
+        processor_->stopService(StopMode::cancel);
         processor_->cleanupOnStop();
         setServiceStatus(SERVICE_STOPPED);
     } catch (const DWORD &error_exception) {
@@ -717,7 +717,7 @@ void ServiceController::Continue() {
 //
 void ServiceController::Shutdown() {
     try {
-        processor_->shutdownService();
+        processor_->shutdownService(StopMode::cancel);
         setServiceStatus(SERVICE_STOPPED);
     } catch (const DWORD &error_exception) {
         xlog::SysLogEvent(processor_->getMainLogName(), xlog::LogEvents::kError,

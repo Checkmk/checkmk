@@ -156,6 +156,12 @@ bool UninstallService(const wchar_t *service_name,
 inline bool UninstallService(const wchar_t *service_name) {
     return UninstallService(service_name, UninstallServiceMode::normal);
 }
+
+enum class StopMode {
+    cancel,  // cancel all global operations
+    ignore,  // do nothing
+};
+
 // Abstract Interface template for SERVICE PROCESSOR:
 // WE ARE NOT GOING TO USE AT ALL.
 // One binary - one object of one class
@@ -164,11 +170,11 @@ class BaseServiceProcessor {
 public:
     virtual ~BaseServiceProcessor() = default;
     // Standard Windows API to Service hit here
-    virtual void stopService() = 0;
+    virtual void stopService(StopMode stop_mode) = 0;
     virtual void startService() = 0;
     virtual void pauseService() = 0;
     virtual void continueService() = 0;
-    virtual void shutdownService() = 0;
+    virtual void shutdownService(StopMode stop_mode) = 0;
     [[nodiscard]] virtual const wchar_t *getMainLogName() const = 0;
     virtual void cleanupOnStop() {
         // may  be but not should overridden

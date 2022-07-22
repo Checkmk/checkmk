@@ -188,7 +188,6 @@ private:
 
 // Implements main logic related to interaction: "Agent <-> Plugins"
 // non movable, non copyable
-// Thread Safe
 class ServiceProcessor : public wtools::BaseServiceProcessor {
 public:
     struct ControllerParam {
@@ -201,11 +200,16 @@ public:
     ServiceProcessor(std::chrono::milliseconds delay,
                      const thread_callback &callback)
         : delay_(delay), callback_(callback), external_port_(this) {}
-    ServiceProcessor() : external_port_(this) {
-        using namespace std::chrono_literals;
-        delay_ = 1000ms;
+    ServiceProcessor() noexcept : external_port_(this) {
+        delay_ = std::chrono::milliseconds{1000};
     }
-    ~ServiceProcessor() override { ohm_process_.stop(); }
+    ~ServiceProcessor() override {
+        try {
+            ohm_process_.stop();
+        } catch (const std::exception &e) {
+            XLOG::l("exception during ~ServiceProcessor {}", e);
+        }
+    }
 
     // boiler plate
     ServiceProcessor(const ServiceProcessor &Rhs) = delete;
@@ -214,10 +218,10 @@ public:
     ServiceProcessor &operator=(ServiceProcessor &&Rhs) = delete;
 
     // Standard Windows API to Service
-    void stopService() override;
+    void stopService(wtools::StopMode stop_mode) override;
     void startService() override;
     void pauseService() override;
-    void shutdownService() override;
+    void shutdownService(wtools::StopMode stop_mode) override;
     void continueService() override;
 
     // \brief - serves test in command line
@@ -230,6 +234,8 @@ public:
     }
 
     std::string getInternalPort() const noexcept { return internal_port_; }
+
+    void processYamlInput(const std::string &yaml) noexcept;
 
     // functions for testing/verifying
     void startTestingMainThread();
@@ -249,11 +255,8 @@ public:
     static void resetOhm() noexcept;
     bool isOhmStarted() const noexcept { return ohm_started_; }
 
-    cma::cfg::modules::ModuleCommander &getModuleCommander() noexcept {
-        return mc_;
-    }
-    const cma::cfg::modules::ModuleCommander &getModuleCommander()
-        const noexcept {
+    cfg::modules::ModuleCommander &getModuleCommander() noexcept { return mc_; }
+    const cfg::modules::ModuleCommander &getModuleCommander() const noexcept {
         return mc_;
     }
 
@@ -263,10 +266,8 @@ public:
 
 private:
     std::vector<uint8_t> makeTestString(const char *text) const {
-        const std::string answer_test{text == nullptr ? "" : text};
-        std::vector<uint8_t> answer_vector{answer_test.begin(),
-                                           answer_test.end()};
-        return answer_vector;
+        const std::string test{text == nullptr ? "" : text};
+        return std::vector<uint8_t>{test.begin(), test.end()};
     }
 
     // controlled exclusively by mainThread

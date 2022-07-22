@@ -279,6 +279,9 @@ protected:
     std::chrono::milliseconds wake_delay_{500};
 };
 
+bool SendDataToMailSlot(const std::string &mailslo_name,
+                        const std::vector<uint8_t> &data);
+
 }  // namespace cma::world
 
 #endif  // external_port_h__

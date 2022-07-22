@@ -23,12 +23,16 @@ public:
     virtual ~TestProcessor2() { s_counter--; }
 
     // Standard Windows API to Service hit here
-    void stopService() { stopped_ = true; }
-    void startService() { started_ = true; }
-    void pauseService() { paused_ = true; }
-    void continueService() { continued_ = true; }
-    void shutdownService() { shutdowned_ = true; }
-    const wchar_t *getMainLogName() const { return L"log.log"; }
+    void stopService(wtools::StopMode /*stop_mode*/) override {
+        stopped_ = true;
+    }
+    void startService() override { started_ = true; }
+    void pauseService() override { paused_ = true; }
+    void continueService() override { continued_ = true; }
+    void shutdownService(wtools::StopMode /*stop_mode*/) override {
+        shutdowned_ = true;
+    }
+    const wchar_t *getMainLogName() const override { return L"log.log"; }
 
     bool stopped_ = false;
     bool started_ = false;

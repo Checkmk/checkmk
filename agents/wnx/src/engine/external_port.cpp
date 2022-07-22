@@ -9,6 +9,7 @@
 #include "agent_controller.h"
 #include "asio.h"
 #include "cfg.h"
+#include "common/mailslot_transport.h"
 #include "encryption.h"
 #include "realtime.h"
 
@@ -19,6 +20,30 @@ namespace rs = std::ranges;
 // This namespace contains classes used for external communication, for example
 // with Monitor
 namespace cma::world {
+
+namespace {
+
+///  returns 0 if something goes wrong
+size_t CalcCryptBufferSize(const encrypt::Commander *commander,
+                           size_t data_size) noexcept {
+    if (commander == nullptr) {
+        return 0;
+    }
+
+    if (!commander->blockSize().has_value()) {
+        XLOG::l("Impossible situation, crypt engine is absent");
+        return 0;
+    }
+
+    const auto block_size = commander->blockSize().value();
+    if (block_size == 0) {
+        XLOG::l("Impossible situation, block is too short");
+        return 0;
+    }
+
+    return (data_size / block_size + 1) * block_size;
+}
+}  // namespace
 
 void LogWhenDebugging(const ByteVector &send_back) noexcept {
     if (!tgt::IsDebug()) {
@@ -61,27 +86,13 @@ void AsioSession::read_ip() {
 }
 
 size_t AsioSession::allocCryptBuffer(const cma::encrypt::Commander *commander) {
-    if (nullptr == commander) return 0;
-
-    if (!commander->blockSize().has_value()) {
-        XLOG::l("Impossible situation, crypt engine is absent");
+    size_t crypt_segment_size = CalcCryptBufferSize(commander, segment_size_);
+    if (crypt_segment_size == 0) {
         return 0;
     }
-
-    if (0 == commander->blockSize().value()) {
-        XLOG::l("Impossible situation, block is too short");
-        return 0;
-    }
-
-    size_t crypt_segment_size = 0;
     try {
-        // calculating length and allocating persistent memory
-        auto block_size = commander->blockSize().value();
-        crypt_segment_size = (segment_size_ / block_size + 1) * block_size;
         crypt_buf_.resize(crypt_segment_size);
-        XLOG::d.i("Encrypted output block {} bytes, crypt buffer {} bytes...",
-                  block_size, crypt_segment_size);
-
+        XLOG::d.i("Encryption crypt buffer {} bytes...", crypt_segment_size);
     } catch (const std::exception &e) {
         XLOG::l.crit(XLOG_FUNC + " unexpected, but exception '{}'", e.what());
         return 0;
@@ -340,7 +351,7 @@ namespace {
 /// Requests are normally supplied through main mailslot
 struct RequestInfo {
     std::string ip;
-    std::string comment;
+    std::string mailslot_name;
 };
 RequestInfo ParseRequest(const std::string &request) {
     std::string s = request;
@@ -348,11 +359,21 @@ RequestInfo ParseRequest(const std::string &request) {
     auto table = tools::SplitString(s, " ", 1);
     if (table.size() != 2) {
         XLOG::l.e("Invalid request '{}'", request);
-        return {.ip = {}, .comment = {}};
+        return {.ip = {}, .mailslot_name = {}};
     }
-    return {.ip{table[0]}, .comment{table[1]}};
+    return {.ip{table[0]}, .mailslot_name{table[1]}};
 }
 }  // namespace
+
+bool SendDataToMailSlot(const std::string &mailslot_name,
+                        const std::vector<uint8_t> &data_block) {
+    if (mailslot_name.size() < 12) {
+        XLOG::l("Invalid mailslot name '{}'", mailslot_name);
+        return false;
+    }
+    mailslot::Slot postman(mailslot_name);
+    return postman.ExecPost(data_block.data(), data_block.size());
+}
 
 void ExternalPort::processRequest(const ReplyFunc &reply,
                                   const std::string &request) {
@@ -369,10 +390,9 @@ void ExternalPort::processRequest(const ReplyFunc &reply,
         return;
     }
 
-    // TODO: SEND DATA TO MAILSLOT
-    // auto crypt = encrypt::MakeCrypt();
-    //  do_write(send_back.data(), send_back.size(), crypt.get());
-    XLOG::d.i("Send [{}] bytes of data", send_back.size());
+    const auto result = SendDataToMailSlot(r.mailslot_name, send_back);
+    XLOG::d.i("Send [{}] bytes of data to [{}] - {}", send_back.size(),
+              r.mailslot_name, result ? "OK" : "FAIl");
 
     LogWhenDebugging(send_back);
 }

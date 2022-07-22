@@ -34,11 +34,6 @@ using namespace std::string_literals;
 namespace fs = std::filesystem;
 
 namespace cma::srv {
-extern bool
-    g_global_stop_signaled;  // semi-hidden global variable for global status
-
-// Implementation of the Windows signals
-
 void ServiceProcessor::startService() {
     if (thread_.joinable()) {
         XLOG::l("Attempt to start service twice, no way!");
@@ -108,9 +103,11 @@ void TryCleanOnExit() {
 }
 }  // namespace
 
-void ServiceProcessor::stopService() {
+void ServiceProcessor::stopService(wtools::StopMode stop_mode) {
     XLOG::l.i("Stop Service called");
-    srv::g_global_stop_signaled = true;
+    if (stop_mode == wtools::StopMode::cancel) {
+        srv::CancelAll(true);
+    }
     {
         std::lock_guard lk(lock_stopper_);
         stop_requested_ = true;  // against spurious wake up
@@ -150,7 +147,9 @@ void ServiceProcessor::continueService() {
     XLOG::l.t("CONTINUE is not implemented");
 }
 
-void ServiceProcessor::shutdownService() { stopService(); }
+void ServiceProcessor::shutdownService(wtools::StopMode stop_mode) {
+    stopService(stop_mode);
+}
 
 void ServiceProcessor::stopTestingMainThread() {
     XLOG::t(XLOG_FUNC + " called");
@@ -789,8 +788,47 @@ void ServiceProcessor::startTestingMainThread() {
     XLOG::l.i("Successful start of main thread");
 }
 
-// Implementation of the Windows signals
-// ---------------- END ----------------
+namespace {
+struct MonitoringRequest {
+    std::string text;
+    std::string id;
+};
+
+std::optional<MonitoringRequest> GetMonitoringRequest(const YAML::Node &yaml) {
+    try {
+        auto y = yaml["monitoring_request"];
+        return MonitoringRequest{.text{y["text"].as<std::string>()},
+                                 .id{y["id"].as<std::string>()}};
+    }
+
+    catch (const std::exception & /*e*/) {
+        return {};
+    }
+}
+
+auto CalcTimePoint(const carrier::CarrierDataHeader *data_header) noexcept {
+    const std::chrono::nanoseconds duration_since_epoch{
+        data_header == nullptr ? 0U : data_header->answerId()};
+    return std::chrono::time_point<std::chrono::steady_clock>{
+        duration_since_epoch};
+}
+
+}  // namespace
+
+void ServiceProcessor::processYamlInput(const std::string &yaml_text) noexcept {
+    try {
+        auto y = YAML::Load(yaml_text);
+        auto mr = GetMonitoringRequest(y);
+        if (mr.has_value()) {
+            external_port_.putOnQueue(mr->text);
+            XLOG::t.i("Request >{}<", yaml_text);
+        } else {
+            XLOG::l("Not supported request '{}'", yaml_text);
+        }
+    } catch (const std::exception &e) {
+        XLOG::l("Invalid request '{}', exception: '{}'", yaml_text, e);
+    }
+}
 
 bool SystemMailboxCallback(const mailslot::Slot * /*nothing*/, const void *data,
                            int len, void *context) {
@@ -800,58 +838,27 @@ bool SystemMailboxCallback(const mailslot::Slot * /*nothing*/, const void *data,
         return false;
     }
 
-    const auto *dt = static_cast<const carrier::CarrierDataHeader *>(data);
-    switch (dt->type()) {
+    switch (auto *dt = static_cast<const carrier::CarrierDataHeader *>(data);
+            dt->type()) {
         case carrier::DataType::kLog:
-            // Receive data for Logging to file
-            if (dt->data() != nullptr) {
-                std::string to_log;
-                const auto *data = static_cast<const char *>(dt->data());
-                to_log.assign(data, data + dt->length());
-                XLOG::l(XLOG::kNoPrefix)("[{}] {}", dt->providerId(), to_log);
-            } else
-                XLOG::l(XLOG::kNoPrefix)("[{}] null", dt->providerId());
+            XLOG::l(XLOG::kNoPrefix)("[{}] {}", dt->providerId(),
+                                     carrier::AsString(dt));
             break;
-
         case carrier::DataType::kSegment:
-            // Receive data for Section
-            {
-                XLOG::d.i("Received [{}] bytes from '{}'\n", len,
-                          dt->providerId());
-                std::chrono::nanoseconds duration_since_epoch{dt->answerId()};
-                std::chrono::time_point<std::chrono::steady_clock> tp(
-                    duration_since_epoch);
-                const auto *data_source =
-                    static_cast<const uint8_t *>(dt->data());
-                const auto *data_end = data_source + dt->length();
-                AsyncAnswer::DataBlock vectorized_data(data_source, data_end);
-
-                if (!vectorized_data.empty() && vectorized_data.back() == 0) {
-                    XLOG::l("Section '{}' sends null terminated strings",
-                            dt->providerId());
-                    vectorized_data.pop_back();
-                }
-
-                processor->addSectionToAnswer(dt->providerId(), tp,
-                                              vectorized_data);
-            }
+            XLOG::d.i("Received [{}] bytes from '{}'\n", len, dt->providerId());
+            processor->addSectionToAnswer(dt->providerId(), CalcTimePoint(dt),
+                                          carrier::AsDataBlock(dt));
             break;
         case carrier::DataType::kYaml:
-            XLOG::l.bp(XLOG_FUNC + " NOT SUPPORTED now");
+            processor->processYamlInput(carrier::AsString(dt));
             break;
-
-        case carrier::DataType::kCommand: {
-            auto rcp = commander::ObtainRunCommandProcessor();
-            if (rcp != nullptr) {
-                std::string cmd(static_cast<const char *>(dt->data()),
-                                static_cast<size_t>(dt->length()));
-                std::string peer(commander::kMainPeer);
-
-                rcp(peer, cmd);
+        case carrier::DataType::kCommand:
+            if (auto rcp = commander::ObtainRunCommandProcessor();
+                rcp != nullptr) {
+                rcp(std::string{commander::kMainPeer}, carrier::AsString(dt));
             }
 
             break;
-        }
     }
 
     return true;

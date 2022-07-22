@@ -101,7 +101,8 @@ SC_HANDLE SelfOpen();
 bool IsServiceConfigured(SC_HANDLE handle);
 bool ConfigureServiceAsRestartable(SC_HANDLE handle);
 
-bool IsGlobalStopSignaled();
+bool IsGlobalStopSignaled() noexcept;
+void CancelAll(bool cancel) noexcept;
 
 };  // namespace cma::srv
 

@@ -333,7 +333,7 @@ int TestLegacy() {
         // to find file, read and start update POC.
         ServiceProcessor sp(2000ms, []() { return true; });
         sp.startServiceAsLegacyTest();
-        sp.stopService();
+        sp.stopService(wtools::StopMode::cancel);
     } catch (const std::exception &e) {
         XLOG::l(XLOG_FUNC + "Exception is not allowed here {}", e.what());
     }
@@ -560,7 +560,7 @@ int ExecMainService(StdioLog stdio_log) {
     }
 
     XLOG::l.i("Server is going to stop");
-    processor->stopService();
+    processor->stopService(wtools::StopMode::cancel);
 
     if (stdio_log != StdioLog::no) XLOG::setup::DuplicateOnStdio(false);
 
@@ -1323,9 +1323,12 @@ SERVICE_FAILURE_ACTIONS *GetServiceFailureActions(SC_HANDLE handle) {
 }
 
 // Service Global Control
-bool g_global_stop_signaled = false;
+namespace {
+bool global_stop_signaled = false;
+}
 
-bool IsGlobalStopSignaled() { return g_global_stop_signaled; }
+bool IsGlobalStopSignaled() noexcept { return global_stop_signaled; }
+void CancelAll(bool cancel) noexcept { global_stop_signaled = cancel; }
 
 // returns true ALSO on error(to avoid useless attempts to configure
 // non-configurable)

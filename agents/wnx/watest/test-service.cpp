@@ -20,11 +20,15 @@ public:
     virtual ~TestProcessor() override { s_counter--; }
 
     // Standard Windows API to Service hit here
-    void stopService() override { stopped_ = true; }
+    void stopService(wtools::StopMode /*stop_mode*/) override {
+        stopped_ = true;
+    }
     void startService() override { started_ = true; }
     void pauseService() override { paused_ = true; }
     void continueService() override { continued_ = true; }
-    void shutdownService() override { shutdowned_ = true; }
+    void shutdownService(wtools::StopMode /*stop_mode*/) override {
+        shutdowned_ = true;
+    }
     const wchar_t *getMainLogName() const override { return L"log.log"; }
 
     bool stopped_ = false;
@@ -115,7 +119,6 @@ TEST(ServiceControllerTest, StartStop) {
 }  // namespace wtools
 
 namespace cma::srv {
-extern bool g_global_stop_signaled;
 TEST(SelfConfigure, Checker) {
     auto handle = SelfOpen();
     if (handle == nullptr) {
@@ -133,10 +136,9 @@ TEST(SelfConfigure, Checker) {
 
 TEST(CmaSrv, GlobalApi) {
     EXPECT_FALSE(cma::srv::IsGlobalStopSignaled());
-    ServiceProcessor sp;
-    sp.stopService();
+    cma::srv::CancelAll(true);
     EXPECT_TRUE(cma::srv::IsGlobalStopSignaled());
-    g_global_stop_signaled = false;
+    cma::srv::CancelAll(false);
 }
 
 static void SetStartMode(std::string_view mode) {

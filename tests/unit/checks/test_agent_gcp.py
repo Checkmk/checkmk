@@ -13,7 +13,7 @@ from tests.testlib import SpecialAgent
 pytestmark = pytest.mark.checks
 
 
-@freeze_time("2022-01-01")
+@freeze_time("2022-01-12")
 @pytest.mark.parametrize(
     "params, expected_result",
     [
@@ -24,8 +24,8 @@ pytestmark = pytest.mark.checks
                 "test",
                 "--credentials",
                 "definitely some json",
-                "--month",
-                "2022-01",
+                "--date",
+                "2022-01-12",
                 "--services",
                 "gcs",
                 "run",
@@ -44,8 +44,8 @@ pytestmark = pytest.mark.checks
                 "test",
                 "--credentials",
                 "definitely some json",
-                "--month",
-                "2022-01",
+                "--date",
+                "2022-01-12",
                 "--cost_table",
                 "checkmk",
             ],
@@ -63,8 +63,8 @@ pytestmark = pytest.mark.checks
                 "test",
                 "--credentials",
                 "definitely some json",
-                "--month",
-                "2022-01",
+                "--date",
+                "2022-01-12",
                 "--cost_table",
                 "checkmk",
                 "--services",

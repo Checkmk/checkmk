@@ -65,6 +65,8 @@ Pages = Sequence[Page]
 
 
 class ClientProtocol(Protocol):
+    date: datetime.date  # date when client is executed
+
     @property
     def project(self) -> str:
         ...
@@ -75,7 +77,7 @@ class ClientProtocol(Protocol):
     def list_assets(self, request: Any) -> Iterable[asset_v1.Asset]:
         ...
 
-    def list_costs(self, tableid: str, month: datetime.datetime) -> Tuple[Schema, Pages]:
+    def list_costs(self, tableid: str) -> Tuple[Schema, Pages]:
         ...
 
 
@@ -83,6 +85,7 @@ class ClientProtocol(Protocol):
 class Client:
     account_info: dict[str, str] = field(compare=False)
     project: str
+    date: datetime.date
 
     @cache  # pylint: disable=method-cache-max-size-none
     def monitoring(self) -> monitoring_v3.MetricServiceClient:
@@ -106,8 +109,8 @@ class Client:
     def list_assets(self, request: Any) -> Iterable[asset_v1.Asset]:
         return self.asset().list_assets(request)
 
-    def list_costs(self, tableid: str, month: datetime.datetime) -> Tuple[Schema, Pages]:
-        prev_month = month - datetime.timedelta(days=1)
+    def list_costs(self, tableid: str) -> Tuple[Schema, Pages]:
+        prev_month = self.date.replace(day=1) - datetime.timedelta(days=1)
         query = f'SELECT PROJECT.name, SUM(cost) AS cost, currency, invoice.month FROM `{tableid}` WHERE DATE(_PARTITIONTIME) >= "{prev_month.strftime("%Y-%m-01")}" GROUP BY PROJECT.name, currency, invoice.month'
         body = {"query": query, "useLegacySql": False}
         request: HttpRequest = self.bigquery().query(projectId=self.project, body=body)
@@ -278,7 +281,7 @@ class CostRow:
 @dataclass(frozen=True)
 class CostSection:
     rows: Sequence[CostRow]
-    query_month: datetime.datetime
+    query_date: datetime.date
     name: str = "cost"
 
 
@@ -313,7 +316,7 @@ def _piggyback_serializer(section: PiggyBackSection) -> None:
 
 def _cost_serializer(section: CostSection) -> None:
     with SectionWriter("gcp_cost") as w:
-        w.append(json.dumps({"query_month": section.query_month.strftime("%Y%m")}))
+        w.append(json.dumps({"query_month": section.query_date.strftime("%Y%m")}))
         for row in section.rows:
             w.append(CostRow.serialize(row))
 
@@ -433,11 +436,10 @@ def run_piggy_back(
 @dataclass(frozen=True)
 class CostArgument:
     tableid: str
-    month: datetime.datetime
 
 
 def gather_costs(client: ClientProtocol, cost: CostArgument) -> Sequence[CostRow]:
-    schema, pages = client.list_costs(tableid=cost.tableid, month=cost.month)
+    schema, pages = client.list_costs(tableid=cost.tableid)
     columns = {el["name"]: i for i, el in enumerate(schema)}
     assert set(columns.keys()) == {"name", "cost", "currency", "month"}
     cost_rows: List[CostRow] = []
@@ -458,7 +460,7 @@ def gather_costs(client: ClientProtocol, cost: CostArgument) -> Sequence[CostRow
 def run_cost(client: ClientProtocol, cost: Optional[CostArgument]) -> Iterable[CostSection]:
     if cost is None:
         return
-    yield CostSection(rows=gather_costs(client, cost), query_month=cost.month)
+    yield CostSection(rows=gather_costs(client, cost), query_date=client.date)
 
 
 #################
@@ -850,15 +852,15 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
         "--credentials", type=str, help="JSON credentials for service account", required=True
     )
     parser.add_argument(
-        "--cost",
+        "--cost_table",
         type=str,
         help="Enable cost monitoring using specified big query table. Give full table id",
         required=False,
     )
     parser.add_argument(
-        "--month",
-        type=lambda x: datetime.datetime.strptime(x, "%Y-%m"),
-        help="For which month to collect cost data. Also includes month prior",
+        "--date",
+        type=datetime.date.fromisoformat,
+        help="date when agent was executed in iso format",
         required=False,
     )
     parser.add_argument(
@@ -873,10 +875,10 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
 
 
 def agent_gcp_main(args: Args) -> None:
-    client = Client(json.loads(args.credentials), args.project)
+    client = Client(json.loads(args.credentials), args.project, args.date)
     services = [SERVICES[s] for s in args.services if s in SERVICES]
     piggies = [PIGGY_BACK_SERVICES[s] for s in args.services if s in PIGGY_BACK_SERVICES]
-    cost = CostArgument(args.cost_table, args.month) if args.cost_table else None
+    cost = CostArgument(args.cost_table) if args.cost_table else None
     run(
         client,
         services,

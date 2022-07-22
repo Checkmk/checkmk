@@ -12,14 +12,13 @@ def agent_gcp_arguments(
 ) -> Sequence[Union[str, tuple[str, str, str]]]:
 
     today = datetime.date.today()
-    month = today.replace(day=1)
     args = [
         "--project",
         params["project"],
         "--credentials",
         passwordstore_get_cmdline("%s", params["credentials"]),
-        "--month",
-        month.strftime("%Y-%m"),
+        "--date",
+        today.isoformat(),
     ]
     if "cost" in params:
         args.append("--cost_table")

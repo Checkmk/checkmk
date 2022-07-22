@@ -120,6 +120,8 @@ class FakeAssetClient:
 
 
 class FakeClient:
+    date: datetime.date = datetime.date(year=2022, month=7, day=16)
+
     def __init__(
         self, project: str, monitoring_client: FakeMonitoringClient, asset_client: FakeAssetClient
     ):
@@ -133,9 +135,7 @@ class FakeClient:
     def list_assets(self, request: Any) -> Iterable[asset_v1.Asset]:
         return self.asset_client.list_assets(request)
 
-    def list_costs(
-        self, tableid: str, month: datetime.datetime
-    ) -> Tuple[agent_gcp.Schema, agent_gcp.Pages]:
+    def list_costs(self, tableid: str) -> Tuple[agent_gcp.Schema, agent_gcp.Pages]:
         schema = [
             {"name": "name", "type": "STRING", "mode": "NULLABLE"},
             {"name": "cost", "type": "FLOAT", "mode": "NULLABLE"},
@@ -288,7 +288,7 @@ def piggy_back_sections_fixture(
 
 
 def test_can_hash_client() -> None:
-    client = agent_gcp.Client({}, "test")
+    client = agent_gcp.Client({}, "test", date=datetime.date.today())
     assert hash(client)
 
 
@@ -442,7 +442,7 @@ def fixture_cost_output() -> Sequence[agent_gcp.Section]:
     client = FakeClient("test", FakeMonitoringClient(), FakeAssetClient())
     sections: list[agent_gcp.Section] = []
     collector = collector_factory(sections)
-    cost = agent_gcp.CostArgument("some table", datetime.datetime(year=2022, month=7, day=12))
+    cost = agent_gcp.CostArgument("some table")
     agent_gcp.run(client, list(agent_gcp.SERVICES.values()), [], cost=cost, serializer=collector)
     return list(sections)
 

@@ -34,7 +34,7 @@ Section = Sequence[FSBlock]
 
 
 def _to_mb(raw: str, unit_size: int) -> float:
-    unscaled = saveint(raw)
+    unscaled = int(raw)
     if unscaled < 0:
         unscaled += 2**32
     return unscaled * unit_size / 1048576.0
@@ -53,9 +53,12 @@ def parse_hr_fs(string_table: StringTable) -> Section:
         }:
             continue
 
-        unit_size = saveint(hrunits)
-        size_mb = _to_mb(hrsize, unit_size)
-        used_mb = _to_mb(hrused, unit_size)
+        try:
+            unit_size = int(hrunits)
+            size_mb = _to_mb(hrsize, unit_size)
+            used_mb = _to_mb(hrused, unit_size)
+        except ValueError:
+            continue
 
         section.append((fix_hr_fs_mountpoint(hrdescr), size_mb, size_mb - used_mb, 0))
 
@@ -78,14 +81,6 @@ check_info["hr_fs"] = {
 }
 
 
-def saveint(raw: str) -> int:
-    # borrowed from legacy API. Get rid of this!
-    try:
-        return int(raw)
-    except ValueError:
-        return 0
-
-
 # Juniper devices put information about the device into the
 # field where we expect the mount point. Ugly. Remove that crap.
 def fix_hr_fs_mountpoint(mp: str) -> str:
@@ -100,9 +95,7 @@ def fix_hr_fs_mountpoint(mp: str) -> str:
 
 def discover_hr_fs(section: Section) -> DiscoveryResult:
     mplist = [
-        descr
-        for descr, size, _avail, _reserved in section
-        if descr not in EXCLUDED_MOUNTPOINTS and size
+        descr for descr, _size, _avail, _reserved in section if descr not in EXCLUDED_MOUNTPOINTS
     ]
     return df_discovery(host_extra_conf(host_name(), filesystem_groups), mplist)
 

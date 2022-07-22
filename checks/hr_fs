@@ -32,6 +32,13 @@ CheckResult = tuple[int, str, list]
 Section = Sequence[tuple[str, str, str, str]]  # for now.
 
 
+def _to_mb(raw: str, unit_size: int) -> float:
+    unscaled = saveint(raw)
+    if unscaled < 0:
+        unscaled += 2**32
+    return unscaled * unit_size / 1048576.0
+
+
 def parse_hr_fs(string_table: StringTable) -> Section:
     section = []
     for hrtype, hrdescr, hrunits, hrsize, hrused in string_table:
@@ -105,18 +112,9 @@ def check_hr_fs(item: str, params: Mapping[str, Any], section: Section) -> Check
         hrdescr = fix_hr_fs_mountpoint(hrdescr)
         if "patterns" in params or item == hrdescr:
             unit_size = saveint(hrunits_str)
-            hrsize = saveint(hrsize_str)
-            if hrsize < 0:
-                hrsize = hrsize + 2**32
-            size = hrsize * unit_size
-            hrused = saveint(hrused_str)
-            if hrused < 0:
-                hrused = hrused + 2**32
-            used = hrused * unit_size
-            size_mb = size / 1048576.0
-            used_mb = used / 1048576.0
-            avail_mb = size_mb - used_mb
-            fslist.append((hrdescr, size_mb, avail_mb, 0))
+            size_mb = _to_mb(hrsize_str, unit_size)
+            used_mb = _to_mb(hrused_str, unit_size)
+            fslist.append((hrdescr, size_mb, size_mb - used_mb, 0))
 
     return df_check_filesystem_list(item, params, fslist)
 

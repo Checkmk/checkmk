@@ -5,7 +5,7 @@
 
 from typing import Any, Mapping, NamedTuple, Sequence
 
-from .agent_based_api.v1 import contains, get_value_store, register, Service, SNMPTree
+from .agent_based_api.v1 import contains, get_value_store, register, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.df import df_check_filesystem_list, df_discovery, FILESYSTEM_DEFAULT_PARAMS
 
@@ -66,7 +66,7 @@ register.snmp_section(
 def discover_emc_isilon_quota(
     params: Sequence[Mapping[str, Any]], section: Section
 ) -> DiscoveryResult:
-    yield from (Service(item=i, parameters=p) for i, p in df_discovery(params, list(section)))
+    yield from df_discovery(params, list(section))
 
 
 def _percent_levels(value: float, total: float, fallback: float) -> float:

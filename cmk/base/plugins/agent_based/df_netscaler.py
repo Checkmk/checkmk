@@ -5,7 +5,7 @@
 
 from typing import Any, Mapping, Sequence
 
-from .agent_based_api.v1 import get_value_store, register, Service, SNMPTree, startswith
+from .agent_based_api.v1 import get_value_store, register, SNMPTree, startswith
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.df import (
     df_check_filesystem_list,
@@ -47,12 +47,14 @@ register.snmp_section(
 def discover_df_netscaler(
     params: Sequence[Mapping[str, Any]], section: FSBlocks
 ) -> DiscoveryResult:
-    mplist = [
-        name
-        for name, size, *_rest in section
-        if size and size > 0 and name not in EXCLUDED_MOUNTPOINTS
-    ]
-    yield from (Service(item=i, parameters=p) for i, p in df_discovery(params, mplist))
+    yield from df_discovery(
+        params,
+        [
+            name
+            for name, size, *_rest in section
+            if size and size > 0 and name not in EXCLUDED_MOUNTPOINTS
+        ],
+    )
 
 
 def check_df_netscaler(item: str, params: Mapping[str, Any], section: FSBlocks) -> CheckResult:

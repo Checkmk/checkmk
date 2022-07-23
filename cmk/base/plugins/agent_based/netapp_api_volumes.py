@@ -13,7 +13,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Metric,
     register,
     Result,
-    Service,
     State,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -67,7 +66,7 @@ register.agent_section(
 def discover_netapp_api_volumes(
     params: Sequence[Mapping[str, Any]], section: Section
 ) -> DiscoveryResult:
-    yield from (Service(item=i, parameters=p) for i, p in df_discovery(params, section))
+    yield from df_discovery(params, section)
 
 
 def _create_key(protocol: str, mode: str, field: str) -> str:

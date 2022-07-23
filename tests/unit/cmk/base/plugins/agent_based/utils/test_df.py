@@ -7,7 +7,7 @@ from typing import Any, Mapping, Optional
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.utils import df
 
@@ -17,7 +17,7 @@ from cmk.base.plugins.agent_based.utils import df
     [
         (
             [],
-            [("SUMMARY", {}), ("ceph_bar", {}), ("ceph_foo", {})],
+            [Service(item="SUMMARY"), Service(item="ceph_bar"), Service(item="ceph_foo")],
         ),
         (
             [
@@ -31,12 +31,15 @@ from cmk.base.plugins.agent_based.utils import df
                     ]
                 }
             ],
-            [("SUMMARY", {}), ("Foo", {"patterns": (["ceph*"], ["SUMM"])})],
+            [
+                Service(item="SUMMARY"),
+                Service(item="Foo", parameters={"patterns": (["ceph*"], ["SUMM"])}),
+            ],
         ),
     ],
 )
 def test_df_discovery(params, expected) -> None:  # type:ignore[no-untyped-def]
-    actual = df.df_discovery(params, ["SUMMARY", "ceph_foo", "ceph_bar"])
+    actual = list(df.df_discovery(params, ["SUMMARY", "ceph_foo", "ceph_bar"]))
 
     assert len(actual) == len(expected)
     for elem in expected:
@@ -305,12 +308,12 @@ def test_df_check_filesystem_single(
         ),
         (
             {  # pylint:disable= duplicate-key
-                "fake_same_name": {
+                "fake_same_name": {  # noqa: F601
                     "size_mb": None,
                     "avail_mb": None,
                     "reserved_mb": 0,
                 },
-                "fake_same_name": {
+                "fake_same_name": {  # noqa: F601
                     "size_mb": None,
                     "avail_mb": None,
                     "reserved_mb": 0,

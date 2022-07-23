@@ -6,7 +6,7 @@
 import re
 from typing import Any, Mapping, Sequence
 
-from .agent_based_api.v1 import get_value_store, register, Service
+from .agent_based_api.v1 import get_value_store, register
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.df import (
     df_check_filesystem_list,
@@ -222,12 +222,9 @@ register.agent_section(
 
 
 def discover_zfsget(params: Sequence[Mapping[str, Any]], section: Section) -> DiscoveryResult:
-    yield from (
-        Service(item=i, parameters=p)
-        for i, p in df_discovery(
-            params,
-            [mp for mp in section if mp not in EXCLUDED_MOUNTPOINTS],
-        )
+    yield from df_discovery(
+        params,
+        [mp for mp in section if mp not in EXCLUDED_MOUNTPOINTS],
     )
 
 

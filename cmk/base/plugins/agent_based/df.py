@@ -167,12 +167,15 @@ def discover_df(params: Mapping[str, Any], section: DfSection) -> DiscoveryResul
 
     # TODO Cleanup df_inventory + mp_to_df_block:
     #      df_inventory should also return a list of DfBlocks or similar.
-    mp_to_df_block = {df_block.mountpoint: df_block for df_block in df_blocks}
+    mp_to_df_block: dict[str | None, DfBlock] = {
+        df_block.mountpoint: df_block for df_block in df_blocks
+    }
 
-    for mountpoint, discovered_params in df_discovery([params], mplist):
-        df_block = mp_to_df_block.get(mountpoint)
+    for service in df_discovery([params], mplist):
+        mountpoint = service.item
+        df_block = mp_to_df_block.get(service.item)
         additional_params = {}
-        if "patterns" in discovered_params:
+        if "patterns" in service.parameters:
             # Add the grouping_behaviour info to the discovered parameters of this service.
             # With this information the check can easily reconstruct the discovered grouping.
             additional_params = {"grouping_behaviour": item_and_grouping.grouping}
@@ -188,7 +191,7 @@ def discover_df(params: Mapping[str, Any], section: DfSection) -> DiscoveryResul
         # in the check because "mountpoint" may contain a free-text group name.
         additional_params["mountpoint_for_block_devices"] = mountpoint_for_block_devices.name
         additional_params["item_appearance"] = item_and_grouping.item
-        yield Service(item=mountpoint, parameters={**discovered_params, **additional_params})
+        yield Service(item=mountpoint, parameters={**service.parameters, **additional_params})
 
 
 # Legacy params

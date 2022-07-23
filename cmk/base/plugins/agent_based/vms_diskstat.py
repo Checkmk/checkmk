@@ -5,7 +5,7 @@
 
 from typing import Any, Mapping, Sequence
 
-from .agent_based_api.v1 import get_value_store, register, Service
+from .agent_based_api.v1 import get_value_store, register
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.df import df_check_filesystem_single, df_discovery, FILESYSTEM_DEFAULT_PARAMS, FSBlock
 
@@ -48,7 +48,7 @@ register.agent_section(
 def discover_vms_diskstat_df(
     params: Sequence[Mapping[str, Any]], section: Section
 ) -> DiscoveryResult:
-    yield from (Service(item=i, parameters=p) for i, p in df_discovery(params, section))
+    yield from df_discovery(params, section)
 
 
 def check_vms_diskstat_df(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:

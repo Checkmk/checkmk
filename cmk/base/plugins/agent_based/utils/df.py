@@ -19,8 +19,8 @@ from typing import (
     Union,
 )
 
-from ..agent_based_api.v1 import check_levels, Metric, render, Result, State
-from ..agent_based_api.v1.type_defs import CheckResult
+from ..agent_based_api.v1 import check_levels, Metric, render, Result, Service, State
+from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .size_trend import size_trend
 
 
@@ -465,7 +465,7 @@ _GroupingSpec = tuple[list[str], list[str]]
 def df_discovery(
     params: Iterable[Mapping[str, Any]],
     mplist: Iterable[str],
-) -> Sequence[tuple[str, Mapping[str, _GroupingSpec]]]:
+) -> DiscoveryResult:
     group_patterns: dict[str, _GroupingSpec] = {}
     for groups in params:
         for group in groups.get("groups", []):
@@ -475,13 +475,14 @@ def df_discovery(
 
     ungrouped_mountpoints, groups = _ungrouped_mountpoints_and_groups(mplist, group_patterns)
 
-    ungrouped: list[tuple[str, Mapping[str, _GroupingSpec]]] = [
-        (mp, {}) for mp in ungrouped_mountpoints
-    ]
-    grouped: list[tuple[str, Mapping[str, _GroupingSpec]]] = [
-        (group, {"patterns": group_patterns[group]}) for group in groups
-    ]
-    return ungrouped + grouped
+    yield from (Service(item=mp) for mp in ungrouped_mountpoints)
+    yield from (
+        Service(
+            item=group,
+            parameters={"patterns": group_patterns[group]},
+        )
+        for group in groups
+    )
 
 
 def check_filesystem_levels(  # type:ignore[no-untyped-def]

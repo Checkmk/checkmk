@@ -7,7 +7,7 @@ import re
 import time
 from typing import Any, Mapping, Sequence
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, register, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, register
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -345,9 +345,7 @@ register.agent_section(
 
 
 def discover_ceph_df(params: Sequence[Mapping[str, Any]], section: FSBlocks) -> DiscoveryResult:
-    yield from (
-        Service(item=i, parameters=p) for i, p in df_discovery(params, [x[0] for x in section])
-    )
+    yield from df_discovery(params, [x[0] for x in section])
 
 
 def check_ceph_df(item: str, params: Mapping[str, Any], section: FSBlocks) -> CheckResult:

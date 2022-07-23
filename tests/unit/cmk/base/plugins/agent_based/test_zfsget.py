@@ -298,7 +298,7 @@ def test_zfsget_parse(info, expected_parse_result) -> None:  # type:ignore[no-un
 )
 def test_zfsget_discovery(info, expected_discovery_result) -> None:  # type:ignore[no-untyped-def]
     assert sorted(zfsget.discover_zfsget([{"groups": []}], zfsget.parse_zfsget(info))) == sorted(
-        zfsget.Service(item=i, parameters=p) for i, p in expected_discovery_result
+        Service(item=i, parameters=p) for i, p in expected_discovery_result
     )
 
 

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Tuple
 
-from .agent_based_api.v1 import get_value_store, OIDEnd, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1 import get_value_store, OIDEnd, register, Result, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils.df import (
     df_check_filesystem_list,
@@ -93,8 +93,7 @@ def discovery_hitachi_hnas_volume(
     params: List[Mapping[str, Any]],
     section: Section,
 ) -> DiscoveryResult:
-    for service_name, param in df_discovery(params, list(section.volumes.keys())):
-        yield Service(item=service_name, parameters=param)
+    yield from df_discovery(params, list(section.volumes.keys()))
 
 
 def check_hitachi_hnas_volume(
@@ -177,8 +176,7 @@ def discovery_hitachi_hnas_virtual_volume(
     params: List[Mapping[str, Any]],
     section: Section,
 ) -> DiscoveryResult:
-    for service_name, param in df_discovery(params, list(section.virtual_volumes.keys())):
-        yield Service(item=service_name, parameters=param)
+    yield from df_discovery(params, list(section.virtual_volumes.keys()))
 
 
 def check_hitachi_hnas_virtual_volume(

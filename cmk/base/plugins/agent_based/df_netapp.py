@@ -13,7 +13,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_value_store,
     not_exists,
     register,
-    Service,
     SNMPTree,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -63,12 +62,14 @@ register.snmp_section(
 
 
 def discvover_df_netapp(params: Sequence[Mapping[str, Any]], section: FSBlocks) -> DiscoveryResult:
-    mplist = [
-        volume
-        for volume, size, *_rest in section
-        if size and size > 0  # Exclude filesystems with zero size (some snapshots)
-    ]
-    yield from (Service(item=i, parameters=p) for i, p in df_discovery(params, mplist))
+    yield from df_discovery(
+        params,
+        [
+            volume
+            for volume, size, *_rest in section
+            if size and size > 0  # Exclude filesystems with zero size (some snapshots)
+        ],
+    )
 
 
 def check_df_netapp(item: str, params: Mapping[str, Any], section: FSBlocks) -> CheckResult:

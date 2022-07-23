@@ -5,13 +5,7 @@
 
 from typing import Any, Final, Mapping, Sequence
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    get_value_store,
-    register,
-    Result,
-    Service,
-    State,
-)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, register, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 from .utils.df import df_check_filesystem_list, df_discovery, FILESYSTEM_DEFAULT_PARAMS
@@ -43,12 +37,14 @@ def _instance_to_item(instance: str) -> str | None:
 def discover_esx_vsphere_counters_ramdisk(
     params: Sequence[Mapping[str, Any]], section: SectionCounter
 ) -> DiscoveryResult:
-    ramdisks = [
-        name
-        for instance in section.get("sys.resourceMemConsumed", {})
-        if (name := _instance_to_item(instance)) is not None
-    ]
-    yield from (Service(item=i, parameters=p) for i, p in df_discovery(params, ramdisks))
+    yield from df_discovery(
+        params,
+        [
+            name
+            for instance in section.get("sys.resourceMemConsumed", {})
+            if (name := _instance_to_item(instance)) is not None
+        ],
+    )
 
 
 def check_esx_vsphere_counters_ramdisk(

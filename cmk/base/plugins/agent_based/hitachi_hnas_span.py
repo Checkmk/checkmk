@@ -5,12 +5,7 @@
 
 from typing import Any, Mapping, Sequence
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    get_value_store,
-    register,
-    Service,
-    SNMPTree,
-)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, register, SNMPTree
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -41,7 +36,7 @@ def parse_hitachi_hnas_span(string_table: StringTable) -> Section:
 def discover_hitachi_hnas_span(
     params: Sequence[Mapping[str, Any]], section: Section
 ) -> DiscoveryResult:
-    yield from (Service(item=i, parameters=p) for i, p in df_discovery(params, list(section)))
+    yield from df_discovery(params, list(section))
 
 
 def check_hitachi_hnas_span(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:

@@ -5,7 +5,7 @@
 
 from typing import Any, Mapping, Sequence
 
-from .agent_based_api.v1 import get_value_store, register, Service, SNMPTree
+from .agent_based_api.v1 import get_value_store, register, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.df import (
     df_check_filesystem_list,
@@ -93,11 +93,8 @@ def fix_hr_fs_mountpoint(mp: str) -> str:
 
 
 def discover_hr_fs(params: Sequence[Mapping[str, Any]], section: Section) -> DiscoveryResult:
-    yield from (
-        Service(item=i, parameters=p)
-        for i, p in df_discovery(
-            params, [descr for descr, *_unused in section if descr not in EXCLUDED_MOUNTPOINTS]
-        )
+    yield from df_discovery(
+        params, [descr for descr, *_unused in section if descr not in EXCLUDED_MOUNTPOINTS]
     )
 
 

@@ -5,7 +5,7 @@
 
 from typing import Any, Mapping, NamedTuple, Sequence
 
-from .agent_based_api.v1 import get_value_store, register, Service
+from .agent_based_api.v1 import get_value_store, register
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.df import df_check_filesystem_list, df_discovery, FILESYSTEM_DEFAULT_PARAMS
 
@@ -65,12 +65,14 @@ register.agent_section(
 
 
 def discover_df_zos(params: Sequence[Mapping[str, Any]], section: Section) -> DiscoveryResult:
-    mplist = [
-        item
-        for item, mp in section.items()
-        if "Read/Write" in mp.options and not mp.options.intersection(_DF_ZOS_EXCLUDE_LIST)
-    ]
-    yield from (Service(item=i, parameters=p) for i, p in df_discovery(params, mplist))
+    yield from df_discovery(
+        params,
+        [
+            item
+            for item, mp in section.items()
+            if "Read/Write" in mp.options and not mp.options.intersection(_DF_ZOS_EXCLUDE_LIST)
+        ],
+    )
 
 
 def check_df_zos(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:

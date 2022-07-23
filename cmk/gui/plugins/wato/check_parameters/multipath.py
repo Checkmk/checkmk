@@ -8,6 +8,7 @@ from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     HostRulespec,
     rulespec_registry,
+    RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersStorage,
 )
 from cmk.gui.valuespec import (
@@ -47,7 +48,7 @@ def _valuespec_inventory_multipath_rules():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupCheckParametersStorage,
+        group=RulespecGroupCheckParametersDiscovery,
         match_type="dict",
         name="inventory_multipath_rules",
         valuespec=_valuespec_inventory_multipath_rules,

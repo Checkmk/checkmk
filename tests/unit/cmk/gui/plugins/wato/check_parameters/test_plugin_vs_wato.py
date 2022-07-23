@@ -264,6 +264,7 @@ class ErrorReporter:
         ("discovery", "discovery_netapp_api_fan_rules"),
         ("discovery", "discovery_netapp_api_psu_rules"),
         ("discovery", "oracle_performance_discovery"),
+        ("discovery", "inventory_multipath_rules"),
         ("inventory", "active_checks:cmk_inv"),
         ("inventory", "inv_parameters:inv_if"),
         ("inventory", "inv_parameters:lnx_sysctl"),

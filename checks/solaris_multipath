@@ -27,6 +27,8 @@ def check_solaris_multipath(item, params, info):  # pylint: disable=too-many-bra
             operational = int(operational)
             total = int(total)
 
+            # TODO: Clean this up! Compare to the multipath plugin.
+
             infotext = "%d paths operational, %d paths total" % (operational, total)
 
             levels = params.get("levels")
@@ -42,21 +44,21 @@ def check_solaris_multipath(item, params, info):  # pylint: disable=too-many-bra
                     info = "paths active: %d" % (operational)
                     if operational <= crit_num:
                         return 2, info + levels
-                    elif operational <= warn_num:
+                    if operational <= warn_num:
                         return 1, info + levels
                     return 0, info
-                else:
-                    expected = int(levels)  # should be int, just for legacy reasons
-                if operational > expected:
-                    state = 1
-                elif expected == operational:
-                    state = 0
-                elif expected >= operational * 2:  # less than half of paths operational
-                    state = 2
-                else:
-                    state = 1
-                if state:
-                    infotext += ", %d paths expected to be operational" % expected
+
+            expected = int(levels)  # should be int, just for legacy reasons
+            if operational > expected:
+                state = 1
+            elif expected == operational:
+                state = 0
+            elif expected >= operational * 2:  # less than half of paths operational
+                state = 2
+            else:
+                state = 1
+            if state:
+                infotext += ", %d paths expected to be operational" % expected
 
             return state, infotext
     return None

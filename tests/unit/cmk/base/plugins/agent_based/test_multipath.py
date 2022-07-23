@@ -74,15 +74,23 @@ def test_check_percent_levels(check_multipath, section) -> None:
     ) == [
         Result(
             state=State.WARN,
-            summary="(ORA_ZAPPL2T_DATA_3): Paths active: 4/4 (warn/crit below 4/1)",
-        )
+            summary="(ORA_ZAPPL2T_DATA_3): Paths active: 100.00% (warn/crit below 110.00%/40.00%)",
+        ),
+        Result(
+            state=State.OK,
+            summary="4 of 4",
+        ),
     ]
 
 
 def test_check_count_levels(check_multipath, section) -> None:
     assert list(check_multipath("3600601604d40310047cf93ce66f7e111", {"levels": 3}, section,)) == [
         Result(
+            state=State.OK,
+            summary="(ORA_ZAPPL2T_DATA_3): Paths active: 100.00%",
+        ),
+        Result(
             state=State.WARN,
-            summary="(ORA_ZAPPL2T_DATA_3): Paths active: 4/4, Expected paths: 3 (warn at 3)",
-        )
+            summary="4 of 4 (expected: 3)",
+        ),
     ]

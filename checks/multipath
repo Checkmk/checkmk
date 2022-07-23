@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+
 # Configuration for using alias instead of UUID
 inventory_multipath_rules = []
 
@@ -172,40 +174,25 @@ def check_multipath(item, params, parsed):  # pylint: disable=too-many-branches
     num_broken = len(broken_paths)
     num_active = num_paths - num_broken
 
-    infotext = "%sPaths active: %s/%s" % (aliasinfo, num_active, num_paths)
-
     levels = params.get("levels")
-    if isinstance(levels, tuple):
-        warn, crit = levels
-        warn_num = (warn / 100.0) * num_paths
-        crit_num = (crit / 100.0) * num_paths
-        if num_active < crit_num:
+
+    yield check_levels(
+        num_active / num_paths * 100.0,
+        None,
+        params=(None, None, levels[0], levels[1]) if isinstance(levels, tuple) else None,
+        human_readable_func=render.percent,
+        infoname=f"{aliasinfo}Paths active",
+    )
+
+    state = 0
+    infotext = f"{num_active} of {num_paths}"
+    if isinstance(levels, int):
+        infotext += f" (expected: {levels})"
+        if num_active < levels:
             state = 2
-        elif num_active < warn_num:
+        elif num_active > levels:
             state = 1
-        else:
-            state = 0
-
-        if state > 0:
-            infotext += " (warn/crit below %d/%d)" % (warn_num, crit_num)
-        yield state, infotext
-
-    else:
-        if isinstance(levels, int):
-            expected_paths = levels
-        else:
-            expected_paths = 2
-
-        infotext += ", Expected paths: %s" % expected_paths
-        if num_active < expected_paths:
-            state = 2
-            infotext += " (crit below %d)" % expected_paths
-        elif num_active > expected_paths:
-            state = 1
-            infotext += " (warn at %d)" % expected_paths
-        else:
-            state = 0
-        yield state, infotext
+    yield state, infotext
 
     if num_broken > 0:
         yield 0, "Broken paths: %s" % ",".join(broken_paths)

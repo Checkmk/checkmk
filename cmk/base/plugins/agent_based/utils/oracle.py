@@ -124,6 +124,10 @@ SectionTableSpaces = TypedDict(
 )
 
 
+InstancePerformance = Mapping[str, Mapping[str, Any]]
+SectionPerformance = Mapping[str, InstancePerformance]
+
+
 def analyze_datafiles(
     datafiles: List[DataFiles],
     db_version: int,

@@ -3,44 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Mapping
-
 from .agent_based_api.v1 import register, TableRow
-from .agent_based_api.v1.type_defs import InventoryResult, StringTable
-
-Instance = Mapping[str, Mapping[str, Any]]
-Section = Mapping[str, Instance]
+from .agent_based_api.v1.type_defs import InventoryResult
+from .utils.oracle import SectionPerformance
 
 
-def parse_oracle_performance(string_table: StringTable) -> Section:
-    def _try_parse_int(s):
-        try:
-            return int(s)
-        except ValueError:
-            return None
-
-    parsed: Dict[str, Dict[str, Dict[str, Any]]] = {}
-    for line in string_table:
-        if len(line) < 3:
-            continue
-        parsed.setdefault(line[0], {})
-        parsed[line[0]].setdefault(line[1], {})
-        counters = line[3:]
-        if len(counters) == 1:
-            parsed[line[0]][line[1]].setdefault(line[2], _try_parse_int(counters[0]))
-        else:
-            parsed[line[0]][line[1]].setdefault(line[2], list(map(_try_parse_int, counters)))
-
-    return parsed
-
-
-register.agent_section(
-    name="oracle_performance",
-    parse_function=parse_oracle_performance,
-)
-
-
-def inventory_oracle_performance(section: Section) -> InventoryResult:
+def inventory_oracle_performance(section: SectionPerformance) -> InventoryResult:
     for entry, entryinfo in section.items():
         if "SGA_info" in entryinfo:
             sga_data = entryinfo["SGA_info"]

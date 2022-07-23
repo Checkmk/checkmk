@@ -38,7 +38,7 @@ from typing import Any, Callable, Iterable, Mapping, Sequence, Union
 import cmk.utils.oracle_constants as oracle_constants
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
-from cmk.base.plugins.agent_based.oracle_performance import Instance, Section
+from cmk.base.plugins.agent_based.utils.oracle import InstancePerformance, SectionPerformance
 
 DiscoveryResult = Iterable[tuple]
 
@@ -49,7 +49,7 @@ CheckResult = Iterable[Result]
 oracle_performance_discovery = []
 
 
-def _get_item_data(item: str, section: Section) -> Instance:
+def _get_item_data(item: str, section: SectionPerformance) -> InstancePerformance:
     data = section.get(item)
 
     # In case of missing information we assume that the login into
@@ -66,7 +66,7 @@ def _get_item_data(item: str, section: Section) -> Instance:
 #
 
 
-def discover_oracle_performance(section: Section) -> DiscoveryResult:
+def discover_oracle_performance(section: SectionPerformance) -> DiscoveryResult:
     params = host_extra_conf_merged(host_name(), oracle_performance_discovery)
     discovered_params = {
         "check_dbtime": params.get("dbtime") is None,
@@ -76,7 +76,7 @@ def discover_oracle_performance(section: Section) -> DiscoveryResult:
 
 
 def check_oracle_performance(  # pylint: disable=too-many-branches
-    item: str, params: Mapping[str, Any], section: Section
+    item: str, params: Mapping[str, Any], section: SectionPerformance
 ) -> CheckResult:
     data = _get_item_data(item, section)
 
@@ -176,10 +176,10 @@ check_info["oracle_performance"] = {
 
 def discover_oracle_performance_subcheck(
     subcheck_settings_name: str,
-) -> Callable[[Section], DiscoveryResult]:
+) -> Callable[[SectionPerformance], DiscoveryResult]:
     """Subchecks are activated optionally via discovery configuration"""
 
-    def inventory_func(section: Section) -> DiscoveryResult:
+    def inventory_func(section: SectionPerformance) -> DiscoveryResult:
         params = host_extra_conf_merged(host_name(), oracle_performance_discovery)
         if params.get(subcheck_settings_name) is None:
             return
@@ -199,7 +199,7 @@ def _get_subcheck_params(full_params: Mapping[str, Any], subcheck_name: str) -> 
 
 
 def _check_oracle_db_time(
-    item: str, item_data: Instance, now: float, params: Mapping[str, Any]
+    item: str, item_data: InstancePerformance, now: float, params: Mapping[str, Any]
 ) -> CheckResult:
     def get_db_time_rate(perfvar, val):
         return get_rate("oracle_perf.%s.sys_time_model.%s" % (item, perfvar), now, val)
@@ -229,7 +229,7 @@ def _check_oracle_db_time(
 
 
 def check_oracle_performance_dbtime(
-    item: str, params: Mapping[str, Any], section: Section
+    item: str, params: Mapping[str, Any], section: SectionPerformance
 ) -> CheckResult:
     params = _get_subcheck_params(params, "dbtime")
     data = _get_item_data(item, section)
@@ -270,7 +270,7 @@ def _check_oracle_memory_info(data, params, sticky_fields: Sequence[str], fields
 
 
 def check_oracle_performance_memory(
-    item: str, params: Mapping[str, Any], section: Section
+    item: str, params: Mapping[str, Any], section: SectionPerformance
 ) -> CheckResult:
     params = _get_subcheck_params(params, "memory")
     data = _get_item_data(item, section)
@@ -302,7 +302,7 @@ check_info["oracle_performance.memory"] = {
 def _check_oracle_performance_iostat_file(
     item: str,
     params: Mapping[str, Any],
-    data: Instance,
+    data: InstancePerformance,
     unit,
     io_fields,
 ) -> CheckResult:
@@ -358,7 +358,7 @@ def _check_oracle_performance_iostat_file(
 
 
 def check_oracle_performance_iostat_bytes(
-    item: str, params: Mapping[str, Any], section: Section
+    item: str, params: Mapping[str, Any], section: SectionPerformance
 ) -> CheckResult:
     params = _get_subcheck_params(params, "iostat_bytes")
     data = _get_item_data(item, section)
@@ -386,7 +386,7 @@ check_info["oracle_performance.iostat_bytes"] = {
 
 
 def check_oracle_performance_iostat_ios(
-    item: str, params: Mapping[str, Any], section: Section
+    item: str, params: Mapping[str, Any], section: SectionPerformance
 ) -> CheckResult:
     params = _get_subcheck_params(params, "iostat_ios")
     data = _get_item_data(item, section)
@@ -418,7 +418,7 @@ check_info["oracle_performance.iostat_ios"] = {
 
 
 def check_oracle_performance_waitclasses(
-    item: str, params: Mapping[str, Any], section: Section
+    item: str, params: Mapping[str, Any], section: SectionPerformance
 ) -> CheckResult:
     params = _get_subcheck_params(params, "waitclasses")
     data = _get_item_data(item, section)

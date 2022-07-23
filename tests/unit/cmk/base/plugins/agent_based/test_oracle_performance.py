@@ -11,10 +11,8 @@ import cmk.base.config
 import cmk.base.plugin_contexts
 from cmk.base.config import ConfigCache
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State, TableRow
-from cmk.base.plugins.agent_based.oracle_performance import (
-    inventory_oracle_performance,
-    parse_oracle_performance,
-)
+from cmk.base.plugins.agent_based.oracle_performance_inventory import inventory_oracle_performance
+from cmk.base.plugins.agent_based.oracle_performance_section import parse_oracle_performance
 
 _AGENT_OUTPUT_1 = [
     ["TWH", "sys_time_model", "DB CPU", "14826"],

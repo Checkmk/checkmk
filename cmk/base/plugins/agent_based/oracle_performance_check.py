@@ -3,6 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
+from typing import Any, Callable, Mapping, MutableMapping, Sequence
+
+import cmk.utils.oracle_constants as oracle_constants  # pylint: disable=cmk-module-layer-violation
+
+from .agent_based_api.v1 import (
+    check_levels,
+    get_rate,
+    get_value_store,
+    IgnoreResultsError,
+    Metric,
+    register,
+    render,
+    Result,
+    Service,
+    State,
+)
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from .utils.oracle import InstancePerformance, SectionPerformance
+
 # In cooperation with Thorsten Bruhns from OPITZ Consulting
 
 # <<oracle_performance:sep(124)>>>
@@ -32,22 +52,6 @@
 # ENLT1|librarycache|TEMPORARY INDEX|18399|3046|18399|0|3046|0
 # ENLT1|librarycache|EDITION|4054576|4054369|7846832|7846023|366|0
 
-import time
-from typing import Any, Callable, Iterable, Mapping, Sequence, Union
-
-import cmk.utils.oracle_constants as oracle_constants
-
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
-from cmk.base.plugins.agent_based.utils.oracle import InstancePerformance, SectionPerformance
-
-DiscoveryResult = Iterable[tuple]
-
-Result = Union[tuple[int, str, list], tuple[int, str]]
-CheckResult = Iterable[Result]
-
-
-oracle_performance_discovery = []
-
 
 def _get_item_data(item: str, section: SectionPerformance) -> InstancePerformance:
     data = section.get(item)
@@ -66,13 +70,14 @@ def _get_item_data(item: str, section: SectionPerformance) -> InstancePerformanc
 #
 
 
-def discover_oracle_performance(section: SectionPerformance) -> DiscoveryResult:
-    params = host_extra_conf_merged(host_name(), oracle_performance_discovery)
+def discover_oracle_performance(
+    params: Mapping[str, Any], section: SectionPerformance
+) -> DiscoveryResult:
     discovered_params = {
         "check_dbtime": params.get("dbtime") is None,
         "check_memory": params.get("memory") is None,
     }
-    yield from ((item, discovered_params.copy()) for item in section)
+    yield from (Service(item=item, parameters=discovered_params.copy()) for item in section)
 
 
 def check_oracle_performance(  # pylint: disable=too-many-branches
@@ -80,14 +85,15 @@ def check_oracle_performance(  # pylint: disable=too-many-branches
 ) -> CheckResult:
     data = _get_item_data(item, section)
 
+    value_store = get_value_store()
     now = time.time()
     perfdata = []
     infotexts = []
 
-    if params.get("check_dbtime", True):
-        yield from _check_oracle_db_time(item, data, now, {})
+    if params["check_dbtime"]:
+        yield from _check_oracle_db_time(value_store, item, data, now, {})
 
-    if params.get("check_memory", True):
+    if params["check_memory"]:
         # old agents deliver not the needed data...
         sga_info = data.get("SGA_info")
         if sga_info:
@@ -95,8 +101,11 @@ def check_oracle_performance(  # pylint: disable=too-many-branches
                 if sga_field.name not in sga_info:
                     continue
                 value = sga_info[sga_field.name]
-                yield 0, "%s: %s" % (sga_field.name, get_bytes_human_readable(value))
-                perfdata.append((sga_field.metric, value))
+                yield Result(
+                    state=State.OK,
+                    summary="%s: %s" % (sga_field.name, render.bytes(value)),
+                )
+                perfdata.append(Metric(sga_field.metric, value))
 
     # PDB is <SID>.<PDB>
     # ignore more perf-data for PDBs except CDBROOT!
@@ -104,7 +113,8 @@ def check_oracle_performance(  # pylint: disable=too-many-branches
 
         # PDB does not support more performance data at the moment...
         infotexts.append("limited performance data for PDBSEED and non CDBROOT")
-        yield 0, ", ".join(infotexts), perfdata
+        yield Result(state=State.OK, summary=", ".join(infotexts))
+        yield from perfdata
         return
 
     if "buffer_pool_statistics" in data and "DEFAULT" in data["buffer_pool_statistics"]:
@@ -128,16 +138,15 @@ def check_oracle_performance(  # pylint: disable=too-many-branches
             ("oracle_free_buffer_wait", free_buffer_wait),
             ("oracle_buffer_busy_wait", buffer_busy_wait),
         ]:
-            rate = get_rate("oracle_perf.%s.buffer_pool_statistics.%s" % (item, what), now, val)
-            perfdata.append((what, rate))
+            rate = get_rate(value_store, "%s.buffer_pool_statistics.%s" % (item, what), now, val)
+            perfdata.append(Metric(what, rate))
 
         if db_block_gets + consistent_gets > 0:
             hit_ratio = (
                 1 - (float(physical_reads) / (float(db_block_gets) + float(consistent_gets)))
             ) * 100
-            yield 0, "Buffer hit ratio: %.1f%%" % hit_ratio, [
-                ("oracle_buffer_hit_ratio", hit_ratio)
-            ]
+            yield Result(state=State.OK, summary="Buffer hit ratio: %.1f%%" % hit_ratio)
+            yield Metric("oracle_buffer_hit_ratio", hit_ratio)
 
     if "librarycache" in data:
         pins_sum = 0
@@ -148,26 +157,30 @@ def check_oracle_performance(  # pylint: disable=too-many-branches
             pin_hits_sum += pin_hits
 
         for what, val in [("oracle_pins_sum", pins_sum), ("oracle_pin_hits_sum", pin_hits_sum)]:
-            rate = get_rate("oracle_perf.%s.librarycache.%s" % (item, what), now, val)
-            perfdata.append((what, rate))
+            rate = get_rate(value_store, "%s.librarycache.%s" % (item, what), now, val)
+            perfdata.append(Metric(what, rate))
 
         if pins_sum > 0:
             pin_ratio = float(pin_hits_sum) / pins_sum * 100
-            yield 0, "Library cache hit ratio: %.1f%%" % pin_ratio, [
-                ("oracle_library_cache_hit_ratio", pin_ratio)
-            ]
+            yield Result(state=State.OK, summary="Library cache hit ratio: %.1f%%" % pin_ratio)
+            yield Metric("oracle_library_cache_hit_ratio", pin_ratio)
 
-    yield 0, ", ".join(sorted(infotexts)), sorted(perfdata)
-    return
+    yield from (Result(state=State.OK, summary=s) for s in sorted(infotexts))
+    yield from sorted(perfdata, key=lambda m: m.name)
 
 
-check_info["oracle_performance"] = {
-    # section is already migrated!
-    "inventory_function": discover_oracle_performance,
-    "check_function": check_oracle_performance,
-    "service_description": "ORA %s Performance",
-    "has_perfdata": True,
-}
+register.check_plugin(
+    name="oracle_performance",
+    service_name="ORA %s Performance",
+    discovery_function=discover_oracle_performance,
+    discovery_ruleset_name="oracle_performance_discovery",
+    discovery_default_parameters={},
+    check_function=check_oracle_performance,
+    check_default_parameters={
+        "check_dbtime": True,
+        "check_memory": True,
+    },
+)
 
 # ======================================
 # ORACLE PERFORMANCE SUBCHECKS
@@ -176,14 +189,13 @@ check_info["oracle_performance"] = {
 
 def discover_oracle_performance_subcheck(
     subcheck_settings_name: str,
-) -> Callable[[SectionPerformance], DiscoveryResult]:
+) -> Callable[[Mapping[str, Any], SectionPerformance], DiscoveryResult]:
     """Subchecks are activated optionally via discovery configuration"""
 
-    def inventory_func(section: SectionPerformance) -> DiscoveryResult:
-        params = host_extra_conf_merged(host_name(), oracle_performance_discovery)
+    def inventory_func(params: Mapping[str, Any], section: SectionPerformance) -> DiscoveryResult:
         if params.get(subcheck_settings_name) is None:
             return
-        yield from ((sid, {}) for sid in section)
+        yield from (Service(item=sid) for sid in section)
 
     return inventory_func
 
@@ -206,10 +218,14 @@ def _unit_formatter(unit: str) -> Callable[[float], str]:
 
 
 def _check_oracle_db_time(
-    item: str, item_data: InstancePerformance, now: float, params: Mapping[str, Any]
+    value_store: MutableMapping[str, Any],
+    item: str,
+    item_data: InstancePerformance,
+    now: float,
+    params: Mapping[str, Any],
 ) -> CheckResult:
     def get_db_time_rate(perfvar, val):
-        return get_rate("oracle_perf.%s.sys_time_model.%s" % (item, perfvar), now, val)
+        return get_rate(value_store, "%s.sys_time_model.%s" % (item, perfvar), now, val)
 
     # old agents deliver no data for sys_time_model!
     sys_time_model = item_data.get("sys_time_model")
@@ -232,12 +248,12 @@ def _check_oracle_db_time(
         ("oracle_db_wait_time", "DB Non-Idle Wait", wait_time_rate),
     ]:
         metric_params = params.get(metric, (None, None))
-        yield check_levels(
+        yield from check_levels(
             rate,
-            metric,
-            metric_params,
-            human_readable_func=_unit_formatter("/s"),
-            infoname=infoname,
+            metric_name=metric,
+            levels_upper=metric_params,
+            render_func=_unit_formatter("/s"),
+            label=infoname,
         )
 
 
@@ -246,17 +262,22 @@ def check_oracle_performance_dbtime(
 ) -> CheckResult:
     params = _get_subcheck_params(params, "dbtime")
     data = _get_item_data(item, section)
+    value_store = get_value_store()
     now = time.time()
-    yield from _check_oracle_db_time(item, data, now, params)
+    yield from _check_oracle_db_time(value_store, item, data, now, params)
 
 
-check_info["oracle_performance.dbtime"] = {
-    "inventory_function": discover_oracle_performance_subcheck("dbtime"),
-    "check_function": check_oracle_performance_dbtime,
-    "service_description": "ORA %s Performance DB-Time",
-    "has_perfdata": True,
-    "group": "oracle_performance",
-}
+register.check_plugin(
+    name="oracle_performance_dbtime",
+    service_name="ORA %s Performance DB-Time",
+    sections=["oracle_performance"],
+    discovery_function=discover_oracle_performance_subcheck("dbtime"),
+    discovery_ruleset_name="oracle_performance_discovery",
+    discovery_default_parameters={},
+    check_function=check_oracle_performance_dbtime,
+    check_ruleset_name="oracle_performance",
+    check_default_parameters={},
+)
 
 #
 # ORACLE Performance Memory
@@ -264,25 +285,20 @@ check_info["oracle_performance.dbtime"] = {
 
 
 def _check_oracle_memory_info(data, params, sticky_fields: Sequence[str], fields) -> CheckResult:
-    results = []
-
     for ga_field in fields:
         value = data.get(ga_field.name)
         if value is None:
             continue
 
         metric_params = params.get(ga_field.metric, (None, None))
-        state, infotext, perf = check_levels(
+        yield from check_levels(
             value,
-            ga_field.metric,
-            metric_params,
-            human_readable_func=get_bytes_human_readable,
+            metric_name=ga_field.metric,
+            levels_upper=metric_params,
+            render_func=render.bytes,
+            label=ga_field.name,
+            notice_only=ga_field.name not in sticky_fields,
         )
-        if ga_field.name in sticky_fields:
-            results.append((state, "%s: %s" % (ga_field.name, infotext), perf))
-        else:
-            results.append((0, "", perf))
-    return results
 
 
 def check_oracle_performance_memory(
@@ -302,13 +318,18 @@ def check_oracle_performance_memory(
     )
 
 
-check_info["oracle_performance.memory"] = {
-    "inventory_function": discover_oracle_performance_subcheck("memory"),
-    "check_function": check_oracle_performance_memory,
-    "service_description": "ORA %s Performance Memory",
-    "has_perfdata": True,
-    "group": "oracle_performance",
-}
+register.check_plugin(
+    name="oracle_performance_memory",
+    service_name="ORA %s Performance Memory",
+    sections=["oracle_performance"],
+    discovery_function=discover_oracle_performance_subcheck("memory"),
+    discovery_ruleset_name="oracle_performance_discovery",
+    discovery_default_parameters={},
+    check_function=check_oracle_performance_memory,
+    check_ruleset_name="oracle_performance",
+    check_default_parameters={},
+)
+
 
 #
 # ORACLE Performance IOStat Bytes + IOs
@@ -316,15 +337,15 @@ check_info["oracle_performance.memory"] = {
 
 
 def _check_oracle_performance_iostat_file(
+    value_store: MutableMapping[str, Any],
+    now: float,
     item: str,
     params: Mapping[str, Any],
     data: InstancePerformance,
     unit: str,
     io_fields,
 ) -> CheckResult:
-    now = time.time()
-    totals = [0] * len(io_fields)
-    error_results = []
+    totals = [0.0] * len(io_fields)
 
     iostat_info = data.get("iostat_file", {})
     for iofile in oracle_constants.oracle_iofiles:
@@ -336,26 +357,23 @@ def _check_oracle_performance_iostat_file(
             metric_name = "oracle_ios_f_%s_%s" % (iofile.id, metric_suffix)
 
             rate = get_rate(
-                "oracle_perf.%s.iostat_file.%s" % (item, metric_name),
+                value_store,
+                "%s.iostat_file.%s" % (item, metric_name),
                 now,
                 waitdata[data_index],
-                onwrap=ZERO,
             )
 
             totals[i] += rate
 
             metric_params = params.get(metric_name, (None, None))
-            state, info, perf = check_levels(
+            yield from check_levels(
                 rate,
-                metric_name,
-                metric_params,
-                human_readable_func=_unit_formatter(unit),
-                infoname=iofile.name + " " + field_name,
+                metric_name=metric_name,
+                levels_upper=metric_params,
+                render_func=_unit_formatter(unit),
+                label=iofile.name + " " + field_name,
+                notice_only=True,
             )
-            if state > 0:
-                error_results.append((state, info, perf))
-            else:
-                yield 0, "", perf
 
     # Output totals
     for i, field in enumerate(io_fields):
@@ -368,13 +386,8 @@ def _check_oracle_performance_iostat_file(
             total_readable = total
             total_output = "%.2f%s" % (total_readable, unit)
 
-        yield 0, "%s: %s" % (field_name, total_output), [
-            ("oracle_ios_f_total_%s" % metric_suffix, total)
-        ]
-
-    # Output errors
-    for result in error_results:
-        yield result
+        yield Result(state=State.OK, summary="%s: %s" % (field_name, total_output))
+        yield Metric("oracle_ios_f_total_%s" % metric_suffix, total)
 
 
 def check_oracle_performance_iostat_bytes(
@@ -382,7 +395,10 @@ def check_oracle_performance_iostat_bytes(
 ) -> CheckResult:
     params = _get_subcheck_params(params, "iostat_bytes")
     data = _get_item_data(item, section)
-    return _check_oracle_performance_iostat_file(
+    value_store = get_value_store()
+    yield from _check_oracle_performance_iostat_file(
+        value_store,
+        time.time(),
         item,
         params,
         data,
@@ -396,13 +412,17 @@ def check_oracle_performance_iostat_bytes(
     )
 
 
-check_info["oracle_performance.iostat_bytes"] = {
-    "inventory_function": discover_oracle_performance_subcheck("iostat_bytes"),
-    "check_function": check_oracle_performance_iostat_bytes,
-    "service_description": "ORA %s Performance IO Stats Bytes",
-    "has_perfdata": True,
-    "group": "oracle_performance",
-}
+register.check_plugin(
+    name="oracle_performance_iostat_bytes",
+    service_name="ORA %s Performance IO Stats Bytes",
+    sections=["oracle_performance"],
+    discovery_function=discover_oracle_performance_subcheck("iostat_bytes"),
+    discovery_ruleset_name="oracle_performance_discovery",
+    discovery_default_parameters={},
+    check_function=check_oracle_performance_iostat_bytes,
+    check_ruleset_name="oracle_performance",
+    check_default_parameters={},
+)
 
 
 def check_oracle_performance_iostat_ios(
@@ -410,7 +430,10 @@ def check_oracle_performance_iostat_ios(
 ) -> CheckResult:
     params = _get_subcheck_params(params, "iostat_ios")
     data = _get_item_data(item, section)
-    return _check_oracle_performance_iostat_file(
+    value_store = get_value_store()
+    yield from _check_oracle_performance_iostat_file(
+        value_store,
+        time.time(),
         item,
         params,
         data,
@@ -424,13 +447,17 @@ def check_oracle_performance_iostat_ios(
     )
 
 
-check_info["oracle_performance.iostat_ios"] = {
-    "inventory_function": discover_oracle_performance_subcheck("iostat_ios"),
-    "check_function": check_oracle_performance_iostat_ios,
-    "service_description": "ORA %s Performance IO Stats Requests",
-    "has_perfdata": True,
-    "group": "oracle_performance",
-}
+register.check_plugin(
+    name="oracle_performance_iostat_ios",
+    service_name="ORA %s Performance IO Stats Requests",
+    sections=["oracle_performance"],
+    discovery_function=discover_oracle_performance_subcheck("iostat_ios"),
+    discovery_ruleset_name="oracle_performance_discovery",
+    discovery_default_parameters={},
+    check_function=check_oracle_performance_iostat_ios,
+    check_ruleset_name="oracle_performance",
+    check_default_parameters={},
+)
 
 #
 # ORACLE Performance Waitclasses
@@ -443,10 +470,10 @@ def check_oracle_performance_waitclasses(
     params = _get_subcheck_params(params, "waitclasses")
     data = _get_item_data(item, section)
     now = time.time()
-    error_results = []
+    value_store = get_value_store()
 
-    total_waited_sum = 0
-    total_waited_sum_fg = 0
+    total_waited_sum = 0.0
+    total_waited_sum_fg = 0.0
 
     # sys_wait_class -> wait_class
     waitclass_info = data.get("sys_wait_class", {})
@@ -462,7 +489,8 @@ def check_oracle_performance_waitclasses(
             metric_name = "%s_%s" % (metric_start, metric_suffix)
             rate = (
                 get_rate(
-                    "oracle_perf.%s.sys_wait_class.%s" % (item, metric_name),
+                    value_store,
+                    "%s.sys_wait_class.%s" % (item, metric_name),
                     now,
                     waitdata[data_index],
                 )
@@ -475,17 +503,14 @@ def check_oracle_performance_waitclasses(
                 total_waited_sum_fg += rate
 
             metric_params = params.get(metric_name, (None, None))
-            state, info, perf = check_levels(
+            yield from check_levels(
                 rate,
-                metric_name,
-                metric_params,
-                human_readable_func=_unit_formatter("/s"),
-                infoname="%s %s" % (waitclass.name, infotext_suffix),
+                metric_name=metric_name,
+                levels_upper=metric_params,
+                render_func=_unit_formatter("/s"),
+                label="%s %s" % (waitclass.name, infotext_suffix),
+                notice_only=True,
             )
-            if state > 0:
-                error_results.append((state, info, perf))
-            else:
-                yield 0, "", perf
 
     # Output totals
     for infoname, total_value, total_metric in [
@@ -493,23 +518,23 @@ def check_oracle_performance_waitclasses(
         ("Total waited (FG)", total_waited_sum_fg, "oracle_wait_class_total_fg"),
     ]:
         metric_params = params.get(total_metric, (None, None))
-        yield check_levels(
+        yield from check_levels(
             total_value,
-            total_metric,
-            metric_params,
-            human_readable_func=_unit_formatter("/s"),
-            infoname=infoname,
+            metric_name=total_metric,
+            levels_upper=metric_params,
+            render_func=_unit_formatter("/s"),
+            label=infoname,
         )
 
-    # Output errors
-    for result in error_results:
-        yield result
 
-
-check_info["oracle_performance.waitclasses"] = {
-    "inventory_function": discover_oracle_performance_subcheck("waitclasses"),
-    "check_function": check_oracle_performance_waitclasses,
-    "service_description": "ORA %s Performance System Wait",
-    "has_perfdata": True,
-    "group": "oracle_performance",
-}
+register.check_plugin(
+    name="oracle_performance_waitclasses",
+    service_name="ORA %s Performance System Wait",
+    sections=["oracle_performance"],
+    discovery_function=discover_oracle_performance_subcheck("waitclasses"),
+    discovery_ruleset_name="oracle_performance_discovery",
+    discovery_default_parameters={},
+    check_function=check_oracle_performance_waitclasses,
+    check_ruleset_name="oracle_performance",
+    check_default_parameters={},
+)

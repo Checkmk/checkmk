@@ -3,16 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Mapping, Sequence, Tuple
+
 import pytest
 
-from cmk.utils.type_defs import CheckPluginName
-
-import cmk.base.config
-import cmk.base.plugin_contexts
-from cmk.base.config import ConfigCache
+from cmk.base.plugins.agent_based import oracle_performance_check as opc
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State, TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    InventoryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.oracle_performance_inventory import inventory_oracle_performance
 from cmk.base.plugins.agent_based.oracle_performance_section import parse_oracle_performance
+from cmk.base.plugins.agent_based.utils.oracle import SectionPerformance
 
 _AGENT_OUTPUT_1 = [
     ["TWH", "sys_time_model", "DB CPU", "14826"],
@@ -60,6 +64,11 @@ _AGENT_OUTPUT_2 = [
 ]
 
 
+@pytest.fixture(name="get_rate_zero", scope="function")
+def _get_rate_zero(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(opc, "get_rate", lambda *a, **kw: 0.0)
+
+
 @pytest.mark.parametrize(
     "string_table, expected_result",
     [
@@ -74,14 +83,10 @@ _AGENT_OUTPUT_2 = [
     ],
 )
 def test_discover_oracle_performance(
-    monkeypatch: pytest.MonkeyPatch, fix_register, string_table, expected_result
+    string_table: StringTable, expected_result: Sequence[Service]
 ) -> None:
-    check_plugin = fix_register.check_plugins[CheckPluginName("oracle_performance")]
-    # TODO hack: clean this up as soon as the check is migrated
-    monkeypatch.setattr(cmk.base.plugin_contexts, "_hostname", "foo")
-    monkeypatch.setattr(ConfigCache, "host_extra_conf_merged", lambda s, h, r: {})
     section = parse_oracle_performance(string_table)
-    assert sorted(check_plugin.discovery_function(section)) == expected_result
+    assert sorted(opc.discover_oracle_performance({}, section)) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -145,15 +150,16 @@ def test_discover_oracle_performance(
     ],
 )
 def test_check_oracle_performance(
-    monkeypatch, fix_register, string_table, item, expected_result
+    get_rate_zero: None, string_table: StringTable, item: str, expected_result: CheckResult
 ) -> None:
-    # TODO hack: clean this up as soon as the check is migrated
-    monkeypatch.setattr(cmk.base.item_state, "raise_counter_wrap", lambda: None)
-
-    check_plugin = fix_register.check_plugins[CheckPluginName("oracle_performance")]
     section = parse_oracle_performance(string_table)
     assert (
-        list(check_plugin.check_function(item=item, params={}, section=section)) == expected_result
+        list(
+            opc.check_oracle_performance(
+                item, {"check_dbtime": True, "check_memory": True}, section
+            )
+        )
+        == expected_result
     )
 
 
@@ -195,8 +201,167 @@ def test_check_oracle_performance(
         ),
     ],
 )
-def test_inventory_oracle_performance(string_table, expected_result) -> None:
+def test_inventory_oracle_performance(
+    string_table: StringTable, expected_result: InventoryResult
+) -> None:
     assert (
         list(inventory_oracle_performance(parse_oracle_performance(string_table)))
         == expected_result
     )
+
+
+@pytest.mark.parametrize(
+    "item, params, section, expected_result",
+    [
+        (
+            "Oracle DB",
+            {
+                "dbtime": [("oracle_db_cpu", (1.0, 2.0))],
+            },
+            {
+                "Oracle DB": {
+                    "sys_time_model": {"DB CPU": 1000000, "DB time": 1000000},
+                }
+            },
+            [
+                Result(state=State.OK, summary="DB Time: 0.00/s"),
+                Metric("oracle_db_time", 0.0),
+                Result(state=State.OK, summary="DB CPU: 0.00/s"),
+                Metric("oracle_db_cpu", 0.0, levels=(1.0, 2.0)),
+                Result(state=State.OK, summary="DB Non-Idle Wait: 0.00/s"),
+                Metric("oracle_db_wait_time", 0.0),
+            ],
+        )
+    ],
+)
+def test_check_oracle_performance_dbtime(  # type:ignore[no-untyped-def]
+    get_rate_zero: None,
+    item: str,
+    params: Mapping[str, Sequence[Tuple[str, Tuple[float, float]]]],
+    section: SectionPerformance,
+    expected_result,
+):
+    assert list(opc.check_oracle_performance_dbtime(item, params, section)) == expected_result
+
+
+@pytest.mark.parametrize(
+    "item, params, section, expected_result",
+    [
+        (
+            "Oracle DB",
+            {
+                "memory": [("oracle_sga_size", (1, 2))],
+            },
+            {
+                "Oracle DB": {
+                    "SGA_info": {
+                        "Maximum SGA Size": 34359738368,
+                    },
+                    "PGA_info": {
+                        "total PGA allocated": [2561432576, None],
+                    },
+                }
+            },
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="Maximum SGA Size: 32.0 GiB (warn/crit at 1 B/2 B)",
+                ),
+                Metric("oracle_sga_size", 34359738368.0, levels=(1.0, 2.0)),
+                Result(state=State.OK, summary="total PGA allocated: 2.39 GiB"),
+                Metric("oracle_pga_total_pga_allocated", 2561432576.0),
+            ],
+        )
+    ],
+)
+def test_check_oracle_performance_memory(  # type:ignore[no-untyped-def]
+    item: str,
+    params: Mapping[str, Sequence[Tuple[str, Tuple[float, float]]]],
+    section: SectionPerformance,
+    expected_result,
+):
+    assert list(opc.check_oracle_performance_memory(item, params, section)) == expected_result
+
+
+@pytest.mark.parametrize(
+    "item, params, section, expected_result",
+    [
+        (
+            "Oracle DB",
+            {
+                "memory": [("oracle_sga_size", (1, 2))],
+            },
+            {
+                "Oracle DB": {
+                    "iostat_file": {
+                        "Archive Log Backup": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    }
+                }
+            },
+            [
+                Result(state=State.OK, notice="Archive Log Backup Small Reads: 0.00/s"),
+                Metric("oracle_ios_f_archive_log_backup_s_r", 0.0),
+                Result(state=State.OK, notice="Archive Log Backup Large Reads: 0.00/s"),
+                Metric("oracle_ios_f_archive_log_backup_l_r", 0.0),
+                Result(state=State.OK, notice="Archive Log Backup Small Writes: 0.00/s"),
+                Metric("oracle_ios_f_archive_log_backup_s_w", 0.0),
+                Result(state=State.OK, notice="Archive Log Backup Large Writes: 0.00/s"),
+                Metric("oracle_ios_f_archive_log_backup_l_w", 0.0),
+                Result(state=State.OK, summary="Small Reads: 0.00/s"),
+                Metric("oracle_ios_f_total_s_r", 0.0),
+                Result(state=State.OK, summary="Large Reads: 0.00/s"),
+                Metric("oracle_ios_f_total_l_r", 0.0),
+                Result(state=State.OK, summary="Small Writes: 0.00/s"),
+                Metric("oracle_ios_f_total_s_w", 0.0),
+                Result(state=State.OK, summary="Large Writes: 0.00/s"),
+                Metric("oracle_ios_f_total_l_w", 0.0),
+            ],
+        )
+    ],
+)
+def test_check_oracle_performance_iostat_ios(  # type:ignore[no-untyped-def]
+    get_rate_zero: None,
+    item: str,
+    params: Mapping[str, Sequence[Tuple[str, Tuple[float, float]]]],
+    section: SectionPerformance,
+    expected_result,
+):
+    assert list(opc.check_oracle_performance_iostat_ios(item, params, section)) == expected_result
+
+
+@pytest.mark.parametrize(
+    "item, params, section, expected_result",
+    [
+        (
+            "Oracle DB",
+            {
+                "waitclasses": [("oracle_wait_class_total", (1.0, 3.0))],
+            },
+            {
+                "Oracle DB": {
+                    "sys_wait_class": {
+                        "Administrative": [207484198, 36421528, 162, 118],
+                    },
+                }
+            },
+            [
+                Result(state=State.OK, notice="Administrative wait class: 0.00/s"),
+                Metric("oracle_wait_class_administrative_waited", 0.0),
+                Result(state=State.OK, notice="Administrative wait class (FG): 0.00/s"),
+                Metric("oracle_wait_class_administrative_waited_fg", 0.0),
+                Result(state=State.OK, summary="Total waited: 0.00/s"),
+                Metric("oracle_wait_class_total", 0.0, levels=(1.0, 3.0)),
+                Result(state=State.OK, summary="Total waited (FG): 0.00/s"),
+                Metric("oracle_wait_class_total_fg", 0.0),
+            ],
+        )
+    ],
+)
+def test_check_oracle_performance_waitclasses(  # type:ignore[no-untyped-def]
+    get_rate_zero: None,
+    item: str,
+    params: Mapping[str, Sequence[Tuple[str, Tuple[float, float]]]],
+    section: SectionPerformance,
+    expected_result,
+):
+    assert list(opc.check_oracle_performance_waitclasses(item, params, section)) == expected_result

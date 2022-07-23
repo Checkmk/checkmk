@@ -30,11 +30,11 @@ import cmk
                 }
             },
             [
-                Result(state=State.OK, summary="DB Time: 0.00 1/s"),
+                Result(state=State.OK, summary="DB Time: 0.00/s"),
                 Metric("oracle_db_time", 0.0),
-                Result(state=State.OK, summary="DB CPU: 0.00 1/s"),
+                Result(state=State.OK, summary="DB CPU: 0.00/s"),
                 Metric("oracle_db_cpu", 0.0, levels=(1.0, 2.0)),
-                Result(state=State.OK, summary="DB Non-Idle Wait: 0.00 1/s"),
+                Result(state=State.OK, summary="DB Non-Idle Wait: 0.00/s"),
                 Metric("oracle_db_wait_time", 0.0),
             ],
         )
@@ -117,13 +117,13 @@ def test_check_oracle_performance_memory(  # type:ignore[no-untyped-def]
                 Metric("oracle_ios_f_archive_log_backup_l_r", 0.0),
                 Metric("oracle_ios_f_archive_log_backup_s_w", 0.0),
                 Metric("oracle_ios_f_archive_log_backup_l_w", 0.0),
-                Result(state=State.OK, summary="Small Reads: 0.00 1/s"),
+                Result(state=State.OK, summary="Small Reads: 0.00/s"),
                 Metric("oracle_ios_f_total_s_r", 0.0),
-                Result(state=State.OK, summary="Large Reads: 0.00 1/s"),
+                Result(state=State.OK, summary="Large Reads: 0.00/s"),
                 Metric("oracle_ios_f_total_l_r", 0.0),
-                Result(state=State.OK, summary="Small Writes: 0.00 1/s"),
+                Result(state=State.OK, summary="Small Writes: 0.00/s"),
                 Metric("oracle_ios_f_total_s_w", 0.0),
-                Result(state=State.OK, summary="Large Writes: 0.00 1/s"),
+                Result(state=State.OK, summary="Large Writes: 0.00/s"),
                 Metric("oracle_ios_f_total_l_w", 0.0),
             ],
         )
@@ -159,9 +159,9 @@ def test_check_oracle_performance_iostat_ios(  # type:ignore[no-untyped-def]
             [
                 Metric("oracle_wait_class_administrative_waited", 0.0),
                 Metric("oracle_wait_class_administrative_waited_fg", 0.0),
-                Result(state=State.OK, summary="Total waited: 0.00 1/s"),
+                Result(state=State.OK, summary="Total waited: 0.00/s"),
                 Metric("oracle_wait_class_total", 0.0, levels=(1.0, 3.0)),
-                Result(state=State.OK, summary="Total waited (FG): 0.00 1/s"),
+                Result(state=State.OK, summary="Total waited (FG): 0.00/s"),
                 Metric("oracle_wait_class_total_fg", 0.0),
             ],
         )

@@ -193,6 +193,13 @@ def _get_subcheck_params(full_params: Mapping[str, Any], subcheck_name: str) -> 
     return {p[0]: p[1] for p in params_list}
 
 
+def _unit_formatter(unit: str) -> Callable[[float], str]:
+    def _fmt(f: float) -> str:
+        return "%.2f%s" % (f, unit)
+
+    return _fmt
+
+
 #
 # ORACLE Performance DB-Time
 #
@@ -225,7 +232,13 @@ def _check_oracle_db_time(
         ("oracle_db_wait_time", "DB Non-Idle Wait", wait_time_rate),
     ]:
         metric_params = params.get(metric, (None, None))
-        yield check_levels(rate, metric, metric_params, unit="1/s", infoname=infoname)
+        yield check_levels(
+            rate,
+            metric,
+            metric_params,
+            human_readable_func=_unit_formatter("/s"),
+            infoname=infoname,
+        )
 
 
 def check_oracle_performance_dbtime(
@@ -260,7 +273,10 @@ def _check_oracle_memory_info(data, params, sticky_fields: Sequence[str], fields
 
         metric_params = params.get(ga_field.metric, (None, None))
         state, infotext, perf = check_levels(
-            value, ga_field.metric, metric_params, human_readable_func=get_bytes_human_readable
+            value,
+            ga_field.metric,
+            metric_params,
+            human_readable_func=get_bytes_human_readable,
         )
         if ga_field.name in sticky_fields:
             results.append((state, "%s: %s" % (ga_field.name, infotext), perf))
@@ -303,7 +319,7 @@ def _check_oracle_performance_iostat_file(
     item: str,
     params: Mapping[str, Any],
     data: InstancePerformance,
-    unit,
+    unit: str,
     io_fields,
 ) -> CheckResult:
     now = time.time()
@@ -330,7 +346,11 @@ def _check_oracle_performance_iostat_file(
 
             metric_params = params.get(metric_name, (None, None))
             state, info, perf = check_levels(
-                rate, metric_name, metric_params, infoname=iofile.name + " " + field_name, unit=unit
+                rate,
+                metric_name,
+                metric_params,
+                human_readable_func=_unit_formatter(unit),
+                infoname=iofile.name + " " + field_name,
             )
             if state > 0:
                 error_results.append((state, info, perf))
@@ -346,7 +366,7 @@ def _check_oracle_performance_iostat_file(
             total_output = render.iobandwidth(total)
         else:
             total_readable = total
-            total_output = "%.2f %s" % (total_readable, unit)
+            total_output = "%.2f%s" % (total_readable, unit)
 
         yield 0, "%s: %s" % (field_name, total_output), [
             ("oracle_ios_f_total_%s" % metric_suffix, total)
@@ -394,7 +414,7 @@ def check_oracle_performance_iostat_ios(
         item,
         params,
         data,
-        "1/s",
+        "/s",
         [
             (0, "s_r", "Small Reads"),
             (1, "l_r", "Large Reads"),
@@ -459,8 +479,8 @@ def check_oracle_performance_waitclasses(
                 rate,
                 metric_name,
                 metric_params,
+                human_readable_func=_unit_formatter("/s"),
                 infoname="%s %s" % (waitclass.name, infotext_suffix),
-                unit="1/s",
             )
             if state > 0:
                 error_results.append((state, info, perf))
@@ -473,7 +493,13 @@ def check_oracle_performance_waitclasses(
         ("Total waited (FG)", total_waited_sum_fg, "oracle_wait_class_total_fg"),
     ]:
         metric_params = params.get(total_metric, (None, None))
-        yield check_levels(total_value, total_metric, metric_params, infoname=infoname, unit="1/s")
+        yield check_levels(
+            total_value,
+            total_metric,
+            metric_params,
+            human_readable_func=_unit_formatter("/s"),
+            infoname=infoname,
+        )
 
     # Output errors
     for result in error_results:

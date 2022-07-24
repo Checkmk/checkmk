@@ -14,56 +14,35 @@ API data, see CMK-10826.
 
 from typing import Literal, Mapping, Sequence, TypedDict, Union
 
+from typing_extensions import NotRequired
+
 from .schemata import api
 from .transform_any import convert_to_timestamp, parse_annotations, parse_labels
 
 # StatefulSet
 
 
-class JSONOwnerReferenceMandatory(TypedDict):
+class JSONOwnerReference(TypedDict):
     uid: str
-
-
-class JSONOwnerReferenceOptional(TypedDict, total=False):
-    controller: bool
-
-
-class JSONOwnerReference(JSONOwnerReferenceOptional, JSONOwnerReferenceMandatory):
-    pass
+    controller: NotRequired[bool]
 
 
 JSONOwnerReferences = Sequence[JSONOwnerReference]
 
 
-class JSONStatefulSetMetaDataMandatory(TypedDict):
+class JSONStatefulSetMetaData(TypedDict):
     uid: str
     name: str
     namespace: str
     creationTimestamp: str
+    labels: NotRequired[Mapping[str, str]]
+    annotations: NotRequired[Mapping[str, str]]
+    ownerReferences: NotRequired[JSONOwnerReferences]
 
 
-class JSONStatefulSetMetaDataOptional(TypedDict, total=False):
-    labels: Mapping[str, str]
-    annotations: Mapping[str, str]
-    ownerReferences: JSONOwnerReferences
-
-
-class JSONStatefulSetMetaData(JSONStatefulSetMetaDataMandatory, JSONStatefulSetMetaDataOptional):
-    pass
-
-
-class JSONStatefulSetRollingUpdateMandatory(TypedDict):
+class JSONStatefulSetRollingUpdate(TypedDict):
     type: Literal["RollingUpdate"]
-
-
-class JSONStatefulSetRollingUpdateOptional(TypedDict, total=False):
-    rollingUpdate: Mapping[Literal["partition"], int]
-
-
-class JSONStatefulSetRollingUpdate(
-    JSONStatefulSetRollingUpdateMandatory, JSONStatefulSetRollingUpdateOptional
-):
-    pass
+    rollingUpdate: NotRequired[Mapping[Literal["partition"], int]]
 
 
 class JSONStatefulSetOnDelete(TypedDict):

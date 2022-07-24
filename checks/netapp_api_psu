@@ -22,11 +22,15 @@ def _format_item(name: str, _instance: netapp_api.Instance) -> str:
 
 
 def parse_netapp_api_psu(string_table: StringTable) -> netapp_api.SectionSingleInstance:
-    return netapp_api.parse_netapp_api_single_instance(
-        string_table,
-        custom_keys=["power-supply-list", "power-supply-element-number"],
-        item_func=_format_item,
-    )
+    return {
+        name: psu
+        for name, psu in netapp_api.parse_netapp_api_single_instance(
+            string_table,
+            custom_keys=["power-supply-list", "power-supply-element-number"],
+            item_func=_format_item,
+        ).items()
+        if psu.get("power-supply-is-not-installed") != "true"
+    }
 
 
 check_info["netapp_api_psu"] = {
@@ -40,7 +44,7 @@ def discovery_netapp_api_psu(section: netapp_api.SectionSingleInstance) -> Disco
     params = host_extra_conf_merged(host_name(), discovery_netapp_api_psu_rules)
     if not netapp_api.discover_single_items(params):
         return
-    yield from ((key, {}) for key in _get_psus_with_power_supply(section))
+    yield from ((key, {}) for key in section)
 
 
 def check_netapp_api_psu(
@@ -68,18 +72,9 @@ check_info["netapp_api_psu"].update(
 
 def discovery_netapp_api_psu_summary(section: netapp_api.SectionSingleInstance) -> DiscoveryResult:
     params = host_extra_conf_merged(host_name(), discovery_netapp_api_psu_rules)
-    if netapp_api.discover_single_items(params):
+    if not section or netapp_api.discover_single_items(params):
         return
-    if _get_psus_with_power_supply(section):
-        yield "Summary", {}
-
-
-def _get_psus_with_power_supply(
-    psus: Mapping[str, netapp_api.Instance]
-) -> Mapping[str, netapp_api.Instance]:
-    return {
-        key: psu for key, psu in psus.items() if psu.get("power-supply-is-not-installed") != "true"
-    }
+    yield "Summary", {}
 
 
 def _get_failed_power_supply_elements(psus: Mapping[str, netapp_api.Instance]) -> Sequence[str]:
@@ -91,10 +86,9 @@ def check_netapp_api_psu_summary(
     _no_params,
     section: netapp_api.SectionSingleInstance,
 ):
-    psus = _get_psus_with_power_supply(section)
-    yield 0, "%d power supply units in total" % len(psus)
+    yield 0, f"{len(section)} power supply units in total"
 
-    erred_psus = _get_failed_power_supply_elements(psus)
+    erred_psus = _get_failed_power_supply_elements(section)
     if erred_psus:
         erred_psus_names = ", ".join(erred_psus)
         count = len(erred_psus)

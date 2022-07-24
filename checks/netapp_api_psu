@@ -3,13 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.netapp_api import discover_single_items
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.utils import netapp_api
 
 # <<<netapp_api_psu:sep(9)>>>
 # power-supply-list 20    is-auto-power-reset-enabled false   power-supply-part-no 114-00065+A2 ...
 # power-supply-list 20    is-auto-power-reset-enabled false   power-supply-part-no 114-00065+A2 ...
+
+
+def parse_netapp_api_psu(string_table: StringTable) -> netapp_api.SectionSingleInstance:
+    return netapp_api.parse_netapp_api_single_instance(
+        string_table,
+        custom_keys=["power-supply-list", "power-supply-element-number"],
+        item_func=None,
+    )
+
+
+check_info["netapp_api_psu"] = {
+    "parse_function": parse_netapp_api_psu,
+}
 
 discovery_netapp_api_psu_rules = []
 
@@ -36,14 +49,13 @@ def check_netapp_api_psu(item, _no_params, parsed):
         yield 0, "Operational state OK"
 
 
-check_info["netapp_api_psu"] = {
-    "check_function": check_netapp_api_psu,
-    "inventory_function": discovery_netapp_api_psu,
-    "parse_function": lambda info: netapp_api_parse_lines(
-        info, custom_keys=["power-supply-list", "power-supply-element-number"]
-    ),
-    "service_description": "Power Supply Shelf %s",
-}
+check_info["netapp_api_psu"].update(
+    {
+        "check_function": check_netapp_api_psu,
+        "inventory_function": discovery_netapp_api_psu,
+        "service_description": "Power Supply Shelf %s",
+    }
+)
 
 
 def discovery_netapp_api_psu_summary(parsed):

@@ -3,14 +3,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.netapp_api import discover_single_items
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.utils import netapp_api
 
 # <<<netapp_api_fan:sep(9)>>>
 # cooling-element-list 20 cooling-element-number 1    rpm 3000    cooling-element-is-error false
 # cooling-element-list 20 cooling-element-number 2    rpm 3000    cooling-element-is-error false
 # cooling-element-list 20 cooling-element-number 3    rpm 3000    cooling-element-is-error false
+
+
+def parse_netapp_api_fan(string_table: StringTable) -> netapp_api.SectionSingleInstance:
+    return netapp_api.parse_netapp_api_single_instance(
+        string_table,
+        custom_keys=["cooling-element-list", "cooling-element-number"],
+        item_func=None,
+    )
+
+
+check_info["netapp_api_fan"] = {
+    "parse_function": parse_netapp_api_fan,
+}
+
 
 discovery_netapp_api_fan_rules = []
 
@@ -38,14 +52,13 @@ def check_netapp_api_fan(item, _no_params, parsed):
         yield 0, "Operational state OK"
 
 
-check_info["netapp_api_fan"] = {
-    "check_function": check_netapp_api_fan,
-    "parse_function": lambda info: netapp_api_parse_lines(
-        info, custom_keys=["cooling-element-list", "cooling-element-number"]
-    ),
-    "inventory_function": discovery_netapp_api_fan,
-    "service_description": "Fan Shelf %s",
-}
+check_info["netapp_api_fan"].update(
+    {
+        "check_function": check_netapp_api_fan,
+        "inventory_function": discovery_netapp_api_fan,
+        "service_description": "Fan Shelf %s",
+    }
+)
 
 
 def discovery_netapp_api_fan_summary(parsed):

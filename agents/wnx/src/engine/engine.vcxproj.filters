@@ -249,6 +249,9 @@
     <ClInclude Include="providers\agent_plugins.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="asio.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

@@ -292,6 +292,7 @@ cd $(ProjectDir)</Command>
     <ClInclude Include="..\lwa\stringutil.h" />
     <ClInclude Include="..\lwa\types.h" />
     <ClInclude Include="agent_controller.h" />
+    <ClInclude Include="asio.h" />
     <ClInclude Include="async_answer.h" />
     <ClInclude Include="cap.h" />
     <ClInclude Include="carrier.h" />

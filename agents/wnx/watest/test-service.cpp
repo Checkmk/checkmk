@@ -9,6 +9,7 @@
 #include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
+#include "tools/_raii.h"
 #include "windows_service_api.h"
 
 using namespace std::chrono_literals;
@@ -252,8 +253,10 @@ TEST(CmaSrv, ServiceChange) {
     if (!ProcessServiceConfiguration(cma::srv::kServiceName))
         GTEST_SKIP() << "service either not installed or not admin";
 
-    ON_OUT_OF_SCOPE(OnStartTest();
-                    ProcessServiceConfiguration(cma::srv::kServiceName););
+    ON_OUT_OF_SCOPE({
+        OnStartTest();
+        ProcessServiceConfiguration(cma::srv::kServiceName);
+    });
 
     auto err_control =
         WinService::ReadUint32(kServiceName, WinService::kRegErrorControl);
@@ -293,8 +296,10 @@ void SetCfgMode(YAML::Node &cfg, std::string_view mode, bool all_ports) {
 
 std::wstring getPortValue(std::wstring_view name, std::wstring_view app_name) {
     auto rule = cma::fw::FindRule(name, app_name);
-    ON_OUT_OF_SCOPE(if (rule) rule->Release());
-    if (rule == nullptr) return {};
+    ON_OUT_OF_SCOPE(if (rule) { rule->Release(); });
+    if (rule == nullptr) {
+        return {};
+    }
 
     BSTR bstr = nullptr;
     auto x = rule->get_LocalPorts(&bstr);

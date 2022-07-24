@@ -12,6 +12,7 @@
 #include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
+#include "tools/_raii.h"
 #include "tools/_tgt.h"
 #include "upgrade.h"
 
@@ -56,7 +57,7 @@ TEST(UpgradeTest, PatchOldFilesWithDatHash) {
 
     tst::TempFolder tmp("PatchOldFilesWithDatHash");
     SetLegacyAgentPath(tmp.path());
-    ON_OUT_OF_SCOPE(SetLegacyAgentPath(""););
+    ON_OUT_OF_SCOPE(SetLegacyAgentPath(""));
 
     auto state_dir = tmp.path() / dirs::kAuStateLocation;
     fs::create_directories(state_dir);

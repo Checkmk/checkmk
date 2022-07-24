@@ -10,6 +10,7 @@
 #include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
+#include "tools/_raii.h"
 using namespace std::chrono_literals;
 
 namespace cma::provider {
@@ -143,7 +144,7 @@ TEST(ServiceProcessorTest, StartStopExe) {
         counter++;
         return true;
     });
-    ON_OUT_OF_SCOPE(delete processor;);
+    ON_OUT_OF_SCOPE(delete processor);
 
     mailslot::Slot mailbox(kTestingMailSlot, 0);
     mailbox.ConstructThread(SystemMailboxCallback, 20, processor,

@@ -16,6 +16,7 @@
 #include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
+#include "tools/_raii.h"
 #include "tools/_tgt.h"
 
 namespace fs = std::filesystem;
@@ -189,8 +190,7 @@ TEST(AgentConfig, AggregateMap) {
                                        vars::kPluginPattern);
         auto merged_yaml = full_yaml[vars::kPluginsExecution];
 
-        auto select = [merged_yaml](int index,
-                                    const std::string &name) -> auto {
+        auto select = [merged_yaml](int index, const std::string &name) -> auto{
             return merged_yaml[index][name].as<std::string>();
         };
 
@@ -447,7 +447,7 @@ TEST(AgentConfig, ReloadWithTimestamp) {
         auto yaml = GetCfg().getConfig();
         ASSERT_TRUE(yaml.IsMap());
         auto x = yaml["global"];
-        ASSERT_NO_THROW(x["ena"].as<bool>(););
+        ASSERT_NO_THROW(x["ena"].as<bool>());
         auto val = x["ena"].as<bool>();
         EXPECT_EQ(val, true);
 
@@ -914,7 +914,7 @@ TEST(AgentConfig, CacheApi) {
     const std::string src("abc");
     auto res = details::CreateTestFile(source_name, src);
     std::error_code ec;
-    ON_OUT_OF_SCOPE(fs::remove(res, ec););
+    ON_OUT_OF_SCOPE(fs::remove(res, ec));
     auto expected_name = GetCfg().getCacheDir() / source_name.filename();
     fs::remove(expected_name, ec);
     ASSERT_EQ(res.u8string(), source_name.u8string());

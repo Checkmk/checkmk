@@ -24,7 +24,7 @@ ItemFunc = Optional[Callable[[str, Instance], str]]
 
 
 def discover_single_items(params: Mapping[str, str]) -> bool:
-    return params.get("mode", "single") == "single"
+    return params["mode"] == "single"
 
 
 def parse_netapp_api_multiple_instances(

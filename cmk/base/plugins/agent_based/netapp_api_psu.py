@@ -3,14 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Mapping, Sequence
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils import netapp_api
-
-DiscoveryResult = Iterable[tuple[str, Mapping[str, Any]]]
-CheckResult = Iterable[tuple[int, str]]
-
+from .agent_based_api.v1 import register, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils import netapp_api
 
 # <<<netapp_api_psu:sep(9)>>>
 # power-supply-list 20    is-auto-power-reset-enabled false   power-supply-part-no 114-00065+A2 ...
@@ -33,48 +30,53 @@ def parse_netapp_api_psu(string_table: StringTable) -> netapp_api.SectionSingleI
     }
 
 
-check_info["netapp_api_psu"] = {
-    "parse_function": parse_netapp_api_psu,
-}
+register.agent_section(
+    name="netapp_api_psu",
+    parse_function=parse_netapp_api_psu,
+)
 
-discovery_netapp_api_psu_rules = []
 
-
-def discovery_netapp_api_psu(section: netapp_api.SectionSingleInstance) -> DiscoveryResult:
-    params = host_extra_conf_merged(host_name(), discovery_netapp_api_psu_rules)
+def discovery_netapp_api_psu(
+    params: Mapping[str, Any],
+    section: netapp_api.SectionSingleInstance,
+) -> DiscoveryResult:
     if not netapp_api.discover_single_items(params):
         return
-    yield from ((key, {}) for key in section)
+    yield from (Service(item=key) for key in section)
 
 
 def check_netapp_api_psu(
     item: str,
-    _no_params,
     section: netapp_api.SectionSingleInstance,
 ) -> CheckResult:
     if not (psu := section.get(item)):
         return
 
     if psu.get("power-supply-is-error") == "true":
-        yield 2, "Error in PSU %s" % psu["power-supply-element-number"]
+        yield Result(
+            state=State.CRIT, summary="Error in PSU %s" % psu["power-supply-element-number"]
+        )
     else:
-        yield 0, "Operational state OK"
+        yield Result(state=State.OK, summary="Operational state OK")
 
 
-check_info["netapp_api_psu"].update(
-    {
-        "check_function": check_netapp_api_psu,
-        "inventory_function": discovery_netapp_api_psu,
-        "service_description": "Power Supply Shelf %s",
-    }
+register.check_plugin(
+    name="netapp_api_psu",
+    service_name="Power Supply Shelf %s",
+    discovery_function=discovery_netapp_api_psu,
+    discovery_ruleset_name="discovery_netapp_api_psu_rules",
+    discovery_default_parameters={"mode": "single"},
+    check_function=check_netapp_api_psu,
 )
 
 
-def discovery_netapp_api_psu_summary(section: netapp_api.SectionSingleInstance) -> DiscoveryResult:
-    params = host_extra_conf_merged(host_name(), discovery_netapp_api_psu_rules)
+def discovery_netapp_api_psu_summary(
+    params: Mapping[str, Any],
+    section: netapp_api.SectionSingleInstance,
+) -> DiscoveryResult:
     if not section or netapp_api.discover_single_items(params):
         return
-    yield "Summary", {}
+    yield Service(item="Summary")
 
 
 def _get_failed_power_supply_elements(psus: Mapping[str, netapp_api.Instance]) -> Sequence[str]:
@@ -83,24 +85,31 @@ def _get_failed_power_supply_elements(psus: Mapping[str, netapp_api.Instance]) -
 
 def check_netapp_api_psu_summary(
     item: str,
-    _no_params,
     section: netapp_api.SectionSingleInstance,
 ):
-    yield 0, f"{len(section)} power supply units in total"
+    yield Result(state=State.OK, summary=f"{len(section)} power supply units in total")
 
     erred_psus = _get_failed_power_supply_elements(section)
     if erred_psus:
         erred_psus_names = ", ".join(erred_psus)
         count = len(erred_psus)
-        yield 2, "%d power supply unit%s in error state (%s)" % (
-            count,
-            "" if count == 1 else "s",
-            erred_psus_names,
+        yield Result(
+            state=State.CRIT,
+            summary="%d power supply unit%s in error state (%s)"
+            % (
+                count,
+                "" if count == 1 else "s",
+                erred_psus_names,
+            ),
         )
 
 
-check_info["netapp_api_psu.summary"] = {
-    "check_function": check_netapp_api_psu_summary,
-    "inventory_function": discovery_netapp_api_psu_summary,
-    "service_description": "Power Supply Shelf %s",
-}
+register.check_plugin(
+    name="netapp_api_psu_summary",
+    service_name="Power Supply Shelf %s",
+    sections=["netapp_api_psu"],
+    discovery_function=discovery_netapp_api_psu_summary,
+    discovery_ruleset_name="discovery_netapp_api_psu_rules",
+    discovery_default_parameters={"mode": "single"},
+    check_function=check_netapp_api_psu_summary,
+)

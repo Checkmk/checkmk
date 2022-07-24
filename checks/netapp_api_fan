@@ -5,7 +5,6 @@
 
 from typing import Any, Iterable, Mapping, Sequence
 
-from cmk.base.check_legacy_includes.netapp_api import discover_single_items
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils import netapp_api
 
@@ -39,11 +38,14 @@ def _format_item(key: str) -> str:
 
 
 def discovery_netapp_api_fan(section: netapp_api.SectionSingleInstance) -> DiscoveryResult:
-    if discover_single_items(discovery_netapp_api_fan_rules):
-        for key, values in section.items():
-            if values.get("cooling-element-is-not-installed") != "true":
-                item_name = _format_item(key)
-                yield item_name, {}
+    params = host_extra_conf_merged(host_name(), discovery_netapp_api_fan_rules)
+    if not netapp_api.discover_single_items(params):
+        return
+    # TODO: use _get_fans_with_cooling
+    for key, values in section.items():
+        if values.get("cooling-element-is-not-installed") != "true":
+            item_name = _format_item(key)
+            yield item_name, {}
 
 
 def check_netapp_api_fan(
@@ -71,7 +73,8 @@ check_info["netapp_api_fan"].update(
 
 
 def discovery_netapp_api_fan_summary(section: netapp_api.SectionSingleInstance) -> DiscoveryResult:
-    if discover_single_items(discovery_netapp_api_fan_rules):
+    params = host_extra_conf_merged(host_name(), discovery_netapp_api_fan_rules)
+    if netapp_api.discover_single_items(params):
         return
     if _get_fans_with_cooling(section):
         yield "Summary", {}

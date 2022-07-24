@@ -23,6 +23,10 @@ CustomKeys = Optional[Sequence[str]]
 ItemFunc = Optional[Callable[[str, Instance], str]]
 
 
+def discover_single_items(params: Mapping[str, str]) -> bool:
+    return params.get("mode", "single") == "single"
+
+
 def parse_netapp_api_multiple_instances(
     string_table: type_defs.StringTable,
     custom_keys: CustomKeys = None,

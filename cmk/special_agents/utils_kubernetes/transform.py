@@ -427,8 +427,8 @@ def parse_deployment_spec(deployment_spec: client.V1DeploymentSpec) -> api.Deplo
     raise ValueError(f"Unknown strategy type: {deployment_spec.strategy.type}")
 
 
-def deployment_from_client(  # type:ignore[no-untyped-def]
-    deployment: client.V1Deployment, pod_uids=Sequence[api.PodUID]
+def deployment_from_client(
+    deployment: client.V1Deployment, pod_uids: Sequence[api.PodUID]
 ) -> api.Deployment:
     return api.Deployment(
         metadata=parse_metadata(deployment.metadata),
@@ -486,8 +486,8 @@ def parse_daemonset_spec(daemonset_spec: client.V1DaemonSetSpec) -> api.DaemonSe
     raise ValueError(f"Unknown strategy type: {daemonset_spec.update_strategy.type}")
 
 
-def daemonset_from_client(  # type:ignore[no-untyped-def]
-    daemonset: client.V1DaemonSet, pod_uids=Sequence[api.PodUID]
+def daemonset_from_client(
+    daemonset: client.V1DaemonSet, pod_uids: Sequence[api.PodUID]
 ) -> api.DaemonSet:
     return api.DaemonSet(
         metadata=parse_metadata(daemonset.metadata),
@@ -525,8 +525,8 @@ def parse_statefulset_spec(statefulset_spec: client.V1StatefulSetSpec) -> api.St
     raise ValueError(f"Unknown strategy type: {statefulset_spec.update_strategy.type}")
 
 
-def statefulset_from_client(  # type:ignore[no-untyped-def]
-    statefulset: client.V1StatefulSet, pod_uids=Sequence[api.PodUID]
+def statefulset_from_client(
+    statefulset: client.V1StatefulSet, pod_uids: Sequence[api.PodUID]
 ) -> api.StatefulSet:
     return api.StatefulSet(
         metadata=parse_metadata(statefulset.metadata),
@@ -566,9 +566,9 @@ def parse_resource_quota_spec(
     )
 
 
-def parse_resource_requirement(  # type:ignore[no-untyped-def]
+def parse_resource_requirement(
     resource: Literal["memory", "cpu"], hard: Mapping[str, str]
-):
+) -> api.HardResourceRequirement | None:
     # request & limit are only defined once for each requirement. It is possible to double
     # define them in the yaml file but only one value is taken into account.
     requirements = {}

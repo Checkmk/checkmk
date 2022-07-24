@@ -29,7 +29,7 @@ info = [[u'cooling-element-list 0',
          u'cooling-element-is-error false']]
 
 
-discovery = {'': [(u'0/1', None), (u'0/2', None), (u'0/3', None), (u'0/4', None)],
+discovery = {'': [(u'0/1', {}), (u'0/2', {}), (u'0/3', {}), (u'0/4', {})],
              'summary': []}
 
 

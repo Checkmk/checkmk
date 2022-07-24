@@ -3,9 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Iterable, Mapping, Sequence
+
 from cmk.base.check_legacy_includes.netapp_api import discover_single_items
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils import netapp_api
+
+DiscoveryResult = Iterable[tuple[str, Mapping[str, Any]]]
+CheckResult = Iterable[tuple[int, str]]
 
 # <<<netapp_api_fan:sep(9)>>>
 # cooling-element-list 20 cooling-element-number 1    rpm 3000    cooling-element-is-error false
@@ -29,20 +34,24 @@ check_info["netapp_api_fan"] = {
 discovery_netapp_api_fan_rules = []
 
 
-def _format_item(key):
+def _format_item(key: str) -> str:
     return key.replace(".", "/")
 
 
-def discovery_netapp_api_fan(parsed):
+def discovery_netapp_api_fan(section: netapp_api.SectionSingleInstance) -> DiscoveryResult:
     if discover_single_items(discovery_netapp_api_fan_rules):
-        for key, values in parsed.items():
+        for key, values in section.items():
             if values.get("cooling-element-is-not-installed") != "true":
                 item_name = _format_item(key)
-                yield item_name, None
+                yield item_name, {}
 
 
-def check_netapp_api_fan(item, _no_params, parsed):
-    fan = parsed.get("%s.%s" % tuple(item.split("/")))
+def check_netapp_api_fan(
+    item: str,
+    _no_params,
+    section: netapp_api.SectionSingleInstance,
+) -> CheckResult:
+    fan = section.get("%s.%s" % tuple(item.split("/")))
     if not fan:
         return
 
@@ -61,14 +70,16 @@ check_info["netapp_api_fan"].update(
 )
 
 
-def discovery_netapp_api_fan_summary(parsed):
+def discovery_netapp_api_fan_summary(section: netapp_api.SectionSingleInstance) -> DiscoveryResult:
     if discover_single_items(discovery_netapp_api_fan_rules):
         return
-    if _get_fans_with_cooling(parsed):
+    if _get_fans_with_cooling(section):
         yield "Summary", {}
 
 
-def _get_fans_with_cooling(fans):
+def _get_fans_with_cooling(
+    fans: Mapping[str, netapp_api.Instance]
+) -> Mapping[str, netapp_api.Instance]:
     return {
         key: fan
         for key, fan in fans.items()
@@ -76,7 +87,7 @@ def _get_fans_with_cooling(fans):
     }
 
 
-def _get_failed_cooling_elements(fans):
+def _get_failed_cooling_elements(fans: Mapping[str, netapp_api.Instance]) -> Sequence[str]:
     erred_fans = []
     for key, value in fans.items():
         if value["cooling-element-is-error"] == "true":
@@ -84,8 +95,12 @@ def _get_failed_cooling_elements(fans):
     return erred_fans
 
 
-def check_netapp_api_fan_summary(item, _no_params, parsed):
-    fans = _get_fans_with_cooling(parsed)  # dictionary now
+def check_netapp_api_fan_summary(
+    item: str,
+    _no_params,
+    section: netapp_api.SectionSingleInstance,
+) -> CheckResult:
+    fans = _get_fans_with_cooling(section)
     yield 0, "%d fans in total" % len(fans)
 
     erred_fans = _get_failed_cooling_elements(fans)

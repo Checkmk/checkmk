@@ -31,7 +31,7 @@ info = [[u'power-supply-list 0',
          u'power-supply-element-number 2']]
 
 
-discovery = {'': [(u'0/1', None), (u'0/2', None)], 'summary': []}
+discovery = {'': [(u'0/1', {}), (u'0/2', {})], 'summary': []}
 
 
 checks = {'': [(u'0/1', {}, [(0, 'Operational state OK', [])]),

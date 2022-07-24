@@ -1,0 +1,4 @@
+*:extlibs/*
+*:src/snippets/*
+*:src/player/*
+syntaxError

@@ -1,0 +1,1 @@
+@call scripts\call_cppcheck.cmd

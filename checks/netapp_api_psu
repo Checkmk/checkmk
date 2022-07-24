@@ -17,11 +17,15 @@ CheckResult = Iterable[tuple[int, str]]
 # power-supply-list 20    is-auto-power-reset-enabled false   power-supply-part-no 114-00065+A2 ...
 
 
+def _format_item(name: str, _instance: netapp_api.Instance) -> str:
+    return name.replace(".", "/")
+
+
 def parse_netapp_api_psu(string_table: StringTable) -> netapp_api.SectionSingleInstance:
     return netapp_api.parse_netapp_api_single_instance(
         string_table,
         custom_keys=["power-supply-list", "power-supply-element-number"],
-        item_func=None,
+        item_func=_format_item,
     )
 
 
@@ -32,17 +36,11 @@ check_info["netapp_api_psu"] = {
 discovery_netapp_api_psu_rules = []
 
 
-def _format_item(key: str) -> str:
-    return key.replace(".", "/")
-
-
 def discovery_netapp_api_psu(section: netapp_api.SectionSingleInstance) -> DiscoveryResult:
     params = host_extra_conf_merged(host_name(), discovery_netapp_api_psu_rules)
     if not netapp_api.discover_single_items(params):
         return
-    for key in _get_psus_with_power_supply(section):
-        item_name = _format_item(key)
-        yield item_name, {}
+    yield from ((key, {}) for key in _get_psus_with_power_supply(section))
 
 
 def check_netapp_api_psu(
@@ -50,8 +48,7 @@ def check_netapp_api_psu(
     _no_params,
     section: netapp_api.SectionSingleInstance,
 ) -> CheckResult:
-    psu = section.get("%s.%s" % tuple(item.split("/")))
-    if not psu:
+    if not (psu := section.get(item)):
         return
 
     if psu.get("power-supply-is-error") == "true":
@@ -86,11 +83,7 @@ def _get_psus_with_power_supply(
 
 
 def _get_failed_power_supply_elements(psus: Mapping[str, netapp_api.Instance]) -> Sequence[str]:
-    erred_psus = []
-    for key, value in psus.items():
-        if value.get("power-supply-is-error") == "true":
-            erred_psus.append(_format_item(key))
-    return erred_psus
+    return [key for key, value in psus.items() if value.get("power-supply-is-error") == "true"]
 
 
 def check_netapp_api_psu_summary(

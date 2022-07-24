@@ -17,11 +17,15 @@ CheckResult = Iterable[tuple[int, str]]
 # cooling-element-list 20 cooling-element-number 3    rpm 3000    cooling-element-is-error false
 
 
+def _format_item(name: str, _instance: netapp_api.Instance) -> str:
+    return name.replace(".", "/")
+
+
 def parse_netapp_api_fan(string_table: StringTable) -> netapp_api.SectionSingleInstance:
     return netapp_api.parse_netapp_api_single_instance(
         string_table,
         custom_keys=["cooling-element-list", "cooling-element-number"],
-        item_func=None,
+        item_func=_format_item,
     )
 
 
@@ -33,10 +37,6 @@ check_info["netapp_api_fan"] = {
 discovery_netapp_api_fan_rules = []
 
 
-def _format_item(key: str) -> str:
-    return key.replace(".", "/")
-
-
 def discovery_netapp_api_fan(section: netapp_api.SectionSingleInstance) -> DiscoveryResult:
     params = host_extra_conf_merged(host_name(), discovery_netapp_api_fan_rules)
     if not netapp_api.discover_single_items(params):
@@ -44,8 +44,7 @@ def discovery_netapp_api_fan(section: netapp_api.SectionSingleInstance) -> Disco
     # TODO: use _get_fans_with_cooling
     for key, values in section.items():
         if values.get("cooling-element-is-not-installed") != "true":
-            item_name = _format_item(key)
-            yield item_name, {}
+            yield key, {}
 
 
 def check_netapp_api_fan(
@@ -53,8 +52,7 @@ def check_netapp_api_fan(
     _no_params,
     section: netapp_api.SectionSingleInstance,
 ) -> CheckResult:
-    fan = section.get("%s.%s" % tuple(item.split("/")))
-    if not fan:
+    if not (fan := section.get(item)):
         return
 
     if fan["cooling-element-is-error"] == "true":
@@ -94,7 +92,7 @@ def _get_failed_cooling_elements(fans: Mapping[str, netapp_api.Instance]) -> Seq
     erred_fans = []
     for key, value in fans.items():
         if value["cooling-element-is-error"] == "true":
-            erred_fans.append(_format_item(key))
+            erred_fans.append(key)
     return erred_fans
 
 

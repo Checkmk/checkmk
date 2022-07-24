@@ -51,6 +51,7 @@ public:
             ::CloseServiceHandle(handle_);
         }
         handle_ = handle;
+        return *this;
     }
 
     ~WinService() {

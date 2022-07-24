@@ -153,7 +153,7 @@ namespace xlog {
                                const T *format_string, ...) noexcept {
         static_assert(sizeof(T) == 1 || sizeof(T) == 2);
 
-        va_list args = nullptr;
+        va_list args{nullptr};
         va_start(args, format_string);
         if constexpr (sizeof(T) == 1) {
             auto offset = ConvertWchar2Char(buf, len, prefix);
@@ -385,8 +385,7 @@ namespace xlog {
 
         //
         [[nodiscard]] const T *text() const noexcept { return text_.c_str(); }
-
-        [[nodiscard]] size_t len() const noexcept { text_.length(); }
+        [[nodiscard]] size_t len() const noexcept { return text_.length(); }
 
     private:
         void setText(const T *text) {

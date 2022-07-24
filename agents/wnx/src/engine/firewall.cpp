@@ -48,6 +48,8 @@ Policy::Policy() {
     if (FAILED(hr)) {
         XLOG::l("CoCreateInstance for INetFwPolicy2 failed: [{:#X}]", hr);
         policy_ = nullptr;
+        rules_ = nullptr;
+        return;
     }
 
     policy_->get_Rules(&rules_);
@@ -200,7 +202,7 @@ INetFwRule *DumpFWRulesInCollection(INetFwRule *fw_rule) {
         ProfileMapElement{NET_FW_PROFILE2_PUBLIC, L"Public"}};
 
     XLOG::l.i("---------------------------------------------\n");
-    auto to_utf8 = [](const auto bstr) -> auto {
+    auto to_utf8 = [](const auto bstr) -> auto{
         if (bstr == nullptr) return std::string("nullptr");
         return wtools::ToUtf8(bstr);
     };

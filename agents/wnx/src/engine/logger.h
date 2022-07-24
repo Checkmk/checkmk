@@ -538,15 +538,18 @@ public:
     }
 
     // this if for stream operations
-    [[maybe_unused]] XLOG::Emitter operator()(int Flags) const noexcept {
+    [[maybe_unused]] XLOG::Emitter operator()(int flags) const noexcept {
         auto e = *this;
-        e.mods_ = Flags;
+        e.mods_ = flags;
 
         return e;
     }
 
     [[maybe_unused]] XLOG::Emitter operator()() const noexcept {
-        return operator()(kCopy);
+        auto e = *this;
+        e.mods_ = kCopy;
+
+        return e;
     }
 
     [[maybe_unused]] Emitter t() noexcept {

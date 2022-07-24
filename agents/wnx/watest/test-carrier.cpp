@@ -32,6 +32,9 @@ TEST(CarrierTest, DataHeaderConversion) {
 
 class CarrierTestFixture : public ::testing::Test {
 protected:
+    const uint32_t cmd_count{3U};
+    const uint32_t log_count{2U};
+    const uint32_t yaml_count{2U};
     struct TestStorage {
         std::vector<uint8_t> buffer_;
         bool delivered_{false};
@@ -49,7 +52,7 @@ protected:
         }
     };
 
-    static inline TestStorage g_mailslot_storage;
+    TestStorage mailslot_storage;
 
     static bool MailboxCallbackCarrier(const mailslot::Slot *slot,
                                        const void *data, int len,
@@ -86,7 +89,6 @@ protected:
                 storage->peer_name_ = dt->providerId();
                 break;
             }
-
             case DataType::kYaml:
                 try {
                     auto s = AsString(dt);
@@ -95,6 +97,7 @@ protected:
                     }
                 } catch (const std::exception & /*e*/) {
                 }
+                break;
             case DataType::kCommand:
                 try {
                     auto s = AsString(dt);
@@ -113,10 +116,10 @@ protected:
     void SetUp() override {
         internal_port_ = BuildPortName(kCarrierMailslotName,
                                        mailbox_.GetName());  // port here
-        g_mailslot_storage.reset();
+        mailslot_storage.reset();
 
         mailbox_.ConstructThread(&CarrierTestFixture::MailboxCallbackCarrier,
-                                 20, &g_mailslot_storage,
+                                 20, &mailslot_storage,
                                  wtools::SecurityLevel::admin);
     }
     void TearDown() override {
@@ -125,6 +128,20 @@ protected:
     mailslot::Slot mailbox_{"WinAgentTest", 0};
     std::string internal_port_;
     CoreCarrier cc_;
+    void sendSetOfCommands(const std::optional<ByteVector> &summary_output) {
+        // send data to mailslot
+        cc_.sendData("a", 11, summary_output->data(), summary_output->size());
+
+        for (size_t _ = 0; _ < log_count; ++_) {
+            cc_.sendLog("x", "aaa", 3);
+        }
+        for (size_t _ = 0; _ < yaml_count; ++_) {
+            cc_.sendYaml("x", "aaa");
+        }
+        for (size_t _ = 0; _ < cmd_count; ++_) {
+            cc_.sendCommand("x", "aaa");
+        }
+    }
 };
 
 TEST_F(CarrierTestFixture, EstablishShutdown) {
@@ -172,27 +189,20 @@ TEST_F(CarrierTestFixture, MailSlotIntegration) {
         (tst::GetUnitTestFilesRoot() / L"summary.output").wstring().c_str());
 
     ASSERT_TRUE(cc_.establishCommunication(internal_port_));
-
-    // send data to mailslot
-    cc_.sendData("a", 11, summary_output->data(), summary_output->size());
-    cc_.sendLog("x", "aaa", 3);
-    cc_.sendLog("x", "aaa", 3);
-    cc_.sendYaml("x", "aaa");
-    cc_.sendYaml("x", "aaa");
-    cc_.sendCommand("x", "aaa");
-    cc_.sendCommand("x", "aaa");
+    sendSetOfCommands(summary_output);
     cc_.shutdownCommunication();
 
-    tst::WaitForSuccessSilent(
-        10'000ms, []() { return g_mailslot_storage.correct_commands_ == 2U; });
+    tst::WaitForSuccessSilent(10'000ms, [this]() {
+        return mailslot_storage.correct_commands_ == 3U;
+    });
 
-    ASSERT_TRUE(g_mailslot_storage.delivered_);
-    EXPECT_EQ(g_mailslot_storage.answer_id_, 11);
-    EXPECT_EQ(g_mailslot_storage.peer_name_, "a");
-    EXPECT_EQ(g_mailslot_storage.buffer_, summary_output);
-    EXPECT_EQ(g_mailslot_storage.correct_logs_, 2U);
-    EXPECT_EQ(g_mailslot_storage.correct_yamls_, 2U);
-    EXPECT_EQ(g_mailslot_storage.correct_commands_, 2U);
+    ASSERT_TRUE(mailslot_storage.delivered_);
+    EXPECT_EQ(mailslot_storage.answer_id_, 11);
+    EXPECT_EQ(mailslot_storage.peer_name_, "a");
+    EXPECT_EQ(mailslot_storage.buffer_, summary_output);
+    EXPECT_EQ(mailslot_storage.correct_logs_, log_count);
+    EXPECT_EQ(mailslot_storage.correct_yamls_, yaml_count);
+    EXPECT_EQ(mailslot_storage.correct_commands_, cmd_count);
 }
 
 namespace {

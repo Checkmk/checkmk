@@ -19,10 +19,10 @@ from cmk.base.plugins.agent_based.utils.kube import (
 )
 
 
-def result_simple(display_name: str, notice_only=False):  # type:ignore[no-untyped-def]
+def result_simple(display_name: str, notice_only=False) -> Callable[[object], Result]:
     key = "notice" if notice_only else "summary"
 
-    def result_func(value):
+    def result_func(value: object) -> Result:
         return Result(state=State.OK, **{key: f"{display_name}: {value}"})
 
     return result_func

@@ -441,22 +441,21 @@ void ExternalPort::ioThreadProc(const ReplyFunc &reply_func, uint16_t port,
     XLOG::d.i(XLOG_FUNC + " started");
     // all threads must control exceptions
     try {
-        asio::io_context context;
         auto ipv6 = cfg::groups::global.ipv6();
 
         // Asio IO server start
         XLOG::l.i("Starting IO ipv6:{}, used port:{}", ipv6, port);
-        ExternalPort::server sock(context, ipv6, port, local_only,
+        ExternalPort::server sock(io_context_, ipv6, port, local_only,
                                   controller_pid);
         sock.run_accept(sinkProc, this);
-        registerAsioContext(&context);
+        registerAsioContext(&io_context_);
 
         // server thread start
         auto processor_thread =
             std::thread(&ExternalPort::processQueue, this, reply_func);
 
         // tcp body
-        auto ret = context.run();  // run itself
+        auto ret = io_context_.run();  // run itself
         XLOG::t(XLOG_FUNC + " ended context with code[{}]", ret);
 
         if (processor_thread.joinable()) {

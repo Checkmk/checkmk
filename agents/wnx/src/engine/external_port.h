@@ -266,7 +266,7 @@ protected:
     bool shutdown_thread_{false};
     bool io_started_{false};
 
-    asio::io_context *context_{nullptr};  // NOT OWNED, should not be locked
+    asio::io_context *context_{nullptr};
 
     // asio sessions queue data
     mutable std::mutex queue_lock_;
@@ -277,6 +277,8 @@ protected:
     mutable std::mutex wake_lock_;
     std::condition_variable wake_thread_;
     std::chrono::milliseconds wake_delay_{500};
+
+    asio::io_context io_context_;  // may be used by ioThreadProc
 };
 
 bool SendDataToMailSlot(const std::string &mailslo_name,

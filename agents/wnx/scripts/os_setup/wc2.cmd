@@ -45,6 +45,12 @@ set version=
 set text=Perl is required to build openssl for rust
 call :process
 
+::cppcheck
+set pkg=cppcheck
+set version=
+set text=cppcheck is required to validate code quality
+call :process
+
 goto eof
 :process
 powershell Write-Host "Installing '%pkg%'..." -Foreground White

@@ -14,6 +14,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 from cmk.base.plugins.agent_based.utils.kube import (
+    check_with_time,
     kube_annotations_to_cmk_labels,
     kube_labels_to_cmk_labels,
     KubernetesError,
@@ -101,7 +102,7 @@ def discovery_kube_pod_info(section: PodInfo) -> DiscoveryResult:
     yield Service()
 
 
-def check_kube_pod_info(section: PodInfo) -> CheckResult:
+def check_kube_pod_info(now: float, section: PodInfo) -> CheckResult:
     # To get an understanding of API objects this check deals with, one can take a look at
     # PodInfo and the definition of its fields
 
@@ -116,7 +117,7 @@ def check_kube_pod_info(section: PodInfo) -> CheckResult:
             "node": section.node,
             "name": section.name,
             "namespace": section.namespace,
-            "creation_timestamp": section.creation_timestamp,
+            "age": now - section.creation_timestamp,
             "qos_class": section.qos_class,
             "uid": section.uid,
             "restart_policy": section.restart_policy,
@@ -129,5 +130,5 @@ register.check_plugin(
     name="kube_pod_info",
     service_name="Info",
     discovery_function=discovery_kube_pod_info,
-    check_function=check_kube_pod_info,
+    check_function=check_with_time(check_kube_pod_info),
 )

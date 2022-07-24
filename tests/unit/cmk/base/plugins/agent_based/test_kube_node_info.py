@@ -12,7 +12,6 @@ import pytest_mock
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.kube_node_info import check_kube_node_info
-from cmk.base.plugins.agent_based.utils import kube_info
 from cmk.base.plugins.agent_based.utils.kube import NodeInfo
 
 
@@ -49,5 +48,4 @@ from cmk.base.plugins.agent_based.utils.kube import NodeInfo
 def test_check_kube_node_info(
     section: NodeInfo, expected_check_result: Sequence[Result], mocker: pytest_mock.MockerFixture
 ) -> None:
-    with mocker.patch.object(kube_info.time, "time", return_value=1600000001.0):
-        assert list(check_kube_node_info(section)) == expected_check_result
+    assert list(check_kube_node_info(1600000001.0, section)) == expected_check_result

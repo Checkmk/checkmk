@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
-from typing import Any, Callable, Literal, Mapping, Protocol
+from typing import Any, Callable, Literal, Mapping, NewType, Protocol
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel, render, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -15,7 +14,6 @@ from cmk.base.plugins.agent_based.utils.kube import (
     ControlChain,
     FilteredAnnotations,
     kube_annotations_to_cmk_labels,
-    Timestamp,
 )
 
 
@@ -28,10 +26,13 @@ def result_simple(display_name: str, notice_only=False) -> Callable[[object], Re
     return result_func
 
 
-def result_from_age(value: Timestamp) -> Result:
+Age = NewType("Age", float)
+
+
+def result_from_age(value: Age) -> Result:
     return Result(
         state=State.OK,
-        summary=f"Age: {render.timespan(time.time() - value)}",
+        summary=f"Age: {render.timespan(value)}",
     )
 
 
@@ -56,7 +57,7 @@ InfoTypes = Literal[
     "os_image",
     "container_runtime_version",
     "control_chain",
-    "creation_timestamp",
+    "age",
     "qos_class",
     "uid",
     "restart_policy",
@@ -69,7 +70,7 @@ _RESULT_FUNC: Mapping[InfoTypes, Callable[[Any], Result]] = {
     "name": result_simple("Name"),
     "node": result_simple("Node"),
     "namespace": result_simple("Namespace"),
-    "creation_timestamp": result_from_age,
+    "age": result_from_age,
     "os_image": result_simple("OS"),
     "container_runtime_version": result_simple("Container runtime"),
     "control_chain": result_from_control_chain,

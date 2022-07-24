@@ -5,6 +5,7 @@
 # mypy: disallow_untyped_defs
 
 import json
+import typing
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel, register, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -14,6 +15,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 from cmk.base.plugins.agent_based.utils.kube import (
+    check_with_time,
     kube_annotations_to_cmk_labels,
     kube_labels_to_cmk_labels,
     NamespaceInfo,
@@ -79,11 +81,11 @@ def discovery_kube_namespace_info(section: NamespaceInfo) -> DiscoveryResult:
     yield Service()
 
 
-def check_kube_namespace_info(section: NamespaceInfo) -> CheckResult:
+def check_kube_namespace_info(now: float, section: NamespaceInfo) -> CheckResult:
     yield from check_info(
         {
             "name": section.name,
-            "creation_timestamp": section.creation_timestamp,
+            "age": now - typing.cast(float, section.creation_timestamp),
         }
     )
 
@@ -92,5 +94,5 @@ register.check_plugin(
     name="kube_namespace_info",
     service_name="Info",
     discovery_function=discovery_kube_namespace_info,
-    check_function=check_kube_namespace_info,
+    check_function=check_with_time(check_kube_namespace_info),
 )

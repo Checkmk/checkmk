@@ -4,12 +4,27 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
-from typing import Literal, Mapping, NewType, Optional, Sequence, Tuple, TypedDict, Union
+import time
+from typing import (
+    Callable,
+    Literal,
+    Mapping,
+    NewType,
+    Optional,
+    Sequence,
+    Tuple,
+    TypedDict,
+    TypeVar,
+    Union,
+)
 
 from pydantic import BaseModel, Field
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import HostLabelGenerator
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    HostLabelGenerator,
+)
 
 LabelValue = NewType("LabelValue", str)
 """
@@ -835,3 +850,15 @@ class CollectorDaemons(Section):
     machine: Optional[NodeCollectorReplica]
     container: Optional[NodeCollectorReplica]
     errors: IdentificationError
+
+
+T = TypeVar("T", bound=Section)
+
+
+def check_with_time(
+    check_function: Callable[[float, T], CheckResult]
+) -> Callable[[T], CheckResult]:
+    def check_function_with_time(section: T) -> CheckResult:
+        yield from check_function(time.time(), section)
+
+    return check_function_with_time

@@ -11,7 +11,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.kube import StatefulSetInfo
+from cmk.base.plugins.agent_based.utils.kube import check_with_time, StatefulSetInfo
 from cmk.base.plugins.agent_based.utils.kube_info import check_info, host_labels
 
 
@@ -45,12 +45,12 @@ def discovery(section: StatefulSetInfo) -> DiscoveryResult:
     yield Service()
 
 
-def check_kube_statefulset_info(section: StatefulSetInfo) -> CheckResult:
+def check_kube_statefulset_info(now: float, section: StatefulSetInfo) -> CheckResult:
     yield from check_info(
         {
             "name": section.name,
             "namespace": section.namespace,
-            "creation_timestamp": section.creation_timestamp,
+            "age": now - section.creation_timestamp,
         }
     )
 
@@ -59,5 +59,5 @@ register.check_plugin(
     name="kube_statefulset_info",
     service_name="Info",
     discovery_function=discovery,
-    check_function=check_kube_statefulset_info,
+    check_function=check_with_time(check_kube_statefulset_info),
 )

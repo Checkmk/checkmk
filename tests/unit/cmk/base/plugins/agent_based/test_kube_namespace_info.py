@@ -5,15 +5,12 @@
 
 # mypy: disallow_untyped_defs
 
-import pytest_mock
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.kube_namespace_info import check_kube_namespace_info
-from cmk.base.plugins.agent_based.utils import kube_info
 from cmk.base.plugins.agent_based.utils.kube import NamespaceInfo
 
 
-def test_check_kube_namespace_info(mocker: pytest_mock.MockerFixture) -> None:
+def test_check_kube_namespace_info() -> None:
     info = NamespaceInfo(
         name="namespace",
         creation_timestamp=1600000000.0,
@@ -21,8 +18,7 @@ def test_check_kube_namespace_info(mocker: pytest_mock.MockerFixture) -> None:
         annotations={},
         cluster="cluster",
     )
-    with mocker.patch.object(kube_info.time, "time", return_value=1600000001.0):
-        check_result = check_kube_namespace_info(info)
+    check_result = check_kube_namespace_info(1600000001.0, info)
     assert list(check_result) == [
         Result(state=State.OK, summary="Name: namespace"),
         Result(state=State.OK, summary="Age: 1 second"),

@@ -14,6 +14,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 from cmk.base.plugins.agent_based.utils.kube import (
+    check_with_time,
     kube_annotations_to_cmk_labels,
     kube_labels_to_cmk_labels,
     NodeInfo,
@@ -91,11 +92,11 @@ def discovery_kube_node_info(section: NodeInfo) -> DiscoveryResult:
     yield Service()
 
 
-def check_kube_node_info(section: NodeInfo) -> CheckResult:
+def check_kube_node_info(now: float, section: NodeInfo) -> CheckResult:
     yield from check_info(
         {
             "name": section.name,
-            "creation_timestamp": section.creation_timestamp,
+            "age": now - section.creation_timestamp,
             "os_image": section.os_image,
             "container_runtime_version": section.container_runtime_version,
             "architecture": section.architecture,
@@ -109,5 +110,5 @@ register.check_plugin(
     name="kube_node_info",
     service_name="Info",
     discovery_function=discovery_kube_node_info,
-    check_function=check_kube_node_info,
+    check_function=check_with_time(check_kube_node_info),
 )

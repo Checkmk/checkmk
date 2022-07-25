@@ -68,7 +68,7 @@ RUN zypper ref -s \
     openssh \
     pango-devel \
     patch \
-    postgresql14-devel \
+    postgresql-server-devel \
     readline-devel \
     rpcbind \
     rpm-build \

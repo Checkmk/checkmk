@@ -1050,8 +1050,13 @@ class ModeEditRuleset(WatoMode):
                     table.row(css=self._css_for_rule(search_options, rule))
                     self._set_focus(rule)
                     self._show_rule_icons(
-                        table, match_state, folder, rule, rulenr, service_labels=service_labels
-                        analyse_rule_matching,
+                        table,
+                        match_state,
+                        folder,
+                        rule,
+                        rulenr,
+                        service_labels=service_labels,
+                        analyse_rule_matching=analyse_rule_matching,
                     )
                     self._rule_cells(table, rule)
 

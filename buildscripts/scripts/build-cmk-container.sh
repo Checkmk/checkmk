@@ -23,17 +23,19 @@ docker_tag() {
     REGISTRY=$1
     FOLDER=$2
 
+    SOURCE_TAG="checkmk/check-mk-${EDITION}:${VERSION}"
+
     log "Erstelle \"${VERSION}\" tag..."
-    docker tag "checkmk/check-mk-${EDITION}:${VERSION}" "$REGISTRY$FOLDER/check-mk-${EDITION}:${VERSION}"
+    docker tag "${SOURCE_TAG}" "$REGISTRY$FOLDER/check-mk-${EDITION}:${VERSION}"
 
     if [ "$SET_BRANCH_LATEST_TAG" = "yes" ]; then
         log "Erstelle \"{$BRANCH}-latest\" tag..."
-        docker tag "checkmk/check-mk-${EDITION}:${VERSION}" "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-latest"
+        docker tag "${SOURCE_TAG}" "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-latest"
     fi
 
     if [ "$SET_LATEST_TAG" = "yes" ]; then
         log "Erstelle \"latest\" tag..."
-        docker tag "checkmk/check-mk-${EDITION}:${VERSION}" "$REGISTRY$FOLDER/check-mk-${EDITION}:latest"
+        docker tag "${SOURCE_TAG}" "$REGISTRY$FOLDER/check-mk-${EDITION}:latest"
     fi
 }
 

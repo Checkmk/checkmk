@@ -1052,7 +1052,7 @@ class ModeEditRuleset(WatoMode):
                 self._host.site_id(),
                 self._hostname,
                 self._service,
-            ).service_info.get("labels", {})
+            ).labels
         for folder, folder_rules in groups:
             with table_element(
                 "rules_%s_%s" % (self._name, folder.ident()),

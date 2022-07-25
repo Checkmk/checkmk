@@ -218,7 +218,7 @@ class ModePatternEditor(WatoMode):
                 host.site_id(),
                 self._hostname,
                 service_desc,
-            ).service_info.get("labels", {})
+            ).labels
         for folder, rulenr, rule in ruleset.get_rules():
             # Check if this rule applies to the given host/service
             if self._hostname:

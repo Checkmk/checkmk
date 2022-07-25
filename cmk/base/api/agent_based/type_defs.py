@@ -13,7 +13,6 @@ from typing import (
     Generator,
     List,
     Literal,
-    Mapping,
     NamedTuple,
     Optional,
     Sequence,
@@ -21,7 +20,13 @@ from typing import (
     Union,
 )
 
-from cmk.utils.type_defs import ParsedSectionName, RuleSetName, SectionName, SNMPDetectBaseType
+from cmk.utils.type_defs import (
+    ParametersTypeAlias,
+    ParsedSectionName,
+    RuleSetName,
+    SectionName,
+    SNMPDetectBaseType,
+)
 
 
 class PluginSuppliedLabel(
@@ -55,9 +60,6 @@ class HostLabel(PluginSuppliedLabel):
         >>> my_label = HostLabel("my_key", "my_value")
 
     """
-
-
-ParametersTypeAlias = Mapping[str, Any]  # Modification may result in an incompatible API change.
 
 
 class Parameters(ParametersTypeAlias):

@@ -16,7 +16,7 @@ import sys
 from contextlib import redirect_stderr, redirect_stdout
 from itertools import islice
 from pathlib import Path
-from typing import Any, cast, Dict, List, Mapping, Optional, Sequence, Tuple, Union
+from typing import Any, cast, Dict, List, Optional, Sequence, Tuple, Union
 
 import cmk.utils.debug
 import cmk.utils.log as log
@@ -51,7 +51,6 @@ from cmk.utils.type_defs import (
     DiscoveryResult,
     HostAddress,
     HostName,
-    LegacyCheckParameters,
     ServiceDetails,
     ServiceState,
     SetAutochecksTable,
@@ -702,21 +701,26 @@ class AutomationAnalyseServices(Automation):
     def execute(self, args: List[str]) -> automation_results.AnalyseServiceResult:
         hostname = HostName(args[0])
         servicedesc = args[1]
-
         config_cache = config.get_config_cache()
-        host_config = config_cache.get_host_config(hostname)
-        host_attrs = core_config.get_host_attributes(hostname, config_cache)
-
-        service_info = self._get_service_info(config_cache, host_config, host_attrs, servicedesc)
-        if not service_info:
-            return automation_results.AnalyseServiceResult({})
-
-        return automation_results.AnalyseServiceResult(
-            {
-                **service_info,
-                "labels": config_cache.labels_of_service(hostname, servicedesc),
-                "label_sources": config_cache.label_sources_of_service(hostname, servicedesc),
-            }
+        return (
+            automation_results.AnalyseServiceResult(
+                service_info=service_info,
+                labels=config_cache.labels_of_service(hostname, servicedesc),
+                label_sources=config_cache.label_sources_of_service(hostname, servicedesc),
+            )
+            if (
+                service_info := self._get_service_info(
+                    config_cache=config_cache,
+                    host_config=config_cache.get_host_config(hostname),
+                    host_attrs=core_config.get_host_attributes(hostname, config_cache),
+                    servicedesc=servicedesc,
+                )
+            )
+            else automation_results.AnalyseServiceResult(
+                service_info={},
+                labels={},
+                label_sources={},
+            )
         )
 
     # Determine the type of the check, and how the parameters are being
@@ -728,7 +732,7 @@ class AutomationAnalyseServices(Automation):
         host_config: HostConfig,
         host_attrs: core_config.ObjectAttributes,
         servicedesc: str,
-    ) -> Mapping[str, Union[None, str, LegacyCheckParameters]]:
+    ) -> automation_results.ServiceInfo:
         hostname = host_config.hostname
 
         # We just consider types of checks that are managed via WATO.
@@ -772,7 +776,7 @@ class AutomationAnalyseServices(Automation):
         for entry in host_config.custom_checks:
             desc = entry["service_description"]
             if desc == servicedesc:
-                result = {
+                result: automation_results.ServiceInfo = {
                     "origin": "classic",
                 }
                 if "command_line" in entry:  # Only active checks have a command line
@@ -802,7 +806,7 @@ class AutomationAnalyseServices(Automation):
     @staticmethod
     def _get_service_info_from_autochecks(
         config_cache: ConfigCache, host_config: HostConfig, servicedesc: str
-    ) -> Optional[Mapping[str, Union[None, str, LegacyCheckParameters]]]:
+    ) -> Optional[automation_results.ServiceInfo]:
         # TODO: There is a lot of duplicated logic with discovery.py/check_table.py. Clean this
         # whole function up.
         # NOTE: Iterating over the check table would make things easier. But we might end up with

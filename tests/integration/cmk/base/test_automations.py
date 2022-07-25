@@ -262,6 +262,8 @@ def test_automation_analyse_service_no_check(  # type:ignore[no-untyped-def]
     )
     assert isinstance(automation_result, results.AnalyseServiceResult)
     assert automation_result.service_info == {}
+    assert automation_result.labels == {}
+    assert automation_result.label_sources == {}
 
 
 def test_automation_try_discovery_not_existing_host(  # type:ignore[no-untyped-def]

@@ -6,9 +6,10 @@
 from abc import ABC, abstractmethod
 from ast import literal_eval
 from dataclasses import asdict, astuple, dataclass
-from typing import Any, List, Mapping, Optional, Sequence, Type, TypeVar
+from typing import Any, List, Mapping, Optional, Sequence, Type, TypedDict, TypeVar
 
 from cmk.utils import version as cmk_version
+from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.type_defs import (
     AgentRawData,
@@ -27,6 +28,7 @@ from cmk.utils.type_defs import (
     MetricTuple,
     NotifyAnalysisInfo,
     NotifyBulks,
+    ParametersTypeAlias,
     RulesetName,
     ServiceDetails,
     ServiceName,
@@ -174,9 +176,32 @@ class RenameHostsResult(ABCAutomationResult):
 result_type_registry.register(RenameHostsResult)
 
 
+class ServiceInfo(TypedDict, total=False):
+    origin: str
+    checkgroup: RulesetName
+    checktype: str
+    item: Item
+    inv_parameters: LegacyCheckParameters
+    factory_settings: ParametersTypeAlias | None
+    parameters: TimespecificParameters | LegacyCheckParameters
+    command_line: str
+
+
 @dataclass
 class AnalyseServiceResult(ABCAutomationResult):
-    service_info: Mapping
+    service_info: ServiceInfo
+    labels: Labels
+    label_sources: LabelSources
+
+    def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
+        if for_cmk_version >= cmk_version.Version("2.2.0i"):
+            return self._default_serialize()
+        previous_serialized: Mapping[str, object] = {
+            **self.service_info,
+            "labels": self.labels,
+            "label_sources": self.label_sources,
+        }
+        return SerializedResult(repr((previous_serialized,)))
 
     @staticmethod
     def automation_call() -> str:

@@ -8,7 +8,9 @@ modified via rules."""
 
 from typing import Collection, Iterator, List, Optional
 from typing import Tuple as _Tuple
-from typing import Type, Union
+from typing import Type
+
+from cmk.utils.type_defs import Item
 
 from cmk.automations.results import AnalyseServiceResult
 
@@ -25,8 +27,7 @@ from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuEntry, PageMen
 from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_service_status_link
 from cmk.gui.type_defs import PermissionName
-from cmk.gui.utils.html import HTML
-from cmk.gui.valuespec import Tuple
+from cmk.gui.valuespec import Tuple, ValueSpecText
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.check_mk_automations import analyse_host, analyse_service
 from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, Folder, folder_preserving_link
@@ -171,7 +172,7 @@ class ModeObjectParameters(WatoMode):
         assert self._service is not None
         serviceinfo = service_result.service_info
         if not serviceinfo:
-            return AnalyseServiceResult(service_info={})
+            return AnalyseServiceResult(service_info={}, labels={}, label_sources={})
 
         forms.header(_("Check origin and parameters"), isopen=True, narrow=True, css="rulesettings")
         origin = serviceinfo["origin"]
@@ -270,7 +271,7 @@ class ModeObjectParameters(WatoMode):
                 rulespec = rulespec_registry["static_checks:" + checkgroup]
                 itemspec = rulespec.item_spec
                 if itemspec:
-                    item_text = itemspec.value_to_html(serviceinfo["item"])
+                    item_text: ValueSpecText | Item = itemspec.value_to_html(serviceinfo["item"])
                     assert rulespec.item_spec is not None
                     title = rulespec.item_spec.title()
                 else:
@@ -350,9 +351,7 @@ class ModeObjectParameters(WatoMode):
             html.close_tr()
             html.close_table()
 
-        self._show_labels(
-            serviceinfo.get("labels", {}), "service", serviceinfo.get("label_sources", {})
-        )
+        self._show_labels(service_result.labels, "service", service_result.label_sources)
 
         return service_result
 
@@ -365,7 +364,7 @@ class ModeObjectParameters(WatoMode):
             self._hostname,
             svc_desc_or_item=None,
             svc_desc=None,
-            service_labels=service_result.service_info.get("labels", {}),
+            service_labels=service_result.labels,
         )
 
         for rule_folder, rule_index, rule in rules:
@@ -398,7 +397,7 @@ class ModeObjectParameters(WatoMode):
         html.close_table()
 
     def _render_rule_reason(
-        self, title, title_url, reason, reason_url, is_default, setting: Union[str, HTML]
+        self, title, title_url, reason, reason_url, is_default, setting: ValueSpecText | Item
     ) -> None:
         if title_url:
             title = HTMLWriter.render_a(title, href=title_url)
@@ -466,7 +465,7 @@ class ModeObjectParameters(WatoMode):
             self._hostname,
             svc_desc_or_item,
             svc_desc,
-            service_labels=service_result.service_info.get("labels", {}) if service_result else {},
+            service_labels=service_result.labels if service_result else {},
         )
 
         html.open_table(class_="setting")

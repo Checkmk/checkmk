@@ -219,7 +219,9 @@ def test_src_only_contains_relative_version_paths(package_path):
     if not package_path.endswith(".tar.gz"):
         pytest.skip("%s is not a source package" % os.path.basename(package_path))
 
-    prefix = os.path.basename(package_path).replace(".tar.gz", "")
+    # package_path may indicate that we're having a release candidate but all files inside
+    # the package paths should not contain a rc information anymore.
+    prefix = os.path.basename(package_path).replace(".tar.gz", "").split("-rc")[0]
     for line in subprocess.check_output(
         ["tar", "tvf", package_path], encoding="utf-8"
     ).splitlines():

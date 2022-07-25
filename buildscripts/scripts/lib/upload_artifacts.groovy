@@ -96,9 +96,12 @@ def create_hashes(ARCHIVE_DIR) {
 def deploy_to_website(UPLOAD_URL, PORT, CMK_VERS) {
     stage("Deploy to Website") {
         withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
+            // CMK_VERS can contain a rc information like v2.1.0p6-rc1. On the website, we only want to have official
+            // releases.
+            def TARGET_VERSION = versioning.strip_rc_number_from_version(CMK_VERS)
             sh """
                 ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT} ${UPLOAD_URL} \
-                    ln -sf /var/downloads/checkmk/${CMK_VERS} /smb-share-customer/checkmk
+                    ln -sf /var/downloads/checkmk/${CMK_VERS} /smb-share-customer/checkmk/${TARGET_VERSION}
             """
         }
     }

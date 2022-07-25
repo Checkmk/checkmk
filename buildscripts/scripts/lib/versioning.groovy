@@ -194,4 +194,8 @@ def delete_non_cre_files() {
     sh "bash -c \"find . \\( ${find_pattern} \\) -prune -print -exec rm -r {} \\;\""
 }
 
+def strip_rc_number_from_version(VERSION) {
+    return sh(script: "echo -n ${VERSION} | sed 's/-rc[0-9]*//g'", returnStdout: true)
+}
+
 return this

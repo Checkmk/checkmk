@@ -143,6 +143,13 @@ class ControllerType(enum.Enum):
         raise ValueError(f"Unknown controller type: {label}")
 
 
+class ConcurrencyPolicy(enum.Enum):
+    # specifies how to treat concurrent executions of a Job.
+    Allow = "Allow"  # allows concurrently running jobs
+    Forbid = "Forbid"  # does not allow concurrent runs
+    Replace = "Replace"  # replaces the currently running job
+
+
 class Section(BaseModel):
     class Config:
         allow_mutation = False
@@ -818,6 +825,22 @@ class NamespaceInfo(Section):
     creation_timestamp: Optional[Timestamp]
     labels: Labels
     annotations: FilteredAnnotations
+    cluster: str
+
+
+class CronJobInfo(Section):
+    """section: kube_cron_job_info_v1"""
+
+    name: str
+    namespace: NamespaceName
+    creation_timestamp: Optional[Timestamp]
+    labels: Labels
+    annotations: FilteredAnnotations
+    schedule: str
+    concurrency_policy: ConcurrencyPolicy
+    failed_jobs_history_limit: int
+    successful_jobs_history_limit: int
+    suspend: bool
     cluster: str
 
 

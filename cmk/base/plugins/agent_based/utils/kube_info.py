@@ -64,12 +64,18 @@ InfoTypes = Literal[
     "architecture",
     "kernel_version",
     "operating_system",
+    "schedule",
+    "concurrency_policy",
+    "failed_jobs_history_limit",
+    "successful_jobs_history_limit",
+    "suspend",
 ]
 
 _RESULT_FUNC: Mapping[InfoTypes, Callable[[Any], Result]] = {
     "name": result_simple("Name"),
     "node": result_simple("Node"),
     "namespace": result_simple("Namespace"),
+    "schedule": result_simple("Schedule"),
     "age": result_from_age,
     "os_image": result_simple("OS"),
     "container_runtime_version": result_simple("Container runtime"),
@@ -80,6 +86,12 @@ _RESULT_FUNC: Mapping[InfoTypes, Callable[[Any], Result]] = {
     "architecture": result_simple("Architecture", notice_only=True),
     "kernel_version": result_simple("Kernel version", notice_only=True),
     "operating_system": result_simple("OS family", notice_only=True),
+    "concurrency_policy": result_simple("Concurrency policy", notice_only=True),
+    "failed_jobs_history_limit": result_simple("Failed jobs history limit", notice_only=True),
+    "successful_jobs_history_limit": result_simple(
+        "Successful jobs history limit", notice_only=True
+    ),
+    "suspend": result_simple("Suspend", notice_only=True),
 }
 
 

@@ -49,6 +49,10 @@ class ResourcesRequirementsFactory(ModelFactory):
     __model__ = api.ResourcesRequirements
 
 
+class CronJobFactory(ModelFactory):
+    __model__ = api.CronJob
+
+
 @pytest.fixture
 def node_name():
     return "node"
@@ -213,6 +217,22 @@ def test_filter_pods_by_namespace() -> None:
     filtered_pods = agent.filter_pods_by_namespace([pod_one, pod_two], api.NamespaceName("one"))
 
     assert [pod.metadata.name for pod in filtered_pods] == ["pod_one"]
+
+
+def test_filter_pods_by_cron_job() -> None:
+    pod_one = APIPodFactory.build(
+        uid="in_cron_job",
+    )
+    pod_two = APIPodFactory.build(
+        uid="not_in_cron_job",
+    )
+    cron_job = CronJobFactory.build(
+        pod_uids=[
+            "in_cron_job",
+        ]
+    )
+    filtered_pods = agent.filter_pods_by_cron_job([pod_one, pod_two], cron_job)
+    assert [pod.uid for pod in filtered_pods] == ["in_cron_job"]
 
 
 @pytest.mark.parametrize(

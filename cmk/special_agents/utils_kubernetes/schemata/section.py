@@ -105,6 +105,22 @@ class NamespaceInfo(Section):
     cluster: str
 
 
+class CronJobInfo(Section):
+    """section: kube_cron_job_info_v1"""
+
+    name: str
+    namespace: api.NamespaceName
+    creation_timestamp: Optional[api.Timestamp]
+    labels: api.Labels
+    annotations: FilteredAnnotations
+    schedule: str
+    concurrency_policy: api.ConcurrencyPolicy
+    failed_jobs_history_limit: int
+    successful_jobs_history_limit: int
+    suspend: bool
+    cluster: str
+
+
 class NodeCollectorMetadata(CollectorMetadata):
     collector_type: CollectorType
     components: Components

@@ -1,0 +1,25 @@
+title: Kubernetes: CronJob Info
+agents: kubernetes
+catalog: containerization/kubernetes
+license: GPLv2
+distribution: check_mk
+description:
+ This check provides an informational overview of a Kubernetes CronJob by
+ displaying
+
+ - Name
+
+ - Age, based on the creationTimestamp
+
+ It also provides additional information in the details, such as:
+ - Schedule
+ - Concurrency policy
+ - Failed jobs history limit
+ - Successful jobs history limit
+ - Suspend
+
+ This information is provided by the API server. The service is always {OK}.
+ It requires that the special agent kube is configured.
+
+discovery:
+ One service is created for each monitored CronJob.

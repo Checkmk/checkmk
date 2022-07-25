@@ -31,6 +31,9 @@ class TestAPICronJob:
                     "spec": {
                         "schedule": "*/5 * * * *",
                         "concurrencyPolicy": "Allow",
+                        "failedJobsHistoryLimit": 10,
+                        "successfulJobsHistoryLimit": 10,
+                        "suspend": False,
                         "jobTemplate": {
                             "metadata": {},
                             "spec": {

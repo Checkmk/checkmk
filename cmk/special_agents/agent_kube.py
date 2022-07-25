@@ -1210,6 +1210,29 @@ def namespace_info(
     )
 
 
+def cron_job_info(
+    cron_job: api.CronJob,
+    cluster_name: str,
+    annotation_key_pattern: AnnotationOption,
+) -> section.CronJobInfo:
+
+    return section.CronJobInfo(
+        name=cron_job.metadata.name,
+        namespace=cron_job.metadata.namespace,
+        creation_timestamp=cron_job.metadata.creation_timestamp,
+        labels=cron_job.metadata.labels,
+        annotations=filter_annotations_by_key_pattern(
+            cron_job.metadata.annotations, annotation_key_pattern
+        ),
+        schedule=cron_job.spec.schedule,
+        concurrency_policy=cron_job.spec.concurrency_policy,
+        failed_jobs_history_limit=cron_job.spec.failed_jobs_history_limit,
+        successful_jobs_history_limit=cron_job.spec.successful_jobs_history_limit,
+        suspend=cron_job.spec.suspend,
+        cluster=cluster_name,
+    )
+
+
 def filter_matching_namespace_resource_quota(
     namespace: api.NamespaceName, resource_quotas: Sequence[api.ResourceQuota]
 ) -> Optional[api.ResourceQuota]:
@@ -1381,6 +1404,10 @@ def filter_pods_by_namespace(
     return [pod for pod in pods if pod_namespace(pod) == namespace]
 
 
+def filter_pods_by_cron_job(pods: Sequence[api.Pod], cron_job: api.CronJob) -> Sequence[api.Pod]:
+    return [pod for pod in pods if pod.uid in cron_job.pod_uids]
+
+
 def filter_pods_by_phase(pods: Sequence[api.Pod], phase: api.Phase) -> Sequence[api.Pod]:
     return [pod for pod in pods if pod.status.phase == phase]
 
@@ -1449,6 +1476,41 @@ def write_cluster_api_sections(cluster_name: str, cluster: Cluster) -> None:
         "kube_collector_daemons_v1": cluster.node_collector_daemons,
     }
     _write_sections(sections)
+
+
+def write_cronjobs_api_sections(
+    cluster_name: str,
+    annotation_key_pattern: AnnotationOption,
+    api_cron_jobs: Sequence[api.CronJob],
+    api_resource_quotas: Sequence[api.ResourceQuota],
+    api_cron_job_pods: Sequence[api.Pod],
+    piggyback_formatter: ObjectSpecificPBFormatter,
+) -> None:
+    def output_cronjob_sections(
+        cron_job: api.CronJob,
+        api_cron_job_pods: Sequence[api.Pod],
+    ) -> None:
+        sections = {
+            "kube_cron_job_info_v1": lambda: cron_job_info(
+                cron_job, cluster_name, annotation_key_pattern
+            ),
+            "kube_memory_resources_v1": lambda: _collect_memory_resources_from_api_pods(
+                api_cron_job_pods
+            ),
+            "kube_cpu_resources_v1": lambda: _collect_cpu_resources_from_api_pods(
+                api_cron_job_pods
+            ),
+        }
+        _write_sections(sections)
+
+    for api_cron_job in api_cron_jobs:
+        with ConditionalPiggybackSection(
+            piggyback_formatter(f"{api_cron_job.metadata.namespace}_{api_cron_job.metadata.name}")
+        ):
+            output_cronjob_sections(
+                api_cron_job,
+                filter_pods_by_cron_job(api_cron_job_pods, api_cron_job),
+            )
 
 
 def write_namespaces_api_sections(
@@ -1701,7 +1763,8 @@ def filter_outdated_and_non_monitored_pods(
         outdated_and_non_monitored_pods.append(performance_pod.lookup_name)
 
     LOGGER.debug(
-        "Outdated or non-monitored performance pods: %s", ", ".join(outdated_and_non_monitored_pods)
+        "Outdated or non-monitored performance pods: %s",
+        ", ".join(outdated_and_non_monitored_pods),
     )
     return current_pods
 
@@ -2633,16 +2696,30 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                 for pod in pods_from_namespaces(cluster.pods(), monitored_namespace_names)
             }
 
+            # TODO: Currently there is no possibility for the user to specify whether to monitor CronJobs or not
+            # The piggyback hosts will always be created, if there are any CronJobs in the cluster
+            # Namespace filtering also needs to be added to the CronJobs
+            monitored_api_cj_pods: Sequence[api.Pod] = [
+                api_pod
+                for cron_job in api_data.cron_jobs
+                for api_pod in api_data.pods
+                if api_pod.uid in cron_job.pod_uids
+            ]
+
+            write_cronjobs_api_sections(
+                arguments.cluster,
+                arguments.annotation_key_pattern,
+                api_data.cron_jobs,
+                resource_quotas,
+                monitored_api_cj_pods,
+                piggyback_formatter=functools.partial(piggyback_formatter, "cronjob"),
+            )
+
             if MonitoredObject.cronjobs_pods not in arguments.monitored_objects:
                 # Ignore pods controlled by CronJobs
                 monitored_pods = monitored_pods.difference(
-                    {
-                        pod_lookup_from_agent_pod(pod)
-                        for cron_job in cluster.cron_jobs()
-                        for pod in cron_job.pods()
-                    }
+                    pod_lookup_from_api_pod(pod) for pod in monitored_api_cj_pods
                 )
-
             if MonitoredObject.pods in arguments.monitored_objects:
                 LOGGER.info("Write pods sections based on API data")
                 write_pods_api_sections(
@@ -2801,6 +2878,33 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                                 )
                             ):
                                 for section_name, section_json in namespace_sections:
+                                    with SectionWriter(section_name) as writer:
+                                        writer.append(section_json)
+
+                    if MonitoredObject.cronjobs_pods in arguments.monitored_objects:
+
+                        for api_cron_job in api_data.cron_jobs:
+
+                            cronjob_api_pods = filter_pods_by_phase(
+                                filter_pods_by_cron_job(monitored_api_cj_pods, api_cron_job),
+                                api.Phase.RUNNING,
+                            )
+
+                            cronjob_sections = kube_object_performance_sections(
+                                performance_pods=filter_associating_performance_pods_from_api_pods(
+                                    cronjob_api_pods, performance_pods
+                                ),
+                            )
+
+                            if not cronjob_sections:
+                                continue
+                            with ConditionalPiggybackSection(
+                                piggyback_formatter(
+                                    object_type="cronjob",
+                                    namespaced_name=f"{api_cron_job.metadata.namespace}_{api_cron_job.metadata.name}",
+                                )
+                            ):
+                                for section_name, section_json in cronjob_sections:
                                     with SectionWriter(section_name) as writer:
                                         writer.append(section_json)
 

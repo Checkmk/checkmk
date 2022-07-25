@@ -443,7 +443,11 @@ def deployment_from_client(
 
 def parse_cron_job_spec(spec: client.V1CronJobSpec) -> api.CronJobSpec:
     return api.CronJobSpec(
-        concurrency_policy=api.ConcurrencyPolicy(spec.concurrency_policy), schedule=spec.schedule
+        concurrency_policy=api.ConcurrencyPolicy(spec.concurrency_policy),
+        schedule=spec.schedule,
+        successful_jobs_history_limit=spec.successful_jobs_history_limit,
+        failed_jobs_history_limit=spec.failed_jobs_history_limit,
+        suspend=spec.suspend,
     )
 
 

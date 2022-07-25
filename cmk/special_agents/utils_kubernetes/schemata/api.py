@@ -583,6 +583,9 @@ class ConcurrencyPolicy(enum.Enum):
 class CronJobSpec(BaseModel):
     concurrency_policy: ConcurrencyPolicy
     schedule: str
+    failed_jobs_history_limit: int
+    successful_jobs_history_limit: int
+    suspend: bool
 
 
 class CronJob(BaseModel):

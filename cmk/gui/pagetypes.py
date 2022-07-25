@@ -45,12 +45,14 @@ from cmk.gui.logged_in import save_user_file, user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
     make_confirmed_form_submit_link,
+    make_external_link,
     make_form_submit_link,
     make_javascript_link,
     make_simple_link,
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
+    PageMenuLink,
     PageMenuSearch,
     PageMenuTopic,
 )
@@ -1626,17 +1628,15 @@ def _page_menu_entries_sub_pages(
         return
 
     for title, pagename, icon in sub_pages:
-        yield PageMenuEntry(
-            title=title,
-            icon_name=icon,
-            item=make_simple_link(
-                makeuri_contextless(
-                    request,
-                    [(ident_attr_name, visualname)],
-                    filename=pagename + ".py",
-                )
-            ),
+        uri: str = makeuri_contextless(
+            request,
+            [(ident_attr_name, visualname)],
+            filename=pagename + ".py",
         )
+        link: PageMenuLink = (
+            make_external_link(uri) if pagename == "report" else make_simple_link(uri)
+        )
+        yield PageMenuEntry(title=title, icon_name=icon, item=link)
 
 
 class ContactGroupChoice(DualListChoice):

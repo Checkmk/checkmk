@@ -76,6 +76,7 @@ from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
+    PageMenuLink,
     PageMenuPopup,
     PageMenuSidePopup,
     PageMenuTopic,
@@ -1102,7 +1103,7 @@ class GUIViewRenderer(ABCViewRenderer):
         yield PageMenuEntry(
             title=_("This view as PDF"),
             icon_name="report",
-            item=make_simple_link(
+            item=make_external_link(
                 makeuri(
                     request,
                     [],
@@ -2986,7 +2987,11 @@ def collect_context_links(
         view, rows, singlecontext_request_vars, mobile, visual_types
     ):
         yield _make_page_menu_entry_for_visual(
-            visual_type, visual, singlecontext_request_vars, mobile
+            visual_type,
+            visual,
+            singlecontext_request_vars,
+            mobile,
+            external_link=True,
         )
 
 
@@ -3052,13 +3057,14 @@ def _make_page_menu_entry_for_visual(
     visual: Visual,
     singlecontext_request_vars: Dict[str, str],
     mobile: bool,
+    external_link: bool = False,
 ) -> PageMenuEntry:
+    url: str = make_linked_visual_url(visual_type, visual, singlecontext_request_vars, mobile)
+    link: PageMenuLink = make_external_link(url) if external_link else make_simple_link(url)
     return PageMenuEntry(
         title=visual["title"],
         icon_name=visual.get("icon") or "trans",
-        item=make_simple_link(
-            make_linked_visual_url(visual_type, visual, singlecontext_request_vars, mobile)
-        ),
+        item=link,
         name="cb_" + visual["name"],
         is_show_more=visual.get("is_show_more", False),
     )

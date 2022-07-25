@@ -841,7 +841,11 @@ def page_list(  # pylint: disable=too-many-branches
                         [(visual_type_registry[what]().ident_attr, visual_name), ("owner", owner)],
                         filename="%s.py" % what_s,
                     )
-                    html.a(title2, href=show_url)
+                    html.a(
+                        title2,
+                        href=show_url,
+                        target="_blank" if what_s == "report" else None,
+                    )
                 else:
                     html.write_text(title2)
                 html.help(_u(visual["description"]))

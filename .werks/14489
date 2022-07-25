@@ -1,0 +1,10 @@
+Title: UI: Open PDFs in new tab
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 2.2.0i1
+Date: 1658732707
+Class: feature
+
+Reports and other PDFs used to be opened within the current page. Now, PDFs are opened in a new tab.

@@ -38,6 +38,7 @@ from cmk.gui.globals import html, output_funnel, request, response, transactions
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
+    make_external_link,
     make_simple_form_page_menu,
     make_simple_link,
     PageMenu,
@@ -481,7 +482,7 @@ def _page_menu_entries_export_reporting() -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
         title=_("This view as PDF"),
         icon_name="report",
-        item=make_simple_link(makeuri(request, [], filename="report_instant.py")),
+        item=make_external_link(makeuri(request, [], filename="report_instant.py")),
     )
 
 

@@ -10,6 +10,7 @@
 #include "on_start.h"
 #include "read_file.h"
 #include "test_tools.h"
+namespace fs = std::filesystem;
 
 namespace xlog {
 TEST(xlogTest, xlogLowLevel) {
@@ -98,7 +99,6 @@ TEST(LogTest, RotationFile) {
     tst::SafeCleanTempDir();
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
 
-    namespace fs = std::filesystem;
     using namespace XLOG::details;
     fs::path log_file = cma::cfg::GetTempDir();
     log_file /= "log.log";

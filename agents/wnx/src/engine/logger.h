@@ -44,7 +44,7 @@ std::string MakeBackupLogName(std::string_view filename,
 // thread safe(no race condition)
 void WriteToLogFileWithBackup(std::string_view filename, size_t max_size,
                               unsigned int max_backup_count,
-                              std::string_view text) noexcept;
+                              std::string_view text);
 
 // check status of duplication
 bool IsDuplicatedOnStdio() noexcept;
@@ -264,10 +264,10 @@ inline void sendStringToStdio(const char *str) {
 #endif
 
 namespace XLOG {
-constexpr unsigned int min_file_count = 0;
-constexpr unsigned int max_file_count = 64;
-constexpr size_t min_file_size = 256 * 1024;
-constexpr size_t max_file_size = 256 * 1024 * 1024;
+constexpr unsigned int factory_min_file_count = 0;
+constexpr unsigned int factory_max_file_count = 64;
+constexpr size_t factory_min_file_size = 256 * 1024;
+constexpr size_t factory_max_file_size = 256 * 1024 * 1024;
 
 namespace setup {
 void DuplicateOnStdio(bool on) noexcept;
@@ -593,8 +593,9 @@ public:
 
     void setLogRotation(unsigned int count, size_t size) {
         backup_log_max_count_ =
-            std::clamp(count, min_file_count, max_file_count);
-        backup_log_max_size_ = std::clamp(size, min_file_size, max_file_size);
+            std::clamp(count, factory_min_file_count, factory_max_file_count);
+        backup_log_max_size_ =
+            std::clamp(size, factory_min_file_size, factory_max_file_size);
     }
 
     void enableFileLog(bool enable) noexcept {

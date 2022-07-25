@@ -251,17 +251,9 @@ std::string MakeBackupLogName(std::string_view filename,
     }
 }
 
-constexpr unsigned int kMaxAllowedBackupCount = 32;
-constexpr size_t kMaxAllowedBackupSize = 1024 * 1024 * 256;
-
-void WriteToLogFileWithBackup(std::string_view filename, size_t max_size,
-                              unsigned int max_backup_count,
-                              std::string_view text) noexcept {
-    max_backup_count =
-        std::clamp(max_backup_count, min_file_count, max_file_count);
-    max_size = std::min(max_size, min_file_size);
-    std::lock_guard lk(g_backup_lock_mutex);
-
+namespace {
+void UpdateLogFiles(std::string_view filename, size_t max_size,
+                    unsigned int max_backup_count, std::string_view text) {
     fs::path log_file(filename);
 
     std::error_code ec;
@@ -271,7 +263,7 @@ void WriteToLogFileWithBackup(std::string_view filename, size_t max_size,
     }
 
     if (size + text.size() + g_file_text_header_size > max_size) {
-        for (auto i = max_file_count; i > max_backup_count; --i) {
+        for (auto i = factory_max_file_count; i > max_backup_count; --i) {
             fs::remove(MakeBackupLogName(filename, i), ec);
         }
         // making chain of backups
@@ -284,6 +276,17 @@ void WriteToLogFileWithBackup(std::string_view filename, size_t max_size,
         // clean main file(may be required)
         fs::remove(filename, ec);
     }
+}
+}  // namespace
+
+void WriteToLogFileWithBackup(std::string_view filename, size_t max_size,
+                              unsigned int max_backup_count,
+                              std::string_view text) {
+    max_backup_count = std::clamp(max_backup_count, factory_min_file_count,
+                                  factory_max_file_count);
+    max_size = std::min(max_size, factory_max_file_size);
+    std::lock_guard lk(g_backup_lock_mutex);
+    UpdateLogFiles(filename, max_size, max_backup_count, text);
 
     xlog::internal_PrintStringFile(filename, text);
 }

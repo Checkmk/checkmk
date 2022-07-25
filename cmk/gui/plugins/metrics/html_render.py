@@ -14,7 +14,7 @@ import livestatus
 
 import cmk.utils.render
 
-from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.exceptions import MKGeneralException, MKMissingDataError
 from cmk.gui.globals import config, html, output_funnel, request, response, theme, user
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u
@@ -753,6 +753,8 @@ def render_graph_content_html(graph_recipe, graph_data_range, graph_render_optio
         output += render_graph_error_html(
             _("Cannot fetch data via Livestatus"), _("Cannot create graph")
         )
+    except MKMissingDataError as e:
+        return html.render_message(str(e))
 
     except Exception as e:
         output += render_graph_error_html(e, _("Cannot create graph"))

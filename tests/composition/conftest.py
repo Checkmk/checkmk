@@ -21,7 +21,7 @@ def site(request):
 def site_factory():
     sf = SiteFactory(version=os.environ.get("VERSION", CMKVersion.DAILY),
                      edition=os.environ.get("EDITION", CMKVersion.CEE),
-                     branch=os.environ.get("BRANCH", current_branch_name()),
+                     branch=os.environ.get("BRANCH") or current_branch_name(),
                      prefix="comp_")
     try:
         yield sf

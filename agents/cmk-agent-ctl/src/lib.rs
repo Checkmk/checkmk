@@ -9,6 +9,8 @@ pub mod config;
 mod constants;
 #[cfg(windows)]
 mod log_ext;
+#[cfg(windows)]
+pub mod mailslot_transport;
 mod misc;
 pub mod modes;
 mod monitoring_data;

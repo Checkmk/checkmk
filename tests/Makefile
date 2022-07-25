@@ -77,6 +77,7 @@ help:
 	    echo "test-agent-plugin-unit-py$${i}-docker - Run Agent plugin tests in container with Python $${i}"; \
 	done
 	@echo "test-bandit                         - Run bandit (security) tests"
+	@echo "test-bandit-nosec-markers           - Check if all bandit #nosec markers are annotated properly"
 	@echo "test-code-quality                   - Run code quality tests locally"
 	@echo "test-code-quality-docker            - Run code quality tests in container"
 	@echo "test-composition                    - Run composition tests locally"
@@ -136,6 +137,7 @@ bandit.ini:
 	( echo -n -e "[bandit]\ntargets: "; \
 	  $(FIND_PYTHON_FILES) | tr '\n' ',' | sed 's/,$$//'; \
 	  echo ) > bandit.ini
+	( echo exclude: /tests >> bandit.ini )
 
 format-shell:
 	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $(SHELL_FILES_REL)
@@ -176,6 +178,9 @@ test-bandit: bandit.ini
 # Currently only care about high severity reported issues. Once this is reached,
 # go and enable the medium/low checks.
 	$(BANDIT) -c ../bandit.yaml -r -lll --ini bandit.ini $(BANDIT_OUTPUT_ARGS)
+
+test-bandit-nosec-markers:
+	$(PIPENV) run python bandit-nosec-markers/nosec_reason.py --doc bandit-nosec-markers/bandit-exclusions.md check $(realpath ..)
 
 prepare-protobuf-files:
 	$(MAKE) -C .. protobuf-files

@@ -43,28 +43,28 @@ def discover(section: SectionPaloAlto) -> DiscoveryResult:
     yield Service()
 
 
-_STATE_MAPPING_DEFAULT: Mapping[str, State] = {
-    "mode_disabled": State.OK,
-    "mode_active_active": State.OK,
-    "mode_active_passive": State.OK,
-    "ha_local_state_active": State.OK,
-    "ha_local_state_passive": State.OK,
-    "ha_local_state_active_primary": State.OK,
-    "ha_local_state_active_secondary": State.OK,
-    "ha_local_state_disabled": State.OK,
-    "ha_local_state_tentative": State.WARN,
-    "ha_local_state_non_functional": State.CRIT,
-    "ha_local_state_suspended": State.CRIT,
-    "ha_local_state_unknown": State.UNKNOWN,
-    "ha_peer_state_active": State.OK,
-    "ha_peer_state_passive": State.OK,
-    "ha_peer_state_active_primary": State.OK,
-    "ha_peer_state_active_secondary": State.OK,
-    "ha_peer_state_disabled": State.OK,
-    "ha_peer_state_tentative": State.WARN,
-    "ha_peer_state_non_functional": State.CRIT,
-    "ha_peer_state_suspended": State.CRIT,
-    "ha_peer_state_unknown": State.UNKNOWN,
+_STATE_MAPPING_DEFAULT: Mapping[str, int] = {
+    "mode_disabled": int(State.OK),
+    "mode_active_active": int(State.OK),
+    "mode_active_passive": int(State.OK),
+    "ha_local_state_active": int(State.OK),
+    "ha_local_state_passive": int(State.OK),
+    "ha_local_state_active_primary": int(State.OK),
+    "ha_local_state_active_secondary": int(State.OK),
+    "ha_local_state_disabled": int(State.OK),
+    "ha_local_state_tentative": int(State.WARN),
+    "ha_local_state_non_functional": int(State.CRIT),
+    "ha_local_state_suspended": int(State.CRIT),
+    "ha_local_state_unknown": int(State.UNKNOWN),
+    "ha_peer_state_active": int(State.OK),
+    "ha_peer_state_passive": int(State.OK),
+    "ha_peer_state_active_primary": int(State.OK),
+    "ha_peer_state_active_secondary": int(State.OK),
+    "ha_peer_state_disabled": int(State.OK),
+    "ha_peer_state_tentative": int(State.WARN),
+    "ha_peer_state_non_functional": int(State.CRIT),
+    "ha_peer_state_suspended": int(State.CRIT),
+    "ha_peer_state_unknown": int(State.UNKNOWN),
 }
 
 
@@ -73,21 +73,21 @@ def _uniform_format(name: str) -> str:
 
 
 def check(
-    params: Mapping[str, State],
+    params: Mapping[str, int],
     section: SectionPaloAlto,
 ) -> CheckResult:
 
     yield Result(state=State.OK, notice=f"Firmware Version: {section.firmware_version}")
     yield Result(
-        state=params[f"mode_{_uniform_format(section.ha_mode)}"],
+        state=State(params[f"mode_{_uniform_format(section.ha_mode)}"]),
         summary=f"HA mode: {section.ha_mode}",
     )
     yield Result(
-        state=params[f"ha_local_state_{_uniform_format(section.ha_local_state)}"],
+        state=State(params[f"ha_local_state_{_uniform_format(section.ha_local_state)}"]),
         summary=f"HA local state: {section.ha_local_state}",
     )
     yield Result(
-        state=params[f"ha_peer_state_{_uniform_format(section.ha_peer_state)}"],
+        state=State(params[f"ha_peer_state_{_uniform_format(section.ha_peer_state)}"]),
         notice=f"HA peer state: {section.ha_peer_state}",
     )
 
@@ -98,4 +98,5 @@ register.check_plugin(
     discovery_function=discover,
     check_function=check,
     check_default_parameters=_STATE_MAPPING_DEFAULT,
+    check_ruleset_name="palo_alto",
 )

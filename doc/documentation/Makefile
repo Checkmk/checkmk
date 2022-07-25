@@ -9,7 +9,7 @@ SPHINXBUILD   ?= ../../scripts/run-pipenv run sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
 PLANTUML_VERSION = 1.2022.5
-PLANTUML_JAR = plantuml.${PLANTUML_VERSION}.jar
+PLANTUML_JAR = plantuml-${PLANTUML_VERSION}.jar
 
 .PHONY: help
 help:
@@ -17,7 +17,7 @@ help:
 
 ${PLANTUML_JAR}:
 	rm -f plantuml*.jar
-	wget "http://downloads.sourceforge.net/project/plantuml/${PLANTUML_VERSION}/$@"
+	wget "https://repo1.maven.org/maven2/net/sourceforge/plantuml/plantuml/${PLANTUML_VERSION}/$@"
 	ln -sf $@ plantuml.jar
 
 .PHONY: spell

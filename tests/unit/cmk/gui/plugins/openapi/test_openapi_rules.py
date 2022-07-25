@@ -424,10 +424,10 @@ def test_create_rule_permission_error_regression(
         url=base + "/domain-types/rule/collections/all",
         params=json.dumps(
             {
-                "ruleset": "agent_config:cmk_update_agent",
+                "ruleset": "active_checks:cmk_inv",
                 "folder": "~",
                 "properties": {"disabled": False},
-                "value_raw": '{"activated": True}',
+                "value_raw": '{"status_data_inventory": True}',
                 "conditions": {},
             }
         ),

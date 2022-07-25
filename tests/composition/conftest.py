@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+from typing import Iterator
 
 import pytest
 
@@ -20,14 +21,14 @@ def site(request):
 
 
 @pytest.fixture(scope="session")
-def site_factory():
+def site_factory() -> Iterator[SiteFactory]:
+    sf = SiteFactory(
+        version=os.environ.get("VERSION", CMKVersion.DAILY),
+        edition=os.environ.get("EDITION", CMKVersion.CEE),
+        branch=os.environ.get("BRANCH", current_branch_name()),
+        prefix="comp_",
+    )
     try:
-        sf = SiteFactory(
-            version=os.environ.get("VERSION", CMKVersion.DAILY),
-            edition=os.environ.get("EDITION", CMKVersion.CEE),
-            branch=os.environ.get("BRANCH", current_branch_name()),
-            prefix="comp_",
-        )
         yield sf
     finally:
         sf.save_results()

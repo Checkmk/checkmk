@@ -5,22 +5,6 @@ package lib
 
 def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
-def upload(Map args) {
-    // needed args + desc:
-    // NAME: Name of the artifact to display
-    // FILE_PATH: Path where the File is stored
-    // FILE_NAME: Name of the File to be uploaded
-    // CMK_VERS: Version that should be uploaded
-    // UPLOAD_DEST: Where should the packages be uploaded to
-    // PORT: Port fo upload dest
-    stage(args.NAME + ' upload package') {
-        def FILE_BASE = get_file_base(args.FILE_PATH)
-        def ARCHIVE_BASE = get_archive_base(FILE_BASE)
-
-        via_rsync(ARCHIVE_BASE, args.CMK_VERS, args.FILE_NAME, args.UPLOAD_DEST, args.PORT)
-    }
-}
-
 def download_deb(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITION, DISTRO) {
     def FILE_PATTERN = "check-mk-${EDITION}-${CMK_VERSION}_0.${DISTRO}_amd64.deb"
     download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, FILE_PATTERN, DISTRO)
@@ -73,27 +57,26 @@ def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT) {
     }
 }
 
-def get_file_base(FILE_PATH) {
-    return sh(script: "dirname ${FILE_PATH}", returnStdout: true).toString().trim()
-}
+def upload_via_rsync(archive_base, cmk_version, filename, upload_dest, upload_port) {
+    println("""
+        ||== upload_via_rsync() ================================================
+        || archive_base = |${archive_base}|
+        || cmk_version =  |${cmk_version}|
+        || filename =     |${filename}|
+        || upload_dest =  |${upload_dest}|
+        || upload_port =  |${upload_port}|
+        ||======================================================================
+        """.stripMargin());
 
-def get_archive_base(FILE_BASE) {
-    return sh(script: "dirname ${FILE_BASE}", returnStdout: true).toString().trim()
-}
-
-def get_file_name(FILE_PATH) {
-    return sh(script: "basename ${FILE_PATH}", returnStdout: true).toString().trim()
-}
-
-def via_rsync(ARCHIVE_BASE, CMK_VERS, FILE_NAME, UPLOAD_DEST, PORT) {
     withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
-        sh """
+        sh("""
             rsync -av --relative \
                 --exclude '*dbgsym*.deb' \
-                -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT}" \
-                ${ARCHIVE_BASE}/./${CMK_VERS}/${FILE_NAME} \
-                ${UPLOAD_DEST}
-        """
+                -e "ssh -o StrictHostKeyChecking=no \
+                -i ${RELEASE_KEY} -p ${upload_port}" \
+                ${archive_base}/./${cmk_version}/${filename} \
+                ${upload_dest}
+        """);
     }
 }
 

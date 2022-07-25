@@ -4,12 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from contextlib import suppress
-from typing import Any, Mapping
+from typing import Any, Mapping, TypedDict
 
 from .agent_based_api.v1 import check_levels, regex, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
-Group = Mapping[str, Any]
+
+class Group(TypedDict):
+    paths: list
+    broken_paths: list
+    luns: list
+    uuid: str | None
+    state: str | None
+    numpaths: int
+    device: str | None
+    alias: str | None
+
+
 Section = Mapping[str, Group]
 
 
@@ -35,8 +46,8 @@ def parse_multipath(string_table: StringTable) -> Section:  # pylint: disable=to
     reg_lun = regex("[0-9]+:[0-9]+:[0-9]+:[0-9]+")
     uuid: str | None = None
     alias = None
-    groups: dict[str, dict[str, Any]] = {}
-    group: dict[str, Any] = {}
+    groups: dict[str, Group] = {}
+    group: Group | dict = {}  # initial value will not be used
     numpaths = 0
     for line in string_table:
         # Ignore error messages due to invalid multipath.conf
@@ -78,7 +89,7 @@ def parse_multipath(string_table: StringTable) -> Section:  # pylint: disable=to
                         alias = None
 
                     if dm_pos:
-                        dm_device = matchobject.group(dm_pos)
+                        dm_device: str | None = matchobject.group(dm_pos)
                     else:
                         dm_device = None
 
@@ -92,20 +103,18 @@ def parse_multipath(string_table: StringTable) -> Section:  # pylint: disable=to
             lun_info: list = []
             paths_info: list = []
             broken_paths: list = []
-            group = {}
-            group["paths"] = paths_info
-            group["broken_paths"] = broken_paths
-            group["luns"] = lun_info
-            group["uuid"] = uuid
-            group["state"] = None
-            group["numpaths"] = 0
-            group["device"] = dm_device
+            group = {
+                "paths": paths_info,
+                "broken_paths": broken_paths,
+                "luns": lun_info,
+                "uuid": uuid,
+                "state": None,
+                "numpaths": 0,
+                "device": dm_device,
+                "alias": alias if alias else None,
+            }
             if uuid is not None:
                 groups[uuid] = group
-
-            # If the device has an alias, then extract it
-            if alias:
-                group["alias"] = alias
 
             # Proceed with next line after init
             continue
@@ -124,6 +133,7 @@ def parse_multipath(string_table: StringTable) -> Section:  # pylint: disable=to
                 numpaths += 1
                 group["numpaths"] = numpaths
                 paths_info.append(line[2])
+
     return groups
 
 
@@ -139,11 +149,12 @@ def discover_multipath(params: Mapping[str, Any], section: Section) -> Discovery
 
     for uuid, info in section.items():
         # take current number of paths as target value
-        if "alias" in info and params["use_alias"]:
-            item = info["alias"]
-        else:
-            item = uuid
-        yield Service(item=item, parameters={"levels": info["numpaths"]})
+        yield Service(
+            item=alias
+            if (alias := info["alias"]) is not None and params.get("use_alias")
+            else uuid,
+            parameters={"levels": info["numpaths"]},
+        )
 
 
 # item is UUID (e.g. '360a9800043346937686f456f59386741') or alias (e.g. 'mpath0')
@@ -155,7 +166,7 @@ def _get_item_data(item: str, section: Section) -> Group | None:
 
     # Fall back to aliases
     for mmap in section.values():
-        if mmap.get("alias") == item:
+        if mmap["alias"] == item:
             return mmap
 
     return None
@@ -169,8 +180,8 @@ def check_multipath(  # pylint: disable=too-many-branches
 
     # If the item is the alias, then show the UUID in the plugin output.
     # If the item is the UUID, then vice versa.
-    alias = mmap.get("alias")
-    uuid = mmap.get("uuid")
+    alias = mmap["alias"]
+    uuid = mmap["uuid"]
 
     if item == uuid and alias:
         aliasinfo = "(%s): " % alias

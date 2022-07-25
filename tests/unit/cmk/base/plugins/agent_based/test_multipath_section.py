@@ -60,6 +60,7 @@ TEST_DATA = [
                 "state": None,
                 "numpaths": 2,
                 "device": None,
+                "alias": None,
             },
         },
     ),
@@ -80,6 +81,7 @@ TEST_DATA = [
                 "state": None,
                 "numpaths": 1,
                 "device": None,
+                "alias": None,
             }
         },
     ),
@@ -103,6 +105,7 @@ TEST_DATA = [
                 "state": "[prio=0][enabled]",
                 "numpaths": 2,
                 "device": "dm-4",
+                "alias": None,
             }
         },
     ),
@@ -125,6 +128,7 @@ TEST_DATA = [
                 "state": "[prio=-1][enabled]",
                 "numpaths": 2,
                 "device": "dm-0",
+                "alias": None,
             }
         },
     ),
@@ -226,6 +230,7 @@ TEST_DATA = [
                 "state": "prio=-1status=active",
                 "numpaths": 2,
                 "device": "dm-1",
+                "alias": None,
             }
         },
     ),
@@ -250,6 +255,7 @@ TEST_DATA = [
                 "state": "prio=-1status=enabled",
                 "numpaths": 4,
                 "device": "dm-0",
+                "alias": None,
             }
         },
     ),
@@ -284,6 +290,7 @@ TEST_DATA = [
                 "state": "[prio=0][enabled]",
                 "numpaths": 6,
                 "device": "dm-13",
+                "alias": None,
             }
         },
     ),
@@ -306,6 +313,7 @@ TEST_DATA = [
                 "state": "[prio=-1][enabled]",
                 "numpaths": 2,
                 "device": "dm-6",
+                "alias": None,
             }
         },
     ),
@@ -332,6 +340,7 @@ TEST_DATA = [
                 "state": "prio=0status=enabled",
                 "numpaths": 4,
                 "device": "dm-4",
+                "alias": None,
             }
         },
     ),
@@ -370,6 +379,7 @@ TEST_DATA = [
                 "state": "prio=0status=enabled",
                 "numpaths": 4,
                 "device": "dm-7",
+                "alias": None,
             }
         },
     ),

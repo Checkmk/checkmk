@@ -3791,14 +3791,10 @@ class ConfigCache:
         cache_id = (hostname, svc_desc)
         if cache_id in self._cache_match_object_service:
             return self._cache_match_object_service[cache_id]
-
-        service_labels = (
-            svc_labels
-            if svc_labels
-            else self.labels.labels_of_service(self.ruleset_matcher, hostname, svc_desc)
-        )
+        if svc_labels is None:
+            svc_labels = self.labels.labels_of_service(self.ruleset_matcher, hostname, svc_desc)
         result = RulesetMatchObject(
-            host_name=hostname, service_description=svc_desc, service_labels=service_labels
+            host_name=hostname, service_description=svc_desc, service_labels=svc_labels
         )
         self._cache_match_object_service[cache_id] = result
         return result
@@ -3826,7 +3822,7 @@ class ConfigCache:
             host_name=hostname,
             service_description=item,
             service_labels=svc_labels
-            if svc_labels
+            if svc_labels is not None
             else self.labels.labels_of_service(self.ruleset_matcher, hostname, svc_desc),
         )
         self._cache_match_object_service_checkgroup[cache_id] = result

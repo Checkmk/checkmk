@@ -76,6 +76,7 @@ RUN zypper ref -s \
     rpcbind \
     rpm-build \
     rpm-devel \
+    rsync \
     samba-client \
     sqlite3-devel \
     tar \

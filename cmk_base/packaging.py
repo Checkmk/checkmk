@@ -136,6 +136,10 @@ package_ignored_files = {
 }
 
 
+def format_file_name(name, version):
+    return "%s-%s%s" % (name, version, pac_ext)
+
+
 def get_package_parts():
     return _package_parts
 
@@ -375,7 +379,7 @@ def package_pack(args):
     package = read_package_info(pacname)
     if not package:
         raise PackageException("Package %s not existing or corrupt." % pacname)
-    tarfilename = "%s-%s%s" % (pacname, package["version"], pac_ext)
+    tarfilename = format_file_name(name=package["name"], version=package["version"])
     logger.verbose("Packing %s into %s...", pacname, tarfilename)
     create_mkp_file(package, file_name=tarfilename)
     logger.verbose("Successfully created %s", tarfilename)

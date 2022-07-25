@@ -22,6 +22,18 @@ def main() {
                     )])
                 }
             }
+            stage('check nosec markers') {
+                try {
+                    dir("${checkout_dir}") {
+                        sh("make -C tests test-bandit-nosec-markers")
+                    }
+                } catch(Exception) {
+                    // Don't fail the job if un-annotated markers are found.
+                    // Security will have to take care of those later.
+                    // TODO: once we have a green baseline, mark unstable if new un-annotated markers have been added:
+                    // unstable("failed to validate nosec marker annotations");
+                }
+            }
         }
     }
 }

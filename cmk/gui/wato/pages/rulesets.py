@@ -1045,7 +1045,9 @@ class ModeEditRuleset(WatoMode):
         html.div("", id_="row_info")
         num_rows = 0
         service_labels: Labels = {}
+        analyse_rule_matching = False
         if self._hostname and self._host and self._service:
+            analyse_rule_matching = True
             service_labels = analyse_service(
                 self._host.site_id(),
                 self._hostname,
@@ -1072,7 +1074,13 @@ class ModeEditRuleset(WatoMode):
                     table.row(css=self._css_for_rule(search_options, rule))
                     self._set_focus(rule)
                     self._show_rule_icons(
-                        table, match_state, folder, rule, rulenr, service_labels=service_labels
+                        table,
+                        match_state,
+                        folder,
+                        rule,
+                        rulenr,
+                        service_labels=service_labels,
+                        analyse_rule_matching=analyse_rule_matching,
                     )
                     self._rule_cells(table, rule)
 
@@ -1107,10 +1115,12 @@ class ModeEditRuleset(WatoMode):
         rule: Rule,
         rulenr,
         service_labels: Labels,
+        analyse_rule_matching: bool,
     ) -> None:
         table.cell(_("Ma."))
-        title, img = self._match(match_state, rule, service_labels=service_labels)
-        html.icon("rule%s" % img, title)
+        if analyse_rule_matching:
+            title, img = self._match(match_state, rule, service_labels=service_labels)
+            html.icon("rule%s" % img, title)
 
         table.cell("", css=["buttons"])
         if rule.is_disabled():

@@ -1,14 +1,22 @@
 @startuml
 
-file "/etc/apache2/conf-*/zzz_omd.conf" as system_hook
-file "/omd/apache/$SITE.conf" as site_hook
-file "$OMD_ROOT/etc/apache/mode.conf" as mode_link
-file "$OMD_ROOT/etc/apache/apache-own.conf" as site_conf
-file "$OMD_ROOT/etc/apache/proxy-port.conf" as proxy_conf
+artifact "System Apache" {
+    file "/etc/apache2/conf-*/zzz_omd.conf" as system_hook
+    file "/omd/apache/$SITE.conf" as site_hook
+}
+artifact "Site Apache" {
+    file "$OMD_ROOT/etc/apache/apache.conf" as site_conf
+    folder "$OMD_ROOT/etc/apache/conf.d/" as conf_d
+    file "security.conf" as security_conf
+    file "nagvis.conf" as nagvis_conf
+    file "etc." as etc_conf
+}
 
 system_hook -d-> site_hook : includes
-site_hook -d-> mode_link : includes
-mode_link -d-> site_conf : symlinks
-site_conf -d-> proxy_conf : includes
+site_hook -d-> site_conf : links (reverse proxy)
+site_conf -d-> conf_d : includes
+conf_d -d-> security_conf : contains
+conf_d -d-> nagvis_conf : contains
+conf_d -d-> etc_conf : contains
 
 @enduml

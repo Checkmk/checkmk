@@ -7,9 +7,10 @@ ENV PATH="/opt/bin:${PATH}"
 
 ARG ARTIFACT_STORAGE
 
-RUN zypper -n --no-gpg-checks in --replacefiles \
-    gawk \
+RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15sp3 sles15sp3 \
     && zypper -n --no-gpg-checks in --replacefiles \
+    gawk \
+    && zypper -n --no-gpg-checks in --replacefiles --force-resolution \
     curl \
     cyrus-sasl-devel \
     enchant-devel \
@@ -18,6 +19,8 @@ RUN zypper -n --no-gpg-checks in --replacefiles \
     make \
     openldap2-devel \
     python \
+    python-devel \
+    python-xml \
     rrdtool-devel \
     sudo \
     && zypper clean -a
@@ -68,6 +71,7 @@ RUN zypper ref -s \
     openssh \
     pango-devel \
     patch \
+    postgresql12-server-devel \
     readline-devel \
     rpcbind \
     rpm-build \
@@ -76,6 +80,7 @@ RUN zypper ref -s \
     sqlite3-devel \
     tar \
     texinfo \
+    tk-devel \
     unzip \
     wget \
     which \

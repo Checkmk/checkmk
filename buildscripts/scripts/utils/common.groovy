@@ -12,20 +12,37 @@ raise = { msg ->
     throw exc;
 }
 
+
 // Runs provided command in a shell and returns the JSON parsed stdout output
 load_json = { json_file ->
     def cmd_stdout_result = cmd_output("cat ${json_file}");
     (new groovy.json.JsonSlurperClassic()).parseText(cmd_stdout_result);
 }
 
+
+onWindows = (env['OS'] ?: "").toLowerCase().contains('windows');
+
+
 cmd_output = { cmd ->
     try {
-        return sh(script: cmd, returnStdout: true).trim();
+        return ( onWindows ?
+            /// bat() conveniently adds the command to stdout, thanks.
+            bat(script: cmd, returnStdout: true).trim().split("\n").tail().join("\n")
+            :
+            sh(script: cmd, returnStdout: true).trim());
     } catch (Exception exc) {
         print("WARNING: Executing ${cmd} returned non-zero: ${exc}");
     }
     return "";
 }
+
+
+cleanup_directory = { directory ->
+    assert directory.startsWith(env.HOME);
+    sh("rm -rf '${directory}/'*");
+    sh("mkdir -p '${directory}'");
+}
+
 
 /// Run a block based on a global "dry run level"
 /// Global level = "0" (or unset) means "run everything"

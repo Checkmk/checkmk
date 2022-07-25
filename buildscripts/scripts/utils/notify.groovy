@@ -5,7 +5,11 @@ import org.codehaus.groovy.runtime.StackTraceUtils;
 def get_author_email() {
     // Workaround since CHANGE_AUTHOR_EMAIL is not available
     // Bug: https://issues.jenkins-ci.org/browse/JENKINS-39838
-    return cmd_output("git log -1 --pretty=format:%ae");
+    return (
+        onWindows ?
+        /// windows will replace %ae with ae..
+        cmd_output('git log -1 --pretty=format:%%ae') :
+        cmd_output('git log -1 --pretty=format:%ae'))
 }
 
 // Send a build failed massage to jenkins

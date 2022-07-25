@@ -858,7 +858,7 @@ def test_openapi_discovery_refresh_services(
     )
     assert (
         resp.location
-        == "http://localhost/NO_SITE/check_mk/api/1.0/objects/service_discovery_run/example.com/actions/wait-for-completion/invoke"
+        == "http://localhost/NO_SITE/check_mk/api/1.0/objects/service_discovery_run/example.com"
     )
     assert mock_try_discovery.mock_calls == [
         call("NO_SITE", ["@noscan"], "example.com"),
@@ -1164,14 +1164,6 @@ def test_openapi_refresh_job_status(  # type:ignore[no-untyped-def]
     mock_try_discovery: MagicMock,
 ) -> None:
     host_name = "example.com"
-
-    aut_user_auth_wsgi_app.call_method(
-        "get",
-        f"{base}/objects/service_discovery_run/example.com/actions/wait-for-completion/invoke",
-        headers={"Accept": "application/json"},
-        status=404,
-    )
-
     aut_user_auth_wsgi_app.call_method(
         "post",
         f"{base}/domain-types/service_discovery_run/actions/start/invoke",
@@ -1179,13 +1171,6 @@ def test_openapi_refresh_job_status(  # type:ignore[no-untyped-def]
         content_type="application/json",
         headers={"Accept": "application/json"},
         status=302,
-    )
-
-    aut_user_auth_wsgi_app.call_method(
-        "get",
-        f"{base}/objects/service_discovery_run/example.com/actions/wait-for-completion/invoke",
-        headers={"Accept": "application/json"},
-        status=204,
     )
 
     resp = aut_user_auth_wsgi_app.call_method(

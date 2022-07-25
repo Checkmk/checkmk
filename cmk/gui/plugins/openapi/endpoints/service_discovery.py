@@ -19,7 +19,7 @@ from cmk.automations.results import CheckPreviewEntry
 
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.http import request, Response
+from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
@@ -327,38 +327,6 @@ def show_service_discovery_run(params: Mapping[str, Any]) -> Response:
     )
 
 
-@Endpoint(
-    constructors.object_action_href("service_discovery_run", "{host_name}", "wait-for-completion"),
-    "cmk/wait-for-completion",
-    method="get",
-    status_descriptions={
-        204: "The service discovery has been completed.",
-        302: "The service discovery is still running. Redirecting to the "
-        "'Wait for completion' endpoint.",
-        404: "There is no running service discovery",
-    },
-    path_params=[HOST_NAME],
-    additional_status_codes=[302],
-    output_empty=True,
-)
-def service_discovery_run_wait_for_completion(params: Mapping[str, Any]) -> Response:
-    """Wait for service discovery completion
-
-    This endpoint will periodically redirect on itself to prevent timeouts.
-    """
-    host = Host.load_host(params["host_name"])
-    job = ServiceDiscoveryBackgroundJob(host.name())
-    if not job.exists():
-        raise ProblemException(
-            status=404, title=f"Service discovery job for host {host.name()} not found."
-        )
-    if job.is_active():
-        response = Response(status=302)
-        response.location = request.url
-        return response
-    return Response(status=204)
-
-
 class DiscoverServicesDeprecated(BaseSchema):
     mode = _discovery_mode(default_mode="fix_all")
 
@@ -467,7 +435,7 @@ def _execute_service_discovery(discovery_action: APIDiscoveryAction, host: CREHo
                 discovery_result=discovery_result,
             )
         case APIDiscoveryAction.refresh:
-            discovery_run = _discovery_wait_for_completion_link(host.name())
+            discovery_run = _discovery_run_link(host.name())
             response = Response(status=302)
             response.location = discovery_run["href"]
             return response
@@ -481,10 +449,10 @@ def _execute_service_discovery(discovery_action: APIDiscoveryAction, host: CREHo
     return serve_json(serialize_discovery_result(host, discovery_result))
 
 
-def _discovery_wait_for_completion_link(host_name: str) -> LinkType:
+def _discovery_run_link(host_name: str) -> LinkType:
     return constructors.link_endpoint(
         "cmk.gui.plugins.openapi.endpoints.service_discovery",
-        "cmk/wait-for-completion",
+        "cmk/show",
         parameters={"host_name": host_name},
     )
 

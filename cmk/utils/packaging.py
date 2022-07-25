@@ -340,10 +340,16 @@ def edit(pacname: PackageName, new_package_info: PackageInfo) -> None:
     write_package_info(new_package_info)
 
 
-def install_optional_package(package_file_name: Path) -> PackageInfo:
-    if package_file_name not in [Path(p.name) for p in _get_optional_package_paths()]:
-        raise PackageException("Optional package %s does not exist" % package_file_name)
-    return install_by_path(cmk.utils.paths.optional_packages_dir / package_file_name)
+def _get_full_package_path(package_file_name: str) -> Path:
+    for package in _get_optional_package_paths():
+        if package_file_name == package.name:
+            return package
+    raise PackageException("Optional package %s does not exist" % package_file_name)
+
+
+def install_optional_package(package_file_base_name: str) -> PackageInfo:
+    package_path = _get_full_package_path(package_file_base_name)
+    return install_by_path(package_path)
 
 
 def install_by_path(package_path: Path) -> PackageInfo:
@@ -591,9 +597,22 @@ def get_optional_package_infos() -> Dict[str, PackageInfo]:
 
 
 def _get_optional_package_paths() -> List[Path]:
-    if not cmk.utils.paths.optional_packages_dir.exists():
-        return []
-    return list(cmk.utils.paths.optional_packages_dir.iterdir())
+    try:
+        local = list(cmk.utils.paths.local_optional_packages_dir.iterdir())
+    except FileNotFoundError:
+        local = []
+
+    local_mkp_names = {p.name for p in local}
+
+    try:
+        shipped = [
+            p for p in cmk.utils.paths.optional_packages_dir.iterdir()
+            if p.name not in local_mkp_names
+        ]
+    except FileNotFoundError:
+        shipped = []
+
+    return local + shipped
 
 
 def get_disabled_package_infos() -> Dict[str, PackageInfo]:

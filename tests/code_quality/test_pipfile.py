@@ -255,6 +255,7 @@ CEE_UNUSED_PACKAGES = [
     "jsonschema",
     "more-itertools",
     "multidict",
+    "npyscreen",
     "ordered-set",
     "pbr",
     "ply",

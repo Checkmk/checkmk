@@ -1,0 +1,29 @@
+Title: Fix PermissionError during 'omd update' related to '/omd/apache' files
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1658738876
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p9
+
+When performing 'omd update' to 2.1.0p7 or newer, a PermissionError could occur, depending
+on the umask settings of your system. A traceback like this was visible in this situation:
+
+C+:
+Traceback (most recent call last):
+  File "/omd/versions/2.1.0p8.cee/bin/omd", line 63, in <module>
+    omdlib.main.main()
+  File "/omd/versions/2.1.0p8.cee/lib/python3/omdlib/main.py", line 4665, in main
+    command.handler(version_info, site, global_opts, args, command_options)
+  File "/omd/versions/2.1.0p8.cee/lib/python3/omdlib/main.py", line 2726, in main_update
+    not is_apache_hook_up_to_date(site)
+  File "/omd/versions/2.1.0p8.cee/lib/python3/omdlib/system_apache.py", line 72, in is_apache_hook_up_to_date
+    with open(os.path.join(omdlib.utils.omd_base_path(), "omd/apache/%s.conf" % site.name)) as f:
+PermissionError: [Errno 13] Permission denied: '/omd/apache/checkmk_test.conf'
+C-:
+
+The issue is fixed with this relase. However, you can workaround this issue by
+executing <tt>chmod o+r /omd/apache/*.conf</tt> as root before executing 'omd
+update'.

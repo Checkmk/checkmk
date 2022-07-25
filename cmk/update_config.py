@@ -48,6 +48,7 @@ import logging  # pylint: disable=unused-import
 from werkzeug.test import create_environ
 
 import cmk_base.autochecks
+import cmk_base.packaging
 
 import cmk.utils.log
 import cmk.utils.debug
@@ -98,6 +99,7 @@ class UpdateConfig(object):
             (self._rewrite_wato_rulesets, "Rewriting WATO rulesets"),
             (self._rewrite_autochecks, "Rewriting autochecks"),
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
+            (self._cleanup_extension_packages, "Cleaning up extension packages"),
         ]
 
     def _rewrite_wato_tag_config(self):
@@ -162,6 +164,29 @@ class UpdateConfig(object):
             except OSError as e:
                 if e.errno != errno.ENOENT:
                     raise  # Do not fail on missing directories / files
+
+    def _cleanup_extension_packages(self):
+        # type: () -> None
+        self._ensure_all_installed_packages_are_available_as_mkp()
+
+    def _ensure_all_installed_packages_are_available_as_mkp(self):
+        # type: () -> None
+        for package_name in cmk_base.packaging.all_package_names():
+            manifest = cmk_base.packaging.read_package_info(package_name)
+            if manifest is None:
+                continue
+            shipped_mkp_path = cmk.utils.paths.optional_packages_dir / cmk_base.packaging.format_file_name(
+                name=manifest["name"], version=manifest["version"])
+            if shipped_mkp_path.exists():
+                cmk_base.packaging.mark_as_enabled(shipped_mkp_path)
+                continue
+
+            try:
+                cmk_base.packaging.create_enabled_mkp_from_installed_package(manifest)
+            except Exception as exc:
+                if cmk.utils.debug.enabled():
+                    raise
+                self._logger.error("ERROR: failed to create enabled MKP: %r" % exc)
 
 
 def _show_failed_plugin_error(logger):

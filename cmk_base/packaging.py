@@ -496,7 +496,7 @@ def create_package(pkg_info):
 
     validate_package_files(pacname, pkg_info["files"])
     write_package_info(pkg_info)
-    _create_enabled_mkp_from_installed_package(pkg_info)
+    create_enabled_mkp_from_installed_package(pkg_info)
 
 
 def edit_package(pacname, new_package_info):
@@ -511,12 +511,12 @@ def edit_package(pacname, new_package_info):
 
     validate_package_files(pacname, new_package_info["files"])
 
-    _create_enabled_mkp_from_installed_package(new_package_info)
+    create_enabled_mkp_from_installed_package(new_package_info)
     remove_package_info(pacname)
     write_package_info(new_package_info)
 
 
-def _create_enabled_mkp_from_installed_package(manifest):
+def create_enabled_mkp_from_installed_package(manifest):
     """Creates an MKP, saves it on disk and enables it
 
     After we changed and or created an MKP, we must make sure it is present on disk as

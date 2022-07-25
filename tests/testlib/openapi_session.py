@@ -217,18 +217,13 @@ class CMKOpenApiSession(requests.Session):
                     raise TimeoutError("wait for completion on service discovery timed out")
 
                 response = self.get(redirect_url)
-                if response.status_code != 200:
+                if response.status_code == 204:     # job has finished
+                    break
+
+                if response.status_code != 302:
                     raise UnexpectedResponse.from_response(response)
 
-                body = response.json()
-                if body["extensions"]["active"]:
-                    time.sleep(0.5)
-                    continue  # Job is still running, wait for the result
-
-                if body["extensions"]["state"] == "finished":
-                    break  # Finished as intended
-
-                raise RuntimeError("Unhandled state: %r" % body)
+                time.sleep(0.5)
 
         # TODO: Once we have a "tabula rasa" mode, we can remove this second invocaton
         response = self.post(

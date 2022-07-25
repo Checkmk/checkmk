@@ -1,0 +1,18 @@
+Title: Add graph data endpoint to the REST API
+Class: feature
+Compatible: compat
+Component: rest-api
+Date: 1659002855
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+The REST API now has endpoints for querying graph data.
+They are analogous to the Web API endpoint.
+If you have any calls to ".../cmk/check_mk/webapi.py?action=get_graph...",
+please use the REST endpoint ("/domain-types/graph/actions/get_*_graph/invoke") instead.
+
+Please note that the request and response schemas differ from the Web API and
+any client code should be adjusted accordingly.
+Further details about the schemas can be found in the documentation of respective endpoints

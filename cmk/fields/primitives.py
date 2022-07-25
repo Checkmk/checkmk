@@ -31,6 +31,10 @@ class Decimal(base.OpenAPIAttributes, fields.Decimal):
     pass
 
 
+class Float(base.OpenAPIAttributes, fields.Float):
+    pass
+
+
 class Email(base.OpenAPIAttributes, fields.Email):
     pass
 

@@ -742,7 +742,7 @@ def query_livestatus(
     if all(
         (
             active_config.debug_livestatus_queries,
-            html.output_format == "html",
+            request.accept_mimetypes.accept_html,
             display_options.enabled(display_options.W),
         )
     ):

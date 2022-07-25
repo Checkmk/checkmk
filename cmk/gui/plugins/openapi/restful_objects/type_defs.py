@@ -35,6 +35,7 @@ DomainType = Literal[
     "discovery_run",
     "downtime",
     "folder_config",
+    "graph",
     "host",
     "host_config",
     "host_config_internal",
@@ -111,6 +112,10 @@ CmkEndpointName = Literal[
     "cmk/service.move-ignored",
     "cmk/service.bulk-acknowledge",
     "cmk/link_uuid",
+    "cmk/get_metric_graph",
+    "cmk/get_custom_graph",
+    "cmk/get_named_graph",
+    "cmk/get_combined_graph",
 ]
 
 RestfulEndpointName = Literal[

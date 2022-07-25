@@ -254,6 +254,28 @@ def test_get_integer_input_mandatory_not_a_number() -> None:
     assert "is not an integer" in "%s" % e
 
 
+@pytest.mark.usefixtures("set_int_vars")
+def test_get_validated_type_input() -> None:
+    with pytest.raises(MKUserError) as e:
+        html.request.get_validated_type_input(int, "not_a_number")
+    assert "The value is not valid: " in str(e)
+
+    assert html.request.get_validated_type_input(int, "Not existing", deflt=0) == 0
+
+    assert html.request.get_validated_type_input(int, "Not existing") is None
+    assert html.request.get_validated_type_input(int, "number") == 2
+    assert html.request.get_validated_type_input(str, "number") == "2"
+
+
+@pytest.mark.usefixtures("set_int_vars")
+def test_get_validated_type_input_mandatory() -> None:
+    with pytest.raises(MKUserError) as e:
+        html.request.get_validated_type_input_mandatory(int, "Not existing")
+    assert 'The parameter "Not existing" is missing.' in str(e)
+
+    assert html.request.get_validated_type_input_mandatory(int, "Not existing", deflt=0) == 0
+
+
 def test_cookie_handling(request_context: RequestContextFixture, monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(html.request, "cookies", {"cookie1": {"key": "1a"}})
     assert html.request.has_cookie("cookie1")

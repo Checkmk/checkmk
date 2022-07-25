@@ -37,7 +37,7 @@ from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.prediction import livestatus_lql
 from cmk.utils.site import omd_site
 from cmk.utils.structured_data import SDPath, StructuredDataNode
-from cmk.utils.type_defs import HostName, ServiceName
+from cmk.utils.type_defs import HostName, ServiceName, UserId
 
 import cmk.gui.i18n
 import cmk.gui.log as log
@@ -2098,7 +2098,7 @@ def page_view():
         view_name = html.request.get_ascii_input_mandatory("view_name", "")
         view_spec = visuals.get_permissioned_visual(
             view_name,
-            html.request.get_str_input("owner"),
+            html.request.get_validated_type_input(UserId, "owner"),
             "view",
             get_permitted_views(),
             get_all_views(),

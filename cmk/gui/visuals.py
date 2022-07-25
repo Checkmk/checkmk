@@ -654,7 +654,7 @@ def available(
 
 def get_permissioned_visual(
     item: str,
-    owner: Optional[str],
+    owner: Optional[UserId],
     what: str,
     permitted_visuals: Dict[str, T],
     all_visuals: Dict[Tuple[UserId, str], T],
@@ -666,7 +666,7 @@ def get_permissioned_visual(
             "general.edit_foreign_%ss" % what
         )
     ):
-        if visual := all_visuals.get((UserId(owner), item)):
+        if visual := all_visuals.get((owner, item)):
             return visual
         # We don't raise on not found immediately and let it trickle down to default permitted
         # as a failsafe for report inheritance. In general it is OK for other cases, because the

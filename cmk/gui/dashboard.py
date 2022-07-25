@@ -25,6 +25,7 @@ from typing import (
 
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKException
+from cmk.utils.type_defs import UserId
 
 import cmk.gui.crash_handler as crash_handler
 import cmk.gui.forms as forms
@@ -553,7 +554,11 @@ def _load_dashboard_with_cloning(
 
     all_dashboards = get_all_dashboards()
     board = visuals.get_permissioned_visual(
-        name, html.request.get_str_input("owner"), "dashboard", permitted_dashboards, all_dashboards
+        name,
+        html.request.get_validated_type_input(UserId, "owner"),
+        "dashboard",
+        permitted_dashboards,
+        all_dashboards,
     )
     if edit and board["owner"] == "":
         # Trying to edit a builtin dashboard results in doing a copy

@@ -8,7 +8,7 @@ import ast
 import json
 import urllib.parse
 from contextlib import contextmanager
-from typing import Any, Dict, Iterator, List, Mapping, Optional, Tuple, TypeVar, Union
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Protocol, Tuple, TypeVar, Union
 
 import werkzeug
 from six import ensure_str
@@ -24,6 +24,17 @@ from cmk.gui.i18n import _
 UploadedFile = Tuple[str, str, bytes]
 T = TypeVar("T")
 Value = TypeVar("Value")
+
+
+class ValidatedClass(Protocol):
+    """Classes like int, UserId, etc..."""
+
+    def __new__(cls, value: str) -> "ValidatedClass":
+        # must raise ValueErrors if value is not valid
+        ...
+
+
+Validation_T = TypeVar("Validation_T", bound=ValidatedClass)
 
 
 class LegacyVarsMixin:
@@ -287,6 +298,36 @@ class Request(
 
     def get_str_input_mandatory(self, varname: str, deflt: Optional[str] = None) -> str:
         return mandatory_parameter(varname, self.get_str_input(varname, deflt))
+
+    def get_validated_type_input(
+        self,
+        type_: type[Validation_T],
+        varname: str,
+        deflt: Optional[Validation_T] = None,
+    ) -> Optional[Validation_T]:
+        """try to convert the value of a HTTP request variable to given type
+
+        The Checkmk UI excepts `MKUserError` exceptions to be raised by
+        validation errors. In this case the UI displays a textual error message to the
+        user without triggering a crash report. The `ValueError` exceptions raises by
+        the `__new__` method of `type_` are catched and re-raised as `MKUserError` to
+        trigger the intended error handling.
+        """
+        raw_value = self.var(varname)
+        if raw_value is None:
+            return deflt
+        try:
+            return type_(raw_value)
+        except ValueError as exception:
+            raise MKUserError(varname, _("The value is not valid: '%s'") % exception)
+
+    def get_validated_type_input_mandatory(
+        self,
+        type_: type[Validation_T],
+        varname: str,
+        deflt: Optional[Validation_T] = None,
+    ) -> Validation_T:
+        return mandatory_parameter(varname, self.get_validated_type_input(type_, varname, deflt))
 
     def get_ascii_input(self, varname: str, deflt: Optional[str] = None) -> Optional[str]:
         """Helper to retrieve a byte string and ensure it only contains ASCII characters

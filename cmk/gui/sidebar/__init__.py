@@ -9,7 +9,7 @@ import json
 import textwrap
 import traceback
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Type, TYPE_CHECKING, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, TYPE_CHECKING, Union
 
 from livestatus import SiteId
 
@@ -33,11 +33,12 @@ from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
 from cmk.gui.pages import AjaxPage, PageResult
+from cmk.gui.type_defs import Icon
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.valuespec import CascadingDropdown, Dictionary
+from cmk.gui.valuespec import CascadingDropdown, CascadingDropdownChoice, Dictionary, ValueSpec
 from cmk.gui.werks import may_acknowledge
 
 if TYPE_CHECKING:
@@ -750,11 +751,11 @@ class CustomSpaninsSpec(pagetypes.OverridableSpec):
 
 class CustomSnapins(pagetypes.Overridable[CustomSpaninsSpec, "CustomSnapins"]):
     @classmethod
-    def type_name(cls):
+    def type_name(cls) -> str:
         return "custom_snapin"
 
     @classmethod
-    def type_icon(cls):
+    def type_icon(cls) -> Icon:
         return "custom_snapin"
 
     @classmethod
@@ -762,7 +763,7 @@ class CustomSnapins(pagetypes.Overridable[CustomSpaninsSpec, "CustomSnapins"]):
         return True
 
     @classmethod
-    def phrase(cls, phrase):
+    def phrase(cls, phrase: pagetypes.PagetypePhrase) -> str:
         return {
             "title": _("Custom sidebar element"),
             "title_plural": _("Custom sidebar elements"),
@@ -774,7 +775,9 @@ class CustomSnapins(pagetypes.Overridable[CustomSpaninsSpec, "CustomSnapins"]):
         }.get(phrase, pagetypes.Base.phrase(phrase))
 
     @classmethod
-    def parameters(cls, mode):
+    def parameters(
+        cls, mode: pagetypes.PageMode
+    ) -> list[tuple[str, list[tuple[float, str, ValueSpec]]]]:
         parameters = super().parameters(mode)
 
         parameters += [
@@ -797,7 +800,7 @@ class CustomSnapins(pagetypes.Overridable[CustomSpaninsSpec, "CustomSnapins"]):
         return parameters
 
     @classmethod
-    def _customizable_snapin_type_choices(cls):
+    def _customizable_snapin_type_choices(cls) -> Sequence[CascadingDropdownChoice]:
         choices = []
         for snapin_type_id, snapin_type in sorted(snapin_registry.get_customizable_snapin_types()):
             choices.append(

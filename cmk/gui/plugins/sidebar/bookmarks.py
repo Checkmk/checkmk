@@ -34,13 +34,14 @@ from cmk.gui.valuespec import (
     TextInput,
     Transform,
     Tuple,
+    ValueSpec,
 )
 
 
 class BookmarkSpec(TypedDict):
     title: str
     url: str
-    icon: str
+    icon: None | str
     topic: None | str
 
 
@@ -59,7 +60,7 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec, "BookmarkList"]):
         return "bookmark_list"
 
     @classmethod
-    def phrase(cls, phrase: str) -> str:
+    def phrase(cls, phrase: pagetypes.PagetypePhrase) -> str:
         return {
             "title": _("Bookmark list"),
             "title_plural": _("Bookmark lists"),
@@ -71,7 +72,9 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec, "BookmarkList"]):
         }.get(phrase, pagetypes.Base.phrase(phrase))
 
     @classmethod
-    def parameters(cls, mode):
+    def parameters(
+        cls, mode: pagetypes.PageMode
+    ) -> list[tuple[str, list[tuple[float, str, ValueSpec]]]]:
         def bookmark_config_to_vs(v):
             if v:
                 return (v["title"], v["url"], v["icon"], v["topic"])
@@ -171,7 +174,7 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec, "BookmarkList"]):
         )
 
     @classmethod
-    def _topic_choices(cls):
+    def _topic_choices(cls) -> list[tuple[str, str]]:
         topics = set()
         for instance in cls.instances_sorted():
             if instance.is_permitted():
@@ -227,14 +230,14 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec, "BookmarkList"]):
             bookmark_list.add_bookmark(title, url)
 
     @classmethod
-    def _do_load_legacy_bookmarks(cls):
+    def _do_load_legacy_bookmarks(cls) -> list[tuple[str, str]]:
         if user.confdir is None:
             raise Exception("user confdir is None")
         path = user.confdir + "/bookmarks.mk"
         return store.load_object_from_file(path, default=[])
 
     @classmethod
-    def new_bookmark(cls, title, url):
+    def new_bookmark(cls, title: str, url: str) -> BookmarkSpec:
         return {
             "title": title,
             "url": url,
@@ -242,10 +245,10 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec, "BookmarkList"]):
             "topic": None,
         }
 
-    def default_bookmark_topic(self):
+    def default_bookmark_topic(self) -> str:
         return self._["default_topic"]
 
-    def bookmarks_by_topic(self):
+    def bookmarks_by_topic(self) -> list[tuple[str, list[BookmarkSpec]]]:
         topics: dict[str, list[BookmarkSpec]] = {}
         default_topic = self.default_bookmark_topic()
         for bookmark in self._["bookmarks"]:

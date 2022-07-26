@@ -21,6 +21,7 @@ from xml.dom import minidom  # type: ignore[import]
 import dateutil.parser
 import requests
 import urllib3  # type: ignore[import]
+from requests.adapters import HTTPAdapter
 
 import cmk.utils.password_store
 import cmk.utils.paths
@@ -907,6 +908,11 @@ def parse_arguments(argv):
                         action="store_true",
                         help="""Disables the checking of the servers ssl certificate""")
     parser.add_argument(
+        "--cert-server-name",
+        help=
+        """Expect this as the servers name in the ssl certificate. Overrides '--no-cert-check'.""",
+    )
+    parser.add_argument(
         "-D",
         "--direct",
         action="store_true",
@@ -1012,6 +1018,16 @@ class ESXCookieInvalid(RuntimeError):
     pass
 
 
+class HostNameValidationAdapter(HTTPAdapter):
+    def __init__(self, host_name: str) -> None:
+        super().__init__()
+        self._reference_host_name = host_name
+
+    def cert_verify(self, conn, url, verify, cert):
+        conn.assert_hostname = self._reference_host_name
+        return super().cert_verify(conn, url, verify, cert)
+
+
 class ESXSession(requests.Session):
     """Encapsulates the Sessions with the ESX system"""
     ENVELOPE = ('<SOAP-ENV:Envelope'
@@ -1026,15 +1042,19 @@ class ESXSession(requests.Session):
                 '<SOAP-ENV:Body xmlns:ns1="urn:vim25">%s</SOAP-ENV:Body>'
                 '</SOAP-ENV:Envelope>')
 
-    def __init__(self, address, port, no_cert_check=False):
+    def __init__(self, address, port, cert_check=True):
         super(ESXSession, self).__init__()
-        if no_cert_check:
+
+        service = "https://%s:%s" % (address, port)
+        if cert_check is False:
             # Watch out: we must provide the verify keyword to every individual request call!
             # Else it will be overwritten by the REQUESTS_CA_BUNDLE env variable
             self.verify = False
             urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
+        elif isinstance(cert_check, str):
+            self.mount(service, HostNameValidationAdapter(cert_check))
 
-        self._post_url = "https://%s:%s/sdk" % (address, port)
+        self._post_url = "%s/sdk" % service
         self.headers.update({
             "Content-Type": 'text/xml; charset="utf-8"',
             "SOAPAction": "urn:vim25/5.0",
@@ -1077,7 +1097,9 @@ class ESXConnection:
         self._perf_samples_path = AGENT_TMP_PATH / ("%s.timer" % address)
         self._perf_samples = None
 
-        self._session = ESXSession(address, port, opt.no_cert_check)
+        self._session = ESXSession(address,
+                                   port,
+                                   cert_check=opt.cert_server_name or not opt.no_cert_check)
         self.system_info = self._fetch_systeminfo()
         self._soap_templates = SoapTemplates(self.system_info)
 

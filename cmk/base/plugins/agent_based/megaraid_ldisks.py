@@ -39,7 +39,7 @@ def parse_megaraid_ldisks(string_table: StringTable) -> megaraid.SectionLDisks:
             adapter = line[1]
         elif megaraid_ldisks_is_new_drive(l) and adapter is not None:
             disk = l.split(": ")[1].split(" ")[0]
-            item = "/c{adapter}/v{disk}"
+            item = f"/c{adapter}/v{disk}"
             parsed[item] = {}
 
             # Add it under the old item name. Not discovered, but can be used when checking

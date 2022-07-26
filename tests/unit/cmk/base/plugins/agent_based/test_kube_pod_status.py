@@ -2,14 +2,18 @@
 # Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import itertools
+from itertools import count
 from typing import MutableMapping, Optional, Union
 
 import pytest
 
 from cmk.base.plugins.agent_based import kube_pod_status
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
-from cmk.base.plugins.agent_based.kube_pod_status import check_kube_pod_status, DEFAULT_PARAMS
+from cmk.base.plugins.agent_based.kube_pod_status import (
+    _check_kube_pod_status,
+    check_kube_pod_status,
+    DEFAULT_PARAMS,
+)
 from cmk.base.plugins.agent_based.utils.kube import (
     ContainerRunningState,
     ContainerStatus,
@@ -275,15 +279,7 @@ def fixture_get_value_store(mocker):
     return get_value_store_mock
 
 
-@pytest.fixture(name="time_time")
-def fixture_time(mocker):
-    mocked_time = mocker.Mock()
-    mocked_time.time = mocker.Mock(side_effect=itertools.count(0.1, 60.1))
-    mocker.patch.object(kube_pod_status, "time", mocked_time)
-    return mocked_time
-
-
-def test_check_alert_if_pending_too_long(get_value_store, time_time) -> None:
+def test_check_alert_if_pending_too_long(get_value_store) -> None:
 
     section_kube_pod_containers = None
     section_kube_pod_lifecycle = PodLifeCycle(phase="pending")
@@ -299,10 +295,10 @@ def test_check_alert_if_pending_too_long(get_value_store, time_time) -> None:
         (State.WARN, "1 minute 0 seconds (warn/crit at 1 minute 0 seconds/2 minutes 0 seconds)"),
         (State.CRIT, "2 minutes 0 seconds (warn/crit at 1 minute 0 seconds/2 minutes 0 seconds)"),
     )
-    for expected_result in expected_results:
+    for time, expected_result in zip(count(0.1, 60.1), expected_results):
         expected_state, expected_message = expected_result
-        summary_result, *_ = check_kube_pod_status(
-            params, section_kube_pod_containers, None, section_kube_pod_lifecycle
+        summary_result, *_ = _check_kube_pod_status(
+            time, params, section_kube_pod_containers, None, section_kube_pod_lifecycle
         )
         assert isinstance(summary_result, Result)
         assert summary_result.state == expected_state
@@ -359,7 +355,7 @@ def test_check_kube_pod_status_init_container_broken(
     assert summary_result.summary.startswith(expected_result)
 
 
-def test_check_alert_resets(get_value_store, time_time) -> None:
+def test_check_alert_resets(get_value_store) -> None:
 
     params = kube_pod_status.Params(
         groups=[
@@ -400,10 +396,12 @@ def test_check_alert_resets(get_value_store, time_time) -> None:
         ),
     )
 
-    for expected, section_kube_pod_lifecycle in zip(expectations, pod_cycles):
+    for time, expected, section_kube_pod_lifecycle in zip(
+        count(0.1, 60.1), expectations, pod_cycles
+    ):
         expected_state, expected_summary, expected_notice = expected
-        summary_result, *notice = check_kube_pod_status(
-            params, section_kube_pod_containers, None, section_kube_pod_lifecycle
+        summary_result, *notice = _check_kube_pod_status(
+            time, params, section_kube_pod_containers, None, section_kube_pod_lifecycle
         )
         assert isinstance(summary_result, Result)
         assert summary_result.state == expected_state
@@ -415,7 +413,7 @@ def test_check_alert_resets(get_value_store, time_time) -> None:
             assert expected_notice == notice[0].details
 
 
-def test_check_group_timer(get_value_store, time_time) -> None:
+def test_check_group_timer(get_value_store) -> None:
 
     params = kube_pod_status.Params(
         groups=[
@@ -455,10 +453,12 @@ def test_check_group_timer(get_value_store, time_time) -> None:
         ),
     )
 
-    for expected, section_kube_pod_lifecycle in zip(expectations, pod_cycles):
+    for time, expected, section_kube_pod_lifecycle in zip(
+        count(0.1, 60.1), expectations, pod_cycles
+    ):
         expected_state, expected_summary, expected_notice = expected
-        summary_result, *notice = check_kube_pod_status(
-            params, section_kube_pod_containers, None, section_kube_pod_lifecycle
+        summary_result, *notice = _check_kube_pod_status(
+            time, params, section_kube_pod_containers, None, section_kube_pod_lifecycle
         )
         assert isinstance(summary_result, Result)
         assert summary_result.state == expected_state
@@ -470,7 +470,7 @@ def test_check_group_timer(get_value_store, time_time) -> None:
             assert expected_notice == notice[0].details
 
 
-def test_check_group_order_matters(get_value_store, time_time) -> None:
+def test_check_group_order_matters(get_value_store) -> None:
 
     params = kube_pod_status.Params(
         groups=[

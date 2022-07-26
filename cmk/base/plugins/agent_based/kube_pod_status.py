@@ -137,7 +137,8 @@ def discovery_kube_pod_status(
     yield Service()
 
 
-def check_kube_pod_status(
+def _check_kube_pod_status(
+    now: float,
     params: Params,
     section_kube_pod_containers: Optional[PodContainers],
     section_kube_pod_init_containers: Optional[PodContainers],
@@ -154,7 +155,6 @@ def check_kube_pod_status(
         section_kube_pod_lifecycle,
     )
 
-    now = time.time()
     value_store = get_value_store()
     group_levels, group_statuses = _get_group_from_params(status_message, params)
     if value_store.get("group") != group_statuses:
@@ -188,6 +188,21 @@ def check_kube_pod_status(
 
     yield from _container_status_details(pod_init_containers)
     yield from _container_status_details(pod_containers)
+
+
+def check_kube_pod_status(
+    params: Params,
+    section_kube_pod_containers: Optional[PodContainers],
+    section_kube_pod_init_containers: Optional[PodContainers],
+    section_kube_pod_lifecycle: Optional[PodLifeCycle],
+) -> CheckResult:
+    yield from _check_kube_pod_status(
+        time.time(),
+        params,
+        section_kube_pod_containers,
+        section_kube_pod_init_containers,
+        section_kube_pod_lifecycle,
+    )
 
 
 register.check_plugin(

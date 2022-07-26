@@ -64,7 +64,7 @@ def get_levels_for(params: Mapping[str, VSResultAge], key: str) -> Optional[Tupl
     return levels[1]
 
 
-def check(params: Mapping[str, VSResultAge], section: PodConditions) -> CheckResult:
+def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions) -> CheckResult:
     """Check every condition in the section. Return one result if all conditions
     passed. Otherwise, return four results if one or more conditions are faulty
     or missing, defining each state according to `last_transition_time` and the
@@ -91,12 +91,10 @@ def check(params: Mapping[str, VSResultAge], section: PodConditions) -> CheckRes
             ),
         )
         return
-
-    curr_timestamp = time.time()
     for name in LOGICAL_ORDER:
         cond = section_dict[name]
         if cond is not None:
-            time_diff = curr_timestamp - cond["last_transition_time"]  # keep the last-seen one
+            time_diff = now - cond["last_transition_time"]  # keep the last-seen one
             if (status := cond["status"]) is True:
                 yield Result(state=State.OK, summary=condition_short_description(name, str(status)))
                 continue
@@ -109,6 +107,10 @@ def check(params: Mapping[str, VSResultAge], section: PodConditions) -> CheckRes
             time_diff, levels_upper=get_levels_for(params, name), render_func=render.timespan
         ):
             yield Result(state=result.state, summary=f"{summary_prefix} for {result.summary}")
+
+
+def check(params: Mapping[str, VSResultAge], section: PodConditions) -> CheckResult:
+    yield from _check(time.time(), params, section)
 
 
 register.agent_section(

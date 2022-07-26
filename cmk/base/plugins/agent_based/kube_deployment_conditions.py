@@ -59,7 +59,9 @@ def condition_levels(
     return levels[1]
 
 
-def check(params: Mapping[str, VSResultAge], section: DeploymentConditions) -> CheckResult:
+def _check(
+    now: float, params: Mapping[str, VSResultAge], section: DeploymentConditions
+) -> CheckResult:
     conditions = section.dict()
     if all(
         condition["status"] is CONDITIONS_OK_MAPPINGS[name]
@@ -73,8 +75,6 @@ def check(params: Mapping[str, VSResultAge], section: DeploymentConditions) -> C
         )
         yield Result(state=State.OK, summary="All conditions OK", details=details)
         return
-
-    current_timestamp = time.time()
 
     for name in ("progressing", "available", "replicafailure"):
         if (condition := conditions[name]) is None:
@@ -91,7 +91,7 @@ def check(params: Mapping[str, VSResultAge], section: DeploymentConditions) -> C
             )
             continue
 
-        time_difference = current_timestamp - condition["last_transition_time"]
+        time_difference = now - condition["last_transition_time"]
         check_result = list(
             check_levels(
                 time_difference,
@@ -104,6 +104,10 @@ def check(params: Mapping[str, VSResultAge], section: DeploymentConditions) -> C
             state=result.state,
             summary=f"{condition_detailed_description(condition_name, condition['status'], condition['reason'], condition['message'])} for {result.summary}",
         )
+
+
+def check(params: Mapping[str, VSResultAge], section: DeploymentConditions) -> CheckResult:
+    yield from _check(time.time(), params, section)
 
 
 register.check_plugin(

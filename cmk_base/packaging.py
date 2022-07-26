@@ -536,31 +536,16 @@ def install_package(file_name=None, file_object=None):
     tar = tarfile.open(name=file_name, fileobj=file_object, mode="r:gz")
     package = parse_package_info(tar.extractfile("info").read())
 
-    verify_check_mk_version(package)
-
     pacname = package["name"]
     old_package = read_package_info(pacname)
+
+    _raise_for_installability(package, old_package, cmk.__version__)
+
     if old_package:
         logger.verbose("Updating %s from version %s to %s.", pacname, old_package["version"],
                        package["version"])
-        update = True
     else:
         logger.verbose("Installing %s version %s.", pacname, package["version"])
-        update = False
-
-    # Before installing check for conflicts
-    for part in get_package_parts() + config_parts:
-        packaged = packaged_files_in_dir(part.ident)
-        old_files = set(old_package["files"].get(part.ident, [])) if old_package else set()
-
-        for fn in package["files"].get(part.ident, []):
-            if fn in old_files:
-                continue
-            path = os.path.join(part.path, fn)
-            if fn in packaged:
-                raise PackageException("File conflict: %s is part of another package." % path)
-            if os.path.exists(path):
-                raise PackageException("File conflict: %s already existing." % path)
 
     # Now install files, but only unpack files explicitely listed
     for part in get_package_parts() + config_parts:
@@ -606,7 +591,7 @@ def install_package(file_name=None, file_object=None):
                 cmk.ec.export.add_rule_pack_proxies(filenames)
 
     # In case of an update remove files from old_package not present in new one
-    if update:
+    if old_package:
         for part in get_package_parts() + config_parts:
             new_filenames = set(package["files"].get(part.ident, []))
             old_filenames = set(old_package["files"].get(part.ident, []))
@@ -628,12 +613,41 @@ def install_package(file_name=None, file_object=None):
     return package
 
 
+def _raise_for_installability(package, old_package, site_version):
+    """Raise a `PackageException` if we should not install this package.
+
+    Note: this currently ignores the packages "max version".
+    """
+    _raise_for_too_old_cmk_version(package, site_version)
+    _raise_for_conflicts(package, old_package)
+
+
+def _raise_for_conflicts(package, old_package):
+    for file_path, type_of_collision in _conflicting_files(package, old_package):
+        raise PackageException("File conflict: %s is %s" % (file_path, type_of_collision))
+
+
+def _conflicting_files(package, old_package):
+
+    for part in get_package_parts() + config_parts:
+        packaged = packaged_files_in_dir(part.ident)
+        old_files = set(old_package["files"].get(part.ident, [])) if old_package else set()
+
+        for fn in package["files"].get(part.ident, []):
+            if fn in old_files:
+                continue
+            path = os.path.join(part.path, fn)
+            if fn in packaged:
+                yield path, "part of another package"
+            elif os.path.exists(path):
+                yield path, "already existing"
+
+
 # Checks whether or not the minimum required Check_MK version is older than the
 # current Check_MK version. Raises an exception if not. When the Check_MK version
 # can not be parsed or is a daily build, the check is simply passing without error.
-def verify_check_mk_version(package):
+def _raise_for_too_old_cmk_version(package, cmk_version):
     min_version = package["version.min_required"]
-    cmk_version = cmk.__version__
 
     if cmk_base.utils.is_daily_build_version(min_version):
         min_branch = cmk_base.utils.branch_of_daily_build(min_version)

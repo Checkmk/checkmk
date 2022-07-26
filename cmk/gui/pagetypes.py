@@ -350,170 +350,6 @@ class Base:
 
 
 # .
-#   .--PageRenderer--------------------------------------------------------.
-#   |   ____                  ____                _                        |
-#   |  |  _ \ __ _  __ _  ___|  _ \ ___ _ __   __| | ___ _ __ ___ _ __     |
-#   |  | |_) / _` |/ _` |/ _ \ |_) / _ \ '_ \ / _` |/ _ \ '__/ _ \ '__|    |
-#   |  |  __/ (_| | (_| |  __/  _ <  __/ | | | (_| |  __/ | |  __/ |       |
-#   |  |_|   \__,_|\__, |\___|_| \_\___|_| |_|\__,_|\___|_|  \___|_|       |
-#   |              |___/                                                   |
-#   +----------------------------------------------------------------------+
-#   |  Base class for all things that have an URL and can be rendered as   |
-#   |  an HTML page. And that can be added to the sidebar snapin of all    |
-#   |  pages.
-#   '----------------------------------------------------------------------'
-
-
-class PageRenderer(Base):
-    # Stuff to be overridden by the implementation of actual page types
-
-    # TODO: Das von graphs.py rauspfluecken. Also alles, was man
-    # überladen muss oder kann.
-
-    # Attribute for identifying that page when building an URL to
-    # the page. This is always "name", but
-    # in the views it's for historic reasons "view_name". We might
-    # change this in near future.
-    # TODO: Change that. In views.py we could simply accept *both*.
-    # First look for "name" and then for "view_name" if "name" is
-    # missing.
-    @classmethod
-    def ident_attr(cls):
-        return "name"
-
-    # Parameters special for page renderers. These can be added to the sidebar,
-    # so we need a topic and a checkbox for the visibility
-    @classmethod
-    def parameters(cls, mode):
-        parameters = super().parameters(mode)
-
-        parameters += [
-            (
-                _("Navigation"),
-                [
-                    (
-                        1.4,
-                        "topic",
-                        DropdownChoice(
-                            title=_("Topic"),
-                            choices=PagetypeTopics.choices(),
-                        ),
-                    ),
-                    (
-                        1.5,
-                        "sort_index",
-                        Integer(
-                            title=_("Sort index"),
-                            default_value=99,
-                            help=_(
-                                "You can customize the order of the %s by changing "
-                                "this number. Lower numbers will be sorted first. "
-                                "Topics with the same number will be sorted alphabetically."
-                            )
-                            % cls.phrase("title_plural"),
-                        ),
-                    ),
-                    (
-                        1.6,
-                        "is_show_more",
-                        Checkbox(
-                            title=_("Show more"),
-                            label=_("Only show the %s if show more is active")
-                            % cls.phrase("title_plural"),
-                            default_value=False,
-                            help=_(
-                                "The navigation allows to hide items based on a show "
-                                "less / show more toggle. You can specify here whether or "
-                                "not this %s should only be shown with show more %s."
-                            )
-                            % (cls.phrase("title_plural"), cls.phrase("title_plural")),
-                        ),
-                    ),
-                    (
-                        2.0,
-                        "hidden",
-                        Checkbox(
-                            title=_("Sidebar integration"),
-                            label=_("Do not add a link to this page in sidebar"),
-                        ),
-                    ),
-                ],
-            )
-        ]
-
-        return parameters
-
-    @classmethod
-    def _transform_old_spec(cls, spec):
-        spec.setdefault("sort_index", 99)
-        spec.setdefault("is_show_more", False)
-
-        spec.setdefault("context", {})
-        spec.setdefault("add_context_to_title", False)
-
-        return spec
-
-    @classmethod
-    def page_handlers(cls):
-        handlers = super().page_handlers()
-        handlers.update(
-            {
-                cls.type_name(): cls.page_show,
-            }
-        )
-        return handlers
-
-    # Most important: page for showing the page ;-)
-    @classmethod
-    def page_show(cls):
-        page = cls.requested_page()
-        page.render()
-
-    @classmethod
-    def requested_page(cls):
-        name = request.var(cls.ident_attr())
-        cls.load()
-        page = cls.find_page(name)
-        if not page:
-            raise MKGeneralException(
-                _("Cannot find %s with the name %s") % (cls.phrase("title"), name)
-            )
-        return page
-
-    # Links for the sidebar
-    @classmethod
-    def sidebar_links(cls):
-        for page in cls.pages():
-            if page._show_in_sidebar():
-                yield page.topic(), page.title(), page.page_url()
-
-    def topic(self) -> str:
-        return self._.get("topic", "other")
-
-    def sort_index(self) -> int:
-        return self._.get("sort_index", 99)
-
-    def is_show_more(self) -> bool:
-        return self._.get("is_show_more", False)
-
-    # Helper functions for page handlers and render function
-    def page_header(self):
-        return self.phrase("title") + " - " + self.title()
-
-    def page_url(self):
-        return makeuri_contextless(
-            request,
-            [(self.ident_attr(), self.name())],
-            filename="%s.py" % self.type_name(),
-        )
-
-    def render_title(self) -> str | HTML:
-        if self._can_be_linked():
-            return HTMLWriter.render_a(self.title(), href=self.page_url())
-        return self.title()
-
-
-# .
 #   .--Overridable---------------------------------------------------------.
 #   |         ___                      _     _       _     _               |
 #   |        / _ \__   _____ _ __ _ __(_) __| | __ _| |__ | | ___          |
@@ -1777,6 +1613,170 @@ class OverridableContainer(Overridable, Container):
         return None, need_sidebar_reload
         # With a redirect directly to the page afterwards do it like this:
         # return page, need_sidebar_reload
+
+
+# .
+#   .--PageRenderer--------------------------------------------------------.
+#   |   ____                  ____                _                        |
+#   |  |  _ \ __ _  __ _  ___|  _ \ ___ _ __   __| | ___ _ __ ___ _ __     |
+#   |  | |_) / _` |/ _` |/ _ \ |_) / _ \ '_ \ / _` |/ _ \ '__/ _ \ '__|    |
+#   |  |  __/ (_| | (_| |  __/  _ <  __/ | | | (_| |  __/ | |  __/ |       |
+#   |  |_|   \__,_|\__, |\___|_| \_\___|_| |_|\__,_|\___|_|  \___|_|       |
+#   |              |___/                                                   |
+#   +----------------------------------------------------------------------+
+#   |  Base class for all things that have an URL and can be rendered as   |
+#   |  an HTML page. And that can be added to the sidebar snapin of all    |
+#   |  pages.
+#   '----------------------------------------------------------------------'
+
+
+class PageRenderer(Base):
+    # Stuff to be overridden by the implementation of actual page types
+
+    # TODO: Das von graphs.py rauspfluecken. Also alles, was man
+    # überladen muss oder kann.
+
+    # Attribute for identifying that page when building an URL to
+    # the page. This is always "name", but
+    # in the views it's for historic reasons "view_name". We might
+    # change this in near future.
+    # TODO: Change that. In views.py we could simply accept *both*.
+    # First look for "name" and then for "view_name" if "name" is
+    # missing.
+    @classmethod
+    def ident_attr(cls):
+        return "name"
+
+    # Parameters special for page renderers. These can be added to the sidebar,
+    # so we need a topic and a checkbox for the visibility
+    @classmethod
+    def parameters(cls, mode):
+        parameters = super().parameters(mode)
+
+        parameters += [
+            (
+                _("Navigation"),
+                [
+                    (
+                        1.4,
+                        "topic",
+                        DropdownChoice(
+                            title=_("Topic"),
+                            choices=PagetypeTopics.choices(),
+                        ),
+                    ),
+                    (
+                        1.5,
+                        "sort_index",
+                        Integer(
+                            title=_("Sort index"),
+                            default_value=99,
+                            help=_(
+                                "You can customize the order of the %s by changing "
+                                "this number. Lower numbers will be sorted first. "
+                                "Topics with the same number will be sorted alphabetically."
+                            )
+                            % cls.phrase("title_plural"),
+                        ),
+                    ),
+                    (
+                        1.6,
+                        "is_show_more",
+                        Checkbox(
+                            title=_("Show more"),
+                            label=_("Only show the %s if show more is active")
+                            % cls.phrase("title_plural"),
+                            default_value=False,
+                            help=_(
+                                "The navigation allows to hide items based on a show "
+                                "less / show more toggle. You can specify here whether or "
+                                "not this %s should only be shown with show more %s."
+                            )
+                            % (cls.phrase("title_plural"), cls.phrase("title_plural")),
+                        ),
+                    ),
+                    (
+                        2.0,
+                        "hidden",
+                        Checkbox(
+                            title=_("Sidebar integration"),
+                            label=_("Do not add a link to this page in sidebar"),
+                        ),
+                    ),
+                ],
+            )
+        ]
+
+        return parameters
+
+    @classmethod
+    def _transform_old_spec(cls, spec):
+        spec.setdefault("sort_index", 99)
+        spec.setdefault("is_show_more", False)
+
+        spec.setdefault("context", {})
+        spec.setdefault("add_context_to_title", False)
+
+        return spec
+
+    @classmethod
+    def page_handlers(cls):
+        handlers = super().page_handlers()
+        handlers.update(
+            {
+                cls.type_name(): cls.page_show,
+            }
+        )
+        return handlers
+
+    # Most important: page for showing the page ;-)
+    @classmethod
+    def page_show(cls):
+        page = cls.requested_page()
+        page.render()
+
+    @classmethod
+    def requested_page(cls):
+        name = request.var(cls.ident_attr())
+        cls.load()
+        page = cls.find_page(name)
+        if not page:
+            raise MKGeneralException(
+                _("Cannot find %s with the name %s") % (cls.phrase("title"), name)
+            )
+        return page
+
+    # Links for the sidebar
+    @classmethod
+    def sidebar_links(cls):
+        for page in cls.pages():
+            if page._show_in_sidebar():
+                yield page.topic(), page.title(), page.page_url()
+
+    def topic(self) -> str:
+        return self._.get("topic", "other")
+
+    def sort_index(self) -> int:
+        return self._.get("sort_index", 99)
+
+    def is_show_more(self) -> bool:
+        return self._.get("is_show_more", False)
+
+    # Helper functions for page handlers and render function
+    def page_header(self):
+        return self.phrase("title") + " - " + self.title()
+
+    def page_url(self):
+        return makeuri_contextless(
+            request,
+            [(self.ident_attr(), self.name())],
+            filename="%s.py" % self.type_name(),
+        )
+
+    def render_title(self) -> str | HTML:
+        if self._can_be_linked():
+            return HTMLWriter.render_a(self.title(), href=self.page_url())
+        return self.title()
 
 
 # .

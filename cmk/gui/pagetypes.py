@@ -1506,33 +1506,11 @@ class ContactGroupChoice(DualListChoice):
 #   '----------------------------------------------------------------------'
 
 
-class Container(Base):
-    def __init__(self, d) -> None:
-        super().__init__(d)
-        self._.setdefault("elements", [])
-
-    # Which kind of elements are allowed to be added to this container?
-    # Defaulting to all possible elements.
+class OverridableContainer(Overridable):
     @classmethod
-    def may_contain(cls, element_type_name):
-        return True
+    def may_contain(cls, element_type_name: str) -> bool:
+        raise NotImplementedError()
 
-    def elements(self):
-        return self._["elements"]
-
-    def add_element(self, element):
-        self._["elements"].append(element)
-
-    def move_element(self, nr, whither):
-        el = self._["elements"][nr]
-        del self._["elements"][nr]
-        self._["elements"][whither:whither] = [el]
-
-    def is_empty(self) -> bool:
-        return not self.elements()
-
-
-class OverridableContainer(Overridable, Container):
     @classmethod
     def page_menu_add_to_topics(cls, added_type: str) -> List[PageMenuTopic]:
         if not cls.may_contain(added_type):
@@ -1614,6 +1592,24 @@ class OverridableContainer(Overridable, Container):
         # With a redirect directly to the page afterwards do it like this:
         # return page, need_sidebar_reload
 
+    def __init__(self, d) -> None:
+        super().__init__(d)
+        self._.setdefault("elements", [])
+
+    def elements(self):
+        return self._["elements"]
+
+    def add_element(self, element):
+        self._["elements"].append(element)
+
+    def move_element(self, nr, whither):
+        el = self._["elements"][nr]
+        del self._["elements"][nr]
+        self._["elements"][whither:whither] = [el]
+
+    def is_empty(self) -> bool:
+        return not self.elements()
+
 
 # .
 #   .--PageRenderer--------------------------------------------------------.
@@ -1630,7 +1626,7 @@ class OverridableContainer(Overridable, Container):
 #   '----------------------------------------------------------------------'
 
 
-class PageRenderer(Base):
+class PageRenderer(OverridableContainer):
     # Stuff to be overridden by the implementation of actual page types
 
     # TODO: Das von graphs.py rauspfluecken. Also alles, was man
@@ -1821,7 +1817,7 @@ def all_page_types():
 def page_menu_add_to_topics(added_type: str) -> List[PageMenuTopic]:
     topics = []
     for page_ty in page_types.values():
-        if issubclass(page_ty, Container):
+        if issubclass(page_ty, OverridableContainer):
             topics += page_ty.page_menu_add_to_topics(added_type)
     return topics
 

@@ -43,6 +43,7 @@ __version__ = "2.2.0i1"
 # Don't have tinkerforge module during tests. So disable those checks
 # pylint: disable=import-error
 
+import hashlib
 import os
 import sys
 import time
@@ -52,6 +53,12 @@ try:
     from typing import List
 except ImportError:
     pass
+
+
+def check_digest(data, expected):
+    digest = hashlib.sha256(data.read()).hexdigest()
+    if digest != expected:
+        raise ValueError("Failed to validate digest: expected: %s, got: %s." % (expected, digest))
 
 
 def install():
@@ -70,9 +77,15 @@ def install():
     import shutil
     from zipfile import ZipFile
 
-    url = "http://download.tinkerforge.com/bindings/python/tinkerforge_python_bindings_latest.zip"
-    response = urlopen(url)
+    url = "https://download.tinkerforge.com/bindings/python/tinkerforge_python_bindings_2_1_30.zip"
+    # sha256sum of the downloaded file. To update:
+    #   `curl -s "https://download.tinkerforge.com/[new-version].zip | sha256sum`
+    download_digest = "e735e0e53ad56e2c2919cf412f3ec28ec0997919eb556b20c27519a57fb7bad0"
+
+    response = urlopen(url)  # nosec B310
     buf = BytesIO(response.read())
+    check_digest(buf, download_digest)
+
     with ZipFile(buf) as z:
 
         extract_files = [f for f in z.namelist() if f.startswith("source/tinkerforge")]

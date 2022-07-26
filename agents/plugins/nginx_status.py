@@ -152,17 +152,20 @@ for server in servers:
         page = server.get("page", "nginx_status")
 
     try:
+        if proto not in ["http", "https"]:
+            raise ValueError("Scheme '%s' is not allowed" % proto)
+
         url = "%s://%s:%s/%s" % (proto, address, port, page)
         # Try to fetch the status page for each server
         try:
             request = Request(url, headers={"Accept": "text/plain"})
-            fd = urlopen(request)
+            fd = urlopen(request)  # nosec B310 # BNS:6b61d9
         except URLError as e:
             if "SSL23_GET_SERVER_HELLO:unknown protocol" in str(e):
                 # HACK: workaround misconfigurations where port 443 is used for
                 # serving non ssl secured http
                 url = "http://%s:%s/%s" % (address, port, page)
-                fd = urlopen(url)
+                fd = urlopen(url)  # nosec B310 # BNS:6b61d9
             else:
                 raise
 

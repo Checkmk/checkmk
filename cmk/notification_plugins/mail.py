@@ -677,7 +677,7 @@ def render_cmk_graphs(context: dict[str, str], is_bulk: bool) -> list[bytes]:
 
     timeout = 10
     try:
-        with urlopen(url, timeout=timeout) as opened_file:
+        with urlopen(url, timeout=timeout) as opened_file:  # nosec B310 # BNS:28af27
             json_data = opened_file.read()
     except socket.timeout:
         if opt_debug:

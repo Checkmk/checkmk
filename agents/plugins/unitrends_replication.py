@@ -26,7 +26,7 @@ url = (
     % (start, end, dpu)
 )
 
-xml = urlopen(url)
+xml = urlopen(url)  # nosec B310 # BNS:28af27
 
 sys.stdout.write("<<<unitrends_replication:sep(124)>>>\n")
 dom = minidom.parse(xml)

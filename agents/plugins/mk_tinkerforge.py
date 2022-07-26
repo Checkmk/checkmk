@@ -82,7 +82,7 @@ def install():
     #   `curl -s "https://download.tinkerforge.com/[new-version].zip | sha256sum`
     download_digest = "e735e0e53ad56e2c2919cf412f3ec28ec0997919eb556b20c27519a57fb7bad0"
 
-    response = urlopen(url)  # nosec B310
+    response = urlopen(url)  # nosec B310 # BNS:28af27
     buf = BytesIO(response.read())
     check_digest(buf, download_digest)
 

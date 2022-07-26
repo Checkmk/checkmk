@@ -55,7 +55,7 @@ def get_allnet_ip_sensoric_info(host_address, opt_debug):
 
     try:
         req = urllib.request.Request(url, None, headers)
-        with urllib.request.urlopen(req) as handle:
+        with urllib.request.urlopen(req) as handle:  # nosec B310 # BNS:28af27
             infos = handle.info()
             contents = handle.read().decode("utf-8")
     except Exception:

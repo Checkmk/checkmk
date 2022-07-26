@@ -51,7 +51,9 @@ def urlopen(request, timeout=5, cafile=None, context=None):
     scheme = urltype(request)
     if scheme not in ["http", "https"]:
         raise ValueError("Scheme '%s' is not allowed" % scheme)
-    return _urlopen(request, timeout=timeout, cafile=cafile, context=context)  # nosec - B310
+    return _urlopen(  # nosec B310 # BNS:6b61d9
+        request, timeout=timeout, cafile=cafile, context=context
+    )
 
 
 def get_config():

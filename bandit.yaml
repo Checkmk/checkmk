@@ -97,7 +97,6 @@ skips:
   - B108  # hardcoded_tmp_directory
   - B302  # marshal
   - B307  # eval
-  - B310  # urllib_urlopen
   - B314  # xml_bad_ElementTree
   - B318  # xml_bad_minidom
   - B323  # unverified_context

@@ -93,9 +93,7 @@ def _valuespec_special_agents_vsphere():
                             FixedValue(value=True, title=_("Use hostname"), totext=""),
                             TextInput(
                                 title=_("Use other hostname"),
-                                help=_(
-                                    "The IP of the other hostname needs to be the same IP as the host address"
-                                ),
+                                help=_("Use a custom name for the SSL certificate validation"),
                             ),
                         ],
                         default_value=True,

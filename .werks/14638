@@ -1,0 +1,12 @@
+Title: Agent vSphere: Configuration of expected name in SSL certificate
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1658833093
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The configuration of the expected name in the servers SSL certificate now works as intended.
+

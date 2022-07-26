@@ -744,7 +744,11 @@ def move_snapin() -> None:
 #   '----------------------------------------------------------------------'
 
 
-class CustomSnapins(pagetypes.Overridable):
+class CustomSpaninsSpec(pagetypes.OverridableSpec):
+    custom_snapin: tuple[str, dict]
+
+
+class CustomSnapins(pagetypes.Overridable[CustomSpaninsSpec]):
     @classmethod
     def type_name(cls):
         return "custom_snapin"

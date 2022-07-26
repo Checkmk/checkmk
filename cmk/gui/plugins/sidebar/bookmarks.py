@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import urllib.parse
-from typing import Any, Callable
+from typing import Any, Callable, TypedDict
 
 import cmk.utils.store as store
 
@@ -37,7 +37,19 @@ from cmk.gui.valuespec import (
 )
 
 
-class BookmarkList(pagetypes.Overridable):
+class BookmarkSpec(TypedDict):
+    title: str
+    url: str
+    icon: str
+    topic: None | str
+
+
+class BookmarkListSpec(pagetypes.OverridableSpec):
+    default_topic: str
+    bookmarks: list[BookmarkSpec]
+
+
+class BookmarkList(pagetypes.Overridable[BookmarkListSpec]):
     @classmethod
     def type_name(cls) -> str:
         return "bookmark_list"
@@ -181,15 +193,17 @@ class BookmarkList(pagetypes.Overridable):
 
     @classmethod
     def add_default_bookmark_list(cls) -> None:
-        attrs = {
-            "title": "My Bookmarks",
-            "public": False,
-            "owner": user.id,
-            "name": "my_bookmarks",
-            "description": "Your personal bookmarks",
-            "default_topic": "My Bookmarks",
-            "bookmarks": [],
-        }
+        attrs = BookmarkListSpec(
+            {
+                "title": "My Bookmarks",
+                "public": False,
+                "owner": str(user.id),
+                "name": "my_bookmarks",
+                "description": "Your personal bookmarks",
+                "default_topic": "My Bookmarks",
+                "bookmarks": [],
+            }
+        )
 
         cls.add_instance((user.id, "my_bookmarks"), cls(attrs))
 
@@ -230,7 +244,7 @@ class BookmarkList(pagetypes.Overridable):
         return self._["default_topic"]
 
     def bookmarks_by_topic(self):
-        topics: dict[str, list[dict[str, Any]]] = {}
+        topics: dict[str, list[BookmarkSpec]] = {}
         default_topic = self.default_bookmark_topic()
         for bookmark in self._["bookmarks"]:
             topic = topics.setdefault(bookmark["topic"] or default_topic, [])

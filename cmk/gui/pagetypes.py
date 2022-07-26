@@ -20,9 +20,9 @@ import copy
 import json
 import os
 from contextlib import suppress
-from typing import Any, Dict, Iterator, List
+from typing import cast, Dict, Generic, Iterator, List, Literal
 from typing import Optional as _Optional
-from typing import Tuple
+from typing import Sequence, Tuple, TypedDict, TypeVar
 
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
@@ -98,6 +98,48 @@ from cmk.gui.valuespec import (
 
 SubPagesSpec = List[Tuple[str, str, str]]
 
+
+class _BaseSpecMandatory(TypedDict):
+    name: str
+    title: str
+
+
+class BaseSpec(_BaseSpecMandatory, total=False):
+    description: str
+
+
+class _OverridableSpecMandatory(BaseSpec):
+    owner: str
+    public: bool | tuple[Literal["contact_groups"], Sequence[str]]
+
+
+class OverridableSpec(_OverridableSpecMandatory, total=False):
+    # Seems it is not configurable through the UI. Is it OK?
+    hidden: bool
+
+
+class OverridableContainerSpec(OverridableSpec):
+    # TODO: Specify element types. Can we make use of the generic typed dicts here?
+    elements: list[dict]
+
+
+class PageRendererSpec(OverridableContainerSpec):
+    topic: str
+    sort_index: int
+    is_show_more: bool
+
+
+class _PagetypeTopicSpecMandatory(OverridableSpec):
+    icon_name: str
+    sort_index: int
+
+
+class PagetypeTopicSpec(_PagetypeTopicSpecMandatory, total=False):
+    max_entries: int
+    # Seems it is not configurable through the UI. Is it OK?
+    hide: bool
+
+
 #   .--Base----------------------------------------------------------------.
 #   |                        ____                                          |
 #   |                       | __ )  __ _ ___  ___                          |
@@ -110,9 +152,11 @@ SubPagesSpec = List[Tuple[str, str, str]]
 #   |  or PageRenderer.                                                    |
 #   '----------------------------------------------------------------------'
 
+_T_BaseSpec = TypeVar("_T_BaseSpec", bound=BaseSpec)
 
-class Base:
-    def __init__(self, d: Dict[str, Any]) -> None:
+
+class Base(Generic[_T_BaseSpec]):
+    def __init__(self, d: _T_BaseSpec) -> None:
         super().__init__()
 
         # The dictionary with the name _ holds all information about
@@ -120,7 +164,7 @@ class Base:
         # and saved to files using repr().
         self._ = d
 
-    def internal_representation(self) -> Dict[str, Any]:
+    def internal_representation(self) -> _T_BaseSpec:
         return self._
 
     # You always must override the following method. Not all phrases
@@ -233,7 +277,10 @@ class Base:
         return self._["title"]
 
     def description(self) -> str:
-        return self._.get("description", "")
+        try:
+            return self._["description"]
+        except KeyError:
+            return ""
 
     def is_hidden(self) -> bool:
         return False
@@ -363,11 +410,14 @@ class Base:
 #   |  Examples: views, dashboards, graphs collections                     |
 #   '----------------------------------------------------------------------'
 
+_T_OverridableSpec = TypeVar("_T_OverridableSpec", bound=OverridableSpec)
 
-class Overridable(Base):
-    def __init__(self, d) -> None:
+
+class Overridable(Base[_T_OverridableSpec]):
+    def __init__(self, d: _T_OverridableSpec) -> None:
+        if "public" not in d:
+            d["public"] = False
         super().__init__(d)
-        self._.setdefault("public", False)
 
     @classmethod
     def parameters(cls, mode):
@@ -448,7 +498,10 @@ class Overridable(Base):
         return False
 
     def is_hidden(self) -> bool:
-        return self._.get("hidden", False)
+        try:
+            return self._["hidden"]
+        except KeyError:
+            return False
 
     # Derived method for conveniance
     def is_builtin(self) -> bool:
@@ -481,7 +534,7 @@ class Overridable(Base):
         return "general.edit_" + cls.type_name()
 
     def owner(self) -> UserId:
-        return self._["owner"]
+        return UserId(self._["owner"])
 
     # Checks if the current user is allowed to see a certain page
     # TODO: Wie is die Semantik hier genau? Umsetzung vervollständigen!
@@ -861,9 +914,8 @@ class Overridable(Base):
         cls.add_instance((new_page.owner(), new_page.name()), new_page)
 
     def clone(self):
-        page_dict = {}
-        page_dict.update(self._)
-        page_dict["owner"] = user.id
+        page_dict = self._.copy()
+        page_dict["owner"] = str(user.id) if user.id else ""
         new_page = self.__class__(page_dict)
         self.add_page(new_page)
         return new_page
@@ -1191,7 +1243,12 @@ class Overridable(Base):
                 page_dict = new_page_dict
                 page_dict["owner"] = str(user.id)  # because is not in vs elements
 
-            new_page = cls(page_dict)
+            # Since we have no way to parse the raw dictionary and Dictionary is also not typable,
+            # we need to hope here that page_dict fits with _T_OverridableSpec. On the mission to at
+            # least add some typing to `self._`, we take this shortcut for now. There are way bigger
+            # problems in this class hierarchy than the edit dialog we should solve first.
+            # TODO: Find a way to clean it up.
+            new_page = cls(cast(_T_OverridableSpec, page_dict))
 
             if not user_errors:
                 cls.add_page(new_page)
@@ -1505,8 +1562,10 @@ class ContactGroupChoice(DualListChoice):
 #   |  graphs.                                                             |
 #   '----------------------------------------------------------------------'
 
+_T_OverridableContainerSpec = TypeVar("_T_OverridableContainerSpec", bound=OverridableContainerSpec)
 
-class OverridableContainer(Overridable):
+
+class OverridableContainer(Overridable[_T_OverridableContainerSpec]):
     @classmethod
     def may_contain(cls, element_type_name: str) -> bool:
         raise NotImplementedError()
@@ -1592,9 +1651,10 @@ class OverridableContainer(Overridable):
         # With a redirect directly to the page afterwards do it like this:
         # return page, need_sidebar_reload
 
-    def __init__(self, d) -> None:
+    def __init__(self, d: _T_OverridableContainerSpec) -> None:
+        if "elements" not in d:
+            d["elements"] = []
         super().__init__(d)
-        self._.setdefault("elements", [])
 
     def elements(self):
         return self._["elements"]
@@ -1611,7 +1671,6 @@ class OverridableContainer(Overridable):
         return not self.elements()
 
 
-# .
 #   .--PageRenderer--------------------------------------------------------.
 #   |   ____                  ____                _                        |
 #   |  |  _ \ __ _  __ _  ___|  _ \ ___ _ __   __| | ___ _ __ ___ _ __     |
@@ -1625,8 +1684,10 @@ class OverridableContainer(Overridable):
 #   |  pages.
 #   '----------------------------------------------------------------------'
 
+_T_PageRendererSpec = TypeVar("_T_PageRendererSpec", bound=PageRendererSpec)
 
-class PageRenderer(OverridableContainer):
+
+class PageRenderer(OverridableContainer[_T_PageRendererSpec]):
     # Stuff to be overridden by the implementation of actual page types
 
     # TODO: Das von graphs.py rauspfluecken. Also alles, was man
@@ -1750,13 +1811,22 @@ class PageRenderer(OverridableContainer):
                 yield page.topic(), page.title(), page.page_url()
 
     def topic(self) -> str:
-        return self._.get("topic", "other")
+        try:
+            return self._["topic"]
+        except KeyError:
+            return "other"
 
     def sort_index(self) -> int:
-        return self._.get("sort_index", 99)
+        try:
+            return self._["sort_index"]
+        except KeyError:
+            return 99
 
     def is_show_more(self) -> bool:
-        return self._.get("is_show_more", False)
+        try:
+            return self._["is_show_more"]
+        except KeyError:
+            return False
 
     # Helper functions for page handlers and render function
     def page_header(self):
@@ -1835,7 +1905,7 @@ def page_menu_add_to_topics(added_type: str) -> List[PageMenuTopic]:
 #   '----------------------------------------------------------------------'
 
 
-class PagetypeTopics(Overridable):
+class PagetypeTopics(Overridable[PagetypeTopicSpec]):
     @classmethod
     def type_name(cls):
         return "pagetype_topic"
@@ -2000,7 +2070,7 @@ class PagetypeTopics(Overridable):
     def icon_name(self) -> str:
         return self._["icon_name"]
 
-    def hide(self) -> str:
+    def hide(self) -> bool:
         return self._.get("hide", False)
 
     @classmethod

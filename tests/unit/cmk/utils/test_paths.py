@@ -28,6 +28,7 @@ pathlib_paths = [
     "optional_packages_dir",
     "local_optional_packages_dir",
     "disabled_packages_dir",
+    "local_enabled_packages_dir",
     "local_share_dir",
     "local_checks_dir",
     "local_notifications_dir",

@@ -9,6 +9,7 @@ import json
 import logging
 import os
 import pprint
+import shutil
 import subprocess
 import tarfile
 import time
@@ -25,8 +26,10 @@ from typing import (
     Iterable,
     List,
     NamedTuple,
+    Mapping,
     Optional,
     Tuple,
+    Union,
 )
 
 from six import ensure_binary, ensure_str
@@ -34,6 +37,7 @@ from six import ensure_binary, ensure_str
 import cmk.utils.debug
 import cmk.utils.misc
 import cmk.utils.paths
+import cmk.utils.store as store
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
 import cmk.utils.werks
@@ -249,7 +253,7 @@ def get_initial_package_info(pacname: str) -> PackageInfo:
     }
 
 
-def remove(package: PackageInfo) -> None:
+def uninstall(package: PackageInfo) -> None:
     for part in get_package_parts() + get_config_parts():
         filenames = package["files"].get(part.ident, [])
         if len(filenames) > 0:
@@ -265,66 +269,69 @@ def remove(package: PackageInfo) -> None:
                 except Exception as e:
                     if cmk.utils.debug.enabled():
                         raise
-                    raise Exception("Cannot remove %s: %s\n" % (file_path, e))
+                    raise Exception("Cannot uninstall %s: %s\n" % (file_path, e))
 
     (package_dir() / package["name"]).unlink()
 
     _build_setup_search_index_background()
 
 
-def disable(package_name: PackageName, package_info: PackageInfo) -> None:
-    """Moves a package to the "disabled packages" path
+def store_package(file_content: bytes) -> PackageInfo:
 
-    It packs the installed files together, places the package in the
-    disabled packages path and then removes the files from the site
+    with tarfile.open(fileobj=BytesIO(file_content), mode="r:gz") as tar:
+        info_file = tar.extractfile("info")
+        if info_file is None:
+            raise PackageException("Failed to open package info file")
+        package = parse_package_info(ensure_str(info_file.read()))
+
+    base_name = format_file_name(name=package["name"], version=package["version"])
+    local_package_path = cmk.utils.paths.local_optional_packages_dir / base_name
+    shipped_package_path = cmk.utils.paths.optional_packages_dir / base_name
+
+    if local_package_path.exists() or shipped_package_path.exists():
+        raise PackageException("Package '%s' already exists on the site!" % base_name)
+
+    local_package_path.parent.mkdir(parents=True, exist_ok=True)
+    store.save_file(str(local_package_path), file_content)
+
+    return package
+
+
+def remove_optional_package(package_name: Union[str, Path]) -> None:
+    """Remove a local optional package file
+
+    If the input is a `Path` (or `str` representing a path) only the base name is considered.
     """
-    logger.log(VERBOSE, "[%s]: Disable outdated package", package_name)
-
-    base_dir = cmk.utils.paths.disabled_packages_dir
-    base_dir.mkdir(parents=True, exist_ok=True)
-
-    file_path = base_dir / format_file_name(name=package_name, version=package_info["version"])
-
-    logger.log(VERBOSE, "[%s] Packing to %s...", package_name, file_path)
-    with Path(file_path).open("wb") as f:
-        write_file(package_info, f)
-
-    logger.log(VERBOSE, "[%s] Removing packed files...", package_name)
-    remove(package_info)
-
-    logger.log(VERBOSE, "[%s] Successfully disabled", package_name)
+    (cmk.utils.paths.local_optional_packages_dir / Path(package_name).name).unlink()
 
 
-def enable(file_name: str) -> None:
-    """Installs a previously disabled package
-
-    Installs the package from the disabled packages path and then removes
-    that package file.
-
-    Unlinke `disable` you have to provide the package file name
-    (e.g. abc-1.2.3.mkp) of the
-    package. This is required because there may be multiple versions of the
-    same package name disabled at the same time.
-    """
-    file_path = cmk.utils.paths.disabled_packages_dir / file_name
-    if not file_path.exists():
-        raise PackageException("Package '%s' does not exist." % file_path)
-
-    logger.log(VERBOSE, "[%s] Installing package", file_name)
-    install_by_path(file_path)
-
-    remove_disabled(file_name)
-
-    logger.log(VERBOSE, "[%s] Successfully enabled", file_name)
+def read_package(package_file_base_name: str) -> bytes:
+    package_path = _get_full_package_path(package_file_base_name)
+    with package_path.open('rb') as fh:
+        return fh.read()
 
 
-def remove_disabled(file_name: str) -> None:
-    logger.log(VERBOSE, "[%s] Removing package", file_name)
-    (cmk.utils.paths.disabled_packages_dir / file_name).unlink()
+def disable(package_name: PackageName) -> None:
+    package_path, package_meta_info = _find_path_and_package_info(package_name)
+
+    if package_name in installed_names():
+        uninstall(package_meta_info)
+
+    package_path.unlink()
 
 
-def is_disabled(file_name: str) -> bool:
-    return (cmk.utils.paths.disabled_packages_dir / file_name).exists()
+def _find_path_and_package_info(package_name: PackageName) -> Tuple[Path, PackageInfo]:
+    for package_path in _get_enabled_package_paths():
+        tar = tarfile.open(name=str(package_path), mode="r:gz")
+        package_info_file = tar.extractfile("info")
+        if package_info_file is None:
+            continue
+        package = parse_package_info(package_info_file.read().decode())
+        if (package["name"] == package_name or
+                format_file_name(name=package["name"], version=package["version"]) == package_name):
+            return package_path, package
+
+    raise PackageException("Package %s is not enabled" % package_name)
 
 
 def create(pkg_info: PackageInfo) -> None:
@@ -334,6 +341,7 @@ def create(pkg_info: PackageInfo) -> None:
 
     _validate_package_files(pacname, pkg_info["files"])
     write_package_info(pkg_info)
+    create_enabled_mkp_from_installed_package(pkg_info)
 
 
 def edit(pacname: PackageName, new_package_info: PackageInfo) -> None:
@@ -348,8 +356,26 @@ def edit(pacname: PackageName, new_package_info: PackageInfo) -> None:
 
     _validate_package_files(pacname, new_package_info["files"])
 
+    create_enabled_mkp_from_installed_package(new_package_info)
     _remove_package_info(pacname)
     write_package_info(new_package_info)
+
+
+def create_enabled_mkp_from_installed_package(manifest: PackageInfo) -> None:
+    """Creates an MKP, saves it on disk and enables it
+
+    After we changed and or created an MKP, we must make sure it is present on disk as
+    an MKP, just like the uploaded ones.
+    """
+    base_name = format_file_name(name=manifest["name"], version=manifest["version"])
+    file_path = cmk.utils.paths.local_optional_packages_dir / base_name
+
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with file_path.open('wb') as fh:
+        write_file(manifest, fh)
+
+    mark_as_enabled(file_path)
 
 
 def _get_full_package_path(package_file_name: str) -> Path:
@@ -361,12 +387,37 @@ def _get_full_package_path(package_file_name: str) -> Path:
 
 def install_optional_package(package_file_base_name: str) -> PackageInfo:
     package_path = _get_full_package_path(package_file_base_name)
-    return install_by_path(package_path)
+    try:
+        return _install_by_path(package_path)
+    finally:
+        # it is enabled, even if installing failed.
+        mark_as_enabled(package_path)
 
 
-def install_by_path(package_path: Path) -> PackageInfo:
+def mark_as_enabled(package_path: Path) -> None:
+    """Mark the package as one of the enabled ones
+
+    Copying (or linking) the packages into the local hierarchy is the easiest way to get them to
+    be synchronized with the remote sites.
+    """
+    destination = cmk.utils.paths.local_enabled_packages_dir / package_path.name
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
+
+    # linking fails if the destination exists
+    destination.unlink(missing_ok=True)
+
+    try:
+        os.link(str(package_path), str(destination))
+    except OSError:
+        # if the source belongs to root (as the shipped packages do) we may not be allowed
+        # to hardlink them. We fall back to copying.
+        shutil.copy(str(package_path), str(destination))
+
+
+def _install_by_path(package_path: Path, allow_outdated: bool = True) -> PackageInfo:
     with package_path.open("rb") as f:
-        return install(file_object=cast(BinaryIO, f))
+        return install(file_object=cast(BinaryIO, f), allow_outdated=allow_outdated)
 
 
 def install(
@@ -630,12 +681,13 @@ def get_all_package_infos() -> Packages:
         "unpackaged": {part.ident: files for part, files in unpackaged_files().items()},
         "parts": package_part_info(),
         "optional_packages": get_optional_package_infos(),
-        "disabled_packages": get_disabled_package_infos(),
+        "enabled_packages": get_enabled_package_infos(),
     }
 
 
 def get_optional_package_infos() -> Dict[str, PackageInfo]:
-    return _get_package_infos(_get_optional_package_paths())
+    return _get_package_infos([(p, p.parent != cmk.utils.paths.optional_packages_dir)
+                               for p in _get_optional_package_paths()])
 
 
 def _get_optional_package_paths() -> List[Path]:
@@ -657,13 +709,13 @@ def _get_optional_package_paths() -> List[Path]:
     return local + shipped
 
 
-def get_disabled_package_infos() -> Dict[str, PackageInfo]:
-    return _get_package_infos(_get_disabled_package_paths())
+def get_enabled_package_infos() -> Dict[str, PackageInfo]:
+    return _get_package_infos([(p, True) for p in _get_enabled_package_paths()])
 
 
-def _get_package_infos(paths: List[Path]) -> Dict[str, PackageInfo]:
+def _get_package_infos(paths: List[Tuple[Path, bool]]) -> Dict[str, PackageInfo]:
     optional = {}
-    for pkg_path in paths:
+    for pkg_path, is_local in paths:
         with pkg_path.open("rb") as pkg:
             try:
                 package_info = _get_package_info_from_package(cast(BinaryIO, pkg))
@@ -671,15 +723,17 @@ def _get_package_infos(paths: List[Path]) -> Dict[str, PackageInfo]:
                 # Do not make broken files / packages fail the whole mechanism
                 logger.error("[%s]: Failed to read package info, skipping", pkg_path, exc_info=True)
                 continue
+            package_info.update(is_local=is_local)
             optional[ensure_str(pkg_path.name)] = package_info
 
     return optional
 
 
-def _get_disabled_package_paths() -> List[Path]:
-    if not cmk.utils.paths.disabled_packages_dir.exists():
+def _get_enabled_package_paths():
+    try:
+        return list(cmk.utils.paths.local_enabled_packages_dir.iterdir())
+    except FileNotFoundError:
         return []
-    return list(cmk.utils.paths.disabled_packages_dir.iterdir())
 
 
 def unpackaged_files() -> Dict[PackagePart, List[str]]:
@@ -813,6 +867,115 @@ def rule_pack_id_to_mkp() -> Dict[str, Any]:
     return {os.path.splitext(file_)[0]: mkp_of(file_) for file_ in exported_rule_packs}
 
 
+def update_active_packages(log: logging.Logger) -> None:
+    """Update which of the enabled packages are actually active (installed)
+    """
+    _deinstall_inapplicable_active_packages(log)
+    _install_applicable_inactive_packages(log)
+
+
+def _deinstall_inapplicable_active_packages(log: logging.Logger) -> None:
+    for package_name in sorted(installed_names()):
+        package_info = read_package_info(package_name)
+        if package_info is None:
+            log.log(VERBOSE, "[%s]: Skipping (failed to read package info)", package_name)
+            continue  # leave broken/corrupt packages allone.
+
+        try:
+            _raise_for_installability(
+                package_info,
+                package_info,
+                cmk_version.__version__,
+                allow_outdated=False,
+            )
+        except PackageException as exc:
+            log.log(VERBOSE, "[%s]: Uninstalling (%s)", package_name, exc)
+            uninstall(package_info)
+        else:
+            log.log(VERBOSE, "[%s]: Kept", package_name)
+
+
+def _install_applicable_inactive_packages(log: logging.Logger) -> None:
+    for package_path in _sort_enabled_packages_for_installation(log):
+
+        try:
+            _install_by_path(package_path, allow_outdated=False)
+        except PackageException as exc:
+            logger.log(VERBOSE, "[%s]: Not installed (%s)", package_path.name, exc)
+        else:
+            logger.log(VERBOSE, "[%s]: Installed", package_path.name)
+
+
+def _sort_enabled_packages_for_installation(log: logging.Logger) -> Iterable[Path]:
+    packages_by_name: Dict[str, Dict[str, Path]] = {}
+    for pkg_path in _get_enabled_package_paths():
+        with pkg_path.open("rb") as pkg:
+            try:
+                package_info = _get_package_info_from_package(pkg)
+            except Exception:
+                # Do not make broken files / packages fail the whole mechanism
+                log.error(
+                    "[%s]: Skipping (failed to read package info)",
+                    pkg_path.name,
+                    exc_info=True,
+                )
+                continue
+
+        packages_by_name.setdefault(package_info["name"], {})[package_info["version"]] = pkg_path
+
+    return _sort_by_name_then_newest_version(packages_by_name)
+
+
+def _sort_by_name_then_newest_version(
+        packages_by_name: Mapping[str, Mapping[str, Path]]) -> Iterable[Path]:
+    """
+    >>> _sort_by_name_then_newest_version({
+    ...    "boo_package": {"1.2": "old_boo", "1.3": "new_boo"},
+    ...    "argl_extension": {"canoo": "lexically_first", "dling": "lexically_later"},
+    ... })
+    ['lexically_later', 'lexically_first', 'new_boo', 'old_boo']
+    """
+    return [
+        paths_by_version[version]
+        for name, paths_by_version in sorted(packages_by_name.items())
+        for version in sorted(paths_by_version, key=_version_sort_key, reverse=True)
+    ]
+
+
+def _version_sort_key(raw: str) -> Tuple[Tuple[float, str], ...]:
+    """Try our best to sort version strings
+
+    They should only consist of dots and digits, but we try not to ever crash.
+    This does the right thing for reasonable versions:
+
+    >>> _version_sort_key("12.3")
+    ((12, ''), (3, ''))
+    >>> _version_sort_key("2022.09.03") < _version_sort_key("2022.8.21")
+    False
+
+    And it does not crash for nonsense values (which our GUI does not allow).
+    Obviously that's not a meaningful result.
+
+    >>> _version_sort_key("12.0-alpha")
+    ((12, ''), (-inf, '0-alpha'))
+    >>> _version_sort_key("12.0-alpha") >= _version_sort_key("käsebrot 3.0")
+    True
+
+    Reasonable ones are "newer":
+
+    >>> _version_sort_key("wurstsalat") < _version_sort_key("0.1")
+    True
+    """
+    key_elements: List[Tuple[float, str]] = []
+    for s in raw.split('.'):
+        try:
+            key_elements.append((int(s), ""))
+        except ValueError:
+            key_elements.append((float("-Inf"), s))
+
+    return tuple(key_elements)
+
+
 def disable_outdated() -> None:
     """Check installed packages and disables the outdated ones
 
@@ -830,7 +993,7 @@ def disable_outdated() -> None:
             _raise_for_too_new_cmk_version(package_name, package_info, cmk_version.__version__)
         except PackageException as exc:
             logger.log(VERBOSE, "[%s]: Disable outdated package: %s", package_name, exc)
-            disable(package_name, package_info)
+            disable(package_name)
         else:
             logger.log(VERBOSE, "[%s]: Not disabling", package_name)
 

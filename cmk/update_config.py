@@ -42,6 +42,7 @@ from cmk.utils.log import VERBOSE
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.paths
+import cmk.utils.packaging
 import cmk.utils
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.type_defs import CheckPluginName, UserId
@@ -185,6 +186,7 @@ class UpdateConfig:
             (self._sanitize_audit_log, "Sanitize audit log (Werk #13330)"),
             (self._rename_discovered_host_label_files, "Rename discovered host label files"),
             (self._check_ec_rules, "Disabling unsafe EC rules"),
+            (self._cleanup_extension_packages, "Cleaning up extension packages"),
         ]
 
     def _initialize_base_environment(self) -> None:
@@ -1090,6 +1092,65 @@ class UpdateConfig:
             if f"${macro_name}$" in script_text:
                 return True
         return False
+
+    def _cleanup_extension_packages(self) -> None:
+        self._ensure_all_installed_packages_are_available_as_mkp()
+        self._migrate_legacy_disabled_packages()
+        cmk.utils.packaging.update_active_packages(self._logger)
+
+    def _ensure_all_installed_packages_are_available_as_mkp(self) -> None:
+        """Make sure all installed MKPs are present in the store
+
+        The new policy is to have *all* packages present as MKP files in the optional packages
+        folders.
+        Make sure this is the case even for packages installed befor we had this policy.
+        """
+        cmk.utils.paths.local_enabled_packages_dir.mkdir(parents=True, exist_ok=True)
+        for package_name in cmk.utils.packaging.installed_names():
+            manifest = cmk.utils.packaging.read_package_info(package_name)
+            if manifest is None:
+                continue
+
+            mkp_base_name = cmk.utils.packaging.format_file_name(
+                name=manifest["name"],
+                version=manifest["version"],
+            )
+            shipped_mkp_path = cmk.utils.paths.optional_packages_dir / mkp_base_name
+
+            if shipped_mkp_path.exists():
+                cmk.utils.packaging.mark_as_enabled(shipped_mkp_path)
+                continue
+
+            try:
+                cmk.utils.packaging.create_enabled_mkp_from_installed_package(manifest)
+            except Exception as exc:
+                if cmk.utils.debug.enabled():
+                    raise
+                self._logger.error("ERROR: failed to create enabled MKP: %r" % exc)
+
+    def _migrate_legacy_disabled_packages(self) -> None:
+        """Migrate old "disabling" concept to new one.
+
+        Old idea: uninstall the package, and move it to a dedicated folder.
+        New idea:
+           a) make sure the MKP is present in the store ([local_]optional_packages_dir)
+           b) mark it as "enabled", but do not install it. This is the new "disabled".
+        """
+        try:
+            disabled_packages_path = list(cmk.utils.paths.disabled_packages_dir.iterdir())
+        except FileNotFoundError:
+            return
+        for package_path in disabled_packages_path:
+            store_path = cmk.utils.paths.optional_packages_dir / package_path.name
+            if store_path.exists():
+                package_path.unlink()
+            else:
+                store_path = cmk.utils.paths.local_optional_packages_dir / package_path.name
+                package_path.rename(store_path)
+
+            cmk.utils.packaging.mark_as_enabled(store_path)
+
+        cmk.utils.paths.disabled_packages_dir.rmdir()
 
 
 class PasswordSanitizer:

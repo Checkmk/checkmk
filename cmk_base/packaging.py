@@ -549,22 +549,17 @@ def install_package(file_name=None, file_object=None):
         update = False
 
     # Before installing check for conflicts
-    keep_files = {}
     for part in get_package_parts() + config_parts:
         packaged = packaged_files_in_dir(part.ident)
-        keep = []
-        keep_files[part.ident] = keep
-
-        if update:
-            old_files = old_package["files"].get(part.ident, [])
+        old_files = set(old_package["files"].get(part.ident, [])) if old_package else set()
 
         for fn in package["files"].get(part.ident, []):
+            if fn in old_files:
+                continue
             path = os.path.join(part.path, fn)
-            if update and fn in old_files:
-                keep.append(fn)
-            elif fn in packaged:
+            if fn in packaged:
                 raise PackageException("File conflict: %s is part of another package." % path)
-            elif os.path.exists(path):
+            if os.path.exists(path):
                 raise PackageException("File conflict: %s already existing." % path)
 
     # Now install files, but only unpack files explicitely listed
@@ -613,20 +608,20 @@ def install_package(file_name=None, file_object=None):
     # In case of an update remove files from old_package not present in new one
     if update:
         for part in get_package_parts() + config_parts:
-            filenames = old_package["files"].get(part.ident, [])
-            keep = keep_files.get(part.ident, [])
-            for fn in filenames:
-                if fn not in keep:
-                    path = os.path.join(part.path, fn)
-                    logger.verbose("Removing outdated file %s.", path)
-                    try:
-                        os.remove(path)
-                    except Exception as e:
-                        logger.error("Error removing %s: %s", path, e)
+            new_filenames = set(package["files"].get(part.ident, []))
+            old_filenames = set(old_package["files"].get(part.ident, []))
+            remove_filenames = old_filenames - new_filenames
+            for fn in remove_filenames:
+                path = os.path.join(part.path, fn)
+                logger.verbose("Removing outdated file %s.", path)
+                try:
+                    os.remove(path)
+                except Exception as e:
+                    logger.error("Error removing %s: %s", path, e)
 
             if part.ident == 'ec_rule_packs':
-                to_remove = [fn for fn in filenames if fn not in keep]
-                cmk.ec.export.remove_packaged_rule_packs(to_remove, delete_export=False)
+                cmk.ec.export.remove_packaged_rule_packs(list(remove_filenames),
+                                                         delete_export=False)
 
     # Last but not least install package file
     write_package_info(package)

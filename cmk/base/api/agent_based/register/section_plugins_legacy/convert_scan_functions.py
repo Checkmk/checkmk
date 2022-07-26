@@ -304,7 +304,6 @@ def _ast_convert_call(call_ast: ast.Call) -> SNMPDetectSpecification:
         if call_ast.func.id in (
             "scan_f5_bigip_cluster_status_pre_11_2",
             "scan_f5_bigip_cluster_status_11_2_upwards",
-            "scan_cisco_mem_asa64",
         ):
             raise NotImplementedError(call_ast.func.id)
 

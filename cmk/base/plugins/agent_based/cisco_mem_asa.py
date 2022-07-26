@@ -5,21 +5,22 @@
 """F5-BIGIP Commons
 
 >>> import re
->>> all(re.match(VERSION_PRE_V9_PATTERN, v) for v in (
-...     "Version 8.2(1)",
-...     "Version 8.4(2)",
-...     "Version 8.4(3)",
+>>> all(re.match(CISCO_ASA_PRE_V9_PATTERN, v) for v in (
+...     "Cisco adaptive security Version 8.2(1)",
+...     "Cisco adaptive security Version 8.4(2)",
+...     "cisco adaptive security Version 8.4(3)",
 ... ))
 True
->>> any(re.match(VERSION_PRE_V9_PATTERN, v) for v in (
-...     "Version 9.1(5)",
-...     "Version 9.2(4)",
-...     "Version 9.2(4)5",
-...     "Version 9.4(3)8",
-...     "Version 9.5(1)",
-...     "Version 9.9(2)61",
-...     "Version 10.9(1)2",
-...     "Version 20.9(1)2",
+>>> any(re.match(CISCO_ASA_PRE_V9_PATTERN, v) for v in (
+...     "Cisco adaptive security Version 9.1(5)",
+...     "Cisco adaptive security Version 9.2(4)",
+...     "Cisco adaptive security Version 9.2(4)5",
+...     "Cisco adaptive security Version 9.4(3)8",
+...     "Cisco adaptive security Version 9.5(1)",
+...     "Cisco adaptive security Version 9.9(2)61",
+...     "Cisco adaptive security Version 10.9(1)2",
+...     "Cisco adaptive security Version 20.9(1)2",
+...     "cisco Version 8.4(3)",
 ... ))
 False
 """
@@ -29,15 +30,15 @@ from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Sequence
 
 from .agent_based_api.v1 import (
     all_of,
+    contains,
+    exists,
     get_value_store,
     GetRateError,
     matches,
-    not_matches,
     register,
     Result,
     Service,
     SNMPTree,
-    startswith,
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -46,22 +47,22 @@ from .utils.size_trend import size_trend
 
 Section = Dict[str, Sequence[str]]
 OID_SysDesc = ".1.3.6.1.2.1.1.1.0"
-VERSION_PRE_V9_PATTERN = r".*Version [0-8]\..*"
+CISCO_ASA_PRE_V9_PATTERN = r"^[Cc]isco [Aa]daptive [Ss]ecurity.*Version [0-8]\..*"
 
 CISCO_MEM_CHECK_DEFAULT_PARAMETERS = {
     "levels": (80.0, 90.0),
 }
 
 
-def parse_cisco_mem_asa(string_table: List[StringTable]) -> Optional[Section]:
+def parse_cisco_mem(string_table: List[StringTable]) -> Optional[Section]:
     """
-    >>> for item, values in parse_cisco_mem_asa([
+    >>> for item, values in parse_cisco_mem([
     ...         [['System memory', '319075344', '754665920', '731194056']],
     ...         [['MEMPOOL_DMA', '41493248', '11754752', '11743928']]]).items():
     ...     print(item, values)
     System memory ['319075344', '754665920', '731194056']
     MEMPOOL_DMA ['41493248', '11754752', '11743928']
-    >>> for item, values in parse_cisco_mem_asa([[
+    >>> for item, values in parse_cisco_mem([[
     ...         ['System memory', '1251166290', '3043801006'],
     ...         ['MEMPOOL_DMA', '0', '0'],
     ...         ['MEMPOOL_GLOBAL_SHARED', '0', '0']]]).items():
@@ -79,13 +80,35 @@ def parse_cisco_mem_asa(string_table: List[StringTable]) -> Optional[Section]:
     }
 
 
+# .1.3.6.1.4.1.9.9.48 OID module is only capable of 32bit values
+# ciscoMemoryPoolName           1.3.6.1.4.1.9.9.48.1.1.1.2
+# ciscoMemoryPoolUsed           1.3.6.1.4.1.9.9.48.1.1.1.5
+# ciscoMemoryPoolFree           1.3.6.1.4.1.9.9.48.1.1.1.6
+# ciscoMemoryPoolLargestFree    1.3.6.1.4.1.9.9.48.1.1.1.7 (unused in check)
 register.snmp_section(
-    name="cisco_mem_asa",
-    detect=all_of(
-        startswith(OID_SysDesc, "cisco adaptive security"),
-        matches(OID_SysDesc, VERSION_PRE_V9_PATTERN),
-    ),
-    parse_function=parse_cisco_mem_asa,
+    name="cisco_mem_legacy",
+    parsed_section_name="cisco_mem",
+    detect=contains(OID_SysDesc, "cisco"),
+    parse_function=parse_cisco_mem,
+    fetch=[
+        SNMPTree(
+            base=".1.3.6.1.4.1.9.9.48.1.1.1",
+            oids=[
+                "2",  # ciscoMemoryPoolName
+                "5",  # ciscoMemoryPoolUsed
+                "6",  # ciscoMemoryPoolFree
+                "7",  # ciscoMemoryPoolLargestFree (unused by check plugin)
+            ],
+        ),
+    ],
+)
+
+# See https://checkmk.com/werk/1266
+register.snmp_section(
+    name="cisco_mem_asa_pre_v9",
+    parsed_section_name="cisco_mem",
+    detect=matches(OID_SysDesc, CISCO_ASA_PRE_V9_PATTERN),
+    parse_function=parse_cisco_mem,
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.48.1.1.1",
@@ -96,19 +119,20 @@ register.snmp_section(
             oids=["2.6", "5.6", "6.6", "7.6"],
         ),
     ],
+    supersedes=["cisco_mem_legacy"],
 )
 
 register.snmp_section(
     # .1.3.6.1.4.1.9.9.221.1.1.1.1.3.2.1  System memory --> CISCO-ENHANCED-MEMPOOL-MIB::cempMemPoolName.2.1
     # .1.3.6.1.4.1.9.9.221.1.1.1.1.18.2.1 902008879     --> CISCO-ENHANCED-MEMPOOL-MIB::cempMemPoolHCUsed.2.1
     # .1.3.6.1.4.1.9.9.221.1.1.1.1.20.2.1 3392957761    --> CISCO-ENHANCED-MEMPOOL-MIB::cempMemPoolHCFree.2.1
-    name="cisco_mem_asa64",
-    parsed_section_name="cisco_mem_asa",
+    name="cisco_mem_enhanced",
+    parsed_section_name="cisco_mem",
     detect=all_of(
-        startswith(OID_SysDesc, "cisco adaptive security"),
-        not_matches(OID_SysDesc, VERSION_PRE_V9_PATTERN),
+        contains(OID_SysDesc, "cisco"),
+        exists(".1.3.6.1.4.1.9.9.221.1.1.1.1.*"),
     ),
-    parse_function=parse_cisco_mem_asa,
+    parse_function=parse_cisco_mem,
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.221.1.1.1.1",
@@ -119,6 +143,7 @@ register.snmp_section(
             ],
         ),
     ],
+    supersedes=["cisco_mem_legacy", "cisco_mem_asa_pre_v9"],
 )
 
 
@@ -232,7 +257,7 @@ def check_cisco_mem_sub(
 
 
 register.check_plugin(
-    name="cisco_mem_asa",  # name taken from pre-1.7 plugin
+    name="cisco_mem",
     service_name="Memory %s",
     discovery_function=discovery_cisco_mem,
     check_default_parameters=CISCO_MEM_CHECK_DEFAULT_PARAMETERS,

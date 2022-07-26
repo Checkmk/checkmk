@@ -1,0 +1,16 @@
+Title: cisco_mem: Display memory values correctly
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1658814303
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+By choosing a legacy 32bit OID module as data source, the
+"Memory ..." service for some Cisco devices previously displayed wrong
+values if the memory of an item exceeded 4GB.
+
+While the correct 64bit OID module (if available) was already selected for
+Cisco ASA devices before, it's now selected for all Cisco devices.

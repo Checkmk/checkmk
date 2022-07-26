@@ -9,7 +9,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
 from cmk.base.plugins.agent_based.cisco_mem_asa import (
     _idem_check_cisco_mem,
     discovery_cisco_mem,
-    parse_cisco_mem_asa,
+    parse_cisco_mem,
 )
 
 
@@ -52,7 +52,7 @@ from cmk.base.plugins.agent_based.cisco_mem_asa import (
     ],
 )
 def test_parse_cisco_mem_asa(string_table, expected_parsed_data) -> None:
-    assert parse_cisco_mem_asa(string_table) == expected_parsed_data
+    assert parse_cisco_mem(string_table) == expected_parsed_data
 
 
 @pytest.mark.parametrize(
@@ -63,6 +63,7 @@ def test_parse_cisco_mem_asa(string_table, expected_parsed_data) -> None:
                 "System memory": ["1251166290", "3043801006"],
                 "MEMPOOL_DMA": ["0", "0"],
                 "MEMPOOL_GLOBAL_SHARED": ["0", "0"],
+                "Driver text": ["1337", "42"],
             },
             [
                 "System memory",
@@ -100,6 +101,45 @@ def test_discovery_cisco_mem(string_table, expected_parsed_data) -> None:
             (
                 Result(state=State.OK, summary="Usage: 53.17% - 409 MiB of 770 MiB"),
                 Metric("mem_used_percent", 53.16899356888102, boundaries=(0.0, None)),
+            ),
+        ),
+        (
+            {
+                "item": "Processor",
+                "params": {"levels": (80.0, 90.0)},
+                "section": {
+                    "Processor": ["27086628", "46835412", "29817596"],
+                },
+            },
+            (
+                Result(state=State.OK, summary="Usage: 36.64% - 25.8 MiB of 70.5 MiB"),
+                Metric(
+                    "mem_used_percent",
+                    36.64215435612978,
+                    levels=(80.0, 90.0),
+                    boundaries=(0, None),
+                ),
+            ),
+        ),
+        (
+            {
+                "item": "I/O",
+                "params": {"levels": (80.0, 90.0)},
+                "section": {
+                    "I/O": ["12409052", "2271012", "2086880"],
+                },
+            },
+            (
+                Result(
+                    state=State.WARN,
+                    summary="Usage: 84.53% - 11.8 MiB of 14.0 MiB (warn/crit at 80.00%/90.00% used)",
+                ),
+                Metric(
+                    "mem_used_percent",
+                    84.52995845249721,
+                    levels=(80.00000000000001, 90.0),
+                    boundaries=(0, None),
+                ),
             ),
         ),
     ],

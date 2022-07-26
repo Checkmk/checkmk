@@ -1044,18 +1044,20 @@ def view_editor_sorter_specs(view: ViewSpec) -> _Tuple[str, Dictionary]:
         for painter_spec in view.get("painters", []):
             # look through all defined columns and add sorters for
             # svc_metrics_hist and svc_metrics_forecast columns.
-            if isinstance(painter_spec[0], tuple) and (painter_name := painter_spec[0][0]) in [
+            if isinstance(painter_name_spec := painter_spec.painter_name, tuple) and (
+                painter_name := painter_name_spec[0]
+            ) in [
                 "svc_metrics_hist",
                 "svc_metrics_forecast",
             ]:
                 hist_sort = sorters_of_datasource(ds_name).get(painter_name)
-                uuid = painter_spec[0][1].get("uuid", "")
+                uuid = painter_name_spec[1].get("uuid", "")
                 if hist_sort and uuid:
                     title = "History" if "hist" in painter_name else "Forecast"
                     yield (
                         "%s:%s" % (painter_name, uuid),
                         "Services: Metric %s - Column: %s"
-                        % (title, painter_spec[0][1]["column_title"]),
+                        % (title, painter_name_spec[1]["column_title"]),
                     )
 
     return (
@@ -1167,9 +1169,13 @@ def transform_view_to_valuespec_value(view):
         if view.get(key):
             view["visibility"][key] = view[key]
 
-    view["grouping"] = {"grouping": view.get("group_painters", [])}
+    view["grouping"] = {
+        "grouping": [painter_spec.to_raw() for painter_spec in view.get("group_painters", [])]
+    }
     view["sorting"] = {"sorters": view.get("sorters", {})}
-    view["columns"] = {"columns": view.get("painters", [])}
+    view["columns"] = {
+        "columns": [painter_spec.to_raw() for painter_spec in view.get("painters", [])]
+    }
 
 
 def transform_valuespec_value_to_view(ident, attrs):
@@ -1188,10 +1194,10 @@ def transform_valuespec_value_to_view(ident, attrs):
         return attrs
 
     if ident == "grouping":
-        return {"group_painters": attrs["grouping"]}
+        return {"group_painters": [PainterSpec.from_raw(*v) for v in attrs["grouping"]]}
 
     if ident == "columns":
-        return {"painters": [PainterSpec(*v) for v in attrs["columns"]]}
+        return {"painters": [PainterSpec.from_raw(*v) for v in attrs["columns"]]}
 
     return {ident: attrs}
 

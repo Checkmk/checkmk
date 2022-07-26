@@ -1853,9 +1853,14 @@ def get_view_by_name(view_name: ViewName) -> ViewSpec:
 
 def transform_painter_spec(view: ViewSpec) -> ViewSpec:
     if "painters" in view:
-        view["painters"] = [PainterSpec(*v) for v in view["painters"]]
+        view["painters"] = [
+            v if isinstance(v, PainterSpec) else PainterSpec.from_raw(*v) for v in view["painters"]
+        ]
     if "group_painters" in view:
-        view["group_painters"] = [PainterSpec(*v) for v in view["group_painters"]]
+        view["group_painters"] = [
+            v if isinstance(v, PainterSpec) else PainterSpec.from_raw(*v)
+            for v in view["group_painters"]
+        ]
     return view
 
 
@@ -2039,13 +2044,13 @@ def _transform_old_views(  # pylint: disable=too-many-branches
 
 
 def extract_painter_name(painter_spec: Union[PainterName, PainterSpec]) -> PainterName:
-    if isinstance(painter_spec[0], tuple):
-        return painter_spec[0][0]
-    if isinstance(painter_spec, tuple):
-        return painter_spec[0]
     if isinstance(painter_spec, str):
         return painter_spec
-    return None
+    return (
+        painter_name[0]
+        if isinstance(painter_name := painter_spec.painter_name, tuple)
+        else painter_name
+    )
 
 
 def painter_exists(painter_spec: PainterSpec) -> bool:
@@ -2075,8 +2080,8 @@ class Cell:
 
     def _from_view(self, painter_spec: PainterSpec) -> None:
         self._painter_name = extract_painter_name(painter_spec)
-        if isinstance(painter_spec[0], tuple):
-            self._painter_params = painter_spec[0][1]
+        if isinstance(painter_name := painter_spec.painter_name, tuple):
+            self._painter_params = painter_name[1]
             self._custom_title = self._painter_params.get("column_title", None)
 
         self._link_spec = painter_spec.link_spec

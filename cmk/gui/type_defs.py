@@ -187,19 +187,16 @@ PainterParameters = Dict  # TODO: Improve this type
 PainterNameSpec = Union[PainterName, Tuple[PainterName, PainterParameters]]
 
 
-class PainterSpec(
-    NamedTuple(  # pylint: disable=typing-namedtuple-call
-        "PainterSpec",
-        [
-            ("painter_name", PainterNameSpec),
-            ("link_spec", Optional[VisualLinkSpec]),
-            ("tooltip", Optional[ColumnName]),
-            ("join_index", Optional[ColumnName]),
-            ("column_title", Optional[str]),
-        ],
-    )
-):
-    def __new__(cls, *value):
+@dataclass(frozen=True)
+class PainterSpec:
+    painter_name: PainterNameSpec
+    link_spec: VisualLinkSpec | None = None
+    tooltip: ColumnName | None = None
+    join_index: ColumnName | None = None
+    column_title: str | None = None
+
+    @classmethod
+    def from_raw(cls, *value: Any) -> "PainterSpec":
         # Some legacy views have optional fields like "tooltip" set to "" instead of None
         # in their definitions. Consolidate this case to None.
         value = (value[0],) + tuple(p or None for p in value[1:]) + (None,) * (5 - len(value))
@@ -212,12 +209,35 @@ class PainterSpec(
         elif isinstance(value[1], tuple):
             value = (value[0], VisualLinkSpec(*value[1])) + value[2:]
 
-        return super().__new__(cls, *value)
+        return cls(*value)
+
+    def to_raw(
+        self,
+    ) -> tuple[
+        PainterNameSpec,
+        tuple[VisualName, VisualName] | None,
+        ColumnName | None,
+        ColumnName | None,
+        str | None,
+    ]:
+        return (
+            self.painter_name,
+            (
+                self.link_spec.type_name,
+                self.link_spec.name,
+            )
+            if self.link_spec
+            else None,
+            self.tooltip,
+            self.join_index,
+            self.column_title,
+        )
 
     def __repr__(self) -> str:
-        return str(
-            (self.painter_name, tuple(self.link_spec) if self.link_spec else None) + tuple(self)[2:]
-        )
+        """
+        Used to serialize user-defined visuals
+        """
+        return str(self.to_raw())
 
 
 ViewSpec = Dict[str, Any]

@@ -999,7 +999,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         # Deletion
         delname = request.var("_delete")
         if delname and transactions.check_transaction():
-            owner = UserId(request.get_str_input_mandatory("_owner", user.id))
+            owner = request.get_validated_type_input_mandatory(UserId, "_owner", user.id)
             pagetype_title = cls.phrase("title")
 
             try:
@@ -1168,7 +1168,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         else:
             raise MKUserError("mode", "Invalid mode")
 
-        owner_id = UserId(request.get_str_input_mandatory("owner", user.id))
+        owner_id = request.get_validated_type_input_mandatory(UserId, "owner", user.id)
         title = cls.phrase(mode)
         if mode == "create":
             page_name = ""

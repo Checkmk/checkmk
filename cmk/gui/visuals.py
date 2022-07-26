@@ -753,8 +753,9 @@ def page_list(  # pylint: disable=too-many-branches
     delname = request.var("_delete")
     if delname and transactions.check_transaction():
         if user.may("general.delete_foreign_%s" % what):
-            user_id_str = request.get_str_input("_user_id", user.id)
-            user_id = None if user_id_str is None else UserId(user_id_str)
+            user_id: Optional[UserId] = request.get_validated_type_input_mandatory(
+                UserId, "_user_id", user.id
+            )
         else:
             user_id = user.id
 
@@ -1280,7 +1281,7 @@ def page_edit_visual(  # pylint: disable=too-many-branches
         raise MKUserError(mode, _("The %s does not exist.") % visual_type.title)
 
     if visualname:
-        owner_id = UserId(request.get_str_input_mandatory("owner", user.id))
+        owner_id = request.get_validated_type_input_mandatory(UserId, "owner", user.id)
         visual = _get_visual(owner_id, mode)
 
         if mode == "edit" and owner_id != "":  # editing builtins requires copy

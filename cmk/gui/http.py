@@ -8,7 +8,19 @@ import ast
 import json
 import urllib.parse
 from contextlib import contextmanager
-from typing import Any, Dict, Iterator, List, Mapping, Optional, Protocol, Tuple, TypeVar, Union
+from typing import (
+    Any,
+    Dict,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    overload,
+    Protocol,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 import werkzeug
 from six import ensure_str
@@ -298,6 +310,32 @@ class Request(
 
     def get_str_input_mandatory(self, varname: str, deflt: Optional[str] = None) -> str:
         return mandatory_parameter(varname, self.get_str_input(varname, deflt))
+
+    @overload
+    def get_validated_type_input(
+        self,
+        type_: type[Validation_T],
+        varname: str,
+    ) -> Optional[Validation_T]:
+        ...
+
+    @overload
+    def get_validated_type_input(
+        self,
+        type_: type[Validation_T],
+        varname: str,
+        deflt: None,
+    ) -> Optional[Validation_T]:
+        ...
+
+    @overload
+    def get_validated_type_input(
+        self,
+        type_: type[Validation_T],
+        varname: str,
+        deflt: Validation_T,
+    ) -> Validation_T:
+        ...
 
     def get_validated_type_input(
         self,

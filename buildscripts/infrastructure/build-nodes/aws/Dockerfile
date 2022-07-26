@@ -1,6 +1,6 @@
-ARG IMAGE_UBUNTU_21_04
+ARG IMAGE_UBUNTU_22_04
 #hadolint ignore=DL3006
-FROM ${IMAGE_UBUNTU_21_04}
+FROM ${IMAGE_UBUNTU_22_04}
 
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
@@ -12,7 +12,7 @@ RUN apt-get update \
     git \
     python2 \
     python3-pip \
-    python-pip-whl \
+    python3-pip-whl \
     && \
     ansible-galaxy collection install community.general \
     && rm -rf /var/lib/apt/lists/*

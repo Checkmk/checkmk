@@ -63,7 +63,7 @@ node (NODE) {
             def DOCKER_REGISTRY_NOHTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
             withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
                 docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                    def IMAGE_ALIAS_NAME = "IMAGE_UBUNTU_21_04"
+                    def IMAGE_ALIAS_NAME = "IMAGE_UBUNTU_22_04"
                     def RESOLVED_IMAGE_ID = sh(script: "../../docker_image_aliases/resolve.sh ${IMAGE_ALIAS_NAME}", returnStdout: true).replaceAll("[\r\n]+", "");
                     println("Using IMAGE_ALIAS_NAME: ${IMAGE_ALIAS_NAME}=${RESOLVED_IMAGE_ID}");
 

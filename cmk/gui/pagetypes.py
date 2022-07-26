@@ -297,15 +297,6 @@ class Base(Generic[_T_BaseSpec]):
     def _show_in_sidebar(self) -> bool:
         return not self.is_empty() and not self.is_hidden()
 
-    # Default values for the creation dialog can be overridden by the
-    # sub class.
-    @classmethod
-    def default_name(cls) -> str:
-        return unique_default_name_suggestion(
-            cls.type_name(),
-            (instance.name() for instance in cls.__instances.values()),
-        )
-
     @classmethod
     def default_topic(cls) -> str:
         return "other"
@@ -316,6 +307,45 @@ class Base(Generic[_T_BaseSpec]):
         navigation only shown on show more button"""
         return False
 
+    @classmethod
+    def type_name(cls) -> str:
+        raise NotImplementedError()
+
+    @classmethod
+    def type_icon(cls) -> str:
+        raise NotImplementedError()
+
+    # Lädt alle Dinge vom aktuellen User-Homeverzeichnis und
+    # mergt diese mit den übergebenen eingebauten
+    @classmethod
+    def load(cls):
+        raise NotImplementedError()
+
+    # Custom method to load e.g. old configs after performing the
+    # loading of the regular files.
+    @classmethod
+    def _load(cls):
+        pass
+
+
+# .
+#   .--Overridable---------------------------------------------------------.
+#   |         ___                      _     _       _     _               |
+#   |        / _ \__   _____ _ __ _ __(_) __| | __ _| |__ | | ___          |
+#   |       | | | \ \ / / _ \ '__| '__| |/ _` |/ _` | '_ \| |/ _ \         |
+#   |       | |_| |\ V /  __/ |  | |  | | (_| | (_| | |_) | |  __/         |
+#   |        \___/  \_/ \___|_|  |_|  |_|\__,_|\__,_|_.__/|_|\___|         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Base class for things that the user can override by cloning and     |
+#   |  editing and where the user might also create complete new types.    |
+#   |  Examples: views, dashboards, graphs collections                     |
+#   '----------------------------------------------------------------------'
+
+_T_OverridableSpec = TypeVar("_T_OverridableSpec", bound=OverridableSpec)
+
+
+class Overridable(Base[_T_OverridableSpec]):
     # Store for all instances of this page type. The key into
     # this dictionary????
     # TODO: Brauchen wir hier überhaupt ein dict??
@@ -357,63 +387,15 @@ class Base(Generic[_T_BaseSpec]):
     def instances_sorted(cls):
         return sorted(cls.__instances.values(), key=lambda x: x.title())
 
-    # Stub function for the list of all pages. In case of Overridable
-    # several instances might exist that overlay each other. This
-    # function returns the final list of pages visible to the user
+    # Default values for the creation dialog can be overridden by the
+    # sub class.
     @classmethod
-    def pages(cls):
-        for instance in cls.__instances.values():
-            return instance
-        return None
+    def default_name(cls) -> str:
+        return unique_default_name_suggestion(
+            cls.type_name(),
+            (instance.name() for instance in cls.__instances.values()),
+        )
 
-    # Stub function for finding a page by name. Overriden by
-    # Overridable.
-    @classmethod
-    def find_page(cls, name):
-        for instance in cls.__instances.values():
-            if instance.name() == name:
-                return instance
-        return None
-
-    @classmethod
-    def type_name(cls) -> str:
-        raise NotImplementedError()
-
-    @classmethod
-    def type_icon(cls) -> str:
-        raise NotImplementedError()
-
-    # Lädt alle Dinge vom aktuellen User-Homeverzeichnis und
-    # mergt diese mit den übergebenen eingebauten
-    @classmethod
-    def load(cls):
-        raise NotImplementedError()
-
-    # Custom method to load e.g. old configs after performing the
-    # loading of the regular files.
-    @classmethod
-    def _load(cls):
-        pass
-
-
-# .
-#   .--Overridable---------------------------------------------------------.
-#   |         ___                      _     _       _     _               |
-#   |        / _ \__   _____ _ __ _ __(_) __| | __ _| |__ | | ___          |
-#   |       | | | \ \ / / _ \ '__| '__| |/ _` |/ _` | '_ \| |/ _ \         |
-#   |       | |_| |\ V /  __/ |  | |  | | (_| | (_| | |_) | |  __/         |
-#   |        \___/  \_/ \___|_|  |_|  |_|\__,_|\__,_|_.__/|_|\___|         |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Base class for things that the user can override by cloning and     |
-#   |  editing and where the user might also create complete new types.    |
-#   |  Examples: views, dashboards, graphs collections                     |
-#   '----------------------------------------------------------------------'
-
-_T_OverridableSpec = TypeVar("_T_OverridableSpec", bound=OverridableSpec)
-
-
-class Overridable(Base[_T_OverridableSpec]):
     def __init__(self, d: _T_OverridableSpec) -> None:
         if "public" not in d:
             d["public"] = False

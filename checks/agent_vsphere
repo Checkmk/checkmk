@@ -51,17 +51,15 @@ def agent_vsphere_arguments(
     if params.get("snapshots_on_host", False):
         args += ["--snapshots-on-host"]
 
-    host_address = ipaddress or hostname
+    cert_verify = params.get("ssl", True)
+    if cert_verify is False:
+        args += ["--no-cert-check"]
+    elif cert_verify is True:
+        args += ["--cert-server-name", hostname]
+    else:
+        args += ["--cert-server-name", cert_verify]
 
-    if "ssl" in params:
-        if params["ssl"] is False:
-            args += ["--no-cert-check", host_address]
-        elif params["ssl"] is True:
-            args.append(hostname)
-        else:
-            args.append(params["ssl"])
-    else:  # legacy mode
-        args.append(host_address)
+    args.append(ipaddress or hostname)
 
     return args
 

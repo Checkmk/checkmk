@@ -272,7 +272,7 @@ def get_all_package_infos() -> Dict[str, Any]:
         "unpackaged": packaging.get_unpackaged_files(),
         "parts": packaging.package_part_info(),
         "optional_packages": packaging.get_optional_package_infos(),
-        "disabled_packages": packaging.get_disabled_package_infos(),
+        "enabled_packages": packaging.get_enabled_package_infos(),
     }
 
 
@@ -334,7 +334,7 @@ def get_local_files_csv(infos: DiagnosticsElementJSONResult) -> DiagnosticsEleme
     # Parse different secions of the packaging output
     for (module, items) in infos["unpackaged"].items():
         files = _deep_update(files, _parse_mkp_files(items, module, {}, "unpackaged", "N/A"))
-    for state in ["installed", "optional_packages"]:
+    for state in ["optional_packages", "installed"]:
         for (package, contents) in infos[state].items():
             for (module, items) in contents["files"].items():
                 files = _deep_update(

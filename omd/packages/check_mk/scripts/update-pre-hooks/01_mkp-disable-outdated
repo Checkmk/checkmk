@@ -1,2 +1,26 @@
-#!/bin/bash
-mkp disable-outdated
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+"""Tool to migrate MKPs.
+
+This must be done before update-config, as we must not load rulesets before
+updating the set of installed packages.
+"""
+
+import logging
+import sys
+
+import cmk.utils.log as log
+import cmk.utils.packaging
+
+
+def main():
+    log.setup_console_logging()
+    logger = logging.getLogger()
+    cmk.utils.packaging.pre_update_config_actions(logger)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

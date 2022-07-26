@@ -47,6 +47,7 @@ import cmk.utils
 import cmk.utils.certs as certs
 import cmk.utils.debug
 import cmk.utils.log as log
+import cmk.utils.packaging
 import cmk.utils.paths
 import cmk.utils.site
 import cmk.utils.tty as tty
@@ -87,7 +88,7 @@ import cmk.gui.watolib.hosts_and_folders
 import cmk.gui.watolib.rulesets
 import cmk.gui.watolib.tags
 from cmk.gui import main_modules
-from cmk.gui.bi import BIManager
+from cmk.gui.bi import BIManager  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.plugins.dashboard.utils import (

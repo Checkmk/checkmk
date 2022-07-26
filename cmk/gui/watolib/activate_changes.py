@@ -42,6 +42,7 @@ import cmk.utils
 import cmk.utils.agent_registration as agent_registration
 import cmk.utils.daemon as daemon
 import cmk.utils.license_usage.samples as license_usage_samples
+import cmk.utils.packaging
 import cmk.utils.paths
 import cmk.utils.render as render
 import cmk.utils.store as store
@@ -2180,6 +2181,8 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
         # version, the config migration logic has to be executed to make the local
         # configuration compatible with the local Checkmk version.
         if _need_to_update_config_after_sync():
+            logger.debug("Fixing up synced packages")
+            cmk.utils.packaging.pre_update_config_actions(logger)
             logger.debug("Executing cmk-update-config")
             _execute_cmk_update_config()
 

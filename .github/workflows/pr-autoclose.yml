@@ -1,0 +1,29 @@
+name: Close inactive PRs
+on:
+  schedule:
+    - cron: "30 1 * * *"
+
+jobs:
+  close-issues:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/stale@v5
+        with:
+          #
+          # Leave all issues alone
+          days-before-issue-stale: -1
+          days-before-issue-close: -1
+          #
+          # We autoclose PRs marked as "Stale" (which is the default label for this)
+          stale-pr-label: "Stale"
+          # We only set the label manually for now.
+          days-before-pr-stale: -1
+          stale-pr-message: "This issue is stale because it has been open for 30 days with no activity."
+          # Autoclose stale PRs after 3 weeks.
+          days-before-pr-close: 21
+          close-pr-message: "This issue was closed because it has been inactive for 3 weeks since being marked as stale."
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+

@@ -145,14 +145,13 @@ _DEFAULT_PARAMS = Params(pending="no_levels", free=("levels_perc", (10.0, 5.0)))
 _POD_RESOURCES_FIELDS = ("running", "pending", "succeeded", "failed", "unknown")
 
 
-def check_kube_pods(params: Params, section: PodResources) -> CheckResult:
-    current_time = time.time()
+def check_kube_pods(params: Params, section: PodResources, now: float) -> CheckResult:
     value_store = get_value_store()
     old_resource_store = value_store.get("pending", {})
     # store currently pending pod_names and the timestamp we first saw them in pending state
     # this means if pods are no longer pending, they are removed from the value_store
     value_store["pending"] = {
-        pod_name: old_resource_store.get(pod_name, current_time) for pod_name in section.pending
+        pod_name: old_resource_store.get(pod_name, now) for pod_name in section.pending
     }
 
     for resource in _POD_RESOURCES_FIELDS:
@@ -168,7 +167,7 @@ def check_kube_pods(params: Params, section: PodResources) -> CheckResult:
         elif resource == "pending" and params["pending"] != "no_levels":
             yield _check_phase_duration_pods(
                 summary,
-                current_time,
+                now,
                 value_store["pending"],
                 Levels(*params["pending"][1]),
             )
@@ -208,14 +207,15 @@ def check_free_pods(
     )
 
 
-def check_kube_pod_resources(
+def _check_kube_pod_resources(
+    now: float,
     params: Params,
     section_kube_pod_resources: Optional[PodResources],
     section_kube_allocatable_pods: Optional[AllocatablePods],
 ) -> CheckResult:
 
     assert section_kube_pod_resources is not None, "Missing Api data"
-    yield from check_kube_pods(params, section_kube_pod_resources)
+    yield from check_kube_pods(params, section_kube_pod_resources, now)
 
     if section_kube_allocatable_pods is None:
         return
@@ -232,6 +232,16 @@ def check_kube_pod_resources(
         params["free"], section_kube_pod_resources, section_kube_allocatable_pods.allocatable
     )
     yield Metric(name="kube_pod_allocatable", value=section_kube_allocatable_pods.allocatable)
+
+
+def check_kube_pod_resources(
+    params: Params,
+    section_kube_pod_resources: Optional[PodResources],
+    section_kube_allocatable_pods: Optional[AllocatablePods],
+) -> CheckResult:
+    yield from _check_kube_pod_resources(
+        time.time(), params, section_kube_pod_resources, section_kube_allocatable_pods
+    )
 
 
 register.check_plugin(

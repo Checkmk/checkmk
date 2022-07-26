@@ -23,7 +23,7 @@ import time
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, NamedTuple, Tuple, Union
+from typing import Any, Dict, Final, NamedTuple, Tuple, Union
 
 from typing_extensions import assert_never
 
@@ -281,8 +281,7 @@ class Version:
         if isinstance(v, _StableDailyVersion):
             return "%d.%d.%d-%s" % (v.major, v.minor, v.sub, v.date.strftime("%Y.%m.%d"))
 
-        assert_never(v)
-        return ""  # silence pylint's broken inconsistent-return-statements
+        return assert_never(v)
 
     def __lt__(self, other: Version) -> bool:
         return self._cmp(other) < 0
@@ -633,10 +632,10 @@ def versions_compatible(
 
     Specific patch release requirements
 
-    >>> isinstance(c(Version("2.1.0p12"), Version("2.2.0i1")), VersionsCompatible)
+    >>> isinstance(c(Version("2.1.0p15"), Version("2.2.0i1")), VersionsCompatible)
     True
-    >>> str(c(Version("2.1.0p3"), Version("2.2.0i1")))
-    'This target versions requires at least 2.1.0p11'
+    >>> str(c(Version("2.1.0p4"), Version("2.2.0i1")))
+    'This target version requires at least 2.1.0p15'
     """
 
     # Daily builds of the master branch (format: YYYY.MM.DD) are always treated to be compatbile
@@ -718,17 +717,25 @@ def versions_compatible(
     return target_too_new
 
 
+_REQUIRED_PATCH_RELEASES_MAP: Final = {
+    # we keep a list for documentation.
+    (2, 2, 0): max(
+        Version("2.1.0p11"),  # ?
+        Version("2.1.0p15"),  # migration for MKPs (Werk #14636)
+    ),
+}
+
+
 def _check_minimum_patch_release(
     from_v: Version, to_v: Version, /
 ) -> VersionsCompatible | VersionsIncompatible:
-    required_patch_releases = {
-        (2, 2, 0): Version("2.1.0p11"),
-    }
-    if not (required_patch_release := required_patch_releases.get(base_version_parts(str(to_v)))):
+    if not (
+        required_patch_release := _REQUIRED_PATCH_RELEASES_MAP.get(base_version_parts(str(to_v)))
+    ):
         return VersionsCompatible()
     if from_v >= required_patch_release:
         return VersionsCompatible()
-    return VersionsIncompatible(f"This target versions requires at least {required_patch_release}")
+    return VersionsIncompatible(f"This target version requires at least {required_patch_release}")
 
 
 #   .--general infos-------------------------------------------------------.

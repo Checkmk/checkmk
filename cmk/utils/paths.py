@@ -125,6 +125,8 @@ local_lib_dir = _local_path(lib_dir)
 local_mib_dir = _local_path(mib_dir)
 local_alert_handlers_dir = _local_path(alert_handlers_dir)
 local_optional_packages_dir = _omd_path("var/check_mk/packages_local")
+local_enabled_packages_dir = local_share_dir / "enabled_packages"
+
 local_agent_based_plugins_dir = _local_path(agent_based_plugins_dir)
 local_gui_plugins_dir = _local_path(gui_plugins_dir)
 

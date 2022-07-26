@@ -1,2 +1,2 @@
 #!/bin/bash
-mkp disable-outdated
+mkp update-active

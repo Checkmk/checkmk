@@ -54,6 +54,7 @@ Available commands are:
    disable NAME     ...  Disable package NAME
    enable NAME      ...  Enable previously disabled package NAME
    disable-outdated ...  Disable outdated packages
+   update-active    ...  Disable inapplicable packages and enable applicable ones
 
    -v  enables verbose output
 
@@ -82,6 +83,7 @@ def do_packaging(args: List[str]) -> None:
         "disable": package_disable,
         "enable": package_enable,
         "disable-outdated": package_disable_outdated,
+        "update-active-packages": package_update_active,
     }
     f = commands.get(command)
     if f:
@@ -286,9 +288,9 @@ def package_remove(args: List[str]) -> None:
     if not package:
         raise PackageException("No such package %s." % pacname)
 
-    logger.log(VERBOSE, "Removing package %s...", pacname)
-    packaging.remove(package)
-    logger.log(VERBOSE, "Successfully removed package %s.", pacname)
+    logger.log(VERBOSE, "Uninstalling package %s...", pacname)
+    packaging.uninstall(package)
+    logger.log(VERBOSE, "Successfully uninstalled package %s.", pacname)
 
 
 def package_install(args: List[str]) -> None:
@@ -298,24 +300,30 @@ def package_install(args: List[str]) -> None:
     if not path.exists():
         raise PackageException("No such file %s." % path)
 
-    packaging.install_by_path(path)
+    with Path(path).open("rb") as fh:
+        package = packaging.store_package(fh.read())
+
+    packaging.install_optional_package(
+        packaging.format_file_name(name=package["name"], version=package["version"])
+    )
 
 
 def package_disable(args: List[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P disable NAME")
     package_name = args[0]
-    package = read_package_info(package_name)
-    if not package:
-        raise PackageException("No such package %s." % package_name)
-
-    packaging.disable(package_name, package)
+    packaging.disable(package_name)
 
 
 def package_enable(args: List[str]) -> None:
     if len(args) != 1:
-        raise PackageException("Usage: check_mk -P enable PACK.mkp")
-    packaging.enable(args[0])
+        raise PackageException("Usage: check_mk -P enable NAME")
+    package = read_package_info(args[0])
+    if not package:
+        raise PackageException("No such package %s." % args[0])
+    packaging.install_optional_package(
+        packaging.format_file_name(name=package["name"], version=package["version"])
+    )
 
 
 def package_disable_outdated(args: List[str]) -> None:
@@ -329,3 +337,16 @@ def package_disable_outdated(args: List[str]) -> None:
     if args:
         raise PackageException("Usage: check_mk -P disable-outdated")
     packaging.disable_outdated()
+
+
+def package_update_active(args: List[str]) -> None:
+    """Disable MKP packages that are not suitable for this version, and enable others
+
+    Packages can declare their minimum or maximum required Checkmk versions.
+    Also packages can collide with one another or fail to load for other reasons.
+
+    This command disables all packages that are not applicable, and then enables the ones that are.
+    """
+    if args:
+        raise PackageException("Usage: check_mk -P update-active")
+    packaging.update_active_packages(logger)

@@ -1863,6 +1863,7 @@ def apply_pre_17_sync_snapshot(site_id: SiteId, tar_content: bytes, base_dir: Pa
         # Create rule making this site only monitor our hosts
         create_distributed_wato_files(Path(cmk.utils.paths.omd_root), site_id, is_remote=True)
 
+        cmk.utils.packaging.pre_update_config_actions(logger)
         _execute_post_config_sync_actions(site_id)
         _execute_cmk_update_config()
     finally:

@@ -42,6 +42,7 @@ from cmk.utils.log import VERBOSE
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.paths
+import cmk.utils.packaging
 import cmk.utils
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.type_defs import CheckPluginName, UserId

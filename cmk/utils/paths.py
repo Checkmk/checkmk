@@ -110,6 +110,7 @@ local_bin_dir = _local_path(bin_dir)
 local_lib_dir = _local_path(lib_dir)
 local_mib_dir = _local_path(mib_dir)
 local_optional_packages_dir = Path(_omd_path("var/check_mk/packages_local"))
+local_enabled_packages_dir = Path(_path(omd_root, "local/share/check_mk/enabled_packages"))
 
 local_agent_based_plugins_dir = _local_path(agent_based_plugins_dir)
 

@@ -49,7 +49,7 @@ class BookmarkListSpec(pagetypes.OverridableSpec):
     bookmarks: list[BookmarkSpec]
 
 
-class BookmarkList(pagetypes.Overridable[BookmarkListSpec]):
+class BookmarkList(pagetypes.Overridable[BookmarkListSpec, "BookmarkList"]):
     @classmethod
     def type_name(cls) -> str:
         return "bookmark_list"
@@ -193,6 +193,7 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec]):
 
     @classmethod
     def add_default_bookmark_list(cls) -> None:
+        assert user.id is not None
         attrs = BookmarkListSpec(
             {
                 "title": "My Bookmarks",
@@ -209,6 +210,7 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec]):
 
     @classmethod
     def load_legacy_bookmarks(cls) -> None:
+        assert user.id is not None
         # Don't load the legacy bookmarks when there is already a my_bookmarks list
         if cls.has_instance((user.id, "my_bookmarks")):
             return
@@ -327,6 +329,7 @@ class Bookmarks(SidebarSnapin):
         self.show()
 
     def _add_bookmark(self, title: str, url: str) -> None:
+        assert user.id is not None
         BookmarkList.load()
 
         if not BookmarkList.has_instance((user.id, "my_bookmarks")):

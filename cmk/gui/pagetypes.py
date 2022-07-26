@@ -22,7 +22,7 @@ import os
 from contextlib import suppress
 from typing import cast, Dict, Generic, Iterator, List, Literal
 from typing import Optional as _Optional
-from typing import Sequence, Tuple, TypedDict, TypeVar
+from typing import Sequence, Tuple, Type, TypedDict, TypeVar
 
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
@@ -343,54 +343,52 @@ class Base(Generic[_T_BaseSpec]):
 #   '----------------------------------------------------------------------'
 
 _T_OverridableSpec = TypeVar("_T_OverridableSpec", bound=OverridableSpec)
+# TODO: May be replaced with Self once we are with Python 3.11
+_Self = TypeVar("_Self", bound="Overridable")
+
+InstanceId = tuple[UserId, str]
 
 
-class Overridable(Base[_T_OverridableSpec]):
-    # Store for all instances of this page type. The key into
-    # this dictionary????
-    # TODO: Brauchen wir hier überhaupt ein dict??
-    __instances: "Dict[Tuple[str, str], Base]" = {}
+class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
+    __instances: dict[InstanceId, _Self] = {}
 
     @classmethod
-    def clear_instances(cls):
+    def clear_instances(cls: Type[_Self]) -> None:
         cls.__instances = {}
 
     @classmethod
-    def add_instance(cls, key, instance):
+    def add_instance(cls: Type[_Self], key: InstanceId, instance: _Self) -> None:
         cls.__instances[key] = instance
 
     @classmethod
-    def remove_instance(cls, key):
+    def remove_instance(cls: Type[_Self], key: InstanceId) -> None:
         del cls.__instances[key]
 
-    # Return a list of all instances of this type
     @classmethod
-    def instances(cls):
+    def instances(cls: Type[_Self]) -> list[_Self]:
+        """Return a list of all instances of this type"""
         return list(cls.__instances.values())
 
     @classmethod
-    def instance(cls, key):
+    def instance(cls: Type[_Self], key: InstanceId) -> _Self:
         return cls.__instances[key]
 
     @classmethod
-    def has_instance(cls, key) -> bool:
+    def has_instance(cls: Type[_Self], key: InstanceId) -> bool:
         return key in cls.__instances
 
-    # Return a dict of all instances of this type
     @classmethod
-    def instances_dict(cls):
+    def instances_dict(cls: Type[_Self]) -> dict[InstanceId, _Self]:
         return cls.__instances
 
-    # Return a list of pairs if instance key and instance, which
-    # is sorted by the title of the instance
     @classmethod
-    def instances_sorted(cls):
+    def instances_sorted(cls: Type[_Self]) -> list[_Self]:
         return sorted(cls.__instances.values(), key=lambda x: x.title())
 
     # Default values for the creation dialog can be overridden by the
     # sub class.
     @classmethod
-    def default_name(cls) -> str:
+    def default_name(cls: Type[_Self]) -> str:
         return unique_default_name_suggestion(
             cls.type_name(),
             (instance.name() for instance in cls.__instances.values()),
@@ -826,7 +824,7 @@ class Overridable(Base[_T_OverridableSpec]):
     # Lädt alle Dinge vom aktuellen User-Homeverzeichnis und
     # mergt diese mit den übergebenen eingebauten
     @classmethod
-    def load(cls):
+    def load(cls: Type[_Self]) -> None:
         cls.clear_instances()
 
         # First load builtin pages. Set username to ''
@@ -837,7 +835,7 @@ class Overridable(Base[_T_OverridableSpec]):
             page_dict = cls._transform_old_spec(page_dict)
 
             new_page = cls(page_dict)
-            cls.add_instance(("", name), new_page)
+            cls.add_instance((UserId(""), name), new_page)
 
         # Now scan users subdirs for files "user_$type_name.mk"
         with suppress(FileNotFoundError):
@@ -1083,11 +1081,12 @@ class Overridable(Base[_T_OverridableSpec]):
                     instance.render_extra_columns(table)
 
                     # Owner
-                    if instance.is_builtin():
-                        ownertxt = HTMLWriter.render_i(_("builtin"))
-                    else:
-                        ownertxt = instance.owner()
-                    table.cell(_("Owner"), ownertxt)
+                    table.cell(
+                        _("Owner"),
+                        HTMLWriter.render_i(_("builtin"))
+                        if instance.is_builtin()
+                        else instance.owner(),
+                    )
                     table.cell(_("Public"), _("yes") if instance.is_public() else _("no"))
                     table.cell(_("Hidden"), _("yes") if instance.is_hidden() else _("no"))
 
@@ -1547,7 +1546,7 @@ class ContactGroupChoice(DualListChoice):
 _T_OverridableContainerSpec = TypeVar("_T_OverridableContainerSpec", bound=OverridableContainerSpec)
 
 
-class OverridableContainer(Overridable[_T_OverridableContainerSpec]):
+class OverridableContainer(Overridable[_T_OverridableContainerSpec, _Self]):
     @classmethod
     def may_contain(cls, element_type_name: str) -> bool:
         raise NotImplementedError()
@@ -1669,7 +1668,7 @@ class OverridableContainer(Overridable[_T_OverridableContainerSpec]):
 _T_PageRendererSpec = TypeVar("_T_PageRendererSpec", bound=PageRendererSpec)
 
 
-class PageRenderer(OverridableContainer[_T_PageRendererSpec]):
+class PageRenderer(OverridableContainer[_T_PageRendererSpec, _Self]):
     # Stuff to be overridden by the implementation of actual page types
 
     # TODO: Das von graphs.py rauspfluecken. Also alles, was man
@@ -1887,7 +1886,7 @@ def page_menu_add_to_topics(added_type: str) -> List[PageMenuTopic]:
 #   '----------------------------------------------------------------------'
 
 
-class PagetypeTopics(Overridable[PagetypeTopicSpec]):
+class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
     @classmethod
     def type_name(cls):
         return "pagetype_topic"

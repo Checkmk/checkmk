@@ -20,9 +20,9 @@ $(LASSO)-int: $(LASSO_INTERMEDIATE_INSTALL)
 ifeq ($(filter sles%,$(DISTRO_CODE)),)
 $(LASSO_BUILD): $(LASSO_UNPACK)
 	cd $(LASSO_BUILD_DIR) \
-        && ./configure \
 	&& export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON3_MODULES_PYTHONPATH) \
 	&& export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON3_PYTHONPATH) \
+        && ./configure \
 	    --prefix=$(OMD_ROOT) \
 	    --disable-gtk-doc \
 	    --disable-java \

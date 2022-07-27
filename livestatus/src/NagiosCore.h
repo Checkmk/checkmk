@@ -102,6 +102,7 @@ public:
     size_t maxResponseSize() override;
     size_t maxCachedMessages() override;
 
+    Logger *loggerCore() override;
     Logger *loggerLivestatus() override;
     Logger *loggerRRD() override;
 

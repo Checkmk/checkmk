@@ -4,14 +4,21 @@
 // source code package.
 
 #include <algorithm>
+#include <chrono>
+#include <cstddef>
+#include <filesystem>
 #include <initializer_list>
 #include <map>
+#include <memory>
 #include <ostream>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "Column.h"
+#include "Logger.h"
+#include "Metric.h"
+#include "MonitoringCore.h"
 #include "Table.h"
 #include "TableColumns.h"
 #include "TableCommands.h"
@@ -35,11 +42,138 @@
 #include "TableStateHistory.h"
 #include "TableStatus.h"
 #include "TableTimeperiods.h"
+#include "Triggers.h"
 #include "gtest/gtest.h"
 
 #ifdef CMC
 #include "TableCachedStatehist.h"
+#include "User.h"
+#else
+#include "nagios.h"
+class User;
 #endif
+
+class DummyMonitoringCore : public MonitoringCore {
+    Host *find_host(const std::string & /*name*/) override { return {}; }
+    host *getHostByDesignation(const std::string & /*designation*/) override {
+        return {};
+    }
+    Service *find_service(
+        const std::string & /*host_name*/,
+        const std::string & /*service_description*/) override {
+        return {};
+    }
+    ContactGroup *find_contactgroup(const std::string & /*name*/) override {
+        return {};
+    }
+    const Contact *find_contact(const std::string & /*name*/) override {
+        return {};
+    }
+    std::unique_ptr<User> find_user(const std::string & /*name*/) override {
+        return {};
+    }
+
+    std::chrono::system_clock::time_point last_logfile_rotation() override {
+        return {};
+    }
+    std::chrono::system_clock::time_point last_config_change() override {
+        return {};
+    }
+    [[nodiscard]] size_t maxLinesPerLogFile() const override { return {}; }
+
+    [[nodiscard]] Command find_command(
+        const std::string & /*name*/) const override {
+        return {};
+    }
+    [[nodiscard]] std::vector<Command> commands() const override { return {}; }
+
+    std::vector<DowntimeData> downtimes(const Host * /*host*/) const override {
+        return {};
+    }
+    std::vector<DowntimeData> downtimes(
+        const Service * /*service*/) const override {
+        return {};
+    }
+    std::vector<CommentData> comments(const Host * /*host*/) const override {
+        return {};
+    }
+    std::vector<CommentData> comments(
+        const Service * /*service*/) const override {
+        return {};
+    }
+
+    bool mkeventdEnabled() override { return {}; }
+
+    [[nodiscard]] std::filesystem::path mkeventdSocketPath() const override {
+        return {};
+    }
+    [[nodiscard]] std::filesystem::path mkLogwatchPath() const override {
+        return {};
+    }
+    [[nodiscard]] std::filesystem::path mkInventoryPath() const override {
+        return {};
+    }
+    [[nodiscard]] std::filesystem::path structuredStatusPath() const override {
+        return {};
+    }
+    [[nodiscard]] std::filesystem::path robotMkHtmlLogPath() const override {
+        return {};
+    }
+    [[nodiscard]] std::filesystem::path crashReportPath() const override {
+        return {};
+    }
+    [[nodiscard]] std::filesystem::path licenseUsageHistoryPath()
+        const override {
+        return {};
+    };
+    [[nodiscard]] std::filesystem::path pnpPath() const override { return {}; }
+    [[nodiscard]] std::filesystem::path historyFilePath() const override {
+        return {};
+    }
+    [[nodiscard]] std::filesystem::path logArchivePath() const override {
+        return {};
+    }
+    [[nodiscard]] std::filesystem::path rrdcachedSocketPath() const override {
+        return {};
+    }
+
+    Encoding dataEncoding() override { return {}; }
+    size_t maxResponseSize() override { return {}; }
+    size_t maxCachedMessages() override { return {}; }
+
+    Logger *loggerCore() override { return Logger::getLogger("test"); }
+    Logger *loggerLivestatus() override { return {}; }
+    Logger *loggerRRD() override { return {}; }
+
+    Triggers &triggers() override { return triggers_; }
+
+    size_t numQueuedNotifications() override { return {}; }
+    size_t numQueuedAlerts() override { return {}; }
+    size_t numCachedLogMessages() override { return {}; }
+
+    Attributes customAttributes(const void * /*holder*/,
+                                AttributeKind /*kind*/) const override {
+        return {};
+    }
+
+    [[nodiscard]] MetricLocation metricLocation(
+        const std::string & /*host_name*/,
+        const std::string & /*service_description*/,
+        const Metric::Name & /*var*/) const override {
+        return {};
+    }
+    [[nodiscard]] bool pnp4nagiosEnabled() const override { return {}; }
+
+private:
+    Triggers triggers_;
+
+    [[nodiscard]] void *implInternal() const override { return {}; }
+};
+
+struct ColumnNamesAndTypesTest : public ::testing::Test {
+protected:
+    DummyMonitoringCore mc_;
+};
 
 using ColumnDefinition = std::pair<std::string, ColumnType>;
 
@@ -139,9 +273,9 @@ static ColumnDefinitions all_state_history_columns() {
 }
 
 #ifdef CMC
-TEST(TableCachedStatehist, ColumnNamesAndTypes) {
+TEST_F(ColumnNamesAndTypesTest, TableCachedStatehist) {
     EXPECT_EQ(all_state_history_columns(),
-              ColumnDefinitions(TableCachedStatehist{nullptr}));
+              ColumnDefinitions(TableCachedStatehist{&mc_}));
 }
 #endif
 
@@ -154,9 +288,9 @@ static ColumnDefinitions columns_columns() {
     };
 }
 
-TEST(TableColumns, ColumnNamesAndTypes) {
+TEST_F(ColumnNamesAndTypesTest, TableColumns) {
     EXPECT_EQ(columns_columns(),  //
-              ColumnDefinitions(TableColumns{nullptr}));
+              ColumnDefinitions(TableColumns{&mc_}));
 }
 
 static ColumnDefinitions commands_columns() {
@@ -166,9 +300,9 @@ static ColumnDefinitions commands_columns() {
     };
 }
 
-TEST(TableCommands, ColumnNamesAndTypes) {
+TEST_F(ColumnNamesAndTypesTest, TableCommands) {
     EXPECT_EQ(commands_columns(),  //
-              ColumnDefinitions(TableCommands{nullptr}));
+              ColumnDefinitions(TableCommands{&mc_}));
 }
 
 static ColumnDefinitions comments_columns() {
@@ -187,11 +321,11 @@ static ColumnDefinitions comments_columns() {
     };
 }
 
-TEST(TableComments, ColumnNamesAndTypes) {
+TEST_F(ColumnNamesAndTypesTest, TableComments) {
     EXPECT_EQ(comments_columns() +                 //
                   "host_" / all_hosts_columns() +  //
                   "service_" / all_services_columns(),
-              ColumnDefinitions(TableComments{nullptr}));
+              ColumnDefinitions(TableComments{&mc_}));
 }
 
 static ColumnDefinitions contact_groups_columns() {
@@ -202,9 +336,9 @@ static ColumnDefinitions contact_groups_columns() {
     };
 }
 
-TEST(TableContactGroups, ColumnNamesAndTypes) {
+TEST_F(ColumnNamesAndTypesTest, TableContactGroups) {
     EXPECT_EQ(contact_groups_columns(),
-              ColumnDefinitions(TableContactGroups{nullptr}));
+              ColumnDefinitions(TableContactGroups{&mc_}));
 }
 
 static ColumnDefinitions contacts_columns() {
@@ -243,9 +377,9 @@ static ColumnDefinitions contacts_columns() {
     };
 }
 
-TEST(TableContacts, ColumnNamesAndTypes) {
+TEST_F(ColumnNamesAndTypesTest, TableContacts) {
     EXPECT_EQ(contacts_columns(),  //
-              ColumnDefinitions(TableContacts{nullptr}));
+              ColumnDefinitions(TableContacts{&mc_}));
 }
 
 static ColumnDefinitions crash_reports_columns() {
@@ -255,9 +389,9 @@ static ColumnDefinitions crash_reports_columns() {
     };
 }
 
-TEST(TableCrashReports, ColumnNamesAndTypes) {
+TEST_F(ColumnNamesAndTypesTest, TableCrashReports) {
     EXPECT_EQ(crash_reports_columns(),
-              ColumnDefinitions(TableCrashReports{nullptr}));
+              ColumnDefinitions(TableCrashReports{&mc_}));
 }
 
 static ColumnDefinitions downtimes_columns() {
@@ -279,11 +413,11 @@ static ColumnDefinitions downtimes_columns() {
     };
 }
 
-TEST(TableDowntimes, ColumnNamesAndTypes) {
+TEST_F(ColumnNamesAndTypesTest, TableDowntimes) {
     EXPECT_EQ(downtimes_columns() +                //
                   "host_" / all_hosts_columns() +  //
                   "service_" / all_services_columns(),
-              ColumnDefinitions(TableDowntimes{nullptr}));
+              ColumnDefinitions(TableDowntimes{&mc_}));
 }
 
 static ColumnDefinitions event_console_events_columns() {
@@ -316,10 +450,10 @@ static ColumnDefinitions event_console_events_columns() {
     };
 }
 
-TEST(TableEventConsoleEvents, ColumnNamesAndTypes) {
+TEST_F(ColumnNamesAndTypesTest, TableEventConsoleEvents) {
     EXPECT_EQ(event_console_events_columns() +  //
                   "host_" / all_hosts_columns(),
-              ColumnDefinitions(TableEventConsoleEvents{nullptr}));
+              ColumnDefinitions(TableEventConsoleEvents{&mc_}));
 }
 
 static ColumnDefinitions event_console_history_columns() {
@@ -332,11 +466,11 @@ static ColumnDefinitions event_console_history_columns() {
     };
 }
 
-TEST(TableEventConsoleHistory, ColumnNamesAndTypes) {
+TEST_F(ColumnNamesAndTypesTest, TableEventConsoleHistory) {
     EXPECT_EQ(event_console_history_columns() +     //
                   event_console_events_columns() +  //
                   "host_" / all_hosts_columns(),
-              ColumnDefinitions(TableEventConsoleHistory{nullptr}));
+              ColumnDefinitions(TableEventConsoleHistory{&mc_}));
 }
 
 static ColumnDefinitions event_console_rules_columns() {
@@ -346,9 +480,9 @@ static ColumnDefinitions event_console_rules_columns() {
     };
 }
 
-TEST(TableEventConsoleRules, ColumnNamesAndTypes) {
+TEST_F(ColumnNamesAndTypesTest, TableEventConsoleRules) {
     EXPECT_EQ(event_console_rules_columns(),
-              ColumnDefinitions(TableEventConsoleRules{nullptr}));
+              ColumnDefinitions(TableEventConsoleRules{&mc_}));
 }
 
 // Why on earth do all column names have a "status_" prefix here?
@@ -393,9 +527,9 @@ static ColumnDefinitions event_console_status_columns() {
     };
 }
 
-TEST(TableEventConsoleStatus, ColumnNamesAndTypes) {
+TEST_F(ColumnNamesAndTypesTest, TableEventConsoleStatus) {
     EXPECT_EQ(event_console_status_columns(),
-              ColumnDefinitions(TableEventConsoleStatus{nullptr}));
+              ColumnDefinitions(TableEventConsoleStatus{&mc_}));
 }
 
 static ColumnDefinitions service_groups_columns() {
@@ -438,10 +572,10 @@ static ColumnDefinitions host_groups_columns() {
     };
 }
 
-TEST(TableHostGroups, ColumnNamesAndTypes) {
+TEST_F(ColumnNamesAndTypesTest, TableHostGroups) {
     EXPECT_EQ(host_groups_columns() +  //
                   service_groups_columns(),
-              ColumnDefinitions(TableHostGroups{nullptr}));
+              ColumnDefinitions(TableHostGroups{&mc_}));
 }
 
 static ColumnDefinitions hosts_and_services_columns() {
@@ -587,16 +721,16 @@ static ColumnDefinitions hosts_columns() {
     };
 }
 
-TEST(TableHosts, ColumnNamesAndTypes) {
+TEST_F(ColumnNamesAndTypesTest, TableHosts) {
     EXPECT_EQ(all_hosts_columns(),  //
-              ColumnDefinitions(TableHosts{nullptr}));
+              ColumnDefinitions(TableHosts{&mc_}));
 }
 
-TEST(TableHostsByGroup, ColumnNamesAndTypes) {
+TEST_F(ColumnNamesAndTypesTest, TableHostsByGroup) {
     EXPECT_EQ(all_hosts_columns() +  //
                   "hostgroup_" / host_groups_columns() +
                   "hostgroup_" / service_groups_columns(),
-              ColumnDefinitions(TableHostsByGroup{nullptr}));
+              ColumnDefinitions(TableHostsByGroup{&mc_}));
 }
 
 static ColumnDefinitions log_columns() {
@@ -621,18 +755,18 @@ static ColumnDefinitions log_columns() {
     };
 }
 
-TEST(TableLog, ColumnNamesAndTypes) {
+TEST_F(ColumnNamesAndTypesTest, TableLog) {
     EXPECT_EQ(log_columns() +  //
                   "current_host_" / all_hosts_columns() +
                   "current_service_" / all_services_columns() +
                   "current_contact_" / contacts_columns() +
                   "current_command_" / commands_columns(),
-              ColumnDefinitions(TableLog{nullptr, nullptr}));
+              ColumnDefinitions(TableLog{&mc_, nullptr}));
 }
 
-TEST(TableServiceGroups, ColumnNamesAndTypes) {
+TEST_F(ColumnNamesAndTypesTest, TableServiceGroups) {
     EXPECT_EQ(service_groups_columns(),
-              ColumnDefinitions(TableServiceGroups{nullptr}));
+              ColumnDefinitions(TableServiceGroups{&mc_}));
 }
 
 static ColumnDefinitions services_columns() {
@@ -655,25 +789,25 @@ static ColumnDefinitions services_columns() {
     };
 }
 
-TEST(TableServices, ColumnNamesAndTypes) {
+TEST_F(ColumnNamesAndTypesTest, TableServices) {
     EXPECT_EQ(all_services_columns() +  //
                   "host_" / all_hosts_columns(),
-              ColumnDefinitions(TableServices{nullptr}));
+              ColumnDefinitions(TableServices{&mc_}));
 }
 
-TEST(TableServicesByGroup, ColumnNamesAndTypes) {
+TEST_F(ColumnNamesAndTypesTest, TableServicesByGroup) {
     EXPECT_EQ(all_services_columns() +  //
                   "host_" / all_hosts_columns() +
                   "servicegroup_" / service_groups_columns(),
-              ColumnDefinitions(TableServicesByGroup{nullptr}));
+              ColumnDefinitions(TableServicesByGroup{&mc_}));
 }
 
-TEST(TableServicesByHostGroup, ColumnNamesAndTypes) {
+TEST_F(ColumnNamesAndTypesTest, TableServicesByHostGroup) {
     EXPECT_EQ(all_services_columns() +  //
                   "host_" / all_hosts_columns() +
                   "hostgroup_" / host_groups_columns() +
                   "hostgroup_" / service_groups_columns(),
-              ColumnDefinitions(TableServicesByHostGroup{nullptr}));
+              ColumnDefinitions(TableServicesByHostGroup{&mc_}));
 }
 
 static ColumnDefinitions state_history_columns() {
@@ -711,9 +845,9 @@ static ColumnDefinitions state_history_columns() {
     };
 }
 
-TEST(TableStateHistory, ColumnNamesAndTypes) {
+TEST_F(ColumnNamesAndTypesTest, TableStateHistory) {
     EXPECT_EQ(all_state_history_columns(),
-              ColumnDefinitions(TableStateHistory{nullptr, nullptr}));
+              ColumnDefinitions(TableStateHistory{&mc_, nullptr}));
 }
 
 static ColumnDefinitions status_columns() {
@@ -790,9 +924,9 @@ static ColumnDefinitions status_columns() {
     };
 }
 
-TEST(TableStatus, ColumnNamesAndTypes) {
+TEST_F(ColumnNamesAndTypesTest, TableStatus) {
     EXPECT_EQ(status_columns(),  //
-              ColumnDefinitions(TableStatus{nullptr}));
+              ColumnDefinitions(TableStatus{&mc_}));
 }
 
 static ColumnDefinitions timeperiods_columns() {
@@ -807,7 +941,6 @@ static ColumnDefinitions timeperiods_columns() {
     };
 }
 
-TEST(TableTimeperiods, ColumnNamesAndTypes) {
-    EXPECT_EQ(timeperiods_columns(),
-              ColumnDefinitions(TableTimeperiods{nullptr}));
+TEST_F(ColumnNamesAndTypesTest, TableTimeperiods) {
+    EXPECT_EQ(timeperiods_columns(), ColumnDefinitions(TableTimeperiods{&mc_}));
 }

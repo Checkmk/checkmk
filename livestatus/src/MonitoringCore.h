@@ -121,6 +121,7 @@ public:
     virtual size_t maxResponseSize() = 0;
     virtual size_t maxCachedMessages() = 0;
 
+    virtual Logger *loggerCore() = 0;
     virtual Logger *loggerLivestatus() = 0;
     virtual Logger *loggerRRD() = 0;
 

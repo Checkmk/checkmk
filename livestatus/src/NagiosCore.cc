@@ -190,9 +190,9 @@ Encoding NagiosCore::dataEncoding() { return _data_encoding; }
 size_t NagiosCore::maxResponseSize() { return _limits._max_response_size; }
 size_t NagiosCore::maxCachedMessages() { return _limits._max_cached_messages; }
 
+Logger *NagiosCore::loggerCore() { return _logger_livestatus; }
 Logger *NagiosCore::loggerLivestatus() { return _logger_livestatus; }
-
-Logger *NagiosCore::loggerRRD() { return loggerLivestatus(); }
+Logger *NagiosCore::loggerRRD() { return _logger_livestatus; }
 
 Triggers &NagiosCore::triggers() { return _triggers; }
 

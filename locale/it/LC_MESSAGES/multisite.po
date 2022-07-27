@@ -17734,6 +17734,22 @@ msgstr "Eventi: Struttura Syslog"
 msgid "Every day"
 msgstr "Ogni giorno"
 
+msgid ""
+"Every time the plugin is executed, it gathers all relevant messages since "
+"its last execution. It then puts these messages in a bundle and stores it on "
+"disk. All bundles that have been created within this <i>retention period</i> "
+"are output and sent to the monitoring site. The monitoring site will keep "
+"track of the bundles, and only process the ones it has not seen before. This "
+"prevents messages from being lost if the transmitted agent output is not "
+"processed in the context of a check cycle (for instance during discovery or "
+"when pulling via <tt>cmk -d my_host</tt>).\n"
+"\n"
+"It is recommended to set it at least to the check interval (which is 60 "
+"seconds by default). Note that if you set this to <i>N</i> times the check "
+"intervall, the amount of data sent will be about <i>N</i> times as much (not "
+"taking into account the compression by the agent controller)."
+msgstr ""
+
 msgid "Every week on..."
 msgstr "Ogni settimana su..."
 
@@ -39438,6 +39454,10 @@ msgid "Retention intervals for HW/SW inventory entities"
 msgstr "Intervalli di conservazione per le entità dell'inventario HW/SW"
 
 #, fuzzy
+msgid "Retention period"
+msgstr "Periodo di notifica del servizio"
+
+#, fuzzy
 msgid "Retrieve information about the following partitions"
 msgstr "Crea una notifica con i seguenti parametri"
 
@@ -46656,11 +46676,6 @@ msgstr ""
 "una per nome di vista. Se si crea una vista che ha lo stesso nome di una "
 "vista integrata, allora la vostra vista la sovrascriverà (shadowing)."
 
-msgid ""
-"The IP of the other hostname needs to be the same IP as the host address"
-msgstr ""
-"L'IP dell'altro hostname deve essere lo stesso IP dell'indirizzo dell'host"
-
 msgid "The Index of the Overcurrent Protector"
 msgstr "L'indice del protettore di sovracorrente"
 
@@ -50422,6 +50437,10 @@ msgstr "Il valore di %s deve essere tra %d e %d"
 #, fuzzy
 msgid "The value is not of type dict."
 msgstr "Il valore deve essere di tipo dict, ma ha il tipo %s"
+
+#, fuzzy, python-format
+msgid "The value is not valid: '%s'"
+msgstr "Il valore di questa regola non è valido. "
 
 #, python-format
 msgid "The value must be of type dict, but it has type %s"
@@ -57504,6 +57523,10 @@ msgstr ""
 
 msgid "Use a custom check plugin..."
 msgstr "Usa un plugin di controllo personalizzato..."
+
+#, fuzzy
+msgid "Use a custom name for the SSL certificate validation"
+msgstr "Disattivare la convalida del certificato SSL"
 
 msgid "Use a namespace prefix"
 msgstr "Utilizzare un prefisso dello spazio dei nomi"
@@ -65138,6 +65161,11 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#~ msgid ""
+#~ "The IP of the other hostname needs to be the same IP as the host address"
+#~ msgstr ""
+#~ "L'IP dell'altro hostname deve essere lo stesso IP dell'indirizzo dell'host"
 
 #~ msgid "SAP value discovery"
 #~ msgstr "Scoperta del valore SAP"

@@ -16782,6 +16782,22 @@ msgstr "イベント:Syslogファシリティ"
 msgid "Every day"
 msgstr "毎日"
 
+msgid ""
+"Every time the plugin is executed, it gathers all relevant messages since "
+"its last execution. It then puts these messages in a bundle and stores it on "
+"disk. All bundles that have been created within this <i>retention period</i> "
+"are output and sent to the monitoring site. The monitoring site will keep "
+"track of the bundles, and only process the ones it has not seen before. This "
+"prevents messages from being lost if the transmitted agent output is not "
+"processed in the context of a check cycle (for instance during discovery or "
+"when pulling via <tt>cmk -d my_host</tt>).\n"
+"\n"
+"It is recommended to set it at least to the check interval (which is 60 "
+"seconds by default). Note that if you set this to <i>N</i> times the check "
+"intervall, the amount of data sent will be about <i>N</i> times as much (not "
+"taking into account the compression by the agent controller)."
+msgstr ""
+
 msgid "Every week on..."
 msgstr "毎週..."
 
@@ -37213,6 +37229,10 @@ msgstr "保有メッセージ"
 msgid "Retention intervals for HW/SW inventory entities"
 msgstr ""
 
+#, fuzzy
+msgid "Retention period"
+msgstr "サービス通知期間"
+
 msgid "Retrieve information about the following partitions"
 msgstr "次のパーティションに関する情報を取得する"
 
@@ -44025,10 +44045,6 @@ msgstr ""
 "名を持つビューを作成すると、ビューはそれをオーバーライドします(シャドウ処理し"
 "ます)。"
 
-msgid ""
-"The IP of the other hostname needs to be the same IP as the host address"
-msgstr "他のホスト名のIPは、ホストアドレスと同じIPである必要があります"
-
 msgid "The Index of the Overcurrent Protector"
 msgstr "過電流プロテクターのインデックス"
 
@@ -47352,6 +47368,10 @@ msgstr "%sの値は%dから%dの間でなければなりません"
 
 msgid "The value is not of type dict."
 msgstr "値がdict型ではありません。"
+
+#, fuzzy, python-format
+msgid "The value is not valid: '%s'"
+msgstr "このルールの値は無効です。 "
 
 #, python-format
 msgid "The value must be of type dict, but it has type %s"
@@ -53775,6 +53795,10 @@ msgstr ""
 
 msgid "Use a custom check plugin..."
 msgstr "カスタムチェックプラグインを使用してください…"
+
+#, fuzzy
+msgid "Use a custom name for the SSL certificate validation"
+msgstr "SSL証明書の検証を無効にする"
 
 msgid "Use a namespace prefix"
 msgstr "名前空間プレフィックスを使用する"
@@ -60802,6 +60826,10 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid ""
+#~ "The IP of the other hostname needs to be the same IP as the host address"
+#~ msgstr "他のホスト名のIPは、ホストアドレスと同じIPである必要があります"
 
 #~ msgid "SAP value discovery"
 #~ msgstr "SAPの価値発見"

@@ -17441,6 +17441,22 @@ msgstr "Gebeurtenissen: Syslog faciliteit"
 msgid "Every day"
 msgstr "Elke dag."
 
+msgid ""
+"Every time the plugin is executed, it gathers all relevant messages since "
+"its last execution. It then puts these messages in a bundle and stores it on "
+"disk. All bundles that have been created within this <i>retention period</i> "
+"are output and sent to the monitoring site. The monitoring site will keep "
+"track of the bundles, and only process the ones it has not seen before. This "
+"prevents messages from being lost if the transmitted agent output is not "
+"processed in the context of a check cycle (for instance during discovery or "
+"when pulling via <tt>cmk -d my_host</tt>).\n"
+"\n"
+"It is recommended to set it at least to the check interval (which is 60 "
+"seconds by default). Note that if you set this to <i>N</i> times the check "
+"intervall, the amount of data sent will be about <i>N</i> times as much (not "
+"taking into account the compression by the agent controller)."
+msgstr ""
+
 msgid "Every week on..."
 msgstr "Elke week op..."
 
@@ -38711,6 +38727,10 @@ msgstr "Behouden berichten"
 msgid "Retention intervals for HW/SW inventory entities"
 msgstr "Bewaartermijnen voor HW/SW-inventarisentiteiten"
 
+#, fuzzy
+msgid "Retention period"
+msgstr "Kennisgevingsperiode voor de dienst"
+
 msgid "Retrieve information about the following partitions"
 msgstr "Informatie opvragen over de volgende partities"
 
@@ -45827,10 +45847,6 @@ msgstr ""
 "heeft als een ingebouwde view, dan zal jouw view deze overschrijven "
 "(shadowing)."
 
-msgid ""
-"The IP of the other hostname needs to be the same IP as the host address"
-msgstr "Het IP van de andere hostnaam moet hetzelfde IP zijn als het hostadres"
-
 msgid "The Index of the Overcurrent Protector"
 msgstr "De Index van de Overstroom Beveiliger"
 
@@ -49577,6 +49593,10 @@ msgstr "De waarde voor %s moet tussen %d en %d liggen"
 
 msgid "The value is not of type dict."
 msgstr "De waarde is niet van het type dict."
+
+#, fuzzy, python-format
+msgid "The value is not valid: '%s'"
+msgstr "De waarde van deze regel is niet geldig. "
 
 #, python-format
 msgid "The value must be of type dict, but it has type %s"
@@ -56575,6 +56595,10 @@ msgstr ""
 
 msgid "Use a custom check plugin..."
 msgstr "Gebruik een aangepaste controle plugin..."
+
+#, fuzzy
+msgid "Use a custom name for the SSL certificate validation"
+msgstr "Uitschakelen SSL-certificaat validatie"
 
 msgid "Use a namespace prefix"
 msgstr "Gebruik een namespace voorvoegsel"
@@ -64136,6 +64160,11 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid ""
+#~ "The IP of the other hostname needs to be the same IP as the host address"
+#~ msgstr ""
+#~ "Het IP van de andere hostnaam moet hetzelfde IP zijn als het hostadres"
 
 #~ msgid "SAP value discovery"
 #~ msgstr "SAP-waarde ontdekking"

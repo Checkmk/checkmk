@@ -21,11 +21,14 @@ ifeq ($(filter sles%,$(DISTRO_CODE)),)
 $(LASSO_BUILD): $(LASSO_UNPACK)
 	cd $(LASSO_BUILD_DIR) \
         && ./configure \
+	&& export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON3_MODULES_PYTHONPATH) \
+	&& export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON3_PYTHONPATH) \
 	    --prefix=$(OMD_ROOT) \
 	    --disable-gtk-doc \
 	    --disable-java \
 	    --disable-perl \
 	    --enable-static-linking \
+	    --with-python=$(PACKAGE_PYTHON3_EXECUTABLE) \
 	&& $(MAKE)
 	$(TOUCH) $@
 else
@@ -37,6 +40,8 @@ endif
 $(LASSO_INTERMEDIATE_INSTALL): $(LASSO_BUILD)
 ifeq ($(filter sles%,$(DISTRO_CODE)),)
 	$(MKDIR) $(INTERMEDIATE_INSTALL_BASE)/$(LASSO_DIR)
+	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON3_MODULES_PYTHONPATH) \
+	&& export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON3_PYTHONPATH) \
 	$(MAKE) DESTDIR=$(INTERMEDIATE_INSTALL_BASE)/$(LASSO_DIR) -C $(LASSO_BUILD_DIR) install
 endif
 	$(TOUCH) $@

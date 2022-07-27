@@ -1,0 +1,15 @@
+Title: Meinberg fan state status is fixed
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1659617174
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p10
+
+The meinberg fan status used to be shown as off when it was turned on.
+The fan status is now parsed according to the MIB [1].
+
+[1] https://www.circitor.fr/Mibs/Html/M/MBG-SNMP-LTNG-MIB.php#mbgLtNgSysFanStatus

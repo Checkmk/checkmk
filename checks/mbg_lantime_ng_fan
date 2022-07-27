@@ -15,8 +15,8 @@ def parse_mbg_lantime_ng_fan(info):
     parsed = {}
     fan_states = {
         "0": (3, "not available"),
-        "1": (0, "on"),
-        "2": (2, "off"),
+        "1": (2, "off"),
+        "2": (0, "on"),
     }
     fan_errors = {
         "0": (0, "not available"),

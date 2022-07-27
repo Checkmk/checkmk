@@ -17,9 +17,9 @@ discovery = {'': [('1', {}), ('2', {}), ('4', {}), ('5', {})]}
 
 checks = {
     '': [
-        ('1', {}, [(2, 'Status: off', []), (0, 'Errors: no', [])]),
-        ('2', {}, [(2, 'Status: off', []), (0, 'Errors: no', [])]),
-        ('4', {}, [(2, 'Status: off', []), (0, 'Errors: no', [])]),
-        ('5', {}, [(2, 'Status: off', []), (3, 'Errors: not available', [])])
+        ('1', {}, [(0, 'Status: on', []), (0, 'Errors: no', [])]),
+        ('2', {}, [(0, 'Status: on', []), (0, 'Errors: no', [])]),
+        ('4', {}, [(0, 'Status: on', []), (0, 'Errors: no', [])]),
+        ('5', {}, [(0, 'Status: on', []), (3, 'Errors: not available', [])])
     ]
 }

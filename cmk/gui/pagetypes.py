@@ -822,13 +822,6 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         return None
 
     @classmethod
-    def find_my_page(cls, name: str) -> _Self | None:
-        for page in cls.instances():
-            if page.is_mine() and page.name() == name:
-                return page
-        return None
-
-    @classmethod
     def find_foreign_page(cls, owner: UserId, name: str) -> _Self | None:
         try:
             return cls.instance((owner, name))
@@ -885,7 +878,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         return spec
 
     @classmethod
-    def _declare_instance_permissions(cls):
+    def _declare_instance_permissions(cls) -> None:
         for instance in cls.instances():
             if instance.is_public():
                 cls.declare_permission(instance)
@@ -904,10 +897,10 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         save_user_file("user_%ss" % cls.type_name(), save_dict, owner)
 
     @classmethod
-    def add_page(cls, new_page):
+    def add_page(cls, new_page: _Self) -> None:
         cls.add_instance((new_page.owner(), new_page.name()), new_page)
 
-    def clone(self):
+    def clone(self: _Self) -> _Self:
         page_dict = self._.copy()
         page_dict["owner"] = str(user.id) if user.id else ""
         new_page = self.__class__(page_dict)
@@ -915,7 +908,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         return new_page
 
     @classmethod
-    def declare_permission(cls, page):
+    def declare_permission(cls, page: _Self) -> None:
         permname = "%s.%s" % (cls.type_name(), page.name())
         if page.is_public() and permname not in permission_registry:
             permission_registry.register(
@@ -929,7 +922,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
             )
 
     @classmethod
-    def custom_list_buttons(cls, instance):
+    def custom_list_buttons(cls, instance: _Self) -> None:
         pass
 
     @classmethod
@@ -945,7 +938,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         return breadcrumb
 
     @classmethod
-    def page_list(cls):  # pylint: disable=too-many-branches
+    def page_list(cls) -> None:  # pylint: disable=too-many-branches
         cls.load()
 
         # custom_columns = []
@@ -1113,7 +1106,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         html.footer()
 
     @classmethod
-    def get_instances(cls):
+    def get_instances(cls) -> tuple[list[_Self], list[_Self], list[_Self]]:
         my_instances, foreign_instances, builtin_instances = [], [], []
 
         for instance in cls.instances_sorted():
@@ -1128,8 +1121,8 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         return my_instances, foreign_instances, builtin_instances
 
     @classmethod
-    def _bulk_delete_after_confirm(cls):
-        to_delete: List[Tuple[UserId, str]] = []
+    def _bulk_delete_after_confirm(cls) -> None:
+        to_delete: list[tuple[UserId, str]] = []
         for varname, _value in request.itervars(prefix="_c_"):
             if html.get_checkbox(varname):
                 raw_user, name = varname[3:].split("+")
@@ -1154,7 +1147,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
 
     # Page for editing an existing page, or creating a new one
     @classmethod
-    def page_edit(cls):  # pylint: disable=too-many-branches
+    def page_edit(cls: Type[_Self]) -> None:  # pylint: disable=too-many-branches
         back_url = request.get_url_input("back", cls.list_url())
 
         cls.load()
@@ -1287,7 +1280,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         html.footer()
 
     @classmethod
-    def reserved_unique_ids(cls) -> List:
+    def reserved_unique_ids(cls) -> list[str]:
         """Used to exclude names from choosing as unique ID, e.g. builtin names
         in sidebar snapins"""
         return []

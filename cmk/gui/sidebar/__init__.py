@@ -817,7 +817,7 @@ class CustomSnapins(pagetypes.Overridable[CustomSpaninsSpec, "CustomSnapins"]):
         return choices
 
     @classmethod
-    def reserved_unique_ids(cls) -> List[str]:
+    def reserved_unique_ids(cls) -> list[str]:
         return [k for k, v in snapin_registry.items() if not v.is_custom_snapin()]
 
 

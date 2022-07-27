@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mode for managing sites"""
 
+from __future__ import annotations
+
 import queue
 import socket
 import time
@@ -65,7 +67,7 @@ from cmk.gui.plugins.watolib.utils import (
 )
 from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site, site_is_local
 from cmk.gui.sites import SiteStatus
-from cmk.gui.table import table_element
+from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName, UserId
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
@@ -225,8 +227,11 @@ class ModeEditSite(WatoMode):
             return redirect(mode_url("sites"))
 
         vs = self._valuespec()
-        site_spec = vs.from_html_vars("site")
-        vs.validate_value(site_spec, "site")
+        raw_site_spec = vs.from_html_vars("site")
+        vs.validate_value(raw_site_spec, "site")
+        # As long as we can't parse the data, we need to cast here. We assume that validate_value
+        # validates the data structure good enough.
+        site_spec = cast(SiteConfiguration, raw_site_spec)
 
         # Extract the ID. It is not persisted in the site value
         if self._new:
@@ -239,7 +244,8 @@ class ModeEditSite(WatoMode):
         # Take over all unknown elements from existing site specs, like for
         # example, the replication secret
         for key, value in configured_sites.get(self._site_id, {}).items():
-            site_spec.setdefault(key, value)
+            # We need to review whether or not we still want to allow setting arbritrary keys
+            site_spec.setdefault(key, value)  # type: ignore[misc]
 
         self._site_mgmt.validate_configuration(self._site_id, site_spec, configured_sites)
 
@@ -274,13 +280,13 @@ class ModeEditSite(WatoMode):
     def page(self) -> None:
         html.begin_form("site")
 
-        self._valuespec().render_input("site", self._site)
+        self._valuespec().render_input("site", dict(self._site))
 
         forms.end()
         html.hidden_fields()
         html.end_form()
 
-    def _valuespec(self):
+    def _valuespec(self) -> Dictionary:
         basic_elements = self._basic_elements()
         livestatus_elements = self._livestatus_elements()
         replication_elements = self._replication_elements()
@@ -787,8 +793,8 @@ class ModeDistributedMonitoring(WatoMode):
 
         html.javascript("cmk.sites.fetch_site_status();")
 
-    def _show_buttons(self, table, site_id, site):
-        table.cell(_("Actions"), css="buttons")
+    def _show_buttons(self, table: Table, site_id: SiteId, site: SiteConfiguration) -> None:
+        table.cell(_("Actions"), css=["buttons"])
         edit_url = folder_preserving_link([("mode", "edit_site"), ("site", site_id)])
         html.icon_button(edit_url, _("Properties"), "edit")
 
@@ -816,22 +822,26 @@ class ModeDistributedMonitoring(WatoMode):
             title = _("Site specific global configuration")
             if has_site_globals:
                 icon = "site_globals_modified"
-                title += " (%s)" % (_("%d specific settings") % len(site.get("globals")))
+                title += " (%s)" % (_("%d specific settings") % len(site.get("globals", {})))
             else:
                 icon = "site_globals"
 
             html.icon_button(globals_url, title, icon)
 
-    def _show_basic_settings(self, table, site_id, site):
+    def _show_basic_settings(self, table: Table, site_id: SiteId, site: SiteConfiguration) -> None:
         table.cell(_("ID"), site_id)
         table.cell(_("Alias"), site.get("alias", ""))
 
-    def _show_status_connection_config(self, table, site_id, site):
+    def _show_status_connection_config(
+        self, table: Table, site_id: SiteId, site: SiteConfiguration
+    ) -> None:
         table.cell(_("Status connection"))
         vs_connection = self._site_mgmt.connection_method_valuespec()
         html.write_text(vs_connection.value_to_html(site["socket"]))
 
-    def _show_status_connection_status(self, table, site_id, site):
+    def _show_status_connection_status(
+        self, table: Table, site_id: SiteId, site: SiteConfiguration
+    ) -> None:
         table.cell("")
 
         encrypted_url = folder_preserving_link(
@@ -848,7 +858,9 @@ class ModeDistributedMonitoring(WatoMode):
         )
         html.close_div()
 
-    def _show_config_connection_config(self, table, site_id, site):
+    def _show_config_connection_config(
+        self, table: Table, site_id: SiteId, site: SiteConfiguration
+    ) -> None:
         table.cell(_("Configuration connection"))
         if not site["replication"]:
             html.write_text(_("Not enabled"))
@@ -863,7 +875,9 @@ class ModeDistributedMonitoring(WatoMode):
         if parts:
             html.write_text(" (%s)" % ", ".join(parts))
 
-    def _show_config_connection_status(self, table, site_id, site):
+    def _show_config_connection_status(
+        self, table: Table, site_id: SiteId, site: SiteConfiguration
+    ) -> None:
         table.cell("")
 
         if site["replication"]:
@@ -913,7 +927,10 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
         return site_states
 
     def _render_configuration_connection_status(
-        self, site_id, site, replication_status
+        self,
+        site_id: SiteId,
+        site: SiteConfiguration,
+        replication_status: Mapping[SiteId, ReplicationStatus],
     ) -> str | HTML:
         """Check whether or not the replication connection is possible.
 
@@ -928,12 +945,14 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
 
         status = replication_status[site_id]
         if status.success:
+            assert not isinstance(status.response, Exception)
             icon = "success"
             msg = _("Online (Version: %s, Edition: %s)") % (
                 status.response.version,
                 status.response.edition,
             )
         else:
+            assert isinstance(status.response, Exception)
             icon = "failed"
             msg = "%s" % status.response
 
@@ -941,7 +960,7 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
             msg, style="vertical-align:middle"
         )
 
-    def _render_status_connection_status(self, site_id, site) -> HTML:
+    def _render_status_connection_status(self, site_id: SiteId, site: SiteConfiguration) -> HTML:
         site_status: SiteStatus = cmk.gui.sites.states().get(site_id, SiteStatus({}))
         if site.get("disabled", False) is True:
             status = status_msg = "disabled"
@@ -1011,7 +1030,12 @@ class ReplicationStatusFetcher:
         self._logger.debug("Got results")
         return results_by_site
 
-    def _fetch_for_site(self, site_id, site, result_queue):
+    def _fetch_for_site(
+        self,
+        site_id: SiteId,
+        site: SiteConfiguration,
+        result_queue: JoinableQueue[ReplicationStatus],
+    ) -> None:
         """Executes the tests on the site. This method is executed in a dedicated
         subprocess (One per site)"""
         self._logger.debug("[%s] Starting" % site_id)
@@ -1047,7 +1071,8 @@ class ReplicationStatusFetcher:
                 response=e,
             )
         finally:
-            result_queue.put(result)
+            if result:
+                result_queue.put(result)
             result_queue.close()
             result_queue.join_thread()
             result_queue.join()
@@ -1210,7 +1235,7 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeEditSiteGlobals
 
-    def _from_vars(self):
+    def _from_vars(self) -> None:
         super()._from_vars()
         self._site_id = SiteId(request.get_ascii_input_mandatory("site"))
         if self._site_id:
@@ -1226,15 +1251,15 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
     def title(self) -> str:
         return _("Site-specific global configuration for %s") % self._site_id
 
-    def _affected_sites(self):
+    def _affected_sites(self) -> list[SiteId]:
         return [self._site_id]
 
-    def _save(self):
+    def _save(self) -> None:
         SiteManagementFactory().factory().save_sites(self._configured_sites, activate=False)
         if self._site_id == omd_site():
             save_site_global_settings(self._current_settings)
 
-    def _show_global_setting(self):
+    def _show_global_setting(self) -> None:
         forms.section(_("Global setting"))
         html.write_text(self._valuespec.value_to_html(self._global_settings[self._varname]))
 
@@ -1411,7 +1436,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
                     css=[self._cert_trusted_css_class(cert_detail)],
                 )
 
-    def _render_cert_trusted(self, cert) -> str:
+    def _render_cert_trusted(self, cert: CertificateDetails) -> str:
         if cert.verify_result.is_valid:
             return _("Yes")
 
@@ -1421,7 +1446,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
             cert.verify_result.error_depth,
         )
 
-    def _cert_trusted_css_class(self, cert) -> str:
+    def _cert_trusted_css_class(self, cert: CertificateDetails) -> str:
         return "state state0" if cert.verify_result.is_valid else "state state2"
 
     def _fetch_certificate_details(self) -> Iterable[CertificateDetails]:

@@ -321,7 +321,7 @@ class SiteManagement:
         return sites
 
     @classmethod
-    def save_sites(cls, sites: SiteConfigurations, activate=True):  # type:ignore[no-untyped-def]
+    def save_sites(cls, sites: SiteConfigurations, activate: bool = True) -> None:
         # TODO: Clean this up
         from cmk.gui.watolib.hosts_and_folders import Folder
 

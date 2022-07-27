@@ -15,9 +15,7 @@ __version__ = "2.2.0i1"
 import datetime
 import sys
 import time
-
-# Bandit complains about insecure protocol (B321). THis is the only possible protocol. Allow it.
-from ftplib import FTP  # nosec
+from ftplib import FTP  # nosec B402 # BNS:97f639
 
 try:
     from typing import Any, List
@@ -92,8 +90,7 @@ for domain, p in domains.items():
             output.append("%s 4" % domain)  # Backup nicht konfiguriert
             continue
 
-        # Bandit complains about insecure protocol (B321). THis is the only possible protocol. Allow it.
-        ftp = FTP(  # nosec
+        ftp = FTP(  # nosec B321 # BNS:97f639
             p["backup_ftp_settinghost"],
             p["backup_ftp_settinglogin"],
             p["backup_ftp_settingpassword"],

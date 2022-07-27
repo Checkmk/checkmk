@@ -45,12 +45,13 @@ def main(job_definition_file) {
     // FIXME: should be defined elsewhere
     DOCKER_TAG_FOLDER = "master-latest";
 
+    def notify = load("${checkout_dir}/buildscripts/scripts/utils/notify.groovy");
     try {
         load("${checkout_dir}/${job_definition_file}").main();
     } catch(Exception e) {
         // sh("figlet ERROR");
         dir("${checkout_dir}") {
-            load("${checkout_dir}/buildscripts/scripts/utils/notify.groovy").notify_error(e);
+            notify.notify_error(e);
         }
     }
 }

@@ -1,4 +1,4 @@
-Title: lnx_if_sys_class_net: new agent and section plugin for network interfaces
+Title: lnx_container_host_if: new agent and section plugin for network interfaces
 Class: feature
 Compatible: compat
 Component: checks
@@ -11,7 +11,7 @@ Version: 2.2.0i1
 We have added a new agent plugin and corresponding section plugin to monitor
 network interfaces. These plugins provide essentially the same information as
 the section <tt>lnx_if</tt>, which is a Checkmk agent section, and are an
-alternative: if both sections are provided, only <tt>lnx_if_sys_class_net</tt>
+alternative: if both sections are provided, only <tt>lnx_container_host_if</tt>
 is considered.
 Note that this agent plugin is not supported by the agent bakery.
 

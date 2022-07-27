@@ -5,8 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: This agent plugin has been developed primarily for the Kubernetes use
-# case (more details, see function definition). For this reason, it is not
-# supported by the agent bakery.
+# case (more details, see function definition). For this reason, it is
+# NOT supported by the agent bakery.
 
 # Reason for this no-op: shellcheck disable=... before the first command disables the error for the
 # entire script.
@@ -15,7 +15,7 @@
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
 CMK_VERSION="2.2.0i1"
-CONFIG_FILE="${MK_CONFDIR}/lnx_if_sys_class_net.cfg"
+CONFIG_FILE="${MK_CONFDIR}/lnx_container_host_if.cfg"
 
 __read_network_interface_files() {
 
@@ -28,24 +28,22 @@ __read_network_interface_files() {
 
 }
 
-section_lnx_if_sys_class_net() {
+section_lnx_container_host_if() {
 
     # This section essentially provides the same information as lnx_if, therefore
     # only one of these sections should be used. It is recommended to use lnx_if
     # (default in Checkmk).
 
     # lnx_if obtains its data from /proc/net/dev, this section obtains it from
-    # /sys/class/net. The difference is that /proc/net/dev is a virtual filesystem
-    # and issues commands to the kernel, while /sys/class/net is a more static,
-    # file-based view of network interfaces.
+    # /sys/class/net.
 
     # Use case: Kubernetes: The Checkmk agent runs inside a container on the
     # Kubernetes cluster but aims to collect information of the underlying node.
     # The node can be a real server, a VM, or a cloud server instance.
     # /proc/net/dev only shows interfaces of the host namespace (in this case
-    # the container). Since files in /sys/class/net are real files, they are mounted
-    # from the node into the container and provide network information of the node in
-    # this way. Note that agent sections are sourced and run selectively, the lnx_if
+    # the container). Instead, the files in /sys/class/net are mounted from the
+    # node into the container and provide network information of the node in this
+    # way. Note that agent sections are sourced and run selectively, the lnx_if
     # section is therefore excluded.
 
     # HOST_PATH_PREFIX: This environment variable is used to provide a way to
@@ -60,7 +58,7 @@ section_lnx_if_sys_class_net() {
     network_interface_rx_stats="rx_bytes rx_packets rx_errors rx_dropped multicast"
     network_interface_tx_stats="tx_bytes tx_packets tx_errors tx_dropped tx_fifo_errors"
 
-    echo "<<<lnx_if_sys_class_net:sep(09)>>>"
+    echo "<<<lnx_container_host_if:sep(09)>>>"
 
     for if_path in "${interface_filepath}"/*; do
 
@@ -81,11 +79,11 @@ section_lnx_if_sys_class_net() {
 main() {
 
     if [ -f "${CONFIG_FILE}" ]; then
-        # shellcheck source=agents/cfg_examples/lnx_if_sys_class_net.cfg
+        # shellcheck source=agents/cfg_examples/lnx_container_host_if.cfg
         . "${CONFIG_FILE}"
     fi
 
-    section_lnx_if_sys_class_net
+    section_lnx_container_host_if
 }
 
 [ -z "${MK_SOURCE_AGENT}" ] && main

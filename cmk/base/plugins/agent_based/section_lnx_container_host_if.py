@@ -106,13 +106,13 @@ def _create_interface(raw_stats: Mapping[str, str]) -> InterfaceWithCounters:
     )
 
 
-def parse_lnx_if_sys_class_net(string_table) -> Section:
+def parse_lnx_container_host_if(string_table) -> Section:
     return [_create_interface(_parse_raw_stats(i)) for i in string_table], {}
 
 
 register.agent_section(
-    name="lnx_if_sys_class_net",
+    name="lnx_container_host_if",
     parsed_section_name="lnx_if",
-    parse_function=parse_lnx_if_sys_class_net,
+    parse_function=parse_lnx_container_host_if,
     supersedes=["lnx_if"],
 )

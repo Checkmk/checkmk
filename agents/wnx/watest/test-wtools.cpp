@@ -747,7 +747,7 @@ TEST(Wtools, RunCommandCheck) {
 }
 
 TEST(Wtools, GetServiceStatus) {
-    EXPECT_EQ(GetServiceStatus(L"vds"), SERVICE_STOPPED);
+    EXPECT_EQ(GetServiceStatus(L"snmptrap"), SERVICE_STOPPED);
     EXPECT_EQ(GetServiceStatus(L"vds-bad-service"), 0U);
     EXPECT_EQ(GetServiceStatus(L"SamSS"), SERVICE_RUNNING);
 }

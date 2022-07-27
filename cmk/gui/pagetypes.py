@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disallow-untyped-defs
+# mypy: disallow-incomplete-defs
+# mypy: disallow-untyped-decorators
+
 # TODO:
 # - The classes here mix two things:
 #   a) Manager/Container classes
@@ -1378,12 +1382,7 @@ def PublishTo(
             (
                 "contact_groups",
                 _("Publish to members of contact groups"),
-                ContactGroupChoice(
-                    with_foreign_groups=with_foreign_groups,
-                    title=_("Publish to members of contact groups"),
-                    rows=5,
-                    size=80,
-                ),
+                ContactGroupChoice(with_foreign_groups=with_foreign_groups),
             )
         )
 
@@ -1395,7 +1394,7 @@ def make_edit_form_page_menu(
     dropdown_name: str,
     mode: str,
     type_title: str,
-    type_title_plural,
+    type_title_plural: str,
     ident_attr_name: str,
     sub_pages: SubPagesSpec,
     form_name: str,
@@ -1526,20 +1525,21 @@ def _page_menu_entries_sub_pages(
         yield PageMenuEntry(title=title, icon_name=icon, item=link)
 
 
-class ContactGroupChoice(DualListChoice):
-    """A multiple selection of contact groups that are part of the current active config"""
-
-    def __init__(self, with_foreign_groups=True, **kwargs) -> None:
-        super().__init__(choices=self._load_groups, **kwargs)
-        self._with_foreign_groups = with_foreign_groups
-
-    def _load_groups(self):
+def ContactGroupChoice(with_foreign_groups: bool) -> DualListChoice:
+    def _load_groups() -> list[tuple[str, str]]:
         contact_group_choices = sites.all_groups("contact")
         return [
             (group_id, alias)
             for (group_id, alias) in contact_group_choices
-            if self._with_foreign_groups or group_id in user.contact_groups
+            if with_foreign_groups or group_id in user.contact_groups
         ]
+
+    return DualListChoice(
+        choices=_load_groups,
+        title=_("Publish to members of contact groups"),
+        rows=5,
+        size=80,
+    )
 
 
 # .
@@ -1610,7 +1610,7 @@ class OverridableContainer(Overridable[_T_OverridableContainerSpec, _Self]):
     # not with any actual subclass like GraphCollection. We need to find that
     # class by the URL variable page_type.
     @classmethod
-    def ajax_add_element(cls):
+    def ajax_add_element(cls) -> None:
         page_type_name = request.get_ascii_input_mandatory("page_type")
         page_name = request.get_ascii_input_mandatory("page_name")
         element_type = request.get_ascii_input_mandatory("element_type")
@@ -2129,7 +2129,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
         return {p.name(): p for p in cls.permitted_instances_sorted()}
 
     @classmethod
-    def get_topic(cls, topic_id) -> PagetypeTopics:
+    def get_topic(cls, topic_id: str) -> PagetypeTopics:
         """Returns either the requested topic or fallback to "other"."""
         PagetypeTopics.load()
         other_page = PagetypeTopics.find_page("other")

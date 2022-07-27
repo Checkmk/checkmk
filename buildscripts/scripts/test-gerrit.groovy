@@ -22,7 +22,7 @@ def main() {
         usernamePassword(
             credentialsId: 'nexus',
             passwordVariable: 'DOCKER_PASSPHRASE',
-            usernameVariable: 'DOCKER_USERNAME')]) { 
+            usernameVariable: 'DOCKER_USERNAME')]) {
         sh('echo  "${DOCKER_PASSPHRASE}" | docker login "${DOCKER_REGISTRY}" -u "${DOCKER_USERNAME}" --password-stdin');
     }
 
@@ -106,10 +106,10 @@ def main() {
                 )])
 
                 archiveArtifacts(allowEmptyArchive: true, artifacts: 'results/*');
+                sh("scripts/run-in-docker.sh make workspaceclean");
             }
         }
         time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
     }
 }
 return this;
-

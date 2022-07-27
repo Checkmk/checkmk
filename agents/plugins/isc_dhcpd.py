@@ -48,7 +48,9 @@ def get_pid():
                     cmd = "ps aux | grep -w [d]hcpd | awk {'printf (\"%s \", $2)'}"
                     break
 
-    return os.popen(cmd).read().strip()  # nosec
+    # This produces a false warning in Bandit, claiming there was no failing test for this nosec.
+    # The warning is a bug in Bandit: https://github.com/PyCQA/bandit/issues/942
+    return os.popen(cmd).read().strip()  # nosec B605 # BNS:f6c1b9
 
 
 pidof_dhcpd = get_pid()

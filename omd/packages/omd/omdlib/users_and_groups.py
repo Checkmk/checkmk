@@ -26,6 +26,7 @@
 import grp
 import os
 import pwd
+import shlex
 import subprocess
 from typing import List, Optional, TYPE_CHECKING, Union
 
@@ -100,13 +101,15 @@ def useradd(
     useradd_options = version_info.USERADD_OPTIONS
     if uid is not None:
         useradd_options += " -u %d" % int(uid)
-    if (
-        os.system(  # nosec
-            "useradd %s -r -d '%s' -c 'OMD site %s' -g %s -G omd %s -s /bin/bash"
-            % (useradd_options, site.dir, site.name, site.name, site.name)
-        )
-        != 0
-    ):
+
+    cmd = "useradd %s -r -d '%s' -c 'OMD site %s' -g %s -G omd %s -s /bin/bash" % (
+        useradd_options,
+        site.dir,
+        site.name,
+        site.name,
+        site.name,
+    )
+    if subprocess.call(shlex.split(cmd)) != 0:
         groupdel(site.name)
         raise MKTerminate("Error creating site user.")
 
@@ -132,7 +135,7 @@ def _groupadd(groupname: str, gid: Optional[str] = None) -> None:
 
 def _add_user_to_group(version_info: "VersionInfo", user: str, group: str) -> bool:
     cmd = version_info.ADD_USER_TO_GROUP % {"user": user, "group": group}
-    return os.system(cmd + " >/dev/null") == 0  # nosec
+    return subprocess.call(shlex.split(cmd), stdout=subprocess.DEVNULL) == 0
 
 
 def userdel(name: str) -> None:

@@ -99,7 +99,11 @@ def check_status(  # pylint: disable=too-many-branches
         if daemon and komponent != daemon:
             continue
 
-        state = os.system("%s/%s status >/dev/null 2>&1" % (rc_dir, script)) >> 8  # nosec
+        state = subprocess.call(
+            [os.path.join(rc_dir, script), "status"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
 
         if display and (state != 5 or is_verbose):
             if bare:

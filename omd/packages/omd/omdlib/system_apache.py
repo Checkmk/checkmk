@@ -24,6 +24,7 @@
 # Boston, MA 02110-1301 USA.
 
 import os
+import shlex
 import subprocess
 import sys
 
@@ -174,18 +175,9 @@ def reload_apache(version_info: VersionInfo) -> None:
 
 
 def restart_apache(version_info: VersionInfo) -> None:
-    if (
-        os.system(  # nosec
-            init_cmd(version_info, version_info.APACHE_INIT_NAME, "status") + " >/dev/null 2>&1"
-        )
-        >> 8
-        == 0
-    ):
+    status_cmd = shlex.split(init_cmd(version_info, version_info.APACHE_INIT_NAME, "status"))
+    if subprocess.call(status_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) == 0:
         sys.stdout.write("Restarting Apache...")
         sys.stdout.flush()
-        show_success(
-            os.system(  # nosec
-                init_cmd(version_info, version_info.APACHE_INIT_NAME, "restart") + " >/dev/null"
-            )
-            >> 8
-        )
+        restart_cmd = shlex.split(init_cmd(version_info, version_info.APACHE_INIT_NAME, "restart"))
+        show_success(subprocess.call(restart_cmd, stdout=subprocess.DEVNULL))

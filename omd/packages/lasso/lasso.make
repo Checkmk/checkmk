@@ -24,6 +24,7 @@ $(LASSO_BUILD): $(LASSO_UNPACK)
 	&& export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON3_PYTHONPATH) \
 	&& export LDFLAGS="$(PACKAGE_PYTHON3_LDFLAGS)" \
 	&& export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" \
+	&& export CFLAGS="-I$(PACKAGE_PYTHON3_INCLUDE_PATH)" \
 	&& ./configure \
 	    --prefix=$(OMD_ROOT) \
 	    --disable-gtk-doc \

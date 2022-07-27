@@ -9,7 +9,7 @@ from typing import Callable, Literal, Sequence
 
 from cmk.gui.config import active_config
 from cmk.gui.http import request, response
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.plugins.metrics import html_render
 from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
@@ -24,7 +24,14 @@ from cmk.gui.plugins.views.utils import (
     PainterOption,
     PainterOptions,
 )
-from cmk.gui.type_defs import ColumnName, CombinedGraphSpec, Row, TemplateGraphSpec
+from cmk.gui.type_defs import (
+    ColumnName,
+    CombinedGraphSpec,
+    PainterSpec,
+    Row,
+    TemplateGraphSpec,
+    VisualLinkSpec,
+)
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri_contextless
@@ -37,62 +44,81 @@ multisite_builtin_views.update(
             "browser_reload": 30,
             "column_headers": "off",
             "datasource": "services",
-            "description": _(
+            "description": _l(
                 "Shows all graphs including timerange selections of a collection of services."
             ),
             "group_painters": [
-                ("sitealias", "sitehosts"),
-                ("host_with_state", "host"),
-                ("service_description", "service"),
+                PainterSpec(
+                    painter_name="sitealias",
+                    link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
+                ),
+                PainterSpec(
+                    painter_name="host_with_state",
+                    link_spec=VisualLinkSpec(type_name="views", name="host"),
+                ),
+                PainterSpec(
+                    painter_name="service_description",
+                    link_spec=VisualLinkSpec(type_name="views", name="service"),
+                ),
             ],
-            "hard_filters": [],
-            "hard_filtervars": [],
             "hidden": True,
-            "hide_filters": ["siteopt", "service", "host"],
             "layout": "boxed_graph",
             "mustsearch": False,
             "name": "service_graphs",
             "num_columns": 1,
             "owner": "",
             "painters": [
-                ("service_graphs", None),
+                PainterSpec(painter_name="service_graphs"),
             ],
             "public": True,
-            "show_filters": [],
             "sorters": [],
             "icon": "service_graph",
-            "title": _("Service Graphs"),
+            "title": _l("Service Graphs"),
             "topic": "history",
+            "user_sortable": True,
+            "single_infos": ["service", "host"],
+            "context": {"siteopt": {}},
+            "link_from": {},
+            "add_context_to_title": True,
+            "sort_index": 99,
+            "is_show_more": False,
         },
         "host_graphs": {
             "browser_reload": 30,
             "column_headers": "off",
             "datasource": "hosts",
-            "description": _(
+            "description": _l(
                 "Shows host graphs including timerange selections of a collection of hosts."
             ),
             "group_painters": [
-                ("sitealias", "sitehosts"),
-                ("host_with_state", "host"),
+                PainterSpec(
+                    painter_name="sitealias",
+                    link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
+                ),
+                PainterSpec(
+                    painter_name="host_with_state",
+                    link_spec=VisualLinkSpec(type_name="views", name="host"),
+                ),
             ],
-            "hard_filters": [],
-            "hard_filtervars": [],
             "hidden": True,
-            "hide_filters": ["siteopt", "host"],
             "layout": "boxed_graph",
             "mustsearch": False,
             "name": "host_graphs",
             "num_columns": 1,
             "owner": "",
-            "painters": [
-                ("host_graphs", None),
-            ],
+            "painters": [PainterSpec(painter_name="host_graphs")],
             "public": True,
-            "show_filters": [],
             "sorters": [],
             "icon": "graph",
-            "title": _("Host graphs"),
+            "title": _l("Host graphs"),
             "topic": "history",
+            "user_sortable": True,
+            "single_infos": ["host"],
+            "context": {"siteopt": {}},
+            "link_from": {},
+            "add_context_to_title": True,
+            "sort_index": 99,
+            "is_show_more": False,
         },
     }
 )

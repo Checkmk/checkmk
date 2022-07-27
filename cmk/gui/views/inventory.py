@@ -94,7 +94,16 @@ from cmk.gui.plugins.visuals.utils import (
     visual_info_registry,
     VisualInfo,
 )
-from cmk.gui.type_defs import ColumnName, FilterName, Icon, Row, Rows, SingleInfos
+from cmk.gui.type_defs import (
+    ColumnName,
+    FilterName,
+    Icon,
+    PainterSpec,
+    Row,
+    Rows,
+    SingleInfos,
+    VisualLinkSpec,
+)
 from cmk.gui.utils.escaping import escape_text
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -102,7 +111,6 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Checkbox, Dictionary, ValueSpec
 from cmk.gui.view_utils import CellSpec, render_labels
-from cmk.gui.views.builtin_views import host_view_filters
 
 if TYPE_CHECKING:
     from cmk.gui.plugins.visuals.utils import Filter
@@ -1740,19 +1748,20 @@ multisite_builtin_views["inv_host"] = {
     # Columns
     "group_painters": [],
     "painters": [
-        ("host", "host", ""),
-        ("inventory_tree", None, ""),
+        PainterSpec(
+            painter_name="host",
+            link_spec=VisualLinkSpec(type_name="views", name="host"),
+        ),
+        PainterSpec(painter_name="inventory_tree"),
     ],
-    # Filters
-    "hard_filters": [],
-    "hard_filtervars": [],
-    # Previously (<2.0/1.6??) the hide_filters: ['host, 'site'] were needed to build the URL.
-    # Now for creating the URL these filters are obsolete;
-    # Side effect: with 'site' in hide_filters the only_sites filter for livestatus is NOT set
-    # properly. Thus we removed 'site'.
-    "hide_filters": ["host"],
-    "show_filters": [],
     "sorters": [],
+    "owner": "",
+    "name": "inv_host",
+    "single_infos": ["host"],
+    "context": {},
+    "add_context_to_title": True,
+    "sort_index": 99,
+    "is_show_more": False,
 }
 
 # View with table of all hosts, with some basic information
@@ -1779,24 +1788,36 @@ multisite_builtin_views["inv_hosts_cpu"] = {
     # Columns
     "group_painters": [],
     "painters": [
-        ("host", "inv_host", ""),
-        ("inv_software_os_name", None, ""),
-        ("inv_hardware_cpu_cpus", None, ""),
-        ("inv_hardware_cpu_cores", None, ""),
-        ("inv_hardware_cpu_max_speed", None, ""),
-        ("perfometer", None, "", "CPU load"),
-        ("perfometer", None, "", "CPU utilization"),
-    ],
-    # Filters
-    "hard_filters": ["has_inv"],
-    "hard_filtervars": [("is_has_inv", "1")],
-    "hide_filters": [],
-    "show_filters": [
-        "inv_hardware_cpu_cpus",
-        "inv_hardware_cpu_cores",
-        "inv_hardware_cpu_max_speed",
+        PainterSpec(
+            painter_name="host",
+            link_spec=VisualLinkSpec(type_name="views", name="inv_host"),
+        ),
+        PainterSpec(painter_name="inv_software_os_name"),
+        PainterSpec(painter_name="inv_hardware_cpu_cpus"),
+        PainterSpec(painter_name="inv_hardware_cpu_cores"),
+        PainterSpec(painter_name="inv_hardware_cpu_max_speed"),
+        PainterSpec(
+            painter_name="perfometer",
+            join_index="CPU load",
+        ),
+        PainterSpec(
+            painter_name="perfometer",
+            join_index="CPU utilization",
+        ),
     ],
     "sorters": [],
+    "owner": "",
+    "name": "inv_hosts_cpu",
+    "single_infos": [],
+    "context": {
+        "has_inv": {"is_has_inv": "1"},
+        "inv_hardware_cpu_cpus": {},
+        "inv_hardware_cpu_cores": {},
+        "inv_hardware_cpu_max_speed": {},
+    },
+    "link_from": {},
+    "icon": None,
+    "add_context_to_title": True,
 }
 
 # View with available and used ethernet ports
@@ -1825,18 +1846,30 @@ multisite_builtin_views["inv_hosts_ports"] = {
     # Columns
     "group_painters": [],
     "painters": [
-        ("host", _make_table_view_name_of_host("invinterface"), ""),
-        ("inv_hardware_system_product", None, ""),
-        ("inv_networking_total_interfaces", None, ""),
-        ("inv_networking_total_ethernet_ports", None, ""),
-        ("inv_networking_available_ethernet_ports", None, ""),
+        PainterSpec(
+            painter_name="host",
+            link_spec=VisualLinkSpec(
+                type_name="views",
+                name=_make_table_view_name_of_host("invinterface"),
+            ),
+        ),
+        PainterSpec(painter_name="inv_hardware_system_product"),
+        PainterSpec(painter_name="inv_networking_total_interfaces"),
+        PainterSpec(painter_name="inv_networking_total_ethernet_ports"),
+        PainterSpec(painter_name="inv_networking_available_ethernet_ports"),
     ],
-    # Filters
-    "hard_filters": ["has_inv"],
-    "hard_filtervars": [("is_has_inv", "1")],
-    "hide_filters": [],
-    "show_filters": host_view_filters + [],
     "sorters": [("inv_networking_available_ethernet_ports", True)],
+    "owner": "",
+    "name": "inv_hosts_ports",
+    "single_infos": [],
+    "context": {
+        "has_inv": {"is_has_inv": "1"},
+        "siteopt": {},
+        "hostregex": {},
+    },
+    "link_from": {},
+    "icon": None,
+    "add_context_to_title": True,
 }
 
 # .
@@ -2087,18 +2120,19 @@ multisite_builtin_views["inv_host_history"] = {
     # Columns
     "group_painters": [],
     "painters": [
-        ("invhist_time", None, ""),
-        ("invhist_removed", None, ""),
-        ("invhist_new", None, ""),
-        ("invhist_changed", None, ""),
-        ("invhist_delta", None, ""),
+        PainterSpec(painter_name="invhist_time"),
+        PainterSpec(painter_name="invhist_removed"),
+        PainterSpec(painter_name="invhist_new"),
+        PainterSpec(painter_name="invhist_changed"),
+        PainterSpec(painter_name="invhist_delta"),
     ],
-    # Filters
-    "hard_filters": [],
-    "hard_filtervars": [],
-    "hide_filters": ["host"],
-    "show_filters": [],
     "sorters": [("invhist_time", False)],
+    "owner": "",
+    "name": "inv_host_history",
+    "single_infos": ["host"],
+    "context": {},
+    "add_context_to_title": True,
+    "sort_index": 99,
 }
 
 # .

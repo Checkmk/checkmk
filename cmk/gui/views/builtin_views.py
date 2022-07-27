@@ -66,11 +66,6 @@ host_view_painters = [
         link_spec=VisualLinkSpec(type_name="views", name="host_pending"),
     ),
 ]
-host_view_filters = [
-    "siteopt",
-    "hostregex",
-]
-
 
 builtin_views.update(
     {

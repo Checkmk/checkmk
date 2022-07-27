@@ -46,12 +46,12 @@ def _parameter_valuespec_job():
                     valuespec=Tuple(
                         orientation="horizontal",
                         elements=[
-                            Integer(title=_("Exit code")),
+                            Integer(title=_("Exit code"), default_value=0),
                             MonitoringState(
                                 title=_("Resulting state"),
+                                default_value=0,
                             ),
                         ],
-                        default_value=(0, 0),
                     ),
                     title=_("Explicit mapping of job exit codes to states"),
                     help=_(

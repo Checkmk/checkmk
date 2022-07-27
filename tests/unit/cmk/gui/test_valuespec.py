@@ -119,25 +119,6 @@ def test_absolutedate_value_to_json_conversion(  # type:ignore[no-untyped-def]
 @pytest.mark.parametrize(
     "value, result",
     [
-        ((1582671600, 1582844400), "2020-02-25, 2020-02-27"),
-        ((1577833200, 1580425200), "2019-12-31, 2020-01-30"),
-    ],
-)
-def test_tuple_value_to_json_conversion(value, result) -> None:  # type:ignore[no-untyped-def]
-    with on_time("2020-03-02", "UTC"):
-        assert (
-            vs.Tuple(elements=[vs.AbsoluteDate(), vs.AbsoluteDate()]).value_to_html(value) == result
-        )
-        json_value = vs.Tuple(elements=[vs.AbsoluteDate(), vs.AbsoluteDate()]).value_to_json(value)
-        assert (
-            vs.Tuple(elements=[vs.AbsoluteDate(), vs.AbsoluteDate()]).value_from_json(json_value)
-            == value
-        )
-
-
-@pytest.mark.parametrize(
-    "value, result",
-    [
         (120, "2 minutes"),
         (700, "11 minutes 40 seconds"),
         (7580, "2 hours 6 minutes 20 seconds"),

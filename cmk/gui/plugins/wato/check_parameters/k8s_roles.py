@@ -24,10 +24,9 @@ def _parameter_valuespec_k8s_roles():
                 "total",
                 Tuple(
                     title=_("Total"),
-                    default_value=(80.0, 90.0),
                     elements=[
-                        Integer(title=_("Warning above")),
-                        Integer(title=_("Critical above")),
+                        Integer(title=_("Warning above"), default_value=80),
+                        Integer(title=_("Critical above"), default_value=90),
                     ],
                 ),
             ),
@@ -35,10 +34,9 @@ def _parameter_valuespec_k8s_roles():
                 "cluster_roles",
                 Tuple(
                     title=_("Cluster roles"),
-                    default_value=(80.0, 90.0),
                     elements=[
-                        Integer(title=_("Warning above")),
-                        Integer(title=_("Critical above")),
+                        Integer(title=_("Warning above"), default_value=80),
+                        Integer(title=_("Critical above"), default_value=90),
                     ],
                 ),
             ),
@@ -46,10 +44,9 @@ def _parameter_valuespec_k8s_roles():
                 "roles",
                 Tuple(
                     title=_("Roles"),
-                    default_value=(80.0, 90.0),
                     elements=[
-                        Integer(title=_("Warning above")),
-                        Integer(title=_("Critical above")),
+                        Integer(title=_("Warning above"), default_value=80),
+                        Integer(title=_("Critical above"), default_value=90),
                     ],
                 ),
             ),

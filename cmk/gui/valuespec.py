@@ -5417,12 +5417,12 @@ class Tuple(ValueSpec[TT]):
         orientation: str = "vertical",
         separator: str = " ",
         title_br: bool = True,
+        # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: ValueSpecDefault[TT] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc[TT]] = None,
     ):
-        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
+        super().__init__(title=title, help=help, default_value=DEF_VALUE, validate=validate)
         self._elements = elements
         self._show_titles = show_titles
         self._orientation = orientation  # also: horizontal, float

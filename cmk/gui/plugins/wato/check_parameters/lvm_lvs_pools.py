@@ -26,10 +26,9 @@ def _parameter_valuespec_lvm_lvs_pools():
                 "levels_meta",
                 Tuple(
                     title=_("Levels for Meta"),
-                    default_value=(80.0, 90.0),
                     elements=[
-                        Percentage(title=_("Warning at"), unit=_("%")),
-                        Percentage(title=_("Critical at"), unit=_("%")),
+                        Percentage(title=_("Warning at"), unit=_("%"), default_value=80.0),
+                        Percentage(title=_("Critical at"), unit=_("%"), default_value=90.0),
                     ],
                 ),
             ),
@@ -37,10 +36,9 @@ def _parameter_valuespec_lvm_lvs_pools():
                 "levels_data",
                 Tuple(
                     title=_("Levels for Data"),
-                    default_value=(80.0, 90.0),
                     elements=[
-                        Percentage(title=_("Warning at"), unit=_("%")),
-                        Percentage(title=_("Critical at"), unit=_("%")),
+                        Percentage(title=_("Warning at"), unit=_("%"), default_value=80.0),
+                        Percentage(title=_("Critical at"), unit=_("%"), default_value=90.0),
                     ],
                 ),
             ),

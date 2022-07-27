@@ -24,10 +24,9 @@ def _parameter_valuespec_k8s_resources():
                 "pods",
                 Tuple(
                     title=_("Pods"),
-                    default_value=(80.0, 90.0),
                     elements=[
-                        Percentage(title=_("Warning above")),
-                        Percentage(title=_("Critical above")),
+                        Percentage(title=_("Warning above"), default_value=80.0),
+                        Percentage(title=_("Critical above"), default_value=90.0),
                     ],
                 ),
             ),
@@ -35,10 +34,9 @@ def _parameter_valuespec_k8s_resources():
                 "cpu",
                 Tuple(
                     title=_("CPU"),
-                    default_value=(80.0, 90.0),
                     elements=[
-                        Percentage(title=_("Warning above")),
-                        Percentage(title=_("Critical above")),
+                        Percentage(title=_("Warning above"), default_value=80.0),
+                        Percentage(title=_("Critical above"), default_value=90.0),
                     ],
                 ),
             ),
@@ -46,10 +44,9 @@ def _parameter_valuespec_k8s_resources():
                 "memory",
                 Tuple(
                     title=_("Memory"),
-                    default_value=(80.0, 90.0),
                     elements=[
-                        Percentage(title=_("Warning above")),
-                        Percentage(title=_("Critical above")),
+                        Percentage(title=_("Warning above"), default_value=80.0),
+                        Percentage(title=_("Critical above"), default_value=90.0),
                     ],
                 ),
             ),

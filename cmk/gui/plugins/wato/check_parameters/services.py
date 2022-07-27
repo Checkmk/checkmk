@@ -142,9 +142,9 @@ def _parameter_valuespec_services():
                             ),
                             MonitoringState(
                                 title=_("Resulting state"),
+                                default_value=0,
                             ),
                         ],
-                        default_value=("running", "auto", 0),
                     ),
                     title=_("Services states"),
                     help=_(

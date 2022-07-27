@@ -19,10 +19,9 @@ def _parameter_valuespec_huawei_osn_laser():
                 "levels_low_in",
                 Tuple(
                     title=_("Levels for laser input"),
-                    default_value=(-160.0, -180.0),
                     elements=[
-                        Integer(title=_("Warning below")),
-                        Integer(title=_("Critical below")),
+                        Integer(title=_("Warning below"), default_value=-160),
+                        Integer(title=_("Critical below"), default_value=-180),
                     ],
                 ),
             ),
@@ -30,10 +29,9 @@ def _parameter_valuespec_huawei_osn_laser():
                 "levels_low_out",
                 Tuple(
                     title=_("Levels for laser output"),
-                    default_value=(-160.0, -180.0),
                     elements=[
-                        Integer(title=_("Warning below")),
-                        Integer(title=_("Critical below")),
+                        Integer(title=_("Warning below"), default_value=-160),
+                        Integer(title=_("Critical below"), default_value=-180),
                     ],
                 ),
             ),

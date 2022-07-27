@@ -50,9 +50,9 @@ def _parameter_valuespec_drbd():
                                     ),
                                     MonitoringState(
                                         title=_("Resulting state"),
+                                        default_value=0,
                                     ),
                                 ],
-                                default_value=("ignore", 0),
                             ),
                             title=_("Set roles"),
                             add_label=_("Add role rule"),

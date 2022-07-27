@@ -5,7 +5,7 @@
 
 import re
 import time
-from typing import Optional, Sequence, Tuple, TypedDict
+from typing import Any, MutableMapping, Optional, Sequence, Tuple, TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -33,6 +33,8 @@ DESIRED_PHASE = [
 ]
 
 Group = Tuple[VSResultAge, Sequence[str]]
+
+ValueStore = MutableMapping[str, Any]
 
 
 class Params(TypedDict):
@@ -139,6 +141,7 @@ def discovery_kube_pod_status(
 
 def _check_kube_pod_status(
     now: float,
+    value_store: ValueStore,
     params: Params,
     section_kube_pod_containers: Optional[PodContainers],
     section_kube_pod_init_containers: Optional[PodContainers],
@@ -155,7 +158,6 @@ def _check_kube_pod_status(
         section_kube_pod_lifecycle,
     )
 
-    value_store = get_value_store()
     group_levels, group_statuses = _get_group_from_params(status_message, params)
     if value_store.get("group") != group_statuses:
         value_store["group"] = group_statuses
@@ -198,6 +200,7 @@ def check_kube_pod_status(
 ) -> CheckResult:
     yield from _check_kube_pod_status(
         time.time(),
+        get_value_store(),
         params,
         section_kube_pod_containers,
         section_kube_pod_init_containers,

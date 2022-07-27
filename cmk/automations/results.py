@@ -194,7 +194,7 @@ class AnalyseServiceResult(ABCAutomationResult):
     label_sources: LabelSources
 
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
-        if for_cmk_version >= cmk_version.Version("2.2.0i"):
+        if for_cmk_version >= cmk_version.Version("2.2.0i1"):
             return self._default_serialize()
         previous_serialized: Mapping[str, object] = {
             **self.service_info,

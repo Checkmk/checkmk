@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "Column.h"
+#include "LogCache.h"
 #include "Logger.h"
 #include "Metric.h"
 #include "MonitoringCore.h"
@@ -173,6 +174,7 @@ private:
 struct ColumnNamesAndTypesTest : public ::testing::Test {
 protected:
     DummyMonitoringCore mc_;
+    LogCache log_cache_{&mc_};
 };
 
 using ColumnDefinition = std::pair<std::string, ColumnType>;
@@ -761,7 +763,7 @@ TEST_F(ColumnNamesAndTypesTest, TableLog) {
                   "current_service_" / all_services_columns() +
                   "current_contact_" / contacts_columns() +
                   "current_command_" / commands_columns(),
-              ColumnDefinitions(TableLog{&mc_, nullptr}));
+              ColumnDefinitions(TableLog{&mc_, &log_cache_}));
 }
 
 TEST_F(ColumnNamesAndTypesTest, TableServiceGroups) {
@@ -847,7 +849,7 @@ static ColumnDefinitions state_history_columns() {
 
 TEST_F(ColumnNamesAndTypesTest, TableStateHistory) {
     EXPECT_EQ(all_state_history_columns(),
-              ColumnDefinitions(TableStateHistory{&mc_, nullptr}));
+              ColumnDefinitions(TableStateHistory{&mc_, &log_cache_}));
 }
 
 static ColumnDefinitions status_columns() {

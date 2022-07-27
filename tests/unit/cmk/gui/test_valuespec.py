@@ -222,19 +222,6 @@ def test_timerange_value_to_json_conversion(request_context) -> None:  # type:ig
 
 
 @pytest.mark.parametrize(
-    "elements,value,expected",
-    [
-        ([], {}, {}),
-        ([], {"a": 1}, {}),
-        ([("a", vs.Integer())], {"a": 1}, {"a": 1}),
-        ([("a", vs.Tuple(elements=[]))], {"a": tuple()}, {"a": []}),
-    ],
-)
-def test_dictionary_value_to_json(elements, value, expected) -> None:  # type:ignore[no-untyped-def]
-    assert vs.Dictionary(elements=elements).value_to_json(value) == expected
-
-
-@pytest.mark.parametrize(
     "address",
     [
         "user@localhost",
@@ -578,11 +565,6 @@ def test_canonical_value_in_cascading_dropdown(
     "valuespec,value,expected",
     [
         (vs.Integer(), 42, 42),
-        (
-            vs.Dictionary(elements=[("the answer", vs.Password())]),
-            {"the answer": "42"},
-            {"the answer": "******"},
-        ),
         (
             vs.SSHKeyPair(),
             ("-----BEGIN PRIVATE KEY and so on", "ssh-ed25519 AAAA..."),

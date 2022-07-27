@@ -5567,7 +5567,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
         elements: DictionaryElementsRaw,
         empty_text: _Optional[str] = None,
         default_text: _Optional[str] = None,
-        optional_keys: Union[bool, Sequence[str]] = True,
+        optional_keys: Union[bool, Iterable[str]] = True,
         required_keys: _Optional[Sequence[str]] = None,
         show_more_keys: _Optional[Sequence[str]] = None,
         ignored_keys: _Optional[Sequence[str]] = None,
@@ -5585,10 +5585,9 @@ class Dictionary(ValueSpec[DictionaryModel]):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: ValueSpecDefault[DictionaryModel] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc[DictionaryModel]] = None,
     ):
-        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
+        super().__init__(title=title, help=help, default_value=DEF_VALUE, validate=validate)
         if callable(elements):
             self._elements = elements
         else:
@@ -5606,13 +5605,20 @@ class Dictionary(ValueSpec[DictionaryModel]):
         self._default_keys = default_keys or []  # keys present in default value
         self._hidden_keys = hidden_keys or []
 
-        if isinstance(optional_keys, list) and optional_keys:
-            self._required_keys = [e[0] for e in self._get_elements() if e[0] not in optional_keys]
+        if isinstance(optional_keys, bool):
+            self._optional_keys = optional_keys
+        elif opt_keys := set(k for k in optional_keys):
             self._optional_keys = True
-        elif optional_keys:
-            self._optional_keys = True
+            if self._required_keys:
+                raise TypeError("optional_keys and required_keys can not be set at the same time.")
+            self._required_keys = [e[0] for e in self._get_elements() if e[0] not in opt_keys]
         else:
             self._optional_keys = False
+
+        if self._optional_keys is False and self._required_keys:
+            raise TypeError(
+                "optional_keys = False enforces all keys to be required, so required_keys has no effect."
+            )
 
         self._columns = columns
         self._render = render

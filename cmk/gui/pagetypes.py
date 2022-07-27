@@ -18,6 +18,7 @@
 
 from __future__ import annotations
 
+import abc
 import copy
 import json
 import os
@@ -172,7 +173,7 @@ class PagetypeTopicSpec(_PagetypeTopicSpecMandatory, total=False):
 _T_BaseSpec = TypeVar("_T_BaseSpec", bound=BaseSpec)
 
 
-class Base(Generic[_T_BaseSpec]):
+class Base(abc.ABC, Generic[_T_BaseSpec]):
     def __init__(self, d: _T_BaseSpec) -> None:
         super().__init__()
 
@@ -325,25 +326,25 @@ class Base(Generic[_T_BaseSpec]):
         return False
 
     @classmethod
+    @abc.abstractmethod
     def type_name(cls) -> str:
-        raise NotImplementedError()
+        ...
 
     @classmethod
+    @abc.abstractmethod
     def type_icon(cls) -> Icon:
-        raise NotImplementedError()
+        ...
 
-    # Lädt alle Dinge vom aktuellen User-Homeverzeichnis und
-    # mergt diese mit den übergebenen eingebauten
     @classmethod
+    @abc.abstractmethod
     def load(cls) -> None:
-        raise NotImplementedError()
+        """Loads the builtin and site custom pagetypes"""
 
-    # Custom method to load e.g. old configs after performing the
-    # loading of the regular files.
     # TODO: Clean this up
     @classmethod
     def _load(cls) -> None:
-        pass
+        """Custom method to load e.g. old configs
+        after performing the loading of the regular files."""
 
 
 # .
@@ -1567,8 +1568,9 @@ _T_OverridableContainerSpec = TypeVar("_T_OverridableContainerSpec", bound=Overr
 
 class OverridableContainer(Overridable[_T_OverridableContainerSpec, _Self]):
     @classmethod
+    @abc.abstractmethod
     def may_contain(cls, element_type_name: str) -> bool:
-        raise NotImplementedError()
+        ...
 
     @classmethod
     def page_menu_add_to_topics(cls, added_type: str) -> List[PageMenuTopic]:
@@ -1852,8 +1854,9 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec, _SelfPageRenderer])
             return HTMLWriter.render_a(self.title(), href=self.page_url())
         return self.title()
 
+    @abc.abstractmethod
     def render(self) -> None:
-        raise NotImplementedError()
+        ...
 
 
 # .

@@ -705,6 +705,8 @@ class TextInput(ValueSpec[str]):
         )
 
     def mask(self, value: str) -> str:
+        if self._hidden:
+            return "******"
         return value
 
     def value_to_html(self, value: str) -> ValueSpecText:
@@ -726,12 +728,6 @@ class TextInput(ValueSpec[str]):
             )
 
     def _validate_value(self, value: str, varprefix: str) -> None:
-        try:
-            if isinstance(value, bytes):
-                value.decode("ascii")
-        except UnicodeDecodeError:
-            raise MKUserError(varprefix, _("Non-ASCII characters are not allowed here."))
-
         if self._forbidden_chars:
             for c in self._forbidden_chars:
                 if c in value:
@@ -739,7 +735,7 @@ class TextInput(ValueSpec[str]):
                         varprefix, _("The character <tt>%s</tt> is not allowed here.") % c
                     )
 
-        if not self._allow_empty and value.strip() == "":
+        if not self._allow_empty and (value == "" or (self._strip and value.strip() == "")):
             raise MKUserError(
                 varprefix,
                 self._empty_text or _("An empty value is not allowed here."),

@@ -288,16 +288,12 @@ def test_email_validation_non_compliance(address) -> None:  # type:ignore[no-unt
 @pytest.mark.parametrize(
     "address",
     [
-        b"text",
-        b"user@foo",
-        b"\t\n a@localhost \t\n",  # whitespace is removed in from_html_vars
-        "אሗ@test.com".encode("utf-8"),  # UTF-8 encoded bytestrings are not allowed
         "text",
         "user@foo",
         "\t\n a@localhost \t\n",  # whitespace is removed in from_html_vars
     ],
 )
-def test_email_validation_raises(address) -> None:  # type:ignore[no-untyped-def]
+def test_email_validation_raises(address: str) -> None:
     with pytest.raises(MKUserError):
         vs.EmailAddress().validate_value(address, "")
 

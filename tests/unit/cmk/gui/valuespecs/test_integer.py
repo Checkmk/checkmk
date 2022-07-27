@@ -3,40 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from contextlib import contextmanager
-from unittest.mock import patch
 
 import pytest
 
 import cmk.gui.valuespec as vs
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib.html import html
+
+from .utils import expect_validate_failure, expect_validate_success, request_var
 
 # size is only relevant for html input element
 
 
-@contextmanager
-def request_var(
-    **request_variables: str,
-):
-    with patch.dict(html.request.legacy_vars, request_variables):
-        yield
-
-
-def validate(valuespec: vs.ValueSpec, value: object) -> None:
-    valuespec.validate_datatype(value, "varprefix")
-    valuespec.validate_value(value, "varprefix")
-
-
 def test_integer_valuespec_validate() -> None:
-    with pytest.raises(MKUserError):
-        validate(vs.Integer(), "asd")
-    validate(vs.Integer(), 128)
-    validate(vs.Integer(minvalue=10, maxvalue=300), 128)
-    with pytest.raises(MKUserError):
-        validate(vs.Integer(minvalue=10, maxvalue=300), 333)
-    with pytest.raises(MKUserError):
-        validate(vs.Integer(minvalue=10, maxvalue=300), 9)
+    expect_validate_failure(vs.Integer(), "asd")  # type:ignore
+    expect_validate_success(vs.Integer(), 128)
+    expect_validate_success(vs.Integer(minvalue=10, maxvalue=300), 128)
+    expect_validate_failure(vs.Integer(minvalue=10, maxvalue=300), 333)
+    expect_validate_failure(vs.Integer(minvalue=10, maxvalue=300), 9)
 
 
 def test_integer_valuespec_default_value() -> None:

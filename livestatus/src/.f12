@@ -16,7 +16,7 @@ echo Building rrdtool library...
 LANG=C make -j4 -C ../../omd re2-build rrdtool-build-library >/dev/null
 LANG=C make -C ../.. config.status
 (cd ../.. && ./config.status)
-LANG=C make -j4
+LANG=C make -j4 all compile_commands.json
 sudo install -v livestatus.o "$ROOT/lib/mk-livestatus/livestatus.o"
 
 if [ -z "$ONLY_COPY" ]; then

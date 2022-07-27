@@ -2,10 +2,17 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use mail_slot::{MailslotClient, MailslotName};
+use anyhow::{anyhow, Result as AnyhowResult};
+use is_elevated::is_elevated;
+use log::warn;
+use mail_slot::{MailslotClient, MailslotName, MailslotServer};
 use serde::{Deserialize, Serialize};
 use std::convert::From;
-
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::mpsc::{channel, Receiver, Sender};
+use std::sync::{Arc, Condvar, Mutex};
+use std::thread::{sleep, JoinHandle};
+use std::time::Duration;
 // data must be in sync with windows agent
 const PROVIDER_NAME_LENGTH: usize = 32;
 pub enum DataType {
@@ -75,14 +82,191 @@ pub fn send_to_mailslot(mailslot_name: &str, data_type: DataType, data: &[u8]) {
     }
 }
 
+pub fn build_own_mailslot_name() -> String {
+    format!(
+        "{}WinAgentCtl_{}",
+        if is_elevated() {
+            "Global\\"
+        } else {
+            "user_mode_"
+        },
+        std::process::id()
+    )
+}
+
+pub struct MailSlotBackend {
+    srv: JoinHandle<()>,
+    stop_flag: Arc<AtomicBool>,
+    pub tx: Receiver<String>,
+}
+
+impl MailSlotBackend {
+    pub fn new(name: &str) -> AnyhowResult<Self> {
+        let (rx, tx) = channel::<String>();
+        let stop = Arc::new(AtomicBool::new(false));
+        let result = Self::start_mailslot_server(name, rx, Arc::clone(&stop));
+        if let Ok(srv) = result {
+            Ok(MailSlotBackend {
+                srv,
+                stop_flag: Arc::clone(&stop),
+                tx,
+            })
+        } else {
+            Err(anyhow!(result.unwrap_err()))
+        }
+    }
+
+    /// Always returns correct string even if input is not valid utf8 sequence
+    /// This is done to prevent crash/panic for the case if peer sends malformed data
+    fn try_as_utf8(msg: Vec<u8>) -> String {
+        let decoded = String::from_utf8_lossy(&msg).into_owned();
+        if decoded.contains(std::char::REPLACEMENT_CHARACTER) {
+            warn!("Mailslot receives non utf-8 symbols in output from the agent.");
+        };
+        decoded
+    }
+
+    fn send_notify(cv_pair: &(Mutex<bool>, Condvar)) {
+        let (lock, cond_var) = &*cv_pair;
+        *lock.lock().unwrap() = true;
+        cond_var.notify_one();
+    }
+
+    fn mailslot_server_thread(
+        base_name: String,
+        rx: Sender<String>,
+        cv_pair: &Arc<(Mutex<bool>, Condvar)>,
+        stop: &AtomicBool,
+    ) {
+        let full_name = MailslotName::local(&base_name);
+        let result = MailslotServer::new(&full_name);
+
+        Self::send_notify(cv_pair); // caller waits(must!) for signal
+
+        match result {
+            Ok(mut server) => loop {
+                match server.get_next_unread() {
+                    Ok(None) | Err(_) => sleep(Duration::from_millis(20)),
+                    Ok(Some(msg)) => rx
+                        .send(Self::try_as_utf8(msg))
+                        .unwrap_or_else(|e| warn!("Mailslot server fails to receive '{}'", e)),
+                }
+                if stop.load(Ordering::Relaxed) {
+                    break;
+                }
+            },
+            Err(e) => warn!("Mailslot server fails to create thread '{}'", e),
+        }
+    }
+
+    fn start_mailslot_server(
+        base_name: &str,
+        rx: Sender<String>,
+        stop: Arc<AtomicBool>,
+    ) -> AnyhowResult<JoinHandle<()>> {
+        let cv_pair = Arc::new((Mutex::new(false), Condvar::new()));
+        let cv_pair_for_thread = Arc::clone(&cv_pair);
+        let n = base_name.to_string();
+        let srv = std::thread::spawn(move || {
+            Self::mailslot_server_thread(n, rx, &cv_pair_for_thread, &stop);
+        });
+
+        {
+            let (lock, cond_var) = &*cv_pair;
+            let wait_result = cond_var
+                .wait_timeout_while(
+                    lock.lock().unwrap(),    // mutex guard
+                    Duration::from_secs(1),  // duration
+                    |&mut started| !started, // predicate: for wait(opposite to C++)
+                )
+                .unwrap();
+            if wait_result.1.timed_out() {
+                return Err(anyhow!("timeout"));
+            }
+        }
+
+        Ok(srv)
+    }
+
+    pub fn stop(self) {
+        self.stop_flag.store(true, Ordering::Relaxed);
+        self.srv.join().expect("Panic");
+    }
+}
+
 #[cfg(test)]
 #[cfg(windows)]
 mod tests {
     use super::*;
     use mail_slot::{MailslotName, MailslotServer};
     use std::convert::From;
+    use std::io::Result as IoResult;
 
     const TEXT_TO_SEND: &str = "message to log";
+    const MESSAGE_COUNT: i32 = 100;
+
+    fn send_messages_to_mailslot(base_name: &str, count: i32) {
+        match MailslotClient::new(&MailslotName::local(&base_name)) {
+            Ok(mut client) => {
+                for i in 0..count {
+                    client
+                        .send_message(i.to_string().as_bytes())
+                        .unwrap_or_else(|e| println!("Failed to send {:?}", e));
+                }
+            }
+            Err(e) => panic!("Can't create client '{}'", e),
+        }
+    }
+
+    fn receive_messages_from_mailslot(tx: &mut Receiver<String>, count: i32) -> bool {
+        for i in 0..count {
+            let value = tx
+                .recv_timeout(Duration::from_secs(1))
+                .expect("not received");
+            if i.to_string() != value {
+                return false;
+            }
+        }
+        true
+    }
+
+    const BAD_UTF8: [u8; 7] = [0x20, 0xF0, 0x28, 0x8C, 0xBC, 0x20, 0x20];
+    const GOOD_UTF8: [u8; 4] = [0xF0, 0x9F, 0x92, 0x96];
+    #[test]
+    /// This test doesn't check logging here despite it is important, because
+    /// it is a bit complicated. We need to reconsider this in the future.
+    fn test_try_as_utf8() {
+        assert_eq!(MailSlotBackend::try_as_utf8(BAD_UTF8.to_vec()), " �(��  ");
+        assert_eq!(MailSlotBackend::try_as_utf8(GOOD_UTF8.to_vec()), "💖");
+    }
+
+    #[test]
+    fn test_mailslot_backend() {
+        let base_name = build_own_mailslot_name() + "_test";
+        let mut backend = MailSlotBackend::new(&base_name).expect("Server is failed");
+        send_messages_to_mailslot(&base_name, MESSAGE_COUNT);
+        receive_messages_from_mailslot(&mut backend.tx, MESSAGE_COUNT);
+        backend.stop();
+    }
+
+    async fn async_collect_from_mailslot() -> IoResult<Vec<u8>> {
+        let base_name = build_own_mailslot_name() + "_test_async";
+        let backend = MailSlotBackend::new(&base_name).expect("Server is failed");
+        send_messages_to_mailslot(&base_name, 1);
+        let value = backend
+            .tx
+            .recv_timeout(Duration::from_secs(1))
+            .expect("not received");
+        backend.stop();
+        Ok(value.as_bytes().to_owned())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_mailslot_backend_async() -> AnyhowResult<()> {
+        let res = async_collect_from_mailslot().await?;
+        assert_eq!(res, "0".as_bytes());
+        Ok(())
+    }
 
     #[test]
     fn test_from() {

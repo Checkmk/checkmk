@@ -94,19 +94,6 @@ def section(string_table):
     return kube_pod_containers.parse(string_table)
 
 
-@pytest.fixture(autouse=True)
-def time(mocker):
-    def time_side_effect():
-        timestamp = TIMESTAMP
-        while True:
-            yield timestamp
-            timestamp += MINUTE
-
-    time_mock = mocker.Mock(side_effect=time_side_effect())
-    mocker.patch.object(kube_pod_containers, "time", time_mock)
-    return time_mock
-
-
 @pytest.fixture
 def failed_state():
     return int(State.CRIT)
@@ -119,7 +106,7 @@ def params(failed_state):
 
 @pytest.fixture
 def check_result(container_name, params, section):
-    return kube_pod_containers.check(container_name, params, section)
+    return kube_pod_containers._check(TIMESTAMP, container_name, params, section)
 
 
 def test_parse(  # type:ignore[no-untyped-def]

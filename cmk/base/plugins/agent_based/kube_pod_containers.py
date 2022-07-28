@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from time import time
+import time
 from typing import Mapping, Optional
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, render, Result, Service, State
@@ -54,11 +54,11 @@ def discovery(section: PodContainers) -> DiscoveryResult:
         yield Service(item=container.name)
 
 
-def check(item: str, params: Mapping[str, int], section: PodContainers) -> CheckResult:
+def _check(now: float, item: str, params: Mapping[str, int], section: PodContainers) -> CheckResult:
     container = section.containers.get(item)
     assert isinstance(container, ContainerStatus)
     if isinstance(container.state, ContainerRunningState):
-        yield from check_running(params, container.state)
+        yield from check_running(now, params, container.state)
     elif isinstance(container.state, ContainerWaitingState):
         yield from check_waiting(params, container.state)
     elif isinstance(container.state, ContainerTerminatedState):
@@ -67,9 +67,11 @@ def check(item: str, params: Mapping[str, int], section: PodContainers) -> Check
     yield Result(state=State.OK, summary=f"Restart count: {container.restart_count}")
 
 
-def check_running(params: Mapping[str, int], state: ContainerRunningState) -> CheckResult:
+def check_running(
+    now: float, params: Mapping[str, int], state: ContainerRunningState
+) -> CheckResult:
     start_time_timestamp = state.start_time
-    time_delta = time() - start_time_timestamp
+    time_delta = now - start_time_timestamp
     summary = f"Status: Running for {render.timespan(time_delta)}"
     yield Result(state=State.OK, summary=summary)
 
@@ -103,6 +105,10 @@ def check_terminated(params: Mapping[str, int], state: ContainerTerminatedState)
 
     if state.end_time is not None:
         yield Result(state=State.OK, summary=f"End time: {render.datetime(state.end_time)}")
+
+
+def check(item: str, params: Mapping[str, int], section: PodContainers) -> CheckResult:
+    yield from _check(time.time(), item, params, section)
 
 
 register.check_plugin(

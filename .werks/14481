@@ -1,0 +1,14 @@
+Title: Dependency updates
+Class: security
+Compatible: compat
+Component: core
+Date: 1658992512
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p10
+
+Update several dependencies including lxml from 4.7.1 to 4.9.1 (CVE-2022-2309)
+
+According to our analyis none of the vulnerabilities could be abused in Checkmk
+since the vulnerable functions were not used.

@@ -215,5 +215,6 @@ inline constexpr std::chrono::seconds G_DefaultDelayOnFail(3600);
 // Prefixes of mailslots' names
 constexpr const char *const kServiceMailSlot = "WinAgent";      // production
 constexpr const char *const kTestingMailSlot = "WinAgentTest";  // testing
+constexpr const char *const kAppMailSlot = "WinAgentApp";  // app/integration
 
 };  // namespace cma::cfg

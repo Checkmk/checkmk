@@ -47,7 +47,7 @@ def run_make_targets(Map args) {
                         artifacts_helper.download_version_dir(
                             INTERNAL_DEPLOY_DEST,
                             INTERNAL_DEPLOY_PORT,
-                            IMAGE_VERSION,
+                            image_version,
                             "${WORKSPACE}/packages/${image_version}",
                         );
                     }

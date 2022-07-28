@@ -2724,7 +2724,7 @@ def main_update(  # pylint: disable=too-many-branches
         hook_up_to_date = False
 
     if (
-        hook_up_to_date
+        not hook_up_to_date
         and not global_opts.force
         and not dialog_yesno(
             "This update requires additional actions: The system apache configuration has changed "

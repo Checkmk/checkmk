@@ -620,9 +620,17 @@ class ModeEditUser(WatoMode):
         self._users = userdb.load_users(lock=transactions.is_transaction())
         new_user = userdb.new_user_template("htpasswd")
         if self._user_id is not None:
-            self._user = self._users.get(UserId(self._user_id), new_user)
+            try:
+                user_id = UserId(self._user_id)
+            except ValueError as e:
+                raise MKUserError("edit", str(e)) from e
+            self._user = self._users.get(user_id, new_user)
         elif self._cloneid:
-            self._user = self._users.get(UserId(self._cloneid), new_user)
+            try:
+                user_id = UserId(self._cloneid)
+            except ValueError as e:
+                raise MKUserError("clone", str(e)) from e
+            self._user = self._users.get(user_id, new_user)
         else:
             self._user = new_user
         self._locked_attributes = userdb.locked_attributes(self._user.get("connector"))

@@ -579,13 +579,13 @@ def cluster(
     return cluster
 
 
-def api_to_agent_cluster(  # pylint: disable=dangerous-default-value
-    excluded_node_roles: Sequence[str] = ["control_plane", "master"],
-    pods: Sequence[api.Pod] = [],
-    nodes: Sequence[api.Node] = [],
-    statefulsets: Sequence[api.StatefulSet] = [],
-    deployments: Sequence[api.Deployment] = [],
-    daemon_sets: Sequence[api.DaemonSet] = [],
+def api_to_agent_cluster(
+    excluded_node_roles: Sequence[str] = ("control_plane", "master"),
+    pods: Sequence[api.Pod] = (),
+    nodes: Sequence[api.Node] = (),
+    statefulsets: Sequence[api.StatefulSet] = (),
+    deployments: Sequence[api.Deployment] = (),
+    daemon_sets: Sequence[api.DaemonSet] = (),
     cluster_details: api.ClusterDetails = ClusterDetailsFactory.build(),
 ) -> agent_kube.Cluster:
     return agent_kube.Cluster.from_api_resources(

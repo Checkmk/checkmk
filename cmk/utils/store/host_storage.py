@@ -253,14 +253,14 @@ class PickleHostsStorage(ABCHostsStorage[HostsData]):
     def _write(
         self, file_path: Path, data: HostsStorageData, value_formatter: Callable[[Any], str]
     ) -> None:
-        pickle_store = store.ObjectStore(file_path, serializer=store.PickleSerializer())
+        pickle_store = store.ObjectStore(file_path, serializer=store.PickleSerializer[HostsData]())
         with pickle_store.locked():
             pickle_store.write_obj(asdict(data))
 
     def _read(self, file_path: Path) -> HostsData:
-        return store.ObjectStore(file_path, serializer=store.PickleSerializer()).read_obj(
-            default={}
-        )
+        return store.ObjectStore(
+            file_path, serializer=store.PickleSerializer[HostsData]()
+        ).read_obj(default={})
 
 
 class RawHostsStorage(ABCHostsStorage[HostsData]):

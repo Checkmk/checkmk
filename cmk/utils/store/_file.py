@@ -2,7 +2,6 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 import pickle
 import pprint
 import tempfile
@@ -64,13 +63,13 @@ class DimSerializer:
         return literal_eval(raw.decode("utf-8"))
 
 
-class PickleSerializer:
+class PickleSerializer(Generic[TObject]):
     """A dangerous serializer that uses pickle"""
 
-    def serialize(self, data) -> bytes:  # type:ignore[no-untyped-def]
+    def serialize(self, data: TObject) -> bytes:
         return pickle.dumps(data)
 
-    def deserialize(self, raw: bytes) -> Any:
+    def deserialize(self, raw: bytes) -> TObject:
         return pickle.loads(raw)  # nosec B301 # BNS:9a7128
 
 

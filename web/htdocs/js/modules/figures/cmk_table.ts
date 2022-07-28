@@ -5,6 +5,9 @@ import * as dc from "dc";
 import * as cmk_figures from "cmk_figures";
 import * as crossfilter from "crossfilter2";
 
+// TODO: figure a way to add typing for figures data using these interfaces
+//https://github.com/tribe29/checkmk/blob/6bb901dcd7da6f64d55e08e206d68c604dbe6fb1/cmk/gui/figures.py#L108
+//https://github.com/tribe29/checkmk/blob/6bb901dcd7da6f64d55e08e206d68c604dbe6fb1/cmk/gui/figures.py#L24-L44
 interface TableFigureData {
     label: string;
     value: number;
@@ -103,12 +106,17 @@ function _update_figures_in_selection(selection) {
     selection.selectAll(".figure_cell").each((d, idx, nodes) => {
         let figure_config = d["figure_config"];
         if (nodes[idx].__figure_instance__ == undefined) {
-            let figure_class = cmk_figures.figure_registry.get_figure(figure_config["figure_type"]);
+            let figure_class = cmk_figures.figure_registry.get_figure(
+                figure_config["figure_type"]
+            );
             if (figure_class == undefined)
                 // unknown figure type
                 return;
 
-            let new_figure = new figure_class(figure_config["selector"], figure_config["size"]);
+            let new_figure = new figure_class(
+                figure_config["selector"],
+                figure_config["size"]
+            );
             new_figure.initialize(false);
             nodes[idx].__figure_instance__ = new_figure;
         }
@@ -187,7 +195,10 @@ function _pie_chart_custom_renderlet(chart, d) {
         .data(labels_data, d => d.datum().data.key);
     labels_key.exit().remove();
 
-    labels_key = labels_key.enter().append("text").classed("pie-label-key", true);
+    labels_key = labels_key
+        .enter()
+        .append("text")
+        .classed("pie-label-key", true);
 
     labels_key.exit().remove();
     labels_key
@@ -197,7 +208,10 @@ function _pie_chart_custom_renderlet(chart, d) {
         })
         .text(d => {
             let data = d.datum();
-            return Math.round(((data.endAngle - data.startAngle) / Math.PI) * 50) + "%";
+            return (
+                Math.round(((data.endAngle - data.startAngle) / Math.PI) * 50) +
+                "%"
+            );
         });
 }
 

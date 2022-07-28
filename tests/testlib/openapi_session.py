@@ -1,6 +1,12 @@
+#!/usr/bin/env python3
+# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import logging
 import time
-from typing import Any, NamedTuple, NoReturn, Optional, Union
+from contextlib import contextmanager
+from typing import Any, Iterator, NamedTuple, NoReturn, Optional, Union
 
 import requests
 
@@ -117,26 +123,9 @@ class CMKOpenApiSession(requests.Session):
         force_foreign_changes: bool = False,
         timeout: int = 60,
     ) -> bool:
-        start = time.time()
-        try:
+        with self._wait_for_completion(timeout):
             return self.activate_changes(sites, force_foreign_changes)
-        except Redirect as redirect:
-            redirect_url = redirect.redirect_url
-            while redirect_url:
-                if time.time() > (start + timeout):
-                    raise TimeoutError("wait for completion on activate changes timed out")
-
-                response = self.get(redirect_url, allow_redirects=False)
-                if response.status_code == 204:
-                    break
-                if response.status_code == 302:
-                    # Would be correct to follow the new URL, but it is not computed correctly.
-                    # Might be enabled once CMK-9669 is fixed.
-                    # redirect_url = response.headers["Location"]
-                    pass
-                else:
-                    raise UnexpectedResponse.from_response(response)
-            return True
+        return True
 
     def create_user(
         self, username: str, fullname: str, password: str, email: str, contactgroups: list[str]
@@ -202,18 +191,28 @@ class CMKOpenApiSession(requests.Session):
             raise Redirect(redirect_url=response.headers["Location"])  # activation pending
         raise UnexpectedResponse.from_response(response)
 
-    # Would be nice to consolidate this function and activate_changes_and_wait_for_completion,
-    # but we will have to extend the API a bit to have the same functionality first.
     def discover_services_and_wait_for_completion(self, hostname: str) -> None:
-        timeout = 60
+        with self._wait_for_completion(timeout=60):
+            self.discover_services(hostname)
+
+        # TODO: Once we have a "tabula rasa" mode, we can remove this second invocaton
+        response = self.post(
+            "/domain-types/service_discovery_run/actions/start/invoke",
+            json={"host_name": hostname, "mode": "fix_all"},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    @contextmanager
+    def _wait_for_completion(self, timeout: int) -> Iterator[None]:
         start = time.time()
         try:
-            self.discover_services(hostname)
+            yield None
         except Redirect as redirect:
             redirect_url = redirect.redirect_url
             while redirect_url:
                 if time.time() > (start + timeout):
-                    raise TimeoutError("wait for completion on service discovery timed out")
+                    raise TimeoutError("wait for completion timed out")
 
                 response = self.get(redirect_url, allow_redirects=False)
                 if response.status_code == 204:  # job has finished
@@ -223,14 +222,6 @@ class CMKOpenApiSession(requests.Session):
                     raise UnexpectedResponse.from_response(response)
 
                 time.sleep(0.5)
-
-        # TODO: Once we have a "tabula rasa" mode, we can remove this second invocaton
-        response = self.post(
-            "/domain-types/service_discovery_run/actions/start/invoke",
-            json={"host_name": hostname, "mode": "fix_all"},
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
 
     def get_baking_status(self) -> BakingStatus:
         response = self.get("/domain-types/agent/actions/baking_status/invoke")

@@ -706,8 +706,7 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
                 ac::kCmkAgentUnistall,
             controller_params.has_value());
     }
-    mailslot::Slot mailbox(
-        is_service ? cfg::kServiceMailSlot : cfg::kTestingMailSlot, 0);
+    mailslot::Slot mailbox(GetModus(), ::GetCurrentProcessId());
     internal_port_ = carrier::BuildPortName(carrier::kCarrierMailslotName,
                                             mailbox.GetName());
     try {

@@ -52,8 +52,14 @@ constexpr int DEFAULT_THREAD_SLEEP = 20;
 constexpr std::string_view controller_slot_prefix{"WinAgentCtl"};
 
 /// convert slot name into fully qualified global object
-std::string BuildMailSlotName(std::string_view slot_name, uint32_t id,
-                              std::string_view pc_name) noexcept;
+std::string BuildCustomMailSlotName(std::string_view slot_name, uint32_t id,
+                                    std::string_view pc_name);
+
+std::string BuildMailSlotNameStem(Modus modus, uint32_t id);
+std::string BuildMailSlotNameRoot(std::string_view pc_name);
+inline std::string BuildMailSlotNameRoot() {
+    return BuildMailSlotNameRoot(".");
+}
 
 class Slot {
 public:
@@ -73,11 +79,11 @@ public:
     Slot(Slot &&) = delete;
     Slot &operator=(Slot &&) = delete;
 
-    Slot(std::string_view name, uint32_t id, std::string_view pc_name) noexcept
-        : name_{BuildMailSlotName(name, id, pc_name)} {}
+    Slot(Modus modus, uint32_t id) noexcept
+        : name_{BuildMailSlotNameRoot() + BuildMailSlotNameStem(modus, id)} {}
 
     Slot(std::string_view name, uint32_t id) noexcept
-        : name_{BuildMailSlotName(name, id, ".")} {}
+        : name_{BuildCustomMailSlotName(name, id, ".")} {}
 
     explicit Slot(std::string_view name) : name_(name) {}
 
@@ -128,7 +134,7 @@ private:
 
 /// returns controller slot_name
 inline std::string ControllerMailSlotName(uint32_t pid) noexcept {
-    return BuildMailSlotName(controller_slot_prefix, pid, ".");
+    return BuildCustomMailSlotName(controller_slot_prefix, pid, ".");
 }
 
 }  // namespace cma::mailslot

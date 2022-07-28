@@ -37,8 +37,31 @@ constexpr bool kUsePublicProfileLog = true;  // to Profile(not to Windows)
 constexpr const char *const kMailSlotLogFileName = "cmk_mail.log";
 
 bool IsApiLogged() noexcept { return false || tgt::IsDebug(); }
-std::string BuildMailSlotName(std::string_view slot_name, uint32_t id,
-                              std::string_view pc_name) noexcept {
+
+std::string BuildMailSlotNameStem(Modus modus, uint32_t id) {
+    std::string_view stem_base;
+    switch (modus) {
+        case Modus::app:
+        case Modus::integration:
+            stem_base = cfg::kAppMailSlot;
+            break;
+        case Modus::test:
+            stem_base = cfg::kTestingMailSlot;
+            break;
+        case Modus::service:
+            stem_base = cfg::kServiceMailSlot;
+            id = 0;
+            break;
+    }
+    return fmt::format(R"(Global\{}_{})", stem_base, id);
+}
+
+std::string BuildMailSlotNameRoot(std::string_view pc_name) {
+    return fmt::format(R"(\\{}\mailslot\)", pc_name);
+}
+
+std::string BuildCustomMailSlotName(std::string_view slot_name, uint32_t id,
+                                    std::string_view pc_name) {
     return fmt::format(R"(\\{}\mailslot\Global\{}_{})", pc_name, slot_name, id);
 }
 

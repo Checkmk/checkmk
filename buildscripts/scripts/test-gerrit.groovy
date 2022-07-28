@@ -81,7 +81,6 @@ def main() {
             def allStagesPassed = true;
             stage_info.STAGES.each { item ->
                 allStagesPassed = test_gerrit_helper.create_stage(item, issues, time_stage_started) and allStagesPassed;
-                sh("ls -alF ${result_dir}");
                 time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
             }
             currentBuild.result = allStagesPassed ? "SUCCESS" : "FAILED";

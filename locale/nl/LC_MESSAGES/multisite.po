@@ -16699,6 +16699,10 @@ msgstr ""
 msgid "Enable logging of logon failures"
 msgstr "Loggen van mislukte aanmeldingen inschakelen"
 
+#, fuzzy
+msgid "Enable login via GET requests"
+msgstr "Profilering op verzoek inschakelen"
+
 msgid "Enable new rule based notifications"
 msgstr "Inschakelen van nieuwe regelgebaseerde meldingen"
 
@@ -29971,6 +29975,10 @@ msgstr "Meta gebruik"
 
 msgid "Method"
 msgstr "Methode"
+
+#, fuzzy
+msgid "Method not allowed"
+msgstr "Toegestane tijd"
 
 msgid "Method of probing"
 msgstr "Methode van sonderen"
@@ -57460,6 +57468,13 @@ msgstr "Regel voor kennisgeving aan gebruikers"
 
 msgid "Using predefined condition"
 msgstr "Gebruik van voorgedefinieerde voorwaarde"
+
+msgid ""
+"Using the GET method to authenticate against login.py leaks user credentials "
+"in the Apache logs (see more details in our Werk 14261). We disable logging  "
+"in via this method by default. Use this property to enable logging in via "
+"the GET method for all users."
+msgstr ""
 
 #, python-format
 msgid ""

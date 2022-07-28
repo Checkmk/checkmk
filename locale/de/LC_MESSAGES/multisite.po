@@ -16742,6 +16742,10 @@ msgstr ""
 msgid "Enable logging of logon failures"
 msgstr "Protokollierung von Anmeldefehlern einschalten"
 
+#, fuzzy
+msgid "Enable login via GET requests"
+msgstr "Profiling pro Anfrage aktivieren"
+
 msgid "Enable new rule based notifications"
 msgstr "Regelbasierte Alarmierung einschalten"
 
@@ -30014,6 +30018,10 @@ msgstr "Meta-Nutzung"
 
 msgid "Method"
 msgstr "Methode"
+
+#, fuzzy
+msgid "Method not allowed"
+msgstr "Zeitraum eingrenzen"
 
 msgid "Method of probing"
 msgstr "Messmethode"
@@ -57509,6 +57517,13 @@ msgstr "Benutzer-Alarmierungsregel"
 
 msgid "Using predefined condition"
 msgstr "Verwendung einer vordefinierten Bedingung"
+
+msgid ""
+"Using the GET method to authenticate against login.py leaks user credentials "
+"in the Apache logs (see more details in our Werk 14261). We disable logging  "
+"in via this method by default. Use this property to enable logging in via "
+"the GET method for all users."
+msgstr ""
 
 #, python-format
 msgid ""

@@ -46,19 +46,6 @@ def not_ready(time_diff_minutes=0):
     }
 
 
-@pytest.fixture(autouse=True)
-def time(mocker):
-    def time_side_effect():
-        timestamp = TIMESTAMP
-        while True:
-            yield timestamp
-            timestamp += MINUTE
-
-    time_mock = mocker.Mock(side_effect=time_side_effect())
-    mocker.patch.object(kube_pod_conditions, "time", mocker.Mock(time=time_mock))
-    return time_mock
-
-
 @pytest.fixture
 def state():
     return OK
@@ -158,7 +145,7 @@ def params():
 
 @pytest.fixture
 def check_result(params, section):
-    return kube_pod_conditions.check(params, section)
+    return kube_pod_conditions._check(TIMESTAMP, params, section)
 
 
 @pytest.fixture

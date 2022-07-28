@@ -41,18 +41,6 @@ def condition_false(time_diff_minutes: int = 0) -> Mapping[str, Union[str, int]]
     }
 
 
-@pytest.fixture(autouse=True)
-def time(mocker):
-    def time_call():
-        timestamp = TIMESTAMP
-        while True:
-            yield timestamp
-
-    time_mock = mocker.Mock(side_effect=time_call())
-    mocker.patch.object(kube_deployment_conditions, "time", mocker.Mock(time=time_mock))
-    return time_mock
-
-
 @pytest.fixture
 def params() -> Mapping[str, VSResultAge]:
     return dict(
@@ -143,7 +131,7 @@ def section(string_table: StringTable) -> DeploymentConditions:
 
 @pytest.fixture
 def check_result(params: Mapping[str, VSResultAge], section: DeploymentConditions) -> CheckResult:
-    return kube_deployment_conditions.check(params, section)
+    return kube_deployment_conditions._check(TIMESTAMP, params, section)
 
 
 def test_ok_state_mappings_match_conditions() -> None:

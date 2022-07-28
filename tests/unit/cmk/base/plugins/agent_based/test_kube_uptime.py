@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from freezegun import freeze_time
 
-from cmk.base.plugins.agent_based.kube_uptime import parse_kube_start_time
+from cmk.base.plugins.agent_based.kube_uptime import _parse_kube_start_time
 from cmk.base.plugins.agent_based.utils.uptime import Section
 
 
-@freeze_time("1970-01-01 00:00:01")
 def test_parse_kube_start_time() -> None:
-    assert parse_kube_start_time([['{"start_time": 0}']]) == Section(uptime_sec=1.0, message=None)
+    assert _parse_kube_start_time(1.0, [['{"start_time": 0}']]) == Section(
+        uptime_sec=1.0, message=None
+    )

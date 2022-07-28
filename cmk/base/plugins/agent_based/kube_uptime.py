@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import time
 from json import loads
-from time import time
 from typing import Optional
 
 from .agent_based_api.v1 import register
@@ -14,12 +14,14 @@ from .utils.kube import StartTime
 from .utils.uptime import Section
 
 
-def parse_kube_start_time(string_table: StringTable) -> Optional[Section]:
+def _parse_kube_start_time(now: float, string_table: StringTable) -> Optional[Section]:
     if not string_table:
         return None
-    return Section(
-        uptime_sec=time() - StartTime(**loads(string_table[0][0])).start_time, message=None
-    )
+    return Section(uptime_sec=now - StartTime(**loads(string_table[0][0])).start_time, message=None)
+
+
+def parse_kube_start_time(string_table: StringTable) -> Optional[Section]:
+    return _parse_kube_start_time(time.time(), string_table)
 
 
 register.agent_section(

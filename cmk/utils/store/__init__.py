@@ -11,13 +11,21 @@ import enum
 import logging
 import pickle
 import pprint
+import shutil
 from contextlib import nullcontext
 from pathlib import Path
 from typing import Any, Union
 
+import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
 from cmk.utils.i18n import _
-from cmk.utils.store._file import BytesSerializer, DimSerializer, ObjectStore, TextSerializer
+from cmk.utils.store._file import (
+    BytesSerializer,
+    DimSerializer,
+    ObjectStore,
+    PickleSerializer,
+    TextSerializer,
+)
 from cmk.utils.store._locks import aquire_lock, cleanup_locks, configuration_lockfile, have_lock
 from cmk.utils.store._locks import leave_locked_unless_exception as _leave_locked_unless_exception
 from cmk.utils.store._locks import (
@@ -216,9 +224,55 @@ def save_bytes_to_file(path: Union[Path, str], content: bytes, mode: int = 0o660
         ObjectStore(Path(path), serializer=BytesSerializer()).write_obj(content, mode=mode)
 
 
-class PickleSerializer:
-    def serialize(self, data) -> bytes:
-        return pickle.dumps(data)
+_pickled_files_base_dir = Path(cmk.utils.paths.tmp_dir) / "pickled_files_cache"
+_pickle_serializer = PickleSerializer[Any]()
 
-    def deserialize(self, raw: bytes) -> Any:
-        return pickle.loads(raw)
+
+def load_pickled_object_file(path: Path, *, default: Any, lock: bool = False) -> Any:
+    """Tries to load a pickled version of the requested object
+    The pickled versions are located in the tmpfs directory under the same relative site path.
+    They are vanishing when the tmpfs is unmounted (reboots/software updates, etc.)
+    If no pickled version exists or the pickled version is older than the original file,
+    the original file is read and a pickled version of it is written.
+
+    Note: I'm not a big fan of all this pathlib.Path stuff here, os.path >>> pathlib.Path (7 times slower)
+          Let's see how that works out..
+    """
+
+    if lock:
+        # Lock the original file and try to return the pickled data
+        aquire_lock(path)
+
+    try:
+        relative_path = path.relative_to(cmk.utils.paths.omd_root)
+    except ValueError:
+        # No idea why someone is trying to load something outside of the sites home directory
+        return load_object_from_file(path, default=default, lock=lock)
+
+    pickle_path = _pickled_files_base_dir / relative_path.parent / (relative_path.name + ".pkl")
+    try:
+        if pickle_path.stat().st_mtime > path.stat().st_mtime:
+            # Use pickled version since this file is newer and therefore valid
+            return ObjectStore(pickle_path, serializer=_pickle_serializer).read_obj(default=default)
+    except (FileNotFoundError, pickle.UnpicklingError):
+        pass
+
+    # Scenarios depending on lock
+    # lock == True
+    #       The original file always exists -> create pickle file, even an empty one
+    #       in case the original file just came into existence
+    # lock == False
+    #       original-missing/pickle-exists: no pickling, use load_object_from_file
+    #       original-missing/pickle-missing_broken_outdated: no pickling, use load_object_from_file
+    #       original-exists/pickle-missing_broken_outdated: create pickle file
+    data = load_object_from_file(path, default=default, lock=lock)
+    if path.exists():
+        # Only create the pickled version if an original file actually exists
+        pickle_path.parent.mkdir(exist_ok=True, parents=True)
+        ObjectStore(pickle_path, serializer=_pickle_serializer).write_obj(data)
+    return data
+
+
+def clear_pickled_object_files() -> None:
+    """Remove all cached pickle files"""
+    shutil.rmtree(_pickled_files_base_dir, ignore_errors=True)

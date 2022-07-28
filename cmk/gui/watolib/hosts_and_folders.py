@@ -684,7 +684,9 @@ class _PickleWATOInfoStorage(_ABCWATOInfoStorage):
         pickle_path = self._add_suffix(file_path)
         if not pickle_path.exists() or not self._file_valid(pickle_path, file_path):
             return None
-        return store.ObjectStore(pickle_path, serializer=PickleSerializer()).read_obj(default={})
+        return store.ObjectStore(
+            pickle_path, serializer=PickleSerializer[Dict[str, Any]]()
+        ).read_obj(default={})
 
     def _file_valid(self, pickle_path: Path, file_path: Path) -> bool:
         # The experimental file must not be older than the corresponding .wato
@@ -695,7 +697,9 @@ class _PickleWATOInfoStorage(_ABCWATOInfoStorage):
         return file_path.stat().st_mtime <= pickle_path.stat().st_mtime
 
     def write(self, file_path: Path, data: Dict[str, Any]) -> None:
-        pickle_store = store.ObjectStore(self._add_suffix(file_path), serializer=PickleSerializer())
+        pickle_store = store.ObjectStore(
+            self._add_suffix(file_path), serializer=PickleSerializer[Dict[str, Any]]()
+        )
         with pickle_store.locked():
             pickle_store.write_obj(data)
 

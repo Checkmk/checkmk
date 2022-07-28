@@ -13,7 +13,7 @@
 
 case "$1" in
     default)
-            if [ ! -z "$CONFIG_WEBSERVER" ]; then
+            if [ -n "$CONFIG_WEBSERVER" ]; then
                 echo "$CONFIG_WEBSERVER"
             else
                 echo "own";
@@ -24,15 +24,27 @@ case "$1" in
             echo "none: Do not run or configure a webserver"
     ;;
     set)
-        # When one configured shared, fallback to own mode
-        if [ "$2" == "own" ] || [ "$2" == "shared" ]; then
-            ln -sfn apache-own.conf $OMD_ROOT/etc/apache/mode.conf
-        elif [ "$2" == "shared" ] ; then
-            echo "DEPRECATION WARNING: the shared apache mode has been removed."
-            exit 1
-        elif [ "$2" == "none" ] ; then
-            rm -f $OMD_ROOT/etc/apache/mode.conf
-            : > $OMD_ROOT/etc/apache/mode.conf
+        if grep ^Include "/omd/apache/$OMD_SITE.conf" >/dev/null 2>&1; then
+            # This site hasn't been updated to the new apache configuration yet.
+            # Use the old system apache configuration for compatibility reasons.
+            # See #14281 for further information.
+
+            # When one configured shared, fallback to own mode
+            if [ "$2" == "own" ] || [ "$2" == "shared" ]; then
+                ln -sfn apache-own.conf "$OMD_ROOT/etc/apache/mode.conf"
+            elif [ "$2" == "shared" ] ; then
+                echo "DEPRECATION WARNING: the shared apache mode has been removed."
+                exit 1
+            elif [ "$2" == "none" ] ; then
+                rm -f "$OMD_ROOT/etc/apache/mode.conf"
+                : > "$OMD_ROOT/etc/apache/mode.conf"
+            fi
+        else
+            # Since werk #14281 these files are not used anymore. Better remove them to
+            # not confuse users.
+            if [ -L "$OMD_ROOT/etc/apache/mode.conf" ]; then
+                rm "$OMD_ROOT/etc/apache/mode.conf"
+            fi
         fi
     ;;
 esac

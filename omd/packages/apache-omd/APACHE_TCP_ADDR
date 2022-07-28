@@ -4,8 +4,7 @@
 # Menu: Web GUI
 # Description:
 #  Configure the TCP host address for the Apache webserver
-#  process of this site. This option is only useful if
-#  APACHE is set to "on" and WEBSERVER is set to "own".
+#  process of this site.
 #
 #  It might be useful to change the host address the site
 #  Apache webserver listes to.
@@ -15,8 +14,8 @@
 
 # Load other config options. This hook needs
 # APACHE_TCP_PORT.
-if [ -f $OMD_ROOT/etc/omd/site.conf ]; then
-    . $OMD_ROOT/etc/omd/site.conf
+if [ -f "$OMD_ROOT/etc/omd/site.conf" ]; then
+    . "$OMD_ROOT/etc/omd/site.conf"
 else
     CONFIG_APACHE_TCP_PORT=${CONFIG_APACHE_TCP_PORT:-0}
 fi
@@ -30,13 +29,18 @@ choices)
     ;;
 set)
     APACHE_HOST=$2
-    cat <<EOF >$OMD_ROOT/etc/apache/listen-port.conf
+    cat <<EOF >"$OMD_ROOT/etc/apache/listen-port.conf"
 # This file is managed by 'omd config set APACHE_TCP_PORT' and 'omd config set APACHE_TCP_ADDR'.
 # Better do not edit manually
 ServerName $APACHE_HOST:$CONFIG_APACHE_TCP_PORT
 Listen $APACHE_HOST:$CONFIG_APACHE_TCP_PORT
 EOF
-    cat <<EOF >$OMD_ROOT/etc/apache/proxy-port.conf
+
+    if grep ^Include "/omd/apache/$OMD_SITE.conf" >/dev/null 2>&1; then
+        # This site hasn't been updated to the new apache configuration yet.
+        # Use the old system apache configuration for compatibility reasons.
+        # See #14281 for further information.
+        cat <<EOF >"$OMD_ROOT/etc/apache/proxy-port.conf"
 # This file is managed by 'omd config set APACHE_TCP_PORT' and 'omd config set APACHE_TCP_ADDR'.
 # Better do not edit manually
 <IfModule mod_proxy_http.c>
@@ -55,6 +59,13 @@ EOF
   </Location>
 </IfModule>
 EOF
+    else
+        # Since werk #14281 these files are not used anymore. Better remove them to
+        # not confuse users.
+        if [ -f "$OMD_ROOT/etc/apache/proxy-port.conf" ]; then
+            rm "$OMD_ROOT/etc/apache/proxy-port.conf"
+        fi
+    fi
     ;;
 depends)
     [ "$CONFIG_APACHE_MODE" = own ]

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disallow-untyped-defs
 import json
 import logging
 from typing import Mapping, Sequence, Union
@@ -23,18 +24,18 @@ from cmk.special_agents.utils_kubernetes.api_server import (
 from cmk.special_agents.utils_kubernetes.schemata import api
 
 
-def kubernetes_api_client():
+def kubernetes_api_client() -> ApiClient:
     config = client.Configuration()
     config.host = "http://api-unittest"
     return ApiClient(config)
 
 
 @pytest.fixture(name="raw_api")
-def _raw_api():
+def _raw_api() -> RawAPI:
     return RawAPI(kubernetes_api_client(), timeout=(10, 10))
 
 
-def test_raw_api_get_healthz_ok(raw_api) -> None:  # type:ignore[no-untyped-def]
+def test_raw_api_get_healthz_ok(raw_api: RawAPI) -> None:
     Entry.single_register(Entry.GET, "http://api-unittest/some_health_endpoint", body="response-ok")
     with Mocketizer():
         result = raw_api._get_healthz("/some_health_endpoint")
@@ -44,7 +45,7 @@ def test_raw_api_get_healthz_ok(raw_api) -> None:  # type:ignore[no-untyped-def]
     assert result.verbose_response is None
 
 
-def test_raw_api_get_healthz_nok(raw_api) -> None:  # type:ignore[no-untyped-def]
+def test_raw_api_get_healthz_nok(raw_api: RawAPI) -> None:
     Entry.single_register(
         Entry.GET, "http://api-unittest/some_health_endpoint", body="response-nok", status=500
     )
@@ -127,8 +128,8 @@ version_json_pytest_params = [
 
 
 @pytest.mark.parametrize("version_json, _", version_json_pytest_params)
-def test_version_endpoint(  # type:ignore[no-untyped-def]
-    version_json: Mapping[str, str], _, raw_api
+def test_version_endpoint(
+    version_json: Mapping[str, str], _: api.KubernetesVersion, raw_api: RawAPI
 ) -> None:
     # arrange
     version_json_dump = json.dumps(version_json)
@@ -145,7 +146,7 @@ def test_version_endpoint(  # type:ignore[no-untyped-def]
     assert queried_version == version_json_dump
 
 
-def test_version_endpoint_no_json(raw_api) -> None:  # type:ignore[no-untyped-def]
+def test_version_endpoint_no_json(raw_api: RawAPI) -> None:
     """
 
     Invalid endpoint, since returned data is not json. RawAPI will not
@@ -157,7 +158,7 @@ def test_version_endpoint_no_json(raw_api) -> None:  # type:ignore[no-untyped-de
     assert result == "I'm not json"
 
 
-def test_version_endpoint_invalid_json(raw_api) -> None:  # type:ignore[no-untyped-def]
+def test_version_endpoint_invalid_json(raw_api: RawAPI) -> None:
     """
 
     Invalid endpoint, since gitVersion field is missing. RawAPI will not
@@ -262,7 +263,7 @@ def test_decompose_git_version(
     git_version: api.GitVersion,
     result: Union[api.KubernetesVersion, api.UnknownKubernetesVersion],
     logs: Sequence[str],
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     with caplog.at_level(logging.WARN):
         assert result == decompose_git_version(git_version)
@@ -302,11 +303,11 @@ def test_decompose_git_version(
         ),
     ],
 )
-def test__verify_version_support_continue_processing(  # type:ignore[no-untyped-def]
+def test__verify_version_support_continue_processing(
     kubernetes_version: Union[api.KubernetesVersion, api.UnknownKubernetesVersion],
     logs: Sequence[str],
-    caplog,
-):
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     with caplog.at_level(logging.WARN):
         _verify_version_support(kubernetes_version)
     assert [formatter.format(record) for record in caplog.records] == logs

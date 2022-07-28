@@ -19,6 +19,8 @@ from cmk.utils.exceptions import MKException, MKGeneralException
 import cmk.gui.sites as sites
 import cmk.gui.utils
 from cmk.gui.config import active_config
+from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
+from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -1391,7 +1393,7 @@ class MenuSearchResultsRenderer:
     def render(self, query: str) -> str:
         try:
             results = self._generate_results(query)
-        # Don't render the IncorrectLapelInputError in Mega Menu to make the handling of
+        # Don't render the IncorrectLabelInputError in Mega Menu to make the handling of
         # incorrect inputs consistent with other search querys
         except IncorrectLabelInputError:
             return ""
@@ -1614,4 +1616,10 @@ class PageSearchSetup(AjaxPage):
                 html.write_text(_("Currently indexing, please try again shortly."))
                 html.close_ul()
                 html.close_div()
+                return output_funnel.drain()
+        except Exception:
+            with output_funnel.plugged():
+                handle_exception_as_gui_crash_report(
+                    show_crash_link=getattr(g, "may_see_crash_reports", False),
+                )
                 return output_funnel.drain()

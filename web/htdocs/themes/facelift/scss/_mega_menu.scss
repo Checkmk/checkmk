@@ -182,6 +182,10 @@
         cursor: pointer;
       }
 
+      div.error a {
+        text-decoration: underline;
+      }
+
       &#popup_menu_user div.navigation_bar div.search_bar,
       &#popup_menu_help_links div.navigation_bar div.search_bar {
         flex-grow: 0;

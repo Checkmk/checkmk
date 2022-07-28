@@ -56,7 +56,6 @@ class TestValueSpecTextInput:
 
     def test_mask(self) -> None:
         assert vs.TextInput().mask("tape") == "tape"
-        assert vs.TextInput(hidden=True).mask("password") == "******"
 
     def test_json(self) -> None:
         assert vs.TextInput().value_from_json(vs.TextInput().value_to_json("b")) == "b"

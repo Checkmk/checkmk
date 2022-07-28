@@ -647,7 +647,6 @@ class TextInput(ValueSpec[str]):
         maxlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         autocomplete: bool = True,
-        hidden: bool = False,
         placeholder: _Optional[str] = None,
         # ValueSpec
         title: _Optional[str] = None,
@@ -678,7 +677,6 @@ class TextInput(ValueSpec[str]):
         self._maxlen = maxlen
         self._onkeyup = onkeyup
         self._autocomplete = autocomplete
-        self._hidden = hidden
         self._placeholder = placeholder
 
     def allow_empty(self) -> bool:
@@ -698,15 +696,13 @@ class TextInput(ValueSpec[str]):
             try_max_width=self._try_max_width,
             read_only=self._read_only,
             cssclass=self._cssclass,
-            type_="password" if self._hidden else "text",
+            type_="text",
             autocomplete="off" if not self._autocomplete else None,
             onkeyup=self._onkeyup if self._onkeyup else None,
             placeholder=self._placeholder,
         )
 
     def mask(self, value: str) -> str:
-        if self._hidden:
-            return "******"
         return value
 
     def value_to_html(self, value: str) -> ValueSpecText:
@@ -792,7 +788,6 @@ def ID(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
     maxlen: _Optional[int] = None,
     onkeyup: _Optional[str] = None,
     autocomplete: bool = True,
-    hidden: bool = False,
     placeholder: _Optional[str] = None,
     # ValueSpec
     title: _Optional[str] = None,
@@ -820,7 +815,6 @@ def ID(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
         maxlen=maxlen,
         onkeyup=onkeyup,
         autocomplete=autocomplete,
-        hidden=hidden,
         placeholder=placeholder,
         title=title,
         help=help,
@@ -843,7 +837,6 @@ def UserID(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
     maxlen: _Optional[int] = None,
     onkeyup: _Optional[str] = None,
     autocomplete: bool = True,
-    hidden: bool = False,
     placeholder: _Optional[str] = None,
     # ValueSpec
     title: _Optional[str] = None,
@@ -880,7 +873,6 @@ def UserID(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
         maxlen=maxlen,
         onkeyup=onkeyup,
         autocomplete=autocomplete,
-        hidden=hidden,
         placeholder=placeholder,
         title=title,
         help=help,
@@ -917,7 +909,6 @@ class RegExp(TextInput):
         maxlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         autocomplete: bool = True,
-        hidden: bool = False,
         # From ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
@@ -940,7 +931,6 @@ class RegExp(TextInput):
             maxlen=maxlen,
             onkeyup=onkeyup,
             autocomplete=autocomplete,
-            hidden=hidden,
             title=title,
             help=help,
             default_value=default_value,
@@ -1066,7 +1056,6 @@ class EmailAddress(TextInput):
         maxlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         autocomplete: bool = True,
-        hidden: bool = False,
         # From ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
@@ -1118,7 +1107,6 @@ class EmailAddress(TextInput):
             maxlen=maxlen,
             onkeyup=onkeyup,
             autocomplete=autocomplete,
-            hidden=hidden,
             title=title,
             help=help,
             default_value=default_value,
@@ -1267,7 +1255,6 @@ class HostAddress(TextInput):
         maxlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         autocomplete: bool = True,
-        hidden: bool = False,
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
@@ -1290,7 +1277,6 @@ class HostAddress(TextInput):
             maxlen=maxlen,
             onkeyup=onkeyup,
             autocomplete=autocomplete,
-            hidden=hidden,
             title=title,
             help=help,
             default_value=default_value,
@@ -1421,7 +1407,6 @@ class Url(TextInput):
         maxlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         autocomplete: bool = True,
-        hidden: bool = False,
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
@@ -1444,7 +1429,6 @@ class Url(TextInput):
             maxlen=maxlen,
             onkeyup=onkeyup,
             autocomplete=autocomplete,
-            hidden=hidden,
             title=title,
             help=help,
             default_value=default_value,
@@ -1564,7 +1548,6 @@ class TextAreaUnicode(TextInput):
         maxlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         autocomplete: bool = True,
-        hidden: bool = False,
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
@@ -1587,7 +1570,6 @@ class TextAreaUnicode(TextInput):
             maxlen=maxlen,
             onkeyup=onkeyup,
             autocomplete=autocomplete,
-            hidden=hidden,
             title=title,
             help=help,
             default_value=default_value,
@@ -1660,7 +1642,6 @@ class Filename(TextInput):
         maxlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         autocomplete: bool = True,
-        hidden: bool = False,
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
@@ -1683,7 +1664,6 @@ class Filename(TextInput):
             maxlen=maxlen,
             onkeyup=onkeyup,
             autocomplete=autocomplete,
-            hidden=hidden,
             title=title,
             help=help,
             default_value=default_value,
@@ -6228,7 +6208,6 @@ class LDAPDistinguishedName(TextInput):
         maxlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         autocomplete: bool = True,
-        hidden: bool = False,
         placeholder: _Optional[str] = None,
         # ValueSpec
         title: _Optional[str] = None,
@@ -6252,7 +6231,6 @@ class LDAPDistinguishedName(TextInput):
             maxlen=maxlen,
             onkeyup=onkeyup,
             autocomplete=autocomplete,
-            hidden=hidden,
             placeholder=placeholder,
             title=title,
             help=help,
@@ -6312,7 +6290,6 @@ class Password(TextInput):
         maxlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         autocomplete: bool = False,  # NOTE: Different!
-        hidden: bool = False,
         placeholder: _Optional[str] = None,
         # ValueSpec
         title: _Optional[str] = None,
@@ -6347,7 +6324,6 @@ class Password(TextInput):
             maxlen=maxlen,
             onkeyup=onkeyup,
             autocomplete=autocomplete,
-            hidden=hidden,
             placeholder=placeholder,
             title=title,
             help=help,
@@ -6434,7 +6410,6 @@ class PasswordSpec(Password):
         maxlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         autocomplete: bool = False,  # NOTE: Different!
-        hidden: bool = True,  # NOTE: Different
         placeholder: _Optional[str] = None,
         # ValueSpec
         title: _Optional[str] = None,
@@ -6461,7 +6436,6 @@ class PasswordSpec(Password):
             maxlen=maxlen,
             onkeyup=onkeyup,
             autocomplete=autocomplete,
-            hidden=hidden,
             placeholder=placeholder,
             title=title,
             help=help,
@@ -6478,13 +6452,12 @@ class PasswordSpec(Password):
                 "random",
                 onclick=f"cmk.valuespecs.passwordspec_randomize(this, {self._pwlen});",
             )
-        if self._hidden:
-            html.icon_button(
-                "#",
-                _("Show/Hide password"),
-                "showhide",
-                onclick="cmk.valuespecs.toggle_hidden(this);",
-            )
+        html.icon_button(
+            "#",
+            _("Show/Hide password"),
+            "showhide",
+            onclick="cmk.valuespecs.toggle_hidden(this);",
+        )
 
         self.password_plaintext_warning()
 

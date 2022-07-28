@@ -2349,7 +2349,7 @@ def main_update(version_info: VersionInfo, site: SiteContext, global_opts: 'Glob
         # In case the hook can not be read, assume the hook needs to be updated
         hook_up_to_date = False
 
-    if (hook_up_to_date and not global_opts.force and not dialog_yesno(
+    if (not hook_up_to_date and not global_opts.force and not dialog_yesno(
             "This update requires additional actions: The system apache configuration has changed "
             "with the new version and needs to be updated.\n\n"
             f"You will have to execute 'omd update-apache-config {site.name}' as root user.\n\n"

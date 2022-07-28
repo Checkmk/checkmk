@@ -2939,8 +2939,9 @@ class StatusServer(ECServerThread):
             self._history.add(event, "CHANGESTATE", user)
 
     def handle_command_reload(self) -> None:
-        reload_configuration(self.settings, self._logger, self._lock_configuration, self._history,
-                             self._event_status, self._event_server, self, self._slave_status)
+        reload_configuration(self.settings, getLogger("cmk.mkeventd"), self._lock_configuration,
+                             self._history, self._event_status, self._event_server, self,
+                             self._slave_status)
 
     def handle_command_reopenlog(self) -> None:
         self._logger.info("Closing this logfile")

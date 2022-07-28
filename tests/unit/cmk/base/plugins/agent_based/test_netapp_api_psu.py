@@ -42,34 +42,34 @@ def _get_section() -> netapp_api.SectionSingleInstance:
 
 
 def test_disovery_single(section: netapp_api.SectionSingleInstance) -> None:
-    assert sorted(nap.discovery_netapp_api_psu({"mode": "single"}, section)) == [
+    assert sorted(nap.netapp_api.discover_single({"mode": "single"}, section)) == [
         Service(item="0/1"),
         Service(item="0/2"),
     ]
-    assert not list(nap.discovery_netapp_api_psu_summary({"mode": "single"}, section))
+    assert not list(nap.netapp_api.discover_summary({"mode": "single"}, section))
 
 
 def test_disovery_summary(section: netapp_api.SectionSingleInstance) -> None:
-    assert not list(nap.discovery_netapp_api_psu({"mode": "summary"}, section))
-    assert list(nap.discovery_netapp_api_psu_summary({"mode": "summary"}, section)) == [
+    assert not list(nap.netapp_api.discover_single({"mode": "summary"}, section))
+    assert list(nap.netapp_api.discover_summary({"mode": "summary"}, section)) == [
         Service(item="Summary"),
     ]
 
 
 def test_check_ok(section: netapp_api.SectionSingleInstance) -> None:
-    assert list(nap.check_netapp_api_psu("0/1", section)) == [
+    assert list(nap.netapp_api.get_single_check("power supply unit")("0/1", section)) == [
         Result(state=State.OK, summary="Operational state OK"),
     ]
 
 
 def test_check_failed(section: netapp_api.SectionSingleInstance) -> None:
-    assert list(nap.check_netapp_api_psu("0/2", section)) == [
-        Result(state=State.CRIT, summary="Error in PSU 2"),
+    assert list(nap.netapp_api.get_single_check("power supply unit")("0/2", section)) == [
+        Result(state=State.CRIT, summary="Error in power supply unit 2"),
     ]
 
 
 def test_check_summary(section: netapp_api.SectionSingleInstance) -> None:
-    assert list(nap.check_netapp_api_psu_summary("Summary", section)) == [
-        Result(state=State.OK, summary="2 power supply units in total"),
-        Result(state=State.CRIT, summary="1 power supply unit in error state (0/2)"),
+    assert list(nap.netapp_api.get_summary_check("power supply unit")("Summary", section)) == [
+        Result(state=State.OK, summary="OK: 1 of 2"),
+        Result(state=State.CRIT, summary="Failed: 1 (0/2)"),
     ]

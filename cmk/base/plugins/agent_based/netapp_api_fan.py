@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, Sequence
-
-from .agent_based_api.v1 import register, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .agent_based_api.v1 import register
+from .agent_based_api.v1.type_defs import StringTable
 from .utils import netapp_api
 
 # <<<netapp_api_fan:sep(9)>>>
@@ -37,82 +35,22 @@ register.agent_section(
 )
 
 
-def discovery_netapp_api_fan(
-    params: Mapping[str, Any],
-    section: netapp_api.SectionSingleInstance,
-) -> DiscoveryResult:
-    if not netapp_api.discover_single_items(params):
-        return
-    yield from (Service(item=item) for item in section)
-
-
-def check_netapp_api_fan(
-    item: str,
-    section: netapp_api.SectionSingleInstance,
-) -> CheckResult:
-    if not (fan := section.get(item)):
-        return
-
-    if fan["cooling-element-is-error"] == "true":
-        yield Result(state=State.CRIT, summary="Error in Fan %s" % fan["cooling-element-number"])
-    else:
-        yield Result(state=State.OK, summary="Operational state OK")
-
-
 register.check_plugin(
     name="netapp_api_fan",
     service_name="Fan Shelf %s",
-    discovery_function=discovery_netapp_api_fan,
+    discovery_function=netapp_api.discover_single,
     discovery_ruleset_name="discovery_netapp_api_fan_rules",
     discovery_default_parameters={"mode": "single"},
-    check_function=check_netapp_api_fan,
+    check_function=netapp_api.get_single_check("fan"),
 )
-
-
-def discovery_netapp_api_fan_summary(
-    params: Mapping[str, Any],
-    section: netapp_api.SectionSingleInstance,
-) -> DiscoveryResult:
-    if not section or netapp_api.discover_single_items(params):
-        return
-    yield Service(item="Summary")
-
-
-def _get_failed_cooling_elements(fans: Mapping[str, netapp_api.Instance]) -> Sequence[str]:
-    erred_fans = []
-    for key, value in fans.items():
-        if value["cooling-element-is-error"] == "true":
-            erred_fans.append(key)
-    return erred_fans
-
-
-def check_netapp_api_fan_summary(
-    item: str,
-    section: netapp_api.SectionSingleInstance,
-) -> CheckResult:
-    yield Result(state=State.OK, summary=f"{len(section)} fans in total")
-
-    erred_fans = _get_failed_cooling_elements(section)
-    if erred_fans:
-        erred_fans_names = ", ".join(erred_fans)
-        count = len(erred_fans)
-        yield Result(
-            state=State.CRIT,
-            summary="%d fan%s in error state (%s)"
-            % (
-                count,
-                "" if count == 1 else "s",
-                erred_fans_names,
-            ),
-        )
 
 
 register.check_plugin(
     name="netapp_api_fan_summary",
     service_name="Fan Shelf %s",
     sections=["netapp_api_fan"],
-    discovery_function=discovery_netapp_api_fan_summary,
+    discovery_function=netapp_api.discover_summary,
     discovery_ruleset_name="discovery_netapp_api_fan_rules",
     discovery_default_parameters={"mode": "single"},
-    check_function=check_netapp_api_fan_summary,
+    check_function=netapp_api.get_summary_check("fan"),
 )

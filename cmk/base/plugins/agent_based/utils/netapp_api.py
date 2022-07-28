@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Dict, List, Mapping, Optional, Sequence, TypedDict
+from typing import Any, Callable, Dict, List, Literal, Mapping, Optional, Sequence, TypedDict
 
-from ..agent_based_api.v1 import type_defs
+from ..agent_based_api.v1 import Result, Service, State, type_defs
 
 CPUSection = TypedDict(
     "CPUSection",
@@ -23,8 +23,10 @@ CustomKeys = Optional[Sequence[str]]
 ItemFunc = Optional[Callable[[str, Instance], str]]
 
 
-def discover_single_items(params: Mapping[str, str]) -> bool:
-    return params["mode"] == "single"
+_DEV_KEYS = {
+    "fan": ("cooling-element-is-error", "cooling-element-number"),
+    "power supply unit": ("power-supply-is-error", "power-supply-element-number"),
+}
 
 
 def parse_netapp_api_multiple_instances(
@@ -148,3 +150,77 @@ def parse_netapp_api_single_instance(
             item_func=item_func,
         ).items()
     }
+
+
+def _single_configured(params: Mapping[str, Any]) -> bool:
+    return params["mode"] == "single"
+
+
+def discover_single(
+    params: Mapping[str, Any], section: SectionSingleInstance
+) -> type_defs.DiscoveryResult:
+    if not _single_configured(params):
+        return
+    yield from (Service(item=item) for item in section)
+
+
+def discover_summary(
+    params: Mapping[str, Any],
+    section: SectionSingleInstance,
+) -> type_defs.DiscoveryResult:
+    if not section or _single_configured(params):
+        return
+    yield Service(item="Summary")
+
+
+def get_single_check(
+    device_type: Literal["fan", "power supply unit"]
+) -> Callable[[str, SectionSingleInstance], type_defs.CheckResult]:
+
+    error_key, number_key = _DEV_KEYS[device_type]
+
+    def check_single(
+        item: str,
+        section: SectionSingleInstance,
+    ) -> type_defs.CheckResult:
+        if not (device := section.get(item)):
+            return
+
+        if device[error_key] == "true":
+            yield Result(
+                state=State.CRIT,
+                summary=f"Error in {device_type} {device[number_key]}",
+            )
+        else:
+            yield Result(state=State.OK, summary="Operational state OK")
+
+    return check_single
+
+
+def _pluralize(thing: str, count: int) -> str:
+    return thing if count == 1 else f"{thing}s"
+
+
+def get_summary_check(
+    device_type: Literal["fan", "power supply unit"]
+) -> Callable[[str, SectionSingleInstance], type_defs.CheckResult]:
+
+    error_key, _number_key = _DEV_KEYS[device_type]
+
+    def check_summary(
+        item: str,
+        section: SectionSingleInstance,
+    ) -> type_defs.CheckResult:
+        total = len(section)
+        erred = [k for k, v in section.items() if v.get(error_key) == "true"]
+        ok_count = total - len(erred)
+
+        yield Result(state=State.OK, summary=f"OK: {ok_count} of {total}")
+
+        if erred:
+            yield Result(
+                state=State.CRIT,
+                summary=f"Failed: {len(erred)} ({', '.join(erred)})",
+            )
+
+    return check_summary

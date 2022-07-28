@@ -44,6 +44,11 @@ if [ "$USER" != "jenkins" ]; then
         -v "${REPO_DIR}/.docker_workspace/home:${REPO_DIR}/build_user_home/" \
         -e HOME="${REPO_DIR}/build_user_home/" \
         "
+else
+    # Needed for .cargo which is shared between workspaces
+    SHARED_CARGO_FOLDER="/home/jenkins/shared_cargo_folder/"
+    mkdir -p "${SHARED_CARGO_FOLDER}"
+    CARGO_JENKINS_MOUNT="-v ${SHARED_CARGO_FOLDER}:${REPO_DIR}/shared_cargo_folder"
 fi
 
 : "${IMAGE_ALIAS:=IMAGE_TESTING}"
@@ -58,6 +63,7 @@ docker run -t -a stdout -a stderr \
     -u "${UID}:$(id -g)" \
     -v "${REPO_DIR}:${REPO_DIR}" \
     -v "${GIT_COMMON_DIR}:${GIT_COMMON_DIR}" \
+    ${CARGO_JENKINS_MOUNT} \
     ${DOCKER_LOCAL_ARGS} \
     -v "/var/run/docker.sock:/var/run/docker.sock" \
     --group-add="$(getent group docker | cut -d: -f3)" \

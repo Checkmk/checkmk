@@ -1,0 +1,16 @@
+Title: Improve 'omd update' apache config handling
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1659005106
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p10
+
+The intended update warning that should be shown in case the
+Apache hook was not up-to-date was not shown correctly in 2.1.0p9.
+
+And during update a update warning
+<tt>Unwanted etc/apache/apache-own.conf (unchanged, deleted by you)</tt>
+was shown which could lead to confusions. This warning has been removed.

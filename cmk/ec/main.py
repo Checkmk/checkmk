@@ -2875,7 +2875,7 @@ class StatusServer(ECServerThread):
     def handle_command_reload(self) -> None:
         reload_configuration(
             self.settings,
-            self._logger,
+            getLogger("cmk.mkeventd"),
             self._lock_configuration,
             self._history,
             self._event_status,

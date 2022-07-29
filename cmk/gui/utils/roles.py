@@ -10,8 +10,10 @@ from cmk.utils.type_defs import UserId
 
 import cmk.gui.permissions as permissions
 from cmk.gui.config import active_config
+from cmk.gui.hooks import request_memoize
 
 
+@request_memoize()
 def user_may(user_id: Optional[UserId], pname: str) -> bool:
     return may_with_roles(roles_of_user(user_id), pname)
 

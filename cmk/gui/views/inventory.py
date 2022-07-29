@@ -102,6 +102,7 @@ from cmk.gui.type_defs import (
     Row,
     Rows,
     SingleInfos,
+    VisualContext,
     VisualLinkSpec,
 )
 from cmk.gui.utils.escaping import escape_text
@@ -1451,7 +1452,7 @@ def _register_table_view(
         )
     )
 
-    painters: List[Tuple[str, str, str]] = []
+    painters: list[PainterSpec] = []
     filters = []
     for name, col_hint in _inv_find_subtable_columns(hints):
         column = table_view_spec.view_name + "_" + name
@@ -1464,7 +1465,7 @@ def _register_table_view(
             col_hint,
         )
 
-        painters.append((column, "", ""))
+        painters.append(PainterSpec(column))
         filters.append(column)
 
     _register_views(
@@ -1578,7 +1579,7 @@ def _register_multi_table_view(
     )
 
     known_common_columns = set()
-    painters: List[Tuple[str, str, str]] = []
+    painters: list[PainterSpec] = []
     filters = []
     for this_inventory_path, this_table_view_name, this_title in zip(
         inventory_paths, info_names, titles
@@ -1602,7 +1603,7 @@ def _register_multi_table_view(
                 col_hint,
             )
 
-            painters.append((column, "", ""))
+            painters.append(PainterSpec(column))
             filters.append(column)
 
     _register_views(table_view_name, title_plural, painters, filters, inventory_paths)
@@ -1630,8 +1631,8 @@ def _register_info_class(table_view_name: str, title_singular: str, title_plural
 def _register_views(
     table_view_name: str,
     title_plural: str,
-    painters: List[Tuple[str, str, str]],
-    filters: List[FilterName],
+    painters: Sequence[PainterSpec],
+    filters: Iterable[FilterName],
     inventory_paths: Sequence[inventory.InventoryPath],
     icon: Optional[Icon] = None,
 ) -> None:
@@ -1657,41 +1658,58 @@ def _register_views(
         "group_painters": [],
         "sorters": [],
         "is_show_more": is_show_more,
+        "owner": "",
+        "add_context_to_title": True,
     }
+    context: VisualContext = {f: {} for f in filters}
 
     # View for searching for items
-    multisite_builtin_views[table_view_name + "_search"] = {
+    search_view_name = table_view_name + "_search"
+    multisite_builtin_views[search_view_name] = {
         # General options
-        "title": _("Search %s") % title_plural,
-        "description": _("A view for searching in the inventory data for %s") % title_plural,
+        "title": _l("Search %s") % title_plural,
+        "description": _l("A view for searching in the inventory data for %s") % title_plural,
         "hidden": False,
         "mustsearch": True,
         # Columns
-        "painters": [("host", "inv_host", "")] + painters,
+        "painters": [
+            PainterSpec(
+                painter_name="host",
+                link_spec=VisualLinkSpec(type_name="views", name="inv_host"),
+            ),
+            *painters,
+        ],
         # Filters
-        "show_filters": [
-            "siteopt",
-            "hostregex",
-            "hostgroups",
-            "opthostgroup",
-            "opthost_contactgroup",
-            "host_address",
-            "host_tags",
-            "hostalias",
-            "host_favorites",
-        ]
-        + filters,
-        "hide_filters": [],
-        "hard_filters": [],
-        "hard_filtervars": [],
+        "context": {
+            **{
+                f: {}
+                for f in [
+                    "siteopt",
+                    "hostregex",
+                    "hostgroups",
+                    "opthostgroup",
+                    "opthost_contactgroup",
+                    "host_address",
+                    "host_tags",
+                    "hostalias",
+                    "host_favorites",
+                ]
+            },
+            **context,
+        },
+        "name": search_view_name,
+        "link_from": {},
+        "icon": None,
+        "single_infos": [],
+        **view_spec,
     }
-    multisite_builtin_views[table_view_name + "_search"].update(view_spec)
 
     # View for the items of one host
-    multisite_builtin_views[_make_table_view_name_of_host(table_view_name)] = {
+    host_view_name = _make_table_view_name_of_host(table_view_name)
+    multisite_builtin_views[host_view_name] = {
         # General options
         "title": title_plural,
-        "description": _("A view for the %s of one host") % title_plural,
+        "description": _l("A view for the %s of one host") % title_plural,
         "hidden": True,
         "mustsearch": False,
         "link_from": {
@@ -1701,13 +1719,12 @@ def _register_views(
         # Columns
         "painters": painters,
         # Filters
-        "show_filters": filters,
-        "hard_filters": [],
-        "hard_filtervars": [],
-        "hide_filters": ["host"],
+        "context": context,
         "icon": icon,
+        "name": host_view_name,
+        "single_infos": ["host"],
+        **view_spec,
     }
-    multisite_builtin_views[_make_table_view_name_of_host(table_view_name)].update(view_spec)
 
 
 # .

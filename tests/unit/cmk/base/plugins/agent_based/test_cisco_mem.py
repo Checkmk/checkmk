@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.cisco_mem_asa import (
+from cmk.base.plugins.agent_based.cisco_mem import (
     _idem_check_cisco_mem,
     discovery_cisco_mem,
     parse_cisco_mem,

@@ -1,0 +1,16 @@
+Title: site_management: New REST API endpoints implemented for distributed monitoring connections
+Class: feature
+Compatible: compat
+Component: rest-api
+Date: 1661767418
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+This werk introduces the implementation of the site management endpoints. These endpoints
+now allow the API user to create, delete, update and retrieve distributed monitoring
+connection configurations. It's also possible to login to / logout of a remote site via
+the endpoints. The new endpoints replace those from the Web-API. Client scripts should
+be adjusted accordingly.
+

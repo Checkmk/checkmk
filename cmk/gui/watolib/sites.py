@@ -605,7 +605,7 @@ class CEESiteManagement(SiteManagement):
 
         conf = {}
         for siteid, siteconf in sites.items():
-            proxy_params = siteconf["proxy"]
+            proxy_params = siteconf.get("proxy")
             if proxy_params is None:
                 continue
 

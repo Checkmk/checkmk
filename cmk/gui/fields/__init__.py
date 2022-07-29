@@ -24,6 +24,13 @@ from cmk.gui.fields.attributes import (
     NetworkScanResult,
     SNMPCredentials,
 )
+from cmk.gui.fields.custom_fields import (
+    LDAPConnectionID,
+    NetworkPortNumber,
+    RelativeUrl,
+    Timeout,
+    UnixPath,
+)
 from cmk.gui.fields.definitions import (
     column_field,
     customer_field,
@@ -34,6 +41,7 @@ from cmk.gui.fields.definitions import (
     GroupField,
     host_attributes_field,
     HostField,
+    HostnameOrIP,
     PasswordIdent,
     PasswordOwner,
     PasswordShare,
@@ -57,11 +65,14 @@ __all__ = [
     "HostAttributeManagementBoardField",
     "HostContactGroup",
     "HostField",
+    "HostnameOrIP",
     "IPMIParameters",
     "MetaData",
     "missing_",
+    "NetworkPortNumber",
     "NetworkScan",
     "NetworkScanResult",
+    "LDAPConnectionID",
     "LockedBy",
     "PasswordIdent",
     "PasswordOwner",
@@ -70,6 +81,9 @@ __all__ = [
     "query_field",
     "SiteField",
     "SNMPCredentials",
+    "Timeout",
     "Timestamp",
+    "UnixPath",
+    "RelativeUrl",
     "X509ReqPEMFieldUUID",
 ]

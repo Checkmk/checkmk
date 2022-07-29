@@ -6,11 +6,12 @@
 import ast
 import json
 import logging
+import re
 import typing
 import uuid
 import warnings
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Literal, Mapping, Optional
 
 import pytz
 from cryptography.x509 import CertificateSigningRequest, load_pem_x509_csr
@@ -44,7 +45,7 @@ from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, Host
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 from cmk.gui.watolib.tags import load_tag_group
 
-from cmk.fields import base, DateTime
+from cmk.fields import base, DateTime, validators
 
 if version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -546,6 +547,7 @@ class HostField(base.String):
         "Activate the configuration?",
         "should_be_cluster": "Host {host_name!r} is not a cluster host, but needs to be.",
         "should_not_be_cluster": "Host {host_name!r} may not be a cluster host, but is.",
+        "pattern": "{value!r} does not match pattern {pattern!r}.",
         "invalid_name": "The provided name for host {host_name!r} is invalid: {invalid_reason!r}",
     }
 
@@ -669,6 +671,135 @@ def validate_custom_host_attributes(
 def _ensure_string(value):
     if not isinstance(value, str):
         raise ValidationError(f"Not a string, but a {type(value).__name__}")
+
+
+class HostnameOrIP(base.String):
+    default_error_messages = {
+        "too_short": "The length of {value!r} is less than the minimum {min!r}.",
+        "too_long": "The length of {value!r} is more than the maximum {max!r}.",
+        "should_exist": "Host not found: {host_name!r}",
+        "should_not_exist": "Host {host_name!r} already exists.",
+        "should_be_cluster": "Host {host_name!r} is not a cluster host, but needs to be.",
+        "should_not_be_cluster": "Host {host_name!r} may not be a cluster host, but is.",
+        "should_be_monitored": "Host {host_name!r} exists, but is not monitored.",
+        "should_not_be_monitored": "Host {host_name!r} exists, but should not be monitored.",
+    }
+
+    def __init__(
+        self,
+        description: str = "A host name or IP address",
+        example: str = "example.com",
+        required: bool = True,
+        strip: bool = True,
+        minlen: int = 1,
+        maxlen: int | None = None,
+        host_type_allowed: Literal[
+            "hostname_and_ipv4", "hostname_and_ipv6", "hostname_only", "ipv4", "ipv6"
+        ] = "hostname_and_ipv4",
+        presence: Literal["should_exist", "should_not_exist", "ignore"] = "ignore",
+        should_be_monitored: bool = False,
+        should_be_cluster: bool = False,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(description=description, example=example, required=required, **kwargs)
+
+        self.strip = strip
+        self.minlen = minlen
+        self.maxlen = maxlen
+        self.host_type_allowed = host_type_allowed
+        self.presence = presence
+        self.should_be_monitored = should_be_monitored
+        self.should_be_cluster = should_be_cluster
+
+    def _validate(self, value: str) -> None:
+        if self.strip:
+            value = value.strip()
+
+        super()._validate(value)
+
+        validate_results: dict[str, ValidationError | Literal["pass"]] = {
+            "hostname": self._validate_hostname(value),
+            "ipv4": self._validate_ip4(value),
+            "ipv6": self._validate_ip6(value),
+        }
+
+        validated_host_type_names = {k for k, v in validate_results.items() if v == "pass"}
+
+        match self.host_type_allowed:
+            case "hostname_and_ipv4":
+                if validated_host_type_names.difference({"ipv4", "hostname"}):
+                    self._raise_an_error(validate_results)
+
+            case "hostname_and_ipv6":
+                if validated_host_type_names.difference({"ipv6", "hostname"}):
+                    self._raise_an_error(validate_results)
+
+            case "hostname_only":
+                if validated_host_type_names.difference({"hostname"}):
+                    self._raise_an_error(validate_results)
+
+            case "ipv4":
+                if "ipv4" not in validated_host_type_names:
+                    self._raise_an_error(validate_results)
+
+            case "ipv6":
+                if "ipv6" not in validated_host_type_names:
+                    self._raise_an_error(validate_results)
+
+        if len(value) < self.minlen:
+            self.make_error("too_short", value=value, min=self.minlen)
+
+        if self.maxlen:
+            if len(value) > self.maxlen:
+                self.make_error("too_long", value=value, min=self.minlen)
+
+    def _raise_an_error(
+        self, validate_results: Mapping[str, ValidationError | Literal["pass"]]
+    ) -> None:
+        for val_error in {v for _, v in validate_results.items() if v != "pass"}:
+            raise val_error
+
+    def _validate_hostname(self, value: str) -> ValidationError | Literal["pass"]:
+        try:
+            if self.presence != "ignore" or self.should_be_cluster or self.should_be_monitored:
+                if host := Host.host(value):
+                    if self.presence == "should_not_exist":
+                        raise self.make_error("should_not_exist", host_name=value)
+
+                    if self.should_be_cluster and not host.is_cluster():
+                        raise self.make_error("should_be_cluster", host_name=value)
+
+                    if not self.should_be_cluster and host.is_cluster():
+                        raise self.make_error("should_not_be_cluster", host_name=value)
+
+                    if self.should_be_monitored and not host_is_monitored(value):
+                        raise self.make_error("should_be_monitored", host_name=value)
+
+                    if not self.should_be_monitored and host_is_monitored(value):
+                        raise self.make_error("should_not_be_monitored", host_name=value)
+                else:
+                    raise self.make_error("should_exist", host_name=value)
+
+            if not re.match("^(:?" + HOST_NAME_REGEXP + ")$", value):
+                raise self.make_error("pattern", value=value, pattern=HOST_NAME_REGEXP)
+
+        except ValidationError as ve:
+            return ve
+        return "pass"
+
+    def _validate_ip4(self, value: str) -> ValidationError | Literal["pass"]:
+        try:
+            validators.ValidateIPv4()(value)
+        except ValidationError as ve:
+            return ve
+        return "pass"
+
+    def _validate_ip6(self, value: str) -> ValidationError | Literal["pass"]:
+        try:
+            validators.ValidateIPv6()(value)
+        except ValidationError as ve:
+            return ve
+        return "pass"
 
 
 class CustomHostAttributes(ValueTypedDictSchema):
@@ -872,11 +1003,27 @@ def host_attributes_field(
 class SiteField(base.String):
     """A field representing a site name."""
 
-    default_error_messages = {"unknown_site": "Unknown site {site!r}"}
+    default_error_messages = {
+        "should_exist": "The site {site!r} should exist but it doesn't.",
+        "should_not_exist": "The site {site!r} should not exist but it does.",
+    }
+
+    def __init__(
+        self,
+        presence: Literal["should_exist", "should_not_exist", "ignore"] = "should_exist",
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(**kwargs)
+        self.presence = presence
 
     def _validate(self, value):
-        if value not in allsites().keys():
-            raise self.make_error("unknown_site", site=value)
+        if self.presence == "should_exist":
+            if value not in allsites().keys():
+                raise self.make_error("should_exist", site=value)
+
+        if self.presence == "should_not_exist":
+            if value in allsites().keys():
+                raise self.make_error("should_not_exist", site=value)
 
 
 def customer_field(**kw):
@@ -1205,6 +1352,7 @@ __all__ = [
     "FOLDER_PATTERN",
     "GroupField",
     "HostField",
+    "HostnameOrIP",
     "MultiNested",
     "PasswordIdent",
     "PasswordOwner",

@@ -51,6 +51,7 @@ DomainType = Literal[
     "servicegroup",
     "service_group_config",
     "sign_key",
+    "site_connection",
     "time_period",
     "user",
     "user_config",
@@ -116,6 +117,9 @@ CmkEndpointName = Literal[
     "cmk/get_custom_graph",
     "cmk/get_named_graph",
     "cmk/get_combined_graph",
+    "cmk/site_logout",
+    "cmk/site_login",
+    "cmk/update",
 ]
 
 RestfulEndpointName = Literal[

@@ -96,8 +96,8 @@ def create_apache_hook(site: SiteContext, version: int) -> None:
     except FileNotFoundError:
         pass
 
-    with open(os.path.join(omdlib.utils.omd_base_path(), "omd/apache/%s.conf" % site.name),
-              "w") as f:
+    hook_path = os.path.join(omdlib.utils.omd_base_path(), "omd/apache/%s.conf" % site.name)
+    with open(hook_path, "w") as f:
         f.write(f"""{apache_hook_header(version)}
 # This file is managed by 'omd' and will automatically be overwritten. Better do not edit manually
 
@@ -138,6 +138,7 @@ def create_apache_hook(site: SiteContext, version: int) -> None:
   ErrorDocument 503 "<meta http-equiv='refresh' content='60'><h1>Checkmk: Site Not Started</h1>You need to start this site in order to access the web interface.<!-- IE shows its own short useless error message otherwise: placeholder -->"
 </Location>
 """)
+        os.chmod(hook_path, 0o664)  # Ensure the site user can read the files created by root
 
 
 def delete_apache_hook(sitename: str) -> None:

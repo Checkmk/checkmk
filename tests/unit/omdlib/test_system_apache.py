@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import stat
 from hashlib import sha256
 from pathlib import Path
 
@@ -112,13 +113,34 @@ def test_is_apache_hook_up_to_date(
     assert is_apache_hook_up_to_date(site_context) is True
 
 
+def test_is_apache_hook_up_to_date_not_readable(
+    apache_config: Path,
+    site_context: SiteContext,
+) -> None:
+    apache_config.parent.mkdir(parents=True)
+    create_apache_hook(site_context, apache_hook_version())
+    assert apache_config.exists()
+    apache_config.chmod(0o200)
+
+    with pytest.raises(PermissionError):
+        is_apache_hook_up_to_date(site_context)
+
+
 def test_is_apache_hook_up_to_date_outdated(
     apache_config: Path,
     site_context: SiteContext,
 ) -> None:
     apache_config.parent.mkdir(parents=True)
     create_apache_hook(site_context, 0)
-    print(repr(apache_config.read_text()))
     assert apache_config.exists()
 
     assert is_apache_hook_up_to_date(site_context) is False
+
+
+def test_create_apache_hook_world_readable(
+    apache_config: Path,
+    site_context: SiteContext,
+) -> None:
+    apache_config.parent.mkdir(parents=True)
+    create_apache_hook(site_context, 0)
+    assert bool(apache_config.stat().st_mode & stat.S_IROTH)

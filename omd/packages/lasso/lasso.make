@@ -17,7 +17,7 @@ $(LASSO)-unpack: $(LASSO_UNPACK)
 
 $(LASSO)-int: $(LASSO_INTERMEDIATE_INSTALL)
 
-ifneq ($(filter sles%,$(DISTRO_CODE)),)
+ifeq ($(filter sles%,$(DISTRO_CODE)),)
 $(LASSO_BUILD): $(LASSO_UNPACK)
 	cd $(LASSO_BUILD_DIR) \
 	&& export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON3_MODULES_PYTHONPATH) \

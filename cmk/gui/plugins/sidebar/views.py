@@ -11,6 +11,7 @@ import cmk.gui.dashboard as dashboard
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.views as views
 from cmk.gui.config import active_config
+from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
@@ -56,6 +57,7 @@ class Views(SidebarSnapin):
             footnotelinks(links)
 
 
+@request_memoize()
 def get_view_menu_items(include_reports: bool) -> List[TopicMenuTopic]:
     # The page types that are implementing the PageRenderer API should also be
     # part of the menu. Bring them into a visual like structure to make it easy to

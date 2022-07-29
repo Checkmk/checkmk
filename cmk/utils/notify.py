@@ -16,6 +16,9 @@ from cmk.utils.i18n import _
 # NOTE: Keep in sync with values in Object.h.
 MAX_COMMENT_LENGTH = 2000
 MAX_PLUGIN_OUTPUT_LENGTH = 1000
+_SEMICOLON = "%3B"
+# from https://www.w3schools.com/tags/ref_urlencode.ASP
+# Nagios uses ":", which is even more surprising, I guess.
 
 # 0 -> OK
 # 1 -> temporary issue
@@ -57,7 +60,7 @@ def notification_message(plugin: NotificationPluginName, context: NotificationCo
         spec,
         state,
         plugin,
-        output[:MAX_PLUGIN_OUTPUT_LENGTH],
+        output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON),
     )
 
 
@@ -79,7 +82,7 @@ def notification_progress_message(plugin: NotificationPluginName, context: Notif
         spec,
         state,
         plugin,
-        output[:MAX_PLUGIN_OUTPUT_LENGTH],
+        output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON),
     )
 
 
@@ -103,8 +106,8 @@ def notification_result_message(plugin: NotificationPluginName, context: Notific
         spec,
         state,
         plugin,
-        short_output[:MAX_PLUGIN_OUTPUT_LENGTH],
-        comment[:MAX_COMMENT_LENGTH],
+        short_output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON),
+        comment[:MAX_COMMENT_LENGTH].replace(";", _SEMICOLON),
     )
 
 

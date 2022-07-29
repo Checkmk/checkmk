@@ -5,7 +5,6 @@
 
 import contextlib
 import http.client
-import os
 import traceback
 from contextlib import suppress
 from datetime import datetime
@@ -91,17 +90,7 @@ def UserSessionContext(user_id: UserId) -> Iterator[None]:
 
 
 def auth_cookie_name() -> str:
-    return "auth%s" % site_cookie_suffix()
-
-
-def site_cookie_suffix() -> str:
-    prefix = url_prefix()
-
-    # Strip of eventual present "http://<host>". DIRTY!
-    if prefix.startswith("http:"):
-        prefix = prefix[prefix[7:].find("/") + 7 :]
-
-    return os.path.dirname(prefix).replace("/", "_")
+    return f"auth_{omd_site()}"
 
 
 def _load_secret() -> str:

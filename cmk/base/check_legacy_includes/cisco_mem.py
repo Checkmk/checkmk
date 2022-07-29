@@ -7,55 +7,10 @@
 from .mem import check_memory_element, get_levels_mode_from_value
 from .size_trend import size_trend
 
-CISCO_MEM_CHECK_DEFAULT_PARAMETERS = {
-    "levels": (80.0, 90.0),
-}
 
-
-def scan_cisco_mem_asa64(oid):
-    version = int((oid(".1.3.6.1.2.1.1.1.0").split("Version")[-1]).split(".")[0])
-    return version >= 9
-
-
-def inventory_cisco_mem(info):
-    return [(line[0], {}) for line in info if line[0] != "Driver text"]
-
-
-def check_cisco_mem(item, params, info):
-    for line in info:
-
-        if line[0] != item:
-            continue
-
-        if isinstance(params, tuple):
-            params = {"levels": params}
-
-        # We saw SNMP outputs which may contain empty entries for free or used memory.
-        # Assumption: In this case these values are zero.
-        try:
-            mem_free = int(line[2])
-        except ValueError:
-            mem_free = 0
-        try:
-            mem_used = int(line[1])
-        except ValueError:
-            mem_used = 0
-        mem_total = mem_free + mem_used
-        return check_cisco_mem_sub(item, params, mem_used, mem_total)
-
-
-def _convert_free_perc_levels(warn_perc_free_mem, crit_perc_free_mem):
-    warn_perc_used = 100.0 - warn_perc_free_mem
-    crit_perc_used = 100.0 - crit_perc_free_mem
-    return warn_perc_used, crit_perc_used
-
-
-def _convert_absolute_levels(warn_abs, crit_abs, mem_total):
-    warn_perc = warn_abs / mem_total * 100.0
-    crit_perc = crit_abs / mem_total * 100.0
-    return warn_perc, crit_perc
-
-
+# TODO: Remove this function/entire file when migrating cisco_cpu_memory.
+# Move cmk/base/plugins/agent_based/cisco_mem.py:_check_cisco_mem_sub to utils
+# and use it instead, then.
 def check_cisco_mem_sub(item, params, mem_used, mem_total):
     if not mem_total:
         return 3, "Cannot calculate memory usage: Device reports total memory 0"

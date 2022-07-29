@@ -202,7 +202,7 @@ def _idem_check_cisco_mem(
         mem_used = int(values[0])
 
     mem_total = mem_free + mem_used
-    yield from check_cisco_mem_sub(
+    yield from _check_cisco_mem_sub(
         value_store,
         item,
         params,
@@ -211,7 +211,7 @@ def _idem_check_cisco_mem(
     )
 
 
-def check_cisco_mem_sub(
+def _check_cisco_mem_sub(
     value_store: MutableMapping[str, Any],
     item: str,
     params: Mapping[str, Any],

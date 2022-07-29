@@ -128,7 +128,6 @@ def test_all_check_variables_present(fix_plugin_legacy) -> None:
         "AnyStr",
         "BACKUP_STATE",
         "BALANCE_THRESHOLDS",
-        "CISCO_MEM_CHECK_DEFAULT_PARAMETERS",
         "DELL_IDRAC_FANS_STATE_MAP",
         "DEVICE_TYPE_MAP",
         "EC2DefaultItemName",

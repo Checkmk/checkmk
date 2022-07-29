@@ -37,7 +37,8 @@ from typing import Optional
 
 import cmk.utils.tty as tty
 
-from omdlib.utils import is_dockerized, ok, delete_directory_contents
+from omdlib.console import ok
+from omdlib.utils import is_dockerized, delete_directory_contents
 from omdlib.version_info import VersionInfo
 from omdlib.contexts import SiteContext
 

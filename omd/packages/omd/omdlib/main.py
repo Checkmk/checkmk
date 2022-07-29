@@ -58,8 +58,9 @@ import omdlib
 import omdlib.certs
 import omdlib.backup
 import omdlib.utils
-from omdlib.utils import chdir, ok, delete_user_file
+from omdlib.utils import chdir, delete_user_file
 from omdlib.version_info import VersionInfo
+from omdlib.console import ok, show_success
 from omdlib.dialog import (
     dialog_menu,
     dialog_regex,
@@ -84,6 +85,11 @@ from omdlib.users_and_groups import (find_processes_of_user, groupdel, useradd, 
                                      switch_to_site_user, user_verify)
 from omdlib.tmpfs import (tmpfs_mounted, prepare_tmpfs, mark_tmpfs_initialized, unmount_tmpfs,
                           add_to_fstab, remove_from_fstab, restore_tmpfs_dump, save_tmpfs_dump)
+from omdlib.system_apache import (
+    delete_apache_hook,
+    register_with_system_apache,
+    unregister_from_system_apache,
+)
 
 Arguments = List[str]
 ConfigChangeCommands = List[Tuple[str, str]]
@@ -154,14 +160,6 @@ def stop_logging() -> None:
     global g_stdout_log, g_stderr_log
     g_stdout_log = None
     g_stderr_log = None
-
-
-def show_success(exit_code: int) -> int:
-    if exit_code is True or exit_code == 0:
-        ok()
-    else:
-        sys.stdout.write(tty.error + "\n")
-    return exit_code
 
 
 #.
@@ -1504,46 +1502,6 @@ def hostname() -> str:
     return p.communicate()[0].strip()
 
 
-def create_apache_hook(site: SiteContext) -> None:
-    with open("/omd/apache/%s.conf" % site.name, "w") as f:
-        f.write("Include %s/etc/apache/mode.conf\n" % site.dir)
-
-
-def delete_apache_hook(sitename: str) -> None:
-    hook_path = "/omd/apache/%s.conf" % sitename
-    try:
-        os.remove(hook_path)
-    except FileNotFoundError:
-        return
-    except Exception as e:
-        sys.stderr.write("Cannot remove apache hook %s: %s\n" % (hook_path, e))
-
-
-def init_cmd(version_info: VersionInfo, name: str, action: str) -> str:
-    return version_info.INIT_CMD % {
-        'name': name,
-        'action': action,
-    }
-
-
-def reload_apache(version_info: VersionInfo) -> None:
-    sys.stdout.write("Reloading Apache...")
-    sys.stdout.flush()
-    show_success(subprocess.call([version_info.APACHE_CTL, "graceful"]) >> 8)
-
-
-def restart_apache(version_info: VersionInfo) -> None:
-    if os.system(  # nosec
-            init_cmd(version_info, version_info.APACHE_INIT_NAME, 'status') +
-            ' >/dev/null 2>&1') >> 8 == 0:
-        sys.stdout.write("Restarting Apache...")
-        sys.stdout.flush()
-        show_success(
-            os.system(
-                init_cmd(version_info, version_info.APACHE_INIT_NAME, 'restart') + ' >/dev/null') >>
-            8)  # nosec
-
-
 def replace_tags(content: bytes, replacements: Replacements) -> bytes:
     for var, value in replacements.items():
         content = content.replace(var.encode("utf-8"), value.encode("utf-8"))
@@ -1956,32 +1914,6 @@ def finalize_site(version_info: VersionInfo, site: SiteContext, what: str,
             bail_out("Error in non-priviledged sub-process.")
 
     register_with_system_apache(version_info, site, apache_reload)
-
-
-def register_with_system_apache(version_info: VersionInfo, site: SiteContext,
-                                apache_reload: bool) -> None:
-    """Apply the site specific configuration to the system global apache
-
-    Basically update the apache configuration to register the mod_proxy configuration
-    and the reload or restart the system apache.
-
-    Root permissions are needed to make this work.
-    """
-    create_apache_hook(site)
-    apply_apache_config(version_info, apache_reload)
-
-
-def unregister_from_system_apache(version_info: VersionInfo, site: SiteContext,
-                                  apache_reload: bool) -> None:
-    delete_apache_hook(site.name)
-    apply_apache_config(version_info, apache_reload)
-
-
-def apply_apache_config(version_info: VersionInfo, apache_reload: bool) -> None:
-    if apache_reload:
-        reload_apache(version_info)
-    else:
-        restart_apache(version_info)
 
 
 def finalize_site_as_user(version_info: VersionInfo,

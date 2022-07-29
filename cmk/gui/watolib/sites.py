@@ -781,7 +781,7 @@ class PushSnapshotRequest(NamedTuple):
 
 
 def get_effective_global_setting(site_id: SiteId, is_remote_site: bool, varname: str) -> Any:
-    global_settings = load_configuration_settings()
+    effective_global_settings = load_configuration_settings()
     default_values = ABCConfigDomain.get_all_default_globals()
 
     if is_remote_site:
@@ -793,7 +793,7 @@ def get_effective_global_setting(site_id: SiteId, is_remote_site: bool, varname:
     if varname in current_settings:
         return current_settings[varname]
 
-    if varname in global_settings:
-        return global_settings[varname]
+    if varname in effective_global_settings:
+        return effective_global_settings[varname]
 
     return default_values[varname]

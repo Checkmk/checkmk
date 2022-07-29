@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from datetime import datetime
+from typing import Iterator
 
 import pytest
 from werkzeug.test import create_environ
@@ -21,12 +22,12 @@ from cmk.gui.utils.script_helpers import application_and_request_context
 
 
 @pytest.fixture(name="user_id")
-def fixture_user_id(with_user):
-    return UserId(with_user[0])
+def fixture_user_id(with_user: tuple[UserId, str]) -> UserId:
+    return with_user[0]
 
 
-def test_authenticate_success(  # type:ignore[no-untyped-def]
-    request_context, monkeypatch, user_id
+def test_authenticate_success(
+    request_context: None, monkeypatch: pytest.MonkeyPatch, user_id: UserId
 ) -> None:
     monkeypatch.setattr(login, "_check_auth", lambda r: user_id)
     assert user.id is None
@@ -36,8 +37,8 @@ def test_authenticate_success(  # type:ignore[no-untyped-def]
     assert user.id is None
 
 
-def test_authenticate_fails(  # type:ignore[no-untyped-def]
-    request_context, monkeypatch, user_id
+def test_authenticate_fails(
+    request_context: None, monkeypatch: pytest.MonkeyPatch, user_id: UserId
 ) -> None:
     monkeypatch.setattr(login, "_check_auth", lambda r: None)
     assert user.id is None
@@ -48,7 +49,7 @@ def test_authenticate_fails(  # type:ignore[no-untyped-def]
 
 
 @pytest.fixture(name="pre_16_cookie")
-def fixture_pre_16_cookie():
+def fixture_pre_16_cookie() -> Iterator[str]:
     environ = dict(
         create_environ(),
         HTTP_COOKIE="xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123".encode(
@@ -61,7 +62,7 @@ def fixture_pre_16_cookie():
 
 
 @pytest.fixture(name="pre_20_cookie")
-def fixture_pre_20_cookie():
+def fixture_pre_20_cookie() -> Iterator[str]:
     environ = dict(
         create_environ(),
         HTTP_COOKIE="xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123".encode(
@@ -74,14 +75,14 @@ def fixture_pre_20_cookie():
 
 
 @pytest.fixture(name="session_id")
-def fixture_session_id(with_user):
+def fixture_session_id(with_user: tuple[UserId, str]) -> str:
     now = datetime.now()
     user_id = with_user[0]
     return userdb._initialize_session(user_id, now)
 
 
 @pytest.fixture(name="current_cookie")
-def fixture_current_cookie(with_user, session_id):
+def fixture_current_cookie(with_user: tuple[UserId, str], session_id: str) -> Iterator[str]:
     user_id = with_user[0]
     cookie_name = login.auth_cookie_name()
     cookie_value = login._auth_cookie_value(user_id, session_id)
@@ -93,18 +94,18 @@ def fixture_current_cookie(with_user, session_id):
         yield cookie_name
 
 
-def test_parse_auth_cookie_refuse_pre_16(pre_16_cookie) -> None:  # type:ignore[no-untyped-def]
+def test_parse_auth_cookie_refuse_pre_16(pre_16_cookie: str) -> None:
     with pytest.raises(MKAuthException, match="Refusing pre 2.0"):
         login.user_from_cookie(login._fetch_cookie(pre_16_cookie))
 
 
-def test_parse_auth_cookie_refuse_pre_20(pre_20_cookie) -> None:  # type:ignore[no-untyped-def]
+def test_parse_auth_cookie_refuse_pre_20(pre_20_cookie: str) -> None:
     with pytest.raises(MKAuthException, match="Refusing pre 2.0"):
         login.user_from_cookie(login._fetch_cookie(pre_20_cookie))
 
 
-def test_parse_auth_cookie_allow_current(  # type:ignore[no-untyped-def]
-    current_cookie, with_user, session_id
+def test_parse_auth_cookie_allow_current(
+    current_cookie: str, with_user: tuple[UserId, str], session_id: str
 ) -> None:
     assert login.user_from_cookie(login._fetch_cookie(current_cookie)) == (
         UserId(with_user[0]),
@@ -113,22 +114,22 @@ def test_parse_auth_cookie_allow_current(  # type:ignore[no-untyped-def]
     )
 
 
-def test_auth_cookie_is_valid_refuse_pre_16(pre_16_cookie) -> None:  # type:ignore[no-untyped-def]
+def test_auth_cookie_is_valid_refuse_pre_16(pre_16_cookie: str) -> None:
     cookie = login._fetch_cookie(pre_16_cookie)
     assert login.auth_cookie_is_valid(cookie) is False
 
 
-def test_auth_cookie_is_valid_refuse_pre_20(pre_20_cookie) -> None:  # type:ignore[no-untyped-def]
+def test_auth_cookie_is_valid_refuse_pre_20(pre_20_cookie: str) -> None:
     cookie = login._fetch_cookie(pre_20_cookie)
     assert login.auth_cookie_is_valid(cookie) is False
 
 
-def test_auth_cookie_is_valid_allow_current(current_cookie) -> None:  # type:ignore[no-untyped-def]
+def test_auth_cookie_is_valid_allow_current(current_cookie: str) -> None:
     cookie = login._fetch_cookie(current_cookie)
     assert login.auth_cookie_is_valid(cookie) is True
 
 
-def test_web_server_auth_session(user_id) -> None:  # type:ignore[no-untyped-def]
+def test_web_server_auth_session(user_id: UserId) -> None:
     environ = dict(create_environ(), REMOTE_USER=str(user_id))
 
     with application_and_request_context(environ):

@@ -9,7 +9,7 @@ import subprocess
 import uuid
 from logging import Logger
 from pathlib import Path
-from typing import Any, Dict, List, Literal, NewType, Optional, TypedDict, Union
+from typing import Any, Dict, Final, List, Literal, NewType, Optional, TypedDict, Union
 
 import cmk.utils.defines
 from cmk.utils import store
@@ -19,6 +19,9 @@ from cmk.utils.i18n import _
 # NOTE: Keep in sync with values in MonitoringLog.cc.
 MAX_COMMENT_LENGTH = 2000
 MAX_PLUGIN_OUTPUT_LENGTH = 1000
+_SEMICOLON: Final = "%3B"
+# from https://www.w3schools.com/tags/ref_urlencode.ASP
+# Nagios uses ":", which is even more surprising, I guess.
 
 # 0 -> OK
 # 1 -> temporary issue
@@ -95,7 +98,7 @@ def notification_message(plugin: NotificationPluginName, context: NotificationCo
         spec,
         state,
         plugin,
-        output[:MAX_PLUGIN_OUTPUT_LENGTH],
+        output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON),
     )
 
 
@@ -121,7 +124,7 @@ def notification_progress_message(
         spec,
         state,
         plugin,
-        output[:MAX_PLUGIN_OUTPUT_LENGTH],
+        output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON),
     )
 
 
@@ -149,8 +152,8 @@ def notification_result_message(
         spec,
         state,
         plugin,
-        short_output[:MAX_PLUGIN_OUTPUT_LENGTH],
-        comment[:MAX_COMMENT_LENGTH],
+        short_output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON),
+        comment[:MAX_COMMENT_LENGTH].replace(";", _SEMICOLON),
     )
 
 

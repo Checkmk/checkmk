@@ -1,0 +1,20 @@
+Title: Escape semicolon in log entries
+Class: fix
+Compatible: incomp
+Component: core
+Date: 1659074652
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p10
+
+The "host & service history" view could not render plugin outputs
+with semicolons correctly.  This is due to the fact that semicolons
+are interpreted as field separators.
+
+We now replace the ";" characters with their HTML encoding, that
+is, "%3B".
+
+Note that Nagios silently replaces semicolons with colons (":")
+in that case.

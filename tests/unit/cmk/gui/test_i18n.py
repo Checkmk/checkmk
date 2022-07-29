@@ -17,6 +17,7 @@ from tests.testlib import cmk_path
 import cmk.utils.paths
 
 import cmk.gui.i18n as i18n
+from cmk.gui.utils.script_helpers import application_and_request_context
 
 
 @pytest.fixture(scope="session")
@@ -91,24 +92,29 @@ def test_underscore_without_localization():
 
 
 def test_underscore_localization():
-    i18n.localize("de")
-    assert i18n.get_current_language() == "de"
-    assert i18n._("Age") == "Alter"
-    i18n.unlocalize()
-    assert i18n._("Age") == "Age"
-    assert i18n.get_current_language() is None
+    with application_and_request_context():
+        i18n.localize("de")
+        assert i18n.get_current_language() == "de"
+        assert i18n._("Age") == "Alter"
+
+    with application_and_request_context():
+        i18n._unlocalize()
+        assert i18n._("Age") == "Age"
+        assert i18n.get_current_language() is None
 
 
 def test_lazy_localization():
-    lazy_str = i18n._l("Age")
+    with application_and_request_context():
+        lazy_str = i18n._l("Age")
+        assert lazy_str == "Age"
 
-    assert lazy_str == "Age"
+    with application_and_request_context():
+        i18n.localize("de")
+        assert lazy_str == "Alter"
 
-    i18n.localize("de")
-    assert lazy_str == "Alter"
-
-    i18n.unlocalize()
-    assert lazy_str == "Age"
+    with application_and_request_context():
+        i18n._unlocalize()
+        assert lazy_str == "Age"
 
 
 def test_init_language_not_existing():

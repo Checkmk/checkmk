@@ -13,6 +13,7 @@ from typing import Dict, List, NamedTuple, Optional, Tuple, TYPE_CHECKING
 import cmk.utils.paths
 
 from cmk.gui.globals import local
+from cmk.gui.hooks import request_memoize
 from cmk.gui.utils.speaklater import LazyString
 
 if TYPE_CHECKING:
@@ -50,6 +51,7 @@ def _translation() -> Optional[Translation]:
     return None
 
 
+@request_memoize()
 def _(message: str, /) -> str:
     """
     Positional-only argument to simplify additional linting of localized strings.
@@ -141,18 +143,19 @@ def get_languages() -> List[Tuple[str, str]]:
     return sorted(list(languages), key=lambda x: x[1])
 
 
-def unlocalize() -> None:
+def _unlocalize() -> None:
     _request_context().translation = None
 
 
 def localize(lang: Optional[str]) -> None:
+    _.cache_clear()  # type:ignore[attr-defined]
     if lang is None:
-        unlocalize()
+        _unlocalize()
         return
 
     gettext_translation = _init_language(lang)
     if not gettext_translation:
-        unlocalize()
+        _unlocalize()
         return
 
     _request_context().translation = Translation(translation=gettext_translation, name=lang)

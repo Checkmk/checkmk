@@ -1602,7 +1602,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "hp_sts_drvbox",
         "hp_webmgmt_status",
         "hpux_fchba",
-        "hpux_lunstats",
         "hpux_lvm",
         "hpux_multipath",
         "hpux_serviceguard",

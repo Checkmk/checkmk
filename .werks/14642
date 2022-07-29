@@ -1,0 +1,19 @@
+Title: hpux_lunstats: Changed WATO rule
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1659192555
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+Services belonging to the check plugin formerly known as "Throughput LUNs" (<tt>hpux_lunstats</tt>) are now created by a different plugin and behave differently.
+
+LI: They are no longer configured by the WATO ruleset "<i>Disk IO levels (old style checks)</i>", but to the WATO rulseset "<i>Disk IO levels</i>"
+LI: The metrics produced are no longer called 'read' and 'write', but 'disk_read_throughput' and 'disk_write_throughtput'
+
+No rediscovery is required.
+We realize this is an inconveniance for affected users.
+However we believe that consolidating check plugins is a worthy goal, in particular for user of less popular operating systems such as HP UX, since they will be maintained more regularly that way.
+

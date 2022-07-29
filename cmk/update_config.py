@@ -196,6 +196,7 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("fjdarye60_thmls"): CheckPluginName("fjdarye_thermal_sensors"),
     CheckPluginName("hp_msa_if"): CheckPluginName("interfaces"),
     CheckPluginName("hpux_cpu"): CheckPluginName("cpu_loads"),
+    CheckPluginName("hpux_lunstats"): CheckPluginName("diskstat_io"),
     CheckPluginName("hr_mem"): CheckPluginName("mem_used"),
     CheckPluginName("if64adm"): CheckPluginName("if64"),
     CheckPluginName("if64_tplink"): CheckPluginName("interfaces"),

@@ -3,22 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any as HopeForTheBestForNow
-
 import pytest
 
-from tests.testlib import on_time
-
-from tests.unit.checks.checktestlib import mock_item_state
-
-from cmk.utils.type_defs import CheckPluginName, SectionName
-
-import cmk.base.plugin_contexts
-from cmk.base.config import CEEConfigCache as Cache
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-
-Section = HopeForTheBestForNow
-
+from cmk.base.plugins.agent_based.diskstat_io import _check_diskstat_io
+from cmk.base.plugins.agent_based.hpux_lunstats import parse_hpux_lunstats
+from cmk.base.plugins.agent_based.utils.diskstat import discovery_diskstat_generic, Section
 
 STRING_TABLE = [
     ["WWID", "  0x5000cca00b045e9c"],
@@ -72,52 +62,19 @@ STRING_TABLE = [
 ]
 
 
-check_name = "hpux_lunstats"
-
-
-# TODO: drop this after migration
-@pytest.fixture(scope="module", name="plugin")
-def _get_plugin(fix_register):
-    return fix_register.check_plugins[CheckPluginName(check_name)]
-
-
-# TODO: drop this after migration
-@pytest.fixture(scope="module", name=f"parse_{check_name}")
-def _get_parse(fix_register):
-    return fix_register.agent_sections[SectionName(check_name)].parse_function
-
-
-# TODO: drop this after migration
-@pytest.fixture(scope="module", name=f"discover_{check_name}")
-def _get_discovery_function(plugin):
-    return lambda s: plugin.discovery_function(section=s)
-
-
-# TODO: drop this after migration
-@pytest.fixture(scope="module", name=f"check_{check_name}")
-def _get_check_function(plugin):
-    return lambda i, p, s: plugin.check_function(item=i, params=p, section=s)
-
-
 @pytest.fixture(scope="module", name="section")
-def _get_section(parse_hpux_lunstats) -> Section:
+def _get_section() -> Section:
     return parse_hpux_lunstats(STRING_TABLE)
 
 
-def test_discover_default(monkeypatch, discover_hpux_lunstats, section: Section) -> None:
-    monkeypatch.setattr(Cache, "host_extra_conf", lambda *a: [])
-    monkeypatch.setattr(cmk.base.plugin_contexts, "_hostname", "moo")
-
-    assert list(discover_hpux_lunstats(section)) == [
+def test_discover_default(section: Section) -> None:
+    assert list(discovery_diskstat_generic([{"summary": True}], section)) == [
         Service(item="SUMMARY"),
     ]
 
 
-def test_discover_physical(monkeypatch, discover_hpux_lunstats, section: Section) -> None:
-    monkeypatch.setattr(Cache, "host_extra_conf", lambda *a: [["physical"]])
-    monkeypatch.setattr(cmk.base.plugin_contexts, "_hostname", "moo")
-
-    assert list(discover_hpux_lunstats(section)) == [
+def test_discover_physical(section: Section) -> None:
+    assert list(discovery_diskstat_generic([{"physical": True}], section)) == [
         Service(item="/dev/rdisk/disk4"),
         Service(item="/dev/rdisk/disk5"),
         Service(item="/dev/rdisk/disk20"),
@@ -127,56 +84,49 @@ def test_discover_physical(monkeypatch, discover_hpux_lunstats, section: Section
     ]
 
 
-def test_check_hpux_lunstats_not_found(check_hpux_lunstats, section: Section) -> None:
-    assert list(check_hpux_lunstats("möööööööp", {}, section)) == [
+def test_check_hpux_lunstats_not_found(section: Section) -> None:
+    assert not list(_check_diskstat_io("möööööööp", {}, section, {}, 0.0))
+
+
+def test_check_hpux_lunstats_summary(section: Section) -> None:
+    vs = {
+        "write_throughput": (1659105408, 3360676168),
+        "read_throughput": (1659105408, 12040575829),
+    }
+    this_time = 1659105468
+    assert list(_check_diskstat_io("SUMMARY", {}, section, vs, this_time)) == [
         Result(
-            state=State.UNKNOWN,
-            summary="No matching disk found",
-        )
+            state=State.OK,
+            summary="Read: 103 GB/s",  # <- wow :-)
+        ),
+        Metric("disk_read_throughput", 102613837506.05),
+        Result(
+            state=State.OK,
+            summary="Write: 28.7 GB/s",
+        ),
+        Metric("disk_write_throughput", 28664425364.133335),
     ]
 
 
-def test_check_hpux_lunstats_summary(check_hpux_lunstats, section: Section) -> None:
-    with mock_item_state(
-        {
-            "diskstat.SUMMARY.write": (1659105408, 3360676168),
-            "diskstat.SUMMARY.read": (1659105408, 12040575829),
-        }
-    ), on_time(1659105468, "UTC"):
-        assert list(check_hpux_lunstats("SUMMARY", {}, section)) == [
-            Result(
-                state=State.OK,
-                summary="read: 68.3 MB/s, write: 42.7 MB/s",
-            ),
-            Metric("read", 68266666.66666667),
-            Metric("write", 42666666.666666664),
-        ]
-
-
-def test_check_hpux_lunstats(check_hpux_lunstats, section: Section) -> None:
+def test_check_hpux_lunstats(section: Section) -> None:
     read_test_data = 2760640735497
     write_test_data = 549730951168
     item = "/dev/rdisk/disk21"
 
-    # just to make sure this is what we're talking about:
-    assert {i: (r, w) for _none, i, r, w in section}[item] == (
-        read_test_data // 512,
-        write_test_data // 512,
-    )
-
     now = 1659105468
-    with mock_item_state(
-        {
-            # surely one of these will result in a nice reported value?
-            f"diskstat.{item}.write": (now - 60, (write_test_data - 1000**2 * 60) / 512),
-            f"diskstat.{item}.read": (now - 60, (read_test_data - 1024**2 * 60) / 512),
-        }
-    ), on_time(now, "UTC"):
-        assert list(check_hpux_lunstats(item, {}, section)) == [
-            Result(
-                state=State.OK,
-                summary="read: 1.05 MB/s, write: 1.00 MB/s",
-            ),
-            Metric("read", 1048571.5833333334),
-            Metric("write", 1000000.0),
-        ]
+    vs = {
+        "write_throughput": (now - 60, (write_test_data - 1000**2 * 60)),
+        "read_throughput": (now - 60, (read_test_data - 1024**2 * 60)),
+    }
+    assert list(_check_diskstat_io(item, {}, section, vs, now)) == [
+        Result(
+            state=State.OK,
+            summary="Read: 1.05 MB/s",
+        ),
+        Metric("disk_read_throughput", 1048576.0),
+        Result(
+            state=State.OK,
+            summary="Write: 1.00 MB/s",
+        ),
+        Metric("disk_write_throughput", 1000000.0),
+    ]

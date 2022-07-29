@@ -211,7 +211,11 @@ class Summarizer:
         *,
         levels_additional_nodes_count: Tuple[float, float],
     ) -> Iterable[Result]:
-        secondary_nodes = sorted(n for n in self._node_results.results if n != self._pivoting)
+        secondary_nodes = sorted(
+            node
+            for node, results in self._node_results.results.items()
+            if node != self._pivoting and results
+        )
         if not secondary_nodes:
             return
 

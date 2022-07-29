@@ -237,6 +237,17 @@ def test_cluster_check_best_ignore_results(vsm: ValueStoreManager) -> None:
         )
 
 
+def test_cluster_check_best_empty_results_are_ignored(vsm: ValueStoreManager) -> None:
+    check_best = _get_cluster_check_function(_simple_check, mode="best", vsm=vsm)
+
+    assert list(check_best(section={"Nodett": [2], "Nomo": [1], "NoResults": []},)) == [
+        Result(state=State.OK, summary="Best: [Nomo]"),
+        Result(state=State.WARN, summary="Hi", details="[Nomo]: Hi"),
+        Result(state=State.OK, summary="Additional results from: [Nodett]"),
+        Result(state=State.OK, notice="[Nodett]: Hi(!!)"),
+    ]
+
+
 def test_cluster_check_best_others_are_notice_only(vsm: ValueStoreManager) -> None:
     check_best = _get_cluster_check_function(_simple_check, mode="best", vsm=vsm)
 

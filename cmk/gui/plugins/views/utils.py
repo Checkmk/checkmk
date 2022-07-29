@@ -1806,7 +1806,7 @@ def render_cache_info(what: str, row: Row) -> str:
 
 
 def _internal_view_to_runtime_view(raw_view: dict[str, Any]) -> ViewSpec:
-    return raw_view
+    return painter_specs_to_runtime_format(raw_view)
 
 
 class ViewStore:
@@ -1824,14 +1824,12 @@ class ViewStore:
     def _load_all_views() -> AllViewSpecs:
         """Loads all view definitions from disk and returns them"""
         # Skip views which do not belong to known datasources
-        views = visuals.load(
+        return visuals.load(
             visuals.VisualType.views,
             multisite_builtin_views,
             _internal_view_to_runtime_view,
             skip_func=lambda v: v["datasource"] not in data_source_registry,
         )
-        views = _transform_old_views(views)
-        return {viewname: transform_painter_spec(view) for viewname, view in views.items()}
 
     @staticmethod
     def _load_permitted_views(all_views: AllViewSpecs) -> PermittedViewSpecs:
@@ -1851,7 +1849,7 @@ def get_view_by_name(view_name: ViewName) -> ViewSpec:
     return get_permitted_views()[view_name]
 
 
-def transform_painter_spec(view: ViewSpec) -> ViewSpec:
+def painter_specs_to_runtime_format(view: ViewSpec) -> ViewSpec:
     if "painters" in view:
         view["painters"] = [
             v if isinstance(v, PainterSpec) else PainterSpec.from_raw(*v) for v in view["painters"]
@@ -1862,171 +1860,6 @@ def transform_painter_spec(view: ViewSpec) -> ViewSpec:
             for v in view["group_painters"]
         ]
     return view
-
-
-# Convert views that are saved in the pre 1.2.6-style
-# FIXME: Can be removed one day. Mark as incompatible change or similar.
-def _transform_old_views(  # pylint: disable=too-many-branches
-    all_views: AllViewSpecs,
-) -> AllViewSpecs:
-    for view in all_views.values():
-        ds_name = view["datasource"]
-        datasource = data_source_registry[ds_name]()
-
-        if "context" not in view:  # legacy views did not have this explicitly
-            view.setdefault("user_sortable", True)
-
-        if "context_type" in view:
-            raise MKGeneralException(
-                'Could not transform legacy view definition containing "context_type". '
-                "You have to remove it or migrate it by hand"
-            )
-
-        if "single_infos" not in view:
-            # This tries to map the datasource and additional settings of the
-            # views to get the correct view context
-            #
-            # This code transforms views from views.mk (legacy format) to the current format
-            try:
-                hide_filters = view.get("hide_filters", [])
-
-                if "service" in hide_filters and "host" in hide_filters:
-                    view["single_infos"] = ["service", "host"]
-                elif "service" in hide_filters and "host" not in hide_filters:
-                    view["single_infos"] = ["service"]
-                elif "host" in hide_filters:
-                    view["single_infos"] = ["host"]
-                elif "hostgroup" in hide_filters:
-                    view["single_infos"] = ["hostgroup"]
-                elif "servicegroup" in hide_filters:
-                    view["single_infos"] = ["servicegroup"]
-                elif "aggr_service" in hide_filters:
-                    view["single_infos"] = ["service"]
-                elif "aggr_name" in hide_filters:
-                    view["single_infos"] = ["aggr"]
-                elif "aggr_group" in hide_filters:
-                    view["single_infos"] = ["aggr_group"]
-                elif "log_contact_name" in hide_filters:
-                    view["single_infos"] = ["contact"]
-                elif "event_host" in hide_filters:
-                    view["single_infos"] = ["host"]
-                elif hide_filters == ["event_id", "history_line"]:
-                    view["single_infos"] = ["history"]
-                elif "event_id" in hide_filters:
-                    view["single_infos"] = ["event"]
-                elif "aggr_hosts" in hide_filters:
-                    view["single_infos"] = ["host"]
-                else:
-                    # For all other context types assume the view is showing multiple objects
-                    # and the datasource can simply be gathered from the datasource
-                    view["single_infos"] = []
-            except Exception:  # Exceptions can happen for views saved with certain GIT versions
-                if active_config.debug:
-                    raise
-
-        # Convert from show_filters, hide_filters, hard_filters and hard_filtervars
-        # to context construct
-        if "context" not in view:
-            view["show_filters"] = (
-                view["hide_filters"] + view["hard_filters"] + view["show_filters"]
-            )
-
-            single_keys = visuals.get_single_info_keys(view["single_infos"])
-
-            # First get vars for the classic filters
-            context: Dict[str, Dict[str, str]] = {}  # VisualContext, yet mutates on creation
-            filtervars = dict(view["hard_filtervars"])
-            all_vars = {}
-            for filter_name in view["show_filters"]:
-                if filter_name in single_keys:
-                    continue  # skip conflictings vars / filters
-
-                filter_variables = context.setdefault(filter_name, {})
-                assert isinstance(filter_variables, dict)
-
-                try:
-                    f = visuals.get_filter(filter_name)
-                except Exception:
-                    # The exact match filters have been removed. They where used only as
-                    # link filters anyway - at least by the builtin views.
-                    continue
-
-                for var in f.htmlvars:
-                    # Check whether or not the filter is supported by the datasource,
-                    # then either skip or use the filter vars
-                    if var in filtervars and f.info in datasource.infos:
-                        value = filtervars[var]
-                        all_vars[var] = value
-                        filter_variables[var] = value
-
-                # We changed different filters since the visuals-rewrite. This must be treated here, since
-                # we need to transform views which have been created with the old filter var names.
-                # Changes which have been made so far:
-                changed_filter_vars = {
-                    "serviceregex": {  # Name of the filter
-                        # old var name: new var name
-                        "service": "service_regex",
-                    },
-                    "hostregex": {
-                        "host": "host_regex",
-                    },
-                    "hostgroupnameregex": {
-                        "hostgroup_name": "hostgroup_regex",
-                    },
-                    "servicegroupnameregex": {
-                        "servicegroup_name": "servicegroup_regex",
-                    },
-                    "opthostgroup": {
-                        "opthostgroup": "opthost_group",
-                        "neg_opthostgroup": "neg_opthost_group",
-                    },
-                    "optservicegroup": {
-                        "optservicegroup": "optservice_group",
-                        "neg_optservicegroup": "neg_optservice_group",
-                    },
-                    "hostgroup": {
-                        "hostgroup": "host_group",
-                        "neg_hostgroup": "neg_host_group",
-                    },
-                    "servicegroup": {
-                        "servicegroup": "service_group",
-                        "neg_servicegroup": "neg_service_group",
-                    },
-                    "host_contactgroup": {
-                        "host_contactgroup": "host_contact_group",
-                        "neg_host_contactgroup": "neg_host_contact_group",
-                    },
-                    "service_contactgroup": {
-                        "service_contactgroup": "service_contact_group",
-                        "neg_service_contactgroup": "neg_service_contact_group",
-                    },
-                }
-
-                if filter_name in changed_filter_vars and f.info in datasource.infos:
-                    for old_var, new_var in changed_filter_vars[filter_name].items():
-                        if old_var in filtervars:
-                            value = filtervars[old_var]
-                            all_vars[new_var] = value
-                            filter_variables[new_var] = value
-
-            # Now, when there are single object infos specified, add these keys to the
-            # context
-            for single_key in single_keys:
-                if single_key in all_vars:
-                    context[single_key] = all_vars[single_key]
-
-            view["context"] = context
-
-        # Cleanup unused attributes
-        for k in ["hide_filters", "hard_filters", "show_filters", "hard_filtervars"]:
-            try:
-                del view[k]
-            except KeyError:
-                pass
-
-        visuals.transform_old_visual(view)
-
-    return all_views
 
 
 # .

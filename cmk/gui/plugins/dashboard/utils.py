@@ -53,7 +53,11 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.metrics.rrd_fetch import merge_multicol
 from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options
 from cmk.gui.plugins.views.painters import host_state_short, service_state_short
-from cmk.gui.plugins.views.utils import get_all_views, get_permitted_views, transform_painter_spec
+from cmk.gui.plugins.views.utils import (
+    get_all_views,
+    get_permitted_views,
+    painter_specs_to_runtime_format,
+)
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.type_defs import HTTPVariables, Row, SingleInfos, TranslatedMetric, VisualContext
 from cmk.gui.utils.html import HTML
@@ -874,7 +878,7 @@ def _transform_dashboards(
 def _transform_dashlets_mut(dashlet_spec: DashletConfig) -> DashletConfig:
     # abusing pass by reference to mutate dashlet
     if dashlet_spec["type"] == "view":
-        transform_painter_spec(dashlet_spec)
+        painter_specs_to_runtime_format(dashlet_spec)
 
     # ->2014-10
     if dashlet_spec["type"] == "pnpgraph":

@@ -52,7 +52,7 @@ endif
 
 $(LASSO_INSTALL): $(LASSO_INTERMEDIATE_INSTALL)
 ifeq ($(filter sles%,$(DISTRO_CODE)),)
-	$(RSYNC) $(LASSO_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
+	$(RSYNC) $(LASSO_INSTALL_DIR)/$(OMD_ROOT)/ $(DESTDIR)$(OMD_ROOT)/
 	$(TOUCH) $@
 endif
 	$(TOUCH) $@

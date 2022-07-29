@@ -12,8 +12,13 @@ from tests.unit.conftest import FixRegister
 
 from cmk.utils.type_defs import CheckPluginName
 
-from cmk.base.item_state import MKCounterWrapped
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    IgnoreResultsError,
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.oracle_instance import (
     GeneralError,
     Instance,
@@ -77,7 +82,7 @@ def test_check_oracle_instance_uptime_normal(fix_register: FixRegister) -> None:
 
 
 def test_check_oracle_instance_uptime_error(fix_register: FixRegister) -> None:
-    with pytest.raises(MKCounterWrapped):
+    with pytest.raises(IgnoreResultsError):
         list(
             fix_register.check_plugins[CheckPluginName("oracle_instance_uptime")].check_function(
                 item="IC731",

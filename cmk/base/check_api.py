@@ -88,7 +88,7 @@ import enum  # noqa: F401 # pylint: disable=unused-import
 import fnmatch  # noqa: F401 # pylint: disable=unused-import
 import functools
 import math  # noqa: F401 # pylint: disable=unused-import
-import os
+import os  # noqa: F401 # pylint: disable=unused-import
 
 # NOTE: We do not use pprint in this module, but it is part of the check API.
 import pprint  # noqa: F401 # pylint: disable=unused-import
@@ -132,6 +132,9 @@ import cmk.base.api.agent_based.register as _agent_based_register
 import cmk.base.config as _config
 import cmk.base.item_state as _item_state
 import cmk.base.prediction as _prediction
+from cmk.base.api.agent_based.checking_classes import (  # noqa: F401 # pylint: disable=unused-import
+    IgnoreResultsError as MKCounterWrapped,
+)
 from cmk.base.api.agent_based.section_classes import OIDBytes as _OIDBytes
 from cmk.base.api.agent_based.section_classes import OIDCached as _OIDCached
 from cmk.base.plugin_contexts import check_type
@@ -210,6 +213,7 @@ def get_check_api_context() -> _config.CheckContext:
 
 # Names of texts usually output by checks
 core_state_names = _defines.short_service_state_names()
+
 
 # backwards compatibility: allow to pass integer.
 BINARY = lambda x: _OIDBytes(str(x))
@@ -354,8 +358,6 @@ last_counter_wrap = _item_state.last_counter_wrap
 SKIP = _item_state.SKIP
 RAISE = _item_state.RAISE
 ZERO = _item_state.ZERO
-
-MKCounterWrapped = _item_state.MKCounterWrapped
 
 
 def _normalize_levels(levels: Levels) -> Levels:

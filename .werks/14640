@@ -1,0 +1,14 @@
+Title: Fix unexpected stale services for builtin cluster modes
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1659088203
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p10
+
+
+When clustering lecagy plugins using the builtin cluster modes, sometimes services would go stale unexpectedly.
+

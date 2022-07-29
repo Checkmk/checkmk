@@ -8,12 +8,9 @@ import pytest
 
 from tests.testlib import Check
 
-from .checktestlib import (
-    assertCheckResultsEqual,
-    assertMKCounterWrapped,
-    CheckResult,
-    mock_item_state,
-)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+
+from .checktestlib import assertCheckResultsEqual, CheckResult, mock_item_state
 
 pytestmark = pytest.mark.checks
 
@@ -106,9 +103,5 @@ def test_statgrab_cpu_check_error(info, mockstate):
 
     with mock_item_state(mockstate):
         # the mock values are designed to raise an exception.
-        # to make sure it is raised, use this:
-        with assertMKCounterWrapped("Too short time difference since last check"):
+        with pytest.raises(IgnoreResultsError):
             CheckResult(check.run_check(None, {}, info))
-        # # You could omit the error message it you don't care about it:
-        # with assertMKCounterWrapped()
-        #     CheckResult(check.run_check(None, {}, info))

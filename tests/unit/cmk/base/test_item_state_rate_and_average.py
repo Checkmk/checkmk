@@ -21,7 +21,7 @@ from cmk.base import item_state
 @pytest.mark.usefixtures("initialised_item_state")
 def test_get_rate_raises(pre_state, time, value, errmsg):
     item_state.set_item_state("foo", pre_state)
-    with pytest.raises(item_state.MKCounterWrapped, match=errmsg):
+    with pytest.raises(item_state.GetRateError, match=errmsg):
         item_state.get_rate("foo", time, value, onwrap=item_state.RAISE)
 
 

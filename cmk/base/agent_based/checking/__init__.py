@@ -475,7 +475,7 @@ def get_aggregated_result(
                 )
             )
 
-    except (item_state.MKCounterWrapped, checking_classes.IgnoreResultsError) as e:
+    except checking_classes.IgnoreResultsError as e:
         msg = str(e) or "No service summary available"
         return AggregatedResult(
             submit=False,

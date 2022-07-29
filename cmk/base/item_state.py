@@ -21,8 +21,7 @@ structures like log files or stuff.
 
 from typing import Any, Optional, Tuple, Union
 
-from cmk.utils.exceptions import MKException
-
+from cmk.base.api.agent_based.utils import GetRateError
 from cmk.base.api.agent_based.value_store import get_value_store
 
 # Constants for counters
@@ -30,16 +29,12 @@ SKIP = None
 RAISE = False
 ZERO = 0.0
 
-g_last_counter_wrap: "Optional[MKCounterWrapped]" = None
+g_last_counter_wrap: "Optional[GetRateError]" = None
 g_suppress_on_wrap = True  # Suppress check on wrap (raise an exception)
 # e.g. do not suppress this check on check_mk -nv
 
 _UserKey = str
 _OnWrap = Union[None, bool, float]
-
-
-class MKCounterWrapped(MKException):
-    pass
 
 
 def _stringify(user_key: object) -> _UserKey:
@@ -95,7 +90,7 @@ def get_rate(
 ) -> float:
     try:
         return _get_counter(user_key, this_time, this_val, allow_negative, is_rate)[1]
-    except MKCounterWrapped as e:
+    except GetRateError as e:
         if onwrap is RAISE:
             raise
         if onwrap is SKIP:
@@ -122,14 +117,14 @@ def _get_counter(
     if old_state is None:
         if not g_suppress_on_wrap:
             return 1.0, 0.0
-        raise MKCounterWrapped("Counter initialization")
+        raise GetRateError("Counter initialization")
 
     last_time, last_val = old_state
     timedif = this_time - last_time
     if timedif <= 0:  # do not update counter
         if not g_suppress_on_wrap:
             return 1.0, 0.0
-        raise MKCounterWrapped("No time difference")
+        raise GetRateError("No time difference")
 
     if not is_rate:
         valuedif = this_val - last_val
@@ -143,7 +138,7 @@ def _get_counter(
         # and wait for the next check interval.
         if not g_suppress_on_wrap:
             return 1.0, 0.0
-        raise MKCounterWrapped("Value overflow")
+        raise GetRateError("Value overflow")
 
     per_sec = float(valuedif) / timedif
     return timedif, per_sec
@@ -155,7 +150,7 @@ def reset_wrapped_counters() -> None:
 
 
 # TODO: Can we remove this? (check API)
-def last_counter_wrap() -> Optional[MKCounterWrapped]:
+def last_counter_wrap() -> Optional[GetRateError]:
     return g_last_counter_wrap
 
 

@@ -13,7 +13,6 @@ import mock
 import pytest
 
 from cmk.base.check_api import Service
-from cmk.base.item_state import MKCounterWrapped
 
 
 class Tuploid:
@@ -421,45 +420,6 @@ def mock_item_state(mock_state):
     )
 
     return mock.patch(target, _MockVSManager(_MockValueStore(getter)))
-
-
-class assertMKCounterWrapped:
-    """Contextmanager in which a MKCounterWrapped exception is expected
-
-    If you can choose to also assert a certain error message:
-
-    with mock_item_state((1., -42)):
-        with assertMKCounterWrapped("value is negative"):
-            # do a check that raises such an exception
-            run_my_check()
-
-    Or you can ignore the exact error message:
-
-    with mock_item_state((1., -42)):
-        with assertMKCounterWrapped():
-            # do a check that raises such an exception
-            run_my_check()
-
-    See for example 'test_statgrab_cpu_check.py'.
-    """
-
-    def __init__(self, msg=None):
-        self.msg = msg
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, ty, ex, tb):
-        if ty is AssertionError:
-            raise
-        assert ty is not None, "assertMKCounterWrapped: no exception has occurred"
-        assert ty == MKCounterWrapped, "assertMKCounterWrapped: %r is not of type %r" % (
-            ex,
-            MKCounterWrapped,
-        )
-        if self.msg is not None:
-            assert self.msg == str(ex), "assertMKCounterWrapped: %r != %r" % (self.msg, str(ex))
-        return True
 
 
 class MockHostExtraConf:

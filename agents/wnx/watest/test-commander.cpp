@@ -51,7 +51,8 @@ TEST(Commander, Base) {
     EXPECT_TRUE(enabled);
     SetEnabledFlag(false);
 
-    mailslot::Slot mailbox("WinAgentTestLocal", 0);
+    mailslot::Slot mailbox(
+        mailslot::BuildCustomMailSlotName("WinAgentTestLocal", 0, "."));
     using namespace cma::carrier;
     auto internal_port =
         BuildPortName(kCarrierMailslotName, mailbox.GetName());  // port here

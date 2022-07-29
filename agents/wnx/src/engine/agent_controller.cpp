@@ -14,6 +14,7 @@
 #include "common/cfg_info.h"
 #include "common/cfg_yaml.h"
 #include "common/cma_yml.h"
+#include "common/mailslot_transport.h"
 #include "common/wtools.h"
 
 namespace fs = std::filesystem;
@@ -110,25 +111,48 @@ uint16_t GetPortFromString(const std::string &str) {
     return port > 1'000 && port < 60'000 ? static_cast<uint16_t>(port) : 0U;
 }
 
+enum class AddrType {
+    mailslot,
+    ip,
+};
+
+std::string FormatAddressFor(AddrType ff, std::string_view addr) {
+    return fmt::format(
+        "{}{}{}",
+        [](AddrType ff) {
+            switch (ff) {
+                case AddrType::mailslot:
+                    return kCmdMailSlotPrefix;
+                case AddrType::ip:
+                    return kCmdIpPrefix;
+            }
+            // unreachable
+            return kCmdIpPrefix;
+        }(ff),
+        kCmdPrefixSeparator, addr);
+}
+
 std::string GetConfiguredAgentChannel(Modus modus) {
     auto controller_config = GetControllerNode();
     auto result =
         cfg::GetVal(controller_config, cfg::vars::kControllerAgentChannel,
                     std::string{cfg::defaults::kControllerAgentChannelDefault});
+
     if (tools::IsEqual(result, cfg::defaults::kControllerAgentChannelMaiSlot)) {
-        return result;
+        return FormatAddressFor(
+            AddrType::mailslot,
+            mailslot::BuildMailSlotNameStem(modus, ::GetCurrentProcessId()));
     }
 
     if (UseSpecialPort(modus)) {
-        return fmt::format("localhost:{}", kWindowsInternalExePort);
-    }
-    if (GetPortFromString(result) == 0) {
+        result = fmt::format("localhost:{}", kWindowsInternalExePort);
+    } else if (GetPortFromString(result) == 0) {
         XLOG::l("Invalid configured agent channel '{}' use default", result);
-        return std::string{cfg::defaults::kControllerAgentChannelDefault};
+        result = std::string{cfg::defaults::kControllerAgentChannelDefault};
     }
-
-    return result;
+    return FormatAddressFor(AddrType::ip, result);
 }
+
 bool GetConfiguredForceLegacy() {
     auto controller_config = GetControllerNode();
     return cfg::GetVal(controller_config, cfg::vars::kControllerForceLegacy,

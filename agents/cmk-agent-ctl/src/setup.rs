@@ -143,7 +143,7 @@ fn agent_port() -> String {
 
 #[cfg(windows)]
 pub fn agent_channel() -> types::AgentChannel {
-    types::AgentChannel::from(format!("localhost:{}", agent_port()).as_str())
+    types::AgentChannel::from(format!("ip/localhost:{}", agent_port()).as_str())
 }
 
 #[cfg(unix)]

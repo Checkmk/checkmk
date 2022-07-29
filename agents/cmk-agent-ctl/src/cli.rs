@@ -129,7 +129,13 @@ pub struct PullOpts {
     #[structopt(long, short = "A", parse(from_str))]
     pub allowed_ip: Option<Vec<String>>,
 
-    /// TCP connection "ip:port"
+    /// Connection in format "type/peer"
+    /// where
+    ///     type is either "ms" or "ip"
+    ///     peer is correct mailslot address or ip address
+    /// examples
+    ///     "ms/Global\\WinAgent_13"
+    ///     "ip/localhost:28250"
     /// None means default behavior
     #[structopt(long, parse(from_str))]
     pub agent_channel: Option<types::AgentChannel>,

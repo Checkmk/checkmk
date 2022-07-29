@@ -9,6 +9,7 @@
 
 #include "agent_controller.h"
 #include "cfg.h"
+#include "common/mailslot_transport.h"
 #include "test_tools.h"
 
 using namespace std::chrono_literals;
@@ -31,7 +32,7 @@ TEST(AgentController, BuildCommandLine) {
                                          "  port: {}\n",
                                          port)));
     EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
-              fmt::format("x daemon --agent-channel {} -vv",
+              fmt::format("x daemon --agent-channel ip/{} -vv",
                           cfg::defaults::kControllerAgentChannelDefault));
 }
 
@@ -130,7 +131,7 @@ TEST(AgentController, BuildCommandLineAgentChannelOk) {
                                              "    agent_channel: {}\n",
                                              ch_in)));
         EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path{"x"})),
-                  fmt::format("x daemon --agent-channel {} -vv", ch_out));
+                  fmt::format("x daemon --agent-channel ip/{} -vv", ch_out));
         EXPECT_EQ(GetConfiguredAgentChannelPort(GetModus()), p);
     }
     EXPECT_EQ(GetConfiguredAgentChannelPort(Modus::integration),
@@ -147,10 +148,15 @@ TEST(AgentController, BuildCommandLineAgentChannelMailsLot) {
         "  controller:\n"
         "    run: yes\n"
         "    agent_channel: mailslot\n";
+    const auto expected_command = fmt::format(
+        "x daemon --agent-channel {}{}{} -vv", ac::kCmdMailSlotPrefix,
+        kCmdPrefixSeparator,
+        mailslot::BuildMailSlotNameStem(GetModus(), ::GetCurrentProcessId()));
+
     auto temp_fs = tst::TempCfgFs::CreateNoIo();
     ASSERT_TRUE(temp_fs->loadContent(with_mailslot));
-    EXPECT_EQ(ac::BuildCommandLine(fs::path{"x"}),
-              L"x daemon --agent-channel mailslot -vv");
+    EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path{"x"})),
+              expected_command);
     for (auto m : {
              Modus::app,
              Modus::integration,
@@ -171,7 +177,8 @@ TEST(AgentController, BuildCommandLineAgentChannelMalformed) {
                                          "    run: yes\n"
                                          "    agent_channel: ll\n")));
     EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
-              fmt::format("x daemon --agent-channel {} -vv",
+              fmt::format("x daemon --agent-channel {}{}{} -vv",
+                          ac::kCmdIpPrefix, ac::kCmdPrefixSeparator,
                           cfg::defaults::kControllerAgentChannelDefault));
     EXPECT_EQ(GetConfiguredAgentChannelPort(GetModus()),
               kWindowsInternalServicePort);
@@ -190,7 +197,8 @@ TEST(AgentController, BuildCommandLineAllowed) {
                                          "  port: {}\n",
                                          allowed, port)));
     EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
-              fmt::format("x daemon --agent-channel {} -vv",
+              fmt::format("x daemon --agent-channel {}{}{} -vv",
+                          ac::kCmdIpPrefix, ac::kCmdPrefixSeparator,
                           cfg::defaults::kControllerAgentChannelDefault));
 }
 

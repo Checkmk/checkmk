@@ -31,6 +31,11 @@ constexpr std::string_view kCmdLineChannel{"--agent-channel"};
 constexpr std::string_view kCmdLineAllowedIp{"-A"};
 constexpr std::string_view kCmdLineVersion{"-V"};
 constexpr std::string_view kCmdLineStatus{"status --json"};
+
+constexpr std::string_view kCmdMailSlotPrefix{"ms"};
+constexpr std::string_view kCmdIpPrefix{"ip"};
+constexpr std::string_view kCmdPrefixSeparator{"/"};
+
 constexpr uint16_t kWindowsInternalServicePort{28250U};
 constexpr uint16_t kWindowsInternalExePort{50002U};
 

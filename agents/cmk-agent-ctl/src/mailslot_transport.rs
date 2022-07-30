@@ -98,7 +98,7 @@ pub fn build_own_mailslot_name() -> String {
 }
 
 pub struct MailSlotBackend {
-    srv: JoinHandle<()>,
+    srv: Option<JoinHandle<()>>, // option is need to call join(self) in drop
     stop_flag: Arc<AtomicBool>,
     pub tx: Receiver<String>,
 }
@@ -110,7 +110,7 @@ impl MailSlotBackend {
         let result = Self::start_mailslot_server(name, rx, Arc::clone(&stop));
         if let Ok(srv) = result {
             Ok(MailSlotBackend {
-                srv,
+                srv: Some(srv),
                 stop_flag: Arc::clone(&stop),
                 tx,
             })
@@ -188,10 +188,15 @@ impl MailSlotBackend {
 
         Ok(srv)
     }
+}
 
-    pub fn stop(self) {
+impl Drop for MailSlotBackend {
+    fn drop(&mut self) {
         self.stop_flag.store(true, Ordering::Relaxed);
-        self.srv.join().expect("Panic");
+        let a = self.srv.take();
+        if a.is_some() {
+            a.unwrap().join().expect("Panic"); // panic here is a real disaster
+        }
     }
 }
 
@@ -251,7 +256,6 @@ mod tests {
         let mut backend = MailSlotBackend::new(&base_name).expect("Server is failed");
         send_messages_to_mailslot(&base_name, MESSAGE_COUNT);
         assert!(receive_expected_messages_from_mailslot(&mut backend.tx, MESSAGE_COUNT).await);
-        backend.stop();
     }
 
     async fn async_collect_from_mailslot(duration: Duration) -> IoResult<Vec<u8>> {
@@ -262,7 +266,6 @@ mod tests {
             .await
             .unwrap_or_default() // in tests we ignore elapsed
             .unwrap_or_default(); // in tests we ignore errors
-        backend.stop();
         Ok(value.as_bytes().to_owned())
     }
 

@@ -6,7 +6,7 @@
 import time
 from typing import Any, Mapping, MutableMapping, Optional
 
-from .agent_based_api.v1 import get_value_store, register, type_defs
+from .agent_based_api.v1 import get_value_store, register, Result, State, type_defs
 from .utils import diskstat, hp_msa
 
 
@@ -164,4 +164,41 @@ register.check_plugin(
     check_ruleset_name="diskstat",
     check_default_parameters={},
     check_function=check_hp_msa_io,
+)
+
+
+def check_hp_msa_volume_io(
+    item: str, params: Mapping[str, Any], section: hp_msa.Section
+) -> type_defs.CheckResult:
+    if item != "SUMMARY":
+        if disk := section.get(item):
+            yield Result(
+                state=State.OK,
+                summary=f"{disk['virtual-disk-name']} ({disk['raidtype']})",
+            )
+        return
+
+    new_section = {}
+    for name, values in section.items():
+        try:
+            new_section[name] = {
+                "read_throughput": float(values["data-read-numeric"]),
+                "write_throughput": float(values["data-written-numeric"]),
+            }
+        except (KeyError, ValueError):
+            pass
+    yield from check_diskstat_io("SUMMARY", params, new_section)
+
+
+register.check_plugin(
+    name="hp_msa_volume_io",
+    service_name="Volume IO %s",
+    sections=["hp_msa_volume"],
+    discovery_ruleset_type=register.RuleSetType.ALL,
+    discovery_default_parameters={"summary": True},
+    discovery_ruleset_name="diskstat_inventory",
+    discovery_function=diskstat.discovery_diskstat_generic,
+    check_ruleset_name="diskstat",
+    check_default_parameters={},
+    check_function=check_hp_msa_volume_io,
 )

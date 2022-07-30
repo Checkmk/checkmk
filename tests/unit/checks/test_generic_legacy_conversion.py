@@ -1580,7 +1580,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "hp_msa_system",
         "hp_msa_volume",
         "hp_msa_volume.df",
-        "hp_msa_volume.io",
         "hp_procurve_cpu",
         "hp_procurve_mem",
         "hp_procurve_sensors",

@@ -9,10 +9,13 @@ use mail_slot::{MailslotClient, MailslotName, MailslotServer};
 use serde::{Deserialize, Serialize};
 use std::convert::From;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Condvar, Mutex};
 use std::thread::{sleep, JoinHandle};
 use std::time::Duration;
+use tokio::sync::mpsc::{
+    unbounded_channel as channel, UnboundedReceiver as Receiver, UnboundedSender as Sender,
+};
+
 // data must be in sync with windows agent
 const PROVIDER_NAME_LENGTH: usize = 32;
 pub enum DataType {
@@ -147,9 +150,7 @@ impl MailSlotBackend {
             Ok(mut server) => loop {
                 match server.get_next_unread() {
                     Ok(None) | Err(_) => sleep(Duration::from_millis(20)),
-                    Ok(Some(msg)) => rx
-                        .send(Self::try_as_utf8(msg))
-                        .unwrap_or_else(|e| warn!("Mailslot server fails to receive '{}'", e)),
+                    Ok(Some(msg)) => rx.send(Self::try_as_utf8(msg)).unwrap_or_default(),
                 }
                 if stop.load(Ordering::Relaxed) {
                     break;
@@ -218,11 +219,15 @@ mod tests {
         }
     }
 
-    fn receive_messages_from_mailslot(tx: &mut Receiver<String>, count: i32) -> bool {
+    async fn receive_expected_messages_from_mailslot(
+        tx: &mut Receiver<String>,
+        count: i32,
+    ) -> bool {
         for i in 0..count {
-            let value = tx
-                .recv_timeout(Duration::from_secs(1))
-                .expect("not received");
+            let value = tokio::time::timeout(Duration::from_secs(1), tx.recv())
+                .await
+                .unwrap_or_default() // in tests we ignore elapsed
+                .unwrap_or_default(); // in tests we ignore errors
             if i.to_string() != value {
                 return false;
             }
@@ -240,30 +245,30 @@ mod tests {
         assert_eq!(MailSlotBackend::try_as_utf8(GOOD_UTF8.to_vec()), "💖");
     }
 
-    #[test]
-    fn test_mailslot_backend() {
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_mailslot_backend() {
         let base_name = build_own_mailslot_name() + "_test";
         let mut backend = MailSlotBackend::new(&base_name).expect("Server is failed");
         send_messages_to_mailslot(&base_name, MESSAGE_COUNT);
-        receive_messages_from_mailslot(&mut backend.tx, MESSAGE_COUNT);
+        assert!(receive_expected_messages_from_mailslot(&mut backend.tx, MESSAGE_COUNT).await);
         backend.stop();
     }
 
-    async fn async_collect_from_mailslot() -> IoResult<Vec<u8>> {
+    async fn async_collect_from_mailslot(duration: Duration) -> IoResult<Vec<u8>> {
         let base_name = build_own_mailslot_name() + "_test_async";
-        let backend = MailSlotBackend::new(&base_name).expect("Server is failed");
+        let mut backend = MailSlotBackend::new(&base_name).expect("Server is failed");
         send_messages_to_mailslot(&base_name, 1);
-        let value = backend
-            .tx
-            .recv_timeout(Duration::from_secs(1))
-            .expect("not received");
+        let value = tokio::time::timeout(duration, backend.tx.recv())
+            .await
+            .unwrap_or_default() // in tests we ignore elapsed
+            .unwrap_or_default(); // in tests we ignore errors
         backend.stop();
         Ok(value.as_bytes().to_owned())
     }
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_mailslot_backend_async() -> AnyhowResult<()> {
-        let res = async_collect_from_mailslot().await?;
+        let res = async_collect_from_mailslot(Duration::from_secs(1)).await?;
         assert_eq!(res, "0".as_bytes());
         Ok(())
     }

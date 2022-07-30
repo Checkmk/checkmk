@@ -11,28 +11,35 @@
 from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
+def _fixup_section(section):
+    # This plugin used to call get_rate in the parse function, which does not work in 2.1.
+    # Putting it here is a quick fix, the solution in 2.2 is a completely different.
+    now = time.time()
+    fixed = {}
+    for name, value in section.items():
+        fixed_value = {
+            **value,
+            "read_throughput": get_rate("readbytes.%s" % name, now, value["read_throughput"]),
+            "write_throughput": get_rate("writebytes.%s" % name, now, value["write_throughput"]),
+            "ios": get_rate("ios.%s" % name, now, value["ios"]),
+        }
+        fixed[name] = fixed_value
+    return fixed
+
+
 def parse_emc_vplex_volumes(info):
     volumes = {}
-    now = time.time()
 
     # Each volume is listed twice, because they are connected to both directors
-    instance_count = {}
     for line in info:
-        # Note: Since the volume name can appear multiple times we need an instance
-        # counter for each volume. Let's hope they always appear in the same order...
         name = line[0]
-        instance_count.setdefault(name, 0)
-        instance_count[name] += 1
-        read_delta = get_rate("readbytes.%s.%s" % (name, instance_count[name]), now, int(line[3]))
-        write_delta = get_rate("writebytes.%s.%s" % (name, instance_count[name]), now, int(line[4]))
-        ios = get_rate("ios.%s.%s" % (name, instance_count[name]), now, int(line[2]))
         read_wait = float(line[5]) / 1000000
         write_wait = float(line[6]) / 1000000
 
         if name in volumes:
-            volumes[name]["read_throughput"] += read_delta
-            volumes[name]["write_throughput"] += write_delta
-            volumes[name]["ios"] += ios
+            volumes[name]["read_throughput"] += float(line[3])
+            volumes[name]["write_throughput"] += float(line[4])
+            volumes[name]["ios"] += float(line[2])
             volumes[name]["average_read_wait"] = max(volumes[name]["average_read_wait"], read_wait)
             volumes[name]["average_write_wait"] = max(
                 volumes[name]["average_write_wait"], write_wait
@@ -41,9 +48,9 @@ def parse_emc_vplex_volumes(info):
             volumes[name] = {
                 "average_read_wait": read_wait,
                 "average_write_wait": write_wait,
-                "read_throughput": read_delta,
-                "write_throughput": write_delta,
-                "ios": ios,
+                "read_throughput": float(line[3]),
+                "write_throughput": float(line[4]),
+                "ios": float(line[2]),
             }
 
     return volumes
@@ -54,11 +61,7 @@ def inventory_emc_vplex_volumes(parsed):
 
 
 def check_emc_vplex_volumes(item, params, parsed):
-    # The check_diskstat_dict function may compute average values
-    # We won't allow this if some of the counters have wrapped
-    if last_counter_wrap():
-        raise MKCounterWrapped("Value overflow")
-    return check_diskstat_dict(item, params, parsed)
+    return check_diskstat_dict(item, params, _fixup_section(parsed))
 
 
 check_info["emc_vplex_volumes"] = {

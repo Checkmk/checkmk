@@ -11,28 +11,45 @@
 from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
+def _fixup_section(section):
+    # This plugin used to call get_rate in the parse function, which does not work in 2.1.
+    # Putting it here is a quick fix, the solution in 2.2 is a completely different.
+    now = time.time()
+    fixed = {}
+    for name, value in section.items():
+        fixed_value = {
+            **value,
+            "read_throughput": get_rate("readbytes.%s" % name, now, value["read_throughput"]),
+            "write_throughput": get_rate("writebytes.%s" % name, now, value["write_throughput"]),
+            "read_ios": get_rate("read_ios.%s" % name, now, value["read_ios"]),
+            "write_ios": get_rate("write_ios.%s" % name, now, value["write_ios"]),
+        }
+        fixed[name] = fixed_value
+    return fixed
+
+
 def parse_emc_director_stats(info):
     directors = {}
     now = time.time()
     for line in info:
         directors["%s_FE" % line[0]] = {
             "node": None,
-            "read_ios": get_rate("fe_readio.%s" % line[0], now, int(line[1])),
-            "write_ios": get_rate("fe_writeio.%s" % line[0], now, int(line[2])),
+            "read_ios": float(line[1]),
+            "write_ios": float(line[2]),
             "queue_length": int(line[3]),
             "average_read_wait": float(line[5]) / 1000000,
             "average_write_wait": float(line[6]) / 1000000,
-            "read_throughput": get_rate("fe_readbytes.%s" % line[0], now, int(line[7])),
-            "write_throughput": get_rate("fe_writebytes.%s" % line[0], now, int(line[8])),
+            "read_throughput": float(line[7]),
+            "write_throughput": float(line[8]),
         }
         directors["%s_BE" % line[0]] = {
             "node": None,
-            "read_ios": get_rate("be_readio.%s" % line[0], now, int(line[9])),
-            "write_ios": get_rate("be_writeio.%s" % line[0], now, int(line[10])),
+            "read_ios": float(line[9]),
+            "write_ios": float(line[10]),
             "average_read_wait": float(line[11]) / 1000000,
             "average_write_wait": float(line[12]) / 1000000,
-            "read_throughput": get_rate("be_readbytes.%s" % line[0], now, int(line[13])),
-            "write_throughput": get_rate("be_writebytes.%s" % line[0], now, int(line[14])),
+            "read_throughput": float(line[13]),
+            "write_throughput": float(line[14]),
         }
 
     return directors
@@ -43,11 +60,7 @@ def inventory_emc_director_stats(parsed):
 
 
 def check_emc_director_stats(item, params, parsed):
-    # The check_diskstat_dict function may compute average values
-    # We won't allow this if some of the counters have wrapped
-    if last_counter_wrap():
-        raise MKCounterWrapped("Value overflow")
-    return check_diskstat_dict(item, params, parsed)
+    return check_diskstat_dict(item, params, _fixup_section(parsed))
 
 
 factory_settings["emc_vplex_director_stats_default_levels"] = diskstat_default_levels

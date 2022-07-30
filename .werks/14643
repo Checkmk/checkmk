@@ -1,0 +1,13 @@
+Title: emc_vplex_{volumes,director_stats}: Fix defunct plugins
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1659212444
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p10
+
+The plugins "<i>EMC VPLEX: Volume Diskstat</i>" (<tt>emc_vplex_volumes</tt>) and
+"<i>EMC VPLEX Director: Throughput</i>" (<tt>emc_vplex_director_stats</tt>) have been
+defunct in Checkmk versions 2.1.0 to 2.1.0p9.

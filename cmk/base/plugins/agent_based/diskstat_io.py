@@ -7,7 +7,7 @@ import time
 from typing import Any, Mapping, MutableMapping, Optional
 
 from .agent_based_api.v1 import get_value_store, register, type_defs
-from .utils import diskstat
+from .utils import diskstat, hp_msa
 
 
 def _check_disk(
@@ -118,4 +118,50 @@ register.check_plugin(
     check_ruleset_name="diskstat",
     check_default_parameters={},
     check_function=check_diskstat_io,
+)
+
+
+# Consider reorganizing the special agent. We only need this extra check,
+# because the disk info is buried in the poorly parsed section, and we have to
+# "re-parse" it.
+def check_hp_msa_io(
+    item: str, params: Mapping[str, Any], section: hp_msa.Section
+) -> type_defs.CheckResult:
+    new_section = {}
+    for name, values in section.items():
+        try:
+            new_section[name] = {
+                "read_throughput": float(values["data-read-numeric"]),
+                "write_throughput": float(values["data-written-numeric"]),
+            }
+        except (KeyError, ValueError):
+            pass
+    yield from check_diskstat_io(item, params, new_section)
+
+
+register.check_plugin(
+    name="hp_msa_disk_io",
+    service_name="Disk IO %s",
+    sections=["hp_msa_disk"],
+    discovery_ruleset_type=register.RuleSetType.ALL,
+    discovery_default_parameters={"summary": True},
+    discovery_ruleset_name="diskstat_inventory",
+    discovery_function=diskstat.discovery_diskstat_generic,
+    check_ruleset_name="diskstat",
+    check_default_parameters={},
+    check_function=check_hp_msa_io,
+)
+
+
+register.check_plugin(
+    name="hp_msa_controller_io",
+    service_name="Controller IO %s",
+    sections=["hp_msa_controller"],
+    discovery_ruleset_type=register.RuleSetType.ALL,
+    discovery_default_parameters={"summary": True},
+    discovery_ruleset_name="diskstat_inventory",
+    discovery_function=diskstat.discovery_diskstat_generic,
+    check_ruleset_name="diskstat",
+    check_default_parameters={},
+    check_function=check_hp_msa_io,
 )

@@ -4,12 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import time
-
 import cmk.base.plugins.agent_based.utils.hp_msa as hp_msa
-from cmk.base.check_api import get_rate
 
-from .diskstat import check_diskstat_dict, inventory_diskstat_generic
+from .diskstat import inventory_diskstat_generic
 
 # TODO
 # Use 'status-numeric' instead of 'status' field regardless of language.
@@ -72,22 +69,3 @@ def check_hp_msa_health(item, _no_params, parsed):
 
 def inventory_hp_msa_io(parsed):
     return inventory_diskstat_generic([[None, item] for item in parsed])
-
-
-def check_hp_msa_io(item, params, parsed):
-    disks: dict = {}
-    now = time.time()
-    for key, values in parsed.items():
-        disk = disks.setdefault(key, {})
-        try:
-            read = int(values["data-read-numeric"])
-            disk["read_throughput"] = get_rate("%s_read" % key, now, read)
-        except (KeyError, ValueError, TypeError):
-            pass
-        try:
-            written = int(values["data-written-numeric"])
-            disk["write_throughput"] = get_rate("%s_write" % key, now, written)
-        except (KeyError, ValueError, TypeError):
-            pass
-
-    return check_diskstat_dict(item, params, disks)

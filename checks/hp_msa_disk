@@ -156,23 +156,6 @@ check_info["hp_msa_disk"] = {
     "service_description": "Disk Health %s",
 }
 
-# .
-#   .--disk IO-------------------------------------------------------------.
-#   |                         _ _     _      ___ ___                       |
-#   |                      __| (_)___| | __ |_ _/ _ \                      |
-#   |                     / _` | / __| |/ /  | | | | |                     |
-#   |                    | (_| | \__ \   <   | | |_| |                     |
-#   |                     \__,_|_|___/_|\_\ |___\___/                      |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-check_info["hp_msa_disk.io"] = {
-    "inventory_function": inventory_hp_msa_io,
-    "check_function": check_hp_msa_io,
-    "service_description": "Disks IO %s",
-    "has_perfdata": True,
-    "group": "diskstat",
-}
 
 # .
 #   .--temperature---------------------------------------------------------.

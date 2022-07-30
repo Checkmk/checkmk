@@ -90,3 +90,19 @@ register.check_plugin(
     check_function=check_diskstat_io,
     cluster_check_function=cluster_check_diskstat_io,
 )
+
+
+# We have to have more than one plugin.
+# The the "SUMMARY" would start summarizing things that must not be mixed otherwise.
+register.check_plugin(
+    name="diskstat_io_volumes",
+    service_name="Disk IO Volumes %s",
+    discovery_ruleset_type=register.RuleSetType.ALL,
+    discovery_default_parameters={"summary": True},
+    discovery_ruleset_name="diskstat_inventory",
+    discovery_function=diskstat.discovery_diskstat_generic,
+    check_ruleset_name="diskstat",
+    check_default_parameters={},
+    check_function=check_diskstat_io,
+    cluster_check_function=cluster_check_diskstat_io,
+)

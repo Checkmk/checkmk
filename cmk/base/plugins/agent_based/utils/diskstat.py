@@ -408,20 +408,21 @@ def compute_rates(
 
     """
     disk_with_rates = {}
-    ignore_res = False
+    initialized = []
     for key, value in disk.items():
+        counter = f"{key}{disk_name}"
         try:
             disk_with_rates[key] = get_rate(
                 value_store,
-                f"{key}{disk_name}",
+                counter,
                 this_time,
                 value,
                 raise_overflow=True,
             )
         except IgnoreResultsError:
-            ignore_res = True
-    if ignore_res:
-        raise IgnoreResultsError("Initializing counters")
+            initialized.append(counter)
+    if initialized:
+        raise IgnoreResultsError(f"Initialized counters: {', '.join(initialized)}")
     return disk_with_rates
 
 

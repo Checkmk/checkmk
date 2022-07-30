@@ -141,6 +141,7 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("docker_container_mem"): CheckPluginName("mem_used"),
     CheckPluginName("emc_vplex_if"): CheckPluginName("interfaces"),
     CheckPluginName("emc_vplex_volumes"): CheckPluginName("diskstat_io_volumes"),
+    CheckPluginName("emc_vplex_director_stats"): CheckPluginName("diskstat_io_director"),
     CheckPluginName("entity_sensors"): CheckPluginName("entity_sensors_temp"),
     CheckPluginName("fjdarye100_cadaps"): CheckPluginName("fjdarye_channel_adapters"),
     CheckPluginName("fjdarye100_cmods"): CheckPluginName("fjdarye_channel_modules"),

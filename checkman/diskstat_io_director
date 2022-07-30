@@ -1,0 +1,23 @@
+title: Disk Throughput for Volume Directors
+agents: emc
+catalog: os/storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check measures the disk IO of volume directors.
+
+ This check is compatible with {diskstat},
+ but only supports {{throughput}}, no latency and queue lengths.
+
+ The {WARN}/{CRIT} levels can be configured manually for each read and write.
+
+ Please read further details in the man page of {diskstat}.
+
+item:
+ Either {"SUMMARY"} for a summarized check of alls items or the
+ name of the disk device, e.g. {"hdisk15"}.
+
+discovery:
+  The discovery is configured via {Dist IO Levels}.
+  If this is set to {"single"} (the default), then one service will be created for each disk.
+  If it is set to {"summary"} then only one service per host will be created that has at least one hard disk.

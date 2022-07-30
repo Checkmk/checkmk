@@ -1362,7 +1362,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "emc_isilon_temp",
         "emc_isilon_temp.cpu",
         "emc_vplex_cpu",
-        "emc_vplex_director_stats",
         "emcvnx_agent",
         "emcvnx_disks",
         "emcvnx_hba",

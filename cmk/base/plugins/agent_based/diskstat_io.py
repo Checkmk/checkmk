@@ -106,3 +106,16 @@ register.check_plugin(
     check_function=check_diskstat_io,
     cluster_check_function=cluster_check_diskstat_io,
 )
+
+
+register.check_plugin(
+    name="diskstat_io_director",
+    service_name="Disk IO Director %s",
+    discovery_ruleset_type=register.RuleSetType.ALL,
+    discovery_default_parameters={"summary": True},
+    discovery_ruleset_name="diskstat_inventory",
+    discovery_function=diskstat.discovery_diskstat_generic,
+    check_ruleset_name="diskstat",
+    check_default_parameters={},
+    check_function=check_diskstat_io,
+)

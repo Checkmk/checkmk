@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 
-from cmk.base.plugins.agent_based import aix_diskiod
+from cmk.base.plugins.agent_based import aix_diskiod, diskstat_io
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     Metric,
@@ -37,9 +37,9 @@ def test_check_disk() -> None:
     now = 1647029464.27418
 
     with pytest.raises(IgnoreResultsError):
-        list(aix_diskiod._check_disk({}, DISK, value_store, now))
+        list(diskstat_io._check_disk({}, DISK, value_store, now))
 
-    assert list(aix_diskiod._check_disk({}, DISK, value_store, now + 60)) == [
+    assert list(diskstat_io._check_disk({}, DISK, value_store, now + 60)) == [
         Result(state=State.OK, summary="Read: 0.00 B/s"),
         Metric("disk_read_throughput", 0.0),
         Result(state=State.OK, summary="Write: 0.00 B/s"),
@@ -94,7 +94,7 @@ def test_check_aix_diskiod(item) -> None:
         {
             item: DISK,
         },
-        aix_diskiod._check_aix_diskiod,
+        diskstat_io._check_diskstat_io,
     )
 
 
@@ -121,5 +121,5 @@ def test_cluster_check_aix_diskiod(item) -> None:
                 item: DISK,
             },
         },
-        aix_diskiod._cluster_check_aix_diskiod,
+        diskstat_io._cluster_check_diskstat_io,
     )

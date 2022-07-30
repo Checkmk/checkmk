@@ -23,14 +23,12 @@
 # 5. Kb_read    -> Kilobytes read since system boot
 # 6. Kb_wrtn    -> Kilobytes written since system boot
 
-import time
-from typing import Any, Mapping, MutableMapping, Optional
 
-from .agent_based_api.v1 import get_value_store, register, type_defs
+from .agent_based_api.v1 import register, type_defs
 from .utils import diskstat
 
 
-def parse_aix_diskiod(string_table: type_defs.StringTable) -> Optional[diskstat.Section]:
+def parse_aix_diskiod(string_table: type_defs.StringTable) -> diskstat.Section | None:
 
     section = {}
 
@@ -49,86 +47,5 @@ def parse_aix_diskiod(string_table: type_defs.StringTable) -> Optional[diskstat.
 register.agent_section(
     name="aix_diskiod",
     parse_function=parse_aix_diskiod,
-)
-
-
-def _check_disk(
-    params: Mapping[str, Any],
-    disk: diskstat.Disk,
-    value_store: MutableMapping[str, Any],
-    now: float,
-) -> type_defs.CheckResult:
-    disk_with_rates = diskstat.compute_rates(disk=disk, value_store=value_store, this_time=now)
-    yield from diskstat.check_diskstat_dict(
-        params=params,
-        disk=disk_with_rates,
-        value_store=value_store,
-        this_time=now,
-    )
-
-
-def _check_aix_diskiod(
-    item: str,
-    params: Mapping[str, Any],
-    section: diskstat.Section,
-    value_store: MutableMapping[str, Any],
-    now: float,
-) -> type_defs.CheckResult:
-    if item == "SUMMARY":
-        disk = diskstat.summarize_disks(section.items())
-    else:
-        try:
-            disk = section[item]
-        except KeyError:
-            return
-    yield from _check_disk(params, disk, value_store, now)
-
-
-def check_aix_diskiod(
-    item: str,
-    params: Mapping[str, Any],
-    section: diskstat.Section,
-) -> type_defs.CheckResult:
-    yield from _check_aix_diskiod(item, params, section, get_value_store(), time.time())
-
-
-def _cluster_check_aix_diskiod(
-    item: str,
-    params: Mapping[str, Any],
-    section: Mapping[str, Optional[diskstat.Section]],
-    value_store: MutableMapping[str, Any],
-    now: float,
-) -> type_defs.CheckResult:
-
-    present_sections = [section for section in section.values() if section is not None]
-    if item == "SUMMARY":
-        disk = diskstat.summarize_disks(
-            item for node_section in present_sections for item in node_section.items()
-        )
-    else:
-        disk = diskstat.combine_disks(
-            node_section[item] for node_section in present_sections if item in node_section
-        )
-    yield from _check_disk(params, disk, value_store, now)
-
-
-def cluster_check_aix_diskiod(
-    item: str,
-    params: Mapping[str, Any],
-    section: Mapping[str, Optional[diskstat.Section]],
-) -> type_defs.CheckResult:
-    yield from _cluster_check_aix_diskiod(item, params, section, get_value_store(), time.time())
-
-
-register.check_plugin(
-    name="aix_diskiod",
-    service_name="Disk IO %s",
-    discovery_ruleset_type=register.RuleSetType.ALL,
-    discovery_default_parameters={"summary": True},
-    discovery_ruleset_name="diskstat_inventory",
-    discovery_function=diskstat.discovery_diskstat_generic,
-    check_ruleset_name="diskstat",
-    check_default_parameters={},
-    check_function=check_aix_diskiod,
-    cluster_check_function=cluster_check_aix_diskiod,
+    parsed_section_name="diskstat_io",
 )

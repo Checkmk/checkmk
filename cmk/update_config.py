@@ -124,6 +124,7 @@ TimeRange = Tuple[Tuple[int, int], Tuple[int, int]]
 # mapping removed check plugins to their replacement:
 REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("aix_if"): CheckPluginName("interfaces"),
+    CheckPluginName("aix_diskiod"): CheckPluginName("diskstat_io"),
     CheckPluginName("aix_memory"): CheckPluginName("mem_used"),
     CheckPluginName("arbor_peakflow_sp_cpu_load"): CheckPluginName("cpu_loads"),
     CheckPluginName("arbor_peakflow_tms_cpu_load"): CheckPluginName("cpu_loads"),

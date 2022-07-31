@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.base.plugins.agent_based.esx_vsphere_counters as esx_vsphere_counters
 from cmk.base.check_legacy_includes.diskstat import check_diskstat_dict, inventory_diskstat_generic
+from cmk.base.plugins.agent_based.utils.esx_vsphere import average_parsed_data
 
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>
@@ -15,14 +15,12 @@ from cmk.base.check_legacy_includes.diskstat import check_diskstat_dict, invento
 # datastore.totalReadLatency|511e4e86-1c009d48-19d2-bc305bf54b07|0#5#5|millisecond
 # datastore.totalWriteLatency|4c4ece34-3d60f64f-1584-0022194fe902|0#2#7|millisecond
 
-esx_vsphere_get_average = esx_vsphere_counters.average_parsed_data
-
 
 _POST_PARSERS = [
-    ("read_throughput", lambda x: int(esx_vsphere_get_average(x)) * 1024, "read"),
-    ("write_throughput", lambda x: int(esx_vsphere_get_average(x)) * 1024, "write"),
-    ("read_ios", lambda x: int(esx_vsphere_get_average(x)), "datastoreReadIops"),
-    ("write_ios", lambda x: int(esx_vsphere_get_average(x)), "datastoreWriteIops"),
+    ("read_throughput", lambda x: int(average_parsed_data(x)) * 1024, "read"),
+    ("write_throughput", lambda x: int(average_parsed_data(x)) * 1024, "write"),
+    ("read_ios", lambda x: int(average_parsed_data(x)), "datastoreReadIops"),
+    ("write_ios", lambda x: int(average_parsed_data(x)), "datastoreWriteIops"),
     ("read_latency", lambda x: max(map(int, x)) * 1e-3, "totalReadLatency"),
     ("write_latency", lambda x: max(map(int, x)) * 1e-3, "totalWriteLatency"),
     ("latency", lambda x: max(map(int, x)) * 1e-6, "sizeNormalizedDatastoreLatency"),

@@ -12,3 +12,15 @@ SectionVM = dict[str, list[str]]
 CounterValues = Sequence[str]
 SubSectionCounter = Mapping[str, list[tuple[CounterValues, str]]]
 SectionCounter = Mapping[str, SubSectionCounter]
+
+
+def average_parsed_data(values: CounterValues) -> float:
+    """
+    >>> average_parsed_data(['1', '2'])
+    1.5
+    >>> average_parsed_data(['1'])
+    1.0
+    >>> average_parsed_data([])
+    0
+    """
+    return sum(map(int, values)) / len(values) if values else 0

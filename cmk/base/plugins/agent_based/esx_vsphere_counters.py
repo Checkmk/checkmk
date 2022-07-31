@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence
 from .agent_based_api.v1 import get_value_store, IgnoreResultsError, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import diskstat, esx_vsphere, interfaces
-from .utils.esx_vsphere import CounterValues, Section, SubSectionCounter
+from .utils.esx_vsphere import Section, SubSectionCounter
 
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>
@@ -84,19 +84,6 @@ register.agent_section(
 )
 
 
-# TODO: this belongs to utils
-def average_parsed_data(values: CounterValues) -> float:
-    """
-    >>> average_parsed_data(['1', '2'])
-    1.5
-    >>> average_parsed_data(['1'])
-    1.0
-    >>> average_parsed_data([])
-    0
-    """
-    return sum(map(int, values)) / len(values) if values else 0
-
-
 # .
 #   .--Interfaces----------------------------------------------------------.
 #   |           ___       _             __                                 |
@@ -145,7 +132,7 @@ def convert_esx_counters_if(section: Section) -> interfaces.Section:
                 if name == "net.macaddress":
                     mac_addresses[instance] = values[0][0][-1]
                 else:
-                    rates[instance][name[4:]] = int(average_parsed_data(values[0][0]))
+                    rates[instance][name[4:]] = int(esx_vsphere.average_parsed_data(values[0][0]))
 
     # Example of rates:
     # {
@@ -246,7 +233,7 @@ def _sum_instance_counts(counts: SubSectionCounter) -> float:
     summed_avgs = 0.0
     for data in counts.values():
         multivalues, _unit = data[0]
-        summed_avgs += average_parsed_data(multivalues)
+        summed_avgs += esx_vsphere.average_parsed_data(multivalues)
     return summed_avgs
 
 
@@ -270,7 +257,7 @@ def check_esx_vsphere_counters_diskio(
         data = section.get("disk.%s" % op_type, {}).get("")
         multivalues, _unit = data[0] if data else (None, None)
         if multivalues is not None:
-            summary["%s_throughput" % op_type] = average_parsed_data(multivalues) * 1024
+            summary["%s_throughput" % op_type] = esx_vsphere.average_parsed_data(multivalues) * 1024
 
         # sum up all instances
         op_counts_key = "disk.number%sAveraged" % op_type.title()

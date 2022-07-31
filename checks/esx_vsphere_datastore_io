@@ -18,32 +18,21 @@ from cmk.base.check_legacy_includes.diskstat import check_diskstat_dict, invento
 esx_vsphere_get_average = esx_vsphere_counters.average_parsed_data
 
 
-_USED_COUNTERS = [
-    "read",
-    "write",
-    "datastoreReadIops",
-    "datastoreWriteIops",
-    "totalReadLatency",
-    "totalWriteLatency",
-    "sizeNormalizedDatastoreLatency",
-]
-
-
 _POST_PARSERS = [
-    ("read_throughput", lambda x: int(esx_vsphere_get_average(x)), "datastore.read", 1024),
-    ("write_throughput", lambda x: int(esx_vsphere_get_average(x)), "datastore.write", 1024),
-    ("read_ios", lambda x: int(esx_vsphere_get_average(x)), "datastore.datastoreReadIops", 1),
-    ("write_ios", lambda x: int(esx_vsphere_get_average(x)), "datastore.datastoreWriteIops", 1),
-    ("read_latency", lambda x: max(map(int, x)), "datastore.totalReadLatency", 1e-3),
-    ("write_latency", lambda x: max(map(int, x)), "datastore.totalWriteLatency", 1e-3),
-    ("latency", lambda x: max(map(int, x)), "datastore.sizeNormalizedDatastoreLatency", 1e-6),
+    ("read_throughput", lambda x: int(esx_vsphere_get_average(x)) * 1024, "read"),
+    ("write_throughput", lambda x: int(esx_vsphere_get_average(x)) * 1024, "write"),
+    ("read_ios", lambda x: int(esx_vsphere_get_average(x)), "datastoreReadIops"),
+    ("write_ios", lambda x: int(esx_vsphere_get_average(x)), "datastoreWriteIops"),
+    ("read_latency", lambda x: max(map(int, x)) * 1e-3, "totalReadLatency"),
+    ("write_latency", lambda x: max(map(int, x)) * 1e-3, "totalWriteLatency"),
+    ("latency", lambda x: max(map(int, x)) * 1e-6, "sizeNormalizedDatastoreLatency"),
 ]
 
 
 # esx datastores are either shown by human readable name (if available) or by the uid
 def esx_vsphere_counters_get_item_mapping(parsed):
     map_instance_to_item = {}
-    for counter in _USED_COUNTERS:
+    for _new_name, _evaluate, counter in _POST_PARSERS:
         for instance in parsed.get("datastore." + counter, {}):
             map_instance_to_item[instance] = instance
 
@@ -66,14 +55,12 @@ def check_esx_vsphere_counters_datastoreio(item, params, parsed):
     datastores = {}
     item_mapping = esx_vsphere_counters_get_item_mapping(parsed)
 
-    for new_name, eval_function, name, scaling in _POST_PARSERS:
-        field_data = parsed.get(name, {})
+    for new_name, eval_function, counter in _POST_PARSERS:
+        field_data = parsed.get(f"datastore.{counter}", {})
 
         for instance, values in field_data.items():
             item_name = item_mapping[instance]
-            datastores.setdefault(item_name, {})
-            value = eval_function(values[0][0])
-            datastores[item_name][new_name] = value * scaling
+            datastores.setdefault(item_name, {})[new_name] = eval_function(values[0][0])
 
     return check_diskstat_dict(item, params, datastores)
 

@@ -88,7 +88,7 @@ def inventory_esx_vsphere_counters_datastoreio(section: Section):
 
 def check_esx_vsphere_counters_datastoreio(item: str, params: Mapping[str, Any], section: Section):
     if "datastore.read" not in section:
-        raise MKCounterWrapped("Counter data is missing")
+        return None
 
     datastores = {}
     item_mapping = esx_vsphere_counters_get_item_mapping(section)

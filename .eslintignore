@@ -3,7 +3,6 @@
 
 enterprise/web/htdocs/js/modules/graphs_cee.*s
 enterprise/web/htdocs/js/modules/ntop/ntop_host_details.*s
-enterprise/web/htdocs/js/modules/ntop/ntop_utils.*s
 enterprise/web/htdocs/js/modules/ntop/ntop_alerts.*s
 enterprise/web/htdocs/js/modules/ntop/ntop_flows.*s
 enterprise/web/htdocs/js/modules/ntop/ntop_top_talkers.*s

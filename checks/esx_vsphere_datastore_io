@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import cmk.base.plugins.agent_based.esx_vsphere_counters as esx_vsphere_counters
+from cmk.base.check_legacy_includes.diskstat import check_diskstat_dict, inventory_diskstat_generic
+
+# Example output:
+# <<<esx_vsphere_counters:sep(124)>>>
+# datastore.read|4c4ece34-3d60f64f-1584-0022194fe902|0#1#2|kiloBytesPerSecond
+# datastore.read|4c4ece5b-f1461510-2932-0022194fe902|0#4#5|kiloBytesPerSecond
+# datastore.numberReadAveraged|511e4e86-1c009d48-19d2-bc305bf54b07|0#0#0|number
+# datastore.numberWriteAveraged|4c4ece34-3d60f64f-1584-0022194fe902|0#0#1|number
+# datastore.totalReadLatency|511e4e86-1c009d48-19d2-bc305bf54b07|0#5#5|millisecond
+# datastore.totalWriteLatency|4c4ece34-3d60f64f-1584-0022194fe902|0#2#7|millisecond
+
+esx_vsphere_get_average = esx_vsphere_counters.average_parsed_data
+
+
+# esx datastores are either shown by human readable name (if available) or by the uid
+def esx_vsphere_counters_get_item_mapping(parsed):
+    map_instance_to_item = {}
+    for counter in [
+        "read",
+        "write",
+        "datastoreReadIops",
+        "datastoreWriteIops",
+        "totalReadLatency",
+        "totalWriteLatency",
+        "sizeNormalizedDatastoreLatency",
+    ]:
+        for instance in parsed.get("datastore." + counter, {}):
+            map_instance_to_item[instance] = instance
+
+    for instance, values in parsed.get("datastore.name", {}).items():
+        if instance in map_instance_to_item and values[0][0] != "":
+            map_instance_to_item[instance] = values[0][0][-1].replace(" ", "_")
+    return map_instance_to_item
+
+
+def inventory_esx_vsphere_counters_datastoreio(parsed):
+    return inventory_diskstat_generic(
+        [[None, x] for x in esx_vsphere_counters_get_item_mapping(parsed).values()]
+    )
+
+
+def check_esx_vsphere_counters_datastoreio(item, params, parsed):
+    if "datastore.read" not in parsed:
+        raise MKCounterWrapped("Counter data is missing")
+
+    datastores = {}
+    item_mapping = esx_vsphere_counters_get_item_mapping(parsed)
+
+    for new_name, eval_function, name, scaling in [
+        ("read_throughput", lambda x: int(esx_vsphere_get_average(x)), "datastore.read", 1024),
+        ("write_throughput", lambda x: int(esx_vsphere_get_average(x)), "datastore.write", 1024),
+        ("read_ios", lambda x: int(esx_vsphere_get_average(x)), "datastore.datastoreReadIops", 1),
+        ("write_ios", lambda x: int(esx_vsphere_get_average(x)), "datastore.datastoreWriteIops", 1),
+        ("read_latency", lambda x: max(map(int, x)), "datastore.totalReadLatency", 1e-3),
+        ("write_latency", lambda x: max(map(int, x)), "datastore.totalWriteLatency", 1e-3),
+        ("latency", lambda x: max(map(int, x)), "datastore.sizeNormalizedDatastoreLatency", 1e-6),
+    ]:
+        field_data = parsed.get(name, {})
+
+        for instance, values in field_data.items():
+            item_name = item_mapping[instance]
+            datastores.setdefault(item_name, {})
+            value = eval_function(values[0][0])
+            datastores[item_name][new_name] = value * scaling
+
+    return check_diskstat_dict(item, params, datastores)
+
+
+check_info["esx_vsphere_counters"] = {
+    "inventory_function": inventory_esx_vsphere_counters_datastoreio,
+    "check_function": check_esx_vsphere_counters_datastoreio,
+    "service_description": "Datastore IO %s",
+    "has_perfdata": True,
+    "group": "diskstat",
+}

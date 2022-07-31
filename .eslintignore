@@ -1,7 +1,6 @@
 # The following files contain a lot of ESLint warnings or errors.
 # These issues will be fixed on a file per file basis over a longer period of time.
 
-enterprise/web/htdocs/js/modules/graphs_cee.*s
 enterprise/web/htdocs/js/modules/ntop/ntop_host_details.*s
 enterprise/web/htdocs/js/modules/ntop/ntop_alerts.*s
 enterprise/web/htdocs/js/modules/ntop/ntop_flows.*s

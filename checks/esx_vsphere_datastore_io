@@ -3,8 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Callable, Mapping, NamedTuple
+
 from cmk.base.check_legacy_includes.diskstat import check_diskstat_dict, inventory_diskstat_generic
-from cmk.base.plugins.agent_based.utils.esx_vsphere import average_parsed_data
+from cmk.base.plugins.agent_based.utils.esx_vsphere import (
+    average_parsed_data,
+    CounterValues,
+    Section,
+)
 
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>
@@ -16,49 +22,83 @@ from cmk.base.plugins.agent_based.utils.esx_vsphere import average_parsed_data
 # datastore.totalWriteLatency|4c4ece34-3d60f64f-1584-0022194fe902|0#2#7|millisecond
 
 
+class PostParser(NamedTuple):
+    key: str
+    evaluate: Callable[[CounterValues], float]
+    counter: str
+
+
 _POST_PARSERS = [
-    ("read_throughput", lambda x: int(average_parsed_data(x)) * 1024, "read"),
-    ("write_throughput", lambda x: int(average_parsed_data(x)) * 1024, "write"),
-    ("read_ios", lambda x: int(average_parsed_data(x)), "datastoreReadIops"),
-    ("write_ios", lambda x: int(average_parsed_data(x)), "datastoreWriteIops"),
-    ("read_latency", lambda x: max(map(int, x)) * 1e-3, "totalReadLatency"),
-    ("write_latency", lambda x: max(map(int, x)) * 1e-3, "totalWriteLatency"),
-    ("latency", lambda x: max(map(int, x)) * 1e-6, "sizeNormalizedDatastoreLatency"),
+    PostParser(
+        key="read_throughput",
+        evaluate=lambda x: int(average_parsed_data(x)) * 1024,
+        counter="read",
+    ),
+    PostParser(
+        key="write_throughput",
+        evaluate=lambda x: int(average_parsed_data(x)) * 1024,
+        counter="write",
+    ),
+    PostParser(
+        key="read_ios",
+        evaluate=lambda x: int(average_parsed_data(x)),
+        counter="datastoreReadIops",
+    ),
+    PostParser(
+        key="write_ios",
+        evaluate=lambda x: int(average_parsed_data(x)),
+        counter="datastoreWriteIops",
+    ),
+    PostParser(
+        key="read_latency",
+        evaluate=lambda x: max(map(int, x)) * 1e-3,
+        counter="totalReadLatency",
+    ),
+    PostParser(
+        key="write_latency",
+        evaluate=lambda x: max(map(int, x)) * 1e-3,
+        counter="totalWriteLatency",
+    ),
+    PostParser(
+        key="latency",
+        evaluate=lambda x: max(map(int, x)) * 1e-6,
+        counter="sizeNormalizedDatastoreLatency",
+    ),
 ]
 
 
 # esx datastores are either shown by human readable name (if available) or by the uid
-def esx_vsphere_counters_get_item_mapping(parsed):
+def esx_vsphere_counters_get_item_mapping(section: Section) -> Mapping[str, str]:
     map_instance_to_item = {}
-    for _new_name, _evaluate, counter in _POST_PARSERS:
-        for instance in parsed.get("datastore." + counter, {}):
+    for parser in _POST_PARSERS:
+        for instance in section.get(f"datastore.{parser.counter}", {}):
             map_instance_to_item[instance] = instance
 
-    for instance, values in parsed.get("datastore.name", {}).items():
+    for instance, values in section.get("datastore.name", {}).items():
         if instance in map_instance_to_item and values[0][0] != "":
             map_instance_to_item[instance] = values[0][0][-1].replace(" ", "_")
     return map_instance_to_item
 
 
-def inventory_esx_vsphere_counters_datastoreio(parsed):
+def inventory_esx_vsphere_counters_datastoreio(section: Section):
     return inventory_diskstat_generic(
-        [[None, x] for x in esx_vsphere_counters_get_item_mapping(parsed).values()]
+        [[None, x] for x in esx_vsphere_counters_get_item_mapping(section).values()]
     )
 
 
-def check_esx_vsphere_counters_datastoreio(item, params, parsed):
-    if "datastore.read" not in parsed:
+def check_esx_vsphere_counters_datastoreio(item: str, params: Mapping[str, Any], section: Section):
+    if "datastore.read" not in section:
         raise MKCounterWrapped("Counter data is missing")
 
     datastores = {}
-    item_mapping = esx_vsphere_counters_get_item_mapping(parsed)
+    item_mapping = esx_vsphere_counters_get_item_mapping(section)
 
-    for new_name, eval_function, counter in _POST_PARSERS:
-        field_data = parsed.get(f"datastore.{counter}", {})
+    for parser in _POST_PARSERS:
+        field_data = section.get(f"datastore.{parser.counter}", {})
 
         for instance, values in field_data.items():
             item_name = item_mapping[instance]
-            datastores.setdefault(item_name, {})[new_name] = eval_function(values[0][0])
+            datastores.setdefault(item_name, {})[parser.key] = parser.evaluate(values[0][0])
 
     return check_diskstat_dict(item, params, datastores)
 

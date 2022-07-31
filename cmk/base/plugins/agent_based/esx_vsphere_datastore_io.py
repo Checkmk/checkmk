@@ -3,14 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Callable, Mapping, NamedTuple
+import time
+from typing import Any, Callable, Mapping, MutableMapping, NamedTuple, Sequence
 
-from cmk.base.check_legacy_includes.diskstat import check_diskstat_dict, inventory_diskstat_generic
+from cmk.base.plugins.agent_based.utils.diskstat import (
+    check_diskstat_dict,
+    combine_disks,
+    discovery_diskstat_generic,
+)
 from cmk.base.plugins.agent_based.utils.esx_vsphere import (
     average_parsed_data,
     CounterValues,
-    Section,
+    SectionCounter,
 )
+
+from .agent_based_api.v1 import get_value_store, register
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>
@@ -67,7 +75,7 @@ _POST_PARSERS = [
 ]
 
 
-def _get_item_mapping(section: Section) -> Mapping[str, str]:
+def _get_item_mapping(section: SectionCounter) -> Mapping[str, str]:
     """datastores are either shown by human readable name (if available) or by the uuid"""
     map_instance_to_item = {}
     for parser in _POST_PARSERS:
@@ -81,22 +89,42 @@ def _get_item_mapping(section: Section) -> Mapping[str, str]:
 
 
 def discover_esx_vsphere_datastore_io(
-    section: Section,
-):
-    return inventory_diskstat_generic([[None, x] for x in _get_item_mapping(section).values()])
+    params: Sequence[Mapping[str, Any]],
+    section: SectionCounter,
+) -> DiscoveryResult:
+    yield from discovery_diskstat_generic(
+        params,
+        _get_item_mapping(section).values(),
+    )
 
 
 def check_esx_vsphere_datastore_io(
     item: str,
     params: Mapping[str, Any],
-    section: Section,
-):
-    if "datastore.read" not in section:
-        return None
+    section: SectionCounter,
+) -> CheckResult:
+    yield from _check_esx_vsphere_datastore_io(
+        item=item,
+        params=params,
+        section=section,
+        now=time.time(),
+        value_store=get_value_store(),
+    )
 
-    datastores: dict[str, dict[str, float]] = {}
+
+def _check_esx_vsphere_datastore_io(
+    item: str,
+    params: Mapping[str, Any],
+    section: SectionCounter,
+    now: float,
+    value_store: MutableMapping[str, Any],
+) -> CheckResult:
+    if "datastore.read" not in section:
+        return
+
     item_mapping = _get_item_mapping(section)
 
+    datastores: dict[str, dict[str, float]] = {}
     for parser in _POST_PARSERS:
         field_data = section.get(f"datastore.{parser.counter}", {})
 
@@ -104,13 +132,31 @@ def check_esx_vsphere_datastore_io(
             item_name = item_mapping[instance]
             datastores.setdefault(item_name, {})[parser.key] = parser.evaluate(values[0][0])
 
-    return check_diskstat_dict(item, params, datastores)
+    if item == "SUMMARY":
+        disk = combine_disks(datastores.values())
+    else:
+        try:
+            disk = datastores[item]
+        except KeyError:
+            return
+
+    yield from check_diskstat_dict(
+        params=params,
+        disk=disk,
+        value_store=value_store,
+        this_time=now,
+    )
 
 
-check_info["esx_vsphere_counters"] = {
-    "inventory_function": discover_esx_vsphere_datastore_io,
-    "check_function": check_esx_vsphere_datastore_io,
-    "service_description": "Datastore IO %s",
-    "has_perfdata": True,
-    "group": "diskstat",
-}
+register.check_plugin(
+    name="esx_vsphere_datastore_io",
+    service_name="Datastore IO %s",
+    sections=["esx_vsphere_counters"],
+    discovery_function=discover_esx_vsphere_datastore_io,
+    discovery_ruleset_name="diskstat_inventory",
+    discovery_ruleset_type=register.RuleSetType.ALL,
+    discovery_default_parameters={"summary": True},
+    check_function=check_esx_vsphere_datastore_io,
+    check_default_parameters={},
+    check_ruleset_name="diskstat",
+)

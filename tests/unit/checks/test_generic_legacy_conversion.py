@@ -1419,7 +1419,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "enviromux_sems.voltage",
         "enviromux_sems.humidity",
         "epson_beamer_lamp",
-        "esx_vsphere_counters",
         "esx_vsphere_counters.uptime",
         "esx_vsphere_counters.swap",
         "esx_vsphere_datastores",

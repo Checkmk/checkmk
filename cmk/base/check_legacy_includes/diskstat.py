@@ -21,7 +21,6 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
-    Union,
 )
 
 from cmk.base.check_api import (
@@ -30,8 +29,6 @@ from cmk.base.check_api import (
     get_average,
     get_percent_human_readable,
     get_rate,
-    host_extra_conf,
-    host_name,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 from cmk.base.plugins.agent_based.utils.diskstat import _METRICS_TO_BE_AVERAGED
@@ -56,60 +53,6 @@ diskstat_inventory: Any = []
 # ]
 
 diskstat_diskless_pattern = re.compile("x?[shv]d[a-z]*[0-9]+")
-
-
-# ==================================================================================================
-# ==================================================================================================
-# THIS FUNCTION HAS BEEN MIGRATED TO THE NEW CHECK API (OR IS IN THE PROCESS), PLEASE DO NOT TOUCH
-# IT. INSTEAD, MODIFY THE MIGRATED VERSION.
-# ==================================================================================================
-# ==================================================================================================
-def inventory_diskstat_generic(  # pylint: disable=too-many-branches
-    parsed: Sequence[Sequence[Any]],
-) -> Sequence[tuple[str, Mapping[str, Any]]]:
-    # Skip over on empty data
-    if not parsed:
-        return []
-
-    # New style: use rule based configuration, defaulting to summary mode
-    if diskstat_inventory_mode == "rule":
-        hits = host_extra_conf(host_name(), diskstat_inventory)
-        if len(hits) > 0:
-            modes = hits[0]
-        else:
-            modes = ["summary"]
-
-    elif diskstat_inventory_mode == "single":
-        modes = ["physical"]
-    elif diskstat_inventory_mode == "summary":
-        modes = ["summary"]
-    else:
-        modes = ["legacy"]
-
-    inventory = []
-    if "summary" in modes:
-        inventory.append(("SUMMARY", {**diskstat_default_levels}))
-
-    if "legacy" in modes:
-        inventory += [("read", {}), ("write", {})]
-
-    for line in parsed:
-        name = line[1]
-        if "physical" in modes and " " not in name and not diskstat_diskless_pattern.match(name):
-            inventory.append((name, {**diskstat_default_levels}))
-
-        if "lvm" in modes and name.startswith("LVM "):
-            inventory.append((name, {**diskstat_default_levels}))
-
-        if "vxvm" in modes and name.startswith("VxVM "):
-            inventory.append((name, {**diskstat_default_levels}))
-
-        if "diskless" in modes and diskstat_diskless_pattern.match(name):
-            # Sort of partitions with disks - typical in XEN virtual setups.
-            # Eg. there are xvda1, xvda2, but no xvda...
-            inventory.append((name, {**diskstat_default_levels}))
-
-    return inventory
 
 
 def check_diskstat_line(  # pylint: disable=too-many-branches
@@ -261,78 +204,6 @@ def check_diskstat_line(  # pylint: disable=too-many-branches
                 perfdata.append((what + "_ql", ql))
 
     return (status, ", ".join(infos), perfdata)
-
-
-def check_diskstat_generic(
-    item: str,
-    params: Mapping[str, Any],
-    this_time: float,
-    info: Sequence[Sequence[Any]],
-    mode: str = "sectors",
-) -> Union[
-    Tuple[int, str],
-    Tuple[int, str, Sequence[Tuple[str, str]]],
-    Tuple[
-        int,
-        str,
-        MutableSequence[Any],
-    ],
-]:
-    # legacy version if item is "read" or "write"
-    if item in ["read", "write"]:
-        return _check_diskstat_old(item, params, this_time, info)
-
-    # Sum up either all physical disks (if item is "SUMMARY") or
-    # all entries matching the item in question. It is not a bug if
-    # a disk appears more than once. This can for example happen in
-    # Windows clusters - even if they are no Checkmk clusters.
-
-    summed_up: Sequence[int] = [0] * 13
-    matching = 0
-
-    has_multiple_nodes = len(set(line[0] for line in info)) > 1
-    if item == "SUMMARY" and has_multiple_nodes:
-        return 3, "summary mode not supported in a cluster"
-
-    for line in info:
-        if item == "SUMMARY" and " " in line[1]:
-            continue  # skip non-physical disks
-
-        elif item == "SUMMARY" or line[1] == item:
-            matching += 1
-            summed_up = [x + int(y) for x, y in zip(summed_up, line[2:])]
-
-    if matching == 0:
-        return 3, "No matching disk found"
-    return check_diskstat_line(this_time, item, params, [None, ""] + summed_up, mode)  # type:ignore
-
-
-# This is the legacy version of diskstat as used in <= 1.1.10.
-# We keep it here for a while in order to be compatible with
-# old installations.
-def _check_diskstat_old(
-    item: str, params: Any, this_time: float, info: Sequence[Sequence[Any]]
-) -> Union[Tuple[int, str], Tuple[int, str, Sequence[Tuple[str, str]]]]:
-    # sum up over all devices
-    if item == "read":
-        index = 2  # sectors read
-    elif item == "write":
-        index = 3  # sectors written
-    else:
-        return (3, "invalid item %s" % (item,))
-
-    this_val = 0
-    for line in info:
-        if line[0] is not None:
-            return 3, "read/write mode not supported in a cluster"
-        if " " not in line[1]:
-            this_val += int(line[index])
-
-    per_sec = get_rate("diskstat." + item, this_time, this_val)
-    mb_per_s = per_sec / 2048.0  # Diskstat output is in sectors a 512 Byte
-    kb_per_s = per_sec / 2.0
-    perfdata = [(item, "%f" % kb_per_s)]
-    return (0, "%.1f MB/s" % mb_per_s, perfdata)
 
 
 # .

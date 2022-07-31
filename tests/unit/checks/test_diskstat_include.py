@@ -7,7 +7,7 @@
 import pytest
 
 import cmk.base.check_legacy_includes.diskstat
-from cmk.base.check_legacy_includes.diskstat import check_diskstat_generic, check_diskstat_line
+from cmk.base.check_legacy_includes.diskstat import check_diskstat_line
 
 from .checktestlib import assertCheckResultsEqual, CheckResult
 
@@ -61,35 +61,4 @@ def test_check_diskstat_line(  # type:ignore[no-untyped-def]
     monkeypatch.setattr(cmk.base.check_legacy_includes.diskstat, "get_rate", get_rate)
     monkeypatch.setattr(cmk.base.check_legacy_includes.diskstat, "get_average", get_average)
     actual_result = CheckResult(check_diskstat_line(*args))
-    assertCheckResultsEqual(actual_result, expected_result)
-
-
-@pytest.mark.parametrize(
-    "info,expected_result",
-    [
-        (
-            [["Node1", "Disk1", 1, 2], ["Node1", "Disk2", 1, 2]],
-            CheckResult(
-                (
-                    0,
-                    "read: 1.02 kB/s, write: 2.05 kB/s",
-                    [
-                        ("read", 1024),
-                        ("write", 2048),
-                    ],
-                )
-            ),
-        ),
-        (
-            [["Node1", "Disk1", 1, 2], ["Node2", "Disk1", 1, 2]],
-            CheckResult((3, "summary mode not supported in a cluster", [])),
-        ),
-    ],
-)
-def test_check_diskstat_generic_summary_clutster(  # type:ignore[no-untyped-def]
-    monkeypatch, info, expected_result
-) -> None:
-    monkeypatch.setattr(cmk.base.check_legacy_includes.diskstat, "get_rate", get_rate)
-    monkeypatch.setattr(cmk.base.check_legacy_includes.diskstat, "get_average", get_average)
-    actual_result = CheckResult(check_diskstat_generic("SUMMARY", {}, 0, info))
     assertCheckResultsEqual(actual_result, expected_result)

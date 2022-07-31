@@ -6,8 +6,6 @@
 
 import cmk.base.plugins.agent_based.utils.hp_msa as hp_msa
 
-from .diskstat import inventory_diskstat_generic
-
 # TODO
 # Use 'status-numeric' instead of 'status' field regardless of language.
 # See for state mapping: https://support.hpe.com/hpsc/doc/public/display?docId=emr_na-a00017709en_us
@@ -65,7 +63,3 @@ def check_hp_msa_health(item, _no_params, parsed):
 
         return health_state, ", ".join(infotexts)
     return None
-
-
-def inventory_hp_msa_io(parsed):
-    return inventory_diskstat_generic([[None, item] for item in parsed])

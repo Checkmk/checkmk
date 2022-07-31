@@ -44,10 +44,11 @@ DISKSTAT_DISKLESS_PATTERN = re.compile("x?[shv]d[a-z]*[0-9]+")
 
 def discovery_diskstat_generic(
     params: Sequence[Mapping[str, Any]],
-    section: Section,
+    section: Iterable[str],
 ) -> type_defs.DiscoveryResult:
+    item_candidates = list(section)
     # Skip over on empty data
-    if not section:
+    if not item_candidates:
         return
 
     modes = params[0]
@@ -55,7 +56,7 @@ def discovery_diskstat_generic(
     if "summary" in modes:
         yield Service(item="SUMMARY")
 
-    for name in section:
+    for name in item_candidates:
         if "physical" in modes and " " not in name and not DISKSTAT_DISKLESS_PATTERN.match(name):
             yield Service(item=name)
 

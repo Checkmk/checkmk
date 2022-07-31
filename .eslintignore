@@ -6,7 +6,6 @@ enterprise/web/htdocs/js/modules/ntop/ntop_alerts.*s
 enterprise/web/htdocs/js/modules/ntop/ntop_flows.*s
 enterprise/web/htdocs/js/modules/ntop/ntop_top_talkers.*s
 enterprise/web/htdocs/js/modules/license_usage/license_usage_timeseries_graph.*s
-enterprise/web/htdocs/js/modules/figures/cmk_tabs.*s
 enterprise/web/htdocs/js/modules/figures/cmk_site_overview.*s
 enterprise/web/htdocs/js/modules/figures/cmk_dc_table.*s
 enterprise/web/htdocs/js/modules/figures/cmk_figures_plugins_cee.*s

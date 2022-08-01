@@ -6,11 +6,13 @@
 from contextlib import suppress
 from typing import Any, Mapping, TypedDict
 
+from cmk.base.plugins.agent_based.utils import multipath
+
 from .agent_based_api.v1 import check_levels, regex, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
-class Group(TypedDict):
+class _RawGroup(TypedDict):
     paths: list
     broken_paths: list
     luns: list
@@ -21,10 +23,9 @@ class Group(TypedDict):
     alias: str | None
 
 
-Section = Mapping[str, Group]
-
-
-def parse_multipath(string_table: StringTable) -> Section:  # pylint: disable=too-many-branches
+def parse_multipath(  # pylint: disable=too-many-branches
+    string_table: StringTable,
+) -> multipath.Section:
     # New reported header lines need to be placed here
     # the matches need to be put in a list of tupples
     # while the structure of the tupple is:
@@ -46,8 +47,8 @@ def parse_multipath(string_table: StringTable) -> Section:  # pylint: disable=to
     reg_lun = regex("[0-9]+:[0-9]+:[0-9]+:[0-9]+")
     uuid: str | None = None
     alias = None
-    groups: dict[str, Group] = {}
-    group: Group | dict = {}  # initial value will not be used
+    groups: dict[str, _RawGroup] = {}
+    group: _RawGroup | dict = {}  # initial value will not be used
     numpaths = 0
     for line in string_table:
         # Ignore error messages due to invalid multipath.conf
@@ -134,7 +135,7 @@ def parse_multipath(string_table: StringTable) -> Section:  # pylint: disable=to
                 group["numpaths"] = numpaths
                 paths_info.append(line[2])
 
-    return groups
+    return {uuid: multipath.Group(**raw_group) for uuid, raw_group in groups.items()}
 
 
 register.agent_section(
@@ -145,20 +146,18 @@ register.agent_section(
 
 # Get list of UUIDs of all multipath devices
 # Length of UUID is 360a9800043346937686f456f59386741
-def discover_multipath(params: Mapping[str, Any], section: Section) -> DiscoveryResult:
+def discover_multipath(params: Mapping[str, Any], section: multipath.Section) -> DiscoveryResult:
 
-    for uuid, info in section.items():
+    for uuid, group in section.items():
         # take current number of paths as target value
         yield Service(
-            item=alias
-            if (alias := info["alias"]) is not None and params.get("use_alias")
-            else uuid,
-            parameters={"levels": info["numpaths"]},
+            item=group.alias if group.alias is not None and params.get("use_alias") else uuid,
+            parameters={"levels": group.numpaths},
         )
 
 
 # item is UUID (e.g. '360a9800043346937686f456f59386741') or alias (e.g. 'mpath0')
-def _get_item_data(item: str, section: Section) -> Group | None:
+def _get_item_data(item: str, section: multipath.Section) -> multipath.Group | None:
     # Keys in section are the UUIDs.
     # First assume that we are looking for a UUID.
     with suppress(KeyError):
@@ -166,32 +165,29 @@ def _get_item_data(item: str, section: Section) -> Group | None:
 
     # Fall back to aliases
     for mmap in section.values():
-        if mmap["alias"] == item:
+        if mmap.alias == item:
             return mmap
 
     return None
 
 
 def check_multipath(  # pylint: disable=too-many-branches
-    item: str, params: Mapping[str, Any], section: Section
+    item: str, params: Mapping[str, Any], section: multipath.Section
 ) -> CheckResult:
     if (mmap := _get_item_data(item, section)) is None:
         return
 
     # If the item is the alias, then show the UUID in the plugin output.
     # If the item is the UUID, then vice versa.
-    alias = mmap["alias"]
-    uuid = mmap["uuid"]
-
-    if item == uuid and alias:
-        aliasinfo = "(%s): " % alias
-    elif item == alias and uuid:
-        aliasinfo = "(%s): " % uuid
+    if item == mmap.uuid and mmap.alias:
+        aliasinfo = "(%s): " % mmap.alias
+    elif item == mmap.alias and mmap.uuid:
+        aliasinfo = "(%s): " % mmap.uuid
     else:
         aliasinfo = ""
 
-    all_paths = mmap["paths"]
-    broken_paths = mmap["broken_paths"]
+    all_paths = mmap.paths
+    broken_paths = mmap.broken_paths
     num_paths = len(all_paths)
     num_broken = len(broken_paths)
     num_active = num_paths - num_broken

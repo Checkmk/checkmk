@@ -9,6 +9,7 @@ import typing as t
 import pytest
 
 from cmk.base.plugins.agent_based import multipath
+from cmk.base.plugins.agent_based.utils import multipath as multipath_utils
 
 # Mark all tests in this file as check related tests
 pytestmark = pytest.mark.checks
@@ -16,7 +17,7 @@ pytestmark = pytest.mark.checks
 
 class TupleTestData(t.NamedTuple):
     input: t.List[str]
-    output: multipath.Section
+    output: multipath_utils.Section
 
 
 TEST_DATA = [
@@ -30,16 +31,16 @@ TEST_DATA = [
             r" \_ 3:0:3:50 sdz 65:144 [active][undef]",
         ],
         output={
-            "360a9800043346937686f456f59386741": {
-                "paths": ["sdy", "sdz"],
-                "broken_paths": [],
-                "luns": ["1:0:3:50(sdy)", "3:0:3:50(sdz)"],
-                "uuid": "360a9800043346937686f456f59386741",
-                "state": "[prio=0][active]",
-                "numpaths": 2,
-                "device": "dm-15",
-                "alias": "orabase.lun50",
-            },
+            "360a9800043346937686f456f59386741": multipath_utils.Group(
+                paths=["sdy", "sdz"],
+                broken_paths=[],
+                luns=["1:0:3:50(sdy)", "3:0:3:50(sdz)"],
+                uuid="360a9800043346937686f456f59386741",
+                state="[prio=0][active]",
+                numpaths=2,
+                device="dm-15",
+                alias="orabase.lun50",
+            ),
         },
     ),
     TupleTestData(
@@ -52,16 +53,16 @@ TEST_DATA = [
             r" \_ 3:0:2:13 sdl 8:176 [active][ready]",
         ],
         output={
-            "360a980004334644d654a364469555a76": {
-                "paths": ["sdc", "sdl"],
-                "broken_paths": [],
-                "luns": ["1:0:2:13(sdc)", "3:0:2:13(sdl)"],
-                "uuid": "360a980004334644d654a364469555a76",
-                "state": None,
-                "numpaths": 2,
-                "device": None,
-                "alias": None,
-            },
+            "360a980004334644d654a364469555a76": multipath_utils.Group(
+                paths=["sdc", "sdl"],
+                broken_paths=[],
+                luns=["1:0:2:13(sdc)", "3:0:2:13(sdl)"],
+                uuid="360a980004334644d654a364469555a76",
+                state=None,
+                numpaths=2,
+                device=None,
+                alias=None,
+            ),
         },
     ),
     TupleTestData(
@@ -73,16 +74,16 @@ TEST_DATA = [
             r" \_ 0:0:3:0  sdb 8:16  [active][ready]",
         ],
         output={
-            "SFUJITSU_MAW3073NC_DBL2P62003VT": {
-                "paths": ["sdb"],
-                "broken_paths": [],
-                "luns": ["0:0:3:0(sdb)"],
-                "uuid": "SFUJITSU_MAW3073NC_DBL2P62003VT",
-                "state": None,
-                "numpaths": 1,
-                "device": None,
-                "alias": None,
-            }
+            "SFUJITSU_MAW3073NC_DBL2P62003VT": multipath_utils.Group(
+                paths=["sdb"],
+                broken_paths=[],
+                luns=["0:0:3:0(sdb)"],
+                uuid="SFUJITSU_MAW3073NC_DBL2P62003VT",
+                state=None,
+                numpaths=1,
+                device=None,
+                alias=None,
+            ),
         },
     ),
     TupleTestData(
@@ -97,16 +98,16 @@ TEST_DATA = [
             r" \_ 4:0:1:50 sdl 8:176 [active][undef]",
         ],
         output={
-            "360a980004334644d654a316e65306e51": {
-                "paths": ["sdg", "sdl"],
-                "broken_paths": [],
-                "luns": ["1:0:2:50(sdg)", "4:0:1:50(sdl)"],
-                "uuid": "360a980004334644d654a316e65306e51",
-                "state": "[prio=0][enabled]",
-                "numpaths": 2,
-                "device": "dm-4",
-                "alias": None,
-            }
+            "360a980004334644d654a316e65306e51": multipath_utils.Group(
+                paths=["sdg", "sdl"],
+                broken_paths=[],
+                luns=["1:0:2:50(sdg)", "4:0:1:50(sdl)"],
+                uuid="360a980004334644d654a316e65306e51",
+                state="[prio=0][enabled]",
+                numpaths=2,
+                device="dm-4",
+                alias=None,
+            ),
         },
     ),
     TupleTestData(
@@ -120,16 +121,16 @@ TEST_DATA = [
             r" \_ 4:0:0:0 sdc 8:32  [active][undef]",
         ],
         output={
-            "1494554000000000052303250303700000000000000000000": {
-                "paths": ["sdb", "sdc"],
-                "broken_paths": [],
-                "luns": ["3:0:0:0(sdb)", "4:0:0:0(sdc)"],
-                "uuid": "1494554000000000052303250303700000000000000000000",
-                "state": "[prio=-1][enabled]",
-                "numpaths": 2,
-                "device": "dm-0",
-                "alias": None,
-            }
+            "1494554000000000052303250303700000000000000000000": multipath_utils.Group(
+                paths=["sdb", "sdc"],
+                broken_paths=[],
+                luns=["3:0:0:0(sdb)", "4:0:0:0(sdc)"],
+                uuid="1494554000000000052303250303700000000000000000000",
+                state="[prio=-1][enabled]",
+                numpaths=2,
+                device="dm-0",
+                alias=None,
+            ),
         },
     ),
     TupleTestData(
@@ -155,10 +156,10 @@ TEST_DATA = [
             r" \_ 3:0:3:0  sdb  8:16   [active][undef]",
         ],
         output={
-            "36005076306ffc6480000000000005005": {
-                "paths": ["sdbe", "sdat", "sdai", "sdx", "sdm", "sdb"],
-                "broken_paths": [],
-                "luns": [
+            "36005076306ffc6480000000000005005": multipath_utils.Group(
+                paths=["sdbe", "sdat", "sdai", "sdx", "sdm", "sdb"],
+                broken_paths=[],
+                luns=[
                     "4:0:5:0(sdbe)",
                     "4:0:4:0(sdat)",
                     "4:0:3:0(sdai)",
@@ -166,16 +167,16 @@ TEST_DATA = [
                     "3:0:4:0(sdm)",
                     "3:0:3:0(sdb)",
                 ],
-                "uuid": "36005076306ffc6480000000000005005",
-                "state": "[prio=-6][active]",
-                "numpaths": 6,
-                "device": "dm-16",
-                "alias": "anzvol1",
-            },
-            "36005076306ffc648000000000000510a": {
-                "paths": ["sdbf", "sdau", "sdaj", "sdy", "sdn", "sdc"],
-                "broken_paths": [],
-                "luns": [
+                uuid="36005076306ffc6480000000000005005",
+                state="[prio=-6][active]",
+                numpaths=6,
+                device="dm-16",
+                alias="anzvol1",
+            ),
+            "36005076306ffc648000000000000510a": multipath_utils.Group(
+                paths=["sdbf", "sdau", "sdaj", "sdy", "sdn", "sdc"],
+                broken_paths=[],
+                luns=[
                     "4:0:5:1(sdbf)",
                     "4:0:4:1(sdau)",
                     "4:0:3:1(sdaj)",
@@ -183,12 +184,12 @@ TEST_DATA = [
                     "3:0:4:1(sdn)",
                     "3:0:3:1(sdc)",
                 ],
-                "uuid": "36005076306ffc648000000000000510a",
-                "state": "[prio=-6][active]",
-                "numpaths": 6,
-                "device": "dm-15",
-                "alias": "anzvol2",
-            },
+                uuid="36005076306ffc648000000000000510a",
+                state="[prio=-6][active]",
+                numpaths=6,
+                device="dm-15",
+                alias="anzvol2",
+            ),
         },
     ),
     TupleTestData(
@@ -200,16 +201,16 @@ TEST_DATA = [
             r" \_ 1:0:1:0 sdd 8:48  [active]",
         ],
         output={
-            "SIBM_____SwapA__________DA02BF71": {
-                "paths": ["sdd"],
-                "broken_paths": [],
-                "luns": ["1:0:1:0(sdd)"],
-                "uuid": "SIBM_____SwapA__________DA02BF71",
-                "state": None,
-                "numpaths": 1,
-                "device": None,
-                "alias": "mpath1",
-            }
+            "SIBM_____SwapA__________DA02BF71": multipath_utils.Group(
+                paths=["sdd"],
+                broken_paths=[],
+                luns=["1:0:1:0(sdd)"],
+                uuid="SIBM_____SwapA__________DA02BF71",
+                state=None,
+                numpaths=1,
+                device=None,
+                alias="mpath1",
+            )
         },
     ),
     TupleTestData(
@@ -222,16 +223,16 @@ TEST_DATA = [
             "  `- 8:0:2:81 sdp 8:240  active undef running",
         ],
         output={
-            "360080e500017bd72000002eb4c1b1ae8": {
-                "paths": ["sdd", "sdp"],
-                "broken_paths": [],
-                "luns": ["7:0:2:81(sdd)", "8:0:2:81(sdp)"],
-                "uuid": "360080e500017bd72000002eb4c1b1ae8",
-                "state": "prio=-1status=active",
-                "numpaths": 2,
-                "device": "dm-1",
-                "alias": None,
-            }
+            "360080e500017bd72000002eb4c1b1ae8": multipath_utils.Group(
+                paths=["sdd", "sdp"],
+                broken_paths=[],
+                luns=["7:0:2:81(sdd)", "8:0:2:81(sdp)"],
+                uuid="360080e500017bd72000002eb4c1b1ae8",
+                state="prio=-1status=active",
+                numpaths=2,
+                device="dm-1",
+                alias=None,
+            )
         },
     ),
     # And this has been seen on SLES 11 SP1 64 Bit:
@@ -247,16 +248,16 @@ TEST_DATA = [
             "  `- 2:0:1:1 sdh        8:112  active undef running",
         ],
         output={
-            "3600508b40006d7da0001a00004740000": {
-                "paths": ["sda", "sdo", "sdv", "sdh"],
-                "broken_paths": [],
-                "luns": ["2:0:0:1(sda)", "3:0:0:1(sdo)", "3:0:1:1(sdv)", "2:0:1:1(sdh)"],
-                "uuid": "3600508b40006d7da0001a00004740000",
-                "state": "prio=-1status=enabled",
-                "numpaths": 4,
-                "device": "dm-0",
-                "alias": None,
-            }
+            "3600508b40006d7da0001a00004740000": multipath_utils.Group(
+                paths=["sda", "sdo", "sdv", "sdh"],
+                broken_paths=[],
+                luns=["2:0:0:1(sda)", "3:0:0:1(sdo)", "3:0:1:1(sdv)", "2:0:1:1(sdh)"],
+                uuid="3600508b40006d7da0001a00004740000",
+                state="prio=-1status=enabled",
+                numpaths=4,
+                device="dm-0",
+                alias=None,
+            ),
         },
     ),
     # This is another output, which made problems up to
@@ -275,10 +276,10 @@ TEST_DATA = [
             r" \_ 3:0:0:11 sdl  8:176   [active][undef]",
         ],
         output={
-            "SDDN_S2A_9900_1308xxxxxxxx": {
-                "paths": ["sdaj", "sdbh", "sddd", "sdeb", "sdcf", "sdl"],
-                "broken_paths": ["3:0:1:11(sdaj)", "4:0:0:11(sdbh)"],
-                "luns": [
+            "SDDN_S2A_9900_1308xxxxxxxx": multipath_utils.Group(
+                paths=["sdaj", "sdbh", "sddd", "sdeb", "sdcf", "sdl"],
+                broken_paths=["3:0:1:11(sdaj)", "4:0:0:11(sdbh)"],
+                luns=[
                     "3:0:1:11(sdaj)",
                     "4:0:0:11(sdbh)",
                     "4:0:2:11(sddd)",
@@ -286,12 +287,12 @@ TEST_DATA = [
                     "4:0:1:11(sdcf)",
                     "3:0:0:11(sdl)",
                 ],
-                "uuid": "SDDN_S2A_9900_1308xxxxxxxx",
-                "state": "[prio=0][enabled]",
-                "numpaths": 6,
-                "device": "dm-13",
-                "alias": None,
-            }
+                uuid="SDDN_S2A_9900_1308xxxxxxxx",
+                state="[prio=0][enabled]",
+                numpaths=6,
+                device="dm-13",
+                alias=None,
+            ),
         },
     ),
     TupleTestData(
@@ -305,16 +306,16 @@ TEST_DATA = [
             r" \_ 4:0:0:11 sdt  65:48  [active][undef]",
         ],
         output={
-            "SDataCoreSANsymphony_DAT05-fscl": {
-                "paths": ["sdae", "sdt"],
-                "broken_paths": [],
-                "luns": ["3:0:0:11(sdae)", "4:0:0:11(sdt)"],
-                "uuid": "SDataCoreSANsymphony_DAT05-fscl",
-                "state": "[prio=-1][enabled]",
-                "numpaths": 2,
-                "device": "dm-6",
-                "alias": None,
-            }
+            "SDataCoreSANsymphony_DAT05-fscl": multipath_utils.Group(
+                paths=["sdae", "sdt"],
+                broken_paths=[],
+                luns=["3:0:0:11(sdae)", "4:0:0:11(sdt)"],
+                uuid="SDataCoreSANsymphony_DAT05-fscl",
+                state="[prio=-1][enabled]",
+                numpaths=2,
+                device="dm-6",
+                alias=None,
+            )
         },
     ),
     TupleTestData(
@@ -332,16 +333,16 @@ TEST_DATA = [
             "  `- 20:0:0:1   sdi  8:128   active undef running",
         ],
         output={
-            "1IET 00010001": {
-                "paths": ["sdk", "sdj", "sdg", "sdi"],
-                "broken_paths": [],
-                "luns": ["23:0:0:1(sdk)", "21:0:0:1(sdj)", "22:0:0:1(sdg)", "20:0:0:1(sdi)"],
-                "uuid": "1IET 00010001",
-                "state": "prio=0status=enabled",
-                "numpaths": 4,
-                "device": "dm-4",
-                "alias": None,
-            }
+            "1IET 00010001": multipath_utils.Group(
+                paths=["sdk", "sdj", "sdg", "sdi"],
+                broken_paths=[],
+                luns=["23:0:0:1(sdk)", "21:0:0:1(sdj)", "22:0:0:1(sdg)", "20:0:0:1(sdi)"],
+                uuid="1IET 00010001",
+                state="prio=0status=enabled",
+                numpaths=4,
+                device="dm-4",
+                alias=None,
+            ),
         },
     ),
     TupleTestData(
@@ -371,16 +372,16 @@ TEST_DATA = [
             "  `- 11:0:0:1 sdj  8:144  active undef unknown",
         ],
         output={
-            "iqn.2015-05.com.oracle:QD_DG_VOTE101_EXAO2ADM1VM101": {
-                "paths": ["sdg", "sdh", "sdi", "sdj"],
-                "broken_paths": [],
-                "luns": ["8:0:0:1(sdg)", "9:0:0:1(sdh)", "10:0:0:1(sdi)", "11:0:0:1(sdj)"],
-                "uuid": "iqn.2015-05.com.oracle:QD_DG_VOTE101_EXAO2ADM1VM101",
-                "state": "prio=0status=enabled",
-                "numpaths": 4,
-                "device": "dm-7",
-                "alias": None,
-            }
+            "iqn.2015-05.com.oracle:QD_DG_VOTE101_EXAO2ADM1VM101": multipath_utils.Group(
+                paths=["sdg", "sdh", "sdi", "sdj"],
+                broken_paths=[],
+                luns=["8:0:0:1(sdg)", "9:0:0:1(sdh)", "10:0:0:1(sdi)", "11:0:0:1(sdj)"],
+                uuid="iqn.2015-05.com.oracle:QD_DG_VOTE101_EXAO2ADM1VM101",
+                state="prio=0status=enabled",
+                numpaths=4,
+                device="dm-7",
+                alias=None,
+            ),
         },
     ),
 ]

@@ -68,12 +68,10 @@
 
 import re
 import time
-from typing import Any, Mapping, MutableMapping, Sequence
+from typing import Any, Mapping, MutableMapping, Sequence, TypeVar
 
 from .agent_based_api.v1 import get_rate, get_value_store, IgnoreResultsError, register, type_defs
-from .utils import diskstat
-
-SectionMultipath = Mapping[str, Any]
+from .utils import diskstat, multipath
 
 
 def parse_diskstat(string_table: type_defs.StringTable) -> diskstat.Section:
@@ -267,7 +265,7 @@ register.agent_section(
 
 def diskstat_convert_info(
     section_diskstat: diskstat.Section,
-    section_multipath: SectionMultipath | None,
+    section_multipath: multipath.Section | None,
 ) -> diskstat.Section:
     converted_disks = dict(section_diskstat)  # we must not modify section_diskstat!
 
@@ -278,24 +276,22 @@ def diskstat_convert_info(
     # For multipath entries: Rename the generic names like "dm-8"
     # with multipath names like "SDataCoreSANsymphony_DAT07-fscl"
     if section_multipath:
-        for uuid, multipath in section_multipath.items():
-            if "alias" not in multipath:
-                multipath["alias"] = ""
+        for uuid, group in section_multipath.items():
 
             if (
-                multipath["device"] in converted_disks
-                or "DM %s" % multipath["alias"] in converted_disks
+                group.device in converted_disks
+                or group.alias is not None
+                and f"DM {group.alias}" in converted_disks
             ):
-                for path in multipath["paths"]:
+                for path in group.paths:
                     if path in converted_disks:
                         del converted_disks[path]
 
-            if multipath["device"] in converted_disks:
-                converted_disks[uuid] = converted_disks[multipath["device"]]
-                del converted_disks[multipath["device"]]
+            if group.device in converted_disks:
+                converted_disks[uuid] = converted_disks[group.device]
+                del converted_disks[group.device]
 
-            if "DM %s" % multipath["alias"] in converted_disks:
-                alias = "DM %s" % multipath["alias"]
+            if group.alias is not None and (alias := f"DM {group.alias}") in converted_disks:
                 converted_disks[uuid] = converted_disks[alias]
                 del converted_disks[alias]
 
@@ -311,7 +307,7 @@ def diskstat_convert_info(
 def discover_diskstat(
     params: Sequence[Mapping[str, Any]],
     section_diskstat: diskstat.Section | None,
-    section_multipath: SectionMultipath | None,
+    section_multipath: multipath.Section | None,
 ) -> type_defs.DiscoveryResult:
     if section_diskstat is None:
         return
@@ -399,7 +395,7 @@ def check_diskstat(
     item: str,
     params: Mapping[str, Any],
     section_diskstat: diskstat.Section | None,
-    section_multipath: SectionMultipath | None,
+    section_multipath: multipath.Section | None,
 ) -> type_defs.CheckResult:
     # Unfortunately, summarizing the disks does not commute with computing the rates for this check.
     # Therefore, we have to compute the rates first.
@@ -438,21 +434,25 @@ def check_diskstat(
     )
 
 
+_ItemData = TypeVar("_ItemData")
+
+
 def _merge_cluster_sections(
-    cluster_section: Mapping[str, Mapping | None]
-) -> Mapping[str, Mapping] | None:
-    section_merged: dict[str, Mapping] = {}
-    for section in cluster_section.values():
-        if section is not None:
-            section_merged.update(section)
-    return section_merged or None
+    cluster_section: Mapping[str, Mapping[str, _ItemData] | None]
+) -> Mapping[str, _ItemData] | None:
+    return {
+        k: v
+        for section in cluster_section.values()
+        if section is not None
+        for k, v in section.items()
+    } or None
 
 
 def cluster_check_diskstat(
     item: str,
     params: Mapping[str, Any],
     section_diskstat: Mapping[str, diskstat.Section | None],
-    section_multipath: Mapping[str, SectionMultipath | None],
+    section_multipath: Mapping[str, multipath.Section | None],
 ) -> type_defs.CheckResult:
     yield from check_diskstat(
         item,

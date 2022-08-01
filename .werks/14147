@@ -1,0 +1,28 @@
+Title: Disappearing sections in "Edit role" view
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1659339101
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p10
+
+When reloading the "Edit role" view after restarting Apache
+certain sections and all of the permissions disappeared.
+Reloading again usually caused them to reappear.
+
+If the respective permissions are configured the following sections were affected:
+<ul>
+<li>Bookmark lists
+<li>Custom graphs
+<li>Custom sidebar elements
+<li>Forecast graphs
+<li>Graph collections
+<li>Graph tunings
+<li>Service Level Agreements
+<li>Topics
+</ul>
+
+Now the permissions are always correctly displayed.

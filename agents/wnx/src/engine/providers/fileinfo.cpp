@@ -26,8 +26,8 @@ namespace cma::provider::details {
 std::optional<std::chrono::system_clock::duration> GetFileTimeSinceEpoch(
     const fs::path &file) noexcept {
     std::error_code ec;
-    auto file_last_touch_full = fs::last_write_time(file, ec);
-    if (ec.value()) {
+    const auto file_last_touch_full = fs::last_write_time(file, ec);
+    if (ec) {
         return {};
     }
     return file_last_touch_full.time_since_epoch();
@@ -60,8 +60,9 @@ fs::path GetOsPathWithCase(const fs::path &file_path) {
     auto [head_part, body] = details::SplitFileInfoPathSmart(file_path);
 
     UppercasePath(head_part);
-    if (head_part.empty() && body.empty())
+    if (head_part.empty() && body.empty()) {
         body = file_path;  // unusual case, only name
+    }
 
     // Scan all path and read for every chunk correct representation
     // from OS
@@ -109,7 +110,7 @@ void GatherMatchingFilesRecursive(const fs::path &search_path,
         for (const auto &entry : fs::recursive_directory_iterator(
                  search_path, fs::directory_options::skip_permission_denied)) {
             std::error_code ec;
-            auto status = entry.status(ec);
+            const auto status = entry.status(ec);
             const auto &entry_name = entry.path();
             if (ec) {
                 XLOG::t("Access to '{}' is not possible, status [{}]",
@@ -126,10 +127,8 @@ void GatherMatchingFilesRecursive(const fs::path &search_path,
                 files.push_back(entry);
             }
         }
-    } catch (std::exception &e) {
+    } catch (const std::exception &e) {
         XLOG::l("Exception recursive '{}'", e.what());
-    } catch (...) {
-        XLOG::l("Exception recursive");
     }
 }
 
@@ -142,7 +141,7 @@ void GatherMatchingFilesAndDirs(
     PathVector &dirs_found) {      // output
     for (const auto &p : fs::directory_iterator(search_dir)) {
         std::error_code ec;
-        auto status = p.status(ec);  // CMK-1417
+        const auto status = p.status(ec);  // CMK-1417
         if (ec) {
             XLOG::d("Cant obtain status for dir '{}' path '{}' error [{}]",
                     search_dir, p.path(), ec.value());
@@ -162,7 +161,7 @@ void GatherMatchingFilesAndDirs(
                 dirs_found.push_back(path);
                 continue;
             }
-        } catch (std::exception &e) {
+        } catch (const std::exception &e) {
             XLOG::l("Exception GatherMatchingFilesAndDirs '{}'", e.what());
         }
     }
@@ -219,7 +218,7 @@ void ProcessDirsAndFilesTables(PathVector &dirs, PathVector &files,
     // check what the hell we have in dirs and update files
     for (auto &entry : dirs) {
         std::error_code ec;
-        auto good_file = fs::is_regular_file(entry, ec);
+        const auto good_file = fs::is_regular_file(entry, ec);
         if (ec) {  // not found, reporting only when error is serious
             if (ec.value() != 2) {  // 2 means NOT FOUND, this is ok
                 // low probability. Something really bad
@@ -333,7 +332,7 @@ bool ValidFileInfoPathEntry(std::string_view entry) {
 std::string MakeFileInfoEntryModern(const fs::path &file_name, bool stat_failed,
                                     uint64_t file_size, int64_t seconds) {
     if (stat_failed) {
-        return file_name.u8string() + FileInfo::kSep +
+        return wtools::ToUtf8(file_name.wstring()) + FileInfo::kSep +
                std::string(FileInfo::kStatFailed) + "\n";
     }
 
@@ -426,8 +425,8 @@ std::tuple<uint64_t, int64_t, bool> GetFileStatsCreative(
 
 std::string MakeFileInfoStringMissing(const fs::path &file_name,
                                       FileInfo::Mode mode) {
-    std::string out =
-        file_name.u8string() + FileInfo::kSep + std::string(FileInfo::kMissing);
+    std::string out = wtools::ToUtf8(file_name.wstring()) + FileInfo::kSep +
+                      std::string(FileInfo::kMissing);
 
     // #deprecated
     if (mode == FileInfo::Mode::legacy) {
@@ -466,10 +465,12 @@ bool IsDriveLetterAtTheStart(std::string_view text) noexcept {
     return text.size() > 2 && text[1] == ':' && std::isalpha(text[0]) != 0;
 }
 
-void CorrectDriveLetterByEntry(std::string &ret, std::string_view entry) {
+void CorrectDriveLetterByEntry(std::string &ret,
+                               std::string_view entry) noexcept {
     // drive letter correction:
-    if (IsDriveLetterAtTheStart(entry) && IsDriveLetterAtTheStart(ret))
+    if (IsDriveLetterAtTheStart(entry) && IsDriveLetterAtTheStart(ret)) {
         ret[0] = entry[0];
+    }
 }
 }  // namespace
 // single entry from config: a, b and c
@@ -572,7 +573,9 @@ std::string FileInfo::generateFileList(const YAML::Node &path_array) {
 
             // mask is valid:
             auto ret = details::ProcessFileInfoPathEntry(mask, mode_);
-            if (ret.empty()) continue;
+            if (ret.empty()) {
+                continue;
+            }
 
             out += ret;
         } catch (const std::exception &e) {

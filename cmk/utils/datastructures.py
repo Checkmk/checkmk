@@ -5,9 +5,12 @@
 
 from __future__ import annotations
 
-from typing import Any, Mapping, MutableMapping, TypeVar
+from typing import Any, Mapping, MutableMapping, Optional, overload, TypeVar, Union
+
+from typing_extensions import assert_never
 
 K = TypeVar("K")
+T = TypeVar("T")
 
 
 def deep_update(
@@ -51,3 +54,40 @@ def deep_update(
             deep_update(original.setdefault(k, {}), v, overwrite=overwrite)
         elif overwrite or original.get(k) is None:
             original[k] = v
+
+
+@overload
+def denilled(obj: list[Optional[T]]) -> list[T]:
+    ...
+
+
+@overload
+def denilled(obj: dict[str, Optional[T]]) -> dict[str, T]:
+    ...
+
+
+def denilled(  # pylint: disable=inconsistent-return-statements
+    obj: Union[list[Optional[T]], dict[str, Optional[T]]],
+) -> Union[list[T], dict[str, T]]:
+    """Remove all None values from a dict or list.
+
+    Examples:
+
+        >>> denilled({'a': None, 'foo': 'bar', 'b': None})
+        {'foo': 'bar'}
+
+        >>> denilled(['Foo', None, 'Bar'])
+        ['Foo', 'Bar']
+
+    Args:
+        obj: Either a dict or a list.
+
+    Returns:
+        A dict or a list without values being None.
+    """
+    if isinstance(obj, list):  # pylint: disable=no-else-return
+        return [entry for entry in obj if entry is not None]
+    elif isinstance(obj, dict):
+        return {key: value for key, value in obj.items() if value is not None}
+    else:
+        assert_never(type(obj))

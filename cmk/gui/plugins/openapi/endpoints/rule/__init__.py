@@ -9,6 +9,7 @@ import contextlib
 import dataclasses
 import typing
 
+from cmk.utils.datastructures import denilled
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.type_defs import RuleOptions
 
@@ -24,7 +25,6 @@ from cmk.gui.plugins.openapi.endpoints.rule.fields import (
     RuleSearchOptions,
 )
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
-from cmk.gui.plugins.openapi.restful_objects.datastructures import denilled
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.utils import gen_id

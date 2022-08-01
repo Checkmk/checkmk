@@ -45,6 +45,8 @@ from typing import (
     Union,
 )
 
+from setproctitle import setthreadtitle  # type: ignore[import] # pylint: disable=no-name-in-module
+
 import cmk.utils.daemon
 import cmk.utils.debug
 import cmk.utils.defines
@@ -236,6 +238,7 @@ class ECServerThread(threading.Thread):
 
     def run(self) -> None:
         self._logger.info("Starting up")
+        setthreadtitle(self.name)
         while not self._terminate_event.is_set():
             try:
                 with cmk.utils.profile.Profile(

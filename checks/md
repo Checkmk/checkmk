@@ -99,12 +99,24 @@
 # unused devices: <none>
 # ---------------------------------------------------------
 
+# Example of a raid with a single disk
+# ---------------------------------------------------------
+# md1 : active raid1 nvme4n1p2[1] nvme5n1p2[0] nvme2n1p2[2] nvme1n1p2[3] nvme3n1p2[5] nvme0n1p2[4]
+#       25977152 blocks super 1.2 [6/6] [UUUUUU]
+#
+# md0 : active raid1 nvme6n1[0]
+#       7501333824 blocks super 1.2 [1/1] [U]
+#       bitmap: 4/56 pages [16KB], 65536KB chunk
+#
+# unused devices: <none>
+# ---------------------------------------------------------
+
 
 def parse_md(info):
     parsed = {}
     instance = {}
     for line in (l for l in info if l):
-        if len(line) >= 6 and line[0].startswith("md") and line[1] == ":":
+        if len(line) >= 5 and line[0].startswith("md") and line[1] == ":":
             if line[3].startswith("(") and line[3].endswith(")"):
                 raid_state = line[2] + line[3]
                 raid_name = line[4]

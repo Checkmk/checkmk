@@ -923,7 +923,7 @@ class ColumnDisplayHint:
         )
 
     def make_filter(
-        self, inv_info: str, ident: str, topic: str
+        self, table_view_name: str, ident: str, topic: str
     ) -> (
         FilterInvtableText
         | FilterInvtableVersion
@@ -936,20 +936,20 @@ class ColumnDisplayHint:
         title: str = topic + ": " + self.title
         if self.filter_class:
             return self.filter_class(
-                inv_info=inv_info,
+                inv_info=table_view_name,
                 ident=ident,
                 title=title,
             )
 
         if (ranged_table_filter_name := get_ranged_table_filter_name(ident)) is not None:
             return FilterInvtableIDRange(
-                inv_info=inv_info,
+                inv_info=table_view_name,
                 ident=ranged_table_filter_name,
                 title=title,
             )
 
         return FilterInvtableText(
-            inv_info=inv_info,
+            inv_info=table_view_name,
             ident=ident,
             title=title,
         )

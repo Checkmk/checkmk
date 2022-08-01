@@ -68,7 +68,7 @@
 
 import re
 import time
-from typing import Any, Dict, Mapping, MutableMapping, Optional, Sequence, Tuple
+from typing import Any, Mapping, MutableMapping, Sequence
 
 from .agent_based_api.v1 import get_rate, get_value_store, IgnoreResultsError, register, type_defs
 from .utils import diskstat
@@ -155,57 +155,57 @@ def parse_diskstat(string_table: type_defs.StringTable) -> diskstat.Section:
     return disks
 
 
-### #  Index 0 -- major number
-### #  Index 1 -- minor number
-### #  Index 2 -- device name                        --> used by check
-### #  Index 3 -- # of reads issued
-### #  Index 4 -- # of reads merged
-### #  Index 5 -- # of sectors read (a 512 Byte)     --> used by check
-### #  Index 6 -- # of milliseconds spent reading
-### #  Index 7 -- # of writes completed
-### #  Index 8 -- # of writes merged
-### #  Index 9 -- # of sectors written (a 512 Byte)  --> used by check
-### #  Index 10 -- # of milliseconds spent writing
-### #  Index 11 -- # of I/Os currently in progress
-### #  Index 12 -- # of milliseconds spent doing I/Os
-### #  Index 13 -- weighted # of milliseconds spent doing I/Os
-###     for line in proc_diskstat:
-###         node = line[0]
-###
-###
-###
-###     # For multipath devices use the entries for dm-?? and rename
-###     # them with their multipath UUID/alias - and drop the according
-###     # sdXY that belong to the paths.
-###     multipath_name_info = {}
-###     skipped_devices = set([])
-###
-###     # The generic function takes the following values per line:
-###     #  0: None or node name
-###     #  1: devname
-###     #  2: read bytes counter
-###     #  3: write bytes counter
-###     # Optional ones:
-###     #  4: number of reads
-###     #  5: number of writes
-###     #  6: timems
-###     #  7: read queue length *counters*
-###     #  8: write queue length *counters*
-###     rewritten = [
-###         ( l[0], # node name or None
-###         diskstat_rewrite_device(name_info, multipath_name_info, l[0:4]),
-###         int(l[6]),
-###         int(l[10]),
-###         int(l[4]),
-###         int(l[8]),
-###         # int(l[13])
-###         ) for l in info[1:] if len(l) >= 14
-###     ]
-###
-###     # Remove device mapper devices without a translated name
-###     return [ line for line in rewritten
-###              if not line[1].startswith("dm-")
-###                 and not line[1] in skipped_devices ]
+# #  Index 0 -- major number
+# #  Index 1 -- minor number
+# #  Index 2 -- device name                        --> used by check
+# #  Index 3 -- # of reads issued
+# #  Index 4 -- # of reads merged
+# #  Index 5 -- # of sectors read (a 512 Byte)     --> used by check
+# #  Index 6 -- # of milliseconds spent reading
+# #  Index 7 -- # of writes completed
+# #  Index 8 -- # of writes merged
+# #  Index 9 -- # of sectors written (a 512 Byte)  --> used by check
+# #  Index 10 -- # of milliseconds spent writing
+# #  Index 11 -- # of I/Os currently in progress
+# #  Index 12 -- # of milliseconds spent doing I/Os
+# #  Index 13 -- weighted # of milliseconds spent doing I/Os
+#     for line in proc_diskstat:
+#         node = line[0]
+#
+#
+#
+#     # For multipath devices use the entries for dm-?? and rename
+#     # them with their multipath UUID/alias - and drop the according
+#     # sdXY that belong to the paths.
+#     multipath_name_info = {}
+#     skipped_devices = set([])
+#
+#     # The generic function takes the following values per line:
+#     #  0: None or node name
+#     #  1: devname
+#     #  2: read bytes counter
+#     #  3: write bytes counter
+#     # Optional ones:
+#     #  4: number of reads
+#     #  5: number of writes
+#     #  6: timems
+#     #  7: read queue length *counters*
+#     #  8: write queue length *counters*
+#     rewritten = [
+#         ( l[0], # node name or None
+#         diskstat_rewrite_device(name_info, multipath_name_info, l[0:4]),
+#         int(l[6]),
+#         int(l[10]),
+#         int(l[4]),
+#         int(l[8]),
+#         # int(l[13])
+#         ) for l in info[1:] if len(l) >= 14
+#     ]
+#
+#     # Remove device mapper devices without a translated name
+#     return [ line for line in rewritten
+#              if not line[1].startswith("dm-")
+#                 and not line[1] in skipped_devices ]
 
 
 # Extra additional information from diskstat section about
@@ -223,7 +223,7 @@ def parse_diskstat(string_table: type_defs.StringTable) -> diskstat.Section:
 # }
 def diskstat_extract_name_info(
     string_table: type_defs.StringTable,
-) -> Tuple[Optional[int], type_defs.StringTable, Mapping[Tuple[int, int], str]]:
+) -> tuple[int | None, type_defs.StringTable, Mapping[tuple[int, int], str]]:
     name_info = {}  # dict from (major, minor) to itemname
     timestamp = None
 
@@ -267,7 +267,7 @@ register.agent_section(
 
 def diskstat_convert_info(
     section_diskstat: diskstat.Section,
-    section_multipath: Optional[SectionMultipath],
+    section_multipath: SectionMultipath | None,
 ) -> diskstat.Section:
     converted_disks = dict(section_diskstat)  # we must not modify section_diskstat!
 
@@ -310,8 +310,8 @@ def diskstat_convert_info(
 
 def discover_diskstat(
     params: Sequence[Mapping[str, Any]],
-    section_diskstat: Optional[diskstat.Section],
-    section_multipath: Optional[SectionMultipath],
+    section_diskstat: diskstat.Section | None,
+    section_multipath: SectionMultipath | None,
 ) -> type_defs.DiscoveryResult:
     if section_diskstat is None:
         return
@@ -398,8 +398,8 @@ def _compute_rates_single_disk(
 def check_diskstat(
     item: str,
     params: Mapping[str, Any],
-    section_diskstat: Optional[diskstat.Section],
-    section_multipath: Optional[SectionMultipath],
+    section_diskstat: diskstat.Section | None,
+    section_multipath: SectionMultipath | None,
 ) -> type_defs.CheckResult:
     # Unfortunately, summarizing the disks does not commute with computing the rates for this check.
     # Therefore, we have to compute the rates first.
@@ -439,9 +439,9 @@ def check_diskstat(
 
 
 def _merge_cluster_sections(
-    cluster_section: Mapping[str, Optional[Mapping]]
-) -> Optional[Mapping[str, Mapping]]:
-    section_merged: Dict[str, Mapping] = {}
+    cluster_section: Mapping[str, Mapping | None]
+) -> Mapping[str, Mapping] | None:
+    section_merged: dict[str, Mapping] = {}
     for section in cluster_section.values():
         if section is not None:
             section_merged.update(section)
@@ -451,8 +451,8 @@ def _merge_cluster_sections(
 def cluster_check_diskstat(
     item: str,
     params: Mapping[str, Any],
-    section_diskstat: Mapping[str, Optional[diskstat.Section]],
-    section_multipath: Mapping[str, Optional[SectionMultipath]],
+    section_diskstat: Mapping[str, diskstat.Section | None],
+    section_multipath: Mapping[str, SectionMultipath | None],
 ) -> type_defs.CheckResult:
     yield from check_diskstat(
         item,

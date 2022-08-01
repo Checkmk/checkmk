@@ -1520,7 +1520,7 @@ run_real_time_checks_for_remote() {
 }
 
 _this_shell() {
-    ps -o args= -p $$ | sed -e 's/^-//' -e 's/\ .*//'
+    ps -o args= -p $$ | sed -e 's/^-//' -e 's/^.*qemu-x86_64 //' -e 's/\ .*//'
 }
 
 #

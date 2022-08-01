@@ -67,8 +67,8 @@ _POST_PARSERS = [
 ]
 
 
-# esx datastores are either shown by human readable name (if available) or by the uid
-def esx_vsphere_counters_get_item_mapping(section: Section) -> Mapping[str, str]:
+def _get_item_mapping(section: Section) -> Mapping[str, str]:
+    """datastores are either shown by human readable name (if available) or by the uuid"""
     map_instance_to_item = {}
     for parser in _POST_PARSERS:
         for instance in section.get(f"datastore.{parser.counter}", {}):
@@ -80,18 +80,22 @@ def esx_vsphere_counters_get_item_mapping(section: Section) -> Mapping[str, str]
     return map_instance_to_item
 
 
-def inventory_esx_vsphere_counters_datastoreio(section: Section):
-    return inventory_diskstat_generic(
-        [[None, x] for x in esx_vsphere_counters_get_item_mapping(section).values()]
-    )
+def discover_esx_vsphere_datastore_io(
+    section: Section,
+):
+    return inventory_diskstat_generic([[None, x] for x in _get_item_mapping(section).values()])
 
 
-def check_esx_vsphere_counters_datastoreio(item: str, params: Mapping[str, Any], section: Section):
+def check_esx_vsphere_datastore_io(
+    item: str,
+    params: Mapping[str, Any],
+    section: Section,
+):
     if "datastore.read" not in section:
         return None
 
-    datastores = {}
-    item_mapping = esx_vsphere_counters_get_item_mapping(section)
+    datastores: dict[str, dict[str, float]] = {}
+    item_mapping = _get_item_mapping(section)
 
     for parser in _POST_PARSERS:
         field_data = section.get(f"datastore.{parser.counter}", {})
@@ -104,8 +108,8 @@ def check_esx_vsphere_counters_datastoreio(item: str, params: Mapping[str, Any],
 
 
 check_info["esx_vsphere_counters"] = {
-    "inventory_function": inventory_esx_vsphere_counters_datastoreio,
-    "check_function": check_esx_vsphere_counters_datastoreio,
+    "inventory_function": discover_esx_vsphere_datastore_io,
+    "check_function": check_esx_vsphere_datastore_io,
     "service_description": "Datastore IO %s",
     "has_perfdata": True,
     "group": "diskstat",

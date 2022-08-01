@@ -1977,6 +1977,19 @@ def test_services_split(services, blacklist, expected):
             None,
             id="parse status with misleading status symbol (x)",
         ),
+        pytest.param(
+            [
+                "[list-unit-files]",
+                "[status]",
+                "acpid.service",
+                "Loaded: not-found (Reason: No such file or directory)",
+                "Active: inactive (dead)",
+                "[all]",
+                "UNIT LOAD ACTIVE SUB JOB DESCRIPTION",
+            ],
+            None,
+            id="parse status works with incomplete data (SUP-10799)",
+        ),
     ],
 )
 def test_parse_systemd_units(string_table: StringTable, section: Section) -> None:

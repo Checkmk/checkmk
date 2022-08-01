@@ -1,0 +1,17 @@
+Title: <tt>systemd_units</tt>: Fix error when parsing incomplete data
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1659346417
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p10
+
+In some cases, the check plugin <tt>systemd_units</tt> crashed when parsing raw agent data. In such
+cases, the Check_MK Discovery service reported "Parsing of section systemd_units failed" and went
+WARNING. The error message in the corresponding crash report was:
+C+:
+IndexError (list index out of range)
+C-:

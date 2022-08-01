@@ -65,6 +65,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page
 from cmk.gui.permissions import (
+    declare_dynamic_permissions,
     declare_permission_section,
     Permission,
     permission_registry,
@@ -2256,3 +2257,22 @@ mega_menu_registry.register(
         topics=_customize_menu_topics,
     )
 )
+
+#   .--Permissions---------------------------------------------------------.
+#   |        ____                     _         _                          |
+#   |       |  _ \ ___ _ __ _ __ ___ (_)___ ___(_) ___  _ __  ___          |
+#   |       | |_) / _ \ '__| '_ ` _ \| / __/ __| |/ _ \| '_ \/ __|         |
+#   |       |  __/  __/ |  | | | | | | \__ \__ \ | (_) | | | \__ \         |
+#   |       |_|   \___|_|  |_| |_| |_|_|___/___/_|\___/|_| |_|___/         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Declare all pagetype permissions as dynamic permissions              |
+#   '----------------------------------------------------------------------'
+
+
+def _load_pagetype_permissions() -> None:
+    for pagetype in all_page_types().values():
+        pagetype.load()
+
+
+declare_dynamic_permissions(_load_pagetype_permissions)

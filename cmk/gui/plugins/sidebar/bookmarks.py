@@ -213,7 +213,10 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec, "BookmarkList"]):
 
     @classmethod
     def load_legacy_bookmarks(cls) -> None:
-        assert user.id is not None
+        # Don't load the bookmarks when there is no user logged in
+        if user.id is None:
+            return
+
         # Don't load the legacy bookmarks when there is already a my_bookmarks list
         if cls.has_instance((user.id, "my_bookmarks")):
             return

@@ -24,7 +24,7 @@ def parse_storcli_physical_disks(string_table: StringTable) -> megaraid.SectionP
             raw_disk["state"] = state
             continue
 
-        if words[:3] == ["Predictive", "Failure", "Count"]:
+        if words[:3] == ["Predictive", "Failure", "Count"] and words[4] != "N/A":
             raw_disk["failure_count"] = words[4]
 
     return {

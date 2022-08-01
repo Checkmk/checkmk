@@ -22,7 +22,7 @@ def agent_gcp_arguments(
         month.strftime("%Y-%m"),
     ]
     if "cost" in params:
-        args.append("--cost")
+        args.append("--cost_table")
         args.append(params["cost"]["tableid"])
     if len(params["services"]) > 0:
         args.append("--services")

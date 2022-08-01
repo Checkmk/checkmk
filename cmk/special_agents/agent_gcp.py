@@ -876,7 +876,7 @@ def agent_gcp_main(args: Args) -> None:
     client = Client(json.loads(args.credentials), args.project)
     services = [SERVICES[s] for s in args.services if s in SERVICES]
     piggies = [PIGGY_BACK_SERVICES[s] for s in args.services if s in PIGGY_BACK_SERVICES]
-    cost = CostArgument(args.cost, args.month) if args.cost else None
+    cost = CostArgument(args.cost_table, args.month) if args.cost_table else None
     run(
         client,
         services,

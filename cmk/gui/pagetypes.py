@@ -1798,8 +1798,9 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec, _SelfPageRenderer])
         return handlers
 
     @classmethod
-    def page_show(cls: Type[_SelfPageRenderer]) -> None:
-        cls.requested_page().render()
+    @abc.abstractmethod
+    def page_show(cls) -> None:
+        ...
 
     @classmethod
     def requested_page(cls) -> _SelfPageRenderer:
@@ -1851,10 +1852,6 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec, _SelfPageRenderer])
         if self._can_be_linked():
             return HTMLWriter.render_a(self.title(), href=self.page_url())
         return self.title()
-
-    @abc.abstractmethod
-    def render(self) -> None:
-        ...
 
 
 # .

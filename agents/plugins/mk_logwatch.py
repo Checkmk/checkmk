@@ -35,6 +35,7 @@ import ast
 import binascii
 import glob
 import io
+import itertools
 import locale
 import logging
 import os
@@ -1171,7 +1172,7 @@ def _filter_consecutive_duplicates(lines, nocontext):
 
 
 def filter_output(lines, options):
-    # type: (Sequence[text_type], Options) -> list[str]
+    # type: (Sequence[text_type], Options) -> Iterable[text_type]
     lines_filtered = (
         _filter_maxcontextlines(lines, *options.maxcontextlines)
         if options.maxcontextlines
@@ -1183,7 +1184,7 @@ def filter_output(lines, options):
     if options.skipconsecutiveduplicated:
         lines_filtered = _filter_consecutive_duplicates(lines_filtered, options.nocontext)
 
-    return [ensure_str(l) for l in lines_filtered]
+    return lines_filtered
 
 
 def _is_outdated_batch(batch_file, retention_period, now):
@@ -1192,16 +1193,20 @@ def _is_outdated_batch(batch_file, retention_period, now):
 
 
 def write_batch_file(lines, batch_id, batch_dir):
-    # type: (Iterable[text_type | str], str, str) -> None
+    # type: (Iterable[str], str, str) -> None
     with open(os.path.join(batch_dir, "logwatch-batch-file-%s" % batch_id), "w") as handle:
-        handle.writelines(lines)
+        handle.writelines([ensure_text_type(l) for l in lines])
 
 
 def process_batches(current_batch, current_batch_id, remote, retention_period, now):
-    # type: (Collection[text_type | str], str, str, float, float) -> None
+    # type: (Collection[str], str, str, float, float) -> None
     batch_dir = os.path.join(MK_VARDIR, "logwatch-batches", remote)
 
-    os.makedirs(batch_dir, exist_ok=True)
+    try:
+        os.makedirs(batch_dir)
+    except OSError as os_err:
+        if os_err.errno != 17:  # 17 means exists
+            raise
 
     pre_existing_batch_files = os.listdir(batch_dir)
 
@@ -1217,7 +1222,7 @@ def process_batches(current_batch, current_batch_id, remote, retention_period, n
                 os.unlink(batch_file)
             else:
                 with open(batch_file) as fh:
-                    sys.stdout.writelines(fh)
+                    sys.stdout.writelines([ensure_str(l) for l in fh])
                 continue
         except EnvironmentError:
             pass
@@ -1230,7 +1235,7 @@ def main(argv=None):  # pylint: disable=too-many-branches
     args = ArgsParser(argv)
     init_logging(args.verbosity)
     now = int(time.time())
-    batch_id = "%s-%s" % (now, "".join("%03d" % int(b) for b in os.urandom(16)))
+    batch_id = "%s-%s" % (now, "".join("%03d" % int(b) for b in bytearray(os.urandom(16))))
 
     try:
         files = get_config_files(MK_CONFDIR, config_file_arg=args.config)
@@ -1248,16 +1253,17 @@ def main(argv=None):  # pylint: disable=too-many-branches
     if not os.path.exists(status_filename) and os.path.exists("%s/logwatch.state" % MK_VARDIR):
         shutil.copy("%s/logwatch.state" % MK_VARDIR, status_filename)
 
-    output = []
-
     found_sections, non_matching_patterns = parse_sections(logfiles_config)
 
-    for pattern in non_matching_patterns:
-        # Python 2.5/2.6 compatible solution
-        if sys.version_info[0] == 3:
-            output.append("[[[%s:missing]]]\n" % pattern)
-        else:
-            output.append(("[[[%s:missing]]]\n" % pattern).encode("utf-8"))
+    output = (
+        str(
+            "[[[%s:missing]]]\n" % pattern
+            if sys.version_info[0] == 3
+            # Python 2.5/2.6 compatible solution
+            else ("[[[%s:missing]]]\n" % pattern).encode("utf-8")
+        )
+        for pattern in non_matching_patterns
+    )  # type: Iterable[str | text_type]
 
     state = State(status_filename)
     try:
@@ -1274,18 +1280,28 @@ def main(argv=None):  # pylint: disable=too-many-branches
         filestate = state.get(section.name_fs)
         try:
             header, log_lines = process_logfile(section, filestate, args.debug)
-            item_data = [
-                header,
-                "BATCH: %s\n" % batch_id,
-            ] + filter_output(log_lines, section.options)
+            filtered_log_lines = filter_output(log_lines, section.options)
         except Exception as exc:
             if args.debug:
                 raise
             LOGGER.debug("Exception when processing %r: %s", section.name_fs, exc)
 
-        output.extend(item_data)
+        output = itertools.chain(
+            output,
+            [
+                header,
+                "BATCH: %s\n" % batch_id,
+            ],
+            filtered_log_lines,
+        )
 
-    process_batches(output, batch_id, REMOTE, global_options.retention_period, now)
+    process_batches(
+        [ensure_str(l) for l in output],
+        batch_id,
+        REMOTE,
+        global_options.retention_period,
+        now,
+    )
 
     if args.debug:
         LOGGER.debug("State file not written (debug mode)")

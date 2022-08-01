@@ -836,7 +836,7 @@ class PackedConfigStore:
 
     def read(self) -> Mapping[str, Any]:
         with self.path.open("rb") as f:
-            return pickle.load(f)
+            return pickle.load(f)  # nosec B301 # BNS:c3c5e9
 
 
 @lru_cache

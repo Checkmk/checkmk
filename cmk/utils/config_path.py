@@ -21,6 +21,8 @@ __all__ = ["ConfigPath", "VersionedConfigPath", "LATEST_CONFIG"]
 class ConfigPath(abc.ABC):
     __slots__ = ()
 
+    # Note - Security: This must remain hard-coded to a path not writable by others.
+    #                  See BNS:c3c5e9.
     ROOT: Final = cmk.utils.paths.core_helper_config_dir
 
     @property

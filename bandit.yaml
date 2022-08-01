@@ -95,7 +95,6 @@ skips:
   - B103  # set_bad_file_permissions
   - B104  # hardcoded_bind_all_interfaces
   - B108  # hardcoded_tmp_directory
-  - B301  # pickle
   - B302  # marshal
   - B307  # eval
   - B310  # urllib_urlopen

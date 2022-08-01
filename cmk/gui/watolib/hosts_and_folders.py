@@ -2121,7 +2121,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             if not os.path.exists(cache_path) or os.stat(cache_path).st_size == 0:
                 Folder.build_host_lookup_cache(cache_path)
             try:
-                g.folder_lookup_cache = pickle.loads(store.load_bytes_from_file(cache_path))
+                g.folder_lookup_cache = store.load_object_from_pickle_file(cache_path, default={})
             except (TypeError, pickle.UnpicklingError) as e:
                 logger.warning("Unable to read folder_lookup_cache from disk: %s", str(e))
                 g.folder_lookup_cache = {}

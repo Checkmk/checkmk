@@ -170,6 +170,13 @@ def load_object_from_file(path: Union[Path, str], *, default: Any, lock: bool = 
         return ObjectStore(Path(path), serializer=DimSerializer()).read_obj(default=default)
 
 
+def load_object_from_pickle_file(
+    path: Union[Path, str], *, default: Any, lock: bool = False
+) -> Any:
+    with _leave_locked_unless_exception(path) if lock else nullcontext():
+        return ObjectStore(Path(path), serializer=PickleSerializer()).read_obj(default=default)
+
+
 def load_text_from_file(path: Union[Path, str], default: str = "", lock: bool = False) -> str:
     with _leave_locked_unless_exception(path) if lock else nullcontext():
         return ObjectStore(Path(path), serializer=TextSerializer()).read_obj(default=default)
@@ -227,8 +234,14 @@ _pickled_files_base_dir = Path(cmk.utils.paths.tmp_dir) / "pickled_files_cache"
 _pickle_serializer = PickleSerializer[Any]()
 
 
-def load_pickled_object_file(path: Path, *, default: Any, lock: bool = False) -> Any:
-    """Tries to load a pickled version of the requested object
+def try_load_file_from_pickle_cache(path: Path, *, default: Any, lock: bool = False) -> Any:
+    """Try to load a pickled version of the requested file from cache, otherwise load `path`
+
+    This function tries to find a ".pkl" version of the requested filename in the pickle files cache
+    and loads the pickled file, IF the pickled file is more recent.
+    Otherwise, if the requested file exists, it is loaded as a raw python object and added to the
+    pickle cache for next time.
+
     The pickled versions are located in the tmpfs directory under the same relative site path.
     They are vanishing when the tmpfs is unmounted (reboots/software updates, etc.)
     If no pickled version exists or the pickled version is older than the original file,
@@ -252,7 +265,7 @@ def load_pickled_object_file(path: Path, *, default: Any, lock: bool = False) ->
     try:
         if pickle_path.stat().st_mtime > path.stat().st_mtime:
             # Use pickled version since this file is newer and therefore valid
-            return ObjectStore(pickle_path, serializer=_pickle_serializer).read_obj(default=default)
+            return load_object_from_pickle_file(pickle_path, default=default)
     except (FileNotFoundError, pickle.UnpicklingError):
         pass
 

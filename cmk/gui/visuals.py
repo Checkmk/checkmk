@@ -483,7 +483,7 @@ class _CombinedVisualsCache:
 
     def _read_from_cache(self) -> Optional[CustomUserVisuals]:
         try:
-            return pickle.loads(store.load_bytes_from_file(self._content_filename))
+            return store.load_object_from_pickle_file(self._content_filename, default={})
         except (TypeError, pickle.UnpicklingError):
             return None
 

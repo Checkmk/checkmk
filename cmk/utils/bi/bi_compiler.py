@@ -232,7 +232,7 @@ class BICompiler:
         store.save_bytes_to_file(filepath, pickle.dumps(data))
 
     def _load_data(self, filepath) -> Dict:
-        return pickle.loads(store.load_bytes_from_file(filepath))
+        return store.load_object_from_pickle_file(filepath, default={})
 
     def _get_redis_client(self) -> "RedisDecoded":
         if self._redis_client is None:

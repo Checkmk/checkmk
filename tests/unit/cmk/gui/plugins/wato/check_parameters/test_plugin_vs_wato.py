@@ -417,7 +417,6 @@ class ErrorReporter:
         ("check", "esx_vsphere_sensors", "checkgroup_parameters:hostsystem_sensors"),
         ("check", "esx_vsphere_vm_guest_tools", "checkgroup_parameters:vm_guest_tools"),
         ("check", "esx_vsphere_vm_heartbeat", "checkgroup_parameters:vm_heartbeat"),
-        ("check", "etherbox_switch", "checkgroup_parameters:switch_contact"),
         ("check", "f5_bigip_fans", "checkgroup_parameters:hw_fans"),
         ("check", "f5_bigip_pool", "checkgroup_parameters:f5_pools"),
         ("check", "fortigate_antivirus", "checkgroup_parameters:fortigate_antivirus"),

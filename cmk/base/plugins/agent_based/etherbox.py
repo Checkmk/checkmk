@@ -2,6 +2,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# mypy: disallow_untyped_defs
 
 # The etherbox supports the following sensor types on each port
 # sensor types
@@ -17,24 +18,22 @@
 #       The short contact status is set for 15 seconds after a button press
 
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping
+from typing import Any, List, Mapping
 
-from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_value_store,
+    Metric,
+    OIDEnd,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    startswith,
+    State,
+)
 
-# TODO: insert missing snmp output
-
-ServiceType = tuple[str, None]
-
-
-def Service(item: str) -> ServiceType:
-    return item, None
-
-
-DiscoveryResult = Iterable[ServiceType]
-StringByteTable = List[List[Union[str, List[str]]]]
-CheckResult = Iterable[Any]
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils import humidity, temperature
 
 
 @dataclass(frozen=True)
@@ -53,60 +52,59 @@ class Section:
     sensor_data: Mapping[Index, Mapping[Type, SensorData]]
 
 
-# placeholder to delete and replace with imports during migration
-def Result(state: State, summary: str) -> tuple[State, str]:
-    return (state, summary)
-
-
-def Metric(name: str, value: float) -> tuple[str, str, list[tuple[str, float]]]:
-    return "", "", [(name, value)]
-
-
-def etherbox_convert(string_table) -> Section:
+def etherbox_convert(string_table: List[StringTable]) -> Section | None:
+    if not string_table[0] and not string_table[1]:
+        return None
     unit_of_measurement = {"0": "c", "1": "f", "2": "k"}[string_table[0][0][0]]
     data: dict[Index, dict[Type, SensorData]] = {}
     for i in range(0, len(string_table[1])):
-        index, sensor_type = string_table[1][i][1], string_table[3][i][1]
+        index, sensor_type = string_table[1][i][1], string_table[1][i][3]
         if index not in data:
             data[index] = {}
-        data[index][sensor_type] = SensorData(string_table[2][i][1], int(string_table[4][i][1]))
+        data[index][sensor_type] = SensorData(string_table[1][i][2], int(string_table[1][i][4]))
     return Section(unit_of_measurement, data)
 
 
-def etherbox_scan(oid):
-    # 2015:
-    # Older firmware version of Etherbox do not answer on
-    # .1.3.6.1.2.1. (sysDescr). Yurks. We need to fetch
-    # a vendor specific OID here and wait until all old devices
-    # have vanished.
-    return oid(".1.3.6.1.4.1.14848.2.1.1.1.0", "").startswith("Version")
-    # 2021:
-    # Have they yet? How do we know? Anyway: better would be the following,
-    # but we need to known what's in the sysDescr in the good case.
-    # return (
-    #    "etherbox" in oid(".1.3.6.1.2.1.1.1.0").lower() or  # TODO: "etherbox" is a wild guess
-    #    (not oid(".1.3.6.1.2.1.1.1.0") and
-    #     oid(".1.3.6.1.4.1.14848.2.1.1.1.0", "").startswith("Version"))
-    # )
+# 2015:
+# Older firmware version of Etherbox do not answer on
+# .1.3.6.1.2.1. (sysDescr). Yurks. We need to fetch
+# a vendor specific OID here and wait until all old devices
+# have vanished.
+# 2021:
+# Have they yet? How do we know? Anyway: better would be the following,
+# but we need to known what's in the sysDescr in the good case.
+# return (
+#    "etherbox" in oid(".1.3.6.1.2.1.1.1.0").lower() or  # TODO: "etherbox" is a wild guess
+#    (not oid(".1.3.6.1.2.1.1.1.0") and
+#     oid(".1.3.6.1.4.1.14848.2.1.1.1.0", "").startswith("Version"))
+# )
+register.snmp_section(
+    name="etherbox",
+    parse_function=etherbox_convert,
+    detect=startswith(".1.3.6.1.4.1.14848.2.1.1.1.0", "Version"),
+    fetch=[
+        SNMPTree(base=".1.3.6.1.4.1.14848.2.1.1", oids=["3"]),  # temperature unit
+        SNMPTree(
+            base=".1.3.6.1.4.1.14848.2.1.2.1",
+            oids=[
+                OIDEnd(),
+                "1",  # index
+                "2",  # name
+                "3",  # type
+                "5",  # value * 10
+            ],
+        ),
+    ],
+)
 
 
-etherbox_info = [
-    (".1.3.6.1.4.1.14848.2.1.1.3", [""]),  # temperature unit
-    (".1.3.6.1.4.1.14848.2.1.2.1.1", [OID_END, ""]),  # index
-    (".1.3.6.1.4.1.14848.2.1.2.1.2", [OID_END, ""]),  # name
-    (".1.3.6.1.4.1.14848.2.1.2.1.3", [OID_END, ""]),  # type
-    (".1.3.6.1.4.1.14848.2.1.2.1.5", [OID_END, ""]),  # value * 10
-]
-
-
-def discovery(info: StringByteTable, req_sensor_type: str) -> DiscoveryResult:
-    section = etherbox_convert(info)
+def discovery(section: Section, req_sensor_type: str) -> DiscoveryResult:
     for index, index_data in section.sensor_data.items():
         for sensor_type, data in index_data.items():
             if sensor_type in ("1", "3") and data.value == 0:
                 continue
             if sensor_type == req_sensor_type:
-                yield Service(f"{index}.{sensor_type}")
+                yield Service(item=f"{index}.{sensor_type}")
 
 
 def etherbox_get_sensor(item: str, section: Section) -> SensorData:
@@ -128,36 +126,45 @@ def etherbox_get_sensor(item: str, section: Section) -> SensorData:
 #   '----------------------------------------------------------------------'
 
 
-def check_etherbox_temp(item: str, params: Mapping[str, Any], info: StringByteTable) -> CheckResult:
+def check_etherbox_temp(
+    item: str, params: temperature.TempParamType, section: Section
+) -> CheckResult:
     try:
-        section = etherbox_convert(info)
         data = etherbox_get_sensor(item, section)
     except Exception as error:
         yield Result(state=State.UNKNOWN, summary=str(error))
         return
 
     temp = data.value / 10.0
-    state, infotext, perfdata = check_temperature(
-        temp, params, "etherbox_temp_%s" % item, section.unit_of_measurement
+    metric, result, *other = list(
+        temperature.check_temperature(
+            temp,
+            params,
+            unique_name="etherbox_temp_%s" % item,
+            value_store=get_value_store(),
+            dev_unit=section.unit_of_measurement,
+        )
     )
-    yield Result(state=State(state), summary=f"[{data.name}] {infotext}")
-    yield "", "", perfdata
+    if isinstance(result, Result):
+        yield Result(state=State(result.state), summary=f"[{data.name}] {result.summary}")
+    yield metric
+    for el in other:
+        yield el
 
 
 def discovery_temp(section: Section) -> DiscoveryResult:
     yield from discovery(section, "1")
 
 
-check_info["etherbox.temp"] = {
-    "check_function": check_etherbox_temp,
-    "inventory_function": discovery_temp,
-    "service_description": "Temperature %s",
-    "has_perfdata": True,
-    "group": "temperature",
-    "snmp_scan_function": etherbox_scan,
-    "snmp_info": etherbox_info,
-}
-
+register.check_plugin(
+    name="etherbox_temp",
+    sections=["etherbox"],
+    check_function=check_etherbox_temp,
+    discovery_function=discovery_temp,
+    check_ruleset_name="temperature",
+    service_name="Temperature %s",
+    check_default_parameters={},
+)
 # .
 #   .--humidity------------------------------------------------------------.
 #   |              _                     _     _ _ _                       |
@@ -169,35 +176,32 @@ check_info["etherbox.temp"] = {
 #   '----------------------------------------------------------------------'
 
 
-def check_etherbox_humidity(
-    item: str, params: Mapping[str, Any], info: StringByteTable
-) -> CheckResult:
+def check_etherbox_humidity(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     try:
-        section = etherbox_convert(info)
         data = etherbox_get_sensor(item, section)
     except Exception as error:
         yield Result(state=State.UNKNOWN, summary=str(error))
         return
 
-    state, infotext, perfdata = check_humidity(data.value / 10.0, params)
-    yield Result(state=State(state), summary=f"[{data.name}] {infotext}")
-    yield "", "", perfdata
+    result, metrics = list(humidity.check_humidity(data.value / 10.0, params))
+    if isinstance(result, Result):
+        yield Result(state=State(result.state), summary=f"[{data.name}] {result.summary}")
+    yield metrics
 
 
 def discovery_humidity(section: Section) -> DiscoveryResult:
     yield from discovery(section, "3")
 
 
-check_info["etherbox.humidity"] = {
-    "check_function": check_etherbox_humidity,
-    "inventory_function": discovery_humidity,
-    "service_description": "Sensor %s",
-    "has_perfdata": True,
-    "group": "humidity",
-    "snmp_scan_function": etherbox_scan,
-    "snmp_info": etherbox_info,
-}
-
+register.check_plugin(
+    name="etherbox_humidity",
+    sections=["etherbox"],
+    check_function=check_etherbox_humidity,
+    discovery_function=discovery_humidity,
+    check_ruleset_name="humidity",
+    service_name="Sensor %s",
+    check_default_parameters={},
+)
 # .
 #   .--switch contact------------------------------------------------------.
 #   |               _ _       _                       _             _      |
@@ -210,10 +214,9 @@ check_info["etherbox.humidity"] = {
 
 
 def check_etherbox_switch_contact(
-    item: str, params: Mapping[str, Any], info: StringByteTable
+    item: str, params: Mapping[str, Any], section: Section
 ) -> CheckResult:
     try:
-        section = etherbox_convert(info)
         data = etherbox_get_sensor(item, section)
     except Exception as error:
         yield Result(state=State.UNKNOWN, summary=str(error))
@@ -236,16 +239,15 @@ def discovery_switch(section: Section) -> DiscoveryResult:
     yield from discovery(section, "4")
 
 
-check_info["etherbox.switch"] = {
-    "check_function": check_etherbox_switch_contact,
-    "inventory_function": discovery_switch,
-    "service_description": "Sensor %s",
-    "group": "switch_contact",
-    "has_perfdata": True,
-    "snmp_scan_function": etherbox_scan,
-    "snmp_info": etherbox_info,
-}
-
+register.check_plugin(
+    name="etherbox_switch",
+    sections=["etherbox"],
+    check_function=check_etherbox_switch_contact,
+    discovery_function=discovery_switch,
+    check_ruleset_name="switch_contact",
+    service_name="Sensor %s",
+    check_default_parameters={"state": "ignore"},
+)
 # .
 #   .--smoke---------------------------------------------------------------.
 #   |                                        _                             |
@@ -257,11 +259,8 @@ check_info["etherbox.switch"] = {
 #   '----------------------------------------------------------------------'
 
 
-def check_etherbox_smoke(
-    item: str, no_params: Mapping[str, Any], info: StringByteTable
-) -> CheckResult:
+def check_etherbox_smoke(item: str, section: Section) -> CheckResult:
     try:
-        section = etherbox_convert(info)
         data = etherbox_get_sensor(item, section)
     except Exception as error:
         yield Result(state=State.UNKNOWN, summary=str(error))
@@ -280,11 +279,10 @@ def discovery_smoke(section: Section) -> DiscoveryResult:
     yield from discovery(section, "6")
 
 
-check_info["etherbox.smoke"] = {
-    "check_function": check_etherbox_smoke,
-    "inventory_function": discovery_smoke,
-    "service_description": "Sensor %s",
-    "has_perfdata": True,
-    "snmp_scan_function": etherbox_scan,
-    "snmp_info": etherbox_info,
-}
+register.check_plugin(
+    name="etherbox_smoke",
+    sections=["etherbox"],
+    check_function=check_etherbox_smoke,
+    discovery_function=discovery_smoke,
+    service_name="Sensor %s",
+)

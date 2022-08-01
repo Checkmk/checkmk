@@ -1,0 +1,11 @@
+Title: Missing services in "State of Multipathing on Linux"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1659343265
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p28
+
+The plugin "<i>State of Multipathing on Linux</i>" (<tt>multipath</tt>) was sporadically missing services during discovery.

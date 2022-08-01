@@ -72,9 +72,7 @@ import time
 from typing import Any, Dict, Mapping, MutableMapping, Optional, Sequence, Tuple
 
 from .agent_based_api.v1 import get_rate, get_value_store, IgnoreResultsError, register, type_defs
-from .utils import diskstat
-
-SectionMultipath = Mapping[str, Any]
+from .utils import diskstat, multipath
 
 
 def parse_diskstat(string_table: type_defs.StringTable) -> diskstat.Section:
@@ -268,7 +266,7 @@ register.agent_section(
 
 def diskstat_convert_info(
     section_diskstat: diskstat.Section,
-    section_multipath: Optional[SectionMultipath],
+    section_multipath: Optional[multipath.Section],
 ) -> diskstat.Section:
     converted_disks = dict(section_diskstat)  # we must not modify section_diskstat!
 
@@ -279,24 +277,22 @@ def diskstat_convert_info(
     # For multipath entries: Rename the generic names like "dm-8"
     # with multipath names like "SDataCoreSANsymphony_DAT07-fscl"
     if section_multipath:
-        for uuid, multipath in section_multipath.items():
-            if "alias" not in multipath:
-                multipath["alias"] = ""
+        for uuid, multipath_values in section_multipath.items():
 
             if (
-                multipath["device"] in converted_disks
-                or "DM %s" % multipath["alias"] in converted_disks
+                multipath_values["device"] in converted_disks
+                or "DM %s" % multipath_values.get("alias", "") in converted_disks
             ):
-                for path in multipath["paths"]:
+                for path in multipath_values["paths"]:
                     if path in converted_disks:
                         del converted_disks[path]
 
-            if multipath["device"] in converted_disks:
-                converted_disks[uuid] = converted_disks[multipath["device"]]
-                del converted_disks[multipath["device"]]
+            if multipath_values["device"] in converted_disks:
+                converted_disks[uuid] = converted_disks[multipath_values["device"]]
+                del converted_disks[multipath_values["device"]]
 
-            if "DM %s" % multipath["alias"] in converted_disks:
-                alias = "DM %s" % multipath["alias"]
+            if "DM %s" % multipath_values.get("alias", "") in converted_disks:
+                alias = "DM %s" % multipath_values.get("alias", "")
                 converted_disks[uuid] = converted_disks[alias]
                 del converted_disks[alias]
 
@@ -312,7 +308,7 @@ def diskstat_convert_info(
 def discover_diskstat(
     params: Sequence[Mapping[str, Any]],
     section_diskstat: Optional[diskstat.Section],
-    section_multipath: Optional[SectionMultipath],
+    section_multipath: Optional[multipath.Section],
 ) -> type_defs.DiscoveryResult:
     if section_diskstat is None:
         return
@@ -400,7 +396,7 @@ def check_diskstat(
     item: str,
     params: Mapping[str, Any],
     section_diskstat: Optional[diskstat.Section],
-    section_multipath: Optional[SectionMultipath],
+    section_multipath: Optional[multipath.Section],
 ) -> type_defs.CheckResult:
     # Unfortunately, summarizing the disks does not commute with computing the rates for this check.
     # Therefore, we have to compute the rates first.
@@ -453,7 +449,7 @@ def cluster_check_diskstat(
     item: str,
     params: Mapping[str, Any],
     section_diskstat: Mapping[str, Optional[diskstat.Section]],
-    section_multipath: Mapping[str, Optional[SectionMultipath]],
+    section_multipath: Mapping[str, Optional[multipath.Section]],
 ) -> type_defs.CheckResult:
     yield from check_diskstat(
         item,

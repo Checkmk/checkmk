@@ -4,11 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
+from cmk.base.plugins.agent_based.utils import multipath
+
 # Configuration for using alias instead of UUID
 inventory_multipath_rules = []
 
 
-def parse_multipath(info):
+def parse_multipath(info) -> multipath.Section:
     # New reported header lines need to be placed here
     # the matches need to be put in a list of tupples
     # while the structure of the tupple is:
@@ -118,6 +121,7 @@ def parse_multipath(info):
                 numpaths += 1
                 group["numpaths"] = numpaths
                 paths_info.append(line[2])
+
     return groups
 
 

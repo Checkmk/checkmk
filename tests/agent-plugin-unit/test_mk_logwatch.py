@@ -668,3 +668,28 @@ def fake_filesystem(tmpdir):
     create_recursively(str(tmpdir), "root", "dir", root)
 
     return os.path.join(str(tmpdir), "root")
+
+
+def test_process_batches(tmpdir, mocker, lw):
+    mocker.patch.object(lw, "MK_VARDIR", str(tmpdir))
+    lw.process_batches(
+        [
+            lw.ensure_text_type(l) for l in [
+                "line1",
+                "line2"
+            ]
+        ],
+        "batch_id",
+        "remote",
+        123,
+        456,
+    )
+    assert os.path.isfile(os.path.join(
+        str(tmpdir),
+        "logwatch-batches/remote/logwatch-batch-file-batch_id",
+    ))
+
+
+def test_main(tmpdir, mocker,lw):
+    mocker.patch.object(lw, "MK_VARDIR", str(tmpdir))
+    lw.main()

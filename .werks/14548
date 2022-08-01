@@ -1,0 +1,20 @@
+Title: <tt>mk_logwatch</tt>: Make agent plugin executable under Python 2
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1659362741
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p10
+
+Werk <a href="https://checkmk.com/werk/14451">14451</a> introduced a regression which made the
+<tt>logwatch</tt> agent plugin crash under Python 2. The <i>"Check_MK"</i> service of affected hosts
+reported "Missing monitoring data for plugins: logwatch". The error message thrown by the plugin
+when executed directly on the host read
+C+:
+Traceback (most recent call last):
+  ...
+ValueError: invalid literal for int() with base 10: ...
+C-:

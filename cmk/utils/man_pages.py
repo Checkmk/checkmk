@@ -232,6 +232,7 @@ CATALOG_TITLES: Final = {
     "pfsense": "pfsense",
     "postfix": "Postfix",
     "postgresql": "PostgreSQL",
+    "primekey": "Primekey",
     "prometheus": "Prometheus",
     "proxmox": "Proxmox",
     "qmail": "qmail",

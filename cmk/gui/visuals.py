@@ -493,6 +493,7 @@ class _CombinedVisualsCache:
 
 
 hooks.register_builtin("snapshot-pushed", _CombinedVisualsCache.invalidate_all_caches)
+hooks.register_builtin("snapshot-pushed", store.clear_pickled_object_files)
 hooks.register_builtin("users-saved", lambda x: _CombinedVisualsCache.invalidate_all_caches())
 
 
@@ -538,7 +539,7 @@ def _load_custom_user_visuals(
 
 def load_visuals_of_a_user(what, builtin_visuals, skip_func, path, user_id) -> CustomUserVisuals:
     user_visuals: CustomUserVisuals = {}
-    for name, visual in store.load_object_from_file(path, default={}).items():
+    for name, visual in store.try_load_file_from_pickle_cache(path, default={}).items():
         visual["owner"] = user_id
         visual["name"] = name
 

@@ -11,7 +11,9 @@
 # and restart the site
 
 import os
+import re
 import shutil
+import subprocess
 import sys
 import tempfile
 
@@ -33,10 +35,17 @@ if not send_path and not spool_dir:
     sys.exit(2)  # Fatal error, no retry
 
 recipient = os.environ["NOTIFY_CONTACTPAGER"].replace(" ", "")
+
 if not recipient:
     contactname = os.environ["NOTIFY_CONTACTNAME"]
     sys.stderr.write("Error: Pager Number of %s not set\n" % contactname)
     sys.exit(2)  # Fatal error, no retry
+
+if not re.match(r"^\+?[\/\-\(\)\.\d\w]*$", recipient):
+    contactname = os.environ["NOTIFY_CONTACTNAME"]
+    sys.stderr.write("Error: Pager Number of %s is not a valid pager address\n" % contactname)
+    sys.exit(2)  # Fatal error, no retry
+
 
 raw_context = collect_context()
 message = get_sms_message_from_context(raw_context)
@@ -49,10 +58,9 @@ def quote_message(msg, max_length=None):
 
 
 if send_path:
-    if (
-        os.system("%s %s %s" % (send_path, recipient, quote_message(message, 160))) >> 8  # nosec
-        != 0
-    ):
+    try:
+        subprocess.run([send_path, recipient, quote_message(message, 160)], check=True)
+    except subprocess.SubprocessError:
         sys.exit(1)
 elif spool_dir:
     # On some distros, like debian, smstools does not ship with the sendsms/smssend helper

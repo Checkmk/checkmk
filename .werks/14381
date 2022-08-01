@@ -1,0 +1,44 @@
+Title: Fix command injection in SMS notification script
+Class: security
+Compatible: compat
+Component: notifications
+Date: 1659368496
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p11
+
+Previous to this Werk it was possible to inject arbitrary shell commands
+when sending SMS notifications. For this, attackers would have needed to
+place a crafted string in a user's Pager Address, which was not properly
+escaped by the SMS script.
+
+In most setups, this issue will not be exploitable: Changing a user's
+Pager Address requires the User Management permission. Users with that
+permission are effectively Administrators and can thus already
+legitimately execute code in the Site context. Note however, that in
+some setups the attribute can also be configured by external interfaces,
+for example via LDAP User Synchronization.
+
+<b>Affected Versions</b>: All currently supported versions are affected:
+1.6, 2.0, and 2.1.
+
+<b>Mitigations</b>: As an immediate mitigation all notifications via the
+method "SMS (using smstools)" can be disabled. Note that users' personal
+notification rules are affected as well.
+
+<b>Indicators of Compromise</b>: If you suspect this issue might have
+been exploited in your installation, validate users' Pager Address
+fields. Check the Audit Log for changes to this field.
+
+<b>Vulnerability Management</b>: We have rated the issue with a CVSS
+Score of 8.0 (High) with the following CVSS vector:
+<tt>CVSS:3.1/AV:A/AC:H/PR:L/UI:N/S:C/C:H/I:H/A:H</tt>. A CVE has been
+requested.
+
+<b>Changes</b>: This Werk replaces a hazardous call to
+<tt>os.system</tt> by a safer alternative and adds additional validation
+to the Pager Address before attempting to send SMS to it. Valid Pager
+Addresses may now include letters, numbers, space characters, any of the
+characters <tt>. / - ()</tt>, as well as a <tt>+</tt> character at the
+beginning.

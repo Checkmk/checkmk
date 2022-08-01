@@ -1,0 +1,15 @@
+Title: Improved loading times of user configured graphs/views/dashboards/reports
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1659338762
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0p10
+
+Configurations with hundreds or thousands of custom visualization elements such as custom graphs suffered
+from slow page rendering, because the configuration files usually become quite large.
+To improve the loading time, an attempt is now always made to load a cached version of the file in question.
+The cached version is located in the tmpfs directory and also uses an optimized file format to reduce the parsing time by a
+factor of 10.

@@ -975,7 +975,7 @@ class Overridable(Base):
                     if not userdb.user_exists(user_id):
                         continue
 
-                    user_pages = store.load_object_from_file(path, default={})
+                    user_pages = store.load_pickled_object_file(path, default={})
                     for name, page_dict in user_pages.items():
                         page_dict["owner"] = user_id
                         page_dict["name"] = name

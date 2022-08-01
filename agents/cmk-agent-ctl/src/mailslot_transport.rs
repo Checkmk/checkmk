@@ -59,6 +59,7 @@ pub fn provider_name() -> [u8; PROVIDER_NAME_LENGTH] {
     [name.as_bytes(), &pad].concat().try_into().expect("FAIL!")
 }
 
+/// NOTE: this function is used for logging too
 pub fn send_to_mailslot(mailslot_name: &str, data_type: DataType, data: &[u8]) {
     let name = MailslotName::local(mailslot_name);
     match &mut MailslotClient::new(&name) {
@@ -76,7 +77,9 @@ pub fn send_to_mailslot(mailslot_name: &str, data_type: DataType, data: &[u8]) {
             // remove encoded length of the log_text:
             let offset = payload.len() - data.len();
             bytes.extend_from_slice(&payload[offset..]);
-            client.send_message(&bytes).unwrap();
+            client
+                .send_message(&bytes)
+                .unwrap_or_else(|e| eprintln!("Fail to send {:?}", e)); // we can't log in the function
         }
         Err(_) => {
             // happens if we have not enough user rights

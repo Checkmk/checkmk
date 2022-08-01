@@ -2,8 +2,12 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::{setup, types};
-use log::debug;
+use crate::{
+    mailslot_transport::{self, MailSlotBackend},
+    setup,
+    types::AgentChannel,
+};
+use log::{debug, warn};
 
 use async_std::net::TcpStream as AsyncTcpStream;
 use async_std::prelude::*;
@@ -11,6 +15,10 @@ use std::net::IpAddr;
 use std::net::TcpStream as StdTcpStream;
 
 use std::io::{Error, ErrorKind, Read, Result as IoResult};
+use std::time::Duration;
+
+/// Absolute max time to wait the agent
+const MAX_ANSWER_WAIT_TIME: Duration = Duration::from_secs(180);
 
 #[derive(PartialEq)]
 enum ChannelType {
@@ -18,7 +26,7 @@ enum ChannelType {
     Mailslot,
 }
 
-impl types::AgentChannel {
+impl AgentChannel {
     const CHANNEL_MAILSLOT_PREFIX: &'static str = "ms";
     const CHANNEL_IP_PREFIX: &'static str = "ip";
     const CHANNEL_PREFIX_SEPARATOR: char = '/';
@@ -76,15 +84,51 @@ async fn async_collect_from_ip(agent_ip: &str, remote_ip: IpAddr) -> IoResult<Ve
     Ok(data)
 }
 
-// TODO(sk): add logging and unit testing(using local server)
-async fn async_collect_from_mailslot(_mailslot: &str, _remote_ip: IpAddr) -> IoResult<Vec<u8>> {
-    let data: Vec<u8> = vec![];
-    // TODO(sk): send command to mailslot & wait for result on own slot
-    Ok(data)
+/// Generates correct request for windows agent mailslot
+///
+/// Attention: must be in sync with windows agent code
+fn make_yaml_command(own_mailslot: &str, remote_ip: IpAddr) -> String {
+    format!(
+        "monitoring_request:\n  text: {} {}\n  id: {}",
+        remote_ip,
+        own_mailslot,
+        std::process::id()
+    )
 }
 
+/// Sends the command to the agent mailslot and awaits on own mailslot
+/// for answer using BIG timeout.
+///
+/// agent_mailslot - an agent's mailslot(usually services' one).
+///
+/// remote_ip - an ip from the peer(Site).
+///
+/// NOTE: uses internally BIG timeout, on the timeout returns empty string with log
+async fn async_collect_from_mailslot(agent_mailslot: &str, remote_ip: IpAddr) -> IoResult<Vec<u8>> {
+    let own_mailslot = mailslot_transport::build_own_mailslot_name();
+    let mut backend = MailSlotBackend::new(&own_mailslot)
+        .map_err(|e| Error::new(ErrorKind::Other, format!("error: {}", e)))?;
+    mailslot_transport::send_to_mailslot(
+        agent_mailslot,
+        mailslot_transport::DataType::Yaml,
+        make_yaml_command(&own_mailslot, remote_ip).as_bytes(),
+    );
+    let value = tokio::time::timeout(MAX_ANSWER_WAIT_TIME, backend.tx.recv())
+        .await
+        .unwrap_or_else(|e| {
+            warn!("Error {:?}", e);
+            Some("".to_string()) // we return empty string on timeout
+        })
+        .unwrap_or_default();
+
+    Ok(value.as_bytes().to_owned())
+}
+
+/// Sends the command to the agent channel and awaits
+///
+/// This is a simple wrapper for Ip and Mailslot channel
 pub async fn async_collect(
-    agent_channel: &types::AgentChannel,
+    agent_channel: &AgentChannel,
     remote_ip: std::net::IpAddr,
 ) -> IoResult<Vec<u8>> {
     let (ch_type, ch_addr) = agent_channel.parse()?;
@@ -94,19 +138,21 @@ pub async fn async_collect(
     }
 }
 
+// TODO(sk): replace custom sync TCP Stream with existing async implementation
 fn collect_from_ip(agent_ip: &str) -> IoResult<Vec<u8>> {
     let mut data: Vec<u8> = vec![];
     StdTcpStream::connect(agent_ip)?.read_to_end(&mut data)?;
     Ok(data)
 }
 
-fn collect_from_mailslot(_mailslot: &str) -> IoResult<Vec<u8>> {
-    let data: Vec<u8> = vec![];
-    // TODO(sk): send command to mailslot & wait for result on own slot
-    Ok(data)
+fn collect_from_mailslot(mailslot: &str) -> IoResult<Vec<u8>> {
+    async_std::task::block_on(async_collect_from_mailslot(
+        mailslot,
+        IpAddr::from([127, 0, 0, 1]),
+    ))
 }
 
-// TODO(sk) : change function signature on collect(types::AgentChannel)
+// TODO(sk) : change function signature on collect(AgentChannel)
 // do not use config/default/setup implicitly: testing difficult, code non-readable
 pub fn collect() -> IoResult<Vec<u8>> {
     let (ch_type, ch_addr) = setup::agent_channel().parse()?;
@@ -119,10 +165,13 @@ pub fn collect() -> IoResult<Vec<u8>> {
 #[cfg(test)]
 #[cfg(windows)]
 mod tests {
-    use super::{async_collect, types, ChannelType};
+    use crate::monitoring_data::windows::make_yaml_command;
+
+    use super::{async_collect, AgentChannel, ChannelType};
     use std::fmt;
     use std::io::{ErrorKind, Result as IoResult};
     use std::net::IpAddr;
+    use std::time::Duration;
 
     fn addr() -> IpAddr {
         IpAddr::from([0, 0, 0, 0])
@@ -139,7 +188,7 @@ mod tests {
     }
 
     fn parse_me(s: &str) -> IoResult<(ChannelType, String)> {
-        types::AgentChannel::from(s).parse()
+        AgentChannel::from(s).parse()
     }
 
     #[test]
@@ -170,10 +219,30 @@ mod tests {
         );
     }
 
+    #[test]
+    fn test_make_yaml_command() {
+        use std::iter::zip;
+        let actual: Vec<IpAddr> = vec![
+            IpAddr::from([127, 126, 0, 1]),
+            IpAddr::from([0, 0, 0, 0, 0, 0xffff, 0xc00a, 0x2ff]),
+        ];
+        let expected: Vec<&str> = vec!["127.126.0.1", "::ffff:192.10.2.255"];
+        zip(actual, expected).for_each(|v| {
+            assert_eq!(
+                make_yaml_command("mailslot", v.0),
+                format!(
+                    "monitoring_request:\n  text: {} mailslot\n  id: {}",
+                    v.1,
+                    std::process::id()
+                )
+            )
+        });
+    }
+
     #[tokio::test(flavor = "multi_thread")]
     async fn test_async_collect_bad_input() {
         assert_eq!(
-            async_collect(&types::AgentChannel::from(""), addr())
+            async_collect(&AgentChannel::from(""), addr())
                 .await
                 .map_err(|e| e.kind()),
             Err(ErrorKind::InvalidInput)
@@ -183,9 +252,13 @@ mod tests {
     #[tokio::test(flavor = "multi_thread")]
     async fn test_async_collect_missing_mailslot() {
         assert_eq!(
-            async_collect(&types::AgentChannel::from("ms/xxxx"), addr())
-                .await
-                .unwrap(),
+            tokio::time::timeout(
+                Duration::from_secs(1),
+                async_collect(&AgentChannel::from("ms/xxxx"), addr())
+            )
+            .await
+            .unwrap_or_else(|_| Ok(EMPTY_DATA)) // this is semi-OK: timeout
+            .unwrap(),
             EMPTY_DATA
         );
     }

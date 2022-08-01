@@ -117,6 +117,15 @@ test_run_cached_get_shell() {
         assertEquals "bash" "$(_this_shell)"
     )
 
+    (# docker on ARM
+        ps() {
+            if [ "$1" = "-o" ] && [ "$2" = "args=" ] && [ "$3" = "-p" ]; then
+                echo /usr/bin/qemu-x86_64 /bin/bash bash /usr/bin/check_mk_agent
+            fi
+        }
+        assertEquals "/bin/bash" "$(_this_shell)"
+    )
+
 }
 # shellcheck disable=SC1090
 . "$UNIT_SH_SHUNIT2"

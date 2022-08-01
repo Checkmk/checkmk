@@ -9,7 +9,6 @@
   <Include Path="cppcorecheckenumrules.ruleset" Action="Default" />
   <Include Path="cppcorecheckexperimentalrules.ruleset" Action="Default" />
   <Include Path="cppcorecheckfuncrules.ruleset" Action="Default" />
-  <Include Path="cppcorecheckgslrules.ruleset" Action="Default" />
   <Include Path="cppcorechecklifetimerules.ruleset" Action="Default" />
   <Include Path="cppcorecheckownerpointerrules.ruleset" Action="Default" />
   <Include Path="cppcorecheckrawpointerrules.ruleset" Action="Default" />

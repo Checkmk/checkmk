@@ -1,4 +1,4 @@
-Title: Limit number of checkers to number of available CPUs
+Title: Warn user when number of checkers exceeds number of available CPUs
 Level: 1
 Component: cmc
 Compatible: compat
@@ -8,8 +8,6 @@ Date: 1659087985
 Class: feature
 
 When the global setting "Maximum concurrent Checkmk checkers" (topic "Monitoring core") is set to
-a value greater than the number of available CPUs, the number of actual checkers is limited to the
-number of CPUs. This is done because the checker processes are most effective when each checker
-gets a dedicated CPU.
-When the number of checkers is limited, a warning is displayed in the UI upon an activation of
-pending changes.
+a value greater than the number of available CPUs, users are now warned on the "Activate pending
+changes" page. This is done because the checker processes are most effective when each checker
+gets a dedicated CPU. Users can, however, ignore this warning and keep their setting.

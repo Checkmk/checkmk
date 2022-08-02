@@ -667,7 +667,7 @@ sw-documentation-docker:
 # wrong up-to-date status of it later, so let's remove it here. What we really
 # want is a check if the contents of .venv match the contents of Pipfile.lock.
 # We should do this via some move-if-change Kung Fu, but for now rm suffices.
-Pipfile.lock: Pipfile defines.make
+Pipfile.lock: Pipfile
 	@( \
 	    echo "Locking Python requirements..." ; \
 	    flock $(LOCK_FD); \

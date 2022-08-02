@@ -156,7 +156,7 @@ impl<'a> AgentRecvPortDiscoverer<'a> {
         let client = self.build_client()?;
         let mut error_messages = std::collections::HashMap::new();
 
-        for protocol in ["http", "https"] {
+        for protocol in ["https", "http"] {
             match Self::discover_with_protocol(self, &client, protocol) {
                 Ok(p) => return Ok(p),
                 Err(err) => {
@@ -167,8 +167,8 @@ impl<'a> AgentRecvPortDiscoverer<'a> {
 
         return Err(anyhow!(
             "Failed to discover agent receiver port from Checkmk REST API, both with http and https.\n\nError with http:\n{}\n\nError with https:\n{}",
-            anyhow_error_to_human_redable(&error_messages["http"]),
             anyhow_error_to_human_redable(&error_messages["https"]),
+            anyhow_error_to_human_redable(&error_messages["http"]),
         ));
     }
 }

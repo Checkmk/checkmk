@@ -23,11 +23,9 @@
 
   #mk_side_search_monitoring,
   #mk_side_search_setup {
-    width: 75%;
+    width: 85%;
     max-width: 600px;
-    min-width: 350px;
     padding: 2 * $spacing;
-    box-sizing: border-box;
 
     form {
       display: flex;

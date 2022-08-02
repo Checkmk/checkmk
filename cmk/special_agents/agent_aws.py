@@ -4739,9 +4739,7 @@ class LambdaCloudwatchInsights(AWSSection):
             else None
         )
 
-    def _query_with_cloudwatch_insights(
-        self, *, log_group_name: str, query_string: str, timeout_seconds: int
-    ) -> Optional[LambdaMetricStats]:
+    def _start_logwatch_query(self, *, log_group_name: str, query_string: str) -> str:
         end_time_seconds = int(NOW.timestamp())
         start_time_seconds = int(end_time_seconds - self.period)
         response_query_id = self._client.start_query(
@@ -4750,20 +4748,17 @@ class LambdaCloudwatchInsights(AWSSection):
             endTime=end_time_seconds,
             queryString=query_string,
         )
-        return self.query_results(
-            client=self._client,
-            query_id=response_query_id["queryId"],
-            timeout_seconds=timeout_seconds,
-        )
+        return response_query_id["queryId"]
 
     def get_live_data(
         self, *args: AWSColleagueContents
     ) -> Mapping[str, Optional[LambdaMetricStats]]:
         (colleague_contents,) = args
-        cloudwatch_data = {}
-        for function_arn in colleague_contents.content.keys():
+        queries: list[tuple[str, str]] = []
+        functions_arn: list[str] = list(colleague_contents.content.keys())
+        for function_arn in functions_arn:
             try:
-                current_data = self._query_with_cloudwatch_insights(
+                query_id = self._start_logwatch_query(
                     log_group_name=f"/aws/lambda/{_function_arn_to_function_name_dim(function_arn)}",
                     query_string='filter @type = "REPORT"'
                     "| stats "
@@ -4771,13 +4766,21 @@ class LambdaCloudwatchInsights(AWSSection):
                     "max(@initDuration) as max_init_duration_ms,"
                     'sum(strcontains(@message, "Init Duration")) as count_cold_starts,'
                     "count() as count_invocations",
-                    timeout_seconds=30,
                 )
+                queries.append((function_arn, query_id))
             except self._client.exceptions.ResourceNotFoundException as e:
                 logging.debug(
                     "CloudWatch logs not found for lambda function %s: %s", function_arn, e
                 )
                 continue
+
+        cloudwatch_data = {}
+        for function_arn, query_id in queries:
+            current_data = self.query_results(
+                client=self._client,
+                query_id=query_id,
+                timeout_seconds=30,
+            )
             if not current_data:
                 continue
             cloudwatch_data[function_arn] = current_data

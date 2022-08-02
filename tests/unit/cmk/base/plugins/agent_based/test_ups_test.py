@@ -34,11 +34,11 @@ def _get_check_function(plugin):
     return lambda p, s: plugin.check_function(params=p, section=s)
 
 
-def test_discover_nothing(discover_ups_test) -> None:
+def test_discover_nothing(discover_ups_test) -> None:  # type:ignore[no-untyped-def]
     assert not list(discover_ups_test([[["3600"]], []]))
 
 
-def test_discover(discover_ups_test) -> None:
+def test_discover(discover_ups_test) -> None:  # type:ignore[no-untyped-def]
     assert list(discover_ups_test([[["3600"]], [["1", "15000000", ""]]])) == [Service()]
 
 
@@ -53,20 +53,24 @@ def test_discover(discover_ups_test) -> None:
         ("6", State.OK, "Last test: no tests initiated (details)"),
     ],
 )
-def test_check_ups_test_result_details(
+def test_check_ups_test_result_details(  # type:ignore[no-untyped-def]
     raw_state: str, state: State, summary: str, check_ups_test
 ) -> None:
     result, *_ = check_ups_test(DEFAULT_PARAMS, [[["3600"]], [[raw_state, "0", "details"]]])
     assert result == Result(state=state, summary=summary)
 
 
-def test_check_ups_test_time_check_no_start_time(check_ups_test) -> None:
+def test_check_ups_test_time_check_no_start_time(  # type:ignore[no-untyped-def]
+    check_ups_test,
+) -> None:
     _, result, *_ = check_ups_test(DEFAULT_PARAMS, [[["0"]], [["1", "10", ""]]])
     assert result.state is State.OK
     assert result.summary.startswith("No battery test since start of device")
 
 
-def test_check_ups_test_time_check_start_time_warn(check_ups_test) -> None:
+def test_check_ups_test_time_check_start_time_warn(  # type:ignore[no-untyped-def]
+    check_ups_test,
+) -> None:
     _, result, *_ = check_ups_test(PARAMS, [[[str(360000 * 52)]], [["1", "1000", ""]]])
     assert result.state is State.WARN
     assert result.summary.startswith("Time since start of last test: 2 days 3 hours")

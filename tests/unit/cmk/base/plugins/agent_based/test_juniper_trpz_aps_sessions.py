@@ -160,7 +160,7 @@ DISCOVERD_ITEMS = {
 @pytest.mark.parametrize("section,parsed_sections", [
     ([[['1', '0']]], (1, 0)),
 ])
-def test_parse_juniper_trpz_aps(section, parsed_sections) -> None: # type:ignore[no-untyped-def]
+def test_parse_juniper_trpz_aps(section, parsed_sections) -> None:  # type:ignore[no-untyped-def]
     section = parse_juniper_trpz_aps(section)
     assert section == parsed_sections
 
@@ -191,7 +191,7 @@ def test_check_juniper_trpz_aps(section, expected_results) -> None: # type:ignor
         Result(state=State.OK, summary='[node2] Online access points: 3, Sessions: 4'),
     ]),
 ])
-def test_cluster_check_juniper_trpz_aps(node_sections, expected_results) -> None: # type:ignore[no-untyped-def]
+def test_cluster_check_juniper_trpz_aps(node_sections, expected_results) -> None:   # type:ignore[no-untyped-def]
     results = list(cluster_check_juniper_trpz_aps(node_sections))
     for r in results:
         print(r)
@@ -201,7 +201,7 @@ def test_cluster_check_juniper_trpz_aps(node_sections, expected_results) -> None
 @pytest.mark.parametrize("node_sections,parsed_sections", [
     (NODE_SECTIONS, PARSED_DATA),
 ])
-def test_parse_juniper_trpz_aps_sessions(node_sections, parsed_sections) -> None: # type:ignore[no-untyped-def]
+def test_parse_juniper_trpz_aps_sessions(node_sections, parsed_sections) -> None:   # type:ignore[no-untyped-def]
     assert {
         node_name: parse_juniper_trpz_aps_sessions(string_list)
         for node_name, string_list in node_sections.items()
@@ -211,7 +211,7 @@ def test_parse_juniper_trpz_aps_sessions(node_sections, parsed_sections) -> None
 @pytest.mark.parametrize("node_sections,expected_items", [
     (PARSED_DATA, DISCOVERD_ITEMS),
 ])
-def test_discovery_juniper_trpz_aps_sessions(node_sections, expected_items) -> None: # type:ignore[no-untyped-def]
+def test_discovery_juniper_trpz_aps_sessions(node_sections, expected_items) -> None:    # type:ignore[no-untyped-def]
     services = {
         node_name:
         [service.item for service in discovery_juniper_trpz_aps_sessions(section)]
@@ -240,7 +240,7 @@ def test_discovery_juniper_trpz_aps_sessions(node_sections, expected_items) -> N
         Metric('noise_floor', 0.0),
     ]),
 ])
-def test__check_common_juniper_trpz_aps_sessions_single(node_sections, expected_results) -> None: # type:ignore[no-untyped-def]
+def test__check_common_juniper_trpz_aps_sessions_single(node_sections, expected_results) -> None:   # type:ignore[no-untyped-def]
     now = 1600000000
     vs: Dict[str, Any] = {}
     for _ in range(2):
@@ -266,7 +266,7 @@ def test__check_common_juniper_trpz_aps_sessions_single(node_sections, expected_
         Metric('noise_floor', 0.0),
     ]),
 ])
-def test__check_common_juniper_trpz_aps_sessions_cluster(node_sections, expected_results) -> None: # type:ignore[no-untyped-def]
+def test__check_common_juniper_trpz_aps_sessions_cluster(node_sections, expected_results) -> None:   # type:ignore[no-untyped-def]
     now = 1600000000
     vs: Dict[str, Any] = {}
     for _ in range(2):

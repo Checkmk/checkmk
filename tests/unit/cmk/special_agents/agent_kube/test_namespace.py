@@ -249,7 +249,7 @@ def test_filter_pods_with_priority_class_from_scope_selector_match_expression() 
     assert [p.metadata.name for p in high_medium_pods_from_not_in_operator] == ["pod-1", "pod-2"]
 
 
-def _pod_with_scopes_factory(
+def _pod_with_scopes_factory(  # type:ignore[no-untyped-def]
     name: Optional[str] = None,
     priority_class: Optional[str] = None,
     best_effort: bool = False,

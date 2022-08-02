@@ -16,7 +16,7 @@ from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.utils import multisite_dir
 
 
-def update_user_custom_attrs(now: datetime):
+def update_user_custom_attrs(now: datetime):  # type:ignore[no-untyped-def]
     userdb.update_config_based_user_attributes()
     userdb.rewrite_users(now)
 

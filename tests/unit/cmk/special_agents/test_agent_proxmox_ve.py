@@ -434,7 +434,9 @@ from cmk.special_agents.agent_proxmox_ve import BackupTask, collect_vm_backup_in
         ),
     ),
 )
-def test_parse_backup_logs(logfile, expected_results, expected_exception) -> None:
+def test_parse_backup_logs(  # type:ignore[no-untyped-def]
+    logfile, expected_results, expected_exception
+) -> None:
     file_path = Path(os.path.dirname(__file__)) / "proxmox_ve-files" / logfile
     log = ({"n": i, "t": line} for i, line in enumerate(file_path.open().readlines()))
     with ExitStack() as exit_stack:

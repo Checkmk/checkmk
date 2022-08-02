@@ -72,7 +72,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, Sta
         ),
     ],
 )
-def test_parse_sap_hana_proc(fix_register, info, expected_result) -> None:
+def test_parse_sap_hana_proc(  # type:ignore[no-untyped-def]
+    fix_register, info, expected_result
+) -> None:
     section_plugin = fix_register.agent_sections[SectionName("sap_hana_proc")]
     assert section_plugin.parse_function(info) == expected_result
 
@@ -95,7 +97,9 @@ def test_parse_sap_hana_proc(fix_register, info, expected_result) -> None:
         ),
     ],
 )
-def test_inventory_sap_hana_proc(fix_register, info, expected_result) -> None:
+def test_inventory_sap_hana_proc(  # type:ignore[no-untyped-def]
+    fix_register, info, expected_result
+) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_proc")].parse_function(info)
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_proc")]
     assert list(plugin.discovery_function(section)) == expected_result
@@ -154,7 +158,9 @@ def test_inventory_sap_hana_proc(fix_register, info, expected_result) -> None:
         ),
     ],
 )
-def test_check_sap_hana_proc(fix_register, item, params, info, expected_result) -> None:
+def test_check_sap_hana_proc(  # type:ignore[no-untyped-def]
+    fix_register, item, params, info, expected_result
+) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_proc")].parse_function(info)
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_proc")]
     assert list(plugin.check_function(item, params, section)) == expected_result

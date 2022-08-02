@@ -76,7 +76,7 @@ def test_determine_rate_metrics_for_containers_with_same_timestamp() -> None:
     assert len(containers_rate_metrics) == 0
 
 
-def test_map_lookup_name_to_piggyback_host_name(new_pod) -> None:
+def test_map_lookup_name_to_piggyback_host_name(new_pod) -> None:  # type:ignore[no-untyped-def]
     """Test that the namespace_name lookup name is used to find the piggyback host name"""
     pod = new_pod()
     pod_namespaced_name = PodLookupName(f"{pod.metadata.namespace}_{pod.metadata.name}")

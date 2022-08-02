@@ -45,7 +45,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
         ),
     ],
 )
-def test_parse_sap_hana_events(fix_register, info, expected_result) -> None:
+def test_parse_sap_hana_events(  # type:ignore[no-untyped-def]
+    fix_register, info, expected_result
+) -> None:
     section_plugin = fix_register.agent_sections[SectionName("sap_hana_events")]
     assert section_plugin.parse_function(info) == expected_result
 
@@ -64,7 +66,9 @@ def test_parse_sap_hana_events(fix_register, info, expected_result) -> None:
         ),
     ],
 )
-def test_inventory_sap_hana_events(fix_register, info, expected_result) -> None:
+def test_inventory_sap_hana_events(  # type:ignore[no-untyped-def]
+    fix_register, info, expected_result
+) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_events")].parse_function(info)
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_events")]
     assert list(plugin.discovery_function(section)) == expected_result
@@ -103,7 +107,9 @@ def test_inventory_sap_hana_events(fix_register, info, expected_result) -> None:
         ),
     ],
 )
-def test_check_sap_hana_events(fix_register, item, info, expected_result) -> None:
+def test_check_sap_hana_events(  # type:ignore[no-untyped-def]
+    fix_register, item, info, expected_result
+) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_events")].parse_function(info)
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_events")]
     assert list(plugin.check_function(item, section)) == expected_result
@@ -120,7 +126,9 @@ def test_check_sap_hana_events(fix_register, item, info, expected_result) -> Non
         ),
     ],
 )
-def test_check_sap_hana_events_stale(fix_register, item, info) -> None:
+def test_check_sap_hana_events_stale(  # type:ignore[no-untyped-def]
+    fix_register, item, info
+) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_events")].parse_function(info)
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_events")]
     with pytest.raises(IgnoreResultsError):

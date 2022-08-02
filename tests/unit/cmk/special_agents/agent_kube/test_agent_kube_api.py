@@ -72,7 +72,7 @@ def api_pod(node_name):
     return pod
 
 
-def test_pod_node_allocation_within_cluster(
+def test_pod_node_allocation_within_cluster(  # type:ignore[no-untyped-def]
     api_node: api.Node, api_pod: api.Pod, cluster_details: api.ClusterDetails
 ):
     """Test pod is correctly allocated to node within cluster"""
@@ -90,7 +90,9 @@ def test_pod_node_allocation_within_cluster(
     assert len(cluster.nodes()[0].pods()) == 1
 
 
-def test_pod_deployment_allocation_within_cluster(api_node, api_pod) -> None:
+def test_pod_deployment_allocation_within_cluster(  # type:ignore[no-untyped-def]
+    api_node, api_pod
+) -> None:
     """Test pod is correctly allocated to deployment within cluster"""
 
     class APIDeployment(ModelFactory):

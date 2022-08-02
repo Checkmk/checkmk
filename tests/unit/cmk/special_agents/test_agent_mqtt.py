@@ -48,7 +48,7 @@ def test_parse_all_arguments() -> None:
     assert args.client_id == "ding"
 
 
-def test_parse_password_store(monkeypatch) -> None:
+def test_parse_password_store(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     password_store.save({"mqtt_password": "blablu"})
     password_store.save_for_helpers(LATEST_CONFIG)
     monkeypatch.setattr(

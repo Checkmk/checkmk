@@ -24,7 +24,7 @@ from cmk.special_agents.agent_smb_share import (
 
 
 class MockShare:
-    def __init__(self, name) -> None:
+    def __init__(self, name) -> None:  # type:ignore[no-untyped-def]
         self._name = name
 
     @property
@@ -33,7 +33,9 @@ class MockShare:
 
 
 class MockSMBConnection:
-    def __init__(self, *args, filesystem=None, shares=None, is_direct_tcp=False) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, *args, filesystem=None, shares=None, is_direct_tcp=False
+    ) -> None:
         self.filesystem = filesystem
         self.shares = shares
         self.is_direct_tcp = is_direct_tcp
@@ -59,7 +61,7 @@ class MockSMBConnection:
 class MockSectionWriter:
     writer: List[str] = []
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args, **kwargs) -> None:  # type:ignore[no-untyped-def]
         self.writer.clear()
 
     def __enter__(self):
@@ -288,7 +290,7 @@ def test_iter_shared_files(
         ),
     ],
 )
-def test_get_all_shared_files(
+def test_get_all_shared_files(  # type:ignore[no-untyped-def]
     patterns: List[str],
     file_data: List[Tuple[str, str]],
     expected_file_data: List[Tuple[str, List[Tuple[str, str]]]],
@@ -314,7 +316,7 @@ def test_get_all_shared_files(
         ),
     ],
 )
-def test_get_all_shared_files_errors(
+def test_get_all_shared_files_errors(  # type:ignore[no-untyped-def]
     patterns: List[str],
     expected_error_message: str,
 ):
@@ -371,7 +373,7 @@ def test_get_all_shared_files_errors(
 )
 @mock.patch("cmk.special_agents.agent_smb_share.SMBConnection", MockSMBConnection)
 @freezegun.freeze_time(datetime(2022, 1, 1, 7, 0, 0, 0))
-def test_smb_share_agent(arg_list, files, expected_result) -> None:
+def test_smb_share_agent(arg_list, files, expected_result) -> None:  # type:ignore[no-untyped-def]
     args = parse_arguments(arg_list)
 
     with mock.patch("cmk.special_agents.agent_smb_share.get_all_shared_files", return_value=files):
@@ -396,7 +398,7 @@ def test_smb_share_agent_error() -> None:
 
 
 @mock.patch("cmk.special_agents.agent_smb_share.SMBConnection.connect", return_value=False)
-def test_smb_share_agent_unsuccessful_connect(mock_connect) -> None:
+def test_smb_share_agent_unsuccessful_connect(mock_connect) -> None:  # type:ignore[no-untyped-def]
     args = parse_arguments(
         ["hostname", "127.0.0.1", "--username", "username", "--password", "password"],
     )
@@ -410,7 +412,7 @@ def test_smb_share_agent_unsuccessful_connect(mock_connect) -> None:
 @mock.patch("cmk.special_agents.agent_smb_share.connect")
 @mock.patch("cmk.special_agents.agent_smb_share.get_all_shared_files")
 @mock.patch("cmk.special_agents.agent_smb_share.write_section")
-def test_smb_share_agent_operation_failure(
+def test_smb_share_agent_operation_failure(  # type:ignore[no-untyped-def]
     mock_connect, mock_get_files, mock_write_section
 ) -> None:
     mock_write_section.side_effect = OperationFailure("Operation failure happened", [])
@@ -423,7 +425,7 @@ def test_smb_share_agent_operation_failure(
 
 @mock.patch("cmk.special_agents.agent_smb_share.SMBConnection.connect", return_value=True)
 @mock.patch("cmk.special_agents.agent_smb_share.SMBConnection.close")
-def test_connect_error(mock_close, mock_connect) -> None:
+def test_connect_error(mock_close, mock_connect) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises(Exception, match="Exception during usage of smb connection"):
         with connect("username", "password", "hostname", "127.0.0.1"):
             raise Exception("Exception during usage of smb connection")
@@ -432,5 +434,5 @@ def test_connect_error(mock_close, mock_connect) -> None:
 
 
 @mock.patch("cmk.special_agents.agent_smb_share.special_agent_main")
-def test_main(mock_agent) -> None:
+def test_main(mock_agent) -> None:  # type:ignore[no-untyped-def]
     assert main() == 0

@@ -36,7 +36,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
         ),
     ],
 )
-def test_parse_sap_hana_memrate(fix_register, info, expected_result) -> None:
+def test_parse_sap_hana_memrate(  # type:ignore[no-untyped-def]
+    fix_register, info, expected_result
+) -> None:
     section_plugin = fix_register.agent_sections[SectionName("sap_hana_memrate")]
     assert section_plugin.parse_function(info) == expected_result
 
@@ -53,7 +55,9 @@ def test_parse_sap_hana_memrate(fix_register, info, expected_result) -> None:
         ),
     ],
 )
-def test_inventory_sap_hana_memrate(fix_register, info, expected_result) -> None:
+def test_inventory_sap_hana_memrate(  # type:ignore[no-untyped-def]
+    fix_register, info, expected_result
+) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_memrate")].parse_function(info)
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_memrate")]
     assert list(plugin.discovery_function(section)) == expected_result
@@ -75,7 +79,9 @@ def test_inventory_sap_hana_memrate(fix_register, info, expected_result) -> None
         ),
     ],
 )
-def test_check_sap_hana_memrate(fix_register, item, info, expected_result) -> None:
+def test_check_sap_hana_memrate(  # type:ignore[no-untyped-def]
+    fix_register, item, info, expected_result
+) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_memrate")].parse_function(info)
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_memrate")]
     assert list(plugin.check_function(item, {}, section)) == expected_result

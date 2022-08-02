@@ -21,7 +21,7 @@ class TestGlobalConfig:
             snmp_plugin_store=SNMPPluginStore(),
         )
 
-    def test_deserialization(self, global_config) -> None:
+    def test_deserialization(self, global_config) -> None:  # type:ignore[no-untyped-def]
         assert GlobalConfig.deserialize(global_config.serialize()) == global_config
 
 

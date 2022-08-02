@@ -34,7 +34,9 @@ def test_node_pod_resources_one_pod_per_phase(node: agent.Node) -> None:
 @pytest.mark.parametrize(
     "phases", [["running"], ["pending"], ["succeeded"], ["failed"], ["unknown"]]
 )
-def test_node_pod_resources_pods_in_phase(node: agent.Node, phases, node_pods: int) -> None:
+def test_node_pod_resources_pods_in_phase(  # type:ignore[no-untyped-def]
+    node: agent.Node, phases, node_pods: int
+) -> None:
     pods = node.pods(phases[0])
     assert len(pods) == node_pods
 
@@ -59,7 +61,7 @@ def test_node_allocatable_cpu_resource(node_allocatable_cpu: float, node: agent.
     assert actual == expected
 
 
-def test_node_alloctable_pods(
+def test_node_alloctable_pods(  # type:ignore[no-untyped-def]
     node_allocatable_pods: int, node_capacity_pods: int, node: agent.Node
 ):
     expected = section.AllocatablePods(
@@ -69,7 +71,7 @@ def test_node_alloctable_pods(
     assert actual == expected
 
 
-def test_write_nodes_api_sections_registers_sections_to_be_written(
+def test_write_nodes_api_sections_registers_sections_to_be_written(  # type:ignore[no-untyped-def]
     node: agent.Node, nodes_api_sections: Sequence[str], write_sections_mock
 ):
     agent.write_nodes_api_sections(
@@ -78,7 +80,7 @@ def test_write_nodes_api_sections_registers_sections_to_be_written(
     assert list(write_sections_mock.call_args[0][0]) == nodes_api_sections
 
 
-def test_write_nodes_api_sections_maps_section_names_to_callables(
+def test_write_nodes_api_sections_maps_section_names_to_callables(  # type:ignore[no-untyped-def]
     node: agent.Node, nodes_api_sections: Sequence[str], write_sections_mock
 ):
     agent.write_nodes_api_sections(
@@ -90,7 +92,7 @@ def test_write_nodes_api_sections_maps_section_names_to_callables(
     )
 
 
-def test_write_nodes_api_sections_calls_write_sections_for_each_node(
+def test_write_nodes_api_sections_calls_write_sections_for_each_node(  # type:ignore[no-untyped-def]
     new_node: Callable[[], agent.Node], cluster_nodes: int, write_sections_mock
 ):
     agent.write_nodes_api_sections(
@@ -181,7 +183,7 @@ def test_node_info_section(node: agent.Node) -> None:
     assert isinstance(info.creation_timestamp, float)
 
 
-def test_node_memory_resources(
+def test_node_memory_resources(  # type:ignore[no-untyped-def]
     new_node: Callable[[], agent.Node],
     new_pod: Callable[[], agent.Pod],
     pod_containers_count: int,
@@ -196,7 +198,7 @@ def test_node_memory_resources(
     assert memory_resources.request == pod_containers_count * container_request_memory
 
 
-def test_node_cpu_resources(
+def test_node_cpu_resources(  # type:ignore[no-untyped-def]
     new_node: Callable[[], agent.Node],
     new_pod: Callable[[], agent.Pod],
     pod_containers_count: int,
@@ -213,7 +215,7 @@ def test_node_cpu_resources(
 
 @pytest.mark.parametrize("pod_containers_count", [0, 5, 10])
 @pytest.mark.parametrize("container_status_state", list(api.ContainerStateType))
-def test_node_container_count(
+def test_node_container_count(  # type:ignore[no-untyped-def]
     container_status_state: api.ContainerStateType,
     new_node: Callable[[], agent.Node],
     new_pod: Callable[[], agent.Pod],

@@ -212,7 +212,7 @@ def container_status_state() -> api.ContainerStateType:
 
 
 @pytest.fixture
-def container_state(container_status_state) -> api.ContainerState:
+def container_state(container_status_state) -> api.ContainerState:  # type:ignore[no-untyped-def]
     if container_status_state == api.ContainerStateType.running:
         return ContainerRunningStateFactory.build()
     if container_status_state == api.ContainerStateType.waiting:
@@ -223,7 +223,9 @@ def container_state(container_status_state) -> api.ContainerState:
 
 
 @pytest.fixture
-def container_status(container_state) -> Callable[[], api.ContainerStatus]:
+def container_status(  # type:ignore[no-untyped-def]
+    container_state,
+) -> Callable[[], api.ContainerStatus]:
     def _container_status() -> api.ContainerStatus:
         return ContainerStatusFactory.build(state=container_state)
 
@@ -462,7 +464,9 @@ def statefulset_spec() -> api.StatefulSetSpec:
 
 
 @pytest.fixture
-def new_statefulset(statefulset_spec) -> Callable[[], agent_kube.StatefulSet]:
+def new_statefulset(  # type:ignore[no-untyped-def]
+    statefulset_spec,
+) -> Callable[[], agent_kube.StatefulSet]:
     def _new_statefulset() -> agent_kube.StatefulSet:
         return agent_kube.StatefulSet(
             metadata=MetaDataFactory.build(),

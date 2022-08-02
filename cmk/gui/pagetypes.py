@@ -281,12 +281,6 @@ class Base(abc.ABC, Generic[_T_BaseSpec]):
     def is_hidden(self) -> bool:
         return False
 
-    def _can_be_linked(self) -> bool:
-        return True
-
-    def render_title(self) -> str | HTML:
-        return _u(self.title())
-
     def is_empty(self) -> bool:
         return False
 
@@ -312,17 +306,6 @@ class Base(abc.ABC, Generic[_T_BaseSpec]):
     @abc.abstractmethod
     def type_icon(cls) -> Icon:
         ...
-
-    @classmethod
-    @abc.abstractmethod
-    def load(cls) -> None:
-        """Loads the builtin and site custom pagetypes"""
-
-    # TODO: Clean this up
-    @classmethod
-    def _load(cls) -> None:
-        """Custom method to load e.g. old configs
-        after performing the loading of the regular files."""
 
 
 # .
@@ -489,6 +472,9 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
 
     def is_mine_and_may_have_own(self) -> bool:
         return self.is_mine() and user.may("general.edit_" + self.type_name())
+
+    def render_title(self) -> str | HTML:
+        return _u(self.title())
 
     def _can_be_linked(self) -> bool:
         """Whether or not the thing can be linked to"""
@@ -811,10 +797,9 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
     def builtin_pages(cls) -> Mapping[str, _T_OverridableSpec]:
         return {}
 
-    # Lädt alle Dinge vom aktuellen User-Homeverzeichnis und
-    # mergt diese mit den übergebenen eingebauten
     @classmethod
     def load(cls: Type[_Self]) -> None:
+        """Loads the builtin and site custom pagetypes"""
         cls.clear_instances()
 
         # First load builtin pages. Set username to ''
@@ -850,6 +835,12 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
 
         cls._load()
         cls._declare_instance_permissions()
+
+    # TODO: Clean this up
+    @classmethod
+    def _load(cls) -> None:
+        """Custom method to load e.g. old configs
+        after performing the loading of the regular files."""
 
     @classmethod
     def _transform_old_spec(cls, spec: Dict) -> Dict:

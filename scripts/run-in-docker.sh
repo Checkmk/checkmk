@@ -49,6 +49,11 @@ else
     SHARED_CARGO_FOLDER="/home/jenkins/shared_cargo_folder/"
     mkdir -p "${SHARED_CARGO_FOLDER}"
     CARGO_JENKINS_MOUNT="-v ${SHARED_CARGO_FOLDER}:${REPO_DIR}/shared_cargo_folder"
+
+    # We're using git reference clones, see also jenkins/global-defaults.yml in tribe29_ci.
+    # That's why we need to mount the reference repos.
+    GIT_REFERENCE_CLONE_PATH="/home/jenkins/git_references/check_mk"
+    REFERENCE_CLONE_MOUNT="-v ${GIT_REFERENCE_CLONE_PATH}:${GIT_REFERENCE_CLONE_PATH}"
 fi
 
 : "${IMAGE_ALIAS:=IMAGE_TESTING}"
@@ -65,6 +70,7 @@ docker run -t -a stdout -a stderr \
     -v "${GIT_COMMON_DIR}:${GIT_COMMON_DIR}" \
     ${CARGO_JENKINS_MOUNT} \
     ${DOCKER_LOCAL_ARGS} \
+    ${REFERENCE_CLONE_MOUNT} \
     -v "/var/run/docker.sock:/var/run/docker.sock" \
     --group-add="$(getent group docker | cut -d: -f3)" \
     -w "${PWD}" \

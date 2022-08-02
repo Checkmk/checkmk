@@ -7,6 +7,7 @@ import re
 from typing import Optional
 
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.exceptions import MKInternalError
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 
@@ -63,10 +64,19 @@ def _make_wato_page_state() -> PageState:
     changelog_url = "wato.py?mode=changelog"
     span_id = "changes_info"
     if changes_info:
-        match = re.match(r"(\d+\+?)(.*)", changes_info)
-        assert match is not None  # only for mypy, semantically useless
+        match = re.match(r"(\d+\+?)([^\d\+].*)", changes_info)
+        if match is None:
+            raise MKInternalError(
+                "pending_changes_str",
+                _(
+                    'The given str "%s" for the pending changes info does not match the required '
+                    'pattern: "[number] change(s)"'
+                )
+                % changes_info,
+            )
         changes_number = match[1]
-        changes_str = match[2]
+        changes_str = match[2].strip()
+
         return PageState(
             text=html.render_span(
                 html.render_span(changes_number, class_="changes_number")

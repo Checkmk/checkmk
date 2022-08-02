@@ -36,6 +36,9 @@ ScanFunction = Union[ast.FunctionDef, ast.Lambda]
 DetectSpecKey = Tuple[bytes, Tuple, Tuple]
 
 MIGRATED_SCAN_FUNCTIONS: Dict[str, SNMPDetectSpecification] = {
+    # Some of these don't exist in the checks anymore. Leave them here in case some users' MKPs
+    # need them.
+    # As long as we have this mechanism in place, they do no harm.
     "scan_checkpoint": checkpoint.DETECT,
     "scan_ricoh_printer": printer.DETECT_RICOH,
     "scan_pulse_secure": pulse_secure.DETECT_PULSE_SECURE,

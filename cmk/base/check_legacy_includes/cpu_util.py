@@ -13,7 +13,6 @@ from cmk.base.check_api import (
     get_average,
     get_item_state,
     get_percent_human_readable,
-    get_rate,
     MKCounterWrapped,
     set_item_state,
 )
@@ -268,21 +267,6 @@ def _util_perfdata(core, total_perc, core_index, this_time, params):
             levels_avg,
             "Core %s (%d-min average)" % (core, time_avg),
         )
-
-
-# not yet migrated!
-def check_cpu_util_linux_container(_no_item, params, parsed):
-    con_ticks = parsed.get("container_ticks")
-    sys_ticks = parsed.get("system_ticks")
-    num_cpus = parsed.get("num_cpus")
-    if None in (con_ticks, sys_ticks, num_cpus):
-        return None
-
-    cpu_tick_rate = get_rate("container_ticks", sys_ticks, con_ticks)
-
-    cpu_usage = cpu_tick_rate * num_cpus * 100.0
-
-    return check_cpu_util(cpu_usage, params, perf_max=num_cpus * 100)
 
 
 #   .--helper--------------------------------------------------------------.

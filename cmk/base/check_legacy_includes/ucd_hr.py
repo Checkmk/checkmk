@@ -27,25 +27,3 @@ def prefer_hr_else_ucd(oid):
 
 def is_ucd_mem(oid) -> bool:  # type:ignore[no-untyped-def]
     raise NotImplementedError("already migrated")
-
-
-def is_hr_mem(oid) -> bool:  # type:ignore[no-untyped-def]
-    raise NotImplementedError("already migrated")
-
-
-#   ---helper---------------------------------------------------------------
-
-# Within _is_ucd or _is_ucd_mem we make use of a whitelist
-# in order to expand this list of devices easily.
-
-
-def _is_ucd(oid) -> bool:  # type:ignore[no-untyped-def]
-    raise NotImplementedError("already migrated")
-
-
-def _is_ucd_mem(oid) -> bool:  # type:ignore[no-untyped-def]
-    raise NotImplementedError("already migrated")
-
-
-def _ignore_both(oid):
-    raise NotImplementedError("already migrated")

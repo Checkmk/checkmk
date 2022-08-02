@@ -37,44 +37,6 @@ filesystem_default_levels: Dict[str, Any] = {}  # can also be dropped some day i
 # ]
 filesystem_groups: Ruleset = []
 
-# Users might have set filesystem_default_levels to old format like (80, 90)
-
-# needed by df, df_netapp and vms_df and maybe others in future:
-# compute warning and critical levels. Takes into account the size of
-# the filesystem and the magic number. Since the size is only known at
-# check time this function's result cannot be precompiled.
-
-
-def _get_update_from_user_config_default_levels(
-    user_default_levels,
-    convert_legacy_levels,
-):
-    # convert default levels to dictionary. This is in order support
-    # old style levels like (80, 90)
-    if isinstance(user_default_levels, dict):
-        fs_default_levels = user_default_levels.copy()
-        fs_levels = fs_default_levels.get("levels")
-        if fs_levels:
-            fs_default_levels["levels"] = convert_legacy_levels(fs_levels)
-        return fs_default_levels
-
-    return {
-        "levels": convert_legacy_levels(user_default_levels[:2]),
-        "magic": user_default_levels[2] if len(user_default_levels) >= 3 else None,
-    }
-
-
-def _get_update_from_params(params):
-    if isinstance(params, dict):
-        # If params is a dictionary, make that override the default values
-        return params
-
-    # simple format - explicitely override levels and magic
-    update_params = {"levels": (float(params[0]), float(params[1]))}
-    if len(params) >= 3:
-        update_params["magic"] = params[2]
-    return update_params
-
 
 # ==================================================================================================
 # THIS FUNCTION DEFINED HERE IS IN THE PROCESS OF OR HAS ALREADY BEEN MIGRATED TO

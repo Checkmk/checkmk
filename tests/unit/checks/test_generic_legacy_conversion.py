@@ -22,7 +22,6 @@ from cmk.base.check_legacy_includes.cisco_cpu_scan_functions import (
     _is_cisco_nexus,
 )
 from cmk.base.check_legacy_includes.fsc import _is_fsc_or_windows, is_fsc
-from cmk.base.check_legacy_includes.ucd_hr import _is_ucd
 
 pytestmark = pytest.mark.checks
 
@@ -85,7 +84,6 @@ def test_scan_function_translation(fix_plugin_legacy) -> None:
     "func",
     [
         _is_fsc_or_windows,
-        _is_ucd,
         is_fsc,
         _has_table_2,
         _is_cisco,

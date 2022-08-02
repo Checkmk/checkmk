@@ -23,26 +23,6 @@ def scan_liebert(oid):
     return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.476.1.42")
 
 
-def levels_liebert(value, warn, crit, sorting="upper"):
-    state = 0
-    if sorting == "upper":
-        if value >= crit:
-            state = 2
-        elif value >= warn:
-            state = 1
-        else:
-            state = 0
-    elif sorting == "lower":
-        if value <= crit:
-            state = 2
-        elif value <= warn:
-            state = 1
-        else:
-            state = 0
-
-    return state
-
-
 def check_temp_unit(output):
     value = float(output[0])
     unit = output[1]

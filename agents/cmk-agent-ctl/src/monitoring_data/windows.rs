@@ -12,9 +12,8 @@ use log::{debug, warn};
 use async_std::net::TcpStream as AsyncTcpStream;
 use async_std::prelude::*;
 use std::net::IpAddr;
-use std::net::TcpStream as StdTcpStream;
 
-use std::io::{Error, ErrorKind, Read, Result as IoResult};
+use std::io::{Error, ErrorKind, Result as IoResult};
 use std::time::Duration;
 
 /// Absolute max time to wait the agent
@@ -138,11 +137,11 @@ pub async fn async_collect(
     }
 }
 
-// TODO(sk): replace custom sync TCP Stream with existing async implementation
 fn collect_from_ip(agent_ip: &str) -> IoResult<Vec<u8>> {
-    let mut data: Vec<u8> = vec![];
-    StdTcpStream::connect(agent_ip)?.read_to_end(&mut data)?;
-    Ok(data)
+    async_std::task::block_on(async_collect_from_ip(
+        agent_ip,
+        IpAddr::from([127, 0, 0, 1]),
+    ))
 }
 
 fn collect_from_mailslot(mailslot: &str) -> IoResult<Vec<u8>> {

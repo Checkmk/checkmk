@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import urllib.parse
 from typing import Any, Callable, TypedDict
 
@@ -176,7 +178,8 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec, "BookmarkList"]):
     @classmethod
     def _topic_choices(cls) -> list[tuple[str, str]]:
         topics = set()
-        for instance in cls.instances_sorted():
+        instances = BookmarkList.load()
+        for instance in instances.instances_sorted():
             if instance.is_permitted():
                 for topic, _bookmarks in instance.bookmarks_by_topic():
                     if topic is None:
@@ -191,11 +194,13 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec, "BookmarkList"]):
         raise MKUserError(varprefix, _("This URL ist not allowed to be used as bookmark"))
 
     @classmethod
-    def _load(cls) -> None:
-        cls.load_legacy_bookmarks()
+    def _load(cls, instances: pagetypes.OverridableInstances[BookmarkList]) -> None:
+        cls.load_legacy_bookmarks(instances)
 
     @classmethod
-    def add_default_bookmark_list(cls) -> None:
+    def add_default_bookmark_list(
+        cls, instances: pagetypes.OverridableInstances[BookmarkList]
+    ) -> None:
         assert user.id is not None
         attrs = BookmarkListSpec(
             {
@@ -209,25 +214,25 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec, "BookmarkList"]):
             }
         )
 
-        cls.add_instance((user.id, "my_bookmarks"), cls(attrs))
+        instances.add_instance((user.id, "my_bookmarks"), cls(attrs))
 
     @classmethod
-    def load_legacy_bookmarks(cls) -> None:
+    def load_legacy_bookmarks(cls, instances: pagetypes.OverridableInstances[BookmarkList]) -> None:
         # Don't load the bookmarks when there is no user logged in
         if user.id is None:
             return
 
         # Don't load the legacy bookmarks when there is already a my_bookmarks list
-        if cls.has_instance((user.id, "my_bookmarks")):
+        if instances.has_instance((user.id, "my_bookmarks")):
             return
 
         # Also don't load them when the user has at least one bookmark list
-        for user_id, _name in cls.instances_dict():
+        for user_id, _name in instances.instances_dict():
             if user_id == user.id:
                 return
 
-        cls.add_default_bookmark_list()
-        bookmark_list = cls.instance((user.id, "my_bookmarks"))
+        cls.add_default_bookmark_list(instances)
+        bookmark_list = instances.instance((user.id, "my_bookmarks"))
 
         for title, url in cls._do_load_legacy_bookmarks():
             bookmark_list.add_bookmark(title, url)
@@ -312,8 +317,8 @@ class Bookmarks(SidebarSnapin):
 
     def _get_bookmarks_by_topic(self):
         topics: dict[Any, list[Any]] = {}
-        BookmarkList.load()
-        for instance in BookmarkList.instances_sorted():
+        instances = BookmarkList.load()
+        for instance in instances.instances_sorted():
             if instance.is_permitted():
                 for topic, bookmarks in instance.bookmarks_by_topic():
                     if topic is None:
@@ -336,14 +341,14 @@ class Bookmarks(SidebarSnapin):
 
     def _add_bookmark(self, title: str, url: str) -> None:
         assert user.id is not None
-        BookmarkList.load()
+        instances = BookmarkList.load()
 
-        if not BookmarkList.has_instance((user.id, "my_bookmarks")):
-            BookmarkList.add_default_bookmark_list()
+        if not instances.has_instance((user.id, "my_bookmarks")):
+            BookmarkList.add_default_bookmark_list(instances)
 
-        bookmarks = BookmarkList.instance((user.id, "my_bookmarks"))
+        bookmarks = instances.instance((user.id, "my_bookmarks"))
         bookmarks.add_bookmark(title, self._try_shorten_url(url))
-        bookmarks.save_user_instances()
+        BookmarkList.save_user_instances(instances)
 
     def _try_shorten_url(self, url: str) -> str:
         referer = request.referer

@@ -827,8 +827,8 @@ pagetypes.declare(CustomSnapins)
 def _register_custom_snapins():
     """First remove all previously registered custom snapins, then register
     the currently configured ones"""
-    CustomSnapins.load()
-    snapin_registry.register_custom_snapins(CustomSnapins.instances_sorted())
+    instances = CustomSnapins.load()
+    snapin_registry.register_custom_snapins(instances.instances_sorted())
 
 
 register_post_config_load_hook(_register_custom_snapins)

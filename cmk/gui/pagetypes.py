@@ -325,53 +325,84 @@ class Base(abc.ABC, Generic[_T_BaseSpec]):
 _T_OverridableSpec = TypeVar("_T_OverridableSpec", bound=OverridableSpec)
 # TODO: May be replaced with Self once we are with Python 3.11
 _Self = TypeVar("_Self", bound="Overridable")
+_T = TypeVar("_T", bound="Overridable")
 
 InstanceId = tuple[UserId, str]
 
 
-class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
-    __instances: dict[InstanceId, _Self] = {}
+class OverridableInstances(Generic[_T]):
+    def __init__(self) -> None:
+        self.__instances: dict[InstanceId, _T] = {}
 
-    @classmethod
-    def clear_instances(cls: Type[_Self]) -> None:
-        cls.__instances = {}
+    def clear_instances(self) -> None:
+        self.__instances = {}
 
-    @classmethod
-    def add_instance(cls: Type[_Self], key: InstanceId, instance: _Self) -> None:
-        cls.__instances[key] = instance
+    def add_instance(self, key: InstanceId, instance: _T) -> None:
+        self.__instances[key] = instance
 
-    @classmethod
-    def remove_instance(cls: Type[_Self], key: InstanceId) -> None:
-        del cls.__instances[key]
+    def remove_instance(self, key: InstanceId) -> None:
+        del self.__instances[key]
 
-    @classmethod
-    def instances(cls: Type[_Self]) -> list[_Self]:
+    def instances(self) -> list[_T]:
         """Return a list of all instances of this type"""
-        return list(cls.__instances.values())
+        return list(self.__instances.values())
 
-    @classmethod
-    def instance(cls: Type[_Self], key: InstanceId) -> _Self:
-        return cls.__instances[key]
+    def instance(self, key: InstanceId) -> _T:
+        return self.__instances[key]
 
-    @classmethod
-    def has_instance(cls: Type[_Self], key: InstanceId) -> bool:
-        return key in cls.__instances
+    def has_instance(self, key: InstanceId) -> bool:
+        return key in self.__instances
 
-    @classmethod
-    def instances_dict(cls: Type[_Self]) -> dict[InstanceId, _Self]:
-        return cls.__instances
+    def instances_dict(self) -> dict[InstanceId, _T]:
+        return self.__instances
 
-    @classmethod
-    def instances_sorted(cls: Type[_Self]) -> list[_Self]:
-        return sorted(cls.__instances.values(), key=lambda x: x.title())
+    def instances_sorted(self) -> list[_T]:
+        return sorted(self.__instances.values(), key=lambda x: x.title())
 
+    def add_page(self, new_page: _T) -> None:
+        self.add_instance((new_page.owner(), new_page.name()), new_page)
+
+    def find_page(self, name: str) -> _T | None:
+        """Find a page by name, implements shadowing and publishing und overriding by admins"""
+        mine = None
+        forced = None
+        builtin = None
+        foreign = None
+
+        for page in self.instances():
+            if page.name() != name:
+                continue
+
+            if page.is_mine_and_may_have_own():
+                mine = page
+
+            elif page.is_published_to_me() and page.may_see():
+                if page.is_public_forced():
+                    forced = page
+                elif page.is_builtin():
+                    builtin = page
+                else:
+                    foreign = page
+
+        if mine:
+            return mine
+        if forced:
+            return forced
+        if builtin:
+            return builtin
+        if foreign:
+            return foreign
+        return None
+
+
+class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
     # Default values for the creation dialog can be overridden by the
     # sub class.
     @classmethod
-    def default_name(cls: Type[_Self]) -> str:
+    def default_name(cls: Type[_Self], instances: OverridableInstances[_Self]) -> str:
         return unique_default_name_suggestion(
             cls.type_name(),
-            (instance.name() for instance in cls.__instances.values()),
+            (instance.name() for instance in instances.instances()),
         )
 
     def __init__(self, d: _T_OverridableSpec) -> None:
@@ -473,10 +504,10 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
     def is_mine_and_may_have_own(self) -> bool:
         return self.is_mine() and user.may("general.edit_" + self.type_name())
 
-    def render_title(self) -> str | HTML:
+    def render_title(self, instances: OverridableInstances[_Self]) -> str | HTML:
         return _u(self.title())
 
-    def _can_be_linked(self) -> bool:
+    def _can_be_linked(self, instances: OverridableInstances[_Self]) -> bool:
         """Whether or not the thing can be linked to"""
         if self.is_hidden():
             return False  # don't link to hidden things
@@ -486,7 +517,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
 
         # Is this the visual which would be shown to the user in case the user
         # requests a visual with the current name?
-        page = self.find_page(self.name())
+        page = instances.find_page(self.name())
         if page and page.owner() != self.owner():
             return False
 
@@ -531,8 +562,10 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         )
 
     @classmethod
-    def permitted_instances_sorted(cls: Type[_Self]) -> list[_Self]:
-        return [i for i in cls.instances_sorted() if i.is_permitted()]
+    def permitted_instances_sorted(
+        cls: Type[_Self], instances: OverridableInstances[_Self]
+    ) -> list[_Self]:
+        return [i for i in instances.instances_sorted() if i.is_permitted()]
 
     def may_delete(self) -> bool:
         if self.is_builtin():
@@ -723,26 +756,26 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
     # Return all pages visible to the user, implements shadowing etc.
     @classmethod
     def pages(cls: Type[_Self]) -> list[_Self]:
-        cls.load()
+        instances = cls.load()
         pages = {}
 
         # Builtin pages
-        for page in cls.instances():
+        for page in instances.instances():
             if page.is_published_to_me() and page.may_see() and page.is_builtin():
                 pages[page.name()] = page
 
         # Public pages by normal other users
-        for page in cls.instances():
+        for page in instances.instances():
             if page.is_published_to_me() and page.may_see():
                 pages[page.name()] = page
 
         # Public pages by admin users, forcing their versions over others
-        for page in cls.instances():
+        for page in instances.instances():
             if page.is_published_to_me() and page.may_see() and page.is_public_forced():
                 pages[page.name()] = page
 
         # My own pages
-        for page in cls.instances():
+        for page in instances.instances():
             if page.is_mine_and_may_have_own():
                 pages[page.name()] = page
 
@@ -752,61 +785,19 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
     def page_choices(cls) -> list[tuple[str, str]]:
         return [(page.name(), page.title()) for page in cls.pages()]
 
-    # Find a page by name, implements shadowing and
-    # publishing und overriding by admins
-    @classmethod
-    def find_page(cls: Type[_Self], name: str) -> _Self | None:
-        mine = None
-        forced = None
-        builtin = None
-        foreign = None
-
-        for page in cls.instances():
-            if page.name() != name:
-                continue
-
-            if page.is_mine_and_may_have_own():
-                mine = page
-
-            elif page.is_published_to_me() and page.may_see():
-                if page.is_public_forced():
-                    forced = page
-                elif page.is_builtin():
-                    builtin = page
-                else:
-                    foreign = page
-
-        if mine:
-            return mine
-        if forced:
-            return forced
-        if builtin:
-            return builtin
-        if foreign:
-            return foreign
-        return None
-
-    @classmethod
-    def find_foreign_page(cls, owner: UserId, name: str) -> _Self | None:
-        try:
-            return cls.instance((owner, name))
-        except KeyError:
-            return None
-
     @classmethod
     def builtin_pages(cls) -> Mapping[str, _T_OverridableSpec]:
         return {}
 
     @classmethod
-    def load(cls: Type[_Self]) -> None:
-        """Loads the builtin and site custom pagetypes"""
-        cls.clear_instances()
+    def load(cls: Type[_Self]) -> OverridableInstances[_Self]:
+        instances = OverridableInstances[_Self]()
 
         # First load builtin pages. Set username to ''
         for name, page_dict in cls.builtin_pages().items():
             page_dict = cls._transform_old_spec(page_dict)
             new_page = cls(page_dict)
-            cls.add_instance((UserId(page_dict["owner"]), name), new_page)
+            instances.add_instance((UserId(page_dict["owner"]), name), new_page)
 
         # Now scan users subdirs for files "user_$type_name.mk"
         with suppress(FileNotFoundError):
@@ -826,19 +817,20 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
                         page_dict["name"] = name
                         page_dict = cls._transform_old_spec(page_dict)
 
-                        cls.add_instance((user_id, name), cls(page_dict))
+                        instances.add_instance((user_id, name), cls(page_dict))
 
                 except SyntaxError as e:
                     raise MKGeneralException(
                         _("Cannot load %s from %s: %s") % (cls.type_name(), path, e)
                     )
 
-        cls._load()
-        cls._declare_instance_permissions()
+        cls._load(instances)
+        cls._declare_instance_permissions(instances)
+        return instances
 
     # TODO: Clean this up
     @classmethod
-    def _load(cls) -> None:
+    def _load(cls, instances: OverridableInstances[_Self]) -> None:
         """Custom method to load e.g. old configs
         after performing the loading of the regular files."""
 
@@ -848,33 +840,30 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         return spec
 
     @classmethod
-    def _declare_instance_permissions(cls) -> None:
-        for instance in cls.instances():
+    def _declare_instance_permissions(cls, instances: OverridableInstances[_Self]) -> None:
+        for instance in instances.instances():
             if instance.is_public():
                 cls.declare_permission(instance)
 
     @classmethod
-    def save_user_instances(cls, owner: _Optional[UserId] = None) -> None:
+    def save_user_instances(
+        cls, instances: OverridableInstances[_Self], owner: _Optional[UserId] = None
+    ) -> None:
         if not owner:
             owner = user.id
         assert owner is not None
 
         save_dict = {}
-        for page in cls.instances():
+        for page in instances.instances():
             if page.owner() == owner:
                 save_dict[page.name()] = page.internal_representation()
 
         save_user_file("user_%ss" % cls.type_name(), save_dict, owner)
 
-    @classmethod
-    def add_page(cls, new_page: _Self) -> None:
-        cls.add_instance((new_page.owner(), new_page.name()), new_page)
-
     def clone(self: _Self) -> _Self:
         page_dict = self._.copy()
         page_dict["owner"] = str(user.id) if user.id else ""
         new_page = self.__class__(page_dict)
-        self.add_page(new_page)
         return new_page
 
     @classmethod
@@ -896,10 +885,12 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         pass
 
     @classmethod
-    def get_instances(cls) -> tuple[list[_Self], list[_Self], list[_Self]]:
+    def get_instances(
+        cls, instances: OverridableInstances[_Self]
+    ) -> tuple[list[_Self], list[_Self], list[_Self]]:
         my_instances, foreign_instances, builtin_instances = [], [], []
 
-        for instance in cls.instances_sorted():
+        for instance in instances.instances_sorted():
             if instance.may_see():
                 if instance.is_builtin():
                     builtin_instances.append(instance)
@@ -927,7 +918,7 @@ class ListPage(Page, Generic[_Self]):
         self._type = pagetype
 
     def page(self) -> None:
-        self._type.load()
+        instances = self._type.load()
         self._type.need_overriding_permission()
 
         title_plural = self._type.phrase("title_plural")
@@ -981,7 +972,7 @@ class ListPage(Page, Generic[_Self]):
             pagetype_title = self._type.phrase("title")
 
             try:
-                instance = self._type.instance((owner, delname))
+                instance = instances.instance((owner, delname))
             except KeyError:
                 raise MKUserError(
                     "_delete",
@@ -992,8 +983,8 @@ class ListPage(Page, Generic[_Self]):
                 raise MKUserError("_delete", _("You are not permitted to perform this action."))
 
             try:
-                self._type.remove_instance((owner, delname))
-                self._type.save_user_instances(owner)
+                instances.remove_instance((owner, delname))
+                self._type.save_user_instances(instances, owner)
                 html.reload_whole_page()
             except MKUserError as e:
                 html.user_error(e)
@@ -1002,20 +993,20 @@ class ListPage(Page, Generic[_Self]):
             html.reload_whole_page(self._type.list_url())
 
         elif request.var("_bulk_delete") and transactions.check_transaction():
-            self._bulk_delete_after_confirm()
+            self._bulk_delete_after_confirm(instances)
 
-        my_instances, foreign_instances, builtin_instances = self._type.get_instances()
-        for what, title, instances in [
+        my_instances, foreign_instances, builtin_instances = self._type.get_instances(instances)
+        for what, title, scope_instances in [
             ("my", _("Customized"), my_instances),
             ("foreign", _("Owned by other users"), foreign_instances),
             ("builtin", _("Builtin"), builtin_instances),
         ]:
-            if instances:
-                self._show_table(what, title, instances)
+            if scope_instances:
+                self._show_table(instances, what, title, scope_instances)
 
         html.footer()
 
-    def _bulk_delete_after_confirm(self) -> None:
+    def _bulk_delete_after_confirm(self, instances: OverridableInstances[_Self]) -> None:
         to_delete: list[tuple[UserId, str]] = []
         for varname, _value in request.itervars(prefix="_c_"):
             if html.get_checkbox(varname):
@@ -1026,22 +1017,28 @@ class ListPage(Page, Generic[_Self]):
             return
 
         for owner, instance_id in to_delete:
-            self._type.remove_instance((owner, instance_id))
+            instances.remove_instance((owner, instance_id))
 
         for owner in {e[0] for e in to_delete}:
-            self._type.save_user_instances(owner)
+            self._type.save_user_instances(instances, owner)
 
         flash(_("The selected %s have been deleted.") % self._type.phrase("title_plural"))
         html.reload_whole_page(self._type.list_url())
 
-    def _show_table(self, what: str, title: str, instances: Sequence[Overridable]) -> None:
+    def _show_table(
+        self,
+        instances: OverridableInstances[_Self],
+        what: str,
+        title: str,
+        scope_instances: Sequence[Overridable],
+    ) -> None:
         html.h3(title, class_="table")
 
         if what != "builtin":
             html.begin_form("bulk_delete", method="POST")
 
         with table_element(limit=None) as table:
-            for instance in instances:
+            for instance in scope_instances:
                 table.row()
 
                 if what != "builtin" and instance.may_delete():
@@ -1085,7 +1082,7 @@ class ListPage(Page, Generic[_Self]):
 
                 # Title
                 table.cell(_("Title"))
-                html.write_text(instance.render_title())
+                html.write_text(instance.render_title(instances))
                 html.help(_u(instance.description()))
 
                 # Custom columns specific to that page type
@@ -1116,7 +1113,7 @@ class EditPage(Page, Generic[_T_OverridableSpec, _Self]):
         """Page for editing an existing page, or creating a new one"""
         back_url = request.get_url_input("back", self._type.list_url())
 
-        self._type.load()
+        instances = self._type.load()
         self._type.need_overriding_permission()
 
         raw_mode = request.get_ascii_input_mandatory("mode", "edit")
@@ -1135,13 +1132,14 @@ class EditPage(Page, Generic[_T_OverridableSpec, _Self]):
         if mode == "create":
             page_name = ""
             page_dict = {
-                "name": self._type.default_name(),
+                "name": self._type.default_name(instances),
                 "topic": self._type.default_topic(),
             }
         else:
             page_name = request.get_str_input_mandatory("load_name")
-            page = self._type.find_foreign_page(owner_id, page_name)
-            if page is None:
+            try:
+                page = instances.instance((owner_id, page_name))
+            except KeyError:
                 raise MKUserError(
                     None, _("The requested %s does not exist") % self._type.phrase("title")
                 )
@@ -1185,7 +1183,11 @@ class EditPage(Page, Generic[_T_OverridableSpec, _Self]):
             headers=keys_by_topic,
             validate=validate_id(
                 mode,
-                {p.name(): p for p in self._type.permitted_instances_sorted() if p.is_mine()},
+                {
+                    p.name(): p
+                    for p in self._type.permitted_instances_sorted(instances)
+                    if p.is_mine()
+                },
                 self._type.reserved_unique_ids(),
             ),
         )
@@ -1214,8 +1216,8 @@ class EditPage(Page, Generic[_T_OverridableSpec, _Self]):
             new_page = self._type(cast(_T_OverridableSpec, page_dict))
 
             if not user_errors:
-                self._type.add_page(new_page)
-                self._type.save_user_instances(owner_id)
+                instances.add_page(new_page)
+                self._type.save_user_instances(instances, owner_id)
                 if mode == "create":
                     redirect_url = new_page.after_create_url() or back_url
                 else:
@@ -1628,19 +1630,20 @@ class OverridableContainer(Overridable[_T_OverridableContainerSpec, _Self]):
         cls.need_overriding_permission()
 
         need_sidebar_reload = False
-        cls.load()
-        page = cls.find_page(page_name)
+        instances = cls.load()
+        page = instances.find_page(page_name)
         if page is None:
             raise MKGeneralException(
                 _("Cannot find %s with the name %s") % (cls.phrase("title"), page_name)
             )
         if not page.is_mine():
             page = page.clone()
+            instances.add_page(page)
             if isinstance(page, PageRenderer) and not page.is_hidden():
                 need_sidebar_reload = True
 
         page.add_element(create_info)  # can be overridden
-        cls.save_user_instances()
+        cls.save_user_instances(instances)
         return None, need_sidebar_reload
         # With a redirect directly to the page afterwards do it like this:
         # return page, need_sidebar_reload
@@ -1790,10 +1793,11 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec, _SelfPageRenderer])
         ...
 
     @classmethod
-    def requested_page(cls) -> _SelfPageRenderer:
+    def requested_page(
+        cls, instances: OverridableInstances[_SelfPageRenderer]
+    ) -> _SelfPageRenderer:
         name = request.get_ascii_input_mandatory(cls.ident_attr(), "")
-        cls.load()
-        page = cls.find_page(name)
+        page = instances.find_page(name)
         if not page:
             raise MKGeneralException(
                 _("Cannot find %s with the name %s") % (cls.phrase("title"), name)
@@ -1835,10 +1839,10 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec, _SelfPageRenderer])
             filename="%s.py" % self.type_name(),
         )
 
-    def render_title(self) -> str | HTML:
-        if self._can_be_linked():
+    def render_title(self, instances: OverridableInstances[_SelfPageRenderer]) -> str | HTML:
+        if self._can_be_linked(instances):
             return HTMLWriter.render_a(self.title(), href=self.page_url())
-        return self.title()
+        return super().render_title(instances)
 
 
 # .
@@ -2107,23 +2111,24 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
 
     @classmethod
     def choices(cls) -> list[tuple[str, str]]:
-        cls.load()
+        instances = cls.load()
         return [
-            (p.name(), p.title()) for p in sorted(cls.instances(), key=lambda p: p.sort_index())
+            (p.name(), p.title())
+            for p in sorted(instances.instances(), key=lambda p: p.sort_index())
         ]
 
     @classmethod
     def get_permitted_instances(cls) -> dict[str, PagetypeTopics]:
-        cls.load()
-        return {p.name(): p for p in cls.permitted_instances_sorted()}
+        instances = cls.load()
+        return {p.name(): p for p in cls.permitted_instances_sorted(instances)}
 
     @classmethod
     def get_topic(cls, topic_id: str) -> PagetypeTopics:
         """Returns either the requested topic or fallback to "other"."""
-        PagetypeTopics.load()
-        other_page = PagetypeTopics.find_page("other")
+        instances = PagetypeTopics.load()
+        other_page = instances.find_page("other")
         assert other_page is not None
-        return PagetypeTopics.find_page(topic_id) or other_page
+        return instances.find_page(topic_id) or other_page
 
 
 declare(PagetypeTopics)

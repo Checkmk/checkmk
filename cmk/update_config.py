@@ -1118,34 +1118,36 @@ class UpdateConfig:
         Persist all the user visuals and page types after modification.
         """
         topic_created_for: Set[UserId] = set()
-        pagetypes.PagetypeTopics.load()
-        topics = pagetypes.PagetypeTopics.instances_dict()
+        instances = pagetypes.PagetypeTopics.load()
+        topics = instances.instances_dict()
 
         # Create the topics for all page types
-        topic_created_for.update(self._migrate_pagetype_topics(topics))
+        topic_created_for.update(self._migrate_pagetype_topics(instances, topics))
 
         # And now do the same for all visuals (views, dashboards, reports)
-        topic_created_for.update(self._migrate_all_visuals_topics(topics))
+        topic_created_for.update(self._migrate_all_visuals_topics(instances, topics))
 
         # Now persist all added topics
         for user_id in topic_created_for:
-            pagetypes.PagetypeTopics.save_user_instances(user_id)
+            pagetypes.PagetypeTopics.save_user_instances(instances, user_id)
 
-    def _migrate_pagetype_topics(self, topics: Dict) -> Set[UserId]:
+    def _migrate_pagetype_topics(
+        self, instances: pagetypes.OverridableInstances[pagetypes.PagetypeTopics], topics: Dict
+    ) -> Set[UserId]:
         topic_created_for: Set[UserId] = set()
 
         for page_type_cls in pagetypes.all_page_types().values():
             if not issubclass(page_type_cls, pagetypes.PageRenderer):
                 continue
 
-            page_type_cls.load()
+            instances = page_type_cls.load()
             modified_user_instances = set()
 
             # First modify all instances in memory and remember which things have changed
-            for instance in page_type_cls.instances():
+            for instance in instances.instances():
                 owner = instance.owner()
                 instance_modified, topic_created = self._transform_pre_17_topic_to_id(
-                    topics, instance.internal_representation()
+                    instances, topics, dict(instance.internal_representation())
                 )
 
                 if instance_modified and owner:
@@ -1156,7 +1158,7 @@ class UpdateConfig:
 
             # Now persist all modified instances
             for user_id in modified_user_instances:
-                page_type_cls.save_user_instances(user_id)
+                page_type_cls.save_user_instances(instances, user_id)
 
         return topic_created_for
 
@@ -1184,18 +1186,22 @@ class UpdateConfig:
             reporting.load_reports()  # Loading does the transformation
             updates("reports", reporting.reports)
 
-    def _migrate_all_visuals_topics(self, topics: Dict) -> Set[UserId]:
+    def _migrate_all_visuals_topics(
+        self, instances: pagetypes.OverridableInstances[pagetypes.PagetypeTopics], topics: Dict
+    ) -> Set[UserId]:
         topic_created_for: Set[UserId] = set()
 
         # Views
         topic_created_for.update(
-            self._migrate_visuals_topics(topics, visual_type="views", all_visuals=get_all_views())
+            self._migrate_visuals_topics(
+                instances, topics, visual_type="views", all_visuals=get_all_views()
+            )
         )
 
         # Dashboards
         topic_created_for.update(
             self._migrate_visuals_topics(
-                topics, visual_type="dashboards", all_visuals=get_all_dashboards()
+                instances, topics, visual_type="dashboards", all_visuals=get_all_dashboards()
             )
         )
 
@@ -1209,7 +1215,7 @@ class UpdateConfig:
             reporting.load_reports()
             topic_created_for.update(
                 self._migrate_visuals_topics(
-                    topics, visual_type="reports", all_visuals=reporting.reports
+                    instances, topics, visual_type="reports", all_visuals=reporting.reports
                 )
             )
 
@@ -1217,6 +1223,7 @@ class UpdateConfig:
 
     def _migrate_visuals_topics(
         self,
+        instances: pagetypes.OverridableInstances[pagetypes.PagetypeTopics],
         topics: Dict,
         visual_type: str,
         all_visuals: Dict,
@@ -1227,7 +1234,7 @@ class UpdateConfig:
             # First modify all instances in memory and remember which things have changed
             for (owner, _name), visual_spec in all_visuals.items():
                 instance_modified, topic_created = self._transform_pre_17_topic_to_id(
-                    topics, visual_spec
+                    instances, topics, visual_spec
                 )
 
                 if instance_modified and owner:
@@ -1239,7 +1246,10 @@ class UpdateConfig:
         return topic_created_for
 
     def _transform_pre_17_topic_to_id(
-        self, topics: Dict, spec: Dict[str, Any]
+        self,
+        instances: pagetypes.OverridableInstances[pagetypes.PagetypeTopics],
+        topics: Dict,
+        spec: Dict[str, Any],
     ) -> Tuple[bool, bool]:
         topic = spec["topic"] or ""
         topic_key = (spec["owner"], topic)
@@ -1275,7 +1285,7 @@ class UpdateConfig:
 
         # Found no match: Create a topic for this spec and use it
         # Use same owner and visibility settings as the original
-        pagetypes.PagetypeTopics.add_instance(
+        instances.add_instance(
             (spec["owner"], name),
             pagetypes.PagetypeTopics(
                 {

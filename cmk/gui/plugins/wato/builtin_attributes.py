@@ -626,7 +626,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
 
     def _vs_ip_range(self, with_regexp=False):
         # NOTE: The `ip_regex_list` choice is only used in the `exclude_ranges` key.
-        options = [
+        options: List[tuple[str, str, ValueSpec[Any]]] = [
             (
                 "ip_range",
                 _("IP-Range"),

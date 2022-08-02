@@ -1252,7 +1252,7 @@ def Levels(
     if default_value is None:
         default_value = default_levels
 
-    elements = [
+    elements: Sequence[ValueSpec[Any]] = [
         FixedValue(
             value=None,
             title=_("No Levels"),

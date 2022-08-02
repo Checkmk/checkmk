@@ -5402,7 +5402,12 @@ class Alternative(ValueSpec[AlternativeModel]):
         )
 
 
-class Tuple(ValueSpec):
+TT = TypeVar("TT", bound=tuple[Any, ...])
+
+
+class Tuple(ValueSpec[TT]):
+    # TODO: wait for TypeVarTuple mypy support:
+    # https://github.com/python/mypy/issues/12840
     """Edit a n-tuple (with fixed size) of values"""
 
     def __init__(  # pylint: disable=redefined-builtin
@@ -5414,8 +5419,8 @@ class Tuple(ValueSpec):
         title_br: bool = True,
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: ValueSpecDefault[tuple[Any, ...]] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc[tuple[Any, ...]]] = None,
+        default_value: ValueSpecDefault[TT] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[TT]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._elements = elements
@@ -5427,11 +5432,11 @@ class Tuple(ValueSpec):
     def allow_empty(self) -> bool:
         return all(vs.allow_empty() for vs in self._elements)
 
-    def canonical_value(self) -> tuple[Any, ...]:
-        return tuple(x.canonical_value() for x in self._elements)
+    def canonical_value(self) -> TT:
+        return tuple(x.canonical_value() for x in self._elements)  # type:ignore[return-value]
 
-    def default_value(self) -> tuple[Any, ...]:
-        return tuple(x.default_value() for x in self._elements)
+    def default_value(self) -> TT:
+        return tuple(x.default_value() for x in self._elements)  # type:ignore[return-value]
 
     def render_input(self, varprefix: str, value: Any) -> None:  # pylint: disable=too-many-branches
         if self._orientation != "float":
@@ -5495,30 +5500,40 @@ class Tuple(ValueSpec):
     def set_focus(self, varprefix: str) -> None:
         self._elements[0].set_focus(varprefix + "_0")
 
-    def _iter_value(self, value: Sequence[Any]) -> Iterable[tuple[int, ValueSpec, Any]]:
+    def _iter_value(self, value: TT) -> Iterable[tuple[int, ValueSpec, Any]]:
         for idx, element in enumerate(self._elements):
             yield idx, element, value[idx]
 
-    def mask(self, value: tuple[Any, ...]) -> tuple[Any, ...]:
-        return tuple(el.mask(val) for _, el, val in self._iter_value(value))
+    def mask(self, value: TT) -> TT:
+        return tuple(
+            el.mask(val) for _, el, val in self._iter_value(value)
+        )  # type:ignore[return-value]
 
-    def value_to_html(self, value: tuple[Any, ...]) -> ValueSpecText:
-        return HTML(", ").join(el.value_to_html(val) for _, el, val in self._iter_value(value))
+    def value_to_html(self, value: TT) -> ValueSpecText:
+        return HTML(", ").join(
+            el.value_to_html(val) for _, el, val in self._iter_value(value)
+        )  # type:ignore[return-value]
 
-    def value_to_json(self, value: tuple[Any, ...]) -> JSONValue:
-        return [el.value_to_json(val) for _, el, val in self._iter_value(value)]
+    def value_to_json(self, value: TT) -> JSONValue:
+        return [
+            el.value_to_json(val) for _, el, val in self._iter_value(value)
+        ]  # type:ignore[return-value]
 
-    def value_from_json(self, json_value: JSONValue) -> tuple[Any, ...]:
-        return tuple(el.value_from_json(val) for _, el, val in self._iter_value(json_value))
+    def value_from_json(self, json_value: JSONValue) -> TT:
+        return tuple(
+            el.value_from_json(val) for _, el, val in self._iter_value(json_value)
+        )  # type:ignore[return-value]
 
-    def from_html_vars(self, varprefix: str) -> tuple[Any, ...]:
-        return tuple(e.from_html_vars(f"{varprefix}_{idx}") for idx, e in enumerate(self._elements))
+    def from_html_vars(self, varprefix: str) -> TT:
+        return tuple(
+            e.from_html_vars(f"{varprefix}_{idx}") for idx, e in enumerate(self._elements)
+        )  # type:ignore[return-value]
 
-    def _validate_value(self, value: tuple[Any, ...], varprefix: str) -> None:
+    def _validate_value(self, value: TT, varprefix: str) -> None:
         for idx, el, val in self._iter_value(value):
             el.validate_value(val, f"{varprefix}_{idx}")
 
-    def validate_datatype(self, value: Any, varprefix: str) -> None:
+    def validate_datatype(self, value: TT, varprefix: str) -> None:
         if not isinstance(value, tuple):
             raise MKUserError(
                 varprefix, _("The datatype must be a tuple, but is %s") % _type_name(value)
@@ -5532,9 +5547,11 @@ class Tuple(ValueSpec):
         for idx, el, val in self._iter_value(value):
             el.validate_datatype(val, f"{varprefix}_{idx}")
 
-    def transform_value(self, value: tuple[Any, ...]) -> tuple[Any, ...]:
+    def transform_value(self, value: TT) -> TT:
         assert isinstance(value, tuple), "Tuple.transform_value() got a non-tuple: %r" % (value,)
-        return tuple(vs.transform_value(value[index]) for index, vs in enumerate(self._elements))
+        return tuple(
+            vs.transform_value(value[index]) for index, vs in enumerate(self._elements)
+        )  # type:ignore[return-value]
 
 
 DictionaryEntry = tuple[str, ValueSpec]

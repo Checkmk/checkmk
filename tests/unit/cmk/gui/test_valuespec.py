@@ -343,7 +343,7 @@ def test_transform_value_in_dict() -> None:
 
 
 def test_transform_value_in_tuple() -> None:
-    valuespec = vs.Tuple(
+    valuespec: vs.Tuple[tuple[str, str]] = vs.Tuple(
         elements=[
             vs.Transform(
                 valuespec=vs.TextInput(),

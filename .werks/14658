@@ -1,0 +1,14 @@
+Title: dcd config: fix save mechanism for checkbox based host attribute tags
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1659944890
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p10
+
+Previously, the dcd failed during the host bulk discovery step if the
+configuration contained a host attribute tag that was enabled via a checkbox.
+This werk fixes this problem

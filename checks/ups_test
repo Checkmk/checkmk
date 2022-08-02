@@ -69,12 +69,12 @@ from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-
 ups_test_default = (0, 0)
 
 _TEST_RESULT_SUMMARY_MAP = {
-    "1": "passed",
-    "2": "warning",
-    "3": "error",
-    "4": "aborted",
-    "5": "in progress",
-    "6": "no tests initiated",
+    "1": (0, "passed"),
+    "2": (1, "warning"),
+    "3": (2, "error"),
+    "4": (2, "aborted"),
+    "5": (0, "in progress"),
+    "6": (0, "no tests initiated"),
 }
 
 
@@ -94,22 +94,14 @@ def check_ups_test(_no_item, params, info):
     uptime = parse_snmp_uptime(uptime_info[0][0])
     start_time = parse_snmp_uptime(StartTime)
 
-    # State of test
-    state = 0
-    if ResultsSummary in ['3', '4']:
-        state = 2
-    elif ResultsSummary in ['2']:
-        state = 1
     details = f" ({upsTestResultsDetail})" if upsTestResultsDetail else ""
-    if ResultsSummary in _TEST_RESULT_SUMMARY_MAP:
-        yield state, f"Last test: {_TEST_RESULT_SUMMARY_MAP[ResultsSummary]}{details}"
-    else:
-        # The MIB dictates a set of possible values for the test result, which are all
-        # included in the result mapping.
-        # However, the device could still have a test result that is outside the set of
-        # possible values (e.g. "0"). In this case, an UNKNOWN state is chosen because
-        # it reflects the truth and the check is able to show further check results.
-        yield 3, f"Last test: unknown{details}"
+    # The MIB dictates a set of possible values for the test result, which are all
+    # included in the result mapping.
+    # However, the device could still have a test result that is outside the set of
+    # possible values (e.g. "0"). In this case, an UNKNOWN state is chosen because
+    # it reflects the truth and the check is able to show further check results.
+    state, test_result = _TEST_RESULT_SUMMARY_MAP.get(ResultsSummary, (3, "unknown"))
+    yield state, f"Last test: {test_result}{details}"
 
     # Elapsed time since last start of test
     elapsed = uptime - start_time

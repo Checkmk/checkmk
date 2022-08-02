@@ -488,8 +488,7 @@ std::string ProcessFileInfoPathEntry(std::string_view entry,
     const auto file_paths = FindFilesByMask(mask);
 
     if (file_paths.empty()) {
-        // no files? place missing entry(as 1.5 Agent)!
-        return MakeFileInfoStringMissing(entry, mode);
+        return {};  // as requested by ticket CMK-11016
     }
 
     std::string out;

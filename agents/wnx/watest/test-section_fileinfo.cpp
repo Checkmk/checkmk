@@ -318,20 +318,14 @@ TEST(FileInfoTest, CheckOutput) {
     {
         FileInfo fi{FileInfo::Mode::legacy};
         auto table = MakeBody(fi);
-        ASSERT_EQ(table.size(), 6);
+        ASSERT_EQ(table.size(), 5);
         EXPECT_TRUE(std::atoll(table[0].c_str()) > 0LL);
         table.erase(table.begin());
 
         auto missing = table.back();
         auto values = tools::SplitString(missing, "|");
-        CheckTableMissing(values, name_with_glob, FileInfo::Mode::legacy);
-        std::error_code ec;
-        EXPECT_FALSE(fs::exists(values[0], ec));
-        table.pop_back();
-
-        missing = table.back();
-        values = tools::SplitString(missing, "|");
         CheckTableMissing(values, name_without_glob, FileInfo::Mode::legacy);
+        std::error_code ec;
         EXPECT_FALSE(fs::exists(values[0], ec));
         table.pop_back();
 
@@ -354,7 +348,7 @@ TEST(FileInfoTest, CheckOutput) {
     {
         FileInfo fi{FileInfo::Mode::modern};
         auto table = MakeBody(fi);
-        ASSERT_EQ(table.size(), 9);
+        ASSERT_EQ(table.size(), 8);
         EXPECT_TRUE(std::atoll(table[0].c_str()) > 0);
         table.erase(table.begin());
         EXPECT_EQ(table[0], "[[[header]]]");
@@ -366,14 +360,8 @@ TEST(FileInfoTest, CheckOutput) {
 
         auto missing = table.back();
         auto values = tools::SplitString(missing, "|");
-        CheckTableMissing(values, name_with_glob, FileInfo::Mode::modern);
-        std::error_code ec;
-        EXPECT_FALSE(fs::exists(values[0], ec));
-        table.pop_back();
-
-        missing = table.back();
-        values = tools::SplitString(missing, "|");
         CheckTableMissing(values, name_without_glob, FileInfo::Mode::modern);
+        std::error_code ec;
         EXPECT_FALSE(fs::exists(values[0], ec));
         table.pop_back();
 

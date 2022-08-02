@@ -11,7 +11,7 @@ from cmk.gui.plugins.wato.utils import (
     TextInput,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Age, Dictionary
+from cmk.gui.valuespec import Age, Dictionary, Integer
 
 
 def _parameter_valuespec_replication_lag():
@@ -33,5 +33,59 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_replication_lag,
         title=lambda: _("Replication Lag"),
+    )
+)
+
+
+def _parameter_valuespec_connections():
+    return Dictionary(
+        title=_("Levels connections"),
+        elements=[
+            (
+                "active_connections",
+                SimpleLevels(Integer, title=_("Active connections")),
+            ),
+            (
+                "failed_connections",
+                SimpleLevels(Integer, title=_("Failed connections")),
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="database_connections",
+        item_spec=lambda: TextInput(title=_("Database Connections")),
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_connections,
+        title=lambda: _("Database Connections"),
+    )
+)
+
+
+def _parameter_valuespec_network():
+    return Dictionary(
+        title=_("Levels network"),
+        elements=[
+            (
+                "ingress_levels",
+                SimpleLevels(Integer, title=_("Network in"), unit="B"),
+            ),
+            (
+                "egress_levels",
+                SimpleLevels(Integer, title=_("Network out"), unit="B"),
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="network_io",
+        item_spec=lambda: TextInput(title=_("Network IO")),
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_network,
+        title=lambda: _("Network IO"),
     )
 )

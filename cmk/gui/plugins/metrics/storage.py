@@ -1313,6 +1313,18 @@ metric_info["checkpoint_age"] = {
     "color": "#006040",
 }
 
+metric_info["io_consumption_percent"] = {
+    "title": _("Storage IO consumption"),
+    "unit": "%",
+    "color": "25/b",
+}
+
+metric_info["serverlog_storage_percent"] = {
+    "title": _("Server log storage used"),
+    "unit": "%",
+    "color": "11/a",
+}
+
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |

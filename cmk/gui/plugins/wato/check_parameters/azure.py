@@ -13,6 +13,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
 from cmk.gui.valuespec import (
     DEF_VALUE,
     Dictionary,
@@ -20,6 +21,7 @@ from cmk.gui.valuespec import (
     Float,
     Integer,
     MonitoringState,
+    Percentage,
     TextInput,
     Tuple,
 )
@@ -585,5 +587,36 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_usagedetails,
         title=lambda: _("Azure Usage Details (Costs)"),
+    )
+)
+
+
+def _parameter_valuespec_storage():
+    return Dictionary(
+        title=_("Levels storage"),
+        elements=[
+            (
+                "io_consumption",
+                SimpleLevels(Percentage, title=_("Storage IO")),
+            ),
+            (
+                "storage",
+                SimpleLevels(Percentage, title=_("Storage")),
+            ),
+            (
+                "serverlog_storage",
+                SimpleLevels(Percentage, title=_("Server log storage")),
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="azure_db_storage",
+        item_spec=lambda: TextInput(title=_("Azure DB Storage")),
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_storage,
+        title=lambda: _("Azure DB Storage"),
     )
 )

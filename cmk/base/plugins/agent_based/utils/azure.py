@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Any, Callable, Iterable, Mapping, NamedTuple, Sequence, Tuple
+from typing import Any, Callable, Iterable, Mapping, NamedTuple, Sequence
 
 from ..agent_based_api.v1 import check_levels, IgnoreResultsError, render, Service
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -32,6 +32,14 @@ class Resource(NamedTuple):
     metrics: Mapping[str, AzureMetric] = {}
 
 
+class MetricData(NamedTuple):
+    azure_metric_name: str
+    param_name: str
+    metric_name: str
+    metric_label: str
+    render_func: Callable[[float], str]
+
+
 Section = Mapping[str, Resource]
 
 
@@ -54,7 +62,7 @@ def _get_metrics_number(row: Sequence[str]) -> int:
         return 0
 
 
-def _get_metrics(metrics_data: Sequence[Sequence[str]]) -> Iterable[Tuple[str, AzureMetric]]:
+def _get_metrics(metrics_data: Sequence[Sequence[str]]) -> Iterable[tuple[str, AzureMetric]]:
     for metric_line in metrics_data:
         metric_dict = json.loads(AZURE_AGENT_SEPARATOR.join(metric_line))
 
@@ -156,45 +164,126 @@ def discover_azure_by_metrics(
 #   +----------------------------------------------------------------------+
 
 
-def check_azure_metric(
-    azure_metric_name: str,
-    metric_name: str,
-    metric_label: str,
-    render_func: Callable[[float], str],
+def check_azure_metrics(
+    metrics_data: Sequence[MetricData],
 ) -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
     def check_metric(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
         resource = section.get(item)
         if not resource:
             raise IgnoreResultsError("Data not present at the moment")
 
-        metric = resource.metrics.get(azure_metric_name)
-        if not metric:
+        metrics = [resource.metrics.get(m.azure_metric_name) for m in metrics_data]
+        if not any(metrics):
             raise IgnoreResultsError("Data not present at the moment")
 
-        yield from check_levels(
-            metric.value,
-            levels_upper=params.get("levels"),
-            metric_name=metric_name,
-            label=metric_label,
-            render_func=render_func,
-        )
+        for metric, metric_data in zip(metrics, metrics_data):
+            if not metric:
+                continue
+
+            yield from check_levels(
+                metric.value,
+                levels_upper=params.get(metric_data.param_name),
+                metric_name=metric_data.metric_name,
+                label=metric_data.metric_label,
+                render_func=metric_data.render_func,
+            )
 
     return check_metric
 
 
 def check_memory() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
-    return check_azure_metric(
-        "average_memory_percent",
-        "mem_used_percent",
-        "Memory utilization",
-        render.percent,
+    return check_azure_metrics(
+        [
+            MetricData(
+                "average_memory_percent",
+                "levels",
+                "mem_used_percent",
+                "Memory utilization",
+                render.percent,
+            )
+        ]
     )
 
 
 def check_cpu() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
-    return check_azure_metric(
-        "average_cpu_percent",
-        "util",
-        "CPU utilization",
-        render.percent,
+    return check_azure_metrics(
+        [
+            MetricData(
+                "average_cpu_percent",
+                "levels",
+                "util",
+                "CPU utilization",
+                render.percent,
+            )
+        ]
+    )
+
+
+def check_connections() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
+    return check_azure_metrics(
+        [
+            MetricData(
+                "total_active_connections",
+                "active_connections",
+                "active_connections",
+                "Active connections",
+                lambda x: str(int(x)),
+            ),
+            MetricData(
+                "total_connections_failed",
+                "failed_connections",
+                "failed_connections",
+                "Failed connections",
+                lambda x: str(int(x)),
+            ),
+        ]
+    )
+
+
+def check_network() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
+    return check_azure_metrics(
+        [
+            MetricData(
+                "total_network_bytes_ingress",
+                "ingress_levels",
+                "ingress",
+                "Network in",
+                render.bytes,
+            ),
+            MetricData(
+                "total_network_bytes_egress",
+                "egress_levels",
+                "egress",
+                "Network out",
+                render.bytes,
+            ),
+        ]
+    )
+
+
+def check_storage() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
+    return check_azure_metrics(
+        [
+            MetricData(
+                "average_io_consumption_percent",
+                "io_consumption",
+                "io_consumption_percent",
+                "IO",
+                render.percent,
+            ),
+            MetricData(
+                "average_storage_percent",
+                "storage",
+                "storage_percent",
+                "Storage",
+                render.percent,
+            ),
+            MetricData(
+                "average_serverlog_storage_percent",
+                "serverlog_storage",
+                "serverlog_storage_percent",
+                "Server log storage",
+                render.percent,
+            ),
+        ]
     )

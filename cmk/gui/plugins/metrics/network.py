@@ -290,6 +290,12 @@ metric_info["active_connections"] = {
     "color": "#a020c0",
 }
 
+metric_info["failed_connections"] = {
+    "title": _("Failed connections"),
+    "unit": "count",
+    "color": "26/a",
+}
+
 metric_info["connections_ssl"] = {
     "title": _("SSL connections"),
     "unit": "count",

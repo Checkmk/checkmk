@@ -1975,3 +1975,11 @@ perfometer_info.append(
         "exponent": 2,
     }
 )
+
+perfometer_info.append(
+    {
+        "type": "linear",
+        "segments": ["io_consumption_percent"],
+        "total": 100.0,
+    }
+)

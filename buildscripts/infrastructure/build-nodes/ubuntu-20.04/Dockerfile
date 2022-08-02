@@ -86,7 +86,6 @@ RUN apt-get update \
     vim \
     libc6-dbg \
     upx-ucl \
-    zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
 

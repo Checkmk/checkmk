@@ -196,9 +196,8 @@ impl MailSlotBackend {
 impl Drop for MailSlotBackend {
     fn drop(&mut self) {
         self.stop_flag.store(true, Ordering::Relaxed);
-        let a = self.srv.take();
-        if a.is_some() {
-            a.unwrap().join().expect("Panic"); // panic here is a real disaster
+        if let Some(thread) = self.srv.take() {
+            thread.join().expect("Panic"); // panic here is a real disaster
         }
     }
 }

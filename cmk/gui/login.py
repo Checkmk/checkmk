@@ -13,7 +13,6 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Iterator, List, Optional, Tuple, Union
 
-from six import ensure_str
 from werkzeug.local import LocalProxy
 
 import cmk.utils.paths
@@ -378,7 +377,7 @@ def _check_auth_web_server(req: Request) -> Optional[UserId]:
     user_id = req.remote_user
     if user_id is not None:
         set_auth_type("web_server")
-        return UserId(ensure_str(user_id))  # pylint: disable= six-ensure-str-bin-call
+        return UserId(user_id)
     return None
 
 
@@ -402,7 +401,7 @@ def _check_auth_by_cookie() -> Optional[UserId]:
     return None
 
 
-def _check_auth_cookie_for_web_server_auth(user_id: UserId):  # type:ignore[no-untyped-def]
+def _check_auth_cookie_for_web_server_auth(user_id: UserId) -> None:
     """Session handling also has to be initialized when the authentication is done
     by the web server.
 

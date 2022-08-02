@@ -12,7 +12,10 @@ Currently we aim for V4.0.3 L1
 See:
 - https://owasp.org/www-project-application-security-verification-standard/"""
 
+from playwright.sync_api import BrowserContext
+
 from tests.testlib.playwright.helpers import PPage
+from tests.testlib.site import Site
 
 
 def _change_password(page: PPage, old_password: str, new_password: str) -> None:
@@ -44,3 +47,23 @@ def test_v2_1_5(logged_in_page: PPage) -> None:
 
     page.login("cmkadmin", "cmk")
     page.main_frame.check_page_title("Main dashboard")
+
+
+def test_cookie_flags(context: BrowserContext, test_site: Site) -> None:
+    """tests for 3.4.X"""
+
+    username = "cmkadmin"
+    password = "cmk"
+
+    page = context.new_page()
+    page.goto(test_site.internal_url)
+    ppage = PPage(page, site_id=test_site.id)
+    ppage.login(username, password)
+
+    cookie = context.cookies()[0]
+    # V3.4.2
+    assert cookie["httpOnly"]
+    # V3.4.3
+    assert cookie["sameSite"] == "Lax"
+    # V3.4.5
+    assert cookie["path"] == "/gui_e2e_central/"

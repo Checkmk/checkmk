@@ -107,12 +107,16 @@ def discovery(section: Section, req_sensor_type: str) -> DiscoveryResult:
                 yield Service(item=f"{index}.{sensor_type}")
 
 
+class SensorException(Exception):
+    pass
+
+
 def etherbox_get_sensor(item: str, section: Section) -> SensorData:
     item_index, item_type = item.split(".")
     if item_index not in section.sensor_data:
-        raise Exception("Sensor not found")
+        raise SensorException("Sensor not found")
     if item_type not in section.sensor_data[item_index]:
-        raise Exception(f"Sensor type changed {item}")
+        raise SensorException(f"Sensor type changed {item}")
     return section.sensor_data[item_index][item_type]
 
 
@@ -131,7 +135,7 @@ def check_etherbox_temp(
 ) -> CheckResult:
     try:
         data = etherbox_get_sensor(item, section)
-    except Exception as error:
+    except SensorException as error:
         yield Result(state=State.UNKNOWN, summary=str(error))
         return
 
@@ -179,7 +183,7 @@ register.check_plugin(
 def check_etherbox_humidity(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     try:
         data = etherbox_get_sensor(item, section)
-    except Exception as error:
+    except SensorException as error:
         yield Result(state=State.UNKNOWN, summary=str(error))
         return
 
@@ -218,7 +222,7 @@ def check_etherbox_switch_contact(
 ) -> CheckResult:
     try:
         data = etherbox_get_sensor(item, section)
-    except Exception as error:
+    except SensorException as error:
         yield Result(state=State.UNKNOWN, summary=str(error))
         return
 
@@ -262,7 +266,7 @@ register.check_plugin(
 def check_etherbox_smoke(item: str, section: Section) -> CheckResult:
     try:
         data = etherbox_get_sensor(item, section)
-    except Exception as error:
+    except SensorException as error:
         yield Result(state=State.UNKNOWN, summary=str(error))
         return
 

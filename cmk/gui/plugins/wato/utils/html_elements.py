@@ -65,12 +65,10 @@ def _make_wato_page_state() -> PageState:
     changelog_url = "wato.py?mode=changelog"
     span_id = "changes_info"
     if changes_info.has_changes():
-        changes_number = changes_info.number
-        changes_str = changes_info.message
         return PageState(
             text=HTMLWriter.render_span(
-                HTMLWriter.render_span(changes_number, class_="changes_number")
-                + HTMLWriter.render_span(changes_str, class_="changes_str"),
+                HTMLWriter.render_span(changes_info.number, class_="changes_number")
+                + HTMLWriter.render_span(changes_info.message_without_number, class_="changes_str"),
                 id_=span_id,
             ),
             icon_name="pending_changes",

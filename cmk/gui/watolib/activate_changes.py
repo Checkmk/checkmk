@@ -22,6 +22,7 @@ import io
 import logging
 import multiprocessing
 import os
+import re
 import shutil
 import subprocess
 import time
@@ -60,7 +61,13 @@ import cmk.gui.watolib.sidebar_reload
 import cmk.gui.watolib.snapshots
 import cmk.gui.watolib.utils
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError, RequestTimeout
+from cmk.gui.exceptions import (
+    MKAuthException,
+    MKGeneralException,
+    MKInternalError,
+    MKUserError,
+    RequestTimeout,
+)
 from cmk.gui.http import request as _request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -394,8 +401,31 @@ class PendingChangesInfo:
     number: int
     message: Optional[str]
 
-    def has_changes(self):
+    def has_changes(self) -> bool:
         return self.number > 0
+
+    @property
+    def message_without_number(self) -> Optional[str]:
+        """Returns only the non-numeric (and non-"+") part of the pending changes message
+        E.g.: self.message = "2 pending changes" -> "pending changes"
+              self.message = "10+ Änderungen"    -> "Änderungen"
+        The message cannot be split by the first space as for the Japanese locale there is no space
+        between number and word"
+        """
+        if self.message is None:
+            return None
+
+        match = re.match(r"(\d+\+?)([^\d\+].*)", self.message)
+        if match is None:
+            raise MKInternalError(
+                "pending_changes_str",
+                _(
+                    'The given str "%s" for the pending changes info does not match the required '
+                    'pattern: "[number] change(s)"'
+                )
+                % self.message,
+            )
+        return match.groups()[1].strip()
 
 
 class ActivateChanges:

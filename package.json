@@ -44,7 +44,6 @@
     "redoc": "^2.0.0-rc.48",
     "redoc-cli": "^0.10.3",
     "sass": "^1.32.6",
-    "sass-lint": "^1.13.1",
     "sass-loader": "^10.1.1",
     "script-loader": "^0.7.2",
     "style-loader": "^2.0.0",

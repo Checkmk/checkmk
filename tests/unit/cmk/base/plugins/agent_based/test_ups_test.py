@@ -70,3 +70,10 @@ def test_check_ups_test_time_check_start_time_warn(check_ups_test) -> None:
     _, result, *_ = check_ups_test(PARAMS, [[[str(360000 * 52)]], [["1", "1000", ""]]])
     assert result.state is State.WARN
     assert result.summary.startswith("time elapsed since start of last test: 2.1 d")
+
+
+def test_ups_test_unknown_test_result(check_ups_test) -> None:
+    check_results = list(
+        check_ups_test(DEFAULT_PARAMS, [[["2400776998"]], [["0", "0", "aardvark"]]])
+    )
+    assert check_results[0] == Result(state=State.UNKNOWN, summary="Last test: unknown (aardvark)")

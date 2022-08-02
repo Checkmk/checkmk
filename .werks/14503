@@ -1,0 +1,13 @@
+Title: ups_test: crash with KeyError (0)
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1659425641
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p10
+
+The check <tt>ups_test</tt> used to crash with the error message 'KeyError
+(0)'. This has been fixed: any unknown test results are shown as 'unknown'.

@@ -103,7 +103,15 @@ def check_ups_test(_no_item, params, info):
     elif ResultsSummary in ["2"]:
         state = 1
     details = f" ({upsTestResultsDetail})" if upsTestResultsDetail else ""
-    yield state, f"Last test: {_TEST_RESULT_SUMMARY_MAP[ResultsSummary]}{details}"
+    if ResultsSummary in _TEST_RESULT_SUMMARY_MAP:
+        yield state, f"Last test: {_TEST_RESULT_SUMMARY_MAP[ResultsSummary]}{details}"
+    else:
+        # The MIB dictates a set of possible values for the test result, which are all
+        # included in the result mapping.
+        # However, the device could still have a test result that is outside the set of
+        # possible values (e.g. "0"). In this case, an UNKNOWN state is chosen because
+        # it reflects the truth and the check is able to show further check results.
+        yield 3, f"Last test: unknown{details}"
 
     # Elapsed time since last start of test
     elapsed = uptime - start_time

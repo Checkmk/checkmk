@@ -5,8 +5,6 @@
 
 from typing import Iterable, Optional, Tuple, Union
 
-from .temperature import check_temperature  # type: ignore[attr-defined]  # what's wrong?
-
 alcatel_cpu_default_levels = (90.0, 95.0)
 
 ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS = {
@@ -84,20 +82,3 @@ def inventory_alcatel_temp(info) -> DiscoveryResult:
                     yield "Slot %s %s" % (index + 1, name), {}
                 else:
                     yield name, {}
-
-
-def check_alcatel_temp(item, params, info):
-    if len(info) == 1:
-        slot_index = 0
-    else:
-        slot = int(item.split()[1])
-        slot_index = slot - 1
-    sensor = item.split()[-1]
-    items = {"Board": 0, "CPU": 1}
-    try:
-        # If multiple switches are staked and one of them are
-        # not reachable, prevent a exception
-        temp_celsius = int(info[slot_index][items[sensor]])
-    except Exception:
-        return 3, "Sensor not found"
-    return check_temperature(temp_celsius, params, "alcatel_temp_%s" % item)

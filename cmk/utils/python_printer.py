@@ -8,7 +8,7 @@ of Python's own pprint module plus the prefix change."""
 
 import sys
 from io import StringIO as StrIO
-from typing import Any, Callable, Dict, IO, Iterable, List, Optional, Tuple
+from typing import Any, Callable, Dict, IO, Iterable, List, Tuple
 
 from cmk.utils.type_defs import EvalableFloat
 
@@ -19,16 +19,16 @@ _bytes_prefix_to_add = ""
 _str_prefix_to_add = "u"
 
 
-def pprint(obj, stream=None):
+def pprint(obj, stream: IO[str] | None = None) -> None:
     PythonPrinter(stream=stream).pprint(obj)
 
 
-def pformat(obj):
+def pformat(obj: object) -> str:
     return PythonPrinter().pformat(obj)
 
 
 class PythonPrinter:
-    def __init__(self, stream: Optional[IO[str]] = None) -> None:
+    def __init__(self, stream: IO[str] | None = None) -> None:
         self._stream = sys.stdout if stream is None else stream
 
     def pprint(self, obj: object) -> None:

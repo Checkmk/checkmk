@@ -9,14 +9,16 @@ from typing import overload
 from bs4 import BeautifulSoup as bs  # type: ignore[import]
 from bs4 import NavigableString
 
+from cmk.gui.utils.html import HTML
 
-def prettify(html_text):
+
+def prettify(html_text: str) -> str:
     txt = bs("%s" % html_text, "lxml").prettify()
     return re.sub("\n{2,}", "\n", re.sub(">", ">\n", txt))
 
 
 @overload
-def encode_attribute(value: list) -> list:
+def encode_attribute(value: list[str]) -> list[str]:
     ...
 
 
@@ -25,7 +27,7 @@ def encode_attribute(value: str) -> str:
     ...
 
 
-def encode_attribute(value: list | str) -> list | str:
+def encode_attribute(value: list[str] | str) -> list[str] | str:
     if isinstance(value, list):
         return [encode_attribute(v) for v in value]
 
@@ -35,7 +37,7 @@ def encode_attribute(value: list | str) -> list | str:
 
 
 @overload
-def undo_encode_attribute(value: list) -> list:
+def undo_encode_attribute(value: list[str]) -> list[str]:
     ...
 
 
@@ -44,7 +46,7 @@ def undo_encode_attribute(value: str) -> str:
     ...
 
 
-def undo_encode_attribute(value: list | str) -> list | str:
+def undo_encode_attribute(value: list[str] | str) -> list[str] | str:
     if isinstance(value, list):
         return [undo_encode_attribute(v) for v in value]
 
@@ -54,7 +56,7 @@ def undo_encode_attribute(value: list | str) -> list | str:
 
 
 @overload
-def subber(value: list) -> list:
+def subber(value: list[str]) -> list[str]:
     ...
 
 
@@ -63,7 +65,7 @@ def subber(value: str) -> str:
     ...
 
 
-def subber(value: list | str) -> list | str:
+def subber(value: list[str] | str) -> list[str] | str:
     if isinstance(value, list):
         return [subber(v) for v in value]
 
@@ -80,7 +82,7 @@ def subber(value: list | str) -> list | str:
     )
 
 
-def compare_soup(html1, html2):
+def compare_soup(html1: str, html2: str) -> None:
     s1 = bs(prettify(html1), "lxml")
     s2 = bs(prettify(html2), "lxml")
 
@@ -127,7 +129,7 @@ def compare_soup(html1, html2):
             assert attrs1 == attrs2, "\n%s\n%s" % (html1, html2)
 
 
-def compare_html(html1, html2):
+def compare_html(html1: HTML | str, html2: HTML | str) -> bool:
     html1 = "%s" % html1
     html2 = "%s" % html2
 

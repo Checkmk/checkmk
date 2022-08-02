@@ -263,7 +263,8 @@ class CMKOpenApiSession(requests.Session):
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
-        return response.json()["id"]
+        the_id: str = response.json()["id"]
+        return the_id
 
     def delete_rule(self, rule_id: str) -> None:
         response = self.delete(f"/objects/rule/{rule_id}")
@@ -277,4 +278,5 @@ class CMKOpenApiSession(requests.Session):
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
-        return response.json()["value"]
+        value: list[dict[str, Any]] = response.json()["value"]
+        return value

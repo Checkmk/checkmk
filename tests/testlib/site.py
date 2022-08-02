@@ -14,9 +14,10 @@ import subprocess
 import sys
 import time
 import urllib.parse
+from collections.abc import Mapping, MutableMapping
 from contextlib import suppress
 from pathlib import Path
-from typing import List, Literal, Mapping, MutableMapping, Optional, Union
+from typing import Literal, Optional
 
 import pytest
 
@@ -62,9 +63,9 @@ class Site:
 
         self.http_proto = "http"
         self.http_address = "127.0.0.1"
-        self._apache_port: Optional[int] = None  # internal cache for the port
+        self._apache_port: int | None = None  # internal cache for the port
 
-        self._livestatus_port: Optional[int] = None
+        self._livestatus_port: int | None = None
         self.admin_password = admin_password
 
         self.openapi = CMKOpenApiSession(
@@ -123,13 +124,13 @@ class Site:
             path = "/%s/check_mk/%s" % (self.id, path)
         return f"{self.http_proto}://{self.http_address}:{self.apache_port}{path}"
 
-    def wait_for_core_reloaded(self, after) -> None:
+    def wait_for_core_reloaded(self, after: float) -> None:
         # Activating changes can involve an asynchronous(!) monitoring
         # core restart/reload, so e.g. querying a Livestatus table immediately
         # might not reflect the changes yet. Ask the core for a successful reload.
-        def config_reloaded():
+        def config_reloaded() -> bool:
             try:
-                new_t = self.live.query_value("GET status\nColumns: program_start\n")
+                new_t: int = self.live.query_value("GET status\nColumns: program_start\n")
             except livestatus.MKLivestatusException:
                 # Seems like the socket may vanish for a short time. Keep waiting in case
                 # of livestatus (connection) issues...
@@ -153,7 +154,7 @@ class Site:
         self.wait_for_core_reloaded(before_restart)
 
     def send_host_check_result(
-        self, hostname: str, state: int, output: str, expected_state: Optional[int] = None
+        self, hostname: str, state: int, output: str, expected_state: int | None = None
     ) -> None:
         if expected_state is None:
             expected_state = state
@@ -172,7 +173,7 @@ class Site:
         service_description: str,
         state: int,
         output: str,
-        expected_state: Optional[int] = None,
+        expected_state: int | None = None,
     ) -> None:
         if expected_state is None:
             expected_state = state
@@ -285,25 +286,30 @@ class Site:
         ), f"Expected {expected_state} state, got {state} state, output {plugin_output}"
 
     def _last_host_check(self, hostname: str) -> float:
-        return self.live.query_value(
+        last_check: int = self.live.query_value(
             f"GET hosts\nColumns: last_check\nFilter: host_name = {hostname}\n"
         )
+        return last_check
 
     def _last_service_check(self, hostname: str, service_description: str) -> float:
-        return self.live.query_value(
+        last_check: int = self.live.query_value(
             "GET services\n"
             "Columns: last_check\n"
             f"Filter: host_name = {hostname}\n"
             f"Filter: service_description = {service_description}\n"
         )
+        return last_check
 
     def get_host_state(self, hostname: str) -> int:
-        return self.live.query_value(f"GET hosts\nColumns: state\nFilter: host_name = {hostname}")
+        state: int = self.live.query_value(
+            f"GET hosts\nColumns: state\nFilter: host_name = {hostname}"
+        )
+        return state
 
     def _is_running_as_site_user(self) -> bool:
         return pwd.getpwuid(os.getuid()).pw_name == self.id
 
-    def execute(self, cmd: List[str], *args, **kwargs) -> subprocess.Popen:
+    def execute(self, cmd: list[str], *args, **kwargs) -> subprocess.Popen:
         assert isinstance(cmd, list), "The command must be given as list"
 
         kwargs.setdefault("encoding", "utf-8")
@@ -375,7 +381,7 @@ class Site:
         else:
             shutil.rmtree(self.path(rel_path))
 
-    def _call_tee(self, rel_target_path: str, content: Union[bytes, str]) -> None:
+    def _call_tee(self, rel_target_path: str, content: bytes | str) -> None:
         with self.execute(
             ["tee", self.path(rel_target_path)],
             stdin=subprocess.PIPE,
@@ -530,7 +536,7 @@ class Site:
                 "01_create-sample-config.py (Missing files: %s)" % missing_files
             )
 
-    def _missing_but_required_wato_files(self) -> List[str]:
+    def _missing_but_required_wato_files(self) -> list[str]:
         required_files = [
             "etc/check_mk/conf.d/wato/rules.mk",
             "etc/check_mk/multisite.d/wato/tags.mk",
@@ -635,7 +641,7 @@ class Site:
             },
         )
 
-    def _log_cmc_startup(self):
+    def _log_cmc_startup(self) -> None:
         tool = None  # sensible tools for us: None, "memcheck" or "helgrind"
         valgrind = (
             'PATH="/opt/bin:$PATH" '
@@ -756,7 +762,7 @@ class Site:
                 == 0
             )
 
-    def rm(self, site_id: Optional[str] = None) -> None:
+    def rm(self, site_id: str | None = None) -> None:
         # TODO: LM: Temporarily disabled until "omd rm" issue is fixed.
         # assert subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
         subprocess.run(
@@ -1005,7 +1011,7 @@ class Site:
     def result_dir(self) -> str:
         return os.path.join(os.environ.get("RESULT_PATH", self.path("results")), self.id)
 
-    def get_automation_secret(self):
+    def get_automation_secret(self) -> str:
         secret_path = "var/check_mk/web/automation/automation.secret"
         secret = self.read_file(secret_path).strip()
 
@@ -1016,7 +1022,7 @@ class Site:
 
     def activate_changes_and_wait_for_core_reload(
         self, allow_foreign_changes: bool = False, remote_site: Optional["Site"] = None
-    ):
+    ) -> None:
         self.ensure_running()
         site = remote_site or self
 
@@ -1064,7 +1070,7 @@ class SiteFactory:
         branch: str,
         update_from_git: bool = False,
         install_test_python_modules: bool = True,
-        prefix: Optional[str] = None,
+        prefix: str | None = None,
     ) -> None:
         self._base_ident = prefix or "s_%s_" % branch[:6]
         self._version = version

@@ -5,7 +5,7 @@
 
 import socket
 import time
-from typing import Any, Dict
+from typing import Any
 
 from tests.testlib.site import Site
 
@@ -16,13 +16,13 @@ class CMKEventConsole:
         self.site = site
         self.status = CMKEventConsoleStatus("%s/tmp/run/mkeventd/status" % site.root)
 
-    def _config(self):
-        cfg: Dict[str, Any] = {}
+    def _config(self) -> dict[str, Any]:
+        cfg: dict[str, Any] = {}
         content = self.site.read_file("etc/check_mk/mkeventd.d/wato/global.mk")
         exec(content, {}, cfg)
         return cfg
 
-    def _gather_status_port(self):
+    def _gather_status_port(self) -> None:
         config = self._config()
 
         if self.site.reuse and self.site.exists() and "remote_status" in config:
@@ -31,31 +31,6 @@ class CMKEventConsole:
             port = self.site.get_free_port_from(self.site.livestatus_port + 1)
 
         self.status_port = port
-
-    def enable_remote_status_port(self, web):
-        html = web.get("wato.py?mode=mkeventd_config").text
-        assert "mode=mkeventd_edit_configvar&amp;site=&amp;varname=remote_status" in html
-
-        html = web.get(
-            "wato.py?folder=&mode=mkeventd_edit_configvar&site=&varname=remote_status"
-        ).text
-        assert "Save" in html
-
-        html = web.post(
-            "wato.py",
-            data={
-                "filled_in": "value_editor",
-                "ve_use": "on",
-                "ve_value_0": self.status_port,
-                "ve_value_2_use": "on",
-                "ve_value_2_value_0": "127.0.0.1",
-                "save": "Save",
-                "varname": "remote_status",
-                "mode": "mkeventd_edit_configvar",
-            },
-            add_transid=True,
-        ).text
-        assert "%d, no commands, 127.0.0.1" % self.status_port in html
 
     @classmethod
     def new_event(cls, attrs):
@@ -88,7 +63,7 @@ class CMKEventConsoleStatus:
         self._address = address
 
     # Copied from web/htdocs/mkeventd.py. Better move to some common lib.
-    def query(self, query):
+    def query(self, query: bytes) -> Any:
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         timeout = 10
 
@@ -106,7 +81,7 @@ class CMKEventConsoleStatus:
 
         return eval(response_text)  # pylint:disable=eval-used
 
-    def query_table_assoc(self, query):
+    def query_table_assoc(self, query: bytes) -> list[dict]:
         response = self.query(query)
         headers = response[0]
         result = []
@@ -114,5 +89,5 @@ class CMKEventConsoleStatus:
             result.append(dict(zip(headers, line)))
         return result
 
-    def query_value(self, query):
+    def query_value(self, query: bytes) -> Any:
         return self.query(query)[0][0]

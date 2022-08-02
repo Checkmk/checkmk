@@ -9,9 +9,11 @@ import os
 import sys
 import tempfile
 import time
+from collections.abc import Mapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Optional, TextIO
+from types import ModuleType
+from typing import Any, Callable, TextIO
 
 import freezegun
 import pytest
@@ -42,13 +44,13 @@ from tests.testlib.utils import (
 from tests.testlib.version import CMKVersion  # noqa: F401 # pylint: disable=unused-import
 from tests.testlib.web_session import APIError, CMKWebSession
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import CheckPluginName, HostName
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-def skip_unwanted_test_types(item):
+def skip_unwanted_test_types(item) -> None:
     test_type = item.get_closest_marker("type")
     if test_type is None:
         raise Exception("Test is not TYPE marked: %s" % item)
@@ -65,7 +67,7 @@ def skip_unwanted_test_types(item):
 # (e.g. cmk/base/default_config/notify.py) for edition specific variable
 # defaults. In integration tests we want to use the exact version of the
 # site. For unit tests we assume we are in Enterprise Edition context.
-def fake_version_and_paths():
+def fake_version_and_paths() -> None:
     if is_running_as_site_user():
         return
 
@@ -259,7 +261,7 @@ def fake_version_and_paths():
     )
 
 
-def import_module(pathname):
+def import_module(pathname: str) -> ModuleType:
     """Return the module loaded from `pathname`.
 
     `pathname` is a path relative to the top-level directory
@@ -285,7 +287,7 @@ def import_module(pathname):
     ).load_module()
 
 
-def wait_until(condition, timeout=1, interval=0.1):
+def wait_until(condition: Callable[[], bool], timeout: float = 1, interval: float = 0.1) -> None:
     start = time.time()
     while time.time() - start < timeout:
         if condition():
@@ -295,20 +297,20 @@ def wait_until(condition, timeout=1, interval=0.1):
     raise Exception("Timeout out waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))
 
 
-def wait_until_liveproxyd_ready(site: Site, site_ids):
-    def _config_available():
+def wait_until_liveproxyd_ready(site: Site, site_ids: Sequence[str]) -> None:
+    def _config_available() -> bool:
         return site.file_exists("etc/check_mk/liveproxyd.mk")
 
     wait_until(_config_available, timeout=60, interval=0.5)
 
     # First wait for the site sockets to appear
-    def _all_sockets_opened():
+    def _all_sockets_opened() -> bool:
         return all((site.file_exists("tmp/run/liveproxy/%s" % s) for s in site_ids))
 
     wait_until(_all_sockets_opened, timeout=60, interval=0.5)
 
     # Then wait for the sites to be ready
-    def _all_sites_ready():
+    def _all_sites_ready() -> bool:
         content = site.read_file("var/log/liveproxyd.state")
         num_ready = content.count("State:                   ready")
         print("%d sites are ready. Waiting for %d sites to be ready." % (num_ready, len(site_ids)))
@@ -320,10 +322,10 @@ def wait_until_liveproxyd_ready(site: Site, site_ids):
 class WatchLog:
     """Small helper for integration tests: Watch a sites log file"""
 
-    def __init__(self, site: Site, default_timeout: Optional[int] = None) -> None:
+    def __init__(self, site: Site, default_timeout: int | None = None) -> None:
         self._site = site
         self._log_path = site.core_history_log()
-        self._log: Optional[TextIO] = None
+        self._log: TextIO | None = None
         self._default_timeout = default_timeout or site.core_history_log_timeout()
 
     def __enter__(self):
@@ -342,7 +344,7 @@ class WatchLog:
         except AttributeError:
             pass
 
-    def check_logged(self, match_for, timeout=None):
+    def check_logged(self, match_for: str, timeout: float | None = None) -> None:
         if timeout is None:
             timeout = self._default_timeout
         if not self._check_for_line(match_for, timeout):
@@ -350,7 +352,7 @@ class WatchLog:
                 "Did not find %r in %s after %d seconds" % (match_for, self._log_path, timeout)
             )
 
-    def check_not_logged(self, match_for, timeout=None):
+    def check_not_logged(self, match_for: str, timeout: float | None = None) -> None:
         if timeout is None:
             timeout = self._default_timeout
         if self._check_for_line(match_for, timeout):
@@ -358,7 +360,7 @@ class WatchLog:
                 "Found %r in %s after %d seconds" % (match_for, self._log_path, timeout)
             )
 
-    def _check_for_line(self, match_for, timeout):
+    def _check_for_line(self, match_for: str, timeout: float) -> bool:
         if self._log is None:
             raise Exception("no log file")
         timeout_at = time.time() + timeout
@@ -378,8 +380,8 @@ class WatchLog:
         return False
 
 
-def create_linux_test_host(request, site: Site, hostname):
-    def finalizer():
+def create_linux_test_host(request: pytest.FixtureRequest, site: Site, hostname: str) -> None:
+    def finalizer() -> None:
         site.openapi.delete_host(hostname)
         site.activate_changes_and_wait_for_core_reload()
 
@@ -435,9 +437,9 @@ class MissingCheckInfoError(KeyError):
 class BaseCheck(abc.ABC):
     """Abstract base class for Check and ActiveCheck"""
 
-    def __init__(self, name) -> None:
+    def __init__(self, name: str) -> None:
         self.name = name
-        self.info: dict = {}
+        self.info: dict[str, Any] = {}
         # we cant use the current_host context, b/c some tests rely on a persistent
         # item state across several calls to run_check
         import cmk.base.plugin_contexts  # pylint: disable=import-outside-toplevel
@@ -446,7 +448,7 @@ class BaseCheck(abc.ABC):
 
 
 class Check(BaseCheck):
-    def __init__(self, name) -> None:
+    def __init__(self, name: str) -> None:
         import cmk.base.config as config  # pylint: disable=import-outside-toplevel
         from cmk.base.api.agent_based import register  # pylint: disable=import-outside-toplevel
 
@@ -456,10 +458,10 @@ class Check(BaseCheck):
         self.info = config.check_info[self.name]
         self.context = config._check_contexts[self.name]
         self._migrated_plugin = register.get_check_plugin(
-            config.CheckPluginName(self.name.replace(".", "_"))
+            CheckPluginName(self.name.replace(".", "_"))
         )
 
-    def default_parameters(self):
+    def default_parameters(self) -> Mapping[str, Any]:
         if self._migrated_plugin:
             return self._migrated_plugin.check_default_parameters or {}
         return {}
@@ -486,7 +488,7 @@ class Check(BaseCheck):
 
 
 class ActiveCheck(BaseCheck):
-    def __init__(self, name) -> None:
+    def __init__(self, name: str) -> None:
         import cmk.base.config as config  # pylint: disable=import-outside-toplevel
 
         super().__init__(name)
@@ -506,7 +508,7 @@ class ActiveCheck(BaseCheck):
 
 
 class SpecialAgent:
-    def __init__(self, name) -> None:
+    def __init__(self, name: str) -> None:
         import cmk.base.config as config  # pylint: disable=import-outside-toplevel
 
         super().__init__()
@@ -518,7 +520,7 @@ class SpecialAgent:
 
 
 @contextmanager
-def set_timezone(timezone):
+def set_timezone(timezone: str):
     if "TZ" not in os.environ:
         tz_set = False
         old_tz = ""
@@ -540,7 +542,7 @@ def set_timezone(timezone):
 
 
 @contextmanager
-def on_time(utctime, timezone):
+def on_time(utctime, timezone: str):
     """Set the time and timezone for the test"""
     if isinstance(utctime, (int, float)):
         utctime = datetime.datetime.utcfromtimestamp(utctime)

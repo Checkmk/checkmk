@@ -21,14 +21,14 @@ class CMKVersion:
     CPE = "cpe"
     CME = "cme"
 
-    def __init__(self, version_spec, edition, branch) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, version_spec: str, edition: str, branch: str) -> None:
         self.version_spec = version_spec
         self._branch = branch
 
         self._set_edition(edition)
         self.set_version(version_spec, branch)
 
-    def _set_edition(self, edition):
+    def _set_edition(self, edition: str) -> None:
         # Allow short (cre) and long (raw) notation as input
         if edition not in [CMKVersion.CRE, CMKVersion.CEE, CMKVersion.CME, CMKVersion.CPE]:
             edition_short = self._get_short_edition(edition)
@@ -40,7 +40,7 @@ class CMKVersion:
 
         self.edition_short = edition_short
 
-    def _get_short_edition(self, edition):
+    def _get_short_edition(self, edition: str) -> str:
         if edition == "raw":
             return "cre"
         if edition == "enterprise":
@@ -51,14 +51,14 @@ class CMKVersion:
             return "cpe"
         raise NotImplementedError("Unknown edition: %s" % edition)
 
-    def get_default_version(self):
+    def get_default_version(self) -> str:
         if os.path.exists("/etc/alternatives/omd"):
             path = os.readlink("/etc/alternatives/omd")
         else:
             path = os.readlink("/omd/versions/default")
         return os.path.split(path)[-1].rsplit(".", 1)[0]
 
-    def set_version(self, version, branch):
+    def set_version(self, version: str, branch: str) -> None:
         if version in [CMKVersion.DAILY, CMKVersion.GIT]:
             date_part = time.strftime("%Y.%m.%d")
             if branch != "master":
@@ -74,10 +74,10 @@ class CMKVersion:
                 raise Exception("Invalid version. Remove the edition suffix!")
             self.version = version
 
-    def branch(self):
+    def branch(self) -> str:
         return self._branch
 
-    def edition(self):
+    def edition(self) -> str:
         if self.edition_short == CMKVersion.CRE:
             return "raw"
         if self.edition_short == CMKVersion.CEE:
@@ -97,13 +97,13 @@ class CMKVersion:
     def is_raw_edition(self) -> bool:
         return self.edition_short == CMKVersion.CRE
 
-    def version_directory(self):
+    def version_directory(self) -> str:
         return self.omd_version()
 
-    def omd_version(self):
+    def omd_version(self) -> str:
         return "%s.%s" % (self.version, self.edition_short)
 
-    def version_path(self):
+    def version_path(self) -> str:
         return "/omd/versions/%s" % self.version_directory()
 
     def is_installed(self) -> bool:

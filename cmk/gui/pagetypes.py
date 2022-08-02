@@ -2118,11 +2118,6 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
         ]
 
     @classmethod
-    def get_permitted_instances(cls) -> dict[str, PagetypeTopics]:
-        instances = cls.load()
-        return {p.name(): p for p in cls.permitted_instances_sorted(instances)}
-
-    @classmethod
     def get_topic(cls, topic_id: str) -> PagetypeTopics:
         """Returns either the requested topic or fallback to "other"."""
         instances = PagetypeTopics.load()

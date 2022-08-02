@@ -339,8 +339,12 @@ def snapin_site_choice(ident: str, choices: List[Tuple[SiteId, str]]) -> Optiona
 
 
 def make_topic_menu(visuals: List[Tuple[str, Tuple[str, Visual]]]) -> List[TopicMenuTopic]:
-    pagetypes.PagetypeTopics.load()
-    topics = pagetypes.PagetypeTopics.get_permitted_instances()
+    topics = {
+        p.name(): p
+        for p in pagetypes.PagetypeTopics.permitted_instances_sorted(
+            pagetypes.PagetypeTopics.load()
+        )
+    }
 
     by_topic: Dict[pagetypes.PagetypeTopics, TopicMenuTopic] = {}
 

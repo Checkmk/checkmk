@@ -2753,8 +2753,8 @@ def _get_context_page_menu_dropdowns(
     """
     dropdowns = []
 
-    pagetypes.PagetypeTopics.load()
-    topics = pagetypes.PagetypeTopics.get_permitted_instances()
+    instances = pagetypes.PagetypeTopics.load()
+    topics = {p.name(): p for p in pagetypes.PagetypeTopics.permitted_instances_sorted(instances)}
 
     # First gather a flat list of all visuals to be linked to
     singlecontext_request_vars = visuals.get_singlecontext_vars(

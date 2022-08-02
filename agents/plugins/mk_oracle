@@ -2312,20 +2312,12 @@ do_dummy_sections() {
 skip_sid() {
     local sid="$1"
     if [ "$ONLY_SIDS" ]; then
-        if echo "$ONLY_SIDS" | "${GREP}" -q "$sid"; then
-            echo "no"
-            return
-        fi
-        echo "yes"
+        [[ " $ONLY_SIDS " != *" $sid "* ]]
         return
     fi
 
     if [ "$SKIP_SIDS" ]; then
-        if echo "$SKIP_SIDS" | "${GREP}" -q "$sid"; then
-            echo "yes"
-            return
-        fi
-        echo "no"
+        [[ " $SKIP_SIDS " == *" $sid "* ]]
         return
     fi
 
@@ -2333,14 +2325,11 @@ skip_sid() {
     # Handle explicit exclusion of instances but not for +ASM
     if [[ "$EXCLUDE" =~ ^[a-zA-Z][a-zA-Z0-9_]*$ ]]; then
         EXCLUDE=${!EXCLUDE}
-        if [ "$EXCLUDE" = "ALL" ]; then
-            echo "yes"
-            return
-        fi
-        echo "no"
+        [ "$EXCLUDE" = "ALL" ]
         return
     fi
-    echo "no"
+
+    false
 }
 
 remove_excluded_sections() {
@@ -3002,8 +2991,7 @@ mkdir -p "${ORA_TMPDIR}"
 
 TASK_NR=0
 for sid in $SIDS; do
-    skip=$(skip_sid "$sid")
-    if [ "$skip" == "yes" ]; then
+    if skip_sid "$sid"; then
         logging "[${sid}] [local]" "Skipping this SID"
         continue
     fi

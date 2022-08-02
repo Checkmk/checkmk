@@ -151,7 +151,7 @@ EOF
 
     load_config
 
-    assertEquals "yes" "$(skip_sid "MYSID")"
+    assertTrue 'skip_sid "MYSID"'
 }
 
 test_mk_oracle_only_sids1() {
@@ -161,7 +161,7 @@ EOF
 
     load_config
 
-    assertEquals "no" "$(skip_sid "MYSID")"
+    assertFalse 'skip_sid "MYSID"'
 }
 
 test_mk_oracle_skip_sids0() {
@@ -171,7 +171,7 @@ EOF
 
     load_config
 
-    assertEquals "yes" "$(skip_sid "MYSID")"
+    assertTrue 'skip_sid "MYSID"'
 }
 
 test_mk_oracle_skip_sids1() {
@@ -181,7 +181,7 @@ EOF
 
     load_config
 
-    assertEquals "no" "$(skip_sid "MYSID")"
+    assertFalse 'skip_sid "MYSID"'
 }
 
 test_mk_oracle_exclude_all0() {
@@ -191,7 +191,7 @@ EOF
 
     load_config
 
-    assertEquals "yes" "$(skip_sid "MYSID")"
+    assertTrue 'skip_sid "MYSID"'
 }
 
 test_mk_oracle_exclude_all1() {
@@ -201,7 +201,7 @@ EOF
 
     load_config
 
-    assertEquals "no" "$(skip_sid "MYSID")"
+    assertFalse 'skip_sid "MYSID"'
 }
 
 test_mk_oracle_only_vs_skip() {
@@ -213,7 +213,7 @@ EOF
 
     load_config
 
-    assertEquals "no" "$(skip_sid "MYSID")"
+    assertFalse 'skip_sid "MYSID"'
 }
 
 test_mk_oracle_load_config_confd() {

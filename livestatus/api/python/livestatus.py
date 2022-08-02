@@ -65,9 +65,25 @@ LocalSocketInfo = tuple[Literal["local"], None]
 SiteGlobals = dict[str, Any]
 
 
+class ProxyConfigParams(TypedDict, total=False):
+    channels: int
+    heartbeat: tuple[int, float]
+    channel_timeout: float
+    query_timeout: float
+    connect_retry: float
+    cache: bool
+
+
+class ProxyConfigTcp(TypedDict, total=False):
+    port: int
+    only_from: list
+    tls: bool
+
+
 class ProxyConfig(TypedDict, total=False):
     cache: bool
-    params: None
+    params: ProxyConfigParams | None
+    tcp: ProxyConfigTcp
 
 
 class SiteConfiguration(TypedDict, total=False):

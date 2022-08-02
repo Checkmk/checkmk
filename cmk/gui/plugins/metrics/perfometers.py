@@ -1983,3 +1983,12 @@ perfometer_info.append(
         "total": 100.0,
     }
 )
+
+perfometer_info.append(
+    {
+        "type": "logarithmic",
+        "metric": "replication_lag",
+        "half_value": 60,
+        "exponent": 2,
+    }
+)

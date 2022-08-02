@@ -18,7 +18,6 @@ fn sleep_randomly() {
     thread::sleep(Duration::from_secs(random_period));
 }
 
-#[cfg(unix)]
 pub fn push(
     mut registry: config::Registry,
     client_config: config::ClientConfig,
@@ -30,20 +29,6 @@ pub fn push(
         if let Err(error) = handle_push_cycle(&registry, &client_config) {
             warn!("Error running push cycle. ({})", error);
         };
-        thread::sleep(Duration::from_secs(60).saturating_sub(begin.elapsed()));
-    }
-}
-
-// TODO(sk): enable this for Windows when this will be ready to production
-#[cfg(windows)]
-pub fn push(
-    mut registry: config::Registry,
-    _client_config: config::ClientConfig,
-) -> AnyhowResult<()> {
-    sleep_randomly();
-    loop {
-        registry.refresh()?;
-        let begin = Instant::now();
         thread::sleep(Duration::from_secs(60).saturating_sub(begin.elapsed()));
     }
 }

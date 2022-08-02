@@ -239,7 +239,7 @@ void WriteToLogFileWithBackup(std::string_view filename, size_t max_size,
                               std::string_view text) noexcept {
     max_backup_count =
         std::clamp(max_backup_count, min_file_count, max_file_count);
-    max_size = std::min(max_size, min_file_size);
+    max_size = std::min(max_size, max_file_size);
     std::lock_guard lk(g_backup_lock_mutex);
 
     fs::path log_file(filename);

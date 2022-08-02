@@ -1,0 +1,13 @@
+Title: Windows agent correctly determines max size of the log file
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1659451544
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p10
+
+This Werk fixes a regression that was introduced with Checkmk 2.1.0p2
+
+CMK-11121

@@ -74,9 +74,12 @@ _TEST_RESULT_SUMMARY_MAP = {
 }
 
 _SUMMARY_STATE_MAP = {
+    "1": 0,
     "2": 1,
     "3": 2,
     "4": 2,
+    "5": 0,
+    "6": 0,
 }
 
 
@@ -96,10 +99,14 @@ def check_ups_test(_no_item, params, info):
     uptime = parse_snmp_uptime(uptime_info[0][0])
     start_time = parse_snmp_uptime(raw_start_time)
 
-    # State of test
-    state = _SUMMARY_STATE_MAP.get(results_summary, 0)
+    # The MIB dictates a set of possible values for the test result, which are all
+    # included in the result mapping.
+    # However, the device could still have a test result that is outside the set of
+    # possible values (e.g. "0"). In this case, an UNKNOWN state is chosen because
+    # it reflects the truth and the check is able to show further check results.
+    state = _SUMMARY_STATE_MAP.get(results_summary, 3)
     details = f" ({ups_test_results_detail})" if ups_test_results_detail else ""
-    yield state, f"Last test: {_TEST_RESULT_SUMMARY_MAP[results_summary]}{details}"
+    yield state, f"Last test: {_TEST_RESULT_SUMMARY_MAP.get(results_summary, 'unknown')}{details}"
 
     if start_time:
         label = "Time since start of last test"

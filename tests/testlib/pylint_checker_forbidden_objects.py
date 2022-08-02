@@ -8,7 +8,6 @@ from typing import FrozenSet, List
 
 import astroid  # type: ignore[import]
 from pylint.checkers import BaseChecker  # type: ignore[import]
-from pylint.interfaces import IAstroidChecker  # type: ignore[import]
 
 
 def register(linter) -> None:  # type:ignore[no-untyped-def]
@@ -19,7 +18,6 @@ def register(linter) -> None:  # type:ignore[no-untyped-def]
 
 
 class ForbiddenObjectChecker(BaseChecker):
-    __implements__ = IAstroidChecker
     name = "forbidden-object"
     target_objects: FrozenSet[str] = frozenset([])
     target_lib = ""

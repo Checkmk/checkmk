@@ -18,6 +18,7 @@ def test_registered_jobs() -> None:
         "cmk.gui.userdb.execute_user_profile_cleanup_job",
         "cmk.gui.watolib.network_scan.execute_network_scan_job",
         "cmk.gui.watolib.activate_changes.execute_activation_cleanup_background_job",
+        "cmk.gui.plugins.wato.remote_audit_logs.execute_get_remote_audit_logs",
     ]
 
     if not cmk_version.is_raw_edition():

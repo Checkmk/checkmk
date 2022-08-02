@@ -1326,16 +1326,7 @@ def _page_menu_entries_related(current_type_name: str) -> Iterator[PageMenuEntry
             item=make_simple_link("edit_dashboards.py"),
         )
 
-    def has_reporting() -> bool:
-        try:
-            # TODO(ml): Import cycle
-            import cmk.gui.cee.reporting as _dummy  # noqa: F401 # pylint: disable=import-outside-toplevel
-
-            return True
-        except ImportError:
-            return False
-
-    if has_reporting() and current_type_name != "reports":
+    if _has_reporting() and current_type_name != "reports":
         yield PageMenuEntry(
             title=_("Reports"),
             icon_name="report",
@@ -1349,6 +1340,10 @@ def _page_menu_entries_related(current_type_name: str) -> Iterator[PageMenuEntry
                 icon_name=other_type_name,
                 item=make_simple_link("%ss.py" % other_type_name),
             )
+
+
+def _has_reporting() -> bool:
+    return not cmk_version.is_raw_edition()
 
 
 def vs_no_permission_to_publish(type_title: str, title: str) -> FixedValue:
@@ -2226,7 +2221,7 @@ def _customize_menu_topics() -> List[TopicMenuTopic]:
         ),
     ]
 
-    if not cmk_version.is_raw_edition():
+    if _has_reporting():
         topics.append(
             TopicMenuTopic(
                 name="business_reporting",

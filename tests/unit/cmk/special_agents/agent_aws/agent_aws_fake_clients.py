@@ -2988,10 +2988,12 @@ class QueryResults(TypedDict):
 FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE: QueryResults = {
     "results": [
         [
-            {"field": "max_memory_used_bytes", "value": "35000000"},
-            {"field": "count_cold_starts", "value": "0"},
-            {"field": "count_invocations", "value": "2"},
-        ]
+            {"field": "@log", "value": "710145618630:/aws/lambda/FunctionName-0"},
+            {"field": "max_memory_used_bytes", "value": "29000000"},
+            {"field": "max_init_duration_ms", "value": "201.44"},
+            {"field": "count_cold_starts", "value": "1"},
+            {"field": "count_invocations", "value": "3"},
+        ],
     ],
     "statistics": {"recordsMatched": 2.0, "recordsScanned": 6.0, "bytesScanned": 710.0},
     "status": "Complete",
@@ -3009,6 +3011,39 @@ FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE: QueryResults = {
 }
 
 
+FAKE_LOGWATCH_CLIENT_DESCRIBE_LOG_GROUPS_PAGINATOR_RESPONSE = [
+    {
+        "logGroups": [
+            {
+                "logGroupName": "/aws/lambda/FunctionName-0",
+                "creationTime": 1655379990007,
+                "metricFilterCount": 0,
+                "arn": "arn:aws:logs:us-east-1:710145618630:log-group:/aws/lambda/FunctionName-0:*",
+                "storedBytes": 5129,
+            },
+            {
+                "logGroupName": "/aws/lambda/deleted-function",
+                "creationTime": 1659443572877,
+                "metricFilterCount": 0,
+                "arn": "arn:aws:logs:us-east-1:710145618630:log-group:/aws/lambda/deleted-function:*",
+                "storedBytes": 4105,
+            },
+        ],
+        "ResponseMetadata": {
+            "RequestId": "ed9c2a23-f656-423c-9a47-f21c11e66ec9",
+            "HTTPStatusCode": 200,
+            "HTTPHeaders": {
+                "x-amzn-requestid": "ed9c2a23-f656-423c-9a47-f21c11e66ec9",
+                "content-type": "application/x-amz-json-1.1",
+                "content-length": "2503",
+                "date": "Wed, 03 Aug 2022 13:50:28 GMT",
+            },
+            "RetryAttempts": 0,
+        },
+    }
+]
+
+
 class QueryId(TypedDict):
     queryId: str
 
@@ -3021,11 +3056,16 @@ class FakeCloudwatchClientLogsClientExceptions:
     ResourceNotFoundException = FakeResourceNotFoundException
 
 
+class FakeCloudwatchClientLogsDescribeLogGroupsPaginator:
+    def paginate(self, *args, **kwargs):
+        return FAKE_LOGWATCH_CLIENT_DESCRIBE_LOG_GROUPS_PAGINATOR_RESPONSE
+
+
 class FakeCloudwatchClientLogsClient:
     exceptions = FakeCloudwatchClientLogsClientExceptions()
 
     def start_query(
-        self, logGroupName: str, startTime: int, endTime: int, queryString: str
+        self, logGroupNames: list[str], startTime: int, endTime: int, queryString: str
     ) -> QueryId:
         return {"queryId": "MY_QUERY_ID"}
 
@@ -3034,6 +3074,11 @@ class FakeCloudwatchClientLogsClient:
 
     def stop_query(self, queryId: str):
         pass
+
+    def get_paginator(self, api_call):
+        if api_call == "describe_log_groups":
+            return FakeCloudwatchClientLogsDescribeLogGroupsPaginator()
+        raise NotImplementedError(f"Please implement the paginator for {api_call}")
 
 
 class FakeServiceQuotasClient:

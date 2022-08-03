@@ -23,6 +23,7 @@ from typing import (
     Any,
     Callable,
     Dict,
+    Iterable,
     List,
     Literal,
     Mapping,
@@ -32,6 +33,7 @@ from typing import (
     Set,
     Tuple,
     TypedDict,
+    TypeVar,
     Union,
 )
 
@@ -64,6 +66,8 @@ NOW = datetime.now()
 # really need more type annotations to comprehend the dict-o-mania below...
 
 AWSStrings = Union[bytes, str]
+
+T = TypeVar("T")
 
 # TODO
 # Rewrite API calls from low-level client to high-level resource:
@@ -4643,6 +4647,10 @@ LambdaMetricStats = Sequence[Mapping[str, str]]
 
 
 class LambdaCloudwatchInsights(AWSSection):
+    # The maximum number of log groups that can be queried with a single API call - source:
+    # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/logs.html#CloudWatchLogs.Client.start_query
+    MAX_LOG_GROUPS_PER_QUERY = 20
+
     def __init__(
         self,
         client,
@@ -4677,8 +4685,8 @@ class LambdaCloudwatchInsights(AWSSection):
 
     @staticmethod
     def query_results(
-        *, client, query_id: str, timeout_seconds: float, sleep_duration=0.1
-    ) -> Optional[LambdaMetricStats]:
+        *, client, query_id: str, timeout_seconds: float, sleep_duration=0.5
+    ) -> Optional[Sequence[LambdaMetricStats]]:
         "Synchronous wrapper for asynchronous query API with timeout checking. (agent should not be blocked)."
         response_results: Mapping[str, Any] = {"status": "Scheduled"}
         query_start = datetime.now().timestamp()
@@ -4695,56 +4703,113 @@ class LambdaCloudwatchInsights(AWSSection):
             sleep(sleep_duration)
         # stat metrics are always in the first element of the results or an empty list
         return (
-            response_results["results"][0]
+            response_results["results"]
             if response_results["results"] and response_results["status"] == "Complete"
             else None
         )
 
-    def _start_logwatch_query(self, *, log_group_name: str, query_string: str) -> str:
+    def _group_query_results_by_function(
+        self, query_results: Sequence[LambdaMetricStats]
+    ) -> dict[str, LambdaMetricStats]:
+        grouped_results: dict[str, LambdaMetricStats] = {}
+        for query_result in query_results:
+            if not query_result:
+                continue
+            log_name = [e["value"] for e in query_result if e["field"] == "@log"][0]
+            lambda_fn_name = log_name.split("/")[-1]
+            final_query_result = [e for e in query_result if e["field"] != "@log"]
+            grouped_results[lambda_fn_name] = final_query_result
+        return grouped_results
+
+    def _start_logwatch_query(self, *, log_group_names: list[str], query_string: str) -> str:
         end_time_seconds = int(NOW.timestamp())
         start_time_seconds = int(end_time_seconds - self.period)
         response_query_id = self._client.start_query(
-            logGroupName=log_group_name,
+            logGroupNames=log_group_names,
             startTime=start_time_seconds,
             endTime=end_time_seconds,
             queryString=query_string,
         )
         return response_query_id["queryId"]
 
+    def _get_splitted_list(self, source_list: list[T], chunk_size: int) -> list[list[T]]:
+        """
+        Split a list into a list of lists where every nested list has a maximum size of `chunk_size`
+        """
+        return [source_list[i : i + chunk_size] for i in range(0, len(source_list), chunk_size)]
+
+    def _get_all_existing_lambda_log_groups(self) -> set[str]:
+        """
+        Fetches all the existing log groups in the AWS account that are related to lambda functions
+        """
+        log_groups: set[str] = set()
+        for page in self._client.get_paginator("describe_log_groups").paginate(
+            logGroupNamePrefix="/aws/lambda/"
+        ):
+            log_groups.update(
+                e["logGroupName"] for e in self._get_response_content(page, "logGroups")
+            )
+        return log_groups
+
+    def _get_existing_log_groups_for_functions(self, function_names: Iterable[str]) -> list[str]:
+        # We are getting all the existing log groups because we want to query logwatch for multiple
+        # log groups at once but the query fails if one of the log groups don't exist so what might
+        # happen is that we query log groups for 2 functions: 1 that has an existing log group and 1
+        # that doesn't have it, in that case the query fails and we are not getting the data for the
+        # function with a log group.
+        # To prevent this, we just query the log groups that exists by checking that before doing
+        # the actual query.
+        all_existing_log_groups = self._get_all_existing_lambda_log_groups()
+        functions_log_groups = [f"/aws/lambda/{fn_name}" for fn_name in function_names]
+        # `all_existing_log_groups` may contain log groups for lambda functions that don't exist
+        # anymore so we are filtering it to just have the log groups for the existing functions
+        return [e for e in functions_log_groups if e in all_existing_log_groups]
+
     def get_live_data(
         self, *args: AWSColleagueContents
     ) -> Mapping[str, Optional[LambdaMetricStats]]:
         (colleague_contents,) = args
-        queries: list[tuple[str, str]] = []
-        functions_arn: list[str] = list(colleague_contents.content.keys())
-        for function_arn in functions_arn:
-            try:
-                query_id = self._start_logwatch_query(
-                    log_group_name=f"/aws/lambda/{_function_arn_to_function_name_dim(function_arn)}",
-                    query_string='filter @type = "REPORT"'
-                    "| stats "
-                    "max(@maxMemoryUsed) as max_memory_used_bytes,"
-                    "max(@initDuration) as max_init_duration_ms,"
-                    'sum(strcontains(@message, "Init Duration")) as count_cold_starts,'
-                    "count() as count_invocations",
-                )
-                queries.append((function_arn, query_id))
-            except self._client.exceptions.ResourceNotFoundException as e:
-                logging.debug(
-                    "CloudWatch logs not found for lambda function %s: %s", function_arn, e
-                )
-                continue
 
-        cloudwatch_data = {}
-        for function_arn, query_id in queries:
-            current_data = self.query_results(
+        function_name_to_arn: dict[str, str] = {
+            _function_arn_to_function_name_dim(fn_arn): fn_arn
+            for fn_arn in colleague_contents.content.keys()
+        }
+        existing_functions_log_groups = self._get_existing_log_groups_for_functions(
+            function_name_to_arn.keys()
+        )
+        chunked_log_groups: list[list[str]] = self._get_splitted_list(
+            existing_functions_log_groups, self.MAX_LOG_GROUPS_PER_QUERY
+        )
+
+        queries: list[str] = []
+        # Logwatch queries are async jobs so we are first starting all of them and then getting the
+        # result for all of them so that they will be processed in parallel by AWS
+        for curr_log_groups in chunked_log_groups:
+            query_id = self._start_logwatch_query(
+                log_group_names=curr_log_groups,
+                query_string='filter @type = "REPORT"'
+                "| stats "
+                "max(@maxMemoryUsed) as max_memory_used_bytes,"
+                "max(@initDuration) as max_init_duration_ms,"
+                'sum(strcontains(@message, "Init Duration")) as count_cold_starts,'
+                "count() as count_invocations "
+                "by @log",
+            )
+            queries.append(query_id)
+
+        cloudwatch_data: dict[str, LambdaMetricStats] = {}
+        for query_id in queries:
+            query_results = self.query_results(
                 client=self._client,
                 query_id=query_id,
-                timeout_seconds=30,
+                timeout_seconds=60,
             )
-            if not current_data:
+            if not query_results:
                 continue
-            cloudwatch_data[function_arn] = current_data
+            current_data = self._group_query_results_by_function(query_results)
+            for fn_name, fn_stats in current_data.items():
+                fn_arn = function_name_to_arn[fn_name]
+                cloudwatch_data[fn_arn] = fn_stats
         return cloudwatch_data
 
     def _compute_content(

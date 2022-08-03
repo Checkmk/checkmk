@@ -252,9 +252,17 @@ def test_agent_aws_lambda_cloudwatch_insights(
     assert lambda_cloudwatch_insights.cache_interval == 300
     assert lambda_cloudwatch_insights.period == 600
     assert lambda_cloudwatch_insights.name == "lambda_cloudwatch_insights"
+
+    # We should have at least a result otherwise the test is not checking anything
+    assert lambda_cloudwatch_logs_results[0].content
     for result in lambda_cloudwatch_logs_results:
-        for metrics in result.content.values():
-            assert len(metrics) == 3  # all metrics
+        for function_arn, metrics in result.content.items():
+            function_name = function_arn.split(":")[-1]
+            assert function_name not in {
+                "FunctionName-1",  # In the simulation data, the FunctionName-1 log group doesn't exist so we shouldn't have metrics for it
+                "deleted-function",  # In the simulation data, deleted-function is a non-existing function with an existing log group
+            }
+            assert len(metrics) == 4  # all metrics
 
 
 def test_lambda_cloudwatch_insights_query_results_timeout(monkeypatch: MonkeyPatch) -> None:

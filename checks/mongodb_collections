@@ -9,6 +9,8 @@
 
 import json
 
+from cmk.base.plugins.agent_based.utils.mongodb import parse_date
+
 factory_settings["mongodb_collections_levels"] = {"levels_nindexes": (62, 65)}
 
 
@@ -176,7 +178,7 @@ def _mongodb_collections_get_indexes_as_list(data):
     index_list = []
     for index_stat in data.get("indexStats"):
         index_name = index_stat.get("name", "n/a")
-        last_access = index_stat.get("accesses", {}).get("since", {}).get("$date", 0)
+        last_access = parse_date(index_stat.get("accesses", {}).get("since", {}).get("$date", 0))
         number_of_operations = index_stat.get("accesses", {}).get("ops", 0)
         index_list.append((index_name, number_of_operations, last_access))
 

@@ -10,6 +10,8 @@
 import datetime
 import json
 
+from cmk.base.plugins.agent_based.utils.mongodb import parse_date
+
 # levels_mongdb_replication_lag: (lag threshold, time interval for warning, time interval for critical)
 factory_settings["mongodb_replica_set_levels"] = {"levels_mongdb_replication_lag": (10, 60, 3600)}
 
@@ -68,7 +70,7 @@ def check_mongodb_replica_set_lag(_item, params, status_dict):
 
         if member.get("optime", {}).get("ts", {}).get("$timestamp", {}).get("t", None):
             # calculate replication lag
-            member_optime_date = member.get("optimeDate", {}).get("$date", 0)
+            member_optime_date = parse_date(member.get("optimeDate", {}).get("$date", 0))
             replication_lag_sec = _calculate_replication_lag(
                 start_operation_timestamp, member_optime_date
             )
@@ -153,13 +155,13 @@ def _get_start_timestamp(primary, secondaries):
     start_operation_timestamp = 0
     name = "unknown"
     if primary:
-        start_operation_timestamp = primary.get("optimeDate", {}).get("$date", 0)
+        start_operation_timestamp = parse_date(primary.get("optimeDate", {}).get("$date", 0))
         name = "primary (%s)" % primary.get("name")
     else:
         index_to_delete = -1
         for index, member in enumerate(secondaries):
-            if member.get("optimeDate", {}).get("$date", 0) > start_operation_timestamp:
-                start_operation_timestamp = member.get("optimeDate", {}).get("$date", 0)
+            if parse_date(member.get("optimeDate", {}).get("$date", 0)) > start_operation_timestamp:
+                start_operation_timestamp = parse_date(member.get("optimeDate", {}).get("$date", 0))
                 name = "freshest member (%s, no primary available at the moment)" % member.get(
                     "name"
                 )

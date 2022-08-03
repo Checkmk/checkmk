@@ -1,0 +1,17 @@
+Title: <tt>mongodb_collections</tt>, <tt>mongodb_replica_set</tt>: Fix date parsing error
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1659508633
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p10
+
+Depending on the <tt>pymongo</tt> version on the host system, the two check plugins mentioned above
+crashed with
+C+:
+TypeError: unsupported operand type(s) for /: 'str' and 'float'
+TypeError: unsupported operand type(s) for -: 'str' and 'str'
+C-:

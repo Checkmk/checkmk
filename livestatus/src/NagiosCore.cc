@@ -224,18 +224,24 @@ Attributes NagiosCore::customAttributes(const void *holder,
                                         AttributeKind kind) const {
     auto h = *static_cast<const customvariablesmember *const *>(holder);
     Attributes attrs;
+    std::string variable_value;
     for (auto cvm = h; cvm != nullptr; cvm = cvm->next) {
+        if (cvm->variable_value == nullptr) {
+          variable_value = "";
+        } else {
+          variable_value = cvm->variable_value;
+        }
         auto [k, name] = to_attribute_kind(cvm->variable_name);
         if (k == kind) {
             switch (kind) {
                 case AttributeKind::custom_variables:
-                    attrs.emplace(name, cvm->variable_value);
+                    attrs.emplace(name, variable_value);
                     break;
                 case AttributeKind::tags:
                 case AttributeKind::labels:
                 case AttributeKind::label_sources:
                     attrs.emplace(b16decode(name),
-                                  b16decode(cvm->variable_value));
+                                  b16decode(variable_value));
                     break;
             }
         }

@@ -15,3 +15,9 @@ are implemented in various locations.
 
 If you scripted the UI you need to parse the CSRF token from the HTML and send
 it with the Post requests.
+
+Please note: Updating to 2.0.0p26 or newer is a compatible change. You don't have
+to do anything. However, this change introduces new data fields in the user sessions
+which makes this change "incompatible" in case you want to downgrade to an older
+version. In case you have to do it, you will have to clean up all files in
+<tt>[SITE]/var/check_mk/web/[USER]/session_info.mk</tt>.

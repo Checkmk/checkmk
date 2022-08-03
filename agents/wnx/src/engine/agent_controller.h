@@ -61,6 +61,7 @@ std::filesystem::path TomlConfigFile();
 uint16_t GetConfiguredAgentChannelPort(Modus modus);
 bool GetConfiguredLocalOnly();
 bool GetConfiguredCheck();
+bool GetConfiguredAllowElevated();
 bool IsConfiguredEmergencyOnCrash();
 
 /// To be called once when cap is installed

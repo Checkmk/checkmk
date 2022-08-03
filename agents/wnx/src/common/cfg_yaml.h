@@ -203,6 +203,7 @@ constexpr std::string_view kControllerForceLegacy = "force_legacy";    // bool
 constexpr std::string_view kControllerAgentChannel = "agent_channel";  // str
 constexpr std::string_view kControllerLocalOnly = "local_only";        // bool
 constexpr std::string_view kControllerOnCrash = "on_crash";            // string
+constexpr std::string_view kControllerAllowElevated = "allow_elevated";  // bool
 
 constexpr const char *const kFirewall = "firewall";  // dictionary
 constexpr const char *const kFirewallMode = "mode";  // string
@@ -288,6 +289,7 @@ constexpr std::string_view kControllerOnCrashDefault{
 constexpr bool kControllerLocalOnly{true};
 constexpr bool kControllerForceLegacy{false};
 constexpr bool kControllerCheck{true};
+constexpr bool kControllerAllowElevated{true};
 
 }  // namespace defaults
 

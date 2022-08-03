@@ -76,6 +76,10 @@ public:
         remote_ip = ip;
         return {};
     };
+    void SetUp() override {
+        temp_fs = tst::TempCfgFs::CreateNoIo();
+        ASSERT_TRUE(temp_fs->loadFactoryConfig());
+    }
     void TearDown() override { remote_ip.clear(); }
     std::string remote_ip;
     wtools::TestProcessor2 tp;
@@ -99,6 +103,12 @@ public:
         socket.close();
         return count;
     }
+    tst::TempCfgFs::ptr temp_fs;
+    void disableElevatedAllowed() {
+        auto cfg = cfg::GetLoadedConfig();
+        cfg[cfg::groups::kSystem][cfg::vars::kController]
+           [cfg::vars::kControllerAllowElevated] = YAML::Load("no");
+    }
 };
 
 namespace {
@@ -111,7 +121,8 @@ ExternalPort::IoParam makeIoParam(std::optional<uint32_t> pid) {
 }
 }  // namespace
 
-TEST_F(ExternalPortCheckProcessFixture, AnyProcess) {
+TEST_F(ExternalPortCheckProcessFixture, AnyProcessIntegration) {
+    disableElevatedAllowed();
     EXPECT_TRUE(test_port.startIo(reply, makeIoParam({})));
 
     EXPECT_EQ(writeToSocket(tst::TestPort()), 6U);
@@ -120,7 +131,8 @@ TEST_F(ExternalPortCheckProcessFixture, AnyProcess) {
     EXPECT_EQ(remote_ip, text);
 }
 
-TEST_F(ExternalPortCheckProcessFixture, InvalidProcess) {
+TEST_F(ExternalPortCheckProcessFixture, InvalidProcessIntegration) {
+    disableElevatedAllowed();
     EXPECT_TRUE(test_port.startIo(reply, makeIoParam(1)));
 
     EXPECT_EQ(writeToSocket(tst::TestPort()), 6U);
@@ -129,7 +141,17 @@ TEST_F(ExternalPortCheckProcessFixture, InvalidProcess) {
     EXPECT_TRUE(remote_ip.empty());
 }
 
-TEST_F(ExternalPortCheckProcessFixture, ValidProcess) {
+TEST_F(ExternalPortCheckProcessFixture, InvalidProcessDefaultIntegration) {
+    EXPECT_TRUE(test_port.startIo(reply, makeIoParam(1)));
+
+    EXPECT_EQ(writeToSocket(tst::TestPort()), 6U);
+    tst::WaitForSuccessSilent(100ms, [this]() { return !remote_ip.empty(); });
+    test_port.shutdownIo();  // this is long operation
+    EXPECT_EQ(remote_ip, text);
+}
+
+TEST_F(ExternalPortCheckProcessFixture, ValidProcessIntegration) {
+    disableElevatedAllowed();
     EXPECT_TRUE(test_port.startIo(reply, makeIoParam(::GetCurrentProcessId())));
 
     EXPECT_EQ(writeToSocket(tst::TestPort()), 6U);

@@ -876,23 +876,6 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
     def custom_list_buttons(cls, instance: _Self) -> None:
         pass
 
-    @classmethod
-    def get_instances(
-        cls, instances: OverridableInstances[_Self]
-    ) -> tuple[list[_Self], list[_Self], list[_Self]]:
-        my_instances, foreign_instances, builtin_instances = [], [], []
-
-        for instance in instances.instances_sorted():
-            if instance.may_see():
-                if instance.is_builtin():
-                    builtin_instances.append(instance)
-                elif instance.is_mine():
-                    my_instances.append(instance)
-                elif instance.is_published_to_me() or instance.may_delete() or instance.may_edit():
-                    foreign_instances.append(instance)
-
-        return my_instances, foreign_instances, builtin_instances
-
     # Override this in order to display additional columns of an instance
     # in the table of all instances.
     def render_extra_columns(self, table: Table) -> None:
@@ -987,7 +970,7 @@ class ListPage(Page, Generic[_Self]):
         elif request.var("_bulk_delete") and transactions.check_transaction():
             self._bulk_delete_after_confirm(instances)
 
-        my_instances, foreign_instances, builtin_instances = self._type.get_instances(instances)
+        my_instances, foreign_instances, builtin_instances = self._partition_instances(instances)
         for what, title, scope_instances in [
             ("my", _("Customized"), my_instances),
             ("foreign", _("Owned by other users"), foreign_instances),
@@ -997,6 +980,24 @@ class ListPage(Page, Generic[_Self]):
                 self._show_table(instances, what, title, scope_instances)
 
         html.footer()
+
+    @classmethod
+    def _partition_instances(
+        cls,
+        instances: OverridableInstances[_Self],
+    ) -> tuple[list[_Self], list[_Self], list[_Self]]:
+        my_instances, foreign_instances, builtin_instances = [], [], []
+
+        for instance in instances.instances_sorted():
+            if instance.may_see():
+                if instance.is_builtin():
+                    builtin_instances.append(instance)
+                elif instance.is_mine():
+                    my_instances.append(instance)
+                elif instance.is_published_to_me() or instance.may_delete() or instance.may_edit():
+                    foreign_instances.append(instance)
+
+        return my_instances, foreign_instances, builtin_instances
 
     def _bulk_delete_after_confirm(self, instances: OverridableInstances[_Self]) -> None:
         to_delete: list[tuple[UserId, str]] = []

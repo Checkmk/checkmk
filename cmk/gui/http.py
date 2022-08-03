@@ -255,7 +255,7 @@ class Request(
     """Provides information about the users HTTP-request to the application
 
     This class essentially wraps the information provided with the WSGI environment
-    and provides some low level functions to the application for accessing this information.
+    and provides some low-level functions to the application for accessing this information.
     These should be basic HTTP request handling things and no application specific mechanisms.
     """
 
@@ -343,12 +343,12 @@ class Request(
         varname: str,
         deflt: Optional[Validation_T] = None,
     ) -> Optional[Validation_T]:
-        """try to convert the value of a HTTP request variable to given type
+        """Try to convert the value of an HTTP request variable to a given type
 
-        The Checkmk UI excepts `MKUserError` exceptions to be raised by
-        validation errors. In this case the UI displays a textual error message to the
-        user without triggering a crash report. The `ValueError` exceptions raises by
-        the `__new__` method of `type_` are catched and re-raised as `MKUserError` to
+        The Checkmk UI excepts `MKUserError` *exceptions* to be raised by
+        validation errors. In this case, the UI displays a textual error message to the
+        user without triggering a crash report. The `ValueError` *exceptions* raised by
+        the `__new__` method of `type_` are caught and re-raised as `MKUserError` to
         trigger the intended error handling.
         """
         raw_value = self.var(varname)
@@ -369,7 +369,7 @@ class Request(
 
     def get_ascii_input(self, varname: str, deflt: Optional[str] = None) -> Optional[str]:
         """Helper to retrieve a byte string and ensure it only contains ASCII characters
-        In case a non ASCII character is found an MKUserError() is raised."""
+        In case a non-ASCII character is found an MKUserError() is raised."""
         value = self.get_str_input(varname, deflt)
         if value is None:
             return value

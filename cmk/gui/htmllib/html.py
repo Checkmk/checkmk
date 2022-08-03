@@ -209,8 +209,8 @@ class HTMLGenerator(HTMLWriter):
         self.title(title)
 
         # If the variable _link_target is set, then all links in this page
-        # should be targetted to the HTML frame named by _link_target. This
-        # is e.g. useful in the dash-board
+        # should be targeted to the HTML frame named by _link_target.
+        # This is e.g. useful in the dashboard
         if self.link_target:
             self.base(target=self.link_target)
 

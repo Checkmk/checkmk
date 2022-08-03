@@ -280,12 +280,12 @@ public:
     }
     tst::TempCfgFs::ptr temp_fs;
     MailData md;
-    mailslot::Slot mailbox{"local_test", ::GetCurrentProcessId()};
+    mailslot::Slot mailbox{mailslot::BuildMailSlotNameRoot() + "local_test"};
     const std::string cmd{
         fmt::format("monitoring_request:\n"
                     "  text: '127.0.0.1 {}'\n"
                     "  id: 0\n",
-                    mailbox.GetName())};
+                    "local_test")};
     bool ready{false};
     ServiceProcessor sp{100ms, [this]() {
                             ready = true;

@@ -116,7 +116,7 @@ async fn async_collect_from_mailslot(agent_mailslot: &str, remote_ip: IpAddr) ->
     let value = tokio::time::timeout(MAX_ANSWER_WAIT_TIME, backend.tx.recv())
         .await
         .unwrap_or_else(|e| {
-            warn!("Error {:?}", e);
+            warn!("Error on receive from channel {:?}", e);
             Some("".to_string()) // we return empty string on timeout
         })
         .unwrap_or_default();

@@ -396,7 +396,8 @@ void ExternalPort::processRequest(const ReplyFunc &reply,
         return;
     }
 
-    const auto result = SendDataToMailSlot(r.mailslot_name, send_back);
+    const auto result = SendDataToMailSlot(
+        mailslot::BuildMailSlotNameRoot(".") + r.mailslot_name, send_back);
     XLOG::d.i("Send [{}] bytes of data to [{}] - {}", send_back.size(),
               r.mailslot_name, result ? "OK" : "FAIl");
 

@@ -26,5 +26,5 @@ class FakeStatusSocket:
 
     def get_response(self) -> list:
         response = ast.literal_eval(self._response.decode("utf-8"))
-        assert isinstance(response, list)
+        # assert isinstance(response, list)
         return response

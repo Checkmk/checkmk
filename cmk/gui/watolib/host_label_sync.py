@@ -37,7 +37,7 @@ from cmk.gui.log import logger
 from cmk.gui.site_config import get_site_config, has_wato_slave_sites, wato_slave_sites
 from cmk.gui.utils.script_helpers import make_request_context
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
-from cmk.gui.watolib.automations import do_remote_automation
+from cmk.gui.watolib.automations import do_remote_automation, MKAutomationException
 from cmk.gui.watolib.hosts_and_folders import Host
 
 
@@ -247,6 +247,15 @@ def _execute_site_sync(
             error="",
             updated_host_labels=result.updated_host_labels,
         )
+
+    except MKAutomationException as e:
+        return SiteResult(
+            site_id=site_id,
+            success=False,
+            error=str(e),
+            updated_host_labels=[],
+        )
+
     except Exception as e:
         logger.error("Exception (%s, discovered_host_label_sync)", site_id, exc_info=True)
         return SiteResult(

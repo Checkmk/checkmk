@@ -27,9 +27,6 @@ from ..checktestlib import (
 )
 from .checkhandler import checkhandler
 
-# TODO CMK-4180
-# from cmk.gui.watolib.rulespecs import rulespec_registry
-
 
 class DiscoveryParameterTypeError(AssertionError):
     pass
@@ -117,16 +114,6 @@ def get_discovery_actual(check, info_arg, immu):
     return d_result
 
 
-def update_dataset_attrs_with_discovery(dataset, check, subcheck, discovery_result):
-    """Feed discovery results into check test cases to run and write later"""
-    dataset.discovery[subcheck] = discovery_result.labels.to_list()
-    for entry in discovery_result.entries:
-        params = get_merged_parameters(check, entry.default_params)
-        dataset.discovery[subcheck].append(entry.tuple)
-        # add test cases for DiscoveryResult entries
-        dataset.update_check_result(subcheck, (entry.item, params, []))
-
-
 def validate_discovered_params(check, params):
     """Validate params with respect to the rule's valuespec"""
     # TODO CMK-4180
@@ -200,16 +187,13 @@ def run_test_on_parse(dataset, immu):
     return parsed
 
 
-def run_test_on_discovery(check, subcheck, dataset, info_arg, immu, write):
+def run_test_on_discovery(check, subcheck, dataset, info_arg, immu):
     d_result_act = get_discovery_actual(check, info_arg, immu)
-    if write:
-        update_dataset_attrs_with_discovery(dataset, check, subcheck, d_result_act)
-    else:
-        d_result_exp = get_discovery_expected(subcheck, dataset)
-        assertDiscoveryResultsEqual(check, d_result_act, d_result_exp)
+    d_result_exp = get_discovery_expected(subcheck, dataset)
+    assertDiscoveryResultsEqual(check, d_result_act, d_result_exp)
 
 
-def run_test_on_checks(check, subcheck, dataset, info_arg, immu, write):
+def run_test_on_checks(check, subcheck, dataset, info_arg, immu):
     """Run check for test case listed in dataset"""
     test_cases = getattr(dataset, "checks", {}).get(subcheck, [])
     check_func = check.info.get("check_function")
@@ -227,11 +211,7 @@ def run_test_on_checks(check, subcheck, dataset, info_arg, immu, write):
 
         result_expected = CheckResult(results_expected_raw)
 
-        if write:
-            new_entry = (item, params, result.raw_repr())
-            dataset.update_check_result(subcheck, new_entry)
-        else:
-            assertCheckResultsEqual(result, result_expected)
+        assertCheckResultsEqual(result, result_expected)
 
 
 @contextmanager
@@ -248,7 +228,7 @@ def optional_freeze_time(dataset):
         yield
 
 
-def run(check_info, dataset, write=False):
+def run(check_info, dataset):
     """Run all possible tests on 'dataset'"""
     print("START: %r" % (dataset,))
     checklist = checkhandler.get_applicables(dataset.checkname, check_info)
@@ -275,8 +255,8 @@ def run(check_info, dataset, write=False):
                 check, mock_hec
             ), MockHostExtraConf(check, mock_hecm, "host_extra_conf_merged"):
 
-                run_test_on_discovery(check, subcheck, dataset, info_arg, immu, write)
+                run_test_on_discovery(check, subcheck, dataset, info_arg, immu)
 
-                run_test_on_checks(check, subcheck, dataset, info_arg, immu, write)
+                run_test_on_checks(check, subcheck, dataset, info_arg, immu)
 
         immu.test(" at end of subcheck loop %r " % (subcheck,))

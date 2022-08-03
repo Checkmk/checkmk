@@ -12,12 +12,24 @@ import pytest
 import cmk.utils.paths
 
 import cmk.ec.export as ec
-import cmk.ec.history
-import cmk.ec.main
+from cmk.ec.config import Config, ConfigFromWATO
+from cmk.ec.history import History
+from cmk.ec.main import (
+    default_slave_status_master,
+    ECLock,
+    EventServer,
+    EventStatus,
+    Perfcounters,
+    SlaveStatus,
+    StatusServer,
+    StatusTableEvents,
+    StatusTableHistory,
+)
+from cmk.ec.settings import Settings
 
 
 @pytest.fixture(name="settings", scope="function")
-def fixture_settings():
+def fixture_settings() -> Settings:
     return ec.settings(
         "1.2.3i45",
         cmk.utils.paths.omd_root,
@@ -27,48 +39,56 @@ def fixture_settings():
 
 
 @pytest.fixture(name="lock_configuration", scope="function")
-def fixture_lock_configuration():
-    return cmk.ec.main.ECLock(logging.getLogger("cmk.mkeventd.configuration"))
+def fixture_lock_configuration() -> ECLock:
+    return ECLock(logging.getLogger("cmk.mkeventd.configuration"))
 
 
 @pytest.fixture(name="slave_status", scope="function")
-def fixture_slave_status():
-    return cmk.ec.main.default_slave_status_master()
+def fixture_slave_status() -> SlaveStatus:
+    return default_slave_status_master()
 
 
 @pytest.fixture(name="config", scope="function")
-def fixture_config():
+def fixture_config() -> ConfigFromWATO:
     return ec.default_config()
 
 
 @pytest.fixture(name="history", scope="function")
-def fixture_history(settings, config):
-    return cmk.ec.history.History(
+def fixture_history(settings: Settings, config: Config) -> History:
+    return History(
         settings,
         config,
         logging.getLogger("cmk.mkeventd"),
-        cmk.ec.main.StatusTableEvents.columns,
-        cmk.ec.main.StatusTableHistory.columns,
+        StatusTableEvents.columns,
+        StatusTableHistory.columns,
     )
 
 
 @pytest.fixture(name="perfcounters", scope="function")
-def fixture_perfcounters():
-    return cmk.ec.main.Perfcounters(logging.getLogger("cmk.mkeventd.lock.perfcounters"))
+def fixture_perfcounters() -> Perfcounters:
+    return Perfcounters(logging.getLogger("cmk.mkeventd.lock.perfcounters"))
 
 
 @pytest.fixture(name="event_status", scope="function")
-def fixture_event_status(settings, config, perfcounters, history):
-    return cmk.ec.main.EventStatus(
+def fixture_event_status(
+    settings: Settings, config: Config, perfcounters: Perfcounters, history: History
+) -> EventStatus:
+    return EventStatus(
         settings, config, perfcounters, history, logging.getLogger("cmk.mkeventd.EventStatus")
     )
 
 
 @pytest.fixture(name="event_server", scope="function")
 def fixture_event_server(
-    settings, config, slave_status, perfcounters, lock_configuration, history, event_status
-):
-    return cmk.ec.main.EventServer(
+    settings: Settings,
+    config: Config,
+    slave_status: SlaveStatus,
+    perfcounters: Perfcounters,
+    lock_configuration: ECLock,
+    history: History,
+    event_status: EventStatus,
+) -> EventServer:
+    return EventServer(
         logging.getLogger("cmk.mkeventd.EventServer"),
         settings,
         config,
@@ -77,23 +97,23 @@ def fixture_event_server(
         lock_configuration,
         history,
         event_status,
-        cmk.ec.main.StatusTableEvents.columns,
+        StatusTableEvents.columns,
         False,
     )
 
 
 @pytest.fixture(name="status_server", scope="function")
 def fixture_status_server(
-    settings,
-    config,
-    slave_status,
-    perfcounters,
-    lock_configuration,
-    history,
-    event_status,
-    event_server,
-):
-    return cmk.ec.main.StatusServer(
+    settings: Settings,
+    config: Config,
+    slave_status: SlaveStatus,
+    perfcounters: Perfcounters,
+    lock_configuration: ECLock,
+    history: History,
+    event_status: EventStatus,
+    event_server: EventServer,
+) -> StatusServer:
+    return StatusServer(
         logging.getLogger("cmk.mkeventd.StatusServer"),
         settings,
         config,

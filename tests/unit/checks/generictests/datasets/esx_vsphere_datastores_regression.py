@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# yapf: disable
+# fmt: off
 # type: ignore
 from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 

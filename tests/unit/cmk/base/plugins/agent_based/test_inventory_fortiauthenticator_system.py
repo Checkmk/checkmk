@@ -5,7 +5,7 @@
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.inventory_fortiauthenticator_system import (
-    inventory_fortiauthenticator_system,  # yapf: disable
+    inventory_fortiauthenticator_system,  # fmt: off
 )
 
 from .utils_inventory import sort_inventory_result

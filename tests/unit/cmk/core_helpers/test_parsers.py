@@ -674,7 +674,7 @@ class TestSectionMarker:
             ("my.section:sep(0):cached(23,42)", None, {}),  # invalid section name
             ("", None, {}),  # invalid section name
         ],
-    )  # yapf: disable
+    )  # fmt: off
     def test_options_from_headerline(  # type:ignore[no-untyped-def]
         self, headerline, section_name, section_options
     ) -> None:

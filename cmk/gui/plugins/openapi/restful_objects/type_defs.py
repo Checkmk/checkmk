@@ -54,7 +54,7 @@ DomainType = Literal[
     "user",
     "user_config",
     "user_role",
-]  # yapf: disable
+]  # fmt: off
 
 DomainObject = Dict[str, Any]
 
@@ -147,7 +147,7 @@ RestfulEndpointName = Literal[
     ".../user",
     ".../value",  # takes params
     ".../version",
-]  # yapf: disable
+]  # fmt: off
 
 LinkRelation = Union[CmkEndpointName, RestfulEndpointName]
 
@@ -172,7 +172,7 @@ PropertyFormat = Literal[
     # Non-string values
     "decimal",  # the number should be interpreted as a float-point decimal.
     "int",  # the number should be interpreted as an integer.
-]  # yapf: disable
+]  # fmt: off
 CollectionItem = Dict[str, str]
 LocationType = Literal["path", "query", "header", "cookie"]
 ResultType = Literal["object", "list", "scalar", "void"]

@@ -102,12 +102,12 @@ def check_netapp_api_environment_threshold(item, _no_params, parsed):
     # (Also battery_life, unknown and counter, but these are currently not used.)
     unit = parsed.get("value-units", "")
 
-    # yapf: disable
+    # fmt: off
     levels = (_scale(maybefloat(parsed.get('warning-high-threshold')), unit),
               _scale(maybefloat(parsed.get('critical-high-threshold')), unit),
               _scale(maybefloat(parsed.get('warning-low-threshold')), unit),
               _scale(maybefloat(parsed.get('critical-low-threshold')), unit))
-    # yapf: enable
+    # fmt: on
 
     sensor_type = parsed["sensor-type"]
     sensor_name = parsed["sensor-name"]

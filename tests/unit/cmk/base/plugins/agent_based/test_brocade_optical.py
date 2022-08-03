@@ -173,7 +173,7 @@ def test_check_brocade_optical(item, params, section, expected) -> None:
 
 
 # Disable auto-formatting here as it takes ages
-# yapf: disable
+# fmt: off
 @pytest.mark.parametrize('string_table, discovery_results, items_params_results', [
     (
         [
@@ -731,7 +731,7 @@ def test_check_brocade_optical(item, params, section, expected) -> None:
         ],
     )
 ])
-# yapf: enable
+# fmt: on
 def test_regression(
     string_table,
     discovery_results,

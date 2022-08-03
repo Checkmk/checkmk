@@ -201,7 +201,7 @@ def _lcp_sensor():
             ["2.49", "Air.Fans.Fan4.Status", "7", "", "0", "OK", "4"],
             ["2.50", "Air.Fans.Fan4.Category", "14", "", "0", "2", "2"],
         ],
-    ]  # yapf: disable
+    ]  # fmt: off
 
 
 @pytest.mark.usefixtures("fix_register")
@@ -438,7 +438,7 @@ def _phase_sensor():
             ["1.128", "Memory.USB-Stick.Status", "7", "", "0", "n.a.", "1"],
             ["1.129", "Memory.USB-Stick.Category", "14", "", "1", "16", "16"],
         ],
-    ]  # yapf: disable
+    ]  # fmt: off
 
 
 def test_phase_sensors() -> None:
@@ -552,7 +552,7 @@ def _access_info():
             ["3.6", "Access.Status", "7", "", "0", "Closed", "13"],
             ["3.7", "Access.Category", "14", "", "0", "0", "0"],
         ],
-    ]  # yapf: disable
+    ]  # fmt: off
 
 
 @pytest.mark.usefixtures("fix_register")
@@ -871,7 +871,7 @@ def _generictest_cmciii():
             ["4.4", "Smoke.Status", "7", "", "0", "OK", "4"],
             ["4.5", "Smoke.Category", "14", "", "0", "80", "80"],
         ],
-    ]  # yapf: disable
+    ]  # fmt: off
 
 
 @pytest.mark.usefixtures("fix_register")
@@ -1301,7 +1301,7 @@ def _generictest_cmciii_input_regression():
             ["4.4", "Input.Status", "7", "", "0", "Closed", "13"],
             ["4.5", "Input.Category", "14", "", "0", "0", "0"],
         ],
-    ]  # yapf: disable
+    ]  # fmt: off
 
 
 @pytest.mark.usefixtures("fix_register")

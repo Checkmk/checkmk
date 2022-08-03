@@ -24,7 +24,7 @@ BackupPath = Tuple[str, str, str, str, bool]
 
 def backup_paths() -> List[BackupPath]:
     # TODO: Refactor to named tuples
-    # yapf: disable
+    # fmt: off
     return [
         # tarname               path                 canonical name   description                is_dir
         ('check_mk_configfile', cmk.utils.paths.main_config_file,    "main.mk",       "Main configuration file",           False, ),
@@ -35,7 +35,7 @@ def backup_paths() -> List[BackupPath]:
         ('tcp_cache_dir',       cmk.utils.paths.tcp_cache_dir,       "",              "Agent cache",                       True,  ),
         ('logwatch_dir',        cmk.utils.paths.logwatch_dir,        "",              "Logwatch",                          True,  ),
     ]
-    # yapf: enable
+    # fmt: on
 
 
 def do_backup(tarname: str) -> None:

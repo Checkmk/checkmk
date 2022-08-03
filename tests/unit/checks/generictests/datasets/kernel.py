@@ -5,7 +5,7 @@
 
 from cmk.base.plugins.agent_based.kernel import parse_kernel
 
-# yapf: disable
+# fmt: off
 
 freeze_time = '2020-06-04 15:40:00'
 

@@ -56,7 +56,7 @@ HTTPMethod = Literal[
     "PUT",
     "POST",
     "DELETE",
-]  # yapf: disable
+]  # fmt: off
 
 
 @pytest.fixture()

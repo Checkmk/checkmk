@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: skip-file
-# yapf: disable
+# fmt: off
 # type: ignore
 checkname = 'storeonce4x_alerts'
 

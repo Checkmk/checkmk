@@ -46,7 +46,7 @@ DowntimeMode = Literal[
     "service",
     "hostgroup",
     "servicegroup",
-]  # yapf: disable
+]  # fmt: off
 
 
 def _set_downtime(

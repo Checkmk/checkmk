@@ -1,4 +1,4 @@
-# yapf: disable
+# fmt: off
 
 
 checkname = 'watchdog_sensors'

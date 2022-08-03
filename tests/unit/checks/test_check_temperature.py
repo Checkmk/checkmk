@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # coding=utf-8
-# yapf: disable
+# fmt: off
 import datetime as dt
 from typing import Any, Mapping, NamedTuple
 

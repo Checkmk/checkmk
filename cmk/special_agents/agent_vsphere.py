@@ -75,7 +75,7 @@ REQUESTED_COUNTERS_KEYS = (
 
 
 class SoapTemplates:
-    # yapf: disable
+    # fmt: off
     SYSTEMINFO = (
         '<ns1:RetrieveServiceContent xsi:type="ns1:RetrieveServiceContentRequestType">'
         '  <ns1:_this type="ServiceInstance">ServiceInstance</ns1:_this>'
@@ -862,7 +862,7 @@ class SoapTemplates:
         '  <ns1:options/>'
         '</ns1:RetrievePropertiesEx>'
     )
-    # yapf: enable
+    # fmt: on
 
     def __init__(self, system_fields) -> None:  # type:ignore[no-untyped-def]
         super().__init__()

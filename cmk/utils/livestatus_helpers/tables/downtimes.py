@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.utils.livestatus_helpers.types import Column, Table
 
-# yapf: disable
+# fmt: off
 
 
 class Downtimes(Table):

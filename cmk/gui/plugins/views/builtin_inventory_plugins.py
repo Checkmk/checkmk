@@ -22,7 +22,7 @@ from cmk.gui.plugins.visuals.inventory import (
     FilterInvtableVersion,
 )
 
-# yapf: disable
+# fmt: off
 
 inventory_displayhints.update({
     ".hardware.": {"title": _l("Hardware"), "icon": "hardware"},
@@ -1087,4 +1087,4 @@ inventory_displayhints.update({
 }
 )
 
-# yapf: enable
+# fmt: on

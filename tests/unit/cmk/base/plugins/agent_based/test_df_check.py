@@ -39,7 +39,7 @@ info_df_win = [
     ["New_Volume", "NTFS", "124929596", "50840432", "74089164", "41%", "F:\\"],
 ]
 
-# yapf: disable
+# fmt: off
 info_df_lnx_docker = [
     ['/dev/sda2', 'ext4', '143786696', '101645524', '34814148', '75%', '/var/lib/docker'],
     ['/dev/sda3', 'ext4', '143786696', '101645524', '34814148', '75%', '/var/lib/docker-latest'],
@@ -52,22 +52,22 @@ info_df_lnx_docker = [
     ['/dev/sdb1', 'ext4', '8388608', '586810', '7801798', '7%', '/var/lib/docker/volumes'],
     ['[df_inodes_end]'],
 ]
-# yapf:enable
+# fmt: on
 
 info_df_lnx_tmpfs = [
-    ['tmpfs', 'tmpfs', '8152820', '76', '8152744', '1%', '/opt/omd/sites/heute/tmp'],
-    ['tmpfs', 'tmpfs', '8152840', '118732', '8034108', '2%', '/dev/shm'],
-    ['[df_inodes_start]'],
-    ['tmpfs', 'tmpfs', '2038205', '48', '2038157', '1%', '/opt/omd/sites/heute/tmp'],
-    ['tmpfs', 'tmpfs', '2038210', '57', '2038153', '1%', '/dev/shm'],
-    ['[df_inodes_end]'],
+    ["tmpfs", "tmpfs", "8152820", "76", "8152744", "1%", "/opt/omd/sites/heute/tmp"],
+    ["tmpfs", "tmpfs", "8152840", "118732", "8034108", "2%", "/dev/shm"],
+    ["[df_inodes_start]"],
+    ["tmpfs", "tmpfs", "2038205", "48", "2038157", "1%", "/opt/omd/sites/heute/tmp"],
+    ["tmpfs", "tmpfs", "2038210", "57", "2038153", "1%", "/dev/shm"],
+    ["[df_inodes_end]"],
 ]
 
 # NOTE: This gargantuan test info section is uncritically used data from an archived agent output.
 #       I suspect that our handling of btrfs is not really adequate, test cases using this data
 #       serve the sole purpose of not inadvertenty breaking the status quo. Thus:
 # TODO: Replace this monstrosity with something more concise.
-# yapf: disable
+# fmt: off
 info_df_btrfs = [
     ['/dev/sda1', 'btrfs', '20970496', '4169036', '16539348', '21%', '/'],
     ['devtmpfs', 'devtmpfs', '497396', '0', '497396', '0%', '/dev'],
@@ -121,7 +121,7 @@ info_df_btrfs = [
     ['}'],
     ['[df_lsblk_end]']
 ]
-# yapf: enable
+# fmt: on
 
 info_empty_inodes = [
     ["[df_inodes_start]"],

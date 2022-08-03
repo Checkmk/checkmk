@@ -39,7 +39,7 @@ TABLE_FILE_TEMPLATE: Final = '''#!/usr/bin/env python3
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.utils.livestatus_helpers.types import Column, Table
 
-# yapf: disable
+# fmt: off
 
 
 class {{ table_name.title() }}(Table):

@@ -5,7 +5,7 @@
 
 from cmk.base.plugins.agent_based.docker_container_mem import parse_docker_container_mem
 from cmk.base.plugins.agent_based.docker_container_mem_cgroupv2 import (
-    parse_docker_container_mem_cgroupv2,  # yapf: disable
+    parse_docker_container_mem_cgroupv2,  # fmt: off
 )
 
 # 16GB RAM

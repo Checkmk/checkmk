@@ -204,15 +204,13 @@ class Base(abc.ABC, Generic[_T_BaseSpec]):
     def phrase(cls, phrase: PagetypePhrase) -> str:
         return _("MISSING '%s'") % phrase
 
-    # Implement this function in a subclass in order to add parameters
-    # to be editable by the user when editing the details of such page
-    # type.
-    # Returns a list of entries.
-    # Each entry is a pair of a topic and a list of elements.
-    # Each element is a triple of order, key and valuespec
-    # TODO: Add topic here
     @classmethod
     def parameters(cls, mode: PageMode) -> list[tuple[str, list[tuple[float, str, ValueSpec]]]]:
+        """Defines the parameter to be configurable by the user when editing this object
+
+        Implement this function in a subclass in order to add parameters to be editable by
+        the user when editing the details of such page type.
+        """
         return [
             (
                 _("General Properties"),
@@ -397,6 +395,35 @@ class OverridableInstances(Generic[_T]):
             return foreign
         return None
 
+    def pages(self) -> list[_T]:
+        """Return all pages visible to the user, implements shadowing etc."""
+        pages = {}
+
+        # Builtin pages
+        for page in self.instances():
+            if page.is_published_to_me() and page.may_see() and page.is_builtin():
+                pages[page.name()] = page
+
+        # Public pages by normal other users
+        for page in self.instances():
+            if page.is_published_to_me() and page.may_see():
+                pages[page.name()] = page
+
+        # Public pages by admin users, forcing their versions over others
+        for page in self.instances():
+            if page.is_published_to_me() and page.may_see() and page.is_public_forced():
+                pages[page.name()] = page
+
+        # My own pages
+        for page in self.instances():
+            if page.is_mine_and_may_have_own():
+                pages[page.name()] = page
+
+        return sorted(pages.values(), key=lambda x: x.title())
+
+    def page_choices(self) -> list[tuple[str, str]]:
+        return [(page.name(), page.title()) for page in self.pages()]
+
 
 class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
     # Default values for the creation dialog can be overridden by the
@@ -474,15 +501,15 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         return self.publish_is_allowed()
 
     def publish_is_allowed(self) -> bool:
-        """Whether or not not publishing an element to other users is allowed by the owner"""
+        """Whether publishing an element to other users is allowed by the owner"""
         return not self.owner() or user_may(self.owner(), "general.publish_" + self.type_name())
 
-    # Same, but checks if the owner has the permission to override builtin views
     def is_public_forced(self) -> bool:
+        """Whether the user is allowed to override builtin pagetypes"""
         return self.is_public() and user_may(self.owner(), "general.force_" + self.type_name())
 
     def is_published_to_me(self) -> bool:
-        """Whether or not the page is published to the currently active user"""
+        """Whether the page is published to the currently active user"""
         if self._["public"] is True:
             return self.publish_is_allowed()
 
@@ -749,38 +776,6 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
                 _("Sorry, you lack the permission. Operation: %s, table: %s")
                 % ("edit", cls.phrase("title_plural"))
             )
-
-    # Return all pages visible to the user, implements shadowing etc.
-    @classmethod
-    def pages(cls: Type[_Self]) -> list[_Self]:
-        instances = cls.load()
-        pages = {}
-
-        # Builtin pages
-        for page in instances.instances():
-            if page.is_published_to_me() and page.may_see() and page.is_builtin():
-                pages[page.name()] = page
-
-        # Public pages by normal other users
-        for page in instances.instances():
-            if page.is_published_to_me() and page.may_see():
-                pages[page.name()] = page
-
-        # Public pages by admin users, forcing their versions over others
-        for page in instances.instances():
-            if page.is_published_to_me() and page.may_see() and page.is_public_forced():
-                pages[page.name()] = page
-
-        # My own pages
-        for page in instances.instances():
-            if page.is_mine_and_may_have_own():
-                pages[page.name()] = page
-
-        return sorted(pages.values(), key=lambda x: x.title())
-
-    @classmethod
-    def page_choices(cls) -> list[tuple[str, str]]:
-        return [(page.name(), page.title()) for page in cls.pages()]
 
     @classmethod
     def builtin_pages(cls) -> Mapping[str, _T_OverridableSpec]:
@@ -1247,7 +1242,6 @@ class EditPage(Page, Generic[_T_OverridableSpec, _Self]):
         self,
     ) -> tuple[list[tuple[str, ValueSpec]], list[tuple[str, list[str]]]]:
         topics: dict[str, list[tuple[float, str, ValueSpec]]] = {}
-        # TODO: Parameter seems to be unused - remove it
         for topic, elements in self._type.parameters("edit"):
             el = topics.setdefault(topic, [])
             el += elements
@@ -1557,20 +1551,20 @@ class OverridableContainer(Overridable[_T_OverridableContainerSpec, _Self]):
         if not cls.may_contain(added_type):
             return []
 
-        pages = cls.pages()
+        pages = cls.load().pages()
         if not pages:
             return []
 
         return [
             PageMenuTopic(
                 title=cls.phrase("add_to"),
-                entries=list(cls._page_menu_add_to_entries()),
+                entries=list(cls._page_menu_add_to_entries(pages)),
             )
         ]
 
     @classmethod
-    def _page_menu_add_to_entries(cls) -> Iterator[PageMenuEntry]:
-        for page in cls.pages():
+    def _page_menu_add_to_entries(cls, pages: list[_Self]) -> Iterator[PageMenuEntry]:
+        for page in pages:
             yield PageMenuEntry(
                 title=page.title(),
                 icon_name=cls.type_name(),
@@ -1793,12 +1787,6 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec, _SelfPageRenderer])
                 _("Cannot find %s with the name %s") % (cls.phrase("title"), name)
             )
         return page
-
-    @classmethod
-    def sidebar_links(cls: Type[_Self]) -> Iterator[tuple[str, str, str]]:
-        for page in cls.pages():
-            if page._show_in_sidebar():
-                yield page.topic(), page.title(), page.page_url()
 
     def topic(self) -> str:
         try:

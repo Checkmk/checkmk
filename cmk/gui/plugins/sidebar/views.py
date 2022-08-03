@@ -67,7 +67,7 @@ def get_view_menu_items(include_reports: bool) -> List[TopicMenuTopic]:
         if not issubclass(page_type, pagetypes.PageRenderer):
             continue
 
-        for page in page_type.pages():
+        for page in page_type.load().pages():
             if page._show_in_sidebar():
                 visual = page.internal_representation().copy()
                 visual["hidden"] = False  # Is currently to configurable for pagetypes

@@ -441,6 +441,9 @@ test-cargo-clippy:
 test-cargo-clippy-docker:
 	$(SCRIPTS)/run-in-docker.sh make test-cargo-clippy
 
+test-find-dirty-files-in-git:
+	scripts/find_dirty_files_in_git
+
 # Run `validate_changes` in live-mode i.e. not creating a JSON file
 # containing build steps to be executed by Jenkins but directly running
 # them.

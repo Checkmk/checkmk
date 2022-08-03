@@ -1,0 +1,17 @@
+Title: AWS special agent: improve performance for lambda functions data fetch
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1659542108
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+This werk improves the performances and reduces the number of API calls
+of the AWS special agent when fetching data for lambda functions.
+
+The change is mainly beneficial for users that are monitoring AWS
+accounts with several lambda functions that could hit a timeout before
+this change.
+

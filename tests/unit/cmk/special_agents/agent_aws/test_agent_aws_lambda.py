@@ -254,9 +254,17 @@ def test_agent_aws_lambda_cloudwatch_insights(
     assert lambda_cloudwatch_insights.cache_interval == 300
     assert lambda_cloudwatch_insights.period == 600
     assert lambda_cloudwatch_insights.name == "lambda_cloudwatch_insights"
+
+    # We should have at least a result otherwise the test is not checking anything
+    assert lambda_cloudwatch_logs_results[0].content
     for result in lambda_cloudwatch_logs_results:
-        for metrics in result.content.values():
-            assert len(metrics) == 3  # all metrics
+        for function_arn, metrics in result.content.items():
+            function_name = function_arn.split(":")[-1]
+            assert function_name not in {
+                "FunctionName-1",  # In the simulation data, the FunctionName-1 log group doesn't exist so we shouldn't have metrics for it
+                "deleted-function",  # In the simulation data, deleted-function is a non-existing function with an existing log group
+            }
+            assert len(metrics) == 4  # all metrics
 
 
 def test_lambda_cloudwatch_insights_query_results_timeout(monkeypatch: MonkeyPatch) -> None:
@@ -276,33 +284,3 @@ def test_lambda_cloudwatch_insights_query_results_timeout(monkeypatch: MonkeyPat
         )
         is None
     )
-
-
-@pytest.mark.parametrize("names,tags", no_tags_or_names_params)
-def test_lambda_cloudwatch_insights_log_not_existing(
-    mocker: MockerFixture, names: Sequence[str], tags: Sequence[Tuple[str, str]]
-) -> None:
-    (
-        _lambda_limits,
-        lambda_summary,
-        lambda_provisioned_concurrency_configuration,
-        _lambda_cloudwatch,
-        lambda_cloudwatch_insights,
-    ) = get_lambda_sections(names, tags)
-    mocker.patch.object(
-        FakeCloudwatchClientLogsClient,
-        "get_query_results",
-        side_effect=FakeResourceNotFoundException,
-    )
-
-    lambda_summary.run()
-    # LambdaProvisionedConcurrency needs LambdaSummary content in order to have content
-    # (as it is specified in the _get_colleague_contents method)
-    lambda_provisioned_concurrency_configuration.run()
-    # LambdaCloudwatchInsights needs LambdaProvisionedConcurrency content in order to have
-    # content (as it is specified in the _get_colleague_contents method).
-    # We are asserting that the colleague contents is present because otherwise the test is not
-    # checking anything
-    assert lambda_cloudwatch_insights._get_colleague_contents().content
-    lambda_cloudwatch_logs_results = lambda_cloudwatch_insights.run().results
-    assert len(lambda_cloudwatch_logs_results) == 0

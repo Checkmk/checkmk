@@ -19,17 +19,12 @@ powershell Write-Host "Pip Upgraded" -Foreground Green
 ) else (
   powershell Write-Host "Pip Upgrade Failed"  -Foreground Red
 )
+
 @!ppath!\pip install pyinstaller > nul 2>&1 
 if "%errorlevel%" == "0" (
 powershell Write-Host "pyinstaller installed" -Foreground Green 
 ) else (
   powershell Write-Host "pyinstaller install Failed"  -Foreground Red
-)
-@!ppath!\pip install yapf > nul 2>&1 
-if "%errorlevel%" == "0" (
-powershell Write-Host "yapf installed" -Foreground Green 
-) else (
-  powershell Write-Host "yapf install Failed"  -Foreground Red
 )
 
 @!ppath!\pip install future> nul 2>&1 

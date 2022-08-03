@@ -83,7 +83,7 @@ endif
 .PHONY: all analyze build check check-binaries check-permissions check-version \
         clean compile-neb-cmc compile-neb-cmc-docker dist documentation \
         documentation-quick format format-c test-format-c format-python format-shell \
-        format-js GTAGS headers help install iwyu mrproper mrclean optimize-images \
+        format-js GTAGS help install iwyu mrproper mrclean optimize-images \
         packages setup setversion tidy version am--refresh skel openapi openapi-doc \
         protobuf-files
 
@@ -299,10 +299,6 @@ setversion:
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise NEW_VERSION=$(NEW_VERSION) setversion
 endif
-
-headers:
-	doc/helpers/headrify
-
 
 $(OPENAPI_SPEC): $(shell find cmk/gui/plugins/openapi $(wildcard cmk/gui/cee/plugins/openapi) -name "*.py")
 	@export PYTHONPATH=${REPO_PATH} ; \

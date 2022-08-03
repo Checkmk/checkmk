@@ -29,6 +29,8 @@ def parse_pandacom_psu(info):
         "6": "230 V AC 60 W",
         "7": "48 V DC 250 W",
         "8": "230 V AC 250 W",
+        "9": "48 V DC 1100 W",
+        "10": "230 V AC 1100 W",
         "255": "type not available",
     }
     map_psu_state = {

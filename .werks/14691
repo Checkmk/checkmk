@@ -1,0 +1,13 @@
+Title: pandacom_psu: Fix crash with missing PSU type
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1659533440
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p10
+
+Check pandacom_psu crashed during discovery for nmCarrierPSU1Type
+with values psu48VDC1100W (9) and psu230VAC1100W (10).
+The crash is now fixed and all existing PSU types are supported.

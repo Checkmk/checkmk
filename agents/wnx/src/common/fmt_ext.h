@@ -33,6 +33,9 @@ struct fmt::formatter<std::exception> {
 };
 
 template <>
+struct fmt::formatter<std::system_error> : fmt::formatter<std::exception> {};
+
+template <>
 struct fmt::formatter<std::filesystem::path> {
     static constexpr auto parse(format_parse_context &ctx) {
         // Return an iterator past the end of the parsed range:

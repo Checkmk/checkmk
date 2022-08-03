@@ -38,7 +38,7 @@ def host_label_esx_vshpere_systeminfo(section):
 
         cmk/vsphere_object:
             This label is set to "vcenter" if the corresponding host is a
-            VMWare vCenter, and to "server" if the host is an ESXi hostsystem.
+            VMware vCenter, and to "server" if the host is an ESXi hostsystem.
 
     """
     name = section.get("name", "")

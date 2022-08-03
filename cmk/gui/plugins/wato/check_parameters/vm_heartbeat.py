@@ -37,7 +37,7 @@ def _parameter_valuespec_vm_heartbeat():
                 "heartbeat_no_tools",
                 MonitoringState(
                     title=_("Heartbeat tools missing or not installed"),
-                    help=_("No VMWare Tools installed."),
+                    help=_("No VMware Tools installed."),
                     default_value=1,
                 ),
             ),

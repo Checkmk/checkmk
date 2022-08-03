@@ -1677,9 +1677,9 @@ def _transform_agent_vsphere(params):
 def _valuespec_special_agents_vsphere():
     return Transform(
         Dictionary(
-            title=_("VMWare ESX via vSphere"),
+            title=_("VMware ESX via vSphere"),
             help=_(
-                "This rule allows monitoring of VMWare ESX via the vSphere API. "
+                "This rule allows monitoring of VMware ESX via the vSphere API. "
                 "You can configure your connection settings here.",
             ),
             elements=[

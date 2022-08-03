@@ -30002,7 +30002,7 @@ msgid ""
 "No UTF-8 encoding found in your locale -a! Please provide C.UTF-8 encoding."
 msgstr ""
 
-msgid "No VMWare Tools installed."
+msgid "No VMware Tools installed."
 msgstr ""
 
 #, fuzzy
@@ -48369,7 +48369,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"This rule allows monitoring of VMWare ESX via the vSphere API. You can "
+"This rule allows monitoring of VMware ESX via the vSphere API. You can "
 "configure your connection settings here."
 msgstr ""
 
@@ -48569,7 +48569,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"This rule configures levels for the CPU utilization (not load) for VMWare "
+"This rule configures levels for the CPU utilization (not load) for VMware "
 "ESX host systems. The utilization percentage is computed with respect to the "
 "total number of CPUs. "
 msgstr ""
@@ -53443,10 +53443,10 @@ msgstr "urca snapshot-uri nesigure"
 msgid "VM, Cloud, Container"
 msgstr ""
 
-msgid "VMWare ESX host systems: Used space"
+msgid "VMware ESX host systems: Used space"
 msgstr ""
 
-msgid "VMWare ESX via vSphere"
+msgid "VMware ESX via vSphere"
 msgstr ""
 
 msgid "VMalloc Address Space"
@@ -53465,7 +53465,7 @@ msgstr ""
 msgid "VMware Tools is installed, and the version is current"
 msgstr ""
 
-msgid "VMware Tools is installed, but it is not managed by VMWare"
+msgid "VMware Tools is installed, but it is not managed by VMware"
 msgstr ""
 
 msgid "VMware Tools is installed, but the version is not current"

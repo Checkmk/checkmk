@@ -41,7 +41,7 @@ def _parameter_valuespec_vm_guest_tools():
             (
                 "guestToolsUnmanaged",
                 MonitoringState(
-                    title=_("VMware Tools is installed, but it is not managed by VMWare"),
+                    title=_("VMware Tools is installed, but it is not managed by VMware"),
                     default_value=0,
                 ),
             ),

@@ -46,7 +46,7 @@ def _parameter_valuespec_cpu_utilization_esx_vsphere_hostsystem():
     return Dictionary(
         help=_(
             "This rule configures levels for the CPU utilization (not load) for "
-            "VMWare ESX host systems. "
+            "VMware ESX host systems. "
             "The utilization percentage is computed with respect to the total "
             "number of CPUs. "
         ),

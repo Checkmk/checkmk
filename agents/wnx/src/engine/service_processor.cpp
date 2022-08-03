@@ -599,8 +599,7 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop(
 
 namespace {
 
-void WaitForNetwork(std::chrono::seconds period) {
-    using namespace std::chrono_literals;
+void WaitForNetwork(std::chrono::seconds period) noexcept {
     constexpr std::chrono::seconds delay = 2s;
 
     DWORD networks = NETWORK_ALIVE_LAN | NETWORK_ALIVE_WAN;
@@ -613,7 +612,10 @@ void WaitForNetwork(std::chrono::seconds period) {
         }
 
         XLOG::l.i("Check network failed [{}] {}", error, ret);
-        std::this_thread::sleep_for(delay);
+        try {
+            std::this_thread::sleep_for(delay);
+        } catch (const std::exception & /*e*/) {
+        }
         elapsed += delay;
     }
 }
@@ -652,7 +654,7 @@ std::wstring_view RuleName() {
 }
 
 void OpenFirewall(bool controller) {
-    auto rule_name = RuleName();
+    const auto rule_name = RuleName();
     if (controller) {
         XLOG::l.i("Controller has started: firewall to controller");
         ProcessFirewallConfiguration(ac::GetWorkController().wstring(),
@@ -666,9 +668,10 @@ void OpenFirewall(bool controller) {
 
 world::ExternalPort::IoParam AsIoParam(
     const std::optional<srv::ServiceProcessor::ControllerParam> &cp) {
-    auto port = cp.has_value() ? cp->port
-                               : cfg::GetVal(cfg::groups::kGlobal,
-                                             cfg::vars::kPort, cfg::kMainPort);
+    const auto port = cp.has_value()
+                          ? cp->port
+                          : cfg::GetVal(cfg::groups::kGlobal, cfg::vars::kPort,
+                                        cfg::kMainPort);
     return {
         .port = port,
         .local_only = cp.has_value() && ac::GetConfiguredLocalOnly()

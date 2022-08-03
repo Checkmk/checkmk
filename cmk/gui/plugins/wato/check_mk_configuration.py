@@ -2516,7 +2516,7 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                     ),
                     ("docker_container_mem", _("Memory usage of Docker containers")),
                     ("enterasys_temp", _("Enterasys Switch: Temperature")),
-                    ("esx_vsphere_datastores", _("VMWare ESX host systems: Used space")),
+                    ("esx_vsphere_datastores", _("VMware ESX host systems: Used space")),
                     ("esx_vsphere_hostsystem_mem_usage", _("Main memory usage of ESX host system")),
                     ("esx_vsphere_hostsystem_mem_usage_cluster", _("Memory Usage of ESX Clusters")),
                     ("etherbox_temp", _("Etherbox / MessPC: Sensor Temperature")),

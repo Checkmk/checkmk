@@ -263,7 +263,7 @@ CATALOG_TITLES: Final = {
     "openvms": "OpenVMS",
     "snmp": "SNMP",
     "solaris": "Solaris",
-    "vsphere": "VMWare ESX (via vSphere)",
+    "vsphere": "VMware ESX (via vSphere)",
     "windows": "Microsoft Windows",
     "z_os": "IBM zOS Mainframes",
     "hardware": "Hardware Sensors",

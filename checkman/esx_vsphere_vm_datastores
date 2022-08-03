@@ -10,7 +10,7 @@ description:
  The check returns {OK}, unless the datastore information is missing.
  In this case it returns {UNKNOWN}.
 
- See "Monitoring VMWare ESX with Checkmk" in the online documentation
+ See "Monitoring VMware ESX with Checkmk" in the online documentation
  as well.
 
 discovery:

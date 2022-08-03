@@ -1,4 +1,4 @@
-title: VMWare ESX: Location and State of VMs and Host Systems
+title: VMware ESX: Location and State of VMs and Host Systems
 agents: vsphere
 catalog: os/misc
 license: GPLv2
@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  This check makes sure that items sent by the ESX special agent (hostsystems
  and VMs) are stil present later on. The information about this data can also
- be used for determining the architecture of a VMWare farm out of the monitoring
+ be used for determining the architecture of a VMware farm out of the monitoring
  data.
 
  The check will get warning if a host or VM is powered off or suspended. But

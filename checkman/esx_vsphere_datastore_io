@@ -1,4 +1,4 @@
-title: VMWare ESX Host Systems: Datastore Throughput
+title: VMware ESX Host Systems: Datastore Throughput
 agents: vsphere
 catalog: os/storage
 license: GPLv2

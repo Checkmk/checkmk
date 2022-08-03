@@ -116,7 +116,7 @@ def parse_solaris_prtdiag(  # pylint: disable=too-many-branches
                 vendor = "Supermicro"
                 index = 1
             elif "vmware, inc." in system_info.lower():
-                vendor = "VMWare, Inc."
+                vendor = "VMware, Inc."
                 index = 2
             elif "hp" in system_info.lower():
                 vendor = "HP"

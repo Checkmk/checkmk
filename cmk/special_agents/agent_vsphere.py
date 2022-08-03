@@ -1008,7 +1008,7 @@ def parse_arguments(argv):
 
     # positional arguments
     parser.add_argument(
-        "host_address", metavar="HOST", help="""Host name or IP address of VMWare HostSystem"""
+        "host_address", metavar="HOST", help="""Host name or IP address of VMware HostSystem"""
     )
 
     return parser.parse_args(argv)

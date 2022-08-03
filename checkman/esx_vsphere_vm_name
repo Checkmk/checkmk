@@ -8,7 +8,7 @@ description:
 
  The check always returns {OK} state.
 
- See "Monitoring VMWare ESX with Checkmk" in the online documentation
+ See "Monitoring VMware ESX with Checkmk" in the online documentation
  as well.
 
 discovery:

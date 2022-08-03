@@ -1,4 +1,4 @@
-title: VMWare ESX Host System: Overall State and Power State
+title: VMware ESX Host System: Overall State and Power State
 agents: vsphere
 catalog: os/misc
 license: GPLv2
@@ -15,7 +15,7 @@ description:
  {CRIT} if vsphere reports overall state of red or grey or if the ESX host is
      in power state poweredOff
 
- See "Monitoring VMWare ESX with Checkmk" in the online documentation
+ See "Monitoring VMware ESX with Checkmk" in the online documentation
  as well.
 
 discovery:

@@ -1,10 +1,10 @@
-title: VMWare ESX Host Systems: Hardware Sensors
+title: VMware ESX Host Systems: Hardware Sensors
 agents: vsphere
 catalog: os/hardware
 license: GPLv2
 distribution: check_mk
 description:
- This check checks the state of all of a VMWare ESX host system's
+ This check checks the state of all of a VMware ESX host system's
  hardware sensors - including temperatures, fans, power supplies, memory DIMMS,
  hard disk, an others. In order to avoid network traffic the agent sends
  only information about sensors that are not in green state.

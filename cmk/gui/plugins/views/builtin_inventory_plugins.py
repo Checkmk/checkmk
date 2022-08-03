@@ -877,7 +877,7 @@ inventory_displayhints.update({
     ".software.applications.oracle.tablespaces:*.free_space": {
         "title": _l("Free space"), "paint": "size"
     },
-    ".software.applications.vmwareesx.": {"title": _l("VMWare ESX")},
+    ".software.applications.vmwareesx.": {"title": _l("VMware ESX")},
     ".software.applications.vmwareesx:*.": {"title": _l("Datacenter %d")},
     ".software.applications.vmwareesx:*.clusters.": {"title": _l("Clusters")},
     ".software.applications.vmwareesx:*.clusters:*.": {"title": _l("Cluster %d")},

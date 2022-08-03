@@ -514,13 +514,15 @@ def run(
     piggy_back_services: Sequence[PiggyBackService],
     serializer: Callable[[Union[Iterable[Section], Iterable[PiggyBackSection]]], None],
     cost: Optional[CostArgument],
+    monitor_health: bool,
 ) -> None:
     assets = run_assets(client, [s.name for s in services] + [s.name for s in piggy_back_services])
     serializer([assets])
     serializer(run_metrics(client, services))
     serializer(run_piggy_back(client, piggy_back_services, assets.assets))
     serializer(run_cost(client, cost))
-    serializer(run_health(client))
+    if monitor_health:
+        serializer(run_health(client))
 
 
 #######################################################################
@@ -912,6 +914,11 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
         choices=list(SERVICES) + list(PIGGY_BACK_SERVICES),
         required=False,
     )
+    parser.add_argument(
+        "--monitor_health",
+        action="store_true",
+        help="Monitor GCP Health",
+    )
     return parser.parse_args(argv)
 
 
@@ -920,12 +927,14 @@ def agent_gcp_main(args: Args) -> None:
     services = [SERVICES[s] for s in args.services if s in SERVICES]
     piggies = [PIGGY_BACK_SERVICES[s] for s in args.services if s in PIGGY_BACK_SERVICES]
     cost = CostArgument(args.cost_table) if args.cost_table else None
+    monitor_health = args.monitor_health
     run(
         client,
         services,
         piggies,
         serializer=gcp_serializer,
         cost=cost,
+        monitor_health=monitor_health,
     )
 
 

@@ -172,7 +172,14 @@ def fixture_agent_output() -> Sequence[agent_gcp.Section]:
     client = FakeClient("test", FakeMonitoringClient(), FakeAssetClient())
     sections: list[agent_gcp.Section] = []
     collector = collector_factory(sections)
-    agent_gcp.run(client, list(agent_gcp.SERVICES.values()), [], cost=None, serializer=collector)
+    agent_gcp.run(
+        client,
+        list(agent_gcp.SERVICES.values()),
+        [],
+        cost=None,
+        serializer=collector,
+        monitor_health=True,
+    )
     return list(sections)
 
 
@@ -214,7 +221,7 @@ def test_metric_retrieval() -> None:
     client = FakeClient("test", FakeMonitoringClient(timeseries), FakeAssetClient())
     sections: list[agent_gcp.Section] = []
     collector = collector_factory(sections)
-    agent_gcp.run(client, [agent_gcp.RUN], [], cost=None, serializer=collector)
+    agent_gcp.run(client, [agent_gcp.RUN], [], cost=None, serializer=collector, monitor_health=True)
     result_section = next(
         s for s in sections if isinstance(s, agent_gcp.ResultSection) and s.name == "cloud_run"
     )
@@ -281,7 +288,9 @@ def asset_and_piggy_back_sections_fixture() -> Sequence[
             )
         ],
     )
-    agent_gcp.run(client, [], [piggy_back_section], cost=None, serializer=collector)
+    agent_gcp.run(
+        client, [], [piggy_back_section], cost=None, serializer=collector, monitor_health=True
+    )
     return list(
         s for s in sections if isinstance(s, (agent_gcp.PiggyBackSection, agent_gcp.AssetSection))
     )
@@ -379,7 +388,7 @@ def fixture_gce_sections() -> Sequence[agent_gcp.PiggyBackSection]:
     sections: list[agent_gcp.Section] = []
     collector = collector_factory(sections)
 
-    agent_gcp.run(client, [], [agent_gcp.GCE], cost=None, serializer=collector)
+    agent_gcp.run(client, [], [agent_gcp.GCE], cost=None, serializer=collector, monitor_health=True)
     return list(s for s in sections if isinstance(s, agent_gcp.PiggyBackSection))
 
 
@@ -466,7 +475,14 @@ def fixture_cost_output() -> Sequence[agent_gcp.Section]:
     sections: list[agent_gcp.Section] = []
     collector = collector_factory(sections)
     cost = agent_gcp.CostArgument("some table")
-    agent_gcp.run(client, list(agent_gcp.SERVICES.values()), [], cost=cost, serializer=collector)
+    agent_gcp.run(
+        client,
+        list(agent_gcp.SERVICES.values()),
+        [],
+        cost=cost,
+        serializer=collector,
+        monitor_health=True,
+    )
     return list(sections)
 
 

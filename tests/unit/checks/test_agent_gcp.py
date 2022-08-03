@@ -18,7 +18,12 @@ pytestmark = pytest.mark.checks
     "params, expected_result",
     [
         pytest.param(
-            {"project": "test", "credentials": "definitely some json", "services": ["gcs", "run"]},
+            {
+                "project": "test",
+                "credentials": "definitely some json",
+                "services": ["gcs", "run"],
+                "health": False,
+            },
             [
                 "--project",
                 "test",
@@ -38,6 +43,7 @@ pytestmark = pytest.mark.checks
                 "credentials": "definitely some json",
                 "cost": {"tableid": "checkmk"},
                 "services": [],
+                "health": False,
             },
             [
                 "--project",
@@ -57,6 +63,7 @@ pytestmark = pytest.mark.checks
                 "credentials": "definitely some json",
                 "cost": {"tableid": "checkmk"},
                 "services": ["gcs"],
+                "health": True,
             },
             [
                 "--project",
@@ -67,6 +74,7 @@ pytestmark = pytest.mark.checks
                 "2022-01-12",
                 "--cost_table",
                 "checkmk",
+                "--monitor_health",
                 "--services",
                 "gcs",
             ],

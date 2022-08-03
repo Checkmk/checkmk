@@ -6,7 +6,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
 from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
-from cmk.gui.valuespec import Dictionary, ListChoice, TextInput
+from cmk.gui.valuespec import Checkbox, Dictionary, ListChoice, TextInput
 
 
 def _valuespec_special_agents_gcp():
@@ -61,6 +61,12 @@ def _valuespec_special_agents_gcp():
                         )
                     ],
                     required_keys=["tableid"],
+                ),
+            ),
+            (
+                "health",
+                Checkbox(
+                    title="Monitor GCP status", help="Monitor status of GCP products in any region"
                 ),
             ),
         ],

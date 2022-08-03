@@ -23,6 +23,8 @@ def agent_gcp_arguments(
     if "cost" in params:
         args.append("--cost_table")
         args.append(params["cost"]["tableid"])
+    if params["health"]:
+        args.append("--monitor_health")
     if len(params["services"]) > 0:
         args.append("--services")
         args.extend(params["services"])

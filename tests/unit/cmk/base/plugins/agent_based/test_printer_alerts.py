@@ -7,7 +7,7 @@
 import mock
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.printer_alerts import (
     check_printer_alerts,
     discovery_printer_alerts,
@@ -15,11 +15,8 @@ from cmk.base.plugins.agent_based.printer_alerts import (
 )
 
 
-@pytest.mark.parametrize("info, expected_result", [([[["1", "2", "15", "3", ""]]], [Service()])])
-def test_zypper_discovery(info, expected_result):
-    _section = parse_printer_alerts(info)
-    result = discovery_printer_alerts(info)
-    assert list(result) == expected_result
+def test_discover_always() -> None:
+    assert list(discovery_printer_alerts(()))
 
 
 @pytest.mark.parametrize(
@@ -49,6 +46,10 @@ def test_zypper_discovery(info, expected_result):
         (
             [[["1", "-1", "5", "-1", "Energiesparen"]]],
             [Result(state=State.OK, summary="No alerts found")],
+        ),
+        (
+            [[["1", "5", "-1", "23", "Bereitschafts-\nmodus ein"]]],
+            [Result(state=State.OK, summary="generalPrinter: Bereitschaftsmodus ein")],
         ),
         ([[["2", "5", "-1", "-1", ""]]], [Result(state=State.UNKNOWN, summary="generalPrinter: ")]),
         (

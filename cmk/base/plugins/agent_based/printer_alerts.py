@@ -149,7 +149,17 @@ PRINTER_ALERTS_TEXT_MAP: Final = {
 
 
 def parse_printer_alerts(string_table: List[StringTable]) -> Section:
-    return [Alert(*s) for s in string_table[0] if s[1:5] != ["0", "0", "0", ""]]
+    return [
+        Alert(
+            severity=s[0],
+            group=s[1],
+            group_index=s[2],
+            code=s[3],
+            description=s[4].replace("-\n", "").replace("\n", " "),
+        )
+        for s in string_table[0]
+        if s[1:5] != ["0", "0", "0", ""]
+    ]
 
 
 register.snmp_section(

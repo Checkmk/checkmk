@@ -1,0 +1,15 @@
+Title: Wait 30 s between failed attempts to connect to InfluxDB
+Class: fix
+Compatible: compat
+Component: core
+Date: 1659531771
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+After a failed attempt to connect to an InfluxDB server, the core now
+waits at least 30 s before trying again.  This leads to, for example,
+an optimized DNS traffic.
+
+This delay of 30 s is not configurable by the end user.

@@ -359,6 +359,9 @@ class OverridableInstances(Generic[_T]):
     def instances_sorted(self) -> list[_T]:
         return sorted(self.__instances.values(), key=lambda x: x.title())
 
+    def permitted_instances_sorted(self) -> list[_T]:
+        return [i for i in self.instances_sorted() if i.is_permitted()]
+
     def add_page(self, new_page: _T) -> None:
         self.add_instance((new_page.owner(), new_page.name()), new_page)
 
@@ -560,12 +563,6 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         return (self.is_mine() and self.may_see()) or (
             not self.is_mine() and self.is_published_to_me() and self.may_see()
         )
-
-    @classmethod
-    def permitted_instances_sorted(
-        cls: Type[_Self], instances: OverridableInstances[_Self]
-    ) -> list[_Self]:
-        return [i for i in instances.instances_sorted() if i.is_permitted()]
 
     def may_delete(self) -> bool:
         if self.is_builtin():
@@ -1183,11 +1180,7 @@ class EditPage(Page, Generic[_T_OverridableSpec, _Self]):
             headers=keys_by_topic,
             validate=validate_id(
                 mode,
-                {
-                    p.name(): p
-                    for p in self._type.permitted_instances_sorted(instances)
-                    if p.is_mine()
-                },
+                {p.name(): p for p in instances.permitted_instances_sorted() if p.is_mine()},
                 self._type.reserved_unique_ids(),
             ),
         )
@@ -1690,9 +1683,6 @@ _SelfPageRenderer = TypeVar("_SelfPageRenderer", bound="PageRenderer")
 
 class PageRenderer(OverridableContainer[_T_PageRendererSpec, _SelfPageRenderer]):
     # Stuff to be overridden by the implementation of actual page types
-
-    # TODO: Das von graphs.py rauspfluecken. Also alles, was man
-    # überladen muss oder kann.
 
     # Attribute for identifying that page when building an URL to
     # the page. This is always "name", but

@@ -13,8 +13,8 @@ import json
 import re
 from typing import Any, Dict, List, NamedTuple, Optional, Type, Union
 
+import black
 import jinja2
-import yapf.yapflib.yapf_api  # type: ignore[import]
 from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[import]
 from marshmallow import Schema  # type: ignore[import]
 
@@ -451,15 +451,15 @@ def code_samples(  # type:ignore[no-untyped-def]
     ]
 
 
-def yapf_format(obj) -> str:  # type:ignore[no-untyped-def]
+def format_nicely(obj: object) -> str:
     """Format the object nicely.
 
     Examples:
 
         While this should format in a stable manner, I'm not quite sure about it.
 
-        >>> yapf_format({'password': 'foo', 'username': 'bar'})
-        "{'password': 'foo', 'username': 'bar'}\\n"
+        >>> format_nicely({'password': 'foo', 'username': 'bar'})
+        '{"password": "foo", "username": "bar"}\\n'
 
     Args:
         obj:
@@ -469,14 +469,7 @@ def yapf_format(obj) -> str:  # type:ignore[no-untyped-def]
         A string of the object, formatted nicely.
 
     """
-    style = {
-        "COLUMN_LIMIT": 50,
-        "ALLOW_SPLIT_BEFORE_DICT_VALUE": False,
-        "COALESCE_BRACKETS": True,
-        "DEDENT_CLOSING_BRACKETS": True,
-    }
-    text, _ = yapf.yapflib.yapf_api.FormatCode(str(obj), style_config=style)
-    return text
+    return black.format_str(str(obj), mode=black.Mode(line_length=50))
 
 
 def _get_schema(schema: Optional[Union[str, Type[Schema]]]) -> Optional[Schema]:
@@ -567,7 +560,7 @@ def _jinja_environment() -> jinja2.Environment:
         to_dict=to_dict,
         to_env=_to_env,
         to_json=json.dumps,
-        to_python=yapf_format,
+        to_python=format_nicely,
         repr=repr,
     )
     # These objects will be available in the templates

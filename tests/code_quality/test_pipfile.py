@@ -276,6 +276,7 @@ CEE_UNUSED_PACKAGES = [
     "uvicorn",
     "websocket_client",
     "wrapt",
+    "yapf",  # TODO: Remove when all references to YAPF are nuked
     "yarl",
     "zipp",
 ]

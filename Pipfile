@@ -8,7 +8,6 @@ name = "pypi"
 [dev-packages]
 astroid = "*"  # used by testlib.pylint_checker_localization
 bandit = "*"  # used by test/Makefile's test-bandit target
-black = "*"  # used in our CI and in the LSP-integration.
 "beautifulsoup4" = "*"  # used by the GUI crawler and various tests
 bson = "*"  # used by test_mk_mongodb unit test
 compiledb = "*"  # used by the Livestatus/CMC Makefiles for building compile_command.json
@@ -178,6 +177,7 @@ grpcio = "==1.46.3"  # newer versions (1.47) caused problems in Centos7 and SLES
 google-api-python-client = "==2.53.0"  # use rest api to query big query for gcp cost monitoring
 npyscreen = "==4.10.5"  # used by mkbench
 setproctitle = "==1.2.3"  # used by mkbench/dcd/liveproxyd
+black = "==22.6.0"  # used in our CI, the LSP-integration and in the OpenAPI part
 
 [requires]
 # As pipenv {sync,lock} does currently not support env variable expansion in and out Pipfile.lock,

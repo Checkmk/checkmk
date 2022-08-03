@@ -1,0 +1,25 @@
+Title: azure_mysql: Monitor Azure database for MySQL
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1659509470
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+It's now possible to monitor Azure database for MySQL in Checkmk.
+Six new checks have been added:
+<ul>
+<li>Microsoft Azure MySQL Database: CPU Utilization</li>
+<li>Microsoft Azure MySQL Database: Connections</li>
+<li>Microsoft Azure MySQL Database: Memory Utilization</li>
+<li>Microsoft Azure MySQL Database: Network</li>
+<li>Microsoft Azure MySQL Database: Replication</li>
+<li>Microsoft Azure MySQL Database: Storage</li>
+</ul>
+
+The new services will be automatically discovered if you have
+an Azure database for MySQL in the resource group already monitored
+in Checkmk.
+

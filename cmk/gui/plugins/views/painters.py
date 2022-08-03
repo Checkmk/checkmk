@@ -504,10 +504,10 @@ class PainterSvcLongPluginOutput(Painter):
         return "svc_long_plugin_output"
 
     def title(self, cell: Cell) -> str:
-        return _("Details")
+        return _("Current details")
 
     def list_title(self, cell: Cell) -> str:
-        return _("Details (Previously named: long output)")
+        return _("Current details (Previously named: long output)")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
@@ -520,7 +520,7 @@ class PainterSvcLongPluginOutput(Painter):
                 (
                     "max_len",
                     Integer(
-                        title=_("Maximum number of characters in to show"),
+                        title=_("Maximum number of characters to show"),
                         help=_(
                             "Truncate content at this amount of characters."
                             "A zero value mean not to truncate"
@@ -4364,6 +4364,54 @@ class PainterDowntimeDuration(Painter):
 #   | |__| (_) | (_| |
 #   |_____\___/ \__, |
 #               |___/
+
+
+@painter_registry.register
+class PainterLogDetailsHistory(Painter):
+    @property
+    def ident(self) -> str:
+        return "log_details_history"
+
+    def title(self, cell: Cell) -> str:
+        return _("Details history")
+
+    @property
+    def columns(self) -> List[ColumnName]:
+        return ["log_long_plugin_output"]
+
+    @property
+    def parameters(self) -> Dictionary:
+        return Dictionary(
+            elements=[
+                (
+                    "max_len",
+                    Integer(
+                        title=_("Maximum number of characters to show"),
+                        help=_(
+                            "Truncate content at this amount of characters."
+                            "A zero value mean not to truncate"
+                        ),
+                        default_value=0,
+                        minvalue=0,
+                    ),
+                ),
+            ],
+        )
+
+    def render(self, row: Row, cell: Cell) -> CellSpec:
+        params = cell.painter_parameters()
+        max_len = params.get("max_len", 0)
+        long_output = row["log_long_plugin_output"]
+
+        if 0 < max_len < len(long_output):
+            long_output = long_output[:max_len] + "..."
+
+        content = format_plugin_output(long_output, row)
+
+        # In long output we get newlines which should also be displayed in the GUI
+        content.value = content.value.replace("\\n", "<br>").replace("\n", "<br>")
+
+        return paint_stalified(row, content)
 
 
 @painter_registry.register

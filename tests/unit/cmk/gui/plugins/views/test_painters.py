@@ -650,6 +650,7 @@ def test_registered_painters() -> None:
         "log_comment",
         "log_contact_name",
         "log_date",
+        "log_details_history",
         "log_icon",
         "log_lineno",
         "log_message",

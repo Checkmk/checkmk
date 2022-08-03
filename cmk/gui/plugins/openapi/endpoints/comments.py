@@ -87,7 +87,7 @@ COMMENT_ID = {
 COLLECTION_NAME = {
     "collection_name": fields.String(
         description="Do you want to get comments from 'hosts', 'services' or 'all'",
-        emum=["host", "service", "all"],
+        enum=["host", "service", "all"],
         example="all",
         required=False,
     )

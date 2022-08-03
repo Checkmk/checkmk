@@ -30,7 +30,7 @@ namespace cma::world {
 enum class LocalOnly { yes, no };
 constexpr size_t kMaxSessionQueueLength{16};
 
-bool IsIpAllowedAsException(const std::string &ip);
+bool IsIpAllowedAsException(const std::string &ip) noexcept;
 
 /// prints last line of the output in the log
 /// to see how correct was an answer
@@ -124,23 +124,38 @@ class ExternalPort;  // forward
 // store incoming session into the queue
 using SinkFunc = std::function<bool(AsioSession::s_ptr, ExternalPort *)>;
 
-inline std::tuple<std::string, uint16_t, bool> GetSocketInfo(
-    const asio::ip::tcp::socket &sock) noexcept {
+enum class IpMode {
+    ipv4,
+    ipv6
+
+};
+
+struct SocketInfo {
+    std::string peer_ip;
+    uint16_t peer_port;
+    IpMode ip_mode;
+    static SocketInfo empty() {
+        return {.peer_ip{""}, .peer_port{0U}, .ip_mode{IpMode::ipv4}};
+    }
+};
+
+inline SocketInfo GetSocketInfo(const asio::ip::tcp::socket &sock) noexcept {
     std::error_code ec;
     auto remote_ep = sock.remote_endpoint(ec);
     if (ec) {
         XLOG::l("Error on socket [{}] with '{}'", ec.value(), ec.message());
-        return {};  // empty socket
+        return SocketInfo::empty();
     }
+
     try {
         auto addr = remote_ep.address();
         auto ip = addr.to_string();
-        bool ipv6 = addr.is_v6();
-        return {ip, remote_ep.port(), ipv6};
+        auto mode = addr.is_v6() ? IpMode::ipv6 : IpMode::ipv4;
+        return {.peer_ip{ip}, .peer_port{remote_ep.port()}, .ip_mode{mode}};
     } catch (const std::exception &e) {
         XLOG::d("Something goes wrong with socket '{}'", e);
     }
-    return {};
+    return SocketInfo::empty();
 }
 
 class ExternalPort : public std::enable_shared_from_this<ExternalPort> {

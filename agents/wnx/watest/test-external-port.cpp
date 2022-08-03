@@ -185,10 +185,10 @@ TEST_F(ExternalPortTestFixture, ReadIntegration) {
         return ec.value() == 0;
     }));
 
-    auto [ip, p, ipv6] = GetSocketInfo(sock_);
-    EXPECT_TRUE(ip == "127.0.0.1");
-    EXPECT_TRUE(p != 0U);
-    EXPECT_FALSE(ipv6);
+    auto info = GetSocketInfo(sock_);
+    EXPECT_EQ(info.peer_ip, "127.0.0.1");
+    EXPECT_NE(info.peer_port, 0U);
+    EXPECT_EQ(info.ip_mode, IpMode::ipv4);
 
     auto text = readSock();
     EXPECT_EQ(reply_text_, text);

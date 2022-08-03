@@ -3,6 +3,7 @@
 #include "external_port.h"
 
 #include <chrono>
+#include <filesystem>
 #include <iostream>
 #include <ranges>
 
@@ -16,6 +17,7 @@
 using asio::ip::tcp;
 using namespace std::chrono_literals;
 namespace rs = std::ranges;
+namespace fs = std::filesystem;
 
 // This namespace contains classes used for external communication, for example
 // with Monitor
@@ -298,7 +300,7 @@ static void OverLoadMemory() {
 #endif
 }
 
-bool IsIpAllowedAsException(const std::string &ip) {
+bool IsIpAllowedAsException(const std::string &ip) noexcept {
     return ac::IsRunController(cfg::GetLoadedConfig()) &&
            (ip == "127.0.0.1" || ip == "::1");
 }
@@ -315,13 +317,16 @@ bool AllowLocalConnection() {
 
 void ExternalPort::processSession(const ReplyFunc &reply,
                                   AsioSession::s_ptr session) {
-    const auto [ip, p, ipv6] = GetSocketInfo(session->currentSocket());
-    XLOG::d.i("Connected from '{}' ipv6:{} port: {} <- queue", ip, ipv6, p);
+    const auto info = GetSocketInfo(session->currentSocket());
+    XLOG::d.i("Connected from '{}' ipv6:{} port: {} <- queue", info.peer_ip,
+              info.ip_mode == IpMode::ipv6 ? "ipv6" : "ipv4", info.peer_port);
 
     OverLoadMemory();
-    // controller can contact us
-    const bool local_connection = ip == "127.0.0.1" || ip == "::1";
-    if (cfg::groups::global.isIpAddressAllowed(ip) || local_connection) {
+
+    const bool local_connection =
+        info.peer_ip == "127.0.0.1" || info.peer_ip == "::1";
+    if (cfg::groups::global.isIpAddressAllowed(info.peer_ip) ||
+        local_connection) {
         if (local_connection && AllowLocalConnection()) {
             session->read_ip();
         }
@@ -343,7 +348,8 @@ void ExternalPort::processSession(const ReplyFunc &reply,
 #endif
         }
     } else {
-        XLOG::d("Address '{}' is not allowed, this call should happen", ip);
+        XLOG::d("Address '{}' is not allowed, this call should happen",
+                info.peer_ip);
     }
 }
 
@@ -544,41 +550,41 @@ size_t ExternalPort::entriesInQueue() const {
 
 void ExternalPort::server::run_accept(SinkFunc sink, ExternalPort *ext_port) {
     acceptor_.async_accept(socket_, [this, sink, ext_port](std::error_code ec) {
-        if (ec.value()) {
+        if (ec) {
             XLOG::l("Error on connection [{}] '{}'", ec.value(), ec.message());
         } else {
             try {
-                auto [peer_ip, peer_port, ipv6] = GetSocketInfo(socket_);
-                XLOG::d.i("Connected from '{}:{}' ipv6 :{} -> queue", peer_ip,
-                          peer_port, ipv6);
+                auto info = GetSocketInfo(socket_);
+                XLOG::d.i("Connected from '{}:{}' {} -> queue", info.peer_ip,
+                          info.peer_port,
+                          info.ip_mode == IpMode::ipv6 ? "ipv6" : "ipv4");
                 auto x = std::make_shared<AsioSession>(std::move(socket_));
 
-                auto process_allowed = !controller_pid_.has_value() ||
-                                       wtools::CheckProcessUsePort(
-                                           port_, *controller_pid_, peer_port);
+                auto process_allowed =
+                    !controller_pid_.has_value() ||
+                    wtools::CheckProcessUsePort(port_, *controller_pid_,
+                                                info.peer_port);
 
                 if (process_allowed &&
-                    (cfg::groups::global.isIpAddressAllowed(peer_ip) ||
-                     IsIpAllowedAsException(peer_ip)))
+                    (cfg::groups::global.isIpAddressAllowed(info.peer_ip) ||
+                     IsIpAllowedAsException(info.peer_ip))) {
                     sink(x, ext_port);
-                else {
-                    XLOG::d("Connection forbidden: address '{}' process {}",
-                            process_allowed ? "allowed" : "not allowed");
+                } else {
+                    XLOG::d("Connection forbidden");
                 }
-
             } catch (const std::system_error &e) {
                 if (e.code().value() == WSAECONNRESET) {
                     XLOG::l(" Client closed connection");
                 } else {
                     XLOG::l(" Thrown unexpected exception '{}' with value {}",
-                            e.what(), e.code().value());
+                            e, e.code().value());
                 }
             } catch (const std::exception &e) {
-                XLOG::l(" Thrown unexpected exception '{}'", e.what());
+                XLOG::l(" Thrown unexpected exception '{}'", e);
             }
         }
 
-        // inside we have async call, this is not recursion
+        // Inside we have async call, this is not recursion
         run_accept(sink, ext_port);
     });
 }

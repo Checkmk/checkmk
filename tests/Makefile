@@ -20,7 +20,6 @@ PYTEST_UNIT_TEST_OPTS = \
     ../agent-receiver \
     unit
 PYTEST_ADDITIONAL_UNIT_TEST_OPTS = -m "not slow"
-YAPF := $(PIPENV) run yapf
 BLACK  := $(SCRIPTS)/run-black
 THREE_TO_TWO := $(PIPENV) run 3to2
 BANDIT := $(PIPENV) run bandit
@@ -210,20 +209,6 @@ test-docker:
 	$(PYTEST) -x -T docker --log-cli-level=INFO docker
 
 test-format-python: test-format-python-isort test-format-python-black
-
-test-format-python-yapf: ../.style.yapf
-# Explicitly specify --style [FILE] to prevent costly searching in parent directories
-# for each file specified via command line
-#
-# There are some mixed up lines on stdout caused by the --parallel option.
-# Nevertheless, we keep that option to get a big performance boost. GitHub issue
-# opened for this problem: https://github.com/google/yapf/issues/644.
-	@if test -z "$${PYTHON_FILES}" && test ! -z "$${PYTHON_FILES+X}"; then exit 0; fi; \
-	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
-	xargs -n 1500 $(YAPF) --parallel --style ../.style.yapf --verbose --diff | \
-	grep '^+++ .*(reformatted)$$' | \
-	sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/' ; \
-	exit $${PIPESTATUS[1]}
 
 test-format-python-isort: ../pyproject.toml
 	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \

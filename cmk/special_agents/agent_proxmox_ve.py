@@ -226,16 +226,12 @@ class BackupTask:
         errors = []
 
         def extract_tuple(line: str, pattern_name: str, count: int = 1) -> Optional[Sequence[str]]:
-            # TODO: use assignment expressions as soon as YAPF supports them or is dead
-            match = log_line_pattern[pattern_name].match(line)
-            if match:
+            if match := log_line_pattern[pattern_name].match(line):
                 return match.groups()[:count]
             return None
 
         def extract_single_value(line: str, pattern_name: str) -> Optional[str]:
-            # TODO: use assignment expressions as soon as YAPF supports them or is dead
-            match = extract_tuple(line, pattern_name, 1)
-            if match:
+            if match := extract_tuple(line, pattern_name, 1):
                 return match[0]
             return None
 

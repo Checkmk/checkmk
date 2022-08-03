@@ -172,7 +172,7 @@ def test_check_brocade_optical(item, params, section, expected) -> None:
     assert list(brocade_optical.check_brocade_optical(item, params, section)) == expected
 
 
-# Disable yapf here as it takes ages
+# Disable auto-formatting here as it takes ages
 # yapf: disable
 @pytest.mark.parametrize('string_table, discovery_results, items_params_results', [
     (

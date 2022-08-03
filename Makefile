@@ -613,15 +613,6 @@ test-format-c:
 
 format-python: format-python-isort format-python-black
 
-format-python-yapf:
-# Explicitly specify --style [FILE] to prevent costly searching in parent directories
-# for each file specified via command line
-#
-# Saw some mixed up lines on stdout after adding the --parallel option. Leaving it on
-# for the moment to get the performance boost this option brings.
-	if test -z "$$PYTHON_FILES"; then ./scripts/find-python-files; else echo "$$PYTHON_FILES"; fi | \
-	PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR)/simple xargs -n 1500 scripts/run-pipenv run yapf --parallel --style .style.yapf --verbose -i
-
 format-python-isort:
 	if test -z "$$PYTHON_FILES"; then ./scripts/find-python-files; else echo "$$PYTHON_FILES"; fi | \
 	PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR)/simple xargs -n 1500 scripts/run-pipenv run isort --settings-path pyproject.toml

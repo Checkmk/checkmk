@@ -32,6 +32,10 @@ class APIPodFactory(ModelFactory):
     __model__ = api.Pod
 
 
+class APIControllerFactory(ModelFactory):
+    __model__ = api.Controller
+
+
 def pod_phase_generator() -> Iterator[api.Phase]:
     yield from itertools.cycle(api.Phase)
 

@@ -39,6 +39,7 @@ struct OffsetStringHostMacroColumnTest : public ::testing::Test {
 
     TestHost test_host{{{"ERNIE", "Bert"},  //
                         {"HARRY", "Hirsch"},
+                        {"I_AM_NULL", "<nullptr>"},
                         {"_TAG_GUT", "Guten Tag!"}}};
     NagiosCore core{NagiosPaths{}, NagiosLimits{}, NagiosAuthorization{},
                     Encoding::utf8};
@@ -184,6 +185,9 @@ TEST_F(OffsetStringHostMacroColumnTest, border_cases) {
 
     set_host_notes("checking $GUT$...");
     EXPECT_EQ("checking $GUT$...", expanded_host_notes());
+
+    set_host_notes("Hi, I'm $_HOSTI_AM_NULL$!");
+    EXPECT_EQ("Hi, I'm !", expanded_host_notes());
 }
 
 TEST_F(OffsetStringServiceMacroColumnTest, misc) {

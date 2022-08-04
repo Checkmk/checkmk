@@ -380,17 +380,17 @@ OPTIONS: ReDocSpec = {
         .replace("$TABLE_DEFINITIONS", "\n".join(table_definitions())),
         "license": {
             "name": "GNU General Public License version 2",
-            "url": "https://checkmk.com/gpl.html",
+            "url": "https://checkmk.com/legal/gpl",
         },
         "contact": {
             "name": "Contact the Checkmk Team",
-            "url": "https://checkmk.com/contact.php",
+            "url": "https://checkmk.com/contact",
             "email": "feedback@checkmk.com",
         },
     },
     "externalDocs": {
-        "description": "User guide",
-        "url": "https://docs.checkmk.com/master",
+        "description": "The official Checkmk user guide",
+        "url": "https://docs.checkmk.com/",
     },
     "x-logo": {
         "url": "https://checkmk.com/bilder/brand-assets/checkmk_logo_main.png",

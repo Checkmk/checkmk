@@ -5,6 +5,7 @@
 
 #include "test_utilities.h"
 
+#include <string>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
@@ -17,7 +18,10 @@ CustomVariables::CustomVariables(Attributes attrs) : attrs_(std::move(attrs)) {
     cvms_.reserve(attrs_.size());  // IMPORTANT: No reallocations later!
     customvariablesmember *last = nullptr;
     for (const auto &[name, value] : attrs_) {  // IMPORTANT: Use refs!
-        cvms_.push_back({cc(name.c_str()), cc(value.c_str()), 0, last});
+        cvms_.push_back({cc(name.c_str()),
+                         // FIXME: Very cruel hack...
+                         (value == "<nullptr>" ? nullptr : cc(value.c_str())),
+                         0, last});
         last = &cvms_.back();
     }
 }

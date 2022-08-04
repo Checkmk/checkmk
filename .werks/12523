@@ -1,0 +1,11 @@
+Title: Mega menu: Fix 'Show all topics' button in search
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1659604299
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p10
+
+When searching within either the 'Monitor' or the 'Setup' menu, extended topics (after clicking 'Show all results') could not be collapsed properly. This is fixed so the 'Show all topics' button brings back all search results with collapsed topics of no more than 10 entries.

@@ -272,33 +272,35 @@ done
 #   '----------------------------------------------------------------------'
 
 filter_sections() {
-    OPT_SYNC_SECTIONS=
-    OPT_ASYNC_SECTIONS=
-    OPT_SYNC_ASM_SECTIONS=
-    OPT_ASYNC_ASM_SECTIONS=
-    OPT_SQLS_SECTIONS=
+    local opt_sync_sections=
+    local opt_async_sections=
+    local opt_sync_asm_sections=
+    local opt_async_asm_sections=
+    local opt_sqls_sections=
+
     for section in $MK_ORA_SECTIONS; do
         if [ -n "$SYNC_SECTIONS" ] && [[ "$SYNC_SECTIONS" == *"$section"* ]]; then
-            OPT_SYNC_SECTIONS="$OPT_SYNC_SECTIONS $section"
+            opt_sync_sections="$opt_sync_sections $section"
         elif [ -n "$ASYNC_SECTIONS" ] && [[ "$ASYNC_SECTIONS" == *"$section"* ]]; then
-            OPT_ASYNC_SECTIONS="$OPT_ASYNC_SECTIONS $section"
+            opt_async_sections="$opt_async_sections $section"
         fi
 
         if [ -n "$SYNC_ASM_SECTIONS" ] && [[ "$SYNC_ASM_SECTIONS" == *"$section"* ]]; then
-            OPT_SYNC_ASM_SECTIONS="$OPT_SYNC_ASM_SECTIONS $section"
+            opt_sync_asm_sections="$opt_sync_asm_sections $section"
         elif [ -n "$ASYNC_ASM_SECTIONS" ] && [[ "$ASYNC_ASM_SECTIONS" == *"$section"* ]]; then
-            OPT_ASYNC_ASM_SECTIONS="$OPT_ASYNC_ASM_SECTIONS $section"
+            opt_async_asm_sections="$opt_async_asm_sections $section"
         fi
 
         if [ -n "$SQLS_SECTIONS" ] && [[ "$SQLS_SECTIONS" == *"$section"* ]]; then
-            OPT_SQLS_SECTIONS="$OPT_SQLS_SECTIONS $section"
+            opt_sqls_sections="$opt_sqls_sections $section"
         fi
     done
-    SYNC_SECTIONS=$OPT_SYNC_SECTIONS
-    ASYNC_SECTIONS=$OPT_ASYNC_SECTIONS
-    SYNC_ASM_SECTIONS=$OPT_SYNC_ASM_SECTIONS
-    ASYNC_ASM_SECTIONS=$OPT_ASYNC_ASM_SECTIONS
-    SQLS_SECTIONS=$OPT_SQLS_SECTIONS
+
+    SYNC_SECTIONS=$opt_sync_sections
+    ASYNC_SECTIONS=$opt_async_sections
+    SYNC_ASM_SECTIONS=$opt_sync_asm_sections
+    ASYNC_ASM_SECTIONS=$opt_async_asm_sections
+    SQLS_SECTIONS=$opt_sqls_sections
 }
 
 load_config() {
@@ -2563,8 +2565,6 @@ mk_ora_db_connect() {
                 P_TNSALIAS_P="$PREFIX_SID$P_TNSALIAS_P"
             elif [ -n "$PREFIX" ]; then
                 P_TNSALIAS_P="$PREFIX$P_TNSALIAS_P"
-            else
-                P_TNSALIAS_P="$P_TNSALIAS_P"
             fi
 
             POSTFIX_SID="POSTFIX_$sid"
@@ -2573,8 +2573,6 @@ mk_ora_db_connect() {
                 P_TNSALIAS_P="$P_TNSALIAS_P$POSTFIX_SID"
             elif [ -n "$POSTFIX" ]; then
                 P_TNSALIAS_P="$P_TNSALIAS_P$POSTFIX"
-            else
-                P_TNSALIAS_P="$P_TNSALIAS_P"
             fi
         fi
 
@@ -2794,8 +2792,9 @@ do_checks() {
 
     if [ "${ORACLE_SID:0:1}" = '+' ]; then
         # ASM sections
-        local sections=${SYNC_ASM_SECTIONS}
-        local asections=${ASYNC_ASM_SECTIONS}
+        sections="$SYNC_ASM_SECTIONS"
+        asections="$ASYNC_ASM_SECTIONS"
+
     else
         local SYNC_SECTIONS_SID=
         local ASYNC_SECTIONS_SID=

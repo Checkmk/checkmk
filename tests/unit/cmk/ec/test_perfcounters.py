@@ -32,7 +32,7 @@ def test_perfcounters_count_time() -> None:
     assert c._times["processing"] == 1.04
 
 
-def test_perfcounters_do_statistics(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_perfcounters_do_statistics(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("time.time", lambda: 1.0)
 
     c = Perfcounters(logger)

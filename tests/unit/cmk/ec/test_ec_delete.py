@@ -3,17 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """EC delete methods with one or more event IDs"""
-
 import pytest
 
 from tests.testlib import CMKEventConsole
 
 from tests.unit.cmk.ec.helpers import FakeStatusSocket
 
+from cmk.ec.main import Event, EventStatus, StatusServer
 from cmk.ec.query import MKClientError
 
 
-def test_delete_nonexistent_event(status_server) -> None:
+def test_delete_nonexistent_event(status_server: StatusServer) -> None:
     """Exception on nonexistent event ID"""
 
     s = FakeStatusSocket(b"COMMAND DELETE;1;testuser")
@@ -24,9 +24,9 @@ def test_delete_nonexistent_event(status_server) -> None:
     assert "No event with id 1" in str(excinfo.value)
 
 
-def test_delete_event(event_status, status_server) -> None:
+def test_delete_event(event_status: EventStatus, status_server: StatusServer) -> None:
     """Delete 1 event"""
-    event = {
+    event: Event = {
         "host": "ABC1",
         "text": "not important",
         "core_host": "ABC",
@@ -41,9 +41,9 @@ def test_delete_event(event_status, status_server) -> None:
     assert len(event_status.events()) == 0
 
 
-def test_delete_multiple_events(event_status, status_server) -> None:
+def test_delete_multiple_events(event_status: EventStatus, status_server: StatusServer) -> None:
     """Delete event list"""
-    events = [
+    events: list[Event] = [
         {
             "host": "ABC1",
             "text": "event1 text",
@@ -66,9 +66,11 @@ def test_delete_multiple_events(event_status, status_server) -> None:
     assert len(event_status.events()) == 0
 
 
-def test_delete_partially_existing_multiple_events(event_status, status_server) -> None:
+def test_delete_partially_existing_multiple_events(
+    event_status: EventStatus, status_server: StatusServer
+) -> None:
     """Event list with a missing ID still deletes the existing ID"""
-    events = [
+    events: list[Event] = [
         {
             "host": "ABC1",
             "text": "event1 text",

@@ -40,7 +40,9 @@ target-version = ['py310']
 module = [
     "cmk.notification_plugins.*",
     "tests.gui_e2e.*",
-    "tests.testlib.playwright.*"
+    "tests.testlib.playwright.*",
+    "tests.unit.cmk.ec.*",
+    "tests/testlib/event_console",
 ]
 disallow_untyped_calls = true
 disallow_untyped_defs = true

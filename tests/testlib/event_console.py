@@ -9,12 +9,14 @@ from typing import Any
 
 from tests.testlib.site import Site
 
+from cmk.ec.event import Event
+
 
 class CMKEventConsole:
     def __init__(self, site: Site) -> None:
         super().__init__()
         self.site = site
-        self.status = CMKEventConsoleStatus("%s/tmp/run/mkeventd/status" % site.root)
+        self.status = CMKEventConsoleStatus(f"{site.root}/tmp/run/mkeventd/status")
 
     def _config(self) -> dict[str, Any]:
         cfg: dict[str, Any] = {}
@@ -33,10 +35,10 @@ class CMKEventConsole:
         self.status_port = port
 
     @classmethod
-    def new_event(cls, attrs):
+    def new_event(cls, attrs: Event) -> Event:
         now = time.time()
-        default_event = {
-            "rule_id": 815,
+        default_event: Event = {
+            "rule_id": "815",
             "text": "",
             "phase": "open",
             "count": 1,
@@ -50,7 +52,7 @@ class CMKEventConsole:
             "pid": 0,
             "priority": 3,
             "facility": 1,  # user
-            "match_groups": (),
+            "match_groups": (""),
         }
 
         event = default_event.copy()
@@ -59,7 +61,7 @@ class CMKEventConsole:
 
 
 class CMKEventConsoleStatus:
-    def __init__(self, address) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, address: str) -> None:
         self._address = address
 
     # Copied from web/htdocs/mkeventd.py. Better move to some common lib.

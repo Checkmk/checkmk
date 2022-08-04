@@ -11,8 +11,11 @@ from tests.testlib import CMKEventConsole
 
 from tests.unit.cmk.ec.helpers import FakeStatusSocket
 
+from cmk.ec.config import ConfigFromWATO
+from cmk.ec.main import Event, EventStatus, StatusServer
 
-def test_handle_client(status_server) -> None:  # type:ignore[no-untyped-def]
+
+def test_handle_client(status_server: StatusServer) -> None:
     s = FakeStatusSocket(b"GET events")
 
     status_server.handle_client(s, True, "127.0.0.1")
@@ -22,8 +25,8 @@ def test_handle_client(status_server) -> None:  # type:ignore[no-untyped-def]
     assert "event_id" in response[0]
 
 
-def test_mkevent_check_query_perf(  # type:ignore[no-untyped-def]
-    config, event_status, status_server
+def test_mkevent_check_query_perf(
+    config: ConfigFromWATO, event_status: EventStatus, status_server: StatusServer
 ) -> None:
     for num in range(10000):
         event_status.new_event(
@@ -116,11 +119,11 @@ def test_mkevent_check_query_perf(  # type:ignore[no-untyped-def]
     ],
 )
 def test_mkevent_query_filters(
-    event_status,
-    status_server,
-    event,
-    status_socket,
-    is_match,
+    event_status: EventStatus,
+    status_server: StatusServer,
+    event: Event,
+    status_socket: FakeStatusSocket,
+    is_match: bool,
 ) -> None:
     event_status.new_event(CMKEventConsole.new_event(event))
     status_server.handle_client(status_socket, True, "127.0.0.1")

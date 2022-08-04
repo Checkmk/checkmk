@@ -4,16 +4,25 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from typing import Dict
 
 import pytest
 
 from cmk.ec.defaults import default_config
-from cmk.ec.main import EventServer, make_config, MatchPriority, MatchSuccess, RuleMatcher
+from cmk.ec.main import (
+    Event,
+    EventServer,
+    make_config,
+    MatchGroups,
+    MatchPriority,
+    MatchResult,
+    MatchSuccess,
+    Rule,
+    RuleMatcher,
+)
 
 
 @pytest.fixture(name="m")
-def fixture_m():
+def fixture_m() -> RuleMatcher:
     logger = logging.getLogger("cmk.mkeventd")
     config = default_config()
     config["debug_rules"] = True
@@ -47,18 +56,24 @@ def fixture_m():
     ],
 )
 def test_match_message(
-    m, message, result, match_message, cancel_message, match_groups, cancel_groups
-):
-    rule = {
-        "match": EventServer._compile_matching_value("match", match_message),
+    m: RuleMatcher,
+    message: str,
+    result: bool,
+    match_message: str,
+    cancel_message: str | None,
+    match_groups: MatchGroups,
+    cancel_groups: bool | None,
+) -> None:
+    rule: Rule = {
+        "match": EventServer._compile_matching_value("match", match_message),  # type: ignore[typeddict-item]
     }
 
     if cancel_message is not None:
-        rule["match_ok"] = EventServer._compile_matching_value("match_ok", cancel_message)
+        rule["match_ok"] = EventServer._compile_matching_value("match_ok", cancel_message)  # type: ignore[typeddict-item]
 
-    event = {"text": message}
+    event: Event = {"text": message}
 
-    matched_groups: Dict = {}
+    matched_groups: dict = {}
     assert m.event_rule_matches_message(rule, event, matched_groups) == result
     assert matched_groups["match_groups_message"] == match_groups
 
@@ -99,15 +114,19 @@ def test_match_message(
         (2, (2, 2), (2, 2), MatchPriority(has_match=True, has_canceling_match=True)),
     ],
 )
-def test_match_priority(  # type:ignore[no-untyped-def]
-    m, priority, match_priority, cancel_priority, expected
+def test_match_priority(
+    m: RuleMatcher,
+    priority: int,
+    match_priority: MatchPriority | None,
+    cancel_priority: MatchPriority | None,
+    expected: MatchPriority | None,
 ) -> None:
-    rule = {}
+    rule: Rule = {}
     if match_priority is not None:
         rule["match_priority"] = match_priority
     if cancel_priority is not None:
         rule["cancel_priority"] = cancel_priority
-    event = {"priority": priority}
+    event: Event = {"priority": priority}
     assert m.event_rule_determine_match_priority(rule, event) == expected
 
 
@@ -156,8 +175,12 @@ def test_match_priority(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_match_outcome(  # type:ignore[no-untyped-def]
-    m, rule, match_groups, match_priority, expected
+def test_match_outcome(
+    m: RuleMatcher,
+    rule: Rule,
+    match_groups: MatchGroups,
+    match_priority: MatchPriority,
+    expected: MatchResult,
 ) -> None:
     assert m._check_match_outcome(rule, match_groups, match_priority) == expected
 
@@ -171,7 +194,7 @@ def test_match_outcome(  # type:ignore[no-untyped-def]
         (False, {"match_site": ["dong"]}),
     ],
 )
-def test_match_site(m, rule, result) -> None:  # type:ignore[no-untyped-def]
+def test_match_site(m: RuleMatcher, rule: Rule, result: bool) -> None:
     assert m.event_rule_matches_site(rule, {}) == result
 
 
@@ -190,12 +213,13 @@ def test_match_site(m, rule, result) -> None:  # type:ignore[no-untyped-def]
         (False, {"match_host": "^abc$"}, {"host": "abx"}),
     ],
 )
-def test_match_host(m, result, rule, event) -> None:  # type:ignore[no-untyped-def]
+def test_match_host(m: RuleMatcher, result: bool, rule: Rule, event: Event) -> None:
     if "match_host" in rule:
-        rule = {
-            **rule,
-            "match_host": EventServer._compile_matching_value("match_host", rule["match_host"]),
-        }
+        rule.update(
+            {
+                "match_host": EventServer._compile_matching_value("match_host", rule["match_host"]),  # type: ignore[typeddict-item]
+            }
+        )
     assert m.event_rule_matches_host(rule, event) == result
 
 
@@ -211,7 +235,7 @@ def test_match_host(m, result, rule, event) -> None:  # type:ignore[no-untyped-d
         (False, {"match_ipaddress": "10.3.3.0"}, {"ipaddress": "10.3.3.4"}),
     ],
 )
-def test_match_ipaddress(m, result, rule, event) -> None:  # type:ignore[no-untyped-def]
+def test_match_ipaddress(m: RuleMatcher, result: bool, rule: Rule, event: Event) -> None:
     assert m.event_rule_matches_ip(rule, event) == result
 
 
@@ -224,5 +248,5 @@ def test_match_ipaddress(m, result, rule, event) -> None:  # type:ignore[no-unty
         (False, {"match_facility": 0}, {"facility": 1}),
     ],
 )
-def test_match_facility(m, result, rule, event) -> None:  # type:ignore[no-untyped-def]
+def test_match_facility(m: RuleMatcher, result: bool, rule: Rule, event: Event) -> None:
     assert m.event_rule_matches_facility(rule, event) == result

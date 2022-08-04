@@ -82,69 +82,6 @@ rulespec_registry.register(
 )
 
 
-def _vs_function_instances() -> ValueSpec:
-    return Dictionary(
-        title=_("Levels on instances"),
-        elements=[
-            ("faas_total_instance_count", Levels(title=_("instances"))),
-            ("faas_active_instance_count", Levels(title=_("active instances"))),
-        ],
-    )
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="gcp_function_instances",
-        group=RulespecGroupCheckParametersApplications,
-        match_type="dict",
-        parameter_valuespec=_vs_function_instances,
-        title=lambda: _("GCP/Function instances"),
-    )
-)
-
-
-def _vs_function_execution() -> ValueSpec:
-    return Dictionary(
-        title=_("Levels on performance"),
-        elements=[
-            ("faas_execution_count", Levels(title=_("execution count"))),
-            ("aws_lambda_memory_size_absolute", SimpleLevels(Filesize, title=_("memory"))),
-            ("faas_execution_times", Levels(title=_("execution time"), unit="s")),
-        ],
-    )
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="gcp_function_execution",
-        group=RulespecGroupCheckParametersApplications,
-        match_type="dict",
-        parameter_valuespec=_vs_function_execution,
-        title=lambda: _("GCP/Function execution"),
-    )
-)
-
-
-def _vs_function_network() -> ValueSpec:
-    return Dictionary(
-        title=_("Levels on network"),
-        elements=[
-            ("net_data_sent", SimpleLevels(title=_("Data sent"), unit="bytes/s")),
-        ],
-    )
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="gcp_function_network",
-        group=RulespecGroupCheckParametersApplications,
-        match_type="dict",
-        parameter_valuespec=_vs_function_network,
-        title=lambda: _("GCP/Function network"),
-    )
-)
-
-
 def _vs_run_network() -> ValueSpec:
     return Dictionary(
         title=_("Levels on network traffic"),

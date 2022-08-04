@@ -99,3 +99,9 @@ check_environment_variables = {param_list ->
         ||==========================================================================================
         """.stripMargin());
 }
+
+assert_no_dirty_files = {repo_root ->
+    dir (repo_root) {
+        assert sh(script: "make -C tests/ test-find-dirty-files-in-git", returnStatus: true) == 0;
+    }
+}

@@ -36,6 +36,7 @@ def main() {
     /// don't add $WORKSPACE based values here, since $docker_args is being
     /// used on different nodes
     def docker_args = "--ulimit nofile=1024:1024";
+    def docker_git_reference_mount = "-v /home/jenkins/git_references/check_mk:/home/jenkins/git_references/check_mk:ro"
     def jenkins_base_folder = new File(new File(currentBuild.fullProjectName).parent).parent;
 
     def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS);
@@ -188,7 +189,7 @@ def main() {
     create_and_upload_bom(WORKSPACE, branch_version, VERSION);
 
     shout("create_source_package");
-    docker_image_from_alias("IMAGE_TESTING").inside(docker_args) {
+    docker_image_from_alias("IMAGE_TESTING").inside("${docker_args} ${docker_git_reference_mount}") {
         // TODO creates stages
         create_source_package(WORKSPACE, checkout_dir, cmk_version);
 
@@ -218,6 +219,7 @@ def main() {
                 "${upload_path}",
                 INTERNAL_DEPLOY_PORT,
             );
+            assert_no_dirty_files(checkout_dir);
         }
     }
 
@@ -306,7 +308,8 @@ def main() {
                 |<p><a href='${INTERNAL_DEPLOY_URL}/${upload_path_suffix}${cmk_version}'>Download Artifacts</a></p>
                 |""".stripMargin());
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            docker_image_from_alias("IMAGE_TESTING").inside("${docker_args}") {
+            docker_image_from_alias("IMAGE_TESTING").inside("${docker_args} ${docker_git_reference_mount}") {
+                assert_no_dirty_files(checkout_dir);
                 artifacts_helper.download_version_dir(
                     upload_path,
                     INTERNAL_DEPLOY_PORT, cmk_version, "${WORKSPACE}/versions/${cmk_version}")

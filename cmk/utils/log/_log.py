@@ -9,6 +9,8 @@ from logging.handlers import WatchedFileHandler
 from pathlib import Path
 from typing import IO, Optional, Union
 
+from cmk.utils.paths import log_dir
+
 from ._level import VERBOSE as VERBOSE  # pylint: disable=useless-import-alias
 
 IOLog = IO[str]
@@ -124,3 +126,25 @@ def verbosity_to_log_level(verbosity: int) -> int:
     if verbosity >= 2:
         return logging.DEBUG
     raise NotImplementedError()
+
+
+def init_dedicated_logging(
+    log_level: int | None, target_logger: logging.Logger, log_file: Path
+) -> None:
+    """Initializes logging to a dedicated log_file for the given log_handler.
+    Logging won't be propagated to parent loggers of log_handler."""
+    del target_logger.handlers[:]  # Remove all previously existing handlers
+
+    if log_level is None:
+        target_logger.addHandler(logging.NullHandler())
+        target_logger.propagate = False
+        return
+
+    handler = logging.FileHandler(
+        Path(log_dir) / log_file,
+        encoding="UTF-8",
+    )
+    handler.setFormatter(get_formatter())
+    target_logger.setLevel(log_level)
+    target_logger.addHandler(handler)
+    target_logger.propagate = False

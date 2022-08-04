@@ -199,6 +199,7 @@ def test_registered_configvars() -> None:
 
     if not cmk_version.is_raw_edition():
         expected_vars += [
+            "agent_bakery_logging",
             "agent_deployment_enabled",
             "agent_deployment_host_selection",
             "agent_deployment_central",

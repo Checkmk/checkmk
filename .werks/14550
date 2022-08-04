@@ -1,0 +1,22 @@
+Title: <tt>mk_logwatch</tt> via bakery: Add <i>APPEND</i> option for message classification
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1659620852
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p10
+
+The <tt>mk_logwatch</tt> agent plugin can be deployed via the agent bakery (ruleset <i>Text logfiles
+(Linux, Solaris, Windows)</i>). In this ruleset, users can specify regular expressions for
+processing log messages. Before this werk, users could specify regular expressions to classify
+messages (OK/WARNING/CRITICAL), to ignore messages and to rewrite messages.
+
+As of this werk, users can additionally specify regular expressions to combine multiple log lines
+into a single message via the APPEND option, see the help of the bakery ruleset for details. One use
+case for this is the processing of multi-line stack traces.
+
+Note that this feature was already supported by the <tt>mk_logwatch</tt> agent plugin before this
+werk, but it was not configurable via the agent bakery.

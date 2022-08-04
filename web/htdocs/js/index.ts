@@ -44,6 +44,7 @@ import * as graph_integration from "graph_integration";
 import * as dashboard from "dashboard";
 import * as page_menu from "page_menu";
 import * as webauthn from "webauthn";
+import * as password_meter from "password_meter";
 
 import * as cmk_figures from "cmk_figures";
 import "cmk_figures_plugins";
@@ -179,3 +180,5 @@ export const cmk_export = {
         webauthn: webauthn,
     },
 };
+
+password_meter.initPasswordStrength();

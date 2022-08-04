@@ -785,6 +785,36 @@ class HTMLGenerator(HTMLWriter):
             placeholder=placeholder,
         )
 
+    def password_meter(self) -> None:
+        """The call should be right behind the password_input call, since the
+        meter looks for inputs in the same parent...
+
+        Relies on the "zxcvbn-ts" package utilized within the
+        "js/password_meter.ts" module"""
+        # the class_name must be in sync with password_meter.ts
+        class_name = "password_meter"
+        # <label>
+        self.write_html(render_start_tag(tag_name="label", close_tag=False))
+        self.write_text(str(_("Strength:")))
+        # <meter>
+        self.write_html(
+            render_start_tag(
+                tag_name="meter",
+                close_tag=False,
+                max="5",
+                class_=class_name,
+                data_password_strength_1=_("Very Weak"),
+                data_password_strength_2=_("Weak"),
+                data_password_strength_3=_("Medium"),
+                data_password_strength_4=_("Good"),
+                data_password_strength_5=_("Strong"),
+            )
+        )
+        # </meter>
+        self.write_html(render_end_tag("meter"))
+        # </label>
+        self.write_html(render_end_tag("label"))
+
     def text_area(
         self,
         varname: str,

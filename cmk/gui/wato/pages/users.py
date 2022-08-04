@@ -974,6 +974,7 @@ class ModeEditUser(WatoMode):
 
         if not self._is_locked("password"):
             html.password_input("_password_" + self._pw_suffix(), autocomplete="new-password")
+            html.password_meter()
             html.close_td()
             html.close_tr()
 

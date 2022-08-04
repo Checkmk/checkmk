@@ -9,7 +9,7 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
 # HACK: Keep this and the rsync below in sync with top-level Makefile.
-JAVASCRIPT_MINI=$(for jmini in main mobile side; do echo "web/htdocs/js/${jmini}_min.js"; done)
+JAVASCRIPT_MINI=$(for jmini in main mobile side zxcvbn; do echo "web/htdocs/js/${jmini}_min.js"; done)
 THEMES="facelift modern-dark"
 THEME_CSS_FILES=$(for theme in $THEMES; do echo "web/htdocs/themes/${theme}/theme.css"; done)
 THEME_JSON_FILES=$(for theme in $THEMES; do echo "web/htdocs/themes/${theme}/theme.json"; done)

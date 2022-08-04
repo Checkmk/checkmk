@@ -127,6 +127,7 @@ class UserChangePasswordPage(ABCUserProfilePage):
 
         forms.section(_("New Password"))
         html.password_input("password", autocomplete="new-password")
+        html.password_meter()
 
         forms.section(_("New Password Confirmation"))
         html.password_input("password2", autocomplete="new-password")

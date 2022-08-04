@@ -78,6 +78,9 @@
   },
   "dependencies": {
     "@yaireo/tagify": "^4.9.2",
+    "@zxcvbn-ts/core": "^2.0.3",
+    "@zxcvbn-ts/language-common": "^2.0.1",
+    "@zxcvbn-ts/language-en": "^2.0.1",
     "canvas-5-polyfill": "^0.1.5",
     "core-js": "^3.19.2",
     "crossfilter2": "^1.5.2",

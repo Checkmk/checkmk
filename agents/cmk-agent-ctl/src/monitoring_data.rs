@@ -11,10 +11,12 @@ use async_std::net::TcpStream as AsyncTcpStream;
 #[cfg(windows)]
 use async_std::prelude::*;
 #[cfg(windows)]
-use std::net::TcpStream as StdTcpStream;
+use std::net::IpAddr;
 
-use std::io::{Read, Result as IoResult, Write};
+use std::io::{Result as IoResult, Write};
 
+#[cfg(unix)]
+use std::io::Read;
 #[cfg(unix)]
 use std::os::unix::net::UnixStream;
 #[cfg(unix)]
@@ -51,9 +53,10 @@ pub async fn async_collect(
 
 #[cfg(windows)]
 fn collect_from_ip(agent_channel: &types::AgentChannel) -> IoResult<Vec<u8>> {
-    let mut data: Vec<u8> = vec![];
-    StdTcpStream::connect(agent_channel.as_ref())?.read_to_end(&mut data)?;
-    Ok(data)
+    async_std::task::block_on(async_collect_from_ip(
+        agent_channel,
+        IpAddr::from([127, 0, 0, 1]),
+    ))
 }
 
 #[cfg(windows)]
@@ -105,6 +108,7 @@ pub fn compression_header_info() -> CompressionHeaderInfo {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::Read;
 
     #[test]
     fn test_compress() {

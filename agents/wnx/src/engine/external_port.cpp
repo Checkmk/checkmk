@@ -407,6 +407,53 @@ size_t ExternalPort::sessionsInQueue() {
     return session_queue_.size();
 }
 
+namespace {
+struct ConnectionPorts {
+    uint16_t port;
+    uint16_t peer_port;
+};
+
+bool IsElevatedProcess(std::optional<uint32_t> p) noexcept {
+    if (!p.has_value()) {
+        return false;
+    }
+    const auto pid = *p;
+    wtools::UniqueHandle process_handle{
+        ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid)};
+    if (!process_handle) {
+        return false;
+    }
+    HANDLE token{nullptr};
+    if (::OpenProcessToken(process_handle.get(), TOKEN_QUERY, &token) == TRUE) {
+        ON_OUT_OF_SCOPE(::CloseHandle(token));
+        DWORD return_size = 0;
+        TOKEN_ELEVATION elevated = {0};
+        return GetTokenInformation(token, TokenElevation, &elevated,
+                                   sizeof(TOKEN_ELEVATION),
+                                   &return_size) == TRUE &&
+               elevated.TokenIsElevated != 0;
+    }
+    return false;
+}
+
+/// Check that connection is allowed
+///
+/// Conditions for true:
+/// - controller-less mode
+/// - our controller process
+/// - elevated process request
+bool IsConnectionAllowed(ConnectionPorts cp, std::optional<uint32_t> ctl_pid) {
+    if (!ctl_pid.has_value() ||  // controller-less mode
+        wtools::CheckProcessUsePort(cp.port, *ctl_pid, cp.peer_port)) {
+        return true;
+    }
+
+    return ac::GetConfiguredAllowElevated() &&
+           IsElevatedProcess(wtools::GetConnectionPid(cp.port, cp.peer_port));
+}
+
+}  // namespace
+
 void ExternalPort::server::run_accept(SinkFunc sink, ExternalPort *ext_port) {
     acceptor_.async_accept(socket_, [this, sink, ext_port](std::error_code ec) {
         if (ec.value()) {
@@ -418,19 +465,12 @@ void ExternalPort::server::run_accept(SinkFunc sink, ExternalPort *ext_port) {
                           peer_port, ipv6);
                 auto x = std::make_shared<AsioSession>(std::move(socket_));
 
-                auto process_allowed = !controller_pid_.has_value() ||
-                                       wtools::CheckProcessUsePort(
-                                           port_, *controller_pid_, peer_port);
-
-                if (process_allowed &&
-                    (cfg::groups::global.isIpAddressAllowed(peer_ip) ||
-                     IsIpAllowedAsException(peer_ip)))
+                if (IsConnectionAllowed({.port = port_, .peer_port = peer_port},
+                                        controller_pid_)) {
                     sink(x, ext_port);
-                else {
-                    XLOG::d("Connection forbidden: address '{}' process {}",
-                            process_allowed ? "allowed" : "not allowed");
+                } else {
+                    XLOG::d("Connection forbidden: address '{}'", peer_ip);
                 }
-
             } catch (const std::system_error &e) {
                 if (e.code().value() == WSAECONNRESET) {
                     XLOG::l(" Client closed connection");

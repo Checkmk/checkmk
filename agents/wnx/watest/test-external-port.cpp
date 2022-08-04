@@ -122,8 +122,8 @@ TEST_F(ExternalPortCheckProcessFixture, InvalidProcess) {
 
     writeToSocket();
     std::this_thread::sleep_for(300ms);
-    test_port.shutdownIo();  // this is long operation
-    EXPECT_TRUE(remote_ip.empty());
+    test_port.shutdownIo();           // this is long operation
+    EXPECT_FALSE(remote_ip.empty());  // elevated in any case we send something
 }
 
 TEST_F(ExternalPortCheckProcessFixture, ValidProcess) {

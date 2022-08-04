@@ -120,6 +120,12 @@ bool GetConfiguredLocalOnly() {
                        cfg::defaults::kControllerLocalOnly);
 }
 
+bool GetConfiguredAllowElevated() {
+    auto controller_config = GetControllerNode();
+    return cfg::GetVal(controller_config, cfg::vars::kControllerAllowElevated,
+                       cfg::defaults::kControllerAllowElevated);
+}
+
 bool IsConfiguredEmergencyOnCrash() {
     auto controller_config = GetControllerNode();
     return cfg::GetVal(controller_config, cfg::vars::kControllerOnCrash,

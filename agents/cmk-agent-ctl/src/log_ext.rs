@@ -6,7 +6,6 @@ use flexi_logger::writers::LogWriter;
 use flexi_logger::DeferredNow;
 use log::Record;
 
-use bincode;
 use mail_slot::{MailslotClient, MailslotName};
 use serde::{Deserialize, Serialize};
 
@@ -59,7 +58,7 @@ pub fn send_log_to_mailslot(log_text: &str, mailslot_name: &str) {
 }
 
 pub fn send_log_to_service_mailslot(log_text: &str) {
-    send_log_to_mailslot(log_text, &AGENT_SERVICE_MAILSLOT_NAME);
+    send_log_to_mailslot(log_text, AGENT_SERVICE_MAILSLOT_NAME);
 }
 
 #[derive(Debug)]

@@ -1,9 +1,0 @@
-title: GCP Memorystore/Redis: Summary
-agents: gcp
-catalog: cloud/gcp
-license: GPLv2
-distribution: check_mk
-description:
- counts number of redis instances
-discovery:
- One service is created

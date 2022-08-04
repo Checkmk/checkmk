@@ -1,0 +1,21 @@
+Title: Agent Bakery: Optionally log to dedicated logfile
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1659700778
+Edition: cee
+Knowledge: undoc
+Level: 2
+State: unknown
+Version: 2.1.0p10
+
+It's now possible to activate logging for the agent bakery.
+When activated at <i>Global Settings - Setup - Agent bakery logging</t>,
+the agent bakery will log messages to <tt>~/var/log/agent_bakery.log</tt>,
+with the selected loglevel. This is applies equally to bakery jobs invoked via GUI
+via command line.
+
+Without activated logging, baking details are still available on the command line
+when baking with command <tt>cmk --bake-agents -v</tt> as a site user.
+Also, when baking on the GUI, on failure, error details are propagated to the executing
+background job as they already used to be.

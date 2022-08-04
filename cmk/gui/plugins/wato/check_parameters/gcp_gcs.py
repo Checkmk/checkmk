@@ -82,109 +82,6 @@ rulespec_registry.register(
 )
 
 
-def _vs_run_network() -> ValueSpec:
-    return Dictionary(
-        title=_("Levels on network traffic"),
-        elements=[
-            ("net_data_sent", SimpleLevels(title=_("Data sent"), unit="bytes/s")),
-            ("net_data_recv", SimpleLevels(title=_("Data received"), unit="bytes/s")),
-        ],
-    )
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="gcp_run_network",
-        group=RulespecGroupCheckParametersApplications,
-        match_type="dict",
-        parameter_valuespec=_vs_run_network,
-        title=lambda: _("GCP/Cloud Run Network"),
-    )
-)
-
-
-def _vs_run_memory() -> ValueSpec:
-    return Dictionary(
-        title=_("Levels memory"),
-        elements=[
-            (
-                "memory_util",
-                SimpleLevels(Percentage, title=_("Memory utilitzation"), default_value=(80, 90)),
-            ),
-        ],
-    )
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="gcp_run_memory",
-        group=RulespecGroupCheckParametersApplications,
-        match_type="dict",
-        parameter_valuespec=_vs_run_memory,
-        title=lambda: _("GCP/Cloud Run Memory"),
-    )
-)
-
-
-def _vs_run_cpu() -> ValueSpec:
-    return Dictionary(
-        title=_("Levels CPU"),
-        elements=[
-            ("util", SimpleLevels(Percentage, title=_("CPU utilitzation"), default_value=(80, 90))),
-        ],
-    )
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="gcp_run_cpu",
-        group=RulespecGroupCheckParametersApplications,
-        match_type="dict",
-        parameter_valuespec=_vs_run_cpu,
-        title=lambda: _("GCP/Cloud Run Cpu"),
-    )
-)
-
-
-def _vs_run_requests() -> ValueSpec:
-    return Dictionary(
-        title=_("Levels requests"),
-        elements=[
-            ("faas_total_instance_count", Levels(title=_("Number of running containers"))),
-            ("faas_execution_count", Levels(title=_("Number of requests"))),
-            (
-                "faas_execution_count_2xx",
-                Levels(title=_("Number of requests with return code class 2xx (sucess)")),
-            ),
-            (
-                "faas_execution_count_3xx",
-                Levels(title=_("Number of requests with return code class 3xx (redirection)")),
-            ),
-            (
-                "faas_execution_count_4xx",
-                Levels(title=_("Number of requests with return code class 4xx (client error)")),
-            ),
-            (
-                "faas_execution_count_5xx",
-                Levels(title=_("Number of requests with return code class 5xx (server error)")),
-            ),
-            ("gcp_billable_time", Levels(title=_("billable time"), unit="s/s")),
-            ("faas_execution_times", Levels(title=_("99th percentile request latency"), unit="s")),
-        ],
-    )
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="gcp_run_requests",
-        group=RulespecGroupCheckParametersApplications,
-        match_type="dict",
-        parameter_valuespec=_vs_run_requests,
-        title=lambda: _("GCP/Cloud Run Requests"),
-    )
-)
-
-
 def _vs_sql_status() -> ValueSpec:
     return Dictionary(
         title=_("Map GCP status to check mk"),
@@ -209,6 +106,38 @@ rulespec_registry.register(
         title=lambda: _("GCP/Cloud SQL status"),
     )
 )
+
+
+def _vs_run_network() -> ValueSpec:
+    return Dictionary(
+        title=_("Levels on network traffic"),
+        elements=[
+            ("net_data_sent", SimpleLevels(title=_("Data sent"), unit="bytes/s")),
+            ("net_data_recv", SimpleLevels(title=_("Data received"), unit="bytes/s")),
+        ],
+    )
+
+
+def _vs_run_memory() -> ValueSpec:
+    return Dictionary(
+        title=_("Levels memory"),
+        elements=[
+            (
+                "memory_util",
+                SimpleLevels(Percentage, title=_("Memory utilitzation"), default_value=(80, 90)),
+            ),
+        ],
+    )
+
+
+def _vs_run_cpu() -> ValueSpec:
+    return Dictionary(
+        title=_("Levels CPU"),
+        elements=[
+            ("util", SimpleLevels(Percentage, title=_("CPU utilitzation"), default_value=(80, 90))),
+        ],
+    )
+
 
 rulespec_registry.register(
     CheckParameterRulespecWithItem(

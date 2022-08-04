@@ -30,6 +30,8 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Checkbox, DropdownChoice, TextInput, Transform, ValueSpec
 from cmk.gui.watolib.utils import host_attribute_matches
 
+from cmk.fields import String
+
 HostAttributeSpec = Dict[str, Any]
 
 
@@ -534,7 +536,7 @@ def declare_host_attribute(  # type:ignore[no-untyped-def]
         }
     )
 
-    attrs["openapi_field"] = lambda self: fields.String(description=self.help())
+    attrs["openapi_field"] = lambda self: String(description=self.help())
 
     # Apply the left over missing attributes that we get from the function arguments
     # by creating the final concrete class of this attribute

@@ -1,0 +1,15 @@
+Title: Guard Livestatus against Nagios custom variables with an empty value.
+Class: fix
+Compatible: compat
+Component: livestatus
+Date: 1659603248
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p10
+
+When Nagios is configured with custom variables having an empty value,
+various Livestatus queries can crash the Nagios core.  This has been fixed.
+
+Reported by GitHub user ronansalmon, including a similar fix.

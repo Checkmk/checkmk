@@ -236,15 +236,16 @@ Attributes NagiosCore::customAttributes(const void *holder,
     for (const auto *cvm = h; cvm != nullptr; cvm = cvm->next) {
         auto [k, name] = to_attribute_kind(cvm->variable_name);
         if (k == kind) {
+            const auto *value =
+                cvm->variable_value == nullptr ? "" : cvm->variable_value;
             switch (kind) {
                 case AttributeKind::custom_variables:
-                    attrs.emplace(name, cvm->variable_value);
+                    attrs.emplace(name, value);
                     break;
                 case AttributeKind::tags:
                 case AttributeKind::labels:
                 case AttributeKind::label_sources:
-                    attrs.emplace(b16decode(name),
-                                  b16decode(cvm->variable_value));
+                    attrs.emplace(b16decode(name), b16decode(value));
                     break;
             }
         }

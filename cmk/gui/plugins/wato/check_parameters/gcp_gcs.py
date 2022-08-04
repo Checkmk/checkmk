@@ -200,6 +200,68 @@ rulespec_registry.register(
     )
 )
 
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="gcp_redis_cpu",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_run_cpu,
+        title=lambda: _("GCP/Memorystore redis CPU"),
+    )
+)
+
+
+def _vs_redis_memory() -> ValueSpec:
+    return Dictionary(
+        title=_("Levels memory"),
+        elements=[
+            (
+                "memory_util",
+                SimpleLevels(Percentage, title=_("Memory utilitzation"), default_value=(80, 90)),
+            ),
+            (
+                "system_memory_util",
+                SimpleLevels(
+                    Percentage, title=_("System Memory utilitzation"), default_value=(80, 90)
+                ),
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="gcp_redis_memory",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_redis_memory,
+        title=lambda: _("GCP/Memorystore redis memory"),
+    )
+)
+
+
+def _vs_redis_clients_connected() -> ValueSpec:
+    return Dictionary(
+        title=_("Levels clients"),
+        elements=[
+            (
+                "clients_connected",
+                Levels(title=_("Number of connected clients")),
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="gcp_redis_clients_connected",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_redis_clients_connected,
+        title=lambda: _("GCP/Memorystore redis clients connected"),
+    )
+)
+
 
 def _vs_gce_cpu() -> Dictionary:
     return Dictionary(

@@ -1,0 +1,18 @@
+title: GCP Memorystore/Redis: Hitratio
+agents: gcp
+catalog: cloud/gcp
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the memory of Cloud Memorystore Redis and reports
+
+ - hit ratio
+
+ To make this check work you have to configure the related
+ special agent {Google Cloud Platform (GCP)}.
+
+ There are no default levels. Upper and lower levels
+ are configurable via the rule "Redis/Hitratio".
+
+discovery:
+ One service is created for each redis instance.

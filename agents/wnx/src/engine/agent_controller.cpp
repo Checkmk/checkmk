@@ -138,7 +138,8 @@ std::string GetConfiguredAgentChannel(Modus modus) {
         cfg::GetVal(controller_config, cfg::vars::kControllerAgentChannel,
                     std::string{cfg::defaults::kControllerAgentChannelDefault});
 
-    if (tools::IsEqual(result, cfg::defaults::kControllerAgentChannelMaiSlot)) {
+    if (tools::IsEqual(result,
+                       cfg::defaults::kControllerAgentChannelMailSlot)) {
         return FormatAddressFor(
             AddrType::mailslot,
             mailslot::BuildMailSlotNameStem(modus, ::GetCurrentProcessId()));
@@ -148,7 +149,9 @@ std::string GetConfiguredAgentChannel(Modus modus) {
         result = fmt::format("localhost:{}", kWindowsInternalExePort);
     } else if (GetPortFromString(result) == 0) {
         XLOG::l("Invalid configured agent channel '{}' use default", result);
-        result = std::string{cfg::defaults::kControllerAgentChannelDefault};
+        return FormatAddressFor(
+            AddrType::mailslot,
+            mailslot::BuildMailSlotNameStem(modus, ::GetCurrentProcessId()));
     }
     return FormatAddressFor(AddrType::ip, result);
 }
@@ -269,9 +272,7 @@ std::wstring BuildCommandLine(const fs::path &controller) {
     return controller.wstring() +
            wtools::ConvertToUTF16(fmt::format(" {} {} {} -vv",   //
                                               kCmdLineAsDaemon,  // daemon
-                                              kCmdLineChannel,
-                                              agent_channel  // --channel 50001
-                                              ));
+                                              kCmdLineChannel, agent_channel));
 }
 std::optional<uint32_t> StartAgentController() {
     XLOG::l.i("starting controller");

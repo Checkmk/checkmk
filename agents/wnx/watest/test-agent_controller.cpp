@@ -32,8 +32,9 @@ TEST(AgentController, BuildCommandLine) {
                                          "  port: {}\n",
                                          port)));
     EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
-              fmt::format("x daemon --agent-channel ip/{} -vv",
-                          cfg::defaults::kControllerAgentChannelDefault));
+              fmt::format("x daemon --agent-channel ms/{} -vv",
+                          mailslot::BuildMailSlotNameStem(
+                              GetModus(), ::GetCurrentProcessId())));
 }
 
 class AgentControllerCreateToml : public ::testing::Test {
@@ -112,14 +113,14 @@ TEST_F(AgentControllerCreateToml, PortAndAllowed) {
 }
 
 TEST(AgentController, BuildCommandLineAgentChannelOk) {
-    for (std::vector<std::tuple<std::string, uint16_t, std::string_view>>
-             mapping{
-                 {"ll:12345", 12345, "ll:12345"},
-                 {"ll:999", kWindowsInternalServicePort,
-                  cfg::defaults::kControllerAgentChannelDefault},
-                 {"ll:-1", kWindowsInternalServicePort,
-                  cfg::defaults::kControllerAgentChannelDefault},
-             };
+    const auto default_channel = fmt::format(
+        "ms/{}",
+        mailslot::BuildMailSlotNameStem(GetModus(), ::GetCurrentProcessId()));
+    for (std::vector<std::tuple<std::string, size_t, std::string_view>> mapping{
+             {"ll:12345", 12345U, "ip/ll:12345"},
+             {"ll:999", 0U, default_channel},
+             {"ll:-1", 0U, default_channel},
+         };
          const auto &[ch_in, p, ch_out] : mapping) {
         auto temp_fs = tst::TempCfgFs::CreateNoIo();
         ASSERT_TRUE(
@@ -131,13 +132,11 @@ TEST(AgentController, BuildCommandLineAgentChannelOk) {
                                              "    agent_channel: {}\n",
                                              ch_in)));
         EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path{"x"})),
-                  fmt::format("x daemon --agent-channel ip/{} -vv", ch_out));
+                  fmt::format("x daemon --agent-channel {} -vv", ch_out));
         EXPECT_EQ(GetConfiguredAgentChannelPort(GetModus()), p);
     }
-    EXPECT_EQ(GetConfiguredAgentChannelPort(Modus::integration),
-              kWindowsInternalExePort);
-    EXPECT_EQ(GetConfiguredAgentChannelPort(Modus::app),
-              kWindowsInternalExePort);
+    EXPECT_EQ(GetConfiguredAgentChannelPort(Modus::integration), 0U);
+    EXPECT_EQ(GetConfiguredAgentChannelPort(Modus::app), 0U);
 }
 
 TEST(AgentController, BuildCommandLineAgentChannelMailsLot) {
@@ -178,10 +177,10 @@ TEST(AgentController, BuildCommandLineAgentChannelMalformed) {
                                          "    agent_channel: ll\n")));
     EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
               fmt::format("x daemon --agent-channel {}{}{} -vv",
-                          ac::kCmdIpPrefix, ac::kCmdPrefixSeparator,
-                          cfg::defaults::kControllerAgentChannelDefault));
-    EXPECT_EQ(GetConfiguredAgentChannelPort(GetModus()),
-              kWindowsInternalServicePort);
+                          ac::kCmdMailSlotPrefix, ac::kCmdPrefixSeparator,
+                          mailslot::BuildMailSlotNameStem(
+                              GetModus(), ::GetCurrentProcessId())));
+    EXPECT_EQ(GetConfiguredAgentChannelPort(GetModus()), 0U);
     EXPECT_EQ(GetConfiguredAgentChannelPort(Modus::integration),
               kWindowsInternalExePort);
     EXPECT_EQ(GetConfiguredAgentChannelPort(Modus::app),
@@ -198,8 +197,9 @@ TEST(AgentController, BuildCommandLineAllowed) {
                                          allowed, port)));
     EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
               fmt::format("x daemon --agent-channel {}{}{} -vv",
-                          ac::kCmdIpPrefix, ac::kCmdPrefixSeparator,
-                          cfg::defaults::kControllerAgentChannelDefault));
+                          ac::kCmdMailSlotPrefix, ac::kCmdPrefixSeparator,
+                          mailslot::BuildMailSlotNameStem(
+                              GetModus(), ::GetCurrentProcessId())));
 }
 
 TEST(AgentController, LegacyMode) {

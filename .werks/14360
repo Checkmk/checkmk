@@ -1,0 +1,18 @@
+Title: Controller communicates with Windows agent using mailslot
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1659629321
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+Previously, the Windows agent controller used TCP-IP as a channel to 
+local Windows agent, but this type of communication can lead to port 
+conflicts. Also, mailslots inherently provide slightly better level 
+of local security.
+
+If, for some reason it is required to use TCP-IP as a channel, 
+you may set system.controller.agent_channel in the check_mk.user.yml 
+to any appropriate value, for example, "localhost:28250".

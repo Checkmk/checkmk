@@ -75,7 +75,7 @@ permission_registry.register(
 )
 
 
-def is_part_of_aggregation(host, service) -> bool:
+def is_part_of_aggregation(host, service) -> bool:  # type:ignore[no-untyped-def]
     if BIAggregationPacks.get_num_enabled_aggregations() == 0:
         return False
     return get_cached_bi_compiler().is_part_of_aggregation(host, service)
@@ -95,7 +95,7 @@ def aggregation_group_choices() -> DropdownChoiceEntries:
     return get_cached_bi_packs().get_aggregation_group_choices()
 
 
-def api_get_aggregation_state(
+def api_get_aggregation_state(  # type:ignore[no-untyped-def]
     filter_names: Optional[List[str]] = None, filter_groups: Optional[List[str]] = None
 ):
     bi_manager = BIManager()
@@ -108,7 +108,9 @@ def api_get_aggregation_state(
         [],
     )
 
-    def collect_infos(node_result_bundle: NodeResultBundle, is_single_host_aggregation: bool):
+    def collect_infos(  # type:ignore[no-untyped-def]
+        node_result_bundle: NodeResultBundle, is_single_host_aggregation: bool
+    ):
         actual_result = node_result_bundle.actual_result
 
         own_infos = {}
@@ -297,7 +299,7 @@ def ajax_render_tree():
     html.write_html(renderer.render())
 
 
-def render_tree_json(row) -> dict[str, Any]:
+def render_tree_json(row) -> dict[str, Any]:  # type:ignore[no-untyped-def]
     expansion_level = request.get_integer_input_mandatory("expansion_level", 999)
 
     treestate = user.get_tree_states("bi")
@@ -306,7 +308,7 @@ def render_tree_json(row) -> dict[str, Any]:
         user.set_tree_states("bi", treestate)
         user.save_tree_states()
 
-    def render_node_json(tree, show_host) -> dict[str, Any]:
+    def render_node_json(tree, show_host) -> dict[str, Any]:  # type:ignore[no-untyped-def]
         is_leaf = len(tree) == 3
         if is_leaf:
             service = tree[2].get("service")
@@ -343,7 +345,7 @@ def render_tree_json(row) -> dict[str, Any]:
         json_node["output"] = compute_output_message(effective_state, tree[2])
         return json_node
 
-    def render_subtree_json(node, path, show_host) -> dict[str, Any]:
+    def render_subtree_json(node, path, show_host) -> dict[str, Any]:  # type:ignore[no-untyped-def]
         json_node = render_node_json(node, show_host)
 
         is_leaf = len(node) == 3
@@ -386,7 +388,7 @@ UNAVAIL = 4
 
 
 class ABCFoldableTreeRenderer(abc.ABC):
-    def __init__(
+    def __init__(  # type:ignore[no-untyped-def]
         self, row, omit_root, expansion_level, only_problems, lazy, wrap_texts=True
     ) -> None:
         self._row = row
@@ -460,13 +462,13 @@ class ABCFoldableTreeRenderer(abc.ABC):
 
         return state, assumed_state, node, new_subtrees
 
-    def _is_leaf(self, tree) -> bool:
+    def _is_leaf(self, tree) -> bool:  # type:ignore[no-untyped-def]
         return len(tree) == 3
 
     def _path_id(self, path):
         return "/".join(path)
 
-    def _is_open(self, path) -> bool:
+    def _is_open(self, path) -> bool:  # type:ignore[no-untyped-def]
         is_open = self._treestate.get(self._path_id(path))
         if is_open is None:
             is_open = len(path) <= self._expansion_level
@@ -819,7 +821,9 @@ class ABCFoldableTreeRendererTable(FoldableTreeRendererTree):
         return leaves
 
 
-def find_all_leaves(node) -> List[Tuple[Optional[str], HostName, Optional[ServiceName]]]:
+def find_all_leaves(  # type:ignore[no-untyped-def]
+    node,
+) -> List[Tuple[Optional[str], HostName, Optional[ServiceName]]]:
     # leaf node
     if node["type"] == 1:
         site, host = node["host"]

@@ -89,7 +89,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Service
         ),
     ],
 )
-def test_hr_ps_discovery(info, discovery_params, expected_discovery_result) -> None:
+def test_hr_ps_discovery(  # type:ignore[no-untyped-def]
+    info, discovery_params, expected_discovery_result
+) -> None:
     """Test that the hr_ps check returns the correct discovery results given different
     discovery parameters.
     """

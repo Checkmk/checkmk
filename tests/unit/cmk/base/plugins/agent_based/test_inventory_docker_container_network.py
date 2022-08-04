@@ -70,6 +70,8 @@ def test_inventory_docker_container_network_empty() -> None:
         (AGENT_OUTPUT_WITH_OCI_ERROR, EXPECTED_RESULT),
     ],
 )
-def test_inventory_docker_container_network(string_table, expected_result) -> None:
+def test_inventory_docker_container_network(  # type:ignore[no-untyped-def]
+    string_table, expected_result
+) -> None:
     section = parse_docker_container_network(string_table)
     assert list(inventory_docker_container_network(section)) == expected_result

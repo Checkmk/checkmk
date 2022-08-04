@@ -37,7 +37,7 @@ DATA = [
         ),
     ],
 )
-def test_discover_aruba_psu_status(
+def test_discover_aruba_psu_status(  # type:ignore[no-untyped-def]
     string_table: StringTable,
     result: DiscoveryResult,
 ):
@@ -82,7 +82,7 @@ def test_discover_aruba_psu_status(
         ),
     ],
 )
-def test_check_aruba_psu_status(
+def test_check_aruba_psu_status(  # type:ignore[no-untyped-def]
     string_table: StringTable,
     item: str,
     result: CheckResult,
@@ -136,7 +136,7 @@ def test_check_aruba_psu_status(
         ),
     ],
 )
-def test_check_aruba_psu_temp(
+def test_check_aruba_psu_temp(  # type:ignore[no-untyped-def]
     string_table: StringTable,
     item: str,
     result: CheckResult,
@@ -203,7 +203,7 @@ def test_check_aruba_psu_temp(
         ),
     ],
 )
-def test_check_aruba_psu_wattage(
+def test_check_aruba_psu_wattage(  # type:ignore[no-untyped-def]
     string_table: StringTable,
     item: str,
     result: CheckResult,

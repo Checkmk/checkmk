@@ -412,7 +412,9 @@ def transform_pre_2_1_range_filters() -> Callable[
     return transform_range_vars
 
 
-def cleanup_context_filters(context, single_infos: SingleInfos) -> VisualContext:
+def cleanup_context_filters(  # type:ignore[no-untyped-def]
+    context, single_infos: SingleInfos
+) -> VisualContext:
     new_context_vars = starmap(transform_pre_2_1_single_infos(single_infos), context.items())
     new_context_vars = starmap(transform_pre_2_1_discovery_state, new_context_vars)
     new_context_vars = starmap(transform_pre_2_1_range_filters(), new_context_vars)
@@ -539,7 +541,7 @@ def _load_custom_user_visuals(
     return visuals
 
 
-def load_visuals_of_a_user(
+def load_visuals_of_a_user(  # type:ignore[no-untyped-def]
     what, builtin_visuals, skip_func, path: Path, user_id: UserId
 ) -> CustomUserVisuals:
     user_visuals: CustomUserVisuals = {}
@@ -614,7 +616,7 @@ def available(
             return bool(user_groups.intersection(visual["public"][1]))
         return False
 
-    def restricted_visual(visualname: VisualName):
+    def restricted_visual(visualname: VisualName):  # type:ignore[no-untyped-def]
         permname = "%s.%s" % (permprefix, visualname)
         return permname in permission_registry and not user.may(permname)
 
@@ -1084,7 +1086,7 @@ def visual_spec_multi(info_key):
     return filter_list if filter_names else None
 
 
-def process_context_specs(context_specs) -> VisualContext:
+def process_context_specs(context_specs) -> VisualContext:  # type:ignore[no-untyped-def]
     context = {}
     for info_key, spec in context_specs:
         ident = "context_" + info_key
@@ -1095,7 +1097,7 @@ def process_context_specs(context_specs) -> VisualContext:
     return context
 
 
-def render_context_specs(
+def render_context_specs(  # type:ignore[no-untyped-def]
     visual,
     context_specs,
     isopen: bool = True,
@@ -1125,7 +1127,7 @@ def render_context_specs(
         spec.render_input(ident, value)
 
 
-def _vs_general(
+def _vs_general(  # type:ignore[no-untyped-def]
     single_infos,
     default_id,
     visual_type,
@@ -1253,7 +1255,7 @@ def _vs_general(
     )
 
 
-def page_edit_visual(  # pylint: disable=too-many-branches
+def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
     what: Literal["dashboards", "views", "reports"],
     all_visuals: Dict[Tuple[UserId, VisualName], Visual],
     custom_field_handler=None,
@@ -1720,7 +1722,7 @@ def get_merged_context(*contexts: VisualContext) -> VisualContext:
 # the only_sites list and a string with the filter headers
 # TODO: Untangle only_sites and filter headers
 # TODO: Reduce redundancies with filters_of_visual()
-def get_filter_headers(table, infos, context: VisualContext):
+def get_filter_headers(table, infos, context: VisualContext):  # type:ignore[no-untyped-def]
     filter_headers = "".join(get_livestatus_filter_headers(context, collect_filters(infos)))
     return filter_headers, get_only_sites_from_context(context)
 
@@ -1738,7 +1740,9 @@ def get_filter_headers(table, infos, context: VisualContext):
 #   '----------------------------------------------------------------------'
 
 
-def FilterChoices(infos: SingleInfos, title: str, help: str):  # pylint: disable=redefined-builtin
+def FilterChoices(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
+    infos: SingleInfos, title: str, help: str
+):
     """Select names of filters for the given infos"""
 
     def _info_filter_choices(infos):
@@ -1771,7 +1775,7 @@ class VisualFilterList(ListOfMultiple):
         for fname, filter_ in filters_allowed_for_info(info):
             yield fname, VisualFilter(name=fname, title=filter_.title)
 
-    def __init__(self, info_list: SingleInfos, **kwargs) -> None:
+    def __init__(self, info_list: SingleInfos, **kwargs) -> None:  # type:ignore[no-untyped-def]
         self._filters = filters_allowed_for_infos(info_list)
 
         kwargs.setdefault("title", _("Filters"))

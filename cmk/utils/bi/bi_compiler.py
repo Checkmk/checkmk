@@ -33,7 +33,9 @@ class ConfigStatus(TypedDict):
 
 
 class BICompiler:
-    def __init__(self, bi_configuration_file, sites_callback: SitesCallback) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, bi_configuration_file, sites_callback: SitesCallback
+    ) -> None:
         self._sites_callback = sites_callback
         self._bi_configuration_file = bi_configuration_file
 
@@ -146,7 +148,9 @@ class BICompiler:
                     )
                 used_titles[branch_title] = aggr_id
 
-    def prepare_for_compilation(self, online_sites: Set[SiteProgramStart]):
+    def prepare_for_compilation(  # type:ignore[no-untyped-def]
+        self, online_sites: Set[SiteProgramStart]
+    ):
         self._bi_packs.load_config()
         self._bi_structure_fetcher.update_data(online_sites)
         self.bi_searcher.set_hosts(self._bi_structure_fetcher.hosts)
@@ -228,10 +232,10 @@ class BICompiler:
 
         return latest_timestamp
 
-    def _save_data(self, filepath: Path, data) -> None:
+    def _save_data(self, filepath: Path, data) -> None:  # type:ignore[no-untyped-def]
         store.save_bytes_to_file(filepath, pickle.dumps(data))
 
-    def _load_data(self, filepath) -> Dict:
+    def _load_data(self, filepath) -> Dict:  # type:ignore[no-untyped-def]
         return store.load_object_from_pickle_file(filepath, default={})
 
     def _get_redis_client(self) -> "RedisDecoded":
@@ -239,7 +243,9 @@ class BICompiler:
             self._redis_client = get_redis_client()
         return self._redis_client
 
-    def is_part_of_aggregation(self, host_name, service_description) -> bool:
+    def is_part_of_aggregation(  # type:ignore[no-untyped-def]
+        self, host_name, service_description
+    ) -> bool:
         self._check_redis_lookup_integrity()
         return bool(
             self._get_redis_client().exists(

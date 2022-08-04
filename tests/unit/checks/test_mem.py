@@ -105,5 +105,5 @@ from cmk.base.plugins.agent_based.mem import parse_proc_meminfo_bytes
         ),
     ],
 )
-def test_cpu_threads_regression(section, parsed) -> None:
+def test_cpu_threads_regression(section, parsed) -> None:  # type:ignore[no-untyped-def]
     assert parsed == parse_proc_meminfo_bytes(section)

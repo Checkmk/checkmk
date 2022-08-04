@@ -19,6 +19,6 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_parse_short_id(indata, expected) -> None:
+def test_parse_short_id(indata, expected) -> None:  # type:ignore[no-untyped-def]
     actual = docker.get_short_id(indata)  # type: ignore[name-defined] # pylint: disable=undefined-variable
     assert actual == expected

@@ -106,7 +106,7 @@ def _create_interface(raw_stats: Mapping[str, str]) -> InterfaceWithCounters:
     )
 
 
-def parse_lnx_container_host_if(string_table) -> Section:
+def parse_lnx_container_host_if(string_table) -> Section:  # type:ignore[no-untyped-def]
     return [_create_interface(_parse_raw_stats(i)) for i in string_table], {}
 
 

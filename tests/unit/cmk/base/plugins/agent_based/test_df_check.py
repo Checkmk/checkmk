@@ -415,7 +415,9 @@ info_empty_inodes = [
         ),
     ],
 )
-def test_df_discovery_with_parse(info, expected_result, inventory_df_rules) -> None:
+def test_df_discovery_with_parse(  # type:ignore[no-untyped-def]
+    info, expected_result, inventory_df_rules
+) -> None:
     assert sorted(df.discover_df(inventory_df_rules, parse_df(info))) == sorted(
         Service(item=i, parameters=p) for i, p in expected_result
     )
@@ -695,7 +697,7 @@ def _extract_value_to_mock_for_zero_growth(results: Iterable[Result | Metric]) -
         ),
     ],
 )
-def test_df_check_with_parse(
+def test_df_check_with_parse(  # type:ignore[no-untyped-def]
     item, counter: str, params, info, expected_result, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(
@@ -1073,7 +1075,9 @@ info_df_groups = [
         ),
     ],
 )
-def test_df_discovery_groups_with_parse(inventory_df_rules, expected_result) -> None:
+def test_df_discovery_groups_with_parse(  # type:ignore[no-untyped-def]
+    inventory_df_rules, expected_result
+) -> None:
     assert sorted(df.discover_df(inventory_df_rules, parse_df(info_df_groups))) == sorted(
         Service(item=i, parameters=p) for i, p in expected_result
     )
@@ -1262,7 +1266,7 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, expected_result) -> 
         ),
     ],
 )
-def test_df_check_groups_with_parse(
+def test_df_check_groups_with_parse(  # type:ignore[no-untyped-def]
     add_params, expected_result, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(

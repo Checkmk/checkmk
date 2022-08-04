@@ -76,7 +76,9 @@ def _create_key(protocol: str, mode: str, field: str) -> str:
     return "_".join([mode, field])
 
 
-def _check_single_netapp_api_volume(item: str, params: Mapping[str, Any], volume) -> CheckResult:
+def _check_single_netapp_api_volume(  # type:ignore[no-untyped-def]
+    item: str, params: Mapping[str, Any], volume
+) -> CheckResult:
     value_store = get_value_store()
     mega = 1024.0 * 1024.0
     inodes_total = volume["files-total"]

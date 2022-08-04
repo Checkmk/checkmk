@@ -33,7 +33,9 @@ _SECTION = {
         (_SECTION, [Service()]),
     ],
 )
-def test_discover_k8s_pod_container(fix_register, section, expected_result) -> None:
+def test_discover_k8s_pod_container(  # type:ignore[no-untyped-def]
+    fix_register, section, expected_result
+) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("k8s_pod_container")]
     assert sorted(check_plugin.discovery_function(section)) == expected_result
 
@@ -54,7 +56,9 @@ def test_discover_k8s_pod_container(fix_register, section, expected_result) -> N
         ),
     ],
 )
-def test_check_k8s_pod_container(fix_register, section, expected_result) -> None:
+def test_check_k8s_pod_container(  # type:ignore[no-untyped-def]
+    fix_register, section, expected_result
+) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("k8s_pod_container")]
     assert list(check_plugin.check_function(params={}, section=section)) == expected_result
 
@@ -86,7 +90,9 @@ def test_check_k8s_pod_container(fix_register, section, expected_result) -> None
         ),
     ],
 )
-def test_inventory_k8s_pod_container(section, expected_result) -> None:
+def test_inventory_k8s_pod_container(  # type:ignore[no-untyped-def]
+    section, expected_result
+) -> None:
     assert sort_inventory_result(inventory_k8s_pod_container(section)) == sort_inventory_result(
         expected_result
     )

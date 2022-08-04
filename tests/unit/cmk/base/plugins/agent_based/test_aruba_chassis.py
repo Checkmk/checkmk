@@ -37,7 +37,7 @@ DATA = [
         ),
     ],
 )
-def test_discover_aruba_chassis_temp(
+def test_discover_aruba_chassis_temp(  # type:ignore[no-untyped-def]
     string_table: StringTable,
     result: DiscoveryResult,
 ):
@@ -111,7 +111,7 @@ def test_discover_aruba_chassis_temp(
         ),
     ],
 )
-def test_check_aruba_chassis_temp(
+def test_check_aruba_chassis_temp(  # type:ignore[no-untyped-def]
     string_table: StringTable,
     item: str,
     result: CheckResult,

@@ -47,7 +47,7 @@ DATA = [
         ),
     ],
 )
-def test_discover_aruba_fan_status(
+def test_discover_aruba_fan_status(  # type:ignore[no-untyped-def]
     string_table: StringTable,
     result: DiscoveryResult,
 ):
@@ -154,7 +154,7 @@ def test_discover_aruba_fan_status(
         ),
     ],
 )
-def test_check_aruba_fan_status(
+def test_check_aruba_fan_status(  # type:ignore[no-untyped-def]
     string_table: StringTable,
     item: str,
     result: CheckResult,

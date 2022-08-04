@@ -289,7 +289,9 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                 % (self.trusted_cas_file, traceback.format_exc())
             ]
 
-    def _update_trusted_cas(self, current_config) -> ConfigurationWarnings:
+    def _update_trusted_cas(  # type:ignore[no-untyped-def]
+        self, current_config
+    ) -> ConfigurationWarnings:
         trusted_cas: List[str] = []
         errors: ConfigurationWarnings = []
 
@@ -573,7 +575,9 @@ class OMDConfigChangeBackgroundJob(WatoBackgroundJob):
             stoppable=False,
         )
 
-    def do_execute(self, config_change_commands: List[str], job_interface):
+    def do_execute(  # type:ignore[no-untyped-def]
+        self, config_change_commands: List[str], job_interface
+    ):
         _do_config_change(config_change_commands, self._logger)
         job_interface.send_result_message(_("OMD config changes have been applied."))
 

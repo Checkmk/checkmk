@@ -30,5 +30,5 @@ STRING_TABLE1 = [
         (STRING_TABLE1, SECTION1),
     ],
 )
-def test_parse_ceph_df_json(string_table, section) -> None:
+def test_parse_ceph_df_json(string_table, section) -> None:  # type:ignore[no-untyped-def]
     assert ceph_df.parse_ceph_df_json(string_table) == section

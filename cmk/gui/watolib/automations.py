@@ -141,7 +141,7 @@ def check_mk_local_automation_serialized(
     return cmd, SerializedResult(completed_process.stdout)
 
 
-def local_automation_failure(
+def local_automation_failure(  # type:ignore[no-untyped-def]
     command,
     cmdline,
     code=None,
@@ -247,7 +247,7 @@ def call_hook_activate_changes():
         hooks.call("activate-changes", cmk.gui.watolib.hosts_and_folders.collect_all_hosts())
 
 
-def _do_remote_automation_serialized(
+def _do_remote_automation_serialized(  # type:ignore[no-untyped-def]
     *,
     site,
     command,
@@ -299,7 +299,9 @@ def execute_phase1_result(site_id: SiteId, connection_id: str) -> PhaseOneResult
     )
 
 
-def do_remote_automation(site, command, vars_, files=None, timeout=None) -> Any:
+def do_remote_automation(  # type:ignore[no-untyped-def]
+    site, command, vars_, files=None, timeout=None
+) -> Any:
     serialized_response = _do_remote_automation_serialized(
         site=site,
         command=command,

@@ -290,7 +290,7 @@ class Document:
     def get_font_size(self) -> SizePT:
         return self._gfx_state["font_size"]
 
-    def set_line_width(self, w: SizeInternal):
+    def set_line_width(self, w: SizeInternal):  # type:ignore[no-untyped-def]
         self._gfx_state["line_width"] = w * mm
         self.set_gfx_state()
 
@@ -442,7 +442,7 @@ class Document:
         self._canvas.rect(self._left, self._bottom, self._inner_width, self._inner_height, fill=0)
         self.restore_state()
 
-    def place_pil_image(
+    def place_pil_image(  # type:ignore[no-untyped-def]
         self, position: Position, pil: Image, width_mm: SizeMM, height_mm: SizeMM, resolution
     ) -> None:
         width, height = self.get_image_dimensions(pil, width_mm, height_mm, resolution)
@@ -527,7 +527,9 @@ class Document:
         self._linepos -= margin * mm
         self.restore_state()
 
-    def add_pil_image(self, pil: Image, width, height, resolution=None, border=True):
+    def add_pil_image(  # type:ignore[no-untyped-def]
+        self, pil: Image, width, height, resolution=None, border=True
+    ):
         width, height = self.get_image_dimensions(pil, width, height, resolution)
 
         self.advance(height)
@@ -718,7 +720,7 @@ class Document:
     def get_line_skip(self) -> SizeMM:
         return self.lineskip() / mm  # fixed: true-division
 
-    def text_width(self, text) -> SizeMM:
+    def text_width(self, text) -> SizeMM:  # type:ignore[no-untyped-def]
         return self._canvas.stringWidth(text) / mm  # fixed: true-division
 
     # TODO: unify with render_text()
@@ -825,7 +827,7 @@ class Document:
     def close_path(self) -> None:
         self._path.close()
 
-    def fill_path(self, color: RGBColor, gradient=None) -> None:
+    def fill_path(self, color: RGBColor, gradient=None) -> None:  # type:ignore[no-untyped-def]
         self.save_state()
 
         # The gradient is dramatically increasing the size of the PDFs. For example a PDF with
@@ -1208,7 +1210,7 @@ class TableRenderer:
 
         self.pdf.restore_state()
 
-    def _paint_headers(
+    def _paint_headers(  # type:ignore[no-untyped-def]
         self,
         headers: Sequence[CellRenderer],
         column_widths: Sequence[SizeMM],
@@ -1240,7 +1242,7 @@ class TableRenderer:
                 row_oddeven="heading",
             )
 
-    def _paint_row(
+    def _paint_row(  # type:ignore[no-untyped-def]
         self,
         row: Sequence[CellRenderer],
         column_widths: Sequence[SizeMM],

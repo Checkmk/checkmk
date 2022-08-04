@@ -142,7 +142,7 @@ MK_DOCKER_CONTAINER_MEM_CGROUPV2 = [
         ],
     ],
 )
-def test_docker_container_diskstat(
+def test_docker_container_diskstat(  # type:ignore[no-untyped-def]
     fix_register,
     string_table,
     expected_result,

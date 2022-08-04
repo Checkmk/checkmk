@@ -227,7 +227,7 @@ register.check_plugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_docker_container_status(section: Section):
+def discover_docker_container_status(section: Section):  # type:ignore[no-untyped-def]
     if isinstance(section, _MultipleNodesMarker) or _is_active_container(section):
         yield Service()
 

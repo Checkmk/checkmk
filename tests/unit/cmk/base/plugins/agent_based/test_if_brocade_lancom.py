@@ -67,7 +67,9 @@ from cmk.base.plugins.agent_based.if_brocade_lancom import parse_if_brocade_lanc
         ),
     ],
 )
-def test_parse_if_brocade_lancom(if_table, name_map, port_map, ignore, expected_results) -> None:
+def test_parse_if_brocade_lancom(  # type:ignore[no-untyped-def]
+    if_table, name_map, port_map, ignore, expected_results
+) -> None:
     results = tuple(
         (r.index, r.descr, r.alias, r.type, r.speed)
         for r in (
@@ -604,7 +606,7 @@ def test_parse_if_brocade_lancom(if_table, name_map, port_map, ignore, expected_
         ),
     ],
 )
-def test_parse_if_lancom(string_table, expected_results) -> None:
+def test_parse_if_lancom(string_table, expected_results) -> None:  # type:ignore[no-untyped-def]
     results = tuple(
         (r.index, r.descr, r.extra_info, r.type, r.speed)
         for r in (iface.attributes for iface in parse_if_lancom(string_table))

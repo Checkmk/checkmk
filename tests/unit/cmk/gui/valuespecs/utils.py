@@ -16,7 +16,7 @@ from cmk.gui.htmllib.html import html
 
 
 @contextmanager
-def request_var(
+def request_var(  # type:ignore[no-untyped-def]
     **request_variables: str,
 ):
     with patch.dict(html.request.legacy_vars, request_variables):

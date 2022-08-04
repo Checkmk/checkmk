@@ -179,7 +179,7 @@ def _create_snmp_parse_function(
     """
 
     # do not use functools.wraps, the point is the new argument name!
-    def parse_function(string_table) -> Any:
+    def parse_function(string_table) -> Any:  # type:ignore[no-untyped-def]
 
         if not handle_empty_info and not any(string_table):
             return None

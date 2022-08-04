@@ -264,20 +264,19 @@ register.check_plugin(
 #   '----------------------------------------------------------------------'
 
 
-def check_etherbox_smoke(item: str, section: Section) -> CheckResult:
+def check_etherbox_smoke(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     try:
         data = etherbox_get_sensor(item, section)
     except SensorException as error:
         yield Result(state=State.UNKNOWN, summary=str(error))
         return
-
-    state = State.OK
-    infotext = "Status: OK"
-    if data.value != 0:
-        infotext = "Status: smoke alarm"
-        state = State.CRIT
-    yield Result(state=state, summary=f"[{data.name}] {infotext}")
-    yield Metric(name="smoke", value=data.value)
+    yield from check_levels(
+        data.value,
+        levels_upper=params["levels"],
+        metric_name="smoke",
+        label="Smoke Alarm",
+        notice_only=True,
+    )
 
 
 def discovery_smoke(section: Section) -> DiscoveryResult:
@@ -290,6 +289,8 @@ register.check_plugin(
     check_function=check_etherbox_smoke,
     discovery_function=discovery_smoke,
     service_name="Sensor %s",
+    check_ruleset_name="etherbox_smoke",
+    check_default_parameters={"levels": (0, 0)},
 )
 
 

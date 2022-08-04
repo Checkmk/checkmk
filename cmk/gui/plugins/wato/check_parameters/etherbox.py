@@ -29,3 +29,22 @@ rulespec_registry.register(
         title=lambda: _("Etherbox voltage"),
     )
 )
+
+
+def _vs_smoke() -> ValueSpec:
+    return Dictionary(
+        title=_("Smoke levels"),
+        elements=[("levels", Levels(title=_("Smoke Levels")))],
+        required_keys=["levels"],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="etherbox_smoke",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_smoke,
+        title=lambda: _("Etherbox smoke"),
+    )
+)

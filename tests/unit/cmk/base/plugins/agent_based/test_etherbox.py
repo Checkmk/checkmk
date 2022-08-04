@@ -79,7 +79,7 @@ def test_sensor_type_not_found(check_smoke: CheckFunction) -> None:
             ],
         ]
     )
-    results = list(check_smoke(item="9.6", section=section))
+    results = list(check_smoke(item="9.6", section=section, params={"levels": (0, 0)}))
     assert set(results) == {
         Result(state=State.UNKNOWN, summary="Sensor type changed 9.6"),
     }
@@ -94,7 +94,7 @@ def test_sensor_not_found(check_smoke: CheckFunction) -> None:
             ],
         ]
     )
-    results = list(check_smoke(item="9.6", section=section))
+    results = list(check_smoke(item="9.6", section=section, params={"levels": (0, 0)}))
     assert set(results) == {
         Result(state=State.UNKNOWN, summary="Sensor not found"),
     }
@@ -109,10 +109,10 @@ def test_check_smoke(check_smoke: CheckFunction) -> None:
             ],
         ]
     )
-    results = list(check_smoke(item="9.6", section=section))
+    results = list(check_smoke(item="9.6", section=section, params={"levels": (0, 0)}))
     assert set(results) == {
-        Result(state=State.CRIT, summary="[n] Status: smoke alarm"),
-        Metric("smoke", 42.0),
+        Result(state=State.CRIT, summary="Smoke Alarm: 42.00 (warn/crit at 0.00/0.00)"),
+        Metric("smoke", 42.0, levels=(0, 0)),
     }
 
 

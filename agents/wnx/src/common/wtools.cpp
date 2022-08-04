@@ -3107,8 +3107,8 @@ private:
 
 bool CheckProcessUsePort(uint16_t port, uint32_t pid, uint16_t peer_port) {
     MibTcpTable2Wrapper table;
-    auto p_port = ::htons(peer_port);
-    auto r_port = ::htons(port);
+    const auto p_port = ::htons(peer_port);
+    const auto r_port = ::htons(port);
     for (size_t i = 0; i < table.count(); ++i) {
         const auto *row = table.row(i);
         if (row == nullptr) {
@@ -3125,6 +3125,22 @@ bool CheckProcessUsePort(uint16_t port, uint32_t pid, uint16_t peer_port) {
         }
     }
     return false;
+}
+
+std::optional<uint32_t> GetConnectionPid(uint16_t port, uint16_t peer_port) {
+    MibTcpTable2Wrapper table;
+    const auto p_port = ::htons(peer_port);
+    const auto r_port = ::htons(port);
+    for (size_t i = 0; i < table.count(); ++i) {
+        const auto *row = table.row(i);
+        if (row == nullptr) {
+            break;
+        }
+        if (row->dwRemotePort == r_port && row->dwLocalPort == p_port) {
+            return row->dwOwningPid;
+        }
+    }
+    return {};
 }
 
 #if 0

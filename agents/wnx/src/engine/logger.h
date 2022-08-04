@@ -679,7 +679,7 @@ private:
     bool copy_{false};       // informs us that whole structure is temporary
     int mods_{Mods::kCopy};  // here we keep modifications to fixed base
 
-    static bool bp_allowed_;
+    static constexpr bool bp_allowed_{tgt::IsDebug()};
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class LogTest;
     FRIEND_TEST(LogTest, All);

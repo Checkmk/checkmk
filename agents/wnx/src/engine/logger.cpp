@@ -15,8 +15,6 @@ Emitter t(LogType::trace);
 Emitter stdio(LogType::stdio);
 Emitter bp(LogType::log, true);
 
-bool Emitter::bp_allowed_ = tgt::IsDebug();
-
 namespace details {
 static bool EventLogEnabled = true;
 
@@ -122,12 +120,9 @@ details::GlobalLogSettings G_GlobalLogSettings;
 
 // check that parameters allow to print
 static bool CalcEnabled(int modifications, LogType log_type) {
-    if ((modifications & Mods::kDrop) != 0) return false;  // output is dropped
-
-    if ((modifications & Mods::kForce) == 0 &&              // output not forced
-        !details::G_GlobalLogSettings.isEnabled(log_type))  // output is too low
-        return false;
-    return true;
+    return (modifications & Mods::kDrop) == 0 ||
+           (modifications & Mods::kForce) != 0 ||
+           details::G_GlobalLogSettings.isEnabled(log_type);
 }
 
 namespace internal {
@@ -153,22 +148,22 @@ int Type2Marker(xlog::Type log_type) noexcept {
 uint32_t Mods2Directions(const xlog::LogParam &lp, uint32_t mods) noexcept {
     int directions = lp.directions_;
 
-    if (mods & Mods::kStdio) {
+    if ((mods & Mods::kStdio) != 0) {
         directions |= xlog::Directions::kStdioPrint;
     }
-    if (mods & Mods::kNoStdio) {
+    if ((mods & Mods::kNoStdio) != 0) {
         directions &= ~xlog::Directions::kStdioPrint;
     }
-    if (mods & Mods::kFile) {
+    if ((mods & Mods::kFile) != 0) {
         directions |= xlog::Directions::kFilePrint;
     }
-    if (mods & Mods::kNoFile) {
+    if ((mods & Mods::kNoFile) != 0) {
         directions &= ~xlog::Directions::kFilePrint;
     }
-    if (mods & Mods::kEvent) {
+    if ((mods & Mods::kEvent) != 0) {
         directions |= xlog::Directions::kEventPrint;
     }
-    if (mods & Mods::kNoEvent) {
+    if ((mods & Mods::kNoEvent) != 0) {
         directions &= ~xlog::Directions::kEventPrint;
     }
 
@@ -180,14 +175,12 @@ uint32_t Mods2Directions(const xlog::LogParam &lp, uint32_t mods) noexcept {
 // modifies it!
 static std::tuple<int, int, std::string, std::string, xlog::internal::Colors>
 CalcLogParam(const xlog::LogParam &lp, int mods) noexcept {
-    using namespace xlog::internal;
-
     auto c = Colors::dflt;
 
     auto directions = internal::Mods2Directions(lp, mods);
 
     auto flags = lp.flags_;
-    if (mods & Mods::kNoPrefix) {
+    if ((mods & Mods::kNoPrefix) != 0) {
         flags |= xlog::Flags::kNoPrefix;
     }
 
@@ -294,7 +287,6 @@ void WriteToLogFileWithBackup(std::string_view filename, size_t max_size,
 
 // output string in different directions
 void Emitter::postProcessAndPrint(const std::string &text) const {
-    using namespace cma::cfg;
     if (!CalcEnabled(mods_, type_)) {
         return;
     }
@@ -357,7 +349,7 @@ void ColoredOutputOnStdio(bool on) noexcept {
                          &details::g_log_old_mode);  // store old mode
 
         //  set color output
-        const DWORD old_mode =
+        constexpr DWORD old_mode =
             ENABLE_PROCESSED_OUTPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING;
         ::SetConsoleMode(std_input, old_mode);
     } else if (details::g_log_old_mode != -1) {
@@ -385,14 +377,13 @@ void SetLogRotation(unsigned int max_count, size_t max_size) {
 }
 
 void ChangeDebugLogLevel(int debug_level) noexcept {
-    using cma::cfg::LogLevel;
     switch (debug_level) {
-        case LogLevel::kLogAll:
+        case static_cast<int>(cma::cfg::LogLevel::kLogAll):
             setup::EnableTraceLog(true);
             setup::EnableDebugLog(true);
             XLOG::t("Enabled All");
             break;
-        case LogLevel::kLogDebug:
+        case static_cast<int>(cma::cfg::LogLevel::kLogDebug):
             setup::EnableTraceLog(false);
             setup::EnableDebugLog(true);
             XLOG::d.t("Enabled Debug");
@@ -462,11 +453,12 @@ void TimeLog::writeLog(size_t processed_bytes) const noexcept {
     const auto ended = std::chrono::steady_clock::now();
     const auto lost = duration_cast<std::chrono::milliseconds>(ended - start_);
 
-    if (processed_bytes == 0)
+    if (processed_bytes == 0) {
         XLOG::d.w("Object '{}' in {}ms sends NO DATA", id_, lost.count());
-    else
+    } else {
         XLOG::d.i("Object '{}' in {}ms sends [{}] bytes", id_, lost.count(),
                   processed_bytes);
+    }
 }
 
 }  // namespace cma::tools

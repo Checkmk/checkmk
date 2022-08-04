@@ -86,14 +86,14 @@ void Global::loadFromMainConfig() {
         std::string default_debug = tgt::IsDebug() ? "yes" : "no";
         auto debug_level = GetVal(logging, vars::kLogDebug, default_debug);
         if (debug_level.empty() || debug_level == "no")
-            debug_level_ = LogLevel::kLogBase;
+            debug_level_ = static_cast<int>(LogLevel::kLogBase);
         else if (debug_level == "yes" || debug_level == "true")
-            debug_level_ = LogLevel::kLogDebug;
+            debug_level_ = static_cast<int>(LogLevel::kLogDebug);
         else if (debug_level == "all")
-            debug_level_ = LogLevel::kLogAll;
+            debug_level_ = static_cast<int>(LogLevel::kLogAll);
         else
-            debug_level_ =
-                tgt::IsDebug() ? LogLevel::kLogDebug : LogLevel::kLogBase;
+            debug_level_ = static_cast<int>(
+                tgt::IsDebug() ? LogLevel::kLogDebug : LogLevel::kLogBase);
 
         windbg_ = GetVal(logging, vars::kLogWinDbg, true);
 
@@ -133,7 +133,8 @@ void Global::setDefaults() {
     realtime_sections_ = {};
 
     // log
-    debug_level_ = tgt::IsDebug() ? LogLevel::kLogDebug : LogLevel::kLogBase;
+    debug_level_ = static_cast<int>(tgt::IsDebug() ? LogLevel::kLogDebug
+                                                   : LogLevel::kLogBase);
     windbg_ = true;
     event_log_ = true;
     log_file_name_ = kDefaultLogFileName;
@@ -199,19 +200,14 @@ void Global::setupLogEnvironment() {
     GetCfg().setConfiguredLogFileDir(logfile_dir_.wstring());
 }
 
-// loader
-// gtest[+] partially
 void WinPerf::loadFromMainConfig() {
     auto config = cfg::GetLoadedConfig();
 
     std::lock_guard lk(lock_);
-    // reset all
     reset();
     counters_.resize(0);
 
-    // attempt to load all
     try {
-        // if section not present
         auto yaml = GetLoadedConfig();
         auto me = yaml[groups::kWinPerf];
         if (!me.IsMap()) {
@@ -241,8 +237,8 @@ void WinPerf::loadFromMainConfig() {
         for (const auto &entry : counters) {
             counters_.emplace_back(entry.first, entry.second);
         }
-    } catch (std::exception &e) {
-        XLOG::l("Section {} ", groups::kWinPerf, e.what());
+    } catch (const std::exception &e) {
+        XLOG::l("Section {} ", groups::kWinPerf, e);
     }
 }
 
@@ -342,15 +338,12 @@ void Plugins::loadFromMainConfig(std::string_view group_name) {
     auto config = GetLoadedConfig();
 
     std::lock_guard lk(lock_);
-    // reset all
     reset();
     units_.resize(0);
 
     local_ = group_name == groups::kLocal;
 
-    // attempt to load all
     try {
-        // if section not present
         auto yaml = GetLoadedConfig();
         auto me = yaml[group_name];
         if (!me.IsMap()) {
@@ -358,15 +351,11 @@ void Plugins::loadFromMainConfig(std::string_view group_name) {
             return;
         }
         exist_in_cfg_ = true;
-
         enabled_in_cfg_ = GetVal(group_name, vars::kEnabled, exist_in_cfg_);
-
         exe_name_ = GetVal(group_name, vars::kPluginExe,
                            std::string{"plugin_player.exe"});
-
         auto units = GetArray<YAML::Node>(group_name, vars::kPluginsExecution);
         LoadExeUnitsFromYaml(units_, units);
-
         folders_.clear();
         if (local_) {
             folders_.push_back(cma::cfg::GetLocalDir());
@@ -378,16 +367,40 @@ void Plugins::loadFromMainConfig(std::string_view group_name) {
                 folders_.push_back(wtools::ConvertToUTF16(f));
             }
         }
-    } catch (std::exception &e) {
+    } catch (const std::exception &e) {
         XLOG::l("Section {} exception {}", group_name, e.what());
     }
 }
 
+namespace {
+void RemoveDuplicates(std::vector<std::wstring> &files) {
+    std::ranges::sort(files);
+    auto [a, b] = std::ranges::unique(files);
+    files.erase(a, b);
+}
+
+void UpdateCommandLine(std::wstring &cmd_line,
+                       const std::vector<std::wstring> &files) {
+    for (const auto &file_name : files) {
+        cmd_line += L"\"" + file_name + L"\" ";
+    }
+    if (cmd_line.empty()) {
+        XLOG::l("Unexpected, no plugins to execute");
+        return;
+    }
+
+    if (!cmd_line.empty() && cmd_line.back() == L' ') {
+        cmd_line.pop_back();
+    }
+
+    XLOG::t.i("Expected to execute [{}] plugins '{}'", files.size(),
+              wtools::ToUtf8(cmd_line));
+}
+}  // namespace
+
 // To be used in plugin player
 // constructs command line from folders and patterns
 Plugins::CmdLineInfo Plugins::buildCmdLine() const {
-    namespace fs = std::filesystem;
-
     // pickup protected data from the structure
     std::unique_lock lk(lock_);
     auto units = units_;
@@ -418,7 +431,6 @@ Plugins::CmdLineInfo Plugins::buildCmdLine() const {
         count_of_folders++;
 
         for (const auto &unit : units) {
-            // THIS IS NOT VALID CODE
             // must be complicated full folder scanning by mask
             fs::path file = folder;
             file /= unit.pattern();
@@ -433,26 +445,8 @@ Plugins::CmdLineInfo Plugins::buildCmdLine() const {
     XLOG::d() << "we have processed:" << count_of_folders << " folders and "
               << count_of_files << " files";
 
-    // remove duplicates
-    std::ranges::sort(files);
-    auto [a, b] = std::ranges::unique(files);
-    files.erase(a, b);
-
-    // build command line
-    for (const auto &file_name : files) {
-        cli.cmd_line_ += L"\"" + file_name + L"\" ";
-    }
-    if (cli.cmd_line_.empty()) {
-        XLOG::l("Unexpected, no plugins to execute");
-        return cli;
-    }
-
-    if (!cli.cmd_line_.empty() && cli.cmd_line_.back() == L' ') {
-        cli.cmd_line_.pop_back();
-    }
-
-    XLOG::t.i("Expected to execute [{}] plugins '{}'", files.size(),
-              wtools::ToUtf8(cli.cmd_line_));
+    RemoveDuplicates(files);
+    UpdateCommandLine(cli.cmd_line_, files);
 
     return cli;
 }

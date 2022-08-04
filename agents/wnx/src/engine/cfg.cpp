@@ -287,13 +287,17 @@ std::wstring GetPathOfUserConfig() noexcept {
     return GetCfg().getUserYamlPath();
 }
 
-std::wstring GetPathOfLoadedConfig() {
-    return fmt::format(L"'{}','{}','{}'", GetCfg().getRootYamlPath().c_str(),
-                       GetCfg().getBakeryDir().c_str(),
-                       GetCfg().getUserYamlPath().c_str());
+std::wstring GetPathOfLoadedConfig() noexcept {
+    try {
+        return fmt::format(L"'{}','{}','{}'", GetCfg().getRootYamlPath(),
+                           GetCfg().getBakeryDir().wstring(),
+                           GetCfg().getUserYamlPath());
+    } catch (const std::exception & /*e*/) {
+        return L"error '','',''";
+    }
 }
 
-std::string GetPathOfLoadedConfigAsString() {
+std::string GetPathOfLoadedConfigAsString() noexcept {
     return wtools::ToUtf8(GetPathOfLoadedConfig());
 }
 
@@ -964,7 +968,7 @@ int GetCurrentDebugLevel() {
     if (ConfigLoaded()) {
         return groups::global.debugLogLevel();
     }
-    return kDefaultLogLevel;
+    return static_cast<int>(kDefaultLogLevel);
 }
 
 XLOG::EventLevel GetCurrentEventLevel() noexcept {
@@ -1252,7 +1256,7 @@ void ConfigInfo::initFolders(
 
     // This is not very good idea, but we want
     // to start logging as early as possible
-    XLOG::setup::ChangeDebugLogLevel(LogLevel::kLogDebug);
+    XLOG::setup::ChangeDebugLogLevel(static_cast<int>(LogLevel::kLogDebug));
     groups::global.setLogFolder(folders_.getData() / dirs::kLog);
     groups::global.setupLogEnvironment();
 

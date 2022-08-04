@@ -58,7 +58,11 @@ enum EventClass {
 // in This section we have defaults for the configuration(YML/INI)
 // values are either plain ints or plain strings
 namespace cma::cfg {
-enum LogLevel { kLogBase = 0, kLogDebug = 1, kLogAll = 2 };
+enum class LogLevel {
+    kLogBase = 0,
+    kLogDebug = 1,
+    kLogAll = 2,
+};
 
 /// \brief  If true, than modules will be moved to %temp% for later usage
 constexpr bool g_quick_module_reinstall_allowed{true};
@@ -68,18 +72,15 @@ constexpr size_t kLogFileMaxSize = 8'000'000;
 
 constexpr uint32_t kMaxOhmErrorsBeforeRestart = 3;
 
-constexpr int kDefaultLogLevel = kLogBase;
+constexpr LogLevel kDefaultLogLevel = LogLevel::kLogBase;
 
 // Windows Wmi API timeout, decision from LWA
 constexpr int kDefaultWmiTimeout = 5;  // seconds, this is Windows FAIL
 
 // data will be send to peer during this interval
-constexpr int kDefaultRealtimeTimeout = 90;  // In seconds.
-
+constexpr int kDefaultRealtimeTimeout = 90;  // in seconds.
 constexpr int kDefaultRealtimePort = 6559;
-
-// #TODO CONFIRM VALUE:
-constexpr int kMinimumCacheAge = 120;
+constexpr int kMinimumCacheAge = 120;  // in seconds
 
 // Default Port for connection to client
 constexpr uint16_t kMainPort = 6556;
@@ -99,8 +100,7 @@ constexpr int kDefaultAgentMinWait = 10;  // min safe timeout
 
 constexpr const char *const kDefaultLogFileName = "check_mk.log";
 constexpr const char *const kDefaultAppFileName = "check_mk_agent.exe";
-constexpr char kDefaultEventLogName[] =
-    "checkmk";  // name for windows event log
+constexpr char kDefaultEventLogName[] = "checkmk";
 const wchar_t *const kAppDataAppName = L"agent";
 const wchar_t *const kDefaultConfigCacheFileName = L"check_mk.cached.yml";
 }  // namespace cma::cfg
@@ -117,15 +117,11 @@ constexpr const KNOWNFOLDERID &kWindowsFolderId = FOLDERID_Windows;
 
 std::string GetCurrentLogFileName();
 int GetCurrentDebugLevel();
-XLOG::EventLevel
-GetCurrentEventLevel() noexcept;  // fixed at the moment on Critical
+XLOG::EventLevel GetCurrentEventLevel() noexcept;
 bool GetCurrentWinDbg();
 bool GetCurrentEventLog();
 
 constexpr std::wstring GetDefaultPrefixName() { return L"agent: "; }
-
-// where you can find executables
-std::vector<std::wstring> &ExternalCommandPaths();
 
 // API to find a file on exe path
 std::wstring FindExeFileOnPath(const std::wstring &file_name);

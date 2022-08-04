@@ -92,37 +92,35 @@ inline std::wstring MakePowershellWrapper() {
 }
 
 // add to scripts interpreter
-// #TODO this is BAD PLACE
-inline std::wstring ConstructCommandToExec(const std::filesystem::path &path) {
-    const auto extension = path.extension().wstring();
-
-    std::wstring wrapper;
-    if (IsExecutable(path)) {
-        wrapper = L"\"{}\"";
-    } else if (extension == L".pl") {
-        wrapper = L"perl.exe \"{}\"";
-    } else if (extension == L".py") {
-        wrapper = L"python.exe \"{}\"";
-    } else if (extension == L".vbs") {
-        wrapper = L"cscript.exe //Nologo \"{}\"";
-    } else if (extension == L".ps1") {
-        wrapper = MakePowershellWrapper();
-    } else {
-        XLOG::l("Not supported extension file {}", path);
-        return {};
-    }
-
-    if (wrapper.empty()) {
-        XLOG::l("impossible to find exe for file {}", path);
-        return {};
-    }
-
-    std::wstring out;
+inline std::wstring ConstructCommandToExec(
+    const std::filesystem::path &path) noexcept {
     try {
+        const auto extension = path.extension().wstring();
+
+        std::wstring wrapper;
+        if (IsExecutable(path)) {
+            wrapper = L"\"{}\"";
+        } else if (extension == L".pl") {
+            wrapper = L"perl.exe \"{}\"";
+        } else if (extension == L".py") {
+            wrapper = L"python.exe \"{}\"";
+        } else if (extension == L".vbs") {
+            wrapper = L"cscript.exe //Nologo \"{}\"";
+        } else if (extension == L".ps1") {
+            wrapper = MakePowershellWrapper();
+        } else {
+            XLOG::l("Not supported extension file {}", path);
+            return {};
+        }
+
+        if (wrapper.empty()) {
+            XLOG::l("impossible to find exe for file {}", path);
+            return {};
+        }
+
         return fmt::format(wrapper, path.wstring());
     } catch (const std::exception &e) {
-        XLOG::l("impossible to format Data for file '{}' exception: '{}'", path,
-                e.what());
+        XLOG::l("Format failed for file '{}' exception: '{}'", path, e);
     }
     return {};
 }
@@ -399,6 +397,8 @@ public:
 
     PluginEntry(const PluginEntry &) = delete;
     PluginEntry &operator=(const PluginEntry &) = delete;
+    PluginEntry(PluginEntry &&) = delete;
+    PluginEntry &operator=(PluginEntry &&) = delete;
 
     // SYNC
 

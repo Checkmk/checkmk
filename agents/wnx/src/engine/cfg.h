@@ -114,8 +114,8 @@ std::wstring GetPathOfBakeryConfig() noexcept;
 std::wstring GetPathOfUserConfig() noexcept;
 
 // deprecated
-std::wstring GetPathOfLoadedConfig();
-std::string GetPathOfLoadedConfigAsString();
+std::wstring GetPathOfLoadedConfig() noexcept;
+std::string GetPathOfLoadedConfigAsString() noexcept;
 
 // official
 std::wstring GetUserPluginsDir() noexcept;
@@ -189,8 +189,7 @@ T GetVal(std::string_view section_name, std::string_view key, T dflt) noexcept {
         return dflt;
     } catch (const std::exception &e) {
         XLOG::l("Cannot read yml file {} with {}.{} code:{}",
-                wtools::ToUtf8(GetPathOfLoadedConfig()), section_name, key,
-                e.what());
+                wtools::ToUtf8(GetPathOfLoadedConfig()), section_name, key, e);
     }
     return dflt;
 }
@@ -198,32 +197,30 @@ T GetVal(std::string_view section_name, std::string_view key, T dflt) noexcept {
 inline YAML::Node GetNode(std::string_view section_name,
                           std::string_view key) noexcept {
     auto yaml = GetLoadedConfig();
-    if (yaml.size() == 0) {
-        return {};
-    }
-
     try {
+        if (yaml.size() == 0) {
+            return {};
+        }
+
         auto section = yaml[section_name];
         return section[key];
     } catch (const std::exception &e) {
         XLOG::l("Cannot read yml file {} with {}.{} code:{}",
-                wtools::ToUtf8(GetPathOfLoadedConfig()), section_name, key,
-                e.what());
+                wtools::ToUtf8(GetPathOfLoadedConfig()), section_name, key, e);
     }
     return {};
 }
 
 inline std::optional<YAML::Node> GetGroup(
     const YAML::Node &yaml, std::string_view section_name) noexcept {
-    if (yaml.size() == 0) {
-        return {};
-    }
-
     try {
+        if (yaml.size() == 0) {
+            return {};
+        }
+
         return yaml[section_name];
     } catch (const std::exception &e) {
-        XLOG::d("Absent '{}' in YAML, exception is '{}'", section_name,
-                e.what());
+        XLOG::d("Absent '{}' in YAML, exception is '{}'", section_name, e);
     }
     return {};
 }

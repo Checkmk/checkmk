@@ -166,7 +166,7 @@ inline bool IsValidRegularFile(const std::filesystem::path &filepath) noexcept {
 
 template <typename T>
 inline void AddVector(std::vector<char> &accu, const T &add) noexcept {
-    auto add_size = add.size();
+    const auto add_size = add.size();
     if (add_size == 0) {
         return;
     }

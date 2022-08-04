@@ -803,7 +803,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
                     if not userdb.user_exists(user_id):
                         continue
 
-                    user_pages = store.load_object_from_file(path, default={})
+                    user_pages = store.try_load_file_from_pickle_cache(path, default={})
                     for name, page_dict in user_pages.items():
                         page_dict["owner"] = user_id
                         page_dict["name"] = name

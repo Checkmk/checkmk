@@ -3283,6 +3283,10 @@ msgstr ""
 msgid "Add all metrics of this graph to"
 msgstr "Añade todas las métricas de este gráfico a"
 
+#, fuzzy
+msgid "Add android hostnames matching"
+msgstr "Coincidencia de nombres de host"
+
 msgid "Add attribute"
 msgstr "Añadir atributo"
 
@@ -3388,6 +3392,10 @@ msgstr "Añadir grupo de hosts"
 
 msgid "Add host to the monitoring"
 msgstr "Añadir el anfitrión a la supervisión"
+
+#, fuzzy
+msgid "Add iOS hostnames matching"
+msgstr "Coincidencia de nombres de host"
 
 msgid "Add instance to be monitored"
 msgstr "Añadir la instancia que se va a supervisar"
@@ -3535,6 +3543,9 @@ msgstr "Añadir regla de notificación para el usuario %s"
 
 msgid "Add one or multiple MIBs"
 msgstr "Añadir uno o varios MIBs"
+
+msgid "Add other (not android and not iOS) hostnames matching"
+msgstr ""
 
 msgid "Add page element"
 msgstr "Añadir elemento de página"
@@ -7747,6 +7758,10 @@ msgstr "Carga de la CPU mediante WMI"
 msgid "CPU Memory used"
 msgstr "CPU Memoria utilizada"
 
+#, fuzzy
+msgid "CPU Utilization"
+msgstr "Utilización de la CPU"
+
 msgid "CPU Utilization of Clusters"
 msgstr "Utilización de la CPU de los clusters"
 
@@ -10228,6 +10243,9 @@ msgstr "Componente"
 msgid "Component specific information"
 msgstr "Información específica de los componentes"
 
+msgid "Compound fields will be joined with a '-' symbol."
+msgstr ""
+
 msgid "Compress the backed up files"
 msgstr "Comprimir los archivos de la copia de seguridad"
 
@@ -10409,6 +10427,10 @@ msgstr ""
 "configuración de monitorización distribuida, porque esta URL es "
 "probablemente diferente para cada sitio remoto."
 
+#, fuzzy
+msgid "Configure compliance state checking"
+msgstr "Configurar una sección de archivo de registro"
+
 msgid "Configure discovery of single interfaces"
 msgstr "Configurar la detección de interfaces individuales"
 
@@ -10438,6 +10460,10 @@ msgid ""
 msgstr ""
 "Configurar la monitorización de los servicios de red mediante los clásicos "
 "plugins de nagios (las llamadas comprobaciones activas)"
+
+#, fuzzy
+msgid "Configure policy violation levels"
+msgstr "Niveles de violación de la política"
 
 msgid ""
 "Configure regular expressions that match the beginning of the service names "
@@ -18688,6 +18714,10 @@ msgstr "Nombre del campo: "
 msgid "Field data size"
 msgstr "Tamaño de los datos del campo"
 
+#, fuzzy
+msgid "Field(s) to use as a hostname key"
+msgstr "Fallo en el cálculo del nombre de host"
+
 msgid "Fieldnames to query"
 msgstr "Nombres de campos a consultar"
 
@@ -24384,6 +24414,10 @@ msgstr "Ignorar los errores de los certificados (no seguros)"
 msgid "Ignore certificate errors (unsecure)"
 msgstr "Ignorar los errores de los certificados (no seguros)"
 
+#, fuzzy
+msgid "Ignore compliance state"
+msgstr "Ignorar el estado"
+
 msgid "Ignore core restarts shorter than"
 msgstr "Ignorar los reinicios del núcleo más cortos que"
 
@@ -27544,6 +27578,10 @@ msgstr ""
 "Niveles durante un periodo de tiempo prolongado en la utilización total de "
 "la CPU"
 
+#, fuzzy
+msgid "Levels replication"
+msgstr "Activar la replicación"
+
 msgid "Levels requests"
 msgstr "Solicitudes de nivel"
 
@@ -30013,6 +30051,10 @@ msgstr "Uso de la memoria de los clusters"
 msgid "Memory Usage of ESX Clusters"
 msgstr "Uso de la memoria de los clusters ESX"
 
+#, fuzzy
+msgid "Memory Utilization"
+msgstr "Utilización de la memoria"
+
 msgid "Memory and CPU of processes on Windows"
 msgstr "Memoria y CPU de los procesos en Windows"
 
@@ -30121,6 +30163,10 @@ msgid "Memory used by caches"
 msgstr "Memoria utilizada por las cachés"
 
 msgid "Memory utilitzation"
+msgstr "Utilización de la memoria"
+
+#, fuzzy
+msgid "Memory utilization"
 msgstr "Utilización de la memoria"
 
 msgid "Memory utilization: Cluster"
@@ -31958,7 +32004,8 @@ msgstr ""
 "No se ha encontrado la codificación UTF-8 en su configuración regional -a. "
 "Por favor, instale las localizaciones apropiadas."
 
-msgid "No VMWare Tools installed."
+#, fuzzy
+msgid "No VMware Tools installed."
 msgstr "No hay herramientas VMWare instaladas."
 
 msgid "No activation needed"
@@ -34911,6 +34958,10 @@ msgstr "Sesiones activas en Palo Alto"
 msgid "Palo Alto Sessions"
 msgstr "Sesiones de Palo Alto"
 
+#, fuzzy
+msgid "Palo Alto State"
+msgstr "Sesiones de Palo Alto"
+
 msgid "Paper margins"
 msgstr "Márgenes del papel"
 
@@ -36472,9 +36523,6 @@ msgstr "Nombre de la política"
 
 msgid "Policy specific levels (Clustermode only)"
 msgstr "Niveles específicos de la política (sólo en el modo Cluster)"
-
-msgid "Policy violation levels"
-msgstr "Niveles de violación de la política"
 
 msgid "Pool name"
 msgstr "Nombre de la piscina"
@@ -38561,6 +38609,10 @@ msgstr "Replicar extensiones (MKPs y archivos en <tt>~/local/</tt>)"
 msgid "Replicate user profile"
 msgstr "Replicar el perfil del usuario"
 
+#, fuzzy
+msgid "Replication Lag"
+msgstr "Réplica del retraso"
+
 msgid "Replication Partner"
 msgstr "Socio de replicación"
 
@@ -38590,6 +38642,10 @@ msgstr "Intervalo de replicación"
 
 msgid "Replication is disabled"
 msgstr "La replicación está desactivada"
+
+#, fuzzy
+msgid "Replication lag"
+msgstr "Estados de replicación"
 
 msgid ""
 "Replication lag is a delay between an operation on the primary and the "
@@ -38700,6 +38756,11 @@ msgstr "Solicite"
 
 msgid "Requests data about Elasticsearch clusters, nodes and indices."
 msgstr "Solicita datos sobre los clusters, nodos e índices de Elasticsearch."
+
+msgid ""
+"Requests data from Mobileiron API and outputs a piggyback host per returned "
+"device."
+msgstr ""
 
 msgid "Requests data from a RabbitMQ instance."
 msgstr "Solicita datos de una instancia de RabbitMQ."
@@ -43949,6 +44010,78 @@ msgstr "Indicar si la calibración no es válida"
 msgid "State if conditions above are not satisfied."
 msgstr "Indique si no se cumplen las condiciones anteriores."
 
+#, fuzzy
+msgid "State if ha local State is Active"
+msgstr "Estado cuando el estado de replicación está activo"
+
+#, fuzzy
+msgid "State if ha local State is Active-Primary"
+msgstr "Estado cuando el estado de replicación está activo"
+
+#, fuzzy
+msgid "State if ha local State is Active-Secondary"
+msgstr "Estado cuando el estado de replicación está activo"
+
+#, fuzzy
+msgid "State if ha local State is Disabled"
+msgstr "Estado cuando falla el estado del ciclo de vida"
+
+#, fuzzy
+msgid "State if ha local State is Non-Functional"
+msgstr "Estado cuando el estado del ciclo de vida no está inicializado"
+
+#, fuzzy
+msgid "State if ha local State is Passive"
+msgstr "Estado cuando el balanceador de carga está vivo"
+
+#, fuzzy
+msgid "State if ha local State is Suspended"
+msgstr "Estado cuando el estado del ciclo de vida está en pausa"
+
+#, fuzzy
+msgid "State if ha local State is Tentative"
+msgstr "Estado cuando el estado de replicación está activo"
+
+#, fuzzy
+msgid "State if ha local State is Unknown"
+msgstr "Estado cuando el estado del canal es desconocido"
+
+#, fuzzy
+msgid "State if ha peer State is Active"
+msgstr "Estado cuando el estado de la VPN es Activo"
+
+#, fuzzy
+msgid "State if ha peer State is Active-Primary"
+msgstr "Estado cuando el estado de la VPN es Activo"
+
+#, fuzzy
+msgid "State if ha peer State is Active-Secondary"
+msgstr "Estado cuando el estado de la VPN es Activo"
+
+#, fuzzy
+msgid "State if ha peer State is Disabled"
+msgstr "Estado cuando se viola el estado de la licencia"
+
+#, fuzzy
+msgid "State if ha peer State is Non-Functional"
+msgstr "Estado cuando el estado del ciclo de vida no está inicializado"
+
+#, fuzzy
+msgid "State if ha peer State is Passive"
+msgstr "Estado cuando el balanceador de carga está vivo"
+
+#, fuzzy
+msgid "State if ha peer State is Suspended"
+msgstr "Estado cuando el estado del ciclo de vida está en pausa"
+
+#, fuzzy
+msgid "State if ha peer State is Tentative"
+msgstr "Estado cuando el balanceador de carga está vivo"
+
+#, fuzzy
+msgid "State if ha peer State is Unknown"
+msgstr "Estado cuando el estado del canal es desconocido"
+
 msgid "State if input is OFF"
 msgstr "Estado si la entrada está en OFF"
 
@@ -43962,6 +44095,17 @@ msgstr ""
 
 msgid "State if license is expired"
 msgstr "Indique si la licencia está caducada"
+
+#, fuzzy
+msgid "State if mode is Active-Active"
+msgstr "Estado cuando el canal está inactivo"
+
+msgid "State if mode is Active-Passive"
+msgstr ""
+
+#, fuzzy
+msgid "State if mode is Disabled"
+msgstr "Estado en caso de que el modo Archivelog esté desactivado: "
 
 msgid "State if no backup found"
 msgstr "Estado si no se encuentra una copia de seguridad"
@@ -52497,8 +52641,9 @@ msgstr ""
 "conducirá a cambios frecuentes en el inventario HW/SW, lo que puede llenar "
 "rápidamente el sistema de archivos temporales."
 
+#, fuzzy
 msgid ""
-"This rule allows monitoring of VMWare ESX via the vSphere API. You can "
+"This rule allows monitoring of VMware ESX via the vSphere API. You can "
 "configure your connection settings here."
 msgstr ""
 "Esta regla permite la monitorización de VMWare ESX a través de la API de "
@@ -52810,8 +52955,9 @@ msgstr ""
 "al número total de CPUs. Tenga en cuenta que no todos los parámetros que "
 "puede configurar aquí son aplicables a todas las comprobaciones."
 
+#, fuzzy
 msgid ""
-"This rule configures levels for the CPU utilization (not load) for VMWare "
+"This rule configures levels for the CPU utilization (not load) for VMware "
 "ESX host systems. The utilization percentage is computed with respect to the "
 "total number of CPUs. "
 msgstr ""
@@ -58139,12 +58285,6 @@ msgstr "Resumen de la instantánea de la máquina virtual"
 msgid "VM, Cloud, Container"
 msgstr "VM, Nube, Contenedor"
 
-msgid "VMWare ESX host systems: Used space"
-msgstr "Sistemas de host VMWare ESX: Espacio utilizado"
-
-msgid "VMWare ESX via vSphere"
-msgstr "VMWare ESX a través de vSphere"
-
 msgid "VMalloc Address Space"
 msgstr "Espacio de direcciones VMalloc"
 
@@ -58154,13 +58294,22 @@ msgstr "VMs"
 msgid "VMs in unknown state"
 msgstr "Máquinas virtuales en estado desconocido"
 
+#, fuzzy
+msgid "VMware ESX host systems: Used space"
+msgstr "Sistemas de host VMWare ESX: Espacio utilizado"
+
+#, fuzzy
+msgid "VMware ESX via vSphere"
+msgstr "VMWare ESX a través de vSphere"
+
 msgid "VMware Tools have never been installed"
 msgstr "VMware Tools nunca se ha instalado"
 
 msgid "VMware Tools is installed, and the version is current"
 msgstr "VMware Tools está instalado y la versión es actual"
 
-msgid "VMware Tools is installed, but it is not managed by VMWare"
+#, fuzzy
+msgid "VMware Tools is installed, but it is not managed by VMware"
 msgstr "VMware Tools está instalado, pero no está gestionado por VMWare"
 
 msgid "VMware Tools is installed, but the version is not current"
@@ -61582,6 +61731,30 @@ msgid ""
 msgstr ""
 "Puede especificar un nombre de host o una dirección IP diferente de la "
 "dirección IP del host al que se asignará esta comprobación."
+
+msgid ""
+"You can specify a list of regex patterns for android hostnames. Several "
+"patterns can be provided. If hostname contains '@' it will be removed with "
+"all following characters. And only then the regex matching will happen. Only "
+"those that match any of the patterns will be monitored. By default all "
+"hostnames are accepted"
+msgstr ""
+
+msgid ""
+"You can specify a list of regex patterns for iOS hostnames. Several patterns "
+"can be provided. If hostname contains '@' it will be removed with all "
+"following characters. And only then the regex matching will happen. Only "
+"those that match any of the patterns will be monitored. By default all "
+"hostnames are accepted"
+msgstr ""
+
+msgid ""
+"You can specify a list of regex patterns for other hostnames which are not "
+"android and not iOS. Several patterns can be provided. If hostname contains "
+"'@' it will be removed with all following characters. And only then the "
+"regex matching will happen. Only those that match any of the patterns will "
+"be monitored. By default all hostnames are accepted"
+msgstr ""
 
 msgid ""
 "You can specify a list of regex patterns to exclude namespaces. Only those "
@@ -65892,11 +66065,6 @@ msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
 #~ msgstr "Organización"
 
 #, fuzzy
-#~| msgid "CPU utilization"
-#~ msgid "CPU Utilization"
-#~ msgstr "Utilización de la CPU"
-
-#, fuzzy
 #~| msgid "Container Name"
 #~ msgid "Container memory"
 #~ msgstr "Nombre del contenedor"
@@ -68079,9 +68247,6 @@ msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
 
 #~ msgid "Rejected Connections"
 #~ msgstr "Conexiones rechazadas"
-
-#~ msgid "Replica Lag"
-#~ msgstr "Réplica del retraso"
 
 #~ msgid "Replication Slot Disk Usage"
 #~ msgstr "Uso del disco de la ranura de replicación"

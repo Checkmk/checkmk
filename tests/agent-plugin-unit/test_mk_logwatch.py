@@ -60,6 +60,11 @@ CLUSTER empty
 
 /var/log/äumlaut.log
  W sshd.*Corrupted MAC on input
+
+/var/log/test_append.log
+ C .*Error.*
+ A .*more information.*
+ A .*also important.*
 """
 
 
@@ -199,7 +204,7 @@ def test_read_config_logfiles(parsed_config):
 
     _global_options, l_config, _cluster_config = parsed_config
 
-    assert len(l_config) == 5
+    assert len(l_config) == 6
     assert all(isinstance(lf, lw.PatternConfigBlock) for lf in l_config)
 
     assert l_config[0].files == [u'not', u'a', u'cluster', u'line']
@@ -230,6 +235,11 @@ def test_read_config_logfiles(parsed_config):
 
     assert l_config[4].files == [u'/var/log/äumlaut.log']
     assert l_config[4].patterns == [(u'W', u'sshd.*Corrupted MAC on input', [], [])]
+
+    assert l_config[5].files == [u'/var/log/test_append.log']
+    assert l_config[5].patterns == [
+        (u'C', u'.*Error.*', [u'.*more information.*', u'.*also important.*'], [])
+    ]
 
 
 @pytest.mark.parametrize(
@@ -505,6 +515,17 @@ def test_non_ascii_line_processing(tmpdir, monkeypatch, use_specific_encoding, l
         assert result == expected_result
 
 
+def _path_to_testfile(filename):
+    return os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+                "datasets",
+                "mk_logwatch",
+                filename,
+        )
+    )
+
+
 class MockStdout(object):  # pylint: disable=useless-object-inheritance
     def isatty(self):
         return False
@@ -572,6 +593,30 @@ class MockStdout(object):  # pylint: disable=useless-object-inheritance
             ],
         ),
         ('locked door', [], {}, {}, [u"[[[locked door:cannotopen]]]\n"]),
+        (
+            _path_to_testfile("test_append.log"),
+            [
+                (
+                    u'C',
+                    re.compile(u'.*Error.*'),
+                    [
+                        re.compile(u'.*more information.*'),
+                        re.compile(u'.*also important.*'),
+                    ],
+                    [],
+                ),
+            ],
+            {
+                'nocontext': True
+            },
+            {
+                'offset': 0,
+            },
+            [
+                u'[[[%s]]]\n' % _path_to_testfile("test_append.log"),
+                u'C Error: Everything down!\x01more information: very useful\x01also important: please inform admins\n',
+            ]
+        ),
     ])
 def test_process_logfile(monkeypatch, logfile, patterns, opt_raw, state,
                          expected_output):
@@ -586,7 +631,8 @@ def test_process_logfile(monkeypatch, logfile, patterns, opt_raw, state,
     assert output == expected_output
     if len(output) > 1:
         assert isinstance(state['offset'], int)
-        assert state['offset'] >= 15000  # about the size of this file
+        if logfile == __file__:
+            assert state['offset'] >= 15000  # about the size of this file
 
 
 @pytest.mark.parametrize("input_lines, before, after, expected_output",

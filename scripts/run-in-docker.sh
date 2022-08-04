@@ -53,7 +53,7 @@ else
     # We're using git reference clones, see also jenkins/global-defaults.yml in tribe29_ci.
     # That's why we need to mount the reference repos.
     GIT_REFERENCE_CLONE_PATH="/home/jenkins/git_references/check_mk"
-    REFERENCE_CLONE_MOUNT="-v ${GIT_REFERENCE_CLONE_PATH}:${GIT_REFERENCE_CLONE_PATH}"
+    REFERENCE_CLONE_MOUNT="-v ${GIT_REFERENCE_CLONE_PATH}:${GIT_REFERENCE_CLONE_PATH}:ro"
 fi
 
 : "${IMAGE_ALIAS:=IMAGE_TESTING}"

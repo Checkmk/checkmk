@@ -11,7 +11,6 @@ import pytest
 from _pytest.monkeypatch import (
     MonkeyPatch,  # type: ignore[import] # pylint: disable=import-outside-toplevel
 )
-from pytest_mock import MockerFixture
 
 from cmk.special_agents.agent_aws import (
     _create_lamdba_sections,
@@ -27,7 +26,6 @@ from .agent_aws_fake_clients import (
     FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE,
     FakeCloudwatchClient,
     FakeCloudwatchClientLogsClient,
-    FakeResourceNotFoundException,
     LambdaListFunctionsIB,
     LambdaListProvisionedConcurrencyConfigsIB,
     LambdaListTagsInstancesIB,

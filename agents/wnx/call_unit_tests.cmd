@@ -32,6 +32,9 @@
   )Else Setlocal EnableDelayedExpansion ^& Set Args=
 
 
+echo -------
+set
+echo -------
 
 set arte=%cd%\..\..\artefacts
 set results=unit_tests_results.zip

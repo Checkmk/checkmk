@@ -504,10 +504,10 @@ class PainterSvcLongPluginOutput(Painter):
         return "svc_long_plugin_output"
 
     def title(self, cell: Cell) -> str:
-        return _("Current details")
+        return _("Details")
 
     def list_title(self, cell: Cell) -> str:
-        return _("Current details (Previously named: long output)")
+        return _("Details (Previously named: long output)")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
@@ -4373,7 +4373,7 @@ class PainterLogDetailsHistory(Painter):
         return "log_details_history"
 
     def title(self, cell: Cell) -> str:
-        return _("Details history")
+        return _("Log: Details")
 
     @property
     def columns(self) -> List[ColumnName]:

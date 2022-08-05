@@ -69,9 +69,10 @@ GCC_VERSION_MINOR      := 2
 GCC_VERSION_PATCHLEVEL := 0
 GCC_VERSION	       := "${GCC_VERSION_MAJOR}.${GCC_VERSION_MINOR}.${GCC_VERSION_PATCHLEVEL}"
 
-# When you update the Python version, you may have to update the test expectations
-# in test_03_pip_interpreter_version.
-# Update omd/Licenses.csv, too.
+# NOTE: When you update the Python version, please take care of the following things:
+# * update test_03_pip_interpreter_version
+# * update omd/Licenses.csv, too.
+# * you may need to regenerate the Pipfile.lock with "make --what-if Pipfile Pipfile.lock"
 PYTHON_VERSION  := 3.10.4
 
 # convenience stuff derived from PYTHON_VERSION

@@ -12,6 +12,7 @@
 .metadata
 .mypy_cache
 .mypy_cache/
+.python-*-stamp
 .cargo
 .ropeproject
 .hypothesis

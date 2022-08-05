@@ -649,24 +649,35 @@ endif
 sw-documentation-docker:
 	scripts/run-in-docker.sh scripts/run-pipenv run make -C doc/documentation html
 
+.python-$(PYTHON_MAJOR_DOT_MINOR)-stamp:
+	$(RM) .python-*-stamp
+	touch $@
+
 # TODO: pipenv and make don't really cooperate nicely: Locking alone already
 # creates a virtual environment with setuptools/pip/wheel. This could lead to a
 # wrong up-to-date status of it later, so let's remove it here. What we really
 # want is a check if the contents of .venv match the contents of Pipfile.lock.
 # We should do this via some move-if-change Kung Fu, but for now rm suffices.
 Pipfile.lock: Pipfile
+	@if [ "${CI}" == "true" ]; then \
+		echo "A locking of Pipfile.lock is needed, but we're executed in the CI, where this should not be done."; \
+		echo "It seems you forgot to commit the new Pipfile.lock. Regenerate Pipfile.lock with e.g.:"; \
+		echo "make --what-if Pipfile Pipfile.lock"; \
+		exit 1; \
+	fi
+
 	@( \
-	    echo "Locking Python requirements..." ; \
-	    flock $(LOCK_FD); \
-	    ( SKIP_MAKEFILE_CALL=1 $(PIPENV) lock --python $(PYTHON_MAJOR_DOT_MINOR) ) || ( $(RM) -r .venv ; exit 1 ) \
-	) $(LOCK_FD)>$(LOCK_PATH)
+		echo "Locking Python requirements..." ; \
+		flock $(LOCK_FD); \
+		( SKIP_MAKEFILE_CALL=1 $(PIPENV) lock --python $(PYTHON_MAJOR_DOT_MINOR) ) || ( $(RM) -r .venv ; exit 1 ) \
+	) $(LOCK_FD)>$(LOCK_PATH); \
 
 # Remake .venv everytime Pipfile or Pipfile.lock are updated. Using the 'sync'
 # mode installs the dependencies exactly as specified in the Pipfile.lock.
 # This is extremely fast since the dependencies do not have to be resolved.
 # Cleanup partially created pipenv. This makes us able to automatically repair
 # broken virtual environments which may have been caused by network issues.
-.venv: Pipfile.lock
+.venv: Pipfile.lock .python-$(PYTHON_MAJOR_DOT_MINOR)-stamp
 	@( \
 	    echo "Creating .venv..." ; \
 	    flock $(LOCK_FD); \

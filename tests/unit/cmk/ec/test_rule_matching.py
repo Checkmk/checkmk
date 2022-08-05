@@ -214,12 +214,13 @@ def test_match_site(m: RuleMatcher, rule: Rule, result: bool) -> None:
     ],
 )
 def test_match_host(m: RuleMatcher, result: bool, rule: Rule, event: Event) -> None:
+
     if "match_host" in rule:
-        rule.update(
-            {
-                "match_host": EventServer._compile_matching_value("match_host", rule["match_host"]),  # type: ignore[typeddict-item]
-            }
-        )
+        rule = {
+            **rule,  # type: ignore[misc]
+            "match_host": EventServer._compile_matching_value("match_host", rule["match_host"]),
+        }
+
     assert m.event_rule_matches_host(rule, event) == result
 
 

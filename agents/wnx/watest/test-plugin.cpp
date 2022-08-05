@@ -167,7 +167,7 @@ TEST(PluginTest, TimeoutCalc) {
         EXPECT_EQ(entry->failures(), 0);
         entry->failures_++;
         InsertEntry(pm, "a1", 5, true, 200);
-        EXPECT_EQ(entry->failures(), 1);
+        EXPECT_EQ(entry->failures(), 0);  // reset bevcause of new retry_count
         InsertEntry(pm, "a1", 3, true, 200);
         EXPECT_EQ(entry->failures(), 0);
         entry->failures_++;
@@ -363,10 +363,8 @@ TEST(PluginTest, ApplyGroupUser_Integration) {
     auto group_name =
         wtools::ToUtf8(wtools::SidToName(L"S-1-5-32-545", SidTypeGroup));
     cma::PluginEntry pe("c:\\a\\x.cmd");
-    auto get_usr = [ptr_pe = &pe]() -> auto { return ptr_pe->getUser().first; };
-    auto get_pwd = [ptr_pe = &pe]() -> auto {
-        return ptr_pe->getUser().second;
-    };
+    auto get_usr = [ptr_pe = &pe]() -> auto{ return ptr_pe->getUser().first; };
+    auto get_pwd = [ptr_pe = &pe]() -> auto{ return ptr_pe->getUser().second; };
     ASSERT_TRUE(get_usr().empty());
     ASSERT_TRUE(get_pwd().empty());
 
@@ -396,9 +394,9 @@ TEST(PluginTest, ApplyConfig) {
     pe.failures_ = 2;
     EXPECT_EQ(pe.failures(), 2);
     pe.retry_ = 0;
-    EXPECT_EQ(pe.failed(), false);
+    EXPECT_EQ(pe.isTooManyRetries(), false);
     pe.retry_ = 1;
-    EXPECT_EQ(pe.failed(), true);
+    EXPECT_EQ(pe.isTooManyRetries(), true);
 
     {
         cma::cfg::PluginInfo e = {10, 1, 1};
@@ -414,7 +412,7 @@ TEST(PluginTest, ApplyConfig) {
 
         pe.failures_ = 2;
         EXPECT_EQ(pe.failures(), 2);
-        EXPECT_EQ(pe.failed(), true);
+        EXPECT_EQ(pe.isTooManyRetries(), true);
         e.extend("g", "u");
         pe.applyConfigUnit(e, false);
         EXPECT_EQ(pe.user(), "u");
@@ -907,7 +905,7 @@ TEST(PluginTest, GeneratePluginEntry) {
     EXPECT_EQ(e->path(), "c:\\z\\x\\asd.d.ps1");
     EXPECT_EQ(e->timeout(), 10);
     EXPECT_EQ(e->cacheAge(), 0);
-    EXPECT_EQ(e->retry(), 5);
+    EXPECT_EQ(e->retry(), 0);  // for cache age 0 is always 0
 
     e = GetEntrySafe(pm, "c:\\z\\x\\asd.d.cmd");
     ASSERT_NE(nullptr, e);
@@ -934,7 +932,7 @@ TEST(PluginTest, GeneratePluginEntry) {
     EXPECT_EQ(e->path(), "c:\\z\\x\\asd.d.ps1");
     EXPECT_EQ(e->timeout(), 13);
     EXPECT_EQ(e->cacheAge(), 0);
-    EXPECT_EQ(e->retry(), 9);
+    EXPECT_EQ(e->retry(), 9);  // not async retry_count kept
 
     // Update, async+0
     UpdatePluginMap(pm, false, pv_main, x2_async_0_cache_age, false);
@@ -945,7 +943,7 @@ TEST(PluginTest, GeneratePluginEntry) {
     EXPECT_EQ(e->path(), "c:\\z\\x\\asd.d.ps1");
     EXPECT_EQ(e->timeout(), 13);
     EXPECT_EQ(e->cacheAge(), 0);
-    EXPECT_EQ(e->retry(), 9);
+    EXPECT_EQ(e->retry(), 0);
 
     // Update, async+119
     UpdatePluginMap(pm, false, pv_main, x2_async_low_cache_age, false);
@@ -956,7 +954,7 @@ TEST(PluginTest, GeneratePluginEntry) {
     EXPECT_EQ(e->path(), "c:\\z\\x\\asd.d.ps1");
     EXPECT_EQ(e->timeout(), 13);
     EXPECT_EQ(e->cacheAge(), kMinimumCacheAge);
-    EXPECT_EQ(e->retry(), 9);
+    EXPECT_EQ(e->retry(), kMinimumCacheAge / (e->timeout() + 1));
 
     // Update
     UpdatePluginMap(pm, false, pv_short, x3_cmd_with_group_user, false);
@@ -967,7 +965,7 @@ TEST(PluginTest, GeneratePluginEntry) {
     EXPECT_EQ(e->path(), "c:\\z\\x\\asd-d.cmd");
     EXPECT_EQ(e->timeout(), 10);
     EXPECT_EQ(e->cacheAge(), 0);
-    EXPECT_EQ(e->retry(), 5);
+    EXPECT_EQ(e->retry(), 0);
     EXPECT_EQ(e->user(), "u");
     EXPECT_EQ(e->group(), "g");
 
@@ -1476,7 +1474,7 @@ TEST(PluginTest, AsyncStartSimulation_Integration) {
         auto &entry_name = entry_pair.first;
         auto &entry = entry_pair.second;
         EXPECT_EQ(entry.failures(), 0);
-        EXPECT_EQ(entry.failed(), 0);
+        EXPECT_FALSE(entry.isTooManyRetries());
 
         auto accu = entry.getResultsSync(L"id", -1);
         EXPECT_FALSE(accu.empty());
@@ -1574,7 +1572,7 @@ TEST(PluginTest, AsyncStartSimulation_Long) {
         auto &entry_name = entry_pair.first;
         auto &entry = entry_pair.second;
         EXPECT_EQ(entry.failures(), 0);
-        EXPECT_EQ(entry.failed(), 0);
+        EXPECT_FALSE(entry.isTooManyRetries());
 
         auto accu = entry.getResultsAsync(true);
         EXPECT_EQ(true, accu.empty());
@@ -1852,7 +1850,7 @@ TEST(PluginTest, AsyncDataPickup_Integration) {
         auto &name = entry_pair.first;
         auto &entry = entry_pair.second;
         EXPECT_EQ(entry.failures(), 0);
-        EXPECT_EQ(entry.failed(), 0);
+        EXPECT_FALSE(entry.isTooManyRetries());
 
         auto accu = entry.getResultsAsync(true);
         EXPECT_EQ(true, accu.empty());
@@ -1972,7 +1970,7 @@ TEST(PluginTest, AsyncLocal_Integration) {
         auto &name = entry_pair.first;
         auto &entry = entry_pair.second;
         EXPECT_EQ(entry.failures(), 0);
-        EXPECT_EQ(entry.failed(), 0);
+        EXPECT_FALSE(entry.isTooManyRetries());
 
         auto accu = entry.getResultsAsync(true);
         EXPECT_EQ(true, accu.empty());
@@ -2324,13 +2322,13 @@ TEST(PluginTest, SyncStartSimulation_Long) {
             auto accu = entry.getResultsSync(L"id", 0);
             EXPECT_TRUE(accu.empty());
             EXPECT_EQ(entry.failures(), i + 1);
-            EXPECT_FALSE(entry.failed());
+            EXPECT_FALSE(entry.isTooManyRetries());
         }
 
         auto accu = entry.getResultsSync(L"id", 0);
         EXPECT_TRUE(accu.empty());
         EXPECT_EQ(entry.failures(), 4);
-        EXPECT_TRUE(entry.failed());
+        EXPECT_TRUE(entry.isTooManyRetries());
     }
 
     // sync part
@@ -2338,7 +2336,7 @@ TEST(PluginTest, SyncStartSimulation_Long) {
         auto &entry_name = entry_pair.first;
         auto &entry = entry_pair.second;
         EXPECT_EQ(entry.failures(), 0);
-        EXPECT_EQ(entry.failed(), 0);
+        EXPECT_FALSE(entry.isTooManyRetries());
 
         if (entry_name == vp[0]) {
             auto accu = entry.getResultsSync(L"id", 0);
@@ -2357,7 +2355,7 @@ TEST(PluginTest, SyncStartSimulation_Long) {
         if (vp[3] == entry_name) {
             EXPECT_EQ(true, accu.empty());
             EXPECT_EQ(entry.failures(), 2);
-            EXPECT_EQ(entry.failed(), 0);
+            EXPECT_FALSE(entry.isTooManyRetries());
         } else {
             std::string result(accu.begin(), accu.end());
             EXPECT_TRUE(!accu.empty());

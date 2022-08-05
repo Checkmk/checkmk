@@ -608,8 +608,6 @@ bool HackDataWithCacheInfo(std::vector<char> &out,
 // Max Timeout < 0 use default
 std::vector<char> PluginEntry::getResultsSync(const std::wstring &Id,
                                               int MaxTimeout) {
-    if (failed()) return {};
-
     auto exec = cmd_line_.empty() ? ConstructCommandToExec(path()) : cmd_line_;
     if (exec.empty()) {
         XLOG::l(
@@ -652,11 +650,13 @@ std::vector<char> PluginEntry::getResultsSync(const std::wstring &Id,
 
     } else {
         // process was either stopped or failed(timeout)
-        auto failed = minibox_.failed();
+        auto failed = minibox_.isFailed();
         unregisterProcess();
-        XLOG::d("Sync Plugin stopped '{}' Stopped: {} Failed: {}", path(),
-                !failed, failed);
-        if (failed) failures_++;
+        XLOG::d("Sync Plugin '{}' is {}", path(),
+                failed ? "Failed" : "Stopped");
+        if (failed) {
+            failures_++;
+        }
     }
 
     minibox_.clean();
@@ -976,42 +976,62 @@ void PluginEntry::threadCore(const std::wstring &Id) {
         return;
     }
 
-    auto started = minibox_.startEx(Id, exec, mode, iu_);
-    if (!started) {
-        XLOG::l("Failed to start minibox thread {}", wtools::ToUtf8(Id));
-        return;
-    }
+    const auto is_detached = mode == TheMiniBox::StartMode::detached;
+    while (true) {
+        auto started = minibox_.startEx(Id, exec, mode, iu_);
+        if (!started) {
+            XLOG::l("Failed to start minibox thread {}", wtools::ToUtf8(Id));
+            break;
+        }
 
-    registerProcess(minibox_.getProcessId());
-    std::vector<char> accu;
+        registerProcess(minibox_.getProcessId());
+        std::vector<char> accu;
 
-    auto success =
-        mode == TheMiniBox::StartMode::detached
-            ? minibox_.waitForUpdater(std::chrono::seconds(timeout()))
-            : minibox_.waitForEnd(std::chrono::seconds(timeout()));
-    if (success) {
-        // we have probably data, try to get and and store
-        minibox_.processResults([&](const std::wstring &cmd_line, uint32_t pid,
-                                    uint32_t code,
-                                    const std::vector<char> &datablock) {
-            auto data = wtools::ConditionallyConvertFromUTF16(datablock);
-            tools::AddVector(accu, data);
-            {
-                std::lock_guard l(data_lock_);
-                storeData(pid, accu);
-            }
-            if (cma::cfg::LogPluginOutput())
-                XLOG::t("Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
+        auto success =
+            is_detached
+                ? minibox_.waitForUpdater(std::chrono::seconds(timeout()))
+                : minibox_.waitForEnd(std::chrono::seconds(timeout()));
+        if (success) {
+            // we have probably data, try to get and and store
+            minibox_.processResults([&](const std::wstring &cmd_line,
+                                        uint32_t pid, uint32_t code,
+                                        const std::vector<char> &datablock) {
+                auto data = wtools::ConditionallyConvertFromUTF16(datablock);
+                tools::AddVector(accu, data);
+                {
+                    std::lock_guard l(data_lock_);
+                    storeData(pid, accu);
+                }
+                if (cma::cfg::LogPluginOutput())
+                    XLOG::t(
+                        "Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
                         wtools::ToUtf8(cmd_line), pid, code, data.data());
-        });
-    } else {
-        // process was either stopped or failed(timeout)
-        auto failed = minibox_.failed();
-        unregisterProcess();
-        XLOG::d("Async Plugin stopped '{}' Stopped: {} Failed: {}", path(),
-                !failed, failed);
-        if (failed) failures_++;
-    }
+            });
+            break;
+        } else {
+            // process was either stopped or failed(timeout)
+            const auto failed = minibox_.isFailed();
+            unregisterProcess();
+            XLOG::d("Async Plugin '{}' is {}", path(),
+                    failed ? "failed" : "stopped");
+            if (!failed || is_detached) {
+                // we do not retry:
+                // - not failed processes, i.e. forces to stop from outside
+                // - detached processes, i.e. agent updater
+                break;
+            }
+            failures_++;
+            if (isTooManyRetries()) {
+                XLOG::d("Async Plugin '{}' has too many failures {}", path(),
+                        failures_);
+
+                std::lock_guard l(data_lock_);
+                resetData();
+                failures_ = 0;
+                break;
+            }
+        }
+    };
 
     XLOG::d.t("Thread OFF: '{}'", path());
 }
@@ -1073,10 +1093,6 @@ void PluginEntry::restartAsyncThreadIfFinished(const std::wstring &Id) {
 }
 
 std::vector<char> PluginEntry::getResultsAsync(bool StartProcessNow) {
-    if (failed()) {
-        return {};
-    }
-
     // check is valid parameters
     if (cacheAge() < cma::cfg::kMinimumCacheAge && cacheAge() != 0) {
         XLOG::l("Plugin '{}' requested to be async, but has no valid cache age",
@@ -1153,25 +1169,30 @@ void PluginEntry::restartIfRequired() {
     }
 }
 
-// after starting box
-bool PluginEntry::registerProcess(uint32_t Id) {
-    if (failed()) {
-        XLOG::d("RETRY FAILED!!!!!!!!!!! {}", retry(), failed());
-        process_id_ = 0;
-    } else {
-        process_id_ = Id;
-        start_time_ = std::chrono::steady_clock::now();
-        return true;
+/// Corrects retry to be reasonable by timeout and cache_age
+void PluginEntry::correctRetry() {
+    if (!async()) {
+        return;
     }
-    return false;
+
+    const auto retry = retry_;
+    if (timeout_ > 0) {
+        // add 1 to reserve time for start process
+        auto max_retries = cache_age_ / (timeout_ + 1);
+        retry_ = std::min(max_retries, retry_);
+    } else {
+        retry_ = 0;
+    }
+}
+
+// after starting box
+void PluginEntry::registerProcess(uint32_t Id) {
+    process_id_ = Id;
+    start_time_ = std::chrono::steady_clock::now();
 }
 
 // this is not normal situation
-// as a rule only after timeout
-void PluginEntry::unregisterProcess() {
-    // killing process
-    process_id_ = 0;
-}
+void PluginEntry::unregisterProcess() { process_id_ = 0; }
 
 // on reading box
 // MUST BE CALLED INSIDE LOCK_GUARD!
@@ -1194,11 +1215,6 @@ void PluginEntry::storeData(uint32_t Id, const std::vector<char> &Data) {
         XLOG::d("Process '{}' has no data", path());
     }
 
-    if (failed()) {
-        data_.clear();
-        return;
-    }
-
     data_time_ = std::chrono::steady_clock::now();
     auto legacy_time = ::time(nullptr);
 
@@ -1218,7 +1234,17 @@ void PluginEntry::storeData(uint32_t Id, const std::vector<char> &Data) {
     // can be created in some cases by plugin and processing(ConvertTo)
     // But must be removed in output
     while (!data_.empty() && data_.back() == '\0') data_.pop_back();
-}  // namespace cma
+}
+
+void PluginEntry::resetData() {
+    data_time_ = std::chrono::steady_clock::now();
+    auto diff = std::chrono::duration_cast<std::chrono::seconds>(data_time_ -
+                                                                 start_time_);
+    XLOG::d.i("Process '{}' resets data after {} seconds", path(),
+              diff.count());
+    legacy_time_ = ::time(nullptr);
+    data_.clear();
+}
 
 // remove what not present in the file vector
 void FilterPluginMap(PluginMap &out_map, const PathVector &found_files) {

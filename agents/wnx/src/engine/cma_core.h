@@ -264,7 +264,7 @@ public:
         return false;
     }
 
-    [[nodiscard]] bool const failed() const noexcept { return failed_; }
+    [[nodiscard]] bool const isFailed() const noexcept { return failed_; }
 
     // very special, only used for cmk-updater
     bool waitForUpdater(std::chrono::milliseconds Timeout);
@@ -467,19 +467,17 @@ public:
         return failures_;
     }
 
-    bool failed() const {
+    /// Check that failures count exceeds retry_ under condition
+    /// retry_ is set(not 0)
+    bool isTooManyRetries() const {
         std::lock_guard lk(lock_);
-        return retry_ && failures_ > retry_;
+        return retry_ != 0 && failures_ > retry_;
     }
 
     bool running() const {
         std::lock_guard lk(lock_);
         return thread_on_ && main_thread_;
     }
-
-    // on reading box
-    // MUST BE CALLED INSIDE LOCK_GUARD!
-    void storeData(uint32_t Id, const std::vector<char> &Data);
 
     // looks as not used
     std::vector<char> cache() const {
@@ -516,8 +514,7 @@ public:
     template <typename T>
     void applyConfigUnit(const T &Unit, bool Local) {
         if (retry() != Unit.retry() || timeout() != Unit.timeout()) {
-            XLOG::t("Important params changed, reset retry '{}'",
-                    path_.u8string());
+            XLOG::t("Important params changed, reset retry '{}'", path_);
             failures_ = 0;
         }
 
@@ -549,6 +546,8 @@ public:
         } else {  // for sync cache_age is 0 always
             cache_age_ = 0;
         }
+
+        correctRetry();
 
         fillInternalUser();
 
@@ -587,10 +586,6 @@ public:
 
 protected:
     void fillInternalUser();
-    void resetData() {
-        std::lock_guard lk(data_lock_);
-        return data_.clear();
-    }
     void restartAsyncThreadIfFinished(const std::wstring &Id);
 
     void markAsForRestart() {
@@ -609,13 +604,21 @@ protected:
     void threadCore(const std::wstring &Id);
 
     // after starting box
-    bool registerProcess(uint32_t Id);
+    void registerProcess(uint32_t Id);
 
     // this is not normal situation
     // as a rule only after timeout
     void unregisterProcess();
 
 private:
+    void correctRetry();
+    /// on reading box
+    /// MUST BE CALLED INSIDE LOCK_GUARD!
+    void storeData(uint32_t Id, const std::vector<char> &Data);
+    /// on fail async
+    /// MUST BE CALLED INSIDE LOCK_GUARD!
+    void resetData();
+
     wtools::InternalUser iu_;
     cma::TheMiniBox minibox_;
 
@@ -623,6 +626,7 @@ private:
 
     uint32_t process_id_ = 0;
     std::chrono::steady_clock::time_point start_time_;  // for timeout
+    /// counter of fails, used by async, ignored by sync
     int failures_ = 0;
 
     bool local_ = false;  // if set then we have deal with local groups

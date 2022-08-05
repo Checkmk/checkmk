@@ -1,0 +1,12 @@
+Title: OpenBSD agent: Fix computation of free memory
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1659718014
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p10
+
+Depending on the OpenBSD version, the agent was reporting wrong values for the free memory.

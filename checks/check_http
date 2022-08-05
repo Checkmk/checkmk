@@ -3,51 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
-
-
-def _transform_check_http(params):
-    if isinstance(params, dict):
-        return params
-    name, mode = copy.deepcopy(params)
-    mode_name = "cert" if "cert_days" in mode else "url"
-
-    transformed = {"name": name, "mode": (mode_name, mode)}
-    # The proxy option has ben isolated in version 1.6.0i1
-    proxy_address = mode.get("proxy")
-    if proxy_address:
-        proxy = transformed.setdefault("proxy", {"address": proxy_address})
-        # ":" outside a IPv6 address indicates port
-        if ":" in proxy_address.split("]")[-1]:
-            addr, port = proxy_address.rsplit(":", 1)
-            try:
-                proxy["port"] = int(port)
-                proxy["address"] = addr
-            except ValueError:
-                pass  # leave address as it is
-        if "proxy_auth" in mode:
-            proxy["auth"] = mode["proxy_auth"]
-
-    # The host options have ben isolated in version 1.6.0i1
-    host_settings = transformed.setdefault("host", {})
-    # URL mode:
-    if "virthost" in mode:
-        virthost, omit_ip = mode.pop("virthost")
-        host_settings["virthost"] = virthost
-        if omit_ip or proxy_address:
-            host_settings["address"] = virthost
-    # CERT mode:
-    if "cert_host" in mode:
-        host_settings["address"] = mode.pop("cert_host")
-    # both modes:
-    for key in ("port", "address_family"):
-        if key in mode:
-            host_settings[key] = mode.pop(key)
-
-    mode.pop("sni", None)
-
-    return transformed
-
 
 def _get_host(params):
     # Use the address family of the monitored host by default
@@ -225,8 +180,6 @@ def _common_args(host, proxy, params):
 
 
 def check_http_arguments(params):
-    params = _transform_check_http(params)
-
     mode_name, settings = params["mode"]
 
     host = _get_host(params)
@@ -241,8 +194,6 @@ def check_http_arguments(params):
 
 
 def check_http_description(params):
-    params = _transform_check_http(params)
-
     description = params["name"]
     if description.startswith("^"):
         return description[1:]

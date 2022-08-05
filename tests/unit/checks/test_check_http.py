@@ -3,27 +3,33 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping, Sequence
+
 import pytest
 
 from tests.testlib import ActiveCheck
-
-pytestmark = pytest.mark.checks
 
 
 @pytest.mark.parametrize(
     "params,expected_args",
     [
         (
-            (
-                None,
-                {
-                    "onredirect": "follow",
+            {
+                "name": "irrelevant",
+                "mode": (
+                    "url",
+                    {
+                        "onredirect": "follow",
+                        "uri": "/images",
+                        "urlize": True,
+                    },
+                ),
+                "host": {
+                    "virthost": "www.test123.de",
+                    "address": "www.test123.de",
                     "port": 80,
-                    "uri": "/images",
-                    "urlize": True,
-                    "virthost": ("www.test123.de", True),
                 },
-            ),
+            },
             [
                 "-u",
                 "/images",
@@ -37,18 +43,24 @@ pytestmark = pytest.mark.checks
             ],
         ),
         (
-            (
-                None,
-                {
-                    "extended_perfdata": True,
-                    "method": "CONNECT",
+            {
+                "name": "irrelevant",
+                "mode": (
+                    "url",
+                    {
+                        "extended_perfdata": True,
+                        "method": "CONNECT",
+                        "ssl": "auto",
+                        "uri": "/images",
+                    },
+                ),
+                "proxy": {"address": "163.172.86.64"},
+                "host": {
+                    "virthost": "www.test123.de",
+                    "address": "www.test123.de",
                     "port": 3128,
-                    "proxy": "163.172.86.64",
-                    "ssl": "auto",
-                    "uri": "/images",
-                    "virthost": ("www.test123.de", True),
                 },
-            ),
+            },
             [
                 "-u",
                 "/images",
@@ -62,14 +74,17 @@ pytestmark = pytest.mark.checks
             ],
         ),
         (
-            (
-                None,
-                {
-                    "cert_days": (10, 20),
-                    "cert_host": "www.test123.com",
-                    "port": "42",
+            {
+                "name": "irrelevant",
+                "mode": (
+                    "cert",
+                    {"cert_days": (10, 20)},
+                ),
+                "host": {
+                    "address": "www.test123.com",
+                    "port": 42,
                 },
-            ),
+            },
             [
                 "-C",
                 "10,20",
@@ -81,27 +96,15 @@ pytestmark = pytest.mark.checks
             ],
         ),
         (
-            (
-                None,
-                {
-                    "cert_days": (10, 20),
-                    "cert_host": "www.test123.com",
-                    "port": "42",
-                    "proxy": "p.roxy",
+            {
+                "name": "irrelevant",
+                "mode": ("cert", {"cert_days": (10, 20)}),
+                "proxy": {"address": "p.roxy"},
+                "host": {
+                    "address": "www.test123.com",
+                    "port": 42,
                 },
-            ),
-            ["-C", "10,20", "--ssl", "-j", "CONNECT", "--sni", "p.roxy", "www.test123.com:42"],
-        ),
-        (
-            (
-                None,
-                {
-                    "cert_days": (10, 20),
-                    "cert_host": "www.test123.com",
-                    "port": "42",
-                    "proxy": "p.roxy:23",
-                },
-            ),
+            },
             [
                 "-C",
                 "10,20",
@@ -109,22 +112,50 @@ pytestmark = pytest.mark.checks
                 "-j",
                 "CONNECT",
                 "--sni",
-                "-p",
-                "23",
                 "p.roxy",
                 "www.test123.com:42",
             ],
         ),
         (
-            (
-                None,
-                {
-                    "cert_days": (10, 20),
-                    "cert_host": "www.test123.com",
-                    "port": "42",
-                    "proxy": "[dead:beef::face]:23",
+            {
+                "name": "irrelevant",
+                "mode": (
+                    "cert",
+                    {"cert_days": (10, 20)},
+                ),
+                "proxy": {"address": "p.roxy"},
+                "host": {
+                    "address": "www.test123.com",
+                    "port": 42,
                 },
-            ),
+            },
+            [
+                "-C",
+                "10,20",
+                "--ssl",
+                "-j",
+                "CONNECT",
+                "--sni",
+                "p.roxy",
+                "www.test123.com:42",
+            ],
+        ),
+        (
+            {
+                "name": "irrelevant",
+                "mode": (
+                    "cert",
+                    {"cert_days": (10, 20)},
+                ),
+                "proxy": {
+                    "address": "[dead:beef::face]",
+                    "port": 23,
+                },
+                "host": {
+                    "address": "www.test123.com",
+                    "port": 42,
+                },
+            },
             [
                 "-C",
                 "10,20",
@@ -165,49 +196,80 @@ pytestmark = pytest.mark.checks
                 },
                 "mode": ("url", {"ssl": "auto"}),
             },
-            ["--ssl", "--sni", "www.test123.com"],
+            [
+                "--ssl",
+                "--sni",
+                "www.test123.com",
+            ],
         ),
         (
-            (
-                None,
-                {
-                    "virthost": ("virtual.host", True),
-                    "proxy": "foo.bar",
+            {
+                "name": "irrelevant",
+                "mode": (
+                    "url",
+                    {},
+                ),
+                "proxy": {"address": "foo.bar"},
+                "host": {
+                    "virthost": "virtual.host",
+                    "address": "virtual.host",
                 },
-            ),
-            ["--sni", "foo.bar", "virtual.host"],
+            },
+            [
+                "--sni",
+                "foo.bar",
+                "virtual.host",
+            ],
         ),
         (
-            (
-                None,
-                {
-                    "virthost": ("virtual.host", False),
-                    "proxy": "foo.bar",
+            {
+                "name": "irrelevant",
+                "mode": ("url", {}),
+                "proxy": {"address": "foo.bar"},
+                "host": {
+                    "virthost": "virtual.host",
+                    "address": "virtual.host",
                 },
-            ),
-            ["--sni", "foo.bar", "virtual.host"],
+            },
+            [
+                "--sni",
+                "foo.bar",
+                "virtual.host",
+            ],
         ),
         (
-            (
-                None,
-                {
-                    "virthost": ("virtual.host", True),
+            {
+                "name": "irrelevant",
+                "mode": ("url", {}),
+                "host": {
+                    "virthost": "virtual.host",
+                    "address": "virtual.host",
                 },
-            ),
-            ["--sni", "virtual.host", "virtual.host"],
+            },
+            [
+                "--sni",
+                "virtual.host",
+                "virtual.host",
+            ],
         ),
         (
-            (
-                None,
-                {
-                    "virthost": ("virtual.host", False),
-                },
-            ),
-            ["--sni", "$_HOSTADDRESS_4$", "virtual.host"],
+            {
+                "name": "irrelevant",
+                "mode": ("url", {}),
+                "host": {"virthost": "virtual.host"},
+            },
+            [
+                "--sni",
+                "$_HOSTADDRESS_4$",
+                "virtual.host",
+            ],
         ),
     ],
 )
-def test_check_http_argument_parsing(params, expected_args) -> None:
+def test_check_http_argument_parsing(
+    params: Mapping[str, Any],
+    expected_args: Sequence[str],
+) -> None:
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_http")
     assert active_check.run_argument_function(params) == expected_args
@@ -217,19 +279,43 @@ def test_check_http_argument_parsing(params, expected_args) -> None:
     "params,expected_description",
     [
         (
-            ("No SSL Test", {}),
+            {
+                "name": "No SSL Test",
+                "host": {},
+                "mode": (
+                    "url",
+                    {},
+                ),
+            },
             "HTTP No SSL Test",
         ),
         (
-            ("Test with SSL", {"ssl": "auto"}),
+            {
+                "name": "Test with SSL",
+                "host": {},
+                "mode": (
+                    "url",
+                    {"ssl": "auto"},
+                ),
+            },
             "HTTPS Test with SSL",
         ),
         (
-            ("^No Prefix Test", {}),
+            {
+                "name": "^No Prefix Test",
+                "host": {},
+                "mode": (
+                    "url",
+                    {"ssl": "auto"},
+                ),
+            },
             "No Prefix Test",
         ),
     ],
 )
-def test_check_http_service_description(params, expected_description) -> None:
+def test_check_http_service_description(
+    params: Mapping[str, Any],
+    expected_description: str,
+) -> None:
     active_check = ActiveCheck("check_http")
     assert active_check.run_service_description(params) == expected_description

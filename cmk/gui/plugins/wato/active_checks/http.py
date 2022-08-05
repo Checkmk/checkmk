@@ -63,9 +63,8 @@ def _active_checks_http_hostspec() -> Dictionary:
             " default port (80/443). With this option you can override either of these"
             " parameters. By default no virtual host is set and HTTP/1.0 will be used."
             " In some setups however, you may want to distiguish the contacted server"
-            " address from your virtual host name (e.g. if the virtual host name is"
-            " not resolvable by DNS). In this case the HTTP Host header will be set and "
-            "HTTP/1.1 is used."
+            " address from your virtual host name. In this case the HTTP Host header"
+            " will be set and HTTP/1.1 is used."
         ),
         elements=[
             ("address", TextInput(title=_("Hostname / IP address"), allow_empty=False, size=45)),

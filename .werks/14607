@@ -1,0 +1,31 @@
+Title: cmk_update_agent: Fix fetching root certificates from server
+Class: fix
+Compatible: incomp
+Component: agents
+Date: 1659707099
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p10
+
+This Werk is only incompatible for users that actually tried to use the broken
+<i>trust-cert</i> option of the agent updater.
+
+This is a regression since Checkmk 2.0.
+
+When invoking cmk-update-agent with <tt>--trust-cert</tt> or <tt>-t</tt> option,
+you can trust and save the root certificate needed for the HTTPS connection to the Checkmk
+server directly from the server's certificate chain (if it's stored there).
+
+Previously, the fetched certificate got saved in a wrong format (python <tt>bytes</tt>
+instead of <tt>str</tt>), leading to a crash when the agent updater tries to import it
+in subsequent calls.
+
+You can fix your broken installations by editing the host-local file
+<tt>/etc/cmk-update-agent.state</tt> or
+<tt>%ProgramData%\checkmk\agent\config\cmk-update-agent.state</tt>, respectively:
+Please remove all occurring <tt>b</tt> prefixes from the <tt>local_certificates</tt> entry.
+Alternatively, you can update the agent once manually by calling the agent updater with
+<tt>--insecure</tt> option. This will skip the certificate handling entirely; the updated
+agent updater can then fix the malformed values by itself.

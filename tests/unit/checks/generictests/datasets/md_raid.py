@@ -71,6 +71,9 @@ info = [
     ], ['md15', ':', 'active', 'raid1', 'sdb1[1]', 'sda1[0]'],
     ['10485688', 'blocks', 'super', '1.0', '[2/2]', '[UU]'],
     ['bitmap:', '0/1', 'pages', '[0KB],', '65536KB', 'chunk'],
+    ['md16',':','active','raid1','nvme6n1[0]'],
+    ['7501333824','blocks','super','1.2','[1/1]','[U]'],
+    ['bitmap:','4/56','pages','[16KB],','65536KB','chunk'],
     ['unused', 'devices:', '<none>']
 ]
 
@@ -79,7 +82,7 @@ discovery = {
         ('md1', None), ('md11', None), ('md12', None), ('md13', None),
         ('md14', None), ('md15', None), ('md2', None), ('md3', None),
         ('md4', None), ('md5', None), ('md6', None), ('md7', None),
-        ('md8', None), ('md9', None)
+        ('md8', None), ('md9', None), ("md16", None)
     ]
 }
 
@@ -191,6 +194,13 @@ checks = {
                 (0, 'Spare: 0, Failed: 0, Active: 2', []),
                 (0, 'Status: 2/2, UU', []),
                 (1, '[Resync] Status: PENDING', [])
+            ]
+        ),
+        (
+            'md16', {}, [
+                (0, 'Status: active', []),
+                (0, 'Spare: 0, Failed: 0, Active: 1', []),
+                (0, 'Status: 1/1, U', []),
             ]
         )
     ]

@@ -1,0 +1,13 @@
+Title: md checks works with single disk raid
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1659641180
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p28
+
+The md check plugin now recognizes a raid with a single disk. Single disk raids would have previously been
+merged with the preceeding raid in the agent output.

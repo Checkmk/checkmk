@@ -48,6 +48,28 @@ else
     exec </dev/null 2>/dev/null
 fi
 
+section_openbsd_mem() {
+    mem_free=$(vmstat | tail -n1 | awk '{ print $5 }')
+    mem_total=$(sysctl hw.usermem | cut -d= -f2)
+    mem_total=$(echo "$mem_total/1024" | bc)
+
+    swapctl_output=$(swapctl -k -s)
+    swap_free=$(echo "$swapctl_output" | awk '{ print $7 }')
+    swap_total=$(echo "$swapctl_output" | awk '{ print $2 }')
+
+    # if there is no swap space swap values are 0
+    if [ -z "$swapctl_output" ]; then
+        swap_free=0
+        swap_total=0
+    fi
+
+    printf "<<<openbsd_mem>>>\n"
+    printf "MemTotal:\t %s kB\n" "$mem_total"
+    printf "MemFree:\t %s kB\n" "$mem_free"
+    printf "SwapTotal:\t %s kB\n" "$swap_total"
+    printf "SwapFree:\t %s kB\n" "$swap_free"
+}
+
 echo "<<<check_mk>>>"
 echo "Version: 2.0.0p28"
 echo "AgentOS: openbsd"
@@ -74,26 +96,7 @@ echo `sysctl -n vm.loadavg | tr -d '{}'` `top -b -n 1 | grep -E '^[0-9]+ process
 echo '<<<uptime>>>'
 echo `date +%s` - `sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' | tr -d ' '` | bc
 
-echo "<<<openbsd_mem>>>"
-MEM_FREE=$(vmstat | tail -n1 | awk '{ print $5 }')
-MEM_TOTAL=$(sysctl hw.usermem | cut -d= -f2)
-MEM_TOTAL=$(echo $MEM_TOTAL/1024 | bc)
-
-SWAPCTL_OUTPUT=$(swapctl -k -s)
-SWAP_FREE=$(echo $SWAPCTL_OUTPUT | awk '{ print $7 }')
-SWAP_TOTAL=$(echo $SWAPCTL_OUTPUT | awk '{ print $2 }')
-
-# if there is no swap space swap values are 0
-if [ -z "$SWAPCTL_OUTPUT" ]
-        then
-        SWAP_FREE=0
-        SWAP_TOTAL=0
-fi
-
-echo "MemTotal:\t" $MEM_TOTAL kB
-echo "MemFree:\t" $MEM_FREE kB
-echo "SwapTotal:\t" $SWAP_TOTAL kB
-echo "SwapFree:\t" $SWAP_FREE kB
+section_openbsd_mem
 
 echo '<<<lnx_if:sep(58)>>>'
 # MC= MAC address

@@ -5,7 +5,9 @@
 
 import pytest
 
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.mem_used_sections import parse_openbsd_mem
+from cmk.base.plugins.agent_based.utils.memory import SectionMemUsed
 
 
 @pytest.mark.parametrize(
@@ -24,6 +26,21 @@ from cmk.base.plugins.agent_based.mem_used_sections import parse_openbsd_mem
                 "SwapFree": 186505 * 1024,
                 "SwapTotal": 186505 * 1024,
             },
+        ),
+        pytest.param(
+            [
+                ["MemTotal:", "1032116", "kB"],
+                ["MemFree:", "8125", "MB"],
+                ["SwapTotal:", "186505", "kB"],
+                ["SwapFree:", "186505", "kB"],
+            ],
+            {
+                "MemFree": 8125 * 1024**2,
+                "MemTotal": 1032116 * 1024,
+                "SwapFree": 186505 * 1024,
+                "SwapTotal": 186505 * 1024,
+            },
+            id="MemFree in MB",
         ),
         (
             [
@@ -53,7 +70,10 @@ from cmk.base.plugins.agent_based.mem_used_sections import parse_openbsd_mem
         ),
     ],
 )
-def test_parse_openbsd_mem(string_table, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_parse_openbsd_mem(
+    string_table: StringTable,
+    expected_result: SectionMemUsed | None,
+) -> None:
     result = parse_openbsd_mem(string_table)
     assert result == expected_result
 

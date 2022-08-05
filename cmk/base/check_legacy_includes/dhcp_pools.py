@@ -15,8 +15,9 @@ from cmk.base.plugins.agent_based.utils import dhcp_pools
 # }
 
 
-def check_dhcp_pools_levels(free, used, pending, size, params: Mapping[str, tuple[float, float]]):
-
+def check_dhcp_pools_levels(  # type:ignore[no-untyped-def]
+    free, used, pending, size, params: Mapping[str, tuple[float, float]]
+):
     for new_api_object in dhcp_pools.check_dhcp_pools_levels(free, used, pending, size, params):
         if isinstance(new_api_object, Result):
             yield int(new_api_object.state), new_api_object.summary, []

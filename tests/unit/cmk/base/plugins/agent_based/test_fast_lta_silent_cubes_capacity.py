@@ -30,11 +30,15 @@ def _get_check_function(plugin):
     return lambda i, p, s: plugin.check_function(item=i, params=p, section=s)
 
 
-def test_discovery_fast_lta_silent_cube_capacity(discover_fast_lta_silent_cubes_capacity) -> None:
+def test_discovery_fast_lta_silent_cube_capacity(  # type:ignore[no-untyped-def]
+    discover_fast_lta_silent_cubes_capacity,
+) -> None:
     assert list(discover_fast_lta_silent_cubes_capacity(info)) == [Service(item="Total")]
 
 
-def test_check_fast_lta_silent_cube_capacity(check_fast_lta_silent_cubes_capacity) -> None:
+def test_check_fast_lta_silent_cube_capacity(  # type:ignore[no-untyped-def]
+    check_fast_lta_silent_cubes_capacity,
+) -> None:
 
     actual_check_results = list(
         check_fast_lta_silent_cubes_capacity(None, FILESYSTEM_DEFAULT_PARAMS, info)

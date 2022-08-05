@@ -66,7 +66,7 @@ def _read_line() -> str:
 
 
 class FetcherFormatter(logging.Formatter):
-    def format(self, record) -> str:
+    def format(self, record) -> str:  # type:ignore[no-untyped-def]
         return bytes(
             CMCMessage.log_answer(
                 logging.Formatter.format(self, record),
@@ -100,7 +100,7 @@ def _vm_size() -> int:
 a_path = Path(os.path.realpath(Path(LATEST_CONFIG)))
 
 
-def print_memory_snapshot(snapshot: tracemalloc.Snapshot):
+def print_memory_snapshot(snapshot: tracemalloc.Snapshot):  # type:ignore[no-untyped-def]
     top_stats = snapshot.statistics("lineno")
     limit = 20
     print("[ Top 20 ] ", file=sys.stderr)

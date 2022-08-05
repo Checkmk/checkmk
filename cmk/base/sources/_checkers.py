@@ -37,7 +37,7 @@ if version.is_plus_edition():
 else:
 
     class PushAgentSource:  # type: ignore[no-redef]
-        def __init__(self, host_name, *a, **kw) -> None:
+        def __init__(self, host_name, *a, **kw) -> None:  # type:ignore[no-untyped-def]
             raise NotImplementedError(
                 f"[{host_name}]: connection mode 'push-agent' not available on "
                 f"{version.edition().title}"

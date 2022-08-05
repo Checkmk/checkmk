@@ -52,7 +52,9 @@ class TestSectionsParser:
         assert parsing_result.data == 1
 
     @staticmethod
-    def test_parsing_errors(monkeypatch, sections_parser: SectionsParser) -> None:
+    def test_parsing_errors(  # type:ignore[no-untyped-def]
+        monkeypatch, sections_parser: SectionsParser
+    ) -> None:
 
         monkeypatch.setattr(
             crash_reporting,

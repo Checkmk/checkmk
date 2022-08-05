@@ -44,7 +44,7 @@ from cmk.base.plugins.agent_based.utils.kube import APIHealth, ClusterDetails, H
         ),
     ],
 )
-def test_check_kube_node_count_default_params(
+def test_check_kube_node_count_default_params(  # type:ignore[no-untyped-def]
     cluster_details: ClusterDetails, expected_result
 ) -> None:
     result = list(check(cluster_details))

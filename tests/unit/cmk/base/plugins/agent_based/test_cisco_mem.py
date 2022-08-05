@@ -51,7 +51,9 @@ from cmk.base.plugins.agent_based.cisco_mem import (
         ),
     ],
 )
-def test_parse_cisco_mem_asa(string_table, expected_parsed_data) -> None:
+def test_parse_cisco_mem_asa(  # type:ignore[no-untyped-def]
+    string_table, expected_parsed_data
+) -> None:
     assert parse_cisco_mem(string_table) == expected_parsed_data
 
 
@@ -73,7 +75,9 @@ def test_parse_cisco_mem_asa(string_table, expected_parsed_data) -> None:
         ),
     ],
 )
-def test_discovery_cisco_mem(string_table, expected_parsed_data) -> None:
+def test_discovery_cisco_mem(  # type:ignore[no-untyped-def]
+    string_table, expected_parsed_data
+) -> None:
     assert list(discovery_cisco_mem(string_table)) == list(
         Service(item=item) for item in expected_parsed_data
     )
@@ -144,7 +148,7 @@ def test_discovery_cisco_mem(string_table, expected_parsed_data) -> None:
         ),
     ],
 )
-def test_check_cisco_mem(check_args, expected_result) -> None:
+def test_check_cisco_mem(check_args, expected_result) -> None:  # type:ignore[no-untyped-def]
     assert list(_idem_check_cisco_mem(value_store={}, **check_args)) == list(expected_result)
 
 

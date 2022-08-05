@@ -66,7 +66,7 @@ from cmk.base.plugins.agent_based.inventory_checkpoint_vpn_tunnels import (
         ),
     ],
 )
-def test_inv_aix_baselevel(raw_section, expected_result) -> None:
+def test_inv_aix_baselevel(raw_section, expected_result) -> None:  # type:ignore[no-untyped-def]
     assert (
         list(inventory_checkpoint_vpn_tunnels(parse_checkpoint_vpn_tunnels(raw_section)))
         == expected_result

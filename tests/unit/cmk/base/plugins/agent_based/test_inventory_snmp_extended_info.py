@@ -39,7 +39,9 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventory_snmp_extended_info_host_labels(string_table, expected_result) -> None:
+def test_inventory_snmp_extended_info_host_labels(  # type:ignore[no-untyped-def]
+    string_table, expected_result
+) -> None:
     section = parse_snmp_extended_info(string_table)
     assert list(get_device_type_label(section)) == expected_result
 
@@ -154,7 +156,9 @@ def test_inventory_snmp_extended_info_host_labels(string_table, expected_result)
         ),
     ],
 )
-def test_inventory_snmp_extended_info(string_table, expected_result) -> None:
+def test_inventory_snmp_extended_info(  # type:ignore[no-untyped-def]
+    string_table, expected_result
+) -> None:
     assert sort_inventory_result(
         inventory_snmp_extended_info(parse_snmp_extended_info(string_table))
     ) == sort_inventory_result(expected_result)

@@ -137,7 +137,7 @@ RESULT_CHECK = [
 @pytest.mark.parametrize(
     "string_table, discovered, results", list(zip(AGENT_INFO, RESULT_DISCOVERY, RESULT_CHECK))
 )
-def test_check_functions_perfdata(
+def test_check_functions_perfdata(  # type:ignore[no-untyped-def]
     string_table: StringTable, discovered: Sequence[Service], results
 ) -> None:
     section = lnx_thermal.parse_lnx_thermal(string_table)

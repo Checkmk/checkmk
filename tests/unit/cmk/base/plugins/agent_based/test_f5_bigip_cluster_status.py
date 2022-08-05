@@ -27,7 +27,9 @@ from cmk.base.plugins.agent_based.f5_bigip_cluster_status import (
         ([[["4"]]], 4),
     ],
 )
-def test_parse_f5_bigip_cluster_status(string_table, expected_parsed_data) -> None:
+def test_parse_f5_bigip_cluster_status(  # type:ignore[no-untyped-def]
+    string_table, expected_parsed_data
+) -> None:
     assert parse_f5_bigip_cluster_status(string_table) == expected_parsed_data
 
 
@@ -40,7 +42,7 @@ def test_parse_f5_bigip_cluster_status(string_table, expected_parsed_data) -> No
         ((def_params, 0), [Result(state=State.OK, summary="Node is standby")]),
     ],
 )
-def test_check_f5_bigip_cluster_status(arg, result) -> None:
+def test_check_f5_bigip_cluster_status(arg, result) -> None:  # type:ignore[no-untyped-def]
     assert list(check_f5_bigip_cluster_status(arg[0], arg[1])) == result
 
 
@@ -64,7 +66,7 @@ def test_check_f5_bigip_cluster_status(arg, result) -> None:
         ((def_params, 0), [Result(state=State.UNKNOWN, summary="Node is unknown")]),
     ],
 )
-def test_check_f5_bigip_cluster_status_v11_2(arg, result) -> None:
+def test_check_f5_bigip_cluster_status_v11_2(arg, result) -> None:  # type:ignore[no-untyped-def]
     assert list(check_f5_bigip_cluster_status_v11_2(arg[0], arg[1])) == result
 
 
@@ -94,7 +96,7 @@ def test_check_f5_bigip_cluster_status_v11_2(arg, result) -> None:
         ),
     ],
 )
-def test_cluster_check_f5_bigip_cluster_status(arg, result) -> None:
+def test_cluster_check_f5_bigip_cluster_status(arg, result) -> None:  # type:ignore[no-untyped-def]
     assert list(cluster_check_f5_bigip_cluster_status(arg[0], arg[1])) == result
 
 
@@ -132,7 +134,9 @@ def test_cluster_check_f5_bigip_cluster_status(arg, result) -> None:
         ),
     ],
 )
-def test_cluster_check_f5_bigip_cluster_status_v11_2(arg, result) -> None:
+def test_cluster_check_f5_bigip_cluster_status_v11_2(  # type:ignore[no-untyped-def]
+    arg, result
+) -> None:
     assert list(cluster_check_f5_bigip_cluster_status_v11_2(arg[0], arg[1])) == result
 
 
@@ -143,5 +147,7 @@ def test_cluster_check_f5_bigip_cluster_status_v11_2(arg, result) -> None:
         ([[["3", "4"]]], None),
     ],
 )
-def test_parse_f5_bigip_vcmpfailover(string_table, expected_parsed_data) -> None:
+def test_parse_f5_bigip_vcmpfailover(  # type:ignore[no-untyped-def]
+    string_table, expected_parsed_data
+) -> None:
     assert parse_f5_bigip_vcmpfailover(string_table) == expected_parsed_data

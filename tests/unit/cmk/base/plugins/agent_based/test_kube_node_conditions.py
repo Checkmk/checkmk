@@ -64,32 +64,36 @@ def custom_string_table():
 
 
 @pytest.fixture
-def section(string_table) -> kube_node_conditions.NodeConditions:
+def section(string_table) -> kube_node_conditions.NodeConditions:  # type:ignore[no-untyped-def]
     return kube_node_conditions.parse_node_conditions(string_table)
 
 
 @pytest.fixture
-def custom_section(custom_string_table) -> kube_node_conditions.NodeCustomConditions:
+def custom_section(  # type:ignore[no-untyped-def]
+    custom_string_table,
+) -> kube_node_conditions.NodeCustomConditions:
     return kube_node_conditions.parse_node_custom_conditions(custom_string_table)
 
 
 @pytest.fixture
-def check_result(section, custom_section) -> CheckResult:
+def check_result(section, custom_section) -> CheckResult:  # type:ignore[no-untyped-def]
     return kube_node_conditions.check(PARAMS, section, custom_section)
 
 
 @pytest.mark.parametrize("section", [None])
-def test_check_raises_when_section_is_none(check_result) -> None:
+def test_check_raises_when_section_is_none(check_result) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises(IgnoreResultsError):
         list(check_result)
 
 
-def test_check_yields_single_result_when_all_conditions_pass(check_result) -> None:
+def test_check_yields_single_result_when_all_conditions_pass(  # type:ignore[no-untyped-def]
+    check_result,
+) -> None:
     results = list(check_result)
     assert len(results) == 1
 
 
-def test_check_all_results_state_ok(check_result) -> None:
+def test_check_all_results_state_ok(check_result) -> None:  # type:ignore[no-untyped-def]
     results = list(check_result)
     assert isinstance(results[0], Result)
     assert results[0].state == State.OK

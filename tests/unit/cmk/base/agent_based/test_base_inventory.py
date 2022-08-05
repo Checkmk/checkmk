@@ -1022,7 +1022,7 @@ def test_updater_handle_inv_tables_outdated(
         (lambda key: key in ["old", "keyz"], {"old": RetentionIntervals(1, 2, 3)}),
     ],
 )
-def test_updater_merge_previous_attributes(
+def test_updater_merge_previous_attributes(  # type:ignore[no-untyped-def]
     filter_func: SDFilterFunc,
     expected_retentions: Dict,
 ):

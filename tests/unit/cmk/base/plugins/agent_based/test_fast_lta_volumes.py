@@ -38,15 +38,17 @@ def _get_check_function(plugin):
     return lambda i, p, s: plugin.check_function(item=i, params=p, section=s)
 
 
-def test_parse_fast_lta_volumes(parse_fast_lta_volumes) -> None:
+def test_parse_fast_lta_volumes(parse_fast_lta_volumes) -> None:  # type:ignore[no-untyped-def]
     assert parse_fast_lta_volumes(info) == parsed
 
 
-def test_discovery_fast_lta_volumes(discover_fast_lta_volumes) -> None:
+def test_discovery_fast_lta_volumes(  # type:ignore[no-untyped-def]
+    discover_fast_lta_volumes,
+) -> None:
     assert list(discover_fast_lta_volumes(parsed)) == [Service(item="Archiv_Test")]
 
 
-def test_check_fast_lta_volumes(check_fast_lta_volumes) -> None:
+def test_check_fast_lta_volumes(check_fast_lta_volumes) -> None:  # type:ignore[no-untyped-def]
     assert list(check_fast_lta_volumes("Archiv_Test", FILESYSTEM_DEFAULT_PARAMS, parsed)) == [
         Result(state=State.OK, summary="Used: 1.00% - 9.31 GiB of 931 GiB"),
         Metric(

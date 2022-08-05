@@ -132,7 +132,7 @@ def _get_if_table_offset(speed_info: StringTable, offset: int) -> int | None:
     return None
 
 
-def parse_brocade_fcport(string_table) -> Section | None:
+def parse_brocade_fcport(string_table) -> Section | None:  # type:ignore[no-untyped-def]
     if_info: StringTable = string_table[0]
     link_info: StringTable = string_table[1]
     speed_info: StringTable = string_table[2]

@@ -623,7 +623,9 @@ _AGENT_OUTPUT = [
         ),
     ],
 )
-def test_discover_hp_proliant_da_phydrv(string_table, expected_result) -> None:
+def test_discover_hp_proliant_da_phydrv(  # type:ignore[no-untyped-def]
+    string_table, expected_result
+) -> None:
     assert (
         list(discover_hp_proliant_da_phydrv(parse_hp_proliant_da_phydrv(string_table)))
         == expected_result
@@ -1015,7 +1017,9 @@ def test_discover_hp_proliant_da_phydrv(string_table, expected_result) -> None:
         ),
     ],
 )
-def test_check_hp_proliant_da_phydrv(string_table, item, expected_result) -> None:
+def test_check_hp_proliant_da_phydrv(  # type:ignore[no-untyped-def]
+    string_table, item, expected_result
+) -> None:
     assert (
         list(
             check_hp_proliant_da_phydrv(
@@ -1069,7 +1073,9 @@ def test_check_hp_proliant_da_phydrv(string_table, item, expected_result) -> Non
         ),
     ],
 )
-def test_inventory_hp_proliant_da_phydrv(string_table, expected_result) -> None:
+def test_inventory_hp_proliant_da_phydrv(  # type:ignore[no-untyped-def]
+    string_table, expected_result
+) -> None:
     assert sort_inventory_result(
         inventory_hp_proliant_da_phydrv(parse_hp_proliant_da_phydrv(string_table))
     ) == sort_inventory_result(expected_result)

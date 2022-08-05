@@ -284,7 +284,9 @@ register.check_plugin(
 #
 
 
-def _check_oracle_memory_info(data, params, sticky_fields: Sequence[str], fields) -> CheckResult:
+def _check_oracle_memory_info(  # type:ignore[no-untyped-def]
+    data, params, sticky_fields: Sequence[str], fields
+) -> CheckResult:
     for ga_field in fields:
         value = data.get(ga_field.name)
         if value is None:
@@ -336,7 +338,7 @@ register.check_plugin(
 #
 
 
-def _check_oracle_performance_iostat_file(
+def _check_oracle_performance_iostat_file(  # type:ignore[no-untyped-def]
     value_store: MutableMapping[str, Any],
     now: float,
     item: str,

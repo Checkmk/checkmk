@@ -19,5 +19,7 @@ from cmk.base.plugins.agent_based.utils.kube import PodLifeCycle
         ),
     ],
 )
-def test_check_kube_pod_phase(section: PodLifeCycle, expected_result) -> None:
+def test_check_kube_pod_phase(  # type:ignore[no-untyped-def]
+    section: PodLifeCycle, expected_result
+) -> None:
     assert expected_result == tuple(check_kube_pod_phase(section))

@@ -78,7 +78,9 @@ class IPMISource(AgentSource):
         return IPMISummarizer(self.exit_spec)
 
     @staticmethod
-    def _make_description(ipaddress: Optional[HostAddress], credentials: IPMICredentials):
+    def _make_description(  # type:ignore[no-untyped-def]
+        ipaddress: Optional[HostAddress], credentials: IPMICredentials
+    ):
         description = "Management board - IPMI"
         items = []
         if ipaddress:

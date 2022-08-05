@@ -22,7 +22,9 @@ from cmk.base.plugins.agent_based.f5_bigip_vcmpguests import (
         ([[]], None),
     ],
 )
-def test_parse_f5_bigip_vcmpguests(string_table, expected_parsed_data) -> None:
+def test_parse_f5_bigip_vcmpguests(  # type:ignore[no-untyped-def]
+    string_table, expected_parsed_data
+) -> None:
     assert parse_f5_bigip_vcmpguests(string_table) == expected_parsed_data
 
 
@@ -39,5 +41,5 @@ def test_parse_f5_bigip_vcmpguests(string_table, expected_parsed_data) -> None:
         ),
     ],
 )
-def test_check_f5_bigip_vcmpguests(section, result) -> None:
+def test_check_f5_bigip_vcmpguests(section, result) -> None:  # type:ignore[no-untyped-def]
     assert list(check_f5_bigip_vcmpguests(section)) == result

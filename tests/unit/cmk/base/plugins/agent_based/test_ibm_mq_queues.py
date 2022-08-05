@@ -68,7 +68,7 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventory_ibm_mq_queues(parsed, expected_result) -> None:
+def test_inventory_ibm_mq_queues(parsed, expected_result) -> None:  # type:ignore[no-untyped-def]
     assert sort_inventory_result(inventory_ibm_mq_queues(parsed)) == sort_inventory_result(
         expected_result
     )

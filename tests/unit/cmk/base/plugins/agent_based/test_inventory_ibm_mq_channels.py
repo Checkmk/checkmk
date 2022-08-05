@@ -62,7 +62,7 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inv_aix_baselevel(parsed, expected_result) -> None:
+def test_inv_aix_baselevel(parsed, expected_result) -> None:  # type:ignore[no-untyped-def]
     assert sort_inventory_result(inventory_ibm_mq_channels(parsed)) == sort_inventory_result(
         expected_result
     )

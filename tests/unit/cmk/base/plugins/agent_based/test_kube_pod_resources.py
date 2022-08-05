@@ -144,7 +144,7 @@ def fixture_get_value_store(mocker):
         ),
     ],
 )
-def test_check_phase_duration_with_different_pods(
+def test_check_phase_duration_with_different_pods(  # type:ignore[no-untyped-def]
     pending_pods_in_each_check_call: Tuple[PodSequence, ...],
     expected_result_in_each_check_call: Tuple[Result, ...],
     get_value_store,
@@ -208,7 +208,7 @@ def test_check_phase_duration_with_different_pods(
         ),
     ],
 )
-def test_check_phase_duration_with_changing_params(
+def test_check_phase_duration_with_changing_params(  # type:ignore[no-untyped-def]
     params_in_each_check_call: Tuple[Params, ...],
     expected_result_in_each_check_call: Tuple[Result, ...],
     get_value_store,
@@ -268,7 +268,7 @@ def test_check_phase_duration_with_changing_params(
         ),
     ],
 )
-def test_check_bevaviour_if_there_are_unknown_pods(
+def test_check_bevaviour_if_there_are_unknown_pods(  # type:ignore[no-untyped-def]
     pending_pods_in_each_check_call: Tuple[PodSequence, ...],
     expected_result_in_each_check_call: Tuple[Result, ...],
     get_value_store,
@@ -465,7 +465,7 @@ _PYTEST_PARAMS_OVER_ALL_LOOK = [
     "pending_pods_in_each_check_call,params_in_each_check_call,expected_result",
     _PYTEST_PARAMS_OVER_ALL_LOOK,
 )
-def test_check_kube_pod_resources_overall_look(
+def test_check_kube_pod_resources_overall_look(  # type:ignore[no-untyped-def]
     pending_pods_in_each_check_call: Tuple[PodSequence, ...],
     params_in_each_check_call: Tuple[Params, ...],
     expected_result,
@@ -489,7 +489,7 @@ def test_check_kube_pod_resources_overall_look(
     "pending_pods_in_each_check_call,params_in_each_check_call,expected_result",
     _PYTEST_PARAMS_OVER_ALL_LOOK,
 )
-def test_check_kube_pod_resources_with_capacity_overall_look(
+def test_check_kube_pod_resources_with_capacity_overall_look(  # type:ignore[no-untyped-def]
     pending_pods_in_each_check_call: Tuple[PodSequence, ...],
     params_in_each_check_call: Tuple[Params, ...],
     expected_result,

@@ -76,7 +76,7 @@ def test_check_ups_test_time_check_start_time_warn(  # type:ignore[no-untyped-de
     assert result.summary.startswith("Time since start of last test: 2 days 3 hours")
 
 
-def test_ups_test_unknown_test_result(check_ups_test) -> None:
+def test_ups_test_unknown_test_result(check_ups_test) -> None:  # type:ignore[no-untyped-def]
     check_results = list(
         check_ups_test(DEFAULT_PARAMS, [[["2400776998"]], [["0", "0", "aardvark"]]])
     )

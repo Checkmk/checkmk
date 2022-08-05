@@ -44,6 +44,8 @@ from cmk.base.plugins.agent_based.utils.kube import HealthZ, KubeletInfo
         ),
     ],
 )
-def test_check_kube_node_kubelet(section: KubeletInfo, expected_result) -> None:
+def test_check_kube_node_kubelet(  # type:ignore[no-untyped-def]
+    section: KubeletInfo, expected_result
+) -> None:
     result = list(check_kube_node_kubelet(section))
     assert result == expected_result

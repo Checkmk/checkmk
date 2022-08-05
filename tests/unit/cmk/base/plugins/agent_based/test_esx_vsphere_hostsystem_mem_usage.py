@@ -37,7 +37,9 @@ from cmk.base.plugins.agent_based.esx_vsphere_hostsystem_mem_usage import (
         ),
     ],
 )
-def test_discover_esx_vsphere_hostsystem_mem_usage(section, discovered_service) -> None:
+def test_discover_esx_vsphere_hostsystem_mem_usage(  # type:ignore[no-untyped-def]
+    section, discovered_service
+) -> None:
     assert list(discover_esx_vsphere_hostsystem_mem_usage(section)) == discovered_service
 
 
@@ -90,7 +92,9 @@ def test_discover_esx_vsphere_hostsystem_mem_usage(section, discovered_service) 
         ),
     ],
 )
-def test_check_esx_vsphere_hostsystem_mem_usage(section, check_results) -> None:
+def test_check_esx_vsphere_hostsystem_mem_usage(  # type:ignore[no-untyped-def]
+    section, check_results
+) -> None:
     assert (
         list(
             check_esx_vsphere_hostsystem_mem_usage(
@@ -322,7 +326,9 @@ def test_check_esx_vsphere_hostsystem_mem_usage(section, check_results) -> None:
         ),
     ],
 )
-def test_cluster_check_esx_vsphere_hostsystem_mem_usage(section, params, check_results) -> None:
+def test_cluster_check_esx_vsphere_hostsystem_mem_usage(  # type:ignore[no-untyped-def]
+    section, params, check_results
+) -> None:
     assert (
         list(
             cluster_check_esx_vsphere_hostsystem_mem_usage(

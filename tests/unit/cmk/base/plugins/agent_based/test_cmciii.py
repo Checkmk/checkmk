@@ -23,7 +23,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
         ("one.two.three", ["one", "two", "three"]),
     ],
 )
-def test_sanitize_variable(variable, expected) -> None:
+def test_sanitize_variable(variable, expected) -> None:  # type:ignore[no-untyped-def]
     assert cmciii.sanitize_variable(variable) == expected
 
 
@@ -39,7 +39,7 @@ def test_sanitize_variable(variable, expected) -> None:
         ("phase", "not 2", ["ONE", "TWO", "THREE", "FOUR", "END"], "THREE FOUR"),
     ],
 )
-def test_sensor_key(table, var_type, variable, expected) -> None:
+def test_sensor_key(table, var_type, variable, expected) -> None:  # type:ignore[no-untyped-def]
     assert cmciii.sensor_key(table, var_type, variable) == expected
 
 
@@ -59,7 +59,7 @@ def test_sensor_key(table, var_type, variable, expected) -> None:
         ("other_sensors", ["one", "two"], "device one"),
     ],
 )
-def test_sensor_id(sensor_type, variable, expected) -> None:
+def test_sensor_id(sensor_type, variable, expected) -> None:  # type:ignore[no-untyped-def]
     assert cmciii.sensor_id(sensor_type, variable, "device") == expected
 
 
@@ -133,7 +133,7 @@ def _leakage_info(status, position):
         ),
     ],
 )
-def test_cmciii_leakage_sensors(status, position, expected) -> None:
+def test_cmciii_leakage_sensors(status, position, expected) -> None:  # type:ignore[no-untyped-def]
     assert (
         run_check(
             "cmciii",
@@ -225,7 +225,7 @@ def _lcp_sensor():
         ),
     ],
 )
-def test_cmciii_lcp_discovery(plugin, expected) -> None:
+def test_cmciii_lcp_discovery(plugin, expected) -> None:  # type:ignore[no-untyped-def]
     assert run_discovery("cmciii", plugin, _lcp_sensor(), params={}) == expected
 
 
@@ -268,7 +268,7 @@ def test_cmciii_lcp_discovery(plugin, expected) -> None:
         ),
     ],
 )
-def test_cmciii_lcp_check(item, expected) -> None:
+def test_cmciii_lcp_check(item, expected) -> None:  # type:ignore[no-untyped-def]
     assert run_check("cmciii", "cmciii_temp_in_out", item, _lcp_sensor(), params={}) == expected
 
 
@@ -472,7 +472,7 @@ def test_phase_sensors() -> None:
         ),
     ],
 )
-def test_cmciii_phase_check(item, expected) -> None:
+def test_cmciii_phase_check(item, expected) -> None:  # type:ignore[no-untyped-def]
     assert run_check("cmciii", "cmciii_phase", item, _phase_sensor(), params={}) == expected
 
 
@@ -509,7 +509,7 @@ def _status_info(variable, status):
         "Ignition",
     ],
 )
-def test_cmciii_status_discovery(variable) -> None:
+def test_cmciii_status_discovery(variable) -> None:  # type:ignore[no-untyped-def]
     service_description = "DET-AC_III_Master %s" % variable
     params = {"use_sensor_description": False}
     section = cmciii.parse_cmciii(_status_info(variable, "OK"))
@@ -527,7 +527,7 @@ def test_cmciii_status_discovery(variable) -> None:
         ("Battery change", "Service", [Result(state=State.CRIT, summary="Status: Service")]),
     ],
 )
-def test_cmciii_status_sensors(variable, status, expected) -> None:
+def test_cmciii_status_sensors(variable, status, expected) -> None:  # type:ignore[no-untyped-def]
     assert (
         run_check(
             "cmciii",
@@ -984,7 +984,9 @@ def _generictest_cmciii():
         ("cmciii_phase", {}, []),
     ],
 )
-def test_genericdataset_cmciii_discovery(plugin, params, expected) -> None:
+def test_genericdataset_cmciii_discovery(  # type:ignore[no-untyped-def]
+    plugin, params, expected
+) -> None:
     assert run_discovery("cmciii", plugin, _generictest_cmciii(), params) == expected
 
 
@@ -1235,7 +1237,7 @@ def test_genericdataset_cmciii_discovery(plugin, params, expected) -> None:
         ),
     ],
 )
-def test_genericdataset_cmciii_check(plugin, params, items) -> None:
+def test_genericdataset_cmciii_check(plugin, params, items) -> None:  # type:ignore[no-untyped-def]
     for item, expected in items:
         assert run_check("cmciii", plugin, item, _generictest_cmciii(), params,) == expected, (
             "Item %s does not match" % item
@@ -1345,7 +1347,9 @@ def _generictest_cmciii_input_regression():
         ("cmciii_phase", {}, []),
     ],
 )
-def test_genericdataset_cmciii_input_regression_discovery(plugin, params, expected) -> None:
+def test_genericdataset_cmciii_input_regression_discovery(  # type:ignore[no-untyped-def]
+    plugin, params, expected
+) -> None:
     assert (
         run_discovery(
             "cmciii",
@@ -1445,7 +1449,9 @@ def test_genericdataset_cmciii_input_regression_discovery(plugin, params, expect
         ),
     ],
 )
-def test_genericdataset_cmciii_input_regression_check(plugin, params, items) -> None:
+def test_genericdataset_cmciii_input_regression_check(  # type:ignore[no-untyped-def]
+    plugin, params, items
+) -> None:
     for item, expected in items:
         assert (
             run_check(

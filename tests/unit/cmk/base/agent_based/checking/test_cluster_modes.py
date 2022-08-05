@@ -34,7 +34,7 @@ def _vsm():
     return vsm
 
 
-def _get_test_check_plugin(**kwargs) -> CheckPlugin:
+def _get_test_check_plugin(**kwargs) -> CheckPlugin:  # type:ignore[no-untyped-def]
     return CheckPlugin(
         **{  # type: ignore[arg-type]
             **{

@@ -279,7 +279,7 @@ def test_parser() -> None:
         ],
     ],
 )
-def test_docker_container_diskstat(
+def test_docker_container_diskstat(  # type:ignore[no-untyped-def]
     fix_register,
     section_name: str,
     plugin_name: str,
@@ -353,7 +353,7 @@ def test_docker_container_diskstat(
         ["physical", "sda"],
     ],
 )
-def test_docker_container_diskstat_discovery(
+def test_docker_container_diskstat_discovery(  # type:ignore[no-untyped-def]
     section_name: str,
     plugin_name: str,
     mocker,

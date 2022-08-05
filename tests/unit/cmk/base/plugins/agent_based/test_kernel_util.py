@@ -488,7 +488,7 @@ def test_discovery() -> None:
         ),
     ],
 )
-def test_check(monkeypatch, parameters, additional_results) -> None:
+def test_check(monkeypatch, parameters, additional_results) -> None:  # type:ignore[no-untyped-def]
     monkeypatch.setattr(
         kernel,
         "get_value_store",

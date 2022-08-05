@@ -226,7 +226,7 @@ class Summarizer:
         yield from (
             Result(
                 state=State.OK,
-                notice=r.summary,
+                notice=r.summary if r.summary else r.details,
                 details=f"{r.details}{state_markers[int(r.state)]}",
             )
             for node in secondary_nodes

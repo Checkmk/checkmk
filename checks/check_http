@@ -3,8 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from dataclasses import dataclass
+from typing import Any, Mapping
 
-def _get_host(params):
+
+@dataclass(frozen=True)
+class ProxySettings:
+    address: str
+    port: int | None
+    auth: str | tuple[str, str, str] | None
+
+
+@dataclass(frozen=True)
+class HostSettings:
+    address: str
+    port: int | None
+    family: str
+    virtual: str | None
+
+
+def _get_host(params: Mapping[str, Any]) -> HostSettings:
     # Use the address family of the monitored host by default
     host = params.get("host", {})
 
@@ -16,13 +34,10 @@ def _get_host(params):
     if address is None:
         address = "$_HOSTADDRESS_%s$" % family[-1]
 
-    HostSettings = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
-        "HostSettings", ("address", "port", "family", "virtual")
-    )
     return HostSettings(address, host.get("port"), family, host.get("virthost"))
 
 
-def _get_proxy(params):
+def _get_proxy(params: Mapping[str, Any]) -> ProxySettings | None:
     """return proxys (address, port, auth) or None"""
     proxy = params.get("proxy")
     if not proxy:
@@ -32,13 +47,13 @@ def _get_proxy(params):
     if auth:
         auth = passwordstore_get_cmdline("%s:%%s" % auth[0], auth[1])
 
-    ProxySettings = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
-        "ProxySettings", ("address", "port", "auth")
-    )
     return ProxySettings(proxy.get("address"), proxy.get("port"), auth)
 
 
-def _certificate_args(host, proxy, settings):
+def _certificate_args(
+    proxy: ProxySettings | None,
+    settings: Mapping[str, Any],
+) -> list[object]:
     args = []
 
     if "cert_days" in settings:
@@ -55,7 +70,7 @@ def _certificate_args(host, proxy, settings):
     return args
 
 
-def _url_args(host, _proxy, settings):  # pylint: disable=too-many-branches
+def _url_args(settings: Mapping[str, Any]) -> list[object]:  # pylint: disable=too-many-branches
     args = []
 
     if "uri" in settings:
@@ -134,13 +149,17 @@ def _url_args(host, _proxy, settings):  # pylint: disable=too-many-branches
     return args
 
 
-def _server_address(host, proxy):
+def _server_address(host: HostSettings, proxy: ProxySettings | None) -> str:
     if proxy:
         return proxy.address
     return host.address
 
 
-def _host_name(host, proxy, params):
+def _host_name(
+    host: HostSettings,
+    proxy: ProxySettings | None,
+    params: Mapping[str, Any],
+) -> str | None:
     if proxy and host.port:
         return "%s:%s" % (host.address, host.port)
     if proxy:
@@ -156,8 +175,12 @@ def _host_name(host, proxy, params):
     return None
 
 
-def _common_args(host, proxy, params):
-    args = []
+def _common_args(
+    host: HostSettings,
+    proxy: ProxySettings | None,
+    params: Mapping[str, Any],
+) -> list[object]:
+    args: list[object] = []
 
     if host.family == "ipv6":
         args.append("-6")
@@ -170,30 +193,29 @@ def _common_args(host, proxy, params):
     if specify_port:
         args += ["-p", "%s" % specify_port]
 
-    # last two arguments correspond to -I/-H, respectively
-    args += [_server_address(host, proxy)]
+    args += ["-I", _server_address(host, proxy)]
     host_name = _host_name(host, proxy, params)
     if host_name:
-        args += [host_name]
+        args += ["-H", host_name]
 
     return args
 
 
-def check_http_arguments(params):
+def check_http_arguments(params: Mapping[str, Any]) -> list[object]:
     mode_name, settings = params["mode"]
 
     host = _get_host(params)
     proxy = _get_proxy(params)
 
     if mode_name == "cert":
-        args = _certificate_args(host, proxy, settings)
+        args = _certificate_args(proxy, settings)
     else:
-        args = _url_args(host, proxy, settings)
+        args = _url_args(settings)
 
     return args + _common_args(host, proxy, params)
 
 
-def check_http_description(params):
+def check_http_description(params: Mapping[str, Any]) -> str:
     description = params["name"]
     if description.startswith("^"):
         return description[1:]

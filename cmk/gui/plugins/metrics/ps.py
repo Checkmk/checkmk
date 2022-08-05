@@ -90,6 +90,6 @@ graph_info["size_per_process"] = {
     "title": _("Size per process"),
     "metrics": [
         ("process_resident_size,processes,/", "area", _("Average resident size per process")),
-        ("process_virtual_size,processes,/", "stack", _("Average virtual size per process")),
+        ("process_virtual_size,processes,/", "area", _("Average virtual size per process")),
     ],
 }

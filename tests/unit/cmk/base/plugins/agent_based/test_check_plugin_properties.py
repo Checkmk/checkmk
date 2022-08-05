@@ -38,7 +38,9 @@ def _get_empty_parsed_result(section: SectionPlugin) -> object:
     )
 
 
-def test_check_plugins_do_not_discover_upon_empty_snmp_input(monkeypatch, fix_register) -> None:
+def test_check_plugins_do_not_discover_upon_empty_snmp_input(  # type:ignore[no-untyped-def]
+    monkeypatch, fix_register
+) -> None:
     """
     In Checkmk < 1.6 the parse function has not been called for empty table data,
     unless "handle_empty_info" has been set.
@@ -91,7 +93,7 @@ def test_check_plugins_do_not_discover_upon_empty_snmp_input(monkeypatch, fix_re
     assert plugins_discovering_upon_empty == plugins_expected_to_discover_upon_empty
 
 
-def test_no_plugins_with_trivial_sections(fix_register) -> None:
+def test_no_plugins_with_trivial_sections(fix_register) -> None:  # type:ignore[no-untyped-def]
     """
     This is a sanity test for registered inventory and check plugins. It ensures that plugins
     have a non trivial section. Trivial sections may be created accidentally e.g. if a typo

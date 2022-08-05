@@ -33,7 +33,9 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_agent_salesforce_argument_parsing(params, expected_args) -> None:
+def test_agent_salesforce_argument_parsing(  # type:ignore[no-untyped-def]
+    params, expected_args
+) -> None:
     """Tests if all required arguments are present."""
     agent = SpecialAgent("agent_salesforce")
     arguments = agent.argument_func(params, "host", "address")

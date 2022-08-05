@@ -23,7 +23,7 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_check_dns_argument_parsing(params, expected_args) -> None:
+def test_check_dns_argument_parsing(params, expected_args) -> None:  # type:ignore[no-untyped-def]
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_dns")
     assert active_check.run_argument_function(params) == expected_args
@@ -42,6 +42,6 @@ def test_check_dns_argument_parsing(params, expected_args) -> None:
         ],
     ],
 )
-def test_check_dns_desc(params, result: str) -> None:
+def test_check_dns_desc(params, result: str) -> None:  # type:ignore[no-untyped-def]
     active_check = ActiveCheck("check_dns")
     assert active_check.run_service_description(params) == result

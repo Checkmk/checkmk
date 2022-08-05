@@ -19,7 +19,7 @@ pytestmark = pytest.mark.checks
         (list("AB"), 2, list("AB")),
     ],
 )
-def test_jolokia_basic_split(line, length, result) -> None:
+def test_jolokia_basic_split(line, length, result) -> None:  # type:ignore[no-untyped-def]
     split_up = jolokia_basic_split(line, length)
     assert result == split_up
 
@@ -31,7 +31,7 @@ def test_jolokia_basic_split(line, length, result) -> None:
         (["too", "short", "aswell"], 4),
     ],
 )
-def test_jolokia_basic_split_fail_value(line, length) -> None:
+def test_jolokia_basic_split_fail_value(line, length) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises(ValueError):
         jolokia_basic_split(line, length)
 
@@ -42,6 +42,8 @@ def test_jolokia_basic_split_fail_value(line, length) -> None:
         (["too", "short"], 1),
     ],
 )
-def test_jolokia_basic_split_fail_notimplemented(line, length) -> None:
+def test_jolokia_basic_split_fail_notimplemented(  # type:ignore[no-untyped-def]
+    line, length
+) -> None:
     with pytest.raises(NotImplementedError):
         jolokia_basic_split(line, length)

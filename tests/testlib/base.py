@@ -155,10 +155,10 @@ class Scenario:
 
         return tag_config
 
-    def set_option(self, varname, option) -> None:
+    def set_option(self, varname, option) -> None:  # type:ignore[no-untyped-def]
         self.config[varname] = option
 
-    def set_ruleset(self, varname, ruleset) -> None:
+    def set_ruleset(self, varname, ruleset) -> None:  # type:ignore[no-untyped-def]
         self.config[varname] = ruleset
 
     def set_autochecks(

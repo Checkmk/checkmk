@@ -40,7 +40,9 @@ def _bi_datasource_parameters():
         ),
     ],
 )
-def test_bi_datasource_parameters(value, _bi_datasource_parameters) -> None:
+def test_bi_datasource_parameters(  # type:ignore[no-untyped-def]
+    value, _bi_datasource_parameters
+) -> None:
     assert (
         MultisiteBiDatasource().get_valuespec().transform_value(value) == _bi_datasource_parameters
     )

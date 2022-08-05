@@ -74,5 +74,7 @@ from cmk.gui.plugins.wato.special_agents.kubernetes import special_agents_kubern
         ),
     ],
 )
-def test__special_agents_kubernetes_transform(parameters, expected_result) -> None:
+def test__special_agents_kubernetes_transform(  # type:ignore[no-untyped-def]
+    parameters, expected_result
+) -> None:
     assert special_agents_kubernetes_transform(parameters) == expected_result

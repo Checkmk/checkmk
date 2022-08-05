@@ -29,7 +29,7 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_tinkerforge_argument_parsing(params, expected_args) -> None:
+def test_tinkerforge_argument_parsing(params, expected_args) -> None:  # type:ignore[no-untyped-def]
     """Tests if all required arguments are present."""
     agent = SpecialAgent("agent_tinkerforge")
     arguments = agent.argument_func(params, "host", "address")

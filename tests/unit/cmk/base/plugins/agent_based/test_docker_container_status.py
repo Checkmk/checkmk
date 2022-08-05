@@ -120,7 +120,7 @@ def test_parse_docker_container_status_multiple_nodes() -> None:
     )
 
 
-def _test_discovery(
+def _test_discovery(  # type:ignore[no-untyped-def]
     discovery_function, section: docker.SectionStandard, expected_discovery
 ) -> None:
     for status in ["running", "exited"]:
@@ -176,7 +176,9 @@ def test_check_docker_container_status_multiple_nodes() -> None:
         ),
     ],
 )
-def test_discovery_docker_container_status_uptime(section_uptime, expected_services) -> None:
+def test_discovery_docker_container_status_uptime(  # type:ignore[no-untyped-def]
+    section_uptime, expected_services
+) -> None:
     _test_discovery(
         lambda parsed: docker.discover_docker_container_status_uptime(parsed, section_uptime),
         PARSED,
@@ -234,7 +236,7 @@ def test_discover_docker_container_status_uptime_multiple_nodes() -> None:
         ),
     ],
 )
-def test_check_docker_container_status_uptime(
+def test_check_docker_container_status_uptime(  # type:ignore[no-untyped-def]
     params,
     section: docker.Section,
     expected_results: CheckResult,
@@ -309,6 +311,8 @@ def test_discover_docker_container_status_health_multiple_nodes() -> None:
         ),
     ],
 )
-def test_check_docker_container_status_health(section, expected) -> None:
+def test_check_docker_container_status_health(  # type:ignore[no-untyped-def]
+    section, expected
+) -> None:
     yielded_results = list(docker.check_docker_container_status_health(section))
     assert yielded_results == expected

@@ -17,7 +17,7 @@ from cmk.base.config import HostConfig
 
 
 @pytest.fixture(name="hostname")
-def hostname_fixture(monkeypatch) -> HostName:
+def hostname_fixture(monkeypatch) -> HostName:  # type:ignore[no-untyped-def]
     # Hide ugly Scenario hack.
     hostname = "hostname"
     ts = Scenario()
@@ -26,7 +26,9 @@ def hostname_fixture(monkeypatch) -> HostName:
     return hostname
 
 
-def test_no_error_keeps_returns_status_from_callee(hostname: HostName, capsys) -> None:
+def test_no_error_keeps_returns_status_from_callee(  # type:ignore[no-untyped-def]
+    hostname: HostName, capsys
+) -> None:
     state, text = error_handling._handle_success(
         ActiveCheckResult(
             0,
@@ -41,7 +43,9 @@ def test_no_error_keeps_returns_status_from_callee(hostname: HostName, capsys) -
     assert capsys.readouterr().out == "summary | metrics x\ndetails\nlots of\n"
 
 
-def test_MKTimeout_exception_returns_2(hostname: HostName, capsys) -> None:
+def test_MKTimeout_exception_returns_2(  # type:ignore[no-untyped-def]
+    hostname: HostName, capsys
+) -> None:
     host_config = HostConfig.make_host_config(hostname)
     state, text = error_handling._handle_failure(
         MKTimeout("oops!"),
@@ -56,7 +60,9 @@ def test_MKTimeout_exception_returns_2(hostname: HostName, capsys) -> None:
     assert capsys.readouterr().out == "Timed out\n"
 
 
-def test_MKAgentError_exception_returns_2(hostname: HostName, capsys) -> None:
+def test_MKAgentError_exception_returns_2(  # type:ignore[no-untyped-def]
+    hostname: HostName, capsys
+) -> None:
     host_config = HostConfig.make_host_config(hostname)
     state, text = error_handling._handle_failure(
         MKAgentError("oops!"),
@@ -71,7 +77,9 @@ def test_MKAgentError_exception_returns_2(hostname: HostName, capsys) -> None:
     assert capsys.readouterr().out == "oops!\n"
 
 
-def test_MKGeneralException_returns_3(hostname: HostName, capsys) -> None:
+def test_MKGeneralException_returns_3(  # type:ignore[no-untyped-def]
+    hostname: HostName, capsys
+) -> None:
     host_config = HostConfig.make_host_config(hostname)
     state, text = error_handling._handle_failure(
         MKGeneralException("kaputt!"),
@@ -87,7 +95,9 @@ def test_MKGeneralException_returns_3(hostname: HostName, capsys) -> None:
 
 
 @pytest.mark.usefixtures("disable_debug")
-def test_unhandled_exception_returns_3(hostname: HostName, capsys) -> None:
+def test_unhandled_exception_returns_3(  # type:ignore[no-untyped-def]
+    hostname: HostName, capsys
+) -> None:
     host_config = HostConfig.make_host_config(hostname)
     state, text = error_handling._handle_failure(
         ValueError("unexpected :/"),

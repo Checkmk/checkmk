@@ -337,6 +337,7 @@ def test_check_http_argument_parsing(
     params: Mapping[str, Any],
     expected_args: Sequence[object],
 ) -> None:
+
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_http")
     assert active_check.run_argument_function(params) == expected_args

@@ -17,7 +17,9 @@ pytestmark = pytest.mark.checks
         ([["0", "29"]], "CPU", {}),
     ],
 )
-def test_inventory_function(info, item_expected, data_expected) -> None:
+def test_inventory_function(  # type:ignore[no-untyped-def]
+    info, item_expected, data_expected
+) -> None:
     """
     Verifies if the item is detected corresponding to info content.
     """

@@ -30,7 +30,7 @@ from tests.testlib import Check
         )
     ],
 )
-def test_apc_netbotz_drycontact_inventory(parsed, expected) -> None:
+def test_apc_netbotz_drycontact_inventory(parsed, expected) -> None:  # type:ignore[no-untyped-def]
 
     check = Check("apc_netbotz_drycontact")
     assert list(check.run_discovery(parsed)) == expected
@@ -67,7 +67,7 @@ def test_apc_netbotz_drycontact_inventory(parsed, expected) -> None:
         ([], {}),
     ],
 )
-def test_apc_netbotz_drycontact_parse(info, expected) -> None:
+def test_apc_netbotz_drycontact_parse(info, expected) -> None:  # type:ignore[no-untyped-def]
 
     check = Check("apc_netbotz_drycontact")
     assert check.run_parse(info) == expected
@@ -114,7 +114,9 @@ def test_apc_netbotz_drycontact_parse(info, expected) -> None:
         ),
     ],
 )
-def test_apc_netbotz_drycontact_check(item, params, data, expected) -> None:
+def test_apc_netbotz_drycontact_check(  # type:ignore[no-untyped-def]
+    item, params, data, expected
+) -> None:
 
     check = Check("apc_netbotz_drycontact")
     assert check.run_check(item, params, data) == expected

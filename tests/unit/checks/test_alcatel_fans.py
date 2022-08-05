@@ -19,7 +19,7 @@ CHECK_NAME = "alcatel_fans"
         ([["doesnt matter", "doesent matter"], ["doesnt matter"]], [("1", None), ("2", None)]),
     ],
 )
-def test_inventory_function(info, result_expected) -> None:
+def test_inventory_function(info, result_expected) -> None:  # type:ignore[no-untyped-def]
     check = Check(CHECK_NAME)
     result = list(check.run_discovery(info))
     assert result == result_expected

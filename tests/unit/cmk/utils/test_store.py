@@ -209,7 +209,9 @@ def test_save_text_to_file(tmp_path: Path, path_type, data) -> None:
     "load_fun", [store.load_bytes_from_file, store.load_object_from_file, store.load_text_from_file]
 )
 @pytest.mark.parametrize("permissions", [0o002, 0o666, 0o777])
-def test_load_world_writable_file(tmp_path: Path, load_fun, permissions) -> None:
+def test_load_world_writable_file(  # type:ignore[no-untyped-def]
+    tmp_path: Path, load_fun, permissions
+) -> None:
     path = str(tmp_path / "writeme.txt")
     store.save_text_to_file(path, "")
     os.chmod(path, permissions)

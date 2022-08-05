@@ -101,22 +101,23 @@ class ProxyHost:
         return vhost if self.settings.port is None else f"{vhost}:{self.settings.port}"
 
 
-def _host_from_params(
-    host_params: Mapping[str, Any],
-    proxy_params: Mapping[str, Any] | None,
-) -> DirectHost | ProxyHost:
-    settings = HostSettings.from_params(host_params)
-    if proxy_params:
-        return ProxyHost(
-            proxy=ProxySettings.from_params(proxy_params),
-            settings=HostSettings(
-                port=settings.port,
-                family=settings.family,
-                virtual=host_params.get("address"),
-            ),
+def _host_from_params(params: Mapping[str, Any]) -> DirectHost | ProxyHost:
+    settings = HostSettings.from_params(params)
+    if address_settings := params.get("address"):
+        address_type, address = address_settings
+        return (
+            DirectHost(
+                address=address,
+                settings=settings,
+            )
+            if address_type == "direct"
+            else ProxyHost(
+                proxy=ProxySettings.from_params(address),
+                settings=settings,
+            )
         )
     return DirectHost(
-        address=address if (address := host_params.get("address")) else settings.fallback_address,
+        address=settings.fallback_address,
         settings=settings,
     )
 
@@ -141,7 +142,10 @@ def _certificate_args(
     return args
 
 
-def _url_args(settings: Mapping[str, Any]) -> list[object]:  # pylint: disable=too-many-branches
+def _url_args(  # pylint: disable=too-many-branches
+    settings: Mapping[str, Any],
+    proxy_used: bool,
+) -> list[object]:
     args = []
 
     if "uri" in settings:
@@ -200,8 +204,8 @@ def _url_args(settings: Mapping[str, Any]) -> list[object]:  # pylint: disable=t
         data, content_type = settings["post_data"]
         args += ["-P", data, "-T", content_type]
 
-    if "method" in settings:
-        args += ["-j", settings["method"]]
+    if http_method := settings.get("method", "CONNECT" if proxy_used else None):
+        args += ["-j", http_method]
 
     if settings.get("no_body"):
         args.append("--no-body")
@@ -247,10 +251,7 @@ def _common_args(
 def check_http_arguments(params: Mapping[str, Any]) -> list[object]:
     mode_raw, settings = params["mode"]
     mode = Mode(mode_raw)
-    host = _host_from_params(
-        params.get("host", {}),
-        params.get("proxy"),
-    )
+    host = _host_from_params(params.get("host", {}))
 
     if mode is Mode.CERT:
         args = _certificate_args(
@@ -261,7 +262,13 @@ def check_http_arguments(params: Mapping[str, Any]) -> list[object]:
             ),
         )
     else:
-        args = _url_args(settings)
+        args = _url_args(
+            settings,
+            proxy_used=isinstance(
+                host,
+                ProxyHost,
+            ),
+        )
 
     return args + _common_args(host, mode, params)
 

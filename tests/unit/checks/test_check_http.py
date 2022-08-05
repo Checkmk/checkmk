@@ -26,7 +26,7 @@ from tests.testlib import ActiveCheck
                 ),
                 "host": {
                     "virthost": "www.test123.de",
-                    "address": "www.test123.de",
+                    "address": ("direct", "www.test123.de"),
                     "port": 80,
                 },
             },
@@ -56,17 +56,19 @@ from tests.testlib import ActiveCheck
                         "uri": "/images",
                     },
                 ),
-                "proxy": {
-                    "address": "163.172.86.64",
-                    "auth": (
-                        "user",
-                        ("password", "pwd"),
-                    ),
-                },
                 "host": {
-                    "virthost": "www.test123.de",
-                    "address": "www.test123.de",
+                    "address": (
+                        "proxy",
+                        {
+                            "address": "163.172.86.64",
+                            "auth": (
+                                "user",
+                                ("password", "pwd"),
+                            ),
+                        },
+                    ),
                     "port": 3128,
+                    "virthost": "www.test123.de",
                 },
             },
             [
@@ -93,7 +95,7 @@ from tests.testlib import ActiveCheck
                     {"cert_days": (10, 20)},
                 ),
                 "host": {
-                    "address": "www.test123.com",
+                    "address": ("direct", "www.test123.com"),
                     "port": 42,
                 },
             },
@@ -113,10 +115,10 @@ from tests.testlib import ActiveCheck
             {
                 "name": "irrelevant",
                 "mode": ("cert", {"cert_days": (10, 20)}),
-                "proxy": {"address": "p.roxy"},
                 "host": {
-                    "address": "www.test123.com",
+                    "address": ("proxy", {"address": "p.roxy"}),
                     "port": 42,
+                    "virthost": "www.test123.com",
                 },
             },
             [
@@ -139,10 +141,10 @@ from tests.testlib import ActiveCheck
                     "cert",
                     {"cert_days": (10, 20)},
                 ),
-                "proxy": {"address": "p.roxy"},
                 "host": {
-                    "address": "www.test123.com",
+                    "address": ("proxy", {"address": "p.roxy"}),
                     "port": 42,
+                    "virthost": "www.test123.com",
                 },
             },
             [
@@ -165,17 +167,20 @@ from tests.testlib import ActiveCheck
                     "cert",
                     {"cert_days": (10, 20)},
                 ),
-                "proxy": {
-                    "address": "[dead:beef::face]",
-                    "port": 23,
-                    "auth": (
-                        "user",
-                        ("store", "check_http"),
+                "host": {
+                    "address": (
+                        "proxy",
+                        {
+                            "address": "[dead:beef::face]",
+                            "port": 23,
+                            "auth": (
+                                "user",
+                                ("store", "check_http"),
+                            ),
+                        },
                     ),
-                },
-                "host": {
-                    "address": "www.test123.com",
                     "port": 42,
+                    "virthost": "www.test123.com",
                 },
             },
             [
@@ -197,8 +202,12 @@ from tests.testlib import ActiveCheck
         ),
         (
             {
-                "host": {"address": "www.test123.com", "port": 42, "address_family": "ipv6"},
-                "proxy": {"address": "[dead:beef::face]", "port": 23},
+                "host": {
+                    "address": ("proxy", {"address": "[dead:beef::face]", "port": 23}),
+                    "port": 42,
+                    "address_family": "ipv6",
+                    "virthost": "www.test123.com",
+                },
                 "mode": ("cert", {"cert_days": (10, 20)}),
                 "disable_sni": True,
             },
@@ -219,9 +228,7 @@ from tests.testlib import ActiveCheck
         ),
         (
             {
-                "host": {
-                    "address": "www.test123.com",
-                },
+                "host": {"address": ("direct", "www.test123.com")},
                 "mode": ("url", {"ssl": "auto"}),
             },
             [
@@ -236,33 +243,16 @@ from tests.testlib import ActiveCheck
                 "name": "irrelevant",
                 "mode": (
                     "url",
-                    {},
+                    {"method": "PUT"},
                 ),
-                "proxy": {"address": "foo.bar"},
                 "host": {
+                    "address": ("proxy", {"address": "foo.bar"}),
                     "virthost": "virtual.host",
-                    "address": "virtual.host",
                 },
             },
             [
-                "--sni",
-                "-I",
-                "foo.bar",
-                "-H",
-                "virtual.host",
-            ],
-        ),
-        (
-            {
-                "name": "irrelevant",
-                "mode": ("url", {}),
-                "proxy": {"address": "foo.bar"},
-                "host": {
-                    "virthost": "virtual.host",
-                    "address": "virtual.host",
-                },
-            },
-            [
+                "-j",
+                "PUT",
                 "--sni",
                 "-I",
                 "foo.bar",
@@ -275,9 +265,25 @@ from tests.testlib import ActiveCheck
                 "name": "irrelevant",
                 "mode": ("url", {}),
                 "host": {
+                    "address": ("proxy", {"address": "foo.bar"}),
                     "virthost": "virtual.host",
-                    "address": "virtual.host",
                 },
+            },
+            [
+                "-j",
+                "CONNECT",
+                "--sni",
+                "-I",
+                "foo.bar",
+                "-H",
+                "virtual.host",
+            ],
+        ),
+        (
+            {
+                "name": "irrelevant",
+                "mode": ("url", {}),
+                "host": {"virthost": "virtual.host", "address": ("direct", "virtual.host")},
             },
             [
                 "--sni",
@@ -304,11 +310,16 @@ from tests.testlib import ActiveCheck
         pytest.param(
             {
                 "name": "irrelevant",
-                "host": {"virthost": "virtual.host", "port": 43, "address_family": "ipv6"},
-                "proxy": {"address": "proxy", "port": 123},
+                "host": {
+                    "address": ("proxy", {"address": "proxy", "port": 123}),
+                    "port": 43,
+                    "address_family": "ipv6",
+                },
                 "mode": ("url", {}),
             },
             [
+                "-j",
+                "CONNECT",
                 "-6",
                 "--sni",
                 "-p",

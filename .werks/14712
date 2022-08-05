@@ -1,0 +1,29 @@
+Title: <tt>check_http</tt>: Consolidate host and proxy settings
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1659779019
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The active check <tt>check_http</tt>, which monitores HTTP services, is configurable via the ruleset
+<i>Check HTTP service</i>. Before this werk, users could configure three host addresses there:
+LI: A hostname or IP address
+LI: A virtual host
+LI: A proxy server
+
+However, <tt>check_http</tt> has only two arguments to specify host addresses: <tt>-I</tt> for the
+actual address to be contacted and <tt>-H</tt> for the virtual host. Hence, specifying an address,
+a virtual host and a proxy server in the ruleset did not make sense. In fact, before this werk, if
+all three of them were specified, the virtual host was simply ignored.
+
+As of this werk, users can configure two options instead of three: the address to contact (either
+directly or a proxy server) and a virtual host. In case users select to configure a proxy server,
+they can optionally provide the corresponding port and credentials, as before.
+
+Furthermore, using a proxy most likely requires the HTTP method <tt>CONNECT</tt>. This method is now
+used automatically if a proxy is configured, unless a different method is explicitly selected.
+Previously, this was only the case for the certificate checking mode, but not for the URL checking
+mode.

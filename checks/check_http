@@ -4,7 +4,35 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
+from enum import Enum
 from typing import Any, Mapping
+
+
+class Mode(Enum):
+    URL = "url"
+    CERT = "cert"
+
+
+@dataclass(frozen=True)
+class HostSettings:
+    port: int | None
+    family: str
+    virtual: str | None
+
+    @classmethod
+    def from_params(cls, params: Mapping[str, Any]) -> "HostSettings":
+        return cls(
+            port=params.get("port"),
+            family=params.get(
+                "address_family",
+                "ipv6" if is_ipv6_primary(host_name()) else "ipv4",
+            ),
+            virtual=params.get("virthost"),
+        )
+
+    @property
+    def fallback_address(self) -> str:
+        return "$_HOSTADDRESS_%s$" % self.family[-1]
 
 
 @dataclass(frozen=True)
@@ -13,46 +41,89 @@ class ProxySettings:
     port: int | None
     auth: str | tuple[str, str, str] | None
 
+    @classmethod
+    def from_params(cls, params: Mapping[str, Any]) -> "ProxySettings":
+        return cls(
+            address=params["address"],
+            port=params.get("port"),
+            auth=passwordstore_get_cmdline("%s:%%s" % auth[0], auth[1])
+            if (auth := params.get("auth"))
+            else None,
+        )
+
 
 @dataclass(frozen=True)
-class HostSettings:
+class DirectHost:
     address: str
-    port: int | None
-    family: str
-    virtual: str | None
+    settings: HostSettings
+
+    @property
+    def server_address(self) -> str:
+        return self.address
+
+    @property
+    def port(self) -> int | None:
+        return self.settings.port
+
+    def virtual_host(self, mode: Mode) -> str | None:
+        return (
+            self.settings.virtual
+            if isinstance(self.settings.virtual, str)
+            # In URL mode, don't return the address in this case, because check_http would
+            # automatically set the HTTP Host header and use HTTP/1.1 instead of
+            # HTTP/1.0. This can lead to request timeouts on hosts which are
+            # not compliant with HTTP/1.1.
+            else None
+            if mode is Mode.URL
+            else self.address
+        )
 
 
-def _get_host(params: Mapping[str, Any]) -> HostSettings:
-    # Use the address family of the monitored host by default
-    host = params.get("host", {})
+@dataclass(frozen=True)
+class ProxyHost:
+    proxy: ProxySettings
+    settings: HostSettings
 
-    family = host.get("address_family")
-    if family is None:
-        family = "ipv6" if is_ipv6_primary(host_name()) else "ipv4"
+    @property
+    def server_address(self) -> str:
+        return self.proxy.address
 
-    address = host.get("address")
-    if address is None:
-        address = "$_HOSTADDRESS_%s$" % family[-1]
+    @property
+    def port(self) -> int | None:
+        return self.proxy.port
 
-    return HostSettings(address, host.get("port"), family, host.get("virthost"))
+    def virtual_host(self, mode: Mode) -> str:
+        vhost = (
+            self.settings.virtual
+            if isinstance(self.settings.virtual, str)
+            else self.settings.fallback_address
+        )
+        return vhost if self.settings.port is None else f"{vhost}:{self.settings.port}"
 
 
-def _get_proxy(params: Mapping[str, Any]) -> ProxySettings | None:
-    """return proxys (address, port, auth) or None"""
-    proxy = params.get("proxy")
-    if not proxy:
-        return None
-
-    auth = proxy.get("auth")
-    if auth:
-        auth = passwordstore_get_cmdline("%s:%%s" % auth[0], auth[1])
-
-    return ProxySettings(proxy.get("address"), proxy.get("port"), auth)
+def _host_from_params(
+    host_params: Mapping[str, Any],
+    proxy_params: Mapping[str, Any] | None,
+) -> DirectHost | ProxyHost:
+    settings = HostSettings.from_params(host_params)
+    if proxy_params:
+        return ProxyHost(
+            proxy=ProxySettings.from_params(proxy_params),
+            settings=HostSettings(
+                port=settings.port,
+                family=settings.family,
+                virtual=host_params.get("address"),
+            ),
+        )
+    return DirectHost(
+        address=address if (address := host_params.get("address")) else settings.fallback_address,
+        settings=settings,
+    )
 
 
 def _certificate_args(
-    proxy: ProxySettings | None,
     settings: Mapping[str, Any],
+    proxy_used: bool,
 ) -> list[object]:
     args = []
 
@@ -64,7 +135,7 @@ def _certificate_args(
             warn, crit = settings["cert_days"]
             args += ["-C", "%d,%d" % (warn, crit)]
 
-    if proxy:
+    if proxy_used:
         args += ["--ssl", "-j", "CONNECT"]
 
     return args
@@ -149,70 +220,50 @@ def _url_args(settings: Mapping[str, Any]) -> list[object]:  # pylint: disable=t
     return args
 
 
-def _server_address(host: HostSettings, proxy: ProxySettings | None) -> str:
-    if proxy:
-        return proxy.address
-    return host.address
-
-
-def _host_name(
-    host: HostSettings,
-    proxy: ProxySettings | None,
-    params: Mapping[str, Any],
-) -> str | None:
-    if proxy and host.port:
-        return "%s:%s" % (host.address, host.port)
-    if proxy:
-        return host.address
-    if host.virtual:
-        return host.virtual
-    if params["mode"][0] == "cert":
-        return host.address
-    # Don't return the address in this case, because check_http would
-    # automatically set the HTTP Host header and use HTTP/1.1 instead of
-    # HTTP/1.0. This can lead to request timeouts on hosts which are
-    # not compliant with HTTP/1.1.
-    return None
-
-
 def _common_args(
-    host: HostSettings,
-    proxy: ProxySettings | None,
+    host: DirectHost | ProxyHost,
+    mode: Mode,
     params: Mapping[str, Any],
 ) -> list[object]:
     args: list[object] = []
 
-    if host.family == "ipv6":
+    if host.settings.family == "ipv6":
         args.append("-6")
     if not params.get("disable_sni"):
         args.append("--sni")
-    if proxy and proxy.auth:
-        args += ["-b", proxy.auth]
+    if isinstance(host, ProxyHost) and (proxy_auth := host.proxy.auth):
+        args += ["-b", proxy_auth]
 
-    specify_port = proxy.port if proxy else host.port
-    if specify_port:
+    if (specify_port := host.port) is not None:
         args += ["-p", "%s" % specify_port]
 
-    args += ["-I", _server_address(host, proxy)]
-    host_name = _host_name(host, proxy, params)
-    if host_name:
-        args += ["-H", host_name]
+    args += ["-I", host.server_address]
+    if (virtual_host := host.virtual_host(mode)) is not None:
+        args += ["-H", virtual_host]
 
     return args
 
 
 def check_http_arguments(params: Mapping[str, Any]) -> list[object]:
-    mode_name, settings = params["mode"]
+    mode_raw, settings = params["mode"]
+    mode = Mode(mode_raw)
+    host = _host_from_params(
+        params.get("host", {}),
+        params.get("proxy"),
+    )
 
-    host = _get_host(params)
-    proxy = _get_proxy(params)
-
-    if mode_name == "cert":
-        args = _certificate_args(proxy, settings)
+    if mode is Mode.CERT:
+        args = _certificate_args(
+            settings,
+            proxy_used=isinstance(
+                host,
+                ProxyHost,
+            ),
+        )
     else:
         args = _url_args(settings)
 
-    return args + _common_args(host, proxy, params)
+    return args + _common_args(host, mode, params)
 
 
 def check_http_description(params: Mapping[str, Any]) -> str:

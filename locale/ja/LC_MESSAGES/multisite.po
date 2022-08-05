@@ -1081,9 +1081,6 @@ msgstr "86% - 1.5 標準偏差"
 msgid "95% - Two standard deviations"
 msgstr "95% - 2つの標準偏差"
 
-msgid "99th percentile request latency"
-msgstr "99%リクエストレイテンシー"
-
 msgid ""
 "<a href='wato.py?mode=edit_ruleset&varname=piggyback_translation'>Piggyback "
 "translations</a> are performed before the piggyback connector creates hosts. "
@@ -6009,6 +6006,10 @@ msgstr "Azure AD Connect"
 msgid "Azure Agent Info"
 msgstr "Azureエージェント情報"
 
+#, fuzzy
+msgid "Azure DB Storage"
+msgstr "Azureストレージ"
+
 msgid "Azure Databases"
 msgstr "Azureデータベース"
 
@@ -6186,12 +6187,6 @@ msgstr "バックグラウンドジョブの概要"
 
 msgid "Background shading for rows"
 msgstr "行のバックグラウンドシェーディング"
-
-msgid "Backplane"
-msgstr "バックプレーン"
-
-msgid "Backplanes"
-msgstr "バックプレーン"
 
 msgid "Backup code"
 msgstr "バックアップコード"
@@ -8149,9 +8144,6 @@ msgstr "Scheduler"
 msgid "Changes since last dump"
 msgstr ""
 
-msgid "Channel"
-msgstr "チャネル"
-
 msgid "Channel state"
 msgstr "チャネル状態"
 
@@ -8677,26 +8669,14 @@ msgstr ""
 msgid "Checkmk helper usage"
 msgstr "Checkmkヘルパーの使用法"
 
-msgid "Checkmk site"
-msgstr "Checkmkサイト"
-
 msgid "Checkmk site objects"
 msgstr "Checkmkサイトオブジェクト"
 
 msgid "Checkmk site performance and settings"
 msgstr "Checkmkサイトのパフォーマンスと設定"
 
-msgid "Checkmk sites"
-msgstr "Checkmkサイト"
-
 msgid "Checkmk specific"
 msgstr "Checkmk固有"
-
-msgid "Checkmk version"
-msgstr "Checkmkバージョン"
-
-msgid "Checkmk versions"
-msgstr "Checkmkバージョン"
 
 msgid ""
 "Checkmk was not not supporting special characters (like Umlauts) in User-"
@@ -11384,6 +11364,14 @@ msgstr "現在のチェックの試み"
 msgid "Current date"
 msgstr "現在の日付"
 
+#, fuzzy
+msgid "Current details"
+msgstr "イベントの詳細"
+
+#, fuzzy
+msgid "Current details (Previously named: long output)"
+msgstr "詳細(以前の名前:長い出力)"
+
 msgid "Current host check attempt"
 msgstr "現在のホストチェックの試行"
 
@@ -12180,6 +12168,10 @@ msgstr "データベース"
 
 msgid "Database Availability Group (DAG) (Windows)"
 msgstr "データベース可用性グループ(DAG)(Windows)"
+
+#, fuzzy
+msgid "Database Connections"
+msgstr "MongoDBデータベース接続"
 
 msgid "Database Files are restored"
 msgstr "データベースファイルが復元されます"
@@ -13422,14 +13414,15 @@ msgstr "各オブジェクトのイベントの詳細なタイムライン"
 msgid "Details"
 msgstr "詳細"
 
-msgid "Details (Previously named: long output)"
-msgstr "詳細(以前の名前:長い出力)"
-
 msgid "Details about a historical event history entry"
 msgstr "履歴イベントエントリの詳細"
 
 msgid "Details about one event"
 msgstr "1つのイベントの詳細"
+
+#, fuzzy
+msgid "Details history"
+msgstr "ダウンタイムの履歴"
 
 msgid "Detect network parent hosts"
 msgstr "ネットワークの親ホストを検出する"
@@ -14922,12 +14915,6 @@ msgstr "Dockerディスクの使用量"
 
 msgid "Docker Disk Usage Count"
 msgstr "Dockerディスク使用数"
-
-msgid "Docker containers"
-msgstr "Dockerコンテナ"
-
-msgid "Docker images"
-msgstr "Dockerイメージ"
 
 msgid "Docker node"
 msgstr "Dockerノード"
@@ -17748,9 +17735,6 @@ msgstr ""
 msgid "Falling"
 msgstr "落下"
 
-msgid "Fan"
-msgstr "ファン"
-
 msgid "Fan Name"
 msgstr "ファン名"
 
@@ -17759,9 +17743,6 @@ msgstr "ファン回転速度"
 
 msgid "Fan speed of hardware devices (in percent)"
 msgstr "ハードウェアデバイスのファン速度(パーセント)"
-
-msgid "Fans"
-msgstr "ファン"
 
 msgid "Favorite entry of user"
 msgstr "ユーザーのお気に入りのエントリ"
@@ -18962,18 +18943,6 @@ msgstr "TCPコネクト"
 msgid "GCP services to monitor"
 msgstr "監視するGCPサービス"
 
-msgid "GCP/Cloud Run Cpu"
-msgstr ""
-
-msgid "GCP/Cloud Run Memory"
-msgstr ""
-
-msgid "GCP/Cloud Run Network"
-msgstr "GCP/Cloud Runネットワーク"
-
-msgid "GCP/Cloud Run Requests"
-msgstr "GCP/Cloud Runリクエスト"
-
 msgid "GCP/Cloud SQL CPU"
 msgstr ""
 
@@ -18991,15 +18960,6 @@ msgstr "GCP/Cloud SQL ステータス"
 
 msgid "GCP/Filestore"
 msgstr "GCP/ファイルストア"
-
-msgid "GCP/Function execution"
-msgstr "GCP/機能実行"
-
-msgid "GCP/Function instances"
-msgstr "インスタンスの自動検出"
-
-msgid "GCP/Function network"
-msgstr "GCP/機能ネットワーク"
 
 msgid "GCP/GCE CPU"
 msgstr ""
@@ -19620,12 +19580,6 @@ msgstr ""
 
 msgid "HW Information"
 msgstr "HW情報"
-
-msgid "HW container"
-msgstr "HWコンテナ"
-
-msgid "HW containers"
-msgstr "HWコンテナ"
 
 msgid "HW/SW inventory"
 msgstr "HW/SWインベントリ"
@@ -25129,12 +25083,6 @@ msgstr "Kerberos"
 msgid "Kernel"
 msgstr "カーネル"
 
-msgid "Kernel configuration (sysctl)"
-msgstr "カーネル設定(sysctl)"
-
-msgid "Kernel configurations (sysctl)"
-msgstr "カーネル構成(sysctl)"
-
 msgid "Kernel stack"
 msgstr "カーネルスタック"
 
@@ -25719,6 +25667,10 @@ msgstr "レベルサービス"
 msgid "Levels clients"
 msgstr "Redisクライアント"
 
+#, fuzzy
+msgid "Levels connections"
+msgstr "レベル接続詞"
+
 msgid "Levels disk"
 msgstr "diskレベル"
 
@@ -26040,6 +25992,10 @@ msgstr "メモリーレベル"
 msgid "Levels monthly GCP costs"
 msgstr "CPU loadのレベル"
 
+#, fuzzy
+msgid "Levels network"
+msgstr "ネットワークのレベル"
+
 #, python-format
 msgid "Levels of %s %s"
 msgstr "%s %sのレベル"
@@ -26099,20 +26055,11 @@ msgstr "ヘルス状態のスコアレベル(パーセント)"
 msgid "Levels on ingress data in bytes"
 msgstr "入力データのレベル(バイト単位)"
 
-msgid "Levels on instances"
-msgstr "インスタンスのレベル"
-
 msgid "Levels on latency"
 msgstr "遅延のレベル"
 
-msgid "Levels on network"
-msgstr "ネットワークのレベル"
-
 msgid "Levels on network traffic"
 msgstr "ネットワークトラフィックのレベル"
-
-msgid "Levels on performance"
-msgstr "パフォーマンスのレベル"
 
 msgid "Levels on read capacity"
 msgstr "読み取り容量のレベル"
@@ -26185,8 +26132,9 @@ msgstr "総CPU使用率の長期間にわたるレベル"
 msgid "Levels replication"
 msgstr "レプリケーションを有効にする"
 
-msgid "Levels requests"
-msgstr "リクエストレベル"
+#, fuzzy
+msgid "Levels storage"
+msgstr "RAM使用量のレベル"
 
 msgid "Libelle Business Shadow"
 msgstr "リベルビジネスシャドウ"
@@ -27687,9 +27635,6 @@ msgstr "管理ボードの構成"
 msgid "Management type"
 msgstr "マネジメントタイプ"
 
-msgid "Manager"
-msgstr "マネージャー"
-
 msgid "Manual"
 msgstr "マニュアル"
 
@@ -28300,7 +28245,8 @@ msgstr "受信する最大バイト数"
 msgid "Maximum number of cached log messages"
 msgstr "キャッシュされたログメッセージの最大数"
 
-msgid "Maximum number of characters in to show"
+#, fuzzy
+msgid "Maximum number of characters to show"
 msgstr "表示する最大文字数"
 
 msgid "Maximum number of check attempts for host"
@@ -29250,9 +29196,6 @@ msgstr "モジュール名"
 msgid "Module name or empty"
 msgstr "モジュール名または空欄"
 
-msgid "Modules"
-msgstr "モジュール"
-
 msgid "Monday"
 msgstr "月曜"
 
@@ -30195,6 +30138,10 @@ msgstr "Netscaler VServerの状態"
 msgid "Network"
 msgstr "ネットワーク"
 
+#, fuzzy
+msgid "Network IO"
+msgstr "ネットワークID"
+
 msgid "Network Load Balancer Listeners"
 msgstr "ネットワークロードバランサーリスナー"
 
@@ -30219,17 +30166,15 @@ msgstr "ネットワークアドレス:"
 msgid "Network filesystem - overall status and usage (e.g. NFS)"
 msgstr "ネットワークファイルシステム-全体的なステータスと使用状況(例:NFS)"
 
-msgid "Network interface"
-msgstr "ネットワークインターフェース"
+#, fuzzy
+msgid "Network in"
+msgstr "ネットワーキング"
 
 msgid "Network interface and switch port discovery"
 msgstr "ネットワークインターフェイスとスイッチポートの検出"
 
 msgid "Network interface groups"
 msgstr "ネットワークインターフェイスグループ"
-
-msgid "Network interfaces"
-msgstr "ネットワークインターフェース"
 
 msgid "Network interfaces and switch ports"
 msgstr "ネットワークインターフェイスとスイッチポート"
@@ -30242,6 +30187,10 @@ msgstr "ネットワークインターフェース: 昨日のビュー"
 
 msgid "Network interfaces: last hour view"
 msgstr "ネットワークインターフェース:過去1時間のビュー"
+
+#, fuzzy
+msgid "Network out"
+msgstr "ネットワーク"
 
 msgid "Network scan"
 msgstr "ネットワークスキャン"
@@ -30265,9 +30214,6 @@ msgstr "ネットワークトポロジ　サイト %s"
 
 msgid "Networking"
 msgstr "ネットワーキング"
-
-msgid "Networking Tunnels"
-msgstr "ネットワークトンネル"
 
 msgid "Networking checks without agent"
 msgstr "エージェントなしのネットワークチェック"
@@ -31750,29 +31696,11 @@ msgstr "回収数"
 msgid "Number of relocating shards"
 msgstr "リローケイトするシャードの数"
 
-msgid "Number of requests"
-msgstr "リクエスト数"
-
-msgid "Number of requests with return code class 2xx (sucess)"
-msgstr ""
-
-msgid "Number of requests with return code class 3xx (redirection)"
-msgstr ""
-
-msgid "Number of requests with return code class 4xx (client error)"
-msgstr ""
-
-msgid "Number of requests with return code class 5xx (server error)"
-msgstr ""
-
 msgid "Number of retries"
 msgstr "再試行回数"
 
 msgid "Number of retries (not counting the initial regular run)"
 msgstr "再試行回数(最初の通常の実行はカウントされません)"
-
-msgid "Number of running containers"
-msgstr "稼働中のコンテナ数"
 
 msgid "Number of search results"
 msgstr "検索結果の数"
@@ -32678,9 +32606,6 @@ msgstr "Oracle Logswitches"
 msgid "Oracle Long Active Sessions"
 msgstr "Oracleの長期アクティブセッション"
 
-msgid "Oracle PGA performance"
-msgstr "Oracle PGAのパフォーマンス"
-
 msgid "Oracle Performance"
 msgstr "Oracleパフォーマンス"
 
@@ -32696,9 +32621,6 @@ msgstr "Oracleリカバリエリア"
 msgid "Oracle Recovery Status"
 msgstr "Oracleリカバリステータス"
 
-msgid "Oracle SGA performance"
-msgstr "OracleS GAのパフォーマンス"
-
 msgid "Oracle Scheduler Job"
 msgstr "Oracleスケジューラジョブ"
 
@@ -32711,38 +32633,8 @@ msgstr "Oracleテーブルスペース"
 msgid "Oracle Undo Retention"
 msgstr "Oracle Undo Retention"
 
-msgid "Oracle dataguard statistic"
-msgstr "Oracle dataguard統計"
-
-msgid "Oracle dataguard statistics"
-msgstr "Oracle dataguardの統計"
-
-msgid "Oracle instance"
-msgstr "Oracleインスタンス"
-
-msgid "Oracle instances"
-msgstr "Oracleインスタンス"
-
 msgid "Oracle performance discovery"
 msgstr "Oracleのパフォーマンスの検出"
-
-msgid "Oracle recovery area"
-msgstr "Oracleリカバリ領域"
-
-msgid "Oracle recovery areas"
-msgstr "Oracleリカバリ領域"
-
-msgid "Oracle system parameter"
-msgstr "Oracleシステムパラメータ"
-
-msgid "Oracle system parameters"
-msgstr "Oracleシステムパラメータ"
-
-msgid "Oracle tablespace"
-msgstr "Oracleテーブルスペース"
-
-msgid "Oracle tablespaces"
-msgstr "Oracleテーブルスペース"
 
 msgid "Order"
 msgstr "注文"
@@ -32790,12 +32682,6 @@ msgstr "その他のコンポーネント"
 #, fuzzy
 msgid "Other dashboards"
 msgstr "その他のダッシュボード"
-
-msgid "Other entities"
-msgstr "その他のエンティティ"
-
-msgid "Other entity"
-msgstr "その他のエンティティ"
 
 msgid "Other integrations"
 msgstr "その他の統合"
@@ -34898,12 +34784,6 @@ msgstr "電源名"
 msgid "Power Usage"
 msgstr "電力使用量"
 
-msgid "Power supplies"
-msgstr "電源供給装置"
-
-msgid "Power supply"
-msgstr "電源"
-
 msgid "Powered OFF"
 msgstr "電源オフ"
 
@@ -35531,9 +35411,6 @@ msgstr "Elasticsearchログをクエリする"
 
 msgid "Query or SQL statement"
 msgstr "クエリまたはSQLステートメント"
-
-msgid "Queue"
-msgstr "キュー"
 
 msgid "Queue Latency"
 msgstr "キューの待ち時間"
@@ -38862,9 +38739,6 @@ msgstr "センサーの状態"
 msgid "Sensor threshold"
 msgstr "センサーのしきい値"
 
-msgid "Sensors"
-msgstr "センサー"
-
 msgid "Sent"
 msgstr "送信済み"
 
@@ -38900,6 +38774,14 @@ msgstr "サーバー時間"
 
 msgid "Server latency"
 msgstr "サーバーの待ち時間"
+
+#, fuzzy
+msgid "Server log storage"
+msgstr "サービスが古くなっている"
+
+#, fuzzy
+msgid "Server log storage used"
+msgstr "使用率"
 
 msgid "Server performance"
 msgstr "サーバーのパフォーマンス"
@@ -40756,12 +40638,6 @@ msgstr "ソケット"
 msgid "Soft query limit"
 msgstr ""
 
-msgid "Software package"
-msgstr "ソフトウェアパッケージ"
-
-msgid "Software packages"
-msgstr "ソフトウェアパッケージ"
-
 msgid "Solaris"
 msgstr "Solaris"
 
@@ -41654,17 +41530,11 @@ msgstr "Sprocレイテンシ"
 msgid "Sqlnet Send timeout"
 msgstr "Sqlnet送信タイムアウト"
 
-msgid "Stack"
-msgstr "スタック"
-
 msgid "Stacked"
 msgstr "積み上げ"
 
 msgid "Stacked Area"
 msgstr "スタックエリア"
-
-msgid "Stacks"
-msgstr "スタック"
 
 msgid "Stale"
 msgstr "最新化要"
@@ -42696,6 +42566,17 @@ msgstr "停止したコンテナの上位レベル"
 
 msgid "Stopping VMs"
 msgstr ""
+
+msgid "Storage"
+msgstr "ストレージ"
+
+#, fuzzy
+msgid "Storage IO"
+msgstr "ストレージ"
+
+#, fuzzy
+msgid "Storage IO consumption"
+msgstr "平均消費量"
 
 msgid "Storage Processor Utilization"
 msgstr "ストレージプロセッサの使用率"
@@ -53041,12 +52922,6 @@ msgstr "不明な構成変更"
 msgid "Unknown date"
 msgstr "日付不明"
 
-msgid "Unknown entities"
-msgstr "不明なエンティティ"
-
-msgid "Unknown entity"
-msgstr "不明なエンティティ"
-
 #, python-format
 msgid "Unknown group: %s"
 msgstr "不明なグループ: %s"
@@ -59138,9 +59013,6 @@ msgstr "アクティブ/スタンバイ"
 msgid "active hosts"
 msgstr "アクティブなホスト"
 
-msgid "active instances"
-msgstr "アクティブ インスタンス"
-
 msgid "add \"ISL\" to service description for interswitch links"
 msgstr "スイッチ間リンクのサービスの説明に\"ISL\"を追加"
 
@@ -59267,9 +59139,6 @@ msgstr "予測値を下回る"
 
 msgid "best state"
 msgstr "最高の状態"
-
-msgid "billable time"
-msgstr "課金時間"
 
 msgid "bindings"
 msgstr "バインディング"
@@ -59626,12 +59495,6 @@ msgstr "除外"
 msgid "execute the action \"%s\""
 msgstr "アクション \"%s\"を実行します"
 
-msgid "execution count"
-msgstr "実行回数"
-
-msgid "execution time"
-msgstr "実行時間"
-
 msgid "exists"
 msgstr "存在する"
 
@@ -59960,9 +59823,6 @@ msgstr "初期化"
 msgid "inodes"
 msgstr "inodes"
 
-msgid "instances"
-msgstr "インスタンス"
-
 msgid "internal"
 msgstr "内部"
 
@@ -60114,9 +59974,6 @@ msgstr "最大期間"
 
 msgid "maximum"
 msgstr "最大"
-
-msgid "memory"
-msgstr "記憶"
 
 msgid "message"
 msgid_plural "messages"
@@ -61012,6 +60869,189 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "99th percentile request latency"
+#~ msgstr "99%リクエストレイテンシー"
+
+#~ msgid "Backplane"
+#~ msgstr "バックプレーン"
+
+#~ msgid "Backplanes"
+#~ msgstr "バックプレーン"
+
+#~ msgid "Channel"
+#~ msgstr "チャネル"
+
+#~ msgid "Checkmk site"
+#~ msgstr "Checkmkサイト"
+
+#~ msgid "Checkmk sites"
+#~ msgstr "Checkmkサイト"
+
+#~ msgid "Checkmk version"
+#~ msgstr "Checkmkバージョン"
+
+#~ msgid "Checkmk versions"
+#~ msgstr "Checkmkバージョン"
+
+#~ msgid "Docker containers"
+#~ msgstr "Dockerコンテナ"
+
+#~ msgid "Docker images"
+#~ msgstr "Dockerイメージ"
+
+#~ msgid "Fan"
+#~ msgstr "ファン"
+
+#~ msgid "Fans"
+#~ msgstr "ファン"
+
+#~ msgid "GCP/Cloud Run Network"
+#~ msgstr "GCP/Cloud Runネットワーク"
+
+#~ msgid "GCP/Cloud Run Requests"
+#~ msgstr "GCP/Cloud Runリクエスト"
+
+#~ msgid "GCP/Function execution"
+#~ msgstr "GCP/機能実行"
+
+#~ msgid "GCP/Function instances"
+#~ msgstr "インスタンスの自動検出"
+
+#~ msgid "GCP/Function network"
+#~ msgstr "GCP/機能ネットワーク"
+
+#~ msgid "HW container"
+#~ msgstr "HWコンテナ"
+
+#~ msgid "HW containers"
+#~ msgstr "HWコンテナ"
+
+#~ msgid "Kernel configuration (sysctl)"
+#~ msgstr "カーネル設定(sysctl)"
+
+#~ msgid "Kernel configurations (sysctl)"
+#~ msgstr "カーネル構成(sysctl)"
+
+#~ msgid "Levels on instances"
+#~ msgstr "インスタンスのレベル"
+
+#~ msgid "Levels on performance"
+#~ msgstr "パフォーマンスのレベル"
+
+#~ msgid "Levels requests"
+#~ msgstr "リクエストレベル"
+
+#~ msgid "Manager"
+#~ msgstr "マネージャー"
+
+#~ msgid "Modules"
+#~ msgstr "モジュール"
+
+#~ msgid "Network interface"
+#~ msgstr "ネットワークインターフェース"
+
+#~ msgid "Network interfaces"
+#~ msgstr "ネットワークインターフェース"
+
+#~ msgid "Networking Tunnels"
+#~ msgstr "ネットワークトンネル"
+
+#~ msgid "Number of requests"
+#~ msgstr "リクエスト数"
+
+#~ msgid "Number of running containers"
+#~ msgstr "稼働中のコンテナ数"
+
+#~ msgid "Oracle PGA performance"
+#~ msgstr "Oracle PGAのパフォーマンス"
+
+#~ msgid "Oracle SGA performance"
+#~ msgstr "OracleS GAのパフォーマンス"
+
+#~ msgid "Oracle dataguard statistic"
+#~ msgstr "Oracle dataguard統計"
+
+#~ msgid "Oracle dataguard statistics"
+#~ msgstr "Oracle dataguardの統計"
+
+#~ msgid "Oracle instance"
+#~ msgstr "Oracleインスタンス"
+
+#~ msgid "Oracle instances"
+#~ msgstr "Oracleインスタンス"
+
+#~ msgid "Oracle recovery area"
+#~ msgstr "Oracleリカバリ領域"
+
+#~ msgid "Oracle recovery areas"
+#~ msgstr "Oracleリカバリ領域"
+
+#~ msgid "Oracle system parameter"
+#~ msgstr "Oracleシステムパラメータ"
+
+#~ msgid "Oracle system parameters"
+#~ msgstr "Oracleシステムパラメータ"
+
+#~ msgid "Oracle tablespace"
+#~ msgstr "Oracleテーブルスペース"
+
+#~ msgid "Oracle tablespaces"
+#~ msgstr "Oracleテーブルスペース"
+
+#~ msgid "Other entities"
+#~ msgstr "その他のエンティティ"
+
+#~ msgid "Other entity"
+#~ msgstr "その他のエンティティ"
+
+#~ msgid "Power supplies"
+#~ msgstr "電源供給装置"
+
+#~ msgid "Power supply"
+#~ msgstr "電源"
+
+#~ msgid "Queue"
+#~ msgstr "キュー"
+
+#~ msgid "Sensors"
+#~ msgstr "センサー"
+
+#~ msgid "Software package"
+#~ msgstr "ソフトウェアパッケージ"
+
+#~ msgid "Software packages"
+#~ msgstr "ソフトウェアパッケージ"
+
+#~ msgid "Stack"
+#~ msgstr "スタック"
+
+#~ msgid "Stacks"
+#~ msgstr "スタック"
+
+#~ msgid "Unknown entities"
+#~ msgstr "不明なエンティティ"
+
+#~ msgid "Unknown entity"
+#~ msgstr "不明なエンティティ"
+
+#~ msgid "active instances"
+#~ msgstr "アクティブ インスタンス"
+
+#~ msgid "billable time"
+#~ msgstr "課金時間"
+
+#~ msgid "execution count"
+#~ msgstr "実行回数"
+
+#~ msgid "execution time"
+#~ msgstr "実行時間"
+
+#~ msgid "instances"
+#~ msgstr "インスタンス"
+
+#~ msgid "memory"
+#~ msgstr "記憶"
 
 #~ msgid ""
 #~ "The IP of the other hostname needs to be the same IP as the host address"
@@ -62652,9 +62692,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 #~ msgid "Available physical processors in shared pool"
 #~ msgstr "共有プールで使用可能な物理プロセッサー"
 
-#~ msgid "Average consumption"
-#~ msgstr "平均消費量"
-
 #~ msgid "Average latency of successful GetItem requests"
 #~ msgstr "成功したGetItemリクエストの平均レイテンシ"
 
@@ -63087,9 +63124,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Documents fragmentation"
 #~ msgstr "ドキュメントの断片化"
-
-#~ msgid "Downtime history"
-#~ msgstr "ダウンタイムの履歴"
 
 #~ msgid "Downtimes of host"
 #~ msgstr "ホストのダウンタイム"
@@ -63754,9 +63788,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 #~ msgid "Network Adapters"
 #~ msgstr "ネットワークアダプタ"
 
-#~ msgid "Network ID"
-#~ msgstr "ネットワークID"
-
 #~ msgid "Networks"
 #~ msgstr "ネットワーク"
 
@@ -64316,9 +64347,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Stopped collectors"
 #~ msgstr "停止したコレクター"
-
-#~ msgid "Storage"
-#~ msgstr "ストレージ"
 
 #~ msgid "Storage Processor utilization"
 #~ msgstr "ストレージプロセッサの使用率"

@@ -1112,10 +1112,6 @@ msgstr ""
 msgid "95% - Two standard deviations"
 msgstr ""
 
-#, fuzzy
-msgid "99th percentile request latency"
-msgstr "Nivelurile maxime pentru voltaj"
-
 msgid ""
 "<a href='wato.py?mode=edit_ruleset&varname=piggyback_translation'>Piggyback "
 "translations</a> are performed before the piggyback connector creates hosts. "
@@ -5968,6 +5964,10 @@ msgstr "Conexiuni Active"
 msgid "Azure Agent Info"
 msgstr ""
 
+#, fuzzy
+msgid "Azure DB Storage"
+msgstr "Conexiuni Active"
+
 msgid "Azure Databases"
 msgstr ""
 
@@ -6157,12 +6157,6 @@ msgid "Background jobs overview"
 msgstr ""
 
 msgid "Background shading for rows"
-msgstr ""
-
-msgid "Backplane"
-msgstr ""
-
-msgid "Backplanes"
 msgstr ""
 
 #, fuzzy
@@ -8036,10 +8030,6 @@ msgid "Changes since last dump"
 msgstr ""
 
 #, fuzzy
-msgid "Channel"
-msgstr "Nici o schimbare"
-
-#, fuzzy
 msgid "Channel state"
 msgstr "Nici o schimbare"
 
@@ -8562,10 +8552,6 @@ msgstr ""
 msgid "Checkmk helper usage"
 msgstr "Nivelurile maxime pentru voltaj"
 
-#, fuzzy
-msgid "Checkmk site"
-msgstr "Privire de ansamblu"
-
 msgid "Checkmk site objects"
 msgstr ""
 
@@ -8573,19 +8559,7 @@ msgid "Checkmk site performance and settings"
 msgstr ""
 
 #, fuzzy
-msgid "Checkmk sites"
-msgstr "Privire de ansamblu"
-
-#, fuzzy
 msgid "Checkmk specific"
-msgstr "Perioada de timp Noua"
-
-#, fuzzy
-msgid "Checkmk version"
-msgstr "Perioada de timp Noua"
-
-#, fuzzy
-msgid "Checkmk versions"
 msgstr "Perioada de timp Noua"
 
 msgid ""
@@ -11336,6 +11310,13 @@ msgstr ""
 msgid "Current date"
 msgstr "Parola"
 
+#, fuzzy
+msgid "Current details"
+msgstr "servicii"
+
+msgid "Current details (Previously named: long output)"
+msgstr ""
+
 msgid "Current host check attempt"
 msgstr ""
 
@@ -12199,6 +12180,10 @@ msgstr "Nume tablespace"
 
 msgid "Database Availability Group (DAG) (Windows)"
 msgstr ""
+
+#, fuzzy
+msgid "Database Connections"
+msgstr "Conexiuni Active"
 
 msgid "Database Files are restored"
 msgstr ""
@@ -13484,14 +13469,15 @@ msgstr ""
 msgid "Details"
 msgstr ""
 
-msgid "Details (Previously named: long output)"
-msgstr ""
-
 msgid "Details about a historical event history entry"
 msgstr ""
 
 msgid "Details about one event"
 msgstr ""
+
+#, fuzzy
+msgid "Details history"
+msgstr "Întreruperi adhoc"
 
 msgid "Detect network parent hosts"
 msgstr ""
@@ -15073,12 +15059,6 @@ msgstr ""
 #, fuzzy
 msgid "Docker Disk Usage Count"
 msgstr "Mesajul Text"
-
-msgid "Docker containers"
-msgstr ""
-
-msgid "Docker images"
-msgstr ""
 
 msgid "Docker node"
 msgstr ""
@@ -17994,9 +17974,6 @@ msgstr ""
 msgid "Falling"
 msgstr ""
 
-msgid "Fan"
-msgstr ""
-
 msgid "Fan Name"
 msgstr ""
 
@@ -18004,9 +17981,6 @@ msgid "Fan speed"
 msgstr ""
 
 msgid "Fan speed of hardware devices (in percent)"
-msgstr ""
-
-msgid "Fans"
 msgstr ""
 
 msgid "Favorite entry of user"
@@ -19208,20 +19182,6 @@ msgstr ""
 msgid "GCP services to monitor"
 msgstr "Adaugă instanță pentru monitorizare"
 
-msgid "GCP/Cloud Run Cpu"
-msgstr ""
-
-msgid "GCP/Cloud Run Memory"
-msgstr ""
-
-#, fuzzy
-msgid "GCP/Cloud Run Network"
-msgstr "Adresă"
-
-#, fuzzy
-msgid "GCP/Cloud Run Requests"
-msgstr "cereri"
-
 msgid "GCP/Cloud SQL CPU"
 msgstr ""
 
@@ -19244,18 +19204,6 @@ msgstr "cereri"
 #, fuzzy
 msgid "GCP/Filestore"
 msgstr "Spațiu liber exact"
-
-#, fuzzy
-msgid "GCP/Function execution"
-msgstr "Numarul maxim de conexiuni"
-
-#, fuzzy
-msgid "GCP/Function instances"
-msgstr "Adaugă instanță NGINX"
-
-#, fuzzy
-msgid "GCP/Function network"
-msgstr "Conexiune Noua"
 
 msgid "GCP/GCE CPU"
 msgstr ""
@@ -19908,12 +19856,6 @@ msgstr ""
 #, fuzzy
 msgid "HW Information"
 msgstr "Informații Adiționale"
-
-msgid "HW container"
-msgstr ""
-
-msgid "HW containers"
-msgstr ""
 
 msgid "HW/SW inventory"
 msgstr ""
@@ -24879,14 +24821,6 @@ msgstr ""
 msgid "Kernel"
 msgstr ""
 
-#, fuzzy
-msgid "Kernel configuration (sysctl)"
-msgstr "foloseste configuratia locala"
-
-#, fuzzy
-msgid "Kernel configurations (sysctl)"
-msgstr "foloseste configuratia locala"
-
 msgid "Kernel stack"
 msgstr ""
 
@@ -25528,6 +25462,10 @@ msgid "Levels clients"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
+msgid "Levels connections"
+msgstr "Conexiune Noua"
+
+#, fuzzy
 msgid "Levels disk"
 msgstr "Nivelurile maxime pentru voltaj"
 
@@ -25900,6 +25838,10 @@ msgstr "Nivelurile maxime pentru voltaj"
 msgid "Levels monthly GCP costs"
 msgstr "Nivelurile maxime pentru voltaj"
 
+#, fuzzy
+msgid "Levels network"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
 #, python-format
 msgid "Levels of %s %s"
 msgstr ""
@@ -25970,24 +25912,12 @@ msgid "Levels on ingress data in bytes"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
-msgid "Levels on instances"
-msgstr "Nivel-urile absolute de licențe neutilizate"
-
-#, fuzzy
 msgid "Levels on latency"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
-msgid "Levels on network"
-msgstr "Nivel-urile absolute de licențe neutilizate"
-
-#, fuzzy
 msgid "Levels on network traffic"
 msgstr "Nivel-urile absolute de licențe neutilizate"
-
-#, fuzzy
-msgid "Levels on performance"
-msgstr "Acces la Consola de Evenimente"
 
 #, fuzzy
 msgid "Levels on read capacity"
@@ -26069,7 +25999,7 @@ msgid "Levels replication"
 msgstr "Optiuni tabel"
 
 #, fuzzy
-msgid "Levels requests"
+msgid "Levels storage"
 msgstr "Nivelurile maxime pentru voltaj"
 
 msgid "Libelle Business Shadow"
@@ -27656,10 +27586,6 @@ msgstr ""
 msgid "Management type"
 msgstr "Adaugă element"
 
-#, fuzzy
-msgid "Manager"
-msgstr "Statusul Serverului"
-
 msgid "Manual"
 msgstr ""
 
@@ -28345,7 +28271,7 @@ msgid "Maximum number of cached log messages"
 msgstr ""
 
 #, fuzzy
-msgid "Maximum number of characters in to show"
+msgid "Maximum number of characters to show"
 msgstr "Numarul maxim de incercari de verificare pentru element"
 
 msgid "Maximum number of check attempts for host"
@@ -29382,10 +29308,6 @@ msgstr ""
 msgid "Module name or empty"
 msgstr ""
 
-#, fuzzy
-msgid "Modules"
-msgstr "Reguli"
-
 msgid "Monday"
 msgstr ""
 
@@ -30404,6 +30326,10 @@ msgstr "Statusul Serverului"
 msgid "Network"
 msgstr "Adresă"
 
+#, fuzzy
+msgid "Network IO"
+msgstr "Adresă"
+
 msgid "Network Load Balancer Listeners"
 msgstr ""
 
@@ -30431,7 +30357,7 @@ msgid "Network filesystem - overall status and usage (e.g. NFS)"
 msgstr ""
 
 #, fuzzy
-msgid "Network interface"
+msgid "Network in"
 msgstr "Adresă"
 
 #, fuzzy
@@ -30440,10 +30366,6 @@ msgstr "Starea porturilor pentru inventariere"
 
 msgid "Network interface groups"
 msgstr ""
-
-#, fuzzy
-msgid "Network interfaces"
-msgstr "Adresă"
 
 msgid "Network interfaces and switch ports"
 msgstr ""
@@ -30457,6 +30379,10 @@ msgstr "Adresă"
 
 #, fuzzy
 msgid "Network interfaces: last hour view"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Network out"
 msgstr "Adresă"
 
 #, fuzzy
@@ -30483,10 +30409,6 @@ msgstr ""
 
 msgid "Networking"
 msgstr ""
-
-#, fuzzy
-msgid "Networking Tunnels"
-msgstr "Adresă"
 
 msgid "Networking checks without agent"
 msgstr ""
@@ -32034,31 +31956,11 @@ msgstr ""
 msgid "Number of relocating shards"
 msgstr "Numarul maxim de conexiuni"
 
-#, fuzzy
-msgid "Number of requests"
-msgstr "Numarul maxim de conexiuni"
-
-msgid "Number of requests with return code class 2xx (sucess)"
-msgstr ""
-
-msgid "Number of requests with return code class 3xx (redirection)"
-msgstr ""
-
-msgid "Number of requests with return code class 4xx (client error)"
-msgstr ""
-
-msgid "Number of requests with return code class 5xx (server error)"
-msgstr ""
-
 msgid "Number of retries"
 msgstr ""
 
 msgid "Number of retries (not counting the initial regular run)"
 msgstr ""
-
-#, fuzzy
-msgid "Number of running containers"
-msgstr "Numarul maxim de conexiuni"
 
 #, fuzzy
 msgid "Number of search results"
@@ -33005,10 +32907,6 @@ msgid "Oracle Long Active Sessions"
 msgstr ""
 
 #, fuzzy
-msgid "Oracle PGA performance"
-msgstr "Starea porturilor pentru inventariere"
-
-#, fuzzy
 msgid "Oracle Performance"
 msgstr "Starea porturilor pentru inventariere"
 
@@ -33024,10 +32922,6 @@ msgstr ""
 msgid "Oracle Recovery Status"
 msgstr ""
 
-#, fuzzy
-msgid "Oracle SGA performance"
-msgstr "Starea porturilor pentru inventariere"
-
 msgid "Oracle Scheduler Job"
 msgstr ""
 
@@ -33040,45 +32934,9 @@ msgstr ""
 msgid "Oracle Undo Retention"
 msgstr ""
 
-msgid "Oracle dataguard statistic"
-msgstr ""
-
-msgid "Oracle dataguard statistics"
-msgstr ""
-
-#, fuzzy
-msgid "Oracle instance"
-msgstr "Adaugă instanță NGINX"
-
-#, fuzzy
-msgid "Oracle instances"
-msgstr "Adaugă instanță NGINX"
-
 #, fuzzy
 msgid "Oracle performance discovery"
 msgstr "Starea porturilor pentru inventariere"
-
-msgid "Oracle recovery area"
-msgstr ""
-
-msgid "Oracle recovery areas"
-msgstr ""
-
-#, fuzzy
-msgid "Oracle system parameter"
-msgstr "Nume nou"
-
-#, fuzzy
-msgid "Oracle system parameters"
-msgstr "Nume nou"
-
-#, fuzzy
-msgid "Oracle tablespace"
-msgstr "Nume tablespace"
-
-#, fuzzy
-msgid "Oracle tablespaces"
-msgstr "Nume tablespace"
 
 msgid "Order"
 msgstr ""
@@ -33131,14 +32989,6 @@ msgstr "cu comentariu"
 #, fuzzy
 msgid "Other dashboards"
 msgstr "rapoarte"
-
-#, fuzzy
-msgid "Other entities"
-msgstr "Setari"
-
-#, fuzzy
-msgid "Other entity"
-msgstr "Setari"
 
 #, fuzzy
 msgid "Other integrations"
@@ -35230,12 +35080,6 @@ msgstr "Nume AP"
 msgid "Power Usage"
 msgstr ""
 
-msgid "Power supplies"
-msgstr ""
-
-msgid "Power supply"
-msgstr ""
-
 msgid "Powered OFF"
 msgstr ""
 
@@ -35909,10 +35753,6 @@ msgstr ""
 
 msgid "Query or SQL statement"
 msgstr ""
-
-#, fuzzy
-msgid "Queue"
-msgstr "Nume nou"
 
 msgid "Queue Latency"
 msgstr ""
@@ -39417,9 +39257,6 @@ msgstr ""
 msgid "Sensor threshold"
 msgstr ""
 
-msgid "Sensors"
-msgstr ""
-
 msgid "Sent"
 msgstr ""
 
@@ -39459,6 +39296,14 @@ msgstr "Numele Elementului"
 #, fuzzy
 msgid "Server latency"
 msgstr "Statusul Serverului"
+
+#, fuzzy
+msgid "Server log storage"
+msgstr "Statusul Serverului"
+
+#, fuzzy
+msgid "Server log storage used"
+msgstr "spatiu utilizat"
 
 msgid "Server performance"
 msgstr ""
@@ -41416,12 +41261,6 @@ msgstr ""
 msgid "Soft query limit"
 msgstr ""
 
-msgid "Software package"
-msgstr ""
-
-msgid "Software packages"
-msgstr ""
-
 msgid "Solaris"
 msgstr ""
 
@@ -42177,18 +42016,12 @@ msgstr ""
 msgid "Sqlnet Send timeout"
 msgstr ""
 
-msgid "Stack"
-msgstr ""
-
 msgid "Stacked"
 msgstr ""
 
 #, fuzzy
 msgid "Stacked Area"
 msgstr "Acces la Agenți"
-
-msgid "Stacks"
-msgstr ""
 
 msgid "Stale"
 msgstr ""
@@ -43246,6 +43079,18 @@ msgstr ""
 
 msgid "Stopping VMs"
 msgstr ""
+
+#, fuzzy
+msgid "Storage"
+msgstr "Dimensiunea Maxima"
+
+#, fuzzy
+msgid "Storage IO"
+msgstr "Dimensiunea Maxima"
+
+#, fuzzy
+msgid "Storage IO consumption"
+msgstr "APC consum de Curent"
 
 msgid "Storage Processor Utilization"
 msgstr ""
@@ -52374,14 +52219,6 @@ msgstr ""
 msgid "Unknown date"
 msgstr ""
 
-#, fuzzy
-msgid "Unknown entities"
-msgstr "% întrări libere"
-
-#, fuzzy
-msgid "Unknown entity"
-msgstr "necunoscut (agent vechi)"
-
 #, python-format
 msgid "Unknown group: %s"
 msgstr ""
@@ -58020,10 +57857,6 @@ msgstr "Verificări active"
 msgid "active hosts"
 msgstr "Verificări active"
 
-#, fuzzy
-msgid "active instances"
-msgstr "Adaugă instanță NGINX"
-
 msgid "add \"ISL\" to service description for interswitch links"
 msgstr ""
 
@@ -58156,10 +57989,6 @@ msgstr ""
 
 msgid "best state"
 msgstr ""
-
-#, fuzzy
-msgid "billable time"
-msgstr "Proprietatile Folderului"
 
 msgid "bindings"
 msgstr ""
@@ -58535,14 +58364,6 @@ msgstr ""
 msgid "execute the action \"%s\""
 msgstr ""
 
-#, fuzzy
-msgid "execution count"
-msgstr "Verificări active"
-
-#, fuzzy
-msgid "execution time"
-msgstr "Verificări active"
-
 msgid "exists"
 msgstr ""
 
@@ -58904,10 +58725,6 @@ msgstr ""
 msgid "inodes"
 msgstr ""
 
-#, fuzzy
-msgid "instances"
-msgstr "Adaugă instanță NGINX"
-
 msgid "internal"
 msgstr ""
 
@@ -59066,10 +58883,6 @@ msgstr ""
 #, fuzzy
 msgid "maximum"
 msgstr "Vechimea maxima"
-
-#, fuzzy
-msgid "memory"
-msgstr "Nume nou"
 
 #, fuzzy
 msgid "message"
@@ -60007,6 +59820,174 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "99th percentile request latency"
+#~ msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+#~ msgid "Channel"
+#~ msgstr "Nici o schimbare"
+
+#, fuzzy
+#~ msgid "Checkmk site"
+#~ msgstr "Privire de ansamblu"
+
+#, fuzzy
+#~ msgid "Checkmk sites"
+#~ msgstr "Privire de ansamblu"
+
+#, fuzzy
+#~ msgid "Checkmk version"
+#~ msgstr "Perioada de timp Noua"
+
+#, fuzzy
+#~ msgid "Checkmk versions"
+#~ msgstr "Perioada de timp Noua"
+
+#, fuzzy
+#~ msgid "GCP/Cloud Run Network"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~ msgid "GCP/Cloud Run Requests"
+#~ msgstr "cereri"
+
+#, fuzzy
+#~ msgid "GCP/Function execution"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~ msgid "GCP/Function instances"
+#~ msgstr "Adaugă instanță NGINX"
+
+#, fuzzy
+#~ msgid "GCP/Function network"
+#~ msgstr "Conexiune Noua"
+
+#, fuzzy
+#~ msgid "Kernel configuration (sysctl)"
+#~ msgstr "foloseste configuratia locala"
+
+#, fuzzy
+#~ msgid "Kernel configurations (sysctl)"
+#~ msgstr "foloseste configuratia locala"
+
+#, fuzzy
+#~ msgid "Levels on instances"
+#~ msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+#~ msgid "Levels on performance"
+#~ msgstr "Acces la Consola de Evenimente"
+
+#, fuzzy
+#~ msgid "Levels requests"
+#~ msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+#~ msgid "Manager"
+#~ msgstr "Statusul Serverului"
+
+#, fuzzy
+#~ msgid "Modules"
+#~ msgstr "Reguli"
+
+#, fuzzy
+#~ msgid "Network interface"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~ msgid "Network interfaces"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~ msgid "Networking Tunnels"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~ msgid "Number of requests"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~ msgid "Number of running containers"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~ msgid "Oracle PGA performance"
+#~ msgstr "Starea porturilor pentru inventariere"
+
+#, fuzzy
+#~ msgid "Oracle SGA performance"
+#~ msgstr "Starea porturilor pentru inventariere"
+
+#, fuzzy
+#~ msgid "Oracle instance"
+#~ msgstr "Adaugă instanță NGINX"
+
+#, fuzzy
+#~ msgid "Oracle instances"
+#~ msgstr "Adaugă instanță NGINX"
+
+#, fuzzy
+#~ msgid "Oracle system parameter"
+#~ msgstr "Nume nou"
+
+#, fuzzy
+#~ msgid "Oracle system parameters"
+#~ msgstr "Nume nou"
+
+#, fuzzy
+#~ msgid "Oracle tablespace"
+#~ msgstr "Nume tablespace"
+
+#, fuzzy
+#~ msgid "Oracle tablespaces"
+#~ msgstr "Nume tablespace"
+
+#, fuzzy
+#~ msgid "Other entities"
+#~ msgstr "Setari"
+
+#, fuzzy
+#~ msgid "Other entity"
+#~ msgstr "Setari"
+
+#, fuzzy
+#~ msgid "Queue"
+#~ msgstr "Nume nou"
+
+#, fuzzy
+#~ msgid "Unknown entities"
+#~ msgstr "% întrări libere"
+
+#, fuzzy
+#~ msgid "Unknown entity"
+#~ msgstr "necunoscut (agent vechi)"
+
+#, fuzzy
+#~ msgid "active instances"
+#~ msgstr "Adaugă instanță NGINX"
+
+#, fuzzy
+#~ msgid "billable time"
+#~ msgstr "Proprietatile Folderului"
+
+#, fuzzy
+#~ msgid "execution count"
+#~ msgstr "Verificări active"
+
+#, fuzzy
+#~ msgid "execution time"
+#~ msgstr "Verificări active"
+
+#, fuzzy
+#~ msgid "instances"
+#~ msgstr "Adaugă instanță NGINX"
+
+#, fuzzy
+#~ msgid "memory"
+#~ msgstr "Nume nou"
+
+#, fuzzy
 #~ msgid "SAP value discovery"
 #~ msgstr "Inventariere in masa"
 
@@ -60646,10 +60627,6 @@ msgstr ""
 #~ msgstr "cereri"
 
 #, fuzzy
-#~ msgid "Average consumption"
-#~ msgstr "APC consum de Curent"
-
-#, fuzzy
 #~ msgid "Average latency of successful GetItem requests"
 #~ msgstr "Vechimea maxima a backup-urilor"
 
@@ -60846,10 +60823,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Documents fragmentation"
 #~ msgstr "Numele Elementului"
-
-#, fuzzy
-#~ msgid "Downtime history"
-#~ msgstr "Întreruperi adhoc"
 
 #, fuzzy
 #~ msgid "Duration of Lambda functions"
@@ -61148,10 +61121,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "Network Adapters"
-#~ msgstr "Adresă"
-
-#, fuzzy
-#~ msgid "Network ID"
 #~ msgstr "Adresă"
 
 #, fuzzy

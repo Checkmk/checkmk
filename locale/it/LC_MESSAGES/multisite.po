@@ -1094,10 +1094,6 @@ msgstr "86% - 1,5 deviazioni standard"
 msgid "95% - Two standard deviations"
 msgstr "95% - Due deviazioni standard"
 
-#, fuzzy
-msgid "99th percentile request latency"
-msgstr "Livelli superiori sulla latenza totale della richiesta"
-
 msgid ""
 "<a href='wato.py?mode=edit_ruleset&varname=piggyback_translation'>Piggyback "
 "translations</a> are performed before the piggyback connector creates hosts. "
@@ -6352,6 +6348,10 @@ msgstr "Azure AD Connect"
 msgid "Azure Agent Info"
 msgstr "Informazioni sull'agente Azure"
 
+#, fuzzy
+msgid "Azure DB Storage"
+msgstr "Archiviazione Azure"
+
 msgid "Azure Databases"
 msgstr "Basi di dati Azure"
 
@@ -6530,12 +6530,6 @@ msgstr "Panoramica dei lavori in background"
 
 msgid "Background shading for rows"
 msgstr "Ombreggiatura di sfondo per le righe"
-
-msgid "Backplane"
-msgstr "Backplane"
-
-msgid "Backplanes"
-msgstr "Backplanes"
 
 #, fuzzy
 msgid "Backup code"
@@ -8645,9 +8639,6 @@ msgstr "Cambiamenti"
 msgid "Changes since last dump"
 msgstr "Cambiamenti dall'ultimo dump"
 
-msgid "Channel"
-msgstr "Canale"
-
 msgid "Channel state"
 msgstr "Stato del canale"
 
@@ -9204,26 +9195,14 @@ msgstr ""
 msgid "Checkmk helper usage"
 msgstr "Uso dell'helper Checkmk"
 
-msgid "Checkmk site"
-msgstr "Sito Checkmk"
-
 msgid "Checkmk site objects"
 msgstr "Oggetti del sito Checkmk"
 
 msgid "Checkmk site performance and settings"
 msgstr "Prestazioni e impostazioni del sito Checkmk"
 
-msgid "Checkmk sites"
-msgstr "Siti Checkmk"
-
 msgid "Checkmk specific"
 msgstr "Checkmk specifico"
-
-msgid "Checkmk version"
-msgstr "Versione Checkmk"
-
-msgid "Checkmk versions"
-msgstr "Versioni Checkmk"
 
 msgid ""
 "Checkmk was not not supporting special characters (like Umlauts) in User-"
@@ -12096,6 +12075,14 @@ msgstr "Tentativo di controllo corrente"
 msgid "Current date"
 msgstr "Data attuale"
 
+#, fuzzy
+msgid "Current details"
+msgstr "Dettagli dell'evento"
+
+#, fuzzy
+msgid "Current details (Previously named: long output)"
+msgstr "Dettagli (precedentemente chiamato: uscita lunga)"
+
 msgid "Current host check attempt"
 msgstr "Attuale tentativo di controllo dell'host"
 
@@ -12905,6 +12892,10 @@ msgstr "SID del database"
 
 msgid "Database Availability Group (DAG) (Windows)"
 msgstr "Database Availability Group (DAG) (Windows)"
+
+#, fuzzy
+msgid "Database Connections"
+msgstr "Connessioni al database MongoDB"
 
 msgid "Database Files are restored"
 msgstr "I file del database vengono ripristinati"
@@ -14211,14 +14202,15 @@ msgstr "Cronologia dettagliata degli eventi per ogni oggetto"
 msgid "Details"
 msgstr "Dettagli"
 
-msgid "Details (Previously named: long output)"
-msgstr "Dettagli (precedentemente chiamato: uscita lunga)"
-
 msgid "Details about a historical event history entry"
 msgstr "Dettagli su una voce della storia di un evento storico"
 
 msgid "Details about one event"
 msgstr "Dettagli su un evento"
+
+#, fuzzy
+msgid "Details history"
+msgstr "Storia dei tempi di inattività"
 
 msgid "Detect network parent hosts"
 msgstr "Rileva gli host genitori della rete"
@@ -15797,12 +15789,6 @@ msgstr "Uso del disco di Docker"
 
 msgid "Docker Disk Usage Count"
 msgstr "Conteggio dell'uso del disco di Docker"
-
-msgid "Docker containers"
-msgstr "Contenitori Docker"
-
-msgid "Docker images"
-msgstr "Immagini Docker"
 
 msgid "Docker node"
 msgstr "Nodo Docker"
@@ -18736,9 +18722,6 @@ msgstr "Modello di fallback (%s): ID sconosciuto %s"
 msgid "Falling"
 msgstr "Caduta di"
 
-msgid "Fan"
-msgstr "Ventilatore"
-
 msgid "Fan Name"
 msgstr "Nome del ventilatore"
 
@@ -18747,9 +18730,6 @@ msgstr "Velocità del ventilatore"
 
 msgid "Fan speed of hardware devices (in percent)"
 msgstr "Velocità della ventola dei dispositivi hardware (in percentuale)"
-
-msgid "Fans"
-msgstr "Fan"
 
 msgid "Favorite entry of user"
 msgstr "Voce preferita dell'utente"
@@ -20017,20 +19997,6 @@ msgstr "TCP Connect"
 msgid "GCP services to monitor"
 msgstr "Servizi globali per monitorare"
 
-msgid "GCP/Cloud Run Cpu"
-msgstr "GCP/Cloud Run Cpu"
-
-msgid "GCP/Cloud Run Memory"
-msgstr "Memoria di esecuzione GCP/Cloud"
-
-#, fuzzy
-msgid "GCP/Cloud Run Network"
-msgstr "Rete IP"
-
-#, fuzzy
-msgid "GCP/Cloud Run Requests"
-msgstr "Richieste IPv6"
-
 msgid "GCP/Cloud SQL CPU"
 msgstr "CPU GCP/Cloud SQL"
 
@@ -20053,18 +20019,6 @@ msgstr "Richieste IPv6"
 #, fuzzy
 msgid "GCP/Filestore"
 msgstr "Filesystem"
-
-#, fuzzy
-msgid "GCP/Function execution"
-msgstr "Massimo di esecuzioni simultanee"
-
-#, fuzzy
-msgid "GCP/Function instances"
-msgstr "Rilevare automaticamente le istanze"
-
-#, fuzzy
-msgid "GCP/Function network"
-msgstr "Test di connessione"
 
 msgid "GCP/GCE CPU"
 msgstr "CPU GCP/GCE"
@@ -20716,12 +20670,6 @@ msgstr ""
 #, fuzzy
 msgid "HW Information"
 msgstr "Informazioni"
-
-msgid "HW container"
-msgstr "Contenitore HW"
-
-msgid "HW containers"
-msgstr "Contenitori HW"
 
 msgid "HW/SW inventory"
 msgstr "Inventario HW/SW"
@@ -26696,12 +26644,6 @@ msgstr "Kerberos"
 msgid "Kernel"
 msgstr "Kernel"
 
-msgid "Kernel configuration (sysctl)"
-msgstr "Configurazione del kernel (sysctl)"
-
-msgid "Kernel configurations (sysctl)"
-msgstr "Configurazioni del kernel (sysctl)"
-
 msgid "Kernel stack"
 msgstr "Pila del kernel"
 
@@ -27327,6 +27269,10 @@ msgid "Levels clients"
 msgstr "Clienti Redis"
 
 #, fuzzy
+msgid "Levels connections"
+msgstr "Congiunzioni di livello"
+
+#, fuzzy
 msgid "Levels disk"
 msgstr "Livelli"
 
@@ -27657,6 +27603,10 @@ msgstr "Livelli per la memoria"
 msgid "Levels monthly GCP costs"
 msgstr "Livelli di latenza"
 
+#, fuzzy
+msgid "Levels network"
+msgstr "Livelli su singoli core"
+
 #, python-format
 msgid "Levels of %s %s"
 msgstr "Livelli di %s %s"
@@ -27718,24 +27668,12 @@ msgstr "Livelli sul punteggio dello stato di salute in percentuale"
 msgid "Levels on ingress data in bytes"
 msgstr "Livelli di dati in ingresso in byte"
 
-#, fuzzy
-msgid "Levels on instances"
-msgstr "Livelli su singoli core"
-
 msgid "Levels on latency"
 msgstr "Livelli di latenza"
 
 #, fuzzy
-msgid "Levels on network"
-msgstr "Livelli su singoli core"
-
-#, fuzzy
 msgid "Levels on network traffic"
 msgstr "Livelli su singoli core"
-
-#, fuzzy
-msgid "Levels on performance"
-msgstr "Prestazioni del server"
 
 #, fuzzy
 msgid "Levels on read capacity"
@@ -27819,8 +27757,8 @@ msgid "Levels replication"
 msgstr "Abilita la replica"
 
 #, fuzzy
-msgid "Levels requests"
-msgstr "Richieste di Livestatus"
+msgid "Levels storage"
+msgstr "Livelli di utilizzo della RAM"
 
 msgid "Libelle Business Shadow"
 msgstr "Ombra del business Libelle"
@@ -29386,9 +29324,6 @@ msgstr "Configurazione del consiglio di amministrazione"
 msgid "Management type"
 msgstr "Tipo di elemento"
 
-msgid "Manager"
-msgstr "Manager"
-
 msgid "Manual"
 msgstr "Manuale"
 
@@ -30028,7 +29963,8 @@ msgstr "Numero massimo di byte da ricevere"
 msgid "Maximum number of cached log messages"
 msgstr "Numero massimo di messaggi di log nella cache"
 
-msgid "Maximum number of characters in to show"
+#, fuzzy
+msgid "Maximum number of characters to show"
 msgstr "Numero massimo di caratteri da mostrare"
 
 msgid "Maximum number of check attempts for host"
@@ -31036,9 +30972,6 @@ msgstr "Nome del modulo"
 msgid "Module name or empty"
 msgstr "Nome del modulo o vuoto"
 
-msgid "Modules"
-msgstr "Moduli"
-
 msgid "Monday"
 msgstr "Lunedì"
 
@@ -32005,6 +31938,10 @@ msgstr "Stati di Netscaler VServer"
 msgid "Network"
 msgstr "Rete"
 
+#, fuzzy
+msgid "Network IO"
+msgstr "ID della rete"
+
 msgid "Network Load Balancer Listeners"
 msgstr "Ascoltatori del bilanciatore di carico di rete"
 
@@ -32029,17 +31966,15 @@ msgstr "Indirizzo di rete:"
 msgid "Network filesystem - overall status and usage (e.g. NFS)"
 msgstr "File system di rete - stato generale e utilizzo (per esempio NFS)"
 
-msgid "Network interface"
-msgstr "Interfaccia di rete"
+#, fuzzy
+msgid "Network in"
+msgstr "Networking"
 
 msgid "Network interface and switch port discovery"
 msgstr "Scoperta dell'interfaccia di rete e della porta dello switch"
 
 msgid "Network interface groups"
 msgstr "Gruppi di interfacce di rete"
-
-msgid "Network interfaces"
-msgstr "Interfacce di rete"
 
 msgid "Network interfaces and switch ports"
 msgstr "Interfacce di rete e porte dello switch"
@@ -32052,6 +31987,10 @@ msgstr "Interfacce di rete: vista dell'ultimo giorno"
 
 msgid "Network interfaces: last hour view"
 msgstr "Interfacce di rete: vista dell'ultima ora"
+
+#, fuzzy
+msgid "Network out"
+msgstr "Rete"
 
 msgid "Network scan"
 msgstr "Scansione della rete"
@@ -32075,9 +32014,6 @@ msgstr "Topologia di rete del sito %s"
 
 msgid "Networking"
 msgstr "Networking"
-
-msgid "Networking Tunnels"
-msgstr "Tunnel di rete"
 
 msgid "Networking checks without agent"
 msgstr "Controlli di rete senza agente"
@@ -33648,34 +33584,11 @@ msgstr "Numero di recuperi"
 msgid "Number of relocating shards"
 msgstr "Numero di frammenti che si trasferiscono"
 
-#, fuzzy
-msgid "Number of requests"
-msgstr "Numero di set regex"
-
-msgid "Number of requests with return code class 2xx (sucess)"
-msgstr "Numero di richieste con codice di ritorno classe 2xx (successo)"
-
-msgid "Number of requests with return code class 3xx (redirection)"
-msgstr ""
-"Numero di richieste con codice di ritorno classe 3xx (reindirizzamento)"
-
-msgid "Number of requests with return code class 4xx (client error)"
-msgstr ""
-"Numero di richieste con codice di ritorno di classe 4xx (errore del cliente)"
-
-msgid "Number of requests with return code class 5xx (server error)"
-msgstr ""
-"Numero di richieste con codice di ritorno classe 5xx (errore del server)"
-
 msgid "Number of retries"
 msgstr "Numero di tentativi"
 
 msgid "Number of retries (not counting the initial regular run)"
 msgstr "Numero di tentativi (senza contare l'esecuzione regolare iniziale)"
-
-#, fuzzy
-msgid "Number of running containers"
-msgstr "Numero di contenitori"
 
 msgid "Number of search results"
 msgstr "Numero di risultati della ricerca"
@@ -34633,9 +34546,6 @@ msgstr "Interruttori di log Oracle"
 msgid "Oracle Long Active Sessions"
 msgstr "Oracle Sessioni attive lunghe"
 
-msgid "Oracle PGA performance"
-msgstr "Oracle PGA performance"
-
 msgid "Oracle Performance"
 msgstr "Prestazioni Oracle"
 
@@ -34651,9 +34561,6 @@ msgstr "Area di recupero Oracle"
 msgid "Oracle Recovery Status"
 msgstr "Stato di recupero Oracle"
 
-msgid "Oracle SGA performance"
-msgstr "Prestazioni di Oracle SGA"
-
 msgid "Oracle Scheduler Job"
 msgstr "Oracle Scheduler Job"
 
@@ -34666,38 +34573,8 @@ msgstr "Oracle Tablespaces"
 msgid "Oracle Undo Retention"
 msgstr "Oracle Undo Retention"
 
-msgid "Oracle dataguard statistic"
-msgstr "Statistica Oracle dataguard"
-
-msgid "Oracle dataguard statistics"
-msgstr "Statistiche Oracle dataguard"
-
-msgid "Oracle instance"
-msgstr "Istanza Oracle"
-
-msgid "Oracle instances"
-msgstr "Istanze Oracle"
-
 msgid "Oracle performance discovery"
 msgstr "Scoperta delle prestazioni Oracle"
-
-msgid "Oracle recovery area"
-msgstr "Area di recupero Oracle"
-
-msgid "Oracle recovery areas"
-msgstr "Aree di recupero Oracle"
-
-msgid "Oracle system parameter"
-msgstr "Parametro di sistema Oracle"
-
-msgid "Oracle system parameters"
-msgstr "Parametri di sistema Oracle"
-
-msgid "Oracle tablespace"
-msgstr "Oracle tablespace"
-
-msgid "Oracle tablespaces"
-msgstr "Oracle tablespaces"
 
 msgid "Order"
 msgstr "Ordina"
@@ -34747,12 +34624,6 @@ msgstr "Altri componenti"
 #, fuzzy
 msgid "Other dashboards"
 msgstr "Altri cruscotti"
-
-msgid "Other entities"
-msgstr "Altre entità"
-
-msgid "Other entity"
-msgstr "Altra entità"
 
 msgid "Other integrations"
 msgstr "Altre integrazioni"
@@ -37011,12 +36882,6 @@ msgstr "Nome dell'alimentatore"
 msgid "Power Usage"
 msgstr "Uso della potenza"
 
-msgid "Power supplies"
-msgstr "Alimentatori"
-
-msgid "Power supply"
-msgstr "Alimentazione"
-
 msgid "Powered OFF"
 msgstr "Spento"
 
@@ -37659,9 +37524,6 @@ msgstr "Interrogare i log di elasticsearch"
 
 msgid "Query or SQL statement"
 msgstr "Query o dichiarazione SQL"
-
-msgid "Queue"
-msgstr "Coda"
 
 msgid "Queue Latency"
 msgstr "Latenza della coda"
@@ -41153,9 +41015,6 @@ msgstr "Stato del sensore"
 msgid "Sensor threshold"
 msgstr "Soglia del sensore"
 
-msgid "Sensors"
-msgstr "Sensori"
-
 msgid "Sent"
 msgstr "Inviato"
 
@@ -41191,6 +41050,14 @@ msgstr "Tempo del server"
 
 msgid "Server latency"
 msgstr "Latenza del server"
+
+#, fuzzy
+msgid "Server log storage"
+msgstr "Il servizio è stantio"
+
+#, fuzzy
+msgid "Server log storage used"
+msgstr "Percentuale utilizzata"
 
 msgid "Server performance"
 msgstr "Prestazioni del server"
@@ -43166,12 +43033,6 @@ msgstr "Presa"
 msgid "Soft query limit"
 msgstr "Limite di query morbido"
 
-msgid "Software package"
-msgstr "Pacchetto software"
-
-msgid "Software packages"
-msgstr "Pacchetti software"
-
 msgid "Solaris"
 msgstr "Solaris"
 
@@ -44158,17 +44019,11 @@ msgstr "Latenza Sproc"
 msgid "Sqlnet Send timeout"
 msgstr "Sqlnet Invia timeout"
 
-msgid "Stack"
-msgstr "Stack"
-
 msgid "Stacked"
 msgstr "Impilato"
 
 msgid "Stacked Area"
 msgstr "Area impilata"
-
-msgid "Stacks"
-msgstr "Pile"
 
 msgid "Stale"
 msgstr "Stantio"
@@ -45230,6 +45085,17 @@ msgstr "Contenitori fermi livelli superiori"
 
 msgid "Stopping VMs"
 msgstr "Arresto delle macchine virtuali"
+
+msgid "Storage"
+msgstr "Stoccaggio"
+
+#, fuzzy
+msgid "Storage IO"
+msgstr "Stoccaggio"
+
+#, fuzzy
+msgid "Storage IO consumption"
+msgstr "Consumo medio"
 
 msgid "Storage Processor Utilization"
 msgstr "Utilizzo del processore di archiviazione"
@@ -56736,12 +56602,6 @@ msgstr "Cambiamento di configurazione sconosciuto"
 msgid "Unknown date"
 msgstr "Data sconosciuta"
 
-msgid "Unknown entities"
-msgstr "Entità sconosciute"
-
-msgid "Unknown entity"
-msgstr "Entità sconosciuta"
-
 #, python-format
 msgid "Unknown group: %s"
 msgstr "Gruppo sconosciuto: %s"
@@ -63436,10 +63296,6 @@ msgstr "attivo / standby"
 msgid "active hosts"
 msgstr "ospiti attivi"
 
-#, fuzzy
-msgid "active instances"
-msgstr "Istanze Oracle"
-
 msgid "add \"ISL\" to service description for interswitch links"
 msgstr ""
 "aggiungere \"ISL\" alla descrizione del servizio per i collegamenti "
@@ -63573,10 +63429,6 @@ msgstr "al di sotto del valore previsto"
 
 msgid "best state"
 msgstr "migliore stato"
-
-#, fuzzy
-msgid "billable time"
-msgstr "Disponibile fino a"
 
 msgid "bindings"
 msgstr "legami"
@@ -63936,14 +63788,6 @@ msgstr "escluso"
 msgid "execute the action \"%s\""
 msgstr "eseguire l'azione \"%s\""
 
-#, fuzzy
-msgid "execution count"
-msgstr "Modalità di esecuzione"
-
-#, fuzzy
-msgid "execution time"
-msgstr "Tempo di esecuzione totale"
-
 msgid "exists"
 msgstr "esiste"
 
@@ -64281,9 +64125,6 @@ msgstr "init"
 msgid "inodes"
 msgstr "inodes"
 
-msgid "instances"
-msgstr "Istanze"
-
 msgid "internal"
 msgstr "interno"
 
@@ -64438,9 +64279,6 @@ msgstr "durata massima"
 
 msgid "maximum"
 msgstr "massimo"
-
-msgid "memory"
-msgstr "Memoria"
 
 msgid "message"
 msgid_plural "messages"
@@ -65347,6 +65185,241 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#, fuzzy
+#~| msgid "Upper levels on total request latency"
+#~ msgid "99th percentile request latency"
+#~ msgstr "Livelli superiori sulla latenza totale della richiesta"
+
+#~ msgid "Backplane"
+#~ msgstr "Backplane"
+
+#~ msgid "Backplanes"
+#~ msgstr "Backplanes"
+
+#~ msgid "Channel"
+#~ msgstr "Canale"
+
+#~ msgid "Checkmk site"
+#~ msgstr "Sito Checkmk"
+
+#~ msgid "Checkmk sites"
+#~ msgstr "Siti Checkmk"
+
+#~ msgid "Checkmk version"
+#~ msgstr "Versione Checkmk"
+
+#~ msgid "Checkmk versions"
+#~ msgstr "Versioni Checkmk"
+
+#~ msgid "Docker containers"
+#~ msgstr "Contenitori Docker"
+
+#~ msgid "Docker images"
+#~ msgstr "Immagini Docker"
+
+#~ msgid "Fan"
+#~ msgstr "Ventilatore"
+
+#~ msgid "Fans"
+#~ msgstr "Fan"
+
+#~ msgid "GCP/Cloud Run Cpu"
+#~ msgstr "GCP/Cloud Run Cpu"
+
+#~ msgid "GCP/Cloud Run Memory"
+#~ msgstr "Memoria di esecuzione GCP/Cloud"
+
+#, fuzzy
+#~| msgid "IP Network"
+#~ msgid "GCP/Cloud Run Network"
+#~ msgstr "Rete IP"
+
+#, fuzzy
+#~| msgid "IPv6 Requests"
+#~ msgid "GCP/Cloud Run Requests"
+#~ msgstr "Richieste IPv6"
+
+#, fuzzy
+#~| msgid "Maximum concurrent executions"
+#~ msgid "GCP/Function execution"
+#~ msgstr "Massimo di esecuzioni simultanee"
+
+#, fuzzy
+#~| msgid "Autodetect instances"
+#~ msgid "GCP/Function instances"
+#~ msgstr "Rilevare automaticamente le istanze"
+
+#, fuzzy
+#~| msgid "Connection tests"
+#~ msgid "GCP/Function network"
+#~ msgstr "Test di connessione"
+
+#~ msgid "HW container"
+#~ msgstr "Contenitore HW"
+
+#~ msgid "HW containers"
+#~ msgstr "Contenitori HW"
+
+#~ msgid "Kernel configuration (sysctl)"
+#~ msgstr "Configurazione del kernel (sysctl)"
+
+#~ msgid "Kernel configurations (sysctl)"
+#~ msgstr "Configurazioni del kernel (sysctl)"
+
+#, fuzzy
+#~| msgid "Levels on single cores"
+#~ msgid "Levels on instances"
+#~ msgstr "Livelli su singoli core"
+
+#, fuzzy
+#~| msgid "Server performance"
+#~ msgid "Levels on performance"
+#~ msgstr "Prestazioni del server"
+
+#, fuzzy
+#~| msgid "Livestatus requests"
+#~ msgid "Levels requests"
+#~ msgstr "Richieste di Livestatus"
+
+#~ msgid "Manager"
+#~ msgstr "Manager"
+
+#~ msgid "Modules"
+#~ msgstr "Moduli"
+
+#~ msgid "Network interface"
+#~ msgstr "Interfaccia di rete"
+
+#~ msgid "Network interfaces"
+#~ msgstr "Interfacce di rete"
+
+#~ msgid "Networking Tunnels"
+#~ msgstr "Tunnel di rete"
+
+#, fuzzy
+#~| msgid "Number of regex sets"
+#~ msgid "Number of requests"
+#~ msgstr "Numero di set regex"
+
+#~ msgid "Number of requests with return code class 2xx (sucess)"
+#~ msgstr "Numero di richieste con codice di ritorno classe 2xx (successo)"
+
+#~ msgid "Number of requests with return code class 3xx (redirection)"
+#~ msgstr ""
+#~ "Numero di richieste con codice di ritorno classe 3xx (reindirizzamento)"
+
+#~ msgid "Number of requests with return code class 4xx (client error)"
+#~ msgstr ""
+#~ "Numero di richieste con codice di ritorno di classe 4xx (errore del "
+#~ "cliente)"
+
+#~ msgid "Number of requests with return code class 5xx (server error)"
+#~ msgstr ""
+#~ "Numero di richieste con codice di ritorno classe 5xx (errore del server)"
+
+#, fuzzy
+#~| msgid "Number of containers"
+#~ msgid "Number of running containers"
+#~ msgstr "Numero di contenitori"
+
+#~ msgid "Oracle PGA performance"
+#~ msgstr "Oracle PGA performance"
+
+#~ msgid "Oracle SGA performance"
+#~ msgstr "Prestazioni di Oracle SGA"
+
+#~ msgid "Oracle dataguard statistic"
+#~ msgstr "Statistica Oracle dataguard"
+
+#~ msgid "Oracle dataguard statistics"
+#~ msgstr "Statistiche Oracle dataguard"
+
+#~ msgid "Oracle instance"
+#~ msgstr "Istanza Oracle"
+
+#~ msgid "Oracle instances"
+#~ msgstr "Istanze Oracle"
+
+#~ msgid "Oracle recovery area"
+#~ msgstr "Area di recupero Oracle"
+
+#~ msgid "Oracle recovery areas"
+#~ msgstr "Aree di recupero Oracle"
+
+#~ msgid "Oracle system parameter"
+#~ msgstr "Parametro di sistema Oracle"
+
+#~ msgid "Oracle system parameters"
+#~ msgstr "Parametri di sistema Oracle"
+
+#~ msgid "Oracle tablespace"
+#~ msgstr "Oracle tablespace"
+
+#~ msgid "Oracle tablespaces"
+#~ msgstr "Oracle tablespaces"
+
+#~ msgid "Other entities"
+#~ msgstr "Altre entità"
+
+#~ msgid "Other entity"
+#~ msgstr "Altra entità"
+
+#~ msgid "Power supplies"
+#~ msgstr "Alimentatori"
+
+#~ msgid "Power supply"
+#~ msgstr "Alimentazione"
+
+#~ msgid "Queue"
+#~ msgstr "Coda"
+
+#~ msgid "Sensors"
+#~ msgstr "Sensori"
+
+#~ msgid "Software package"
+#~ msgstr "Pacchetto software"
+
+#~ msgid "Software packages"
+#~ msgstr "Pacchetti software"
+
+#~ msgid "Stack"
+#~ msgstr "Stack"
+
+#~ msgid "Stacks"
+#~ msgstr "Pile"
+
+#~ msgid "Unknown entities"
+#~ msgstr "Entità sconosciute"
+
+#~ msgid "Unknown entity"
+#~ msgstr "Entità sconosciuta"
+
+#, fuzzy
+#~| msgid "Oracle instances"
+#~ msgid "active instances"
+#~ msgstr "Istanze Oracle"
+
+#, fuzzy
+#~| msgid "Available till"
+#~ msgid "billable time"
+#~ msgstr "Disponibile fino a"
+
+#, fuzzy
+#~| msgid "Execution Mode"
+#~ msgid "execution count"
+#~ msgstr "Modalità di esecuzione"
+
+#, fuzzy
+#~| msgid "Total execution time"
+#~ msgid "execution time"
+#~ msgstr "Tempo di esecuzione totale"
+
+#~ msgid "instances"
+#~ msgstr "Istanze"
+
+#~ msgid "memory"
+#~ msgstr "Memoria"
 
 #~ msgid ""
 #~ "The IP of the other hostname needs to be the same IP as the host address"
@@ -67163,9 +67236,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 #~ msgid "Available physical processors in shared pool"
 #~ msgstr "Processori fisici disponibili nel pool condiviso"
 
-#~ msgid "Average consumption"
-#~ msgstr "Consumo medio"
-
 #~ msgid "Average latency of successful GetItem requests"
 #~ msgstr "Latenza media delle richieste GetItem riuscite"
 
@@ -67604,9 +67674,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
 #~ msgid "Documents fragmentation"
 #~ msgstr "Frammentazione dei documenti"
-
-#~ msgid "Downtime history"
-#~ msgstr "Storia dei tempi di inattività"
 
 #~ msgid "Downtimes of host"
 #~ msgstr "Tempi di inattività dell'host"
@@ -68320,9 +68387,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 #~ msgid "Network Adapters"
 #~ msgstr "Adattatori di rete"
 
-#~ msgid "Network ID"
-#~ msgstr "ID della rete"
-
 #~ msgid "Networks"
 #~ msgstr "Reti"
 
@@ -68918,9 +68982,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
 #~ msgid "Stopped collectors"
 #~ msgstr "Collezionisti fermi"
-
-#~ msgid "Storage"
-#~ msgstr "Stoccaggio"
 
 #~ msgid "Storage Processor utilization"
 #~ msgstr "Storage Utilizzo del processore"

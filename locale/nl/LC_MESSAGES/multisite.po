@@ -1090,9 +1090,6 @@ msgstr "86% - 1.5 standaard afwijkingen"
 msgid "95% - Two standard deviations"
 msgstr "95% - Twee standaard afwijkingen"
 
-msgid "99th percentile request latency"
-msgstr "99e percentiel verzoeklatentie"
-
 msgid ""
 "<a href='wato.py?mode=edit_ruleset&varname=piggyback_translation'>Piggyback "
 "translations</a> are performed before the piggyback connector creates hosts. "
@@ -6281,6 +6278,10 @@ msgstr "Azure AD Connect"
 msgid "Azure Agent Info"
 msgstr "Azure Agent Info"
 
+#, fuzzy
+msgid "Azure DB Storage"
+msgstr "Azure Opslag"
+
 msgid "Azure Databases"
 msgstr "Azure Databases"
 
@@ -6458,12 +6459,6 @@ msgstr "Overzicht achtergrondbanen"
 
 msgid "Background shading for rows"
 msgstr "Achtergrond schaduwen voor rijen"
-
-msgid "Backplane"
-msgstr "Backplane"
-
-msgid "Backplanes"
-msgstr "Backplanes"
 
 msgid "Backup code"
 msgstr "Back-up code"
@@ -8539,9 +8534,6 @@ msgstr "Wijzigingen"
 msgid "Changes since last dump"
 msgstr "Veranderingen sinds de laatste dump"
 
-msgid "Channel"
-msgstr "Kanaal"
-
 msgid "Channel state"
 msgstr "Kanaal toestand"
 
@@ -9094,26 +9086,14 @@ msgstr ""
 msgid "Checkmk helper usage"
 msgstr "Checkmk helper gebruik"
 
-msgid "Checkmk site"
-msgstr "Checkmk site"
-
 msgid "Checkmk site objects"
 msgstr "Checkmk site objecten"
 
 msgid "Checkmk site performance and settings"
 msgstr "Checkmk site prestaties en instellingen"
 
-msgid "Checkmk sites"
-msgstr "Checkmk sites"
-
 msgid "Checkmk specific"
 msgstr "Checkmk specifiek"
-
-msgid "Checkmk version"
-msgstr "Checkmk versie"
-
-msgid "Checkmk versions"
-msgstr "Checkmk versies"
 
 msgid ""
 "Checkmk was not not supporting special characters (like Umlauts) in User-"
@@ -11929,6 +11909,14 @@ msgstr "Huidige controlepoging"
 msgid "Current date"
 msgstr "Huidige datum"
 
+#, fuzzy
+msgid "Current details"
+msgstr "Details evenement"
+
+#, fuzzy
+msgid "Current details (Previously named: long output)"
+msgstr "Details (Voorheen genaamd: lange uitvoer)"
+
 msgid "Current host check attempt"
 msgstr "Huidige host controle poging"
 
@@ -12729,6 +12717,10 @@ msgstr "Database"
 
 msgid "Database Availability Group (DAG) (Windows)"
 msgstr "Databasebeschikbaarheidsgroep (DAG) (Windows)"
+
+#, fuzzy
+msgid "Database Connections"
+msgstr "MongoDB database verbindingen"
 
 msgid "Database Files are restored"
 msgstr "Database Bestanden worden hersteld"
@@ -14003,14 +13995,15 @@ msgstr "Gedetailleerde tijdlijn van gebeurtenissen voor elk object"
 msgid "Details"
 msgstr "Details"
 
-msgid "Details (Previously named: long output)"
-msgstr "Details (Voorheen genaamd: lange uitvoer)"
-
 msgid "Details about a historical event history entry"
 msgstr "Details over een historische gebeurtenis geschiedenis item"
 
 msgid "Details about one event"
 msgstr "Details over een gebeurtenis"
+
+#, fuzzy
+msgid "Details history"
+msgstr "Geschiedenis downtime"
 
 msgid "Detect network parent hosts"
 msgstr "Detecteer netwerk moeder hosts"
@@ -15542,12 +15535,6 @@ msgstr "Docker Schijf Gebruik"
 
 msgid "Docker Disk Usage Count"
 msgstr "Docker Schijf Gebruik Telling"
-
-msgid "Docker containers"
-msgstr "Docker-containers"
-
-msgid "Docker images"
-msgstr "Docker-afbeeldingen"
 
 msgid "Docker node"
 msgstr "Docker knooppunt"
@@ -18423,9 +18410,6 @@ msgstr "Terugvalsjabloon (%s): Onbekende ID %s"
 msgid "Falling"
 msgstr "Falling"
 
-msgid "Fan"
-msgstr "Ventilator"
-
 msgid "Fan Name"
 msgstr "Naam ventilator"
 
@@ -18434,9 +18418,6 @@ msgstr "Ventilatorsnelheid"
 
 msgid "Fan speed of hardware devices (in percent)"
 msgstr "Ventilatorsnelheid van hardware-apparaten (in procenten)"
-
-msgid "Fans"
-msgstr "Fans"
 
 msgid "Favorite entry of user"
 msgstr "Favoriete invoer van gebruiker"
@@ -19691,18 +19672,6 @@ msgstr "TCP Verbinden"
 msgid "GCP services to monitor"
 msgstr "GCP-diensten voor toezicht"
 
-msgid "GCP/Cloud Run Cpu"
-msgstr "GCP/Cloud Run Cpu"
-
-msgid "GCP/Cloud Run Memory"
-msgstr "GCP/Cloud Run Geheugen"
-
-msgid "GCP/Cloud Run Network"
-msgstr "GCP/Cloud Run Netwerk"
-
-msgid "GCP/Cloud Run Requests"
-msgstr "GCP/Cloud Run Verzoeken"
-
 msgid "GCP/Cloud SQL CPU"
 msgstr "GCP/Cloud SQL CPU"
 
@@ -19720,15 +19689,6 @@ msgstr "GCP/Cloud SQL status"
 
 msgid "GCP/Filestore"
 msgstr "GCP/Bestandenmagazijn"
-
-msgid "GCP/Function execution"
-msgstr "GCP/Functie-uitvoering"
-
-msgid "GCP/Function instances"
-msgstr "GCP/Functie-instanties"
-
-msgid "GCP/Function network"
-msgstr "GCP/Functienetwerk"
 
 msgid "GCP/GCE CPU"
 msgstr "GCP/GCE CPU"
@@ -20362,12 +20322,6 @@ msgstr ""
 
 msgid "HW Information"
 msgstr "HW Informatie"
-
-msgid "HW container"
-msgstr "HW container"
-
-msgid "HW containers"
-msgstr "HW containers"
 
 msgid "HW/SW inventory"
 msgstr "HW/SW-inventaris"
@@ -26293,12 +26247,6 @@ msgstr "Kerberos"
 msgid "Kernel"
 msgstr "Kernel"
 
-msgid "Kernel configuration (sysctl)"
-msgstr "Kernel configuratie (sysctl)"
-
-msgid "Kernel configurations (sysctl)"
-msgstr "Kernel configuraties (sysctl)"
-
 msgid "Kernel stack"
 msgstr "Kernel stack"
 
@@ -26891,6 +26839,10 @@ msgstr "Niveaus Diensten"
 msgid "Levels clients"
 msgstr "Redis cliënten"
 
+#, fuzzy
+msgid "Levels connections"
+msgstr "Niveau voegwoorden"
+
 msgid "Levels disk"
 msgstr "Niveauschijf"
 
@@ -27216,6 +27168,10 @@ msgstr "Niveaus geheugen"
 msgid "Levels monthly GCP costs"
 msgstr "Niveaus op CPU belasting"
 
+#, fuzzy
+msgid "Levels network"
+msgstr "Niveaus op het netwerk"
+
 #, python-format
 msgid "Levels of %s %s"
 msgstr "Niveaus van %s %s"
@@ -27275,20 +27231,11 @@ msgstr "Niveaus op score gezondheidstoestand in procenten"
 msgid "Levels on ingress data in bytes"
 msgstr "Niveaus op ingangsgegevens in bytes"
 
-msgid "Levels on instances"
-msgstr "Niveaus op instanties"
-
 msgid "Levels on latency"
 msgstr "Niveaus op latentie"
 
-msgid "Levels on network"
-msgstr "Niveaus op het netwerk"
-
 msgid "Levels on network traffic"
 msgstr "Niveaus op netwerkverkeer"
-
-msgid "Levels on performance"
-msgstr "Niveaus op prestaties"
 
 msgid "Levels on read capacity"
 msgstr "Niveaus op leescapaciteit"
@@ -27365,8 +27312,9 @@ msgstr "Niveaus over een langere periode op het totale CPU-gebruik"
 msgid "Levels replication"
 msgstr "Inschakelen replicatie"
 
-msgid "Levels requests"
-msgstr "Niveaus verzoeken"
+#, fuzzy
+msgid "Levels storage"
+msgstr "Niveaus voor RAM-gebruik"
 
 msgid "Libelle Business Shadow"
 msgstr "Libelle Bedrijfsschaduw"
@@ -28906,9 +28854,6 @@ msgstr "Configuratie raad van bestuur"
 msgid "Management type"
 msgstr "Type beheer"
 
-msgid "Manager"
-msgstr "Manager"
-
 msgid "Manual"
 msgstr "Handmatig"
 
@@ -29537,7 +29482,8 @@ msgstr "Maximum aantal te ontvangen bytes"
 msgid "Maximum number of cached log messages"
 msgstr "Maximum aantal logboekberichten in de cache"
 
-msgid "Maximum number of characters in to show"
+#, fuzzy
+msgid "Maximum number of characters to show"
 msgstr "Maximum aantal tekens in te tonen"
 
 msgid "Maximum number of check attempts for host"
@@ -30502,9 +30448,6 @@ msgstr "Naam van de module"
 msgid "Module name or empty"
 msgstr "Naam van de module of leeg"
 
-msgid "Modules"
-msgstr "Modules"
-
 msgid "Monday"
 msgstr "Maandag"
 
@@ -31463,6 +31406,10 @@ msgstr "Netscaler VServer Staten"
 msgid "Network"
 msgstr "Netwerk"
 
+#, fuzzy
+msgid "Network IO"
+msgstr "Netwerk ID"
+
 msgid "Network Load Balancer Listeners"
 msgstr "Netwerk Load Balancer Luisteraars"
 
@@ -31487,17 +31434,15 @@ msgstr "Netwerkadres:"
 msgid "Network filesystem - overall status and usage (e.g. NFS)"
 msgstr "Netwerk bestandssysteem - algemene status en gebruik (b.v. NFS)"
 
-msgid "Network interface"
-msgstr "Netwerk interface"
+#, fuzzy
+msgid "Network in"
+msgstr "Netwerken"
 
 msgid "Network interface and switch port discovery"
 msgstr "Netwerk interface en switch poort ontdekking"
 
 msgid "Network interface groups"
 msgstr "Netwerk interface groepen"
-
-msgid "Network interfaces"
-msgstr "Netwerk interfaces"
 
 msgid "Network interfaces and switch ports"
 msgstr "Netwerkinterfaces en switchpoorten"
@@ -31510,6 +31455,10 @@ msgstr "Netwerk interfaces: laatste dag weergave"
 
 msgid "Network interfaces: last hour view"
 msgstr "Netwerk interfaces: weergave laatste uur"
+
+#, fuzzy
+msgid "Network out"
+msgstr "Netwerk"
 
 msgid "Network scan"
 msgstr "Netwerk scan"
@@ -31533,9 +31482,6 @@ msgstr "Netwerk topologie van site %s"
 
 msgid "Networking"
 msgstr "Netwerken"
-
-msgid "Networking Tunnels"
-msgstr "Netwerken tunnels"
 
 msgid "Networking checks without agent"
 msgstr "Netwerkcontroles zonder agent"
@@ -33074,29 +33020,11 @@ msgstr "Aantal terugvorderingen"
 msgid "Number of relocating shards"
 msgstr "Aantal verhuizende scherven"
 
-msgid "Number of requests"
-msgstr "Aantal verzoeken"
-
-msgid "Number of requests with return code class 2xx (sucess)"
-msgstr "Aantal verzoeken met retourcode klasse 2xx (sucess)"
-
-msgid "Number of requests with return code class 3xx (redirection)"
-msgstr "Aantal verzoeken met retourcode klasse 3xx (omleiding)"
-
-msgid "Number of requests with return code class 4xx (client error)"
-msgstr "Aantal verzoeken met retourcode klasse 4xx (cliëntfout)"
-
-msgid "Number of requests with return code class 5xx (server error)"
-msgstr "Aantal verzoeken met retourcode klasse 5xx (serverfout)"
-
 msgid "Number of retries"
 msgstr "Aantal herhalingen"
 
 msgid "Number of retries (not counting the initial regular run)"
 msgstr "Aantal herhalingen (de eerste reguliere poging niet meegerekend)"
-
-msgid "Number of running containers"
-msgstr "Aantal lopende containers"
 
 msgid "Number of search results"
 msgstr "Aantal zoekresultaten"
@@ -34029,9 +33957,6 @@ msgstr "Oracle Logswitches"
 msgid "Oracle Long Active Sessions"
 msgstr "Oracle lange actieve sessies"
 
-msgid "Oracle PGA performance"
-msgstr "Oracle PGA prestaties"
-
 msgid "Oracle Performance"
 msgstr "Oracle Prestaties"
 
@@ -34047,9 +33972,6 @@ msgstr "Oracle herstelgebied"
 msgid "Oracle Recovery Status"
 msgstr "Oracle herstelstatus"
 
-msgid "Oracle SGA performance"
-msgstr "Oracle SGA-prestaties"
-
 msgid "Oracle Scheduler Job"
 msgstr "Oracle Scheduler Job"
 
@@ -34062,38 +33984,8 @@ msgstr "Oracle Tafelspaces"
 msgid "Oracle Undo Retention"
 msgstr "Oracle Ongedaan maken Behoud"
 
-msgid "Oracle dataguard statistic"
-msgstr "Oracle dataguard statistiek"
-
-msgid "Oracle dataguard statistics"
-msgstr "Oracle dataguard statistieken"
-
-msgid "Oracle instance"
-msgstr "Oracle instantie"
-
-msgid "Oracle instances"
-msgstr "Oracle gevallen"
-
 msgid "Oracle performance discovery"
 msgstr "Oracle prestatie ontdekking"
-
-msgid "Oracle recovery area"
-msgstr "Oracle herstelgebied"
-
-msgid "Oracle recovery areas"
-msgstr "Oracle herstelgebieden"
-
-msgid "Oracle system parameter"
-msgstr "Oracle systeemparameter"
-
-msgid "Oracle system parameters"
-msgstr "Oracle systeemparameters"
-
-msgid "Oracle tablespace"
-msgstr "Oracle-ruimte"
-
-msgid "Oracle tablespaces"
-msgstr "Oracle tablespaces"
 
 msgid "Order"
 msgstr "Bestel"
@@ -34141,12 +34033,6 @@ msgstr "Andere componenten"
 #, fuzzy
 msgid "Other dashboards"
 msgstr "Andere dashboards"
-
-msgid "Other entities"
-msgstr "Andere entiteiten"
-
-msgid "Other entity"
-msgstr "Andere entiteit"
 
 msgid "Other integrations"
 msgstr "Andere integraties"
@@ -36349,12 +36235,6 @@ msgstr "Naam stroomvoorziening"
 msgid "Power Usage"
 msgstr "Stroomverbruik"
 
-msgid "Power supplies"
-msgstr "Stroomvoorziening"
-
-msgid "Power supply"
-msgstr "Stroomvoorziening"
-
 msgid "Powered OFF"
 msgstr "Uitgeschakeld"
 
@@ -36987,9 +36867,6 @@ msgstr "Zoeken in elasticsearch logs"
 
 msgid "Query or SQL statement"
 msgstr "Query of SQL verklaring"
-
-msgid "Queue"
-msgstr "Wachtrij"
 
 msgid "Queue Latency"
 msgstr "Wachtrijvertraging"
@@ -40409,9 +40286,6 @@ msgstr "Toestand van de sensor"
 msgid "Sensor threshold"
 msgstr "Sensordrempel"
 
-msgid "Sensors"
-msgstr "Sensoren"
-
 msgid "Sent"
 msgstr "Verzonden"
 
@@ -40447,6 +40321,14 @@ msgstr "Server tijd"
 
 msgid "Server latency"
 msgstr "Serververtraging"
+
+#, fuzzy
+msgid "Server log storage"
+msgstr "Service is muf"
+
+#, fuzzy
+msgid "Server log storage used"
+msgstr "Percentage gebruikt"
 
 msgid "Server performance"
 msgstr "Serverprestaties"
@@ -42385,12 +42267,6 @@ msgstr "Stopcontact"
 msgid "Soft query limit"
 msgstr "Zachte query limiet"
 
-msgid "Software package"
-msgstr "Software pakket"
-
-msgid "Software packages"
-msgstr "Software pakketten"
-
 msgid "Solaris"
 msgstr "Solaris"
 
@@ -43367,17 +43243,11 @@ msgstr "Sproc latentie"
 msgid "Sqlnet Send timeout"
 msgstr "Sqlnet Verzend timeout"
 
-msgid "Stack"
-msgstr "Stack"
-
 msgid "Stacked"
 msgstr "Stacked"
 
 msgid "Stacked Area"
 msgstr "Gestapeld gebied"
-
-msgid "Stacks"
-msgstr "Stapels"
 
 msgid "Stale"
 msgstr "Stale"
@@ -44425,6 +44295,17 @@ msgstr "Containers bovenste niveaus gestopt"
 
 msgid "Stopping VMs"
 msgstr "VM's stoppen"
+
+msgid "Storage"
+msgstr "Opslag"
+
+#, fuzzy
+msgid "Storage IO"
+msgstr "Opslag"
+
+#, fuzzy
+msgid "Storage IO consumption"
+msgstr "Gemiddeld verbruik"
 
 msgid "Storage Processor Utilization"
 msgstr "Opslag Processor Gebruik"
@@ -55829,12 +55710,6 @@ msgstr "Onbekende configuratiewijziging"
 msgid "Unknown date"
 msgstr "Onbekende datum"
 
-msgid "Unknown entities"
-msgstr "Onbekende entiteiten"
-
-msgid "Unknown entity"
-msgstr "Onbekende entiteit"
-
 #, python-format
 msgid "Unknown group: %s"
 msgstr "Onbekende groep: %s"
@@ -62463,9 +62338,6 @@ msgstr "actief / stand-by"
 msgid "active hosts"
 msgstr "actieve gastheren"
 
-msgid "active instances"
-msgstr "actieve instanties"
-
 msgid "add \"ISL\" to service description for interswitch links"
 msgstr "ISL\" toevoegen aan dienstbeschrijving voor interswitch links"
 
@@ -62592,9 +62464,6 @@ msgstr "onder voorspelde waarde"
 
 msgid "best state"
 msgstr "beste staat"
-
-msgid "billable time"
-msgstr "factureerbare tijd"
 
 msgid "bindings"
 msgstr "bindingen"
@@ -62953,12 +62822,6 @@ msgstr "uitgesloten"
 msgid "execute the action \"%s\""
 msgstr "voer de actie \"%s\" uit"
 
-msgid "execution count"
-msgstr "uitvoering telling"
-
-msgid "execution time"
-msgstr "uitvoeringstermijn"
-
 msgid "exists"
 msgstr "bestaat"
 
@@ -63290,9 +63153,6 @@ msgstr "init"
 msgid "inodes"
 msgstr "inodes"
 
-msgid "instances"
-msgstr "instanties"
-
 msgid "internal"
 msgstr "intern"
 
@@ -63444,9 +63304,6 @@ msgstr "max. duur"
 
 msgid "maximum"
 msgstr "maximum"
-
-msgid "memory"
-msgstr "geheugen"
 
 msgid "message"
 msgid_plural "messages"
@@ -64348,6 +64205,207 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "99th percentile request latency"
+#~ msgstr "99e percentiel verzoeklatentie"
+
+#~ msgid "Backplane"
+#~ msgstr "Backplane"
+
+#~ msgid "Backplanes"
+#~ msgstr "Backplanes"
+
+#~ msgid "Channel"
+#~ msgstr "Kanaal"
+
+#~ msgid "Checkmk site"
+#~ msgstr "Checkmk site"
+
+#~ msgid "Checkmk sites"
+#~ msgstr "Checkmk sites"
+
+#~ msgid "Checkmk version"
+#~ msgstr "Checkmk versie"
+
+#~ msgid "Checkmk versions"
+#~ msgstr "Checkmk versies"
+
+#~ msgid "Docker containers"
+#~ msgstr "Docker-containers"
+
+#~ msgid "Docker images"
+#~ msgstr "Docker-afbeeldingen"
+
+#~ msgid "Fan"
+#~ msgstr "Ventilator"
+
+#~ msgid "Fans"
+#~ msgstr "Fans"
+
+#~ msgid "GCP/Cloud Run Cpu"
+#~ msgstr "GCP/Cloud Run Cpu"
+
+#~ msgid "GCP/Cloud Run Memory"
+#~ msgstr "GCP/Cloud Run Geheugen"
+
+#~ msgid "GCP/Cloud Run Network"
+#~ msgstr "GCP/Cloud Run Netwerk"
+
+#~ msgid "GCP/Cloud Run Requests"
+#~ msgstr "GCP/Cloud Run Verzoeken"
+
+#~ msgid "GCP/Function execution"
+#~ msgstr "GCP/Functie-uitvoering"
+
+#~ msgid "GCP/Function instances"
+#~ msgstr "GCP/Functie-instanties"
+
+#~ msgid "GCP/Function network"
+#~ msgstr "GCP/Functienetwerk"
+
+#~ msgid "HW container"
+#~ msgstr "HW container"
+
+#~ msgid "HW containers"
+#~ msgstr "HW containers"
+
+#~ msgid "Kernel configuration (sysctl)"
+#~ msgstr "Kernel configuratie (sysctl)"
+
+#~ msgid "Kernel configurations (sysctl)"
+#~ msgstr "Kernel configuraties (sysctl)"
+
+#~ msgid "Levels on instances"
+#~ msgstr "Niveaus op instanties"
+
+#~ msgid "Levels on performance"
+#~ msgstr "Niveaus op prestaties"
+
+#~ msgid "Levels requests"
+#~ msgstr "Niveaus verzoeken"
+
+#~ msgid "Manager"
+#~ msgstr "Manager"
+
+#~ msgid "Modules"
+#~ msgstr "Modules"
+
+#~ msgid "Network interface"
+#~ msgstr "Netwerk interface"
+
+#~ msgid "Network interfaces"
+#~ msgstr "Netwerk interfaces"
+
+#~ msgid "Networking Tunnels"
+#~ msgstr "Netwerken tunnels"
+
+#~ msgid "Number of requests"
+#~ msgstr "Aantal verzoeken"
+
+#~ msgid "Number of requests with return code class 2xx (sucess)"
+#~ msgstr "Aantal verzoeken met retourcode klasse 2xx (sucess)"
+
+#~ msgid "Number of requests with return code class 3xx (redirection)"
+#~ msgstr "Aantal verzoeken met retourcode klasse 3xx (omleiding)"
+
+#~ msgid "Number of requests with return code class 4xx (client error)"
+#~ msgstr "Aantal verzoeken met retourcode klasse 4xx (cliëntfout)"
+
+#~ msgid "Number of requests with return code class 5xx (server error)"
+#~ msgstr "Aantal verzoeken met retourcode klasse 5xx (serverfout)"
+
+#~ msgid "Number of running containers"
+#~ msgstr "Aantal lopende containers"
+
+#~ msgid "Oracle PGA performance"
+#~ msgstr "Oracle PGA prestaties"
+
+#~ msgid "Oracle SGA performance"
+#~ msgstr "Oracle SGA-prestaties"
+
+#~ msgid "Oracle dataguard statistic"
+#~ msgstr "Oracle dataguard statistiek"
+
+#~ msgid "Oracle dataguard statistics"
+#~ msgstr "Oracle dataguard statistieken"
+
+#~ msgid "Oracle instance"
+#~ msgstr "Oracle instantie"
+
+#~ msgid "Oracle instances"
+#~ msgstr "Oracle gevallen"
+
+#~ msgid "Oracle recovery area"
+#~ msgstr "Oracle herstelgebied"
+
+#~ msgid "Oracle recovery areas"
+#~ msgstr "Oracle herstelgebieden"
+
+#~ msgid "Oracle system parameter"
+#~ msgstr "Oracle systeemparameter"
+
+#~ msgid "Oracle system parameters"
+#~ msgstr "Oracle systeemparameters"
+
+#~ msgid "Oracle tablespace"
+#~ msgstr "Oracle-ruimte"
+
+#~ msgid "Oracle tablespaces"
+#~ msgstr "Oracle tablespaces"
+
+#~ msgid "Other entities"
+#~ msgstr "Andere entiteiten"
+
+#~ msgid "Other entity"
+#~ msgstr "Andere entiteit"
+
+#~ msgid "Power supplies"
+#~ msgstr "Stroomvoorziening"
+
+#~ msgid "Power supply"
+#~ msgstr "Stroomvoorziening"
+
+#~ msgid "Queue"
+#~ msgstr "Wachtrij"
+
+#~ msgid "Sensors"
+#~ msgstr "Sensoren"
+
+#~ msgid "Software package"
+#~ msgstr "Software pakket"
+
+#~ msgid "Software packages"
+#~ msgstr "Software pakketten"
+
+#~ msgid "Stack"
+#~ msgstr "Stack"
+
+#~ msgid "Stacks"
+#~ msgstr "Stapels"
+
+#~ msgid "Unknown entities"
+#~ msgstr "Onbekende entiteiten"
+
+#~ msgid "Unknown entity"
+#~ msgstr "Onbekende entiteit"
+
+#~ msgid "active instances"
+#~ msgstr "actieve instanties"
+
+#~ msgid "billable time"
+#~ msgstr "factureerbare tijd"
+
+#~ msgid "execution count"
+#~ msgstr "uitvoering telling"
+
+#~ msgid "execution time"
+#~ msgstr "uitvoeringstermijn"
+
+#~ msgid "instances"
+#~ msgstr "instanties"
+
+#~ msgid "memory"
+#~ msgstr "geheugen"
 
 #~ msgid ""
 #~ "The IP of the other hostname needs to be the same IP as the host address"
@@ -66140,9 +66198,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 #~ msgid "Available physical processors in shared pool"
 #~ msgstr "Beschikbare fysieke processoren in gedeelde pool"
 
-#~ msgid "Average consumption"
-#~ msgstr "Gemiddeld verbruik"
-
 #~ msgid "Average latency of successful GetItem requests"
 #~ msgstr "Gemiddelde wachttijd van succesvolle GetItem-verzoeken"
 
@@ -66581,9 +66636,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Documents fragmentation"
 #~ msgstr "Versnippering van documenten"
-
-#~ msgid "Downtime history"
-#~ msgstr "Geschiedenis downtime"
 
 #~ msgid "Downtimes of host"
 #~ msgstr "Downtimes van host"
@@ -67292,9 +67344,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 #~ msgid "Network Adapters"
 #~ msgstr "Netwerk Adapters"
 
-#~ msgid "Network ID"
-#~ msgstr "Netwerk ID"
-
 #~ msgid "Networks"
 #~ msgstr "Netwerken"
 
@@ -67888,9 +67937,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Stopped collectors"
 #~ msgstr "Gestopte verzamelaars"
-
-#~ msgid "Storage"
-#~ msgstr "Opslag"
 
 #~ msgid "Storage Processor utilization"
 #~ msgstr "Opslag Processorgebruik"

@@ -1,0 +1,23 @@
+Title: Crash: Clustered services using predefined cluster modes
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1659695057
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p10
+
+Using Clustered services with predefined cluster mode certain services would crash
+if no summary (therefore only notice) was available for a node result.
+
+This issue occured for many check plugins but the known ones were:
+<ul>
+<li>apache_status
+<li>fileinfo_groups
+<li>if64
+<li>mrpe
+<li>ntp_time
+</ul>
+
+This issue is solved and the correct information is now displayed.

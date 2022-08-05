@@ -356,3 +356,50 @@ def test_cluster_check_failover_unprefered_node_is_not_ok(vsm: ValueStoreManager
     section = {"Nodett": [0]}
 
     assert not _is_ok(*check_failover(section=section))
+
+
+@pytest.mark.parametrize(
+    "node_results, expected_primary_result, expected_secondary_result",
+    [
+        pytest.param(
+            cluster_modes.NodeResults(
+                results={
+                    "Nodebert": [Result(state=State.OK, notice="[Nodebert]: CPU load: 0.00")],
+                    "Nodett": [Result(state=State.OK, notice="[Nodett]: CPU load: 0.00")],
+                },
+                metrics={
+                    "Nodebert": [Metric("CPULoad", 0.00335345)],
+                    "Nodett": [Metric("CPULoad", 0.00387467)],
+                },
+                ignore_results={"Nodebert": [], "Nodett": []},
+            ),
+            [
+                Result(state=State.OK, summary="Best: [Nodebert]"),
+                Result(state=State.OK, notice="[Nodebert]: CPU load: 0.00"),
+            ],
+            [
+                Result(state=State.CRIT, summary="Additional results from: [Nodett]"),
+                Result(state=State.OK, notice="[Nodett]: CPU load: 0.00"),
+            ],
+            id="notice only",
+        ),
+    ],
+)
+def test_summarizer_result_generation(
+    node_results: cluster_modes.NodeResults,
+    expected_primary_result: CheckResult,
+    expected_secondary_result: CheckResult,
+) -> None:
+    clusterization_parameters = {"primary_node": "Nodebert"}
+    summarizer = cluster_modes.Summarizer(
+        node_results=node_results,
+        label="Best",
+        selector=State.best,
+        preferred=clusterization_parameters.get("primary_node"),
+        unpreferred_node_state=State.WARN,
+    )
+
+    assert expected_primary_result == list(summarizer.primary_results())
+    assert expected_secondary_result == list(
+        summarizer.secondary_results(levels_additional_nodes_count=(0.0, 0.0))
+    )

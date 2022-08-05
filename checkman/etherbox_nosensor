@@ -9,7 +9,7 @@ description:
 item:
  The port number of the sensor followed by the sensor type
 
- Example: "2.3" A humidity sensor(type 3) on port 2
+ Example: "2.0" - No sensor(type 0) on port 2
 
 discovery:
  One service is created for sensor port without a sensor

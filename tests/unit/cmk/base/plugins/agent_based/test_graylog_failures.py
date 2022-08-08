@@ -50,14 +50,13 @@ _STRING_TABLE_MSG_STR = [
 ]
 
 
+def test_parse_no_failures() -> None:
+    assert graylog_failures.parse(_STRING_TABLE_NO_FAILURES) is None
+
+
 @pytest.mark.parametrize(
     ["string_table", "expected_result"],
     [
-        pytest.param(
-            _STRING_TABLE_NO_FAILURES,
-            [],
-            id="no failures",
-        ),
         pytest.param(
             _STRING_TABLE_ZERO_FAILURES,
             [Service()],
@@ -79,18 +78,13 @@ def test_discover(
     string_table: StringTable,
     expected_result: DiscoveryResult,
 ) -> None:
-    assert list(graylog_failures.discover(graylog_failures.parse(string_table))) == expected_result
+    assert (section := graylog_failures.parse(string_table))
+    assert list(graylog_failures.discover(section)) == expected_result
 
 
 @pytest.mark.parametrize(
     ["string_table", "params", "expected_result"],
     [
-        pytest.param(
-            _STRING_TABLE_NO_FAILURES,
-            {},
-            [],
-            id="no failures",
-        ),
         pytest.param(
             _STRING_TABLE_ZERO_FAILURES,
             {},
@@ -171,11 +165,12 @@ def test_check(
     params: Mapping[str, Any],
     expected_result: CheckResult,
 ) -> None:
+    assert (section := graylog_failures.parse(string_table))
     assert (
         list(
             graylog_failures.check(
                 params=params,
-                section=graylog_failures.parse(string_table),
+                section=section,
             )
         )
         == expected_result

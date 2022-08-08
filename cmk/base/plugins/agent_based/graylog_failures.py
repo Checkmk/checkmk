@@ -4,20 +4,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Iterable
+from typing import Any, Iterable, Mapping
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.graylog import deserialize_and_merge_json
 
-# <<<graylog_failures>>>
+Section = Mapping[str, Any]
 
 
-def inventory_graylog_failures(parsed):
-    failure_details = parsed.get("failures")
+def parse(string_table: StringTable) -> Section:
+    return deserialize_and_merge_json(string_table)
+
+
+register.agent_section(
+    name="graylog_failures",
+    parse_function=parse,
+)
+
+
+def discover(section: Section) -> DiscoveryResult:
+    failure_details = section.get("failures")
     if failure_details is not None:
-        return [(None, {})]
-    return []
+        yield Service()
 
 
 def _failure_message_to_human_readable(message_serialized: str) -> Iterable[str]:
@@ -38,29 +47,32 @@ def _failure_message_to_human_readable(message_serialized: str) -> Iterable[str]
     )
 
 
-def check_graylog_failures(_no_item, params, parsed):
-    failure_details = parsed.get("failures")
+def check(
+    params: Mapping[str, Any],
+    section: Section,
+) -> CheckResult:
+    failure_details = section.get("failures")
     if failure_details is None:
         return
 
-    failure_total = parsed.get("total")
+    failure_total = section.get("total")
     if failure_total is not None:
-        yield check_levels(
-            failure_total,
-            "failures",
-            params.get("failures"),
-            human_readable_func=int,
-            infoname="Total number of failures",
+        yield from check_levels(
+            value=failure_total,
+            levels_upper=params.get("failures"),
+            metric_name="failures",
+            render_func=lambda v: str(int(v)),
+            label="Total number of failures",
         )
 
-    failure_count = parsed.get("count")
+    failure_count = section.get("count")
     if failure_count is not None:
-        yield check_levels(
-            failure_count,
-            None,
-            params.get("failures_last"),
-            human_readable_func=int,
-            infoname="Failures in last %s" % get_age_human_readable(parsed["ds_param_since"]),
+        yield from check_levels(
+            value=failure_count,
+            levels_upper=params.get("failures_last"),
+            metric_name=None,
+            render_func=lambda v: str(int(v)),
+            label="Failures in last %s" % render.timespan(section["ds_param_since"]),
         )
 
         if failure_count:
@@ -97,18 +109,22 @@ def check_graylog_failures(_no_item, params, parsed):
                 )
 
             if long_output:
-                yield 0, "Affected indices: %d, " "See long output for further information" % len(
-                    index_affected
+                yield Result(
+                    state=State.OK,
+                    summary="Affected indices: %d, "
+                    "See long output for further information" % len(index_affected),
+                )
+                yield Result(
+                    state=State.OK,
+                    notice="\n".join(long_output),
                 )
 
-                yield 0, "\n%s" % "\n".join(long_output)
 
-
-check_info["graylog_failures"] = {
-    "parse_function": parse_graylog_agent_data,
-    "check_function": check_graylog_failures,
-    "inventory_function": inventory_graylog_failures,
-    "service_description": "Graylog Index Failures",
-    "has_perfdata": True,
-    "group": "graylog_failures",
-}
+register.check_plugin(
+    name="graylog_failures",
+    service_name="Graylog Index Failures",
+    discovery_function=discover,
+    check_function=check,
+    check_default_parameters={},
+    check_ruleset_name="graylog_failures",
+)

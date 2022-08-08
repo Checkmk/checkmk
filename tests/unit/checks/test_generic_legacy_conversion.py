@@ -1515,7 +1515,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "graylog_cluster_stats.elastic",
         "graylog_cluster_stats.mongodb",
         "graylog_cluster_traffic",
-        "graylog_failures",
         "graylog_jvm",
         "graylog_license",
         "graylog_messages",

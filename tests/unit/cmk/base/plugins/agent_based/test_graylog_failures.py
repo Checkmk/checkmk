@@ -134,8 +134,7 @@ def test_discover(
                 ),
                 Result(
                     state=State.OK,
-                    summary="6 additional details available",
-                    details="Timestamp: 2019-09-20T10:52:02.908Z, Index: a, Type: cluster_block_exception, Reason: blocked by: [SERVICE_UNAVAILABLE/2/no master];\nTimestamp: 2019-09-20T10:52:02.908Z, Index: b, Type: cluster_block_exception, Reason: blocked by: [SERVICE_UNAVAILABLE/2/no master];\nTimestamp: 2019-09-20T10:52:02.908Z, Index: graylog_index1, Type: cluster_block_exception, Reason: blocked by: [SERVICE_UNAVAILABLE/2/no master];\nTimestamp: 2019-09-20T10:52:02.908Z, Index: graylog_index1, Type: cluster_block_exception, Reason: blocked by: [SERVICE_UNAVAILABLE/2/no master];\nTimestamp: 2019-09-20T10:52:03.110Z, Index: a, Type: cluster_block_exception, Reason: blocked by: [SERVICE_UNAVAILABLE/2/no master];\nTimestamp: 2019-09-20T10:52:03.110Z, Index: b, Type: cluster_block_exception, Reason: blocked by: [SERVICE_UNAVAILABLE/2/no master];",
+                    notice="Timestamp: 2019-09-20T10:52:02.908Z, Index: a, Type: cluster_block_exception, Reason: blocked by: [SERVICE_UNAVAILABLE/2/no master];\nTimestamp: 2019-09-20T10:52:02.908Z, Index: b, Type: cluster_block_exception, Reason: blocked by: [SERVICE_UNAVAILABLE/2/no master];\nTimestamp: 2019-09-20T10:52:02.908Z, Index: graylog_index1, Type: cluster_block_exception, Reason: blocked by: [SERVICE_UNAVAILABLE/2/no master];\nTimestamp: 2019-09-20T10:52:02.908Z, Index: graylog_index1, Type: cluster_block_exception, Reason: blocked by: [SERVICE_UNAVAILABLE/2/no master];\nTimestamp: 2019-09-20T10:52:03.110Z, Index: a, Type: cluster_block_exception, Reason: blocked by: [SERVICE_UNAVAILABLE/2/no master];\nTimestamp: 2019-09-20T10:52:03.110Z, Index: b, Type: cluster_block_exception, Reason: blocked by: [SERVICE_UNAVAILABLE/2/no master];",
                 ),
             ],
             id="failure messages are json-serialized dicts",
@@ -162,8 +161,7 @@ def test_discover(
                 ),
                 Result(
                     state=State.OK,
-                    summary="6 additional details available",
-                    details="Timestamp: 2019-09-20T10:52:02.908Z, Index: a, Type: cluster_block_exception, Reason: blocked by: [SERVICE_UNAVAILABLE/2/no master];\nTimestamp: 2019-09-20T10:52:02.908Z, Index: b, Type: cluster_block_exception, Reason: blocked by: [SERVICE_UNAVAILABLE/2/no master];\nTimestamp: 2019-09-20T10:52:02.908Z, Index: graylog_index1, Type: cluster_block_exception, Reason: blocked by: [SERVICE_UNAVAILABLE/2/no master];\nTimestamp: 2019-09-20T10:52:02.908Z, Index: graylog_index1, Type: cluster_block_exception, Reason: blocked by: [SERVICE_UNAVAILABLE/2/no master];\nTimestamp: 2019-09-20T10:52:03.110Z, Index: a, Type: cluster_block_exception, Reason: blocked by: [SERVICE_UNAVAILABLE/2/no master];\nTimestamp: 2019-09-20T10:52:03.110Z, Index: b, Type: cluster_block_exception, Reason: blocked by: [SERVICE_UNAVAILABLE/2/no master];",
+                    notice="Timestamp: 2019-09-20T10:52:02.908Z, Index: a, Type: cluster_block_exception, Reason: blocked by: [SERVICE_UNAVAILABLE/2/no master];\nTimestamp: 2019-09-20T10:52:02.908Z, Index: b, Type: cluster_block_exception, Reason: blocked by: [SERVICE_UNAVAILABLE/2/no master];\nTimestamp: 2019-09-20T10:52:02.908Z, Index: graylog_index1, Type: cluster_block_exception, Reason: blocked by: [SERVICE_UNAVAILABLE/2/no master];\nTimestamp: 2019-09-20T10:52:02.908Z, Index: graylog_index1, Type: cluster_block_exception, Reason: blocked by: [SERVICE_UNAVAILABLE/2/no master];\nTimestamp: 2019-09-20T10:52:03.110Z, Index: a, Type: cluster_block_exception, Reason: blocked by: [SERVICE_UNAVAILABLE/2/no master];\nTimestamp: 2019-09-20T10:52:03.110Z, Index: b, Type: cluster_block_exception, Reason: blocked by: [SERVICE_UNAVAILABLE/2/no master];",
                 ),
             ],
             id="failure messages are json-serialized dicts, with levels on number of failures",
@@ -181,8 +179,7 @@ def test_discover(
                 ),
                 Result(
                     state=State.OK,
-                    summary="2 additional details available",
-                    details="Timestamp: 2022-08-08T08:33:25.031Z, Index: graylog_9375, Message: ElasticsearchException[Elasticsearch exception [type=mapper_parsing_exception, reason=Could not dynamically add mapping for field [app.kubernetes.io/component]. Existing mapping for [kubernetes_labels.app] must be of type object but found [keyword].]]\nTimestamp: 2022-08-08T08:33:26.622Z, Index: graylog_9375, Message: ElasticsearchException[Elasticsearch exception [type=mapper_parsing_exception, reason=Could not dynamically add mapping for field [app.kubernetes.io/component]. Existing mapping for [kubernetes_labels.app] must be of type object but found [keyword].]]",
+                    notice="Timestamp: 2022-08-08T08:33:25.031Z, Index: graylog_9375, Message: ElasticsearchException[Elasticsearch exception [type=mapper_parsing_exception, reason=Could not dynamically add mapping for field [app.kubernetes.io/component]. Existing mapping for [kubernetes_labels.app] must be of type object but found [keyword].]]\nTimestamp: 2022-08-08T08:33:26.622Z, Index: graylog_9375, Message: ElasticsearchException[Elasticsearch exception [type=mapper_parsing_exception, reason=Could not dynamically add mapping for field [app.kubernetes.io/component]. Existing mapping for [kubernetes_labels.app] must be of type object but found [keyword].]]",
                 ),
             ],
             id="failure messages are non-json strings",

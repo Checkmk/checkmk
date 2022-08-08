@@ -21,7 +21,7 @@ SECTION = {
         "NAME": ["pool01"],
         "MAX_CAPACITY_IN_KB": ["27.9", "TB", "(28599", "GB)"],
         "UNUSED_CAPACITY_IN_KB": ["15.7", "TB", "(16105", "GB)"],
-        "FAILED_CAPACITY_IN_KB": ["123132", "Bytes"],
+        "FAILED_CAPACITY_IN_KB": ["2311212", "Bytes"],
         "TOTAL_READ_BWC": [
             "7",
             "IOPS",
@@ -82,7 +82,7 @@ def test_check_scaleio_storage_pool_with_failed_capacity(fix_register: FixRegist
     check_result = list(
         check.check_function(item=ITEM, params=FILESYSTEM_DEFAULT_PARAMS, section=SECTION)
     )
-    assert check_result[-1] == Result(state=State.CRIT, summary="Failed Capacity: 123132 Bytes")
+    assert check_result[-1] == Result(state=State.CRIT, summary="Failed Capacity: 2.20 MiB")
 
 
 def test_check_scaleio_storage_pool(fix_register: FixRegister) -> None:
@@ -90,4 +90,4 @@ def test_check_scaleio_storage_pool(fix_register: FixRegister) -> None:
     check_result = list(
         check.check_function(item=ITEM, params=FILESYSTEM_DEFAULT_PARAMS, section=SECTION)
     )
-    assert check_result[0] == Result(state=State.OK, summary="Used: 43.69% - 12.2 TiB of 27.9 TiB")
+    assert check_result[0] == Result(state=State.OK, summary="Used: 43.73% - 12.2 TiB of 27.9 TiB")

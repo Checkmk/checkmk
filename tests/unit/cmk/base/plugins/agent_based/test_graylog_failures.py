@@ -7,12 +7,7 @@ from typing import Any, Mapping
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.type_defs import CheckPluginName, SectionName
-
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.type_defs import AgentSectionPlugin
+from cmk.base.plugins.agent_based import graylog_failures
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
@@ -55,16 +50,6 @@ _STRING_TABLE_MSG_STR = [
 ]
 
 
-@pytest.fixture(name="section_plugin", scope="module")
-def fixture_section_plugin(fix_register: FixRegister) -> AgentSectionPlugin:
-    return fix_register.agent_sections[SectionName("graylog_failures")]
-
-
-@pytest.fixture(name="check_plugin", scope="module")
-def fixture_check_plugin(fix_register: FixRegister) -> CheckPlugin:
-    return fix_register.check_plugins[CheckPluginName("graylog_failures")]
-
-
 @pytest.mark.parametrize(
     ["string_table", "expected_result"],
     [
@@ -91,15 +76,10 @@ def fixture_check_plugin(fix_register: FixRegister) -> CheckPlugin:
     ],
 )
 def test_discover(
-    section_plugin: AgentSectionPlugin,
-    check_plugin: CheckPlugin,
     string_table: StringTable,
     expected_result: DiscoveryResult,
 ) -> None:
-    assert (
-        list(check_plugin.discovery_function(section_plugin.parse_function(string_table)))
-        == expected_result
-    )
+    assert list(graylog_failures.discover(graylog_failures.parse(string_table))) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -187,17 +167,15 @@ def test_discover(
     ],
 )
 def test_check(
-    section_plugin: AgentSectionPlugin,
-    check_plugin: CheckPlugin,
     string_table: StringTable,
     params: Mapping[str, Any],
     expected_result: CheckResult,
 ) -> None:
     assert (
         list(
-            check_plugin.check_function(
+            graylog_failures.check(
                 params=params,
-                section=section_plugin.parse_function(string_table),
+                section=graylog_failures.parse(string_table),
             )
         )
         == expected_result

@@ -1,0 +1,31 @@
+Title: Windows agent uses retry_count correctly
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1659967331
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Previously, Windows agent used retry_count as a maximal allowed 
+count of plugin's failures. If the count of failures exceeded the 
+limit set by retry_count, then the plugin had been excluded from 
+execution. Such behavior may break monitoring or updating in 
+some cases.
+
+Since this release, the retry_count is defined as a maximally 
+allowed count of attempts to call a plugin before clearing the 
+previously gathered data (also known as a cache). This approach 
+is fully compliant with the documentation, the help and the 
+functionality of the Linux agent.
+
+The incompatibility in this werk is limited by definition: the
+Windows agent will continue to call a plugin even if the number
+of errors exceeds retry_count. This is the same behavior as when
+retry_count is not set at all.
+
+IMPORTANT: Windows agent always ignores retry_count for synchronous 
+plugins. Windows agent may decrease value of retry_count if the 
+value is set too high.
+

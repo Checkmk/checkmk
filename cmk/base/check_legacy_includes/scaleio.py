@@ -21,6 +21,22 @@ def parse_scaleio(info, section):
 
 # This converts data into MB for our df.include
 def convert_scaleio_space(unit, value):
+    """Convert the space from the storage pool to MB
+
+    >>> convert_scaleio_space("Bytes", 1048576)
+    1.0
+    >>> convert_scaleio_space("KB", 1024.0)
+    1.0
+    >>> convert_scaleio_space("MB", 1)
+    1
+    >>> convert_scaleio_space("GB", 1)
+    1024
+    >>> convert_scaleio_space("TB", 1)
+    1048576
+    >>> convert_scaleio_space("Not_known", 1)
+
+    """
+
     if unit == "Bytes":
         return value / 1024.0**2
     elif unit == "KB":

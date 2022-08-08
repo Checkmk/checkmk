@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import copy
 from typing import Any, Mapping
 
 from cmk.gui.exceptions import MKUserError
@@ -513,7 +514,7 @@ def _valuespec_active_checks_http() -> Transform:
 
 def _transform_forth(params: Mapping[str, Any]) -> Mapping[str, Any]:
     # 2.2.0i1: Host and proxy params were reworked
-    transformed_params = {**params}
+    transformed_params = dict(copy.deepcopy(params))
     proxy_params = transformed_params.pop("proxy", None)
     host_params = transformed_params.get("host", {})
 

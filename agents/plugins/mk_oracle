@@ -2919,17 +2919,18 @@ done
 PIGGYBACK_HOSTS="$(echo "$PIGGYBACK_HOSTS" | tr ' ' '\n' | sort | uniq)"
 
 logging "[preliminaries]" \
-    "SIDs               : ${SIDS//$'\n'/ }" \
-    "Remote instances   : ${REMOTE_INSTANCES}" \
-    "Piggyback hosts    : ${PIGGYBACK_HOSTS//$'\n'/ }" \
-    "OS                 : ${OS_TYPE}" \
-    "SYNC_SECTIONS      : ${SYNC_SECTIONS}" \
-    "ASYNC_SECTIONS     : ${ASYNC_SECTIONS}" \
-    "SYNC_ASM_SECTIONS  : ${SYNC_ASM_SECTIONS}" \
-    "ASYNC_ASM_SECTIONS : ${ASYNC_ASM_SECTIONS}" \
-    "CACHE_MAXAGE       : ${CACHE_MAXAGE}" \
-    "ONLY_SIDS          : ${ONLY_SIDS}" \
-    "SKIP_SIDS          : ${SKIP_SIDS}"
+    "SIDs                : ${SIDS//$'\n'/ }" \
+    "Remote instances    : ${REMOTE_INSTANCES}" \
+    "Piggyback hosts     : ${PIGGYBACK_HOSTS//$'\n'/ }" \
+    "OS                  : ${OS_TYPE}" \
+    "SYNC_SECTIONS       : ${SYNC_SECTIONS}" \
+    "ASYNC_SECTIONS      : ${ASYNC_SECTIONS}" \
+    "SYNC_ASM_SECTIONS   : ${SYNC_ASM_SECTIONS}" \
+    "ASYNC_ASM_SECTIONS  : ${ASYNC_ASM_SECTIONS}" \
+    "CACHE_MAXAGE        : ${CACHE_MAXAGE}" \
+    "ONLY_SIDS           : ${ONLY_SIDS}" \
+    "SKIP_SIDS           : ${SKIP_SIDS}" \
+    "Custom SQLs sections: $custom_sqls_sections"
 
 if [ "$PIGGYBACK_HOSTS" ]; then
     if [ ! -e "$MK_VARDIR/mk_oracle.found" ]; then

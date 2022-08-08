@@ -451,7 +451,7 @@ class PainterEventHost(Painter):
         # See SUP-10272 for a detailed explanation, hacks of view.py do not
         # work for SNMP traps
         link = makeuri_contextless(html.request, [
-            ("view_name", cell._link_spec[1]),
+            ("view_name", "ec_events_of_host"),
             ("host", host_name),
             ("event_host", row["event_host"]),
         ])

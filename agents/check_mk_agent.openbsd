@@ -48,8 +48,54 @@ else
     exec </dev/null 2>/dev/null
 fi
 
+_free_mem_index_vmstat() {
+    # The number of output columns in the vmstat command changed in newer versions. We want the
+    # entry under 'fre' (not a typo).
+    # https://man.openbsd.org/OpenBSD-6.0/vmstat.8
+    # https://man.openbsd.org/vmstat.8
+    idx=1
+    for col in "$@"; do
+        if [ "$col" = "fre" ]; then
+            printf "%s" "$idx"
+            return 0
+        fi
+        idx=$((idx + 1))
+    done
+    return 1
+}
+
+_free_mem_with_unit_vmstat() {
+    # Newer vmstat versions print "1M" instead of "1024" as free memory
+    # SUP-11138
+    # https://github.com/openbsd/src/blob/1c702c4a4395025332d4340f326500c590811dc8/usr.bin/vmstat/vmstat.c#L368
+    case "${1}" in
+        *M)
+            mem_free_mb_with_unit="${1}"
+            printf "%s" "${mem_free_mb_with_unit%?} MB"
+            ;;
+        *)
+            printf "%s" "${1} kB"
+            ;;
+    esac
+}
+
+_free_mem_with_unit() {
+    vmstat_output=$(vmstat)
+
+    # shellcheck disable=SC2046  # we want word splitting here
+    if ! mem_free_idx="$(_free_mem_index_vmstat $(echo "$vmstat_output" | tail -n2 | head -1))"; then
+        return 1
+    fi
+
+    _free_mem_with_unit_vmstat "$(echo "$vmstat_output" | tail -n1 | awk -v idx="$mem_free_idx" '{ print $idx }')"
+
+    return 0
+}
+
 section_openbsd_mem() {
-    mem_free=$(vmstat | tail -n1 | awk '{ print $5 }')
+    if ! mem_free_with_unit=$(_free_mem_with_unit); then
+        return 1
+    fi
     mem_total=$(sysctl hw.usermem | cut -d= -f2)
     mem_total=$(echo "$mem_total/1024" | bc)
 
@@ -65,9 +111,11 @@ section_openbsd_mem() {
 
     printf "<<<openbsd_mem>>>\n"
     printf "MemTotal:\t %s kB\n" "$mem_total"
-    printf "MemFree:\t %s kB\n" "$mem_free"
+    printf "MemFree:\t %s\n" "$mem_free_with_unit"
     printf "SwapTotal:\t %s kB\n" "$swap_total"
     printf "SwapFree:\t %s kB\n" "$swap_free"
+
+    return 0
 }
 
 echo "<<<check_mk>>>"

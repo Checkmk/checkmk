@@ -17,6 +17,21 @@ from cmk.base.plugins.agent_based.mem_used_sections import parse_openbsd_mem
           "SwapFree": 186505 * 1024,
           "SwapTotal": 186505 * 1024
       }),
+    pytest.param(
+        [
+            ["MemTotal:", "1032116", "kB"],
+            ["MemFree:", "8125", "MB"],
+            ["SwapTotal:", "186505", "kB"],
+            ["SwapFree:", "186505", "kB"],
+        ],
+        {
+            "MemFree": 8125 * 1024**2,
+            "MemTotal": 1032116 * 1024,
+            "SwapFree": 186505 * 1024,
+            "SwapTotal": 186505 * 1024,
+        },
+        id="MemFree in MB",
+    ),
     ([["MemTotal:", "1032116", "kB"], ["MemTotal2:", "1032116", "kB"], ["MemFree:", "744076", "kB"],
       ["SwapTotal:", "186505", "kB"], ["SwapFree:", "186505", "kB"]], None),
     ([["MemTotal:", "1032116", "kB"], ["MemFree:", "744076", "kB"], ["SwapFree:", "186505", "kB"]

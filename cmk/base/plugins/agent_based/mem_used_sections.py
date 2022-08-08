@@ -284,7 +284,7 @@ register.agent_section(
 
 
 def parse_openbsd_mem(string_table: type_defs.StringTable) -> Optional[Dict[str, int]]:
-    units = {'kB': 1024}
+    units = {'kB': 1024, "MB": 1024**2}
 
     try:
         mem_data = {k.strip(':'): int(v) * units[u] for k, v, u in string_table}

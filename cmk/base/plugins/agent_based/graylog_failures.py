@@ -96,6 +96,30 @@ def discover(section: Section) -> DiscoveryResult:
     yield Service()
 
 
+def _failure_results(failures: Iterable[Failure]) -> CheckResult:
+    indices_affected = set()
+    details = []
+
+    for failure in sorted(
+        failures,
+        key=lambda f: (f.timestamp, f.index),
+    ):
+        if failure.index is not None:
+            indices_affected.add(failure.index)
+        if failure_human_readable := ", ".join(failure.to_human_readable()):
+            details.append(failure_human_readable)
+
+    if details:
+        yield Result(
+            state=State.OK,
+            summary=f"Affected indices: {len(indices_affected)}, see service details for further information",
+        )
+        yield Result(
+            state=State.OK,
+            notice="\n".join(details),
+        )
+
+
 def check(
     params: Mapping[str, Any],
     section: Section,
@@ -123,29 +147,7 @@ def check(
     if not section.count:
         return
 
-    index_affected = []
-    long_output = []
-
-    for failure in sorted(
-        section.failures,
-        key=lambda f: (f.timestamp, f.index),
-    ):
-        if failure.index is not None:
-            if failure.index not in index_affected:
-                index_affected.append(failure.index)
-
-        if failure_human_readable := ", ".join(failure.to_human_readable()):
-            long_output.append(failure_human_readable)
-
-    if long_output:
-        yield Result(
-            state=State.OK,
-            summary=f"Affected indices: {len(index_affected)}, See long output for further information",
-        )
-        yield Result(
-            state=State.OK,
-            notice="\n".join(long_output),
-        )
+    yield from _failure_results(section.failures)
 
 
 register.check_plugin(

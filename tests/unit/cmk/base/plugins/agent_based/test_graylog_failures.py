@@ -104,7 +104,7 @@ def test_discover(
                 Result(state=State.OK, summary="Failures in last 30 minutes 0 seconds: 6"),
                 Result(
                     state=State.OK,
-                    summary="Affected indices: 3, See long output for further information",
+                    summary="Affected indices: 3, see service details for further information",
                 ),
                 Result(
                     state=State.OK,
@@ -131,7 +131,7 @@ def test_discover(
                 ),
                 Result(
                     state=State.OK,
-                    summary="Affected indices: 3, See long output for further information",
+                    summary="Affected indices: 3, see service details for further information",
                 ),
                 Result(
                     state=State.OK,
@@ -149,7 +149,7 @@ def test_discover(
                 Result(state=State.OK, summary="Failures in last 30 minutes 0 seconds: 5963"),
                 Result(
                     state=State.OK,
-                    summary="Affected indices: 1, See long output for further information",
+                    summary="Affected indices: 1, see service details for further information",
                 ),
                 Result(
                     state=State.OK,

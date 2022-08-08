@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from typing import Iterable
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
@@ -19,7 +20,19 @@ def inventory_graylog_failures(parsed):
     return []
 
 
-def check_graylog_failures(_no_item, params, parsed):  # pylint: disable=too-many-branches
+def _failure_message_to_human_readable(message_serialized: str) -> Iterable[str]:
+    message_deserialized = json.loads(message_serialized)
+    yield from (
+        f"{field.title()}: {field_value}"
+        for field in [
+            "type",
+            "reason",
+        ]
+        if (field_value := message_deserialized.get(field)) is not None
+    )
+
+
+def check_graylog_failures(_no_item, params, parsed):
     failure_details = parsed.get("failures")
     if failure_details is None:
         return
@@ -64,19 +77,18 @@ def check_graylog_failures(_no_item, params, parsed):  # pylint: disable=too-man
                         index_affected.append(index)
                     long_output_str += ", Index: %s" % index
 
-                if failure.get("message"):
-                    message = json.loads(failure.get("message"))
-                    if message is not None:
-                        for key, infotext in [
-                            ("type", "Type:"),
-                            ("reason", "Reason"),
-                        ]:
-
-                            value = message.get(key)
-                            if value is not None:
-                                long_output_str += ", %s %s" % (infotext, value)
-
-                long_output.append(long_output_str)
+                long_output.append(
+                    ", ".join(
+                        [
+                            long_output_str,
+                            *(
+                                _failure_message_to_human_readable(message_serialized)
+                                if (message_serialized := failure.get("message")) is not None
+                                else []
+                            ),
+                        ]
+                    )
+                )
 
             if long_output:
                 yield 0, "Affected indices: %d, " "See long output for further information" % len(

@@ -9,7 +9,7 @@ import base64
 import json
 import time
 import traceback
-from typing import Any, Literal, Optional
+from typing import Any, Callable, Literal, Optional, Sequence
 
 import livestatus
 
@@ -33,8 +33,12 @@ from cmk.gui.plugins.metrics.graph_pdf import (
     render_graph_pdf,
 )
 from cmk.gui.plugins.metrics.identification import graph_identification_types
-from cmk.gui.plugins.metrics.utils import get_graph_data_from_livestatus, GraphRecipe
-from cmk.gui.type_defs import TemplateGraphSpec
+from cmk.gui.plugins.metrics.utils import (
+    CombinedGraphMetricSpec,
+    get_graph_data_from_livestatus,
+    GraphRecipe,
+)
+from cmk.gui.type_defs import CombinedGraphSpec, TemplateGraphSpec
 
 
 # Provides a json list containing base64 encoded PNG images of the current 24h graphs
@@ -42,16 +46,31 @@ from cmk.gui.type_defs import TemplateGraphSpec
 #    # Needed by mail notification plugin (-> no authentication from localhost)
 @cmk.gui.pages.register("noauth:ajax_graph_images")
 def ajax_graph_images_for_notifications() -> None:
+    try:
+        from cmk.gui.cee.plugins.metrics.graphs import (  # pylint: disable=no-name-in-module
+            resolve_combined_single_metric_spec,
+        )
+    except ImportError:
+
+        def resolve_combined_single_metric_spec(
+            specification: CombinedGraphSpec,
+        ) -> Sequence[CombinedGraphMetricSpec]:
+            return ()
+
     if request.remote_ip not in ["127.0.0.1", "::1"]:
         raise MKUnauthenticatedException(
             _("You are not allowed to access this page (%s).") % request.remote_ip
         )
 
     with SuperUserContext():
-        _answer_graph_image_request()
+        _answer_graph_image_request(resolve_combined_single_metric_spec)
 
 
-def _answer_graph_image_request() -> None:
+def _answer_graph_image_request(
+    resolve_combined_single_metric_spec: Callable[
+        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+    ],
+) -> None:
     try:
         host_name = request.get_ascii_input_mandatory("host")
         if not host_name:
@@ -103,7 +122,10 @@ def _answer_graph_image_request() -> None:
         graphs = []
         for graph_recipe in graph_recipes[:num_graphs]:
             graph_artwork = artwork.compute_graph_artwork(
-                graph_recipe, graph_data_range, graph_render_options
+                graph_recipe,
+                graph_data_range,
+                graph_render_options,
+                resolve_combined_single_metric_spec,
             )
             graph_png = render_graph_image(graph_artwork, graph_data_range, graph_render_options)
 
@@ -246,7 +268,12 @@ def graph_recipes_for_api_request(
     return graph_data_range, graph_recipes
 
 
-def graph_spec_from_request(api_request: dict[str, Any]) -> dict[str, Any]:
+def graph_spec_from_request(
+    api_request: dict[str, Any],
+    resolve_combined_single_metric_spec: Callable[
+        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+    ],
+) -> dict[str, Any]:
     graph_data_range, graph_recipes = graph_recipes_for_api_request(api_request)
 
     try:
@@ -254,7 +281,11 @@ def graph_spec_from_request(api_request: dict[str, Any]) -> dict[str, Any]:
     except IndexError:
         raise MKUserError(None, _("The requested graph does not exist"))
 
-    curves = artwork.compute_graph_artwork_curves(graph_recipe, graph_data_range)
+    curves = artwork.compute_graph_artwork_curves(
+        graph_recipe,
+        graph_data_range,
+        resolve_combined_single_metric_spec,
+    )
 
     api_curves = []
     (start_time, end_time), step = graph_data_range["time_range"], 60  # empty graph

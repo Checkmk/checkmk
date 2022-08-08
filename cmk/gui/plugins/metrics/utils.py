@@ -156,6 +156,15 @@ RRDDataKey = Tuple[SiteId, HostName, ServiceName, str, Optional[GraphConsoldiati
 RRDData = Dict[RRDDataKey, TimeSeries]
 
 
+class CombinedGraphMetricSpec(TypedDict):
+    unit: str
+    color: str
+    title: str
+    line_type: LineType
+    expression: StackElement
+    metric_definition: MetricDefinition
+
+
 class MetricUnitColor(TypedDict):
     unit: str
     color: str

@@ -17,7 +17,7 @@ import abc
 import json
 import math
 import string
-from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Type, Union
 
 import cmk.utils
 import cmk.utils.plugin_registry
@@ -38,6 +38,7 @@ from cmk.gui.plugins.metrics.html_render import (
 # Needed for legacy (pre 1.6) plugins and for cross-module imports (e.g. in dashboards plugin)
 from cmk.gui.plugins.metrics.utils import (  # noqa: F401 # pylint: disable=unused-import
     check_metrics,
+    CombinedGraphMetricSpec,
     darken_color,
     evaluate,
     G,
@@ -76,7 +77,7 @@ from cmk.gui.plugins.metrics.utils import (  # noqa: F401 # pylint: disable=unus
     TranslatedMetrics,
     unit_info,
 )
-from cmk.gui.type_defs import PerfometerSpec
+from cmk.gui.type_defs import CombinedGraphSpec, PerfometerSpec
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 PerfometerExpression = Union[str, int, float]
@@ -725,10 +726,26 @@ class MetricometerRendererDual(MetricometerRenderer):
 # This page is called for the popup of the graph icon of hosts/services.
 @cmk.gui.pages.register("host_service_graph_popup")
 def page_host_service_graph_popup() -> None:
+    try:
+        from cmk.gui.cee.plugins.metrics.graphs import (  # pylint: disable=no-name-in-module
+            resolve_combined_single_metric_spec,
+        )
+    except ImportError:
+
+        def resolve_combined_single_metric_spec(
+            specification: CombinedGraphSpec,
+        ) -> Sequence[CombinedGraphMetricSpec]:
+            return ()
+
     site_id = request.var("site")
     host_name = request.var("host_name")
     service_description = request.get_str_input("service")
-    host_service_graph_popup_cmk(site_id, host_name, service_description)
+    host_service_graph_popup_cmk(
+        site_id,
+        host_name,
+        service_description,
+        resolve_combined_single_metric_spec,
+    )
 
 
 # .
@@ -746,6 +763,17 @@ def page_host_service_graph_popup() -> None:
 
 @cmk.gui.pages.register("graph_dashlet")
 def page_graph_dashlet() -> None:
+    try:
+        from cmk.gui.cee.plugins.metrics.graphs import (  # pylint: disable=no-name-in-module
+            resolve_combined_single_metric_spec,
+        )
+    except ImportError:
+
+        def resolve_combined_single_metric_spec(
+            specification: CombinedGraphSpec,
+        ) -> Sequence[CombinedGraphMetricSpec]:
+            return ()
+
     spec = request.var("spec")
     if not spec:
         raise MKUserError("spec", _("Missing spec parameter"))
@@ -756,4 +784,8 @@ def page_graph_dashlet() -> None:
         raise MKUserError("render", _("Missing render parameter"))
     custom_graph_render_options = json.loads(request.get_str_input_mandatory("render"))
 
-    host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_options)
+    host_service_graph_dashlet_cmk(
+        graph_identification,
+        custom_graph_render_options,
+        resolve_combined_single_metric_spec,
+    )

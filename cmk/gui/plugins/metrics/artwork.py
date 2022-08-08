@@ -18,6 +18,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.metrics import rrd_fetch, timeseries
 from cmk.gui.plugins.metrics.utils import (
+    CombinedGraphMetricSpec,
     Curve,
     GraphDataRange,
     GraphRecipe,
@@ -27,7 +28,7 @@ from cmk.gui.plugins.metrics.utils import (
     unit_info,
     UnitInfo,
 )
-from cmk.gui.type_defs import UnitRenderFunc
+from cmk.gui.type_defs import CombinedGraphSpec, UnitRenderFunc
 from cmk.gui.utils.theme import theme
 
 Label = Tuple[float, Optional[str], int]
@@ -209,10 +210,17 @@ def compute_graph_artwork(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
+    resolve_combined_single_metric_spec: Callable[
+        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+    ],
 ) -> GraphArtwork:
     graph_render_options = add_default_render_options(graph_render_options)
 
-    curves = compute_graph_artwork_curves(graph_recipe, graph_data_range)
+    curves = compute_graph_artwork_curves(
+        graph_recipe,
+        graph_data_range,
+        resolve_combined_single_metric_spec,
+    )
 
     pin_time = load_graph_pin()
     _compute_scalars(graph_recipe, curves, pin_time)
@@ -369,10 +377,18 @@ def areastack(
 
 
 def compute_graph_artwork_curves(
-    graph_recipe: GraphRecipe, graph_data_range: GraphDataRange
+    graph_recipe: GraphRecipe,
+    graph_data_range: GraphDataRange,
+    resolve_combined_single_metric_spec: Callable[
+        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+    ],
 ) -> list[Curve]:
     # Fetch all raw RRD data
-    rrd_data = rrd_fetch.fetch_rrd_data_for_graph(graph_recipe, graph_data_range)
+    rrd_data = rrd_fetch.fetch_rrd_data_for_graph(
+        graph_recipe,
+        graph_data_range,
+        resolve_combined_single_metric_spec,
+    )
 
     curves = timeseries.compute_graph_curves(graph_recipe["metrics"], rrd_data)
 

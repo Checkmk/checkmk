@@ -3,8 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Sequence
+
 from cmk.gui.plugins.metrics.graph_images import graph_spec_from_request
+from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
 from cmk.gui.plugins.webapi.utils import api_call_collection_registry, APICallCollection
+from cmk.gui.type_defs import CombinedGraphSpec
 
 # Request:
 # {
@@ -31,4 +35,18 @@ class APICallGraph(APICallCollection):
         }
 
     def _get_graph(self, request):
-        return graph_spec_from_request(request)
+        try:
+            from cmk.gui.cee.plugins.metrics.graphs import (  # pylint: disable=no-name-in-module
+                resolve_combined_single_metric_spec,
+            )
+        except ImportError:
+
+            def resolve_combined_single_metric_spec(
+                specification: CombinedGraphSpec,
+            ) -> Sequence[CombinedGraphMetricSpec]:
+                return ()
+
+        return graph_spec_from_request(
+            request,
+            resolve_combined_single_metric_spec,
+        )

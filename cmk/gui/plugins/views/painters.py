@@ -25,7 +25,11 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics.utils import render_color_icon, TranslatedMetrics
+from cmk.gui.plugins.metrics.utils import (
+    CombinedGraphMetricSpec,
+    render_color_icon,
+    TranslatedMetrics,
+)
 from cmk.gui.plugins.views.graphs import cmk_time_graph_params, paint_time_graph_cmk
 from cmk.gui.plugins.views.icons.utils import (
     get_icons,
@@ -58,7 +62,7 @@ from cmk.gui.plugins.views.utils import (
     VisualLinkSpec,
 )
 from cmk.gui.site_config import get_site_config
-from cmk.gui.type_defs import ColumnName, Row, SorterName
+from cmk.gui.type_defs import ColumnName, CombinedGraphSpec, Row, SorterName
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.output_funnel import output_funnel
@@ -1430,7 +1434,18 @@ class PainterSvcPnpgraph(Painter):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_time_graph_cmk(row, cell)
+        try:
+            from cmk.gui.cee.plugins.metrics.graphs import (  # pylint: disable=no-name-in-module
+                resolve_combined_single_metric_spec,
+            )
+        except ImportError:
+
+            def resolve_combined_single_metric_spec(
+                specification: CombinedGraphSpec,
+            ) -> Sequence[CombinedGraphMetricSpec]:
+                return ()
+
+        return paint_time_graph_cmk(row, cell, resolve_combined_single_metric_spec)
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
@@ -2406,7 +2421,18 @@ class PainterHostPnpgraph(Painter):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_time_graph_cmk(row, cell)
+        try:
+            from cmk.gui.cee.plugins.metrics.graphs import (  # pylint: disable=no-name-in-module
+                resolve_combined_single_metric_spec,
+            )
+        except ImportError:
+
+            def resolve_combined_single_metric_spec(
+                specification: CombinedGraphSpec,
+            ) -> Sequence[CombinedGraphMetricSpec]:
+                return ()
+
+        return paint_time_graph_cmk(row, cell, resolve_combined_single_metric_spec)
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()

@@ -5,12 +5,13 @@
 
 import copy
 import time
-from typing import Literal, Sequence
+from typing import Callable, Literal, Sequence
 
 from cmk.gui.config import active_config
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics import html_render
+from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.plugins.views.utils import (
     Cell,
@@ -24,7 +25,7 @@ from cmk.gui.plugins.views.utils import (
     PainterOption,
     PainterOptions,
 )
-from cmk.gui.type_defs import ColumnName, Row, TemplateGraphSpec
+from cmk.gui.type_defs import ColumnName, CombinedGraphSpec, Row, TemplateGraphSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri_contextless
@@ -98,7 +99,15 @@ multisite_builtin_views.update(
 )
 
 
-def paint_time_graph_cmk(row, cell, override_graph_render_options=None):
+def paint_time_graph_cmk(
+    row,
+    cell,
+    resolve_combined_single_metric_spec: Callable[
+        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+    ],
+    *,
+    override_graph_render_options=None,
+):
     graph_identification: tuple[Literal["template"], TemplateGraphSpec] = (
         "template",
         TemplateGraphSpec(
@@ -169,13 +178,25 @@ def paint_time_graph_cmk(row, cell, override_graph_render_options=None):
         )
 
     return "", html_render.render_graphs_from_specification_html(
-        graph_identification, graph_data_range, graph_render_options
+        graph_identification,
+        graph_data_range,
+        graph_render_options,
+        resolve_combined_single_metric_spec,
     )
 
 
-def paint_cmk_graphs_with_timeranges(row, cell):
+def paint_cmk_graphs_with_timeranges(
+    row,
+    cell,
+    resolve_combined_single_metric_spec: Callable[
+        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+    ],
+):
     return paint_time_graph_cmk(
-        row, cell, override_graph_render_options={"show_time_range_previews": True}
+        row,
+        cell,
+        resolve_combined_single_metric_spec,
+        override_graph_render_options={"show_time_range_previews": True},
     )
 
 
@@ -249,7 +270,22 @@ class PainterServiceGraphs(Painter):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_cmk_graphs_with_timeranges(row, cell)
+        try:
+            from cmk.gui.cee.plugins.metrics.graphs import (  # pylint: disable=no-name-in-module
+                resolve_combined_single_metric_spec,
+            )
+        except ImportError:
+
+            def resolve_combined_single_metric_spec(
+                specification: CombinedGraphSpec,
+            ) -> Sequence[CombinedGraphMetricSpec]:
+                return ()
+
+        return paint_cmk_graphs_with_timeranges(
+            row,
+            cell,
+            resolve_combined_single_metric_spec,
+        )
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
@@ -284,7 +320,22 @@ class PainterHostGraphs(Painter):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_cmk_graphs_with_timeranges(row, cell)
+        try:
+            from cmk.gui.cee.plugins.metrics.graphs import (  # pylint: disable=no-name-in-module
+                resolve_combined_single_metric_spec,
+            )
+        except ImportError:
+
+            def resolve_combined_single_metric_spec(
+                specification: CombinedGraphSpec,
+            ) -> Sequence[CombinedGraphMetricSpec]:
+                return ()
+
+        return paint_cmk_graphs_with_timeranges(
+            row,
+            cell,
+            resolve_combined_single_metric_spec,
+        )
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()

@@ -9,6 +9,7 @@ import time
 import traceback
 from typing import (
     Any,
+    Callable,
     Iterable,
     List,
     Literal,
@@ -37,6 +38,7 @@ from cmk.gui.plugins.metrics import artwork
 from cmk.gui.plugins.metrics.artwork import GraphArtwork, LayoutedCurve
 from cmk.gui.plugins.metrics.identification import graph_identification_types
 from cmk.gui.plugins.metrics.utils import (
+    CombinedGraphMetricSpec,
     GraphDataRange,
     GraphRecipe,
     GraphRenderOptions,
@@ -46,7 +48,7 @@ from cmk.gui.plugins.metrics.utils import (
 )
 from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options_title_format
 from cmk.gui.sites import get_alias_of_host
-from cmk.gui.type_defs import GraphIdentifier, TemplateGraphSpec
+from cmk.gui.type_defs import CombinedGraphSpec, GraphIdentifier, TemplateGraphSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
@@ -85,7 +87,14 @@ min_resize_width = 50
 min_resize_height = 6
 
 
-def host_service_graph_popup_cmk(site, host_name, service_description):
+def host_service_graph_popup_cmk(
+    site,
+    host_name,
+    service_description,
+    resolve_combined_single_metric_spec: Callable[
+        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+    ],
+):
     graph_render_options = {
         "size": (30, 10),
         "font_size": 6.0,  # pt
@@ -113,7 +122,11 @@ def host_service_graph_popup_cmk(site, host_name, service_description):
 
     html.write_html(
         render_graphs_from_specification_html(
-            graph_identification, graph_data_range, graph_render_options, render_async=False
+            graph_identification,
+            graph_data_range,
+            graph_render_options,
+            resolve_combined_single_metric_spec,
+            render_async=False,
         )
     )
 
@@ -554,11 +567,22 @@ def _graph_margin_ex(  # type:ignore[no-untyped-def]
 
 @cmk.gui.pages.register("ajax_graph")
 def ajax_graph() -> None:
+    try:
+        from cmk.gui.cee.plugins.metrics.graphs import (  # pylint: disable=no-name-in-module
+            resolve_combined_single_metric_spec,
+        )
+    except ImportError:
+
+        def resolve_combined_single_metric_spec(
+            specification: CombinedGraphSpec,
+        ) -> Sequence[CombinedGraphMetricSpec]:
+            return ()
+
     response.set_content_type("application/json")
     try:
         context_var = request.get_str_input_mandatory("context")
         context = json.loads(context_var)
-        response_data = render_ajax_graph(context)
+        response_data = render_ajax_graph(context, resolve_combined_single_metric_spec)
         response.set_data(json.dumps(response_data))
     except Exception as e:
         logger.error("Ajax call ajax_graph.py failed: %s\n%s", e, traceback.format_exc())
@@ -567,7 +591,12 @@ def ajax_graph() -> None:
         response.set_data("ERROR: %s" % e)
 
 
-def render_ajax_graph(context: Mapping[str, Any]) -> dict[str, Any]:
+def render_ajax_graph(
+    context: Mapping[str, Any],
+    resolve_combined_single_metric_spec: Callable[
+        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+    ],
+) -> dict[str, Any]:
     graph_data_range = context["data_range"]
     graph_render_options = context["render_options"]
     graph_recipe = context["definition"]
@@ -618,7 +647,10 @@ def render_ajax_graph(context: Mapping[str, Any]) -> dict[str, Any]:
         save_user_graph_data_range(graph_data_range)
 
     graph_artwork = artwork.compute_graph_artwork(
-        graph_recipe, graph_data_range, graph_render_options
+        graph_recipe,
+        graph_data_range,
+        graph_render_options,
+        resolve_combined_single_metric_spec,
     )
 
     with output_funnel.plugged():
@@ -693,6 +725,10 @@ def render_graphs_from_specification_html(
     graph_identification: GraphIdentifier,
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
+    resolve_combined_single_metric_spec: Callable[
+        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+    ],
+    *,
     render_async: bool = True,
 ) -> HTML:
 
@@ -701,7 +737,11 @@ def render_graphs_from_specification_html(
         return graph_recipes  # This is to html.write the exception
 
     return render_graphs_from_definitions(
-        graph_recipes, graph_data_range, graph_render_options, render_async
+        graph_recipes,
+        graph_data_range,
+        graph_render_options,
+        resolve_combined_single_metric_spec,
+        render_async,
     )
 
 
@@ -709,6 +749,9 @@ def render_graphs_from_definitions(
     graph_recipes: Sequence[GraphRecipe],
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
+    resolve_combined_single_metric_spec: Callable[
+        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+    ],
     render_async: bool = True,
 ) -> HTML:
     # Estimate step. Step is the number of seconds each fetched data point represents.
@@ -726,7 +769,10 @@ def render_graphs_from_definitions(
             )
         else:
             output += render_graph_content_html(
-                graph_recipe, graph_data_range, graph_render_options
+                graph_recipe,
+                graph_data_range,
+                graph_render_options,
+                resolve_combined_single_metric_spec,
             )
     return output
 
@@ -773,6 +819,17 @@ def render_graph_container_html(
 # Called from javascript code via JSON to initially render a graph
 @cmk.gui.pages.register("ajax_render_graph_content")
 def ajax_render_graph_content() -> None:
+    try:
+        from cmk.gui.cee.plugins.metrics.graphs import (  # pylint: disable=no-name-in-module
+            resolve_combined_single_metric_spec,
+        )
+    except ImportError:
+
+        def resolve_combined_single_metric_spec(
+            specification: CombinedGraphSpec,
+        ) -> Sequence[CombinedGraphMetricSpec]:
+            return ()
+
     response.set_content_type("application/json")
     try:
         api_request = request.get_request()
@@ -782,6 +839,7 @@ def ajax_render_graph_content() -> None:
                 api_request["graph_recipe"],
                 api_request["graph_data_range"],
                 api_request["graph_render_options"],
+                resolve_combined_single_metric_spec,
             ),
         }
     except Exception:
@@ -798,11 +856,17 @@ def render_graph_content_html(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
+    resolve_combined_single_metric_spec: Callable[
+        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+    ],
 ) -> HTML:
     output = HTML()
     try:
         graph_artwork = artwork.compute_graph_artwork(
-            graph_recipe, graph_data_range, graph_render_options
+            graph_recipe,
+            graph_data_range,
+            graph_render_options,
+            resolve_combined_single_metric_spec,
         )
         main_graph_html = render_graph_or_error_html(
             graph_artwork, graph_data_range, graph_render_options
@@ -814,7 +878,12 @@ def render_graph_content_html(
 
         if previews:
             output += HTMLWriter.render_div(
-                main_graph_html + render_time_range_selection(graph_recipe, graph_render_options),
+                main_graph_html
+                + render_time_range_selection(
+                    graph_recipe,
+                    graph_render_options,
+                    resolve_combined_single_metric_spec,
+                ),
                 class_="graph_with_timeranges",
             )
         else:
@@ -833,7 +902,11 @@ def render_graph_content_html(
 
 
 def render_time_range_selection(
-    graph_recipe: GraphRecipe, graph_render_options: GraphRenderOptions
+    graph_recipe: GraphRecipe,
+    graph_render_options: GraphRenderOptions,
+    resolve_combined_single_metric_spec: Callable[
+        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+    ],
 ) -> HTML:
     now = int(time.time())
     graph_render_options = copy.deepcopy(graph_render_options)
@@ -865,7 +938,10 @@ def render_time_range_selection(
         )
 
         graph_artwork = artwork.compute_graph_artwork(
-            graph_recipe, graph_data_range, graph_render_options
+            graph_recipe,
+            graph_data_range,
+            graph_render_options,
+            resolve_combined_single_metric_spec,
         )
         rows.append(
             HTMLWriter.render_td(
@@ -915,12 +991,25 @@ def estimate_graph_step_for_html(
 
 @cmk.gui.pages.register("ajax_graph_hover")
 def ajax_graph_hover() -> None:
+    try:
+        from cmk.gui.cee.plugins.metrics.graphs import (  # pylint: disable=no-name-in-module
+            resolve_combined_single_metric_spec,
+        )
+    except ImportError:
+
+        def resolve_combined_single_metric_spec(
+            specification: CombinedGraphSpec,
+        ) -> Sequence[CombinedGraphMetricSpec]:
+            return ()
+
     response.set_content_type("application/json")
     try:
         context_var = request.get_str_input_mandatory("context")
         context = json.loads(context_var)
         hover_time = request.get_integer_input_mandatory("hover_time")
-        response_data = render_ajax_graph_hover(context, hover_time)
+        response_data = render_ajax_graph_hover(
+            context, hover_time, resolve_combined_single_metric_spec
+        )
         response.set_data(json.dumps(response_data))
     except Exception as e:
         logger.error("Ajax call ajax_graph_hover.py failed: %s\n%s", e, traceback.format_exc())
@@ -929,11 +1018,21 @@ def ajax_graph_hover() -> None:
         response.set_data("ERROR: %s" % e)
 
 
-def render_ajax_graph_hover(context: Mapping[str, Any], hover_time: int) -> dict[str, Any]:
+def render_ajax_graph_hover(
+    context: Mapping[str, Any],
+    hover_time: int,
+    resolve_combined_single_metric_spec: Callable[
+        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+    ],
+) -> dict[str, Any]:
     graph_data_range = context["data_range"]
     graph_recipe = context["definition"]
 
-    curves = artwork.compute_graph_artwork_curves(graph_recipe, graph_data_range)
+    curves = artwork.compute_graph_artwork_curves(
+        graph_recipe,
+        graph_data_range,
+        resolve_combined_single_metric_spec,
+    )
 
     curve_values = artwork._compute_curve_values_at_timestamp(graph_recipe, curves, hover_time)
 
@@ -1006,6 +1105,9 @@ default_dashlet_graph_render_options: Mapping[str, Any] = {
 def host_service_graph_dashlet_cmk(
     graph_identification: GraphIdentifier,
     custom_graph_render_options: GraphRenderOptions,
+    resolve_combined_single_metric_spec: Callable[
+        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+    ],
 ) -> Optional[HTML]:
     graph_render_options = {**default_dashlet_graph_render_options}
     graph_render_options = artwork.add_default_render_options(graph_render_options)
@@ -1049,14 +1151,21 @@ def host_service_graph_dashlet_cmk(
     if graph_render_options["show_legend"]:
         # TODO FIXME: This graph artwork is calulated twice. Once here and once in render_graphs_from_specification_html()
         graph_artwork = artwork.compute_graph_artwork(
-            graph_recipe, graph_data_range, graph_render_options
+            graph_recipe,
+            graph_data_range,
+            graph_render_options,
+            resolve_combined_single_metric_spec,
         )
         if graph_artwork["curves"]:
             legend_height = graph_legend_height_ex(graph_render_options, graph_artwork)
             graph_render_options["size"] = (width, height - legend_height)
 
     html_code = render_graphs_from_definitions(
-        [graph_recipe], graph_data_range, graph_render_options, render_async=False
+        [graph_recipe],
+        graph_data_range,
+        graph_render_options,
+        resolve_combined_single_metric_spec,
+        render_async=False,
     )
     html.write_html(html_code)
     return None

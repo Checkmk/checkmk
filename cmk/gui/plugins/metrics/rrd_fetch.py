@@ -6,7 +6,7 @@
 
 import collections
 import time
-from typing import Any, Callable, Iterator, List, Optional, Set
+from typing import Any, Callable, Iterator, List, Optional, Sequence, Set
 
 import livestatus
 from livestatus import SiteId
@@ -21,6 +21,7 @@ from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import (
     check_metrics,
+    CombinedGraphMetricSpec,
     GraphConsoldiationFunction,
     GraphDataRange,
     GraphMetric,
@@ -28,13 +29,19 @@ from cmk.gui.plugins.metrics.utils import (
     reverse_translate_metric_name,
     RRDData,
 )
-from cmk.gui.type_defs import ColumnName
+from cmk.gui.type_defs import ColumnName, CombinedGraphSpec
 
 
 def fetch_rrd_data_for_graph(
-    graph_recipe: GraphRecipe, graph_data_range: GraphDataRange
+    graph_recipe: GraphRecipe,
+    graph_data_range: GraphDataRange,
+    resolve_combined_single_metric_spec: Callable[
+        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+    ],
 ) -> RRDData:
-    needed_rrd_data = get_needed_sources(graph_recipe["metrics"])
+    needed_rrd_data = get_needed_sources(
+        graph_recipe["metrics"], resolve_combined_single_metric_spec
+    )
 
     by_service = group_needed_rrd_data_by_service(needed_rrd_data)
     rrd_data: RRDData = {}
@@ -109,26 +116,34 @@ def chop_last_empty_step(graph_data_range: GraphDataRange, rrd_data: RRDData) ->
         data.end -= step
 
 
-def needed_elements_of_expression(expression):
+def needed_elements_of_expression(
+    expression,
+    resolve_combined_single_metric_spec: Callable[
+        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+    ],
+):
     if expression[0] in ["rrd", "scalar"]:
         yield tuple(expression[1:])
     elif expression[0] in ["operator", "transformation"]:
         for operand in expression[2]:
-            yield from needed_elements_of_expression(operand)
+            yield from needed_elements_of_expression(operand, resolve_combined_single_metric_spec)
     elif expression[0] == "combined" and not cmk_version.is_raw_edition():
-        # Suppression is needed to silence pylint in CRE environment
-        from cmk.gui.cee.plugins.metrics.graphs import (  # pylint: disable=no-name-in-module
-            resolve_combined_single_metric_spec,
-        )
-
         metrics = resolve_combined_single_metric_spec(expression[1])
 
-        for out in (needed_elements_of_expression(m["expression"]) for m in metrics):
+        for out in (
+            needed_elements_of_expression(m["expression"], resolve_combined_single_metric_spec)
+            for m in metrics
+        ):
             yield from out
 
 
 def get_needed_sources(
-    metrics: list[GraphMetric], condition: Callable[[Any], bool] = lambda x: True
+    metrics: list[GraphMetric],
+    resolve_combined_single_metric_spec: Callable[
+        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+    ],
+    *,
+    condition: Callable[[Any], bool] = lambda x: True,
 ) -> Set:
     """Extract all metric data sources definitions
 
@@ -139,7 +154,10 @@ def get_needed_sources(
     return {
         source  #
         for metric in metrics
-        for source in needed_elements_of_expression(metric["expression"])
+        for source in needed_elements_of_expression(
+            metric["expression"],
+            resolve_combined_single_metric_spec,
+        )
         if condition(metric)
     }
 

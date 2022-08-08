@@ -13,6 +13,7 @@ def test_needed_elements_of_expression() -> None:
                 "transformation",
                 ("q90percentile", 95.0),
                 [("rrd", "heute", "CPU utilization", "util", "max")],
-            )
+            ),
+            lambda *args: (),
         )
     ) == {("heute", "CPU utilization", "util", "max")}

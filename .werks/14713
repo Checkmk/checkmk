@@ -1,0 +1,16 @@
+Title: <tt>graylog_failures</tt>: Fix crash with <tt>JSONDecodeError</tt>
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1659964676
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p10
+
+Depending on the failures reported by the Graylog API, the check plugin <tt>graylog_failures</tt>
+crashed with
+C+:
+JSONDecodeError (Expecting value: line 1 column 1 (char 0))
+C-:

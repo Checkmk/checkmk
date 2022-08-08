@@ -23,7 +23,13 @@ def inventory_graylog_failures(parsed):
 
 
 def _failure_message_to_human_readable(message_serialized: str) -> Iterable[str]:
-    message_deserialized = json.loads(message_serialized)
+    try:
+        message_deserialized = json.loads(message_serialized)
+    except json.JSONDecodeError:
+        # the graylog API does not specify the scheme of the endpoint providing this data (it only
+        # says 'anyMap'), see SUP-11170
+        yield f"Message: {message_serialized}"
+        return
     yield from (
         f"{field.title()}: {field_value}"
         for field in [

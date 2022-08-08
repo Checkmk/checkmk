@@ -436,3 +436,98 @@ class VisualInfoCrash(VisualInfo):
                 ),
             ),
         ]
+
+
+@visual_info_registry.register
+class VisualInfoKubernetesCluser(VisualInfo):
+    @property
+    def ident(self) -> str:
+        return "kubecluster"
+
+    @property
+    def title(self) -> str:
+        return _("Kubernetes Cluster")
+
+    @property
+    def title_plural(self):
+        return _("Kubernetes Clusters")
+
+    @property
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+        return [("kubernetes_cluster", TextInput(title=self.title))]
+
+
+@visual_info_registry.register
+class VisualInfoKubernetesNamespace(VisualInfo):
+    @property
+    def ident(self) -> str:
+        return "kubenamespace"
+
+    @property
+    def title(self) -> str:
+        return _("Kubernetes Namespace")
+
+    @property
+    def title_plural(self):
+        return _("Kubernetes Namespaces")
+
+    @property
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+        return [("kubernetes_namespace", TextInput(title=self.title))]
+
+
+@visual_info_registry.register
+class VisualInfoKubernetesDaemonset(VisualInfo):
+    @property
+    def ident(self) -> str:
+        return "kubedaemonset"
+
+    @property
+    def title(self) -> str:
+        return _("Kubernetes Daemonset")
+
+    @property
+    def title_plural(self):
+        return _("Kubernetes Daemonsets")
+
+    @property
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+        return [("kubernetes_daemonset", TextInput(title=self.title))]
+
+
+@visual_info_registry.register
+class VisualInfoKubernetesDeployment(VisualInfo):
+    @property
+    def ident(self) -> str:
+        return "kubedeployment"
+
+    @property
+    def title(self) -> str:
+        return _("Kubernetes Deployment")
+
+    @property
+    def title_plural(self):
+        return _("Kubernetes Deployments")
+
+    @property
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+        return [("kubernetes_deployment", TextInput(title=self.title))]
+
+
+@visual_info_registry.register
+class VisualInfoKubernetesStatefulset(VisualInfo):
+    @property
+    def ident(self) -> str:
+        return "kubestatefulset"
+
+    @property
+    def title(self) -> str:
+        return _("Kubernetes Statefulset")
+
+    @property
+    def title_plural(self):
+        return _("Kubernetes Statefulsets")
+
+    @property
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+        return [("kubernetes_statefulset", TextInput(title=self.title))]

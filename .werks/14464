@@ -1,0 +1,11 @@
+Title: Fix reset of "Tree of folders" snapin
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1659955336
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p10
+
+On sidebar reload, the subcategory of the chosen topic was not shown any more.

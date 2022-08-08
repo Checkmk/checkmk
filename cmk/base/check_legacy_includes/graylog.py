@@ -5,7 +5,7 @@
 
 
 import calendar
-import json
+import json as json_module
 import time
 
 from cmk.base.check_api import (
@@ -16,15 +16,10 @@ from cmk.base.check_api import (
     get_rate,
     set_item_state,
 )
+from cmk.base.plugins.agent_based.utils import graylog
 
-
-def parse_graylog_agent_data(info):
-    parsed = {}
-
-    for line in info:
-        parsed.update(json.loads(line[0]))
-
-    return parsed
+json = json_module
+parse_graylog_agent_data = graylog.deserialize_and_merge_json
 
 
 def handle_iso_utc_to_localtimestamp(iso_8601_time):

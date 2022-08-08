@@ -11,16 +11,20 @@ import cmk.gui.gui_background_job as _gui_background_job
 import cmk.gui.hooks as _hooks
 import cmk.gui.mkeventd as _mkeventd
 import cmk.gui.pages as _pages
+import cmk.gui.plugins.wato.builtin_attributes as builtin_attributes
 import cmk.gui.userdb as _userdb
 import cmk.gui.watolib.auth_php as _auth_php
 import cmk.gui.watolib.automation_commands as _automation_commands
 import cmk.gui.watolib.config_domains as _config_domains
+import cmk.gui.watolib.groups as groups
 import cmk.gui.weblib as _webling
 from cmk.gui.config import register_post_config_load_hook as _register_post_config_load_hook
 from cmk.gui.permissions import permission_section_registry as _permission_section_registry
 from cmk.gui.plugins.watolib.utils import config_domain_registry as _config_domain_registry
 from cmk.gui.utils import load_web_plugins as _load_web_plugins
 from cmk.gui.watolib._host_attributes import register as _register_host_attributes
+from cmk.gui.watolib.host_attributes import ABCHostAttribute
+from cmk.gui.watolib.host_attributes import host_attribute_registry as _host_attributes_registry
 
 # Disable python warnings in background job output or logs like "Unverified
 # HTTPS request is being made". We warn the user using analyze configuration.
@@ -49,6 +53,33 @@ def _register_config_domains() -> None:
     )
     for cls in clss:
         _config_domain_registry.register(cls)
+
+
+def _register_host_attribute():
+    clss: Sequence[Type[ABCHostAttribute]] = [
+        builtin_attributes.HostAttributeAlias,
+        builtin_attributes.HostAttributeIPv4Address,
+        builtin_attributes.HostAttributeIPv6Address,
+        builtin_attributes.HostAttributeAdditionalIPv4Addresses,
+        builtin_attributes.HostAttributeAdditionalIPv6Addresses,
+        builtin_attributes.HostAttributeSNMPCommunity,
+        builtin_attributes.HostAttributeParents,
+        builtin_attributes.HostAttributeNetworkScan,
+        builtin_attributes.HostAttributeNetworkScanResult,
+        builtin_attributes.HostAttributeManagementAddress,
+        builtin_attributes.HostAttributeManagementProtocol,
+        builtin_attributes.HostAttributeManagementSNMPCommunity,
+        builtin_attributes.HostAttributeManagementIPMICredentials,
+        builtin_attributes.HostAttributeSite,
+        builtin_attributes.HostAttributeLockedBy,
+        builtin_attributes.HostAttributeLockedAttributes,
+        builtin_attributes.HostAttributeMetaData,
+        builtin_attributes.HostAttributeDiscoveryFailed,
+        builtin_attributes.HostAttributeLabels,
+        groups.HostAttributeContactGroups,
+    ]
+    for cls in clss:
+        _host_attributes_registry.register(cls)
 
 
 def _register_hooks():
@@ -96,7 +127,8 @@ def load_watolib_plugins():
 _register_automation_commands()
 _register_gui_background_jobs()
 _register_hooks()
-_register_host_attributes()
 _register_config_domains()
+_register_host_attributes()
+_register_host_attribute()
 _register_pages()
 _register_permission_section_registry()

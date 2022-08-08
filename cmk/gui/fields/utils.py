@@ -36,10 +36,6 @@ from cmk.utils.livestatus_helpers.expressions import (
 )
 from cmk.utils.tags import BuiltinTagConfig, TagGroup
 
-# There is an implicit dependency introduced by the collect_attributes call which is evaluated
-# at import time. To make it work as expected we need to import
-import cmk.gui.plugins.wato.builtin_attributes  # pylint: disable=unused-import
-import cmk.gui.watolib.groups  # pylint: disable=unused-import
 from cmk.gui import site_config
 from cmk.gui.fields.base import BaseSchema
 from cmk.gui.utils.escaping import strip_tags

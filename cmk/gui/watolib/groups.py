@@ -38,7 +38,6 @@ from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.global_settings import GlobalSettings, load_configuration_settings
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,
-    host_attribute_registry,
     HostAttributeTopic,
     HostAttributeTopicBasicSettings,
 )
@@ -468,7 +467,6 @@ def is_alias_used(
     return True, None
 
 
-@host_attribute_registry.register
 class HostAttributeContactGroups(ABCHostAttribute):
     """Attribute needed for folder permissions"""
 

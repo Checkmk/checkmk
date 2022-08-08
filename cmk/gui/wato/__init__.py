@@ -5,7 +5,7 @@
 
 # WATO
 #
-# This file contain acutal page handlers and WATO modes. It does HTML creation
+# This file contain actual page handlers and WATO modes. It does HTML creation
 # and implement AJAX handlers. It uses classes, functions and globals
 # from watolib.py.
 

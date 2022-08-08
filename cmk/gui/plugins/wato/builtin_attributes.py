@@ -71,7 +71,6 @@ import cmk.fields.validators
 from cmk import fields
 
 
-@host_attribute_registry.register
 class HostAttributeAlias(ABCHostAttributeNagiosText):
     @property
     def _size(self):
@@ -109,7 +108,6 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
         return fields.String(description=self.help())
 
 
-@host_attribute_registry.register
 class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
     def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicAddress
@@ -160,7 +158,6 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
         )
 
 
-@host_attribute_registry.register
 class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
     def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicAddress
@@ -206,7 +203,6 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
         )
 
 
-@host_attribute_registry.register
 class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
     def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicAddress
@@ -254,7 +250,6 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
         )
 
 
-@host_attribute_registry.register
 class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
     def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicAddress
@@ -295,7 +290,6 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
         )
 
 
-@host_attribute_registry.register
 class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
     def topic(self) -> Type[HostAttributeTopic]:
         return HostAttributeTopicDataSources
@@ -340,7 +334,6 @@ class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
         )
 
 
-@host_attribute_registry.register
 class HostAttributeParents(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "parents"
@@ -449,7 +442,6 @@ def _get_criticality_choices():
     return criticality_group.get_tag_choices()
 
 
-@host_attribute_registry.register
 class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "network_scan"
@@ -701,7 +693,6 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
         return CascadingDropdown(choices=options)
 
 
-@host_attribute_registry.register
 class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "network_scan_result"
@@ -811,7 +802,6 @@ class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
         )
 
 
-@host_attribute_registry.register
 class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "management_address"
@@ -853,7 +843,6 @@ class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
         )
 
 
-@host_attribute_registry.register
 class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "management_protocol"
@@ -887,7 +876,6 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
         return gui_fields.HostAttributeManagementBoardField()
 
 
-@host_attribute_registry.register
 class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "management_snmp_community"
@@ -952,7 +940,6 @@ class IPMICredentials(Alternative):
         )
 
 
-@host_attribute_registry.register
 class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "management_ipmi_credentials"
@@ -984,7 +971,6 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
         )
 
 
-@host_attribute_registry.register
 class HostAttributeSite(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "site"
@@ -1034,7 +1020,6 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
         return {}
 
 
-@host_attribute_registry.register
 class HostAttributeLockedBy(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "locked_by"
@@ -1116,7 +1101,6 @@ class LockedByValuespec(Tuple):
         return super().value_to_html(value)
 
 
-@host_attribute_registry.register
 class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "locked_attributes"
@@ -1163,7 +1147,6 @@ class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
         )
 
 
-@host_attribute_registry.register
 class HostAttributeMetaData(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "meta_data"
@@ -1247,7 +1230,6 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
         )
 
 
-@host_attribute_registry.register
 class HostAttributeDiscoveryFailed(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "inventory_failed"
@@ -1307,7 +1289,6 @@ class HostAttributeDiscoveryFailed(ABCHostAttributeValueSpec):
         return {}
 
 
-@host_attribute_registry.register
 class HostAttributeLabels(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "labels"

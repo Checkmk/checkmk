@@ -47,7 +47,9 @@ class TestModeAutomation:
         )
 
     @staticmethod
-    def _check_mk_local_automation_serialized(**_kwargs) -> Tuple[Sequence[str], str]:
+    def _check_mk_local_automation_serialized(  # type:ignore[no-untyped-def]
+        **_kwargs,
+    ) -> Tuple[Sequence[str], str]:
         return (
             ["x", "y", "z"],
             "((1, 2), 'abc')",
@@ -119,7 +121,7 @@ class TestModeAutomation:
         "setup_request",
         "patch_edition",
     )
-    def test_execute_cmk_automation_incompatible(
+    def test_execute_cmk_automation_incompatible(  # type:ignore[no-untyped-def]
         self, incomp_version: str, monkeypatch: pytest.MonkeyPatch
     ):
         monkeypatch.setattr(

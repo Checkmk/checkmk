@@ -20,7 +20,7 @@ def test_find_debug_code(changed_files: ChangedFiles) -> None:
                 assert not l.startswith("html.debug("), 'Found "html.debug(...)" call'
 
 
-def _files_to_scan(changed_files: ChangedFiles):
+def _files_to_scan(changed_files: ChangedFiles):  # type:ignore[no-untyped-def]
     to_scan = [Path(cmk_path(), "web", "app", "index.wsgi")]
     for matched_file in Path(cmk_path(), "cmk", "gui").glob("**/*.py"):
         if matched_file.is_file() and changed_files.is_changed(matched_file):

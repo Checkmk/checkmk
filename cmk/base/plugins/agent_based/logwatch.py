@@ -351,7 +351,7 @@ class LogwatchBlock:
     CHAR_TO_STATE = {"O": 0, "W": 1, "u": 1, "C": 2}
     STATE_TO_STR = {0: "OK", 1: "WARN"}
 
-    def __init__(self, header, patterns) -> None:
+    def __init__(self, header, patterns) -> None:  # type:ignore[no-untyped-def]
         self._timestamp = header.strip("<>").rsplit(None, 1)[0]
         self.worst = -1
         self.lines: list = []
@@ -442,7 +442,7 @@ def _logmsg_file_path(item: str) -> pathlib.Path:
     return logmsg_dir / item.replace("/", "\\")
 
 
-def check_logwatch_generic(  # pylint: disable=too-many-branches
+def check_logwatch_generic(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
     *,
     item: str,
     patterns,
@@ -561,7 +561,7 @@ def _truncate_way_too_large_result(
     return True
 
 
-def _extract_blocks(
+def _extract_blocks(  # type:ignore[no-untyped-def]
     lines: Iterable[str],
     patterns,
     reclassify: bool,

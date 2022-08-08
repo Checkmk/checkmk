@@ -27,7 +27,7 @@ def get_test_id(unreachable_enabled):
     params=[True, False],
     ids=get_test_id,
 )
-def unreachable_enabled_fixture(request, web, site: Site):
+def unreachable_enabled_fixture(request, web, site: Site):  # type:ignore[no-untyped-def]
     unreachable_enabled = request.param
 
     rule_id = None
@@ -175,7 +175,7 @@ def _send_child_down_expect_unreachable(
 # a) Child goes down
 # b) Parent goes down
 # c) child becomes unreachable
-def test_unreachable_child_down_before_parent_down(
+def test_unreachable_child_down_before_parent_down(  # type:ignore[no-untyped-def]
     unreachable_enabled: bool, site: Site, initial_state
 ):
     with WatchLog(site) as log:
@@ -223,7 +223,7 @@ def test_unreachable_child_down_before_parent_down(
 # Test the situation where:
 # a) Parent goes down
 # b) Child goes down, becomes unreachable
-def test_unreachable_child_after_parent_is_down(
+def test_unreachable_child_after_parent_is_down(  # type:ignore[no-untyped-def]
     unreachable_enabled, site: Site, initial_state
 ) -> None:
     with WatchLog(site) as log:
@@ -241,7 +241,9 @@ def test_unreachable_child_after_parent_is_down(
 # a) Child goes down
 # b) Parent goes down
 # c) Child goes up while parent is down
-def test_parent_down_child_up_on_up_result(unreachable_enabled, site: Site, initial_state) -> None:
+def test_parent_down_child_up_on_up_result(  # type:ignore[no-untyped-def]
+    unreachable_enabled, site: Site, initial_state
+) -> None:
     with WatchLog(site) as log:
         # - Set child down, expect DOWN notification
         _send_child_down(site, log)
@@ -261,7 +263,9 @@ def test_parent_down_child_up_on_up_result(unreachable_enabled, site: Site, init
 # b) Child goes down and becomes unreachable
 # c) Child goes up while parent is down
 # d) Child goes down and becomes unreachable while parent is down
-def test_parent_down_child_state_changes(unreachable_enabled, site: Site, initial_state) -> None:
+def test_parent_down_child_state_changes(  # type:ignore[no-untyped-def]
+    unreachable_enabled, site: Site, initial_state
+) -> None:
     with WatchLog(site) as log:
         # - Set parent down, expect DOWN notification
         _send_parent_down(site, log)
@@ -316,7 +320,9 @@ def test_parent_down_child_state_changes(unreachable_enabled, site: Site, initia
 # b) Child goes down and becomes unreachable
 # c) Parent goes up
 # d) Child is still down and becomes down
-def test_child_down_after_parent_recovers(unreachable_enabled, site: Site, initial_state) -> None:
+def test_child_down_after_parent_recovers(  # type:ignore[no-untyped-def]
+    unreachable_enabled, site: Site, initial_state
+) -> None:
     with WatchLog(site) as log:
         # - Set parent down, expect DOWN notification
         _send_parent_down(site, log)
@@ -348,7 +354,7 @@ def test_child_down_after_parent_recovers(unreachable_enabled, site: Site, initi
 # b) Child goes down and becomes unreachable
 # c) Parent goes up
 # d) Child goes up
-def test_child_up_after_parent_recovers(
+def test_child_up_after_parent_recovers(  # type:ignore[no-untyped-def]
     unreachable_enabled: bool, site: Site, initial_state
 ) -> None:
     with WatchLog(site) as log:
@@ -386,7 +392,7 @@ def test_child_up_after_parent_recovers(
 # b) Child goes down and becomes unreachable
 # c) Child goes up
 # d) Parent goes up
-def test_child_down_and_up_while_not_reachable(
+def test_child_down_and_up_while_not_reachable(  # type:ignore[no-untyped-def]
     unreachable_enabled, site: Site, initial_state
 ) -> None:
     with WatchLog(site) as log:
@@ -418,7 +424,7 @@ def test_child_down_and_up_while_not_reachable(
 # a) Child goes down
 # b) Parent goes down, child becomes unreachable
 # d) Parent goes up, child becomes down
-def test_down_child_becomes_unreachable_and_down_again(
+def test_down_child_becomes_unreachable_and_down_again(  # type:ignore[no-untyped-def]
     unreachable_enabled, site: Site, initial_state
 ):
     with WatchLog(site) as log:
@@ -484,7 +490,7 @@ def test_down_child_becomes_unreachable_and_down_again(
 # b) Parent goes down, child becomes unreachable
 # c) Child goes up
 # d) Parent goes up
-def test_down_child_becomes_unreachable_then_up(
+def test_down_child_becomes_unreachable_then_up(  # type:ignore[no-untyped-def]
     unreachable_enabled, site: Site, initial_state
 ) -> None:
     with WatchLog(site) as log:

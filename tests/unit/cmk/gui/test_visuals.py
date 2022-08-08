@@ -5068,7 +5068,7 @@ def test_registered_info_attributes() -> None:
         ),
     ],
 )
-def test_context_to_uri_vars(context, expected_vars) -> None:
+def test_context_to_uri_vars(context, expected_vars) -> None:  # type:ignore[no-untyped-def]
     context_vars = visuals.context_to_uri_vars(context)
     assert sorted(context_vars) == sorted(expected_vars)
 
@@ -5177,7 +5177,9 @@ def test_get_context_from_uri_vars(request_context, infos, uri_vars, expected_co
         ),
     ],
 )
-def test_get_merged_context(request_context, uri_vars, visual, expected_context) -> None:
+def test_get_merged_context(  # type:ignore[no-untyped-def]
+    request_context, uri_vars, visual, expected_context
+) -> None:
     for key, val in uri_vars:
         request.set_var(key, val)
 
@@ -5292,5 +5294,7 @@ def test_get_missing_single_infos_missing_context() -> None:
         ),
     ],
 )
-def test_cleanup_contexts(context, single_infos, expected_context) -> None:
+def test_cleanup_contexts(  # type:ignore[no-untyped-def]
+    context, single_infos, expected_context
+) -> None:
     assert visuals.cleanup_context_filters(context, single_infos) == expected_context

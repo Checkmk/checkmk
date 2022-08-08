@@ -135,7 +135,7 @@ def test_usage_counters(site: Site) -> None:
 
 
 @pytest.fixture(name="configure_service_tags")
-def configure_service_tags_fixture(site: Site, default_cfg):
+def configure_service_tags_fixture(site: Site, default_cfg):  # type:ignore[no-untyped-def]
     site.openapi.create_host(
         "modes-test-host",
         attributes={
@@ -199,13 +199,15 @@ class TestCrashReport:
         yield
         site.delete_dir("var/check_mk/crashes/%s" % component)
 
-    def test_list_crash_report(self, site, component, uuid) -> None:
+    def test_list_crash_report(self, site, component, uuid) -> None:  # type:ignore[no-untyped-def]
         rows = site.live.query("GET crashreports")
         assert rows
         assert ["component", "id"] in rows
         assert [component, uuid] in rows
 
-    def test_read_crash_report(self, site, component, uuid, crash_info) -> None:
+    def test_read_crash_report(  # type:ignore[no-untyped-def]
+        self, site, component, uuid, crash_info
+    ) -> None:
         rows = site.live.query(
             "\n".join(
                 (
@@ -218,7 +220,7 @@ class TestCrashReport:
         assert rows
         assert _json.loads(rows[0][0]) == crash_info
 
-    def test_del_crash_report(self, site, component, uuid) -> None:
+    def test_del_crash_report(self, site, component, uuid) -> None:  # type:ignore[no-untyped-def]
         before = site.live.query("GET crashreports")
         assert [component, uuid] in before
 
@@ -229,7 +231,7 @@ class TestCrashReport:
         assert after != before
         assert [component, uuid] not in after
 
-    def test_other_crash_report(self, site, component, uuid) -> None:
+    def test_other_crash_report(self, site, component, uuid) -> None:  # type:ignore[no-untyped-def]
         before = site.live.query("GET crashreports")
         assert [component, uuid] in before
 

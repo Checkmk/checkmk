@@ -108,7 +108,7 @@ def fixture_sample_host_name() -> str:
 
 
 @pytest.fixture(name="sample_host")
-def fixture_sample_host(
+def fixture_sample_host(  # type:ignore[no-untyped-def]
     request_context,
     with_admin_login,
     sample_host_name: str,

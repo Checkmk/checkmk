@@ -42,7 +42,7 @@ def snmp_data_dir_fixture(request):
 
 
 @pytest.fixture(name="snmpsim", scope="module", autouse=True)
-def snmpsim_fixture(site: Site, snmp_data_dir, tmp_path_factory):
+def snmpsim_fixture(site: Site, snmp_data_dir, tmp_path_factory):  # type:ignore[no-untyped-def]
     tmp_path = tmp_path_factory.getbasetemp()
     log.logger.setLevel(logging.DEBUG)
     debug.enable()
@@ -136,7 +136,7 @@ def _create_listening_condition(process_def):
     return lambda: _is_listening(process_def)
 
 
-def _is_listening(process_def) -> bool:
+def _is_listening(process_def) -> bool:  # type:ignore[no-untyped-def]
     p = process_def.process
     port = process_def.port
     exitcode = p.poll()

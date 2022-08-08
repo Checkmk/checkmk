@@ -159,7 +159,9 @@ class IconRenderResult(NamedTuple):
         ),
     ],
 )
-def test_icon_options(args, result, request_context, monkeypatch) -> None:
+def test_icon_options(  # type:ignore[no-untyped-def]
+    args, result, request_context, monkeypatch
+) -> None:
     """Creation of title and url for links to event console entries of host"""
     icon = get_multisite_icons()["mkeventd"]
 

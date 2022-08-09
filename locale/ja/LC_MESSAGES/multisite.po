@@ -2304,6 +2304,10 @@ msgstr "APIサーバー接続"
 msgid "API server endpoint"
 msgstr "APIサーバーエンドポイント"
 
+#, fuzzy
+msgid "APPEND"
+msgstr "保留"
+
 msgid "APT Updates"
 msgstr "APTアップデート"
 
@@ -3631,6 +3635,9 @@ msgid ""
 msgstr ""
 "管理ボードにアクセスできるアドレス(IPv4またはIPv6)またはDNS名。これが設定され"
 "ていない場合、ホストのアドレスと同じアドレスが使用されます。"
+
+msgid "Address (name / IP or proxy) -- see also inline help for proxy"
+msgstr ""
 
 msgid "Address Check mode"
 msgstr "アドレスチェックモード"
@@ -6336,6 +6343,10 @@ msgid "Basic Layout"
 msgstr "基本レイアウト"
 
 msgid "Basic authentication"
+msgstr "基本認証"
+
+#, fuzzy
+msgid "Basic authorization"
 msgstr "基本認証"
 
 msgid "Basic properties"
@@ -11364,14 +11375,6 @@ msgstr "現在のチェックの試み"
 msgid "Current date"
 msgstr "現在の日付"
 
-#, fuzzy
-msgid "Current details"
-msgstr "イベントの詳細"
-
-#, fuzzy
-msgid "Current details (Previously named: long output)"
-msgstr "詳細(以前の名前:長い出力)"
-
 msgid "Current host check attempt"
 msgstr "現在のホストチェックの試行"
 
@@ -13414,15 +13417,15 @@ msgstr "各オブジェクトのイベントの詳細なタイムライン"
 msgid "Details"
 msgstr "詳細"
 
+#, fuzzy
+msgid "Details (Previously named: long output)"
+msgstr "詳細(以前の名前:長い出力)"
+
 msgid "Details about a historical event history entry"
 msgstr "履歴イベントエントリの詳細"
 
 msgid "Details about one event"
 msgstr "1つのイベントの詳細"
-
-#, fuzzy
-msgid "Details history"
-msgstr "ダウンタイムの履歴"
 
 msgid "Detect network parent hosts"
 msgstr "ネットワークの親ホストを検出する"
@@ -15406,17 +15409,26 @@ msgstr "各ラベルは1回のみ使用可能です。"
 msgid "Each metric must be unique for a service"
 msgstr "各メトリックは、サービスに対して一意である必要があります"
 
+#, fuzzy
 msgid ""
 "Each new message runs through this list of rules. As soon as a regular "
 "expression is found <i>in</i> the message, the state is determined and the "
 "search terminated. If no rule matches the message is classified as "
 "<i>IGNORE</i>. Note: <i>OK</i> messages are being sent to the central "
-"Check_MK server, where they can be reclassified. <i>IGNORE</i> messages are "
-"silently dropped.<br><br><i>REWRITE</i> allows to change the content a a "
+"Checkmk server, where they can be reclassified. <i>IGNORE</i> messages are "
+"silently dropped.<br><br><i>REWRITE</i> allows to change the content of a "
 "message that has been matched by the <i>previous</i> rule. You can specify a "
 "new text and use the placeholders <tt>\\0</tt> for the original message, <tt>"
 "\\1</tt> for the first regex match group of the match, <tt>\\2</tt> for the "
-"second and so on."
+"second and so on.<br><br><i>APPEND</i> allows for appending messages to a "
+"<i>previous</i> message. A block of APPEND patterns (one more multiple) "
+"works in conjunction with the pattern directly <i>before</i> this block. "
+"Once this pattern matches a message (call it the 'initial message'), the "
+"agent plugin starts to check the subsequent messages against the patterns in "
+"the APPEND block. As long as there is a match, these subsequent messages are "
+"appended to the initial message. Once there is no match, the appending is "
+"stopped and the regular processing of messages continues. One use case for "
+"this feature is the handling of multi-line stack traces."
 msgstr ""
 "新しいメッセージはそれぞれ、このルールのリストを通過します。<i>メッセージ内</"
 "i>で正規表現が見つかるとすぐに、状態が判別され、検索が終了します。一致する"
@@ -16618,6 +16630,13 @@ msgstr "完了するまでの推定時間"
 
 msgid "Etherbox / MessPC: Sensor Temperature"
 msgstr "Etherbox/MessPC: センサーの温度"
+
+msgid "Etherbox smoke"
+msgstr ""
+
+#, fuzzy
+msgid "Etherbox voltage"
+msgstr "電圧"
 
 msgid "Euro"
 msgstr "ユーロ"
@@ -18326,6 +18345,13 @@ msgid "Foobar-Daemon"
 msgstr "Foobar-デーモン"
 
 msgid ""
+"For <tt>check_http</tt> to work with a proxy server, you will most likely "
+"need use the HTTP method <tt>CONNECT</tt>. If you configure a proxy, Checkmk "
+"will automatically use this method, unless you explicitly select a different "
+"method in the options below (URL mode only)."
+msgstr ""
+
+msgid ""
 "For Containers - Choose which identifier is used for the monitored "
 "containers. This will affect the name used for the piggyback host "
 "corresponding to the container, as well as items for services created on the "
@@ -18975,16 +19001,6 @@ msgstr "GCP/GCS オブジェクト"
 
 msgid "GCP/GCS Requests"
 msgstr "GCP/GCS リクエスト"
-
-msgid "GCP/Memorystore redis CPU"
-msgstr ""
-
-#, fuzzy
-msgid "GCP/Memorystore redis clients connected"
-msgstr "接続されたクライアント"
-
-msgid "GCP/Memorystore redis memory"
-msgstr ""
 
 msgid "GET/POST variables of this page"
 msgstr ""
@@ -25664,10 +25680,6 @@ msgid "Levels Services"
 msgstr "レベルサービス"
 
 #, fuzzy
-msgid "Levels clients"
-msgstr "Redisクライアント"
-
-#, fuzzy
 msgid "Levels connections"
 msgstr "レベル接続詞"
 
@@ -26806,6 +26818,10 @@ msgid ""
 "controller registration command."
 msgstr ""
 
+#, fuzzy
+msgid "Log: Details"
+msgstr "ホストの詳細"
+
 msgid "Log: State information"
 msgstr "ログ:状態情報"
 
@@ -27158,9 +27174,6 @@ msgstr "最初の出力項目の下位レベル"
 
 msgid "Lower levels for health lifetime"
 msgstr "ヘルスライフタイムの低レベル"
-
-msgid "Lower levels for hit ratio"
-msgstr "ヒット比率の下位レベル"
 
 msgid "Lower levels for remaining API reads"
 msgstr "残りのAPI読み取りの下位レベル"
@@ -29780,6 +29793,10 @@ msgstr ""
 msgid "Name / Description"
 msgstr "名前/説明"
 
+#, fuzzy
+msgid "Name / IP address"
+msgstr "ホスト名/IPアドレス"
+
 msgid "Name of Alert rules/Alert rule groups"
 msgstr "アラートルール/アラートルールグループの名称。"
 
@@ -31159,6 +31176,14 @@ msgstr "通知延期"
 
 msgid "Notification"
 msgstr "通知"
+
+#, fuzzy
+msgid "Notification Author"
+msgstr "通知方法"
+
+#, fuzzy
+msgid "Notification Comment"
+msgstr "通知コメントの一致"
 
 msgid "Notification Method"
 msgstr "通知方法"
@@ -33264,9 +33289,6 @@ msgstr "バケットオブジェクトのパラメータio"
 msgid "Parameters for the bucket requests"
 msgstr "バケットリクエストのパラメーター"
 
-msgid "Parameters for the key hit ratio"
-msgstr "キーヒット率に関するパラメータ"
-
 msgid "Parameters for this host"
 msgstr "このホストのパラメーター"
 
@@ -35273,13 +35295,11 @@ msgstr "Proxmoxクラスター"
 msgid "Proxy URL"
 msgstr "プロキシURL"
 
-msgid "Proxy basic authorization"
-msgstr "プロキシの基本認証"
-
 msgid "Proxy host"
 msgstr "プロキシホスト"
 
-msgid "Proxy server address"
+#, fuzzy
+msgid "Proxy server"
 msgstr "プロキシサーバーアドレス"
 
 msgid "Proxy server details"
@@ -36013,9 +36033,6 @@ msgstr "Redisの永続性"
 
 msgid "Redis server name"
 msgstr "Redisサーバー名"
-
-msgid "Redis/Hitratio"
-msgstr "Redis/Hitratio"
 
 msgid "Reenable this test"
 msgstr "このテストを再度有効にする"
@@ -40626,6 +40643,14 @@ msgstr "スモーク"
 msgid "Smoke Detection"
 msgstr "Smoke探知"
 
+#, fuzzy
+msgid "Smoke Levels"
+msgstr "レベルを設定する"
+
+#, fuzzy
+msgid "Smoke levels"
+msgstr "レベルを設定する"
+
 msgid "Snapshot build currently in progress"
 msgstr "現在進行中のスナップショットビルド"
 
@@ -43103,9 +43128,6 @@ msgstr "dmidecodeを介したインベントリのシステム情報(Windows)"
 
 msgid "System MIBs"
 msgstr "システムMIB"
-
-msgid "System Memory utilitzation"
-msgstr "システムメモリ使用率"
 
 msgid "System Number"
 msgstr "システム番号"
@@ -53452,9 +53474,6 @@ msgstr "完了するまでの推定時間の上位レベル"
 msgid "Upper levels for first output item"
 msgstr "最初の出力項目の上位レベル"
 
-msgid "Upper levels for hit ratio"
-msgstr "ヒット比率の上位レベル"
-
 msgid "Upper levels for indexes"
 msgstr "インデックスの上位レベル"
 
@@ -54005,9 +54024,6 @@ msgstr "事前定義された条件を使用して、ルールセットの条件
 
 msgid "Use procedure call instead of SQL statement"
 msgstr "SQLステートメントの代わりにプロシージャコールを使用する"
-
-msgid "Use proxy"
-msgstr "プロキシを使う"
 
 msgid "Use proxy for MobileIron API connection"
 msgstr "MobilelronのAPI接続にプロキシを使用する"
@@ -54748,8 +54764,8 @@ msgid ""
 "default port (80/443). With this option you can override either of these "
 "parameters. By default no virtual host is set and HTTP/1.0 will be used. In "
 "some setups however, you may want to distiguish the contacted server address "
-"from your virtual host name (e.g. if the virtual host name is not resolvable "
-"by DNS). In this case the HTTP Host header will be set and HTTP/1.1 is used."
+"from your virtual host name. In this case the HTTP Host header will be set "
+"and HTTP/1.1 is used."
 msgstr ""
 
 msgid ""
@@ -55235,6 +55251,10 @@ msgstr "ボルト"
 msgid "Voltage"
 msgstr "電圧"
 
+#, fuzzy
+msgid "Voltage Levels"
+msgstr "電圧レベル"
+
 msgid ""
 "Voltage Levels for devices like UPS or PDUs. Several phases may be addressed "
 "independently."
@@ -55246,6 +55266,10 @@ msgid "Voltage Sensor"
 msgstr "電圧センサー"
 
 msgid "Voltage level"
+msgstr "電圧レベル"
+
+#, fuzzy
+msgid "Voltage levels"
 msgstr "電圧レベル"
 
 msgid "Voltage levels (UPS / PDU / Other Devices)"
@@ -60869,6 +60893,47 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "Event details"
+#~ msgid "Current details"
+#~ msgstr "イベントの詳細"
+
+#, fuzzy
+#~| msgid "Downtime history"
+#~ msgid "Details history"
+#~ msgstr "ダウンタイムの履歴"
+
+#~ msgid "Proxy basic authorization"
+#~ msgstr "プロキシの基本認証"
+
+#~ msgid "Use proxy"
+#~ msgstr "プロキシを使う"
+
+#, fuzzy
+#~| msgid "Clients connected"
+#~ msgid "GCP/Memorystore redis clients connected"
+#~ msgstr "接続されたクライアント"
+
+#, fuzzy
+#~| msgid "Redis clients"
+#~ msgid "Levels clients"
+#~ msgstr "Redisクライアント"
+
+#~ msgid "Lower levels for hit ratio"
+#~ msgstr "ヒット比率の下位レベル"
+
+#~ msgid "Parameters for the key hit ratio"
+#~ msgstr "キーヒット率に関するパラメータ"
+
+#~ msgid "Redis/Hitratio"
+#~ msgstr "Redis/Hitratio"
+
+#~ msgid "System Memory utilitzation"
+#~ msgstr "システムメモリ使用率"
+
+#~ msgid "Upper levels for hit ratio"
+#~ msgstr "ヒット比率の上位レベル"
 
 #~ msgid "99th percentile request latency"
 #~ msgstr "99%リクエストレイテンシー"

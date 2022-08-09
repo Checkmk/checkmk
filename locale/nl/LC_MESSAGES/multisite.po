@@ -2447,6 +2447,10 @@ msgstr "API-serververbinding"
 msgid "API server endpoint"
 msgstr "API-server eindpunt"
 
+#, fuzzy
+msgid "APPEND"
+msgstr "PEND"
+
 msgid "APT Updates"
 msgstr "APT-updates"
 
@@ -3806,6 +3810,9 @@ msgstr ""
 "Adres (IPv4 of IPv6) of dns naam waaronder de beheersraad kan worden "
 "bereikt. Als dit niet is ingesteld, wordt hetzelfde adres gebruikt als dat "
 "van de host."
+
+msgid "Address (name / IP or proxy) -- see also inline help for proxy"
+msgstr ""
 
 msgid "Address Check mode"
 msgstr "Adres Check mode"
@@ -6608,6 +6615,10 @@ msgid "Basic Layout"
 msgstr "Basisopmaak"
 
 msgid "Basic authentication"
+msgstr "Basisauthenticatie"
+
+#, fuzzy
+msgid "Basic authorization"
 msgstr "Basisauthenticatie"
 
 msgid "Basic properties"
@@ -11909,14 +11920,6 @@ msgstr "Huidige controlepoging"
 msgid "Current date"
 msgstr "Huidige datum"
 
-#, fuzzy
-msgid "Current details"
-msgstr "Details evenement"
-
-#, fuzzy
-msgid "Current details (Previously named: long output)"
-msgstr "Details (Voorheen genaamd: lange uitvoer)"
-
 msgid "Current host check attempt"
 msgstr "Huidige host controle poging"
 
@@ -13995,15 +13998,15 @@ msgstr "Gedetailleerde tijdlijn van gebeurtenissen voor elk object"
 msgid "Details"
 msgstr "Details"
 
+#, fuzzy
+msgid "Details (Previously named: long output)"
+msgstr "Details (Voorheen genaamd: lange uitvoer)"
+
 msgid "Details about a historical event history entry"
 msgstr "Details over een historische gebeurtenis geschiedenis item"
 
 msgid "Details about one event"
 msgstr "Details over een gebeurtenis"
-
-#, fuzzy
-msgid "Details history"
-msgstr "Geschiedenis downtime"
 
 msgid "Detect network parent hosts"
 msgstr "Detecteer netwerk moeder hosts"
@@ -16041,17 +16044,26 @@ msgstr "Elk etiket mag slechts één keer worden gebruikt."
 msgid "Each metric must be unique for a service"
 msgstr "Elke metriek moet uniek zijn voor een dienst"
 
+#, fuzzy
 msgid ""
 "Each new message runs through this list of rules. As soon as a regular "
 "expression is found <i>in</i> the message, the state is determined and the "
 "search terminated. If no rule matches the message is classified as "
 "<i>IGNORE</i>. Note: <i>OK</i> messages are being sent to the central "
-"Check_MK server, where they can be reclassified. <i>IGNORE</i> messages are "
-"silently dropped.<br><br><i>REWRITE</i> allows to change the content a a "
+"Checkmk server, where they can be reclassified. <i>IGNORE</i> messages are "
+"silently dropped.<br><br><i>REWRITE</i> allows to change the content of a "
 "message that has been matched by the <i>previous</i> rule. You can specify a "
 "new text and use the placeholders <tt>\\0</tt> for the original message, <tt>"
 "\\1</tt> for the first regex match group of the match, <tt>\\2</tt> for the "
-"second and so on."
+"second and so on.<br><br><i>APPEND</i> allows for appending messages to a "
+"<i>previous</i> message. A block of APPEND patterns (one more multiple) "
+"works in conjunction with the pattern directly <i>before</i> this block. "
+"Once this pattern matches a message (call it the 'initial message'), the "
+"agent plugin starts to check the subsequent messages against the patterns in "
+"the APPEND block. As long as there is a match, these subsequent messages are "
+"appended to the initial message. Once there is no match, the appending is "
+"stopped and the regular processing of messages continues. One use case for "
+"this feature is the handling of multi-line stack traces."
 msgstr ""
 "Elk nieuw bericht doorloopt deze lijst van regels. Zodra een reguliere "
 "expressie <i>in</i> het bericht wordt gevonden, wordt de status bepaald en "
@@ -17277,6 +17289,13 @@ msgstr "Geschatte tijd om te voltooien"
 
 msgid "Etherbox / MessPC: Sensor Temperature"
 msgstr "Etherbox / MessPC: Temperatuur sensor"
+
+msgid "Etherbox smoke"
+msgstr ""
+
+#, fuzzy
+msgid "Etherbox voltage"
+msgstr "Elektrische spanning"
 
 msgid "Euro"
 msgstr "Euro"
@@ -19011,6 +19030,13 @@ msgid "Foobar-Daemon"
 msgstr "Foobar-Daemon"
 
 msgid ""
+"For <tt>check_http</tt> to work with a proxy server, you will most likely "
+"need use the HTTP method <tt>CONNECT</tt>. If you configure a proxy, Checkmk "
+"will automatically use this method, unless you explicitly select a different "
+"method in the options below (URL mode only)."
+msgstr ""
+
+msgid ""
 "For Containers - Choose which identifier is used for the monitored "
 "containers. This will affect the name used for the piggyback host "
 "corresponding to the container, as well as items for services created on the "
@@ -19704,16 +19730,6 @@ msgstr "GCP/GCS-objecten"
 
 msgid "GCP/GCS Requests"
 msgstr "GCP/GCS Verzoeken"
-
-msgid "GCP/Memorystore redis CPU"
-msgstr "GCP/Memorystore redis CPU"
-
-#, fuzzy
-msgid "GCP/Memorystore redis clients connected"
-msgstr "GCP/Memorystore redis geheugen"
-
-msgid "GCP/Memorystore redis memory"
-msgstr "GCP/Memorystore redis geheugen"
 
 msgid "GET/POST variables of this page"
 msgstr "GET/POST variabelen van deze pagina"
@@ -26836,10 +26852,6 @@ msgid "Levels Services"
 msgstr "Niveaus Diensten"
 
 #, fuzzy
-msgid "Levels clients"
-msgstr "Redis cliënten"
-
-#, fuzzy
 msgid "Levels connections"
 msgstr "Niveau voegwoorden"
 
@@ -28009,6 +28021,10 @@ msgstr ""
 "Log het agent registratieproces van inkomende verzoeken door het Checkmk "
 "agent controller registratiecommando."
 
+#, fuzzy
+msgid "Log: Details"
+msgstr "Gastheer Details"
+
 msgid "Log: State information"
 msgstr "Logboek: Informatie over de staat"
 
@@ -28363,9 +28379,6 @@ msgstr "Lagere niveaus voor eerste uitgangsitem"
 
 msgid "Lower levels for health lifetime"
 msgstr "Lagere niveaus voor levenslange gezondheid"
-
-msgid "Lower levels for hit ratio"
-msgstr "Lagere niveaus voor hit ratio"
 
 msgid "Lower levels for remaining API reads"
 msgstr "Lagere niveaus voor resterende API-lezingen"
@@ -31044,6 +31057,10 @@ msgstr "Naam - Gebruik de naam van de container"
 msgid "Name / Description"
 msgstr "Naam / Beschrijving"
 
+#, fuzzy
+msgid "Name / IP address"
+msgstr "Hostnaam / IP-adres"
+
 msgid "Name of Alert rules/Alert rule groups"
 msgstr "Naam van Waarschuwingsregels/Alert regelgroepen"
 
@@ -32467,6 +32484,14 @@ msgstr "Notif. uitgesteld"
 
 msgid "Notification"
 msgstr "Kennisgeving"
+
+#, fuzzy
+msgid "Notification Author"
+msgstr "Kennisgevingsmethode"
+
+#, fuzzy
+msgid "Notification Comment"
+msgstr "Opmerking bij kennisgeving wedstrijd"
 
 msgid "Notification Method"
 msgstr "Kennisgevingsmethode"
@@ -34632,9 +34657,6 @@ msgstr "Parameters voor de emmerobjecten io"
 msgid "Parameters for the bucket requests"
 msgstr "Parameters voor de emmeraanvragen"
 
-msgid "Parameters for the key hit ratio"
-msgstr "Parameters voor de toetsaanslagverhouding"
-
 msgid "Parameters for this host"
 msgstr "Parameters voor deze host"
 
@@ -36729,13 +36751,11 @@ msgstr "Proxmox cluster"
 msgid "Proxy URL"
 msgstr "Proxy URL"
 
-msgid "Proxy basic authorization"
-msgstr "Proxy basis machtiging"
-
 msgid "Proxy host"
 msgstr "Proxy host"
 
-msgid "Proxy server address"
+#, fuzzy
+msgid "Proxy server"
 msgstr "Proxy server adres"
 
 msgid "Proxy server details"
@@ -37476,9 +37496,6 @@ msgstr "Redis persistentie"
 
 msgid "Redis server name"
 msgstr "Redis server naam"
-
-msgid "Redis/Hitratio"
-msgstr "Redis/Hitratio"
 
 msgid "Reenable this test"
 msgstr "Schakel deze test opnieuw in"
@@ -42255,6 +42272,14 @@ msgstr "Rook"
 msgid "Smoke Detection"
 msgstr "Rookdetectie"
 
+#, fuzzy
+msgid "Smoke Levels"
+msgstr "Stel niveaus in"
+
+#, fuzzy
+msgid "Smoke levels"
+msgstr "Ingestelde niveaus"
+
 msgid "Snapshot build currently in progress"
 msgstr "Snapshot build is bezig"
 
@@ -44843,9 +44868,6 @@ msgstr "Systeeminformatie voor inventarisatie via dmidecode (Windows)"
 
 msgid "System MIBs"
 msgstr "Systeem MIB's"
-
-msgid "System Memory utilitzation"
-msgstr "Gebruik systeemgeheugen"
 
 msgid "System Number"
 msgstr "Systeemnummer"
@@ -56245,9 +56267,6 @@ msgstr "Bovenste niveaus voor geschatte tijd om te voltooien"
 msgid "Upper levels for first output item"
 msgstr "Bovenste niveaus voor eerste uitgangsitem"
 
-msgid "Upper levels for hit ratio"
-msgstr "Bovenste niveaus voor hit ratio"
-
 msgid "Upper levels for indexes"
 msgstr "Bovenste niveaus voor indexen"
 
@@ -56812,9 +56831,6 @@ msgstr ""
 
 msgid "Use procedure call instead of SQL statement"
 msgstr "Gebruik procedure-aanroep in plaats van SQL-instructie"
-
-msgid "Use proxy"
-msgstr "Gebruik proxy"
 
 msgid "Use proxy for MobileIron API connection"
 msgstr "Gebruik proxy voor MobileIron API-verbinding"
@@ -57607,14 +57623,15 @@ msgstr ""
 "regel kun je een alternatieve manier opgeven om de status van de host te "
 "bepalen."
 
+#, fuzzy
 msgid ""
 "Usually Checkmk will nail this check to the primary IP address of the host "
 "it is attached to. It will use the corresponding IP version (IPv4/IPv6) and "
 "default port (80/443). With this option you can override either of these "
 "parameters. By default no virtual host is set and HTTP/1.0 will be used. In "
 "some setups however, you may want to distiguish the contacted server address "
-"from your virtual host name (e.g. if the virtual host name is not resolvable "
-"by DNS). In this case the HTTP Host header will be set and HTTP/1.1 is used."
+"from your virtual host name. In this case the HTTP Host header will be set "
+"and HTTP/1.1 is used."
 msgstr ""
 "Gewoonlijk zal Checkmk deze controle nagelen op het primaire IP adres van de "
 "host waaraan het verbonden is. Het zal de corresponderende IP versie (IPv4/"
@@ -58119,6 +58136,10 @@ msgstr "Volt"
 msgid "Voltage"
 msgstr "Spanning"
 
+#, fuzzy
+msgid "Voltage Levels"
+msgstr "Spanningsniveau"
+
 msgid ""
 "Voltage Levels for devices like UPS or PDUs. Several phases may be addressed "
 "independently."
@@ -58130,6 +58151,10 @@ msgid "Voltage Sensor"
 msgstr "Spanningssensor"
 
 msgid "Voltage level"
+msgstr "Spanningsniveau"
+
+#, fuzzy
+msgid "Voltage levels"
 msgstr "Spanningsniveau"
 
 msgid "Voltage levels (UPS / PDU / Other Devices)"
@@ -64205,6 +64230,53 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~| msgid "Event details"
+#~ msgid "Current details"
+#~ msgstr "Details evenement"
+
+#, fuzzy
+#~| msgid "Downtime history"
+#~ msgid "Details history"
+#~ msgstr "Geschiedenis downtime"
+
+#~ msgid "Proxy basic authorization"
+#~ msgstr "Proxy basis machtiging"
+
+#~ msgid "Use proxy"
+#~ msgstr "Gebruik proxy"
+
+#~ msgid "GCP/Memorystore redis CPU"
+#~ msgstr "GCP/Memorystore redis CPU"
+
+#, fuzzy
+#~| msgid "GCP/Memorystore redis memory"
+#~ msgid "GCP/Memorystore redis clients connected"
+#~ msgstr "GCP/Memorystore redis geheugen"
+
+#~ msgid "GCP/Memorystore redis memory"
+#~ msgstr "GCP/Memorystore redis geheugen"
+
+#, fuzzy
+#~| msgid "Redis clients"
+#~ msgid "Levels clients"
+#~ msgstr "Redis cliënten"
+
+#~ msgid "Lower levels for hit ratio"
+#~ msgstr "Lagere niveaus voor hit ratio"
+
+#~ msgid "Parameters for the key hit ratio"
+#~ msgstr "Parameters voor de toetsaanslagverhouding"
+
+#~ msgid "Redis/Hitratio"
+#~ msgstr "Redis/Hitratio"
+
+#~ msgid "System Memory utilitzation"
+#~ msgstr "Gebruik systeemgeheugen"
+
+#~ msgid "Upper levels for hit ratio"
+#~ msgstr "Bovenste niveaus voor hit ratio"
 
 #~ msgid "99th percentile request latency"
 #~ msgstr "99e percentiel verzoeklatentie"

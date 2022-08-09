@@ -2075,6 +2075,9 @@ msgstr "Conexiune Noua"
 msgid "API server endpoint"
 msgstr ""
 
+msgid "APPEND"
+msgstr ""
+
 msgid "APT Updates"
 msgstr ""
 
@@ -3602,6 +3605,9 @@ msgid ""
 "Address (IPv4 or IPv6) or dns name under which the management board can be "
 "reached. If this is not set, the same address as that of the host will be "
 "used."
+msgstr ""
+
+msgid "Address (name / IP or proxy) -- see also inline help for proxy"
 msgstr ""
 
 msgid "Address Check mode"
@@ -6323,6 +6329,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Basic authentication"
+msgstr "trimite notificare"
+
+#, fuzzy
+msgid "Basic authorization"
 msgstr "trimite notificare"
 
 #, fuzzy
@@ -11310,13 +11320,6 @@ msgstr ""
 msgid "Current date"
 msgstr "Parola"
 
-#, fuzzy
-msgid "Current details"
-msgstr "servicii"
-
-msgid "Current details (Previously named: long output)"
-msgstr ""
-
 msgid "Current host check attempt"
 msgstr ""
 
@@ -13469,15 +13472,14 @@ msgstr ""
 msgid "Details"
 msgstr ""
 
+msgid "Details (Previously named: long output)"
+msgstr ""
+
 msgid "Details about a historical event history entry"
 msgstr ""
 
 msgid "Details about one event"
 msgstr ""
-
-#, fuzzy
-msgid "Details history"
-msgstr "Întreruperi adhoc"
 
 msgid "Detect network parent hosts"
 msgstr ""
@@ -15567,12 +15569,20 @@ msgid ""
 "expression is found <i>in</i> the message, the state is determined and the "
 "search terminated. If no rule matches the message is classified as "
 "<i>IGNORE</i>. Note: <i>OK</i> messages are being sent to the central "
-"Check_MK server, where they can be reclassified. <i>IGNORE</i> messages are "
-"silently dropped.<br><br><i>REWRITE</i> allows to change the content a a "
+"Checkmk server, where they can be reclassified. <i>IGNORE</i> messages are "
+"silently dropped.<br><br><i>REWRITE</i> allows to change the content of a "
 "message that has been matched by the <i>previous</i> rule. You can specify a "
 "new text and use the placeholders <tt>\\0</tt> for the original message, <tt>"
 "\\1</tt> for the first regex match group of the match, <tt>\\2</tt> for the "
-"second and so on."
+"second and so on.<br><br><i>APPEND</i> allows for appending messages to a "
+"<i>previous</i> message. A block of APPEND patterns (one more multiple) "
+"works in conjunction with the pattern directly <i>before</i> this block. "
+"Once this pattern matches a message (call it the 'initial message'), the "
+"agent plugin starts to check the subsequent messages against the patterns in "
+"the APPEND block. As long as there is a match, these subsequent messages are "
+"appended to the initial message. Once there is no match, the appending is "
+"stopped and the regular processing of messages continues. One use case for "
+"this feature is the handling of multi-line stack traces."
 msgstr ""
 
 msgid ""
@@ -16790,6 +16800,12 @@ msgid "Estimated time to complete"
 msgstr ""
 
 msgid "Etherbox / MessPC: Sensor Temperature"
+msgstr ""
+
+msgid "Etherbox smoke"
+msgstr ""
+
+msgid "Etherbox voltage"
 msgstr ""
 
 msgid "Euro"
@@ -18610,6 +18626,13 @@ msgid "Foobar-Daemon"
 msgstr ""
 
 msgid ""
+"For <tt>check_http</tt> to work with a proxy server, you will most likely "
+"need use the HTTP method <tt>CONNECT</tt>. If you configure a proxy, Checkmk "
+"will automatically use this method, unless you explicitly select a different "
+"method in the options below (URL mode only)."
+msgstr ""
+
+msgid ""
 "For Containers - Choose which identifier is used for the monitored "
 "containers. This will affect the name used for the piggyback host "
 "corresponding to the container, as well as items for services created on the "
@@ -19222,16 +19245,6 @@ msgstr ""
 #, fuzzy
 msgid "GCP/GCS Requests"
 msgstr "cereri"
-
-msgid "GCP/Memorystore redis CPU"
-msgstr ""
-
-#, fuzzy
-msgid "GCP/Memorystore redis clients connected"
-msgstr "Conexiune Noua"
-
-msgid "GCP/Memorystore redis memory"
-msgstr ""
 
 msgid "GET/POST variables of this page"
 msgstr ""
@@ -25458,10 +25471,6 @@ msgid "Levels Services"
 msgstr "servicii"
 
 #, fuzzy
-msgid "Levels clients"
-msgstr "Nivelurile maxime pentru voltaj"
-
-#, fuzzy
 msgid "Levels connections"
 msgstr "Conexiune Noua"
 
@@ -26697,6 +26706,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Log: Details"
+msgstr "Arata in masa"
+
+#, fuzzy
 msgid "Log: State information"
 msgstr "Adaugă informații despre contact"
 
@@ -27091,10 +27104,6 @@ msgstr ""
 
 #, fuzzy
 msgid "Lower levels for health lifetime"
-msgstr "Nivelurile maxime pentru voltaj"
-
-#, fuzzy
-msgid "Lower levels for hit ratio"
 msgstr "Nivelurile maxime pentru voltaj"
 
 msgid "Lower levels for remaining API reads"
@@ -29932,6 +29941,10 @@ msgid "Name / Description"
 msgstr ""
 
 #, fuzzy
+msgid "Name / IP address"
+msgstr "Adresă"
+
+#, fuzzy
 msgid "Name of Alert rules/Alert rule groups"
 msgstr "Numele elementului pentru eveniment"
 
@@ -31359,6 +31372,14 @@ msgstr ""
 #, fuzzy
 msgid "Notification"
 msgstr "Notificari"
+
+#, fuzzy
+msgid "Notification Author"
+msgstr "Notificari"
+
+#, fuzzy
+msgid "Notification Comment"
+msgstr "Adaugă notificare"
 
 msgid "Notification Method"
 msgstr ""
@@ -33577,10 +33598,6 @@ msgstr ""
 msgid "Parameters for the bucket requests"
 msgstr "trei nivele"
 
-#, fuzzy
-msgid "Parameters for the key hit ratio"
-msgstr " pe siteul de monitorizare: "
-
 msgid "Parameters for this host"
 msgstr ""
 
@@ -35610,15 +35627,13 @@ msgstr "Cluster nou"
 msgid "Proxy URL"
 msgstr ""
 
-msgid "Proxy basic authorization"
-msgstr ""
-
 #, fuzzy
 msgid "Proxy host"
 msgstr "(fără elemente)"
 
-msgid "Proxy server address"
-msgstr ""
+#, fuzzy
+msgid "Proxy server"
+msgstr "servicii"
 
 #, fuzzy
 msgid "Proxy server details"
@@ -36410,9 +36425,6 @@ msgstr "Adaugă nume de senzor"
 #, fuzzy
 msgid "Redis server name"
 msgstr "Adaugă nume de senzor"
-
-msgid "Redis/Hitratio"
-msgstr ""
 
 #, fuzzy
 msgid "Reenable this test"
@@ -41249,6 +41261,14 @@ msgstr ""
 msgid "Smoke Detection"
 msgstr ""
 
+#, fuzzy
+msgid "Smoke Levels"
+msgstr "doua nivele"
+
+#, fuzzy
+msgid "Smoke levels"
+msgstr "doua nivele"
+
 msgid "Snapshot build currently in progress"
 msgstr ""
 
@@ -43660,10 +43680,6 @@ msgstr ""
 
 msgid "System MIBs"
 msgstr ""
-
-#, fuzzy
-msgid "System Memory utilitzation"
-msgstr "Dezactiveaza Notificarile"
 
 msgid "System Number"
 msgstr ""
@@ -52822,10 +52838,6 @@ msgid "Upper levels for first output item"
 msgstr ""
 
 #, fuzzy
-msgid "Upper levels for hit ratio"
-msgstr "Nivelurile maxime pentru voltaj"
-
-#, fuzzy
 msgid "Upper levels for indexes"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
@@ -53431,9 +53443,6 @@ msgid ""
 msgstr ""
 
 msgid "Use procedure call instead of SQL statement"
-msgstr ""
-
-msgid "Use proxy"
 msgstr ""
 
 #, fuzzy
@@ -54116,8 +54125,8 @@ msgid ""
 "default port (80/443). With this option you can override either of these "
 "parameters. By default no virtual host is set and HTTP/1.0 will be used. In "
 "some setups however, you may want to distiguish the contacted server address "
-"from your virtual host name (e.g. if the virtual host name is not resolvable "
-"by DNS). In this case the HTTP Host header will be set and HTTP/1.1 is used."
+"from your virtual host name. In this case the HTTP Host header will be set "
+"and HTTP/1.1 is used."
 msgstr ""
 
 msgid ""
@@ -54637,6 +54646,10 @@ msgstr ""
 msgid "Voltage"
 msgstr ""
 
+#, fuzzy
+msgid "Voltage Levels"
+msgstr "Editeaza regulile de loguri"
+
 msgid ""
 "Voltage Levels for devices like UPS or PDUs. Several phases may be addressed "
 "independently."
@@ -54647,6 +54660,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Voltage level"
+msgstr "Editeaza regulile de loguri"
+
+#, fuzzy
+msgid "Voltage levels"
 msgstr "Editeaza regulile de loguri"
 
 msgid "Voltage levels (UPS / PDU / Other Devices)"
@@ -59820,6 +59837,38 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Current details"
+#~ msgstr "servicii"
+
+#, fuzzy
+#~ msgid "Details history"
+#~ msgstr "Întreruperi adhoc"
+
+#, fuzzy
+#~ msgid "GCP/Memorystore redis clients connected"
+#~ msgstr "Conexiune Noua"
+
+#, fuzzy
+#~ msgid "Levels clients"
+#~ msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+#~ msgid "Lower levels for hit ratio"
+#~ msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+#~ msgid "Parameters for the key hit ratio"
+#~ msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+#~ msgid "System Memory utilitzation"
+#~ msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+#~ msgid "Upper levels for hit ratio"
+#~ msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
 #~ msgid "99th percentile request latency"
 #~ msgstr "Nivelurile maxime pentru voltaj"
 
@@ -61837,10 +61886,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Main dashboard $SITE$"
 #~ msgstr "Adaugă element"
-
-#, fuzzy
-#~ msgid "Notifications today"
-#~ msgstr "Notificari"
 
 #, fuzzy
 #~ msgid "Number of services (excluded)"

@@ -278,7 +278,7 @@ def declare_visual_permissions(what, what_plural):
 #   '----------------------------------------------------------------------'
 
 
-def save(what, visuals, user_id=None):
+def save(what: VisualType, visuals, user_id=None):
     if user_id is None:
         user_id = user.id
     assert user_id is not None
@@ -287,12 +287,12 @@ def save(what, visuals, user_id=None):
     for (owner_id, name), visual in visuals.items():
         if user_id == owner_id:
             uservisuals[name] = visual
-    save_user_file("user_" + what, uservisuals, user_id=user_id)
-    _CombinedVisualsCache(VisualType(what)).invalidate_cache()
+    save_user_file("user_" + what.value, uservisuals, user_id=user_id)
+    _CombinedVisualsCache(what).invalidate_cache()
 
 
 def load(
-    what: str,
+    what: VisualType,
     builtin_visuals: Dict[Any, Any],
     skip_func: Optional[Callable[[Dict[Any, Any]], bool]] = None,
 ) -> Dict[Tuple[UserId, str], Dict[str, Any]]:
@@ -318,7 +318,7 @@ def load(
         visuals[(UserId(""), name)] = visual
 
     # Add custom "user_*.mk" visuals
-    visuals.update(_CombinedVisualsCache(VisualType(what)).load(builtin_visuals, skip_func))
+    visuals.update(_CombinedVisualsCache(what).load(builtin_visuals, skip_func))
 
     return visuals
 
@@ -1493,7 +1493,7 @@ def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
                             back_url = back_url.replace(
                                 varstring + oldname, varstring + visual["name"]
                             )
-                    save(what, all_visuals, owner_user_id)
+                    save(VisualType(what), all_visuals, owner_user_id)
 
                 if not request.var("save_and_view"):
                     flash(_("Your %s has been saved.") % visual_type.title)

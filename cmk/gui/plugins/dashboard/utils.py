@@ -819,7 +819,9 @@ class DashboardStore:
     def _load_all(self) -> Dict[Tuple[UserId, DashboardName], DashboardConfig]:
         """Loads all definitions from disk and returns them"""
         _transform_builtin_dashboards()
-        return _transform_dashboards(visuals.load("dashboards", builtin_dashboards))
+        return _transform_dashboards(
+            visuals.load(visuals.VisualType.dashboards, builtin_dashboards)
+        )
 
     def _load_permitted(
         self, all_dashboards: Dict[Tuple[UserId, DashboardName], DashboardConfig]
@@ -829,7 +831,7 @@ class DashboardStore:
 
 
 def save_all_dashboards() -> None:
-    visuals.save("dashboards", get_all_dashboards())
+    visuals.save(visuals.VisualType.dashboards, get_all_dashboards())
 
 
 def get_all_dashboards() -> Dict[Tuple[UserId, DashboardName], DashboardConfig]:

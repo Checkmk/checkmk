@@ -248,7 +248,9 @@ _MATCH_SINGLE_BACKSLASH = re.compile(r"[^\\]\\[^\\]")
 
 
 @contextmanager
-def _save_user_instances(visual_type: str, all_visuals: Dict):  # type:ignore[no-untyped-def]
+def _save_user_instances(  # type:ignore[no-untyped-def]
+    visual_type: visuals.VisualType, all_visuals: Dict
+):
     modified_user_instances: Set[UserId] = set()
 
     yield modified_user_instances
@@ -1162,13 +1164,15 @@ class UpdateConfig:
         the transformed visual in this update step. All user configs are rewriten.
         The load and transform functions are specific to each visual, saving is generic."""
 
-        def updates(visual_type: str, all_visuals: Dict):  # type:ignore[no-untyped-def]
+        def updates(  # type:ignore[no-untyped-def]
+            visual_type: visuals.VisualType, all_visuals: Dict
+        ):
             with _save_user_instances(visual_type, all_visuals) as affected_user:
                 # skip builtins, only users
                 affected_user.update(owner for owner, _name in all_visuals if owner)
 
-        updates("views", get_all_views())
-        updates("dashboards", get_all_dashboards())
+        updates(visuals.VisualType.views, get_all_views())
+        updates(visuals.VisualType.dashboards, get_all_dashboards())
 
         # Reports
         try:
@@ -1178,7 +1182,7 @@ class UpdateConfig:
 
         if reporting:
             reporting.load_reports()  # Loading does the transformation
-            updates("reports", reporting.reports)
+            updates(visuals.VisualType.reports, reporting.reports)
 
     def _migrate_all_visuals_topics(
         self, instances: pagetypes.OverridableInstances[pagetypes.PagetypeTopics], topics: Dict
@@ -1188,14 +1192,17 @@ class UpdateConfig:
         # Views
         topic_created_for.update(
             self._migrate_visuals_topics(
-                instances, topics, visual_type="views", all_visuals=get_all_views()
+                instances, topics, visual_type=visuals.VisualType.views, all_visuals=get_all_views()
             )
         )
 
         # Dashboards
         topic_created_for.update(
             self._migrate_visuals_topics(
-                instances, topics, visual_type="dashboards", all_visuals=get_all_dashboards()
+                instances,
+                topics,
+                visual_type=visuals.VisualType.dashboards,
+                all_visuals=get_all_dashboards(),
             )
         )
 
@@ -1209,7 +1216,10 @@ class UpdateConfig:
             reporting.load_reports()
             topic_created_for.update(
                 self._migrate_visuals_topics(
-                    instances, topics, visual_type="reports", all_visuals=reporting.reports
+                    instances,
+                    topics,
+                    visual_type=visuals.VisualType.reports,
+                    all_visuals=reporting.reports,
                 )
             )
 
@@ -1219,7 +1229,7 @@ class UpdateConfig:
         self,
         instances: pagetypes.OverridableInstances[pagetypes.PagetypeTopics],
         topics: Dict,
-        visual_type: str,
+        visual_type: visuals.VisualType,
         all_visuals: Dict,
     ) -> Set[UserId]:
         topic_created_for: Set[UserId] = set()
@@ -1323,8 +1333,8 @@ class UpdateConfig:
         global_config = load_configuration_settings(full_config=True)
         filter_group = global_config.get("topology_default_filter_group", "")
 
-        dashboards = visuals.load("dashboards", builtin_dashboards)
-        with _save_user_instances("dashboards", dashboards) as affected_user:
+        dashboards = visuals.load(visuals.VisualType.dashboards, builtin_dashboards)
+        with _save_user_instances(visuals.VisualType.dashboards, dashboards) as affected_user:
             for (owner, _name), dashboard in dashboards.items():
                 for dashlet in dashboard["dashlets"]:
                     if dashlet["type"] == "network_topology":

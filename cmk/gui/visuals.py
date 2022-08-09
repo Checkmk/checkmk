@@ -300,17 +300,7 @@ def load(
 ) -> Dict[Tuple[UserId, str], Dict[str, Any]]:
     visuals: Dict[Tuple[UserId, str], Dict[str, Any]] = {}
 
-    # first load builtins. Set username to ''
     for name, visual in builtin_visuals.items():
-        visual["owner"] = ""  # might have been forgotten on copy action
-        visual["public"] = True
-        visual["name"] = name
-
-        # Dashboards had not all COMMON fields in previous versions. Add them
-        # here to be compatible for a specific time. Seamless migration, yeah.
-        visual.setdefault("description", "")
-        visual.setdefault("hidden", False)
-
         # Ensure converting _l to str
         for key, value in visual.items():
             if not isinstance(value, utils.speaklater.LazyString):
@@ -322,34 +312,12 @@ def load(
     # Add custom "user_*.mk" visuals
     visuals.update(
         _CombinedVisualsCache(what).load(
-            builtin_visuals,
             internal_to_runtime_transformer,
             skip_func,
         )
     )
 
     return visuals
-
-
-# This is currently not called by load() because some visual type (e.g. view) specific transform
-# needs to be executed in advance. This should be cleaned up.
-def transform_old_visual(visual):
-    """Prepare visuals for working with them. Migrate old formats or add default settings, for example"""
-    visual.setdefault("single_infos", [])
-    visual.setdefault("context", {})
-    visual.setdefault("link_from", {})
-    visual.setdefault("topic", "")
-    visual.setdefault("icon", None)
-
-    # 1.6 introduced this setting: Ensure all visuals have it set
-    visual.setdefault("add_context_to_title", True)
-
-    # 1.7 introduced these settings for the new mega menus
-    visual.setdefault("sort_index", 99)
-    visual.setdefault("is_show_more", False)
-
-    # 2.1
-    visual["context"] = cleanup_context_filters(visual["context"], visual["single_infos"])
 
 
 def transform_pre_2_1_discovery_state(
@@ -459,7 +427,6 @@ class _CombinedVisualsCache:
 
     def load(
         self,
-        builtin_visuals: Dict[Any, Any],
         internal_to_runtime_transformer: Callable[[dict[str, Any]], Visual],
         skip_func: Callable[[Visual], bool],
     ) -> CustomUserVisuals:
@@ -467,9 +434,7 @@ class _CombinedVisualsCache:
         if self._may_use_cache():
             if (content := self._read_from_cache()) is not None:
                 return content
-        return self._compute_and_write_cache(
-            builtin_visuals, internal_to_runtime_transformer, skip_func
-        )
+        return self._compute_and_write_cache(internal_to_runtime_transformer, skip_func)
 
     def _may_use_cache(self) -> bool:
         if not self._content_filename.exists():
@@ -487,12 +452,11 @@ class _CombinedVisualsCache:
 
     def _compute_and_write_cache(
         self,
-        builtin_visuals: Dict[Any, Any],
         internal_to_runtime_transformer: Callable[[dict[str, Any]], Visual],
         skip_func: Callable[[Visual], bool],
     ) -> CustomUserVisuals:
         visuals = _load_custom_user_visuals(
-            self._visual_type.value, builtin_visuals, internal_to_runtime_transformer, skip_func
+            self._visual_type.value, internal_to_runtime_transformer, skip_func
         )
         self._write_to_cache(visuals)
         return visuals
@@ -515,7 +479,6 @@ hooks.register_builtin("users-saved", lambda x: _CombinedVisualsCache.invalidate
 
 def _load_custom_user_visuals(
     what: str,
-    builtin_visuals: Dict[Any, Any],
     internal_to_runtime_transformer: Callable[[dict[str, Any]], Visual],
     skip_func: Callable[[Visual], bool],
 ) -> CustomUserVisuals:
@@ -547,7 +510,6 @@ def _load_custom_user_visuals(
             visuals.update(
                 load_visuals_of_a_user(
                     what,
-                    builtin_visuals,
                     internal_to_runtime_transformer,
                     skip_func,
                     Path(visual_path),
@@ -563,7 +525,6 @@ def _load_custom_user_visuals(
 
 def load_visuals_of_a_user(  # type:ignore[no-untyped-def]
     what,
-    builtin_visuals,
     internal_to_runtime_transformer: Callable[[dict[str, Any]], Visual],
     skip_func: Callable[[Visual], bool],
     path: Path,
@@ -577,21 +538,6 @@ def load_visuals_of_a_user(  # type:ignore[no-untyped-def]
 
         visual["owner"] = user_id
         visual["name"] = name
-
-        # Maybe resolve inherited attributes. This was a feature for several versions
-        # to make the visual texts localizable. This has been removed because the visual
-        # texts can now be localized using the custom localization strings.
-        # This is needed for backward compatibility to make the visuals without these
-        # attributes get the attributes from their builtin visual.
-        builtin_visual = builtin_visuals.get(name)
-        if builtin_visual:
-            for attr in ["title", "topic", "description"]:
-                if attr not in visual and attr in builtin_visual:
-                    visual[attr] = builtin_visual[attr]
-
-        # Repair visuals with missing 'title' or 'description'
-        visual.setdefault("title", name)
-        visual.setdefault("description", "")
 
         # Declare custom permissions
         declare_visual_permission(what, name, visual)

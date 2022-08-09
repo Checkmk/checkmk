@@ -1851,14 +1851,9 @@ def get_view_by_name(view_name: ViewName) -> ViewSpec:
 
 def painter_specs_to_runtime_format(view: ViewSpec) -> ViewSpec:
     if "painters" in view:
-        view["painters"] = [
-            v if isinstance(v, PainterSpec) else PainterSpec.from_raw(*v) for v in view["painters"]
-        ]
+        view["painters"] = [PainterSpec.from_raw(*v) for v in view["painters"]]
     if "group_painters" in view:
-        view["group_painters"] = [
-            v if isinstance(v, PainterSpec) else PainterSpec.from_raw(*v)
-            for v in view["group_painters"]
-        ]
+        view["group_painters"] = [PainterSpec.from_raw(*v) for v in view["group_painters"]]
     return view
 
 

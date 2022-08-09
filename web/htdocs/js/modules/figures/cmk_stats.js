@@ -1,11 +1,14 @@
 import * as cmk_figures from "cmk_figures";
 import * as d3Hexbin from "d3-hexbin";
 
+//TODO: add generic type to Figurebase and adjust getEmptyData to fit the data
 export class HostStats extends cmk_figures.FigureBase {
     ident() {
         return "hoststats";
     }
-
+    getEmptyData() {
+        return cmk_figures.getEmptyBasicFigureData();
+    }
     initialize(debug) {
         super.initialize(debug);
 

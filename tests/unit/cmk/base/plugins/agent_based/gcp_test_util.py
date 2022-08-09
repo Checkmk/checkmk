@@ -80,6 +80,10 @@ class DiscoverTester(ABC):
         ]
         assert len(list(self.discover(parse_assets(string_table)))) == 0
 
+    def test_discover_nothing_without_asset(self) -> None:
+        string_table = [self._assets[0]]
+        assert len(list(self.discover(parse_assets(string_table)))) == 0
+
 
 def generate_timeseries(item: str, value: float, service_desc: agent_gcp.Service) -> StringTable:
     start_time = datetime.datetime(2016, 4, 6, 22, 5, 0, 42)

@@ -31,7 +31,11 @@ def discover(
     section_gcp_service_cloud_sql: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> DiscoveryResult:
-    if section_gcp_assets is None or not section_gcp_assets.config.is_enabled("cloud_sql"):
+    if (
+        section_gcp_assets is None
+        or not section_gcp_assets.config.is_enabled("cloud_sql")
+        or not ASSET_TYPE in section_gcp_assets
+    ):
         return
     for item, service in section_gcp_assets[ASSET_TYPE].items():
         data = service.resource_data

@@ -25,10 +25,13 @@ def discover(
     section_gcp_service_filestore: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> DiscoveryResult:
-    if section_gcp_assets is None or not section_gcp_assets.config.is_enabled("filestore"):
+    if (
+        section_gcp_assets is None
+        or not section_gcp_assets.config.is_enabled("filestore")
+        or not ASSET_TYPE in section_gcp_assets
+    ):
         return
-    shares = section_gcp_assets[ASSET_TYPE]
-    for item, share in shares.items():
+    for item, share in section_gcp_assets[ASSET_TYPE].items():
         data = share.resource_data
         labels = [
             ServiceLabel("gcp/location", share.location),

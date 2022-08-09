@@ -63,6 +63,8 @@ sudo rm -f \
     "$ROOT/lib/python3/cmk/post_rename_site/plugins/__init__.py" \
     "$ROOT/lib/python3/cmk/post_rename_site/plugins/actions/__init__.py" \
     "$ROOT/lib/python3/cmk/gui/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/raw/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/raw/plugins/__init__.py" \
     "$ROOT/lib/python3/cmk/gui/plugins/__init__.py" \
     "$ROOT/lib/python3/cmk/gui/plugins/dashboard/__init__.py" \
     "$ROOT/lib/python3/cmk/gui/plugins/config/__init__.py" \

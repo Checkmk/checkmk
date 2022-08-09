@@ -17,7 +17,7 @@ import abc
 import json
 import math
 import string
-from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Type, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple, Type, Union
 
 import cmk.utils
 import cmk.utils.plugin_registry
@@ -724,19 +724,12 @@ class MetricometerRendererDual(MetricometerRenderer):
 
 
 # This page is called for the popup of the graph icon of hosts/services.
-@cmk.gui.pages.register("host_service_graph_popup")
-def page_host_service_graph_popup() -> None:
-    try:
-        from cmk.gui.cee.plugins.metrics.graphs import (  # pylint: disable=no-name-in-module
-            resolve_combined_single_metric_spec,
-        )
-    except ImportError:
-
-        def resolve_combined_single_metric_spec(
-            specification: CombinedGraphSpec,
-        ) -> Sequence[CombinedGraphMetricSpec]:
-            return ()
-
+def page_host_service_graph_popup(
+    resolve_combined_single_metric_spec: Callable[
+        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+    ],
+) -> None:
+    """Registered as `host_service_graph_popup`."""
     site_id = request.var("site")
     host_name = request.var("host_name")
     service_description = request.get_str_input("service")
@@ -761,19 +754,12 @@ def page_host_service_graph_popup() -> None:
 #   '----------------------------------------------------------------------'
 
 
-@cmk.gui.pages.register("graph_dashlet")
-def page_graph_dashlet() -> None:
-    try:
-        from cmk.gui.cee.plugins.metrics.graphs import (  # pylint: disable=no-name-in-module
-            resolve_combined_single_metric_spec,
-        )
-    except ImportError:
-
-        def resolve_combined_single_metric_spec(
-            specification: CombinedGraphSpec,
-        ) -> Sequence[CombinedGraphMetricSpec]:
-            return ()
-
+def page_graph_dashlet(
+    resolve_combined_single_metric_spec: Callable[
+        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+    ],
+) -> None:
+    """Registered as `graph_dashlet`."""
     spec = request.var("spec")
     if not spec:
         raise MKUserError("spec", _("Missing spec parameter"))

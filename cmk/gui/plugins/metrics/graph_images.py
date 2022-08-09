@@ -13,8 +13,6 @@ from typing import Any, Callable, Literal, Optional, Sequence
 
 import livestatus
 
-import cmk.utils
-import cmk.utils.render
 from cmk.utils.type_defs import Timestamp
 
 import cmk.gui.pdf as pdf
@@ -44,19 +42,12 @@ from cmk.gui.type_defs import CombinedGraphSpec, TemplateGraphSpec
 # Provides a json list containing base64 encoded PNG images of the current 24h graphs
 # of a host or service.
 #    # Needed by mail notification plugin (-> no authentication from localhost)
-@cmk.gui.pages.register("noauth:ajax_graph_images")
-def ajax_graph_images_for_notifications() -> None:
-    try:
-        from cmk.gui.cee.plugins.metrics.graphs import (  # pylint: disable=no-name-in-module
-            resolve_combined_single_metric_spec,
-        )
-    except ImportError:
-
-        def resolve_combined_single_metric_spec(
-            specification: CombinedGraphSpec,
-        ) -> Sequence[CombinedGraphMetricSpec]:
-            return ()
-
+def ajax_graph_images_for_notifications(
+    resolve_combined_single_metric_spec: Callable[
+        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+    ],
+) -> None:
+    """Registered as `noauth:ajax_graph_images`."""
     if request.remote_ip not in ["127.0.0.1", "::1"]:
         raise MKUnauthenticatedException(
             _("You are not allowed to access this page (%s).") % request.remote_ip

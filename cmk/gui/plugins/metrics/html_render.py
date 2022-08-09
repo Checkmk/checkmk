@@ -565,19 +565,12 @@ def _graph_margin_ex(  # type:ignore[no-untyped-def]
     return Bounds(0, 0, 0, 0)
 
 
-@cmk.gui.pages.register("ajax_graph")
-def ajax_graph() -> None:
-    try:
-        from cmk.gui.cee.plugins.metrics.graphs import (  # pylint: disable=no-name-in-module
-            resolve_combined_single_metric_spec,
-        )
-    except ImportError:
-
-        def resolve_combined_single_metric_spec(
-            specification: CombinedGraphSpec,
-        ) -> Sequence[CombinedGraphMetricSpec]:
-            return ()
-
+def ajax_graph(
+    resolve_combined_single_metric_spec: Callable[
+        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+    ],
+) -> None:
+    """Registered as `ajax_graph`."""
     response.set_content_type("application/json")
     try:
         context_var = request.get_str_input_mandatory("context")
@@ -817,19 +810,12 @@ def render_graph_container_html(
 
 
 # Called from javascript code via JSON to initially render a graph
-@cmk.gui.pages.register("ajax_render_graph_content")
-def ajax_render_graph_content() -> None:
-    try:
-        from cmk.gui.cee.plugins.metrics.graphs import (  # pylint: disable=no-name-in-module
-            resolve_combined_single_metric_spec,
-        )
-    except ImportError:
-
-        def resolve_combined_single_metric_spec(
-            specification: CombinedGraphSpec,
-        ) -> Sequence[CombinedGraphMetricSpec]:
-            return ()
-
+def ajax_render_graph_content(
+    resolve_combined_single_metric_spec: Callable[
+        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+    ],
+) -> None:
+    """Registered as `ajax_render_graph_content`."""
     response.set_content_type("application/json")
     try:
         api_request = request.get_request()
@@ -989,19 +975,12 @@ def estimate_graph_step_for_html(
 #   '----------------------------------------------------------------------'
 
 
-@cmk.gui.pages.register("ajax_graph_hover")
-def ajax_graph_hover() -> None:
-    try:
-        from cmk.gui.cee.plugins.metrics.graphs import (  # pylint: disable=no-name-in-module
-            resolve_combined_single_metric_spec,
-        )
-    except ImportError:
-
-        def resolve_combined_single_metric_spec(
-            specification: CombinedGraphSpec,
-        ) -> Sequence[CombinedGraphMetricSpec]:
-            return ()
-
+def ajax_graph_hover(
+    resolve_combined_single_metric_spec: Callable[
+        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+    ],
+) -> None:
+    """Registered as `ajax_graph_hover`."""
     response.set_content_type("application/json")
     try:
         context_var = request.get_str_input_mandatory("context")

@@ -18,7 +18,9 @@ from cmk.gui.log import logger
 # isort: off
 import cmk.gui.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import
 
-if not cmk_version.is_raw_edition():
+if cmk_version.is_raw_edition():
+    import cmk.gui.raw.plugins.main_modules  # pylint: disable=unused-import
+else:
     import cmk.gui.cee.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import
 
 if cmk_version.is_managed_edition():

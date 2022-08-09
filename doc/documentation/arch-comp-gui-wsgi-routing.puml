@@ -5,7 +5,7 @@ component "Apache" as site_apache {
     component "CheckmkRESTAPI" as cmk_rest_api_app
 }
 
-index_wsgi -d-> cmk_gui_app
-index_wsgi -d-> cmk_rest_api_app
+index_wsgi --> cmk_gui_app
+index_wsgi --> cmk_rest_api_app
 
 @enduml

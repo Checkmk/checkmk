@@ -16,9 +16,9 @@ package "Central site" {
     subprocess_n -u-( unix_sock_n
     subprocess_2 -u-( unix_sock_2
     subprocess_1 -u-( unix_sock_1
-    livestatus_queries -d-> unix_sock_n
-    livestatus_queries -d-> unix_sock_2
-    livestatus_queries -d-> unix_sock_1
+    livestatus_queries --> unix_sock_n
+    livestatus_queries --> unix_sock_2
+    livestatus_queries --> unix_sock_1
 }
 
 cloud "Remote site //n//" as remote_site_n
@@ -32,8 +32,8 @@ interface "TCP socket" as tcp_sock_1
 remote_site_n -u-( tcp_sock_n
 remote_site_2 -u-( tcp_sock_2
 remote_site_1 -u-( tcp_sock_1
-subprocess_n -d-> tcp_sock_n: persistent
-subprocess_2 -d-> tcp_sock_2: persistent
-subprocess_1 -d-> tcp_sock_1: persistent
+subprocess_n --> tcp_sock_n: persistent
+subprocess_2 --> tcp_sock_2: persistent
+subprocess_1 --> tcp_sock_1: persistent
 
 @enduml

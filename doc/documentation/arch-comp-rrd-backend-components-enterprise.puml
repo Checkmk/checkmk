@@ -13,7 +13,7 @@ package "RRD backend" as rrd_backend {
    interface librrd
 
    rrdcached --> librrd : write
-   rrd_create_helper -d-> librrd : create
+   rrd_create_helper --> librrd : create
    librrd <--> rrd_storage
 }
 
@@ -21,10 +21,10 @@ interface "IO" as cmc_rrd_create_helper_io
 interface "rrdcached.socket" as rrd_socket
 
 rrd_helper -> rrdcached_thread
-librrd -d-> rrd_column : read
-rrd_helper -d-> cmc_rrd_create_helper_io
-cmc_rrd_create_helper_io -d-> rrd_create_helper
-rrdcached_thread -d-> rrd_socket : write
-rrd_socket -d-> rrdcached
+librrd --> rrd_column : read
+rrd_helper --> cmc_rrd_create_helper_io
+cmc_rrd_create_helper_io --> rrd_create_helper
+rrdcached_thread --> rrd_socket : write
+rrd_socket --> rrdcached
 rrd_column -> rrd_socket : flush
 @enduml

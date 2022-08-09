@@ -90,58 +90,58 @@ interface SNMP
 interface "SNMP trap" as trap
 interface HTTP as api_hosts_http
 
-users -d- http_gui
-rest_api_client -d- http_rest_api
-grafana_connector -d- http_rest_api
+users -- http_gui
+rest_api_client -- http_rest_api
+grafana_connector -- http_rest_api
 
-http_gui -d- GUI
-http_gui -d- nagvis
-http_rest_api -d- rest_api
+http_gui -- GUI
+http_gui -- nagvis
+http_rest_api -- rest_api
 
-GUI -d- apache_livestatus_client
-rest_api -d- apache_livestatus_client
-apache_livestatus_client -d- apache_livestatus
-nagvis -d- apache_livestatus
-apache_livestatus -d- liveproxyd
+GUI -- apache_livestatus_client
+rest_api -- apache_livestatus_client
+apache_livestatus_client -- apache_livestatus
+nagvis -- apache_livestatus
+apache_livestatus -- liveproxyd
 
-liveproxyd -d- liveproxyd_livestatus_client
-liveproxyd_livestatus_client -d- cmc_livestatus_server
+liveproxyd -- liveproxyd_livestatus_client
+liveproxyd_livestatus_client -- cmc_livestatus_server
 
-dcd -u- dcd_web_api_client
-dcd -d- dcd_piggyback
-dcd_web_api_client -l- rest_api
-dcd_piggyback -d- check_engine
+dcd_web_api_client -- dcd
+dcd -- dcd_piggyback
+dcd_web_api_client - rest_api
+dcd_piggyback -- check_engine
 
 ' Help visualization
 notify_helper -[hidden]r-> rrd_integration
-rrd_integration -r- cmc_livestatus_server
-checker -r- Fetcher
+rrd_integration - cmc_livestatus_server
+checker - Fetcher
 
-external_livestatus_client -d- cmc_livestatus_server
-Fetcher -d----- TCP
-Fetcher -d----- SNMP
-Fetcher -d----- api_hosts_http
-TCP -d- agent_based_host
-SNMP -d- snmp_host
-api_hosts_http -d- api_hosts
-ICMPSender -d---- hosts
-ICMPReceiver -d---- hosts
+external_livestatus_client -- cmc_livestatus_server
+Fetcher ------ TCP
+Fetcher ------ SNMP
+Fetcher ------ api_hosts_http
+TCP -- agent_based_host
+SNMP -- snmp_host
+api_hosts_http -- api_hosts
+ICMPSender ----- hosts
+ICMPReceiver ----- hosts
 
-rrd_integration -d- rrd_io
-rrd_io -d- rrd_backend
+rrd_integration -- rrd_io
+rrd_io -- rrd_backend
 
-notify_helper -d- call_notification_plugins
-call_notification_plugins -d---- notification_plugins
-notify_helper -d- mknotifyd_notification
-mknotifyd_notification -d- mknotifyd
-mknotifyd -d------ mknotifyd_protocol
-mknotifyd_protocol -d- mknotifyd_other_site
+notify_helper -- call_notification_plugins
+call_notification_plugins ----- notification_plugins
+notify_helper -- mknotifyd_notification
+mknotifyd_notification -- mknotifyd
+mknotifyd ------- mknotifyd_protocol
+mknotifyd_protocol -- mknotifyd_other_site
 
-cmc_livestatus_server -d- mkeventd_livestatus
-mkeventd_livestatus -d- mkeventd
-mkeventd -d-- Syslog
-Syslog -d- agent_based_host
-mkeventd -d----- trap
-trap -d- snmp_host
+cmc_livestatus_server -- mkeventd_livestatus
+mkeventd_livestatus -- mkeventd
+mkeventd --- Syslog
+Syslog -- agent_based_host
+mkeventd ------ trap
+trap -- snmp_host
 
 @enduml

@@ -34,22 +34,22 @@ interface "Livestatus" as livestatus_remote_site
 interface "HTTP automation calls" as setup_http
 interface "mknotifyd protocol" as mknotifyd_protocol
 
-users -d- gui
+users -- gui
 
-monitoring -d- apache_livestatus_client
-setup -d- apache_livestatus_client
-apache_livestatus_client -d- apache_livestatus
-apache_livestatus -d- liveproxyd
+monitoring -- apache_livestatus_client
+setup -- apache_livestatus_client
+apache_livestatus_client -- apache_livestatus
+apache_livestatus -- liveproxyd
 
-setup -----d- setup_http
-setup_http -d- setup_remote_site
+setup ------ setup_http
+setup_http -- setup_remote_site
 
-liveproxyd -d- liveproxyd_livestatus_client
-liveproxyd_livestatus_client -d- livestatus_remote_site
-livestatus_remote_site -d- cmc_remote_site
+liveproxyd -- liveproxyd_livestatus_client
+liveproxyd_livestatus_client -- livestatus_remote_site
+livestatus_remote_site -- cmc_remote_site
 
-cmc_notify -d- mknotifyd_notification
-mknotifyd_notification -d- mknotifyd
-mknotifyd ---d- mknotifyd_protocol
-mknotifyd_protocol -d- mknotifyd_remote_site
+cmc_notify -- mknotifyd_notification
+mknotifyd_notification -- mknotifyd
+mknotifyd ---- mknotifyd_protocol
+mknotifyd_protocol -- mknotifyd_remote_site
 @enduml

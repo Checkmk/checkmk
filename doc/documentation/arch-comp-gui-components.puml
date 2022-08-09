@@ -27,10 +27,10 @@ package Setup {
     component watolib
 }
 
-cmk_gui_app -d--> gui_framework
-cmk_gui_app -d--> Monitoring
-cmk_gui_app -d--> wato
-cmk_rest_api_app -d-> openapi
-openapi -d-> watolib
+cmk_gui_app ---> gui_framework
+cmk_gui_app ---> Monitoring
+cmk_gui_app ---> wato
+cmk_rest_api_app --> openapi
+openapi --> watolib
 wato -> watolib
 @enduml

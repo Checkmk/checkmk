@@ -23,11 +23,11 @@ package "OMD Site foo" as site_bar {
 
 interface "Site bar 127.0.0.1:APACHE_TCP_PORT" as site_bar_port
 
-http_clients -d-> system_http_port
-system_http_port -d-> system_apache
-site_foo_proxy -d-> site_foo_port
-site_foo_port -d-> site_foo_apache
-site_bar_proxy -d-> site_bar_port
-site_bar_port -d-> site_bar_apache
+http_clients --> system_http_port
+system_http_port --> system_apache
+site_foo_proxy --> site_foo_port
+site_foo_port --> site_foo_apache
+site_bar_proxy --> site_bar_port
+site_bar_port --> site_bar_apache
 
 @enduml

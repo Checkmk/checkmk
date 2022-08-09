@@ -12,11 +12,11 @@ artifact "Site Apache" {
     file "etc." as etc_conf
 }
 
-system_hook -d-> site_hook : includes
-site_hook -d-> site_conf : links (reverse proxy)
-site_conf -d-> conf_d : includes
-conf_d -d-> security_conf : contains
-conf_d -d-> nagvis_conf : contains
-conf_d -d-> etc_conf : contains
+system_hook --> site_hook : includes
+site_hook --> site_conf : links (reverse proxy)
+site_conf --> conf_d : includes
+conf_d --> security_conf : contains
+conf_d --> nagvis_conf : contains
+conf_d --> etc_conf : contains
 
 @enduml

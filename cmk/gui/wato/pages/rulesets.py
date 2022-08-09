@@ -1045,9 +1045,7 @@ class ModeEditRuleset(WatoMode):
         html.div("", id_="row_info")
         num_rows = 0
         service_labels: Labels = {}
-        analyse_rule_matching = False
         if self._hostname and self._host and self._service:
-            analyse_rule_matching = True
             service_labels = analyse_service(
                 self._host.site_id(),
                 self._hostname,
@@ -1080,7 +1078,7 @@ class ModeEditRuleset(WatoMode):
                         rule,
                         rulenr,
                         service_labels=service_labels,
-                        analyse_rule_matching=analyse_rule_matching,
+                        analyse_rule_matching=bool(self._hostname),
                     )
                     self._rule_cells(table, rule)
 

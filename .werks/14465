@@ -1,0 +1,12 @@
+Title: Fix rule match analyse for hosts
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1660024442
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p10
+
+If rule matches for hosts were analyzed, e.g. via "Effective parameters" and a
+matching rule, the rule page showed no matches, even if the host matched.

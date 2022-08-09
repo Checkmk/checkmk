@@ -124,13 +124,38 @@ register.snmp_section(
 
 register.snmp_section(
     # .1.3.6.1.4.1.9.9.221.1.1.1.1.3.2.1  System memory --> CISCO-ENHANCED-MEMPOOL-MIB::cempMemPoolName.2.1
-    # .1.3.6.1.4.1.9.9.221.1.1.1.1.18.2.1 902008879     --> CISCO-ENHANCED-MEMPOOL-MIB::cempMemPoolHCUsed.2.1
-    # .1.3.6.1.4.1.9.9.221.1.1.1.1.20.2.1 3392957761    --> CISCO-ENHANCED-MEMPOOL-MIB::cempMemPoolHCFree.2.1
-    name="cisco_mem_enhanced",
+    # .1.3.6.1.4.1.9.9.221.1.1.1.1.7.2.1 902008879     --> CISCO-ENHANCED-MEMPOOL-MIB::cempMemPoolUsed.2.1
+    # .1.3.6.1.4.1.9.9.221.1.1.1.1.8.2.1 3392957761    --> CISCO-ENHANCED-MEMPOOL-MIB::cempMemPoolFree.2.1
+    name="cisco_mem_enhanced_32",
     parsed_section_name="cisco_mem",
     detect=all_of(
         contains(OID_SysDesc, "cisco"),
         exists(".1.3.6.1.4.1.9.9.221.1.1.1.1.*"),
+    ),
+    parse_function=parse_cisco_mem,
+    fetch=[
+        SNMPTree(
+            base=".1.3.6.1.4.1.9.9.221.1.1.1.1",
+            oids=[
+                "3",  # cempMemPoolName
+                "7",  # cempMemPoolUsed
+                "8",  # cempMemPoolFree
+            ],
+        ),
+    ],
+    supersedes=["cisco_mem_legacy", "cisco_mem_asa_pre_v9"],
+)
+
+# 64 bit part of the "enhanced mempool" is not available on all devices
+register.snmp_section(
+    # .1.3.6.1.4.1.9.9.221.1.1.1.1.3.2.1  System memory --> CISCO-ENHANCED-MEMPOOL-MIB::cempMemPoolName.2.1
+    # .1.3.6.1.4.1.9.9.221.1.1.1.1.18.2.1 902008879     --> CISCO-ENHANCED-MEMPOOL-MIB::cempMemPoolHCUsed.2.1
+    # .1.3.6.1.4.1.9.9.221.1.1.1.1.20.2.1 3392957761    --> CISCO-ENHANCED-MEMPOOL-MIB::cempMemPoolHCFree.2.1
+    name="cisco_mem_enhanced_64",
+    parsed_section_name="cisco_mem",
+    detect=all_of(
+        contains(OID_SysDesc, "cisco"),
+        exists(".1.3.6.1.4.1.9.9.221.1.1.1.1.18.*"),
     ),
     parse_function=parse_cisco_mem,
     fetch=[
@@ -143,7 +168,7 @@ register.snmp_section(
             ],
         ),
     ],
-    supersedes=["cisco_mem_legacy", "cisco_mem_asa_pre_v9"],
+    supersedes=["cisco_mem_legacy", "cisco_mem_asa_pre_v9", "cisco_mem_enhanced_32"],
 )
 
 

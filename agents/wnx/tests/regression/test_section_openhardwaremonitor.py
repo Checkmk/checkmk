@@ -54,7 +54,7 @@ def wait_agent():
 @pytest.fixture(name="expected_output")
 def expected_output_engine():
     re_str = (
-        r"^\d+,[^,]+,(\/\w+)+,(Power|Clock|Load|Data|Temperature)," r"\d+\.\d{6},\b(?:OK|Timeout)\b"
+        r"^\d+,[^,]+,(\/\w+)+,(Power|Clock|Load|Data|Temperature),\d+\.\d{6},\b(?:OK|Timeout)\b"
     )
     if not Globals.alone:
         re_str += r"|" + re.escape(r"<<<systemtime>>>") + r"|\d+"
@@ -71,7 +71,7 @@ def manage_ohm_binaries():
         binaries = ["OpenHardwareMonitorCLI.exe", "OpenHardwareMonitorLib.dll"]
 
         source_dir = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "files\\ohm\cli"
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "files\\ohm\\cli"
         )
         target_dir = os.path.join(user_dir, "bin")
 

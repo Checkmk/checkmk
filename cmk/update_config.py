@@ -1101,6 +1101,11 @@ class UpdateConfig:
                 if e.errno != errno.ENOENT:
                     raise  # Do not fail on missing directories / files
 
+        # The caches might contain visuals in a deprecated format. For example, in 2.2, painters in
+        # visuals are represented by a dedicated type, which was not the case the before. The caches
+        # from 2.1 will still contain the old data structures.
+        visuals._CombinedVisualsCache.invalidate_all_caches()
+
     def _migrate_pagetype_topics_to_ids(self) -> None:
         """Change all visuals / page types to use IDs as topics
 

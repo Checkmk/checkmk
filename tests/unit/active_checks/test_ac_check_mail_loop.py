@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access,redefined-outer-name
+# pylint: disable=protected-access
+from types import ModuleType
+
 import pytest
 
 from tests.testlib import import_module
@@ -11,12 +13,12 @@ from tests.testlib import import_module
 from cmk.utils.mailbox import _active_check_main_core
 
 
-@pytest.fixture(scope="module")
-def check_mail_loop():
+@pytest.fixture(name="check_mail_loop", scope="module")
+def fixture_check_mail_loop() -> ModuleType:
     return import_module("active_checks/check_mail_loop")
 
 
-def test_ac_check_mail_main_loop_failed_to_send_mail(check_mail_loop) -> None:
+def test_ac_check_mail_main_loop_failed_to_send_mail(check_mail_loop: ModuleType) -> None:
     state, info, perf = _active_check_main_core(
         check_mail_loop.create_argument_parser(),
         check_mail_loop.check_mail_roundtrip,
@@ -162,8 +164,8 @@ def test_ac_check_mail_main_loop_failed_to_send_mail(check_mail_loop) -> None:
     ],
 )
 def test_ac_check_mail_loop(
-    check_mail_loop, warning, critical, expected_mails, fetched_mails, expected_result
-):
+    check_mail_loop: ModuleType, warning, critical, expected_mails, fetched_mails, expected_result
+) -> None:
     state, info, perf = check_mail_loop.check_mails(
         warning, critical, expected_mails.copy(), fetched_mails.copy()
     )
@@ -183,7 +185,7 @@ def test_ac_check_mail_loop(
         "RE: Wg: re: subject",
     ],
 )
-def test_regex_pattern(check_mail_loop, subject) -> None:
+def test_regex_pattern(check_mail_loop: ModuleType, subject: str) -> None:
     assert check_mail_loop._regex_pattern(subject).match(f"{subject} a b").groups() == (
         "a",
         "b",

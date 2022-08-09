@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access,redefined-outer-name
-import email
+# pylint: disable=protected-access
+
 from argparse import Namespace as Args
+from email import message_from_string
+from email.message import Message
+from types import ModuleType
 
 import pytest
 
@@ -14,20 +17,20 @@ from tests.testlib import import_module
 from cmk.utils.mailbox import _active_check_main_core
 
 
-@pytest.fixture(scope="module")
-def check_mail():
+@pytest.fixture(name="check_mail", scope="module")
+def fixture_check_mail() -> ModuleType:
     return import_module("active_checks/check_mail")
 
 
-def create_test_email(subject):
+def create_test_email(subject: str) -> Message:
     email_string = (
         'Subject: %s\r\nContent-Transfer-Encoding: quoted-printable\r\nContent-Type: text/plain; charset="iso-8859-1"\r\n\r\nThe email content\r\nis very important!\r\n'
         % subject
     )
-    return email.message_from_string(email_string)
+    return message_from_string(email_string)
 
 
-def test_ac_check_mail_main_failed_connect(check_mail) -> None:
+def test_ac_check_mail_main_failed_connect(check_mail: ModuleType) -> None:
     state, info, perf = _active_check_main_core(
         check_mail.create_argument_parser(),
         check_mail.check_mail,
@@ -79,11 +82,11 @@ def test_ac_check_mail_main_failed_connect(check_mail) -> None:
     ],
 )
 def test_ac_check_mail_prepare_messages_for_ec(
-    check_mail,
+    check_mail: ModuleType,
     mails,
     expected_messages,
     expected_forwarded,
-):
+) -> None:
     args = Args(
         body_limit=1000,
         forward_app=None,

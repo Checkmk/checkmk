@@ -3,14 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access,redefined-outer-name
+from types import ModuleType
+
+# pylint: disable=protected-access
 import pytest
 
-from tests.testlib import import_module  # pylint: disable=import-error
+from tests.testlib import import_module
 
 
-@pytest.fixture(scope="module")
-def check_uniserv():
+@pytest.fixture(name="check_uniserv", scope="module")
+def fixture_check_uniserv() -> ModuleType:
     return import_module("active_checks/check_uniserv")
 
 
@@ -29,7 +31,7 @@ def check_uniserv():
         ["host", "port", "service", "ADDRESS", "street", "street_nr", "city", "regex"],
     ],
 )
-def test_ac_check_uniserv_broken_arguments(capsys, check_uniserv, args) -> None:
+def test_ac_check_uniserv_broken_arguments(capsys, check_uniserv: ModuleType, args) -> None:
     with pytest.raises(SystemExit):
         check_uniserv.parse_arguments(args)
     out, _err = capsys.readouterr()
@@ -52,7 +54,7 @@ def test_ac_check_uniserv_broken_arguments(capsys, check_uniserv, args) -> None:
         ),
     ],
 )
-def test_ac_check_uniserv_parse_arguments(check_uniserv, args, expected_args) -> None:
+def test_ac_check_uniserv_parse_arguments(check_uniserv: ModuleType, args, expected_args) -> None:
     assert check_uniserv.parse_arguments(args) == expected_args
 
 
@@ -70,7 +72,7 @@ def test_ac_check_uniserv_parse_arguments(check_uniserv, args, expected_args) ->
         "foo=bar;type=TIPTOP",
     ],
 )
-def test_ac_check_uniserv_broken_data(capsys, check_uniserv, data) -> None:
+def test_ac_check_uniserv_broken_data(capsys, check_uniserv: ModuleType, data) -> None:
     with pytest.raises(SystemExit):
         check_uniserv.parse_response(data)
     out, _err = capsys.readouterr()
@@ -84,7 +86,7 @@ def test_ac_check_uniserv_broken_data(capsys, check_uniserv, data) -> None:
         "type=1;foo=bar",
     ],
 )
-def test_ac_check_uniserv_broken_response(capsys, check_uniserv, data) -> None:
+def test_ac_check_uniserv_broken_response(capsys, check_uniserv: ModuleType, data) -> None:
     with pytest.raises(SystemExit):
         check_uniserv.parse_response(data)
     out, _err = capsys.readouterr()
@@ -98,7 +100,7 @@ def test_ac_check_uniserv_broken_response(capsys, check_uniserv, data) -> None:
         ("type=TIPTOP;key=value;foo=bar", {"type": "TIPTOP", "key": "value"}),
     ],
 )
-def test_ac_check_uniserv_parse_response(check_uniserv, data, expected_result) -> None:
+def test_ac_check_uniserv_parse_response(check_uniserv: ModuleType, data, expected_result) -> None:
     assert sorted(check_uniserv.parse_response(data).items()) == sorted(expected_result.items())
 
 
@@ -140,7 +142,7 @@ def test_ac_check_uniserv_parse_response(check_uniserv, data, expected_result) -
     ],
 )
 def test_ac_check_uniserv_check_job(
-    monkeypatch, check_uniserv, args, parsed, expected_result
+    monkeypatch, check_uniserv: ModuleType, args, parsed, expected_result
 ) -> None:
     job, s, sid, street, street_nr, city, regex = args
     monkeypatch.setattr("check_uniserv.send_and_receive", lambda x, y: parsed)

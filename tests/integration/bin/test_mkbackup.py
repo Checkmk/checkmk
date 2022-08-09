@@ -12,12 +12,13 @@ import os
 import re
 import subprocess
 import tarfile
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Generator
 
 import pytest
 
 from tests.testlib.site import Site
+from tests.testlib.web_session import CMKWebSession
 
 from cmk.utils.paths import mkbackup_lock_dir
 from cmk.utils.python_printer import pformat
@@ -67,7 +68,7 @@ def backup_lock_dir_fixture(request):
 
 
 @pytest.fixture(name="test_cfg", scope="function")
-def test_cfg_fixture(web, site: Site, backup_path) -> Generator:  # type:ignore[no-untyped-def]
+def test_cfg_fixture(web: CMKWebSession, site: Site, backup_path: str) -> Iterator[None]:
     site.ensure_running()
 
     cfg = {

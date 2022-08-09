@@ -4,8 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Final, Mapping
+from typing import Final
+
+from _pytest.monkeypatch import MonkeyPatch
 
 from tests.testlib import import_module, repo_path
 
@@ -86,8 +89,7 @@ def _check_paths(root: str, namespace_dict: Mapping[str, object]) -> None:
         assert str(value).startswith(required_prefix), repr((var, value, required_prefix))
 
 
-def test_paths_in_omd_and_opt_root(monkeypatch) -> None:  # type:ignore[no-untyped-def]
-
+def test_paths_in_omd_and_opt_root(monkeypatch: MonkeyPatch) -> None:
     omd_root = "/omd/sites/dingeling"
     with monkeypatch.context() as m:
         m.setitem(os.environ, "OMD_ROOT", omd_root)

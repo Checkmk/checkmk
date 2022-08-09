@@ -5,8 +5,9 @@
 
 import re
 import shutil
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, Dict, Generator, List, Mapping, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -2737,7 +2738,7 @@ def test_load_config_folder_paths(folder_path_test_config: None) -> None:
 
 
 @pytest.fixture(name="folder_path_test_config")
-def folder_path_test_config_fixture(monkeypatch: MonkeyPatch) -> Generator[None, None, None]:
+def folder_path_test_config_fixture(monkeypatch: MonkeyPatch) -> Iterator[None]:
     config_dir = Path(cmk.utils.paths.check_mk_config_dir)
     config_dir.mkdir(parents=True, exist_ok=True)
 

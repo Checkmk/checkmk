@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -18,14 +19,14 @@ def test_protobuf_api_implementation_is_cpp() -> None:
 
 
 @pytest.fixture(name="test_dir")
-def fixture_test_dir(site: Site):
+def fixture_test_dir(site: Site) -> Iterator[Path]:
     site.makedirs("protobuf")
     yield Path(site.path("protobuf"))
     # site.delete_dir("protobuf")
 
 
 @pytest.fixture(name="proto_source_file")
-def fixture_proto_source_file(test_dir, site: Site):
+def fixture_proto_source_file(test_dir: Path, site: Site) -> Path:
     proto_path = test_dir / "test.proto"
     with proto_path.open("w") as f:
         f.write(
@@ -60,7 +61,7 @@ message AddressBook {
 
 
 @pytest.fixture(name="protobuf_py")
-def fixture_protobuf_py(site: Site, test_dir, proto_source_file):
+def fixture_protobuf_py(site: Site, test_dir: Path, proto_source_file: Path) -> Path:
     p = site.execute(
         ["protoc", "-I=%s" % test_dir, "--python_out=%s" % test_dir, str(proto_source_file)]
     )

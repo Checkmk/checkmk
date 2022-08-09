@@ -2,16 +2,15 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-# pylint: disable=redefined-outer-name
+from types import ModuleType
 
 import pytest
 
 from tests.testlib import import_module
 
 
-@pytest.fixture(scope="module")
-def check_sql():
+@pytest.fixture(name="check_sql", scope="module")
+def fixture_check_sql() -> ModuleType:
     return import_module("active_checks/check_sql")
 
 
@@ -24,7 +23,13 @@ def check_sql():
         ([[5, "count"]], (3, 5), (float("-inf"), 8), (1, "count: 5.0")),
     ],
 )
-def test_process_result(check_sql, result, warn, crit, reference) -> None:
+def test_process_result(
+    check_sql: ModuleType,
+    result: list,
+    warn: tuple[int, int],
+    crit: tuple[float, int],
+    reference: tuple[int, str],
+) -> None:
     assert (
         check_sql.process_result(
             result=result,

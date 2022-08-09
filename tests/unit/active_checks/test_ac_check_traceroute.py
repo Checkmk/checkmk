@@ -3,14 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access,redefined-outer-name
+# pylint: disable=protected-access
+from types import ModuleType
+
 import pytest
 
-from tests.testlib import import_module  # pylint: disable=import-error
+from tests.testlib import import_module
 
 
-@pytest.fixture(scope="module")
-def check_traceroute():
+@pytest.fixture(name="check_traceroute", scope="module")
+def fixture_check_traceroute() -> ModuleType:
     return import_module("active_checks/check_traceroute")
 
 
@@ -102,7 +104,9 @@ def check_traceroute():
         ),
     ],
 )
-def test_ac_check_traceroute_no_routes(check_traceroute, lines, hops_info, expected_perf) -> None:
+def test_ac_check_traceroute_no_routes(
+    check_traceroute: ModuleType, lines, hops_info, expected_perf
+) -> None:
     status, info, perf = check_traceroute.check_traceroute(lines, [])
     assert status == 0
     assert hops_info in info
@@ -417,8 +421,13 @@ def test_ac_check_traceroute_no_routes(check_traceroute, lines, hops_info, expec
     ],
 )
 def test_ac_check_traceroute_routes(
-    check_traceroute, lines, routes, missing_or_bad_info, expected_status, expected_hops
-):
+    check_traceroute: ModuleType,
+    lines,
+    routes,
+    missing_or_bad_info,
+    expected_status,
+    expected_hops,
+) -> None:
     status, info, perf = check_traceroute.check_traceroute(lines, routes)
     assert status == expected_status
     assert info.endswith(missing_or_bad_info)

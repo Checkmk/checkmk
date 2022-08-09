@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+from collections.abc import Mapping, Sequence
 from types import ModuleType
-from typing import Mapping, Optional, Sequence
 
 import pytest
 import vcr  # type: ignore[import]
@@ -138,7 +138,7 @@ def test_ac_check_form_submit_host_states_no_levels(
 def test_ac_check_form_submit_host_states_levels(
     check_form_submit: ModuleType,
     states: Mapping[str, tuple[int, str]],
-    levels: Optional[tuple[int, int]],
+    levels: tuple[int, int] | None,
     expected_status: int,
     expected_info: str,
 ) -> None:

@@ -36,7 +36,6 @@ from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.sites as sites
-import cmk.gui.utils.escaping as escaping
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.config import active_config, builtin_role_ids
@@ -51,7 +50,6 @@ from cmk.gui.metrics import translate_perf_data
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.metrics.rrd_fetch import merge_multicol
-from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options
 from cmk.gui.plugins.views.painters import host_state_short, service_state_short
 from cmk.gui.plugins.views.utils import (
     get_all_views,
@@ -809,7 +807,15 @@ class ABCFigureDashlet(Dashlet, abc.ABC):
 
 
 def _internal_dashboard_to_runtime_dashboard(raw_dashboard: dict[str, Any]) -> DashboardConfig:
-    return raw_dashboard
+    return {
+        **raw_dashboard,
+        "dashlets": [
+            painter_specs_to_runtime_format(dashlet_spec)
+            if dashlet_spec["type"] == "view"
+            else dashlet_spec
+            for dashlet_spec in raw_dashboard["dashlets"]
+        ],
+    }
 
 
 # TODO: Same as in cmk.gui.plugins.views.utils.ViewStore, centralize implementation?
@@ -826,13 +832,10 @@ class DashboardStore:
 
     def _load_all(self) -> Dict[Tuple[UserId, DashboardName], DashboardConfig]:
         """Loads all definitions from disk and returns them"""
-        _transform_builtin_dashboards()
-        return _transform_dashboards(
-            visuals.load(
-                visuals.VisualType.dashboards,
-                builtin_dashboards,
-                _internal_dashboard_to_runtime_dashboard,
-            )
+        return visuals.load(
+            visuals.VisualType.dashboards,
+            builtin_dashboards,
+            _internal_dashboard_to_runtime_dashboard,
         )
 
     def _load_permitted(
@@ -852,79 +855,6 @@ def get_all_dashboards() -> Dict[Tuple[UserId, DashboardName], DashboardConfig]:
 
 def get_permitted_dashboards() -> Dict[DashboardName, DashboardConfig]:
     return DashboardStore.get_instance().permitted
-
-
-# During implementation of the dashboard editor and recode of the visuals
-# we had serveral different data structures, for example one where the
-# views in user dashlets were stored with a context_type instead of the
-# "single_info" key, which is the currently correct one.
-#
-# This code transforms views from user_dashboards.mk which have been
-# migrated/created with daily snapshots from 2014-08 till beginning 2014-10.
-# FIXME: Can be removed one day. Mark as incompatible change or similar.
-# Also this method transforms network topology dashlets to custom url ones
-def _transform_dashboards(
-    boards: Dict[Tuple[UserId, DashboardName], DashboardConfig]
-) -> Dict[Tuple[UserId, DashboardName], DashboardConfig]:
-    for dashboard in boards.values():
-        visuals.transform_old_visual(dashboard)
-        for dashlet in dashboard["dashlets"]:
-            visuals.transform_old_visual(dashlet)
-            _transform_dashlets_mut(dashlet)
-
-    return boards
-
-
-def _transform_dashlets_mut(dashlet_spec: DashletConfig) -> DashletConfig:
-    # abusing pass by reference to mutate dashlet
-    if dashlet_spec["type"] == "view":
-        painter_specs_to_runtime_format(dashlet_spec)
-
-    # ->2014-10
-    if dashlet_spec["type"] == "pnpgraph":
-        if "service" not in dashlet_spec["single_infos"]:
-            dashlet_spec["single_infos"].append("service")
-        if "host" not in dashlet_spec["single_infos"]:
-            dashlet_spec["single_infos"].append("host")
-
-        # The service context has to be set, otherwise the pnpgraph dashlet would
-        # complain about missing context information when displaying host graphs.
-        # -> 2.1.0i1 dashlets now use dict as context: change "_HOST_" to {"service": "_HOST_"}
-        dashlet_spec["context"].setdefault("service", {"service": "_HOST_"})
-
-    if dashlet_spec["type"] in ["pnpgraph", "custom_graph"]:
-        # -> 1.5.0i2
-        if "graph_render_options" not in dashlet_spec:
-            dashlet_spec["graph_render_options"] = {
-                "show_legend": dashlet_spec.pop("show_legend", False),
-                "show_service": dashlet_spec.pop("show_service", True),
-            }
-        # -> 2.0.0b6
-        transform_graph_render_options(dashlet_spec["graph_render_options"])
-        dashlet_spec["graph_render_options"].pop("show_title", None)
-        # title_format is not used in Dashlets (Custom tiltle instead, field 'title')
-        dashlet_spec["graph_render_options"].pop("title_format", None)
-
-    if dashlet_spec["type"] == "network_topology":
-        # -> 2.0.0i Removed network topology dashlet type
-        transform_topology_dashlet(dashlet_spec)
-
-    if dashlet_spec["type"] in ["notifications_bar_chart", "alerts_bar_chart"]:
-        # -> v2.0.0b6 introduced the different render modes
-        _transform_event_bar_chart_dashlet(dashlet_spec)
-
-    return dashlet_spec
-
-
-def _transform_event_bar_chart_dashlet(dashlet_spec: DashletConfig):  # type:ignore[no-untyped-def]
-    if "render_mode" not in dashlet_spec:
-        dashlet_spec["render_mode"] = (
-            "bar_chart",
-            {
-                "time_range": dashlet_spec.pop("time_range", "d0"),
-                "time_resolution": dashlet_spec.pop("time_resolution", "h"),
-            },
-        )
 
 
 def transform_topology_dashlet(
@@ -962,105 +892,6 @@ def transform_timerange_dashlet(dashlet_spec: DashletConfig) -> DashletConfig:
         "4": "400d",
     }.get(dashlet_spec["timerange"], dashlet_spec["timerange"])
     return dashlet_spec
-
-
-# be compatible to old definitions, where even internal dashlets were
-# referenced by url, e.g. dashboard['url'] = 'hoststats.py'
-# FIXME: can be removed one day. Mark as incompatible change or similar.
-def _transform_builtin_dashboards() -> None:  # pylint: disable=too-many-branches
-    for name, dashboard in builtin_dashboards.items():
-        # Do not transform dashboards which are already in the new format
-        if "context" in dashboard:
-            continue
-
-        # Transform the dashlets
-        for nr, dashlet in enumerate(dashboard["dashlets"]):
-            dashlet.setdefault("show_title", True)
-
-            if dashlet.get("url", "").startswith("dashlet_hoststats") or dashlet.get(
-                "url", ""
-            ).startswith("dashlet_servicestats"):
-
-                # hoststats and servicestats
-                dashlet["type"] = dashlet["url"][8:].split(".", 1)[0]
-
-                if "?" in dashlet["url"]:
-                    # Transform old parameters:
-                    # wato_folder
-                    # host_contact_group
-                    # service_contact_group
-                    paramstr = dashlet["url"].split("?", 1)[1]
-                    dashlet["context"] = {}
-                    for key, val in [p.split("=", 1) for p in paramstr.split("&")]:
-                        if key == "host_contact_group":
-                            dashlet["context"]["opthost_contactgroup"] = {
-                                "neg_opthost_contact_group": "",
-                                "opthost_contact_group": val,
-                            }
-                        elif key == "service_contact_group":
-                            dashlet["context"]["optservice_contactgroup"] = {
-                                "neg_optservice_contact_group": "",
-                                "optservice_contact_group": val,
-                            }
-                        elif key == "wato_folder":
-                            dashlet["context"]["wato_folder"] = {
-                                "wato_folder": val,
-                            }
-
-                del dashlet["url"]
-
-            elif dashlet.get("urlfunc") and not isinstance(dashlet["urlfunc"], str):
-                raise MKGeneralException(
-                    _(
-                        "Unable to transform dashlet %d of dashboard %s: "
-                        'the dashlet is using "urlfunc" which can not be '
-                        "converted automatically."
-                    )
-                    % (nr, name)
-                )
-
-            elif dashlet.get("url", "") != "" or dashlet.get("urlfunc") or dashlet.get("iframe"):
-                # Normal URL based dashlet
-                dashlet["type"] = "url"
-
-                if dashlet.get("iframe"):
-                    dashlet["url"] = dashlet["iframe"]
-                    del dashlet["iframe"]
-
-            elif dashlet.get("view", "") != "":
-                # Transform views
-                # There might be more than the name in the view definition
-                view_name = dashlet["view"].split("&")[0]
-
-                # Copy the view definition into the dashlet
-                copy_view_into_dashlet(dashlet, nr, view_name, load_from_all_views=True)
-                del dashlet["view"]
-
-            else:
-                raise MKGeneralException(
-                    _(
-                        "Unable to transform dashlet %d of dashboard %s. "
-                        "You will need to migrate it on your own. Definition: %r"
-                    )
-                    % (nr, name, escaping.escape_attribute(dashlet))
-                )
-
-            dashlet.setdefault("context", {})
-            dashlet.setdefault("single_infos", [])
-
-        # the modification time of builtin dashboards can not be checked as on user specific
-        # dashboards. Set it to 0 to disable the modification chech.
-        dashboard.setdefault("mtime", 0)
-
-        dashboard.setdefault("show_title", True)
-        if dashboard["title"] is None:
-            dashboard["title"] = _("No title")
-            dashboard["show_title"] = False
-
-        dashboard.setdefault("single_infos", [])
-        dashboard.setdefault("context", {})
-        dashboard.setdefault("topic", _("Overview"))
-        dashboard.setdefault("description", dashboard.get("title", ""))
 
 
 def copy_view_into_dashlet(

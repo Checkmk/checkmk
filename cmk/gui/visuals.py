@@ -295,7 +295,8 @@ def save(  # type:ignore[no-untyped-def]
 def load(
     what: VisualType,
     builtin_visuals: Dict[Any, Any],
-    skip_func: Optional[Callable[[Dict[Any, Any]], bool]] = None,
+    internal_to_runtime_transformer: Callable[[dict[str, Any]], Visual],
+    skip_func: Callable[[Visual], bool] = lambda _v: False,
 ) -> Dict[Tuple[UserId, str], Dict[str, Any]]:
     visuals: Dict[Tuple[UserId, str], Dict[str, Any]] = {}
 
@@ -319,7 +320,13 @@ def load(
         visuals[(UserId(""), name)] = visual
 
     # Add custom "user_*.mk" visuals
-    visuals.update(_CombinedVisualsCache(what).load(builtin_visuals, skip_func))
+    visuals.update(
+        _CombinedVisualsCache(what).load(
+            builtin_visuals,
+            internal_to_runtime_transformer,
+            skip_func,
+        )
+    )
 
     return visuals
 
@@ -453,13 +460,16 @@ class _CombinedVisualsCache:
     def load(
         self,
         builtin_visuals: Dict[Any, Any],
-        skip_func: Optional[Callable[[Dict[Any, Any]], bool]],
+        internal_to_runtime_transformer: Callable[[dict[str, Any]], Visual],
+        skip_func: Callable[[Visual], bool],
     ) -> CustomUserVisuals:
 
         if self._may_use_cache():
             if (content := self._read_from_cache()) is not None:
                 return content
-        return self._compute_and_write_cache(builtin_visuals, skip_func)
+        return self._compute_and_write_cache(
+            builtin_visuals, internal_to_runtime_transformer, skip_func
+        )
 
     def _may_use_cache(self) -> bool:
         if not self._content_filename.exists():
@@ -478,9 +488,12 @@ class _CombinedVisualsCache:
     def _compute_and_write_cache(
         self,
         builtin_visuals: Dict[Any, Any],
-        skip_func: Optional[Callable[[Dict[Any, Any]], bool]],
+        internal_to_runtime_transformer: Callable[[dict[str, Any]], Visual],
+        skip_func: Callable[[Visual], bool],
     ) -> CustomUserVisuals:
-        visuals = _load_custom_user_visuals(self._visual_type.value, builtin_visuals, skip_func)
+        visuals = _load_custom_user_visuals(
+            self._visual_type.value, builtin_visuals, internal_to_runtime_transformer, skip_func
+        )
         self._write_to_cache(visuals)
         return visuals
 
@@ -503,7 +516,8 @@ hooks.register_builtin("users-saved", lambda x: _CombinedVisualsCache.invalidate
 def _load_custom_user_visuals(
     what: str,
     builtin_visuals: Dict[Any, Any],
-    skip_func: Optional[Callable[[Dict[Any, Any]], bool]],
+    internal_to_runtime_transformer: Callable[[dict[str, Any]], Visual],
+    skip_func: Callable[[Visual], bool],
 ) -> CustomUserVisuals:
     """Note: Try NOT to use pathlib.Path functionality in this function, as pathlib is
     measurably slower (7 times), due to path object creation and concatenation. This function
@@ -532,7 +546,12 @@ def _load_custom_user_visuals(
 
             visuals.update(
                 load_visuals_of_a_user(
-                    what, builtin_visuals, skip_func, Path(visual_path), UserId(user_id)
+                    what,
+                    builtin_visuals,
+                    internal_to_runtime_transformer,
+                    skip_func,
+                    Path(visual_path),
+                    UserId(user_id),
                 )
             )
 
@@ -543,15 +562,21 @@ def _load_custom_user_visuals(
 
 
 def load_visuals_of_a_user(  # type:ignore[no-untyped-def]
-    what, builtin_visuals, skip_func, path: Path, user_id: UserId
+    what,
+    builtin_visuals,
+    internal_to_runtime_transformer: Callable[[dict[str, Any]], Visual],
+    skip_func: Callable[[Visual], bool],
+    path: Path,
+    user_id: UserId,
 ) -> CustomUserVisuals:
     user_visuals: CustomUserVisuals = {}
-    for name, visual in store.try_load_file_from_pickle_cache(path, default={}).items():
+    for name, raw_visual in store.try_load_file_from_pickle_cache(path, default={}).items():
+        visual = internal_to_runtime_transformer(raw_visual)
+        if skip_func(visual):
+            continue
+
         visual["owner"] = user_id
         visual["name"] = name
-
-        if skip_func and skip_func(visual):
-            continue
 
         # Maybe resolve inherited attributes. This was a feature for several versions
         # to make the visual texts localizable. This has been removed because the visual

@@ -804,6 +804,10 @@ class ABCFigureDashlet(Dashlet, abc.ABC):
         return args
 
 
+def _internal_dashboard_to_runtime_dashboard(raw_dashboard: dict[str, Any]) -> DashboardConfig:
+    return raw_dashboard
+
+
 # TODO: Same as in cmk.gui.plugins.views.utils.ViewStore, centralize implementation?
 class DashboardStore:
     @classmethod
@@ -820,7 +824,11 @@ class DashboardStore:
         """Loads all definitions from disk and returns them"""
         _transform_builtin_dashboards()
         return _transform_dashboards(
-            visuals.load(visuals.VisualType.dashboards, builtin_dashboards)
+            visuals.load(
+                visuals.VisualType.dashboards,
+                builtin_dashboards,
+                _internal_dashboard_to_runtime_dashboard,
+            )
         )
 
     def _load_permitted(

@@ -87,7 +87,6 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.logged_in import SuperUserContext
 from cmk.gui.plugins.dashboard.utils import (
-    builtin_dashboards,
     get_all_dashboards,
     transform_stats_dashlet,
     transform_timerange_dashlet,
@@ -1333,7 +1332,7 @@ class UpdateConfig:
         global_config = load_configuration_settings(full_config=True)
         filter_group = global_config.get("topology_default_filter_group", "")
 
-        dashboards = visuals.load(visuals.VisualType.dashboards, builtin_dashboards)
+        dashboards = get_all_dashboards()
         with _save_user_instances(visuals.VisualType.dashboards, dashboards) as affected_user:
             for (owner, _name), dashboard in dashboards.items():
                 for dashlet in dashboard["dashlets"]:

@@ -1805,6 +1805,10 @@ def render_cache_info(what: str, row: Row) -> str:
     return text
 
 
+def _internal_view_to_runtime_view(raw_view: dict[str, Any]) -> ViewSpec:
+    return raw_view
+
+
 class ViewStore:
     @classmethod
     @request_memoize()
@@ -1823,6 +1827,7 @@ class ViewStore:
         views = visuals.load(
             visuals.VisualType.views,
             multisite_builtin_views,
+            _internal_view_to_runtime_view,
             skip_func=lambda v: v["datasource"] not in data_source_registry,
         )
         views = _transform_old_views(views)

@@ -31,6 +31,7 @@ Downtime object can have the following relations:
 """
 
 import datetime as dt
+import json
 from typing import Literal
 
 from cmk.utils.livestatus_helpers.expressions import And, Or
@@ -98,7 +99,19 @@ RW_PERMISSIONS = permissions.AllPerm(
 
 
 class DowntimeParameter(BaseSchema):
-    query = gui_fields.query_field(Downtimes, required=False)
+    query = gui_fields.query_field(
+        Downtimes,
+        required=False,
+        example=json.dumps(
+            {
+                "op": "and",
+                "expr": [
+                    {"op": "=", "left": "host_name", "right": "example.com"},
+                    {"op": "=", "left": "type", "right": "0"},
+                ],
+            }
+        ),
+    )
 
 
 @Endpoint(
@@ -265,11 +278,29 @@ def create_service_related_downtime(params):
 )
 def show_downtimes(param):
     """Show all scheduled downtimes"""
+    return _show_downtimes(param)
+
+
+def _show_downtimes(param):
+    """
+    Examples:
+
+        >>> import json
+        >>> from cmk.gui.livestatus_utils.testing import simple_expect
+        >>> from cmk.gui.plugins.openapi.restful_objects.params import to_openapi
+        >>> from cmk.utils.livestatus_helpers.expressions import tree_to_expr
+        >>> with simple_expect() as live:
+        ...    _ = live.expect_query("GET downtimes\\nColumns: host_name type\\nFilter: host_name = example.com\\nFilter: type = 0\\nAnd: 2")
+        ...    q = Query([Downtimes.host_name, Downtimes.type])
+        ...    q = q.filter(tree_to_expr(json.loads(to_openapi([DowntimeParameter], "query")[0]['example']), "downtimes"))
+        ...    list(q.iterate(live))
+        []
+
+    """
     live = sites.live()
     sites_to_query = param.get("sites")
     if sites_to_query:
         live.only_sites = sites_to_query
-
     q = Query(
         [
             Downtimes.id,
@@ -283,19 +314,15 @@ def show_downtimes(param):
             Downtimes.comment,
         ]
     )
-
     query_expr = param.get("query")
     if query_expr is not None:
         q = q.filter(query_expr)
-
     host_name = param.get("host_name")
     if host_name is not None:
         q = q.filter(And(Downtimes.host_name.op("=", host_name), Downtimes.is_service.equals(0)))
-
     service_description = param.get("service_description")
     if service_description is not None:
         q = q.filter(Downtimes.service_description.contains(service_description))
-
     gen_downtimes = q.iterate(live)
     return serve_json(_serialize_downtimes(gen_downtimes))
 

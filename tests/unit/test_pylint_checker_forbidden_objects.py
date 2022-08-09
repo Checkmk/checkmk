@@ -140,7 +140,7 @@ def test_multiple_modules_typing(
 ) -> None:
     for import_code, call_code, ref_value in modules:
         node = astroid.extract_node(import_code)
-        node.parent = astroid.Module("module ", None)
+        node.parent = astroid.Module("module ")
         namedtuple_checker.visit_module(node.parent)
         namedtuple_checker.visit_import(node)
         node = astroid.extract_node(call_code)
@@ -233,7 +233,7 @@ def test_multiple_modules_multiple_functions(
 ) -> None:
     for import_code, call_code, ref_value in modules:
         node = astroid.extract_node(import_code)
-        node.parent = astroid.Module("module ", None)
+        node.parent = astroid.Module("module ")
         six_checker.visit_module(node.parent)
         six_checker.visit_importfrom(node)
         node = astroid.extract_node(call_code)

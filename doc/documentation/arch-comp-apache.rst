@@ -97,7 +97,7 @@ Site Apache: `mod_wsgi` - Python application server
 
 The Apache module `mod_wsgi <https://modwsgi.readthedocs.io/>`_ enables the
 Apache web server to run Python WSGI applications. It is configured with the
-Site Apache using the file `$OMD_ROOT/etc/apache/conf.d/02_wsgi.conf`.
+Site Apache using the file `$OMD_ROOT/etc/apache/conf.d/01_wsgi.conf`.
 
 The Checkmk user interface is registered with `mod_wsgi` using the configuration
 file `$OMD_ROOT/etc/apache/conf.d/check_mk.conf`.

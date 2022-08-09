@@ -1,0 +1,15 @@
+Title: Fix ValueError on usage of empty service level filter
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1660034458
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+If "Host service level" or "Service service level" was used without "From" and
+"To" values in views, the error "ValueError: invalid literal for int() with
+base 10: ''" occurred.
+

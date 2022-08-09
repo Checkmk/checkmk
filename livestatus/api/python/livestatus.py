@@ -246,7 +246,7 @@ def create_client_socket(
     context = ssl.create_default_context()
     context.check_hostname = False
     context.verify_mode = ssl.CERT_REQUIRED if verify else ssl.CERT_NONE
-    context.options |= ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1
+    context.minimum_version = ssl.TLSVersion.TLSv1_2
 
     ca_file_path = ca_file_path if ca_file_path is not None else site_local_ca_path()
     try:

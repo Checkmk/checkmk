@@ -883,7 +883,7 @@ def _is_outdated(package_name: PackageName, package_info: PackageInfo, version: 
                    exc_info=True)
         return False
 
-    logger.log(VERBOSE, "[%s]: %s > %s = %s", package_name, version, until_version, is_outdated)
+    logger.log(VERBOSE, "[%s]: %s >= %s : %s", package_name, version, until_version, is_outdated)
     return is_outdated
 
 

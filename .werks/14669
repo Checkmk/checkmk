@@ -1,0 +1,11 @@
+Title: fix netstat parsing on OpenBSD agent
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1660139482
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Parsing of netstat output on OpenBSD agent is fixed.

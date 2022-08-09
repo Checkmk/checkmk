@@ -1756,11 +1756,12 @@ class FilterECServiceLevelRange(Filter):
         # NOTE: We need this special case only because our construction of the
         # disjunction is broken. We should really have a Livestatus Query DSL...
         bounds: FilterHTTPVariables = context.get(self.ident, {})
-        if not any(bounds):
+        if not any(v for _k, v in bounds.items()):
             return rows
 
         lower_bound: Optional[str] = bounds.get(self.lower_bound_varname)
         upper_bound: Optional[str] = bounds.get(self.upper_bound_varname)
+
         # If user only chooses "From" or "To", use same value from the choosen
         # field for the empty field and update filter form with that value
         if not lower_bound:

@@ -147,6 +147,9 @@ pub struct RuntimeConfig {
 
     #[serde(default)]
     detect_proxy: Option<bool>,
+
+    #[serde(default)]
+    validate_api_cert: Option<bool>,
 }
 
 impl TOMLLoader for RuntimeConfig {}
@@ -190,12 +193,15 @@ impl LegacyPullMarker {
 
 pub struct ClientConfig {
     pub use_proxy: bool,
+    pub validate_api_cert: bool,
 }
 
 impl ClientConfig {
     pub fn new(runtime_config: RuntimeConfig, client_opts: cli::ClientOpts) -> ClientConfig {
         ClientConfig {
             use_proxy: client_opts.detect_proxy || runtime_config.detect_proxy.unwrap_or(false),
+            validate_api_cert: client_opts.validate_api_cert
+                || runtime_config.validate_api_cert.unwrap_or(false),
         }
     }
 }

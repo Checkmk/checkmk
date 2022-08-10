@@ -34,6 +34,12 @@ pub struct ClientOpts {
     /// The default is to ignore configured proxies and to connect directly.
     #[structopt(long, short = "d")]
     pub detect_proxy: bool,
+
+    /// Enable TLS certificate validation for querying the agent receiver port from the Checkmk
+    /// REST API. By default, certificate validation is disabled because it is not security-relevant
+    /// at this stage, see werk #14715.
+    #[structopt(long)]
+    pub validate_api_cert: bool,
 }
 
 #[derive(StructOpt)]

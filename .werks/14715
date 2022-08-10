@@ -1,0 +1,31 @@
+Title: Agent controller: Do not verify TLS certificates by default when querying the agent receiver port from Checkmk REST API
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1660145786
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p10
+
+During registration, the agent controller (<tt>cmk-agent-ctl</tt>) queries the port on which the
+agent receiver is listening from the Checkmk REST API, unless the port has been explicitly provided
+on the command line. This query is attempted both with <tt>http</tt> and <tt>https</tt>. If both
+queries fail, the controller aborts, otherwise, the result of the first sucessful query is used.
+
+Before this werk, when attempting with <tt>https</tt>, the controller verified the TLS server
+certificate presented by the Checkmk server. Hence, for the port query to succeed with
+<tt>https</tt>, the host system had to trust the Checkmk server certificate. If a custom certificate
+authority was used, the corresponding root certificate had to be added to the host's certificate
+store.
+
+As of this werk, the controller by default no longer verifies the server certificate when querying
+the port with <tt>https</tt>. We do not consider this a security risk as this is just a query to
+identify the receiver port. The resulting port uses a Checkmk internal certificate authority anyway,
+which in turn is verified in any case. Furthermore, the verification can be re-enabled with the flag
+<tt>--validate-api-cert</tt> (passed to <tt>cmk-agent-ctl register ...</tt>).
+
+Note that this change has no impact on the subsequent communication between the monitored host and
+the Checkmk server. After a successful registration, this communication will be TLS-encrypted,
+indepedently of whether <tt>--validate-api-cert</tt> was used or not.

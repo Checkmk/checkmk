@@ -144,7 +144,8 @@ impl<'a> AgentRecvPortDiscoverer<'a> {
     }
 
     fn build_client(&self) -> reqwest::Result<reqwest::blocking::Client> {
-        let mut client_builder = reqwest::blocking::ClientBuilder::new();
+        let mut client_builder = reqwest::blocking::ClientBuilder::new()
+            .danger_accept_invalid_certs(!self.client_config.validate_api_cert);
         if !self.client_config.use_proxy {
             client_builder = client_builder.no_proxy();
         }
@@ -304,7 +305,10 @@ mod test_agent_recv_port_discoverer {
             AgentRecvPortDiscoverer {
                 server: "some-server",
                 site: "some-site",
-                client_config: &ClientConfig { use_proxy: false },
+                client_config: &ClientConfig {
+                    use_proxy: false,
+                    validate_api_cert: false,
+                },
             }
             .url("http")
             .unwrap()
@@ -325,7 +329,10 @@ mod test_make_coordinates {
                 "some-server",
                 Some(8000),
                 "some-site",
-                &ClientConfig { use_proxy: false }
+                &ClientConfig {
+                    use_proxy: false,
+                    validate_api_cert: false,
+                }
             )
             .unwrap(),
             Coordinates {

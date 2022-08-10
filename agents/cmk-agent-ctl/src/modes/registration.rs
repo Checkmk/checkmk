@@ -397,7 +397,10 @@ mod tests {
             root_certificate,
             host_reg_data,
             trust_server_cert,
-            client_config: config::ClientConfig { use_proxy: false },
+            client_config: config::ClientConfig {
+                use_proxy: false,
+                validate_api_cert: false,
+            },
         }
     }
 

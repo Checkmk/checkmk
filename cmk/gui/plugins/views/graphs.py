@@ -19,9 +19,8 @@ from cmk.gui.plugins.views.utils import (
     get_graph_timerange_from_painter_options,
     JSONExportError,
     multisite_builtin_views,
-    Painter,
+    Painter2,
     painter_option_registry,
-    painter_registry,
     PainterOption,
     PainterOptions,
 )
@@ -238,8 +237,7 @@ def _transform_old_graph_render_options(value):
     return value
 
 
-@painter_registry.register
-class PainterServiceGraphs(Painter):
+class PainterServiceGraphs(Painter2):
     @property
     def ident(self) -> str:
         return "service_graphs"
@@ -270,17 +268,8 @@ class PainterServiceGraphs(Painter):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        try:
-            from cmk.gui.cee.plugins.metrics.graphs import (  # pylint: disable=no-name-in-module
-                resolve_combined_single_metric_spec,
-            )
-        except ImportError:
-
-            def resolve_combined_single_metric_spec(
-                specification: CombinedGraphSpec,
-            ) -> Sequence[CombinedGraphMetricSpec]:
-                return ()
-
+        resolve_combined_single_metric_spec = type(self).resolve_combined_single_metric_spec
+        assert resolve_combined_single_metric_spec is not None
         return paint_cmk_graphs_with_timeranges(
             row,
             cell,
@@ -294,8 +283,7 @@ class PainterServiceGraphs(Painter):
         raise JSONExportError()
 
 
-@painter_registry.register
-class PainterHostGraphs(Painter):
+class PainterHostGraphs(Painter2):
     @property
     def ident(self) -> str:
         return "host_graphs"
@@ -320,17 +308,8 @@ class PainterHostGraphs(Painter):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        try:
-            from cmk.gui.cee.plugins.metrics.graphs import (  # pylint: disable=no-name-in-module
-                resolve_combined_single_metric_spec,
-            )
-        except ImportError:
-
-            def resolve_combined_single_metric_spec(
-                specification: CombinedGraphSpec,
-            ) -> Sequence[CombinedGraphMetricSpec]:
-                return ()
-
+        resolve_combined_single_metric_spec = type(self).resolve_combined_single_metric_spec
+        assert resolve_combined_single_metric_spec is not None
         return paint_cmk_graphs_with_timeranges(
             row,
             cell,

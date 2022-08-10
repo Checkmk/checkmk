@@ -9,8 +9,11 @@ from typing import Sequence
 import cmk.gui.pages
 import cmk.gui.plugins.metrics.graph_images as graph_images
 import cmk.gui.plugins.metrics.html_render as html_render
+import cmk.gui.plugins.views.graphs as graphs
+import cmk.gui.plugins.views.painters as painters
 from cmk.gui.metrics import page_graph_dashlet, page_host_service_graph_popup
 from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
+from cmk.gui.plugins.views.utils import painter_registry
 from cmk.gui.type_defs import CombinedGraphSpec
 
 
@@ -33,4 +36,25 @@ def register_pages() -> None:
         cmk.gui.pages.register(path)(partial(callback, resolve_combined_single_metric_spec))
 
 
+def register_painters() -> None:
+    graphs.PainterServiceGraphs.resolve_combined_single_metric_spec = (
+        resolve_combined_single_metric_spec
+    )
+    graphs.PainterHostGraphs.resolve_combined_single_metric_spec = (
+        resolve_combined_single_metric_spec
+    )
+    painters.PainterSvcPnpgraph.resolve_combined_single_metric_spec = (
+        resolve_combined_single_metric_spec
+    )
+    painters.PainterHostPnpgraph.resolve_combined_single_metric_spec = (
+        resolve_combined_single_metric_spec
+    )
+
+    painter_registry.register(graphs.PainterServiceGraphs)
+    painter_registry.register(graphs.PainterHostGraphs)
+    painter_registry.register(painters.PainterSvcPnpgraph)
+    painter_registry.register(painters.PainterHostPnpgraph)
+
+
 register_pages()
+register_painters()

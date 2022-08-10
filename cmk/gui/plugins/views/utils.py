@@ -76,10 +76,12 @@ from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.num_split import cmp_num_split as _cmp_num_split
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import Permission, permission_registry
+from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
 from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
 from cmk.gui.type_defs import (
     AllViewSpecs,
     ColumnName,
+    CombinedGraphSpec,
     HTTPVariables,
     LivestatusQuery,
     PainterName,
@@ -1104,6 +1106,13 @@ class Painter(abc.ABC):
         raises a 'JSONExportError'.
         """
         return self._compute_data(row, cell)
+
+
+class Painter2(Painter):
+    # Poor man's composition:  Renderer differs between CRE and non-CRE.
+    resolve_combined_single_metric_spec: Optional[
+        Callable[[CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]]
+    ] = None
 
 
 class PainterRegistry(cmk.utils.plugin_registry.Registry[Type[Painter]]):

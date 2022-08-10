@@ -109,19 +109,19 @@ def value_store(expired_values, current_values, restart_count, is_empty_value_st
     return {"restart_count_list": restart_count_list}
 
 
-def test_discovery_returns_single_service(section) -> None:
+def test_discovery_returns_single_service(section) -> None:  # type:ignore[no-untyped-def]
     assert len(list(kube_pod_restarts.discovery(section))) == 1
 
 
-def test_check_yields_two_results(check_result) -> None:
+def test_check_yields_two_results(check_result) -> None:  # type:ignore[no-untyped-def]
     assert len([r for r in check_result if isinstance(r, Result)]) == 2
 
 
-def test_check_results_state_ok(check_result) -> None:
+def test_check_results_state_ok(check_result) -> None:  # type:ignore[no-untyped-def]
     assert all(r.state == State.OK for r in check_result if isinstance(r, Result))
 
 
-def test_check_result_summary(check_result) -> None:
+def test_check_result_summary(check_result) -> None:  # type:ignore[no-untyped-def]
     expected = [
         f"Total: {OK * NUMBER_OF_CONTAINERS}",
         f"In last hour: {OK * NUMBER_OF_CONTAINERS * ONE_HOUR // ONE_MINUTE}",
@@ -131,7 +131,9 @@ def test_check_result_summary(check_result) -> None:
 
 
 @pytest.mark.parametrize("restart_count", [WARN, CRIT])
-def test_check_result_summary_alert(restart_count, params, check_result) -> None:
+def test_check_result_summary_alert(  # type:ignore[no-untyped-def]
+    restart_count, params, check_result
+) -> None:
     warn_crit_count = "(warn/crit at {}/{})".format(*params["restart_count"][1])
     warn_crit_rate = "(warn/crit at {}/{})".format(*params["restart_rate"][1])
     expected = [
@@ -142,11 +144,11 @@ def test_check_result_summary_alert(restart_count, params, check_result) -> None
     assert actual == expected
 
 
-def test_check_yields_two_metrics(check_result) -> None:
+def test_check_yields_two_metrics(check_result) -> None:  # type:ignore[no-untyped-def]
     assert len([m for m in check_result if isinstance(m, Metric)]) == 2
 
 
-def test_check_metric_value(check_result) -> None:
+def test_check_metric_value(check_result) -> None:  # type:ignore[no-untyped-def]
     expected = [OK * NUMBER_OF_CONTAINERS, OK * NUMBER_OF_CONTAINERS * ONE_HOUR // ONE_MINUTE]
     actual = [int(m.value) for m in check_result if isinstance(m, Metric)]
     assert actual == expected
@@ -160,13 +162,17 @@ def test_check_metric_value(check_result) -> None:
         (CRIT, [State.CRIT, State.CRIT]),
     ],
 )
-def test_check_result_state_mixed(expected_states, check_result) -> None:
+def test_check_result_state_mixed(  # type:ignore[no-untyped-def]
+    expected_states, check_result
+) -> None:
     assert [r.state for r in check_result if isinstance(r, Result)] == expected_states
 
 
 @pytest.mark.parametrize("expired_values", [0, 10, 30, 50, 59])
 @pytest.mark.parametrize("current_values", [10, 30, 50, 59])
-def test_check_results_considers_only_current_values(current_values, check_result) -> None:
+def test_check_results_considers_only_current_values(  # type:ignore[no-untyped-def]
+    current_values, check_result
+) -> None:
     expected = [OK * NUMBER_OF_CONTAINERS, OK * NUMBER_OF_CONTAINERS * (current_values + 1)]
     actual = [int(m.value) for m in check_result if isinstance(m, Metric)]
     assert actual == expected
@@ -174,14 +180,18 @@ def test_check_results_considers_only_current_values(current_values, check_resul
 
 @pytest.mark.parametrize("expired_values", [0, 10, 30, 50, 59])
 @pytest.mark.parametrize("current_values", [0])
-def test_check_yields_single_result_when_no_current_values(current_values, check_result) -> None:
+def test_check_yields_single_result_when_no_current_values(  # type:ignore[no-untyped-def]
+    current_values, check_result
+) -> None:
     expected = [OK * NUMBER_OF_CONTAINERS]
     actual = [int(m.value) for m in check_result if isinstance(m, Metric)]
     assert actual == expected
 
 
 @pytest.mark.parametrize("is_empty_value_store", [True])
-def test_check_results_creates_restart_count_list(value_store, check_result) -> None:
+def test_check_results_creates_restart_count_list(  # type:ignore[no-untyped-def]
+    value_store, check_result
+) -> None:
     list(check_result)
     assert len(value_store) == 1
     assert "restart_count_list" in value_store
@@ -189,20 +199,26 @@ def test_check_results_creates_restart_count_list(value_store, check_result) -> 
     assert value_store["restart_count_list"][0] == (TIMESTAMP, OK * NUMBER_OF_CONTAINERS)
 
 
-def test_check_results_updates_restart_count_list(value_store, check_result) -> None:
+def test_check_results_updates_restart_count_list(  # type:ignore[no-untyped-def]
+    value_store, check_result
+) -> None:
     list(check_result)
     assert len(value_store["restart_count_list"]) == ONE_HOUR // ONE_MINUTE
     assert value_store["restart_count_list"][-1] == (TIMESTAMP, OK * NUMBER_OF_CONTAINERS)
 
 
 @pytest.mark.parametrize("expired_values", [0, 10, 100])
-def test_check_results_disregards_expired_values(value_store, check_result) -> None:
+def test_check_results_disregards_expired_values(  # type:ignore[no-untyped-def]
+    value_store, check_result
+) -> None:
     list(check_result)
     assert len(value_store["restart_count_list"]) == ONE_HOUR // ONE_MINUTE
 
 
 @pytest.mark.parametrize("expired_values", [0, 10, 100])
-def test_check_results_maintains_restart_count_list_sorted(value_store, check_result) -> None:
+def test_check_results_maintains_restart_count_list_sorted(  # type:ignore[no-untyped-def]
+    value_store, check_result
+) -> None:
     list(check_result)
     assert value_store["restart_count_list"] == sorted(value_store["restart_count_list"])
 

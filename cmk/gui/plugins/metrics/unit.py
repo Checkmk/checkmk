@@ -128,7 +128,9 @@ unit_info["s/s"] = {
 }
 
 
-def physical_precision_list(values, precision, unit_symbol) -> tuple[str, list[str]]:
+def physical_precision_list(  # type:ignore[no-untyped-def]
+    values, precision, unit_symbol
+) -> tuple[str, list[str]]:
     if not values:
         reference = 0
     else:
@@ -152,7 +154,9 @@ unit_info["bits/s"] = {
 }
 
 
-def bytes_human_readable_list(values: Iterable[float], *_args, **kwargs) -> tuple[str, list[str]]:
+def bytes_human_readable_list(  # type:ignore[no-untyped-def]
+    values: Iterable[float], *_args, **kwargs
+) -> tuple[str, list[str]]:
     if not values:
         reference = 0.0
     else:

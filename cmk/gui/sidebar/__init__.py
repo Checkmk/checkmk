@@ -562,7 +562,7 @@ class SidebarRenderer:
             html.write_text(styles)
             html.close_style()
 
-    def _show_page_content(self, content: Optional["HTML"]):
+    def _show_page_content(self, content: Optional["HTML"]):  # type:ignore[no-untyped-def]
         html.open_div(id_="content_area")
         if content is not None:
             html.write_html(content)

@@ -121,7 +121,9 @@ class VirtualHostTree(SidebarSnapin):
             [(tree["id"], tree["title"]) for tree in self._trees.values()], key=lambda x: x[1]
         )
 
-    def _render_tag_tree_level(self, tree_spec, path, cwd, title, tree) -> None:
+    def _render_tag_tree_level(  # type:ignore[no-untyped-def]
+        self, tree_spec, path, cwd, title, tree
+    ) -> None:
         if not self._is_tag_subdir(path=path, cwd=cwd) and not self._is_tag_subdir(
             path=cwd, cwd=path
         ):
@@ -175,7 +177,7 @@ class VirtualHostTree(SidebarSnapin):
                 else:
                     self._render_tag_tree_level(tree_spec, subpath, cwd, node_title, subtree)
 
-    def _is_tag_subdir(self, path, cwd) -> bool:
+    def _is_tag_subdir(self, path, cwd) -> bool:  # type:ignore[no-untyped-def]
         if not cwd:
             return True
         if not path:
@@ -184,7 +186,7 @@ class VirtualHostTree(SidebarSnapin):
             return False
         return self._is_tag_subdir(path[1:], cwd[1:])
 
-    def _tag_tree_bullet(self, state, path, leaf) -> HTML:
+    def _tag_tree_bullet(self, state, path, leaf) -> HTML:  # type:ignore[no-untyped-def]
         code = HTMLWriter.render_div(
             "&nbsp;",
             class_=["tagtree"] + (["leaf"] if leaf else []) + ["statebullet", "state%d" % state],

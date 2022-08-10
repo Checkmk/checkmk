@@ -153,7 +153,7 @@ class UserProfile(ABCUserProfilePage):
         html.footer()
 
 
-def _show_custom_user_attr(user_spec: UserSpec, custom_attr) -> None:
+def _show_custom_user_attr(user_spec: UserSpec, custom_attr) -> None:  # type:ignore[no-untyped-def]
     for name, attr in custom_attr:
         if attr.user_editable():
             vs = attr.valuespec()

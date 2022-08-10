@@ -265,7 +265,7 @@ def ActionList(vs, **kwargs):
 
 
 class RuleState(CascadingDropdown):
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs) -> None:  # type:ignore[no-untyped-def]
         choices: List[CascadingDropdownChoice] = [
             (0, _("OK")),
             (1, _("WARN")),
@@ -3199,7 +3199,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
     # Used zipfile.is_zipfile(io.BytesIO(content)) before, but this only
     # possible with python 2.7. zipfile is only supporting checking of files by
     # their path.
-    def _is_zipfile(self, fo) -> bool:
+    def _is_zipfile(self, fo) -> bool:  # type:ignore[no-untyped-def]
         try:
             with zipfile.ZipFile(fo) as _opened_file:
                 pass

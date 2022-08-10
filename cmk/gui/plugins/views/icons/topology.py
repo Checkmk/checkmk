@@ -25,7 +25,9 @@ class ShowParentChildTopology(Icon):
     def default_sort_index(self):
         return 51
 
-    def render(self, what, row, tags, custom_vars) -> tuple[str, str, str]:
+    def render(  # type:ignore[no-untyped-def]
+        self, what, row, tags, custom_vars
+    ) -> tuple[str, str, str]:
         url = makeuri_contextless(
             request,
             [("host_name", row["host_name"])],

@@ -24,7 +24,9 @@ class InventoryIcon(Icon):
     def host_columns(self):
         return ["name"]
 
-    def render(self, what, row, tags, custom_vars) -> None | tuple[str, str, str]:
+    def render(  # type:ignore[no-untyped-def]
+        self, what, row, tags, custom_vars
+    ) -> None | tuple[str, str, str]:
         if (
             what == "host"
             or row.get("service_check_command", "").startswith("check_mk_active-cmk_inv!")

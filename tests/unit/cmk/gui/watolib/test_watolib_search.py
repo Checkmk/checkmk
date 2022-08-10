@@ -303,7 +303,7 @@ class TestIndexBuilderAndSearcher:
 
 
 @pytest.fixture(name="created_host_url")
-def fixture_created_host_url(with_admin_login) -> str:
+def fixture_created_host_url(with_admin_login) -> str:  # type:ignore[no-untyped-def]
     folder = Folder.root_folder()
     folder.create_hosts([("host", {}, [])])
     return "wato.py?folder=&host=host&mode=edit_host"
@@ -328,7 +328,7 @@ class TestURLChecker:
     ) -> None:
         assert URLChecker[ModeEditHost](ModeEditHost).is_permitted(created_host_url)
 
-    def test_is_permitted_host_false(
+    def test_is_permitted_host_false(  # type:ignore[no-untyped-def]
         self,
         monkeypatch: MonkeyPatch,
         request_context,
@@ -426,7 +426,7 @@ class TestRealisticSearch:
         "fake_rrdcached_default_globals",
         "suppress_get_configuration_automation_call",
     )
-    def test_index_is_built_as_super_user(
+    def test_index_is_built_as_super_user(  # type:ignore[no-untyped-def]
         self,
         mock_livestatus: MockLiveStatusConnection,
     ):
@@ -455,7 +455,7 @@ class TestRealisticSearch:
         "fake_rrdcached_default_globals",
         "suppress_get_configuration_automation_call",
     )
-    def test_dcd_not_found_if_not_super_user(
+    def test_dcd_not_found_if_not_super_user(  # type:ignore[no-untyped-def]
         self,
         monkeypatch: MonkeyPatch,
         mock_livestatus: MockLiveStatusConnection,

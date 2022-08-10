@@ -35,7 +35,7 @@ def _wato_folders_to_lq_regex(path: str) -> str:
 
 
 class FilterWatoFolder(Filter):
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs) -> None:  # type:ignore[no-untyped-def]
         super().__init__(**kwargs)
         self.last_wato_data_update: None | float = None
 
@@ -94,7 +94,9 @@ class FilterWatoFolder(Filter):
     # by the HTML selection box. This also updates self.path_to_tree,
     # a dictionary from the path to the title, by recursively scanning the
     # folders
-    def folder_selection(self, folder, depth=0) -> Iterator[Tuple[str, str]]:
+    def folder_selection(  # type:ignore[no-untyped-def]
+        self, folder, depth=0
+    ) -> Iterator[Tuple[str, str]]:
         my_path: str = folder.path()
         self.path_to_tree[my_path] = folder.title()
 
@@ -147,7 +149,7 @@ class FilterMultipleWatoFolder(FilterWatoFolder):
             return folders.split("|")
         return []
 
-    def display(self, value: FilterHTTPVariables):
+    def display(self, value: FilterHTTPVariables):  # type:ignore[no-untyped-def]
         self.valuespec().render_input(self.ident, self._to_list(value))
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:

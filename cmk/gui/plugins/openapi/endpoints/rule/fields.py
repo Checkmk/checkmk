@@ -150,7 +150,7 @@ class LabelConditionSchema(base.BaseSchema):
     )
 
     @pre_dump(pass_many=True)
-    def convert_to_api(
+    def convert_to_api(  # type:ignore[no-untyped-def]
         self,
         data,
         many: bool = False,
@@ -536,7 +536,7 @@ class HostOrServiceConditionSchema(base.BaseSchema):
 
             raise ValidationError(f"Unknown format: {_entry}")
 
-        def _ensure_list(_entry) -> typing.List[str]:
+        def _ensure_list(_entry) -> typing.List[str]:  # type:ignore[no-untyped-def]
             if isinstance(_entry, list):
                 return _entry
 
@@ -965,7 +965,7 @@ class RuleSearchOptions(base.BaseSchema):
     )
 
 
-def _unpack_operator(v) -> ApiOperator:
+def _unpack_operator(v) -> ApiOperator:  # type:ignore[no-untyped-def]
     """Unpacks the operator from a condition value
 
     Examples:

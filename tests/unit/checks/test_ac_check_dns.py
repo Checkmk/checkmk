@@ -76,7 +76,7 @@ from cmk.gui.plugins.wato.active_checks.dns import _transform_check_dns_settings
         ),
     ],
 )
-def test_ac_check_dns_expected_addresses(params, result) -> None:
+def test_ac_check_dns_expected_addresses(params, result) -> None:  # type:ignore[no-untyped-def]
     active_check = ActiveCheck("check_dns")
     assert active_check.run_argument_function(params) == result
 
@@ -149,5 +149,5 @@ def test_ac_check_dns_expected_addresses(params, result) -> None:
         ],
     ],
 )
-def test_legacy_params(params, result) -> None:
+def test_legacy_params(params, result) -> None:  # type:ignore[no-untyped-def]
     assert _transform_check_dns_settings(params) == result

@@ -1055,7 +1055,7 @@ class MultipleSitesFilter(SiteFilter):
     def get_request_sites(self, value: FilterHTTPVariables) -> List[str]:
         return [x for x in value.get(self.htmlvars[0], "").strip().split("|") if x]
 
-    def display(self, value: FilterHTTPVariables):
+    def display(self, value: FilterHTTPVariables):  # type:ignore[no-untyped-def]
         sites_vs = DualListChoice(choices=query_filters.sites_options(), rows=4)
         sites_vs.render_input(self.htmlvars[0], self.get_request_sites(value))
 
@@ -1590,7 +1590,7 @@ filter_registry.register(
 )
 
 
-def filter_kubernetes_register(
+def filter_kubernetes_register(  # type:ignore[no-untyped-def]
     title: str,
     object_name: Literal["cluster", "node", "deployment", "namespace", "daemonset", "statefulset"],
 ):

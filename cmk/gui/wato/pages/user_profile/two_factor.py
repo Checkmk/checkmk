@@ -105,7 +105,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
                 % "".join(f"<li><tt>{password}</tt></li>" for password, _pwhashed in codes)
             )
 
-    def _page_menu(self, breadcrumb) -> PageMenu:
+    def _page_menu(self, breadcrumb) -> PageMenu:  # type:ignore[no-untyped-def]
         page_menu: PageMenu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(

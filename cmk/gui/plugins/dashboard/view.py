@@ -30,7 +30,7 @@ class ABCViewDashlet(IFrameDashlet):
     def has_context(cls) -> bool:
         return True
 
-    def _show_view_as_dashlet(self, view_spec: ViewSpec):
+    def _show_view_as_dashlet(self, view_spec: ViewSpec):  # type:ignore[no-untyped-def]
         html.add_body_css_class("view")
         html.open_div(id_="dashlet_content_wrapper")
 
@@ -82,7 +82,7 @@ class ABCViewDashlet(IFrameDashlet):
 
         html.close_div()
 
-    def _get_infos_from_view_spec(self, view_spec: ViewSpec):
+    def _get_infos_from_view_spec(self, view_spec: ViewSpec):  # type:ignore[no-untyped-def]
         ds_name = view_spec["datasource"]
         return data_source_registry[ds_name]().infos
 
@@ -105,7 +105,7 @@ class ViewDashlet(ABCViewDashlet):
 
     @classmethod
     def vs_parameters(cls):
-        def _render_input(dashlet) -> None:
+        def _render_input(dashlet) -> None:  # type:ignore[no-untyped-def]
             # TODO: Don't modify the self._dashlet data structure here!
             views.transform_view_to_valuespec_value(dashlet)
             return views.render_view_config(dashlet)

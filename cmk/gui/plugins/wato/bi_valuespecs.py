@@ -243,7 +243,7 @@ class ABCBIConfigSearch(ABCBISearch):
 
 
 class BIConfigSearchRegistry(plugin_registry.Registry[Type[ABCBIConfigSearch]]):
-    def plugin_name(self, instance) -> str:
+    def plugin_name(self, instance) -> str:  # type:ignore[no-untyped-def]
         return instance.type()
 
 
@@ -488,7 +488,7 @@ class ABCBIConfigAction(ABCBIAction):
 
 
 class BIConfigActionRegistry(plugin_registry.Registry[Type[ABCBIConfigAction]]):
-    def plugin_name(self, instance) -> str:
+    def plugin_name(self, instance) -> str:  # type:ignore[no-untyped-def]
         return instance.type()
 
 
@@ -595,7 +595,7 @@ def may_use_rules_in_pack(bi_pack):
     return bi_pack.public or is_contact_for_pack(bi_pack)
 
 
-def is_contact_for_pack(bi_pack) -> bool:
+def is_contact_for_pack(bi_pack) -> bool:  # type:ignore[no-untyped-def]
     if user.may("wato.bi_admin"):
         return True  # meaning I am admin
 
@@ -739,7 +739,7 @@ class ABCBIConfigAggregationFunction(ABCBIAggregationFunction):
 class BIConfigAggregationFunctionRegistry(
     plugin_registry.Registry[Type[ABCBIConfigAggregationFunction]]
 ):
-    def plugin_name(self, instance) -> str:
+    def plugin_name(self, instance) -> str:  # type:ignore[no-untyped-def]
         return instance.type()
 
 

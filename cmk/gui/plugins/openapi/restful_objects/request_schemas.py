@@ -622,7 +622,7 @@ class TimePeriodName(fields.String):
         "should_not_exist": "Name {name!r} already exists.",
     }
 
-    def __init__(
+    def __init__(  # type:ignore[no-untyped-def]
         self,
         example,
         required=True,
@@ -656,7 +656,7 @@ class TimePeriodAlias(fields.String):
         "should_not_exist": "Timeperiod alias {name!r} already exists.",
     }
 
-    def __init__(
+    def __init__(  # type:ignore[no-untyped-def]
         self,
         example,
         required=True,
@@ -1047,7 +1047,7 @@ class Username(fields.String):
         "should_not_exist": "Username {username!r} already exists",
     }
 
-    def __init__(
+    def __init__(  # type:ignore[no-untyped-def]
         self,
         example,
         required=True,
@@ -1082,7 +1082,7 @@ class UserRoleID(fields.String):
         "should_be_builtin": "The role should be a builtin role but it's not: {role!r}",
     }
 
-    def __init__(
+    def __init__(  # type:ignore[no-untyped-def]
         self,
         presence: Literal["should_exist", "should_not_exist", "ignore"] = "ignore",
         userrole_type: Literal["should_be_custom", "should_be_builtin", "ignore"] = "ignore",
@@ -1093,7 +1093,7 @@ class UserRoleID(fields.String):
         self.presence = presence
         self.userrole_type = userrole_type
 
-    def _validate(self, value) -> None:
+    def _validate(self, value) -> None:  # type:ignore[no-untyped-def]
         super()._validate(value)
 
         if self.presence == "should_not_exist":
@@ -2208,7 +2208,9 @@ class PermissionField(fields.String):
         "invalid_permission": "The specified permission name doesn't exist: {value!r}",
     }
 
-    def __init__(self, required=True, validate=None, **kwargs) -> None:
+    def __init__(  # type:ignore[no-untyped-def]
+        self, required=True, validate=None, **kwargs
+    ) -> None:
         super().__init__(
             example="general.edit_profile",
             description="The name of a permission",
@@ -2217,7 +2219,7 @@ class PermissionField(fields.String):
             **kwargs,
         )
 
-    def _validate(self, value) -> None:
+    def _validate(self, value) -> None:  # type:ignore[no-untyped-def]
         super()._validate(value)
         if value not in permission_registry:
             raise self.make_error("invalid_permission", value=value)

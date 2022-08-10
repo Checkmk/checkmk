@@ -920,7 +920,7 @@ def _page_menu(
     return menu
 
 
-def _page_menu_dashboards(name) -> Iterable[PageMenuTopic]:
+def _page_menu_dashboards(name) -> Iterable[PageMenuTopic]:  # type:ignore[no-untyped-def]
     if cmk_version.is_raw_edition():
         linked_dashboards = ["main", "checkmk"]  # problems = main in raw edition
     else:

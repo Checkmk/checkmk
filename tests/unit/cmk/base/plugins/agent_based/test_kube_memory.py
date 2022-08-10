@@ -158,19 +158,23 @@ def section_kube_memory_allocatable_resource():
     return AllocatableResource(context="node", value=35917989.0)
 
 
-def test_register_agent_memory_section_calls(agent_performance_section) -> None:
+def test_register_agent_memory_section_calls(  # type:ignore[no-untyped-def]
+    agent_performance_section,
+) -> None:
     assert str(agent_performance_section.name) == "kube_performance_memory_v1"
     assert str(agent_performance_section.parsed_section_name) == "kube_performance_memory"
     assert agent_performance_section.parse_function == kube_memory.parse_performance_usage
 
 
-def test_register_agent_memory_resources_section_calls(agent_resources_section) -> None:
+def test_register_agent_memory_resources_section_calls(  # type:ignore[no-untyped-def]
+    agent_resources_section,
+) -> None:
     assert str(agent_resources_section.name) == "kube_memory_resources_v1"
     assert str(agent_resources_section.parsed_section_name) == "kube_memory_resources"
     assert agent_resources_section.parse_function == kube_memory.parse_resources
 
 
-def test_register_check_plugin_calls(check_plugin) -> None:
+def test_register_check_plugin_calls(check_plugin) -> None:  # type:ignore[no-untyped-def]
     assert str(check_plugin.name) == "kube_memory"
     assert check_plugin.service_name == "Memory resources"
     assert check_plugin.discovery_function.__wrapped__ == kube_memory.discovery_kube_memory
@@ -428,7 +432,9 @@ def test_check_kube_memory(
         ),
     ],
 )
-def test_crashes_if_no_resources(section_kube_performance_memory) -> None:
+def test_crashes_if_no_resources(  # type:ignore[no-untyped-def]
+    section_kube_performance_memory,
+) -> None:
     with pytest.raises(AssertionError):
         list(
             check_kube_memory(

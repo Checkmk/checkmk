@@ -22,7 +22,7 @@ import subprocess
 import tempfile
 from dataclasses import dataclass
 from textwrap import wrap
-from typing import Callable, Literal, Optional, Protocol, Sequence, TypedDict, Union
+from typing import Callable, Literal, Optional, overload, Protocol, Sequence, TypedDict, Union
 
 from PIL import Image, PngImagePlugin  # type: ignore[import]
 from reportlab.lib.units import mm  # type: ignore[import]
@@ -66,7 +66,17 @@ class RowShading(TypedDict):
     heading: RGBColor
 
 
-def from_mm(dim):
+@overload
+def from_mm(dim: float) -> float:
+    ...
+
+
+@overload
+def from_mm(dim: Sequence[float]) -> Sequence[float]:
+    ...
+
+
+def from_mm(dim: Union[float, Sequence[float]]) -> Union[float, Sequence[float]]:
     if isinstance(dim, (int, float)):
         return dim * mm
     return [x * mm for x in dim]
@@ -290,7 +300,7 @@ class Document:
     def get_font_size(self) -> SizePT:
         return self._gfx_state["font_size"]
 
-    def set_line_width(self, w: SizeInternal):  # type:ignore[no-untyped-def]
+    def set_line_width(self, w: SizeInternal) -> None:
         self._gfx_state["line_width"] = w * mm
         self.set_gfx_state()
 

@@ -1,0 +1,16 @@
+Title: Traceback in "Percentage of total service problems" dashlet with missing monitoring data
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1660112476
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p28
+
+When using a "Percentage of total service problems" dashlet without the necessary monitoring data the
+dashlet would display a traceback of the error.
+The error also occured in the Main dashboard which uses this dashlet by default.
+
+Now the error message is displayed as a text message in the dashlet.

@@ -10,7 +10,19 @@ import os
 import pprint
 import re
 from enum import auto, Enum
-from typing import Any, Callable, cast, Container, Dict, List, Mapping, Optional, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Container,
+    Dict,
+    Final,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.store as store
@@ -54,7 +66,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     may_use_redis,
 )
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
-from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
+from cmk.gui.watolib.rulespecs import Rulespec, rulespec_group_registry, rulespec_registry
 from cmk.gui.watolib.utils import ALL_HOSTS, ALL_SERVICES, NEGATE, wato_root_dir
 
 # Make the GUI config module reset the base config to always get the latest state of the config
@@ -502,11 +514,16 @@ class Ruleset:
     TOP = 0
     BOTTOM = -1
 
-    def __init__(self, name: RulesetName, tag_to_group_map: TagIDToTaggroupID) -> None:
+    def __init__(
+        self,
+        name: RulesetName,
+        tag_to_group_map: TagIDToTaggroupID,
+        rulespec: Optional[Rulespec] = None,
+    ) -> None:
         super().__init__()
-        self.name = name
-        self.tag_to_group_map = tag_to_group_map
-        self.rulespec = rulespec_registry[name]
+        self.name: Final = name
+        self.tag_to_group_map: Final = tag_to_group_map
+        self.rulespec: Final = rulespec_registry[name] if rulespec is None else rulespec
 
         # Holds list of the rules. Using the folder paths as keys.
         self._rules: Dict[FolderPath, List[Rule]] = {}
@@ -521,14 +538,10 @@ class Ruleset:
         )
 
     def clone(self):
-        cloned = Ruleset(self.name, self.tag_to_group_map)
-        cloned.rulespec = self.rulespec
+        cloned = Ruleset(self.name, self.tag_to_group_map, self.rulespec)
         for folder, _rule_index, rule in self.get_rules():
             cloned.append_rule(folder, rule)
         return cloned
-
-    def set_name(self, name: RulesetName) -> None:
-        self.name = name
 
     def object_ref(self) -> ObjectRef:
         return ObjectRef(ObjectRefType.Ruleset, self.name)

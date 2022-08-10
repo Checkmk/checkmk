@@ -93,6 +93,11 @@ class AssetSection:
     def __getitem__(self, key: AssetType) -> AssetTypeSection:
         return self._assets[key]
 
+    def get(
+        self, key: AssetType, default: Optional[AssetTypeSection] = None
+    ) -> Optional[AssetTypeSection]:
+        return self._assets.get(key, default)
+
     def __contains__(self, key: AssetType) -> bool:
         return key in self._assets
 
@@ -196,11 +201,11 @@ def check(
     params: Mapping[str, Any],
     section: Optional[Section],
     asset_type: AssetType,
-    assets: Optional[AssetSection],
+    all_assets: Optional[AssetSection],
 ) -> CheckResult:
     if section is None:
         return
-    if assets is None or item not in assets[asset_type]:
+    if all_assets is None or (assets := all_assets.get(asset_type)) is None or item not in assets:
         return
     timeseries = section.get(item, SectionItem(rows=[])).rows
     yield from generic_check(spec, timeseries, params)

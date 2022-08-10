@@ -1,0 +1,13 @@
+Title: Fix crash in license graphs for Citrix devices
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1660135496
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p28
+
+
+This werk fixes a crash in the license graph for some devices (including
+Citrix devices).

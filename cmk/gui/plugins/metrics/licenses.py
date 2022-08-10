@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _l
+from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import graph_info
 
 # .
@@ -20,7 +20,7 @@ from cmk.gui.plugins.metrics.utils import graph_info
 #   '----------------------------------------------------------------------'
 
 graph_info["licenses"] = {
-    "title": _l("Licenses"),
+    "title": _("Licenses"),
     "metrics": [("licenses", "area"),],
     "scalars": [
         "licenses:warn",

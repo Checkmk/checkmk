@@ -30,7 +30,7 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from logging import getLogger, Logger
 from pathlib import Path
 from re import Pattern
-from types import FrameType, TracebackType
+from types import FrameType
 from typing import Any, AnyStr, Literal, NamedTuple, Protocol, TypedDict
 
 from setproctitle import setthreadtitle  # type: ignore[import] # pylint: disable=no-name-in-module
@@ -57,8 +57,10 @@ from .config import Config, ConfigFromWATO, Rule
 from .core_queries import query_hosts_scheduled_downtime_depth, query_timeperiods_in
 from .crash_reporting import CrashReportStore, ECCrashReport
 from .event import create_event_from_line, Event
+from .helpers import ECLock
 from .history import ActiveHistoryPeriod, get_logfile, History, quote_tab, scrub_string
 from .host_config import HostConfig, HostInfo
+from .perfcounters import Perfcounters
 from .query import filter_operator_in, MKClientError, Query, QueryCOMMAND, QueryGET, QueryREPLICATE
 from .rule_packs import load_config as load_config_using
 from .settings import FileDescriptor, PortNumber, Settings
@@ -176,28 +178,6 @@ def scrub_and_decode(s: AnyStr) -> str:
 #   +----------------------------------------------------------------------+
 #   |  Various helper functions                                            |
 #   '----------------------------------------------------------------------'
-
-
-class ECLock:
-    def __init__(self, logger: Logger) -> None:
-        super().__init__()
-        self._logger = logger
-        self._lock = threading.Lock()
-
-    def __enter__(self) -> None:
-        self._logger.debug("[%s] Trying to acquire lock", threading.current_thread().name)
-        self._lock.acquire()
-        self._logger.debug("[%s] Acquired lock", threading.current_thread().name)
-
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: TracebackType | None,
-    ) -> Literal[False]:
-        self._logger.debug("[%s] Releasing lock", threading.current_thread().name)
-        self._lock.release()
-        return False  # Do not swallow exceptions
 
 
 class ECServerThread(threading.Thread):
@@ -420,118 +400,6 @@ class TimePeriods:
             self._logger.warning("unknown timeperiod '%s', assuming it is active", name)
             is_active = True
         return is_active
-
-
-# .
-#   .--Perfcounters--------------------------------------------------------.
-#   |      ____            __                       _                      |
-#   |     |  _ \ ___ _ __ / _| ___ ___  _   _ _ __ | |_ ___ _ __ ___       |
-#   |     | |_) / _ \ '__| |_ / __/ _ \| | | | '_ \| __/ _ \ '__/ __|      |
-#   |     |  __/  __/ |  |  _| (_| (_) | |_| | | | | ||  __/ |  \__ \      |
-#   |     |_|   \___|_|  |_|  \___\___/ \__,_|_| |_|\__\___|_|  |___/      |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Helper class for performance counting                               |
-#   '----------------------------------------------------------------------'
-
-
-def lerp(a: float, b: float, t: float) -> float:
-    """Linear interpolation between a and b with weight t"""
-    return (1 - t) * a + t * b
-
-
-class Perfcounters:
-    _counter_names = [
-        "messages",
-        "rule_tries",
-        "rule_hits",
-        "drops",
-        "overflows",
-        "events",
-        "connects",
-    ]
-
-    # Average processing times
-    _weights = {
-        "processing": 0.99,  # event processing
-        "sync": 0.95,  # Replication sync
-        "request": 0.95,  # Client requests
-    }
-
-    # TODO: Why aren't self._times / self._rates / ... not initialized with their defaults?
-    def __init__(self, logger: Logger) -> None:
-        super().__init__()
-        self._lock = ECLock(logger)
-
-        # Initialize counters
-        self._counters = {n: 0 for n in self._counter_names}
-        self._old_counters: dict[str, int] = {}
-        self._rates: dict[str, float] = {}
-        self._average_rates: dict[str, float] = {}
-        self._times: dict[str, float] = {}
-        self._last_statistics: float | None = None
-
-        self._logger = logger.getChild("Perfcounters")
-
-    def count(self, counter: str) -> None:
-        with self._lock:
-            self._counters[counter] += 1
-
-    def count_time(self, counter: str, ptime: float) -> None:
-        with self._lock:
-            if counter in self._times:
-                self._times[counter] = lerp(ptime, self._times[counter], self._weights[counter])
-            else:
-                self._times[counter] = ptime
-
-    def do_statistics(self) -> None:
-        with self._lock:
-            now = time.time()
-            if self._last_statistics:
-                duration = now - self._last_statistics
-            else:
-                duration = 0
-            for name, value in self._counters.items():
-                if duration:
-                    delta = value - self._old_counters[name]
-                    rate = delta / duration
-                    self._rates[name] = rate
-                    if name in self._average_rates:
-                        # We could make the weight configurable
-                        self._average_rates[name] = lerp(rate, self._average_rates[name], 0.9)
-                    else:
-                        self._average_rates[name] = rate
-
-            self._last_statistics = now
-            self._old_counters = self._counters.copy()
-
-    @classmethod
-    def status_columns(cls: type[Perfcounters]) -> list[tuple[str, float]]:
-        columns: list[tuple[str, float]] = []
-        # Please note: status_columns() and get_status() need to produce lists with exact same column order
-        for name in cls._counter_names:
-            columns.append(("status_" + name, 0))
-            columns.append(("status_" + name.rstrip("s") + "_rate", 0.0))
-            columns.append(("status_average_" + name.rstrip("s") + "_rate", 0.0))
-
-        for name in cls._weights:
-            columns.append(("status_average_%s_time" % name, 0.0))
-
-        return columns
-
-    def get_status(self) -> list[float]:
-        with self._lock:
-            row: list[float] = []
-            # Please note: status_columns() and get_status() need to produce lists with exact same column order
-            for name in self._counter_names:
-                row.append(self._counters[name])
-                row.append(self._rates.get(name, 0.0))
-                row.append(self._average_rates.get(name, 0.0))
-
-            for name in self._weights:
-                row.append(self._times.get(name, 0.0))
-
-            return row
 
 
 # .

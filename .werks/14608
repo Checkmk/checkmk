@@ -1,0 +1,24 @@
+Title: Agent Bakery: Stabilize bake & sign
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1660125522
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p10
+
+In some situations, it could happen that some agent packages are signed
+with an invalid signature after baking/signing with "Bake and sign agents"
+action.<br>
+The cause for this was that the signature of pre-existing packages sometimes
+wouldn't get updated if the package had to be repackaged for a bakery revision update.
+
+This resulted in the agent updater being unable to update affected hosts
+and exiting with message <tt>signature #<i>n</i> is invalid</tt>, and the
+matching <i>Check_MK</i> service showing a <i>WARN</t> state.
+
+Signatures will be fixed and updates will continue to work after first
+bake&sign action after applying this Werk.
+

@@ -6,6 +6,8 @@
 from pathlib import Path
 from typing import Final
 
+import pytest
+
 import cmk.utils.msi_engine as msi_engine
 
 EXPECTED_P: Final = msi_engine._Parameters(
@@ -70,3 +72,17 @@ def test_msi_component_table() -> None:
     assert len(a) == len(EXPECTED_COMPONENT_TABLE)  # size now(yml, dat & cap, zip)
     a_sorted = sorted(a)
     assert a == a_sorted  # array should be sorted
+
+
+@pytest.mark.parametrize(
+    "version, expected",
+    [
+        ("1.7.0i1", "1.7.0.xxx"),
+        ("1.2.5i4p1", "1.2.5.xxx"),
+        ("2015.04.12", "15.4.12.xxx"),
+        ("2.0.0i1", "2.0.0.xxx"),
+        ("1.6.0-2020.02.20", "1.6.0.xxx"),
+    ],
+)
+def test_generate_product_versions(version: str, expected: str) -> None:
+    assert msi_engine.generate_product_version(version, revision_text="xxx") == expected

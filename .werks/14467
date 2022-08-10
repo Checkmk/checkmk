@@ -1,0 +1,19 @@
+Title: LDAP: Fix name conflict if new connector is used
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1660134794
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p10
+
+Since werk #13501 the user connector is used to only contact connections, the
+user is configured for.
+
+If a connection was deleted and a new one was used, the user still had the
+deleted connector in his profile, leading to messages like "SKIP SYNC "MY_USER"
+(name conflict with user from "MY_OLD_CONNECTION" connector)" in
+~/var/log/web.log on LDAP logging set to debug.
+
+We now make sure that the connection still exists.

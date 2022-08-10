@@ -1,0 +1,18 @@
+Title: Agent controller: Respect <tt>--detect-proxy</tt> when querying port from Checkmk REST API
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1660144754
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p10
+
+During registration, the agent controller (<tt>cmk-agent-ctl</tt>) queries the port on which the
+agent receiver is listening from the Checkmk REST API, unless the port has been explicitly provided
+on the command line. Before this werk, this call to the REST API did not respect the
+<tt>--detect-proxy</tt> option, wich enables the detection and usage of sytem proxy settings.
+
+Note that this werk does not change the default behavior, which is to connect directly without any
+proxy server.

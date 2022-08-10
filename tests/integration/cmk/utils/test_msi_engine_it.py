@@ -86,7 +86,7 @@ def test_update_package_code(tmp_path: Path) -> None:
         # case for the uuid in command line
         assert not tgt.exists()
         assert msi_engine.copy_file_safe(src, tgt)
-        msi_engine.update_package_code(tgt, "{01234567-1234-1234-1234-012345678901}")
+        msi_engine.update_package_code(tgt, package_code="{01234567-1234-1234-1234-012345678901}")
         tgt_content = tgt.read_bytes()
         pos = tgt_content.find(b"01234567-1234-1234")
         assert pos == pos_initial
@@ -97,7 +97,7 @@ def test_update_package_code(tmp_path: Path) -> None:
         # case for the hash
         assert not tgt.exists()
         assert msi_engine.copy_file_safe(src, tgt)
-        msi_engine.update_package_code(tgt, "012")
+        msi_engine.update_package_code(tgt, package_code="012")
         tgt_content = tgt.read_bytes()
         pos = tgt_content.find(b"21FAC8EF-8042-50CA-8C85-FBCA566E726E")
 

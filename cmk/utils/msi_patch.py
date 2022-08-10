@@ -3,58 +3,71 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import argparse
 import re
 import sys
 import uuid
+from collections.abc import Sequence
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Final, Literal, Tuple
 
 import yaml
 
-TRADITIONAL_UUID = "{BAEBF560-7308-4D53-B426-903EA74B1D7E}"
-MSI_PACKAGE_CODE_MARKER = "Intel;1033"
-MSI_PACKAGE_CODE_OFFSET = len("Intel;1033") + 10  #
-# UUID regex
-regex = re.compile("^{[a-f0-9]{8}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{12}}", re.I)
+TRADITIONAL_UUID: Final = "{BAEBF560-7308-4D53-B426-903EA74B1D7E}"
+MSI_PACKAGE_CODE_MARKER: Final = "Intel;1033"
+MSI_PACKAGE_CODE_OFFSET: Final = len("Intel;1033") + 10
+_UUID_REGEX: Final = re.compile(
+    "^{[a-f0-9]{8}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{12}}", re.I
+)
 
-_expected_version = "600"  # this value must be in sync with Windows Agent Product.wxs
-_matrix = "( VersionNT >= {} )"  # this string must be in sync with Windows Agent Product.wxs
+_EXPECTED_WIN_VERSION: Final = "600"  # this value must be in sync with Windows Agent product.wxs
+_MSI_WIN_VERSION_TEMPLATE: Final = "( VersionNT >= {} )"  # must be in sync with product.wxs
 
 
-# used normally only in Windows build chain to patch
-def parse_command_line(argv):
-    # mode of the
-    patch_mode = argv[1]
+@dataclass
+class _Parameters:
+    mode: Literal["win_ver", "code", "1033"]
+    file_name: Path
+    mode_parameter: str
 
-    # Directory where the sources are contained
-    f_name = argv[2]
 
-    # anything
-    mask = "" if len(argv) <= 3 else argv[3]
-
-    return patch_mode, f_name, mask
+def parse_command_line(argv: Sequence[str]) -> _Parameters:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("mode", choices=["win_ver", "code", "1033"], type=str)
+    parser.add_argument("file_name", type=Path)
+    parser.add_argument("mode_parameter", nargs="?")
+    result = parser.parse_args(argv[1:])
+    return _Parameters(
+        mode=result.mode,
+        file_name=result.file_name,
+        mode_parameter=result.mode_parameter or "",
+    )
 
 
 def generate_uuid() -> str:
     return ("{%s}" % uuid.uuid1()).upper()
 
 
-# converts any text to SHA-1 based uuid
 def generate_uuid_from_base(base: str) -> str:
+    """converts any text to SHA-1 based uuid"""
     return ("{%s}" % uuid.uuid5(uuid.NAMESPACE_DNS, base)).upper()
 
 
-def write_state_file(path_to_state: Optional[Path], pos: int, code: str) -> None:
-    if path_to_state is not None:
-        state = {"msi_info": {"package_code_pos": pos, "package_code_value": code}}
-        with path_to_state.open("w", encoding="utf-8") as f:
-            yaml.dump(state, f, encoding="utf-8", allow_unicode=True)
+def write_state_file(path_to_state: Path | None, pos: int, code: str) -> None:
+    if path_to_state is None:
+        return
+
+    state = {"msi_info": {"package_code_pos": pos, "package_code_value": code}}
+    with path_to_state.open("w", encoding="utf-8") as f:
+        yaml.dump(state, f, encoding="utf-8", allow_unicode=True)
 
 
-def load_state_file(path_to_state: Optional[Path]) -> Tuple[int, str]:
+def load_state_file(path_to_state: Path | None) -> Tuple[int, str]:
+    """returns offset and value if found, offset is -1 - not found"""
 
     if path_to_state is not None and path_to_state.exists():
-        with path_to_state.open("r", encoding="utf-8") as f:
+        with path_to_state.open(encoding="utf-8") as f:
             result = yaml.safe_load(f)
             if result is not None:
                 root = result["msi_info"]
@@ -63,37 +76,42 @@ def load_state_file(path_to_state: Optional[Path]) -> Tuple[int, str]:
     return -1, ""
 
 
-# engine to patch MSI file with new code
-# optionally can save state file with results of patching
-# by default amsk is TRADITIONAL
-# by default uuid is generated
 def patch_package_code(
-    f_name: str,
-    mask: Optional[str] = None,
-    package_code: Optional[str] = None,
-    state_file: Optional[Path] = None,
+    file_name: Path,
+    *,
+    old_code: str,
+    new_code: str | None,
+    state_file: Path | None,
 ) -> bool:
+    """
+    Reserve engine to patch MSI file with new code.
+    This engine is universal(!) and used for debugging and testing purposes.
 
-    p = Path(f_name)
-    if not p.exists():
+    Args:
+        file_name: file to patch
+        old_code: search for, if empty uses TRADITIONAL_UUID
+        new_code: patch with, if None uses generate random code
+        state_file: save results to if not None
+
+    Returns:
+        True on success
+    """
+
+    if not file_name.exists():
         return False
 
-    if package_code is None or len(package_code) == 0:
-        package_code = generate_uuid()
-
-    if mask is None or len(mask) == 0:
-        mask = TRADITIONAL_UUID
-
-    data = p.read_bytes()
-    pos = data.find(mask.encode("ascii"))
+    data = file_name.read_bytes()
+    old_uuid_data = (old_code or TRADITIONAL_UUID).encode("ascii")
+    pos = data.find(old_uuid_data)
     if pos == -1:
         write_state_file(state_file, -1, "")
         return False
 
-    ret = data.replace(mask.encode("ascii"), package_code.encode("ascii"), 1)
-    p.write_bytes(ret)
+    new_uuid = new_code or generate_uuid()
+    ret = data.replace(old_uuid_data, new_uuid.encode("ascii"), 1)
+    file_name.write_bytes(ret)
 
-    write_state_file(state_file, pos, package_code)
+    write_state_file(state_file, pos, new_uuid)
 
     return True
 
@@ -103,21 +121,30 @@ def patch_windows_version(
     *,
     new_version: str,
 ) -> bool:
-    """Patches the allowed Windows version in MSI file.
-    Some configurations may not work on the older Windows operation systems, we want to prevent
+    """
+    Patches the allowed Windows version in MSI file.
+
+    Args:
+        f_name: file to patch
+        new_version: new version for example '602' or '610'
+
+    Returns:
+        true on success
+
+    Some configurations may not work on the older Windows: we must prevent
     an installation by patching allowed Windows version.
 
     VersionNT is from
-    https://docs.microsoft.com/de-at/windows/win32/msi/operating-system-property-values
-    https://tarma.com/support/im9/using/symbols/variables/versionnt.htm
+        https://docs.microsoft.com/de-at/windows/win32/msi/operating-system-property-values
+        https://tarma.com/support/im9/using/symbols/variables/versionnt.htm
 
-    But, ATTENTION, the values above are not always valid
-    VersionNT is 600 allows Windows Vista(Server 2008) higher
-    VersionNT is 602 allows Windows 8(Server 2012) or higher
+    ATTENTION: the values above are not always valid
+        VersionNT is 600 allows Windows Vista(Server 2008) higher
+        VersionNT is 602 allows Windows 8(Server 2012) or higher
 
     Conditions:
-    The string _matrix with VersionNT 600 must be presented.
-    Must be called to set 602 if Python module 3.8.7 or newer is added to the MSI.
+        The string _MSI_WIN_VERSION_TEMPLATE must be presented.
+        Must be called to set 602 if Python module 3.8.7 or newer is added to the MSI.
     """
 
     if len(new_version) != 3:
@@ -129,8 +156,8 @@ def patch_windows_version(
         print(f"The file {p} isn't found")
         return False
 
-    expected_blob = _matrix.format(_expected_version).encode("ascii")
-    required_blob = _matrix.format(new_version).encode("ascii")
+    expected_blob = _MSI_WIN_VERSION_TEMPLATE.format(_EXPECTED_WIN_VERSION).encode("ascii")
+    required_blob = _MSI_WIN_VERSION_TEMPLATE.format(new_version).encode("ascii")
     data = p.read_bytes()
     pos = data.find(expected_blob)
     if pos == -1:
@@ -143,60 +170,52 @@ def patch_windows_version(
     return True
 
 
-# engine to patch MSI file using already existsing state file
-def patch_package_code_by_state_file(
-    f_name: str, state_file: Path, package_code: Optional[str] = None
-) -> bool:
-
-    p = Path(f_name)
-    if not p.exists():
-        return False
-
-    pos, id_ = load_state_file(state_file)
-
-    if pos == -1 or id_ == "":
-        return False
-
-    return patch_package_code(f_name, mask=id_, package_code=package_code)
-
-
 def valid_uuid(uuid_value: str) -> bool:
-    match = regex.match(uuid_value)
+    match = _UUID_REGEX.match(uuid_value)
     return bool(match)
 
 
-# engine to patch MSI file with new code
-# search for 'Intel;1033' marker, add offset and patch code
 def patch_package_code_by_marker(
-    f_name: str, package_code: Optional[str] = None, state_file: Optional[Path] = None
+    file_name: Path,
+    *,
+    new_uuid: str | None,
+    state_file: Path | None,
 ) -> bool:
+    """
+    Main engine to patch MSI file with new code.
+    Search for 'Intel;1033' marker, add offset and patch code
 
-    p = Path(f_name)
-    if not p.exists():
+    Args:
+        file_name: file to patch
+        new_uuid: patch with, if None then generate random code, if not uuid: special generation(!)
+        state_file: save results to if not None
+
+    Returns:
+        True on success
+    """
+    if not file_name.exists():
         return False
 
-    if package_code is None:
-        package_code = generate_uuid()
-    elif not valid_uuid(package_code):
-        package_code = generate_uuid_from_base(package_code)
+    if new_uuid is None:
+        new_uuid = generate_uuid()
+    elif not valid_uuid(new_uuid):
+        new_uuid = generate_uuid_from_base(new_uuid)
 
-    data = p.read_bytes()
+    data = file_name.read_bytes()
     location = data.find(MSI_PACKAGE_CODE_MARKER.encode("ascii"))
     if location == -1:
         return False
 
     location += MSI_PACKAGE_CODE_OFFSET
-
     if data[location : location + 1] != b"{":
         return False
 
     start = location
-    end = start + len(package_code)
-    out = data[:start] + package_code.encode("ascii") + data[end:]
-    p.write_bytes(out)
+    end = start + len(new_uuid)
+    out = data[:start] + new_uuid.encode("ascii") + data[end:]
+    file_name.write_bytes(out)
 
-    write_state_file(state_file, start, package_code)
-
+    write_state_file(state_file, start, new_uuid)
     return True
 
 
@@ -204,19 +223,25 @@ def patch_package_code_by_marker(
 # py -2 msi_patch.py code -v ../../artefacts/check_mk_agent.msi
 # MAIN:
 if __name__ == "__main__":
-    mode, file_name, param = parse_command_line(sys.argv)
-    if mode == "win_ver":
-        success = patch_windows_version(file_name, new_version=param)
-        sys.exit(0 if success else 1)
+    params = parse_command_line(sys.argv)
+    match params.mode:
+        case "win_ver":
+            success = patch_windows_version(params.file_name, new_version=params.mode_parameter)
+            sys.exit(0 if success else 1)
 
-    if mode == "code":
-        success = patch_package_code(f_name=file_name, mask=param)
-        sys.exit(0 if success else 1)
+        case "code":
+            success = patch_package_code(
+                params.file_name, old_code=params.mode_parameter, new_code=None, state_file=None
+            )
+            sys.exit(0 if success else 1)
 
-    if mode == "1033":
-        out_state_file = None if param == "" else Path(param)
-        success = patch_package_code_by_marker(f_name=file_name, state_file=out_state_file)
-        sys.exit(0 if success else 1)
+        case "1033":
+            out_state_file = None if params.mode_parameter == "" else Path(params.mode_parameter)
+            success = patch_package_code_by_marker(
+                params.file_name, new_uuid=None, state_file=out_state_file
+            )
+            sys.exit(0 if success else 1)
+        case _:
+            print(f"Invalid mode '{params.mode}'")
 
-    print("Invalid mode '{}'".format(mode))
     sys.exit(1)

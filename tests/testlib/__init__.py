@@ -261,7 +261,7 @@ def fake_version_and_paths() -> None:
     )
 
 
-def import_module(pathname: str) -> ModuleType:
+def import_module_hack(pathname: str) -> ModuleType:
     """Return the module loaded from `pathname`.
 
     `pathname` is a path relative to the top-level directory

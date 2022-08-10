@@ -8,14 +8,14 @@ from types import ModuleType
 
 import pytest
 
-from tests.testlib import import_module
+from tests.testlib import import_module_hack
 
 from cmk.utils.mailbox import _active_check_main_core
 
 
 @pytest.fixture(name="check_mail_loop", scope="module")
 def fixture_check_mail_loop() -> ModuleType:
-    return import_module("active_checks/check_mail_loop")
+    return import_module_hack("active_checks/check_mail_loop")
 
 
 def test_ac_check_mail_main_loop_failed_to_send_mail(check_mail_loop: ModuleType) -> None:

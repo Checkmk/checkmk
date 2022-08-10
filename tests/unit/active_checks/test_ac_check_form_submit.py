@@ -10,12 +10,12 @@ from types import ModuleType
 import pytest
 import vcr  # type: ignore[import]
 
-from tests.testlib import import_module
+from tests.testlib import import_module_hack
 
 
 @pytest.fixture(name="check_form_submit", scope="module")
 def fixture_check_form_submit() -> ModuleType:
-    return import_module("active_checks/check_form_submit")
+    return import_module_hack("active_checks/check_form_submit")
 
 
 @pytest.mark.parametrize(

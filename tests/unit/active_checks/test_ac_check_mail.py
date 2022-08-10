@@ -12,14 +12,14 @@ from types import ModuleType
 
 import pytest
 
-from tests.testlib import import_module
+from tests.testlib import import_module_hack
 
 from cmk.utils.mailbox import _active_check_main_core
 
 
 @pytest.fixture(name="check_mail", scope="module")
 def fixture_check_mail() -> ModuleType:
-    return import_module("active_checks/check_mail")
+    return import_module_hack("active_checks/check_mail")
 
 
 def create_test_email(subject: str) -> Message:

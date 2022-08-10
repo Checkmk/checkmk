@@ -6,12 +6,12 @@ from types import ModuleType
 
 import pytest
 
-from tests.testlib import import_module
+from tests.testlib import import_module_hack
 
 
 @pytest.fixture(name="check_sql", scope="module")
 def fixture_check_sql() -> ModuleType:
-    return import_module("active_checks/check_sql")
+    return import_module_hack("active_checks/check_sql")
 
 
 @pytest.mark.parametrize(

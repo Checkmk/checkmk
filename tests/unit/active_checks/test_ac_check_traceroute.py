@@ -8,12 +8,12 @@ from types import ModuleType
 
 import pytest
 
-from tests.testlib import import_module
+from tests.testlib import import_module_hack
 
 
 @pytest.fixture(name="check_traceroute", scope="module")
 def fixture_check_traceroute() -> ModuleType:
-    return import_module("active_checks/check_traceroute")
+    return import_module_hack("active_checks/check_traceroute")
 
 
 @pytest.mark.parametrize(

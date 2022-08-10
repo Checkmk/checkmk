@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib import import_module
+from tests.testlib import import_module_hack
 from tests.testlib.site import Site
 
 
@@ -73,7 +73,7 @@ def fixture_protobuf_py(site: Site, test_dir: Path, proto_source_file: Path) -> 
 
 
 def test_python_protobuf(site: Site, protobuf_py) -> None:
-    test_pb2 = import_module(str(protobuf_py))
+    test_pb2 = import_module_hack(str(protobuf_py))
 
     address_book = test_pb2.AddressBook()
 

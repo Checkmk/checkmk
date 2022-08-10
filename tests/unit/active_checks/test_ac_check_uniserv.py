@@ -8,12 +8,12 @@ from types import ModuleType
 # pylint: disable=protected-access
 import pytest
 
-from tests.testlib import import_module
+from tests.testlib import import_module_hack
 
 
 @pytest.fixture(name="check_uniserv", scope="module")
 def fixture_check_uniserv() -> ModuleType:
-    return import_module("active_checks/check_uniserv")
+    return import_module_hack("active_checks/check_uniserv")
 
 
 @pytest.mark.parametrize(

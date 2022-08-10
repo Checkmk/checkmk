@@ -64,6 +64,7 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.groups import load_contact_group_information
 from cmk.gui.i18n import _
 from cmk.gui.plugins.userdb.utils import (
+    active_connections,
     add_internal_attributes,
     CheckCredentialsResult,
     get_connection,
@@ -1261,9 +1262,20 @@ class LDAPUserConnector(UserConnector):
 
         has_changed_passwords = False
         profiles_to_synchronize = {}
+        all_active_connections: List[str] = [connection[0] for connection in active_connections()]
         for user_id, ldap_user in ldap_users.items():
             mode_create, user = load_user(user_id)
             user_connection_id = user.get("connector")
+
+            # Change user connector if the current one of an existing user is
+            # disabled or not known any more
+            is_known_connection: Optional[UserConnector] = get_connection(user_connection_id)
+            if not mode_create and (
+                not is_known_connection
+                or (is_known_connection and user_connection_id not in all_active_connections)
+            ):
+                user_connection_id = connection_id
+                user["connector"] = connection_id
 
             if self._create_users_only_on_login() and mode_create:
                 self._logger.info(

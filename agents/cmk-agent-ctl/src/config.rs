@@ -127,10 +127,7 @@ impl RegistrationConfig {
             root_certificate,
             host_reg_data,
             trust_server_cert: reg_args.trust_server_cert,
-            client_config: ClientConfig {
-                use_proxy: reg_args.client_opts.detect_proxy
-                    || runtime_config.detect_proxy.unwrap_or(false),
-            },
+            client_config: ClientConfig::new(runtime_config, reg_args.client_opts),
         })
     }
 }

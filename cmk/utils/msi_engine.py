@@ -81,9 +81,11 @@ def add_cab(path_to_msibuild, new_msi_filename, working_dir):
         bail_out("msi build is failed")
 
 
-# tested
-def update_package_code(new_msi_file, package_code_hash=None):
-    if not msi_patch.patch_package_code_by_marker(new_msi_file, package_code=package_code_hash):
+def update_package_code(file_name: str, *, package_code: str | None = None):
+    """Patch package code of MSI with new random package_code_hash"""
+    if not msi_patch.patch_package_code_by_marker(
+        Path(file_name), new_uuid=package_code, state_file=None
+    ):
         raise Exception("Failed to patch package code")
 
 
@@ -283,7 +285,7 @@ def msi_update_core(msi_file_name, src_dir, revision_text, version, package_code
             path_prefix = "./"
             tmp_dir = "."
 
-        new_msi_file = src_dir + "/" + AGENT_MSI_FILE
+        new_msi_file: str = src_dir + "/" + AGENT_MSI_FILE
         work_dir = tempfile.mkdtemp(prefix=tmp_dir + "/msi-update.")
         deobfuscated_file = Path(new_msi_file)
 
@@ -343,7 +345,7 @@ def msi_update_core(msi_file_name, src_dir, revision_text, version, package_code
         # In this step we replace the package code with a new uuid. This uuid is important, because it is
         # the unqiue identifier for this package. Inside the package the uuid is split into two halfs.
         # Each of it is updated with the corresponding new package code.
-        update_package_code(new_msi_file, package_code_hash=package_code_base)
+        update_package_code(new_msi_file, package_code=package_code_base)
 
         # Remove original product.cab from stream
         remove_cab(path_prefix, new_msi_file)

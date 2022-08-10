@@ -7,64 +7,26 @@
 import os
 import shutil
 from pathlib import Path
+from typing import Final
 
 import pytest
-import yaml
 
 from cmk.utils import msi_patch
 
 
-@pytest.fixture()
-def conf_dir(tmp_path):
+@pytest.fixture(name="conf_dir")
+def fixture_conf_dir(tmp_path: Path) -> Path:
     path = tmp_path / "temp"
     path.mkdir(parents=True)
     return path
 
 
-aaa_marker = "{AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA}".encode("ascii")
+AAA_MARKER: Final = "{AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA}".encode("ascii")
+MARKER: Final = msi_patch.TRADITIONAL_UUID.encode("ascii")
+TEST_FILE: Final = Path("test_bin.tst")
 
 
-def test_parse_command_line() -> None:
-    try:
-        mode, f, param = msi_patch.parse_command_line(
-            ["/path/to/executable", "mode", "msi", "param"]
-        )
-    except Exception as _:
-        raise AssertionError() from _
-
-    assert mode == "mode"
-    assert f == "msi"
-    assert param == "param"
-
-    try:
-        mode, f, param = msi_patch.parse_command_line(["/path/to/executable", "mode", "msi"])
-    except Exception as _:
-        raise AssertionError() from _
-
-    assert mode == "mode"
-    assert f == "msi"
-    assert param == ""
-
-    try:
-        msi_patch.parse_command_line(["/path/to/executable", "mode"])
-        raise AssertionError()
-    except IndexError as _:
-        assert True
-
-
-def test_low_level_functions(conf_dir) -> None:
-    assert msi_patch.MSI_PACKAGE_CODE_OFFSET == 20
-    assert msi_patch.MSI_PACKAGE_CODE_MARKER == "Intel;1033"
-    assert msi_patch.generate_uuid() != msi_patch.generate_uuid()
-    assert len(msi_patch.generate_uuid()) == 38
-    p = conf_dir / "msi_state.yml"
-    msi_patch.write_state_file(p, 12, "12")
-    _pos, _id = msi_patch.load_state_file(p)
-    assert _pos == 12
-    assert _id == "12"
-
-
-def _get_test_file(fname):
+def _get_test_file(fname: Path) -> Path:
     # we want to check that files are present
     # This check is mostly required to keep the test with BUILD in sync: scm checkout valid dirs,
     # directory tree, etc.
@@ -77,89 +39,112 @@ def _get_test_file(fname):
     return src
 
 
-def test_patch_package_code_by_state_file(conf_dir) -> None:
-    # prepare file to tests
-    fname = "test_bin.tst"
-    src = _get_test_file(fname=fname)
+def _find_uuid(content: bytes, the_uuid: str) -> bool:
+    return content.find(the_uuid.encode("ascii")) != -1
 
+
+def _marker_loc(file_name: Path, marker: bytes) -> int:
+    return file_name.read_bytes().find(marker)
+
+
+@pytest.fixture(name="state_file")
+def fixture_state_file(conf_dir: Path) -> Path:
+    return conf_dir / "msi_state.yml"
+
+
+@pytest.fixture(name="work_file")
+def fixture_work_file(conf_dir: Path) -> Path:
+    src = _get_test_file(TEST_FILE)
+    dst = conf_dir / TEST_FILE
+    shutil.copy(str(src), str(dst))
+    return dst
+
+
+def test_parse_command_line() -> None:
+    try:
+        params = msi_patch.parse_command_line(["/path/to/executable", "win_ver", "msi", "param"])
+        assert params == msi_patch._Parameters(
+            mode="win_ver",
+            file_name=Path("msi"),
+            mode_parameter="param",
+        )
+    except Exception as _:
+        raise AssertionError() from _
+
+    try:
+        params = msi_patch.parse_command_line(["/path/to/executable", "code", "msi"])
+        assert params == msi_patch._Parameters(
+            mode="code",
+            file_name=Path("msi"),
+            mode_parameter="",
+        )
+    except Exception as _:
+        raise AssertionError() from _
+
+
+def test_parse_command_line_invalid() -> None:
+    with pytest.raises(SystemExit):
+        msi_patch.parse_command_line(["/path/to/executable", "1033"])
+    with pytest.raises(SystemExit):
+        msi_patch.parse_command_line(["/path/to/executable", "1033", "msi", "a", "b"])
+
+
+def test_critical_consts(conf_dir: Path) -> None:
+    assert msi_patch.MSI_PACKAGE_CODE_OFFSET == 20
+    assert msi_patch.MSI_PACKAGE_CODE_MARKER == "Intel;1033"
+
+
+def test_low_level_api(conf_dir: Path, state_file: Path) -> None:
+    assert msi_patch.generate_uuid() != msi_patch.generate_uuid()
+    assert len(msi_patch.generate_uuid()) == 38
+    msi_patch.write_state_file(state_file, 12, "12")
+    assert (12, "12") == msi_patch.load_state_file(state_file)
+
+
+def test_validate_content(work_content: bytes) -> None:
+    assert work_content.find(MARKER) != -1
+
+
+@pytest.mark.parametrize(
+    "old_code, success, loc",
+    [
+        ("", True, 4),
+        ("trashy", False, -1),
+    ],
+)
+def test_patch_package_code_with_state(
+    work_file: Path,
+    work_content: bytes,
+    state_file: Path,
+    old_code: str,
+    success: bool,
+    loc: int,
+) -> None:
     uuid = msi_patch.generate_uuid()
-
-    # prepare test file
-    dst = conf_dir / fname
-    shutil.copy(str(src), str(dst))
-    base_content = dst.read_bytes()
-    assert base_content.find(msi_patch.TRADITIONAL_UUID.encode("ascii")) != -1
-
-    # patch 1, patching is successful
-    p = conf_dir / "msi_state.yml"
-    msi_patch.write_state_file(p, 4, msi_patch.TRADITIONAL_UUID)
-    assert msi_patch.patch_package_code_by_state_file(f_name=dst, package_code=uuid, state_file=p)
-
-    assert dst.stat().st_size == src.stat().st_size
-
-    new_content = dst.read_bytes()
-    assert new_content.find(uuid.encode("ascii")) == 4
-
-
-def test_patch_package_code_with_state(conf_dir) -> None:
-    # prepare file to tests
-    fname = "test_bin.tst"
-    src = _get_test_file(fname=fname)
-
-    uuid = msi_patch.generate_uuid()
-
-    # prepare test file
-    dst = conf_dir / fname
-    shutil.copy(str(src), str(dst))
-    base_content = dst.read_bytes()
-    assert base_content.find(msi_patch.TRADITIONAL_UUID.encode("ascii")) != -1
-
-    # patch 1, patching is successful
-    p = conf_dir / "msi_state.yml"
-    assert msi_patch.patch_package_code(f_name=dst, package_code=uuid, state_file=p)
-
-    assert dst.stat().st_size == src.stat().st_size
-
-    new_content = dst.read_bytes()
-    assert new_content.find(uuid.encode("ascii")) != -1
-
-    _pos, _id = msi_patch.load_state_file(p)
-    assert _pos == 4
-    assert _id == uuid
-
-    # prepare test file
-    shutil.copy(str(src), str(dst))
-
-    # patch 2, patching failed
-    p = conf_dir / "msi_state.yml"
-    assert not msi_patch.patch_package_code(
-        f_name=dst, mask="asdyebdvdbee", package_code=uuid, state_file=p
+    assert (
+        msi_patch.patch_package_code(
+            work_file, old_code=old_code, new_code=uuid, state_file=state_file
+        )
+        == success
     )
 
-    assert dst.stat().st_size == src.stat().st_size
+    original_file = _get_test_file(TEST_FILE)
+    assert work_file.stat().st_size == original_file.stat().st_size
 
-    new_content = dst.read_bytes()
-    assert new_content.find(uuid.encode("ascii")) == -1
-
-    yaml_content = p.read_bytes()
-    state = yaml.safe_load(yaml_content)
-    assert state is not None
-
-    _pos, _id = msi_patch.load_state_file(p)
-    assert _pos == -1
-    assert _id == ""
+    new_content = work_file.read_bytes()
+    assert _find_uuid(new_content, uuid) == success
+    assert (loc, uuid if success else "") == msi_patch.load_state_file(state_file)
 
 
-def test_patch_version(tmpdir) -> None:
+def test_patch_windows_version(conf_dir: Path) -> None:
     """Tests version patching using the test file from test directory"""
 
-    # base data
-    fname = "test_msi_patch_version.tst"
-    result = b"( VersionNT >= 602 )"
+    fname: Final = Path("test_msi_patch_version.tst")
+    result: Final = b"( VersionNT >= 602 )"
 
     # copy
-    src = _get_test_file(fname=fname)
-    dst = Path(tmpdir) / fname
+    src = _get_test_file(fname)
+    dst = conf_dir / fname
     shutil.copy(src, dst)
 
     # testing
@@ -169,12 +154,13 @@ def test_patch_version(tmpdir) -> None:
     assert msi_patch.patch_windows_version(dst, new_version="602")  # valid call -> success
     assert not msi_patch.patch_windows_version(dst, new_version="602")  # no matrix -> fail
     assert dst.stat().st_size == src.stat().st_size
-    assert dst.read_bytes().find(result) != -1
+    assert _marker_loc(dst, result) != -1
 
 
-def check_content(
-    new_content: bytes, base_content: bytes, pos: int, uuid: str, marker: bytes
+def _check_content(
+    work_file: Path, *, base_content: bytes, pos: int, uuid: str, marker: bytes
 ) -> None:
+    new_content = work_file.read_bytes()
     assert new_content.find(marker) == -1
     new_pos = new_content.decode("utf-8").find(uuid)
     assert new_pos == pos
@@ -184,7 +170,7 @@ def check_content(
     assert new_content[pos + len(uuid) :] == base_content[pos + len(uuid) :]
 
 
-def test_uuid() -> None:
+def test_uuid_api() -> None:
     # relative random set of data, probably better to divide data in few arrays
     assert not msi_patch.valid_uuid("")
     assert not msi_patch.valid_uuid("1")
@@ -202,83 +188,48 @@ def test_uuid_base() -> None:
     )
 
 
-def test_patch_package_code_by_marker(conf_dir) -> None:
-    # prepare file to tests
-    fname = "test_bin.tst"
-    src = _get_test_file(fname=fname)
+@pytest.fixture(name="work_content")
+def fixture_work_content(work_file: Path) -> bytes:
+    return work_file.read_bytes()
 
+
+@pytest.fixture(name="marker_pos")
+def fixture_marker_pos(work_content: bytes) -> int:
+    return work_content.find(MARKER)
+
+
+def test_patch_package_code_by_marker(work_file: Path, work_content: bytes) -> None:
     uuid = msi_patch.generate_uuid()
+    assert (pos := work_content.find(AAA_MARKER)) != -1
+    assert msi_patch.patch_package_code_by_marker(work_file, new_uuid=uuid, state_file=None)
+    _check_content(work_file, base_content=work_content, pos=pos, uuid=uuid, marker=AAA_MARKER)
 
-    # prepare test file
-    dst = conf_dir / fname
-    shutil.copy(str(src), str(dst))
-    base_content = dst.read_bytes()
-    assert base_content.find(msi_patch.TRADITIONAL_UUID.encode("ascii")) != -1
 
-    # patch 1
-    pos = base_content.find(aaa_marker)
-    assert pos != -1
-    assert msi_patch.patch_package_code_by_marker(f_name=dst, package_code=uuid)
-
-    new_content = dst.read_bytes()
-    check_content(
-        new_content=new_content, base_content=base_content, pos=pos, uuid=uuid, marker=aaa_marker
-    )
-
-    # prepare test file
-    shutil.copy(str(src), str(dst))
-
-    # patch 2
+def test_patch_package_code_by_marker_with_state_file(conf_dir: Path, work_file: Path) -> None:
+    uuid = msi_patch.generate_uuid()
     st_f = conf_dir / "state_file_2.yml"
-    assert msi_patch.patch_package_code_by_marker(f_name=dst, package_code=uuid, state_file=st_f)
-
-    new_content = dst.read_bytes()
-    _loc = new_content.find(uuid.encode("ascii"))
-    _pos, _id = msi_patch.load_state_file(st_f)
-    assert _loc == _pos
-    assert _id == uuid
+    assert msi_patch.patch_package_code_by_marker(work_file, new_uuid=uuid, state_file=st_f)
+    assert (_marker_loc(work_file, uuid.encode("ascii")), uuid) == msi_patch.load_state_file(st_f)
 
 
-def test_patch_package_code(conf_dir) -> None:
-    # prepare file to tests
-    fname = "test_bin.tst"
-    src = _get_test_file(fname=fname)
-
-    uuid = msi_patch.generate_uuid()
-    marker = msi_patch.TRADITIONAL_UUID.encode("ascii")
-
-    # prepare test file
-    dst = conf_dir / fname
-    shutil.copy(str(src), str(dst))
-    base_content = dst.read_bytes()
-    pos = base_content.find(marker)
-    assert pos != -1
-
-    # patch 1, default
-    assert msi_patch.patch_package_code(f_name=dst, mask="", package_code=uuid)
-
-    new_content = dst.read_bytes()
-    check_content(
-        new_content=new_content, base_content=base_content, pos=pos, uuid=uuid, marker=marker
-    )
-
-    # prepare test file
-    shutil.copy(str(src), str(dst))
-    # patch 2
+@pytest.mark.parametrize("old_code", ["", msi_patch.TRADITIONAL_UUID])
+def test_patch_package_code(
+    work_file: Path, work_content: bytes, marker_pos: int, old_code: str
+) -> None:
+    assert marker_pos != -1
     uuid = msi_patch.generate_uuid()
     assert msi_patch.patch_package_code(
-        f_name=dst, mask=msi_patch.TRADITIONAL_UUID, package_code=uuid
+        work_file,
+        old_code=old_code,
+        new_code=uuid,
+        state_file=None,
     )
+    _check_content(work_file, base_content=work_content, pos=marker_pos, uuid=uuid, marker=MARKER)
 
-    new_content = dst.read_bytes()
-    check_content(
-        new_content=new_content, base_content=base_content, pos=pos, uuid=uuid, marker=marker
+
+def test_patch_package_code_notfound(work_file: Path) -> None:
+    uuid = msi_patch.generate_uuid()
+    assert not msi_patch.patch_package_code(
+        work_file, old_code="Cant/Be/Found/In", new_code=uuid, state_file=None
     )
-
-    # prepare test file
-    shutil.copy(str(src), str(dst))
-    # patch 3, mask is absent
-    assert not msi_patch.patch_package_code(f_name=dst, mask="Cant/Be/Found/In")
-
-    new_content = dst.read_bytes()
-    assert new_content.find(marker) != -1
+    assert _marker_loc(work_file, MARKER) != -1

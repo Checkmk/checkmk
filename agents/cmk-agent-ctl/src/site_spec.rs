@@ -98,21 +98,6 @@ impl Display for Coordinates {
 }
 
 impl Coordinates {
-    pub fn new(server: &str, port: Option<u16>, site: &str) -> AnyhowResult<Self> {
-        Ok(Self {
-            server: String::from(server),
-            port: match port {
-                Some(p) => p,
-                None => AgentRecvPortDiscoverer {
-                    server: server.to_string(),
-                    site: site.to_string(),
-                }
-                .discover()?,
-            },
-            site: String::from(site),
-        })
-    }
-
     pub fn to_url(&self) -> AnyhowResult<reqwest::Url> {
         reqwest::Url::parse(&format!(
             "https://{}:{}/{}",
@@ -168,6 +153,21 @@ impl AgentRecvPortDiscoverer {
             anyhow_error_to_human_redable(&error_messages["https"]),
         ));
     }
+}
+
+pub fn make_coordinates(server: &str, port: Option<u16>, site: &str) -> AnyhowResult<Coordinates> {
+    Ok(Coordinates {
+        server: String::from(server),
+        port: match port {
+            Some(p) => p,
+            None => AgentRecvPortDiscoverer {
+                server: server.to_string(),
+                site: site.to_string(),
+            }
+            .discover()?,
+        },
+        site: String::from(site),
+    })
 }
 
 #[cfg(test)]
@@ -286,6 +286,23 @@ mod test_agent_recv_port_discoverer {
             .unwrap()
             .to_string(),
             "http://some-server/some-site/check_mk/api/1.0/domain-types/internal/actions/discover-receiver/invoke",
+        )
+    }
+}
+
+#[cfg(test)]
+mod test_make_coordinates {
+    use super::*;
+
+    #[test]
+    fn test_with_port() {
+        assert_eq!(
+            make_coordinates("some-server", Some(8000), "some-site").unwrap(),
+            Coordinates {
+                server: String::from("some-server"),
+                port: 8000,
+                site: String::from("some-site")
+            }
         )
     }
 }

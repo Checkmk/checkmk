@@ -104,7 +104,7 @@ impl RegistrationConfig {
             }
         };
         let coordinates =
-            site_spec::Coordinates::new(&server_spec.server, server_spec.port, &site)?;
+            site_spec::make_coordinates(&server_spec.server, server_spec.port, &site)?;
         let opt_pwd_credentials = match reg_args.user {
             Some(username) => types::OptPwdCredentials {
                 username,

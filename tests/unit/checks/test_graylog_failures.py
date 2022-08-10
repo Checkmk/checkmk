@@ -39,6 +39,16 @@ _STRING_TABLE_MSG_DICT = [[
     '"type": "message", "letter_id": "ae66b485-db94-11e9-9de2-005056981acf"}], "count": 6, "ds_param_since": 1800, "total": 198508}'
 ]]
 
+_STRING_TABLE_MSG_STR = [[
+    '{"count": 5963, "failures": [{"timestamp": "2022-08-08T08:33:26.622Z", "letter_id": "c9d31a87-16f4-11ed-b805-001a4a1078b5", '
+    '"message": "ElasticsearchException[Elasticsearch exception [type=mapper_parsing_exception, reason=Could not dynamically add mapping '
+    'for field [app.kubernetes.io/component]. Existing mapping for [kubernetes_labels.app] must be of type object but found [keyword].]]", '
+    '"index": "graylog_9375", "type": "indexing"}, {"timestamp": "2022-08-08T08:33:25.031Z", "letter_id": "c9d2f37d-16f4-11ed-b805-001a4a1078b5", '
+    '"message": "ElasticsearchException[Elasticsearch exception [type=mapper_parsing_exception, reason=Could not dynamically add mapping for field '
+    '[app.kubernetes.io/component]. Existing mapping for [kubernetes_labels.app] must be of type object but found [keyword].]]", "index": "graylog_9375", '
+    '"type": "indexing"}], "total": 131346, "ds_param_since": 1800}'
+]]
+
 
 @pytest.fixture(name="section_plugin", scope="module")
 def fixture_section_plugin() -> AgentSectionPlugin:
@@ -71,6 +81,11 @@ def fixture_check_plugin() -> CheckPlugin:
             _STRING_TABLE_MSG_DICT,
             [Service()],
             id="failure messages are json-serialized dicts",
+        ),
+        pytest.param(
+            _STRING_TABLE_MSG_STR,
+            [Service()],
+            id="failure messages are non-json strings",
         ),
     ],
 )
@@ -150,6 +165,25 @@ def test_discover(
                 ),
             ],
             id="failure messages are json-serialized dicts, with levels on number of failures",
+        ),
+        pytest.param(
+            _STRING_TABLE_MSG_STR,
+            {},
+            [
+                Result(state=State.OK, summary="Total number of failures: 131346"),
+                Metric("failures", 131346.0),
+                Result(state=State.OK, summary="Failures in last 30 m: 5963"),
+                Result(
+                    state=State.OK,
+                    summary="Affected indices: 1, See long output for further information",
+                ),
+                Result(
+                    state=State.OK,
+                    notice=
+                    "Timestamp: 2022-08-08T08:33:25.031Z, Index: graylog_9375, Message: ElasticsearchException[Elasticsearch exception [type=mapper_parsing_exception, reason=Could not dynamically add mapping for field [app.kubernetes.io/component]. Existing mapping for [kubernetes_labels.app] must be of type object but found [keyword].]]\nTimestamp: 2022-08-08T08:33:26.622Z, Index: graylog_9375, Message: ElasticsearchException[Elasticsearch exception [type=mapper_parsing_exception, reason=Could not dynamically add mapping for field [app.kubernetes.io/component]. Existing mapping for [kubernetes_labels.app] must be of type object but found [keyword].]]",
+                ),
+            ],
+            id="failure messages are non-json strings",
         ),
     ],
 )

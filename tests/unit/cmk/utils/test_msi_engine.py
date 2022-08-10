@@ -7,23 +7,19 @@ import cmk.utils.msi_engine as msi_engine
 
 
 def test_parse_command_line() -> None:
-    msi_file, source_dir, revision, version_name, aghash = msi_engine.parse_command_line(
-        ["stub", "msi", "dir", "rev", "vers", "aghash"]
-    )
-    assert msi_file == "msi"
-    assert source_dir == "dir"
-    assert revision == "rev"
-    assert version_name == "vers"
-    assert aghash == "aghash"
+    p = msi_engine.parse_command_line(["stub", "msi", "dir", "rev", "vers", "hash"])
+    assert p.msi == "msi"
+    assert p.use_dir == "dir"
+    assert p.revision == "rev"
+    assert p.version == "vers"
+    assert p.package_code_hash == "hash"
     assert not msi_engine.opt_verbose
-    msi_file, source_dir, revision, version_name, aghash = msi_engine.parse_command_line(
-        ["stub", "-v", "msi", "dir", "rev", "vers", "aghash"]
-    )
-    assert msi_file == "msi"
-    assert source_dir == "dir"
-    assert revision == "rev"
-    assert version_name == "vers"
-    assert aghash == "aghash"
+    p = msi_engine.parse_command_line(["stub", "-v", "msi", "dir", "rev", "vers", "hash"])
+    assert p.msi == "msi"
+    assert p.use_dir == "dir"
+    assert p.revision == "rev"
+    assert p.version == "vers"
+    assert p.package_code_hash == "hash"
     assert msi_engine.opt_verbose
 
 

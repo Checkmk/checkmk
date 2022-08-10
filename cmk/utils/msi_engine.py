@@ -8,16 +8,15 @@
 # - msiinfo
 # - msibuild
 
-# TODO: The refactoring is mandatory.
-
 import os
 import re
 import shutil
 import sys
 import tempfile
 import uuid
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import Final, NoReturn
 
 import cmk.utils.obfuscate as obfuscate
 from cmk.utils import msi_patch
@@ -32,7 +31,7 @@ def verbose(text):
         sys.stdout.write(text + "\n")
 
 
-def bail_out(text):
+def bail_out(text: str) -> NoReturn:
     sys.stderr.write("ERROR: %s\n" % text)
     sys.exit(1)
 
@@ -232,8 +231,16 @@ def export_msi_file(exe_path_prefix, entry_in, msi_in, out_dir):
         )
 
 
-# tested
-def parse_command_line(argv):
+@dataclass
+class _Parameters:
+    msi: Path
+    use_dir: Path
+    revision: str
+    version: str
+    package_code_hash: str | None
+
+
+def parse_command_line(argv) -> _Parameters:
     try:
         global opt_verbose
         if argv[1] == "-v":
@@ -263,7 +270,13 @@ def parse_command_line(argv):
         else:
             package_code_hash = None
 
-        return msi, from_dir, revision_param, version_param, package_code_hash
+        return _Parameters(
+            msi=msi,
+            use_dir=from_dir,
+            revision=revision_param,
+            version=version_param,
+            package_code_hash=package_code_hash,
+        )
 
     except Exception as ex:
         bail_out(
@@ -271,10 +284,16 @@ def parse_command_line(argv):
                 sys.argv[0], ex
             )
         )
-    return None
 
 
-def msi_update_core(msi_file_name, src_dir, revision_text, version, package_code_base=None):
+# TODO(sk): fix typing here
+def msi_update_core(
+    msi_file_name: str,
+    src_dir: str,
+    revision_text: str,
+    version: str,
+    package_code_base: str | None = None,
+):
     try:
         new_version_build = generate_product_version(version, revision_text)
 
@@ -328,8 +347,8 @@ def msi_update_core(msi_file_name, src_dir, revision_text, version, package_code
 
         # Rename modified tables
         for entry in ["Property", "File", "Component"]:
-            p = Path(work_dir, entry).with_suffix(".idt.new")
-            p.rename(p.with_suffix(""))
+            filename = Path(work_dir, entry).with_suffix(".idt.new")
+            filename.rename(filename.with_suffix(""))
 
         for entry in ["Property", "File", "Component"]:
             if (
@@ -373,5 +392,7 @@ def msi_update_core(msi_file_name, src_dir, revision_text, version, package_code
 if __name__ == "__main__":
     # package code can be None: used in Windows Build machine to generate something random
     # in bakery we are sending aghash to generate package code
-    msi_file, source_dir, revision, version_name, config_hash = parse_command_line(sys.argv)
-    msi_update_core(msi_file, source_dir, revision, version_name, package_code_base=config_hash)
+    p = parse_command_line(sys.argv)
+    msi_update_core(
+        str(p.msi), str(p.use_dir), p.revision, p.version, package_code_base=p.package_code_hash
+    )

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import contextlib
-import hmac
 import http.client
 import traceback
 from contextlib import suppress
@@ -94,7 +93,7 @@ def auth_cookie_name() -> str:
     return f"auth_{omd_site()}"
 
 
-def _load_secret() -> bytes:
+def _load_secret() -> str:
     """Reads the sites auth secret from a file
 
     Creates the files if it does not exist. Having access to the secret means that one can issue
@@ -119,7 +118,7 @@ def _load_secret() -> bytes:
         with secret_path.open("w", encoding="utf-8") as f:
             f.write(secret)
 
-    return secret.encode("utf-8")
+    return secret
 
 
 def _generate_secret() -> str:
@@ -139,12 +138,14 @@ def _load_serial(username: UserId) -> int:
 
 
 def _generate_auth_hash(username: UserId, session_id: str) -> str:
+    return _generate_hash(username, username + session_id)
+
+
+def _generate_hash(username: UserId, value: str) -> str:
     """Generates a hash to be added into the cookie value"""
     secret = _load_secret()
     serial = _load_serial(username)
-    return hmac.new(
-        key=secret, msg=(username + session_id + str(serial)).encode("utf-8"), digestmod=sha256
-    ).hexdigest()
+    return sha256((value + str(serial) + secret).encode()).hexdigest()
 
 
 def del_auth_cookie() -> None:
@@ -262,7 +263,7 @@ def check_parsed_auth_cookie(username: UserId, session_id: str, cookie_hash: str
     if not userdb.user_exists(username):
         raise MKAuthException(_("Username is unknown"))
 
-    if not hmac.compare_digest(cookie_hash, _generate_auth_hash(username, session_id)):
+    if cookie_hash != _generate_auth_hash(username, session_id):
         raise MKAuthException(_("Invalid credentials"))
 
 

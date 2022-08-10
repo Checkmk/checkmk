@@ -19,7 +19,9 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 
 
 def parse(string_table: StringTable) -> gcp.Section:
-    return gcp.parse_gcp(string_table, "database_id", extract=lambda x: x.split(":")[-1])
+    return gcp.parse_gcp(
+        string_table, gcp.ResourceKey("database_id"), extract=lambda x: x.split(":")[-1]
+    )
 
 
 register.agent_section(name="gcp_service_cloud_sql", parse_function=parse)

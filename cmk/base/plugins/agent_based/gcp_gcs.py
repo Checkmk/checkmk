@@ -11,7 +11,7 @@ from .utils import gcp
 
 
 def parse_gcp_gcs(string_table: StringTable) -> gcp.Section:
-    return gcp.parse_gcp(string_table, "bucket_name")
+    return gcp.parse_gcp(string_table, gcp.ResourceKey("bucket_name"))
 
 
 register.agent_section(name="gcp_service_gcs", parse_function=parse_gcp_gcs)

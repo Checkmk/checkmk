@@ -6,7 +6,7 @@
 import json
 from dataclasses import dataclass
 from enum import IntEnum, unique
-from typing import Any, Callable, Mapping, Optional, Sequence
+from typing import Any, Callable, Mapping, Optional, Sequence, Union
 
 from ..agent_based_api.v1 import check_levels, check_levels_predictive, Result, Service, State
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -15,16 +15,37 @@ Project = str
 
 
 @dataclass(frozen=True)
+class ResourceKey:
+    key: str
+    prefix: str = "resource"
+
+
+@dataclass(frozen=True)
+class MetricKey:
+    key: str
+    prefix: str = "metric"
+
+
+Key = Union[ResourceKey, MetricKey]
+
+
+@dataclass(frozen=True)
+class GCPLabels:
+    _data: Mapping[str, Any]
+
+    def __getitem__(self, key: Key) -> str:
+        return self._data[key.prefix]["labels"][key.key]
+
+
+@dataclass(frozen=True)
 class GCPResult:
     _ts: Mapping[str, Any]
+    labels: GCPLabels
 
     @classmethod
     def deserialize(cls, data: str) -> "GCPResult":
-        return cls(_ts=json.loads(data))
-
-    @property
-    def resource_labels(self) -> Mapping[str, str]:
-        return self._ts["resource"]["labels"]
+        parsed = json.loads(data)
+        return cls(_ts=parsed, labels=GCPLabels(parsed))
 
     @property
     def metric_type(self) -> str:
@@ -33,10 +54,6 @@ class GCPResult:
     @property
     def value_type(self) -> int:
         return self._ts["value_type"]
-
-    @property
-    def metric_labels(self) -> Mapping[str, str]:
-        return self._ts["metric"]["labels"]
 
     @property
     def points(self) -> Sequence[Mapping[str, Any]]:
@@ -103,12 +120,12 @@ class AssetSection:
 
 
 def parse_gcp(
-    string_table: StringTable, label_key: str, extract: Callable[[str], str] = lambda x: x
+    string_table: StringTable, label_key: Key, extract: Callable[[str], str] = lambda x: x
 ) -> Section:
     rows = [GCPResult.deserialize(row[0]) for row in string_table]
-    items = {row.resource_labels[label_key] for row in rows}
+    items = {row.labels[label_key] for row in rows}
     return {
-        extract(item): SectionItem([r for r in rows if r.resource_labels[label_key] == item])
+        extract(item): SectionItem([r for r in rows if r.labels[label_key] == item])
         for item in items
     }
 
@@ -148,7 +165,7 @@ def _get_value(results: Sequence[GCPResult], spec: MetricSpec) -> float:
         def filter_func(r: GCPResult) -> bool:
             return (
                 r.metric_type == spec.metric_type
-                and r.metric_labels[filter_by.label] == filter_by.value
+                and r.labels[MetricKey(filter_by.label)] == filter_by.value
             )
 
     else:

@@ -12,7 +12,7 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 
 
 def parse(string_table: StringTable) -> gcp.Section:
-    return gcp.parse_gcp(string_table, "instance_name")
+    return gcp.parse_gcp(string_table, gcp.ResourceKey("instance_name"))
 
 
 register.agent_section(name="gcp_service_filestore", parse_function=parse)

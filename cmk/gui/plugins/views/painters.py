@@ -7,7 +7,7 @@ import abc
 import time
 from fnmatch import fnmatch
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 import cmk.utils.man_pages as man_pages
 import cmk.utils.paths
@@ -4198,8 +4198,10 @@ class PainterDowntimeOrigin(Painter):
         return (None, row["downtime_origin"] == 1 and _("configuration") or _("command"))
 
 
-@painter_registry.register
 class PainterDowntimeRecurring(Painter):
+    # Poor man's composition.  CRE and non-CRE have different renderers.
+    renderer: Optional[Callable[[Row, Cell], CellSpec]] = None
+
     @property
     def ident(self) -> str:
         return "downtime_recurring"
@@ -4215,16 +4217,9 @@ class PainterDowntimeRecurring(Painter):
         return ["downtime_recurring"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        try:
-            from cmk.gui.cee.plugins.wato.cmc import recurring_downtimes_types
-
-        except ImportError:
-            return "", _("(not supported)")
-
-        r = row["downtime_recurring"]
-        if not r:
-            return "", _("no")
-        return "", recurring_downtimes_types().get(r, _("(unknown: %d)") % r)
+        renderer = type(self).renderer
+        assert renderer is not None
+        return renderer(row, cell)  # pylint: disable=not-callable
 
 
 @painter_registry.register

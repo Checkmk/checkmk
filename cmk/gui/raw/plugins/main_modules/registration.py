@@ -11,10 +11,12 @@ import cmk.gui.plugins.metrics.graph_images as graph_images
 import cmk.gui.plugins.metrics.html_render as html_render
 import cmk.gui.plugins.views.graphs as graphs
 import cmk.gui.plugins.views.painters as painters
+from cmk.gui.i18n import _
 from cmk.gui.metrics import page_graph_dashlet, page_host_service_graph_popup
 from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
-from cmk.gui.plugins.views.utils import painter_registry
-from cmk.gui.type_defs import CombinedGraphSpec
+from cmk.gui.plugins.views.utils import Cell, painter_registry
+from cmk.gui.type_defs import CombinedGraphSpec, Row
+from cmk.gui.view_utils import CellSpec
 
 
 def resolve_combined_single_metric_spec(
@@ -22,6 +24,10 @@ def resolve_combined_single_metric_spec(
 ) -> Sequence[CombinedGraphMetricSpec]:
     # Not available in CRE.
     return ()
+
+
+def painter_downtime_recurring_renderer(row: Row, cell: Cell) -> CellSpec:
+    return "", _("(not supported)")
 
 
 def register_pages() -> None:
@@ -54,6 +60,9 @@ def register_painters() -> None:
     painter_registry.register(graphs.PainterHostGraphs)
     painter_registry.register(painters.PainterSvcPnpgraph)
     painter_registry.register(painters.PainterHostPnpgraph)
+
+    painters.PainterDowntimeRecurring.renderer = painter_downtime_recurring_renderer
+    painter_registry.register(painters.PainterDowntimeRecurring)
 
 
 register_pages()

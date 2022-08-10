@@ -8,12 +8,14 @@
 # - msiinfo
 # - msibuild
 
+import argparse
 import os
 import re
 import shutil
 import sys
 import tempfile
 import uuid
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, NoReturn
@@ -231,59 +233,39 @@ def export_msi_file(exe_path_prefix, entry_in, msi_in, out_dir):
         )
 
 
-@dataclass
+@dataclass(frozen=True)
 class _Parameters:
     msi: Path
-    use_dir: Path
+    src_dir: Path
     revision: str
     version: str
     package_code_hash: str | None
 
 
-def parse_command_line(argv) -> _Parameters:
-    try:
-        global opt_verbose
-        if argv[1] == "-v":
-            opt_verbose = True
-            del argv[1]
-        else:
-            opt_verbose = False
-
-        # MSI container to modify
-        msi = argv[1]
-
-        # Directory where the sources are contained
-        from_dir = argv[2]
-
-        # Revision (from build_version)
-        revision_param = argv[3]
-
-        # TODO: complete overhaul of version generation
-        # Official version name, e.g
-        # 1.2.5i4p1
-        # 2015.04.12
-        # 1.2.6-2015.04.12
-        version_param = argv[4]
-
-        if len(argv) > 5:
-            package_code_hash = argv[5]  # aghash normally {...-...-..-...-...}
-        else:
-            package_code_hash = None
-
-        return _Parameters(
-            msi=msi,
-            use_dir=from_dir,
-            revision=revision_param,
-            version=version_param,
-            package_code_hash=package_code_hash,
-        )
-
-    except Exception as ex:
-        bail_out(
-            "Usage: {} msi_file_name.msi SourceDir BuildNumber VersionText [aghash], '{}'".format(
-                sys.argv[0], ex
-            )
-        )
+def parse_command_line(argv: Sequence[str]) -> _Parameters:
+    global opt_verbose
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", default=False, help="increase verbosity"
+    )
+    parser.add_argument("msi", type=Path, help="msi container to create")
+    parser.add_argument("src_dir", type=Path, help="directory with data files")
+    parser.add_argument("revision", type=str, help="Revision calculated from version")
+    parser.add_argument(
+        "version", type=str, help="Official version, eg 2015.04.12 or 1.2.6-2015.04.12"
+    )
+    parser.add_argument(
+        "config_hash", type=str, nargs="?", help="hash of agent configuration(aka aghash)"
+    )
+    result = parser.parse_args(argv[1:])
+    opt_verbose = result.verbose
+    return _Parameters(
+        msi=result.msi,
+        src_dir=result.src_dir,
+        revision=result.revision,
+        version=result.version,
+        package_code_hash=result.config_hash,
+    )
 
 
 # TODO(sk): fix typing here
@@ -394,5 +376,5 @@ if __name__ == "__main__":
     # in bakery we are sending aghash to generate package code
     p = parse_command_line(sys.argv)
     msi_update_core(
-        str(p.msi), str(p.use_dir), p.revision, p.version, package_code_base=p.package_code_hash
+        str(p.msi), str(p.src_dir), p.revision, p.version, package_code_base=p.package_code_hash
     )

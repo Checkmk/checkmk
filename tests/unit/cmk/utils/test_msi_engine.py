@@ -3,23 +3,42 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
+from typing import Final
+
 import cmk.utils.msi_engine as msi_engine
+
+EXPECTED_P: Final = msi_engine._Parameters(
+    msi=Path("msi"),
+    src_dir=Path("dir"),
+    revision="rev",
+    version="vers",
+    package_code_hash="hash",
+)
+
+EXPECTED_P_NO_HASH: Final = msi_engine._Parameters(
+    msi=Path("msi"),
+    src_dir=Path("dir"),
+    revision="rev",
+    version="vers",
+    package_code_hash=None,
+)
 
 
 def test_parse_command_line() -> None:
-    p = msi_engine.parse_command_line(["stub", "msi", "dir", "rev", "vers", "hash"])
-    assert p.msi == "msi"
-    assert p.use_dir == "dir"
-    assert p.revision == "rev"
-    assert p.version == "vers"
-    assert p.package_code_hash == "hash"
+    assert (
+        msi_engine.parse_command_line(["stub", "-v", "msi", "dir", "rev", "vers", "hash"])
+        == EXPECTED_P
+    )
+    assert msi_engine.opt_verbose
+    assert (
+        msi_engine.parse_command_line(["stub", "msi", "dir", "rev", "vers", "hash"]) == EXPECTED_P
+    )
     assert not msi_engine.opt_verbose
-    p = msi_engine.parse_command_line(["stub", "-v", "msi", "dir", "rev", "vers", "hash"])
-    assert p.msi == "msi"
-    assert p.use_dir == "dir"
-    assert p.revision == "rev"
-    assert p.version == "vers"
-    assert p.package_code_hash == "hash"
+    assert (
+        msi_engine.parse_command_line(["stub", "msi", "dir", "rev", "-v", "vers"])
+        == EXPECTED_P_NO_HASH
+    )
     assert msi_engine.opt_verbose
 
 

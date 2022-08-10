@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping
+from collections.abc import Mapping
 
 import pytest
 
@@ -51,7 +51,9 @@ _STRING_TABLE_MSG_STR = [
 
 
 def test_parse_no_failures() -> None:
-    assert graylog_failures.parse(_STRING_TABLE_NO_FAILURES) is None
+    assert graylog_failures.parse(_STRING_TABLE_NO_FAILURES) == graylog_failures.Section(
+        failures=None, total=131346, count=0, ds_param_since=1800.0
+    )
 
 
 @pytest.mark.parametrize(
@@ -78,7 +80,7 @@ def test_discover(
     string_table: StringTable,
     expected_result: DiscoveryResult,
 ) -> None:
-    assert (section := graylog_failures.parse(string_table))
+    section = graylog_failures.parse(string_table)
     assert list(graylog_failures.discover(section)) == expected_result
 
 
@@ -162,10 +164,10 @@ def test_discover(
 )
 def test_check(
     string_table: StringTable,
-    params: Mapping[str, Any],
+    params: Mapping[str, tuple[int, int] | None],
     expected_result: CheckResult,
 ) -> None:
-    assert (section := graylog_failures.parse(string_table))
+    section = graylog_failures.parse(string_table)
     assert (
         list(
             graylog_failures.check(

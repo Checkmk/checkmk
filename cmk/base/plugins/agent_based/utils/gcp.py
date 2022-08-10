@@ -203,12 +203,24 @@ def check(
     asset_type: AssetType,
     all_assets: Optional[AssetSection],
 ) -> CheckResult:
-    if section is None:
-        return
-    if all_assets is None or (assets := all_assets.get(asset_type)) is None or item not in assets:
+    if section is None or not item_in_section(item, asset_type, all_assets):
         return
     timeseries = section.get(item, SectionItem(rows=[])).rows
     yield from generic_check(spec, timeseries, params)
+
+
+def item_in_section(
+    item: str,
+    asset_type: AssetType,
+    all_assets: Optional[AssetSection],
+) -> bool:
+    """We have to check the assets for the item. In the normal section a missing item could also indicate no data.
+    This happens for example with a function that is not called."""
+    return (
+        all_assets is not None
+        and (assets := all_assets.get(asset_type)) is not None
+        and item in assets
+    )
 
 
 class ServiceNamer:

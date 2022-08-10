@@ -68,9 +68,9 @@ def check_gcp_sql_status(
     section_gcp_service_cloud_sql: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> CheckResult:
-    if section_gcp_service_cloud_sql is None:
-        return
-    if section_gcp_assets is None or item not in section_gcp_assets[ASSET_TYPE]:
+    if section_gcp_service_cloud_sql is None or not gcp.item_in_section(
+        item, ASSET_TYPE, section_gcp_assets
+    ):
         return
     metrics = {
         "up": gcp.MetricSpec(

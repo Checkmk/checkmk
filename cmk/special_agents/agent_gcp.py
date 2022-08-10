@@ -796,6 +796,37 @@ REDIS = Service(
     ],
 )
 
+GCE_STORAGE = Service(
+    name="gce_storage",
+    default_groupby="metric.device_name",
+    metrics=[
+        Metric(
+            name="compute.googleapis.com/instance/disk/read_bytes_count",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_SUM,
+            ),
+        ),
+        Metric(
+            name="compute.googleapis.com/instance/disk/read_ops_count",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_SUM,
+            ),
+        ),
+        Metric(
+            name="compute.googleapis.com/instance/disk/write_bytes_count",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_SUM,
+            ),
+        ),
+        Metric(
+            name="compute.googleapis.com/instance/disk/write_ops_count",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_SUM,
+            ),
+        ),
+    ],
+)
+
 
 def default_labeler(asset: Asset) -> Labels:
     if "labels" in asset.asset.resource.data:
@@ -884,7 +915,7 @@ GCE = PiggyBackService(
     ],
 )
 
-SERVICES = {s.name: s for s in [GCS, FUNCTIONS, RUN, CLOUDSQL, FILESTORE, REDIS]}
+SERVICES = {s.name: s for s in [GCS, FUNCTIONS, RUN, CLOUDSQL, FILESTORE, REDIS, GCE_STORAGE]}
 PIGGY_BACK_SERVICES = {s.name: s for s in [GCE]}
 
 

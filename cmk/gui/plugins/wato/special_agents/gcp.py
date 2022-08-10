@@ -32,6 +32,7 @@ def _valuespec_special_agents_gcp():
                         ("cloud_sql", _("Cloud SQL")),
                         ("filestore", _("Filestore")),
                         ("redis", _("Memorystore Redis")),
+                        ("gce_storage", _("GCE Storage")),
                     ],
                     default_value=[
                         "gcs",
@@ -41,6 +42,7 @@ def _valuespec_special_agents_gcp():
                         "cloud_sql",
                         "filestore",
                         "redis",
+                        "gce_storage",
                     ],
                     allow_empty=True,
                 ),

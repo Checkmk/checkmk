@@ -103,8 +103,13 @@ impl RegistrationConfig {
                 None => return Err(anyhow!("Missing server and site specifications"))
             }
         };
-        let coordinates =
-            site_spec::make_coordinates(&server_spec.server, server_spec.port, &site)?;
+        let client_config = ClientConfig::new(runtime_config, reg_args.client_opts);
+        let coordinates = site_spec::make_coordinates(
+            &server_spec.server,
+            server_spec.port,
+            &site,
+            &client_config,
+        )?;
         let opt_pwd_credentials = match reg_args.user {
             Some(username) => types::OptPwdCredentials {
                 username,
@@ -127,7 +132,7 @@ impl RegistrationConfig {
             root_certificate,
             host_reg_data,
             trust_server_cert: reg_args.trust_server_cert,
-            client_config: ClientConfig::new(runtime_config, reg_args.client_opts),
+            client_config,
         })
     }
 }

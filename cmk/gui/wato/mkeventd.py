@@ -5,7 +5,6 @@
 
 import abc
 import io
-import logging
 import os
 import re
 import time
@@ -4255,28 +4254,7 @@ class ConfigVariableEventConsoleTranslateSNMPTraps(ConfigVariable):
         return "translate_snmptraps"
 
     def valuespec(self) -> ValueSpec:
-        return Transform(
-            valuespec=CascadingDropdown(
-                choices=[
-                    (False, _("Do not translate SNMP traps")),
-                    (
-                        True,
-                        _("Translate SNMP traps using the available MIBs"),
-                        Dictionary(
-                            elements=[
-                                (
-                                    "add_description",
-                                    FixedValue(
-                                        value=True,
-                                        title=_("Add OID descriptions"),
-                                        totext=_("Append descriptions of OIDs to message texts"),
-                                    ),
-                                ),
-                            ],
-                        ),
-                    ),
-                ],
-            ),
+        return CascadingDropdown(
             title=_("Translate SNMP traps"),
             help=_(
                 "When this option is enabled all available SNMP MIB files will be used "
@@ -4284,7 +4262,25 @@ class ConfigVariableEventConsoleTranslateSNMPTraps(ConfigVariable):
                 "translated, e.g. because a MIB is missing, are written untouched to "
                 "the event message."
             ),
-            forth=lambda v: v is True and (v, {}) or v,
+            choices=[
+                (False, _("Do not translate SNMP traps")),
+                (
+                    True,
+                    _("Translate SNMP traps using the available MIBs"),
+                    Dictionary(
+                        elements=[
+                            (
+                                "add_description",
+                                FixedValue(
+                                    value=True,
+                                    title=_("Add OID descriptions"),
+                                    totext=_("Append descriptions of OIDs to message texts"),
+                                ),
+                            ),
+                        ],
+                    ),
+                ),
+            ],
         )
 
 
@@ -4385,23 +4381,15 @@ class ConfigVariableEventConsoleLogLevel(ConfigVariable):
         return "log_level"
 
     def valuespec(self) -> ValueSpec:
-        return Transform(
-            valuespec=Dictionary(
-                title=_("Log level"),
-                help=_(
-                    "You can configure the Event Console to log more details about it's actions. "
-                    "These information are logged into the file <tt>%s</tt>"
-                )
-                % site_neutral_path(cmk.utils.paths.log_dir + "/mkeventd.log"),
-                elements=self._ec_log_level_elements(),
-                optional_keys=[],
-            ),
-            # Transform old values:
-            # 0 -> normal logging
-            # 1 -> verbose logging
-            forth=lambda x: {"cmk.mkeventd": (logging.INFO if x == 0 else cmk.utils.log.VERBOSE)}
-            if x in (0, 1)
-            else x,
+        return Dictionary(
+            title=_("Log level"),
+            help=_(
+                "You can configure the Event Console to log more details about it's actions. "
+                "These information are logged into the file <tt>%s</tt>"
+            )
+            % site_neutral_path(cmk.utils.paths.log_dir + "/mkeventd.log"),
+            elements=self._ec_log_level_elements(),
+            optional_keys=[],
         )
 
     def _ec_log_level_elements(self):

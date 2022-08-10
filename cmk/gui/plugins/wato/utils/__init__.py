@@ -2544,12 +2544,6 @@ class PageAjaxDictHostTagConditionGetChoice(ABCPageListOfMultipleGetChoice):
         return condition._get_tag_group_choices()
 
 
-def transform_simple_to_multi_host_rule_match_conditions(value):
-    if value and "match_folder" in value:
-        value["match_folders"] = [value.pop("match_folder")]
-    return value
-
-
 def _simple_host_rule_match_conditions() -> list[DictionaryEntry]:
     return [
         _site_rule_match_condition(),

@@ -31,7 +31,6 @@ from cmk.gui.valuespec import (
     Integer,
     ListOf,
     TextInput,
-    Transform,
     Tuple,
     ValueSpec,
 )
@@ -207,15 +206,7 @@ class ConfigVariableNotificationLogging(ConfigVariable):
         return "notification_logging"
 
     def valuespec(self) -> ValueSpec:
-        return Transform(
-            valuespec=DropdownChoice(
-                choices=[
-                    (20, _("Minimal logging")),
-                    (15, _("Normal logging")),
-                    (10, _("Full dump of all variables and command")),
-                ],
-            ),
-            forth=self._transform_log_level,
+        return DropdownChoice(
             title=_("Notification log level"),
             help=_(
                 "You can configure the notification mechanism to log more details about "
@@ -223,18 +214,12 @@ class ConfigVariableNotificationLogging(ConfigVariable):
                 "into the file <tt>%s</tt>"
             )
             % site_neutral_path(cmk.utils.paths.log_dir + "/notify.log"),
+            choices=[
+                (20, _("Minimal logging")),
+                (15, _("Normal logging")),
+                (10, _("Full dump of all variables and command")),
+            ],
         )
-
-    @staticmethod
-    def _transform_log_level(level):
-        # The former values 1 and 2 are mapped to the values 20 (default) and 10 (debug)
-        # which agree with the values used in cmk/utils/log.py.
-        # The decprecated value 0 is transformed to the default logging value.
-        if level in [0, 1]:
-            return 20
-        if level == 2:
-            return 10
-        return level
 
 
 @config_variable_registry.register

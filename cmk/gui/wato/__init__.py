@@ -388,7 +388,6 @@ def _register_pre_21_plugin_api() -> None:
         "SiteBackupJobs",
         "SNMPCredentials",
         "sort_sites",
-        "transform_simple_to_multi_host_rule_match_conditions",
         "UserIconOrAction",
         "valuespec_check_plugin_selection",
         "WatoMode",

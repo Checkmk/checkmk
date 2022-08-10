@@ -16,7 +16,6 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.sidebar.utils import SidebarSnapin, snapin_registry
-from cmk.gui.plugins.wato.check_mk_configuration import transform_virtual_host_trees
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.hosts_and_folders import Folder, get_folder_title_path
@@ -33,10 +32,7 @@ class VirtualHostTree(SidebarSnapin):
         self._load_user_settings()
 
     def _load_trees(self):
-        self._trees = {
-            tree["id"]: tree
-            for tree in transform_virtual_host_trees(active_config.virtual_host_trees)  #
-        }
+        self._trees = {tree["id"]: tree for tree in active_config.virtual_host_trees}
 
     def _load_user_settings(self):
         tree_conf = user.load_file("virtual_host_tree", {"tree": 0, "cwd": {}})

@@ -10,6 +10,8 @@
 # creating objects. Or at least update the documentation. It is not clear
 # which fields are mandatory for the events.
 
+from __future__ import annotations
+
 import abc
 import ast
 import errno
@@ -24,26 +26,12 @@ import sys
 import threading
 import time
 import traceback
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from logging import getLogger, Logger
 from pathlib import Path
+from re import Pattern
 from types import FrameType, TracebackType
-from typing import (
-    Any,
-    AnyStr,
-    Callable,
-    Iterable,
-    Iterator,
-    Literal,
-    Mapping,
-    NamedTuple,
-    Optional,
-    Pattern,
-    Protocol,
-    Sequence,
-    Type,
-    TypedDict,
-    Union,
-)
+from typing import Any, AnyStr, Literal, NamedTuple, Protocol, TypedDict
 
 from setproctitle import setthreadtitle  # type: ignore[import] # pylint: disable=no-name-in-module
 
@@ -85,11 +73,11 @@ class MatchPriority(NamedTuple):
 
 # TODO: Make this total.
 class SlaveStatus(TypedDict, total=False):
-    last_master_down: Optional[float]
+    last_master_down: float | None
     last_sync: float
     mode: Literal["master", "sync", "takeover"]
     success: bool
-    average_sync_time: Optional[float]  # TODO: Never changed. Bug?
+    average_sync_time: float | None  # TODO: Never changed. Bug?
 
 
 # Python and mypy have FD stuff internally, but they don't export it. :-/
@@ -99,9 +87,9 @@ class HasFileno(Protocol):
 
 
 FileDescr = int  # mypy calls this FileDescriptor, but this clashes with out definition
-FileDescriptorLike = Union[FileDescr, HasFileno]
+FileDescriptorLike = FileDescr | HasFileno
 
-Response = Union[Iterable[list[Any]], dict[str, Any], None]
+Response = Iterable[list[Any]] | dict[str, Any] | None
 
 
 class SyslogPriority:
@@ -203,9 +191,9 @@ class ECLock:
 
     def __exit__(
         self,
-        exc_type: Optional[Type[BaseException]],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> Literal[False]:
         self._logger.debug("[%s] Releasing lock", threading.current_thread().name)
         self._lock.release()
@@ -258,8 +246,8 @@ class ECServerThread(threading.Thread):
 
 def terminate(
     terminate_main_event: threading.Event,
-    event_server: "EventServer",
-    status_server: "StatusServer",
+    event_server: EventServer,
+    status_server: StatusServer,
 ) -> None:
     terminate_main_event.set()
     status_server.terminate()
@@ -300,8 +288,8 @@ def drain_pipe(pipe: FileDescr) -> None:
             break  # No data available
 
 
-TextPattern = Union[None, str, Pattern[str]]
-TextMatchResult = Union[bool, Sequence[str]]
+TextPattern = str | Pattern[str] | None
+TextMatchResult = bool | Sequence[str]
 MatchGroups = dict[str, TextMatchResult]
 
 
@@ -413,7 +401,7 @@ class TimePeriods:
         super().__init__()
         self._logger = logger
         self._active: Mapping[TimeperiodName, bool] = {}
-        self._cache_timestamp: Optional[Timestamp] = None
+        self._cache_timestamp: Timestamp | None = None
 
     def _update(self) -> None:
         try:
@@ -481,7 +469,7 @@ class Perfcounters:
         self._rates: dict[str, float] = {}
         self._average_rates: dict[str, float] = {}
         self._times: dict[str, float] = {}
-        self._last_statistics: Optional[float] = None
+        self._last_statistics: float | None = None
 
         self._logger = logger.getChild("Perfcounters")
 
@@ -518,7 +506,7 @@ class Perfcounters:
             self._old_counters = self._counters.copy()
 
     @classmethod
-    def status_columns(cls: type["Perfcounters"]) -> list[tuple[str, float]]:
+    def status_columns(cls: type[Perfcounters]) -> list[tuple[str, float]]:
         columns: list[tuple[str, float]] = []
         # Please note: status_columns() and get_status() need to produce lists with exact same column order
         for name in cls._counter_names:
@@ -568,7 +556,7 @@ class MatchSuccess(NamedTuple):
     match_groups: dict[str, Any]
 
 
-MatchResult = Union[MatchFailure, MatchSuccess]
+MatchResult = MatchFailure | MatchSuccess
 
 
 class EventServer(ECServerThread):
@@ -581,7 +569,7 @@ class EventServer(ECServerThread):
         perfcounters: Perfcounters,
         lock_configuration: ECLock,
         history: History,
-        event_status: "EventStatus",
+        event_status: EventStatus,
         event_columns: list[tuple[str, Any]],
         create_pipes_and_sockets: bool = True,
     ) -> None:
@@ -594,9 +582,9 @@ class EventServer(ECServerThread):
             profiling_enabled=settings.options.profile_event,
             profile_file=settings.paths.event_server_profile.value,
         )
-        self._syslog_udp: Optional[socket.socket] = None
-        self._syslog_tcp: Optional[socket.socket] = None
-        self._snmptrap: Optional[socket.socket] = None
+        self._syslog_udp: socket.socket | None = None
+        self._syslog_tcp: socket.socket | None = None
+        self._snmptrap: socket.socket | None = None
 
         # TODO: Improve type!
         self._rules: list[Any] = []
@@ -813,7 +801,7 @@ class EventServer(ECServerThread):
         if self._snmptrap is not None:
             listen_list.append(self._snmptrap)
 
-        client_sockets: dict[FileDescr, tuple[socket.socket, Optional[tuple[str, int]], bytes]] = {}
+        client_sockets: dict[FileDescr, tuple[socket.socket, tuple[str, int] | None, bytes]] = {}
         select_timeout = 1
         while not self._terminate_event.is_set():
             try:
@@ -824,8 +812,8 @@ class EventServer(ECServerThread):
                 if e.args[0] != errno.EINTR:
                     raise
                 continue
-            address: Optional[tuple[str, int]]  # host/port
-            data: Optional[bytes] = None
+            address: tuple[str, int] | None  # host/port
+            data: bytes | None = None
 
             # Accept new connection on event unix socket
             if self._eventsocket in readable:
@@ -981,7 +969,7 @@ class EventServer(ECServerThread):
         self._perfcounters.count_time("processing", elapsed)
 
     # Takes several lines of messages, handles encoding and processes them separated
-    def process_raw_lines(self, data: bytes, address: Optional[tuple[str, int]]) -> None:
+    def process_raw_lines(self, data: bytes, address: tuple[str, int] | None) -> None:
         for line_bytes in data.splitlines():
             if line := scrub_and_decode(line_bytes.rstrip()):
                 try:
@@ -1491,7 +1479,7 @@ class EventServer(ECServerThread):
                 )
             )
 
-    def process_line(self, line: str, address: Optional[tuple[str, int]]) -> None:
+    def process_line(self, line: str, address: tuple[str, int] | None) -> None:
         self.process_event(
             create_event_from_line(line, address, self._logger, verbose=self._config["debug_rules"])
         )
@@ -1679,7 +1667,7 @@ class EventServer(ECServerThread):
         # Add some state dependent information (like host is in downtime etc.)
         event["host_in_downtime"] = self._is_host_in_downtime(event["core_host"])
 
-    def _is_host_in_downtime(self, host_name: Optional[HostName]) -> bool:
+    def _is_host_in_downtime(self, host_name: HostName | None) -> bool:
         if not host_name:
             return False  # Found no host in core: Not in downtime!
         try:
@@ -1891,7 +1879,7 @@ class EventServer(ECServerThread):
 
     # Returns False if the event has been created and actions should be
     # performed on that event
-    def _handle_event_limit(self, ty: str, event: Event, host_config: Optional[HostInfo]) -> bool:
+    def _handle_event_limit(self, ty: str, event: Event, host_config: HostInfo | None) -> bool:
         assert ty in ["overall", "by_rule", "by_host"]
 
         num_already_open = self._event_status.get_num_existing_events_by(ty, event)
@@ -1944,7 +1932,7 @@ class EventServer(ECServerThread):
 
     # protected by self._event_status.lock
     def _get_event_limit(
-        self, ty: str, event: Event, host_config: Optional[HostInfo]
+        self, ty: str, event: Event, host_config: HostInfo | None
     ) -> tuple[int, str]:
         if ty == "overall":
             return self._get_overall_event_limit()
@@ -1960,7 +1948,7 @@ class EventServer(ECServerThread):
             self._config["event_limit"]["overall"]["action"],
         )
 
-    def _get_rule_event_limit(self, rule_id: Optional[str]) -> tuple[int, str]:
+    def _get_rule_event_limit(self, rule_id: str | None) -> tuple[int, str]:
         """Prefer the rule individual limit for by_rule limit (in case there is some)"""
         rule_limit = self._rule_by_id.get(rule_id, {}).get("event_limit")
         if rule_limit:
@@ -1971,7 +1959,7 @@ class EventServer(ECServerThread):
             self._config["event_limit"]["by_rule"]["action"],
         )
 
-    def _get_host_event_limit(self, host_config: Optional[HostInfo]) -> tuple[int, str]:
+    def _get_host_event_limit(self, host_config: HostInfo | None) -> tuple[int, str]:
         """Prefer the host individual limit for by_host limit (in case there is some)"""
         host_limit = (
             None if host_config is None else host_config.custom_variables.get("EC_EVENT_LIMIT")
@@ -2189,9 +2177,7 @@ class RuleMatcher:
                 return False
         return True
 
-    def event_rule_determine_match_priority(
-        self, rule: Rule, event: Event
-    ) -> Optional[MatchPriority]:
+    def event_rule_determine_match_priority(self, rule: Rule, event: Event) -> MatchPriority | None:
         p = event["priority"]
 
         if "match_priority" in rule:
@@ -2346,7 +2332,7 @@ class RuleMatcher:
 
 
 class Queries:
-    def __init__(self, status_server: "StatusServer", sock: socket.socket, logger: Logger) -> None:
+    def __init__(self, status_server: StatusServer, sock: socket.socket, logger: Logger) -> None:
         super().__init__()
         self._status_server = status_server
         self._socket = sock
@@ -2410,7 +2396,7 @@ class Queries:
 
 
 class StatusTable:
-    prefix: Optional[str] = None
+    prefix: str | None = None
     columns: list[tuple[str, Any]] = []
 
     # Must return a enumerable type containing fully populated lists (rows) matching the
@@ -2445,7 +2431,7 @@ class StatusTable:
                 num_rows += 1
 
     def _build_result_row(
-        self, row: list[Any], requested_column_indexes: list[Optional[int]]
+        self, row: list[Any], requested_column_indexes: list[int | None]
     ) -> list[Any]:
         return [(None if index is None else row[index]) for index in requested_column_indexes]  #
 
@@ -2480,7 +2466,7 @@ class StatusTableEvents(StatusTable):
         ("event_match_groups_syslog_application", ""),  # introduced in 1.5.0i2
     ]
 
-    def __init__(self, logger: Logger, event_status: "EventStatus") -> None:
+    def __init__(self, logger: Logger, event_status: EventStatus) -> None:
         super().__init__(logger)
         self._event_status = event_status
 
@@ -2527,7 +2513,7 @@ class StatusTableRules(StatusTable):
         ("rule_hits", 0),
     ]
 
-    def __init__(self, logger: Logger, event_status: "EventStatus") -> None:
+    def __init__(self, logger: Logger, event_status: EventStatus) -> None:
         super().__init__(logger)
         self._event_status = event_status
 
@@ -2570,7 +2556,7 @@ class StatusServer(ECServerThread):
         perfcounters: Perfcounters,
         lock_configuration: ECLock,
         history: History,
-        event_status: "EventStatus",
+        event_status: EventStatus,
         event_server: EventServer,
         terminate_main_event: threading.Event,
     ) -> None:
@@ -2583,8 +2569,8 @@ class StatusServer(ECServerThread):
             profiling_enabled=settings.options.profile_status,
             profile_file=settings.paths.status_server_profile.value,
         )
-        self._socket: Optional[socket.socket] = None
-        self._tcp_socket: Optional[socket.socket] = None
+        self._socket: socket.socket | None = None
+        self._tcp_socket: socket.socket | None = None
         self._reopen_sockets = False
 
         self._table_events = StatusTableEvents(logger, event_status)
@@ -2794,7 +2780,7 @@ class StatusServer(ECServerThread):
             raise NotImplementedError()
 
     def _answer_query_python(
-        self, client_socket: socket.socket, response: Optional[Iterable[list[Any]]]
+        self, client_socket: socket.socket, response: Iterable[list[Any]] | None
     ) -> None:
         client_socket.sendall((repr(response) + "\n").encode("utf-8"))
 
@@ -2927,7 +2913,7 @@ class StatusServer(ECServerThread):
 
     def handle_command_action(self, arguments: list[str]) -> None:
         event_id, user, action_id = arguments
-        event: Optional[Event] = self._event_status.event(int(event_id))
+        event: Event | None = self._event_status.event(int(event_id))
         if user and event is not None:
             event["owner"] = user
 
@@ -3010,7 +2996,7 @@ def run_eventd(  # pylint: disable=too-many-branches
     lock_configuration: ECLock,
     history: History,
     perfcounters: Perfcounters,
-    event_status: "EventStatus",
+    event_status: EventStatus,
     event_server: EventServer,
     status_server: StatusServer,
     slave_status: SlaveStatus,
@@ -3149,7 +3135,7 @@ class EventStatus:
         # TODO: Improve type!
         return self._events
 
-    def event(self, eid: int) -> Optional[Event]:
+    def event(self, eid: int) -> Event | None:
         for event in self._events:
             if event["id"] == eid:
                 return event
@@ -3174,7 +3160,7 @@ class EventStatus:
             self._interval_starts[rule_id] = start
         return start
 
-    def next_interval_start(self, interval: Union[tuple, int], previous_start: float) -> int:
+    def next_interval_start(self, interval: tuple | int, previous_start: float) -> int:
         if isinstance(interval, tuple):
             length, offset = interval
             offset *= 3600
@@ -3225,7 +3211,7 @@ class EventStatus:
         elapsed = time.time() - now
         self._logger.log(VERBOSE, "Saved event state to %s in %.3fms.", path, elapsed * 1000)
 
-    def reset_counters(self, rule_id: Optional[str]) -> None:
+    def reset_counters(self, rule_id: str | None) -> None:
         if rule_id:
             if rule_id in self._rule_stats:
                 del self._rule_stats[rule_id]
@@ -3267,7 +3253,7 @@ class EventStatus:
     def _initialize_event_limit_status(self) -> None:
         self.num_existing_events = len(self._events)
 
-        self.num_existing_events_by_host: dict[tuple[str, Optional[HostName]], int] = {}
+        self.num_existing_events_by_host: dict[tuple[str, HostName | None], int] = {}
         self.num_existing_events_by_rule: dict[Any, int] = {}
         for event in self._events:
             self._count_event_add(event)
@@ -3539,7 +3525,7 @@ class EventStatus:
 
     def count_event(
         self, event_server: EventServer, event: Event, rule: str, count: dict
-    ) -> Optional[Event]:
+    ) -> Event | None:
         """
         Find previous occurrance of this event and account for
         one new occurrance. In case of negated count (expecting rules)
@@ -4031,7 +4017,7 @@ def main() -> None:  # pylint: disable=too-many-branches
         cmk.utils.daemon.lock_with_pid_file(pid_path)
 
         # Install signal hander
-        def signal_handler(signum: int, stack_frame: Optional[FrameType]) -> None:
+        def signal_handler(signum: int, stack_frame: FrameType | None) -> None:
             logger.log(VERBOSE, "Got signal %d.", signum)
             raise MKSignalException(signum)
 

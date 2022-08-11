@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# this is a simple wrapper over next windows msi build tools
+# Uses next windows msi build tools
 # - lcab
 # - msiinfo
 # - msibuild
@@ -24,6 +24,15 @@ import cmk.utils.obfuscate as obfuscate
 from cmk.utils import msi_patch
 
 AGENT_MSI_FILE: Final = "check_mk_agent_unsigned.msi"
+_MSI_FILES: Final = sorted(["check_mk_install_yml", "checkmk.dat", "plugins_cap", "python_3.cab"])
+_MSI_COMPONENTS: Final = sorted(
+    [
+        "check_mk_install_yml_",
+        "checkmk.dat",
+        "plugins_cap_",
+        "python_3.cab",
+    ]
+)
 
 opt_verbose = True
 
@@ -39,43 +48,48 @@ def bail_out(text: str) -> NoReturn:
 
 
 def msi_file_table() -> list[str]:
-    # we have to sort the table, the table is created by MSI installer
-    return ["check_mk_install_yml", "checkmk.dat", "plugins_cap", "python_3.cab"]
+    """return sorted table of files in MSI"""
+    return _MSI_FILES
 
 
 def msi_component_table() -> list[str]:
-    # we have to sort the table, the table is created by MSI installer too
-    return ["check_mk_install_yml_", "checkmk.dat", "plugins_cap_", "python_3.cab"]
+    """return sorted table of components in MSI"""
+    return _MSI_COMPONENTS
 
 
 def _remove_cab(path_to_msibuild: Path, *, msi: Path) -> None:
     _verbose("Removing product.cab from %s" % msi)
-    cmd_line = f"{path_to_msibuild/'msibuild'} {msi} -q \"DELETE FROM _Streams where Name = 'product.cab'\""
+    cmd: Final = f"{path_to_msibuild/'msibuild'} {msi} -q \"DELETE FROM _Streams where Name = 'product.cab'\""
 
-    if os.system(cmd_line) != 0:  # nosec
-        bail_out("msibuild is failed on remove cab")
+    if (result := os.system(cmd)) != 0:  # nosec
+        bail_out(f"msibuild is failed on remove cab, {result=}")
 
 
 def _create_new_cab(work_dir: Path) -> None:
     _verbose("Generating new product.cab")
-
     files = " ".join(map(lambda f: f"{work_dir/f}", msi_file_table()))
-    cmd_line = f"lcab -n {files} {work_dir}/product.cab > nul"
-
-    if os.system(cmd_line) != 0:  # nosec
-        bail_out("lcab is failed in create new cab")
+    cmd: Final = f"lcab -n {files} {work_dir}/product.cab > nul"
+    if (result := os.system(cmd)) != 0:  # nosec
+        bail_out(f"lcab is failed in create new cab, {result=}")
 
 
 def _add_cab(path_to_msibuild: Path, *, msi: Path, working_dir: Path) -> None:
     _verbose("Add modified product.cab")
-    cmd_line = f"{path_to_msibuild/'msibuild'} {msi} -a product.cab {working_dir}/product.cab"
-
-    if os.system(cmd_line) != 0:  # nosec
-        bail_out("msi build is failed")
+    cmd: Final = f"{path_to_msibuild/'msibuild'} {msi} -a product.cab {working_dir}/product.cab"
+    if (result := os.system(cmd)) != 0:  # nosec
+        bail_out(f"msi build is failed, {result=}")
 
 
 def update_package_code(file_name: Path, *, package_code: str | None):
     """Patch package code of MSI with new random package_code_hash"""
+
+    # NOTES:
+    # Update summary info with new uuid (HACK! - the msibuild tool is not able to do this on all
+    # systems). We replace the package code with a new uuid. This uuid is important, because it is
+    # the unique identifier for this package.
+    # Inside the package the uuid is split into two halfs. Each of it is updated with the
+    # corresponding new package code.
+
     if not msi_patch.patch_package_code_by_marker(
         file_name, new_uuid=package_code, state_file=None
     ):
@@ -88,17 +102,14 @@ def read_file_as_lines(f_to_read: Path) -> list[str]:
 
 
 def _patch_msi_files(use_dir: Path, version_build: str) -> None:
-
     name = "File.idt"
     lines_file_idt = read_file_as_lines(use_dir / name)
 
     with (use_dir / (name + ".new")).open("w", newline="", encoding="utf8") as out_file:
-        # first three lines of the table write back
-        to_write = "".join(lines_file_idt[:3])
-        out_file.write(to_write)
+        out_file.write("".join(lines_file_idt[:3]))
 
-        for l in lines_file_idt[3:]:
-            words = l.split("\t")
+        for line in lines_file_idt[3:]:
+            words = line.split("\t")
             filename = words[0]
             # check every file from the table whether it should be replaced
             for file_to_replace in msi_file_table():  # sorted(cabinet_files):
@@ -110,7 +121,7 @@ def _patch_msi_files(use_dir: Path, version_build: str) -> None:
                         words[3] = str(new_size)
                     else:
                         _verbose("'{}' doesn't exist".format(work_file))
-                    break  # always leaving internal loop
+                    break  # one file per table
 
             # The version of this file is different from the msi installer version !
             words[4] = version_build if words[4] else ""
@@ -124,8 +135,8 @@ def _patch_msi_components(use_dir: Path) -> None:
     with (use_dir / (name + ".new")).open("w", newline="", encoding="utf8") as out_file:
         out_file.write("".join(lines_component_idt[:3]))
 
-        for l in lines_component_idt[3:]:
-            words = l.split("\t")
+        for line in lines_component_idt[3:]:
+            words = line.split("\t")
             if words[0] in msi_component_table():
                 words[1] = ("{%s}" % uuid.uuid1()).upper()
             out_file.write("\t".join(words))
@@ -233,7 +244,7 @@ def parse_command_line(argv: Sequence[str]) -> _Parameters:
     parser.add_argument("src_dir", type=Path, help="directory with data files")
     parser.add_argument("revision", type=str, help="Revision calculated from version")
     parser.add_argument(
-        "version", type=str, help="Official version, eg 2015.04.12 or 1.2.6-2015.04.12"
+        "version", type=str, help="Official version: 2015.04.12 or 1.2.6-2015.04.12"
     )
     parser.add_argument(
         "config_hash", type=str, nargs="?", help="hash of agent configuration(aka aghash)"
@@ -261,8 +272,8 @@ def _rename_modified_tables(work_dir: Path) -> None:
 def _insert_modified_tables_in_msi(bin_dir: Path, *, msi: Path, work_dir: Path) -> None:
     for entry in _TABLE_NAMES:
         cmd = f"{bin_dir / 'msibuild'} {msi} -i {work_dir}/{entry}.idt"
-        if os.system(cmd) != 0:  # nosec
-            bail_out("failed main msibuild")
+        if (result := os.system(cmd)) != 0:  # nosec
+            bail_out(f"failed main msibuild, {result=}")
 
 
 def _copy_required_files(work_dir: Path, *, src_dir: Path) -> None:
@@ -308,7 +319,7 @@ def msi_update_core(
         work_dir = Path(tempfile.mkdtemp(prefix=str(tmp_dir) + "/msi-update."))
 
         if (error := obfuscate.deobfuscate_file(Path(msi_file_name), file_out=new_msi_file)) != 0:
-            bail_out(f"Deobfuscate returns error {error}")
+            bail_out(f"Deobfuscate returns error {error=}")
 
         # When this script is run in the build environment then we need to specify
         # paths to the msitools. When running in an OMD site, these tools are in
@@ -337,10 +348,6 @@ def msi_update_core(
         _rename_modified_tables(work_dir)
         _insert_modified_tables_in_msi(bin_dir, msi=new_msi_file, work_dir=work_dir)
         # 2. PATCH
-        # Update summary info with new uuid (HACK! - the msibuild tool is not able to do this on all systems)
-        # In this step we replace the package code with a new uuid. This uuid is important, because it is
-        # the unqiue identifier for this package. Inside the package the uuid is split into two halfs.
-        # Each of it is updated with the corresponding new package code.
         update_package_code(new_msi_file, package_code=package_code_base)
         # 3.CAB:
         _remove_cab(bin_dir, msi=new_msi_file)
@@ -348,21 +355,20 @@ def msi_update_core(
         _add_cab(bin_dir, msi=new_msi_file, working_dir=work_dir)
 
         shutil.rmtree(work_dir)
-        _verbose("Successfully created file {new_msi_file}")
+        _verbose(f"Successfully created file {new_msi_file}")
     except Exception as e:
         # if work_dir and os.path.exists(work_dir):
         #    shutil.rmtree(work_dir)
-        bail_out("Error on creating msi file: {}, work_dir is {}".format(str(e), str(work_dir)))
+        bail_out(f"Error on creating msi file: {e}, work_dir is {work_dir}")
 
 
-# We could want to test this module too
-# Normally should not be called as a process
-# typical testing code
+# NOTES:
+# Typical command line:
 # msi-update -v ../../wnx/test_files/msibuild/msi/check_mk_agent.msi ../../wnx/test_files/msibuild . 1.7.0i1
+#   package_code can be None: used in Windows Build machine to generate random package code
+#   in bakery we are sending aghash to _generate_ package code
 
 # MAIN:
 if __name__ == "__main__":
-    # package code can be None: used in Windows Build machine to generate something random
-    # in bakery we are sending aghash to generate package code
     p = parse_command_line(sys.argv)
     msi_update_core(p.msi, p.src_dir, p.revision, p.version, package_code_base=p.package_code_hash)

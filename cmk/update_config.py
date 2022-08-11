@@ -300,7 +300,6 @@ class UpdateConfig:
         return [
             (self._rewrite_visuals, "Migrate Visuals context"),
             (self._update_global_settings, "Update global settings"),
-            (self._rewrite_wato_host_and_folder_config, "Rewriting hosts and folders"),
             (self._rewrite_wato_rulesets, "Rewriting rulesets"),
             (self._rewrite_autochecks, "Rewriting autochecks"),
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
@@ -327,13 +326,6 @@ class UpdateConfig:
         cmk.base.config.load_all_agent_based_plugins(
             cmk.base.check_api.get_check_api_context,
         )
-
-    def _rewrite_wato_host_and_folder_config(self) -> None:
-        root_folder = cmk.gui.watolib.hosts_and_folders.Folder.root_folder()
-        if root_folder.title() == "Main directory":
-            root_folder.edit(new_title="Main", new_attributes=root_folder.attributes())
-        root_folder.rewrite_folders()
-        root_folder.rewrite_hosts_files()
 
     def _update_global_settings(self) -> None:
         self._update_installation_wide_global_settings()

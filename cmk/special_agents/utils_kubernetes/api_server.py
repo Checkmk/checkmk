@@ -295,15 +295,13 @@ def _match_controllers(
     # https://github.com/kubernetes-client/python/issues/946
     # We have tested the solution in the github issue. It does not work, but was good
     # enough as a prototype.
-    result: Mapping[str, List[api.PodUID]] = {uid: [] for uid in object_to_owners}
+    controller_to_pods: Dict[str, List[api.PodUID]] = {}
     for pod in pods:
         owner_references = pod.metadata.owner_references or []
-        while (
-            controller := next((r for r in owner_references if r.controller), None)
-        ) and controller.uid in result:
-            result[controller.uid].append(pod.metadata.uid)
-            owner_references = object_to_owners[controller.uid]
-    return result
+        while controller := next((r for r in owner_references if r.controller), None):
+            controller_to_pods.setdefault(controller.uid, []).append(api.PodUID(pod.metadata.uid))
+            owner_references = object_to_owners.get(controller.uid, [])
+    return controller_to_pods
 
 
 def _verify_version_support(
@@ -436,7 +434,9 @@ def statefulset_list_from_client(
     controller_to_pods: Mapping[str, Sequence[api.PodUID]],
 ) -> Sequence[api.StatefulSet]:
     return [
-        statefulset_from_client(raw_statefulset, controller_to_pods[raw_statefulset.metadata.uid])
+        statefulset_from_client(
+            raw_statefulset, controller_to_pods.get(raw_statefulset.metadata.uid, [])
+        )
         for raw_statefulset in statefulset_list
     ]
 
@@ -459,15 +459,17 @@ def parse_api_data(
     ],
 ) -> APIData:
     cron_jobs = [
-        cron_job_from_client(raw_cron_job, controller_to_pods[raw_cron_job.metadata.uid])
+        cron_job_from_client(raw_cron_job, controller_to_pods.get(raw_cron_job.metadata.uid, []))
         for raw_cron_job in raw_cron_jobs
     ]
     deployments = [
-        deployment_from_client(raw_deployment, controller_to_pods[raw_deployment.metadata.uid])
+        deployment_from_client(
+            raw_deployment, controller_to_pods.get(raw_deployment.metadata.uid, [])
+        )
         for raw_deployment in raw_deployments
     ]
     daemonsets = [
-        daemonset_from_client(raw_daemonset, controller_to_pods[raw_daemonset.metadata.uid])
+        daemonset_from_client(raw_daemonset, controller_to_pods.get(raw_daemonset.metadata.uid, []))
         for raw_daemonset in raw_daemonsets
     ]
     statefulsets = versioned_parse_statefulsets(raw_statefulsets, controller_to_pods)

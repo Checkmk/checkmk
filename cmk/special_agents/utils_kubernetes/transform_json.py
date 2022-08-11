@@ -163,7 +163,7 @@ def statefulset_list_from_json(
 ) -> Sequence[api.StatefulSet]:
     return [
         _statefulset_from_json(
-            statefulset, controller_to_pods[dependent_object_uid_from_json(statefulset)]
+            statefulset, controller_to_pods.get(dependent_object_uid_from_json(statefulset), [])
         )
         for statefulset in statefulset_list["items"]
     ]

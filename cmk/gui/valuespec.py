@@ -2588,14 +2588,12 @@ class DropdownChoice(ValueSpec):
         self._invalid_choice_title = (
             invalid_choice_title
             if invalid_choice_title is not None
-            else _("Element '%r' does not exist anymore")
+            else _("Element %r does not exist anymore")
         )
         self._invalid_choice_error = (
             invalid_choice_error
             if invalid_choice_error is not None
-            else _(
-                "The selected element '%r' is not longer available. Please select something else."
-            )
+            else _("The selected element %r is not longer available. Please select something else.")
         )
         self._no_preselect = no_preselect
         self._no_preselect_value = no_preselect_value
@@ -2752,7 +2750,9 @@ class DropdownChoice(ValueSpec):
 
         if self._invalid_choice == "complain" and self._value_is_invalid(value):
             if value is not None:
-                raise MKUserError(varprefix, self._invalid_choice_error)
+                raise MKUserError(
+                    varprefix, self._get_invalid_choice_text(self._invalid_choice_error, value)
+                )
             raise MKUserError(varprefix, self._empty_text)
 
     def _value_is_invalid(self, value: DropdownChoiceValue) -> bool:

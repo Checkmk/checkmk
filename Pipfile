@@ -63,7 +63,7 @@ python-lsp-server = "*"  # Note: There are extras, but the default seems sensibl
 python-lsp-black = "*"  # black plugin for python-lsp-server
 pyls-isort = "*"  # isort plugin for python-lsp-server
 pylsp-mypy = "*"  # mypy plugin for python-lsp-server
-mypy-protobuf = "==3.0.0" # for mypy
+mypy-protobuf = "*" # for mypy
 pipfile = "*" # for generating import names during int tests
 py-import-cycles = "*"  # used in tests/Makefile
 

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "76b8bd47f721513a653d689362eae471d18bf043e137de43c73674a568a4d6dc"
+            "sha256": "ae145f1bd8a6e8472d2d6cddab8ed88d1b2256d23a6684be4f47551f0bed259c"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -2478,6 +2478,9 @@
             "version": "==0.10.1"
         },
         "coverage": {
+            "extras": [
+                "toml"
+            ],
             "hashes": [
                 "sha256:04010af3c06ce2bfeb3b1e4e05d136f88d88c25f76cd4faff5d1fd84d11581ea",
                 "sha256:05de0762c1caed4a162b3e305f36cf20a548ff4da0be6766ad5c870704be3660",
@@ -3117,11 +3120,11 @@
         },
         "mypy-protobuf": {
             "hashes": [
-                "sha256:87a5fdc809388ee5190763063415c0f11b858c590f751f6a7492204646364773",
-                "sha256:f92c71d987c457f69c0c87cc28d00f1762f1fa87f164faf452279d42033d80c9"
+                "sha256:65fc0492165f4a3c0aff69b03e34096fc1453e4dac8f14b4e9c2306cdde06010",
+                "sha256:730aa15337c38f0446fbe08f6c6c2370ee01d395125369d4b70e08b1e2ee30ee"
             ],
             "index": "pypi",
-            "version": "==3.0.0"
+            "version": "==3.2.0"
         },
         "nodeenv": {
             "hashes": [

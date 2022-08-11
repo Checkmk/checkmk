@@ -255,6 +255,7 @@ timeout(time: 12, unit: 'HOURS') {
                     }
                 }
             }
+            cleanWs(cleanWhenFailure: false)
         }
     }
 }

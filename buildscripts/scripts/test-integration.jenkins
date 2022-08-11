@@ -55,5 +55,8 @@ timeout(time: 12, unit: 'HOURS') {
         } catch (Exception e) {
             notify.notify_error(e)
         }
+        stage("clean workspace") {
+                cleanWs(cleanWhenFailure: false)
+            }
     }
 }

@@ -59,7 +59,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.logged_in import SuperUserContext
 from cmk.gui.plugins.dashboard.utils import get_all_dashboards
-from cmk.gui.plugins.userdb.utils import load_connection_config, USER_SCHEME_SERIAL
+from cmk.gui.plugins.userdb.utils import USER_SCHEME_SERIAL
 from cmk.gui.plugins.watolib.utils import config_variable_registry, filter_unknown_settings
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.userdb import load_users, save_users, Users
@@ -707,16 +707,9 @@ class UpdateConfig:
     def _adjust_user_attributes(self) -> None:
         """All users are loaded and attributes can be transformed or set."""
         users: Users = load_users(lock=True)
-        has_deprecated_ldap_connection: bool = any(
-            connection for connection in load_connection_config() if connection.get("id") == "ldap"
-        )
-        for user_id in users:
-            # pre 2.0 user
-            if users[user_id].get("user_scheme_serial") is None:
-                _add_show_mode(users, user_id)
 
+        for user_id in users:
             _add_user_scheme_serial(users, user_id)
-            _cleanup_ldap_connector(users, user_id, has_deprecated_ldap_connection)
 
         save_users(users, datetime.now())
 
@@ -1056,39 +1049,10 @@ def _format_warning(msg: str) -> str:
     return "\033[93m {}\033[00m".format(msg)
 
 
-def _add_show_mode(users: Users, user_id: UserId) -> Users:
-    """Set show_mode for existing user to 'default to show more' on upgrade to
-    2.0"""
-    users[user_id]["show_mode"] = "default_show_more"
-    return users
-
-
 def _add_user_scheme_serial(users: Users, user_id: UserId) -> Users:
     """Set attribute to detect with what cmk version the user was
     created. We start that with 2.0"""
     users[user_id]["user_scheme_serial"] = USER_SCHEME_SERIAL
-    return users
-
-
-def _cleanup_ldap_connector(
-    users: Users,
-    user_id: UserId,
-    has_deprecated_ldap_connection: bool,
-) -> Users:
-    """Transform LDAP connector attribute of older versions to new format"""
-    connection_id: Optional[str] = users[user_id].get("connector")
-    if connection_id is None:
-        connection_id = "htpasswd"
-
-    # Old Checkmk used a static "ldap" connector id for all LDAP users.
-    # Since Checkmk now supports multiple LDAP connections, the ID has
-    # been changed to "default". But only transform this when there is
-    # no connection existing with the id LDAP.
-    if connection_id == "ldap" and not has_deprecated_ldap_connection:
-        connection_id = "default"
-
-    users[user_id]["connector"] = connection_id
-
     return users
 
 

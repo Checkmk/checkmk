@@ -1,6 +1,6 @@
 Title: Manual enablement of login using HTTP GET to avoid unintentional leakage of user credentials in Apache's access logs
 Class: security
-Compatible: compat
+Compatible: incomp
 Component: wato
 Date: 1656422525
 Edition: cre

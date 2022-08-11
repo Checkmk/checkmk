@@ -145,7 +145,10 @@ def test__transform_replaced_wato_rulesets_and_params(
         }
     )
 
-    uc._transform_replaced_wato_rulesets(all_rulesets)
+    uc._transform_replaced_wato_rulesets(
+        all_rulesets,
+        {ruleset_name: new_ruleset_name},
+    )
     uc._transform_wato_rulesets_params(all_rulesets)
 
     assert not all_rulesets.exists(ruleset_name)

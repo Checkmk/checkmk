@@ -55,6 +55,7 @@ from cmk.utils.type_defs import (
     ContactgroupName,
     HostName,
     HostOrServiceConditionRegex,
+    RulesetName,
     UserId,
 )
 
@@ -217,7 +218,7 @@ REMOVED_CHECK_PLUGIN_MAP = {
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]
 REMOVED_GLOBALS_MAP: List[Tuple[str, str, Dict]] = []
 
-REMOVED_WATO_RULESETS_MAP = {
+REMOVED_WATO_RULESETS_MAP: Mapping[RulesetName, RulesetName] = {
     "non_inline_snmp_hosts": "snmp_backend_hosts",
     "agent_config:package_compression": "agent_config:bakery_packages",
 }
@@ -530,7 +531,7 @@ class UpdateConfig:
         self._extract_checkmk_agent_rule_from_check_mk_config(all_rulesets)
         self._extract_checkmk_agent_rule_from_exit_spec(all_rulesets)
         self._transform_fileinfo_timeofday_to_timeperiods(all_rulesets)
-        self._transform_replaced_wato_rulesets(all_rulesets)
+        self._transform_replaced_wato_rulesets(all_rulesets, REMOVED_WATO_RULESETS_MAP)
         self._transform_wato_rulesets_params(all_rulesets)
         self._transform_discovery_disabled_services(all_rulesets)
         self._validate_regexes_in_item_specs(all_rulesets)
@@ -683,13 +684,14 @@ class UpdateConfig:
     def _transform_replaced_wato_rulesets(
         self,
         all_rulesets: RulesetCollection,
+        replaced_rulesets: Mapping[RulesetName, RulesetName],
     ) -> None:
-        deprecated_ruleset_names: Set[str] = set()
+        deprecated_ruleset_names: Set[RulesetName] = set()
         for ruleset_name, ruleset in all_rulesets.get_rulesets().items():
-            if ruleset_name not in REMOVED_WATO_RULESETS_MAP:
+            if ruleset_name not in replaced_rulesets:
                 continue
 
-            new_ruleset = all_rulesets.get(REMOVED_WATO_RULESETS_MAP[ruleset_name])
+            new_ruleset = all_rulesets.get(replaced_rulesets[ruleset_name])
 
             if not new_ruleset.is_empty():
                 self._logger.log(VERBOSE, "Found deprecated ruleset: %s" % ruleset_name)

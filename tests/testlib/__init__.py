@@ -5,6 +5,8 @@
 
 import abc
 import datetime
+import importlib.machinery
+import importlib.util
 import os
 import sys
 import tempfile
@@ -270,21 +272,17 @@ def import_module_hack(pathname: str) -> ModuleType:
     This function loads the module at `pathname` even if it does not have
     the ".py" extension.
 
-    See Also:
-        - `https://mail.python.org/pipermail/python-ideas/2014-December/030265.html`.
-
+    See: https://docs.python.org/3/library/importlib.html#importing-a-source-file-directly
     """
-    modname = os.path.splitext(os.path.basename(pathname))[0]
-    modpath = os.path.join(cmk_path(), pathname)
-
-    import importlib  # pylint: disable=import-outside-toplevel
-
-    # TODO: load_module() is deprecated, we should avoid using it.
-    # Furthermore, due to some reflection Kung-Fu and typeshed oddities,
-    # mypy is confused about its arguments.
-    return importlib.machinery.SourceFileLoader(  # pylint: disable=no-value-for-parameter,deprecated-method
-        modname, modpath
-    ).load_module()
+    name = os.path.splitext(os.path.basename(pathname))[0]
+    location = os.path.join(cmk_path(), pathname)
+    loader = importlib.machinery.SourceFileLoader(name, location)
+    spec = importlib.machinery.ModuleSpec(name, loader, origin=location)
+    spec.has_location = True
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    loader.exec_module(module)
+    return module
 
 
 def wait_until(condition: Callable[[], bool], timeout: float = 1, interval: float = 0.1) -> None:

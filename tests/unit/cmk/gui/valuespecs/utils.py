@@ -31,8 +31,10 @@ def validate(valuespec: vs.ValueSpec[T], value: T) -> None:
     valuespec.validate_value(value, "varprefix")
 
 
-def expect_validate_failure(valuespec: vs.ValueSpec[T], value: T) -> None:
-    with pytest.raises(MKUserError):
+def expect_validate_failure(
+    valuespec: vs.ValueSpec[T], value: T, *, match: str | None = None
+) -> None:
+    with pytest.raises(MKUserError, match=match):
         validate(valuespec, value)
 
 

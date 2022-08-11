@@ -37,6 +37,7 @@ logonmodule="LogonMultisite"
 logon_multisite_htpasswd="/omd/sites/$OMD_SITE/etc/htpasswd"
 logon_multisite_secret="/omd/sites/$OMD_SITE/etc/auth.secret"
 logon_multisite_serials="/omd/sites/$OMD_SITE/etc/auth.serials"
+logon_multisite_cookie_version=1
 EOF
           fi
 

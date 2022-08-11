@@ -19,11 +19,10 @@ import multiprocessing
 import re
 import shutil
 import subprocess
-import time
 from contextlib import contextmanager
 from datetime import datetime
 from datetime import time as dt_time
-from pathlib import Path, PureWindowsPath
+from pathlib import Path
 from typing import (
     Any,
     Callable,
@@ -45,19 +44,10 @@ import cmk.utils.paths
 import cmk.utils.site
 import cmk.utils.tty as tty
 from cmk.utils import version
-from cmk.utils.check_utils import maincheckify
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import VERBOSE
-from cmk.utils.regex import unescape
-from cmk.utils.type_defs import (
-    CheckPluginName,
-    ContactgroupName,
-    HostName,
-    HostOrServiceConditionRegex,
-    RulesetName,
-    UserId,
-)
+from cmk.utils.type_defs import CheckPluginName, ContactgroupName, HostName, RulesetName, UserId
 
 # This special script needs persistence and conversion code from different
 # places of Checkmk. We may centralize the conversion and move the persistance
@@ -111,26 +101,12 @@ TimeRange = Tuple[Tuple[int, int], Tuple[int, int]]
 
 # mapping removed check plugins to their replacement:
 REMOVED_CHECK_PLUGIN_MAP = {
-    CheckPluginName("aix_if"): CheckPluginName("interfaces"),
     CheckPluginName("aix_diskiod"): CheckPluginName("diskstat_io"),
-    CheckPluginName("aix_memory"): CheckPluginName("mem_used"),
-    CheckPluginName("arbor_peakflow_sp_cpu_load"): CheckPluginName("cpu_loads"),
-    CheckPluginName("arbor_peakflow_tms_cpu_load"): CheckPluginName("cpu_loads"),
-    CheckPluginName("arbor_pravail_cpu_load"): CheckPluginName("cpu_loads"),
-    CheckPluginName("aruba_wlc_clients"): CheckPluginName("wlc_clients"),
-    CheckPluginName("check_mk_agent_update"): CheckPluginName("checkmk_agent"),
     CheckPluginName("cisco_mem_asa"): CheckPluginName("cisco_mem"),
     CheckPluginName("cisco_mem_asa64"): CheckPluginName("cisco_mem"),
-    CheckPluginName("cisco_wlc_clients"): CheckPluginName("wlc_clients"),
-    CheckPluginName("datapower_tcp"): CheckPluginName("tcp_conn_stats"),
     CheckPluginName("df_netapp32"): CheckPluginName("df_netapp"),
-    CheckPluginName("docker_container_cpu"): CheckPluginName("cpu_utilization_os"),
-    CheckPluginName("docker_container_diskstat"): CheckPluginName("diskstat"),
-    CheckPluginName("docker_container_mem"): CheckPluginName("mem_used"),
-    CheckPluginName("emc_vplex_if"): CheckPluginName("interfaces"),
     CheckPluginName("emc_vplex_volumes"): CheckPluginName("diskstat_io_volumes"),
     CheckPluginName("emc_vplex_director_stats"): CheckPluginName("diskstat_io_director"),
-    CheckPluginName("entity_sensors"): CheckPluginName("entity_sensors_temp"),
     CheckPluginName("fjdarye100_cadaps"): CheckPluginName("fjdarye_channel_adapters"),
     CheckPluginName("fjdarye100_cmods"): CheckPluginName("fjdarye_channel_modules"),
     CheckPluginName("fjdarye100_cmods_mem"): CheckPluginName("fjdarye_controller_modules_memory"),
@@ -184,46 +160,14 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("fjdarye60_sum"): CheckPluginName("fjdarye_summary_status"),
     CheckPluginName("fjdarye60_syscaps"): CheckPluginName("fjdarye_system_capacitors"),
     CheckPluginName("fjdarye60_thmls"): CheckPluginName("fjdarye_thermal_sensors"),
-    CheckPluginName("hp_msa_if"): CheckPluginName("interfaces"),
-    CheckPluginName("hpux_cpu"): CheckPluginName("cpu_loads"),
     CheckPluginName("hpux_lunstats"): CheckPluginName("diskstat_io"),
-    CheckPluginName("hr_mem"): CheckPluginName("mem_used"),
-    CheckPluginName("if64adm"): CheckPluginName("if64"),
-    CheckPluginName("if64_tplink"): CheckPluginName("interfaces"),
-    CheckPluginName("if_brocade"): CheckPluginName("interfaces"),
-    CheckPluginName("if"): CheckPluginName("interfaces"),
-    CheckPluginName("if_fortigate"): CheckPluginName("interfaces"),
-    CheckPluginName("if_lancom"): CheckPluginName("interfaces"),
-    CheckPluginName("lnx_bonding"): CheckPluginName("bonding"),
-    CheckPluginName("lxc_container_cpu"): CheckPluginName("cpu_utilization_os"),
-    CheckPluginName("mcafee_emailgateway_cpuload"): CheckPluginName("cpu_loads"),
-    CheckPluginName("ovs_bonding"): CheckPluginName("bonding"),
-    CheckPluginName("pdu_gude_8301"): CheckPluginName("pdu_gude"),
-    CheckPluginName("pdu_gude_8310"): CheckPluginName("pdu_gude"),
-    CheckPluginName("ps_perf"): CheckPluginName("ps"),
-    CheckPluginName("snmp_uptime"): CheckPluginName("uptime"),
-    CheckPluginName("solaris_mem"): CheckPluginName("mem_used"),
-    CheckPluginName("statgrab_disk"): CheckPluginName("diskstat"),
-    CheckPluginName("statgrab_load"): CheckPluginName("cpu_loads"),
-    CheckPluginName("statgrab_mem"): CheckPluginName("mem_used"),
-    CheckPluginName("statgrab_net"): CheckPluginName("interfaces"),
-    CheckPluginName("ucd_cpu_load"): CheckPluginName("cpu_loads"),
-    CheckPluginName("ucs_bladecenter_if"): CheckPluginName("interfaces"),
-    CheckPluginName("vms_if"): CheckPluginName("interfaces"),
-    CheckPluginName("windows_os_bonding"): CheckPluginName("bonding"),
-    CheckPluginName("winperf_tcp_conn"): CheckPluginName("tcp_conn_stats"),
 }
 
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]
 REMOVED_GLOBALS_MAP: List[Tuple[str, str, Dict]] = []
 
-REMOVED_WATO_RULESETS_MAP: Mapping[RulesetName, RulesetName] = {
-    "non_inline_snmp_hosts": "snmp_backend_hosts",
-    "agent_config:package_compression": "agent_config:bakery_packages",
-}
-
-_MATCH_SINGLE_BACKSLASH = re.compile(r"[^\\]\\[^\\]")
+REMOVED_WATO_RULESETS_MAP: Mapping[RulesetName, RulesetName] = {}
 
 
 @contextmanager
@@ -526,160 +470,18 @@ class UpdateConfig:
     def _rewrite_wato_rulesets(self) -> None:
         all_rulesets = cmk.gui.watolib.rulesets.AllRulesets()
         all_rulesets.load()
-        self._transform_ignored_checks_to_maincheckified_list(all_rulesets)
-        self._extract_disabled_snmp_sections_from_ignored_checks(all_rulesets)
-        self._extract_checkmk_agent_rule_from_check_mk_config(all_rulesets)
-        self._extract_checkmk_agent_rule_from_exit_spec(all_rulesets)
         self._transform_fileinfo_timeofday_to_timeperiods(all_rulesets)
-        self._transform_replaced_wato_rulesets(all_rulesets, REMOVED_WATO_RULESETS_MAP)
+        self._transform_replaced_wato_rulesets(
+            all_rulesets,
+            REMOVED_WATO_RULESETS_MAP,
+        )
         self._transform_wato_rulesets_params(all_rulesets)
-        self._transform_discovery_disabled_services(all_rulesets)
-        self._validate_regexes_in_item_specs(all_rulesets)
         self._remove_removed_check_plugins_from_ignored_checks(
             all_rulesets,
             REMOVED_CHECK_PLUGIN_MAP,
         )
         self._validate_rule_values(all_rulesets)
         all_rulesets.save()
-
-    def _transform_ignored_checks_to_maincheckified_list(
-        self,
-        all_rulesets: RulesetCollection,
-    ) -> None:
-        ignored_checks_ruleset = all_rulesets.get("ignored_checks")
-        if ignored_checks_ruleset.is_empty():
-            return
-
-        for _folder, _index, rule in ignored_checks_ruleset.get_rules():
-            if isinstance(rule.value, str):
-                rule.value = [maincheckify(rule.value)]
-            else:
-                rule.value = [maincheckify(s) for s in rule.value]
-
-    def _extract_disabled_snmp_sections_from_ignored_checks(
-        self,
-        all_rulesets: RulesetCollection,
-    ) -> None:
-        ignored_checks_ruleset = all_rulesets.get("ignored_checks")
-        if ignored_checks_ruleset.is_empty():
-            # nothing to do
-            return
-        if not all_rulesets.get("snmp_exclude_sections").is_empty():
-            # this must be an upgrade from 2.0.0 or newer - don't mess with
-            # the existing rules!
-            return
-
-        self._logger.log(VERBOSE, "Extracting excluded SNMP sections")
-
-        all_snmp_section_names = set(s.name for s in register.iter_all_snmp_sections())
-        all_check_plugin_names = set(p.name for p in register.iter_all_check_plugins())
-        all_inventory_plugin_names = set(i.name for i in register.iter_all_inventory_plugins())
-
-        snmp_exclude_sections_ruleset = cmk.gui.watolib.rulesets.Ruleset(
-            "snmp_exclude_sections", ignored_checks_ruleset.tag_to_group_map
-        )
-
-        for folder, _index, rule in ignored_checks_ruleset.get_rules():
-            disabled = {CheckPluginName(n) for n in rule.value}
-            still_needed_sections_names = set(
-                register.get_relevant_raw_sections(
-                    check_plugin_names=all_check_plugin_names - disabled,
-                    inventory_plugin_names=all_inventory_plugin_names,
-                )
-            )
-            sections_to_disable = all_snmp_section_names - still_needed_sections_names
-            if not sections_to_disable:
-                continue
-
-            new_rule = cmk.gui.watolib.rulesets.Rule.from_config(
-                rule.folder,
-                snmp_exclude_sections_ruleset,
-                rule.to_config(),
-            )
-            new_rule.id = cmk.gui.watolib.rulesets.utils.gen_id()
-            new_rule.value = {
-                "sections_disabled": sorted(str(s) for s in sections_to_disable),
-                "sections_enabled": [],
-            }
-            new_rule.rule_options.comment = (
-                "%s - Checkmk: automatically converted during upgrade from rule "
-                '"Disabled checks". Please review if these rules can be deleted.'
-            ) % time.strftime("%Y-%m-%d %H:%M", time.localtime())
-            snmp_exclude_sections_ruleset.append_rule(folder, new_rule)
-
-        all_rulesets.set(snmp_exclude_sections_ruleset.name, snmp_exclude_sections_ruleset)
-
-    def _extract_checkmk_agent_rule_from_check_mk_config(
-        self, all_rulesets: RulesetCollection
-    ) -> None:
-        target_version_ruleset = all_rulesets.get("check_mk_agent_target_versions")
-        if target_version_ruleset.is_empty():
-            # nothing to do
-            return
-
-        agent_update_ruleset = all_rulesets.get("checkgroup_parameters:agent_update")
-
-        for folder, _index, rule in target_version_ruleset.get_rules():
-
-            new_rule = cmk.gui.watolib.rulesets.Rule.from_config(
-                rule.folder,
-                agent_update_ruleset,
-                rule.to_config(),
-            )
-            new_rule.id = cmk.gui.watolib.rulesets.utils.gen_id()
-            new_rule.value = {"agent_version": rule.value}
-            new_rule.rule_options.comment = (
-                "%s - Checkmk: automatically converted during upgrade from rule "
-                '"Check for correct version of Checkmk agent".'
-            ) % time.strftime("%Y-%m-%d %H:%M", time.localtime())
-
-            agent_update_ruleset.append_rule(folder, new_rule)
-
-        all_rulesets.set(agent_update_ruleset.name, agent_update_ruleset)
-        all_rulesets.delete("check_mk_agent_target_versions")
-
-    def _extract_checkmk_agent_rule_from_exit_spec(self, all_rulesets: RulesetCollection) -> None:
-        exit_spec_ruleset = all_rulesets.get("check_mk_exit_status")
-        if exit_spec_ruleset.is_empty():
-            # nothing to do
-            return
-
-        agent_update_ruleset = all_rulesets.get("checkgroup_parameters:agent_update")
-
-        for folder, _index, rule in exit_spec_ruleset.get_rules():
-
-            moved_values = {
-                key: rule.value.pop(key)
-                for key in ("restricted_address_mismatch", "legacy_pull_mode")
-                if key in rule.value
-            }
-            if "wrong_version" in rule.value:
-                moved_values["agent_version_missmatch"] = rule.value.pop("wrong_version")
-            if "wrong_version" in (overall := rule.value.get("overall", {})):
-                moved_values["agent_version_missmatch"] = overall.pop("wrong_version")
-            if "wrong_version" in (individual := rule.value.get("individual", {}).get("agent", {})):
-                moved_values["agent_version_missmatch"] = individual.pop("wrong_version")
-
-            if not moved_values:
-                continue
-
-            new_rule = cmk.gui.watolib.rulesets.Rule.from_config(
-                rule.folder,
-                agent_update_ruleset,
-                rule.to_config(),
-            )
-            new_rule.id = cmk.gui.watolib.rulesets.utils.gen_id()
-            new_rule.value = moved_values
-            new_rule.rule_options.comment = (
-                "%s - Checkmk: automatically converted during upgrade from rule "
-                '"Status of the Checkmk services".'
-            ) % time.strftime("%Y-%m-%d %H:%M", time.localtime())
-
-            agent_update_ruleset.append_rule(folder, new_rule)
-
-        all_rulesets.set(agent_update_ruleset.name, agent_update_ruleset)
-        # TODO: do we have to do this:?
-        all_rulesets.set(exit_spec_ruleset.name, exit_spec_ruleset)
 
     def _transform_replaced_wato_rulesets(
         self,
@@ -734,61 +536,6 @@ class UpdateConfig:
         if num_errors and self._arguments.debug:
             raise MKGeneralException("Failed to transform %d rule values" % num_errors)
 
-    def _transform_discovery_disabled_services(
-        self,
-        all_rulesets: RulesetCollection,
-    ) -> None:
-        """Transform regex escaping of service descriptions
-
-        In 1.4.0 disabled services were not quoted in the rules configuration file. Later versions
-        quoted these services. Due to this the unquoted services were not found when re-enabling
-        them via the GUI in version 1.6.
-
-        Previous to Checkmk 2.0 we used re.escape() for storing service descriptions as exact match
-        regexes. With 2.0 we switched to cmk.utils.regex.escape_regex_chars(), because this escapes
-        less characters (like the " "), which makes the definitions more readable.
-
-        This transformation only applies to disabled services rules created by the service
-        discovery page (when enabling or disabling a single service using the "move to disabled" or
-        "move to enabled" icon)
-        """
-        ruleset = all_rulesets.get("ignored_services")
-        if not ruleset:
-            return
-
-        def _fix_up_escaped_service_pattern(pattern: str) -> HostOrServiceConditionRegex:
-            if pattern == (unescaped_pattern := unescape(pattern)):
-                # If there was nothing to unescape, escaping would break the pattern (e.g. '.foo').
-                # This still breaks half escaped patterns (e.g. '\.foo.')
-                return {"$regex": pattern}
-            return cmk.gui.watolib.rulesets.service_description_to_condition(
-                unescaped_pattern.rstrip("$")
-            )
-
-        for _folder, _index, rule in ruleset.get_rules():
-            # We can't truly distinguish between user- and discovery generated rules.
-            # We try our best to detect them, but there will be false positives.
-            if not rule.is_discovery_rule():
-                continue
-
-            if isinstance(
-                service_description := rule.conditions.service_description, dict
-            ) and service_description.get("$nor"):
-                rule.conditions.service_description = {
-                    "$nor": [
-                        _fix_up_escaped_service_pattern(s["$regex"])
-                        for s in service_description["$nor"]
-                        if isinstance(s, dict) and "$regex" in s
-                    ]
-                }
-
-            elif service_description:
-                rule.conditions.service_description = [
-                    _fix_up_escaped_service_pattern(s["$regex"])
-                    for s in service_description
-                    if isinstance(s, dict) and "$regex" in s
-                ]
-
     def _validate_rule_values(
         self,
         all_rulesets: RulesetCollection,
@@ -832,74 +579,6 @@ class UpdateConfig:
                     "Upon attempting to save them, any problematic fields will be highlighted."
                 ),
                 n_invalid,
-            )
-
-    def _validate_regexes_in_item_specs(
-        self,
-        all_rulesets: RulesetCollection,
-    ) -> None:
-        def format_error(msg: str):  # type:ignore[no-untyped-def]
-            return "\033[91m {}\033[00m".format(msg)
-
-        num_errors = 0
-        for ruleset in all_rulesets.get_rulesets().values():
-            for folder, index, rule in ruleset.get_rules():
-                if not isinstance(
-                    service_description := rule.get_rule_conditions().service_description, list
-                ):
-                    continue
-                for item in service_description:
-                    if not isinstance(item, dict):
-                        continue
-                    regex = item.get("$regex")
-                    if regex is None:
-                        continue
-                    try:
-                        re.compile(regex)
-                    except re.error as e:
-                        self._logger.error(
-                            format_error(
-                                "ERROR: Invalid regular expression in service condition detected "
-                                "(Ruleset: %s, Title: %s, Folder: %s,\nRule nr: %s, Condition: %s, "
-                                "Exception: %s)"
-                            ),
-                            ruleset.name,
-                            ruleset.title(),
-                            folder.path(),
-                            index + 1,
-                            regex,
-                            e,
-                        )
-                        num_errors += 1
-                        continue
-                    if PureWindowsPath(regex).is_absolute() and _MATCH_SINGLE_BACKSLASH.search(
-                        regex
-                    ):
-                        self._logger.warning(
-                            _format_warning(
-                                "WARN: Service condition in rule looks like an absolute windows path that is not correctly escaped.\n"
-                                " Use double backslash as directory separator in regex expressions, e.g.\n"
-                                " 'C:\\\\Program Files\\\\'\n"
-                                " (Ruleset: %s, Folder: %s, Rule nr: %s, Condition:%s)"
-                            ),
-                            ruleset.name,
-                            folder.path(),
-                            index,
-                            regex,
-                        )
-
-        if num_errors:
-            self._has_errors = True
-            self._logger.error(
-                format_error(
-                    "Detected %s errors in service conditions.\n"
-                    "You must correct these errors *before* starting Checkmk.\n"
-                    "To do so, we recommend to open the affected rules in the GUI. Upon attempting "
-                    "to save them, any problematic field will be highlighted.\n"
-                    "For more information regarding errors in regular expressions see:\n"
-                    "https://docs.checkmk.com/latest/en/regexes.html"
-                ),
-                num_errors,
             )
 
     def _remove_removed_check_plugins_from_ignored_checks(

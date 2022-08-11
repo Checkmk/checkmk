@@ -8,7 +8,7 @@ import argparse
 import io
 import sys
 from pathlib import Path
-from typing import Any, Mapping, MutableMapping, Sequence, Tuple
+from typing import Any, Mapping, MutableMapping, Tuple
 
 import pytest
 from pytest_mock import MockerFixture
@@ -21,7 +21,7 @@ from tests.unit.cmk.gui.conftest import load_plugins  # noqa: F401 # pylint: dis
 import cmk.utils.log
 import cmk.utils.paths
 from cmk.utils import version
-from cmk.utils.type_defs import CheckPluginName, ContactgroupName, RulesetName, RuleSpec, RuleValue
+from cmk.utils.type_defs import CheckPluginName, ContactgroupName, RulesetName, RuleValue
 from cmk.utils.version import is_raw_edition
 
 import cmk.gui.config
@@ -168,116 +168,6 @@ def _instantiate_ruleset(ruleset_name, param_value) -> Ruleset:  # type:ignore[n
     ruleset.append_rule(Folder(""), rule)
     assert ruleset.get_rules()
     return ruleset
-
-
-def _2_0_ignored_services() -> Sequence[RuleSpec]:
-    return [
-        {
-            "id": "1",
-            "value": True,
-            "condition": {
-                "host_name": ["heute"],
-                "service_description": [
-                    {"$regex": "Filesystem /opt/omd/sites/heute/tmp$"},
-                ],
-            },
-        },
-        {
-            "id": "1",
-            "value": True,
-            "condition": {
-                "host_name": ["heute"],
-                "service_description": {
-                    "$nor": [{"$regex": "Filesystem /opt/omd/sites/heute/tmp$"}]
-                },
-            },
-        },
-    ]
-
-
-def _non_discovery_ignored_services_ruleset() -> Sequence[RuleSpec]:
-    return [
-        # Skip rule with multiple hostnames
-        {
-            "id": "1",
-            "value": True,
-            "condition": {
-                "service_description": [{"$regex": "abc\\ xyz$"}, {"$regex": "dd\\ ggg$"}],
-                "host_name": ["stable", "xyz"],
-            },
-        },
-        # Skip rule service condition without $ at end
-        {
-            "id": "1",
-            "value": True,
-            "condition": {
-                "service_description": [{"$regex": "abc\\ xyz"}, {"$regex": "dd\\ ggg$"}]
-            },
-        },
-    ]
-
-
-@pytest.mark.parametrize(
-    "ruleset_spec,expected_ruleset",
-    [
-        # Transform pre 2.0 to 2.0 service_description regex
-        (
-            [
-                {
-                    "id": "1",
-                    "condition": {
-                        "service_description": [
-                            {"$regex": "Filesystem\\ \\/boot\\/efi$"},
-                            {"$regex": "\\(a\\)\\ b\\?\\ c\\!$"},
-                        ],
-                        "host_name": ["stable"],
-                    },
-                    "value": True,
-                },
-            ],
-            [
-                {
-                    "id": "1",
-                    "condition": {
-                        "service_description": [
-                            {"$regex": "Filesystem /boot/efi$"},
-                            {"$regex": "\\(a\\) b\\? c!$"},
-                        ],
-                        "host_name": ["stable"],
-                    },
-                    "value": True,
-                },
-            ],
-        ),
-        # Do not touch rules saved with 2.0
-        (
-            _2_0_ignored_services(),
-            _2_0_ignored_services(),
-        ),
-        # Do not touch rules that have not been created by discovery page
-        (
-            _non_discovery_ignored_services_ruleset(),
-            _non_discovery_ignored_services_ruleset(),
-        ),
-    ],
-)
-@pytest.mark.usefixtures("request_context")
-def test__transform_discovery_disabled_services(
-    uc: update_config.UpdateConfig,
-    ruleset_spec: Sequence[RuleSpec],
-    expected_ruleset: Sequence[RuleSpec],
-) -> None:
-    ruleset = Ruleset("ignored_services", {})
-    ruleset.from_config(Folder(""), ruleset_spec)
-    assert ruleset.get_rules()
-
-    rulesets = RulesetCollection()
-    rulesets.set_rulesets({"ignored_services": ruleset})
-
-    uc._transform_discovery_disabled_services(rulesets)
-
-    folder_rules = ruleset.get_folder_rules(Folder(""))
-    assert [r.to_config() for r in folder_rules] == expected_ruleset
 
 
 @pytest.mark.usefixtures("request_context")

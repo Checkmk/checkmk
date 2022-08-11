@@ -86,12 +86,7 @@ from cmk.gui import main_modules
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.logged_in import SuperUserContext
-from cmk.gui.plugins.dashboard.utils import (
-    get_all_dashboards,
-    transform_stats_dashlet,
-    transform_timerange_dashlet,
-    transform_topology_dashlet,
-)
+from cmk.gui.plugins.dashboard.utils import get_all_dashboards
 from cmk.gui.plugins.userdb.utils import (
     load_connection_config,
     save_connection_config,
@@ -328,8 +323,6 @@ class UpdateConfig:
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
             # CAUTION: update_fs_used_name must be called *after* rewrite_autochecks!
             (self._migrate_pagetype_topics_to_ids, "Migrate pagetype topics"),
-            # NEXT CAUTION: self._migrate_dashlets, must be called *after* migrate_pagetype_topics_to_ids!
-            (self._migrate_dashlets, "Migrate dashlets"),
             (self._migrate_ldap_connections, "Migrate LDAP connections"),
             (self._adjust_user_attributes, "Set version specific user attributes"),
             (self._rewrite_py2_inventory_data, "Rewriting inventory data"),
@@ -1332,30 +1325,6 @@ class UpdateConfig:
                 connection["bind"] = (dn, ("password", password))
 
         save_connection_config(connections)
-
-    def _migrate_dashlets(self) -> None:
-        global_config = load_configuration_settings(full_config=True)
-        filter_group = global_config.get("topology_default_filter_group", "")
-
-        dashboards = get_all_dashboards()
-        with _save_user_instances(visuals.VisualType.dashboards, dashboards) as affected_user:
-            for (owner, _name), dashboard in dashboards.items():
-                for dashlet in dashboard["dashlets"]:
-                    if dashlet["type"] == "network_topology":
-                        transform_topology_dashlet(dashlet, filter_group)
-                        affected_user.add(owner)
-                    elif dashlet["type"] in ("hoststats", "servicestats"):
-                        transform_stats_dashlet(dashlet)
-                        affected_user.add(owner)
-                    elif dashlet["type"] in (
-                        "single_timeseries",
-                        "custom_graph",
-                        "combined_graph",
-                        "problem_graph",
-                        "pnpgraph",
-                    ):
-                        transform_timerange_dashlet(dashlet)
-                        affected_user.add(owner)
 
     def _adjust_user_attributes(self) -> None:
         """All users are loaded and attributes can be transformed or set."""

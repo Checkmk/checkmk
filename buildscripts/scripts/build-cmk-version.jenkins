@@ -236,6 +236,9 @@ timeout(time: 12, unit: 'HOURS') {
 
                             }
                         }
+                        stage("clean distro workspace") {
+                            cleanWs(cleanWhenFailure: false)
+                        }
                     }
                 }
             }
@@ -255,7 +258,9 @@ timeout(time: 12, unit: 'HOURS') {
                     }
                 }
             }
-            cleanWs(cleanWhenFailure: false)
+            stage("clean workspace") {
+                cleanWs(cleanWhenFailure: false)
+            }
         }
     }
 }

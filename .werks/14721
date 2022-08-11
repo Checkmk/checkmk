@@ -1,0 +1,18 @@
+Title: Crash using the cmk_site_statistics (core PIDs) filter
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1660209278
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p10
+
+When using the cmk_site_statistics (core PIDs) filter with no monitoring data present the
+view would crash.
+
+Note: This filter is not intended to be used in views and should only be used in host and service
+problem graphs.
+But due to compatibility the filter is not removed from view filters.
+
+Now the view no longer crashes but rather displays a warning.

@@ -32,7 +32,6 @@ from livestatus import LivestatusColumn, LivestatusResponse, SiteId
 
 import cmk.utils.plugin_registry
 from cmk.utils.macros import MacroMapping, replace_macros_in_str
-from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.sites as sites
@@ -855,43 +854,6 @@ def get_all_dashboards() -> Dict[Tuple[UserId, DashboardName], DashboardConfig]:
 
 def get_permitted_dashboards() -> Dict[DashboardName, DashboardConfig]:
     return DashboardStore.get_instance().permitted
-
-
-def transform_topology_dashlet(
-    dashlet_spec: DashletConfig, filter_group: str = ""
-) -> DashletConfig:
-    site_id = dashlet_spec["context"].get("site", omd_site())
-
-    dashlet_spec.update(
-        {
-            "type": "url",
-            "title": _("Network topology of site %s") % site_id,
-            "url": "../nagvis/frontend/nagvis-js/index.php?mod=Map&header_template="
-            "on-demand-filter&header_menu=1&label_show=1&sources=automap&act=view"
-            "&backend_id=%s&render_mode=undirected&url_target=main&filter_group=%s"
-            % (site_id, filter_group),
-            "show_in_iframe": True,
-        }
-    )
-
-    return dashlet_spec
-
-
-def transform_stats_dashlet(dashlet_spec: DashletConfig) -> DashletConfig:
-    # Stats dashlets in version 2.0 are no longer updated through the dashboard scheduler
-    dashlet_spec.pop("refresh", None)
-    return dashlet_spec
-
-
-def transform_timerange_dashlet(dashlet_spec: DashletConfig) -> DashletConfig:
-    dashlet_spec["timerange"] = {
-        "0": "4h",
-        "1": "25h",
-        "2": "8d",
-        "3": "35d",
-        "4": "400d",
-    }.get(dashlet_spec["timerange"], dashlet_spec["timerange"])
-    return dashlet_spec
 
 
 def copy_view_into_dashlet(

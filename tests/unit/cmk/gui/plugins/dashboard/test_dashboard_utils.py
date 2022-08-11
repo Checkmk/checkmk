@@ -23,33 +23,6 @@ def test_transform_dashlet_status_display(entry, result) -> None:  # type:ignore
 
 
 @pytest.mark.parametrize(
-    "config, expected_config",
-    [
-        pytest.param(
-            {
-                "timerange": "0",
-            },
-            {
-                "timerange": "4h",
-            },
-            id="1.4.0->2.1.0i1 Timewindow from Timerange valuespec CMK-5864",
-        ),
-        pytest.param(
-            {
-                "timerange": "25h",
-            },
-            {
-                "timerange": "25h",
-            },
-            id="2.1 Timewindow from Timerange valuespec CMK-5864",
-        ),
-    ],
-)
-def test_transform_timerange(config, expected_config) -> None:  # type:ignore[no-untyped-def]
-    assert expected_config == utils.transform_timerange_dashlet(config)
-
-
-@pytest.mark.parametrize(
     "context, single_infos, title, additional_macros, result",
     [
         pytest.param(

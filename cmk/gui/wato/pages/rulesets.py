@@ -83,7 +83,6 @@ from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
     DropdownChoice,
-    DropdownChoiceModel,
     FixedValue,
     ListChoice,
     ListOfStrings,
@@ -1821,7 +1820,7 @@ class ABCEditRuleMode(WatoMode):
         self._ruleset.valuespec().validate_value(value, "ve")
         self._rule.value = value
 
-    def _get_condition_type_from_vars(self) -> DropdownChoiceModel:
+    def _get_condition_type_from_vars(self) -> str | None:
         condition_type = self._vs_condition_type().from_html_vars("condition_type")
         self._vs_condition_type().validate_value(condition_type, "condition_type")
         return condition_type
@@ -1921,7 +1920,7 @@ class ABCEditRuleMode(WatoMode):
         self._show_explicit_conditions()
         html.javascript('cmk.wato.toggle_rule_condition_type("condition_type")')
 
-    def _vs_condition_type(self) -> DropdownChoice:
+    def _vs_condition_type(self) -> DropdownChoice[str]:
         return DropdownChoice(
             title=_("Condition type"),
             help=_(
@@ -1946,7 +1945,7 @@ class ABCEditRuleMode(WatoMode):
 
     def _vs_predefined_condition_id(self) -> DropdownChoice:
         url = folder_preserving_link([("mode", "predefined_conditions")])
-        return DropdownChoice(
+        return DropdownChoice[str](
             title=_("Predefined condition"),
             choices=PredefinedConditionStore().choices(),
             sorted=True,
@@ -1967,7 +1966,7 @@ class ABCEditRuleMode(WatoMode):
         )
 
     # TODO: refine type
-    def _validate_predefined_condition(self, value: str, varprefix: str) -> None:
+    def _validate_predefined_condition(self, value: str | None, varprefix: str) -> None:
         if _allow_label_conditions(self._rulespec.name):
             return
 
@@ -2230,7 +2229,7 @@ class VSExplicitConditions(Transform):
             elements=[
                 ListOfStrings(
                     orientation="horizontal",
-                    valuespec=ConfigHostname(validate=self._validate_list_entry),
+                    valuespec=ConfigHostname(validate=self._validate_list_entry),  # type: ignore[arg-type]  # should be Valuespec[str]
                     help=_(
                         "Here you can enter a list of explicit host names that the rule should or should "
                         "not apply to. Leave this option disabled if you want the rule to "
@@ -2303,8 +2302,8 @@ class VSExplicitConditions(Transform):
             help=self._explicit_service_help_text(),
         )
 
-    def _validate_list_entry(self, value: str, varprefix: str) -> None:
-        if value.startswith("!"):
+    def _validate_list_entry(self, value: str | None, varprefix: str) -> None:
+        if value and value.startswith("!"):
             raise MKUserError(varprefix, _('It\'s not allowed to use a leading "!" here.'))
 
     def value_to_html(self, value: RuleConditions) -> ValueSpecText:

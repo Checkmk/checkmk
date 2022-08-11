@@ -39,7 +39,7 @@ def _check_not_empty_exporter_dict(value, _varprefix):
 def _valuespec_generic_metrics_prometheus():
     namespace_element = (
         "prepend_namespaces",
-        DropdownChoice(
+        DropdownChoice[str](
             title=_("Prepend namespace prefix for hosts"),
             help=_(
                 "If a cluster uses multiple namespaces you need to activate this option. "

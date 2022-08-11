@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from typing import Any, Callable, Literal, Optional, Type
+from typing import Any, Callable, Literal, Optional, Sequence, Type
 
 import cmk.utils.tags
 from cmk.utils.type_defs import HostName, List, Union
+from cmk.utils.type_defs._misc import UserId
 
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
@@ -356,7 +357,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
 
     def valuespec(self) -> ValueSpec:
         return ListOfStrings(
-            valuespec=ConfigHostname(),
+            valuespec=ConfigHostname(),  # type: ignore[arg-type]  # should be Valuespec[str]
             title=_("Parents"),
             help=_(
                 "Parents are used to configure the reachability of hosts by the "
@@ -575,7 +576,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
             ),
             (
                 "run_as",
-                DropdownChoice(
+                DropdownChoice[UserId](
                     title=_("Run as"),
                     help=_(
                         "Execute the network scan in the Check_MK user context of the "
@@ -583,7 +584,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
                         "to this folder."
                     ),
                     choices=self._get_all_user_ids,
-                    default_value=lambda: user.id,
+                    default_value=lambda: user.id if user.id is not None else DEF_VALUE,
                 ),
             ),
             (
@@ -596,7 +597,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
 
         return elements
 
-    def _get_all_user_ids(self):
+    def _get_all_user_ids(self) -> Sequence[tuple[UserId, str]]:
         return [
             (user_id, "%s (%s)" % (user_id, user.get("alias", user_id)))
             for user_id, user in userdb.load_users(lock=False).items()

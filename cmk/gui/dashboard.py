@@ -1868,7 +1868,7 @@ def page_create_view_dashlet_infos() -> None:
 
 
 def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Callable) -> None:
-    vs_view = DropdownChoice(
+    vs_view = DropdownChoice[str](
         title=_("View name"),
         choices=lambda: view_choices(allow_empty=False),
         sorted=True,

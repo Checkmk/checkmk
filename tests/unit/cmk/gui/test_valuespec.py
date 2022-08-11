@@ -168,7 +168,7 @@ def test_dropdownchoice_value_to_json_conversion(  # type:ignore[no-untyped-def]
 def test_dropdownchoice_validate_datatype(  # type:ignore[no-untyped-def]
     choices, deprecated_choices, value, is_valid_datatype
 ) -> None:
-    dropdown_choice = vs.DropdownChoice(
+    dropdown_choice = vs.DropdownChoice[int](
         choices=choices,
         deprecated_choices=deprecated_choices,
     )

@@ -60,7 +60,7 @@ def process_level_elements():
     return [
         (
             "cpu_rescale_max",
-            DropdownChoice(
+            DropdownChoice[bool](
                 title=_("CPU rescale maximum load"),
                 help=_(
                     "CPU utilization is delivered by the Operating "

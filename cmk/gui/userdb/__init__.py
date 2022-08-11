@@ -76,7 +76,6 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
     DEF_VALUE,
     DropdownChoice,
-    DropdownChoiceModel,
     TextInput,
     ValueSpec,
     ValueSpecDefault,
@@ -339,7 +338,7 @@ def _multisite_dir() -> str:
 
 
 # TODO: Change to factory
-class UserSelection(DropdownChoice):
+class UserSelection(DropdownChoice[UserId]):
     """Dropdown for choosing a multisite user"""
 
     def __init__(  # pylint: disable=redefined-builtin
@@ -350,10 +349,9 @@ class UserSelection(DropdownChoice):
         # ValueSpec
         title: Optional[str] = None,
         help: Optional[ValueSpecHelp] = None,
-        default_value: ValueSpecDefault[DropdownChoiceModel] = DEF_VALUE,
+        default_value: ValueSpecDefault[UserId] = DEF_VALUE,
     ) -> None:
-        DropdownChoice.__init__(
-            self,
+        super().__init__(
             choices=self._generate_wato_users_elements_function(
                 none, only_contacts=only_contacts, only_automation=only_automation
             ),

@@ -67,12 +67,12 @@ def _filter_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> TimeperiodSpecs
     return {k: v for k, v in timeperiods.items() if k not in builtin_keys}
 
 
-class TimeperiodSelection(DropdownChoice):
+class TimeperiodSelection(DropdownChoice[str]):
     def __init__(self, **kwargs) -> None:  # type:ignore[no-untyped-def]
         kwargs.setdefault("no_preselect_title", _("Select a timeperiod"))
-        DropdownChoice.__init__(self, choices=self._get_choices, **kwargs)
+        super().__init__(choices=self._get_choices, **kwargs)
 
-    def _get_choices(self):
+    def _get_choices(self) -> list[tuple[str, str]]:
         timeperiods = load_timeperiods()
         elements = [(name, "%s - %s" % (name, tp["alias"])) for (name, tp) in timeperiods.items()]
 

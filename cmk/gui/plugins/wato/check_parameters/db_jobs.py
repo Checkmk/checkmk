@@ -17,7 +17,7 @@ run_duration: Tuple[tuple[Seconds, Seconds]] = Tuple(
     ],
 )
 
-ignore_db_status = DropdownChoice(
+ignore_db_status = DropdownChoice[bool](
     title=_("Job State"),
     help=_("The state of the job is ignored by default."),
     choices=[

@@ -489,7 +489,7 @@ vs_elements_if_groups_matches: List[DictionaryEntry] = [
     (
         "iftype",
         Transform(
-            valuespec=DropdownChoice(
+            valuespec=DropdownChoice[int](
                 title=_("Select interface port type"),
                 choices=ListChoice.dict_choices(defines.interface_port_types()),
                 help=_(
@@ -510,7 +510,7 @@ vs_elements_if_groups_matches: List[DictionaryEntry] = [
     ),
 ]
 
-vs_elements_if_groups_group = [
+vs_elements_if_groups_group: List[DictionaryEntry] = [
     (
         "group_name",
         TextInput(
@@ -521,7 +521,7 @@ vs_elements_if_groups_group = [
     ),
     (
         "group_presence",
-        DropdownChoice(
+        DropdownChoice[str](
             title=_("Group interface presence"),
             help=_(
                 "Determine whether the group interface is created as an "

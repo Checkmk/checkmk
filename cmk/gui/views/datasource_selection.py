@@ -17,9 +17,9 @@ from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import DropdownChoice
 
 
-def DatasourceSelection() -> DropdownChoice:
+def DatasourceSelection() -> DropdownChoice[str]:
     """Create datasource selection valuespec, also for other modules"""
-    return DropdownChoice(
+    return DropdownChoice[str](
         title=_("Datasource"),
         help=_("The datasources define which type of objects should be displayed with this view."),
         choices=data_source_registry.data_source_choices(),
@@ -34,7 +34,7 @@ def page_create_view():
 def show_create_view_dialog(next_url=None):
     vs_ds = DatasourceSelection()
 
-    ds = "services"  # Default selection
+    ds: str | None = "services"  # Default selection
 
     title = _("Create view")
     breadcrumb = visuals.visual_page_breadcrumb("views", title, "create")

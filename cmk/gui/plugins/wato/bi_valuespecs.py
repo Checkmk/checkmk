@@ -576,7 +576,7 @@ class BIConfigCallARuleAction(actions.BICallARuleAction, ABCBIConfigAction):
                     (
                         pack_id,
                         "%s (%s)" % (bi_pack.title, bi_pack.id),
-                        DropdownChoice(
+                        DropdownChoice[str](
                             choices=sorted(pack_choices),
                             empty_text=_("There are no configured rules in this aggregation pack"),
                             on_change="cmk.bi.update_argument_hints();",

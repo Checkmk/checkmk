@@ -44,7 +44,6 @@ from cmk.gui.valuespec import (
     Dictionary,
     DictionaryElements,
     DictionaryEntry,
-    DropdownChoiceModel,
     DropdownChoiceWithHostAndServiceHints,
     Timerange,
     ValueSpec,
@@ -87,11 +86,11 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
         }
         super().__init__(**kwargs_with_defaults)
 
-    def _validate_value(self, value: DropdownChoiceModel, varprefix: str) -> None:
+    def _validate_value(self, value: str | None, varprefix: str) -> None:
         if not value or value == self._MARKER_DEPRECATED_CHOICE:
             raise MKUserError(varprefix, _("Please select a graph."))
 
-    def _choices_from_value(self, value: DropdownChoiceModel) -> Choices:
+    def _choices_from_value(self, value: str | None) -> Choices:
         if not value:
             return list(self.choices())
         return [
@@ -118,7 +117,7 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
             )
         ]
 
-    def render_input(self, varprefix: str, value: DropdownChoiceModel) -> None:
+    def render_input(self, varprefix: str, value: str | None) -> None:
         return super().render_input(
             varprefix,
             self._MARKER_DEPRECATED_CHOICE if isinstance(value, int) else value,

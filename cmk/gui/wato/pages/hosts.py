@@ -280,7 +280,7 @@ class ABCHostMode(WatoMode, abc.ABC):
     def _vs_cluster_nodes(self):
         return ListOfStrings(
             title=_("Nodes"),
-            valuespec=ConfigHostname(),
+            valuespec=ConfigHostname(),  # type: ignore[arg-type]  # should be Valuespec[str]
             orientation="horizontal",
             help=_(
                 "Enter the host names of the cluster nodes. These hosts must be present in WATO."

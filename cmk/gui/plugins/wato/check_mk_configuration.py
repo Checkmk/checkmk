@@ -11,6 +11,7 @@ from typing import Type
 
 import cmk.utils.paths
 from cmk.utils.tags import TagGroup
+from cmk.utils.type_defs import TagID
 from cmk.utils.version import is_raw_edition
 
 from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
@@ -1483,7 +1484,7 @@ def _service_tag_rules_tag_group_choices():
             (
                 tag_group.id,
                 tag_group.title,
-                DropdownChoice(
+                DropdownChoice[TagID](
                     choices=list(tag_group.get_tag_choices()),
                 ),
             )

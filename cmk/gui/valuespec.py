@@ -56,6 +56,8 @@ from OpenSSL import crypto
 from PIL import Image  # type: ignore[import]
 from six import ensure_binary, ensure_str
 
+from livestatus import SiteId
+
 import cmk.utils.defines as defines
 import cmk.utils.log
 import cmk.utils.paths
@@ -1728,7 +1730,9 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
 
-        self._valuespec = valuespec if valuespec is not None else TextInput(size=size)
+        self._valuespec: ValueSpec[str] = (
+            valuespec if valuespec is not None else TextInput(size=size)
+        )
         self._vertical = orientation == "vertical"
         self._allow_empty = allow_empty
         self._empty_text = empty_text
@@ -2586,13 +2590,13 @@ class Checkbox(ValueSpec[bool]):
             )
 
 
-DropdownChoiceModel = Any  # TODO: Can we be more specific?
-DropdownChoiceEntry = tuple[DropdownChoiceModel, str]
+DropdownChoiceEntry = tuple[T, str]
 DropdownChoiceEntries = Sequence[DropdownChoiceEntry]
 DropdownChoices = Promise[DropdownChoiceEntries]
+DropdownInvalidChoice = _Optional[Literal["complain", "replace"]]
 
 
-class DropdownChoice(ValueSpec[DropdownChoiceModel]):
+class DropdownChoice(ValueSpec[T | None]):
     """A type-safe dropdown choice
 
     Parameters:
@@ -2613,7 +2617,7 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
         help_separator: _Optional[str] = None,
         prefix_values: bool = False,
         empty_text: _Optional[str] = None,
-        invalid_choice: _Optional[str] = "complain",
+        invalid_choice: DropdownInvalidChoice = "complain",
         invalid_choice_title: _Optional[str] = None,
         invalid_choice_error: _Optional[str] = None,
         no_preselect_title: _Optional[str] = None,
@@ -2621,12 +2625,12 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
         read_only: bool = False,
         encode_value: bool = True,
         html_attrs: _Optional[HTMLTagAttributes] = None,
+        deprecated_choices: Sequence[Any] = (),
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: ValueSpecDefault[DropdownChoiceModel] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc[DropdownChoiceModel]] = None,
-        deprecated_choices: Sequence[DropdownChoiceModel] = (),
+        default_value: ValueSpecDefault[T] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[T | None]] = None,
     ):
 
         super().__init__(
@@ -2673,13 +2677,13 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
         pre = [] if self._no_preselect_title is None else [(None, self._no_preselect_title)]
         return pre + list(result)
 
-    def canonical_value(self) -> _Optional[DropdownChoiceModel]:
+    def canonical_value(self) -> T | None:
         choices = self.choices()
         if len(choices) > 0:
             return choices[0][0]
         return None
 
-    def render_input(self, varprefix: str, value: DropdownChoiceModel) -> None:
+    def render_input(self, varprefix: str, value: T | None) -> None:
         if self._label:
             html.span(self._label, class_="vs_floating_text")
 
@@ -2727,7 +2731,7 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
             **self._html_attrs,
         )
 
-    def validate_datatype(self, value: DropdownChoiceModel, varprefix: str) -> None:
+    def validate_datatype(self, value: T | None, varprefix: str) -> None:
         if (
             any(isinstance(value, type(choice[0])) for choice in self.choices())
             or value in self._deprecated_choices
@@ -2742,10 +2746,10 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
     def _get_invalid_choice_text(self, tmpl: str, value: object) -> str:
         return tmpl % (value,) if "%s" in tmpl or "%r" in tmpl else tmpl
 
-    def mask(self, value: DropdownChoiceModel) -> DropdownChoiceModel:
+    def mask(self, value: T | None) -> T | None:
         return value
 
-    def value_to_html(self, value: DropdownChoiceModel) -> ValueSpecText:
+    def value_to_html(self, value: T | None) -> ValueSpecText:
         for val, title in self.choices():
             if value == val:
                 if self._help_separator:
@@ -2753,13 +2757,13 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
                 return title
         return self._get_invalid_choice_text(self._invalid_choice_title, value)
 
-    def value_to_json(self, value: DropdownChoiceModel) -> JSONValue:
+    def value_to_json(self, value: T | None) -> JSONValue:
         return value
 
-    def value_from_json(self, json_value: JSONValue) -> DropdownChoiceModel:
+    def value_from_json(self, json_value: JSONValue) -> T | None:
         return json_value
 
-    def from_html_vars(self, varprefix: str) -> DropdownChoiceModel:
+    def from_html_vars(self, varprefix: str) -> T | None:
         choices = self.choices()
 
         for val, _title in choices:
@@ -2775,13 +2779,18 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
             self._get_invalid_choice_text(self._invalid_choice_error, request.var(varprefix)),
         )
 
-    def _is_selected_option_from_html(self, varprefix: str, val: DropdownChoiceModel) -> bool:
+    def _is_selected_option_from_html(self, varprefix: str, val: T) -> bool:
         selected_value = request.var(varprefix)
         return selected_value == self._option_for_html(val)
 
-    def _option_for_html(self, value: DropdownChoiceModel) -> ChoiceId:
+    def _option_for_html(self, value: T | None) -> ChoiceId:
         if self._encode_value:
             return self.option_id(value)
+        if value is not None and not isinstance(value, str):
+            raise TypeError(
+                f"Can not create option for html of value {value} type {type(value)}, "
+                "expected str. Use encode_value=True"
+            )
         return value
 
     def _options_for_html(self, orig_options: DropdownChoiceEntries) -> Choices:
@@ -2791,7 +2800,7 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
     def option_id(val) -> str:  # type:ignore[no-untyped-def]
         return "%s" % hashlib.sha256(repr(val).encode()).hexdigest()
 
-    def _validate_value(self, value: DropdownChoiceModel, varprefix: str) -> None:
+    def _validate_value(self, value: T | None, varprefix: str) -> None:
         if self._no_preselect_title is not None and value is None:
             raise MKUserError(varprefix, _("Please make a selection"))
 
@@ -2800,12 +2809,11 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
                 raise MKUserError(varprefix, self._invalid_choice_error)
             raise MKUserError(varprefix, self._empty_text)
 
-    def _value_is_invalid(self, value: DropdownChoiceModel) -> bool:
+    def _value_is_invalid(self, value: T | None) -> bool:
         return all(value != val for val, _title in self.choices())
 
 
-# FIXME: This is effectively a ValueSpec[str], but this is not reflected in the type!
-class AjaxDropdownChoice(DropdownChoice):
+class AjaxDropdownChoice(DropdownChoice[str]):
     # This valuespec is a coodinate effort between the python
     # renderer. A JS component for the ajax query and the AJAX
     # python endpoint. You're responsible of putting them together.
@@ -2828,7 +2836,7 @@ class AjaxDropdownChoice(DropdownChoice):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: ValueSpecDefault[str] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc[str]] = None,
+        validate: _Optional[ValueSpecValidateFunc[str | None]] = None,
     ):
         super().__init__(
             label=label,
@@ -2863,21 +2871,21 @@ class AjaxDropdownChoice(DropdownChoice):
     def from_html_vars(self, varprefix: str) -> str:
         return request.get_str_input_mandatory(varprefix, "")
 
-    def validate_datatype(self, value: str, varprefix: str) -> None:
+    def validate_datatype(self, value: str | None, varprefix: str) -> None:
         if not isinstance(value, str):
             raise MKUserError(
                 varprefix,
                 _("The value must be of type str, but it has type %s") % _type_name(value),
             )
 
-    def _validate_value(self, value: str, varprefix: str) -> None:
+    def _validate_value(self, value: str | None, varprefix: str) -> None:
         if value and self._regex and not self._regex.match(value):
             raise MKUserError(varprefix, self._regex_error)
 
-    def value_to_html(self, value: str) -> ValueSpecText:
+    def value_to_html(self, value: str | None) -> ValueSpecText:
         return super().value_to_html(value) if self.choices() else str(value)
 
-    def render_input(self, varprefix: str, value: str) -> None:
+    def render_input(self, varprefix: str, value: str | None) -> None:
         if self._label:
             html.write_text(self._label)
 
@@ -2928,6 +2936,8 @@ autocompleter_registry = AutocompleterRegistry()
 # TODO: check where this class is used with strict=False.
 # Create a separate class (MonitoredHostnameFreeInput?) for this usecase,
 # otherwise use a normal AjaxDropdownChoice with the correct ident.
+# grep for 'should be Valuespec.str.' to find typeignores that can be replaced
+# after fixins that.
 class MonitoredHostname(AjaxDropdownChoice):
     """Hostname input with dropdown completion
 
@@ -2947,7 +2957,7 @@ class MonitoredHostname(AjaxDropdownChoice):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: ValueSpecDefault[str] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc[str]] = None,
+        validate: _Optional[ValueSpecValidateFunc[str | None]] = None,
     ):
         super().__init__(
             regex=cmk.utils.regex.regex(cmk.utils.regex.REGEX_HOST_NAME),
@@ -2965,7 +2975,9 @@ class MonitoredHostname(AjaxDropdownChoice):
             validate=validate,
         )
 
-    def value_to_html(self, value: str) -> ValueSpecText:
+    def value_to_html(self, value: str | None) -> ValueSpecText:
+        if value is None:
+            return ""
         return value
 
 
@@ -2998,7 +3010,7 @@ class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: ValueSpecDefault[str] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc[str]] = None,
+        validate: _Optional[ValueSpecValidateFunc[str | None]] = None,
     ):
         if autocompleter is None:
             autocompleter = AutocompleterConfig(
@@ -3020,10 +3032,10 @@ class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
         self._css_spec = css_spec
         self._hint_label = hint_label
 
-    def _choices_from_value(self, value: DropdownChoiceModel) -> Choices:
+    def _choices_from_value(self, value: str | None) -> Choices:
         raise NotImplementedError()
 
-    def render_input(self, varprefix: str, value: DropdownChoiceModel) -> None:
+    def render_input(self, varprefix: str, value: str | None) -> None:
         if self._label:
             html.span(self._label, class_="vs_floating_text")
 
@@ -3065,7 +3077,7 @@ def MonitoringState(  # type:ignore[no-untyped-def] # pylint: disable=redefined-
     help_separator: _Optional[str] = None,
     prefix_values: bool = False,
     empty_text: _Optional[str] = None,
-    invalid_choice: _Optional[str] = "complain",
+    invalid_choice: DropdownInvalidChoice = "complain",
     invalid_choice_title: _Optional[str] = None,
     invalid_choice_error: _Optional[str] = None,
     no_preselect_title: _Optional[str] = None,
@@ -3076,12 +3088,12 @@ def MonitoringState(  # type:ignore[no-untyped-def] # pylint: disable=redefined-
     # ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
-    default_value: ValueSpecDefault[DropdownChoiceModel] = 0,  # NOTE: Different!
-    validate: _Optional[ValueSpecValidateFunc[DropdownChoiceModel]] = None,
-    deprecated_choices: Sequence[DropdownChoiceModel] = (),
+    default_value: ValueSpecDefault[int] = 0,  # NOTE: Different!
+    validate: _Optional[ValueSpecValidateFunc[_Optional[int]]] = None,
+    deprecated_choices: Sequence[int] = (),
 ):
     """Special convenience variant for monitoring states"""
-    return DropdownChoice(
+    return DropdownChoice[int](
         choices=[
             (0, _("OK")),
             (1, _("WARN")),
@@ -3116,7 +3128,7 @@ def HostState(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builti
     help_separator: _Optional[str] = None,
     prefix_values: bool = False,
     empty_text: _Optional[str] = None,
-    invalid_choice: _Optional[str] = "complain",
+    invalid_choice: DropdownInvalidChoice = "complain",
     invalid_choice_title: _Optional[str] = None,
     invalid_choice_error: _Optional[str] = None,
     no_preselect_title: _Optional[str] = None,
@@ -3127,9 +3139,9 @@ def HostState(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builti
     # ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
-    default_value: ValueSpecDefault[DropdownChoiceModel] = 0,  # NOTE: Different!
-    validate: _Optional[ValueSpecValidateFunc[DropdownChoiceModel]] = None,
-    deprecated_choices: Sequence[DropdownChoiceModel] = (),
+    default_value: ValueSpecDefault[int] = 0,  # NOTE: Different!
+    validate: _Optional[ValueSpecValidateFunc[_Optional[int]]] = None,
+    deprecated_choices: Sequence[int] = (),
 ):
     return DropdownChoice(
         choices=[
@@ -3953,7 +3965,7 @@ class DualListChoice(ListChoice):
         return value
 
 
-class OptionalDropdownChoice(DropdownChoice):
+class OptionalDropdownChoice(DropdownChoice[T]):
     """A type-safe dropdown choice with one extra field that
     opens a further value spec for entering an alternative
     Value."""
@@ -3969,7 +3981,7 @@ class OptionalDropdownChoice(DropdownChoice):
         help_separator: _Optional[str] = None,
         prefix_values: bool = False,
         empty_text: _Optional[str] = None,
-        invalid_choice: _Optional[str] = "complain",
+        invalid_choice: DropdownInvalidChoice = "complain",
         invalid_choice_title: _Optional[str] = None,
         invalid_choice_error: _Optional[str] = None,
         no_preselect_title: _Optional[str] = None,
@@ -3979,8 +3991,8 @@ class OptionalDropdownChoice(DropdownChoice):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: ValueSpecDefault[DropdownChoiceModel] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc[DropdownChoiceModel]] = None,
+        default_value: ValueSpecDefault[T] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[T | None]] = None,
     ):
         super().__init__(
             choices=choices,
@@ -4093,7 +4105,7 @@ def Weekday(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
     help_separator: _Optional[str] = None,
     prefix_values: bool = False,
     empty_text: _Optional[str] = None,
-    invalid_choice: _Optional[str] = "complain",
+    invalid_choice: DropdownInvalidChoice = "complain",
     invalid_choice_title: _Optional[str] = None,
     invalid_choice_error: _Optional[str] = None,
     no_preselect_title: _Optional[str] = None,
@@ -4104,9 +4116,9 @@ def Weekday(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
     # ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
-    default_value: ValueSpecDefault[DropdownChoiceModel] = DEF_VALUE,
-    validate: _Optional[ValueSpecValidateFunc[DropdownChoiceModel]] = None,
-    deprecated_choices: Sequence[DropdownChoiceModel] = (),
+    default_value: ValueSpecDefault[str] = DEF_VALUE,
+    validate: _Optional[ValueSpecValidateFunc[str | None]] = None,
+    deprecated_choices: Sequence[str] = (),
 ):
     return DropdownChoice(
         choices=_sorted(defines.weekdays().items()),
@@ -4131,7 +4143,7 @@ def Weekday(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
     )
 
 
-class RelativeDate(OptionalDropdownChoice):
+class RelativeDate(OptionalDropdownChoice[int]):
     """Input of date with optimization for nearby dates in the future
 
     Useful for example for alarms. The date is represented by a UNIX timestamp
@@ -4146,7 +4158,7 @@ class RelativeDate(OptionalDropdownChoice):
         help_separator: _Optional[str] = None,
         prefix_values: bool = False,
         empty_text: _Optional[str] = None,
-        invalid_choice: _Optional[str] = "complain",
+        invalid_choice: DropdownInvalidChoice = "complain",
         invalid_choice_title: _Optional[str] = None,
         invalid_choice_error: _Optional[str] = None,
         no_preselect_title: _Optional[str] = None,
@@ -4156,7 +4168,7 @@ class RelativeDate(OptionalDropdownChoice):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        validate: _Optional[ValueSpecValidateFunc[DropdownChoiceModel]] = None,
+        validate: _Optional[ValueSpecValidateFunc[_Optional[int]]] = None,
     ) -> None:
         choices = [
             (0, _("today")),
@@ -4196,14 +4208,16 @@ class RelativeDate(OptionalDropdownChoice):
             validate=validate,
         )
 
-    def canonical_value(self) -> int:
+    def canonical_value(self) -> _Optional[int]:
         return self.default_value()
 
-    def render_input(self, varprefix: str, value: int) -> None:
+    def render_input(self, varprefix: str, value: _Optional[int]) -> None:
+        assert isinstance(value, (int, float))
         reldays = int((_round_date(value) - _today()) / seconds_per_day)  # fixed: true-division
         super().render_input(varprefix, reldays)
 
-    def value_to_html(self, value: int) -> ValueSpecText:
+    def value_to_html(self, value: _Optional[int]) -> ValueSpecText:
+        assert isinstance(value, (int, float))
         reldays = int((_round_date(value) - _today()) / seconds_per_day)  # fixed: true-division
         if reldays == -1:
             return _("yesterday")
@@ -4220,7 +4234,7 @@ class RelativeDate(OptionalDropdownChoice):
         reldays = super().from_html_vars(varprefix)
         return _today() + reldays * seconds_per_day
 
-    def validate_datatype(self, value: int, varprefix: str) -> None:
+    def validate_datatype(self, value: _Optional[int], varprefix: str) -> None:
         if not isinstance(value, (int, float)):
             raise MKUserError(varprefix, _("Date must be a number value"))
 
@@ -5008,7 +5022,7 @@ def DateFormat(  # pylint: disable=redefined-builtin
     help_separator: _Optional[str] = None,
     prefix_values: bool = False,
     empty_text: _Optional[str] = None,
-    invalid_choice: _Optional[str] = "complain",
+    invalid_choice: DropdownInvalidChoice = "complain",
     invalid_choice_title: _Optional[str] = None,
     invalid_choice_error: _Optional[str] = None,
     no_preselect_title: _Optional[str] = None,
@@ -5019,12 +5033,12 @@ def DateFormat(  # pylint: disable=redefined-builtin
     # ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
-    default_value: ValueSpecDefault[DropdownChoiceModel] = "%Y-%m-%d",  # NOTE: Different!
-    validate: _Optional[ValueSpecValidateFunc[DropdownChoiceModel]] = None,
-    deprecated_choices: Sequence[DropdownChoiceModel] = (),
+    default_value: ValueSpecDefault[str] = "%Y-%m-%d",  # NOTE: Different!
+    validate: _Optional[ValueSpecValidateFunc[str | None]] = None,
+    deprecated_choices: Sequence[str] = (),
 ) -> DropdownChoice:
     """A selection of various date formats"""
-    return DropdownChoice(
+    return DropdownChoice[str](
         choices=[
             ("%Y-%m-%d", "1970-12-18"),
             ("%d.%m.%Y", "18.12.1970"),
@@ -5060,7 +5074,7 @@ def TimeFormat(  # pylint: disable=redefined-builtin
     help_separator: _Optional[str] = None,
     prefix_values: bool = False,
     empty_text: _Optional[str] = None,
-    invalid_choice: _Optional[str] = "complain",
+    invalid_choice: DropdownInvalidChoice = "complain",
     invalid_choice_title: _Optional[str] = None,
     invalid_choice_error: _Optional[str] = None,
     no_preselect_title: _Optional[str] = None,
@@ -5071,9 +5085,9 @@ def TimeFormat(  # pylint: disable=redefined-builtin
     # ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
-    default_value: ValueSpecDefault[DropdownChoiceModel] = "%H:%M:%S",  # NOTE: Different!
-    validate: _Optional[ValueSpecValidateFunc[DropdownChoiceModel]] = None,
-    deprecated_choices: Sequence[DropdownChoiceModel] = (),
+    default_value: ValueSpecDefault[str] = "%H:%M:%S",  # NOTE: Different!
+    validate: _Optional[ValueSpecValidateFunc[str | None]] = None,
+    deprecated_choices: Sequence[str] = (),
 ) -> DropdownChoice:
     return DropdownChoice(
         choices=[
@@ -7781,9 +7795,9 @@ class SetupSiteChoice(DropdownChoice):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: ValueSpecDefault[DropdownChoiceModel] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc[DropdownChoiceModel]] = None,
-        deprecated_choices: Sequence[DropdownChoiceModel] = (),
+        default_value: ValueSpecDefault[SiteId] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[_Optional[SiteId]]] = None,
+        deprecated_choices: Sequence[SiteId] = (),
     ):
         super().__init__(
             choices=user_sites.get_activation_site_choices,
@@ -7838,7 +7852,7 @@ def LogLevelChoice(  # pylint: disable=redefined-builtin
     help_separator: _Optional[str] = None,
     prefix_values: bool = False,
     empty_text: _Optional[str] = None,
-    invalid_choice: _Optional[str] = "complain",
+    invalid_choice: DropdownInvalidChoice = "complain",
     invalid_choice_title: _Optional[str] = None,
     invalid_choice_error: _Optional[str] = None,
     no_preselect_title: _Optional[str] = None,
@@ -7849,9 +7863,9 @@ def LogLevelChoice(  # pylint: disable=redefined-builtin
     # ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
-    default_value: ValueSpecDefault[DropdownChoiceModel] = DEF_VALUE,
-    validate: _Optional[ValueSpecValidateFunc[DropdownChoiceModel]] = None,
-    deprecated_choices: Sequence[DropdownChoiceModel] = (),
+    default_value: ValueSpecDefault[int] = DEF_VALUE,
+    validate: _Optional[ValueSpecValidateFunc[_Optional[int]]] = None,
+    deprecated_choices: Sequence[int] = (),
 ) -> DropdownChoice:
     return DropdownChoice(
         choices=[

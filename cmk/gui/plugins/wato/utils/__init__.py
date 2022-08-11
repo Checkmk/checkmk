@@ -2610,7 +2610,7 @@ def _common_host_rule_match_conditions() -> list[DictionaryEntry]:
         (
             "match_hosts",
             ListOfStrings(
-                valuespec=MonitoredHostname(),
+                valuespec=MonitoredHostname(),  # type: ignore[arg-type]  # should be Valuespec[str]
                 title=_("Match hosts"),
                 size=24,
                 orientation="horizontal",
@@ -2623,7 +2623,7 @@ def _common_host_rule_match_conditions() -> list[DictionaryEntry]:
         (
             "match_exclude_hosts",
             ListOfStrings(
-                valuespec=MonitoredHostname(),
+                valuespec=MonitoredHostname(),  # type: ignore[arg-type]  # should be Valuespec[str]
                 title=_("Exclude hosts"),
                 size=24,
                 orientation="horizontal",

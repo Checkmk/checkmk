@@ -28,7 +28,11 @@ def test_controller_matched_to_pod() -> None:
     )
     job_owner_reference = {
         "cronjob": api.OwnerReference(
-            uid="cronjob_uid", controller=True, kind="CronJob", name="mycron"
+            uid="cronjob_uid",
+            controller=True,
+            kind="CronJob",
+            name="mycron",
+            namespace="namespace-name",
         )
     }
     object_to_owners: Mapping[str, api.OwnerReferences] = {
@@ -37,7 +41,13 @@ def test_controller_matched_to_pod() -> None:
     }
     assert _match_controllers([pod], object_to_owners) == (
         {"cronjob_uid": ["pod"]},
-        {"pod": [api.Controller(type_=api.ControllerType.cronjob, name="mycron")]},
+        {
+            "pod": [
+                api.Controller(
+                    type_=api.ControllerType.cronjob, name="mycron", namespace="namespace-name"
+                )
+            ]
+        },
     )
 
 
@@ -131,11 +141,23 @@ def test_multiple_owners() -> None:
     )
     object_to_owners: Mapping[str, api.OwnerReferences] = {
         "job_uid": [
-            api.OwnerReference(uid="cronjob_uid", controller=True, kind="CronJob", name="mycron")
+            api.OwnerReference(
+                uid="cronjob_uid",
+                controller=True,
+                kind="CronJob",
+                name="mycron",
+                namespace="ns-name",
+            )
         ],
         "cronjob_uid": [],
         "replica_uid": [
-            api.OwnerReference(uid="deployment_uid", controller=True, kind="Deployment", name="myd")
+            api.OwnerReference(
+                uid="deployment_uid",
+                controller=True,
+                kind="Deployment",
+                name="myd",
+                namespace="ns-name",
+            )
         ],
         "deployment_uid": [],
     }
@@ -146,8 +168,12 @@ def test_multiple_owners() -> None:
         },
         {
             "pod": [
-                api.Controller(type_=api.ControllerType.cronjob, name="mycron"),
-                api.Controller(type_=api.ControllerType.deployment, name="myd"),
+                api.Controller(
+                    type_=api.ControllerType.cronjob, name="mycron", namespace="ns-name"
+                ),
+                api.Controller(
+                    type_=api.ControllerType.deployment, name="myd", namespace="ns-name"
+                ),
             ]
         },
     )

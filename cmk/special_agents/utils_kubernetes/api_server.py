@@ -287,9 +287,9 @@ def _match_controllers(
     """Matches controllers to the pods they control
 
     >>> pod = client.V1Pod(metadata=client.V1ObjectMeta(name="test-pod", uid="pod", owner_references=[client.V1OwnerReference(api_version="v1", kind="Job", name="test-job", uid="job", controller=True)]))
-    >>> object_to_owners = {"job": [api.OwnerReference(uid='cronjob', controller=True, kind="CronJob", name="mycron")], "cronjob": []}
+    >>> object_to_owners = {"job": [api.OwnerReference(uid='cronjob', controller=True, kind="CronJob", name="mycron", namespace='namespace_name')], "cronjob": []}
     >>> _match_controllers([pod], object_to_owners)
-    ({'cronjob': ['pod']}, {'pod': [Controller(type_=<ControllerType.cronjob: 'cronjob'>, name='mycron')]})
+    ({'cronjob': ['pod']}, {'pod': [Controller(type_=<ControllerType.cronjob: 'cronjob'>, name='mycron', namespace='namespace_name')]})
 
     """
     # owner_reference approach is taken from these two links:
@@ -323,7 +323,9 @@ def _match_controllers(
             controller_to_pods.setdefault(owner.uid, []).append(pod_uid)
             pod_to_controllers.setdefault(pod_uid, []).append(
                 api.Controller(
-                    name=owner.name, type_=api.ControllerType.from_str(owner.kind.lower())
+                    name=owner.name,
+                    namespace=owner.namespace,
+                    type_=api.ControllerType.from_str(owner.kind.lower()),
                 )
             )
 

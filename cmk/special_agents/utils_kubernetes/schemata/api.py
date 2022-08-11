@@ -592,6 +592,7 @@ class Controller(BaseModel):
     # the top-level controller of the "test_pod" is the "test_cronjob"
     type_: ControllerType  # Relates to the field kind in OwnerReference
     name: str
+    namespace: str | None
 
 
 class Pod(BaseModel):
@@ -652,6 +653,7 @@ class OwnerReference(BaseModel):
     # references happens.
     kind: str
     name: str
+    namespace: str | None
 
 
 OwnerReferences = Sequence[OwnerReference]

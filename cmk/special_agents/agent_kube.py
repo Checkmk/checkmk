@@ -523,25 +523,6 @@ def aggregate_resources(
     )
 
 
-class CronJob(PodNamespacedOwner):
-    def __init__(self, metadata: api.MetaData[str], spec: api.CronJobSpec) -> None:
-        super().__init__()
-        self.metadata = metadata
-        self.spec = spec
-
-    @property
-    def namespace(self) -> Optional[api.NamespaceName]:
-        return self.metadata.namespace
-
-    def name(self, prepend_namespace: bool = True) -> str:
-        if not prepend_namespace:
-            return self.metadata.name
-        return f"{self.metadata.namespace}_{self.metadata.name}"
-
-    def pods(self) -> Sequence[Pod]:
-        return self._pods
-
-
 # TODO: addition of test framework for output sections
 class Deployment(PodNamespacedOwner):
     def __init__(
@@ -920,7 +901,6 @@ class Cluster:
         nodes: Sequence[api.Node],
         statefulsets: Sequence[api.StatefulSet],
         deployments: Sequence[api.Deployment],
-        cron_jobs: Sequence[api.CronJob],
         daemon_sets: Sequence[api.DaemonSet],
         cluster_details: api.ClusterDetails,
     ) -> Cluster:
@@ -958,11 +938,6 @@ class Cluster:
             )
             cluster.add_deployment(deployment)
             _register_owner_for_pods(deployment, api_deployment.pods)
-
-        for api_cron_job in cron_jobs:
-            cron_job = CronJob(api_cron_job.metadata, api_cron_job.spec)
-            cluster.add_cron_job(cron_job)
-            _register_owner_for_pods(cron_job, api_cron_job.pod_uids)
 
         for api_daemon_set in daemon_sets:
             daemon_set = DaemonSet(
@@ -1024,7 +999,6 @@ class Cluster:
     ) -> None:
         self._cluster_details: api.ClusterDetails = cluster_details
         self._excluded_node_roles: Sequence[str] = excluded_node_roles
-        self._cron_jobs: List[CronJob] = []
         self._daemon_sets: List[DaemonSet] = []
         self._statefulsets: List[StatefulSet] = []
         self._deployments: List[Deployment] = []
@@ -1040,9 +1014,6 @@ class Cluster:
         ):
             self._cluster_aggregation_node_names.append(node.name)
         self._nodes[node.name] = node
-
-    def add_cron_job(self, cron_job: CronJob) -> None:
-        self._cron_jobs.append(cron_job)
 
     def add_deployment(self, deployment: Deployment) -> None:
         self._deployments.append(deployment)
@@ -1090,9 +1061,6 @@ class Cluster:
 
     def nodes(self) -> Sequence[Node]:
         return list(self._nodes.values())
-
-    def cron_jobs(self) -> Sequence[CronJob]:
-        return self._cron_jobs
 
     def daemon_sets(self) -> Sequence[DaemonSet]:
         return self._daemon_sets
@@ -1451,6 +1419,18 @@ def namespace_name(namespace: api.Namespace) -> api.NamespaceName:
         'foo'
     """
     return namespace.metadata.name
+
+
+def cron_job_namespaced_name(cron_job: api.CronJob) -> str:
+    """The name of the cron job appended to the namespace
+    >>> cron_job_namespaced_name(api.CronJob(uid="cron_job_uid", metadata=api.MetaData(namespace="bar", name="foo", creation_timestamp=0.0, labels={}, annotations={}), pod_uids=[], spec=api.CronJobSpec(concurrency_policy=api.ConcurrencyPolicy.Forbid, schedule="0 0 0 0 0", suspend=False, successful_jobs_history_limit=0, failed_jobs_history_limit=0)))
+    'bar_foo'
+    """
+    return f"{cron_job.metadata.namespace}_{cron_job.metadata.name}"
+
+
+def controller_namespaced_name(controller: api.Controller) -> str:
+    return f"{controller.namespace}_{controller.name}"
 
 
 def _write_sections(sections: Mapping[str, Callable[[], section.Section | None]]) -> None:
@@ -2569,6 +2549,126 @@ class CustomKubernetesApiException(Exception):
         return error_message_visible_in_check_mk_service_summary
 
 
+def pod_conditions(pod_status: api.PodStatus) -> Optional[section.PodConditions]:
+    if pod_status.conditions is None:
+        return None
+
+    return section.PodConditions(
+        **{
+            condition.type.value: section.PodCondition(
+                status=condition.status,
+                reason=condition.reason,
+                detail=condition.detail,
+                last_transition_time=condition.last_transition_time,
+            )
+            for condition in pod_status.conditions
+            if condition.type is not None
+        }
+    )
+
+
+def pod_container_specs(pod_spec: api.PodSpec) -> section.ContainerSpecs:
+    return section.ContainerSpecs(
+        containers={
+            container_spec.name: section.ContainerSpec(
+                image_pull_policy=container_spec.image_pull_policy,
+            )
+            for container_spec in pod_spec.containers
+        }
+    )
+
+
+def pod_init_container_specs(pod_spec: api.PodSpec) -> section.ContainerSpecs:
+    return section.ContainerSpecs(
+        containers={
+            container_spec.name: section.ContainerSpec(
+                image_pull_policy=container_spec.image_pull_policy,
+            )
+            for container_spec in pod_spec.init_containers
+        }
+    )
+
+
+def pod_start_time(pod_status: api.PodStatus) -> Optional[section.StartTime]:
+    if pod_status.start_time is None:
+        return None
+
+    return section.StartTime(start_time=pod_status.start_time)
+
+
+def pod_lifecycle_phase(pod_status: api.PodStatus) -> section.PodLifeCycle:
+    return section.PodLifeCycle(phase=pod_status.phase)
+
+
+def pod_info(
+    pod: api.Pod, cluster_name: str, annotation_key_pattern: AnnotationOption
+) -> section.PodInfo:
+
+    return section.PodInfo(
+        namespace=pod_namespace(pod),
+        name=pod_name(pod),
+        creation_timestamp=pod.metadata.creation_timestamp,
+        labels=pod.metadata.labels,
+        annotations=filter_annotations_by_key_pattern(
+            pod.metadata.annotations, annotation_key_pattern
+        ),
+        node=pod.spec.node,
+        host_network=pod.spec.host_network,
+        dns_policy=pod.spec.dns_policy,
+        host_ip=pod.status.host_ip,
+        pod_ip=pod.status.pod_ip,
+        qos_class=pod.status.qos_class,
+        restart_policy=pod.spec.restart_policy,
+        uid=pod.uid,
+        controllers=[
+            section.Controller(
+                type_=section.ControllerType(c.type_.value),
+                name=controller_namespaced_name(c),
+            )
+            for c in pod.controllers
+        ],
+        cluster=cluster_name,
+    )
+
+
+def write_api_pods_sections(
+    cluster_name: str,
+    annotation_key_pattern: AnnotationOption,
+    pods: Sequence[api.Pod],
+    piggyback_formatter: ObjectSpecificPBFormatter,
+) -> None:
+    def output_pod_sections(
+        pod: api.Pod,
+        cluster_name: str,
+        annotation_key_pattern: AnnotationOption,
+    ) -> None:
+        sections = {
+            "kube_pod_conditions_v1": lambda: pod_conditions(pod.status),
+            "kube_pod_containers_v1": lambda: section.PodContainers(containers=pod.containers)
+            if pod.containers
+            else None,
+            "kube_pod_container_specs_v1": lambda: pod_container_specs(pod.spec),
+            "kube_pod_init_containers_v1": lambda: section.PodContainers(
+                containers=pod.init_containers
+            )
+            if pod.init_containers
+            else None,
+            "kube_pod_init_container_specs_v1": lambda: pod_init_container_specs(pod.spec),
+            "kube_start_time_v1": lambda: pod_start_time(pod.status),
+            "kube_pod_lifecycle_v1": lambda: pod_lifecycle_phase(pod.status),
+            "kube_pod_info_v1": lambda: pod_info(pod, cluster_name, annotation_key_pattern),
+            "kube_cpu_resources_v1": lambda: _collect_cpu_resources_from_api_pods([pod]),
+            "kube_memory_resources_v1": lambda: _collect_memory_resources_from_api_pods([pod]),
+        }
+        _write_sections(sections)
+
+    for pod in pods:
+        with ConditionalPiggybackSection(
+            piggyback_formatter(f"{pod_name(pod, prepend_namespace=True)}")
+        ):
+            output_pod_sections(pod, cluster_name, annotation_key_pattern)
+
+
 def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-branches
     if args is None:
         cmk.utils.password_store.replace_passwords()
@@ -2607,7 +2707,6 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                 pods=api_pods,
                 nodes=api_data.nodes,
                 deployments=api_data.deployments,
-                cron_jobs=api_data.cron_jobs,
                 daemon_sets=api_data.daemonsets,
                 statefulsets=api_data.statefulsets,
                 cluster_details=api_data.cluster_details,
@@ -2699,26 +2798,28 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
             # TODO: Currently there is no possibility for the user to specify whether to monitor CronJobs or not
             # The piggyback hosts will always be created, if there are any CronJobs in the cluster
             # Namespace filtering also needs to be added to the CronJobs
-            monitored_api_cj_pods: Sequence[api.Pod] = [
+            monitored_api_cron_job_pods = [
                 api_pod
                 for cron_job in api_data.cron_jobs
                 for api_pod in api_data.pods
                 if api_pod.uid in cron_job.pod_uids
             ]
-
             write_cronjobs_api_sections(
                 arguments.cluster,
                 arguments.annotation_key_pattern,
                 api_data.cron_jobs,
                 resource_quotas,
-                monitored_api_cj_pods,
+                monitored_api_cron_job_pods,
                 piggyback_formatter=functools.partial(piggyback_formatter, "cronjob"),
             )
 
-            if MonitoredObject.cronjobs_pods not in arguments.monitored_objects:
-                # Ignore pods controlled by CronJobs
-                monitored_pods = monitored_pods.difference(
-                    pod_lookup_from_api_pod(pod) for pod in monitored_api_cj_pods
+            if MonitoredObject.cronjobs_pods in arguments.monitored_objects:
+                LOGGER.info("Write cronjob pods sections based on API data")
+                write_api_pods_sections(
+                    arguments.cluster,
+                    arguments.annotation_key_pattern,
+                    monitored_api_cron_job_pods,
+                    piggyback_formatter=functools.partial(piggyback_formatter, "pod"),
                 )
             if MonitoredObject.pods in arguments.monitored_objects:
                 LOGGER.info("Write pods sections based on API data")
@@ -2729,6 +2830,11 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                         pod
                         for pod in cluster.pods()
                         if pod_lookup_from_agent_pod(pod) in monitored_pods
+                        and pod_lookup_from_agent_pod(pod)
+                        not in [
+                            f"{pod_name(pod, prepend_namespace=True)}"
+                            for pod in monitored_api_cron_job_pods
+                        ]
                     ],
                     piggyback_formatter=functools.partial(piggyback_formatter, "pod"),
                 )
@@ -2886,7 +2992,10 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                         for api_cron_job in api_data.cron_jobs:
 
                             cronjob_api_pods = filter_pods_by_phase(
-                                filter_pods_by_cron_job(monitored_api_cj_pods, api_cron_job),
+                                filter_pods_by_cron_job(
+                                    monitored_api_cron_job_pods,
+                                    api_cron_job,
+                                ),
                                 api.Phase.RUNNING,
                             )
 
@@ -2901,7 +3010,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                             with ConditionalPiggybackSection(
                                 piggyback_formatter(
                                     object_type="cronjob",
-                                    namespaced_name=f"{api_cron_job.metadata.namespace}_{api_cron_job.metadata.name}",
+                                    namespaced_name=cron_job_namespaced_name(api_cron_job),
                                 )
                             ):
                                 for section_name, section_json in cronjob_sections:

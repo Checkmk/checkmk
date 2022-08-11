@@ -317,7 +317,9 @@ def node_resources_builder(
         return {
             "capacity": NodeResourcesFactory.build(pods=node_capacity_pods),
             "allocatable": NodeResourcesFactory().build(
-                cpu=node_allocatable_cpu, memory=node_allocatable_memory, pods=node_allocatable_pods
+                cpu=node_allocatable_cpu,
+                memory=node_allocatable_memory,
+                pods=node_allocatable_pods,
             ),
         }
 
@@ -583,7 +585,6 @@ def api_to_agent_cluster(  # pylint: disable=dangerous-default-value
     nodes: Sequence[api.Node] = [],
     statefulsets: Sequence[api.StatefulSet] = [],
     deployments: Sequence[api.Deployment] = [],
-    cron_jobs: Sequence[api.CronJob] = [],
     daemon_sets: Sequence[api.DaemonSet] = [],
     cluster_details: api.ClusterDetails = ClusterDetailsFactory.build(),
 ) -> agent_kube.Cluster:
@@ -593,7 +594,6 @@ def api_to_agent_cluster(  # pylint: disable=dangerous-default-value
         nodes=nodes,
         statefulsets=statefulsets,
         deployments=deployments,
-        cron_jobs=cron_jobs,
         daemon_sets=daemon_sets,
         cluster_details=cluster_details,
     )

@@ -82,7 +82,6 @@ def test_pod_node_allocation_within_cluster(  # type:ignore[no-untyped-def]
         nodes=[api_node],
         statefulsets=[],
         daemon_sets=[],
-        cron_jobs=[],
         deployments=[],
         cluster_details=cluster_details,
     )
@@ -106,7 +105,6 @@ def test_pod_deployment_allocation_within_cluster(  # type:ignore[no-untyped-def
         nodes=[api_node],
         statefulsets=[],
         daemon_sets=[],
-        cron_jobs=[],
         deployments=[deployment],
         cluster_details=ClusterDetailsFactory.build(),
     )

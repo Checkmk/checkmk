@@ -660,6 +660,7 @@ def dependent_object_owner_refererences_from_client(
             controller=ref.controller,
             kind=ref.kind,
             name=ref.name,
+            namespace=dependent.metadata.namespace,
         )
         for ref in dependent.metadata.owner_references or []
     ]

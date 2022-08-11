@@ -282,6 +282,14 @@ def version_from_json(
 def _match_controllers(
     pods: Iterable[client.V1Pod], object_to_owners: Mapping[str, api.OwnerReferences]
 ) -> Mapping[str, Sequence[api.PodUID]]:
+    """Matches controllers to the pods they control
+
+    >>> pod = client.V1Pod(metadata=client.V1ObjectMeta(name="test-pod", uid="pod", owner_references=[client.V1OwnerReference(api_version="v1", kind="Job", name="test-job", uid="job", controller=True)]))
+    >>> object_to_owners = {"job": [api.OwnerReference(uid='cronjob', controller=True)], "cronjob": []}
+    >>> _match_controllers([pod], object_to_owners)
+    {'job': ['pod'], 'cronjob': ['pod']}
+
+    """
     # owner_reference approach is taken from these two links:
     # https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
     # https://github.com/kubernetes-client/python/issues/946

@@ -570,6 +570,7 @@ class Pod(BaseModel):
     spec: PodSpec
     containers: Mapping[str, ContainerStatus]
     init_containers: Mapping[str, ContainerStatus]
+    controllers: Sequence[str]
 
 
 class ConcurrencyPolicy(enum.Enum):

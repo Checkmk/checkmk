@@ -360,7 +360,7 @@ def deployment_conditions(
     }
 
 
-def pod_from_client(pod: client.V1Pod) -> api.Pod:
+def pod_from_client(pod: client.V1Pod, controllers: Sequence[str]) -> api.Pod:
     return api.Pod(
         uid=api.PodUID(pod.metadata.uid),
         metadata=parse_metadata(pod.metadata, str),
@@ -368,6 +368,7 @@ def pod_from_client(pod: client.V1Pod) -> api.Pod:
         spec=pod_spec(pod),
         containers=pod_containers(pod.status.container_statuses),
         init_containers=pod_containers(pod.status.init_container_statuses),
+        controllers=controllers,
     )
 
 

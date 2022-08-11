@@ -18,6 +18,7 @@ from typing import (
     Mapping,
     Optional,
     Sequence,
+    Tuple,
     TypeVar,
     Union,
 )
@@ -282,13 +283,13 @@ def version_from_json(
 # TODO Needs an integration test
 def _match_controllers(
     pods: Iterable[client.V1Pod], object_to_owners: Mapping[str, api.OwnerReferences]
-) -> Mapping[str, Sequence[api.PodUID]]:
+) -> Tuple[Mapping[str, Sequence[api.PodUID]], Mapping[api.PodUID, Sequence[str]]]:
     """Matches controllers to the pods they control
 
     >>> pod = client.V1Pod(metadata=client.V1ObjectMeta(name="test-pod", uid="pod", owner_references=[client.V1OwnerReference(api_version="v1", kind="Job", name="test-job", uid="job", controller=True)]))
     >>> object_to_owners = {"job": [api.OwnerReference(uid='cronjob', controller=True)], "cronjob": []}
     >>> _match_controllers([pod], object_to_owners)
-    {'cronjob': ['pod']}
+    ({'cronjob': ['pod']}, {'pod': ['cronjob']})
 
     """
     # owner_reference approach is taken from these two links:
@@ -310,12 +311,16 @@ def _match_controllers(
             yield from recursive_toplevel_owner_lookup(parent)
 
     controller_to_pods: Dict[str, List[api.PodUID]] = {}
+    pod_to_controllers: Dict[api.PodUID, List[str]] = {}
     for pod in pods:
+        pod_uid = api.PodUID(pod.metadata.uid)
         for owner_uid in recursive_toplevel_owner_lookup(
             list(dependent_object_owner_refererences_from_client(pod))
         ):
-            controller_to_pods.setdefault(owner_uid, []).append(api.PodUID(pod.metadata.uid))
-    return controller_to_pods
+            controller_to_pods.setdefault(owner_uid, []).append(pod_uid)
+            pod_to_controllers.setdefault(pod_uid, []).append(owner_uid)
+
+    return controller_to_pods, pod_to_controllers
 
 
 def _verify_version_support(
@@ -427,11 +432,11 @@ def query_raw_api_data_v2(
     )
 
 
-def create_controller_to_pods(
+def map_controllers(
     raw_pods: Sequence[client.V1Pod],
     workload_resources_client: Iterable[WorkloadResource],
     workload_resources_json: Iterable[JSONStatefulSet],
-) -> Mapping[str, Sequence[api.PodUID]]:
+) -> Tuple[Mapping[str, Sequence[api.PodUID]], Mapping[api.PodUID, Sequence[str]]]:
     object_to_owners = parse_object_to_owners(
         workload_resources_client=workload_resources_client,
         workload_resources_json=workload_resources_json,
@@ -467,6 +472,7 @@ def parse_api_data(
     node_to_kubelet_health: Mapping[str, api.HealthZ],
     api_health: api.APIHealth,
     controller_to_pods: Mapping[str, Sequence[api.PodUID]],
+    pod_to_controllers: Mapping[api.PodUID, Sequence[str]],
     git_version: api.GitVersion,
     versioned_parse_statefulsets: Callable[
         [StatefulSets, Mapping[str, Sequence[api.PodUID]]], Sequence[api.StatefulSet]
@@ -492,7 +498,7 @@ def parse_api_data(
         node_from_client(raw_node, node_to_kubelet_health[raw_node.metadata.name])
         for raw_node in raw_nodes
     ]
-    pods = [pod_from_client(pod) for pod in raw_pods]
+    pods = [pod_from_client(pod, pod_to_controllers.get(pod.metadata.uid, [])) for pod in raw_pods]
     resource_quotas: Sequence[api.ResourceQuota] = [
         api_resource_quota
         for api_resource_quota in [
@@ -528,7 +534,7 @@ def create_api_data_v1(
         raw_api,
         external_api,
     )
-    controller_to_pods = create_controller_to_pods(
+    controller_to_pods, pod_to_controllers = map_controllers(
         raw_api_data.raw_pods,
         workload_resources_client=itertools.chain(
             raw_api_data.raw_deployments,
@@ -552,6 +558,7 @@ def create_api_data_v1(
         raw_api_data.node_to_kubelet_health,
         raw_api_data.api_health,
         controller_to_pods,
+        pod_to_controllers,
         git_version,
         versioned_parse_statefulsets=statefulset_list_from_client,
     )
@@ -570,7 +577,7 @@ def create_api_data_v2(
         raw_api,
         external_api,
     )
-    controller_to_pods = create_controller_to_pods(
+    controller_to_pods, pod_to_controllers = map_controllers(
         raw_api_data.raw_pods,
         workload_resources_client=itertools.chain(
             raw_api_data.raw_deployments,
@@ -593,6 +600,7 @@ def create_api_data_v2(
         raw_api_data.node_to_kubelet_health,
         raw_api_data.api_health,
         controller_to_pods,
+        pod_to_controllers,
         git_version,
         versioned_parse_statefulsets=statefulset_list_from_json,
     )

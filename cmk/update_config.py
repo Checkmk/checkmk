@@ -9,21 +9,17 @@ all sites and on remote sites after receiving a snapshot and does not need to
 be called manually.
 """
 import argparse
-import ast
 import copy
 import errno
-import gzip
 import hashlib
 import logging
-import multiprocessing
 import re
 import shutil
-import subprocess
 from contextlib import contextmanager
 from datetime import datetime
 from datetime import time as dt_time
 from pathlib import Path
-from typing import Any, Callable, Container, Dict, List, Mapping, Optional, Sequence, Set, Tuple
+from typing import Any, Callable, Container, Dict, List, Mapping, Sequence, Set, Tuple
 
 import cmk.utils
 import cmk.utils.debug
@@ -231,7 +227,6 @@ class UpdateConfig:
             (self._rewrite_autochecks, "Rewriting autochecks"),
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
             (self._adjust_user_attributes, "Set version specific user attributes"),
-            (self._rewrite_py2_inventory_data, "Rewriting inventory data"),
             (self._sanitize_audit_log, "Sanitize audit log (Werk #13330)"),
             (self._rename_discovered_host_label_files, "Rename discovered host label files"),
             (self._add_site_ca_to_trusted_cas, "Adding site CA to trusted CAs"),
@@ -712,106 +707,6 @@ class UpdateConfig:
             _add_user_scheme_serial(users, user_id)
 
         save_users(users, datetime.now())
-
-    def _rewrite_py2_inventory_data(self) -> None:
-        done_path = Path(cmk.utils.paths.var_dir, "update_config")
-        done_file = done_path / "py2conversion.done"
-        if done_file.exists():
-            self._logger.log(VERBOSE, "Skipping py2 inventory data update (already done)")
-            return
-
-        dirpaths = [
-            Path(cmk.utils.paths.var_dir + "/inventory/"),
-            Path(cmk.utils.paths.var_dir + "/inventory_archive/"),
-            Path(cmk.utils.paths.tmp_dir + "/status_data/"),
-        ]
-        filepaths: List[Path] = []
-        for dirpath in dirpaths:
-            if not dirpath.exists():
-                self._logger.log(VERBOSE, "Skipping path %r (empty)" % str(dirpath))
-                continue
-
-            # Create a list of all files that need to be converted with 2to3
-            if "inventory_archive" in str(dirpath):
-                self._find_files_recursively(filepaths, dirpath)
-            else:
-                filepaths += [
-                    f
-                    for f in dirpath.iterdir()
-                    if not f.name.endswith(".gz") and not f.name.startswith(".")
-                ]
-
-        with multiprocessing.Pool(min(15, multiprocessing.cpu_count())) as pool:
-            py2_files = [str(x) for x in pool.map(self._needs_to_be_converted, filepaths) if x]
-
-        self._logger.log(VERBOSE, "Finished checking for corrupt files")
-
-        if not py2_files:
-            self._create_donefile(done_file)
-            return
-
-        self._logger.log(VERBOSE, "Found %i files: %s" % (len(py2_files), py2_files))
-
-        returncode = self._fix_with_2to3(py2_files)
-
-        # Rewriting .gz files
-        for filepath in py2_files:
-            if "inventory_archive" not in str(filepath):
-                with open(filepath, "rb") as f_in, gzip.open(str(filepath) + ".gz", "wb") as f_out:
-                    f_out.writelines(f_in)
-
-        if returncode == 0:
-            self._create_donefile(done_file)
-
-    def _create_donefile(self, done_file: Path) -> None:
-        self._logger.log(VERBOSE, "Creating file %r" % str(done_file))
-        done_file.parent.mkdir(parents=True, exist_ok=True)
-        done_file.touch(exist_ok=True)
-
-    def _fix_with_2to3(self, files: List[str]) -> int:
-        self._logger.log(VERBOSE, "Try to fix corrupt files with 2to3")
-        cmd = [
-            "2to3",
-            "--write",
-            "--nobackups",
-        ] + files
-
-        self._logger.log(VERBOSE, "Executing: %s", subprocess.list2cmdline(cmd))
-        completed_process = subprocess.run(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            shell=False,
-            check=False,
-        )
-        if completed_process.returncode != 0:
-            self._logger.error(
-                "Failed to run 2to3 (Exit code: %d): %s",
-                completed_process.returncode,
-                completed_process.stdout,
-            )
-        self._logger.log(VERBOSE, "Finished.")
-        return completed_process.returncode
-
-    def _needs_to_be_converted(self, filepath: Path) -> Optional[Path]:
-        with filepath.open(encoding="utf-8") as f:
-            # Try to evaluate data with ast.literal_eval
-            try:
-                data = f.read()
-                self._logger.debug("Evaluating %r" % str(filepath))
-                ast.literal_eval(data)
-            except SyntaxError:
-                self._logger.log(VERBOSE, "Found corrupt file %r" % str(filepath))
-                return filepath
-        return None
-
-    def _find_files_recursively(self, files: List[Path], path: Path) -> None:
-        for f in path.iterdir():
-            if f.is_file():
-                if not f.name.endswith(".gz") and not f.name.startswith("."):
-                    files.append(f)
-            elif f.is_dir():
-                self._find_files_recursively(files, f)
 
     def _sanitize_audit_log(self) -> None:
         # Use a file to determine if the sanitization was successfull. Otherwise it would be

@@ -297,16 +297,19 @@ def _match_controllers(
     # https://github.com/kubernetes-client/python/issues/946
     # We have tested the solution in the github issue. It does not work, but was good
     # enough as a prototype.
-    def recursive_toplevel_owner_lookup(owner_references: api.OwnerReferences) -> Iterable[str]:
+
+    def recursive_toplevel_owner_lookup(
+        owner_references: api.OwnerReferences,
+    ) -> Iterable[api.OwnerReference]:
         for owner in owner_references:
             if not owner.controller:
                 continue
             if (parent := object_to_owners.get(owner.uid)) is None:
                 continue
-            if parent == []:
+            if len(parent) == 0:
                 # If an owner does not have any parent owners, then
                 # the owner is the top-level-owner
-                yield owner.uid
+                yield owner
                 continue
             yield from recursive_toplevel_owner_lookup(parent)
 
@@ -314,11 +317,11 @@ def _match_controllers(
     pod_to_controllers: Dict[api.PodUID, List[str]] = {}
     for pod in pods:
         pod_uid = api.PodUID(pod.metadata.uid)
-        for owner_uid in recursive_toplevel_owner_lookup(
+        for owner in recursive_toplevel_owner_lookup(
             list(dependent_object_owner_refererences_from_client(pod))
         ):
-            controller_to_pods.setdefault(owner_uid, []).append(pod_uid)
-            pod_to_controllers.setdefault(pod_uid, []).append(owner_uid)
+            controller_to_pods.setdefault(owner.uid, []).append(pod_uid)
+            pod_to_controllers.setdefault(pod_uid, []).append(owner.uid)
 
     return controller_to_pods, pod_to_controllers
 

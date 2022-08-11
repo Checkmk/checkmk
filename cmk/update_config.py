@@ -59,11 +59,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.logged_in import SuperUserContext
 from cmk.gui.plugins.dashboard.utils import get_all_dashboards
-from cmk.gui.plugins.userdb.utils import (
-    load_connection_config,
-    save_connection_config,
-    USER_SCHEME_SERIAL,
-)
+from cmk.gui.plugins.userdb.utils import load_connection_config, USER_SCHEME_SERIAL
 from cmk.gui.plugins.watolib.utils import config_variable_registry, filter_unknown_settings
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.userdb import load_users, save_users, Users
@@ -234,7 +230,6 @@ class UpdateConfig:
             (self._rewrite_wato_rulesets, "Rewriting rulesets"),
             (self._rewrite_autochecks, "Rewriting autochecks"),
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
-            (self._migrate_ldap_connections, "Migrate LDAP connections"),
             (self._adjust_user_attributes, "Set version specific user attributes"),
             (self._rewrite_py2_inventory_data, "Rewriting inventory data"),
             (self._sanitize_audit_log, "Sanitize audit log (Werk #13330)"),
@@ -708,28 +703,6 @@ class UpdateConfig:
         if reporting:
             reporting.load_reports()  # Loading does the transformation
             updates(visuals.VisualType.reports, reporting.reports)
-
-    def _migrate_ldap_connections(self) -> None:
-        """Each user connections needs to declare it's connection type.
-
-        This is done using the "type" attribute. Previous versions did not always set this
-        attribute, which is corrected with this update method.
-
-        Furthermore, convert to password store compatible format"""
-        connections = load_connection_config()
-        if not connections:
-            return
-
-        for connection in connections:
-            connection.setdefault("type", "ldap")
-
-            if "bind" in connection:
-                dn, password = connection["bind"]
-                if isinstance(password, tuple):
-                    continue
-                connection["bind"] = (dn, ("password", password))
-
-        save_connection_config(connections)
 
     def _adjust_user_attributes(self) -> None:
         """All users are loaded and attributes can be transformed or set."""

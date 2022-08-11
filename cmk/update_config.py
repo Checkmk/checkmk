@@ -74,7 +74,6 @@ from cmk.base.api.agent_based import register
 
 import cmk.gui.config
 import cmk.gui.groups
-import cmk.gui.pagetypes as pagetypes
 import cmk.gui.utils
 import cmk.gui.visuals as visuals
 import cmk.gui.watolib.groups
@@ -313,7 +312,6 @@ class UpdateConfig:
             (self._rewrite_autochecks, "Rewriting autochecks"),
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
             # CAUTION: update_fs_used_name must be called *after* rewrite_autochecks!
-            (self._migrate_pagetype_topics_to_ids, "Migrate pagetype topics"),
             (self._migrate_ldap_connections, "Migrate LDAP connections"),
             (self._adjust_user_attributes, "Set version specific user attributes"),
             (self._rewrite_py2_inventory_data, "Rewriting inventory data"),
@@ -1090,62 +1088,6 @@ class UpdateConfig:
         # from 2.1 will still contain the old data structures.
         visuals._CombinedVisualsCache.invalidate_all_caches()
 
-    def _migrate_pagetype_topics_to_ids(self) -> None:
-        """Change all visuals / page types to use IDs as topics
-
-        2.0 changed the topic from a free form user localizable string to an ID
-        that references the builtin and user managable "pagetype_topics".
-
-        Try to detect builtin or existing topics topics, reference them and
-        also create missing topics and refernce them.
-
-        Persist all the user visuals and page types after modification.
-        """
-        topic_created_for: Set[UserId] = set()
-        instances = pagetypes.PagetypeTopics.load()
-        topics = instances.instances_dict()
-
-        # Create the topics for all page types
-        topic_created_for.update(self._migrate_pagetype_topics(instances, topics))
-
-        # And now do the same for all visuals (views, dashboards, reports)
-        topic_created_for.update(self._migrate_all_visuals_topics(instances, topics))
-
-        # Now persist all added topics
-        for user_id in topic_created_for:
-            pagetypes.PagetypeTopics.save_user_instances(instances, user_id)
-
-    def _migrate_pagetype_topics(
-        self, instances: pagetypes.OverridableInstances[pagetypes.PagetypeTopics], topics: Dict
-    ) -> Set[UserId]:
-        topic_created_for: Set[UserId] = set()
-
-        for page_type_cls in pagetypes.all_page_types().values():
-            if not issubclass(page_type_cls, pagetypes.PageRenderer):
-                continue
-
-            instances = page_type_cls.load()
-            modified_user_instances = set()
-
-            # First modify all instances in memory and remember which things have changed
-            for instance in instances.instances():
-                owner = instance.owner()
-                instance_modified, topic_created = self._transform_pre_17_topic_to_id(
-                    instances, topics, dict(instance.internal_representation())
-                )
-
-                if instance_modified and owner:
-                    modified_user_instances.add(owner)
-
-                if topic_created and owner:
-                    topic_created_for.add(owner)
-
-            # Now persist all modified instances
-            for user_id in modified_user_instances:
-                page_type_cls.save_user_instances(instances, user_id)
-
-        return topic_created_for
-
     def _rewrite_visuals(self):
         """This function uses the updates in visuals.transform_old_visual which
         takes place upon visuals load. However, load forces no save, thus save
@@ -1171,129 +1113,6 @@ class UpdateConfig:
         if reporting:
             reporting.load_reports()  # Loading does the transformation
             updates(visuals.VisualType.reports, reporting.reports)
-
-    def _migrate_all_visuals_topics(
-        self, instances: pagetypes.OverridableInstances[pagetypes.PagetypeTopics], topics: Dict
-    ) -> Set[UserId]:
-        topic_created_for: Set[UserId] = set()
-
-        # Views
-        topic_created_for.update(
-            self._migrate_visuals_topics(
-                instances, topics, visual_type=visuals.VisualType.views, all_visuals=get_all_views()
-            )
-        )
-
-        # Dashboards
-        topic_created_for.update(
-            self._migrate_visuals_topics(
-                instances,
-                topics,
-                visual_type=visuals.VisualType.dashboards,
-                all_visuals=get_all_dashboards(),
-            )
-        )
-
-        # Reports
-        try:
-            import cmk.gui.cee.reporting as reporting
-        except ImportError:
-            reporting = None  # type: ignore[assignment]
-
-        if reporting:
-            reporting.load_reports()
-            topic_created_for.update(
-                self._migrate_visuals_topics(
-                    instances,
-                    topics,
-                    visual_type=visuals.VisualType.reports,
-                    all_visuals=reporting.reports,
-                )
-            )
-
-        return topic_created_for
-
-    def _migrate_visuals_topics(
-        self,
-        instances: pagetypes.OverridableInstances[pagetypes.PagetypeTopics],
-        topics: Dict,
-        visual_type: visuals.VisualType,
-        all_visuals: Dict,
-    ) -> Set[UserId]:
-        topic_created_for: Set[UserId] = set()
-        with _save_user_instances(visual_type, all_visuals) as affected_user:
-
-            # First modify all instances in memory and remember which things have changed
-            for (owner, _name), visual_spec in all_visuals.items():
-                instance_modified, topic_created = self._transform_pre_17_topic_to_id(
-                    instances, topics, visual_spec
-                )
-
-                if instance_modified and owner:
-                    affected_user.add(owner)
-
-                if topic_created and owner:
-                    topic_created_for.add(owner)
-
-        return topic_created_for
-
-    def _transform_pre_17_topic_to_id(
-        self,
-        instances: pagetypes.OverridableInstances[pagetypes.PagetypeTopics],
-        topics: Dict,
-        spec: Dict[str, Any],
-    ) -> Tuple[bool, bool]:
-        topic = spec["topic"] or ""
-        topic_key = (spec["owner"], topic)
-        name = _id_from_title(topic)
-        name_key = (spec["owner"], topic)
-
-        topics_by_title = {v.title(): k for k, v in topics.items()}
-
-        if ("", topic) in topics:
-            # No need to transform. Found a builtin topic which has the current topic
-            # as ID
-            return False, False
-
-        if ("", name) in topics:
-            # Found a builtin topic matching the generated name, assume we have a match
-            spec["topic"] = name
-            return True, False
-
-        if name_key in topics:
-            # Found a custom topic matching the generated name, assume we have a match
-            spec["topic"] = name
-            return True, False
-
-        if topic_key in topics:
-            # No need to transform. Found a topic which has the current topic as ID
-            return False, False
-
-        if topic in topics_by_title and topics_by_title[topic][0] in ["", spec["owner"]]:
-            # Found an existing topic which title exactly matches the current topic attribute and which
-            # is either owned by the same user as the spec or builtin and accessible
-            spec["topic"] = topics_by_title[topic][1]
-            return True, False
-
-        # Found no match: Create a topic for this spec and use it
-        # Use same owner and visibility settings as the original
-        instances.add_instance(
-            (spec["owner"], name),
-            pagetypes.PagetypeTopics(
-                {
-                    "name": name,
-                    "title": topic,
-                    "description": "",
-                    "public": spec["public"],
-                    "icon_name": "missing",
-                    "sort_index": 99,
-                    "owner": spec["owner"],
-                }
-            ),
-        )
-
-        spec["topic"] = name
-        return True, True
 
     def _migrate_ldap_connections(self) -> None:
         """Each user connections needs to declare it's connection type.

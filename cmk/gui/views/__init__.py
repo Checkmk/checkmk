@@ -218,6 +218,7 @@ from cmk.gui.watolib.activate_changes import (
 if not cmk_version.is_raw_edition():
     from cmk.gui.cee.ntop.connector import get_cache  # pylint: disable=no-name-in-module
 
+from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.type_defs import (
     ColumnName,
     FilterName,
@@ -412,6 +413,7 @@ class View:
         self._only_sites: Optional[List[SiteId]] = None
         self._user_sorters: Optional[List[SorterSpec]] = None
         self._want_checkboxes: bool = False
+        self._warning_messages: list[str] = []
         self.process_tracking = ViewProcessTracking()
 
     @property
@@ -703,6 +705,13 @@ class View:
 
         return missing_single_infos
 
+    def add_warning_message(self, message: str) -> None:
+        self._warning_messages.append(message)
+
+    @property
+    def warning_messages(self) -> list[str]:
+        return self._warning_messages
+
 
 class DummyView(View):
     """Represents an empty view hull, not intended to be displayed
@@ -856,6 +865,9 @@ class GUIViewRenderer(ABCViewRenderer):
                 )
                 % ", ".join(sorted(missing_single_infos))
             )
+
+        for message in self.view.warning_messages:
+            html.show_warning(message)
 
         if not has_done_actions and not missing_single_infos:
             html.div("", id_="row_info")
@@ -2312,7 +2324,10 @@ def _get_view_rows(
     with CPUTracker() as filter_rows_tracker:
         # Apply non-Livestatus filters
         for filter_ in all_active_filters:
-            rows = filter_.filter_table(view.context, rows)
+            try:
+                rows = filter_.filter_table(view.context, rows)
+            except MKMissingDataError as e:
+                view.add_warning_message(str(e))
 
     view.process_tracking.amount_unfiltered_rows = unfiltered_amount_of_rows
     view.process_tracking.amount_filtered_rows = len(rows)

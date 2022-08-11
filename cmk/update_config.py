@@ -248,7 +248,6 @@ class UpdateConfig:
             (self._rewrite_wato_rulesets, "Rewriting rulesets"),
             (self._rewrite_autochecks, "Rewriting autochecks"),
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
-            # CAUTION: update_fs_used_name must be called *after* rewrite_autochecks!
             (self._migrate_ldap_connections, "Migrate LDAP connections"),
             (self._adjust_user_attributes, "Set version specific user attributes"),
             (self._rewrite_py2_inventory_data, "Rewriting inventory data"),

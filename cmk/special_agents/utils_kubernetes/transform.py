@@ -360,7 +360,7 @@ def deployment_conditions(
     }
 
 
-def pod_from_client(pod: client.V1Pod, controllers: Sequence[str]) -> api.Pod:
+def pod_from_client(pod: client.V1Pod, controllers: Sequence[api.Controller]) -> api.Pod:
     return api.Pod(
         uid=api.PodUID(pod.metadata.uid),
         metadata=parse_metadata(pod.metadata, str),
@@ -658,6 +658,8 @@ def dependent_object_owner_refererences_from_client(
         api.OwnerReference(
             uid=ref.uid,
             controller=ref.controller,
+            kind=ref.kind,
+            name=ref.name,
         )
         for ref in dependent.metadata.owner_references or []
     ]

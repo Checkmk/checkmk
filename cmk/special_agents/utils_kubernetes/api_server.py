@@ -283,13 +283,13 @@ def version_from_json(
 # TODO Needs an integration test
 def _match_controllers(
     pods: Iterable[client.V1Pod], object_to_owners: Mapping[str, api.OwnerReferences]
-) -> Tuple[Mapping[str, Sequence[api.PodUID]], Mapping[api.PodUID, Sequence[str]]]:
+) -> Tuple[Mapping[str, Sequence[api.PodUID]], Mapping[api.PodUID, Sequence[api.Controller]]]:
     """Matches controllers to the pods they control
 
     >>> pod = client.V1Pod(metadata=client.V1ObjectMeta(name="test-pod", uid="pod", owner_references=[client.V1OwnerReference(api_version="v1", kind="Job", name="test-job", uid="job", controller=True)]))
-    >>> object_to_owners = {"job": [api.OwnerReference(uid='cronjob', controller=True)], "cronjob": []}
+    >>> object_to_owners = {"job": [api.OwnerReference(uid='cronjob', controller=True, kind="CronJob", name="mycron")], "cronjob": []}
     >>> _match_controllers([pod], object_to_owners)
-    ({'cronjob': ['pod']}, {'pod': ['cronjob']})
+    ({'cronjob': ['pod']}, {'pod': [Controller(type_=<ControllerType.cronjob: 'cronjob'>, name='mycron')]})
 
     """
     # owner_reference approach is taken from these two links:
@@ -314,14 +314,18 @@ def _match_controllers(
             yield from recursive_toplevel_owner_lookup(parent)
 
     controller_to_pods: Dict[str, List[api.PodUID]] = {}
-    pod_to_controllers: Dict[api.PodUID, List[str]] = {}
+    pod_to_controllers: Dict[api.PodUID, List[api.Controller]] = {}
     for pod in pods:
         pod_uid = api.PodUID(pod.metadata.uid)
         for owner in recursive_toplevel_owner_lookup(
             list(dependent_object_owner_refererences_from_client(pod))
         ):
             controller_to_pods.setdefault(owner.uid, []).append(pod_uid)
-            pod_to_controllers.setdefault(pod_uid, []).append(owner.uid)
+            pod_to_controllers.setdefault(pod_uid, []).append(
+                api.Controller(
+                    name=owner.name, type_=api.ControllerType.from_str(owner.kind.lower())
+                )
+            )
 
     return controller_to_pods, pod_to_controllers
 
@@ -439,7 +443,7 @@ def map_controllers(
     raw_pods: Sequence[client.V1Pod],
     workload_resources_client: Iterable[WorkloadResource],
     workload_resources_json: Iterable[JSONStatefulSet],
-) -> Tuple[Mapping[str, Sequence[api.PodUID]], Mapping[api.PodUID, Sequence[str]]]:
+) -> Tuple[Mapping[str, Sequence[api.PodUID]], Mapping[api.PodUID, Sequence[api.Controller]]]:
     object_to_owners = parse_object_to_owners(
         workload_resources_client=workload_resources_client,
         workload_resources_json=workload_resources_json,
@@ -475,7 +479,7 @@ def parse_api_data(
     node_to_kubelet_health: Mapping[str, api.HealthZ],
     api_health: api.APIHealth,
     controller_to_pods: Mapping[str, Sequence[api.PodUID]],
-    pod_to_controllers: Mapping[api.PodUID, Sequence[str]],
+    pod_to_controllers: Mapping[api.PodUID, Sequence[api.Controller]],
     git_version: api.GitVersion,
     versioned_parse_statefulsets: Callable[
         [StatefulSets, Mapping[str, Sequence[api.PodUID]]], Sequence[api.StatefulSet]

@@ -26,14 +26,18 @@ def test_controller_matched_to_pod() -> None:
             owner_references=[pod_owner_references["job"]],
         )
     )
-    job_owner_reference = {"cronjob": api.OwnerReference(uid="cronjob_uid", controller=True)}
+    job_owner_reference = {
+        "cronjob": api.OwnerReference(
+            uid="cronjob_uid", controller=True, kind="CronJob", name="mycron"
+        )
+    }
     object_to_owners: Mapping[str, api.OwnerReferences] = {
         "job_uid": [job_owner_reference["cronjob"]],
         "cronjob_uid": [],
     }
     assert _match_controllers([pod], object_to_owners) == (
         {"cronjob_uid": ["pod"]},
-        {"pod": ["cronjob_uid"]},
+        {"pod": [api.Controller(type_=api.ControllerType.cronjob, name="mycron")]},
     )
 
 
@@ -50,7 +54,7 @@ def test_controller_not_added_if_not_a_controller() -> None:
         )
     )
     object_to_owners: Mapping[str, api.OwnerReferences] = {
-        "job_uid": [api.OwnerReference(uid="cronjob_uid", controller=True)],
+        "job_uid": [api.OwnerReference(uid="cronjob_uid", controller=True, kind="Job", name="myj")],
         "cronjob_uid": [],
     }
     assert _match_controllers([pod], object_to_owners) == ({}, {})
@@ -69,7 +73,9 @@ def test_controller_not_added_if_not_a_controller_object_mapping() -> None:
         )
     )
     object_to_owners: Mapping[str, api.OwnerReferences] = {
-        "job_uid": [api.OwnerReference(uid="cronjob_uid", controller=False)],
+        "job_uid": [
+            api.OwnerReference(uid="cronjob_uid", controller=False, kind="CronJob", name="mycron")
+        ],
         "cronjob_uid": [],
     }
     assert _match_controllers([pod], object_to_owners) == ({}, {})
@@ -96,7 +102,9 @@ def test_pod_does_not_have_owner_ref() -> None:
         metadata=client.V1ObjectMeta(name="test-pod", uid="pod", owner_references=None)
     )
     object_to_owners: Mapping[str, api.OwnerReferences] = {
-        "job_uid": [api.OwnerReference(uid="cronjob_uid", controller=True)],
+        "job_uid": [
+            api.OwnerReference(uid="cronjob_uid", controller=True, kind="CronJob", name="mycron")
+        ],
         "cronjob_uid": [],
     }
     assert _match_controllers([pod], object_to_owners) == ({}, {})
@@ -122,9 +130,13 @@ def test_multiple_owners() -> None:
         )
     )
     object_to_owners: Mapping[str, api.OwnerReferences] = {
-        "job_uid": [api.OwnerReference(uid="cronjob_uid", controller=True)],
+        "job_uid": [
+            api.OwnerReference(uid="cronjob_uid", controller=True, kind="CronJob", name="mycron")
+        ],
         "cronjob_uid": [],
-        "replica_uid": [api.OwnerReference(uid="deployment_uid", controller=True)],
+        "replica_uid": [
+            api.OwnerReference(uid="deployment_uid", controller=True, kind="Deployment", name="myd")
+        ],
         "deployment_uid": [],
     }
     assert _match_controllers([pod], object_to_owners) == (
@@ -132,5 +144,10 @@ def test_multiple_owners() -> None:
             "cronjob_uid": ["pod"],
             "deployment_uid": ["pod"],
         },
-        {"pod": ["cronjob_uid", "deployment_uid"]},
+        {
+            "pod": [
+                api.Controller(type_=api.ControllerType.cronjob, name="mycron"),
+                api.Controller(type_=api.ControllerType.deployment, name="myd"),
+            ]
+        },
     )

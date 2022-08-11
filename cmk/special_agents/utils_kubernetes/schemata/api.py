@@ -563,6 +563,37 @@ class PodStatus(BaseModel):
     qos_class: Optional[QosClass]
 
 
+class ControllerType(enum.Enum):
+    deployment = "deployment"
+    daemonset = "daemonset"
+    statefulset = "statefulset"
+    cronjob = "cronjob"
+
+    @staticmethod
+    def from_str(label):
+        if label == "deployment":
+            return ControllerType.deployment
+        if label == "daemonset":
+            return ControllerType.daemonset
+        if label == "statefulset":
+            return ControllerType.statefulset
+        if label == "cronjob":
+            return ControllerType.cronjob
+        raise ValueError(f"Unknown controller type {label} specified")
+
+
+class Controller(BaseModel):
+    # Used to represent top level controllers of a pod
+    # Derived from the OwnerReference information in the pod
+    # But they may not be the top-level controllers of the pod
+    # In the event that they are not the top-level controllers, we go through the OwnerReferences of the intermediary controllers until we find the top-level controller
+    # Example:
+    # pod "test_pod" is owned by a job named "test_job" and the "test_job" in owned by a cronjob named "test_cronjob"
+    # the top-level controller of the "test_pod" is the "test_cronjob"
+    type_: ControllerType  # Relates to the field kind in OwnerReference
+    name: str
+
+
 class Pod(BaseModel):
     uid: PodUID
     metadata: MetaData[str]
@@ -570,7 +601,7 @@ class Pod(BaseModel):
     spec: PodSpec
     containers: Mapping[str, ContainerStatus]
     init_containers: Mapping[str, ContainerStatus]
-    controllers: Sequence[str]
+    controllers: Sequence[Controller]
 
 
 class ConcurrencyPolicy(enum.Enum):
@@ -619,6 +650,8 @@ class OwnerReference(BaseModel):
     # field can be interpreted as controller=False, but this interpretation is
     # done in _match_controllers, where all the interpretation for owner
     # references happens.
+    kind: str
+    name: str
 
 
 OwnerReferences = Sequence[OwnerReference]

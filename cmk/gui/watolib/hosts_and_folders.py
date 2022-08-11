@@ -782,7 +782,6 @@ class WithUniqueIdentifier(abc.ABC):
             self._id = self._get_identifier()
 
         data = self._get_instance_data()
-        data = self._upgrade_keys(data)
         data["attributes"] = update_metadata(data["attributes"])
         data["__id"] = self._id
         store.makedirs(os.path.dirname(self._store_file_name()))
@@ -799,7 +798,6 @@ class WithUniqueIdentifier(abc.ABC):
         """
         data = self.wato_info_storage_manager().read(Path(self._store_file_name()))
 
-        data = self._upgrade_keys(data)
         unique_id = data.get("__id")
         if self._id is None:
             self._id = unique_id
@@ -815,11 +813,6 @@ class WithUniqueIdentifier(abc.ABC):
     @abc.abstractmethod
     def _get_identifier(self) -> str:
         """The unique identifier of this object."""
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def _upgrade_keys(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Upgrade the structure of the store-file."""
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -1333,125 +1326,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     def _create_host_from_variables(self, host_name: HostName, wato_hosts: WATOHosts) -> CREHost:
         cluster_nodes = wato_hosts["clusters"].get(host_name)
-        attributes = self._transform_old_attributes(wato_hosts["host_attributes"][host_name])
-        return Host(self, host_name, attributes, cluster_nodes)
-
-    def _upgrade_keys(self, data):
-        data["attributes"] = self._transform_old_attributes(data.get("attributes", {}))
-        return data
-
-    def _transform_old_attributes(self, attributes):
-        """Mangle all attribute structures read from the disk to prepare it for the current logic"""
-        attributes = self._transform_pre_15_agent_type_in_attributes(attributes)
-        attributes = self._transform_none_value_site_attribute(attributes)
-        attributes = self._add_missing_meta_data(attributes)
-        attributes = self._transform_tag_snmp_ds(attributes)
-        attributes = self._transform_cgconf_attributes(attributes)
-        attributes = self._cleanup_pre_210_hostname_attribute(attributes)
-        return attributes
-
-    def _transform_cgconf_attributes(self, attributes):
-        cgconf = attributes.get("contactgroups")
-        if cgconf:
-            attributes["contactgroups"] = convert_cgroups_from_tuple(cgconf)
-        return attributes
-
-    # In versions previous to 1.6 Checkmk had a tag group named "snmp" and an
-    # auxiliary tag named "snmp" in the builtin tags. This name conflict had to
-    # be resolved. The tag group has been changed to "snmp_ds" to fix it.
-    def _transform_tag_snmp_ds(self, attributes):
-        if "tag_snmp" in attributes:
-            attributes["tag_snmp_ds"] = attributes.pop("tag_snmp")
-        return attributes
-
-    def _cleanup_pre_210_hostname_attribute(self, attributes):
-        """Cleanup accidentally added hostname host attribute
-
-        The host diagnostic page was adding the field "hostname" to the "attributes"
-        dictionary before 2.0.0p24 and 2.1.0b6 when clicking on "Save and go to host
-        properties".
-
-        Args:
-            attributes: The attributes dictionary
-
-        Returns:
-            The modified 'attributes' dictionary. It actually is modified in-place though.
-
-        """
-        attributes.pop("hostname", None)
-        return attributes
-
-    def _add_missing_meta_data(self, attributes):
-        """Bring meta_data structure up to date.
-
-        New in 1.6:
-            'meta_data' struct added.
-
-        New in 1.7:
-            Key 'updated_at' in 'meta_data' added for use in the REST API.
-
-        Args:
-            attributes: The attributes dictionary
-
-        Returns:
-            The modified 'attributes' dictionary. In actually is modified in-place though.
-
-        """
-        meta_data = attributes.setdefault("meta_data", {})
-        meta_data.setdefault("created_at", None)
-        meta_data.setdefault("updated_at", None)
-        meta_data.setdefault("created_by", None)
-        return attributes
-
-    # Old tag group trans:
-    # ('agent', u'Agent type',
-    #    [
-    #        ('cmk-agent', u'Check_MK Agent (Server)', ['tcp']),
-    #        ('snmp-only', u'SNMP (Networking device, Appliance)', ['snmp']),
-    #        ('snmp-v1',   u'Legacy SNMP device (using V1)', ['snmp']),
-    #        ('snmp-tcp',  u'Dual: Check_MK Agent + SNMP', ['snmp', 'tcp']),
-    #        ('ping',      u'No Agent', []),
-    #    ],
-    # )
-    #
-    def _transform_pre_15_agent_type_in_attributes(self, attributes):
-        if "tag_agent" not in attributes:
-            return attributes  # Nothing set here, no transformation necessary
-
-        if "tag_snmp" in attributes:
-            return attributes  # Already in new format, no transformation necessary
-
-        if "meta_data" in attributes:
-            return attributes  # These attributes were already saved with version 1.6+
-
-        value = attributes["tag_agent"]
-
-        if value == "cmk-agent":
-            attributes["tag_snmp"] = "no-snmp"
-
-        elif value == "snmp-only":
-            attributes["tag_agent"] = "no-agent"
-            attributes["tag_snmp"] = "snmp-v2"
-
-        elif value == "snmp-v1":
-            attributes["tag_agent"] = "no-agent"
-            attributes["tag_snmp"] = "snmp-v1"
-
-        elif value == "snmp-tcp":
-            attributes["tag_agent"] = "cmk-agent"
-            attributes["tag_snmp"] = "snmp-v2"
-
-        elif value == "ping":
-            attributes["tag_agent"] = "no-agent"
-            attributes["tag_snmp"] = "no-snmp"
-
-        return attributes
-
-    def _transform_none_value_site_attribute(self, attributes):
-        # Old WATO was saving "site" attribute with value of None. Skip this key.
-        if "site" in attributes and attributes["site"] is None:
-            del attributes["site"]
-        return attributes
+        return Host(self, host_name, wato_hosts["host_attributes"][host_name], cluster_nodes)
 
     def _load_hosts_file(self) -> Optional[HostsData]:
         variables = get_hosts_file_variables()

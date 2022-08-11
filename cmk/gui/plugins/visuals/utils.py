@@ -748,7 +748,7 @@ class DualListFilter(Filter):
         sort_index: int,
         info: str,
         query_filter: query_filters.MultipleQuery,
-        options: Callable[[str], query_filters.Options],
+        options: Callable[[str], query_filters.SitesOptions],
         description: Union[None, str, LazyString] = None,
         is_show_more: bool = True,
     ):

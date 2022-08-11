@@ -26,7 +26,7 @@ from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, Visu
 from cmk.gui.utils.labels import encode_labels_for_livestatus, Label, Labels, parse_labels_value
 from cmk.gui.utils.user_errors import user_errors
 
-Options = List[Tuple[str, str]]
+SitesOptions = List[Tuple[str, str]]
 
 
 def lq_logic(filter_condition: str, values: List[str], join: str) -> str:
@@ -64,7 +64,7 @@ class MultipleOptionsQuery(Query):
         self,
         *,
         ident: str,
-        options: Options,
+        options: SitesOptions,
         livestatus_query: Optional[Callable[[FilterHTTPVariables], FilterHeader]] = None,
         rows_filter: Optional[Callable[..., Rows]] = None,
     ):
@@ -88,11 +88,11 @@ class MultipleOptionsQuery(Query):
 
 
 ### Tri State filter
-def default_tri_state_options() -> Options:
+def default_tri_state_options() -> SitesOptions:
     return [("1", _("yes")), ("0", _("no")), ("-1", _("(ignore)"))]
 
 
-def tri_state_type_options() -> Options:
+def tri_state_type_options() -> SitesOptions:
     return [
         ("0", _("SOFT")),
         ("1", _("HARD")),
@@ -100,7 +100,7 @@ def tri_state_type_options() -> Options:
     ]
 
 
-def tri_state_log_notifications_options() -> Options:
+def tri_state_log_notifications_options() -> SitesOptions:
     return [
         ("1", _("Show just preliminary notifications")),
         ("0", _("Show just end-user-notifications")),
@@ -113,7 +113,7 @@ class SingleOptionQuery(Query):
         self,
         *,
         ident: str,
-        options: Options,
+        options: SitesOptions,
         filter_code: Callable[[str], FilterHeader],
         filter_row: Optional[Callable[[str, Row], bool]] = None,
     ):
@@ -262,7 +262,7 @@ def has_inventory(on: bool, row: Row) -> bool:
 
 
 ### Filter Time
-def time_filter_options() -> Options:
+def time_filter_options() -> SitesOptions:
     ranges = [(86400, _("days")), (3600, _("hours")), (60, _("min")), (1, _("sec"))]
     choices = [(str(sec), title + " " + _("ago")) for sec, title in ranges]
     choices += [
@@ -627,7 +627,7 @@ class IPAddressQuery(Query):
         return "Filter: host_custom_variables %s %s %s\n" % (op, varname, address)
 
 
-def ip_match_options() -> Options:
+def ip_match_options() -> SitesOptions:
     return [("yes", _("Prefix match")), ("no", _("Exact match"))]
 
 
@@ -635,7 +635,7 @@ def address_family(family: str) -> FilterHeader:
     return "Filter: tags = address_family ip-v%s-only\n" % livestatus.lqencode(family)
 
 
-def ip_address_family_options() -> Options:
+def ip_address_family_options() -> SitesOptions:
     return [("4", _("IPv4")), ("6", _("IPv6")), ("both", _("Both"))]
 
 
@@ -659,7 +659,7 @@ def address_families(family: str) -> FilterHeader:
     return filt
 
 
-def ip_address_families_options() -> Options:
+def ip_address_families_options() -> SitesOptions:
     return [
         ("4", "v4"),
         ("6", "v6"),
@@ -895,7 +895,7 @@ def svc_problems_options(prefix: str) -> List[Tuple[str, str]]:
     ]
 
 
-def host_problems_options(prefix: str) -> Options:
+def host_problems_options(prefix: str) -> SitesOptions:
     return [
         (prefix + "down", _("DOWN")),
         (prefix + "unreach", _("UNREACH")),
@@ -920,7 +920,7 @@ def discovery_state_options() -> List[Tuple[str, str]]:
     ]
 
 
-def log_class_options() -> Options:
+def log_class_options() -> SitesOptions:
     # NOTE: We have to keep this table in sync with the enum LogEntry::Class on the C++ side.
     # INFO          0 // all messages not in any other class
     # ALERT         1 // alerts: the change service/host state
@@ -968,7 +968,7 @@ def if_oper_status_filter_table(ident: str, context: VisualContext, rows: Rows) 
     return [row for row in rows if _add_row(row)]
 
 
-def cre_sites_options() -> Options:
+def cre_sites_options() -> SitesOptions:
 
     return sorted(
         [
@@ -980,7 +980,7 @@ def cre_sites_options() -> Options:
     )
 
 
-def sites_options() -> Options:
+def sites_options() -> SitesOptions:
     if cmk_version.is_managed_edition():
         from cmk.gui.cme.plugins.visuals.managed import (  # pylint: disable=no-name-in-module
             filter_cme_choices,

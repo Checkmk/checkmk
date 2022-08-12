@@ -26,6 +26,8 @@ case "$1" in
                 --access-logfile $OMD_ROOT/var/log/agent-receiver/access.log \
                 --keyfile "$KEY_AND_CERT_FILE" \
                 --certfile "$KEY_AND_CERT_FILE" \
+                --ca-certs "${OMD_ROOT}/etc/ssl/ca.pem" \
+                --cert-reqs 1 \
                 -b 0.0.0.0:$CONFIG_AGENT_RECEIVER_PORT \
                 -k uvicorn.workers.UvicornWorker 'agent_receiver.apps:main_app()'
         if [ $? -eq 0 ]; then

@@ -25,7 +25,7 @@ from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_loc
 from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
 
 
-def _ruleset(ruleset_name) -> rulesets.Ruleset:
+def _ruleset(ruleset_name) -> rulesets.Ruleset:  # type:ignore[no-untyped-def]
     return rulesets.Ruleset(ruleset_name, ruleset_matcher.get_tag_to_group_map(active_config.tags))
 
 
@@ -64,7 +64,7 @@ def fixture_gen_id(monkeypatch):
         ("clustered_services", True, True),
     ],
 )
-def test_rule_from_ruleset_defaults(
+def test_rule_from_ruleset_defaults(  # type:ignore[no-untyped-def]
     request_context, ruleset_name, default_value, is_binary
 ) -> None:
     ruleset = _ruleset(ruleset_name)
@@ -380,7 +380,7 @@ def test_rule_from_config_tuple(ruleset_name, rule_spec):
         ),
     ],
 )
-def test_rule_from_config_dict(
+def test_rule_from_config_dict(  # type:ignore[no-untyped-def]
     request_context,
     ruleset_name,
     rule_spec: RuleSpec,
@@ -454,7 +454,9 @@ checkgroup_parameters['local'] = [
         # """),
     ],
 )
-def test_ruleset_to_config(request_context, monkeypatch, wato_use_git, expected_result) -> None:
+def test_ruleset_to_config(  # type:ignore[no-untyped-def]
+    request_context, monkeypatch, wato_use_git, expected_result
+) -> None:
     monkeypatch.setattr(active_config, "wato_use_git", wato_use_git)
 
     ruleset = rulesets.Ruleset(
@@ -509,7 +511,7 @@ checkgroup_parameters['local'] = [
         ),
     ],
 )
-def test_ruleset_to_config_sub_folder(
+def test_ruleset_to_config_sub_folder(  # type:ignore[no-untyped-def]
     with_admin_login, monkeypatch, wato_use_git, expected_result
 ) -> None:
     monkeypatch.setattr(active_config, "wato_use_git", wato_use_git)
@@ -545,7 +547,7 @@ def test_ruleset_to_config_sub_folder(
     assert ruleset.to_config(folder) == expected_result
 
 
-def test_rule_clone(request_context) -> None:
+def test_rule_clone(request_context) -> None:  # type:ignore[no-untyped-def]
     rule = rulesets.Rule.from_config(
         hosts_and_folders.Folder.root_folder(),
         _ruleset("clustered_services"),
@@ -627,7 +629,7 @@ def test_rule_clone(request_context) -> None:
         ),
     ],
 )
-def test_matches_search_with_rules(
+def test_matches_search_with_rules(  # type:ignore[no-untyped-def]
     with_admin_login,
     search_options: rulesets.SearchOptions,
     rule_config: RuleSpec,
@@ -691,35 +693,39 @@ class _RuleHelper:
         ),
     ]
 )
-def rule_helper(request) -> _RuleHelper:
+def rule_helper(request) -> _RuleHelper:  # type:ignore[no-untyped-def]
     return request.param
 
 
-def test_to_log_masks_secrets(request_context) -> None:
+def test_to_log_masks_secrets(request_context) -> None:  # type:ignore[no-untyped-def]
     log = str(_RuleHelper.gcp_rule().to_log())
     assert "'password'" in log, "password tuple is present"
     assert "hunter2" not in log, "password is masked"
 
 
-def test_diff_rules_new_rule(request_context, rule_helper) -> None:
+def test_diff_rules_new_rule(request_context, rule_helper) -> None:  # type:ignore[no-untyped-def]
     new = rule_helper.rule()
     diff = new.ruleset.diff_rules(None, new)
     assert rule_helper.secret_attr in diff, "Attribute is added in new rule"
     assert "******" in diff, "Attribute is masked"
 
 
-def test_diff_to_no_changes(request_context, rule_helper) -> None:
+def test_diff_to_no_changes(request_context, rule_helper) -> None:  # type:ignore[no-untyped-def]
     rule = rule_helper.rule()
     assert rule.diff_to(rule) == "Nothing was changed."
 
 
-def test_diff_to_secret_changed(request_context, rule_helper) -> None:
+def test_diff_to_secret_changed(  # type:ignore[no-untyped-def]
+    request_context, rule_helper
+) -> None:
     old, new = rule_helper.rule(), rule_helper.rule()
     new.value[rule_helper.secret_attr] = rule_helper.new_secret
     assert old.diff_to(new) == "Redacted secrets changed."
 
 
-def test_diff_to_secret_unchanged(request_context, rule_helper) -> None:
+def test_diff_to_secret_unchanged(  # type:ignore[no-untyped-def]
+    request_context, rule_helper
+) -> None:
     old, new = rule_helper.rule(), rule_helper.rule()
     new.value[rule_helper.other_attr] = "new_value"
     diff = old.diff_to(new)
@@ -727,7 +733,9 @@ def test_diff_to_secret_unchanged(request_context, rule_helper) -> None:
     assert 'changed from "old_value" to "new_value".' in diff
 
 
-def test_diff_to_secret_and_other_attribute_changed(request_context, rule_helper) -> None:
+def test_diff_to_secret_and_other_attribute_changed(  # type:ignore[no-untyped-def]
+    request_context, rule_helper
+) -> None:
     old, new = rule_helper.rule(), rule_helper.rule()
     new.value[rule_helper.secret_attr] = rule_helper.new_secret
     new.value[rule_helper.other_attr] = "new_value"

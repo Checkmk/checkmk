@@ -171,7 +171,7 @@ class APICallGrafanaConnector(APICallCollection):
             ),
         }
 
-    def _get_filter_headers_of_context(
+    def _get_filter_headers_of_context(  # type:ignore[no-untyped-def]
         self,
         datasource_name,
         context,

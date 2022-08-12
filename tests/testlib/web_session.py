@@ -23,7 +23,7 @@ logger = logging.getLogger()
 
 
 class CMKWebSession:
-    def __init__(self, site) -> None:
+    def __init__(self, site) -> None:  # type:ignore[no-untyped-def]
         super().__init__()
         self.transids: list = []
         # Resources are only fetched and verified once per session
@@ -31,7 +31,7 @@ class CMKWebSession:
         self.site = site
         self.session = requests.Session()
 
-    def check_redirect(self, path, expected_target=None) -> None:
+    def check_redirect(self, path, expected_target=None) -> None:  # type:ignore[no-untyped-def]
         response = self.get(path, expected_code=302, allow_redirects=False)
         if expected_target:
             if response.headers["Location"] != expected_target:
@@ -41,13 +41,13 @@ class CMKWebSession:
                 )
             assert response.headers["Location"] == expected_target
 
-    def get(self, *args, **kwargs) -> requests.Response:
+    def get(self, *args, **kwargs) -> requests.Response:  # type:ignore[no-untyped-def]
         return self.request("get", *args, **kwargs)
 
-    def post(self, *args, **kwargs) -> requests.Response:
+    def post(self, *args, **kwargs) -> requests.Response:  # type:ignore[no-untyped-def]
         return self.request("post", *args, **kwargs)
 
-    def request(
+    def request(  # type:ignore[no-untyped-def]
         self,
         method,
         path,
@@ -77,12 +77,14 @@ class CMKWebSession:
         self._handle_http_response(response, expected_code, allow_redirect_to_login)
         return response
 
-    def _add_transid(self, url) -> str:
+    def _add_transid(self, url) -> str:  # type:ignore[no-untyped-def]
         if not self.transids:
             raise Exception("Tried to add a transid, but none available at the moment")
         return url + ("&" if "?" in url else "?") + "_transid=" + self.transids.pop()
 
-    def _handle_http_response(self, response, expected_code, allow_redirect_to_login) -> None:
+    def _handle_http_response(  # type:ignore[no-untyped-def]
+        self, response, expected_code, allow_redirect_to_login
+    ) -> None:
         assert (
             response.status_code == expected_code
         ), "Got invalid status code (%d != %d) for URL %s (Location: %s)" % (
@@ -106,11 +108,11 @@ class CMKWebSession:
             self._find_errors(response.text)
             self._check_html_page_resources(response.url, soup)
 
-    def _get_mime_type(self, response) -> str:
+    def _get_mime_type(self, response) -> str:  # type:ignore[no-untyped-def]
         assert "Content-Type" in response.headers
         return response.headers["Content-Type"].split(";", 1)[0]
 
-    def _extract_transids(self, body, soup) -> list:
+    def _extract_transids(self, body, soup) -> list:  # type:ignore[no-untyped-def]
         """Extract transids from pages used in later actions issued by tests."""
 
         transids = set()
@@ -128,7 +130,7 @@ class CMKWebSession:
         matches = re.search("<div class=error>(.*?)</div>", body, re.M | re.DOTALL)
         assert not matches, "Found error message: %s" % matches.groups()
 
-    def _check_html_page_resources(self, url, soup) -> None:
+    def _check_html_page_resources(self, url, soup) -> None:  # type:ignore[no-untyped-def]
         base_url = urllib.parse.urlparse(url).path
         if ".py" in base_url:
             base_url = os.path.dirname(base_url)
@@ -150,7 +152,9 @@ class CMKWebSession:
             filters=[("rel", "shortcut icon")],
         )
 
-    def _check_resources(self, soup, base_url, tag, attr, allowed_mime_types, filters=None) -> None:
+    def _check_resources(  # type:ignore[no-untyped-def]
+        self, soup, base_url, tag, attr, allowed_mime_types, filters=None
+    ) -> None:
         for url in self._find_resource_urls(tag, attr, soup, filters):
             # Only check resources once per session
             if url in self.verified_resources:
@@ -163,7 +167,9 @@ class CMKWebSession:
             mime_type = self._get_mime_type(req)
             assert mime_type in allowed_mime_types
 
-    def _find_resource_urls(self, tag, attribute, soup, filters=None) -> list:
+    def _find_resource_urls(  # type:ignore[no-untyped-def]
+        self, tag, attribute, soup, filters=None
+    ) -> list:
         urls = []
 
         for element in soup.findAll(tag):
@@ -226,7 +232,9 @@ class CMKWebSession:
             "_secret": self.site.get_automation_secret(),
         }
 
-    def _api_request(self, url, data, expect_error: bool = False, output_format: str = "json"):
+    def _api_request(  # type:ignore[no-untyped-def]
+        self, url, data, expect_error: bool = False, output_format: str = "json"
+    ):
         data.update(self._automation_credentials())
 
         req = self.post(url, data=data)
@@ -250,7 +258,7 @@ class CMKWebSession:
 
         return response["result"]
 
-    def set_ruleset(self, ruleset_name, ruleset_spec) -> None:
+    def set_ruleset(self, ruleset_name, ruleset_spec) -> None:  # type:ignore[no-untyped-def]
         request = {
             "ruleset_name": ruleset_name,
         }
@@ -267,7 +275,7 @@ class CMKWebSession:
         assert result is None
 
     # TODO: Cleanup remaining API call
-    def set_site(self, site_id, site_config) -> None:
+    def set_site(self, site_id, site_config) -> None:  # type:ignore[no-untyped-def]
         result = self._api_request(
             "webapi.py?action=set_site&request_format=python&output_format=python",
             {"request": str({"site_id": site_id, "site_config": site_config})},
@@ -276,7 +284,9 @@ class CMKWebSession:
         assert result is None
 
     # TODO: Cleanup remaining API call
-    def login_site(self, site_id, user: str = "cmkadmin", password: str = "cmk") -> None:
+    def login_site(  # type:ignore[no-untyped-def]
+        self, site_id, user: str = "cmkadmin", password: str = "cmk"
+    ) -> None:
         result = self._api_request(
             "webapi.py?action=login_site",
             {"request": json.dumps({"site_id": site_id, "username": user, "password": password})},
@@ -288,7 +298,7 @@ class CMKWebSession:
         return self._api_request("webapi.py?action=get_all_users", {})
 
     # TODO: Cleanup remaining API call
-    def edit_htpasswd_users(self, users) -> None:
+    def edit_htpasswd_users(self, users) -> None:  # type:ignore[no-untyped-def]
         result = self._api_request(
             "webapi.py?action=edit_users", {"request": json.dumps({"users": users})}
         )

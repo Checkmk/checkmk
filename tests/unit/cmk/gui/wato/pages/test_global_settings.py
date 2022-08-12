@@ -15,7 +15,9 @@ from cmk.gui.wato.pages.global_settings import (
 from cmk.gui.watolib.search import MatchItem
 
 
-def test_match_item_generator_settings(monkeypatch, request_context) -> None:
+def test_match_item_generator_settings(  # type:ignore[no-untyped-def]
+    monkeypatch, request_context
+) -> None:
     class SomeConfigVariable(ConfigVariable):
         def ident(self) -> str:
             return "ident"

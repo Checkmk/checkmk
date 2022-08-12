@@ -203,7 +203,7 @@ from cmk.gui.wato.pages.rulesets import _is_var_to_delete
         ),
     ],
 )
-def test_vars_to_delete(
+def test_vars_to_delete(  # type:ignore[no-untyped-def]
     request_vars: List[Tuple[str, str]],
     expected_removed: List[str],
 ):

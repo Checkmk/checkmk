@@ -81,7 +81,7 @@ def fixture_tag_config():
 
 
 @pytest.fixture(autouse=True)
-def patch_tag_config(
+def patch_tag_config(  # type:ignore[no-untyped-def]
     request_context,
     monkeypatch: MonkeyPatch,
     tag_config: TagConfig,
@@ -273,7 +273,9 @@ class TestRuleConditionRenderer:
             ),
         ],
     )
-    def test_render_host_condition_text(self, folder_lookup, conditions, expected) -> None:
+    def test_render_host_condition_text(  # type:ignore[no-untyped-def]
+        self, folder_lookup, conditions, expected
+    ) -> None:
         assert RuleConditionRenderer()._render_host_condition_text(conditions) == HTML(expected)
 
     @pytest.mark.parametrize(
@@ -296,7 +298,9 @@ class TestRuleConditionRenderer:
             ),
         ],
     )
-    def test_render_host_condition_text_raises(self, folder_lookup, conditions, exception) -> None:
+    def test_render_host_condition_text_raises(  # type:ignore[no-untyped-def]
+        self, folder_lookup, conditions, exception
+    ) -> None:
         with pytest.raises(exception):
             assert RuleConditionRenderer()._render_host_condition_text(conditions)
 
@@ -407,7 +411,9 @@ class TestRuleConditionRenderer:
             ),
         ],
     )
-    def test_service_conditions(self, item_type, item_name, conditions, expected) -> None:
+    def test_service_conditions(  # type:ignore[no-untyped-def]
+        self, item_type, item_name, conditions, expected
+    ) -> None:
         assert (
             list(RuleConditionRenderer()._service_conditions(item_type, item_name, conditions))
             == expected

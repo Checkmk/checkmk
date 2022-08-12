@@ -424,7 +424,7 @@ def test_openapi_move_rule_before_specific_rule(
     assert _order_of_rules(wsgi_app, base) == ["They made me do it!", "rule2", "rule1"]
 
 
-def test_create_rule_permission_error_regression(
+def test_create_rule_permission_error_regression(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     base: str,
     with_admin,

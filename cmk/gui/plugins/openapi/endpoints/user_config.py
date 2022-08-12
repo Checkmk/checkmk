@@ -358,7 +358,7 @@ ContactOptions = TypedDict(
 )
 
 
-def _contact_options_to_internal_format(
+def _contact_options_to_internal_format(  # type:ignore[no-untyped-def]
     contact_options: ContactOptions, current_email: Optional[str] = None
 ):
     updated_details: Dict[str, Union[str, bool]] = {}
@@ -398,7 +398,9 @@ AuthOptions = TypedDict(
 )
 
 
-def _update_auth_options(internal_attrs, auth_options: AuthOptions, new_user=False):
+def _update_auth_options(  # type:ignore[no-untyped-def]
+    internal_attrs, auth_options: AuthOptions, new_user=False
+):
     if not auth_options:
         return internal_attrs
 
@@ -466,7 +468,7 @@ IdleDetails = TypedDict(
 )
 
 
-def _update_idle_options(internal_attrs, idle_details: IdleDetails):
+def _update_idle_options(internal_attrs, idle_details: IdleDetails):  # type:ignore[no-untyped-def]
     if not idle_details:
         return internal_attrs
 
@@ -574,7 +576,9 @@ NotificationDetails = TypedDict(
 )
 
 
-def _update_notification_options(internal_attrs, notification_options: NotificationDetails):
+def _update_notification_options(  # type:ignore[no-untyped-def]
+    internal_attrs, notification_options: NotificationDetails
+):
     internal_attrs["disable_notifications"] = _notification_options_to_internal_format(
         internal_attrs.get("disable_notifications", {}), notification_options
     )

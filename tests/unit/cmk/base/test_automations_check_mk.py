@@ -49,7 +49,7 @@ class TestAutomationDiagHost:
 
     @pytest.mark.usefixtures("scenario")
     @pytest.mark.usefixtures("patch_fetch")
-    def test_execute(self, hostname, ipaddress, raw_data) -> None:
+    def test_execute(self, hostname, ipaddress, raw_data) -> None:  # type:ignore[no-untyped-def]
         args = [hostname, "agent", ipaddress, "", "6557", "10", "5", "5", ""]
         assert check_mk.AutomationDiagHost().execute(args) == DiagHostResult(
             0,
@@ -180,7 +180,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
         ),
     ],
 )
-def test_automation_active_check(
+def test_automation_active_check(  # type:ignore[no-untyped-def]
     active_checks: Tuple[str, Sequence[Mapping[str, str]]],
     active_check_info: Mapping[str, Mapping[str, str]],
     host_attrs: Mapping[str, str],
@@ -227,7 +227,7 @@ def test_automation_active_check(
         ),
     ],
 )
-def test_automation_active_check_invalid_args(
+def test_automation_active_check_invalid_args(  # type:ignore[no-untyped-def]
     active_checks: Tuple[str, Sequence[Mapping[str, str]]],
     active_check_info: Mapping[str, Mapping[str, str]],
     host_attrs: Mapping[str, str],

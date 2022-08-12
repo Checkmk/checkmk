@@ -33,7 +33,7 @@ def alcatel_new_networking_products_scan_function(oid):
     )  # MIB object "alcatelENT1BaseMIB"
 
 
-def inventory_alcatel_cpu(info) -> DiscoveryResult:
+def inventory_alcatel_cpu(info) -> DiscoveryResult:  # type:ignore[no-untyped-def]
     return [(None, "alcatel_cpu_default_levels")]
 
 
@@ -52,7 +52,7 @@ def check_alcatel_cpu(_no_item, params, info):
     return status, "total: %.1f%%" % cpu_perc + levelstext, perfdata
 
 
-def inventory_alcatel_fans(info) -> DiscoveryResult:
+def inventory_alcatel_fans(info) -> DiscoveryResult:  # type:ignore[no-untyped-def]
     for nr, _value in enumerate(info, 1):
         yield str(nr), None
 
@@ -73,7 +73,7 @@ def check_alcatel_fans(item, _no_params, info):
     return state, "Fan " + fan_states.get(fan_state, "unknown (%s)" % fan_state)
 
 
-def inventory_alcatel_temp(info) -> DiscoveryResult:
+def inventory_alcatel_temp(info) -> DiscoveryResult:  # type:ignore[no-untyped-def]
     with_slot = len(info) != 1
     for index, row in enumerate(info):
         for oid, name in enumerate(["Board", "CPU"]):

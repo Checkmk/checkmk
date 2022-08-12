@@ -13,7 +13,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import CascadingDropdown, Dictionary, Integer, Percentage, Tuple
 
 
-def _parameter_valuespec_kube_pod_resources(help_text: str):
+def _parameter_valuespec_kube_pod_resources(help_text: str):  # type:ignore[no-untyped-def]
     return Dictionary(
         elements=[
             (

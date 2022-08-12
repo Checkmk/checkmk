@@ -14,7 +14,7 @@ from omdlib.version_info import VersionInfo
 
 
 @pytest.fixture(autouse=True)
-def omd_base_path(monkeypatch: MonkeyPatch, tmp_path: Path):
+def omd_base_path(monkeypatch: MonkeyPatch, tmp_path: Path):  # type:ignore[no-untyped-def]
     monkeypatch.setattr(omdlib.utils, "omd_base_path", lambda: str(tmp_path))
 
 

@@ -210,7 +210,7 @@ class GraphDashlet(Dashlet):
             self._dashlet_spec["_graph_title"] = graph_recipes[0]["title"]
 
     @staticmethod
-    def _resolve_site(host: str):
+    def _resolve_site(host: str):  # type:ignore[no-untyped-def]
         with sites.prepend_site():
             query = "GET hosts\nFilter: name = %s\nColumns: name" % livestatus.lqencode(host)
             try:

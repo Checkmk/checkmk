@@ -754,7 +754,7 @@ def _transform_if_check_parameters(v):  # pylint: disable=too-many-branches
     return v
 
 
-def _transform_packet_levels(
+def _transform_packet_levels(  # type:ignore[no-untyped-def]
     vs: dict,
     old_name: str,
     new_name: str,

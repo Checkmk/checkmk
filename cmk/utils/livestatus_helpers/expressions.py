@@ -170,7 +170,9 @@ class ScalarExpression(UnaryExpression):
     def empty(self) -> BinaryExpression:
         raise NotImplementedError("Not implemented for this type.")
 
-    def disparity(self, other, ignore_case=False) -> BinaryExpression:
+    def disparity(  # type:ignore[no-untyped-def]
+        self, other, ignore_case=False
+    ) -> BinaryExpression:
         raise NotImplementedError("Not implemented for this type.")
 
 

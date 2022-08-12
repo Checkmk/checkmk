@@ -27,7 +27,7 @@ from cmk.base.plugins.agent_based.utils.kube import (
 from cmk.gui.plugins.wato.check_parameters import kube_pod_status as wato_kube_pod_status
 
 
-def _mocked_container_info_from_state(
+def _mocked_container_info_from_state(  # type:ignore[no-untyped-def]
     state: Union[ContainerRunningState, ContainerTerminatedState, ContainerWaitingState]
 ):
     # The check only requires the state field to be populated, therefore all the other fields are
@@ -95,7 +95,7 @@ def _mocked_container_info_from_state(
         ),
     ],
 )
-def test_check_kube_pod_status_no_issues_in_containers(
+def test_check_kube_pod_status_no_issues_in_containers(  # type:ignore[no-untyped-def]
     section_kube_pod_containers: Optional[PodContainers],
     section_kube_pod_lifecycle: Optional[PodLifeCycle],
     expected_result,
@@ -161,7 +161,7 @@ def test_check_kube_pod_status_no_issues_in_containers(
         ),
     ],
 )
-def test_check_kube_pod_status_failing_container(
+def test_check_kube_pod_status_failing_container(  # type:ignore[no-untyped-def]
     section_kube_pod_containers: Optional[PodContainers],
     section_kube_pod_lifecycle: Optional[PodLifeCycle],
     expected_result,
@@ -253,7 +253,7 @@ def test_check_kube_pod_status_failing_container(
         ),
     ],
 )
-def test_check_kube_pod_status_multiple_issues(
+def test_check_kube_pod_status_multiple_issues(  # type:ignore[no-untyped-def]
     section_kube_pod_containers: Optional[PodContainers],
     section_kube_pod_lifecycle: Optional[PodLifeCycle],
     expected_result,
@@ -329,7 +329,7 @@ def test_check_alert_if_pending_too_long() -> None:
         ),
     ],
 )
-def test_check_kube_pod_status_init_container_broken(
+def test_check_kube_pod_status_init_container_broken(  # type:ignore[no-untyped-def]
     section_kube_pod_init_containers: PodContainers,
     section_kube_pod_containers: PodContainers,
     section_kube_pod_lifecycle: Optional[PodLifeCycle],

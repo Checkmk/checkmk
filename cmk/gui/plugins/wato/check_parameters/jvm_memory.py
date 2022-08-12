@@ -72,7 +72,9 @@ def _transform_legacy_parameters_jvm_memory(
     return params
 
 
-def _get_memory_level_elements(mem_type) -> Iterable[TupleType[str, Tuple]]:
+def _get_memory_level_elements(  # type:ignore[no-untyped-def]
+    mem_type,
+) -> Iterable[TupleType[str, Tuple]]:
     return [
         (
             "perc_%s" % mem_type,

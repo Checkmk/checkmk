@@ -216,7 +216,9 @@ def api_request_authentication():
     )
 
 
-def api_request_connection_elements(help_text: str, default_port: int):
+def api_request_connection_elements(  # type:ignore[no-untyped-def]
+    help_text: str, default_port: int
+):
     return [
         ("port", Integer(title=_("Port"), default_value=default_port)),
         (

@@ -157,7 +157,9 @@ def _legacy_dashlet_type(attrs=None):
     return dashboard.dashlet_registry["test123"]
 
 
-def test_registry_of_old_dashlet_plugins(reset_dashlet_types) -> None:
+def test_registry_of_old_dashlet_plugins(  # type:ignore[no-untyped-def]
+    reset_dashlet_types,
+) -> None:
     dashlet_type = _legacy_dashlet_type()
     assert dashlet_type.title() == "Test dashlet"
     assert dashlet_type.description() == "Descr"
@@ -182,14 +184,14 @@ _attr_map = [
 ]
 
 
-def test_old_dashlet_defaults(reset_dashlet_types) -> None:
+def test_old_dashlet_defaults(reset_dashlet_types) -> None:  # type:ignore[no-untyped-def]
     dashlet_type = _legacy_dashlet_type()
     dashlet = dashlet_type(dashboard_name="main", dashboard={}, dashlet_id=0, dashlet={})
     for _attr, new_method, deflt in _attr_map:
         assert getattr(dashlet, new_method)() == deflt
 
 
-def test_old_dashlet_title_func(reset_dashlet_types) -> None:
+def test_old_dashlet_title_func(reset_dashlet_types) -> None:  # type:ignore[no-untyped-def]
     dashlet_type = _legacy_dashlet_type(
         {
             "title_func": lambda d: "xyz",
@@ -201,7 +203,7 @@ def test_old_dashlet_title_func(reset_dashlet_types) -> None:
     assert dashlet.display_title() == "xyz"
 
 
-def test_old_dashlet_on_resize(reset_dashlet_types) -> None:
+def test_old_dashlet_on_resize(reset_dashlet_types) -> None:  # type:ignore[no-untyped-def]
     dashlet_type = _legacy_dashlet_type(
         {
             "on_resize": lambda x, y: "xyz",
@@ -212,7 +214,7 @@ def test_old_dashlet_on_resize(reset_dashlet_types) -> None:
     assert dashlet.on_resize() == "xyz"
 
 
-def test_old_dashlet_on_refresh(reset_dashlet_types) -> None:
+def test_old_dashlet_on_refresh(reset_dashlet_types) -> None:  # type:ignore[no-untyped-def]
     dashlet_type = _legacy_dashlet_type(
         {
             "on_refresh": lambda nr, the_dashlet: "xyz",
@@ -223,7 +225,9 @@ def test_old_dashlet_on_refresh(reset_dashlet_types) -> None:
     assert dashlet.on_refresh() == "xyz"
 
 
-def test_old_dashlet_iframe_render(mocker, request_context, reset_dashlet_types) -> None:
+def test_old_dashlet_iframe_render(  # type:ignore[no-untyped-def]
+    mocker, request_context, reset_dashlet_types
+) -> None:
     iframe_render_mock = mocker.Mock()
 
     dashlet_type = _legacy_dashlet_type(
@@ -245,7 +249,9 @@ def test_old_dashlet_iframe_render(mocker, request_context, reset_dashlet_types)
     assert dashlet._get_iframe_url() == "dashboard_dashlet.py?id=1&mtime=123&name=main"
 
 
-def test_old_dashlet_iframe_urlfunc(mocker, request_context, reset_dashlet_types) -> None:
+def test_old_dashlet_iframe_urlfunc(  # type:ignore[no-untyped-def]
+    mocker, request_context, reset_dashlet_types
+) -> None:
     dashlet_type = _legacy_dashlet_type(
         {
             "iframe_urlfunc": lambda x: "blaurl",
@@ -256,7 +262,9 @@ def test_old_dashlet_iframe_urlfunc(mocker, request_context, reset_dashlet_types
     assert dashlet._get_iframe_url() == "blaurl"
 
 
-def test_old_dashlet_render(mocker, request_context, reset_dashlet_types) -> None:
+def test_old_dashlet_render(  # type:ignore[no-untyped-def]
+    mocker, request_context, reset_dashlet_types
+) -> None:
     render_mock = mocker.Mock()
 
     dashlet_type = _legacy_dashlet_type(
@@ -273,13 +281,15 @@ def test_old_dashlet_render(mocker, request_context, reset_dashlet_types) -> Non
     assert render_mock.called_once()
 
 
-def test_old_dashlet_add_urlfunc(mocker, reset_dashlet_types) -> None:
+def test_old_dashlet_add_urlfunc(  # type:ignore[no-untyped-def]
+    mocker, reset_dashlet_types
+) -> None:
     dashlet_type = _legacy_dashlet_type({"add_urlfunc": lambda: "xyz"})
     dashlet = dashlet_type(dashboard_name="main", dashboard={}, dashlet_id=0, dashlet={})
     assert dashlet.add_url() == "xyz"
 
 
-def test_old_dashlet_position(mocker, reset_dashlet_types) -> None:
+def test_old_dashlet_position(mocker, reset_dashlet_types) -> None:  # type:ignore[no-untyped-def]
     dashlet_type = _legacy_dashlet_type({})
     assert dashlet_type.initial_position() == (1, 1)
 
@@ -292,7 +302,7 @@ def test_old_dashlet_position(mocker, reset_dashlet_types) -> None:
     assert dashlet.position() == (10, 12)
 
 
-def test_old_dashlet_size(mocker, reset_dashlet_types) -> None:
+def test_old_dashlet_size(mocker, reset_dashlet_types) -> None:  # type:ignore[no-untyped-def]
     dashlet_type = _legacy_dashlet_type({})
     assert dashlet_type.initial_size() == (12, 12)
 
@@ -308,7 +318,7 @@ def test_old_dashlet_size(mocker, reset_dashlet_types) -> None:
     assert dashlet.size() == (30, 20)
 
 
-def test_old_dashlet_settings(reset_dashlet_types) -> None:
+def test_old_dashlet_settings(reset_dashlet_types) -> None:  # type:ignore[no-untyped-def]
     dashlet_attrs = {}
     for attr, _new_method, _deflt in _attr_map:
         dashlet_attrs[attr] = attr
@@ -320,7 +330,7 @@ def test_old_dashlet_settings(reset_dashlet_types) -> None:
         assert getattr(dashlet, new_method)() == attr
 
 
-def test_dashlet_type_defaults(request_context) -> None:
+def test_dashlet_type_defaults(request_context) -> None:  # type:ignore[no-untyped-def]
     assert dashboard.Dashlet.single_infos() == []
     assert dashboard.Dashlet.is_selectable() is True
     assert dashboard.Dashlet.is_resizable() is True

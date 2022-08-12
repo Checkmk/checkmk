@@ -30,7 +30,7 @@ from cmk.gui.logged_in import user
         ("/a/b/../../etc/shadow", False),
     ],
 )
-def test_is_canonical(monkeypatch, path, expected) -> None:
+def test_is_canonical(monkeypatch, path, expected) -> None:  # type:ignore[no-untyped-def]
     monkeypatch.setattr("os.getcwd", lambda: "/test")
     monkeypatch.setattr("os.path.islink", lambda x: False)
 

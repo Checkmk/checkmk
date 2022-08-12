@@ -1060,7 +1060,7 @@ match_plugin_registry.register(ServiceMatchPlugin())
 
 
 class HostMatchPlugin(ABCLivestatusMatchPlugin):
-    def __init__(self, livestatus_field, name) -> None:
+    def __init__(self, livestatus_field, name) -> None:  # type:ignore[no-untyped-def]
         super().__init__(["hosts", "services"], "hosts", name)
         self._livestatus_field = livestatus_field  # address, name or alias
 
@@ -1506,7 +1506,7 @@ class MenuSearchResultsRenderer:
         html.span(topic)
         html.close_h2()
 
-    def _render_result(self, result, hidden=False) -> None:
+    def _render_result(self, result, hidden=False) -> None:  # type:ignore[no-untyped-def]
         html.open_li(
             class_="hidden" if hidden else "",
             **{"data-extended": "false" if hidden else ""},

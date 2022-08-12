@@ -338,7 +338,7 @@ def list_folders(params: Mapping[str, Any]) -> Response:
     return serve_json(_folders_collection(folders, params["show_hosts"]))
 
 
-def _folders_collection(
+def _folders_collection(  # type:ignore[no-untyped-def]
     folders: List[CREFolder],
     show_hosts: bool,
 ):
@@ -418,7 +418,7 @@ def _serve_folder(
     return response
 
 
-def _serialize_folder(folder: CREFolder, show_hosts):
+def _serialize_folder(folder: CREFolder, show_hosts):  # type:ignore[no-untyped-def]
     links = []
 
     if not folder.is_root():

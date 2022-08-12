@@ -628,7 +628,7 @@ def test_update_contacts_dict(master: dict, slave: dict, result: dict) -> None:
 # This test does not perform the full synchronization. It executes the central site parts and mocks
 # the remote site HTTP calls
 @pytest.mark.usefixtures("request_context")
-def test_synchronize_site(
+def test_synchronize_site(  # type:ignore[no-untyped-def]
     mocked_responses: responses.RequestsMock,
     monkeypatch: pytest.MonkeyPatch,
     edition: cmk_version.Edition,

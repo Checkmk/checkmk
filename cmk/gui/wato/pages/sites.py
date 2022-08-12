@@ -617,7 +617,9 @@ class ModeDistributedMonitoring(WatoMode):
         return None
 
     # Mypy wants the explicit return, pylint does not like it.
-    def _action_delete(self, delete_id) -> ActionResult:  # pylint: disable=useless-return
+    def _action_delete(  # type:ignore[no-untyped-def] # pylint: disable=useless-return
+        self, delete_id
+    ) -> ActionResult:
         # TODO: Can we delete this ancient code? The site attribute is always available
         # these days and the following code does not seem to have any effect.
         configured_sites = self._site_mgmt.load_sites()

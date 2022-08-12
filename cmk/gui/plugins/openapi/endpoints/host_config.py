@@ -266,7 +266,7 @@ def _bulk_host_action_response(
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
     query_params=[EFFECTIVE_ATTRIBUTES],
 )
-def list_hosts(param) -> Response:
+def list_hosts(param) -> Response:  # type:ignore[no-untyped-def]
     """Show all hosts"""
     root_folder = Folder.root_folder()
     root_folder.need_recursive_permission("read")

@@ -396,7 +396,7 @@ class ModeObjectParameters(WatoMode):
         html.close_tr()
         html.close_table()
 
-    def _render_rule_reason(
+    def _render_rule_reason(  # type:ignore[no-untyped-def]
         self, title, title_url, reason, reason_url, is_default, setting: ValueSpecText | Item
     ) -> None:
         if title_url:
@@ -417,7 +417,7 @@ class ModeObjectParameters(WatoMode):
         html.close_tr()
         html.close_table()
 
-    def _output_analysed_ruleset(  # pylint: disable=too-many-branches
+    def _output_analysed_ruleset(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
         self,
         all_rulesets: AllRulesets,
         rulespec: Rulespec,

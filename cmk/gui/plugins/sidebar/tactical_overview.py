@@ -497,7 +497,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         if error.site_ids:
             self._create_status_box(error.site_ids, "tacticalalert", error.readable)
 
-    def _create_status_box(
+    def _create_status_box(  # type:ignore[no-untyped-def]
         self,
         site_ids: Collection[livestatus.SiteId],
         css_class: str,

@@ -400,7 +400,7 @@ BILeafTreeState = Tuple[Dict[str, Any], Any, Dict[str, Any]]
 
 # Creates are hierarchical dictionary which can be read by the NodeVisualization framework
 class NodeVisualizationBIDataMapper:
-    def __init__(self, is_single_host_aggregation=False) -> None:
+    def __init__(self, is_single_host_aggregation=False) -> None:  # type:ignore[no-untyped-def]
         super().__init__()
         self._is_single_host_aggregation = is_single_host_aggregation
 
@@ -817,7 +817,7 @@ class Topology:
     def is_border_host(self, hostname: HostName) -> bool:
         return hostname in self._border_hosts
 
-    def _update_meshes(self, new_hosts: List[_MeshNode]):
+    def _update_meshes(self, new_hosts: List[_MeshNode]):  # type:ignore[no-untyped-def]
         # Data flow is child->parent
         # Incoming data comes from child
         # Outgoing data goes to parent

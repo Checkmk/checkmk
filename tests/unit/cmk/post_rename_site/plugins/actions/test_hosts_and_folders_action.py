@@ -89,7 +89,7 @@ host_attributes.update(
     assert hosts_config["host_tags"]["ag"]["site"] == "dingdong"
 
 
-def test_rewrite_tags_no_explicit_site_set(monkeypatch) -> None:
+def test_rewrite_tags_no_explicit_site_set(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     _write_folder_attributes(
         {
             "title": "Main",

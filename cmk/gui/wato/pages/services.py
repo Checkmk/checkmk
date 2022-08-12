@@ -528,7 +528,7 @@ class DiscoveryPageRenderer:
                 discovery_result,
             )
 
-    def _render_host_labels(
+    def _render_host_labels(  # type:ignore[no-untyped-def]
         self,
         table,
         discovery_result: DiscoveryResult,
@@ -576,7 +576,9 @@ class DiscoveryPageRenderer:
             _("Active"),
         )
 
-    def _create_host_label_row(self, table, host_labels, text) -> None:
+    def _create_host_label_row(  # type:ignore[no-untyped-def]
+        self, table, host_labels, text
+    ) -> None:
         if not host_labels:
             return
 
@@ -675,7 +677,7 @@ class DiscoveryPageRenderer:
             html.hidden_fields()
             html.end_form()
 
-    def _is_active(self, discovery_result) -> bool:
+    def _is_active(self, discovery_result) -> bool:  # type:ignore[no-untyped-def]
         return discovery_result.job_status["is_active"]
 
     def _group_check_table_by_state(
@@ -847,7 +849,7 @@ class DiscoveryPageRenderer:
     def _enable_bulk_button(self, source, target):
         enable_page_menu_entry(html, "bulk_%s_%s" % (source, target))
 
-    def _show_check_row(
+    def _show_check_row(  # type:ignore[no-untyped-def]
         self, table, discovery_result, api_request, entry: CheckPreviewEntry, show_bulk_actions
     ) -> None:
         statename = "" if entry.state is None else short_service_state_name(entry.state, "")
@@ -1003,7 +1005,7 @@ class DiscoveryPageRenderer:
         )
         html.checkbox(varname=name, deflt=checked, class_=css_classes)
 
-    def _show_actions(  # pylint: disable=too-many-branches
+    def _show_actions(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
         self,
         table,
         discovery_result,
@@ -1169,7 +1171,7 @@ class DiscoveryPageRenderer:
         )
         return 1
 
-    def _check_parameters_button(self, entry: CheckPreviewEntry):
+    def _check_parameters_button(self, entry: CheckPreviewEntry):  # type:ignore[no-untyped-def]
         if not entry.ruleset_name:
             return 0
 
@@ -1452,7 +1454,9 @@ class ModeAjaxExecuteCheck(AjaxPage):
         }
 
 
-def service_page_menu(breadcrumb, host: CREHost, options: DiscoveryOptions):
+def service_page_menu(  # type:ignore[no-untyped-def]
+    breadcrumb, host: CREHost, options: DiscoveryOptions
+):
     menu = PageMenu(
         dropdowns=[
             PageMenuDropdown(

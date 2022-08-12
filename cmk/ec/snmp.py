@@ -170,7 +170,7 @@ class SNMPTrapEngine:
             wholeMsg=message,
         )
 
-    def _handle_snmptrap(
+    def _handle_snmptrap(  # type:ignore[no-untyped-def]
         self,
         snmp_engine: pysnmp.entity.engine.SnmpEngine,
         state_reference: str,

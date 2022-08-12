@@ -84,7 +84,7 @@ def mock_livestatus(
 
 
 @contextlib.contextmanager
-def simple_expect(
+def simple_expect(  # type:ignore[no-untyped-def]
     query="",
     match_type: MatchType = "loose",
     expect_status_query: bool = True,

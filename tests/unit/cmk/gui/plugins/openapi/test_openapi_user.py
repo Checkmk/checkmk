@@ -29,7 +29,9 @@ managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #
 
 
 @managedtest
-def test_openapi_customer(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch) -> None:
+def test_openapi_customer(  # type:ignore[no-untyped-def]
+    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
+) -> None:
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
@@ -83,7 +85,9 @@ def test_openapi_customer(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch)
 
 
 @managedtest
-def test_openapi_user_minimal_settings(monkeypatch, run_as_superuser) -> None:
+def test_openapi_user_minimal_settings(  # type:ignore[no-untyped-def]
+    monkeypatch, run_as_superuser
+) -> None:
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
@@ -136,7 +140,7 @@ def test_openapi_user_minimal_settings(monkeypatch, run_as_superuser) -> None:
 
 
 @managedtest
-def test_openapi_user_minimal_password_settings(
+def test_openapi_user_minimal_password_settings(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     monkeypatch,
 ):
@@ -195,7 +199,7 @@ def test_openapi_user_minimal_password_settings(
     assert extensions["roles"] == ["user"]
 
 
-def test_openapi_all_users(wsgi_app, with_automation_user) -> None:
+def test_openapi_all_users(wsgi_app, with_automation_user) -> None:  # type:ignore[no-untyped-def]
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
     base = "/NO_SITE/check_mk/api/1.0"
@@ -215,7 +219,7 @@ def test_openapi_all_users(wsgi_app, with_automation_user) -> None:
 
 
 @managedtest
-def test_openapi_user_config(
+def test_openapi_user_config(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK, with_automation_user, monkeypatch
 ):
     monkeypatch.setattr(
@@ -292,7 +296,9 @@ def test_openapi_user_config(
 
 
 @managedtest
-def test_openapi_user_internal_with_notifications(monkeypatch, run_as_superuser) -> None:
+def test_openapi_user_internal_with_notifications(  # type:ignore[no-untyped-def]
+    monkeypatch, run_as_superuser
+) -> None:
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
@@ -348,7 +354,9 @@ def test_openapi_user_internal_with_notifications(monkeypatch, run_as_superuser)
 
 
 @managedtest
-def test_openapi_user_edit_auth(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch) -> None:
+def test_openapi_user_edit_auth(  # type:ignore[no-untyped-def]
+    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
+) -> None:
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
@@ -409,7 +417,9 @@ def test_openapi_user_edit_auth(aut_user_auth_wsgi_app: WebTestAppForCMK, monkey
 
 
 @managedtest
-def test_openapi_user_internal_auth_handling(monkeypatch, run_as_superuser) -> None:
+def test_openapi_user_internal_auth_handling(  # type:ignore[no-untyped-def]
+    monkeypatch, run_as_superuser
+) -> None:
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
@@ -534,7 +544,7 @@ def test_openapi_user_internal_auth_handling(monkeypatch, run_as_superuser) -> N
 
 
 @managedtest
-def test_openapi_managed_global_edition(
+def test_openapi_managed_global_edition(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
 ) -> None:
     monkeypatch.setattr(
@@ -565,7 +575,9 @@ def test_openapi_managed_global_edition(
 
 
 @managedtest
-def test_managed_global_internal(monkeypatch, run_as_superuser) -> None:
+def test_managed_global_internal(  # type:ignore[no-untyped-def]
+    monkeypatch, run_as_superuser
+) -> None:
     # this test uses the internal mechanics of the user endpoint
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
@@ -603,7 +615,9 @@ def test_managed_global_internal(monkeypatch, run_as_superuser) -> None:
 
 
 @managedtest
-def test_global_full_configuration(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch) -> None:
+def test_global_full_configuration(  # type:ignore[no-untyped-def]
+    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
+) -> None:
     # this test uses the internal mechanics of the user endpoint
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
@@ -663,7 +677,9 @@ def test_global_full_configuration(aut_user_auth_wsgi_app: WebTestAppForCMK, mon
     }
 
 
-def test_managed_idle_internal(with_automation_user, monkeypatch, run_as_superuser) -> None:
+def test_managed_idle_internal(  # type:ignore[no-untyped-def]
+    with_automation_user, monkeypatch, run_as_superuser
+) -> None:
     # this test uses the internal mechanics of the user endpoint
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
@@ -775,7 +791,7 @@ def test_openapi_user_update_contact_options(
 
 
 @managedtest
-def test_openapi_user_disable_notifications(
+def test_openapi_user_disable_notifications(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
 ) -> None:
     # this test uses the internal mechanics of the user endpoint
@@ -823,7 +839,7 @@ def test_openapi_user_disable_notifications(
 
 
 @managedtest
-def test_show_all_users_with_no_email(
+def test_show_all_users_with_no_email(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
 ) -> None:
     """Test a user which has no email internally similar to the internal cmkadmin user"""
@@ -862,7 +878,7 @@ def test_show_all_users_with_no_email(
 
 
 @managedtest
-def test_user_enforce_password_change_option(
+def test_user_enforce_password_change_option(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
 ) -> None:
     """Test enforce password change option for create and update endpoints"""
@@ -910,7 +926,9 @@ def test_user_enforce_password_change_option(
 
 
 @managedtest
-def test_user_interface_settings(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch) -> None:
+def test_user_interface_settings(  # type:ignore[no-untyped-def]
+    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
+) -> None:
     """Test enforce password change option for create and update endpoints"""
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
@@ -981,7 +999,7 @@ def _internal_attributes(user_attributes):
 
 
 @managedtest
-def test_openapi_new_user_with_cloned_role(
+def test_openapi_new_user_with_cloned_role(  # type:ignore[no-untyped-def]
     base: str, aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
 ):
     monkeypatch.setattr(
@@ -1021,7 +1039,7 @@ def test_openapi_new_user_with_cloned_role(
 
 
 @managedtest
-def test_openapi_new_user_with_non_existing_role(
+def test_openapi_new_user_with_non_existing_role(  # type:ignore[no-untyped-def]
     base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
 ):
     userrole = "non-existing-userole"

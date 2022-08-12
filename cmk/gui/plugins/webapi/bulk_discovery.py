@@ -78,7 +78,7 @@ class APICallBulkDiscovery(APICallCollection):
             "started": True,
         }
 
-    def _get_parameters_from_request(
+    def _get_parameters_from_request(  # type:ignore[no-untyped-def]
         self, request
     ) -> Tuple[DiscoveryMode, DoFullScan, BulkSize, IgnoreErrors]:
         """Get and verify discovery parameters from the request

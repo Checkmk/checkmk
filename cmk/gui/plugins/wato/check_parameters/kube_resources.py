@@ -27,7 +27,7 @@ def valuespec_percentual(title: str) -> CascadingDropdown:
     )
 
 
-def _parameter_valuespec_memory(
+def _parameter_valuespec_memory(  # type:ignore[no-untyped-def]
     valuespec_help: str,
     options: Optional[Sequence[Literal["usage", "request", "limit", "cluster", "node"]]] = None,
 ):
@@ -99,7 +99,7 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_cpu(
+def _parameter_valuespec_cpu(  # type:ignore[no-untyped-def]
     valuespec_help: str,
     options: Optional[Sequence[Literal["usage", "request", "limit", "cluster", "node"]]] = None,
 ):

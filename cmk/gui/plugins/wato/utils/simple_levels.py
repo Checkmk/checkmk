@@ -19,7 +19,7 @@ def _NoLevels() -> FixedValue:
 
 
 class _Spec(Protocol):
-    def __call__(self, title: str, default_value: float):
+    def __call__(self, title: str, default_value: float):  # type:ignore[no-untyped-def]
         ...
 
 

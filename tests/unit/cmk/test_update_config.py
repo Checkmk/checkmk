@@ -1000,7 +1000,7 @@ def test__create_timeperiod(uc: update_config.UpdateConfig) -> None:
     ],
 )
 @pytest.mark.usefixtures("request_context")
-def test__transform_fileinfo_timeofday_to_timeperiods(
+def test__transform_fileinfo_timeofday_to_timeperiods(  # type:ignore[no-untyped-def]
     uc: update_config.UpdateConfig, old_param_value: RuleValue, transformed_param_value: RuleValue
 ):
     rulesets = RulesetCollection()

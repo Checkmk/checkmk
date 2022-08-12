@@ -41,5 +41,6 @@ $REPO_PATH/omd/packages/omd" \
     --check-untyped-defs \
     --strict-equality \
     --no-implicit-optional \
+    --disallow-incomplete-defs \
     ${JUNIT_XML} \
     "$@"

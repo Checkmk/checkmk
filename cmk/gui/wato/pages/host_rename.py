@@ -62,7 +62,7 @@ class RenameHostsBackgroundJob(WatoBackgroundJob):
     def gui_title(cls):
         return _("Host renaming")
 
-    def __init__(self, title=None) -> None:
+    def __init__(self, title=None) -> None:  # type:ignore[no-untyped-def]
         last_job_status = WatoBackgroundJob(self.job_prefix).get_status()
         super().__init__(
             self.job_prefix,
@@ -81,7 +81,7 @@ class RenameHostsBackgroundJob(WatoBackgroundJob):
 
 @gui_background_job.job_registry.register
 class RenameHostBackgroundJob(RenameHostsBackgroundJob):
-    def __init__(self, host, title=None) -> None:
+    def __init__(self, host, title=None) -> None:  # type:ignore[no-untyped-def]
         super().__init__(title)
         self._host = host
 
@@ -552,7 +552,7 @@ def rename_hosts(renamings, job_interface=None):
     return action_texts, auth_problems
 
 
-def render_renaming_actions(action_counts) -> list[str]:
+def render_renaming_actions(action_counts) -> list[str]:  # type:ignore[no-untyped-def]
     action_titles = {
         "folder": _("Folder"),
         "notify_user": _("Users' notification rule"),

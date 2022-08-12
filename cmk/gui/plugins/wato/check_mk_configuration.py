@@ -5228,7 +5228,7 @@ rulespec_registry.register(
 )
 
 
-def _encryption_secret(title) -> _Tuple[str, PasswordSpec]:
+def _encryption_secret(title) -> _Tuple[str, PasswordSpec]:  # type:ignore[no-untyped-def]
     return ("passphrase", PasswordSpec(title=title, pwlen=16, allow_empty=False))
 
 

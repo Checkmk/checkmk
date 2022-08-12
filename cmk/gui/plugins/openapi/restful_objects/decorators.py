@@ -842,6 +842,10 @@ class Endpoint:
                     )
 
             response.freeze()
+            # response code 204 does not have headers.
+            if response.status_code == 204:
+                for key in ["Content-Type", "Etag"]:
+                    del response.headers[key]
             return response
 
         def _wrap_with_wato_lock(func: WrappedFunc) -> WrappedFunc:

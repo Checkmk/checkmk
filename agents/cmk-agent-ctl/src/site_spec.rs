@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use super::config::ClientConfig;
-use super::misc::anyhow_error_to_human_redable;
+use super::misc::anyhow_error_to_human_readable;
 use anyhow::{anyhow, Context, Error as AnyhowError, Result as AnyhowResult};
 use std::fmt::Display;
 use std::str::FromStr;
@@ -167,8 +167,8 @@ impl<'a> AgentRecvPortDiscoverer<'a> {
 
         return Err(anyhow!(
             "Failed to discover agent receiver port from Checkmk REST API, both with http and https.\n\nError with http:\n{}\n\nError with https:\n{}",
-            anyhow_error_to_human_redable(&error_messages["https"]),
-            anyhow_error_to_human_redable(&error_messages["http"]),
+            anyhow_error_to_human_readable(&error_messages["https"]),
+            anyhow_error_to_human_readable(&error_messages["http"]),
         ));
     }
 }

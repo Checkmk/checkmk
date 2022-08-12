@@ -685,7 +685,7 @@ Pipfile.lock: Pipfile
 	      echo "CI is $(CI), Python version of .venv is $(PY_VIRT_MAJ_MIN), Target python version is $(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)"; \
 	      echo "Cleaning up .venv before sync..."; \
 	      $(RM) -r .venv; \
-    	    fi; \
+	    fi; \
 	    ( PIPENV_COLORBLIND=1 SKIP_MAKEFILE_CALL=1 VIRTUAL_ENV="" $(PIPENV) sync --python $(PYTHON_MAJOR_DOT_MINOR) --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
 	) $(LOCK_FD)>$(LOCK_PATH)
 

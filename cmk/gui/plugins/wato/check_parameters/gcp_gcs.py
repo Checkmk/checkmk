@@ -250,6 +250,16 @@ rulespec_registry.register(
     )
 )
 
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="gcp_gce_storage",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_gce_disk,
+        title=lambda: _("GCP/GCE storage IO"),
+    )
+)
+
 
 def _vs_cost() -> Dictionary:
     return Dictionary(

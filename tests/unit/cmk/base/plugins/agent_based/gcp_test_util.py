@@ -7,7 +7,7 @@ import datetime
 import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Callable, Optional, Sequence
+from typing import Callable, Mapping, Optional, Sequence, Tuple
 
 import pytest
 from google.cloud import monitoring_v3
@@ -64,6 +64,9 @@ class DiscoverTester(ABC):
     def test_no_assets_yield_no_section(self) -> None:
         assert len(list(self.discover(assets=None))) == 0
 
+    def test_found_some_assets(self, asset_section: gcp.AssetSection) -> None:
+        assert len(asset_section._assets) != 0
+
     def test_discover_project_label(self, services: Sequence[Service]) -> None:
         for asset in services:
             assert ServiceLabel("gcp/projectId", "backup-255820") in asset.labels
@@ -85,19 +88,32 @@ class DiscoverTester(ABC):
         assert len(list(self.discover(parse_assets(string_table)))) == 0
 
 
+def generate_labels(item: str, service_desc: agent_gcp.Service) -> Tuple[Mapping, Mapping]:
+    metric_labels = {}
+    resource_labels = {"project": "test"}
+    if "resource" in service_desc.default_groupby:
+        resource_labels[service_desc.default_groupby.split(".", 1)[-1]] = item
+    elif "metric" in service_desc.default_groupby:
+        metric_labels[service_desc.default_groupby.split(".", 1)[-1]] = item
+    else:
+        raise RuntimeError("Unknown label for group by")
+    return metric_labels, resource_labels
+
+
 def generate_timeseries(item: str, value: float, service_desc: agent_gcp.Service) -> StringTable:
     start_time = datetime.datetime(2016, 4, 6, 22, 5, 0, 42)
     end_time = datetime.datetime(2016, 4, 6, 22, 5, 1, 42)
     interval = monitoring_v3.TimeInterval(end_time=end_time, start_time=start_time)
     point = monitoring_v3.Point({"interval": interval, "value": {"double_value": value}})
 
+    metric_labels, resource_labels = generate_labels(item, service_desc)
+
     time_series = []
     for metric in service_desc.metrics:
         metric_type = metric.name
-        resource_labels = {"project": "test", service_desc.default_groupby.split(".", 1)[-1]: item}
         ts = monitoring_v3.TimeSeries(
             {
-                "metric": {"type": metric_type, "labels": {}},
+                "metric": {"type": metric_type, "labels": metric_labels},
                 "resource": {"type": "does_not_matter_i_think", "labels": resource_labels},
                 "metric_kind": 1,
                 "value_type": 3,

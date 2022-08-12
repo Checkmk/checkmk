@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::sync::Arc;
 
-use crate::{config, misc::anyhow_error_to_human_redable, monitoring_data, tls_server, types};
+use crate::{config, misc::anyhow_error_to_human_readable, monitoring_data, tls_server, types};
 use anyhow::{anyhow, bail, Context, Error as AnyhowError, Result as AnyhowResult};
 use async_trait::async_trait;
 use log::{debug, info, warn};
@@ -268,8 +268,8 @@ fn tcp_listener(listening_config: ListeningConfig) -> AnyhowResult<TcpListenerSt
     };
     bail!(
         "Failed to listen on TCP socket for incoming pull connections.\n\nError with IPV6:\n{}\n\nError with IPV4:\n{}",
-        anyhow_error_to_human_redable(&err_v6),
-        anyhow_error_to_human_redable(&err_v4),
+        anyhow_error_to_human_readable(&err_v6),
+        anyhow_error_to_human_readable(&err_v4),
     );
 }
 

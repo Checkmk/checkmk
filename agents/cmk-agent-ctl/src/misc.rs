@@ -4,7 +4,7 @@
 
 use anyhow::Error as AnyhowError;
 
-pub fn anyhow_error_to_human_redable(err: &AnyhowError) -> String {
+pub fn anyhow_error_to_human_readable(err: &AnyhowError) -> String {
     err.chain()
         .map(|e| e.to_string())
         .collect::<Vec<String>>()
@@ -17,9 +17,11 @@ mod test {
     use anyhow::anyhow;
 
     #[test]
-    fn test_anyhow_error_to_string() {
+    fn test_anyhow_error_to_human_readable() {
         assert_eq!(
-            anyhow_error_to_human_redable(&anyhow!("something went wrong").context("some context")),
+            anyhow_error_to_human_readable(
+                &anyhow!("something went wrong").context("some context")
+            ),
             "some context\nsomething went wrong"
         )
     }

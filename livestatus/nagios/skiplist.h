@@ -1,4 +1,3 @@
-
 /************************************************************************
  *
  * SKIPLIST.H - Skiplist data structures and functions

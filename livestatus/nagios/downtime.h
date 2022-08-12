@@ -1,4 +1,3 @@
-
 /*****************************************************************************
  *
  * DOWNTIME.H - Header file for scheduled downtime functions
@@ -57,6 +56,7 @@ typedef struct scheduled_downtime_struct{
 #endif
 	struct scheduled_downtime_struct *next;
 	}scheduled_downtime;
+
 
 
 #ifdef NSCORE

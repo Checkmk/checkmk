@@ -1,4 +1,3 @@
-
 /*****************************************************************************
  *
  * SRETENTION.H - Header for state retention routines

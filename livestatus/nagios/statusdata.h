@@ -1,4 +1,3 @@
-
 /*****************************************************************************
  *
  * STATUSDATA.H - Header for external status data routines

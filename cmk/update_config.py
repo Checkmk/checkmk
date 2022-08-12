@@ -11,10 +11,8 @@ be called manually.
 import argparse
 import copy
 import errno
-import hashlib
 import logging
 import re
-import shutil
 from contextlib import contextmanager
 from datetime import datetime
 from datetime import time as dt_time
@@ -62,7 +60,6 @@ from cmk.gui.userdb import load_users, save_users, Users
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.view_store import get_all_views
 from cmk.gui.wato.mkeventd import MACROS_AND_VARS
-from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
 from cmk.gui.watolib.global_settings import (
     GlobalSettings,
@@ -227,7 +224,6 @@ class UpdateConfig:
             (self._rewrite_autochecks, "Rewriting autochecks"),
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
             (self._adjust_user_attributes, "Set version specific user attributes"),
-            (self._sanitize_audit_log, "Sanitize audit log (Werk #13330)"),
             (self._rename_discovered_host_label_files, "Rename discovered host label files"),
             (self._add_site_ca_to_trusted_cas, "Adding site CA to trusted CAs"),
             (self._check_ec_rules, "Disabling unsafe EC rules"),
@@ -708,46 +704,6 @@ class UpdateConfig:
 
         save_users(users, datetime.now())
 
-    def _sanitize_audit_log(self) -> None:
-        # Use a file to determine if the sanitization was successfull. Otherwise it would be
-        # run on every update and we want to tamper with the audit log as little as possible.
-        log_dir = AuditLogStore.make_path().parent
-
-        update_flag = log_dir / ".werk-13330"
-        if update_flag.is_file():
-            self._logger.log(VERBOSE, "Skipping (already done)")
-            return
-
-        logs = list(log_dir.glob("wato_audit.*"))
-        if not logs:
-            self._logger.log(VERBOSE, "Skipping (nothing to do)")
-            update_flag.touch(mode=0o660)
-            return
-
-        backup_dir = Path.home() / "audit_log_backup"
-        backup_dir.mkdir(mode=0o750, exist_ok=True)
-        for l in logs:
-            shutil.copy(src=l, dst=backup_dir / l.name)
-        self._logger.info(
-            f"{tty.yellow}Wrote audit log backup to {backup_dir}. Please check if the audit log "
-            f"in the GUI works as expected. In case of problems you can copy the backup files back to "
-            f"{log_dir}. Please check the corresponding files in {log_dir} for any leftover passwords "
-            f"and remove them if necessary. If everything works as expected you can remove the "
-            f"backup. For further details please have a look at Werk #13330.{tty.normal}"
-        )
-
-        self._logger.log(VERBOSE, "Sanitizing log files: %s", ", ".join(map(str, logs)))
-        sanitizer = PasswordSanitizer()
-
-        for l in logs:
-            store = AuditLogStore(l)
-            entries = [sanitizer.replace_password(e) for e in store.read()]
-            store.write(entries)
-        self._logger.log(VERBOSE, "Finished sanitizing log files")
-
-        update_flag.touch(mode=0o660)
-        self._logger.log(VERBOSE, "Wrote sanitization flag file %s", update_flag)
-
     def _rename_discovered_host_label_files(self) -> None:
         config_cache = cmk.base.config.get_config_cache()
         for host_name in config_cache.all_configured_realhosts():
@@ -818,126 +774,6 @@ class UpdateConfig:
             if f"${macro_name}$" in script_text:
                 return True
         return False
-
-
-class PasswordSanitizer:
-    """
-    Due to a bug the audit log could contain clear text passwords. This class replaces clear text
-    passwords in audit log entries on a best-effort basis. This is no 100% solution! After Werk
-    #13330 no clear text passwords are written to the audit log anymore.
-    """
-
-    CHANGED_PATTERN = re.compile(
-        r'Value of "value/('
-        r"\[1\]auth/\[1|"
-        r"auth/\[1|"
-        r"auth_basic/password/\[1|"
-        r"\[2\]authentication/\[1|"
-        r"basicauth/\[1|"
-        r"basicauth/\[1]\[1|"
-        r"api_token\"|"
-        r"client_secret\"|"
-        r"\[0\]credentials/\[1\]\[1|"
-        r"credentials/\[1|"
-        r"credentials/\[1\]\[1|"
-        r"credentials/\[1\]\[1\]\[1|"
-        r"credentials/\[\d+\]\[3\]\[1\]\[1|"
-        r"credentials_sap_connect/\[1\]\[1|"
-        r"fetch/\[1\]auth/\[1\]\[1|"
-        r"imap_parameters/auth/\[1\]\[1|"
-        r"instance/api_key/\[1|"
-        r"instance/app_key/\[1|"
-        r"instances/\[0\]passwd\"|"
-        r"login/\[1|"
-        r"login/auth/\[1\]\[1|"
-        r"login_asm/auth/\[1\]\[1|"
-        r"login_exceptions/\[0\]\[1\]auth/\[1\]\[1|"
-        r"mode/\[1\]auth/\[1\]\[1|"
-        r"password\"|"
-        r"\[1\]password\"|"
-        r"password/\[1|"
-        r"proxy/auth/\[1\]\[1|"
-        r"proxy/proxy_protocol/\[1\]credentials/\[1|"
-        r"proxy_details/proxy_password/\[1|"
-        r"smtp_auth/\[1\]\[1|"
-        r"token/\[1|"
-        r"secret\"|"
-        r"secret/\[1|"
-        r"secret_access_key/\[1|"
-        r"passphrase\""
-        # Even if values contain double quotes the outer quotes remain double quotes.
-        # That .* is greedy is not a problem here since each change is on its own line.
-        r') changed from "(.*)" to "(.*)"\.'
-    )
-
-    _QUOTED_STRING = r"(\"(?:(?!(?<!\\)\").)*\"|'(?:(?!(?<!\\)').)*')"
-
-    NEW_NESTED_PATTERN = re.compile(
-        rf"'login': \({_QUOTED_STRING}, {_QUOTED_STRING}, {_QUOTED_STRING}\)|"
-        rf"\('password', {_QUOTED_STRING}\)|"
-        rf"'(auth|authentication|basicauth|credentials)': \({_QUOTED_STRING}, {_QUOTED_STRING}\)|"
-        rf"'(auth|credentials)': \('(explicit|configured)', \({_QUOTED_STRING}, {_QUOTED_STRING}\)\)"
-    )
-
-    NEW_DICT_ENTRY_PATTERN = (
-        r"'("
-        r"api_token|"
-        r"auth|"
-        r"authentication|"
-        r"client_secret|"
-        r"passphrase|"
-        r"passwd|"
-        r"password|"
-        r"secret"
-        rf")': {_QUOTED_STRING}"
-    )
-
-    def replace_password(self, entry: AuditLogStore.Entry) -> AuditLogStore.Entry:
-        if entry.diff_text and entry.action in ("edit-rule", "new-rule"):
-            diff_edit = re.sub(self.CHANGED_PATTERN, self._changed_match_function, entry.diff_text)
-            diff_nested = re.sub(
-                self.NEW_NESTED_PATTERN, self._new_nested_match_function, diff_edit
-            )
-            diff_text = re.sub(
-                self.NEW_DICT_ENTRY_PATTERN, self._new_single_key_match_function, diff_nested
-            )
-            return entry._replace(diff_text=diff_text)
-        return entry
-
-    def _changed_match_function(self, match: re.Match) -> str:
-        return 'Value of "value/%s changed from "hash:%s" to "hash:%s".' % (
-            match.group(1),
-            self._hash(match.group(2)),
-            self._hash(match.group(3)),
-        )
-
-    def _new_nested_match_function(self, match: re.Match) -> str:
-        if match.group(1):
-            return "'login': (%s, 'hash:%s', %s)" % (
-                match.group(1),
-                self._hash(match.group(2)[1:-1]),
-                match.group(3),
-            )
-        if match.group(4):
-            return "('password', 'hash:%s')" % self._hash(match.group(4)[1:-1])
-        if match.group(5):
-            return "'%s': (%s, 'hash:%s')" % (
-                match.group(5),
-                match.group(6),
-                self._hash(match.group(7)[1:-1]),
-            )
-        return "'%s': ('%s', (%s, 'hash:%s'))" % (
-            match.group(8),
-            match.group(9),
-            match.group(10),
-            self._hash(match.group(11)[1:-1]),
-        )
-
-    def _new_single_key_match_function(self, match: re.Match) -> str:
-        return "'%s': 'hash:%s'" % (match.group(1), self._hash(match.group(2)[1:-1]))
-
-    def _hash(self, password: str) -> str:
-        return hashlib.sha256(password.encode()).hexdigest()[:10]
 
 
 def _format_warning(msg: str) -> str:

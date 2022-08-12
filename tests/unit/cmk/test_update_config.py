@@ -28,7 +28,6 @@ import cmk.gui.config
 import cmk.gui.watolib.timeperiods as timeperiods
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.hosts_and_folders import Folder
-from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
 
 import cmk.update_config as update_config
@@ -414,104 +413,6 @@ def fixture_old_audit_log(old_path: Path) -> Path:
 """
         )
     return old_path
-
-
-def test__migrate_pre_2_0_audit_log(
-    uc: update_config.UpdateConfig,
-    old_audit_log: Path,
-    new_path: Path,
-) -> None:
-    assert not new_path.exists()
-    assert old_audit_log.exists()
-
-    uc._migrate_pre_2_0_audit_log()
-
-    assert new_path.exists()
-    assert not old_audit_log.exists()
-
-    # Now try to parse the migrated log with the new logic
-    log_store = AuditLogStore(new_path)
-    assert log_store.read() == [
-        AuditLogStore.Entry(
-            time=1604991356,
-            object_ref=None,
-            user_id="cmkadmin",
-            action="liveproxyd-activate",
-            text="Activating changes of Livestatus Proxy configuration",
-            diff_text=None,
-        ),
-        AuditLogStore.Entry(
-            time=1604991356,
-            object_ref=None,
-            user_id="cmkadmin",
-            action="liveproxyd-activate",
-            text="Activating changes of Livestatus Proxy configuration",
-            diff_text=None,
-        ),
-        AuditLogStore.Entry(
-            time=1604992040,
-            object_ref=ObjectRef(ObjectRefType.Host, "heute2"),
-            user_id="cmkadmin",
-            action="create-host",
-            text="Created new host heute2.",
-            diff_text=None,
-        ),
-        AuditLogStore.Entry(
-            time=1604992159,
-            object_ref=ObjectRef(ObjectRefType.Host, "heute2"),
-            user_id="cmkadmin",
-            action="delete-host",
-            text="Deleted host heute2",
-            diff_text=None,
-        ),
-        AuditLogStore.Entry(
-            time=1604992163,
-            object_ref=ObjectRef(ObjectRefType.Host, "heute1"),
-            user_id="cmkadmin",
-            action="create-host",
-            text="Created new host heute1.",
-            diff_text=None,
-        ),
-        AuditLogStore.Entry(
-            time=1604992166,
-            object_ref=ObjectRef(ObjectRefType.Host, "heute12"),
-            user_id="cmkadmin",
-            action="create-host",
-            text="Created new host heute12.",
-            diff_text=None,
-        ),
-    ]
-
-
-def test__migrate_pre_2_0_audit_log_not_existing(
-    uc: update_config.UpdateConfig,
-    old_path: Path,
-    new_path: Path,
-) -> None:
-    assert not new_path.exists()
-    assert not old_path.exists()
-    uc._migrate_pre_2_0_audit_log()
-    assert not new_path.exists()
-    assert not old_path.exists()
-
-
-def test__migrate_pre_2_0_audit_log_not_migrate_already_migrated(
-    uc: update_config.UpdateConfig,
-    old_audit_log: Path,
-    new_path: Path,
-) -> None:
-    assert not new_path.exists()
-    assert old_audit_log.exists()
-
-    new_path.parent.mkdir(exist_ok=True, parents=True)
-    with new_path.open("w") as f:
-        f.write("abc\n")
-    assert new_path.exists()
-
-    uc._migrate_pre_2_0_audit_log()
-
-    assert new_path.open().read() == "abc\n"
-    assert old_audit_log.exists()
 
 
 def test__rename_discovered_host_label_files_fix_wrong_name(

@@ -29,7 +29,6 @@ from typing import (
     Callable,
     Container,
     Dict,
-    Iterable,
     List,
     Mapping,
     MutableMapping,
@@ -107,7 +106,6 @@ from cmk.gui.watolib.global_settings import (
     save_site_global_settings,
 )
 from cmk.gui.watolib.notifications import load_notification_rules, save_notification_rules
-from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.rulesets import RulesetCollection
 from cmk.gui.watolib.sites import site_globals_editable, SiteManagementFactory
 from cmk.gui.watolib.timeperiods import TimeperiodSpec
@@ -315,7 +313,6 @@ class UpdateConfig:
             (self._migrate_ldap_connections, "Migrate LDAP connections"),
             (self._adjust_user_attributes, "Set version specific user attributes"),
             (self._rewrite_py2_inventory_data, "Rewriting inventory data"),
-            (self._migrate_pre_2_0_audit_log, "Migrate audit log"),
             (self._sanitize_audit_log, "Sanitize audit log (Werk #13330)"),
             (self._rename_discovered_host_label_files, "Rename discovered host label files"),
             (self._transform_groups, "Rewriting host, service or contact groups"),
@@ -1252,39 +1249,6 @@ class UpdateConfig:
             elif f.is_dir():
                 self._find_files_recursively(files, f)
 
-    def _migrate_pre_2_0_audit_log(self) -> None:
-        old_path = Path(cmk.utils.paths.var_dir, "wato", "log", "audit.log")
-        new_path = Path(cmk.utils.paths.var_dir, "wato", "log", "wato_audit.log")
-
-        if not old_path.exists():
-            self._logger.log(VERBOSE, "No audit log present. Skipping.")
-            return
-
-        if new_path.exists():
-            self._logger.log(VERBOSE, "New audit log already existing. Skipping.")
-            return
-
-        store = AuditLogStore(AuditLogStore.make_path())
-        store.write(list(self._read_pre_2_0_audit_log(old_path)))
-
-        old_path.unlink()
-
-    def _read_pre_2_0_audit_log(self, old_path: Path) -> Iterable[AuditLogStore.Entry]:
-        with old_path.open(encoding="utf-8") as fp:
-            for line in fp:
-                splitted = line.rstrip().split(None, 4)
-                if len(splitted) == 5 and splitted[0].isdigit():
-                    t, linkinfo, user, action, text = splitted
-
-                    yield AuditLogStore.Entry(
-                        time=int(t),
-                        object_ref=self._object_ref_from_linkinfo(linkinfo),
-                        user_id=user,
-                        action=action,
-                        text=text,
-                        diff_text=None,
-                    )
-
     def _sanitize_audit_log(self) -> None:
         # Use a file to determine if the sanitization was successfull. Otherwise it would be
         # run on every update and we want to tamper with the audit log as little as possible.
@@ -1324,15 +1288,6 @@ class UpdateConfig:
 
         update_flag.touch(mode=0o660)
         self._logger.log(VERBOSE, "Wrote sanitization flag file %s", update_flag)
-
-    def _object_ref_from_linkinfo(self, linkinfo: str) -> Optional[ObjectRef]:
-        if ":" not in linkinfo:
-            return None
-
-        folder_path, host_name = linkinfo.split(":", 1)
-        if not host_name:
-            return ObjectRef(ObjectRefType.Folder, folder_path)
-        return ObjectRef(ObjectRefType.Host, host_name)
 
     def _rename_discovered_host_label_files(self) -> None:
         config_cache = cmk.base.config.get_config_cache()

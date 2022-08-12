@@ -224,7 +224,6 @@ class UpdateConfig:
             (self._rewrite_autochecks, "Rewriting autochecks"),
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
             (self._adjust_user_attributes, "Set version specific user attributes"),
-            (self._rename_discovered_host_label_files, "Rename discovered host label files"),
             (self._add_site_ca_to_trusted_cas, "Adding site CA to trusted CAs"),
             (self._check_ec_rules, "Disabling unsafe EC rules"),
         ]
@@ -703,20 +702,6 @@ class UpdateConfig:
             _add_user_scheme_serial(users, user_id)
 
         save_users(users, datetime.now())
-
-    def _rename_discovered_host_label_files(self) -> None:
-        config_cache = cmk.base.config.get_config_cache()
-        for host_name in config_cache.all_configured_realhosts():
-            old_path = (cmk.utils.paths.discovered_host_labels_dir / host_name).with_suffix(".mk")
-            new_path = cmk.utils.paths.discovered_host_labels_dir / (host_name + ".mk")
-            if old_path == new_path:
-                continue
-
-            if old_path.exists() and not new_path.exists():
-                self._logger.debug(
-                    "Rename discovered host labels file from '%s' to '%s'", old_path, new_path
-                )
-                old_path.rename(new_path)
 
     def _add_site_ca_to_trusted_cas(self) -> None:
         site_ca = (

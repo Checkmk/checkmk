@@ -8,12 +8,10 @@ import argparse
 import io
 import sys
 from pathlib import Path
-from typing import Mapping, Tuple
+from typing import Mapping
 
 import pytest
 from pytest_mock import MockerFixture
-
-from tests.testlib.base import Scenario
 
 # This GUI specific fixture is also needed in this context
 from tests.unit.cmk.gui.conftest import load_plugins  # noqa: F401 # pylint: disable=unused-import
@@ -384,57 +382,6 @@ def fixture_old_audit_log(old_path: Path) -> Path:
 """
         )
     return old_path
-
-
-def test__rename_discovered_host_label_files_fix_wrong_name(
-    monkeypatch: pytest.MonkeyPatch,
-    uc: update_config.UpdateConfig,
-) -> None:
-    ts = Scenario()
-    ts.add_host("abc.d")
-    ts.apply(monkeypatch)
-
-    host_name = "abc.d"
-    old_path = (cmk.utils.paths.discovered_host_labels_dir / host_name).with_suffix(".mk")
-    new_path = cmk.utils.paths.discovered_host_labels_dir / (host_name + ".mk")
-
-    old_path.parent.mkdir(exist_ok=True, parents=True)
-    with old_path.open("w") as f:
-        f.write("{}\n")
-    assert old_path.exists()
-    assert not new_path.exists()
-
-    uc._rename_discovered_host_label_files()
-
-    assert not old_path.exists()
-    assert new_path.exists()
-
-
-def test__rename_discovered_host_label_files_do_not_overwrite(
-    monkeypatch: pytest.MonkeyPatch,
-    uc: update_config.UpdateConfig,
-) -> None:
-    ts = Scenario()
-    ts.add_host("abc.d")
-    ts.apply(monkeypatch)
-
-    host_name = "abc.d"
-    old_path = (cmk.utils.paths.discovered_host_labels_dir / host_name).with_suffix(".mk")
-    new_path = cmk.utils.paths.discovered_host_labels_dir / (host_name + ".mk")
-
-    old_path.parent.mkdir(exist_ok=True, parents=True)
-    with old_path.open("w") as f:
-        f.write("{}\n")
-    assert old_path.exists()
-
-    with new_path.open("w") as f:
-        f.write("{}\n")
-    assert new_path.exists()
-
-    uc._rename_discovered_host_label_files()
-
-    assert old_path.exists()
-    assert new_path.exists()
 
 
 def mock_audit_log_entry(action: str, diff_text: str) -> AuditLogStore.Entry:

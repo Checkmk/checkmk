@@ -3,31 +3,43 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
+from typing import Any, Iterable, Mapping
 
 from cmk.base.check_legacy_includes.df import (
     df_check_filesystem_list_coroutine,
     FILESYSTEM_DEFAULT_PARAMS,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
+Store = Mapping[str, Any]
+Section = Mapping[str, Store]
+
+DiscoveryResult = Iterable[tuple]
+CheckResult = Iterable[tuple]
 
 
-def parse_storeonce4x_cat_stores(info):
+def parse_storeonce4x_cat_stores(string_table: StringTable) -> Section:
     return {
         "%d - %s" % (elem["id"], elem["name"]): elem  #
-        for elem in json.loads(info[0][0])["members"]
+        for elem in json.loads(string_table[0][0])["members"]
     }
 
 
-def discovery_storeonce4x_cat_stores(parsed):
-    yield from ((k, {}) for k in parsed)
+check_info["storeonce4x_cat_stores"] = {
+    "parse_function": parse_storeonce4x_cat_stores,
+}
 
 
-def check_storeonce4x_cat_stores(item, params, parsed):
-    if item not in parsed:
+def discover_storeonce4x_cat_stores(section: Section) -> DiscoveryResult:
+    yield from ((k, {}) for k in section)
+
+
+def check_storeonce4x_cat_stores(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    if (store := section.get(item)) is None:
         return
-
-    store = parsed[item]
 
     mega = 1024 * 1024
     store_status, store_status_str = store["storeStatus"], store["storeStatusString"]
@@ -45,17 +57,20 @@ def check_storeonce4x_cat_stores(item, params, parsed):
     yield 0 if store_status == 2 else 2, "Status: %s" % store_status_str
 
     yield 0, "Description: %s" % store["description"]
-    yield 0, "UserBytes: %s" % get_bytes_human_readable(user_bytes)
+    yield 0, "UserBytes: %s" % render.bytes(user_bytes)
     yield 0, "Dedup ratio: %.2f" % dedup_ratio, [("dedup_rate", dedup_ratio)]
     yield 0, "Files: %d" % num_items, [("file_count", num_items)]
 
 
-check_info["storeonce4x_cat_stores"] = {
-    "parse_function": parse_storeonce4x_cat_stores,
-    "inventory_function": discovery_storeonce4x_cat_stores,
-    "check_function": check_storeonce4x_cat_stores,
-    "service_description": "Catalyst Stores %s",
-    "group": "filesystem",
-    "has_perfdata": True,
-    "default_levels_variable": "filesystem_default_levels",
-}
+check_info["storeonce4x_cat_stores"].update(
+    {
+        "inventory_function": discover_storeonce4x_cat_stores,
+        "check_function": check_storeonce4x_cat_stores,
+        "service_description": "Catalyst Stores %s",
+        "group": "filesystem",
+        "has_perfdata": True,
+        "default_levels_variable": "filesystem_default_levels",
+    }
+)
+
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS

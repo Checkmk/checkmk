@@ -23,19 +23,7 @@ from contextlib import contextmanager
 from datetime import datetime
 from datetime import time as dt_time
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Container,
-    Dict,
-    List,
-    Mapping,
-    MutableMapping,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-)
+from typing import Any, Callable, Container, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
 import cmk.utils
 import cmk.utils.debug
@@ -46,7 +34,7 @@ import cmk.utils.tty as tty
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import CheckPluginName, ContactgroupName, HostName, RulesetName, UserId
+from cmk.utils.type_defs import CheckPluginName, HostName, RulesetName, UserId
 
 # This special script needs persistence and conversion code from different
 # places of Checkmk. We may centralize the conversion and move the persistance
@@ -252,7 +240,6 @@ class UpdateConfig:
             (self._rewrite_py2_inventory_data, "Rewriting inventory data"),
             (self._sanitize_audit_log, "Sanitize audit log (Werk #13330)"),
             (self._rename_discovered_host_label_files, "Rename discovered host label files"),
-            (self._transform_groups, "Rewriting host, service or contact groups"),
             (
                 self._rewrite_servicenow_notification_config,
                 "Rewriting notification configuration for ServiceNow",
@@ -918,74 +905,6 @@ class UpdateConfig:
                     "Rename discovered host labels file from '%s' to '%s'", old_path, new_path
                 )
                 old_path.rename(new_path)
-
-    def _transform_groups(self) -> None:
-        group_information = cmk.gui.groups.load_group_information()
-
-        # Add host or service group transformations here if needed
-        self._transform_contact_groups(group_information.get("contact", {}))
-
-        cmk.gui.watolib.groups.save_group_information(group_information)
-
-    def _transform_contact_groups(
-        self,
-        contact_groups: Mapping[ContactgroupName, MutableMapping[str, Any]],
-    ) -> None:
-        # Changed since Checkmk 2.1: see Werk 12390
-        # Old entries of inventory paths of multisite contact groups had the following form:
-        # {
-        #     "group_name_0": {
-        #         "inventory_paths": "allow_all"
-        #     },
-        #     "group_name_1": {
-        #         "inventory_paths": "forbid_all"
-        #     },
-        #     "group_name_2": {
-        #         "inventory_paths": ("paths", [
-        #             {
-        #                 "path": "path.to.node_0",
-        #             },
-        #             {
-        #                 "path": "path.to.node_1",
-        #                 "attributes": [],
-        #             },
-        #             {
-        #                 "path": "path.to.node_2",
-        #                 "attributes": ["some", "keys"],
-        #             },
-        #         ])
-        #     }
-        # }
-        for settings in contact_groups.values():
-            inventory_paths = settings.get("inventory_paths")
-            if inventory_paths and isinstance(inventory_paths, tuple):
-                settings["inventory_paths"] = (
-                    inventory_paths[0],
-                    [
-                        self._transform_inventory_path_and_keys(entry)
-                        for entry in inventory_paths[1]
-                    ],
-                )
-
-    def _transform_inventory_path_and_keys(self, params: Dict) -> Dict:
-        if "path" not in params:
-            return params
-
-        params["visible_raw_path"] = params.pop("path")
-
-        attributes_keys = params.pop("attributes", None)
-        if attributes_keys is None:
-            return params
-
-        if attributes_keys == []:
-            params["nodes"] = "nothing"
-            return params
-
-        params["attributes"] = ("choices", attributes_keys)
-        params["columns"] = ("choices", attributes_keys)
-        params["nodes"] = "nothing"
-
-        return params
 
     def _rewrite_servicenow_notification_config(self) -> None:
         # Management type "case" introduced with werk #13096 in 2.1.0i1

@@ -5,13 +5,12 @@
 
 import os
 import shlex
-import struct
 import subprocess
 import threading
 import time
 from logging import Logger
 from pathlib import Path
-from typing import Any, AnyStr, Callable, Iterable, Optional, Union
+from typing import Any, Callable, Iterable, Optional, Union
 
 from typing_extensions import assert_never
 
@@ -687,21 +686,15 @@ def _get_logfile_timespan(path: Path) -> tuple[Optional[float], Optional[float]]
     return first_entry, last_entry
 
 
-# Rip out/replace any characters which have a special meaning in the UTF-8
-# encoded history files, see e.g. quote_tab. In theory this shouldn't be
-# necessary, because there are a bunch of bytes which are not contained in any
-# valid UTF-8 string, but following Murphy's Law, those are not used in
-# Checkmk. To keep backwards compatibility with old history files, we have no
-# choice and continue to do it wrong... :-/
-def scrub_string(s: AnyStr) -> AnyStr:
-    if isinstance(s, bytes):
-        return s.translate(_scrub_string_str_table, b"\0\1\2\n")
-    if isinstance(s, str):
-        return s.translate(_scrub_string_unicode_table)
-    raise TypeError("scrub_string expects a string argument")
+def scrub_string(s: str) -> str:
+    """Rip out/replace any characters which have a special meaning in the UTF-8
+    encoded history files, see e.g. quote_tab. In theory this shouldn't be
+    necessary, because there are a bunch of bytes which are not contained in any
+    valid UTF-8 string, but following Murphy's Law, those are not used in
+    Checkmk. To keep backwards compatibility with old history files, we have no
+    choice and continue to do it wrong... :-/"""
+
+    return s.translate(_scrub_string_unicode_table)
 
 
-_scrub_string_str_table = b"".join(
-    b" " if x == ord(b"\t") else struct.Struct(">B").pack(x) for x in range(256)
-)
 _scrub_string_unicode_table = {0: None, 1: None, 2: None, ord("\n"): None, ord("\t"): ord(" ")}

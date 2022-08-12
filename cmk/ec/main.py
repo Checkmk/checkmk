@@ -31,7 +31,7 @@ from logging import getLogger, Logger
 from pathlib import Path
 from re import Pattern
 from types import FrameType
-from typing import Any, AnyStr, Literal, NamedTuple, Protocol, TypedDict
+from typing import Any, Literal, NamedTuple, Protocol, TypedDict
 
 from setproctitle import setthreadtitle  # type: ignore[import] # pylint: disable=no-name-in-module
 
@@ -45,7 +45,6 @@ import cmk.utils.regex
 import cmk.utils.render
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
-from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKException
 from cmk.utils.iterables import partition
 from cmk.utils.log import VERBOSE
@@ -161,10 +160,6 @@ class SyslogFacility:
             return self.NAMES[self.value]
         except KeyError:
             return "(unknown facility %d)" % self.value
-
-
-def scrub_and_decode(s: AnyStr) -> str:
-    return ensure_str_with_fallback(scrub_string(s), encoding="utf-8", fallback="latin-1")
 
 
 # .
@@ -839,7 +834,7 @@ class EventServer(ECServerThread):
     # Takes several lines of messages, handles encoding and processes them separated
     def process_raw_lines(self, data: bytes, address: tuple[str, int] | None) -> None:
         for line_bytes in data.splitlines():
-            if line := scrub_and_decode(line_bytes.rstrip()):
+            if line := scrub_string(line_bytes.rstrip().decode("utf-8")):
                 try:
 
                     def handler(line: str = line) -> None:
@@ -1918,12 +1913,12 @@ def create_event_from_trap(trap: Iterable[tuple[str, str]], ipaddress: str) -> E
     )
     return {
         "time": time.time(),
-        "host": scrub_and_decode(ipaddress),
-        "ipaddress": scrub_and_decode(ipaddress),
+        "host": scrub_string(ipaddress),
+        "ipaddress": scrub_string(ipaddress),
         "priority": 5,  # notice
         "facility": 31,  # not used by syslog -> we use this for all traps
-        "application": scrub_and_decode(trapOIDs[0][1] if trapOIDs else ""),
-        "text": scrub_and_decode(", ".join(f"{oid}: {value}" for oid, value in other)),
+        "application": scrub_string(trapOIDs[0][1] if trapOIDs else ""),
+        "text": scrub_string(", ".join(f"{oid}: {value}" for oid, value in other)),
         "core_host": None,
         "host_in_downtime": False,
     }

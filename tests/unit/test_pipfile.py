@@ -280,7 +280,6 @@ CEE_UNUSED_PACKAGES = [
     "snmpsim",
     "tenacity",
     "typing_extensions",
-    "uvicorn",
     "websocket_client",
     "wrapt",
     "yarl",

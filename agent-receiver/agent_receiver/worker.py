@@ -5,6 +5,9 @@
 
 # pylint: disable=too-many-branches,no-else-break
 
+from ssl import SSLObject
+from typing import Iterator, Optional
+
 from uvicorn.protocols.http.h11_impl import (  # type: ignore[import]
     asyncio,
     h11,
@@ -15,6 +18,21 @@ from uvicorn.protocols.http.h11_impl import (  # type: ignore[import]
     unquote,
 )
 from uvicorn.workers import UvicornWorker  # type: ignore[import]
+
+
+def _extract_client_cert_cns(ssl_object: Optional[SSLObject]) -> Iterator[str]:
+    if ssl_object is None:
+        return
+    try:
+        client_cert = ssl_object.getpeercert()
+    except ValueError:
+        return
+    if client_cert is None:
+        return
+
+    for distinguished_name in client_cert.get("subject", ()):
+        if cn := dict(dn for dn in distinguished_name if isinstance(dn, tuple)).get("commonName"):
+            yield cn
 
 
 class _ClientCertProtocol(H11Protocol):
@@ -43,6 +61,23 @@ class _ClientCertProtocol(H11Protocol):
 
             elif event_type is h11.Request:
                 self.headers = [(key.lower(), value) for key, value in event.headers]
+
+                # ==================================================================================
+                # ==================================================================================
+                # OUR CUSTOM EXTENSION
+
+                self.headers = [
+                    *self.headers,
+                    *(
+                        (b"verified-uuid", cn.encode())
+                        for cn in _extract_client_cert_cns(
+                            self.transport.get_extra_info("ssl_object")
+                        )
+                    ),
+                ]
+                # ==================================================================================
+                # ==================================================================================
+
                 raw_path, _, query_string = event.target.partition(b"?")
                 self.scope = {
                     "type": "http",

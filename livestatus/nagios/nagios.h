@@ -351,7 +351,7 @@ typedef struct timed_event_struct{
 
 /* NOTIFY_LIST structure */
 typedef struct notify_list_struct{
-	contact *this_should_be_named_other_than_contact;
+	struct contact_struct *contact;
 	struct notify_list_struct *next;
         }notification;
 

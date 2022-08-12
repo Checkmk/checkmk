@@ -178,9 +178,9 @@ typedef struct command_struct{
 
 /* COMMANDSMEMBER structure */
 typedef struct commandsmember_struct{
-	char	*command_dummy;
+	char	*command;
 #ifdef NSCORE
-	command *command_ptr;
+	struct command_struct *command_ptr;
 #endif
 	struct	commandsmember_struct *next;
 	}commandsmember;

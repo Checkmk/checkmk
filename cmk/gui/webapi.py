@@ -156,7 +156,7 @@ def _get_request(api_call: APICallDefinitionDict) -> dict[str, Any]:
     return request.get_request(exclude_vars=["action", "pretty_print"])
 
 
-def _check_formats(
+def _check_formats(  # type:ignore[no-untyped-def]
     output_format: str, api_call: APICallDefinitionDict, request_object: dict[str, Any]
 ):
     required_input_format = api_call.get("required_input_format")

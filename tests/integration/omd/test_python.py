@@ -122,7 +122,7 @@ def test_03_pip_interpreter_version(site: Site) -> None:
 
 
 @pytest.mark.parametrize("module_name", _get_import_names_from_pipfile())
-def test_python_modules(site: Site, module_name) -> None:
+def test_python_modules(site: Site, module_name) -> None:  # type:ignore[no-untyped-def]
     # TODO: Clarify and remove skipping of obscure modules
     # Skip those modules for now, they throw:
     # >       found = self._search_paths(context.pattern, context.path)

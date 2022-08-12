@@ -126,7 +126,7 @@ class BackupTarFile(tarfile.TarFile):
     """We need to use our tarfile class here to perform a rrdcached SUSPEND/RESUME
     to prevent writing to individual RRDs during backups."""
 
-    def __init__(self, name, mode, fileobj, **kwargs) -> None:
+    def __init__(self, name, mode, fileobj, **kwargs) -> None:  # type:ignore[no-untyped-def]
         self._site = kwargs.pop("site")
         self._verbose = kwargs.pop("verbose")
         self._site_stopped = self._site.is_stopped()

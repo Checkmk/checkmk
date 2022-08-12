@@ -1042,7 +1042,7 @@ class ModeFolder(WatoMode):
             labels = dict(sorted(labels.items())[:limit])
         return labels, show_all
 
-    def _render_contact_group(self, contact_group_names, c) -> HTML:
+    def _render_contact_group(self, contact_group_names, c) -> HTML:  # type:ignore[no-untyped-def]
         display_name = contact_group_names.get(c, {"alias": c})["alias"]
         return HTMLWriter.render_a(display_name, "wato.py?mode=edit_contact_group&edit=%s" % c)
 
@@ -1081,7 +1081,7 @@ class ModeFolder(WatoMode):
                 )
                 html.icon_button(delete_url, _("Delete this host"), "delete")
 
-    def _delete_hosts(self, host_names) -> ActionResult:
+    def _delete_hosts(self, host_names) -> ActionResult:  # type:ignore[no-untyped-def]
         self._folder.delete_hosts(host_names, automation=delete_hosts)
         flash(_("Successfully deleted %d hosts") % len(host_names))
         return redirect(self._folder.url())
@@ -1095,7 +1095,7 @@ class ModeFolder(WatoMode):
             html.button("_bulk_move", _("Move"), form=form_name)
             return HTML(output_funnel.drain())
 
-    def _move_to_imported_folders(self, host_names_to_move) -> None:
+    def _move_to_imported_folders(self, host_names_to_move) -> None:  # type:ignore[no-untyped-def]
         # Create groups of hosts with the same target folder
         target_folder_names: Dict[str, List[HostName]] = {}
         for host_name in host_names_to_move:
@@ -1365,7 +1365,7 @@ class ModeCreateFolder(ABCFolderMode):
 
 
 # TODO: Move to Folder()?
-def _create_wato_foldername(title: str, in_folder=None) -> str:
+def _create_wato_foldername(title: str, in_folder=None) -> str:  # type:ignore[no-untyped-def]
     if in_folder is None:
         in_folder = Folder.current()
 

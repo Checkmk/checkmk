@@ -28,7 +28,7 @@ from cmk.utils.exceptions import MKException
         ),
     ],
 )
-def test_mkexception(sources, expected) -> None:
+def test_mkexception(sources, expected) -> None:  # type:ignore[no-untyped-def]
     exc = MKException(*sources)
     assert str(exc) == expected
     assert str(MKException(exc)) == expected

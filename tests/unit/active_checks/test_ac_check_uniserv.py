@@ -31,7 +31,9 @@ def fixture_check_uniserv() -> ModuleType:
         ["host", "port", "service", "ADDRESS", "street", "street_nr", "city", "regex"],
     ],
 )
-def test_ac_check_uniserv_broken_arguments(capsys, check_uniserv: ModuleType, args) -> None:
+def test_ac_check_uniserv_broken_arguments(  # type:ignore[no-untyped-def]
+    capsys, check_uniserv: ModuleType, args
+) -> None:
     with pytest.raises(SystemExit):
         check_uniserv.parse_arguments(args)
     out, _err = capsys.readouterr()
@@ -54,7 +56,9 @@ def test_ac_check_uniserv_broken_arguments(capsys, check_uniserv: ModuleType, ar
         ),
     ],
 )
-def test_ac_check_uniserv_parse_arguments(check_uniserv: ModuleType, args, expected_args) -> None:
+def test_ac_check_uniserv_parse_arguments(  # type:ignore[no-untyped-def]
+    check_uniserv: ModuleType, args, expected_args
+) -> None:
     assert check_uniserv.parse_arguments(args) == expected_args
 
 
@@ -72,7 +76,9 @@ def test_ac_check_uniserv_parse_arguments(check_uniserv: ModuleType, args, expec
         "foo=bar;type=TIPTOP",
     ],
 )
-def test_ac_check_uniserv_broken_data(capsys, check_uniserv: ModuleType, data) -> None:
+def test_ac_check_uniserv_broken_data(  # type:ignore[no-untyped-def]
+    capsys, check_uniserv: ModuleType, data
+) -> None:
     with pytest.raises(SystemExit):
         check_uniserv.parse_response(data)
     out, _err = capsys.readouterr()
@@ -86,7 +92,9 @@ def test_ac_check_uniserv_broken_data(capsys, check_uniserv: ModuleType, data) -
         "type=1;foo=bar",
     ],
 )
-def test_ac_check_uniserv_broken_response(capsys, check_uniserv: ModuleType, data) -> None:
+def test_ac_check_uniserv_broken_response(  # type:ignore[no-untyped-def]
+    capsys, check_uniserv: ModuleType, data
+) -> None:
     with pytest.raises(SystemExit):
         check_uniserv.parse_response(data)
     out, _err = capsys.readouterr()
@@ -100,7 +108,9 @@ def test_ac_check_uniserv_broken_response(capsys, check_uniserv: ModuleType, dat
         ("type=TIPTOP;key=value;foo=bar", {"type": "TIPTOP", "key": "value"}),
     ],
 )
-def test_ac_check_uniserv_parse_response(check_uniserv: ModuleType, data, expected_result) -> None:
+def test_ac_check_uniserv_parse_response(  # type:ignore[no-untyped-def]
+    check_uniserv: ModuleType, data, expected_result
+) -> None:
     assert sorted(check_uniserv.parse_response(data).items()) == sorted(expected_result.items())
 
 
@@ -141,7 +151,7 @@ def test_ac_check_uniserv_parse_response(check_uniserv: ModuleType, data, expect
         ),
     ],
 )
-def test_ac_check_uniserv_check_job(
+def test_ac_check_uniserv_check_job(  # type:ignore[no-untyped-def]
     monkeypatch, check_uniserv: ModuleType, args, parsed, expected_result
 ) -> None:
     job, s, sid, street, street_nr, city, regex = args

@@ -81,7 +81,7 @@ def test_ac_check_mail_main_failed_connect(check_mail: ModuleType) -> None:
         ),
     ],
 )
-def test_ac_check_mail_prepare_messages_for_ec(
+def test_ac_check_mail_prepare_messages_for_ec(  # type:ignore[no-untyped-def]
     check_mail: ModuleType,
     mails,
     expected_messages,

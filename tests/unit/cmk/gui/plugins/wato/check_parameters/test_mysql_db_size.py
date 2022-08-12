@@ -36,5 +36,5 @@ from cmk.gui.plugins.wato.check_parameters.mysql_db_size import _transform
         ),
     ],
 )
-def test_transform(entry, result) -> None:
+def test_transform(entry, result) -> None:  # type:ignore[no-untyped-def]
     assert _transform(entry) == result

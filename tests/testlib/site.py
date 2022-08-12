@@ -309,7 +309,9 @@ class Site:
     def _is_running_as_site_user(self) -> bool:
         return pwd.getpwuid(os.getuid()).pw_name == self.id
 
-    def execute(self, cmd: list[str], *args, **kwargs) -> subprocess.Popen:
+    def execute(  # type:ignore[no-untyped-def]
+        self, cmd: list[str], *args, **kwargs
+    ) -> subprocess.Popen:
         assert isinstance(cmd, list), "The command must be given as list"
 
         kwargs.setdefault("encoding", "utf-8")

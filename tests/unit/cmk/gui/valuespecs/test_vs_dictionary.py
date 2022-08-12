@@ -14,7 +14,7 @@ from cmk.gui.utils.html import HTML
 from .utils import expect_validate_failure, expect_validate_success, request_var
 
 
-def get_dictionary_vs(**kwargs) -> vs.Dictionary:
+def get_dictionary_vs(**kwargs) -> vs.Dictionary:  # type:ignore[no-untyped-def]
     return vs.Dictionary(
         elements=[
             ("a", vs.TextInput(title="A")),

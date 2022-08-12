@@ -870,7 +870,7 @@ class ABCDeleteHosts:
             self._delete_host_files(HostName(hostname_str))
 
     @abc.abstractmethod
-    def _single_file_paths(self, hostname: HostName):
+    def _single_file_paths(self, hostname: HostName):  # type:ignore[no-untyped-def]
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -927,7 +927,7 @@ class AutomationDeleteHosts(ABCDeleteHosts, Automation):
         self._execute(args)
         return automation_results.DeleteHostsResult()
 
-    def _single_file_paths(self, hostname: HostName):
+    def _single_file_paths(self, hostname: HostName):  # type:ignore[no-untyped-def]
         return [
             "%s/%s" % (precompiled_hostchecks_dir, hostname),
             "%s/%s.py" % (precompiled_hostchecks_dir, hostname),
@@ -968,7 +968,7 @@ class AutomationDeleteHostsKnownRemote(ABCDeleteHosts, Automation):
         self._execute(args)
         return automation_results.DeleteHostsKnownRemoteResult()
 
-    def _single_file_paths(self, hostname: HostName):
+    def _single_file_paths(self, hostname: HostName):  # type:ignore[no-untyped-def]
         return [
             "%s/%s" % (precompiled_hostchecks_dir, hostname),
             "%s/%s.py" % (precompiled_hostchecks_dir, hostname),
@@ -1155,7 +1155,7 @@ class AutomationGetCheckInformation(Automation):
         return automation_results.GetCheckInformationResult(plugin_infos)
 
     @staticmethod
-    def _get_title(manuals, plugin) -> str:
+    def _get_title(manuals, plugin) -> str:  # type:ignore[no-untyped-def]
         manfile = manuals.get(str(plugin.name))
         if manfile:
             try:

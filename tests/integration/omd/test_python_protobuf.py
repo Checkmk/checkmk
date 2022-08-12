@@ -72,7 +72,7 @@ def fixture_protobuf_py(site: Site, test_dir: Path, proto_source_file: Path) -> 
     return py_file
 
 
-def test_python_protobuf(site: Site, protobuf_py) -> None:
+def test_python_protobuf(site: Site, protobuf_py) -> None:  # type:ignore[no-untyped-def]
     test_pb2 = import_module_hack(str(protobuf_py))
 
     address_book = test_pb2.AddressBook()

@@ -237,7 +237,7 @@ class PasswordStore:
             return f.read().strip()
 
     @staticmethod
-    def _cipher(key: bytes, nonce: bytes):
+    def _cipher(key: bytes, nonce: bytes):  # type:ignore[no-untyped-def]
         return AES.new(key, AES.MODE_GCM, nonce=nonce)
 
     @staticmethod

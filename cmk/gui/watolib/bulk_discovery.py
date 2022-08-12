@@ -122,7 +122,7 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
     def _back_url(self):
         return Folder.current().url()
 
-    def do_execute(
+    def do_execute(  # type:ignore[no-untyped-def]
         self,
         mode: DiscoveryMode,
         do_scan: DoFullScan,
@@ -165,7 +165,7 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
 
         job_interface.send_result_message(_("Bulk discovery successful"))
 
-    def _initialize_statistics(self, *, num_hosts_total: int):
+    def _initialize_statistics(self, *, num_hosts_total: int):  # type:ignore[no-untyped-def]
         self._num_hosts_total = num_hosts_total
         self._num_hosts_processed = 0
         self._num_hosts_succeeded = 0
@@ -178,7 +178,7 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         self._num_host_labels_total = 0
         self._num_host_labels_added = 0
 
-    def _bulk_discover_item(
+    def _bulk_discover_item(  # type:ignore[no-untyped-def]
         self,
         task: DiscoveryTask,
         mode: DiscoveryMode,
@@ -225,7 +225,7 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
             non_blocking_http=True,
         )
 
-    def _process_discovery_results(
+    def _process_discovery_results(  # type:ignore[no-untyped-def]
         self,
         task: DiscoveryTask,
         job_interface,
@@ -253,7 +253,9 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         self._num_host_labels_added += result.self_new_host_labels
         self._num_host_labels_total += result.self_total_host_labels
 
-    def _process_discovery_result_for_host(self, host, result: DiscoveryResult) -> str:
+    def _process_discovery_result_for_host(  # type:ignore[no-untyped-def]
+        self, host, result: DiscoveryResult
+    ) -> str:
         if result.error_text == "":
             self._num_hosts_skipped += 1
             return _("discovery skipped: host not monitored")

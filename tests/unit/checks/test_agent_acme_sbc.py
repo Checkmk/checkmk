@@ -16,7 +16,7 @@ pytestmark = pytest.mark.checks
         (None, ["host"]),
     ],
 )
-def test_acme_sbc_argument_parsing(params, expected_args) -> None:
+def test_acme_sbc_argument_parsing(params, expected_args) -> None:  # type:ignore[no-untyped-def]
     """Tests if all required arguments are present."""
     agent = SpecialAgent("agent_acme_sbc")
     arguments = agent.argument_func(params, "host", "address")

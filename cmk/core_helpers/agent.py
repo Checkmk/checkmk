@@ -82,7 +82,7 @@ class NoFetcher(Fetcher[AgentRawData]):
     def close(self) -> None:
         pass
 
-    def _fetch_from_io(self, mode: Mode):
+    def _fetch_from_io(self, mode: Mode):  # type:ignore[no-untyped-def]
         raise TypeError(self)
 
 

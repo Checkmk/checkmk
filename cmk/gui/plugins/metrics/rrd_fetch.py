@@ -116,7 +116,7 @@ def chop_last_empty_step(graph_data_range: GraphDataRange, rrd_data: RRDData) ->
         data.end -= step
 
 
-def needed_elements_of_expression(
+def needed_elements_of_expression(  # type:ignore[no-untyped-def]
     expression,
     resolve_combined_single_metric_spec: Callable[
         [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]

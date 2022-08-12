@@ -197,7 +197,7 @@ def local_lock_file_path(site_name: str) -> Path:
     return mkbackup_lock_dir / Path(f"mkbackup-{site_name}.lock")
 
 
-def get_needed_lock_files(opts) -> List[Path]:
+def get_needed_lock_files(opts) -> List[Path]:  # type:ignore[no-untyped-def]
     if not is_root():
         site_id = current_site_id()
         assert site_id
@@ -1333,11 +1333,11 @@ def is_inactive_cluster_node() -> bool:
     return cma.inactive_cluster_node()
 
 
-def is_cluster_backup(info) -> bool:
+def is_cluster_backup(info) -> bool:  # type:ignore[no-untyped-def]
     return info.get("cma_cluster", {}).get("clustered", False)
 
 
-def is_inactive_cluster_backup(info) -> bool:
+def is_inactive_cluster_backup(info) -> bool:  # type:ignore[no-untyped-def]
     return "cma_cluster" in info and info["cma_cluster"]["is_inactive"]
 
 

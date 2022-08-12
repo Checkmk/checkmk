@@ -35,7 +35,9 @@ def test_parameter_valuespec_has_as_much_elements_as_section_elements() -> None:
 
 
 @pytest.mark.parametrize("section_element", OPTIONS)
-def test_parameter_valuespec_has_element_for_section_element(section_element) -> None:
+def test_parameter_valuespec_has_element_for_section_element(  # type:ignore[no-untyped-def]
+    section_element,
+) -> None:
     parameters = kube_node_container_count._parameter_valuespec()
     assert any(title == section_element for title, _ in parameters._elements())
 
@@ -49,13 +51,13 @@ def rulespec():
 
 
 @pytest.mark.xfail(reason="`match_type` should be dict")
-def test_rulespec_registry_match_type(rulespec) -> None:
+def test_rulespec_registry_match_type(rulespec) -> None:  # type:ignore[no-untyped-def]
     assert rulespec.match_type == "dict"
 
 
-def test_rulespec_registry_parameter_valuespec(rulespec) -> None:
+def test_rulespec_registry_parameter_valuespec(rulespec) -> None:  # type:ignore[no-untyped-def]
     assert rulespec._parameter_valuespec == kube_node_container_count._parameter_valuespec
 
 
-def test_rulespec_registry_title(rulespec) -> None:
+def test_rulespec_registry_title(rulespec) -> None:  # type:ignore[no-untyped-def]
     assert rulespec.title == "Kubernetes node containers"

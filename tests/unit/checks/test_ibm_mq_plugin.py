@@ -91,7 +91,7 @@ runmqsc: Not executable
         ),
     ],
 )
-def test_check(params, parsed, expected) -> None:
+def test_check(params, parsed, expected) -> None:  # type:ignore[no-untyped-def]
     check = Check(CHECK_NAME)
     actual = list(check.run_check(None, params, parsed))
     assert actual == expected

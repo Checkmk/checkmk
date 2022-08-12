@@ -186,7 +186,7 @@ def test_save_data_to_file_not_pretty(tmp_path: Path, path_type: Type[str] | Typ
         [b"foob\xc3\xa4r"],
     ],
 )
-def test_save_data_to_file(tmp_path: Path, path_type, data) -> None:
+def test_save_data_to_file(tmp_path: Path, path_type, data) -> None:  # type:ignore[no-untyped-def]
     path = path_type(tmp_path / "lala")
     store.save_object_to_file(path, data)
     assert store.load_object_from_file(path, default=None) == data
@@ -199,7 +199,7 @@ def test_save_data_to_file(tmp_path: Path, path_type, data) -> None:
         "föö",
     ],
 )
-def test_save_text_to_file(tmp_path: Path, path_type, data) -> None:
+def test_save_text_to_file(tmp_path: Path, path_type, data) -> None:  # type:ignore[no-untyped-def]
     path = path_type(tmp_path / "lala")
     store.save_text_to_file(path, data)
     assert store.load_text_from_file(path) == data
@@ -227,7 +227,9 @@ def test_load_world_writable_file(  # type:ignore[no-untyped-def]
         b"foob\xc3\xa4r",
     ],
 )
-def test_save_text_to_file_bytes(tmp_path: Path, path_type, data) -> None:
+def test_save_text_to_file_bytes(  # type:ignore[no-untyped-def]
+    tmp_path: Path, path_type, data
+) -> None:
     path = path_type(tmp_path / "lala")
     with pytest.raises(TypeError) as e:
         store.save_text_to_file(path, data)
@@ -241,7 +243,7 @@ def test_save_text_to_file_bytes(tmp_path: Path, path_type, data) -> None:
         b"foob\xc3\xa4r",
     ],
 )
-def test_save_bytes_to_file(tmp_path: Path, path_type, data) -> None:
+def test_save_bytes_to_file(tmp_path: Path, path_type, data) -> None:  # type:ignore[no-untyped-def]
     path = path_type(tmp_path / "lala")
     store.save_bytes_to_file(path, data)
     assert store.load_bytes_from_file(path) == data
@@ -321,7 +323,7 @@ def test_try_locked_fails(  # type:ignore[no-untyped-def]
 ) -> None:
     path = path_type(locked_file)
 
-    def _is_already_locked(path, blocking) -> bool:
+    def _is_already_locked(path, blocking) -> bool:  # type:ignore[no-untyped-def]
         raise IOError(errno.EAGAIN, "%s is already locked" % path)
 
     monkeypatch.setattr(store._locks, "aquire_lock", _is_already_locked)
@@ -356,7 +358,7 @@ def test_aquire_lock_twice(locked_file: Path, path_type: Type[str] | Type[Path])
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_release_lock_not_locked(path_type) -> None:
+def test_release_lock_not_locked(path_type) -> None:  # type:ignore[no-untyped-def]
     store.release_lock(path_type("/asdasd/aasdasd"))
 
 
@@ -435,7 +437,7 @@ class LockTestJob(enum.Enum):
 
 
 class LockTestThread(threading.Thread):
-    def __init__(self, store_mod, path) -> None:
+    def __init__(self, store_mod, path) -> None:  # type:ignore[no-untyped-def]
         super().__init__()
         self.daemon = True
 
@@ -724,7 +726,7 @@ def test_non_blocking_decorated_locking_while_already_locked(  # type:ignore[no-
         ("pickle", StorageFormat.PICKLE),
     ],
 )
-def test_storage_format(text, storage_format) -> None:
+def test_storage_format(text, storage_format) -> None:  # type:ignore[no-untyped-def]
     assert StorageFormat(text) == storage_format
     assert str(storage_format) == text
     assert StorageFormat.from_str(text) == storage_format

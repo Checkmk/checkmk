@@ -656,7 +656,7 @@ class RulesetOptimizer:
 
     # TODO: Generalize this optimization: Build some kind of key out of the tag conditions
     # (positive, negative, ...). Make it work with the new tag group based "$or" handling.
-    def _match_hosts_by_tags(
+    def _match_hosts_by_tags(  # type:ignore[no-untyped-def]
         self,
         cache_id,
         valid_hosts: Set[HostName],
@@ -716,7 +716,7 @@ class RulesetOptimizer:
         self._all_matching_hosts_match_cache[cache_id] = matching
         return matching
 
-    def _filter_hosts_with_same_tags_as_host(
+    def _filter_hosts_with_same_tags_as_host(  # type:ignore[no-untyped-def]
         self,
         hostname: HostName,
         hosts: Set[HostName],
@@ -911,7 +911,7 @@ def matches_tag_condition(
     ) in hosttags
 
 
-def matches_labels(object_labels, required_labels) -> bool:
+def matches_labels(object_labels, required_labels) -> bool:  # type:ignore[no-untyped-def]
     for label_group_id, label_spec in required_labels.items():
         is_not = isinstance(label_spec, dict)
         if is_not:

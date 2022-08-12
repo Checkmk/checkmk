@@ -53,7 +53,7 @@ from cmk.gui.watolib.sites import SiteManagementFactory
 from cmk.gui.watolib.tags import TagConfigFile
 
 
-def validate_host_attributes(attributes, *, new=False) -> None:
+def validate_host_attributes(attributes, *, new=False) -> None:  # type:ignore[no-untyped-def]
     # inventory_failed and site are not "real" host_attributes attributes (TODO: Clean this up!)
     _validate_host_attributes(attributes, extra_attrs=("inventory_failed", "site"), new=new)
 

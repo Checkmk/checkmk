@@ -62,13 +62,13 @@ def dummy_function_jj(section_jim, section_jill):  # pylint: disable=unused-argu
         ("", ValueError),
     ],
 )
-def test_invalid_service_name(string, exc_ty) -> None:
+def test_invalid_service_name(string, exc_ty) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises(exc_ty):
         check_plugins._validate_service_name(CheckPluginName("test"), string)
 
 
 @pytest.mark.parametrize("string", ["whooop", "foo %s bar"])
-def test_valid_service_name(string) -> None:
+def test_valid_service_name(string) -> None:  # type:ignore[no-untyped-def]
     check_plugins._validate_service_name(CheckPluginName("test"), string)
 
 
@@ -79,7 +79,7 @@ def test_valid_service_name(string) -> None:
         ("Foo %s", True),
     ],
 )
-def test_requires_item(service_name, expected) -> None:
+def test_requires_item(service_name, expected) -> None:  # type:ignore[no-untyped-def]
     assert check_plugins._requires_item(service_name) == expected
 
 
@@ -90,7 +90,7 @@ def test_requires_item(service_name, expected) -> None:
         "mööp",
     ],
 )
-def test_create_sections_invalid(sections) -> None:
+def test_create_sections_invalid(sections) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises((TypeError, ValueError)):
         check_plugins.create_subscribed_sections(sections, None)  # type: ignore[arg-type]
 
@@ -106,7 +106,7 @@ def test_create_sections_invalid(sections) -> None:
         ),
     ],
 )
-def test_create_sections(sections, plugin_name, expected) -> None:
+def test_create_sections(sections, plugin_name, expected) -> None:  # type:ignore[no-untyped-def]
     assert check_plugins.create_subscribed_sections(sections, plugin_name) == expected
 
 
@@ -140,7 +140,9 @@ def test_create_sections(sections, plugin_name, expected) -> None:
         (dummy_function_jj, False, False, [CheckPluginName("jim"), CheckPluginName("jill")], None),
     ],
 )
-def test_validate_function_args(function, has_item, has_params, sections, raises) -> None:
+def test_validate_function_args(  # type:ignore[no-untyped-def]
+    function, has_item, has_params, sections, raises
+) -> None:
     if raises is None:
         check_plugins.validate_function_arguments(
             type_label="check",
@@ -162,7 +164,7 @@ def test_validate_function_args(function, has_item, has_params, sections, raises
 
 
 @pytest.mark.parametrize("key", list(MINIMAL_CREATION_KWARGS.keys()))
-def test_create_check_plugin_mandatory(key) -> None:
+def test_create_check_plugin_mandatory(key) -> None:  # type:ignore[no-untyped-def]
     kwargs = {k: v for k, v in MINIMAL_CREATION_KWARGS.items() if k != key}
     with pytest.raises(TypeError):
         _ = check_plugins.create_check_plugin(**kwargs)
@@ -201,6 +203,6 @@ def test_create_check_plugin() -> None:
     assert plugin.check_ruleset_name is None
 
 
-def test_module_attribute(fix_register) -> None:
+def test_module_attribute(fix_register) -> None:  # type:ignore[no-untyped-def]
     local_check = fix_register.check_plugins[CheckPluginName("local")]
     assert local_check.module == "local"

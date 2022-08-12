@@ -163,7 +163,7 @@ def test_ac_check_mail_main_loop_failed_to_send_mail(check_mail_loop: ModuleType
         ),
     ],
 )
-def test_ac_check_mail_loop(
+def test_ac_check_mail_loop(  # type:ignore[no-untyped-def]
     check_mail_loop: ModuleType, warning, critical, expected_mails, fetched_mails, expected_result
 ) -> None:
     state, info, perf = check_mail_loop.check_mails(

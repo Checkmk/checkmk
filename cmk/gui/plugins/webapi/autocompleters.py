@@ -259,7 +259,9 @@ def tag_group_opt_autocompleter(value: str, params: Dict) -> Choices:
     return grouped
 
 
-def _graph_choices_from_livestatus_row(row) -> Iterable[Tuple[str, str]]:
+def _graph_choices_from_livestatus_row(  # type:ignore[no-untyped-def]
+    row,
+) -> Iterable[Tuple[str, str]]:
     def _metric_title_from_id(metric_or_graph_id: MetricName) -> str:
         metric_id = metric_or_graph_id.replace("METRIC_", "")
         return str(metric_info.get(metric_id, {}).get("title", metric_id))

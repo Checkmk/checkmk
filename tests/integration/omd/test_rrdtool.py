@@ -123,7 +123,7 @@ def fixture_rrd_database(tmp_path_factory):
         ),
     ],
 )
-def test_xport(rrd_database, bounds, result) -> None:
+def test_xport(rrd_database, bounds, result) -> None:  # type:ignore[no-untyped-def]
     "Test python binding and that direct memory access behaves correctly"
     qstart, qend = bounds
     assert (
@@ -190,7 +190,7 @@ def test_xport(rrd_database, bounds, result) -> None:
         ),
     ],
 )
-def test_cli_xport(rrd_database, bounds, out_fmt, result) -> None:
+def test_cli_xport(rrd_database, bounds, out_fmt, result) -> None:  # type:ignore[no-untyped-def]
     """Test CLI so that when debugging output from tool it matches state in memory
 
     RRDTool composes the XML/JSON outputs explicitly and one may rely for

@@ -90,7 +90,7 @@ def test_parse_datadog_monitors() -> None:
         ),
     ),
 )
-def test_discover_datadog_monitors(params, expected_result) -> None:
+def test_discover_datadog_monitors(params, expected_result) -> None:  # type:ignore[no-untyped-def]
     assert (
         list(
             discover_datadog_monitors(
@@ -191,7 +191,9 @@ def test_discover_datadog_monitors(params, expected_result) -> None:
         ),
     ),
 )
-def test_check_datadog_monitors(item, params, expected_result) -> None:
+def test_check_datadog_monitors(  # type:ignore[no-untyped-def]
+    item, params, expected_result
+) -> None:
     assert (
         list(
             check_datadog_monitors(

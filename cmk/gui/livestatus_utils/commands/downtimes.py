@@ -39,7 +39,7 @@ class QueryException(Exception):
     pass
 
 
-def del_host_downtime(
+def del_host_downtime(  # type:ignore[no-untyped-def]
     connection,
     downtime_id: int,
     site_id: SiteId,
@@ -74,7 +74,7 @@ def del_host_downtime(
     return send_command(connection, "DEL_HOST_DOWNTIME", [downtime_id], site_id)
 
 
-def del_service_downtime(
+def del_service_downtime(  # type:ignore[no-untyped-def]
     connection,
     downtime_id: int,
     site_id: SiteId,
@@ -136,7 +136,7 @@ def delete_downtime(connection, downtime_id):
         del_host_downtime(connection, downtime_id, entry["site"])
 
 
-def schedule_services_downtimes_with_query(
+def schedule_services_downtimes_with_query(  # type:ignore[no-untyped-def]
     connection,
     query: QueryExpression,
     start_time: dt.datetime,
@@ -178,7 +178,7 @@ def schedule_services_downtimes_with_query(
         )
 
 
-def schedule_service_downtime(
+def schedule_service_downtime(  # type:ignore[no-untyped-def]
     connection,
     site_id: SiteId,
     host_name: str,
@@ -291,7 +291,7 @@ def schedule_service_downtime(
         )
 
 
-def schedule_servicegroup_service_downtime(
+def schedule_servicegroup_service_downtime(  # type:ignore[no-untyped-def]
     connection,
     servicegroup_name: str,
     start_time: dt.datetime,
@@ -393,7 +393,7 @@ def schedule_servicegroup_service_downtime(
         )
 
 
-def schedule_hostgroup_host_downtime(
+def schedule_hostgroup_host_downtime(  # type:ignore[no-untyped-def]
     connection,
     hostgroup_name: str,
     start_time: dt.datetime,
@@ -477,7 +477,7 @@ def schedule_hostgroup_host_downtime(
     )
 
 
-def schedule_hosts_downtimes_with_query(
+def schedule_hosts_downtimes_with_query(  # type:ignore[no-untyped-def]
     connection,
     query: QueryExpression,
     start_time: dt.datetime,
@@ -513,7 +513,7 @@ def schedule_hosts_downtimes_with_query(
     )
 
 
-def schedule_host_downtime(
+def schedule_host_downtime(  # type:ignore[no-untyped-def]
     connection,
     host_entry: Union[str, List[str]],
     start_time: dt.datetime,
@@ -664,7 +664,7 @@ def schedule_host_downtime(
             )
 
 
-def _schedule_downtime(
+def _schedule_downtime(  # type:ignore[no-untyped-def]
     sites,
     command: LivestatusCommand,
     site_id,

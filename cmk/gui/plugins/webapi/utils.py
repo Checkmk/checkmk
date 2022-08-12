@@ -60,7 +60,7 @@ api_call_collection_registry = APICallCollectionRegistry()
 
 
 # TODO: Rename to validate_hostname to be in sync with other functions
-def check_hostname(hostname: HostName, should_exist=True) -> None:
+def check_hostname(hostname: HostName, should_exist=True) -> None:  # type:ignore[no-untyped-def]
     # Validate hostname with valuespec
     Hostname().validate_value(hostname, "hostname")
 

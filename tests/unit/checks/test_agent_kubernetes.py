@@ -77,7 +77,7 @@ pytestmark = pytest.mark.checks
     ],
 )
 @pytest.mark.usefixtures("fix_register")
-def test_parse_arguments(params, expected_args) -> None:
+def test_parse_arguments(params, expected_args) -> None:  # type:ignore[no-untyped-def]
     """Tests if all required arguments are present."""
     agent = SpecialAgent("agent_kubernetes")
     arguments = agent.argument_func(params, "host", "127.0.0.1")

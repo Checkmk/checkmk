@@ -23,7 +23,7 @@ def test_ui_theme_registration() -> None:
     assert valuespec.choices() == theme_choices()
 
 
-def test_ui_theme_default_value(request_context) -> None:
+def test_ui_theme_default_value(request_context) -> None:  # type:ignore[no-untyped-def]
     var = config_variable_registry["ui_theme"]()
 
     default_setting = var.domain()().default_globals()[var.ident()]
@@ -97,5 +97,7 @@ def test_ui_theme_default_value(request_context) -> None:
         ),
     ],
 )
-def test__transform_automatic_rediscover_parameters(parameters, result) -> None:
+def test__transform_automatic_rediscover_parameters(  # type:ignore[no-untyped-def]
+    parameters, result
+) -> None:
     assert _transform_automatic_rediscover_parameters(parameters) == result

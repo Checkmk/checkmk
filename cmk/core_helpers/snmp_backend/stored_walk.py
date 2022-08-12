@@ -90,7 +90,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
         return rowinfo
 
     @staticmethod
-    def read_walk_data(path: str):
+    def read_walk_data(path: str):  # type:ignore[no-untyped-def]
         lines = []
         with open(path) as f:
             # Sometimes there are newlines in the data of snmpwalks.

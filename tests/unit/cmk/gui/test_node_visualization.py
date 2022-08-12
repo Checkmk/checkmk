@@ -74,7 +74,7 @@ def test_ParentChildNetworkTopology_fetch_data_for_hosts(
     assert host_info[0]["name"] == "foo<(/"
 
 
-def test_ParentChildTopologyPage_get_hostnames_from_filters(
+def test_ParentChildTopologyPage_get_hostnames_from_filters(  # type:ignore[no-untyped-def]
     rough_livestatus: MockLiveStatusConnection, mocker
 ) -> None:
     rough_livestatus.expect_query("GET hosts\nColumns: name\nColumnHeaders: off")

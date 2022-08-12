@@ -43,5 +43,7 @@ from cmk.gui.utils.html import HTML
         ),
     ],
 )
-def test_perfometer_fileinfo_groups(perf_data, expected_result, request_context) -> None:
+def test_perfometer_fileinfo_groups(  # type:ignore[no-untyped-def]
+    perf_data, expected_result, request_context
+) -> None:
     assert perfometer_fileinfo_groups({}, "", perf_data) == expected_result

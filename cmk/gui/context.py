@@ -66,7 +66,7 @@ class AppContext:
         https://flask.palletsprojects.com/en/1.1.x/reqcontext/
     """
 
-    def __init__(self, app, *, stack: LocalStack) -> None:
+    def __init__(self, app, *, stack: LocalStack) -> None:  # type:ignore[no-untyped-def]
         self.app = app
         self.g = _AppCtxGlobals()
         self._stack = stack

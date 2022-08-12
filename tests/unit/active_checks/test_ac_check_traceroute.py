@@ -104,7 +104,7 @@ def fixture_check_traceroute() -> ModuleType:
         ),
     ],
 )
-def test_ac_check_traceroute_no_routes(
+def test_ac_check_traceroute_no_routes(  # type:ignore[no-untyped-def]
     check_traceroute: ModuleType, lines, hops_info, expected_perf
 ) -> None:
     status, info, perf = check_traceroute.check_traceroute(lines, [])
@@ -420,7 +420,7 @@ def test_ac_check_traceroute_no_routes(
         ),
     ],
 )
-def test_ac_check_traceroute_routes(
+def test_ac_check_traceroute_routes(  # type:ignore[no-untyped-def]
     check_traceroute: ModuleType,
     lines,
     routes,

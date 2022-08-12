@@ -87,7 +87,7 @@ min_resize_width = 50
 min_resize_height = 6
 
 
-def host_service_graph_popup_cmk(
+def host_service_graph_popup_cmk(  # type:ignore[no-untyped-def]
     site,
     host_name,
     service_description,

@@ -21,13 +21,13 @@ TEST_MSI_FILE: Final = Path("agents/wnx/test_files/msibuild/msi") / "check_mk_ag
 
 
 @pytest.mark.parametrize("executable", EXPECTED_EXECUTABLES)
-def test_executables(site: Site, executable) -> None:
+def test_executables(site: Site, executable) -> None:  # type:ignore[no-untyped-def]
     p = Path(site.path("bin")) / executable
     assert p.exists(), f"path: '{p}' exe: '{executable}'"
 
 
 @pytest.mark.parametrize("test_file", EXPECTED_TEST_FILES)
-def test_files(site: Site, test_file) -> None:
+def test_files(site: Site, test_file) -> None:  # type:ignore[no-untyped-def]
     p = Path(site.path(MSI_LOCATION)) / test_file
     assert p.exists(), f"path: '{p}' file: '{test_file}'"
 

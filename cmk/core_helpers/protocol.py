@@ -258,7 +258,7 @@ class _ExceptionType(enum.Enum):
     TIMEOUT = enum.auto()
 
     @classmethod
-    def from_exception(cls, exception) -> _ExceptionType:
+    def from_exception(cls, exception) -> _ExceptionType:  # type:ignore[no-untyped-def]
         if isinstance(exception, MKTimeout):
             return cls.TIMEOUT
         if isinstance(exception, MKFetcherError):
@@ -288,7 +288,9 @@ class ErrorResultMessage(ResultMessage[AgentRawData]):
         msg: str
 
         @classmethod
-        def from_exception(cls, exception) -> ErrorResultMessage._Model:
+        def from_exception(  # type:ignore[no-untyped-def]
+            cls, exception
+        ) -> ErrorResultMessage._Model:
             return cls(exc_type=_ExceptionType.from_exception(exception), msg=str(exception))
 
         def to_exception(self) -> Exception | MKFetcherError | MKTimeout:

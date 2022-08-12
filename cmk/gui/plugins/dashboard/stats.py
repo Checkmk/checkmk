@@ -73,7 +73,9 @@ class ServiceStats(NamedTuple):
     unknown: int
     critical: int
 
-    def get_parts_data(self, general_url_vars) -> List[Tuple[str, str, int, str]]:
+    def get_parts_data(  # type:ignore[no-untyped-def]
+        self, general_url_vars
+    ) -> List[Tuple[str, str, int, str]]:
         return [
             (
                 _("OK"),
@@ -131,7 +133,9 @@ class EventStats(NamedTuple):
     unknown: int
     critical: int
 
-    def get_parts_data(self, general_url_vars) -> List[Tuple[str, str, int, str]]:
+    def get_parts_data(  # type:ignore[no-untyped-def]
+        self, general_url_vars
+    ) -> List[Tuple[str, str, int, str]]:
         return [
             (
                 _("Ok"),
@@ -206,7 +210,7 @@ class StatsDashletDataGenerator:
         raise NotImplementedError()
 
     @classmethod
-    def _collect_data(cls, context, settings) -> StatsElement:
+    def _collect_data(cls, context, settings) -> StatsElement:  # type:ignore[no-untyped-def]
         stats = cls._get_stats(context, settings)
         general_url_vars = cls._general_url_vars(context, settings["single_infos"])
         parts_data = stats.get_parts_data(general_url_vars)

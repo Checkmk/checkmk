@@ -109,7 +109,9 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
         """Option to show the custom attribute in overview tables of the setup menu."""
         raise NotImplementedError()
 
-    def _render_table_option(self, section_title, label, help_text) -> None:
+    def _render_table_option(  # type:ignore[no-untyped-def]
+        self, section_title, label, help_text
+    ) -> None:
         """Helper method to implement _show_in_table_option."""
         forms.section(section_title)
         html.help(help_text)

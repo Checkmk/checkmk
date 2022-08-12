@@ -17,18 +17,20 @@ from cmk.gui.plugins.wato.check_parameters.ps import (
 
 
 @pytest.mark.parametrize("pattern", ["(test)$", "foo\\b", "^bar", "\\bfoo\\b", "(a)\\b"])
-def test_validate_ps_allowed_regex(pattern) -> None:
+def test_validate_ps_allowed_regex(pattern) -> None:  # type:ignore[no-untyped-def]
     assert forbid_re_delimiters_inside_groups(pattern, "") is None
 
 
 @pytest.mark.parametrize("pattern", ["(test$)", "(foo\\b)", "(^bar)", "(\\bfoo\\b)"])
-def test_validate_ps_forbidden_regex(pattern) -> None:
+def test_validate_ps_forbidden_regex(pattern) -> None:  # type:ignore[no-untyped-def]
     with pytest.raises(MKUserError):
         forbid_re_delimiters_inside_groups(pattern, "")
 
 
 @pytest.mark.parametrize("description", ["%s%5"])
-def test_validate_process_discovery_descr_option(description) -> None:
+def test_validate_process_discovery_descr_option(  # type:ignore[no-untyped-def]
+    description,
+) -> None:
     with pytest.raises(MKUserError):
         validate_process_discovery_descr_option(description, "")
 
@@ -47,7 +49,7 @@ def test_validate_process_discovery_descr_option(description) -> None:
         ),
     ],
 )
-def test_transform_cpu_iowait(params, result) -> None:
+def test_transform_cpu_iowait(params, result) -> None:  # type:ignore[no-untyped-def]
     assert transform_cpu_iowait(params) == result
 
 
@@ -124,7 +126,7 @@ def test_transform_cpu_iowait(params, result) -> None:
         ),
     ],
 )
-def test_convert_inventory_process(params, result) -> None:
+def test_convert_inventory_process(params, result) -> None:  # type:ignore[no-untyped-def]
     assert convert_inventory_processes(params) == result
 
 
@@ -181,5 +183,5 @@ def test_convert_inventory_process(params, result) -> None:
         ),
     ],
 )
-def test_ps_cleanup_params(params, result) -> None:
+def test_ps_cleanup_params(params, result) -> None:  # type:ignore[no-untyped-def]
     assert ps_cleanup_params(params) == result

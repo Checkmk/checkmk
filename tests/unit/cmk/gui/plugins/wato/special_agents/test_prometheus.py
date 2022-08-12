@@ -73,5 +73,7 @@ from cmk.gui.plugins.wato.special_agents.prometheus import _transform_agent_prom
         ),
     ],
 )
-def test__transform_agent_prometheus(parameters, expected_result) -> None:
+def test__transform_agent_prometheus(  # type:ignore[no-untyped-def]
+    parameters, expected_result
+) -> None:
     assert _transform_agent_prometheus(parameters) == expected_result

@@ -149,7 +149,7 @@ def test_all_agents_tested() -> None:
 
 
 @pytest.mark.parametrize("agent_name, required_args", list(REQUIRED_ARGUMENTS.items()))
-def test_parse_arguments(agent_name, required_args) -> None:
+def test_parse_arguments(agent_name, required_args) -> None:  # type:ignore[no-untyped-def]
     agent = import_module("cmk.special_agents.%s" % agent_name)
     if agent_name in AGENTS_WITHOUT_PARSE_ARGUMENTS:
         return

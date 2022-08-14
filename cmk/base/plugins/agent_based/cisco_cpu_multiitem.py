@@ -7,19 +7,9 @@ from contextlib import suppress
 from statistics import mean
 from typing import Dict, List, NamedTuple, Tuple, TypedDict
 
-from .agent_based_api.v1 import (
-    all_of,
-    check_levels,
-    contains,
-    exists,
-    not_contains,
-    OIDEnd,
-    register,
-    render,
-    Service,
-    SNMPTree,
-)
+from .agent_based_api.v1 import check_levels, OIDEnd, register, render, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.cisco_mem import DETECT_MULTIITEM
 from .utils.entity_mib import PhysicalClasses
 
 DISCOVERY_DEFAULT_PARAMETERS = {"individual": True, "average": False}
@@ -97,11 +87,7 @@ def check_cisco_cpu_multiitem(item: str, params: Params, section: Section) -> Ch
 
 register.snmp_section(
     name="cisco_cpu_multiitem",
-    detect=all_of(
-        contains(".1.3.6.1.2.1.1.1.0", "cisco"),
-        not_contains(".1.3.6.1.2.1.1.1.0", "nx-os"),
-        exists(".1.3.6.1.4.1.9.9.109.1.1.1.1.2.*"),
-    ),
+    detect=DETECT_MULTIITEM,
     parse_function=parse_cisco_cpu_multiitem,
     fetch=[
         SNMPTree(

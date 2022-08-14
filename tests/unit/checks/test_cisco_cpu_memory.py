@@ -20,7 +20,7 @@ from cmk.utils.type_defs import SectionName
                 [["1", "1", "1", "1"], ["2", "0", "0", "0"]],
                 [["1", "CPU of Module 1"], ["2", "CPU of Module 2"]],
             ],
-            {"of Module 1": {"mem_free": 1.0, "mem_reserved": 1.0, "mem_used": 1.0}},
+            {"of Module 1": {"mem_free": 1024.0, "mem_reserved": 1024.0, "mem_used": 1024.0}},
         )
     ],
 )

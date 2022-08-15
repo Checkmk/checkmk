@@ -68,6 +68,7 @@ import cmk.gui.config  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.userdb import load_users, save_users, Users  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.utils  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.utils.script_helpers import application_and_request_context, initialize_gui_environment  # pylint: disable=cmk-module-layer-violation
+from cmk.utils.store import load_from_mk_file, save_mk_file
 
 import cmk.update_rrd_fs_names  # pylint: disable=cmk-module-layer-violation  # TODO: this should be fine
 
@@ -212,6 +213,7 @@ class UpdateConfig:
     def _update_global_settings(self) -> None:
         self._update_installation_wide_global_settings()
         self._update_site_specific_global_settings()
+        self._update_site_specific_central_site_mknotifyd()
         self._update_remote_site_specific_global_settings()
 
     def _update_installation_wide_global_settings(self) -> None:
@@ -231,6 +233,22 @@ class UpdateConfig:
         self._update_global_config(global_config)
 
         cmk.gui.watolib.global_settings.save_site_global_settings(global_config)
+
+    def _update_site_specific_central_site_mknotifyd(self) -> None:
+        """ 'config' key changed to 'notification_spooler_config' in 2.0 """
+        if cmk.gui.config.is_wato_slave_site():
+            return
+
+        sitespecific_file_path: Path = Path(cmk.utils.paths.default_config_dir, "mknotifyd.d",
+                                            "wato", "sitespecific.mk")
+        if not sitespecific_file_path.exists():
+            return
+
+        mknotifyd_config: Dict[str, Any] = load_from_mk_file(sitespecific_file_path, "config", {})
+        if not mknotifyd_config:
+            return
+
+        save_mk_file(sitespecific_file_path, "notification_spooler_config = %r" % mknotifyd_config)
 
     def _update_remote_site_specific_global_settings(self) -> None:
         """Update the site specific global settings in the central site configuration"""

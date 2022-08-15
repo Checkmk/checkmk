@@ -1,0 +1,14 @@
+Title: Notification spooler: Fix possible ConnectionRefusedError after update to 2.0
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1660563193
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p28
+
+If the notification spooler configuration was made via "Distributed monitoring"
+- "Site specific global configuration" for central sites in versions before
+2.0, the start of the mknotifyd daemon could fail with an error like
+"ConnectionRefusedError: [Errno 111] Connection refused".

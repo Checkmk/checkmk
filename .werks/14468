@@ -1,0 +1,12 @@
+Title: Extension packages: Fix error on usage of "mkp show"
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1660554659
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p10
+
+If the command "mkp show" was used with mkp files like "my_mkp.mkp", the error
+"Cannot open package my_mkp.mkp: I/O operation on closed file" occurred.

@@ -1122,7 +1122,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "cisco_asa_conn",
         "cisco_asa_connections",
         "cisco_cpu",
-        "cisco_cpu_memory",
         "cisco_fan",
         "cisco_fantray",
         "cisco_fru_module_status",

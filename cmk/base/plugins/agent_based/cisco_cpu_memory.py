@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any, List, Mapping, TypedDict
 
-from cmk.base.check_legacy_includes.cisco_cpu_scan_functions import snmp_scan_cisco_cpu_multiitem
-from cmk.base.check_legacy_includes.cisco_mem import check_cisco_mem_sub
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1 import get_value_store, OIDEnd, register, Service, SNMPTree
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.cisco_mem import check_cisco_mem_sub, DETECT_MULTIITEM
 
 
 class MemInfo(TypedDict):
@@ -44,35 +44,38 @@ def parse_cisco_cpu_memory_multiitem(string_table: List[StringTable]) -> Section
     return parsed
 
 
-check_info["cisco_cpu_memory"] = {
-    "parse_function": parse_cisco_cpu_memory_multiitem,
-    "snmp_info": [
-        (
-            ".1.3.6.1.4.1.9.9.109.1.1.1",
-            [
-                "1.2",  # cpmCPUTotalPhysicalIndex
-                "1.12",  # cpmCPUMemoryUsed
-                "1.13",  # cpmCPUMemoryFree
-                "1.14",  # cpmCPUMemoryKernelReserved
+register.snmp_section(
+    name="cisco_cpu_memory",
+    parse_function=parse_cisco_cpu_memory_multiitem,
+    fetch=[
+        SNMPTree(
+            base=".1.3.6.1.4.1.9.9.109.1.1.1.1",
+            oids=[
+                "2",  # cpmCPUTotalPhysicalIndex
+                "12",  # cpmCPUMemoryUsed
+                "13",  # cpmCPUMemoryFree
+                "14",  # cpmCPUMemoryKernelReserved
             ],
         ),
-        (
-            ".1.3.6.1.2.1.47.1.1.1",
-            [
-                OID_END,  # OID index
+        SNMPTree(
+            base=".1.3.6.1.2.1.47.1.1.1",
+            oids=[
+                OIDEnd(),  # OID index
                 "1.7",  # entPhysicalName
             ],
         ),
     ],
-    "snmp_scan_function": snmp_scan_cisco_cpu_multiitem,
-}
+    detect=DETECT_MULTIITEM,
+)
 
 
-def discover_cisco_cpu_memory_multiitem(section: Section):
-    yield from ((key, {}) for key in section)
+def discover_cisco_cpu_memory_multiitem(section: Section) -> DiscoveryResult:
+    yield from (Service(item=key) for key in section)
 
 
-def check_cisco_cpu_memory_multiitem(item: str, params: Mapping[str, Any], section: Section):
+def check_cisco_cpu_memory_multiitem(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
     if (data := section.get(item)) is None:
         return
     mem_used = data["mem_used"]
@@ -80,15 +83,14 @@ def check_cisco_cpu_memory_multiitem(item: str, params: Mapping[str, Any], secti
     mem_reserved = data["mem_reserved"]
     mem_occupied = mem_used + mem_reserved
     mem_total = mem_used + mem_free
-    yield check_cisco_mem_sub(None, params, mem_occupied, mem_total)
+    yield from check_cisco_mem_sub(get_value_store(), item, params, mem_occupied, mem_total)
 
 
-check_info["cisco_cpu_memory"].update(
-    {
-        "check_function": check_cisco_cpu_memory_multiitem,
-        "inventory_function": discover_cisco_cpu_memory_multiitem,
-        "group": "cisco_cpu_memory",
-        "service_description": "CPU Memory utilization %s",
-        "has_perfdata": True,
-    }
+register.check_plugin(
+    name="cisco_cpu_memory",
+    service_name="CPU Memory utilization %s",
+    discovery_function=discover_cisco_cpu_memory_multiitem,
+    check_function=check_cisco_cpu_memory_multiitem,
+    check_ruleset_name="cisco_cpu_memory",
+    check_default_parameters={},
 )

@@ -11,10 +11,6 @@ from cmk.base.check_legacy_includes.db2 import *  # pylint: disable=wildcard-imp
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
 # <<<db2_logsizes>>>
 # [[[db2taddm:CMDBS1]]]
 # TIMESTAMP 1426495343

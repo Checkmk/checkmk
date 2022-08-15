@@ -11,10 +11,6 @@ from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-impo
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
 # Example output from agent:
 # <<<ibm_svc_mdiskgrp:sep(58)>>>
 # 0:Quorum_2:online:1:0:704.00MB:64:704.00MB:0.00MB:0.00MB:0.00MB:0:0:auto:inactive:no:0.00MB:0.00MB:0.00MB

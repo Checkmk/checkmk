@@ -3,41 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping
-
 import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.type_defs import CheckPluginName, SectionName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-
-Section = Mapping  # for now
-
-
-# remove after migration
-@pytest.fixture(name="parse_cisco_cpu_memory_multiitem", scope="module")
-def _get_parse_cisco_cpu_memory(fix_register: FixRegister):
-    section_plugin = fix_register.snmp_sections[SectionName("cisco_cpu_memory")]
-    return section_plugin.parse_function
+from cmk.base.plugins.agent_based.cisco_cpu_memory import (
+    check_cisco_cpu_memory_multiitem,
+    discover_cisco_cpu_memory_multiitem,
+    parse_cisco_cpu_memory_multiitem,
+    Section,
+)
 
 
-# remove after migration
-@pytest.fixture(name="discover_cisco_cpu_memory_multiitem", scope="module")
-def _get_discover_cisco_cpu_memory(fix_register: FixRegister):
-    plugin = fix_register.check_plugins[CheckPluginName("cisco_cpu_memory")]
-    return lambda s: plugin.discovery_function(section=s)
-
-
-# remove after migration
-@pytest.fixture(name="check_cisco_cpu_memory_multiitem", scope="module")
-def _get_check_cisco_cpu_memory(fix_register: FixRegister):
-    plugin = fix_register.check_plugins[CheckPluginName("cisco_cpu_memory")]
-    return lambda i, p, s: plugin.check_function(item=i, params=p, section=s)
-
-
-def test_parsing(parse_cisco_cpu_memory_multiitem) -> None:
+def test_parsing() -> None:
     assert parse_cisco_cpu_memory_multiitem(
         [
             [["1", "1", "1", "1"], ["2", "0", "0", "0"]],
@@ -57,17 +34,17 @@ STRING_TABLE = [
 
 
 @pytest.fixture(name="section", scope="module")
-def _get_section(parse_cisco_cpu_memory_multiitem) -> Section:
+def _get_section() -> Section:
     return parse_cisco_cpu_memory_multiitem(STRING_TABLE)
 
 
-def test_discovery(discover_cisco_cpu_memory_multiitem, section: Section) -> None:
+def test_discovery(section: Section) -> None:
     assert list(discover_cisco_cpu_memory_multiitem(section)) == [
         Service(item="Switch2 Supervisor 1 (virtual slot 11)"),
     ]
 
 
-def test_check_no_levels(check_cisco_cpu_memory_multiitem, section: Section) -> None:
+def test_check_no_levels(section: Section) -> None:
     assert list(
         check_cisco_cpu_memory_multiitem("Switch2 Supervisor 1 (virtual slot 11)", {}, section)
     ) == [
@@ -76,7 +53,7 @@ def test_check_no_levels(check_cisco_cpu_memory_multiitem, section: Section) -> 
     ]
 
 
-def test_check_used_levels(check_cisco_cpu_memory_multiitem, section: Section) -> None:
+def test_check_used_levels(section: Section) -> None:
     assert list(
         check_cisco_cpu_memory_multiitem(
             "Switch2 Supervisor 1 (virtual slot 11)", {"levels": (50.0, 90.0)}, section
@@ -90,7 +67,7 @@ def test_check_used_levels(check_cisco_cpu_memory_multiitem, section: Section) -
     ]
 
 
-def test_check_free_levels(check_cisco_cpu_memory_multiitem, section: Section) -> None:
+def test_check_free_levels(section: Section) -> None:
     assert list(
         check_cisco_cpu_memory_multiitem(
             "Switch2 Supervisor 1 (virtual slot 11)", {"levels": (-20.0, -10.0)}, section

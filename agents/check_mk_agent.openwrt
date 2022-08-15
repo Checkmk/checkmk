@@ -1395,6 +1395,8 @@ main_setup() {
 
     set_variable_defaults
 
+    set_up_profiling
+
     unset_locale
 
     preamble_1

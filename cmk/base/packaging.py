@@ -142,10 +142,9 @@ def show_package(  # pylint: disable=too-many-branches
     try:
         if name.endswith(PACKAGE_EXTENSION):
             with tarfile.open(name, "r:gz") as tar:
-                info = tar.extractfile("info")
-            if info is None:
-                raise PackageException('Failed to extract "info"')
-            package = parse_package_info(info.read().decode())
+                if (info := tar.extractfile("info")) is None:
+                    raise PackageException('Failed to extract "info"')
+                package = parse_package_info(info.read().decode())
         else:
             this_package = read_package_info(name)
             if not this_package:

@@ -1,0 +1,14 @@
+Title: Execute local checks in openwrt agent
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1660648581
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p10
+
+Before this werk local checks where not executed.
+In debug mode the following error message was visible:
+
+   _log_section_time: not found

@@ -1,0 +1,11 @@
+Title: Fix autocompletion in 'Move to other folder' dropdown
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 2.2.0i1
+Date: 1660556209
+Class: fix
+
+The autocompletion of the 'Move to other folder' dropdown on host setup pages (Setup > Hosts > Main [> ...]) was broken. The dropdown entries were not filtered by the entered search string.
+This behavior is fixed: The dropdown entries are now filtered by the entered string.

@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping
+
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils import netapp_api
 from cmk.base.plugins.agent_based.utils.df import (
@@ -11,6 +14,9 @@ from cmk.base.plugins.agent_based.utils.df import (
     MAGIC_FACTOR_DEFAULT_PARAMS,
     TREND_DEFAULT_PARAMS,
 )
+
+_MEBI = 1048576
+
 
 # <<<netapp_api_luns:sep(9)>>>
 # lun /vol/iscsi_crm_dblogs/crm_dblogs_lu01   read-only false size 644286182400   vserver ISCSI_CRM   size-used 538924421120  online true volume iscsi_crm_dblogs
@@ -31,21 +37,16 @@ check_info["netapp_api_luns"] = {
 }
 
 
-factory_settings["netapp_api_luns_default_levels"] = {
-    **FILESYSTEM_DEFAULT_LEVELS,
-    **MAGIC_FACTOR_DEFAULT_PARAMS,
-    **TREND_DEFAULT_PARAMS,
-    "read_only": False,
-}
+def discover_netapp_api_luns(section: netapp_api.SectionSingleInstance):
+    yield from ((lun, {}) for lun in section)
 
 
-def inventory_netapp_api_luns(parsed):
-    for lun in parsed:
-        yield lun, {}
+def check_netapp_api_luns(
+    item: str, params: Mapping[str, Any], section: netapp_api.SectionSingleInstance
+):
+    if (lun := section.get(item)) is None:
+        return
 
-
-@get_parsed_item_data
-def check_netapp_api_luns(item, params, lun):
     if lun.get("online") != "true":
         yield 2, "LUN is offline"
 
@@ -57,17 +58,16 @@ def check_netapp_api_luns(item, params, lun):
     size_total_bytes = int(lun["size"])
 
     if params.get("ignore_levels"):
-        yield 0, "Total size: %s, Used space is ignored" % get_bytes_human_readable(
-            size_total_bytes
-        )
+        yield 0, f"Total size: {render.bytes(size_total_bytes)}"
+        yield 0, "Used space is ignored"
     else:
-        # df_check_filesystem_single expects input in Megabytes
-        mega = 1024.0 * 1024.0
         size_avail_bytes = size_total_bytes - int(lun["size-used"])
         yield df_check_filesystem_single(
             item,
-            size_total_bytes / mega,
-            size_avail_bytes / mega,
+            # df_check_filesystem_single expects input in Megabytes
+            # (mo: but we're passing mebibytes, apparently.)
+            size_total_bytes / _MEBI,
+            size_avail_bytes / _MEBI,
             0,
             None,
             None,
@@ -78,10 +78,17 @@ def check_netapp_api_luns(item, params, lun):
 check_info["netapp_api_luns"].update(
     {
         "check_function": check_netapp_api_luns,
-        "inventory_function": inventory_netapp_api_luns,
+        "inventory_function": discover_netapp_api_luns,
         "service_description": "LUN %s",
         "has_perfdata": True,
         "group": "netapp_luns",
         "default_levels_variable": "netapp_api_luns_default_levels",
     }
 )
+
+factory_settings["netapp_api_luns_default_levels"] = {
+    **FILESYSTEM_DEFAULT_LEVELS,
+    **MAGIC_FACTOR_DEFAULT_PARAMS,
+    **TREND_DEFAULT_PARAMS,
+    "read_only": False,
+}

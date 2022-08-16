@@ -1471,7 +1471,7 @@ class AjaxBIRulePreview(AjaxPage):
                 response.append([{"Error": _("Can not evaluate search")}])
 
         return {
-            "title": _("Search result(s) preview"),
+            "title": _("Available macros and search result(s)"),
             "data": response,
             "params": preview_bi_rule.params.arguments,
         }
@@ -1501,7 +1501,7 @@ class AjaxBIAggregationPreview(AjaxPage):
             response.append([{_("Error"): _("Can not evaluate search")}])
 
         return {
-            "title": _("Search result(s) preview"),
+            "title": _("Available macros and search result(s)"),
             "data": response,
         }
 

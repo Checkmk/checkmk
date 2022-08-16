@@ -171,3 +171,17 @@ table.data.table .bi_tree_container .title .state {
   margin-right: 4px;
   border-radius: 2px;
 }
+
+div.node_preview {
+  max-height: 300px;
+  overflow: scroll;
+  padding-right: 2 * $spacing;
+  margin-bottom: 2 * $spacing;
+
+  table {
+    padding: 6px;
+    th {
+      padding: 6px;
+    }
+  }
+}

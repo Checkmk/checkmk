@@ -97,7 +97,7 @@ def test_update_remote_site_status_host_config() -> None:
                     timeout=2,
                     persist=False,
                     url_prefix="/remote/",
-                    status_host=(SiteId("stable"), b"af"),
+                    status_host=(SiteId("stable"), "af"),
                     disabled=False,
                     replication="slave",
                     multisiteurl="http://localhost/remote/check_mk/",
@@ -129,4 +129,4 @@ def test_update_remote_site_status_host_config() -> None:
     # Remote site status host was updated
     assert all_sites[SiteId("remote")]["url_prefix"] == "/remote/"
     assert all_sites[SiteId("remote")]["multisiteurl"] == "http://localhost/remote/check_mk/"
-    assert all_sites[SiteId("remote")]["status_host"] == ("dingdong", b"af")
+    assert all_sites[SiteId("remote")]["status_host"] == ("dingdong", "af")

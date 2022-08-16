@@ -91,11 +91,11 @@ class SiteConfiguration(TypedDict, total=False):
     replicate_mkps: bool
     replication: str | None
     secret: str
-    status_host: tuple[SiteId, bytes] | None
+    status_host: tuple[SiteId, str] | None
     timeout: int
     url_prefix: str
     user_login: bool
-    user_sync: str | None
+    user_sync: Literal["all"] | tuple[Literal["list"], list[str]] | None
 
     # Thanks to SingleSiteConnection we need str here. The convertion can
     # probably be moved into the SingleSiteConnection
@@ -956,7 +956,7 @@ class MultiSiteConnection(Helpers):
         # hosts at the same time.
 
         # dict from site to list of status_hosts
-        status_hosts: dict[SiteId, list[bytes]] = {}
+        status_hosts: dict[SiteId, list[str]] = {}
         sites_dict = sites.copy()
         sites_dict.update(extra_status_sites)
         for sitename, site in sites_dict.items():

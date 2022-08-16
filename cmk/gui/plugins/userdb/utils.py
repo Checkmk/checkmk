@@ -32,7 +32,7 @@ USER_SCHEME_SERIAL = 0
 RoleSpec = Dict[str, Any]  # TODO: Improve this type
 Roles = Dict[str, RoleSpec]  # TODO: Improve this type
 UserConnectionSpec = Dict[str, Any]  # TODO: Improve this type
-UserSyncConfig = Optional[str]
+UserSyncConfig = Union[Literal["all", "master"], tuple[Literal["list"], list[str]], None]
 CheckCredentialsResult = Union[UserId, None, Literal[False]]
 
 

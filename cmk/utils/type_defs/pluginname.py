@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import abc
 import string
-from typing import Any, Final, NamedTuple, Set
+from typing import Final, NamedTuple, Set
 
 from ._misc import Item
 

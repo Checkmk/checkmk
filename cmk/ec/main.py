@@ -54,12 +54,12 @@ from cmk.utils.type_defs import HostName, TimeperiodName, Timestamp
 
 from .actions import do_event_action, do_event_actions, do_notify, event_has_opened
 from .config import Config, ConfigFromWATO, Rule
-from .core_queries import query_hosts_scheduled_downtime_depth, query_timeperiods_in
+from .core_queries import HostInfo, query_hosts_scheduled_downtime_depth, query_timeperiods_in
 from .crash_reporting import CrashReportStore, ECCrashReport
 from .event import create_event_from_line, Event
 from .helpers import ECLock
 from .history import ActiveHistoryPeriod, get_logfile, History, quote_tab, scrub_string
-from .host_config import HostConfig, HostInfo
+from .host_config import HostConfig
 from .perfcounters import Perfcounters
 from .query import filter_operator_in, MKClientError, Query, QueryCOMMAND, QueryGET, QueryREPLICATE
 from .rule_packs import load_config as load_config_using

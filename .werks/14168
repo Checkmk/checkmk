@@ -26,3 +26,5 @@ SnapshotSettings = NamedTuple(
     ])
 F-:
 
+Please keep in mind that the entire hook mechanism is intended only for very specialized tasks and experienced users.
+If you make a mistake, things will break/disappear.

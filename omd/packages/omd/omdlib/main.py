@@ -2830,14 +2830,12 @@ def _is_version_update_allowed(from_version: str, to_version: str) -> bool:
     True
     >>> c("2.0.0", "2.2.0")
     False
-    >>> c("2.0.0", "3.0.0")
-    True
-    >>> c("2.1.0", "3.0.0")
-    True
     >>> c("2.1.0", "3.1.0")
     False
     >>> c("3.1.0", "2.1.0")
     False
+    >>> c("2.2.0", "2.2.0")
+    True
 
     Nightly build of master branch is always compatible as we don't know which major version it
     belongs to. It's also not that important to validate this case.
@@ -2859,9 +2857,9 @@ def _is_version_update_allowed(from_version: str, to_version: str) -> bool:
     True
     >>> c("2.0.0p3", "2.0.0-2022.01.01")
     True
-    >>> c("2.0.0p3", "3.0.0-2022.01.01")
-    True
-    >>> c("2.0.0p3", "4.0.0-2022.01.01")
+    >>> c("2.0.0p3", "3.1.0-2022.01.01")
+    False
+    >>> c("2.2.0p3", "2.0.0-2022.01.01")
     False
     """
 
@@ -2871,26 +2869,33 @@ def _is_version_update_allowed(from_version: str, to_version: str) -> bool:
     if is_daily_build_of_master(from_version) or is_daily_build_of_master(to_version):
         return True  # Don't know to which major master daily builds belong to -> always allow
 
-    first_part_diff = abs(from_parts[0] - to_parts[0])
-    second_part_diff = abs(from_parts[1] - to_parts[1])
+    # Same major version is allowed
+    if from_parts == to_parts:
+        return True
 
-    if from_parts[0] > to_parts[0]:
-        return False  # Do not allow downgrades from e.g. 2.x.x to 1.x.x
-    if first_part_diff == 0 and from_parts[0] > to_parts[0]:
-        return False  # Do not allow downgrades from e.g. 2.1.x to 2.0.x
+    # Newer major to older is not allowed
+    if from_parts > to_parts:
+        return False
 
-    # All downgrade cases we care about should be treated now
+    if to_parts[0] - from_parts[0] > 1:
+        return False  # preprev 1st number
 
-    if first_part_diff > 1:
-        return False  # Do not allow upgrades from e.g. 2.x.x to 4.x.x
+    last_major_releases = {
+        1: (1, 6, 0),
+    }
 
-    if to_parts[0] - from_parts[0] == 1 and to_parts[1] != 0:
-        return False  # Do not allow upgrades from e.g. 1.6.x to 2.1.x
+    if to_parts[0] - from_parts[0] == 1 and to_parts[1] == 0:
+        if last_major_releases[from_parts[0]] == from_parts:
+            return True  # prev major (e.g. last 1.x.0 before 2.0.0)
+        return False  # preprev 1st number
 
-    if from_parts[0] == to_parts[0] and second_part_diff > 1:
-        return False  # Do not allow upgrades from e.g. 2.0.x to 2.2.x
+    if to_parts[0] == from_parts[0]:
+        if to_parts[1] - from_parts[1] > 1:
+            return False  # preprev in 2nd number
+        if to_parts[1] - from_parts[1] == 1:
+            return True  # prev in 2nd number, ignoring 3rd
 
-    return True
+    return False
 
 
 def _update_cmk_core_config(site: SiteContext):  # type:ignore[no-untyped-def]

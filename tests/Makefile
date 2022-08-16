@@ -18,6 +18,7 @@ PYTEST_UNIT_TEST_OPTS = \
     ../cmk/special_agents \
     ../cmk/utils \
     ../agent-receiver \
+    ../omd/packages/omd \
     unit
 PYTEST_ADDITIONAL_UNIT_TEST_OPTS = -m "not slow"
 BLACK  := $(SCRIPTS)/run-black

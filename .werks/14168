@@ -1,0 +1,28 @@
+Title: Activate changes: Added additional central site hook: post-snapshop-creation
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1660633171
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0p28
+
+This hook can be used by custom plugins to further modify the snapshot content for the remote site.
+The registered function gets the site_snapshot_settings as argument.
+
+F+:
+site_snapshot_settings: Dict[SiteId, SnapshotSettings]
+
+SnapshotSettings = NamedTuple(
+    "SnapshotSettings",
+    [
+        ("snapshot_path", str),
+        ("work_dir", str),
+        ("snapshot_components", List[ReplicationPath]),
+        ("component_names", Set[str]),
+        ("site_config", SiteConfiguration),
+        ("create_pre_17_snapshot", bool),
+    ])
+F-:
+

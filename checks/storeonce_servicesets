@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from typing import Any, Iterable, Mapping
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.storeonce import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes import storeonce
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+DiscoveryResult = Iterable[tuple]
+CheckResult = Iterable[tuple]
 
 # example output
 #
@@ -57,64 +58,68 @@ from cmk.base.check_legacy_includes.storeonce import *  # pylint: disable=wildca
 # combinedFreeBytes   85220347674624
 # combinedUserBytes   265622218292968
 
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
+
+def parse_storeonce_servicesets(string_table: StringTable) -> storeonce.SectionServiceSets:
+    return {
+        data["ServiceSet ID"]: data
+        for data in storeonce.parse_storeonce_servicesets(string_table).values()
+    }
 
 
-def _get_item(data):
-    return data["ServiceSet ID"]
+def discover_storeonce_servicesets(section: storeonce.SectionServiceSets) -> DiscoveryResult:
+    yield from ((item, {}) for item in section)
 
 
-def inventory_storeonce_servicesets(parsed):
-    for values in parsed.values():
-        yield _get_item(values), {}
+def check_storeonce_servicesets(
+    item: str, params: Mapping[str, Any], section: storeonce.SectionServiceSets
+) -> CheckResult:
+    if (values := section.get(item)) is None:
+        return
 
+    if "ServiceSet Alias" in values:
+        yield 0, "Alias: %s" % values["ServiceSet Alias"]
+    elif "ServiceSet Name" in values:
+        yield 0, "Name: %s" % values["ServiceSet Name"]
 
-def check_storeonce_servicesets(item, params, parsed):
-    for values in parsed.values():
-        if not item == values["ServiceSet ID"]:
-            continue
+    yield 0, "Overall Status: %s, Overall Health: %s" % (
+        values["Overall Status"],
+        values["Overall Health"],
+    )
 
-        if "ServiceSet Alias" in values:
-            yield 0, "Alias: %s" % values["ServiceSet Alias"]
-        elif "ServiceSet Name" in values:
-            yield 0, "Name: %s" % values["ServiceSet Name"]
-
-        yield 0, "Overall Status: %s, Overall Health: %s" % (
-            values["Overall Status"],
-            values["Overall Health"],
-        )
-
-        for component in [
-            "ServiceSet Health",
-            "Replication Health",
-            "Housekeeping Health",
-        ]:
-            state = translate_storeonce_status(values["%s Level" % component])
-            state_readable = "%s: %s" % (component, values[component])
-            if state > 0:
-                yield state, state_readable
+    for component in [
+        "ServiceSet Health",
+        "Replication Health",
+        "Housekeeping Health",
+    ]:
+        state = storeonce.STATE_MAP[values["%s Level" % component]]
+        state_readable = "%s: %s" % (component, values[component])
+        if state > 0:
+            yield state, state_readable
 
 
 check_info["storeonce_servicesets"] = {
     "parse_function": parse_storeonce_servicesets,
-    "inventory_function": inventory_storeonce_servicesets,
+    "inventory_function": discover_storeonce_servicesets,
     "check_function": check_storeonce_servicesets,
     "service_description": "ServiceSet %s Status",
 }
 
 
-def check_storeonce_servicesets_capacity(item, params, parsed):
-    for values in parsed.values():
-        if _get_item(values) == item:
-            return check_storeonce_space(item, params, values)
-    return None
+def check_storeonce_servicesets_capacity(
+    item: str, params: Mapping[str, Any], section: storeonce.SectionServiceSets
+) -> CheckResult:
+    if (values := section.get(item)) is None:
+        return
+    yield from storeonce.check_storeonce_space(item, params, values)
 
 
 check_info["storeonce_servicesets.capacity"] = {
-    "inventory_function": inventory_storeonce_servicesets,
+    "inventory_function": discover_storeonce_servicesets,
     "check_function": check_storeonce_servicesets_capacity,
     "service_description": "ServiceSet %s Capacity",
     "has_perfdata": True,
     "group": "filesystem",
     "default_levels_variable": "filesystem_default_levels",
 }
+
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS

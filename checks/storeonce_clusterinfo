@@ -3,17 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from typing import Any, Iterable, Mapping
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.storeonce import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes import storeonce, uptime
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
+DiscoveryResult = Iterable[tuple]
+CheckResult = Iterable[tuple]
+
+Section = Mapping[str, str]
 
 # example output:
 #
@@ -44,11 +43,8 @@ from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-
 # isMixedCluster  false
 
 
-def parse_storeonce_clusterinfo(info):
-    parsed = {}
-    for line in info:
-        parsed[line[0]] = line[1]
-    return parsed
+def parse_storeonce_clusterinfo(string_table: StringTable) -> Section:
+    return {key: value for key, value, *_rest in string_table}
 
 
 # .
@@ -64,23 +60,21 @@ def parse_storeonce_clusterinfo(info):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_storeonce_clusterinfo(parsed):
-    if "Product Class" in parsed:
-        return [(parsed["Product Class"], None)]
-    return []
+def discover_storeonce_clusterinfo(section: Section) -> DiscoveryResult:
+    if "Product Class" in section:
+        yield section["Product Class"], {}
 
 
-def check_storeonce_clusterinfo(item, _no_params, parsed):
-    return 0, "Name: %s, Serial Number: %s, Version: %s" % (
-        parsed["Appliance Name"],
-        parsed["Serial Number"],
-        parsed["Software Version"],
-    )
+# this seems to be a HaSI plugin
+def check_storeonce_clusterinfo(item: str, _no_params: object, section: Section) -> CheckResult:
+    yield 0, f"Name: {section['Appliance Name']}"
+    yield 0, f"Serial Number: {section['Serial Number']}"
+    yield 0, f"Version: {section['Software Version']}"
 
 
 check_info["storeonce_clusterinfo"] = {
     "parse_function": parse_storeonce_clusterinfo,
-    "inventory_function": inventory_storeonce_clusterinfo,
+    "inventory_function": discover_storeonce_clusterinfo,
     "check_function": check_storeonce_clusterinfo,
     "service_description": "%s",
 }
@@ -98,28 +92,28 @@ check_info["storeonce_clusterinfo"] = {
 #   '----------------------------------------------------------------------'
 
 
-def inventory_storeonce_clusterinfo_cluster(parsed):
-    if "Cluster Health" in parsed:
-        return [(None, {})]
-    return []
+def discover_storeonce_clusterinfo_cluster(section: Section) -> DiscoveryResult:
+    if "Cluster Health" in section:
+        yield None, {}
 
 
-def check_storeonce_clusterinfo_cluster(item, params, parsed):
-    yield 0, "Cluster Status: %s, Replication Status: %s" % (
-        parsed["Cluster Status"],
-        parsed["Replication Status"],
-    )
+# this seems to be a HaSI plugin
+def check_storeonce_clusterinfo_cluster(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    yield 0, f"Cluster Status: {section['Cluster Status']}"
+    yield 0, f"Replication Status: {section['Replication Status']}"
 
     # Check state of components
     for component in ["Cluster Health", "Replication Health"]:
-        state = translate_storeonce_status(parsed["%s Level" % component])
-        state_readable = "%s: %s" % (component, parsed[component])
+        state = storeonce.STATE_MAP[section["%s Level" % component]]
+        state_readable = "%s: %s" % (component, section[component])
         if state > 0:
             yield state, state_readable
 
 
 check_info["storeonce_clusterinfo.cluster"] = {
-    "inventory_function": inventory_storeonce_clusterinfo_cluster,
+    "inventory_function": discover_storeonce_clusterinfo_cluster,
     "check_function": check_storeonce_clusterinfo_cluster,
     "service_description": "Appliance Status",
 }
@@ -137,21 +131,20 @@ check_info["storeonce_clusterinfo.cluster"] = {
 #   '----------------------------------------------------------------------'
 
 
-def inventory_storeonce_clusterinfo_space(parsed):
-    return [("Total Capacity", {})]
-
-
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
+def discover_storeonce_clusterinfo_space(section: Section) -> DiscoveryResult:
+    yield "Total Capacity", {}
 
 
 check_info["storeonce_clusterinfo.space"] = {
-    "inventory_function": inventory_storeonce_clusterinfo_space,
-    "check_function": check_storeonce_space,
+    "inventory_function": discover_storeonce_clusterinfo_space,
+    "check_function": storeonce.check_storeonce_space,
     "service_description": "%s",
     "has_perfdata": True,
     "group": "filesystem",
     "default_levels_variable": "filesystem_default_levels",
 }
+
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 # .
 #   .--uptime--------------------------------------------------------------.
@@ -166,17 +159,18 @@ check_info["storeonce_clusterinfo.space"] = {
 #   '----------------------------------------------------------------------'
 
 
-def inventory_storeonce_clusterinfo_uptime(parsed):
-    return [(None, {})]
+def discover_storeonce_clusterinfo_uptime(section: Section) -> DiscoveryResult:
+    yield None, {}
 
 
-def check_storeonce_clusterinfo_uptime(item, params, parsed):
-    uptime = float(parsed["Uptime Seconds"])
-    return check_uptime_seconds(params, uptime)
+def check_storeonce_clusterinfo_uptime(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    yield uptime.check_uptime_seconds(params, float(section["Uptime Seconds"]))
 
 
 check_info["storeonce_clusterinfo.uptime"] = {
-    "inventory_function": inventory_storeonce_clusterinfo_uptime,
+    "inventory_function": discover_storeonce_clusterinfo_uptime,
     "check_function": check_storeonce_clusterinfo_uptime,
     "service_description": "Uptime",
     "has_perfdata": True,

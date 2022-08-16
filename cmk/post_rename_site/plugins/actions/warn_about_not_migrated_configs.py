@@ -6,7 +6,7 @@
 from livestatus import SiteId
 
 from cmk.utils.i18n import _
-from cmk.utils.log.console import warning
+from cmk.utils.log import console
 
 from cmk.post_rename_site.main import logger
 from cmk.post_rename_site.registry import rename_action_registry, RenameAction
@@ -14,7 +14,7 @@ from cmk.post_rename_site.registry import rename_action_registry, RenameAction
 
 def warn_about_configs_to_review(old_site_id: SiteId, new_site_id: SiteId) -> None:
     logger.info("")
-    warning(
+    console.warning(
         "Some configs may need to be reviewed\n\n"
         "Parts of the site configuration cannot be migrated automatically. The following\n"
         "parts of the configuration may have to be reviewed and adjusted manually:\n\n"

@@ -11,7 +11,6 @@ from typing import final, Final, Generic, Optional, Sequence
 
 import cmk.utils
 import cmk.utils.debug
-import cmk.utils.log  # TODO: Remove this!
 import cmk.utils.misc
 import cmk.utils.paths
 from cmk.utils.check_utils import ActiveCheckResult

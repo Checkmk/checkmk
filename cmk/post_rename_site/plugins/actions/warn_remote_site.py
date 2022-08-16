@@ -6,7 +6,7 @@
 from livestatus import SiteId
 
 from cmk.utils.i18n import _
-from cmk.utils.log.console import warning
+from cmk.utils.log import console
 
 from cmk.gui.site_config import is_wato_slave_site
 
@@ -22,7 +22,7 @@ def warn_about_renamed_remote_site(old_site_id: SiteId, new_site_id: SiteId) -> 
         return
 
     logger.info("")
-    warning(
+    console.warning(
         "You renamed a distributed remote site.\n\nTo make your distributed "
         'setup work again, you will have to update the "Distributed Monitoring" '
         "configuration in your central site.\n"

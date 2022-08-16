@@ -100,7 +100,6 @@ from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Set, 
 import cmk.utils as _cmk_utils
 import cmk.utils.debug as _debug
 import cmk.utils.defines as _defines
-import cmk.utils.log.console as _console  # noqa: F401 # pylint: disable=unused-import
 import cmk.utils.paths as _paths
 
 # These imports are not meant for use in the API. So we prefix the names
@@ -108,6 +107,7 @@ import cmk.utils.paths as _paths
 # check context.
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.http_proxy_config import HTTPProxyConfig
+from cmk.utils.log import console as _console  # noqa: F401 # pylint: disable=unused-import
 from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
 from cmk.utils.rulesets.tuple_rulesets import (  # noqa: F401 # pylint: disable=unused-import # TODO: Only used by logwatch check. Can we clean this up?; These functions were used in some specific checks until 1.6. Don't add it to; the future check API. It's kept here for compatibility reasons for now.
     get_rule_options,

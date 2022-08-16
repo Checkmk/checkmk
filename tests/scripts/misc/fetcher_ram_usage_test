@@ -84,7 +84,7 @@ def setup_fetcher_logger():
 
     # Temporary hack to unbreak SNMP discovery (that uses console.log)
     # TODO: Drop this once a better solution was built (CMK-5598)
-    import cmk.utils.log.console as console
+    from cmk.utils.log import console
 
     console._handler = handler
 

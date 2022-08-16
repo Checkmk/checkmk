@@ -8,7 +8,7 @@ from pathlib import Path
 from livestatus import SiteId
 
 from cmk.utils.i18n import _
-from cmk.utils.log.console import warning
+from cmk.utils.log import console
 
 from cmk.post_rename_site.main import logger
 from cmk.post_rename_site.registry import rename_action_registry, RenameAction
@@ -19,7 +19,7 @@ def warn_about_network_ports(old_site_id: SiteId, new_site_id: SiteId) -> None:
         return  # Site was not copied
 
     logger.info("")
-    warning(
+    console.warning(
         "Network port configuration may need your attention\n\n"
         "It seems like you copied an existing site. In case you plan to use both on the same "
         "system, you may have to review the network port configuration of your sites. Two sites"

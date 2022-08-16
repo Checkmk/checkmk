@@ -11,7 +11,20 @@ from typing import IO, Optional, Union
 
 from cmk.utils.paths import log_dir
 
-from ._level import VERBOSE as VERBOSE  # pylint: disable=useless-import-alias
+from ._level import VERBOSE
+
+__all__ = [
+    "clear_console_logging",
+    "get_formatter",
+    "init_dedicated_logging",
+    "logger",
+    "modify_logging_handler",
+    "open_log",
+    "setup_console_logging",
+    "setup_logging_handler",
+    "setup_watched_file_logging_handler",
+    "verbosity_to_log_level",
+]
 
 IOLog = IO[str]
 

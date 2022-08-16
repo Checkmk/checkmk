@@ -17,6 +17,14 @@ from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
 from cmk.utils.i18n import _
 from cmk.utils.store._locks import aquire_lock, have_lock, release_lock
 
+__all__ = [
+    "BytesSerializer",
+    "DimSerializer",
+    "ObjectStore",
+    "PickleSerializer",
+    "TextSerializer",
+]
+
 TObject = TypeVar("TObject")
 
 

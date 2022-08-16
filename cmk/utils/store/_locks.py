@@ -19,6 +19,21 @@ from cmk.utils.exceptions import MKTimeout
 from cmk.utils.i18n import _
 from cmk.utils.paths import default_config_dir
 
+_all = [
+    "aquire_lock",
+    "cleanup_locks",
+    "configuration_lockfile",
+    "have_lock",
+    "lock_checkmk_configuration",
+    "lock_exclusive",
+    "locked",
+    "MKConfigLockTimeout",
+    "release_all_locks",
+    "release_lock",
+    "try_aquire_lock",
+    "try_locked",
+]
+
 logger = logging.getLogger("cmk.store")
 
 #   .--Predefined----------------------------------------------------------.

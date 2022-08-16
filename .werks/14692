@@ -1,0 +1,15 @@
+Title: esx_vsphere_datastores: Used provisioned space added to details
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1660657848
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0p10
+
+In case of provisioned space being bigger than total available space,
+we showed used provisioned space in the perfometer but not in the
+service details.
+This led to confusion, so now the used provisioned space is also added
+to service details.

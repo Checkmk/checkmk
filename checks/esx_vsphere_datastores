@@ -86,6 +86,10 @@ def check_esx_vsphere_datastores(item, params, data):
         infoname="Provisioning",
     )
 
+    if prov_bytes > size_bytes:
+        prov_used = used_bytes / prov_bytes * 100.0
+        yield 0, f"{get_percent_human_readable(prov_used)} provisioned space used"
+
     if warn is not None:
         # convert percent to abs MiB
         scale = (size_bytes / mib) / 100.0  # fixed: true-division

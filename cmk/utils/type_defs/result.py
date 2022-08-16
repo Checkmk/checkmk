@@ -21,7 +21,8 @@ See Also:
 from __future__ import annotations
 
 import abc
-from typing import Any, Callable, Final, Generic, Iterable, NoReturn, Optional, TypeVar
+from collections.abc import Callable, Iterable
+from typing import Final, Generic, NoReturn, TypeVar
 
 __all__ = ["Result", "OK", "Error"]
 
@@ -46,24 +47,24 @@ class Result(Generic[T_co, E_co], abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         raise NotImplementedError
 
-    def __ne__(self, other: Any) -> bool:
+    def __ne__(self, other: object) -> bool:
         return not self == other
 
     @abc.abstractmethod
-    def __lt__(self, other: Any) -> bool:
+    def __lt__(self, other: Result[T_co, E_co]) -> bool:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def __gt__(self, other: Any) -> bool:
+    def __gt__(self, other: Result[T_co, E_co]) -> bool:
         raise NotImplementedError
 
-    def __le__(self, other: Any) -> bool:
+    def __le__(self, other: Result[T_co, E_co]) -> bool:
         return self < other or self == other
 
-    def __ge__(self, other: Any) -> bool:
+    def __ge__(self, other: Result[T_co, E_co]) -> bool:
         return self > other or self == other
 
     @abc.abstractmethod
@@ -96,7 +97,7 @@ class Result(Generic[T_co, E_co], abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def as_optional(self) -> Optional[T_co]:
+    def as_optional(self) -> T_co | None:
         raise NotImplementedError
 
     def flatten(self) -> Result[T_co, E_co]:
@@ -144,28 +145,28 @@ class OK(Result[T_co, E_co]):
     def __hash__(self) -> int:
         return hash(self.ok)
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
         if not isinstance(other, OK):
             return False
-        return self.ok == other.ok
+        return bool(self.ok == other.ok)
 
-    def __lt__(self, other: Any) -> bool:
+    def __lt__(self, other: Result[T_co, E_co]) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
         if isinstance(other, Error):
             return True
         assert isinstance(other, OK)
-        return self.ok < other.ok
+        return bool(self.ok < other.ok)
 
-    def __gt__(self, other: Any) -> bool:
+    def __gt__(self, other: Result[T_co, E_co]) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
         if isinstance(other, Error):
             return False
         assert isinstance(other, OK)
-        return self.ok > other.ok
+        return bool(self.ok > other.ok)
 
     def __iter__(self) -> Iterable[T_co]:
         return iter((self.ok,))
@@ -229,28 +230,28 @@ class Error(Result[T_co, E_co]):
     def __hash__(self) -> int:
         return hash(self.error)
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
         if not isinstance(other, Error):
             return False
-        return self.error == other.error
+        return bool(self.error == other.error)
 
-    def __lt__(self, other: Any) -> bool:
+    def __lt__(self, other: Result[T_co, E_co]) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
         if isinstance(other, OK):
             return False
         assert isinstance(other, Error)
-        return self._error < other._error
+        return bool(self._error < other._error)
 
-    def __gt__(self, other: Any) -> bool:
+    def __gt__(self, other: Result[T_co, E_co]) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
         if isinstance(other, OK):
             return True
         assert isinstance(other, Error)
-        return self._error > other._error
+        return bool(self._error > other._error)
 
     def __iter__(self) -> Iterable[T_co]:
         return iter(())

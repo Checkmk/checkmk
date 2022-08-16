@@ -2,7 +2,9 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Literal, Sequence, TypedDict, Union
+
+from collections.abc import Sequence
+from typing import Any, Literal, TypedDict
 
 
 class PiggybackHostsConnectorAttributes(TypedDict):
@@ -43,7 +45,7 @@ class ConnectorObj(TypedDict):
     # Literal["PiggybackHosts"]
     class_name: str  # TODO: replace str type with Literal
     # attributes of new connector objects should be listed here
-    attributes: Union[PiggybackHostsConnectorAttributes, dict]
+    attributes: PiggybackHostsConnectorAttributes | dict[str, Any]
 
 
 class PhaseOneAttributes(TypedDict):

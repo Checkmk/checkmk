@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import abc
 import string
 from typing import Any, Final, NamedTuple, Set
@@ -53,7 +55,7 @@ class ABCName(abc.ABC):
 
         return plugin_name
 
-    def __getnewargs__(self):
+    def __getnewargs__(self) -> tuple[str]:
         return (str(self),)
 
     def __new__(cls, plugin_name: str):  # type:ignore[no-untyped-def]
@@ -70,23 +72,23 @@ class ABCName(abc.ABC):
     def __str__(self) -> str:
         return self._value
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, self.__class__):
             raise TypeError("cannot compare %r and %r" % (self, other))
         return self._value == other._value
 
-    def __lt__(self, other: Any) -> bool:
+    def __lt__(self, other: ABCName) -> bool:
         if not isinstance(other, self.__class__):
-            raise TypeError("Can only be compared with %s objects" % self.__class__)
+            return NotImplemented
         return self._value < other._value
 
-    def __le__(self, other: Any) -> bool:
+    def __le__(self, other: ABCName) -> bool:
         return self < other or self == other
 
-    def __gt__(self, other: Any) -> bool:
+    def __gt__(self, other: ABCName) -> bool:
         return not self <= other
 
-    def __ge__(self, other: Any) -> bool:
+    def __ge__(self, other: ABCName) -> bool:
         return not self < other
 
     def __hash__(self) -> int:

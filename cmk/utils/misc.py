@@ -12,22 +12,10 @@ import itertools
 import os
 import sys
 import time
+from collections.abc import Callable, Iterator, Mapping, MutableMapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterator,
-    List,
-    Mapping,
-    MutableMapping,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    Union,
-)
+from typing import Any, Type
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostAddress
@@ -47,7 +35,7 @@ def pnp_cleanup(s: str) -> str:
     return s.replace(" ", "_").replace(":", "_").replace("/", "_").replace("\\", "_")
 
 
-def key_config_paths(a: Path) -> Tuple[Tuple[str, ...], int, Tuple[str, ...]]:
+def key_config_paths(a: Path) -> tuple[tuple[str, ...], int, tuple[str, ...]]:
     """Key function for Check_MK configuration file paths
 
     Helper functions that determines the sort order of the
@@ -64,7 +52,9 @@ def key_config_paths(a: Path) -> Tuple[Tuple[str, ...], int, Tuple[str, ...]]:
     return pa[:-1], len(pa), pa
 
 
-def total_size(o: Any, handlers: Optional[Dict] = None) -> int:
+def total_size(
+    o: Any, handlers: dict[Type[Any], Callable[[Any], Iterator[object]]] | None = None
+) -> int:
     """Returns the approximate memory footprint an object and all of its contents.
 
     Automatically finds the contents of the following builtin containers and
@@ -78,7 +68,7 @@ def total_size(o: Any, handlers: Optional[Dict] = None) -> int:
     if handlers is None:
         handlers = {}
 
-    all_handlers = {
+    all_handlers: dict[Type[Any], Callable[[Any], Iterator[object]]] = {
         tuple: iter,
         list: iter,
         dict: lambda d: itertools.chain.from_iterable(d.items()),
@@ -86,7 +76,7 @@ def total_size(o: Any, handlers: Optional[Dict] = None) -> int:
         frozenset: iter,
     }
     all_handlers.update(handlers)  # user handlers take precedence
-    seen: Set[int] = set()
+    seen: set[int] = set()
     default_size = sys.getsizeof(0)  # estimate sizeof object without __sizeof__
 
     def sizeof(o: Any) -> int:
@@ -116,7 +106,7 @@ def branch_of_daily_build(v: str) -> str:
     return v.split("-")[0]
 
 
-def cachefile_age(path: Union[Path, str]) -> float:
+def cachefile_age(path: Path | str) -> float:
     """Return the time difference between the last modification and now.
 
     Raises:
@@ -129,11 +119,11 @@ def cachefile_age(path: Union[Path, str]) -> float:
     return time.time() - path.stat().st_mtime
 
 
-def getfuncargs(func: Callable) -> List[str]:
+def getfuncargs(func: Callable) -> list[str]:
     return list(inspect.signature(func).parameters)
 
 
-def make_kwargs_for(function: Callable, **kwargs: Any) -> Dict[str, Any]:
+def make_kwargs_for(function: Callable, **kwargs: Any) -> dict[str, Any]:
     return {
         arg_indicator: arg  #
         for arg_name in getfuncargs(function)
@@ -162,7 +152,7 @@ def umask(mask: int) -> Iterator[None]:
         os.umask(old_mask)
 
 
-def normalize_ip_addresses(ip_addresses: Union[str, Sequence[str]]) -> List[HostAddress]:
+def normalize_ip_addresses(ip_addresses: str | Sequence[str]) -> list[HostAddress]:
     """Expand 10.0.0.{1,2,3}."""
     if isinstance(ip_addresses, str):
         ip_addresses = ip_addresses.split()
@@ -182,7 +172,7 @@ def normalize_ip_addresses(ip_addresses: Union[str, Sequence[str]]) -> List[Host
     return expanded
 
 
-def typeshed_issue_7724(x: Optional[Mapping[str, str]]) -> Optional[MutableMapping[str, str]]:
+def typeshed_issue_7724(x: Mapping[str, str] | None) -> MutableMapping[str, str] | None:
     """Temporary workaround for https://github.com/python/typeshed/issues/7724
     TODO: Remove this when the issue a above is fixed!"""
     return None if x is None else dict(x)

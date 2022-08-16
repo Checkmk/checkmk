@@ -9,24 +9,9 @@ import dataclasses
 import enum
 import re
 import sys
-from collections.abc import Container
+from collections.abc import Container, Mapping, Sequence
 from dataclasses import dataclass
-from typing import (
-    Any,
-    Dict,
-    List,
-    Literal,
-    Mapping,
-    NamedTuple,
-    NewType,
-    Optional,
-    Protocol,
-    Sequence,
-    Set,
-    Tuple,
-    TypedDict,
-    Union,
-)
+from typing import Any, Literal, NamedTuple, NewType, Optional, Protocol, TypedDict, Union
 
 HostName = str
 HostAddress = str
@@ -36,7 +21,7 @@ ServicegroupName = str
 ContactgroupName = str
 TimeperiodName = str
 
-AgentTargetVersion = Union[None, str, Tuple[str, str], Tuple[str, Dict[str, str]]]
+AgentTargetVersion = Union[None, str, tuple[str, str], tuple[str, dict[str, str]]]
 
 AgentRawData = NewType("AgentRawData", bytes)
 
@@ -121,7 +106,7 @@ HostOrServiceConditionRegex = TypedDict(
     "HostOrServiceConditionRegex",
     {"$regex": str},
 )
-HostOrServiceConditionsSimple = List[Union[HostOrServiceConditionRegex, str]]
+HostOrServiceConditionsSimple = list[Union[HostOrServiceConditionRegex, str]]
 HostOrServiceConditionsNegated = TypedDict(
     "HostOrServiceConditionsNegated",
     {"$nor": HostOrServiceConditionsSimple},
@@ -132,18 +117,18 @@ HostOrServiceConditions = Union[
     HostOrServiceConditionsNegated,
 ]  # TODO: refine type
 
-Ruleset = List[RuleSpec]  # TODO: Improve this type
+Ruleset = list[RuleSpec]  # TODO: Improve this type
 CheckPluginNameStr = str
 ActiveCheckPluginName = str
 Item = Optional[str]
 Labels = Mapping[str, str]
-LabelSources = Dict[str, str]
+LabelSources = dict[str, str]
 
 TagID = str
 TaggroupID = str
 TaggroupIDToTagID = Mapping[TaggroupID, TagID]
 TagIDToTaggroupID = Mapping[TagID, TaggroupID]
-TagIDs = Set[TagID]
+TagIDs = set[TagID]
 TagConditionNE = TypedDict(
     "TagConditionNE",
     {
@@ -166,15 +151,15 @@ TagCondition = Union[Optional[TagID], TagConditionNE, TagConditionOR, TagConditi
 # Here, we have data structures such as
 # {'ip-v4': {'$ne': 'ip-v4'}, 'snmp_ds': {'$nor': ['no-snmp', 'snmp-v1']}, 'taggroup_02': None, 'aux_tag_01': 'aux_tag_01', 'address_family': 'ip-v4-only'}
 TaggroupIDToTagCondition = Mapping[TaggroupID, TagCondition]
-TagsOfHosts = Dict[HostName, TaggroupIDToTagID]
+TagsOfHosts = dict[HostName, TaggroupIDToTagID]
 
-LabelConditions = Dict[str, Union[str, TagConditionNE]]
+LabelConditions = dict[str, Union[str, TagConditionNE]]
 
 
 class GroupedTagSpec(TypedDict):
     id: Optional[TagID]
     title: str
-    aux_tags: List[TagID]
+    aux_tags: list[TagID]
 
 
 class _AuxTagSpecOpt(TypedDict, total=False):
@@ -194,18 +179,18 @@ class _TaggroupSpecOpt(TypedDict, total=False):
 class TaggroupSpec(_TaggroupSpecOpt):
     id: TaggroupID
     title: str
-    tags: List[GroupedTagSpec]
+    tags: list[GroupedTagSpec]
 
 
 class TagConfigSpec(TypedDict):
-    tag_groups: List[TaggroupSpec]
-    aux_tags: List[AuxTagSpec]
+    tag_groups: list[TaggroupSpec]
+    aux_tags: list[AuxTagSpec]
 
 
-CheckVariables = Dict[str, Any]
+CheckVariables = dict[str, Any]
 Seconds = int
 Timestamp = int
-TimeRange = Tuple[int, int]
+TimeRange = tuple[int, int]
 
 ServiceState = int
 HostState = int
@@ -213,7 +198,7 @@ ServiceDetails = str
 ServiceAdditionalDetails = str
 
 MetricName = str
-MetricTuple = Tuple[
+MetricTuple = tuple[
     MetricName,
     float,
     Optional[float],
@@ -224,14 +209,14 @@ MetricTuple = Tuple[
 
 ClusterMode = Literal["native", "failover", "worst", "best"]
 
-LegacyCheckParameters = Union[None, Mapping, Tuple, List, str, int, bool]
+LegacyCheckParameters = Union[None, Mapping[Any, Any], tuple[Any, ...], list[Any], str, int, bool]
 ParametersTypeAlias = Mapping[str, Any]  # Modification may result in an incompatible API change.
 
-SetAutochecksTable = Dict[
-    Tuple[str, Item], Tuple[ServiceName, LegacyCheckParameters, Labels, List[HostName]]
+SetAutochecksTable = dict[
+    tuple[str, Item], tuple[ServiceName, LegacyCheckParameters, Labels, list[HostName]]
 ]
 
-SetAutochecksTablePre20 = Dict[Tuple[str, Item], Tuple[Dict[str, Any], Labels]]
+SetAutochecksTablePre20 = dict[tuple[str, Item], tuple[dict[str, Any], Labels]]
 
 
 @dataclass
@@ -286,12 +271,12 @@ class UserId(str):
 
 # This def is used to keep the API-exposed object in sync with our
 # implementation.
-SNMPDetectBaseType = List[List[Tuple[str, str, bool]]]
+SNMPDetectBaseType = list[list[tuple[str, str, bool]]]
 
 # TODO: TimeperiodSpec should really be a class or at least a NamedTuple! We
 # can easily transform back and forth for serialization.
-TimeperiodSpec = Dict[str, Union[str, List[str], List[Tuple[str, str]]]]
-TimeperiodSpecs = Dict[TimeperiodName, TimeperiodSpec]
+TimeperiodSpec = dict[str, Union[str, list[str], list[tuple[str, str]]]]
+TimeperiodSpecs = dict[TimeperiodName, TimeperiodSpec]
 
 
 class SourceType(enum.Enum):
@@ -330,7 +315,7 @@ class EvalableFloat(float):
         return super().__repr__()
 
 
-class _Everything(Container):
+class _Everything(Container[Any]):
     def __contains__(self, other: object) -> bool:
         return True
 
@@ -349,7 +334,7 @@ class ExitSpec(TypedDict, total=False):
     exception: int
     wrong_version: int
     missing_sections: int
-    specific_missing_sections: List[Tuple[str, int]]
+    specific_missing_sections: list[tuple[str, int]]
     restricted_address_mismatch: int
     legacy_pull_mode: int
 
@@ -359,7 +344,7 @@ class HostLabelValueDict(TypedDict):
     plugin_name: Optional[str]
 
 
-DiscoveredHostLabelsDict = Dict[str, HostLabelValueDict]
+DiscoveredHostLabelsDict = dict[str, HostLabelValueDict]
 
 
 class KeepaliveAPI(Protocol):

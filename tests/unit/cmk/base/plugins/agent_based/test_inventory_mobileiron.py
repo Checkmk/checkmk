@@ -7,7 +7,7 @@ from typing import Iterable, Union
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
 from cmk.base.plugins.agent_based.inventory_mobileiron import inventory_mobileiron
-from cmk.base.plugins.agent_based.mobileiron_section import parse_mobileiron, parse_mobileiron_df
+from cmk.base.plugins.agent_based.mobileiron_section import parse_mobileiron
 
 from .utils_inventory import sort_inventory_result
 
@@ -29,10 +29,6 @@ DEVICE_DATA = parse_mobileiron(
     ]
 )
 
-DEVICE_DATA_DF = parse_mobileiron_df(
-    [[json.dumps({"totalCapacity": 67.108864, "availableCapacity": 34.0})]]
-)
-
 
 EXPECTED: Iterable[Union[Attributes, TableRow]] = [
     Attributes(
@@ -49,13 +45,15 @@ EXPECTED: Iterable[Union[Attributes, TableRow]] = [
             "type": "ANDROID",
         },
     ),
-    Attributes(
-        path=["hardware", "storage", "disks"],
-        inventory_attributes={"size": 72057594037.92793},
-    ),
-    Attributes(
+    TableRow(
         path=["networking", "addresses"],
-        inventory_attributes={"address": "10.10.10.10"},
+        key_columns={
+            "address": "10.10.10.10",
+            "device": "generic",
+        },
+        inventory_columns={
+            "type": "ipv4",
+        },
     ),
     Attributes(
         path=["software", "applications", "mobileiron"],
@@ -68,6 +66,6 @@ EXPECTED: Iterable[Union[Attributes, TableRow]] = [
 
 
 def test_inventory_mobileiron() -> None:
-    assert sort_inventory_result(
-        inventory_mobileiron(DEVICE_DATA, DEVICE_DATA_DF)
-    ) == sort_inventory_result(EXPECTED)
+    assert sort_inventory_result(inventory_mobileiron(DEVICE_DATA)) == sort_inventory_result(
+        EXPECTED
+    )

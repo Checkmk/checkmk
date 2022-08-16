@@ -12,5 +12,5 @@ CrashReportStore = cmk.utils.crash_reporting.CrashReportStore
 @cmk.utils.crash_reporting.crash_report_registry.register
 class ECCrashReport(cmk.utils.crash_reporting.ABCCrashReport):
     @classmethod
-    def type(cls):
+    def type(cls) -> str:
         return "ec"

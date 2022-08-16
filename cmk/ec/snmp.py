@@ -6,7 +6,7 @@
 import traceback
 from logging import Logger
 from pathlib import Path
-from typing import Callable, Iterable, Optional
+from typing import Any, Callable, Iterable, Mapping, Optional
 
 import pyasn1.error  # type: ignore[import]
 import pysnmp.debug  # type: ignore[import]
@@ -172,12 +172,12 @@ class SNMPTrapEngine:
 
     def _handle_snmptrap(
         self,
-        snmp_engine,
-        state_reference,
-        context_engine_id,
-        context_name,
+        snmp_engine: pysnmp.entity.engine.SnmpEngine,
+        state_reference: str,
+        context_engine_id: pysnmp.smi.rfc1902.ObjectIdentity,
+        context_name: pysnmp.proto.rfc1902.ObjectName,
         var_binds: VarBinds,
-        cb_ctx,
+        cb_ctx: None,
     ) -> None:
         # sender_address contains a (host: str, port: int) tuple
         ipaddress: str = self.snmp_engine.getUserContext("sender_address")[0]
@@ -186,7 +186,11 @@ class SNMPTrapEngine:
         self._callback(trap, ipaddress)
 
     def _log_snmptrap_details(
-        self, context_engine_id, context_name, var_binds: VarBinds, ipaddress: str
+        self,
+        context_engine_id: pysnmp.smi.rfc1902.ObjectIdentity,
+        context_name: pysnmp.proto.rfc1902.ObjectName,
+        var_binds: VarBinds,
+        ipaddress: str,
     ) -> None:
         if self._logger.isEnabledFor(VERBOSE):
             self._logger.log(
@@ -200,7 +204,13 @@ class SNMPTrapEngine:
             for name, val in var_binds:
                 self._logger.log(VERBOSE, "%-40s = %s", name.prettyPrint(), val.prettyPrint())
 
-    def _handle_unauthenticated_snmptrap(self, snmp_engine, execpoint, variables, cb_ctx) -> None:
+    def _handle_unauthenticated_snmptrap(
+        self,
+        snmp_engine: pysnmp.entity.engine.SnmpEngine,
+        execpoint: str,
+        variables: Mapping[str, Any],
+        cb_ctx: None,
+    ) -> None:
         if (
             variables["securityLevel"] in [1, 2]
             and variables["statusInformation"]["errorIndication"]

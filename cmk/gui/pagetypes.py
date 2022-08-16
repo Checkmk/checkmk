@@ -37,6 +37,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadc
 from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
 from cmk.gui.globals import html, request, transactions, user, user_errors
+from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _, _l, _u
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
@@ -317,6 +318,7 @@ class Base:
     # Stub function for finding a page by name. Overriden by
     # Overridable.
     @classmethod
+    @request_memoize()
     def find_page(cls, name):
         for instance in cls.__instances.values():
             if instance.name() == name:

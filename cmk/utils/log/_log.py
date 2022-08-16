@@ -9,7 +9,7 @@ from logging.handlers import WatchedFileHandler
 from pathlib import Path
 from typing import IO, Optional, Union
 
-from ._level import VERBOSE
+from ._level import VERBOSE as VERBOSE  # pylint: disable=useless-import-alias
 
 IOLog = IO[str]
 

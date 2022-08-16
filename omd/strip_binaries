@@ -138,7 +138,8 @@ def strip_static_library(file: Path) -> None:
 
 
 def strip(args: list[str], file: Path) -> None:
-    subprocess.run(["strip"] + args + [str(file)], check=True)  # nosec
+    if file.name != "strip":
+        subprocess.run(["/usr/bin/strip"] + args + [str(file)], check=True)  # nosec
 
 
 def main(args: Sequence[str]) -> int:

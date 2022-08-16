@@ -78,7 +78,7 @@ bool IsConfiguredEmergencyOnCrash();
 /// - create controller flag
 ///
 void CreateArtifacts(const std::filesystem::path &marker,
-                     bool controller_exists);
+                     bool controller_exists) noexcept;
 }  // namespace cma::ac
 
 #endif  // agent_controller_h__

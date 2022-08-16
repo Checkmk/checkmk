@@ -250,7 +250,7 @@ T GetVal(const YAML::Node &yaml, std::string_view name, T dflt) noexcept {
         return dflt;
     } catch (const std::exception &e) {
         XLOG::l("Cannot read yml file {} with {} code:{}",
-                wtools::ToUtf8(GetPathOfLoadedConfig()), name, e.what());
+                wtools::ToUtf8(GetPathOfLoadedConfig()), name, e);
     }
     return dflt;
 }

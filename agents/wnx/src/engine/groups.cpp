@@ -279,7 +279,7 @@ void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit> &exe_unit,
             exe_unit.back().assignUser(user);
         } catch (const std::exception &e) {
             XLOG::l("bad entry at {} {} exc {}", groups::kPlugins,
-                    vars::kPluginsExecution, e.what());
+                    vars::kPluginsExecution, e);
         }
     }
 }
@@ -292,7 +292,7 @@ void Plugins::ExeUnit::assign(const YAML::Node &entry) {
         pattern_ = "";
         source_.reset();
         XLOG::l("bad entry at {} {} exc {}", groups::kPlugins,
-                vars::kPluginsExecution, e.what());
+                vars::kPluginsExecution, e);
     }
 }
 

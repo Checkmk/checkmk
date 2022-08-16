@@ -106,7 +106,8 @@ void LogWindowsEventWarn(int code, const char *format_str, Args &&...args) {
 }
 
 template <typename... Args>
-void LogWindowsEventInfo(int code, const char *format_str, Args &&...args) {
+void LogWindowsEventInfo(int code, const char *format_str,
+                         Args &&...args) noexcept {
     LogWindowsEvent(EventLevel::information, code, format_str,
                     std::forward<Args>(args)...);
 }

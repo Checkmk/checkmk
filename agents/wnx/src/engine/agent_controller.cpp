@@ -451,7 +451,7 @@ bool IsControllerFlagFileExists() {
     return fs::exists(ControllerFlagFile(), ec);
 }
 
-void CreateArtifacts(const fs::path &marker, bool controller_exists) {
+void CreateArtifacts(const fs::path &marker, bool controller_exists) noexcept {
     std::error_code ec;
     ON_OUT_OF_SCOPE(fs::remove(marker, ec));
     if (!controller_exists) {

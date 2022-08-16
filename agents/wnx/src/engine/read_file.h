@@ -118,7 +118,7 @@ inline std::optional<std::string> ReadFileInString(
         const auto fsize = details::GetFileStreamSize(f);
         std::string v;
         v.resize(fsize);
-        f.read(reinterpret_cast<char *>(v.data()), fsize);
+        f.read(v.data(), fsize);
         return v;
     } catch (const std::exception &e) {
         // catching possible exceptions in the

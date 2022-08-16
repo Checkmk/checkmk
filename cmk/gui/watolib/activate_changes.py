@@ -1085,6 +1085,9 @@ class SnapshotManager:
                         site_id, snapshot_settings, snapshot_creator, self._data_collector
                     )
 
+        # 3. Allow hooks to further modify the reference data for the remote site
+        hooks.call("post-snapshot-creation", self._site_snapshot_settings)
+
 
 class ABCSnapshotDataCollector(abc.ABC):
     """Prepares files to be synchronized to the remote sites"""

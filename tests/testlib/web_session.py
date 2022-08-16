@@ -251,8 +251,6 @@ class CMKWebSession:
         return response["result"]
 
     def set_ruleset(self, ruleset_name, ruleset_spec) -> None:
-        from cmk.utils.python_printer import pformat  # pylint: disable=import-outside-toplevel
-
         request = {
             "ruleset_name": ruleset_name,
         }
@@ -261,7 +259,7 @@ class CMKWebSession:
         result = self._api_request(
             "webapi.py?action=set_ruleset&output_format=python&request_format=python",
             {
-                "request": pformat(request),
+                "request": str(request),
             },
             output_format="python",
         )
@@ -270,11 +268,9 @@ class CMKWebSession:
 
     # TODO: Cleanup remaining API call
     def set_site(self, site_id, site_config) -> None:
-        from cmk.utils.python_printer import pformat  # pylint: disable=import-outside-toplevel
-
         result = self._api_request(
             "webapi.py?action=set_site&request_format=python&output_format=python",
-            {"request": pformat({"site_id": site_id, "site_config": site_config})},
+            {"request": str({"site_id": site_id, "site_config": site_config})},
             output_format="python",
         )
         assert result is None

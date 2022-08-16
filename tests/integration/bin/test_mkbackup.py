@@ -21,7 +21,6 @@ from tests.testlib.site import Site
 from tests.testlib.web_session import CMKWebSession
 
 from cmk.utils.paths import mkbackup_lock_dir
-from cmk.utils.python_printer import pformat
 
 
 @contextmanager
@@ -110,7 +109,7 @@ def test_cfg_fixture(web: CMKWebSession, site: Site, backup_path: str) -> Iterat
             },
         },
     }
-    site.write_text_file("etc/check_mk/backup.mk", pformat(cfg))
+    site.write_text_file("etc/check_mk/backup.mk", str(cfg))
 
     keys = {
         1: {
@@ -123,7 +122,7 @@ def test_cfg_fixture(web: CMKWebSession, site: Site, backup_path: str) -> Iterat
         }
     }
 
-    site.write_text_file("etc/check_mk/backup_keys.mk", "keys.update(%s)" % pformat(keys))
+    site.write_text_file("etc/check_mk/backup_keys.mk", f"keys.update({keys})")
 
     yield None
 

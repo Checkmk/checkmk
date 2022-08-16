@@ -101,6 +101,36 @@ class NoCacheFactory(FileCacheFactory[AgentRawData]):
         )
 
 
+class PushAgentFileCache(FileCache[AgentRawData]):
+    # TODO(ml): The only difference with `AgentFileCache` is `make_path()`.  Make
+    #           them consistent/pass the path as an argument and nuke this class.
+    @staticmethod
+    def _from_cache_file(raw_data: bytes) -> AgentRawData:
+        return AgentRawData(raw_data)
+
+    @staticmethod
+    def _to_cache_file(raw_data: AgentRawData) -> bytes:
+        return raw_data
+
+    def make_path(self, mode: Mode) -> Path:
+        return self.base_path / self.hostname / "agent_output"
+
+
+class PushAgentFileCacheFactory(FileCacheFactory[AgentRawData]):
+    # force_cache_refresh is currently only used by SNMP. It's probably less irritating
+    # to implement it here anyway:
+    def make(self, *, force_cache_refresh: bool = False) -> PushAgentFileCache:
+        return PushAgentFileCache(
+            self.hostname,
+            base_path=self.base_path,
+            max_age=MaxAge.none() if force_cache_refresh else self.max_age,
+            use_outdated=self.simulation or (False if force_cache_refresh else self.use_outdated),
+            simulation=self.simulation,
+            use_only_cache=self.use_only_cache,
+            file_cache_mode=FileCacheMode.DISABLED if self.disabled else FileCacheMode.READ,
+        )
+
+
 class SectionWithHeader(NamedTuple):
     header: SectionMarker
     section: List[AgentRawData]

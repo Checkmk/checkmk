@@ -9,13 +9,6 @@ from cmk.base.check_api import get_bytes_human_readable
 from .df import df_check_filesystem_list
 
 
-def parse_storeonce_clusterinfo(info):
-    parsed = {}
-    for line in info:
-        parsed[line[0]] = line[1]
-    return parsed
-
-
 def parse_storeonce_servicesets(info):
     parsed: dict = {}
     for line in info:

@@ -43,6 +43,14 @@ from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-
 # sysLocation     None
 # isMixedCluster  false
 
+
+def parse_storeonce_clusterinfo(info):
+    parsed = {}
+    for line in info:
+        parsed[line[0]] = line[1]
+    return parsed
+
+
 # .
 #   .--general-------------------------------------------------------------.
 #   |                                                  _                   |

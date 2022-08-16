@@ -5,76 +5,11 @@
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
-from typing import Any, Mapping
-
-from cmk.base.check_api import get_bytes_human_readable
-from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.scaleio import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
-
-# <<<scaleio_storage_pool>>>
-# STORAGE_POOL 59c7748300000000:
-#        ID                                                 59c7748300000000
-#        NAME                                               pool01
-#        MAX_CAPACITY_IN_KB                                 65.5 TB (67059 GB)
-#        UNUSED_CAPACITY_IN_KB                              17.2 TB (17635 GB)
-#        FAILED_CAPACITY_IN_KB                              0 Bytes
-#        TOTAL_READ_BWC                                     0 IOPS 0 Bytes per-second
-#        TOTAL_WRITE_BWC                                    0 IOPS 0 Bytes per-second
-#        REBALANCE_READ_BWC                                 0 IOPS 0 Bytes per-second
-#        REBALANCE_WRITE_BWC                                0 IOPS 0 Bytes per-second
-#
-
-
-def parse_scaleio_storage_pool(
-    string_table: StringTable,
-) -> SectionScaleio:
-    return parse_scaleio(string_table, "STORAGE_POOL")
-
-
-def discover_scaleio_storage_pool(section: SectionScaleio) -> tuple[str, Mapping]:
-    for entry in section:
-        yield entry, {}
-
-
-def check_scaleio_storage_pool(item: str, params: Mapping[str, Any], section: SectionScaleio):
-    if not (storage_pool := section.get(item)):
-        return
-
-    # How will the data be represented? It's magic and the only
-    # indication is the unit. We need to handle this!
-    unit = storage_pool["MAX_CAPACITY_IN_KB"][1]
-    total = convert_scaleio_space(unit, float(storage_pool["MAX_CAPACITY_IN_KB"][0]))
-    free = convert_scaleio_space(unit, float(storage_pool["UNUSED_CAPACITY_IN_KB"][0]))
-
-    yield df_check_filesystem_single(item, total, free, 0.0, None, None, params)
-
-    if (failed_value := float(storage_pool["FAILED_CAPACITY_IN_KB"][0])) > 0:
-        yield 2, f"Failed Capacity: {get_bytes_human_readable(failed_value)}"
-
-
-check_info["scaleio_storage_pool"] = {
-    "parse_function": parse_scaleio_storage_pool,
-    "inventory_function": discover_scaleio_storage_pool,
-    "check_function": check_scaleio_storage_pool,
-    "service_description": "ScaleIO SP capacity %s",
-    "has_perfdata": True,
-    "group": "filesystem",
-    "default_levels_variable": "filesystem_default_levels",
-}
 
 
 def inventory_scaleio_storage_pool_totalrw(parsed):

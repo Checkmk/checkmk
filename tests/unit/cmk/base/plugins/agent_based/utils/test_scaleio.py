@@ -8,8 +8,8 @@ from typing import Mapping, Sequence
 
 import pytest
 
-from cmk.base.check_legacy_includes.scaleio import parse_scaleio
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.utils.scaleio import parse_scaleio
 
 
 @pytest.mark.parametrize(

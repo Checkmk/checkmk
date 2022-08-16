@@ -43,6 +43,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadc
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
+from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -363,6 +364,7 @@ class OverridableInstances(Generic[_T]):
     def add_page(self, new_page: _T) -> None:
         self.add_instance((new_page.owner(), new_page.name()), new_page)
 
+    @request_memoize(maxsize=4096)
     def find_page(self, name: str) -> _T | None:
         """Find a page by name, implements shadowing and publishing und overriding by admins"""
         mine = None

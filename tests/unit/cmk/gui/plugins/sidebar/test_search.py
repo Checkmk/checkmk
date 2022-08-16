@@ -38,11 +38,11 @@ class TestLabelMatchPlugin:
     def test_get_livestatus_filters_one_filter(self):
         assert (
             HostLabelMatchPlugin().get_livestatus_filters("hosts", {"hl": ["x:y"]})
-            == "Filter: labels = 'x' 'y'\n"
+            == "Filter: labels = 'x' 'y'"
         )
 
     def test_get_livestatus_filters_two_filters(self):
         assert (
             ServiceLabelMatchPlugin().get_livestatus_filters("services", {"sl": ["x:y", "a:b"]})
-            == "Filter: labels = 'x' 'y'\nFilter: labels = 'a' 'b'\n"
+            == "Filter: labels = 'x' 'y'\nFilter: labels = 'a' 'b'"
         )

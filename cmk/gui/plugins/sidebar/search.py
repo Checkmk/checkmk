@@ -1257,9 +1257,9 @@ class ABCLabelMatchPlugin(ABCLivestatusMatchPlugin):
     ) -> LivestatusFilterHeaders:
         user_inputs = used_filters.get(self.name, [])
         return encode_labels_for_livestatus(
-            self.get_livestatus_columns(livestatus_table)[0],
-            self._user_inputs_to_labels(user_inputs),
-        )
+            column=self.get_livestatus_columns(livestatus_table)[0],
+            labels=self._user_inputs_to_labels(user_inputs),
+        ).rstrip("\n")
 
 
 class HostLabelMatchPlugin(ABCLabelMatchPlugin):

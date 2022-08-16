@@ -1,0 +1,12 @@
+Title: Fix host label search in monitoring search and quicksearch
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1660661527
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p10
+
+If host labels were searched with "hl:" prefix in previous 2.1 versions, no
+search results were found, even if the search matched.

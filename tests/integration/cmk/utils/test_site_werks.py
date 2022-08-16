@@ -41,3 +41,14 @@ def test_managed_werks(site: Site) -> None:
         assert not managed_werks
     else:
         assert managed_werks
+
+
+def test_plus_werks(site: Site) -> None:
+    werks = cmk.utils.werks.load()
+
+    plus_werks = [werk for werk in werks.values() if werk["edition"] == "cpe"]
+
+    if site.version.edition() != "plus":
+        assert not plus_werks
+    else:
+        assert plus_werks

@@ -23,12 +23,12 @@ def check_mobileiron_compliance(params: Mapping[str, Any], section: Section) -> 
     if not params["ignore_compliance"]:
         yield Result(
             state=State.OK if section.compliance_state else State.CRIT,
-            summary=f"Compliance state: {section.compliance_state}",
+            summary=f"Compliant: {section.compliance_state}",
         )
     else:
         yield Result(
             state=State.OK,
-            summary=f"Compliance state: {section.compliance_state} and ignored",
+            summary=f"Compliant: {section.compliance_state} (ignored)",
         )
 
 

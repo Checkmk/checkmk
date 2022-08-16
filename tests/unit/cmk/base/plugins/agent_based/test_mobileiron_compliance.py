@@ -60,7 +60,7 @@ NO_COUNT_DEVICE_DATA = parse_mobileiron(
                     "mobileiron_policyviolationcount",
                     value=4,
                 ),
-                Result(state=State.CRIT, summary="Compliance state: False"),
+                Result(state=State.CRIT, summary="Compliant: False"),
             ),
         ),
         (
@@ -75,7 +75,7 @@ NO_COUNT_DEVICE_DATA = parse_mobileiron(
                     "mobileiron_policyviolationcount",
                     value=4,
                 ),
-                Result(state=State.OK, summary="Compliance state: False and ignored"),
+                Result(state=State.OK, summary="Compliant: False (ignored)"),
             ),
         ),
         (
@@ -91,7 +91,7 @@ NO_COUNT_DEVICE_DATA = parse_mobileiron(
                     value=4,
                     levels=(3.0, 5.0),
                 ),
-                Result(state=State.CRIT, summary="Compliance state: False"),
+                Result(state=State.CRIT, summary="Compliant: False"),
             ),
         ),
         (
@@ -107,7 +107,7 @@ NO_COUNT_DEVICE_DATA = parse_mobileiron(
                     value=4,
                     levels=(3.0, 5.0),
                 ),
-                Result(state=State.OK, summary="Compliance state: True"),
+                Result(state=State.OK, summary="Compliant: True"),
             ),
         ),
         (
@@ -123,7 +123,7 @@ NO_COUNT_DEVICE_DATA = parse_mobileiron(
                     value=0,
                     levels=(3.0, 5.0),
                 ),
-                Result(state=State.OK, summary="Compliance state: True"),
+                Result(state=State.OK, summary="Compliant: True"),
             ),
         ),
     ],

@@ -6,6 +6,7 @@
 import logging
 import sys
 from logging.handlers import WatchedFileHandler
+from os import PathLike
 from pathlib import Path
 from typing import IO, Optional, Union
 
@@ -79,7 +80,9 @@ def open_log(log_file_path: Union[str, Path]) -> IOLog:
     return logfile
 
 
-def setup_watched_file_logging_handler(logfile, formatter=None):
+def setup_watched_file_logging_handler(
+    logfile: str | PathLike[str], formatter: logging.Formatter | None = None
+) -> None:
     """Removes all previous logger handlers and set a logfile handler for the given logfile path
     This handler automatically reopens the logfile if it detects an inode change, e.g through logrotate
     """
@@ -112,7 +115,7 @@ def get_default_formatter() -> logging.Formatter:
 
 
 def modify_logging_handler(
-    handler: logging.StreamHandler,
+    handler: logging.Handler,
     formatter: Optional[logging.Formatter],
 ) -> None:
     """Changes logging behavior. Normally used by fetcher to prevent

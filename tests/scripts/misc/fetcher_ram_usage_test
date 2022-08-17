@@ -75,7 +75,7 @@ class FetcherFormatter(logging.Formatter):
         ).decode("utf-8")
 
 
-def setup_fetcher_logger():
+def setup_fetcher_logger() -> None:
     handler = logging.StreamHandler(stream=sys.stdout)
     handler.terminator = ""  # to disable '\n' in microcore log
     log.modify_logging_handler(

@@ -12,30 +12,32 @@ from cmk.utils.log import console
 
 
 @pytest.fixture(name="stream")
-def stream_fixture():
+def stream_fixture() -> io.StringIO:
     return io.StringIO()
 
 
-def read(stream):
+def read(stream: io.StringIO) -> str:
     stream.seek(0)
     return stream.read()
 
 
-def test_verbose_on(stream, caplog) -> None:  # type:ignore[no-untyped-def]
+def test_verbose_on(stream: io.StringIO, caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(console.VERBOSE, logger="cmk.base")
 
     console.verbose("hello", stream=stream)
     assert read(stream) == "hello"
 
 
-def test_verbose_off(stream, caplog) -> None:  # type:ignore[no-untyped-def]
+def test_verbose_off(stream: io.StringIO, caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(console.VERBOSE + 1, logger="cmk.base")
 
     console.verbose("hello", stream=stream)
     assert not read(stream)
 
 
-def test_verbose_default_stream_on(caplog, capsys) -> None:  # type:ignore[no-untyped-def]
+def test_verbose_default_stream_on(
+    caplog: pytest.LogCaptureFixture, capsys: pytest.CaptureFixture[str]
+) -> None:
     caplog.set_level(console.VERBOSE, logger="cmk.base")
 
     console.verbose("hello")
@@ -45,7 +47,9 @@ def test_verbose_default_stream_on(caplog, capsys) -> None:  # type:ignore[no-un
     assert not captured.err
 
 
-def test_verbose_default_stream_off(caplog, capsys) -> None:  # type:ignore[no-untyped-def]
+def test_verbose_default_stream_off(
+    caplog: pytest.LogCaptureFixture, capsys: pytest.CaptureFixture[str]
+) -> None:
     caplog.set_level(console.VERBOSE + 1, logger="cmk.base")
 
     console.verbose("hello")
@@ -55,40 +59,40 @@ def test_verbose_default_stream_off(caplog, capsys) -> None:  # type:ignore[no-u
     assert not captured.err
 
 
-def test_vverbose_on(stream, caplog) -> None:  # type:ignore[no-untyped-def]
+def test_vverbose_on(stream: io.StringIO, caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.DEBUG, logger="cmk.base")
 
     console.vverbose("hello", stream=stream)
     assert read(stream) == "hello"
 
 
-def test_vverbose_off(stream, caplog) -> None:  # type:ignore[no-untyped-def]
+def test_vverbose_off(stream: io.StringIO, caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.DEBUG + 1, logger="cmk.base")
 
     console.vverbose("hello", stream=stream)
     assert not read(stream)
 
 
-def test_info_on(stream, caplog) -> None:  # type:ignore[no-untyped-def]
+def test_info_on(stream: io.StringIO, caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.INFO, logger="cmk.base")
 
     console.info("hello", stream=stream)
     assert read(stream) == "hello"
 
 
-def test_info_off(stream, caplog) -> None:  # type:ignore[no-untyped-def]
+def test_info_off(stream: io.StringIO, caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.INFO + 1, logger="cmk.base")
 
     console.info("hello", stream=stream)
     assert not read(stream)
 
 
-def test_warning(stream) -> None:  # type:ignore[no-untyped-def]
+def test_warning(stream) -> None:
     console.warning("  hello  ", stream=stream)
     assert read(stream) == console._format_warning("  hello  ")
 
 
-def test_error(caplog, capsys) -> None:  # type:ignore[no-untyped-def]
+def test_error(caplog: pytest.LogCaptureFixture, capsys: pytest.CaptureFixture[str]) -> None:
     caplog.set_level(console.VERBOSE, logger="cmk.base")
 
     console.error("hello")

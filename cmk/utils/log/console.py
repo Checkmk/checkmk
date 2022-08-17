@@ -3,10 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import logging
 import sys
 from contextlib import contextmanager
-from typing import Any, Generator, IO, Optional
+from typing import Generator, TextIO
 
 import cmk.utils.tty as tty
 
@@ -16,7 +18,7 @@ from ._level import VERBOSE
 # For StreamHandler.setStream()
 @contextmanager
 def set_stream(
-    logger: logging.Logger, handler: logging.StreamHandler, stream: IO[str]
+    logger: logging.Logger, handler: logging.StreamHandler[TextIO], stream: TextIO
 ) -> Generator[None, None, None]:
     # See `https://bugs.python.org/issue6333` for why this is necessary.
     old = handler.setStream(stream)
@@ -38,15 +40,15 @@ _console.propagate = False
 isEnabledFor = _console.isEnabledFor
 
 
-def log(level: int, text: str, *args: Any, **kwargs: Any) -> None:
-    stream: IO[str] = kwargs.pop("stream", sys.stdout)
+def log(level: int, text: str, *args: object, **kwargs: TextIO) -> None:
+    stream = kwargs.pop("stream", sys.stdout)
     assert not kwargs
 
     with set_stream(_console, _handler, stream):
         _console.log(level, text, *args)
 
 
-def debug(text: str, *args: Any, **kwargs: Optional[IO[str]]) -> None:
+def debug(text: str, *args: object, **kwargs: TextIO) -> None:
     """Output text if, opt_verbose >= 2 (-vv)."""
     log(logging.DEBUG, text, *args, **kwargs)
 
@@ -54,7 +56,7 @@ def debug(text: str, *args: Any, **kwargs: Optional[IO[str]]) -> None:
 vverbose = debug
 
 
-def verbose(text: str, *args: Any, **kwargs: Optional[IO[str]]) -> None:
+def verbose(text: str, *args: object, **kwargs: TextIO) -> None:
     """Output text if opt_verbose is set (-v).
 
     Adds no linefeed.
@@ -63,7 +65,7 @@ def verbose(text: str, *args: Any, **kwargs: Optional[IO[str]]) -> None:
     log(VERBOSE, text, *args, **kwargs)
 
 
-def info(text: str, *args: Any, **kwargs: Optional[IO[str]]) -> None:
+def info(text: str, *args: object, **kwargs: TextIO) -> None:
     """Output text if opt_verbose is set (-v).
 
     Adds no linefeed.
@@ -77,19 +79,19 @@ def info(text: str, *args: Any, **kwargs: Optional[IO[str]]) -> None:
 #
 
 
-def warning(text: str, *args: Any, **kwargs: Any) -> None:
-    stream: IO[str] = kwargs.pop("stream", sys.stderr)
+def warning(text: str, *args: object, **kwargs: TextIO) -> None:
+    stream = kwargs.pop("stream", sys.stderr)
     assert not kwargs
     log(logging.WARNING, _format_warning(text), *args, stream=stream)
 
 
 # TODO: Inconsistent -> Adds newline and other functions don't
-def _format_warning(text):
+def _format_warning(text: str) -> str:
     # type (str) -> str
     stripped = text.lstrip()
     indent = text[: len(text) - len(stripped)]
     return "%s%s%sWARNING:%s %s\n" % (indent, tty.bold, tty.yellow, tty.normal, stripped)
 
 
-def error(text: str, *args: Any) -> None:
+def error(text: str, *args: object) -> None:
     log(logging.ERROR, text, *args, stream=sys.stderr)

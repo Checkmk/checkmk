@@ -8,7 +8,6 @@ import json
 from typing import Any, Callable, Iterable, Mapping, Optional, Sequence, Tuple, Union
 
 import pytest
-from _pytest.capture import CaptureFixture
 from google.cloud import asset_v1, monitoring_v3
 from google.cloud.monitoring_v3 import Aggregation
 from google.cloud.monitoring_v3.types import TimeSeries
@@ -203,7 +202,7 @@ def test_output_contains_one_asset_section(agent_output: Sequence[agent_gcp.Sect
 
 
 def test_metric_serialization(
-    agent_output: Sequence[agent_gcp.Section], capsys: CaptureFixture
+    agent_output: Sequence[agent_gcp.Section], capsys: pytest.CaptureFixture[str]
 ) -> None:
     result_section = next(s for s in agent_output if isinstance(s, agent_gcp.ResultSection))
     agent_gcp.gcp_serializer([result_section])
@@ -230,7 +229,7 @@ def test_metric_retrieval() -> None:
 
 
 def test_asset_serialization(
-    agent_output: Sequence[agent_gcp.Section], capsys: CaptureFixture
+    agent_output: Sequence[agent_gcp.Section], capsys: pytest.CaptureFixture[str]
 ) -> None:
     asset_section = next(s for s in agent_output if isinstance(s, agent_gcp.AssetSection))
     agent_gcp.gcp_serializer([asset_section])
@@ -243,7 +242,7 @@ def test_asset_serialization(
 
 
 def test_health_serialization(
-    agent_output: Sequence[agent_gcp.Section], capsys: CaptureFixture
+    agent_output: Sequence[agent_gcp.Section], capsys: pytest.CaptureFixture[str]
 ) -> None:
     health_section = next(s for s in agent_output if isinstance(s, agent_gcp.HealthSection))
     agent_gcp.gcp_serializer([health_section])
@@ -332,7 +331,7 @@ def test_piggyback_identify_hosts(
 
 
 def test_serialize_piggy_back_section(
-    piggy_back_sections: Sequence[agent_gcp.PiggyBackSection], capsys: CaptureFixture
+    piggy_back_sections: Sequence[agent_gcp.PiggyBackSection], capsys: pytest.CaptureFixture[str]
 ) -> None:
     section = piggy_back_sections[1]
     agent_gcp.gcp_serializer([section])
@@ -493,7 +492,7 @@ def test_output_contains_cost_section(cost_output: Sequence[agent_gcp.Section]) 
 
 
 def test_output_cost_sectoin(
-    cost_output: Sequence[agent_gcp.Section], capsys: CaptureFixture
+    cost_output: Sequence[agent_gcp.Section], capsys: pytest.CaptureFixture[str]
 ) -> None:
     assert "cost" in {s.name for s in cost_output}
     sections = list(s for s in cost_output if isinstance(s, agent_gcp.CostSection))

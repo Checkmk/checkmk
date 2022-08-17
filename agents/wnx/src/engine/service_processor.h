@@ -87,10 +87,14 @@ bool SystemMailboxCallback(const cma::mailslot::Slot *, const void *data,
 
 class ServiceProcessor;
 
+template <class T>
+concept ProviderLike = std::is_base_of_v<cma::provider::Basic, T>;
+
 //
 // wrapper to use section engine ASYNCHRONOUS by default
 //
 template <typename T>
+requires ProviderLike<T>
 class SectionProvider {
 public:
     // engine is default constructed

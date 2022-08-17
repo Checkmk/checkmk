@@ -1,0 +1,15 @@
+Title: Fix TypeError on scheduled report execution
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1660743749
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p10
+
+If a scheduled report was executed at the configured time, the execution failed
+with "TypeError: join() argument must be str, bytes, or os.PathLike object, not
+'NoneType'".
+
+Manual execution via "Execute this schedule now" was still possible.

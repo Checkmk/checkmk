@@ -152,7 +152,7 @@ class ModeBulkRenameHost(WatoMode):
 
         message = html.render_b(
             _(
-                "Do you really want to rename to following hosts?"
+                "Do you really want to rename the following hosts? "
                 "This involves a restart of the monitoring core!"
             )
         )

@@ -1,0 +1,13 @@
+Title: vsphere memory check is stale for powered off machines
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1660807772
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p11
+
+If you have a monitored VM that is powered off then the memory service would go stale.
+This has been fixed. No user interaction required.

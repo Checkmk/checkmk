@@ -4175,6 +4175,10 @@ msgid "Agent bakery"
 msgstr "Padaria de agentes"
 
 #, fuzzy
+msgid "Agent bakery logging"
+msgstr "Padaria de agentes"
+
+#, fuzzy
 msgid "Agent bakery packages"
 msgstr "Padaria de agentes"
 
@@ -4209,9 +4213,6 @@ msgstr "Status de implantação do agente"
 #, python-format
 msgid "Agent for %s (%s)"
 msgstr "Agente para %s (%s)"
-
-msgid "Agent internal TCP port used to communicate with the agent controller"
-msgstr ""
 
 #, fuzzy
 msgid "Agent labels"
@@ -46775,12 +46776,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"The agent controller uses TCP port 28250 to communicate with the agent. You "
-"may change this port if it is used by another application, or blocked, for "
-"security reason, by the administrator."
-msgstr ""
-
-msgid ""
 "The agent plugin <tt>mk_filestats</tt> monitors a configured set of files "
 "for their number, size and age. Files are grouped according to the "
 "configured section. Also a single file can be monitored."
@@ -60380,6 +60375,14 @@ msgstr ""
 "tiver atribuído outros grupos de contato aos serviços através de regras em "
 "<i>Host & Service Parameters</i>. Desde que você não tenha nenhuma regra "
 "desse tipo, um serviço sempre herda todos os grupos de contato de seu host."
+
+msgid ""
+"With this option enabled, the agent bakery will log details about baking "
+"processes to a dedicated log file located at <tt>~/var/log/agent_bakery.log</"
+"tt>, with the specified log level. When disabled, detailed information is "
+"only displayed on commandline when baking agents as site user with command "
+"<tt>cmk --bake-agents -v</tt>"
+msgstr ""
 
 msgid ""
 "With this option the check produces an output that is a valid hyperlink to "

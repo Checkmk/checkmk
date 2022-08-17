@@ -3944,6 +3944,10 @@ msgid "Agent bakery"
 msgstr ""
 
 #, fuzzy
+msgid "Agent bakery logging"
+msgstr "Conexiune Noua"
+
+#, fuzzy
 msgid "Agent bakery packages"
 msgstr "Conexiune Noua"
 
@@ -3976,9 +3980,6 @@ msgstr ""
 
 #, python-format
 msgid "Agent for %s (%s)"
-msgstr ""
-
-msgid "Agent internal TCP port used to communicate with the agent controller"
 msgstr ""
 
 #, fuzzy
@@ -44864,12 +44865,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"The agent controller uses TCP port 28250 to communicate with the agent. You "
-"may change this port if it is used by another application, or blocked, for "
-"security reason, by the administrator."
-msgstr ""
-
-msgid ""
 "The agent plugin <tt>mk_filestats</tt> monitors a configured set of files "
 "for their number, size and age. Files are grouped according to the "
 "configured section. Also a single file can be monitored."
@@ -56031,6 +56026,14 @@ msgid ""
 "assigned other contact groups to services via rules in <i>Host & Service "
 "Parameters</i>. As long as you do not have any such rule a service always "
 "inherits all contact groups from its host."
+msgstr ""
+
+msgid ""
+"With this option enabled, the agent bakery will log details about baking "
+"processes to a dedicated log file located at <tt>~/var/log/agent_bakery.log</"
+"tt>, with the specified log level. When disabled, detailed information is "
+"only displayed on commandline when baking agents as site user with command "
+"<tt>cmk --bake-agents -v</tt>"
 msgstr ""
 
 msgid ""

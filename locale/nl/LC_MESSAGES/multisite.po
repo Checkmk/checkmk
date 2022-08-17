@@ -4202,6 +4202,10 @@ msgstr "Agent-toegangsregels"
 msgid "Agent bakery"
 msgstr "Agent bakkerij"
 
+#, fuzzy
+msgid "Agent bakery logging"
+msgstr "Agent bakkerij"
+
 msgid "Agent bakery packages"
 msgstr "Agent bakkerij pakketten"
 
@@ -4234,11 +4238,6 @@ msgstr "Agent inzet status"
 #, python-format
 msgid "Agent for %s (%s)"
 msgstr "Agent voor %s (%s)"
-
-msgid "Agent internal TCP port used to communicate with the agent controller"
-msgstr ""
-"Interne TCP-poort van de agent die wordt gebruikt om te communiceren met de "
-"agentcontroller"
 
 msgid "Agent labels"
 msgstr "Agent labels"
@@ -46294,15 +46293,6 @@ msgstr ""
 "gecodeerd."
 
 msgid ""
-"The agent controller uses TCP port 28250 to communicate with the agent. You "
-"may change this port if it is used by another application, or blocked, for "
-"security reason, by the administrator."
-msgstr ""
-"De agent controller gebruikt TCP poort 28250 om met de agent te "
-"communiceren. U kunt deze poort wijzigen als hij door een andere toepassing "
-"wordt gebruikt, of om veiligheidsredenen door de beheerder is geblokkeerd."
-
-msgid ""
 "The agent plugin <tt>mk_filestats</tt> monitors a configured set of files "
 "for their number, size and age. Files are grouped according to the "
 "configured section. Also a single file can be monitored."
@@ -59968,6 +59958,14 @@ msgstr ""
 "contactgroepen van zijn host."
 
 msgid ""
+"With this option enabled, the agent bakery will log details about baking "
+"processes to a dedicated log file located at <tt>~/var/log/agent_bakery.log</"
+"tt>, with the specified log level. When disabled, detailed information is "
+"only displayed on commandline when baking agents as site user with command "
+"<tt>cmk --bake-agents -v</tt>"
+msgstr ""
+
+msgid ""
 "With this option the check produces an output that is a valid hyperlink to "
 "the checked URL and this clickable."
 msgstr ""
@@ -64230,6 +64228,22 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid ""
+#~ "Agent internal TCP port used to communicate with the agent controller"
+#~ msgstr ""
+#~ "Interne TCP-poort van de agent die wordt gebruikt om te communiceren met "
+#~ "de agentcontroller"
+
+#~ msgid ""
+#~ "The agent controller uses TCP port 28250 to communicate with the agent. "
+#~ "You may change this port if it is used by another application, or "
+#~ "blocked, for security reason, by the administrator."
+#~ msgstr ""
+#~ "De agent controller gebruikt TCP poort 28250 om met de agent te "
+#~ "communiceren. U kunt deze poort wijzigen als hij door een andere "
+#~ "toepassing wordt gebruikt, of om veiligheidsredenen door de beheerder is "
+#~ "geblokkeerd."
 
 #, fuzzy
 #~| msgid "Event details"

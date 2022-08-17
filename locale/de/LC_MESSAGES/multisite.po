@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2022-08-06 06:00+0000\n"
+"PO-Revision-Date: 2022-08-13 06:00+0000\n"
 "Last-Translator: Marc Nerreter <marc.nerreter@tribe29.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -189,7 +189,7 @@ msgstr " oder Int"
 
 #, python-format
 msgid " spread over %d minutes "
-msgstr "über %d Minuten verteilt"
+msgstr " verteilt auf %d Minuten "
 
 #, python-format
 msgid " the following %d Event Console %s"
@@ -2192,8 +2192,8 @@ msgid ""
 "A scheduler job is an object in an ORACLE database which could be compared "
 "to a cron job on Unix. "
 msgstr ""
-"Ein Scheduler-Job in einer ORACLE-Datenbank ist etwas Ähnliches wie ein Unix "
-"Cron-Job. "
+"Ein Scheduler-Job ist ein Objekt in einer ORACLE-Datenbank, das mit einem "
+"Cron-Job unter Unix verglichen werden kann. "
 
 msgid ""
 "A seperate notification is send to every recipient. Recipients cannot see "
@@ -2454,9 +2454,8 @@ msgstr "API-Server-Verbindung"
 msgid "API server endpoint"
 msgstr "API-Server-Endpunkt"
 
-#, fuzzy
 msgid "APPEND"
-msgstr "PEND"
+msgstr "APPEND"
 
 msgid "APT Updates"
 msgstr "APT-Updates"
@@ -3818,7 +3817,7 @@ msgstr ""
 "erreicht werden kann. Wenn nicht gesetzt, wird die Hostadresse genutzt."
 
 msgid "Address (name / IP or proxy) -- see also inline help for proxy"
-msgstr ""
+msgstr "Adresse (Name / IP oder Proxy) -- siehe auch Inline-Hilfe für Proxy"
 
 msgid "Address Check mode"
 msgstr "Modus für die Adressenprüfung"
@@ -4206,6 +4205,10 @@ msgstr "Zugriffsregeln des Agents"
 msgid "Agent bakery"
 msgstr "Agentenbäckerei"
 
+#, fuzzy
+msgid "Agent bakery logging"
+msgstr "Agentenbäckerei"
+
 msgid "Agent bakery packages"
 msgstr "Agent Bäckerei Pakete"
 
@@ -4238,11 +4241,6 @@ msgstr "Status der Agentenupdates"
 #, python-format
 msgid "Agent for %s (%s)"
 msgstr "Agent für %s (%s)"
-
-msgid "Agent internal TCP port used to communicate with the agent controller"
-msgstr ""
-"Agent-interner TCP-Port, der für die Kommunikation mit dem Agent-Controller "
-"verwendet wird"
 
 msgid "Agent labels"
 msgstr "Agenten-Etiketten"
@@ -4980,7 +4978,7 @@ msgid "Amazon S3 Glacier (Glacier)"
 msgstr "Amazon S3 Glacier (Glacier)"
 
 msgid "Amazon Web Services (AWS)"
-msgstr "Amazon Web Services (AWS)"
+msgstr "Amazon web Services (AWS)"
 
 #, fuzzy
 msgid "Amount in billed currency"
@@ -5256,7 +5254,7 @@ msgid "AppDynamics login username"
 msgstr "AppDynamics Login-Username"
 
 msgid "AppDynamics via REST API"
-msgstr "AppDynamics via REST API"
+msgstr "AppDynamics via REST-API"
 
 msgid "Apparent Power"
 msgstr "Scheinleistung"
@@ -5363,7 +5361,7 @@ msgid "Apply logwatch patterns"
 msgstr "Logwatchmuster anwenden"
 
 msgid "Apply operation on all checked metrics: "
-msgstr "Operation auf alle geprüften Metriken anwenden:"
+msgstr "Operation auf alle geprüften Metriken anwenden: "
 
 msgid "Apply rule to temporary Tablespaces"
 msgstr "Regel auf temporäre Tablespaces anwenden"
@@ -5429,7 +5427,7 @@ msgid "Apply to combined graphs"
 msgstr "Bei Kombigraphen nutzen"
 
 msgid "Apply transformation on checked metric: "
-msgstr "Transformation auf geprüfte Metrik anwenden:"
+msgstr "Transformation auf geprüfte Metrik anwenden: "
 
 #, python-format
 msgid "Approximately finishes in %.1f seconds"
@@ -6573,7 +6571,7 @@ msgid "Barplot"
 msgstr "Säulendiagramm"
 
 msgid "Barracuda: Mail Queue"
-msgstr "Barracuda: Mail Queue"
+msgstr "Barracuda: Mail Warteschlange"
 
 msgid "Base DN"
 msgstr "Base DN"
@@ -6623,9 +6621,8 @@ msgstr "Grundlayout"
 msgid "Basic authentication"
 msgstr "Basis-Authentifizierung"
 
-#, fuzzy
 msgid "Basic authorization"
-msgstr "Basis-Authentifizierung"
+msgstr "Basis-Autorisierung"
 
 msgid "Basic properties"
 msgstr "Grundlegende Eigenschaften"
@@ -14029,9 +14026,8 @@ msgstr "Detaillierte Timeline von Ereignissen für jedes Objekt"
 msgid "Details"
 msgstr "Details"
 
-#, fuzzy
 msgid "Details (Previously named: long output)"
-msgstr "Aktuelle Details (Bisheriger Name: Long Output)"
+msgstr "Details (Bisheriger Name: Long Output)"
 
 msgid "Details about a historical event history entry"
 msgstr "Details über einen Eintrag in der Event-Historie"
@@ -15496,7 +15492,7 @@ msgid "Do you really want to delete this backup?"
 msgstr "Wollen Sie die Sicherung wirklich löschen?"
 
 msgid "Do you really want to delete this credential"
-msgstr "Möchten Sie diesen Berechtigungsnachweis wirklich löschen?"
+msgstr "Möchten Sie diesen Berechtigungsnachweis wirklich löschen"
 
 msgid "Do you really want to delete this job?"
 msgstr "Wollen Sie den Sicherungs-Job wirklich löschen?"
@@ -16769,9 +16765,8 @@ msgstr ""
 msgid "Enable logging of logon failures"
 msgstr "Protokollierung von Anmeldefehlern einschalten"
 
-#, fuzzy
 msgid "Enable login via GET requests"
-msgstr "Anmeldung über GET-Anfragen ermöglichen"
+msgstr "Anmeldung über GET-Anfragen aktivieren"
 
 msgid "Enable new rule based notifications"
 msgstr "Regelbasierte Alarmierung einschalten"
@@ -19110,6 +19105,11 @@ msgid ""
 "will automatically use this method, unless you explicitly select a different "
 "method in the options below (URL mode only)."
 msgstr ""
+"Damit <tt>check_http</tt> mit einem Proxyserver funktioniert, müssen Sie "
+"höchstwahrscheinlich die HTTP-Methode <tt>CONNECT</tt> verwenden. Wenn Sie "
+"einen Proxy konfigurieren, wird Checkmk automatisch diese Methode verwenden, "
+"es sei denn, Sie wählen in den Optionen unten explizit eine andere Methode "
+"aus (nur URL-Modus)"
 
 msgid ""
 "For Containers - Choose which identifier is used for the monitored "
@@ -19566,7 +19566,7 @@ msgstr ""
 
 #, python-format
 msgid "Found no history entry at the time of '%s' for the host '%s'"
-msgstr "Es wurde kein History zum Zeitpunkt '%s' für den Host '%s' gefunden"
+msgstr "Es wurde keine History zum Zeitpunkt '%s' für den Host '%s' gefunden"
 
 msgid "Found no inventory data for this host."
 msgstr "Keine Inventurdate für diesen Host gefunden."
@@ -21542,7 +21542,7 @@ msgid "Hide folders without read permissions"
 msgstr "Ordner ohne Leseberechtigung ausblenden"
 
 msgid "Hide from Status GUI"
-msgstr "Nicht in Status GUI anzeigen "
+msgstr "Nicht in Status GUI anzeigen"
 
 msgid "Hide help text of rules in list views"
 msgstr "Hilfetexte von Regeln in der Listenansicht verbergen"
@@ -28077,9 +28077,8 @@ msgstr ""
 "Protokollieren Sie den Prozess der Agentenregistrierung bei eingehenden "
 "Anfragen mit dem Befehl Checkmk agent controller registration."
 
-#, fuzzy
 msgid "Log: Details"
-msgstr "Hostdetails"
+msgstr "Log: Details"
 
 msgid "Log: State information"
 msgstr "Log: Informationen zum Zustand"
@@ -46393,16 +46392,6 @@ msgstr ""
 "werden die übertragenen Daten nicht verschlüsselt."
 
 msgid ""
-"The agent controller uses TCP port 28250 to communicate with the agent. You "
-"may change this port if it is used by another application, or blocked, for "
-"security reason, by the administrator."
-msgstr ""
-"Der Agent-Controller verwendet den TCP-Port 28250 für die Kommunikation mit "
-"dem Agenten. Sie können diesen Port ändern, wenn er von einer anderen "
-"Anwendung verwendet wird oder aus Sicherheitsgründen vom Administrator "
-"gesperrt wurde."
-
-msgid ""
 "The agent plugin <tt>mk_filestats</tt> monitors a configured set of files "
 "for their number, size and age. Files are grouped according to the "
 "configured section. Also a single file can be monitored."
@@ -60031,6 +60020,14 @@ msgstr ""
 "Host."
 
 msgid ""
+"With this option enabled, the agent bakery will log details about baking "
+"processes to a dedicated log file located at <tt>~/var/log/agent_bakery.log</"
+"tt>, with the specified log level. When disabled, detailed information is "
+"only displayed on commandline when baking agents as site user with command "
+"<tt>cmk --bake-agents -v</tt>"
+msgstr ""
+
+msgid ""
 "With this option the check produces an output that is a valid hyperlink to "
 "the checked URL and this clickable."
 msgstr "Diese Option erstellt für die Check-Ausgabe einen klickbaren Link."
@@ -64316,6 +64313,22 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid ""
+#~ "Agent internal TCP port used to communicate with the agent controller"
+#~ msgstr ""
+#~ "Agent-interner TCP-Port, der für die Kommunikation mit dem Agent-"
+#~ "Controller verwendet wird"
+
+#~ msgid ""
+#~ "The agent controller uses TCP port 28250 to communicate with the agent. "
+#~ "You may change this port if it is used by another application, or "
+#~ "blocked, for security reason, by the administrator."
+#~ msgstr ""
+#~ "Der Agent-Controller verwendet den TCP-Port 28250 für die Kommunikation "
+#~ "mit dem Agenten. Sie können diesen Port ändern, wenn er von einer anderen "
+#~ "Anwendung verwendet wird oder aus Sicherheitsgründen vom Administrator "
+#~ "gesperrt wurde."
 
 #, fuzzy
 #~| msgid "Event details"

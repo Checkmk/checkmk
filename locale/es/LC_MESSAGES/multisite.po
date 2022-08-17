@@ -4226,6 +4226,10 @@ msgstr "Normas de acceso de los agentes"
 msgid "Agent bakery"
 msgstr "Agente de panadería"
 
+#, fuzzy
+msgid "Agent bakery logging"
+msgstr "Agente de panadería"
+
 msgid "Agent bakery packages"
 msgstr "Paquetes de panadería para agentes"
 
@@ -4259,11 +4263,6 @@ msgstr "Estado de despliegue del agente"
 #, python-format
 msgid "Agent for %s (%s)"
 msgstr "Agente de %s (%s)"
-
-msgid "Agent internal TCP port used to communicate with the agent controller"
-msgstr ""
-"Puerto TCP interno del agente utilizado para comunicarse con el controlador "
-"del agente"
 
 msgid "Agent labels"
 msgstr "Etiquetas de los agentes"
@@ -46709,15 +46708,6 @@ msgstr ""
 "transportados no están encriptados."
 
 msgid ""
-"The agent controller uses TCP port 28250 to communicate with the agent. You "
-"may change this port if it is used by another application, or blocked, for "
-"security reason, by the administrator."
-msgstr ""
-"El controlador del agente utiliza el puerto TCP 28250 para comunicarse con "
-"el agente. Puede cambiar este puerto si es utilizado por otra aplicación, o "
-"bloqueado, por razones de seguridad, por el administrador."
-
-msgid ""
 "The agent plugin <tt>mk_filestats</tt> monitors a configured set of files "
 "for their number, size and age. Files are grouped according to the "
 "configured section. Also a single file can be monitored."
@@ -60471,6 +60461,14 @@ msgstr ""
 "anfitrión."
 
 msgid ""
+"With this option enabled, the agent bakery will log details about baking "
+"processes to a dedicated log file located at <tt>~/var/log/agent_bakery.log</"
+"tt>, with the specified log level. When disabled, detailed information is "
+"only displayed on commandline when baking agents as site user with command "
+"<tt>cmk --bake-agents -v</tt>"
+msgstr ""
+
+msgid ""
 "With this option the check produces an output that is a valid hyperlink to "
 "the checked URL and this clickable."
 msgstr ""
@@ -64757,6 +64755,21 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
+
+#~ msgid ""
+#~ "Agent internal TCP port used to communicate with the agent controller"
+#~ msgstr ""
+#~ "Puerto TCP interno del agente utilizado para comunicarse con el "
+#~ "controlador del agente"
+
+#~ msgid ""
+#~ "The agent controller uses TCP port 28250 to communicate with the agent. "
+#~ "You may change this port if it is used by another application, or "
+#~ "blocked, for security reason, by the administrator."
+#~ msgstr ""
+#~ "El controlador del agente utiliza el puerto TCP 28250 para comunicarse "
+#~ "con el agente. Puede cambiar este puerto si es utilizado por otra "
+#~ "aplicación, o bloqueado, por razones de seguridad, por el administrador."
 
 #, fuzzy
 #~| msgid "Event details"

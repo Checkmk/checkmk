@@ -3415,7 +3415,7 @@ def _get_info_title(plugin: Union[Painter, Sorter]) -> str:
 
     return "/".join(
         [
-            visual_info_registry[info_name]().title_plural
+            str(visual_info_registry[info_name]().title_plural)
             for info_name in sorted(infos_needed_by_plugin(plugin))
         ]
     )

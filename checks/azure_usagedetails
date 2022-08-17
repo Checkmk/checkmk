@@ -17,24 +17,21 @@ def parse_azure_usagedetails(info):
     parsed = {}
     for detail in list(parse_azure(info).values()):
         props = detail["properties"]
-        service_name = props["consumedService"]
+        service_name = props["ResourceType"].split("/")[0]
         data = parsed.setdefault(
             service_name,
             {
                 "costs": collections.Counter(),
-                "usage": 0.0,
-                "subscription_name": props["subscriptionName"],
+                "subscription_id": detail["subscription"],
             },
         )
-        data["costs"].update({props["currency"]: props["pretaxCost"]})
-        data["usage"] += props["usageQuantity"]
+        data["costs"].update({props["Currency"]: props["Cost"]})
 
     if parsed:
         parsed["Summary"] = {
             "costs": sum((d["costs"] for d in list(parsed.values())), collections.Counter()),
-            "usage": sum(d["usage"] for d in list(parsed.values())),
-            # use any subscription_name, they're all the same
-            "subscription_name": list(parsed.values())[0]["subscription_name"],
+            # use any subscription_id, they're all the same
+            "subscription_id": list(parsed.values())[0]["subscription_id"],
         }
 
     return parsed
@@ -47,7 +44,7 @@ def check_azure_usagedetails(_no_item, params, data):
         levels = params.get("levels")
         yield check_levels(amount, "service_costs_%s" % currency.lower(), levels, currency)
 
-    yield 0, "Subscription: %s" % data["subscription_name"]
+    yield 0, "Subscription: %s" % data["subscription_id"]
 
 
 check_info["azure_usagedetails"] = {

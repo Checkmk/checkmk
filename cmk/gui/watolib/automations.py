@@ -373,19 +373,23 @@ def _verify_compatibility(response: requests.Response) -> None:
     if not remote_version or not remote_edition_short:
         return  # No validation
 
-    if not compatible_with_central_site(
-        central_version, central_edition_short, remote_version, remote_edition_short
+    if not isinstance(
+        compatibility := compatible_with_central_site(
+            central_version, central_edition_short, remote_version, remote_edition_short
+        ),
+        cmk_version.VersionsCompatible,
     ):
         raise MKGeneralException(
             _(
                 "The central (Version: %s, Edition: %s) and remote site "
-                "(Version: %s, Edition: %s) are not compatible"
+                "(Version: %s, Edition: %s) are not compatible. Reason: %s"
             )
             % (
                 central_version,
                 central_edition_short,
                 remote_version,
                 remote_edition_short,
+                compatibility,
             )
         )
 
@@ -631,9 +635,17 @@ class CheckmkAutomationBackgroundJob(WatoBackgroundJob):
         job_interface.send_result_message(_("Finished."))
 
 
+class EditionsIncompatible:
+    def __init__(self, reason: str) -> None:
+        self._reason = reason
+
+    def __str__(self) -> str:
+        return self._reason
+
+
 def compatible_with_central_site(
     central_version: str, central_edition_short: str, remote_version: str, remote_edition_short: str
-) -> bool:
+) -> cmk_version.VersionsCompatible | cmk_version.VersionsIncompatible | EditionsIncompatible:
     """Whether or not a remote site version and edition is compatible with the central site
 
     The version check is handled by the version utils, the edition check is handled here.
@@ -642,15 +654,15 @@ def compatible_with_central_site(
 
     C*E != CME is not allowed
 
-    >>> c("2.0.0p3", "cee", "2.0.0p3", "cme")
-    False
-    >>> c("2.0.0p3", "cme", "2.0.0p3", "cee")
-    False
-    >>> c("2.0.0p3", "cre", "2.0.0p3", "cme")
-    False
-    >>> c("2.0.0p3", "cme", "2.0.0p3", "cre")
-    False
-    >>> c("2.0.0p3", "cme", "2.0.0p3", "cme")
+    >>> str(c("2.0.0p3", "cee", "2.0.0p3", "cme"))
+    'Mix of CME and non-CME is not supported.'
+    >>> str(c("2.0.0p3", "cme", "2.0.0p3", "cee"))
+    'Mix of CME and non-CME is not supported.'
+    >>> str(c("2.0.0p3", "cre", "2.0.0p3", "cme"))
+    'Mix of CME and non-CME is not supported.'
+    >>> str(c("2.0.0p3", "cme", "2.0.0p3", "cre"))
+    'Mix of CME and non-CME is not supported.'
+    >>> isinstance(c("2.0.0p3", "cme", "2.0.0p3", "cme"), cmk_version.VersionsCompatible)
     True
     """
     # Pre 2.0.0p1 did not sent x-checkmk-* headers -> Not compabile
@@ -662,10 +674,10 @@ def compatible_with_central_site(
             remote_version,
         )
     ):
-        return False
+        return cmk_version.VersionsIncompatible("Central or remote site are below 2.0.0p1.")
 
     if (central_edition_short == "cme") is not (remote_edition_short == "cme"):
-        return False
+        return EditionsIncompatible("Mix of CME and non-CME is not supported.")
 
     return cmk_version.versions_compatible(
         cmk_version.Version(central_version),

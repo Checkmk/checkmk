@@ -557,7 +557,21 @@ def is_same_major_version(this_version: str, other_version: str) -> bool:
     return base_version_parts(this_version)[:-1] == base_version_parts(other_version)[:-1]
 
 
-def versions_compatible(from_v: Version, to_v: Version, /) -> bool:
+class VersionsCompatible:
+    ...
+
+
+class VersionsIncompatible:
+    def __init__(self, reason: str) -> None:
+        self._reason = reason
+
+    def __str__(self) -> str:
+        return self._reason
+
+
+def versions_compatible(
+    from_v: Version, to_v: Version, /
+) -> VersionsCompatible | VersionsIncompatible:
     """Whether or not two versions are compatible (e.g. for omd update or remote automation calls)
 
     >>> c = versions_compatible
@@ -565,57 +579,57 @@ def versions_compatible(from_v: Version, to_v: Version, /) -> bool:
     Nightly build of master branch is always compatible as we don't know which major version it
     belongs to. It's also not that important to validate this case.
 
-    >>> c(Version("2.0.0i1"), Version("2021.12.13"))
+    >>> isinstance(c(Version("2.0.0i1"), Version("2021.12.13")), VersionsCompatible)
     True
-    >>> c(Version("2021.12.13"), Version("2.0.0i1"))
+    >>> isinstance(c(Version("2021.12.13"), Version("2.0.0i1")), VersionsCompatible)
     True
-    >>> c(Version("2021.12.13"), Version("2022.01.01"))
+    >>> isinstance(c(Version("2021.12.13"), Version("2022.01.01")), VersionsCompatible)
     True
-    >>> c(Version("2022.01.01"), Version("2021.12.13"))
+    >>> isinstance(c(Version("2022.01.01"), Version("2021.12.13")), VersionsCompatible)
     True
 
     Nightly branch builds e.g. 2.0.0-2022.01.01 are treated as 2.0.0.
 
-    >>> c(Version("2.0.0-2022.01.01"), Version("2.0.0p3"))
+    >>> isinstance(c(Version("2.0.0-2022.01.01"), Version("2.0.0p3")), VersionsCompatible)
     True
-    >>> c(Version("2.0.0p3"), Version("2.0.0-2022.01.01"))
+    >>> isinstance(c(Version("2.0.0p3"), Version("2.0.0-2022.01.01")), VersionsCompatible)
     True
 
     Same major is allowed
 
-    >>> c(Version("2.0.0i1"), Version("2.0.0p3"))
+    >>> isinstance(c(Version("2.0.0i1"), Version("2.0.0p3")), VersionsCompatible)
     True
-    >>> c(Version("2.0.0p3"), Version("2.0.0i1"))
+    >>> isinstance(c(Version("2.0.0p3"), Version("2.0.0i1")), VersionsCompatible)
     True
-    >>> c(Version("2.0.0p3"), Version("2.0.0p3"))
+    >>> isinstance(c(Version("2.0.0p3"), Version("2.0.0p3")), VersionsCompatible)
     True
 
     Prev major to new is allowed #1
 
-    >>> c(Version("1.6.0i1"), Version("2.0.0"))
+    >>> isinstance(c(Version("1.6.0i1"), Version("2.0.0")), VersionsCompatible)
     True
-    >>> c(Version("1.6.0p23"), Version("2.0.0"))
+    >>> isinstance(c(Version("1.6.0p23"), Version("2.0.0")), VersionsCompatible)
     True
-    >>> c(Version("2.0.0p12"), Version("2.1.0i1"))
+    >>> isinstance(c(Version("2.0.0p12"), Version("2.1.0i1")), VersionsCompatible)
     True
 
     Prepre major to new not allowed
 
-    >>> c(Version("1.6.0p1"), Version("2.1.0p3"))
-    False
-    >>> c(Version("1.6.0p1"), Version("2.1.0b1"))
-    False
-    >>> c(Version("1.5.0i1"), Version("2.0.0"))
-    False
-    >>> c(Version("1.4.0"), Version("2.0.0"))
-    False
+    >>> str(c(Version("1.6.0p1"), Version("2.1.0p3")))
+    'Target version too new (one major version jump at maximum).'
+    >>> str(c(Version("1.6.0p1"), Version("2.1.0b1")))
+    'Target version too new (one major version jump at maximum).'
+    >>> str(c(Version("1.5.0i1"), Version("2.0.0")))
+    'Target version too new (one major version jump at maximum).'
+    >>> str(c(Version("1.4.0"), Version("2.0.0")))
+    'Target version too new (one major version jump at maximum).'
 
     New major to old not allowed
 
-    >>> c(Version("2.0.0"), Version("1.6.0p1"))
-    False
-    >>> c(Version("2.1.0"), Version("2.0.0b1"))
-    False
+    >>> str(c(Version("2.0.0"), Version("1.6.0p1")))
+    'Target version too old (older major version is not supported).'
+    >>> str(c(Version("2.1.0"), Version("2.0.0b1")))
+    'Target version too old (older major version is not supported).'
     """
 
     # Daily builds of the master branch (format: YYYY.MM.DD) are always treated to be compatbile
@@ -625,18 +639,20 @@ def versions_compatible(from_v: Version, to_v: Version, /) -> bool:
             is_daily_build_of_master(str(to_v)),
         )
     ):
-        return True
+        return VersionsCompatible()
 
     from_v_parts = base_version_parts(str(from_v))
     to_v_parts = base_version_parts(str(to_v))
 
     # Same major version is allowed
     if from_v_parts == to_v_parts:
-        return True
+        return VersionsCompatible()
 
     # Newer major to older is not allowed
     if from_v_parts > to_v_parts:
-        return False
+        return VersionsIncompatible(
+            "Target version too old (older major version is not supported)."
+        )
 
     # Now we need to detect the previous and pre-previous major version.
     # How can we do it without explicitly listing all version numbers?
@@ -668,8 +684,12 @@ def versions_compatible(from_v: Version, to_v: Version, /) -> bool:
     #
     # Obviously, this only works as long as we keep the current version scheme.
 
+    target_too_new = VersionsIncompatible(
+        "Target version too new (one major version jump at maximum)."
+    )
+
     if to_v_parts[0] - from_v_parts[0] > 1:
-        return False  # preprev 1st number
+        return target_too_new  # preprev 1st number
 
     last_major_releases = {
         1: (1, 6, 0),
@@ -677,17 +697,17 @@ def versions_compatible(from_v: Version, to_v: Version, /) -> bool:
 
     if to_v_parts[0] - from_v_parts[0] == 1 and to_v_parts[1] == 0:
         if last_major_releases[from_v_parts[0]] == from_v_parts:
-            return True  # prev major (e.g. last 1.x.0 before 2.0.0)
-        return False  # preprev 1st number
+            return VersionsCompatible()  # prev major (e.g. last 1.x.0 before 2.0.0)
+        return target_too_new  # preprev 1st number
 
     if to_v_parts[0] == from_v_parts[0]:
         if to_v_parts[1] - from_v_parts[1] > 1:
-            return False  # preprev in 2nd number
+            return target_too_new  # preprev in 2nd number
         if to_v_parts[1] - from_v_parts[1] == 1:
-            return True  # prev in 2nd number, ignoring 3rd
+            return VersionsCompatible()  # prev in 2nd number, ignoring 3rd
 
     # Everything else is incompatible
-    return False
+    return target_too_new
 
 
 #   .--general infos-------------------------------------------------------.

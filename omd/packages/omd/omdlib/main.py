@@ -127,7 +127,7 @@ from cmk.utils.certs import cert_dir, root_cert_path, RootCA
 from cmk.utils.exceptions import MKTerminate
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import mkbackup_lock_dir
-from cmk.utils.version import Version, versions_compatible
+from cmk.utils.version import Version, versions_compatible, VersionsIncompatible
 
 Arguments = List[str]
 ConfigChangeCommands = List[Tuple[str, str]]
@@ -2677,14 +2677,17 @@ def main_update(  # pylint: disable=too-many-branches
         exec_other_omd(site, to_version, "update")
 
     if (
-        not versions_compatible(
-            _omd_to_check_mk_version(from_version), _omd_to_check_mk_version(to_version)
+        isinstance(
+            compatibility := versions_compatible(
+                _omd_to_check_mk_version(from_version), _omd_to_check_mk_version(to_version)
+            ),
+            VersionsIncompatible,
         )
         and not global_opts.force
     ):
         bail_out(
             f"ERROR: You are trying to update from {from_version} to {to_version} which is not "
-            "supported.\n\n"
+            f"supported. Reason: {compatibility}\n\n"
             "* Major downgrades are not supported\n"
             "* Major version updates need to be done step by step.\n\n"
             "If you are really sure about what you are doing, you can still do the "

@@ -76,22 +76,26 @@ class ModeAutomationLogin(AjaxPage):
             else request.get_ascii_input_mandatory("_edition_short")
         )
 
-        if not compatible_with_central_site(
-            central_version,
-            central_edition_short,
-            cmk_version.__version__,
-            cmk_version.edition().short,
+        if not isinstance(
+            compatibility := compatible_with_central_site(
+                central_version,
+                central_edition_short,
+                cmk_version.__version__,
+                cmk_version.edition().short,
+            ),
+            cmk_version.VersionsCompatible,
         ):
             raise MKGeneralException(
                 _(
                     "Your central site (Version: %s, Edition: %s) is incompatible with this "
-                    "remote site (Version: %s, Edition: %s)"
+                    "remote site (Version: %s, Edition: %s). Reason: %s"
                 )
                 % (
                     central_version,
                     central_edition_short,
                     cmk_version.__version__,
                     cmk_version.edition().short,
+                    compatibility,
                 )
             )
 
@@ -133,22 +137,26 @@ class ModeAutomation(AjaxPage):
     def _verify_compatibility(self) -> None:
         central_version = request.headers.get("x-checkmk-version", "")
         central_edition_short = request.headers.get("x-checkmk-edition", "")
-        if not compatible_with_central_site(
-            central_version,
-            central_edition_short,
-            cmk_version.__version__,
-            cmk_version.edition().short,
+        if not isinstance(
+            compatibility := compatible_with_central_site(
+                central_version,
+                central_edition_short,
+                cmk_version.__version__,
+                cmk_version.edition().short,
+            ),
+            cmk_version.VersionsCompatible,
         ):
             raise MKGeneralException(
                 _(
                     "Your central site (Version: %s, Edition: %s) is incompatible with this "
-                    "remote site (Version: %s, Edition: %s)"
+                    "remote site (Version: %s, Edition: %s): Reason: %s"
                 )
                 % (
                     central_version,
                     central_edition_short,
                     cmk_version.__version__,
                     cmk_version.edition().short,
+                    compatibility,
                 )
             )
 

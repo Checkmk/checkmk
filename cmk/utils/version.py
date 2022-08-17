@@ -630,6 +630,13 @@ def versions_compatible(
     'Target version too old (older major version is not supported).'
     >>> str(c(Version("2.1.0"), Version("2.0.0b1")))
     'Target version too old (older major version is not supported).'
+
+    Specific patch release requirements
+
+    >>> isinstance(c(Version("2.1.0p12"), Version("2.2.0i1")), VersionsCompatible)
+    True
+    >>> str(c(Version("2.1.0p3"), Version("2.2.0i1")))
+    'This target versions requires at least 2.1.0p9'
     """
 
     # Daily builds of the master branch (format: YYYY.MM.DD) are always treated to be compatbile
@@ -696,18 +703,32 @@ def versions_compatible(
     }
 
     if to_v_parts[0] - from_v_parts[0] == 1 and to_v_parts[1] == 0:
+        # prev major (e.g. last 1.x.0 before 2.0.0)
         if last_major_releases[from_v_parts[0]] == from_v_parts:
-            return VersionsCompatible()  # prev major (e.g. last 1.x.0 before 2.0.0)
+            return _check_minimum_patch_release(from_v, to_v)
         return target_too_new  # preprev 1st number
 
     if to_v_parts[0] == from_v_parts[0]:
         if to_v_parts[1] - from_v_parts[1] > 1:
             return target_too_new  # preprev in 2nd number
         if to_v_parts[1] - from_v_parts[1] == 1:
-            return VersionsCompatible()  # prev in 2nd number, ignoring 3rd
+            return _check_minimum_patch_release(from_v, to_v)  # prev in 2nd number, ignoring 3rd
 
     # Everything else is incompatible
     return target_too_new
+
+
+def _check_minimum_patch_release(
+    from_v: Version, to_v: Version, /
+) -> VersionsCompatible | VersionsIncompatible:
+    required_patch_releases = {
+        (2, 2, 0): Version("2.1.0p9"),
+    }
+    if not (required_patch_release := required_patch_releases.get(base_version_parts(str(to_v)))):
+        return VersionsCompatible()
+    if from_v >= required_patch_release:
+        return VersionsCompatible()
+    return VersionsIncompatible(f"This target versions requires at least {required_patch_release}")
 
 
 #   .--general infos-------------------------------------------------------.

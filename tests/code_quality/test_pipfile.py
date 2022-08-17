@@ -23,6 +23,8 @@ IGNORED_LIBS = set(["cmk", "livestatus", "mk_jolokia"])  # our stuff
 IGNORED_LIBS |= isort.stdlibs._all.stdlib  # builtin stuff
 IGNORED_LIBS |= set(["__future__", "typing_extensions"])  # other builtin stuff
 
+BUILD_DIRS = {Path(repo_path(), "agent-receiver", "build")}
+
 PACKAGE_REPLACEMENTS = ".-_"
 
 
@@ -72,6 +74,10 @@ def iter_sourcefiles(basepath: Path) -> Iterable[Path]:
     this could have been a easy glob, but we do not care for hidden files here:
     https://bugs.python.org/issue26096"""
     for sub_path in basepath.iterdir():
+        if sub_path in BUILD_DIRS:
+            # Ignore build directories: those may not be aligned with the actual status in git
+            # and for python sources they would enforce testing the same file twice...
+            continue
         if sub_path.name.startswith("."):
             continue
         if sub_path.is_file() and sub_path.name.endswith(".py"):

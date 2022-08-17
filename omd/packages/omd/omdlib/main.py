@@ -127,7 +127,7 @@ from cmk.utils.certs import cert_dir, root_cert_path, RootCA
 from cmk.utils.exceptions import MKTerminate
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import mkbackup_lock_dir
-from cmk.utils.version import base_version_parts, is_daily_build_of_master
+from cmk.utils.version import Version, versions_compatible
 
 Arguments = List[str]
 ConfigChangeCommands = List[Tuple[str, str]]
@@ -2677,7 +2677,7 @@ def main_update(  # pylint: disable=too-many-branches
         exec_other_omd(site, to_version, "update")
 
     if (
-        not _is_version_update_allowed(
+        not versions_compatible(
             _omd_to_check_mk_version(from_version), _omd_to_check_mk_version(to_version)
         )
         and not global_opts.force
@@ -2818,86 +2818,6 @@ def main_update(  # pylint: disable=too-many-branches
     stop_logging()
 
 
-def _is_version_update_allowed(from_version: str, to_version: str) -> bool:
-    """Whether or not an "omd update" is allowed from one version to another
-    >>> c = _is_version_update_allowed
-
-    >>> c("1.6.0", "2.0.0")
-    True
-    >>> c("1.6.0", "2.1.0")
-    False
-    >>> c("2.0.0", "2.1.0")
-    True
-    >>> c("2.0.0", "2.2.0")
-    False
-    >>> c("2.1.0", "3.1.0")
-    False
-    >>> c("3.1.0", "2.1.0")
-    False
-    >>> c("2.2.0", "2.2.0")
-    True
-
-    Nightly build of master branch is always compatible as we don't know which major version it
-    belongs to. It's also not that important to validate this case.
-
-    >>> c("2.0.0i1", "2021.12.13")
-    True
-    >>> c("2021.12.13", "2.0.0i1")
-    True
-    >>> c("2021.12.13", "2022.01.01")
-    True
-    >>> c("2022.01.01", "2021.12.13")
-    True
-    >>> c("2.1.0-2022.06.23", "2022.06.23-sandbox-lm-2.2-omd-apache")
-    True
-
-    Nightly branch builds e.g. 2.0.0-2022.01.01 are treated as 2.0.0.
-
-    >>> c("2.0.0-2022.01.01", "2.0.0p3")
-    True
-    >>> c("2.0.0p3", "2.0.0-2022.01.01")
-    True
-    >>> c("2.0.0p3", "3.1.0-2022.01.01")
-    False
-    >>> c("2.2.0p3", "2.0.0-2022.01.01")
-    False
-    """
-
-    from_parts = base_version_parts(from_version)
-    to_parts = base_version_parts(to_version)
-
-    if is_daily_build_of_master(from_version) or is_daily_build_of_master(to_version):
-        return True  # Don't know to which major master daily builds belong to -> always allow
-
-    # Same major version is allowed
-    if from_parts == to_parts:
-        return True
-
-    # Newer major to older is not allowed
-    if from_parts > to_parts:
-        return False
-
-    if to_parts[0] - from_parts[0] > 1:
-        return False  # preprev 1st number
-
-    last_major_releases = {
-        1: (1, 6, 0),
-    }
-
-    if to_parts[0] - from_parts[0] == 1 and to_parts[1] == 0:
-        if last_major_releases[from_parts[0]] == from_parts:
-            return True  # prev major (e.g. last 1.x.0 before 2.0.0)
-        return False  # preprev 1st number
-
-    if to_parts[0] == from_parts[0]:
-        if to_parts[1] - from_parts[1] > 1:
-            return False  # preprev in 2nd number
-        if to_parts[1] - from_parts[1] == 1:
-            return True  # prev in 2nd number, ignoring 3rd
-
-    return False
-
-
 def _update_cmk_core_config(site: SiteContext):  # type:ignore[no-untyped-def]
     if site.conf["CORE"] == "none":
         return  # No core config is needed in this case
@@ -2957,17 +2877,17 @@ def _get_edition(omd_version: str) -> str:
     return "unknown"
 
 
-def _omd_to_check_mk_version(omd_version: str) -> str:
+def _omd_to_check_mk_version(omd_version: str) -> Version:
     """
     >>> f = _omd_to_check_mk_version
     >>> f("2.0.0p3.cee")
-    '2.0.0p3'
+    Version('2.0.0p3')
     >>> f("1.6.0p3.cee.demo")
-    '1.6.0p3'
+    Version('1.6.0p3')
     >>> f("2.0.0p3.cee")
-    '2.0.0p3'
+    Version('2.0.0p3')
     >>> f("2021.12.13.cee")
-    '2021.12.13'
+    Version('2021.12.13')
     """
     parts = omd_version.split(".")
 
@@ -2979,7 +2899,7 @@ def _omd_to_check_mk_version(omd_version: str) -> str:
     # Strip the edition suffix away
     del parts[-1]
 
-    return ".".join(parts)
+    return Version(".".join(parts))
 
 
 def main_umount(

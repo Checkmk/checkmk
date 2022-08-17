@@ -557,6 +557,139 @@ def is_same_major_version(this_version: str, other_version: str) -> bool:
     return base_version_parts(this_version)[:-1] == base_version_parts(other_version)[:-1]
 
 
+def versions_compatible(from_v: Version, to_v: Version, /) -> bool:
+    """Whether or not two versions are compatible (e.g. for omd update or remote automation calls)
+
+    >>> c = versions_compatible
+
+    Nightly build of master branch is always compatible as we don't know which major version it
+    belongs to. It's also not that important to validate this case.
+
+    >>> c(Version("2.0.0i1"), Version("2021.12.13"))
+    True
+    >>> c(Version("2021.12.13"), Version("2.0.0i1"))
+    True
+    >>> c(Version("2021.12.13"), Version("2022.01.01"))
+    True
+    >>> c(Version("2022.01.01"), Version("2021.12.13"))
+    True
+
+    Nightly branch builds e.g. 2.0.0-2022.01.01 are treated as 2.0.0.
+
+    >>> c(Version("2.0.0-2022.01.01"), Version("2.0.0p3"))
+    True
+    >>> c(Version("2.0.0p3"), Version("2.0.0-2022.01.01"))
+    True
+
+    Same major is allowed
+
+    >>> c(Version("2.0.0i1"), Version("2.0.0p3"))
+    True
+    >>> c(Version("2.0.0p3"), Version("2.0.0i1"))
+    True
+    >>> c(Version("2.0.0p3"), Version("2.0.0p3"))
+    True
+
+    Prev major to new is allowed #1
+
+    >>> c(Version("1.6.0i1"), Version("2.0.0"))
+    True
+    >>> c(Version("1.6.0p23"), Version("2.0.0"))
+    True
+    >>> c(Version("2.0.0p12"), Version("2.1.0i1"))
+    True
+
+    Prepre major to new not allowed
+
+    >>> c(Version("1.6.0p1"), Version("2.1.0p3"))
+    False
+    >>> c(Version("1.6.0p1"), Version("2.1.0b1"))
+    False
+    >>> c(Version("1.5.0i1"), Version("2.0.0"))
+    False
+    >>> c(Version("1.4.0"), Version("2.0.0"))
+    False
+
+    New major to old not allowed
+
+    >>> c(Version("2.0.0"), Version("1.6.0p1"))
+    False
+    >>> c(Version("2.1.0"), Version("2.0.0b1"))
+    False
+    """
+
+    # Daily builds of the master branch (format: YYYY.MM.DD) are always treated to be compatbile
+    if any(
+        (
+            is_daily_build_of_master(str(from_v)),
+            is_daily_build_of_master(str(to_v)),
+        )
+    ):
+        return True
+
+    from_v_parts = base_version_parts(str(from_v))
+    to_v_parts = base_version_parts(str(to_v))
+
+    # Same major version is allowed
+    if from_v_parts == to_v_parts:
+        return True
+
+    # Newer major to older is not allowed
+    if from_v_parts > to_v_parts:
+        return False
+
+    # Now we need to detect the previous and pre-previous major version.
+    # How can we do it without explicitly listing all version numbers?
+    #
+    # What version changes did we have?
+    #
+    # - Long ago we increased only the 3rd number which is not done anymore
+    # - Until 1.6.0 we only increased the 2nd number
+    # - With 2.0.0 we once increased the 1st number
+    # - With 2.1.0 we will again only increase the 2nd number
+    # - Increasing of the 1st number may happen again
+    #
+    # Seems we need to handle these cases for:
+    #
+    # - Steps in 1st number with reset of 2nd number can happen
+    # - Steps in 2nd number can happen
+    # - 3rd number and suffixes can completely be ignored for now
+    #
+    # We could implement a simple logic like this:
+    #
+    # - 1st number +1, newer 2nd is 0 -> it is uncertain which was the
+    #                                    last release. We need an explicit
+    #                                    lookup table for this situation.
+    # - 1st number +2                      -> preprev major
+    # - Equal 1st number and 2nd number +1 -> prev major
+    # - Equal 1st number and 2nd number +2 -> preprev major
+    #
+    # Seems to be sufficient for now.
+    #
+    # Obviously, this only works as long as we keep the current version scheme.
+
+    if to_v_parts[0] - from_v_parts[0] > 1:
+        return False  # preprev 1st number
+
+    last_major_releases = {
+        1: (1, 6, 0),
+    }
+
+    if to_v_parts[0] - from_v_parts[0] == 1 and to_v_parts[1] == 0:
+        if last_major_releases[from_v_parts[0]] == from_v_parts:
+            return True  # prev major (e.g. last 1.x.0 before 2.0.0)
+        return False  # preprev 1st number
+
+    if to_v_parts[0] == from_v_parts[0]:
+        if to_v_parts[1] - from_v_parts[1] > 1:
+            return False  # preprev in 2nd number
+        if to_v_parts[1] - from_v_parts[1] == 1:
+            return True  # prev in 2nd number, ignoring 3rd
+
+    # Everything else is incompatible
+    return False
+
+
 #   .--general infos-------------------------------------------------------.
 #   |                                      _   _        __                 |
 #   |       __ _  ___ _ __   ___ _ __ __ _| | (_)_ __  / _| ___  ___       |

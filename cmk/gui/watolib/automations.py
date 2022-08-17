@@ -636,35 +636,9 @@ def compatible_with_central_site(
 ) -> bool:
     """Whether or not a remote site version and edition is compatible with the central site
 
+    The version check is handled by the version utils, the edition check is handled here.
+
     >>> c = compatible_with_central_site
-
-    Nightly build of master branch is always compatible as we don't know which major version it
-    belongs to. It's also not that important to validate this case.
-
-    >>> c("2.0.0i1", "cee", "2021.12.13", "cee")
-    True
-    >>> c("2021.12.13", "cee", "2.0.0i1", "cee")
-    True
-    >>> c("2021.12.13", "cee", "2022.01.01", "cee")
-    True
-    >>> c("2022.01.01", "cee", "2021.12.13", "cee")
-    True
-
-    Nightly branch builds e.g. 2.0.0-2022.01.01 are treated as 2.0.0.
-
-    >>> c("2.0.0-2022.01.01", "cee", "2.0.0p3", "cee")
-    True
-    >>> c("2.0.0p3", "cee", "2.0.0-2022.01.01", "cee")
-    True
-
-    Same major is allowed
-
-    >>> c("2.0.0i1", "cee", "2.0.0p3", "cee")
-    True
-    >>> c("2.0.0p3", "cee", "2.0.0i1", "cee")
-    True
-    >>> c("2.0.0p3", "cme", "2.0.0p3", "cme")
-    True
 
     C*E != CME is not allowed
 
@@ -676,112 +650,24 @@ def compatible_with_central_site(
     False
     >>> c("2.0.0p3", "cme", "2.0.0p3", "cre")
     False
-
-    Prev major to new is allowed #1
-
-    >>> c("1.6.0i1", "cee", "2.0.0", "cee")
+    >>> c("2.0.0p3", "cme", "2.0.0p3", "cme")
     True
-    >>> c("1.6.0p23", "cee", "2.0.0", "cee")
-    True
-    >>> c("2.0.0p12", "cee", "2.1.0i1", "cee")
-    True
-
-    Prepre major to new not allowed
-
-    >>> c("1.6.0p1", "cee", "2.1.0p3", "cee")
-    False
-    >>> c("1.6.0p1", "cee", "2.1.0b1", "cee")
-    False
-    >>> c("1.5.0i1", "cee", "2.0.0", "cee")
-    False
-    >>> c("1.4.0", "cee", "2.0.0", "cee")
-    False
-
-    New major to old not allowed
-
-    >>> c("2.0.0", "cee", "1.6.0p1", "cee")
-    False
-    >>> c("2.1.0", "cee", "2.0.0b1", "cee")
-    False
     """
     # Pre 2.0.0p1 did not sent x-checkmk-* headers -> Not compabile
-    if (
-        not central_edition_short
-        or not central_version
-        or not remote_edition_short
-        or not remote_version
+    if not all(
+        (
+            central_edition_short,
+            central_version,
+            remote_edition_short,
+            remote_version,
+        )
     ):
         return False
 
-    if (central_edition_short == "cme" and remote_edition_short != "cme") or (
-        remote_edition_short == "cme" and central_edition_short != "cme"
-    ):
+    if (central_edition_short == "cme") is not (remote_edition_short == "cme"):
         return False
 
-    # Daily builds of the master branch (format: YYYY.MM.DD) are always treated to be compatbile
-    if cmk_version.is_daily_build_of_master(
-        central_version
-    ) or cmk_version.is_daily_build_of_master(remote_version):
-        return True
-
-    central_parts = cmk_version.base_version_parts(central_version)
-    remote_parts = cmk_version.base_version_parts(remote_version)
-
-    # Same major version is allowed
-    if central_parts == remote_parts:
-        return True
-
-    # Newer major to older is not allowed
-    if central_parts > remote_parts:
-        return False
-
-    # Now we need to detect the previous and pre-previous major version.
-    # How can we do it without explicitly listing all version numbers?
-    #
-    # What version changes did we have?
-    #
-    # - Long ago we increased only the 3rd number which is not done anymore
-    # - Until 1.6.0 we only increased the 2nd number
-    # - With 2.0.0 we once increased the 1st number
-    # - With 2.1.0 we will again only increase the 2nd number
-    # - Increasing of the 1st number may happen again
-    #
-    # Seems we need to handle these cases for:
-    #
-    # - Steps in 1st number with reset of 2nd number can happen
-    # - Steps in 2nd number can happen
-    # - 3rd number and suffixes can completely be ignored for now
-    #
-    # We could implement a simple logic like this:
-    #
-    # - 1st number +1, newer 2nd is 0 -> it is uncertain which was the
-    #                                    last release. We need an explicit
-    #                                    lookup table for this situation.
-    # - 1st number +2                      -> preprev major
-    # - Equal 1st number and 2nd number +1 -> prev major
-    # - Equal 1st number and 2nd number +2 -> preprev major
-    #
-    # Seems to be sufficient for now.
-    #
-    # Obviously, this only works as long as we keep the current version scheme.
-
-    if remote_parts[0] - central_parts[0] > 1:
-        return False  # preprev 1st number
-
-    last_major_releases = {
-        1: (1, 6, 0),
-    }
-
-    if remote_parts[0] - central_parts[0] == 1 and remote_parts[1] == 0:
-        if last_major_releases[central_parts[0]] == central_parts:
-            return True  # prev major (e.g. last 1.x.0 before 2.0.0)
-        return False  # preprev 1st number
-
-    if remote_parts[0] == central_parts[0]:
-        if remote_parts[1] - central_parts[1] > 1:
-            return False  # preprev in 2nd number
-        if remote_parts[1] - central_parts[1] == 1:
-            return True  # prev in 2nd number, ignoring 3rd
-
-    # Everything else is incompatible
-    return False
+    return cmk_version.versions_compatible(
+        cmk_version.Version(central_version),
+        cmk_version.Version(remote_version),
+    )

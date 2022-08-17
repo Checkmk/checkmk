@@ -7,7 +7,6 @@ usable in all components of Check_MK
 
 Please try to find a better place for the things you want to put here."""
 
-import inspect
 import itertools
 import os
 import sys
@@ -117,19 +116,6 @@ def cachefile_age(path: Path | str) -> float:
         path = Path(path)
 
     return time.time() - path.stat().st_mtime
-
-
-def getfuncargs(func: Callable) -> list[str]:
-    return list(inspect.signature(func).parameters)
-
-
-def make_kwargs_for(function: Callable, **kwargs: Any) -> dict[str, Any]:
-    return {
-        arg_indicator: arg  #
-        for arg_name in getfuncargs(function)
-        for arg_indicator, arg in kwargs.items()
-        if arg_name == arg_indicator
-    }
 
 
 def with_umask(mask: int) -> Callable:

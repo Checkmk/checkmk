@@ -6,7 +6,8 @@ name = "pypi"
 [dev-packages]
 
 [packages]
-mypy = "*"
+mypy = "==0.790"
+typed-ast = "==1.4.3"
 
 [requires]
 python_version = "3"

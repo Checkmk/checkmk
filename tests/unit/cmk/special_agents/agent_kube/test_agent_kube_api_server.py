@@ -33,7 +33,6 @@ def test_controller_matched_to_pod() -> None:
     }
 
     assert _match_controllers([pod], object_to_owners) == {
-        "job_uid": ["pod"],
         "cronjob_uid": ["pod"],
     }
 
@@ -73,7 +72,7 @@ def test_controller_not_added_if_not_a_controller_object_mapping() -> None:
         "job_uid": [api.OwnerReference(uid="cronjob_uid", controller=False)],
         "cronjob_uid": [],
     }
-    assert _match_controllers([pod], object_to_owners) == {"job_uid": ["pod"]}
+    assert _match_controllers([pod], object_to_owners) == {}
 
 
 def test_controller_not_in_object_to_owners() -> None:
@@ -89,7 +88,7 @@ def test_controller_not_in_object_to_owners() -> None:
         )
     )
     object_to_owners: Mapping[str, api.OwnerReferences] = {"somethingelse": []}
-    assert _match_controllers([pod], object_to_owners) == {"job_uid": ["pod"]}
+    assert _match_controllers([pod], object_to_owners) == {}
 
 
 def test_pod_does_not_have_owner_ref() -> None:
@@ -129,6 +128,6 @@ def test_multiple_owners() -> None:
         "deployment_uid": [],
     }
     assert _match_controllers([pod], object_to_owners) == {
-        "job_uid": ["pod"],
         "cronjob_uid": ["pod"],
+        "deployment_uid": ["pod"],
     }

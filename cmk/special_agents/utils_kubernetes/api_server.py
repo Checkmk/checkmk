@@ -28,6 +28,7 @@ from cmk.special_agents.utils_kubernetes.schemata import api
 from cmk.special_agents.utils_kubernetes.transform import (
     cron_job_from_client,
     daemonset_from_client,
+    dependent_object_owner_refererences_from_client,
     deployment_from_client,
     namespace_from_client,
     node_from_client,
@@ -287,7 +288,7 @@ def _match_controllers(
     >>> pod = client.V1Pod(metadata=client.V1ObjectMeta(name="test-pod", uid="pod", owner_references=[client.V1OwnerReference(api_version="v1", kind="Job", name="test-job", uid="job", controller=True)]))
     >>> object_to_owners = {"job": [api.OwnerReference(uid='cronjob', controller=True)], "cronjob": []}
     >>> _match_controllers([pod], object_to_owners)
-    {'job': ['pod'], 'cronjob': ['pod']}
+    {'cronjob': ['pod']}
 
     """
     # owner_reference approach is taken from these two links:
@@ -295,12 +296,25 @@ def _match_controllers(
     # https://github.com/kubernetes-client/python/issues/946
     # We have tested the solution in the github issue. It does not work, but was good
     # enough as a prototype.
+    def recursive_toplevel_owner_lookup(owner_references: api.OwnerReferences) -> Iterable[str]:
+        for owner in owner_references:
+            if not owner.controller:
+                continue
+            if (parent := object_to_owners.get(owner.uid)) is None:
+                continue
+            if parent == []:
+                # If an owner does not have any parent owners, then
+                # the owner is the top-level-owner
+                yield owner.uid
+                continue
+            yield from recursive_toplevel_owner_lookup(parent)
+
     controller_to_pods: Dict[str, List[api.PodUID]] = {}
     for pod in pods:
-        owner_references = pod.metadata.owner_references or []
-        while controller := next((r for r in owner_references if r.controller), None):
-            controller_to_pods.setdefault(controller.uid, []).append(api.PodUID(pod.metadata.uid))
-            owner_references = object_to_owners.get(controller.uid, [])
+        for owner_uid in recursive_toplevel_owner_lookup(
+            list(dependent_object_owner_refererences_from_client(pod))
+        ):
+            controller_to_pods.setdefault(owner_uid, []).append(api.PodUID(pod.metadata.uid))
     return controller_to_pods
 
 

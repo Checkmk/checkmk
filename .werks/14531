@@ -1,0 +1,15 @@
+Title: azure special agent: fix usagedetails section
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1660759617
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The usagedetails section was fetched using an api call that was no
+longer supported by microsoft.
+
+This werk fixes the issue and now the Cost services are working again.
+

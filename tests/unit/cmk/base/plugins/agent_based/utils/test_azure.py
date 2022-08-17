@@ -104,6 +104,7 @@ PARSED_RESOURCES = {
                 name="network_bytes_egress", aggregation="total", value=1500.0, unit="bytes"
             ),
         },
+        subscription="2fac104f-cb9c-461d-be57-037039662426",
     )
 }
 

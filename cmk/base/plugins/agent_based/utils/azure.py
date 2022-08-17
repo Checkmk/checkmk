@@ -30,6 +30,7 @@ class Resource(NamedTuple):
     properties: Mapping[str, str | int] = {}
     specific_info: Mapping[str, str | int] = {}
     metrics: Mapping[str, AzureMetric] = {}
+    subscription: str | None = None
 
 
 class MetricData(NamedTuple):
@@ -87,6 +88,7 @@ def _get_resource(resource: Mapping[str, Any], metrics=None):  # type:ignore[no-
         resource.get("properties", {}),
         resource.get("specific_info", {}),
         metrics or {},
+        resource.get("subscription"),
     )
 
 

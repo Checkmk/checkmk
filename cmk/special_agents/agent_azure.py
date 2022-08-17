@@ -239,7 +239,45 @@ class BaseApiClient(abc.ABC):
         self._ratelimit = min(self._ratelimit, new_value)
 
     def _get(self, uri_end, key=None, params=None):
-        json_data = self._get_json_from_url(self._base_url + uri_end, params=params)
+        return self._request(method="GET", uri_end=uri_end, key=key, params=params)
+
+    def _query(self, uri_end, body, params=None):
+        json_data = self._request_json_from_url(
+            "POST", self._base_url + uri_end, body=body, params=params
+        )
+
+        data = self._lookup(json_data, "properties")
+        columns = self._lookup(data, "columns")
+        rows = self._lookup(data, "rows")
+
+        next_link = data.get("nextLink")
+        while next_link is not None:
+            new_json_data = self._request_json_from_url("POST", next_link, body=body)
+            data = self._lookup(new_json_data, "properties")
+            rows += self._lookup(data, "rows")
+            next_link = data.get("nextLink")
+
+        common_metadata = {k: v for k, v in json_data.items() if k != "properties"}
+        processed_query = self._process_query(columns, rows, common_metadata)
+        return processed_query
+
+    def _process_query(self, columns, rows, common_metadata):
+        processed_query = []
+        column_names = [c["name"] for c in columns]
+        for index, row in enumerate(rows):
+            processed_row = common_metadata.copy()
+            # each entry should have a different name because the agent expects this value to be
+            # different for each resource but in case of a query the "name" is the id of the
+            # query so we replace it with a different name for each query result
+            processed_row["name"] = f"{processed_row['name']}-{index}"
+            processed_row["properties"] = dict(zip(column_names, row))
+            processed_query.append(processed_row)
+        return processed_query
+
+    def _request(self, method, uri_end, body=None, key=None, params=None):
+        json_data = self._request_json_from_url(
+            method, self._base_url + uri_end, body=body, params=params
+        )
 
         if key is None:
             return json_data
@@ -250,15 +288,15 @@ class BaseApiClient(abc.ABC):
         # See if we must fetch another page:
         next_link = json_data.get("nextLink")
         while next_link is not None:
-            json_data = self._get_json_from_url(next_link)
+            json_data = self._request_json_from_url(method, next_link, body=body)
             # we only know of lists. Let exception happen otherwise
             data += self._lookup(json_data, key)
             next_link = json_data.get("nextLink")
 
         return data
 
-    def _get_json_from_url(self, url, *, params=None):
-        response = requests.get(url, params=params, headers=self._headers)
+    def _request_json_from_url(self, method, url, *, body=None, params=None):
+        response = requests.request(method, url, json=body, params=params, headers=self._headers)
         self._update_ratelimit(response)
         json_data = response.json()
         LOGGER.debug("response: %r", json_data)
@@ -338,10 +376,31 @@ class MgmtApiClient(BaseApiClient):
         return self._get(temp % (group, name), params={"api-version": "2018-06-01"})
 
     def usagedetails(self):
-        return self._get(
-            "providers/Microsoft.Consumption/usageDetails",
-            key="value",
-            params={"api-version": "2019-01-01"},
+        yesterday = (NOW - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+        body = {
+            "type": "ActualCost",
+            "dataSet": {
+                "granularity": "None",
+                "aggregation": {
+                    "totalCost": {"name": "Cost", "function": "Sum"},
+                    "totalCostUSD": {"name": "CostUSD", "function": "Sum"},
+                },
+                "grouping": [
+                    {"type": "Dimension", "name": "ResourceType"},
+                    {"type": "Dimension", "name": "ResourceGroupName"},
+                ],
+                "include": ["Tags"],
+            },
+            "timeframe": "Custom",
+            "timePeriod": {
+                "from": f"{yesterday}T00:00:00+00:00",
+                "to": f"{yesterday}T23:59:59+00:00",
+            },
+        }
+        return self._query(
+            "/providers/Microsoft.CostManagement/query",
+            body=body,
+            params={"api-version": "2021-10-01", "$top": "100"},
         )
 
     def metrics(self, resource_id, **params):
@@ -727,26 +786,18 @@ class UsageClient(DataCache):
         LOGGER.debug("UsageClient: get live data")
 
         try:
-            # (mo) I am unable to get the filter for usage_end working :-(
-            unfiltered_usages = self._client.usagedetails()
+            usages = self._client.usagedetails()
         except ApiError as exc:
             if self.offerid_has_no_consuption_api(exc.args[0]):
                 return []
             raise
-        LOGGER.debug("unfiltered usage details: %d", len(unfiltered_usages))
-        if not unfiltered_usages:  # do not save this in the cache!
+        if not usages:  # do not save this in the cache!
             raise ApiErrorMissingData("Azure API did not return any usage details")
-
-        yesterday = (NOW - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-        usages = [u for u in unfiltered_usages if u["properties"]["usageEnd"].startswith(yesterday)]
         LOGGER.debug("yesterdays usage details: %d", len(usages))
 
-        # add group info:
+        # add group info and name
         for usage in usages:
-            attrs = get_attrs_from_uri(usage["properties"]["instanceId"])
-            if "group" in attrs:
-                usage["group"] = attrs["group"]
-
+            usage["group"] = usage["properties"]["ResourceGroupName"]
         return usages
 
     def write_sections(self, monitored_groups):
@@ -761,6 +812,7 @@ class UsageClient(DataCache):
 
         cacheinfo = (self.cache_timestamp or time.time(), self.cache_interval)
         for usage_details in usage_data:
+            usage_details["type"] = "Microsoft.Consumption/usageDetails"
             usage_resource = AzureResource(usage_details)
             piggytargets = [g for g in usage_resource.piggytargets if g in monitored_groups] + [""]
             UsageSection(usage_resource, piggytargets, cacheinfo).write()

@@ -76,6 +76,7 @@ if "%1" == "SIMULATE_FAIL" powershell Write-Host "Failed Install build" -Foregro
 call %cur_dir%\scripts\clean_artifacts.cmd 
 
 call scripts\unpack_packs.cmd
+make install_extlibs
 
 powershell Write-Host "Looking for MSVC 2022..." -Foreground White
 set msbuild="C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe"

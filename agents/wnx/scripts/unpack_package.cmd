@@ -6,7 +6,7 @@ if "%4%" == "" powershell Write-Host "Invalid out dir root" -ForegroundColor Red
 if "%5%" == "" powershell Write-Host "Invalid out dir name" -ForegroundColor Red && goto usage
 if "%6%" == "" powershell Write-Host "Folder Correction not set" -ForegroundColor Red && goto usage
 
-set unpacker_exe=7z
+set unpacker_exe=%1
 set unpacker=%unpacker_exe% x -y
 
 set src_dir_name=%2

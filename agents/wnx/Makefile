@@ -9,11 +9,20 @@
 # Usage:
 #  make msi_patch
 
-ARTE_PATH = ..\..\artefacts
 
-MSI_STATE_FILE = $(ARTE_PATH)\msi_state_data.yml
-MSI_AGENT_FILE = $(ARTE_PATH)\check_mk_agent.msi
-MSI_PATCH_FILE = ..\..\cmk\utils\msi_patch.py
+TOP_SRC_DIR 	:= ..\..
+ARTE_PATH 	= $(TOP_SRC_DIR)\artefacts
+
+MSI_STATE_FILE 	= $(ARTE_PATH)\msi_state_data.yml
+MSI_AGENT_FILE 	= $(ARTE_PATH)\check_mk_agent.msi
+MSI_PATCH_FILE 	= $(TOP_SRC_DIR)\cmk\utils\msi_patch.py
+
+EXTLIBS 	:= extlibs
+
+PACKAGE_ASIO 	:= $(TOP_SRC_DIR)\omd\packages\asio
+# ATTENTION: this value is hardcoded in the vcxproj files - fix it, please, too
+ASIO_VERSION 	:= asio-1.24.0
+
 
 
 $(MSI_STATE_FILE): $(MSI_AGENT_FILE) $(MSI_PATCH_FILE)
@@ -34,4 +43,14 @@ clean_artifacts:
 
 setversion:
 	@python patch_windows_agent_version.py src\common\wnx_version.h $(NEW_VERSION)
+
+install_extlibs: $(EXTLIBS)\$(ASIO_VERSION)
+
+$(EXTLIBS)\$(ASIO_VERSION): $(PACKAGE_ASIO)/$(ASIO_VERSION).tar.gz
+	@if "$(EXTLIBS)" == "" echo bad extlibs && exit 1
+	@if "$(ASIO_VERSION)" == "" echo bad asio_version && exit 1
+	@rmdir /s /q .\$@ 2> nul || echo "directory $@ is absent, ok!"
+	@scripts\unpack_package.cmd 7z $(PACKAGE_ASIO) $(ASIO_VERSION) $(EXTLIBS) $(ASIO_VERSION) *
+	@powershell (Get-Item $@).LastWriteTime = (Get-Date)
+
 

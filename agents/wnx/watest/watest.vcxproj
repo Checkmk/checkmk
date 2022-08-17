@@ -24,6 +24,7 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>watest</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <AsioVersion>asio-1.24.0</AsioVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -144,7 +145,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>.;$(ProjectDir)/../extlibs/googletest/googletest;$(ProjectDir)/../extlibs/googletest/googletest/include;$(ProjectDir)/../src/engine;$(ProjectDir)/../include;$(ProjectDir)/../src;$(ProjectDir)/../extlibs/asio/include;$(ProjectDir)/../src/player;$(ProjectDir)/../extlibs/yaml-cpp/include;$(ProjectDir)/../extlibs/fmt/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;$(ProjectDir)/../extlibs/googletest/googletest;$(ProjectDir)/../extlibs/googletest/googletest/include;$(ProjectDir)/../src/engine;$(ProjectDir)/../include;$(ProjectDir)/../src;$(ProjectDir)/../extlibs/$(AsioVersion)/include;$(ProjectDir)/../src/player;$(ProjectDir)/../extlibs/yaml-cpp/include;$(ProjectDir)/../extlibs/fmt/include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -184,7 +185,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>.;$(ProjectDir)/../extlibs/googletest/googletest;$(ProjectDir)/../extlibs/googletest/googletest/include;$(ProjectDir)/../src/engine;$(ProjectDir)/../include;$(ProjectDir)/../src;$(ProjectDir)/../extlibs/asio/include;$(ProjectDir)/../src/player;$(ProjectDir)/../extlibs/yaml-cpp/include;$(ProjectDir)/../extlibs/fmt/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;$(ProjectDir)/../extlibs/googletest/googletest;$(ProjectDir)/../extlibs/googletest/googletest/include;$(ProjectDir)/../src/engine;$(ProjectDir)/../include;$(ProjectDir)/../src;$(ProjectDir)/../extlibs/$(AsioVersion)/include;$(ProjectDir)/../src/player;$(ProjectDir)/../extlibs/yaml-cpp/include;$(ProjectDir)/../extlibs/fmt/include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -226,7 +227,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>.;$(ProjectDir)/../extlibs/googletest/googletest;$(ProjectDir)/../extlibs/googletest/googletest/include;$(ProjectDir)/../src/engine;$(ProjectDir)/../include;$(ProjectDir)/../src;$(ProjectDir)/../extlibs/asio/include;$(ProjectDir)/../src/player;$(ProjectDir)/../extlibs/yaml-cpp/include;$(ProjectDir)/../extlibs/fmt/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;$(ProjectDir)/../extlibs/googletest/googletest;$(ProjectDir)/../extlibs/googletest/googletest/include;$(ProjectDir)/../src/engine;$(ProjectDir)/../include;$(ProjectDir)/../src;$(ProjectDir)/../extlibs/$(AsioVersion)/include;$(ProjectDir)/../src/player;$(ProjectDir)/../extlibs/yaml-cpp/include;$(ProjectDir)/../extlibs/fmt/include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -268,7 +269,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>.;$(ProjectDir)/../extlibs/googletest/googletest;$(ProjectDir)/../extlibs/googletest/googletest/include;$(ProjectDir)/../src/engine;$(ProjectDir)/../include;$(ProjectDir)/../src;$(ProjectDir)/../extlibs/asio/include;$(ProjectDir)/../src/player;$(ProjectDir)/../extlibs/yaml-cpp/include;$(ProjectDir)/../extlibs/fmt/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;$(ProjectDir)/../extlibs/googletest/googletest;$(ProjectDir)/../extlibs/googletest/googletest/include;$(ProjectDir)/../src/engine;$(ProjectDir)/../include;$(ProjectDir)/../src;$(ProjectDir)/../extlibs/$(AsioVersion)/include;$(ProjectDir)/../src/player;$(ProjectDir)/../extlibs/yaml-cpp/include;$(ProjectDir)/../extlibs/fmt/include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>

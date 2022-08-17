@@ -16,10 +16,8 @@ set first=1
 if not exist %out% echo "no %out%" && goto install
 if not exist %out%\googletest echo "no googletest" &&  goto install
 if not exist %out%\simpleini echo "no simpleini" && goto install
-if not exist %out%\asio echo "no asio" && goto install
 if not exist %out%\fmt echo "no fmt" && goto install
 if not exist %out%\yaml-cpp echo "no yaml-cpp" && goto install
-if not exist %out%\asio\include\asio.hpp "no asio.hpp" && goto install
 echo package check success
 goto end
 :install

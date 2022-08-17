@@ -23,6 +23,7 @@
     <ProjectGuid>{343045B4-F20A-4E48-AB2F-83E1C22C9710}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>engine</RootNamespace>
+    <AsioVersion>asio-1.24.0</AsioVersion>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -132,7 +133,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR_CMK_ENGINE=uR"($(ProjectDir))";_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);../../include;..;.;../../extlibs/asio/include;../../extlibs/yaml-cpp/include;../../extlibs/fmt/include;../../extlibs/simpleini</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);../../include;..;.;../../extlibs/$(AsioVersion)/include;../../extlibs/yaml-cpp/include;../../extlibs/fmt/include;../../extlibs/simpleini</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpplatest</LanguageStandard>
@@ -167,7 +168,7 @@ cd $(ProjectDir)</Command>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR_CMK_ENGINE=uR"($(ProjectDir))";_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);../../include;..;.;../../extlibs/asio/include;../../extlibs/yaml-cpp/include;../../extlibs/fmt/include;../../extlibs/simpleini</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);../../include;..;.;../../extlibs/$(AsioVersion)/include;../../extlibs/yaml-cpp/include;../../extlibs/fmt/include;../../extlibs/simpleini</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpplatest</LanguageStandard>
@@ -203,7 +204,7 @@ cd $(ProjectDir)</Command>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR_CMK_ENGINE=uR"($(ProjectDir))";_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);../../include;..;.;../../extlibs/asio/include;../../extlibs/yaml-cpp/include;../../extlibs/fmt/include;../../extlibs/simpleini</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);../../include;..;.;../../extlibs/$(AsioVersion)/include;../../extlibs/yaml-cpp/include;../../extlibs/fmt/include;../../extlibs/simpleini</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpplatest</LanguageStandard>
@@ -239,7 +240,7 @@ cd $(ProjectDir)</Command>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR_CMK_ENGINE=uR"($(ProjectDir))";_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);../../include;..;.;../../extlibs/asio/include;../../extlibs/yaml-cpp/include;../../extlibs/fmt/include;../../extlibs/simpleini</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);../../include;..;.;../../extlibs/$(AsioVersion)/include;../../extlibs/yaml-cpp/include;../../extlibs/fmt/include;../../extlibs/simpleini</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpplatest</LanguageStandard>

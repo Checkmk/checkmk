@@ -21,24 +21,6 @@ powershell Write-Host "%out_dir_name%:" -ForegroundColor blue
 call %unpack_cmd% %unpacker_exe% %src_dir_name% %src_file_name% %out_root% %out_dir_name% *
 
 rem with internal folder in the tar.gz
-set nm=asio
-set vv=-asio-1-18-2
-set src_dir_name=%omd_path%\%nm%
-if not exist %src_dir_name% powershell Write-Host "%src_dir_name% is not found" -ForegroundColor Red && goto end
-set src_file_name=%nm%%vv%
-set out_dir_name=%nm%
-powershell Write-Host "%out_dir_name%:" -ForegroundColor blue
-call %unpack_cmd% %unpacker_exe% %src_dir_name% %src_file_name% %out_root% %out_dir_name% *
-rem specific asio, renaming asio/asio to asio
-set top_folder=%out_root%\%out_dir_name%
-if not exist %top_folder%\asio powershell Write-Host "asio\asio is absent, nothing to move" -foreground cyan && goto skip_asio_move
-powershell Write-Host "asio\asio exists moving to asio" -foreground green
-rename %top_folder% tmp
-move %out_root%\tmp\asio %top_folder%
-rmdir /q/s %out_root%\tmp
-
-:skip_asio_move
-rem with internal folder in the tar.gz
 set nm=fmt
 set vv=-master-7.0.3
 set src_dir_name=%omd_path%\%nm%

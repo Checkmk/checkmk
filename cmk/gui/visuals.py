@@ -278,7 +278,9 @@ def declare_visual_permissions(what, what_plural):
 #   '----------------------------------------------------------------------'
 
 
-def save(what: VisualType, visuals, user_id=None):
+def save(  # type:ignore[no-untyped-def]
+    what: VisualType, visuals, user_id=None
+):
     if user_id is None:
         user_id = user.id
     assert user_id is not None

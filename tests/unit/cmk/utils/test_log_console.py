@@ -87,7 +87,7 @@ def test_info_off(stream: io.StringIO, caplog: pytest.LogCaptureFixture) -> None
     assert not read(stream)
 
 
-def test_warning(stream) -> None:
+def test_warning(stream: io.StringIO) -> None:
     console.warning("  hello  ", stream=stream)
     assert read(stream) == console._format_warning("  hello  ")
 

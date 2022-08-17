@@ -1,0 +1,15 @@
+Title: Fix possible AttributeError on report rendering
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1660719847
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p28
+
+If an availability table with annotation using "Reclassify downtime of this
+period regard as scheduled downtime" was added to a report, the rendering of
+the report failed with an error like "AttributeError: 'NoneType' object has no
+attribute 'read'".

@@ -14,7 +14,7 @@ import time
 from collections.abc import Callable, Iterator, Mapping, MutableMapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Type
+from typing import Any, ParamSpec, Type, TypeVar
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostAddress
@@ -118,15 +118,19 @@ def cachefile_age(path: Path | str) -> float:
     return time.time() - path.stat().st_mtime
 
 
-def with_umask(mask: int) -> Callable:
-    def umask_wrapper(fun: Callable) -> Callable:
-        def fun_wrapper(*args: Any, **kwargs: Any) -> Any:
+P = ParamSpec("P")
+R = TypeVar("R")
+
+
+def with_umask(mask: int) -> Callable[[Callable[P, R]], Callable[P, R]]:
+    def wrap(f: Callable[P, R]) -> Callable[P, R]:
+        def wrapped_f(*args: P.args, **kwargs: P.kwargs) -> R:
             with umask(mask):
-                return fun(*args, **kwargs)
+                return f(*args, **kwargs)
 
-        return fun_wrapper
+        return wrapped_f
 
-    return umask_wrapper
+    return wrap
 
 
 @contextmanager

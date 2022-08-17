@@ -98,7 +98,7 @@ def lock_exclusive() -> None:
 
 LockDict = dict[str, int]
 
-# This will hold our path to file descriptor dicts.
+# This will hold our path to file descriptor dicts in acquired_locks: dict[str, int].
 _locks = threading.local()
 
 
@@ -114,7 +114,8 @@ def _aquired_locks() -> dict[str, int]:
     """
     if not hasattr(_locks, "acquired_locks"):
         _locks.acquired_locks = {}
-    return _locks.acquired_locks
+    acquired_locks: dict[str, int] = _locks.acquired_locks
+    return acquired_locks
 
 
 def _set_lock(name: str, fd: int) -> None:

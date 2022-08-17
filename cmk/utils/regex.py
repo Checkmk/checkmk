@@ -5,12 +5,11 @@
 """This module wraps some regex handling functions used by Check_MK"""
 
 import re
-from typing import Any, Dict, Pattern, Tuple
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
-g_compiled_regexes: Dict[Tuple[Any, int], Pattern] = {}
+g_compiled_regexes: dict[tuple[str, int], re.Pattern[str]] = {}
 
 REGEX_HOST_NAME_CHARS = r"-0-9a-zA-Z_."
 REGEX_HOST_NAME = r"^[%s]+$" % REGEX_HOST_NAME_CHARS
@@ -37,7 +36,7 @@ WATO_FOLDER_PATH_NAME_CHARS = r"-\w"
 WATO_FOLDER_PATH_NAME_REGEX = r"^[%s]*$" % WATO_FOLDER_PATH_NAME_CHARS
 
 
-def regex(pattern: str, flags: int = 0) -> Pattern[str]:
+def regex(pattern: str, flags: int = 0) -> re.Pattern[str]:
     """Compile regex or look it up in already compiled regexes.
     (compiling is a CPU consuming process. We cache compiled regexes)."""
     try:

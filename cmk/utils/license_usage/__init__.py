@@ -11,11 +11,12 @@ import logging
 import random
 import time
 from collections import deque
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import auto, Enum
 from pathlib import Path
-from typing import Any, Iterable, Iterator, Mapping, NamedTuple, Optional, Sequence, Tuple
+from typing import Any, NamedTuple
 
 import livestatus
 
@@ -164,7 +165,7 @@ def _get_services_counter() -> EntityCounter:
     )
 
 
-def _get_stats_from_livestatus(query: str) -> Tuple[int, int]:
+def _get_stats_from_livestatus(query: str) -> tuple[int, int]:
     stats = livestatus.LocalConnection().query(query)[0]
     return int(stats[0]), int(stats[1])
 
@@ -258,7 +259,7 @@ class LicenseUsageHistory:
         return len(self._samples)
 
     @property
-    def last(self) -> Optional[LicenseUsageSample]:
+    def last(self) -> LicenseUsageSample | None:
         return self._samples[0] if self._samples else None
 
     def for_report(self) -> Sequence[Mapping[str, Any]]:

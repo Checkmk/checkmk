@@ -78,7 +78,8 @@ class PickleSerializer(Generic[TObject]):
         return pickle.dumps(data)
 
     def deserialize(self, raw: bytes) -> TObject:
-        return pickle.loads(raw)  # nosec B301 # BNS:9a7128
+        obj: TObject = pickle.loads(raw)  # nosec B301 # BNS:9a7128
+        return obj
 
 
 def _check_permissions(path: Path) -> None:

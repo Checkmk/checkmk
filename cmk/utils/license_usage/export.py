@@ -7,23 +7,11 @@
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from datetime import date, datetime
 from enum import auto, Enum
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Mapping,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-)
+from typing import Any, NamedTuple
 
 from dateutil.relativedelta import relativedelta
 
@@ -156,10 +144,10 @@ class SubscriptionDetailsLimit(NamedTuple):
     limit_type: SubscriptionDetailsLimitType
     limit_value: int
 
-    def for_report(self) -> Tuple[str, float]:
+    def for_report(self) -> tuple[str, float]:
         return (self.limit_type.name, self.limit_value)
 
-    def for_config(self) -> Union[str, Tuple[str, float]]:
+    def for_config(self) -> str | tuple[str, float]:
         if self.limit_type == SubscriptionDetailsLimitType.fixed:
             return str(self.limit_value)
 
@@ -183,7 +171,7 @@ class SubscriptionDetailsLimit(NamedTuple):
 
     @classmethod
     def _parse(
-        cls, raw_limit_type: str, raw_limit_value: Union[str, int, float]
+        cls, raw_limit_type: str, raw_limit_value: str | int | float
     ) -> SubscriptionDetailsLimit:
         if raw_limit_type in ["2000000+", "unlimited"]:
             return SubscriptionDetailsLimit(
@@ -272,7 +260,7 @@ class SubscriptionDetails(NamedTuple):
         raise SubscriptionDetailsError()
 
     @staticmethod
-    def _validate_detail_values(raw_subscription_details: dict) -> None:
+    def _validate_detail_values(raw_subscription_details: dict[str, object]) -> None:
         for key in [
             "subscription_start",
             "subscription_end",
@@ -282,10 +270,14 @@ class SubscriptionDetails(NamedTuple):
                 raise SubscriptionDetailsError()
 
 
-def validate_subscription_period(attrs: Dict) -> None:
-    delta = date.fromtimestamp(attrs["subscription_end"]) - date.fromtimestamp(
-        attrs["subscription_start"]
-    )
+def validate_subscription_period(attrs: dict[str, object]) -> None:
+    start = attrs["subscription_start"]
+    if not isinstance(start, float):
+        raise TypeError()
+    end = attrs["subscription_end"]
+    if not isinstance(end, float):
+        raise TypeError()
+    delta = date.fromtimestamp(end) - date.fromtimestamp(start)
     # full year is e.g. 01.01.1970-31.12.1970 (364 days)
     if delta.days < 364:
         raise SubscriptionPeriodError()
@@ -486,8 +478,8 @@ class MonthlyServiceAverages:
     def __init__(
         self,
         username: str,
-        subscription_details: Optional[SubscriptionDetails],
-        short_samples: Sequence[Tuple[int, int]],
+        subscription_details: SubscriptionDetails | None,
+        short_samples: Sequence[tuple[int, int]],
     ) -> None:
         self._username = username
 
@@ -500,13 +492,13 @@ class MonthlyServiceAverages:
         )
 
         self._daily_services = self._calculate_daily_services(short_samples)
-        self._monthly_service_averages: List[MonthlyServiceAverage] = []
+        self._monthly_service_averages: list[MonthlyServiceAverage] = []
 
     @staticmethod
     def _calculate_daily_services(
-        short_samples: Sequence[Tuple[int, int]]
+        short_samples: Sequence[tuple[int, int]]
     ) -> Sequence[MonthlyServiceAverage]:
-        daily_services: Dict[datetime, Counter] = {}
+        daily_services: dict[datetime, Counter[str]] = {}
         for sample_time, num_services in short_samples:
             sample_date = datetime.fromtimestamp(sample_time)
             daily_services.setdefault(
@@ -523,7 +515,8 @@ class MonthlyServiceAverages:
             for sample_date, counter in sorted(daily_services.items())[-400:]
         ]
 
-    def get_aggregation(self) -> Dict:
+    # FIXME: We need a real type for the return value.
+    def get_aggregation(self) -> dict[str, Any]:
         "This method prepares the following data for javascript rendering"
         self._calculate_averages()
         return {
@@ -547,7 +540,7 @@ class MonthlyServiceAverages:
             # start or end.
             return
 
-        monthly_services: Dict[datetime, Counter] = {}
+        monthly_services: dict[datetime, Counter[str]] = {}
         month_start = datetime.fromtimestamp(self._subscription_start).replace(
             hour=0,
             minute=0,
@@ -585,17 +578,17 @@ class MonthlyServiceAverages:
                 )
             )
 
-    def _get_last_service_report(self) -> Optional[Mapping[str, float]]:
+    def _get_last_service_report(self) -> Mapping[str, float] | None:
         if not self._monthly_service_averages:
             return None
         return self._monthly_service_averages[-1].for_report()
 
-    def _get_highest_service_report(self) -> Optional[Mapping[str, float]]:
+    def _get_highest_service_report(self) -> Mapping[str, float] | None:
         if not self._monthly_service_averages:
             return None
         return max(self._monthly_service_averages, key=lambda d: d.num_services).for_report()
 
-    def _get_subscription_exceeded_first(self) -> Optional[Mapping[str, float]]:
+    def _get_subscription_exceeded_first(self) -> Mapping[str, float] | None:
         if self._subscription_limit_value is None or self._subscription_limit_value < 0:
             return None
         for service_average in self._monthly_service_averages:

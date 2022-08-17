@@ -467,7 +467,7 @@ def parse_check_mk_version(v: str) -> int:
         ".": (90000, 0),  # daily
     }
 
-    def _extract_rest(_rest):
+    def _extract_rest(_rest: str) -> tuple[str, int, str]:
         for match in VERSION_PATTERN.finditer(_rest):
             _var_type = match.group(1) or "s"
             _num = match.group(2)

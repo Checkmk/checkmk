@@ -12,22 +12,25 @@ from contextlib import closing
 from pathlib import Path
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
 import livestatus
 
+# FIXME: Somehow tools disagree about the order...
 from omdlib.certs import CertificateAuthority  # pylint: disable=wrong-import-order
 
 from cmk.utils.certs import root_cert_path, RootCA
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
 # Override top level fixture to make livestatus connects possible here
 @pytest.fixture(autouse=True)
-def prevent_livestatus_connect():
+def prevent_livestatus_connect() -> None:
     pass
 
 
 @pytest.fixture
-def ca(tmp_path):
+def ca(tmp_path: Path) -> CertificateAuthority:
     p = tmp_path / "etc" / "ssl"
     return CertificateAuthority(
         root_ca=RootCA.load_or_create(root_cert_path(p), "ca-name"), ca_path=p
@@ -35,7 +38,7 @@ def ca(tmp_path):
 
 
 @pytest.fixture()
-def sock_path(monkeypatch, tmp_path):
+def sock_path(monkeypatch: MonkeyPatch, tmp_path: Path) -> Path:
     omd_root = tmp_path
     sock_path = omd_root / "tmp" / "run" / "live"
     monkeypatch.setenv("OMD_ROOT", "%s" % omd_root)
@@ -47,12 +50,12 @@ def sock_path(monkeypatch, tmp_path):
 @pytest.mark.parametrize(
     "query_part",
     [
+        "xyzabc",
         "xyz\nabc",
-        "xyz\nabc",
-        b"xyz\nabc",
+        "xyz\n\nabc\n",
     ],
 )
-def test_lqencode(query_part) -> None:  # type:ignore[no-untyped-def]
+def test_lqencode(query_part: str) -> None:
     result = livestatus.lqencode(query_part)
     assert result == "xyzabc"
 
@@ -65,21 +68,21 @@ def test_lqencode(query_part) -> None:  # type:ignore[no-untyped-def]
         ("ä \nabc", "'ä \nabc'"),
     ],
 )
-def test_quote_dict(inp, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_quote_dict(inp: str, expected_result: str) -> None:
     result = livestatus.quote_dict(inp)
     assert isinstance(result, str)
     assert result == expected_result
 
 
-def test_livestatus_local_connection_omd_root_not_set(  # type:ignore[no-untyped-def]
-    monkeypatch, tmp_path
+def test_livestatus_local_connection_omd_root_not_set(
+    monkeypatch: MonkeyPatch, tmp_path: Path
 ) -> None:
     monkeypatch.delenv("OMD_ROOT")
     with pytest.raises(livestatus.MKLivestatusConfigError, match="OMD_ROOT is not set"):
         livestatus.LocalConnection()
 
 
-def test_livestatus_local_connection_no_socket(sock_path) -> None:  # type:ignore[no-untyped-def]
+def test_livestatus_local_connection_no_socket(sock_path: Path) -> None:
     live = livestatus.LocalConnection()
     with pytest.raises(
         livestatus.MKLivestatusSocketError, match="Cannot connect to 'unix:%s'" % sock_path
@@ -87,9 +90,7 @@ def test_livestatus_local_connection_no_socket(sock_path) -> None:  # type:ignor
         live.connect()
 
 
-def test_livestatus_local_connection_not_listening(  # type:ignore[no-untyped-def]
-    sock_path,
-) -> None:
+def test_livestatus_local_connection_not_listening(sock_path: Path) -> None:
     sock = socket.socket(socket.AF_UNIX)
     sock.bind("%s" % sock_path)
 
@@ -100,7 +101,7 @@ def test_livestatus_local_connection_not_listening(  # type:ignore[no-untyped-de
         live.connect()
 
 
-def test_livestatus_local_connection(sock_path) -> None:  # type:ignore[no-untyped-def]
+def test_livestatus_local_connection(sock_path: Path) -> None:
     sock = socket.socket(socket.AF_UNIX)
     sock.bind("%s" % sock_path)
     sock.listen(1)
@@ -156,8 +157,10 @@ def test_livestatus_ipv6_connection() -> None:
         ("xyz:bla", None),
     ],
 )
-def test_single_site_connection_socketurl(  # type:ignore[no-untyped-def]
-    socket_url, result, monkeypatch
+def test_single_site_connection_socketurl(
+    socket_url: str,
+    result: tuple[socket.AddressFamily, str | tuple[str, int]] | None,
+    monkeypatch: MonkeyPatch,
 ) -> None:
     if result is None:
         with pytest.raises(livestatus.MKLivestatusConfigError, match="Invalid livestatus"):
@@ -170,8 +173,13 @@ def test_single_site_connection_socketurl(  # type:ignore[no-untyped-def]
 @pytest.mark.parametrize("tls", [True, False])
 @pytest.mark.parametrize("verify", [True, False])
 @pytest.mark.parametrize("ca_file_path", ["ca.pem", None])
-def test_create_socket(  # type:ignore[no-untyped-def]
-    tls, verify, ca, ca_file_path, monkeypatch, tmp_path
+def test_create_socket(
+    tls: bool,
+    verify: bool,
+    ca: CertificateAuthority,
+    ca_file_path: str | None,
+    monkeypatch: MonkeyPatch,
+    tmp_path: Path,
 ) -> None:
 
     ssl_dir = tmp_path / "var/ssl"
@@ -182,14 +190,14 @@ def test_create_socket(  # type:ignore[no-untyped-def]
     monkeypatch.setenv("OMD_ROOT", str(tmp_path))
 
     if ca_file_path is not None:
-        ca_file_path = "%s/%s" % (ca._ca_path, ca_file_path)
+        ca_file_path = str(Path(ca._ca_path) / ca_file_path)
 
     live = livestatus.SingleSiteConnection(
         "unix:/tmp/xyz", tls=tls, verify=verify, ca_file_path=ca_file_path
     )
 
     if ca_file_path is None:
-        ca_file_path = tmp_path / "var/ssl/ca-certificates.crt"
+        ca_file_path = str(tmp_path / "var/ssl/ca-certificates.crt")
 
     sock = live._create_socket(socket.AF_INET)
 
@@ -212,7 +220,7 @@ def test_create_socket_not_existing_ca_file() -> None:
         live._create_socket(socket.AF_INET)
 
 
-def test_create_socket_no_cert(tmp_path) -> None:  # type:ignore[no-untyped-def]
+def test_create_socket_no_cert(tmp_path: Path) -> None:
     with Path(tmp_path, "z.pem").open("wb"):
         live = livestatus.SingleSiteConnection(
             "unix:/tmp/xyz", tls=True, verify=True, ca_file_path=str(tmp_path / "z.pem")
@@ -223,7 +231,7 @@ def test_create_socket_no_cert(tmp_path) -> None:  # type:ignore[no-untyped-def]
             live._create_socket(socket.AF_INET)
 
 
-def test_local_connection(mock_livestatus) -> None:  # type:ignore[no-untyped-def]
+def test_local_connection(mock_livestatus: MockLiveStatusConnection) -> None:
     live = mock_livestatus
     live.set_sites(["local"])
     live.add_table(

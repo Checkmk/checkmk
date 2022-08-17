@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """MK Livestatus Python API"""
+
+from __future__ import annotations
+
 import ast
 import contextlib
 import json
@@ -13,28 +16,12 @@ import socket
 import ssl
 import threading
 import time
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
 from functools import lru_cache
 from io import BytesIO
-from typing import (
-    Any,
-    AnyStr,
-    Dict,
-    Iterator,
-    List,
-    Literal,
-    NamedTuple,
-    NewType,
-    Optional,
-    Pattern,
-    Sequence,
-    Set,
-    Tuple,
-    Type,
-    TypedDict,
-    Union,
-)
+from typing import Any, Literal, NamedTuple, NewType, Type, TypedDict
 
 UserId = NewType("UserId", str)
 SiteId = NewType("SiteId", str)
@@ -42,7 +29,7 @@ SiteId = NewType("SiteId", str)
 
 class TLSParams(TypedDict, total=False):
     verify: bool
-    ca_file_path: Optional[str]
+    ca_file_path: str | None
 
 
 TLSInfo = tuple[Literal["encrypted", "plain_text"], TLSParams]
@@ -76,7 +63,7 @@ class ProxyConfigParams(TypedDict, total=False):
 
 class ProxyConfigTcp(TypedDict, total=False):
     port: int
-    only_from: list
+    only_from: list[str]
     tls: bool
 
 
@@ -90,7 +77,7 @@ class SiteConfiguration(TypedDict, total=False):
     """SiteConfiguration = NewType("SiteConfiguration", Dict[str, Any])"""
 
     alias: str
-    ca_file_path: Optional[str]
+    ca_file_path: str | None
     customer: str
     disable_wato: bool
     disabled: bool
@@ -99,31 +86,31 @@ class SiteConfiguration(TypedDict, total=False):
     insecure: bool
     multisiteurl: str
     persist: bool
-    proxy: Optional[ProxyConfig]
+    proxy: ProxyConfig | None
     replicate_ec: bool
     replicate_mkps: bool
-    replication: Optional[str]
+    replication: str | None
     secret: str
-    status_host: Optional[tuple[SiteId, bytes]]
+    status_host: tuple[SiteId, bytes] | None
     timeout: int
     url_prefix: str
     user_login: bool
-    user_sync: Optional[str]
+    user_sync: str | None
 
     # Thanks to SingleSiteConnection we need str here. The convertion can
     # probably be moved into the SingleSiteConnection
-    socket: Union[str, Union[UnixSocketInfo, NetworkSocketInfo, LocalSocketInfo]]
+    socket: str | UnixSocketInfo | NetworkSocketInfo | LocalSocketInfo
 
     # Livestatus specific
     cache: bool
     tls: TLSInfo
 
 
-SiteConfigurations = NewType("SiteConfigurations", Dict[SiteId, SiteConfiguration])
+SiteConfigurations = NewType("SiteConfigurations", dict[SiteId, SiteConfiguration])
 
 LivestatusColumn = Any
-LivestatusRow = NewType("LivestatusRow", List[LivestatusColumn])
-LivestatusResponse = NewType("LivestatusResponse", List[LivestatusRow])
+LivestatusRow = NewType("LivestatusRow", list[LivestatusColumn])
+LivestatusResponse = NewType("LivestatusResponse", list[LivestatusRow])
 
 
 # Note: If you want to use JSON as OutputFormat, then note that there are subtle differences
@@ -157,16 +144,10 @@ class LivestatusTestingError(RuntimeError):
 
 # TODO: This mechanism does not take different connection options into account
 # Keep a global array of persistant connections
-persistent_connections: Dict[str, socket.socket] = {}
+persistent_connections: dict[str, socket.socket] = {}
 
 # Regular expression for removing Cache: headers if caching is not allowed
-remove_cache_regex: Pattern = re.compile("\nCache:[^\n]*")
-
-
-def _ensure_unicode(value: Union[str, bytes]) -> str:
-    if isinstance(value, str):
-        return value
-    return value.decode("utf-8")
+remove_cache_regex = re.compile("\nCache:[^\n]*")
 
 
 class MKLivestatusException(Exception):
@@ -209,11 +190,11 @@ def no_default() -> None:
 # Escape/strip unwanted chars from (user provided) strings to
 # use them in livestatus queries. Prevent injections of livestatus
 # protocol related chars or strings
-def lqencode(s: AnyStr) -> str:
+def lqencode(s: str) -> str:
     # It is not enough to strip off \n\n, because one might submit "\n \n",
     # which is also interpreted as termination of the last query and beginning
     # of the next query.
-    return _ensure_unicode(s).replace("\n", "")
+    return s.replace("\n", "")
 
 
 def quote_dict(s: str) -> str:
@@ -234,7 +215,7 @@ def create_client_socket(
     family: socket.AddressFamily,
     tls: bool,
     verify: bool,
-    ca_file_path: Optional[str],
+    ca_file_path: str | None,
     do_handshake_on_connect: bool = True,
 ) -> socket.socket:
     """Create a client socket object for the livestatus connection"""
@@ -272,7 +253,7 @@ def create_client_socket(
 
 
 @contextlib.contextmanager
-def intercept_queries():
+def intercept_queries() -> Iterator[list[str]]:
     SingleSiteConnection.collect_queries.active = True
     SingleSiteConnection.collect_queries.queries = []
     try:
@@ -282,12 +263,10 @@ def intercept_queries():
 
 
 class Helpers:
-    def query(
-        self, query: "QueryTypes", add_headers: Union[str, bytes] = ""
-    ) -> "LivestatusResponse":
+    def query(self, query: QueryTypes, add_headers: str = "") -> LivestatusResponse:
         raise NotImplementedError()
 
-    def query_value(self, query: "QueryTypes", deflt: Any = no_default) -> LivestatusColumn:
+    def query_value(self, query: QueryTypes, deflt: Any = no_default) -> LivestatusColumn:
         """Issues a query that returns exactly one line and one columns and returns
         the response as a single value"""
         normalized_query = Query(query) if not isinstance(query, Query) else query
@@ -302,7 +281,7 @@ class Helpers:
                 )
             return deflt
 
-    def query_row(self, query: "QueryTypes") -> LivestatusRow:
+    def query_row(self, query: QueryTypes) -> LivestatusRow:
         """Issues a query that returns one line of data and returns the elements
         of that line as list"""
         normalized_query = Query(query) if not isinstance(query, Query) else query
@@ -315,7 +294,7 @@ class Helpers:
                 "No matching entries found for query: %s" % normalized_query
             )
 
-    def query_row_assoc(self, query: "QueryTypes") -> Dict[str, Any]:
+    def query_row_assoc(self, query: QueryTypes) -> dict[str, Any]:
         """Issues a query that returns one line of data and returns the elements
         of that line as a dictionary from column names to values"""
         normalized_query = Query(query) if not isinstance(query, Query) else query
@@ -323,28 +302,28 @@ class Helpers:
         r = self.query(normalized_query, "ColumnHeaders: on\n")[0:2]
         return dict(zip(r[0], r[1]))
 
-    def query_column(self, query: "QueryTypes") -> List[LivestatusColumn]:
+    def query_column(self, query: QueryTypes) -> list[LivestatusColumn]:
         """Issues a query that returns exactly one column and returns the values
         of all lines in that column as a single list"""
         normalized_query = Query(query) if not isinstance(query, Query) else query
 
         return [l[0] for l in self.query(normalized_query, "ColumnHeaders: off\n")]
 
-    def query_column_unique(self, query: "QueryTypes") -> Set[LivestatusColumn]:
+    def query_column_unique(self, query: QueryTypes) -> set[LivestatusColumn]:
         """Issues a query that returns exactly one column and returns the values
         of all lines with duplicates removed. The "natural order" of the rows is
         not preserved."""
         normalized_query = Query(query) if not isinstance(query, Query) else query
         return {line[0] for line in self.query(normalized_query, "ColumnHeaders: off\n")}
 
-    def query_table(self, query: "QueryTypes") -> LivestatusResponse:
+    def query_table(self, query: QueryTypes) -> LivestatusResponse:
         """Issues a query that may return multiple lines and columns and returns
         a list of lists"""
         normalized_query = Query(query) if not isinstance(query, Query) else query
 
         return self.query(normalized_query, "ColumnHeaders: off\n")
 
-    def query_table_assoc(self, query: "QueryTypes") -> List[Dict[str, Any]]:
+    def query_table_assoc(self, query: QueryTypes) -> list[dict[str, Any]]:
         """Issues a query that may return multiple lines and columns and returns
         a dictionary from column names to values for each line. This can be
         very ineffective for large response sets."""
@@ -357,9 +336,7 @@ class Helpers:
             result.append(dict(zip(headers, line)))
         return result
 
-    def query_summed_stats(
-        self, query: "QueryTypes", add_headers: Union[str, bytes] = ""
-    ) -> List[int]:
+    def query_summed_stats(self, query: QueryTypes, add_headers: str = "") -> list[int]:
         """Convenience function for adding up numbers from Stats queries
         Adds up results column-wise. This is useful for multisite queries."""
         normalized_query = Query(query) if not isinstance(query, Query) else query
@@ -373,7 +350,7 @@ class Helpers:
 
 
 @lru_cache
-def get_livestatus_blob_columns() -> Set[LivestatusColumn]:
+def get_livestatus_blob_columns() -> set[LivestatusColumn]:
     # These columns should get queried from the core
     return {
         "current_host_mk_inventory",
@@ -431,12 +408,12 @@ class Query:
     query. The object can be used to hand over the handling code some flags, for
     example to influence the error handling during query processing."""
 
-    default_suppressed_exceptions: Tuple[Type[Exception], ...] = (MKLivestatusTableNotFoundError,)
+    default_suppressed_exceptions: tuple[Type[Exception], ...] = (MKLivestatusTableNotFoundError,)
 
     def __init__(
         self,
-        query: Union[str, bytes, QuerySpecification],
-        suppress_exceptions: Optional[Tuple[Type[Exception], ...]] = None,
+        query: str | QuerySpecification,
+        suppress_exceptions: tuple[Type[Exception], ...] | None = None,
     ) -> None:
         self._query = query
         if suppress_exceptions is None:
@@ -447,7 +424,7 @@ class Query:
     def __str__(self) -> str:
         if isinstance(self._query, QuerySpecification):
             return str(self._query)
-        return _ensure_unicode(self._query)
+        return self._query
 
     def supports_json_format(self) -> bool:
         if not isinstance(self._query, QuerySpecification):
@@ -455,9 +432,9 @@ class Query:
         return self._query.supports_json_format()
 
 
-QueryTypes = Union[str, bytes, Query]
-OnlySites = Optional[List[SiteId]]
-DeadSite = Dict[str, Union[str, int, Exception, SiteConfiguration]]
+QueryTypes = str | Query
+OnlySites = list[SiteId] | None
+DeadSite = dict[str, str | int | Exception | SiteConfiguration]
 
 # .
 #   .--SingleSiteConn------------------------------------------------------.
@@ -472,7 +449,7 @@ DeadSite = Dict[str, Union[str, int, Exception, SiteConfiguration]]
 #   '----------------------------------------------------------------------'
 
 
-def _parse_socket_url(url: str) -> Tuple[socket.AddressFamily, Union[str, tuple]]:
+def _parse_socket_url(url: str) -> tuple[socket.AddressFamily, str | tuple[str, int]]:
     """Parses a Livestatus socket URL to address family and address
 
     Examples:
@@ -524,28 +501,28 @@ class SingleSiteConnection(Helpers):
     def __init__(
         self,
         socketurl: str,
-        site_name: Optional[SiteId] = None,
+        site_name: SiteId | None = None,
         persist: bool = False,
         allow_cache: bool = False,
         tls: bool = False,
         verify: bool = True,
-        ca_file_path: Optional[str] = None,
+        ca_file_path: str | None = None,
     ) -> None:
         """Create a new connection to a MK Livestatus socket"""
         super().__init__()
         self.prepend_site = False
         self.site_name = site_name
-        self.auth_users: Dict[str, UserId] = {}
+        self.auth_users: dict[str, UserId] = {}
         # never filled, just to have the same API as MultiSiteConnection (TODO: Cleanup)
-        self.deadsites: Dict[SiteId, DeadSite] = {}
-        self.limit: Optional[int] = None
+        self.deadsites: dict[SiteId, DeadSite] = {}
+        self.limit: int | None = None
         self.add_headers = ""
         self.auth_header = ""
         self.persist = persist
         self.allow_cache = allow_cache
         self.socketurl = socketurl
-        self.socket: Optional[socket.socket] = None
-        self.timeout: Optional[int] = None
+        self.socket: socket.socket | None = None
+        self.timeout: int | None = None
         self.successful_persistence = False
         self._output_format = LivestatusOutputFormat.PYTHON
 
@@ -573,7 +550,7 @@ class SingleSiteConnection(Helpers):
         if self.socket:
             self.socket.settimeout(float(timeout))
 
-    def _try_get_persisted_connection(self) -> Optional[socket.socket]:
+    def _try_get_persisted_connection(self) -> socket.socket | None:
         if self.persist and self.socketurl in persistent_connections:
             self.successful_persistence = True
             return persistent_connections[self.socketurl]
@@ -643,7 +620,7 @@ class SingleSiteConnection(Helpers):
     def _create_socket(
         self,
         family: socket.AddressFamily,
-        site_name: Optional[SiteId] = None,
+        site_name: SiteId | None = None,
     ) -> socket.socket:
         """Creates the Livestatus client socket
 
@@ -672,7 +649,7 @@ class SingleSiteConnection(Helpers):
             except KeyError:
                 pass
 
-    def receive_data(self, size: int, timeout: Optional[float] = None) -> bytes:
+    def receive_data(self, size: int, timeout: float | None = None) -> bytes:
         if self.socket is None:
             raise MKLivestatusSocketError("Socket to '%s' is not connected" % self.socketurl)
 
@@ -753,8 +730,8 @@ class SingleSiteConnection(Helpers):
     def receive_raw_response(
         self,
         query: str,
-        suppress_exceptions: Tuple[Type[Exception], ...],
-        timeout_at: Optional[float] = None,
+        suppress_exceptions: tuple[Type[Exception], ...],
+        timeout_at: float | None = None,
     ) -> bytes:
         try:
             # Headers are always ASCII encoded
@@ -828,16 +805,17 @@ class SingleSiteConnection(Helpers):
     def parse_raw_response(self, raw_response: bytes, query: Query) -> LivestatusResponse:
         data = raw_response.decode("utf-8")
         try:
-            if query.supports_json_format():
-                return json.loads(data)
-            return ast.literal_eval(data)
+            response: LivestatusResponse = (
+                json.loads(data) if query.supports_json_format() else ast.literal_eval(data)
+            )
+            return response
         except (ValueError, SyntaxError):
             raise MKLivestatusQueryError("Malformed raw response output")
 
     def set_prepend_site(self, p: bool) -> None:
         self.prepend_site = p
 
-    def set_only_sites(self, sites: Optional[List[SiteId]] = None) -> None:
+    def set_only_sites(self, sites: list[SiteId] | None = None) -> None:
         pass
 
     def set_output_format(self, output_format: LivestatusOutputFormat) -> None:
@@ -846,12 +824,12 @@ class SingleSiteConnection(Helpers):
     def get_output_format(self) -> LivestatusOutputFormat:
         return self._output_format
 
-    def set_limit(self, limit: Optional[int] = None) -> None:
+    def set_limit(self, limit: int | None = None) -> None:
         self.limit = limit
 
-    def query(self, query: "QueryTypes", add_headers: Union[str, bytes] = "") -> LivestatusResponse:
+    def query(self, query: QueryTypes, add_headers: str = "") -> LivestatusResponse:
         # Normalize argument types
-        normalized_add_headers = _ensure_unicode(add_headers)
+        normalized_add_headers = add_headers
         normalized_query = Query(query) if not isinstance(query, Query) else query
 
         if self.limit is not None:
@@ -866,9 +844,8 @@ class SingleSiteConnection(Helpers):
                 row.insert(0, b"")
         return response
 
-    # TODO: Cleanup all call sites to hand over str types
-    def command(self, command: AnyStr, site: Optional[SiteId] = None) -> None:
-        command_str = _ensure_unicode(command).rstrip("\n")
+    def command(self, command: str, site: SiteId | None = None) -> None:
+        command_str = command.rstrip("\n")
         if not command_str.startswith("["):
             command_str = f"[{int(time.time())}] {command_str}"
         self.send_command(f"COMMAND {command_str}")
@@ -928,22 +905,22 @@ class ConnectedSite(NamedTuple):
     connection: SingleSiteConnection
 
 
-ConnectedSites = List[ConnectedSite]
+ConnectedSites = list[ConnectedSite]
 
 
 class MultiSiteConnection(Helpers):
     def __init__(  # pylint: disable=too-many-branches
-        self, sites: SiteConfigurations, disabled_sites: Optional[SiteConfigurations] = None
+        self, sites: SiteConfigurations, disabled_sites: SiteConfigurations | None = None
     ) -> None:
         if disabled_sites is None:
             disabled_sites = SiteConfigurations({})
 
         self.sites = sites
         self.connections: ConnectedSites = []
-        self.deadsites: Dict[SiteId, DeadSite] = {}
+        self.deadsites: dict[SiteId, DeadSite] = {}
         self.prepend_site = False
         self.only_sites: OnlySites = None
-        self.limit: Optional[int] = None
+        self.limit: int | None = None
         self.parallelize = True
 
         # Status host: A status host helps to prevent trying to connect
@@ -979,7 +956,7 @@ class MultiSiteConnection(Helpers):
         # hosts at the same time.
 
         # dict from site to list of status_hosts
-        status_hosts: Dict[SiteId, List[bytes]] = {}
+        status_hosts: dict[SiteId, list[bytes]] = {}
         sites_dict = sites.copy()
         sites_dict.update(extra_status_sites)
         for sitename, site in sites_dict.items():
@@ -1111,7 +1088,7 @@ class MultiSiteConnection(Helpers):
     def set_prepend_site(self, p: bool) -> None:
         self.prepend_site = p
 
-    def set_only_sites(self, sites: Optional[OnlySites] = None) -> None:
+    def set_only_sites(self, sites: OnlySites | None = None) -> None:
         """Make future queries only contact the given sites.
 
         Provide a list of site IDs to not contact all configured sites, but only the listed
@@ -1119,14 +1096,14 @@ class MultiSiteConnection(Helpers):
         """
         self.only_sites = sites
 
-    def set_limit(self, limit: Optional[int] = None) -> None:
+    def set_limit(self, limit: int | None = None) -> None:
         """Impose Limit on number of returned datasets (distributed among sites)"""
         self.limit = limit
 
-    def dead_sites(self) -> Dict[SiteId, DeadSite]:
+    def dead_sites(self) -> dict[SiteId, DeadSite]:
         return self.deadsites
 
-    def alive_sites(self) -> List[SiteId]:
+    def alive_sites(self) -> list[SiteId]:
         return [s.id for s in self.connections]
 
     def successfully_persisted(self) -> bool:
@@ -1155,9 +1132,9 @@ class MultiSiteConnection(Helpers):
         for connected_site in self.connections:
             connected_site.connection.set_auth_domain(domain)
 
-    def query(self, query: "QueryTypes", add_headers: Union[str, bytes] = "") -> LivestatusResponse:
+    def query(self, query: QueryTypes, add_headers: str = "") -> LivestatusResponse:
         # Normalize argument types
-        normalized_add_headers = _ensure_unicode(add_headers)
+        normalized_add_headers = add_headers
         normalized_query = Query(query) if not isinstance(query, Query) else query
 
         with _livestatus_output_format_switcher(normalized_query, self):
@@ -1220,7 +1197,7 @@ class MultiSiteConnection(Helpers):
             limit_header = ""
 
         # First send all queries
-        retrieve_responses: List[Tuple[str, ConnectedSite]] = []
+        retrieve_responses: list[tuple[str, ConnectedSite]] = []
         for connected_site in connect_to_sites:
             try:
                 str_query = connected_site.connection.build_query(query, add_headers + limit_header)
@@ -1235,7 +1212,7 @@ class MultiSiteConnection(Helpers):
                 }
 
         # Then retrieve all raw responses. We will be as slow as the slowest of all connections.
-        site_responses: List[Tuple[ConnectedSite, bytes]] = []
+        site_responses: list[tuple[ConnectedSite, bytes]] = []
         for str_query, connected_site in retrieve_responses:
             try:
                 site_responses.append(
@@ -1284,9 +1261,7 @@ class MultiSiteConnection(Helpers):
         self.connections = stillalive
         return result
 
-    # TODO: Is this SiteId(...) the way to go? Without this mypy complains about incompatible bytes
-    # vs. Optional[SiteId]
-    def command(self, command: AnyStr, sitename: Optional[SiteId] = SiteId("local")) -> None:
+    def command(self, command: str, sitename: SiteId | None = SiteId("local")) -> None:
         if sitename in self.deadsites:
             raise MKLivestatusSocketError(
                 "Connection to site %s is dead: %s"
@@ -1316,7 +1291,7 @@ class MultiSiteConnection(Helpers):
 
 @contextlib.contextmanager
 def _livestatus_output_format_switcher(
-    query: Query, connection: Union[MultiSiteConnection, SingleSiteConnection]
+    query: Query, connection: MultiSiteConnection | SingleSiteConnection
 ) -> Iterator[None]:
     previous_format = connection.get_output_format()
     try:
@@ -1352,7 +1327,7 @@ class LocalConnection(SingleSiteConnection):
         super().__init__("unix:" + omd_root + "/tmp/run/live", SiteId("local"), *args, **kwargs)
 
 
-def _combine_query(query: str, headers: Union[str, List[str]]):  # type:ignore[no-untyped-def]
+def _combine_query(query: str, headers: str | list[str]) -> str:
     """Combine a query with additional headers
 
     Examples:

@@ -111,22 +111,20 @@ public:
         std::launch mode,             // type of execution
         const std::string &cmd_line,  // command line, first is Ip address
         AnswerId answer_id,           // expected id
-        ServiceProcessor *processor   // hosting object
-    ) {
+        ServiceProcessor *processor,  // owner
+        const std ::string &port_name) {
         engine_.registerOwner(processor);
         engine_.loadConfig();
 
         section_expected_timeout_ = engine_.timeout();
         return std::async(
             mode,
-            [this](const std::string &command_line,  //
-                   AnswerId answer,                  //
-                   const ServiceProcessor *Proc) {
+            [this, port_name](const std::string &command_line,
+                              AnswerId answer) {
                 engine_.updateSectionStatus();  // actual data gathering is
                                                 // here for plugins and local
 
                 engine_.registerCommandLine(command_line);
-                auto port_name = Proc->getInternalPort();
                 auto id = AnswerIdToNumber(answer);
                 XLOG::d.t(
                     "Provider '{}' is about to be started, id '{}' port [{}]",
@@ -136,10 +134,8 @@ public:
 
                 return true;
             },
-            cmd_line,   //
-            answer_id,  // param 1
-            processor   // param 2
-
+            cmd_line,  //
+            answer_id  // param 1
         );
     }
 
@@ -381,8 +377,8 @@ private:
             return false;
         }
 
-        vf_.emplace_back(
-            section_provider.kick(std::launch::async, cmdline, stamp, this));
+        vf_.emplace_back(section_provider.kick(std::launch::async, cmdline,
+                                               stamp, this, getInternalPort()));
         auto expected_timeout = section_provider.expectedTimeout();
         updateMaxWaitTime(expected_timeout);
 

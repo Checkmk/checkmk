@@ -47,7 +47,7 @@ def parse_zpool(string_table: StringTable) -> Section | None:
         return None
     raw_header, *content = string_table
 
-    header = [_canonize_header_entry(item.lower()) for item in raw_header[0]]
+    header = [_canonize_header_entry(item.lower()) for item in raw_header]
     return {
         line[0]: (line[0], _mb(entry["size"]), _mb(entry["free"]), 0)
         for line in content

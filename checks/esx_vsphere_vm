@@ -23,7 +23,8 @@ def check_esx_vsphere_vm_mem(_no_item, params, section):
     # If the machine is powered of, we do not get data
     powerstate = section["runtime.powerState"][0]
     if powerstate != "poweredOn":
-        raise MKCounterWrapped("VM is %s, skipping this check" % powerstate)
+        yield 0, "VM is %s, skipping this check" % powerstate
+        return
 
     try:
         #consumed host memory

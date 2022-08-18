@@ -65,7 +65,9 @@ build_binutils() {
     tar xzf binutils-${BINUTILS_VERSION}.tar.gz
     mkdir binutils-${BINUTILS_VERSION}-build
     cd binutils-${BINUTILS_VERSION}-build
+    # FIXME: We disable gprofng for now because it needs bison, which is not in the images yet.
     ../binutils-${BINUTILS_VERSION}/configure \
+        --disable-gprofng \
         --prefix="${PREFIX}"
     make -j4
     make install

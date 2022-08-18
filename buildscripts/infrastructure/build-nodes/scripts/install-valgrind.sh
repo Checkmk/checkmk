@@ -17,7 +17,7 @@ ARCHIVE_NAME=${DIR_NAME}.tar.bz2
 PREFIX="${TARGET_DIR}/${DIR_NAME}"
 
 # Increase this to enforce a recreation of the build cache
-BUILD_ID=0
+BUILD_ID=1
 
 build_package() {
     mkdir -p "$TARGET_DIR/src"

@@ -32,7 +32,10 @@ PREFIX=${TARGET_DIR}/${DIR_NAME}
 BUILD_DIR=/opt/src
 
 # Increase this to enforce a recreation of the build cache
-BUILD_ID=1
+# NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
+# Only the GCC_VERSION is part of the cache key, so be sure to bump this, too,
+# e.g. when changing the binutils or gdb version!
+BUILD_ID=2
 
 download_sources() {
     # Get the sources from nexus or upstream

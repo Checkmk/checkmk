@@ -14,50 +14,60 @@ from cmk.base.check_legacy_includes.storeonce import *  # pylint: disable=wildca
 
 factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
+_APP_STATE_MAP = {"Reachable": 0}
+
+# Currently used metrics
+_PROPERTIES_FEDERATION = (
+    "hostname",
+    "address",
+    "productName",
+    "serialNumber",
+    "localhost",
+    "applianceState",
+    "stateUpdatedDate",
+    "federationApiVersion",
+    "applianceStateString",
+    "sinceStateUpdatedSeconds",
+)
+
+_PROPERTIES_DASHBOARD = (
+    "softwareUpdateRecommended",
+    "softwareVersion",
+    "localFreeBytes",
+    "localCapacityBytes",
+    "cloudFreeBytes",
+    "cloudCapacityBytes",
+    "metricsCpuTotal",
+    "metricsMemoryUsedPercent",
+    "metricsDataDiskUtilisationPercent",
+    "applianceStatusString",
+    "dataServicesStatusString",
+    "licenseStatus",
+    "licenseStatusString",
+    "userStorageStatusString",
+    "hardwareStatusString",
+    "catStoresSummary",
+    "cloudBankStoresSummary",
+    "nasSharesSummary",
+    "vtlLibrariesSummary",
+    "nasRepMappingSummary",
+    "vtlRepMappingSummary",
+    "dedupeRatio",
+)
+
+
+_LICENSE_MAP = {
+    "OK": 0,
+    "WARNING": 1,
+    "CRITICAL": 2,
+    "NOT_HARDWARE": 3,
+    "NOT_APPLICABLE": 3,
+}
+
 
 def parse_storeonce4x_appliances(info):
 
     parsed = {}
-    app_state_map = {"Reachable": 0}
-
-    # Currently used metrics
-    properties_federation = (
-        "hostname",
-        "address",
-        "productName",
-        "serialNumber",
-        "localhost",
-        "applianceState",
-        "stateUpdatedDate",
-        "federationApiVersion",
-        "applianceStateString",
-        "sinceStateUpdatedSeconds",
-    )
-
-    properties_dashboard = (
-        "softwareUpdateRecommended",
-        "softwareVersion",
-        "localFreeBytes",
-        "localCapacityBytes",
-        "cloudFreeBytes",
-        "cloudCapacityBytes",
-        "metricsCpuTotal",
-        "metricsMemoryUsedPercent",
-        "metricsDataDiskUtilisationPercent",
-        "applianceStatusString",
-        "dataServicesStatusString",
-        "licenseStatus",
-        "licenseStatusString",
-        "userStorageStatusString",
-        "hardwareStatusString",
-        "catStoresSummary",
-        "cloudBankStoresSummary",
-        "nasSharesSummary",
-        "vtlLibrariesSummary",
-        "nasRepMappingSummary",
-        "vtlRepMappingSummary",
-        "dedupeRatio",
-    )
 
     federation_json = json.loads(info[0][0])
     dashboard_json_list = [json.loads(json_obj[0]) for json_obj in info[1:]]
@@ -67,16 +77,16 @@ def parse_storeonce4x_appliances(info):
         hostname = member["hostname"]
 
         parsed[hostname] = {}
-        for mem_property in properties_federation:
+        for mem_property in _PROPERTIES_FEDERATION:
             parsed[hostname][mem_property] = member[mem_property]
 
-        parsed[hostname]["cmk_state"] = app_state_map.get(member["applianceStateString"], 3)
+        parsed[hostname]["cmk_state"] = _APP_STATE_MAP.get(member["applianceStateString"], 3)
 
     # For every member uuid, we have more metrics in the dashboard
     for hostname in parsed:
         for dashboard_elem in dashboard_json_list:
             if hostname == dashboard_elem["hostname"]:
-                for dashboard_property in properties_dashboard:
+                for dashboard_property in _PROPERTIES_DASHBOARD:
                     parsed[hostname][dashboard_property] = dashboard_elem[dashboard_property]
 
         # Calculate missing metrics (which where previously available in REST API 3x)
@@ -132,8 +142,7 @@ check_info["storeonce4x_appliances.storage"] = {
 @get_parsed_item_data
 def check_storeonce4x_appliances_license(item, params, data):
 
-    license_map = {"OK": 0, "WARNING": 1, "CRITICAL": 2, "NOT_HARDWARE": 3, "NOT_APPLICABLE": 3}
-    yield license_map.get(data["licenseStatus"], 3), "Status: %s" % data["licenseStatusString"]
+    yield _LICENSE_MAP.get(data["licenseStatus"], 3), "Status: %s" % data["licenseStatusString"]
 
 
 check_info["storeonce4x_appliances.license"] = {

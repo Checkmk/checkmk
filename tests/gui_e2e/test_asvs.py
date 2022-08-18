@@ -49,6 +49,21 @@ def test_v2_1_5(logged_in_page: PPage) -> None:
     page.main_frame.check_page_title("Main dashboard")
 
 
+def test_password_truncation_error(logged_in_page: PPage) -> None:
+    """Bcrypt truncates at 72 chars, check for the error if the password is longer"""
+
+    page = logged_in_page
+    page.main_menu.user.click()
+    page.main_menu.locator("text=Change password").click()
+
+    page.main_frame.locator("input[name='cur_password']").fill("cmk")
+    page.main_frame.locator("input[name='password']").fill("A" * 80)
+    page.main_frame.locator("#suggestions >> text=Save").click()
+    page.main_frame.check_error(
+        "Passwords over 72 characters would be truncated and are therefore not allowed!"
+    )
+
+
 def test_cookie_flags(context: BrowserContext, test_site: Site) -> None:
     """tests for 3.4.X"""
 

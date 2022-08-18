@@ -1218,7 +1218,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "couchbase_nodes_stats",
         "couchbase_nodes_stats.cpu_util",
         "couchbase_nodes_stats.mem",
-        "couchbase_nodes_uptime",
         "cpsecure_sessions",
         "cups_queues",
         "datapower_cpu",

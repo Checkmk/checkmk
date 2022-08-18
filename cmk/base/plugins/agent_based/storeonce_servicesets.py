@@ -3,14 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Iterable, Mapping
+from typing import Any, Mapping
 
-from cmk.base.check_legacy_includes import storeonce
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
-
-DiscoveryResult = Iterable[tuple]
-CheckResult = Iterable[tuple]
+from .agent_based_api.v1 import register, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils import storeonce
+from .utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 # example output
 #
@@ -66,24 +64,32 @@ def parse_storeonce_servicesets(string_table: StringTable) -> storeonce.SectionS
     }
 
 
+register.agent_section(
+    name="storeonce_servicesets",
+    parse_function=parse_storeonce_servicesets,
+)
+
+
 def discover_storeonce_servicesets(section: storeonce.SectionServiceSets) -> DiscoveryResult:
-    yield from ((item, {}) for item in section)
+    yield from (Service(item=item) for item in section)
 
 
-def check_storeonce_servicesets(
-    item: str, params: Mapping[str, Any], section: storeonce.SectionServiceSets
-) -> CheckResult:
+def check_storeonce_servicesets(item: str, section: storeonce.SectionServiceSets) -> CheckResult:
     if (values := section.get(item)) is None:
         return
 
     if "ServiceSet Alias" in values:
-        yield 0, "Alias: %s" % values["ServiceSet Alias"]
+        yield Result(state=State.OK, summary="Alias: %s" % values["ServiceSet Alias"])
     elif "ServiceSet Name" in values:
-        yield 0, "Name: %s" % values["ServiceSet Name"]
+        yield Result(state=State.OK, summary="Name: %s" % values["ServiceSet Name"])
 
-    yield 0, "Overall Status: %s, Overall Health: %s" % (
-        values["Overall Status"],
-        values["Overall Health"],
+    yield Result(
+        state=State.OK,
+        summary="Overall Status: %s, Overall Health: %s"
+        % (
+            values["Overall Status"],
+            values["Overall Health"],
+        ),
     )
 
     for component in [
@@ -91,18 +97,18 @@ def check_storeonce_servicesets(
         "Replication Health",
         "Housekeeping Health",
     ]:
-        state = storeonce.STATE_MAP[values["%s Level" % component]]
-        state_readable = "%s: %s" % (component, values[component])
-        if state > 0:
-            yield state, state_readable
+        yield Result(
+            state=storeonce.STATE_MAP[values["%s Level" % component]],
+            notice="%s: %s" % (component, values[component]),
+        )
 
 
-check_info["storeonce_servicesets"] = {
-    "parse_function": parse_storeonce_servicesets,
-    "inventory_function": discover_storeonce_servicesets,
-    "check_function": check_storeonce_servicesets,
-    "service_description": "ServiceSet %s Status",
-}
+register.check_plugin(
+    name="storeonce_servicesets",
+    service_name="ServiceSet %s Status",
+    discovery_function=discover_storeonce_servicesets,
+    check_function=check_storeonce_servicesets,
+)
 
 
 def check_storeonce_servicesets_capacity(
@@ -113,13 +119,12 @@ def check_storeonce_servicesets_capacity(
     yield from storeonce.check_storeonce_space(item, params, values)
 
 
-check_info["storeonce_servicesets.capacity"] = {
-    "inventory_function": discover_storeonce_servicesets,
-    "check_function": check_storeonce_servicesets_capacity,
-    "service_description": "ServiceSet %s Capacity",
-    "has_perfdata": True,
-    "group": "filesystem",
-    "default_levels_variable": "filesystem_default_levels",
-}
-
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
+register.check_plugin(
+    name="storeonce_servicesets_capacity",
+    service_name="ServiceSet %s Capacity",
+    sections=["storeonce_servicesets"],
+    discovery_function=discover_storeonce_servicesets,
+    check_function=check_storeonce_servicesets_capacity,
+    check_ruleset_name="filesystem",
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
+)

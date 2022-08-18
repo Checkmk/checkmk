@@ -4,23 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Any, Iterable, Mapping
+from typing import Any, Mapping
 
-from cmk.base.check_legacy_includes import storeonce
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
-
-DiscoveryResult = Iterable[tuple[str, Mapping]]
-
-CheckResult = Iterable[tuple]
-
+from .agent_based_api.v1 import register, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils import storeonce
+from .utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 # If have no idea what exactly this is...
 Appliance = Mapping[str, Any]
 
 Section = Mapping[str, Appliance]
 
-_APP_STATE_MAP = {"Reachable": 0}
+_APP_STATE_MAP = {"Reachable": State.OK}
 
 # Currently used metrics
 _PROPERTIES_FEDERATION = (
@@ -63,11 +59,11 @@ _PROPERTIES_DASHBOARD = (
 
 
 _LICENSE_MAP = {
-    "OK": 0,
-    "WARNING": 1,
-    "CRITICAL": 2,
-    "NOT_HARDWARE": 3,
-    "NOT_APPLICABLE": 3,
+    "OK": State.OK,
+    "WARNING": State.WARN,
+    "CRITICAL": State.CRIT,
+    "NOT_HARDWARE": State.UNKNOWN,
+    "NOT_APPLICABLE": State.UNKNOWN,
 }
 
 
@@ -86,7 +82,9 @@ def parse_storeonce4x_appliances(string_table: StringTable) -> Section:
         for mem_property in _PROPERTIES_FEDERATION:
             parsed[hostname][mem_property] = member[mem_property]
 
-        parsed[hostname]["cmk_state"] = _APP_STATE_MAP.get(member["applianceStateString"], 3)
+        parsed[hostname]["cmk_state"] = _APP_STATE_MAP.get(
+            member["applianceStateString"], State.UNKNOWN
+        )
 
     # For every member uuid, we have more metrics in the dashboard
     for hostname in parsed:
@@ -104,31 +102,37 @@ def parse_storeonce4x_appliances(string_table: StringTable) -> Section:
     return parsed
 
 
+register.agent_section(
+    name="storeonce4x_appliances",
+    parse_function=parse_storeonce4x_appliances,
+)
+
+
 def discover_storeonce4x_appliances(section: Section) -> DiscoveryResult:
-    yield from ((host, {}) for host in section)
+    yield from (Service(item=host) for host in section)
 
 
-def check_storeonce4x_appliances(
-    item: str, params: Mapping[str, Any], section: Section
-) -> CheckResult:
+def check_storeonce4x_appliances(item: str, section: Section) -> CheckResult:
     if (data := section.get(item)) is None:
         return
-    yield data[
-        "cmk_state"
-    ], "State: %s, Serial Number: %s, Software version: %s, Product Name: %s" % (
-        data["applianceStateString"],
-        data["serialNumber"],
-        data["softwareVersion"],
-        data["productName"],
+    yield Result(
+        state=data["cmk_state"],
+        summary="State: %s, Serial Number: %s, Software version: %s, Product Name: %s"
+        % (
+            data["applianceStateString"],
+            data["serialNumber"],
+            data["softwareVersion"],
+            data["productName"],
+        ),
     )
 
 
-check_info["storeonce4x_appliances"] = {
-    "parse_function": parse_storeonce4x_appliances,
-    "inventory_function": discover_storeonce4x_appliances,
-    "check_function": check_storeonce4x_appliances,
-    "service_description": "Appliance %s Status",
-}
+register.check_plugin(
+    name="storeonce4x_appliances",
+    service_name="Appliance %s Status",
+    discovery_function=discover_storeonce4x_appliances,
+    check_function=check_storeonce4x_appliances,
+)
 
 
 def check_storeonce4x_appliances_storage(
@@ -139,37 +143,37 @@ def check_storeonce4x_appliances_storage(
     yield from storeonce.check_storeonce_space(item, params, data)
 
 
-check_info["storeonce4x_appliances.storage"] = {
-    "inventory_function": discover_storeonce4x_appliances,
-    "check_function": check_storeonce4x_appliances_storage,
-    "service_description": "Appliance %s Storage",
-    "group": "filesystem",
-    "has_perfdata": True,
-    "default_levels_variable": "filesystem_default_levels",
-}
+register.check_plugin(
+    name="storeonce4x_appliances_storage",
+    service_name="Appliance %s Storage",
+    sections=["storeonce4x_appliances"],
+    discovery_function=discover_storeonce4x_appliances,
+    check_function=check_storeonce4x_appliances_storage,
+    check_ruleset_name="filesystem",
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
+)
 
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
-
-def check_storeonce4x_appliances_license(
-    item: str, params: Mapping[str, Any], section: Section
-) -> CheckResult:
+def check_storeonce4x_appliances_license(item: str, section: Section) -> CheckResult:
     if (data := section.get(item)) is None:
         return
 
-    yield _LICENSE_MAP.get(data["licenseStatus"], 3), "Status: %s" % data["licenseStatusString"]
+    yield Result(
+        state=_LICENSE_MAP.get(data["licenseStatus"], State.UNKNOWN),
+        summary="Status: %s" % data["licenseStatusString"],
+    )
 
 
-check_info["storeonce4x_appliances.license"] = {
-    "inventory_function": discover_storeonce4x_appliances,
-    "check_function": check_storeonce4x_appliances_license,
-    "service_description": "Appliance %s License",
-}
+register.check_plugin(
+    name="storeonce4x_appliances_license",
+    service_name="Appliance %s License",
+    sections=["storeonce4x_appliances"],
+    discovery_function=discover_storeonce4x_appliances,
+    check_function=check_storeonce4x_appliances_license,
+)
 
 
-def check_storeonce4x_appliances_summaries(
-    item: str, param: Mapping[str, Any], section: Section
-) -> CheckResult:
+def check_storeonce4x_appliances_summaries(item: str, section: Section) -> CheckResult:
     if (data := section.get(item)) is None:
         return
 
@@ -181,17 +185,26 @@ def check_storeonce4x_appliances_summaries(
         ("nasRepMappingSummary", "NAS Replication Mapping"),
         ("vtlRepMappingSummary", "VTL Replication Mapping"),
     ):
-        for descr, state in (("Ok", 0), ("Warning", 1), ("Critical", 2), ("Unknown", 3)):
+        for descr, state in (
+            ("Ok", State.OK),
+            ("Warning", State.WARN),
+            ("Critical", State.CRIT),
+            ("Unknown", State.UNKNOWN),
+        ):
             numbers = data[summary]["statusSummary"]["num%s" % descr]
             total = data[summary]["statusSummary"]["total"]
             if numbers == 0:
                 continue
-            yield state, "%s %s (%s of %s)" % (summary_descr, descr, str(numbers), str(total))
+            yield Result(
+                state=state,
+                summary="%s %s (%s of %s)" % (summary_descr, descr, numbers, total),
+            )
 
 
-check_info["storeonce4x_appliances.summaries"] = {
-    "parse_function": parse_storeonce4x_appliances,
-    "inventory_function": discover_storeonce4x_appliances,
-    "check_function": check_storeonce4x_appliances_summaries,
-    "service_description": "Appliance %s Summaries",
-}
+register.check_plugin(
+    name="storeonce4x_appliances_summaries",
+    service_name="Appliance %s Summaries",
+    sections=["storeonce4x_appliances"],
+    discovery_function=discover_storeonce4x_appliances,
+    check_function=check_storeonce4x_appliances_summaries,
+)

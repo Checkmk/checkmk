@@ -5,8 +5,9 @@
 
 from typing import Mapping
 
-from cmk.base.check_legacy_includes import storeonce
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils import storeonce
 
 Section = Mapping[str, Mapping[str, str]]
 
@@ -68,33 +69,42 @@ def parse_storeonce_stores(string_table: StringTable) -> Section:
     }
 
 
-def discover_storeonce_stores(section):
-    yield from ((item, {}) for item in section)
+register.agent_section(
+    name="storeonce_stores",
+    parse_function=parse_storeonce_stores,
+)
 
 
-def check_storeonce_stores(item: str, _no_params, section: Section):
+def discover_storeonce_stores(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
+
+
+def check_storeonce_stores(item: str, section: Section) -> CheckResult:
     if (values := section.get(item)) is None:
         return
 
-    state = storeonce.STATE_MAP[values["Health Level"]]
-    yield state, "Status: %s" % values["Status"]
+    yield Result(
+        state=storeonce.STATE_MAP[values["Health Level"]],
+        summary="Status: %s" % values["Status"],
+    )
 
-    size = float(values["diskBytes"])
-    yield 0, "Size: %s" % get_bytes_human_readable(size), [("data_size", size)]
+    yield from check_levels(
+        float(values["diskBytes"]), metric_name="data_size", label="Size", render_func=render.bytes
+    )
 
     if "Dedupe Ratio" in values:
-        dedup = float(values["Dedupe Ratio"])
-        yield 0, "Dedup ratio: %.2f" % dedup, [("dedup_rate", dedup)]
+        yield from check_levels(
+            float(values["Dedupe Ratio"]), metric_name="dedup_rate", label="Dedup ratio"
+        )
 
     description = values.get("Description")
     if description:
-        yield 0, "Description: %s" % description
+        yield Result(state=State.OK, summary="Description: %s" % description)
 
 
-check_info["storeonce_stores"] = {
-    "parse_function": parse_storeonce_stores,
-    "inventory_function": discover_storeonce_stores,
-    "check_function": check_storeonce_stores,
-    "service_description": "%s",
-    "has_perfdata": True,
-}
+register.check_plugin(
+    name="storeonce_stores",
+    service_name="%s",
+    discovery_function=discover_storeonce_stores,
+    check_function=check_storeonce_stores,
+)

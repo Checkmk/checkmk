@@ -3,52 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[no-untyped-def]
-
-from typing import Any
 
 import pytest
 
 from tests.testlib import on_time
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
+from cmk.base.plugins.agent_based.storeonce_servicesets import (
+    check_storeonce_servicesets,
+    check_storeonce_servicesets_capacity,
+    discover_storeonce_servicesets,
+    FILESYSTEM_DEFAULT_PARAMS,
+    parse_storeonce_servicesets,
+)
+from cmk.base.plugins.agent_based.utils import storeonce
 
-Section = Any  # just for now
-
-
-# drop after migration
-@pytest.fixture(name="parse_storeonce_servicesets", scope="module")
-def _get_parse_func(fix_register):
-    return fix_register.agent_sections[SectionName("storeonce_servicesets")].parse_function
-
-
-# drop after migration
-@pytest.fixture(name="plugin", scope="module")
-def _get_plugin(fix_register):
-    return fix_register.check_plugins[CheckPluginName("storeonce_servicesets")]
-
-
-# drop after migration
-@pytest.fixture(name="discover_storeonce_servicesets", scope="module")
-def _get_diso_func(plugin):
-    return lambda s: plugin.discovery_function(section=s)
-
-
-# drop after migration
-@pytest.fixture(name="check_storeonce_servicesets", scope="module")
-def _get_check_func(plugin):
-    return lambda i, s: plugin.check_function(item=i, params={}, section=s)
-
-
-# drop after migration
-@pytest.fixture(name="check_storeonce_servicesets_capacity", scope="module")
-def _get_check_func_c(fix_register):
-    plugin = fix_register.check_plugins[CheckPluginName("storeonce_servicesets_capacity")]
-    return lambda i, p, s: plugin.check_function(item=i, params=p, section=s)
-
+Section = storeonce.SectionServiceSets
 
 STRING_TABLE_1 = [
     ["[1]"],
@@ -82,15 +52,15 @@ STRING_TABLE_1 = [
 
 
 @pytest.fixture(name="section_1", scope="module")
-def _get_section_1(parse_storeonce_servicesets) -> Section:
+def _get_section_1() -> Section:
     return parse_storeonce_servicesets(STRING_TABLE_1)
 
 
-def test_discovery_1(discover_storeonce_servicesets, section_1: Section) -> None:
+def test_discovery_1(section_1: Section) -> None:
     assert list(discover_storeonce_servicesets(section_1)) == [Service(item="1")]
 
 
-def test_check_1(check_storeonce_servicesets, section_1: Section) -> None:
+def test_check_1(section_1: Section) -> None:
     assert list(check_storeonce_servicesets("1", section_1)) == [
         Result(
             state=State.OK,
@@ -100,18 +70,22 @@ def test_check_1(check_storeonce_servicesets, section_1: Section) -> None:
             state=State.OK,
             summary="Overall Status: Running, Overall Health: OK",
         ),
+        Result(state=State.OK, notice="ServiceSet Health: OK"),
+        Result(state=State.OK, notice="Replication Health: OK"),
+        Result(state=State.OK, notice="Housekeeping Health: OK"),
     ]
 
 
-def test_check_1_capacity(check_storeonce_servicesets_capacity, section_1: Section) -> None:
+def test_check_1_capacity(monkeypatch: pytest.MonkeyPatch, section_1: Section) -> None:
+    monkeypatch.setattr(
+        storeonce,
+        "get_value_store",
+        lambda: {"1.delta": (1577972460.0 - 60, 21108135.3046875 - 300)},
+    )
     with on_time("2020-01-02 13:41:00", "UTC"):
         assert list(
-            check_storeonce_servicesets_capacity("1", FILESYSTEM_DEFAULT_LEVELS, section_1)
+            check_storeonce_servicesets_capacity("1", FILESYSTEM_DEFAULT_PARAMS, section_1)
         ) == [
-            Result(
-                state=State.OK,
-                summary="Used: 29.14% - 20.1 TiB of 69.1 TiB",
-            ),
             Metric(
                 "fs_used",
                 21108135.3046875,
@@ -125,7 +99,16 @@ def test_check_1_capacity(check_storeonce_servicesets_capacity, section_1: Secti
                 levels=(79.99999999999947, 89.99999999999908),
                 boundaries=(0.0, 100.0),
             ),
+            Result(
+                state=State.OK,
+                summary="Used: 29.14% - 20.1 TiB of 69.1 TiB",
+            ),
             Metric("fs_size", 72434242.83375072, boundaries=(0, None)),
+            Metric("growth", 432000.0),
+            Result(state=State.OK, summary="trend per 1 day 0 hours: +422 GiB"),
+            Result(state=State.OK, summary="trend per 1 day 0 hours: +0.60%"),
+            Metric("trend", 432000.0, boundaries=(0.0, 3018093.4514062805)),
+            Result(state=State.OK, summary="Time left until disk full: 118 days 19 hours"),
             Result(
                 state=State.OK,
                 summary="Dedup ratio: 15.95",
@@ -175,15 +158,15 @@ STRING_TABLE_2 = [
 
 
 @pytest.fixture(name="section_2", scope="module")
-def _get_section_2(parse_storeonce_servicesets) -> Section:
+def _get_section_2() -> Section:
     return parse_storeonce_servicesets(STRING_TABLE_2)
 
 
-def test_discovery_2(discover_storeonce_servicesets, section_2: Section) -> None:
+def test_discovery_2(section_2: Section) -> None:
     assert list(discover_storeonce_servicesets(section_2)) == [Service(item="1")]
 
 
-def test_check_2(check_storeonce_servicesets, section_2: Section) -> None:
+def test_check_2(section_2: Section) -> None:
     assert list(check_storeonce_servicesets("1", section_2)) == [
         Result(
             state=State.OK,
@@ -193,18 +176,22 @@ def test_check_2(check_storeonce_servicesets, section_2: Section) -> None:
             state=State.OK,
             summary="Overall Status: Running, Overall Health: OK",
         ),
+        Result(state=State.OK, notice="ServiceSet Health: OK"),
+        Result(state=State.OK, notice="Replication Health: OK"),
+        Result(state=State.OK, notice="Housekeeping Health: OK"),
     ]
 
 
-def test_check_2_capacity(check_storeonce_servicesets_capacity, section_2: Section) -> None:
+def test_check_2_capacity(monkeypatch: pytest.MonkeyPatch, section_2: Section) -> None:
+    monkeypatch.setattr(
+        storeonce,
+        "get_value_store",
+        lambda: {"1.delta": (1577972280.0 - 60, 51789957.953125 - 6000)},
+    )
     with on_time("2020-01-02 13:38:00", "UTC"):
         assert list(
-            check_storeonce_servicesets_capacity("1", FILESYSTEM_DEFAULT_LEVELS, section_2)
+            check_storeonce_servicesets_capacity("1", FILESYSTEM_DEFAULT_PARAMS, section_2)
         ) == [
-            Result(
-                state=State.OK,
-                summary="Used: 71.50% - 49.4 TiB of 69.1 TiB",
-            ),
             Metric(
                 "fs_used",
                 51789957.953125,
@@ -218,7 +205,16 @@ def test_check_2_capacity(check_storeonce_servicesets_capacity, section_2: Secti
                 levels=(79.99999999999947, 89.99999999999908),
                 boundaries=(0.0, 100.0),
             ),
+            Result(
+                state=State.OK,
+                summary="Used: 71.50% - 49.4 TiB of 69.1 TiB",
+            ),
             Metric("fs_size", 72434242.83375072, boundaries=(0, None)),
+            Metric("growth", 8640000.0),
+            Result(state=State.OK, summary="trend per 1 day 0 hours: +8.24 TiB"),
+            Result(state=State.OK, summary="trend per 1 day 0 hours: +11.93%"),
+            Metric("trend", 8640000.0, boundaries=(0.0, 3018093.4514062805)),
+            Result(state=State.OK, summary="Time left until disk full: 2 days 9 hours"),
             Result(state=State.OK, summary="Total local: 69.1 TiB"),
             Result(state=State.OK, summary="Free local: 19.7 TiB"),
             Result(

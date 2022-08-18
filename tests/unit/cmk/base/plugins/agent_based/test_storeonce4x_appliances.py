@@ -3,79 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[no-untyped-def]
-
-from typing import Any
-
 import pytest
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
-
-Section = Any  # just for now
-
-
-# drop after migration
-@pytest.fixture(name="parse_storeonce4x_appliances", scope="module")
-def _get_parse_func(fix_register):
-    return fix_register.agent_sections[SectionName("storeonce4x_appliances")].parse_function
-
-
-# drop after migration
-@pytest.fixture(name="plugin", scope="module")
-def _get_plugin(fix_register):
-    return fix_register.check_plugins[CheckPluginName("storeonce4x_appliances")]
-
-
-# drop after migration
-@pytest.fixture(name="plugin_storage", scope="module")
-def _get_plugin_s(fix_register):
-    return fix_register.check_plugins[CheckPluginName("storeonce4x_appliances_storage")]
-
-
-# drop after migration
-@pytest.fixture(name="plugin_licenses", scope="module")
-def _get_plugin_l(fix_register):
-    return fix_register.check_plugins[CheckPluginName("storeonce4x_appliances_license")]
-
-
-# drop after migration
-@pytest.fixture(name="plugin_summaries", scope="module")
-def _get_plugin_su(fix_register):
-    return fix_register.check_plugins[CheckPluginName("storeonce4x_appliances_summaries")]
-
-
-# drop after migration
-@pytest.fixture(name="discover_storeonce4x_appliances", scope="module")
-def _get_diso_func(plugin):
-    return lambda s: plugin.discovery_function(section=s)
-
-
-# drop after migration
-@pytest.fixture(name="check_storeonce4x_appliances", scope="module")
-def _get_check_func(plugin):
-    return lambda i, s: plugin.check_function(item=i, params={}, section=s)
-
-
-# drop after migration
-@pytest.fixture(name="check_storeonce4x_appliances_storage", scope="module")
-def _get_check_func_s(plugin_storage):
-    return lambda i, p, s: plugin_storage.check_function(item=i, params=p, section=s)
-
-
-# drop after migration
-@pytest.fixture(name="check_storeonce4x_appliances_licenses", scope="module")
-def _get_check_func_l(plugin_licenses):
-    return lambda i, s: plugin_licenses.check_function(item=i, params={}, section=s)
-
-
-# drop after migration
-@pytest.fixture(name="check_storeonce4x_appliances_summaries", scope="module")
-def _get_check_func_su(plugin_summaries):
-    return lambda i, s: plugin_summaries.check_function(item=i, params={}, section=s)
-
+from cmk.base.plugins.agent_based.storeonce4x_appliances import (
+    check_storeonce4x_appliances,
+    check_storeonce4x_appliances_license,
+    check_storeonce4x_appliances_storage,
+    check_storeonce4x_appliances_summaries,
+    discover_storeonce4x_appliances,
+    parse_storeonce4x_appliances,
+    Section,
+)
+from cmk.base.plugins.agent_based.utils import storeonce
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 STRING_TABLE = [
     [
@@ -88,15 +31,15 @@ STRING_TABLE = [
 
 
 @pytest.fixture(name="section", scope="module")
-def _get_section(parse_storeonce4x_appliances) -> Section:
+def _get_section() -> Section:
     return parse_storeonce4x_appliances(STRING_TABLE)
 
 
-def test_discovery(discover_storeonce4x_appliances, section: Section) -> None:
+def test_discovery(section: Section) -> None:
     assert list(discover_storeonce4x_appliances(section)) == [Service(item="myhostname")]
 
 
-def test_check(check_storeonce4x_appliances, section: Section) -> None:
+def test_check(section: Section) -> None:
     assert list(check_storeonce4x_appliances("myhostname", section)) == [
         Result(
             state=State.OK,
@@ -108,29 +51,44 @@ def test_check(check_storeonce4x_appliances, section: Section) -> None:
     ]
 
 
-def test_check_storage(check_storeonce4x_appliances_storage, section: Section) -> None:
-    assert list(
-        check_storeonce4x_appliances_storage("myhostname", FILESYSTEM_DEFAULT_LEVELS, section)
-    ) == [
-        Result(
-            state=State.OK,
-            summary="Used: 28.03% - 91.7 TiB of 327 TiB",
-        ),
-        Metric(
-            "fs_used", 96122807.59765625, levels=(274296840.0, 308583945.0), boundaries=(0, None)
-        ),
-        Metric("fs_free", 246748242.40234375, boundaries=(0, None)),
-        Metric("fs_used_percent", 28.034681725872236, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
-        Metric("fs_size", 342871050.0, boundaries=(0, None)),
-        Result(state=State.OK, summary="Total local: 327 TiB"),
-        Result(state=State.OK, summary="Free local: 235 TiB"),
-        Result(state=State.OK, summary="Dedup ratio: 10.06"),
-        Metric("dedup_rate", 10.06372),
-    ]
+def test_check_storage(monkeypatch: pytest.MonkeyPatch, section: Section) -> None:
+    monkeypatch.setattr(
+        storeonce,
+        "get_value_store",
+        lambda: {"myhostname.delta": (1356034260.0, 96122807.59765625)},
+    )
+    with on_time("20.12.2012 20:12:00", "UTC"):
+        assert list(
+            check_storeonce4x_appliances_storage("myhostname", FILESYSTEM_DEFAULT_PARAMS, section)
+        ) == [
+            Metric(
+                "fs_used",
+                96122807.59765625,
+                levels=(274296840.0, 308583945.0),
+                boundaries=(0, None),
+            ),
+            Metric("fs_free", 246748242.40234375, boundaries=(0, None)),
+            Metric(
+                "fs_used_percent", 28.034681725872236, levels=(80.0, 90.0), boundaries=(0.0, 100.0)
+            ),
+            Result(
+                state=State.OK,
+                summary="Used: 28.03% - 91.7 TiB of 327 TiB",
+            ),
+            Metric("fs_size", 342871050.0, boundaries=(0, None)),
+            Metric("growth", 0.0),
+            Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
+            Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
+            Metric("trend", 0.0, boundaries=(0.0, 14286293.75)),
+            Result(state=State.OK, summary="Total local: 327 TiB"),
+            Result(state=State.OK, summary="Free local: 235 TiB"),
+            Result(state=State.OK, summary="Dedup ratio: 10.06"),
+            Metric("dedup_rate", 10.06372),
+        ]
 
 
-def test_check_licenses(check_storeonce4x_appliances_licenses, section: Section) -> None:
-    assert list(check_storeonce4x_appliances_licenses("myhostname", section)) == [
+def test_check_licenses(section: Section) -> None:
+    assert list(check_storeonce4x_appliances_license("myhostname", section)) == [
         Result(
             state=State.OK,
             summary="Status: OK",
@@ -138,7 +96,7 @@ def test_check_licenses(check_storeonce4x_appliances_licenses, section: Section)
     ]
 
 
-def test_check_summaries(check_storeonce4x_appliances_summaries, section: Section) -> None:
+def test_check_summaries(section: Section) -> None:
     assert list(check_storeonce4x_appliances_summaries("myhostname", section)) == [
         Result(
             state=State.OK,

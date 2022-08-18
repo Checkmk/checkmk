@@ -3,14 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Iterable, Mapping
+from typing import Any, Mapping
 
-from cmk.base.check_legacy_includes import storeonce, uptime
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
-
-DiscoveryResult = Iterable[tuple]
-CheckResult = Iterable[tuple]
+from .agent_based_api.v1 import register, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils import df, storeonce, uptime
 
 Section = Mapping[str, str]
 
@@ -47,6 +44,11 @@ def parse_storeonce_clusterinfo(string_table: StringTable) -> Section:
     return {key: value for key, value, *_rest in string_table}
 
 
+register.agent_section(
+    name="storeonce_clusterinfo",
+    parse_function=parse_storeonce_clusterinfo,
+)
+
 # .
 #   .--general-------------------------------------------------------------.
 #   |                                                  _                   |
@@ -62,22 +64,22 @@ def parse_storeonce_clusterinfo(string_table: StringTable) -> Section:
 
 def discover_storeonce_clusterinfo(section: Section) -> DiscoveryResult:
     if "Product Class" in section:
-        yield section["Product Class"], {}
+        yield Service(item=section["Product Class"])
 
 
 # this seems to be a HaSI plugin
-def check_storeonce_clusterinfo(item: str, _no_params: object, section: Section) -> CheckResult:
-    yield 0, f"Name: {section['Appliance Name']}"
-    yield 0, f"Serial Number: {section['Serial Number']}"
-    yield 0, f"Version: {section['Software Version']}"
+def check_storeonce_clusterinfo(item: str, section: Section) -> CheckResult:
+    yield Result(state=State.OK, summary=f"Name: {section['Appliance Name']}")
+    yield Result(state=State.OK, summary=f"Serial Number: {section['Serial Number']}")
+    yield Result(state=State.OK, summary=f"Version: {section['Software Version']}")
 
 
-check_info["storeonce_clusterinfo"] = {
-    "parse_function": parse_storeonce_clusterinfo,
-    "inventory_function": discover_storeonce_clusterinfo,
-    "check_function": check_storeonce_clusterinfo,
-    "service_description": "%s",
-}
+register.check_plugin(
+    name="storeonce_clusterinfo",
+    service_name="%s",
+    discovery_function=discover_storeonce_clusterinfo,
+    check_function=check_storeonce_clusterinfo,
+)
 
 # .
 #   .--cluster-------------------------------------------------------------.
@@ -94,29 +96,30 @@ check_info["storeonce_clusterinfo"] = {
 
 def discover_storeonce_clusterinfo_cluster(section: Section) -> DiscoveryResult:
     if "Cluster Health" in section:
-        yield None, {}
+        yield Service()
 
 
 # this seems to be a HaSI plugin
-def check_storeonce_clusterinfo_cluster(
-    item: str, params: Mapping[str, Any], section: Section
-) -> CheckResult:
-    yield 0, f"Cluster Status: {section['Cluster Status']}"
-    yield 0, f"Replication Status: {section['Replication Status']}"
+def check_storeonce_clusterinfo_cluster(section: Section) -> CheckResult:
+    yield Result(state=State.OK, summary=f"Cluster Status: {section['Cluster Status']}")
+    yield Result(state=State.OK, summary=f"Replication Status: {section['Replication Status']}")
 
     # Check state of components
-    for component in ["Cluster Health", "Replication Health"]:
-        state = storeonce.STATE_MAP[section["%s Level" % component]]
-        state_readable = "%s: %s" % (component, section[component])
-        if state > 0:
-            yield state, state_readable
+    for component in ("Cluster Health", "Replication Health"):
+        yield Result(
+            state=storeonce.STATE_MAP[section["%s Level" % component]],
+            notice="%s: %s" % (component, section[component]),
+        )
 
 
-check_info["storeonce_clusterinfo.cluster"] = {
-    "inventory_function": discover_storeonce_clusterinfo_cluster,
-    "check_function": check_storeonce_clusterinfo_cluster,
-    "service_description": "Appliance Status",
-}
+register.check_plugin(
+    name="storeonce_clusterinfo_cluster",
+    service_name="Appliance Status",
+    sections=["storeonce_clusterinfo"],
+    discovery_function=discover_storeonce_clusterinfo_cluster,
+    check_function=check_storeonce_clusterinfo_cluster,
+)
+
 
 # .
 #   .--cluster space-------------------------------------------------------.
@@ -132,19 +135,18 @@ check_info["storeonce_clusterinfo.cluster"] = {
 
 
 def discover_storeonce_clusterinfo_space(section: Section) -> DiscoveryResult:
-    yield "Total Capacity", {}
+    yield Service(item="Total Capacity")
 
 
-check_info["storeonce_clusterinfo.space"] = {
-    "inventory_function": discover_storeonce_clusterinfo_space,
-    "check_function": storeonce.check_storeonce_space,
-    "service_description": "%s",
-    "has_perfdata": True,
-    "group": "filesystem",
-    "default_levels_variable": "filesystem_default_levels",
-}
-
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
+register.check_plugin(
+    name="storeonce_clusterinfo_space",
+    service_name="%s",
+    sections=["storeonce_clusterinfo"],
+    discovery_function=discover_storeonce_clusterinfo_space,
+    check_function=storeonce.check_storeonce_space,
+    check_ruleset_name="filesystem",
+    check_default_parameters=df.FILESYSTEM_DEFAULT_PARAMS,
+)
 
 # .
 #   .--uptime--------------------------------------------------------------.
@@ -160,19 +162,19 @@ factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 def discover_storeonce_clusterinfo_uptime(section: Section) -> DiscoveryResult:
-    yield None, {}
+    yield Service()
 
 
-def check_storeonce_clusterinfo_uptime(
-    item: str, params: Mapping[str, Any], section: Section
-) -> CheckResult:
-    yield uptime.check_uptime_seconds(params, float(section["Uptime Seconds"]))
+def check_storeonce_clusterinfo_uptime(params: Mapping[str, Any], section: Section) -> CheckResult:
+    yield from uptime.check(params, uptime.Section(float(section["Uptime Seconds"]), None))
 
 
-check_info["storeonce_clusterinfo.uptime"] = {
-    "inventory_function": discover_storeonce_clusterinfo_uptime,
-    "check_function": check_storeonce_clusterinfo_uptime,
-    "service_description": "Uptime",
-    "has_perfdata": True,
-    "group": "uptime",
-}
+register.check_plugin(
+    name="storeonce_clusterinfo_uptime",
+    service_name="Uptime",
+    sections=["storeonce_clusterinfo"],
+    discovery_function=discover_storeonce_clusterinfo_uptime,
+    check_function=check_storeonce_clusterinfo_uptime,
+    check_ruleset_name="uptime",
+    check_default_parameters={},
+)

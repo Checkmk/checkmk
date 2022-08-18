@@ -2,22 +2,20 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Final, Iterable, Mapping
+from typing import Any, Final, Mapping
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-
+from ..agent_based_api.v1 import check_levels, get_value_store, render, Result, State
+from ..agent_based_api.v1.type_defs import CheckResult, StringTable
 from .df import df_check_filesystem_list
 
-CheckResult = Iterable[tuple[int, str, list] | tuple[int, str]]
 SectionServiceSets = Mapping[str, Mapping[str, str]]
 
 STATE_MAP: Final = {
-    "0": 3,  # Unknown
-    "1": 0,  # OK
-    "2": 0,  # Information
-    "3": 1,  # Warning
-    "4": 2,  # Critical
+    "0": State.UNKNOWN,  # Unknown
+    "1": State.OK,  # OK
+    "2": State.OK,  # Information
+    "3": State.WARN,  # Warning
+    "4": State.CRIT,  # Critical
 }
 
 
@@ -52,28 +50,29 @@ def _get_storeonce_space_values(
 
 
 def check_storeonce_space(
-    item: str, params: Mapping[str, Any], values: Mapping[str, str | int | float]
+    item: str, params: Mapping[str, Any], section: Mapping[str, str | int | float]
 ) -> CheckResult:
-    total_bytes, cloud_bytes, local_bytes = _get_storeonce_space_values(values, "Capacity")
+    total_bytes, cloud_bytes, local_bytes = _get_storeonce_space_values(section, "Capacity")
     free_bytes, free_cloud_bytes, free_local_bytes = _get_storeonce_space_values(
-        values, "Free Space"
+        section, "Free Space"
     )
 
     factor = 1024 * 1024
-    yield df_check_filesystem_list(
-        item, params, [(item, total_bytes / factor, free_bytes / factor, 0)]
+    yield from df_check_filesystem_list(
+        get_value_store(), item, params, [(item, total_bytes / factor, free_bytes / factor, 0)]
     )
 
     if cloud_bytes:
-        yield 0, "Total cloud: %s" % render.bytes(cloud_bytes)
+        yield Result(state=State.OK, summary="Total cloud: %s" % render.bytes(cloud_bytes))
     if local_bytes:
-        yield 0, "Total local: %s" % render.bytes(local_bytes)
+        yield Result(state=State.OK, summary="Total local: %s" % render.bytes(local_bytes))
     if free_cloud_bytes:
-        yield 0, "Free cloud: %s" % render.bytes(free_cloud_bytes)
+        yield Result(state=State.OK, summary="Free cloud: %s" % render.bytes(free_cloud_bytes))
     if free_local_bytes:
-        yield 0, "Free local: %s" % render.bytes(free_local_bytes)
+        yield Result(state=State.OK, summary="Free local: %s" % render.bytes(free_local_bytes))
 
-    dedupl_ratio_str = values.get("Deduplication Ratio") or values.get("dedupeRatio")
+    dedupl_ratio_str = section.get("Deduplication Ratio") or section.get("dedupeRatio")
     if dedupl_ratio_str is not None:
-        dedupl_ratio = float(dedupl_ratio_str)
-        yield 0, "Dedup ratio: %.2f" % dedupl_ratio, [("dedup_rate", dedupl_ratio)]
+        yield from check_levels(
+            float(dedupl_ratio_str), metric_name="dedup_rate", label="Dedup ratio"
+        )

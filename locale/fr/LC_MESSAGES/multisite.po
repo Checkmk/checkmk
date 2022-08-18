@@ -15700,8 +15700,9 @@ msgid "Do you really want to remove the package <tt>%s</tt> from your system?"
 msgstr ""
 "Voulez-vous vraiment supprimer le paquet <tt>%s</tt> de votre système ?"
 
+#, fuzzy
 msgid ""
-"Do you really want to rename to following hosts?This involves a restart of "
+"Do you really want to rename the following hosts? This involves a restart of "
 "the monitoring core!"
 msgstr ""
 "Voulez-vous vraiment renommer les hôtes suivants ? Cela implique un "
@@ -26660,10 +26661,26 @@ msgstr "Utilisation des ressources CPU de Kubernetes"
 msgid "Kubernetes Cluster"
 msgstr "Cluster Kubernetes"
 
+#, fuzzy
+msgid "Kubernetes Clusters"
+msgstr "Cluster Kubernetes"
+
 msgid "Kubernetes DaemonSet"
 msgstr "Kubernetes DaemonSet"
 
+#, fuzzy
+msgid "Kubernetes Daemonset"
+msgstr "Port Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes Daemonsets"
+msgstr "Port Kubernetes"
+
 msgid "Kubernetes Deployment"
+msgstr "Déploiement de Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes Deployments"
 msgstr "Déploiement de Kubernetes"
 
 msgid "Kubernetes Namespace"
@@ -26679,6 +26696,10 @@ msgstr "Kubernetes Namespaced pods cpu usage"
 msgid "Kubernetes Namespaced pods memory usage"
 msgstr "Utilisation de la mémoire des pods de Kubernetes Namespaced"
 
+#, fuzzy
+msgid "Kubernetes Namespaces"
+msgstr "Espace de noms Kubernetes"
+
 msgid "Kubernetes Network interfaces"
 msgstr "Kubernetes Interfaces réseau"
 
@@ -26692,6 +26713,10 @@ msgid "Kubernetes StatefulSet"
 msgstr "Kubernetes StatefulSet"
 
 msgid "Kubernetes Statefulset"
+msgstr "Kubernetes Statefulset"
+
+#, fuzzy
+msgid "Kubernetes Statefulsets"
 msgstr "Kubernetes Statefulset"
 
 msgid "Kubernetes deployment conditions"
@@ -47991,6 +48016,12 @@ msgstr ""
 "Le mot de passe donné est trop court. Il doit comporter au moins %d "
 "caractères."
 
+#, python-format
+msgid ""
+"The given str \"%s\" for the pending changes info does not match the "
+"required pattern: \"[number] change(s)\""
+msgstr ""
+
 msgid "The given text must only contain ASCII characters."
 msgstr "Le texte donné ne doit contenir que des caractères ASCII."
 
@@ -65957,11 +65988,6 @@ msgstr "© %s tribe29 GmbH. Tous droits réservés."
 #~| msgid "Daemon sets"
 #~ msgid "Daemonset"
 #~ msgstr "Jeux de démons"
-
-#, fuzzy
-#~| msgid "Kubernetes Port"
-#~ msgid "Kubernetes Daemonset"
-#~ msgstr "Port Kubernetes"
 
 #, fuzzy
 #~| msgid "Kubernetes roles"

@@ -14879,8 +14879,9 @@ msgstr "選択したホストのTLS登録を本当に削除しますか?"
 msgid "Do you really want to remove the package <tt>%s</tt> from your system?"
 msgstr "本当にシステムからパッケージ<tt>%s</tt>を削除しますか？"
 
+#, fuzzy
 msgid ""
-"Do you really want to rename to following hosts?This involves a restart of "
+"Do you really want to rename the following hosts? This involves a restart of "
 "the monitoring core!"
 msgstr ""
 "本当に次のホストに名前を変更してもよろしいですか？これには、監視コアの再起動"
@@ -25151,10 +25152,26 @@ msgstr "Kubernetes CPU使用率"
 msgid "Kubernetes Cluster"
 msgstr "Kubernetesクラスター"
 
+#, fuzzy
+msgid "Kubernetes Clusters"
+msgstr "Kubernetesクラスター"
+
 msgid "Kubernetes DaemonSet"
 msgstr "Kubernetesデーモンセット"
 
+#, fuzzy
+msgid "Kubernetes Daemonset"
+msgstr "Kubernetesポート"
+
+#, fuzzy
+msgid "Kubernetes Daemonsets"
+msgstr "Kubernetesポート"
+
 msgid "Kubernetes Deployment"
+msgstr "Kubernetes デプロイ"
+
+#, fuzzy
+msgid "Kubernetes Deployments"
 msgstr "Kubernetes デプロイ"
 
 msgid "Kubernetes Namespace"
@@ -25169,6 +25186,10 @@ msgstr "Kubernetes名前空間PodのCPU使用率"
 msgid "Kubernetes Namespaced pods memory usage"
 msgstr "Kubernetes名前空間Podのメモリ使用量"
 
+#, fuzzy
+msgid "Kubernetes Namespaces"
+msgstr "Kubernetes 名前空間"
+
 msgid "Kubernetes Network interfaces"
 msgstr "Kubernetesネットワークインターフェース"
 
@@ -25182,6 +25203,10 @@ msgid "Kubernetes StatefulSet"
 msgstr "Kubernetesステートフルセット"
 
 msgid "Kubernetes Statefulset"
+msgstr "Kubernetesステートフルセット"
+
+#, fuzzy
+msgid "Kubernetes Statefulsets"
 msgstr "Kubernetesステートフルセット"
 
 msgid "Kubernetes deployment conditions"
@@ -45386,6 +45411,12 @@ msgstr ""
 msgid "The given password is too short. It must have at least %d characters."
 msgstr "指定されたパスワードが短すぎます。少なくとも %d 文字が必要です。"
 
+#, python-format
+msgid ""
+"The given str \"%s\" for the pending changes info does not match the "
+"required pattern: \"[number] change(s)\""
+msgstr ""
+
 msgid "The given text must only contain ASCII characters."
 msgstr "指定されたテキストにはASCII文字のみが含まれている必要があります。"
 
@@ -61659,11 +61690,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 #~| msgid "Daemon sets"
 #~ msgid "Daemonset"
 #~ msgstr "デーモンセット"
-
-#, fuzzy
-#~| msgid "Kubernetes Port"
-#~ msgid "Kubernetes Daemonset"
-#~ msgstr "Kubernetesポート"
 
 #, fuzzy
 #~| msgid "Kubernetes roles"

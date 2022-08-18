@@ -15626,8 +15626,9 @@ msgstr "¿Realmente quiere eliminar el registro TLS de los hosts seleccionados?"
 msgid "Do you really want to remove the package <tt>%s</tt> from your system?"
 msgstr "¿Realmente quiere eliminar el paquete <tt>%s</tt> de su sistema?"
 
+#, fuzzy
 msgid ""
-"Do you really want to rename to following hosts?This involves a restart of "
+"Do you really want to rename the following hosts? This involves a restart of "
 "the monitoring core!"
 msgstr ""
 "¿Realmente quiere cambiar el nombre a los siguientes hosts? ¡Esto implica un "
@@ -26523,10 +26524,26 @@ msgstr "Utilización de recursos de la CPU de Kubernetes"
 msgid "Kubernetes Cluster"
 msgstr "Clúster Kubernetes"
 
+#, fuzzy
+msgid "Kubernetes Clusters"
+msgstr "Clúster Kubernetes"
+
 msgid "Kubernetes DaemonSet"
 msgstr "Kubernetes DaemonSet"
 
+#, fuzzy
+msgid "Kubernetes Daemonset"
+msgstr "Puerto Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes Daemonsets"
+msgstr "Puerto Kubernetes"
+
 msgid "Kubernetes Deployment"
+msgstr "Despliegue de Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes Deployments"
 msgstr "Despliegue de Kubernetes"
 
 msgid "Kubernetes Namespace"
@@ -26541,6 +26558,10 @@ msgstr "Kubernetes Namespaced pods cpu usage"
 msgid "Kubernetes Namespaced pods memory usage"
 msgstr "Uso de la memoria de los pods Kubernetes Namespaced"
 
+#, fuzzy
+msgid "Kubernetes Namespaces"
+msgstr "Espacio de nombres de Kubernetes"
+
 msgid "Kubernetes Network interfaces"
 msgstr "Interfaces de red de Kubernetes"
 
@@ -26554,6 +26575,10 @@ msgid "Kubernetes StatefulSet"
 msgstr "Kubernetes StatefulSet"
 
 msgid "Kubernetes Statefulset"
+msgstr "Kubernetes Statefulset"
+
+#, fuzzy
+msgid "Kubernetes Statefulsets"
 msgstr "Kubernetes Statefulset"
 
 msgid "Kubernetes deployment conditions"
@@ -47786,6 +47811,12 @@ msgid "The given password is too short. It must have at least %d characters."
 msgstr ""
 "La contraseña dada es demasiado corta. Debe tener al menos %d caracteres."
 
+#, python-format
+msgid ""
+"The given str \"%s\" for the pending changes info does not match the "
+"required pattern: \"[number] change(s)\""
+msgstr ""
+
 msgid "The given text must only contain ASCII characters."
 msgstr "El texto dado debe contener sólo caracteres ASCII."
 
@@ -65600,11 +65631,6 @@ msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
 #~| msgid "Daemon sets"
 #~ msgid "Daemonset"
 #~ msgstr "Conjuntos de demonios"
-
-#, fuzzy
-#~| msgid "Kubernetes Port"
-#~ msgid "Kubernetes Daemonset"
-#~ msgstr "Puerto Kubernetes"
 
 #, fuzzy
 #~| msgid "Kubernetes roles"

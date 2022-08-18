@@ -15026,7 +15026,7 @@ msgid "Do you really want to remove the package <tt>%s</tt> from your system?"
 msgstr ""
 
 msgid ""
-"Do you really want to rename to following hosts?This involves a restart of "
+"Do you really want to rename the following hosts? This involves a restart of "
 "the monitoring core!"
 msgstr ""
 
@@ -24892,11 +24892,27 @@ msgid "Kubernetes Cluster"
 msgstr "Adresă"
 
 #, fuzzy
+msgid "Kubernetes Clusters"
+msgstr "Adresă"
+
+#, fuzzy
 msgid "Kubernetes DaemonSet"
 msgstr "Adresă"
 
 #, fuzzy
+msgid "Kubernetes Daemonset"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Kubernetes Daemonsets"
+msgstr "Adresă"
+
+#, fuzzy
 msgid "Kubernetes Deployment"
+msgstr "(fără condiții)"
+
+#, fuzzy
+msgid "Kubernetes Deployments"
 msgstr "(fără condiții)"
 
 #, fuzzy
@@ -24911,6 +24927,10 @@ msgstr ""
 
 msgid "Kubernetes Namespaced pods memory usage"
 msgstr ""
+
+#, fuzzy
+msgid "Kubernetes Namespaces"
+msgstr "Adresă"
 
 msgid "Kubernetes Network interfaces"
 msgstr ""
@@ -24928,6 +24948,10 @@ msgstr "Adresă"
 
 #, fuzzy
 msgid "Kubernetes Statefulset"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Kubernetes Statefulsets"
 msgstr "Adresă"
 
 #, fuzzy
@@ -45666,6 +45690,12 @@ msgstr ""
 msgid "The given password is too short. It must have at least %d characters."
 msgstr ""
 
+#, python-format
+msgid ""
+"The given str \"%s\" for the pending changes info does not match the "
+"required pattern: \"[number] change(s)\""
+msgstr ""
+
 msgid "The given text must only contain ASCII characters."
 msgstr ""
 
@@ -60296,10 +60326,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Daemonset"
 #~ msgstr "fire"
-
-#, fuzzy
-#~ msgid "Kubernetes Daemonset"
-#~ msgstr "Adresă"
 
 #, fuzzy
 #~ msgid "Kubernetes cluster"

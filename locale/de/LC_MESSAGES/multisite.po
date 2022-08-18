@@ -15540,8 +15540,9 @@ msgstr ""
 msgid "Do you really want to remove the package <tt>%s</tt> from your system?"
 msgstr "Wollen Sie wirklich das Paket <tt>%s</tt> von Ihrem System entfernen?"
 
+#, fuzzy
 msgid ""
-"Do you really want to rename to following hosts?This involves a restart of "
+"Do you really want to rename the following hosts? This involves a restart of "
 "the monitoring core!"
 msgstr ""
 "Sind Sie sicher, dass Sie die folgenden Hosts umbenennen wollen? Das "
@@ -26373,10 +26374,26 @@ msgstr "Kubernetes CPU-Ressourcenauslastung"
 msgid "Kubernetes Cluster"
 msgstr "Kubernetes-Cluster"
 
+#, fuzzy
+msgid "Kubernetes Clusters"
+msgstr "Kubernetes-Cluster"
+
 msgid "Kubernetes DaemonSet"
 msgstr "Kubernetes DaemonSet"
 
+#, fuzzy
+msgid "Kubernetes Daemonset"
+msgstr "Kubernetes Port"
+
+#, fuzzy
+msgid "Kubernetes Daemonsets"
+msgstr "Kubernetes Port"
+
 msgid "Kubernetes Deployment"
+msgstr "Kubernetes-Bereitstellung"
+
+#, fuzzy
+msgid "Kubernetes Deployments"
 msgstr "Kubernetes-Bereitstellung"
 
 msgid "Kubernetes Namespace"
@@ -26391,6 +26408,10 @@ msgstr "Kubernetes Namespaced Pods CPU-Nutzung"
 msgid "Kubernetes Namespaced pods memory usage"
 msgstr "Kubernetes Namespaced Pods Speichernutzung"
 
+#, fuzzy
+msgid "Kubernetes Namespaces"
+msgstr "Kubernetes-Namensraum"
+
 msgid "Kubernetes Network interfaces"
 msgstr "Kubernetes Netzwerkschnittstellen"
 
@@ -26404,6 +26425,10 @@ msgid "Kubernetes StatefulSet"
 msgstr "Kubernetes StatefulSet"
 
 msgid "Kubernetes Statefulset"
+msgstr "Kubernetes Statefulset"
+
+#, fuzzy
+msgid "Kubernetes Statefulsets"
 msgstr "Kubernetes Statefulset"
 
 msgid "Kubernetes deployment conditions"
@@ -47468,6 +47493,12 @@ msgstr ""
 "Das angegebene Passwort ist zu kurz. Es muss aus mindestens %d Zeichen "
 "bestehen."
 
+#, python-format
+msgid ""
+"The given str \"%s\" for the pending changes info does not match the "
+"required pattern: \"[number] change(s)\""
+msgstr ""
+
 msgid "The given text must only contain ASCII characters."
 msgstr "Der Text darf nur ASCII-Zeichen enthalten."
 
@@ -65142,11 +65173,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 #~| msgid "Daemon sets"
 #~ msgid "Daemonset"
 #~ msgstr "DaemonSets"
-
-#, fuzzy
-#~| msgid "Kubernetes Port"
-#~ msgid "Kubernetes Daemonset"
-#~ msgstr "Kubernetes Port"
 
 #, fuzzy
 #~| msgid "Kubernetes roles"

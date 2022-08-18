@@ -15497,8 +15497,9 @@ msgstr "Wilt u echt de TLS registratie van de geselecteerde hosts verwijderen?"
 msgid "Do you really want to remove the package <tt>%s</tt> from your system?"
 msgstr "Wilt u echt het pakket <tt>%s</tt> van uw systeem verwijderen?"
 
+#, fuzzy
 msgid ""
-"Do you really want to rename to following hosts?This involves a restart of "
+"Do you really want to rename the following hosts? This involves a restart of "
 "the monitoring core!"
 msgstr ""
 "Wil je echt de volgende hosts hernoemen? Dit impliceert een herstart van de "
@@ -26313,10 +26314,26 @@ msgstr "Kubernetes CPU-brongebruik"
 msgid "Kubernetes Cluster"
 msgstr "Kubernetes Cluster"
 
+#, fuzzy
+msgid "Kubernetes Clusters"
+msgstr "Kubernetes Cluster"
+
 msgid "Kubernetes DaemonSet"
 msgstr "Kubernetes DaemonSet"
 
+#, fuzzy
+msgid "Kubernetes Daemonset"
+msgstr "Kubernetes Poort"
+
+#, fuzzy
+msgid "Kubernetes Daemonsets"
+msgstr "Kubernetes Poort"
+
 msgid "Kubernetes Deployment"
+msgstr "Kubernetes-implementatie"
+
+#, fuzzy
+msgid "Kubernetes Deployments"
 msgstr "Kubernetes-implementatie"
 
 msgid "Kubernetes Namespace"
@@ -26331,6 +26348,10 @@ msgstr "Kubernetes Namespaced pods cpu gebruik"
 msgid "Kubernetes Namespaced pods memory usage"
 msgstr "Kubernetes Namespaced pods geheugengebruik"
 
+#, fuzzy
+msgid "Kubernetes Namespaces"
+msgstr "Kubernetes Naamruimte"
+
 msgid "Kubernetes Network interfaces"
 msgstr "Kubernetes Netwerk interfaces"
 
@@ -26344,6 +26365,10 @@ msgid "Kubernetes StatefulSet"
 msgstr "Kubernetes StatefulSet"
 
 msgid "Kubernetes Statefulset"
+msgstr "Kubernetes Statefulset"
+
+#, fuzzy
+msgid "Kubernetes Statefulsets"
 msgstr "Kubernetes Statefulset"
 
 msgid "Kubernetes deployment conditions"
@@ -47370,6 +47395,12 @@ msgid "The given password is too short. It must have at least %d characters."
 msgstr ""
 "Het opgegeven wachtwoord is te kort. Het moet ten minste %d tekens bevatten."
 
+#, python-format
+msgid ""
+"The given str \"%s\" for the pending changes info does not match the "
+"required pattern: \"[number] change(s)\""
+msgstr ""
+
 msgid "The given text must only contain ASCII characters."
 msgstr "De opgegeven tekst mag alleen ASCII-tekens bevatten."
 
@@ -65057,11 +65088,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 #~| msgid "Daemon sets"
 #~ msgid "Daemonset"
 #~ msgstr "Daemon sets"
-
-#, fuzzy
-#~| msgid "Kubernetes Port"
-#~ msgid "Kubernetes Daemonset"
-#~ msgstr "Kubernetes Poort"
 
 #, fuzzy
 #~| msgid "Kubernetes roles"

@@ -245,8 +245,32 @@ def _check_auth_cookie(cookie_name: str) -> Optional[UserId]:
     return username
 
 
+def check_cookie_restapi() -> Optional[UserId]:
+    """check cookie for sugnature and valid session
+
+    more or less duplicate code from _check_auth_cookie"""
+
+    cookie_name = auth_cookie_name()
+    if not global_request.has_cookie(cookie_name):
+        return None
+
+    username, session_id, cookie_hash = user_from_cookie(_fetch_cookie(cookie_name))
+    check_parsed_auth_cookie(username, session_id, cookie_hash)
+
+    try:
+        userdb.on_access(username, session_id)
+    except MKAuthException:
+        del_auth_cookie()
+        raise
+
+    if userdb.need_to_change_pw(username):
+        raise MKAuthException(_("User needs to change password first!"))
+
+    return username
+
+
 def _fetch_cookie(cookie_name: str) -> str:
-    raw_cookie = html.request.cookie(cookie_name, "::")
+    raw_cookie = global_request.cookie(cookie_name, "::")
     assert raw_cookie is not None
     return raw_cookie
 

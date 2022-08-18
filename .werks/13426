@@ -1,0 +1,14 @@
+Title: agent_ucs_bladecenter can now handle HyperFlex Server
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1660805580
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p10
+
+Before this change only UCSB and UCSC Models where queried, now also HyperFlex
+Servers can be monitored.
+

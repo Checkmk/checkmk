@@ -4,8 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+"""
+>>> C_SERIES_REGEX.match("HXAF240C") is not None
+True
+>>> C_SERIES_REGEX.match("UCSC") is not None
+True
+>>> B_SERIES_REGEX.match("UCSB") is not None
+True
+"""
+
 import argparse
 import logging
+import re
 import sys
 import xml.etree.ElementTree as ET
 from typing import Any, Dict, List, Mapping, Sequence, Tuple
@@ -38,14 +48,33 @@ ElementAttributes = Dict[str, str]
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 Entry = Tuple[str, Sequence[str]]
-Entities = List[Tuple[str, str, Sequence[Entry]]]
+Entities = List[Tuple[str, re.Pattern[str], Sequence[Entry]]]
+
+B_SERIES_REGEX = re.compile(r"^UCSB$")
+# As of SUP-11234 hyperflex systems share the same hardware with UCSC systems.
+# Those two models should be basically the same: UCSC-C240-M5SX and HXAF240C-M5SX
+C_SERIES_REGEX = re.compile(
+    r"""
+    ^
+    (
+        UCSC      # normal, direct form
+        |
+        HX        # hyperflex
+        (AF)?     # optional "all flash"
+        [0-9]{3}  # model number
+        C         # C for UCSC
+    )
+    $
+""",
+    re.VERBOSE,
+)
 
 # Cisco UCS B-Series Blade Servers
 B_SERIES_ENTITIES: Entities = [
     # FANS
     (
         "ucs_bladecenter_fans",
-        "UCSB",
+        B_SERIES_REGEX,
         [
             ("equipmentFan", ["Dn", "Model", "OperState"]),
             ("equipmentFanModuleStats", ["Dn", "AmbientTemp"]),
@@ -57,7 +86,7 @@ B_SERIES_ENTITIES: Entities = [
     # PSU
     (
         "ucs_bladecenter_psu",
-        "UCSB",
+        B_SERIES_REGEX,
         [
             ("equipmentPsuInputStats", ["Dn", "Current", "PowerAvg", "Voltage"]),
             ("equipmentPsuStats", ["Dn", "AmbientTemp", "Output12vAvg", "Output3v3Avg"]),
@@ -66,7 +95,7 @@ B_SERIES_ENTITIES: Entities = [
     # NETWORK
     (
         "ucs_bladecenter_if",
-        "UCSB",
+        B_SERIES_REGEX,
         [
             # Fibrechannel
             ("fcStats", ["Dn", "BytesRx", "BytesTx", "PacketsRx", "PacketsTx", "Suspect"]),
@@ -127,7 +156,7 @@ B_SERIES_ENTITIES: Entities = [
     # Fault Instances
     (
         "ucs_bladecenter_faultinst",
-        "UCSB",
+        B_SERIES_REGEX,
         [
             ("faultInst", ["Dn", "Descr", "Severity"]),
         ],
@@ -135,7 +164,7 @@ B_SERIES_ENTITIES: Entities = [
     # TopSystem Info
     (
         "ucs_bladecenter_topsystem",
-        "UCSB",
+        B_SERIES_REGEX,
         [
             ("topSystem", ["Address", "CurrentTime", "Ipv6Addr", "Mode", "Name", "SystemUpTime"]),
         ],
@@ -146,7 +175,7 @@ B_SERIES_ENTITIES: Entities = [
 C_SERIES_ENTITIES: Entities = [
     (
         "ucs_c_rack_server_fans",
-        "UCSC",
+        C_SERIES_REGEX,
         [
             (
                 "equipmentFan",
@@ -161,7 +190,7 @@ C_SERIES_ENTITIES: Entities = [
     ),
     (
         "ucs_c_rack_server_psu",
-        "UCSC",
+        C_SERIES_REGEX,
         [
             (
                 "equipmentPsu",
@@ -177,7 +206,7 @@ C_SERIES_ENTITIES: Entities = [
     ),
     (
         "ucs_c_rack_server_power",
-        "UCSC",
+        C_SERIES_REGEX,
         [
             (
                 "computeMbPowerStats",
@@ -192,7 +221,7 @@ C_SERIES_ENTITIES: Entities = [
     ),
     (
         "ucs_c_rack_server_temp",
-        "UCSC",
+        C_SERIES_REGEX,
         [
             (
                 "computeRackUnitMbTempStats",
@@ -209,7 +238,7 @@ C_SERIES_ENTITIES: Entities = [
     ),
     (
         "ucs_c_rack_server_environment",
-        "UCSC",
+        C_SERIES_REGEX,
         [
             (
                 "processorEnvStats",
@@ -224,7 +253,7 @@ C_SERIES_ENTITIES: Entities = [
     ),
     (
         "ucs_c_rack_server_environment",
-        "UCSC",
+        C_SERIES_REGEX,
         [
             (
                 "memoryUnitEnvStats",
@@ -239,7 +268,7 @@ C_SERIES_ENTITIES: Entities = [
     ),
     (
         "ucs_c_rack_server_health",
-        "UCSC",
+        C_SERIES_REGEX,
         [
             (
                 "storageControllerHealth",
@@ -253,7 +282,7 @@ C_SERIES_ENTITIES: Entities = [
     ),
     (
         "ucs_c_rack_server_topsystem",
-        "UCSC",
+        C_SERIES_REGEX,
         [
             (
                 "topSystem",
@@ -269,7 +298,7 @@ C_SERIES_ENTITIES: Entities = [
     ),
     (
         "ucs_c_rack_server_util",
-        "UCSC",
+        C_SERIES_REGEX,
         [
             (
                 "serverUtilization",
@@ -285,7 +314,7 @@ C_SERIES_ENTITIES: Entities = [
     ),
     (
         "ucs_c_rack_server_led",
-        "UCSC",
+        C_SERIES_REGEX,
         [
             (
                 "equipmentIndicatorLed",
@@ -300,7 +329,7 @@ C_SERIES_ENTITIES: Entities = [
     ),
     (
         "ucs_c_rack_server_faultinst",
-        "UCSC",
+        C_SERIES_REGEX,
         [
             (
                 "faultInst",
@@ -389,7 +418,7 @@ class Server:
         """
         logging.debug("Server.get_data_from_entities: Try to get entities")
         data: Dict[str, List[Tuple[Any, Any]]] = {}
-        for header, model, entries in entities:
+        for header, model_pattern, entries in entities:
             for class_id, attributes in entries:
                 logging.debug(
                     "Server.get_data_from_entities: header: '%s', class_id: '%s' - attributes: '%s'",
@@ -411,8 +440,9 @@ class Server:
                     # if a class_id exists for all model types (e.g. faultInst).
                     # Only xml_object of the correct Model type may be processed.
                     bios_unit_name = self._get_bios_unit_name_from_dn(xml_object)
-                    if model != model_info.get(bios_unit_name, model):
-                        continue
+                    if (model_prefix := model_info.get(bios_unit_name)) is not None:
+                        if not model_pattern.match(model_prefix):
+                            continue
 
                     xml_data = []
                     for attribute in attributes:

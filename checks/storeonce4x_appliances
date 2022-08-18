@@ -2,7 +2,9 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import json
+from typing import Any, Mapping
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
@@ -11,8 +13,17 @@ from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-impo
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.storeonce import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+# If have no idea what exactly this is...
+Appliance = Mapping[str, Any]
+
+
+Section = Mapping[str, Appliance]
+
 
 factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
+
 
 _APP_STATE_MAP = {"Reachable": 0}
 
@@ -65,12 +76,12 @@ _LICENSE_MAP = {
 }
 
 
-def parse_storeonce4x_appliances(info):
+def parse_storeonce4x_appliances(string_table: StringTable) -> Section:
 
-    parsed = {}
+    parsed: dict[str, dict[str, Any]] = {}
 
-    federation_json = json.loads(info[0][0])
-    dashboard_json_list = [json.loads(json_obj[0]) for json_obj in info[1:]]
+    federation_json = json.loads(string_table[0][0])
+    dashboard_json_list = [json.loads(json_obj[0]) for json_obj in string_table[1:]]
 
     for member in federation_json["members"]:
 

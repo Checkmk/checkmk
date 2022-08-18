@@ -1,0 +1,16 @@
+Title: REST API returns correct WATO Rule values
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1660649796
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p10
+
+The REST API used to transform the raw value of a ruleset to a json object.
+We now return a raw string representing the Python repr() of a rule value
+as documented.
+
+This problem affected all endpoints under the route /domain-types/rule/*.

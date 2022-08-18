@@ -123,6 +123,36 @@ def test_openapi_create_rule_regression(logged_in_admin_wsgi_app):
     )
 
 
+def test_openapi_value_raw_is_unaltered(  # type:ignore[no-untyped-def]
+    logged_in_admin_wsgi_app,
+) -> None:
+    wsgi_app = logged_in_admin_wsgi_app
+    value_raw = "{'levels': (10.0, 5.0)}"
+    base = "/NO_SITE/check_mk/api/1.0"
+    values = {
+        "ruleset": "checkgroup_parameters:memory_percentage_used",
+        "folder": "~",
+        "properties": {
+            "disabled": False,
+        },
+        "value_raw": value_raw,
+        "conditions": {},
+    }
+    new_resp = wsgi_app.post(
+        base + "/domain-types/rule/collections/all",
+        headers={"Accept": "application/json", "Content-Type": "application/json"},
+        params=json.dumps(values),
+        status=200,
+    )
+    resp = wsgi_app.get(
+        base + f"/objects/rule/{new_resp.json['id']}",
+        headers={"Accept": "application/json"},
+        status=200,
+    )
+    resp_value = resp.json["extensions"]["value_raw"]
+    assert value_raw == resp_value
+
+
 def test_openapi_rules_href_escaped(logged_in_admin_wsgi_app):
     wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"

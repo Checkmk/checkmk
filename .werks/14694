@@ -1,0 +1,20 @@
+Title: bluecoat_sensors: Fix duplicate service names
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1660830227
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p11
+
+This change is incompatible for users who use bluecoat_sensors_temp check.
+
+During the check plugin migration, bluecoat_sensors_temp service name was
+changed. This caused a clash with the bluecoat_sensors service name.
+The bluecoat_sensors_temp disappeared and there was a warning on activate
+changes.
+
+After the upgrade, run the discovery on the affected hosts to get the
+bluecoat_sensors_temp service again.

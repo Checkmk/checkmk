@@ -17,10 +17,11 @@ import sys
 import traceback
 import urllib.parse
 import uuid
+from collections.abc import Iterator, Mapping
 from contextlib import suppress
 from itertools import islice
 from pathlib import Path
-from typing import Any, Dict, Iterator, Optional, Tuple, Type
+from typing import Any, Type
 
 import cmk.utils.paths
 import cmk.utils.plugin_registry
@@ -28,16 +29,15 @@ import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKParseFunctionError
 
-CrashInfo = Dict[str, Any]  # TODO: improve this type
+CrashInfo = dict[str, Any]  # TODO: improve this type
 
 
 # The default JSON encoder raises an exception when detecting unknown types. For the crash
 # reporting it is totally ok to have some string representations of the objects.
 class RobustJSONEncoder(json.JSONEncoder):
     # Are there cases where no __str__ is available? if so, we should do something like %r
-    # pylint: disable=method-hidden
-    def default(self, o):
-        return "%s" % o
+    def default(self, o: object) -> str:
+        return str(o)
 
 
 class CrashReportStore:
@@ -59,6 +59,7 @@ class CrashReportStore:
                     crash.crash_dir() / fname, str(json.dumps(value, cls=RobustJSONEncoder)) + "\n"
                 )
             else:
+                assert isinstance(value, bytes)
                 store.save_bytes_to_file(crash.crash_dir() / fname, value)
 
         self._cleanup_old_crashes(crash.crash_dir().parent)
@@ -103,12 +104,12 @@ class CrashReportStore:
         """Populate the crash info from the given crash directory"""
         return ABCCrashReport.deserialize(self._load_decoded_from_directory(crash_dir))
 
-    def _load_decoded_from_directory(self, crash_dir: Path) -> Dict[str, Any]:
+    def _load_decoded_from_directory(self, crash_dir: Path) -> dict[str, Any]:
         serialized = self.load_serialized_from_directory(crash_dir)
         serialized["crash_info"] = json.loads(serialized["crash_info"])
         return serialized
 
-    def load_serialized_from_directory(self, crash_dir: Path) -> Dict[str, bytes]:
+    def load_serialized_from_directory(self, crash_dir: Path) -> dict[str, bytes]:
         """Load the raw serialized crash report from the given directory
 
         Nothing is decoded here, the plain files are read into a dictionary. This creates a
@@ -131,7 +132,9 @@ class ABCCrashReport(abc.ABC):
 
     @classmethod
     def from_exception(
-        cls, details: Optional[Dict] = None, type_specific_attributes: Optional[Dict] = None
+        cls,
+        details: Mapping[str, Any] | None = None,
+        type_specific_attributes: dict[str, Any] | None = None,
     ) -> ABCCrashReport:
         """Create a crash info object from the current exception context
 
@@ -147,16 +150,18 @@ class ABCCrashReport(abc.ABC):
         return cls(**attributes)
 
     @classmethod
-    def deserialize(cls: Type[ABCCrashReport], serialized: dict) -> ABCCrashReport:
+    def deserialize(
+        cls: Type[ABCCrashReport], serialized: dict[str, dict[str, str]]
+    ) -> ABCCrashReport:
         """Deserialize the object"""
         class_ = crash_report_registry[serialized["crash_info"]["crash_type"]]
         return class_(**serialized)
 
-    def _serialize_attributes(self) -> dict:
+    def _serialize_attributes(self) -> dict[str, CrashInfo | bytes]:
         """Serialize object type specific attributes for transport"""
         return {"crash_info": self.crash_info}
 
-    def serialize(self) -> Dict:
+    def serialize(self) -> dict[str, CrashInfo | bytes]:
         """Serialize the object
 
         Nested structures are allowed. Only objects that can be handled by
@@ -171,7 +176,7 @@ class ABCCrashReport(abc.ABC):
         super().__init__()
         self.crash_info = crash_info
 
-    def ident(self) -> Tuple[str, ...]:
+    def ident(self) -> tuple[str, ...]:
         """Return the identity in form of a tuple of a single crash report"""
         return (self.crash_info["id"],)
 
@@ -183,7 +188,7 @@ class ABCCrashReport(abc.ABC):
         service descriptions don't have such signs."""
         return "@".join([p.replace("@", "~") for p in self.ident()])
 
-    def crash_dir(self, ident_text: Optional[str] = None) -> Path:
+    def crash_dir(self, ident_text: str | None = None) -> Path:
         """Returns the path to the crash directory of the current or given crash report"""
         if ident_text is None:
             ident_text = self.ident_to_text()
@@ -196,7 +201,7 @@ class ABCCrashReport(abc.ABC):
         )
 
 
-def _get_generic_crash_info(type_name: str, details: Dict) -> CrashInfo:
+def _get_generic_crash_info(type_name: str, details: Mapping[str, Any]) -> CrashInfo:
     """Produces the crash info data structure.
 
     The top level keys of the crash info dict are standardized and need
@@ -279,7 +284,7 @@ def _format_var_for_export(val: Any, maxdepth: int = 4, maxsize: int = 1024 * 10
             val[index] = _format_var_for_export(item, maxdepth - 1)
 
     elif isinstance(val, tuple):
-        new_val: Tuple = ()
+        new_val: tuple[Any, ...] = ()
         for item in val:
             new_val += (_format_var_for_export(item, maxdepth - 1),)
         val = new_val

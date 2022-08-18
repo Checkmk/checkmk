@@ -8,30 +8,55 @@ minimal changes."""
 
 import cProfile
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Optional, Union
+from typing import ParamSpec, TypeVar
 
 import cmk.utils.log
 
 
 class Profile:
     def __init__(
-        self, enabled: bool = True, profile_file: Union[Path, str, None] = None, **kwargs: Any
+        self,
+        *,
+        enabled: bool = True,
+        profile_file: Path | str | None = None,
+        # cProfile.Profile arguments, avoids the need for Any
+        timer: Callable[[], float] | None = None,
+        timeunit: float = 0.0,
+        subcalls: bool = True,
+        builtins: bool = True,
     ) -> None:
-
-        if profile_file is None or isinstance(profile_file, Path):
-            self._profile_file = profile_file
-        else:
-            self._profile_file = Path(profile_file)
-
         self._enabled = enabled
-        self._kwargs = kwargs
-        self._profile: Optional[cProfile.Profile] = None
+        self._profile_file = (
+            profile_file
+            if profile_file is None or isinstance(profile_file, Path)
+            else Path(profile_file)
+        )
+        self._timer = timer
+        self._timeunit = timeunit
+        self._subcalls = subcalls
+        self._builtins = builtins
+        self._profile: cProfile.Profile | None = None
 
     def __enter__(self) -> "Profile":
         if self._enabled:
             cmk.utils.log.logger.info("Recording profile")
-            self._profile = cProfile.Profile(**self._kwargs)
+            # cProfile.Profile has a slightly interesting API: None is not allowed as a timer argument. o_O
+            self._profile = (
+                cProfile.Profile(
+                    timeunit=self._timeunit,
+                    subcalls=self._subcalls,
+                    builtins=self._builtins,
+                )
+                if self._timer is None
+                else cProfile.Profile(
+                    timer=self._timer,
+                    timeunit=self._timeunit,
+                    subcalls=self._subcalls,
+                    builtins=self._builtins,
+                )
+            )
             self._profile.enable()
         return self
 
@@ -73,7 +98,11 @@ class Profile:
         cmk.utils.log.logger.info("Created profile dump script: %s", script_path)
 
 
-def profile_call(base_dir: str, enabled: bool = True) -> Callable:
+P = ParamSpec("P")
+R = TypeVar("R")
+
+
+def profile_call(base_dir: str, enabled: bool = True) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """
     This decorator can be used to profile single functions as a starting point.
     A directory where the file will be saved has to be stated as first argument.
@@ -85,12 +114,12 @@ def profile_call(base_dir: str, enabled: bool = True) -> Callable:
       @cmk.utils.profile.profile_call(base_dir="/PATH/TO/DIR", enabled=True)
       @cmk.utils.profile.profile_call(base_dir="/PATH/TO/DIR", enabled=False)"""
 
-    def decorate(f):
-        def wrapper(*args, **kwargs):
-            filepath = "%s/%s_%s.profile" % (base_dir.rstrip("/"), f.__name__, time.time())
+    def wrap(f: Callable[P, R]) -> Callable[P, R]:
+        def wrapped_f(*args: P.args, **kwargs: P.kwargs) -> R:
+            filepath = f"{base_dir.rstrip('/')}/{f.__name__}_{time.time()}.profile"
             with Profile(enabled=enabled, profile_file=filepath):
                 return f(*args, **kwargs)
 
-        return wrapper
+        return wrapped_f
 
-    return decorate
+    return wrap

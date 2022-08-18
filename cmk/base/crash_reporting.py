@@ -38,7 +38,9 @@ class CMKBaseCrashReport(crash_reporting.ABCCrashReport):
 
     @classmethod
     def from_exception(
-        cls, details: Optional[Dict] = None, type_specific_attributes: Optional[Dict] = None
+        cls,
+        details: Mapping[str, Any] | None = None,
+        type_specific_attributes: Mapping[str, Any] | None = None,
     ) -> crash_reporting.ABCCrashReport:
         return super().from_exception(
             details={

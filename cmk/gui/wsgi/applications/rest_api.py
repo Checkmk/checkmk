@@ -28,14 +28,13 @@ from cmk.utils.exceptions import MKException
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import config, sites, userdb
-from cmk.gui.config import omd_site
 from cmk.gui.context import AppContext, RequestContext
 from cmk.gui.ctx_stack import app_stack, request_stack
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import Request, Response
 from cmk.gui.logged_in import LoggedInNobody, user
-from cmk.gui.login import check_parsed_auth_cookie, user_from_cookie
+from cmk.gui.login import check_auth_by_cookie
 from cmk.gui.openapi import add_once, ENDPOINT_REGISTRY, generate_data
 from cmk.gui.permissions import load_dynamic_permissions
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
@@ -96,11 +95,9 @@ def _verify_user(  # pylint: disable=too-many-branches
             raise MKAuthException("Mismatch in authentication headers.")
         verified.append(rfc7662_subject(UserId(remote_user), "web_server"))
 
-    cookie = Request(environ).cookies.get(f"auth_{omd_site()}")
-    if cookie:
-        user_id, session_id, cookie_hash = user_from_cookie(cookie)
-        check_parsed_auth_cookie(user_id, session_id, cookie_hash)
-        verified.append(rfc7662_subject(user_id, "cookie"))
+    cookie_user = check_auth_by_cookie()
+    if cookie_user is not None:
+        verified.append(rfc7662_subject(cookie_user, "cookie"))
 
     if not verified:
         raise MKAuthException("You need to be authenticated to use the REST API.")

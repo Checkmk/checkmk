@@ -3,23 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import abc
+from collections.abc import Callable, Iterable
 from functools import partial
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    NamedTuple,
-    Optional,
-    Protocol,
-    Set,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import Any, NamedTuple, Protocol, Type, TypeVar
 
 from livestatus import LivestatusOutputFormat, LivestatusResponse, SiteId
 
@@ -39,10 +28,10 @@ ReqString = partial(String, required=True)
 ReqNested = partial(Nested, required=True)
 ReqBoolean = partial(Boolean, required=True)
 
-SearchResult = Dict[str, str]
-SearchResults = List[SearchResult]
-ActionArgument = Tuple[str, ...]
-ActionArguments = List[ActionArgument]
+SearchResult = dict[str, str]
+SearchResults = list[SearchResult]
+ActionArgument = tuple[str, ...]
+ActionArguments = list[ActionArgument]
 
 import cmk.utils.plugin_registry as plugin_registry
 from cmk.utils.bi.type_defs import (
@@ -87,8 +76,8 @@ class NodeComputeResult(NamedTuple):
 
 class NodeResultBundle(NamedTuple):
     actual_result: NodeComputeResult
-    assumed_result: Optional[NodeComputeResult]
-    nested_results: List
+    assumed_result: NodeComputeResult | None
+    nested_results: list
     instance: Any
 
 
@@ -96,7 +85,7 @@ class QueryCallback(Protocol):
     def __call__(
         self,
         query: str,
-        only_sites: Optional[List[SiteId]] = None,
+        only_sites: list[SiteId] | None = None,
         output_format: LivestatusOutputFormat = LivestatusOutputFormat.PYTHON,
         fetch_full_data: bool = False,
     ) -> LivestatusResponse:
@@ -108,22 +97,22 @@ class SitesCallback(NamedTuple):
     query: QueryCallback
 
 
-MapGroup2Value = Dict[str, str]
+MapGroup2Value = dict[str, str]
 
 
 class BIServiceData(NamedTuple):
-    tags: Set[str]
+    tags: set[str]
     labels: MapGroup2Value
 
 
 class BIHostData(NamedTuple):
     site_id: str
-    tags: Set[Tuple[TaggroupID, TagID]]
+    tags: set[tuple[TaggroupID, TagID]]
     labels: MapGroup2Value
     folder: str
-    services: Dict[str, BIServiceData]
-    children: Tuple[HostName]
-    parents: Tuple[HostName]
+    services: dict[str, BIServiceData]
+    children: tuple[HostName]
+    parents: tuple[HostName]
     alias: str
     name: HostName
 
@@ -133,14 +122,14 @@ class BIHostSpec(NamedTuple):
     host_name: HostName
 
 
-BINeededHosts = Set[BIHostSpec]
+BINeededHosts = set[BIHostSpec]
 
 
 class BIServiceWithFullState(NamedTuple):
-    state: Optional[ServiceState]
+    state: ServiceState | None
     has_been_checked: bool
     plugin_output: ServiceDetails
-    hard_state: Optional[ServiceState]
+    hard_state: ServiceState | None
     current_attempt: int
     max_check_attempts: int
     scheduled_downtime_depth: int
@@ -149,18 +138,18 @@ class BIServiceWithFullState(NamedTuple):
 
 
 class BIHostStatusInfoRow(NamedTuple):
-    state: Optional[HostState]
+    state: HostState | None
     has_been_checked: bool
-    hard_state: Optional[HostState]
+    hard_state: HostState | None
     plugin_output: str
     scheduled_downtime_depth: int
     in_service_period: bool
     acknowledged: bool
-    services_with_fullstate: Dict[ServiceName, BIServiceWithFullState]
+    services_with_fullstate: dict[ServiceName, BIServiceWithFullState]
     remaining_row_keys: dict
 
 
-BIStatusInfo = Dict[BIHostSpec, BIHostStatusInfoRow]
+BIStatusInfo = dict[BIHostSpec, BIHostStatusInfoRow]
 
 
 class BIHostSearchMatch(NamedTuple):
@@ -177,23 +166,23 @@ class BIServiceSearchMatch(NamedTuple):
 class ABCWithSchema(abc.ABC):
     @classmethod
     @abc.abstractmethod
-    def schema(cls):
+    def schema(cls) -> Type[Schema]:
         raise NotImplementedError()
 
 
 def create_nested_schema_for_class(
     class_template: Type[ABCWithSchema],
-    default_schema: Optional[Type[Schema]] = None,
-    example_config: Optional[Union[list, Dict[str, Any]]] = None,
+    default_schema: Type[Schema] | None = None,
+    example_config: list | dict[str, Any] | None = None,
 ) -> Nested:
     class_schema = class_template.schema()
     return create_nested_schema(class_schema, default_schema, example_config)
 
 
-def create_nested_schema(  # type:ignore[no-untyped-def]
-    base_schema,
-    default_schema: Optional[Type[Schema]] = None,
-    example_config: Optional[Union[list, Dict[str, Any]]] = None,
+def create_nested_schema(
+    base_schema: Type[Schema],
+    default_schema: Type[Schema] | None = None,
+    example_config: list | dict[str, Any] | None = None,
 ) -> Nested:
     """
 
@@ -223,9 +212,9 @@ def create_nested_schema(  # type:ignore[no-untyped-def]
     )
 
 
-def get_schema_default_config(  # type:ignore[no-untyped-def]
-    schema: Type[Schema], params=None
-) -> Dict[str, Any]:
+def get_schema_default_config(
+    schema: Type[Schema], params: dict[object, object] | None = None
+) -> dict[str, Any]:
     """
 
     >>> from marshmallow import fields
@@ -251,7 +240,7 @@ def get_schema_default_config(  # type:ignore[no-untyped-def]
 class RequiredBIElement(NamedTuple):
     site_id: SiteId
     host_name: HostName
-    service_description: Optional[ServiceName]
+    service_description: ServiceName | None
 
 
 class BIAggregationComputationOptions(ABCWithSchema):
@@ -262,7 +251,7 @@ class BIAggregationComputationOptions(ABCWithSchema):
         self.escalate_downtimes_as_warn = computation_config["escalate_downtimes_as_warn"]
 
     @classmethod
-    def schema(cls) -> Type["BIAggregationComputationOptionsSchema"]:
+    def schema(cls) -> Type[BIAggregationComputationOptionsSchema]:
         return BIAggregationComputationOptionsSchema
 
     def serialize(self):
@@ -282,17 +271,17 @@ class BIAggregationComputationOptionsSchema(Schema):
 class BIAggregationGroups(ABCWithSchema):
     def __init__(self, group_config: GroupConfigDict) -> None:
         super().__init__()
-        self.names: List[str] = group_config["names"]
-        self.paths: List[List[str]] = group_config["paths"]
+        self.names: list[str] = group_config["names"]
+        self.paths: list[list[str]] = group_config["paths"]
 
     def count(self) -> int:
         return len(self.names) + len(self.paths)
 
-    def combined_groups(self) -> Set[str]:
+    def combined_groups(self) -> set[str]:
         return set(self.names + ["/".join(x) for x in self.paths])
 
     @classmethod
-    def schema(cls) -> Type["BIAggregationGroupsSchema"]:
+    def schema(cls) -> Type[BIAggregationGroupsSchema]:
         return BIAggregationGroupsSchema
 
     def serialize(self):
@@ -308,14 +297,14 @@ class BIAggregationGroupsSchema(Schema):
 
 
 class BIParams(ABCWithSchema):
-    def __init__(self, params_config: Dict[str, List[str]]) -> None:
+    def __init__(self, params_config: dict[str, list[str]]) -> None:
         super().__init__()
         self.arguments = params_config["arguments"]
         # Note: The BIParams may get additional options
         # Like keywords which are passed down the tree, without being explicit set for a rule
 
     @classmethod
-    def schema(cls) -> Type["BIParamsSchema"]:
+    def schema(cls) -> Type[BIParamsSchema]:
         return BIParamsSchema
 
     def serialize(self):
@@ -341,15 +330,15 @@ def replace_macros(pattern: T, macros: MacroMapping) -> T:
     return None
 
 
-def replace_macros_in_list(elements: List[str], macros: MacroMapping) -> List[str]:
-    new_list: List[str] = []
+def replace_macros_in_list(elements: list[str], macros: MacroMapping) -> list[str]:
+    new_list: list[str] = []
     for element in elements:
         new_list.append(replace_macros(element, macros))
     return new_list
 
 
-def replace_macros_in_dict(old_dict: Dict[str, str], macros: MacroMapping) -> Dict[str, str]:
-    new_dict: Dict[str, str] = {}
+def replace_macros_in_dict(old_dict: dict[str, str], macros: MacroMapping) -> dict[str, str]:
+    new_dict: dict[str, str] = {}
     for key, value in old_dict.items():
         new_dict[replace_macros(key, macros)] = replace_macros(value, macros)
     return new_dict
@@ -378,29 +367,29 @@ class ABCBISearcher(abc.ABC):
         self._host_regex_miss_cache: dict[str, dict] = {}
 
     @abc.abstractmethod
-    def search_hosts(self, conditions: Dict) -> List[BIHostSearchMatch]:
+    def search_hosts(self, conditions: dict) -> list[BIHostSearchMatch]:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def search_services(self, conditions: Dict) -> List[BIServiceSearchMatch]:
+    def search_services(self, conditions: dict) -> list[BIServiceSearchMatch]:
         raise NotImplementedError()
 
     @abc.abstractmethod
     def get_host_name_matches(
-        self, hosts: List[BIHostData], pattern: str
-    ) -> Tuple[List[BIHostData], Dict]:
+        self, hosts: list[BIHostData], pattern: str
+    ) -> tuple[list[BIHostData], dict]:
         raise NotImplementedError()
 
     @abc.abstractmethod
     def get_service_description_matches(
-        self, host_matches: List[BIHostSearchMatch], pattern: str
-    ) -> List[BIServiceSearchMatch]:
+        self, host_matches: list[BIHostSearchMatch], pattern: str
+    ) -> list[BIServiceSearchMatch]:
         raise NotImplementedError()
 
     @abc.abstractmethod
     def filter_host_choice(
-        self, hosts: List[BIHostData], condition: Dict
-    ) -> Tuple[Iterable[BIHostData], Dict]:
+        self, hosts: list[BIHostData], condition: dict
+    ) -> tuple[Iterable[BIHostData], dict]:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -416,7 +405,7 @@ class ABCBIStatusFetcher(abc.ABC):
     def __init__(self, sites_callback: SitesCallback) -> None:
         self._sites_callback = sites_callback
         self.states: BIStatusInfo = {}
-        self.assumed_states: Dict = {}
+        self.assumed_states: dict = {}
 
 
 class ABCBICompiledNode(abc.ABC):
@@ -429,7 +418,7 @@ class ABCBICompiledNode(abc.ABC):
     def type(cls) -> str:
         raise NotImplementedError()
 
-    def __lt__(self, other: "ABCBICompiledNode"):  # type:ignore[no-untyped-def]
+    def __lt__(self, other: ABCBICompiledNode) -> bool:
         return self._get_comparable_name() < other._get_comparable_name()
 
     @abc.abstractmethod
@@ -437,33 +426,33 @@ class ABCBICompiledNode(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def services_of_host(self, host_name: HostName) -> Set[ServiceName]:
+    def services_of_host(self, host_name: HostName) -> set[ServiceName]:
         raise NotImplementedError()
 
     @abc.abstractmethod
     def compile_postprocess(
         self,
-        bi_branch_root: "ABCBICompiledNode",
-        services_of_host: Dict[HostName, Set[ServiceName]],
+        bi_branch_root: ABCBICompiledNode,
+        services_of_host: dict[HostName, set[ServiceName]],
         bi_searcher: ABCBISearcher,
-    ) -> List["ABCBICompiledNode"]:
+    ) -> list[ABCBICompiledNode]:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def compute(  # type:ignore[no-untyped-def]
+    def compute(
         self,
         computation_options: BIAggregationComputationOptions,
         bi_status_fetcher: ABCBIStatusFetcher,
-        use_assumed=False,
-    ) -> Optional[NodeResultBundle]:
+        use_assumed: bool = False,
+    ) -> NodeResultBundle | None:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def required_elements(self) -> Set[RequiredBIElement]:
+    def required_elements(self) -> set[RequiredBIElement]:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def serialize(self) -> Dict[str, Any]:
+    def serialize(self) -> dict[str, Any]:
         raise NotImplementedError()
 
 
@@ -478,7 +467,7 @@ class ABCBICompiledNode(abc.ABC):
 
 
 class ABCBIAction(abc.ABC):
-    def __init__(self, action_config: Dict[str, Any]) -> None:
+    def __init__(self, action_config: dict[str, Any]) -> None:
         super().__init__()
 
     @classmethod
@@ -492,16 +481,16 @@ class ABCBIAction(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def serialize(self) -> Dict[str, Any]:
+    def serialize(self) -> dict[str, Any]:
         raise NotImplementedError()
 
     def _generate_action_arguments(
-        self, search_results: List[Dict[str, str]], macros: MacroMapping
+        self, search_results: list[dict[str, str]], macros: MacroMapping
     ) -> ActionArguments:
         raise NotImplementedError()
 
-    def execute_search_results(  # type:ignore[no-untyped-def]
-        self, search_results, macros: MacroMapping, bi_searcher
+    def execute_search_results(
+        self, search_results: list[dict], macros: MacroMapping, bi_searcher: ABCBISearcher
     ) -> Iterable[ABCBICompiledNode]:
         action_arguments = self._generate_action_arguments(search_results, macros)
         for argument in self._deduplicate_action_arguments(action_arguments):
@@ -513,7 +502,7 @@ class ABCBIAction(abc.ABC):
     @abc.abstractmethod
     def execute(
         self, argument: ActionArgument, bi_searcher: ABCBISearcher
-    ) -> List[ABCBICompiledNode]:
+    ) -> list[ABCBICompiledNode]:
         raise NotImplementedError()
 
 
@@ -538,7 +527,7 @@ bi_action_registry = BIActionRegistry()
 
 
 class ABCBISearch(abc.ABC):
-    def __init__(self, search_config: Dict[str, Any]) -> None:
+    def __init__(self, search_config: dict[str, Any]) -> None:
         super().__init__()
 
     @classmethod
@@ -552,11 +541,11 @@ class ABCBISearch(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def serialize(self) -> Dict[str, Any]:
+    def serialize(self) -> dict[str, Any]:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> List[Dict]:
+    def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> list[dict]:
         raise NotImplementedError()
 
 
@@ -581,7 +570,7 @@ bi_search_registry = BISearchRegistry()
 
 
 class ABCBIAggregationFunction(abc.ABC):
-    def __init__(self, aggr_function_config: Dict[str, Any]) -> None:
+    def __init__(self, aggr_function_config: dict[str, Any]) -> None:
         super().__init__()
 
     @classmethod
@@ -590,7 +579,7 @@ class ABCBIAggregationFunction(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def aggregate(self, states: List[int]) -> int:
+    def aggregate(self, states: list[int]) -> int:
         raise NotImplementedError()
 
     @classmethod
@@ -599,7 +588,7 @@ class ABCBIAggregationFunction(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def serialize(self) -> Dict[str, Any]:
+    def serialize(self) -> dict[str, Any]:
         raise NotImplementedError()
 
 
@@ -607,7 +596,7 @@ class BIAggregationFunctionRegistry(plugin_registry.Registry[Type[ABCBIAggregati
     def plugin_name(self, instance: Type[ABCBIAggregationFunction]) -> str:
         return instance.type()
 
-    def instantiate(self, aggr_func_config: Dict[str, Any]) -> ABCBIAggregationFunction:
+    def instantiate(self, aggr_func_config: dict[str, Any]) -> ABCBIAggregationFunction:
         return self._entries[aggr_func_config["type"]](aggr_func_config)
 
 

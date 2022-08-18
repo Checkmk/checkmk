@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import pytest
 
@@ -21,7 +21,7 @@ from .bi_test_data import sample_config
 
 
 class MockBIAggregationPack(BIAggregationPacks):
-    def __init__(self, config: Dict[Any, Any]) -> None:
+    def __init__(self, config: dict[Any, Any]) -> None:
         super().__init__("")
         self._load_config(config)
 
@@ -34,7 +34,7 @@ class MockBIAggregationPack(BIAggregationPacks):
 
 def mock_query_callback(
     query: str,
-    only_sites: Optional[List[SiteId]] = None,
+    only_sites: list[SiteId] | None = None,
     output_format: LivestatusOutputFormat = LivestatusOutputFormat.PYTHON,
     fetch_full_data: bool = False,
 ) -> LivestatusResponse:
@@ -49,7 +49,7 @@ def _bi_searcher():
 @pytest.fixture(scope="function")
 def bi_searcher_with_sample_config(bi_searcher):
     structure_fetcher = BIStructureFetcher(SitesCallback(lambda: None, mock_query_callback))
-    structure_fetcher.add_site_data("heute", sample_config.bi_structure_states)
+    structure_fetcher.add_site_data(SiteId("heute"), sample_config.bi_structure_states)
     bi_searcher.set_hosts(structure_fetcher.hosts)
     yield bi_searcher
 

@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Type, Union
+from collections.abc import Callable
+from typing import Any, Type
 
 from marshmallow import validate
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
@@ -31,12 +32,12 @@ _bi_criticality_level = {
 _reversed_bi_criticality_level = {v: k for k, v in _bi_criticality_level.items()}
 
 
-def mapped_states(func):
-    def wrap(self, states: List[int]) -> int:  # type:ignore[no-untyped-def]
-        new_states = sorted(map(lambda x: _bi_criticality_level[x], states))
-        return _reversed_bi_criticality_level.get(func(self, new_states), BIStates.UNKNOWN)
+def mapped_states(f: Callable[[Any, list[int]], int]) -> Callable[[Any, list[int]], int]:
+    def wrapped_f(self: ABCBIAggregationFunction, states: list[int]) -> int:
+        new_states = sorted(_bi_criticality_level[state] for state in states)
+        return _reversed_bi_criticality_level.get(f(self, new_states), BIStates.UNKNOWN)
 
-    return wrap
+    return wrapped_f
 
 
 #   .--Best----------------------------------------------------------------.
@@ -66,14 +67,14 @@ class BIAggregationFunctionBest(ABCBIAggregationFunction):
             "restrict_state": self.restrict_state,
         }
 
-    def __init__(self, aggr_function_config: Dict[str, Any]) -> None:
+    def __init__(self, aggr_function_config: dict[str, Any]) -> None:
         super().__init__(aggr_function_config)
         self.count = aggr_function_config["count"]
         self.restrict_state = aggr_function_config["restrict_state"]
         self.restricted_bi_level = _bi_criticality_level[self.restrict_state]
 
     @mapped_states
-    def aggregate(self, states: List[int]) -> int:
+    def aggregate(self, states: list[int]) -> int:
         return min(self.restricted_bi_level, states[min(len(states) - 1, self.count - 1)])
 
 
@@ -119,14 +120,14 @@ class BIAggregationFunctionWorst(ABCBIAggregationFunction):
             "restrict_state": self.restrict_state,
         }
 
-    def __init__(self, aggr_function_config: Dict[str, Any]) -> None:
+    def __init__(self, aggr_function_config: dict[str, Any]) -> None:
         super().__init__(aggr_function_config)
         self.count = aggr_function_config["count"]
         self.restrict_state = aggr_function_config["restrict_state"]
         self.restricted_bi_level = _bi_criticality_level[self.restrict_state]
 
     @mapped_states
-    def aggregate(self, states: List[int]) -> int:
+    def aggregate(self, states: list[int]) -> int:
         return min(self.restricted_bi_level, states[max(0, len(states) - self.count)])
 
 
@@ -172,12 +173,12 @@ class BIAggregationFunctionCountOK(ABCBIAggregationFunction):
             "levels_warn": self.levels_warn,
         }
 
-    def __init__(self, aggr_function_config: Dict[str, Any]) -> None:
+    def __init__(self, aggr_function_config: dict[str, Any]) -> None:
         super().__init__(aggr_function_config)
         self.levels_ok = aggr_function_config["levels_ok"]
         self.levels_warn = aggr_function_config["levels_warn"]
 
-    def aggregate(self, states: List[int]) -> int:
+    def aggregate(self, states: list[int]) -> int:
         ok_nodes = states.count(0)
         if self._check_levels(ok_nodes, len(states), self.levels_ok):
             return BIStates.OK
@@ -185,7 +186,7 @@ class BIAggregationFunctionCountOK(ABCBIAggregationFunction):
             return BIStates.WARN
         return BIStates.CRIT
 
-    def _check_levels(self, ok_nodes: int, total_nodes: int, levels: Dict) -> bool:
+    def _check_levels(self, ok_nodes: int, total_nodes: int, levels: dict) -> bool:
         if levels["type"] == "count":
             return ok_nodes >= levels["value"]
         return (ok_nodes / total_nodes) * 100 >= levels["value"]
@@ -223,7 +224,7 @@ class BIAggregationFunctionSchema(OneOfSchema):
     #    "count_ok": BIAggregationFunctionCountOKSchema,
     # }
 
-    def get_obj_type(self, obj: Union[ABCBIAggregationFunction, dict]) -> str:
+    def get_obj_type(self, obj: ABCBIAggregationFunction | dict) -> str:
         if isinstance(obj, dict):
             return obj["type"]
         return obj.type()

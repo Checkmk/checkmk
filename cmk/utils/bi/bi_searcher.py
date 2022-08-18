@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Iterable, List, Tuple
+from collections.abc import Iterable
+from typing import Any
 
 from cmk.utils.bi.bi_lib import ABCBISearcher, BIHostData, BIHostSearchMatch, BIServiceSearchMatch
 from cmk.utils.regex import regex
@@ -32,7 +33,7 @@ from cmk.utils.type_defs import HostName, TaggroupIDToTagCondition
 
 
 class BISearcher(ABCBISearcher):
-    def set_hosts(self, hosts: Dict[HostName, BIHostData]) -> None:
+    def set_hosts(self, hosts: dict[HostName, BIHostData]) -> None:
         self.cleanup()
         self.hosts = hosts
 
@@ -43,7 +44,7 @@ class BISearcher(ABCBISearcher):
         self._host_regex_match_cache.clear()
         self._host_regex_miss_cache.clear()
 
-    def search_hosts(self, conditions: Dict) -> List[BIHostSearchMatch]:
+    def search_hosts(self, conditions: dict) -> list[BIHostSearchMatch]:
         hosts, matched_re_groups = self.filter_host_choice(
             list(self.hosts.values()), conditions["host_choice"]
         )
@@ -54,9 +55,9 @@ class BISearcher(ABCBISearcher):
 
     def filter_host_choice(
         self,
-        hosts: List[BIHostData],
-        condition: Dict,
-    ) -> Tuple[List[BIHostData], Dict]:
+        hosts: list[BIHostData],
+        condition: dict,
+    ) -> tuple[list[BIHostData], dict]:
         if condition["type"] == "all_hosts":
             return hosts, self._host_match_groups(hosts)
 
@@ -68,16 +69,14 @@ class BISearcher(ABCBISearcher):
 
         raise NotImplementedError("Invalid condition type %r" % condition["type"])
 
-    def _host_match_groups(  # type:ignore[no-untyped-def]
-        self, hosts: List[BIHostData], match="name"
-    ):
+    def _host_match_groups(self, hosts: list[BIHostData], match: str = "name") -> dict[str, tuple]:
         return {host.name: (getattr(host, match),) for host in hosts}
 
     def get_host_name_matches(
         self,
-        hosts: List[BIHostData],
+        hosts: list[BIHostData],
         pattern: str,
-    ) -> Tuple[List[BIHostData], Dict]:
+    ) -> tuple[list[BIHostData], dict]:
 
         if pattern == "(.*)":
             return hosts, self._host_match_groups(hosts)
@@ -121,9 +120,9 @@ class BISearcher(ABCBISearcher):
 
     def get_host_alias_matches(
         self,
-        hosts: List[BIHostData],
+        hosts: list[BIHostData],
         pattern: str,
-    ) -> Tuple[List[BIHostData], Dict]:
+    ) -> tuple[list[BIHostData], dict]:
         if pattern == "(.*)":
             return hosts, self._host_match_groups(hosts, "alias")
 
@@ -142,9 +141,9 @@ class BISearcher(ABCBISearcher):
 
     def get_service_description_matches(
         self,
-        host_matches: List[BIHostSearchMatch],
+        host_matches: list[BIHostSearchMatch],
         pattern: str,
-    ) -> List[BIServiceSearchMatch]:
+    ) -> list[BIServiceSearchMatch]:
         matched_services = []
         regex_pattern = regex(pattern)
         for host_match in host_matches:
@@ -155,8 +154,8 @@ class BISearcher(ABCBISearcher):
                     )
         return matched_services
 
-    def search_services(self, conditions: Dict) -> List[BIServiceSearchMatch]:
-        host_matches: List[BIHostSearchMatch] = self.search_hosts(conditions)
+    def search_services(self, conditions: dict) -> list[BIServiceSearchMatch]:
+        host_matches: list[BIHostSearchMatch] = self.search_hosts(conditions)
         service_matches = self.get_service_description_matches(
             host_matches, conditions["service_regex"]
         )
@@ -192,16 +191,16 @@ class BISearcher(ABCBISearcher):
             )
         )
 
-    def filter_host_labels(  # type:ignore[no-untyped-def]
-        self, hosts: Iterable[BIHostData], required_labels
+    def filter_host_labels(
+        self, hosts: Iterable[BIHostData], required_labels: Any
     ) -> Iterable[BIHostData]:
         if not required_labels:
             return hosts
         return (x for x in hosts if matches_labels(x.labels, required_labels))
 
-    def filter_service_labels(  # type:ignore[no-untyped-def]
-        self, services: List[BIServiceSearchMatch], required_labels
-    ):
+    def filter_service_labels(
+        self, services: list[BIServiceSearchMatch], required_labels: Any
+    ) -> list:
         if not required_labels:
             return services
 

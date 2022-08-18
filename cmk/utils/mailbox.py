@@ -405,8 +405,7 @@ class Mailbox:
             # return int(time.time()) if parsed is None else email.utils.mktime_tz(parsed)
             raw_number = verified_result(self._connection.fetch(mail_id, "INTERNALDATE"))[0]
             assert isinstance(raw_number, bytes)
-            # typeshed bug: https://github.com/python/typeshed/issues/7781
-            return int(time.mktime(imaplib.Internaldate2tuple(raw_number)))  # type: ignore[arg-type]
+            return int(time.mktime(imaplib.Internaldate2tuple(raw_number)))
 
         if self.inbox_protocol() == "EWS":
             assert isinstance(self._connection, EWS)

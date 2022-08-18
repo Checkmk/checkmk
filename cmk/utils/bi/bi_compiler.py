@@ -3,10 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import pickle
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Set, TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 import cmk.utils.store as store
 from cmk.utils.bi.bi_aggregation import BIAggregation
@@ -28,34 +30,32 @@ if TYPE_CHECKING:
 
 class ConfigStatus(TypedDict):
     configfile_timestamp: float
-    known_sites: Set[SiteProgramStart]
-    online_sites: Set[SiteProgramStart]
+    known_sites: set[SiteProgramStart]
+    online_sites: set[SiteProgramStart]
 
 
 class BICompiler:
-    def __init__(  # type:ignore[no-untyped-def]
-        self, bi_configuration_file, sites_callback: SitesCallback
-    ) -> None:
+    def __init__(self, bi_configuration_file: str, sites_callback: SitesCallback) -> None:
         self._sites_callback = sites_callback
         self._bi_configuration_file = bi_configuration_file
 
         self._logger = logger.getChild("bi.compiler")
-        self._compiled_aggregations: Dict[str, BICompiledAggregation] = {}
+        self._compiled_aggregations: dict[str, BICompiledAggregation] = {}
         self._path_compilation_lock = Path(get_cache_dir(), "compilation.LOCK")
         self._path_compilation_timestamp = Path(get_cache_dir(), "last_compilation")
         self._path_compiled_aggregations = Path(get_cache_dir(), "compiled_aggregations")
         self._path_compiled_aggregations.mkdir(parents=True, exist_ok=True)
 
-        self._redis_client: Optional["RedisDecoded"] = None
+        self._redis_client: RedisDecoded | None = None
         self._setup()
 
-    def _setup(self):
+    def _setup(self) -> None:
         self._bi_packs = BIAggregationPacks(self._bi_configuration_file)
         self._bi_structure_fetcher = BIStructureFetcher(self._sites_callback)
         self.bi_searcher = BISearcher()
 
     @property
-    def compiled_aggregations(self) -> Dict[str, BICompiledAggregation]:
+    def compiled_aggregations(self) -> dict[str, BICompiledAggregation]:
         return self._compiled_aggregations
 
     def cleanup(self) -> None:
@@ -76,7 +76,7 @@ class BICompiler:
                 continue
 
             self._logger.debug("Loading cached aggregation results %s" % aggr_id)
-            aggr_data = self._load_data(str(path_object))
+            aggr_data = self._load_data(path_object)
             self._compiled_aggregations[aggr_id] = BIAggregation.create_trees_from_schema(aggr_data)
 
     def _check_compilation_status(self) -> None:
@@ -123,7 +123,7 @@ class BICompiler:
             str(self._path_compilation_timestamp), str(current_configstatus["configfile_timestamp"])
         )
 
-    def _cleanup_vanished_aggregations(self):
+    def _cleanup_vanished_aggregations(self) -> None:
         valid_aggregations = list(self._compiled_aggregations.keys())
         for path_object in self._path_compiled_aggregations.iterdir():
             if path_object.is_dir():
@@ -132,9 +132,9 @@ class BICompiler:
                 path_object.unlink(missing_ok=True)
 
     def _verify_aggregation_title_uniqueness(
-        self, compiled_aggregations: Dict[str, BICompiledAggregation]
+        self, compiled_aggregations: dict[str, BICompiledAggregation]
     ) -> None:
-        used_titles: Dict[str, str] = {}
+        used_titles: dict[str, str] = {}
         for aggr_id, bi_aggregation in compiled_aggregations.items():
             for bi_branch in bi_aggregation.branches:
                 branch_title = bi_branch.properties.title
@@ -148,16 +148,12 @@ class BICompiler:
                     )
                 used_titles[branch_title] = aggr_id
 
-    def prepare_for_compilation(  # type:ignore[no-untyped-def]
-        self, online_sites: Set[SiteProgramStart]
-    ):
+    def prepare_for_compilation(self, online_sites: set[SiteProgramStart]) -> None:
         self._bi_packs.load_config()
         self._bi_structure_fetcher.update_data(online_sites)
         self.bi_searcher.set_hosts(self._bi_structure_fetcher.hosts)
 
-    def compile_aggregation_result(
-        self, aggr_id: str, title: str
-    ) -> Optional[BICompiledAggregation]:
+    def compile_aggregation_result(self, aggr_id: str, title: str) -> BICompiledAggregation | None:
         """Allows to compile a single aggregation with a given title. Does not save any results to disk"""
         current_configstatus = self.compute_current_configstatus()
         self.prepare_for_compilation(current_configstatus["online_sites"])
@@ -193,7 +189,7 @@ class BICompiler:
             self._logger.warning("Can not determine compilation timestamp %s" % str(e))
         return compilation_timestamp
 
-    def _site_status_changed(self, required_program_starts: Set[SiteProgramStart]) -> bool:
+    def _site_status_changed(self, required_program_starts: set[SiteProgramStart]) -> bool:
         # The cached data may include more data than the currently required_program_starts
         # Empty branches are simply not shown during computation
         cached_program_starts = self._bi_structure_fetcher.get_cached_program_starts()
@@ -232,10 +228,10 @@ class BICompiler:
 
         return latest_timestamp
 
-    def _save_data(self, filepath: Path, data) -> None:  # type:ignore[no-untyped-def]
+    def _save_data(self, filepath: Path, data: dict) -> None:
         store.save_bytes_to_file(filepath, pickle.dumps(data))
 
-    def _load_data(self, filepath) -> Dict:  # type:ignore[no-untyped-def]
+    def _load_data(self, filepath: Path) -> dict:
         return store.load_object_from_pickle_file(filepath, default={})
 
     def _get_redis_client(self) -> "RedisDecoded":
@@ -243,9 +239,7 @@ class BICompiler:
             self._redis_client = get_redis_client()
         return self._redis_client
 
-    def is_part_of_aggregation(  # type:ignore[no-untyped-def]
-        self, host_name, service_description
-    ) -> bool:
+    def is_part_of_aggregation(self, host_name: str, service_description: str) -> bool:
         self._check_redis_lookup_integrity()
         return bool(
             self._get_redis_client().exists(
@@ -275,7 +269,7 @@ class BICompiler:
                 lookup_lock.release()
 
     def _generate_part_of_aggregation_lookup(self, compiled_aggregations):
-        part_of_aggregation_map: Dict[str, List[str]] = {}
+        part_of_aggregation_map: dict[str, list[str]] = {}
         for aggr_id, compiled_aggregation in compiled_aggregations.items():
             for branch in compiled_aggregation.branches:
                 for _site, host_name, service_description in branch.required_elements():

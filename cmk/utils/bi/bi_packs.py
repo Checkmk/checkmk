@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, NamedTuple, Optional, Set, Tuple, Type
+from typing import Any, NamedTuple, Type
 
 from marshmallow import fields, pre_dump
 
@@ -46,7 +47,7 @@ class RuleReferencesResult(NamedTuple):
 
 
 class BIAggregationPack:
-    def __init__(self, pack_config: Dict[str, Any]) -> None:
+    def __init__(self, pack_config: dict[str, Any]) -> None:
         super().__init__()
         self.id = pack_config["id"]
         self.title = pack_config["title"]
@@ -80,10 +81,10 @@ class BIAggregationPack:
     def num_rules(self) -> int:
         return len(self.rules)
 
-    def get_rules(self) -> Dict[str, BIRule]:
+    def get_rules(self) -> dict[str, BIRule]:
         return self.rules
 
-    def get_aggregations(self) -> Dict[str, BIAggregation]:
+    def get_aggregations(self) -> dict[str, BIAggregation]:
         return self.aggregations
 
     def add_rule(self, bi_rule: BIRule) -> None:
@@ -93,7 +94,7 @@ class BIAggregationPack:
         """Deletes a rule without rule tree integrity check"""
         del self.rules[rule_id]
 
-    def get_rule(self, rule_id: str) -> Optional[BIRule]:
+    def get_rule(self, rule_id: str) -> BIRule | None:
         return self.rules.get(rule_id)
 
     def get_rule_mandatory(self, rule_id: str) -> BIRule:
@@ -105,7 +106,7 @@ class BIAggregationPack:
     def delete_aggregation(self, aggregation_id: str) -> None:
         del self.aggregations[aggregation_id]
 
-    def get_aggregation(self, aggregation_id: str) -> Optional[BIAggregation]:
+    def get_aggregation(self, aggregation_id: str) -> BIAggregation | None:
         return self.aggregations.get(aggregation_id)
 
     def get_aggregation_mandatory(self, aggregation_id: str) -> BIAggregation:
@@ -115,7 +116,7 @@ class BIAggregationPack:
 class BIAggregationPacks:
     def __init__(self, bi_configuration_file: str) -> None:
         super().__init__()
-        self.packs: Dict[str, BIAggregationPack] = {}
+        self.packs: dict[str, BIAggregationPack] = {}
         self._bi_configuration_file = bi_configuration_file
 
     @classmethod
@@ -129,13 +130,13 @@ class BIAggregationPacks:
     def pack_exists(self, pack_id: str) -> bool:
         return pack_id in self.packs
 
-    def get_packs(self) -> Dict[str, BIAggregationPack]:
+    def get_packs(self) -> dict[str, BIAggregationPack]:
         return self.packs
 
-    def add_pack(self, pack: BIAggregationPack):  # type:ignore[no-untyped-def]
+    def add_pack(self, pack: BIAggregationPack) -> None:
         self.packs[pack.id] = pack
 
-    def get_pack(self, pack_id: str) -> Optional[BIAggregationPack]:
+    def get_pack(self, pack_id: str) -> BIAggregationPack | None:
         return self.packs.get(pack_id)
 
     def get_pack_mandatory(self, pack_id: str) -> BIAggregationPack:
@@ -144,7 +145,7 @@ class BIAggregationPacks:
     def delete_pack(self, pack_id: str) -> None:
         del self.packs[pack_id]
 
-    def get_rule(self, rule_id: str) -> Optional[BIRule]:
+    def get_rule(self, rule_id: str) -> BIRule | None:
         for bi_pack in self.packs.values():
             bi_rule = bi_pack.get_rule(rule_id)
             if bi_rule:
@@ -175,22 +176,22 @@ class BIAggregationPacks:
                 bi_pack.delete_rule(rule_id)
                 break
 
-    def get_all_rules(self) -> List[BIRule]:
+    def get_all_rules(self) -> list[BIRule]:
         return [
             bi_rule for bi_pack in self.packs.values() for bi_rule in bi_pack.get_rules().values()
         ]
 
-    def get_aggregation_group_trees(self) -> List[str]:
-        all_groups: Set[str] = set()
+    def get_aggregation_group_trees(self) -> list[str]:
+        all_groups: set[str] = set()
         for aggregation in self.get_all_aggregations():
             if aggregation.computation_options.disabled:
                 continue
             all_groups.update(["/".join(x) for x in aggregation.groups.paths])
         return sorted(all_groups)
 
-    def get_aggregation_group_choices(self) -> List[Tuple[str, str]]:
+    def get_aggregation_group_choices(self) -> list[tuple[str, str]]:
         """Return a list of all available group names and fully combined group paths"""
-        all_groups: Set[str] = set()
+        all_groups: set[str] = set()
         for aggregation in self.get_all_aggregations():
             if aggregation.computation_options.disabled:
                 continue
@@ -198,7 +199,7 @@ class BIAggregationPacks:
             all_groups.update(["/".join(x) for x in aggregation.groups.paths])
         return [(gn, gn) for gn in sorted(all_groups, key=lambda x: x.lower())]
 
-    def get_aggregation(self, aggregation_id: str) -> Optional[BIAggregation]:
+    def get_aggregation(self, aggregation_id: str) -> BIAggregation | None:
         for bi_pack in self.packs.values():
             bi_aggregation = bi_pack.get_aggregation(aggregation_id)
             if bi_aggregation:
@@ -218,25 +219,25 @@ class BIAggregationPacks:
             return bi_aggregation
         raise MKGeneralException(_("The requested BI aggregation does not exist."))
 
-    def get_all_aggregations(self) -> List[BIAggregation]:
-        aggregations: List[BIAggregation] = []
+    def get_all_aggregations(self) -> list[BIAggregation]:
+        aggregations: list[BIAggregation] = []
         for bi_pack in self.packs.values():
             aggregations.extend(bi_pack.get_aggregations().values())
         return aggregations
 
-    def get_pack_of_rule(self, rule_id: str) -> Optional[BIAggregationPack]:
+    def get_pack_of_rule(self, rule_id: str) -> BIAggregationPack | None:
         for bi_pack in self.packs.values():
             if bi_pack.get_rule(rule_id) is not None:
                 return bi_pack
         return None
 
-    def get_pack_of_aggregation(self, aggr_id: str) -> Optional[BIAggregationPack]:
+    def get_pack_of_aggregation(self, aggr_id: str) -> BIAggregationPack | None:
         for bi_pack in self.packs.values():
             if bi_pack.get_aggregation(aggr_id) is not None:
                 return bi_pack
         return None
 
-    def get_rule_ids_of_aggregation(self, aggr_id: str) -> Set[str]:
+    def get_rule_ids_of_aggregation(self, aggr_id: str) -> set[str]:
         bi_aggregation = self.get_aggregation_mandatory(aggr_id)
         if isinstance(bi_aggregation.node.action, BICallARuleAction):
             return set(self._get_rule_ids_of_rule(bi_aggregation.node.action.rule_id))
@@ -277,11 +278,11 @@ class BIAggregationPacks:
             return
         self._load_config(store.load_object_from_file(self._bi_configuration_file, default=None))
 
-    def _load_config(self, config: Dict) -> None:
+    def _load_config(self, config: dict) -> None:
         self.cleanup()
         self._instantiate_packs(config["packs"])
 
-    def _instantiate_packs(self, packs_data: List[Dict[str, Any]]):  # type:ignore[no-untyped-def]
+    def _instantiate_packs(self, packs_data: list[dict[str, Any]]) -> None:
         self.packs = {x["id"]: BIAggregationPack(x) for x in packs_data}
 
     def save_config(self) -> None:
@@ -314,7 +315,7 @@ class BIAggregationPacks:
         except (TypeError, ValueError):
             return 0
 
-    def generate_config(self) -> Dict[str, Any]:
+    def generate_config(self) -> dict[str, Any]:
         self._check_rule_cycles()
         return self.serialize()
 
@@ -331,7 +332,7 @@ class BIAggregationPacks:
         for toplevel_rule in toplevel_rules:
             self._traverse_rule(self.get_rule_mandatory(toplevel_rule))
 
-    def _traverse_rule(self, bi_rule: BIRule, parents=None) -> None:  # type:ignore[no-untyped-def]
+    def _traverse_rule(self, bi_rule: BIRule, parents: list[str] | None = None) -> None:
         if not parents:
             parents = []
 
@@ -397,7 +398,7 @@ class BIAggregationPackSchema(Schema):
     aggregations = ReqList(fields.Nested(BIAggregationSchema()), dump_default=[])
 
     @pre_dump
-    def pre_dumper(self, obj: BIAggregationPack, many=False) -> Dict:  # type:ignore[no-untyped-def]
+    def pre_dumper(self, obj: BIAggregationPack, many: bool = False) -> dict:
         # Convert aggregations and rules to list
         return {
             "id": obj.id,
@@ -414,7 +415,7 @@ class BIAggregationPacksSchema(Schema):
     packs = ReqList(ReqNested(BIAggregationPackSchema))
 
     @pre_dump
-    def pre_dumper(self, obj: BIAggregationPacks, many=None) -> Dict:  # type:ignore[no-untyped-def]
+    def pre_dumper(self, obj: BIAggregationPacks, many: bool = False) -> dict:
         # Convert packs to list
         return {"packs": obj.packs.values()}
 
@@ -433,7 +434,7 @@ class BIAggregationPacksSchema(Schema):
 
 
 class BIHostRenamer:
-    def rename_host(self, oldname: str, newname: str, bi_packs: BIAggregationPacks) -> List:
+    def rename_host(self, oldname: str, newname: str, bi_packs: BIAggregationPacks) -> list:
         bi_packs.load_config()
         renamed = 0
 

@@ -4,21 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-from typing import Dict, Iterator, List, NamedTuple, Optional, Set, Tuple
+from collections.abc import Iterator
+from typing import NamedTuple
 
 import cmk.utils.plugin_registry
+from cmk.utils.bi.bi_data_fetcher import BIStatusFetcher
 from cmk.utils.bi.bi_lib import RequiredBIElement
 from cmk.utils.bi.bi_trees import BICompiledAggregation, BICompiledRule, NodeResultBundle
 from cmk.utils.type_defs import HostName, ServiceName
 
 
 class BIAggregationFilter(NamedTuple):
-    hosts: List[HostName]
-    services: List[Tuple[HostName, ServiceName]]
-    aggr_ids: List[str]
-    aggr_titles: List[str]
-    group_names: List[str]
-    group_path_prefix: List[str]
+    hosts: list[HostName]
+    services: list[tuple[HostName, ServiceName]]
+    aggr_ids: list[str]
+    aggr_titles: list[str]
+    group_names: list[str]
+    group_path_prefix: list[str]
 
 
 class ABCPostprocessComputeResult:
@@ -37,7 +39,7 @@ class BIComputerPostprocessingRegistry(
     def postprocess(
         self,
         compiled_aggregation: BICompiledAggregation,
-        node_result_bundles: List[NodeResultBundle],
+        node_result_bundles: list[NodeResultBundle],
     ) -> Iterator[NodeResultBundle]:
         for node_result_bundle in node_result_bundles:
             postprocessed_bundle = node_result_bundle
@@ -52,10 +54,12 @@ bi_computer_postprocessing_registry = BIComputerPostprocessingRegistry()
 
 
 class BIComputer:
-    def __init__(  # type:ignore[no-untyped-def]
-        self, compiled_aggregations, bi_status_fetcher
+    def __init__(
+        self,
+        compiled_aggregations: dict[str, BICompiledAggregation],
+        bi_status_fetcher: BIStatusFetcher,
     ) -> None:
-        self._compiled_aggregations: Dict[str, BICompiledAggregation] = compiled_aggregations
+        self._compiled_aggregations = compiled_aggregations
         self._bi_status_fetcher = bi_status_fetcher
         self._legacy_branch_cache: dict = {}
 
@@ -63,8 +67,8 @@ class BIComputer:
         self,
         aggr_id: str,
         title: str,
-    ) -> List[Tuple[BICompiledAggregation, List[NodeResultBundle]]]:
-        compiled_aggregation: Optional[BICompiledAggregation] = self._compiled_aggregations.get(
+    ) -> list[tuple[BICompiledAggregation, list[NodeResultBundle]]]:
+        compiled_aggregation: BICompiledAggregation | None = self._compiled_aggregations.get(
             aggr_id
         )
 
@@ -78,7 +82,7 @@ class BIComputer:
 
     def compute_result_for_filter(
         self, bi_aggregation_filter: BIAggregationFilter
-    ) -> List[Tuple[BICompiledAggregation, List[NodeResultBundle]]]:
+    ) -> list[tuple[BICompiledAggregation, list[NodeResultBundle]]]:
         required_aggregations = self.get_required_aggregations(bi_aggregation_filter)
         required_elements = self.get_required_elements(required_aggregations)
         self._bi_status_fetcher.update_states(required_elements)
@@ -86,7 +90,7 @@ class BIComputer:
 
     def get_required_aggregations(
         self, bi_aggregation_filter: BIAggregationFilter
-    ) -> List[Tuple[BICompiledAggregation, List[BICompiledRule]]]:
+    ) -> list[tuple[BICompiledAggregation, list[BICompiledRule]]]:
         return [
             (
                 compiled_aggregation,
@@ -96,8 +100,8 @@ class BIComputer:
         ]
 
     def get_required_elements(
-        self, required_aggregations: List[Tuple[BICompiledAggregation, List[BICompiledRule]]]
-    ) -> Set[RequiredBIElement]:
+        self, required_aggregations: list[tuple[BICompiledAggregation, list[BICompiledRule]]]
+    ) -> set[RequiredBIElement]:
         required_elements = set()
         for _compiled_aggregation, branches in required_aggregations:
             for branch in branches:
@@ -105,8 +109,8 @@ class BIComputer:
         return required_elements
 
     def compute_results(
-        self, required_aggregations: List[Tuple[BICompiledAggregation, List[BICompiledRule]]]
-    ) -> List[Tuple[BICompiledAggregation, List[NodeResultBundle]]]:
+        self, required_aggregations: list[tuple[BICompiledAggregation, list[BICompiledRule]]]
+    ) -> list[tuple[BICompiledAggregation, list[NodeResultBundle]]]:
         results = []
         for compiled_aggregation, branches in required_aggregations:
             node_result_bundles = compiled_aggregation.compute_branches(
@@ -129,7 +133,7 @@ class BIComputer:
         self,
         compiled_aggregation: BICompiledAggregation,
         bi_aggregation_filter: BIAggregationFilter,
-    ) -> List[BICompiledRule]:
+    ) -> list[BICompiledRule]:
         if not self._use_aggregation(compiled_aggregation, bi_aggregation_filter):
             return []
 
@@ -211,16 +215,16 @@ class BIComputer:
 
     def compute_legacy_result_for_filter(
         self, bi_aggregation_filter: BIAggregationFilter
-    ) -> List[Dict]:
+    ) -> list[dict]:
         results = self.compute_result_for_filter(bi_aggregation_filter)
         legacy_results = self.convert_to_legacy_results(results, bi_aggregation_filter)
         return legacy_results
 
     def convert_to_legacy_results(
         self,
-        results: List[Tuple[BICompiledAggregation, List[NodeResultBundle]]],
+        results: list[tuple[BICompiledAggregation, list[NodeResultBundle]]],
         bi_aggregation_filter: BIAggregationFilter,
-    ) -> List[Dict]:
+    ) -> list[dict]:
         try:
             return self._legacy_postprocessing(results, bi_aggregation_filter)
         finally:
@@ -228,9 +232,9 @@ class BIComputer:
 
     def _legacy_postprocessing(
         self,
-        results: List[Tuple[BICompiledAggregation, List[NodeResultBundle]]],
+        results: list[tuple[BICompiledAggregation, list[NodeResultBundle]]],
         bi_aggregation_filter: BIAggregationFilter,
-    ) -> List[Dict]:
+    ) -> list[dict]:
         legacy_results = []
         # Create one result for each bi group name/path
         for compiled_aggregation, branches in results:
@@ -247,11 +251,11 @@ class BIComputer:
 
         return legacy_results
 
-    def _get_matched_aggr_groups(  # type:ignore[no-untyped-def]
+    def _get_matched_aggr_groups(
         self,
         bi_aggregation_filter: BIAggregationFilter,
         compiled_aggregation: BICompiledAggregation,
-    ):
+    ) -> set[str]:
         filter_names = bi_aggregation_filter.group_names
         filter_paths = bi_aggregation_filter.group_path_prefix
 
@@ -275,7 +279,7 @@ class BIComputer:
 
         return matched_aggr_groups
 
-    def _matches_group_path(self, group_paths: List[List[str]], filter_paths: List[str]) -> bool:
+    def _matches_group_path(self, group_paths: list[list[str]], filter_paths: list[str]) -> bool:
         for filter_path in filter_paths:
             for group_path in group_paths:
                 if "/".join(group_path).startswith(filter_path):
@@ -287,7 +291,7 @@ class BIComputer:
         compiled_aggregation: BICompiledAggregation,
         node_result_bundle: NodeResultBundle,
         aggr_group: str,
-    ) -> Dict:
+    ) -> dict:
         title = node_result_bundle.instance.properties.title
         if title not in self._legacy_branch_cache:
             legacy_branch = compiled_aggregation.convert_result_to_legacy_format(node_result_bundle)

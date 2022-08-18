@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Set, Type, Union
+from collections.abc import Mapping
+from typing import Any, Type
 
 from marshmallow import fields, validate
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
@@ -50,7 +51,7 @@ class BIHostChoice(OneOfSchema):
         "host_alias_regex": BIHostAliasRegexChoiceSchema,
     }
 
-    def get_obj_type(self, obj) -> str:  # type:ignore[no-untyped-def]
+    def get_obj_type(self, obj: Mapping[str, str]) -> str:
         return obj["type"]
 
 
@@ -88,7 +89,7 @@ class BIEmptySearch(ABCBISearch):
     def schema(cls) -> Type["BIEmptySearchSchema"]:
         return BIEmptySearchSchema
 
-    def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> List[Dict]:
+    def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> list[dict]:
         return [{}]
 
     def serialize(self):
@@ -128,14 +129,14 @@ class BIHostSearch(ABCBISearch):
             "refer_to": self.refer_to,
         }
 
-    def __init__(self, search_config: Dict[str, Any]) -> None:
+    def __init__(self, search_config: dict[str, Any]) -> None:
         super().__init__(search_config)
         self.conditions = search_config["conditions"]
         self.refer_to = search_config["refer_to"]
 
-    def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> List[Dict]:
+    def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> list[dict]:
         new_conditions = replace_macros(self.conditions, macros)
-        search_matches: List[BIHostSearchMatch] = bi_searcher.search_hosts(new_conditions)
+        search_matches: list[BIHostSearchMatch] = bi_searcher.search_hosts(new_conditions)
 
         if self.refer_to == "host":
             return self._refer_to_host_results(search_matches)
@@ -152,7 +153,7 @@ class BIHostSearch(ABCBISearch):
 
         raise NotImplementedError("Invalid refer to type %r" % (self.refer_to,))
 
-    def _refer_to_host_results(self, search_matches: List[BIHostSearchMatch]) -> List[Dict]:
+    def _refer_to_host_results(self, search_matches: list[BIHostSearchMatch]) -> list[dict]:
         search_results = []
         for search_match in search_matches:
             search_result = {
@@ -166,8 +167,8 @@ class BIHostSearch(ABCBISearch):
         return search_results
 
     def _refer_to_children_results(
-        self, search_matches: List[BIHostSearchMatch], bi_searcher: ABCBISearcher
-    ) -> List[Dict]:
+        self, search_matches: list[BIHostSearchMatch], bi_searcher: ABCBISearcher
+    ) -> list[dict]:
         search_results = []
         handled_children = set()
         for search_match in search_matches:
@@ -183,7 +184,7 @@ class BIHostSearch(ABCBISearch):
                 search_results.append(search_result)
         return search_results
 
-    def _refer_to_parent_results(self, search_matches: List[BIHostSearchMatch]) -> List[Dict]:
+    def _refer_to_parent_results(self, search_matches: list[BIHostSearchMatch]) -> list[dict]:
         search_results = []
         handled_parents = set()
         for search_match in search_matches:
@@ -203,19 +204,19 @@ class BIHostSearch(ABCBISearch):
 
     def _refer_to_children_with_results(
         self,
-        search_matches: List[BIHostSearchMatch],
+        search_matches: list[BIHostSearchMatch],
         bi_searcher: ABCBISearcher,
         refer_config: dict,
-    ) -> List[Dict]:
+    ) -> list[dict]:
         referred_tags, referred_host_choice = refer_config
-        all_children: Set[HostName] = set()
+        all_children: set[HostName] = set()
 
         # Determine pool of childrens
         for search_match in search_matches:
             all_children.update(search_match.host.children)
 
         # Filter childrens known to bi_searcher
-        children_host_data: List[BIHostData] = [
+        children_host_data: list[BIHostData] = [
             bi_searcher.hosts[x] for x in all_children if x in bi_searcher.hosts
         ]
 
@@ -268,13 +269,13 @@ class BIServiceSearch(ABCBISearch):
             "conditions": self.conditions,
         }
 
-    def __init__(self, search_config: Dict[str, Any]) -> None:
+    def __init__(self, search_config: dict[str, Any]) -> None:
         super().__init__(search_config)
         self.conditions = search_config["conditions"]
 
-    def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> List[Dict]:
+    def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> list[dict]:
         new_conditions = replace_macros(self.conditions, macros)
-        search_matches: List[BIServiceSearchMatch] = bi_searcher.search_services(new_conditions)
+        search_matches: list[BIServiceSearchMatch] = bi_searcher.search_services(new_conditions)
         search_results = []
         for search_match in sorted(search_matches, key=lambda x: x.service_description):
             search_result = {
@@ -322,12 +323,12 @@ class BIFixedArgumentsSearch(ABCBISearch):
     def schema(cls) -> Type["BIFixedArgumentsSearchSchema"]:
         return BIFixedArgumentsSearchSchema
 
-    def __init__(self, search_config: Dict[str, Any]) -> None:
+    def __init__(self, search_config: dict[str, Any]) -> None:
         super().__init__(search_config)
         self.arguments = search_config["arguments"]
 
-    def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> List[Dict]:
-        results: List[Dict] = []
+    def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> list[dict]:
+        results: list[dict] = []
         new_vars = replace_macros(self.arguments, macros)
         for argument in new_vars:
             key = argument["key"]
@@ -364,7 +365,7 @@ class BISearchSchema(OneOfSchema):
     type_field_remove = False
     type_schemas = dict((k, v.schema()) for k, v in bi_search_registry.items())
 
-    def get_obj_type(self, obj: Union[ABCBISearch, dict]) -> str:
+    def get_obj_type(self, obj: ABCBISearch | dict) -> str:
         if isinstance(obj, dict):
             return obj["type"]
         return obj.type()

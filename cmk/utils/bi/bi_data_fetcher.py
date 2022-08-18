@@ -6,8 +6,8 @@
 import marshal
 import os
 import time
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Dict, List, Mapping, Optional, Set, Tuple
 
 from livestatus import LivestatusColumn, LivestatusOutputFormat, LivestatusResponse, SiteId
 
@@ -23,9 +23,10 @@ from cmk.utils.bi.bi_lib import (
     RequiredBIElement,
     SitesCallback,
 )
+from cmk.utils.bi.bi_trees import BICompiledAggregation, BICompiledRule
 from cmk.utils.type_defs import HostName
 
-SiteProgramStart = Tuple[SiteId, int]
+SiteProgramStart = tuple[SiteId, int]
 
 #   .--Defines-------------------------------------------------------------.
 #   |                  ____        __ _                                    |
@@ -63,8 +64,8 @@ def get_cache_dir() -> Path:
 class BIStructureFetcher:
     def __init__(self, sites_callback: SitesCallback) -> None:
         self._sites_callback = sites_callback
-        self._hosts: Dict[HostName, BIHostData] = {}
-        self._have_sites: Set[SiteId] = set()
+        self._hosts: dict[HostName, BIHostData] = {}
+        self._have_sites: set[SiteId] = set()
         self._path_lock_structure_cache = Path(get_cache_dir(), "bi_structure_cache.LOCK")
 
         self._site_cache_prefix = "bi_site_cache"
@@ -76,16 +77,16 @@ class BIStructureFetcher:
         self._hosts.clear()
 
     @property
-    def hosts(self) -> Dict[HostName, BIHostData]:
+    def hosts(self) -> dict[HostName, BIHostData]:
         return self._hosts
 
-    def get_cached_program_starts(self) -> Set[SiteProgramStart]:
+    def get_cached_program_starts(self) -> set[SiteProgramStart]:
         cached_program_starts = set()
         for _path_object, (site_id, timestamp) in self._get_site_data_files():
             cached_program_starts.add((site_id, timestamp))
         return cached_program_starts
 
-    def update_data(self, required_program_starts: Set[SiteProgramStart]) -> None:
+    def update_data(self, required_program_starts: set[SiteProgramStart]) -> None:
         missing_program_starts = required_program_starts - self.get_cached_program_starts()
 
         if missing_program_starts:
@@ -93,7 +94,7 @@ class BIStructureFetcher:
 
         self._read_cached_data(required_program_starts)
 
-    def _fetch_missing_data(self, missing_program_starts) -> None:  # type:ignore[no-untyped-def]
+    def _fetch_missing_data(self, missing_program_starts: set) -> None:
         only_sites = {kv[0]: kv[1] for kv in missing_program_starts}
 
         # Start two queries: GET hosts / GET services
@@ -113,7 +114,7 @@ class BIStructureFetcher:
         service_query = "GET services\nColumns: %s\nCache: reload\n" % " ".join(
             self._service_structure_columns()
         )
-        host_service_lookup: Dict[HostName, List] = {}
+        host_service_lookup: dict[HostName, list] = {}
         for row in self._sites_callback.query(
             service_query,
             list(only_sites.keys()),
@@ -122,7 +123,7 @@ class BIStructureFetcher:
         ):
             host_service_lookup.setdefault(row[1], []).append(row[2:])
 
-        site_data: Dict[str, Dict] = {x: {} for x in only_sites.keys()}
+        site_data: dict[SiteId, dict] = {x: {} for x in only_sites.keys()}
         for (
             site,
             host_name,
@@ -169,9 +170,9 @@ class BIStructureFetcher:
             path = self._path_site_structure_data.joinpath(
                 self._site_data_filename(site_id, only_sites[site_id])
             )
-            self._marshal_save_data(str(path), hosts)
+            self._marshal_save_data(path, hosts)
 
-    def _read_cached_data(self, required_program_starts: Set[SiteProgramStart]) -> None:
+    def _read_cached_data(self, required_program_starts: set[SiteProgramStart]) -> None:
         required_sites = {x[0] for x in required_program_starts}
         for path_object, (site_id, _timestamp) in self._get_site_data_files():
             if site_id in self._have_sites:
@@ -183,11 +184,11 @@ class BIStructureFetcher:
                 # The site probably got disabled in the distributed monitoring page
                 continue
 
-            site_data = self._marshal_load_data(str(path_object))
+            site_data = self._marshal_load_data(path_object)
             self.add_site_data(site_id, site_data)
 
     @classmethod
-    def _host_structure_columns(cls) -> List[str]:
+    def _host_structure_columns(cls) -> list[str]:
         return [
             "host_name",
             "host_tags",
@@ -199,19 +200,19 @@ class BIStructureFetcher:
         ]
 
     @classmethod
-    def _service_structure_columns(cls) -> List[str]:
+    def _service_structure_columns(cls) -> list[str]:
         return ["host_name", "description", "tags", "labels"]
 
-    def _site_data_filename(self, site_id, timestamp) -> str:  # type:ignore[no-untyped-def]
+    def _site_data_filename(self, site_id: str, timestamp: int) -> str:
         return "%s.%s.%d" % (self._site_cache_prefix, site_id, timestamp)
 
-    def add_site_data(self, site_id, hosts) -> None:  # type:ignore[no-untyped-def]
+    def add_site_data(self, site_id: SiteId, hosts: Mapping[HostName, tuple]) -> None:
         # BIHostData
         # ("site_id", str),
-        # ("tags", Set[Tuple[TaggroupID, TagID]]),
+        # ("tags", set[tuple[TaggroupID, TagID]]),
         # ("labels", set),
         # ("folder", str),
-        # ("services", Dict[str, BIServiceData]),
+        # ("services", dict[str, BIServiceData]),
         # ("children", tuple),
         # ("parents", tuple),
         # ("alias", str),
@@ -246,7 +247,7 @@ class BIStructureFetcher:
             except (IndexError, IOError, ValueError):
                 path_object.unlink(missing_ok=True)
 
-    def _get_site_data_files(self) -> List[Tuple[Path, SiteProgramStart]]:
+    def _get_site_data_files(self) -> list[tuple[Path, SiteProgramStart]]:
         data_files = []
         for path_object in self._path_site_structure_data.iterdir():
             if path_object.is_dir():
@@ -265,12 +266,12 @@ class BIStructureFetcher:
             data_files.append((path_object, (SiteId(site_id), int(timestamp))))
         return data_files
 
-    def _marshal_save_data(self, filepath, data) -> None:  # type:ignore[no-untyped-def]
+    def _marshal_save_data(self, filepath: Path, data: dict) -> None:
         with open(filepath, "wb") as f:
             marshal.dump(data, f)
             os.fsync(f.fileno())
 
-    def _marshal_load_data(self, filepath) -> Dict:  # type:ignore[no-untyped-def]
+    def _marshal_load_data(self, filepath: Path) -> dict:
         with open(filepath, "rb") as f:
             return marshal.load(f)
 
@@ -286,7 +287,7 @@ class BIStructureFetcher:
 
 
 class BIStatusFetcher(ABCBIStatusFetcher):
-    def set_assumed_states(self, assumed_states) -> None:  # type:ignore[no-untyped-def]
+    def set_assumed_states(self, assumed_states: dict) -> None:
         # Streamline format to site, host, service (may be None)
         self.assumed_states = {}
         for key, state in assumed_states.items():
@@ -295,21 +296,31 @@ class BIStatusFetcher(ABCBIStatusFetcher):
             else:
                 self.assumed_states[key] = state
 
-    def update_states(self, required_elements: Set[RequiredBIElement]) -> None:
+    def update_states(self, required_elements: set[RequiredBIElement]) -> None:
         self.states = self._get_status_info(required_elements)
 
-    def update_states_filtered(self, *args) -> None:  # type:ignore[no-untyped-def]
-        self.states = self._get_status_info_filtered(*args)
+    def update_states_filtered(
+        self,
+        filter_header: str,
+        only_sites: list[SiteId] | None,
+        limit: int,
+        host_columns: list,
+        bygroup: bool,
+        required_aggregations: list[tuple[BICompiledAggregation, list[BICompiledRule]]],
+    ) -> None:
+        self.states = self._get_status_info_filtered(
+            filter_header, only_sites, limit, host_columns, bygroup, required_aggregations
+        )
 
     def cleanup(self) -> None:
         self.states.clear()
         self.assumed_states.clear()
 
     # Get all status information for the required_hosts
-    def _get_status_info(self, required_elements) -> BIStatusInfo:  # type:ignore[no-untyped-def]
+    def _get_status_info(self, required_elements: set[RequiredBIElement]) -> BIStatusInfo:
         # Query each site only for hosts that that site provides
-        req_hosts: Set[HostName] = set()
-        req_sites: Set[SiteId] = set()
+        req_hosts: set[HostName] = set()
+        req_sites: set[SiteId] = set()
 
         for site, host, _service in required_elements:
             req_hosts.add(host)
@@ -333,8 +344,14 @@ class BIStatusFetcher(ABCBIStatusFetcher):
     # This variant of the function is configured not with a list of
     # hosts but with a livestatus filter header and a list of columns
     # that need to be fetched in any case
-    def _get_status_info_filtered(  # type:ignore[no-untyped-def]
-        self, filter_header, only_sites, limit, host_columns, bygroup, required_aggregations
+    def _get_status_info_filtered(
+        self,
+        filter_header: str,
+        only_sites: list[SiteId] | None,
+        limit: int,
+        host_columns: list,
+        bygroup: bool,
+        required_aggregations: list[tuple[BICompiledAggregation, list[BICompiledRule]]],
     ) -> BIStatusInfo:
         columns = self.get_status_columns() + host_columns
         query = "GET hosts%s\n" % ("bygroup" if bygroup else "")
@@ -343,7 +360,7 @@ class BIStatusFetcher(ABCBIStatusFetcher):
         data = self._sites_callback.query(query, only_sites)
 
         # Now determine aggregation branches which include the site hosts
-        site_hosts = {(row[0], row[1]) for row in data}
+        site_hosts = {BIHostSpec(row[0], row[1]) for row in data}
         required_hosts = set()
         for _compiled_aggregation, branches in required_aggregations:
             for branch in branches:
@@ -354,11 +371,11 @@ class BIStatusFetcher(ABCBIStatusFetcher):
         missing_hosts = required_hosts - site_hosts
 
         # Restrict hosts with only sites, maybe someone want to see a subtree..
-        remaining_hosts = set()
+        remaining_hosts: set[BIHostSpec] = set()
         if only_sites:
             for site_id, host_name in missing_hosts:
                 if site_id in only_sites:
-                    remaining_hosts.add((site_id, host_name))
+                    remaining_hosts.add(BIHostSpec(site_id, host_name))
         else:
             remaining_hosts = missing_hosts
 
@@ -379,7 +396,7 @@ class BIStatusFetcher(ABCBIStatusFetcher):
 
     @classmethod
     def create_bi_status_data(
-        cls, rows: LivestatusResponse, extra_columns: Optional[List[LivestatusColumn]] = None
+        cls, rows: LivestatusResponse, extra_columns: list[LivestatusColumn] | None = None
     ) -> BIStatusInfo:
         response = {}
         bi_data_end = len(cls.get_status_columns())
@@ -402,7 +419,7 @@ class BIStatusFetcher(ABCBIStatusFetcher):
         return cls.get_status_columns().index("services_with_fullstate") + 1
 
     @classmethod
-    def get_status_columns(cls) -> List[LivestatusColumn]:
+    def get_status_columns(cls) -> list[LivestatusColumn]:
         return [
             "name",
             "state",

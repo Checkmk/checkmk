@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Optional, Set, Type
+from __future__ import annotations
+
+from typing import Any, Type
 
 from cmk.utils.bi.bi_lib import (
+    ABCBICompiledNode,
     ABCBISearcher,
     BIAggregationComputationOptions,
     BIAggregationGroups,
@@ -37,7 +40,7 @@ SCOPE_GLOBAL = None
 
 
 class BIAggregation:
-    def __init__(self, aggr_config: Optional[AggrConfigDict] = None, pack_id: str = "") -> None:
+    def __init__(self, aggr_config: AggrConfigDict | None = None, pack_id: str = "") -> None:
         super().__init__()
         if aggr_config is None:
             aggr_config = self.schema()().dump({})
@@ -54,7 +57,7 @@ class BIAggregation:
         self.aggregation_visualization = aggr_config["aggregation_visualization"]
 
     @classmethod
-    def schema(cls) -> Type["BIAggregationSchema"]:
+    def schema(cls) -> Type[BIAggregationSchema]:
         return BIAggregationSchema
 
     def serialize(self):
@@ -73,14 +76,14 @@ class BIAggregation:
         return BIAggregation(aggregation_config)
 
     def compile(self, bi_searcher: ABCBISearcher) -> BICompiledAggregation:
-        compiled_branches: List[BICompiledRule] = []
+        compiled_branches: list[BICompiledRule] = []
         if not self.computation_options.disabled:
             branches = self.node.compile({}, bi_searcher)
 
             # Each sub-branch represents one BI Aggregation with an unique name
             # The postprocessing phase takes care of the "remaining services" action
             for branch in branches:
-                services_of_host: Dict[HostName, Set[ServiceName]] = {}
+                services_of_host: dict[HostName, set[ServiceName]] = {}
                 for _site, host_name, service_description in branch.required_elements():
                     if service_description is None:
                         continue
@@ -97,15 +100,15 @@ class BIAggregation:
             self.groups,
         )
 
-    def _verify_all_branches_start_with_rule(  # type:ignore[no-untyped-def]
-        self, branches
-    ) -> List[BICompiledRule]:
-        new_branches: List[BICompiledRule] = [x for x in branches if isinstance(x, BICompiledRule)]
+    def _verify_all_branches_start_with_rule(
+        self, branches: list[ABCBICompiledNode]
+    ) -> list[BICompiledRule]:
+        new_branches: list[BICompiledRule] = [x for x in branches if isinstance(x, BICompiledRule)]
         assert len(branches) == len(new_branches)
         return new_branches
 
     @classmethod
-    def create_trees_from_schema(cls, schema_config: Dict[str, Any]) -> BICompiledAggregation:
+    def create_trees_from_schema(cls, schema_config: dict[str, Any]) -> BICompiledAggregation:
         branches = [BIRule.create_tree_from_schema(config) for config in schema_config["branches"]]
         aggregation_id = schema_config["id"]
         computation_options = BIAggregationComputationOptions(schema_config["computation_options"])

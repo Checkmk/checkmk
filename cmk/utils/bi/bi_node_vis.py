@@ -12,6 +12,8 @@
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
+from collections.abc import Mapping
+
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.utils.bi.bi_lib import ReqBoolean, ReqConstant, ReqInteger, ReqNested, ReqString
@@ -81,5 +83,5 @@ class BINodeVisLayoutStyleSchema(OneOfSchema):
         "force": BINodeVisForceStyleSchema,
     }
 
-    def get_obj_type(self, obj) -> str:  # type:ignore[no-untyped-def]
+    def get_obj_type(self, obj: Mapping[str, str]) -> str:
         return obj["type"]

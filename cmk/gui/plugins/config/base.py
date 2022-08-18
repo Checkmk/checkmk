@@ -11,7 +11,7 @@ from livestatus import SiteConfigurations
 
 from cmk.utils.type_defs import TagConfigSpec
 
-from cmk.gui.type_defs import UserSpec
+from cmk.gui.type_defs import GroupSpec, UserSpec
 
 CustomLinkSpec = Tuple[str, bool, List[Tuple[str, str, Optional[str], str]]]
 
@@ -242,7 +242,7 @@ class CREConfig:
     hidden_views: Optional[List[str]] = None
 
     # Patterns to group services in table views together
-    service_view_grouping: List = field(default_factory=list)
+    service_view_grouping: List[GroupSpec] = field(default_factory=list)
 
     # Custom user stylesheet to load (resides in htdocs/)
     custom_style_sheet: Optional[str] = None

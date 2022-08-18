@@ -3,15 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Sequence
+
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.utils import (
+    Cell,
     Layout,
     layout_registry,
     multisite_builtin_views,
     PainterOptions,
 )
+from cmk.gui.type_defs import Rows, ViewSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 
@@ -27,7 +31,7 @@ from cmk.gui.utils.mobile import is_mobile
 #   '----------------------------------------------------------------------'
 
 
-def mobile_view(d):
+def mobile_view(d: dict[str, Any]) -> ViewSpec:
     x = {
         "mobile": True,
         "browser_reload": 0,
@@ -721,8 +725,13 @@ multisite_builtin_views.update(
 #   '----------------------------------------------------------------------'
 
 
-def render_mobile_table(  # type:ignore[no-untyped-def]
-    rows, view, group_cells, cells, num_columns, show_checkboxes
+def render_mobile_table(
+    rows: Rows,
+    view: ViewSpec,
+    group_cells: Sequence[Cell],
+    cells: Sequence[Cell],
+    num_columns: int,
+    show_checkboxes: bool,
 ) -> None:
     if not is_mobile(request, response):
         html.show_error(_("This view can only be used in mobile mode."))
@@ -774,18 +783,28 @@ class LayoutMobileTable(Layout):
         return _("Mobile: Table")
 
     @property
-    def can_display_checkboxes(self):
+    def can_display_checkboxes(self) -> bool:
         return False
 
-    def render(  # type:ignore[no-untyped-def]
-        self, rows, view, group_cells, cells, num_columns, show_checkboxes
+    def render(
+        self,
+        rows: Rows,
+        view: ViewSpec,
+        group_cells: Sequence[Cell],
+        cells: Sequence[Cell],
+        num_columns: int,
+        show_checkboxes: bool,
     ) -> None:
-        # TODO: Move to class
         render_mobile_table(rows, view, group_cells, cells, num_columns, show_checkboxes)
 
 
-def render_mobile_list(  # type:ignore[no-untyped-def]
-    rows, view, group_cells, cells, num_columns, show_checkboxes
+def render_mobile_list(
+    rows: Rows,
+    view: ViewSpec,
+    group_cells: Sequence[Cell],
+    cells: Sequence[Cell],
+    num_columns: int,
+    show_checkboxes: bool,
 ) -> None:
     if not is_mobile(request, response):
         html.show_error(_("This view can only be used in mobile mode."))
@@ -803,11 +822,16 @@ def render_mobile_list(  # type:ignore[no-untyped-def]
         rendered_cells = [cell.render(row) for cell in cells]
         if rendered_cells:  # First cell (assumedly state) is left
             rendered_class, rendered_content = rendered_cells[0]
+            assert isinstance(rendered_content, (str, HTML))
             html.p(rendered_content, class_=["ui-li-aside", "ui-li-desc", rendered_class])
 
             if len(rendered_cells) > 1:
                 content = HTML(" &middot; ").join(
-                    [rendered_cell[1] for rendered_cell in rendered_cells[1 : num_columns + 1]]
+                    [
+                        rendered_cell[1]
+                        for rendered_cell in rendered_cells[1 : num_columns + 1]
+                        if isinstance(rendered_cell[1], (str, HTML))
+                    ]
                 )
                 html.h3(content)
 
@@ -815,6 +839,7 @@ def render_mobile_list(  # type:ignore[no-untyped-def]
                     rendered_cells[num_columns + 1 :], cells[num_columns + 1 :]
                 ):
                     rendered_class, rendered_content = rendered_cell
+                    assert isinstance(rendered_content, (str, HTML))
                     html.open_p(class_="ui-li-desc")
                     cell.paint_as_header()
                     html.write_text(": ")
@@ -837,18 +862,28 @@ class LayoutMobileList(Layout):
         return _("Mobile: List")
 
     @property
-    def can_display_checkboxes(self):
+    def can_display_checkboxes(self) -> bool:
         return False
 
-    def render(  # type:ignore[no-untyped-def]
-        self, rows, view, group_cells, cells, num_columns, show_checkboxes
+    def render(
+        self,
+        rows: Rows,
+        view: ViewSpec,
+        group_cells: Sequence[Cell],
+        cells: Sequence[Cell],
+        num_columns: int,
+        show_checkboxes: bool,
     ) -> None:
-        # TODO: Move to class
         render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkboxes)
 
 
-def render_mobile_dataset(  # type:ignore[no-untyped-def]
-    rows, view, group_cells, cells, num_columns, show_checkboxes
+def render_mobile_dataset(
+    rows: Rows,
+    view: ViewSpec,
+    group_cells: Sequence[Cell],
+    cells: Sequence[Cell],
+    num_columns: int,
+    show_checkboxes: bool,
 ) -> None:
     if not is_mobile(request, response):
         html.show_error(_("This view can only be used in mobile mode."))
@@ -890,11 +925,16 @@ class LayoutMobileDataset(Layout):
         return _("Mobile: Dataset")
 
     @property
-    def can_display_checkboxes(self):
+    def can_display_checkboxes(self) -> bool:
         return False
 
-    def render(  # type:ignore[no-untyped-def]
-        self, rows, view, group_cells, cells, num_columns, show_checkboxes
+    def render(
+        self,
+        rows: Rows,
+        view: ViewSpec,
+        group_cells: Sequence[Cell],
+        cells: Sequence[Cell],
+        num_columns: int,
+        show_checkboxes: bool,
     ) -> None:
-        # TODO: Move to class
         render_mobile_dataset(rows, view, group_cells, cells, num_columns, show_checkboxes)

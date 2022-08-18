@@ -226,6 +226,13 @@ PermittedViewSpecs = Dict[ViewName, ViewSpec]
 SorterFunction = Callable[[ColumnName, Row, Row], int]
 FilterHeader = str
 
+
+class GroupSpec(TypedDict):
+    title: str
+    pattern: str
+    min_items: int
+
+
 # Configuration related
 ConfigDomainName = str
 

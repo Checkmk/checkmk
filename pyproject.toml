@@ -38,6 +38,8 @@ target-version = ['py310']
 # If you add more modules, add them to mypy-raw.ini as well...
 [[tool.mypy.overrides]]
 module = [
+    "cmk.gui.plugins.views.mobile",
+    "cmk.gui.plugins.views.layouts",
     "cmk.notification_plugins.*",
     "tests.gui_e2e.*",
     "tests.testlib.playwright.*",

@@ -78,14 +78,7 @@ from cmk.gui.valuespec import (
     Timerange,
     Transform,
 )
-from cmk.gui.view_utils import (
-    CellContent,
-    CellSpec,
-    CSSClass,
-    get_labels,
-    render_labels,
-    render_tag_groups,
-)
+from cmk.gui.view_utils import CellSpec, CSSClass, get_labels, render_labels, render_tag_groups
 
 #   .--Painter Options-----------------------------------------------------.
 #   |                   ____       _       _                               |
@@ -4084,7 +4077,7 @@ class PainterCommentEntryType(Painter):
             help_txt = _("Acknowledgement")
         else:
             return "", ""
-        code: CellContent = html.render_icon(icon, help_txt)
+        code: str | HTML = html.render_icon(icon, help_txt)
         if linkview:
             code = render_link_to_view(code, row, VisualLinkSpec("views", linkview))
         return "icons", code

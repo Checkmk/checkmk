@@ -317,7 +317,7 @@ def row_id(view_spec: ViewSpec, row: Row) -> str:
     return hashlib.sha256(key.encode("utf-8")).hexdigest()
 
 
-def group_value(row: Row, group_cells: "List[Cell]") -> Hashable:
+def group_value(row: Row, group_cells: Sequence[Cell]) -> Hashable:
     """The Group-value of a row is used for deciding whether
     two rows are in the same group or not"""
     group = []
@@ -413,9 +413,9 @@ class Layout(abc.ABC):
     def render(
         self,
         rows: Rows,
-        view: Dict,
-        group_cells: "List[Cell]",
-        cells: "List[Cell]",
+        view: ViewSpec,
+        group_cells: Sequence[Cell],
+        cells: Sequence[Cell],
         num_columns: int,
         show_checkboxes: bool,
     ) -> None:
@@ -439,7 +439,7 @@ class Layout(abc.ABC):
         return False
 
     def csv_export(
-        self, rows: Rows, view: Dict, group_cells: "List[Cell]", cells: "List[Cell]"
+        self, rows: Rows, view: ViewSpec, group_cells: Sequence[Cell], cells: Sequence[Cell]
     ) -> None:
         """Render the given data using this layout for CSV"""
 
@@ -1326,8 +1326,7 @@ def format_plugin_output(output: str, row: Row) -> HTML:
     )
 
 
-def render_link_to_view(content: CellContent, row: Row, link_spec: VisualLinkSpec) -> CellContent:
-    assert isinstance(content, (str, HTML))
+def render_link_to_view(content: str | HTML, row: Row, link_spec: VisualLinkSpec) -> str | HTML:
     if display_options.disabled(display_options.I):
         return content
 
@@ -2256,11 +2255,12 @@ class Cell:
         sorters = [SorterSpec(*s) for s in sorter]
         return _encode_sorter_url(sorters)
 
-    def render(self, row: Row) -> CellSpec:
+    def render(self, row: Row) -> tuple[str, str | HTML]:
         row = join_row(row, self)
 
         try:
             tdclass, content = self.render_content(row)
+            assert isinstance(content, (str, HTML))
         except Exception:
             logger.exception("Failed to render painter '%s' (Row: %r)", self._painter_name, row)
             raise
@@ -2507,7 +2507,7 @@ class JoinCell(Cell):
 
 
 class EmptyCell(Cell):
-    def render(self, row: Row) -> CellSpec:
+    def render(self, row: Row) -> tuple[str, str]:
         return "", ""
 
     def paint(self, row: Row, colspan: Optional[int] = None) -> bool:

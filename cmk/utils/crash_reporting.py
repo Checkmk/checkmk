@@ -294,7 +294,7 @@ def _format_var_for_export(val: Any, maxdepth: int = 4, maxsize: int = 1024 * 10
 
 
 class CrashReportRegistry(cmk.utils.plugin_registry.Registry[Type[ABCCrashReport]]):
-    def plugin_name(self, instance):
+    def plugin_name(self, instance: Type[ABCCrashReport]) -> str:
         return instance.type()
 
 

@@ -143,6 +143,7 @@ def test_werk_versions_after_tagged(precompiled_werks):
             13829,
             13830,
             13949,
+            14485,
         }:
             continue
 

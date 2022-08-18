@@ -1,0 +1,33 @@
+Title: Fix session cookie validation on RestAPI
+Class: security
+Compatible: compat
+Component: rest-api
+Date: 1662109524
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p11
+
+Before this Werk expired sessions were still valid on the RestAPI, since the
+RestAPI only vaildated the Cookie signature.
+
+An attacker who was able to steal a session cookie could use that cookie on the
+RestAPI even after the session expired.  Some actions though require access to
+the user session, these action fail due to the expired session. Some actions do
+not access the session and are therefore possible.
+
+<b>Affected Versions</b>:
+All versions with the RestAPI are affected: 2.0, and 2.1.
+
+<b>Mitigations</b>:
+Immediate mitigations are not available.
+
+<b>Indicators of Compromise</b>:
+Review Apache and web.log for suspicious logs.
+
+<b>Vulnerability Management</b>:
+We have rated the issue with a CVSS Score of 5.6 (Medium) with the following
+CVSS vector:
+<tt>CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:L</tt>.
+A CVE has been requested.

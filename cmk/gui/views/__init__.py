@@ -1760,9 +1760,9 @@ def _get_common_vs_column(ds_name: str) -> ValueSpec:
         elements=[
             _get_vs_column_dropdown(ds_name, "painter", painters),
             FixedValue(value=None, totext=""),
+            FixedValue(value=None, totext=""),
         ]
-        + _get_vs_link_or_tooltip_elements(painters)
-        + [FixedValue(value=None, totext="")],
+        + _get_vs_link_or_tooltip_elements(painters),
     )
 
 
@@ -1783,9 +1783,9 @@ def _get_join_vs_column(ds_name: str) -> None | ValueSpec:
                 title=_("of Service"),
                 allow_empty=False,
             ),
+            TextInput(title=_("Title")),
         ]
-        + _get_vs_link_or_tooltip_elements(join_painters)
-        + [TextInput(title=_("Title"))],
+        + _get_vs_link_or_tooltip_elements(join_painters),
     )
 
 
@@ -1829,8 +1829,8 @@ def _view_editor_spec(
 ) -> Dictionary:
     vs_column = Transform(
         valuespec=vs_column,
-        back=lambda value: (value[0], value[2], value[3], value[1], value[4]),
-        forth=lambda value: (value[0], value[3], value[1], value[2], value[4])
+        back=lambda value: (value[0], value[3], value[4], value[1], value[2]),
+        forth=lambda value: (value[0], value[3], value[4], value[1], value[2])
         if value is not None
         else None,
     )

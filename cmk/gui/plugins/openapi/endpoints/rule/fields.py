@@ -45,7 +45,7 @@ if typing.TYPE_CHECKING:
         operator: ApiOperator
 
 
-RULE_ID = {
+RULE_ID: typing.Mapping[str, fields.String] = {
     "rule_id": fields.String(
         description="The ID of the rule.",
         required=True,
@@ -389,7 +389,10 @@ class TagConditionSchema(marshmallow_oneofschema.OneOfSchema):
 
     """
 
-    type_schemas = {
+    type_schemas: typing.Mapping[
+        str,
+        typing.Type[TagConditionScalarSchemaBase] | typing.Type[TagConditionConditionSchemaBase],
+    ] = {
         "is": TagConditionScalarSchemaBase,
         "is_not": TagConditionScalarSchemaBase,
         "one_of": TagConditionConditionSchemaBase,
@@ -754,7 +757,7 @@ class RuleCollection(response_schemas.DomainObjectCollection):
         "rule",
         description="Domain type of this object.",
     )
-    value: gui_fields.Field = fields.Nested(
+    value: fields.Field = fields.Nested(
         RuleObject,
         description="The collection itself. Each entry in here is part of the collection.",
         many=True,

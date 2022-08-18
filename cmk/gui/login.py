@@ -337,7 +337,7 @@ def _check_auth(req: Request) -> Optional[UserId]:
     if user_id is None:
         if not config.user_login and not _is_site_login():
             return None
-        user_id = _check_auth_by_cookie()
+        user_id = check_auth_by_cookie()
 
     if (user_id is not None and not isinstance(user_id, str)) or user_id == "":
         raise MKInternalError(_("Invalid user authentication"))
@@ -409,7 +409,11 @@ def _check_auth_web_server(req: Request) -> Optional[UserId]:
     return None
 
 
-def _check_auth_by_cookie() -> Optional[UserId]:
+def check_auth_by_cookie() -> Optional[UserId]:
+    """check if session cookie exists and if it is valid
+
+    Returns None if not authenticated. If a user was successful authenticated the UserId is returned"""
+
     cookie_name = auth_cookie_name()
     if not request.has_cookie(cookie_name):
         return None

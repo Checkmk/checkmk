@@ -722,7 +722,7 @@ class RuleExtensions(base.BaseSchema):
         description="Property values of this rule.",
         example={},
     )
-    value_raw = gui_fields.PythonString(
+    value_raw = fields.String(
         description="The raw parameter value for this rule.",
         example='{"ignore_fs_types": ["tmpfs"]}',
     )

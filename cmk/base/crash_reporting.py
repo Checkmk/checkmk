@@ -59,7 +59,7 @@ def create_section_crash_dump(
 
     text = f"{operation.title()} of section {section_name} failed"
     try:
-        crash = SectionCrashReport.from_exception_and_context(
+        crash = SectionCrashReport.from_section(
             section_name=section_name,
             section_content=section_content,
             host_name=host_name,
@@ -88,7 +88,7 @@ def create_check_crash_dump(
     """
     text = "check failed - please submit a crash report!"
     try:
-        crash = CheckCrashReport.from_exception_and_context(
+        crash = CheckCrashReport.from_check(
             host_config=host_config,
             check_plugin_name=str(plugin_name),
             check_plugin_kwargs=plugin_kwargs,
@@ -137,7 +137,7 @@ class SectionCrashReport(CrashReportWithAgentOutput):
         return "section"
 
     @classmethod
-    def from_exception_and_context(
+    def from_section(
         cls,
         *,
         section_name: SectionName,
@@ -167,8 +167,9 @@ class CheckCrashReport(CrashReportWithAgentOutput):
         return "check"
 
     @classmethod
-    def from_exception_and_context(
+    def from_check(
         cls,
+        *,
         host_config: HostConfig,
         check_plugin_name: str,
         check_plugin_kwargs: Mapping[str, Any],

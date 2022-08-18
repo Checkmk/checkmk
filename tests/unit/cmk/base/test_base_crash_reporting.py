@@ -80,7 +80,7 @@ def test_check_crash_report_from_exception(monkeypatch) -> None:  # type:ignore[
     try:
         raise Exception("DING")
     except Exception:
-        crash = crash_reporting.CheckCrashReport.from_exception_and_context(
+        crash = crash_reporting.CheckCrashReport.from_check(
             host_config=HostConfig.make_host_config(hostname),
             check_plugin_name="uptime",
             check_plugin_kwargs={"item": None, "params": None},
@@ -125,7 +125,7 @@ def test_check_crash_report_save(monkeypatch) -> None:  # type:ignore[no-untyped
     try:
         raise Exception("DING")
     except Exception:
-        crash = crash_reporting.CheckCrashReport.from_exception_and_context(
+        crash = crash_reporting.CheckCrashReport.from_check(
             host_config=HostConfig.make_host_config(hostname),
             check_plugin_name="uptime",
             check_plugin_kwargs={},
@@ -151,7 +151,7 @@ def test_check_crash_report_read_agent_output(monkeypatch) -> None:  # type:igno
     try:
         raise Exception("DING")
     except Exception:
-        crash = crash_reporting.CheckCrashReport.from_exception_and_context(
+        crash = crash_reporting.CheckCrashReport.from_check(
             host_config=HostConfig.make_host_config(hostname),
             check_plugin_name="uptime",
             check_plugin_kwargs={},
@@ -177,7 +177,7 @@ def test_check_crash_report_read_snmp_info(monkeypatch) -> None:  # type:ignore[
     try:
         raise Exception("DING")
     except Exception:
-        crash = crash_reporting.CheckCrashReport.from_exception_and_context(
+        crash = crash_reporting.CheckCrashReport.from_check(
             host_config=HostConfig.make_host_config(hostname),
             check_plugin_name="snmp_uptime",
             check_plugin_kwargs={},

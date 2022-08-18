@@ -1757,31 +1757,29 @@ def _get_common_vs_column(ds_name: str) -> ValueSpec:
     painters = painters_of_datasource(ds_name)
     return Tuple(
         title=_("Column"),
-        elements=_transform_vs_column_elements(
-            [
-                CascadingDropdown(
-                    title=_("Column"),
-                    choices=painter_choices_with_params(painters),
-                    no_preselect_title="",
-                    render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
-                    render_sub_vs_request_vars={
-                        "ds_name": ds_name,
-                        "painter_type": "painter",
-                    },
-                ),
-                CascadingDropdown(
-                    title=_("Link"),
-                    choices=_column_link_choices(),
-                    orientation="horizontal",
-                ),
-                DropdownChoice(
-                    title=_("Tooltip"),
-                    choices=[(None, "")] + list(painter_choices(painters)),
-                ),
-                FixedValue(value=None, totext=""),
-                FixedValue(value=None, totext=""),
-            ]
-        ),
+        elements=[
+            CascadingDropdown(
+                title=_("Column"),
+                choices=painter_choices_with_params(painters),
+                no_preselect_title="",
+                render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
+                render_sub_vs_request_vars={
+                    "ds_name": ds_name,
+                    "painter_type": "painter",
+                },
+            ),
+            FixedValue(value=None, totext=""),
+            CascadingDropdown(
+                title=_("Link"),
+                choices=_column_link_choices(),
+                orientation="horizontal",
+            ),
+            DropdownChoice(
+                title=_("Tooltip"),
+                choices=[(None, "")] + list(painter_choices(painters)),
+            ),
+            FixedValue(value=None, totext=""),
+        ],
     )
 
 
@@ -1796,40 +1794,33 @@ def _get_join_vs_column(ds_name: str) -> None | ValueSpec:
             "host objects in a view showing host objects. You need to specify the "
             "service description of the service you like to show the data for."
         ),
-        elements=_transform_vs_column_elements(
-            [
-                CascadingDropdown(
-                    title=_("Column"),
-                    choices=painter_choices_with_params(painters),
-                    no_preselect_title="",
-                    render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
-                    render_sub_vs_request_vars={
-                        "ds_name": ds_name,
-                        "painter_type": "join_painter",
-                    },
-                ),
-                CascadingDropdown(
-                    title=_("Link"),
-                    choices=_column_link_choices(),
-                    orientation="horizontal",
-                ),
-                DropdownChoice(
-                    title=_("Tooltip"),
-                    choices=[(None, "")] + list(painter_choices(painters)),
-                ),
-                TextInput(
-                    title=_("of Service"),
-                    allow_empty=False,
-                ),
-                TextInput(title=_("Title")),
-            ]
-        ),
+        elements=[
+            CascadingDropdown(
+                title=_("Column"),
+                choices=painter_choices_with_params(painters),
+                no_preselect_title="",
+                render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
+                render_sub_vs_request_vars={
+                    "ds_name": ds_name,
+                    "painter_type": "join_painter",
+                },
+            ),
+            TextInput(
+                title=_("of Service"),
+                allow_empty=False,
+            ),
+            CascadingDropdown(
+                title=_("Link"),
+                choices=_column_link_choices(),
+                orientation="horizontal",
+            ),
+            DropdownChoice(
+                title=_("Tooltip"),
+                choices=[(None, "")] + list(painter_choices(painters)),
+            ),
+            TextInput(title=_("Title")),
+        ],
     )
-
-
-def _transform_vs_column_elements(elements: list[ValueSpec]) -> Sequence[ValueSpec]:
-    elements.insert(1, elements.pop(3))
-    return elements
 
 
 def _view_editor_spec(

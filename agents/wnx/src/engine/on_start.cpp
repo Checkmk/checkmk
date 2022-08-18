@@ -151,13 +151,13 @@ bool LoadConfigBase(const std::vector<std::wstring> &config_filenames,
     return true;
 }
 
-bool LoadConfigFull(const std::wstring &ConfigFile) {
+bool LoadConfigFull(const std::wstring &config_file) {
     cfg::details::KillDefaultConfig();
     // load config is here
     auto cfg_files = cfg::DefaultConfigArray();
-    if (!ConfigFile.empty()) {
+    if (!config_file.empty()) {
         cfg_files.clear();
-        cfg_files.push_back(ConfigFile);
+        cfg_files.push_back(config_file);
     }
 
     return LoadConfigBase(cfg_files, YamlCacheOp::update);

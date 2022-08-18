@@ -445,20 +445,22 @@ void LoadGlobal() {
 void KillDefaultConfig() { GetCfg().cleanConfig(); }
 
 fs::path FindRootByExePath(const std::wstring &cmd_line) {
-    if (cmd_line.empty()) return {};  // something strange
+    if (cmd_line.empty()) {
+        return {};
+    }
 
     std::error_code ec;
 
-    fs::path exe = cma::tools::RemoveQuotes(cmd_line);
+    fs::path exe = tools::RemoveQuotes(cmd_line);
     exe = exe.lexically_normal();
     if (!exe.has_extension()) {
         exe += ".exe";
     }
     if (!fs::exists(exe, ec)) {
-        return {};  // something wrong probably
+        return {};
     }
 
-    fs::path path = FindServiceImagePath(cma::srv::kServiceName);
+    fs::path path = FindServiceImagePath(srv::kServiceName);
 
     if (fs::equivalent(path.lexically_normal().parent_path(), exe.parent_path(),
                        ec)) {

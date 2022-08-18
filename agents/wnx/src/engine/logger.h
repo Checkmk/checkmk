@@ -592,7 +592,7 @@ public:
         log_param_.initPrefix(prefix);
     }
 
-    void setLogRotation(unsigned int count, size_t size) {
+    void setLogRotation(unsigned int count, size_t size) noexcept {
         backup_log_max_count_ =
             std::clamp(count, factory_min_file_count, factory_max_file_count);
         backup_log_max_size_ =

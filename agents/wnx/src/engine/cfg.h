@@ -475,7 +475,7 @@ public:
         std::lock_guard lk(lock_);
         return enabled_in_cfg_;
     }
-    std::string name() const noexcept {
+    std::string name__() const noexcept {
         std::lock_guard lk(lock_);
         return name_;
     }

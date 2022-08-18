@@ -25,7 +25,9 @@ bool RunCommand(std::string_view peer, std::string_view cmd) {
         return false;
     }
 
-    if (cmd.empty()) return false;
+    if (cmd.empty()) {
+        return false;
+    }
 
     if (tools::IsEqual(cmd, kReload)) {
         XLOG::l.t("Commander: Reload");

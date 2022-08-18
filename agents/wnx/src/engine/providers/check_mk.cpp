@@ -31,18 +31,16 @@ namespace cma::provider {
 // function to provide format compatibility for monitoring site
 // probably, a bit to pedantic
 std::string AddressToCheckMkString(std::string_view entry) {
-    if (cfg::of::IsNetwork(entry)) return std::string{entry};
+    if (cfg::of::IsNetwork(entry)) {
+        return std::string{entry};
+    }
 
     try {
-        if (cfg::of::IsAddressV4(entry)) {
-            return std::string{entry};
-        }
-
-        if (cfg::of::IsAddressV6(entry)) {
+        if (cfg::of::IsAddressV4(entry) || cfg::of::IsAddressV6(entry)) {
             return std::string{entry};
         }
     } catch (const std::exception &e) {
-        XLOG::l("Entry '{}' is bad, exception '{}'", entry, e.what());
+        XLOG::l("Entry '{}' is bad, exception '{}'", entry, e);
     }
 
     XLOG::l("Entry '{}' is bad, we return nothing", entry);
@@ -52,8 +50,9 @@ std::string AddressToCheckMkString(std::string_view entry) {
 std::string CheckMk::makeOnlyFrom() {
     auto only_from =
         cfg::GetInternalArray(cfg::groups::kGlobal, cfg::vars::kOnlyFrom);
-    if (only_from.empty()) return {};
-    if (only_from.size() == 1 && only_from[0] == "~") return {};
+    if (only_from.empty() || (only_from.size() == 1 && only_from[0] == "~")) {
+        return {};
+    }
 
     std::string out;
     for (auto &entry : only_from) {

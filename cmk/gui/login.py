@@ -378,12 +378,8 @@ def _check_auth_by_cookie() -> Optional[UserId]:
     try:
         set_auth_type("cookie")
         return _check_auth_cookie(cookie_name)
-    except MKAuthException:
-        # Suppress cookie validation errors from other sites cookies
-        auth_logger.debug(
-            "Exception while checking cookie %s: %s" % (cookie_name, traceback.format_exc())
-        )
     except Exception:
+        # Suppress cookie validation errors from other sites cookies
         auth_logger.debug(
             "Exception while checking cookie %s: %s" % (cookie_name, traceback.format_exc())
         )
@@ -407,12 +403,8 @@ def _check_auth_cookie_for_web_server_auth(user_id: UserId) -> None:
     cookie_name = auth_cookie_name()
     try:
         _check_auth_cookie(cookie_name)
-    except MKAuthException:
-        # Suppress cookie validation errors from other sites cookies
-        auth_logger.debug(
-            "Exception while checking cookie %s: %s" % (cookie_name, traceback.format_exc())
-        )
     except Exception:
+        # Suppress cookie validation errors from other sites cookies
         auth_logger.debug(
             "Exception while checking cookie %s: %s" % (cookie_name, traceback.format_exc())
         )

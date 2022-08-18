@@ -643,6 +643,7 @@ class HTMLGenerator(HTMLWriter):
         data_max_labels: Optional[int] = None,
         required: bool = False,
         title: Optional[str] = None,
+        maxlength: Optional[int] = None,
     ) -> None:
 
         # Model
@@ -693,6 +694,7 @@ class HTMLGenerator(HTMLWriter):
             "data-max-labels": None if data_max_labels is None else str(data_max_labels),
             "required": "" if required else None,
             "title": title,
+            "maxlength": None if maxlength is None else str(maxlength),
         }
 
         if error:
@@ -769,6 +771,7 @@ class HTMLGenerator(HTMLWriter):
         read_only: bool = False,
         autocomplete: Optional[str] = None,
         placeholder: Optional[str] = None,
+        maxlength: Optional[int] = None,
     ) -> None:
         self.text_input(
             varname,
@@ -783,6 +786,7 @@ class HTMLGenerator(HTMLWriter):
             read_only=read_only,
             autocomplete=autocomplete,
             placeholder=placeholder,
+            maxlength=maxlength,
         )
 
     def text_area(

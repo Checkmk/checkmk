@@ -94,3 +94,6 @@ def test_user_connector_verify_password(htpasswd_file: Path, monkeypatch: Monkey
     assert c.check_credentials(UserId("bcrypt_user"), "cmk") == "bcrypt_user"
     assert c.check_credentials(UserId("dingeling"), "aaa") is None
     assert c.check_credentials(UserId("locked"), "locked") is False
+
+    # Check no exception is raised, when setting a password > 72 chars a exception is raised...
+    assert c.check_credentials(UserId("bcrypt_user"), "A" * 100) is False

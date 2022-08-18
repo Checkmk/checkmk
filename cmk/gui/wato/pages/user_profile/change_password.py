@@ -126,10 +126,10 @@ class UserChangePasswordPage(ABCUserProfilePage):
         html.password_input("cur_password", autocomplete="new-password")
 
         forms.section(_("New Password"))
-        html.password_input("password", autocomplete="new-password")
+        html.password_input("password", autocomplete="new-password", maxlength=72)
 
         forms.section(_("New Password Confirmation"))
-        html.password_input("password2", autocomplete="new-password")
+        html.password_input("password2", autocomplete="new-password", maxlength=72)
 
         forms.end()
         html.close_div()

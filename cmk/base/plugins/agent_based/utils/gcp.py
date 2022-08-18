@@ -156,7 +156,7 @@ class MetricSpec:
     filter_by: Optional[Filter] = None
 
 
-def _get_value(results: Sequence[GCPResult], spec: MetricSpec) -> float:
+def get_value(results: Sequence[GCPResult], spec: MetricSpec) -> float:
     # GCP does not always deliver all metrics. i.e. api/request_count only contains values if
     # api requests have occured. To ensure all metrics are displayed in check mk we default to
     # 0 in the absence of data.
@@ -191,7 +191,7 @@ def generic_check(
     metrics: Mapping[str, MetricSpec], timeseries: Sequence[GCPResult], params: Mapping[str, Any]
 ) -> CheckResult:
     for metric_name, metric_spec in metrics.items():
-        value = _get_value(timeseries, metric_spec)
+        value = get_value(timeseries, metric_spec)
         levels_upper = params[metric_name]
         if isinstance(levels_upper, dict):
             yield from check_levels_predictive(

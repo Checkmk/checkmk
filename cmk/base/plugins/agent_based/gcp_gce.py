@@ -20,7 +20,7 @@ def parse_gce_uptime(string_table: StringTable) -> Optional[uptime.Section]:
         "uptime",
         render.timespan,
     )
-    uptime_sec = gcp._get_value(section, metric)
+    uptime_sec = gcp.get_value(section, metric)
     return uptime.Section(uptime_sec, None)
 
 
@@ -101,7 +101,7 @@ def check_network(
             render.timespan,
         ),
     }
-    metrics = {k: gcp._get_value(section, desc) for k, desc in metric_descs.items()}
+    metrics = {k: gcp.get_value(section, desc) for k, desc in metric_descs.items()}
     interface = interfaces.InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
         interfaces.InterfaceWithRates(
             attributes=interfaces.Attributes(

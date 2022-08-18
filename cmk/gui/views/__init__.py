@@ -1717,14 +1717,31 @@ def view_editor_general_properties(ds_name):
     )
 
 
-def view_editor_column_spec(ident, title, ds_name):
+def view_editor_column_spec(ds_name: str) -> tuple[str, Dictionary]:
+    ident = "columns"
+    return ident, _view_editor_spec(
+        ds_name=ds_name,
+        ident=ident,
+        title=_("Columns"),
+        allow_empty=False,
+        empty_text=_("Please add at least one column to your view."),
+    )
 
-    allow_empty = True
-    empty_text = None
-    if ident == "columns":
-        allow_empty = False
-        empty_text = _("Please add at least one column to your view.")
 
+def view_editor_grouping_spec(ds_name: str) -> tuple[str, Dictionary]:
+    ident = "grouping"
+    return ident, _view_editor_spec(
+        ds_name=ds_name,
+        ident=ident,
+        title=_("Grouping"),
+        allow_empty=True,
+        empty_text=None,
+    )
+
+
+def _view_editor_spec(
+    *, ident: str, ds_name: str, title: str, allow_empty: bool, empty_text: Optional[str]
+) -> Dictionary:
     def column_elements(_painters, painter_type):
         empty_choices: DropdownChoiceEntries = [(None, "")]
         elements = [
@@ -1792,25 +1809,22 @@ def view_editor_column_spec(ident, title, ds_name):
         if value is not None
         else None,
     )
-    return (
-        ident,
-        Dictionary(
-            title=title,
-            render="form",
-            optional_keys=False,
-            elements=[
-                (
-                    ident,
-                    ListOf(
-                        valuespec=vs_column,
-                        title=title,
-                        add_label=_("Add column"),
-                        allow_empty=allow_empty,
-                        empty_text=empty_text,
-                    ),
+    return Dictionary(
+        title=title,
+        render="form",
+        optional_keys=False,
+        elements=[
+            (
+                ident,
+                ListOf(
+                    valuespec=vs_column,
+                    title=title,
+                    add_label=_("Add column"),
+                    allow_empty=allow_empty,
+                    empty_text=empty_text,
                 ),
-            ],
-        ),
+            ),
+        ],
     )
 
 
@@ -1951,9 +1965,9 @@ def render_view_config(  # type:ignore[no-untyped-def]
         view_editor_general_properties(ds_name).render_input("view", view_spec.get("view"))
 
     for ident, vs in [
-        view_editor_column_spec("columns", _("Columns"), ds_name),
+        view_editor_column_spec(ds_name),
         view_editor_sorter_specs(view_spec),
-        view_editor_column_spec("grouping", _("Grouping"), ds_name),
+        view_editor_grouping_spec(ds_name),
     ]:
         vs.render_input(ident, view_spec.get(ident))
 
@@ -2027,8 +2041,8 @@ def create_view_from_valuespec(old_view, view):
 
     for ident, vs in [
         ("view", view_editor_general_properties(ds_name)),
-        view_editor_column_spec("columns", _("Columns"), ds_name),
-        view_editor_column_spec("grouping", _("Grouping"), ds_name),
+        view_editor_column_spec(ds_name),
+        view_editor_grouping_spec(ds_name),
     ]:
         update_view(ident, vs)
 

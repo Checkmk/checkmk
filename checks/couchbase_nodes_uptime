@@ -3,32 +3,41 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from typing import Any, Mapping
+
+from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.utils import uptime
+
+Section = Mapping[str, uptime.Section]
 
 
-def parse_couchbase_uptime(info):
+def parse_couchbase_uptime(string_table: StringTable) -> Section:
     parsed = {}
-    for line in info:
+    for line in string_table:
         if len(line) < 2:
             continue
-        uptime, node = line[0], " ".join(line[1:])
+        uptime_value, node = line[0], " ".join(line[1:])
         try:
-            parsed[node] = float(uptime)
+            parsed[node] = uptime.Section(float(uptime_value), None)
         except ValueError:
             continue
     return parsed
 
 
-@get_parsed_item_data
-def check_couchbase_nodes_uptime(_item, params, uptime):
-    return check_uptime_seconds(params, uptime)
+def discover_couchbase_nodes_uptime(section: Section):
+    yield from ((item, {}) for item in section)
+
+
+def check_couchbase_nodes_uptime(item: str, params: Mapping[str, Any], section: Section):
+    if (uptime_section := section.get(item)) is None:
+        return
+    yield check_uptime_seconds(params, uptime_section.uptime_sec)
 
 
 check_info["couchbase_nodes_uptime"] = {
     "parse_function": parse_couchbase_uptime,
-    "inventory_function": discover(),
+    "inventory_function": discover_couchbase_nodes_uptime,
     "check_function": check_couchbase_nodes_uptime,
     "service_description": "Couchbase %s Uptime",
     "group": "uptime_multiitem",

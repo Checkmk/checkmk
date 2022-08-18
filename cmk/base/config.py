@@ -913,7 +913,7 @@ def strip_tags(tagged_hostlist: List[str]) -> List[HostName]:
         return cache.setdefault(cache_id, [HostName(h.split("|", 1)[0]) for h in tagged_hostlist])
 
 
-def _get_shadow_hosts() -> ShadowHosts:
+def get_shadow_hosts() -> ShadowHosts:
     try:
         # Only available with CEE
         return shadow_hosts  # type: ignore[name-defined]
@@ -968,7 +968,7 @@ def duplicate_hosts() -> Sequence[HostName]:
             # all_active_hosts() but with the difference that duplicates are not removed.
             _filter_active_hosts(
                 get_config_cache(),
-                strip_tags(list(all_hosts) + list(clusters) + list(_get_shadow_hosts())),
+                strip_tags(list(all_hosts) + list(clusters) + list(get_shadow_hosts())),
             )
         ).items()
         if count > 1
@@ -3552,7 +3552,7 @@ class ConfigCache:
                     tag_to_group_map, self._hosttags[hostname]
                 )
 
-        for shadow_host_name, shadow_host_spec in list(_get_shadow_hosts().items()):
+        for shadow_host_name, shadow_host_spec in list(get_shadow_hosts().items()):
             self._hosttags[shadow_host_name] = set(
                 shadow_host_spec.get("custom_variables", {}).get("TAGS", "").split()
             )
@@ -3957,7 +3957,7 @@ class ConfigCache:
     def _get_all_configured_shadow_hosts(self) -> Set[HostName]:
         """Returns a set of all shadow host names, regardless if currently disabled or
         monitored on a remote site"""
-        return set(_get_shadow_hosts())
+        return set(get_shadow_hosts())
 
     def all_configured_hosts(self) -> Set[HostName]:
         return self._all_configured_hosts

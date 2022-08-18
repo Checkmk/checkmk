@@ -1758,33 +1758,16 @@ def _get_common_vs_column(ds_name: str) -> ValueSpec:
     return Tuple(
         title=_("Column"),
         elements=[
-            CascadingDropdown(
-                title=_("Column"),
-                choices=painter_choices_with_params(painters),
-                no_preselect_title="",
-                render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
-                render_sub_vs_request_vars={
-                    "ds_name": ds_name,
-                    "painter_type": "painter",
-                },
-            ),
+            _get_vs_column_dropdown(ds_name, "painter", painters),
             FixedValue(value=None, totext=""),
-            CascadingDropdown(
-                title=_("Link"),
-                choices=_column_link_choices(),
-                orientation="horizontal",
-            ),
-            DropdownChoice(
-                title=_("Tooltip"),
-                choices=[(None, "")] + list(painter_choices(painters)),
-            ),
-            FixedValue(value=None, totext=""),
-        ],
+        ]
+        + _get_vs_link_or_tooltip_elements(painters)
+        + [FixedValue(value=None, totext="")],
     )
 
 
 def _get_join_vs_column(ds_name: str) -> None | ValueSpec:
-    if not (painters := join_painters_of_datasource(ds_name)):
+    if not (join_painters := join_painters_of_datasource(ds_name)):
         return None
 
     return Tuple(
@@ -1795,32 +1778,44 @@ def _get_join_vs_column(ds_name: str) -> None | ValueSpec:
             "service description of the service you like to show the data for."
         ),
         elements=[
-            CascadingDropdown(
-                title=_("Column"),
-                choices=painter_choices_with_params(painters),
-                no_preselect_title="",
-                render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
-                render_sub_vs_request_vars={
-                    "ds_name": ds_name,
-                    "painter_type": "join_painter",
-                },
-            ),
+            _get_vs_column_dropdown(ds_name, "join_painter", join_painters),
             TextInput(
                 title=_("of Service"),
                 allow_empty=False,
             ),
-            CascadingDropdown(
-                title=_("Link"),
-                choices=_column_link_choices(),
-                orientation="horizontal",
-            ),
-            DropdownChoice(
-                title=_("Tooltip"),
-                choices=[(None, "")] + list(painter_choices(painters)),
-            ),
-            TextInput(title=_("Title")),
-        ],
+        ]
+        + _get_vs_link_or_tooltip_elements(join_painters)
+        + [TextInput(title=_("Title"))],
     )
+
+
+def _get_vs_column_dropdown(
+    ds_name: str, painter_type: str, painters: Mapping[str, Painter]
+) -> ValueSpec:
+    return CascadingDropdown(
+        title=_("Column"),
+        choices=painter_choices_with_params(painters),
+        no_preselect_title="",
+        render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
+        render_sub_vs_request_vars={
+            "ds_name": ds_name,
+            "painter_type": painter_type,
+        },
+    )
+
+
+def _get_vs_link_or_tooltip_elements(painters: Mapping[str, Painter]) -> list[ValueSpec]:
+    return [
+        CascadingDropdown(
+            title=_("Link"),
+            choices=_column_link_choices(),
+            orientation="horizontal",
+        ),
+        DropdownChoice(
+            title=_("Tooltip"),
+            choices=[(None, "")] + list(painter_choices(painters)),
+        ),
+    ]
 
 
 def _view_editor_spec(

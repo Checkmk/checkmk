@@ -1,0 +1,15 @@
+Title: Fix GUI crash if unknown theme was used in global settings
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1660830726
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p11
+
+If an unknown theme was configured in the global settings within "User
+interface theme", the GUI crashed without an error message.
+
+This was seen with a configured classic theme in 1.6, an update to 2.0 without
+problems and the mentioned crash on update to 2.1.

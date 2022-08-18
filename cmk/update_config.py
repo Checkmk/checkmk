@@ -104,6 +104,7 @@ from cmk.gui.sites import is_wato_slave_site
 from cmk.gui.userdb import load_users, save_users, Users
 from cmk.gui.utils.logged_in import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
+from cmk.gui.utils.theme import theme_choices
 from cmk.gui.wato.mkeventd import MACROS_AND_VARS
 from cmk.gui.watolib.changes import (
     ActivateChangesWriter,
@@ -350,9 +351,10 @@ class UpdateConfig:
         self,
         global_config: GlobalSettings,
     ) -> GlobalSettings:
-        return self._transform_global_config_values(
-            self._update_removed_global_config_vars(global_config)
-        )
+        global_config = self._update_removed_global_config_vars(global_config)
+        global_config = self._remove_unknown_themes_from_global_config(global_config)
+        global_config = self._transform_global_config_values(global_config)
+        return global_config
 
     def _update_removed_global_config_vars(
         self,
@@ -374,6 +376,20 @@ class UpdateConfig:
 
         # Delete unused settings
         global_config = filter_unknown_settings(global_config)
+
+        return global_config
+
+    def _remove_unknown_themes_from_global_config(
+        self,
+        global_config: GlobalSettings,
+    ) -> GlobalSettings:
+        """
+        User could choose the classic theme in global settings in 1.6.
+        2.0 will work with this setting but 2.1 crashes.
+        """
+        if (theme := global_config.get("ui_theme")) and theme not in dict(theme_choices()):
+            global_config.pop("ui_theme")
+
         return global_config
 
     def _transform_global_config_value(

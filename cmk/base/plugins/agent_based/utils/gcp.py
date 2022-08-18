@@ -138,7 +138,7 @@ def parse_piggyback(string_table: StringTable) -> PiggyBackSection:
 
 @dataclass(frozen=True)
 class Filter:
-    label: str
+    key: Key
     value: str
 
 
@@ -165,10 +165,7 @@ def _get_value(results: Sequence[GCPResult], spec: MetricSpec) -> float:
         filter_by = spec.filter_by
 
         def filter_func(r: GCPResult) -> bool:
-            return (
-                r.metric_type == spec.metric_type
-                and r.labels[MetricKey(filter_by.label)] == filter_by.value
-            )
+            return r.metric_type == spec.metric_type and r.labels[filter_by.key] == filter_by.value
 
     else:
 

@@ -183,11 +183,15 @@ def monitored_service_description_autocompleter(value: str, params: Dict) -> Cho
 
 @autocompleter_registry.register_expression("wato_folder_choices")
 def wato_folder_choices_autocompleter(value: str, params: Dict) -> Choices:
-    # select2 omits empty strings ("") as option therefore the path of the Main folder is replaced by a placeholder
-    return [
-        (path, name) if path != "" else ("@main", name)
-        for path, name in watolib.Folder.folder_choices_fulltitle()
-    ]
+    match_pattern = re.compile(value, re.IGNORECASE)
+    matching_folders: Choices = []
+    for path, name in watolib.Folder.folder_choices_fulltitle():  # str, HTML
+        name = str(name)
+        if match_pattern.search(name) is not None:
+            # select2 omits empty strings ("") as option therefore the path of the Main folder is
+            # replaced by a placeholder
+            matching_folders.append((path, name) if path != "" else ("@main", name))
+    return matching_folders
 
 
 @autocompleter_registry.register_expression("kubernetes_labels")

@@ -1794,7 +1794,7 @@ def _get_vs_column_dropdown(
 ) -> ValueSpec:
     return CascadingDropdown(
         title=_("Column"),
-        choices=painter_choices_with_params(painters),
+        choices=_painter_choices_with_params(painters),
         no_preselect_title="",
         render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
         render_sub_vs_request_vars={
@@ -1813,7 +1813,7 @@ def _get_vs_link_or_tooltip_elements(painters: Mapping[str, Painter]) -> list[Va
         ),
         DropdownChoice(
             title=_("Tooltip"),
-            choices=[(None, "")] + list(painter_choices(painters)),
+            choices=[(None, "")] + list(_painter_choices(painters)),
         ),
     ]
 
@@ -1958,7 +1958,7 @@ class PageAjaxCascadingRenderPainterParameters(AjaxPage):
         else:
             raise NotImplementedError()
 
-        vs = CascadingDropdown(choices=painter_choices_with_params(painters))
+        vs = CascadingDropdown(choices=_painter_choices_with_params(painters))
         sub_vs = self._get_sub_vs(vs, ast.literal_eval(api_request["choice_id"]))
         value = ast.literal_eval(api_request["encoded_value"])
 
@@ -3429,16 +3429,16 @@ def infos_needed_by_plugin(
     return {c.split("_", 1)[0] for c in plugin.columns if c != "site" and c not in add_columns}
 
 
-def painter_choices(painters: Mapping[str, Painter]) -> DropdownChoiceEntries:
-    return [(c[0], c[1]) for c in painter_choices_with_params(painters)]
+def _painter_choices(painters: Mapping[str, Painter]) -> DropdownChoiceEntries:
+    return [(c[0], c[1]) for c in _painter_choices_with_params(painters)]
 
 
-def painter_choices_with_params(painters: Mapping[str, Painter]) -> List[CascadingDropdownChoice]:
+def _painter_choices_with_params(painters: Mapping[str, Painter]) -> List[CascadingDropdownChoice]:
     return sorted(
         (
             (
                 name,
-                get_painter_plugin_title_for_choices(painter),
+                _get_painter_plugin_title_for_choices(painter),
                 painter.parameters if painter.parameters else None,
             )
             for name, painter in painters.items()
@@ -3460,7 +3460,7 @@ def _get_info_title(plugin: Union[Painter, Sorter]) -> str:
     )
 
 
-def get_painter_plugin_title_for_choices(plugin: Painter) -> str:
+def _get_painter_plugin_title_for_choices(plugin: Painter) -> str:
     dummy_cell = Cell(DummyView(), PainterSpec(plugin.ident))
     return "%s: %s" % (_get_info_title(plugin), plugin.list_title(dummy_cell))
 

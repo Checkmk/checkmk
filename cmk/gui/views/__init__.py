@@ -1718,90 +1718,129 @@ def view_editor_general_properties(ds_name):
 
 
 def view_editor_column_spec(ds_name: str) -> tuple[str, Dictionary]:
+    vs_column = _get_common_vs_column(ds_name)
+
+    if join_vs_column := _get_join_vs_column(ds_name):
+        vs_column = Alternative(
+            elements=[
+                vs_column,
+                join_vs_column,
+            ],
+            match=lambda x: 1 * (x is not None and x[1] is not None),
+        )
+
     ident = "columns"
     return ident, _view_editor_spec(
         ds_name=ds_name,
         ident=ident,
         title=_("Columns"),
+        vs_column=vs_column,
         allow_empty=False,
         empty_text=_("Please add at least one column to your view."),
     )
 
 
 def view_editor_grouping_spec(ds_name: str) -> tuple[str, Dictionary]:
+    vs_column = _get_common_vs_column(ds_name)
     ident = "grouping"
     return ident, _view_editor_spec(
         ds_name=ds_name,
         ident=ident,
         title=_("Grouping"),
+        vs_column=vs_column,
         allow_empty=True,
         empty_text=None,
     )
 
 
-def _view_editor_spec(
-    *, ident: str, ds_name: str, title: str, allow_empty: bool, empty_text: Optional[str]
-) -> Dictionary:
-    def column_elements(_painters, painter_type):
-        empty_choices: DropdownChoiceEntries = [(None, "")]
-        elements = [
-            CascadingDropdown(
-                title=_("Column"),
-                choices=painter_choices_with_params(_painters),
-                no_preselect_title="",
-                render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
-                render_sub_vs_request_vars={
-                    "ds_name": ds_name,
-                    "painter_type": painter_type,
-                },
-            ),
-            CascadingDropdown(
-                title=_("Link"),
-                choices=_column_link_choices(),
-                orientation="horizontal",
-            ),
-            DropdownChoice(
-                title=_("Tooltip"),
-                choices=list(empty_choices) + list(painter_choices(_painters)),
-            ),
-        ]
-        if painter_type == "join_painter":
-            elements.extend(
-                [
-                    TextInput(
-                        title=_("of Service"),
-                        allow_empty=False,
-                    ),
-                    TextInput(title=_("Title")),
-                ]
-            )
-        else:
-            elements.extend([FixedValue(value=None, totext=""), FixedValue(value=None, totext="")])
-        # UX/GUI Better ordering of fields and reason for transform
-        elements.insert(1, elements.pop(3))
-        return elements
-
+def _get_common_vs_column(ds_name: str) -> ValueSpec:
     painters = painters_of_datasource(ds_name)
-    vs_column: ValueSpec = Tuple(title=_("Column"), elements=column_elements(painters, "painter"))
-
-    join_painters = join_painters_of_datasource(ds_name)
-    if ident == "columns" and join_painters:
-        vs_column = Alternative(
-            elements=[
-                vs_column,
-                Tuple(
-                    title=_("Joined column"),
-                    help=_(
-                        "A joined column can display information about specific services for "
-                        "host objects in a view showing host objects. You need to specify the "
-                        "service description of the service you like to show the data for."
-                    ),
-                    elements=column_elements(join_painters, "join_painter"),
+    return Tuple(
+        title=_("Column"),
+        elements=_transform_vs_column_elements(
+            [
+                CascadingDropdown(
+                    title=_("Column"),
+                    choices=painter_choices_with_params(painters),
+                    no_preselect_title="",
+                    render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
+                    render_sub_vs_request_vars={
+                        "ds_name": ds_name,
+                        "painter_type": "painter",
+                    },
                 ),
-            ],
-            match=lambda x: 1 * (x is not None and x[1] is not None),
-        )
+                CascadingDropdown(
+                    title=_("Link"),
+                    choices=_column_link_choices(),
+                    orientation="horizontal",
+                ),
+                DropdownChoice(
+                    title=_("Tooltip"),
+                    choices=[(None, "")] + list(painter_choices(painters)),
+                ),
+                FixedValue(value=None, totext=""),
+                FixedValue(value=None, totext=""),
+            ]
+        ),
+    )
 
+
+def _get_join_vs_column(ds_name: str) -> None | ValueSpec:
+    if not (painters := join_painters_of_datasource(ds_name)):
+        return None
+
+    return Tuple(
+        title=_("Joined column"),
+        help=_(
+            "A joined column can display information about specific services for "
+            "host objects in a view showing host objects. You need to specify the "
+            "service description of the service you like to show the data for."
+        ),
+        elements=_transform_vs_column_elements(
+            [
+                CascadingDropdown(
+                    title=_("Column"),
+                    choices=painter_choices_with_params(painters),
+                    no_preselect_title="",
+                    render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
+                    render_sub_vs_request_vars={
+                        "ds_name": ds_name,
+                        "painter_type": "join_painter",
+                    },
+                ),
+                CascadingDropdown(
+                    title=_("Link"),
+                    choices=_column_link_choices(),
+                    orientation="horizontal",
+                ),
+                DropdownChoice(
+                    title=_("Tooltip"),
+                    choices=[(None, "")] + list(painter_choices(painters)),
+                ),
+                TextInput(
+                    title=_("of Service"),
+                    allow_empty=False,
+                ),
+                TextInput(title=_("Title")),
+            ]
+        ),
+    )
+
+
+def _transform_vs_column_elements(elements: list[ValueSpec]) -> Sequence[ValueSpec]:
+    elements.insert(1, elements.pop(3))
+    return elements
+
+
+def _view_editor_spec(
+    *,
+    ident: str,
+    ds_name: str,
+    title: str,
+    vs_column: ValueSpec,
+    allow_empty: bool,
+    empty_text: Optional[str],
+) -> Dictionary:
     vs_column = Transform(
         valuespec=vs_column,
         back=lambda value: (value[0], value[2], value[3], value[1], value[4]),
@@ -3404,7 +3443,7 @@ def infos_needed_by_plugin(
     return {c.split("_", 1)[0] for c in plugin.columns if c != "site" and c not in add_columns}
 
 
-def painter_choices(painters: Dict[str, Painter]) -> DropdownChoiceEntries:
+def painter_choices(painters: Mapping[str, Painter]) -> DropdownChoiceEntries:
     return [(c[0], c[1]) for c in painter_choices_with_params(painters)]
 
 

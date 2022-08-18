@@ -6,6 +6,8 @@
 
 import json
 
+import pytest
+
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
@@ -389,7 +391,10 @@ def test_openapi_delete_pack_forbidden(aut_user_auth_wsgi_app: WebTestAppForCMK)
     )
 
 
-def test_get_aggregation_state_empty(aut_user_auth_wsgi_app, mock_livestatus):
+@pytest.mark.parametrize("wato_enabled", [True, False])
+def test_get_aggregation_state_empty(  # type:ignore[no-untyped-def]
+    aut_user_auth_wsgi_app, mock_livestatus, wato_enabled
+) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
     postfix = "/domain-types/bi_aggregation/actions/aggregation_state/invoke"
     url = f"{base}{postfix}"
@@ -403,15 +408,19 @@ def test_get_aggregation_state_empty(aut_user_auth_wsgi_app, mock_livestatus):
     )
 
     with live():
-        _response = aut_user_auth_wsgi_app.post(
-            url,
-            headers={"Accept": "application/json", "Content-Type": "application/json"},
-            status=200,
-            params=json.dumps({}),
-        )
+        with aut_user_auth_wsgi_app.set_config(wato_enabled=wato_enabled):
+            _response = aut_user_auth_wsgi_app.post(
+                url,
+                headers={"Accept": "application/json", "Content-Type": "application/json"},
+                status=200,
+                params=json.dumps({}),
+            )
 
 
-def test_get_aggregation_state_filter_names(aut_user_auth_wsgi_app, mock_livestatus):
+@pytest.mark.parametrize("wato_enabled", [True, False])
+def test_get_aggregation_state_filter_names(  # type:ignore[no-untyped-def]
+    aut_user_auth_wsgi_app, mock_livestatus, wato_enabled
+) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
     postfix = "/domain-types/bi_aggregation/actions/aggregation_state/invoke"
     url = f"{base}{postfix}"
@@ -425,9 +434,10 @@ def test_get_aggregation_state_filter_names(aut_user_auth_wsgi_app, mock_livesta
     )
 
     with live():
-        _response = aut_user_auth_wsgi_app.post(
-            url,
-            headers={"Accept": "application/json", "Content-Type": "application/json"},
-            status=200,
-            params=json.dumps({"filter_names": ["Host heute"]}),
-        )
+        with aut_user_auth_wsgi_app.set_config(wato_enabled=wato_enabled):
+            _response = aut_user_auth_wsgi_app.post(
+                url,
+                headers={"Accept": "application/json", "Content-Type": "application/json"},
+                status=200,
+                params=json.dumps({"filter_names": ["Host heute"]}),
+            )

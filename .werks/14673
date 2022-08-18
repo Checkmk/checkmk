@@ -1,0 +1,14 @@
+Title: Allow to GET bi aggregation state with wato disabled
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1660892831
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p11
+
+
+The endpoint /domain-types/bi_aggregation/actions/aggregation_state/invoke does not
+require wato to be enable any longer.

@@ -26,7 +26,7 @@ def parse(string_table: StringTable) -> gcp.Section:
 
 register.agent_section(name="gcp_service_cloud_sql", parse_function=parse)
 service_namer = gcp.service_name_factory("Cloud SQL")
-ASSET_TYPE = "sqladmin.googleapis.com/Instance"
+ASSET_TYPE = gcp.AssetType("sqladmin.googleapis.com/Instance")
 
 
 def discover(

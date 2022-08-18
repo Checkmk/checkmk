@@ -25,14 +25,14 @@ def parse_assets(string_table: StringTable) -> AssetSection:
     # Known asset types that downstream checks can work with. Ignore others
     # fmt: off
     extractors: Mapping[AssetType, Callable[[GCPAsset], Item]] = {
-        "file.googleapis.com/Instance": lambda a: a.resource_data["name"].split("/")[-1],
-        "cloudfunctions.googleapis.com/CloudFunction": lambda a: a.resource_data["name"].split("/")[-1],
-        "storage.googleapis.com/Bucket": lambda a: a.resource_data["id"],
-        "redis.googleapis.com/Instance": lambda a: a.resource_data["name"],
-        "run.googleapis.com/Service": lambda a: a.resource_data["metadata"]["name"],
-        "sqladmin.googleapis.com/Instance": lambda a: a.resource_data["name"],
-        "compute.googleapis.com/Instance": lambda a: a.resource_data["name"],
-        "compute.googleapis.com/Disk": lambda a: a.resource_data["name"],
+        AssetType("file.googleapis.com/Instance"):                lambda a: a.resource_data["name"].split("/")[-1],
+        AssetType("cloudfunctions.googleapis.com/CloudFunction"): lambda a: a.resource_data["name"].split("/")[-1],
+        AssetType("storage.googleapis.com/Bucket"):               lambda a: a.resource_data["id"],
+        AssetType("redis.googleapis.com/Instance"):               lambda a: a.resource_data["name"],
+        AssetType("run.googleapis.com/Service"):                  lambda a: a.resource_data["metadata"]["name"],
+        AssetType("sqladmin.googleapis.com/Instance"):            lambda a: a.resource_data["name"],
+        AssetType("compute.googleapis.com/Instance"):             lambda a: a.resource_data["name"],
+        AssetType("compute.googleapis.com/Disk"):                 lambda a: a.resource_data["name"],
     }
     # fmt: on
     typed_assets: dict[AssetType, AssetTypeSection] = {}

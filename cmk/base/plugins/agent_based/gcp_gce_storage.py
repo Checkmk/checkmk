@@ -19,7 +19,7 @@ register.agent_section(name="gcp_service_gce_storage", parse_function=parse)
 
 service_namer = gcp.service_name_factory("GCE Disk")
 SECTIONS = ["gcp_service_gce_storage", "gcp_assets"]
-ASSET_TYPE = "compute.googleapis.com/Disk"
+ASSET_TYPE = gcp.AssetType("compute.googleapis.com/Disk")
 
 
 def discover(

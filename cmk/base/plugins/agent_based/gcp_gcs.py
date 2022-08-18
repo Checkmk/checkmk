@@ -19,7 +19,7 @@ register.agent_section(name="gcp_service_gcs", parse_function=parse_gcp_gcs)
 
 service_namer = gcp.service_name_factory("GCS")
 SECTIONS = ["gcp_service_gcs", "gcp_assets"]
-ASSET_TYPE = "storage.googleapis.com/Bucket"
+ASSET_TYPE = gcp.AssetType("storage.googleapis.com/Bucket")
 
 
 def discover(

@@ -18,7 +18,7 @@ def parse(string_table: StringTable) -> gcp.Section:
 register.agent_section(name="gcp_service_filestore", parse_function=parse)
 
 service_namer = gcp.service_name_factory("Filestore")
-ASSET_TYPE = "file.googleapis.com/Instance"
+ASSET_TYPE = gcp.AssetType("file.googleapis.com/Instance")
 
 
 def discover(

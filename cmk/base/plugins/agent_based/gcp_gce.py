@@ -182,7 +182,7 @@ register.check_plugin(
 )
 
 
-ASSET_TYPE = "compute.googleapis.com/Instance"
+ASSET_TYPE = gcp.AssetType("compute.googleapis.com/Instance")
 
 
 def discovery_summary(section: gcp.AssetSection) -> DiscoveryResult:

@@ -6,7 +6,7 @@
 import json
 from dataclasses import dataclass
 from enum import IntEnum, unique
-from typing import Any, Callable, Mapping, Optional, Sequence, Union
+from typing import Any, Callable, Mapping, NewType, Optional, Sequence, Union
 
 from ..agent_based_api.v1 import check_levels, check_levels_predictive, Result, Service, State
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -60,6 +60,9 @@ class GCPResult:
         return self._ts["points"]
 
 
+AssetType = NewType("AssetType", str)
+
+
 @dataclass(frozen=True)
 class GCPAsset:
     _asset: Mapping[str, Any]
@@ -77,7 +80,7 @@ class GCPAsset:
         return self._asset["resource"]["location"]
 
     @property
-    def asset_type(self) -> str:
+    def asset_type(self) -> AssetType:
         return self._asset["asset_type"]
 
 
@@ -94,11 +97,10 @@ class Config:
         return service in self.services
 
 
-Section = Mapping[str, SectionItem]
 PiggyBackSection = Sequence[GCPResult]
-AssetType = str
 Item = str
 AssetTypeSection = Mapping[Item, GCPAsset]
+Section = Mapping[Item, SectionItem]
 
 
 @dataclass(frozen=True)
@@ -260,7 +262,7 @@ def discovery_summary(section: AssetSection, service: str) -> DiscoveryResult:
         yield Service()
 
 
-def check_summary(asset_type: str, descriptor: str, section: AssetSection) -> CheckResult:
+def check_summary(asset_type: AssetType, descriptor: str, section: AssetSection) -> CheckResult:
     n = len(section[asset_type]) if asset_type in section else 0
     appendix = "s" if n != 1 else ""
     yield Result(

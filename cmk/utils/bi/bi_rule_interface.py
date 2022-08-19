@@ -123,7 +123,7 @@ class BIRuleIDRegistry(cmk.utils.plugin_registry.Registry[ABCBIRule]):
     def plugin_name(self, instance: ABCBIRule) -> str:
         return instance.id
 
-    def clear(self):
+    def clear(self) -> None:
         self._entries.clear()
 
 

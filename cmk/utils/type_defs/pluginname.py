@@ -58,7 +58,7 @@ class ABCName(abc.ABC):
     def __getnewargs__(self) -> tuple[str]:
         return (str(self),)
 
-    def __new__(cls, plugin_name: str):  # type:ignore[no-untyped-def]
+    def __new__(cls, plugin_name: str) -> ABCName:
         cls._validate_args(plugin_name)
         return super().__new__(cls)
 

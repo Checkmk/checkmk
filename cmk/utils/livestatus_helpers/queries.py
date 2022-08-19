@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from contextlib import contextmanager
-from typing import Any, cast, Dict, Generator, List, Optional, Tuple, Type
+from typing import Any, cast, Generator, Optional, Type
+
+from livestatus import LivestatusResponse, MultiSiteConnection
 
 from cmk.utils.livestatus_helpers import tables
 from cmk.utils.livestatus_helpers.base import BaseQuery
@@ -197,7 +199,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
 
     def __init__(
         self,
-        columns: List[Column],
+        columns: list[Column],
         filter_expr: QueryExpression = NothingExpression(),
     ):
         """A representation of a livestatus query.
@@ -230,7 +232,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
     def __str__(self) -> str:
         return self.compile()
 
-    def first(self, sites) -> Optional[ResultRow]:  # type:ignore[no-untyped-def]
+    def first(self, sites: MultiSiteConnection) -> Optional[ResultRow]:
         """Fetch the first row of the result.
 
         If the result is empty, `None` will be returned.
@@ -245,7 +247,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         """
         return next(self.iterate(sites), None)
 
-    def first_value(self, sites) -> Optional[Any]:  # type:ignore[no-untyped-def]
+    def first_value(self, sites: MultiSiteConnection) -> Optional[Any]:
         """Fetch one cell from the result.
 
         If no result could be found, None is returned.
@@ -289,10 +291,10 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             return list(entry.values())[0]
         return None
 
-    def fetchall(self, sites) -> List[ResultRow]:  # type:ignore[no-untyped-def]
+    def fetchall(self, sites: MultiSiteConnection) -> list[ResultRow]:
         return list(self.iterate(sites))
 
-    def fetchone(self, sites) -> ResultRow:  # type:ignore[no-untyped-def]
+    def fetchone(self, sites: MultiSiteConnection) -> ResultRow:
         """Fetch one row of the result.
 
         If the result from livestatus is more or less than exactly one row long it
@@ -340,7 +342,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             raise ValueError(f"Expected one row, got {len(result)} row(s).")
         return result[0]
 
-    def value(self, sites) -> Any:  # type:ignore[no-untyped-def]
+    def value(self, sites: MultiSiteConnection) -> Any:
         """Fetch one cell from the result.
 
         For this to work, the result must be exactly one row long and this row needs to have
@@ -379,7 +381,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             raise ValueError("Number of columns need to be exactly 1 to give a value.")
         return list(self.fetchone(sites).values())[0]
 
-    def fetch_values(self, sites) -> List[List[Any]]:  # type:ignore[no-untyped-def]
+    def fetch_values(self, sites: MultiSiteConnection) -> LivestatusResponse:
         """Return the result coming from LiveStatus.
 
         This returns a list with each row being a list of len(number of columns requested).
@@ -393,7 +395,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         """
         return sites.query(self.compile())
 
-    def iterate(self, sites) -> Generator[ResultRow, None, None]:  # type:ignore[no-untyped-def]
+    def iterate(self, sites: MultiSiteConnection) -> Generator[ResultRow, None, None]:
         """Return a generator of the result.
 
         Args:
@@ -435,7 +437,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             # This is Dict[str, Any], just with Attribute based access. Can't do much about this.
             yield ResultRow(list(zip(names, entry)))
 
-    def to_dict(self, sites) -> Dict[Any, Any]:  # type:ignore[no-untyped-def]
+    def to_dict(self, sites: MultiSiteConnection) -> dict[Any, Any]:
         """Return a dict from the result set.
 
         The first column will be the mapping key, the second one the value.
@@ -485,7 +487,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             The LiveStatus-Query as a string.
 
         """
-        _query: List[Tuple[str, str]] = []
+        _query: list[tuple[str, str]] = []
         column_names = " ".join(column.name for column in self.columns)
         _query.append(("Columns", column_names))
         _query.extend(self.filter_expr.render())
@@ -646,7 +648,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         for line in lines:
             if line.startswith("Columns: "):
                 column_names = line.split(": ", 1)[1].lstrip().split()
-                columns: List[Column] = []
+                columns: list[Column] = []
                 for col in column_names:
                     try:
                         columns.append(_get_column(table_class, col))
@@ -656,7 +658,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         else:
             raise ValueError("No columns found")
 
-        filters: List[QueryExpression] = []
+        filters: list[QueryExpression] = []
         for line in lines:
             if line.startswith("Filter: "):
                 try:

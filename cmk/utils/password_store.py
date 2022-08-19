@@ -44,9 +44,10 @@ import secrets
 import shutil
 import string
 import sys
+from collections.abc import Mapping
 from contextlib import suppress
 from pathlib import Path
-from typing import Literal, Mapping, NoReturn, Optional, TypedDict, Union
+from typing import Any, Literal, NoReturn, TypedDict, Union
 
 from Cryptodome.Cipher import AES
 
@@ -56,6 +57,7 @@ from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
 from cmk.utils.exceptions import MKGeneralException
 
 PasswordLookupType = Literal["password", "store"]
+# We still need "Union" because of https://github.com/python/mypy/issues/11098
 PasswordId = Union[str, tuple[PasswordLookupType, str]]
 Password = TypedDict(
     "Password",
@@ -67,7 +69,7 @@ Password = TypedDict(
         # Only owners can edit the password
         # None -> Administrators (having the permission "Write access to all passwords")
         # str -> Name of the contact group owning the password
-        "owned_by": Optional[str],
+        "owned_by": str | None,
         "shared_with": list[str],
     },
 )
@@ -123,7 +125,7 @@ def replace_passwords() -> None:
         sys.argv[num_arg] = arg[:pos_in_arg] + password + arg[pos_in_arg + len(password) :]
 
 
-def save(stored_passwords: Mapping[str, str], custom_path: Optional[Path] = None) -> None:
+def save(stored_passwords: Mapping[str, str], custom_path: Path | None = None) -> None:
     """Save the passwords to the pre-activation path"""
     content = ""
     for ident, pw in stored_passwords.items():
@@ -153,7 +155,7 @@ def _load(store_path: Path) -> dict[str, str]:
     return passwords
 
 
-def extract(password_id: PasswordId) -> Optional[str]:
+def extract(password_id: PasswordId) -> str | None:
     if not isinstance(password_id, tuple):
         return load().get(password_id)
 
@@ -237,7 +239,7 @@ class PasswordStore:
             return f.read().strip()
 
     @staticmethod
-    def _cipher(key: bytes, nonce: bytes):  # type:ignore[no-untyped-def]
+    def _cipher(key: bytes, nonce: bytes) -> Any:
         return AES.new(key, AES.MODE_GCM, nonce=nonce)
 
     @staticmethod

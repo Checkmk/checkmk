@@ -762,7 +762,7 @@ class Table:
         for row in rows:
             self.add_row(self._make_row_ident(row), row)
 
-    def _make_row_ident(self, row) -> SDRowIdent:  # type:ignore[no-untyped-def]
+    def _make_row_ident(self, row: SDRow) -> SDRowIdent:
         return tuple(self._get_row_value(row[k]) for k in self.key_columns if k in row)
 
     @staticmethod

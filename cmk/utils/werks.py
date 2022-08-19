@@ -117,7 +117,7 @@ def load_precompiled_werks_file(path):
         return {int(werk_id): werk for werk_id, werk in json.load(fp).items()}
 
 
-def load_raw_files(werks_dir):
+def load_raw_files(werks_dir: Path) -> dict[int, dict[str, Any]]:
     if werks_dir is None:
         werks_dir = _compiled_werks_dir()
     werks = {}
@@ -153,7 +153,7 @@ _OPTIONAL_WERK_FIELDS = {
 _ALLOWED_WERK_FIELDS = _REQUIRED_WERK_FIELDS | _OPTIONAL_WERK_FIELDS
 
 
-def _load_werk(path) -> dict[str, Any]:  # type:ignore[no-untyped-def]
+def _load_werk(path: Path) -> dict[str, Any]:
     werk: dict[str, Any] = {
         "body": [],
         "compatible": "compat",
@@ -168,7 +168,7 @@ def _load_werk(path) -> dict[str, Any]:  # type:ignore[no-untyped-def]
             elif in_header:
                 key, text = line.split(":", 1)
                 try:
-                    value = int(text.strip())
+                    value: int | str = int(text.strip())
                 except ValueError:
                     value = text.strip()
                 field = key.lower()

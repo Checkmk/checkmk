@@ -6,7 +6,10 @@
 It provides a decorator that can be used to cache function results based on the
 given function arguments."""
 
-from typing import Any, Callable, Dict, Set, Tuple, Type, Union
+from __future__ import annotations
+
+from collections.abc import Callable
+from typing import Any, Type
 
 # The functions that violate this checker are borrowed from official python
 # code and are done for performance reasons.
@@ -17,13 +20,13 @@ from typing import Any, Callable, Dict, Set, Tuple, Type, Union
 # + Add support for "list" args
 # pylint: disable=dangerous-default-value
 def _make_key(
-    args: Tuple,
-    kwds: Dict,
-    kwd_mark: Tuple = (object(),),
-    fasttypes: Set[Type] = {int, str},
+    args: tuple,
+    kwds: dict,
+    kwd_mark: tuple = (object(),),
+    fasttypes: set[Type] = {int, str},
     type: Callable = type,
     len: Callable = len,
-) -> "Union[int, str, _HashedSeq]":
+) -> int | str | _HashedSeq:
     """Make a cache key from optionally typed positional and keyword arguments
     The key is constructed in a way that is flat as possible rather than
     as a nested structure that would take more memory.
@@ -54,7 +57,7 @@ class _HashedSeq(list):
 
     __slots__ = ["hashvalue"]
 
-    def __init__(self, tup, hash=hash) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, tup: tuple, hash: Callable[[object], int] = hash) -> None:
         super().__init__()
         self[:] = tup
         self.hashvalue = hash(tup)
@@ -79,7 +82,7 @@ class MemoizeCache:
 
     def __init__(self, function: Callable) -> None:
         self.mem_func = function
-        self._cache: Dict[Union[int, str, _HashedSeq], Any] = {}
+        self._cache: dict[int | str | _HashedSeq, Any] = {}
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         cache_id = _make_key(args, kwargs)
@@ -91,7 +94,7 @@ class MemoizeCache:
         self._cache[cache_id] = result
         return result
 
-    def clear(self):
+    def clear(self) -> None:
         self._cache.clear()
 
     def clear_cache(self):

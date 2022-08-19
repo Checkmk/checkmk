@@ -251,12 +251,12 @@ def fmt_number_with_precision(
 #   '----------------------------------------------------------------------'
 
 
-def fmt_bytes(  # type:ignore[no-untyped-def]
+def fmt_bytes(
     b: int,
     *,
     unit_prefix_type: Type[_ABCUnitPrefixes] = IECUnitPrefixes,
     precision: int = 2,
-    unit="B",
+    unit: str = "B",
 ) -> str:
     """Formats byte values to be used in texts for humans.
 

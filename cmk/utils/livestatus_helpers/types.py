@@ -2,8 +2,11 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from __future__ import annotations
+
 import abc
-from typing import Any, Dict, List, Literal, Optional, Type
+from typing import Any, Literal, Optional, Type
 
 from cmk.utils.livestatus_helpers.expressions import (
     BinaryExpression,
@@ -11,12 +14,14 @@ from cmk.utils.livestatus_helpers.expressions import (
     ListExpression,
     Not,
     NothingExpression,
+    Primitives,
     QueryExpression,
     ScalarExpression,
+    UnaryExpression,
 )
 
 LivestatusType = Literal["string", "int", "float", "list", "dict", "time", "blob"]
-ExpressionDict = Dict[str, Any]
+ExpressionDict = dict[str, Any]
 
 
 class Table(abc.ABC):
@@ -28,13 +33,17 @@ class Table(abc.ABC):
     __tablename__: str
 
     @classmethod
-    def __columns__(cls) -> List[str]:
+    def __columns__(cls) -> list[str]:
         """Gives a list of all columns which are defined on the Table."""
         columns = []
         for key, value in cls.__dict__.items():
             if isinstance(value, Column):
                 columns.append(key)
         return columns
+
+
+class Hurz:
+    pass
 
 
 class NoTable(Table):
@@ -45,7 +54,7 @@ class NoTable(Table):
     """
 
     @classmethod
-    def __columns__(cls) -> List[str]:
+    def __columns__(cls) -> list[str]:
         raise NotImplementedError("NoTable instances have no columns.")
 
 
@@ -111,7 +120,7 @@ class Column:
         self.__doc__ = description
 
     @property
-    def full_name(self):
+    def full_name(self) -> str:
         # This needs to be a @property, due to the descriptor magic mentioned elsewhere.
         return f"{self.table.__tablename__}.{self.name}"
 
@@ -135,7 +144,7 @@ class Column:
         """
         return self.label_name if self.label_name is not None else self.name
 
-    def label(self, label_name: str) -> "Column":
+    def label(self, label_name: str) -> Column:
         """Set the label for use in the response.
 
         Args:
@@ -151,7 +160,7 @@ class Column:
         copy.label_name = label_name
         return copy
 
-    def __get__(self, obj, obj_type) -> "Column":  # type:ignore[no-untyped-def]
+    def __get__(self, obj: object, obj_type: Type[Table]) -> Column:
         # As we don't know on which Table this Column is located, we use
         # the descriptor protocol during attribute access to find out.
         if self.table is NoTable:
@@ -159,37 +168,37 @@ class Column:
 
         return self
 
-    def __eq__(self, other):
+    def __eq__(self, other: Primitives) -> BinaryExpression:  # type: ignore[override]
         return self.expr.__eq__(other)
 
-    def __ne__(self, other):
+    def __ne__(self, other: Primitives) -> Not:  # type: ignore[override]
         return self.expr.__ne__(other)
 
-    def __lt__(self, other):
+    def __lt__(self, other: Primitives) -> BinaryExpression:
         return self.expr.__lt__(other)
 
-    def __le__(self, other):
+    def __le__(self, other: Primitives) -> BinaryExpression:
         return self.expr.__le__(other)
 
-    def __gt__(self, other):
+    def __gt__(self, other: Primitives) -> BinaryExpression:
         return self.expr.__gt__(other)
 
-    def __ge__(self, other):
+    def __ge__(self, other: Primitives) -> BinaryExpression:
         return self.expr.__ge__(other)
 
-    def equals(self, other, ignore_case=False):
+    def equals(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
         return self.expr.equals(other, ignore_case=ignore_case)
 
-    def contains(self, other, ignore_case=False):
+    def contains(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
         return self.expr.contains(other, ignore_case=ignore_case)
 
-    def disparity(self, other, ignore_case=False):
+    def disparity(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
         return self.expr.disparity(other, ignore_case=ignore_case)
 
-    def op(self, op_str, other) -> BinaryExpression:  # type:ignore[no-untyped-def]
+    def op(self, op_str: str, other: UnaryExpression | Primitives) -> BinaryExpression:
         return self.expr.op(op_str, other)
 
-    def empty(self):
+    def empty(self) -> BinaryExpression:
         return self.expr.empty()
 
 

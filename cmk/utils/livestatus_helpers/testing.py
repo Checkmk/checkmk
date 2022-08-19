@@ -20,7 +20,8 @@ import re
 import socket
 import statistics
 import time
-from typing import Any, Callable, Dict, Iterable, List, Literal, Mapping, Optional, Tuple, Union
+from collections.abc import Callable, Iterable, Mapping
+from typing import Any, Literal
 
 from livestatus import LivestatusTestingError
 
@@ -30,19 +31,19 @@ from livestatus import LivestatusTestingError
 MatchType = Literal["strict", "ellipsis", "loose"]
 Operator = str
 OperatorFunc = Callable[[Any, Any], bool]
-Response = List[List[Any]]
-ResultEntry = Dict[str, Any]
-ResultList = List[ResultEntry]
+Response = list[list[Any]]
+ResultEntry = dict[str, Any]
+ResultList = list[ResultEntry]
 FilterKeyFunc = Callable[[ResultEntry], bool]
-ReduceFunc = Callable[[List[Any]], Any]
+ReduceFunc = Callable[[list[Any]], Any]
 # TODO: Integrate NewType into the internal interfaces.
 SiteName = str  # NewType("SiteName", str)
 ColumnName = str  # NewType("ColumnName", str)
 TableName = str  # NewType("TableName", str)
-Tables = Dict[TableName, Dict[SiteName, ResultList]]
+Tables = dict[TableName, dict[SiteName, ResultList]]
 
 
-def repr2(obj):
+def repr2(obj: object) -> str:
     """Create a string representation of an object like in Python2
 
     Examples:
@@ -91,16 +92,16 @@ class FakeSocket:
         # The actual (fake) data is not send/received via this FakeSocket fds, anyway
         self._write_socket.send(b"This could be your data")
 
-    def settimeout(self, timeout: Optional[int]) -> None:
+    def settimeout(self, timeout: int | None) -> None:
         pass
 
     def connect(self, address: str) -> None:
         pass
 
-    def fileno(self):
+    def fileno(self) -> int:
         return self._read_socket.fileno()
 
-    def close(self):
+    def close(self) -> None:
         return
 
     def recv(self, length: int) -> bytes:
@@ -274,13 +275,13 @@ program_start num_hosts num_services core_pid'
     """
 
     def __init__(self) -> None:
-        self.sites: List[SiteName] = []
-        self._connections: Dict[SiteName, MockSingleSiteConnection] = collections.OrderedDict()
-        self._expect_status_query: Optional[bool] = None
+        self.sites: list[SiteName] = []
+        self._connections: dict[SiteName, MockSingleSiteConnection] = collections.OrderedDict()
+        self._expect_status_query: bool | None = None
         self.tables: Tables = {}
         self.set_sites(["NO_SITE", "remote", "local"])
 
-    def set_sites(self, site_names: List[ColumnName]) -> None:
+    def set_sites(self, site_names: list[ColumnName]) -> None:
         """Set a new list of sites to be queried.
 
         NOTE: This resets all table data to the default data.
@@ -302,7 +303,7 @@ program_start num_hosts num_services core_pid'
                 self._connections[site_name] = MockSingleSiteConnection(site_name, self)
         return self._connections
 
-    def create_socket(self, family, site_name: Optional[SiteName]):  # type:ignore[no-untyped-def]
+    def create_socket(self, family: object, site_name: SiteName | None) -> FakeSocket:
         if site_name is None:  # plain SingleConnection instantiated by hand
             site_name = self.sites[0]
         return self.connections[site_name].socket
@@ -327,15 +328,11 @@ program_start num_hosts num_services core_pid'
 
         return result, output_format
 
-    def enabled_and_disabled_sites(  # type:ignore[no-untyped-def]
-        self, user_id
-    ) -> Tuple[dict, dict]:
+    def enabled_and_disabled_sites(self, user_id: object) -> tuple[dict, dict]:
         """This method is used to inject the currently configured sites into livestatus.py"""
         return {site_name: {"socket": "unix:"} for site_name in self.sites}, {}
 
-    def __call__(  # type:ignore[no-untyped-def]
-        self, expect_status_query=True
-    ) -> MockLiveStatusConnection:
+    def __call__(self, expect_status_query: bool = True) -> MockLiveStatusConnection:
         self._expect_status_query = expect_status_query
         return self
 
@@ -369,7 +366,7 @@ program_start num_hosts num_services core_pid'
         self,
         table_name: TableName,
         table_data: ResultList,
-        site: Optional[SiteName] = None,
+        site: SiteName | None = None,
     ) -> None:
         """Add the data of a table.
 
@@ -418,9 +415,9 @@ program_start num_hosts num_services core_pid'
 
     def expect_query(
         self,
-        query: Union[str, List[str]],
+        query: str | list[str],
         match_type: MatchType = "strict",
-        force_pos: Optional[int] = None,
+        force_pos: int | None = None,
     ) -> MockLiveStatusConnection:
         """Add a LiveStatus query to be expected by this class.
 
@@ -463,7 +460,7 @@ def execute_query(
     tables: Tables,
     query: str,
     site_name: SiteName,
-) -> Tuple[Response, List[ColumnName]]:
+) -> tuple[Response, list[ColumnName]]:
     """Execute a Livestatus query against a dict of table data.
 
     This function will evaluate the query and gather the correct information
@@ -488,7 +485,7 @@ def execute_query(
     # If the columns are explicitly asked for, we get the columns here.
     query_columns = _column_of_query(query) or []
 
-    columns: List[ColumnName] = query_columns
+    columns: list[ColumnName] = query_columns
     if table and not query_columns:
         # Otherwise, we figure out the columns from the table store.
         for entry in tables[table].get(site_name, []):
@@ -529,7 +526,7 @@ def execute_query(
     return result, columns
 
 
-def pick_header(query: str, header_name: str, default: Optional[str] = None) -> str:
+def pick_header(query: str, header_name: str, default: str | None = None) -> str:
     """Pick a header from a query.
 
     Examples:
@@ -568,7 +565,7 @@ def pick_header(query: str, header_name: str, default: Optional[str] = None) -> 
     raise ValueError(f"Header {header_name} not found in query.")
 
 
-def remove_headers(query: str, headers: List[str]) -> str:
+def remove_headers(query: str, headers: list[str]) -> str:
     """Remove specific Livestatus headers from a query
 
     Examples:
@@ -597,11 +594,11 @@ def remove_headers(query: str, headers: List[str]) -> str:
 
 
 class MockSingleSiteConnection:
-    def __init__(self, site_name, multisite_connection) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, site_name: SiteName, multisite_connection: MockLiveStatusConnection) -> None:
         self._site_name = site_name
         self._multisite = multisite_connection
-        self._last_response: Optional[io.StringIO] = None
-        self._expected_queries: List[Tuple[str, MatchType]] = []
+        self._last_response: io.StringIO | None = None
+        self._expected_queries: list[tuple[str, MatchType]] = []
 
         self.socket = FakeSocket(self)
 
@@ -610,9 +607,9 @@ class MockSingleSiteConnection:
 
     def expect_query(
         self,
-        query: Union[str, List[str]],
+        query: str | list[str],
         match_type: MatchType = "strict",
-        force_pos: Optional[int] = None,
+        force_pos: int | None = None,
     ) -> MockSingleSiteConnection:
         if match_type not in ("strict", "ellipsis", "loose"):
             raise ValueError(f"match_type {match_type!r} not supported.")
@@ -679,7 +676,7 @@ class MockSingleSiteConnection:
         response, output_format = self.result_of_next_query(data.decode("utf-8"))
         self._last_response = io.StringIO(_make_livestatus_response(response, output_format))
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         pass
 
     def __exit__(self, *exc_info: object) -> None:
@@ -697,7 +694,7 @@ def _show_columns(query: str) -> bool:
     return header_dict.pop("ColumnHeaders", "off") == "on"
 
 
-def _default_tables() -> Dict[TableName, ResultList]:
+def _default_tables() -> dict[TableName, ResultList]:
     # Just that parse_check_mk_version is happy we replace the dashes with dots.
     _today = str(dt.datetime.utcnow().date()).replace("-", ".")
     _program_start_timestamp = int(time.time())
@@ -856,7 +853,7 @@ def _compare(expected: str, query: str, match_type: MatchType) -> bool:
     return result
 
 
-def evaluate_stats(query: str, columns: List[ColumnName], result: ResultList) -> ResultList:
+def evaluate_stats(query: str, columns: list[ColumnName], result: ResultList) -> ResultList:
     """Aggregate the result set, as told by the Stats directives
 
     This function not only does counting and aggregating. It also groups the result by the
@@ -937,7 +934,7 @@ def evaluate_stats(query: str, columns: List[ColumnName], result: ResultList) ->
     if not reducers:
         return result
 
-    def key_func(entry):
+    def key_func(entry: Mapping[str, Any]) -> tuple:
         return tuple((field, entry[field]) for field in columns)
 
     aggregated = []
@@ -971,7 +968,7 @@ def make_reducer_func(line: str) -> ReduceFunc:
 
     """
     # As described in https://docs.checkmk.com/master/en/livestatus_references.html#stats
-    aggregators: Dict[str, ReduceFunc] = {
+    aggregators: dict[str, ReduceFunc] = {
         "avg": statistics.mean,
         "sum": sum,
         "min": min,
@@ -982,7 +979,7 @@ def make_reducer_func(line: str) -> ReduceFunc:
     }
 
     def _reducer(_func: ReduceFunc, make_value: Callable[[ResultEntry], Any]) -> ReduceFunc:
-        def _reduce(result: List[Any]) -> Any:
+        def _reduce(result: list[Any]) -> Any:
             return _func([make_value(entry) for entry in result])
 
         return _reduce
@@ -1075,7 +1072,7 @@ def evaluate_filter(query: str, result: ResultList) -> ResultList:
     return [entry for entry in result if filters[0](entry)]
 
 
-def and_(filters: List[FilterKeyFunc]) -> FilterKeyFunc:
+def and_(filters: list[FilterKeyFunc]) -> FilterKeyFunc:
     """Combines multiple filters via a logical AND.
 
     Args:
@@ -1095,13 +1092,13 @@ def and_(filters: List[FilterKeyFunc]) -> FilterKeyFunc:
 
     """
 
-    def _and_impl(entry: Dict[str, Any]) -> bool:
+    def _and_impl(entry: dict[str, Any]) -> bool:
         return all(filt(entry) for filt in filters)
 
     return _and_impl
 
 
-def or_(filters: List[FilterKeyFunc]) -> FilterKeyFunc:
+def or_(filters: list[FilterKeyFunc]) -> FilterKeyFunc:
     """Combine multiple filters via a logical OR.
 
     Args:
@@ -1121,13 +1118,13 @@ def or_(filters: List[FilterKeyFunc]) -> FilterKeyFunc:
 
     """
 
-    def _or_impl(entry: Dict[str, Any]) -> bool:
+    def _or_impl(entry: dict[str, Any]) -> bool:
         return any(filt(entry) for filt in filters)
 
     return _or_impl
 
 
-COMBINATORS: Dict[str, Callable[[List[FilterKeyFunc]], FilterKeyFunc]] = {
+COMBINATORS: dict[str, Callable[[list[FilterKeyFunc]], FilterKeyFunc]] = {
     "And:": and_,
     "Or:": or_,
 }
@@ -1176,7 +1173,7 @@ def match_regexp(string_: str, regexp: str) -> bool:
     return bool(re.match(regexp, string_))
 
 
-OPERATORS: Dict[str, OperatorFunc] = {
+OPERATORS: dict[str, OperatorFunc] = {
     "=": cast_down(operator.eq),
     ">": cast_down(operator.gt),
     "<": cast_down(operator.lt),
@@ -1251,7 +1248,7 @@ def make_filter_func(line: str) -> FilterKeyFunc:
     return _comparison_function(field_name, op, value)
 
 
-def _comparison_function(field_name: str, op: Operator, value: List[Any]) -> FilterKeyFunc:
+def _comparison_function(field_name: str, op: Operator, value: list[Any]) -> FilterKeyFunc:
     """Create a comparison function
 
     Examples:
@@ -1288,7 +1285,7 @@ def _comparison_function(field_name: str, op: Operator, value: List[Any]) -> Fil
     return _apply_op
 
 
-def _column_of_query(query: str) -> Optional[List[ColumnName]]:
+def _column_of_query(query: str) -> list[ColumnName] | None:
     """Figure out the queried columns from a LiveStatus query.
 
     Args:
@@ -1314,7 +1311,7 @@ def _column_of_query(query: str) -> Optional[List[ColumnName]]:
     return None
 
 
-def _table_of_query(query: str) -> Optional[TableName]:
+def _table_of_query(query: str) -> TableName | None:
     """Figure out a table from a LiveStatus query.
 
     Args:
@@ -1342,7 +1339,7 @@ def _table_of_query(query: str) -> Optional[TableName]:
     return None
 
 
-def _unpack_headers(query: str) -> Dict[str, str]:
+def _unpack_headers(query: str) -> dict[str, str]:
     r"""Unpack and normalize headers from a string.
 
     Examples:

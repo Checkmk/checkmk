@@ -15,8 +15,9 @@ import hashlib
 import os
 import re
 import socket
+from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import Callable, Iterable, List, NamedTuple, Tuple
+from typing import Any, NamedTuple
 
 from Cryptodome.Cipher import AES
 from Cryptodome.Hash import SHA256
@@ -126,7 +127,7 @@ def _derive_openssl_key_and_iv(
     digest: Callable[..., "hashlib._Hash"],
     key_length: int,
     iv_length: int,
-) -> Tuple[bytes, bytes]:
+) -> tuple[bytes, bytes]:
     """Simple OpenSSL Key derivation function"""
     d = d_i = b""
     while len(d) < key_length + iv_length:
@@ -144,7 +145,7 @@ _PEM_RE = re.compile(
 )
 
 
-def raw_certificates_from_file(path: Path) -> List[str]:
+def raw_certificates_from_file(path: Path) -> list[str]:
     try:
         # Some users use comments in certificate files e.g. to write the content of the
         # certificate outside of encapsulation boundaries. We only want to extract the
@@ -185,7 +186,7 @@ class ChainVerifyResult(NamedTuple):
 
 # NOTE: Use this function only in conjunction with the permission server_side_requests
 def fetch_certificate_details(
-    trusted_ca_file: Path, address_family: socket.AddressFamily, address: Tuple[str, int]
+    trusted_ca_file: Path, address_family: socket.AddressFamily, address: tuple[str, int]
 ) -> Iterable[CertificateDetails]:
     """Creates a list of certificate details for the chain certs"""
     verify_chain_results = _fetch_certificate_chain_verify_results(
@@ -233,8 +234,8 @@ def _is_ca_certificate(crypto_cert: x509.Certificate) -> bool:
 def _fetch_certificate_chain_verify_results(
     trusted_ca_file: Path,
     address_family: socket.AddressFamily,
-    address: Tuple[str, int],
-) -> List[ChainVerifyResult]:
+    address: tuple[str, int],
+) -> list[ChainVerifyResult]:
     """Opens a SSL connection and performs a handshake to get the certificate chain"""
 
     ctx = SSL.Context(SSL.SSLv23_METHOD)
@@ -257,8 +258,8 @@ def _fetch_certificate_chain_verify_results(
 
 
 def _verify_certificate_chain(
-    x509_store: crypto.X509Store, certificate_chain: List[crypto.X509]
-) -> List[ChainVerifyResult]:
+    x509_store: crypto.X509Store, certificate_chain: list[crypto.X509]
+) -> list[ChainVerifyResult]:
     verify_chain_results = []
 
     # Used to record all certificates and verification results for later displaying
@@ -309,7 +310,7 @@ class Encrypter:
         return hashlib.scrypt(passphrase, salt=salt, n=2**14, r=8, p=1, dklen=32)
 
     @staticmethod
-    def _cipher(key: bytes, nonce: bytes):  # type:ignore[no-untyped-def]
+    def _cipher(key: bytes, nonce: bytes) -> Any:  # FIXME: Better return type?
         return AES.new(key, AES.MODE_GCM, nonce=nonce)
 
     @staticmethod

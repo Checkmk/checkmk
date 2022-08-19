@@ -11,6 +11,7 @@
 import abc
 import datetime
 import time
+from typing import Any
 
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import DAILY, MONTHLY, rrule, WEEKLY
@@ -26,19 +27,19 @@ class Schedule(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def rule(self):
+    def rule(self) -> rrule:
         pass
 
     @property
     @abc.abstractmethod
-    def delta(self):
+    def delta(self) -> relativedelta:
         pass
 
     def next(self, t):
         return self.rule.replace(dtstart=t).after(t)
 
     def last(self, t):
-        from_ = t + relativedelta(**self.delta)
+        from_ = t + self.delta
         return self.rule.replace(dtstart=from_, until=t).before(t)
 
 
@@ -47,17 +48,17 @@ class DaySchedule(Schedule):
     A daily schedule.
     """
 
-    def __init__(self, timeofday) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, timeofday: datetime.time) -> None:
         super().__init__()
         self._rule = rrule(DAILY, byhour=timeofday.hour, byminute=timeofday.minute, bysecond=0)
 
     @property
-    def rule(self):
+    def rule(self) -> rrule:
         return self._rule
 
     @property
-    def delta(self):
-        return {"days": -1}
+    def delta(self) -> relativedelta:
+        return relativedelta(days=-1)
 
 
 class WeekSchedule(Schedule):
@@ -65,7 +66,7 @@ class WeekSchedule(Schedule):
     A weekly schedule.
     """
 
-    def __init__(self, weekday, timeofday) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, weekday: int, timeofday: datetime.time) -> None:
         super().__init__()
         if not 0 <= weekday <= 6:
             raise ValueError("weekday must be between 0 and 6")
@@ -74,12 +75,12 @@ class WeekSchedule(Schedule):
         )
 
     @property
-    def rule(self):
+    def rule(self) -> rrule:
         return self._rule
 
     @property
-    def delta(self):
-        return {"weeks": -1}
+    def delta(self) -> relativedelta:
+        return relativedelta(weeks=-1)
 
 
 class StartMonthSchedule(Schedule):
@@ -87,7 +88,7 @@ class StartMonthSchedule(Schedule):
     A monthly schedule initialized relatively to the first day of the month.
     """
 
-    def __init__(self, day, timeofday) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, day: int, timeofday: datetime.time) -> None:
         super().__init__()
         if not 1 <= day <= 31:
             raise ValueError("day must be between 1 and 31")
@@ -96,12 +97,12 @@ class StartMonthSchedule(Schedule):
         )
 
     @property
-    def rule(self):
+    def rule(self) -> rrule:
         return self._rule
 
     @property
-    def delta(self):
-        return {"months": -2}
+    def delta(self) -> relativedelta:
+        return relativedelta(months=-2)
 
 
 class EndMonthSchedule(Schedule):
@@ -109,7 +110,7 @@ class EndMonthSchedule(Schedule):
     A monthly schedule initialized relatively to the last day of the month.
     """
 
-    def __init__(self, days_from_end, timeofday) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, days_from_end: int, timeofday: datetime.time) -> None:
         super().__init__()
         if not 1 <= days_from_end <= 31:
             raise ValueError("days_from_end must be between 1 and 31")
@@ -119,15 +120,15 @@ class EndMonthSchedule(Schedule):
         )
 
     @property
-    def rule(self):
+    def rule(self) -> rrule:
         return self._rule
 
     @property
-    def delta(self):
-        return {"months": -2}
+    def delta(self) -> relativedelta:
+        return relativedelta(months=-2)
 
 
-def _get_schedule(period, timeofday):
+def _get_schedule(period: str | tuple[str, Any], timeofday: tuple[int, int]) -> Schedule:
     """
     Returns a schedule instance for a given period and timeofday.
     """
@@ -135,6 +136,7 @@ def _get_schedule(period, timeofday):
 
     if period == "day":
         return DaySchedule(t)
+    assert isinstance(period, tuple)
     if period[0] == "week":
         weekday = period[1]
         return WeekSchedule(weekday, t)
@@ -147,14 +149,19 @@ def _get_schedule(period, timeofday):
     raise ValueError("Unknown period")
 
 
-def last_scheduled_time(period, timeofday, dt=None):
+def last_scheduled_time(
+    period: str | tuple[str, Any], timeofday: tuple[int, int], dt: datetime.datetime | None = None
+) -> float:
     if dt is None:
         dt = datetime.datetime.today()
     schedule = _get_schedule(period, timeofday)
     return time.mktime(schedule.last(dt).timetuple())
 
 
-def next_scheduled_time(period, timeofday, dt=None):
+# Timeofday
+def next_scheduled_time(
+    period: str | tuple[str, Any], timeofday: tuple[int, int], dt: datetime.datetime | None = None
+) -> float:
     if dt is None:
         dt = datetime.datetime.today()
     schedule = _get_schedule(period, timeofday)

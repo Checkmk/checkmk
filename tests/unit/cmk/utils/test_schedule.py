@@ -134,7 +134,7 @@ def test_endmonth_schedule_two_days() -> None:
 
 def test_last_scheduled_time_month_start() -> None:
     result = schedule.last_scheduled_time(
-        ["month_begin", 4], [12, 30], dt=datetime.datetime(2017, 2, 7, 10, 31, 52)
+        ("month_begin", 4), (12, 30), dt=datetime.datetime(2017, 2, 7, 10, 31, 52)
     )
     expected = time.mktime(datetime.datetime(2017, 2, 4, 12, 30).timetuple())
     assert result == expected
@@ -142,7 +142,7 @@ def test_last_scheduled_time_month_start() -> None:
 
 def test_next_scheduled_time_month_end() -> None:
     result = schedule.next_scheduled_time(
-        ["month_end", 4], [12, 30], dt=datetime.datetime(2017, 1, 31, 10, 31, 52)
+        ("month_end", 4), (12, 30), dt=datetime.datetime(2017, 1, 31, 10, 31, 52)
     )
     expected = time.mktime(datetime.datetime(2017, 2, 25, 12, 30).timetuple())
     assert result == expected

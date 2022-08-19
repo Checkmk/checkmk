@@ -85,6 +85,7 @@ class Result(Generic[T_co, E_co], abc.ABC):
     def error(self) -> E_co:
         raise NotImplementedError
 
+    # FIXME: Why do we need this? "Cannot use a covariant type variable as a parameter"
     def value(self, default: T_co) -> T_co:  # type: ignore[misc]
         return default if self.is_error() else self.ok
 

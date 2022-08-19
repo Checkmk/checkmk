@@ -843,7 +843,7 @@ class NowikiManPageRenderer(ManPageRenderer):
         else:
             self.__output.write("%s\n" % self._markup(line))
 
-    def _print_begin_splitlines(self):
+    def _print_begin_splitlines(self) -> None:
         self.__output.write("<table>\n")
 
     def _print_end_splitlines(self) -> None:

@@ -80,9 +80,7 @@ def _add_cab(path_to_msibuild: Path, *, msi: Path, working_dir: Path) -> None:
         bail_out(f"msi build is failed, {result=}")
 
 
-def update_package_code(  # type:ignore[no-untyped-def]
-    file_name: Path, *, package_code: str | None
-):
+def update_package_code(file_name: Path, *, package_code: str | None) -> None:
     """Patch package code of MSI with new random package_code_hash"""
 
     # NOTES:
@@ -215,9 +213,7 @@ def generate_product_version(version: str, *, revision_text: str) -> str:
 
 
 # tested
-def _export_msi_file_table(  # type:ignore[no-untyped-def]
-    exe_dir: Path, *, name: str, msi_in: Path, out_dir: Path
-):
+def _export_msi_file_table(exe_dir: Path, *, name: str, msi_in: Path, out_dir: Path) -> None:
     _verbose("Export table %s from file %s" % (name, msi_in))
     exe = exe_dir / "msiinfo"
     if not exe.exists():
@@ -300,13 +296,13 @@ def _export_required_tables(bin_dir: Path, *, msi: Path, work_dir: Path) -> None
         _export_msi_file_table(bin_dir, name=name, msi_in=msi, out_dir=work_dir)
 
 
-def msi_update_core(  # type:ignore[no-untyped-def]
+def msi_update_core(
     msi_file_name: Path,
     src_dir: Path,
     revision_text: str,
     version: str,
     package_code_base: str | None,
-):
+) -> None:
     work_dir = Path()
     try:
         new_version_build = generate_product_version(version, revision_text=revision_text)

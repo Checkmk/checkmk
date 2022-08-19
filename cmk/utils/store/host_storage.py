@@ -7,38 +7,27 @@ from __future__ import annotations
 import abc
 import enum
 import io
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generic,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    TypedDict,
-    TypeVar,
-    Union,
-)
+from typing import Any, Generic, TypedDict, TypeVar
 
 from cmk.utils import store
 from cmk.utils.rulesets.tuple_rulesets import ALL_HOSTS, ALL_SERVICES
 from cmk.utils.type_defs import ContactgroupName, HostName, Labels, TaggroupIDToTagID
 
-HostAttributeMapping = Tuple[
-    str, str, Dict[str, Any], str
+HostAttributeMapping = tuple[
+    str, str, dict[str, Any], str
 ]  # host attr, cmk.base var name, value, title
 
 
 class GroupRuleType(TypedDict):
-    value: Union[List[ContactgroupName], ContactgroupName]
-    condition: Dict[str, Union[str, List[str]]]
+    value: list[ContactgroupName] | ContactgroupName
+    condition: dict[str, str | list[str]]
 
 
-HostsData = Dict[str, Any]
+HostsData = dict[str, Any]
 THostsReadData = TypeVar("THostsReadData")
 
 
@@ -73,32 +62,32 @@ def get_hosts_file_variables() -> HostsData:
 
 
 class ContactGroupsField(TypedDict):
-    hosts: List[GroupRuleType]
-    services: List[GroupRuleType]
-    folder_hosts: List[GroupRuleType]
-    folder_services: List[GroupRuleType]
+    hosts: list[GroupRuleType]
+    services: list[GroupRuleType]
+    folder_hosts: list[GroupRuleType]
+    folder_services: list[GroupRuleType]
 
 
 @dataclass
 class HostsStorageData:
     locked_hosts: bool
-    all_hosts: List[HostName]
-    clusters: Dict[HostName, Any]
-    attributes: Dict[str, Any]
-    custom_macros: Dict[str, Any]
-    host_tags: Dict[HostName, TaggroupIDToTagID]
-    host_labels: Dict[HostName, Labels]
+    all_hosts: list[HostName]
+    clusters: dict[HostName, Any]
+    attributes: dict[str, Any]
+    custom_macros: dict[str, Any]
+    host_tags: dict[HostName, TaggroupIDToTagID]
+    host_labels: dict[HostName, Labels]
     contact_groups: ContactGroupsField
-    explicit_host_conf: Dict[str, Dict[HostName, Any]]
-    host_attributes: Dict[HostName, Any]
+    explicit_host_conf: dict[str, dict[HostName, Any]]
+    host_attributes: dict[HostName, Any]
 
 
 class HostsStorageFieldsGenerator:
     @classmethod
     def contact_groups(
         cls,
-        host_service_group_rules: List[Tuple[List[GroupRuleType], bool]],
-        folder_host_service_group_rules: Tuple[Set[str], Set[ContactgroupName], bool],
+        host_service_group_rules: list[tuple[list[GroupRuleType], bool]],
+        folder_host_service_group_rules: tuple[set[str], set[ContactgroupName], bool],
         folder_path: str,
     ) -> ContactGroupsField:
 
@@ -139,9 +128,9 @@ class HostsStorageFieldsGenerator:
 
     @classmethod
     def custom_macros(
-        cls, custom_macros: Dict[str, Dict[str, str]]
-    ) -> Dict[str, List[Tuple[str, List[HostName]]]]:
-        macros: Dict[str, List[Tuple[str, List[HostName]]]] = {}
+        cls, custom_macros: dict[str, dict[str, str]]
+    ) -> dict[str, list[tuple[str, list[HostName]]]]:
+        macros: dict[str, list[tuple[str, list[HostName]]]] = {}
         for custom_varname, entries in custom_macros.items():
             if len(entries) == 0:
                 continue
@@ -155,13 +144,13 @@ class ABCHostsStorage(Generic[THostsReadData]):
     def __init__(self, storage_format: StorageFormat) -> None:
         self._storage_format = storage_format
 
-    def exists(self, file_path_without_extension: Path):  # type:ignore[no-untyped-def]
+    def exists(self, file_path_without_extension: Path) -> bool:
         return self.add_file_extension(file_path_without_extension).exists()
 
-    def remove(self, file_path_without_extension: Path):  # type:ignore[no-untyped-def]
+    def remove(self, file_path_without_extension: Path) -> None:
         Path(self.add_file_extension(file_path_without_extension)).unlink(missing_ok=True)
 
-    def add_file_extension(self, file_path: Path):  # type:ignore[no-untyped-def]
+    def add_file_extension(self, file_path: Path) -> Path:
         return file_path.with_suffix(self._storage_format.extension())
 
     def write(
@@ -277,7 +266,7 @@ class RawHostsStorage(ABCHostsStorage[HostsData]):
 
 
 @lru_cache
-def make_experimental_hosts_storage(storage_format: StorageFormat) -> Optional[ABCHostsStorage]:
+def make_experimental_hosts_storage(storage_format: StorageFormat) -> ABCHostsStorage | None:
     if storage_format == StorageFormat.RAW:
         return RawHostsStorage()
     if storage_format == StorageFormat.PICKLE:
@@ -290,8 +279,8 @@ def get_standard_hosts_storage() -> ABCHostsStorage[str]:
 
 
 @lru_cache
-def get_host_storage_loaders(storage_format_option: str) -> List[ABCHostsStorageLoader]:
-    host_storage_loaders: List[ABCHostsStorageLoader] = [
+def get_host_storage_loaders(storage_format_option: str) -> list[ABCHostsStorageLoader]:
+    host_storage_loaders: list[ABCHostsStorageLoader] = [
         StandardStorageLoader(get_standard_hosts_storage())
     ]
     if storage := _make_experimental_base_hosts_storage_loader(
@@ -303,7 +292,7 @@ def get_host_storage_loaders(storage_format_option: str) -> List[ABCHostsStorage
 
 def _make_experimental_base_hosts_storage_loader(
     storage_format: StorageFormat,
-) -> Optional[ABCHostsStorageLoader]:
+) -> ABCHostsStorageLoader | None:
     if storage := make_experimental_hosts_storage(storage_format):
         return ExperimentalStorageLoader(storage)
     return None
@@ -311,8 +300,8 @@ def _make_experimental_base_hosts_storage_loader(
 
 def apply_hosts_file_to_object(
     path_without_extension: Path,
-    host_storage_loaders: List[ABCHostsStorageLoader],
-    global_dict: Dict[str, Any],
+    host_storage_loaders: list[ABCHostsStorageLoader],
+    global_dict: dict[str, Any],
 ) -> None:
     for storage_loader in host_storage_loaders:
         if storage_loader.file_exists(path_without_extension) and storage_loader.file_valid(
@@ -335,16 +324,16 @@ class ABCHostsStorageLoader(abc.ABC, Generic[THostsReadData]):
     def file_valid(self, file_path: Path) -> bool:
         return True
 
-    def read_and_apply(self, file_path: Path, global_dict: Dict[str, Any]) -> bool:
+    def read_and_apply(self, file_path: Path, global_dict: dict[str, Any]) -> bool:
         return self.apply(self._storage.read(file_path), global_dict)
 
     @abc.abstractmethod
-    def apply(self, data: THostsReadData, global_dict: Dict[str, Any]) -> bool:
+    def apply(self, data: THostsReadData, global_dict: dict[str, Any]) -> bool:
         raise NotImplementedError()
 
 
 class StandardStorageLoader(ABCHostsStorageLoader[str]):
-    def apply(self, data: str, global_dict: Dict[str, Any]) -> bool:
+    def apply(self, data: str, global_dict: dict[str, Any]) -> bool:
         exec(data, global_dict, global_dict)
         return True
 
@@ -362,7 +351,7 @@ class ExperimentalStorageLoader(ABCHostsStorageLoader[HostsData]):
             <= self._storage.add_file_extension(file_path).stat().st_mtime
         )
 
-    def apply(self, data: HostsData, global_dict: Dict[str, Any]) -> bool:
+    def apply(self, data: HostsData, global_dict: dict[str, Any]) -> bool:
         """Integrates HostsData from PickleHostsStorage/RawHostsStorage into the global_dict"""
 
         # List based settings, append based
@@ -444,7 +433,7 @@ class StorageFormat(enum.Enum):
         }[self]
 
 
-def get_all_storage_readers() -> List[ABCHostsStorage]:
+def get_all_storage_readers() -> list[ABCHostsStorage]:
     return [
         StandardHostsStorage(),
         RawHostsStorage(),

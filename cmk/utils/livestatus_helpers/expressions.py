@@ -15,14 +15,13 @@ It's implementation is still a bit rudimentary but supports most necessary conce
 from __future__ import annotations
 
 import abc
-from typing import List, Tuple, Union
 
-Primitives = Union[str, int, bool, float, list, tuple]
+Primitives = str | int | bool | float | list[str] | tuple[str, ...]
 
 # TODO: column functions
 # TODO: more tests
 
-RenderIntermediary = List[Tuple[str, str]]
+RenderIntermediary = list[tuple[str, str]]
 
 LIVESTATUS_OPERATORS = [
     "=",
@@ -80,7 +79,7 @@ class NothingExpression(QueryExpression):
 class UnaryExpression(abc.ABC):
     """Base class of all concrete single parts of BinaryExpression."""
 
-    def __init__(self, value) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, value: str) -> None:
         self.value = value
 
     def op(self, operator: str, other: UnaryExpression | Primitives) -> BinaryExpression:
@@ -90,7 +89,7 @@ class UnaryExpression(abc.ABC):
         elif isinstance(other, UnaryExpression):
             other_expr = other
         else:
-            other_expr = LiteralExpression(other)
+            other_expr = LiteralExpression(str(other))
         return BinaryExpression(self, other_expr, operator)
 
     def __repr__(self) -> str:
@@ -170,9 +169,7 @@ class ScalarExpression(UnaryExpression):
     def empty(self) -> BinaryExpression:
         raise NotImplementedError("Not implemented for this type.")
 
-    def disparity(  # type:ignore[no-untyped-def]
-        self, other, ignore_case=False
-    ) -> BinaryExpression:
+    def disparity(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
         raise NotImplementedError("Not implemented for this type.")
 
 

@@ -1464,7 +1464,7 @@ def init_new_run():
 def save_next_run():
     schedule_cfg = g_job_config["schedule"]
     if not schedule_cfg:
-        next_schedule = None
+        next_schedule: str | float | None = None
 
     elif schedule_cfg["disabled"]:
         next_schedule = "disabled"

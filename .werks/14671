@@ -8,5 +8,5 @@ Knowledge: doc
 Level: 1
 Version: 2.2.0i1
 
-If you have a monitored VM that is powered of then the memory service would go stale.
+If you have a monitored VM that is powered off then the memory service would go stale.
 This has been fixed. No user interaction required.

@@ -57,6 +57,13 @@ class Socket:
     path: str | None = None
 
     @classmethod
+    def from_external(cls, external_config: dict[str, Any]) -> Socket:
+        if external_config["socket_type"] in ("tcp", "tcp6"):
+            if not external_config["encrypted"]:
+                external_config.pop("verify", None)
+        return cls(**external_config)
+
+    @classmethod
     def from_internal(
         cls, internal_config: str | UnixSocketInfo | NetworkSocketInfo | LocalSocketInfo
     ) -> Socket:
@@ -358,7 +365,7 @@ class StatusConnection:
     @classmethod
     def from_external(cls, external_config: Mapping[str, Any]) -> StatusConnection:
         return cls(
-            connection=Socket(**external_config["connection"]),
+            connection=Socket.from_external(external_config["connection"]),
             proxy=Proxy.from_external(external_config["proxy"]),
             connect_timeout=external_config["connect_timeout"],
             persistent_connection=external_config["persistent_connection"],

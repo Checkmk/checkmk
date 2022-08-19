@@ -20016,6 +20016,10 @@ msgid "GByte/s"
 msgstr "GByte/s"
 
 #, fuzzy
+msgid "GCE Storage"
+msgstr "Stoccaggio"
+
+#, fuzzy
 msgid "GCP Cost"
 msgstr "TCP Connect"
 
@@ -20050,6 +20054,10 @@ msgstr "CPU GCP/GCE"
 
 #, fuzzy
 msgid "GCP/GCE disk IO"
+msgstr "Rete IP"
+
+#, fuzzy
+msgid "GCP/GCE storage IO"
 msgstr "Rete IP"
 
 #, fuzzy

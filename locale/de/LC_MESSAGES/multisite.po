@@ -19766,6 +19766,10 @@ msgid "GByte/s"
 msgstr "GB/Sek."
 
 #, fuzzy
+msgid "GCE Storage"
+msgstr "Massenspeicher"
+
+#, fuzzy
 msgid "GCP Cost"
 msgstr "GCP Kosten"
 
@@ -19794,6 +19798,10 @@ msgid "GCP/GCE CPU"
 msgstr "GCP/GCE CPU"
 
 msgid "GCP/GCE disk IO"
+msgstr "GCP/GCE-Platten-IO"
+
+#, fuzzy
+msgid "GCP/GCE storage IO"
 msgstr "GCP/GCE-Platten-IO"
 
 msgid "GCP/GCS Network"

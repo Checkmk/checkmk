@@ -18965,6 +18965,10 @@ msgid "GByte/s"
 msgstr "ギガバイト/秒"
 
 #, fuzzy
+msgid "GCE Storage"
+msgstr "ストレージ"
+
+#, fuzzy
 msgid "GCP Cost"
 msgstr "TCPコネクト"
 
@@ -18993,6 +18997,10 @@ msgid "GCP/GCE CPU"
 msgstr ""
 
 msgid "GCP/GCE disk IO"
+msgstr "GCP/GCEのディスクIO"
+
+#, fuzzy
+msgid "GCP/GCE storage IO"
 msgstr "GCP/GCEのディスクIO"
 
 msgid "GCP/GCS Network"

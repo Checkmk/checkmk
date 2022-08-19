@@ -19199,6 +19199,10 @@ msgstr ""
 msgid "GByte/s"
 msgstr ""
 
+#, fuzzy
+msgid "GCE Storage"
+msgstr "Dimensiunea Maxima"
+
 msgid "GCP Cost"
 msgstr ""
 
@@ -19234,6 +19238,10 @@ msgstr ""
 
 #, fuzzy
 msgid "GCP/GCE disk IO"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "GCP/GCE storage IO"
 msgstr "Adresă"
 
 #, fuzzy

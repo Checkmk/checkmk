@@ -9,12 +9,13 @@ MODULES_DIR="$(dirname "$(realpath -- "$0" || printf "%s" "$0")")"
 
 usage() {
     cat >&2 <<HERE
-Usage ${0} deploy|cleanup|trigger|getdeployed
+Usage ${0} deploy|cleanup|purge|trigger|getdeployed
 
 Commands:
   deploy       Deploy the files for the (first available) conifgured
                super server.
   cleanup      Cleanup all super server files
+  purge        Cleanup all super server files that may remain from old agent installations
   trigger      Reload or start all super servers
   getdeployed  Print the deployed super server
 HERE
@@ -75,6 +76,14 @@ cleanup() {
     done
 }
 
+purge() {
+    _module_subfolders | while read -r module; do
+        "${module:?}/setup" purge
+    done
+
+    cleanup
+}
+
 deploy() {
     _configured_modules | while read -r module; do
         module_path="$(find "${MODULES_DIR}" -type d -name "*${module}" | head -n1)" || continue
@@ -118,6 +127,9 @@ main() {
             ;;
         cleanup)
             cleanup
+            ;;
+        purge)
+            purge
             ;;
         trigger)
             trigger

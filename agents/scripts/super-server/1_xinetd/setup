@@ -10,14 +10,15 @@ SERVICE_FILE="check-mk-agent"
 
 usage() {
     cat >&2 <<HERE
-$0 deploy|cleanup|trigger|isdeployed
+$0 deploy|cleanup|purge|trigger|isdeployed
 
 Manage the xinetd unit required for Checkmk agent setup.
 
 Commands:
   deploy      Deploy the service file to ${DESTINATION},
               using the template ${TEMPLATE}
-  cleanup     Remove the service file
+  cleanup     Remove the deployed service file
+  purge       cleanup and additionally remove leftover (CRE) service files
   trigger     Reload or start xinetd
   isdeployed  Exit successfully if and only if files are deployed
 HERE
@@ -75,6 +76,15 @@ cleanup() {
     rm -f "${DESTINATION}/${SERVICE_FILE}" 2>/dev/null
 }
 
+purge() {
+    path="/etc/xinetd.d/check_mk"
+    [ -e "${path}" ] || return 0
+    printf "Removing leftover xinetd service: %s\n" "${path}"
+    rm -f "${path}"
+
+    cleanup
+}
+
 trigger() {
     if _xinetd_running; then
         echo "Reloading xinetd"
@@ -108,6 +118,9 @@ main() {
             ;;
         cleanup)
             cleanup
+            ;;
+        purge)
+            purge
             ;;
         trigger)
             trigger

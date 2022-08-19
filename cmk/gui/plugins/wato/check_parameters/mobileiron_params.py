@@ -9,10 +9,38 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Age, Checkbox, Dictionary, Integer, MonitoringState, RegExp, Tuple
+from cmk.gui.valuespec import (
+    Age,
+    Checkbox,
+    Dictionary,
+    Integer,
+    MonitoringState,
+    Percentage,
+    RegExp,
+    Tuple,
+)
 
 
-def _parameter_valuespec_mobileiron_compliance():
+def _parameter_valuespec_mobileiron_statistics() -> Dictionary:
+    return Dictionary(
+        title=_("Mobileiron statistics parameters"),
+        elements=[
+            (
+                "non_compliant_summary_levels",
+                Tuple(
+                    title=_("Configure non compliant devices summary percent levels"),
+                    elements=[
+                        Percentage(title=_("Warning at"), default_value=10),
+                        Percentage(title=_("Critical at"), default_value=20),
+                    ],
+                ),
+            )
+        ],
+        optional_keys=[],
+    )
+
+
+def _parameter_valuespec_mobileiron_compliance() -> Dictionary:
     return Dictionary(
         title=_("Mobileiron compliance parameters"),
         elements=[
@@ -38,7 +66,7 @@ def _parameter_valuespec_mobileiron_compliance():
     )
 
 
-def _parameter_valuespec_mobileiron_versions():
+def _parameter_valuespec_mobileiron_versions() -> Dictionary:
     return Dictionary(
         title=_("Mobileiron versions parameters"),
         elements=[
@@ -106,7 +134,17 @@ def _parameter_valuespec_mobileiron_versions():
 
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
-        title=lambda: _("Mobileiron/Compliance"),
+        title=lambda: _("Mobileiron statistics"),
+        check_group_name="mobileiron_statistics",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_mobileiron_statistics,
+    )
+)
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        title=lambda: _("Mobileiron compliance"),
         check_group_name="mobileiron_compliance",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
@@ -116,7 +154,7 @@ rulespec_registry.register(
 
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
-        title=lambda: _("Mobileiron/Versions"),
+        title=lambda: _("Mobileiron versions"),
         check_group_name="mobileiron_versions",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",

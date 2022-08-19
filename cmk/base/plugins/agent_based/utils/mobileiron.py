@@ -23,5 +23,5 @@ class Section(NamedTuple):
 
 
 class SourceHostSection(NamedTuple):
-    query_time: Optional[int]
-    total_count: Optional[int]
+    non_compliant: int
+    total_count: int

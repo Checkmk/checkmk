@@ -248,11 +248,12 @@ class MobileironAPI:
             }
         )
         total_count = first_page_json["result"]["totalCount"]
+        non_compliant = first_page_json["result"]["facetedResults"]["COMPLIANCESTATE"]["false"]
         self._all_devices.update(
             {
                 self.api_host: {
                     "total_count": total_count,
-                    "queryTime": first_page_json["result"]["queryTime"],
+                    "non_compliant": non_compliant,
                 }
             }
         )
@@ -285,13 +286,11 @@ class MobileironAPI:
 def agent_mobileiron_main(args: Args) -> None:
     """Fetches and writes selected information formatted as agent output to stdout.
     Standard out with sections and piggyback example:
+    <<<mobileiron_statistics>>>
+    {"...": ...}
     <<<<entityName>>>>
     <<<mobileiron_section>>>
     {"...": ...}
-    <<<<entityName>>>>
-    <<<mobileiron_source_host>>>
-    {"...": ...}
-    <<<<>>>>
     <<<<entityName>>>>
     <<<mobileiron_df>>>
     {"...": ...}
@@ -330,9 +329,7 @@ def agent_mobileiron_main(args: Args) -> None:
     LOGGER.info("Write agent output..")
     for device in all_devices:
         if "total_count" in all_devices[device]:
-            with ConditionalPiggybackSection(device), SectionWriter(
-                "mobileiron_source_host"
-            ) as writer:
+            with SectionWriter("mobileiron_statistics") as writer:
                 writer.append_json(all_devices[device])
         else:
             with ConditionalPiggybackSection(device), SectionWriter("mobileiron_section") as writer:

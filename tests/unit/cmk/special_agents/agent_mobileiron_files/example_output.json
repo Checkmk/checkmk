@@ -167,6 +167,12 @@
         "offset": 0,
         "limit": 10,
         "queryTime": 64,
-        "totalUnfilteredResultCount": 0
+        "totalUnfilteredResultCount": 0,
+        "facetedResults": {
+            "COMPLIANCESTATE": {
+                "true": 5,
+                "false": 27
+            }
+        }
     }
 }

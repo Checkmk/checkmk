@@ -31,11 +31,11 @@ def parse_mobileiron(string_table: StringTable) -> Section:
     )
 
 
-def parse_mobileiron_source_host(string_table: StringTable) -> SourceHostSection:
+def parse_mobileiron_statistics(string_table: StringTable) -> SourceHostSection:
     json_raw = json.loads(string_table[0][0])
     return SourceHostSection(
-        query_time=json_raw.get("queryTime"),
         total_count=json_raw.get("total_count"),
+        non_compliant=json_raw.get("non_compliant"),
     )
 
 
@@ -66,8 +66,8 @@ register.agent_section(
 )
 
 register.agent_section(
-    name="mobileiron_source_host",
-    parse_function=parse_mobileiron_source_host,
+    name="mobileiron_statistics",
+    parse_function=parse_mobileiron_statistics,
 )
 
 register.agent_section(

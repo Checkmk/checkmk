@@ -1,4 +1,4 @@
-title: Mobileiron device: Mobileiron source host
+title: Mobileiron device: Mobileiron source host statistics
 agents: mobileiron
 catalog: app/mobileiron
 license: GPL
@@ -11,7 +11,7 @@ description:
  This check monitors the source host itself.
 
  The monitored parameters are:
- - queryTime
+ - non_compliant
  - total_count
 
 discovery:

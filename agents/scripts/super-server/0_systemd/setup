@@ -7,14 +7,15 @@ RESOURCES="$(dirname "$(realpath -- "$0" || printf "%s" "$0")")"
 
 _usage() {
     cat >&2 <<HERE
-$0 deploy|cleanup|trigger|isdeployed
+$0 deploy|cleanup|purge|trigger|isdeployed
 
 Manage the systemd units required for Checkmk agent setup.
 
 Commands:
   deploy      Deploy the unit files found in ${RESOURCES} to the
               "most suitable" of: $(_destination --all)
-  cleanup     Disable and remove the systemd units
+  cleanup     Disable and remove the deployed systemd units
+  purge       cleanup and additionally remove leftover CRE systemd units
   trigger     Enable or disable systemd units
   isdeployed  Exit successfully if and only if files are deployed
 
@@ -135,7 +136,7 @@ deploy() {
 }
 
 cleanup() {
-    prefix="Removing systemd units:"
+    prefix="Removing deployed systemd units:"
     _destination --all | while read -r dest; do
         for unit in $(_unit_files); do
             [ -e "${ROOT}${dest}/${unit}" ] || continue
@@ -145,6 +146,29 @@ cleanup() {
         done
     done
     printf "\n"
+}
+
+purge() {
+    _systemd_present && {
+        # We forgot to stop/disable the units in the prerm scripts in 1.6
+        systemctl stop "check_mk.socket" 2>/dev/null
+        systemctl disable "check_mk.socket" 2>/dev/null
+    }
+
+    prefix="Removing leftover systemd units:"
+    suffix=
+    units='check_mk.socket check_mk@.service check_mk-async.service check-mk-agent.socket check-mk-agent@.service check-mk-agent-async.service'
+    for unit in ${units}; do
+        path="/etc/systemd/system/${unit}"
+        [ -e "${path}" ] || continue
+        printf "%s %s" "${prefix}" "${path}"
+        prefix=","
+        suffix="\n"
+        rm -f "${path}"
+    done
+    printf "%s" "${suffix}"
+
+    cleanup
 }
 
 trigger() {
@@ -189,6 +213,9 @@ main() {
             ;;
         cleanup)
             cleanup "$@"
+            ;;
+        purge)
+            purge
             ;;
         trigger)
             trigger

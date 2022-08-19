@@ -75,6 +75,17 @@ def _aggregate_check_table_services(
             for s in _get_clustered_services(config_cache, host_config, skip_autochecks)
             if sfilter.keep(s)
         )
+        return
+
+    # add all services from the nodes inside the host's clusters
+    # the host must try to fetch all services that are discovered in his clusters
+    # in case of failover, it has to provide the service data to the cluster
+    # even when the service was never discovered on it
+    yield from (
+        s
+        for s in _get_services_from_cluster_nodes(config_cache, host_config.hostname)
+        if sfilter.keep(s)
+    )
 
 
 class _ServiceFilter:
@@ -157,6 +168,15 @@ def _get_static_check_entries(
     # ones. For static checks that is important if there are two rules for
     # a host with the same combination of check type and item.
     return reversed(entries)
+
+
+def _get_services_from_cluster_nodes(
+    config_cache: config.ConfigCache, hostname: HostName
+) -> Iterable[ConfiguredService]:
+    for cluster in config_cache.clusters_of(hostname):
+        cluster_config = config_cache.get_host_config(cluster)
+        for service in _get_clustered_services(config_cache, cluster_config, False):
+            yield service
 
 
 def _get_clustered_services(

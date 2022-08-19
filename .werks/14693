@@ -1,0 +1,19 @@
+Title: clustering: Fix clustering in case of failover
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1660746708
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p11
+
+In case of failover, a clustered check showed "Item not found in monitoring data"
+instead of fetching the data from the second node.
+The problem was that the service was discovered on a particular node within
+the cluster and expected to persist on this node, instead of being fetched from
+other nodes in the event that a failover had occurred.
+
+This behavior was visible when the rule "Aggregation options for clustered services"
+was set on "Failover".

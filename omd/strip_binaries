@@ -140,8 +140,17 @@ def strip_static_library(file: Path) -> None:
     )
 
 
+# We can't strip stuff which is currently executing, otherwise we might get "Text file is busy"
+DONT_STRIP = {
+    "strip",
+    f"python{sys.version_info.major}.{sys.version_info.minor}",
+    f"libpython{sys.version_info.major}.{sys.version_info.minor}.so.1.0",
+    f"libpython{sys.version_info.major}.so",
+}
+
+
 def strip(args: list[str], file: Path) -> None:
-    if file.name != "strip":
+    if file.name not in DONT_STRIP:
         subprocess.run(["/usr/bin/strip"] + args + [str(file)], check=True)  # nosec
 
 

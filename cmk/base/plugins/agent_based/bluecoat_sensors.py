@@ -157,7 +157,7 @@ def check_bluecoat_sensors_temp(
 register.check_plugin(
     name="bluecoat_sensors_temp",
     sections=["bluecoat_sensors"],
-    service_name="%s",
+    service_name="Temperature %s",
     discovery_function=discover_bluecoat_sensors_temp,
     check_function=check_bluecoat_sensors_temp,
     check_ruleset_name="temperature",

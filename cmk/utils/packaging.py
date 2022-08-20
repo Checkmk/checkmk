@@ -408,10 +408,9 @@ def install(file_object: BinaryIO) -> PackageInfo:
     package = _get_package_info_from_package(file_object)
     file_object.seek(0)
 
-    _verify_check_mk_version(package)
-
     pacname = package["name"]
     old_package = read_package_info(pacname)
+
     if old_package:
         logger.log(
             VERBOSE,
@@ -420,25 +419,10 @@ def install(file_object: BinaryIO) -> PackageInfo:
             old_package["version"],
             package["version"],
         )
-        update = True
     else:
         logger.log(VERBOSE, "Installing %s version %s.", pacname, package["version"])
-        update = False
 
-    # Before installing check for conflicts
-    for part in get_package_parts() + get_config_parts():
-        packaged = _packaged_files_in_dir(part.ident)
-
-        old_files = set(old_package["files"].get(part.ident, [])) if old_package else set()
-
-        for fn in package["files"].get(part.ident, []):
-            if fn in old_files:
-                continue
-            path = os.path.join(part.path, fn)
-            if fn in packaged:
-                raise PackageException("File conflict: %s is part of another package." % path)
-            if os.path.exists(path):
-                raise PackageException("File conflict: %s already existing." % path)
+    _raise_for_installability(package, old_package, cmk_version.__version__)
 
     with tarfile.open(fileobj=file_object, mode="r:gz") as tar:
         # Now install files, but only unpack files explicitely listed
@@ -494,7 +478,7 @@ def install(file_object: BinaryIO) -> PackageInfo:
                     ec.add_rule_pack_proxies(filenames)
 
     # In case of an update remove files from old_package not present in new one
-    if update and old_package is not None:
+    if old_package is not None:
         for part in get_package_parts() + get_config_parts():
             new_files = set(package["files"].get(part.ident, []))
             old_files = set(old_package["files"].get(part.ident, []))
@@ -517,6 +501,47 @@ def install(file_object: BinaryIO) -> PackageInfo:
     _execute_post_package_change_actions(package)
 
     return package
+
+
+def _raise_for_installability(
+    package: PackageInfo,
+    old_package: Optional[PackageInfo],
+    site_version: str,
+) -> None:
+    """Raise a `PackageException` if we should not install this package.
+
+    Note: this currently ignores the packages "max version".
+    """
+    _raise_for_too_old_cmk_version(package, site_version)
+    _raise_for_conflicts(package, old_package)
+
+
+def _raise_for_conflicts(
+    package: PackageInfo,
+    old_package: Optional[PackageInfo],
+) -> None:
+    for file_path, type_of_collision in _conflicting_files(package, old_package):
+        raise PackageException("File conflict: %s (%s)" % (file_path, type_of_collision))
+
+
+def _conflicting_files(
+    package: PackageInfo,
+    old_package: Optional[PackageInfo],
+) -> Iterable[tuple[str, str]]:
+    # Before installing check for conflicts
+    for part in get_package_parts() + get_config_parts():
+        packaged = _packaged_files_in_dir(part.ident)
+
+        old_files = set(old_package["files"].get(part.ident, [])) if old_package else set()
+
+        for fn in package["files"].get(part.ident, []):
+            if fn in old_files:
+                continue
+            path = os.path.join(part.path, fn)
+            if fn in packaged:
+                yield path, "part of another package"
+            elif os.path.exists(path):
+                yield path, "already existing"
 
 
 def _remove_packaged_rule_packs(file_names: Iterable[str], delete_export: bool = True) -> None:
@@ -584,7 +609,7 @@ def _validate_package_files_part(
                     )
 
 
-def _verify_check_mk_version(package: PackageInfo) -> None:
+def _raise_for_too_old_cmk_version(package: PackageInfo, site_version: str) -> None:
     """Checks whether or not the minimum required Check_MK version is older than the
     current Check_MK version. Raises an exception if not. When the Check_MK version
     can not be parsed or is a daily build, the check is simply passing without error."""
@@ -593,7 +618,7 @@ def _verify_check_mk_version(package: PackageInfo) -> None:
     if min_version == "master":
         return  # can not check exact version
 
-    version = _normalize_daily_version(str(cmk_version.__version__))
+    version = _normalize_daily_version(site_version)
     if version == "master":
         return  # can not check exact version
 
@@ -843,18 +868,26 @@ def disable_outdated() -> None:
             logger.log(VERBOSE, "[%s]: Failed to read package info, skipping", package_name)
             continue
 
-        if not _is_outdated(package_name, package_info, cmk_version.__version__):
+        try:
+            _raise_for_too_new_cmk_version(package_name, package_info, cmk_version.__version__)
+        except PackageException as exc:
+            logger.log(VERBOSE, "[%s]: Disable outdated package: %s", package_name, exc)
+            disable(package_name, package_info)
+        else:
             logger.log(VERBOSE, "[%s]: Not disabling", package_name)
-            continue
-
-        logger.log(VERBOSE, "[%s]: Disable outdated package", package_name)
-        disable(package_name, package_info)
 
 
-def _is_outdated(package_name: PackageName, package_info: PackageInfo, version: str) -> bool:
-    """Whether or not the given package is considered outated for the given Checkmk version
+def _raise_for_too_new_cmk_version(
+    package_name: PackageName, package_info: PackageInfo, version: str
+) -> None:
+    """Raise an exception if a package is considered outated for the Checmk version
 
-    >>> i = _is_outdated
+    >>> def i(*args):
+    ...     try:
+    ...         _raise_for_too_new_cmk_version(*args)
+    ...     except:
+    ...         return True
+    ...     return False
 
     >>> i('a', {'version.usable_until': None}, '1.7.0i1')
     False
@@ -910,14 +943,13 @@ def _is_outdated(package_name: PackageName, package_info: PackageInfo, version: 
     until_version = package_info["version.usable_until"]
 
     if _is_16_feature_pack_package(package_name, package_info):
-        logger.log(
-            VERBOSE, "[%s]: This is a 1.6 feature pack package: It is outdated. ", package_name
-        )
-        return True
+        msg = "Outdated 1.6 feature pack package"
+        logger.log(VERBOSE, "[%s]: %s", package_name, msg)
+        raise PackageException(msg)
 
     if until_version is None:
         logger.log(VERBOSE, '[%s]: "Until version" is not set', package_name)
-        return False
+        return
 
     # Normalize daily versions to branch version
     version = _normalize_daily_version(version)
@@ -925,14 +957,14 @@ def _is_outdated(package_name: PackageName, package_info: PackageInfo, version: 
         logger.log(
             VERBOSE, "[%s]: This is a daily build of master branch, can not decide", package_name
         )
-        return False
+        return
 
     until_version = _normalize_daily_version(until_version)
     if until_version == "master":
         logger.log(
             VERBOSE, "[%s]: Until daily build of master branch, can not decide", package_name
         )
-        return False
+        return
 
     try:
         is_outdated = parse_check_mk_version(version) >= parse_check_mk_version(until_version)
@@ -945,10 +977,16 @@ def _is_outdated(package_name: PackageName, package_info: PackageInfo, version: 
             version,
             exc_info=True,
         )
-        return False
+        return
 
-    logger.log(VERBOSE, "[%s]: %s >= %s : %s", package_name, version, until_version, is_outdated)
-    return is_outdated
+    msg = "Package is %s: %s >= %s" % (
+        "outdated" if is_outdated else "not outdated",
+        version,
+        until_version,
+    )
+    logger.log(VERBOSE, "[%s]: %s", package_name, msg)
+    if is_outdated:
+        raise PackageException(msg)
 
 
 def _is_16_feature_pack_package(package_name: PackageName, package_info: PackageInfo) -> bool:

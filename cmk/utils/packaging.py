@@ -369,7 +369,14 @@ def install_by_path(package_path: Path) -> PackageInfo:
         return install(file_object=cast(BinaryIO, f))
 
 
-def install(file_object: BinaryIO) -> PackageInfo:
+def install(
+    file_object: BinaryIO,
+    # I am not sure whether we should install outdated packages by default -- but
+    #  a) this is the compatible way to go
+    #  b) users cannot even modify packages without installing them
+    # Reconsider!
+    allow_outdated: bool = True,
+) -> PackageInfo:
     package = _get_package_info_from_package(file_object)
     file_object.seek(0)
 
@@ -382,7 +389,7 @@ def install(file_object: BinaryIO) -> PackageInfo:
     else:
         logger.log(VERBOSE, "Installing %s version %s.", pacname, package["version"])
 
-    _raise_for_installability(package, old_package, cmk_version.__version__)
+    _raise_for_installability(package, old_package, cmk_version.__version__, allow_outdated)
 
     tar = tarfile.open(fileobj=file_object, mode="r:gz")
 
@@ -464,12 +471,15 @@ def _raise_for_installability(
     package: PackageInfo,
     old_package: Optional[PackageInfo],
     site_version: str,
+    allow_outdated: bool,
 ) -> None:
     """Raise a `PackageException` if we should not install this package.
 
     Note: this currently ignores the packages "max version".
     """
     _raise_for_too_old_cmk_version(package, site_version)
+    if not allow_outdated:
+        _raise_for_too_new_cmk_version(package["name"], package, cmk_version.__version__)
     _raise_for_conflicts(package, old_package)
 
 

@@ -287,6 +287,12 @@ inline void SendStringToStdio(std::string_view string) {
     return xlog::sendStringToStdio(string.data());
 }
 
+struct ModData {
+    enum class ModType { assign, modify };
+    int mods;
+    ModType type;
+};
+
 enum Mods : int {
     kCopy = 0,           // no changes in param`
     kDrop = 1,           // no output at all
@@ -393,7 +399,6 @@ public:
     std::ostream &operator<<(const std::wstring &value) {
         auto s = wtools::ToUtf8(value);
         if (!constructed()) {
-            xlog::l("Attempt to log too early '%s'", s.c_str());
             return os_;
         }
 
@@ -404,7 +409,6 @@ public:
     std::ostream &operator<<(const wchar_t *value) {
         auto s = wtools::ToUtf8(value);
         if (!constructed()) {
-            xlog::l("Attempt to log too early '%s'", s.c_str());
             return os_;
         }
         std::lock_guard lk(lock_);
@@ -425,45 +429,20 @@ public:
         return "";
     }
 
-    // **********************************
-    // STREAM OUTPUT
     template <typename... Args>
-    auto operator()(const std::string &format, Args &&...args) noexcept {
-        try {
-            auto s = fmt::format(format, std::forward<Args>(args)...);
-            if (!constructed()) {
-                xlog::l("Attempt to log too early '%s'", s.c_str());
-                return s;
-            }
-
-            std::lock_guard lk(lock_);
-            postProcessAndPrint(s);
-            return s;
-        } catch (...) {
-            return SafePrintToDebuggerAndEventLog(format);
-        }
+    auto operator()(const std::string &format, Args &&...args) const noexcept {
+        const auto va = fmt::make_format_args(args...);
+        return sendToLogModding({}, format, va);
     }
 
-    // #TODO make more versatile
     template <typename... Args>
-    auto operator()(int flags, const std::string &format,
-                    Args &&...args) noexcept {
-        try {
-            auto s = fmt::format(format, std::forward<Args>(args)...);
-            if (!constructed()) {
-                xlog::l("Attempt to log too early '%s'", s.c_str());
-                return s;
-            }
-
-            auto e = (*this).operator()(flags);
-            std::lock_guard lk(lock_);
-            e.postProcessAndPrint(s);
-            return s;
-        } catch (...) {
-            return SafePrintToDebuggerAndEventLog(format);
-        }
+    auto operator()(int mods, const std::string &format,
+                    Args &&...args) const noexcept {
+        auto va = fmt::make_format_args(args...);
+        return sendToLogModding(
+            ModData{.mods = mods, .type = ModData::ModType::assign}, format,
+            va);
     }
-    // **********************************
 
     static void bp() noexcept {
         if (bp_allowed_) {
@@ -472,21 +451,12 @@ public:
     }
 
     template <typename... Args>
-    auto exec(int modifications, const std::string &format,
-              Args &&...args) noexcept {
-        try {
-            auto s = fmt::format(format, std::forward<Args>(args)...);
-            // check construction
-            if (!this->constructed_) {
-                return s;
-            }
-            auto e = *this;
-            e.mods_ |= modifications;
-            e.postProcessAndPrint(s);
-            return s;
-        } catch (...) {
-            return SafePrintToDebuggerAndEventLog(format);
-        }
+    auto exec(int mods, const std::string &format,
+              Args &&...args) const noexcept {
+        const auto va = fmt::make_format_args(args...);
+        return sendToLogModding(
+            ModData{.mods = mods, .type = ModData::ModType::modify}, format,
+            va);
     }
 
 #pragma warning(push)
@@ -645,6 +615,12 @@ public:
     size_t getBackupLogMaxSize() const noexcept { return backup_log_max_size_; }
 
 private:
+    XLOG::Emitter copyAndModify(ModData data) const noexcept;
+
+    std::string sendToLogModding(std::optional<ModData> data,
+                                 std::string_view format,
+                                 fmt::format_args args) const noexcept;
+
     uint32_t constructed_;  // filled during construction
     // private, can be called only from operator ()
     Emitter(const Emitter &rhs) {

@@ -285,6 +285,38 @@ void WriteToLogFileWithBackup(std::string_view filename, size_t max_size,
 }
 }  // namespace details
 
+XLOG::Emitter Emitter::copyAndModify(ModData data) const noexcept {
+    auto e = *this;
+    switch (data.type) {
+        case ModData::ModType::assign:
+            e.mods_ = data.mods;
+            break;
+        case ModData::ModType::modify:
+            e.mods_ |= data.mods;
+            break;
+    }
+    return e;
+}
+
+std::string Emitter::sendToLogModding(std::optional<ModData> data,
+                                      std::string_view format,
+                                      fmt::format_args args) const noexcept {
+    try {
+        auto s = fmt::vformat(format, args);
+        if (!this->constructed_) {
+            return s;
+        }
+        if (data.has_value()) {
+            copyAndModify(*data).postProcessAndPrint(s);
+        } else {
+            postProcessAndPrint(s);
+        }
+        return s;
+    } catch (const std::exception & /*e*/) {
+        return SafePrintToDebuggerAndEventLog(std::string{format});
+    }
+}
+
 // output string in different directions
 void Emitter::postProcessAndPrint(const std::string &text) const {
     if (!CalcEnabled(mods_, type_)) {

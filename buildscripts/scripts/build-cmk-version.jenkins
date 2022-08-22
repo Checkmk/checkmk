@@ -225,11 +225,11 @@ timeout(time: 12, unit: 'HOURS') {
                         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                             def DISTRO_DIR = WORKSPACE + "/git"
 
-                            DISTRO_IMAGE = docker.image(DISTRO + ':' + DOCKER_TAG)
+                            def DISTRO_IMAGE = docker.image(DISTRO + ':' + DOCKER_TAG)
                             // Ensure we're using an up-to-date image from the registry, this is a prepartion step
                             // torwards executing all branch builds on all nodes
                             DISTRO_IMAGE.pull()
-                            DISTRO_IMAGE.image(DISTRO + ':' + DOCKER_TAG).inside(DOCKER_ARGS + " -v ${SOURCE_DIR}:${SOURCE_DIR}:ro --hostname ${DISTRO}") {
+                            DISTRO_IMAGE.inside(DOCKER_ARGS + " -v ${SOURCE_DIR}:${SOURCE_DIR}:ro --hostname ${DISTRO}") {
                                 cleanup_versions(WORKSPACE)
                                 initialize_workspace(DISTRO, SOURCE_DIR, DISTRO_DIR)
 

@@ -186,7 +186,7 @@ trigger() {
             systemctl enable "${unit}"
             systemctl restart "${unit}"
         else
-            printf "Deactivating systemd unit '%s'...\n" "${unit}"
+            printf "Deactivating systemd unit '%s' (if active)...\n" "${unit}"
             systemctl stop "${unit}" 2>/dev/null
             systemctl disable "${unit}" 2>/dev/null
         fi

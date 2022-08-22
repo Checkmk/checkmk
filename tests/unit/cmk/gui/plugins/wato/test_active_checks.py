@@ -202,13 +202,11 @@ def test_transform_form_submit(
                     {
                         "auth": ("basic", ("foobar", ("password", "password"))),
                         "connection": {},
+                        "server": None,
                     },
                 ),
             },
-            marks=[pytest.mark.xfail],
-            id="Transform currently only works for 2.0->2.1 updates and "
-            "not within 2.1 patch releases. "
-            "v2.1.0 rule with already migrated fetch/connection dict but still "
+            id="v2.1.0 rule with already migrated fetch/connection dict but still "
             "old basic auth only format",
         ),
     ],

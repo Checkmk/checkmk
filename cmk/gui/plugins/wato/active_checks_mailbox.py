@@ -217,7 +217,7 @@ def update_fetch(old_fetch):
     and contains a type now, which is being inserted by `update_auth()`
     """
     return {
-        "server": old_fetch["server"],
+        "server": old_fetch.get("server"),
         "connection": {
             **{
                 k: (not v) if isinstance(v, bool) else v
@@ -234,7 +234,7 @@ def transform_check_mail_loop_params(params):
     """Transforms rule sets from 2.0 and below format to current (2.1 and up)"""
     allowed_keys = {
         "item",  # instead of "service_description"
-        "fetch",
+        "fetch",  # can be asserted - since v2.0.0
         "connect_timeout",
         "subject",
         "smtp_server",
@@ -246,31 +246,30 @@ def transform_check_mail_loop_params(params):
         "duration",
         "delete_messages",
     }
-    if not params.keys() <= allowed_keys | {"imap_tls"}:
-        raise ValueError(f"{params.keys() - allowed_keys}")
-
-    if "fetch" not in params:
-        raise ValueError(f"Cannot transform {params} - 'fetch' element is missing")
-
     fetch_protocol, fetch_params = params["fetch"]
-    if (
-        fetch_protocol in {"IMAP", "POP3"}
-        and {"connection", "auth"} <= fetch_params.keys()
-        and is_typed_auth(fetch_params["auth"])
-    ):
-        # newest schema (2.2 and up) - return the unmodified argument
-        return params
-    if fetch_protocol in {"IMAP", "POP3"} and {"server", "auth"} <= fetch_params.keys():
-        # old format (2.0 and below)
-        if params.get("imap_tls"):
-            fetch_params["ssl"] = (True, fetch_params["ssl"][1])
-        return apply_fetch(
-            params,
-            (fetch_protocol, update_fetch(fetch_params)),
-            allowed_keys,
-        )
 
-    raise ValueError(f"Cannot transform {params}")
+    # since v2.0.0 `fetch_protocol` is one of {"IMAP", "POP3"}
+    # - but cannot be "EWS" for check_mail_loop yet
+
+    # `connection` is part of `fetch_params` since v2.1.0
+    if "connection" in fetch_params:
+        if not is_typed_auth(fetch_params["auth"]):
+            # Up to 2.1.0p24 we only had the basic auth tuple
+            return {
+                **params,
+                "fetch": (fetch_protocol, update_fetch(fetch_params)),
+            }
+        # newest schema (2.1 and up) - return the unmodified argument
+        return params
+
+    # old format (2.0 and below)
+    if params.get("imap_tls"):
+        fetch_params["ssl"] = (True, fetch_params["ssl"][1])
+    return apply_fetch(
+        params,
+        (fetch_protocol, update_fetch(fetch_params)),
+        allowed_keys,
+    )
 
 
 def _valuespec_active_checks_mail_loop():
@@ -485,21 +484,28 @@ def transform_check_mail_params(params):
     }:
         raise ValueError(f"{params.keys()}")
 
-    if "fetch" in params:
-        fetch_protocol, fetch_params = params["fetch"]
-        if (
-            fetch_protocol in {"IMAP", "POP3", "EWS"}
-            and {"connection", "auth"} <= fetch_params.keys()
-        ):
-            # newest schema (2.1 and up) - do nothing
-            return params
-        if fetch_protocol in {"IMAP", "POP3"} and {"server", "ssl", "auth"} <= fetch_params.keys():
-            # old format (2.0 and below)
-            return apply_fetch(
-                params,
-                (fetch_protocol, update_fetch(fetch_params)),
-                {"service_description", "forward", "connect_timeout"},
-            )
+    fetch_protocol, fetch_params = params["fetch"]
+
+    # since v2.0.0 `fetch_protocol` is one of {"IMAP", "POP3"}
+    # - but cannot be "EWS" for check_mail yet
+
+    if "connection" in fetch_params:
+        if not is_typed_auth(fetch_params["auth"]):
+            # Up to 2.1.0p24 we only had the basic auth tuple
+            return {
+                **params,
+                "fetch": (fetch_protocol, update_fetch(fetch_params)),
+            }
+        # newest schema (2.1 and up) - do nothing
+        return params
+
+    if {"ssl", "auth"} <= fetch_params.keys():
+        # old format (2.0 and below)
+        return apply_fetch(
+            params,
+            (fetch_protocol, update_fetch(fetch_params)),
+            {"service_description", "forward", "connect_timeout"},
+        )
 
     raise ValueError(f"Cannot transform {params}")
 
@@ -856,9 +862,14 @@ def transform_check_mailbox_params(params):
     if "fetch" in params:
         fetch_protocol, fetch_params = params["fetch"]
         if fetch_protocol in {"IMAP", "EWS"} and {"connection", "auth"} <= fetch_params.keys():
-            # newest schema (2.1 and up) - do nothing
-            fetch_params["auth"] = update_auth(fetch_params["auth"])
-            return params
+            if is_typed_auth(fetch_params["auth"]):
+                # newest schema (2.1 and up) - do nothing
+                return params
+            # Up to 2.1.0p24 we only had the basic auth tuple
+            return {
+                **params,
+                "fetch": (fetch_protocol, update_fetch(fetch_params)),
+            }
         if fetch_protocol in {"IMAP"} and {"server", "ssl", "auth"} <= fetch_params.keys():
             # temporary 2.1.0b format - just update the connection element
             return apply_fetch(params, ("IMAP", update_fetch(fetch_params)), allowed_keys)

@@ -106,7 +106,7 @@ from cmk.gui.views.builtin_views import host_view_filters
 
 if TYPE_CHECKING:
     from cmk.gui.plugins.visuals.utils import Filter
-    from cmk.gui.views import View
+    from cmk.gui.view import View
 
 
 PaintResult = Tuple[str, Union[str, HTML]]

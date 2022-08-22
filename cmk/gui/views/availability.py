@@ -73,7 +73,7 @@ from cmk.gui.visuals import page_menu_dropdown_add_to_visual
 
 if TYPE_CHECKING:
     from cmk.gui.type_defs import FilterHeader, HTTPVariables, Rows
-    from cmk.gui.views import View
+    from cmk.gui.view import View
 
 # Variable name conventions
 # av_rawdata: a two tier dict: (site, host) -> service -> list(spans)

@@ -9,7 +9,6 @@ import cmk.utils.version as cmk_version
 
 import cmk.gui.dashboard as dashboard
 import cmk.gui.pagetypes as pagetypes
-import cmk.gui.views as views
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _, _l
@@ -24,6 +23,7 @@ from cmk.gui.plugins.sidebar.utils import (
     SidebarSnapin,
     snapin_registry,
 )
+from cmk.gui.plugins.views.utils import get_permitted_views
 from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, Visual
 
 if not cmk_version.is_raw_edition():
@@ -78,7 +78,7 @@ def get_view_menu_items(include_reports: bool) -> List[TopicMenuTopic]:
     # Apply some view specific filters
     views_to_show = [
         (name, view)
-        for name, view in views.get_permitted_views().items()
+        for name, view in get_permitted_views().items()
         if (not active_config.visible_views or name in active_config.visible_views)
         and (not active_config.hidden_views or name not in active_config.hidden_views)
     ]

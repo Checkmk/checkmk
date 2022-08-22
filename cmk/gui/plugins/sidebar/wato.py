@@ -8,7 +8,6 @@ from typing import Callable, Dict, Iterable, List, Optional, Tuple
 import cmk.gui.dashboard as dashboard
 import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
-import cmk.gui.views as views
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -24,6 +23,7 @@ from cmk.gui.plugins.sidebar.utils import (
     SidebarSnapin,
     snapin_registry,
 )
+from cmk.gui.plugins.views.utils import get_permitted_views
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry, MainModuleTopic
 from cmk.gui.type_defs import Choices, MegaMenu, TopicMenuItem, TopicMenuTopic, ViewSpec
 from cmk.gui.utils.html import HTML
@@ -325,7 +325,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         views_to_show: List[Tuple[str, ViewSpec]] = []
         dflt_target_name: str = "allhosts"
         dflt_topic_name: str = ""
-        for name, view in views.get_permitted_views().items():
+        for name, view in get_permitted_views().items():
             if (not active_config.visible_views or name in active_config.visible_views) and (
                 not active_config.hidden_views or name not in active_config.hidden_views
             ):

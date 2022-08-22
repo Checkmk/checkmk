@@ -15,6 +15,8 @@ from cmk.gui.plugins.views.utils import data_source_registry, PainterOptions
 from cmk.gui.type_defs import SingleInfos, ViewSpec
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
 from cmk.gui.valuespec import DropdownChoice
+from cmk.gui.view import View
+from cmk.gui.view_renderer import GUIViewRenderer
 
 
 class ABCViewDashlet(IFrameDashlet):
@@ -73,12 +75,12 @@ class ABCViewDashlet(IFrameDashlet):
         }
         context = visuals.get_merged_context(self.context, view_context)
 
-        view = views.View(self._dashlet_spec["name"], view_spec, context)
+        view = View(self._dashlet_spec["name"], view_spec, context)
         view.row_limit = views.get_limit()
         view.only_sites = visuals.get_only_sites_from_context(context)
         view.user_sorters = views.get_user_sorters()
 
-        views.process_view(views.GUIViewRenderer(view, show_buttons=False))
+        views.process_view(GUIViewRenderer(view, show_buttons=False))
 
         html.close_div()
 

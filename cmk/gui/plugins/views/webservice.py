@@ -14,7 +14,7 @@ from cmk.gui.type_defs import Rows
 from cmk.gui.utils.html import HTML
 
 if TYPE_CHECKING:
-    from cmk.gui.views import View
+    from cmk.gui.view import View
 
 
 def _export_python_raw(view: "View", rows: Rows) -> None:

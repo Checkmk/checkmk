@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.plugins.views.utils import RowTableLivestatus
 from cmk.gui.type_defs import VisualContext
-from cmk.gui.views import View
+from cmk.gui.view import View
 
 
 def test_row_table_object(mock_livestatus, request_context) -> None:  # type:ignore[no-untyped-def]

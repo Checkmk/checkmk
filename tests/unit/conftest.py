@@ -36,6 +36,7 @@ import cmk.gui.default_permissions
 import cmk.gui.permissions
 import cmk.gui.views
 from cmk.gui.livestatus_utils.testing import mock_livestatus
+from cmk.gui.plugins.views.icons.utils import icon_and_action_registry
 from cmk.gui.utils.script_helpers import application_and_request_context
 
 if is_enterprise_repo():
@@ -400,7 +401,7 @@ def registry_reset() -> Iterator[None]:
     """Fixture to reset registries to its default entries."""
     registries: list[Registry[Any]] = [
         cmk.gui.dashboard.dashlet_registry,
-        cmk.gui.views.icon_and_action_registry,
+        icon_and_action_registry,
         cmk.gui.permissions.permission_registry,
         cmk.gui.permissions.permission_section_registry,
     ]

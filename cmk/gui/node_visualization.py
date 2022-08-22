@@ -52,7 +52,8 @@ from cmk.gui.plugins.wato import bi_valuespecs
 from cmk.gui.type_defs import VisualContext
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.theme import theme
-from cmk.gui.views import ABCAjaxInitialFilters, View
+from cmk.gui.view import View
+from cmk.gui.views import ABCAjaxInitialFilters
 
 Mesh = Set[HostName]
 Meshes = List[Mesh]

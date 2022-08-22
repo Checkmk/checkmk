@@ -27,7 +27,7 @@ from cmk.gui.plugins.views.utils import (
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import GroupSpec, Row, Rows, ViewSpec
 from cmk.gui.utils.theme import theme
-from cmk.gui.views import DummyView
+from cmk.gui.view import DummyView
 
 
 def render_checkbox(view: ViewSpec, row: Row, num_tds: int) -> None:

@@ -18,7 +18,7 @@ from cmk.gui.plugins.views.utils import (
     SorterSpec,
 )
 from cmk.gui.type_defs import PainterSpec
-from cmk.gui.views import View
+from cmk.gui.view import View
 
 
 @pytest.mark.parametrize(

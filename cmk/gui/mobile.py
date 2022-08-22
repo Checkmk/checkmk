@@ -20,12 +20,14 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenuEntry, PageMenuLink
+from cmk.gui.page_menu_utils import collect_context_links
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.views.utils import (
     ABCDataSource,
     command_registry,
     CommandSpec,
     data_source_registry,
+    get_permitted_views,
     PainterOptions,
 )
 from cmk.gui.plugins.visuals.utils import Filter
@@ -33,6 +35,7 @@ from cmk.gui.type_defs import Rows, VisualContext
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, requested_file_name
+from cmk.gui.view import View
 
 HeaderButton = Union[Tuple[str, str, str], Tuple[str, str, str, str]]
 Items = List[Tuple[str, str, str]]
@@ -216,13 +219,13 @@ def page_index() -> None:
         id_="data",
     )
     items = []
-    for view_name, view_spec in views.get_permitted_views().items():
+    for view_name, view_spec in get_permitted_views().items():
         if view_spec.get("mobile") and not view_spec.get("hidden"):
 
             datasource = data_source_registry[view_spec["datasource"]]()
             context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
 
-            view = views.View(view_name, view_spec, context)
+            view = View(view_name, view_spec, context)
             view.row_limit = views.get_limit()
             view.only_sites = visuals.get_only_sites_from_context(context)
             view.user_sorters = views.get_user_sorters()
@@ -266,14 +269,14 @@ def page_view() -> None:
     if not view_name:
         return page_index()
 
-    view_spec = views.get_permitted_views().get(view_name)
+    view_spec = get_permitted_views().get(view_name)
     if not view_spec:
         raise MKUserError("view_name", "No view defined with the name '%s'." % view_name)
 
     datasource = data_source_registry[view_spec["datasource"]]()
     context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
 
-    view = views.View(view_name, view_spec, context)
+    view = View(view_name, view_spec, context)
     view.row_limit = views.get_limit()
     view.only_sites = visuals.get_only_sites_from_context(context)
     view.user_sorters = views.get_user_sorters()
@@ -330,7 +333,7 @@ class MobileViewRenderer(views.ABCViewRenderer):
 
         # Should we show a page with context links?
         context_links = list(
-            views.collect_context_links(self.view, rows, mobile=True, visual_types=["views"])
+            collect_context_links(self.view, rows, mobile=True, visual_types=["views"])
         )
 
         if context_links:

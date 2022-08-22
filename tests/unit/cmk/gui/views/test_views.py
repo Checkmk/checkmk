@@ -22,13 +22,14 @@ from cmk.gui.plugins.views.utils import Cell, Painter, transform_painter_spec
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import PainterSpec
 from cmk.gui.valuespec import ValueSpec
+from cmk.gui.view import View
 
 
 @pytest.fixture(name="view")
 def view_fixture(request_context):
     view_name = "allhosts"
     view_spec = transform_painter_spec(cmk.gui.views.multisite_builtin_views[view_name].copy())
-    return cmk.gui.views.View(view_name, view_spec, view_spec.get("context", {}))
+    return View(view_name, view_spec, view_spec.get("context", {}))
 
 
 def test_registered_painter_options() -> None:
@@ -678,7 +679,7 @@ def test_painter_export_title(monkeypatch) -> None: # type:ignore[no-untyped-def
     painters_and_cells: list[Tuple[Painter, Cell]] = [
                                                       (
                                                        painter,
-                                                       cmk.gui.plugins.views.utils.Cell(cmk.gui.views.View("", {}, {}),PainterSpec(painter.ident))
+                                                       cmk.gui.plugins.views.utils.Cell(View("", {}, {}),PainterSpec(painter.ident))
                                                       )
                                                       for painter in painters
                                                      ]
@@ -712,7 +713,7 @@ def test_legacy_register_painter(monkeypatch) -> None: # type:ignore[no-untyped-
         })
 
     painter = cmk.gui.plugins.views.utils.painter_registry["abc"]()
-    dummy_cell = cmk.gui.plugins.views.utils.Cell(cmk.gui.views.View("", {}, {}), PainterSpec(painter.ident))
+    dummy_cell = cmk.gui.plugins.views.utils.Cell(View("", {}, {}), PainterSpec(painter.ident))
     assert isinstance(painter, cmk.gui.plugins.views.utils.Painter)
     assert painter.ident == "abc"
     assert painter.title(dummy_cell) == "A B C"
@@ -2437,7 +2438,7 @@ def test_get_needed_regular_columns(view) -> None: # type:ignore[no-untyped-def]
 def test_get_needed_join_columns(view, load_config) -> None: # type:ignore[no-untyped-def]
     view_spec = copy.deepcopy(view.spec)
     view_spec["painters"].append(PainterSpec('service_description', None, None, u'CPU load'))
-    view = cmk.gui.views.View(view.name, view_spec, view_spec.get("context", {}))
+    view = View(view.name, view_spec, view_spec.get("context", {}))
 
     columns = cmk.gui.views._get_needed_join_columns(view.join_cells, view.sorters)
 
@@ -2458,7 +2459,7 @@ def test_get_needed_join_columns(view, load_config) -> None: # type:ignore[no-un
 def test_create_view_basics() -> None:
     view_name = "allhosts"
     view_spec = cmk.gui.views.multisite_builtin_views[view_name]
-    view = cmk.gui.views.View(view_name, view_spec, view_spec.get("context", {}))
+    view = View(view_name, view_spec, view_spec.get("context", {}))
 
     assert view.name == view_name
     assert view.spec == view_spec

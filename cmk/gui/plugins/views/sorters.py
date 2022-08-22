@@ -34,7 +34,7 @@ from cmk.gui.valuespec import Dictionary, DropdownChoice, ValueSpec
 from cmk.gui.view_utils import get_labels
 
 if TYPE_CHECKING:
-    from cmk.gui.views import View
+    from cmk.gui.view import View
 
 
 def cmp_state_equiv(r):

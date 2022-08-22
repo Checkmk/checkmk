@@ -93,6 +93,7 @@ from cmk.gui.type_defs import (
     SingleInfos,
     SorterFunction,
     SorterName,
+    ViewName,
     ViewSpec,
     Visual,
     VisualContext,
@@ -108,7 +109,7 @@ from cmk.gui.view_utils import CellContent, CellSpec, CSSClass
 
 if TYPE_CHECKING:
     from cmk.gui.plugins.visuals.utils import Filter
-    from cmk.gui.views import View
+    from cmk.gui.view import View
 
 
 ExportCellContent = Union[str, Dict[str, Any]]
@@ -1839,6 +1840,10 @@ def get_all_views() -> AllViewSpecs:
 
 def get_permitted_views() -> PermittedViewSpecs:
     return ViewStore.get_instance().permitted
+
+
+def get_view_by_name(view_name: ViewName) -> ViewSpec:
+    return get_permitted_views()[view_name]
 
 
 def transform_painter_spec(view: ViewSpec) -> ViewSpec:

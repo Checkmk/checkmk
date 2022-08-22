@@ -229,16 +229,11 @@ constexpr unsigned int g_file_text_header_size = 24;
 
 std::string MakeBackupLogName(std::string_view filename,
                               unsigned int index) noexcept {
-    std::string name;
-    if (!filename.empty()) {
-        name += filename;
-    }
-
     if (index == 0) {
-        return name;
+        return std::string{filename};
     }
     try {
-        return name + "." + std::to_string(index);
+        return std::string{filename} + "." + std::to_string(index);
     } catch (const std::bad_alloc & /*e*/) {
         return {};
     }

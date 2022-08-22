@@ -4,34 +4,42 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Managing in-memory caches through the execution time of cmk"""
 
+from __future__ import annotations
+
 import collections
+from collections.abc import Callable
 from functools import lru_cache, wraps
-from typing import Dict
+from typing import Concatenate, ParamSpec, TypeVar
 
 import cmk.utils.misc
+
+P = ParamSpec("P")
+R = TypeVar("R")
+S = TypeVar("S")
 
 
 # Used as decorator wrapper for functools.lru_cache in order to bind the cache to an instance method
 # rather than the class method.
-def instance_method_lru_cache(*cache_args, **cache_kwargs):
-    def cache_decorator(func):
-        @wraps(func)
-        def cache_factory(self, *args, **kwargs):
-            instance_cache = lru_cache(*cache_args, **cache_kwargs)(func)
-            instance_cache = instance_cache.__get__(  # pylint: disable=unnecessary-dunder-call
-                self, self.__class__
-            )
-            setattr(self, func.__name__, instance_cache)
+# FIXME: Nuke this cruel hack below, it is just an ugly workaround for a missing object which should actually hold the cache!
+def instance_method_lru_cache(
+    maxsize: int | None = 128, typed: bool = False
+) -> Callable[[Callable[Concatenate[S, P], R]], Callable[Concatenate[S, P], R]]:
+    def wrap(f: Callable[Concatenate[S, P], R]) -> Callable[Concatenate[S, P], R]:
+        @wraps(f)
+        def wrapped_f(self: S, *args: P.args, **kwargs: P.kwargs) -> R:
+            cache_orig = lru_cache(maxsize, typed)(f)
+            instance_cache = cache_orig.__get__(self, self.__class__)  # type: ignore[attr-defined] # pylint: disable=unnecessary-dunder-call
+            setattr(self, f.__name__, instance_cache)
             return instance_cache(*args, **kwargs)
 
-        return cache_factory
+        return wrapped_f
 
-    return cache_decorator
+    return wrap
 
 
 class CacheManager:
     def __init__(self) -> None:
-        self._caches: Dict[str, DictCache] = collections.defaultdict(DictCache)
+        self._caches: dict[str, DictCache] = collections.defaultdict(DictCache)
 
     def __contains__(self, name: str) -> bool:
         return name in self._caches
@@ -46,7 +54,7 @@ class CacheManager:
         for cache in self._caches.values():
             cache.clear()
 
-    def dump_sizes(self) -> Dict[str, int]:
+    def dump_sizes(self) -> dict[str, int]:
         sizes = {}
         for name, cache in self._caches.items():
             sizes[name] = cmk.utils.misc.total_size(cache)

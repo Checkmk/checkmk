@@ -279,7 +279,8 @@ class BICompiledRule(ABCBICompiledNode):
             for res in node.compile_postprocess(bi_branch_root, services_of_host, bi_searcher)
         ]
         # Clear required elements cache, since the number of nodes might have changed
-        self.required_elements.cache_clear()
+        # NOTE: We need this suppression because of the instance_method_lru_cache hack, which magically adds things to its wrapped method. :-/
+        self.required_elements.cache_clear()  # type: ignore[attr-defined]
         return [self]
 
     @instance_method_lru_cache()

@@ -1,0 +1,21 @@
+Title: super_server: Reenable "Checkmk agent network service (Linux)" ruleset
+Class: fix
+Compatible: incomp
+Component: agents
+Date: 1661257711
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p11
+
+This is a regression since Checkmk 2.1.
+
+The agent package install scripts didn't recognize the <tt>/etc/check_mk/super_server.cfg</tt>
+correctly. As a result, the super server, if configured other than "auto",
+wasn't set correctly.
+
+In order to apply this fix, an agent update or reinstallation has to be done on
+affected hosts.
+
+

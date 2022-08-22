@@ -65,7 +65,7 @@ if [ -x /var/lib/cmk-agent/scripts/super-server/setup ]; then
     /var/lib/cmk-agent/scripts/super-server/setup cleanup
 fi
 
-%post
+%posttrans
 
 /var/lib/cmk-agent/scripts/super-server/setup cleanup
 /var/lib/cmk-agent/scripts/super-server/setup deploy

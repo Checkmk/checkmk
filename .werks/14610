@@ -1,0 +1,23 @@
+Title: super_server: Missing systemd units/xinetd services after agent update (RPM)
+Class: fix
+Compatible: incomp
+Component: agents
+Date: 1661256310
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p11
+
+After agent update to a 2.1 linux agent (prepackaged and bakery versions)
+on RPM based systems, the agent installation may end up with missing systemd
+units or a missing xinetd service file.
+
+As a workaround, or to recover from an agent installation with broken super-server,
+agents can be reinstalled once manually with <tt>cmk-update-agent --reinstall</tt>
+or <tt>cmk-update-agent --force</tt> to restore the missing file(s).
+Subsequent agent updates won't run into the same problem again.
+
+With this Werk, the initial agent update to version 2.1 won't run into the
+problem in the first place.
+

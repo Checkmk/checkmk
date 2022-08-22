@@ -1,0 +1,31 @@
+Title: super_server: Cleanup config files when installing a bakery package
+Class: fix
+Compatible: incomp
+Component: agents
+Date: 1661255342
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p29
+
+This Werk will be compatible for most users. See below for details.
+
+When using the prepackaged agent package on DPKG or RPM based systems,
+some xinetd/system files are marked as config files and won't be removed
+on uninstallation/update.
+
+This leads to problems when updating from a prepackaged agent package
+to a bakery agent package, as leftover service or unit files would
+occupy the listening agent port.
+
+Bakery agent packages will now remove all deprecated systemd/xinetd
+files that may be leftover from old installations before activating the
+new super server coming from the new package.
+
+Please be aware that, starting with this Werk, agent packages from the agent
+bakery will discard changes made to xinetd/systemd files from
+a previously installed prepackaged/raw edition agent package. While this
+is expected behavior for bakery packages, it may still change some agent
+installations in an unexpected way, because this was done inconsequently
+in the past.
+

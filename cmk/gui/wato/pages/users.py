@@ -973,18 +973,14 @@ class ModeEditUser(WatoMode):
         html.open_td()
 
         if not self._is_locked("password"):
-            html.password_input(
-                "_password_" + self._pw_suffix(), autocomplete="new-password", maxlength=72
-            )
+            html.password_input("_password_" + self._pw_suffix(), autocomplete="new-password")
             html.close_td()
             html.close_tr()
 
             html.open_tr()
             html.td(_("repeat:"))
             html.open_td()
-            html.password_input(
-                "_password2_" + self._pw_suffix(), autocomplete="new-password", maxlength=72
-            )
+            html.password_input("_password2_" + self._pw_suffix(), autocomplete="new-password")
             html.write_text(" (%s)" % _("optional"))
             html.close_td()
             html.close_tr()
@@ -1027,7 +1023,6 @@ class ModeEditUser(WatoMode):
             size=30,
             id_="automation_secret",
             placeholder="******" if "automation_secret" in self._user else "",
-            maxlength=72,
         )
         html.write_text(" ")
         html.open_b(style=["position: relative", "top: 4px;"])

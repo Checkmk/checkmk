@@ -17,8 +17,7 @@ This mechanism has now been replaced by an incremental mechanism. Before each
 synchronization, the system determines which files already exist on the remote
 site. Only those files are synchronized that differ from the central site.
 
-For the migration from Checkmk 1.6 to 1.7 the change is compatible. Both
-central 1.6 sites can communicate with remote 1.7 sites and 1.7 central sites
-can communicate with 1.6 remote sites. Mixed environments should only be used
-for migration purposes. In such a scenario, the previous synchronization
-mechanism is used. After 1.7 this compatibility mode will be removed.
+Note that for migration purposes, remote sites should be upgraded before the
+central site is upgraded. It is not supported to run a set-up in which the
+central site runs on a newer Checkmk version than the remote sites. See werk
+#13313 for more information.

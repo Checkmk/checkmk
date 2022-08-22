@@ -78,6 +78,22 @@ METRICS_SELECTED = {
             None,
         ),
     ],
+    "Microsoft.DBforPostgreSQL/servers": [
+        (
+            "cpu_percent,memory_percent,io_consumption_percent,serverlog_storage_percent,"
+            "storage_percent",
+            "PT1M",
+            "average",
+            None,
+        ),
+        (
+            "active_connections,connections_failed,pg_replica_log_delay_in_seconds,"
+            "network_bytes_ingress,network_bytes_egress",
+            "PT1M",
+            "total",
+            None,
+        ),
+    ],
 }
 
 AZURE_CACHE_FILE_PATH = Path(tmp_dir) / "agents" / "agent_azure"
@@ -705,7 +721,12 @@ class MetricCache(DataCache):
             "PT5M": datetime.timedelta(minutes=5),
             "PT1H": datetime.timedelta(hours=1),
         }[metric_definition[1]]
-        start = ref_time - 3 * self.timedelta
+        # For 1-min metrics, the start time should be at least 4 minutes before because of the
+        # ingestion time of Azure metrics (we had to change from 3 minutes to 5 minutes because we
+        # were missing some metrics with 3 minutes).
+        # More info on Azure Monitor Ingestion time:
+        # https://docs.microsoft.com/en-us/azure/azure-monitor/logs/data-ingestion-time
+        start = ref_time - 5 * self.timedelta
         self._timespan = "%s/%s" % (
             start.strftime("%Y-%m-%dT%H:%M:%SZ"),
             ref_time.strftime("%Y-%m-%dT%H:%M:%SZ"),

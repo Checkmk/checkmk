@@ -2,8 +2,10 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Any, cast, Generator, Optional, Type
+from typing import Any, Type
 
 from livestatus import LivestatusResponse, MultiSiteConnection
 
@@ -118,8 +120,7 @@ def _get_column(table_class: Type[Table], col: str) -> Column:
     if hasattr(table_class, col):
         return getattr(table_class, col)
 
-    table_name = cast(str, table_class.__tablename__)
-    prefix = table_name.rstrip("s") + "_"
+    prefix = table_class.__tablename__.rstrip("s") + "_"
     while col.startswith(prefix):
         col = col[len(prefix) :]
     return getattr(table_class, col)
@@ -232,7 +233,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
     def __str__(self) -> str:
         return self.compile()
 
-    def first(self, sites: MultiSiteConnection) -> Optional[ResultRow]:
+    def first(self, sites: MultiSiteConnection) -> ResultRow | None:
         """Fetch the first row of the result.
 
         If the result is empty, `None` will be returned.
@@ -247,7 +248,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         """
         return next(self.iterate(sites), None)
 
-    def first_value(self, sites: MultiSiteConnection) -> Optional[Any]:
+    def first_value(self, sites: MultiSiteConnection) -> Any | None:
         """Fetch one cell from the result.
 
         If no result could be found, None is returned.

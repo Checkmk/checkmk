@@ -11,6 +11,7 @@
 #include "read_file.h"
 #include "test_tools.h"
 namespace fs = std::filesystem;
+using namespace std::string_literals;
 
 namespace xlog {
 TEST(xlogTest, xlogLowLevel) {
@@ -177,14 +178,10 @@ TEST(LogTest, RotationFile) {
     }
 }
 
+// TODO(sk): SPlit this test in few
 TEST(LogTest, All) {
     auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
-    // tests of log:
-    // stream OUT
-    // e
-    using namespace cma::cfg;
-    using namespace std;
 
     // Check Defaults settings on start
     {
@@ -192,42 +189,42 @@ TEST(LogTest, All) {
 
         auto debug_log_level = cma::cfg::groups::global.debugLogLevel();
         if (debug_log_level < 1)
-            EXPECT_TRUE(xlogd.log_param_.directions_ ==
-                        xlog::Directions::kDebuggerPrint);
+            EXPECT_EQ(xlogd.logParam().directions_,
+                      xlog::Directions::kDebuggerPrint);
         else
-            EXPECT_TRUE(xlogd.log_param_.directions_ ==
-                        (xlog::Directions::kDebuggerPrint |
-                         xlog::Directions::kFilePrint));
+            EXPECT_EQ(xlogd.logParam().directions_,
+                      xlog::Directions::kDebuggerPrint |
+                          xlog::Directions::kFilePrint);
 
-        EXPECT_TRUE(xlogd.type_ == XLOG::LogType::debug);
+        EXPECT_TRUE(xlogd.type() == XLOG::LogType::debug);
     }
 
     {
         auto &xlogl = XLOG::l;
-        EXPECT_TRUE(
-            xlogl.log_param_.directions_ ==
-            (xlog::Directions::kDebuggerPrint | xlog::Directions::kFilePrint));
-        EXPECT_TRUE(xlogl.type_ == XLOG::LogType::log);
+        EXPECT_EQ(
+            xlogl.logParam().directions_,
+            xlog::Directions::kDebuggerPrint | xlog::Directions::kFilePrint);
+        EXPECT_EQ(xlogl.type(), XLOG::LogType::log);
     }
 
     {
         auto &xlogt = XLOG::t;
-        EXPECT_TRUE(xlogt.log_param_.directions_ ==
-                    (xlog::Directions::kDebuggerPrint));
-        EXPECT_TRUE(xlogt.type_ == XLOG::LogType::trace);
+        EXPECT_EQ(xlogt.logParam().directions_,
+                  xlog::Directions::kDebuggerPrint);
+        EXPECT_EQ(xlogt.type(), XLOG::LogType::trace);
     }
 
     {
         auto &xlogstdio = XLOG::stdio;
-        EXPECT_TRUE(xlogstdio.log_param_.directions_ ==
-                    xlog::Directions::kStdioPrint);
-        EXPECT_TRUE(xlogstdio.type_ == XLOG::LogType::stdio);
+        EXPECT_EQ(xlogstdio.logParam().directions_,
+                  xlog::Directions::kStdioPrint);
+        EXPECT_EQ(xlogstdio.type(), XLOG::LogType::stdio);
     }
 
     // DEFAULT
-    auto prefix = GetDefaultPrefixName();
+    auto prefix = cma::cfg::GetDefaultPrefixName();
     auto prefix_ascii = wtools::ToUtf8(prefix);
-    auto &lp = l.log_param_;
+    const auto &lp = l.logParam();
 
     EXPECT_TRUE(lp.directions_ & xlog::Directions::kDebuggerPrint);
     EXPECT_TRUE(lp.filename()[0] != 0);
@@ -235,10 +232,10 @@ TEST(LogTest, All) {
     // Check API
     {
         XLOG::Emitter l(XLOG::LogType::log);
-        auto &lp = l.log_param_;
+        const auto &lp = l.logParam();
         EXPECT_TRUE(lp.directions_ & xlog::Directions::kFilePrint);
-        l.configFile(GetCurrentLogFileName());
-        EXPECT_TRUE(GetCurrentLogFileName() == lp.filename());
+        l.configFile(cma::cfg::GetCurrentLogFileName());
+        EXPECT_TRUE(cma::cfg::GetCurrentLogFileName() == lp.filename());
         l.configPrefix(prefix);
         EXPECT_TRUE(prefix == lp.prefix());
         EXPECT_TRUE(prefix_ascii == lp.prefixAscii());
@@ -246,13 +243,13 @@ TEST(LogTest, All) {
 
     {
         XLOG::Emitter d(XLOG::LogType::debug);
-        auto &lp = t.log_param_;
+        auto &lp = t.logParam();
         EXPECT_FALSE(lp.directions_ & xlog::Directions::kFilePrint);
     }
 
     {
         XLOG::Emitter t(XLOG::LogType::trace);
-        auto &lp = t.log_param_;
+        auto &lp = t.logParam();
         EXPECT_FALSE(lp.directions_ & xlog::Directions::kFilePrint);
 
         t.enableFileLog(true);
@@ -267,7 +264,7 @@ TEST(LogTest, All) {
     // CLEAN FILE
     {
         XLOG::Emitter l(XLOG::LogType::log);
-        auto &lp = l.log_param_;
+        auto &lp = l.logParam();
         l.configFile("");
         EXPECT_TRUE(lp.filename()[0] == 0) << "File not changed";
         EXPECT_TRUE(lp.directions_ & xlog::Directions::kFilePrint)
@@ -280,18 +277,13 @@ TEST(LogTest, All) {
         EXPECT_TRUE(new_prefix == "ac");
     }
 
-    // *************************************************************
-    // *************************************************************
-    // *************************************************************
-    // *************************************************************
-
     // DEFAULT CONFIG
     std::string fname = "a";
     setup::ChangeLogFileName(fname);
     EXPECT_EQ(fname, XLOG::l.getLogParam().filename());
     EXPECT_EQ(fname, XLOG::d.getLogParam().filename());
     EXPECT_EQ(fname, XLOG::t.getLogParam().filename());
-    EXPECT_EQ(std::string(""), XLOG::stdio.getLogParam().filename());
+    EXPECT_TRUE(XLOG::stdio.getLogParam().filename().empty());
 
     setup::EnableDebugLog(true);
     EXPECT_TRUE(XLOG::d.getLogParam().directions_ &
@@ -321,9 +313,12 @@ TEST(LogTest, All) {
                  xlog::Directions::kDebuggerPrint);
 
     setup::ReConfigure();
-    EXPECT_EQ(XLOG::l.getLogParam().filename(), GetCurrentLogFileName());
-    EXPECT_EQ(XLOG::d.getLogParam().filename(), GetCurrentLogFileName());
-    EXPECT_EQ(XLOG::t.getLogParam().filename(), GetCurrentLogFileName());
+    EXPECT_EQ(XLOG::l.getLogParam().filename(),
+              cma::cfg::GetCurrentLogFileName());
+    EXPECT_EQ(XLOG::d.getLogParam().filename(),
+              cma::cfg::GetCurrentLogFileName());
+    EXPECT_EQ(XLOG::t.getLogParam().filename(),
+              cma::cfg::GetCurrentLogFileName());
     EXPECT_EQ(XLOG::stdio.getLogParam().filename(), std::string(""));
 
     EXPECT_TRUE(XLOG::l.getLogParam().directions_ &
@@ -354,7 +349,11 @@ TEST(LogTest, All) {
                  xlog::Directions::kEventPrint);
     EXPECT_FALSE(XLOG::stdio.getLogParam().directions_ &
                  xlog::Directions::kEventPrint);
+}
 
+TEST(LogTest, Simulation) {
+    GTEST_SKIP() << "This test is not finished";
+    return;
     // Output to log
     XLOG::l() << L"This streamed Log Entry and"  // body
                                                  // .....
@@ -367,31 +366,27 @@ TEST(LogTest, All) {
         ;                                        // finish
 
     // Variant THREE AND BASIC
-    XLOG::l(XLOG::kDrop, "This is dropped a l log {} {}", string("x"), 24);
-    if (0) {
-        XLOG::l(XLOG::kBp, "This is breakpoint {} {}", string("x"), 24);
+    XLOG::l(XLOG::kDrop, "This is dropped a l log {} {}", "x"s, 24);
+    if constexpr (false) {
+        XLOG::l(XLOG::kBp, "This is breakpoint {} {}", "x"s, 24);
     }
 
-    XLOG::d(XLOG::kForce | XLOG::kFile, "This is a forced d log {} {}",
-            std::string("x"), 24);
+    XLOG::d(XLOG::kForce | XLOG::kFile, "This is a forced d log {} {}", "x"s,
+            24);
 
     // Example of debug tracing. In release this output disappears
-    XLOG::d("This is a standard debug out {} {}", string("x"), 24);
+    XLOG::d("This is a standard debug out {} {}", "x"s, 24);
 
     // Example of logging. This output exists in release!
-    XLOG::l("This is a standard LOG out {} {}", string("x"), 24);
-    XLOG::l() << "This is ALSO a standard LOG out" << string(" x ") << 24;
+    XLOG::l("This is a standard LOG out {} {}", "x"s, 24);
+    XLOG::l() << "This is ALSO a standard LOG out"
+              << "x"s << 24;
 
-    XLOG::stdio() << XLOG::d("This is stdio write {} {}", string("x"), 24)
+    XLOG::stdio() << XLOG::d("This is stdio write {} {}", "x"s, 24)
                   << '\n';  // you need this usually to have caret return
 
-    XLOG::stdio("This is stdio write TOO {} {}", string("x"),
+    XLOG::stdio("This is stdio write TOO {} {}", "x"s,
                 24);  // you need this usually to have caret return
-
-    // *************************************************************
-    // *************************************************************
-    // *************************************************************
-    // *************************************************************
 }
 
 TEST(LogTest, EmitterLogRotation) {

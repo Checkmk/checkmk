@@ -338,8 +338,8 @@ void Emitter::postProcessAndPrint(const std::string &text) const {
 
     // USUAL
     if ((dirs & xlog::Directions::kDebuggerPrint) != 0) {
-        const auto normal = xlog::formatString(
-            flags, (prefix_ascii + marker_ascii).c_str(), text.c_str());
+        const auto normal =
+            xlog::formatString(flags, prefix_ascii + marker_ascii, text);
         xlog::sendStringToDebugger(normal.c_str());
     }
 
@@ -347,14 +347,13 @@ void Emitter::postProcessAndPrint(const std::string &text) const {
     const auto stdio_print = (dirs & xlog::Directions::kStdioPrint) != 0;
 
     if (stdio_print || (file_print && details::IsDuplicatedOnStdio())) {
-        auto normal = xlog::formatString(flags, nullptr, text.c_str());
+        auto normal = xlog::formatString(flags, "", text);
         xlog::sendStringToStdio(normal.c_str(), c);
     }
 
     // FILE
     if (file_print && !lp.filename().empty()) {
-        auto for_file =
-            xlog::formatString(flags, marker_ascii.c_str(), text.c_str());
+        auto for_file = xlog::formatString(flags, marker_ascii, text);
 
         details::WriteToLogFileWithBackup(lp.filename(), getBackupLogMaxSize(),
                                           getBackupLogMaxCount(), for_file);
@@ -377,10 +376,8 @@ void ColoredOutputOnStdio(bool on) noexcept {
 
     auto *std_input = ::GetStdHandle(STD_INPUT_HANDLE);
     if (on) {
-        ::GetConsoleMode(std_input,
-                         &details::g_log_old_mode);  // store old mode
+        ::GetConsoleMode(std_input, &details::g_log_old_mode);
 
-        //  set color output
         constexpr DWORD old_mode =
             ENABLE_PROCESSED_OUTPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING;
         ::SetConsoleMode(std_input, old_mode);

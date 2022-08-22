@@ -3,9 +3,6 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-// simple logging
-// see logger.cpp to understand how it works
-
 #pragma once
 #include <fmt/format.h>
 
@@ -21,14 +18,8 @@
 #include "fmt/color.h"
 #include "tools/_xlog.h"
 
-// #TODO put it into internal/details
-// support for windows event log
-// implementation according to MSDN
-// Windows doesn't support critical, so we have only limited possibilities to
-// choose from: error, warning, info
 #if defined(WIN32) && defined(FMT_FORMAT_H_)
 namespace XLOG::details {
-// SIMPLE LOG SUPPORT TO WINDOWS EVENT LOG
 #if 0
     // example how to use
     XLOG::LogWindowsEventError(1, "Service Starting {}", "error!");
@@ -36,29 +27,30 @@ namespace XLOG::details {
     XLOG::LogWindowsEventInfo(3, "My Information {}", "info!");
 #endif
 
-// converts "filename", 0 into "filename" and "filename", N into "filename.N"
+/// converts "filename": 0 into "filename" and "filename", N into "filename.N"
 std::string MakeBackupLogName(std::string_view filename,
                               unsigned int index) noexcept;
 
-// internal engine to print text in file with optional backing up
-// thread safe(no race condition)
+/// internal engine to print text in file with optional backing up
 void WriteToLogFileWithBackup(std::string_view filename, size_t max_size,
                               unsigned int max_backup_count,
                               std::string_view text);
 
-// check status of duplication
 bool IsDuplicatedOnStdio() noexcept;
 bool IsColoredOnStdio() noexcept;
 
 unsigned short LoggerEventLevelToWindowsEventType(EventLevel level) noexcept;
 
+/// Implementation according to MSDN
+/// Windows doesn't support critical, so we have only limited possibilities to
+/// choose from: error, warning, info
 void WriteToWindowsEventLog(unsigned short type, int code,
                             std::string_view log_name,
                             std::string_view text) noexcept;
 
-// main engine to write something in the Windows Event Log
 template <typename... Args>
-void LogWindowsEventAlways(EventLevel level, int code, const char *format_str,
+void LogWindowsEventAlways(EventLevel level, int code,
+                           std::string_view format_str,
                            Args &&...args) noexcept {
     const auto type = LoggerEventLevelToWindowsEventType(level);
     std::string x;
@@ -72,7 +64,7 @@ void LogWindowsEventAlways(EventLevel level, int code, const char *format_str,
 }
 
 template <typename... Args>
-void LogWindowsEvent(EventLevel level, int code, const char *format_str,
+void LogWindowsEvent(EventLevel level, int code, std::string_view format_str,
                      Args &&...args) noexcept {
     if (level > cma::cfg::GetCurrentEventLevel()) {
         return;
@@ -82,31 +74,35 @@ void LogWindowsEvent(EventLevel level, int code, const char *format_str,
 }
 
 template <typename... Args>
-void LogWindowsEventCritical(int code, const char *format_str, Args &&...args) {
+void LogWindowsEventCritical(int code, std::string_view format_str,
+                             Args &&...args) noexcept {
     LogWindowsEvent(EventLevel::critical, code, format_str,
                     std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-void LogWindowsEventError(int code, const char *format_str, Args &&...args) {
+void LogWindowsEventError(int code, std::string_view format_str,
+                          Args &&...args) noexcept {
     LogWindowsEvent(EventLevel::error, code, format_str,
                     std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-void LogWindowsEventSuccess(int code, const char *format_str, Args &&...args) {
+void LogWindowsEventSuccess(int code, std::string_view format_str,
+                            Args &&...args) noexcept {
     LogWindowsEvent(EventLevel::success, code, format_str,
                     std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-void LogWindowsEventWarn(int code, const char *format_str, Args &&...args) {
+void LogWindowsEventWarn(int code, std::string_view format_str,
+                         Args &&...args) noexcept {
     LogWindowsEvent(EventLevel::warning, code, format_str,
                     std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-void LogWindowsEventInfo(int code, const char *format_str,
+void LogWindowsEventInfo(int code, std::string_view format_str,
                          Args &&...args) noexcept {
     LogWindowsEvent(EventLevel::information, code, format_str,
                     std::forward<Args>(args)...);
@@ -136,24 +132,22 @@ constexpr bool IsNoCrFlag(int flag) noexcept {
 constexpr bool IsAddCrFlag(int flag) noexcept {
     return (flag & Flags::kAddCr) != 0;
 }
+constexpr bool IsNoPrefix(int flag) noexcept {
+    return (flag & Flags::kNoPrefix) != 0;
+}
 
-// Public Engine to print all
-inline std::string formatString(int flag, const char *dflt_prefix,
-                                const char *str) {
+inline std::string formatString(int flag, std::string_view dflt_prefix,
+                                std::string_view str) {
     std::string s;
-    auto length = str != nullptr ? strlen(str) : 0;
-    const auto *prefix = (flag & Flags::kNoPrefix) != 0 ? nullptr : dflt_prefix;
-    length += prefix != nullptr ? strlen(prefix) : 0;
+    auto length = str.length();
+    const std::string prefix = IsNoPrefix(flag) ? "" : std::string{dflt_prefix};
+    length += prefix.length();
     length++;
 
     try {
         s.reserve(length);
-        if (prefix != nullptr) {
-            s = prefix;
-        }
-        if (str != nullptr) {
-            s += str;
-        }
+        s = prefix;
+        s += str;
     } catch (const std::exception &) {
         return {};
     }
@@ -392,6 +386,11 @@ public:
     // STREAM OUTPUT
     template <typename T>
     std::ostream &operator<<(const T &value) {
+        if (!constructed()) {
+            return os_;
+        }
+
+        std::lock_guard lk(lock_);
         return (os_ << value);
     }
 
@@ -500,6 +499,7 @@ public:
                                Args &&...args) noexcept {
         return exec(XLOG::kCritError, format, std::forward<Args>(args)...);
     }
+
     // [ERROR:CRITICAL] +  breakpoint
     template <typename... Args>
     [[maybe_unused]] auto bp(const std::string &format,
@@ -508,7 +508,6 @@ public:
                     std::forward<Args>(args)...);
     }
 
-    // this if for stream operations
     [[maybe_unused]] XLOG::Emitter operator()(int flags) const noexcept {
         auto e = *this;
         e.mods_ = flags;
@@ -614,6 +613,9 @@ public:
 
     size_t getBackupLogMaxSize() const noexcept { return backup_log_max_size_; }
 
+    const xlog::LogParam &logParam() const noexcept { return log_param_; }
+    XLOG::LogType type() const noexcept { return type_; }
+
 private:
     XLOG::Emitter copyAndModify(ModData data) const noexcept;
 
@@ -622,7 +624,7 @@ private:
                                  fmt::format_args args) const noexcept;
 
     uint32_t constructed_;  // filled during construction
-    // private, can be called only from operator ()
+
     Emitter(const Emitter &rhs) {
         {
             std::lock_guard lk(rhs.lock_);
@@ -634,8 +636,8 @@ private:
         copy_ = true;
     }
 
-    // this if for stream operations
-    // called from destructor
+    /// this if for stream operations
+    /// called from destructor
     void flush() {
         std::lock_guard lk(lock_);
         if (!os_.str().empty()) {
@@ -657,11 +659,6 @@ private:
     int mods_{Mods::kCopy};  // here we keep modifications to fixed base
 
     static constexpr bool bp_allowed_{tgt::IsDebug()};
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class LogTest;
-    FRIEND_TEST(LogTest, All);
-#endif
-
 };  // namespace XLOG
 
 // Global Log Engines

@@ -22,7 +22,7 @@ properties([
 // TODO: Change to versioning.get_branch and versioning.get_cmk_version! Then
 // the copy&paste below can be removed. First we'll have to clean up the
 def BRANCH = scm.branches[0].name.replaceAll("/","-")
-def CMK_VERS = get_cmk_version(BRANCH, VERSION)
+def CMK_VERS_RC_AWARE = get_cmk_version(BRANCH, VERSION)
 
 // Duplicate code with nightly-build.jenkins
 def get_cmk_version(BRANCH, VERSION){
@@ -48,9 +48,8 @@ timeout(time: 12, unit: 'HOURS') {
     node (NODE) {
         def PACKAGE_DIR = WORKSPACE + '/download'
         def DOCKER_GROUP_ID = ''
-        def SOURCE_DIR = PACKAGE_DIR + "/" + CMK_VERS
         stage('checkout sources') {
-            checkout(scm)
+            checkout_git(scm, VERSION)
         }
         notify = load 'buildscripts/scripts/lib/notify.groovy'
         versioning = load 'buildscripts/scripts/lib/versioning.groovy'
@@ -61,6 +60,8 @@ timeout(time: 12, unit: 'HOURS') {
         // executed inside the container (as long as the IDs are different)
         DOCKER_GROUP_ID = docker_util.get_docker_group_id()
 
+        def CMK_VERS = versioning.strip_rc_number_from_version(CMK_VERS_RC_AWARE);
+        def SOURCE_DIR = PACKAGE_DIR + "/" + CMK_VERS_RC_AWARE
         try {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull buildscripts/docker_image_aliases/IMAGE_TESTING")
@@ -76,8 +77,8 @@ timeout(time: 12, unit: 'HOURS') {
                         stage('Build Container') {
                             def CREDENTIALS_ID = registry_credentials_id()
 
-                            upload.download_deb(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, SOURCE_DIR, EDITION, "buster")
-                            upload.download_source_tar(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, SOURCE_DIR, EDITION)
+                            upload.download_deb(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS_RC_AWARE, SOURCE_DIR, EDITION, "buster")
+                            upload.download_source_tar(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS_RC_AWARE, SOURCE_DIR, EDITION)
 
                             withCredentials([
                                     usernamePassword(credentialsId: CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME'),
@@ -91,9 +92,9 @@ timeout(time: 12, unit: 'HOURS') {
                         def filename = versioning.get_docker_artifact_name(EDITION, CMK_VERS)
                         upload.upload(
                                 NAME: filename,
-                                FILE_PATH: "${PACKAGE_DIR}/download/${CMK_VERS}",
+                                FILE_PATH: "${PACKAGE_DIR}/download/${CMK_VERS_RC_AWARE}",
                                 FILE_NAME: filename,
-                                CMK_VERS: CMK_VERS,
+                                CMK_VERS: CMK_VERS_RC_AWARE,
                                 UPLOAD_DEST: INTERNAL_DEPLOY_DEST,
                                 PORT: INTERNAL_DEPLOY_PORT,
                         )
@@ -101,9 +102,9 @@ timeout(time: 12, unit: 'HOURS') {
                         // Upload all built docker.tar.gz except builds from experimental branches to WEB_DEPLOY_DEST
                         if (!BRANCH.contains("sandbox")) {
                             upload.upload(
-                                    NAME: "check-mk-${EDITION}-docker-${CMK_VERS}.tar.gz",
-                                    FILE_PATH: "${PACKAGE_DIR}/download/${CMK_VERS}",
-                                    FILE_NAME: "check-mk-${EDITION}-docker-${CMK_VERS}.tar.gz",
+                                    NAME: "check-mk-${EDITION}-docker-${CMK_VERS_RC_AWARE}.tar.gz",
+                                    FILE_PATH: "${PACKAGE_DIR}/download/${CMK_VERS_RC_AWARE}",
+                                    FILE_NAME: "check-mk-${EDITION}-docker-${CMK_VERS_RC_AWARE}.tar.gz",
                                     CMK_VERS: CMK_VERS,
                                     UPLOAD_DEST: WEB_DEPLOY_DEST,
                                     PORT: "52022",
@@ -128,5 +129,19 @@ timeout(time: 12, unit: 'HOURS') {
         } catch(Exception e) {
             notify.notify_error(e)
         }
+    }
+}
+
+def checkout_git(scm, VERSION) {
+    if (VERSION == 'daily') {
+        checkout(scm)
+    } else {
+        checkout([
+            $class: 'GitSCM',
+            userRemoteConfigs: scm.userRemoteConfigs,
+            branches: [
+                [name: 'refs/tags/v' + VERSION]
+            ]
+        ])
     }
 }

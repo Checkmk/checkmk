@@ -22,11 +22,15 @@ docker_tag() {
     # Tag images
     REGISTRY=$1
     FOLDER=$2
+    TARGET_VERSION=$3
+    if [[ -z "$TARGET_VERSION" ]]; then
+        TARGET_VERSION="${VERSION_TAG}"
+    fi
 
     SOURCE_TAG="checkmk/check-mk-${EDITION}:${VERSION_TAG}"
 
     log "Erstelle \"${VERSION}\" tag..."
-    docker tag "${SOURCE_TAG}" "$REGISTRY$FOLDER/check-mk-${EDITION}:${VERSION_TAG}"
+    docker tag "${SOURCE_TAG}" "$REGISTRY$FOLDER/check-mk-${EDITION}:${TARGET_VERSION}"
 
     if [ "$SET_BRANCH_LATEST_TAG" = "yes" ]; then
         log "Erstelle \"{$BRANCH}-latest\" tag..."
@@ -44,9 +48,22 @@ docker_push () {
     REGISTRY=$1
     FOLDER=$2
 
+    if [[ "$VERSION_TAG" == *"-rc"* ]]; then
+        echo "${VERSION_TAG} was a release candidate, do a retagging before pushing".
+        RELEASE_VERSION=$(echo -n ${VERSION_TAG} | sed 's/-rc[0-9]*//g')
+        if [ $EDITION = raw ] || [ "$EDITION" = free ]; then
+            docker_tag "" "checkmk" "${RELEASE_VERSION}"
+        else
+            docker_tag "registry.checkmk.com" "/${EDITION}" "${RELEASE_VERSION}"
+        fi
+    else
+        RELEASE_VERSION="${VERSION_TAG}"
+    fi
+
+
     log "Lade zu ($REGISTRY) hoch..."
     docker login ${REGISTRY} -u ${DOCKER_USERNAME} -p ${DOCKER_PASSPHRASE}
-    DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:${VERSION_TAG}"
+    DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:${RELEASE_VERSION}"
 
     if [ "$SET_BRANCH_LATEST_TAG" = "yes" ]; then
         DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-latest"
@@ -65,7 +82,7 @@ build_image() {
    cp "${SOURCE_PATH}/${PKG_FILE}" "$DOCKER_PATH/"
 
    log "Building container image"
-   make -C "$DOCKER_PATH" "$DOCKER_IMAGE_ARCHIVE"
+   make -C "$DOCKER_PATH" VERSION_TAG=${VERSION_TAG} "$DOCKER_IMAGE_ARCHIVE"
 
    log "Verschiebe Image-Tarball..."
    mv -v "$DOCKER_PATH/$DOCKER_IMAGE_ARCHIVE" "${SOURCE_PATH}/"

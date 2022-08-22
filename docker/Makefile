@@ -49,7 +49,7 @@ image: needed-packages
 	    --build-arg CMK_VERSION="$(VERSION)" \
 	    --build-arg CMK_EDITION="$(EDITION)" \
 	    --build-arg IMAGE_CMK_BASE=$$($(RESOLVE_CMD) IMAGE_CMK_BASE) \
-	    -t $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION) \
+	    -t $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION_TAG) \
 	    . ; \
 	docker stop $$SECRET_CONTAINER_ID
 

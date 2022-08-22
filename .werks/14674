@@ -1,0 +1,14 @@
+Title: ibm csv eventlog check now compatible with IBM FlashSystem 900
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1661152736
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p11
+
+The ibm svc eventlog check is not compatible wit hIBM FlashSystem 900 systems.
+Previously the check would produce a crash with the cause: "ValueError: too many values to unpack (expected 11)".
+

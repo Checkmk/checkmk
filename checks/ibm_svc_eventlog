@@ -36,6 +36,7 @@ def check_ibm_svc_eventlog(item, _no_params, info):
         _event_id,
         _error_code,
         description,
+        *_,
     ) in info:
         messagecount += 1
         last_err = description

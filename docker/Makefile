@@ -42,9 +42,6 @@ needed-packages: ../omd/distros/DEBIAN_10.mk
 check-mk-$(EDITION)-docker-$(VERSION).tar.gz: image
 	docker save $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION) | gzip > check-mk-$(EDITION)-docker-$(VERSION).tar.gz
 
-check-mk-$(EDITION)-docker-$(VERSION).demo.tar.gz: image-demo
-	docker save $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION).demo | gzip > check-mk-$(EDITION)-docker-$(VERSION).demo.tar.gz
-
 image: needed-packages
 	SECRET_CONTAINER_ID=$$($(SECRET_CONTAINER_ID_CMD)) ; \
 	docker build \
@@ -53,17 +50,6 @@ image: needed-packages
 	    --build-arg CMK_EDITION="$(EDITION)" \
 	    --build-arg IMAGE_CMK_BASE=$$($(RESOLVE_CMD) IMAGE_CMK_BASE) \
 	    -t $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION) \
-	    . ; \
-	docker stop $$SECRET_CONTAINER_ID
-
-image-demo: needed-packages
-	SECRET_CONTAINER_ID=$$($(SECRET_CONTAINER_ID_CMD)) ; \
-	docker build \
-	    --network=container:$$SECRET_CONTAINER_ID \
-	    --build-arg CMK_VERSION="$(VERSION).demo" \
-	    --build-arg CMK_EDITION="$(EDITION)" \
-	    --build-arg IMAGE_CMK_BASE=$$($(RESOLVE_CMD) IMAGE_CMK_BASE) \
-	    -t $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION).demo \
 	    . ; \
 	docker stop $$SECRET_CONTAINER_ID
 

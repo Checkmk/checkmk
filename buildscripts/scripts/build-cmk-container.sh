@@ -23,10 +23,10 @@ docker_tag() {
     REGISTRY=$1
     FOLDER=$2
 
-    SOURCE_TAG="checkmk/check-mk-${EDITION}:${VERSION}"
+    SOURCE_TAG="checkmk/check-mk-${EDITION}:${VERSION_TAG}"
 
     log "Erstelle \"${VERSION}\" tag..."
-    docker tag "${SOURCE_TAG}" "$REGISTRY$FOLDER/check-mk-${EDITION}:${VERSION}"
+    docker tag "${SOURCE_TAG}" "$REGISTRY$FOLDER/check-mk-${EDITION}:${VERSION_TAG}"
 
     if [ "$SET_BRANCH_LATEST_TAG" = "yes" ]; then
         log "Erstelle \"{$BRANCH}-latest\" tag..."
@@ -46,7 +46,7 @@ docker_push () {
 
     log "Lade zu ($REGISTRY) hoch..."
     docker login ${REGISTRY} -u ${DOCKER_USERNAME} -p ${DOCKER_PASSPHRASE}
-    DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:${VERSION}"
+    DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:${VERSION_TAG}"
 
     if [ "$SET_BRANCH_LATEST_TAG" = "yes" ]; then
         DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-latest"
@@ -59,16 +59,16 @@ docker_push () {
 
 build_image() {
    log "Unpack source tar to $TMP_PATH"
-   tar -xz -C "$TMP_PATH" -f "$PACKAGE_PATH/${VERSION}/check-mk-${EDITION}-${VERSION}${SUFFIX}.tar.gz"
+   tar -xz -C "$TMP_PATH" -f "${SOURCE_PATH}/check-mk-${EDITION}-${VERSION}${SUFFIX}.tar.gz"
 
    log "Copy debian package..."
-   cp "$PACKAGE_PATH/${VERSION}/${PKG_FILE}" "$DOCKER_PATH/"
+   cp "${SOURCE_PATH}/${PKG_FILE}" "$DOCKER_PATH/"
 
    log "Building container image"
    make -C "$DOCKER_PATH" "$DOCKER_IMAGE_ARCHIVE"
 
    log "Verschiebe Image-Tarball..."
-   mv -v "$DOCKER_PATH/$DOCKER_IMAGE_ARCHIVE" "$PACKAGE_PATH/${VERSION}/"
+   mv -v "$DOCKER_PATH/$DOCKER_IMAGE_ARCHIVE" "${SOURCE_PATH}/"
 
    if [ $EDITION = raw ] || [ "$EDITION" = free ]; then
        docker_tag "" "checkmk"
@@ -86,9 +86,9 @@ push_image() {
 
 }
 
-if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "" ] || [ "$2" = "" ] || [ "$3" = "" ] || [ "$4" = "" ] || [ "$5" = "" ] || [ "$6" = "" ]; then
-    echo "Aufrufen: bw-docker-bauen [BRANCH] [EDITION] [VERSION] [SET_LATEST_TAG] [SET_BRANCH_LATEST_TAG] [ACTION]"
-    echo "          bw-docker-bauen 1.5.0 enterprise 1.5.0p4 no no push"
+if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "" ] || [ "$2" = "" ] || [ "$3" = "" ] || [ "$4" = "" ] || [ "$5" = "" ] || [ "$6" = "" ] || [ "$7" = "" ]; then
+    echo "Aufrufen: build-cmk-container.sh [BRANCH] [EDITION] [VERSION] [SOURCE_PATH] [SET_LATEST_TAG] [SET_BRANCH_LATEST_TAG] [ACTION]"
+    echo "          build-cmk-container.sh 2.1.0 enterprise 2.1.0p6 /foo/bar/2.1.0p6-rc1 no no push"
     echo
     exit 1
 fi
@@ -96,9 +96,12 @@ fi
 BRANCH=$1
 EDITION=$2
 VERSION=$3
-SET_LATEST_TAG=$4
-SET_BRANCH_LATEST_TAG=$5
-ACTION=$6
+SOURCE_PATH=$4
+SET_LATEST_TAG=$5
+SET_BRANCH_LATEST_TAG=$6
+ACTION=$7
+
+VERSION_TAG=$(basename ${SOURCE_PATH})
 
 if [ $EDITION = raw ]; then
     SUFFIX=.cre
@@ -117,7 +120,6 @@ fi
 BASE_PATH=$(pwd)/tmp
 mkdir -p "$BASE_PATH"
 TMP_PATH=$(mktemp --directory -p $BASE_PATH --suffix=.cmk-docker)
-PACKAGE_PATH=$(pwd)/download
 DOCKER_PATH="$TMP_PATH/check-mk-${EDITION}-${VERSION}${SUFFIX}/docker"
 DOCKER_IMAGE_ARCHIVE="check-mk-${EDITION}-docker-${VERSION}.tar.gz"
 PKG_NAME="check-mk-${EDITION}-${VERSION}"

@@ -48,7 +48,7 @@ timeout(time: 12, unit: 'HOURS') {
     node (NODE) {
         def PACKAGE_DIR = WORKSPACE + '/download'
         def DOCKER_GROUP_ID = ''
-
+        def SOURCE_DIR = PACKAGE_DIR + "/" + CMK_VERS
         stage('checkout sources') {
             checkout(scm)
         }
@@ -76,14 +76,14 @@ timeout(time: 12, unit: 'HOURS') {
                         stage('Build Container') {
                             def CREDENTIALS_ID = registry_credentials_id()
 
-                            upload.download_deb(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, PACKAGE_DIR + "/" + CMK_VERS, EDITION, "buster")
-                            upload.download_source_tar(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, PACKAGE_DIR + "/" + CMK_VERS, EDITION)
+                            upload.download_deb(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, SOURCE_DIR, EDITION, "buster")
+                            upload.download_source_tar(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, SOURCE_DIR, EDITION)
 
                             withCredentials([
                                     usernamePassword(credentialsId: CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME'),
                                     usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
                                 sh """
-                                ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SET_LATEST_TAG} ${SET_BRANCH_LATEST_TAG} "build"
+                                ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SOURCE_DIR} ${SET_LATEST_TAG} ${SET_BRANCH_LATEST_TAG} "build"
                             """
                             }
                         }
@@ -118,7 +118,7 @@ timeout(time: 12, unit: 'HOURS') {
                                     usernamePassword(credentialsId: CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME'),
                                     usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
                                 sh """
-                                ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SET_LATEST_TAG} ${SET_BRANCH_LATEST_TAG} "push"
+                                ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SOURCE_DIR} ${SET_LATEST_TAG} ${SET_BRANCH_LATEST_TAG} "push"
                             """
                             }
                         }

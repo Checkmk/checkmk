@@ -1,0 +1,15 @@
+Title: Don't leak LDAP server address when connection fails
+Class: security
+Compatible: compat
+Component: wato
+Date: 1661247476
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p11
+
+Prior to this Werk, trying to authenticate to an LDAP server that is unavailable would result in an error saying that the server could be contacted.
+This leaks the address of the LDAP server.
+In addition, it was possible to check if a user is a htpasswd user, since the LDAP connection is not attempted for these users and LDAP error is not shown.
+
+Now a generic "invalid login" message is shown to avoid this information disclosure.

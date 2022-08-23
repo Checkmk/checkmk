@@ -1120,7 +1120,12 @@ class LDAPUserConnector(UserConnector):
         if user_connection_id is not None and user_connection_id != self.id():
             return None
 
-        self.connect()
+        try:
+            self.connect()
+        except Exception as e:
+            self._logger.exception("Failed to connect to LDAP:", e)
+            # Could not connect to any of the LDAP servers, or unknown error. Skip this connection.
+            return None
 
         enforce_this_connection = None
         # Also honor users that are currently not known, e.g. when sync did not

@@ -9,6 +9,7 @@ from typing import Optional
 # TODO: Import errors from passlib are suppressed right now since now
 # stub files for mypy are not available.
 from passlib.context import CryptContext  # type: ignore[import]
+from passlib.exc import PasswordTruncateError  # type: ignore[import]
 from passlib.hash import bcrypt  # type: ignore[import]
 
 import cmk.utils.paths
@@ -92,7 +93,14 @@ class Htpasswd:
 # Nevertheless, the rounds a.k.a. workfactor should be more than 10 for security
 # reasons. It defaults to 12, but let's be explicit.
 def hash_password(password: str, *, rounds: Optional[int] = None) -> str:
-    return bcrypt.using(rounds=12 if rounds is None else rounds).hash(password)
+    try:
+        return bcrypt.using(rounds=12 if rounds is None else rounds, truncate_error=True).hash(
+            password
+        )
+    except PasswordTruncateError:
+        raise MKUserError(
+            None, "Passwords over 72 characters would be truncated and are therefore not allowed!"
+        )
 
 
 # NOTE: The same warning regarding runtime is applicable here, the runtime for

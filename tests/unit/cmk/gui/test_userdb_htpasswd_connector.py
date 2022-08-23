@@ -12,6 +12,7 @@ from passlib.hash import bcrypt  # type: ignore[import]
 
 from cmk.utils.type_defs import UserId
 
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.userdb import htpasswd
 
 
@@ -76,6 +77,11 @@ def test_hash_password() -> None:
         hashed_pw = htpasswd.hash_password("blä")
     assert bcrypt.verify("blä", hashed_pw)
 
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        with pytest.raises(MKUserError):
+            htpasswd.hash_password("A" * 72 + "foo")
+
 
 def test_user_connector_verify_password(htpasswd_file: Path, monkeypatch: MonkeyPatch) -> None:
     c = htpasswd.HtpasswdUserConnector({})
@@ -88,3 +94,6 @@ def test_user_connector_verify_password(htpasswd_file: Path, monkeypatch: Monkey
     assert c.check_credentials(UserId("bcrypt_user"), "cmk") == "bcrypt_user"
     assert c.check_credentials(UserId("dingeling"), "aaa") is None
     assert c.check_credentials(UserId("locked"), "locked") is False
+
+    # Check no exception is raised, when setting a password > 72 chars a exception is raised...
+    assert c.check_credentials(UserId("bcrypt_user"), "A" * 100) is False

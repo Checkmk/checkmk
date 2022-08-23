@@ -1426,7 +1426,6 @@ class TagFilter(Filter):
 
     def display(self, value: FilterHTTPVariables) -> None:
         operators: Choices = [
-            ("", ""),
             ("is", "="),
             ("isnot", "≠"),
         ]
@@ -1457,7 +1456,7 @@ class TagFilter(Filter):
             html.dropdown(
                 prefix + "_op",
                 operators,
-                deflt=value.get(prefix + "_op", ""),
+                deflt=value.get(prefix + "_op", "is"),
                 style="width:36px",
                 ordered=True,
                 class_=["op"],
@@ -1492,7 +1491,7 @@ class TagFilter(Filter):
 
 filter_registry.register(
     TagFilter(
-        title=_l("Host Tags"),
+        title=_l("Host tags"),
         query_filter=query_filters.TagsQuery(object_type="host"),
     )
 )

@@ -28,10 +28,18 @@ def parse_ucs_c_rack_server_psu(info):
             parsed[psu] = {
                 "operability": key_value_pairs[3][1],
                 "voltage": key_value_pairs[4][1],
+                "model": key_value_pairs[2][1],
             }
         except IndexError:
             continue  # skip info line in case agent output is incomplete or invalid
     return parsed
+
+
+def inventory_ucs_c_rack_server_psu_voltage(parsed):
+    for key, value in parsed.items():
+        if value.get("voltage") == "unknown" and value.get("model", "").startswith("UCS-"):
+            continue  # see SUP-11285
+        yield key, {}
 
 
 def inventory_ucs_c_rack_server_psu(parsed):
@@ -128,7 +136,7 @@ def check_ucs_c_rack_server_psu_voltage(item, _no_params, data):
 
 
 check_info["ucs_c_rack_server_psu.voltage"] = {
-    "inventory_function": inventory_ucs_c_rack_server_psu,
+    "inventory_function": inventory_ucs_c_rack_server_psu_voltage,
     "check_function": check_ucs_c_rack_server_psu_voltage,
     "service_description": "Output Voltage %s",
 }

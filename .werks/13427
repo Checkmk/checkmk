@@ -1,0 +1,13 @@
+Title: ucs_rack_server_psu_voltage no longer discovers fabric interconnect PSUs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1661246500
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p11
+
+Before this change Services like "Output Voltage switch-A PSU 1" were
+discovered but had an unknown status.

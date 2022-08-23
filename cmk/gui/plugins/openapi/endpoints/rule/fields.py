@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import typing
 
-import marshmallow_oneofschema  # type: ignore[import]
+import marshmallow_oneofschema
 from marshmallow import post_load, pre_dump, types, ValidationError
 
 from cmk.utils.type_defs import (

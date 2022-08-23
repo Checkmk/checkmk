@@ -8,7 +8,7 @@ import typing
 
 from marshmallow import ValidationError
 from marshmallow.decorators import post_load, pre_dump, validates_schema
-from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
+from marshmallow_oneofschema import OneOfSchema
 
 from cmk.gui import userdb
 from cmk.gui.fields.base import BaseSchema

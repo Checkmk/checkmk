@@ -6,7 +6,7 @@
 from typing import Any, Type
 
 from marshmallow import fields, pre_dump
-from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
+from marshmallow_oneofschema import OneOfSchema
 
 from livestatus import SiteId
 

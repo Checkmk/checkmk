@@ -17,7 +17,7 @@ from cryptography.x509 import CertificateSigningRequest, load_pem_x509_csr
 from cryptography.x509.oid import NameOID
 from marshmallow import fields as _fields
 from marshmallow import post_load, pre_dump, utils, ValidationError
-from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
+from marshmallow_oneofschema import OneOfSchema
 
 import cmk.utils.version as version
 from cmk.utils.exceptions import MKException

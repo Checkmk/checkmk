@@ -5,7 +5,7 @@
 
 from typing import Any, Dict, List, Type, Union
 
-from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
+from marshmallow_oneofschema import OneOfSchema
 
 from cmk.utils.bi.bi_lib import (
     ABCBIAction,

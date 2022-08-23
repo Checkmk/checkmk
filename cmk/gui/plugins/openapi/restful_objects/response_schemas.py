@@ -6,7 +6,7 @@
 import datetime as dt
 
 from marshmallow import Schema
-from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
+from marshmallow_oneofschema import OneOfSchema
 
 from cmk.utils.defines import weekday_ids
 

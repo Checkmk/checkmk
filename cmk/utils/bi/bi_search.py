@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from typing import Any, Type
 
 from marshmallow import fields, validate
-from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
+from marshmallow_oneofschema import OneOfSchema
 
 from cmk.utils.bi.bi_lib import (
     ABCBISearch,

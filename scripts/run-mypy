@@ -32,6 +32,7 @@ fi
 # in messages relative, which will confuse e.g. Emacs' flycheck mode.
 # shellcheck disable=SC2086
 MYPYPATH="$REPO_PATH:\
+$REPO_PATH/tests/typeshed:\
 $REPO_PATH/livestatus/api/python:\
 $REPO_PATH/omd/packages/omd" \
     exec "$REPO_PATH/scripts/run-pipenv" run mypy \

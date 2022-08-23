@@ -5,7 +5,7 @@
 import urllib.parse
 from typing import Literal
 
-from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
+from marshmallow_oneofschema import OneOfSchema
 
 from cmk.utils.defines import weekday_ids
 from cmk.utils.livestatus_helpers import tables

@@ -8,7 +8,7 @@ FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
 PIPENV := $(SCRIPTS)/run-pipenv
 PYTEST := $(PIPENV) run py.test $(PYTEST_ARGS)
 CYCLES := $(PIPENV) run py_import_cycles
-CYCLES_THRESHOLD := 30
+CYCLES_THRESHOLD := 145
 PYTEST_UNIT_TEST_OPTS = \
     -T unit \
     --doctest-modules \
@@ -338,9 +338,9 @@ test-shellcheck:
 
 test-cycles:
 	$(CYCLES) \
-		--folders cmk enterprise managed plus \
 		--graph no \
 		--map enterprise:cee managed:cme plus:cpe \
+		--packages cmk enterprise managed plus \
 		--project-path $$(realpath -L ..) \
 		--strategy dfs \
 		--verbose 2>&1 | tee .py-import-cycles.txt || true

@@ -624,25 +624,27 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
 
     if host_config.is_ipv4v6_host:
         if host_config.is_ipv6_primary:
-            _add_ping_service(
-                cfg,
-                config_cache,
-                host_config,
-                host_attrs["_ADDRESS_4"],
-                4,
-                "PING IPv4",
-                host_attrs.get("_NODEIPS_4"),
-            )
+            if "PING IPv4" not in used_descriptions:
+                _add_ping_service(
+                    cfg,
+                    config_cache,
+                    host_config,
+                    host_attrs["_ADDRESS_4"],
+                    4,
+                    "PING IPv4",
+                    host_attrs.get("_NODEIPS_4"),
+                )
         else:
-            _add_ping_service(
-                cfg,
-                config_cache,
-                host_config,
-                host_attrs["_ADDRESS_6"],
-                6,
-                "PING IPv6",
-                host_attrs.get("_NODEIPS_6"),
-            )
+            if "PING IPv6" not in used_descriptions:
+                _add_ping_service(
+                    cfg,
+                    config_cache,
+                    host_config,
+                    host_attrs["_ADDRESS_6"],
+                    6,
+                    "PING IPv6",
+                    host_attrs.get("_NODEIPS_6"),
+                )
 
 
 def _add_ping_service(

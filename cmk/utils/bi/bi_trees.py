@@ -62,13 +62,13 @@ class BICompiledLeaf(ABCBICompiledNode):
     def __init__(
         self,
         host_name: HostName,
+        site_id: str,
         service_description: ServiceName | None = None,
-        site_id: Any = None,  # FIXME: Typing chaos: str? None? SiteId? o_O
         **kwargs: Any,
     ) -> None:
         super().__init__()
-        self.required_hosts = [(site_id, host_name)]
-        self.site_id = site_id
+        self.site_id = SiteId(site_id)
+        self.required_hosts = [(self.site_id, host_name)]
         self.host_name = host_name
         self.service_description = service_description
 

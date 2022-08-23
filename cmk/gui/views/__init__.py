@@ -209,7 +209,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
-from cmk.gui.view import DummyView, View
+from cmk.gui.view import View
 from cmk.gui.view_renderer import ABCViewRenderer, GUIViewRenderer
 from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
 from cmk.gui.views.builtin_views import builtin_views
@@ -2029,12 +2029,12 @@ def _get_info_title(plugin: Union[Painter, Sorter]) -> str:
 
 
 def _get_painter_plugin_title_for_choices(plugin: Painter) -> str:
-    dummy_cell = Cell(DummyView(), PainterSpec(plugin.ident))
+    dummy_cell = Cell({}, None, PainterSpec(plugin.ident))
     return "%s: %s" % (_get_info_title(plugin), plugin.list_title(dummy_cell))
 
 
 def get_sorter_plugin_title_for_choices(plugin: Sorter) -> str:
-    dummy_cell = Cell(DummyView(), PainterSpec(plugin.ident))
+    dummy_cell = Cell({}, None, PainterSpec(plugin.ident))
     title: str
     if callable(plugin.title):
         title = plugin.title(dummy_cell)

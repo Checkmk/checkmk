@@ -27,7 +27,6 @@ from cmk.gui.plugins.views.utils import (
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import GroupSpec, Row, Rows, ViewSpec
 from cmk.gui.utils.theme import theme
-from cmk.gui.view import DummyView
 
 
 def render_checkbox(view: ViewSpec, row: Row, num_tds: int) -> None:
@@ -529,7 +528,7 @@ class LayoutTiled(Layout):
             # We need at least five cells
             render_cells = list(cells)
             if len(render_cells) < 5:
-                render_cells += [EmptyCell(DummyView())] * (5 - len(render_cells))
+                render_cells += [EmptyCell({}, None)] * (5 - len(render_cells))
 
             rendered = [cell.render(row) for cell in render_cells]
 

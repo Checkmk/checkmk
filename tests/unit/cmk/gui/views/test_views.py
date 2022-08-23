@@ -666,8 +666,7 @@ def test_painter_export_title(monkeypatch) -> None:  # type:ignore[no-untyped-de
         painter_class() for painter_class in cmk.gui.plugins.views.utils.painter_registry.values()
     ]
     painters_and_cells: list[Tuple[Painter, Cell]] = [
-        (painter, cmk.gui.plugins.views.utils.Cell(View("", {}, {}), PainterSpec(painter.ident)))
-        for painter in painters
+        (painter, Cell({}, None, PainterSpec(painter.ident))) for painter in painters
     ]
 
     dummy_ident: str = "einszwo"
@@ -704,7 +703,7 @@ def test_legacy_register_painter(monkeypatch) -> None:  # type:ignore[no-untyped
     )
 
     painter = cmk.gui.plugins.views.utils.painter_registry["abc"]()
-    dummy_cell = cmk.gui.plugins.views.utils.Cell(View("", {}, {}), PainterSpec(painter.ident))
+    dummy_cell = cmk.gui.plugins.views.utils.Cell({}, None, PainterSpec(painter.ident))
     assert isinstance(painter, cmk.gui.plugins.views.utils.Painter)
     assert painter.ident == "abc"
     assert painter.title(dummy_cell) == "A B C"

@@ -92,16 +92,20 @@ class View:
                 continue
 
             if e.join_index is not None:
-                cells.append(JoinCell(self, e))
+                cells.append(JoinCell(self.spec, self._user_sorters, e))
             else:
-                cells.append(Cell(self, e))
+                cells.append(Cell(self.spec, self._user_sorters, e))
 
         return cells
 
     @property
     def group_cells(self) -> List[Cell]:
         """Group cells are displayed as titles of grouped rows"""
-        return [Cell(self, e) for e in self.spec["group_painters"] if painter_exists(e)]
+        return [
+            Cell(self.spec, self._user_sorters, e)
+            for e in self.spec["group_painters"]
+            if painter_exists(e)
+        ]
 
     @property
     def join_cells(self) -> List[JoinCell]:
@@ -355,12 +359,3 @@ class View:
     @property
     def warning_messages(self) -> list[str]:
         return self._warning_messages
-
-
-class DummyView(View):
-    """Represents an empty view hull, not intended to be displayed
-    This view can be used as surrogate where a view-ish like object is needed
-    """
-
-    def __init__(self) -> None:
-        super().__init__("dummy_view", {}, {})

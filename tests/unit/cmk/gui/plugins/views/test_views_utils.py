@@ -18,7 +18,6 @@ from cmk.gui.plugins.views.utils import (
     SorterSpec,
 )
 from cmk.gui.type_defs import PainterSpec
-from cmk.gui.view import View
 
 
 @pytest.mark.parametrize(
@@ -101,6 +100,6 @@ def test_group_value(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     )
 
     painter: Painter = utils.painter_registry["tag_painter"]()
-    dummy_cell: Cell = Cell(View("", {}, {}), PainterSpec(painter.ident))
+    dummy_cell: Cell = Cell({}, None, PainterSpec(painter.ident))
 
     assert group_value({"host_tags": {"networking": "dmz"}}, [dummy_cell]) == ("dmz",)

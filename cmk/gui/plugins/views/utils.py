@@ -2051,8 +2051,14 @@ def painter_exists(painter_spec: PainterSpec) -> bool:
 class Cell:
     """A cell is an instance of a painter in a view (-> a cell or a grouping cell)"""
 
-    def __init__(self, view: "View", painter_spec: Optional[PainterSpec] = None) -> None:
-        self._view = view
+    def __init__(
+        self,
+        view_spec: ViewSpec,
+        view_user_sorters: Optional[List[SorterSpec]],
+        painter_spec: Optional[PainterSpec] = None,
+    ) -> None:
+        self._view_spec = view_spec
+        self._view_user_sorters = view_user_sorters
         self._painter_name: Optional[PainterName] = None
         self._painter_params: Optional[PainterParameters] = None
         self._link_spec: Optional[VisualLinkSpec] = None
@@ -2061,10 +2067,6 @@ class Cell:
 
         if painter_spec:
             self._from_view(painter_spec)
-
-    @property
-    def view(self) -> "View":
-        return self._view
 
     def _from_view(self, painter_spec: PainterSpec) -> None:
         self._painter_name = extract_painter_name(painter_spec)
@@ -2184,7 +2186,7 @@ class Cell:
         title = ""
         if (
             display_options.enabled(display_options.L)
-            and self._view.spec.get("user_sortable", False)
+            and self._view_spec.get("user_sortable", False)
             and _get_sorter_name_of_painter(self.painter_name()) is not None
         ):
             params: HTTPVariables = [
@@ -2213,7 +2215,9 @@ class Cell:
         """
         sorter = []
 
-        group_sort, user_sort, view_sort = _get_separated_sorters(self._view)
+        group_sort, user_sort, view_sort = _get_separated_sorters(
+            self._view_spec, self._view_user_sorters
+        )
 
         sorter = group_sort + user_sort + view_sort
 
@@ -2283,7 +2287,9 @@ class Cell:
         # Add the optional mouseover tooltip
         if content and self.has_tooltip():
             assert isinstance(content, (str, HTML))
-            tooltip_cell = Cell(self._view, PainterSpec(self.tooltip_painter_name()))
+            tooltip_cell = Cell(
+                self._view_spec, self._view_user_sorters, PainterSpec(self.tooltip_painter_name())
+            )
             _tooltip_tdclass, tooltip_content = tooltip_cell.render_content(row)
             assert not isinstance(tooltip_content, Mapping)
             tooltip_text = escaping.strip_tags_for_tooltip(tooltip_content)
@@ -2478,9 +2484,14 @@ def _parse_url_sorters(sort: Optional[str]) -> List[SorterSpec]:
 
 
 class JoinCell(Cell):
-    def __init__(self, view: "View", painter_spec: PainterSpec) -> None:
+    def __init__(
+        self,
+        view_spec: ViewSpec,
+        view_user_sorters: Optional[List[SorterSpec]],
+        painter_spec: PainterSpec,
+    ) -> None:
         self._join_service_descr: Optional[ServiceName] = None
-        super().__init__(view, painter_spec)
+        super().__init__(view_spec, view_user_sorters, painter_spec)
 
     def _from_view(self, painter_spec: PainterSpec) -> None:
         super()._from_view(painter_spec)
@@ -2542,11 +2553,12 @@ def _get_sorter_name_of_painter(
 
 
 def _get_separated_sorters(
-    view: "View",
+    view_spec: ViewSpec,
+    view_user_sorters: Optional[List[SorterSpec]],
 ) -> Tuple[List[SorterSpec], List[SorterSpec], List[SorterSpec]]:
-    group_sort = _get_group_sorters(view)
-    view_sort = [SorterSpec(*s) for s in view.spec["sorters"] if not s[0] in group_sort]
-    user_sort = view.user_sorters or []
+    group_sort = _get_group_sorters(view_spec)
+    view_sort = [SorterSpec(*s) for s in view_spec["sorters"] if not s[0] in group_sort]
+    user_sort = view_user_sorters or []
 
     _substract_sorters(user_sort, group_sort)
     _substract_sorters(view_sort, user_sort)
@@ -2554,9 +2566,9 @@ def _get_separated_sorters(
     return group_sort, user_sort, view_sort
 
 
-def _get_group_sorters(view: "View") -> List[SorterSpec]:
+def _get_group_sorters(view_spec: ViewSpec) -> List[SorterSpec]:
     group_sort: List[SorterSpec] = []
-    for p in view.spec["group_painters"]:
+    for p in view_spec["group_painters"]:
         if not painter_exists(p):
             continue
         sorter_name = _get_sorter_name_of_painter(p)

@@ -10,6 +10,8 @@ from collections.abc import Callable, Iterable
 from functools import partial
 from typing import Any, NamedTuple, Protocol, Type, TypeVar
 
+import marshmallow
+
 from livestatus import LivestatusOutputFormat, LivestatusResponse, SiteId
 
 from cmk.utils.bi.bi_schema import Schema
@@ -180,8 +182,8 @@ def create_nested_schema_for_class(
 
 
 def create_nested_schema(
-    base_schema: Type[Schema],
-    default_schema: Type[Schema] | None = None,
+    base_schema: Type[marshmallow.Schema],
+    default_schema: Type[marshmallow.Schema] | None = None,
     example_config: list | dict[str, Any] | None = None,
 ) -> Nested:
     """
@@ -213,7 +215,7 @@ def create_nested_schema(
 
 
 def get_schema_default_config(
-    schema: Type[Schema], params: dict[object, object] | None = None
+    schema: Type[marshmallow.Schema], params: dict[object, object] | None = None
 ) -> dict[str, Any]:
     """
 

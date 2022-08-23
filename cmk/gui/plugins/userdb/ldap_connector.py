@@ -1090,7 +1090,12 @@ class LDAPUserConnector(UserConnector):
 
     # This function only validates credentials, no locked checking or similar
     def check_credentials(self, user_id, password):
-        self.connect()
+        try:
+            self.connect()
+        except Exception as e:
+            self._logger.exception("Failed to connect to LDAP:", e)
+            # Could not connect to any of the LDAP servers, or unknown error. Skip this connection.
+            return None
 
         # Did the user provide an suffix with his user_id? This might enforce
         # LDAP connections to be choosen or skipped.

@@ -114,18 +114,6 @@ def heartbeat_crm_parse_general(string_table: StringTable) -> _Cluster:
 def heartbeat_crm_parse_resources(  # pylint: disable=too-many-branches
     string_table: StringTable,
 ) -> _Resources:
-    """
-
-    :param info:
-        An info list of lists from the check system.
-
-    :param show:
-        Can be either 'all', then it shows some additional information or
-        'resources' then it shows only resources.
-
-    :return:
-        A dict of resources and possibly additional information (like error messages).
-    """
     block_start = False
     resources: dict[str, list[list[str]]] = {}
     resource = ""
@@ -138,7 +126,7 @@ def heartbeat_crm_parse_resources(  # pylint: disable=too-many-branches
         if "failed" in line.lower() and "actions" in line.lower():
             block_start = False
             list_start = True
-        elif not block_start and line == "Full list of resources:":
+        elif line == "Full list of resources:":
             block_start = True
             list_start = False
         elif list_start:
@@ -161,11 +149,6 @@ def heartbeat_crm_parse_resources(  # pylint: disable=too-many-branches
                 resource = parts[2]
                 mode = "masterslaveset"
             elif line[0] == "_":
-                # Cleanup inconsistent agent output in clone set lines
-                if parts[0] != "_":
-                    parts.insert(1, parts[0][1:])
-                    parts[0] = "_"
-
                 # Resource group or set member
                 if mode == "resourcegroup":
                     resources[resource].append(parts[1:])

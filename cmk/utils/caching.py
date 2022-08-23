@@ -9,13 +9,12 @@ from __future__ import annotations
 import collections
 from collections.abc import Callable
 from functools import lru_cache, wraps
-from typing import Concatenate, ParamSpec, TypeVar
+from typing import ParamSpec, TypeVar
 
 import cmk.utils.misc
 
 P = ParamSpec("P")
 R = TypeVar("R")
-S = TypeVar("S")
 
 
 # Used as decorator wrapper for functools.lru_cache in order to bind the cache to an instance method
@@ -23,14 +22,19 @@ S = TypeVar("S")
 # FIXME: Nuke this cruel hack below, it is just an ugly workaround for a missing object which should actually hold the cache!
 def instance_method_lru_cache(
     maxsize: int | None = 128, typed: bool = False
-) -> Callable[[Callable[Concatenate[S, P], R]], Callable[Concatenate[S, P], R]]:
-    def wrap(f: Callable[Concatenate[S, P], R]) -> Callable[Concatenate[S, P], R]:
+) -> Callable[[Callable[P, R]], Callable[P, R]]:
+    def wrap(f: Callable[P, R]) -> Callable[P, R]:
         @wraps(f)
-        def wrapped_f(self: S, *args: P.args, **kwargs: P.kwargs) -> R:
+        def wrapped_f(*args: P.args, **kwargs: P.kwargs) -> R:
+            # We can use the following when https://github.com/python/mypy/pull/13459 is release (mypy 0.980)
+            # self, *rest = args
+            self = args[0]
+            rest = args[1:]
             cache_orig = lru_cache(maxsize, typed)(f)
             instance_cache = cache_orig.__get__(self, self.__class__)  # type: ignore[attr-defined] # pylint: disable=unnecessary-dunder-call
             setattr(self, f.__name__, instance_cache)
-            return instance_cache(*args, **kwargs)
+            value: R = instance_cache(*rest, **kwargs)
+            return value
 
         return wrapped_f
 

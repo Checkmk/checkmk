@@ -5,7 +5,7 @@
 
 import calendar
 import time
-from typing import Any, Mapping, NamedTuple, Optional, Sequence
+from typing import Any, Iterable, Mapping, NamedTuple, Optional, Sequence
 
 from .agent_based_api.v1 import register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -29,6 +29,10 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 # resource_slapslave  (ocf::heartbeat:OpenLDAP):  Started smwp
 
 
+KNOWN_RESOURCES_HEADERS = {"full list of resources:"}
+KNOWN_FAILED_RESOURCE_ACTION_HEADERS = {"failed actions:", "failed resource actions:"}
+
+
 class _Cluster(NamedTuple):
     last_updated: str
     dc: Optional[str]
@@ -38,8 +42,8 @@ class _Cluster(NamedTuple):
 
 
 class _Resources(NamedTuple):
-    resources: Mapping[str, list[list[str]]]
-    failed_actions: Any
+    resources: Mapping[str, Sequence[Sequence[str]]]
+    failed_actions: Sequence[str]
 
 
 class Section(NamedTuple):
@@ -56,15 +60,15 @@ def _parse_for_error(first_line: str) -> Optional[str]:
     return None
 
 
-def heartbeat_crm_parse_general(string_table: StringTable) -> _Cluster:
-    if (error := _parse_for_error(" ".join(string_table[0]))) is not None:
+def heartbeat_crm_parse_general(general_section: Sequence[Sequence[str]]) -> _Cluster:
+    if (error := _parse_for_error(" ".join(general_section[0]))) is not None:
         return _Cluster("", None, None, None, error)
 
     last_updated = ""
     dc = None
     num_nodes = None
     num_resources = None
-    for raw_line in string_table:
+    for raw_line in general_section:
         # lines are prefixed with _* in pacemaker versions 2.0.3, e.g.:
         # _* Current DC: ha02 (version 2.0.3-5.el8_2.1-4b1f869f0f)
         line = raw_line[1:] if not raw_line[0].isalnum() else raw_line
@@ -112,75 +116,129 @@ def heartbeat_crm_parse_general(string_table: StringTable) -> _Cluster:
 
 
 def heartbeat_crm_parse_resources(  # pylint: disable=too-many-branches
-    string_table: StringTable,
-) -> _Resources:
-    block_start = False
-    resources: dict[str, list[list[str]]] = {}
+    resources_section: Iterable[Sequence[str]],
+) -> Mapping[str, Sequence[Sequence[str]]]:
+    resources: dict[str, list[Sequence[str]]] = {}
     resource = ""
-    list_start = False
-    lines = []
     mode = "single"
-    for parts in string_table:
+
+    for parts in resources_section:
         line = " ".join(parts)
 
-        if "failed" in line.lower() and "actions" in line.lower():
-            block_start = False
-            list_start = True
-        elif line == "Full list of resources:":
-            block_start = True
-            list_start = False
-        elif list_start:
-            lines.append(line)
-            mode = "failedaction"
-        elif block_start:
-            if line.startswith("Resource Group:"):
-                # Resource group
-                resources[parts[2]] = []
-                resource = parts[2]
-                mode = "resourcegroup"
-            elif line.startswith("Clone Set:"):
-                # Clone set
-                resources[parts[2]] = []
-                resource = parts[2]
-                mode = "cloneset"
-            elif line.startswith("Master/Slave Set:"):
-                # Master/Slave set
-                resources[parts[2]] = []
-                resource = parts[2]
-                mode = "masterslaveset"
-            elif line[0] == "_":
-                # Resource group or set member
-                if mode == "resourcegroup":
-                    resources[resource].append(parts[1:])
-                elif mode == "cloneset":
-                    if parts[1] == "Started:":
-                        # Resources are only used to check that the master does not switch nodes.
-                        # Clone and Slave information is discarded in the check function.
-                        resources[resource].append(
-                            [resource, "Clone", "Started", ", ".join(parts[3:-1])]
-                        )
-                elif mode == "masterslaveset":
-                    if parts[1] == "Masters:":
-                        resources[resource].append([resource, "Master", "Started", parts[3]])
-                    if parts[1] == "Slaves:":
-                        resources[resource].append([resource, "Slave", "Started", parts[3]])
-            else:
-                # Single resource
-                resources[parts[0]] = [parts]
+        if line.startswith("Resource Group:"):
+            # Resource group
+            resources[parts[2]] = []
+            resource = parts[2]
+            mode = "resourcegroup"
+        elif line.startswith("Clone Set:"):
+            # Clone set
+            resources[parts[2]] = []
+            resource = parts[2]
+            mode = "cloneset"
+        elif line.startswith("Master/Slave Set:"):
+            # Master/Slave set
+            resources[parts[2]] = []
+            resource = parts[2]
+            mode = "masterslaveset"
+        elif line[0] == "_":
+            # Resource group or set member
+            if mode == "resourcegroup":
+                resources[resource].append(parts[1:])
+            elif mode == "cloneset":
+                if parts[1] == "Started:":
+                    # Resources are only used to check that the master does not switch nodes.
+                    # Clone and Slave information is discarded in the check function.
+                    resources[resource].append(
+                        [resource, "Clone", "Started", ", ".join(parts[3:-1])]
+                    )
+            elif mode == "masterslaveset":
+                if parts[1] == "Masters:":
+                    resources[resource].append([resource, "Master", "Started", parts[3]])
+                if parts[1] == "Slaves:":
+                    resources[resource].append([resource, "Slave", "Started", parts[3]])
+        else:
+            # Single resource
+            resources[parts[0]] = [parts]
 
-    return _Resources(
-        resources=resources,
-        failed_actions=_join_lines(lines),
-    )
+    return resources
+
+
+def heartbeat_crm_parse_failed_resource_actions(
+    failed_resource_actions_section: Iterable[Sequence[str]],
+) -> Sequence[str]:
+    """Join lines on space and ignore punctuations/extra spaces.
+
+    Examples:
+
+        >>> heartbeat_crm_parse_failed_resource_actions((l for l in [["*", "1", "2"], ["_", "3"]]))
+        ['1 2 3']
+
+        >>> heartbeat_crm_parse_failed_resource_actions((l for l in [["*", "1", "2"], ["_", "3"], ["_", "4"], ["*", "1", "2"], ["_", "3"]]))
+        ['1 2 3 4', '1 2 3']
+
+        >>> heartbeat_crm_parse_failed_resource_actions((l for l in [["1", "2", "3"], ["1", "2", "3"], ["*", "1"], ["_", "2", "3"]]))
+        ['1 2 3', '1 2 3', '1 2 3']
+
+        >>> heartbeat_crm_parse_failed_resource_actions((l for l in [["1", "2",], [" ", "3"]]))
+        ['1 2 3']
+
+        >>> heartbeat_crm_parse_failed_resource_actions((l for l in []))
+        []
+
+    """
+    joined = []
+    line = ""
+    for part_list in failed_resource_actions_section:
+        part = " ".join(part_list)
+        if part.startswith("*"):
+            if line:
+                joined.append(line)
+            line = part[2:]
+        elif part.startswith(("_ ", "  ")):
+            line += part[1:]
+        else:
+            if line:
+                joined.append(line)
+            line = part
+
+    if line:
+        joined.append(line)
+    return joined
+
+
+def _partition_string_table(iter_string_table, next_section_headers=None):
+    if not next_section_headers:
+        yield from (l for l in iter_string_table)
+        return
+
+    while (line := next(iter_string_table, None)) is not None and " ".join(
+        line
+    ).lower() not in next_section_headers:
+        yield line
 
 
 def parse_heartbeat_crm(string_table: StringTable) -> Optional[Section]:
-    if string_table:
-        return Section(
-            cluster=heartbeat_crm_parse_general(string_table),
-            resources=heartbeat_crm_parse_resources(string_table),
-        )
-    return None
+    if not string_table:
+        return None
+
+    iter_string_table = iter(string_table)
+    general_section = _partition_string_table(
+        iter_string_table, next_section_headers=KNOWN_RESOURCES_HEADERS
+    )
+    resources_section = _partition_string_table(
+        iter_string_table, next_section_headers=KNOWN_FAILED_RESOURCE_ACTION_HEADERS
+    )
+    failed_resource_actions_section = _partition_string_table(iter_string_table)
+
+    return Section(
+        cluster=heartbeat_crm_parse_general(list(general_section)),
+        resources=_Resources(
+            resources=heartbeat_crm_parse_resources(resources_section),
+            failed_actions=heartbeat_crm_parse_failed_resource_actions(
+                failed_resource_actions_section
+            ),
+        ),
+    )
 
 
 register.agent_section(
@@ -289,52 +347,6 @@ register.check_plugin(
 #   |           |_| \_\___||___/\___/ \__,_|_|  \___\___||___/             |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
-def _join_lines(lines: Sequence[str]) -> Sequence[str]:
-    """Join lines with the help of some helper characters.
-
-    :param lines:
-        List of strings
-
-    :returns:
-        List of joined strings
-
-    Examples:
-
-        >>> _join_lines(["* 1, 2,", "_ 3"])
-        ['1, 2, 3']
-
-        >>> _join_lines(["* 1, 2,", "_ 3,", "_ 4", "* 1, 2,", "_ 3"])
-        ['1, 2, 3, 4', '1, 2, 3']
-
-        >>> _join_lines(["1, 2, 3", "1, 2, 3", "* 1,", "_ 2, 3"])
-        ['1, 2, 3', '1, 2, 3', '1, 2, 3']
-
-        >>> _join_lines(["1, 2,", "  3"])
-        ['1, 2, 3']
-
-        >>> _join_lines([])
-        []
-
-    """
-    joined = []
-    line = ""
-    for part in lines:
-        if part.startswith("*"):
-            if line:
-                joined.append(line)
-            line = part[2:]
-        elif part.startswith(("_ ", "  ")):
-            line += part[1:]
-        else:
-            if line:
-                joined.append(line)
-            line = part
-
-    if line:
-        joined.append(line)
-    return joined
 
 
 def discover_heartbeat_crm_resources(

@@ -179,6 +179,11 @@ def _init_language(lang: str) -> Optional[gettext_module.NullTranslations]:
     return translations[-1]
 
 
+def is_community_translation(lang: Optional[str]) -> bool:
+    """All languages but English (None/"en") and German ("de") are community translations."""
+    return lang not in [None, "en", "de"]
+
+
 # .
 #   .--User i18n-----------------------------------------------------------.
 #   |                _   _                 _ _  ___                        |

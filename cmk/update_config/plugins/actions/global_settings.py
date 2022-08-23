@@ -8,8 +8,11 @@ from typing import Mapping, Sequence
 
 from cmk.utils.log import VERBOSE
 
+from cmk.gui.i18n import is_community_translation
+from cmk.gui.plugins.wato.check_mk_configuration import ConfigVariableEnableCommunityTranslations
 from cmk.gui.plugins.watolib.utils import config_variable_registry, filter_unknown_settings
 from cmk.gui.site_config import is_wato_slave_site
+from cmk.gui.userdb import load_users
 from cmk.gui.watolib.global_settings import (
     GlobalSettings,
     load_configuration_settings,
@@ -47,6 +50,8 @@ def _update_installation_wide_global_settings(logger: Logger) -> None:
     # Load full config (with undefined settings)
     global_config = load_configuration_settings(full_config=True)
     _update_global_config(logger, global_config)
+    _handle_community_translations(logger, global_config)
+
     save_global_settings(global_config)
 
 
@@ -119,3 +124,25 @@ def _transform_global_config_values(global_config: GlobalSettings) -> GlobalSett
         }
     )
     return global_config
+
+
+def _handle_community_translations(logger: Logger, global_config: GlobalSettings) -> None:
+    """Set the global setting "enable_community_translations" to True if it wasn't set in the old
+    version and if a community translated language was set as default language or as user specific
+    UI language. Otherwise this global setting defaults to False and community translations are not
+    choosable as language.
+    """
+    enable_ct_ident = ConfigVariableEnableCommunityTranslations().ident()
+    if not enable_ct_ident in global_config:
+        enable_ct = False
+        if is_community_translation(global_config.get("default_language", None)):
+            enable_ct = True
+        else:
+            for user_config in load_users().values():
+                if is_community_translation(user_config.get("language", None)):
+                    enable_ct = True
+                    break
+
+        if enable_ct:
+            logger.log(VERBOSE, "Changing global setting '%s' to true" % enable_ct_ident)
+            global_config.update({enable_ct_ident: enable_ct})

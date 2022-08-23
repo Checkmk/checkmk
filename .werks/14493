@@ -1,0 +1,15 @@
+Title: Add global setting "Enable community translations"
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 2.2.0i1
+Date: 1664276784
+Class: feature
+
+<ul>
+<li>Defaults to False - per default only English and German are shown in the language dropdown (User > Edit profile > Language)</li>
+<li>Changing this global setting requires an additional activation of pending changes</li>
+<li>When changed from True to False, the UI default and user specific languages are checked and set to English if a community translation was in place. Any such reset to English is logged as a warning to the details column on the "Activate pending changes" page.</li>
+<li>When updating from an older version without this global setting, the UI default and user specific languages are checked and if a community translation was in place this global setting is changed to True to keep the previous language configuration.</li>
+</ul>

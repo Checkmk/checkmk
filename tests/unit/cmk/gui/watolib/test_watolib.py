@@ -197,6 +197,8 @@ def test_registered_configvars() -> None:
         "graph_timeranges",
         "rest_api_etag_locking",
         "enable_login_via_get",
+        "enable_community_translations",
+        "default_language",
     ]
 
     if not cmk_version.is_raw_edition():

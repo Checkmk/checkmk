@@ -188,28 +188,28 @@ def test_get_language_local_alias(local_translation) -> None:  # type:ignore[no-
 
 def test_get_languages() -> None:
     assert i18n.get_languages() == [
-        ("nl", "Dutch (machine-supported translation)"),
+        ("nl", "Dutch (community translated)"),
         ("", "English"),
-        ("fr", "French (machine-supported translation)"),
+        ("fr", "French (community translated)"),
         ("de", "German"),
-        ("it", "Italian (machine-supported translation)"),
-        ("ja", "Japanese"),
-        ("pt_PT", "Portuguese (Portugal) (machine-supported translation)"),
-        ("ro", "Romanian"),
-        ("es", "Spanish (machine-supported translation)"),
+        ("it", "Italian (community translated)"),
+        ("ja", "Japanese (community translated)"),
+        ("pt_PT", "Portuguese (Portugal) (community translated)"),
+        ("ro", "Romanian (community translated)"),
+        ("es", "Spanish (community translated)"),
     ]
 
 
 def test_get_languages_new_local_language(local_translation) -> None:  # type:ignore[no-untyped-def]
     assert i18n.get_languages() == [
-        ("nl", "Dutch (machine-supported translation)"),
+        ("nl", "Dutch (community translated)"),
         ("", "English"),
-        ("fr", "French (machine-supported translation)"),
-        ("it", "Italian (machine-supported translation)"),
-        ("ja", "Japanese"),
-        ("pt_PT", "Portuguese (Portugal) (machine-supported translation)"),
-        ("ro", "Romanian"),
-        ("es", "Spanish (machine-supported translation)"),
+        ("fr", "French (community translated)"),
+        ("it", "Italian (community translated)"),
+        ("ja", "Japanese (community translated)"),
+        ("pt_PT", "Portuguese (Portugal) (community translated)"),
+        ("ro", "Romanian (community translated)"),
+        ("es", "Spanish (community translated)"),
         ("xz", "Xz"),
         ("de", "Äxtended German"),
     ]

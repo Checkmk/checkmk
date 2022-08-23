@@ -10,6 +10,7 @@ import signal
 import subprocess
 import traceback
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
@@ -28,7 +29,7 @@ import cmk.gui.mkeventd as mkeventd
 import cmk.gui.watolib.config_domain_name as config_domain_name
 from cmk.gui.config import active_config, get_default_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, get_language_alias, is_community_translation
 from cmk.gui.log import logger
 from cmk.gui.plugins.watolib.utils import (
     ABCConfigDomain,
@@ -37,6 +38,7 @@ from cmk.gui.plugins.watolib.utils import (
     SerializedSettings,
 )
 from cmk.gui.site_config import is_wato_slave_site
+from cmk.gui.userdb import load_users, save_users
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.config_domain_name import ConfigDomainName
 from cmk.gui.watolib.utils import liveproxyd_config_dir, multisite_dir, wato_root_dir
@@ -110,7 +112,34 @@ class ConfigDomainGUI(ABCConfigDomain):
         return multisite_dir()
 
     def activate(self, settings: Optional[SerializedSettings] = None) -> ConfigurationWarnings:
-        return []
+        warnings: ConfigurationWarnings = []
+        if not active_config.enable_community_translations:
+            # Check whether a community translated language is set either as default language or as
+            # user specific UI language. Fix the respective language settings to 'English'.
+            dflt_lang = active_config.default_language
+            if is_community_translation(dflt_lang):
+                warnings.append(
+                    f"Resetting the default language '{get_language_alias(dflt_lang)}' to 'English' due to "
+                    "globally disabled commmunity translations (Global settings > User interface)."
+                )
+                gui_config = self.load()
+                gui_config.pop("default_language", None)
+                self.save(gui_config)
+                active_config.default_language = None
+
+            users = load_users()
+            for ident, user_config in users.items():
+                lang = user_config.get("language", None)
+                if is_community_translation(lang):
+                    warnings.append(
+                        f"For user '{ident}': Resetting the language '{get_language_alias(lang)}' to the default "
+                        f"language '{get_language_alias(active_config.default_language)}' due to "
+                        "globally disabled commmunity translations (Global settings > User "
+                        "interface)."
+                    )
+                    user_config.pop("language", None)
+            save_users(users, datetime.now())
+        return warnings
 
     def default_globals(self):
         return get_default_config()

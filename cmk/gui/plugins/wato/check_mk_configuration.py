@@ -21,7 +21,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError, MKUserError
 from cmk.gui.groups import load_contact_group_information
 from cmk.gui.http import request
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, get_languages
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.views.icons.utils import icon_and_action_registry
 from cmk.gui.plugins.wato.utils import (
@@ -137,6 +137,52 @@ class ConfigVariableUITheme(ConfigVariable):
             help=_("Change the default user interface theme of your Checkmk installation"),
             choices=theme_choices(),
         )
+
+
+@config_variable_registry.register
+class ConfigVariableEnableCommunityTranslations(ConfigVariable):
+    def group(self) -> Type[ConfigVariableGroup]:
+        return ConfigVariableGroupUserInterface
+
+    def domain(self) -> Type[ABCConfigDomain]:
+        return ConfigDomainGUI
+
+    def ident(self) -> str:
+        return "enable_community_translations"
+
+    def valuespec(self) -> ValueSpec:
+        return Checkbox(
+            title=_("Enable community translated languages (not supported)"),
+            label=_("Enable community translated languages"),
+            help=_(
+                'Show/Hide community translated languages in the "Language" dropdown (User > Edit '
+                "profile). Note that these translations are contributed by the Checkmk community "
+                "and thus no liability is assumed for their validity.<br>"
+                "If this setting is turned from 'on' to 'off' while a user has set a community "
+                "translated language, the user's language is changed to 'English'."
+            ),
+        )
+
+    def need_restart(self):
+        return True
+
+
+@config_variable_registry.register
+class ConfigVariableDefaultLanguage(ConfigVariable):
+    def group(self) -> Type[ConfigVariableGroup]:
+        return ConfigVariableGroupUserInterface
+
+    def domain(self) -> Type[ABCConfigDomain]:
+        return ConfigDomainGUI
+
+    def ident(self) -> str:
+        return "default_language"
+
+    def valuespec(self) -> ValueSpec:
+        return DropdownChoice(title=_("Default language"), choices=get_languages())
+
+    def in_global_settings(self) -> bool:
+        return False
 
 
 @config_variable_registry.register
@@ -1213,7 +1259,7 @@ class ConfigVariableUserLocalizations(ConfigVariable):
                             title=_("Translations"),
                             elements=lambda: [
                                 (l or "en", TextInput(title=a, size=32))
-                                for (l, a) in cmk.gui.i18n.get_languages()
+                                for (l, a) in get_languages()
                             ],
                             columns=2,
                         ),

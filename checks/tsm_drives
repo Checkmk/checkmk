@@ -50,7 +50,7 @@ def check_tsm_drives(item, params, info):
         if len(line) >= 5:
             inst, library, drive, state, online = line[:5]
             libdev = "%s / %s" % (library, drive)
-            if item == libdev or item == inst + " / " + libdev:
+            if item in {libdev, inst + " / " + libdev}:
                 if len(line) >= 6:
                     serial = line[5]
                     infotext = "[%s] " % serial

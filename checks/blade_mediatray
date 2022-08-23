@@ -21,7 +21,7 @@ def check_blade_mediatray(_no_item, _no_params, info):
     communicating = info[0][1]
     if present != "1":
         return (2, "media tray not present")
-    elif communicating != "1":
+    if communicating != "1":
         return (2, "media tray not communicating")
     return (0, "media tray present and communicating")
 

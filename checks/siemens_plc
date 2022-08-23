@@ -271,7 +271,7 @@ def check_siemens_plc_cpu_state(_no_item, _no_params, info):
 
     if state == "S7CpuStatusRun":
         return 0, "CPU is running"
-    elif state == "S7CpuStatusStop":
+    if state == "S7CpuStatusStop":
         return 2, "CPU is stopped"
     return 3, "CPU is in unknown state"
 

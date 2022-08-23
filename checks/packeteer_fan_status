@@ -14,9 +14,9 @@ def check_packeteer_fan_status(item, _no_params, info):
     fan_status = info[0][int(item)]
     if fan_status == "1":
         return 0, "OK"
-    elif fan_status == "2":
+    if fan_status == "2":
         return 2, "Not OK"
-    elif fan_status == "3":
+    if fan_status == "3":
         return 2, "Not present"
     return None
 

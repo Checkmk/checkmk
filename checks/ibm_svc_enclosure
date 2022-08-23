@@ -127,7 +127,7 @@ def _get_ibm_svc_enclosure_dflt_header(info):
             "online_PSUs",
             "drive_slots",
         ]
-    elif len(first_line) == 13:
+    if len(first_line) == 13:
         return [
             "id",
             "status",
@@ -143,7 +143,7 @@ def _get_ibm_svc_enclosure_dflt_header(info):
             "online_PSUs",
             "drive_slots",
         ]
-    elif len(first_line) == 15:
+    if len(first_line) == 15:
         return [
             "id",
             "status",
@@ -161,7 +161,7 @@ def _get_ibm_svc_enclosure_dflt_header(info):
             "total_fan_modules",
             "online_fan_modules",
         ]
-    elif len(first_line) == 17:
+    if len(first_line) == 17:
         return [
             "id",
             "status",

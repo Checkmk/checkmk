@@ -31,7 +31,7 @@ def check_oracle_locks(item, params, info):  # pylint: disable=too-many-branches
             err = oracle_handle_ora_errors(line)
             if err is False:
                 continue
-            elif isinstance(err, tuple):
+            if isinstance(err, tuple):
                 return err
 
             if len(line) == 10:

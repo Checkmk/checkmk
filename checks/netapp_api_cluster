@@ -15,7 +15,7 @@
 
 
 def inventory_netapp_api_cluster(info):
-    data = dict([line for line in info if len(line) == 2])
+    data = {line[0]: line[1] for line in info if len(line) == 2}
     # non_ha is standalone
     if data.get("current-mode", "").lower() != "non_ha" and data.get("partner") is not None:
         return [(data.get("partner"), {"state": data.get("state", "").lower()})]
@@ -43,7 +43,7 @@ def inventory_netapp_api_cluster(info):
 
 
 def check_netapp_api_cluster(item, params, info):
-    data = dict([line for line in info if len(line) == 2])
+    data = {line[0]: line[1] for line in info if len(line) == 2}
 
     had_errors = False
     state = data.get("state").lower()

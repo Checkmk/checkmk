@@ -15,7 +15,7 @@ def check_wmic_process(item, params, info):
         psinfo = dict(zip(legend, line))
         if psinfo.get("Name") is None:
             continue
-        elif "ThreadCount" in legend and psinfo["Name"].lower() == "system idle process":
+        if "ThreadCount" in legend and psinfo["Name"].lower() == "system idle process":
             cpucores = int(psinfo["ThreadCount"])
         elif psinfo["Name"].lower() == name.lower():
             count += 1
@@ -52,10 +52,10 @@ def check_wmic_process(item, params, info):
     messages.append(msg)
 
     msg = "%.1fMB RAM" % mem_mb
-    if mem_mb >= memcrit and memcrit > 0:
+    if 0 < memcrit <= mem_mb:
         state = 2
         msg += "(!!) (critical at %d MB)" % memcrit
-    elif mem_mb >= memwarn and memwarn > 0:
+    elif 0 < memwarn <= mem_mb:
         state = max(1, state)
         msg += "(!) (warning at %d MB)" % memwarn
     messages.append(msg)

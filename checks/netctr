@@ -93,7 +93,7 @@ def check_netctr_combined(nic, params, info):
             infotxt += ", error rate %.4f%%" % error_percentage
         if error_percentage >= crit:
             return (2, infotxt, perfdata)
-        elif error_percentage >= warn:
+        if error_percentage >= warn:
             return (1, infotxt, perfdata)
         return (0, infotxt, perfdata)
 

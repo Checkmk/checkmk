@@ -38,9 +38,9 @@ def check_f5_bigip_psu(item, _no_params, info):
         if psu == item:
             if state == 1:
                 return (0, "PSU state: good")
-            elif state == 0:
+            if state == 0:
                 return (2, "PSU state: bad!!")
-            elif state == 2:
+            if state == 2:
                 return (1, "PSU state: notpresent!")
             return (3, "PSU state is unknown")
 

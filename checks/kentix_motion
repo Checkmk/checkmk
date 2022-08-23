@@ -19,7 +19,7 @@ def check_kentix_motion(item, params, info):
         for per in periods:
             per_mins_low = per[0][0] * 60 + per[0][1]
             per_mins_high = per[1][0] * 60 + per[1][1]
-            if time_mins >= per_mins_low and time_mins < per_mins_high:
+            if per_mins_low <= time_mins < per_mins_high:
                 return True
         return False
 

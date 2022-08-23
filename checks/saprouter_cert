@@ -92,7 +92,7 @@ def check_saprouter_cert(_no_item, params, parsed):
 
         return state, infotext
 
-    elif "failed" in parsed:
+    if "failed" in parsed:
         return 3, " - ".join(parsed["failed"])
     return None
 

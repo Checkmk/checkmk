@@ -89,7 +89,7 @@ def check_isc_dhcpd(item, params, parsed):
     num_leases = range_to - range_from + 1
     num_used = 0
     for lease_dec in parsed["leases"]:
-        if lease_dec >= range_from and lease_dec <= range_to:
+        if range_from <= lease_dec <= range_to:
             num_used += 1
 
     for check_result in check_dhcp_pools_levels(

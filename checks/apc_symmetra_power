@@ -23,7 +23,7 @@ def check_apc_power(item, params, info):
 
             if power != -1 and power < crit:
                 return (2, infotext, perfdata)
-            elif power != -1 and power < warn:
+            if power != -1 and power < warn:
                 return (1, infotext, perfdata)
             return (0, infotext, perfdata)
 

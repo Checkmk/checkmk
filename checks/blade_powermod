@@ -18,7 +18,7 @@ def check_blade_powermod(index, _no_param, info):
             present, status, text = line[1:]
             if present != "1":
                 return (2, "Not present")
-            elif status != "1":
+            if status != "1":
                 return (2, "%s" % text)
             return (0, "%s" % text)
     return (3, "Module %s not found in SNMP info" % index)

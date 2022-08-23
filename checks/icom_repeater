@@ -60,12 +60,10 @@ def parse_icom_repeater(info):  # pylint: disable=too-many-branches
                 pass
 
         elif line[1] == "Repeater frequency":
-            parsed["repeater_frequency"] = dict(
-                [
-                    (b.split(":")[0].lower(), int(b.split(":")[1]))
-                    for b in [a.lstrip() for a in line[2].split(",")]
-                ]
-            )
+            parsed["repeater_frequency"] = {
+                b.split(":")[0].lower(): int(b.split(":")[1])
+                for b in [a.lstrip() for a in line[2].split(",")]
+            }
 
     return parsed
 

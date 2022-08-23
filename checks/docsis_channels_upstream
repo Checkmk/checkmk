@@ -54,9 +54,9 @@ factory_settings["docsis_channels_upstream_default_levels"] = {
 
 def parse_docsis_channels_upstream(info):
     freq_info = info[0]
-    freq_info_dict = dict([(x[0], x[1:]) for x in freq_info])
-    sig_info_dict = dict([(x[0], x[1:]) for x in info[1]])
-    cm_info_dict = dict([(x[0], x[1:]) for x in info[2]])
+    freq_info_dict = {x[0]: x[1:] for x in freq_info}
+    sig_info_dict = {x[0]: x[1:] for x in info[1]}
+    cm_info_dict = {x[0]: x[1:] for x in info[2]}
 
     parsed = {}
     for endoid, (cid, freq_str) in freq_info_dict.items():

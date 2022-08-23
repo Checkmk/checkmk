@@ -131,22 +131,12 @@ special_agent_info                 = {}
         )
 
         disable_pylint = [
-            "chained-comparison",
-            "consider-iterating-dictionary",
-            "consider-using-dict-comprehension",
-            "consider-using-in",
             "function-redefined",
-            "no-else-break",
-            "no-else-continue",
-            "no-else-return",
             "pointless-string-statement",
             "redefined-outer-name",
             "reimported",
-            "simplifiable-if-expression",
             "ungrouped-imports",
-            "unnecessary-comprehension",
             "unused-variable",
-            "useless-object-inheritance",
             "wrong-import-order",
             "wrong-import-position",
         ]

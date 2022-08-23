@@ -29,7 +29,7 @@ def check_fsc_temp(item, params, info):
     for name, rawtemp, warn, crit in info:
         if name == item:
             temp = int(rawtemp)
-            if temp == -1 or temp == 4294967295:
+            if temp in {-1, 4294967295}:
                 return 3, "Sensor or component missing"
 
             return check_temperature(

@@ -15,11 +15,11 @@ def check_zebra_printer_status(item, params, info):
 
     if zebra_status == 3:
         return 0, "Printer is online and ready for the next print job"
-    elif zebra_status == 4:
+    if zebra_status == 4:
         return 0, "Printer is printing"
-    elif zebra_status == 5:
+    if zebra_status == 5:
         return 0, "Printer is warming up"
-    elif zebra_status == 1:
+    if zebra_status == 1:
         return 2, "Printer is offline"
     return 3, "Unknown printer status"
 

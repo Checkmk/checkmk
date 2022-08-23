@@ -11,7 +11,7 @@ def get_time(timefromdevice):
 
     length = len(timefromdevice)
     DateAndTime = dict({8: ">HBBBBBB", 11: ">HBBBBBBcBB"})
-    if length == 8 or length == 11:
+    if length in {8, 11}:
         timedecoded = struct.unpack(DateAndTime[length], timefromdevice.encode("latin-1"))
         if length == 8:
             timedevice = time.strftime(

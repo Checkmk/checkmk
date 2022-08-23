@@ -16,11 +16,11 @@ def check_qlogic_sanbox_fabric_element(item, _no_params, info):
         if fe_id == item:
             if fe_status == "1":
                 return 0, "Fabric Element %s is online" % fe_id
-            elif fe_status == "2":
+            if fe_status == "2":
                 return 2, "Fabric Element %s is offline" % fe_id
-            elif fe_status == "3":
+            if fe_status == "3":
                 return 1, "Fabric Element %s is testing" % fe_id
-            elif fe_status == "4":
+            if fe_status == "4":
                 return 2, "Fabric Element %s is faulty" % fe_id
             return 3, "Fabric Element %s is in unidentified status %s" % (fe_id, fe_status)
 

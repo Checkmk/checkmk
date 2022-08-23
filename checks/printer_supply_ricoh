@@ -57,10 +57,10 @@ def check_printer_supply_ricoh(item, params, parsed):
             # does not apply level. Since we don't get a proper reading
             # the best we could do would be test against 0
             return 2, "almost empty (<10%)", 0
-        elif code == -2:
+        if code == -2:
             # cartridge removed?
             return 3, "unknown level", 0
-        elif code == -3:
+        if code == -3:
             # -3 = full is based on user claim, but other walks also show
             # the device itself does not alert in this state
             return 0, "100%", 100

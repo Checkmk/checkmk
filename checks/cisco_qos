@@ -107,7 +107,7 @@ def cisco_qos_get_config_entries_by_class_id(config, class_id):
 def inventory_cisco_qos(info):
     if len(info) == 12:
         ifs = dict(info[0])
-        config = dict([(".".join(oid.split(".")[-2:]), value) for oid, value in info[3]])
+        config = {".".join(oid.split(".")[-2:]): value for oid, value in info[3]}
         if_names = dict(info[6])
 
         # Find all interfaces for each class and create one service for each pair
@@ -135,9 +135,9 @@ def check_cisco_qos(item, params, info):  # pylint: disable=too-many-branches
     ifs = dict(info[0])
     policies = dict(info[1])
     classes = dict(info[2])
-    config = dict([(".".join(oid.split(".")[-2:]), value) for oid, value in info[3]])
-    post_bytes = dict([(".".join(oid.split(".")[-2:]), value) for oid, value in info[4]])
-    drop_bytes = dict([(".".join(oid.split(".")[-2:]), value) for oid, value in info[5]])
+    config = {".".join(oid.split(".")[-2:]): value for oid, value in info[3]}
+    post_bytes = {".".join(oid.split(".")[-2:]): value for oid, value in info[4]}
+    drop_bytes = {".".join(oid.split(".")[-2:]): value for oid, value in info[5]}
     if_names = dict(info[6])
     if_speeds = dict(info[7])
     parents = dict(info[8])

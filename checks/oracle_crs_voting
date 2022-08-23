@@ -32,17 +32,13 @@ def check_oracle_crs_voting(_no_item, _no_params, info):
         state = 0
         infotext = "%d Voting Disks found. %s" % (votecount, votedisk)
         return state, infotext
-    elif votecount == 0:
+    if votecount == 0:
         # cssd could not start without an existing voting disk!
         raise MKCounterWrapped("No Voting Disk(s) found. Maybe the cssd/crsd is not running!")
-    else:
-        state = 2
-        infotext = "missing Voting Disks (!!). %d Votes found %s" % (votecount, votedisk)
-        return state, infotext
 
-    # In case of missing information we assume that the clusterware
-    # is not running and we simple skip the result
-    raise MKCounterWrapped("No Voting Disk(s) found. Maybe the cssd/crsd is not running!")
+    state = 2
+    infotext = "missing Voting Disks (!!). %d Votes found %s" % (votecount, votedisk)
+    return state, infotext
 
 
 check_info["oracle_crs_voting"] = {

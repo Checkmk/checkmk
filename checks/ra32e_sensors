@@ -23,11 +23,11 @@ def parse_ra32e_sensors(info):
 
         if values_until(2):
             return "temp"
-        elif values_until(3):
+        if values_until(3):
             return "temp/active"
-        elif values_until(4):
+        if values_until(4):
             return "temp/analog"
-        elif values_until(5):
+        if values_until(5):
             return "temp/humidity"
         return "unknown"
 

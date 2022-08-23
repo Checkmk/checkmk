@@ -65,7 +65,7 @@ def check_cisco_power(item, no_params, info):
             )
             if state == 1:
                 return 0, "%s" % output
-            elif state == 2:
+            if state == 2:
                 return 1, "%s" % output
             return 2, "%s" % output
     return None

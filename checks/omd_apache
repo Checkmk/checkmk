@@ -47,14 +47,14 @@ def check_omd_apache(item, _no_params, parsed):
 
     if item not in parsed:
         return
-    elif not parsed[item]:
+    if not parsed[item]:
         yield 0, "No activity since last check"
         return
 
     for line in parsed[item]:
         if len(line) < 3:
             continue
-        elif len(line) == 4:
+        if len(line) == 4:
             url, _status, size_bytes, microsec = line
         else:
             url = " ".join(line[:-3])

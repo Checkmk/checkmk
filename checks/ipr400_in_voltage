@@ -22,7 +22,7 @@ def check_ipr400_in_voltage(item, params, info):
 
     if power <= crit:
         return 2, infotext + ", " + limitstext, perfdata
-    elif power <= warn:
+    if power <= warn:
         return 1, infotext + ", " + limitstext, perfdata
     return 0, infotext, perfdata
 

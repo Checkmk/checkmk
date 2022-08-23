@@ -179,7 +179,7 @@ def check_md(item, _no_params, parsed):  # pylint: disable=too-many-branches
 
     raid_state = data["raid_state"]
     infotext = "Status: %s" % raid_state
-    if raid_state == "active" or raid_state == "active(auto-read-only)":
+    if raid_state in {"active", "active(auto-read-only)"}:
         state = 0
     else:
         infotext += " (should be 'active')"

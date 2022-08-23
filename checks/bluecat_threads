@@ -18,11 +18,12 @@ def check_bluecat_threads(item, params, info):
     if "levels" in params and params["levels"] != "no_levels":
         warn, crit = params["levels"][1]
     perfdata = [("threads", nthreads, warn, crit, 0)]
+
     if crit is not None and nthreads >= crit:
-        return (2, "%d threads (critical at %d)" % (nthreads, crit), perfdata)
-    elif warn is not None and nthreads >= warn:
-        return (1, "%d threads (warning at %d)" % (nthreads, warn), perfdata)
-    return (0, "%d threads" % (nthreads,), perfdata)
+        return 2, "%d threads (critical at %d)" % (nthreads, crit), perfdata
+    if warn is not None and nthreads >= warn:
+        return 1, "%d threads (warning at %d)" % (nthreads, warn), perfdata
+    return 0, "%d threads" % (nthreads,), perfdata
 
 
 check_info["bluecat_threads"] = {

@@ -56,7 +56,7 @@ def check_h3c_lanswitch_cpu(item, params, info):
 
             if util > crit:
                 return (2, infotext, perfdata)
-            elif util > warn:
+            if util > warn:
                 return (1, infotext, perfdata)
             return (0, infotext, perfdata)
 

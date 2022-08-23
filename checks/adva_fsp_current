@@ -35,7 +35,7 @@ def check_adva_fsp_current(item, _no_params, info):
 
             if current <= 0:
                 return 3, "Invalid sensor data"
-            elif current >= upper_threshold:
+            if current >= upper_threshold:
                 return 2, infotext, perfdata
             return 0, infotext, perfdata
     return None

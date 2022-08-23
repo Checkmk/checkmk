@@ -38,19 +38,19 @@ def check_brocade_sys_mem(item, params, parsed):
     if not params:
         perfdata = [("mem_used_percent", mem_used_percent)]
         return 0, infotext, perfdata
+
+    warn, crit = params
+    perfdata = [("mem_used_percent", mem_used_percent, warn, crit)]
+    levelstext = " (warn/crit at %d/%d%%)" % (warn, crit)
+    if mem_used_percent >= crit:
+        status = 2
+    elif mem_used_percent >= warn:
+        status = 1
     else:
-        warn, crit = params
-        perfdata = [("mem_used_percent", mem_used_percent, warn, crit)]
-        levelstext = " (warn/crit at %d/%d%%)" % (warn, crit)
-        if mem_used_percent >= crit:
-            status = 2
-        elif mem_used_percent >= warn:
-            status = 1
-        else:
-            status = 0
-        if status:
-            infotext += levelstext
-        return status, infotext, perfdata
+        status = 0
+    if status:
+        infotext += levelstext
+    return status, infotext, perfdata
 
 
 check_info["brocade_sys.mem"] = {

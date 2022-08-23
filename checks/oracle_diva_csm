@@ -49,9 +49,9 @@ def inventory_oracle_diva_csm_status(name, idx, info):
 def status_result_oracle_diva_csm(reading):
     if reading == "1":
         return 0, "online"
-    elif reading == "2":
+    if reading == "2":
         return 2, "offline"
-    elif reading == "3":
+    if reading == "3":
         return 1, "unknown"
     return 3, "unexpected state"
 

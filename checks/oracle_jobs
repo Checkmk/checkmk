@@ -42,7 +42,7 @@ def inventory_oracle_jobs(info):
         if len(line) <= 2:
             continue
         # old format < RDBMS 12.1
-        elif 3 <= len(line) <= 10:
+        if 3 <= len(line) <= 10:
             yield "%s.%s.%s" % (line[0], line[1], line[2]), {}
         else:
             # new format: sid.pdb_name.job_owner.job_name
@@ -64,7 +64,7 @@ def check_oracle_jobs(item, params, info):  # pylint: disable=too-many-branches
             # ignore wrong/corrupted lines
             continue
 
-        elif line[1].startswith(" Debug "):
+        if line[1].startswith(" Debug "):
             # Skip invalid lines from Agent
             continue
 
@@ -191,7 +191,7 @@ def check_oracle_jobs(item, params, info):  # pylint: disable=too-many-branches
             state = max(state, 1)
     output.append(txt)
 
-    if job_runtime == "" or job_runtime == "SCHEDULED":
+    if job_runtime in {"", "SCHEDULED"}:
         last_duration = 0
     else:
         last_duration = int(job_runtime.replace(".", ",").split(",", 1)[0])

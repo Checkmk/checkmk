@@ -67,28 +67,28 @@ def check_silverpeak(_item, _params, parsed):
     if alarm_cnt == 0:
         yield 0, "No active alarms."
         return
-    else:
-        alarms = parsed["alarms"]
 
-        cnt_ok = len([alarm for alarm in alarms if alarm["state"] == 0])
-        cnt_warn = len([alarm for alarm in alarms if alarm["state"] == 1])
-        cnt_crit = len([alarm for alarm in alarms if alarm["state"] == 2])
-        cnt_unkn = len([alarm for alarm in alarms if alarm["state"] == 3])
+    alarms = parsed["alarms"]
 
-        yield 0, "%s active alarms. OK: %s, WARN: %s, CRIT: %s, UNKNOWN: %s" % (
-            alarm_cnt,
-            cnt_ok,
-            cnt_warn,
-            cnt_crit,
-            cnt_unkn,
+    cnt_ok = len([alarm for alarm in alarms if alarm["state"] == 0])
+    cnt_warn = len([alarm for alarm in alarms if alarm["state"] == 1])
+    cnt_crit = len([alarm for alarm in alarms if alarm["state"] == 2])
+    cnt_unkn = len([alarm for alarm in alarms if alarm["state"] == 3])
+
+    yield 0, "%s active alarms. OK: %s, WARN: %s, CRIT: %s, UNKNOWN: %s" % (
+        alarm_cnt,
+        cnt_ok,
+        cnt_warn,
+        cnt_crit,
+        cnt_unkn,
+    )
+
+    for elem in alarms:
+        yield elem["state"], "\nAlarm: %s, Alarm-Source: %s, Severity: %s" % (
+            elem["descr"],
+            elem["source"],
+            elem["severity_as_text"],
         )
-
-        for elem in alarms:
-            yield elem["state"], "\nAlarm: %s, Alarm-Source: %s, Severity: %s" % (
-                elem["descr"],
-                elem["source"],
-                elem["severity_as_text"],
-            )
 
 
 check_info["silverpeak_VX6000"] = {

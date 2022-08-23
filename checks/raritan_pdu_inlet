@@ -13,7 +13,7 @@ from cmk.base.check_legacy_includes.raritan import *  # pylint: disable=wildcard
 
 
 def parse_raritan_pdu_inlet(info):
-    precisions = dict([(oid_end, int(decimals)) for oid_end, decimals in info[0]])
+    precisions = {oid_end: int(decimals) for oid_end, decimals in info[0]}
     parsed = {}
     for oid_end, availability, sensor_state, value in info[1]:
         if availability == "1":

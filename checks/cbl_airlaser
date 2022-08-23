@@ -159,11 +159,11 @@ def check_cbl_airlaser_status(item, _no_params, info):
 
     if status == "1":
         return (0, "Airlaser: normal operation")
-    elif status == "2":
+    if status == "2":
         return (1, "Airlaser: testing mode")
-    elif status == "3":
+    if status == "3":
         return (1, "Airlaser: warning condition")
-    elif status == "4":
+    if status == "4":
         return (2, "Airlaser: a component has failed self-tests")
 
     return (3, "Unknown data from agent")

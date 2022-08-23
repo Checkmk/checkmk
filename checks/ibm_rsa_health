@@ -34,12 +34,12 @@ def check_ibm_rsa_health(_no_item, _no_params, info):
 
     state = info[0][0]
     if state == "255":
-        return (0, "no problem found")
-    elif state in ["0", "2"]:
-        return (2, infotext)
-    elif state == "4":
-        return (1, infotext)
-    return (3, infotext)
+        return 0, "no problem found"
+    if state in ["0", "2"]:
+        return 2, infotext
+    if state == "4":
+        return 1, infotext
+    return 3, infotext
 
 
 check_info["ibm_rsa_health"] = {

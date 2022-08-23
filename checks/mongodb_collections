@@ -97,7 +97,7 @@ def _mongodb_collections_split_namespace(namespace):
         names = namespace.split(".", 1)
         if len(names) > 1:
             return names[0], names[1]
-        elif len(names) > 0:
+        if len(names) > 0:
             return names[0], ""
     except ValueError:
         pass
@@ -109,9 +109,9 @@ def _mongodb_collections_split_namespace(namespace):
 def _mongodb_collections_get_perfdata_key(key):
     if key == "size":
         return "mongodb_collection_size"
-    elif key == "storageSize":
+    if key == "storageSize":
         return "mongodb_collection_storage_size"
-    elif key == "totalIndexSize":
+    if key == "totalIndexSize":
         return "mongodb_collection_total_index_size"
     return None
 

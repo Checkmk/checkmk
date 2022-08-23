@@ -17,13 +17,13 @@ def check_casa_fan(item, no_params, info):
             fan_status = info[1][idx][1]
             if fan_status == "1":
                 return (0, "%s RPM" % speed)
-            elif fan_status == "3":
+            if fan_status == "3":
                 return (1, "%s RPM, running over threshold (!)" % speed)
-            elif fan_status == "2":
+            if fan_status == "2":
                 return (1, "%s RPM, running under threshold (!)" % speed)
-            elif fan_status == "0":
+            if fan_status == "0":
                 return (3, "%s RPM, unknown fan status (!)" % speed)
-            elif fan_status == "4":
+            if fan_status == "4":
                 return (2, "FAN Failure (!!)")
     return (3, "Fan %s not found in snmp output" % item)
 

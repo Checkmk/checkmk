@@ -27,11 +27,11 @@ def check_blade_health(_no_item, _no_params, info):
 
     if state == "255":
         return (0, "State is good")
-    elif state == "2":
+    if state == "2":
         return (1, "State is degraded (non critical)" + descr)
-    elif state == "4":
+    if state == "4":
         return (1, "State is degraded (system level)" + descr)
-    elif state == "0":
+    if state == "0":
         return (2, "State is critical!" + descr)
     return (3, "Undefined state code %s%s" % (state, descr))
 

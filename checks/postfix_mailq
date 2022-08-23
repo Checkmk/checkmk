@@ -66,9 +66,9 @@ def postfix_mailq_to_bytes(value, uom):
     uom = uom.lower()
     if uom == "kbytes":
         return value * 1024
-    elif uom == "mbytes":
+    if uom == "mbytes":
         return value * 1024 * 1024
-    elif uom == "gbytes":
+    if uom == "gbytes":
         return value * 1024 * 1024 * 1024
     return None
 

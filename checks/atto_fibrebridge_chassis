@@ -74,7 +74,7 @@ def check_atto_fibrebridge_chassis(_no_item, _no_params, parsed):
     throughput_status = parsed["throughput_status"]
     if throughput_status == "1":
         return 0, "Normal"
-    elif throughput_status == "2":
+    if throughput_status == "2":
         return 1, "Warning"
     return None
 

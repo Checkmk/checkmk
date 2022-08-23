@@ -239,16 +239,12 @@ def check_mongodb_primary_election(_item, _params, status_dict):
     last_primary_dict = get_item_state("mongodb_primary_election", {})
 
     # check if primary or election date has changed between checks
-    primary_name_changed = (
-        True
-        if last_primary_dict and last_primary_dict.get("name", primary_name) != primary_name
-        else False
+    primary_name_changed = bool(
+        last_primary_dict and last_primary_dict.get("name", primary_name) != primary_name
     )
-    election_date_changed = (
-        True
-        if last_primary_dict
+    election_date_changed = bool(
+        last_primary_dict
         and last_primary_dict.get("election_time", primary_election_time) != primary_election_time
-        else False
     )
 
     # warning if primary has changed
@@ -301,9 +297,9 @@ def _get_primary(member_list):
         if member.get("state", -1) == ReplicaState.PRIMARY:
             primary = member
             continue
-        elif member.get("state", -1) == ReplicaState.ARBITER:
+        if member.get("state", -1) == ReplicaState.ARBITER:
             # ignore arbiters(7)
             continue
-        else:
-            secondaries.append(member)
+
+        secondaries.append(member)
     return primary, secondaries

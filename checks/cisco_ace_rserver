@@ -8,15 +8,15 @@
 def parse_framework_mib_inet_address(ip_address_type, ip_address):
     if ip_address_type == 1:
         return "%d.%d.%d.%d" % tuple(ip_address)
-    elif ip_address_type == 2:
+    if ip_address_type == 2:
         return "%x:%x:%x:%x:%x:%x:%x:%x" % tuple(ip_address)
-    elif ip_address_type == 3:
+    if ip_address_type == 3:
         return "%d.%d.%d.%d%%%d%d%d%d" % tuple(ip_address)
-    elif ip_address_type == 4:
+    if ip_address_type == 4:
         return "%x:%x:%x:%x:%x:%x:%x:%x%%%d%d%d%d" % tuple(ip_address)
-    elif ip_address_type == 5:  # Means DNS name - Reconvert to ASCII string
+    if ip_address_type == 5:  # Means DNS name - Reconvert to ASCII string
         return "".join([chr(x) for x in ip_address])
-    elif ip_address_type == 0:  # Unknown address type - represent as hex string
+    if ip_address_type == 0:  # Unknown address type - represent as hex string
         return "".join(["%x" % byte for byte in ip_address])
     return None
 
@@ -62,7 +62,7 @@ def check_cisco_ace_rserver(item, _no_params, info):
 
     for name, ip_address_type, ip_address, descr, admin_status, oper_status, conns in info:
         ip_addr = parse_framework_mib_inet_address(ip_address_type, ip_address)
-        if name == item or ip_addr == item or descr == item:
+        if item in {name, ip_addr, descr}:
             admin_state = admin_stati[admin_status]
             state, state_txt = oper_stati[oper_status]
             if admin_status == "2" and state == 2:

@@ -34,7 +34,7 @@ def check_ifoperstatus(item, targetstate, info):
                 isinstance(targetstate, list) and operstatus in targetstate
             ):
                 return (0, "status is %s" % operstatus)
-            elif operstatus == "up":
+            if operstatus == "up":
                 return (1, "port used, but should not be")
             return (2, "status is %s" % operstatus)
 

@@ -11,7 +11,7 @@ def inventory_quantum_libsmall_door(info):
 def check_quantum_libsmall_door(_no_item, _no_params, info):
     if info[0][0] == "1":
         return 2, "Library door open"
-    elif info[0][0] == "2":
+    if info[0][0] == "2":
         return 0, "Library door closed"
     return 3, "Library door status unknown"
 

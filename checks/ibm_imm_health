@@ -26,11 +26,11 @@ def check_ibm_imm_health(_no_item, _no_params, info):
     state = info[0][0]
     if state == "255":
         return (0, "no problem found")
-    elif state == "0":
+    if state == "0":
         return (2, infotext + " - manual log clearing needed to recover state")
-    elif state == "2":
+    if state == "2":
         return (2, infotext)
-    elif state == "4":
+    if state == "4":
         return (1, infotext)
     return (3, infotext)
 

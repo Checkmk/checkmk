@@ -68,7 +68,7 @@ def check_aironet_clients(item, params, info):
 
     if neg * avg <= neg * crit:
         return (2, infotxt, perfdata)
-    elif neg * avg <= neg * warn:
+    if neg * avg <= neg * warn:
         return (1, infotxt, perfdata)
     return (0, infotxt, perfdata)
 

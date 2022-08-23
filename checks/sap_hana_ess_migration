@@ -51,7 +51,7 @@ def check_sap_hana_ess_migration(item, params, data):
         raise MKCounterWrapped("Login into database failed.")
 
     key = None
-    for ident in sap_hana_ess_migration_state_map.keys():
+    for ident in sap_hana_ess_migration_state_map:
         if ident.lower() in data["log"].lower():
             key = ident
 

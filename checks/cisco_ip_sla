@@ -67,7 +67,7 @@ def parse_cisco_ip_sla(info):
     def to_ip_address(int_list):
         if len(int_list) == 4:
             return "%d.%d.%d.%d" % tuple(int_list)
-        elif len(int_list) == 6:
+        if len(int_list) == 6:
             return "%d:%d:%d:%d:%d:%d" % tuple(int_list)
         return ""
 

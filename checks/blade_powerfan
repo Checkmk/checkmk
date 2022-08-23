@@ -21,13 +21,13 @@ def check_blade_powerfan(item, params, info):
         speedperc_int = saveint(speedperc)
         if present != "1":
             return (2, "Fan not present", perfdata)
-        elif status != "1":
+        if status != "1":
             return (2, "Status not OK", perfdata)
-        elif ctrlstate != "0":
+        if ctrlstate != "0":
             return (2, "Controller state not OK", perfdata)
-        elif speedperc_int <= crit_perc:
+        if speedperc_int <= crit_perc:
             return (2, "Speed at %d%% of max (crit at %d%%)" % (speedperc_int, crit_perc), perfdata)
-        elif speedperc_int <= warn_perc:
+        if speedperc_int <= warn_perc:
             return (
                 1,
                 "Speed at %d%% of max (warning at %d%%)" % (speedperc_int, warn_perc),

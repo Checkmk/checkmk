@@ -127,7 +127,7 @@ def check_elasticsearch_cluster_health_shards(no_item, params, parsed):
         infotext = values[1]
         warn, crit = params.get(shard) or (None, None)
 
-        if shard == "active_primary_shards" or shard == "active_shards":
+        if shard in {"active_primary_shards", "active_shards"}:
             yield check_levels(
                 int(value),
                 shard,

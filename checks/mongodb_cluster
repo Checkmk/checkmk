@@ -463,7 +463,7 @@ def _mongodb_cluster_split_namespace(namespace):
         names = namespace.split(".", 1)
         if len(names) > 1:
             return names[0], names[1]
-        elif len(names) > 0:
+        if len(names) > 0:
             return names[0], ""
     except ValueError:
         pass

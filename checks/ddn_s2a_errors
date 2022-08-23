@@ -58,18 +58,18 @@ def check_ddn_s2a_errors(item, params, parsed):
         infotext = infotext_formatstring % value
         if levels is None:
             return 0, infotext
+
+        warn, crit = levels
+        levelstext = " (warn/crit at %d/%d errors)" % (warn, crit)
+        if value >= crit:
+            status = 2
+            infotext += levelstext
+        elif value >= warn:
+            status = 1
+            infotext += levelstext
         else:
-            warn, crit = levels
-            levelstext = " (warn/crit at %d/%d errors)" % (warn, crit)
-            if value >= crit:
-                status = 2
-                infotext += levelstext
-            elif value >= warn:
-                status = 1
-                infotext += levelstext
-            else:
-                status = 0
-            return status, infotext
+            status = 0
+        return status, infotext
 
     nr = int(item) - 1
     link_failure_errs = parsed["link_failure_errs"][nr]

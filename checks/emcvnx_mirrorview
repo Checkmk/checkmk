@@ -78,7 +78,7 @@ def parse_emcvnx_mirrorview(info):
         if " ".join(line).startswith("Unable to validate the identity of the server."):
             break
 
-        elif line[0] == "MirrorView Name":
+        if line[0] == "MirrorView Name":
             lun_name = line[1].replace("_", " ").replace("Mirror", "").strip()
             instance = parsed.setdefault(lun_name, {})
             continue

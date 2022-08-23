@@ -287,8 +287,8 @@ def check_esx_vsphere_vm_hb_status(_no_item, params, section):
         if vm_status == "gray":
             return state, "No VMware Tools installed, outdated or not running"
         return state, "Heartbeat status is %s" % vm_status
-    else:
-        return 3, "Unknown heartbeat status %s" % vm_status
+
+    return 3, "Unknown heartbeat status %s" % vm_status
 
 
 check_info["esx_vsphere_vm.heartbeat"] = {

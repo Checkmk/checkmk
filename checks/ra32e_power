@@ -15,7 +15,7 @@ def check_ra32e_power(item, params, info):
 
     if power == "1":
         return 0, "unit is running on AC/Utility power"
-    elif power == "0":
+    if power == "0":
         return 1, "unit is running on battery backup power"
     return 3, "unknown status"
 

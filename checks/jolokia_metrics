@@ -60,7 +60,7 @@ def jolokia_metrics_app(info, split_item):
     parsed = jolokia_metrics_parse(info)
     if parsed.get(inst, "") is None:
         raise MKCounterWrapped("No information from Jolokia agent")
-    if not inst in parsed or not app in parsed[inst].get("apps", {}):
+    if inst not in parsed or app not in parsed[inst].get("apps", {}):
         return None
     return parsed[inst]["apps"][app]
 
@@ -69,7 +69,7 @@ def jolokia_metrics_app(info, split_item):
 def jolokia_metrics_serv(info, split_item):
     inst, app, serv = split_item
     app = jolokia_metrics_app(info, (inst, app))
-    if not app or not serv in app.get("servlets", {}):
+    if not app or serv not in app.get("servlets", {}):
         return None
     return app["servlets"][serv]
 
@@ -104,7 +104,7 @@ def inventory_jolokia_metrics_serv(info):
 def check_jolokia_metrics_serv_req(item, params, info):
     lo_crit, lo_warn, hi_warn, hi_crit = params
     serv = jolokia_metrics_serv(info, item.split())
-    if not serv or not "Requests" in serv:
+    if not serv or "Requests" not in serv:
         return (3, "data not found in agent output")
     req = saveint(serv["Requests"])
 
@@ -175,13 +175,13 @@ def check_jolokia_metrics_app_state(item, _unused, info):
         else:
             app_state = 2
     if app_state == 3:
-        return (3, "data not found in agent output")
-    elif app_state == 0:
-        return (0, "application is running")
-    elif app_state == 2:
-        return (2, "application is not running (Running: %s)")
+        return 3, "data not found in agent output"
+    if app_state == 0:
+        return 0, "application is running"
+    if app_state == 2:
+        return 2, "application is not running (Running: %s)"
 
-    return (3, "error in agent output")
+    return 3, "error in agent output"
 
 
 check_info["jolokia_metrics.app_state"] = {

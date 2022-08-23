@@ -68,7 +68,7 @@ def check_cmciii_lcp_water(item, params, parsed):
     def parse_status(status_name):
         if status_name.lower() == "ok":
             return 0
-        elif status_name.lower() == "warning":
+        if status_name.lower() == "warning":
             return 1
         return 2
 

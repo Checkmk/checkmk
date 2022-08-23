@@ -48,8 +48,8 @@ def check_casa_cpu_util(item, params, info):
         infotext = "%d%% %s%s" % (value, error_text, levels_text)
         perfdata = [("util", value, warn, crit, 0, 100)]
         return (state, infotext, perfdata)
-    else:
-        return 3, "%s not found in SNMP output" % item
+
+    return 3, "%s not found in SNMP output" % item
 
 
 check_info["casa_cpu_util"] = {

@@ -97,7 +97,7 @@ def check_j4p_performance_mem(item, params, info):
     warn, crit = params
     parsed = j4p_performance_parse(info)
     if item not in parsed:
-        return (3, "data not found in agent output")
+        return 3, "data not found in agent output"
     d = parsed[item]
     mb = 1024 * 1024.0
     heap = saveint(d["HeapMemoryUsage"]) / mb  # fixed: true-division
@@ -115,10 +115,10 @@ def check_j4p_performance_mem(item, params, info):
         crit,
     )
     if total >= crit:
-        return (2, infotext, perfdata)
-    elif total >= warn:
-        return (1, infotext, perfdata)
-    return (0, infotext, perfdata)
+        return 2, infotext, perfdata
+    if total >= warn:
+        return 1, infotext, perfdata
+    return 0, infotext, perfdata
 
 
 check_info["j4p_performance.mem"] = {

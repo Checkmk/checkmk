@@ -12,7 +12,7 @@ def inventory_netapp_api_status(info):
 
 
 def check_netapp_api_status(item, _no_params, info):
-    data = dict([line for line in info if len(line) == 2])
+    data = {line[0]: line[1] for line in info if len(line) == 2}
 
     if data.get("status"):
         state = (

@@ -36,16 +36,16 @@ def check_hitachi_hnas_vnode(item, _no_params, info):
             nodetype = ""
             if status == 0 or status >= len(statusmap):
                 return 3, "EVS reports unidentified status %s" % status
-            else:
-                if is_admin == "0":
-                    nodetype = "This is a service node."
-                if is_admin == "1":
-                    nodetype = "This is a administrative node."
-                return (
-                    statusmap[status][1],
-                    "EVS is hosted by PNode %s and reports status %s. %s"
-                    % (hosted_by, statusmap[status][0], nodetype),
-                )
+
+            if is_admin == "0":
+                nodetype = "This is a service node."
+            if is_admin == "1":
+                nodetype = "This is a administrative node."
+            return (
+                statusmap[status][1],
+                "EVS is hosted by PNode %s and reports status %s. %s"
+                % (hosted_by, statusmap[status][0], nodetype),
+            )
 
     return 3, "SNMP did not report a status of this EVS"
 

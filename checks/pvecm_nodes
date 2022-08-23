@@ -56,7 +56,7 @@ def parse_pvecm_nodes(info):
             parse_func = _parse_version_eq_2
             continue
 
-        elif line == ["Nodeid", "Votes", "Name"]:
+        if line == ["Nodeid", "Votes", "Name"]:
             header = ["node_id", "votes", "name"]
             parse_func = _parse_version_gt_2
             continue

@@ -42,7 +42,7 @@ def check_fsc_ipmi_mem_status(name, _no_params, info):
     for line in info:
         if line[0] == "E":
             return (3, "Error in agent plugin output (%s)" % " ".join(line[1:]))
-        elif line[1] == name:
+        if line[1] == name:
             return fsc_ipmi_mem_status_levels[int(line[2])]
 
     return (3, "item %s not found" % name)

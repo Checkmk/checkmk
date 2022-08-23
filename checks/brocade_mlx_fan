@@ -24,9 +24,9 @@ def check_brocade_mlx_fan(item, _no_params, info):
         if brocade_mlx_fan_combine_item(fan_id, fan_descr) == item:
             if fan_state == "2":
                 return 0, "Fan reports state: normal"
-            elif fan_state == "3":
+            if fan_state == "3":
                 return 2, "Fan reports state: failure"
-            elif fan_state == "1":
+            if fan_state == "1":
                 return 3, "Fan reports state: other"
             return 3, "Fan reports an unhandled state (%s)" % fan_state
     return 3, "Fan not found"

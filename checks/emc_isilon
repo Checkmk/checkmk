@@ -28,12 +28,12 @@ def check_emc_isilon_clusterhealth(item, _no_params, info):
     statusmap = ("ok", "attn", "down", "invalid")
     if status >= len(statusmap):
         return 3, "ClusterHealth reports unidentified status %s" % status
+
+    if status == 0:
+        rc = 0
     else:
-        if status == 0:
-            rc = 0
-        else:
-            rc = 2
-        return rc, "ClusterHealth reports status %s" % statusmap[status]
+        rc = 2
+    return rc, "ClusterHealth reports status %s" % statusmap[status]
 
 
 check_info["emc_isilon.clusterhealth"] = {
@@ -58,12 +58,12 @@ def check_emc_isilon_nodehealth(item, _no_params, info):
     nodename = info[1][0][0]
     if status >= len(statusmap):
         return 3, "nodeHealth reports unidentified status %s" % status
+
+    if status == 0:
+        rc = 0
     else:
-        if status == 0:
-            rc = 0
-        else:
-            rc = 2
-        return rc, "nodeHealth for %s reports status %s" % (nodename, statusmap[status])
+        rc = 2
+    return rc, "nodeHealth for %s reports status %s" % (nodename, statusmap[status])
 
 
 check_info["emc_isilon.nodehealth"] = {

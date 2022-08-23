@@ -54,10 +54,10 @@ def check_ftp_arguments(params):  # pylint: disable=too-many-branches
 def check_ftp_get_item(params):
     if isinstance(params, tuple):
         return "FTP " + params[0]
-    else:
-        if "port" in params and params["port"] != 21:
-            return "FTP Port " + str(params["port"])
-        return "FTP"
+
+    if "port" in params and params["port"] != 21:
+        return "FTP Port " + str(params["port"])
+    return "FTP"
 
 
 active_check_info["ftp"] = {

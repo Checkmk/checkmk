@@ -282,9 +282,7 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
     def get_sym(state):
         if state == 0:
             return ""
-        else:
-            sym = state_markers[state]
-        return sym
+        return state_markers[state]
 
     statetxt, state = fc_port_admstates.get(int(admstate), ("unknown", 3))
     sym = get_sym(state)

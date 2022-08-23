@@ -45,7 +45,7 @@ def check_vms_system_procs(_no_item, params, info):
         perfdata = [("procs", procs, warn, crit, 0)]
         if procs >= crit:
             return (2, "%d processes (critical at %d)" % (procs, crit), perfdata)
-        elif procs >= warn:
+        if procs >= warn:
             return (1, "%d processes (warning at %d)" % (procs, warn), perfdata)
 
     return (0, "%d processes" % (procs,), perfdata)

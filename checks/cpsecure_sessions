@@ -26,18 +26,18 @@ def check_cpsecure_sessions(item, params, info):
     for service, enabled, sessions in info:
         if item == service:
             if enabled != "1":
-                return (1, "service not enabled")
+                return 1, "service not enabled"
             num_sessions = int(sessions)
             warn, crit = params
             perfdata = [("sessions", num_sessions, warn, crit, 0)]
 
             if num_sessions >= crit:
-                return (2, "%s sessions (critical at %d)" % (sessions, crit), perfdata)
-            elif num_sessions >= warn:
-                return (1, "%s sessions (warning at %d)" % (sessions, warn), perfdata)
-            return (0, "%s sessions" % sessions, perfdata)
+                return 2, "%s sessions (critical at %d)" % (sessions, crit), perfdata
+            if num_sessions >= warn:
+                return 1, "%s sessions (warning at %d)" % (sessions, warn), perfdata
+            return 0, "%s sessions" % sessions, perfdata
 
-    return (3, "service not found")
+    return 3, "service not found"
 
 
 check_info["cpsecure_sessions"] = {

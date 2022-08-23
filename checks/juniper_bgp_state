@@ -10,7 +10,7 @@ def juniper_bgp_state_create_item(peering_entry):
     try:
         if len(peering_entry) == 4:
             return clean_v4_address(peering_entry)
-        elif len(peering_entry) == 16:
+        if len(peering_entry) == 16:
             return clean_v6_address(peering_entry)
     except (ValueError, IndexError):
         pass

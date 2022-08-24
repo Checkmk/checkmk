@@ -1,0 +1,23 @@
+Title: Use internal folder ID in audit log on moving hosts
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1661351032
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p12
+
+If hosts were moved between folders, the audit log uses the ID of the folder.
+
+This could lead to unclear log entries if folder were renamed in the past,
+because the ID does not change on folder renaming.
+
+We now added the internal ID of the folder for a better understanding of this
+log entries.
+
+For example:
+
+"Moved host from "Main directory" (ID: 21016475a7554c11afca66ae620b4c52) to
+"myfolder1/myfolder2" (ID: fffa1507d66248cd9da17ac3cc5103d5)"

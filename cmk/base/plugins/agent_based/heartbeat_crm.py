@@ -68,10 +68,7 @@ def heartbeat_crm_parse_general(general_section: Sequence[Sequence[str]]) -> _Cl
     dc = None
     num_nodes = None
     num_resources = None
-    for raw_line in general_section:
-        # lines are prefixed with _* in pacemaker versions 2.0.3, e.g.:
-        # _* Current DC: ha02 (version 2.0.3-5.el8_2.1-4b1f869f0f)
-        line = raw_line[1:] if not raw_line[0].isalnum() else raw_line
+    for line in general_section:
         line_txt = " ".join(line)
         title = line_txt.split(":", 1)[0]
 
@@ -206,6 +203,31 @@ def heartbeat_crm_parse_failed_resource_actions(
     return joined
 
 
+def _sanitise_line(line: Sequence[str]) -> Sequence[str]:
+    """Ensure consistency across different versions of pacemaker.
+
+    - General information should not contain any leading punctuation
+    - List elements are denoted with "_"
+
+    Examples:
+
+    >>> _sanitise_line(["a"])
+    ['a']
+    >>> _sanitise_line(["_*", "a"])
+    ['a']
+    >>> _sanitise_line(["_", "a"])
+    ['_', 'a']
+    """
+    leading_character = line[0]
+
+    if leading_character == "_*":
+        # lines are prefixed with _* in pacemaker versions 2.0.3, e.g.:
+        # _* Current DC: ha02 (version 2.0.3-5.el8_2.1-4b1f869f0f)
+        return line[1:]
+
+    return line
+
+
 def _partition_string_table(iter_string_table, next_section_headers=None):
     if not next_section_headers:
         yield from (l for l in iter_string_table)
@@ -214,7 +236,7 @@ def _partition_string_table(iter_string_table, next_section_headers=None):
     while (line := next(iter_string_table, None)) is not None and " ".join(
         line
     ).lower() not in next_section_headers:
-        yield line
+        yield _sanitise_line(line)
 
 
 def parse_heartbeat_crm(string_table: StringTable) -> Optional[Section]:

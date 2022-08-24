@@ -104,6 +104,10 @@ def get_wato_menu_items() -> List[TopicMenuTopic]:
     return [v for k, v in sorted(by_topic.items(), key=lambda e: (e[0].sort_index, e[0].title))]
 
 
+def _hide_menu() -> bool:
+    return site_config.is_wato_slave_site() and not active_config.wato_enabled
+
+
 mega_menu_registry.register(
     MegaMenu(
         name="setup",
@@ -112,6 +116,7 @@ mega_menu_registry.register(
         sort_index=15,
         topics=get_wato_menu_items,
         search=search.SetupSearch("setup_search"),
+        hide=_hide_menu,
     )
 )
 

@@ -23,7 +23,6 @@ import cmk.utils
 import cmk.utils.plugin_registry
 import cmk.utils.render
 
-import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKGeneralException, MKInternalError, MKUserError

@@ -40,7 +40,6 @@ import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.forms as forms
-import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.query_filters as query_filters

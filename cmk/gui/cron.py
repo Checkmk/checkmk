@@ -9,7 +9,6 @@ from pathlib import Path
 import cmk.utils.paths
 import cmk.utils.store as store
 
-import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKGeneralException

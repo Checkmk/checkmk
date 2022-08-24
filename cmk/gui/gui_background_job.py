@@ -11,7 +11,6 @@ import cmk.utils.render
 from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.background_job as background_job
-import cmk.gui.i18n
 import cmk.gui.log as log
 import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import Breadcrumb

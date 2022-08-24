@@ -11,7 +11,6 @@ from typing import Dict, Iterator, List
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
-import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.sites as sites
 import cmk.gui.view_utils

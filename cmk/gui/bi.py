@@ -18,7 +18,6 @@ from cmk.utils.bi.bi_packs import BIAggregationPacks
 from cmk.utils.bi.bi_trees import BICompiledRule
 from cmk.utils.type_defs import HostName, ServiceName
 
-import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.utils
 import cmk.gui.utils.escaping as escaping

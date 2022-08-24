@@ -15,7 +15,6 @@ from livestatus import SiteId
 
 import cmk.utils.paths
 
-import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.sites as sites

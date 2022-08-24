@@ -19,7 +19,6 @@ import cmk.utils.version as cmk_version
 from cmk.utils.site import omd_site, url_prefix
 from cmk.utils.type_defs import UserId
 
-import cmk.gui.i18n
 import cmk.gui.mobile
 import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils

@@ -39,7 +39,6 @@ from cmk.utils.site import omd_site
 from cmk.utils.structured_data import SDPath, StructuredDataNode
 from cmk.utils.type_defs import HostName, ServiceName, UserId
 
-import cmk.gui.i18n
 import cmk.gui.log as log
 import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes

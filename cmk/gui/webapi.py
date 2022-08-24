@@ -13,7 +13,6 @@ import dicttoxml  # type: ignore[import]
 
 import cmk.utils.store as store
 
-import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping

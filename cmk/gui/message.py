@@ -14,7 +14,6 @@ import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.notify import ensure_utf8
 
-import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils

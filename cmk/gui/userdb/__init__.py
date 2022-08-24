@@ -41,7 +41,6 @@ from cmk.utils.type_defs import ContactgroupName, UserId
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.hooks as hooks
-import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.config import active_config

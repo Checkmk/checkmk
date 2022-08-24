@@ -65,7 +65,6 @@ import cmk.gui.background_job as background_job
 import cmk.gui.backup as backup
 import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job
-import cmk.gui.i18n
 import cmk.gui.mkeventd
 import cmk.gui.plugins.wato.utils
 import cmk.gui.plugins.wato.utils.base_modes

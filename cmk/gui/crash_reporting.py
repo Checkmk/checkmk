@@ -21,7 +21,6 @@ import cmk.utils.version as cmk_version
 from cmk.utils.crash_reporting import CrashInfo
 
 import cmk.gui.forms as forms
-import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.userdb as userdb
 import cmk.gui.utils.escaping as escaping

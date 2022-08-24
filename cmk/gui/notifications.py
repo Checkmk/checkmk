@@ -10,7 +10,6 @@ from livestatus import LivestatusResponse, MKLivestatusNotFoundError
 
 import cmk.utils.render
 
-import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb

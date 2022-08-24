@@ -79,7 +79,6 @@ from cmk.gui.watolib.global_settings import (
     save_global_settings,
     save_site_global_settings,
 )
-from cmk.gui.watolib.notifications import load_notification_rules, save_notification_rules
 from cmk.gui.watolib.rulesets import RulesetCollection
 from cmk.gui.watolib.sites import site_globals_editable, SiteManagementFactory
 from cmk.gui.watolib.timeperiods import TimeperiodSpec
@@ -240,10 +239,6 @@ class UpdateConfig:
             (self._rewrite_py2_inventory_data, "Rewriting inventory data"),
             (self._sanitize_audit_log, "Sanitize audit log (Werk #13330)"),
             (self._rename_discovered_host_label_files, "Rename discovered host label files"),
-            (
-                self._rewrite_servicenow_notification_config,
-                "Rewriting notification configuration for ServiceNow",
-            ),
             (self._add_site_ca_to_trusted_cas, "Adding site CA to trusted CAs"),
             (self._check_ec_rules, "Disabling unsafe EC rules"),
         ]
@@ -905,42 +900,6 @@ class UpdateConfig:
                     "Rename discovered host labels file from '%s' to '%s'", old_path, new_path
                 )
                 old_path.rename(new_path)
-
-    def _rewrite_servicenow_notification_config(self) -> None:
-        # Management type "case" introduced with werk #13096 in 2.1.0i1
-        notification_rules = load_notification_rules()
-        for index, rule in enumerate(notification_rules):
-            plugin_name = rule["notify_plugin"][0]
-            if plugin_name != "servicenow":
-                continue
-
-            params = rule["notify_plugin"][1]
-            if "mgmt_types" in params:
-                continue
-
-            assert isinstance(params, dict)
-
-            incident_params = {
-                key: params.pop(key)
-                for key in [
-                    "caller",
-                    "host_short_desc",
-                    "svc_short_desc",
-                    "host_desc",
-                    "svc_desc",
-                    "urgency",
-                    "impact",
-                    "ack_state",
-                    "recovery_state",
-                    "dt_state",
-                ]
-                if key in params
-            }
-            params["mgmt_type"] = ("incident", incident_params)
-
-            notification_rules[index]["notify_plugin"] = (plugin_name, params)
-
-        save_notification_rules(notification_rules)
 
     def _add_site_ca_to_trusted_cas(self) -> None:
         site_ca = (

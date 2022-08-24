@@ -1,0 +1,19 @@
+Title: Fix <ii>Percentage of service problems</ii> dashlet in custom dashboards
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1662131213
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Depending on the current configuration, the dashlet <ii>Percentage of service problems</ii> reported
+"Sorry, you cannot create combined graphs for more than 100 objects"
+when used in custom dashboards. This regression was introduced with werk <a href="https://checkmk.com/werk/14423">#14423</a>.
+
+Note that this werk only affects custom dashboards, not builtin dashboards such as the main
+dashboard. It is possible that werk #14423 results in the error message also being displayed in the
+main dashboard, on which this werk has no impact. Note that this probably means that the
+<ii>Percentage of total service problems</ii> graph in the main dashboard was showing wrong values
+prior to werk #14423.

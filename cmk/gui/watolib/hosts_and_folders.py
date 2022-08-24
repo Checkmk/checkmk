@@ -2586,7 +2586,13 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             new_folder_text = target_folder.path() or self.root_folder().title()
             add_change(
                 "move-host",
-                _('Moved host from "%s" to "%s"') % (old_folder_text, new_folder_text),
+                _('Moved host from "%s" (ID: %s) to "%s" (ID: %s)')
+                % (
+                    old_folder_text,
+                    self._id,
+                    new_folder_text,
+                    target_folder._id,
+                ),
                 object_ref=host.object_ref(),
                 sites=affected_sites,
             )

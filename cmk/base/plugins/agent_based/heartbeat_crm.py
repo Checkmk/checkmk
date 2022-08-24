@@ -60,6 +60,20 @@ def _parse_for_error(first_line: str) -> Optional[str]:
     return None
 
 
+def _title(title: str) -> str:
+    """
+    >>> _title("")
+    ''
+    >>> _title("Foo")
+    'Foo'
+    >>> _title("Foo:")
+    'Foo'
+    >>> _title("Foo: bar baz")
+    'Foo'
+    """
+    return title.split(":", 1)[0]
+
+
 def heartbeat_crm_parse_general(general_section: Sequence[Sequence[str]]) -> _Cluster:
     if (error := _parse_for_error(" ".join(general_section[0]))) is not None:
         return _Cluster("", None, None, None, error)
@@ -70,7 +84,7 @@ def heartbeat_crm_parse_general(general_section: Sequence[Sequence[str]]) -> _Cl
     num_resources = None
     for line in general_section:
         line_txt = " ".join(line)
-        title = line_txt.split(":", 1)[0]
+        title = _title(line_txt)
 
         if title == "Last updated":
             if "Last change:" in line_txt:
@@ -124,18 +138,18 @@ def heartbeat_crm_parse_resources(  # pylint: disable=too-many-branches
 
         if line.startswith("Resource Group:"):
             # Resource group
-            resources[parts[2]] = []
-            resource = parts[2]
+            resource = _title(parts[2])
+            resources[resource] = []
             mode = "resourcegroup"
         elif line.startswith("Clone Set:"):
             # Clone set
-            resources[parts[2]] = []
-            resource = parts[2]
+            resource = _title(parts[2])
+            resources[resource] = []
             mode = "cloneset"
         elif line.startswith("Master/Slave Set:"):
             # Master/Slave set
-            resources[parts[2]] = []
-            resource = parts[2]
+            resource = _title(parts[2])
+            resources[resource] = []
             mode = "masterslaveset"
         elif line[0] == "_":
             # Resource group or set member
@@ -217,13 +231,28 @@ def _sanitise_line(line: Sequence[str]) -> Sequence[str]:
     ['a']
     >>> _sanitise_line(["_", "a"])
     ['_', 'a']
+    >>> _sanitise_line(["_", "*", "a"])
+    ['_', 'a']
     """
     leading_character = line[0]
 
     if leading_character == "_*":
-        # lines are prefixed with _* in pacemaker versions 2.0.3, e.g.:
+        # lines are prefixed with _* in pacemaker versions >= 2, e.g.:
         # _* Current DC: ha02 (version 2.0.3-5.el8_2.1-4b1f869f0f)
         return line[1:]
+
+    if leading_character != "_":
+        return line
+
+    if line[1] == "*":
+        # list elements are prefixed with "_ *" (artibrary number of spaces)
+        # in pacemaker versions >= 2, e.g.:
+        # _  * qpid_lvm	(ocf::heartbeat:LVM-activate):	 Started cbgdevd01
+        # the leading character to denote a list is changed to "_" for
+        # consistency, and to recognise list elements during later parsing
+        sanitised_line = list(line[2:])
+        sanitised_line.insert(0, "_")
+        return sanitised_line
 
     return line
 

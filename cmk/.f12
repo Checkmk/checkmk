@@ -31,6 +31,7 @@ PYTHON3_PATHS=(
     update_config.py
     automations
     base
+    bi
 )
 
 echo "Copy CRE files..."

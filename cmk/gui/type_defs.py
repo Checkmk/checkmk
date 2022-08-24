@@ -215,7 +215,7 @@ class PainterSpec:
         self,
     ) -> tuple[
         PainterNameSpec,
-        tuple[VisualName, VisualName] | None,
+        tuple[VisualTypeName, VisualName] | None,
         ColumnName | None,
         ColumnName | None,
         str | None,

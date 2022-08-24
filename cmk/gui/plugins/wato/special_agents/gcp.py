@@ -33,6 +33,7 @@ def _valuespec_special_agents_gcp():
                         ("filestore", _("Filestore")),
                         ("redis", _("Memorystore Redis")),
                         ("gce_storage", _("GCE Storage")),
+                        ("http_lb", _("HTTP(S) load balancer")),
                     ],
                     default_value=[
                         "gcs",
@@ -43,6 +44,7 @@ def _valuespec_special_agents_gcp():
                         "filestore",
                         "redis",
                         "gce_storage",
+                        "http_lb",
                     ],
                     allow_empty=True,
                 ),

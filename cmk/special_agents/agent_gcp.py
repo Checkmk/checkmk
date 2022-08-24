@@ -827,6 +827,26 @@ GCE_STORAGE = Service(
     ],
 )
 
+HTTP_LOADBALANCER = Service(
+    name="http_lb",
+    # this is shown as a "load balancer" in the cloud console
+    default_groupby="resource.url_map_name",
+    metrics=[
+        Metric(
+            name="loadbalancing.googleapis.com/https/total_latencies",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_PERCENTILE_99,
+            ),
+        ),
+        Metric(
+            name="loadbalancing.googleapis.com/https/request_count",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_SUM,
+            ),
+        ),
+    ],
+)
+
 
 def default_labeler(asset: Asset) -> Labels:
     if "labels" in asset.asset.resource.data:
@@ -915,7 +935,10 @@ GCE = PiggyBackService(
     ],
 )
 
-SERVICES = {s.name: s for s in [GCS, FUNCTIONS, RUN, CLOUDSQL, FILESTORE, REDIS, GCE_STORAGE]}
+SERVICES = {
+    s.name: s
+    for s in [GCS, FUNCTIONS, RUN, CLOUDSQL, FILESTORE, REDIS, GCE_STORAGE, HTTP_LOADBALANCER]
+}
 PIGGY_BACK_SERVICES = {s.name: s for s in [GCE]}
 
 

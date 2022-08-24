@@ -310,7 +310,8 @@ query_fileinfo() {
     local hostname="$4"
     cat <<QUERY
 SELECT '/SAP HANA $sid $instance $db/' || FILE_NAME, FILE_SIZE,
-SECONDS_BETWEEN('1970-01-01 00:00:00', FILE_MTIME) AS UNIXMTIME FROM
+SECONDS_BETWEEN('1970-01-01 00:00:00', FILE_MTIME) - (SELECT VALUE FROM
+M_HOST_INFORMATION WHERE KEY = 'timezone_offset') AS UNIXMTIME FROM
 M_TRACEFILES WHERE HOST = '$hostname'
 QUERY
 }
@@ -672,8 +673,22 @@ get_sections() {
     mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_proc "$hostname")" "$credentials" "$ssloption"
 
     echo "<<<sap_hana_fileinfo:sep(59)>>>"
+    # File age is calculated as
+
+    # reference timestamp (aka current time: 'date +%s') - file mtime (retrieved from the database using 'query_fileinfo')
+
+    # The logical order of operation should therefore be:
+    # 1. Get file mtime from SAP Hana
+    # 2. Determine current time as a reference timestamp to be used to
+    #    calculate file age
+
+    # If the reference timestamp is determined before the file mtime is
+    # collected, this could give rise to a scenario in which the file mtime is newer
+    # than the reference timestamp, leading to a negative file age.
+
+    filestats=$(mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_fileinfo "$sid" "$instance" "$db" "$hostname")" "$credentials" "$ssloption")
     date +%s
-    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_fileinfo "$sid" "$instance" "$db" "$hostname")" "$credentials" "$ssloption"
+    echo "${filestats}"
 
     # echo "<<<sap_hana_threads:sep(59)>>>"
     # echo $tenant_name

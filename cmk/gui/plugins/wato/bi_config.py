@@ -40,10 +40,14 @@ import cmk.gui.forms as forms
 # TODO: forbidden import, integrate into bi_config... ?
 # TODO: forbidden import, integrate into bi_config... ?
 import cmk.gui.plugins.wato.bi_valuespecs as bi_valuespecs
-import cmk.gui.sites
 import cmk.gui.watolib.changes as _changes
 import cmk.gui.weblib as weblib
-from cmk.gui.bi import bi_livestatus_query, BIManager, get_cached_bi_packs
+from cmk.gui.bi import (
+    all_sites_with_id_and_online,
+    bi_livestatus_query,
+    BIManager,
+    get_cached_bi_packs,
+)
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
@@ -1436,7 +1440,7 @@ class BIAggregationForm(Dictionary):
 @page_registry.register_page("ajax_bi_rule_preview")
 class AjaxBIRulePreview(AjaxPage):
     def page(self) -> PageResult:
-        sites_callback = SitesCallback(cmk.gui.sites.states, bi_livestatus_query)
+        sites_callback = SitesCallback(all_sites_with_id_and_online, bi_livestatus_query, _)
         compiler = BICompiler(BIManager.bi_configuration_file(), sites_callback)
         compiler.prepare_for_compilation(compiler.compute_current_configstatus()["online_sites"])
 
@@ -1479,7 +1483,7 @@ class AjaxBIRulePreview(AjaxPage):
 class AjaxBIAggregationPreview(AjaxPage):
     def page(self) -> PageResult:
         # Prepare compiler
-        sites_callback = SitesCallback(cmk.gui.sites.states, bi_livestatus_query)
+        sites_callback = SitesCallback(all_sites_with_id_and_online, bi_livestatus_query, _)
         compiler = BICompiler(BIManager.bi_configuration_file(), sites_callback)
         compiler.prepare_for_compilation(compiler.compute_current_configstatus()["online_sites"])
 

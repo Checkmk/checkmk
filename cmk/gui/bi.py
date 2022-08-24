@@ -973,9 +973,16 @@ def singlehost_table(
     return rows
 
 
+def all_sites_with_id_and_online() -> list[tuple[SiteId, bool]]:
+    return [
+        (site_id, site_status["state"] == "online")
+        for site_id, site_status in sites.states().items()
+    ]
+
+
 class BIManager:
     def __init__(self) -> None:
-        sites_callback = SitesCallback(cmk.gui.sites.states, bi_livestatus_query)
+        sites_callback = SitesCallback(all_sites_with_id_and_online, bi_livestatus_query, _)
         self.compiler = BICompiler(self.bi_configuration_file(), sites_callback)
         self.compiler.load_compiled_aggregations()
         self.status_fetcher = BIStatusFetcher(sites_callback)
@@ -1001,7 +1008,8 @@ def get_cached_bi_manager() -> BIManager:
 @request_memoize()
 def get_cached_bi_compiler() -> BICompiler:
     return BICompiler(
-        BIManager.bi_configuration_file(), SitesCallback(cmk.gui.sites.states, bi_livestatus_query)
+        BIManager.bi_configuration_file(),
+        SitesCallback(all_sites_with_id_and_online, bi_livestatus_query, _),
     )
 
 

@@ -95,8 +95,9 @@ class QueryCallback(Protocol):
 
 
 class SitesCallback(NamedTuple):
-    states: Callable
+    all_sites_with_id_and_online: Callable[[], list[tuple[SiteId, bool]]]
     query: QueryCallback
+    translate: Callable[[str], str]
 
 
 MapGroup2Value = dict[str, str]
@@ -405,9 +406,9 @@ class ABCBISearcher(ABC):
 
 class ABCBIStatusFetcher(ABC):
     def __init__(self, sites_callback: SitesCallback) -> None:
-        self._sites_callback = sites_callback
+        self.sites_callback = sites_callback
         self.states: BIStatusInfo = {}
-        self.assumed_states: dict = {}
+        self.assumed_states: dict[RequiredBIElement, HostState | ServiceState] = {}
 
 
 class ABCBICompiledNode(ABC):

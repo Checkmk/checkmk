@@ -63,7 +63,7 @@ def get_cache_dir() -> Path:
 
 class BIStructureFetcher:
     def __init__(self, sites_callback: SitesCallback) -> None:
-        self._sites_callback = sites_callback
+        self.sites_callback = sites_callback
         self._hosts: dict[HostName, BIHostData] = {}
         self._have_sites: set[SiteId] = set()
         self._path_lock_structure_cache = Path(get_cache_dir(), "bi_structure_cache.LOCK")
@@ -104,7 +104,7 @@ class BIStructureFetcher:
         host_query = "GET hosts\nColumns: %s\nCache: reload\n" % " ".join(
             self._host_structure_columns()
         )
-        host_rows = self._sites_callback.query(
+        host_rows = self.sites_callback.query(
             host_query,
             list(only_sites.keys()),
             output_format=LivestatusOutputFormat.JSON,
@@ -115,7 +115,7 @@ class BIStructureFetcher:
             self._service_structure_columns()
         )
         host_service_lookup: dict[HostName, list] = {}
-        for row in self._sites_callback.query(
+        for row in self.sites_callback.query(
             service_query,
             list(only_sites.keys()),
             output_format=LivestatusOutputFormat.JSON,
@@ -336,7 +336,7 @@ class BIStatusFetcher(ABCBIStatusFetcher):
 
         query = "GET hosts\nColumns: %s\n" % " ".join(self.get_status_columns()) + host_filter
         return self.create_bi_status_data(
-            self._sites_callback.query(
+            self.sites_callback.query(
                 query, list(req_sites), output_format=LivestatusOutputFormat.JSON
             )
         )
@@ -357,7 +357,7 @@ class BIStatusFetcher(ABCBIStatusFetcher):
         query = "GET hosts%s\n" % ("bygroup" if bygroup else "")
         query += "Columns: " + (" ".join(columns)) + "\n"
         query += filter_header
-        data = self._sites_callback.query(query, only_sites)
+        data = self.sites_callback.query(query, only_sites)
 
         # Now determine aggregation branches which include the site hosts
         site_hosts = {BIHostSpec(row[0], row[1]) for row in data}
@@ -390,7 +390,7 @@ class BIStatusFetcher(ABCBIStatusFetcher):
             query = "GET hosts%s\n" % ("bygroup" if bygroup else "")
             query += "Columns: " + (" ".join(columns)) + "\n"
             query += host_filter
-            data.extend(self._sites_callback.query(query, list(remaining_sites)))
+            data.extend(self.sites_callback.query(query, list(remaining_sites)))
 
         return self.create_bi_status_data(data, extra_columns=host_columns)
 

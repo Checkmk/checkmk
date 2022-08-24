@@ -42,8 +42,6 @@ from cmk.utils.caching import instance_method_lru_cache
 from cmk.utils.defines import host_state_name, service_state_name
 from cmk.utils.type_defs import HostName, HostState, ServiceName, ServiceState
 
-from cmk.gui.i18n import _  # pylint: disable=cmk-module-layer-violation
-
 #   .--Leaf----------------------------------------------------------------.
 #   |                         _                __                          |
 #   |                        | |    ___  __ _ / _|                         |
@@ -135,9 +133,11 @@ class BICompiledLeaf(ABCBICompiledNode):
         assumed_result = None
         if use_assumed:
             assumed_state = bi_status_fetcher.assumed_states.get(
-                (self.site_id, self.host_name, self.service_description)
+                RequiredBIElement(self.site_id, self.host_name, self.service_description)
             )
             if assumed_state is not None:
+                # Make the i18n call explicit for our tooling
+                _ = bi_status_fetcher.sites_callback.translate
                 assumed_result = NodeComputeResult(
                     int(assumed_state),
                     downtime_state,

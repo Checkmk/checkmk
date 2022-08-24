@@ -205,10 +205,10 @@ class BICompiler:
         result = self._sites_callback.query("GET status\nColumns: program_start\nCache: reload")
         program_start_times = {row[0]: int(row[1]) for row in result}
 
-        for site_id, values in self._sites_callback.states().items():
+        for site_id, site_is_online in self._sites_callback.all_sites_with_id_and_online():
             start_time = program_start_times.get(site_id, 0)
             current_configstatus["known_sites"].add((site_id, start_time))
-            if values.get("state") == "online":
+            if site_is_online:
                 current_configstatus["online_sites"].add((site_id, start_time))
 
         return current_configstatus

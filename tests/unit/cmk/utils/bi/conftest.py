@@ -41,6 +41,9 @@ def mock_query_callback(
     return LivestatusResponse([])
 
 
+DUMMY_SITES_CALLBACK = SitesCallback(lambda: [], mock_query_callback, lambda s: s)
+
+
 @pytest.fixture(scope="function", name="bi_searcher")
 def _bi_searcher():
     yield BISearcher()
@@ -48,7 +51,7 @@ def _bi_searcher():
 
 @pytest.fixture(scope="function")
 def bi_searcher_with_sample_config(bi_searcher):
-    structure_fetcher = BIStructureFetcher(SitesCallback(lambda: None, mock_query_callback))
+    structure_fetcher = BIStructureFetcher(DUMMY_SITES_CALLBACK)
     structure_fetcher.add_site_data(SiteId("heute"), sample_config.bi_structure_states)
     bi_searcher.set_hosts(structure_fetcher.hosts)
     yield bi_searcher
@@ -56,13 +59,13 @@ def bi_searcher_with_sample_config(bi_searcher):
 
 @pytest.fixture(scope="function")
 def bi_status_fetcher():
-    status_fetcher = BIStatusFetcher(SitesCallback(lambda: None, mock_query_callback))
+    status_fetcher = BIStatusFetcher(DUMMY_SITES_CALLBACK)
     yield status_fetcher
 
 
 @pytest.fixture(scope="function")
 def bi_structure_fetcher():
-    structure_fetcher = BIStructureFetcher(SitesCallback(lambda: None, mock_query_callback))
+    structure_fetcher = BIStructureFetcher(DUMMY_SITES_CALLBACK)
     yield structure_fetcher
 
 

@@ -10,9 +10,9 @@ from typing import NamedTuple
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.type_defs import HostName, ServiceName
 
-from cmk.bi.bi_data_fetcher import BIStatusFetcher
-from cmk.bi.bi_lib import RequiredBIElement
-from cmk.bi.bi_trees import BICompiledAggregation, BICompiledRule, NodeResultBundle
+from cmk.bi.data_fetcher import BIStatusFetcher
+from cmk.bi.lib import RequiredBIElement
+from cmk.bi.trees import BICompiledAggregation, BICompiledRule, NodeResultBundle
 
 
 class BIAggregationFilter(NamedTuple):

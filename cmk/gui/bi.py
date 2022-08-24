@@ -40,12 +40,12 @@ from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless, urlencode_vars
 from cmk.gui.valuespec import DropdownChoiceEntries
 
-from cmk.bi.bi_compiler import BICompiler
-from cmk.bi.bi_computer import BIAggregationFilter, BIComputer
-from cmk.bi.bi_data_fetcher import BIStatusFetcher
-from cmk.bi.bi_lib import BIStates, NodeResultBundle, SitesCallback
-from cmk.bi.bi_packs import BIAggregationPacks
-from cmk.bi.bi_trees import BICompiledRule
+from cmk.bi.compiler import BICompiler
+from cmk.bi.computer import BIAggregationFilter, BIComputer
+from cmk.bi.data_fetcher import BIStatusFetcher
+from cmk.bi.lib import BIStates, NodeResultBundle, SitesCallback
+from cmk.bi.packs import BIAggregationPacks
+from cmk.bi.trees import BICompiledRule
 
 
 @permission_section_registry.register

@@ -59,14 +59,14 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.view_utils import CSSClass
 
-from cmk.bi.bi_data_fetcher import (
+from cmk.bi.data_fetcher import (
     BIHostSpec,
     BIHostStatusInfoRow,
     BIServiceWithFullState,
     BIStatusInfo,
 )
-from cmk.bi.bi_lib import NodeComputeResult, NodeResultBundle
-from cmk.bi.bi_trees import BICompiledAggregation, BICompiledRule
+from cmk.bi.lib import NodeComputeResult, NodeResultBundle
+from cmk.bi.trees import BICompiledAggregation, BICompiledRule
 
 AVMode = str  # TODO: Improve this type
 AVObjectType = Literal["host", "service", "bi"]  # TODO: Improve this type

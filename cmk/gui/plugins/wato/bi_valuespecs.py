@@ -33,14 +33,14 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.hosts_and_folders import Folder
 
-from cmk.bi import bi_actions
-from cmk.bi.bi_aggregation_functions import (
+from cmk.bi import actions
+from cmk.bi.aggregation_functions import (
     BIAggregationFunctionBest,
     BIAggregationFunctionCountOK,
     BIAggregationFunctionWorst,
 )
-from cmk.bi.bi_lib import ABCBIAction, ABCBIAggregationFunction, ABCBISearch
-from cmk.bi.bi_search import BIEmptySearch, BIFixedArgumentsSearch, BIHostSearch, BIServiceSearch
+from cmk.bi.lib import ABCBIAction, ABCBIAggregationFunction, ABCBISearch
+from cmk.bi.search import BIEmptySearch, BIFixedArgumentsSearch, BIHostSearch, BIServiceSearch
 
 #   .--Generic converter---------------------------------------------------.
 #   |                   ____                      _                        |
@@ -492,7 +492,7 @@ bi_config_action_registry = BIConfigActionRegistry()
 
 
 @bi_config_action_registry.register
-class BIConfigCallARuleAction(bi_actions.BICallARuleAction, ABCBIConfigAction):
+class BIConfigCallARuleAction(actions.BICallARuleAction, ABCBIConfigAction):
     @classmethod
     def cascading_dropdown_choice_element(cls):
         return (cls.type(), _("Call a Rule"), cls.valuespec())
@@ -607,7 +607,7 @@ def is_contact_for_pack(bi_pack) -> bool:  # type:ignore[no-untyped-def]
 
 
 @bi_config_action_registry.register
-class BIConfigStateOfHostAction(bi_actions.BIStateOfHostAction, ABCBIConfigAction):
+class BIConfigStateOfHostAction(actions.BIStateOfHostAction, ABCBIConfigAction):
     @classmethod
     def cascading_dropdown_choice_element(cls):
         return (cls.type(), _("State of a host"), cls.valuespec())
@@ -639,7 +639,7 @@ class BIConfigStateOfHostAction(bi_actions.BIStateOfHostAction, ABCBIConfigActio
 
 
 @bi_config_action_registry.register
-class BIConfigStateOfServiceAction(bi_actions.BIStateOfServiceAction, ABCBIConfigAction):
+class BIConfigStateOfServiceAction(actions.BIStateOfServiceAction, ABCBIConfigAction):
     @classmethod
     def cascading_dropdown_choice_element(cls):
         return (cls.type(), _("State of a service"), cls.valuespec())
@@ -674,7 +674,7 @@ class BIConfigStateOfServiceAction(bi_actions.BIStateOfServiceAction, ABCBIConfi
 
 @bi_config_action_registry.register
 class BIConfigStateOfRemainingServicesAction(
-    bi_actions.BIStateOfRemainingServicesAction, ABCBIConfigAction
+    actions.BIStateOfRemainingServicesAction, ABCBIConfigAction
 ):
     @classmethod
     def cascading_dropdown_choice_element(cls):

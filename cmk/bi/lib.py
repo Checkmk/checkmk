@@ -14,7 +14,7 @@ from marshmallow import Schema as marshmallow_Schema
 
 from livestatus import LivestatusOutputFormat, LivestatusResponse, SiteId
 
-from cmk.bi.bi_schema import Schema
+from cmk.bi.schema import Schema
 from cmk.fields import Boolean, Constant
 from cmk.fields import Dict as MDict
 from cmk.fields import Integer

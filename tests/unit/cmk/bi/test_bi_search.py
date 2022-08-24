@@ -6,7 +6,7 @@
 # pylint: disable=redefined-outer-name
 import pytest
 
-from cmk.bi.bi_search import BIEmptySearch, BIFixedArgumentsSearch, BIHostSearch, BIServiceSearch
+from cmk.bi.search import BIEmptySearch, BIFixedArgumentsSearch, BIHostSearch, BIServiceSearch
 
 
 def test_empty_search(bi_searcher) -> None:  # type:ignore[no-untyped-def]

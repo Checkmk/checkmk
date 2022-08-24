@@ -18,8 +18,8 @@ from marshmallow import fields
 
 from cmk.utils.macros import MacroMapping
 
-from cmk.bi.bi_aggregation_functions import BIAggregationFunctionBest, BIAggregationFunctionSchema
-from cmk.bi.bi_lib import (
+from cmk.bi.aggregation_functions import BIAggregationFunctionBest, BIAggregationFunctionSchema
+from cmk.bi.lib import (
     ABCBICompiledNode,
     ABCBISearcher,
     ABCWithSchema,
@@ -33,16 +33,16 @@ from cmk.bi.bi_lib import (
     ReqList,
     ReqString,
 )
-from cmk.bi.bi_node_generator import BINodeGenerator, BINodeGeneratorSchema
-from cmk.bi.bi_node_vis import BINodeVisBlockStyleSchema, BINodeVisLayoutStyleSchema
-from cmk.bi.bi_rule_interface import (
+from cmk.bi.node_generator import BINodeGenerator, BINodeGeneratorSchema
+from cmk.bi.node_vis import BINodeVisBlockStyleSchema, BINodeVisLayoutStyleSchema
+from cmk.bi.rule_interface import (
     ABCBIRule,
     bi_rule_id_registry,
     BIRuleComputationOptions,
     BIRuleProperties,
 )
-from cmk.bi.bi_schema import Schema
-from cmk.bi.bi_trees import BICompiledLeaf, BICompiledRule
+from cmk.bi.schema import Schema
+from cmk.bi.trees import BICompiledLeaf, BICompiledRule
 
 
 class BIRule(ABCBIRule, ABCWithSchema):

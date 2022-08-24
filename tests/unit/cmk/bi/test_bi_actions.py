@@ -6,13 +6,13 @@
 # pylint: disable=redefined-outer-name
 import pytest
 
-from cmk.bi.bi_actions import (
+from cmk.bi.actions import (
     BICallARuleAction,
     BIStateOfHostAction,
     BIStateOfRemainingServicesAction,
     BIStateOfServiceAction,
 )
-from cmk.bi.bi_trees import BICompiledLeaf, BICompiledRule, BIRemainingResult
+from cmk.bi.trees import BICompiledLeaf, BICompiledRule, BIRemainingResult
 
 
 @pytest.mark.parametrize(

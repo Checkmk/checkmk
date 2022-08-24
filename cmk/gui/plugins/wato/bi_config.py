@@ -114,13 +114,13 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 
-from cmk.bi.bi_actions import BICallARuleAction
-from cmk.bi.bi_aggregation import BIAggregation, BIAggregationSchema
-from cmk.bi.bi_aggregation_functions import BIAggregationFunctionSchema
-from cmk.bi.bi_compiler import BICompiler
-from cmk.bi.bi_lib import SitesCallback
-from cmk.bi.bi_packs import BIAggregationPack
-from cmk.bi.bi_rule import BIRule, BIRuleSchema
+from cmk.bi.actions import BICallARuleAction
+from cmk.bi.aggregation import BIAggregation, BIAggregationSchema
+from cmk.bi.aggregation_functions import BIAggregationFunctionSchema
+from cmk.bi.compiler import BICompiler
+from cmk.bi.lib import SitesCallback
+from cmk.bi.packs import BIAggregationPack
+from cmk.bi.rule import BIRule, BIRuleSchema
 
 
 @main_module_registry.register

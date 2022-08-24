@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Sequence, Type
 
 from cmk.utils.plugin_registry import Registry
 
-from cmk.bi.bi_lib import (
+from cmk.bi.lib import (
     ABCBICompiledNode,
     ABCBISearcher,
     ABCWithSchema,
@@ -18,8 +18,8 @@ from cmk.bi.bi_lib import (
     ReqDict,
     ReqString,
 )
-from cmk.bi.bi_node_generator_interface import ABCBINodeGenerator
-from cmk.bi.bi_schema import Schema
+from cmk.bi.node_generator_interface import ABCBINodeGenerator
+from cmk.bi.schema import Schema
 
 
 class BIRulePropertiesSchema(Schema):

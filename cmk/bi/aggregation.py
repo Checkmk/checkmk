@@ -10,7 +10,7 @@ from typing import Any, Type
 # TODO: fix duplicate type def. the original type def is in gui-managed (module layer violation)
 from cmk.utils.type_defs import HostName, ServiceName
 
-from cmk.bi.bi_lib import (
+from cmk.bi.lib import (
     ABCBICompiledNode,
     ABCBISearcher,
     BIAggregationComputationOptions,
@@ -20,11 +20,11 @@ from cmk.bi.bi_lib import (
     ReqString,
     String,
 )
-from cmk.bi.bi_node_generator import BINodeGenerator
-from cmk.bi.bi_node_vis import BIAggregationVisualizationSchema
-from cmk.bi.bi_rule import BIRule
-from cmk.bi.bi_schema import Schema
-from cmk.bi.bi_trees import BICompiledAggregation, BICompiledRule
+from cmk.bi.node_generator import BINodeGenerator
+from cmk.bi.node_vis import BIAggregationVisualizationSchema
+from cmk.bi.rule import BIRule
+from cmk.bi.schema import Schema
+from cmk.bi.trees import BICompiledAggregation, BICompiledRule
 from cmk.bi.type_defs import AggrConfigDict
 
 SCOPE_GLOBAL = None

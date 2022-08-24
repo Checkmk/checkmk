@@ -17,12 +17,12 @@ from cmk.utils.log import logger
 from cmk.utils.paths import default_config_dir
 from cmk.utils.redis import get_redis_client
 
-from cmk.bi.bi_aggregation import BIAggregation
-from cmk.bi.bi_data_fetcher import BIStructureFetcher, get_cache_dir, SiteProgramStart
-from cmk.bi.bi_lib import SitesCallback
-from cmk.bi.bi_packs import BIAggregationPacks
-from cmk.bi.bi_searcher import BISearcher
-from cmk.bi.bi_trees import BICompiledAggregation
+from cmk.bi.aggregation import BIAggregation
+from cmk.bi.data_fetcher import BIStructureFetcher, get_cache_dir, SiteProgramStart
+from cmk.bi.lib import SitesCallback
+from cmk.bi.packs import BIAggregationPacks
+from cmk.bi.searcher import BISearcher
+from cmk.bi.trees import BICompiledAggregation
 
 if TYPE_CHECKING:
     from cmk.utils.redis import RedisDecoded

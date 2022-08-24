@@ -17,7 +17,7 @@ from typing import List, Optional
 
 from cmk.utils.macros import MacroMapping
 
-from cmk.bi.bi_lib import (
+from cmk.bi.lib import (
     ABCBIAction,
     ABCBICompiledNode,
     ABCBISearch,

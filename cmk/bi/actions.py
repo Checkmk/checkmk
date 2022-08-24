@@ -9,7 +9,7 @@ from marshmallow_oneofschema import OneOfSchema
 
 from cmk.utils.macros import MacroMapping
 
-from cmk.bi.bi_lib import (
+from cmk.bi.lib import (
     ABCBIAction,
     ABCBICompiledNode,
     ABCBISearcher,
@@ -27,9 +27,9 @@ from cmk.bi.bi_lib import (
     SearchResult,
     SearchResults,
 )
-from cmk.bi.bi_rule_interface import bi_rule_id_registry
-from cmk.bi.bi_schema import Schema
-from cmk.bi.bi_trees import BICompiledLeaf, BIRemainingResult
+from cmk.bi.rule_interface import bi_rule_id_registry
+from cmk.bi.schema import Schema
+from cmk.bi.trees import BICompiledLeaf, BIRemainingResult
 
 #   .--CallARule-----------------------------------------------------------.
 #   |               ____      _ _    _    ____        _                    |

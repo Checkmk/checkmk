@@ -12,7 +12,7 @@ from marshmallow_oneofschema import OneOfSchema
 from cmk.utils.macros import MacroMapping
 from cmk.utils.type_defs import HostName
 
-from cmk.bi.bi_lib import (
+from cmk.bi.lib import (
     ABCBISearch,
     ABCBISearcher,
     bi_search_registry,
@@ -26,7 +26,7 @@ from cmk.bi.bi_lib import (
     ReqNested,
     ReqString,
 )
-from cmk.bi.bi_schema import Schema
+from cmk.bi.schema import Schema
 
 
 class BIAllHostsChoiceSchema(Schema):

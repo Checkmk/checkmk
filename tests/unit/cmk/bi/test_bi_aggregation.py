@@ -7,8 +7,8 @@
 
 import pytest
 
-from cmk.bi.bi_actions import BICallARuleAction
-from cmk.bi.bi_aggregation import BIAggregation
+from cmk.bi.actions import BICallARuleAction
+from cmk.bi.aggregation import BIAggregation
 
 from .bi_test_data import sample_config
 

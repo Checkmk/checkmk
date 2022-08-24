@@ -31,11 +31,11 @@ from cmk.gui.plugins.openapi.restful_objects import (
 from cmk.gui.plugins.openapi.utils import ProblemException, serve_json
 
 from cmk import fields
-from cmk.bi.bi_aggregation import BIAggregation, BIAggregationSchema
-from cmk.bi.bi_lib import ReqBoolean, ReqList, ReqString
-from cmk.bi.bi_packs import BIAggregationPack
-from cmk.bi.bi_rule import BIRule, BIRuleSchema
-from cmk.bi.bi_schema import Schema
+from cmk.bi.aggregation import BIAggregation, BIAggregationSchema
+from cmk.bi.lib import ReqBoolean, ReqList, ReqString
+from cmk.bi.packs import BIAggregationPack
+from cmk.bi.rule import BIRule, BIRuleSchema
+from cmk.bi.schema import Schema
 
 BI_RULE_ID = {
     "rule_id": fields.String(

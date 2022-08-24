@@ -15,20 +15,20 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 from cmk.utils.paths import var_dir
 
-from cmk.bi.bi_actions import (
+from cmk.bi.actions import (
     BICallARuleAction,
     BIStateOfHostAction,
     BIStateOfRemainingServicesAction,
     BIStateOfServiceAction,
 )
-from cmk.bi.bi_aggregation import BIAggregation, BIAggregationSchema
-from cmk.bi.bi_lib import ReqBoolean, ReqList, ReqNested, ReqString, String
-from cmk.bi.bi_node_generator import BINodeGenerator
-from cmk.bi.bi_rule import BIRule, BIRuleSchema
-from cmk.bi.bi_rule_interface import bi_rule_id_registry
-from cmk.bi.bi_sample_configs import bi_sample_config
-from cmk.bi.bi_schema import Schema
-from cmk.bi.bi_search import BIHostSearch, BIServiceSearch
+from cmk.bi.aggregation import BIAggregation, BIAggregationSchema
+from cmk.bi.lib import ReqBoolean, ReqList, ReqNested, ReqString, String
+from cmk.bi.node_generator import BINodeGenerator
+from cmk.bi.rule import BIRule, BIRuleSchema
+from cmk.bi.rule_interface import bi_rule_id_registry
+from cmk.bi.sample_configs import bi_sample_config
+from cmk.bi.schema import Schema
+from cmk.bi.search import BIHostSearch, BIServiceSearch
 
 
 class RuleReferencesResult(NamedTuple):

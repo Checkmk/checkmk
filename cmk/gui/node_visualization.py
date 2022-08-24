@@ -51,10 +51,10 @@ from cmk.gui.utils.theme import theme
 from cmk.gui.view import View
 from cmk.gui.views import ABCAjaxInitialFilters
 
-from cmk.bi.bi_aggregation_functions import BIAggregationFunctionSchema
-from cmk.bi.bi_computer import BIAggregationFilter
-from cmk.bi.bi_lib import NodeResultBundle
-from cmk.bi.bi_trees import BICompiledLeaf, BICompiledRule
+from cmk.bi.aggregation_functions import BIAggregationFunctionSchema
+from cmk.bi.computer import BIAggregationFilter
+from cmk.bi.lib import NodeResultBundle
+from cmk.bi.trees import BICompiledLeaf, BICompiledRule
 
 Mesh = Set[HostName]
 Meshes = List[Mesh]

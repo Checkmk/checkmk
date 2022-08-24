@@ -16,8 +16,8 @@ from collections.abc import Mapping
 
 from marshmallow_oneofschema import OneOfSchema
 
-from cmk.bi.bi_lib import ReqBoolean, ReqConstant, ReqInteger, ReqNested, ReqString
-from cmk.bi.bi_schema import Schema
+from cmk.bi.lib import ReqBoolean, ReqConstant, ReqInteger, ReqNested, ReqString
+from cmk.bi.schema import Schema
 
 
 class BIAggregationVisualizationSchema(Schema):

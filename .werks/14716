@@ -1,0 +1,27 @@
+Title: Local customizations might need adjustment due to structural refactorings in GUI code
+Class: feature
+Compatible: incomp
+Component: wato
+Date: 1661344938
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+This werk only affects users of non-tribe29 local customizations (single files and MKPs from non-
+tribe29 sources such as the Checkmk exchange).
+
+Two monolithic files under <tt>cmk/gui/plugins/wato/</tt> have been split up into multiple smaller
+files:
+
+LI: <tt>datasource_programs.py</tt>, which defined rules for configuring special agents, has been
+refactored into the folder <tt>datasource_programs</tt>.
+LI: <tt>active_checks.py</tt>, which defined rules for configuring active checks, has been
+refactored into the folder <tt>active_checks</tt>.
+
+Hence, any customization containing imports from any of the two dissolved files has to be
+adjusted. The new import paths are probably
+<tt>cmk.gui.plugins.wato.datasource_programs/active_checks.common</tt>.
+
+Note that this only affects non-tribe29 customizations because as of the writing of this werk, any
+customization produced by tribe29 will be obsolete with Checkmk 2.2.

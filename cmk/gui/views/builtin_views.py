@@ -4926,7 +4926,7 @@ def cmk_sites_painters() -> Sequence[PainterSpec]:
         ]
     else:
         service_painters += [
-            ("invcmksites_nagios"),
+            PainterSpec("invcmksites_nagios"),
         ]
 
     service_painters += [

@@ -10,11 +10,11 @@ from typing import Tuple as _Tuple
 from typing import TYPE_CHECKING
 from typing import Union as _Union
 
-if TYPE_CHECKING:
-    from cmk.utils.type_defs import EventRule
-    from cmk.base.notify import NotifyPluginParamsDict
-
 import cmk.utils.version as cmk_version
+
+if TYPE_CHECKING:
+    from cmk.utils.type_defs import EventRule, NotifyPluginParamsDict
+
 
 # Log level of notifications
 # 0, 1, 2 -> deprecated (transformed to 20, 20, and 10)

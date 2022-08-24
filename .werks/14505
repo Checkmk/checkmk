@@ -1,0 +1,16 @@
+Title: heartbeat_crm_resources: services not discovered under pacemaker version >= 2
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1661330101
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p11
+
+The check heartbeat_crm_resources would not discover any services when
+pacemaker version >= 2 is installed on the host system. This is for example the
+case with RHEL8. This has been fixed.
+
+The problem was due to the fact that newer versions of pacemaker show heartbeat
+information in a different format.

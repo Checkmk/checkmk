@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import typing
+
 # Example outputs from agent:
 # <<<heartbeat_crm>>>
 # ============
@@ -52,17 +54,62 @@ factory_settings["heartbeat_crm_default_levels"] = {
 _FAILED_ACTIONS_KEY = "__failed_actions__"
 
 
+def _sanitise_line(line: typing.Sequence[str]) -> typing.Sequence[str]:
+    """Ensure consistency across different versions of pacemaker.
+    - General information should not contain any leading punctuation
+    - List elements are denoted with "_"
+    Examples:
+    >>> _sanitise_line(["a"])
+    ['a']
+    >>> _sanitise_line(["_*", "a"])
+    ['a']
+    >>> _sanitise_line(["_", "a"])
+    ['_', 'a']
+    >>> _sanitise_line(["_", "*", "a"])
+    ['_', 'a']
+    """
+    leading_character = line[0]
+    if leading_character == "_*":
+        # lines are prefixed with _* in pacemaker versions >= 2, e.g.:
+        # _* Current DC: ha02 (version 2.0.3-5.el8_2.1-4b1f869f0f)
+        return line[1:]
+    if leading_character != "_":
+        return line
+    if line[1] == "*":
+        # list elements are prefixed with "_ *" (artibrary number of spaces)
+        # in pacemaker versions >= 2, e.g.:
+        # _  * qpid_lvm	(ocf::heartbeat:LVM-activate):	 Started cbgdevd01
+        # the leading character to denote a list is changed to "_" for
+        # consistency, and to recognise list elements during later parsing
+        sanitised_line = list(line[2:])
+        sanitised_line.insert(0, "_")
+        return sanitised_line
+    return line
+
+
+def _title(title: str) -> str:
+    """
+    >>> _title("")
+    ''
+    >>> _title("Foo")
+    'Foo'
+    >>> _title("Foo:")
+    'Foo'
+    >>> _title("Foo: bar baz")
+    'Foo'
+    """
+    return title.split(":", 1)[0]
+
+
 def heartbeat_crm_parse_general(info):
     last_updated = None
     dc = None
     num_nodes = None
     num_resources = None
     for raw_line in info:
-        # lines are prefixed with _* in pacemaker versions 2.0.3, e.g.:
-        # _* Current DC: ha02 (version 2.0.3-5.el8_2.1-4b1f869f0f)
-        line = raw_line[1:] if not raw_line[0].isalnum() else raw_line
+        line = _sanitise_line(raw_line)
         line_txt = " ".join(line)
-        title = line_txt.split(":", 1)[0]
+        title = _title(line_txt)
 
         if title == "Last updated":
             if "Last change:" in line_txt:
@@ -290,13 +337,14 @@ def heartbeat_crm_parse_resources(info, show="resources"):
     list_start = False
     lines = []
     mode = "single"
-    for parts in info:
+    for raw_parts in info:
+        parts = _sanitise_line(raw_parts)
         line = " ".join(parts)
 
         if "failed" in line.lower() and "actions" in line.lower():
             block_start = False
             list_start = True
-        elif not block_start and line == "Full list of resources:":
+        elif not block_start and line.lower() == "full list of resources:":
             block_start = True
             list_start = False
         elif list_start:
@@ -305,18 +353,18 @@ def heartbeat_crm_parse_resources(info, show="resources"):
         elif block_start:
             if line.startswith("Resource Group:"):
                 # Resource group
-                resources[parts[2]] = []
-                resource = parts[2]
+                resource = _title(parts[2])
+                resources[resource] = []
                 mode = "resourcegroup"
             elif line.startswith("Clone Set:"):
                 # Clone set
-                resources[parts[2]] = []
-                resource = parts[2]
+                resource = _title(parts[2])
+                resources[resource] = []
                 mode = "cloneset"
             elif line.startswith("Master/Slave Set:"):
                 # Master/Slave set
-                resources[parts[2]] = []
-                resource = parts[2]
+                resource = _title(parts[2])
+                resources[resource] = []
                 mode = "masterslaveset"
             elif line[0] == "_":
                 # Cleanup inconsistent agent output in clone set lines

@@ -78,6 +78,9 @@ class MainMenuRenderer:
             if not menu.topics():
                 continue  # Hide e.g. Setup menu when user is not permitted to see a single topic
 
+            if menu.hide():
+                continue
+
             items.append(
                 MainMenuItem(
                     name=menu.name,

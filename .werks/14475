@@ -1,0 +1,15 @@
+Title: Don't show setup menu on remote sites with WATO disabled
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1661341377
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p12
+
+The setup menu was shown on remote sites with option "Disable configuration via
+WATO on this site" enabled.
+
+Because every entry in this menu resulted in the same message that the setup
+menu can not be used, we decided to remove the menu on such sites.

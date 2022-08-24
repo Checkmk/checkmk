@@ -290,6 +290,7 @@ class MegaMenu(NamedTuple):
     topics: Callable[[], List[TopicMenuTopic]]
     search: Optional[ABCMegaMenuSearch] = None
     info_line: Optional[Callable[[], str]] = None
+    hide: Callable[[], bool] = lambda: False
 
 
 SearchQuery = str

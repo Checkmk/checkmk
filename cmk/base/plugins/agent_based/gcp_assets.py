@@ -33,6 +33,7 @@ def parse_assets(string_table: StringTable) -> AssetSection:
         AssetType("sqladmin.googleapis.com/Instance"):            lambda a: a.resource_data["name"],
         AssetType("compute.googleapis.com/Instance"):             lambda a: a.resource_data["name"],
         AssetType("compute.googleapis.com/Disk"):                 lambda a: a.resource_data["name"],
+        AssetType("compute.googleapis.com/UrlMap"):               lambda a: a.resource_data["name"],
     }
     # fmt: on
     typed_assets: dict[AssetType, AssetTypeSection] = {}

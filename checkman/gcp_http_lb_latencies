@@ -1,0 +1,21 @@
+title: GCP HTTP(S) load balancer: Latencies
+agents: gcp
+catalog: cloud/gcp
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the requests of an external HTTP(S) load balancer.
+
+ - 99th percentile of the total latency measured.
+
+ The total latency is the time from when the request is received by the
+ external HTTP(S) load balancer proxy to when the proxy received ACK from the
+ client on the last response byte.
+
+ To make this check work you have to configure the related
+ special agent {Google Cloud Platform (GCP)}.
+
+ Upper levels are configurable via the rule "GCP/HTTP(S) load balancer requests".
+
+discovery:
+ One service is created per load balancer.

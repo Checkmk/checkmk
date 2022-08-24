@@ -282,3 +282,39 @@ rulespec_registry.register(
         title=lambda: _("GCP Cost"),
     )
 )
+
+
+def _vs_gcs_http_lb_requests() -> ValueSpec:
+    return Dictionary(
+        title=_("Parameters for the  requests"),
+        elements=[("requests", Levels(title=_("Parameters for the  requests"), unit="1/second"))],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="gcp_http_lb_requests",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_gcs_http_lb_requests,
+        title=lambda: _("GCP/HTTP(S) load balancer requests"),
+    )
+)
+
+
+def _vs_gcs_http_lb_latencies() -> ValueSpec:
+    return Dictionary(
+        title=_("Parameters for the  latencies"),
+        elements=[("latencies", Levels(title=_("Parameters for the latencies"), unit="second"))],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="gcp_http_lb_latencies",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_gcs_http_lb_latencies,
+        title=lambda: _("GCP/HTTP(S) load balancer Latencies"),
+    )
+)

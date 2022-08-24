@@ -1,0 +1,17 @@
+title: GCP HTTP(S) load balancer: Requests
+agents: gcp
+catalog: cloud/gcp
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the number of request for external HTTP(S) load balancer.
+
+ - number of requests
+
+ To make this check work you have to configure the related
+ special agent {Google Cloud Platform (GCP)}.
+
+ Upper levels are configurable via the rule "GCP/HTTP(S) load balancer requests".
+
+discovery:
+ One service is created per load balancer.

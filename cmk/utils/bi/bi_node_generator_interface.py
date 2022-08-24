@@ -12,7 +12,7 @@
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-import abc
+from abc import abstractmethod
 from typing import List, Optional
 
 from cmk.utils.bi.bi_lib import (
@@ -38,6 +38,6 @@ class ABCBINodeGenerator(ABCWithSchema):
         # Can be used to limit the compilation to a specific branch, e.g. "Aggr HostA"
         self.restrict_rule_title: Optional[str] = None
 
-    @abc.abstractmethod
+    @abstractmethod
     def compile(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
         raise NotImplementedError()

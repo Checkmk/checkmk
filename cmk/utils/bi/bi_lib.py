@@ -5,12 +5,12 @@
 
 from __future__ import annotations
 
-import abc
+from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
 from functools import partial
 from typing import Any, NamedTuple, Protocol, Type, TypeVar
 
-import marshmallow
+from marshmallow import Schema as marshmallow_Schema
 
 from livestatus import LivestatusOutputFormat, LivestatusResponse, SiteId
 
@@ -35,7 +35,7 @@ SearchResults = list[SearchResult]
 ActionArgument = tuple[str, ...]
 ActionArguments = list[ActionArgument]
 
-import cmk.utils.plugin_registry as plugin_registry
+from cmk.utils import plugin_registry
 from cmk.utils.bi.type_defs import (
     ActionConfig,
     ComputationConfigDict,
@@ -165,9 +165,9 @@ class BIServiceSearchMatch(NamedTuple):
     match_groups: tuple
 
 
-class ABCWithSchema(abc.ABC):
+class ABCWithSchema(ABC):
     @classmethod
-    @abc.abstractmethod
+    @abstractmethod
     def schema(cls) -> Type[Schema]:
         raise NotImplementedError()
 
@@ -182,15 +182,15 @@ def create_nested_schema_for_class(
 
 
 def create_nested_schema(
-    base_schema: Type[marshmallow.Schema],
-    default_schema: Type[marshmallow.Schema] | None = None,
+    base_schema: Type[marshmallow_Schema],
+    default_schema: Type[marshmallow_Schema] | None = None,
     example_config: list | dict[str, Any] | None = None,
 ) -> Nested:
     """
 
-    >>> from cmk import fields
+    >>> from cmk.fields import String
     >>> class Foo(Schema):
-    ...      field = fields.String()
+    ...      field = String()
 
     >>> nested = create_nested_schema(Foo)
     >>> nested.dump_default
@@ -215,7 +215,7 @@ def create_nested_schema(
 
 
 def get_schema_default_config(
-    schema: Type[marshmallow.Schema], params: dict[object, object] | None = None
+    schema: Type[marshmallow_Schema], params: dict[object, object] | None = None
 ) -> dict[str, Any]:
     """
 
@@ -362,39 +362,39 @@ def replace_macros_in_string(pattern: str, macros: MacroMapping) -> str:
 #   +----------------------------------------------------------------------+
 
 
-class ABCBISearcher(abc.ABC):
+class ABCBISearcher(ABC):
     def __init__(self) -> None:
         self.hosts: dict[str, BIHostData] = {}
         self._host_regex_match_cache: dict[str, dict] = {}
         self._host_regex_miss_cache: dict[str, dict] = {}
 
-    @abc.abstractmethod
+    @abstractmethod
     def search_hosts(self, conditions: dict) -> list[BIHostSearchMatch]:
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abstractmethod
     def search_services(self, conditions: dict) -> list[BIServiceSearchMatch]:
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abstractmethod
     def get_host_name_matches(
         self, hosts: list[BIHostData], pattern: str
     ) -> tuple[list[BIHostData], dict]:
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abstractmethod
     def get_service_description_matches(
         self, host_matches: list[BIHostSearchMatch], pattern: str
     ) -> list[BIServiceSearchMatch]:
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abstractmethod
     def filter_host_choice(
         self, hosts: list[BIHostData], condition: dict
     ) -> tuple[Iterable[BIHostData], dict]:
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abstractmethod
     def filter_host_tags(
         self,
         hosts: Iterable[BIHostData],
@@ -403,35 +403,35 @@ class ABCBISearcher(abc.ABC):
         ...
 
 
-class ABCBIStatusFetcher(abc.ABC):
+class ABCBIStatusFetcher(ABC):
     def __init__(self, sites_callback: SitesCallback) -> None:
         self._sites_callback = sites_callback
         self.states: BIStatusInfo = {}
         self.assumed_states: dict = {}
 
 
-class ABCBICompiledNode(abc.ABC):
+class ABCBICompiledNode(ABC):
     def __init__(self) -> None:
         super().__init__()
         self.required_hosts: list[tuple[SiteId, str]] = []
 
     @classmethod
-    @abc.abstractmethod
+    @abstractmethod
     def type(cls) -> str:
         raise NotImplementedError()
 
     def __lt__(self, other: ABCBICompiledNode) -> bool:
         return self._get_comparable_name() < other._get_comparable_name()
 
-    @abc.abstractmethod
+    @abstractmethod
     def _get_comparable_name(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abstractmethod
     def services_of_host(self, host_name: HostName) -> set[ServiceName]:
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abstractmethod
     def compile_postprocess(
         self,
         bi_branch_root: ABCBICompiledNode,
@@ -440,7 +440,7 @@ class ABCBICompiledNode(abc.ABC):
     ) -> list[ABCBICompiledNode]:
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abstractmethod
     def compute(
         self,
         computation_options: BIAggregationComputationOptions,
@@ -449,11 +449,11 @@ class ABCBICompiledNode(abc.ABC):
     ) -> NodeResultBundle | None:
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abstractmethod
     def required_elements(self) -> set[RequiredBIElement]:
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abstractmethod
     def serialize(self) -> dict[str, Any]:
         raise NotImplementedError()
 
@@ -468,21 +468,21 @@ class ABCBICompiledNode(abc.ABC):
 #   +----------------------------------------------------------------------+
 
 
-class ABCBIAction(abc.ABC):
+class ABCBIAction(ABC):
     def __init__(self, action_config: dict[str, Any]) -> None:
         super().__init__()
 
     @classmethod
-    @abc.abstractmethod
+    @abstractmethod
     def type(cls) -> str:
         raise NotImplementedError()
 
     @classmethod
-    @abc.abstractmethod
+    @abstractmethod
     def schema(cls) -> Type[Schema]:
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abstractmethod
     def serialize(self) -> dict[str, Any]:
         raise NotImplementedError()
 
@@ -501,7 +501,7 @@ class ABCBIAction(abc.ABC):
     def _deduplicate_action_arguments(self, arguments: ActionArguments) -> ActionArguments:
         return list(dict.fromkeys(arguments).keys())
 
-    @abc.abstractmethod
+    @abstractmethod
     def execute(
         self, argument: ActionArgument, bi_searcher: ABCBISearcher
     ) -> list[ABCBICompiledNode]:
@@ -528,25 +528,25 @@ bi_action_registry = BIActionRegistry()
 #   +----------------------------------------------------------------------+
 
 
-class ABCBISearch(abc.ABC):
+class ABCBISearch(ABC):
     def __init__(self, search_config: dict[str, Any]) -> None:
         super().__init__()
 
     @classmethod
-    @abc.abstractmethod
+    @abstractmethod
     def type(cls) -> str:
         raise NotImplementedError()
 
     @classmethod
-    @abc.abstractmethod
+    @abstractmethod
     def schema(cls) -> Type[Schema]:
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abstractmethod
     def serialize(self) -> dict[str, Any]:
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abstractmethod
     def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> list[dict]:
         raise NotImplementedError()
 
@@ -571,25 +571,25 @@ bi_search_registry = BISearchRegistry()
 #   +----------------------------------------------------------------------+
 
 
-class ABCBIAggregationFunction(abc.ABC):
+class ABCBIAggregationFunction(ABC):
     def __init__(self, aggr_function_config: dict[str, Any]) -> None:
         super().__init__()
 
     @classmethod
-    @abc.abstractmethod
+    @abstractmethod
     def type(cls) -> str:
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abstractmethod
     def aggregate(self, states: list[int]) -> int:
         raise NotImplementedError()
 
     @classmethod
-    @abc.abstractmethod
+    @abstractmethod
     def schema(cls) -> Type[Schema]:
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abstractmethod
     def serialize(self) -> dict[str, Any]:
         raise NotImplementedError()
 

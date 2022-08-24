@@ -10,8 +10,7 @@ from typing import Any, NamedTuple, Type
 
 from marshmallow import fields, pre_dump
 
-import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.bi.bi_actions import (
     BICallARuleAction,
     BIStateOfHostAction,
@@ -28,6 +27,7 @@ from cmk.utils.bi.bi_schema import Schema
 from cmk.utils.bi.bi_search import BIHostSearch, BIServiceSearch
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
+from cmk.utils.paths import var_dir
 
 
 class RuleReferencesResult(NamedTuple):
@@ -302,7 +302,7 @@ class BIAggregationPacks:
 
     @classmethod
     def _num_enabled_aggregations_dir(cls):
-        return os.path.join(cmk.utils.paths.var_dir, "wato")
+        return os.path.join(var_dir, "wato")
 
     @classmethod
     def _num_enabled_aggregations_path(cls):

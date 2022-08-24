@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import abc
+from abc import abstractmethod
 from typing import Any, Dict, List, Sequence, Type
 
-import cmk.utils.plugin_registry
 from cmk.utils.bi.bi_lib import (
     ABCBICompiledNode,
     ABCBISearcher,
@@ -19,6 +18,7 @@ from cmk.utils.bi.bi_lib import (
 )
 from cmk.utils.bi.bi_node_generator_interface import ABCBINodeGenerator
 from cmk.utils.bi.bi_schema import Schema
+from cmk.utils.plugin_registry import Registry
 
 
 class BIRulePropertiesSchema(Schema):
@@ -76,50 +76,50 @@ class ABCBIRule(ABCWithSchema):
         self.id = ""
 
     @property
-    @abc.abstractmethod
+    @abstractmethod
     def params(self) -> BIParams:
         raise NotImplementedError()
 
     @property
-    @abc.abstractmethod
+    @abstractmethod
     def properties(self) -> BIRuleProperties:
         raise NotImplementedError()
 
     @property
-    @abc.abstractmethod
+    @abstractmethod
     def title(self) -> str:
         raise NotImplementedError()
 
     @classmethod
-    @abc.abstractmethod
+    @abstractmethod
     def schema(cls) -> Type[Schema]:
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abstractmethod
     def clone(self) -> "ABCBIRule":
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abstractmethod
     def get_nodes(self) -> Sequence[ABCBINodeGenerator]:
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abstractmethod
     def num_nodes(self) -> int:
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abstractmethod
     def compile(
         self, extern_arguments: ActionArgument, bi_searcher: ABCBISearcher
     ) -> List[ABCBICompiledNode]:
         raise NotImplementedError()
 
     @classmethod
-    @abc.abstractmethod
+    @abstractmethod
     def create_tree_from_schema(cls, schema_config: Dict[str, Any]) -> Any:
         raise NotImplementedError()
 
 
-class BIRuleIDRegistry(cmk.utils.plugin_registry.Registry[ABCBIRule]):
+class BIRuleIDRegistry(Registry[ABCBIRule]):
     def plugin_name(self, instance: ABCBIRule) -> str:
         return instance.id
 

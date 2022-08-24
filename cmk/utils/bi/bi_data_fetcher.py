@@ -11,7 +11,6 @@ from pathlib import Path
 
 from livestatus import LivestatusColumn, LivestatusOutputFormat, LivestatusResponse, SiteId
 
-import cmk.utils.paths
 from cmk.utils.bi.bi_lib import (
     ABCBIStatusFetcher,
     BIHostData,
@@ -24,6 +23,7 @@ from cmk.utils.bi.bi_lib import (
     SitesCallback,
 )
 from cmk.utils.bi.bi_trees import BICompiledAggregation, BICompiledRule
+from cmk.utils.paths import tmp_dir
 from cmk.utils.type_defs import HostName
 
 SiteProgramStart = tuple[SiteId, int]
@@ -56,7 +56,7 @@ SiteProgramStart = tuple[SiteId, int]
 
 
 def get_cache_dir() -> Path:
-    cache_dir = Path(cmk.utils.paths.tmp_dir, "bi_cache")
+    cache_dir = Path(tmp_dir, "bi_cache")
     cache_dir.mkdir(parents=True, exist_ok=True)
     return cache_dir
 

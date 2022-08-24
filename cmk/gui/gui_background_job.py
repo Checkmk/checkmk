@@ -31,8 +31,6 @@ from cmk.gui.utils.timeout_manager import timeout_manager
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri_contextless
 
-import cmk
-
 
 @permission_section_registry.register
 class PermissionSectionBackgroundJobs(PermissionSection):

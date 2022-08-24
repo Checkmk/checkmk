@@ -10,7 +10,6 @@ from marshmallow_oneofschema import OneOfSchema
 
 from livestatus import SiteId
 
-import cmk.utils.defines
 from cmk.utils.bi.bi_aggregation_functions import BIAggregationFunctionSchema
 from cmk.utils.bi.bi_lib import (
     ABCBIAggregationFunction,
@@ -40,6 +39,7 @@ from cmk.utils.bi.bi_node_vis import (
 from cmk.utils.bi.bi_rule_interface import BIRuleProperties
 from cmk.utils.bi.bi_schema import Schema
 from cmk.utils.caching import instance_method_lru_cache
+from cmk.utils.defines import host_state_name, service_state_name
 from cmk.utils.type_defs import HostName, HostState, ServiceName, ServiceState
 
 from cmk.gui.i18n import _  # pylint: disable=cmk-module-layer-violation
@@ -173,9 +173,7 @@ class BICompiledLeaf(ABCBICompiledNode):
         return BIStates.UNKNOWN
 
     def _get_state_name(self, state: HostState | ServiceState) -> str:
-        if self.service_description:
-            return cmk.utils.defines.service_state_name(state)
-        return cmk.utils.defines.host_state_name(state)
+        return service_state_name(state) if self.service_description else host_state_name(state)
 
     def _get_entity(
         self, bi_status_fetcher: ABCBIStatusFetcher

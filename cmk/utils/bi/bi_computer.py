@@ -7,10 +7,10 @@ import copy
 from collections.abc import Iterator
 from typing import NamedTuple
 
-import cmk.utils.plugin_registry
 from cmk.utils.bi.bi_data_fetcher import BIStatusFetcher
 from cmk.utils.bi.bi_lib import RequiredBIElement
 from cmk.utils.bi.bi_trees import BICompiledAggregation, BICompiledRule, NodeResultBundle
+from cmk.utils.plugin_registry import Registry
 from cmk.utils.type_defs import HostName, ServiceName
 
 
@@ -30,9 +30,7 @@ class ABCPostprocessComputeResult:
         raise NotImplementedError()
 
 
-class BIComputerPostprocessingRegistry(
-    cmk.utils.plugin_registry.Registry[ABCPostprocessComputeResult]
-):
+class BIComputerPostprocessingRegistry(Registry[ABCPostprocessComputeResult]):
     def plugin_name(self, instance: ABCPostprocessComputeResult) -> str:
         return instance.__class__.__name__
 

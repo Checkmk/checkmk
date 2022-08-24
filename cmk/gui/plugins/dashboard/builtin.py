@@ -5,7 +5,7 @@
 
 import cmk.utils.version as cmk_version
 
-from cmk.gui.i18n import _l
+from cmk.gui.i18n import _, _l
 from cmk.gui.plugins.dashboard.utils import builtin_dashboards, GROW, MAX
 from cmk.gui.type_defs import PainterSpec, VisualLinkSpec
 
@@ -23,7 +23,7 @@ builtin_dashboards["problems"] = {
     ),
     "dashlets": [
         {
-            "title": _l("Host statistics"),
+            "title": _("Host statistics"),
             "type": "hoststats",
             "position": (1, 1),
             "show_title": True,
@@ -41,7 +41,7 @@ builtin_dashboards["problems"] = {
             "is_show_more": False,
         },
         {
-            "title": _l("Service statistics"),
+            "title": _("Service statistics"),
             "type": "servicestats",
             "position": (31, 1),
             "show_title": True,
@@ -60,7 +60,7 @@ builtin_dashboards["problems"] = {
         },
         {
             "type": "view",
-            "title": _l("Host Problems (unhandled)"),
+            "title": _("Host Problems (unhandled)"),
             "title_url": "view.py?view_name=hostproblems&is_host_acknowledged=0",
             "position": (-1, 1),
             "size": (GROW, 18),
@@ -108,7 +108,7 @@ builtin_dashboards["problems"] = {
         },
         {
             "type": "view",
-            "title": _l("Service Problems (unhandled)"),
+            "title": _("Service Problems (unhandled)"),
             "title_url": "view.py?view_name=svcproblems&is_service_acknowledged=0",
             "position": (1, 19),
             "size": (GROW, MAX),
@@ -163,7 +163,7 @@ builtin_dashboards["problems"] = {
         },
         {
             "type": "view",
-            "title": _l("Events of recent 4 hours"),
+            "title": _("Events of recent 4 hours"),
             "title_url": "view.py?view_name=events_dash",
             "position": (-1, -1),
             "size": (GROW, GROW),
@@ -246,7 +246,7 @@ builtin_dashboards["simple_problems"] = {
     "dashlets": [
         {
             "type": "view",
-            "title": _l("Host Problems (unhandled)"),
+            "title": _("Host Problems (unhandled)"),
             "title_url": "view.py?view_name=hostproblems&is_host_acknowledged=0",
             "show_title": True,
             "position": (1, 1),
@@ -289,7 +289,7 @@ builtin_dashboards["simple_problems"] = {
         },
         {
             "type": "view",
-            "title": _l("Service Problems (unhandled)"),
+            "title": _("Service Problems (unhandled)"),
             "title_url": "view.py?view_name=svcproblems&is_service_acknowledged=0",
             "show_title": True,
             "position": (1, 19),
@@ -383,7 +383,7 @@ builtin_dashboards["checkmk"] = {
         },
         {
             "name": "cmk_sites",
-            "title": _l("Site overview"),
+            "title": _("Site overview"),
             "show_title": True,
             "background": True,
             "add_context_to_title": True,

@@ -1396,7 +1396,7 @@ class PainterSvcPnpgraph(Painter2):
         return "svc_pnpgraph"
 
     def title(self, cell: Cell) -> str:
-        return _("Service Graphs")
+        return _("Service graphs")
 
     @property
     def columns(self) -> Sequence[ColumnName]:

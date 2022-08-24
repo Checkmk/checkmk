@@ -71,7 +71,7 @@ multisite_builtin_views.update(
             "public": True,
             "sorters": [],
             "icon": "service_graph",
-            "title": _l("Service Graphs"),
+            "title": _l("Service graphs"),
             "topic": "history",
             "user_sortable": True,
             "single_infos": ["service", "host"],
@@ -268,7 +268,7 @@ class PainterServiceGraphs(Painter2):
         return "service_graphs"
 
     def title(self, cell):
-        return _("Service Graphs with Timerange Previews")
+        return _("Service graphs with timerange previews")
 
     @property
     def columns(self) -> Sequence[ColumnName]:

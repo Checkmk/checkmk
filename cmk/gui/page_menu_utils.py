@@ -448,6 +448,9 @@ def _show_combined_graphs_context_button(view: View) -> bool:
     if cmk_version.is_raw_edition():
         return False
 
+    if view.name == "service":
+        return False
+
     return view.datasource.ident in ["hosts", "services", "hostsbygroup", "servicesbygroup"]
 
 

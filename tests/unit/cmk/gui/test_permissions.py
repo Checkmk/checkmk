@@ -421,7 +421,6 @@ def test_registered_permissions() -> None:
         "view.service",
         "view.service_check_durations",
         "view.servicedesc",
-        "view.servicedescpnp",
         "view.servicegroup",
         "view.sitehosts",
         "view.sitesvcs",

@@ -21,6 +21,7 @@ from typing import (
     Callable,
     Dict,
     Final,
+    Iterable,
     Iterator,
     List,
     Literal,
@@ -54,6 +55,7 @@ from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKGeneralException
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.tag_rendering import HTMLContent
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
@@ -86,7 +88,7 @@ from cmk.gui.plugins.visuals.utils import (  # noqa: F401 # pylint: disable=unus
     visual_info_registry,
     visual_type_registry,
 )
-from cmk.gui.table import table_element
+from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import (
     FilterHTTPVariables,
     FilterName,
@@ -677,15 +679,16 @@ def get_permissioned_visual(
 # We need to convert all existing page types (views, dashboards, reports)
 # to pagetypes.py and then remove this function!
 def page_list(  # pylint: disable=too-many-branches
-    what,
-    title,
-    visuals,
-    custom_columns=None,
-    render_custom_buttons=None,
-    render_custom_columns=None,
-    custom_page_menu_entries=None,
-    check_deletable_handler=None,
-):
+    what: Literal["dashboards", "views", "reports"],
+    title: str,
+    visuals: dict[Tuple[UserId, VisualName], Visual],
+    custom_columns: Iterable[tuple[HTMLContent, Callable[[Visual], HTMLContent]]] | None = None,
+    render_custom_buttons: Callable[[VisualName, Visual], None] | None = None,
+    render_custom_columns: Callable[[Table, VisualName, Visual], None] | None = None,
+    custom_page_menu_entries: Callable[[], Iterable[PageMenuEntry]] | None = None,
+    check_deletable_handler: Callable[[dict[Tuple[UserId, VisualName], Visual], UserId, str], None]
+    | None = None,
+) -> None:
 
     if custom_columns is None:
         custom_columns = []
@@ -737,13 +740,13 @@ def page_list(  # pylint: disable=too-many-branches
             )
         else:
             user_id = user.id
-
+        assert user_id is not None
         try:
             if check_deletable_handler:
                 check_deletable_handler(visuals, user_id, delname)
 
             del visuals[(user_id, delname)]
-            save(what, visuals, user_id)
+            save(VisualType(what), visuals, user_id)
             flash(_("Your %s has been deleted.") % visual_type.title)
             html.reload_whole_page()
         except MKUserError as e:

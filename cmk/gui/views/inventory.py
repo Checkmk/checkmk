@@ -1674,7 +1674,7 @@ def _register_views(
         # Columns
         "painters": [
             PainterSpec(
-                painter_name="host",
+                name="host",
                 link_spec=VisualLinkSpec(type_name="views", name="inv_host"),
             ),
             *painters,
@@ -1766,10 +1766,10 @@ multisite_builtin_views["inv_host"] = {
     "group_painters": [],
     "painters": [
         PainterSpec(
-            painter_name="host",
+            name="host",
             link_spec=VisualLinkSpec(type_name="views", name="host"),
         ),
-        PainterSpec(painter_name="inventory_tree"),
+        PainterSpec(name="inventory_tree"),
     ],
     "sorters": [],
     "owner": "",
@@ -1806,19 +1806,19 @@ multisite_builtin_views["inv_hosts_cpu"] = {
     "group_painters": [],
     "painters": [
         PainterSpec(
-            painter_name="host",
+            name="host",
             link_spec=VisualLinkSpec(type_name="views", name="inv_host"),
         ),
-        PainterSpec(painter_name="inv_software_os_name"),
-        PainterSpec(painter_name="inv_hardware_cpu_cpus"),
-        PainterSpec(painter_name="inv_hardware_cpu_cores"),
-        PainterSpec(painter_name="inv_hardware_cpu_max_speed"),
+        PainterSpec(name="inv_software_os_name"),
+        PainterSpec(name="inv_hardware_cpu_cpus"),
+        PainterSpec(name="inv_hardware_cpu_cores"),
+        PainterSpec(name="inv_hardware_cpu_max_speed"),
         PainterSpec(
-            painter_name="perfometer",
+            name="perfometer",
             join_index="CPU load",
         ),
         PainterSpec(
-            painter_name="perfometer",
+            name="perfometer",
             join_index="CPU utilization",
         ),
     ],
@@ -1864,16 +1864,16 @@ multisite_builtin_views["inv_hosts_ports"] = {
     "group_painters": [],
     "painters": [
         PainterSpec(
-            painter_name="host",
+            name="host",
             link_spec=VisualLinkSpec(
                 type_name="views",
                 name=_make_table_view_name_of_host("invinterface"),
             ),
         ),
-        PainterSpec(painter_name="inv_hardware_system_product"),
-        PainterSpec(painter_name="inv_networking_total_interfaces"),
-        PainterSpec(painter_name="inv_networking_total_ethernet_ports"),
-        PainterSpec(painter_name="inv_networking_available_ethernet_ports"),
+        PainterSpec(name="inv_hardware_system_product"),
+        PainterSpec(name="inv_networking_total_interfaces"),
+        PainterSpec(name="inv_networking_total_ethernet_ports"),
+        PainterSpec(name="inv_networking_available_ethernet_ports"),
     ],
     "sorters": [("inv_networking_available_ethernet_ports", True)],
     "owner": "",
@@ -2137,11 +2137,11 @@ multisite_builtin_views["inv_host_history"] = {
     # Columns
     "group_painters": [],
     "painters": [
-        PainterSpec(painter_name="invhist_time"),
-        PainterSpec(painter_name="invhist_removed"),
-        PainterSpec(painter_name="invhist_new"),
-        PainterSpec(painter_name="invhist_changed"),
-        PainterSpec(painter_name="invhist_delta"),
+        PainterSpec(name="invhist_time"),
+        PainterSpec(name="invhist_removed"),
+        PainterSpec(name="invhist_new"),
+        PainterSpec(name="invhist_changed"),
+        PainterSpec(name="invhist_delta"),
     ],
     "sorters": [("invhist_time", False)],
     "owner": "",

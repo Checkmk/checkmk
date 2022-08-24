@@ -1872,13 +1872,7 @@ def painter_specs_to_runtime_format(view: ViewSpec) -> ViewSpec:
 
 
 def extract_painter_name(painter_spec: Union[PainterName, PainterSpec]) -> PainterName:
-    if isinstance(painter_spec, str):
-        return painter_spec
-    return (
-        painter_name[0]
-        if isinstance(painter_name := painter_spec.painter_name, tuple)
-        else painter_name
-    )
+    return painter_spec.name if isinstance(painter_spec, PainterSpec) else painter_spec
 
 
 def painter_exists(painter_spec: PainterSpec) -> bool:
@@ -1907,9 +1901,9 @@ class Cell:
             self._from_view(painter_spec)
 
     def _from_view(self, painter_spec: PainterSpec) -> None:
-        self._painter_name = extract_painter_name(painter_spec)
-        if isinstance(painter_name := painter_spec.painter_name, tuple):
-            self._painter_params = painter_name[1]
+        self._painter_name = painter_spec.name
+        if painter_spec.parameters is not None:
+            self._painter_params = painter_spec.parameters
             self._custom_title = self._painter_params.get("column_title", None)
 
         self._link_spec = painter_spec.link_spec

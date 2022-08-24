@@ -184,12 +184,12 @@ SorterName = str
 ViewName = str
 ColumnName = str
 PainterParameters = Dict  # TODO: Improve this type
-PainterNameSpec = Union[PainterName, Tuple[PainterName, PainterParameters]]
 
 
 @dataclass(frozen=True)
 class PainterSpec:
-    painter_name: PainterNameSpec
+    name: PainterName
+    parameters: PainterParameters | None = None
     link_spec: VisualLinkSpec | None = None
     tooltip: ColumnName | None = None
     join_index: ColumnName | None = None
@@ -201,33 +201,43 @@ class PainterSpec:
         # in their definitions. Consolidate this case to None.
         value = (value[0],) + tuple(p or None for p in value[1:]) + (None,) * (5 - len(value))
 
+        if isinstance(value[0], tuple):
+            name, parameters = value[0]
+        else:
+            name = value[0]
+            parameters = None
+
         # With Checkmk 2.0 we introduced the option to link to dashboards. Now the link_view is not
         # only a string (view_name) anymore, but a tuple of two elemets: ('<visual_type_name>',
         # '<visual_name>'). Transform the old value to the new format.
         if isinstance(value[1], str):
-            value = (value[0], VisualLinkSpec("views", value[1])) + value[2:]
+            link_spec = VisualLinkSpec("views", value[1])
         elif isinstance(value[1], tuple):
-            value = (value[0], VisualLinkSpec(*value[1])) + value[2:]
+            link_spec = VisualLinkSpec(*value[1])
+        else:
+            link_spec = None
 
-        return cls(*value)
+        return cls(
+            name=name,
+            parameters=parameters,
+            link_spec=link_spec,
+            tooltip=value[2],
+            join_index=value[3],
+            column_title=value[4],
+        )
 
     def to_raw(
         self,
     ) -> tuple[
-        PainterNameSpec,
+        PainterName | tuple[PainterName, PainterParameters],
         tuple[VisualTypeName, VisualName] | None,
         ColumnName | None,
         ColumnName | None,
         str | None,
     ]:
         return (
-            self.painter_name,
-            (
-                self.link_spec.type_name,
-                self.link_spec.name,
-            )
-            if self.link_spec
-            else None,
+            self.name if self.parameters is None else (self.name, self.parameters),
+            None if self.link_spec is None else (self.link_spec.type_name, self.link_spec.name),
             self.tooltip,
             self.join_index,
             self.column_title,

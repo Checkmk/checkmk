@@ -814,11 +814,13 @@ def test_service_painters(  # type:ignore[no-untyped-def]
 def _test_painter(painter_ident, live):
     _set_expected_queries(painter_ident, live)
 
+    name, params = _painter_name_spec(painter_ident)
+
     view = View(
         view_name="",
         view_spec={
             "group_painters": [],
-            "painters": [PainterSpec(_painter_name_spec(painter_ident), None, None, None)],
+            "painters": [PainterSpec(name=name, parameters=params)],
             "sorters": [],
             "datasource": "services",
         },
@@ -1680,7 +1682,7 @@ def _painter_name_spec(painter_ident):
         return painter_ident, {"uuid": "e13957f5-1b0b-43a7-a452-3bff7187542e"}
     if painter_ident == "svc_metrics_forecast":
         return painter_ident, {"uuid": "3c659189-29f3-411a-8456-6a07fdae4d51"}
-    return painter_ident
+    return painter_ident, None
 
 
 def _set_expected_queries(painter_ident, live):

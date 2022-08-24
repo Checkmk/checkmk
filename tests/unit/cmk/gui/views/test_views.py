@@ -666,7 +666,7 @@ def test_painter_export_title(monkeypatch) -> None:  # type:ignore[no-untyped-de
         painter_class() for painter_class in cmk.gui.plugins.views.utils.painter_registry.values()
     ]
     painters_and_cells: list[Tuple[Painter, Cell]] = [
-        (painter, Cell({}, None, PainterSpec(painter.ident))) for painter in painters
+        (painter, Cell({}, None, PainterSpec(name=painter.ident))) for painter in painters
     ]
 
     dummy_ident: str = "einszwo"
@@ -703,7 +703,7 @@ def test_legacy_register_painter(monkeypatch) -> None:  # type:ignore[no-untyped
     )
 
     painter = cmk.gui.plugins.views.utils.painter_registry["abc"]()
-    dummy_cell = cmk.gui.plugins.views.utils.Cell({}, None, PainterSpec(painter.ident))
+    dummy_cell = cmk.gui.plugins.views.utils.Cell({}, None, PainterSpec(name=painter.ident))
     assert isinstance(painter, cmk.gui.plugins.views.utils.Painter)
     assert painter.ident == "abc"
     assert painter.title(dummy_cell) == "A B C"
@@ -1948,7 +1948,7 @@ def test_get_needed_regular_columns(view) -> None:  # type:ignore[no-untyped-def
 
 def test_get_needed_join_columns(view, load_config) -> None:  # type:ignore[no-untyped-def]
     view_spec = copy.deepcopy(view.spec)
-    view_spec["painters"].append(PainterSpec("service_description", None, None, "CPU load"))
+    view_spec["painters"].append(PainterSpec(name="service_description", join_index="CPU load"))
     view = View(view.name, view_spec, view_spec.get("context", {}))
 
     columns = cmk.gui.views._get_needed_join_columns(view.join_cells, view.sorters)

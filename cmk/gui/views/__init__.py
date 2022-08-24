@@ -976,9 +976,9 @@ def _view_editor_spec(
     vs_column = Transform(
         valuespec=vs_column,
         back=lambda value: (value[0], value[3], value[4], value[1], value[2]),
-        forth=lambda value: (value[0], value[3], value[4], value[1], value[2])
-        if value is not None
-        else None,
+        forth=lambda value: (
+            None if value is None else (value[0], value[3], value[4], value[1], value[2])
+        ),
     )
     return Dictionary(
         title=title,
@@ -1044,21 +1044,18 @@ def view_editor_sorter_specs(view: ViewSpec) -> _Tuple[str, Dictionary]:
         for painter_spec in view.get("painters", []):
             # look through all defined columns and add sorters for
             # svc_metrics_hist and svc_metrics_forecast columns.
-            if isinstance(painter_name_spec := painter_spec.painter_name, tuple) and (
-                painter_name := painter_name_spec[0]
-            ) in [
-                "svc_metrics_hist",
-                "svc_metrics_forecast",
-            ]:
-                hist_sort = sorters_of_datasource(ds_name).get(painter_name)
-                uuid = painter_name_spec[1].get("uuid", "")
-                if hist_sort and uuid:
-                    title = "History" if "hist" in painter_name else "Forecast"
-                    yield (
-                        "%s:%s" % (painter_name, uuid),
-                        "Services: Metric %s - Column: %s"
-                        % (title, painter_name_spec[1]["column_title"]),
-                    )
+            if (
+                painter_spec.name in ("svc_metrics_hist", "svc_metrics_forecast")
+                and sorters_of_datasource(ds_name).get(painter_spec.name)
+                and painter_spec.parameters is not None
+                and (uuid := painter_spec.parameters.get("uuid", ""))
+            ):
+                title = "History" if "hist" in painter_spec.name else "Forecast"
+                yield (
+                    "%s:%s" % (painter_spec.name, uuid),
+                    "Services: Metric %s - Column: %s"
+                    % (title, painter_spec.parameters["column_title"]),
+                )
 
     return (
         "sorting",
@@ -1172,7 +1169,9 @@ def transform_view_to_valuespec_value(view):
     view["grouping"] = {
         "grouping": [painter_spec.to_raw() for painter_spec in view.get("group_painters", [])]
     }
+
     view["sorting"] = {"sorters": view.get("sorters", {})}
+
     view["columns"] = {
         "columns": [painter_spec.to_raw() for painter_spec in view.get("painters", [])]
     }

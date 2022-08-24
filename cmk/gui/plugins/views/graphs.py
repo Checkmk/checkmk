@@ -49,15 +49,15 @@ multisite_builtin_views.update(
             ),
             "group_painters": [
                 PainterSpec(
-                    painter_name="sitealias",
+                    name="sitealias",
                     link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
                 ),
                 PainterSpec(
-                    painter_name="host_with_state",
+                    name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 ),
                 PainterSpec(
-                    painter_name="service_description",
+                    name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
             ],
@@ -68,7 +68,7 @@ multisite_builtin_views.update(
             "num_columns": 1,
             "owner": "",
             "painters": [
-                PainterSpec(painter_name="service_graphs"),
+                PainterSpec(name="service_graphs"),
             ],
             "public": True,
             "sorters": [],
@@ -92,11 +92,11 @@ multisite_builtin_views.update(
             ),
             "group_painters": [
                 PainterSpec(
-                    painter_name="sitealias",
+                    name="sitealias",
                     link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
                 ),
                 PainterSpec(
-                    painter_name="host_with_state",
+                    name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 ),
             ],
@@ -106,7 +106,7 @@ multisite_builtin_views.update(
             "name": "host_graphs",
             "num_columns": 1,
             "owner": "",
-            "painters": [PainterSpec(painter_name="host_graphs")],
+            "painters": [PainterSpec(name="host_graphs")],
             "public": True,
             "sorters": [],
             "icon": "graph",

@@ -17,6 +17,7 @@ from cmk.gui.plugins.watolib.utils import (
     ConfigVariableGroup,
 )
 from cmk.gui.valuespec import ValueSpec
+from cmk.gui.watolib.utils import format_php
 
 
 def test_registered_config_domains():
@@ -313,3 +314,23 @@ def test_legacy_configvar_order_access():
     with pytest.raises(NotImplementedError) as e:
         configvar_order()["x"] = 10
     assert "werk #6911" in "%s" % e
+
+
+# This is a regression test for CMK-11206.
+@pytest.mark.parametrize(
+    "python_data,expected",
+    [
+        (None, "null"),
+        ("", "''"),
+        ({}, "array(\n)"),
+        ("quote: '", r"'quote: \''"),
+        ("backslash: \\", r"'backslash: \\'"),
+        ("bsquote: \\'", r"'bsquote: \\\''"),
+        (
+            {"a": "x", "b": False, "c": [1, "foo"]},
+            "array(\n    'a' => 'x',\n    'b' => false,\n    'c' => array(\n        1,\n        'foo',\n    ),\n)",
+        ),
+    ],
+)
+def test_format_php(python_data, expected):
+    assert format_php(python_data) == expected

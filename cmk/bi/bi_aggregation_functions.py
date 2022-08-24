@@ -9,7 +9,7 @@ from typing import Any, Type
 from marshmallow import validate
 from marshmallow_oneofschema import OneOfSchema
 
-from cmk.utils.bi.bi_lib import (
+from cmk.bi.bi_lib import (
     ABCBIAggregationFunction,
     bi_aggregation_function_registry,
     BIStates,
@@ -18,7 +18,7 @@ from cmk.utils.bi.bi_lib import (
     ReqNested,
     ReqString,
 )
-from cmk.utils.bi.bi_schema import Schema
+from cmk.bi.bi_schema import Schema
 
 _bi_criticality_level = {
     BIStates.OK: 0,

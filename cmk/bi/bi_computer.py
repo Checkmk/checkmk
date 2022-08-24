@@ -7,11 +7,12 @@ import copy
 from collections.abc import Iterator
 from typing import NamedTuple
 
-from cmk.utils.bi.bi_data_fetcher import BIStatusFetcher
-from cmk.utils.bi.bi_lib import RequiredBIElement
-from cmk.utils.bi.bi_trees import BICompiledAggregation, BICompiledRule, NodeResultBundle
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.type_defs import HostName, ServiceName
+
+from cmk.bi.bi_data_fetcher import BIStatusFetcher
+from cmk.bi.bi_lib import RequiredBIElement
+from cmk.bi.bi_trees import BICompiledAggregation, BICompiledRule, NodeResultBundle
 
 
 class BIAggregationFilter(NamedTuple):

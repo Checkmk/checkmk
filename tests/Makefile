@@ -13,6 +13,7 @@ PYTEST_UNIT_TEST_OPTS = \
     -T unit \
     --doctest-modules \
     ../cmk/base \
+    ../cmk/bi \
     ../cmk/fields \
     ../cmk/gui \
     ../cmk/special_agents \

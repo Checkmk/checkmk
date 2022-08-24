@@ -10,8 +10,12 @@ from marshmallow_oneofschema import OneOfSchema
 
 from livestatus import SiteId
 
-from cmk.utils.bi.bi_aggregation_functions import BIAggregationFunctionSchema
-from cmk.utils.bi.bi_lib import (
+from cmk.utils.caching import instance_method_lru_cache
+from cmk.utils.defines import host_state_name, service_state_name
+from cmk.utils.type_defs import HostName, HostState, ServiceName, ServiceState
+
+from cmk.bi.bi_aggregation_functions import BIAggregationFunctionSchema
+from cmk.bi.bi_lib import (
     ABCBIAggregationFunction,
     ABCBICompiledNode,
     ABCBISearcher,
@@ -31,16 +35,13 @@ from cmk.utils.bi.bi_lib import (
     ReqString,
     RequiredBIElement,
 )
-from cmk.utils.bi.bi_node_vis import (
+from cmk.bi.bi_node_vis import (
     BIAggregationVisualizationSchema,
     BINodeVisBlockStyleSchema,
     BINodeVisLayoutStyleSchema,
 )
-from cmk.utils.bi.bi_rule_interface import BIRuleProperties
-from cmk.utils.bi.bi_schema import Schema
-from cmk.utils.caching import instance_method_lru_cache
-from cmk.utils.defines import host_state_name, service_state_name
-from cmk.utils.type_defs import HostName, HostState, ServiceName, ServiceState
+from cmk.bi.bi_rule_interface import BIRuleProperties
+from cmk.bi.bi_schema import Schema
 
 #   .--Leaf----------------------------------------------------------------.
 #   |                         _                __                          |

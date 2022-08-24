@@ -16,11 +16,10 @@ from typing import Any, Dict, List, Optional, Sequence, Type
 
 from marshmallow import fields
 
-from cmk.utils.bi.bi_aggregation_functions import (
-    BIAggregationFunctionBest,
-    BIAggregationFunctionSchema,
-)
-from cmk.utils.bi.bi_lib import (
+from cmk.utils.macros import MacroMapping
+
+from cmk.bi.bi_aggregation_functions import BIAggregationFunctionBest, BIAggregationFunctionSchema
+from cmk.bi.bi_lib import (
     ABCBICompiledNode,
     ABCBISearcher,
     ABCWithSchema,
@@ -34,17 +33,16 @@ from cmk.utils.bi.bi_lib import (
     ReqList,
     ReqString,
 )
-from cmk.utils.bi.bi_node_generator import BINodeGenerator, BINodeGeneratorSchema
-from cmk.utils.bi.bi_node_vis import BINodeVisBlockStyleSchema, BINodeVisLayoutStyleSchema
-from cmk.utils.bi.bi_rule_interface import (
+from cmk.bi.bi_node_generator import BINodeGenerator, BINodeGeneratorSchema
+from cmk.bi.bi_node_vis import BINodeVisBlockStyleSchema, BINodeVisLayoutStyleSchema
+from cmk.bi.bi_rule_interface import (
     ABCBIRule,
     bi_rule_id_registry,
     BIRuleComputationOptions,
     BIRuleProperties,
 )
-from cmk.utils.bi.bi_schema import Schema
-from cmk.utils.bi.bi_trees import BICompiledLeaf, BICompiledRule
-from cmk.utils.macros import MacroMapping
+from cmk.bi.bi_schema import Schema
+from cmk.bi.bi_trees import BICompiledLeaf, BICompiledRule
 
 
 class BIRule(ABCBIRule, ABCWithSchema):

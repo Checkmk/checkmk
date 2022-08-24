@@ -12,7 +12,6 @@ from livestatus import SiteId
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.agent_registration import get_uuid_link_manager, UUIDLinkManager
-from cmk.utils.bi.bi_packs import BIHostRenamer
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.type_defs import HostName
 
@@ -27,6 +26,8 @@ from cmk.gui.watolib.hosts_and_folders import call_hook_hosts_changed, CREFolder
 from cmk.gui.watolib.notifications import load_notification_rules, save_notification_rules
 from cmk.gui.watolib.rulesets import FolderRulesets
 from cmk.gui.watolib.utils import rename_host_in_list
+
+from cmk.bi.bi_packs import BIHostRenamer
 
 try:
     import cmk.gui.cee.plugins.wato.alert_handling as alert_handling  # type: ignore[import]

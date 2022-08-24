@@ -6,7 +6,7 @@
 # pylint: disable=redefined-outer-name
 import pytest
 
-from cmk.utils.bi.bi_aggregation_functions import (
+from cmk.bi.bi_aggregation_functions import (
     BIAggregationFunctionBest,
     BIAggregationFunctionCountOK,
     BIAggregationFunctionWorst,

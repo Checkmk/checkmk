@@ -21,14 +21,6 @@ import cmk.utils.defines as defines
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
-from cmk.utils.bi.bi_data_fetcher import (
-    BIHostSpec,
-    BIHostStatusInfoRow,
-    BIServiceWithFullState,
-    BIStatusInfo,
-)
-from cmk.utils.bi.bi_lib import NodeComputeResult, NodeResultBundle
-from cmk.utils.bi.bi_trees import BICompiledAggregation, BICompiledRule
 from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.prediction import lq_logic
 from cmk.utils.type_defs import HostName, ServiceName
@@ -66,6 +58,15 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.view_utils import CSSClass
+
+from cmk.bi.bi_data_fetcher import (
+    BIHostSpec,
+    BIHostStatusInfoRow,
+    BIServiceWithFullState,
+    BIStatusInfo,
+)
+from cmk.bi.bi_lib import NodeComputeResult, NodeResultBundle
+from cmk.bi.bi_trees import BICompiledAggregation, BICompiledRule
 
 AVMode = str  # TODO: Improve this type
 AVObjectType = Literal["host", "service", "bi"]  # TODO: Improve this type

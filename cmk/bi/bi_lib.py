@@ -14,8 +14,7 @@ from marshmallow import Schema as marshmallow_Schema
 
 from livestatus import LivestatusOutputFormat, LivestatusResponse, SiteId
 
-from cmk.utils.bi.bi_schema import Schema
-
+from cmk.bi.bi_schema import Schema
 from cmk.fields import Boolean, Constant
 from cmk.fields import Dict as MDict
 from cmk.fields import Integer
@@ -36,12 +35,6 @@ ActionArgument = tuple[str, ...]
 ActionArguments = list[ActionArgument]
 
 from cmk.utils import plugin_registry
-from cmk.utils.bi.type_defs import (
-    ActionConfig,
-    ComputationConfigDict,
-    GroupConfigDict,
-    SearchConfig,
-)
 from cmk.utils.macros import MacroMapping, replace_macros_in_str
 from cmk.utils.type_defs import (
     HostName,
@@ -53,6 +46,8 @@ from cmk.utils.type_defs import (
     TaggroupIDToTagCondition,
     TagID,
 )
+
+from cmk.bi.type_defs import ActionConfig, ComputationConfigDict, GroupConfigDict, SearchConfig
 
 
 class BIStates:

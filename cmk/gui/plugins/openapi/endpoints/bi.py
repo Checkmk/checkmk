@@ -17,11 +17,6 @@ import http
 import http.client
 from typing import Any, Mapping
 
-from cmk.utils.bi.bi_aggregation import BIAggregation, BIAggregationSchema
-from cmk.utils.bi.bi_lib import ReqBoolean, ReqList, ReqString
-from cmk.utils.bi.bi_packs import BIAggregationPack
-from cmk.utils.bi.bi_rule import BIRule, BIRuleSchema
-from cmk.utils.bi.bi_schema import Schema
 from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui.bi import api_get_aggregation_state, get_cached_bi_packs
@@ -36,6 +31,11 @@ from cmk.gui.plugins.openapi.restful_objects import (
 from cmk.gui.plugins.openapi.utils import ProblemException, serve_json
 
 from cmk import fields
+from cmk.bi.bi_aggregation import BIAggregation, BIAggregationSchema
+from cmk.bi.bi_lib import ReqBoolean, ReqList, ReqString
+from cmk.bi.bi_packs import BIAggregationPack
+from cmk.bi.bi_rule import BIRule, BIRuleSchema
+from cmk.bi.bi_schema import Schema
 
 BI_RULE_ID = {
     "rule_id": fields.String(

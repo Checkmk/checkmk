@@ -9,13 +9,13 @@ import pytest
 
 from livestatus import LivestatusOutputFormat, LivestatusResponse, SiteId
 
-from cmk.utils.bi.bi_data_fetcher import BIStatusFetcher, BIStructureFetcher
-from cmk.utils.bi.bi_lib import SitesCallback
-from cmk.utils.bi.bi_node_generator import BINodeGenerator
-from cmk.utils.bi.bi_packs import BIAggregationPacks
-from cmk.utils.bi.bi_rule import BIRule
-from cmk.utils.bi.bi_rule_interface import bi_rule_id_registry
-from cmk.utils.bi.bi_searcher import BISearcher
+from cmk.bi.bi_data_fetcher import BIStatusFetcher, BIStructureFetcher
+from cmk.bi.bi_lib import SitesCallback
+from cmk.bi.bi_node_generator import BINodeGenerator
+from cmk.bi.bi_packs import BIAggregationPacks
+from cmk.bi.bi_rule import BIRule
+from cmk.bi.bi_rule_interface import bi_rule_id_registry
+from cmk.bi.bi_searcher import BISearcher
 
 from .bi_test_data import sample_config
 

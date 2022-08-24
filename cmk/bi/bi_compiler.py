@@ -11,17 +11,18 @@ from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 
 from cmk.utils import store
-from cmk.utils.bi.bi_aggregation import BIAggregation
-from cmk.utils.bi.bi_data_fetcher import BIStructureFetcher, get_cache_dir, SiteProgramStart
-from cmk.utils.bi.bi_lib import SitesCallback
-from cmk.utils.bi.bi_packs import BIAggregationPacks
-from cmk.utils.bi.bi_searcher import BISearcher
-from cmk.utils.bi.bi_trees import BICompiledAggregation
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 from cmk.utils.log import logger
 from cmk.utils.paths import default_config_dir
 from cmk.utils.redis import get_redis_client
+
+from cmk.bi.bi_aggregation import BIAggregation
+from cmk.bi.bi_data_fetcher import BIStructureFetcher, get_cache_dir, SiteProgramStart
+from cmk.bi.bi_lib import SitesCallback
+from cmk.bi.bi_packs import BIAggregationPacks
+from cmk.bi.bi_searcher import BISearcher
+from cmk.bi.bi_trees import BICompiledAggregation
 
 if TYPE_CHECKING:
     from cmk.utils.redis import RedisDecoded

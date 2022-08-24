@@ -14,12 +14,13 @@
 
 from typing import List, Type
 
-from cmk.utils.bi.bi_actions import BIActionSchema, BICallARuleAction, BIStateOfHostActionSchema
-from cmk.utils.bi.bi_lib import ABCBICompiledNode, ABCBISearcher, create_nested_schema
-from cmk.utils.bi.bi_node_generator_interface import ABCBINodeGenerator
-from cmk.utils.bi.bi_schema import Schema
-from cmk.utils.bi.bi_search import BIEmptySearchSchema, BISearchSchema
 from cmk.utils.macros import MacroMapping
+
+from cmk.bi.bi_actions import BIActionSchema, BICallARuleAction, BIStateOfHostActionSchema
+from cmk.bi.bi_lib import ABCBICompiledNode, ABCBISearcher, create_nested_schema
+from cmk.bi.bi_node_generator_interface import ABCBINodeGenerator
+from cmk.bi.bi_schema import Schema
+from cmk.bi.bi_search import BIEmptySearchSchema, BISearchSchema
 
 
 class BINodeGenerator(ABCBINodeGenerator):

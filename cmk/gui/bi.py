@@ -10,12 +10,6 @@ from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Type, Union
 
 from livestatus import LivestatusOutputFormat, LivestatusResponse, OnlySites, SiteId
 
-from cmk.utils.bi.bi_compiler import BICompiler
-from cmk.utils.bi.bi_computer import BIAggregationFilter, BIComputer
-from cmk.utils.bi.bi_data_fetcher import BIStatusFetcher
-from cmk.utils.bi.bi_lib import BIStates, NodeResultBundle, SitesCallback
-from cmk.utils.bi.bi_packs import BIAggregationPacks
-from cmk.utils.bi.bi_trees import BICompiledRule
 from cmk.utils.type_defs import HostName, ServiceName
 
 import cmk.gui.pages
@@ -45,6 +39,13 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless, urlencode_vars
 from cmk.gui.valuespec import DropdownChoiceEntries
+
+from cmk.bi.bi_compiler import BICompiler
+from cmk.bi.bi_computer import BIAggregationFilter, BIComputer
+from cmk.bi.bi_data_fetcher import BIStatusFetcher
+from cmk.bi.bi_lib import BIStates, NodeResultBundle, SitesCallback
+from cmk.bi.bi_packs import BIAggregationPacks
+from cmk.bi.bi_trees import BICompiledRule
 
 
 @permission_section_registry.register

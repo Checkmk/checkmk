@@ -7,7 +7,9 @@ from typing import Any, Dict, List, Type, Union
 
 from marshmallow_oneofschema import OneOfSchema
 
-from cmk.utils.bi.bi_lib import (
+from cmk.utils.macros import MacroMapping
+
+from cmk.bi.bi_lib import (
     ABCBIAction,
     ABCBICompiledNode,
     ABCBISearcher,
@@ -25,10 +27,9 @@ from cmk.utils.bi.bi_lib import (
     SearchResult,
     SearchResults,
 )
-from cmk.utils.bi.bi_rule_interface import bi_rule_id_registry
-from cmk.utils.bi.bi_schema import Schema
-from cmk.utils.bi.bi_trees import BICompiledLeaf, BIRemainingResult
-from cmk.utils.macros import MacroMapping
+from cmk.bi.bi_rule_interface import bi_rule_id_registry
+from cmk.bi.bi_schema import Schema
+from cmk.bi.bi_trees import BICompiledLeaf, BIRemainingResult
 
 #   .--CallARule-----------------------------------------------------------.
 #   |               ____      _ _    _    ____        _                    |

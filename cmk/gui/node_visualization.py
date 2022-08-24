@@ -12,10 +12,6 @@ from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Type, TypedDi
 import livestatus
 from livestatus import SiteId
 
-from cmk.utils.bi.bi_aggregation_functions import BIAggregationFunctionSchema
-from cmk.utils.bi.bi_computer import BIAggregationFilter
-from cmk.utils.bi.bi_lib import NodeResultBundle
-from cmk.utils.bi.bi_trees import BICompiledLeaf, BICompiledRule
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import HostName
 
@@ -54,6 +50,11 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.theme import theme
 from cmk.gui.view import View
 from cmk.gui.views import ABCAjaxInitialFilters
+
+from cmk.bi.bi_aggregation_functions import BIAggregationFunctionSchema
+from cmk.bi.bi_computer import BIAggregationFilter
+from cmk.bi.bi_lib import NodeResultBundle
+from cmk.bi.bi_trees import BICompiledLeaf, BICompiledRule
 
 Mesh = Set[HostName]
 Meshes = List[Mesh]

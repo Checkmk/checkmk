@@ -7,7 +7,10 @@ from __future__ import annotations
 
 from typing import Any, Type
 
-from cmk.utils.bi.bi_lib import (
+# TODO: fix duplicate type def. the original type def is in gui-managed (module layer violation)
+from cmk.utils.type_defs import HostName, ServiceName
+
+from cmk.bi.bi_lib import (
     ABCBICompiledNode,
     ABCBISearcher,
     BIAggregationComputationOptions,
@@ -17,15 +20,12 @@ from cmk.utils.bi.bi_lib import (
     ReqString,
     String,
 )
-from cmk.utils.bi.bi_node_generator import BINodeGenerator
-from cmk.utils.bi.bi_node_vis import BIAggregationVisualizationSchema
-from cmk.utils.bi.bi_rule import BIRule
-from cmk.utils.bi.bi_schema import Schema
-from cmk.utils.bi.bi_trees import BICompiledAggregation, BICompiledRule
-from cmk.utils.bi.type_defs import AggrConfigDict
-
-# TODO: fix duplicate type def. the original type def is in gui-managed (module layer violation)
-from cmk.utils.type_defs import HostName, ServiceName
+from cmk.bi.bi_node_generator import BINodeGenerator
+from cmk.bi.bi_node_vis import BIAggregationVisualizationSchema
+from cmk.bi.bi_rule import BIRule
+from cmk.bi.bi_schema import Schema
+from cmk.bi.bi_trees import BICompiledAggregation, BICompiledRule
+from cmk.bi.type_defs import AggrConfigDict
 
 SCOPE_GLOBAL = None
 

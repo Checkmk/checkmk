@@ -11,7 +11,10 @@ from pathlib import Path
 
 from livestatus import LivestatusColumn, LivestatusOutputFormat, LivestatusResponse, SiteId
 
-from cmk.utils.bi.bi_lib import (
+from cmk.utils.paths import tmp_dir
+from cmk.utils.type_defs import HostName
+
+from cmk.bi.bi_lib import (
     ABCBIStatusFetcher,
     BIHostData,
     BIHostSpec,
@@ -22,9 +25,7 @@ from cmk.utils.bi.bi_lib import (
     RequiredBIElement,
     SitesCallback,
 )
-from cmk.utils.bi.bi_trees import BICompiledAggregation, BICompiledRule
-from cmk.utils.paths import tmp_dir
-from cmk.utils.type_defs import HostName
+from cmk.bi.bi_trees import BICompiledAggregation, BICompiledRule
 
 SiteProgramStart = tuple[SiteId, int]
 

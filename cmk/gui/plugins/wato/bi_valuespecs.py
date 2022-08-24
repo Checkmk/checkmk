@@ -7,20 +7,7 @@ import abc
 import copy
 from typing import Any, Dict, List, Type, Union
 
-import cmk.utils.bi.bi_actions as bi_actions
 import cmk.utils.plugin_registry as plugin_registry
-from cmk.utils.bi.bi_aggregation_functions import (
-    BIAggregationFunctionBest,
-    BIAggregationFunctionCountOK,
-    BIAggregationFunctionWorst,
-)
-from cmk.utils.bi.bi_lib import ABCBIAction, ABCBIAggregationFunction, ABCBISearch
-from cmk.utils.bi.bi_search import (
-    BIEmptySearch,
-    BIFixedArgumentsSearch,
-    BIHostSearch,
-    BIServiceSearch,
-)
 from cmk.utils.defines import short_service_state_name
 
 import cmk.gui.userdb as userdb
@@ -45,6 +32,15 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.watolib.hosts_and_folders import Folder
+
+from cmk.bi import bi_actions
+from cmk.bi.bi_aggregation_functions import (
+    BIAggregationFunctionBest,
+    BIAggregationFunctionCountOK,
+    BIAggregationFunctionWorst,
+)
+from cmk.bi.bi_lib import ABCBIAction, ABCBIAggregationFunction, ABCBISearch
+from cmk.bi.bi_search import BIEmptySearch, BIFixedArgumentsSearch, BIHostSearch, BIServiceSearch
 
 #   .--Generic converter---------------------------------------------------.
 #   |                   ____                      _                        |

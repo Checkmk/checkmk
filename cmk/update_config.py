@@ -1164,7 +1164,7 @@ class UpdateConfig:
 
         # Reports
         try:
-            import cmk.gui.cee.reporting as reporting  # pylint: disable=cmk-module-layer-violation
+            import cmk.gui.cee.reporting as reporting
         except ImportError:
             reporting = None  # type: ignore[assignment]
 

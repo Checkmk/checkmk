@@ -9,7 +9,7 @@ from typing import NoReturn, Optional, Union
 
 import requests
 
-from cmk.notification_plugins.utils import (  # pylint: disable=cmk-module-layer-violation
+from cmk.notification_plugins.utils import (
     collect_context,
     get_sms_message_from_context,
     quote_message,

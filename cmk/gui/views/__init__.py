@@ -478,7 +478,7 @@ def _register_pre_21_plugin_api() -> None:
     switch to the new API. Until then let's not bother the users with it.
     """
     # Needs to be a local import to not influence the regular plugin loading order
-    import cmk.gui.plugins.views as api_module  # pylint: disable=cmk-module-layer-violation
+    import cmk.gui.plugins.views as api_module
     import cmk.gui.plugins.views.utils as plugin_utils
 
     for name in (

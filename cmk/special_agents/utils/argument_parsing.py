@@ -14,7 +14,7 @@ Current responsibilities include:
 import argparse
 from typing import Optional
 
-from cmk.special_agents.utils import vcrtrace  # pylint: disable=cmk-module-layer-violation
+from cmk.special_agents.utils import vcrtrace
 
 Args = argparse.Namespace
 

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Initialize the Checkmk default configuration in case it is necessary.
 """
-# pylint: disable=cmk-module-layer-violation
+
 
 from cmk.gui import main_modules
 from cmk.gui.utils.script_helpers import gui_context

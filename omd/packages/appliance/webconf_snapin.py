@@ -12,8 +12,7 @@ from cmk.gui.htmllib.html import html  # pylint: disable=cmk-module-layer-violat
 
 # Does not detect the module hierarchy correctly. Imports are fine.
 from cmk.gui.i18n import _  # pylint: disable=cmk-module-layer-violation
-
-from cmk.gui.plugins.sidebar.utils import (  # pylint: disable=cmk-module-layer-violation # isort: skip
+from cmk.gui.plugins.sidebar.utils import (  # pylint: disable=cmk-module-layer-violation
     SidebarSnapin,
     snapin_registry,
 )

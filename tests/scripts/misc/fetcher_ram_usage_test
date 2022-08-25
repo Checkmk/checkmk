@@ -27,7 +27,7 @@ from cmk.utils.observer import FetcherMemoryObserver
 import cmk.core_helpers.controller as controller
 from cmk.core_helpers.protocol import CMCMessage
 
-import cmk.base.utils  # pylint: disable=cmk-module-layer-violation
+import cmk.base.utils
 
 logger = logging.getLogger("cmk.helper")
 cmk.base.utils.register_sigint_handler()

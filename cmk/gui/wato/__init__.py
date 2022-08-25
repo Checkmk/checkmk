@@ -55,7 +55,7 @@
 # A huge number of imports are here to be compatible with old GUI plugins. Once we dropped support
 # for them, we can remove this here and the imports
 # flake8: noqa
-# pylint: disable=unused-import,cmk-module-layer-violation
+# pylint: disable=unused-import
 from typing import Any, Dict
 
 import cmk.utils.paths

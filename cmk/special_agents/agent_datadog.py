@@ -22,13 +22,13 @@ from cmk.utils import paths, store
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.utils.misc import typeshed_issue_7724
 
-from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
-
-from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation # isort: skip
+from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
     SyslogForwarderUnixSocket,
     SyslogMessage,
 )
+
+from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
+from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
 
 Tags = Sequence[str]
 DatadogAPIResponse = Mapping[str, Any]

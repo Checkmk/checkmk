@@ -108,7 +108,6 @@ from cmk.gui.plugins.views.perfometers.utils import (  # noqa: F401 # pylint: di
     perfometers,
 )
 from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused-import
-    _parse_url_sorters,
     Cell,
     cmp_custom_variable,
     cmp_insensitive_string,
@@ -125,8 +124,6 @@ from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused
     CommandSpec,
     compare_ips,
     declare_1to1_sorter,
-    declare_simple_sorter,
-    DerivedColumnsSorter,
     exporter_registry,
     format_plugin_output,
     get_custom_var,
@@ -155,15 +152,8 @@ from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused
     register_command_group,
     register_legacy_command,
     register_painter,
-    register_sorter,
     replace_action_url_macros,
     row_id,
-    Sorter,
-    sorter_registry,
-    SorterEntry,
-    SorterListEntry,
-    SorterRegistry,
-    SorterSpec,
     transform_action_url,
     view_hooks,
     view_is_enabled,
@@ -176,6 +166,18 @@ from cmk.gui.plugins.visuals.utils import (
     visual_type_registry,
     VisualInfo,
     VisualType,
+)
+from cmk.gui.sorter import (  # noqa: F401 # pylint: disable=unused-import
+    _parse_url_sorters,
+    declare_simple_sorter,
+    DerivedColumnsSorter,
+    register_sorter,
+    Sorter,
+    sorter_registry,
+    SorterEntry,
+    SorterListEntry,
+    SorterRegistry,
+    SorterSpec,
 )
 from cmk.gui.utils.csrf_token import check_csrf_token
 
@@ -482,6 +484,7 @@ def _register_pre_21_plugin_api() -> None:
     import cmk.gui.data_source as data_source
     import cmk.gui.plugins.views as api_module
     import cmk.gui.plugins.views.utils as plugin_utils
+    import cmk.gui.sorter as sorter
     import cmk.gui.view_store as view_store
 
     for name in (
@@ -490,6 +493,15 @@ def _register_pre_21_plugin_api() -> None:
         "RowTable",
     ):
         api_module.__dict__[name] = data_source.__dict__[name]
+
+    for name in (
+        "declare_simple_sorter",
+        "DerivedColumnsSorter",
+        "register_sorter",
+        "Sorter",
+        "sorter_registry",
+    ):
+        api_module.__dict__[name] = sorter.__dict__[name]
 
     for name in (
         "get_permitted_views",
@@ -516,8 +528,6 @@ def _register_pre_21_plugin_api() -> None:
         "compare_ips",
         "DataSourceLivestatus",
         "declare_1to1_sorter",
-        "declare_simple_sorter",
-        "DerivedColumnsSorter",
         "display_options",
         "EmptyCell",
         "ExportCellContent",
@@ -547,15 +557,12 @@ def _register_pre_21_plugin_api() -> None:
         "PainterOptions",
         "query_livestatus",
         "register_painter",
-        "register_sorter",
         "render_cache_info",
         "render_link_to_view",
         "replace_action_url_macros",
         "Row",
         "row_id",
         "RowTableLivestatus",
-        "Sorter",
-        "sorter_registry",
         "transform_action_url",
         "url_to_visual",
         "view_is_enabled",

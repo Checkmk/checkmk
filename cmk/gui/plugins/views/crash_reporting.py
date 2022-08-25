@@ -27,9 +27,8 @@ from cmk.gui.plugins.views.utils import (
     paint_age,
     Painter,
     painter_registry,
-    Sorter,
-    sorter_registry,
 )
+from cmk.gui.sorter import Sorter, sorter_registry
 from cmk.gui.type_defs import ColumnName, Row, SingleInfos
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.view_utils import CellSpec

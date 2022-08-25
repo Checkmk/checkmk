@@ -21,9 +21,8 @@ from cmk.gui.plugins.views.utils import (
     Painter,
     painter_registry,
     Row,
-    Sorter,
-    sorter_registry,
 )
+from cmk.gui.sorter import Sorter, sorter_registry
 from cmk.gui.type_defs import ColumnName, Perfdata, PerfometerSpec, TranslatedMetrics
 from cmk.gui.utils.html import HTML
 

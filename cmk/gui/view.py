@@ -21,18 +21,20 @@ from cmk.gui.i18n import _
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.plugins.views.utils import (
     Cell,
-    DerivedColumnsSorter,
     JoinCell,
     Layout,
     layout_registry,
     make_host_breadcrumb,
     make_service_breadcrumb,
     painter_exists,
+    view_title,
+)
+from cmk.gui.sorter import (
+    DerivedColumnsSorter,
     sorter_registry,
     SorterEntry,
     SorterListEntry,
     SorterSpec,
-    view_title,
 )
 from cmk.gui.type_defs import (
     FilterName,

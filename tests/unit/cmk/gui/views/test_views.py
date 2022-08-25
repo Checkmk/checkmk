@@ -20,6 +20,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.views.utils import Cell, Painter
 from cmk.gui.plugins.visuals.utils import Filter
+from cmk.gui.sorter import sorter_registry
 from cmk.gui.type_defs import PainterSpec
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view import View
@@ -1845,7 +1846,7 @@ def test_registered_sorters() -> None:
         "wato_folder_rel": {"columns": ["host_filename"], "title": "Folder - relative path"},
     }
 
-    for sorter_class in cmk.gui.plugins.views.utils.sorter_registry.values():
+    for sorter_class in sorter_registry.values():
         sorter = sorter_class()
         spec = expected[sorter.ident]
 
@@ -1860,31 +1861,6 @@ def test_registered_sorters() -> None:
             assert sorter.columns == spec["columns"]
 
         assert sorter.load_inv == spec.get("load_inv", False)
-
-
-def test_register_sorter(monkeypatch) -> None:  # type:ignore[no-untyped-def]
-    monkeypatch.setattr(
-        cmk.gui.plugins.views.utils, "sorter_registry", cmk.gui.plugins.views.utils.SorterRegistry()
-    )
-
-    def cmpfunc():
-        pass
-
-    cmk.gui.plugins.views.utils.register_sorter(
-        "abc",
-        {
-            "title": "A B C",
-            "columns": ["x"],
-            "cmp": cmpfunc,
-        },
-    )
-
-    sorter = cmk.gui.plugins.views.utils.sorter_registry["abc"]()
-    assert isinstance(sorter, cmk.gui.plugins.views.utils.Sorter)
-    assert sorter.ident == "abc"
-    assert sorter.title == "A B C"
-    assert sorter.columns == ["x"]
-    assert sorter.cmp.__name__ == cmpfunc.__name__
 
 
 def test_get_needed_regular_columns(view) -> None:  # type:ignore[no-untyped-def]

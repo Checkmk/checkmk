@@ -21,14 +21,11 @@ from cmk.gui.plugins.views.utils import (
     cmp_string_list,
     compare_ips,
     declare_1to1_sorter,
-    declare_simple_sorter,
-    DerivedColumnsSorter,
     get_perfdata_nth_value,
     get_tag_groups,
-    Sorter,
-    sorter_registry,
 )
 from cmk.gui.site_config import get_site_config
+from cmk.gui.sorter import declare_simple_sorter, DerivedColumnsSorter, Sorter, sorter_registry
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.valuespec import Dictionary, DropdownChoice, ValueSpec
 from cmk.gui.view_utils import get_labels

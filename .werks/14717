@@ -1,0 +1,15 @@
+Title: Local customizations might need adjustment due to structural refactorings in GUI code
+Class: feature
+Compatible: incomp
+Component: wato
+Date: 1661407444
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0p11
+
+The monolithic file <tt>cmk/gui/plugins/wato/datasource_programs.py</tt> has been partially split up
+into smaller files in the folder <tt>datasource_programs</tt>. Hence, any customization (single
+files and MKPs) containing imports from <tt>cmk/gui/plugins/wato/datasource_programs.py</tt> might
+have to be adjusted. The new import path is probably
+<tt>cmk.gui.plugins.wato.datasource_programs.common</tt>.

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import uuid
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field
@@ -175,6 +177,19 @@ class VisualLinkSpec(NamedTuple):
     type_name: VisualTypeName
     name: VisualName
 
+    @classmethod
+    def from_raw(cls, value: VisualName | tuple[VisualTypeName, VisualName]) -> VisualLinkSpec:
+        # With Checkmk 2.0 we introduced the option to link to dashboards. Now the link_view is not
+        # only a string (view_name) anymore, but a tuple of two elemets: ('<visual_type_name>',
+        # '<visual_name>'). Transform the old value to the new format.
+        if isinstance(value, tuple):
+            return cls(value[0], value[1])
+
+        return cls("views", value)
+
+    def to_raw(self) -> tuple[VisualTypeName, VisualName]:
+        return self.type_name, self.name
+
 
 # View specific
 Row = Dict[str, Any]  # TODO: Improve this type
@@ -196,7 +211,7 @@ class PainterSpec:
     column_title: str | None = None
 
     @classmethod
-    def from_raw(cls, *value: Any) -> "PainterSpec":
+    def from_raw(cls, *value: Any) -> PainterSpec:
         # Some legacy views have optional fields like "tooltip" set to "" instead of None
         # in their definitions. Consolidate this case to None.
         value = (value[0],) + tuple(p or None for p in value[1:]) + (None,) * (5 - len(value))
@@ -207,20 +222,10 @@ class PainterSpec:
             name = value[0]
             parameters = None
 
-        # With Checkmk 2.0 we introduced the option to link to dashboards. Now the link_view is not
-        # only a string (view_name) anymore, but a tuple of two elemets: ('<visual_type_name>',
-        # '<visual_name>'). Transform the old value to the new format.
-        if isinstance(value[1], str):
-            link_spec = VisualLinkSpec("views", value[1])
-        elif isinstance(value[1], tuple):
-            link_spec = VisualLinkSpec(*value[1])
-        else:
-            link_spec = None
-
         return cls(
             name=name,
             parameters=parameters,
-            link_spec=link_spec,
+            link_spec=None if value[1] is None else VisualLinkSpec.from_raw(value[1]),
             tooltip=value[2],
             join_index=value[3],
             column_title=value[4],
@@ -237,7 +242,7 @@ class PainterSpec:
     ]:
         return (
             self.name if self.parameters is None else (self.name, self.parameters),
-            None if self.link_spec is None else (self.link_spec.type_name, self.link_spec.name),
+            None if self.link_spec is None else self.link_spec.to_raw(),
             self.tooltip,
             self.join_index,
             self.column_title,

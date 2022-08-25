@@ -1478,7 +1478,6 @@ def write_cronjobs_api_sections(
     cluster_name: str,
     annotation_key_pattern: AnnotationOption,
     api_cron_jobs: Sequence[api.CronJob],
-    api_resource_quotas: Sequence[api.ResourceQuota],
     api_cron_job_pods: Sequence[api.Pod],
     piggyback_formatter: ObjectSpecificPBFormatter,
 ) -> None:
@@ -2848,7 +2847,6 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                 arguments.cluster,
                 arguments.annotation_key_pattern,
                 api_data.cron_jobs,
-                resource_quotas,
                 monitored_api_cron_job_pods,
                 piggyback_formatter=functools.partial(piggyback_formatter, "cronjob"),
             )

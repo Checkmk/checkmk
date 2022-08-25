@@ -42,6 +42,7 @@ from cmk.base.plugins.agent_based.utils.kube import (
                 uid="3336928e-b9e1-4774-a5c4-bf45b8f9f24e",
                 controllers=[],
                 cluster="cluster",
+                kubernetes_cluster_hostname="host",
             ),
             PodContainers(
                 containers={

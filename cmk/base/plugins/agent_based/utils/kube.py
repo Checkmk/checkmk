@@ -496,6 +496,7 @@ class PodInfo(Section):
     # TODO: see CMK-9901
     controllers: ControlChain = []
     cluster: str
+    kubernetes_cluster_hostname: str
 
 
 class ClusterDetails(Section):

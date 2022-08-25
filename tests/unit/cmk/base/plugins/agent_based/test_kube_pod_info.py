@@ -33,6 +33,7 @@ from cmk.base.plugins.agent_based.utils.kube import PodInfo
                 restart_policy="Always",
                 uid="dd1019ca-c429-46af-b6b7-8aad47b6081a",
                 cluster="cluster",
+                kubernetes_cluster_hostname="host",
             ),
             (
                 Result(state=State.OK, summary="Name: mypod"),

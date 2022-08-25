@@ -18,7 +18,7 @@ class DeploymentConditionFactory(ModelFactory):
 
 def test_pod_deployment_controller_name(pod: agent.Pod, deployment: agent.Deployment) -> None:
     pod.add_controller(deployment)
-    pod_info = pod.info("cluster", agent.AnnotationNonPatternOption.ignore_all)
+    pod_info = pod.info("cluster", "host", agent.AnnotationNonPatternOption.ignore_all)
     assert len(pod_info.controllers) == 1
     assert pod_info.controllers[0].name == deployment.name()
 

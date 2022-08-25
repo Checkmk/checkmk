@@ -159,7 +159,10 @@ def test_pod_info() -> None:
         uid="pod-uid",
     )
     section_pod_info = agent.pod_info(
-        pod, cluster_name="cluster-name", annotation_key_pattern="import_all"
+        pod,
+        cluster_name="cluster-name",
+        kubernetes_cluster_hostname="host",
+        annotation_key_pattern="import_all",
     )
 
     assert isinstance(section_pod_info, section.PodInfo)
@@ -184,4 +187,5 @@ def test_pod_info() -> None:
         ],
         cluster="cluster-name",
         uid="pod-uid",
+        kubernetes_cluster_hostname="host",
     )

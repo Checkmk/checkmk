@@ -409,6 +409,7 @@ class Pod:
     def info(
         self,
         cluster_name: str,
+        kubernetes_cluster_hostname: str,
         annotation_key_pattern: AnnotationOption,
     ) -> section.PodInfo:
         controllers = []
@@ -438,6 +439,7 @@ class Pod:
             uid=self.uid,
             controllers=controllers,
             cluster=cluster_name,
+            kubernetes_cluster_hostname=kubernetes_cluster_hostname,
         )
 
     def conditions(self) -> Optional[section.PodConditions]:
@@ -1700,12 +1702,13 @@ def write_pods_api_sections(
     cluster_name: str,
     annotation_key_pattern: AnnotationOption,
     api_pods: Sequence[Pod],
+    kubernetes_cluster_hostname: str,
     piggyback_formatter: ObjectSpecificPBFormatter,
 ) -> None:
     for pod in api_pods:
         with ConditionalPiggybackSection(piggyback_formatter(pod.name(prepend_namespace=True))):
             for section_name, section_content in pod_api_based_checkmk_sections(
-                cluster_name, annotation_key_pattern, pod
+                cluster_name, kubernetes_cluster_hostname, annotation_key_pattern, pod
             ):
                 if section_content is None:
                     continue
@@ -1727,6 +1730,7 @@ def write_machine_sections(
 
 def pod_api_based_checkmk_sections(
     cluster_name: str,
+    kubernetes_cluster_hostname: str,
     annotation_key_pattern: AnnotationOption,
     pod: Pod,
 ) -> Iterable[tuple[str, section.Section | None]]:
@@ -1738,7 +1742,10 @@ def pod_api_based_checkmk_sections(
         ("kube_pod_init_container_specs_v1", pod.init_container_specs),
         ("kube_start_time_v1", pod.start_time),
         ("kube_pod_lifecycle_v1", pod.lifecycle_phase),
-        ("kube_pod_info_v1", lambda: pod.info(cluster_name, annotation_key_pattern)),
+        (
+            "kube_pod_info_v1",
+            lambda: pod.info(cluster_name, kubernetes_cluster_hostname, annotation_key_pattern),
+        ),
         (
             "kube_cpu_resources_v1",
             lambda: _collect_cpu_resources([pod]),
@@ -2638,7 +2645,10 @@ def pod_lifecycle_phase(pod_status: api.PodStatus) -> section.PodLifeCycle:
 
 
 def pod_info(
-    pod: api.Pod, cluster_name: str, annotation_key_pattern: AnnotationOption
+    pod: api.Pod,
+    cluster_name: str,
+    kubernetes_cluster_hostname: str,
+    annotation_key_pattern: AnnotationOption,
 ) -> section.PodInfo:
 
     return section.PodInfo(
@@ -2665,6 +2675,7 @@ def pod_info(
             for c in pod.controllers
         ],
         cluster=cluster_name,
+        kubernetes_cluster_hostname=kubernetes_cluster_hostname,
     )
 
 
@@ -2672,6 +2683,7 @@ def write_api_pods_sections(
     cluster_name: str,
     annotation_key_pattern: AnnotationOption,
     pods: Sequence[api.Pod],
+    kubernetes_cluster_hostname: str,
     piggyback_formatter: ObjectSpecificPBFormatter,
 ) -> None:
     def output_pod_sections(
@@ -2693,7 +2705,9 @@ def write_api_pods_sections(
             "kube_pod_init_container_specs_v1": lambda: pod_init_container_specs(pod.spec),
             "kube_start_time_v1": lambda: pod_start_time(pod.status),
             "kube_pod_lifecycle_v1": lambda: pod_lifecycle_phase(pod.status),
-            "kube_pod_info_v1": lambda: pod_info(pod, cluster_name, annotation_key_pattern),
+            "kube_pod_info_v1": lambda: pod_info(
+                pod, cluster_name, kubernetes_cluster_hostname, annotation_key_pattern
+            ),
             "kube_cpu_resources_v1": lambda: _collect_cpu_resources_from_api_pods([pod]),
             "kube_memory_resources_v1": lambda: _collect_memory_resources_from_api_pods([pod]),
         }
@@ -2861,6 +2875,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                     arguments.cluster,
                     arguments.annotation_key_pattern,
                     monitored_api_cron_job_pods,
+                    kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
                     piggyback_formatter=functools.partial(piggyback_formatter, "pod"),
                 )
             if MonitoredObject.pods in arguments.monitored_objects:
@@ -2878,6 +2893,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                             for pod in monitored_api_cron_job_pods
                         ]
                     ],
+                    kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
                     piggyback_formatter=functools.partial(piggyback_formatter, "pod"),
                 )
 

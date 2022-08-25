@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
+
+from cmk.base.check_api import check_levels
+
 aironet_default_error_levels = (1.0, 10.0)  # per second
 
 
@@ -15,16 +19,13 @@ def check_aironet_errors(item, params, info):
         if line[0] == item:
             value = int(line[1])
             this_time = time.time()
-            persec = get_rate("aironet_errors.%s" % item, this_time, value)
-            warn, crit = params
-            perfdata = [("errors", persec, None, None, warn, crit)]
-            infotxt = "%.2f errors/s" % persec
-            return (
-                2 if persec >= crit else 1 if persec >= warn else 0,  #  #
-                infotxt,
-                perfdata,
+            yield check_levels(
+                get_rate("aironet_errors.%s" % item, this_time, value),
+                "errors",
+                params,
+                infoname="Errors/s",
             )
-    return None
+            return
 
 
 check_info["aironet_errors"] = {

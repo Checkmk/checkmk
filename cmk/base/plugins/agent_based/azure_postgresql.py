@@ -19,27 +19,28 @@ from .utils.azure import (
     Section,
 )
 
-DB_MYSQL_RESOURCE_NAME = "Microsoft.DBforMySQL/servers"
+DB_POSTGRESQL_RESOURCE_NAME = "Microsoft.DBforPostgreSQL/servers"
 
 
 register.check_plugin(
-    name="azure_mysql_memory",
+    name="azure_postgresql_memory",
     sections=["azure_servers"],
-    service_name="Azure/DB for MySQL %s Memory",
+    service_name="Azure/DB for PostgreSQL %s Memory",
     discovery_function=discover_azure_by_metrics(
-        "average_memory_percent", resource_type=DB_MYSQL_RESOURCE_NAME
+        "average_memory_percent", resource_type=DB_POSTGRESQL_RESOURCE_NAME
     ),
     check_function=check_memory(),
     check_ruleset_name="memory_utilization",
     check_default_parameters={},
 )
 
+
 register.check_plugin(
-    name="azure_mysql_cpu",
+    name="azure_postgresql_cpu",
     sections=["azure_servers"],
-    service_name="Azure/DB for MySQL %s CPU",
+    service_name="Azure/DB for PostgreSQL %s CPU",
     discovery_function=discover_azure_by_metrics(
-        "average_cpu_percent", resource_type=DB_MYSQL_RESOURCE_NAME
+        "average_cpu_percent", resource_type=DB_POSTGRESQL_RESOURCE_NAME
     ),
     check_function=check_cpu(),
     check_ruleset_name="cpu_utilization_with_item",
@@ -51,7 +52,7 @@ def check_replication() -> Callable[[str, Mapping[str, Any], Section], CheckResu
     return check_azure_metrics(
         [
             MetricData(
-                "total_seconds_behind_master",
+                "total_pg_replica_log_delay_in_seconds",
                 "levels",
                 "replication_lag",
                 "Replication lag",
@@ -62,54 +63,57 @@ def check_replication() -> Callable[[str, Mapping[str, Any], Section], CheckResu
 
 
 register.check_plugin(
-    name="azure_mysql_replication",
+    name="azure_postgresql_replication",
     sections=["azure_servers"],
-    service_name="Azure/DB for MySQL %s Replication",
+    service_name="Azure/DB for PostgreSQL %s Replication",
     discovery_function=discover_azure_by_metrics(
-        "total_seconds_behind_master", resource_type=DB_MYSQL_RESOURCE_NAME
+        "total_pg_replica_log_delay_in_seconds", resource_type=DB_POSTGRESQL_RESOURCE_NAME
     ),
     check_function=check_replication(),
     check_ruleset_name="replication_lag",
     check_default_parameters={},
 )
 
+
 register.check_plugin(
-    name="azure_mysql_connections",
+    name="azure_postgresql_connections",
     sections=["azure_servers"],
-    service_name="Azure/DB for MySQL %s Connections",
+    service_name="Azure/DB for PostgreSQL %s Connections",
     discovery_function=discover_azure_by_metrics(
         "total_active_connections",
         "total_connections_failed",
-        resource_type=DB_MYSQL_RESOURCE_NAME,
+        resource_type=DB_POSTGRESQL_RESOURCE_NAME,
     ),
     check_function=check_connections(),
     check_ruleset_name="database_connections",
     check_default_parameters={},
 )
 
+
 register.check_plugin(
-    name="azure_mysql_network",
+    name="azure_postgresql_network",
     sections=["azure_servers"],
-    service_name="Azure/DB for MySQL %s Network",
+    service_name="Azure/DB for PostgreSQL %s Network",
     discovery_function=discover_azure_by_metrics(
         "total_network_bytes_ingress",
         "total_network_bytes_egress",
-        resource_type=DB_MYSQL_RESOURCE_NAME,
+        resource_type=DB_POSTGRESQL_RESOURCE_NAME,
     ),
     check_function=check_network(),
     check_ruleset_name="network_io",
     check_default_parameters={},
 )
 
+
 register.check_plugin(
-    name="azure_mysql_storage",
+    name="azure_postgresql_storage",
     sections=["azure_servers"],
-    service_name="Azure/DB for MySQL %s Storage",
+    service_name="Azure/DB for PostgreSQL %s Storage",
     discovery_function=discover_azure_by_metrics(
         "average_io_consumption_percent",
         "average_serverlog_storage_percent",
         "average_storage_percent",
-        resource_type=DB_MYSQL_RESOURCE_NAME,
+        resource_type=DB_POSTGRESQL_RESOURCE_NAME,
     ),
     check_function=check_storage(),
     check_ruleset_name="azure_db_storage",

@@ -144,13 +144,16 @@ def parse_resources(string_table: StringTable) -> Mapping[str, Resource]:
 
 
 def discover_azure_by_metrics(
-    *desired_metrics: Iterable[str],
+    *desired_metrics: str,
+    resource_type: str | None = None,
 ) -> Callable[[Section], DiscoveryResult]:
     """Return a discovery function, that will discover if any of the metrics are found"""
 
     def discovery_function(section: Section) -> DiscoveryResult:
         for item, resource in section.items():
-            if set(desired_metrics) & set(resource.metrics):
+            if (resource_type is None or resource_type == resource.type) and (
+                set(desired_metrics) & set(resource.metrics)
+            ):
                 yield Service(item=item)
 
     return discovery_function

@@ -1,0 +1,26 @@
+Title: azure_postgresql: Monitor Azure database for PostgreSQL
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1661448533
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+It's now possible to monitor Azure database for PostgreSQL in Checkmk.
+Six new checks have been added:
+<ul>
+<li>Microsoft Azure PostgreSQL Database: CPU Utilization</li>
+<li>Microsoft Azure PostgreSQL Database: Connections</li>
+<li>Microsoft Azure PostgreSQL Database: Memory Utilization</li>
+<li>Microsoft Azure PostgreSQL Database: Network</li>
+<li>Microsoft Azure PostgreSQL Database: Replication</li>
+<li>Microsoft Azure PostgreSQL Database: Storage</li>
+</ul>
+
+The new services will be automatically discovered if you have
+an Azure database for PostgreSQL in the resource group already monitored
+in Checkmk.
+
+

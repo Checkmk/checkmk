@@ -14,6 +14,7 @@ import cmk.gui.mkeventd as mkeventd
 import cmk.gui.sites as sites
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config, builtin_role_ids
+from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -22,7 +23,6 @@ from cmk.gui.logged_in import user
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.dashboard.utils import DashletConfig
 from cmk.gui.plugins.views.utils import (
-    ABCDataSource,
     Cell,
     cmp_num_split,
     cmp_simple_number,
@@ -31,10 +31,7 @@ from cmk.gui.plugins.views.utils import (
     command_registry,
     CommandActionResult,
     CommandSpec,
-    data_source_registry,
     declare_1to1_sorter,
-    get_permitted_views,
-    multisite_builtin_views,
     paint_age,
     paint_nagiosflag,
     Painter,
@@ -55,6 +52,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless, urlencode_vars
 from cmk.gui.valuespec import MonitoringState
+from cmk.gui.view_store import get_permitted_views, multisite_builtin_views
 from cmk.gui.view_utils import CellSpec
 
 #   .--Datasources---------------------------------------------------------.

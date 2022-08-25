@@ -23,10 +23,10 @@ from cmk.gui.plugins.sidebar.utils import (
     SidebarSnapin,
     snapin_registry,
 )
-from cmk.gui.plugins.views.utils import get_permitted_views
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry, MainModuleTopic
 from cmk.gui.type_defs import Choices, MegaMenu, TopicMenuItem, TopicMenuTopic, ViewSpec
 from cmk.gui.utils.html import HTML
+from cmk.gui.view_store import get_permitted_views
 from cmk.gui.watolib.activate_changes import ActivateChanges
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.search import (

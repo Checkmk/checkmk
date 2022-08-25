@@ -14,14 +14,13 @@ from cmk.utils.type_defs import HostName, ServiceName
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
+from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.plugins.views.utils import (
-    ABCDataSource,
     Cell,
-    data_source_registry,
     DerivedColumnsSorter,
     JoinCell,
     Layout,

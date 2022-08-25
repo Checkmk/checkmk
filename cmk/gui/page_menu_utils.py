@@ -12,6 +12,7 @@ import cmk.gui.pagetypes as pagetypes
 import cmk.gui.visuals as visuals
 from cmk.gui.bi import is_part_of_aggregation
 from cmk.gui.config import active_config
+from cmk.gui.data_source import ABCDataSource
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -24,7 +25,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.views.utils import (
-    ABCDataSource,
     get_linked_visual_request_vars,
     make_linked_visual_url,
     view_title,

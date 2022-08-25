@@ -5,18 +5,20 @@
 
 import cmk.gui.views as views
 import cmk.gui.visuals as visuals
+from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.dashboard.utils import dashlet_registry, IFrameDashlet
-from cmk.gui.plugins.views.utils import data_source_registry, PainterOptions
+from cmk.gui.plugins.views.utils import PainterOptions
 from cmk.gui.type_defs import SingleInfos, ViewSpec
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.view import View
 from cmk.gui.view_renderer import GUIViewRenderer
+from cmk.gui.view_store import get_permitted_views
 
 
 class ABCViewDashlet(IFrameDashlet):
@@ -185,7 +187,7 @@ class LinkedViewDashlet(ABCViewDashlet):
 
     def _get_view_spec(self) -> ViewSpec:
         view_name = self._dashlet_spec["name"]
-        view_spec = views.get_permitted_views().get(view_name)
+        view_spec = get_permitted_views().get(view_name)
         if not view_spec:
             raise MKUserError("name", _("No view defined with the name '%s'.") % view_name)
 

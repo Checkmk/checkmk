@@ -5,13 +5,13 @@
 
 import cmk.gui.forms as forms
 import cmk.gui.visuals as visuals
+from cmk.gui.data_source import data_source_registry
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_form_page_menu
-from cmk.gui.plugins.views.utils import data_source_registry
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import DropdownChoice

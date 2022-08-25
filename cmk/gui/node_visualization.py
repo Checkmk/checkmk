@@ -41,7 +41,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import AjaxPage, Page, page_registry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.plugins.views.utils import get_permitted_views
 from cmk.gui.plugins.visuals.node_vis import FilterTopologyMaxNodes, FilterTopologyMeshDepth
 from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
 from cmk.gui.plugins.wato import bi_valuespecs
@@ -49,6 +48,7 @@ from cmk.gui.type_defs import VisualContext
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.theme import theme
 from cmk.gui.view import View
+from cmk.gui.view_store import get_permitted_views
 from cmk.gui.views import ABCAjaxInitialFilters
 
 from cmk.bi.aggregation_functions import BIAggregationFunctionSchema

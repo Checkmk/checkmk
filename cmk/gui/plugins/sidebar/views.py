@@ -23,8 +23,8 @@ from cmk.gui.plugins.sidebar.utils import (
     SidebarSnapin,
     snapin_registry,
 )
-from cmk.gui.plugins.views.utils import get_permitted_views
 from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, Visual
+from cmk.gui.view_store import get_permitted_views
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.reporting as reporting  # pylint: disable=no-name-in-module

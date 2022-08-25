@@ -39,6 +39,7 @@ from cmk.gui.breadcrumb import (
     make_topic_breadcrumb,
 )
 from cmk.gui.config import builtin_role_ids
+from cmk.gui.data_source import data_source_registry
 from cmk.gui.exceptions import (
     HTTPRedirect,
     MKAuthException,
@@ -106,7 +107,6 @@ from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=un
     save_all_dashboards,
 )
 from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
-from cmk.gui.plugins.views.utils import data_source_registry
 from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
 from cmk.gui.type_defs import InfoName, SingleInfos, VisualContext
 from cmk.gui.utils.html import HTML, HTMLInput

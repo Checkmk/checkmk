@@ -12,6 +12,7 @@ import cmk.gui.view_utils
 import cmk.gui.views as views
 import cmk.gui.visuals as visuals
 from cmk.gui.config import active_config
+from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -22,20 +23,14 @@ from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenuEntry, PageMenuLink
 from cmk.gui.page_menu_utils import collect_context_links
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.plugins.views.utils import (
-    ABCDataSource,
-    command_registry,
-    CommandSpec,
-    data_source_registry,
-    get_permitted_views,
-    PainterOptions,
-)
+from cmk.gui.plugins.views.utils import command_registry, CommandSpec, PainterOptions
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import Rows, VisualContext
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, requested_file_name
 from cmk.gui.view import View
+from cmk.gui.view_store import get_permitted_views
 
 HeaderButton = Union[Tuple[str, str, str], Tuple[str, str, str, str]]
 Items = List[Tuple[str, str, str]]

@@ -15,6 +15,7 @@ import cmk.gui.plugins.views
 import cmk.gui.plugins.views.utils
 import cmk.gui.views
 from cmk.gui.config import active_config
+from cmk.gui.data_source import ABCDataSource, data_source_registry, RowTable
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.views.utils import Cell, Painter
@@ -22,12 +23,13 @@ from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import PainterSpec
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view import View
+from cmk.gui.view_store import multisite_builtin_views
 
 
 @pytest.fixture(name="view")
 def view_fixture(request_context):
     view_name = "allhosts"
-    view_spec = cmk.gui.views.multisite_builtin_views[view_name].copy()
+    view_spec = multisite_builtin_views[view_name].copy()
     return View(view_name, view_spec, view_spec.get("context", {}))
 
 
@@ -640,10 +642,10 @@ def test_registered_datasources() -> None:
         },
     }
 
-    names = cmk.gui.plugins.views.utils.data_source_registry.keys()
+    names = data_source_registry.keys()
     assert sorted(expected.keys()) == sorted(names)
 
-    for ds_class in cmk.gui.plugins.views.utils.data_source_registry.values():
+    for ds_class in data_source_registry.values():
         ds = ds_class()
         spec = expected[ds.ident]
         assert ds.title == spec["title"]
@@ -1969,13 +1971,13 @@ def test_get_needed_join_columns(view, load_config) -> None:  # type:ignore[no-u
 
 def test_create_view_basics() -> None:
     view_name = "allhosts"
-    view_spec = cmk.gui.views.multisite_builtin_views[view_name]
+    view_spec = multisite_builtin_views[view_name]
     view = View(view_name, view_spec, view_spec.get("context", {}))
 
     assert view.name == view_name
     assert view.spec == view_spec
-    assert isinstance(view.datasource, cmk.gui.plugins.views.utils.ABCDataSource)
-    assert isinstance(view.datasource.table, cmk.gui.plugins.views.utils.RowTable)
+    assert isinstance(view.datasource, ABCDataSource)
+    assert isinstance(view.datasource.table, RowTable)
     assert view.row_limit is None
     assert view.user_sorters is None
     assert view.want_checkboxes is False

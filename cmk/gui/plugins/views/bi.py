@@ -13,23 +13,21 @@ from cmk.utils.defines import short_service_state_name
 
 import cmk.gui.bi as bi
 import cmk.gui.utils.escaping as escaping
+from cmk.gui.data_source import ABCDataSource, data_source_registry, RowTable
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.utils import (
-    ABCDataSource,
     Cell,
     CellSpec,
     CSVExportError,
-    data_source_registry,
     Painter,
     painter_option_registry,
     painter_registry,
     PainterOption,
     PainterOptions,
     Row,
-    RowTable,
 )
 from cmk.gui.type_defs import ColumnName, Rows, SingleInfos
 from cmk.gui.utils.html import HTML

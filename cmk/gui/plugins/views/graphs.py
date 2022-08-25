@@ -18,7 +18,6 @@ from cmk.gui.plugins.views.utils import (
     CSVExportError,
     get_graph_timerange_from_painter_options,
     JSONExportError,
-    multisite_builtin_views,
     Painter2,
     painter_option_registry,
     PainterOption,
@@ -36,6 +35,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import Dictionary, DropdownChoice, Transform, ValueSpec
+from cmk.gui.view_store import multisite_builtin_views
 from cmk.gui.view_utils import CellSpec
 
 multisite_builtin_views.update(

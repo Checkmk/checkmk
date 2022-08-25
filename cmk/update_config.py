@@ -92,11 +92,11 @@ from cmk.gui.plugins.userdb.utils import (
     save_connection_config,
     USER_SCHEME_SERIAL,
 )
-from cmk.gui.plugins.views.utils import get_all_views
 from cmk.gui.plugins.watolib.utils import config_variable_registry, filter_unknown_settings
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.userdb import load_users, save_users, Users
 from cmk.gui.utils.script_helpers import gui_context
+from cmk.gui.view_store import get_all_views
 from cmk.gui.wato.mkeventd import MACROS_AND_VARS
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.changes import ActivateChangesWriter, add_change

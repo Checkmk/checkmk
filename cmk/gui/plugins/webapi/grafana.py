@@ -10,6 +10,7 @@ import livestatus
 import cmk.gui.availability as availability
 import cmk.gui.sites as sites
 import cmk.gui.user_sites as user_sites
+from cmk.gui.data_source import data_source_registry
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.graph_images import graph_recipes_for_api_request
@@ -18,7 +19,6 @@ from cmk.gui.plugins.metrics.utils import (
     metric_info,
     perfvar_translation,
 )
-from cmk.gui.plugins.views.utils import data_source_registry
 from cmk.gui.plugins.webapi.utils import api_call_collection_registry, APICallCollection
 from cmk.gui.visuals import cleanup_context_filters, get_filter_headers
 

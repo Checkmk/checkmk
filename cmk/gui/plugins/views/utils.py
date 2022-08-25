@@ -23,7 +23,6 @@ from typing import (
     Callable,
     cast,
     Dict,
-    Final,
     Hashable,
     List,
     Mapping,
@@ -63,6 +62,7 @@ import cmk.gui.view_utils
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.config import active_config
+from cmk.gui.data_source import ABCDataSource, data_source_registry, RowTable
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.hooks import request_memoize
@@ -79,7 +79,6 @@ from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
 from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
 from cmk.gui.type_defs import (
-    AllViewSpecs,
     ColumnName,
     CombinedGraphSpec,
     HTTPVariables,
@@ -87,13 +86,11 @@ from cmk.gui.type_defs import (
     PainterName,
     PainterParameters,
     PainterSpec,
-    PermittedViewSpecs,
     Row,
     Rows,
     SingleInfos,
     SorterFunction,
     SorterName,
-    ViewName,
     ViewSpec,
     Visual,
     VisualContext,
@@ -105,6 +102,7 @@ from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.gui.valuespec import DropdownChoice, ValueSpec
+from cmk.gui.view_store import get_permitted_views
 from cmk.gui.view_utils import CellContent, CellSpec, CSSClass
 
 if TYPE_CHECKING:
@@ -646,167 +644,12 @@ def register_legacy_command(spec: Dict[str, Any]) -> None:
     command_registry.register(cls)
 
 
-class ABCDataSource(abc.ABC):
-    """Provider of rows for the views (basically tables of data) in the GUI"""
-
-    @property
-    @abc.abstractmethod
-    def ident(self) -> str:
-        """The identity of a data source. One word, may contain alpha numeric characters"""
-        raise NotImplementedError()
-
-    @property
-    @abc.abstractmethod
-    def title(self) -> str:
-        """Used as display-string for the datasource in the GUI (e.g. view editor)"""
-        raise NotImplementedError()
-
-    @property
-    @abc.abstractmethod
-    def table(self) -> "RowTable":
-        """Returns a table object that can provide a list of rows for the provided
-        query using the query() method."""
-        raise NotImplementedError()
-
-    @property
-    @abc.abstractmethod
-    def infos(self) -> SingleInfos:
-        """Infos that are available with this data sources
-
-        A info is used to create groups out of single painters and filters.
-        e.g. 'host' groups all painters and filters which begin with "host_".
-        Out of this declaration multisite knows which filters or painters are
-        available for the single datasources."""
-        raise NotImplementedError()
-
-    @property
-    def merge_by(self) -> Optional[str]:
-        """
-        1. Results in fetching these columns from the datasource.
-        2. Rows from different sites are merged together. For example members
-           of hostgroups which exist on different sites are merged together to
-           show the user one big hostgroup.
-        """
-        return None
-
-    @property
-    def add_columns(self) -> List[ColumnName]:
-        """These columns are requested automatically in addition to the
-        other needed columns."""
-        return []
-
-    @property
-    def unsupported_columns(self) -> List[ColumnName]:
-        """These columns are ignored, e.g. 'site' for DataSourceBIAggregations"""
-        return []
-
-    @property
-    def add_headers(self) -> str:
-        """additional livestatus headers to add to each call"""
-        return ""
-
-    @property
-    @abc.abstractmethod
-    def keys(self) -> List[ColumnName]:
-        """columns which must be fetched in order to execute commands on
-        the items (= in order to identify the items and gather all information
-        needed for constructing Nagios commands)
-        those columns are always fetched from the datasource for each item"""
-        raise NotImplementedError()
-
-    @property
-    @abc.abstractmethod
-    def id_keys(self) -> List[ColumnName]:
-        """These are used to generate a key which is unique for each data row
-        is used to identify an item between http requests"""
-        raise NotImplementedError()
-
-    @property
-    def join(self) -> Optional[Tuple[str, str]]:
-        """A view can display e.g. host-rows and include information from e.g.
-        the service table to create a column which shows e.g. the state of one
-        service.
-        With this attibute it is configured which tables can be joined into
-        this table and by which attribute. It must be given as tuple, while
-        the first argument is the name of the table to be joined and the second
-        argument is the column in the master table (in this case hosts) which
-        is used to match the rows of the master and slave table."""
-        return None
-
-    @property
-    def join_key(self) -> Optional[str]:
-        """Each joined column in the view can have a 4th attribute which is
-        used as value for this column to filter the datasource query
-        to get the matching row of the slave table."""
-        return None
-
-    @property
-    def ignore_limit(self) -> bool:
-        """Ignore the soft/hard query limits in view.py/query_data(). This
-        fixes stats queries on e.g. the log table."""
-        return False
-
-    @property
-    def auth_domain(self) -> str:
-        """Querying a table might require to use another auth domain than
-        the default one (read). When this is set, the given auth domain
-        will be used while fetching the data for this datasource from
-        livestatus."""
-        return "read"
-
-    @property
-    def time_filters(self) -> List[str]:
-        return []
-
-    @property
-    def link_filters(self) -> Dict[str, str]:
-        """When the single info "hostgroup" is used, use the "opthostgroup" filter
-        to handle the data provided by the single_spec value of the "hostgroup"
-        info, which is in fact the name of the wanted hostgroup"""
-        return {}
-
-    # TODO: This can be cleaned up later
-    def post_process(self, rows: Rows) -> Rows:
-        """Optional function to postprocess the resulting data after executing
-        the regular data fetching"""
-        return rows
-
-
 class DataSourceLivestatus(ABCDataSource):
     """Base class for all simple data sources which 1:1 base on a livestatus table"""
 
     @property
     def table(self) -> "RowTableLivestatus":
         return RowTableLivestatus(self.ident)
-
-
-class DataSourceRegistry(cmk.utils.plugin_registry.Registry[Type[ABCDataSource]]):
-    def plugin_name(self, instance: Type[ABCDataSource]) -> str:
-        return instance().ident
-
-    # TODO: Sort the datasources by (assumed) common usage
-    def data_source_choices(self) -> List[Tuple[str, str]]:
-        datasources = []
-        for ident, ds_class in self.items():
-            datasources.append((ident, ds_class().title))
-        return sorted(datasources, key=lambda x: x[1])
-
-
-data_source_registry = DataSourceRegistry()
-
-
-class RowTable(abc.ABC):
-    @abc.abstractmethod
-    def query(
-        self,
-        view: "View",
-        columns: List[ColumnName],
-        headers: str,
-        only_sites: OnlySites,
-        limit: Optional[int],
-        all_active_filters: "List[Filter]",
-    ) -> Union[Rows, Tuple[Rows, int]]:
-        raise NotImplementedError()
 
 
 class RowTableLivestatus(RowTable):
@@ -1281,7 +1124,6 @@ def register_sorter(ident: str, spec: Dict[str, Any]) -> None:
 
 
 # TODO: Refactor to plugin_registries
-multisite_builtin_views: Dict = {}
 view_hooks: Dict = {}
 inventory_displayhints: Dict[str, InventoryHintSpec] = {}
 # For each view a function can be registered that has to return either True
@@ -1803,58 +1645,6 @@ def render_cache_info(what: str, row: Row) -> str:
         text += _(", elapsed cache lifespan: %s") % cmk.utils.render.percent(percentage)
 
     return text
-
-
-def _internal_view_to_runtime_view(raw_view: dict[str, Any]) -> ViewSpec:
-    return painter_specs_to_runtime_format(raw_view)
-
-
-class ViewStore:
-    @classmethod
-    @request_memoize()
-    def get_instance(cls) -> ViewStore:
-        """Return the request bound instance"""
-        return cls()
-
-    def __init__(self) -> None:
-        self.all: Final = ViewStore._load_all_views()
-        self.permitted: Final = ViewStore._load_permitted_views(self.all)
-
-    @staticmethod
-    def _load_all_views() -> AllViewSpecs:
-        """Loads all view definitions from disk and returns them"""
-        # Skip views which do not belong to known datasources
-        return visuals.load(
-            visuals.VisualType.views,
-            multisite_builtin_views,
-            _internal_view_to_runtime_view,
-            skip_func=lambda v: v["datasource"] not in data_source_registry,
-        )
-
-    @staticmethod
-    def _load_permitted_views(all_views: AllViewSpecs) -> PermittedViewSpecs:
-        """Returns all view defitions that a user is allowed to use"""
-        return visuals.available("views", all_views)
-
-
-def get_all_views() -> AllViewSpecs:
-    return ViewStore.get_instance().all
-
-
-def get_permitted_views() -> PermittedViewSpecs:
-    return ViewStore.get_instance().permitted
-
-
-def get_view_by_name(view_name: ViewName) -> ViewSpec:
-    return get_permitted_views()[view_name]
-
-
-def painter_specs_to_runtime_format(view: ViewSpec) -> ViewSpec:
-    if "painters" in view:
-        view["painters"] = [PainterSpec.from_raw(v) for v in view["painters"]]
-    if "group_painters" in view:
-        view["group_painters"] = [PainterSpec.from_raw(v) for v in view["group_painters"]]
-    return view
 
 
 # .

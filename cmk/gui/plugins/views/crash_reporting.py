@@ -10,6 +10,7 @@ import livestatus
 from livestatus import SiteId
 
 import cmk.gui.sites as sites
+from cmk.gui.data_source import data_source_registry, RowTable
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -22,12 +23,10 @@ from cmk.gui.plugins.views.utils import (
     Command,
     command_registry,
     CommandActionResult,
-    data_source_registry,
     DataSourceLivestatus,
     paint_age,
     Painter,
     painter_registry,
-    RowTable,
     Sorter,
     sorter_registry,
 )

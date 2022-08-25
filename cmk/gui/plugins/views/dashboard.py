@@ -7,8 +7,8 @@
 # to have the view definitions right inside the dashboards
 
 from cmk.gui.i18n import _l
-from cmk.gui.plugins.views.utils import multisite_builtin_views
 from cmk.gui.type_defs import PainterSpec, VisualLinkSpec
+from cmk.gui.view_store import multisite_builtin_views
 
 multisite_builtin_views.update(
     {

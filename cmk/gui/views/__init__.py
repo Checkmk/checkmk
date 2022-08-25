@@ -54,6 +54,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.command_utils import core_command
 from cmk.gui.config import active_config, builtin_role_ids, register_post_config_load_hook
 from cmk.gui.ctx_stack import g
+from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKGeneralException, MKInternalError, MKUserError
 from cmk.gui.htmllib.html import html
@@ -108,7 +109,6 @@ from cmk.gui.plugins.views.perfometers.utils import (  # noqa: F401 # pylint: di
 )
 from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused-import
     _parse_url_sorters,
-    ABCDataSource,
     Cell,
     cmp_custom_variable,
     cmp_insensitive_string,
@@ -124,19 +124,15 @@ from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused
     CommandGroup,
     CommandSpec,
     compare_ips,
-    data_source_registry,
     declare_1to1_sorter,
     declare_simple_sorter,
     DerivedColumnsSorter,
     exporter_registry,
     format_plugin_output,
-    get_all_views,
     get_custom_var,
     get_linked_visual_request_vars,
     get_perfdata_nth_value,
-    get_permitted_views,
     get_tag_groups,
-    get_view_by_name,
     get_view_infos,
     group_value,
     inventory_displayhints,
@@ -148,7 +144,6 @@ from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused
     make_host_breadcrumb,
     make_linked_visual_url,
     make_service_breadcrumb,
-    multisite_builtin_views,
     paint_age,
     paint_host_list,
     paint_stalified,
@@ -210,6 +205,12 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.view import View
 from cmk.gui.view_renderer import ABCViewRenderer, GUIViewRenderer
+from cmk.gui.view_store import (
+    get_all_views,
+    get_permitted_views,
+    get_view_by_name,
+    multisite_builtin_views,
+)
 from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
 from cmk.gui.views.builtin_views import builtin_views
 from cmk.gui.views.inventory import register_table_views_and_columns, update_paint_functions
@@ -478,11 +479,25 @@ def _register_pre_21_plugin_api() -> None:
     switch to the new API. Until then let's not bother the users with it.
     """
     # Needs to be a local import to not influence the regular plugin loading order
+    import cmk.gui.data_source as data_source
     import cmk.gui.plugins.views as api_module
     import cmk.gui.plugins.views.utils as plugin_utils
+    import cmk.gui.view_store as view_store
 
     for name in (
         "ABCDataSource",
+        "data_source_registry",
+        "RowTable",
+    ):
+        api_module.__dict__[name] = data_source.__dict__[name]
+
+    for name in (
+        "get_permitted_views",
+        "multisite_builtin_views",
+    ):
+        api_module.__dict__[name] = view_store.__dict__[name]
+
+    for name in (
         "Cell",
         "CellSpec",
         "cmp_custom_variable",
@@ -499,7 +514,6 @@ def _register_pre_21_plugin_api() -> None:
         "CommandGroup",
         "CommandSpec",
         "compare_ips",
-        "data_source_registry",
         "DataSourceLivestatus",
         "declare_1to1_sorter",
         "declare_simple_sorter",
@@ -513,7 +527,6 @@ def _register_pre_21_plugin_api() -> None:
         "get_graph_timerange_from_painter_options",
         "get_label_sources",
         "get_perfdata_nth_value",
-        "get_permitted_views",
         "get_tag_groups",
         "group_value",
         "inventory_displayhints",
@@ -522,7 +535,6 @@ def _register_pre_21_plugin_api() -> None:
         "join_row",
         "Layout",
         "layout_registry",
-        "multisite_builtin_views",
         "output_csv_headers",
         "paint_age",
         "paint_host_list",
@@ -541,7 +553,6 @@ def _register_pre_21_plugin_api() -> None:
         "replace_action_url_macros",
         "Row",
         "row_id",
-        "RowTable",
         "RowTableLivestatus",
         "Sorter",
         "sorter_registry",

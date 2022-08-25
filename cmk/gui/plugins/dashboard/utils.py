@@ -50,11 +50,6 @@ from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.metrics.rrd_fetch import merge_multicol
 from cmk.gui.plugins.views.painters import host_state_short, service_state_short
-from cmk.gui.plugins.views.utils import (
-    get_all_views,
-    get_permitted_views,
-    painter_specs_to_runtime_format,
-)
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.type_defs import HTTPVariables, Row, SingleInfos, TranslatedMetric, VisualContext
 from cmk.gui.utils.html import HTML
@@ -73,6 +68,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
     ValueSpecValidateFunc,
 )
+from cmk.gui.view_store import get_all_views, get_permitted_views, painter_specs_to_runtime_format
 
 DashboardName = str
 DashboardConfig = Dict[str, Any]

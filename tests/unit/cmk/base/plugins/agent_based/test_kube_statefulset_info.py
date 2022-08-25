@@ -27,6 +27,7 @@ from cmk.base.plugins.agent_based.utils.kube import Selector, StatefulSetInfo, T
                 creation_timestamp=1600000000.0,
                 containers=ThinContainers(images={"i/name:0.5"}, names=["name"]),
                 cluster="cluster",
+                kubernetes_cluster_hostname="host",
             ),
             (
                 Result(state=State.OK, summary="Name: oh-lord"),

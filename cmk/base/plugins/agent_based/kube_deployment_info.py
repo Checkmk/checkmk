@@ -25,9 +25,10 @@ def parse(string_table: StringTable) -> DeploymentInfo:
     ... '"selector": {"match_labels": {}, "match_expressions": [{"key": "app", "operator": "In", "values": ["sleep"]}]},'
     ... '"creation_timestamp": 1638798546.0,'
     ... '"containers": {"images": ["i/name:0.5"], "names": ["name"]},'
+    ... '"kubernetes_cluster_hostname": "host",'
     ... '"cluster": "cluster"}'
     ... ]])
-    DeploymentInfo(name='oh-lord', namespace='have-mercy', labels={}, annotations={}, selector=Selector(match_labels={}, match_expressions=[{'key': 'app', 'operator': 'In', 'values': ['sleep']}]), creation_timestamp=1638798546.0, containers=ThinContainers(images=frozenset({'i/name:0.5'}), names=['name']), cluster='cluster')
+    DeploymentInfo(name='oh-lord', namespace='have-mercy', labels={}, annotations={}, selector=Selector(match_labels={}, match_expressions=[{'key': 'app', 'operator': 'In', 'values': ['sleep']}]), creation_timestamp=1638798546.0, containers=ThinContainers(images=frozenset({'i/name:0.5'}), names=['name']), cluster='cluster', kubernetes_cluster_hostname='host')
     """
     return DeploymentInfo(**json.loads(string_table[0][0]))
 

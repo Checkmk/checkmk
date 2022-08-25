@@ -380,6 +380,7 @@ class DeploymentInfo(Section):
     creation_timestamp: api.Timestamp
     containers: ThinContainers
     cluster: str
+    kubernetes_cluster_hostname: str
 
 
 class DaemonSetInfo(Section):
@@ -393,6 +394,7 @@ class DaemonSetInfo(Section):
     creation_timestamp: api.Timestamp
     containers: ThinContainers
     cluster: str
+    kubernetes_cluster_hostname: str
 
 
 class StatefulSetInfo(Section):
@@ -406,6 +408,7 @@ class StatefulSetInfo(Section):
     creation_timestamp: api.Timestamp
     containers: ThinContainers
     cluster: str
+    kubernetes_cluster_hostname: str
 
 
 class DeploymentConditions(Section):

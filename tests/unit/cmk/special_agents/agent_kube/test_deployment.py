@@ -96,6 +96,6 @@ def test_write_deployments_api_sections_registers_sections_to_be_written(  # typ
     write_sections_mock: MagicMock,
 ):
     agent.write_deployments_api_sections(
-        "cluster", agent.AnnotationNonPatternOption.ignore_all, [deployment], Mock()
+        "cluster", agent.AnnotationNonPatternOption.ignore_all, [deployment], "host", Mock()
     )
     assert list(write_sections_mock.call_args[0][0]) == deployments_api_sections

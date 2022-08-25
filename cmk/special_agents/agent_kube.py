@@ -565,6 +565,7 @@ class Deployment(PodNamespacedOwner):
     def info(
         self,
         cluster_name: str,
+        kubernetes_cluster_hostname: str,
         annotation_key_pattern: AnnotationOption,
     ) -> section.DeploymentInfo:
         return section.DeploymentInfo(
@@ -578,6 +579,7 @@ class Deployment(PodNamespacedOwner):
             selector=self.spec.selector,
             containers=_thin_containers(self.pods()),
             cluster=cluster_name,
+            kubernetes_cluster_hostname=kubernetes_cluster_hostname,
         )
 
     def pod_resources(self) -> section.PodResources:
@@ -670,6 +672,7 @@ class DaemonSet(PodNamespacedOwner):
 def daemonset_info(
     daemonset: DaemonSet,
     cluster_name: str,
+    kubernetes_cluster_hostname: str,
     annotation_key_pattern: AnnotationOption,
 ) -> section.DaemonSetInfo:
     return section.DaemonSetInfo(
@@ -683,6 +686,7 @@ def daemonset_info(
         selector=daemonset.spec.selector,
         containers=_thin_containers(daemonset.pods()),
         cluster=cluster_name,
+        kubernetes_cluster_hostname=kubernetes_cluster_hostname,
     )
 
 
@@ -737,6 +741,7 @@ class StatefulSet(PodNamespacedOwner):
 def statefulset_info(
     statefulset: StatefulSet,
     cluster_name: str,
+    kubernetes_cluster_hostname: str,
     annotation_key_pattern: AnnotationOption,
 ) -> section.StatefulSetInfo:
     return section.StatefulSetInfo(
@@ -750,6 +755,7 @@ def statefulset_info(
         selector=statefulset.spec.selector,
         containers=_thin_containers(statefulset.pods()),
         cluster=cluster_name,
+        kubernetes_cluster_hostname=kubernetes_cluster_hostname,
     )
 
 
@@ -1598,6 +1604,7 @@ def write_deployments_api_sections(
     cluster_name: str,
     annotation_key_pattern: AnnotationOption,
     api_deployments: Sequence[Deployment],
+    kubernetes_cluster_hostname: str,
     piggyback_formatter: ObjectSpecificPBFormatter,
 ) -> None:
     """Write the deployment relevant sections based on k8 API information"""
@@ -1607,7 +1614,7 @@ def write_deployments_api_sections(
             "kube_pod_resources_v1": cluster_deployment.pod_resources,
             "kube_memory_resources_v1": cluster_deployment.memory_resources,
             "kube_deployment_info_v1": lambda: cluster_deployment.info(
-                cluster_name, annotation_key_pattern
+                cluster_name, kubernetes_cluster_hostname, annotation_key_pattern
             ),
             "kube_deployment_conditions_v1": cluster_deployment.conditions,
             "kube_cpu_resources_v1": cluster_deployment.cpu_resources,
@@ -1627,6 +1634,7 @@ def write_daemon_sets_api_sections(
     cluster_name: str,
     annotation_key_pattern: AnnotationOption,
     api_daemon_sets: Sequence[DaemonSet],
+    kubernetes_cluster_hostname: str,
     piggyback_formatter: ObjectSpecificPBFormatter,
 ) -> None:
     """Write the daemon set relevant sections based on k8 API information"""
@@ -1637,7 +1645,10 @@ def write_daemon_sets_api_sections(
             "kube_memory_resources_v1": cluster_daemon_set.memory_resources,
             "kube_cpu_resources_v1": cluster_daemon_set.cpu_resources,
             "kube_daemonset_info_v1": lambda: daemonset_info(
-                cluster_daemon_set, cluster_name, annotation_key_pattern
+                cluster_daemon_set,
+                cluster_name,
+                kubernetes_cluster_hostname,
+                annotation_key_pattern,
             ),
             "kube_update_strategy_v1": cluster_daemon_set.strategy,
             "kube_daemonset_replicas_v1": cluster_daemon_set.replicas,
@@ -1655,6 +1666,7 @@ def write_statefulsets_api_sections(
     cluster_name: str,
     annotation_key_pattern: AnnotationOption,
     api_statefulsets: Sequence[StatefulSet],
+    kubernetes_cluster_hostname: str,
     piggyback_formatter: ObjectSpecificPBFormatter,
 ) -> None:
     """Write the StatefulSet relevant sections based on k8 API information"""
@@ -1665,7 +1677,10 @@ def write_statefulsets_api_sections(
             "kube_memory_resources_v1": cluster_statefulset.memory_resources,
             "kube_cpu_resources_v1": cluster_statefulset.cpu_resources,
             "kube_statefulset_info_v1": lambda: statefulset_info(
-                cluster_statefulset, cluster_name, annotation_key_pattern
+                cluster_statefulset,
+                cluster_name,
+                kubernetes_cluster_hostname,
+                annotation_key_pattern,
             ),
             "kube_update_strategy_v1": cluster_statefulset.strategy,
             "kube_statefulset_replicas_v1": cluster_statefulset.replicas,
@@ -2762,6 +2777,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                     arguments.cluster,
                     arguments.annotation_key_pattern,
                     kube_objects_from_namespaces(cluster.deployments(), monitored_namespace_names),
+                    kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
                     piggyback_formatter=functools.partial(piggyback_formatter, "deployment"),
                 )
 
@@ -2800,6 +2816,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                     arguments.cluster,
                     arguments.annotation_key_pattern,
                     kube_objects_from_namespaces(cluster.daemon_sets(), monitored_namespace_names),
+                    kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
                     piggyback_formatter=functools.partial(piggyback_formatter, "daemonset"),
                 )
 
@@ -2809,6 +2826,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                     arguments.cluster,
                     arguments.annotation_key_pattern,
                     kube_objects_from_namespaces(cluster.statefulsets(), monitored_namespace_names),
+                    kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
                     piggyback_formatter=functools.partial(piggyback_formatter, "statefulset"),
                 )
 

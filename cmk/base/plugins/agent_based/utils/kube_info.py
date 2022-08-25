@@ -107,6 +107,7 @@ class Info(Protocol):
     cluster: str
     namespace: str
     name: str
+    kubernetes_cluster_hostname: str
     annotations: FilteredAnnotations
 
 
@@ -144,6 +145,10 @@ def host_labels(
             cmk/kubernetes/statefulset:
                 This label is set to the name of the StatefulSet.
 
+            cmk/kubernetes/cluster-host:
+                This label contains the name of the Checkmk host which represents the
+                Kubernetes cluster.
+
         """
 
         yield HostLabel("cmk/kubernetes", "yes")
@@ -151,6 +156,7 @@ def host_labels(
         yield HostLabel("cmk/kubernetes/cluster", section.cluster)
         yield HostLabel("cmk/kubernetes/namespace", section.namespace)
         yield HostLabel(f"cmk/kubernetes/{object_type}", section.name)
+        yield HostLabel("cmk/kubernetes/cluster-host", section.kubernetes_cluster_hostname)
         yield from kube_annotations_to_cmk_labels(section.annotations)
 
     return _host_labels

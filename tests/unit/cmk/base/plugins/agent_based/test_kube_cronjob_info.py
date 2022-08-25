@@ -21,6 +21,7 @@ def test_check_kube_cronjob_info() -> None:
         successful_jobs_history_limit=10,
         suspend=False,
         cluster="cluster",
+        kubernetes_cluster_hostname="host",
     )
 
     assert tuple(check_kube_cronjob_info(1600000001.0, section)) == (

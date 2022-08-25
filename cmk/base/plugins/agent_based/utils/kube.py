@@ -850,6 +850,7 @@ class CronJobInfo(Section):
     successful_jobs_history_limit: int
     suspend: bool
     cluster: str
+    kubernetes_cluster_hostname: str
 
 
 class IdentificationError(BaseModel):

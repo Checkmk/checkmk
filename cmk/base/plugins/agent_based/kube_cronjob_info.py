@@ -37,9 +37,10 @@ def parse_kube_cronjob_info(string_table: StringTable) -> CronJobInfo:
     ... '"concurrency_policy": "Allow",'
     ... '"failed_jobs_history_limit": "10",'
     ... '"successful_jobs_history_limit": "10",'
+    ... '"kubernetes_cluster_hostname": "host",'
     ... '"suspend": "false"}'
     ... ]])
-    CronJobInfo(name='cronjob', namespace='checkmk-monitoring', creation_timestamp=1640000000.0, labels={}, annotations={}, schedule='0 * * * *', concurrency_policy=<ConcurrencyPolicy.Allow: 'Allow'>, failed_jobs_history_limit=10, successful_jobs_history_limit=10, suspend=False, cluster='cluster')
+    CronJobInfo(name='cronjob', namespace='checkmk-monitoring', creation_timestamp=1640000000.0, labels={}, annotations={}, schedule='0 * * * *', concurrency_policy=<ConcurrencyPolicy.Allow: 'Allow'>, failed_jobs_history_limit=10, successful_jobs_history_limit=10, suspend=False, cluster='cluster', kubernetes_cluster_hostname='host')
     """
     return CronJobInfo(**json.loads(string_table[0][0]))
 
@@ -61,6 +62,10 @@ def host_labels(section: CronJobInfo) -> HostLabelGenerator:
             This label contains the name of the Kubernetes CronJob this
             checkmk host is associated with.
 
+        cmk/kubernetes/cluster-host:
+            This label contains the name of the Checkmk host which represents the
+            Kubernetes cluster.
+
         cmk/kubernetes/annotation/{key}:{value} :
             These labels are yielded for each Kubernetes annotation that is
             a valid Kubernetes label. This can be configured via the rule
@@ -71,6 +76,7 @@ def host_labels(section: CronJobInfo) -> HostLabelGenerator:
     yield HostLabel("cmk/kubernetes/cluster", section.cluster)
     yield HostLabel("cmk/kubernetes/namespace", section.namespace)
     yield HostLabel("cmk/kubernetes/cronjob", section.name)
+    yield HostLabel("cmk/kubernetes/cluster-host", section.kubernetes_cluster_hostname)
     yield from kube_labels_to_cmk_labels(section.labels)
     yield from kube_annotations_to_cmk_labels(section.annotations)
 

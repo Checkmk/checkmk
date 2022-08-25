@@ -1197,6 +1197,7 @@ def namespace_info(
 def cron_job_info(
     cron_job: api.CronJob,
     cluster_name: str,
+    kubernetes_cluster_hostname: str,
     annotation_key_pattern: AnnotationOption,
 ) -> section.CronJobInfo:
 
@@ -1214,6 +1215,7 @@ def cron_job_info(
         successful_jobs_history_limit=cron_job.spec.successful_jobs_history_limit,
         suspend=cron_job.spec.suspend,
         cluster=cluster_name,
+        kubernetes_cluster_hostname=kubernetes_cluster_hostname,
     )
 
 
@@ -1479,6 +1481,7 @@ def write_cronjobs_api_sections(
     annotation_key_pattern: AnnotationOption,
     api_cron_jobs: Sequence[api.CronJob],
     api_cron_job_pods: Sequence[api.Pod],
+    kubernetes_cluster_hostname: str,
     piggyback_formatter: ObjectSpecificPBFormatter,
 ) -> None:
     def output_cronjob_sections(
@@ -1487,7 +1490,7 @@ def write_cronjobs_api_sections(
     ) -> None:
         sections = {
             "kube_cron_job_info_v1": lambda: cron_job_info(
-                cron_job, cluster_name, annotation_key_pattern
+                cron_job, cluster_name, kubernetes_cluster_hostname, annotation_key_pattern
             ),
             "kube_pod_resources_v1": lambda: _pod_resources_from_api_pods(api_cron_job_pods),
             "kube_memory_resources_v1": lambda: _collect_memory_resources_from_api_pods(
@@ -2848,6 +2851,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                 arguments.annotation_key_pattern,
                 api_data.cron_jobs,
                 monitored_api_cron_job_pods,
+                kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
                 piggyback_formatter=functools.partial(piggyback_formatter, "cronjob"),
             )
 

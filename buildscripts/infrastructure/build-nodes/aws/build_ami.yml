@@ -82,7 +82,7 @@
 
     - name: Provision VMs on Amazon
       ec2:
-        spot_price: "0.02"
+        spot_price: "0.03"
         spot_wait_timeout: 600
         instance_initiated_shutdown_behavior: terminate
         aws_access_key: "{{ ec2_access_key }}"

@@ -103,6 +103,7 @@ class NamespaceInfo(Section):
     labels: api.Labels
     annotations: FilteredAnnotations
     cluster: str
+    kubernetes_cluster_hostname: str
 
 
 class CronJobInfo(Section):

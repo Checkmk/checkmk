@@ -195,6 +195,12 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
         required=True,
         help="The name of the Kubernetes cluster",
     )
+    p.add_argument(
+        "--kubernetes-cluster-hostname",
+        required=True,
+        help="The name of the Checkmk host which represents the Kubernetes cluster (this will be "
+        "the host where the Kubernetes rule has been assigned to)",
+    )
     p.add_argument("--token", help="Token for that user")
     p.add_argument(
         "--monitored-objects",
@@ -1166,6 +1172,7 @@ def namespace_info(
     namespace: api.Namespace,
     cluster_name: str,
     annotation_key_pattern: AnnotationOption,
+    kubernetes_cluster_hostname: str,
 ) -> section.NamespaceInfo:
     return section.NamespaceInfo(
         name=namespace_name(namespace),
@@ -1175,6 +1182,7 @@ def namespace_info(
             namespace.metadata.annotations, annotation_key_pattern
         ),
         cluster=cluster_name,
+        kubernetes_cluster_hostname=kubernetes_cluster_hostname,
     )
 
 
@@ -1500,6 +1508,7 @@ def write_namespaces_api_sections(
     api_namespaces: Sequence[api.Namespace],
     api_resource_quotas: Sequence[api.ResourceQuota],
     api_pods: Sequence[api.Pod],
+    kubernetes_cluster_hostname: str,
     piggyback_formatter: ObjectSpecificPBFormatter,
 ) -> None:
     def output_namespace_sections(
@@ -1507,7 +1516,10 @@ def write_namespaces_api_sections(
     ) -> None:
         sections = {
             "kube_namespace_info_v1": lambda: namespace_info(
-                namespace, cluster_name, annotation_key_pattern
+                namespace,
+                cluster_name,
+                annotation_key_pattern,
+                kubernetes_cluster_hostname,
             ),
             "kube_pod_resources_v1": lambda: _pod_resources_from_api_pods(namespaced_api_pods),
             "kube_memory_resources_v1": lambda: _collect_memory_resources_from_api_pods(
@@ -2770,6 +2782,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                     monitored_api_namespaces,
                     resource_quotas,
                     api_pods,
+                    kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
                     piggyback_formatter=functools.partial(piggyback_formatter, "namespace"),
                 )
 

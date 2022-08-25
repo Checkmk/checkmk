@@ -24,6 +24,7 @@ from .utils_inventory import sort_inventory_result
                 annotations={},
                 creation_timestamp=None,
                 cluster="a",
+                kubernetes_cluster_hostname="host",
             ),
             [
                 Attributes(

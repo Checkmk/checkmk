@@ -97,6 +97,8 @@ REQUIRED_ARGUMENTS: dict[str, list[str]] = {
         "ENDPOINT",
         "--cluster-collector-endpoint",
         "ENDPOINT",
+        "--kubernetes-cluster-hostname",
+        "host",
     ],
     "agent_prometheus": [],
     "agent_rabbitmq": [

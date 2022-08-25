@@ -17,6 +17,7 @@ def test_check_kube_namespace_info() -> None:
         labels={},
         annotations={},
         cluster="cluster",
+        kubernetes_cluster_hostname="host",
     )
     check_result = check_kube_namespace_info(1600000001.0, info)
     assert list(check_result) == [

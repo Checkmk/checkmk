@@ -21,6 +21,7 @@ def agent_kube_arguments(  # pylint: disable=too-many-branches
     params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
 ) -> Sequence[Union[str, tuple[str, str, str]]]:
     args = ["--cluster", params["cluster-name"]]
+    args.extend(["--kubernetes-cluster-hostname", hostname])
     args.extend(["--token", passwordstore_get_cmdline("%s", params["token"])])
 
     args.append("--monitored-objects")

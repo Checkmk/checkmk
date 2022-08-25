@@ -41,6 +41,8 @@ pytestmark = pytest.mark.checks
             [
                 "--cluster",
                 "cluster",
+                "--kubernetes-cluster-hostname",
+                "host",
                 "--token",
                 "cluster",
                 "--monitored-objects",
@@ -84,6 +86,8 @@ pytestmark = pytest.mark.checks
             [
                 "--cluster",
                 "cluster",
+                "--kubernetes-cluster-hostname",
+                "host",
                 "--token",
                 "cluster",
                 "--monitored-objects",
@@ -120,6 +124,8 @@ pytestmark = pytest.mark.checks
             [
                 "--cluster",
                 "cluster",
+                "--kubernetes-cluster-hostname",
+                "host",
                 "--token",
                 "randomtoken",
                 "--monitored-objects",
@@ -164,6 +170,8 @@ def test_parse_arguments_with_no_cluster_endpoint() -> None:
     assert arguments == [
         "--cluster",
         "cluster",
+        "--kubernetes-cluster-hostname",
+        "host",
         "--token",
         "token",
         "--monitored-objects",
@@ -198,6 +206,8 @@ def test_cronjob_piggyback_option() -> None:
     assert arguments == [
         "--cluster",
         "cluster",
+        "--kubernetes-cluster-hostname",
+        "host",
         "--token",
         "token",
         "--monitored-objects",
@@ -237,6 +247,8 @@ def test_cluster_resource_aggregation() -> None:
     assert arguments == [
         "--cluster",
         "cluster",
+        "--kubernetes-cluster-hostname",
+        "host",
         "--token",
         "token",
         "--monitored-objects",
@@ -267,6 +279,8 @@ def test_cluster_resource_aggregation() -> None:
     assert arguments == [
         "--cluster",
         "cluster",
+        "--kubernetes-cluster-hostname",
+        "host",
         "--token",
         "token",
         "--monitored-objects",
@@ -294,6 +308,8 @@ def test_cluster_resource_aggregation() -> None:
     assert arguments == [
         "--cluster",
         "cluster",
+        "--kubernetes-cluster-hostname",
+        "host",
         "--token",
         "token",
         "--monitored-objects",
@@ -335,6 +351,8 @@ def test_host_labels_annotation_selection() -> None:
     assert arguments == [
         "--cluster",
         "cluster",
+        "--kubernetes-cluster-hostname",
+        "host",
         "--token",
         "token",
         "--monitored-objects",
@@ -371,6 +389,8 @@ def test_host_labels_annotation_selection() -> None:
     assert arguments == [
         "--cluster",
         "cluster",
+        "--kubernetes-cluster-hostname",
+        "host",
         "--token",
         "token",
         "--monitored-objects",
@@ -407,6 +427,8 @@ def test_parse_namespace_patterns() -> None:
     assert arguments == [
         "--cluster",
         "cluster",
+        "--kubernetes-cluster-hostname",
+        "host",
         "--token",
         "token",
         "--monitored-objects",

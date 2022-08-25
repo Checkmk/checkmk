@@ -31,9 +31,10 @@ def parse_kube_namespace_info(string_table: StringTable) -> NamespaceInfo:
     ... '"creation_timestamp": "1640000000.0",'
     ... '"cluster": "cluster",'
     ... '"labels": {},'
-    ... '"annotations": {}'
+    ... '"annotations": {},'
+    ... '"kubernetes_cluster_hostname": "host"'
     ... '}']])
-    NamespaceInfo(name='namespace', creation_timestamp=1640000000.0, labels={}, annotations={}, cluster='cluster')
+    NamespaceInfo(name='namespace', creation_timestamp=1640000000.0, labels={}, annotations={}, cluster='cluster', kubernetes_cluster_hostname='host')
     """
     return NamespaceInfo(**json.loads(string_table[0][0]))
 
@@ -55,6 +56,10 @@ def host_labels(section: NamespaceInfo) -> HostLabelGenerator:
             This label contains the name of the Kubernetes Namespace this
             checkmk host is associated with.
 
+        cmk/kubernetes/cluster-host:
+            This label contains the name of the Checkmk host which represents the
+            Kubernetes cluster.
+
         cmk/kubernetes/annotation/{key}:{value} :
             These labels are yielded for each Kubernetes annotation that is
             a valid Kubernetes label. This can be configured via the rule
@@ -65,6 +70,7 @@ def host_labels(section: NamespaceInfo) -> HostLabelGenerator:
     yield HostLabel("cmk/kubernetes/object", "namespace")
     yield HostLabel("cmk/kubernetes/cluster", section.cluster)
     yield HostLabel("cmk/kubernetes/namespace", section.name)
+    yield HostLabel("cmk/kubernetes/cluster-host", section.kubernetes_cluster_hostname)
     yield from kube_labels_to_cmk_labels(section.labels)
     yield from kube_annotations_to_cmk_labels(section.annotations)
 

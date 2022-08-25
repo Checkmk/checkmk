@@ -193,7 +193,7 @@ class PainterInventoryTree(Painter):
         return "inventory_tree"
 
     def title(self, cell):
-        return _("Hardware & Software Tree")
+        return _("Inventory Tree")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
@@ -632,6 +632,13 @@ def _make_long_title_function(title: str, parent_path: SDPath) -> Callable[[], s
     )
 
 
+def _make_long_inventory_title(
+    hint: NodeDisplayHint | ColumnDisplayHint | AttributeDisplayHint,
+) -> str:
+    # This long title with topic 'Inventory' is used for painters, sorters and filters.
+    return _("Inventory") + ": " + hint.long_title
+
+
 def _make_table_view_name_of_host(view_name: str) -> str:
     return f"{view_name}_of_host"
 
@@ -683,6 +690,7 @@ class TableDisplayHint:
 @dataclass(frozen=True)
 class ColumnDisplayHint:
     title: str
+    _long_title_function: Callable[[], str]
     paint_function: PaintFunction
     sort_function: Callable[[Any, Any], int]  # TODO improve type hints for args
     filter_class: (
@@ -695,19 +703,24 @@ class ColumnDisplayHint:
         | Type[FilterInvtableInterfaceType]
     )
 
+    @property
+    def long_title(self) -> str:
+        return self._long_title_function()
+
     @classmethod
     def from_raw(cls, path: SDPath, key: str, raw_hint: InventoryHintSpec) -> ColumnDisplayHint:
         _data_type, paint_function = _get_paint_function(raw_hint)
         title = _make_title_function(raw_hint)(key)
         return cls(
             title=title,
+            _long_title_function=_make_long_title_function(title, path),
             paint_function=paint_function,
             sort_function=raw_hint.get("sort", _cmp_inv_generic),
             filter_class=raw_hint.get("filter"),
         )
 
     def make_filter(
-        self, table_view_name: str, ident: str, topic: str
+        self, table_view_name: str, ident: str
     ) -> (
         FilterInvtableText
         | FilterInvtableVersion
@@ -717,25 +730,25 @@ class ColumnDisplayHint:
         | FilterInvtableInterfaceType
         | FilterInvtableIDRange
     ):
-        title: str = topic + ": " + self.title
+        long_inventory_title = _make_long_inventory_title(self)
         if self.filter_class:
             return self.filter_class(
                 inv_info=table_view_name,
                 ident=ident,
-                title=title,
+                title=long_inventory_title,
             )
 
         if (ranged_table_filter_name := get_ranged_table_filter_name(ident)) is not None:
             return FilterInvtableIDRange(
                 inv_info=table_view_name,
                 ident=ranged_table_filter_name,
-                title=title,
+                title=long_inventory_title,
             )
 
         return FilterInvtableText(
             inv_info=table_view_name,
             ident=ident,
-            title=title,
+            title=long_inventory_title,
         )
 
 
@@ -777,10 +790,11 @@ class AttributeDisplayHint:
     def make_filter(
         self, ident: str, inventory_path: inventory.InventoryPath
     ) -> FilterInvText | FilterInvBool | FilterInvFloat:
+        long_inventory_title = _make_long_inventory_title(self)
         if self.data_type == "str":
             return FilterInvText(
                 ident=ident,
-                title=self.long_title,
+                title=long_inventory_title,
                 inventory_path=inventory_path,
                 is_show_more=self.is_show_more,
             )
@@ -788,7 +802,7 @@ class AttributeDisplayHint:
         if self.data_type == "bool":
             return FilterInvBool(
                 ident=ident,
-                title=self.long_title,
+                title=long_inventory_title,
                 inventory_path=inventory_path,
                 is_show_more=self.is_show_more,
             )
@@ -796,7 +810,7 @@ class AttributeDisplayHint:
         filter_info = _inv_filter_info().get(self.data_type, {})
         return FilterInvFloat(
             ident=ident,
-            title=self.long_title,
+            title=long_inventory_title,
             inventory_path=inventory_path,
             unit=filter_info.get("unit"),
             scale=filter_info.get("scale", 1.0),
@@ -868,7 +882,7 @@ class DisplayHints:
         path: SDPath = tuple()
         return DisplayHints(
             path=path,
-            node_hint=NodeDisplayHint.from_raw(path, {"title": _l("Inventory")}),
+            node_hint=NodeDisplayHint.from_raw(path, {"title": _l("Inventory Tree")}),
             table_hint=TableDisplayHint.from_raw({}, None),
             column_hints={},
             attributes_hint=AttributesDisplayHint.from_raw({}),
@@ -1119,11 +1133,7 @@ def _register_node_painter(
     register_painter(
         name,
         {
-            "title": (
-                (_("Inventory") + ": " + hint.long_title)
-                if inventory_path.path
-                else _("Inventory Tree")
-            ),
+            "title": _make_long_inventory_title(hint),
             "short": hint.title,
             "columns": ["host_inventory", "host_structured_status"],
             "options": ["show_internal_tree_paths"],
@@ -1202,16 +1212,13 @@ def _register_attribute_column(
 ) -> None:
     """Declares painters, sorters and filters to be used in views based on all host related
     datasources."""
+    long_inventory_title = _make_long_inventory_title(hint)
 
     # Declare column painter
     register_painter(
         name,
         {
-            "title": (
-                (_("Inventory") + ": " + hint.long_title)
-                if inventory_path.path
-                else _("Inventory Tree")
-            ),
+            "title": long_inventory_title,
             "short": hint.title,
             "columns": ["host_inventory", "host_structured_status"],
             "options": ["show_internal_tree_paths"],
@@ -1242,7 +1249,7 @@ def _register_attribute_column(
         name,
         {
             "_inventory_path": inventory_path,
-            "title": _("Inventory") + ": " + hint.long_title,
+            "title": long_inventory_title,
             "columns": ["host_inventory", "host_structured_status"],
             "load_inv": True,
             "cmp": lambda self, a, b: _cmp_inventory_node(a, b, self._spec["_inventory_path"]),
@@ -1327,18 +1334,19 @@ def _inv_find_subtable_columns(hints: DisplayHints) -> Sequence[Tuple[str, Colum
 
 def _register_table_column(
     table_view_name: str,
-    topic: str,
     column: str,
     hint: ColumnDisplayHint,
 ) -> None:
     # TODO
     # - Sync this with _register_attribute_column()
-    filter_registry.register(hint.make_filter(table_view_name, column, topic))
+    filter_registry.register(hint.make_filter(table_view_name, column))
+
+    long_inventory_title = _make_long_inventory_title(hint)
 
     register_painter(
         column,
         {
-            "title": topic + ": " + hint.title,
+            "title": long_inventory_title,
             "short": hint.title,
             "columns": [column],
             "paint": lambda row: hint.paint_function(row.get(column)),
@@ -1349,7 +1357,7 @@ def _register_table_column(
     register_sorter(
         column,
         {
-            "title": _("Inventory") + ": " + hint.title,
+            "title": long_inventory_title,
             "columns": [column],
             "cmp": lambda self, a, b: _decorate_sort_func(hint.sort_function)(
                 a.get(column), b.get(column)
@@ -1446,7 +1454,6 @@ def _register_table_view(
         # Declare a painter, sorter and filters for each path with display hint
         _register_table_column(
             table_view_spec.view_name,
-            table_view_spec.title,
             column,
             col_hint,
         )
@@ -1523,7 +1530,6 @@ def _register_multi_table_view(
 
     info_names: List[str] = []
     inventory_paths: List[inventory.InventoryPath] = []
-    titles: List[str] = []
     errors = []
     for this_table_view_name in tables:
         visual_info_class = visual_info_registry.get(this_table_view_name)
@@ -1538,7 +1544,6 @@ def _register_multi_table_view(
         ds = data_source_class()
         info_names.append(ds.ident)
         inventory_paths.append(ds.inventory_path)
-        titles.append(visual_info_class().title)
 
     # Create the datasource (like a database view)
     data_source_registry.register(
@@ -1567,9 +1572,7 @@ def _register_multi_table_view(
     known_common_columns = set()
     painters: list[PainterSpec] = []
     filters = []
-    for this_inventory_path, this_table_view_name, this_title in zip(
-        inventory_paths, info_names, titles
-    ):
+    for this_inventory_path, this_table_view_name in zip(inventory_paths, info_names):
         for name, col_hint in _inv_find_subtable_columns(
             DISPLAY_HINTS.get_hints(this_inventory_path.path)
         ):
@@ -1584,7 +1587,6 @@ def _register_multi_table_view(
             # Declare a painter, sorter and filters for each path with display hint
             _register_table_column(
                 this_table_view_name,
-                this_title,
                 column,
                 col_hint,
             )

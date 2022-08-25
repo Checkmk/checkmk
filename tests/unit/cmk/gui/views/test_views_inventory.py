@@ -296,8 +296,8 @@ def test__cmp_inventory_node(  # type:ignore[no-untyped-def]
             tuple(),
             NodeDisplayHint(
                 icon=None,
-                title="Inventory",
-                _long_title_function=lambda: "Inventory",
+                title="Inventory Tree",
+                _long_title_function=lambda: "Inventory Tree",
             ),
             AttributesDisplayHint(
                 key_order=[],
@@ -548,6 +548,7 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
             ColumnDisplayHint(
                 paint_function=inv_paint_generic,
                 title="Key",
+                _long_title_function=lambda: "Key",
                 sort_function=_cmp_inv_generic,
                 filter_class=None,
             ),
@@ -558,6 +559,7 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
             ColumnDisplayHint(
                 paint_function=inv_paint_if_oper_status,
                 title="Operational Status",
+                _long_title_function=lambda: "Network interfaces ➤ Operational Status",
                 sort_function=_cmp_inv_generic,
                 filter_class=None,
             ),
@@ -568,6 +570,7 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
             ColumnDisplayHint(
                 paint_function=inv_paint_generic,
                 title="Key",
+                _long_title_function=lambda: "Node ➤ Key",
                 sort_function=_cmp_inv_generic,
                 filter_class=None,
             ),
@@ -578,6 +581,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
     hint = DISPLAY_HINTS.get_hints(path).get_column_hint(key)
 
     assert hint.title == expected.title
+    assert hint.long_title == expected.long_title
     assert hint.paint_function == expected.paint_function
     assert hint.sort_function == expected.sort_function
 
@@ -590,6 +594,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
             ColumnDisplayHint(
                 paint_function=inv_paint_generic,
                 title="Bar",
+                _long_title_function=lambda: "Foo ➤ Bar",
                 sort_function=_cmp_inv_generic,
                 filter_class=None,
             ),
@@ -599,6 +604,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
             ColumnDisplayHint(
                 paint_function=inv_paint_generic,
                 title="Package Version",
+                _long_title_function=lambda: "Software packages ➤ Package Version",
                 sort_function=cmp_version,
                 filter_class=None,
             ),
@@ -608,6 +614,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
             ColumnDisplayHint(
                 paint_function=inv_paint_generic,
                 title="Version",
+                _long_title_function=lambda: "Software packages ➤ Version",
                 sort_function=cmp_version,
                 filter_class=FilterInvtableVersion,
             ),
@@ -617,6 +624,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
             ColumnDisplayHint(
                 paint_function=inv_paint_number,
                 title="Index",
+                _long_title_function=lambda: "Network interfaces ➤ Index",
                 sort_function=_cmp_inv_generic,
                 filter_class=None,
             ),
@@ -626,6 +634,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
             ColumnDisplayHint(
                 paint_function=inv_paint_if_oper_status,
                 title="Operational Status",
+                _long_title_function=lambda: "Network interfaces ➤ Operational Status",
                 sort_function=_cmp_inv_generic,
                 filter_class=None,
             ),
@@ -639,6 +648,7 @@ def test_make_column_displayhint_from_hint(
     hint = DISPLAY_HINTS.get_hints(inventory_path.path).get_column_hint(inventory_path.key or "")
 
     assert hint.title == expected.title
+    assert hint.long_title == expected.long_title
     assert hint.paint_function == expected.paint_function
     assert hint.sort_function == expected.sort_function
 

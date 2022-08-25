@@ -5,6 +5,7 @@
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
+
 from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
@@ -14,7 +15,7 @@ from cmk.base.check_legacy_includes.scaleio import *  # pylint: disable=wildcard
 ScaleioCheckResult = Iterable[tuple[int, str]]
 
 
-def discover_scaleio_storage_pool_disks(section: ScaleioSection) -> tuple[str, Mapping]:
+def discover_scaleio_storage_pool_disks(section: ScaleioStoragePoolSection) -> tuple[str, Mapping]:
     for entry in section:
         yield entry, {}
 
@@ -22,36 +23,38 @@ def discover_scaleio_storage_pool_disks(section: ScaleioSection) -> tuple[str, M
 def _check_scaleio_storage_pool_disks(
     item: str,
     params: Mapping[str, Any],
-    section: ScaleioSection,
-    read_data_field_name: str,
-    write_data_field_name: str,
+    pool_name: str,
+    disk_stats: DiskReadWrite,
 ) -> ScaleioCheckResult:
 
-    if not (storage_pool := section.get(item)):
-        return
-
-    yield 0, f"Name: {storage_pool['NAME'][0]}"
+    yield 0, f"Name: {pool_name}"
 
     yield from check_diskstat_dict(
-        item,
-        params,
-        get_disks(
-            item,
-            storage_pool[read_data_field_name],
-            storage_pool[write_data_field_name],
-        ),
+        item=item,
+        params=params,
+        disks={
+            item: {
+                "node": None,
+                "read_ios": disk_stats.read_operations,
+                "read_throughput": disk_stats.read_throughput,
+                "write_ios": disk_stats.write_operations,
+                "write_throughput": disk_stats.write_throughput,
+            }
+        },
     )
 
 
 def check_scaleio_storage_pool_totalrw(
-    item: str, params: Mapping[str, Any], section: ScaleioSection
+    item: str, params: Mapping[str, Any], section: ScaleioStoragePoolSection
 ) -> ScaleioCheckResult:
+    if not (pool := section.get(item)):
+        return
+
     yield from _check_scaleio_storage_pool_disks(
-        item,
-        params,
-        section,
-        "TOTAL_READ_BWC",
-        "TOTAL_WRITE_BWC",
+        item=item,
+        params=params,
+        pool_name=pool.name,
+        disk_stats=pool.total_io,
     )
 
 
@@ -65,14 +68,16 @@ check_info["scaleio_storage_pool.totalrw"] = {
 
 
 def check_scaleio_storage_pool_rebalancerw(
-    item: str, params: Mapping[str, Any], section: ScaleioSection
+    item: str, params: Mapping[str, Any], section: ScaleioStoragePoolSection
 ) -> ScaleioCheckResult:
+    if not (pool := section.get(item)):
+        return
+
     yield from _check_scaleio_storage_pool_disks(
-        item,
-        params,
-        section,
-        "REBALANCE_READ_BWC",
-        "REBALANCE_WRITE_BWC",
+        item=item,
+        params=params,
+        pool_name=pool.name,
+        disk_stats=pool.rebalance_io,
     )
 
 

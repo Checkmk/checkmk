@@ -2,41 +2,67 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 from typing import Mapping, MutableMapping, Sequence
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 ScaleioSection = Mapping[str, Mapping[str, Sequence[str]]]
 
+KNOWN_CONVERSION_VALUES_INTO_MB = {
+    "Bytes": 1.0 / 1024.0**2,
+    "KB": 1.0 / 1024,
+    "MB": 1.0,
+    "GB": 1024.0,
+    "TB": 1024**2,
+}
 
-def convert_scaleio_space(unit: str, value: float) -> float | None:
+
+def convert_scaleio_space_into_mb(unit: str, value: float) -> float:
     """Convert the space from the storage pool to MB
 
-    >>> convert_scaleio_space("Bytes", 1048576)
+    >>> convert_scaleio_space_into_mb("Bytes", 1048576)
     1.0
-    >>> convert_scaleio_space("KB", 1024.0)
+    >>> convert_scaleio_space_into_mb("KB", 1024.0)
     1.0
-    >>> convert_scaleio_space("MB", 1.0)
+    >>> convert_scaleio_space_into_mb("MB", 1.0)
     1.0
-    >>> convert_scaleio_space("GB", 1.0)
+    >>> convert_scaleio_space_into_mb("GB", 1.0)
     1024.0
-    >>> convert_scaleio_space("TB", 1.0)
+    >>> convert_scaleio_space_into_mb("TB", 1.0)
     1048576.0
-    >>> convert_scaleio_space("Not_known", 1.0)
+
+    """
+
+    return value * KNOWN_CONVERSION_VALUES_INTO_MB[unit]
+
+
+def convert_to_bytes(throughput: float, unit: str) -> float | None:
+    """Convert the throughput values from the storage pool to Bytes
+
+    >>> convert_to_bytes(1.0, "Bytes")
+    1.0
+    >>> convert_to_bytes(1.0, "KB")
+    1024.0
+    >>> convert_to_bytes(1.0, "MB")
+    1048576.0
+    >>> convert_to_bytes(1.0, "GB")
+    1073741824.0
+    >>> convert_to_bytes(1.0, "TB")
+    1099511627776.0
+    >>> convert_to_bytes(1.0, "Not_known")
 
     """
 
     if unit == "Bytes":
-        return value / 1024.0**2
+        return throughput
     if unit == "KB":
-        return value / 1024.0
+        return throughput * 1024
     if unit == "MB":
-        return value
+        return throughput * 1024 * 1024
     if unit == "GB":
-        return value * 1024.0
+        return throughput * 1024 * 1024 * 1024
     if unit == "TB":
-        return value * 1024.0**2
+        return throughput * 1024 * 1024 * 1024 * 1024
     return None
 
 

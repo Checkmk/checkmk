@@ -13,36 +13,33 @@ from tests.unit.conftest import FixRegister
 from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.utils.scaleio import ScaleioSection
+from cmk.base.plugins.agent_based.scaleio_storage_pool import (
+    DiskReadWrite,
+    FilesystemStoragePool,
+    ScaleioStoragePoolSection,
+    StoragePool,
+)
 
 SECTION = {
-    "4e9a44c700000000": {
-        "ID": ["4e9a44c700000000"],
-        "NAME": ["pool01"],
-        "MAX_CAPACITY_IN_KB": ["27.9", "TB", "(28599", "GB)"],
-        "UNUSED_CAPACITY_IN_KB": ["15.7", "TB", "(16105", "GB)"],
-        "FAILED_CAPACITY_IN_KB": ["123132", "Bytes"],
-        "TOTAL_READ_BWC": [
-            "7",
-            "IOPS",
-            "33.2",
-            "KB",
-            "(33996",
-            "Bytes)",
-            "per-second",
-        ],
-        "TOTAL_WRITE_BWC": [
-            "63",
-            "IOPS",
-            "219.6",
-            "KB",
-            "(224870",
-            "Bytes)",
-            "per-second",
-        ],
-        "REBALANCE_READ_BWC": ["0", "IOPS", "0", "Bytes", "per-second"],
-        "REBALANCE_WRITE_BWC": ["0", "IOPS", "0", "Bytes", "per-second"],
-    }
+    "4e9a44c700000000": StoragePool(
+        pool_id="4e9a44c700000000",
+        name="pool01",
+        filesystem_storage_pool=FilesystemStoragePool(
+            total_capacity=29255270.4, free_capacity=16462643.2, failed_capacity=0.0
+        ),
+        total_io=DiskReadWrite(
+            read_throughput=33996.8,
+            write_throughput=224870.4,
+            read_operations=7.0,
+            write_operations=63.0,
+        ),
+        rebalance_io=DiskReadWrite(
+            read_throughput=0.0,
+            write_throughput=0.0,
+            read_operations=0.0,
+            write_operations=0.0,
+        ),
+    )
 }
 
 ITEM = "4e9a44c700000000"
@@ -53,10 +50,25 @@ ITEM = "4e9a44c700000000"
     [
         pytest.param(
             {
-                "4e9a44c700000000": {
-                    "ID": ["4e9a44c700000000"],
-                    "NAME": ["pool01"],
-                }
+                "4e9a44c700000000": StoragePool(
+                    pool_id="4e9a44c700000000",
+                    name="pool01",
+                    filesystem_storage_pool=FilesystemStoragePool(
+                        total_capacity=29255270.4, free_capacity=16462643.2, failed_capacity=0.0
+                    ),
+                    total_io=DiskReadWrite(
+                        read_throughput=33996.8,
+                        write_throughput=224870.4,
+                        read_operations=7.0,
+                        write_operations=63.0,
+                    ),
+                    rebalance_io=DiskReadWrite(
+                        read_throughput=0.0,
+                        write_throughput=0.0,
+                        read_operations=0.0,
+                        write_operations=0.0,
+                    ),
+                )
             },
             [Service(item="4e9a44c700000000")],
             id="A service is created for each storage pool that is present in the parsed section",
@@ -69,7 +81,7 @@ ITEM = "4e9a44c700000000"
     ],
 )
 def test_inventory_scaleio_storage_pool(
-    parsed_section: ScaleioSection,
+    parsed_section: ScaleioStoragePoolSection,
     discovered_services: Sequence[Service],
     fix_register: FixRegister,
 ) -> None:

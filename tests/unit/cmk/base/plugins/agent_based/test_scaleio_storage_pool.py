@@ -13,85 +13,119 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTabl
 from cmk.base.plugins.agent_based.scaleio_storage_pool import (
     _check_scaleio_storage_pool,
     discover_scaleio_storage_pool,
+    DiskReadWrite,
+    FilesystemStorageConversionError,
+    FilesystemStoragePool,
     parse_scaleio_storage_pool,
+    ScaleioStoragePoolSection,
+    StoragePool,
 )
 from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.plugins.agent_based.utils.scaleio import ScaleioSection
 
 SECTION = {
-    "4e9a44c700000000": {
-        "ID": ["4e9a44c700000000"],
-        "NAME": ["pool01"],
-        "MAX_CAPACITY_IN_KB": ["27.9", "TB", "(28599", "GB)"],
-        "UNUSED_CAPACITY_IN_KB": ["15.7", "TB", "(16105", "GB)"],
-        "FAILED_CAPACITY_IN_KB": ["2311212", "Bytes"],
-        "TOTAL_READ_BWC": [
-            "7",
-            "IOPS",
-            "33.2",
-            "KB",
-            "(33996",
-            "Bytes)",
-            "per-second",
-        ],
-        "TOTAL_WRITE_BWC": [
-            "63",
-            "IOPS",
-            "219.6",
-            "KB",
-            "(224870",
-            "Bytes)",
-            "per-second",
-        ],
-        "REBALANCE_READ_BWC": ["0", "IOPS", "0", "Bytes", "per-second"],
-        "REBALANCE_WRITE_BWC": ["0", "IOPS", "0", "Bytes", "per-second"],
-    }
+    "4e9a44c700000000": StoragePool(
+        pool_id="4e9a44c700000000",
+        name="pool01",
+        filesystem_storage_pool=FilesystemStoragePool(
+            total_capacity=29255270.4,
+            free_capacity=16462643.2,
+            failed_capacity=2311212.0,
+        ),
+        total_io=DiskReadWrite(
+            read_throughput=33996.8,
+            write_throughput=224870.4,
+            read_operations=7.0,
+            write_operations=63.0,
+        ),
+        rebalance_io=DiskReadWrite(
+            read_throughput=0.0,
+            write_throughput=0.0,
+            read_operations=0.0,
+            write_operations=0.0,
+        ),
+    )
 }
+
 
 ITEM = "4e9a44c700000000"
 
+STRING_TABLE: StringTable = [
+    ["STORAGE_POOL", "4e9a44c700000000:"],
+    ["ID", "4e9a44c700000000"],
+    ["NAME", "pool01"],
+    ["MAX_CAPACITY_IN_KB", "27.9", "TB", "(28599", "GB)"],
+    ["UNUSED_CAPACITY_IN_KB", "15.7", "TB", "(16105", "GB)"],
+    ["FAILED_CAPACITY_IN_KB", "0", "Bytes"],
+    ["TOTAL_READ_BWC", "7", "IOPS", "33.2", "KB", "(33996", "Bytes)", "per-second"],
+    ["TOTAL_WRITE_BWC", "63", "IOPS", "219.6", "KB", "(224870", "Bytes)", "per-second"],
+    ["REBALANCE_READ_BWC", "0", "IOPS", "0", "Bytes", "per-second"],
+    ["REBALANCE_WRITE_BWC", "0", "IOPS", "0", "Bytes", "per-second"],
+]
 
-@pytest.mark.parametrize(
-    "string_table, parsed_section",
-    [
-        pytest.param(
-            [
-                ["aardvark", "b"],
-                ["STORAGE_POOL", "4e9a44c700000000:"],
-                ["ID", "4e9a44c700000000"],
-                ["NAME", "pool01"],
-                ["STORAGE_POOL", "BANANA"],
-                ["ID", "BANANA"],
-                ["NAME", "pool02"],
-            ],
-            {
-                "4e9a44c700000000": {
-                    "ID": ["4e9a44c700000000"],
-                    "NAME": ["pool01"],
-                },
-                "BANANA": {
-                    "ID": ["BANANA"],
-                    "NAME": ["pool02"],
-                },
-            },
-            id="If the storage section is present in the string_table, a mapping with the storage ID as the item and with the storage info as the value is returned",
-        ),
-        pytest.param(
-            [
-                ["VOLUME", "4e9a44c700000000:"],
-                ["ID", "4e9a44c700000000"],
-                ["NAME", "pool01"],
-            ],
-            {},
-            id="If the storage section is not present in the info, an empty mapping is returned",
-        ),
-    ],
-)
-def test_parse_scaleio(
-    string_table: StringTable,
-    parsed_section: ScaleioSection,
-) -> None:
-    assert parse_scaleio_storage_pool(string_table) == parsed_section
+STRING_TABLE_WITH_UNKNOWN_FILESYSTEM_UNIT: StringTable = [
+    ["STORAGE_POOL", "4e9a44c700000000:"],
+    ["ID", "4e9a44c700000000"],
+    ["NAME", "pool01"],
+    ["MAX_CAPACITY_IN_KB", "27.9", "PB", "(28599", "GB)"],
+    ["UNUSED_CAPACITY_IN_KB", "15.7", "PB", "(16105", "GB)"],
+    ["FAILED_CAPACITY_IN_KB", "0", "Bytes"],
+    ["TOTAL_READ_BWC", "7", "IOPS", "33.2", "KB", "(33996", "Bytes)", "per-second"],
+    ["TOTAL_WRITE_BWC", "63", "IOPS", "219.6", "KB", "(224870", "Bytes)", "per-second"],
+    ["REBALANCE_READ_BWC", "0", "IOPS", "0", "Bytes", "per-second"],
+    ["REBALANCE_WRITE_BWC", "0", "IOPS", "0", "Bytes", "per-second"],
+]
+
+
+def test_parse_scaleio_id_and_name() -> None:
+
+    scaleio_storage_pool = parse_scaleio_storage_pool(STRING_TABLE)["4e9a44c700000000"]
+    assert scaleio_storage_pool.pool_id == "4e9a44c700000000"
+    assert scaleio_storage_pool.name == "pool01"
+
+
+def test_parse_scaleio_filesystem_data() -> None:
+    assert isinstance(
+        parse_scaleio_storage_pool(STRING_TABLE)["4e9a44c700000000"].filesystem_storage_pool,
+        FilesystemStoragePool,
+    )
+
+
+def test_parse_scaleio_unknown_filesystem_unit() -> None:
+    assert isinstance(
+        parse_scaleio_storage_pool(STRING_TABLE_WITH_UNKNOWN_FILESYSTEM_UNIT)[
+            "4e9a44c700000000"
+        ].filesystem_storage_pool,
+        FilesystemStorageConversionError,
+    )
+
+
+def test_parse_scaleio_total_io_data() -> None:
+    storage_pool_total_io = parse_scaleio_storage_pool(STRING_TABLE)["4e9a44c700000000"].total_io
+    assert storage_pool_total_io.read_throughput == 33996.8
+    assert storage_pool_total_io.read_operations == 7.0
+    assert storage_pool_total_io.write_throughput == 224870.4
+    assert storage_pool_total_io.write_operations == 63.0
+
+
+def test_parse_scaleio_rebalance_io_data() -> None:
+    storage_pool_rebalance_io = parse_scaleio_storage_pool(STRING_TABLE)[
+        "4e9a44c700000000"
+    ].rebalance_io
+    assert storage_pool_rebalance_io.read_throughput == 0.0
+    assert storage_pool_rebalance_io.read_operations == 0.0
+    assert storage_pool_rebalance_io.write_throughput == 0.0
+    assert storage_pool_rebalance_io.write_operations == 0.0
+
+
+def test_parse_scaleio_section_not_found() -> None:
+    parse_result = parse_scaleio_storage_pool(
+        [
+            ["VOLUME", "4e9a44c700000000:"],
+            ["ID", "4e9a44c700000000"],
+            ["NAME", "pool01"],
+        ]
+    )
+    assert parse_result == {}
 
 
 @pytest.mark.parametrize(
@@ -99,10 +133,25 @@ def test_parse_scaleio(
     [
         pytest.param(
             {
-                "4e9a44c700000000": {
-                    "ID": ["4e9a44c700000000"],
-                    "NAME": ["pool01"],
-                }
+                "4e9a44c700000000": StoragePool(
+                    pool_id="4e9a44c700000000",
+                    name="pool01",
+                    filesystem_storage_pool=FilesystemStoragePool(
+                        total_capacity=29255270.4, free_capacity=16462643.2, failed_capacity=0.0
+                    ),
+                    total_io=DiskReadWrite(
+                        read_throughput=33996.8,
+                        write_throughput=224870.4,
+                        read_operations=7.0,
+                        write_operations=63.0,
+                    ),
+                    rebalance_io=DiskReadWrite(
+                        read_throughput=0.0,
+                        write_throughput=0.0,
+                        read_operations=0.0,
+                        write_operations=0.0,
+                    ),
+                )
             },
             [Service(item="4e9a44c700000000")],
             id="A service is created for each storage pool that is present in the parsed section",
@@ -115,7 +164,7 @@ def test_parse_scaleio(
     ],
 )
 def test_inventory_scaleio_storage_pool(
-    parsed_section: ScaleioSection,
+    parsed_section: ScaleioStoragePoolSection,
     discovered_services: Sequence[Service],
 ) -> None:
     assert list(discover_scaleio_storage_pool(parsed_section)) == discovered_services

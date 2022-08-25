@@ -4,45 +4,31 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from contextlib import suppress
+
 # pylint: disable=no-else-return
 from typing import Mapping, MutableMapping, Sequence
 
+from cmk.base.plugins.agent_based.scaleio_storage_pool import (  # pylint: disable=unused-import
+    DiskReadWrite,
+    ScaleioStoragePoolSection,
+)
 from cmk.base.plugins.agent_based.utils.scaleio import (  # pylint: disable=unused-import
-    convert_scaleio_space,
+    convert_scaleio_space_into_mb,
+    convert_to_bytes,
     parse_scaleio,
-    ScaleioSection,
 )
 
 
-# Values can be in every unit. We need Bytes for
-# diskstat.include
-def convert_to_bytes(tp: float, unit: str) -> float | None:
-    """Convert the throughput values from the storage pool to Bytes
+def convert_scaleio_space(unit: str, value: float) -> float | None:
+    """Convert the space from the storage pool to MB
 
-    >>> convert_to_bytes(1.0, "Bytes")
-    1.0
-    >>> convert_to_bytes(1.0, "KB")
-    1024.0
-    >>> convert_to_bytes(1.0, "MB")
-    1048576.0
-    >>> convert_to_bytes(1.0, "GB")
-    1073741824.0
-    >>> convert_to_bytes(1.0, "TB")
-    1099511627776.0
-    >>> convert_to_bytes(1.0, "Not_known")
+    >>> convert_scaleio_space("Not_known", 1.0)
 
     """
 
-    if unit == "Bytes":
-        return tp
-    elif unit == "KB":
-        return tp * 1024
-    elif unit == "MB":
-        return tp * 1024 * 1024
-    elif unit == "GB":
-        return tp * 1024 * 1024 * 1024
-    elif unit == "TB":
-        return tp * 1024 * 1024 * 1024 * 1024
+    with suppress(KeyError):
+        return convert_scaleio_space_into_mb(unit, value)
     return None
 
 

@@ -11,7 +11,7 @@ from pytest import MonkeyPatch
 
 from cmk.special_agents import agent_datadog
 from cmk.special_agents.agent_datadog import (
-    _to_syslog_message,
+    _event_to_syslog_message,
     DatadogAPI,
     DatadogAPIResponse,
     EventsQuerier,
@@ -192,10 +192,10 @@ class TestEventsQuerier:
         assert events_querier._read_last_event_ids() == frozenset({1, 2, 3})
 
 
-def test_to_syslog_message() -> None:
+def test_event_to_syslog_message() -> None:
     assert (
         repr(
-            _to_syslog_message(
+            _event_to_syslog_message(
                 {
                     "date_happened": 1618216122,
                     "alert_type": "info",

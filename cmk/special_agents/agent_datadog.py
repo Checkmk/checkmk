@@ -339,7 +339,7 @@ class EventsQuerier:
         )
 
 
-def _to_syslog_message(
+def _event_to_syslog_message(
     raw_event: DatadogAPIResponse,
     tag_regexes: Iterable[str],
     facility: int,
@@ -376,7 +376,7 @@ def _forward_events_to_ec(
     add_text: bool,
 ) -> None:
     SyslogForwarderUnixSocket().forward(
-        _to_syslog_message(
+        _event_to_syslog_message(
             raw_event,
             tag_regexes,
             facility,

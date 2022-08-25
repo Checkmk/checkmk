@@ -1720,10 +1720,7 @@ class UpdateConfig:
         if version.is_raw_edition():
             return
 
-        # fmt: off
-        from cmk.gui.cee.plugins.wato import influxdb
-
-        # fmt: on
+        from cmk.gui.cee.plugins.wato import influxdb  # pylint: disable=no-name-in-module
 
         influx_db_connection_config = influxdb.InfluxDBConnectionConfig()
         influx_db_connection_valuespec = influxdb.ModeEditInfluxDBConnection().valuespec()

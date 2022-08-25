@@ -452,7 +452,7 @@ def draw_dashboard(name: DashboardName) -> None:
         unconfigured_single_infos.update(dashlet.unconfigured_single_infos())
 
     html.add_body_css_class("dashboard")
-    breadcrumb = dashboard_breadcrumb(name, board, title)
+    breadcrumb = dashboard_breadcrumb(name, board, title, board_context)
     make_header(
         html,
         title,

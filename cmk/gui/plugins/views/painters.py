@@ -5451,7 +5451,7 @@ class PainterHostKubernetesCluster(_PainterHostKubernetes):
 @painter_registry.register
 class PainterHostKubernetesNamespace(_PainterHostKubernetes):
     _kubernetes_object_type = "namespace"
-    _constraints = ["namespace", "cluster"]
+    _constraints = ["namespace", "cluster-host", "cluster"]
 
     def title(self, cell: Cell) -> str:
         return _("Kubernetes Namespace")
@@ -5463,7 +5463,7 @@ class PainterHostKubernetesNamespace(_PainterHostKubernetes):
 @painter_registry.register
 class PainterHostKubernetesDeployment(_PainterHostKubernetes):
     _kubernetes_object_type = "deployment"
-    _constraints = ["deployment", "namespace", "cluster"]
+    _constraints = ["deployment", "namespace", "cluster-host", "cluster"]
 
     def title(self, cell: Cell) -> str:
         return _("Kubernetes Deployment")
@@ -5475,7 +5475,7 @@ class PainterHostKubernetesDeployment(_PainterHostKubernetes):
 @painter_registry.register
 class PainterHostKubernetesDaemonset(_PainterHostKubernetes):
     _kubernetes_object_type = "daemonset"
-    _constraints = ["daemonset", "namespace", "cluster"]
+    _constraints = ["daemonset", "namespace", "cluster-host", "cluster"]
 
     def title(self, cell: Cell) -> str:
         return _("Kubernetes DaemonSet")
@@ -5487,7 +5487,7 @@ class PainterHostKubernetesDaemonset(_PainterHostKubernetes):
 @painter_registry.register
 class PainterHostKubernetesStatefulset(_PainterHostKubernetes):
     _kubernetes_object_type = "statefulset"
-    _constraints = ["statefulset", "namespace", "cluster"]
+    _constraints = ["statefulset", "namespace", "cluster-host", "cluster"]
 
     def title(self, cell: Cell) -> str:
         return _("Kubernetes StatefulSet")

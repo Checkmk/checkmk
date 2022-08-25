@@ -1,0 +1,11 @@
+Title: Kubernetes dashboards: Introduce specific breadcrumbs
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cee
+Version: 2.2.0i1
+Date: 1665035660
+Class: feature
+
+The Kubernetes dashboard breadcrumbs now reflect the Kubernetes hierarchy starting from the "Kubernetes" overview dashboard:
+(Monitor > Applications >) Kubernetes > Cluster > Namespace > [DaemonSet|StatefulSet|Deployment]

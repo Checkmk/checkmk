@@ -99,7 +99,7 @@ def hash_password(password: str, *, rounds: Optional[int] = None) -> str:
         )
     except PasswordTruncateError:
         raise MKUserError(
-            None, "Passwords over 72 characters would be truncated and are therefore not allowed!"
+            None, "Passwords over 72 bytes would be truncated and are therefore not allowed!"
         )
 
 

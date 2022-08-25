@@ -66,7 +66,16 @@ def test_htpasswd_save(htpasswd_file: Path) -> None:
     assert htpasswd_file.open(encoding="utf-8").read() == saved_file.open(encoding="utf-8").read()
 
 
-def test_hash_password() -> None:
+@pytest.mark.parametrize(
+    "password",
+    [
+        "blä",
+        "😀",
+        "😀" * 18,
+        "a" * 71,
+    ],
+)
+def test_hash_password(password: str) -> None:
     # Suppress this warning from passlib code. We can not do anything about this and it clutters our
     # unit test log
     # tests/unit/cmk/gui/test_userdb_htpasswd_connector.py::test_hash_password
@@ -74,13 +83,19 @@ def test_hash_password() -> None:
     # if not result:
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=DeprecationWarning)
-        hashed_pw = htpasswd.hash_password("blä")
-    assert bcrypt.verify("blä", hashed_pw)
+        hashed_pw = htpasswd.hash_password(password)
+    assert bcrypt.verify(password, hashed_pw)
 
+
+def test_truncation_error() -> None:
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         with pytest.raises(MKUserError):
             htpasswd.hash_password("A" * 72 + "foo")
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        with pytest.raises(MKUserError):
+            htpasswd.hash_password("😀" * 19)
 
 
 def test_user_connector_verify_password(htpasswd_file: Path, monkeypatch: MonkeyPatch) -> None:

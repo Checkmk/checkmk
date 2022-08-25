@@ -124,19 +124,19 @@ class Socket:
 class StatusHost:
     site: SiteId | None = None
     host: str | None = None
-    status_host_set: bool = False
+    status_host_set: Literal["enabled", "disabled"] = "disabled"
 
     @classmethod
     def from_internal(cls, internal_config: tuple[SiteId, str] | None) -> StatusHost:
         if internal_config is None:
-            return cls()
+            return cls(status_host_set="disabled")
 
-        return cls(site=internal_config[0], host=str(internal_config[1]), status_host_set=True)
+        return cls(site=internal_config[0], host=str(internal_config[1]), status_host_set="enabled")
 
     def to_external(self) -> Iterator[tuple[str, str | bool | None]]:
         yield "status_host_set", self.status_host_set
 
-        if self.status_host_set:
+        if self.status_host_set == "enabled":
             yield "site", self.site
             yield "host", self.host
 
@@ -232,14 +232,14 @@ class ProxyTcp:
 
 @dataclass
 class Proxy:
-    connect_directly: bool
+    direct_or_with_proxy: Literal["with_proxy", "direct"]
     params: ProxyParams | None = None
     tcp: ProxyTcp | None = None
     global_settings: bool | None = None
 
     @classmethod
     def from_external(cls, external_config: Mapping[str, Any]) -> Proxy:
-        connect_directly = external_config["connect_directly"]
+        direct_or_with_proxy = external_config["use_livestatus_daemon"]
 
         if params := external_config.get("params"):
             if heartbeat := params.get("heartbeat"):
@@ -256,7 +256,7 @@ class Proxy:
             tcp_val = ProxyTcp()
 
         return cls(
-            connect_directly=connect_directly,
+            direct_or_with_proxy=direct_or_with_proxy,
             global_settings=global_settings,
             params=proxyparams,
             tcp=tcp_val,
@@ -265,9 +265,12 @@ class Proxy:
     @classmethod
     def from_internal(cls, internal_config: ProxyConfig | None) -> Proxy:
         if internal_config is None:
-            return cls(connect_directly=True)
+            return cls(direct_or_with_proxy="direct")
 
-        connect_directly = "params" not in internal_config
+        direct_or_with_proxy: Literal["with_proxy", "direct"] = (
+            "with_proxy" if "params" in internal_config else "direct"
+        )
+
         if proxyconfigparams := internal_config.get("params"):
             proxyparams = ProxyParams.from_internal(proxyconfigparams)
             global_settings = False
@@ -281,16 +284,16 @@ class Proxy:
             tcp_val = ProxyTcp()
 
         return cls(
-            connect_directly=connect_directly,
+            direct_or_with_proxy=direct_or_with_proxy,
             global_settings=global_settings,
             params=proxyparams,
             tcp=tcp_val,
         )
 
-    def to_external(self) -> Iterator[tuple[str, bool | None | dict]]:
-        yield "connect_directly", self.connect_directly
+    def to_external(self) -> Iterator[tuple[str, str | bool | None | dict]]:
+        yield "use_livestatus_daemon", self.direct_or_with_proxy
 
-        if not self.connect_directly:
+        if self.direct_or_with_proxy == "with_proxy":
             yield "global_settings", self.global_settings
 
             if self.params:
@@ -302,7 +305,7 @@ class Proxy:
                     yield "tcp", tcpdict
 
     def to_internal(self) -> ProxyConfig | None:
-        if self.connect_directly:
+        if self.direct_or_with_proxy == "direct":
             return None
 
         proxyconfig: ProxyConfig = {}

@@ -1,0 +1,16 @@
+Title: Fix combined search for tag groups
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1661429043
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p12
+
+If you used "tg:" for tag groups in combined searches, no results were shown,
+even if the search would match.
+This feature was broken since at least version 1.6.
+
+You can now use combined searches like "s: MY_SERVICE tg: MY_TAG" in the
+monitoring search and quicksearch again.

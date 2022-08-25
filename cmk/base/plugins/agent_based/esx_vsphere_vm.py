@@ -6,7 +6,7 @@ from typing import Dict, List, Mapping, Sequence
 
 from .agent_based_api.v1 import HostLabel, register
 from .agent_based_api.v1.type_defs import StringTable
-from .utils.esx_vsphere import ESXMemory, ESXVm, SectionVM
+from .utils.esx_vsphere import ESXCpu, ESXMemory, ESXVm, SectionVM
 
 
 def parse_esx_vsphere_vm(string_table: StringTable) -> SectionVM:
@@ -21,6 +21,7 @@ def parse_esx_vsphere_vm(string_table: StringTable) -> SectionVM:
         snapshots=grouped_values.get("snapshot.rootSnapshotList", []),
         power_state=_parse_esx_power_state(grouped_values),
         memory=_parse_esx_memory_section(grouped_values),
+        cpu=_parse_esx_cpu_section(grouped_values),
     )
 
 
@@ -49,6 +50,18 @@ def _parse_esx_memory_section(vm_values: Mapping[str, Sequence[str]]) -> ESXMemo
 
         memory_values[memory_mapping[memory_type]] = value * 1024**2
     return ESXMemory(**memory_values)
+
+
+def _parse_esx_cpu_section(vm_values: Mapping[str, Sequence[str]]) -> ESXCpu | None:
+    """Parse cpu specific values from ESX VSphere VM agent output"""
+    try:
+        return ESXCpu(
+            overall_usage=int(vm_values["summary.quickStats.overallCpuUsage"][0]),
+            cpus_count=int(vm_values["config.hardware.numCPU"][0]),
+            cores_per_socket=int(vm_values["config.hardware.numCoresPerSocket"][0]),
+        )
+    except (KeyError, IndexError):
+        return None
 
 
 def host_label_esx_vshpere_vm(section):

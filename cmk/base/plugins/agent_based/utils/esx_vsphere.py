@@ -38,10 +38,30 @@ class ESXMemory(BaseModel):
     private: float
 
 
+class ESXCpu(BaseModel):
+    """ESX VSphere VM cpu model
+
+    overall_usage:
+        overall cpu usage in Mhz
+    cpus_count:
+        count of virtual CPUs
+    cores_per_socket:
+        number of cores per socket
+    """
+
+    overall_usage: int
+    cpus_count: int
+    cores_per_socket: int
+
+    class Config:
+        allow_mutation = False
+
+
 class ESXVm(BaseModel):
     snapshots: Sequence[str]
     power_state: str | None
     memory: ESXMemory | None
+    cpu: ESXCpu | None
 
     class Config:
         allow_mutation = False

@@ -1410,7 +1410,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "esx_vsphere_vm.datastores",
         "esx_vsphere_vm.guest_tools",
         "esx_vsphere_vm.heartbeat",
-        "esx_vsphere_vm.cpu",
         "esx_vsphere_vm.mounted_devices",
         "etherbox2_temp",
         "f5_bigip_apm",

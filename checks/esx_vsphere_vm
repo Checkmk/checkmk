@@ -229,50 +229,6 @@ check_info["esx_vsphere_vm.heartbeat"] = {
     "group": "vm_heartbeat",
 }
 
-# .
-#   .--CPU-----------------------------------------------------------------.
-#   |                           ____ ____  _   _                           |
-#   |                          / ___|  _ \| | | |                          |
-#   |                         | |   | |_) | | | |                          |
-#   |                         | |___|  __/| |_| |                          |
-#   |                          \____|_|    \___/                           |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-# <<<esx_vsphere_vm>>>
-# config.hardware.numCPU 8
-# config.hardware.numCoresPerSocket 2
-# summary.quickStats.overallCpuUsage 8
-
-
-def inventory_esx_vsphere_vm_cpu(section):
-    if "summary.quickStats.overallCpuUsage" in section:
-        return [(None, None)]
-    return []
-
-
-def check_esx_vsphere_vm_cpu(_no_item, _no_params, section):
-    # VMs that are currently down do not have this entry
-    if "summary.quickStats.overallCpuUsage" not in section:
-        raise MKCounterWrapped("No information about CPU usage. VM is probably powered off.")
-
-    usage_mhz = int(section["summary.quickStats.overallCpuUsage"][0])
-    cpus = int(section["config.hardware.numCPU"][0])
-    return (
-        0,
-        "demand is %.3f Ghz, %d virtual CPUs" % (usage_mhz / 1000.0, cpus),
-        [("demand", usage_mhz)],
-    )
-
-
-check_info["esx_vsphere_vm.cpu"] = {
-    "inventory_function": inventory_esx_vsphere_vm_cpu,
-    "check_function": check_esx_vsphere_vm_cpu,
-    "service_description": "ESX CPU",
-    "has_perfdata": True,
-}
 
 # .
 #   .--VM devices----------------------------------------------------------.

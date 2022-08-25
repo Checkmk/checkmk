@@ -1871,13 +1871,8 @@ def painter_specs_to_runtime_format(view: ViewSpec) -> ViewSpec:
 #   '----------------------------------------------------------------------'
 
 
-def extract_painter_name(painter_spec: Union[PainterName, PainterSpec]) -> PainterName:
-    return painter_spec.name if isinstance(painter_spec, PainterSpec) else painter_spec
-
-
 def painter_exists(painter_spec: PainterSpec) -> bool:
-    painter_name = extract_painter_name(painter_spec)
-    return painter_name in painter_registry
+    return painter_spec.name in painter_registry
 
 
 class Cell:
@@ -2373,7 +2368,11 @@ def output_csv_headers(view: ViewSpec) -> None:
 def _get_sorter_name_of_painter(
     painter_name_or_spec: Union[PainterName, PainterSpec]
 ) -> Optional[SorterName]:
-    painter_name = extract_painter_name(painter_name_or_spec)
+    painter_name = (
+        painter_name_or_spec.name
+        if isinstance(painter_name_or_spec, PainterSpec)
+        else painter_name_or_spec
+    )
     painter = painter_registry[painter_name]()
     if painter.sorter:
         return painter.sorter

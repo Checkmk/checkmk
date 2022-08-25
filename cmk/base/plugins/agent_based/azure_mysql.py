@@ -16,15 +16,8 @@ from .utils.azure import (
     check_storage,
     discover_azure_by_metrics,
     MetricData,
-    parse_resources,
     Section,
 )
-
-register.agent_section(
-    name="azure_servers",
-    parse_function=parse_resources,
-)
-
 
 register.check_plugin(
     name="azure_mysql_memory",

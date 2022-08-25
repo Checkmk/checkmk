@@ -1,0 +1,21 @@
+Title: cmk-update-agent: Retry locking
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1661422870
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p11
+
+The agent updater is designed to have no more than one instance running
+at a time on a host. This is implemented by holding a file lock while running.
+
+We recently observed that a lock may sometimes fail briefly after it was
+released by a previous agent updater instance, possibly due to some anti virus
+software.
+
+To mitigate this situation, the locking is now retried 10 times before aborting
+the agent updater call.
+

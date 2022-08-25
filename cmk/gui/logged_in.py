@@ -11,18 +11,7 @@ import errno
 import logging
 import os
 import time
-from typing import (
-    Any,
-    ContextManager,
-    Dict,
-    Iterator,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    TYPE_CHECKING,
-    Union,
-)
+from typing import Any, ContextManager, Dict, Iterator, List, Optional, Set, Tuple, Union
 
 from livestatus import SiteConfigurations, SiteId
 
@@ -41,11 +30,17 @@ from cmk.gui.i18n import _
 from cmk.gui.utils.roles import may_with_roles, roles_of_user
 from cmk.gui.utils.transaction_manager import TransactionManager
 
-if TYPE_CHECKING:
-    # Cyclic import!
-    from cmk.gui.plugins.openapi.restful_objects import Endpoint
-
-endpoint: Endpoint = request_local_attr("endpoint")
+# TODO(ml): Any is but a stop gab.  The type should actually be
+#           `cmk.gui.plugins.openapi.restful_objects.Endpoint`.
+#           However, this pulls the REST API into our GUI code and
+#           is responsible for a huge layering violation resulting
+#           in 100+ cyclic dependencies.
+#
+#           Also note that the Endpoint is only used in a branch of
+#           the `may()` method.  The proper solution would be to keep
+#           the code under `is_rest_api_call` in the openapi plugin.
+#
+endpoint: Any = request_local_attr("endpoint")
 
 _logger = logging.getLogger(__name__)
 

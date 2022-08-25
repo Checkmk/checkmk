@@ -187,13 +187,13 @@ def urlopen_with_ssl(request, timeout):
         result = urlopen(request, context=get_ssl_no_verify_context(), timeout=timeout)
     else:
         if sys.version_info[0] == 2:
-            from urllib2 import (  # pylint: disable=import-error # isort: skip
+            from urllib2 import (  # pylint: disable=import-error
                 build_opener,
                 HTTPSHandler,
                 install_opener,
             )
         else:
-            from urllib.request import (  # pylint: disable=import-error,no-name-in-module # isort: skip
+            from urllib.request import (  # pylint: disable=import-error,no-name-in-module
                 build_opener,
                 HTTPSHandler,
                 install_opener,

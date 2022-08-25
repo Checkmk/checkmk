@@ -844,7 +844,8 @@ def test_transform_influxdb_connnections(uc: update_config.UpdateConfig) -> None
         return
 
     # fmt: off
-    from cmk.gui.cee.plugins.wato import influxdb  # type: ignore[import] # isort:skip # pylint: disable=no-name-in-module
+    from cmk.gui.cee.plugins.wato import influxdb
+
     # fmt: on
 
     influx_db_connection_config = influxdb.InfluxDBConnectionConfig()

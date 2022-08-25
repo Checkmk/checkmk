@@ -1721,7 +1721,8 @@ class UpdateConfig:
             return
 
         # fmt: off
-        from cmk.gui.cee.plugins.wato import influxdb  # isort:skip # pylint: disable=no-name-in-module
+        from cmk.gui.cee.plugins.wato import influxdb
+
         # fmt: on
 
         influx_db_connection_config = influxdb.InfluxDBConnectionConfig()

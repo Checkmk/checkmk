@@ -642,7 +642,6 @@ def _make_table_view_name_of_host(view_name: str) -> str:
 class NodeDisplayHint:
     icon: Optional[str]
     title: str
-    short_title: str
     _long_title_function: Callable[[], str]
 
     @property
@@ -655,7 +654,6 @@ class NodeDisplayHint:
         return cls(
             icon=raw_hint.get("icon"),
             title=title,
-            short_title=raw_hint.get("short", title),
             _long_title_function=_make_long_title_function(title, path[:-1]),
         )
 
@@ -687,7 +685,6 @@ class TableDisplayHint:
 @dataclass(frozen=True)
 class ColumnDisplayHint:
     title: str
-    short_title: str
     paint_function: PaintFunction
     sort_function: Callable[[Any, Any], int]  # TODO improve type hints for args
     filter_class: (
@@ -708,7 +705,6 @@ class ColumnDisplayHint:
         title = _make_title_function(raw_hint)(key)
         return cls(
             title=title,
-            short_title=raw_hint.get("short", title),
             paint_function=paint_function,
             sort_function=raw_hint.get("sort", _cmp_inv_generic),
             filter_class=raw_hint.get("filter"),
@@ -761,7 +757,6 @@ class AttributesDisplayHint:
 @dataclass(frozen=True)
 class AttributeDisplayHint:
     title: str
-    short_title: str
     _long_title_function: Callable[[], str]
     data_type: str
     paint_function: PaintFunction
@@ -779,7 +774,6 @@ class AttributeDisplayHint:
         title = _make_title_function(raw_hint)(key)
         return cls(
             title=title,
-            short_title=raw_hint.get("short", title),
             _long_title_function=_make_long_title_function(title, path),
             data_type=data_type,
             paint_function=paint_function,
@@ -1138,7 +1132,7 @@ def _register_node_painter(
                 if inventory_path.path
                 else _("Inventory Tree")
             ),
-            "short": hint.short_title,
+            "short": hint.title,
             "columns": ["host_inventory", "host_structured_status"],
             "options": ["show_internal_tree_paths"],
             "params": Dictionary(
@@ -1226,7 +1220,7 @@ def _register_attribute_column(
                 if inventory_path.path
                 else _("Inventory Tree")
             ),
-            "short": hint.short_title,
+            "short": hint.title,
             "columns": ["host_inventory", "host_structured_status"],
             "options": ["show_internal_tree_paths"],
             "params": Dictionary(
@@ -1353,7 +1347,7 @@ def _register_table_column(
         column,
         {
             "title": topic + ": " + hint.title,
-            "short": hint.short_title,
+            "short": hint.title,
             "columns": [column],
             "paint": lambda row: hint.paint_function(row.get(column)),
             "sorter": column,
@@ -2249,7 +2243,7 @@ class ABCNodeRenderer(abc.ABC):
         for column in columns:
             html.th(
                 self._get_header(
-                    column.hint.short_title,
+                    column.hint.title,
                     column.key,
                     "#DDD",
                     is_key_column=column.is_key_column,

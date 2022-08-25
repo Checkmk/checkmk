@@ -295,7 +295,6 @@ def test__cmp_inventory_node(  # type:ignore[no-untyped-def]
             NodeDisplayHint(
                 icon=None,
                 title="Inventory",
-                short_title="Inventory",
                 _long_title_function=lambda: "Inventory",
             ),
             AttributesDisplayHint(
@@ -312,7 +311,6 @@ def test__cmp_inventory_node(  # type:ignore[no-untyped-def]
             NodeDisplayHint(
                 icon="hardware",
                 title="Hardware",
-                short_title="Hardware",
                 _long_title_function=lambda: "Hardware",
             ),
             AttributesDisplayHint(
@@ -329,7 +327,6 @@ def test__cmp_inventory_node(  # type:ignore[no-untyped-def]
             NodeDisplayHint(
                 icon=None,
                 title="Processor",
-                short_title="Processor",
                 _long_title_function=lambda: "Hardware ➤ Processor",
             ),
             AttributesDisplayHint(
@@ -358,7 +355,6 @@ def test__cmp_inventory_node(  # type:ignore[no-untyped-def]
             NodeDisplayHint(
                 icon=None,
                 title="Docker images",
-                short_title="Docker images",
                 _long_title_function=lambda: "Docker ➤ Docker images",
             ),
             AttributesDisplayHint(
@@ -387,7 +383,6 @@ def test__cmp_inventory_node(  # type:ignore[no-untyped-def]
             NodeDisplayHint(
                 icon=None,
                 title="Node",
-                short_title="Node",
                 _long_title_function=lambda: "To ➤ Node",
             ),
             AttributesDisplayHint(
@@ -411,7 +406,6 @@ def test_make_node_displayhint(
 
     assert hints.node_hint.icon == expected_node_hint.icon
     assert hints.node_hint.title == expected_node_hint.title
-    assert hints.node_hint.short_title == expected_node_hint.short_title
     assert hints.node_hint.long_title == expected_node_hint.long_title
 
     assert hints.attributes_hint.key_order == expected_attributes_hint.key_order
@@ -429,7 +423,6 @@ def test_make_node_displayhint(
             NodeDisplayHint(
                 icon=None,
                 title="Bar",
-                short_title="Bar",
                 _long_title_function=lambda: "Foo ➤ Bar",
             ),
             AttributesDisplayHint(
@@ -446,7 +439,6 @@ def test_make_node_displayhint(
             NodeDisplayHint(
                 icon=None,
                 title="Bar",
-                short_title="Bar",
                 _long_title_function=lambda: "Foo ➤ Bar",
             ),
             AttributesDisplayHint(
@@ -463,7 +455,6 @@ def test_make_node_displayhint(
             NodeDisplayHint(
                 icon="software",
                 title="Software",
-                short_title="Software",
                 _long_title_function=lambda: "Software",
             ),
             AttributesDisplayHint(
@@ -480,7 +471,6 @@ def test_make_node_displayhint(
             NodeDisplayHint(
                 icon=None,
                 title="Docker containers",
-                short_title="Docker containers",
                 _long_title_function=lambda: "Docker ➤ Docker containers",
             ),
             AttributesDisplayHint(
@@ -508,7 +498,6 @@ def test_make_node_displayhint_from_hint(
 
     assert hints.node_hint.icon == expected_node_hint.icon
     assert hints.node_hint.title == expected_node_hint.title
-    assert hints.node_hint.short_title == expected_node_hint.short_title
     assert hints.node_hint.long_title == expected_node_hint.long_title
 
     assert hints.attributes_hint.key_order == expected_attributes_hint.key_order
@@ -555,7 +544,6 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
             tuple(),
             "key",
             ColumnDisplayHint(
-                short_title="Key",
                 paint_function=inv_paint_generic,
                 title="Key",
                 sort_function=_cmp_inv_generic,
@@ -566,7 +554,6 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
             ("networking", "interfaces"),
             "oper_status",
             ColumnDisplayHint(
-                short_title="Status",
                 paint_function=inv_paint_if_oper_status,
                 title="Operational Status",
                 sort_function=_cmp_inv_generic,
@@ -577,7 +564,6 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
             ("path", "to", "node"),
             "key",
             ColumnDisplayHint(
-                short_title="Key",
                 paint_function=inv_paint_generic,
                 title="Key",
                 sort_function=_cmp_inv_generic,
@@ -590,7 +576,6 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
     hint = DISPLAY_HINTS.get_hints(path).get_column_hint(key)
 
     assert hint.title == expected.title
-    assert hint.short_title == expected.short_title
     assert hint.paint_function == expected.paint_function
     assert hint.sort_function == expected.sort_function
 
@@ -601,7 +586,6 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         (
             ".foo:*.bar",
             ColumnDisplayHint(
-                short_title="Bar",
                 paint_function=inv_paint_generic,
                 title="Bar",
                 sort_function=_cmp_inv_generic,
@@ -611,7 +595,6 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         (
             ".software.packages:*.package_version",
             ColumnDisplayHint(
-                short_title="Package Version",
                 paint_function=inv_paint_generic,
                 title="Package Version",
                 sort_function=cmp_version,
@@ -621,7 +604,6 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         (
             ".software.packages:*.version",
             ColumnDisplayHint(
-                short_title="Version",
                 paint_function=inv_paint_generic,
                 title="Version",
                 sort_function=cmp_version,
@@ -631,7 +613,6 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         (
             ".networking.interfaces:*.index",
             ColumnDisplayHint(
-                short_title="Index",
                 paint_function=inv_paint_number,
                 title="Index",
                 sort_function=_cmp_inv_generic,
@@ -641,7 +622,6 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         (
             ".networking.interfaces:*.oper_status",
             ColumnDisplayHint(
-                short_title="Status",
                 paint_function=inv_paint_if_oper_status,
                 title="Operational Status",
                 sort_function=_cmp_inv_generic,
@@ -657,7 +637,6 @@ def test_make_column_displayhint_from_hint(
     hint = DISPLAY_HINTS.get_hints(inventory_path.path).get_column_hint(inventory_path.key or "")
 
     assert hint.title == expected.title
-    assert hint.short_title == expected.short_title
     assert hint.paint_function == expected.paint_function
     assert hint.sort_function == expected.sort_function
 
@@ -695,7 +674,6 @@ def test_sort_attributes_pairs_displayhint(
                 data_type="str",
                 paint_function=inv_paint_generic,
                 title="Key",
-                short_title="Key",
                 _long_title_function=lambda: "Key",
                 is_show_more=True,
             ),
@@ -707,7 +685,6 @@ def test_sort_attributes_pairs_displayhint(
                 data_type="size",
                 paint_function=inv_paint_size,
                 title="Size",
-                short_title="Size",
                 _long_title_function=lambda: "Block Devices ➤ Size",
                 is_show_more=True,
             ),
@@ -719,7 +696,6 @@ def test_sort_attributes_pairs_displayhint(
                 data_type="str",
                 paint_function=inv_paint_generic,
                 title="Key",
-                short_title="Key",
                 _long_title_function=lambda: "Node ➤ Key",
                 is_show_more=True,
             ),
@@ -732,7 +708,6 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
     assert hint.data_type == expected.data_type
     assert hint.paint_function == expected.paint_function
     assert hint.title == expected.title
-    assert hint.short_title == expected.short_title
     assert hint.long_title == expected.long_title
     assert hint.is_show_more == expected.is_show_more
 
@@ -746,7 +721,6 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
                 data_type="str",
                 paint_function=inv_paint_generic,
                 title="Bar",
-                short_title="Bar",
                 _long_title_function=lambda: "Foo ➤ Bar",
                 is_show_more=True,
             ),
@@ -757,7 +731,6 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
                 data_type="str",
                 paint_function=inv_paint_generic,
                 title="CPU Architecture",
-                short_title="CPU Arch",
                 _long_title_function=lambda: "Processor ➤ CPU Architecture",
                 is_show_more=True,
             ),
@@ -768,7 +741,6 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
                 data_type="str",
                 paint_function=inv_paint_generic,
                 title="Product",
-                short_title="Product",
                 _long_title_function=lambda: "System ➤ Product",
                 is_show_more=False,
             ),
@@ -784,7 +756,6 @@ def test_make_attribute_displayhint_from_hint(
     assert hint.data_type == expected.data_type
     assert hint.paint_function == expected.paint_function
     assert hint.title == expected.title
-    assert hint.short_title == expected.short_title
     assert hint.long_title == expected.long_title
     assert hint.is_show_more == expected.is_show_more
 

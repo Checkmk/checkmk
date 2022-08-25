@@ -43,10 +43,10 @@ inventory_displayhints.update({
             "logical_cpus",
         ],
     },
-    ".hardware.cpu.arch": {"title": _l("CPU Architecture"), "short": _l("CPU Arch")},
+    ".hardware.cpu.arch": {"title": _l("CPU Architecture")},
     ".hardware.cpu.max_speed": {"title": _l("Maximum Speed"), "paint": "hz"},
-    ".hardware.cpu.model": {"title": _l("Model"), "short": _l("CPU Model")},
-    ".hardware.cpu.threads": {"title": _l("Total Number of Hyperthreads"), "paint": "count"},
+    ".hardware.cpu.model": {"title": _l("CPU Model")},
+    ".hardware.cpu.threads": {"title": _l("#Hyperthreads"), "paint": "count"},
     ".hardware.cpu.smt_threads": {"title": _l("SMT Threads"), "paint": "count"},
     ".hardware.cpu.sharing_mode": {"title": _l("Shared Processor Mode")},
     ".hardware.cpu.implementation_mode": {"title": _l("Processor Implementation Mode")},
@@ -58,13 +58,13 @@ inventory_displayhints.update({
     ".hardware.cpu.cores_per_cpu": {"title": _l("Cores per CPU"), "paint": "count"},
     ".hardware.cpu.threads_per_cpu": {"title": _l("Hyperthreads per CPU"), "paint": "count"},
     ".hardware.cpu.cpus": {
-        "title": _l("Number of physical CPUs"), "short": _l("CPUs"), "paint": "count"
+        "title": _l("#Physical CPUs"), "paint": "count"
     },
     ".hardware.cpu.logical_cpus": {
-        "title": _l("Number of logical CPUs"), "short": _l("Logical CPUs"), "paint": "count"
+        "title": _l("#Logical CPUs"), "paint": "count"
     },
     ".hardware.cpu.cores": {
-        "title": _l("Total Number of Cores"), "short": _l("Cores"), "paint": "count"
+        "title": _l("#Cores"), "paint": "count"
     },
     ".hardware.memory.": {"title": _l("Memory (RAM)")},
     ".hardware.memory.total_ram_usable": {"title": _l("Total usable RAM"), "paint": "bytes_rounded"},
@@ -373,13 +373,11 @@ inventory_displayhints.update({
         "keyorder": ["name", "driver_version", "driver_date", "graphic_memory"],
     },
     ".hardware.video:*.": {"title": _l("Graphic Card %d")},
-    ".hardware.video:*.name": {"title": _l("Graphic Card Name"), "short": _l("Card Name")},
-    ".hardware.video:*.subsystem": {"title": _l("Vendor and Device ID"), "short": _l("Vendor")},
-    ".hardware.video:*.driver": {"title": _l("Driver"), "short": _l("Driver")},
-    ".hardware.video:*.driver_date": {"title": _l("Driver Date"), "short": _l("Driver Date")},
-    ".hardware.video:*.driver_version": {
-        "title": _l("Driver Version"), "short": _l("Driver Version")
-    },
+    ".hardware.video:*.name": {"title": _l("Graphic Card Name")},
+    ".hardware.video:*.subsystem": {"title": _l("Vendor and Device ID")},
+    ".hardware.video:*.driver": {"title": _l("Driver")},
+    ".hardware.video:*.driver_date": {"title": _l("Driver Date")},
+    ".hardware.video:*.driver_version": {"title": _l("Driver Version")},
     ".hardware.video:*.graphic_memory": {"title": _l("Memory"), "paint": "bytes_rounded"},
     ".hardware.nwadapter:": {
         "title": _l("Network Adapters"),
@@ -398,8 +396,8 @@ inventory_displayhints.update({
     ".software.": {"title": _l("Software"), "icon": "software"},
     ".software.applications.": {"title": _l("Applications")},
     ".software.applications.check_mk.": {"title": _l("Checkmk")},
-    ".software.applications.check_mk.num_hosts": {"title": _l("#Hosts"), "short": _l("Hosts"),},
-    ".software.applications.check_mk.num_services": {"title": _l("#Services"), "short": _l("Services"),},
+    ".software.applications.check_mk.num_hosts": {"title": _l("#Hosts")},
+    ".software.applications.check_mk.num_services": {"title": _l("#Services")},
     ".software.applications.check_mk.versions:": {
         "title": _l("Checkmk versions"),
         "keyorder": ["version", "number", "edition", "demo", "num_sites"],
@@ -422,14 +420,14 @@ inventory_displayhints.update({
         ],
         "view": "invcmksites",
     },
-    ".software.applications.check_mk.sites:*.used_version": {"title": _l("Version"), "short": _l("Version")},
-    ".software.applications.check_mk.sites:*.num_hosts": {"title": _l("#Hosts"), "short": _l("Hosts")},
-    ".software.applications.check_mk.sites:*.num_services": {"title": _l("#Services"), "short": _l("Services")},
-    ".software.applications.check_mk.sites:*.check_mk_helper_usage": {"title": _l("CMK helper usage"), "short": _l("CMK helper")},
-    ".software.applications.check_mk.sites:*.fetcher_helper_usage": {"title": _l("Fetcher helper usage"), "short": _l("Fetcher helper")},
-    ".software.applications.check_mk.sites:*.checker_helper_usage": {"title": _l("Checker helper usage"), "short": _l("Checker helper")},
-    ".software.applications.check_mk.sites:*.livestatus_usage": {"title": _l("Lice helper usage"), "short": _l("Live helper")},
-    ".software.applications.check_mk.sites:*.check_helper_usage": {"title": _l("Actual helper usage"), "short": _l("Act. helper")},
+    ".software.applications.check_mk.sites:*.used_version": {"title": _l("Version")},
+    ".software.applications.check_mk.sites:*.num_hosts": {"title": _l("#Hosts")},
+    ".software.applications.check_mk.sites:*.num_services": {"title": _l("#Services")},
+    ".software.applications.check_mk.sites:*.check_mk_helper_usage": {"title": _l("CMK helper usage")},
+    ".software.applications.check_mk.sites:*.fetcher_helper_usage": {"title": _l("Fetcher helper usage")},
+    ".software.applications.check_mk.sites:*.checker_helper_usage": {"title": _l("Checker helper usage")},
+    ".software.applications.check_mk.sites:*.livestatus_usage": {"title": _l("Lice helper usage")},
+    ".software.applications.check_mk.sites:*.check_helper_usage": {"title": _l("Actual helper usage")},
     ".software.applications.check_mk.sites:*.autostart": {"title": _l("Autostart"), "paint": "bool"},
     ".software.applications.check_mk.sites:*.apache": {"title": _l("Apache status"), "paint": "service_status"},
     ".software.applications.check_mk.sites:*.cmc": {"title": _l("CMC status"), "paint": "service_status"},
@@ -445,7 +443,7 @@ inventory_displayhints.update({
     ".software.applications.check_mk.sites:*.npcd": {"title": _l("NPCD status"), "paint": "service_status"},
     ".software.applications.check_mk.cluster.": {"title": _l("Cluster")},
     ".software.applications.check_mk.cluster.is_cluster": {
-        "title": _l("Cluster host"), "short": _l("Cluster"), "paint": "bool"
+        "title": _l("Cluster host"), "paint": "bool"
     },
     ".software.applications.check_mk.cluster.nodes:": {
         "title": _l("Nodes"),
@@ -489,10 +487,10 @@ inventory_displayhints.update({
     ".software.applications.docker.registry": {"title": _l("Registry")},
     ".software.applications.docker.swarm_state": {"title": _l("Swarm State")},
     ".software.applications.docker.swarm_node_id": {"title": _l("Swarm Node ID")},
-    ".software.applications.docker.num_containers_total": {"title": _l("#Containers"), "short": _l("Containers"),},
-    ".software.applications.docker.num_containers_running": {"title": _l("#Containers running"), "short": _l("Running"),},
-    ".software.applications.docker.num_containers_stopped": {"title": _l("#Containers stopped"), "short": _l("Stopped"),},
-    ".software.applications.docker.num_containers_paused": {"title": _l("#Containers paused"), "short": _l("Paused"),},
+    ".software.applications.docker.num_containers_total": {"title": _l("#Containers")},
+    ".software.applications.docker.num_containers_running": {"title": _l("#Containers running")},
+    ".software.applications.docker.num_containers_stopped": {"title": _l("#Containers stopped")},
+    ".software.applications.docker.num_containers_paused": {"title": _l("#Containers paused")},
     ".software.applications.docker.num_images": {"title": _l("#Images")},
     ".software.applications.docker.node_labels:": {
         "title": _l("Node Labels"),
@@ -869,7 +867,7 @@ inventory_displayhints.update({
         "title": _l("Used size"), "paint": "size"
     },
     ".software.applications.oracle.tablespaces:*.num_increments": {
-        "title": _l("Number of increments"),
+        "title": _l("#Increments"),
     },
     ".software.applications.oracle.tablespaces:*.increment_size": {
         "title": _l("Increment size"), "paint": "size"
@@ -962,14 +960,14 @@ inventory_displayhints.update({
     ".software.kernel_config:*.name": {"title": _l("Parameter name")},
     ".software.kernel_config:*.value": {"title": _l("Value")},
     ".software.os.": {"title": _l("Operating System")},
-    ".software.os.name": {"title": _l("Name"), "short": _l("Operating System"), "is_show_more": False},
+    ".software.os.name": {"title": _l("Operatin system"), "is_show_more": False},
     ".software.os.version": {"title": _l("Version")},
     ".software.os.vendor": {"title": _l("Vendor")},
     ".software.os.type": {"title": _l("Type"), "is_show_more": False},  # e.g. "linux"
     ".software.os.install_date": {"title": _l("Install Date"), "paint": "date"},
-    ".software.os.kernel_version": {"title": _l("Kernel Version"), "short": _l("Kernel")},
-    ".software.os.arch": {"title": _l("Kernel Architecture"), "short": _l("Architecture")},
-    ".software.os.service_pack": {"title": _l("Latest Service Pack"), "short": _l("Service Pack")},
+    ".software.os.kernel_version": {"title": _l("Kernel Version")},
+    ".software.os.arch": {"title": _l("Kernel Architecture")},
+    ".software.os.service_pack": {"title": _l("Latest Service Pack")},
     ".software.os.service_packs:": {"title": _l("Service Packs"), "keyorder": ["name"]},
     ".software.packages:": {
         "title": _l("Software packages"),
@@ -1026,19 +1024,16 @@ inventory_displayhints.update({
     ".networking.interfaces:*.phys_address": {"title": _l("Physical Address (MAC)")},
     ".networking.interfaces:*.oper_status": {
         "title": _l("Operational Status"),
-        "short": _l("Status"),
         "paint": "if_oper_status",
         "filter": FilterInvtableOperStatus,
     },
     ".networking.interfaces:*.admin_status": {
         "title": _l("Administrative Status"),
-        "short": _l("Admin"),
         "paint": "if_admin_status",
         "filter": FilterInvtableAdminStatus,
     },
     ".networking.interfaces:*.available": {
         "title": _l("Port Usage"),
-        "short": _l("Used"),
         "paint": "if_available",
         "filter": FilterInvtableAvailable,
     },

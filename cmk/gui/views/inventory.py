@@ -649,7 +649,7 @@ class NodeDisplayHint:
         return self._long_title_function()
 
     @classmethod
-    def make_from_hint(cls, path: SDPath, raw_hint: InventoryHintSpec) -> NodeDisplayHint:
+    def from_raw(cls, path: SDPath, raw_hint: InventoryHintSpec) -> NodeDisplayHint:
         title = _make_title_function(raw_hint)(path[-1] if path else "")
         return cls(
             icon=raw_hint.get("icon"),
@@ -672,7 +672,7 @@ class TableDisplayHint:
     view_spec: Optional[TableViewSpec]
 
     @classmethod
-    def make_from_hint(
+    def from_raw(
         cls, raw_hint: InventoryHintSpec, table_view_spec: Optional[TableViewSpec]
     ) -> TableDisplayHint:
         return cls(
@@ -698,9 +698,7 @@ class ColumnDisplayHint:
     )
 
     @classmethod
-    def make_from_hint(
-        cls, path: SDPath, key: str, raw_hint: InventoryHintSpec
-    ) -> ColumnDisplayHint:
+    def from_raw(cls, path: SDPath, key: str, raw_hint: InventoryHintSpec) -> ColumnDisplayHint:
         _data_type, paint_function = _get_paint_function(raw_hint)
         title = _make_title_function(raw_hint)(key)
         return cls(
@@ -748,7 +746,7 @@ class AttributesDisplayHint:
     key_order: Sequence[str]
 
     @classmethod
-    def make_from_hint(cls, raw_hint: InventoryHintSpec) -> AttributesDisplayHint:
+    def from_raw(cls, raw_hint: InventoryHintSpec) -> AttributesDisplayHint:
         return cls(
             key_order=raw_hint.get("keyorder", []),
         )
@@ -767,9 +765,7 @@ class AttributeDisplayHint:
         return self._long_title_function()
 
     @classmethod
-    def make_from_hint(
-        cls, path: SDPath, key: str, raw_hint: InventoryHintSpec
-    ) -> AttributeDisplayHint:
+    def from_raw(cls, path: SDPath, key: str, raw_hint: InventoryHintSpec) -> AttributeDisplayHint:
         data_type, paint_function = _get_paint_function(raw_hint)
         title = _make_title_function(raw_hint)(key)
         return cls(
@@ -874,10 +870,10 @@ class DisplayHints:
         path: SDPath = tuple()
         return DisplayHints(
             path=path,
-            node_hint=NodeDisplayHint.make_from_hint(path, {"title": _l("Inventory")}),
-            table_hint=TableDisplayHint.make_from_hint({}, None),
+            node_hint=NodeDisplayHint.from_raw(path, {"title": _l("Inventory")}),
+            table_hint=TableDisplayHint.from_raw({}, None),
             column_hints={},
-            attributes_hint=AttributesDisplayHint.make_from_hint({}),
+            attributes_hint=AttributesDisplayHint.from_raw({}),
             attribute_hints={},
         )
 
@@ -885,10 +881,10 @@ class DisplayHints:
     def default(cls, path: SDPath) -> DisplayHints:
         return DisplayHints(
             path=path,
-            node_hint=NodeDisplayHint.make_from_hint(path, {}),
-            table_hint=TableDisplayHint.make_from_hint({}, None),
+            node_hint=NodeDisplayHint.from_raw(path, {}),
+            table_hint=TableDisplayHint.from_raw({}, None),
             column_hints={},
-            attributes_hint=AttributesDisplayHint.make_from_hint({}),
+            attributes_hint=AttributesDisplayHint.from_raw({}),
             attribute_hints={},
         )
 
@@ -906,11 +902,11 @@ class DisplayHints:
                     # - real nodes, eg. ".hardware.chassis.",
                     # - nodes with attributes, eg. ".hardware.cpu." or
                     # - nodes with a table, eg. ".software.packages:"
-                    node_hint=NodeDisplayHint.make_from_hint(
+                    node_hint=NodeDisplayHint.from_raw(
                         path,
                         {**related_raw_hints.for_node, **related_raw_hints.for_table},
                     ),
-                    table_hint=TableDisplayHint.make_from_hint(
+                    table_hint=TableDisplayHint.from_raw(
                         related_raw_hints.for_table,
                         self._get_table_view_spec(
                             path,
@@ -919,14 +915,12 @@ class DisplayHints:
                         ),
                     ),
                     column_hints={
-                        key: ColumnDisplayHint.make_from_hint(path, key, raw_hint)
+                        key: ColumnDisplayHint.from_raw(path, key, raw_hint)
                         for key, raw_hint in related_raw_hints.by_columns.items()
                     },
-                    attributes_hint=AttributesDisplayHint.make_from_hint(
-                        related_raw_hints.for_node
-                    ),
+                    attributes_hint=AttributesDisplayHint.from_raw(related_raw_hints.for_node),
                     attribute_hints={
-                        key: AttributeDisplayHint.make_from_hint(path, key, raw_hint)
+                        key: AttributeDisplayHint.from_raw(path, key, raw_hint)
                         for key, raw_hint in related_raw_hints.by_attributes.items()
                     },
                 ),
@@ -1020,12 +1014,12 @@ class DisplayHints:
     def get_column_hint(self, key: str) -> ColumnDisplayHint:
         if key in self.column_hints:
             return self.column_hints[key]
-        return ColumnDisplayHint.make_from_hint(self.abc_path, key, {})
+        return ColumnDisplayHint.from_raw(self.abc_path, key, {})
 
     def get_attribute_hint(self, key: str) -> AttributeDisplayHint:
         if key in self.attribute_hints:
             return self.attribute_hints[key]
-        return AttributeDisplayHint.make_from_hint(self.abc_path, key, {})
+        return AttributeDisplayHint.from_raw(self.abc_path, key, {})
 
     def make_columns(
         self, rows: Sequence[SDRow], key_columns: SDKeyColumns, path: SDPath

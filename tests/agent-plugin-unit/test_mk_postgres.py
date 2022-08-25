@@ -222,8 +222,11 @@ class TestLinux:
         }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
-        assert (
-            myPostgresOnLinux.get_instances() == "1252 /usr/bin/postmaster -D /var/lib/pgsql/data"
+        assert myPostgresOnLinux.get_instances() == "\n".join(
+            [
+                "1252 /usr/bin/postmaster -D /var/lib/pgsql/data",
+                "3148 postmaster -D /var/lib/pgsql/data",
+            ]
         )
 
 

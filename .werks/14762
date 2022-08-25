@@ -1,0 +1,22 @@
+Title: mk_postgres.py: instances not found under Linux for PostgreSQL version >= 13
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1661436391
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p11
+
+This fix only applies when your PostgreSQL server runs under Linux.
+
+The plugin "mk_postgres.py" does not find any instances when PostgreSQL version >=
+13 is installed. This has been fixed. If you require this fix, please update
+the agent plugin "mk_postgres.py" on the relevant host.
+
+The problem was that in this version, the output of the "ps" command does not
+include the full path to the relevant binaries, and therefore they could not be
+correctly identified as PostgreSQL processes. For example:<br>
+<br>
+[PID] /usr/bin/postmaster [OPTS]  -->  [PID] postmaster [OPTS]
+<br>

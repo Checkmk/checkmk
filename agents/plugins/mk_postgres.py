@@ -640,8 +640,14 @@ class PostgresLinux(PostgresBase):
         # type: () -> str
 
         procs_to_match = [
-            re.compile(pattern) for pattern in
-            ["(.*)bin/postgres(.*)", "(.*)bin/postmaster(.*)", "(.*)bin/edb-postgres(.*)"]
+            re.compile(pattern) for pattern in [
+                "(.*)bin/postgres(.*)",
+                "(.*)bin/postmaster(.*)",
+                "(.*)bin/edb-postgres(.*)",
+                "^[0-9]+ postgres (.*)",
+                "^[0-9]+ postmaster (.*)",
+                "^[0-9]+ edb-postgres (.*)",
+            ]
         ]
 
         procs_list = ensure_str(subprocess_check_output(["ps", "h", "-eo",

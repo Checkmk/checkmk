@@ -1193,10 +1193,10 @@ def transform_valuespec_value_to_view(ident, attrs):
         return attrs
 
     if ident == "grouping":
-        return {"group_painters": [PainterSpec.from_raw(*v) for v in attrs["grouping"]]}
+        return {"group_painters": [PainterSpec.from_raw(v) for v in attrs["grouping"]]}
 
     if ident == "columns":
-        return {"painters": [PainterSpec.from_raw(*v) for v in attrs["columns"]]}
+        return {"painters": [PainterSpec.from_raw(v) for v in attrs["columns"]]}
 
     return {ident: attrs}
 

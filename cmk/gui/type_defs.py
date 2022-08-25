@@ -211,7 +211,7 @@ class PainterSpec:
     column_title: str | None = None
 
     @classmethod
-    def from_raw(cls, *value: Any) -> PainterSpec:
+    def from_raw(cls, value: tuple) -> PainterSpec:
         # Some legacy views have optional fields like "tooltip" set to "" instead of None
         # in their definitions. Consolidate this case to None.
         value = (value[0],) + tuple(p or None for p in value[1:]) + (None,) * (5 - len(value))

@@ -1173,7 +1173,7 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
         return _("Hosttag")
 
     def get_livestatus_columns(self, livestatus_table):
-        return ["tags"]
+        return ["host_tags"]
 
     def get_livestatus_filters(
         self, livestatus_table: LivestatusTable, used_filters: UsedFilters
@@ -1188,7 +1188,7 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
             if ":" not in entry:
                 # Be compatible to pre 1.6 filtering for some time (no
                 # tag-group:tag-value, but tag-value only)
-                filter_lines.append("Filter: tag_values >= %s" % livestatus.lqencode(entry))
+                filter_lines.append("Filter: host_tag_values >= %s" % livestatus.lqencode(entry))
                 continue
 
             tag_key, tag_value = entry.split(":", 1)
@@ -1210,13 +1210,19 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
         used_filters: UsedFilters,
         rows: Rows,
     ) -> Matches:
-        supported_views = {"searchhost": "host_regex", "host": "host"}
+        # "svcsearch" and "allservices" are needed for Multi-Filter use
+        supported_views = {
+            "searchhost": "host_regex",
+            "host": "host",
+            "svcsearch": "svcsearch",
+            "allservices": "allservices",
+        }
 
         filter_name = supported_views.get(for_view)
         if not filter_name:
             return None
 
-        if row:
+        if row and filter_name not in ["allservices", "svcsearch"]:
             hostname = row.get("host_name", row.get("name"))
             return hostname, [(filter_name, hostname)]
 

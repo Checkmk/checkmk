@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import check_levels
+
+
 def parse_casa_info_util(info):
     entity_names = {int(k): v for k, v in (x for x in info[0])}
     data = {}
@@ -30,26 +33,18 @@ def inventory_casa_cpu_util(info):
 
 def check_casa_cpu_util(item, params, info):
     data = parse_casa_info_util(info)
-    if item in data:
-        state = 0
-        value = int(data[item]["cpu_util"])
-        levels_text = ""
-        error_text = ""
-        warn, crit = None, None
-        if "levels" in params:
-            warn, crit = params["levels"]
-            levels_text = "(warn/crit at %s%%/%s%%)" % (warn, crit)
-            if value > crit:
-                state = 2
-            elif value > warn:
-                state = 1
-            else:
-                levels_text = ""
-        infotext = "%d%% %s%s" % (value, error_text, levels_text)
-        perfdata = [("util", value, warn, crit, 0, 100)]
-        return (state, infotext, perfdata)
+    if (values := data.get(item)) is None:
+        return
 
-    return 3, "%s not found in SNMP output" % item
+    value = int(values["cpu_util"])
+
+    yield check_levels(
+        value,
+        "util",
+        params.get("levels"),
+        human_readable_func=lambda x: f"{x}",
+        boundaries=(0, 100),
+    )
 
 
 check_info["casa_cpu_util"] = {

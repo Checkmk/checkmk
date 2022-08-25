@@ -15,8 +15,36 @@ SubSectionCounter = Mapping[str, list[tuple[CounterValues, str]]]
 SectionCounter = Mapping[str, SubSectionCounter]
 
 
+class ESXMemory(BaseModel):
+    """ESX VSphere VM memory model
+    host_usage:
+        consumed host memory
+    guest_usage:
+        active guest memory
+    ballooned:
+        size of the balloon driver in the VM
+    shared:
+        the portion of memory, in MB, that is granted to this VM from non-shared memory
+        (must not be set)
+    private:
+        the portion of memory, in MB, that is granted to this VM from host memory that is shared
+        between VMs.
+    """
+
+    host_usage: float
+    guest_usage: float
+    ballooned: float
+    shared: float
+    private: float
+
+
 class ESXVm(BaseModel):
     snapshots: Sequence[str]
+    power_state: str | None
+    memory: ESXMemory | None
+
+    class Config:
+        allow_mutation = False
 
 
 SectionVM = ESXVm | None

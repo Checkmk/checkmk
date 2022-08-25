@@ -104,15 +104,15 @@ def test_no_subcheck_with_snmp_keywords(fix_plugin_legacy) -> None:
 
 
 def test_all_checks_migrated(fix_plugin_legacy, fix_register) -> None:
-    migrated = set(str(name) for name in fix_register.check_plugins)
+    migrated = {str(name) for name in fix_register.check_plugins}
     # we don't expect pure section declarations anymore
-    true_checks = set(
+    true_checks = {
         n.replace(".", "_").replace("-", "_")
         for n, i in fix_plugin_legacy.check_info.items()
         if i["check_function"]
-    )
+    }
     failures = true_checks - migrated
-    assert not failures, "failed to migrate: %r" % (failures,)
+    assert not failures, "failed to migrate: {!r}".format(failures)
 
 
 def test_all_check_variables_present(fix_plugin_legacy) -> None:
@@ -1405,7 +1405,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "esx_vsphere_objects",
         "esx_vsphere_objects.count",
         "esx_vsphere_sensors",
-        "esx_vsphere_vm.mem_usage",
         "esx_vsphere_vm.name",
         "esx_vsphere_vm.running_on",
         "esx_vsphere_vm.datastores",

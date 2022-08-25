@@ -32,6 +32,7 @@ def agent_mobileiron_arguments(
             ("-p", passwordstore_get_cmdline("%s", params["password"]))
             if "password" in params
             else (),
+            ("--protocol", params["protocol"]) if "protocol" in params else (),
             ("--port", params["port"]) if "port" in params else (),
             ("--no-cert-check",) if params.get("no-cert-check") else (),
             ("--partition", ",".join(params["partition"])) if "partition" in params else (),
@@ -39,10 +40,13 @@ def agent_mobileiron_arguments(
         )
         for elem in chunk
     ]
-    if "proxy_details" in params:
-        args += _get_proxy_args_and_secrets(params["proxy_details"])
+    if proxy_setting := params.get("proxy"):
+        args += [
+            "--proxy",
+            get_http_proxy(proxy_setting).serialize(),
+        ]
 
-    for regex_platform_type in ("android-regex", "ios-regex", "others-regex"):
+    for regex_platform_type in ("android-regex", "ios-regex", "other-regex"):
         if regex_platform_type in params:
             for regex in params[regex_platform_type]:
                 args.append(f"--{regex_platform_type}={regex}")

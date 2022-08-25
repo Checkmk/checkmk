@@ -2,16 +2,24 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+from typing import Mapping
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
-from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
+from cmk.gui.plugins.wato.special_agents.common import (
+    MKUserError,
+    RulespecGroupDatasourceProgramsApps,
+)
+from cmk.gui.plugins.wato.utils import (
+    HostRulespec,
+    HTTPProxyReference,
+    IndividualOrStoredPassword,
+    rulespec_registry,
+)
 from cmk.gui.valuespec import (
+    Alternative,
     Dictionary,
     DropdownChoice,
     FixedValue,
-    Integer,
     ListOf,
     ListOfStrings,
     NetworkPort,
@@ -20,9 +28,24 @@ from cmk.gui.valuespec import (
 )
 
 
-def _valuespec_special_agents_mobileiron():
+def _validate_regex_choices(
+    value: Mapping,
+    varprefix: str,  # pylint: disable=unused-argument
+) -> None:
+    """At least one device type should be monitored."""
 
+    if not any(regex in value for regex in ["android-regex", "ios-regex", "other-regex"]):
+        raise MKUserError(
+            "android-regex",
+            _(
+                "Please activate the monitoring of at least one device type: Android, iOS or other devices"
+            ),
+        )
+
+
+def _valuespec_special_agents_mobileiron() -> Dictionary:
     return Dictionary(
+        title=_("MobileIron API"),
         help=_(
             "Requests data from Mobileiron API and outputs a piggyback host per returned device."
         ),
@@ -30,45 +53,42 @@ def _valuespec_special_agents_mobileiron():
             ("username", TextInput(title=_("Username"), allow_empty=False)),
             ("password", IndividualOrStoredPassword(title=_("Password"), allow_empty=False)),
             (
+                "protocol",
+                Alternative(
+                    title=_("Protocol"),
+                    elements=[
+                        FixedValue(value=True, title=_("HTTPS"), totext=""),
+                        FixedValue(value=False, title=_("HTTP"), totext=""),
+                    ],
+                    default_value=True,
+                ),
+            ),
+            (
                 "port",
                 NetworkPort(
                     title=_("Port"),
                     default_value=443,
-                    help=_("The port that is used for the API call."),
                 ),
             ),
             (
                 "no-cert-check",
-                FixedValue(
-                    True,
-                    title=_("Disable SSL certificate validation"),
-                    totext=_("SSL certificate validation is disabled"),
+                Alternative(
+                    title=_("SSL certificate validation"),
+                    elements=[
+                        FixedValue(value=False, title=_("Verify the certificate"), totext=""),
+                        FixedValue(
+                            value=True, title=_("Ignore certificate errors (unsecure)"), totext=""
+                        ),
+                    ],
+                    default_value=False,
                 ),
             ),
+            ("proxy", HTTPProxyReference()),
             (
                 "partition",
                 ListOfStrings(
                     allow_empty=False,
                     title=_("Retrieve information about the following partitions"),
-                ),
-            ),
-            (
-                "proxy_details",
-                Dictionary(
-                    title=_("Use proxy for MobileIron API connection"),
-                    elements=[
-                        ("proxy_host", TextInput(title=_("Proxy host"), allow_empty=True)),
-                        ("proxy_port", Integer(title=_("Port"))),
-                        (
-                            "proxy_user",
-                            TextInput(
-                                title=_("Username"),
-                                size=32,
-                            ),
-                        ),
-                        ("proxy_password", IndividualOrStoredPassword(title=_("Password"))),
-                    ],
-                    optional_keys=["proxy_port", "proxy_user", "proxy_password"],
                 ),
             ),
             (
@@ -94,15 +114,12 @@ def _valuespec_special_agents_mobileiron():
                     valuespec=RegExp(
                         mode=RegExp.infix, title=_("Pattern"), allow_empty=False, default_value=".*"
                     ),
-                    title=_("Add android hostnames matching"),
+                    title=_("Monitor Android devices"),
                     add_label=_("Add new pattern"),
                     allow_empty=False,
-                    default_value=[".*"],
                     help=_(
-                        "You can specify a list of regex patterns for android hostnames. "
+                        "You can specify a list of regex patterns for android host names. "
                         "Several patterns can be provided. "
-                        "If hostname contains '@' it will be removed with all following characters. "
-                        "And only then the regex matching will happen. "
                         "Only those that match any of the patterns will be monitored. "
                         "By default all hostnames are accepted"
                     ),
@@ -114,44 +131,46 @@ def _valuespec_special_agents_mobileiron():
                     valuespec=RegExp(
                         mode=RegExp.infix, title=_("Pattern"), allow_empty=False, default_value=".*"
                     ),
-                    title=_("Add iOS hostnames matching"),
+                    title=_("Monitor iOS devices"),
                     add_label=_("Add new pattern"),
                     allow_empty=False,
-                    default_value=[".*"],
                     help=_(
-                        "You can specify a list of regex patterns for iOS hostnames. "
+                        "You can specify a list of regex patterns for iOS host names. "
                         "Several patterns can be provided. "
-                        "If hostname contains '@' it will be removed with all following characters. "
-                        "And only then the regex matching will happen. "
                         "Only those that match any of the patterns will be monitored. "
-                        "By default all hostnames are accepted"
+                        "By default all host names are accepted"
                     ),
                 ),
             ),
             (
-                "others-regex",
+                "other-regex",
                 ListOf(
                     valuespec=RegExp(
                         mode=RegExp.infix, title=_("Pattern"), allow_empty=False, default_value=".*"
                     ),
-                    title=_("Add other (not android and not iOS) hostnames matching"),
+                    title=_("Monitor other than Android or iOS devices"),
                     add_label=_("Add new pattern"),
                     allow_empty=False,
-                    default_value=[".*"],
                     help=_(
-                        "You can specify a list of regex patterns for other hostnames "
+                        "You can specify a list of regex patterns for other host names "
                         "which are not android and not iOS. "
                         "Several patterns can be provided. "
-                        "If hostname contains '@' it will be removed with all following characters. "
-                        "And only then the regex matching will happen. "
                         "Only those that match any of the patterns will be monitored. "
-                        "By default all hostnames are accepted"
+                        "By default all host names are accepted"
                     ),
                 ),
             ),
         ],
-        optional_keys=["no-cert-check"],
-        title=_("MobileIron API"),
+        optional_keys=[
+            "port",
+            "protocol",
+            "no-cert-check",
+            "proxy",
+            "android-regex",
+            "ios-regex",
+            "other-regex",
+        ],
+        validate=_validate_regex_choices,
     )
 
 

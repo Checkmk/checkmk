@@ -49,6 +49,7 @@ def test_agent_output_2_partitions(capsys: pytest.CaptureFixture[str]) -> None:
 
     args = argparse.Namespace(
         hostname="example.com",
+        protocol=True,
         port="443",
         key_fields=("entityName",),
         android_regex=[".*"],
@@ -58,10 +59,7 @@ def test_agent_output_2_partitions(capsys: pytest.CaptureFixture[str]) -> None:
         password="",
         partition=[103881, 103882],
         no_cert_check=False,
-        proxy_host=None,
-        proxy_port=None,
-        proxy_user=None,
-        proxy_password=None,
+        proxy=None,
         debug=False,
     )
     agent_mobileiron_main(args)
@@ -102,6 +100,7 @@ def test_agent_output_regexes(capsys: pytest.CaptureFixture[str]) -> None:
 
     args = argparse.Namespace(
         hostname="example.com",
+        protocol=True,
         port="443",
         key_fields=("entityName",),
         android_regex=[r"device[0-9]{1}"],
@@ -111,10 +110,7 @@ def test_agent_output_regexes(capsys: pytest.CaptureFixture[str]) -> None:
         password="",
         partition=[103881, 103882],
         no_cert_check=False,
-        proxy_host=None,
-        proxy_port=None,
-        proxy_user=None,
-        proxy_password=None,
+        proxy=None,
         debug=False,
     )
     agent_mobileiron_main(args)
@@ -143,6 +139,7 @@ def test_agent_output_regexes(capsys: pytest.CaptureFixture[str]) -> None:
 def test_agent_raises_exceptions(exception) -> None:  # type:ignore[no-untyped-def]
     args = argparse.Namespace(
         hostname="does_not_exist",
+        protocol=True,
         port="443",
         key_fields=("entityName",),
         android_regex=["foo"],
@@ -152,10 +149,7 @@ def test_agent_raises_exceptions(exception) -> None:  # type:ignore[no-untyped-d
         password="",
         partition=[103881],
         no_cert_check=False,
-        proxy_host=None,
-        proxy_port=None,
-        proxy_user=None,
-        proxy_password=None,
+        proxy=None,
         debug=False,
     )
     responses.get(

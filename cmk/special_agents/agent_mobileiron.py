@@ -29,11 +29,13 @@ from typing import (
     Tuple,
     Union,
 )
-from urllib.parse import quote, urljoin
+from urllib.parse import urljoin
 
 import requests
 import urllib3
 
+from cmk.utils.http_proxy_config import deserialize_http_proxy_config
+from cmk.utils.misc import typeshed_issue_7724
 from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
 
 from cmk.special_agents.utils.agent_common import (
@@ -103,8 +105,9 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
     parser.add_argument("--username", "-u", type=str, help="username for connection")
     parser.add_argument("--password", "-p", type=str, help="password for connection")
     parser.add_argument("--key-fields", action="append", help="field for hostname generation")
-    parser.add_argument("--port", type=int, help="port for connection")
-    parser.add_argument("--no-cert-check", action="store_true")
+    parser.add_argument("--protocol", type=int, default=True, help="protocol for connection")
+    parser.add_argument("--port", type=int, default=433, help="port for connection")
+    parser.add_argument("--no-cert-check", action="store_true", default=False)
     parser.add_argument(
         "--partition",
         nargs="+",
@@ -114,32 +117,15 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
     parser.add_argument("--hostname", help="Name of the Mobileiron instance to query.")
     parser.add_argument("--android-regex", action="append", help="Regex for Android hosts.")
     parser.add_argument("--ios-regex", action="append", help="Regex for iOS hosts.")
-    parser.add_argument("--others-regex", action="append", help="Regex for other platform hosts.")
-    parser.add_argument("--proxy-host", help="The address of the proxy server")
-    parser.add_argument("--proxy-port", help="The port of the proxy server")
-    parser.add_argument("--proxy-user", help="The username for authentication of the proxy server")
+    parser.add_argument("--other-regex", action="append", help="Regex for other platform hosts.")
     parser.add_argument(
-        "--proxy-password", help="The password for authentication of the proxy server"
+        "--proxy",
+        type=str,
+        default=None,
+        metavar="PROXY",
+        help="HTTP proxy used to connect to the Mobileiron API. If not set, the environment settings will be used.",
     )
     return parser.parse_args(argv)
-
-
-def _proxy_address(
-    server_address: str,
-    port: Optional[str] = None,
-    username: Optional[str] = None,
-    password: Optional[str] = None,
-) -> str:
-    """Constructs a full proxy address string."""
-    address = server_address
-    authentication = ""
-    if port:
-        address += f":{port}"
-    if username and password:
-        user_quoted = quote(username)
-        password_quoted = quote(password)
-        authentication = f"{user_quoted}:{password_quoted}@"
-    return f"{authentication}{address}"
 
 
 def _sanitize_hostname(raw_hostname: str) -> str:
@@ -154,16 +140,18 @@ class MobileironAPI:
     def __init__(
         self,
         api_host: str,
+        https_enabled: bool,
         port: int,
         key_fields: Sequence[str],
         auth: Tuple[str, str],
         verify: bool,
         regex_patterns: Regexes,
-        proxies: Optional[str] = None,
+        proxy: Optional[str] = None,
     ) -> None:
         self.api_host = api_host
         self._key_fields = key_fields
-        self._api_url = urljoin(f"https://{api_host}:{port}", "/api/v1/device")
+        self._protocol = "https" if https_enabled else "http"
+        self._api_url = urljoin(f"{self._protocol}://{api_host}:{port}", "/api/v1/device")
         self._session = requests.Session()
         self._session.auth = auth
         self._session.verify = verify
@@ -173,8 +161,9 @@ class MobileironAPI:
         self._all_devices: HostnameDict = HostnameDict()
         self._devices_per_request = 200
         self.regex_patterns = regex_patterns
-        if proxies:
-            self._session.proxies.update({"https": proxies})
+        self._proxy = deserialize_http_proxy_config(proxy)
+        if _requests_proxy := typeshed_issue_7724(self._proxy.to_requests_proxies()):
+            self._session.proxies = _requests_proxy
 
     def __enter__(self) -> MobileironAPI:
         return self
@@ -303,20 +292,14 @@ def agent_mobileiron_main(args: Args) -> None:
         LOGGER.debug("Initialize Mobileiron API")
 
     with MobileironAPI(
-        args.hostname,
-        args.port,
+        api_host=args.hostname,
+        https_enabled=args.protocol,
+        port=args.port,
         key_fields=args.key_fields,
         regex_patterns=Regexes(args.android_regex, args.ios_regex, args.others_regex),
         auth=(args.username, args.password),
         verify=not args.no_cert_check,
-        proxies=_proxy_address(
-            args.proxy_host,
-            args.proxy_port,
-            args.proxy_user,
-            args.proxy_password,
-        )
-        if args.proxy_host
-        else None,
+        proxy=args.proxy,
     ) as mobileiron_api:
 
         all_devices = mobileiron_api.get_all_devices(

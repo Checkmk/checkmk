@@ -72,12 +72,12 @@ class ContextAutocompleterConfig(AutocompleterConfig):
     metric can only be chosen if both host and service is chosen).
     """
 
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(
         self,
         *,
         ident: str,
         strict: bool = True,
-        show_independent_of_context=False,
+        show_independent_of_context: bool = False,
         dynamic_params_callback_name: Optional[DynamicParamsCallbackName] = None,
     ) -> None:
         super().__init__(

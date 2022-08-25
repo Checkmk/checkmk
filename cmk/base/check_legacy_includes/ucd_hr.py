@@ -7,14 +7,14 @@
 # We must keep the functions here for the moment, to keep the auto migration working.
 
 
-def is_ucd(oid) -> bool:  # type:ignore[no-untyped-def]
+def is_ucd(oid: object) -> bool:
     raise NotImplementedError("already migrated")
 
 
 #   ---general ucd/hr-------------------------------------------------------
 
 
-def is_hr(oid) -> bool:  # type:ignore[no-untyped-def]
+def is_hr(oid: object) -> bool:
     raise NotImplementedError("already migrated")
 
 
@@ -25,5 +25,5 @@ def prefer_hr_else_ucd(oid):
 #   ---memory---------------------------------------------------------------
 
 
-def is_ucd_mem(oid) -> bool:  # type:ignore[no-untyped-def]
+def is_ucd_mem(oid: object) -> bool:
     raise NotImplementedError("already migrated")

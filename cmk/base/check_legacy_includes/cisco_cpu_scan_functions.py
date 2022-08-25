@@ -7,7 +7,10 @@
 #   ---specific Cisco devices-----------------------------------------------
 
 
-def snmp_scan_cisco_cpu(oid):
+from typing import Callable
+
+
+def snmp_scan_cisco_cpu(oid: Callable[[str], str]) -> bool:
     return (
         _is_cisco(oid)
         and (not _is_cisco_nexus(oid) or not bool(oid(".1.3.6.1.4.1.9.9.305.1.1.1.0")))
@@ -23,21 +26,21 @@ def snmp_scan_cisco_cpu(oid):
 
 
 # the follwoing function was duplicated to cmk/base/plugins/agent_based/cisco_cpu_multiitem.py
-def snmp_scan_cisco_cpu_multiitem(oid):
+def snmp_scan_cisco_cpu_multiitem(oid: Callable[[str], str]) -> bool:
     return _is_cisco(oid) and not _is_cisco_nexus(oid) and _has_table_2(oid)
 
 
 #   ---Nexus devices--------------------------------------------------------
 
 
-def snmp_scan_cisco_nexus_cpu(oid):
+def snmp_scan_cisco_nexus_cpu(oid: Callable[[str], str]) -> bool:
     return _is_cisco(oid) and _is_cisco_nexus(oid) and bool(oid(".1.3.6.1.4.1.9.9.305.1.1.1.0"))
 
 
 #   ---old Cisco devices----------------------------------------------------
 
 
-def snmp_scan_cisco_oldcpu(oid):
+def snmp_scan_cisco_oldcpu(oid: Callable[[str], str]) -> bool:
     return (
         oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.9.1.1745")
         and _has_table_2(oid)
@@ -48,13 +51,13 @@ def snmp_scan_cisco_oldcpu(oid):
 #   ---helper---------------------------------------------------------------
 
 
-def _is_cisco(oid) -> bool:  # type:ignore[no-untyped-def]
+def _is_cisco(oid: Callable[[str], str]) -> bool:
     return "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower()
 
 
-def _is_cisco_nexus(oid) -> bool:  # type:ignore[no-untyped-def]
+def _is_cisco_nexus(oid: Callable[[str], str]) -> bool:
     return "nx-os" in oid(".1.3.6.1.2.1.1.1.0").lower()
 
 
-def _has_table_2(oid) -> bool:  # type:ignore[no-untyped-def]
+def _has_table_2(oid: Callable[[str], str]) -> bool:
     return bool(oid(".1.3.6.1.4.1.9.9.109.1.1.1.1.2.*"))

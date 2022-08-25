@@ -12,7 +12,7 @@
 # Host.name=heute
 import collections
 import pprint
-from typing import Tuple
+from typing import Iterable, Iterator, Mapping, Sequence
 
 import dateutil.parser
 import pyparsing as pp  # type: ignore
@@ -148,7 +148,7 @@ def make_grammar():
     return base_expr
 
 
-def parse_filter(fstr: str):  # type:ignore[no-untyped-def]
+def parse_filter(fstr: str) -> None:
     """
     >>> parse_filter(r'''
     ... and(
@@ -186,9 +186,12 @@ def parse_filter(fstr: str):  # type:ignore[no-untyped-def]
     return pprint.pprint(root_expr)
 
 
-def nested_loop_join(  # type:ignore[no-untyped-def]
-    t1, t2, key1: Tuple[str, ...], key2: Tuple[str, ...]
-):
+def nested_loop_join(
+    t1: Iterable[Mapping[str, object]],
+    t2: Iterable[Mapping[str, object]],
+    key1: tuple[str, ...],
+    key2: tuple[str, ...],
+) -> Iterator[tuple[Mapping[str, object], Mapping[str, object]]]:
     """Joins two datasets with the nested-loop join algorithm.
 
     >>> l1 = [{'a': 1}, {'a': 2}]
@@ -222,12 +225,12 @@ def nested_loop_join(  # type:ignore[no-untyped-def]
 # Hosts.name <- Downtimes.host_name
 
 
-def hash_join(  # type:ignore[no-untyped-def]
-    t1,
-    t2,
-    key1: Tuple[str, ...],
-    key2: Tuple[str, ...],
-):
+def hash_join(
+    t1: Sequence[dict[str, object]],
+    t2: Sequence[dict[str, object]],
+    key1: tuple[str, ...],
+    key2: tuple[str, ...],
+) -> Iterator[tuple[dict[str, object], dict[str, object]]]:
     """Joins two datasets with the hash-join algorithm.
 
     Notes:

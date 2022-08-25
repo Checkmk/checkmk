@@ -8,9 +8,10 @@ from typing import FrozenSet, List
 
 import astroid  # type: ignore[import]
 from pylint.checkers import BaseChecker  # type: ignore[import]
+from pylint.lint import PyLinter  # type: ignore[import]
 
 
-def register(linter) -> None:  # type:ignore[no-untyped-def]
+def register(linter: PyLinter) -> None:
     linter.register_checker(CollectionsNamedTupleChecker(linter))
     linter.register_checker(TypingNamedTupleChecker(linter))
     linter.register_checker(SixEnsureStrBinChecker(linter))
@@ -22,7 +23,7 @@ class ForbiddenObjectChecker(BaseChecker):
     target_objects: FrozenSet[str] = frozenset([])
     target_lib = ""
 
-    def __init__(self, linter) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, linter: PyLinter) -> None:
         super().__init__(linter)
         self.was_imported = False
         self.object_names: List[str] = []

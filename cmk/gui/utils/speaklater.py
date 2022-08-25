@@ -17,7 +17,7 @@ class LazyString:
         self._func = func
         self._text = text
 
-    def __getattr__(self, attr: str):  # type:ignore[no-untyped-def]
+    def __getattr__(self, attr: str) -> object:
         if attr == "__setstate__":
             raise AttributeError(attr)
         string = str(self)

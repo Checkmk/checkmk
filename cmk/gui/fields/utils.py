@@ -34,6 +34,7 @@ from cmk.utils.livestatus_helpers.expressions import (
     QueryExpression,
     UnaryExpression,
 )
+from cmk.utils.livestatus_helpers.types import Table
 from cmk.utils.tags import BuiltinTagConfig, TagGroup
 
 from cmk.gui import site_config
@@ -418,7 +419,7 @@ def tree_to_expr(filter_dict, table: Any = None) -> QueryExpression:  # type:ign
     raise ValueError(f"Unknown operator: {op}")
 
 
-def _lookup_column(table_name, column_name) -> UnaryExpression:  # type:ignore[no-untyped-def]
+def _lookup_column(table_name: str | typing.Type[Table], column_name: str) -> UnaryExpression:
     if isinstance(table_name, str):
         table_class = getattr(tables, table_name.title())
     else:
@@ -432,7 +433,7 @@ def _lookup_column(table_name, column_name) -> UnaryExpression:  # type:ignore[n
     return column.expr
 
 
-def _table_name(table) -> str:  # type:ignore[no-untyped-def]
+def _table_name(table: typing.Type[Table]) -> str:
     if isinstance(table, str):
         return table
 

@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Final
+from typing import Callable, Final
 
 
-def scan_cisco_ucs(oid) -> bool:  # type:ignore[no-untyped-def]
+def scan_cisco_ucs(oid: Callable[[str], str]) -> bool:
     return (
         ".1.3.6.1.4.1.9.1.1682" in oid(".1.3.6.1.2.1.1.2.0")
         or ".1.3.6.1.4.1.9.1.1683" in oid(".1.3.6.1.2.1.1.2.0")

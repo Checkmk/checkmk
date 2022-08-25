@@ -6,6 +6,7 @@
 import functools
 import json
 from contextlib import contextmanager
+from types import ModuleType
 from typing import Iterator
 
 
@@ -13,7 +14,7 @@ from typing import Iterator
 # needed features there would be more straight forward. But that would need all call sites to use
 # that encoder instead of the default methods.
 @contextmanager
-def patch_json(json_module) -> Iterator[None]:  # type:ignore[no-untyped-def]
+def patch_json(json_module: ModuleType) -> Iterator[None]:
     # Monkey patch in order to make the HTML class below json-serializable without changing the
     # default json calls.
     def _default(self: json.JSONEncoder, obj: object) -> str:

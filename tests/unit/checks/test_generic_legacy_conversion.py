@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # type: ignore[attr-defined]
+from typing import Callable
+
 import pytest
 
 from cmk.utils.check_utils import section_name_of
@@ -90,7 +92,7 @@ def test_scan_function_translation(fix_plugin_legacy) -> None:
         _is_cisco_nexus,
     ],
 )
-def test_explicit_conversion(func) -> None:
+def test_explicit_conversion(func: Callable[[str], str]) -> None:
     created = create_detect_spec("unit-test", func, [])
     explicit = _explicit_conversions(func.__name__)
     assert created == explicit

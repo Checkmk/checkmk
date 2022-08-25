@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-def test_ajax_call(logged_in_wsgi_app) -> None:  # type:ignore[no-untyped-def]
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+
+
+def test_ajax_call(logged_in_wsgi_app: WebTestAppForCMK) -> None:
     ajax_page = "/NO_SITE/check_mk/ajax_popup_move_to_folder.py"
     app = logged_in_wsgi_app
     resp = app.get(

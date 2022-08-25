@@ -12,6 +12,8 @@ import itertools
 from collections import defaultdict
 from typing import DefaultDict, Dict, Final, List, Optional, Sequence
 
+from tests.unit.conftest import FixRegister
+
 from cmk.utils.type_defs import SectionName
 
 ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
@@ -58,8 +60,8 @@ KNOWN_NON_BUILTIN_LABEL_PRODUCERS: Final = {
 }
 
 
-def test_all_sections_have_host_labels_documented(  # type:ignore[no-untyped-def]
-    fix_register,
+def test_all_sections_have_host_labels_documented(
+    fix_register: FixRegister,
 ) -> None:
     """Test that all sections have documented their host labels"""
     sections = itertools.chain(

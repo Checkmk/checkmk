@@ -43,7 +43,6 @@ import cmk.utils.log as log
 import cmk.utils.paths
 import cmk.utils.site
 import cmk.utils.tty as tty
-from cmk.utils import version
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import VERBOSE
@@ -259,7 +258,6 @@ class UpdateConfig:
                 "Rewriting notification configuration for ServiceNow",
             ),
             (self._add_site_ca_to_trusted_cas, "Adding site CA to trusted CAs"),
-            (self._transform_influxdb_connnections, "Rewriting InfluxDB connections"),
             (self._check_ec_rules, "Disabling unsafe EC rules"),
         ]
 
@@ -1046,24 +1044,6 @@ class UpdateConfig:
 
         cert_settings["trusted_cas"].append(site_ca)
         save_global_settings(global_config)
-
-    def _transform_influxdb_connnections(self) -> None:
-        """
-        Apply valuespec transforms to InfluxDB connections
-        """
-        if version.is_raw_edition():
-            return
-
-        from cmk.gui.cee.plugins.wato import influxdb  # pylint: disable=no-name-in-module
-
-        influx_db_connection_config = influxdb.InfluxDBConnectionConfig()
-        influx_db_connection_valuespec = influxdb.ModeEditInfluxDBConnection().valuespec()
-        influx_db_connection_config.save(
-            {
-                connection_id: influx_db_connection_valuespec.transform_value(connection_config)
-                for connection_id, connection_config in influx_db_connection_config.load_for_modification().items()
-            }
-        )
 
     def _check_ec_rules(self) -> None:
         """check for macros in EC scripts and disable them if found

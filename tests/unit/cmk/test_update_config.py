@@ -20,7 +20,6 @@ from tests.unit.cmk.gui.conftest import load_plugins  # noqa: F401 # pylint: dis
 
 import cmk.utils.log
 import cmk.utils.paths
-from cmk.utils import version
 from cmk.utils.type_defs import CheckPluginName, ContactgroupName, RulesetName, RuleValue
 from cmk.utils.version import is_raw_edition
 
@@ -709,40 +708,6 @@ def test_update_global_config(
         "new_global_a": 1,
         "new_global_b": 15,
     }
-
-
-@pytest.mark.usefixtures("request_context")
-def test_transform_influxdb_connnections(uc: update_config.UpdateConfig) -> None:
-    if version.is_raw_edition():
-        return
-
-    from cmk.gui.cee.plugins.wato import influxdb  # pylint: disable=no-name-in-module
-
-    influx_db_connection_config = influxdb.InfluxDBConnectionConfig()
-    influx_db_connection_config.save(
-        {
-            "InfluxDB_Connection_1": {
-                "title": "influxdb",
-                "comment": "",
-                "docu_url": "",
-                "disabled": False,
-                "site": ["-all-sites"],
-                "instance": {
-                    "protocol": ("https", {"port": 8086, "no-cert-check": True}),
-                    "instance_host": "influx.somwhere.com",
-                    "instance_token": "to_be_transformed",
-                },
-            }
-        }
-    )
-
-    uc._transform_influxdb_connnections()
-    assert influx_db_connection_config.load_for_reading()["InfluxDB_Connection_1"]["instance"][
-        "instance_token"
-    ] == (
-        "password",
-        "to_be_transformed",
-    )
 
 
 def test__transform_time_range(uc: update_config.UpdateConfig) -> None:

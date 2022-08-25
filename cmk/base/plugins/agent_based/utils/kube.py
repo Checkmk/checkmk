@@ -453,6 +453,7 @@ class NodeInfo(Section):
     annotations: FilteredAnnotations
     addresses: NodeAddresses
     cluster: str
+    kubernetes_cluster_hostname: str
 
 
 class HealthZ(BaseModel):

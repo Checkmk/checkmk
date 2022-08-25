@@ -31,6 +31,7 @@ from cmk.base.plugins.agent_based.utils.kube import NodeInfo
                 annotations={},
                 addresses=[],
                 cluster="cluster",
+                kubernetes_cluster_hostname="host",
             ),
             [
                 Result(state=State.OK, summary="Name: minikube"),

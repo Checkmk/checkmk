@@ -794,6 +794,7 @@ class Node(PodOwner):
     def info(
         self,
         cluster_name: str,
+        kubernetes_cluster_hostname: str,
         annotation_key_pattern: AnnotationOption,
     ) -> section.NodeInfo:
         return section.NodeInfo(
@@ -810,6 +811,7 @@ class Node(PodOwner):
             operating_system=self.status.node_info.operating_system,
             container_runtime_version=self.status.node_info.container_runtime_version,
             cluster=cluster_name,
+            kubernetes_cluster_hostname=kubernetes_cluster_hostname,
         )
 
     def container_count(self) -> section.ContainerCount:
@@ -1564,6 +1566,7 @@ def write_nodes_api_sections(
     cluster_name: str,
     annotation_key_pattern: AnnotationOption,
     api_nodes: Sequence[Node],
+    kubernetes_cluster_hostname: str,
     piggyback_formatter: ObjectSpecificPBFormatter,
 ) -> None:
     def output_sections(cluster_node: Node) -> None:
@@ -1572,7 +1575,11 @@ def write_nodes_api_sections(
             "kube_node_kubelet_v1": cluster_node.kubelet,
             "kube_pod_resources_v1": cluster_node.pod_resources,
             "kube_allocatable_pods_v1": cluster_node.allocatable_pods,
-            "kube_node_info_v1": lambda: cluster_node.info(cluster_name, annotation_key_pattern),
+            "kube_node_info_v1": lambda: cluster_node.info(
+                cluster_name,
+                kubernetes_cluster_hostname,
+                annotation_key_pattern,
+            ),
             "kube_cpu_resources_v1": cluster_node.cpu_resources,
             "kube_memory_resources_v1": cluster_node.memory_resources,
             "kube_allocatable_cpu_resource_v1": cluster_node.allocatable_cpu_resource,
@@ -2745,6 +2752,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                     arguments.cluster,
                     arguments.annotation_key_pattern,
                     cluster.nodes(),
+                    kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
                     piggyback_formatter=piggyback_formatter_node,
                 )
 

@@ -35,10 +35,11 @@ def parse_kube_node_info(string_table: StringTable) -> NodeInfo:
     ... '"addresses": [],'
     ... '"cluster": "cluster",'
     ... '"labels": {},'
-    ... '"annotations": {}'
+    ... '"annotations": {},'
+    ... '"kubernetes_cluster_hostname": "host"'
     ... '}'
     ... ]])
-    NodeInfo(architecture='amd64', kernel_version='5.13.0-27-generic', os_image='Ubuntu 20.04.2 LTS', operating_system='linux', container_runtime_version='docker://20.10.8', name='minikube', creation_timestamp=1640000000.0, labels={}, annotations={}, addresses=[], cluster='cluster')
+    NodeInfo(architecture='amd64', kernel_version='5.13.0-27-generic', os_image='Ubuntu 20.04.2 LTS', operating_system='linux', container_runtime_version='docker://20.10.8', name='minikube', creation_timestamp=1640000000.0, labels={}, annotations={}, addresses=[], cluster='cluster', kubernetes_cluster_hostname='host')
     """
     return NodeInfo(**json.loads(string_table[0][0]))
 
@@ -70,12 +71,17 @@ def host_labels(section: NodeInfo) -> HostLabelGenerator:
             This label is set to the operating system as reported by the agent
             as "AgentOS" (such as "windows" or "linux").
 
+        cmk/kubernetes/cluster-host:
+            This label contains the name of the Checkmk host which represents the
+            Kubernetes cluster.
+
     """
     yield HostLabel("cmk/kubernetes", "yes")
     yield HostLabel("cmk/kubernetes/object", "node")
     yield HostLabel("cmk/kubernetes/cluster", section.cluster)
     yield HostLabel("cmk/kubernetes/node", section.name)
     yield HostLabel("cmk/os_family", section.operating_system)
+    yield HostLabel("cmk/kubernetes/cluster-host", section.kubernetes_cluster_hostname)
     yield from kube_labels_to_cmk_labels(section.labels)
     yield from kube_annotations_to_cmk_labels(section.annotations)
 

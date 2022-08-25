@@ -322,6 +322,7 @@ class NodeInfo(api.NodeInfo, Section):
     annotations: FilteredAnnotations
     addresses: api.NodeAddresses
     cluster: str
+    kubernetes_cluster_hostname: str
 
 
 class NodeCondition(BaseModel):

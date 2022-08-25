@@ -34,6 +34,7 @@ from .utils_inventory import sort_inventory_result
                     NodeAddress(type_="ExternalIP", address="10.200.3.21"),
                 ],
                 cluster="cluster",
+                kubernetes_cluster_hostname="host",
             ),
             KubeletInfo(
                 version="1.2.3",

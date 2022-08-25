@@ -58,7 +58,6 @@ from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.userdb import load_users, save_users, Users
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.view_store import get_all_views
-from cmk.gui.wato.mkeventd import MACROS_AND_VARS
 from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
 from cmk.gui.watolib.global_settings import (
     GlobalSettings,
@@ -223,7 +222,6 @@ class UpdateConfig:
             (self._rewrite_autochecks, "Rewriting autochecks"),
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
             (self._adjust_user_attributes, "Set version specific user attributes"),
-            (self._check_ec_rules, "Disabling unsafe EC rules"),
         ]
 
     def _initialize_base_environment(self) -> None:
@@ -700,41 +698,6 @@ class UpdateConfig:
             _add_user_scheme_serial(users, user_id)
 
         save_users(users, datetime.now())
-
-    def _check_ec_rules(self) -> None:
-        """check for macros in EC scripts and disable them if found
-
-        The macros in shell scripts cannot be gated by quotes or something, so
-        an attacker could craft malicious logs and insert code.
-
-        This routine goes through all rules, checks for macros in the scripts
-        and then disables them"""
-        global_config = load_configuration_settings(full_config=True)
-        for action in global_config.get("actions", []):
-            if action["action"][0] == "script":
-                if not self._has_script_macros(action["action"][1]["script"]):
-                    self._logger.debug("Script %r doesn't use macros, that's good", action["id"])
-                    continue
-                if action["disabled"]:
-                    self._logger.info(
-                        "Script %r uses macros but was already disabled. Be careful if you enable this!",
-                        action["id"],
-                    )
-                else:
-                    self._logger.warning(
-                        "Script %r uses macros. We disable it. Please replace the macros with proper variables before enabling it again!",
-                        action["id"],
-                    )
-                    action["disabled"] = True
-        save_global_settings(global_config)
-
-    @staticmethod
-    def _has_script_macros(script_text: str) -> bool:
-        """check if a script uses macros"""
-        for macro_name, _description in MACROS_AND_VARS:
-            if f"${macro_name}$" in script_text:
-                return True
-        return False
 
 
 def _format_warning(msg: str) -> str:

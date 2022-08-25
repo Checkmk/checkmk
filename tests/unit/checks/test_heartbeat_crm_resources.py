@@ -181,6 +181,64 @@ def _get_section_2() -> StringTable:
     ]
 
 
+@pytest.fixture(name="section_pacemaker_v2")
+def _section_pacemaker_v2() -> StringTable:
+    return [
+        ["Cluster", "Summary:"],
+        ["_*", "Stack:", "corosync"],
+        [
+            "_*",
+            "Current",
+            "DC:",
+            "cbgdevd01",
+            "(version",
+            "2.1.2-4.el8_6.2-ada5c3b36e2)",
+            "-",
+            "partition",
+            "with",
+            "quorum",
+        ],
+        ["_*", "Last", "updated:", "Tue", "Aug", "23", "05:14:00", "2022"],
+        [
+            "_*",
+            "Last",
+            "change:",
+            "Mon",
+            "Aug",
+            "22",
+            "10:11:00",
+            "2022",
+            "by",
+            "hacluster",
+            "via",
+            "crmd",
+            "on",
+            "cbgdevd01",
+        ],
+        ["_*", "2", "nodes", "configured"],
+        ["_*", "6", "resource", "instances", "configured"],
+        ["Node", "List:"],
+        ["_*", "Online:", "[", "cbgdevd01", "cbgdevd02", "]"],
+        ["Full", "List", "of", "Resources:"],
+        ["_*", "rhevfence", "(stonith:fence_rhevm):", "Started", "cbgdevd01"],
+        ["_*", "Resource", "Group:", "QPID:"],
+        ["_", "*", "qpid_lvm", "(ocf::heartbeat:LVM-activate):", "Started", "cbgdevd01"],
+        ["_", "*", "qpid_fs", "(ocf::heartbeat:Filesystem):", "Started", "cbgdevd01"],
+        ["_", "*", "qpid_ip", "(ocf::heartbeat:IPaddr2):", "Started", "cbgdevd01"],
+        ["_", "*", "qpid_jb", "(ocf::custom:AmqpService):", "Started", "cbgdevd01"],
+        ["_*", "Resource", "Group:", "BRIDGE:"],
+        [
+            "_",
+            "*",
+            "bridge_bb",
+            "(ocf::custom:AmqpService):",
+            "Started",
+            "cbgdevd02",
+            "(unmanaged)",
+        ],
+    ]
+
+
 @pytest.mark.usefixtures("config_load_all_checks")
 def test_discovery_heartbeat_crm_resources_nothing(heartbeat_crm_resources_check: Check) -> None:
 
@@ -246,3 +304,19 @@ def test_check_heartbeat_crm_resources_started(section_2: StringTable,
             # TODO: check if this maaaaaybe should read 'state "Started"'
             (2, 'Resource is in state "cluster2"'),
         ]
+
+
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_discover_heartbeat_crm_resources_pacemaker_v2(
+        section_pacemaker_v2: StringTable, heartbeat_crm_resources_check: Check) -> None:
+    expected_services = [("rhevfence", None), ("QPID", None), ("BRIDGE", None)]
+
+    with MockHostExtraConf(
+            heartbeat_crm_resources_check,
+            lambda _h, _r: {},
+            "host_extra_conf_merged",
+    ):
+        discovered_services = list(
+            heartbeat_crm_resources_check.run_discovery(section_pacemaker_v2))
+
+    assert discovered_services == expected_services

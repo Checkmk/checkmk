@@ -5,6 +5,7 @@
 import json
 import random
 import string
+from typing import Mapping
 
 import pytest
 from freezegun import freeze_time
@@ -351,6 +352,57 @@ def test_openapi_user_internal_with_notifications(  # type:ignore[no-untyped-def
         "enforce_pw_change": True,
         "num_failed_logins": 0,
     }
+
+
+test_data_update_auth_options = (
+    ({"auth_option": {"auth_type": "password", "password": "newpassword"}}, 1),
+    ({"auth_option": {"auth_type": "automation", "secret": "DEYQEQQPYCFFBYH@AVMC"}}, 1),
+    ({"auth_option": {"auth_type": "remove"}}, 1),
+    (None, 0),
+)
+
+
+@managedtest
+@pytest.mark.parametrize("test_data, expected_serial_count", test_data_update_auth_options)
+def test_update_user_auth_options(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    monkeypatch: MonkeyPatch,
+    base: str,
+    test_data: Mapping[str, str],
+    expected_serial_count: int,
+) -> None:
+
+    monkeypatch.setattr(
+        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
+    )
+
+    name = _random_string(10)
+    resp = aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/user_config/collections/all",
+        params=json.dumps({"username": name, "fullname": "KPECYCq79E", "customer": "provider"}),
+        headers={"Accept": "application/json"},
+        status=200,
+        content_type="application/json",
+    )
+
+    user_data = resp.json["extensions"]
+    user_data.pop("enforce_password_change", None)
+
+    if test_data is not None:
+        user_data.update(test_data)
+
+    resp = aut_user_auth_wsgi_app.call_method(
+        "put",
+        base + f"/objects/user_config/{name}",
+        params=json.dumps(user_data),
+        status=200,
+        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
+        content_type="application/json",
+    )
+
+    serial_count_after = _load_user(name)["serial"]
+    assert serial_count_after == expected_serial_count
 
 
 @managedtest

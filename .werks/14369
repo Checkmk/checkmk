@@ -1,0 +1,13 @@
+Title: user_config: add fix to stop user being logged out when using the REST API edit endpoint
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1661786696
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+This werk fixes a bug in the REST API edit user endpoint. The serial count should only
+increment when the client attempts to edit the auth_option nested attributes.
+

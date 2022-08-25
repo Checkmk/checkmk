@@ -173,9 +173,7 @@ def edit_user(params: Mapping[str, Any]) -> Response:
     api_attrs = params["body"]
     internal_attrs = _api_to_internal_format(_load_user(username), api_attrs)
 
-    if "password" in internal_attrs:
-        # increase serial if password is there (regardless if there is a password change or not)
-        # if password is remove, old serial remains
+    if api_attrs.get("auth_option"):
         internal_attrs["serial"] = internal_attrs.get("serial", 0) + 1
 
     edit_users(

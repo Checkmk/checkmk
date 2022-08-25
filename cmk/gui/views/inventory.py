@@ -11,18 +11,13 @@ from dataclasses import dataclass, field
 from typing import (
     Any,
     Callable,
-    Dict,
     Iterable,
     Iterator,
-    List,
     Mapping,
     NamedTuple,
-    Optional,
     Sequence,
-    Tuple,
     Type,
     TYPE_CHECKING,
-    Union,
 )
 
 from livestatus import LivestatusResponse, OnlySites, SiteId
@@ -116,7 +111,7 @@ if TYPE_CHECKING:
     from cmk.gui.view import View
 
 
-PaintResult = Tuple[str, Union[str, HTML]]
+PaintResult = tuple[str, str | HTML]
 PaintFunction = Callable[[Any], PaintResult]
 
 
@@ -164,7 +159,7 @@ def _validate_inventory_tree_uniqueness(row: Row) -> None:
 
 @request_memoize()
 def _get_sites_with_same_named_hosts_cache() -> Mapping[HostName, Sequence[SiteId]]:
-    cache: Dict[HostName, List[SiteId]] = {}
+    cache: dict[HostName, list[SiteId]] = {}
     query_str = "GET hosts\nColumns: host_name\n"
     with sites.prepend_site():
         for row in sites.live().query(query_str):
@@ -207,7 +202,7 @@ class PainterInventoryTree(Painter):
     def load_inv(self):
         return True
 
-    def _compute_data(self, row: Row, cell: Cell) -> Optional[StructuredDataNode]:
+    def _compute_data(self, row: Row, cell: Cell) -> StructuredDataNode | None:
         try:
             _validate_inventory_tree_uniqueness(row)
         except MultipleInventoryTreesError:
@@ -252,12 +247,12 @@ class ABCRowTable(RowTable):
     def query(  # type:ignore[no-untyped-def]
         self,
         view: View,
-        columns: List[ColumnName],
+        columns: Sequence[ColumnName],
         headers: str,
         only_sites: OnlySites,
         limit,
-        all_active_filters: List[Filter],
-    ) -> Tuple[Rows, int]:
+        all_active_filters: Sequence[Filter],
+    ) -> tuple[Rows, int]:
         self._add_declaration_errors()
 
         # Create livestatus filter for filtering out hosts
@@ -371,7 +366,7 @@ def decorate_inv_paint(
 
 
 @decorate_inv_paint()
-def inv_paint_generic(v: Union[str, float, int]) -> PaintResult:
+def inv_paint_generic(v: str | float | int) -> PaintResult:
     if isinstance(v, float):
         return "number", "%.2f" % v
     if isinstance(v, int):
@@ -404,7 +399,7 @@ def inv_paint_bytes_rounded(b: int) -> PaintResult:
 
 
 @decorate_inv_paint()
-def inv_paint_number(b: Union[str, int, float]) -> PaintResult:
+def inv_paint_number(b: str | int | float) -> PaintResult:
     return "number", str(b)
 
 
@@ -412,7 +407,7 @@ def inv_paint_number(b: Union[str, int, float]) -> PaintResult:
 # abbreviate things if numbers are very large
 # (though it doesn't do so yet)
 @decorate_inv_paint()
-def inv_paint_count(b: Union[str, int, float]) -> PaintResult:
+def inv_paint_count(b: str | int | float) -> PaintResult:
     return "number", str(b)
 
 
@@ -560,7 +555,7 @@ def inv_paint_csv_labels(csv_list: str) -> PaintResult:
 
 
 @decorate_inv_paint()
-def inv_paint_cmk_label(label: List[str]) -> PaintResult:
+def inv_paint_cmk_label(label: Sequence[str]) -> PaintResult:
     return "labels", render_labels(
         {label[0]: label[1]},
         object_type="host",
@@ -645,7 +640,7 @@ def _make_table_view_name_of_host(view_name: str) -> str:
 
 @dataclass(frozen=True)
 class NodeDisplayHint:
-    icon: Optional[str]
+    icon: str | None
     title: str
     _long_title_function: Callable[[], str]
 
@@ -667,18 +662,18 @@ class NodeDisplayHint:
 class TableViewSpec:
     view_name: str
     title: str
-    icon: Optional[str]
+    icon: str | None
 
 
 @dataclass(frozen=True)
 class TableDisplayHint:
     key_order: Sequence[str]
     is_show_more: bool
-    view_spec: Optional[TableViewSpec]
+    view_spec: TableViewSpec | None = None
 
     @classmethod
     def from_raw(
-        cls, raw_hint: InventoryHintSpec, table_view_spec: Optional[TableViewSpec]
+        cls, raw_hint: InventoryHintSpec, table_view_spec: TableViewSpec | None = None
     ) -> TableDisplayHint:
         return cls(
             key_order=raw_hint.get("keyorder", []),
@@ -843,8 +838,8 @@ def inv_titleinfo_long(raw_path: SDRawPath) -> str:
 class _RelatedRawHints:
     for_node: InventoryHintSpec = field(default_factory=dict)
     for_table: InventoryHintSpec = field(default_factory=dict)
-    by_columns: Dict[str, InventoryHintSpec] = field(default_factory=dict)
-    by_attributes: Dict[str, InventoryHintSpec] = field(default_factory=dict)
+    by_columns: dict[str, InventoryHintSpec] = field(default_factory=dict)
+    by_attributes: dict[str, InventoryHintSpec] = field(default_factory=dict)
 
 
 class _Column(NamedTuple):
@@ -875,7 +870,7 @@ class DisplayHints:
         self.attributes_hint = attributes_hint
         self.attribute_hints = attribute_hints
 
-        self.nodes: Dict[str, DisplayHints] = {}
+        self.nodes: dict[str, DisplayHints] = {}
 
     @classmethod
     def root(cls) -> DisplayHints:
@@ -883,7 +878,7 @@ class DisplayHints:
         return DisplayHints(
             path=path,
             node_hint=NodeDisplayHint.from_raw(path, {"title": _l("Inventory Tree")}),
-            table_hint=TableDisplayHint.from_raw({}, None),
+            table_hint=TableDisplayHint.from_raw({}),
             column_hints={},
             attributes_hint=AttributesDisplayHint.from_raw({}),
             attribute_hints={},
@@ -894,7 +889,7 @@ class DisplayHints:
         return DisplayHints(
             path=path,
             node_hint=NodeDisplayHint.from_raw(path, {}),
-            table_hint=TableDisplayHint.from_raw({}, None),
+            table_hint=TableDisplayHint.from_raw({}),
             column_hints={},
             attributes_hint=AttributesDisplayHint.from_raw({}),
             attribute_hints={},
@@ -942,7 +937,7 @@ class DisplayHints:
     def _get_related_raw_hints(
         raw_hints: Mapping[str, InventoryHintSpec]
     ) -> Mapping[SDPath, _RelatedRawHints]:
-        related_raw_hints_by_path: Dict[SDPath, _RelatedRawHints] = {}
+        related_raw_hints_by_path: dict[SDPath, _RelatedRawHints] = {}
         for raw_path, raw_hint in raw_hints.items():
             inventory_path = inventory.InventoryPath.parse(raw_path)
             related_raw_hints = related_raw_hints_by_path.setdefault(
@@ -980,8 +975,8 @@ class DisplayHints:
 
     def _get_table_view_spec(
         self, path: SDPath, raw_node_hint: InventoryHintSpec, raw_table_hint: InventoryHintSpec
-    ) -> Optional[TableViewSpec]:
-        def _get_table_view_name(path: SDPath, raw_table_hint: InventoryHintSpec) -> Optional[str]:
+    ) -> TableViewSpec | None:
+        def _get_table_view_name(path: SDPath, raw_table_hint: InventoryHintSpec) -> str | None:
             if "view" not in raw_table_hint:
                 return None
             if (view_name := raw_table_hint["view"]).endswith("_of_host"):
@@ -1004,7 +999,7 @@ class DisplayHints:
     def __iter__(self) -> Iterator[DisplayHints]:
         yield from self._make_inventory_paths_or_hints([])
 
-    def _make_inventory_paths_or_hints(self, path: List[str]) -> Iterator[DisplayHints]:
+    def _make_inventory_paths_or_hints(self, path: list[str]) -> Iterator[DisplayHints]:
         yield self
         for node_name, node in self.nodes.items():
             yield from node._make_inventory_paths_or_hints(path + [node_name])
@@ -1045,7 +1040,7 @@ class DisplayHints:
     def sort_rows(rows: Sequence[SDRow], columns: Sequence[_Column]) -> Sequence[SDRow]:
         return sorted(rows, key=lambda r: tuple(r.get(c.key) or "" for c in columns))
 
-    def sort_pairs(self, pairs: Mapping[SDKey, SDValue]) -> Sequence[Tuple[SDKey, SDValue]]:
+    def sort_pairs(self, pairs: Mapping[SDKey, SDValue]) -> Sequence[tuple[SDKey, SDValue]]:
         sorting_keys = list(self.attributes_hint.key_order) + sorted(
             set(pairs) - set(self.attributes_hint.key_order)
         )
@@ -1165,7 +1160,7 @@ def _register_node_painter(
 
 def _compute_node_painter_data(
     row: Row, inventory_path: inventory.InventoryPath
-) -> Optional[StructuredDataNode]:
+) -> StructuredDataNode | None:
     try:
         _validate_inventory_tree_uniqueness(row)
     except MultipleInventoryTreesError:
@@ -1312,7 +1307,7 @@ def _export_attribute_as_json(
     return _compute_attribute_painter_data(row, inventory_path)
 
 
-def _inv_find_subtable_columns(hints: DisplayHints) -> Sequence[Tuple[str, ColumnDisplayHint]]:
+def _inv_find_subtable_columns(hints: DisplayHints) -> Sequence[tuple[str, ColumnDisplayHint]]:
     """Find the name of all columns of an embedded table that have a display
     hint. Respects the order of the columns if one is specified in the
     display hint.
@@ -1474,9 +1469,9 @@ def _register_table_view(
 class RowMultiTableInventory(ABCRowTable):
     def __init__(
         self,
-        sources: List[Tuple[str, inventory.InventoryPath]],
-        match_by: List[str],
-        errors: List[str],
+        sources: Sequence[tuple[str, inventory.InventoryPath]],
+        match_by: Sequence[str],
+        errors: Sequence[str],
     ) -> None:
         super().__init__(
             [table_view_name for table_view_name, _path in sources], ["host_structured_status"]
@@ -1485,7 +1480,7 @@ class RowMultiTableInventory(ABCRowTable):
         self._match_by = match_by
         self._errors = errors
 
-    def _get_inv_data(self, hostrow: Row) -> Sequence[Tuple[str, Sequence[SDRow]]]:
+    def _get_inv_data(self, hostrow: Row) -> Sequence[tuple[str, Sequence[SDRow]]]:
         try:
             merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
         except inventory.LoadStructuredDataError:
@@ -1506,8 +1501,8 @@ class RowMultiTableInventory(ABCRowTable):
             for info_name, inventory_path in self._sources
         ]
 
-    def _prepare_rows(self, inv_data: Sequence[Tuple[str, Sequence[SDRow]]]) -> Iterable[Row]:
-        joined_rows: Dict[Tuple[str, ...], Dict] = {}
+    def _prepare_rows(self, inv_data: Sequence[tuple[str, Sequence[SDRow]]]) -> Iterable[Row]:
+        joined_rows: dict[tuple[str, ...], dict] = {}
         for this_info_name, this_inv_data in inv_data:
             for entry in this_inv_data:
                 inst = joined_rows.setdefault(tuple(entry[key] for key in self._match_by), {})
@@ -1528,8 +1523,8 @@ def _register_multi_table_view(
 ) -> None:
     _register_info_class(table_view_name, title_singular, title_plural)
 
-    info_names: List[str] = []
-    inventory_paths: List[inventory.InventoryPath] = []
+    info_names: list[str] = []
+    inventory_paths: list[inventory.InventoryPath] = []
     errors = []
     for this_table_view_name in tables:
         visual_info_class = visual_info_registry.get(this_table_view_name)
@@ -1622,7 +1617,7 @@ def _register_views(
     painters: Sequence[PainterSpec],
     filters: Iterable[FilterName],
     inventory_paths: Sequence[inventory.InventoryPath],
-    icon: Optional[Icon] = None,
+    icon: Icon | None = None,
 ) -> None:
     is_show_more = True
     if len(inventory_paths) == 1:
@@ -1939,11 +1934,11 @@ class DataSourceInventoryHistory(ABCDataSource):
         return ["host", "invhist"]
 
     @property
-    def keys(self) -> List[ColumnName]:
+    def keys(self) -> list[ColumnName]:
         return []
 
     @property
-    def id_keys(self) -> List[ColumnName]:
+    def id_keys(self) -> list[ColumnName]:
         return ["host_name", "invhist_time"]
 
 
@@ -1964,7 +1959,7 @@ class PainterInvhistTime(Painter):
         return ["invhist_time"]
 
     @property
-    def painter_options(self) -> List[str]:
+    def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1984,7 +1979,7 @@ class PainterInvhistDelta(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["invhist_delta", "invhist_time"]
 
-    def _compute_data(self, row: Row, cell: Cell) -> Optional[StructuredDataNode]:
+    def _compute_data(self, row: Row, cell: Cell) -> StructuredDataNode | None:
         try:
             _validate_inventory_tree_uniqueness(row)
         except MultipleInventoryTreesError:
@@ -2268,7 +2263,7 @@ class ABCNodeRenderer(abc.ABC):
         self,
         value: Any,
         col_hint: ColumnDisplayHint,
-        retention_intervals: Optional[RetentionIntervals] = None,
+        retention_intervals: RetentionIntervals | None = None,
     ) -> None:
         raise NotImplementedError()
 
@@ -2302,7 +2297,7 @@ class ABCNodeRenderer(abc.ABC):
         self,
         value: Any,
         attr_hint: AttributeDisplayHint,
-        retention_intervals: Optional[RetentionIntervals] = None,
+        retention_intervals: RetentionIntervals | None = None,
     ) -> None:
         raise NotImplementedError()
 
@@ -2325,8 +2320,8 @@ class ABCNodeRenderer(abc.ABC):
     def _show_child_value(
         self,
         value: Any,
-        hint: Union[ColumnDisplayHint, AttributeDisplayHint],
-        retention_intervals: Optional[RetentionIntervals] = None,
+        hint: ColumnDisplayHint | AttributeDisplayHint,
+        retention_intervals: RetentionIntervals | None = None,
     ) -> None:
         if isinstance(value, HTML):
             html.write_html(value)
@@ -2338,7 +2333,7 @@ class ABCNodeRenderer(abc.ABC):
             html.write_html(ret_value_to_write)
 
     @staticmethod
-    def _get_retention_value(retention_intervals: Optional[RetentionIntervals]) -> Optional[HTML]:
+    def _get_retention_value(retention_intervals: RetentionIntervals | None) -> HTML | None:
         if retention_intervals is None:
             return None
 
@@ -2359,7 +2354,7 @@ class NodeRenderer(ABCNodeRenderer):
         self,
         value: Any,
         col_hint: ColumnDisplayHint,
-        retention_intervals: Optional[RetentionIntervals] = None,
+        retention_intervals: RetentionIntervals | None = None,
     ) -> None:
         self._show_child_value(value, col_hint, retention_intervals)
 
@@ -2367,7 +2362,7 @@ class NodeRenderer(ABCNodeRenderer):
         self,
         value: Any,
         attr_hint: AttributeDisplayHint,
-        retention_intervals: Optional[RetentionIntervals] = None,
+        retention_intervals: RetentionIntervals | None = None,
     ) -> None:
         self._show_child_value(value, attr_hint, retention_intervals)
 
@@ -2377,7 +2372,7 @@ class DeltaNodeRenderer(ABCNodeRenderer):
         self,
         value: Any,
         col_hint: ColumnDisplayHint,
-        retention_intervals: Optional[RetentionIntervals] = None,
+        retention_intervals: RetentionIntervals | None = None,
     ) -> None:
         self._show_delta_child_value(value, col_hint)
 
@@ -2385,14 +2380,14 @@ class DeltaNodeRenderer(ABCNodeRenderer):
         self,
         value: Any,
         attr_hint: AttributeDisplayHint,
-        retention_intervals: Optional[RetentionIntervals] = None,
+        retention_intervals: RetentionIntervals | None = None,
     ) -> None:
         self._show_delta_child_value(value, attr_hint)
 
     def _show_delta_child_value(
         self,
         value: Any,
-        hint: Union[ColumnDisplayHint, AttributeDisplayHint],
+        hint: ColumnDisplayHint | AttributeDisplayHint,
     ) -> None:
         if value is None:
             value = (None, None)
@@ -2493,8 +2488,8 @@ def ajax_inv_render_tree() -> None:
 
 
 def _cmp_inventory_node(
-    a: Dict[str, StructuredDataNode],
-    b: Dict[str, StructuredDataNode],
+    a: Mapping[str, StructuredDataNode],
+    b: Mapping[str, StructuredDataNode],
     inventory_path: inventory.InventoryPath,
 ) -> int:
     val_a = inventory.get_attribute(a["host_inventory"], inventory_path)

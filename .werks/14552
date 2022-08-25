@@ -1,0 +1,23 @@
+Title: Invalid rule configuration for static checks after upgrade
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1661495160
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p11
+
+When upgrading a 1.6.0 site, the configuration data for manual checks (also known as enforced
+services or static checks) would only be partially updated.
+Specifically, the "<i>Checktype</i>" would not be updated to reflect new plug-in names.
+This would result in warnings such as this,
+
+C+:
+-| WARNING: Invalid rule configuration detected (Ruleset: static_checks:fileinfo-groups, Title: Size, age and count of file groups, Folder: ,
+
+-| Rule nr: 1, Exception: fileinfo.groups is not an existing element in this selection.)
+C-:
+
+during upgrades from 2.0.0 to 2.1.0.
+With this werk, the checktype is automatically transformed during the update step.

@@ -1,0 +1,14 @@
+Title: Fix sorting by folder on ruleset pages
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1661440677
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p12
+
+The rules on ruleset pages were always sorted by folder ID.
+If the folder was renamed this could lead to a wrong sorting order.
+
+Now the title path is used.

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Union
+from typing import List, Optional, Tuple, Union
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -12,9 +12,10 @@ from _pytest.monkeypatch import MonkeyPatch
 from cmk.utils.tags import TagConfig
 from cmk.utils.type_defs import TagConditionNE, TaggroupID, TagID
 
-import cmk.gui.watolib as watolib
 from cmk.gui.htmllib import HTML
-from cmk.gui.wato.pages.rulesets import config, RuleConditionRenderer
+from cmk.gui.wato.pages.rulesets import _get_groups, config, Rule, RuleConditionRenderer
+from cmk.gui.watolib import Folder, Host, Ruleset
+from cmk.gui.watolib.hosts_and_folders import CREFolder
 
 
 @pytest.fixture(name="tag_config")
@@ -97,13 +98,13 @@ def patch_tag_config(
 @pytest.fixture(name="folder_lookup")
 def fixture_folder_lookup(mocker):
     folder_cache = {"cached_host": "cached_host_value"}
-    mocker.patch.object(watolib.Folder, "get_folder_lookup_cache", return_value=folder_cache)
+    mocker.patch.object(Folder, "get_folder_lookup_cache", return_value=folder_cache)
 
     class MockHost:
         def edit_url(self):
             return "cached_host_url"
 
-    mocker.patch.object(watolib.Host, "host", return_value=MockHost())
+    mocker.patch.object(Host, "host", return_value=MockHost())
 
 
 class TestRuleConditionRenderer:
@@ -413,3 +414,52 @@ class TestRuleConditionRenderer:
             list(RuleConditionRenderer()._service_conditions(item_type, item_name, conditions))
             == expected
         )
+
+
+def test_get_groups() -> None:
+    """Test sort order of rules"""
+    expected_folder_order: List[CREFolder] = [
+        Folder("folder2/folder2/folder2", "folder2"),
+        Folder("folder2/folder2/folder1", "folder1"),
+        Folder("folder2/folder2", "folder2"),
+        Folder("folder2/folder1/folder2", "folder2"),
+        Folder("folder2/folder1/folder1", "folder1"),
+        Folder("folder2/folder1", "folder1"),
+        Folder("folder2", "folder2"),
+        Folder("folder1/folder2/folder2", "folder2"),
+        Folder("folder1/folder2/folder1", "folder1"),
+        Folder("folder1/folder2", "folder2"),
+        Folder("folder1/folder1/folder2", "folder2"),
+        Folder("folder1/folder1/folder1", "folder1"),
+        Folder("folder1/folder1", "folder1"),
+        Folder("folder1", "folder1"),
+        Folder("folder4", "abc"),
+        Folder("", "Main"),
+    ]
+
+    root: CREFolder = Folder.root_folder()
+    ruleset: Ruleset = Ruleset("only_hosts", {"TAG1": "TG1"})
+    rules: List[Tuple[CREFolder, int, Rule]] = [
+        (root, 0, Rule.from_ruleset_defaults(root, ruleset))
+    ]
+
+    for nr in range(1, 3):
+        folder = Folder("folder%d" % nr, parent_folder=root)
+        rules.append((folder, 0, Rule.from_ruleset_defaults(folder, ruleset)))
+        for x in range(1, 3):
+            subfolder = Folder("folder%d" % x, parent_folder=folder)
+            rules.append((subfolder, 0, Rule.from_ruleset_defaults(folder, ruleset)))
+            for y in range(1, 3):
+                sub_subfolder = Folder("folder%d" % y, parent_folder=subfolder)
+                rules.append((sub_subfolder, 0, Rule.from_ruleset_defaults(folder, ruleset)))
+
+    # Also test renamed folder
+    folder4 = Folder("folder4", parent_folder=root)
+    folder4._title = "abc"  # pylint: disable=protected-access
+    rules.append((folder4, 0, Rule.from_ruleset_defaults(folder4, ruleset)))
+
+    sorted_rules = sorted(
+        rules, key=lambda x: (x[0].path().split("/"), len(rules) - x[1]), reverse=True
+    )
+
+    assert list(rule[0] for rule in _get_groups(sorted_rules, root)) == expected_folder_order

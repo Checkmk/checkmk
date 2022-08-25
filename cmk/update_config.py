@@ -50,7 +50,6 @@ from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import VERBOSE
 from cmk.utils.regex import unescape
-from cmk.utils.store import load_from_mk_file, save_mk_file
 from cmk.utils.type_defs import (
     CheckPluginName,
     ContactgroupName,
@@ -318,7 +317,6 @@ class UpdateConfig:
                 "Rewriting notification configuration for ServiceNow",
             ),
             (self._add_site_ca_to_trusted_cas, "Adding site CA to trusted CAs"),
-            (self._update_mknotifyd, "Rewrite mknotifyd config for central site"),
             (self._transform_influxdb_connnections, "Rewriting InfluxDB connections"),
             (self._check_ec_rules, "Disabling unsafe EC rules"),
         ]
@@ -1424,34 +1422,6 @@ class UpdateConfig:
 
         cert_settings["trusted_cas"].append(site_ca)
         save_global_settings(global_config)
-
-    def _update_mknotifyd(self) -> None:
-        """
-        Update the sitespecific mknotifyd config file.
-        The encryption key is missing on update from 2.0 to 2.1.
-        """
-        sitespecific_file_path: Path = Path(
-            cmk.utils.paths.default_config_dir, "mknotifyd.d", "wato", "sitespecific.mk"
-        )
-        if not sitespecific_file_path.exists():
-            return
-
-        mknotifyd_config: Dict[str, Any] = load_from_mk_file(
-            sitespecific_file_path, "notification_spooler_config", {}
-        )
-        if not mknotifyd_config:
-            return
-
-        for key, value in mknotifyd_config.items():
-            if key not in ["incoming", "outgoing"]:
-                continue
-            if key == "incoming":
-                value.setdefault("encryption", "unencrypted")
-            if key == "outgoing":
-                for outgoing in value:
-                    outgoing.setdefault("encryption", "upgradable")
-
-        save_mk_file(sitespecific_file_path, "notification_spooler_config = %s" % mknotifyd_config)
 
     def _transform_influxdb_connnections(self) -> None:
         """

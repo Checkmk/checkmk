@@ -798,6 +798,12 @@ class Painter(abc.ABC):
     service state. It uses the columns "service_state" and "has_been_checked".
     """
 
+    @staticmethod
+    def uuid_col(cell: Cell) -> str:
+        # This method is only overwritten in two subclasses and does not even
+        # use `self`.  This is all very fishy.
+        return ""
+
     @property
     @abc.abstractmethod
     def ident(self) -> str:

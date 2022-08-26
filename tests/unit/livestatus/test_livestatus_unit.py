@@ -245,3 +245,28 @@ def test_local_connection(mock_livestatus: MockLiveStatusConnection) -> None:
     live.expect_query("GET status\nColumns: program_start\nColumnHeaders: off")
     with mock_livestatus(expect_status_query=False):
         livestatus.LocalConnection().query_value("GET status\nColumns: program_start")
+
+
+# Regression test for Werk 14384
+@pytest.mark.parametrize(
+    "user_id,allowed",
+    [
+        ("", True),  # used to delete from auth_users
+        ("1234", True),
+        ("cmkadmin", True),
+        ("ädmin", True),
+        ("12 34", False),
+        ("🙈🙉🙊", False),
+        ("12\n34", False),
+        ("12\\n34", False),
+        ("a'dmin", False),
+    ],
+)
+def test_set_auth_user(mock_livestatus, user_id, allowed):
+    with mock_livestatus(expect_status_query=False):
+        if not allowed:
+            with pytest.raises(ValueError, match="Invalid user ID"):
+                livestatus.LocalConnection().set_auth_user("mydomain", user_id)
+            return
+
+        livestatus.LocalConnection().set_auth_user("mydomain", user_id)

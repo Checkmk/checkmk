@@ -1,0 +1,14 @@
+Title: Update requests module
+Class: fix
+Compatible: compat
+Component: config
+Date: 1661499966
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p12
+
+Update requests module to fix an upstream bug
+with proxy authentication.
+
+Fixed parsing issue that resulted in the auth component being dropped from proxy URLs. (#6028)

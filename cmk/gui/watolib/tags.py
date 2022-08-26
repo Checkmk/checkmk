@@ -36,6 +36,7 @@ from cmk.utils.i18n import _
 import cmk.utils.tags
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 from cmk.gui.watolib.utils import (
+    format_php,
     multisite_dir,
     wato_root_dir,
 )
@@ -300,35 +301,8 @@ function all_taggroup_choices($object_tags) {
 }
 
 ?>
-''' % (_format_php(hosttags_dict), _format_php(auxtags_dict)))
+''' % (format_php(hosttags_dict), format_php(auxtags_dict)))
     # Now really replace the destination file
     os.rename(tempfile, path)
     store.release_lock(lockfile)
     os.unlink(lockfile)
-
-
-def _format_php(data, lvl=1):
-    s = ''
-    if isinstance(data, (list, tuple)):
-        s += 'array(\n'
-        for item in data:
-            s += '    ' * lvl + _format_php(item, lvl + 1) + ',\n'
-        s += '    ' * (lvl - 1) + ')'
-    elif isinstance(data, dict):
-        s += 'array(\n'
-        for key, val in data.iteritems():
-            s += '    ' * lvl + _format_php(key, lvl + 1) + ' => ' + _format_php(val,
-                                                                                 lvl + 1) + ',\n'
-        s += '    ' * (lvl - 1) + ')'
-    elif isinstance(data, str):
-        s += '\'%s\'' % data.replace('\'', '\\\'')
-    elif isinstance(data, unicode):
-        s += '\'%s\'' % data.encode('utf-8').replace('\'', '\\\'')
-    elif isinstance(data, bool):
-        s += data and 'true' or 'false'
-    elif data is None:
-        s += 'null'
-    else:
-        s += str(data)
-
-    return s

@@ -64,33 +64,9 @@ import cmk.utils.paths
 import cmk.gui.config as config
 import cmk.gui.hooks as hooks
 
+from cmk.gui.watolib.utils import format_php
+
 g_auth_base_dir = cmk.utils.paths.var_dir + '/wato/auth'
-
-
-def format_php(data, lvl=1):
-    s = ''
-    if isinstance(data, (list, tuple)):
-        s += 'array(\n'
-        for item in data:
-            s += '    ' * lvl + format_php(item, lvl + 1) + ',\n'
-        s += '    ' * (lvl - 1) + ')'
-    elif isinstance(data, dict):
-        s += 'array(\n'
-        for key, val in data.iteritems():
-            s += '    ' * lvl + format_php(key, lvl + 1) + ' => ' + format_php(val, lvl + 1) + ',\n'
-        s += '    ' * (lvl - 1) + ')'
-    elif isinstance(data, str):
-        s += '\'%s\'' % data.replace('\'', '\\\'')
-    elif isinstance(data, unicode):
-        s += '\'%s\'' % data.encode('utf-8').replace('\'', '\\\'')
-    elif isinstance(data, bool):
-        s += data and 'true' or 'false'
-    elif data is None:
-        s += 'null'
-    else:
-        s += str(data)
-
-    return s
 
 
 def create_php_file(callee, users, role_permissions, groups):

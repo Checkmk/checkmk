@@ -149,3 +149,29 @@ def site_neutral_path(path):
         parts[3] = '[SITE_ID]'
         return '/'.join(parts)
     return path
+
+
+def format_php(data, lvl=1):
+    s = ''
+    if isinstance(data, (list, tuple)):
+        s += 'array(\n'
+        for item in data:
+            s += '    ' * lvl + format_php(item, lvl + 1) + ',\n'
+        s += '    ' * (lvl - 1) + ')'
+    elif isinstance(data, dict):
+        s += 'array(\n'
+        for key, val in data.iteritems():
+            s += '    ' * lvl + format_php(key, lvl + 1) + ' => ' + format_php(val, lvl + 1) + ',\n'
+        s += '    ' * (lvl - 1) + ')'
+    elif isinstance(data, str):
+        s += '\'%s\'' % re.sub(r"('|\\)", r"\\\1", data)
+    elif isinstance(data, unicode):
+        s += '\'%s\'' % re.sub(r"('|\\)", r"\\\1", data.encode('utf-8'))
+    elif isinstance(data, bool):
+        s += data and 'true' or 'false'
+    elif data is None:
+        s += 'null'
+    else:
+        s += str(data)
+
+    return s

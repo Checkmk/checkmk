@@ -121,7 +121,6 @@ def test_section_parse_function_does_something(fix_register) -> None:  # type:ig
 
     legacy_exceptions_for_easier_migration = {
         # snmp sections
-        "inv_cisco_vlans",
         "juniper_info",
         # agent sections
         "3ware_disks",

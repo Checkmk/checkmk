@@ -31,12 +31,28 @@
 # VLANs; the VLAN is not included if its bit has a
 # value of '0'."
 
-from typing import List, Sequence
+from typing import NamedTuple, Sequence
 
 from .agent_based_api.v1 import contains, OIDEnd, register, SNMPTree, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
-Section = List[StringTable]
+
+class _IfInfo(NamedTuple):
+    id_: int
+    vlans: str
+    vlan_type: str
+
+
+Section = Sequence[_IfInfo]
+
+
+INVENTORY_PATH = ["networking", "interfaces"]
+
+MAP_VLANS = {
+    "1": "static",
+    "2": "dynamic",
+    "3": "multi-VLAN",
+}
 
 
 def _bitmask(raw: str) -> Sequence[int]:
@@ -106,51 +122,45 @@ def _render_vlan_lists(vlans: Sequence[int]) -> str:
     return ", ".join((str(s.pop()) if len(s) == 1 else f"{min(s)}-{max(s)}" for s in succ_vals))
 
 
+def parse_inv_cisco_vlans(string_table: StringTable) -> Section:
+    section = []
+    for if_id, vlan_type, vlan_single, vlan_multi in string_table:
+        vlan_readable = MAP_VLANS.get(vlan_type, "")
+        if vlan_single != "0" and vlan_type in ["1", "2"]:
+            section.append(_IfInfo(int(if_id), vlan_single, vlan_readable))
+        elif vlan_type == "3":
+            section.append(_IfInfo(int(if_id), _parse_multi_vlan(vlan_multi), vlan_readable))
+
+    return section
+
+
 register.snmp_section(
     name="inv_cisco_vlans",
-    fetch=[
-        SNMPTree(
-            base=".1.3.6.1.4.1.9.9.68.1.2.2.1",
-            oids=[
-                OIDEnd(),
-                "1",  # vmVlanType
-                "2",  # vmVlan
-                "4",  # vmVlans
-            ],
-        ),
-    ],
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.9.9.68.1.2.2.1",
+        oids=[
+            OIDEnd(),
+            "1",  # vmVlanType
+            "2",  # vmVlan
+            "4",  # vmVlans
+        ],
+    ),
     detect=contains(".1.3.6.1.2.1.1.1.0", "cisco"),
 )
 
 
-INVENTORY_PATH = ["networking", "interfaces"]
-
-MAP_VLANS = {
-    "1": "static",
-    "2": "dynamic",
-    "3": "multi-VLAN",
-}
-
-
 def inv_cisco_vlans(section: Section) -> InventoryResult:
-
-    for if_id, vlan_type, vlan_single, vlan_multi in section[0]:
-        vlan_readable = MAP_VLANS.get(vlan_type, "")
-        vlans = None
-        if vlan_single != "0" and vlan_type in ["1", "2"]:
-            vlans = vlan_single
-        elif vlan_type == "3":
-            vlans = _parse_multi_vlan(vlan_multi)
-
-        if vlans:
-            yield TableRow(
-                path=INVENTORY_PATH,
-                key_columns={"index": int(if_id)},
-                inventory_columns={
-                    "vlans": vlans,
-                    "vlantype": vlan_readable,
-                },
-            )
+    yield from (
+        TableRow(
+            path=INVENTORY_PATH,
+            key_columns={"index": if_info.id_},
+            inventory_columns={
+                "vlans": if_info.vlans,
+                "vlantype": if_info.vlan_type,
+            },
+        )
+        for if_info in section
+    )
 
 
 register.inventory_plugin(

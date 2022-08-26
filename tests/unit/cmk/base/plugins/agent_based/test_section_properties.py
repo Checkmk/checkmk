@@ -120,8 +120,6 @@ def test_section_parse_function_does_something(fix_register) -> None:  # type:ig
     noop_code = (lambda x: x).__code__.co_code
 
     legacy_exceptions_for_easier_migration = {
-        # snmp sections
-        "juniper_info",
         # agent sections
         "3ware_disks",
         "3ware_info",

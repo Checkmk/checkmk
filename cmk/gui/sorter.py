@@ -9,6 +9,7 @@ import abc
 from typing import (
     Any,
     Dict,
+    Iterable,
     List,
     NamedTuple,
     Optional,
@@ -26,7 +27,7 @@ from cmk.gui.type_defs import ColumnName, SorterFunction, SorterName
 from cmk.gui.valuespec import ValueSpec
 
 if TYPE_CHECKING:
-    from cmk.gui.view import View
+    from cmk.gui.plugins.views.utils import Cell
 
 
 class SorterSpec(NamedTuple):
@@ -149,6 +150,11 @@ class Sorter(abc.ABC):
 
 
 class DerivedColumnsSorter(Sorter):
+    # TODO(ml): This really looks wrong.  `derived_columns` is most certainly
+    #           on the wrong class (it should be on `Cell` or `Painter`, just
+    #           look at the few places it is implemented) and without this new
+    #           method, this class is just a regular `Sorter`.  We should get
+    #           rid of this useless piece of code.
     """
     Can be used to transfer an additional parameter to the Sorter instance.
 
@@ -180,7 +186,7 @@ class DerivedColumnsSorter(Sorter):
     #   name of the column (drawback: it's the third hack)
 
     @abc.abstractmethod
-    def derived_columns(self, view: "View", uuid: Optional[str]) -> None:
+    def derived_columns(self, cells: Iterable["Cell"], uuid: Optional[str]) -> None:
         # TODO: rename uuid, as this is no longer restricted to uuids
         raise NotImplementedError()
 

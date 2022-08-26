@@ -448,7 +448,7 @@ class SorterCustomHostVariable(DerivedColumnsSorter):
     def columns(self) -> List[str]:
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
-    def derived_columns(self, view: "View", uuid: Optional[str]) -> None:
+    def derived_columns(self, cells: object, uuid: Optional[str]) -> None:
         self._variable_name = uuid
 
     def get_parameters(self) -> Optional[ValueSpec]:

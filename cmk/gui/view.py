@@ -152,7 +152,7 @@ class View:
 
             sorter_instance = sorter()
             if isinstance(sorter_instance, DerivedColumnsSorter):
-                sorter_instance.derived_columns(self, uuid)
+                sorter_instance.derived_columns(self.row_cells, uuid)
 
             sorters.append(SorterEntry(sorter=sorter_instance, negate=negate, join_key=join_key))
         return sorters

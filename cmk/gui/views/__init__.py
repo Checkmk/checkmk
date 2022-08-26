@@ -1641,7 +1641,7 @@ def _get_all_active_filters(view: View) -> "List[Filter]":
     for filt in use_filters:
         # TODO: Clean this up! E.g. make the Filter class implement a default method
         if hasattr(filt, "derived_columns"):
-            filt.derived_columns(view)  # type: ignore[attr-defined]
+            filt.derived_columns(view.row_cells)  # type: ignore[attr-defined]
 
     return use_filters
 

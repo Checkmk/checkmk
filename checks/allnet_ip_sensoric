@@ -119,7 +119,7 @@ check_info["allnet_ip_sensoric.tension"] = {
 #   |                                        |_|                           |
 #   '----------------------------------------------------------------------'
 
-factory_settings["allnet_ip_sensoric_temp_default_levels"] = {"levels": (35, 40)}
+factory_settings["allnet_ip_sensoric_temp_default_levels"] = {"levels": (35.0, 40.0)}
 
 
 def inventory_allnet_ip_sensoric_temp(parsed):

@@ -8,7 +8,6 @@ from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    Transform,
 )
 from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
@@ -19,23 +18,20 @@ def _item_spec_ups_out_load():
     )
 
 
-def _parameter_valuespec_ups_out_load():
-    return Transform(
-        Dictionary(
-            elements=[
-                (
-                    "levels",
-                    Tuple(
-                        elements=[
-                            Integer(title=_("warning at"), unit="%", default_value=85),
-                            Integer(title=_("critical at"), unit="%", default_value=90),
-                        ],
-                    ),
-                )
-            ],
-            optional_keys=False,
-        ),
-        forth=lambda v: v if isinstance(v, dict) else {"levels": v},
+def _parameter_valuespec_ups_out_load() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    elements=[
+                        Integer(title=_("warning at"), unit="%", default_value=85),
+                        Integer(title=_("critical at"), unit="%", default_value=90),
+                    ],
+                ),
+            )
+        ],
+        optional_keys=False,
     )
 
 

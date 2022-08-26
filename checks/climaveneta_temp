@@ -27,7 +27,7 @@ climaveneta_sensors = {
     28: "Suction",
 }
 
-factory_settings["climaveneta_temp_default_levels"] = {"levels": (28, 30)}
+factory_settings["climaveneta_temp_default_levels"] = {"levels": (28.0, 30.0)}
 
 
 def inventory_climaveneta_temp(info):

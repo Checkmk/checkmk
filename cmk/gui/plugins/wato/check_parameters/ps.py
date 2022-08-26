@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
 import re
-from typing import Any, Dict
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -295,63 +293,6 @@ def process_level_elements():
     ]
 
 
-# Add checks that have parameters but are only configured as manual checks
-def ps_cleanup_params(params):
-    # New parameter format: dictionary. Example:
-    # {
-    #    "user" : "foo",
-    #    "process" : "/usr/bin/food",
-    #    "warnmin" : 1,
-    #    "okmin"   : 1,
-    #    "okmax"   : 1,
-    #    "warnmax" : 1,
-    # }
-
-    # Even newer format:
-    # {
-    #   "user" : "foo",
-    #   "levels" : (1, 1, 99999, 99999)
-    # }
-
-    # TODO: This is a workaround which makes sure input arguments are not getting altered.
-    #       A nice implementation would return a new dict based on the input
-    params = copy.deepcopy(params)
-
-    if isinstance(params, (list, tuple)):
-        if len(params) == 5:
-            procname, warnmin, okmin, okmax, warnmax = params
-            user = None
-        elif len(params) == 6:
-            procname, user, warnmin, okmin, okmax, warnmax = params
-        params = {
-            "process": procname,
-            "levels": (warnmin, okmin, okmax, warnmax),
-            "user": user,
-        }
-
-    elif any(k in params for k in ["okmin", "warnmin", "okmax", "warnmax"]):
-        params["levels"] = (
-            params.pop("warnmin", 1),
-            params.pop("okmin", 1),
-            params.pop("okmax", 99999),
-            params.pop("warnmax", 99999),
-        )
-
-    if "cpu_rescale_max" not in params:
-        params["cpu_rescale_max"] = CPU_RESCALE_MAX_UNSPEC
-
-    return params
-
-
-def ps_convert_inventorized_from_singlekeys(old_params):
-    params = ps_cleanup_params(old_params)
-    if "user" in params:
-        del params["user"]
-    if "process" in params:
-        del params["process"]
-    return params
-
-
 def forbid_re_delimiters_inside_groups(pattern, varprefix):
     # Used as input validation in PS check wato config
     group_re = r"\(.*?\)"
@@ -551,14 +492,11 @@ def _item_spec_ps():
     )
 
 
-def _parameter_valuespec_ps():
-    return Transform(
-        valuespec=Dictionary(
-            elements=process_level_elements(),
-            ignored_keys=["match_groups", "cgroup"],
-            required_keys=["cpu_rescale_max"],
-        ),
-        forth=ps_convert_inventorized_from_singlekeys,
+def _parameter_valuespec_ps() -> Dictionary:
+    return Dictionary(
+        elements=process_level_elements(),
+        ignored_keys=["match_groups", "cgroup"],
+        required_keys=["cpu_rescale_max"],
     )
 
 
@@ -588,18 +526,15 @@ def _manual_item_spec_ps():
     )
 
 
-def _manual_parameter_valuespec_ps():
-    return Transform(
-        valuespec=Dictionary(
-            elements=[
-                ("process", process_match_options()),
-                ("user", user_match_options()),
-            ]
-            + process_level_elements(),
-            ignored_keys=["match_groups"],
-            required_keys=["cpu_rescale_max"],
-        ),
-        forth=ps_cleanup_params,
+def _manual_parameter_valuespec_ps() -> Dictionary:
+    return Dictionary(
+        elements=[
+            ("process", process_match_options()),
+            ("user", user_match_options()),
+        ]
+        + process_level_elements(),
+        ignored_keys=["match_groups"],
+        required_keys=["cpu_rescale_max"],
     )
 
 
@@ -614,104 +549,70 @@ rulespec_registry.register(
 )
 
 
-# In version 1.2.4 the check parameters for the resulting ps check
-# where defined in the discovery rule. We moved that to an own rule
-# in the classical check parameter style. In order to support old
-# configuration we allow reading old discovery rules and ship these
-# settings in an optional sub-dictionary.
-def convert_inventory_processes(old_dict):
-    new_dict: Dict[str, Dict[str, Any]] = {"default_params": {}}
-    for key in old_dict:
-        if key in [
-            "levels",
-            "handle_count",
-            "cpulevels",
-            "cpu_average",
-            "virtual_levels",
-            "resident_levels",
-        ]:
-            new_dict["default_params"][key] = old_dict[key]
-        elif key != "perfdata":
-            new_dict[key] = old_dict[key]
-
-    # cmk1.6 cpu rescaling load rule
-    if "cpu_rescale_max" not in old_dict.get("default_params", {}):
-        new_dict["default_params"]["cpu_rescale_max"] = CPU_RESCALE_MAX_UNSPEC
-
-    # cmk1.6 move icon into default_params to match setup of static and discovered ps checks
-    if "icon" in old_dict:
-        new_dict["default_params"]["icon"] = old_dict.pop("icon")
-
-    return new_dict
-
-
-def _valuespec_inventory_processes_rules() -> Transform:
-    return Transform(
-        valuespec=Dictionary(
-            title=_("Process discovery"),
-            help=_(
-                "This ruleset defines criteria for automatically creating checks for running "
-                "processes based upon what is running when the service discovery is "
-                "done. These services will be created with default parameters. They will get "
-                "critical when no process is running and OK otherwise. You can parameterize "
-                "the check with the ruleset <i>State and count of processes</i>."
-            ),
-            elements=[
-                ("descr", process_discovery_descr_option()),
-                ("match", process_match_options()),
-                (
-                    "user",
-                    user_match_options(
-                        [
-                            FixedValue(
-                                value=False,
-                                title=_("Grab user from found processess"),
-                                totext="",
-                                help=_(
-                                    'Specifying "grab user" makes the created check expect the process to '
-                                    "run as the same user as during inventory: the user name will be "
-                                    "hardcoded into the check. In that case if you put %u into the service "
-                                    "description, that will be replaced by the actual user name during "
-                                    "inventory. You need that if your rule might match for more than one "
-                                    "user - your would create duplicate services with the same description "
-                                    "otherwise."
-                                ),
-                            )
-                        ]
-                    ),
-                ),
-                ("cgroup", cgroup_match_options()),
-                (
-                    "label",
-                    Labels(
-                        world=Labels.World.CONFIG,
-                        title=_("Host Label"),
-                        help=_(
-                            "Here you can set host labels that automatically get created when discovering the services."
-                        ),
-                    ),
-                ),
-                (
-                    "default_params",
-                    Dictionary(
-                        title=_("Default parameters for detected services"),
-                        help=_(
-                            "Here you can select default parameters that are being set "
-                            "for detected services. Note: the preferred way for setting parameters is to use "
-                            'the rule set <a href="wato.py?varname=checkgroup_parameters:ps&mode=edit_ruleset"> '
-                            "State and Count of Processes</a> instead. "
-                            "A change there will immediately be active, while a change in this rule "
-                            "requires a re-discovery of the services."
-                        ),
-                        elements=process_level_elements(),
-                        ignored_keys=["match_groups"],
-                        required_keys=["cpu_rescale_max"],
-                    ),
-                ),
-            ],
-            required_keys=["descr", "default_params"],
+def _valuespec_inventory_processes_rules() -> Dictionary:
+    return Dictionary(
+        title=_("Process discovery"),
+        help=_(
+            "This ruleset defines criteria for automatically creating checks for running "
+            "processes based upon what is running when the service discovery is "
+            "done. These services will be created with default parameters. They will get "
+            "critical when no process is running and OK otherwise. You can parameterize "
+            "the check with the ruleset <i>State and count of processes</i>."
         ),
-        forth=convert_inventory_processes,
+        elements=[
+            ("descr", process_discovery_descr_option()),
+            ("match", process_match_options()),
+            (
+                "user",
+                user_match_options(
+                    [
+                        FixedValue(
+                            value=False,
+                            title=_("Grab user from found processess"),
+                            totext="",
+                            help=_(
+                                'Specifying "grab user" makes the created check expect the process to '
+                                "run as the same user as during inventory: the user name will be "
+                                "hardcoded into the check. In that case if you put %u into the service "
+                                "description, that will be replaced by the actual user name during "
+                                "inventory. You need that if your rule might match for more than one "
+                                "user - your would create duplicate services with the same description "
+                                "otherwise."
+                            ),
+                        )
+                    ]
+                ),
+            ),
+            ("cgroup", cgroup_match_options()),
+            (
+                "label",
+                Labels(
+                    world=Labels.World.CONFIG,
+                    title=_("Host Label"),
+                    help=_(
+                        "Here you can set host labels that automatically get created when discovering the services."
+                    ),
+                ),
+            ),
+            (
+                "default_params",
+                Dictionary(
+                    title=_("Default parameters for detected services"),
+                    help=_(
+                        "Here you can select default parameters that are being set "
+                        "for detected services. Note: the preferred way for setting parameters is to use "
+                        'the rule set <a href="wato.py?varname=checkgroup_parameters:ps&mode=edit_ruleset"> '
+                        "State and Count of Processes</a> instead. "
+                        "A change there will immediately be active, while a change in this rule "
+                        "requires a re-discovery of the services."
+                    ),
+                    elements=process_level_elements(),
+                    ignored_keys=["match_groups"],
+                    required_keys=["cpu_rescale_max"],
+                ),
+            ),
+        ],
+        required_keys=["descr", "default_params"],
     )
 
 

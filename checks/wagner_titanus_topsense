@@ -368,7 +368,7 @@ check_info["wagner_titanus_topsense.airflow_deviation"] = {
 #   '----------------------------------------------------------------------'
 
 factory_settings["wagner_titanus_topsense_temperature_default_values"] = {
-    "levels": (30, 35),
+    "levels": (30.0, 35.0),
 }
 
 

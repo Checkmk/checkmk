@@ -11,7 +11,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, Integer, Transform, Tuple, ValueSpec
+from cmk.gui.valuespec import Dictionary, Integer, Tuple, ValueSpec
 
 mailqueue_elements: typing.List[typing.Tuple[str, ValueSpec]] = [
     (
@@ -45,16 +45,11 @@ mailqueue_elements: typing.List[typing.Tuple[str, ValueSpec]] = [
     ),
 ]
 
-mailqueue_params = Dictionary(
-    elements=mailqueue_elements,
-    optional_keys=["active"],
-)
 
-
-def _parameter_valuespec_mailqueue_length():
-    return Transform(
-        valuespec=mailqueue_params,
-        forth=lambda old: not isinstance(old, dict) and {"deferred": old} or old,
+def _parameter_valuespec_mailqueue_length() -> Dictionary:
+    return Dictionary(
+        elements=mailqueue_elements,
+        optional_keys=["active"],
     )
 
 

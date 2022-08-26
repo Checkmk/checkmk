@@ -96,8 +96,8 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 
 # Suggested by customer
 factory_settings["apc_netbotz_sensors_temp_default_levels"] = {
-    "levels": (30, 35),
-    "levels_lower": (25, 20),
+    "levels": (30.0, 35.0),
+    "levels_lower": (25.0, 20.0),
 }
 
 
@@ -174,8 +174,8 @@ check_info["apc_netbotz_sensors"] = {
 
 # Suggested by customer
 factory_settings["apc_netbotz_sensors_dewpoint_default_levels"] = {
-    "levels": (18, 25),
-    "levels_lower": (-4, -6),
+    "levels": (18.0, 25.0),
+    "levels_lower": (-4.0, -6.0),
 }
 
 

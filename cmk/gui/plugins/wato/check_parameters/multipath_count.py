@@ -9,18 +9,10 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import (
-    Alternative,
-    Dictionary,
-    FixedValue,
-    Integer,
-    TextInput,
-    Transform,
-    Tuple,
-)
+from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, Integer, TextInput, Tuple
 
 
-def _parameter_valuespec_multipath_count():
+def _parameter_valuespec_multipath_count() -> Alternative:
     return Alternative(
         help=_(
             "This rules sets the expected number of active paths for a multipath LUN "
@@ -38,24 +30,14 @@ def _parameter_valuespec_multipath_count():
                 elements=[
                     (
                         element,
-                        Transform(
-                            valuespec=Tuple(
-                                title=description,
-                                elements=[
-                                    Integer(title=_("Critical if less than")),
-                                    Integer(title=_("Warning if less than")),
-                                    Integer(title=_("Warning if more than")),
-                                    Integer(title=_("Critical if more than")),
-                                ],
-                            ),
-                            forth=lambda x: len(x) == 2
-                            and (
-                                0,
-                                0,
-                                x[0],
-                                x[1],
-                            )
-                            or x,
+                        Tuple(
+                            title=description,
+                            elements=[
+                                Integer(title=_("Critical if less than")),
+                                Integer(title=_("Warning if less than")),
+                                Integer(title=_("Warning if more than")),
+                                Integer(title=_("Critical if more than")),
+                            ],
                         ),
                     )
                     for (element, description) in [

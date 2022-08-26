@@ -6,7 +6,7 @@
 from cmk.base.check_legacy_includes.temperature import check_temperature
 
 factory_settings["avaya_45xx_temp_default_levels"] = {
-    "levels": (55, 60),
+    "levels": (55.0, 60.0),
 }
 
 

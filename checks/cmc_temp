@@ -10,7 +10,7 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 # [[[u'26', u'26']], [[u'45', u'15', u'45', u'15']]]
 
 factory_settings["cmc_temp_default_levels"] = {
-    "levels": (45, 50),
+    "levels": (45.0, 50.0),
 }
 
 

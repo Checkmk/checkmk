@@ -52,7 +52,7 @@ def parse_ibm_svc_enclosurestats(info):
 #   |                       |_|                                            |
 #   '----------------------------------------------------------------------'
 
-factory_settings["ibm_svc_enclosurestats_temperature_default_levels"] = {"levels": (35, 40)}
+factory_settings["ibm_svc_enclosurestats_temperature_default_levels"] = {"levels": (35.0, 40.0)}
 
 
 def inventory_ibm_svc_enclosurestats_temp(info):

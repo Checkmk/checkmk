@@ -8,7 +8,7 @@ from typing import Iterable, Optional, Tuple, Union
 alcatel_cpu_default_levels = (90.0, 95.0)
 
 ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS = {
-    "levels": (45, 50),
+    "levels": (45.0, 50.0),
 }
 
 DiscoveryResult = Union[Iterable[Tuple[None, Optional[str]]], Iterable[Tuple[str, Optional[str]]]]

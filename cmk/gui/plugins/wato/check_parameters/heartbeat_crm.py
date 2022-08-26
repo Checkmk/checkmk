@@ -11,7 +11,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, Integer, TextInput, Transform
+from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, Integer, TextInput
 
 
 def _valuespec_inventory_heartbeat_crm_rules():
@@ -56,87 +56,63 @@ rulespec_registry.register(
 )
 
 
-def _heartbeat_crm_transform_heartbeat_crm(params):
-    """
-    >>> _heartbeat_crm_transform_heartbeat_crm([60, 1, 0, 0])
-    {'max_age': 60, 'show_failed_actions': False, 'dc': 1, 'num_nodes': 0, 'num_resources': 0}
-    """
-    if isinstance(params, dict):
-        _params = params.copy()
-        _params.setdefault("show_failed_actions", False)
-        return _params
-    par_dict = {"max_age": params[0], "show_failed_actions": False}
-    if params[1]:
-        par_dict["dc"] = params[1]
-    if params[2] > -1:
-        par_dict["num_nodes"] = params[2]
-    if params[3] > -1:
-        par_dict["num_resources"] = params[3]
-    return par_dict
-
-
-def _parameter_valuespec_heartbeat_crm():
-    return Transform(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "max_age",
-                    Integer(
-                        title=_("Maximum age"),
-                        help=_("Maximum accepted age of the reported data in seconds"),
-                        unit=_("seconds"),
-                        default_value=60,
-                    ),
+def _parameter_valuespec_heartbeat_crm() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "max_age",
+                Integer(
+                    title=_("Maximum age"),
+                    help=_("Maximum accepted age of the reported data in seconds"),
+                    unit=_("seconds"),
+                    default_value=60,
                 ),
-                (
-                    "dc",
-                    TextInput(
-                        allow_empty=False,
-                        title=_("Expected DC"),
-                        help=_(
-                            "The hostname of the expected distinguished controller of the cluster"
+            ),
+            (
+                "dc",
+                TextInput(
+                    allow_empty=False,
+                    title=_("Expected DC"),
+                    help=_("The hostname of the expected distinguished controller of the cluster"),
+                ),
+            ),
+            (
+                "num_nodes",
+                Integer(
+                    minvalue=0,
+                    default_value=2,
+                    title=_("Number of Nodes"),
+                    help=_("The expected number of nodes in the cluster"),
+                ),
+            ),
+            (
+                "num_resources",
+                Integer(
+                    minvalue=0,
+                    title=_("Number of Resources"),
+                    help=_("The expected number of resources in the cluster"),
+                ),
+            ),
+            (
+                "show_failed_actions",
+                DropdownChoice(
+                    title=_('Show "Failed Actions"'),
+                    choices=[
+                        (
+                            False,
+                            _('Don\'t show or warn if "Failed Actions" are present (default)'),
                         ),
+                        (True, _('Show "Failed Actions" and warn if any is present')),
+                    ],
+                    default_value=False,
+                    help=_(
+                        'If activated, any "Failed Action" entry will be shown in the main check '
+                        "and the check will go to the WARN state."
                     ),
                 ),
-                (
-                    "num_nodes",
-                    Integer(
-                        minvalue=0,
-                        default_value=2,
-                        title=_("Number of Nodes"),
-                        help=_("The expected number of nodes in the cluster"),
-                    ),
-                ),
-                (
-                    "num_resources",
-                    Integer(
-                        minvalue=0,
-                        title=_("Number of Resources"),
-                        help=_("The expected number of resources in the cluster"),
-                    ),
-                ),
-                (
-                    "show_failed_actions",
-                    DropdownChoice(
-                        title=_('Show "Failed Actions"'),
-                        choices=[
-                            (
-                                False,
-                                _('Don\'t show or warn if "Failed Actions" are present (default)'),
-                            ),
-                            (True, _('Show "Failed Actions" and warn if any is present')),
-                        ],
-                        default_value=False,
-                        help=_(
-                            'If activated, any "Failed Action" entry will be shown in the main check '
-                            "and the check will go to the WARN state."
-                        ),
-                    ),
-                ),
-            ],
-            optional_keys=["dc", "num_nodes", "num_resources", "show_failed_actions"],
-        ),
-        forth=_heartbeat_crm_transform_heartbeat_crm,
+            ),
+        ],
+        optional_keys=["dc", "num_nodes", "num_resources", "show_failed_actions"],
     )
 
 

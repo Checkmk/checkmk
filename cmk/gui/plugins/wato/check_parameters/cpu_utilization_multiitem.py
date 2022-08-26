@@ -9,25 +9,10 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
-from cmk.gui.valuespec import Dictionary, Integer, Percentage, TextInput, Transform, Tuple
+from cmk.gui.valuespec import Dictionary, Integer, Percentage, TextInput, Tuple
 
 
-def _parameter_valuespec():
-    return Transform(
-        valuespec=_real_parameter_valuespec(),
-        forth=_transform,
-    )
-
-
-def _transform(params):
-    if params is None:
-        return {}
-    if isinstance(params, tuple):
-        return {"levels": params}
-    return params
-
-
-def _real_parameter_valuespec():
+def _parameter_valuespec() -> Dictionary:
     return Dictionary(
         help=_(
             "The CPU utilization sums up the percentages of CPU time that is used "

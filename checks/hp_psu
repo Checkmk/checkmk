@@ -27,7 +27,7 @@ def parse_hp_psu(info):
 #   '----------------------------------------------------------------------'
 
 factory_settings["hp_psu_temp_default_levels"] = {
-    "levels": (70, 80),
+    "levels": (70.0, 80.0),
 }
 
 

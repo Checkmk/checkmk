@@ -9,7 +9,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Transform, Tuple
+from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 
 
 def transform_humidity(p):
@@ -28,35 +28,32 @@ def _item_spec_humidity():
     )
 
 
-def _parameter_valuespec_humidity():
-    return Transform(
-        valuespec=Dictionary(
-            help=_("This Ruleset sets the threshold limits for humidity sensors"),
-            elements=[
-                (
-                    "levels",
-                    Tuple(
-                        title=_("Upper levels"),
-                        elements=[
-                            Percentage(title=_("Warning at")),
-                            Percentage(title=_("Critical at")),
-                        ],
-                    ),
+def _parameter_valuespec_humidity() -> Dictionary:
+    return Dictionary(
+        help=_("This Ruleset sets the threshold limits for humidity sensors"),
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    title=_("Upper levels"),
+                    elements=[
+                        Percentage(title=_("Warning at")),
+                        Percentage(title=_("Critical at")),
+                    ],
                 ),
-                (
-                    "levels_lower",
-                    Tuple(
-                        title=_("Lower levels"),
-                        elements=[
-                            Percentage(title=_("Warning below")),
-                            Percentage(title=_("Critical below")),
-                        ],
-                    ),
+            ),
+            (
+                "levels_lower",
+                Tuple(
+                    title=_("Lower levels"),
+                    elements=[
+                        Percentage(title=_("Warning below")),
+                        Percentage(title=_("Critical below")),
+                    ],
                 ),
-            ],
-            ignored_keys=["_item_key"],
-        ),
-        forth=transform_humidity,
+            ),
+        ],
+        ignored_keys=["_item_key"],
     )
 
 

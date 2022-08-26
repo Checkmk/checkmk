@@ -7,7 +7,7 @@
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-factory_settings["dell_chassis_temp_default_levels"] = {"levels": (60, 80)}
+factory_settings["dell_chassis_temp_default_levels"] = {"levels": (60.0, 80.0)}
 
 
 def inventory_dell_chassis_temp(info):

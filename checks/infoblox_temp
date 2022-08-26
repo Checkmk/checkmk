@@ -28,7 +28,7 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 
 # Suggested by customer
 factory_settings["infoblox_temp_default_levels"] = {
-    "levels": (40, 50),
+    "levels": (40.0, 50.0),
 }
 
 

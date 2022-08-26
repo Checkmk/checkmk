@@ -314,7 +314,7 @@ check_info["bluenet2_powerrail.rcm"] = {
 
 # Suggested by customer
 factory_settings["bluenet2_powerrail_temp_default_levels"] = {
-    "levels": (30, 35),
+    "levels": (30.0, 35.0),
 }
 
 

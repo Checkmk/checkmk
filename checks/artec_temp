@@ -12,7 +12,7 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 
 # suggested by customer
 factory_settings["artec_temp_default_levels"] = {
-    "levels": (36, 40),
+    "levels": (36.0, 40.0),
 }
 
 

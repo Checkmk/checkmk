@@ -91,7 +91,7 @@ def check_akcp_humidity(item, params, info):
 #   +----------------------------------------------------------------------+
 
 AKCP_TEMP_CHECK_DEFAULT_PARAMETERS = {
-    "levels": (32, 35),
+    "levels": (32.0, 35.0),
 }
 
 

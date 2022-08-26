@@ -9,69 +9,56 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput, Transform
+from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 
-def _oracle_instance_transform_oracle_instance_params(p):
-    if "ignore_noarchivelog" in p:
-        if p["ignore_noarchivelog"]:
-            p["noarchivelog"] = 0
-        del p["ignore_noarchivelog"]
-    if "uptime_min" in p:
-        del p["uptime_min"]
-    return p
-
-
-def _parameter_valuespec_oracle_instance():
-    return Transform(
-        valuespec=Dictionary(
-            title=_("Consider state of Archivelogmode: "),
-            elements=[
-                (
-                    "archivelog",
-                    MonitoringState(
-                        default_value=0,
-                        title=_("State in case of Archivelogmode is enabled: "),
-                    ),
+def _parameter_valuespec_oracle_instance() -> Dictionary:
+    return Dictionary(
+        title=_("Consider state of Archivelogmode: "),
+        elements=[
+            (
+                "archivelog",
+                MonitoringState(
+                    default_value=0,
+                    title=_("State in case of Archivelogmode is enabled: "),
                 ),
-                (
-                    "noarchivelog",
-                    MonitoringState(
-                        default_value=1,
-                        title=_("State in case of Archivelogmode is disabled: "),
-                    ),
+            ),
+            (
+                "noarchivelog",
+                MonitoringState(
+                    default_value=1,
+                    title=_("State in case of Archivelogmode is disabled: "),
                 ),
-                (
-                    "forcelogging",
-                    MonitoringState(
-                        default_value=0,
-                        title=_("State in case of Force Logging is enabled: "),
-                    ),
+            ),
+            (
+                "forcelogging",
+                MonitoringState(
+                    default_value=0,
+                    title=_("State in case of Force Logging is enabled: "),
                 ),
-                (
-                    "noforcelogging",
-                    MonitoringState(
-                        default_value=1,
-                        title=_("State in case of Force Logging is disabled: "),
-                    ),
+            ),
+            (
+                "noforcelogging",
+                MonitoringState(
+                    default_value=1,
+                    title=_("State in case of Force Logging is disabled: "),
                 ),
-                (
-                    "logins",
-                    MonitoringState(
-                        default_value=2,
-                        title=_("State in case of logins are not possible: "),
-                    ),
+            ),
+            (
+                "logins",
+                MonitoringState(
+                    default_value=2,
+                    title=_("State in case of logins are not possible: "),
                 ),
-                (
-                    "primarynotopen",
-                    MonitoringState(
-                        default_value=2,
-                        title=_("State in case of Database is PRIMARY and not OPEN: "),
-                    ),
+            ),
+            (
+                "primarynotopen",
+                MonitoringState(
+                    default_value=2,
+                    title=_("State in case of Database is PRIMARY and not OPEN: "),
                 ),
-            ],
-        ),
-        forth=_oracle_instance_transform_oracle_instance_params,
+            ),
+        ],
     )
 
 

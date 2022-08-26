@@ -34,7 +34,6 @@ from cmk.gui.valuespec import (
     ListOf,
     Percentage,
     TextInput,
-    Transform,
     Tuple,
     ValueSpec,
 )
@@ -814,47 +813,30 @@ rulespec_registry.register(
 )
 
 
-def _transform_aws_elb_http(p):
-
-    if "levels_load_balancers" in p:
-        return p
-    p_trans = {"levels_load_balancers": p, "levels_backend_targets": {}}
-
-    for http_err_code in ["4xx", "5xx"]:
-        levels_key = "levels_http_%s_perc" % http_err_code
-        if levels_key in p:
-            p_trans["levels_backend_targets"][levels_key] = p[levels_key]
-
-    return p_trans
-
-
-def _parameter_valuespec_aws_elb_http():
-    return Transform(
-        valuespec=Dictionary(
-            title=_("Upper levels for HTTP errors"),
-            elements=[
-                (
-                    "levels_load_balancers",
-                    Dictionary(
-                        title=_("Upper levels for Load Balancers"),
-                        elements=_vs_elements_http_errors(
-                            ["3xx", "4xx", "5xx", "500", "502", "503", "504"],
-                            title_add=lambda http_err_code: ""
-                            if http_err_code in ["4xx", "5xx"]
-                            else " (Application Load Balancers only)",
-                        ),
+def _parameter_valuespec_aws_elb_http() -> Dictionary:
+    return Dictionary(
+        title=_("Upper levels for HTTP errors"),
+        elements=[
+            (
+                "levels_load_balancers",
+                Dictionary(
+                    title=_("Upper levels for Load Balancers"),
+                    elements=_vs_elements_http_errors(
+                        ["3xx", "4xx", "5xx", "500", "502", "503", "504"],
+                        title_add=lambda http_err_code: ""
+                        if http_err_code in ["4xx", "5xx"]
+                        else " (Application Load Balancers only)",
                     ),
                 ),
-                (
-                    "levels_backend_targets",
-                    Dictionary(
-                        title=_("Upper levels for Backend"),
-                        elements=_vs_elements_http_errors(["2xx", "3xx", "4xx", "5xx"]),
-                    ),
+            ),
+            (
+                "levels_backend_targets",
+                Dictionary(
+                    title=_("Upper levels for Backend"),
+                    elements=_vs_elements_http_errors(["2xx", "3xx", "4xx", "5xx"]),
                 ),
-            ],
-        ),
-        forth=_transform_aws_elb_http,
+            ),
+        ],
     )
 
 

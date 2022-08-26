@@ -127,7 +127,7 @@ check_info["hp_msa_psu.sensor"] = {
 #   +----------------------------------------------------------------------+
 
 factory_settings["hp_msa_psu_temp_default_levels"] = {
-    "levels": (40, 45),  # Just assumed
+    "levels": (40.0, 45.0),  # Just assumed
 }
 
 

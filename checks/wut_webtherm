@@ -65,7 +65,7 @@ def parse_wut_webtherm(info):
 #   '----------------------------------------------------------------------'
 
 factory_settings["wut_webtherm_defaultlevels"] = {
-    "levels": (30, 35),
+    "levels": (30.0, 35.0),
 }
 
 

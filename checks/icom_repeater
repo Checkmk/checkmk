@@ -205,8 +205,8 @@ check_info["icom_repeater.pll_volt"] = {
 #   '----------------------------------------------------------------------'
 
 factory_settings["icom_repeater_temp_default_levels"] = {
-    "levels": (50, 55),
-    "levels_lower": (-20, -25),
+    "levels": (50.0, 55.0),
+    "levels_lower": (-20.0, -25.0),
 }
 
 

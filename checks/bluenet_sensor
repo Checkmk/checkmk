@@ -22,8 +22,8 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 
 # ambient temperature levels for a datacenter
 factory_settings["bluenet_sensor_temp_default_levels"] = {
-    "levels": (28, 35),
-    "levels_lower": (13, 17),
+    "levels": (28.0, 35.0),
+    "levels_lower": (13.0, 17.0),
 }
 
 

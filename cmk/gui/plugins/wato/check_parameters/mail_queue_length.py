@@ -10,34 +10,29 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, Integer, TextInput, Transform, Tuple
+from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
-mailqueue_params = Dictionary(
-    elements=[
-        *mailqueue_elements,
-        (
-            "failed",
-            Tuple(
-                title=_("Mails in failed mail queue"),
-                help=_(
-                    "This rule is applied to the number of E-Mails currently "
-                    "in the failed mail queue"
+
+def _parameter_valuespec_mail_queue_length() -> Dictionary:
+    return Dictionary(
+        elements=[
+            *mailqueue_elements,
+            (
+                "failed",
+                Tuple(
+                    title=_("Mails in failed mail queue"),
+                    help=_(
+                        "This rule is applied to the number of E-Mails currently "
+                        "in the failed mail queue"
+                    ),
+                    elements=[
+                        Integer(title=_("Warning at"), unit=_("mails"), default_value=1),
+                        Integer(title=_("Critical at"), unit=_("mails"), default_value=1),
+                    ],
                 ),
-                elements=[
-                    Integer(title=_("Warning at"), unit=_("mails"), default_value=1),
-                    Integer(title=_("Critical at"), unit=_("mails"), default_value=1),
-                ],
             ),
-        ),
-    ],
-    optional_keys=["active", "deferred", "failed"],
-)
-
-
-def _parameter_valuespec_mail_queue_length():
-    return Transform(
-        valuespec=mailqueue_params,
-        forth=lambda old: not isinstance(old, dict) and {"deferred": old} or old,
+        ],
+        optional_keys=["active", "deferred", "failed"],
     )
 
 

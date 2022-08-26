@@ -11,7 +11,7 @@ from cmk.base.check_legacy_includes.bvip import *  # pylint: disable=wildcard-im
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-factory_settings["bvip_temp_default_levels"] = {"levels": (50, 60)}
+factory_settings["bvip_temp_default_levels"] = {"levels": (50.0, 60.0)}
 
 
 def inventory_bvip_temp(info):

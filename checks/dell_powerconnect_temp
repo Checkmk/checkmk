@@ -15,7 +15,7 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 # Tested with Dell PowerConnect 5448 and 5424 models.
 
 factory_settings["dell_powerconnect_temp_default_values"] = {
-    "levels": (35, 40),
+    "levels": (35.0, 40.0),
 }
 
 

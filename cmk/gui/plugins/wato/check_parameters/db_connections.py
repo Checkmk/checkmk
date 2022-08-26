@@ -9,87 +9,73 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, Integer, Percentage, TextInput, Transform, Tuple
+from cmk.gui.valuespec import Dictionary, Integer, Percentage, TextInput, Tuple
 
 
-def _transform_connection_type(params):
-    # The old WATO rule did not differentiate between "active" and "idle"
-    # The old levels were refering to the "active" type
-    for metric_type in ("perc", "abs"):
-        if "levels_%s" % metric_type in params.keys():
-            params["levels_%s_active" % metric_type] = params["levels_%s" % metric_type]
-            params.pop("levels_%s" % metric_type)
-
-    return params
-
-
-def _parameter_valuespec_db_connections():
-    return Transform(
-        valuespec=Dictionary(
-            help=_(
-                "This rule allows you to configure the number of maximum concurrent "
-                "connections for a given database."
-            ),
-            elements=[
-                (
-                    "levels_perc_active",
-                    Tuple(
-                        title=_("Percentage of maximum available active connections"),
-                        elements=[
-                            Percentage(
-                                title=_("Warning at"),
-                                # xgettext: no-python-format
-                                unit=_("% of maximum active connections"),
-                            ),
-                            Percentage(
-                                title=_("Critical at"),
-                                # xgettext: no-python-format
-                                unit=_("% of maximum active connections"),
-                            ),
-                        ],
-                    ),
-                ),
-                (
-                    "levels_abs_active",
-                    Tuple(
-                        title=_("Absolute number of active connections"),
-                        elements=[
-                            Integer(title=_("Warning at"), minvalue=0, unit=_("connections")),
-                            Integer(title=_("Critical at"), minvalue=0, unit=_("connections")),
-                        ],
-                    ),
-                ),
-                (
-                    "levels_perc_idle",
-                    Tuple(
-                        title=_("Percentage of maximum available idle connections"),
-                        elements=[
-                            Percentage(
-                                title=_("Warning at"),
-                                # xgettext: no-python-format
-                                unit=_("% of maximum idle connections"),
-                            ),
-                            Percentage(
-                                title=_("Critical at"),
-                                # xgettext: no-python-format
-                                unit=_("% of maximum idle connections"),
-                            ),
-                        ],
-                    ),
-                ),
-                (
-                    "levels_abs_idle",
-                    Tuple(
-                        title=_("Absolute number of idle connections"),
-                        elements=[
-                            Integer(title=_("Warning at"), minvalue=0, unit=_("idle connections")),
-                            Integer(title=_("Critical at"), minvalue=0, unit=_("idle connections")),
-                        ],
-                    ),
-                ),
-            ],
+def _parameter_valuespec_db_connections() -> Dictionary:
+    return Dictionary(
+        help=_(
+            "This rule allows you to configure the number of maximum concurrent "
+            "connections for a given database."
         ),
-        forth=_transform_connection_type,
+        elements=[
+            (
+                "levels_perc_active",
+                Tuple(
+                    title=_("Percentage of maximum available active connections"),
+                    elements=[
+                        Percentage(
+                            title=_("Warning at"),
+                            # xgettext: no-python-format
+                            unit=_("% of maximum active connections"),
+                        ),
+                        Percentage(
+                            title=_("Critical at"),
+                            # xgettext: no-python-format
+                            unit=_("% of maximum active connections"),
+                        ),
+                    ],
+                ),
+            ),
+            (
+                "levels_abs_active",
+                Tuple(
+                    title=_("Absolute number of active connections"),
+                    elements=[
+                        Integer(title=_("Warning at"), minvalue=0, unit=_("connections")),
+                        Integer(title=_("Critical at"), minvalue=0, unit=_("connections")),
+                    ],
+                ),
+            ),
+            (
+                "levels_perc_idle",
+                Tuple(
+                    title=_("Percentage of maximum available idle connections"),
+                    elements=[
+                        Percentage(
+                            title=_("Warning at"),
+                            # xgettext: no-python-format
+                            unit=_("% of maximum idle connections"),
+                        ),
+                        Percentage(
+                            title=_("Critical at"),
+                            # xgettext: no-python-format
+                            unit=_("% of maximum idle connections"),
+                        ),
+                    ],
+                ),
+            ),
+            (
+                "levels_abs_idle",
+                Tuple(
+                    title=_("Absolute number of idle connections"),
+                    elements=[
+                        Integer(title=_("Warning at"), minvalue=0, unit=_("idle connections")),
+                        Integer(title=_("Critical at"), minvalue=0, unit=_("idle connections")),
+                    ],
+                ),
+            ),
+        ],
     )
 
 

@@ -9,28 +9,25 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
-from cmk.gui.valuespec import Age, Dictionary, Transform, Tuple
+from cmk.gui.valuespec import Age, Dictionary, Tuple
 
 
-def _parameter_valuespec_systemtime():
-    return Transform(
-        valuespec=Dictionary(
-            title="Time offset",
-            elements=[
-                (
-                    "levels",
-                    Tuple(
-                        title=_("Levels on time offset"),
-                        elements=[
-                            Age(title=_("Warning at"), default_value=30),
-                            Age(title=_("Critical at"), default_value=60),
-                        ],
-                    ),
+def _parameter_valuespec_systemtime() -> Dictionary:
+    return Dictionary(
+        title="Time offset",
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    title=_("Levels on time offset"),
+                    elements=[
+                        Age(title=_("Warning at"), default_value=30),
+                        Age(title=_("Critical at"), default_value=60),
+                    ],
                 ),
-            ],
-            optional_keys=False,
-        ),
-        forth=lambda v: {"levels": v} if isinstance(v, tuple) else v,
+            ),
+        ],
+        optional_keys=False,
     )
 
 

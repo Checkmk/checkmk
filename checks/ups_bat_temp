@@ -9,7 +9,7 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 from cmk.base.check_legacy_includes.ups_generic import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 factory_settings["ups_bat_temp_default"] = {
-    "levels": (40, 50),
+    "levels": (40.0, 50.0),
 }
 
 

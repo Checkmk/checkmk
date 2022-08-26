@@ -11,16 +11,14 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersApplications,
     RulespecGroupEnforcedServicesApplications,
 )
-from cmk.gui.valuespec import Dictionary, DropdownChoice, TextInput, Transform
+from cmk.gui.valuespec import Dictionary, DropdownChoice, TextInput
 
 rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="local",
         group=RulespecGroupEnforcedServicesApplications,
         item_spec=lambda: TextInput(title=_("Name of local item")),
-        parameter_valuespec=lambda: Transform(
-            valuespec=Dictionary(elements=[]), forth=lambda p: {}
-        ),
+        parameter_valuespec=lambda: Dictionary(elements=[]),
         title=lambda: _("Local checks"),
     )
 )

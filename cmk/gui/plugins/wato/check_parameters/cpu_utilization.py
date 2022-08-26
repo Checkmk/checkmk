@@ -14,7 +14,7 @@ from cmk.gui.plugins.wato.utils import (
     TextInput,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Age, Dictionary, DropdownChoice, Integer, Percentage, Transform, Tuple
+from cmk.gui.valuespec import Age, Dictionary, DropdownChoice, Integer, Percentage, Tuple
 
 
 def cpu_util_elements():
@@ -217,41 +217,15 @@ def _cpu_util_common_elements():
     )
 
 
-def transform_legacy_cpu_utilization_os(params):
-    if "levels" in params:
-        params["util"] = params.pop("levels")
-    return params
-
-
-def _parameter_valuespec_cpu_utilization_os():
-    return Transform(
-        valuespec=_cpu_util_common_elements(),
-        forth=transform_legacy_cpu_utilization_os,
-    )
-
-
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
         check_group_name="cpu_utilization_os",
         group=RulespecGroupCheckParametersOperatingSystem,
         match_type="dict",
-        parameter_valuespec=_parameter_valuespec_cpu_utilization_os,
+        parameter_valuespec=_cpu_util_common_elements,
         title=lambda: _("CPU utilization for simple devices"),
     )
 )
-
-
-def transform_cpu_iowait(params):
-    if isinstance(params, tuple):
-        return {"iowait": params}
-    return params
-
-
-def _parameter_valuespec_cpu_iowait():
-    return Transform(
-        valuespec=_cpu_util_common_elements(),
-        forth=transform_cpu_iowait,
-    )
 
 
 rulespec_registry.register(
@@ -259,42 +233,31 @@ rulespec_registry.register(
         check_group_name="cpu_iowait",
         group=RulespecGroupCheckParametersOperatingSystem,
         match_type="dict",
-        parameter_valuespec=_parameter_valuespec_cpu_iowait,
+        parameter_valuespec=_cpu_util_common_elements,
         title=lambda: _("CPU utilization on Linux/UNIX"),
     )
 )
 
 
-def _transform_cpu_utilization(params):
-    if params is None:
-        return {}
-    if isinstance(params, tuple):
-        return {"util": params}
-    return params
-
-
-def _parameter_valuespec_cpu_utilization():
-    return Transform(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "util",
-                    Tuple(
-                        elements=[
-                            Percentage(title=_("Warning at a utilization of"), default_value=90.0),
-                            Percentage(title=_("Critical at a utilization of"), default_value=95.0),
-                        ],
-                        title=_("Alert on excessive CPU utilization"),
-                        help=_(
-                            "The CPU utilization sums up the percentages of CPU time that is used "
-                            "for user processes and kernel routines over all available cores within "
-                            "the last check interval. The possible range is from 0% to 100%"
-                        ),
+def _parameter_valuespec_cpu_utilization() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "util",
+                Tuple(
+                    elements=[
+                        Percentage(title=_("Warning at a utilization of"), default_value=90.0),
+                        Percentage(title=_("Critical at a utilization of"), default_value=95.0),
+                    ],
+                    title=_("Alert on excessive CPU utilization"),
+                    help=_(
+                        "The CPU utilization sums up the percentages of CPU time that is used "
+                        "for user processes and kernel routines over all available cores within "
+                        "the last check interval. The possible range is from 0% to 100%"
                     ),
                 ),
-            ]
-        ),
-        forth=_transform_cpu_utilization,
+            ),
+        ]
     )
 
 

@@ -8,7 +8,7 @@
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 factory_settings["ipr400_temp_default_levels"] = {
-    "levels": (30, 40),  # reported temperature seems to be near room temperature usually
+    "levels": (30.0, 40.0),  # reported temperature seems to be near room temperature usually
 }
 
 

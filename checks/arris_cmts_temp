@@ -11,7 +11,7 @@ from cmk.base.check_legacy_includes.arris_cmts import *  # pylint: disable=wildc
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-factory_settings["arris_cmts_temp_default_levels"] = {"levels": (40, 46)}
+factory_settings["arris_cmts_temp_default_levels"] = {"levels": (40.0, 46.0)}
 
 
 def inventory_arris_cmts_temp(info):

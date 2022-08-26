@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
-from typing import Any, Dict, List
+from typing import List
 from typing import Optional as _Optional
 from typing import Tuple as _Tuple
-from typing import Union
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -44,23 +42,6 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
-
-
-def transform_if_groups_forth(params):
-    for param in params:
-        if param.get("name"):
-            param["group_name"] = param["name"]
-            del param["name"]
-        if param.get("include_items"):
-            param["items"] = param["include_items"]
-            del param["include_items"]
-        if param.get("single") is not None:
-            if param["single"]:
-                param["group_presence"] = "instead"
-            else:
-                param["group_presence"] = "separate"
-            del param["single"]
-    return params
 
 
 def _vs_item_appearance(title, help_txt):
@@ -350,83 +331,6 @@ def _vs_matching_conditions():
     )
 
 
-def _transform_discovery_if_rules(params):
-
-    use_alias = params.pop("use_alias", None)
-    if use_alias:
-        params["item_appearance"] = "alias"
-    use_desc = params.pop("use_desc", None)
-    if use_desc:
-        params["item_appearance"] = "descr"
-
-    # Up to v1.6, the host rulespec inventory_if_rules had the option to activate the discovery of
-    # the check rmon_stats under this key. However, rmon_stats does honor any of the other options
-    # offered by inventory_if_rules. Therefore, in v2.0, the activation of the discovery of
-    # rmon_stats has been moved to a separate host rulespec (rmon_discovery).
-    params.pop("rmon", None)
-
-    single_interface_discovery_settings = {
-        # pre-2.0 default settings that were effectively added to any user-defined rule, unless the
-        # user specifically configured these fields
-        "item_appearance": "index",
-        "pad_portnumbers": True,
-        **{key: params.pop(key) for key in ["item_appearance", "pad_portnumbers"] if key in params},
-    }
-    # 'matching_conditions' not in params --> check if this is a pre-v2.0 rule, if it is not, it is
-    # ok for this key to be missing
-    if "discovery_single" not in params and "matching_conditions" not in params:
-        params["discovery_single"] = (True, single_interface_discovery_settings)
-
-    if "matching_conditions" not in params:
-        params["matching_conditions"] = (
-            False,
-            {
-                # pre-2.0 default matching conditions that were effectively added to any
-                # user-defined rule, unless the user specifically configured these fields
-                "portstates": ["1"],
-                "porttypes": [
-                    "6",
-                    "32",
-                    "62",
-                    "117",
-                    "127",
-                    "128",
-                    "129",
-                    "180",
-                    "181",
-                    "182",
-                    "205",
-                    "229",
-                ],
-            },
-        )
-    for key in ["match_alias", "match_desc", "portstates", "porttypes"]:
-        if key in params:
-            params["matching_conditions"][1][key] = params.pop(key)
-            params["matching_conditions"] = (False, params["matching_conditions"][1])
-
-    # Up to and including v1.6, port state '9' was used to represent an ifAdminStatus of 2. From
-    # v2.0 onwards, ifAdminStatus is handled completely separately from the port state. Note that
-    # a unique transform is unfortunately not possible here. For example, translating
-    # {'portstates': [1, 2, 9]}
-    # into
-    # {'portstates': [1, 2], 'admin_states': [2]}
-    # might be too restrictive, since we now restrict to ports with ifAdminStatus=2, whereas before,
-    # also ports with for example ifAdminStatus=1 could have matched.
-    matching_conditions_spec = params["matching_conditions"][1]
-    try:
-        matching_conditions_spec.get("portstates", []).remove("9")
-        removed_port_state_9 = True
-    except ValueError:
-        removed_port_state_9 = False
-    # if only port state 9 was selected, a unique transform is possible
-    if removed_port_state_9 and matching_conditions_spec.get("portstates") == []:
-        del matching_conditions_spec["portstates"]
-        matching_conditions_spec["admin_states"] = ["2"]
-
-    return params
-
-
 def _validate_valuespec_inventory_if_rules(value, varprefix):
     if "grouping" not in value and "discovery_single" not in value:
         raise MKUserError(
@@ -437,42 +341,39 @@ def _validate_valuespec_inventory_if_rules(value, varprefix):
         )
 
 
-def _valuespec_inventory_if_rules():
-    return Transform(
-        valuespec=Dictionary(
-            title=_("Network interface and switch port discovery"),
-            help=_(
-                "Configure the discovery of services monitoring network interfaces and switch "
-                "ports. Note that this rule is a somewhat special case compared to most other "
-                "rules in checkmk. Usually, the conditions for applying a rule are configured "
-                "exclusively below in the section 'Conditions'. However, here, you can define "
-                "additional conditions using the options offered by 'Conditions for this rule to "
-                "apply'. These conditions are evaluated on a per-interface basis and allow for "
-                "configuring the discovery of the corresponding services very finely. For example, "
-                "you can make checkmk discover only interfaces whose alias matches the regex 'eth' "
-                "or exclude certain port types or states from being discoverd. Note that saving a "
-                "rule which has only conditions specified is not allowed and will result in an "
-                "error. The reason is that such a rule would have no effect."
-            ),
-            elements=[
-                (
-                    "discovery_single",
-                    _vs_single_discovery(),
-                ),
-                (
-                    "grouping",
-                    _vs_grouping(),
-                ),
-                (
-                    "matching_conditions",
-                    _vs_matching_conditions(),
-                ),
-            ],
-            optional_keys=["discovery_single", "grouping"],
-            default_keys=["discovery_single"],
-            validate=_validate_valuespec_inventory_if_rules,
+def _valuespec_inventory_if_rules() -> Dictionary:
+    return Dictionary(
+        title=_("Network interface and switch port discovery"),
+        help=_(
+            "Configure the discovery of services monitoring network interfaces and switch "
+            "ports. Note that this rule is a somewhat special case compared to most other "
+            "rules in checkmk. Usually, the conditions for applying a rule are configured "
+            "exclusively below in the section 'Conditions'. However, here, you can define "
+            "additional conditions using the options offered by 'Conditions for this rule to "
+            "apply'. These conditions are evaluated on a per-interface basis and allow for "
+            "configuring the discovery of the corresponding services very finely. For example, "
+            "you can make checkmk discover only interfaces whose alias matches the regex 'eth' "
+            "or exclude certain port types or states from being discoverd. Note that saving a "
+            "rule which has only conditions specified is not allowed and will result in an "
+            "error. The reason is that such a rule would have no effect."
         ),
-        forth=_transform_discovery_if_rules,
+        elements=[
+            (
+                "discovery_single",
+                _vs_single_discovery(),
+            ),
+            (
+                "grouping",
+                _vs_grouping(),
+            ),
+            (
+                "matching_conditions",
+                _vs_matching_conditions(),
+            ),
+        ],
+        optional_keys=["discovery_single", "grouping"],
+        default_keys=["discovery_single"],
+        validate=_validate_valuespec_inventory_if_rules,
     )
 
 
@@ -538,54 +439,51 @@ vs_elements_if_groups_group: List[DictionaryEntry] = [
 ]
 
 
-def _valuespec_if_groups():
+def _valuespec_if_groups() -> Alternative:
     node_name_elements: List[DictionaryEntry] = [("node_name", TextInput(title=_("Node name")))]
-    return Transform(
-        valuespec=Alternative(
-            title=_("Network interface groups"),
-            help=_(
-                "Normally the Interface checks create a single service for interface. "
-                "By defining if-group patterns multiple interfaces can be combined together. "
-                "A single service is created for this interface group showing the total traffic amount "
-                "of its members. You can configure if interfaces which are identified as group interfaces "
-                "should not show up as single service. You can restrict grouped interfaces by iftype and the "
-                "item name of the single interface."
-            ),
-            elements=[
-                ListOf(
-                    valuespec=Dictionary(
-                        elements=vs_elements_if_groups_group + vs_elements_if_groups_matches,
-                        required_keys=["group_name", "group_presence"],
-                    ),
-                    title=_("Groups on single host"),
-                    add_label=_("Add pattern"),
-                ),
-                ListOf(
-                    valuespec=Dictionary(
-                        elements=vs_elements_if_groups_group
-                        + [
-                            (
-                                "node_patterns",
-                                ListOf(
-                                    title=_("Patterns for each node"),
-                                    add_label=_("Add pattern"),
-                                    valuespec=Dictionary(
-                                        elements=node_name_elements + vs_elements_if_groups_matches,
-                                        required_keys=["node_name"],
-                                    ),
-                                    allow_empty=False,
-                                ),
-                            )
-                        ],
-                        optional_keys=[],
-                    ),
-                    magic="@!!",
-                    title=_("Groups on cluster"),
-                    add_label=_("Add pattern"),
-                ),
-            ],
+    return Alternative(
+        title=_("Network interface groups"),
+        help=_(
+            "Normally the Interface checks create a single service for interface. "
+            "By defining if-group patterns multiple interfaces can be combined together. "
+            "A single service is created for this interface group showing the total traffic amount "
+            "of its members. You can configure if interfaces which are identified as group interfaces "
+            "should not show up as single service. You can restrict grouped interfaces by iftype and the "
+            "item name of the single interface."
         ),
-        forth=transform_if_groups_forth,
+        elements=[
+            ListOf(
+                valuespec=Dictionary(
+                    elements=vs_elements_if_groups_group + vs_elements_if_groups_matches,
+                    required_keys=["group_name", "group_presence"],
+                ),
+                title=_("Groups on single host"),
+                add_label=_("Add pattern"),
+            ),
+            ListOf(
+                valuespec=Dictionary(
+                    elements=vs_elements_if_groups_group
+                    + [
+                        (
+                            "node_patterns",
+                            ListOf(
+                                title=_("Patterns for each node"),
+                                add_label=_("Add pattern"),
+                                valuespec=Dictionary(
+                                    elements=node_name_elements + vs_elements_if_groups_matches,
+                                    required_keys=["node_name"],
+                                ),
+                                allow_empty=False,
+                            ),
+                        )
+                    ],
+                    optional_keys=[],
+                ),
+                magic="@!!",
+                title=_("Groups on cluster"),
+                add_label=_("Add pattern"),
+            ),
+        ],
     )
 
 
@@ -668,124 +566,6 @@ def _vs_packet_levels(
 
 def _item_spec_if():
     return TextInput(title=_("Port"), allow_empty=False)
-
-
-def _transform_if_check_parameters(v):  # pylint: disable=too-many-branches
-
-    # TODO: This is a workaround which makes sure input arguments are not getting altered.
-    #       A nice implementation would return a new dict based on the input
-    v = copy.deepcopy(v)
-
-    new_traffic: List[_Tuple[str, _Tuple[str, _Tuple[str, _Tuple[Union[int, float], Any]]]]] = []
-
-    if "traffic" in v and not isinstance(v["traffic"], list):
-        warn, crit = v["traffic"]
-        if isinstance(warn, int):
-            new_traffic.append(("both", ("upper", ("abs", (warn, crit)))))
-        elif isinstance(warn, float):
-            new_traffic.append(("both", ("upper", ("perc", (warn, crit)))))
-
-    if "traffic_minimum" in v:
-        warn, crit = v["traffic_minimum"]
-        if isinstance(warn, int):
-            new_traffic.append(("both", ("lower", ("abs", (warn, crit)))))
-        elif isinstance(warn, float):
-            new_traffic.append(("both", ("lower", ("perc", (warn, crit)))))
-        del v["traffic_minimum"]
-
-    if new_traffic:
-        v["traffic"] = new_traffic
-
-    if "discards" in v:
-        warn, crit = v["discards"]
-        if isinstance(warn, int):
-            v["discards"] = (float(warn), float(crit))
-
-    _transform_packet_levels(v, "errors", "errors", "both")
-
-    # The following 4 calls transform rule entries that have been introduced in
-    # Checkmk 2.0.0i1. and handle an update from 2.0.0i1/b1 to 2.0.0b3 or newer.
-    # It should be safe to remove these transformations after 2.1.0
-    _transform_packet_levels(v, "errors_in", "errors", "in")
-    _transform_packet_levels(v, "errors_out", "errors", "out")
-    _transform_packet_levels(v, "multicast", "multicast", "both")
-    _transform_packet_levels(v, "broadcast", "broadcast", "both")
-
-    # Up to and including v1.6, port state '9' was used to represent an ifAdminStatus of 2. From
-    # v1.7 onwards, ifAdminStatus is handled completely separately from the port state. Note that
-    # a unique transform is unfortunately not possible here. For example, translating
-    # {'state': [1, 2, 9]}
-    # into
-    # {'state': [1, 2], 'admin_state': [2]}
-    # might be too restrictive, since now, only ports with ifAdminStatus=2 are OK, whereas before,
-    # also ports with ifAdminStatus=1 could have been OK.
-    states = v.get("state", [])
-    try:
-        states.remove("9")
-        removed_port_state_9 = True
-    # AttributeError --> states = None --> means 'ignore the interface status'
-    except (ValueError, AttributeError):
-        removed_port_state_9 = False
-    # if only port state 9 was selected, a unique transform is possible
-    if removed_port_state_9 and v.get("state") == []:
-        del v["state"]
-        v["admin_state"] = ["2"]
-
-    # map_operstates can be transformed uniquely
-    map_operstates = v.get("map_operstates", [])
-    mon_state_9 = None
-    for oper_states, mon_state in map_operstates:
-        if "9" in oper_states:
-            mon_state_9 = mon_state
-            oper_states.remove("9")
-    if map_operstates:
-        v["map_operstates"] = [
-            mapping_oper_states for mapping_oper_states in map_operstates if mapping_oper_states[0]
-        ]
-        if not v["map_operstates"]:
-            del v["map_operstates"]
-    if mon_state_9:
-        v["map_admin_states"] = [(["2"], mon_state_9)]
-
-    # Up to 2.0.0p5, there were only independent mappings of operational and admin states. Then, we
-    # introduced the option to define either independent or combined mappings.
-    _transform_state_mappings(v)
-
-    return v
-
-
-def _transform_packet_levels(  # type:ignore[no-untyped-def]
-    vs: dict,
-    old_name: str,
-    new_name: str,
-    direction: str,
-):
-    if old_name in vs and not isinstance(vs[old_name], dict):
-        (warn, crit) = vs[old_name]
-        new_value = ("abs", (warn, crit)) if isinstance(warn, int) else ("perc", (warn, crit))
-        if new_name in vs and isinstance(vs[new_name], dict):
-            vs[new_name][direction] = new_value
-        else:
-            vs[new_name] = {direction: new_value}
-
-        if old_name != new_name:
-            del vs[old_name]
-
-
-def _transform_state_mappings(v: Dict[str, Any]) -> None:
-    if "state_mappings" in v or ("map_operstates" not in v and "map_admin_states" not in v):
-        return
-    v["state_mappings"] = (
-        "independent_mappings",
-        {
-            independent_mapping_key: v.pop(independent_mapping_key)
-            for independent_mapping_key in (
-                "map_operstates",
-                "map_admin_states",
-            )
-            if independent_mapping_key in v
-        },
-    )
 
 
 PERC_ERROR_LEVELS = (0.01, 0.1)
@@ -949,374 +729,367 @@ def _vs_state_mappings() -> CascadingDropdown:
     )
 
 
-def _parameter_valuespec_if():
-    # Transform old traffic related levels which used "traffic" and "traffic_minimum"
-    # keys where each was configured with an Alternative valuespec
-    return Transform(
-        valuespec=Dictionary(
-            ignored_keys=[
-                "aggregate",
-                "discovered_oper_status",
-                "discovered_admin_status",
-                "discovered_speed",
-            ],  # Created by discovery
-            elements=[
-                (
-                    "errors",
-                    _vs_alternative_levels(
-                        title=_("Levels for error rates"),
-                        help=_(
-                            "These levels make the check go warning or critical whenever the "
-                            "<b>percentual error rate</b> or the <b>absolute error rate</b> of the monitored interface reaches "
-                            "the given bounds. The percentual error rate is computed by "
-                            "the formula <b>(errors / (unicast + non-unicast + errors))*100</b> "
-                        ),
-                        percent_levels=PERC_ERROR_LEVELS,
-                        percent_detail=_(" (in relation to all packets (successful + error))"),
-                        abs_detail=_(" (in errors per second)"),
+def _parameter_valuespec_if() -> Dictionary:
+    return Dictionary(
+        ignored_keys=[
+            "aggregate",
+            "discovered_oper_status",
+            "discovered_admin_status",
+            "discovered_speed",
+        ],  # Created by discovery
+        elements=[
+            (
+                "errors",
+                _vs_alternative_levels(
+                    title=_("Levels for error rates"),
+                    help=_(
+                        "These levels make the check go warning or critical whenever the "
+                        "<b>percentual error rate</b> or the <b>absolute error rate</b> of the monitored interface reaches "
+                        "the given bounds. The percentual error rate is computed by "
+                        "the formula <b>(errors / (unicast + non-unicast + errors))*100</b> "
+                    ),
+                    percent_levels=PERC_ERROR_LEVELS,
+                    percent_detail=_(" (in relation to all packets (successful + error))"),
+                    abs_detail=_(" (in errors per second)"),
+                ),
+            ),
+            (
+                "speed",
+                OptionalDropdownChoice(
+                    title=_("Operating speed"),
+                    help=_(
+                        "If you use this parameter then the check goes warning if the "
+                        "interface is not operating at the expected speed (e.g. it "
+                        "is working with 100Mbit/s instead of 1Gbit/s.<b>Note:</b> "
+                        "some interfaces do not provide speed information. In such cases "
+                        "this setting is used as the assumed speed when it comes to "
+                        "traffic monitoring (see below)."
+                    ),
+                    choices=[
+                        (None, _("ignore speed")),
+                        (10000000, "10 Mbit/s"),
+                        (100000000, "100 Mbit/s"),
+                        (1000000000, "1 Gbit/s"),
+                        (10000000000, "10 Gbit/s"),
+                    ],
+                    otherlabel=_("specify manually ->"),
+                    explicit=Integer(
+                        title=_("Other speed in bits per second"),
+                        label=_("Bits per second"),
                     ),
                 ),
-                (
-                    "speed",
-                    OptionalDropdownChoice(
-                        title=_("Operating speed"),
-                        help=_(
-                            "If you use this parameter then the check goes warning if the "
-                            "interface is not operating at the expected speed (e.g. it "
-                            "is working with 100Mbit/s instead of 1Gbit/s.<b>Note:</b> "
-                            "some interfaces do not provide speed information. In such cases "
-                            "this setting is used as the assumed speed when it comes to "
-                            "traffic monitoring (see below)."
-                        ),
+            ),
+            (
+                "state",
+                Optional(
+                    valuespec=ListChoice(
+                        title=_("Allowed operational states:"),
+                        choices=defines.interface_oper_states(),
+                        allow_empty=False,
+                    ),
+                    title=_("Operational state"),
+                    help=_(
+                        "If you activate the monitoring of the operational state "
+                        "(<tt>ifOperStatus</tt>), the check will go critical if the current "
+                        "state of the interface does not match one of the expected states."
+                    ),
+                    label=_("Ignore the operational state"),
+                    none_label=_("ignore"),
+                    negate=True,
+                ),
+            ),
+            (
+                "admin_state",
+                Optional(
+                    valuespec=ListChoice(
+                        title=_("Allowed admin states:"),
+                        choices=_admin_states(),
+                        allow_empty=False,
+                    ),
+                    title=_("Admin state (SNMP with 64-bit counters only)"),
+                    help=(
+                        _(
+                            "If you activate the monitoring of the admin state "
+                            "(<tt>ifAdminStatus</tt>), the check will go critical if the "
+                            "current state of the interface does not match one of the expected "
+                            "states."
+                        )
+                        + " "
+                        + _note_for_admin_state_options()
+                    ),
+                    label=_("Ignore the admin state"),
+                    none_label=_("ignore"),
+                    negate=True,
+                ),
+            ),
+            (
+                "state_mappings",
+                _vs_state_mappings(),
+            ),
+            (
+                "assumed_speed_in",
+                OptionalDropdownChoice(
+                    title=_("Assumed input speed"),
+                    help=_(
+                        "If the automatic detection of the link speed does not work "
+                        "or the switch's capabilities are throttled because of the network setup "
+                        "you can set the assumed speed here."
+                    ),
+                    choices=[
+                        (None, _("ignore speed")),
+                        (10000000, "10 Mbit/s"),
+                        (100000000, "100 Mbit/s"),
+                        (1000000000, "1 Gbit/s"),
+                        (10000000000, "10 Gbit/s"),
+                    ],
+                    otherlabel=_("specify manually ->"),
+                    default_value=16000000,
+                    explicit=Integer(
+                        title=_("Other speed in bits per second"),
+                        label=_("Bits per second"),
+                        size=12,
+                    ),
+                ),
+            ),
+            (
+                "assumed_speed_out",
+                OptionalDropdownChoice(
+                    title=_("Assumed output speed"),
+                    help=_(
+                        "If the automatic detection of the link speed does not work "
+                        "or the switch's capabilities are throttled because of the network setup "
+                        "you can set the assumed speed here."
+                    ),
+                    choices=[
+                        (None, _("ignore speed")),
+                        (10000000, "10 Mbit/s"),
+                        (100000000, "100 Mbit/s"),
+                        (1000000000, "1 Gbit/s"),
+                        (10000000000, "10 Gbit/s"),
+                    ],
+                    otherlabel=_("specify manually ->"),
+                    default_value=1500000,
+                    explicit=Integer(
+                        title=_("Other speed in bits per second"),
+                        label=_("Bits per second"),
+                        size=12,
+                    ),
+                ),
+            ),
+            (
+                "unit",
+                DropdownChoice(
+                    title=_("Measurement unit"),
+                    help=_("Here you can specifiy the measurement unit of the network interface"),
+                    default_value="byte",
+                    choices=[
+                        ("bit", _("Bits")),
+                        ("byte", _("Bytes")),
+                    ],
+                ),
+            ),
+            (
+                "infotext_format",
+                DropdownChoice(
+                    title=_("Change infotext in check output"),
+                    help=_(
+                        "This setting allows you to modify the information text which is displayed between "
+                        "the two brackets in the check output. Please note that this setting does not work for "
+                        "grouped interfaces, since the additional information of grouped interfaces is different"
+                    ),
+                    choices=[
+                        ("alias", _("Show alias")),
+                        ("description", _("Show description")),
+                        ("alias_and_description", _("Show alias and description")),
+                        ("alias_or_description", _("Show alias if set, else description")),
+                        ("desription_or_alias", _("Show description if set, else alias")),
+                        ("hide", _("Hide infotext")),
+                    ],
+                ),
+            ),
+            (
+                "traffic",
+                ListOf(
+                    valuespec=CascadingDropdown(
+                        title=_("Direction"),
+                        orientation="horizontal",
                         choices=[
-                            (None, _("ignore speed")),
-                            (10000000, "10 Mbit/s"),
-                            (100000000, "100 Mbit/s"),
-                            (1000000000, "1 Gbit/s"),
-                            (10000000000, "10 Gbit/s"),
-                        ],
-                        otherlabel=_("specify manually ->"),
-                        explicit=Integer(
-                            title=_("Other speed in bits per second"),
-                            label=_("Bits per second"),
-                        ),
-                    ),
-                ),
-                (
-                    "state",
-                    Optional(
-                        valuespec=ListChoice(
-                            title=_("Allowed operational states:"),
-                            choices=defines.interface_oper_states(),
-                            allow_empty=False,
-                        ),
-                        title=_("Operational state"),
-                        help=_(
-                            "If you activate the monitoring of the operational state "
-                            "(<tt>ifOperStatus</tt>), the check will go critical if the current "
-                            "state of the interface does not match one of the expected states."
-                        ),
-                        label=_("Ignore the operational state"),
-                        none_label=_("ignore"),
-                        negate=True,
-                    ),
-                ),
-                (
-                    "admin_state",
-                    Optional(
-                        valuespec=ListChoice(
-                            title=_("Allowed admin states:"),
-                            choices=_admin_states(),
-                            allow_empty=False,
-                        ),
-                        title=_("Admin state (SNMP with 64-bit counters only)"),
-                        help=(
-                            _(
-                                "If you activate the monitoring of the admin state "
-                                "(<tt>ifAdminStatus</tt>), the check will go critical if the "
-                                "current state of the interface does not match one of the expected "
-                                "states."
-                            )
-                            + " "
-                            + _note_for_admin_state_options()
-                        ),
-                        label=_("Ignore the admin state"),
-                        none_label=_("ignore"),
-                        negate=True,
-                    ),
-                ),
-                (
-                    "state_mappings",
-                    _vs_state_mappings(),
-                ),
-                (
-                    "assumed_speed_in",
-                    OptionalDropdownChoice(
-                        title=_("Assumed input speed"),
-                        help=_(
-                            "If the automatic detection of the link speed does not work "
-                            "or the switch's capabilities are throttled because of the network setup "
-                            "you can set the assumed speed here."
-                        ),
-                        choices=[
-                            (None, _("ignore speed")),
-                            (10000000, "10 Mbit/s"),
-                            (100000000, "100 Mbit/s"),
-                            (1000000000, "1 Gbit/s"),
-                            (10000000000, "10 Gbit/s"),
-                        ],
-                        otherlabel=_("specify manually ->"),
-                        default_value=16000000,
-                        explicit=Integer(
-                            title=_("Other speed in bits per second"),
-                            label=_("Bits per second"),
-                            size=12,
-                        ),
-                    ),
-                ),
-                (
-                    "assumed_speed_out",
-                    OptionalDropdownChoice(
-                        title=_("Assumed output speed"),
-                        help=_(
-                            "If the automatic detection of the link speed does not work "
-                            "or the switch's capabilities are throttled because of the network setup "
-                            "you can set the assumed speed here."
-                        ),
-                        choices=[
-                            (None, _("ignore speed")),
-                            (10000000, "10 Mbit/s"),
-                            (100000000, "100 Mbit/s"),
-                            (1000000000, "1 Gbit/s"),
-                            (10000000000, "10 Gbit/s"),
-                        ],
-                        otherlabel=_("specify manually ->"),
-                        default_value=1500000,
-                        explicit=Integer(
-                            title=_("Other speed in bits per second"),
-                            label=_("Bits per second"),
-                            size=12,
-                        ),
-                    ),
-                ),
-                (
-                    "unit",
-                    DropdownChoice(
-                        title=_("Measurement unit"),
-                        help=_(
-                            "Here you can specifiy the measurement unit of the network interface"
-                        ),
-                        default_value="byte",
-                        choices=[
-                            ("bit", _("Bits")),
-                            ("byte", _("Bytes")),
+                            ("both", _("In / Out"), vs_interface_traffic()),
+                            ("in", _("In"), vs_interface_traffic()),
+                            ("out", _("Out"), vs_interface_traffic()),
                         ],
                     ),
-                ),
-                (
-                    "infotext_format",
-                    DropdownChoice(
-                        title=_("Change infotext in check output"),
-                        help=_(
-                            "This setting allows you to modify the information text which is displayed between "
-                            "the two brackets in the check output. Please note that this setting does not work for "
-                            "grouped interfaces, since the additional information of grouped interfaces is different"
-                        ),
-                        choices=[
-                            ("alias", _("Show alias")),
-                            ("description", _("Show description")),
-                            ("alias_and_description", _("Show alias and description")),
-                            ("alias_or_description", _("Show alias if set, else description")),
-                            ("desription_or_alias", _("Show description if set, else alias")),
-                            ("hide", _("Hide infotext")),
-                        ],
+                    title=_("Used bandwidth (minimum or maximum traffic)"),
+                    help=_(
+                        "Setting levels on the used bandwidth is optional. If you do set "
+                        "levels you might also consider using averaging."
                     ),
                 ),
-                (
-                    "traffic",
-                    ListOf(
-                        valuespec=CascadingDropdown(
-                            title=_("Direction"),
-                            orientation="horizontal",
-                            choices=[
-                                ("both", _("In / Out"), vs_interface_traffic()),
-                                ("in", _("In"), vs_interface_traffic()),
-                                ("out", _("Out"), vs_interface_traffic()),
-                            ],
-                        ),
-                        title=_("Used bandwidth (minimum or maximum traffic)"),
-                        help=_(
-                            "Setting levels on the used bandwidth is optional. If you do set "
-                            "levels you might also consider using averaging."
-                        ),
+            ),
+            (
+                "total_traffic",
+                Dictionary(
+                    title=_("Activate total bandwidth metric (sum of in and out)"),
+                    help=_(
+                        "By activating this item, the sum of incoming and outgoing traffic will "
+                        "be monitored via a seperate metric. Setting levels on the used total bandwidth "
+                        "is optional. If you do set levels you might also consider using averaging."
                     ),
-                ),
-                (
-                    "total_traffic",
-                    Dictionary(
-                        title=_("Activate total bandwidth metric (sum of in and out)"),
-                        help=_(
-                            "By activating this item, the sum of incoming and outgoing traffic will "
-                            "be monitored via a seperate metric. Setting levels on the used total bandwidth "
-                            "is optional. If you do set levels you might also consider using averaging."
-                        ),
-                        elements=[
-                            (
-                                "levels",
-                                ListOf(
-                                    valuespec=vs_interface_traffic(),
-                                    title=_("Provide levels"),
-                                    help=_(
-                                        "Levels on the total bandwidth will act the same way as they do for "
-                                        "in/out bandwidth."
-                                    ),
+                    elements=[
+                        (
+                            "levels",
+                            ListOf(
+                                valuespec=vs_interface_traffic(),
+                                title=_("Provide levels"),
+                                help=_(
+                                    "Levels on the total bandwidth will act the same way as they do for "
+                                    "in/out bandwidth."
                                 ),
                             ),
-                        ],
-                        optional_keys=["levels"],
-                    ),
-                ),
-                (
-                    "average",
-                    Integer(
-                        title=_("Average values for used bandwidth"),
-                        help=_(
-                            "By activating the computation of averages, the levels on "
-                            "traffic and speed are applied to the averaged value. That "
-                            "way you can make the check react only on long-time changes, "
-                            "not on one-minute events."
                         ),
-                        unit=_("minutes"),
-                        minvalue=1,
-                        default_value=15,
-                    ),
+                    ],
+                    optional_keys=["levels"],
                 ),
-                (
-                    "nucasts",
-                    Tuple(
-                        title=_("Non-unicast packet rates"),
-                        help=_(
-                            "Setting levels on non-unicast packet rates is optional. This may help "
-                            "to detect broadcast storms and other unwanted traffic."
-                        ),
-                        elements=[
-                            Integer(title=_("Warning at"), unit=_("pkts / sec")),
-                            Integer(title=_("Critical at"), unit=_("pkts / sec")),
-                        ],
+            ),
+            (
+                "average",
+                Integer(
+                    title=_("Average values for used bandwidth"),
+                    help=_(
+                        "By activating the computation of averages, the levels on "
+                        "traffic and speed are applied to the averaged value. That "
+                        "way you can make the check react only on long-time changes, "
+                        "not on one-minute events."
                     ),
+                    unit=_("minutes"),
+                    minvalue=1,
+                    default_value=15,
                 ),
-                (
-                    "unicast",
-                    _vs_alternative_levels(
-                        title=_("Unicast packet rates"),
-                        help=_(
-                            "These levels make the check go warning or critical whenever the "
-                            "<b>percentual packet rate</b> or the <b>absolute packet "
-                            "rate</b> of the monitored interface reaches the given "
-                            "bounds. The percentual packet rate is computed by "
-                            "the formula <b>(unicast / (unicast + non-unicast))*100</b>"
-                        ),
-                        percent_levels=PERC_PKG_LEVELS,
-                        percent_detail=_(" (in relation to all successful packets)"),
-                        abs_detail=_(" (in packets per second)"),
+            ),
+            (
+                "nucasts",
+                Tuple(
+                    title=_("Non-unicast packet rates"),
+                    help=_(
+                        "Setting levels on non-unicast packet rates is optional. This may help "
+                        "to detect broadcast storms and other unwanted traffic."
                     ),
+                    elements=[
+                        Integer(title=_("Warning at"), unit=_("pkts / sec")),
+                        Integer(title=_("Critical at"), unit=_("pkts / sec")),
+                    ],
                 ),
-                (
-                    "multicast",
-                    _vs_alternative_levels(
-                        title=_("Multicast packet rates"),
-                        help=_(
-                            "These levels make the check go warning or critical whenever the "
-                            "<b>percentual packet rate</b> or the <b>absolute packet "
-                            "rate</b> of the monitored interface reaches the given "
-                            "bounds. The percentual packet rate is computed by "
-                            "the formula <b>(multicast / (unicast + non-unicast))*100</b>"
-                        ),
-                        percent_levels=PERC_PKG_LEVELS,
-                        percent_detail=_(" (in relation to all successful packets)"),
-                        abs_detail=_(" (in packets per second)"),
+            ),
+            (
+                "unicast",
+                _vs_alternative_levels(
+                    title=_("Unicast packet rates"),
+                    help=_(
+                        "These levels make the check go warning or critical whenever the "
+                        "<b>percentual packet rate</b> or the <b>absolute packet "
+                        "rate</b> of the monitored interface reaches the given "
+                        "bounds. The percentual packet rate is computed by "
+                        "the formula <b>(unicast / (unicast + non-unicast))*100</b>"
                     ),
+                    percent_levels=PERC_PKG_LEVELS,
+                    percent_detail=_(" (in relation to all successful packets)"),
+                    abs_detail=_(" (in packets per second)"),
                 ),
-                (
-                    "broadcast",
-                    _vs_alternative_levels(
-                        title=_("Broadcast packet rates"),
-                        help=_(
-                            "These levels make the check go warning or critical whenever the "
-                            "<b>percentual packet rate</b> or the <b>absolute packet "
-                            "rate</b> of the monitored interface reaches the given "
-                            "bounds. The percentual packet rate is computed by "
-                            "the formula <b>(broadcast / (unicast + non-unicast))*100</b>"
-                        ),
-                        percent_levels=PERC_PKG_LEVELS,
-                        percent_detail=_(" (in relation to all successful packets)"),
-                        abs_detail=_(" (in packets per second)"),
+            ),
+            (
+                "multicast",
+                _vs_alternative_levels(
+                    title=_("Multicast packet rates"),
+                    help=_(
+                        "These levels make the check go warning or critical whenever the "
+                        "<b>percentual packet rate</b> or the <b>absolute packet "
+                        "rate</b> of the monitored interface reaches the given "
+                        "bounds. The percentual packet rate is computed by "
+                        "the formula <b>(multicast / (unicast + non-unicast))*100</b>"
                     ),
+                    percent_levels=PERC_PKG_LEVELS,
+                    percent_detail=_(" (in relation to all successful packets)"),
+                    abs_detail=_(" (in packets per second)"),
                 ),
-                (
-                    "average_bm",
-                    Integer(
-                        title=_("Average values for broad- and multicast packet rates"),
-                        help=_(
-                            "By activating the computation of averages, the levels on "
-                            "broad- and multicast packet rates are applied to "
-                            "the averaged value. That way you can make the check react only on long-time "
-                            "changes, not on one-minute events."
-                        ),
-                        unit=_("minutes"),
-                        minvalue=1,
-                        default_value=15,
+            ),
+            (
+                "broadcast",
+                _vs_alternative_levels(
+                    title=_("Broadcast packet rates"),
+                    help=_(
+                        "These levels make the check go warning or critical whenever the "
+                        "<b>percentual packet rate</b> or the <b>absolute packet "
+                        "rate</b> of the monitored interface reaches the given "
+                        "bounds. The percentual packet rate is computed by "
+                        "the formula <b>(broadcast / (unicast + non-unicast))*100</b>"
                     ),
+                    percent_levels=PERC_PKG_LEVELS,
+                    percent_detail=_(" (in relation to all successful packets)"),
+                    abs_detail=_(" (in packets per second)"),
                 ),
-                (
-                    "discards",
-                    Tuple(
-                        title=_("Absolute levels for discards rates"),
-                        elements=[
-                            Float(title=_("Warning at"), unit=_("discards")),
-                            Float(title=_("Critical at"), unit=_("discards")),
-                        ],
+            ),
+            (
+                "average_bm",
+                Integer(
+                    title=_("Average values for broad- and multicast packet rates"),
+                    help=_(
+                        "By activating the computation of averages, the levels on "
+                        "broad- and multicast packet rates are applied to "
+                        "the averaged value. That way you can make the check react only on long-time "
+                        "changes, not on one-minute events."
                     ),
+                    unit=_("minutes"),
+                    minvalue=1,
+                    default_value=15,
                 ),
-                (
-                    "match_same_speed",
-                    DropdownChoice(
-                        title=_("Speed of interface groups (Netapp only)"),
-                        help=_(
-                            "Choose the behaviour for different interface speeds in "
-                            'interface groups. The default is "Check and WARN". This '
-                            "feature is currently only supported by the check "
-                            "netapp_api_if."
-                        ),
-                        choices=[
-                            ("check_and_warn", _("Check and WARN")),
-                            ("check_and_crit", _("Check and CRIT")),
-                            ("check_and_display", _("Check and display only")),
-                            ("dont_show_and_check", _("Don't show and check")),
-                        ],
+            ),
+            (
+                "discards",
+                Tuple(
+                    title=_("Absolute levels for discards rates"),
+                    elements=[
+                        Float(title=_("Warning at"), unit=_("discards")),
+                        Float(title=_("Critical at"), unit=_("discards")),
+                    ],
+                ),
+            ),
+            (
+                "match_same_speed",
+                DropdownChoice(
+                    title=_("Speed of interface groups (Netapp only)"),
+                    help=_(
+                        "Choose the behaviour for different interface speeds in "
+                        'interface groups. The default is "Check and WARN". This '
+                        "feature is currently only supported by the check "
+                        "netapp_api_if."
                     ),
+                    choices=[
+                        ("check_and_warn", _("Check and WARN")),
+                        ("check_and_crit", _("Check and CRIT")),
+                        ("check_and_display", _("Check and display only")),
+                        ("dont_show_and_check", _("Don't show and check")),
+                    ],
                 ),
-                (
-                    "home_port",
-                    DropdownChoice(
-                        title=_("Is-Home state (Netapp only)"),
-                        help=_(
-                            "Choose the behaviour when the current port is not the "
-                            "home port of the respective interface. The default is "
-                            '"Check and Display". This feature is currently only '
-                            "supported by the check netapp_api_if."
-                        ),
-                        choices=[
-                            ("check_and_warn", _("Check and WARN")),
-                            ("check_and_crit", _("Check and CRIT")),
-                            ("check_and_display", _("Check and display only")),
-                            ("dont_show_and_check", _("Don't show home port info")),
-                        ],
+            ),
+            (
+                "home_port",
+                DropdownChoice(
+                    title=_("Is-Home state (Netapp only)"),
+                    help=_(
+                        "Choose the behaviour when the current port is not the "
+                        "home port of the respective interface. The default is "
+                        '"Check and Display". This feature is currently only '
+                        "supported by the check netapp_api_if."
                     ),
+                    choices=[
+                        ("check_and_warn", _("Check and WARN")),
+                        ("check_and_crit", _("Check and CRIT")),
+                        ("check_and_display", _("Check and display only")),
+                        ("dont_show_and_check", _("Don't show home port info")),
+                    ],
                 ),
-            ],
-        ),
-        forth=_transform_if_check_parameters,
+            ),
+        ],
     )
 
 

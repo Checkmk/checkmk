@@ -9,7 +9,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, Float, Percentage, TextInput, Transform, Tuple
+from cmk.gui.valuespec import Dictionary, Float, Percentage, TextInput, Tuple
 
 
 def _item_spec_jvm_gc():
@@ -20,45 +20,31 @@ def _item_spec_jvm_gc():
     )
 
 
-def transform_units(params):
-    """transform 1/min to 1/s and ms/min to %"""
-    if "CollectionTime" in params:
-        ms_per_min = params.pop("CollectionTime")
-        params["collection_time"] = (ms_per_min[0] / 600.0, ms_per_min[1] / 600.0)
-    if "CollectionCount" in params:
-        count_rate_per_min = params.pop("CollectionCount")
-        params["collection_count"] = (count_rate_per_min[0] / 60.0, count_rate_per_min[1] / 60.0)
-    return params
-
-
-def _parameter_valuespec_jvm_gc():
-    return Transform(
-        valuespec=Dictionary(
-            help=_("This ruleset also covers Tomcat, Jolokia and JMX. "),
-            elements=[
-                (
-                    "collection_time",
-                    Tuple(
-                        title=_("Time spent collecting garbage in percent"),
-                        elements=[
-                            Percentage(title=_("Warning at")),
-                            Percentage(title=_("Critical at")),
-                        ],
-                    ),
+def _parameter_valuespec_jvm_gc() -> Dictionary:
+    return Dictionary(
+        help=_("This ruleset also covers Tomcat, Jolokia and JMX. "),
+        elements=[
+            (
+                "collection_time",
+                Tuple(
+                    title=_("Time spent collecting garbage in percent"),
+                    elements=[
+                        Percentage(title=_("Warning at")),
+                        Percentage(title=_("Critical at")),
+                    ],
                 ),
-                (
-                    "collection_count",
-                    Tuple(
-                        title=_("Count of garbage collections per second"),
-                        elements=[
-                            Float(title=_("Warning at")),
-                            Float(title=_("Critical at")),
-                        ],
-                    ),
+            ),
+            (
+                "collection_count",
+                Tuple(
+                    title=_("Count of garbage collections per second"),
+                    elements=[
+                        Float(title=_("Warning at")),
+                        Float(title=_("Critical at")),
+                    ],
                 ),
-            ],
-        ),
-        forth=transform_units,
+            ),
+        ],
     )
 
 

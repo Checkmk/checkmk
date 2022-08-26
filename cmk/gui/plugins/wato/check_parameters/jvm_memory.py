@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Iterable, Mapping
+from typing import Iterable
 from typing import Tuple as TupleType
-from typing import Type, Union
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -13,7 +12,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, Filesize, Percentage, TextInput, Transform, Tuple
+from cmk.gui.valuespec import Dictionary, Filesize, Percentage, TextInput, Tuple
 
 
 def _item_spec_jvm_memory() -> TextInput:
@@ -22,54 +21,6 @@ def _item_spec_jvm_memory() -> TextInput:
         help=_("The name of the application server"),
         allow_empty=False,
     )
-
-
-def _transform_legacy_parameters_jvm_memory(
-    params: Union[
-        TupleType[float, float],  #
-        Mapping[str, Union[TupleType[int, int], TupleType[float, float]]],
-    ]
-) -> Mapping[str, Union[TupleType[int, int], TupleType[float, float]]]:
-    # These old parameters only applied to the depricated jolokia_metrics.mem service
-    # NOT to jolokia_jvm_memory(.pools).
-    # However, absolute values were lower levels for *free* memory,
-    # which makes no sense if no max-value for memory is known. We therefore dismiss those.
-    if isinstance(params, tuple) and isinstance(params[0], float):
-        return {"perc_total": params}
-
-    old_key_to_new_key = {
-        "totalheap": "total",
-    }
-    type_to_prefix = {
-        int: "abs",
-        float: "perc",
-    }
-    type_to_transform: Mapping[Type, Callable[[float], float]] = {
-        int: lambda v: v * 1024**2,
-        float: lambda v: v,
-    }
-
-    new_params_from_legacy = {}
-    for old_key in (
-        "totalheap",
-        "heap",
-        "nonheap",
-    ):
-        if not (levels := params.get(old_key)):  # pylint: disable=superfluous-parens
-            continue
-        type_ = type(levels[0])
-        transform = type_to_transform[type_]
-        new_params_from_legacy[
-            f"{type_to_prefix[type_]}_{old_key_to_new_key.get(old_key, old_key)}"
-        ] = (
-            transform(levels[0]),
-            transform(levels[1]),
-        )
-
-    if new_params_from_legacy:
-        return new_params_from_legacy
-
-    return params
 
 
 def _get_memory_level_elements(  # type:ignore[no-untyped-def]
@@ -111,24 +62,21 @@ def _get_memory_level_elements(  # type:ignore[no-untyped-def]
     ]
 
 
-def _parameter_valuespec_jvm_memory() -> Transform:
-    return Transform(
-        valuespec=Dictionary(
-            help=(
-                _(
-                    "This rule allows to set the warn and crit levels of the heap / "
-                    "non-heap and total memory area usage on web application servers."
-                )
-                + " "
-                + _("Other keywords for this rule: %s") % "Tomcat, Jolokia, JMX"
-            ),
-            elements=[
-                element
-                for mem_type in ("heap", "nonheap", "total")
-                for element in _get_memory_level_elements(mem_type)
-            ],
+def _parameter_valuespec_jvm_memory() -> Dictionary:
+    return Dictionary(
+        help=(
+            _(
+                "This rule allows to set the warn and crit levels of the heap / "
+                "non-heap and total memory area usage on web application servers."
+            )
+            + " "
+            + _("Other keywords for this rule: %s") % "Tomcat, Jolokia, JMX"
         ),
-        forth=_transform_legacy_parameters_jvm_memory,
+        elements=[
+            element
+            for mem_type in ("heap", "nonheap", "total")
+            for element in _get_memory_level_elements(mem_type)
+        ],
     )
 
 

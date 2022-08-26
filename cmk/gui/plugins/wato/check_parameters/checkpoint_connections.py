@@ -9,41 +9,38 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, Integer, Transform, Tuple
+from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
-def _parameter_valuespec_checkpoint_connections() -> Transform:
-    return Transform(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "levels",
-                    Tuple(
-                        help=_(
-                            "This rule sets limits to the current number of connections through "
-                            "a Checkpoint firewall."
-                        ),
-                        title=_("Maximum number of firewall connections"),
-                        elements=[
-                            Integer(
-                                title=_("Warning at"),
-                                minvalue=0,
-                                default_value=40000,
-                                unit=_("connections"),
-                            ),
-                            Integer(
-                                title=_("Critical at"),
-                                minvalue=0,
-                                default_value=50000,
-                                unit=_("connections"),
-                            ),
-                        ],
+def _parameter_valuespec_checkpoint_connections() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    help=_(
+                        "This rule sets limits to the current number of connections through "
+                        "a Checkpoint firewall."
                     ),
+                    title=_("Maximum number of firewall connections"),
+                    elements=[
+                        Integer(
+                            title=_("Warning at"),
+                            minvalue=0,
+                            default_value=40000,
+                            unit=_("connections"),
+                        ),
+                        Integer(
+                            title=_("Critical at"),
+                            minvalue=0,
+                            default_value=50000,
+                            unit=_("connections"),
+                        ),
+                    ],
                 ),
-            ],
-            optional_keys=False,
-        ),
-        forth=lambda x: x if isinstance(x, dict) else {"levels": x},
+            ),
+        ],
+        optional_keys=False,
     )
 
 

@@ -9,44 +9,23 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import (
-    Dictionary,
-    DropdownChoice,
-    ListOfNetworkPorts,
-    ListOfStrings,
-    Transform,
-)
+from cmk.gui.valuespec import Dictionary, DropdownChoice, ListOfNetworkPorts, ListOfStrings
 
 
-def transform_ssh_config(choice):
-    """
-    In the sshd_config the options without-password and
-    prohibit-password are equivalent. Therefore, we
-    transform the old Check_MK option without-password
-    to the new option key-based which represents both values.
-    """
-    if choice == "without-password":
-        return "key-based"
-    return choice
-
-
-def _parameter_valuespec_sshd_config():
+def _parameter_valuespec_sshd_config() -> Dictionary:
     return Dictionary(
         elements=[
             (
                 "PermitRootLogin",
-                Transform(
-                    valuespec=DropdownChoice(
-                        title=_("Permit root login"),
-                        choices=[
-                            ("yes", _("yes")),
-                            ("key-based", _("without-password/prohibit-password (Key based)")),
-                            ("forced-commands-only", _("forced-commands-only")),
-                            ("no", _("no")),
-                        ],
-                        default_value="key-based",
-                    ),
-                    forth=transform_ssh_config,
+                DropdownChoice(
+                    title=_("Permit root login"),
+                    choices=[
+                        ("yes", _("yes")),
+                        ("key-based", _("without-password/prohibit-password (Key based)")),
+                        ("forced-commands-only", _("forced-commands-only")),
+                        ("no", _("no")),
+                    ],
+                    default_value="key-based",
                 ),
             ),
             (

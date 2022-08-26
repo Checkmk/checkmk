@@ -9,27 +9,24 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
-from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Transform, Tuple
+from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 
 
-def _parameter_valuespec_juniper_cpu_util():
-    return Transform(
-        valuespec=Dictionary(
-            optional_keys=[],
-            elements=[
-                (
-                    "levels",
-                    Tuple(
-                        title=_("Upper levels"),
-                        elements=[
-                            Percentage(title=_("Warning at"), default_value=80.0),
-                            Percentage(title=_("Critical at"), default_value=90.0),
-                        ],
-                    ),
+def _parameter_valuespec_juniper_cpu_util() -> Dictionary:
+    return Dictionary(
+        optional_keys=[],
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    title=_("Upper levels"),
+                    elements=[
+                        Percentage(title=_("Warning at"), default_value=80.0),
+                        Percentage(title=_("Critical at"), default_value=90.0),
+                    ],
                 ),
-            ],
-        ),
-        forth=lambda old: not old and {"levels": (80.0, 90.0)} or old,
+            ),
+        ],
     )
 
 

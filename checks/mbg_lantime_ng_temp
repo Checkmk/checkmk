@@ -12,7 +12,7 @@ from cmk.base.check_legacy_includes.mbg_lantime import *  # pylint: disable=wild
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 factory_settings["mbg_lantime_ng_temp_default_levels"] = {
-    "levels": (80, 90),  # levels for system temperature
+    "levels": (80.0, 90.0),  # levels for system temperature
 }
 
 

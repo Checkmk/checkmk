@@ -12,7 +12,7 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 
 # Similar default levels in other checks
 factory_settings["gude_temp_default_levels"] = {
-    "levels": (35, 40),
+    "levels": (35.0, 40.0),
 }
 
 

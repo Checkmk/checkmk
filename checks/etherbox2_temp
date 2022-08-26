@@ -23,7 +23,7 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 
 # suggested by customer
 factory_settings["etherbox2_temp_default_levels"] = {
-    "levels": (30, 35),
+    "levels": (30.0, 35.0),
 }
 
 

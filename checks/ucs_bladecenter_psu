@@ -153,7 +153,7 @@ check_info["ucs_bladecenter_psu.switch_power"] = {
 #   '----------------------------------------------------------------------'
 
 factory_settings["ucs_bladecenter_psu_chassis_temp_default_levels"] = {
-    "levels": (35, 40),
+    "levels": (35.0, 40.0),
 }
 
 

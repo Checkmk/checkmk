@@ -11,7 +11,7 @@ from cmk.base.check_legacy_includes.dell_om import *  # pylint: disable=wildcard
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-factory_settings["dell_om_sensors_default_levels"] = {"levels": (50, 60)}
+factory_settings["dell_om_sensors_default_levels"] = {"levels": (50.0, 60.0)}
 
 
 def dell_om_sensors_item(name):

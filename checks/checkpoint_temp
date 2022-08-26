@@ -8,7 +8,7 @@
 from cmk.base.check_legacy_includes.checkpoint import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-factory_settings["checkpoint_temp_default_levels"] = {"levels": (50, 60)}
+factory_settings["checkpoint_temp_default_levels"] = {"levels": (50.0, 60.0)}
 
 
 def format_item_checkpoint_temp(name):

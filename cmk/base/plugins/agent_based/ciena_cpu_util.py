@@ -124,7 +124,7 @@ register.check_plugin(
     check_function=check_ciena_cpu_util_5142,
     check_ruleset_name="cpu_utilization_os",
     check_default_parameters={
-        "levels": (80.0, 90.0),
+        "util": (80.0, 90.0),
     },
 )
 
@@ -135,6 +135,6 @@ register.check_plugin(
     check_function=check_ciena_cpu_util_5171,
     check_ruleset_name="cpu_utilization_os",
     check_default_parameters={
-        "levels": (80.0, 90.0),
+        "util": (80.0, 90.0),
     },
 )

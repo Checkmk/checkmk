@@ -11,7 +11,7 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 
 # Just an assumption
 factory_settings["netextreme_temp_default_levels"] = {
-    "levels": (45, 50),
+    "levels": (45.0, 50.0),
 }
 
 

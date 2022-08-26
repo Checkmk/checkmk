@@ -12,71 +12,62 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Age, Dictionary, FixedValue, TextInput, Transform
+from cmk.gui.valuespec import Age, Dictionary, FixedValue, TextInput
 
 
-def transform_diskstat(params):
-    if isinstance(params, list):
-        return {mode: True for mode in params}
-    return params
-
-
-def _valuespec_diskstat_inventory():
-    return Transform(
-        valuespec=Dictionary(
-            title=_("Disk IO discovery"),
-            help=_(
-                "This rule controls which and how many checks will be created "
-                "for monitoring individual physical and logical disks. "
-                "Note: the option <i>Create a summary for all read, one for "
-                "write</i> has been removed. Some checks will still support "
-                "this settings, but it will be removed there soon."
-            ),
-            elements=[
-                (
-                    "summary",
-                    FixedValue(
-                        value=True,
-                        title=_("Summary"),
-                        totext="Create a summary over all physical disks",
-                    ),
-                ),
-                (
-                    "physical",
-                    FixedValue(
-                        value=True,
-                        title=_("Physical disks"),
-                        totext="Create a separate check for each physical disk",
-                    ),
-                ),
-                (
-                    "lvm",
-                    FixedValue(
-                        value=True,
-                        title=_("LVM volumes (Linux)"),
-                        totext="Create a separate check for each LVM volume (Linux)",
-                    ),
-                ),
-                (
-                    "vxvm",
-                    FixedValue(
-                        value=True,
-                        title=_("VxVM volumes (Linux)"),
-                        totext="Create a separate check for each VxVM volume (Linux)",
-                    ),
-                ),
-                (
-                    "diskless",
-                    FixedValue(
-                        value=True,
-                        title=_("Partitions (XEN)"),
-                        totext="Create a separate check for each partition (XEN)",
-                    ),
-                ),
-            ],
-            default_keys=["summary"],
+def _valuespec_diskstat_inventory() -> Dictionary:
+    return Dictionary(
+        title=_("Disk IO discovery"),
+        help=_(
+            "This rule controls which and how many checks will be created "
+            "for monitoring individual physical and logical disks. "
+            "Note: the option <i>Create a summary for all read, one for "
+            "write</i> has been removed. Some checks will still support "
+            "this settings, but it will be removed there soon."
         ),
-        forth=transform_diskstat,
+        elements=[
+            (
+                "summary",
+                FixedValue(
+                    value=True,
+                    title=_("Summary"),
+                    totext="Create a summary over all physical disks",
+                ),
+            ),
+            (
+                "physical",
+                FixedValue(
+                    value=True,
+                    title=_("Physical disks"),
+                    totext="Create a separate check for each physical disk",
+                ),
+            ),
+            (
+                "lvm",
+                FixedValue(
+                    value=True,
+                    title=_("LVM volumes (Linux)"),
+                    totext="Create a separate check for each LVM volume (Linux)",
+                ),
+            ),
+            (
+                "vxvm",
+                FixedValue(
+                    value=True,
+                    title=_("VxVM volumes (Linux)"),
+                    totext="Create a separate check for each VxVM volume (Linux)",
+                ),
+            ),
+            (
+                "diskless",
+                FixedValue(
+                    value=True,
+                    title=_("Partitions (XEN)"),
+                    totext="Create a separate check for each partition (XEN)",
+                ),
+            ),
+        ],
+        default_keys=["summary"],
     )
 
 

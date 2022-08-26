@@ -29,7 +29,7 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 # descriptions! But be careful: There is no standard neither for IDs nor for
 # descriptions. Only use those, which are common sense.
 
-factory_settings["smart_temp_default_levels"] = {"levels": (35, 40)}
+factory_settings["smart_temp_default_levels"] = {"levels": (35.0, 40.0)}
 
 
 def inventory_smart_temp(section):

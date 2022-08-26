@@ -40,7 +40,7 @@ def check_avaya_88xx_fan(item, _no_params, parsed):
 
 
 factory_settings["avaya_88xx_default_levels"] = {
-    "levels": (55, 60),
+    "levels": (55.0, 60.0),
 }
 
 

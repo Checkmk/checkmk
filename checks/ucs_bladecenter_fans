@@ -97,7 +97,7 @@ check_info["ucs_bladecenter_fans"] = {
 #   '----------------------------------------------------------------------'
 
 factory_settings["ucs_bladecenter_fans_temp_default_levels"] = {
-    "levels": (40, 50),
+    "levels": (40.0, 50.0),
 }
 
 

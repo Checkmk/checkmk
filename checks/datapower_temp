@@ -14,7 +14,7 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 #
 
 factory_settings["datapower_temp_default_levels"] = {
-    "levels": (65, 70),  # 70C recommended alarm level by IBM
+    "levels": (65.0, 70.0),  # 70C recommended alarm level by IBM
 }
 
 

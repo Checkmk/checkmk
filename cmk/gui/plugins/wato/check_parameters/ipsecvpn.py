@@ -9,28 +9,25 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersNetworking,
 )
-from cmk.gui.valuespec import Dictionary, Integer, ListOfStrings, Transform, Tuple
+from cmk.gui.valuespec import Dictionary, Integer, ListOfStrings, Tuple
 
 
-def _parameter_valuespec_ipsecvpn():
-    return Transform(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "levels",
-                    Tuple(
-                        title=_("Levels for number of down channels"),
-                        elements=[
-                            Integer(title=_("Warning at"), default_value=1),
-                            Integer(title=_("Critical at"), default_value=2),
-                        ],
-                    ),
+def _parameter_valuespec_ipsecvpn() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    title=_("Levels for number of down channels"),
+                    elements=[
+                        Integer(title=_("Warning at"), default_value=1),
+                        Integer(title=_("Critical at"), default_value=2),
+                    ],
                 ),
-                ("tunnels_ignore_levels", ListOfStrings(title=_("Tunnels which ignore levels"))),
-            ],
-            optional_keys=[],
-        ),
-        forth=lambda params: isinstance(params, dict) and params or {"levels": params},
+            ),
+            ("tunnels_ignore_levels", ListOfStrings(title=_("Tunnels which ignore levels"))),
+        ],
+        optional_keys=[],
     )
 
 

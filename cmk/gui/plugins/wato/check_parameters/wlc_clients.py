@@ -9,49 +9,34 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersNetworking,
 )
-from cmk.gui.valuespec import Dictionary, Integer, TextInput, Transform, Tuple
+from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
-def _parameter_valuespec_wlc_clients():
-    return Transform(
-        valuespec=Dictionary(
-            title=_("Number of connections"),
-            elements=[
-                (
-                    "levels",
-                    Tuple(
-                        title=_("Upper levels"),
-                        elements=[
-                            Integer(title=_("Warning at"), unit=_("connections")),
-                            Integer(title=_("Critical at"), unit=_("connections")),
-                        ],
-                    ),
+def _parameter_valuespec_wlc_clients() -> Dictionary:
+    return Dictionary(
+        title=_("Number of connections"),
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    title=_("Upper levels"),
+                    elements=[
+                        Integer(title=_("Warning at"), unit=_("connections")),
+                        Integer(title=_("Critical at"), unit=_("connections")),
+                    ],
                 ),
-                (
-                    "levels_lower",
-                    Tuple(
-                        title=_("Lower levels"),
-                        elements=[
-                            Integer(title=_("Critical if below"), unit=_("connections")),
-                            Integer(title=_("Warning if below"), unit=_("connections")),
-                        ],
-                    ),
+            ),
+            (
+                "levels_lower",
+                Tuple(
+                    title=_("Lower levels"),
+                    elements=[
+                        Integer(title=_("Critical if below"), unit=_("connections")),
+                        Integer(title=_("Warning if below"), unit=_("connections")),
+                    ],
                 ),
-            ],
-        ),
-        # old params = (crit_low, warn_low, warn, crit)
-        forth=lambda v: isinstance(v, tuple)
-        and {
-            "levels": (
-                v[2],
-                v[3],
             ),
-            "levels_lower": (
-                v[1],
-                v[0],
-            ),
-        }
-        or v,
+        ],
     )
 
 

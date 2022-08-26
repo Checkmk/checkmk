@@ -9,11 +9,11 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Checkbox, Dictionary, Integer, TextInput, Transform, Tuple
+from cmk.gui.valuespec import Checkbox, Dictionary, Integer, TextInput, Tuple
 
 
-def _parameter_valuespec_hw_fans():
-    hw_fans_dict = Dictionary(
+def _parameter_valuespec_hw_fans() -> Dictionary:
+    return Dictionary(
         elements=[
             (
                 "lower",
@@ -43,10 +43,6 @@ def _parameter_valuespec_hw_fans():
             ),
         ],
         optional_keys=["upper", "output_metrics"],
-    )
-    return Transform(
-        valuespec=hw_fans_dict,
-        forth=lambda spec: spec if isinstance(spec, dict) else {"lower": spec},
     )
 
 

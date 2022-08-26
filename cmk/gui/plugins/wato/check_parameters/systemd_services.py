@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, Sequence
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -20,73 +18,53 @@ from cmk.gui.valuespec import (
     MonitoringState,
     TextInput,
     TextOrRegExp,
-    Transform,
 )
 
 
-def _discovery_forth(discovery_params: Mapping[str, Sequence[str]]) -> Mapping[str, Sequence[str]]:
-    """
-    >>> _discovery_forth({})
-    {}
-    >>> _discovery_forth({'descriptions': ['a', '~[bc]'], 'names': ['xy'], 'states': ['inactive']})
-    {'descriptions': ['a', '~[bc]'], 'names': ['xy'], 'states': ['inactive']}
-    >>> _discovery_forth({'states': ['active', 'active', 'inactive']})
-    {'states': ['active', 'inactive']}
-    """
-    transformed_params = {**discovery_params}
-    if "states" in transformed_params:
-        # sorted() for testability
-        transformed_params["states"] = sorted(set(transformed_params["states"]))
-    return transformed_params
-
-
-def _valuespec_discovery_systemd_units_services_rules() -> Transform:
-    return Transform(
-        valuespec=Dictionary(
-            title=_("Systemd single services discovery"),
-            elements=[
-                (
-                    "descriptions",
-                    ListOf(
-                        valuespec=TextOrRegExp(),
-                        title=_("Restrict by description"),
-                        help=_("Restrict the systemd services by description."),
-                        allow_empty=False,
-                    ),
+def _valuespec_discovery_systemd_units_services_rules() -> Dictionary:
+    return Dictionary(
+        title=_("Systemd single services discovery"),
+        elements=[
+            (
+                "descriptions",
+                ListOf(
+                    valuespec=TextOrRegExp(),
+                    title=_("Restrict by description"),
+                    help=_("Restrict the systemd services by description."),
+                    allow_empty=False,
                 ),
-                (
-                    "names",
-                    ListOf(
-                        valuespec=TextOrRegExp(),
-                        title=_("Restrict by service unit name"),
-                        help=_("Restrict the systemd services by unit name."),
-                        allow_empty=False,
-                    ),
-                ),
-                (
-                    "states",
-                    ListChoice(
-                        choices=[
-                            ("active", "active"),
-                            ("inactive", "inactive"),
-                            ("failed", "failed"),
-                        ],
-                        title=_("Restrict by state"),
-                        allow_empty=False,
-                    ),
-                ),
-            ],
-            help=_(
-                "Configure the discovery of single systemd services. To be discovered, a service "
-                "must match at least one description condition, one name condition and one state "
-                "condition, if configured. To simply discover all systemd services, do not "
-                "configure any restrictions. Note that independently of this ruleset, some systemd "
-                "service units which are used by the Checkmk agent ('check-mk-agent@...') will "
-                "never be discovered because they appear and disappear frequently."
             ),
-            empty_text=_("No restrictions (discover all systemd service units)"),
+            (
+                "names",
+                ListOf(
+                    valuespec=TextOrRegExp(),
+                    title=_("Restrict by service unit name"),
+                    help=_("Restrict the systemd services by unit name."),
+                    allow_empty=False,
+                ),
+            ),
+            (
+                "states",
+                ListChoice(
+                    choices=[
+                        ("active", "active"),
+                        ("inactive", "inactive"),
+                        ("failed", "failed"),
+                    ],
+                    title=_("Restrict by state"),
+                    allow_empty=False,
+                ),
+            ),
+        ],
+        help=_(
+            "Configure the discovery of single systemd services. To be discovered, a service "
+            "must match at least one description condition, one name condition and one state "
+            "condition, if configured. To simply discover all systemd services, do not "
+            "configure any restrictions. Note that independently of this ruleset, some systemd "
+            "service units which are used by the Checkmk agent ('check-mk-agent@...') will "
+            "never be discovered because they appear and disappear frequently."
         ),
-        forth=_discovery_forth,
+        empty_text=_("No restrictions (discover all systemd service units)"),
     )
 
 

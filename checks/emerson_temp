@@ -17,7 +17,7 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 # the mib is the NetSure_ESNA.mib, which we have received from directly
 # from a customer, its named "Emerson Energy Systems (EES) Power MIB"
 
-factory_settings["emerson_temp_default"] = {"levels": (40, 50)}
+factory_settings["emerson_temp_default"] = {"levels": (40.0, 50.0)}
 
 
 def inventory_emerson_temp(info):

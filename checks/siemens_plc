@@ -40,7 +40,7 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 #   '----------------------------------------------------------------------'
 
 factory_settings["siemens_plc_temp_default_levels"] = {
-    "levels": (70, 80),
+    "levels": (70.0, 80.0),
     "device_levels_handling": "devdefault",
 }
 

@@ -94,7 +94,7 @@ check_info["netscaler_health.fan"] = {
 #   +----------------------------------------------------------------------+
 
 factory_settings["netscaler_health_temp_default_levels"] = {
-    "levels": (80, 90),
+    "levels": (80.0, 90.0),
 }
 
 

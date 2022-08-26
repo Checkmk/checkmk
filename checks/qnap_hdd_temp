@@ -7,7 +7,7 @@ from cmk.base.check_legacy_includes import qnap
 from cmk.base.check_legacy_includes.temperature import check_temperature
 
 factory_settings["qnap_hdd_temp_default_levels"] = {
-    "levels": (40, 45),
+    "levels": (40.0, 45.0),
 }
 
 

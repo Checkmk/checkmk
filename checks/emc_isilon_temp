@@ -52,7 +52,7 @@ def isilon_temp_item_name(sensor_name):
 #   '----------------------------------------------------------------------'
 
 factory_settings["emc_isilon_temp_default_levels"] = {
-    "levels": (28, 33),  # assumed useful levels for ambient / air temperature
+    "levels": (28.0, 33.0),  # assumed useful levels for ambient / air temperature
 }
 
 check_info["emc_isilon_temp"] = {
@@ -89,7 +89,7 @@ check_info["emc_isilon_temp"] = {
 #   '----------------------------------------------------------------------'
 
 factory_settings["emc_isilon_temp_cpu_default_levels"] = {
-    "levels": (75, 85),  # assumed useful levels for ambient / air temperature
+    "levels": (75.0, 85.0),  # assumed useful levels for ambient / air temperature
 }
 
 check_info["emc_isilon_temp.cpu"] = {

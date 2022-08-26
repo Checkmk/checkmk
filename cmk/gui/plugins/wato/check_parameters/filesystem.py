@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
-from typing import Any, Dict, List, Mapping, Sequence, Tuple, Union
-
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.filesystem_utils import vs_filesystem
@@ -26,7 +23,6 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     TextInput,
     TextOrRegExp,
-    Transform,
 )
 
 
@@ -59,94 +55,77 @@ def _validate_discovery_filesystem_params(value, varprefix):
         )
 
 
-def _transform_discovery_filesystem_params(params: Mapping[str, Any]) -> Dict[str, Any]:
-    p: Dict[str, Any] = dict(copy.deepcopy(params))
-    include_volume_name = p.pop("include_volume_name", None)
-
-    if isinstance(include_volume_name, tuple):
-        p["item_appearance"] = "volume_name_and_mountpoint"
-        p["grouping_behaviour"] = include_volume_name[1]
-    elif isinstance(include_volume_name, bool):
-        p["item_appearance"] = "volume_name_and_mountpoint" if include_volume_name else "mountpoint"
-        p["grouping_behaviour"] = "mountpoint"
-
-    return p
-
-
-def _valuespec_inventory_df_rules():
-    return Transform(
-        valuespec=Dictionary(
-            title=_("Filesystem discovery"),
-            elements=[
-                (
-                    "mountpoint_for_block_devices",
-                    DropdownChoice(
-                        title=_("Mountpoint for block devices (brtfs)"),
-                        choices=[
-                            ("volume_name_as_mountpoint", _("Use volume name as mountpoint")),
-                            ("uuid_as_mountpoint", _("Use UUID as mountpoint")),
-                        ],
-                        default_value="volume_name_as_mountpoint",
+def _valuespec_inventory_df_rules() -> Dictionary:
+    return Dictionary(
+        title=_("Filesystem discovery"),
+        elements=[
+            (
+                "mountpoint_for_block_devices",
+                DropdownChoice(
+                    title=_("Mountpoint for block devices (brtfs)"),
+                    choices=[
+                        ("volume_name_as_mountpoint", _("Use volume name as mountpoint")),
+                        ("uuid_as_mountpoint", _("Use UUID as mountpoint")),
+                    ],
+                    default_value="volume_name_as_mountpoint",
+                ),
+            ),
+            (
+                "item_appearance",
+                DropdownChoice(
+                    title=_("Item appearance"),
+                    choices=[
+                        ("mountpoint", _("Use mountpoint")),
+                        ("volume_name_and_mountpoint", _("Use volume name and mountpoint")),
+                        ("uuid_and_mountpoint", _("Use UUID and mountpoint")),
+                    ],
+                    default_value="mountpoint",
+                ),
+            ),
+            (
+                "grouping_behaviour",
+                DropdownChoice(
+                    title=_("Grouping applies to"),
+                    choices=[
+                        ("mountpoint", _("mountpoint only")),
+                        ("volume_name_and_mountpoint", _("volume name and mountpoint")),
+                        ("uuid_and_mountpoint", _("UUID and mountpoint")),
+                    ],
+                    help=_(
+                        "Specifies how the <a href='wato.py?mode=edit_ruleset&varname=filesystem_groups'>Filesystem grouping patterns</a>"
+                        " feature processes this filesystem."
+                    ),
+                    default_value="mountpoint",
+                ),
+            ),
+            (
+                "ignore_fs_types",
+                ListChoice(
+                    title=_("Filesystem types to ignore"),
+                    choices=[
+                        ("tmpfs", "tmpfs"),
+                        ("nfs", "nfs"),
+                        ("smbfs", "smbfs"),
+                        ("cifs", "cifs"),
+                        ("iso9660", "iso9660"),
+                    ],
+                    default_value=["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
+                ),
+            ),
+            (
+                "never_ignore_mountpoints",
+                ListOf(
+                    valuespec=TextOrRegExp(),
+                    title=_("Mountpoints to never ignore"),
+                    help=_(
+                        "Regardless of filesystem type, these mountpoints will always be discovered."
+                        "Regular expressions are supported."
                     ),
                 ),
-                (
-                    "item_appearance",
-                    DropdownChoice(
-                        title=_("Item appearance"),
-                        choices=[
-                            ("mountpoint", _("Use mountpoint")),
-                            ("volume_name_and_mountpoint", _("Use volume name and mountpoint")),
-                            ("uuid_and_mountpoint", _("Use UUID and mountpoint")),
-                        ],
-                        default_value="mountpoint",
-                    ),
-                ),
-                (
-                    "grouping_behaviour",
-                    DropdownChoice(
-                        title=_("Grouping applies to"),
-                        choices=[
-                            ("mountpoint", _("mountpoint only")),
-                            ("volume_name_and_mountpoint", _("volume name and mountpoint")),
-                            ("uuid_and_mountpoint", _("UUID and mountpoint")),
-                        ],
-                        help=_(
-                            "Specifies how the <a href='wato.py?mode=edit_ruleset&varname=filesystem_groups'>Filesystem grouping patterns</a>"
-                            " feature processes this filesystem."
-                        ),
-                        default_value="mountpoint",
-                    ),
-                ),
-                (
-                    "ignore_fs_types",
-                    ListChoice(
-                        title=_("Filesystem types to ignore"),
-                        choices=[
-                            ("tmpfs", "tmpfs"),
-                            ("nfs", "nfs"),
-                            ("smbfs", "smbfs"),
-                            ("cifs", "cifs"),
-                            ("iso9660", "iso9660"),
-                        ],
-                        default_value=["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
-                    ),
-                ),
-                (
-                    "never_ignore_mountpoints",
-                    ListOf(
-                        valuespec=TextOrRegExp(),
-                        title=_("Mountpoints to never ignore"),
-                        help=_(
-                            "Regardless of filesystem type, these mountpoints will always be discovered."
-                            "Regular expressions are supported."
-                        ),
-                    ),
-                ),
-                _list_of_filesystem_groups_specs_elements(),
-            ],
-            validate=_validate_discovery_filesystem_params,
-        ),
-        forth=_transform_discovery_filesystem_params,
+            ),
+            _list_of_filesystem_groups_specs_elements(),
+        ],
+        validate=_validate_discovery_filesystem_params,
     )
 
 
@@ -162,86 +141,11 @@ rulespec_registry.register(
 FILESYSTEM_GROUPS_WRAPPER_KEY = "groups"
 
 
-def _transform_filesystem_groups(
-    params: Union[Sequence[Tuple], Sequence[Mapping[str, Any]], Dict[str, Any]]
-) -> Dict[str, Any]:
-    """
-    Old format:
-
-        [(group_name, include_pattern), (group_name, include_pattern), ...]
-
-    OR
-
-        [
-            {
-                group_name: name,
-                patterns_include: [include_pattern, include_pattern, ...],
-                patterns_exclude: [exclude_pattern, exclude_pattern, ...],
-            },
-            {
-                group_name: name,
-                patterns_include: ...
-            ...
-        ]
-
-    New format:
-
-        {
-            "groups" : [
-                {
-                    group_name: name,
-                    patterns_include: [include_pattern, include_pattern, ...],
-                    patterns_exclude: [exclude_pattern, exclude_pattern, ...],
-                },
-                {
-                    group_name: name,
-                    patterns_include: ...
-                ...
-            ],
-        }
-
-    >>> _transform_filesystem_groups([('whisky', ['Glen.*'])])
-    {'groups': [{'group_name': 'whisky', 'patterns_include': [['Glen.*']], 'patterns_exclude': []}]}
-    >>> _transform_filesystem_groups([{
-    ...     'group_name': 'Whisky',
-    ...     'patterns_exclude': ['Jim.*', 'Jack.*'],
-    ...     'patterns_include': ['Glen.*', '*iach'],
-    ... }])
-    {'groups': [{'group_name': 'Whisky', 'patterns_exclude': ['Jim.*', 'Jack.*'], 'patterns_include': ['Glen.*', '*iach']}]}
-
-    """
-    grouping = copy.deepcopy(params)
-    if isinstance(grouping, dict) and FILESYSTEM_GROUPS_WRAPPER_KEY in grouping:
-        return grouping
-
-    if not grouping or (isinstance(grouping, list) and isinstance(grouping[0], dict)):
-        return {FILESYSTEM_GROUPS_WRAPPER_KEY: grouping}
-
-    grouping_dict: Dict[str, List[str]] = {}
-    if isinstance(grouping, list) and isinstance(grouping[0], tuple):
-        for group_name, pattern_include in grouping:
-            grouping_dict.setdefault(group_name, []).append(pattern_include)
-
-    return {
-        FILESYSTEM_GROUPS_WRAPPER_KEY: [
-            {
-                "group_name": group_name,
-                "patterns_include": patterns_include,
-                "patterns_exclude": [],
-            }
-            for group_name, patterns_include in grouping_dict.items()
-        ]
-    }
-
-
-def _valuespec_filesystem_groups():
-    return Transform(
-        valuespec=Dictionary(
-            title=_("Filesystem grouping patterns"),
-            optional_keys=False,
-            elements=[_list_of_filesystem_groups_specs_elements()],
-        ),
-        forth=_transform_filesystem_groups,
+def _valuespec_filesystem_groups() -> Dictionary:
+    return Dictionary(
+        title=_("Filesystem grouping patterns"),
+        optional_keys=False,
+        elements=[_list_of_filesystem_groups_specs_elements()],
     )
 
 

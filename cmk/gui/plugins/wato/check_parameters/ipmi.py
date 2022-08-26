@@ -20,40 +20,8 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     MonitoringState,
     TextInput,
-    Transform,
     Tuple,
 )
-
-
-def transform_ipmi_inventory_rules(p):
-    # this rule once was a Dictionary, then it became a CascadingDropdown, now we are back to a
-    # Dictionary
-    if isinstance(p, dict):
-        if "discovery_mode" in p:
-            return p
-        if p.get("summarize", True):
-            return {
-                "discovery_mode": (
-                    "summarize",
-                    {},
-                ),
-            }
-        return {
-            "discovery_mode": (
-                "single",
-                "ignored_sensors" in p and {"ignored_sensors": p["ignored_sensors"]} or {},
-            ),
-        }
-    if p == "summarize":
-        return {
-            "discovery_mode": (
-                "summarize",
-                {},
-            ),
-        }
-    return {
-        "discovery_mode": p,
-    }
 
 
 def _valuespec_inventory_ipmi_rules_single() -> Dictionary:
@@ -87,35 +55,32 @@ def _valuespec_inventory_ipmi_rules_single() -> Dictionary:
     )
 
 
-def _valuespec_inventory_ipmi_rules() -> Transform:
-    return Transform(
-        valuespec=Dictionary(
-            title=_("IPMI sensor discovery"),
-            elements=[
-                (
-                    "discovery_mode",
-                    CascadingDropdown(
-                        title=_("Discovery mode"),
-                        orientation="vertical",
-                        choices=[
-                            (
-                                "summarize",
-                                _("Summary of all sensors"),
-                                FixedValue(value={}, totext=""),
-                            ),
-                            (
-                                "single",
-                                _("One service per sensor"),
-                                _valuespec_inventory_ipmi_rules_single(),
-                            ),
-                        ],
-                        sorted=False,
-                    ),
+def _valuespec_inventory_ipmi_rules() -> Dictionary:
+    return Dictionary(
+        title=_("IPMI sensor discovery"),
+        elements=[
+            (
+                "discovery_mode",
+                CascadingDropdown(
+                    title=_("Discovery mode"),
+                    orientation="vertical",
+                    choices=[
+                        (
+                            "summarize",
+                            _("Summary of all sensors"),
+                            FixedValue(value={}, totext=""),
+                        ),
+                        (
+                            "single",
+                            _("One service per sensor"),
+                            _valuespec_inventory_ipmi_rules_single(),
+                        ),
+                    ],
+                    sorted=False,
                 ),
-            ],
-            optional_keys=False,
-        ),
-        forth=transform_ipmi_inventory_rules,
+            ),
+        ],
+        optional_keys=False,
     )
 
 

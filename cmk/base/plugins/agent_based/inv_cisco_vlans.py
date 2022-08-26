@@ -72,6 +72,12 @@ def _bitmask(raw: str) -> Sequence[int]:
     ]
 
 
+def _concatenate_vlans(vlan: int, subinfo: List[int]) -> str:
+    if vlan not in subinfo:
+        subinfo.append(vlan)
+    return "-".join(map(str, subinfo))
+
+
 def _parse_multi_vlan(vlan_multi: str) -> str:
     """compress a list of vlans into a readable format
 
@@ -83,27 +89,22 @@ def _parse_multi_vlan(vlan_multi: str) -> str:
     '1, 5-6, 9, 13-14, 17, 25, 29-30, 33, 37-38'
     """
 
-    def concatenate_vlans(vlan, subinfo):
-        if vlan not in subinfo:
-            subinfo.append(vlan)
-        return "-".join(map(str, subinfo))
-
     vlans = _bitmask(vlan_multi)
 
     if not vlans:
         return ""
 
     infotexts = []
-    subinfo = vlans[:1]
+    subinfo = [vlans[0]]
     last_vlan = vlans[0]
 
     for vlan in vlans[1:]:
         if vlan - last_vlan > 1:
-            infotexts.append(concatenate_vlans(last_vlan, subinfo))
+            infotexts.append(_concatenate_vlans(last_vlan, subinfo))
             subinfo = [vlan]
 
         if vlan == vlans[-1]:
-            infotexts.append(concatenate_vlans(vlan, subinfo))
+            infotexts.append(_concatenate_vlans(vlan, subinfo))
 
         last_vlan = vlan
 

@@ -1,0 +1,25 @@
+Title: Prometheus: Bad request url /api/v1/api/v1/status/buildinfo
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1661498856
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p11
+
+Previously, the Prometheus special agent would query endpoints, which don't exist. This would
+(depending on the the HTTP response of the server) result in the following error
+
+C+:
+[special_prometheus] Agent exited with code 1: 400 Client Error: Bad Request for url: http://127.0.0.1:8428/api/v1/api/v1/status/buildinfo(!!)
+C-:
+
+Moreover, the buildinfo would sometimes be incomplete. Note, the new error is a regression
+introduced in werk 14132. With this werk, the Prometheus agent queries the endpoints
+
+C+:
+/api/v1/status/buildinfo
+/api/v1/status/runtimeinfo
+C-:

@@ -26,9 +26,12 @@ from cmk.utils.version import is_raw_edition
 
 import cmk.gui.config
 import cmk.gui.watolib.timeperiods as timeperiods
+from cmk.gui.valuespec import Dictionary, Float, Transform
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
+from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationVarious
+from cmk.gui.watolib.rulespecs import Rulespec
 
 import cmk.update_config as update_config
 
@@ -93,26 +96,90 @@ def test_cleanup_version_specific_caches(uc: update_config.UpdateConfig) -> None
         assert base_dir.exists()
 
 
+@pytest.fixture(name="rulespec_with_transform")
+def fixture_rulespec_with_transform() -> Rulespec:
+    return Rulespec(
+        name="rulespec_with_transform",
+        group=RulespecGroupMonitoringConfigurationVarious,
+        title=None,
+        valuespec=lambda: Transform(
+            Dictionary(
+                elements=[
+                    (
+                        "key",
+                        Float(),
+                    )
+                ],
+                optional_keys=False,
+            ),
+            forth=lambda p: {"key": p["key"] + 1},
+        ),
+        match_type="dict",
+        item_type=None,
+        item_spec=None,
+        item_name=None,
+        item_help=None,
+        is_optional=False,
+        is_deprecated=False,
+        is_for_services=False,
+        is_binary_ruleset=False,
+        factory_default={"key": 0},
+        help_func=None,
+    )
+
+
+@pytest.fixture(name="replaced_rulespec")
+def fixture_replaced_rulespec() -> Rulespec:
+    return Rulespec(
+        name="replaced_rulespec",
+        group=RulespecGroupMonitoringConfigurationVarious,
+        title=None,
+        valuespec=lambda: Dictionary(
+            elements=[
+                (
+                    "key",
+                    Float(),
+                )
+            ],
+            optional_keys=False,
+        ),
+        match_type="dict",
+        item_type=None,
+        item_spec=None,
+        item_name=None,
+        item_help=None,
+        is_optional=False,
+        is_deprecated=False,
+        is_for_services=False,
+        is_binary_ruleset=False,
+        factory_default={"key": 0},
+        help_func=None,
+    )
+
+
 @pytest.mark.parametrize(
-    "ruleset_name, param_value, transformed_param_value",
+    ["param_value", "transformed_param_value"],
     [
-        (
-            "diskstat_inventory",
-            ["summary", "lvm"],
-            {"summary": True, "lvm": True},
+        pytest.param(
+            {"key": 1},
+            {"key": 2},
         ),
     ],
 )
 @pytest.mark.usefixtures("request_context")
 def test__transform_wato_rulesets_params(
     uc: update_config.UpdateConfig,
-    ruleset_name: RulesetName,
+    rulespec_with_transform: Rulespec,
     param_value: RuleValue,
     transformed_param_value: RuleValue,
 ) -> None:
-    ruleset = _instantiate_ruleset(ruleset_name, param_value)
+    ruleset = _instantiate_ruleset(
+        rulespec_with_transform.name,
+        param_value,
+        rulespec=rulespec_with_transform,
+    )
     rulesets = RulesetCollection()
-    rulesets.set_rulesets({ruleset_name: ruleset})
+    rulesets.set_rulesets({rulespec_with_transform.name: ruleset})
 
     uc._transform_wato_rulesets_params(rulesets)
 
@@ -121,39 +188,47 @@ def test__transform_wato_rulesets_params(
 
 
 @pytest.mark.parametrize(
-    "ruleset_name, param_value, new_ruleset_name, transformed_param_value",
+    ["param_value", "transformed_param_value"],
     [
-        ("non_inline_snmp_hosts", True, "snmp_backend_hosts", "classic"),
-        ("non_inline_snmp_hosts", False, "snmp_backend_hosts", "inline"),
+        pytest.param(
+            {"key": 1},
+            {"key": 2},
+        ),
     ],
 )
 @pytest.mark.usefixtures("request_context")
 def test__transform_replaced_wato_rulesets_and_params(
     uc: update_config.UpdateConfig,
-    ruleset_name: RulesetName,
+    rulespec_with_transform: Rulespec,
+    replaced_rulespec: Rulespec,
     param_value: RuleValue,
-    new_ruleset_name: RulesetName,
     transformed_param_value: RuleValue,
 ) -> None:
     all_rulesets = RulesetCollection()
-    # checkmk: all_rulesets are loaded via
-    # all_rulesets = cmk.gui.watolib.rulesets.AllRulesets()
     all_rulesets.set_rulesets(
         {
-            ruleset_name: _instantiate_ruleset(ruleset_name, param_value),
-            new_ruleset_name: Ruleset(new_ruleset_name, {}),
+            replaced_rulespec.name: _instantiate_ruleset(
+                replaced_rulespec.name,
+                param_value,
+                rulespec=replaced_rulespec,
+            ),
+            rulespec_with_transform.name: Ruleset(
+                rulespec_with_transform.name,
+                {},
+                rulespec=rulespec_with_transform,
+            ),
         }
     )
 
     uc._transform_replaced_wato_rulesets(
         all_rulesets,
-        {ruleset_name: new_ruleset_name},
+        {replaced_rulespec.name: rulespec_with_transform.name},
     )
     uc._transform_wato_rulesets_params(all_rulesets)
 
-    assert not all_rulesets.exists(ruleset_name)
+    assert not all_rulesets.exists(replaced_rulespec.name)
 
-    rules = all_rulesets.get(new_ruleset_name).get_rules()
+    rules = all_rulesets.get(rulespec_with_transform.name).get_rules()
     assert len(rules) == 1
 
     rule = rules[0]
@@ -161,8 +236,12 @@ def test__transform_replaced_wato_rulesets_and_params(
     assert rule[2].value == transformed_param_value
 
 
-def _instantiate_ruleset(ruleset_name, param_value) -> Ruleset:  # type:ignore[no-untyped-def]
-    ruleset = Ruleset(ruleset_name, {})
+def _instantiate_ruleset(
+    ruleset_name: str,
+    param_value: RuleValue,
+    rulespec: Rulespec | None = None,
+) -> Ruleset:
+    ruleset = Ruleset(ruleset_name, {}, rulespec=rulespec)
     rule = Rule.from_ruleset_defaults(Folder(""), ruleset)
     rule.value = param_value
     ruleset.append_rule(Folder(""), rule)

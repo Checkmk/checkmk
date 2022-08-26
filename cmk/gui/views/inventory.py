@@ -1532,8 +1532,7 @@ def _register_multi_table_view(
 ) -> None:
     _register_info_class(table_view_name, title_singular, title_plural)
 
-    info_names: list[str] = []
-    inventory_paths: list[inventory.InventoryPath] = []
+    info_names_and_paths: list[tuple[str, inventory.InventoryPath]] = []
     errors = []
     for this_table_view_name in tables:
         visual_info_class = visual_info_registry.get(this_table_view_name)
@@ -1546,8 +1545,7 @@ def _register_multi_table_view(
 
         assert issubclass(data_source_class, ABCDataSourceInventory)
         ds = data_source_class()
-        info_names.append(ds.ident)
-        inventory_paths.append(ds.inventory_path)
+        info_names_and_paths.append((ds.ident, ds.inventory_path))
 
     # Create the datasource (like a database view)
     data_source_registry.register(
@@ -1556,11 +1554,13 @@ def _register_multi_table_view(
             (ABCDataSource,),
             {
                 "_ident": table_view_name,
-                "_sources": list(zip(info_names, inventory_paths)),
+                "_sources": info_names_and_paths,
                 "_match_by": match_by,
                 "_errors": errors,
                 "_title": "%s: %s" % (_("Inventory"), title_plural),
-                "_infos": ["host"] + info_names,
+                "_infos": (
+                    ["host"] + [info_name for info_name, _inventory_path in info_names_and_paths]
+                ),
                 "ident": property(lambda s: s._ident),
                 "title": property(lambda s: s._title),
                 "table": property(
@@ -1576,7 +1576,7 @@ def _register_multi_table_view(
     known_common_columns = set()
     painters: list[PainterSpec] = []
     filters = []
-    for this_inventory_path, this_table_view_name in zip(inventory_paths, info_names):
+    for this_table_view_name, this_inventory_path in info_names_and_paths:
         for name, col_hint in DISPLAY_HINTS.get_hints(
             this_inventory_path.path
         ).column_hints.items():
@@ -1598,7 +1598,13 @@ def _register_multi_table_view(
             painters.append(PainterSpec(column))
             filters.append(column)
 
-    _register_views(table_view_name, title_plural, painters, filters, inventory_paths)
+    _register_views(
+        table_view_name,
+        title_plural,
+        painters,
+        filters,
+        [inventory_path for _info_name, inventory_path in info_names_and_paths],
+    )
 
 
 def _register_info_class(table_view_name: str, title_singular: str, title_plural: str) -> None:

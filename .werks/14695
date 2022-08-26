@@ -1,0 +1,20 @@
+Title: azure_traffic_manager: Monitor Azure Traffic Manager
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1661764566
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+It's now possible to monitor Azure Traffic Manager in Checkmk.
+Two new checks have been added:
+<ul>
+<li>Microsoft Azure Traffic Manager: Qps</li>
+<li>Microsoft Azure Traffic Manager: Probe State</li>
+</ul>
+The new services will be automatically discovered if you have
+an Azure Traffic Manager Profile in the resource group already
+monitored in Checkmk.
+

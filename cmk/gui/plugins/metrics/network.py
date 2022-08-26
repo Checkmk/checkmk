@@ -1569,6 +1569,12 @@ metric_info["bytes_uploaded"] = {
     "color": "41/b",
 }
 
+metric_info["queries_per_sec"] = {
+    "title": _("Queries per second"),
+    "unit": "1/s",
+    "color": "41/b",
+}
+
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |

@@ -104,6 +104,20 @@ METRICS_SELECTED = {
             None,
         ),
     ],
+    "Microsoft.Network/trafficmanagerprofiles": [
+        (
+            "QpsByEndpoint",
+            "PT1M",
+            "total",
+            None,
+        ),
+        (
+            "ProbeAgentCurrentEndpointStateByProfileResourceId",
+            "PT1M",
+            "maximum",
+            None,
+        ),
+    ],
 }
 
 AZURE_CACHE_FILE_PATH = Path(tmp_dir) / "agents" / "agent_azure"

@@ -620,3 +620,56 @@ rulespec_registry.register(
         title=lambda: _("Azure DB Storage"),
     )
 )
+
+
+def _parameter_valuespec_qps():
+    return Dictionary(
+        title=_("Levels qps"),
+        elements=[
+            (
+                "levels",
+                SimpleLevels(Integer, title=_("Queries per second"), unit="1/s"),
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="azure_traffic_manager_qps",
+        item_spec=lambda: TextInput(title=_("Qps")),
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_qps,
+        title=lambda: _("Azure Traffic Manager Qps"),
+    )
+)
+
+
+def _parameter_valuespec_probe_state():
+    return Dictionary(
+        title=_("Custom probe state"),
+        elements=[
+            (
+                "custom_state",
+                MonitoringState(
+                    title=_("State if probe state not OK"),
+                    default_value=2,
+                    help=_(
+                        "Choose the Checkmk state in case of probe state"
+                        " not OK (probe state metric is 0)."
+                    ),
+                ),
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="azure_traffic_manager_probe_state",
+        item_spec=lambda: TextInput(title=_("Probe State")),
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_probe_state,
+        title=lambda: _("Azure Traffic Manager Probe State"),
+    )
+)

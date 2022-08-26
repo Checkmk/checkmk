@@ -1,0 +1,16 @@
+title: Microsoft Azure Traffic Manager: Qps
+agents: azure
+catalog: cloud/azure
+license: GPLv2
+distribution: check_mk
+description:
+ This check reports the number of times a Traffic Manager endpoint
+ was returned per second.
+ You can configure levels using the rule "Azure Traffic Manager Qps".
+
+item:
+ The name of the resource.
+
+discovery:
+ One service is created for each traffic manager profile if
+ required metric (total_QpsByEndpoint) is given.

@@ -5,7 +5,7 @@
 
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.active_checks.common import RulespecGroupActiveChecks, transform_cert_days
+from cmk.gui.plugins.wato.active_checks.common import RulespecGroupActiveChecks
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.valuespec import (
     Dictionary,
@@ -15,12 +15,11 @@ from cmk.gui.valuespec import (
     Integer,
     ListOfStrings,
     TextInput,
-    Transform,
     Tuple,
 )
 
 
-def _valuespec_active_checks_tcp():
+def _valuespec_active_checks_tcp() -> Tuple:
     return Tuple(
         title=_("Check TCP port connection"),
         help=_(
@@ -167,20 +166,15 @@ def _valuespec_active_checks_tcp():
                     ),
                     (
                         "cert_days",
-                        Transform(
-                            valuespec=Tuple(
-                                title=_("SSL certificate validation"),
-                                help=_("Minimum number of days a certificate has to be valid"),
-                                elements=[
-                                    Integer(
-                                        title=_("Warning at or below"), minvalue=0, unit=_("days")
-                                    ),
-                                    Integer(
-                                        title=_("Critical at or below"), minvalue=0, unit=_("days")
-                                    ),
-                                ],
-                            ),
-                            forth=transform_cert_days,
+                        Tuple(
+                            title=_("SSL certificate validation"),
+                            help=_("Minimum number of days a certificate has to be valid"),
+                            elements=[
+                                Integer(title=_("Warning at or below"), minvalue=0, unit=_("days")),
+                                Integer(
+                                    title=_("Critical at or below"), minvalue=0, unit=_("days")
+                                ),
+                            ],
                         ),
                     ),
                     (

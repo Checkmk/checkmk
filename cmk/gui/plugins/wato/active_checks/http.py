@@ -11,7 +11,6 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import (
     ip_address_family_element,
     RulespecGroupActiveChecks,
-    transform_cert_days,
 )
 from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
 from cmk.gui.valuespec import (
@@ -195,23 +194,20 @@ def _valuespec_active_checks_http() -> Transform:
                                         ),
                                         (
                                             "ssl",
-                                            Transform(
-                                                valuespec=DropdownChoice(
-                                                    title=_("Use SSL/HTTPS for the connection"),
-                                                    choices=[
-                                                        (
-                                                            "auto",
-                                                            _("Use SSL with auto negotiation"),
-                                                        ),
-                                                        ("1.2", _("Use SSL, enforce TLSv1.2")),
-                                                        ("1.1", _("Use SSL, enforce TLSv1.1")),
-                                                        ("1", _("Use SSL, enforce TLSv1")),
-                                                        ("2", _("Use SSL, enforce SSLv2")),
-                                                        ("3", _("Use SSL, enforce SSLv3")),
-                                                    ],
-                                                    default_value="auto",
-                                                ),
-                                                forth=lambda x: x is True and "auto" or x,
+                                            DropdownChoice(
+                                                title=_("Use SSL/HTTPS for the connection"),
+                                                choices=[
+                                                    (
+                                                        "auto",
+                                                        _("Use SSL with auto negotiation"),
+                                                    ),
+                                                    ("1.2", _("Use SSL, enforce TLSv1.2")),
+                                                    ("1.1", _("Use SSL, enforce TLSv1.1")),
+                                                    ("1", _("Use SSL, enforce TLSv1")),
+                                                    ("2", _("Use SSL, enforce SSLv2")),
+                                                    ("3", _("Use SSL, enforce SSLv3")),
+                                                ],
+                                                default_value="auto",
                                             ),
                                         ),
                                         (
@@ -326,31 +322,24 @@ def _valuespec_active_checks_http() -> Transform:
                                         ),
                                         (
                                             "expect_regex",
-                                            Transform(
-                                                valuespec=Tuple(
-                                                    orientation="vertical",
-                                                    show_titles=False,
-                                                    elements=[
-                                                        RegExp(
-                                                            label=_("Regular expression: "),
-                                                            mode=RegExp.infix,
-                                                            maxlen=1023,
-                                                        ),
-                                                        Checkbox(label=_("Case insensitive")),
-                                                        Checkbox(
-                                                            label=_(
-                                                                "return CRITICAL if found, OK if not"
-                                                            )
-                                                        ),
-                                                        Checkbox(
-                                                            label=_("Multiline string matching")
-                                                        ),
-                                                    ],
-                                                ),
-                                                forth=lambda x: len(x) == 3
-                                                and tuple(list(x) + [False])
-                                                or x,
+                                            Tuple(
                                                 title=_("Regular expression to expect in content"),
+                                                orientation="vertical",
+                                                show_titles=False,
+                                                elements=[
+                                                    RegExp(
+                                                        label=_("Regular expression: "),
+                                                        mode=RegExp.infix,
+                                                        maxlen=1023,
+                                                    ),
+                                                    Checkbox(label=_("Case insensitive")),
+                                                    Checkbox(
+                                                        label=_(
+                                                            "return CRITICAL if found, OK if not"
+                                                        )
+                                                    ),
+                                                    Checkbox(label=_("Multiline string matching")),
+                                                ],
                                             ),
                                         ),
                                         (
@@ -461,27 +450,24 @@ def _valuespec_active_checks_http() -> Transform:
                                     elements=[
                                         (
                                             "cert_days",
-                                            Transform(
-                                                valuespec=Tuple(
-                                                    title=_("Age"),
-                                                    help=_(
-                                                        "Minimum number of days a certificate"
-                                                        " has to be valid."
-                                                    ),
-                                                    elements=[
-                                                        Integer(
-                                                            title=_("Warning at or below"),
-                                                            minvalue=0,
-                                                            unit=_("days"),
-                                                        ),
-                                                        Integer(
-                                                            title=_("Critical at or below"),
-                                                            minvalue=0,
-                                                            unit=_("days"),
-                                                        ),
-                                                    ],
+                                            Tuple(
+                                                title=_("Age"),
+                                                help=_(
+                                                    "Minimum number of days a certificate"
+                                                    " has to be valid."
                                                 ),
-                                                forth=transform_cert_days,
+                                                elements=[
+                                                    Integer(
+                                                        title=_("Warning at or below"),
+                                                        minvalue=0,
+                                                        unit=_("days"),
+                                                    ),
+                                                    Integer(
+                                                        title=_("Critical at or below"),
+                                                        minvalue=0,
+                                                        unit=_("days"),
+                                                    ),
+                                                ],
                                             ),
                                         ),
                                     ],

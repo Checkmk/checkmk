@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-from typing import Union
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupActiveChecks
 from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
@@ -17,15 +14,8 @@ from cmk.gui.valuespec import (
     Integer,
     TextAreaUnicode,
     TextInput,
-    Transform,
     Tuple,
 )
-
-
-def transform_check_sql_perfdata(perfdata: Union[str, bool]) -> str:
-    if isinstance(perfdata, str):
-        return perfdata
-    return "performance_data"
 
 
 def _valuespec_active_checks_sql() -> Dictionary:
@@ -98,29 +88,19 @@ def _valuespec_active_checks_sql() -> Dictionary:
             ),
             (
                 "sql",
-                Transform(
-                    valuespec=TextAreaUnicode(
-                        title=_("Query or SQL statement"),
-                        help=_(
-                            "The SQL-statement or procedure name which is executed on the DBMS. It must return "
-                            "a result table with one row and at least two columns. The first column must be "
-                            "an integer and is interpreted as the state (0 is OK, 1 is WARN, 2 is CRIT). "
-                            "Alternatively the first column can be interpreted as number value and you can "
-                            "define levels for this number. The "
-                            "second column is used as check output. The third column is optional and can "
-                            "contain performance data."
-                        ),
-                        allow_empty=False,
-                        monospaced=True,
+                TextAreaUnicode(
+                    title=_("Query or SQL statement"),
+                    help=_(
+                        "The SQL-statement or procedure name which is executed on the DBMS. It must return "
+                        "a result table with one row and at least two columns. The first column must be "
+                        "an integer and is interpreted as the state (0 is OK, 1 is WARN, 2 is CRIT). "
+                        "Alternatively the first column can be interpreted as number value and you can "
+                        "define levels for this number. The "
+                        "second column is used as check output. The third column is optional and can "
+                        "contain performance data."
                     ),
-                    # Former Alternative(Text, Alternative(FileUpload, Text)) based implementation
-                    # would save a string or a tuple with a string or a binary array as third element
-                    # which would then be turned into a string.
-                    # Just make all this a string
-                    forth=lambda old_val: [
-                        elem.decode() if isinstance(elem, bytes) else str(elem)
-                        for elem in ((old_val[-1] if isinstance(old_val, tuple) else old_val),)
-                    ][0],
+                    allow_empty=False,
+                    monospaced=True,
                 ),
             ),
             (
@@ -173,14 +153,11 @@ def _valuespec_active_checks_sql() -> Dictionary:
             ),
             (
                 "perfdata",
-                Transform(
-                    TextInput(
-                        title=_("Performance Data"),
-                        help=_("Store output value into RRD database in a metric with this name."),
-                        default_value="performance_data",
-                        allow_empty=False,
-                    ),
-                    forth=transform_check_sql_perfdata,
+                TextInput(
+                    title=_("Performance Data"),
+                    help=_("Store output value into RRD database in a metric with this name."),
+                    default_value="performance_data",
+                    allow_empty=False,
                 ),
             ),
             (

@@ -24,7 +24,7 @@ import subprocess
 import sys
 
 try:
-    from typing import Any, Dict, Iterable, List, Optional, Tuple
+    from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 except ImportError:
     # We need typing only for testing
     pass
@@ -110,8 +110,8 @@ class PostgresBase:
     __metaclass__ = abc.ABCMeta
     _supported_pg_versions = ["12"]
 
-    def __init__(self, db_user, instance):
-        # type: (str, Dict) -> None
+    def __init__(self, db_user, instance, process_match_patterns):
+        # type: (str, Dict, Sequence[re.Pattern]) -> None
         self.db_user = db_user
         self.name = instance["name"]
         self.pg_user = instance["pg_user"]
@@ -123,6 +123,7 @@ class PostgresBase:
         self.sep = os.sep
         self.psql, self.bin_path = self.get_psql_and_bin_path()
         self.conn_time = ""  # For caching as conn_time and version are in one query
+        self.process_match_patterns = process_match_patterns
 
     @abc.abstractmethod
     def run_sql_as_db_user(
@@ -279,6 +280,21 @@ class PostgresBase:
         )
 
         sys.stdout.write("%s\n" % ensure_str(out))
+
+    def is_postgres_process(self, process):
+        # type: (str) -> bool
+        """Determine whether a process is a PostgreSQL process.
+
+        Note that the relevant binaries are contained in PATH under Linux, so they
+        may or may not be called using the full path. Starting from PostgreSQL
+        verion >= 13, they are not called using the full path.
+
+        Examples:
+
+        1252 /usr/bin/postmaster -D /var/lib/pgsql/data
+        3148 postmaster -D /var/lib/pgsql/data
+        """
+        return any(re.search(p, process) for p in self.process_match_patterns)
 
     def execute_all_queries(self):
         """Executes all queries and writes the output formatted to stdout"""
@@ -461,7 +477,7 @@ class PostgresWin(PostgresBase):
             cmd_line, PID = task.split("\r\r\n")
             cmd_line = cmd_line.split("CommandLine=")[1]
             PID = PID.split("ProcessId=")[1]
-            if any(pat.search(cmd_line) for pat in WINDOWS_PROCESS_MATCH_PATTERNS):
+            if self.is_postgres_process(cmd_line):
                 if task.find(self.name) != -1:
                     out += "%s %s\n" % (PID, cmd_line)
         return out.rstrip()
@@ -725,7 +741,7 @@ class PostgresLinux(PostgresBase):
         ).split("\n")
         out = ""
         for proc in procs_list:
-            if any(pat.search(proc) for pat in LINUX_PROCESS_MATCH_PATTERNS):
+            if self.is_postgres_process(proc):
                 # the data directory for the instance "main" is not called "main" but "data" on some platforms
                 if self.name in proc or (self.name == "main" and "data" in proc):
                     out += proc + "\n"
@@ -945,9 +961,9 @@ class PostgresLinux(PostgresBase):
 def postgres_factory(db_user, pg_instance):
     # type: (str, Dict[str, str]) -> PostgresBase
     if IS_LINUX:
-        return PostgresLinux(db_user, pg_instance)
+        return PostgresLinux(db_user, pg_instance, LINUX_PROCESS_MATCH_PATTERNS)
     if IS_WINDOWS:
-        return PostgresWin(db_user, pg_instance)
+        return PostgresWin(db_user, pg_instance, WINDOWS_PROCESS_MATCH_PATTERNS)
     raise OSNotImplementedError
 
 

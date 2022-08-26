@@ -5,9 +5,14 @@
 def run_make_targets(Map args) {
     println("""
         ||== RUN INTEGRATION TEST ==============================================
-        ${args.collect({key, value ->
-          "||  ${key}=${value}"
-        }).join("\n")}
+        ||EDITION = ${args.EDITION}
+        ||VERSION = ${args.VERSION}
+        ||DOCKER_TAG = ${args.DOCKER_TAG}
+        ||cmk_version = ${args.cmk_version}
+        ||BRANCH = ${args.BRANCH}
+        ||MAKE_TARGET = ${args.MAKE_TARGET}
+        ||DOCKER_GROUP_ID = ${args.DOCKER_GROUP_ID}
+        ||DISTRO_LIST = ${args.DISTRO_LIST}
         ||======================================================================
         """.stripMargin());
 
@@ -16,9 +21,12 @@ def run_make_targets(Map args) {
     // TODO: this should be done by the top level scripts
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         docker_image_from_alias("IMAGE_TESTING").inside(
-            "--group-add=${args.DOCKER_GROUP_ID} --ulimit nofile=1024:1024 --env HOME=/home/jenkins \
+            "--group-add=${args.DOCKER_GROUP_ID} \
+            --ulimit nofile=1024:1024 \
+            --env HOME=/home/jenkins \
+            ${mount_reference_repo_dir} \
             -v /var/run/docker.sock:/var/run/docker.sock") {
-            
+
             // TODO dir + set WORKSPACE is needed due to nested dependency
             dir("${checkout_dir}") {
                 withEnv(["WORKSPACE=${checkout_dir}"]) {
@@ -26,7 +34,7 @@ def run_make_targets(Map args) {
                     // TODO preprocess values in top level scripts
                     def versioning = load "${checkout_dir}/buildscripts/scripts/utils/versioning.groovy"
                     def artifacts_helper = load "${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy"
-                    def image_version = args.VERSION == "git" ? versioning.get_date() : args.cmk_version;
+                    def image_version = args.VERSION == "git" ? "${build_date}" : args.cmk_version;
 
                     // TODO make independent from WORKSPACE
                     sh("rm -rf \"${WORKSPACE}/packages\"")
@@ -41,7 +49,7 @@ def run_make_targets(Map args) {
                         );
                     }
                     else if(args.DISTRO_LIST.size() == 1) {
-                        throw new Exception("Please add a case to download only the needed package for ${args.DISTRO_LIST}")
+                        raise("Please add a case to download only the needed package for ${args.DISTRO_LIST}");
                     }
                     else {
                         artifacts_helper.download_version_dir(

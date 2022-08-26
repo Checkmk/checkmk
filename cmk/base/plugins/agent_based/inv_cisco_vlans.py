@@ -31,7 +31,7 @@
 # VLANs; the VLAN is not included if its bit has a
 # value of '0'."
 
-from typing import List
+from typing import List, Sequence
 
 from .agent_based_api.v1 import contains, OIDEnd, register, SNMPTree, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -39,19 +39,56 @@ from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 Section = List[StringTable]
 
 
+def _bitmask(raw: str) -> Sequence[int]:
+
+    """
+    >>> _bitmask("F")
+    [1, 5, 6]
+
+    >>> _bitmask("FF FF")
+    [1, 5, 6, 9, 13, 14, 17, 25, 29, 30, 33, 37, 38]
+
+    >>> _bitmask("80 40 00 00 01 00 F0 00")
+    [1, 2, 3, 9, 10, 17, 25, 26, 28, 33, 34, 41, 49, 50, 57, 58, 65, 73, 74, 81, 82, 89, 97, 98, 105, 106, 110, 113, 121, 122, 129, 130, 137, 145, 149, 150, 153, 154, 161, 169, 170, 177, 178]
+
+    """
+    # This is the state as I refactor this.
+    # I am not convinced this is right.
+    #
+    #  for k, hex_ in enumerate(raw.split())
+    #  for index, flag in enumerate(bin(int(hex_, 16))[2:])
+    #
+    # Looks better to me -- but there are no tests.
+    # The above would result in
+    #
+    #  >>> _bitmask("FF FF")
+    #  [1, 2, 3, 4, ..., 15, 16]
+    #
+    return [
+        k * 8 + index + 1
+        for k, hex_ in enumerate(raw)
+        for index, flag in enumerate(bin(ord(hex_))[2:])
+        if flag == "1"
+    ]
+
+
 def _parse_multi_vlan(vlan_multi: str) -> str:
-    """compress a list of vlans into a readable format"""
+    """compress a list of vlans into a readable format
+
+    I am not sure if this is correct:
+
+    >>> _parse_multi_vlan("80 40 00 00 01 00 F0 00")
+    '1-3, 9-10, 17, 25-26, 28, 33-34, 41, 49-50, 57-58, 65, 73-74, 81-82, 89, 97-98, 105-106, 110, 113, 121-122, 129-130, 137, 145, 149-150, 153-154, 161, 169-170, 177-178'
+    >>> _parse_multi_vlan("FF FF")
+    '1, 5-6, 9, 13-14, 17, 25, 29-30, 33, 37-38'
+    """
 
     def concatenate_vlans(vlan, subinfo):
         if vlan not in subinfo:
             subinfo.append(vlan)
         return "-".join(map(str, subinfo))
 
-    vlans = []
-    for k, hex_ in enumerate(vlan_multi):
-        for l, bit in enumerate(bin(ord(hex_))[2:]):
-            if bit == "1":
-                vlans.append(k * 8 + l + 1)
+    vlans = _bitmask(vlan_multi)
 
     if not vlans:
         return ""

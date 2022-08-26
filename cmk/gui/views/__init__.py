@@ -57,6 +57,7 @@ from cmk.gui.ctx_stack import g
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKGeneralException, MKInternalError, MKUserError
+from cmk.gui.exporter import exporter_registry  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.top_heading import top_heading
 from cmk.gui.http import request, response
@@ -124,7 +125,6 @@ from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused
     CommandSpec,
     compare_ips,
     declare_1to1_sorter,
-    exporter_registry,
     format_plugin_output,
     get_custom_var,
     get_linked_visual_request_vars,
@@ -482,6 +482,7 @@ def _register_pre_21_plugin_api() -> None:
     """
     # Needs to be a local import to not influence the regular plugin loading order
     import cmk.gui.data_source as data_source
+    import cmk.gui.exporter as exporter
     import cmk.gui.plugins.views as api_module
     import cmk.gui.plugins.views.utils as plugin_utils
     import cmk.gui.sorter as sorter
@@ -493,6 +494,12 @@ def _register_pre_21_plugin_api() -> None:
         "RowTable",
     ):
         api_module.__dict__[name] = data_source.__dict__[name]
+
+    for name in (
+        "Exporter",
+        "exporter_registry",
+    ):
+        api_module.__dict__[name] = exporter.__dict__[name]
 
     for name in (
         "declare_simple_sorter",
@@ -531,8 +538,6 @@ def _register_pre_21_plugin_api() -> None:
         "display_options",
         "EmptyCell",
         "ExportCellContent",
-        "Exporter",
-        "exporter_registry",
         "format_plugin_output",
         "get_graph_timerange_from_painter_options",
         "get_label_sources",

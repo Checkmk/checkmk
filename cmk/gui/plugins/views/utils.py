@@ -26,7 +26,6 @@ from typing import (
     Hashable,
     List,
     Mapping,
-    NamedTuple,
     Optional,
     Sequence,
     Set,
@@ -458,19 +457,6 @@ class ViewLayoutRegistry(cmk.utils.plugin_registry.Registry[Type[Layout]]):
 
 
 layout_registry = ViewLayoutRegistry()
-
-
-class Exporter(NamedTuple):
-    name: str
-    handler: Callable[["View", Rows], None]
-
-
-class ViewExporterRegistry(cmk.utils.plugin_registry.Registry[Exporter]):
-    def plugin_name(self, instance):
-        return instance.name
-
-
-exporter_registry = ViewExporterRegistry()
 
 
 class CommandGroup(abc.ABC):

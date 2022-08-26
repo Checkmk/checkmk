@@ -8,8 +8,9 @@ import time
 from typing import List, TYPE_CHECKING
 
 import cmk.gui.utils.escaping as escaping
+from cmk.gui.exporter import Exporter, exporter_registry
 from cmk.gui.http import request, response
-from cmk.gui.plugins.views.utils import Exporter, exporter_registry, join_row, output_csv_headers
+from cmk.gui.plugins.views.utils import join_row, output_csv_headers
 from cmk.gui.type_defs import Rows
 from cmk.gui.utils.html import HTML
 

@@ -16,6 +16,7 @@ import cmk.gui.plugins.views.utils
 import cmk.gui.views
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, data_source_registry, RowTable
+from cmk.gui.exporter import exporter_registry
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.views.utils import Cell, Painter
@@ -128,7 +129,7 @@ def test_registered_exporters() -> None:
         "python",
         "python-raw",
     ]
-    names = cmk.gui.plugins.views.utils.exporter_registry.keys()
+    names = exporter_registry.keys()
     assert sorted(expected) == sorted(names)
 
 

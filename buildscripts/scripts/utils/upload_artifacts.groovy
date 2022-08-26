@@ -90,10 +90,10 @@ def create_hashes(ARCHIVE_DIR) {
 def deploy_to_website(UPLOAD_URL, PORT, CMK_VERS) {
     stage("Deploy to Website") {
         withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
-            sh """
+            sh("""
                 ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT} ${UPLOAD_URL} \
                     ln -sf /var/downloads/checkmk/${CMK_VERS} /smb-share-customer/checkmk
-            """
+            """);
         }
     }
 }

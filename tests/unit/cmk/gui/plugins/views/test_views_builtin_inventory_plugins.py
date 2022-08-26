@@ -13,6 +13,20 @@ def test_display_hint_titles() -> None:
     assert all("title" in hint and "short" not in hint for hint in inventory_displayhints.values())
 
 
+_IGNORED_KEYS_BY_PATH = {
+    ("hardware", "system"): ["serial_number", "model_name"],
+    ("hardware", "storage", "disks"): [
+        "bus",
+        "serial",
+        "local",
+        "size",
+        "product",
+        "type",
+        "vendor",
+    ],
+}
+
+
 def test_related_display_hints() -> None:
     # Each node of a display hint (especially for table columns or attributes) must have a display
     # hint, too.
@@ -37,8 +51,25 @@ def test_related_display_hints() -> None:
     def _check_raw_hints(related_raw_hints: _RelatedRawHints) -> bool:
         return bool(related_raw_hints.for_node) ^ bool(related_raw_hints.for_table)
 
+    def _check_table_key_order(path: SDPath, related_raw_hints: _RelatedRawHints) -> bool:
+        ignored_keys = set(_IGNORED_KEYS_BY_PATH.get(path, []))
+        return (
+            set(related_raw_hints.for_table.get("keyorder", [])) - ignored_keys
+            == set(related_raw_hints.by_columns) - ignored_keys
+        )
+
+    def _check_attributes_key_order(path: SDPath, related_raw_hints: _RelatedRawHints) -> bool:
+        ignored_keys = set(_IGNORED_KEYS_BY_PATH.get(path, []))
+        return (
+            set(related_raw_hints.for_node.get("keyorder", [])) - ignored_keys
+            == set(related_raw_hints.by_attributes) - ignored_keys
+        )
+
     assert all(
-        _check_path(path) and _check_raw_hints(related_raw_hints)
+        _check_path(path)
+        and _check_raw_hints(related_raw_hints)
+        and _check_table_key_order(path, related_raw_hints)
+        and _check_attributes_key_order(path, related_raw_hints)
         for path, related_raw_hints in DisplayHints._get_related_raw_hints(
             inventory_displayhints
         ).items()

@@ -12,6 +12,7 @@ RUN sed -i 's/^mirrorlist/#mirrorlist/' /etc/yum.repos.d/* \
 RUN yum -y --enablerepo=powertools --allowerasing install \
     epel-release \
     && yum -y --enablerepo=powertools --allowerasing install \
+    bison \
     curl \
     enchant \
     gcc \

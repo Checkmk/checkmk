@@ -1,0 +1,17 @@
+Title: Fix ping endpoint for InfluxDB
+Class: fix
+Compatible: compat
+Component: core
+Date: 1661508150
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p11
+
+The InfluxDB connector checks whether a connection is possible over
+the "ping" endpoint.
+
+Before, the connector erroneously used the /api/v2/ping endpoint, which
+has stopped working in recent versions of the API.  Now, it correctly
+uses the documented /ping endpoint.

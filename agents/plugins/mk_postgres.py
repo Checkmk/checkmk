@@ -42,6 +42,25 @@ OS = platform.system()
 IS_LINUX = OS == "Linux"
 IS_WINDOWS = OS == "Windows"
 LOGGER = logging.getLogger(__name__)
+LINUX_PROCESS_MATCH_PATTERNS = [
+    re.compile(pattern)
+    for pattern in [
+        "(.*)bin/postgres(.*)",
+        "(.*)bin/postmaster(.*)",
+        "(.*)bin/edb-postgres(.*)",
+        "^[0-9]+ postgres (.*)",
+        "^[0-9]+ postmaster (.*)",
+        "^[0-9]+ edb-postgres (.*)",
+    ]
+]
+WINDOWS_PROCESS_MATCH_PATTERNS = [
+    re.compile(pattern)
+    for pattern in [
+        r"(.*)bin\\postgres(.*)",
+        r"(.*)bin\\postmaster(.*)",
+        r"(.*)bin\\edb-postgres(.*)",
+    ]
+]
 
 
 class OSNotImplementedError(NotImplementedError):
@@ -428,15 +447,6 @@ class PostgresWin(PostgresBase):
         # type: () -> str
         """Gets all instances"""
 
-        procs_to_match = [
-            re.compile(pattern)
-            for pattern in [
-                r"(.*)bin\\postgres(.*)",
-                r"(.*)bin\\postmaster(.*)",
-                r"(.*)bin\\edb-postgres(.*)",
-            ]
-        ]
-
         taskslist = ensure_str(
             subprocess_check_output(
                 ["wmic", "process", "get", "processid,commandline", "/format:list"]
@@ -451,7 +461,7 @@ class PostgresWin(PostgresBase):
             cmd_line, PID = task.split("\r\r\n")
             cmd_line = cmd_line.split("CommandLine=")[1]
             PID = PID.split("ProcessId=")[1]
-            if any(pat.search(cmd_line) for pat in procs_to_match):
+            if any(pat.search(cmd_line) for pat in WINDOWS_PROCESS_MATCH_PATTERNS):
                 if task.find(self.name) != -1:
                     out += "%s %s\n" % (PID, cmd_line)
         return out.rstrip()
@@ -710,24 +720,12 @@ class PostgresLinux(PostgresBase):
     def get_instances(self):
         # type: () -> str
 
-        procs_to_match = [
-            re.compile(pattern)
-            for pattern in [
-                "(.*)bin/postgres(.*)",
-                "(.*)bin/postmaster(.*)",
-                "(.*)bin/edb-postgres(.*)",
-                "^[0-9]+ postgres (.*)",
-                "^[0-9]+ postmaster (.*)",
-                "^[0-9]+ edb-postgres (.*)",
-            ]
-        ]
-
         procs_list = ensure_str(
             subprocess_check_output(["ps", "h", "-eo", "pid:1,command:1"])
         ).split("\n")
         out = ""
         for proc in procs_list:
-            if any(pat.search(proc) for pat in procs_to_match):
+            if any(pat.search(proc) for pat in LINUX_PROCESS_MATCH_PATTERNS):
                 # the data directory for the instance "main" is not called "main" but "data" on some platforms
                 if self.name in proc or (self.name == "main" and "data" in proc):
                     out += proc + "\n"

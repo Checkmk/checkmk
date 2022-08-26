@@ -23,7 +23,6 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
     TextInput,
-    Transform,
     Tuple,
     ValueSpec,
 )
@@ -96,16 +95,6 @@ def _vs_element_aws_limits():
             totext=_("Monitor service limits"),
         ),
     )
-
-
-def _transform_aws(d):
-    services = d["services"]
-    if "cloudwatch" in services:
-        services["cloudwatch_alarms"] = services["cloudwatch"]
-        del services["cloudwatch"]
-    if "assume_role" not in d:
-        d["assume_role"] = {}
-    return d
 
 
 class AWSSpecialAgentValuespecBuilder:
@@ -378,112 +367,109 @@ class AWSSpecialAgentValuespecBuilder:
         ]
 
 
-def _valuespec_special_agents_aws():
+def _valuespec_special_agents_aws() -> Dictionary:
     valuespec_builder = AWSSpecialAgentValuespecBuilder(is_plus_edition())
     global_services = valuespec_builder.get_global_services()
     regional_services = valuespec_builder.get_regional_services()
     regional_services_default_keys = [service[0] for service in regional_services]
 
-    return Transform(
-        valuespec=Dictionary(
-            title=_("Amazon Web Services (AWS)"),
-            elements=[
-                (
-                    "access_key_id",
-                    TextInput(
-                        title=_("The access key ID for your AWS account"),
-                        allow_empty=False,
-                        size=50,
-                    ),
+    return Dictionary(
+        title=_("Amazon Web Services (AWS)"),
+        elements=[
+            (
+                "access_key_id",
+                TextInput(
+                    title=_("The access key ID for your AWS account"),
+                    allow_empty=False,
+                    size=50,
                 ),
-                (
-                    "secret_access_key",
-                    IndividualOrStoredPassword(
-                        title=_("The secret access key for your AWS account"),
-                        allow_empty=False,
-                    ),
+            ),
+            (
+                "secret_access_key",
+                IndividualOrStoredPassword(
+                    title=_("The secret access key for your AWS account"),
+                    allow_empty=False,
                 ),
-                (
-                    "proxy_details",
-                    Dictionary(
-                        title=_("Proxy server details"),
-                        elements=[
-                            ("proxy_host", TextInput(title=_("Proxy host"), allow_empty=False)),
-                            ("proxy_port", Integer(title=_("Port"))),
-                            (
-                                "proxy_user",
-                                TextInput(
-                                    title=_("Username"),
-                                    size=32,
-                                ),
+            ),
+            (
+                "proxy_details",
+                Dictionary(
+                    title=_("Proxy server details"),
+                    elements=[
+                        ("proxy_host", TextInput(title=_("Proxy host"), allow_empty=False)),
+                        ("proxy_port", Integer(title=_("Port"))),
+                        (
+                            "proxy_user",
+                            TextInput(
+                                title=_("Username"),
+                                size=32,
                             ),
-                            ("proxy_password", IndividualOrStoredPassword(title=_("Password"))),
-                        ],
-                        optional_keys=["proxy_port", "proxy_user", "proxy_password"],
-                    ),
+                        ),
+                        ("proxy_password", IndividualOrStoredPassword(title=_("Password"))),
+                    ],
+                    optional_keys=["proxy_port", "proxy_user", "proxy_password"],
                 ),
-                (
-                    "assume_role",
-                    Dictionary(
-                        title=_("Assume a different IAM role"),
-                        elements=[
-                            (
-                                "role_arn_id",
-                                Tuple(
-                                    title=_("Use STS AssumeRole to assume a different IAM role"),
-                                    elements=[
-                                        TextInput(
-                                            title=_("The ARN of the IAM role to assume"),
-                                            size=50,
-                                            help=_(
-                                                "The Amazon Resource Name (ARN) of the role to assume."
-                                            ),
+            ),
+            (
+                "assume_role",
+                Dictionary(
+                    title=_("Assume a different IAM role"),
+                    elements=[
+                        (
+                            "role_arn_id",
+                            Tuple(
+                                title=_("Use STS AssumeRole to assume a different IAM role"),
+                                elements=[
+                                    TextInput(
+                                        title=_("The ARN of the IAM role to assume"),
+                                        size=50,
+                                        help=_(
+                                            "The Amazon Resource Name (ARN) of the role to assume."
                                         ),
-                                        TextInput(
-                                            title=_("External ID (optional)"),
-                                            size=50,
-                                            help=_(
-                                                "A unique identifier that might be required when you assume a role in another "
-                                                "account. If the administrator of the account to which the role belongs provided "
-                                                "you with an external ID, then provide that value in the External ID parameter. "
-                                            ),
+                                    ),
+                                    TextInput(
+                                        title=_("External ID (optional)"),
+                                        size=50,
+                                        help=_(
+                                            "A unique identifier that might be required when you assume a role in another "
+                                            "account. If the administrator of the account to which the role belongs provided "
+                                            "you with an external ID, then provide that value in the External ID parameter. "
                                         ),
-                                    ],
-                                ),
-                            )
-                        ],
-                    ),
+                                    ),
+                                ],
+                            ),
+                        )
+                    ],
                 ),
-                (
-                    "global_services",
-                    Dictionary(
-                        title=_("Global services to monitor"),
-                        elements=global_services,
-                    ),
+            ),
+            (
+                "global_services",
+                Dictionary(
+                    title=_("Global services to monitor"),
+                    elements=global_services,
                 ),
-                (
-                    "regions",
-                    ListChoice(
-                        title=_("Regions to use"),
-                        choices=sorted(aws_constants.AWSRegions, key=lambda x: x[1]),
-                    ),
+            ),
+            (
+                "regions",
+                ListChoice(
+                    title=_("Regions to use"),
+                    choices=sorted(aws_constants.AWSRegions, key=lambda x: x[1]),
                 ),
-                (
-                    "services",
-                    Dictionary(
-                        title=_("Services per region to monitor"),
-                        elements=regional_services,
-                        default_keys=regional_services_default_keys,
-                    ),
+            ),
+            (
+                "services",
+                Dictionary(
+                    title=_("Services per region to monitor"),
+                    elements=regional_services,
+                    default_keys=regional_services_default_keys,
                 ),
-                (
-                    "overall_tags",
-                    _vs_aws_tags(_("Restrict monitoring services by one of these AWS tags")),
-                ),
-            ],
-            optional_keys=["overall_tags", "proxy_details"],
-        ),
-        forth=_transform_aws,
+            ),
+            (
+                "overall_tags",
+                _vs_aws_tags(_("Restrict monitoring services by one of these AWS tags")),
+            ),
+        ],
+        optional_keys=["overall_tags", "proxy_details"],
     )
 
 

@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsHardware
 from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
-from cmk.gui.valuespec import Dictionary, ListChoice, TextInput, Transform
+from cmk.gui.valuespec import Dictionary, ListChoice, TextInput
 from cmk.gui.watolib.rulespecs import Rulespec
 
 
@@ -16,7 +16,7 @@ def _factory_default_special_agents_emcvnx():
     return Rulespec.FACTORY_DEFAULT_UNUSED
 
 
-def _valuespec_special_agents_emcvnx():
+def _valuespec_special_agents_emcvnx() -> Dictionary:
     return Dictionary(
         title=_("EMC VNX storage systems"),
         help=_(
@@ -53,27 +53,25 @@ def _valuespec_special_agents_emcvnx():
             ),
             (
                 "infos",
-                Transform(
-                    valuespec=ListChoice(
-                        choices=[
-                            ("disks", _("Disks")),
-                            ("hba", _("iSCSI HBAs")),
-                            ("hwstatus", _("Hardware status")),
-                            ("raidgroups", _("RAID groups")),
-                            ("agent", _("Model and revsion")),
-                            ("sp_util", _("Storage processor utilization")),
-                            ("writecache", _("Write cache state")),
-                            ("mirrorview", _("Mirror views")),
-                            ("storage_pools", _("Storage pools")),
-                        ],
-                        default_value=[
-                            "disks",
-                            "hba",
-                            "hwstatus",
-                        ],
-                        allow_empty=False,
-                    ),
+                ListChoice(
                     title=_("Retrieve information about..."),
+                    choices=[
+                        ("disks", _("Disks")),
+                        ("hba", _("iSCSI HBAs")),
+                        ("hwstatus", _("Hardware status")),
+                        ("raidgroups", _("RAID groups")),
+                        ("agent", _("Model and revsion")),
+                        ("sp_util", _("Storage processor utilization")),
+                        ("writecache", _("Write cache state")),
+                        ("mirrorview", _("Mirror views")),
+                        ("storage_pools", _("Storage pools")),
+                    ],
+                    default_value=[
+                        "disks",
+                        "hba",
+                        "hwstatus",
+                    ],
+                    allow_empty=False,
                 ),
             ),
         ],

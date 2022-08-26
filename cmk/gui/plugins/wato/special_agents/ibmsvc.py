@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsHardware
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import Checkbox, Dictionary, ListChoice, TextInput, Transform
+from cmk.gui.valuespec import Checkbox, Dictionary, ListChoice, TextInput
 from cmk.gui.watolib.rulespecs import Rulespec
 
 
@@ -16,7 +16,7 @@ def _factory_default_special_agents_ibmsvc():
     return Rulespec.FACTORY_DEFAULT_UNUSED
 
 
-def _valuespec_special_agents_ibmsvc():
+def _valuespec_special_agents_ibmsvc() -> Dictionary:
     return Dictionary(
         title=_("IBM SVC / V7000 storage systems"),
         help=_(
@@ -56,43 +56,41 @@ def _valuespec_special_agents_ibmsvc():
             ),
             (
                 "infos",
-                Transform(
-                    valuespec=ListChoice(
-                        choices=[
-                            ("lshost", _("Hosts Connected")),
-                            ("lslicense", _("Licensing Status")),
-                            ("lsmdisk", _("MDisks")),
-                            ("lsmdiskgrp", _("MDisksGrps")),
-                            ("lsnode", _("IO Groups")),
-                            ("lsnodestats", _("Node Stats")),
-                            ("lssystem", _("System Info")),
-                            ("lssystemstats", _("System Stats")),
-                            ("lseventlog", _("Event Log")),
-                            ("lsportfc", _("FC Ports")),
-                            ("lsportsas", _("SAS Ports")),
-                            ("lsenclosure", _("Enclosures")),
-                            ("lsenclosurestats", _("Enclosure Stats")),
-                            ("lsarray", _("RAID Arrays")),
-                            ("disks", _("Physical Disks")),
-                        ],
-                        default_value=[
-                            "lshost",
-                            "lslicense",
-                            "lsmdisk",
-                            "lsmdiskgrp",
-                            "lsnode",
-                            "lsnodestats",
-                            "lssystem",
-                            "lssystemstats",
-                            "lsportfc",
-                            "lsenclosure",
-                            "lsenclosurestats",
-                            "lsarray",
-                            "disks",
-                        ],
-                        allow_empty=False,
-                    ),
+                ListChoice(
                     title=_("Retrieve information about..."),
+                    choices=[
+                        ("lshost", _("Hosts Connected")),
+                        ("lslicense", _("Licensing Status")),
+                        ("lsmdisk", _("MDisks")),
+                        ("lsmdiskgrp", _("MDisksGrps")),
+                        ("lsnode", _("IO Groups")),
+                        ("lsnodestats", _("Node Stats")),
+                        ("lssystem", _("System Info")),
+                        ("lssystemstats", _("System Stats")),
+                        ("lseventlog", _("Event Log")),
+                        ("lsportfc", _("FC Ports")),
+                        ("lsportsas", _("SAS Ports")),
+                        ("lsenclosure", _("Enclosures")),
+                        ("lsenclosurestats", _("Enclosure Stats")),
+                        ("lsarray", _("RAID Arrays")),
+                        ("disks", _("Physical Disks")),
+                    ],
+                    default_value=[
+                        "lshost",
+                        "lslicense",
+                        "lsmdisk",
+                        "lsmdiskgrp",
+                        "lsnode",
+                        "lsnodestats",
+                        "lssystem",
+                        "lssystemstats",
+                        "lsportfc",
+                        "lsenclosure",
+                        "lsenclosurestats",
+                        "lsarray",
+                        "disks",
+                    ],
+                    allow_empty=False,
                 ),
             ),
         ],

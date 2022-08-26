@@ -14,7 +14,6 @@ from cmk.gui.valuespec import (
     DictionaryElements,
     DropdownChoice,
     TextInput,
-    Transform,
 )
 
 
@@ -35,17 +34,6 @@ def _special_agents_ipmi_sensors_vs_ipmi_common_elements() -> DictionaryElements
             ),
         ),
     ]
-
-
-def _special_agents_ipmi_sensors_transform_ipmi_sensors(params):
-    # Note that the key privilege_lvl was once a common element with free text as input and now it
-    # is tool-specific and a dropdown menu. However, we do not need a transform for this. Either
-    # the user anyway entered a valid choice or the special agent crashed. There is no good way of
-    # transforming an invalid choice to a valid choice. Instead, the user has to fix this manually
-    # by editing the rule.
-    if isinstance(params, dict):
-        return ("freeipmi", params)
-    return params
 
 
 def _special_agents_ipmi_sensors_vs_freeipmi() -> Dictionary:
@@ -189,20 +177,17 @@ def _special_agents_ipmi_sensors_vs_ipmitool() -> Dictionary:
     )
 
 
-def _valuespec_special_agents_ipmi_sensors() -> Transform:
-    return Transform(
-        valuespec=CascadingDropdown(
-            choices=[
-                ("freeipmi", _("Use FreeIPMI"), _special_agents_ipmi_sensors_vs_freeipmi()),
-                ("ipmitool", _("Use IPMItool"), _special_agents_ipmi_sensors_vs_ipmitool()),
-            ],
-            title=_("IPMI Sensors via Freeipmi or IPMItool"),
-            help=_(
-                "This rule selects the Agent IPMI Sensors instead of the normal Check_MK Agent "
-                "which collects the data through the FreeIPMI resp. IPMItool command"
-            ),
+def _valuespec_special_agents_ipmi_sensors() -> CascadingDropdown:
+    return CascadingDropdown(
+        choices=[
+            ("freeipmi", _("Use FreeIPMI"), _special_agents_ipmi_sensors_vs_freeipmi()),
+            ("ipmitool", _("Use IPMItool"), _special_agents_ipmi_sensors_vs_ipmitool()),
+        ],
+        title=_("IPMI Sensors via Freeipmi or IPMItool"),
+        help=_(
+            "This rule selects the Agent IPMI Sensors instead of the normal Check_MK Agent "
+            "which collects the data through the FreeIPMI resp. IPMItool command"
         ),
-        forth=_special_agents_ipmi_sensors_transform_ipmi_sensors,
     )
 
 

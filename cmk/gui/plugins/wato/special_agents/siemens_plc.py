@@ -19,8 +19,8 @@ from cmk.gui.valuespec import (
     Integer,
     ListOf,
     TextInput,
-    Transform,
     Tuple,
+    ValueSpec,
 )
 from cmk.gui.watolib.rulespecs import Rulespec
 
@@ -37,31 +37,27 @@ def _special_agents_siemens_plc_validate_siemens_plc_values(value, varprefix):
         valuetypes[valuetype].append(ident)
 
 
-def _special_agents_siemens_plc_siemens_plc_value():
+def _special_agents_siemens_plc_siemens_plc_value() -> list[ValueSpec]:
     return [
-        Transform(
-            valuespec=CascadingDropdown(
-                title=_("The Area"),
-                choices=[
-                    (
-                        "db",
-                        _("Datenbaustein"),
-                        Integer(
-                            title="<nobr>%s</nobr>" % _("DB Number"),
-                            minvalue=1,
-                        ),
+        CascadingDropdown(
+            title=_("The Area"),
+            choices=[
+                (
+                    "db",
+                    _("Datenbaustein"),
+                    Integer(
+                        title="<nobr>%s</nobr>" % _("DB Number"),
+                        minvalue=1,
                     ),
-                    ("input", _("Input")),
-                    ("output", _("Output")),
-                    ("merker", _("Merker")),
-                    ("timer", _("Timer")),
-                    ("counter", _("Counter")),
-                ],
-                orientation="horizontal",
-                sorted=True,
-            ),
-            # Transform old Integer() value spec to new cascading dropdown value
-            forth=lambda x: isinstance(x, int) and ("db", x) or x,
+                ),
+                ("input", _("Input")),
+                ("output", _("Output")),
+                ("merker", _("Merker")),
+                ("timer", _("Timer")),
+                ("counter", _("Counter")),
+            ],
+            orientation="horizontal",
+            sorted=True,
         ),
         Float(
             title=_("Address"),

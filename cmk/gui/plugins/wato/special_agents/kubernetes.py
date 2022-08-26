@@ -22,7 +22,6 @@ from cmk.gui.valuespec import (
     Integer,
     ListChoice,
     TextInput,
-    Transform,
 )
 
 
@@ -43,22 +42,6 @@ def _transform_kubernetes_connection_params(value):
         return "url_custom", value.pop("url-prefix") + url_suffix
 
     return "ipaddress", {k: value.pop(k) for k in ["port", "path-prefix"] if k in value}
-
-
-def special_agents_kubernetes_transform(value):
-    if "infos" not in value:
-        value["infos"] = ["nodes"]
-    if "no-cert-check" not in value:
-        value["no-cert-check"] = False
-    if "namespaces" not in value:
-        value["namespaces"] = False
-
-    if "api-server-endpoint" in value:
-        return value
-
-    value["api-server-endpoint"] = _transform_kubernetes_connection_params(value)
-
-    return value
 
 
 def _kubernetes_connection_elements():
@@ -88,118 +71,113 @@ def _kubernetes_connection_elements():
     ]
 
 
-def _valuespec_special_agents_kubernetes():
-    return Transform(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "api-server-endpoint",
-                    CascadingDropdown(
-                        choices=[
-                            (
-                                "hostname",
-                                _("Hostname"),
-                                Dictionary(elements=_kubernetes_connection_elements()),
-                            ),
-                            (
-                                "ipaddress",
-                                _("IP address"),
-                                Dictionary(elements=_kubernetes_connection_elements()),
-                            ),
-                            (
-                                "url_custom",
-                                _("Custom URL"),
-                                TextInput(
-                                    allow_empty=False,
-                                    size=80,
-                                ),
-                            ),
-                        ],
-                        orientation="horizontal",
-                        title=_("API server endpoint"),
-                        help=_(
-                            'The URL that will be contacted for Kubernetes API calls. If the "Hostname" '
-                            'or the "IP Address" options are selected, the DNS hostname or IP address and '
-                            "a secure protocol (HTTPS) are used."
+def _valuespec_special_agents_kubernetes() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "api-server-endpoint",
+                CascadingDropdown(
+                    choices=[
+                        (
+                            "hostname",
+                            _("Hostname"),
+                            Dictionary(elements=_kubernetes_connection_elements()),
                         ),
-                    ),
-                ),
-                (
-                    "token",
-                    IndividualOrStoredPassword(
-                        title=_("Token"),
-                        allow_empty=False,
-                    ),
-                ),
-                (
-                    "no-cert-check",
-                    Alternative(
-                        title=_("SSL certificate verification"),
-                        elements=[
-                            FixedValue(value=False, title=_("Verify the certificate"), totext=""),
-                            FixedValue(
-                                value=True,
-                                title=_("Ignore certificate errors (unsecure)"),
-                                totext="",
-                            ),
-                        ],
-                        default_value=False,
-                    ),
-                ),
-                (
-                    "namespaces",
-                    Alternative(
-                        title=_("Namespace prefix for hosts"),
-                        elements=[
-                            FixedValue(
-                                value=False, title=_("Don't use a namespace prefix"), totext=""
-                            ),
-                            FixedValue(value=True, title=_("Use a namespace prefix"), totext=""),
-                        ],
-                        help=_(
-                            "If a cluster uses multiple namespaces you need to activate this option. "
-                            "Hosts for namespaced Kubernetes objects will then be prefixed with the "
-                            "name of their namespace. This makes Kubernetes resources in different "
-                            "namespaces that have the same name distinguishable, but results in "
-                            "longer hostnames."
+                        (
+                            "ipaddress",
+                            _("IP address"),
+                            Dictionary(elements=_kubernetes_connection_elements()),
                         ),
-                        default_value=False,
+                        (
+                            "url_custom",
+                            _("Custom URL"),
+                            TextInput(
+                                allow_empty=False,
+                                size=80,
+                            ),
+                        ),
+                    ],
+                    orientation="horizontal",
+                    title=_("API server endpoint"),
+                    help=_(
+                        'The URL that will be contacted for Kubernetes API calls. If the "Hostname" '
+                        'or the "IP Address" options are selected, the DNS hostname or IP address and '
+                        "a secure protocol (HTTPS) are used."
                     ),
                 ),
-                (
-                    "infos",
-                    ListChoice(
-                        choices=[
-                            ("nodes", _("Nodes")),
-                            ("services", _("Services")),
-                            ("ingresses", _("Ingresses")),
-                            ("deployments", _("Deployments")),
-                            ("pods", _("Pods")),
-                            ("endpoints", _("Endpoints")),
-                            ("daemon_sets", _("Daemon sets")),
-                            ("stateful_sets", _("Stateful sets")),
-                            ("jobs", _("Job")),
-                        ],
-                        default_value=[
-                            "nodes",
-                            "endpoints",
-                            "ingresses",
-                        ],
-                        allow_empty=False,
-                        title=_("Retrieve information about..."),
-                    ),
-                ),
-                filter_kubernetes_namespace_element(),
-            ],
-            optional_keys=["port", "url-prefix", "path-prefix", "namespace_include_patterns"],
-            title=_("Kubernetes (deprecated)"),
-            help=_(
-                "This special agent is deprecated and will be removed in "
-                'Checkmk version 2.2.0. Please use the "Kubernetes" ruleset to '
-                "configure the new special agent for Kubernetes."
             ),
+            (
+                "token",
+                IndividualOrStoredPassword(
+                    title=_("Token"),
+                    allow_empty=False,
+                ),
+            ),
+            (
+                "no-cert-check",
+                Alternative(
+                    title=_("SSL certificate verification"),
+                    elements=[
+                        FixedValue(value=False, title=_("Verify the certificate"), totext=""),
+                        FixedValue(
+                            value=True,
+                            title=_("Ignore certificate errors (unsecure)"),
+                            totext="",
+                        ),
+                    ],
+                    default_value=False,
+                ),
+            ),
+            (
+                "namespaces",
+                Alternative(
+                    title=_("Namespace prefix for hosts"),
+                    elements=[
+                        FixedValue(value=False, title=_("Don't use a namespace prefix"), totext=""),
+                        FixedValue(value=True, title=_("Use a namespace prefix"), totext=""),
+                    ],
+                    help=_(
+                        "If a cluster uses multiple namespaces you need to activate this option. "
+                        "Hosts for namespaced Kubernetes objects will then be prefixed with the "
+                        "name of their namespace. This makes Kubernetes resources in different "
+                        "namespaces that have the same name distinguishable, but results in "
+                        "longer hostnames."
+                    ),
+                    default_value=False,
+                ),
+            ),
+            (
+                "infos",
+                ListChoice(
+                    choices=[
+                        ("nodes", _("Nodes")),
+                        ("services", _("Services")),
+                        ("ingresses", _("Ingresses")),
+                        ("deployments", _("Deployments")),
+                        ("pods", _("Pods")),
+                        ("endpoints", _("Endpoints")),
+                        ("daemon_sets", _("Daemon sets")),
+                        ("stateful_sets", _("Stateful sets")),
+                        ("jobs", _("Job")),
+                    ],
+                    default_value=[
+                        "nodes",
+                        "endpoints",
+                        "ingresses",
+                    ],
+                    allow_empty=False,
+                    title=_("Retrieve information about..."),
+                ),
+            ),
+            filter_kubernetes_namespace_element(),
+        ],
+        optional_keys=["port", "url-prefix", "path-prefix", "namespace_include_patterns"],
+        title=_("Kubernetes (deprecated)"),
+        help=_(
+            "This special agent is deprecated and will be removed in "
+            'Checkmk version 2.2.0. Please use the "Kubernetes" ruleset to '
+            "configure the new special agent for Kubernetes."
         ),
-        forth=special_agents_kubernetes_transform,
     )
 
 

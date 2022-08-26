@@ -7,28 +7,8 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
 from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
-from cmk.gui.valuespec import (
-    Checkbox,
-    Dictionary,
-    DropdownChoice,
-    Integer,
-    TextInput,
-    Transform,
-    Tuple,
-)
+from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, Integer, TextInput, Tuple
 from cmk.gui.watolib.rulespecs import Rulespec
-
-
-def _special_agents_activemq_transform_activemq(value):
-    if not isinstance(value, tuple):
-        if "protocol" not in value:
-            value["protocol"] = "http"
-        return value
-    new_value = {}
-    new_value["servername"] = value[0]
-    new_value["port"] = value[1]
-    new_value["use_piggyback"] = "piggybag" in value[2]  # piggybag...
-    return new_value
 
 
 def _factory_default_special_agents_activemq():
@@ -36,44 +16,41 @@ def _factory_default_special_agents_activemq():
     return Rulespec.FACTORY_DEFAULT_UNUSED
 
 
-def _valuespec_special_agents_activemq():
-    return Transform(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "servername",
-                    TextInput(
-                        title=_("Server Name"),
-                        allow_empty=False,
-                    ),
-                ),
-                ("port", Integer(title=_("Port Number"), default_value=8161)),
-                (
-                    "protocol",
-                    DropdownChoice(
-                        title=_("Protocol"),
-                        choices=[
-                            ("http", "HTTP"),
-                            ("https", "HTTPS"),
-                        ],
-                    ),
-                ),
-                ("use_piggyback", Checkbox(title=_("Use Piggyback"), label=_("Enable"))),
-                (
-                    "basicauth",
-                    Tuple(
-                        title=_("BasicAuth settings (optional)"),
-                        elements=[
-                            TextInput(title=_("Username")),
-                            IndividualOrStoredPassword(title=_("Password")),
-                        ],
-                    ),
-                ),
-            ],
-            optional_keys=["basicauth"],
-        ),
+def _valuespec_special_agents_activemq() -> Dictionary:
+    return Dictionary(
         title=_("Apache ActiveMQ queues"),
-        forth=_special_agents_activemq_transform_activemq,
+        elements=[
+            (
+                "servername",
+                TextInput(
+                    title=_("Server Name"),
+                    allow_empty=False,
+                ),
+            ),
+            ("port", Integer(title=_("Port Number"), default_value=8161)),
+            (
+                "protocol",
+                DropdownChoice(
+                    title=_("Protocol"),
+                    choices=[
+                        ("http", "HTTP"),
+                        ("https", "HTTPS"),
+                    ],
+                ),
+            ),
+            ("use_piggyback", Checkbox(title=_("Use Piggyback"), label=_("Enable"))),
+            (
+                "basicauth",
+                Tuple(
+                    title=_("BasicAuth settings (optional)"),
+                    elements=[
+                        TextInput(title=_("Username")),
+                        IndividualOrStoredPassword(title=_("Password")),
+                    ],
+                ),
+            ),
+        ],
+        optional_keys=["basicauth"],
     )
 
 

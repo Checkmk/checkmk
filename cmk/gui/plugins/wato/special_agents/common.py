@@ -18,6 +18,7 @@ from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,
     Dictionary,
+    DictionaryEntry,
     DropdownChoice,
     FixedValue,
     HTTPUrl,
@@ -25,7 +26,6 @@ from cmk.gui.valuespec import (
     ListOf,
     RegExp,
     TextInput,
-    Transform,
 )
 
 
@@ -163,55 +163,52 @@ class RulespecGroupDatasourceProgramsTesting(RulespecSubGroup):
         return _("Testing")
 
 
-def api_request_authentication():
+def api_request_authentication() -> DictionaryEntry:
     return (
         "auth_basic",
-        Transform(
-            valuespec=CascadingDropdown(
-                title=_("Authentication"),
-                choices=[
-                    (
-                        "auth_login",
-                        _("Basic authentication"),
-                        Dictionary(
-                            elements=[
-                                (
-                                    "username",
-                                    TextInput(
-                                        title=_("Login username"),
-                                        allow_empty=False,
-                                    ),
+        CascadingDropdown(
+            title=_("Authentication"),
+            choices=[
+                (
+                    "auth_login",
+                    _("Basic authentication"),
+                    Dictionary(
+                        elements=[
+                            (
+                                "username",
+                                TextInput(
+                                    title=_("Login username"),
+                                    allow_empty=False,
                                 ),
-                                (
-                                    "password",
-                                    IndividualOrStoredPassword(
-                                        title=_("Password"),
-                                        allow_empty=False,
-                                    ),
+                            ),
+                            (
+                                "password",
+                                IndividualOrStoredPassword(
+                                    title=_("Password"),
+                                    allow_empty=False,
                                 ),
-                            ],
-                            optional_keys=[],
-                        ),
+                            ),
+                        ],
+                        optional_keys=[],
                     ),
-                    (
-                        "auth_token",
-                        _("Token authentication"),
-                        Dictionary(
-                            elements=[
-                                (
-                                    "token",
-                                    IndividualOrStoredPassword(
-                                        title=_("Login token"),
-                                        allow_empty=False,
-                                    ),
+                ),
+                (
+                    "auth_token",
+                    _("Token authentication"),
+                    Dictionary(
+                        elements=[
+                            (
+                                "token",
+                                IndividualOrStoredPassword(
+                                    title=_("Login token"),
+                                    allow_empty=False,
                                 ),
-                            ],
-                            optional_keys=[],
-                        ),
+                            ),
+                        ],
+                        optional_keys=[],
                     ),
-                ],
-            ),
-            forth=lambda v: ("auth_login", v) if "username" in v else v,
+                ),
+            ],
         ),
     )
 

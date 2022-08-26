@@ -10,7 +10,7 @@ from cmk.gui.plugins.wato.special_agents.common import (
     RulespecGroupDatasourceProgramsHardware,
 )
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import Dictionary, Transform
+from cmk.gui.valuespec import Dictionary
 from cmk.gui.watolib.rulespecs import Rulespec
 
 
@@ -19,29 +19,15 @@ def _factory_default_special_agents_innovaphone():
     return Rulespec.FACTORY_DEFAULT_UNUSED
 
 
-def special_agents_innovaphone_transform(value):
-    if isinstance(value, tuple):
-        return {
-            "auth_basic": {
-                "username": value[0],
-                "password": ("password", value[1]),
-            },
-        }
-    return value
-
-
-def _valuespec_special_agents_innovaphone():
-    return Transform(
-        valuespec=Dictionary(
-            title=_("Innovaphone Gateways"),
-            help=_("Please specify the user and password needed to access the xml interface"),
-            elements=connection_set(
-                options=["protocol", "ssl_verify"],
-                auth_option="basic",
-            ),
-            optional_keys=["protocol", "no-cert-check"],
+def _valuespec_special_agents_innovaphone() -> Dictionary:
+    return Dictionary(
+        title=_("Innovaphone Gateways"),
+        help=_("Please specify the user and password needed to access the xml interface"),
+        elements=connection_set(
+            options=["protocol", "ssl_verify"],
+            auth_option="basic",
         ),
-        forth=special_agents_innovaphone_transform,
+        optional_keys=["protocol", "no-cert-check"],
     )
 
 

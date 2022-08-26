@@ -18,7 +18,6 @@ from cmk.gui.valuespec import (
     MonitoringState,
     RegExp,
     TextInput,
-    Transform,
     Tuple,
 )
 
@@ -145,46 +144,30 @@ class MultisiteBiDatasource:
             ],
         )
 
-    def _vs_filters(self):
-        return Transform(
-            valuespec=Dictionary(
-                elements=[
-                    (
-                        "aggr_name",
-                        ListOf(
-                            valuespec=TextInput(title=_("Pattern")),
-                            title=_("By aggregation name (exact match)"),
-                            add_label=_("Add new aggregation"),
-                            movable=False,
-                        ),
+    def _vs_filters(self) -> Dictionary:
+        return Dictionary(
+            elements=[
+                (
+                    "aggr_name",
+                    ListOf(
+                        valuespec=TextInput(title=_("Pattern")),
+                        title=_("By aggregation name (exact match)"),
+                        add_label=_("Add new aggregation"),
+                        movable=False,
                     ),
-                    (
-                        "aggr_group_prefix",
-                        ListOf(
-                            valuespec=DropdownChoice(choices=bi.aggregation_group_choices),
-                            title=_("By aggregation group prefix"),
-                            add_label=_("Add new group"),
-                            movable=False,
-                        ),
+                ),
+                (
+                    "aggr_group_prefix",
+                    ListOf(
+                        valuespec=DropdownChoice(choices=bi.aggregation_group_choices),
+                        title=_("By aggregation group prefix"),
+                        add_label=_("Add new group"),
+                        movable=False,
                     ),
-                ],
-                title=_("Filter aggregations"),
-            ),
-            forth=self._transform_vs_filters_forth,
+                ),
+            ],
+            title=_("Filter aggregations"),
         )
-
-    def _transform_vs_filters_forth(self, value):
-        # Version 2.0: Changed key
-        #              from aggr_name_regex -> aggr_name_prefix
-        #              from aggr_group -> aggr_group_prefix
-        #              This transform can be removed with Version 2.3
-        for replacement, old_name in (
-            ("aggr_name", "aggr_name_regex"),
-            ("aggr_group_prefix", "aggr_groups"),
-        ):
-            if old_name in value:
-                value[replacement] = value.pop(old_name)
-        return value
 
     def _vs_options(self):
         return Dictionary(

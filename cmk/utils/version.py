@@ -636,7 +636,7 @@ def versions_compatible(
     >>> isinstance(c(Version("2.1.0p12"), Version("2.2.0i1")), VersionsCompatible)
     True
     >>> str(c(Version("2.1.0p3"), Version("2.2.0i1")))
-    'This target versions requires at least 2.1.0p9'
+    'This target versions requires at least 2.1.0p11'
     """
 
     # Daily builds of the master branch (format: YYYY.MM.DD) are always treated to be compatbile
@@ -722,7 +722,7 @@ def _check_minimum_patch_release(
     from_v: Version, to_v: Version, /
 ) -> VersionsCompatible | VersionsIncompatible:
     required_patch_releases = {
-        (2, 2, 0): Version("2.1.0p9"),
+        (2, 2, 0): Version("2.1.0p11"),
     }
     if not (required_patch_release := required_patch_releases.get(base_version_parts(str(to_v)))):
         return VersionsCompatible()

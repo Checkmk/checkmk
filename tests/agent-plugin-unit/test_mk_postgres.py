@@ -179,6 +179,53 @@ class TestLinux:
         assert myPostgresOnLinux.my_env["PGPASSFILE"] == "/home/.pgpass"
         assert myPostgresOnLinux.name == "mydb"
 
+    @patch("subprocess.Popen")
+    def test_get_instances(
+        self,
+        mock_Popen,
+        monkeypatch,
+        mk_postgres,
+    ):
+        instance = {
+            "pg_database": "mydb",
+            "pg_port": "1234",
+            "name": "main",
+            "pg_user": "myuser",
+            "pg_passfile": "/home/.pgpass",
+        }
+        process_mock = Mock()
+        attrs = {
+            "communicate.side_effect": [
+                ("/usr/lib/postgres/psql", None),
+                ("postgres\ndb1", None),
+                ("12.3.6", None),
+            ]
+        }
+        process_mock.configure_mock(**attrs)
+        mock_Popen.return_value = process_mock
+        myPostgresOnLinux = mk_postgres.postgres_factory("postgres", instance)
+
+        process_mock = Mock()
+        attrs = {
+            "communicate.side_effect": [
+                (
+                    "\n".join(
+                        [
+                            "3190 postgres: logger",
+                            "1252 /usr/bin/postmaster -D /var/lib/pgsql/data",
+                            "3148 postmaster -D /var/lib/pgsql/data",
+                        ]
+                    ),
+                    None,
+                ),
+            ],
+        }
+        process_mock.configure_mock(**attrs)
+        mock_Popen.return_value = process_mock
+        assert (
+            myPostgresOnLinux.get_instances() == "1252 /usr/bin/postmaster -D /var/lib/pgsql/data"
+        )
+
 
 class TestWindows:
     @pytest.fixture(autouse=True)

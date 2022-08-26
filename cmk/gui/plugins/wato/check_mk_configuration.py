@@ -5,7 +5,7 @@
 
 import logging
 import re
-from typing import Any, Dict, List, Literal
+from typing import Dict, List, Literal
 from typing import Tuple as _Tuple
 from typing import Type
 
@@ -3703,14 +3703,11 @@ rulespec_registry.register(
 def _valuespec_extra_host_conf_notification_interval():
     return Transform(
         Optional(
-            valuespec=Transform(
-                valuespec=Float(
-                    minvalue=0.05,
-                    default_value=120.0,
-                    label=_("Interval:"),
-                    unit=_("minutes"),
-                ),
-                forth=float,
+            valuespec=Float(
+                minvalue=0.05,
+                default_value=120.0,
+                label=_("Interval:"),
+                unit=_("minutes"),
             ),
             title=_("Periodic notifications during host problems"),
             help=_(
@@ -3738,11 +3735,8 @@ rulespec_registry.register(
 def _valuespec_extra_service_conf_notification_interval():
     return Transform(
         Optional(
-            valuespec=Transform(
-                valuespec=Float(
-                    minvalue=0.05, default_value=120.0, label=_("Interval:"), unit=_("minutes")
-                ),
-                forth=float,
+            valuespec=Float(
+                minvalue=0.05, default_value=120.0, label=_("Interval:"), unit=_("minutes")
             ),
             title=_("Periodic notifications during service problems"),
             help=_(
@@ -3887,11 +3881,6 @@ rulespec_registry.register(
 )
 
 
-def _periodic_discovery_add_severity_new_host_label(val):
-    val.setdefault("severity_new_host_label", 1)
-    return val
-
-
 def _valuespec_periodic_discovery():
     return Alternative(
         title=_("Periodic service discovery"),
@@ -3912,243 +3901,196 @@ def _valuespec_periodic_discovery():
     )
 
 
-def _vs_periodic_discovery() -> Transform:
-    return Transform(
-        valuespec=Dictionary(
-            title=_("Perform periodic service discovery check"),
-            help=_(
-                "If enabled, Check_MK will create one additional service per host "
-                "that does a periodic check, if the service discovery would find new services "
-                "that are currently not monitored."
-            ),
-            elements=[
-                (
-                    "check_interval",
-                    Transform(
-                        valuespec=Age(
-                            minvalue=1,
-                            display=["days", "hours", "minutes"],
-                        ),
-                        forth=lambda v: int(v * 60),
-                        back=lambda v: float(v) / 60.0,
-                        title=_("Perform service discovery every"),
-                    ),
-                ),
-                (
-                    "severity_unmonitored",
-                    DropdownChoice(
-                        title=_("Severity of unmonitored services"),
-                        help=_(
-                            "Please select which alarm state the service discovery check services "
-                            "shall assume in case that un-monitored services are found."
-                        ),
-                        choices=[
-                            (0, _("OK - do not alert, just display")),
-                            (1, _("Warning")),
-                            (2, _("Critical")),
-                            (3, _("Unknown")),
-                        ],
-                    ),
-                ),
-                (
-                    "severity_vanished",
-                    DropdownChoice(
-                        title=_("Severity of vanished services"),
-                        help=_(
-                            "Please select which alarm state the service discovery check services "
-                            "shall assume in case that non-existing services are being monitored."
-                        ),
-                        choices=[
-                            (0, _("OK - do not alert, just display")),
-                            (1, _("Warning")),
-                            (2, _("Critical")),
-                            (3, _("Unknown")),
-                        ],
-                    ),
-                ),
-                (
-                    "severity_new_host_label",
-                    DropdownChoice(
-                        title=_("Severity of new host labels"),
-                        help=_(
-                            "Please select which state the service discovery check services "
-                            "shall assume in case that new host labels are found."
-                        ),
-                        choices=[
-                            (0, _("OK - do not alert, just display")),
-                            (1, _("Warning")),
-                            (2, _("Critical")),
-                            (3, _("Unknown")),
-                        ],
-                    ),
-                ),
-                ("inventory_rediscovery", _valuespec_automatic_rediscover_parameters()),
-            ],
-            optional_keys=["inventory_rediscovery"],
-            ignored_keys=["inventory_check_do_scan"],
+def _vs_periodic_discovery() -> Dictionary:
+    return Dictionary(
+        title=_("Perform periodic service discovery check"),
+        help=_(
+            "If enabled, Check_MK will create one additional service per host "
+            "that does a periodic check, if the service discovery would find new services "
+            "that are currently not monitored."
         ),
-        forth=_periodic_discovery_add_severity_new_host_label,
+        elements=[
+            (
+                "check_interval",
+                Transform(
+                    valuespec=Age(
+                        minvalue=1,
+                        display=["days", "hours", "minutes"],
+                    ),
+                    forth=lambda v: int(v * 60),
+                    back=lambda v: float(v) / 60.0,
+                    title=_("Perform service discovery every"),
+                ),
+            ),
+            (
+                "severity_unmonitored",
+                DropdownChoice(
+                    title=_("Severity of unmonitored services"),
+                    help=_(
+                        "Please select which alarm state the service discovery check services "
+                        "shall assume in case that un-monitored services are found."
+                    ),
+                    choices=[
+                        (0, _("OK - do not alert, just display")),
+                        (1, _("Warning")),
+                        (2, _("Critical")),
+                        (3, _("Unknown")),
+                    ],
+                ),
+            ),
+            (
+                "severity_vanished",
+                DropdownChoice(
+                    title=_("Severity of vanished services"),
+                    help=_(
+                        "Please select which alarm state the service discovery check services "
+                        "shall assume in case that non-existing services are being monitored."
+                    ),
+                    choices=[
+                        (0, _("OK - do not alert, just display")),
+                        (1, _("Warning")),
+                        (2, _("Critical")),
+                        (3, _("Unknown")),
+                    ],
+                ),
+            ),
+            (
+                "severity_new_host_label",
+                DropdownChoice(
+                    title=_("Severity of new host labels"),
+                    help=_(
+                        "Please select which state the service discovery check services "
+                        "shall assume in case that new host labels are found."
+                    ),
+                    choices=[
+                        (0, _("OK - do not alert, just display")),
+                        (1, _("Warning")),
+                        (2, _("Critical")),
+                        (3, _("Unknown")),
+                    ],
+                ),
+            ),
+            ("inventory_rediscovery", _valuespec_automatic_rediscover_parameters()),
+        ],
+        optional_keys=["inventory_rediscovery"],
+        ignored_keys=["inventory_check_do_scan"],
     )
 
 
-def _transform_automatic_rediscover_parameters(parameters: Dict[str, Any]) -> Dict[str, Any]:
-    # Be compatible to pre 1.7.0 versions; There were only two general pattern lists
-    # which were used for new AND vanished services:
-    # {
-    #     "service_whitelist": [PATTERN],
-    #     "service_blacklist": [PATTERN],
-    # }
-    # New since 1.7.0: A white- and blacklist can be configured for both new and vanished
-    # services as "combined" pattern lists.
-    # Or two separate pattern lists for each new and vanished services are configurable:
-    # {
-    #     "service_filters": (
-    #         "combined",
-    #         {
-    #             "service_whitelist": [PATTERN],
-    #             "service_blacklist": [PATTERN],
-    #         },
-    #     )
-    # } resp.
-    # {
-    #     "service_filters": (
-    #         "dedicated",
-    #         {
-    #             "service_whitelist": [PATTERN],
-    #             "service_blacklist": [PATTERN],
-    #             "vanished_service_whitelist": [PATTERN],
-    #             "vanished_service_blacklist": [PATTERN],
-    #         },
-    #     )
-    # }
-    service_filters = {}
-    for key in ("service_whitelist", "service_blacklist"):
-        if key in parameters:
-            service_filters[key] = parameters.pop(key)
-    if service_filters:
-        parameters["service_filters"] = ("combined", service_filters)
-    return parameters
-
-
-def _valuespec_automatic_rediscover_parameters() -> Transform:
-    return Transform(
-        valuespec=Dictionary(
-            title=_("Automatically update service configuration"),
-            help=_(
-                "If active the check will not only notify about un-monitored services, "
-                "it will also automatically add/remove them as neccessary."
-            ),
-            elements=[
-                (
-                    "mode",
-                    DropdownChoice(
-                        title=_("Mode"),
-                        choices=[
-                            (0, _("Add unmonitored services, new host labels")),
-                            (1, _("Remove vanished services")),
-                            (2, _("Add unmonitored & remove vanished services and host labels")),
-                            (3, _("Refresh all services and host labels (tabula rasa)")),
-                        ],
-                        default_value=0,
-                    ),
-                ),
-                (
-                    "group_time",
-                    Age(
-                        title=_("Group discovery and activation for up to"),
-                        help=_(
-                            "A delay can be configured here so that multiple "
-                            "discoveries can be activated in one go. This avoids frequent core "
-                            "restarts in situations with frequent services changes."
-                        ),
-                        default_value=15 * 60,
-                        # The cronjob (etc/cron.d/cmk_discovery) is executed every 5 minutes
-                        minvalue=5 * 60,
-                        display=["hours", "minutes"],
-                    ),
-                ),
-                (
-                    "excluded_time",
-                    ListOfTimeRanges(
-                        title=_(
-                            "Never do discovery or activate changes in the following time ranges"
-                        ),
-                        help=_(
-                            "This avoids automatic changes during these times so "
-                            "that the automatic system doesn't interfere with "
-                            "user activity."
-                        ),
-                    ),
-                ),
-                (
-                    "activation",
-                    DropdownChoice(
-                        title=_("Automatic activation"),
-                        choices=[
-                            (True, _("Automatically activate changes")),
-                            (False, _("Do not activate changes")),
-                        ],
-                        default_value=True,
-                        help=_(
-                            "Here you can have the changes activated whenever services "
-                            "have been added or removed."
-                        ),
-                    ),
-                ),
-                (
-                    "service_filters",
-                    CascadingDropdown(
-                        title=_("Service Filters"),
-                        choices=[
-                            (
-                                "combined",
-                                _("Combined white-/blacklist for new and vanished services"),
-                                Dictionary(
-                                    elements=_get_periodic_discovery_dflt_service_filter_lists()
-                                ),
-                            ),
-                            (
-                                "dedicated",
-                                _("Dedicated white-/blacklists for new and vanished services"),
-                                Dictionary(
-                                    elements=_get_periodic_discovery_dflt_service_filter_lists()
-                                    + [
-                                        (
-                                            "vanished_service_whitelist",
-                                            ListOfStrings(
-                                                title=_("Remove only matching vanished services"),
-                                                allow_empty=False,
-                                                help=_(
-                                                    "Set service names or regular expression patterns here to "
-                                                    "remove matching vanished services automatically. "
-                                                    "If you set both this and 'Don't remove matching vanished services', "
-                                                    "both rules have to apply for a service to be removed."
-                                                ),
-                                            ),
-                                        ),
-                                        (
-                                            "vanished_service_blacklist",
-                                            ListOfStrings(
-                                                title=_("Don't remove matching vanished services"),
-                                                allow_empty=False,
-                                                help=_(
-                                                    "Set service names or regular expression patterns here to "
-                                                    "prevent removing of matching vanished services automatically. "
-                                                    "If you set both this and 'Remove only matching vanished services', "
-                                                    "both rules have to apply for a service to be removed."
-                                                ),
-                                            ),
-                                        ),
-                                    ],
-                                ),
-                            ),
-                        ],
-                    ),
-                ),
-            ],
-            optional_keys=["service_filters"],
+def _valuespec_automatic_rediscover_parameters() -> Dictionary:
+    return Dictionary(
+        title=_("Automatically update service configuration"),
+        help=_(
+            "If active the check will not only notify about un-monitored services, "
+            "it will also automatically add/remove them as neccessary."
         ),
-        forth=_transform_automatic_rediscover_parameters,
+        elements=[
+            (
+                "mode",
+                DropdownChoice(
+                    title=_("Mode"),
+                    choices=[
+                        (0, _("Add unmonitored services, new host labels")),
+                        (1, _("Remove vanished services")),
+                        (2, _("Add unmonitored & remove vanished services and host labels")),
+                        (3, _("Refresh all services and host labels (tabula rasa)")),
+                    ],
+                    default_value=0,
+                ),
+            ),
+            (
+                "group_time",
+                Age(
+                    title=_("Group discovery and activation for up to"),
+                    help=_(
+                        "A delay can be configured here so that multiple "
+                        "discoveries can be activated in one go. This avoids frequent core "
+                        "restarts in situations with frequent services changes."
+                    ),
+                    default_value=15 * 60,
+                    # The cronjob (etc/cron.d/cmk_discovery) is executed every 5 minutes
+                    minvalue=5 * 60,
+                    display=["hours", "minutes"],
+                ),
+            ),
+            (
+                "excluded_time",
+                ListOfTimeRanges(
+                    title=_("Never do discovery or activate changes in the following time ranges"),
+                    help=_(
+                        "This avoids automatic changes during these times so "
+                        "that the automatic system doesn't interfere with "
+                        "user activity."
+                    ),
+                ),
+            ),
+            (
+                "activation",
+                DropdownChoice(
+                    title=_("Automatic activation"),
+                    choices=[
+                        (True, _("Automatically activate changes")),
+                        (False, _("Do not activate changes")),
+                    ],
+                    default_value=True,
+                    help=_(
+                        "Here you can have the changes activated whenever services "
+                        "have been added or removed."
+                    ),
+                ),
+            ),
+            (
+                "service_filters",
+                CascadingDropdown(
+                    title=_("Service Filters"),
+                    choices=[
+                        (
+                            "combined",
+                            _("Combined white-/blacklist for new and vanished services"),
+                            Dictionary(
+                                elements=_get_periodic_discovery_dflt_service_filter_lists()
+                            ),
+                        ),
+                        (
+                            "dedicated",
+                            _("Dedicated white-/blacklists for new and vanished services"),
+                            Dictionary(
+                                elements=_get_periodic_discovery_dflt_service_filter_lists()
+                                + [
+                                    (
+                                        "vanished_service_whitelist",
+                                        ListOfStrings(
+                                            title=_("Remove only matching vanished services"),
+                                            allow_empty=False,
+                                            help=_(
+                                                "Set service names or regular expression patterns here to "
+                                                "remove matching vanished services automatically. "
+                                                "If you set both this and 'Don't remove matching vanished services', "
+                                                "both rules have to apply for a service to be removed."
+                                            ),
+                                        ),
+                                    ),
+                                    (
+                                        "vanished_service_blacklist",
+                                        ListOfStrings(
+                                            title=_("Don't remove matching vanished services"),
+                                            allow_empty=False,
+                                            help=_(
+                                                "Set service names or regular expression patterns here to "
+                                                "prevent removing of matching vanished services automatically. "
+                                                "If you set both this and 'Remove only matching vanished services', "
+                                                "both rules have to apply for a service to be removed."
+                                            ),
+                                        ),
+                                    ),
+                                ],
+                            ),
+                        ),
+                    ],
+                ),
+            ),
+        ],
+        optional_keys=["service_filters"],
     )
 
 
@@ -4578,18 +4520,15 @@ rulespec_registry.register(
 #   '----------------------------------------------------------------------'
 
 
-def _valuespec_extra_host_conf_icon_image():
-    return Transform(
-        valuespec=IconSelector(
-            title=_("Icon image for hosts in status GUI"),
-            help=_(
-                "You can assign icons to hosts for the status GUI. "
-                "Put your images into <tt>%s</tt>. "
-            )
-            % str(cmk.utils.paths.omd_root / "local/share/check_mk/web/htdocs/images/icons"),
-            with_emblem=False,
-        ),
-        forth=lambda v: v and (v.endswith(".png") and v[:-4]) or v if v is not None else "",
+def _valuespec_extra_host_conf_icon_image() -> IconSelector:
+    return IconSelector(
+        title=_("Icon image for hosts in status GUI"),
+        help=_(
+            "You can assign icons to hosts for the status GUI. "
+            "Put your images into <tt>%s</tt>. "
+        )
+        % str(cmk.utils.paths.omd_root / "local/share/check_mk/web/htdocs/images/icons"),
+        with_emblem=False,
     )
 
 
@@ -4602,18 +4541,15 @@ rulespec_registry.register(
 )
 
 
-def _valuespec_extra_service_conf_icon_image():
-    return Transform(
-        valuespec=IconSelector(
-            title=_("Icon image for services in status GUI"),
-            help=_(
-                "You can assign icons to services for the status GUI. "
-                "Put your images into <tt>%s</tt>. "
-            )
-            % str(cmk.utils.paths.omd_root / "local/share/check_mk/web/htdocs/images/icons"),
-            with_emblem=False,
-        ),
-        forth=lambda v: v and (v.endswith(".png") and v[:-4]) or v if v is not None else "",
+def _valuespec_extra_service_conf_icon_image() -> IconSelector:
+    return IconSelector(
+        title=_("Icon image for services in status GUI"),
+        help=_(
+            "You can assign icons to services for the status GUI. "
+            "Put your images into <tt>%s</tt>. "
+        )
+        % str(cmk.utils.paths.omd_root / "local/share/check_mk/web/htdocs/images/icons"),
+        with_emblem=False,
     )
 
 
@@ -5309,12 +5245,6 @@ def _common_check_mk_exit_status_elements():
     ]
 
 
-def transform_exit_code_spec(p):
-    if "overall" in p:
-        return p
-    return {"overall": p}
-
-
 def _factory_default_check_mk_exit_status():
     return {
         "connection": 2,
@@ -5325,113 +5255,8 @@ def _factory_default_check_mk_exit_status():
     }
 
 
-def _valuespec_check_mk_exit_status():
-    return Transform(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "overall",
-                    Dictionary(
-                        title=_("Overall status"),
-                        elements=_common_check_mk_exit_status_elements()
-                        + [
-                            (
-                                "missing_sections",
-                                MonitoringState(
-                                    default_value=1,
-                                    title=_(
-                                        "State if just <i>some</i> check plugins received no "
-                                        "monitoring data"
-                                    ),
-                                ),
-                            ),
-                            (
-                                "specific_missing_sections",
-                                ListOf(
-                                    valuespec=Tuple(
-                                        elements=[
-                                            RegExp(
-                                                help=_(
-                                                    'In addition to setting the generic "Missing monitoring '
-                                                    'data" state above you can specify a regex pattern to '
-                                                    "match specific check plugins and give them an individual "
-                                                    "state in case they receive no monitoring data. Note that "
-                                                    "the first match is used."
-                                                ),
-                                                mode=RegExp.prefix,
-                                            ),
-                                            MonitoringState(),
-                                        ],
-                                        orientation="horizontal",
-                                    ),
-                                    title=_(
-                                        "State if specific check plugins receive no monitoring data."
-                                    ),
-                                ),
-                            ),
-                        ],
-                    ),
-                ),
-                (
-                    "individual",
-                    Dictionary(
-                        title=_("Individual states per data source"),
-                        elements=[
-                            (
-                                "agent",
-                                Dictionary(
-                                    title=_("Agent"),
-                                    elements=_common_check_mk_exit_status_elements(),
-                                ),
-                            ),
-                            (
-                                "programs",
-                                Dictionary(
-                                    title=_("Programs"),
-                                    elements=_common_check_mk_exit_status_elements(),
-                                ),
-                            ),
-                            (
-                                "special",
-                                Dictionary(
-                                    title=_("Special Agent"),
-                                    elements=_common_check_mk_exit_status_elements(),
-                                ),
-                            ),
-                            (
-                                "snmp",
-                                Dictionary(
-                                    title=_("SNMP"),
-                                    elements=_common_check_mk_exit_status_elements(),
-                                ),
-                            ),
-                            (
-                                "mgmt_snmp",
-                                Dictionary(
-                                    title=_("SNMP Management Board"),
-                                    elements=_common_check_mk_exit_status_elements(),
-                                ),
-                            ),
-                            (
-                                "mgmt_ipmi",
-                                Dictionary(
-                                    title=_("IPMI Management Board"),
-                                    elements=_common_check_mk_exit_status_elements(),
-                                ),
-                            ),
-                            (
-                                "piggyback",
-                                Dictionary(
-                                    title=_("Piggyback"),
-                                    elements=_common_check_mk_exit_status_elements(),
-                                ),
-                            ),
-                        ],
-                    ),
-                ),
-            ],
-        ),
-        forth=transform_exit_code_spec,
+def _valuespec_check_mk_exit_status() -> Dictionary:
+    return Dictionary(
         title=_("Status of the Checkmk services"),
         help=_(
             "This ruleset specifies the total status of the Check_MK services <i>Check_MK</i>, "
@@ -5440,6 +5265,108 @@ def _valuespec_check_mk_exit_status():
             "You can have Check_MK an OK status here if the host is not reachable. Note: the "
             "<i>Timeout</i> setting only works when using the Check_MK Micro Core."
         ),
+        elements=[
+            (
+                "overall",
+                Dictionary(
+                    title=_("Overall status"),
+                    elements=_common_check_mk_exit_status_elements()
+                    + [
+                        (
+                            "missing_sections",
+                            MonitoringState(
+                                default_value=1,
+                                title=_(
+                                    "State if just <i>some</i> check plugins received no "
+                                    "monitoring data"
+                                ),
+                            ),
+                        ),
+                        (
+                            "specific_missing_sections",
+                            ListOf(
+                                valuespec=Tuple(
+                                    elements=[
+                                        RegExp(
+                                            help=_(
+                                                'In addition to setting the generic "Missing monitoring '
+                                                'data" state above you can specify a regex pattern to '
+                                                "match specific check plugins and give them an individual "
+                                                "state in case they receive no monitoring data. Note that "
+                                                "the first match is used."
+                                            ),
+                                            mode=RegExp.prefix,
+                                        ),
+                                        MonitoringState(),
+                                    ],
+                                    orientation="horizontal",
+                                ),
+                                title=_(
+                                    "State if specific check plugins receive no monitoring data."
+                                ),
+                            ),
+                        ),
+                    ],
+                ),
+            ),
+            (
+                "individual",
+                Dictionary(
+                    title=_("Individual states per data source"),
+                    elements=[
+                        (
+                            "agent",
+                            Dictionary(
+                                title=_("Agent"),
+                                elements=_common_check_mk_exit_status_elements(),
+                            ),
+                        ),
+                        (
+                            "programs",
+                            Dictionary(
+                                title=_("Programs"),
+                                elements=_common_check_mk_exit_status_elements(),
+                            ),
+                        ),
+                        (
+                            "special",
+                            Dictionary(
+                                title=_("Special Agent"),
+                                elements=_common_check_mk_exit_status_elements(),
+                            ),
+                        ),
+                        (
+                            "snmp",
+                            Dictionary(
+                                title=_("SNMP"),
+                                elements=_common_check_mk_exit_status_elements(),
+                            ),
+                        ),
+                        (
+                            "mgmt_snmp",
+                            Dictionary(
+                                title=_("SNMP Management Board"),
+                                elements=_common_check_mk_exit_status_elements(),
+                            ),
+                        ),
+                        (
+                            "mgmt_ipmi",
+                            Dictionary(
+                                title=_("IPMI Management Board"),
+                                elements=_common_check_mk_exit_status_elements(),
+                            ),
+                        ),
+                        (
+                            "piggyback",
+                            Dictionary(
+                                title=_("Piggyback"),
+                                elements=_common_check_mk_exit_status_elements(),
+                            ),
+                        ),
+                    ],
+                ),
+            ),
+        ],
     )
 
 
@@ -5454,50 +5381,45 @@ rulespec_registry.register(
 )
 
 
-def _valuespec_check_mk_agent_target_versions():
-    return Transform(
-        valuespec=CascadingDropdown(
-            title="%s - %s" % (_("Check for correct version of Checkmk agent"), _("Deprecated")),
-            help=_('This ruleset is deprecated. Please use the ruleset <i>"%s"</i> instead.')
-            % _("Checkmk Agent installation auditing"),
-            choices=[
-                ("ignore", _("Ignore the version")),
-                ("site", _("Same version as the monitoring site")),
-                (
-                    "specific",
-                    _("Specific version"),
-                    TextInput(
-                        allow_empty=False,
-                    ),
+def _valuespec_check_mk_agent_target_versions() -> CascadingDropdown:
+    return CascadingDropdown(
+        title="%s - %s" % (_("Check for correct version of Checkmk agent"), _("Deprecated")),
+        help=_('This ruleset is deprecated. Please use the ruleset <i>"%s"</i> instead.')
+        % _("Checkmk Agent installation auditing"),
+        choices=[
+            ("ignore", _("Ignore the version")),
+            ("site", _("Same version as the monitoring site")),
+            (
+                "specific",
+                _("Specific version"),
+                TextInput(
+                    allow_empty=False,
                 ),
-                (
-                    "at_least",
-                    _("At least"),
-                    Dictionary(
-                        elements=[
-                            (
-                                "release",
-                                TextInput(
-                                    title=_("Official Release version"),
-                                    allow_empty=False,
-                                ),
+            ),
+            (
+                "at_least",
+                _("At least"),
+                Dictionary(
+                    elements=[
+                        (
+                            "release",
+                            TextInput(
+                                title=_("Official Release version"),
+                                allow_empty=False,
                             ),
-                            (
-                                "daily_build",
-                                TextInput(
-                                    title=_("Daily build"),
-                                    allow_empty=False,
-                                ),
+                        ),
+                        (
+                            "daily_build",
+                            TextInput(
+                                title=_("Daily build"),
+                                allow_empty=False,
                             ),
-                        ]
-                    ),
+                        ),
+                    ]
                 ),
-            ],
-            default_value="ignore",
-        ),
-        # In the past, this was a OptionalDropdownChoice() which values could be strings:
-        # ignore, site or a custom string representing a version number.
-        forth=lambda x: isinstance(x, str) and x not in ["ignore", "site"] and ("specific", x) or x,
+            ),
+        ],
+        default_value="ignore",
     )
 
 
@@ -5626,19 +5548,15 @@ def _valuespec_snmp_fetch_interval():
             "in misleading output (e.g. far too large interface throughputs) in such cases."
         ),
         elements=[
-            Transform(
-                valuespec=DropdownChoice(
-                    title=_("Section"),
-                    help=_(
-                        "You can only configure section names here, but not choose individual "
-                        "check plugins. The reason for this is that the check plugins "
-                        "themselves are not aware whether or not they are processing SNMP based "
-                        "data."
-                    ),
-                    choices=lambda: [(None, _("All SNMP sections"))] + get_snmp_section_names(),
+            DropdownChoice(
+                title=_("Section"),
+                help=_(
+                    "You can only configure section names here, but not choose individual "
+                    "check plugins. The reason for this is that the check plugins "
+                    "themselves are not aware whether or not they are processing SNMP based "
+                    "data."
                 ),
-                # Transform check types to section names
-                forth=lambda e: e.split(".")[0] if e is not None else None,
+                choices=lambda: [(None, _("All SNMP sections"))] + get_snmp_section_names(),
             ),
             Integer(
                 title=_("Fetch every"),
@@ -5659,60 +5577,42 @@ rulespec_registry.register(
 )
 
 
-def _transform_2_0_beta_params(params: Dict[str, Any]) -> Dict[str, Any]:
-    """this transforms a parameter format that was only created by Checkmk 2.0.0b1 - 2.0.0b4"""
-    if "sections" not in params:
-        return params
-
-    new_params: Dict[str, Any] = {}
-    for section, is_disabled in params["sections"]:
-        new_params.setdefault(
-            "sections_disabled" if is_disabled else "sections_enabled",
-            [],
-        ).append(section)
-
-    return new_params
-
-
-def _valuespec_snmp_config_agent_sections():
-    return Transform(
-        valuespec=Dictionary(
-            title=_("Disabled or enabled sections (SNMP)"),
-            help=_(
-                "This option allows to omit individual sections from being fetched at all. "
-                "As a result, associated Checkmk services may be entirely missing. "
-                "However, some check plugins process multiple sections and their behavior may "
-                "change if one of them is excluded. In such cases, you may want to disable "
-                "individual sections, instead of the check plugin itself. "
-                "Furthermore, SNMP sections can supersede other SNMP sections in order to "
-                "prevent duplicate services. By excluding a section which supersedes another one, "
-                "the superseded section might become available. One such use case is the enforcing "
-                "of 32-bit network interface counters (section <tt>if</tt>, superseded by "
-                "<tt>if64</tt>) in case the 64-bit counters reported by the device are useless "
-                "due to broken firmware."
-            ),
-            elements=[
-                (
-                    "sections_disabled",
-                    DualListChoice(
-                        title=_("Disabled sections"),
-                        choices=get_snmp_section_names,
-                        rows=25,
-                    ),
-                ),
-                (
-                    "sections_enabled",
-                    DualListChoice(
-                        title=_("Enabled sections"),
-                        choices=get_snmp_section_names,
-                        rows=25,
-                    ),
-                ),
-            ],
-            validate=_validate_snmp_config_agent_sections,
-            optional_keys=[],
+def _valuespec_snmp_config_agent_sections() -> Dictionary:
+    return Dictionary(
+        title=_("Disabled or enabled sections (SNMP)"),
+        help=_(
+            "This option allows to omit individual sections from being fetched at all. "
+            "As a result, associated Checkmk services may be entirely missing. "
+            "However, some check plugins process multiple sections and their behavior may "
+            "change if one of them is excluded. In such cases, you may want to disable "
+            "individual sections, instead of the check plugin itself. "
+            "Furthermore, SNMP sections can supersede other SNMP sections in order to "
+            "prevent duplicate services. By excluding a section which supersedes another one, "
+            "the superseded section might become available. One such use case is the enforcing "
+            "of 32-bit network interface counters (section <tt>if</tt>, superseded by "
+            "<tt>if64</tt>) in case the 64-bit counters reported by the device are useless "
+            "due to broken firmware."
         ),
-        forth=_transform_2_0_beta_params,
+        elements=[
+            (
+                "sections_disabled",
+                DualListChoice(
+                    title=_("Disabled sections"),
+                    choices=get_snmp_section_names,
+                    rows=25,
+                ),
+            ),
+            (
+                "sections_enabled",
+                DualListChoice(
+                    title=_("Enabled sections"),
+                    choices=get_snmp_section_names,
+                    rows=25,
+                ),
+            ),
+        ],
+        validate=_validate_snmp_config_agent_sections,
+        optional_keys=[],
     )
 
 
@@ -5751,14 +5651,9 @@ def _valuespec_snmpv3_contexts():
             "contexts Checkmk should ask for when getting information via SNMPv3."
         ),
         elements=[
-            Transform(
-                valuespec=DropdownChoice(
-                    title=_("Section name"),
-                    choices=get_snmp_section_names,
-                ),
-                # Legacy plugins had dots in their names, but sections have only ever been
-                # associated with the part left of the dot.
-                forth=lambda e: e.split(".")[0] if e is not None else None,
+            DropdownChoice(
+                title=_("Section name"),
+                choices=get_snmp_section_names,
             ),
             ListOfStrings(
                 title=_("SNMP Context IDs"),
@@ -5796,14 +5691,6 @@ def _validate_max_cache_age_and_validity_period(max_cache_age, period, varprefix
         raise MKUserError(varprefix, _("Maximum cache age must be greater than period."))
 
 
-def _transform_piggybacked_exception(p):
-    if "piggybacked_hostname" in p:
-        piggybacked_hostname = p["piggybacked_hostname"]
-        del p["piggybacked_hostname"]
-        p["piggybacked_hostname_expressions"] = [piggybacked_hostname]
-    return p
-
-
 def _valuespec_piggybacked_host_files():
     global_max_cache_age_uri = makeuri_contextless(
         request,
@@ -5828,31 +5715,28 @@ def _valuespec_piggybacked_host_files():
             (
                 "per_piggybacked_host",
                 ListOf(
-                    valuespec=Transform(
-                        valuespec=Dictionary(
-                            optional_keys=[],
-                            elements=[
-                                (
-                                    "piggybacked_hostname_expressions",
-                                    ListOfStrings(
-                                        title=_("Piggybacked host name expressions"),
-                                        orientation="horizontal",
-                                        valuespec=RegExp(
-                                            size=30,
-                                            mode=RegExp.prefix,
-                                        ),
-                                        allow_empty=False,
-                                        help=_(
-                                            "Here you can specify explicit piggybacked host names or "
-                                            "regex patterns to match specific piggybacked host names."
-                                        ),
+                    valuespec=Dictionary(
+                        optional_keys=[],
+                        elements=[
+                            (
+                                "piggybacked_hostname_expressions",
+                                ListOfStrings(
+                                    title=_("Piggybacked host name expressions"),
+                                    orientation="horizontal",
+                                    valuespec=RegExp(
+                                        size=30,
+                                        mode=RegExp.prefix,
+                                    ),
+                                    allow_empty=False,
+                                    help=_(
+                                        "Here you can specify explicit piggybacked host names or "
+                                        "regex patterns to match specific piggybacked host names."
                                     ),
                                 ),
-                                ("max_cache_age", _vs_max_cache_age(max_cache_age_title)),
-                                ("validity", _vs_validity()),
-                            ],
-                        ),
-                        forth=_transform_piggybacked_exception,
+                            ),
+                            ("max_cache_age", _vs_max_cache_age(max_cache_age_title)),
+                            ("validity", _vs_validity()),
+                        ],
                     ),
                     title=_("Exceptions for piggybacked hosts (VMs, ...)"),
                     add_label=_("Add exception"),

@@ -159,6 +159,7 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON3_CACHE_PKG_PROCESS) $(OPENSSL_INTERMEDIATE_IN
 		PKG=$${M//.tar.gz/} ; \
 		PKG=$${PKG//.zip/} ; \
 		cd $$PKG ; \
+                test -f setup.py || printf "from setuptools import setup\nsetup()" > setup.py ; \
 		$(PACKAGE_PYTHON3_EXECUTABLE) setup.py build ; \
 		$(PACKAGE_PYTHON3_EXECUTABLE) setup.py install \
 		    --root=$(PYTHON3_MODULES_INSTALL_DIR) \

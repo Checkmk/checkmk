@@ -6,7 +6,7 @@ PYTHON3_MODULES_DIR := $(PYTHON3_MODULES)-$(PYTHON3_MODULES_VERS)
 # Note: Because the versions of the individual modules is not reflected in PYTHON3_MODULES_VERS,
 #       like it is done in other OMD packages, we'll have to increase the BUILD_ID on every package
 #       change.
-PYTHON3_MODULES_BUILD_ID := 16
+PYTHON3_MODULES_BUILD_ID := 15
 
 PYTHON3_MODULES_UNPACK:= $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-unpack
 PYTHON3_MODULES_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-patching
@@ -124,7 +124,7 @@ PYTHON3_MODULES_LIST += marshmallow-oneofschema-2.1.0.tar.gz
 PYTHON3_MODULES_LIST += apispec-oneofschema-3.0.0.tar.gz
 
 PYTHON3_MODULES_LIST += mypy_extensions-0.4.3.tar.gz  # direct dependency
-PYTHON3_MODULES_LIST += typing_extensions-4.3.0.tar.gz  # direct dependency
+PYTHON3_MODULES_LIST += typing_extensions-3.7.4.1.tar.gz  # direct dependency
 
 PYTHON3_MODULES_LIST += dnspython-1.16.0.zip  # needed by python-active-directory
 PYTHON3_MODULES_LIST += python-active-directory-1.0.5.tar.gz  # direct dependency

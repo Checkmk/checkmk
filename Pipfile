@@ -134,7 +134,7 @@ marshmallow = "==3.11.1"  # direct dependency
 marshmallow-oneofschema = "==2.1.0"  # direct dependency
 apispec-oneofschema = "==3.0.0"  # direct dependency
 mypy_extensions = "==0.4.3"  # direct dependency
-typing_extensions = "==4.3.0"  # direct dependency
+typing_extensions = "==3.7.4.1"  # direct dependency
 dnspython = "==1.16.0"  # needed by python-active-directory
 python-active-directory = "==1.0.5"
 rrdtool = "==0.1.15"  # Actually we ship the binding which comes with rrdtool itself...

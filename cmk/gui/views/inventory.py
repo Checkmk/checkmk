@@ -666,9 +666,12 @@ class TableViewSpec:
     icon: str | None
 
 
+KeyOrder = Sequence[str]
+
+
 @dataclass(frozen=True)
 class TableDisplayHint:
-    key_order: Sequence[str]
+    key_order: KeyOrder
     is_show_more: bool
     view_spec: TableViewSpec | None = None
 
@@ -676,7 +679,7 @@ class TableDisplayHint:
     def from_raw(
         cls,
         raw_hint: InventoryHintSpec,
-        key_order: Sequence[str],
+        key_order: KeyOrder,
         table_view_spec: TableViewSpec | None = None,
     ) -> TableDisplayHint:
         return cls(
@@ -753,10 +756,10 @@ class ColumnDisplayHint:
 
 @dataclass(frozen=True)
 class AttributesDisplayHint:
-    key_order: Sequence[str]
+    key_order: KeyOrder
 
     @classmethod
-    def from_raw(cls, key_order: Sequence[str]) -> AttributesDisplayHint:
+    def from_raw(cls, key_order: KeyOrder) -> AttributesDisplayHint:
         return cls(key_order=key_order)
 
 
@@ -989,7 +992,7 @@ class DisplayHints:
         return related_raw_hints_by_path
 
     @staticmethod
-    def _complete_key_order(key_order: Sequence[str], additional_keys: set[str]) -> Sequence[str]:
+    def _complete_key_order(key_order: KeyOrder, additional_keys: set[str]) -> KeyOrder:
         return list(key_order) + [key for key in sorted(additional_keys) if key not in key_order]
 
     def _get_parent(self, path: SDPath) -> DisplayHints:
@@ -1152,13 +1155,11 @@ def _register_node_painter(
     hints: DisplayHints,
 ) -> None:
     """Declares painters for (sub) trees on all host related datasources."""
-    hint = hints.node_hint
-
     register_painter(
         name,
         {
-            "title": _make_long_inventory_title(hint),
-            "short": hint.title,
+            "title": _make_long_inventory_title(hints.node_hint),
+            "short": hints.node_hint.title,
             "columns": ["host_inventory", "host_structured_status"],
             "options": ["show_internal_tree_paths"],
             "params": Dictionary(
@@ -1520,7 +1521,7 @@ class RowMultiTableInventory(ABCRowTable):
 
     def _add_declaration_errors(self) -> None:
         if self._errors:
-            user_errors.add(MKUserError("declare_invtable_view", ", ".join(self._errors)))
+            user_errors.add(MKUserError("table_view_name", ", ".join(self._errors)))
 
 
 def _register_multi_table_view(
@@ -1539,7 +1540,7 @@ def _register_multi_table_view(
         data_source_class = data_source_registry.get(this_table_view_name)
         if data_source_class is None or visual_info_class is None:
             errors.append(
-                "Missing declare_invtable_view for inventory table view '%s'" % this_table_view_name
+                "Missing table view name for inventory table view '%s'" % this_table_view_name
             )
             continue
 

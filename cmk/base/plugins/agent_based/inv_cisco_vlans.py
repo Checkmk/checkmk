@@ -94,6 +94,14 @@ def _parse_multi_vlan(vlan_multi: str) -> str:
     if not vlans:
         return ""
 
+    return _render_vlan_lists(vlans)
+
+
+def _render_vlan_lists(vlans: Sequence[int]) -> str:
+    """
+    >>> _render_vlan_lists([1, 2, 3, 4, 6, 8, 9, 12])
+    '1-4, 6, 8-9, 12'
+    """
     infotexts = []
     subinfo = [vlans[0]]
     last_vlan = vlans[0]

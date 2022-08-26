@@ -24,6 +24,7 @@ from cmk.utils.bi.bi_rule import BIRule, BIRuleSchema
 from cmk.utils.bi.bi_schema import Schema
 from cmk.utils.exceptions import MKGeneralException
 
+from cmk.gui import fields as gui_fields
 from cmk.gui.bi import api_get_aggregation_state, get_cached_bi_packs
 from cmk.gui.globals import user
 from cmk.gui.http import Response
@@ -519,7 +520,7 @@ class BIPackEndpointSchema(Schema):
         description="TODO: Hier muß Andreas noch etwas reinschreiben!",
     )
     contact_groups = ReqList(
-        fields.String(),
+        gui_fields.GroupField(should_exist=True, group_type="contact", example="important_persons"),
         dump_default=[],
         example=["contact", "contactgroup_b"],
         description="TODO: Hier muß Andreas noch etwas reinschreiben!",

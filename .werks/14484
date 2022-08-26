@@ -1,0 +1,12 @@
+Title: Add password strength meter
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1661500122
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+When changing the password or creating a new user you now see a password
+strength meter indicating a estimation of the password strength.

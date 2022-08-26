@@ -699,7 +699,7 @@ class RowTableLivestatus(RowTable):
         only_sites: OnlySites,
         limit: Optional[int],
         all_active_filters: "List[Filter]",
-    ) -> Tuple[Rows, int]:
+    ) -> Union[Rows, Tuple[Rows, int]]:
         """Retrieve data via livestatus, convert into list of dicts,
 
         view: view object

@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import urllib.parse
-from typing import Callable, Optional, Sequence, TypeVar, Union
+from typing import Callable, List, Optional, Sequence, Tuple, TypeVar, Union
 
-from livestatus import SiteId
+from livestatus import OnlySites, SiteId
 
 from cmk.utils.defines import short_service_state_name
 
@@ -39,11 +39,13 @@ from cmk.gui.plugins.views.utils import (
     row_id,
     RowTableLivestatus,
 )
+from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import (
     ColumnName,
     HTTPVariables,
     PainterSpec,
     Row,
+    Rows,
     SingleInfos,
     ViewSpec,
     VisualLinkSpec,
@@ -52,6 +54,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless, urlencode_vars
 from cmk.gui.valuespec import MonitoringState
+from cmk.gui.view import View
 from cmk.gui.view_store import get_permitted_views, multisite_builtin_views
 from cmk.gui.view_utils import CellSpec
 
@@ -66,7 +69,15 @@ from cmk.gui.view_utils import CellSpec
 
 
 class RowTableEC(RowTableLivestatus):
-    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
+    def query(
+        self,
+        view: View,
+        columns: List[ColumnName],
+        headers: str,
+        only_sites: OnlySites,
+        limit: Optional[int],
+        all_active_filters: List[Filter],
+    ) -> Union[Rows, Tuple[Rows, int]]:
         for c in ["event_contact_groups", "host_contact_groups", "event_host"]:
             if c not in columns:
                 columns.append(c)

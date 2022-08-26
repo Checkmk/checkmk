@@ -245,15 +245,15 @@ class ABCRowTable(RowTable):
         self._info_names = info_names
         self._add_host_columns = add_host_columns
 
-    def query(  # type:ignore[no-untyped-def]
+    def query(
         self,
         view: View,
         columns: Sequence[ColumnName],
         headers: str,
         only_sites: OnlySites,
-        limit,
+        limit: object,
         all_active_filters: Sequence[Filter],
-    ) -> tuple[Rows, int]:
+    ) -> tuple[Rows, int] | Rows:
         self._add_declaration_errors()
 
         # Create livestatus filter for filtering out hosts

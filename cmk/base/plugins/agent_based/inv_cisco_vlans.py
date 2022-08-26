@@ -31,26 +31,15 @@
 # VLANs; the VLAN is not included if its bit has a
 # value of '0'."
 
+from typing import List
+
 from .agent_based_api.v1 import contains, OIDEnd, register, SNMPTree, TableRow
+from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
-register.snmp_section(
-    name="inv_cisco_vlans",
-    fetch=[
-        SNMPTree(
-            base=".1.3.6.1.4.1.9.9.68.1.2.2.1",
-            oids=[
-                OIDEnd(),
-                "1",  # vmVlanType
-                "2",  # vmVlan
-                "4",  # vmVlans
-            ],
-        ),
-    ],
-    detect=contains(".1.3.6.1.2.1.1.1.0", "cisco"),
-)
+Section = List[StringTable]
 
 
-def parse_multi_vlan(vlan_multi):
+def _parse_multi_vlan(vlan_multi: str) -> str:
     """compress a list of vlans into a readable format"""
 
     def concatenate_vlans(vlan, subinfo):
@@ -84,25 +73,45 @@ def parse_multi_vlan(vlan_multi):
     return ", ".join(infotexts)
 
 
-def inv_cisco_vlans(section):
-    path = ["networking", "interfaces"]
-    map_vlans = {
-        "1": "static",
-        "2": "dynamic",
-        "3": "multi-VLAN",
-    }
+register.snmp_section(
+    name="inv_cisco_vlans",
+    fetch=[
+        SNMPTree(
+            base=".1.3.6.1.4.1.9.9.68.1.2.2.1",
+            oids=[
+                OIDEnd(),
+                "1",  # vmVlanType
+                "2",  # vmVlan
+                "4",  # vmVlans
+            ],
+        ),
+    ],
+    detect=contains(".1.3.6.1.2.1.1.1.0", "cisco"),
+)
+
+
+INVENTORY_PATH = ["networking", "interfaces"]
+
+MAP_VLANS = {
+    "1": "static",
+    "2": "dynamic",
+    "3": "multi-VLAN",
+}
+
+
+def inv_cisco_vlans(section: Section) -> InventoryResult:
 
     for if_id, vlan_type, vlan_single, vlan_multi in section[0]:
-        vlan_readable = map_vlans.get(vlan_type, "")
+        vlan_readable = MAP_VLANS.get(vlan_type, "")
         vlans = None
         if vlan_single != "0" and vlan_type in ["1", "2"]:
             vlans = vlan_single
         elif vlan_type == "3":
-            vlans = parse_multi_vlan(vlan_multi)
+            vlans = _parse_multi_vlan(vlan_multi)
 
         if vlans:
             yield TableRow(
-                path=path,
+                path=INVENTORY_PATH,
                 key_columns={"index": int(if_id)},
                 inventory_columns={
                     "vlans": vlans,

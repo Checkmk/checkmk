@@ -25,7 +25,6 @@ from cmk.gui.valuespec import (
     MonitoringState,
     RegExp,
     TextInput,
-    Transform,
     ValueSpec,
 )
 
@@ -45,65 +44,8 @@ class RulespecGroupInventory(RulespecGroup):
         return _("Configuration of the Checkmk Hardware and Software Inventory System")
 
 
-def _valuespec_active_checks_cmk_inv():
-    return Transform(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "sw_changes",
-                    MonitoringState(
-                        title=_("State when software changes are detected"),
-                        default_value=0,
-                    ),
-                ),
-                (
-                    "sw_missing",
-                    MonitoringState(
-                        title=_("State when software packages info is missing"),
-                        default_value=0,
-                    ),
-                ),
-                (
-                    "hw_changes",
-                    MonitoringState(
-                        title=_("State when hardware changes are detected"),
-                        default_value=0,
-                    ),
-                ),
-                (
-                    "fail_status",
-                    MonitoringState(
-                        title=_("State when inventory fails"),
-                        help=_(
-                            "The check takes this state in case the inventory cannot be "
-                            "updated because of any possible reason. A common use is "
-                            "setting this to OK for workstations that can be switched "
-                            "off - so you will get no notifications in that case."
-                        ),
-                        default_value=1,
-                    ),
-                ),
-                (
-                    "status_data_inventory",
-                    DropdownChoice(
-                        title=_("Status data inventory"),
-                        help=_(
-                            "All hosts configured via this ruleset will do a hardware and "
-                            "software inventory after every check cycle if there's at least "
-                            "one inventory plugin which processes status data. "
-                            "<b>Note:</b> in order to get any useful "
-                            "result for agent based hosts make sure that you have installed "
-                            "the agent plugin <tt>mk_inventory</tt> on these hosts."
-                        ),
-                        choices=[
-                            (True, _("Do status data inventory")),
-                            (False, _("Do not status data inventory")),
-                        ],
-                        default_value=True,
-                    ),
-                ),
-            ]
-        ),
+def _valuespec_active_checks_cmk_inv() -> Dictionary:
+    return Dictionary(
         title=_("Do hardware/software inventory"),
         help=_(
             "All hosts configured via this ruleset will do a hardware and "
@@ -115,7 +57,61 @@ def _valuespec_active_checks_cmk_inv():
             "result for agent based hosts make sure that you have installed "
             "the agent plugin <tt>mk_inventory</tt> on these hosts."
         ),
-        forth=lambda x: x is not None and x or {},  # convert from legacy None
+        elements=[
+            (
+                "sw_changes",
+                MonitoringState(
+                    title=_("State when software changes are detected"),
+                    default_value=0,
+                ),
+            ),
+            (
+                "sw_missing",
+                MonitoringState(
+                    title=_("State when software packages info is missing"),
+                    default_value=0,
+                ),
+            ),
+            (
+                "hw_changes",
+                MonitoringState(
+                    title=_("State when hardware changes are detected"),
+                    default_value=0,
+                ),
+            ),
+            (
+                "fail_status",
+                MonitoringState(
+                    title=_("State when inventory fails"),
+                    help=_(
+                        "The check takes this state in case the inventory cannot be "
+                        "updated because of any possible reason. A common use is "
+                        "setting this to OK for workstations that can be switched "
+                        "off - so you will get no notifications in that case."
+                    ),
+                    default_value=1,
+                ),
+            ),
+            (
+                "status_data_inventory",
+                DropdownChoice(
+                    title=_("Status data inventory"),
+                    help=_(
+                        "All hosts configured via this ruleset will do a hardware and "
+                        "software inventory after every check cycle if there's at least "
+                        "one inventory plugin which processes status data. "
+                        "<b>Note:</b> in order to get any useful "
+                        "result for agent based hosts make sure that you have installed "
+                        "the agent plugin <tt>mk_inventory</tt> on these hosts."
+                    ),
+                    choices=[
+                        (True, _("Do status data inventory")),
+                        (False, _("Do not status data inventory")),
+                    ],
+                    default_value=True,
+                ),
+            ),
+        ],
     )
 
 

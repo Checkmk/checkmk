@@ -347,12 +347,6 @@ class NotificationParameterMail(NotificationParameter):
         return elements
 
 
-def _slack_add_proxy(value):
-    # introduced with 2.0.0p4 werk #12857
-    value.setdefault("proxy_url", ("no_proxy", None))
-    return value
-
-
 @notification_parameter_registry.register
 class NotificationParameterSlack(NotificationParameter):
     @property
@@ -360,54 +354,51 @@ class NotificationParameterSlack(NotificationParameter):
         return "slack"
 
     @property
-    def spec(self):
-        return Transform(
-            valuespec=Dictionary(
-                title=_("Create notification with the following parameters"),
-                optional_keys=["ignore_ssl", "url_prefix", "proxy_url"],
-                elements=[
-                    (
-                        "webhook_url",
-                        CascadingDropdown(
-                            title=_("Webhook-URL"),
-                            help=_(
-                                "Webhook URL. Setup Slack Webhook "
-                                '<a href="https://my.slack.com/services/new/incoming-webhook/" target="_blank">here</a>'
-                                "<br />For Mattermost follow the documentation "
-                                '<a href="https://docs.mattermost.com/developer/webhooks-incoming.html" target="_blank">here</a>'
-                                "<br />This URL can also be collected from the Password Store from Checkmk."
+    def spec(self) -> Dictionary:
+        return Dictionary(
+            title=_("Create notification with the following parameters"),
+            optional_keys=["ignore_ssl", "url_prefix", "proxy_url"],
+            elements=[
+                (
+                    "webhook_url",
+                    CascadingDropdown(
+                        title=_("Webhook-URL"),
+                        help=_(
+                            "Webhook URL. Setup Slack Webhook "
+                            '<a href="https://my.slack.com/services/new/incoming-webhook/" target="_blank">here</a>'
+                            "<br />For Mattermost follow the documentation "
+                            '<a href="https://docs.mattermost.com/developer/webhooks-incoming.html" target="_blank">here</a>'
+                            "<br />This URL can also be collected from the Password Store from Checkmk."
+                        ),
+                        choices=[
+                            (
+                                "webhook_url",
+                                _("Webhook URL"),
+                                HTTPUrl(size=80, allow_empty=False),
                             ),
-                            choices=[
-                                (
-                                    "webhook_url",
-                                    _("Webhook URL"),
-                                    HTTPUrl(size=80, allow_empty=False),
+                            (
+                                "store",
+                                _("URL from password store"),
+                                DropdownChoice(
+                                    sorted=True,
+                                    choices=passwordstore_choices,
                                 ),
-                                (
-                                    "store",
-                                    _("URL from password store"),
-                                    DropdownChoice(
-                                        sorted=True,
-                                        choices=passwordstore_choices,
-                                    ),
-                                ),
-                            ],
-                        ),
+                            ),
+                        ],
                     ),
-                    (
-                        "ignore_ssl",
-                        FixedValue(
-                            value=True,
-                            title=_("Disable SSL certificate verification"),
-                            totext=_("Disable SSL certificate verification"),
-                            help=_("Ignore unverified HTTPS request warnings. Use with caution."),
-                        ),
+                ),
+                (
+                    "ignore_ssl",
+                    FixedValue(
+                        value=True,
+                        title=_("Disable SSL certificate verification"),
+                        totext=_("Disable SSL certificate verification"),
+                        help=_("Ignore unverified HTTPS request warnings. Use with caution."),
                     ),
-                    ("url_prefix", _get_url_prefix_specs(local_site_url)),
-                    ("proxy_url", HTTPProxyReference()),
-                ],
-            ),
-            forth=_slack_add_proxy,
+                ),
+                ("url_prefix", _get_url_prefix_specs(local_site_url)),
+                ("proxy_url", HTTPProxyReference()),
+            ],
         )
 
 
@@ -1116,35 +1107,33 @@ class NotificationParameterServiceNow(NotificationParameter):
                         elements=[
                             (
                                 "start",
-                                Transform(
-                                    valuespec=Alternative(
-                                        title=_("State of incident if acknowledgement is set"),
-                                        help=_(
-                                            "Here you can define the state of the incident in case of an "
-                                            "acknowledgement of the host or service problem."
+                                Alternative(
+                                    title=_("State of incident if acknowledgement is set"),
+                                    help=_(
+                                        "Here you can define the state of the incident in case of an "
+                                        "acknowledgement of the host or service problem."
+                                    ),
+                                    elements=[
+                                        DropdownChoice(
+                                            title=_(
+                                                "State of incident if acknowledgement is set (predefined)"
+                                            ),
+                                            help=_(
+                                                "Please note that the mapping to the numeric "
+                                                "ServiceNow state may be changed at your system "
+                                                "and can differ from our definitions. In this case "
+                                                "use the option below."
+                                            ),
+                                            choices=self._get_state_choices("incident"),
+                                            default_value="none",
                                         ),
-                                        elements=[
-                                            DropdownChoice(
-                                                title=_(
-                                                    "State of incident if acknowledgement is set (predefined)"
-                                                ),
-                                                help=_(
-                                                    "Please note that the mapping to the numeric "
-                                                    "ServiceNow state may be changed at your system "
-                                                    "and can differ from our definitions. In this case "
-                                                    "use the option below."
-                                                ),
-                                                choices=self._get_state_choices("incident"),
-                                                default_value="none",
+                                        Integer(
+                                            title=_(
+                                                "State of incident if acknowledgement is set (as integer)"
                                             ),
-                                            Integer(
-                                                title=_(
-                                                    "State of incident if acknowledgement is set (as integer)"
-                                                ),
-                                                minvalue=0,
-                                            ),
-                                        ],
-                                    )
+                                            minvalue=0,
+                                        ),
+                                    ],
                                 ),
                             ),
                         ],
@@ -1162,64 +1151,60 @@ class NotificationParameterServiceNow(NotificationParameter):
                         elements=[
                             (
                                 "start",
-                                Transform(
-                                    valuespec=Alternative(
-                                        title=_("State of incident if downtime is set"),
-                                        elements=[
-                                            DropdownChoice(
-                                                title=_(
-                                                    "State of incident if downtime is set (predefined)"
-                                                ),
-                                                help=_(
-                                                    "Please note that the mapping to the numeric "
-                                                    "ServiceNow state may be changed at your system "
-                                                    "and can differ from our definitions. In this case "
-                                                    "use the option below."
-                                                ),
-                                                choices=self._get_state_choices("incident"),
-                                                default_value="none",
+                                Alternative(
+                                    title=_("State of incident if downtime is set"),
+                                    elements=[
+                                        DropdownChoice(
+                                            title=_(
+                                                "State of incident if downtime is set (predefined)"
                                             ),
-                                            Integer(
-                                                title=_(
-                                                    "State of incident if downtime is set (as integer)"
-                                                ),
-                                                minvalue=0,
+                                            help=_(
+                                                "Please note that the mapping to the numeric "
+                                                "ServiceNow state may be changed at your system "
+                                                "and can differ from our definitions. In this case "
+                                                "use the option below."
                                             ),
-                                        ],
-                                    )
+                                            choices=self._get_state_choices("incident"),
+                                            default_value="none",
+                                        ),
+                                        Integer(
+                                            title=_(
+                                                "State of incident if downtime is set (as integer)"
+                                            ),
+                                            minvalue=0,
+                                        ),
+                                    ],
                                 ),
                             ),
                             (
                                 "end",
-                                Transform(
-                                    valuespec=Alternative(
-                                        title=_("State of incident if downtime expires"),
-                                        help=_(
-                                            "Here you can define the state of the incident in case of an "
-                                            "ending acknowledgement of the host or service problem."
+                                Alternative(
+                                    title=_("State of incident if downtime expires"),
+                                    help=_(
+                                        "Here you can define the state of the incident in case of an "
+                                        "ending acknowledgement of the host or service problem."
+                                    ),
+                                    elements=[
+                                        DropdownChoice(
+                                            title=_(
+                                                "State of incident if downtime expires (predefined)"
+                                            ),
+                                            help=_(
+                                                "Please note that the mapping to the numeric "
+                                                "ServiceNow state may be changed at your system "
+                                                "and can differ from our definitions. In this case "
+                                                "use the option below."
+                                            ),
+                                            choices=self._get_state_choices("incident"),
+                                            default_value="none",
                                         ),
-                                        elements=[
-                                            DropdownChoice(
-                                                title=_(
-                                                    "State of incident if downtime expires (predefined)"
-                                                ),
-                                                help=_(
-                                                    "Please note that the mapping to the numeric "
-                                                    "ServiceNow state may be changed at your system "
-                                                    "and can differ from our definitions. In this case "
-                                                    "use the option below."
-                                                ),
-                                                choices=self._get_state_choices("incident"),
-                                                default_value="none",
+                                        Integer(
+                                            title=_(
+                                                "State of incident if downtime expires (as integer)"
                                             ),
-                                            Integer(
-                                                title=_(
-                                                    "State of incident if downtime expires (as integer)"
-                                                ),
-                                                minvalue=0,
-                                            ),
-                                        ],
-                                    )
+                                            minvalue=0,
+                                        ),
+                                    ],
                                 ),
                             ),
                         ],
@@ -1338,28 +1323,25 @@ $LONGSERVICEOUTPUT$
             elements=[
                 (
                     "start",
-                    Transform(
-                        valuespec=Alternative(
-                            title=_("State of %s if recovery is set") % issue_type,
-                            elements=[
-                                DropdownChoice(
-                                    title=_("State of case if recovery is set (predefined)"),
-                                    help=_(
-                                        "Please note that the mapping to the numeric "
-                                        "ServiceNow state may be changed at your system "
-                                        "and can differ from our definitions. In this case "
-                                        "use the option below."
-                                    ),
-                                    choices=self._get_state_choices(issue_type),
-                                    default_value="none",
+                    Alternative(
+                        title=_("State of %s if recovery is set") % issue_type,
+                        elements=[
+                            DropdownChoice(
+                                title=_("State of case if recovery is set (predefined)"),
+                                help=_(
+                                    "Please note that the mapping to the numeric "
+                                    "ServiceNow state may be changed at your system "
+                                    "and can differ from our definitions. In this case "
+                                    "use the option below."
                                 ),
-                                Integer(
-                                    title=_("State of %s if recovery is set (as integer)")
-                                    % issue_type,
-                                    minvalue=0,
-                                ),
-                            ],
-                        )
+                                choices=self._get_state_choices(issue_type),
+                                default_value="none",
+                            ),
+                            Integer(
+                                title=_("State of %s if recovery is set (as integer)") % issue_type,
+                                minvalue=0,
+                            ),
+                        ],
                     ),
                 ),
             ],
@@ -1718,11 +1700,7 @@ class NotificationParameterPushover(NotificationParameter):
                 ),
                 (
                     "proxy_url",
-                    Transform(
-                        valuespec=HTTPProxyReference(),
-                        # Transform legacy explicit TextInput() proxy URL
-                        forth=lambda v: ("url", v) if isinstance(v, str) else v,
-                    ),
+                    HTTPProxyReference(),
                 ),
                 (
                     "priority",

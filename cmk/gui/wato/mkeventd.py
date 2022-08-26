@@ -4675,19 +4675,6 @@ class RulespecGroupEventConsole(RulespecGroup):
         return _("Host and service rules related to the Event Console")
 
 
-def convert_mkevents_hostspec(value):
-    if isinstance(value, list):
-        return value
-    if value == "$HOSTADDRESS$":
-        return ["$HOSTADDRESS$"]
-    if value == "$HOSTNAME$":
-        return ["$HOSTNAME$"]
-    if value == "$HOSTNAME$/$HOSTADDRESS$":
-        return ["$HOSTNAME$", "$HOSTADDRESS$"]
-    # custom
-    return value
-
-
 def _valuespec_extra_host_conf__ec_event_limit():
     return Transform(
         valuespec=vs_ec_host_limit(title=_("Host event limit")),
@@ -4717,22 +4704,20 @@ def _valuespec_active_checks_mkevents():
         elements=[
             (
                 "hostspec",
-                Transform(
-                    valuespec=Alternative(
-                        title=_("Host specification"),
-                        elements=[
-                            ListChoice(
-                                title=_("Match the hosts with..."),
-                                choices=[
-                                    ("$HOSTNAME$", _("Hostname")),
-                                    ("$HOSTADDRESS$", _("IP address")),
-                                    ("$HOSTALIAS$", _("Alias")),
-                                ],
-                            ),
-                            TextInput(allow_empty=False, title="Specify host explicitly"),
-                        ],
-                        default_value=["$HOSTNAME$", "$HOSTADDRESS$"],
-                    ),
+                Alternative(
+                    title=_("Host specification"),
+                    elements=[
+                        ListChoice(
+                            title=_("Match the hosts with..."),
+                            choices=[
+                                ("$HOSTNAME$", _("Hostname")),
+                                ("$HOSTADDRESS$", _("IP address")),
+                                ("$HOSTALIAS$", _("Alias")),
+                            ],
+                        ),
+                        TextInput(allow_empty=False, title="Specify host explicitly"),
+                    ],
+                    default_value=["$HOSTNAME$", "$HOSTADDRESS$"],
                     help=_(
                         "When querying the event status, you can match events to a particular host "
                         "using the hostname, the IP address, or the host alias. This is due to the "
@@ -4740,7 +4725,6 @@ def _valuespec_active_checks_mkevents():
                         "same host using different specification methods. Alternatively, you can "
                         "specify an explicit host for which to show events."
                     ),
-                    forth=convert_mkevents_hostspec,
                 ),
             ),
             (

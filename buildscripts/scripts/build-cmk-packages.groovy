@@ -35,8 +35,7 @@ def main() {
 
     /// don't add $WORKSPACE based values here, since $docker_args is being
     /// used on different nodes
-    def docker_args = "--ulimit nofile=1024:1024";
-    def docker_git_reference_mount = "-v /home/jenkins/git_references/check_mk:/home/jenkins/git_references/check_mk:ro"
+    def docker_args = "${mount_reference_repo_dir} --ulimit nofile=1024:1024";
     def jenkins_base_folder = new File(new File(currentBuild.fullProjectName).parent).parent;
 
     def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS);
@@ -127,12 +126,12 @@ def main() {
     ///       https://review.lan.tribe29.com/c/check_mk/+/34634
     ///       Anyway this whole upload/download mayhem hopfully evaporates with
     ///       bazel..
-    // shout("pull packages");
-    // docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-    //     distros.each { distro ->
-    //          docker.image("${distro}:${docker_tag}").pull();
-    //     }
-    // }
+    shout("pull packages");
+    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+        distros.each { distro ->
+             docker.image("${distro}:${docker_tag}").pull();
+        }
+    }
 
 
     shout("agents");
@@ -173,9 +172,11 @@ def main() {
                     } else {
                         /// must take place in $WORKSPACE since we need to
                         /// access $WORKSPACE/agents
-                        docker_image_from_alias("IMAGE_TESTING").inside(
-                            "${docker_args} --group-add=${docker_group_id} -v /var/run/docker.sock:/var/run/docker.sock") {
-                            build_linux_agent_updater(agent, EDITION, branch_version, docker_registry_no_http);
+                        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                            docker_image_from_alias("IMAGE_TESTING").inside(
+                                "${docker_args} --group-add=${docker_group_id} -v /var/run/docker.sock:/var/run/docker.sock") {
+                                build_linux_agent_updater(agent, EDITION, branch_version, docker_registry_no_http);
+                            }
                         }
                     }
                 }
@@ -189,7 +190,7 @@ def main() {
     create_and_upload_bom(WORKSPACE, branch_version, VERSION);
 
     shout("create_source_package");
-    docker_image_from_alias("IMAGE_TESTING").inside("${docker_args} ${docker_git_reference_mount}") {
+    docker_image_from_alias("IMAGE_TESTING").inside("${docker_args} ${mount_reference_repo_dir}") {
         // TODO creates stages
         create_source_package(WORKSPACE, checkout_dir, cmk_version);
 
@@ -308,7 +309,7 @@ def main() {
                 |<p><a href='${INTERNAL_DEPLOY_URL}/${upload_path_suffix}${cmk_version}'>Download Artifacts</a></p>
                 |""".stripMargin());
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            docker_image_from_alias("IMAGE_TESTING").inside("${docker_args} ${docker_git_reference_mount}") {
+            docker_image_from_alias("IMAGE_TESTING").inside("${docker_args} ${mount_reference_repo_dir}") {
                 assert_no_dirty_files(checkout_dir);
                 artifacts_helper.download_version_dir(
                     upload_path,

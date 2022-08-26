@@ -13,8 +13,6 @@ from pathlib import Path
 import abc
 from enum import Enum
 
-from six import ensure_str
-
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 from cmk.gui.exceptions import (MKAuthException, MKGeneralException)
@@ -26,6 +24,7 @@ from cmk.utils.i18n import _
 import cmk.utils.tags
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 from cmk.gui.watolib.utils import (
+    format_php,
     multisite_dir,
     wato_root_dir,
 )
@@ -652,32 +651,6 @@ function all_taggroup_choices($object_tags) {
 }
 
 ?>
-''' % (_format_php(hosttags_dict), _format_php(auxtags_dict))
+''' % (format_php(hosttags_dict), format_php(auxtags_dict))
 
     store.save_text_to_file(path, content)
-
-
-# TODO: Fix copy-n-paste with cmk.gui.watolib.auth_pnp.
-def _format_php(data, lvl=1):
-    s = ''
-    if isinstance(data, (list, tuple)):
-        s += 'array(\n'
-        for item in data:
-            s += '    ' * lvl + _format_php(item, lvl + 1) + ',\n'
-        s += '    ' * (lvl - 1) + ')'
-    elif isinstance(data, dict):
-        s += 'array(\n'
-        for key, val in data.items():
-            s += '    ' * lvl + _format_php(key, lvl + 1) + ' => ' + _format_php(val,
-                                                                                 lvl + 1) + ',\n'
-        s += '    ' * (lvl - 1) + ')'
-    elif isinstance(data, str):
-        s += '\'%s\'' % ensure_str(data).replace('\'', '\\\'')
-    elif isinstance(data, bool):
-        s += data and 'true' or 'false'
-    elif data is None:
-        s += 'null'
-    else:
-        s += str(data)
-
-    return s

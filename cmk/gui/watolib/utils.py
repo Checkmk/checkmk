@@ -182,3 +182,28 @@ def find_signature_key(fingerprint: str):
     for signature_key in config.agent_signature_keys.values():
         if fingerprint == sign_key_fingerprint(signature_key["certificate"]):
             return signature_key
+
+
+def format_php(data: object, lvl: int = 1) -> str:
+    """Format a python object for php"""
+    s = ""
+    if isinstance(data, (list, tuple)):
+        s += "array(\n"
+        for item in data:
+            s += "    " * lvl + format_php(item, lvl + 1) + ",\n"
+        s += "    " * (lvl - 1) + ")"
+    elif isinstance(data, dict):
+        s += "array(\n"
+        for key, val in data.items():
+            s += "    " * lvl + format_php(key, lvl + 1) + " => " + format_php(val, lvl + 1) + ",\n"
+        s += "    " * (lvl - 1) + ")"
+    elif isinstance(data, str):
+        s += "'%s'" % re.sub(r"('|\\)", r"\\\1", ensure_str(data))
+    elif isinstance(data, bool):
+        s += data and "true" or "false"
+    elif data is None:
+        s += "null"
+    else:
+        s += str(data)
+
+    return s

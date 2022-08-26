@@ -38,8 +38,6 @@
 import copy
 from pathlib import Path
 
-from six import ensure_str
-
 import cmk.utils.store as store
 import cmk.utils.paths
 
@@ -47,36 +45,11 @@ import cmk.gui.config as config
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
 from cmk.gui.watolib.groups import load_contact_group_information
+from cmk.gui.watolib.utils import format_php
 
 
 def _auth_php():
     return Path(cmk.utils.paths.var_dir) / "wato" / "auth" / "auth.php"
-
-
-# TODO: Fix copy-n-paste with cmk.gui.watolib.tags.
-def _format_php(data, lvl=1):
-    s = ''
-    if isinstance(data, (list, tuple)):
-        s += 'array(\n'
-        for item in data:
-            s += '    ' * lvl + _format_php(item, lvl + 1) + ',\n'
-        s += '    ' * (lvl - 1) + ')'
-    elif isinstance(data, dict):
-        s += 'array(\n'
-        for key, val in data.items():
-            s += '    ' * lvl + _format_php(key, lvl + 1) + ' => ' + _format_php(val,
-                                                                                 lvl + 1) + ',\n'
-        s += '    ' * (lvl - 1) + ')'
-    elif isinstance(data, str):
-        s += '\'%s\'' % ensure_str(data).replace('\'', '\\\'')
-    elif isinstance(data, bool):
-        s += data and 'true' or 'false'
-    elif data is None:
-        s += 'null'
-    else:
-        s += str(data)
-
-    return s
 
 
 def _create_php_file(callee, users, role_permissions, groups):
@@ -191,7 +164,7 @@ function permitted_maps($username) {
 }
 
 ?>
-''' % (callee, _format_php(nagvis_users), _format_php(role_permissions), _format_php(groups))
+''' % (callee, format_php(nagvis_users), format_php(role_permissions), format_php(groups))
 
     store.makedirs(_auth_php().parent)
     store.save_text_to_file(_auth_php(), content)

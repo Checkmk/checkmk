@@ -11,6 +11,7 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15 sles15 \
     && zypper -n in -y --force-resolution \
     apache2-devel \
     bind-utils \
+    bison \
     curl \
     cyrus-sasl-devel \
     flex \

@@ -25,6 +25,7 @@ from cmk.gui.plugins.visuals.inventory import FilterInvtableVersion
 from cmk.gui.view import View
 from cmk.gui.views.inventory import (
     _cmp_inv_generic,
+    _cmp_inventory_node,
     AttributeDisplayHint,
     AttributesDisplayHint,
     ColumnDisplayHint,
@@ -34,6 +35,7 @@ from cmk.gui.views.inventory import (
     inv_paint_number,
     inv_paint_size,
     NodeDisplayHint,
+    RowMultiTableInventory,
     RowTableInventory,
     RowTableInventoryHistory,
     TableDisplayHint,
@@ -209,7 +211,7 @@ def test_query_row_multi_table_inventory(monkeypatch) -> None:  # type:ignore[no
             ],
         )
     )
-    row_table = cmk.gui.views.inventory.RowMultiTableInventory(sources, ["sid"], [])
+    row_table = RowMultiTableInventory(sources, ["sid"], [])
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS_MULTI)
@@ -231,7 +233,7 @@ def test_query_row_multi_table_inventory_unknown_columns(  # type:ignore[no-unty
             ],
         )
     )
-    row_table = cmk.gui.views.inventory.RowMultiTableInventory(sources, ["sid"], [])
+    row_table = RowMultiTableInventory(sources, ["sid"], [])
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS_MULTI)
@@ -253,7 +255,7 @@ def test_query_row_multi_table_inventory_add_columns(  # type:ignore[no-untyped-
             ],
         )
     )
-    row_table = cmk.gui.views.inventory.RowMultiTableInventory(sources, ["sid"], [])
+    row_table = RowMultiTableInventory(sources, ["sid"], [])
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS2)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS_MULTI)
@@ -278,7 +280,7 @@ def test__cmp_inventory_node(  # type:ignore[no-untyped-def]
 ) -> None:
     monkeypatch.setattr(cmk.gui.inventory, "get_attribute", lambda val, path: val)
     assert (
-        cmk.gui.views.inventory._cmp_inventory_node(
+        _cmp_inventory_node(
             {"host_inventory": val_a},
             {"host_inventory": val_b},
             cmk.gui.inventory.InventoryPath.parse(".any.path"),

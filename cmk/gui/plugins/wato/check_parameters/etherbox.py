@@ -9,7 +9,18 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, ValueSpec
+from cmk.gui.valuespec import Dictionary, TextInput, ValueSpec
+
+
+def _item_spec() -> ValueSpec:
+    return TextInput(
+        title=_("Contact sensor type"),
+        help=_(
+            "The item of etherbox checks is build as 'contact.sensor_type'. "
+            "For example, you want the rule to only apply to a temperature sensor (type 1) on contact 3 "
+            "then set the item to 3.1 ."
+        ),
+    )
 
 
 def _vs_voltage() -> ValueSpec:
@@ -27,6 +38,7 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_vs_voltage,
         title=lambda: _("Etherbox voltage"),
+        item_spec=_item_spec,
     )
 )
 
@@ -46,5 +58,6 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_vs_smoke,
         title=lambda: _("Etherbox smoke"),
+        item_spec=_item_spec,
     )
 )

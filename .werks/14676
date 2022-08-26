@@ -1,0 +1,31 @@
+Title: Item description in CheckParameterRuleSpecWithItem mandatory
+Class: fix
+Compatible: incomp
+Component: wato
+Date: 1661519686
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+This change might break existing MKPs.
+
+When writing a new rulespec for a check with an item the item_spec could be left blank.
+However those are needed to properly render the rulespec and allow to enable a rulespec only for
+specific services of a check plugin.
+
+Now the item_spec parameter is mandatory. The item_name, and item_help parameters have been removed, with werk #14677.
+Below is an example how to register a new rulespec for a check with an item.
+
+
+C+:
+    rulespec_registry.register(
+        CheckParameterRulespecWithItem(
+            check_group_name="a_check",
+            item_spec=lambda: TextInput(title="fitting item name", help="inline help text"),
+            group=RulespecGroupCheckParametersApplications,
+            parameter_valuespec=_parameter_valuespec_network,
+            title=lambda: "A good title",
+        )
+    )
+C-:

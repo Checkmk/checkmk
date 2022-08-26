@@ -9,7 +9,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersNetworking,
 )
-from cmk.gui.valuespec import Dictionary, Float, Percentage, Tuple
+from cmk.gui.valuespec import Dictionary, Float, Percentage, TextInput, Tuple, ValueSpec
 
 
 def _parameter_valuespec_psu_wattage() -> Dictionary:
@@ -76,6 +76,10 @@ def _parameter_valuespec_psu_wattage() -> Dictionary:
     )
 
 
+def _item_spec() -> ValueSpec:
+    return TextInput(title=_("PSU"))
+
+
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="psu_wattage",
@@ -83,5 +87,6 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_psu_wattage,
         title=lambda: _("Power Supply Wattage"),
+        item_spec=_item_spec,
     )
 )

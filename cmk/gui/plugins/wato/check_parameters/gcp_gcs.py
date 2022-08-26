@@ -11,7 +11,15 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersApplications,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Dictionary, Filesize, Integer, MonitoringState, Percentage, ValueSpec
+from cmk.gui.valuespec import (
+    Dictionary,
+    Filesize,
+    Integer,
+    MonitoringState,
+    Percentage,
+    TextInput,
+    ValueSpec,
+)
 
 # A notes about the names of the Dictionary elements. They correspond to the names of the metrics in
 # the check plugin. Please do not change them.
@@ -26,6 +34,10 @@ def _vs_gcs_bucket_requests() -> ValueSpec:
     )
 
 
+def _item_spec_gcs() -> ValueSpec:
+    return TextInput(title=_("Bucket"))
+
+
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="gcp_gcs_requests",
@@ -33,6 +45,7 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_vs_gcs_bucket_requests,
         title=lambda: _("GCP/GCS Requests"),
+        item_spec=_item_spec_gcs,
     )
 )
 
@@ -54,6 +67,7 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_vs_gcs_bucket_network,
         title=lambda: _("GCP/GCS Network"),
+        item_spec=_item_spec_gcs,
     )
 )
 
@@ -78,6 +92,7 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_vs_gcs_bucket_objects,
         title=lambda: _("GCP/GCS Objects"),
+        item_spec=_item_spec_gcs,
     )
 )
 
@@ -97,6 +112,10 @@ def _vs_sql_status() -> ValueSpec:
     )
 
 
+def _item_spec_sql() -> ValueSpec:
+    return TextInput(title=_("Database server"))
+
+
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="gcp_sql_status",
@@ -104,6 +123,7 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_vs_sql_status,
         title=lambda: _("GCP/Cloud SQL status"),
+        item_spec=_item_spec_sql,
     )
 )
 
@@ -146,6 +166,7 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_vs_run_cpu,
         title=lambda: _("GCP/Cloud SQL CPU"),
+        item_spec=_item_spec_sql,
     )
 )
 rulespec_registry.register(
@@ -155,6 +176,7 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_vs_run_memory,
         title=lambda: _("GCP/Cloud SQL memory"),
+        item_spec=_item_spec_sql,
     )
 )
 
@@ -165,6 +187,7 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_vs_run_network,
         title=lambda: _("GCP/Cloud SQL Network"),
+        item_spec=_item_spec_sql,
     )
 )
 
@@ -187,8 +210,14 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_vs_sql_disk,
         title=lambda: _("GCP/Cloud SQL disk"),
+        item_spec=_item_spec_sql,
     )
 )
+
+
+def _item_spec_filestore() -> ValueSpec:
+    return TextInput(title=_("Server"))
+
 
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
@@ -197,6 +226,7 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_vs_sql_disk,
         title=lambda: _("GCP/Filestore"),
+        item_spec=_item_spec_filestore,
     )
 )
 
@@ -250,6 +280,11 @@ rulespec_registry.register(
     )
 )
 
+
+def _item_spec_gce_storage() -> ValueSpec:
+    return TextInput(title=_("Device"))
+
+
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="gcp_gce_storage",
@@ -257,6 +292,7 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_vs_gce_disk,
         title=lambda: _("GCP/GCE storage IO"),
+        item_spec=_item_spec_gce_storage,
     )
 )
 
@@ -273,6 +309,10 @@ def _vs_cost() -> Dictionary:
     )
 
 
+def _item_spec_cost() -> ValueSpec:
+    return TextInput(title=_("Project"))
+
+
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="gcp_cost",
@@ -280,8 +320,13 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_vs_cost,
         title=lambda: _("GCP Cost"),
+        item_spec=_item_spec_cost,
     )
 )
+
+
+def _item_spec_http_lb() -> ValueSpec:
+    return TextInput(title=_("Project"))
 
 
 def _vs_gcs_http_lb_requests() -> ValueSpec:
@@ -298,6 +343,7 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_vs_gcs_http_lb_requests,
         title=lambda: _("GCP/HTTP(S) load balancer requests"),
+        item_spec=_item_spec_http_lb,
     )
 )
 
@@ -316,5 +362,6 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_vs_gcs_http_lb_latencies,
         title=lambda: _("GCP/HTTP(S) load balancer Latencies"),
+        item_spec=_item_spec_http_lb,
     )
 )

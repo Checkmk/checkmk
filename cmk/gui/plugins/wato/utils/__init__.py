@@ -853,15 +853,11 @@ def register_check_parameters(
         }
 
         if itemspec:
-            kwargs["item_spec"] = lambda: itemspec
-
-        base_class = (
-            CheckParameterRulespecWithItem
-            if itemspec is not None
-            else CheckParameterRulespecWithoutItem
-        )
-
-        rulespec_registry.register(base_class(**kwargs))
+            rulespec_registry.register(
+                CheckParameterRulespecWithItem(item_spec=lambda: itemspec, **kwargs)
+            )
+        else:
+            rulespec_registry.register(CheckParameterRulespecWithoutItem(**kwargs))
 
     if not (valuespec and has_inventory) and register_static_check:
         raise MKGeneralException(

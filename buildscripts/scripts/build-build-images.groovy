@@ -9,8 +9,6 @@
 /// Depends on: image aliases for upstream OS images on Nexus, ???
 
 def main() {
-    global_dry_run_level = 0;
-
     check_job_parameters([
         "SYNC_WITH_IMAGES_WITH_UPSTREAM",
         "PUBLISH_IMAGES",
@@ -76,20 +74,18 @@ def main() {
             def stages = distros.collectEntries { distro ->
                 [("${distro}") : {
                         stage("Build ${distro}") {
-                            on_dry_run_omit(GLOBAL_IMPACT, "docker.build(${distro}:${vers_tag})") {
-                                def DOCKER_ARGS = (
-                                    " --build-arg ${alias_names[distro]}=${image_ids[distro]}" +
-                                    " --build-arg DOCKER_REGISTRY='${docker_registry_no_http}'" +
-                                    " --build-arg NEXUS_ARCHIVES_URL='$NEXUS_ARCHIVES_URL'" +
-                                    " --build-arg DISTRO='$distro'" +
-                                    " --build-arg NEXUS_USERNAME='$USERNAME'" +
-                                    " --build-arg NEXUS_PASSWORD='$PASSWORD'" +
-                                    " --build-arg ARTIFACT_STORAGE='$ARTIFACT_STORAGE'" +
-                                    " --build-arg VERS_TAG='$vers_tag'" +
-                                    " --build-arg BRANCH_VERSION='$branch_version'" +
-                                    " -f ${dockerfiles[distro]} .");
-                                docker.build("${distro}:${vers_tag}", DOCKER_ARGS);
-                            }
+                            def DOCKER_ARGS = (
+                                " --build-arg ${alias_names[distro]}=${image_ids[distro]}" +
+                                " --build-arg DOCKER_REGISTRY='${docker_registry_no_http}'" +
+                                " --build-arg NEXUS_ARCHIVES_URL='$NEXUS_ARCHIVES_URL'" +
+                                " --build-arg DISTRO='$distro'" +
+                                " --build-arg NEXUS_USERNAME='$USERNAME'" +
+                                " --build-arg NEXUS_PASSWORD='$PASSWORD'" +
+                                " --build-arg ARTIFACT_STORAGE='$ARTIFACT_STORAGE'" +
+                                " --build-arg VERS_TAG='$vers_tag'" +
+                                " --build-arg BRANCH_VERSION='$branch_version'" +
+                                " -f ${dockerfiles[distro]} .");
+                            docker.build("${distro}:${vers_tag}", DOCKER_ARGS);
                         }}
                 ]
             }
@@ -98,10 +94,8 @@ def main() {
             conditional_stage('upload images', publish_images) {
                 docker.withRegistry(DOCKER_REGISTRY, "nexus") {
                     images.each { distro, image ->
-                        on_dry_run_omit(GLOBAL_IMPACT, "PUBLISH |${distro}|${image}|") {
-                            image.push();
-                            image.push("${branch_name}-latest");
-                        }
+                        image.push();
+                        image.push("${branch_name}-latest");
                     }
                 }
             }

@@ -85,6 +85,9 @@ persistent_connections: Dict[str, socket.socket] = {}
 # Regular expression for removing Cache: headers if caching is not allowed
 remove_cache_regex: Pattern = re.compile("\nCache:[^\n]*")
 
+# Pattern for allowed UserId values
+validate_user_id_regex: Pattern = re.compile(r"^[\w_][-\w.@_]*$")
+
 
 def _ensure_unicode(value: Union[str, bytes]) -> str:
     if isinstance(value, str):
@@ -631,6 +634,10 @@ class SingleSiteConnection(Helpers):
                 raise
 
     def build_query(self, query_obj: Query, add_headers: str) -> str:
+        # Prevent injection of further livestatus commands inside AuthUser header.
+        if "\n" in self.auth_header[:-1]:
+            raise MKLivestatusQueryError("Refusing to build query with invalid AuthUser header.")
+
         query = str(query_obj)
         if not self.allow_cache:
             query = remove_cache_regex.sub("", query)
@@ -809,6 +816,11 @@ class SingleSiteConnection(Helpers):
 
     # Set user to be used in certain authorization domain
     def set_auth_user(self, domain: str, user: UserId) -> None:
+        # Prevent setting AuthUser to values that would be rejected later. See Werk 14384.
+        # Empty value is allowed and used to delete from auth_users dict.
+        if user and validate_user_id_regex.match(user) is None:
+            raise ValueError("Invalid user ID")
+
         if user:
             self.auth_users[domain] = user
         elif domain in self.auth_users:

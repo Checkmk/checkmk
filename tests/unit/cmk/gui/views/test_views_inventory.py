@@ -344,6 +344,13 @@ def test__cmp_inventory_node(  # type:ignore[no-untyped-def]
                     "entitlement",
                     "cpu_max_capa",
                     "logical_cpus",
+                    "bus_speed",
+                    "cache_size",
+                    "cores",
+                    "cores_per_cpu",
+                    "cpus",
+                    "threads_per_cpu",
+                    "voltage",
                 ],
             ),
             TableDisplayHint(

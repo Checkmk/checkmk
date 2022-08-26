@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import abc
 import time
+from collections import OrderedDict
 from dataclasses import dataclass, field
 from typing import (
     Any,
@@ -673,10 +674,13 @@ class TableDisplayHint:
 
     @classmethod
     def from_raw(
-        cls, raw_hint: InventoryHintSpec, table_view_spec: TableViewSpec | None = None
+        cls,
+        raw_hint: InventoryHintSpec,
+        key_order: Sequence[str],
+        table_view_spec: TableViewSpec | None = None,
     ) -> TableDisplayHint:
         return cls(
-            key_order=raw_hint.get("keyorder", []),
+            key_order=key_order,
             is_show_more=raw_hint.get("is_show_more", True),
             view_spec=table_view_spec,
         )
@@ -752,10 +756,8 @@ class AttributesDisplayHint:
     key_order: Sequence[str]
 
     @classmethod
-    def from_raw(cls, raw_hint: InventoryHintSpec) -> AttributesDisplayHint:
-        return cls(
-            key_order=raw_hint.get("keyorder", []),
-        )
+    def from_raw(cls, key_order: Sequence[str]) -> AttributesDisplayHint:
+        return cls(key_order=key_order)
 
 
 @dataclass(frozen=True)
@@ -855,9 +857,9 @@ class DisplayHints:
         path: SDPath,
         node_hint: NodeDisplayHint,
         table_hint: TableDisplayHint,
-        column_hints: Mapping[str, ColumnDisplayHint],
+        column_hints: OrderedDict[str, ColumnDisplayHint],
         attributes_hint: AttributesDisplayHint,
-        attribute_hints: Mapping[str, AttributeDisplayHint],
+        attribute_hints: OrderedDict[str, AttributeDisplayHint],
     ) -> None:
         # This inventory path is an 'abc' path because it's the general, abstract path of a display
         # hint and may contain "*" (ie. placeholders).
@@ -878,10 +880,10 @@ class DisplayHints:
         return DisplayHints(
             path=path,
             node_hint=NodeDisplayHint.from_raw(path, {"title": _l("Inventory Tree")}),
-            table_hint=TableDisplayHint.from_raw({}),
-            column_hints={},
-            attributes_hint=AttributesDisplayHint.from_raw({}),
-            attribute_hints={},
+            table_hint=TableDisplayHint.from_raw({}, []),
+            column_hints=OrderedDict({}),
+            attributes_hint=AttributesDisplayHint.from_raw([]),
+            attribute_hints=OrderedDict({}),
         )
 
     @classmethod
@@ -889,16 +891,26 @@ class DisplayHints:
         return DisplayHints(
             path=path,
             node_hint=NodeDisplayHint.from_raw(path, {}),
-            table_hint=TableDisplayHint.from_raw({}),
-            column_hints={},
-            attributes_hint=AttributesDisplayHint.from_raw({}),
-            attribute_hints={},
+            table_hint=TableDisplayHint.from_raw({}, []),
+            column_hints=OrderedDict({}),
+            attributes_hint=AttributesDisplayHint.from_raw([]),
+            attribute_hints=OrderedDict({}),
         )
 
     def parse(self, raw_hints: Mapping[str, InventoryHintSpec]) -> None:
         for path, related_raw_hints in sorted(self._get_related_raw_hints(raw_hints).items()):
             if not path:
                 continue
+
+            table_keys = self._complete_key_order(
+                related_raw_hints.for_table.get("keyorder", []),
+                set(related_raw_hints.by_columns),
+            )
+
+            attributes_keys = self._complete_key_order(
+                related_raw_hints.for_node.get("keyorder", []),
+                set(related_raw_hints.by_attributes),
+            )
 
             self._get_parent(path).nodes.setdefault(
                 path[-1],
@@ -915,21 +927,34 @@ class DisplayHints:
                     ),
                     table_hint=TableDisplayHint.from_raw(
                         related_raw_hints.for_table,
+                        table_keys,
                         self._get_table_view_spec(
                             path,
                             related_raw_hints.for_node,
                             related_raw_hints.for_table,
                         ),
                     ),
-                    column_hints={
-                        key: ColumnDisplayHint.from_raw(path, key, raw_hint)
-                        for key, raw_hint in related_raw_hints.by_columns.items()
-                    },
-                    attributes_hint=AttributesDisplayHint.from_raw(related_raw_hints.for_node),
-                    attribute_hints={
-                        key: AttributeDisplayHint.from_raw(path, key, raw_hint)
-                        for key, raw_hint in related_raw_hints.by_attributes.items()
-                    },
+                    column_hints=OrderedDict(
+                        {
+                            key: ColumnDisplayHint.from_raw(
+                                path,
+                                key,
+                                related_raw_hints.by_columns.get(key, {}),
+                            )
+                            for key in table_keys
+                        }
+                    ),
+                    attributes_hint=AttributesDisplayHint.from_raw(attributes_keys),
+                    attribute_hints=OrderedDict(
+                        {
+                            key: AttributeDisplayHint.from_raw(
+                                path,
+                                key,
+                                related_raw_hints.by_attributes.get(key, {}),
+                            )
+                            for key in attributes_keys
+                        }
+                    ),
                 ),
             )
 
@@ -962,6 +987,10 @@ class DisplayHints:
                 continue
 
         return related_raw_hints_by_path
+
+    @staticmethod
+    def _complete_key_order(key_order: Sequence[str], additional_keys: set[str]) -> Sequence[str]:
+        return list(key_order) + [key for key in sorted(additional_keys) if key not in key_order]
 
     def _get_parent(self, path: SDPath) -> DisplayHints:
         node = self
@@ -1307,26 +1336,6 @@ def _export_attribute_as_json(
     return _compute_attribute_painter_data(row, inventory_path)
 
 
-def _inv_find_subtable_columns(hints: DisplayHints) -> Sequence[tuple[str, ColumnDisplayHint]]:
-    """Find the name of all columns of an embedded table that have a display
-    hint. Respects the order of the columns if one is specified in the
-    display hint.
-
-    Also use the names found in keyorder to get even more of the available columns."""
-    # Create dict from column name to its order number in the list
-    with_numbers = enumerate(hints.table_hint.key_order)
-    swapped = [(t[1], t[0]) for t in with_numbers]
-    order = dict(swapped)
-
-    columns = dict(hints.column_hints)
-
-    for key in hints.table_hint.key_order:
-        if key not in columns:
-            columns[key] = hints.get_column_hint(key)
-
-    return sorted(columns.items(), key=lambda t: (order.get(t[0], 999), t[0]))
-
-
 def _register_table_column(
     table_view_name: str,
     column: str,
@@ -1443,7 +1452,7 @@ def _register_table_view(
 
     painters: list[PainterSpec] = []
     filters = []
-    for name, col_hint in _inv_find_subtable_columns(hints):
+    for name, col_hint in hints.column_hints.items():
         column = table_view_spec.view_name + "_" + name
 
         # Declare a painter, sorter and filters for each path with display hint
@@ -1568,9 +1577,9 @@ def _register_multi_table_view(
     painters: list[PainterSpec] = []
     filters = []
     for this_inventory_path, this_table_view_name in zip(inventory_paths, info_names):
-        for name, col_hint in _inv_find_subtable_columns(
-            DISPLAY_HINTS.get_hints(this_inventory_path.path)
-        ):
+        for name, col_hint in DISPLAY_HINTS.get_hints(
+            this_inventory_path.path
+        ).column_hints.items():
             if name in match_by:
                 # Filter out duplicate common columns which are used to join tables
                 if name in known_common_columns:

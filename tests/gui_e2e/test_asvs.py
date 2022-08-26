@@ -60,7 +60,7 @@ def test_password_truncation_error(logged_in_page: PPage) -> None:
     page.main_frame.locator("input[name='password']").fill("A" * 80)
     page.main_frame.locator("#suggestions >> text=Save").click()
     page.main_frame.check_error(
-        "Passwords over 72 characters would be truncated and are therefore not allowed!"
+        "Passwords over 72 bytes would be truncated and are therefore not allowed!"
     )
 
 

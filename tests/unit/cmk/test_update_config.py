@@ -145,6 +145,24 @@ def test__transform_replaced_wato_rulesets_and_params(
     assert rule[2].value == transformed_param_value
 
 
+def test__transform_enforced_services(uc: update_config.UpdateConfig,) -> None:
+    ruleset_spec = [
+        {
+            "condition": {},
+            "value": ("nvidia.temp", "", {})
+        },
+    ]
+    ruleset = Ruleset("static_checks:temperature", {})
+    ruleset.from_config(Folder(""), ruleset_spec)
+    rulesets = RulesetCollection()
+    rulesets.set_rulesets({"static_checks:temperature": ruleset})
+
+    uc._transform_wato_rulesets_params(rulesets)
+
+    _folder, _idx, nvidia_rule = rulesets.get("static_checks:temperature").get_rules()[0]
+    assert nvidia_rule.value == ("nvidia_temp", "", {})
+
+
 def _instantiate_ruleset(ruleset_name, param_value) -> Ruleset:
     ruleset = Ruleset(ruleset_name, {})
     rule = Rule(Folder(''), ruleset)

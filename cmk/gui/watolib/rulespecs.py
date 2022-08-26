@@ -10,6 +10,7 @@ import re
 from typing import Union, Dict, List, Type, Optional, Any, Callable, Tuple as _Tuple
 
 import cmk.utils.plugin_registry
+from cmk.utils.check_utils import maincheckify
 
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.globals import html, request
@@ -942,10 +943,13 @@ class ManualCheckParameterRulespec(HostRulespec):
         return Tuple(
             title=parameter_vs.title(),
             elements=[
-                CheckTypeGroupSelection(
-                    self.check_group_name,
-                    title=_("Checktype"),
-                    help=_("Please choose the check plugin"),
+                Transform(
+                    CheckTypeGroupSelection(
+                        self.check_group_name,
+                        title=_("Checktype"),
+                        help=_("Please choose the check plugin"),
+                    ),
+                    forth=maincheckify,
                 ),
                 self._get_item_spec(),
                 parameter_vs,

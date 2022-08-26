@@ -29,6 +29,7 @@ from cmk.gui.watolib.rulespecs import (
     CheckTypeGroupSelection,
     RulespecGroupEnforcedServices,
     ManualCheckParameterRulespec,
+    Transform,
 )
 from cmk.gui.watolib.search import MatchItem
 from cmk.gui.utils.urls import makeuri_contextless_rulespec_group
@@ -1656,7 +1657,8 @@ def test_register_check_parameters(patch_rulespec_registries):
     # - original valuespec (TimeperiodSelection)
     assert isinstance(rulespec.valuespec, Tuple)
     assert len(rulespec.valuespec._elements) == 3
-    assert isinstance(rulespec.valuespec._elements[0], CheckTypeGroupSelection)
+    assert isinstance(rulespec.valuespec._elements[0], Transform)
+    assert isinstance(rulespec.valuespec._elements[0]._valuespec, CheckTypeGroupSelection)
     assert isinstance(rulespec.valuespec._elements[1], ValueSpec)
     assert isinstance(rulespec.valuespec._elements[2], TimeperiodValuespec)
 
@@ -1679,7 +1681,8 @@ def test_register_host_check_parameters(patch_rulespec_registries):
     assert rulespec.is_for_services is False
     assert isinstance(rulespec.valuespec, Tuple)
     assert len(rulespec.valuespec._elements) == 3
-    assert isinstance(rulespec.valuespec._elements[0], CheckTypeGroupSelection)
+    assert isinstance(rulespec.valuespec._elements[0], Transform)
+    assert isinstance(rulespec.valuespec._elements[0]._valuespec, CheckTypeGroupSelection)
     assert isinstance(rulespec.valuespec._elements[1], ValueSpec)
     assert isinstance(rulespec.valuespec._elements[2], TimeperiodValuespec)
 

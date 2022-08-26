@@ -442,3 +442,36 @@ def test_get_aggregation_state_filter_names(  # type:ignore[no-untyped-def]
                 status=200,
                 params=json.dumps({"filter_names": ["Host heute"]}),
             )
+
+
+@pytest.mark.parametrize("wato_enabled", [True, False])
+def test_post_bi_pack_creating_contact_groups_regression(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+    wato_enabled: bool,
+) -> None:
+    base = "/NO_SITE/check_mk/api/1.0"
+    contact_group = "i_should_never_exists"
+    contact_group_url = f"{base}/objects/contact_group_config/{contact_group}"
+
+    # Make sure the contact group does not exist
+    aut_user_auth_wsgi_app.get(
+        url=contact_group_url,
+        status=404,
+        headers={"Accept": "application/json", "Content-Type": "application/json"},
+    )
+    # try to create it indirectly through posting it in a BI Pack,  unsuccessfully
+    aut_user_auth_wsgi_app.post(
+        url=f"{base}/objects/bi_pack/testpack",
+        params=json.dumps(
+            {"title": "my_cool_pack", "contact_groups": [contact_group], "public": False}
+        ),
+        status=400,
+        headers={"Accept": "application/json", "Content-Type": "application/json"},
+    )
+    # Make sure it still does not exist
+    aut_user_auth_wsgi_app.get(
+        url=contact_group_url,
+        status=404,
+        headers={"Accept": "application/json", "Content-Type": "application/json"},
+    )

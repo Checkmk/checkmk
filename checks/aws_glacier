@@ -8,7 +8,7 @@
 from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
-def parse_aws_glacier(info):  # pylint: disable=function-redefined
+def parse_aws_glacier(info):
     parsed = parse_aws(info)
     parsed_by_vault = {}
     for vault in parsed:

@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-def inventory_bdtms_tape_info(info):  # pylint: disable=function-redefined
+def inventory_bdtms_tape_info(info):
     return [(None, None)]
 
 
-def check_bdtms_tape_info(_no_item, _no_params, info):  # pylint: disable=function-redefined
+def check_bdtms_tape_info(_no_item, _no_params, info):
     _activity_id, health_id = info[0]
 
     health = {

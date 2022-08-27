@@ -9,7 +9,7 @@ from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-imp
 from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
 
 
-def parse_aws_s3(info):  # pylint: disable=function-redefined
+def parse_aws_s3(info):
     parsed = extract_aws_metrics_by_labels(
         [
             "AllRequests",

@@ -416,6 +416,7 @@ def test_make_node_displayhint(
     assert hints.node_hint.icon == expected_node_hint.icon
     assert hints.node_hint.title == expected_node_hint.title
     assert hints.node_hint.long_title == expected_node_hint.long_title
+    assert hints.node_hint.long_inventory_title == expected_node_hint.long_inventory_title
 
     assert hints.attributes_hint.key_order == expected_attributes_hint.key_order
 
@@ -508,6 +509,7 @@ def test_make_node_displayhint_from_hint(
     assert hints.node_hint.icon == expected_node_hint.icon
     assert hints.node_hint.title == expected_node_hint.title
     assert hints.node_hint.long_title == expected_node_hint.long_title
+    assert hints.node_hint.long_inventory_title == expected_node_hint.long_inventory_title
 
     assert hints.attributes_hint.key_order == expected_attributes_hint.key_order
 
@@ -589,6 +591,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
 
     assert hint.title == expected.title
     assert hint.long_title == expected.long_title
+    assert hint.long_inventory_title == expected.long_inventory_title
     assert hint.paint_function == expected.paint_function
     assert hint.sort_function == expected.sort_function
 
@@ -656,6 +659,7 @@ def test_make_column_displayhint_from_hint(
 
     assert hint.title == expected.title
     assert hint.long_title == expected.long_title
+    assert hint.long_inventory_title == expected.long_inventory_title
     assert hint.paint_function == expected.paint_function
     assert hint.sort_function == expected.sort_function
 
@@ -728,6 +732,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
     assert hint.paint_function == expected.paint_function
     assert hint.title == expected.title
     assert hint.long_title == expected.long_title
+    assert hint.long_inventory_title == expected.long_inventory_title
     assert hint.is_show_more == expected.is_show_more
 
 
@@ -776,6 +781,7 @@ def test_make_attribute_displayhint_from_hint(
     assert hint.paint_function == expected.paint_function
     assert hint.title == expected.title
     assert hint.long_title == expected.long_title
+    assert hint.long_inventory_title == expected.long_inventory_title
     assert hint.is_show_more == expected.is_show_more
 
 

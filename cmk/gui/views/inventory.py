@@ -628,11 +628,9 @@ def _make_long_title_function(title: str, parent_path: SDPath) -> Callable[[], s
     )
 
 
-def _make_long_inventory_title(
-    hint: NodeDisplayHint | ColumnDisplayHint | AttributeDisplayHint,
-) -> str:
+def _make_long_inventory_title(long_title: str) -> str:
     # This long title with topic 'Inventory' is used for painters, sorters and filters.
-    return _("Inventory") + ": " + hint.long_title
+    return _("Inventory") + ": " + long_title
 
 
 def _make_table_view_name_of_host(view_name: str) -> str:
@@ -648,6 +646,10 @@ class NodeDisplayHint:
     @property
     def long_title(self) -> str:
         return self._long_title_function()
+
+    @property
+    def long_inventory_title(self) -> str:
+        return _make_long_inventory_title(self.long_title)
 
     @classmethod
     def from_raw(cls, path: SDPath, raw_hint: InventoryHintSpec) -> NodeDisplayHint:
@@ -709,6 +711,10 @@ class ColumnDisplayHint:
     def long_title(self) -> str:
         return self._long_title_function()
 
+    @property
+    def long_inventory_title(self) -> str:
+        return _make_long_inventory_title(self.long_title)
+
     @classmethod
     def from_raw(cls, path: SDPath, key: str, raw_hint: InventoryHintSpec) -> ColumnDisplayHint:
         _data_type, paint_function = _get_paint_function(raw_hint)
@@ -732,25 +738,24 @@ class ColumnDisplayHint:
         | FilterInvtableInterfaceType
         | FilterInvtableIDRange
     ):
-        long_inventory_title = _make_long_inventory_title(self)
         if self.filter_class:
             return self.filter_class(
                 inv_info=table_view_name,
                 ident=ident,
-                title=long_inventory_title,
+                title=self.long_inventory_title,
             )
 
         if (ranged_table_filter_name := get_ranged_table_filter_name(ident)) is not None:
             return FilterInvtableIDRange(
                 inv_info=table_view_name,
                 ident=ranged_table_filter_name,
-                title=long_inventory_title,
+                title=self.long_inventory_title,
             )
 
         return FilterInvtableText(
             inv_info=table_view_name,
             ident=ident,
-            title=long_inventory_title,
+            title=self.long_inventory_title,
         )
 
 
@@ -775,6 +780,10 @@ class AttributeDisplayHint:
     def long_title(self) -> str:
         return self._long_title_function()
 
+    @property
+    def long_inventory_title(self) -> str:
+        return _make_long_inventory_title(self.long_title)
+
     @classmethod
     def from_raw(cls, path: SDPath, key: str, raw_hint: InventoryHintSpec) -> AttributeDisplayHint:
         data_type, paint_function = _get_paint_function(raw_hint)
@@ -790,11 +799,10 @@ class AttributeDisplayHint:
     def make_filter(
         self, ident: str, inventory_path: inventory.InventoryPath
     ) -> FilterInvText | FilterInvBool | FilterInvFloat:
-        long_inventory_title = _make_long_inventory_title(self)
         if self.data_type == "str":
             return FilterInvText(
                 ident=ident,
-                title=long_inventory_title,
+                title=self.long_inventory_title,
                 inventory_path=inventory_path,
                 is_show_more=self.is_show_more,
             )
@@ -802,7 +810,7 @@ class AttributeDisplayHint:
         if self.data_type == "bool":
             return FilterInvBool(
                 ident=ident,
-                title=long_inventory_title,
+                title=self.long_inventory_title,
                 inventory_path=inventory_path,
                 is_show_more=self.is_show_more,
             )
@@ -810,7 +818,7 @@ class AttributeDisplayHint:
         filter_info = _inv_filter_info().get(self.data_type, {})
         return FilterInvFloat(
             ident=ident,
-            title=long_inventory_title,
+            title=self.long_inventory_title,
             inventory_path=inventory_path,
             unit=filter_info.get("unit"),
             scale=filter_info.get("scale", 1.0),
@@ -1158,7 +1166,7 @@ def _register_node_painter(
     register_painter(
         name,
         {
-            "title": _make_long_inventory_title(hints.node_hint),
+            "title": hints.node_hint.long_inventory_title,
             "short": hints.node_hint.title,
             "columns": ["host_inventory", "host_structured_status"],
             "options": ["show_internal_tree_paths"],
@@ -1237,7 +1245,7 @@ def _register_attribute_column(
 ) -> None:
     """Declares painters, sorters and filters to be used in views based on all host related
     datasources."""
-    long_inventory_title = _make_long_inventory_title(hint)
+    long_inventory_title = hint.long_inventory_title
 
     # Declare column painter
     register_painter(
@@ -1342,11 +1350,11 @@ def _register_table_column(
     column: str,
     hint: ColumnDisplayHint,
 ) -> None:
+    long_inventory_title = hint.long_inventory_title
+
     # TODO
     # - Sync this with _register_attribute_column()
     filter_registry.register(hint.make_filter(table_view_name, column))
-
-    long_inventory_title = _make_long_inventory_title(hint)
 
     register_painter(
         column,
